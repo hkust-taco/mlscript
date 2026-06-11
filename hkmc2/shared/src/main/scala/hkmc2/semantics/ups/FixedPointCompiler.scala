@@ -146,8 +146,11 @@ class FixedPointCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynt
               // patterns; let the regular path report the mismatch.
               case S(_) => N
             outputPattern.flatMap: outputPattern =>
-              val body = stripAnnotations(defn.pattern)
-              val recognized = recognizeBody(body, patternSymbol)
+              val shape = recognizeShape(stripAnnotations(defn.pattern))
+              val recognized = shape.filter(_._1 is patternSymbol).flatMap:
+                (_, stepPattern, rest, requireProgress) =>
+                  classifyRest(rest).map((middles, catchAll) =>
+                    (stepPattern, middles, catchAll, requireProgress))
               val machine = recognized match
                 case S((stepPattern, middles, catchAll, requireProgress)) =>
                   scoped("ucs:fixpoint")(compileMachine(stepPattern, middles, catchAll, requireProgress))
@@ -161,7 +164,7 @@ class FixedPointCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynt
                     .map((_, if links.forall(_._4) then N else S(pattern)))
               machine match
                 case S((machine, fallback)) => S(Outcome.Compiled(machine, outputPattern, fallback))
-                case N => unsupported(recognized.isDefined, body, pattern.toLoc)
+                case N => unsupported(recognized.isDefined, shape.isDefined, pattern.toLoc)
           case _ => N
     case body: (SP.Chain | SP.Composition) =>
       // The body-annotated form. The body must belong to the very definition
@@ -173,16 +176,16 @@ class FixedPointCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynt
         patternSymbol.defn.exists(defn =>
           (stripAnnotations(defn.pattern) eq body) &&
             defn.patternParams.isEmpty && defn.extractionParams.isEmpty)
-      selfRefSymbol(body) match
-        case S(patternSymbol) if isOwnBody(patternSymbol) =>
-          val recognized = recognizeBody(body, patternSymbol)
-          val machine = recognized.flatMap: (stepPattern, middles, catchAll, requireProgress) =>
+      recognizeShape(body) match
+        case S((patternSymbol, stepPattern, rest, requireProgress)) if isOwnBody(patternSymbol) =>
+          val recognized = classifyRest(rest)
+          val machine = recognized.flatMap: (middles, catchAll) =>
             scoped("ucs:fixpoint")(compileMachine(stepPattern, middles, catchAll, requireProgress))
               .map((_, if catchAll then N else S(body)))
           machine match
             case S((machine, fallback)) => S(Outcome.Compiled(machine, N, fallback))
-            case N => unsupported(recognized.isDefined, body, body.toLoc)
-        case S(tailSymbol) =>
+            case N => unsupported(recognized.isDefined, true, body.toLoc)
+        case S((tailSymbol, _, _, _)) =>
           // The body may be a link of an indirect recursion cycle; its tail
           // then refers to the next link rather than the definition itself.
           // Locate the definition the body belongs to in the cycle and
@@ -198,7 +201,7 @@ class FixedPointCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynt
                 .map((_, if links.forall(_._4) then N else S(body)))
           machine match
             case S((machine, fallback)) => S(Outcome.Compiled(machine, N, fallback))
-            case N => unsupported(false, body, body.toLoc)
+            case N => unsupported(false, true, body.toLoc)
         case N => N
     case _ => N
 
@@ -206,9 +209,9 @@ class FixedPointCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynt
     * fixed-point shaped, report a warning (unless the rejection point already
     * did) and route the caller to the naive translation, which handles all
     * such shapes; otherwise leave it to the regular efficient compilation. */
-  private def unsupported(alreadyWarned: Bool, body: SP, loc: Opt[Loc]): Opt[Outcome] =
+  private def unsupported(alreadyWarned: Bool, shaped: Bool, loc: Opt[Loc]): Opt[Outcome] =
     if alreadyWarned then S(Outcome.Unsupported)
-    else if selfRefSymbol(body).isDefined then
+    else if shaped then
       warn(msg"This fixed-point pattern is not supported by the machine compilation." -> loc,
         msg"Falling back to the naive translation." -> N)
       S(Outcome.Unsupported)
@@ -236,51 +239,38 @@ class FixedPointCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynt
       if middles.exists(p => p.isInstanceOf[SP.Wildcard] || p.isInstanceOf[SP.Chain]) then N
       else S((middles, catchAll))
 
-  /** If the pattern is fixed-point shaped — `P as (S | ...)` or
-    * `(P1 as S) | ...` — return the pattern symbol `S` refers to. */
-  private def selfRefSymbol(pattern: SP): Opt[PatternSymbol] = pattern match
-    case SP.Chain(_, tail) => disjuncts(tail) match
-      case SP.Constructor(target, N) :: _ => target.resolvedSym.flatMap(_.asPat)
-      case _ => N
-    case composition: SP.Composition => disjuncts(composition) match
-      case SP.Chain(_, SP.Constructor(target, N)) :: _ => target.resolvedSym.flatMap(_.asPat)
-      case _ => N
-    case _ => N
-
-  /** Recognize the two fixed-point shapes, where `S` is the given pattern
-    * symbol and the trailing wildcard is optional in both:
+  /** Recognize the two fixed-point shapes, discovering the pattern symbol
+    * `S` the recursive alternatives refer to (the definition itself, or the
+    * next link of an indirect recursion cycle):
     *
-    *   - `P as (S | a1 | ... | ak | _)`, the chain shape: at least one `P`
-    *     step is required.
-    *   - `(P1 as S) | ... | (Pn as S) | a1 | ... | ak | _`, the disjunction
-    *     shape: the steps `P1 ... Pn` are tried in order at every iteration,
-    *     and — the wildcard being an alternative to the whole chains rather
-    *     than inside their tails — zero steps are allowed, in which case the
+    *   - `P as (S | rest)`, the chain shape: at least one `P` step is
+    *     required.
+    *   - `(P1 as S) | ... | (Pn as S) | rest`, the disjunction shape: the
+    *     steps `P1 ... Pn` are tried in order at every iteration, and — the
+    *     trailing alternatives being disjuncts of the whole chains rather
+    *     than of their tails — zero steps are allowed, in which case the
     *     alternatives process the original scrutinee.
     *
-    * Return the step pattern (the disjunction of the steps), the middle
-    * alternatives `a1 ... ak`, whether the wildcard is present, and whether
-    * at least one step is required. Since the recursive alternatives fail
-    * exactly when no step applies, the middle alternatives are matched once,
-    * against the final normal form. Without the wildcard, the naive
-    * semantics additionally backtracks to the latest intermediate result
-    * matching an alternative, which the machine handles by retrying with the
-    * naive translation. */
-  private def recognizeBody(pattern: SP, self: PatternSymbol): Opt[(SP, Ls[SP], Bool, Bool)] =
-    def isSelf(target: Term): Bool = target.resolvedSym.flatMap(_.asPat).exists(_ is self)
+    * Return the symbol, the step pattern (the disjunction of the steps), the
+    * trailing alternatives (to be validated with `classifyRest`), and
+    * whether at least one step is required. */
+  private def recognizeShape(pattern: SP): Opt[(PatternSymbol, SP, Ls[SP], Bool)] =
     pattern match
       case SP.Chain(stepPattern, tail) => disjuncts(tail) match
-        case SP.Constructor(target, N) :: rest if isSelf(target) =>
-          classifyRest(rest).map((middles, catchAll) => (stepPattern, middles, catchAll, true))
+        case SP.Constructor(target, N) :: rest =>
+          target.resolvedSym.flatMap(_.asPat).map((_, stepPattern, rest, true))
         case _ => N
-      case composition: SP.Composition =>
-        val (selfChains, rest) = disjuncts(composition).span:
-          case SP.Chain(_, SP.Constructor(target, N)) => isSelf(target)
-          case _ => false
-        val steps = selfChains.collect { case SP.Chain(step, _) => step }
-        if steps.isEmpty then N
-        else classifyRest(rest).map: (middles, catchAll) =>
-          (steps.reduceLeft(SP.Composition(true, _, _)), middles, catchAll, false)
+      case composition: SP.Composition => disjuncts(composition) match
+        case SP.Chain(_, SP.Constructor(target, N)) :: _ =>
+          target.resolvedSym.flatMap(_.asPat).map: symbol =>
+            def isSelf(target: Term): Bool =
+              target.resolvedSym.flatMap(_.asPat).exists(_ is symbol)
+            val (selfChains, rest) = disjuncts(composition).span:
+              case SP.Chain(_, SP.Constructor(target, N)) => isSelf(target)
+              case _ => false
+            val steps = selfChains.collect { case SP.Chain(step, _) => step }
+            (symbol, steps.reduceLeft(SP.Composition(true, _, _)), rest, false)
+        case _ => N
       case _ => N
 
   /** Recognize an indirect recursion cycle of chain-shaped definitions
@@ -298,13 +288,11 @@ class FixedPointCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynt
     ): Opt[Ls[(PatternSymbol, SP, Ls[SP], Bool)]] =
       val linkOpt = current.defn match
         case S(defn) if defn.patternParams.isEmpty && defn.extractionParams.isEmpty =>
-          stripAnnotations(defn.pattern) match
-            case SP.Chain(stepPattern, tail) => disjuncts(tail) match
-              case SP.Constructor(target, N) :: rest =>
-                target.resolvedSym.flatMap(_.asPat).flatMap: next =>
-                  classifyRest(rest).map: (middles, catchAll) =>
-                    (next, (current, stepPattern, middles, catchAll))
-              case _ => N
+          recognizeShape(stripAnnotations(defn.pattern)) match
+            // Only chain-shaped bodies (`step as (Next | rest)`) form links.
+            case S((next, stepPattern, rest, true)) =>
+              classifyRest(rest).map: (middles, catchAll) =>
+                (next, (current, stepPattern, middles, catchAll))
             case _ => N
         case _ => N
       linkOpt match
