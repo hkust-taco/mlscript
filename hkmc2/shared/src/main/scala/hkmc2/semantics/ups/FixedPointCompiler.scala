@@ -34,6 +34,16 @@ object FixedPointCompiler:
     * implements the deepest-first try order on intermediate results. */
   final case class Machine(params: ParamList, prelude: Ls[Statement], loop: Split, result: Term, naiveFallback: Bool)
 
+  /** The outcome of `compile` on a fixed-point-shaped pattern. */
+  enum Outcome:
+    /** The compiled machine, paired with the output sub-pattern of the
+      * match-site shorthand (`x is @compile S(q)`). */
+    case Compiled(machine: Machine, outputPattern: Opt[SP])
+    /** The pattern is fixed-point shaped but not supported by the machine
+      * compilation; a warning has been reported and the caller should use the
+      * naive backtracking translation. */
+    case Unsupported
+
   // The machine's control modes. `find` searches the focus for a redex going
   // downwards; `up` re-examines the frame on top of the context stack after
   // the focus has been exhausted; `done` matches no branch of the loop split,
@@ -104,8 +114,9 @@ object FixedPointCompiler:
   * (`pattern Steps = @compile (Step as Steps | _)`), in which case the
   * generated `unapply` method embeds the machine and every match site
   * benefits. Patterns that are not fixed-point shaped proceed with the
-  * regular multi-matcher compilation; fixed-point-shaped patterns whose
-  * context alternatives are unsupported get a warning and fall back.
+  * regular multi-matcher compilation; fixed-point-shaped patterns that the
+  * machine compilation does not support get a warning and fall back to the
+  * naive backtracking translation.
   */
 class FixedPointCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesizer:
   import FixedPointCompiler.*, tl.*
@@ -120,10 +131,9 @@ class FixedPointCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynt
     *     definition's right-hand side: `pattern S = @compile (P as S | _)`.
     *     The `unapply` translation then reaches this method with the chain.
     *
-    * Returns the machine paired with the optional output sub-pattern, or `N`
-    * when the pattern is not fixed-point shaped — in which case the caller
-    * should proceed with the regular efficient compilation. */
-  def compile(pattern: SP): Opt[(Machine, Opt[SP])] = pattern match
+    * Returns `N` when the pattern is not fixed-point shaped — in which case
+    * the caller should proceed with the regular efficient compilation. */
+  def compile(pattern: SP): Opt[Outcome] = pattern match
     case SP.Constructor(target, arguments) =>
       target.resolvedSym.flatMap(_.asPat).flatMap: patternSymbol =>
         patternSymbol.defn match
@@ -135,7 +145,9 @@ class FixedPointCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynt
               // patterns; let the regular path report the mismatch.
               case S(_) => N
             outputPattern.flatMap: outputPattern =>
-              val machine = recognizeBody(stripAnnotations(defn.pattern), patternSymbol) match
+              val body = stripAnnotations(defn.pattern)
+              val recognized = recognizeBody(body, patternSymbol)
+              val machine = recognized match
                 case S((stepPattern, middles, catchAll, requireProgress)) =>
                   scoped("ucs:fixpoint")(compileMachine(stepPattern, middles, catchAll, requireProgress))
                 case N =>
@@ -144,7 +156,9 @@ class FixedPointCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynt
                   recognizeCycle(patternSymbol).flatMap: links =>
                     scoped("ucs:fixpoint"):
                       compileAlternatingMachine(links.map((_, step, middles, catchAll) => (step, middles, catchAll)))
-              machine.map((_, outputPattern))
+              machine match
+                case S(machine) => S(Outcome.Compiled(machine, outputPattern))
+                case N => unsupported(recognized.isDefined, body, pattern.toLoc)
           case _ => N
     case body: (SP.Chain | SP.Composition) =>
       // The body-annotated form. The body must belong to the very definition
@@ -158,14 +172,18 @@ class FixedPointCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynt
             defn.patternParams.isEmpty && defn.extractionParams.isEmpty)
       selfRefSymbol(body) match
         case S(patternSymbol) if isOwnBody(patternSymbol) =>
-          recognizeBody(body, patternSymbol).flatMap: (stepPattern, middles, catchAll, requireProgress) =>
-            scoped("ucs:fixpoint")(compileMachine(stepPattern, middles, catchAll, requireProgress)).map((_, N))
+          val recognized = recognizeBody(body, patternSymbol)
+          val machine = recognized.flatMap: (stepPattern, middles, catchAll, requireProgress) =>
+            scoped("ucs:fixpoint")(compileMachine(stepPattern, middles, catchAll, requireProgress))
+          machine match
+            case S(machine) => S(Outcome.Compiled(machine, N))
+            case N => unsupported(recognized.isDefined, body, body.toLoc)
         case S(tailSymbol) =>
           // The body may be a link of an indirect recursion cycle; its tail
           // then refers to the next link rather than the definition itself.
           // Locate the definition the body belongs to in the cycle and
           // rotate its link to the front.
-          recognizeCycle(tailSymbol).flatMap: links =>
+          val machine = recognizeCycle(tailSymbol).flatMap: links =>
             links.indexWhere((symbol, _, _, _) =>
               symbol.defn.exists(defn => stripAnnotations(defn.pattern) eq body)) match
               case -1 => N
@@ -173,9 +191,23 @@ class FixedPointCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynt
                 val rotated = links.drop(index) ::: links.take(index)
                 scoped("ucs:fixpoint"):
                   compileAlternatingMachine(rotated.map((_, step, middles, catchAll) => (step, middles, catchAll)))
-                .map((_, N))
+          machine match
+            case S(machine) => S(Outcome.Compiled(machine, N))
+            case N => unsupported(false, body, body.toLoc)
         case N => N
     case _ => N
+
+  /** Handle a pattern the machine compilation rejected: when it is
+    * fixed-point shaped, report a warning (unless the rejection point already
+    * did) and route the caller to the naive translation, which handles all
+    * such shapes; otherwise leave it to the regular efficient compilation. */
+  private def unsupported(alreadyWarned: Bool, body: SP, loc: Opt[Loc]): Opt[Outcome] =
+    if alreadyWarned then S(Outcome.Unsupported)
+    else if selfRefSymbol(body).isDefined then
+      warn(msg"This fixed-point pattern is not supported by the machine compilation." -> loc,
+        msg"Falling back to the naive translation." -> N)
+      S(Outcome.Unsupported)
+    else N
 
   /** Remove `Annotated` wrappers (such as the `@compile` marking itself). */
   @tailrec private def stripAnnotations(pattern: SP): SP = pattern match

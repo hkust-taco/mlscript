@@ -1,0 +1,102 @@
+:js
+
+// Fixed-point-shaped patterns that the machine compilation does not support
+// must not be handed to the regular efficient compilation, which cannot
+// handle chains at all. Instead, they get a warning and fall back to the
+// naive backtracking translation, so `@compile` never changes the meaning
+// of a match.
+
+open annotations { compile }
+
+data class Box(val value)
+data class Tag(val value)
+data class Pair(val first, val second)
+data class Lit(val value)
+
+pattern UnBox = Box(x) => x
+pattern UnTag = Tag(x) => x
+
+
+// ————— A chain among the middle alternatives —————
+
+// The middle alternatives may not contain chains, so the machine compilation
+// rejects this shape; the naive translation handles it fine.
+pattern PeelMixed = UnBox as PeelMixed | (UnTag as PeelMixed) | _
+
+let mixed = Box(Tag(Box(42)))
+//│ mixed = Box(Tag(Box(42)))
+
+:expect 42
+if mixed is PeelMixed(r) then r else -1
+//│ = 42
+
+:w
+:expect 42
+if mixed is @compile PeelMixed(r) then r else -1
+//│ ╔══[WARNING] This fixed-point pattern is not supported by the machine compilation.
+//│ ║  l.35: 	if mixed is @compile PeelMixed(r) then r else -1
+//│ ║        	                     ^^^^^^^^^^^
+//│ ╙── Falling back to the naive translation.
+//│ = 42
+
+
+// ————— A chain to a pattern that is not part of a cycle —————
+
+// `Rest` is an ordinary pattern, so `PeelOnce` is a chain, not a fixed
+// point; under `@compile` it falls back to the naive translation.
+pattern Rest = Lit(_)
+pattern PeelOnce = UnBox as Rest | _
+
+:expect Lit(7)
+if Box(Lit(7)) is PeelOnce(r) then r else "<no match>"
+//│ = Lit(7)
+
+:w
+:expect Lit(7)
+if Box(Lit(7)) is @compile PeelOnce(r) then r else "<no match>"
+//│ ╔══[WARNING] This fixed-point pattern is not supported by the machine compilation.
+//│ ║  l.56: 	if Box(Lit(7)) is @compile PeelOnce(r) then r else "<no match>"
+//│ ║        	                           ^^^^^^^^^^
+//│ ╙── Falling back to the naive translation.
+//│ = Lit(7)
+
+
+// ————— An unsupported context alternative —————
+
+// The recursive context must occur as exactly one direct constructor
+// argument, so a two-hole alternative is rejected with a warning.
+pattern TwoHoles(pattern H) = H | Pair(TwoHoles(H), TwoHoles(H))
+pattern SumLits = TwoHoles(Pair(Lit(a), Lit(b)) => Lit(a + b)) as SumLits | _
+
+let nested = Pair(Pair(Lit(1), Lit(2)), Pair(Lit(3), Lit(4)))
+//│ nested = Pair(Pair(Lit(1), Lit(2)), Pair(Lit(3), Lit(4)))
+
+:expect Lit(10)
+if nested is SumLits(r) then r else "<no match>"
+//│ = Lit(10)
+
+:w
+:expect Lit(10)
+if nested is @compile SumLits(r) then r else "<no match>"
+//│ ╔══[WARNING] The recursive context must occur as exactly one direct constructor argument.
+//│ ║  l.68: 	pattern TwoHoles(pattern H) = H | Pair(TwoHoles(H), TwoHoles(H))
+//│ ║        	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.69: 	pattern SumLits = TwoHoles(Pair(Lit(a), Lit(b)) => Lit(a + b)) as SumLits | _
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ = Lit(10)
+
+
+// ————— The body-annotated form —————
+
+// The same fallback applies when the annotation is on the definition's
+// right-hand side: the `unapply` translation warns and stays naive.
+:w
+pattern PeelMixedFast = @compile (UnBox as PeelMixedFast | (UnTag as PeelMixedFast) | _)
+//│ ╔══[WARNING] This fixed-point pattern is not supported by the machine compilation.
+//│ ║  l.94: 	pattern PeelMixedFast = @compile (UnBox as PeelMixedFast | (UnTag as PeelMixedFast) | _)
+//│ ║        	                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙── Falling back to the naive translation.
+
+:expect 42
+if mixed is PeelMixedFast(r) then r else -1
+//│ = 42

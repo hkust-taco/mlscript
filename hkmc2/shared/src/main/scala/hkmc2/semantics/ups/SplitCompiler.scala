@@ -1128,11 +1128,14 @@ class SplitCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
     // Fixed-point patterns — patterns piping their own output back into
     // themselves, such as `pattern S = P as S | _` — are compiled to an
     // iterative matcher machine instead of the multi-matcher scheme below
-    // (see `FixedPointCompiler`).
+    // (see `FixedPointCompiler`). Fixed-point-shaped patterns the machine
+    // compilation does not support fall back to the naive translation.
     FixedPointCompiler().compile(pattern) match
-      case S((machine, outputPattern)) =>
+      case S(FixedPointCompiler.Outcome.Compiled(machine, outputPattern)) =>
         makeFixedPointMatchSplit(scrutinee, machine, outputPattern, outputNeeded,
           if machine.naiveFallback then S(pattern) else N)
+      case S(FixedPointCompiler.Outcome.Unsupported) =>
+        makeMatchSplit(scrutinee, pattern, outputNeeded)
       case N => compilePatternImpl(scrutinee, pattern, outputNeeded)
 
   /** Embed a compiled fixed-point machine at a match site: bind the machine
