@@ -405,7 +405,13 @@ class FixedPointCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynt
       case _ =>
         warn(msg"This alternative is not supported by fixed-point pattern compilation." -> pattern.toLoc)
         N
-    if descentAlternatives.exists(pattern => !mentions(pattern, ctxInst)) then
+    if redexAlternatives.isEmpty then
+      // Without a redex alternative no rewriting step can ever fire: the
+      // naive pattern never matches, and a machine — whose redex matcher
+      // would degenerate to a catch-all — would search forever.
+      warn(msg"The recursive context has no redex alternative, so no rewriting step can apply." -> ctxInst.toLoc)
+      N
+    else if descentAlternatives.exists(pattern => !mentions(pattern, ctxInst)) then
       warn(msg"Redex alternatives must precede all recursive context alternatives." -> ctxInst.toLoc)
       N
     else

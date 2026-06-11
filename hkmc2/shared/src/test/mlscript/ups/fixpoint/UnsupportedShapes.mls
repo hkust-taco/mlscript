@@ -86,6 +86,27 @@ if nested is @compile SumLits(r) then r else "<no match>"
 //│ = Lit(10)
 
 
+// ————— A context grammar without a redex alternative —————
+
+// Every alternative of this context descends, so no rewriting step can ever
+// fire: the naive pattern simply never matches, while a compiled machine
+// would search forever. The compilation warns and falls back.
+pattern NoRedex(pattern H) = Pair(NoRedex(H), _) | Pair(Lit(_), NoRedex(H))
+pattern Reduce = NoRedex(Pair(Lit(a), Lit(b)) => Lit(a + b)) as Reduce | _
+
+:expect "no match"
+if Pair(Lit(1), Lit(2)) is Reduce(r) then "matched" else "no match"
+//│ = "no match"
+
+:w
+:expect "no match"
+if Pair(Lit(1), Lit(2)) is @compile Reduce(r) then "matched" else "no match"
+//│ ╔══[WARNING] The recursive context has no redex alternative, so no rewriting step can apply.
+//│ ║  l.95: 	pattern Reduce = NoRedex(Pair(Lit(a), Lit(b)) => Lit(a + b)) as Reduce | _
+//│ ╙──      	                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ = "no match"
+
+
 // ————— The body-annotated form —————
 
 // The same fallback applies when the annotation is on the definition's
@@ -93,8 +114,8 @@ if nested is @compile SumLits(r) then r else "<no match>"
 :w
 pattern PeelMixedFast = @compile (UnBox as PeelMixedFast | (UnTag as PeelMixedFast) | _)
 //│ ╔══[WARNING] This fixed-point pattern is not supported by the machine compilation.
-//│ ║  l.94: 	pattern PeelMixedFast = @compile (UnBox as PeelMixedFast | (UnTag as PeelMixedFast) | _)
-//│ ║        	                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.115: 	pattern PeelMixedFast = @compile (UnBox as PeelMixedFast | (UnTag as PeelMixedFast) | _)
+//│ ║         	                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╙── Falling back to the naive translation.
 
 :expect 42
