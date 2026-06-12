@@ -108,9 +108,9 @@ f(1, 2)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 3
 
-:fixme
+:todo
 f(...a)
-//│ /!!!\ Uncaught error: scala.MatchError: Spd(Eager,Ref(a)) (of class hkmc2.semantics.Spd)
+//│ /!!!\ Uncaught error: scala.NotImplementedError: tuple spread in flow analysis (of class String)
 
 
 fun przd[A, B](x: A) = x

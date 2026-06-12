@@ -1,5 +1,6 @@
 :js
 :deadParamElim debug
+:noInline
 
 
 
@@ -37,6 +38,17 @@ M.main()
 //│ = 42
 
 
+:lift
+:expect 42
+module M with
+  private fun f(a) = a
+  private fun withF() = x => f(x)
+M.withF()(42)
+//│ dead-param-elim > >>> dead-param-elim results >>>
+//│ dead-param-elim > <<< dead-param-elim results <<<
+//│ = 42
+
+
 
 
 module M with
@@ -62,3 +74,82 @@ foo M.Foo::n(2)
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ = 125
 //│ foo = Foo(123)
+
+
+
+
+module O with
+  module I with
+    val x = 3
+    fun g() = 23
+    data class C(x)
+//│ dead-param-elim > >>> dead-param-elim results >>>
+//│ dead-param-elim > <<< dead-param-elim results <<<
+
+
+
+:soir
+:noInline
+private fun f(module O: O) = O.I.x
+private fun g(module O: O) = O.I.g()
+f(O) + g(O)
+//│ dead-param-elim > >>> dead-param-elim results >>>
+//│ dead-param-elim > <<< dead-param-elim results <<<
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let f⁰, g⁰, tmp, tmp1;
+//│ @private
+//│ define f⁰ as fun f¹(O) {
+//│   return O.I⁰.x⁰
+//│ };
+//│ @private
+//│ define g⁰ as fun g²(O) {
+//│   return O.I⁰.g¹()
+//│ };
+//│ set tmp = f¹(O⁰);
+//│ set tmp1 = g²(O⁰);
+//│ return +⁰(tmp, tmp1)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 26
+
+
+:soir
+:noInline
+private fun f(module I: O.I) = I.x
+private fun g(module I: O.I) = I.g()
+f(O.I) + g(O.I)
+//│ dead-param-elim > >>> dead-param-elim results >>>
+//│ dead-param-elim > <<< dead-param-elim results <<<
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let f², g³, tmp, tmp1;
+//│ @private
+//│ define f² as fun f³(I) {
+//│   return I.x⁰
+//│ };
+//│ @private
+//│ define g³ as fun g⁴(I) {
+//│   return I.g¹()
+//│ };
+//│ set tmp = f³(O⁰.I⁰);
+//│ set tmp1 = g⁴(O⁰.I⁰);
+//│ return +⁰(tmp, tmp1)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 26
+
+
+:noInline
+private fun f(module I: O.I) = I.C(3)
+private fun g(x, module I: O.I) = if x is
+  I.C(y) then y + 2
+g(f(O.I), O.I)
+//│ dead-param-elim > >>> dead-param-elim results >>>
+//│ dead-param-elim > <<< dead-param-elim results <<<
+//│ = 5
+
+:noInline
+private fun f(module O: O) = O.I.C(3)
+private fun g(x, module O: O) = if x is
+  O.I.C(y) then y + 2
+g(f(O), O)
+//│ dead-param-elim > >>> dead-param-elim results >>>
+//│ dead-param-elim > <<< dead-param-elim results <<<
+//│ = 5

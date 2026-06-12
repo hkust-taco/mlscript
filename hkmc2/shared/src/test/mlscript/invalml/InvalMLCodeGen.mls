@@ -203,7 +203,12 @@ fun nott = case
 :sjs
 nott of false
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let tmp; tmp = nott(); return runtime.safeCall(tmp(false))
+//│ if (false === true) {
+//│   return false
+//│ } else if (false === false) {
+//│   return true
+//│ }
+//│ throw globalThis.Object.freeze(new globalThis.Error.class("match error"));
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = true
 //│ Type: Bool
@@ -218,14 +223,14 @@ fun fact = case
 //│ fact = function fact() {
 //│   let lambda2;
 //│   lambda2 = (undefined, function (caseScrut) {
-//│     let tmp1, tmp2, tmp3;
+//│     let tmp, tmp1, tmp2;
 //│     if (caseScrut === 0) {
 //│       return 1
 //│     }
-//│     tmp1 = fact();
-//│     tmp2 = caseScrut - 1;
-//│     tmp3 = runtime.safeCall(tmp1(tmp2));
-//│     return caseScrut * tmp3;
+//│     tmp = fact();
+//│     tmp1 = caseScrut - 1;
+//│     tmp2 = runtime.safeCall(tmp(tmp1));
+//│     return caseScrut * tmp2;
 //│   });
 //│   return lambda2
 //│ };

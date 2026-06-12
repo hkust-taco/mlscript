@@ -122,7 +122,7 @@ class DeforestRewriter(val solver: DeforestFusionSolver)(using Raise):
       finalDest match
       case FinalDestSel(dtors, field) =>
         // create poly fun syms
-        val instIds = (dtors + ctor).toList.sortBy(_.exprId).map(_.instId)
+        val instIds = (dtors + ctor).toList.sortBy(_.exprId.uid).map(_.instId)
         for
           ctorInstId <- instIds
           case path@(pathTo :+ refedFun) <- ctorInstId.inits
@@ -142,7 +142,7 @@ class DeforestRewriter(val solver: DeforestFusionSolver)(using Raise):
         
         // create branch sel syms
         val fieldSym = MutMap.empty[SelField, VarSymbol]
-        for sel <- sels.toList.sortBy(_._1) do
+        for sel <- sels.toList.sortBy(_._1.uid) do
           branchSelSyms.getOrElseUpdate(
             sel,
             locally:
@@ -357,7 +357,7 @@ class DeforestRewriter(val solver: DeforestFusionSolver)(using Raise):
         
         def mkCall(target: (BlockMemberSymbol, TermSymbol), args: Ls[ValueSymbol]): Call =
           Call(
-            Value.Ref(target._1, S(target._2)),
+            Value.MemberRef(target._1, target._2),
             args.map(a => Arg(N, a.asPath)) ne_:: Nil
           )(true, false, false)
         
@@ -385,7 +385,7 @@ class DeforestRewriter(val solver: DeforestFusionSolver)(using Raise):
                 applyPath(from)(k)
               else
                 super.applyResult(r)(k)
-            case ctor@CtorProducer(cls, args) =>
+            case ctor@CtorProducer(cls, args, _) =>
               def mkCtorFieldSyms(ctorDtorId: CtorDtorId): Ls[TempSymbol] =
                 val ctorInfo = solver.fusingCtorInfo(ctorDtorId)
                 val clsNme = ctorInfo.ctor.ctorClsName
@@ -416,10 +416,10 @@ class DeforestRewriter(val solver: DeforestFusionSolver)(using Raise):
           
           override def applyPath(p: Path)(k: Path => Block): Block =
             p match
-            case ref@FunRef(f) if newPolyFnSyms.isDefinedAt(newRefId(ref.uid, f)) =>
+            case ref@FunRef(f, _) if newPolyFnSyms.isDefinedAt(newRefId(ref.uid, f)) =>
               val (bms, tSym) = newPolyFnSyms(newRefId(ref.uid, f))(f)
               k(bms.asMemberRef(tSym))
-            case ctor@CtorProducer(_, args) if solver.finalCtorDests.isDefinedAt(ctor.uid.concreteId) =>
+            case ctor@CtorProducer(_, args, _) if solver.finalCtorDests.isDefinedAt(ctor.uid.concreteId) =>
               assert(args.isEmpty)
               val callBranchFun = mkCall(branchFunSyms(ctorWhichBranch(ctor.uid.concreteId)), Nil)
               val lambdaSym = new TempSymbol(N, "deforest$lam")
@@ -485,8 +485,36 @@ class DeforestRewriter(val solver: DeforestFusionSolver)(using Raise):
                 case Some(bms) =>
                   k(bms.asMemberRef(l.asMod.get))
                 case None => super.applyValue(v)(k)
+            // We may generate bms -> VarSymbol replacement, which require change of IR
+            case Value.MemberRef(bms, disamb) if existingMapping.contains(bms) =>
+              val sym = existingMapping(bms)
+              sym match
+              case s: VarSymbol => k(Value.SimpleRef(s))
+              case _ => super.applyValue(v)(k)
             case _ => super.applyValue(v)(k)
         end RefreshSymbol
+
+        // FIXME: This is a temporary workaround for the deforestation problem discussed at
+        //          https://discord.com/channels/884326249617559653/935507764384501760/1512041398520774832
+        //        It should be fixed after we fix Lowering; then, this function should be removed,
+        //        and its uses replaced back by `new RefreshSymbol(refreshParamMap.toMap).apply`
+        // TODO: it may cause BMS to malfunction if both class and function refer to same BMS and they are split apart
+        def refreshExtractedBody(mapping: Map[Symbol, Symbol], body: Block): Block =
+          val defined = MutSet.empty[ScopedSymbol]
+          val missing = MutSet.empty[ScopedSymbol]
+          val walker = new BlockTraverserShallow:
+            override def applyBlock(b: Block): Unit = b match
+              case Scoped(syms, body) =>
+                defined.addAll(syms)
+                applyBlock(body)
+              case Define(defn: FunDefn, rest) =>
+                if !defined(defn.sym) then
+                  missing.add(defn.sym)
+                  defined.add(defn.sym)
+                applyBlock(rest)
+              case _ => super.applyBlock(b)
+          walker.applyBlock(body)
+          new RefreshSymbol(mapping).apply(Scoped(missing, body))
         
         // Instantiated polymorphic functions
         val newPolyFuns =
@@ -507,7 +535,7 @@ class DeforestRewriter(val solver: DeforestFusionSolver)(using Raise):
                   refreshParamMap(p.sym) = newSym
                   Param(p.flags, newSym, p.sign, p.modulefulness),
                 pl.restParam)
-            val bodyWithCorrectSymbols = new RefreshSymbol(refreshParamMap.toMap).applyBlock(transformedBody)
+            val bodyWithCorrectSymbols = refreshExtractedBody(refreshParamMap.toMap, transformedBody)
             FunDefn(
               N, bms, tSym, refreshedParams,
               bodyWithCorrectSymbols)(N, PrivateModifier :: fDefn.annotations)
@@ -524,7 +552,7 @@ class DeforestRewriter(val solver: DeforestFusionSolver)(using Raise):
               new Rewriter(instId).applyBlock(ogBody),
               Return(mkCall(restFunSym, restFunArgs)))
             val refreshedFvSymbols = dtorBranchFnFvs(branchId._1).map(s => s -> new VarSymbol(Tree.Ident(s"fv_${s.nme}")))
-            val bodyWithCorrectSymbols = new RefreshSymbol(refreshedFvSymbols.toMap).applyBlock(actualBody)
+            val bodyWithCorrectSymbols = refreshExtractedBody(refreshedFvSymbols.toMap, actualBody)
             FunDefn(N, bms, tSym,
               branchFunParamFieldSyms(branchId).asParamList :: refreshedFvSymbols.unzip._2.asParamList :: Nil,
               bodyWithCorrectSymbols
@@ -548,7 +576,7 @@ class DeforestRewriter(val solver: DeforestFusionSolver)(using Raise):
               case None =>
                 Begin(transformedOgBody, Return(Value.Lit(Tree.UnitLit(true))))
             val refreshedFvSymbols = restFnFvs(restFunId).map(s => s -> new VarSymbol(Tree.Ident(s"fv_${s.nme}")))
-            val bodyWithCorrectSymbols = new RefreshSymbol(refreshedFvSymbols.toMap).applyBlock(actualBody)
+            val bodyWithCorrectSymbols = refreshExtractedBody(refreshedFvSymbols.toMap, actualBody)
             FunDefn(N, bms, tsym, refreshedFvSymbols.unzip._2.asParamList :: Nil, bodyWithCorrectSymbols)(N, annotations = PrivateModifier :: Nil)
         end newRestFuns
 

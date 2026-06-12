@@ -256,8 +256,10 @@ class ParseRules(using State):
     keepKw(`new`):
       val withRefinement = discardKw(`with`)(
           ParseRule("'new' body")(
-            Blk(ParseRule("'new' expression")(end(()))) { case (res: Block // FIXME: can it be something else?
-              , ()) => S(res) }
+            Blk(ParseRule("'new' expression")(end(()))) {
+              case (res: Block, ()) => S(res) // FIXME: can it be something else?
+              case (res, ()) => lastWords(s"expected a Block from the block parse rule; got ${res.describe}")
+            }
           )
         )
       ParseRule("`new` keyword")(

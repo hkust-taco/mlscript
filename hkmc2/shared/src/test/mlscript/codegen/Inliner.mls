@@ -348,3 +348,25 @@ fun g() =
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 
+// Refresh the constructor symbol together with an inlined local class.
+:soir
+@inline fun makeFoo() =
+  class Foo()
+  Foo()
+makeFoo()
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let makeFoo⁰, Foo⁰;
+//│ @inline
+//│ define makeFoo⁰ as fun makeFoo¹() {
+//│   let Foo;
+//│   define Foo as class Foo² {
+//│     constructor Foo¹
+//│   };
+//│   return Foo¹()
+//│ };
+//│ define Foo⁰ as class Foo⁴ { constructor Foo³ };
+//│ return Foo³()
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = Foo()
+
+

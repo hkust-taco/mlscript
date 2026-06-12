@@ -9,297 +9,154 @@ import hkmc2.utils.*
 import semantics.*
 import semantics.Elaborator.State
 
-class SymbolRefresher(existingMapping: Map[Symbol, Symbol])(using State) extends BlockTransformer(SymbolSubst.Id):
-  val mapping = MutMap.from(existingMapping)
-  // Stack of cleanup frames, one per scoped block. ClsLikeDefn / applyObjBody add
-  // class-internal symbols to the top frame; the enclosing applyScopedBlock pops
-  // and removes them from `mapping` when its body finishes. Initialized with a
-  // bottom frame so callers that hand us a non-Scoped entry block still have a
-  // valid `cleanupStack.head` to add to (the bottom frame is never popped).
-  private var toRemoveSymbols: List[MutSet[Symbol]] = MutSet.empty[Symbol] :: Nil
+class SymbolRefresherWalker(mapping: MutMap[Symbol, Symbol])(using State) extends BlockTraverser:
 
-  override def applyScopedBlock(b: Block): Block =
-    toRemoveSymbols = MutSet.empty[Symbol] :: toRemoveSymbols
-    val res = b match
+  private def assertUpdate[T <: Symbol](k: T, v: T) =
+    assert(!mapping.isDefinedAt(k), s"already defined: $k")
+    mapping(k) = v
+  
+  private def refreshTempSymbol(s: TempSymbol) =
+    assertUpdate(s, new TempSymbol(s.trm, s.nme))
+
+  private def refreshVarSymbol(s: VarSymbol) =
+    assertUpdate(s, new VarSymbol(s.id))
+  
+  private def refreshBlockMemberSymbol(s: BlockMemberSymbol) =
+    assertUpdate(s, new BlockMemberSymbol(s.nme, s.trees, s.nameIsMeaningful))
+
+  private def refreshLabelSymbol(s: LabelSymbol) =
+    assertUpdate(s, new LabelSymbol(s.trm, s.nme))
+
+  private def refreshTermSymbol(s: TermSymbol) =
+    // Inner symbol (if present) must be traversed at this point.
+    assertUpdate(s, new TermSymbol(s.k, s.owner.map(o => mapping.getOrElse(o, o).asInstanceOf[InnerSymbol]), s.id))
+
+  private def refreshClassSymbol(s: ClassSymbol) =
+    val ns = new ClassSymbol(s.tree, s.id)
+    assertUpdate(s, ns)
+    // defn is relied by JSBuilder to identify whether a class should be lifted
+    ns.defn = s.defn
+
+  private def refreshModuleOrObjectSymbol(s: ModuleOrObjectSymbol) =
+    assertUpdate(s, new ModuleOrObjectSymbol(s.tree, s.id))
+
+  private def refreshPatternSymbol(s: PatternSymbol) =
+    assertUpdate(s, new PatternSymbol(s.id, s.params, s.body))
+
+  private def refreshTopLevelSymbol(s: TopLevelSymbol) =
+    assertUpdate(s, new TopLevelSymbol(s.nme))
+
+  private def refreshClassCtorSymbol(s: ClassCtorSymbol) =
+    assertUpdate(s, new ClassCtorSymbol(s.k, S(mapping.getOrElse(s.owner.value, s.owner.value).asInstanceOf[ClassSymbol]), s.id))
+
+  private def refreshParamList(pl: ParamList) =
+    for
+      p <- pl.restParam ++: pl.params
+    do
+      refreshVarSymbol(p.sym)
+
+  override def applyBlock(b: Block) = b match
     case Scoped(syms, body) =>
-      val newSyms = MutSet.empty[ScopedSymbol]
-      val oldSyms = MutSet.empty[Symbol]
       for s <- syms.toList.sortBy(_.uid) do
-        assert(!mapping.isDefinedAt(s), s"already defined: $s")
-        val new_s: ScopedSymbol = s match
-          case tmpSym: TempSymbol => new TempSymbol(N, tmpSym.nme)
-          case bms: BlockMemberSymbol =>
-            val newBms = new BlockMemberSymbol(bms.nme, Nil, bms.nameIsMeaningful)
-            newBms.tsym = bms.tsym.map: t =>
-              val newOwner: Opt[InnerSymbol] = t.owner.map: o =>
-                existingMapping.get(o) match
-                  case Some(inner: InnerSymbol) => inner
-                  case _ => o
-              val nt = new TermSymbol(t.k, newOwner, t.id)
-              mapping(t) = nt
-              oldSyms.add(t)
-              nt
-            newBms
-          case varSym: VarSymbol => new VarSymbol(varSym.id)
-        mapping(s) = new_s
-        oldSyms.add(s)
-        newSyms.add(new_s)
-      val r = Scoped(newSyms, applyBlock(body))
-      for s <- oldSyms do mapping.remove(s)
-      r
-    case _ => super.applyScopedBlock(b)
-    val hd = toRemoveSymbols.head
-    toRemoveSymbols = toRemoveSymbols.tail
-    hd.foreach(mapping.remove)
-    res
-  override def applyBlock(b: Block): Block =
-    b match
-    case Assign(lhs, rhs, rest) =>
-      applyResult(rhs): newRhs =>
-        val newLhs: Assignable = lhs match
-          case lhs: NoSymbol => lhs
-          case lhs: LocalVarSymbol =>
-            mapping.get(lhs) match
-            case Some(sym: LocalVarSymbol) => sym
-            case Some(sym) => lastWords(s"assignment local ${lhs.nme} mapped to non-variable ${sym.nme}")
-            case None => lhs
-        val newRest = applyBlock(rest)
-        if (newLhs is lhs) && (newRhs is rhs) && (newRest is rest) then b else Assign(newLhs, newRhs, newRest)
+        s match
+          case s: TempSymbol => refreshTempSymbol(s)
+          case s: VarSymbol => refreshVarSymbol(s)
+          case s: BlockMemberSymbol => refreshBlockMemberSymbol(s)
+      applyBlock(body)
     case Label(label, loop, body, rest) =>
-      assert(!mapping.isDefinedAt(label))
-      val newLabel = new LabelSymbol(label.trm, label.nme)
-      mapping(label) = newLabel
-      val newBody = applyBlock(body)
-      mapping.remove(label)
-      val newRest = applyBlock(rest)
-      Label(newLabel, loop, newBody, newRest)
-    case Break(label) => Break(mapping.getOrElse(label, label).asInstanceOf[LabelSymbol])
-    case Continue(label) => Continue(mapping.getOrElse(label, label).asInstanceOf[LabelSymbol])
+      refreshLabelSymbol(label)
+      applyBlock(body)
+      applyBlock(rest)
     case _ => super.applyBlock(b)
   
-  override def applyDefn(defn: Defn)(k: Defn => Block): Block =
-    defn match
-    case fun: FunDefn =>
-      assert(fun.owner.isEmpty)
-      // because fun sym is not treated as a free var, we refresh here
-      var newlyCreated = false
-      val (sym2, dSym2) = mapping.get(fun.sym) match
-        case Some(s: BlockMemberSymbol) => (s, s.tsym.get)
-        case None =>
-          newlyCreated = true
-          val newBms = new BlockMemberSymbol(fun.sym.nme, fun.sym.trees, fun.sym.nameIsMeaningful)
-          val newDsym = fun.sym.tsym.map: tsym =>
-            assert(tsym.owner.isEmpty)
-            new TermSymbol(tsym.k, N, tsym.id)
-          newBms.tsym = S(newDsym.get)
-          // Keep the definition symbol in sync with the freshly-created member symbol.
-          // Self-recursive references use the disambiguating TermSymbol, and later passes
-          // such as inlining rely on that symbol to identify the function being called.
-          mapping(fun.dSym) = newDsym.get
-          mapping(fun.sym) = newBms
-          (newBms, newDsym.get)
-        case _ => die
-      val oldParamSyms = Buffer.empty[VarSymbol]
-      val params2 = fun.params.map:
-        case ParamList(flags, params, restParam) =>
-          def handleSingleParam(p: Param) =
-            val Param(flags, sym, sign, modulefulness) = p
-            oldParamSyms.append(sym)
-            val newSym = new VarSymbol(sym.id)
-            assert(!mapping.isDefinedAt(sym))
-            mapping(sym) = newSym
-            Param(flags, newSym, sign, modulefulness)
-          val params2 = params.map(handleSingleParam)
-          val rest2 = restParam.map(handleSingleParam)
-          ParamList(flags, params2, rest2)
-      val body2 = applyFunBodyLikeBlock(fun.body)
-      for s <- oldParamSyms do mapping.remove(s)
-      if newlyCreated then
-        Scoped(Set.single(sym2), k(FunDefn(N, sym2, dSym2, params2, body2)(fun.configOverride, fun.annotations)))
-      else
-        k(FunDefn(N, sym2, dSym2, params2, body2)(fun.configOverride, fun.annotations))
-    case defn @ ValDefn(tsym, sym, rhs) =>
-      val (tsym2, sym2) = mapping.get(sym) match
-        case None =>
-          val newBms = new BlockMemberSymbol(sym.nme, sym.trees, sym.nameIsMeaningful)
-          val newOwner = tsym.owner.map: o =>
-            existingMapping.get(o) match
-              case Some(inner: InnerSymbol) => inner
-              case _ => o
-          val newTsym = new TermSymbol(tsym.k, newOwner, tsym.id)
-          newBms.tsym = S(newTsym)
-          (newTsym, newBms)
-        case S(bms: BlockMemberSymbol) =>
-          (bms.tsym.get, bms)
-        case _ => die
-      applyPath(rhs): rhs2 =>
-        k(ValDefn(tsym2, sym2, rhs2)(defn.configOverride, defn.annotations))
-    case defn: ClsLikeDefn =>
-      val hd = toRemoveSymbols.head
-      val oldIsym = defn.isym
-      assert(!mapping.isDefinedAt(oldIsym), s"isym already in mapping: $oldIsym")
-      val newIsym: DefinitionSymbol[? <: ClassLikeDef] & InnerSymbol = oldIsym match
-        case c: ClassSymbol => new ClassSymbol(c.tree, c.id)
-        case m: ModuleOrObjectSymbol => new ModuleOrObjectSymbol(m.tree, m.id)
-        case p: PatternSymbol => new PatternSymbol(p.id, p.params, p.body)
-        case _ => lastWords(s"unexpected isym kind: $oldIsym")
-      mapping(oldIsym) = newIsym
-      hd += oldIsym
-
-      var newlyCreatedSym = false
-      val newSym: BlockMemberSymbol = mapping.get(defn.sym) match
-        case Some(bms: BlockMemberSymbol) => bms
-        case None =>
-          newlyCreatedSym = true
-          val nb = new BlockMemberSymbol(defn.sym.nme, Nil, defn.sym.nameIsMeaningful)
-          mapping(defn.sym) = nb
-          nb
-        case _ => die
-
-      val newCtorSym: Opt[ClassCtorSymbol] = defn.ctorSym.map: cs =>
-        assert(!mapping.isDefinedAt(cs))
-        val newOwner = newIsym match
-          case cls: ClassSymbol => cls
-          case _ => lastWords(s"ClassCtorSymbol for non-class: $newIsym")
-        val ncs = new ClassCtorSymbol(cs.k, S(newOwner), cs.id)
-        mapping(cs) = ncs
-        hd += cs
-        ncs
-
-      val newOwn: Opt[InnerSymbol] = defn.owner.map: o =>
-        mapping.get(o) match
-          case Some(inner: InnerSymbol) => inner
-          case _ => o
-
-      def freshenParamList(pl: ParamList): ParamList =
-        def handleParam(p: Param) =
-          val ns = new VarSymbol(p.sym.id)
-          assert(!mapping.isDefinedAt(p.sym))
-          mapping(p.sym) = ns
-          hd += p.sym
-          Param(p.flags, ns, p.sign, p.modulefulness)
-        ParamList(pl.flags, pl.params.map(handleParam), pl.restParam.map(handleParam))
-      val newParamsOpt = defn.paramsOpt.map(freshenParamList)
-      val newAuxParams = defn.auxParams.map(freshenParamList)
-
-      val newPrivateFields = freshenPrivateFields(defn.privateFields, newIsym)
-      val newPublicFields = freshenPublicFields(defn.publicFields, newIsym)
-      val newMethods = freshenMethods(defn.methods, oldIsym, newIsym)
-
-      val newPreCtor = applyFunBodyLikeBlock(defn.preCtor)
-      val newCtor = applyFunBodyLikeBlock(defn.ctor)
-      val newMod = defn.companion.map(applyObjBody)
-
-      def buildResult(newParentPath: Opt[Path]): Block =
-        val newDefn = ClsLikeDefn(newOwn, newIsym, newSym, newCtorSym, defn.k,
-          newParamsOpt, newAuxParams, newParentPath, newMethods,
-          newPrivateFields, newPublicFields, newPreCtor, newCtor, newMod, defn.bufferable)(defn.configOverride, defn.annotations)
-        if newlyCreatedSym then
-          Scoped(Set.single(newSym), k(newDefn))
-        else
-          k(newDefn)
-
-      defn.parentPath match
-        case Some(pp) => applyPath(pp): pp2 =>
-          buildResult(if pp2 is pp then defn.parentPath else Some(pp2))
-        case None => buildResult(None)
+  override def applyFunDefn(fun: FunDefn): Unit =
+    val FunDefn(owner, sym, dSym, params, body) = fun
+    assert(mapping.isDefinedAt(sym), s"BlockMemberSymbol ${sym} for FunDefn is a free variable for this block")
+    refreshTermSymbol(dSym)
+    params.foreach(refreshParamList)
+    applyBlock(body)
   
-  override def applyPath(p: Path)(k: Path => Block): Block = p match
-    case p @ Select(qual, name) =>
-      applyPath(qual): qual2 =>
-        val sym2 = p.symbol.map: s =>
-          mapping.get(s) match
-            case Some(ds: DefinitionSymbol[?]) => ds
-            case _ => s
-        k(if (qual2 is qual) && (sym2 is p.symbol) then p else Select(qual2, name)(sym2).withLocOf(p))
-    case _ => super.applyPath(p)(k)
-
-  override def applyValue(v: Value)(k: Value => Block): Block = v match
-    case Value.SimpleRef(l) =>
-      mapping.get(l) match
-        case Some(newSym: SimpleSymbol) =>
-          k(newSym.asSimpleRef)
-        case _ => super.applyValue(v)(k)
-    case Value.MemberRef(bms, disamb) =>
-      mapping.get(bms) match
-        case Some(newBms: BlockMemberSymbol) =>
-          val newDisamb = mapping.get(disamb) match
-            case Some(nd: DefinitionSymbol[?]) => nd
-            case Some(nd) => lastWords(s"unexpected symbol kind for disamb: ${nd}")
-            case N => lastWords(s"unexpected lack of refreshed disamb symbol for $disamb")
-          k(newBms.asMemberRef(newDisamb))
-        case Some(newSym: (LocalVarSymbol | TempSymbol)) => k(newSym.asSimpleRef)
-        case _ => super.applyValue(v)(k)
-    case Value.This(sym) =>
-      mapping.get(sym) match
-        case Some(inner: InnerSymbol) => k(inner.asThis.withLocOf(v))
-        case _ => super.applyValue(v)(k)
-    case _ => super.applyValue(v)(k)
+  override def applyValDefn(defn: ValDefn): Unit =
+    val ValDefn(tsym, sym, result) = defn
+    assert(mapping.isDefinedAt(sym), s"BlockMemberSymbol ${sym} for ValDefn is a free variable for this block")
+    refreshTermSymbol(tsym)
+    applyResult(result)
   
-  private def freshenPrivateFields(
-    fields: Ls[TermSymbol], ownerIsym: InnerSymbol
-  ): Ls[TermSymbol] = fields.map: ts =>
-    assert(!mapping.isDefinedAt(ts))
-    val nts = new TermSymbol(ts.k, S(ownerIsym), ts.id)
-    mapping(ts) = nts
-    toRemoveSymbols.head += ts
-    nts
+  override def applyClsLikeDefn(defn: ClsLikeDefn): Unit =
+    val ClsLikeDefn(
+      owner, isym, sym, ctorSym, k, paramsOpt, auxParams, parentPath,
+      methods, privateFields, publicFields, preCtor, ctor, companion,
+      bufferable) = defn
+    assert(mapping.isDefinedAt(sym), s"BlockMemberSymbol ${sym} for ClsLikeDefn is a free variable for this block")
+    isym match
+      case s: ClassSymbol => refreshClassSymbol(s)
+      case s: ModuleOrObjectSymbol => refreshModuleOrObjectSymbol(s)
+      case s: PatternSymbol => refreshPatternSymbol(s)
+      case s: TopLevelSymbol => refreshTopLevelSymbol(s)
+    ctorSym.foreach(refreshClassCtorSymbol)
+    paramsOpt.foreach(refreshParamList)
+    auxParams.foreach(refreshParamList)
+    methods.foreach: mtd =>
+      // For methods, the BlockMemberSymbol is owned by the class itself
+      refreshBlockMemberSymbol(mtd.sym)
+      applyFunDefn(mtd)
+    privateFields.foreach(refreshTermSymbol)
+    publicFields.foreach: p =>
+      refreshBlockMemberSymbol(p._1)
+      // For public fields, we have ValDefn for defining the variable
+      // refreshTermSymbol(p._2)
+    applyBlock(preCtor)
+    applyBlock(ctor)
+    companion.foreach(applyClsLikeBody)
 
-  private def freshenPublicFields(
-    fields: Ls[BlockMemberSymbol -> TermSymbol], ownerIsym: InnerSymbol
-  ): Ls[BlockMemberSymbol -> TermSymbol] = fields.map:
-    case (bms, ts) =>
-      assert(!mapping.isDefinedAt(bms))
-      assert(!mapping.isDefinedAt(ts))
-      val nbms = new BlockMemberSymbol(bms.nme, Nil, bms.nameIsMeaningful)
-      val nts = new TermSymbol(ts.k, S(ownerIsym), ts.id)
-      nbms.tsym = S(nts)
-      mapping(bms) = nbms
-      mapping(ts) = nts
-      toRemoveSymbols.head.addAll(Seq(bms, ts))
-      nbms -> nts
+  def applyClsLikeBody(b: ClsLikeBody): Unit =
+    val ClsLikeBody(
+      isym, methods, privateFields, publicFields, ctor, annotations
+    ) = b
+    isym match
+      case s: ModuleOrObjectSymbol => refreshModuleOrObjectSymbol(s)
+      case s: TopLevelSymbol => refreshTopLevelSymbol(s)
+    methods.foreach: mtd =>
+      // For methods, the BlockMemberSymbol is owned by the class itself
+      refreshBlockMemberSymbol(mtd.sym)
+      applyFunDefn(mtd)
+    privateFields.foreach(refreshTermSymbol)
+    publicFields.foreach: p =>
+      refreshBlockMemberSymbol(p._1)
+      // For public fields, we have ValDefn for defining the variable
+      // refreshTermSymbol(p._2)
+    applyBlock(ctor)
 
-  private def freshenMethods(
-    methods: Ls[FunDefn], oldIsym: InnerSymbol, newIsym: InnerSymbol
-  ): Ls[FunDefn] =
-    val methodsAndNewSyms = methods.map: m =>
-      assert(m.owner.contains(oldIsym), s"method owner mismatch: ${m.owner} vs S($oldIsym)")
-      assert(!mapping.isDefinedAt(m.sym))
-      assert(!mapping.isDefinedAt(m.dSym))
-      val newMsym = new BlockMemberSymbol(m.sym.nme, Nil, m.sym.nameIsMeaningful)
-      val newDsym = new TermSymbol(m.dSym.k, S(newIsym), m.dSym.id)
-      newMsym.tsym = S(newDsym)
-      mapping(m.sym) = newMsym
-      mapping(m.dSym) = newDsym
-      toRemoveSymbols.head.addAll(Seq(m.sym, m.dSym))
-      (m, newMsym, newDsym)
-    methodsAndNewSyms.map: (m, newMsym, newDsym) =>
-      val methodParamOlds = MutSet.empty[VarSymbol]
-      val newParams = m.params.map: pl =>
-        def handleParam(p: Param) =
-          val ns = new VarSymbol(p.sym.id)
-          assert(!mapping.isDefinedAt(p.sym))
-          mapping(p.sym) = ns
-          methodParamOlds += p.sym
-          Param(p.flags, ns, p.sign, p.modulefulness)
-        ParamList(pl.flags, pl.params.map(handleParam), pl.restParam.map(handleParam))
-      val newBody = applyFunBodyLikeBlock(m.body)
-      methodParamOlds.foreach(mapping.remove)
-      FunDefn(S(newIsym), newMsym, newDsym, newParams, newBody)(m.configOverride, m.annotations)
+object SymbolRefresher:
   
-  override def applyObjBody(defn: ClsLikeBody): ClsLikeBody =
-    val hd = toRemoveSymbols.head
-    val oldIsym = defn.isym
-    assert(!mapping.isDefinedAt(oldIsym), s"companion isym already in mapping: $oldIsym")
-    val newIsym: DefinitionSymbol[? <: ModuleOrObjectDef] & InnerSymbol = oldIsym match
-      case m: ModuleOrObjectSymbol => new ModuleOrObjectSymbol(m.tree, m.id)
-      case _ => lastWords(s"unexpected companion isym kind: $oldIsym")
-    mapping(oldIsym) = newIsym
-    hd += oldIsym
+  def initSymbolSubst(m: collection.Map[Symbol, Symbol]) =
+    new SymbolSubst:
+      override def mapBlockMemberSym(s: BlockMemberSymbol): BlockMemberSymbol = m.getOrElse(s, s).asInstanceOf[BlockMemberSymbol]
+      override def mapTempSym(s: TempSymbol): TempSymbol = m.getOrElse(s, s).asInstanceOf[TempSymbol]
+      override def mapVarSym(s: VarSymbol): VarSymbol = m.getOrElse(s, s).asInstanceOf[VarSymbol]
+      override def mapTermSym(s: TermSymbol): TermSymbol = m.getOrElse(s, s).asInstanceOf[TermSymbol]
+      override def mapClassCtorSym(s: ClassCtorSymbol): ClassCtorSymbol = m.getOrElse(s, s).asInstanceOf[ClassCtorSymbol]
+      override def mapClsSym(s: ClassSymbol): ClassSymbol = m.getOrElse(s, s).asInstanceOf[ClassSymbol]
+      override def mapModuleSym(s: ModuleOrObjectSymbol): ModuleOrObjectSymbol = m.getOrElse(s, s).asInstanceOf[ModuleOrObjectSymbol]
+      override def mapPatSym(s: PatternSymbol): PatternSymbol = m.getOrElse(s, s).asInstanceOf[PatternSymbol]
+      override def mapTopLevelSym(s: TopLevelSymbol): TopLevelSymbol = m.getOrElse(s, s).asInstanceOf[TopLevelSymbol]
+      override def mapLabelSym(s: LabelSymbol): LabelSymbol = m.getOrElse(s, s).asInstanceOf[LabelSymbol]
 
-    val newPrivateFields = freshenPrivateFields(defn.privateFields, newIsym)
-    val newPublicFields = freshenPublicFields(defn.publicFields, newIsym)
-    val newMethods = freshenMethods(defn.methods, oldIsym, newIsym)
-    val newCtor = applyFunBodyLikeBlock(defn.ctor)
+// An internal class so that the actual map can be used
+private class SymbolRefresherInternal(m: MutMap[Symbol, Symbol])(using State) extends BlockTransformer(SymbolRefresher.initSymbolSubst(m)):
+  // We have a pretty weird setup here, where we store a mutable state inside the SymbolRefresher
+  // We must initialize the SymbolRefresher by walking before applyBlock
+  def apply(b: Block) =
+    SymbolRefresherWalker(m).applyBlock(b)
+    applyBlock(b)
 
-    ClsLikeBody(newIsym, newMethods, newPrivateFields, newPublicFields, newCtor, defn.annotations)
+  // Although the types created during walking can always be symbol substituted, the user may pass in extra symbol that map across different types
+  override def applySimpleSymbol(s: SimpleSymbol): SimpleSymbol = m.getOrElse(s, s).asInstanceOf[SimpleSymbol]
+
+  override def applyImportSymbol(s: ImportSymbol): ImportSymbol = m.getOrElse(s, s).asInstanceOf[ImportSymbol]
+  
+  override def applyAssignLhs(s: Assignable): Assignable = s match
+    case s: NoSymbol => s
+    case s: LocalVarSymbol => m.getOrElse(s, s).asInstanceOf[LocalVarSymbol]
+  
+class SymbolRefresher(m: Map[Symbol, Symbol])(using State) extends SymbolRefresherInternal(MutMap.from(m))

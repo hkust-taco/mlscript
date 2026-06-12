@@ -666,6 +666,11 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
       doc" # switch (${result(scrut)}) { #{ ${bodWithDflt} #}  # }" :: returningTerm(rest, endSemi)
     case Match(scrut, arms @ hd :: tl, els, rest) =>
       val sd = result(scrut)
+      // * Parenthesize the scrutinee for property access when it's a numeric literal,
+      // * since things like `12.length` are invalid JS (the `.` is parsed as a decimal point).
+      def sdProp = scrut match
+        case Value.Lit(Tree.IntLit(_) | Tree.DecLit(_)) => doc"($sd)"
+        case _ => sd
       def cond(cse: Case) = cse match
         case Case.Lit(lit) => doc"$sd === ${lit.idStr}"
         case Case.Cls(cls, pth) => cls match
@@ -684,7 +689,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
             // * ^ Note that modules are currently not valid patterns;
             // *    this case is just for objects, which have their class stored in a `.class` property.
           case _ => doc"$sd instanceof ${result(pth)}"
-        case Case.Tup(len, inf) => doc"$runtimeVar.Tuple.isArrayLike($sd) && $sd.length ${if inf then ">=" else "==="} ${len}"
+        case Case.Tup(len, inf) => doc"$runtimeVar.Tuple.isArrayLike($sd) && $sdProp.length ${if inf then ">=" else "==="} ${len}"
         case Case.Field(name = n, safe = false) =>
           doc"""typeof $sd === "object" && $sd !== null && "${n.name}" in $sd"""
         case Case.Field(name = n, safe = true) =>

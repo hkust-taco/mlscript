@@ -76,3 +76,11 @@ Lol
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
+:todo
+trait F
+//│ ╔══[INTERNAL ERROR] Compiler reached an unsupported state: trait not yet supported
+//│ ╟── The compilation result may be incorrect.
+//│ ╙── This is a known compiler limitation; if it is a blocker for you, please report it to the maintainers.
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+
+

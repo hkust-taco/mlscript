@@ -1108,7 +1108,7 @@ class BlockSimplifier
             case _ => super.applyBlock(b)
         
         def applyBlock(blk: Block) =
-          Label(lblSym, false, Copier.applyBlock(blk), _)
+          Label(lblSym, false, Copier.apply(blk), _)
       
       class Transformer(m: InlinerMap) extends BlockTransformer(SymbolSubst()):
         
