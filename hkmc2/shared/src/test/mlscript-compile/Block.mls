@@ -178,8 +178,10 @@ class Printer(val owner: Opt[Class]) with
         "fun " + showSymbol(sym) + showParamList(ps) + " =" +
         (if body is Return | End then " " else "\n  ") + indent(showBlock(body))
       ClsLikeDefn(sym, methods, _) then
-        "class " + showSymbol(sym) + showParamsOpt(sym.paramsOpt) + sym.auxParams.map(showParams(_)).join("")
-          + indent((if methods is [] then "" else " with\n") + methods.map(showDefn(_)).join("\n"))
+        let decl = if sym is
+          ClassSymbol then "class " + showSymbol(sym) + showParamsOpt(sym.paramsOpt) + sym.auxParams.map(showParams(_)).join("")
+          ModuleSymbol then "object " + showSymbol(sym)
+        decl + indent((if methods is [] then "" else " with\n") + methods.map(showDefn(_)).join("\n"))
       // TODO: used to represent assignments in constructors, which still need some adjustments
       ValDefn(owner, sym, rhs) then
         "val " + showSymbol(sym) + " = " + showPath(rhs)
