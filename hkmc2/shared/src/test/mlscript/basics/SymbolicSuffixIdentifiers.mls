@@ -1,0 +1,20 @@
+:js
+
+
+fun foo_<:<(value_?!) = value_?! + 1
+
+foo_<:<(41)
+//│ = 42
+
+
+class Box_#(val value_?!) with
+  fun add_++(delta) = value_?! + delta
+
+let box_# = new Box_#(42)
+//│ box_# = Box_#(42)
+
+box_#.value_?!
+//│ = 42
+
+box_#.add_++(1)
+//│ = 43

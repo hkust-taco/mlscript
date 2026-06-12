@@ -463,7 +463,7 @@ extends Importer with ucs.SplitElaborator:
   given TraceLogger = tl
   
   lazy val illegalMemberNameTail =
-    msg"Member names must start with a letter or underscore, followed by letters, digits, or underscores." -> N
+    msg"Member names must be normal identifiers, optionally ending in an underscore followed by operator characters." -> N
     :: Nil
   
   def mkLetBinding(kw: Tree.Keywrd[?], sym: LocalVarSymbol | TermSymbol, rhs: Term, annotations: Ls[Annot]): Ls[Statement] =
@@ -1494,7 +1494,7 @@ extends Importer with ucs.SplitElaborator:
                   msg"Mutable 'val' definitions are only valid as members of a module, object, or class definition" -> td.toLoc
                   :: Nil
               return go(sts, Nil, acc)
-            if owner.isDefined && !identifierPattern.matches(id.name) then
+            if owner.isDefined && !isMemberIdentifier(id.name) then
               raise:
                 ErrorReport:
                   msg"Illegal ${k.desc} member name: '${id.name}'" -> nme.toLoc
@@ -1574,7 +1574,7 @@ extends Importer with ucs.SplitElaborator:
             raise(d)
             return go(sts, Nil, acc)
         
-        if owner.isDefined && !identifierPattern.matches(nme.name) then
+        if owner.isDefined && !isMemberIdentifier(nme.name) then
           raise:
             ErrorReport:
               msg"Illegal ${k.desc} member name: '${nme.name}'" -> nme.toLoc

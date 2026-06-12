@@ -21,10 +21,23 @@ extension [A](xs: Ls[A])
     case xs: NELs[A] => S(xs)
 
 
-// * Valid identifiers for the members of module and class-like definitions
-// * Importantly, these are the same as valid JavaScript identifiers,
-// * so we do not check them in JS code-generation.
+// * Valid JavaScript identifiers, used where names are emitted without escaping.
 val identifierPattern: scala.util.matching.Regex = "^[A-Za-z_$][A-Za-z0-9_$]*$".r
+
+val symbolicIdentifierChars: Set[Char] = Set(
+  '!', '#', '%', '&', '*', '+', '-', '/', ':', '<', '=', '>', '?', '@', '\\', '^', '|', '~')
+
+/** Whether a name can be used as a member identifier in source code.
+  * Besides JavaScript-shaped names, this permits a Scala-style symbolic suffix after `_`.
+  */
+def isMemberIdentifier(name: Str): Bool =
+  identifierPattern.matches(name) || {
+    val separator = name.lastIndexOf('_')
+    separator > 0 &&
+      identifierPattern.matches(name.take(separator)) &&
+      name.drop(separator + 1).nonEmpty &&
+      name.drop(separator + 1).forall(symbolicIdentifierChars)
+  }
 
 
 def softAssert(cond: Boolean, msg: => Str = "")(using Line, FileName, Raise): Unit =
@@ -46,4 +59,3 @@ def softTODO(cond: Boolean, msg: => Str = "")(using Line, FileName, Raise): Unit
         :: msg"The compilation result may be incorrect." -> N
         :: msg"This is a known compiler limitation; if it is a blocker for you, please report it to the maintainers." -> N
         :: Nil)
-
