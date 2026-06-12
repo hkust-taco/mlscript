@@ -19,9 +19,9 @@ fun loop(x)(y) =
   else loop(x - 1)(y + x)
 loop(1000)(0)
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let loop⁰, loop$tailrec⁰;
+//│ let loop$tailrec;
 //│ @private
-//│ define loop$tailrec⁰ as fun loop$tailrec¹(x, y) {
+//│ define loop$tailrec as fun loop$tailrec⁰(x, y) {
 //│   loop loopLabel:
 //│     let scrut, tmp, tmp1;
 //│     set scrut = Predef⁰.equals⁰(x, 0);
@@ -38,7 +38,7 @@ loop(1000)(0)
 //│   end
 //│ };
 //│ @tailrec
-//│ define loop⁰ as fun loop¹(x)(y) { return loop$tailrec¹(x, y) };
+//│ define loop⁰ as fun loop¹(x)(y) { return loop$tailrec⁰(x, y) };
 //│ return loop¹(1000)(0)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 500500
@@ -51,9 +51,9 @@ fun count(start)(stop) =
   else count(start + 1)(stop)
 count(0)(100)
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let count⁰, count$tailrec⁰;
+//│ let count$tailrec;
 //│ @private
-//│ define count$tailrec⁰ as fun count$tailrec¹(start, stop) {
+//│ define count$tailrec as fun count$tailrec⁰(start, stop) {
 //│   loop loopLabel:
 //│     let scrut, tmp;
 //│     set scrut = Predef⁰.equals⁰(start, stop);
@@ -68,7 +68,7 @@ count(0)(100)
 //│   end
 //│ };
 //│ define count⁰ as fun count¹(start)(stop) {
-//│   return count$tailrec¹(start, stop)
+//│   return count$tailrec⁰(start, stop)
 //│ };
 //│ return count¹(0)(100)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
@@ -79,8 +79,8 @@ count(0)(100)
 fun even(n)(dummy) = if n == 0 then [true, dummy] else odd(n - 1)(dummy + 1)
 fun odd(n)(dummy) = if n == 0 then [false, dummy] else even(n - 1)(dummy + 1)
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let even⁰, odd⁰, even_odd⁰;
-//│ define even_odd⁰ as fun even_odd¹(id, param0, param1) {
+//│ let even_odd;
+//│ define even_odd as fun even_odd⁰(id, param0, param1) {
 //│   loop loopLabel:
 //│     match id
 //│       0 =>
@@ -117,9 +117,9 @@ fun odd(n)(dummy) = if n == 0 then [false, dummy] else even(n - 1)(dummy + 1)
 //│   end
 //│ };
 //│ define even⁰ as fun even¹(n)(dummy) {
-//│   return even_odd¹(0, n, dummy)
+//│   return even_odd⁰(0, n, dummy)
 //│ };
-//│ define odd⁰ as fun odd¹(n)(dummy) { return even_odd¹(1, n, dummy) };
+//│ define odd⁰ as fun odd¹(n)(dummy) { return even_odd⁰(1, n, dummy) };
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
@@ -142,8 +142,8 @@ fun f(n)(a, b, c, d, ...e)(m) =
 fun g(n)(m) =
   @tailcall f(n - 1)(...[1, 2], 3, ...[3, 4], ...[5, n], 7, n)(m)
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let f⁰, g⁰, f_g⁰;
-//│ define f_g⁰ as fun f_g¹(id, param0, param1, param2, param3, param4, param5, param6) {
+//│ let f_g;
+//│ define f_g as fun f_g⁰(id, param0, param1, param2, param3, param4, param5, param6) {
 //│   loop loopLabel:
 //│     match id
 //│       0 =>
@@ -183,10 +183,10 @@ fun g(n)(m) =
 //│   end
 //│ };
 //│ define f⁰ as fun f¹(n)(a, b, c, d, ...e)(m) {
-//│   return f_g¹(0, n, a, b, c, d, e, m)
+//│   return f_g⁰(0, n, a, b, c, d, e, m)
 //│ };
 //│ define g⁰ as fun g¹(n)(m) {
-//│   return f_g¹(1, n, m, undefined, undefined, undefined, undefined, undefined)
+//│   return f_g⁰(1, n, m, undefined, undefined, undefined, undefined, undefined)
 //│ };
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————

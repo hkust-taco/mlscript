@@ -34,19 +34,19 @@ fun foo(y) =
   (new M).foo()
 foo(10)
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let M⁰, foo⁰;
-//│ define M⁰ as class M¹ {
+//│ let M;
+//│ define M as class M⁰ {
 //│   private val y⁰;
 //│   constructor(y) {
-//│     set M¹.this.y⁰ = y;
+//│     set M⁰.this.y⁰ = y;
 //│     end
 //│   }
-//│   method foo¹ = fun foo²() {
-//│     set M¹.this.y⁰ = 2;
+//│   method foo⁰ = fun foo¹() {
+//│     set M⁰.this.y⁰ = 2;
 //│     return runtime⁰.Unit⁰
 //│   }
 //│ };
-//│ define foo⁰ as fun foo³(y) { let tmp; set tmp = new M¹(y); return tmp.foo²() };
+//│ define foo² as fun foo³(y) { let tmp; set tmp = new M⁰(y); return tmp.foo¹() };
 //│ return foo³(10)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
@@ -112,16 +112,16 @@ fun foo(x, y) =
 //│ ║  l.105: 	  object M with
 //│ ╙──       	         ^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let foo3⁰, foo⁴;
-//│ define foo3⁰ as fun foo3¹(M) {
+//│ let foo3;
+//│ define foo3 as fun foo3⁰(M) {
 //│   return M.foo2⁰()
 //│ };
 //│ define foo⁴ as fun foo⁵(x, y) {
 //│   let M;
-//│   define M as object M² {
+//│   define M as object M¹ {
 //│     method foo2¹ = fun foo2⁰() { set y = 2; return +⁰(x, y) }
 //│   };
-//│   return foo3¹(M²)
+//│   return foo3⁰(M¹)
 //│ };
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
@@ -207,19 +207,19 @@ module M with
   val x = if A() is A then 2 else 3
 M.A().get
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let M³, tmp;
-//│ define M³ as class M⁴
-//│ module M⁵ {
+//│ let tmp;
+//│ define M² as class M³
+//│ module M⁴ {
 //│   val x⁰;
 //│   constructor {
 //│     let scrut, tmp1;
 //│     define A⁰ as class A² {
 //│       constructor A¹
 //│       method get⁰ = fun get¹ {
-//│         return +⁰(M⁵.this.x¹, M⁵.this.x¹)
+//│         return +⁰(M⁴.this.x¹, M⁴.this.x¹)
 //│       }
 //│     };
-//│     set scrut = M⁵.this.A¹();
+//│     set scrut = M⁴.this.A¹();
 //│     match scrut
 //│       A² =>
 //│         set tmp1 = 2;
@@ -231,7 +231,7 @@ M.A().get
 //│     end
 //│   }
 //│ };
-//│ set tmp = M⁵.A¹();
+//│ set tmp = M⁴.A¹();
 //│ return tmp.get¹
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 4

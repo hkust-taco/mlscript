@@ -6,7 +6,7 @@
 :sir
 class A(val x)
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let A⁰; define A⁰ as class A² { val x⁰; constructor A¹(x) { define x⁰ as val x¹ = x; end } }; end
+//│ define A⁰ as class A² { val x⁰; constructor A¹(x) { define x⁰ as val x¹ = x; end } }; end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 let a = A(1)
@@ -32,10 +32,10 @@ a.A#x
 :sir
 A::x
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let lambda⁰;
+//│ let lambda;
 //│ @private
-//│ define lambda⁰ as fun lambda¹(self, ...args) { return self.x¹(...args) };
-//│ return lambda¹
+//│ define lambda as fun lambda⁰(self, ...args) { return self.x¹(...args) };
+//│ return lambda⁰
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = fun
 
@@ -43,9 +43,9 @@ A::x
 :sir
 case A(x) then x
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let lambda²;
+//│ let lambda;
 //│ @private
-//│ define lambda² as fun lambda³(caseScrut) {
+//│ define lambda as fun lambda¹(caseScrut) {
 //│   let x, arg$A$0$;
 //│   match caseScrut
 //│     A² =>
@@ -56,7 +56,7 @@ case A(x) then x
 //│       throw new globalThis⁰.Error⁰("match error")
 //│   end
 //│ };
-//│ return lambda³
+//│ return lambda¹
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = fun
 
@@ -64,7 +64,7 @@ case A(x) then x
 :sir
 class A()(val x)
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let A³; define A³ as class A⁵ { val x²; constructor A⁴(x) { define x² as val x³ = x; end } }; end
+//│ define A³ as class A⁵ { val x²; constructor A⁴(x) { define x² as val x³ = x; end } }; end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 let a = A()(1)
@@ -87,10 +87,10 @@ a.A#x
 :sir
 A::x
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let lambda⁴;
+//│ let lambda;
 //│ @private
-//│ define lambda⁴ as fun lambda⁵(self, ...args) { return self.x³(...args) };
-//│ return lambda⁵
+//│ define lambda as fun lambda²(self, ...args) { return self.x³(...args) };
+//│ return lambda²
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = fun
 
@@ -98,9 +98,9 @@ A::x
 :sir
 case A as a then a.x
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let lambda⁶;
+//│ let lambda;
 //│ @private
-//│ define lambda⁶ as fun lambda⁷(caseScrut) {
+//│ define lambda as fun lambda³(caseScrut) {
 //│   let a;
 //│   match caseScrut
 //│     A⁵ =>
@@ -110,7 +110,7 @@ case A as a then a.x
 //│       throw new globalThis⁰.Error⁰("match error")
 //│   end
 //│ };
-//│ return lambda⁷
+//│ return lambda³
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = fun
 
@@ -125,19 +125,19 @@ fun foo(x, y) =
   let a = new A(x)
   [a, a.A#u, a.A#v]
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let A⁶, foo⁰;
-//│ define A⁶ as class A⁸ {
+//│ let A;
+//│ define A as class A⁷ {
 //│   private val y⁰;
 //│   val u⁰;
 //│   val v⁰;
-//│   constructor A⁷(u, y) {
-//│     set A⁸.this.y⁰ = y;
+//│   constructor A⁶(u, y) {
+//│     set A⁷.this.y⁰ = y;
 //│     define u⁰ as val u¹ = u;
-//│     define v⁰ as val v¹ = A⁸.this.y⁰;
+//│     define v⁰ as val v¹ = A⁷.this.y⁰;
 //│     end
 //│   }
 //│ };
-//│ define foo⁰ as fun foo¹(x, y) { let a; set a = new A⁸(x, y); return [a, a.u¹, a.v¹] };
+//│ define foo⁰ as fun foo¹(x, y) { let a; set a = new A⁷(x, y); return [a, a.u¹, a.v¹] };
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 

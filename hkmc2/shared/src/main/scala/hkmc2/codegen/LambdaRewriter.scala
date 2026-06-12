@@ -1,6 +1,6 @@
 package hkmc2
 
-import mlscript.utils.*, shorthands.*
+import hkmc2.utils.*, shorthands.*
 import utils.*
 
 import hkmc2.codegen.*
@@ -29,7 +29,8 @@ object LambdaRewriter:
           val newSym = BlockMemberSymbol(lhs.nme, Nil,
             nameIsMeaningful = true // TODO: lhs.nme is not always meaningful
           )
-          val defn = FunDefn.withFreshSymbol(N, newSym, params :: Nil, applyBlock(body))(N, annotations = Annot.Private :: lam.annot)
+          val defn = FunDefn.withFreshSymbol(N, newSym, params :: Nil, applyBlock(body))
+            (N, annotations = Annot.Private :: lam.annot)
           val blk = blockBuilder
             .define(defn)
             .assign(lhs, defn.asPath)

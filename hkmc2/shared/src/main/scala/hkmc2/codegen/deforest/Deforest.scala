@@ -3,7 +3,7 @@ package codegen
 package deforest
 
 import utils.*
-import mlscript.utils.*, shorthands.*
+import hkmc2.utils.*, shorthands.*
 import semantics.*
 import scala.collection.mutable.{Set as MutSet, Map as MutMap, LinkedHashMap}
 import hkmc2.codegen.flowAnalysis.*

@@ -2,7 +2,7 @@ package hkmc2
 package semantics
 package ucs
 
-import mlscript.utils.*, shorthands.*
+import hkmc2.utils.*, shorthands.*
 import syntax.Tree, Tree.*, Elaborator.{Ctx, State, ctx}
 
 /** This trait includes some helpers for synthesizing `Term`s which look like 
@@ -56,13 +56,13 @@ trait TermSynthesizer(using State):
     val parameters = parametersOpt.map(_.map(_ -> N))
     FlatPattern.ClassLike(matchFailureClass, State.matchFailureClsSymbol, parameters, false)(Tree.Dummy)
 
-  protected lazy val tupleSlice = sel(sel(runtimeRef, "Tuple"), "slice", State.tupleSliceSymbol)
-  protected lazy val tupleLazySlice = sel(sel(runtimeRef, "Tuple"), "lazySlice", State.tupleLazySliceSymbol)
-  protected lazy val tupleGet = sel(sel(runtimeRef, "Tuple"), "get", State.tupleGetSymbol)
-  protected lazy val stringStartsWith = sel(sel(runtimeRef, "Str"), "startsWith", State.strStartsWithSymbol)
-  protected lazy val stringGet = sel(sel(runtimeRef, "Str"), "get", State.strGetSymbol)
-  protected lazy val stringTake = sel(sel(runtimeRef, "Str"), "take", State.strTakeSymbol)
-  protected lazy val stringLeave = sel(sel(runtimeRef, "Str"), "leave", State.strLeaveSymbol)
+  protected lazy val tupleSlice = sel(sel(runtimeRef, "Tuple", State.tupleSymbol), "slice", State.tupleSliceSymbol)
+  protected lazy val tupleLazySlice = sel(sel(runtimeRef, "Tuple", State.tupleSymbol), "lazySlice", State.tupleLazySliceSymbol)
+  protected lazy val tupleGet = sel(sel(runtimeRef, "Tuple", State.tupleSymbol), "get", State.tupleGetSymbol)
+  protected lazy val stringStartsWith = sel(sel(runtimeRef, "Str", State.strSymbol), "startsWith", State.strStartsWithSymbol)
+  protected lazy val stringGet = sel(sel(runtimeRef, "Str", State.strSymbol), "get", State.strGetSymbol)
+  protected lazy val stringTake = sel(sel(runtimeRef, "Str", State.strSymbol), "take", State.strTakeSymbol)
+  protected lazy val stringLeave = sel(sel(runtimeRef, "Str", State.strSymbol), "leave", State.strLeaveSymbol)
 
   /** Make a term that looks like `runtime.Tuple.get(t, i)`. */
   protected final def callTupleGet(t: Term, i: Int, label: Str): Term =

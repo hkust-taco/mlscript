@@ -62,12 +62,12 @@ fun f(used1, unused1) =
   foo(used2) + unused2
 f(1, 2)
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let g⁰, f⁰, g$⁰;
+//│ let g, g$;
 //│ @inline
-//│ define g$⁰ as fun g$¹(used1, used2)(g_arg) {
-//│   return g¹(used1, used2, g_arg)
+//│ define g$ as fun g$⁰(used1, used2)(g_arg) {
+//│   return g⁰(used1, used2, g_arg)
 //│ };
-//│ define g⁰ as fun g¹(used1, used2, g_arg) {
+//│ define g as fun g⁰(used1, used2, g_arg) {
 //│   let used3;
 //│   set used3 = 2;
 //│   return +⁰(used1, used2)
@@ -76,7 +76,7 @@ f(1, 2)
 //│   let used2, unused2, foo, tmp, g$here;
 //│   set used2 = unused1;
 //│   set unused2 = 2;
-//│   set g$here = g$¹(used1, used2);
+//│   set g$here = g$⁰(used1, used2);
 //│   set foo = g$here;
 //│   set tmp = foo(used2);
 //│   return +⁰(tmp, unused2)
@@ -92,8 +92,8 @@ fun f(a1, a2, a3, a4, a5, a6) =
   g
 f(1,2,3,4,5,6)
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let g², f²;
-//│ define g² as fun g³(a1, a2, a3, a4, a5, a6) {
+//│ let g;
+//│ define g as fun g¹(a1, a2, a3, a4, a5, a6) {
 //│   let tmp, tmp1, tmp2, tmp3;
 //│   set tmp = +⁰(a1, a2);
 //│   set tmp1 = +⁰(tmp, a3);
@@ -102,7 +102,7 @@ f(1,2,3,4,5,6)
 //│   return +⁰(tmp3, a6)
 //│ };
 //│ define f² as fun f³(a1, a2, a3, a4, a5, a6) {
-//│   return g³(a1, a2, a3, a4, a5, a6)
+//│   return g¹(a1, a2, a3, a4, a5, a6)
 //│ };
 //│ return f³(1, 2, 3, 4, 5, 6)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
@@ -176,25 +176,25 @@ fun f(unused, immutable, mutated) =
   a + h() + unused
 f(1, 2, 1000)
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let g⁴, h⁰, f⁴, Capture$f⁰;
-//│ define g⁴ as fun g⁵(f$cap, immutable) {
+//│ let g, h, Capture$f;
+//│ define g as fun g²(f$cap, immutable) {
 //│   set f$cap.mutated$0⁰ = 2;
 //│   return +⁰(immutable, f$cap.mutated$0⁰)
 //│ };
-//│ define h⁰ as fun h¹(f$cap) {
+//│ define h as fun h⁰(f$cap) {
 //│   return f$cap.mutated$0⁰
 //│ };
-//│ define Capture$f⁰ as class Capture$f² {
-//│   constructor Capture$f¹(mutated$0) {
+//│ define Capture$f as class Capture$f¹ {
+//│   constructor Capture$f⁰(mutated$0) {
 //│     define mutated$0¹ as val mutated$0⁰ = mutated$0;
 //│     end
 //│   }
 //│ };
 //│ define f⁴ as fun f⁵(unused, immutable, mutated) {
 //│   let a, tmp, tmp1, f$cap;
-//│   set f$cap = new mut Capture$f²(mutated);
-//│   set a = g⁵(f$cap, immutable);
-//│   set tmp = h¹(f$cap);
+//│   set f$cap = new mut Capture$f¹(mutated);
+//│   set a = g²(f$cap, immutable);
+//│   set tmp = h⁰(f$cap);
 //│   set tmp1 = +⁰(a, tmp);
 //│   return +⁰(tmp1, unused)
 //│ };
@@ -262,36 +262,36 @@ fun g() =
   f
 g()(1)
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let h², f⁶, g⁶, baseCall, Capture$scope0⁰, f$⁰;
-//│ define Capture$scope0⁰ as class Capture$scope0² {
-//│   constructor Capture$scope0¹(y$0) {
+//│ let h, f, baseCall, Capture$scope0, f$;
+//│ define Capture$scope0 as class Capture$scope0¹ {
+//│   constructor Capture$scope0⁰(y$0) {
 //│     define y$0⁰ as val y$0¹ = y$0;
 //│     end
 //│   }
 //│ };
-//│ define h² as fun h³(scope0$cap, x, k) {
+//│ define h as fun h¹(scope0$cap, x, k) {
 //│   set k = 5;
 //│   set x = 4;
 //│   return +⁰(x, scope0$cap.y$0¹)
 //│ };
 //│ @inline
-//│ define f$⁰ as fun f$¹(scope0$cap)(x) {
-//│   return f⁷(scope0$cap, x)
+//│ define f$ as fun f$⁰(scope0$cap)(x) {
+//│   return f⁶(scope0$cap, x)
 //│ };
-//│ define f⁶ as fun f⁷(scope0$cap, x) {
+//│ define f as fun f⁶(scope0$cap, x) {
 //│   let k;
 //│   set k = 4;
 //│   set scope0$cap.y$0¹ = 2;
 //│   return x
 //│ };
-//│ define g⁶ as fun g⁷() {
+//│ define g³ as fun g⁴() {
 //│   let y, scope0$cap, f$here;
-//│   set scope0$cap = new mut Capture$scope0²(y);
+//│   set scope0$cap = new mut Capture$scope0¹(y);
 //│   set scope0$cap.y$0¹ = 0;
-//│   set f$here = f$¹(scope0$cap);
+//│   set f$here = f$⁰(scope0$cap);
 //│   return f$here
 //│ };
-//│ set baseCall = g⁷();
+//│ set baseCall = g⁴();
 //│ return baseCall(1)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 1
@@ -372,26 +372,26 @@ fun f(x) =
   x
 f(0)
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let g⁸, f⁸;
-//│ define g⁸ as fun g⁹(x) {
+//│ let g;
+//│ define g as fun g⁵(x) {
 //│   let tmp;
 //│   set tmp = +⁰(x, 1);
 //│   set x = tmp;
 //│   return x
 //│ };
-//│ define f⁸ as fun f⁹(x) {
+//│ define f⁷ as fun f⁸(x) {
 //│   let scrut, tmp;
 //│   set scrut = true;
 //│   match scrut
 //│     true =>
-//│       return g⁹(x)
+//│       return g⁵(x)
 //│     else
 //│       set tmp = +⁰(x, 1);
 //│       set x = tmp;
 //│       return x
 //│   end
 //│ };
-//│ return f⁹(0)
+//│ return f⁸(0)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 1
 
@@ -412,25 +412,25 @@ fun f(x) =
     set y = 2
     [g, g]
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let g¹⁰, f¹⁰, g$²;
+//│ let g, g$;
 //│ @inline
-//│ define g$² as fun g$³(y)() {
-//│   return g¹¹(y)
+//│ define g$ as fun g$¹(y)() {
+//│   return g⁶(y)
 //│ };
-//│ define g¹⁰ as fun g¹¹(y) {
+//│ define g as fun g⁶(y) {
 //│   return y
 //│ };
-//│ define f¹⁰ as fun f¹¹(x) {
+//│ define f⁹ as fun f¹⁰(x) {
 //│   let y, scrut, g$here;
 //│   set scrut = <⁰(x, 0);
 //│   match scrut
 //│     true =>
 //│       set y = 1;
-//│       set g$here = g$³(y);
+//│       set g$here = g$¹(y);
 //│       return [g$here, g$here]
 //│     else
 //│       set y = 2;
-//│       set g$here = g$³(y);
+//│       set g$here = g$¹(y);
 //│       return [g$here, g$here]
 //│   end
 //│ };
@@ -444,28 +444,28 @@ fun f(x) =
   set x += 1
   [a, g]
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let g¹², f¹², Capture$f³, g$⁴;
+//│ let g, Capture$f, g$;
 //│ @inline
-//│ define g$⁴ as fun g$⁵(f$cap)() {
-//│   return g¹³(f$cap)
+//│ define g$ as fun g$²(f$cap)() {
+//│   return g⁷(f$cap)
 //│ };
-//│ define g¹² as fun g¹³(f$cap) {
+//│ define g as fun g⁷(f$cap) {
 //│   return f$cap.x$0⁰
 //│ };
-//│ define Capture$f³ as class Capture$f⁵ {
-//│   constructor Capture$f⁴(x$0) {
+//│ define Capture$f as class Capture$f³ {
+//│   constructor Capture$f²(x$0) {
 //│     define x$0¹ as val x$0⁰ = x$0;
 //│     end
 //│   }
 //│ };
-//│ define f¹² as fun f¹³(x) {
+//│ define f¹¹ as fun f¹²(x) {
 //│   let a, tmp, f$cap, g$here;
-//│   set f$cap = new mut Capture$f⁵(x);
-//│   set g$here = g$⁵(f$cap);
+//│   set f$cap = new mut Capture$f³(x);
+//│   set g$here = g$²(f$cap);
 //│   set a = g$here;
 //│   set tmp = +⁰(f$cap.x$0⁰, 1);
 //│   set f$cap.x$0⁰ = tmp;
-//│   set g$here = g$⁵(f$cap);
+//│   set g$here = g$²(f$cap);
 //│   return [a, g$here]
 //│ };
 //│ end
@@ -553,3 +553,26 @@ fun f =
   A(h)
 f.foo
 //│ = 2
+
+// Val defns
+
+:expect 0
+:noOpt
+:lift
+fun f =
+  val y = 0
+  fun g =
+    val z = y
+    z
+  g
+f
+//│ = 0
+
+:expect 0
+:noOpt
+:lift
+fun f =
+  val y = () => 0
+  y()
+f
+//│ = 0

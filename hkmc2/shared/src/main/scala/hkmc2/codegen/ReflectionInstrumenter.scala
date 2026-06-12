@@ -7,7 +7,7 @@ import hkmc2.Message.MessageContext
 import scala.collection.mutable.HashMap
 import scala.util.chaining.*
 
-import mlscript.utils.*, shorthands.*
+import hkmc2.utils.*, shorthands.*
 
 import semantics.*
 import semantics.Elaborator.{State, Ctx, ctx}
@@ -77,10 +77,10 @@ class ReflectionInstrumenter(using State, Raise, Ctx) extends BlockTransformer(S
     assign(Tuple(false, elems.map(asArg)), symName)(k)
 
   def ctor(cls: Path, args: Ls[ArgWrappable], symName: Str = "tmp")(k: Path => Block): Block =
-    assign(Instantiate(false, cls, Ls(args.map(asArg))), symName)(k)
+    assign(Instantiate(false, cls, Ls(args.map(asArg)))(InstantiateMetadata.empty), symName)(k)
 
   def call(fun: Path, args: Ls[ArgWrappable], isMlsFun: Bool = true, symName: Str = "tmp")(k: Path => Block): Block =
-    assign(Call(fun, args.map(asArg) ne_:: Nil)(isMlsFun, false, false), symName)(k)
+    assign(Call(fun, args.map(asArg) ne_:: Nil)(CallMetadata(isMlsFun, false, Nil)), symName)(k)
 
   // helpers for constructing Block IR
 
@@ -301,7 +301,7 @@ class ReflectionInstrumenter(using State, Raise, Ctx) extends BlockTransformer(S
       transformSymbol(x): (xSym, ctx) =>
         blockCtor("ValueSimpleRef", Ls(xSym)): xStaged =>
           given Context = x match
-            case _: NoSymbol => ctx
+            case NoSymbol => ctx
             case x: ValueSymbol => ctx.addCache(x.asPath, xStaged)
           transformResult(r): (y, ctx) =>
             transformBlock(b)(using ctx): (z, ctx) =>
@@ -509,7 +509,7 @@ class ReflectionInstrumenter(using State, Raise, Ctx) extends BlockTransformer(S
       
       def replaceSuper(parentPath: Path) = new BlockTransformer(SymbolSubst.Id):
         override def applyResult(r: Result)(k: Result => Block) = super.applyResult(r):
-          case Call(Value.SimpleRef(sym: BuiltinSymbol), args) if sym.nme == "super" => k(Call(parentPath, args)(true, false, false))
+          case Call(Value.SimpleRef(sym: BuiltinSymbol), args) if sym.nme == "super" => k(Call(parentPath, args)(CallMetadata.defaultMlsFun))
           case r => k(r)
       val preCtor = defn.parentPath match
         case S(parent) => replaceSuper(parent).applyBlock(defn.preCtor)

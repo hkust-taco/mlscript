@@ -7,7 +7,7 @@ fun foo() =
   let x = hide(42)
   x
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let foo⁰; define foo⁰ as fun foo¹() { return Predef⁰.hide⁰(42) }; end
+//│ define foo⁰ as fun foo¹() { return Predef⁰.hide⁰(42) }; end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 // * The call should NOT be moved into the conditional, here, as it is impure
@@ -19,7 +19,6 @@ fun foo() =
   else
     0
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let foo²;
 //│ define foo² as fun foo³() {
 //│   let x, scrut;
 //│   set x = Predef⁰.hide⁰(42);
@@ -48,7 +47,6 @@ fun foo() =
   else
     0
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let foo⁴;
 //│ define foo⁴ as fun foo⁵() {
 //│   let scrut;
 //│   do Predef⁰.print⁰("Hello");
@@ -70,7 +68,7 @@ fun foo() =
   let y = bar(42)
   x
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let foo⁶; define foo⁶ as fun foo⁷() { return Predef⁰.hide⁰(42) }; end
+//│ define foo⁶ as fun foo⁷() { return Predef⁰.hide⁰(42) }; end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 
@@ -81,7 +79,7 @@ fun main =
   let x
   x = const(x)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let main⁰; define main⁰ as fun main¹() { let x; set x = const⁰(x); return runtime⁰.Unit⁰ }; end
+//│ define main⁰ as fun main¹() { return runtime⁰.Unit⁰ }; end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 

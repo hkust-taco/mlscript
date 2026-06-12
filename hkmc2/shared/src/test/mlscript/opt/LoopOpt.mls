@@ -72,7 +72,6 @@ fun loopBackPost(flag) =
     set flag = false
   x
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let loopBackPost⁰;
 //│ define loopBackPost⁰ as fun loopBackPost¹(flag) {
 //│   let x;
 //│   set x = 1;
@@ -106,7 +105,6 @@ fun loopElseReturn(flag) =
       set flag = false
     else return x
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let loopElseReturn⁰;
 //│ define loopElseReturn⁰ as fun loopElseReturn¹(flag) {
 //│   let x;
 //│   set x = 1;
@@ -140,7 +138,6 @@ fun loopReturnDoesNotPolluteExit(flag) =
     return x
   x
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let loopReturnDoesNotPolluteExit⁰;
 //│ define loopReturnDoesNotPolluteExit⁰ as fun loopReturnDoesNotPolluteExit¹(flag) {
 //│   let x;
 //│   set x = 1;
@@ -156,7 +153,6 @@ fun loopReturnDoesNotPolluteExit(flag) =
 //│ };
 //│ end
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let loopReturnDoesNotPolluteExit⁰;
 //│ define loopReturnDoesNotPolluteExit⁰ as fun loopReturnDoesNotPolluteExit¹(flag) {
 //│   match flag
 //│     true =>

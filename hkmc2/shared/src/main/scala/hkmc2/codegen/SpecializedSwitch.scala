@@ -1,7 +1,7 @@
 package hkmc2
 package codegen
 
-import mlscript.utils.*, shorthands.*
+import hkmc2.utils.*, shorthands.*
 import utils.*
 
 import hkmc2.codegen.*
@@ -150,7 +150,7 @@ private object PostCondAnalysisImpl extends CachedAnalysis[Block, PostCondRes]:
     case Scoped(syms, body) => analyze(body)
     case Begin(sub, rest) => analyze(sub) >=> analyze(rest)
     case TryBlock(sub, finallyDo, rest) => analyze(sub) >=> analyze(finallyDo) >=> analyze(rest)
-    case Assign(_: NoSymbol, rhs, rest) => res(N, rhs, rest)
+    case Assign(NoSymbol, rhs, rest) => res(N, rhs, rest)
     case Assign(lhs: ValueSymbol, rhs, rest) => res(S(lhs), rhs, rest)
     case AssignField(path, _, rhs, rest) => res(N, rhs, rest)
     case AssignDynField(lhs, fld, arrayIdx, rhs, rest) => res(N, rhs, rest)

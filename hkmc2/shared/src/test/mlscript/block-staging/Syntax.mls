@@ -20,30 +20,28 @@ staged fun f() = 0
 :staging // TODO: this is only used to import Block, the printout is undesired
 staged module A
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let A⁰, symbolMap⁰, tmp, tmp1, tmp2;
+//│ let symbolMap, tmp, tmp1, tmp2;
 //│ set tmp = new globalThis⁰.Map﹖();
 //│ set tmp1 = new globalThis⁰.Map﹖();
 //│ set tmp2 = new Block⁰.SymbolMap﹖(tmp, tmp1);
-//│ set symbolMap⁰ = tmp2;
+//│ set symbolMap = tmp2;
 //│ define A⁰ as class A¹
 //│ staged module A² {
 //│   constructor {
 //│     let tmp3, tmp4, tmp5, tmp6, sym, tmp7, tmp8, tmp9, tmp10, tmp11, tmp12;
-//│     begin
-//│       set tmp5 = [];
-//│       set tmp6 = new globalThis⁰.Map﹖(tmp5);
-//│       set sym = Block⁰.ModuleSymbol﹖("A", A².this);
-//│       set tmp7 = symbolMap⁰.checkMap﹖("moduleMap", A².this, sym);
-//│       set tmp8 = new SpecializeHelpers⁰.FunCache﹖(tmp7, tmp6);
-//│       define cache$A⁰ as val cache$A¹ = tmp8;
-//│       set tmp3 = [];
-//│       set tmp4 = new globalThis⁰.Map﹖(tmp3);
-//│       define generatorMap$A⁰ as val generatorMap$A¹ = tmp4;
-//│       end;
+//│     set tmp5 = [];
+//│     set tmp6 = new globalThis⁰.Map﹖(tmp5);
+//│     set sym = Block⁰.ModuleSymbol﹖("A", A².this);
+//│     set tmp7 = symbolMap.checkMap﹖("moduleMap", A².this, sym);
+//│     set tmp8 = new SpecializeHelpers⁰.FunCache﹖(tmp7, tmp6);
+//│     define cache$A⁰ as val cache$A¹ = tmp8;
+//│     set tmp3 = [];
+//│     set tmp4 = new globalThis⁰.Map﹖(tmp3);
+//│     define generatorMap$A⁰ as val generatorMap$A¹ = tmp4;
 //│     set tmp9 = A².this.cache$A﹖.toString﹖();
 //│     set tmp10 = globalThis⁰.console﹖.log﹖(tmp9);
 //│     set tmp11 = globalThis⁰.console﹖.log﹖(A².this.generatorMap$A﹖);
-//│     set tmp12 = globalThis⁰.console﹖.log﹖(symbolMap⁰);
+//│     set tmp12 = globalThis⁰.console﹖.log﹖(symbolMap);
 //│     end
 //│   }
 //│   method ctor$_instr⁰ = fun ctor$_instr¹() {

@@ -11,7 +11,7 @@ f()
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let f; f = function f() { return 42 }; return 42
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let f⁰; define f⁰ as fun f¹() { return 42 }; return 42
+//│ define f⁰ as fun f¹() { return 42 }; return 42
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 42
 
@@ -61,10 +61,10 @@ f()
 //│ });
 //│ return 42
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let f², A⁰;
+//│ let A;
 //│ define f² as fun f³() {
-//│   let A;
-//│   define A as object A¹ {
+//│   let A1;
+//│   define A1 as object A⁰ {
 //│     constructor() {
 //│       do Predef⁰.print⁰("Hello");
 //│       end
@@ -72,7 +72,7 @@ f()
 //│   };
 //│   return 42
 //│ };
-//│ define A⁰ as object A² { constructor() { do Predef⁰.print⁰("Hello"); end } };
+//│ define A as object A¹ { constructor() { do Predef⁰.print⁰("Hello"); end } };
 //│ return 42
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > Hello

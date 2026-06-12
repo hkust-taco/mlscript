@@ -6,7 +6,7 @@ import scala.collection.mutable
 import scala.util.boundary
 import sourcecode.{ Line, FileName, Name }
 
-import mlscript.utils.*, shorthands.*
+import hkmc2.utils.*, shorthands.*
 import hkmc2.utils.*
 import hkmc2.utils.SymbolSubst
 import hkmc2.Message.MessageContext
@@ -69,7 +69,7 @@ object HandlerLowering:
         resumeInfo.argLists ++:
         (intLit(restoreList.length) ::
         restoreList.map(_.asPath))
-      ).map(_.asArg) ne_:: Nil)(true, true, false))
+      ).map(_.asArg) ne_:: Nil)(CallMetadata.mlsFunWithEffect))
   
   // argLists: length-encoded argument list used for resumption.
   // currentLocals: All locals to be saved and reloaded, this cannot include any variables in outer scopes
@@ -84,6 +84,12 @@ object HandlerLowering:
     debugNme: Str,
     debugInfoPath: Path,
   )
+
+  object EffectfulResult:
+    def unapply(r: Result)(using Config): Bool = r match
+      case c: Call if c.metadata.mayRaiseEffects => true
+      case _: Instantiate if config.checkInstantiateEffect => true
+      case _ => false
   
   type StateId = BigInt
 
@@ -112,18 +118,18 @@ class HandlerPaths(using Elaborator.State):
 
 type StackSafetyMap = collection.Map[FnOrCls, (Int, Block)]
 
-class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise, Elaborator.State, Elaborator.Ctx):
+class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise, Elaborator.State, Elaborator.Ctx, Config):
   
   private def freshTmp(dbgNme: Str = "tmp") = new TempSymbol(N, dbgNme)
   private def freshLabel(nme: Str) = new LabelSymbol(N, nme)
   
   private def rtThrowMsg(msg: Str) = Throw(
     Instantiate(mut = false, State.globalThisSymbol.asThis.selN(Tree.Ident("Error")),
-    (Value.Lit(Tree.StrLit(msg)).asArg :: Nil) :: Nil)
+    (Value.Lit(Tree.StrLit(msg)).asArg :: Nil) :: Nil)(InstantiateMetadata.empty)
   )
   
   object PureCall:
-    def apply(fun: Path, args: List[Path]) = Call(fun, args.map(Arg(N, _)) ne_:: Nil)(true, false, false)
+    def apply(fun: Path, args: List[Path]) = Call(fun, args.map(Arg(N, _)) ne_:: Nil)(CallMetadata.defaultMlsFun)
     def unapply(res: Result) = res match
       case Call(fun, args :: Nil) => args.foldRight[Opt[List[Path]]](S(Nil)): (arg, acc) =>
           acc.flatMap: acc =>
@@ -172,12 +178,6 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
     containsCall: Bool,
     containsError: Bool
   )
-
-  object EffectfulResult:
-    def unapply(r: Result) = r match
-      case c: Call if c.mayRaiseEffects => S(r)
-      case _: Instantiate if opt.checkInstantiateEffect => S(r)
-      case _ => N
   
   private def partitionBlock(blk: Block): PartitionedBlock =
     val result = mutable.HashMap.empty[StateId, BlockPartition]
@@ -230,7 +230,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
             b // Prevents the recursion into applyResult
           case _ => super.applyBlock(b)
         override def applyResult(r: Result)(k: Result => Block) = r match
-          case EffectfulResult(r) =>
+          case r @ EffectfulResult() =>
             containsCall = true
             doNewEffectPartition(r, k(paths.resumeValue))
           case _ => super.applyResult(r)(k)
@@ -390,7 +390,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
             applyResult(rhs)
             lhs match
             case lhs: LocalVarSymbol => assignToSym(lhs)
-            case _: NoSymbol =>
+            case NoSymbol =>
             applyBlock(rest)
           case Define(defn: ValDefn, rest) =>
             applyPath(defn.rhs)
@@ -555,9 +555,9 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
     val preTransform = new BlockTransformer(SymbolSubst.Id):
       override def applyResult(r: Result)(k: Result => Block): Block = r match
         case Call(Value.MemberRef(sym, _), args) if sym is Elaborator.ctx.builtins.runtime.suspend =>
-          k(Call(paths.mkEffectPath, args)(true, true, false))
+          k(Call(paths.mkEffectPath, args)(CallMetadata.mlsFunWithEffect))
         case Call(Value.MemberRef(sym, _), args) if sym is Elaborator.ctx.builtins.runtime.handle_suspension =>
-          k(Call(paths.enterHandleBlockPath, args)(true, true, false))
+          k(Call(paths.enterHandleBlockPath, args)(CallMetadata.mlsFunWithEffect))
         case _ => super.applyResult(r)(k)
       override def applyDefn(defn: Defn)(k: Defn => Block): Block = defn match
         case fun: FunDefn =>
@@ -598,12 +598,12 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
         case _ => super.applyDefn(defn)(k)
     val b = preTransform.applyBlock(blk)
     if h.inCtor then
-      return translateIllegalEffectCtx(b, Call(paths.illegalEffectPath, (Value.Lit(Tree.StrLit("in a constructor")).asArg :: Nil) ne_:: Nil)(true, true, false))
+      return translateIllegalEffectCtx(b, Call.raw(paths.illegalEffectPath, (Value.Lit(Tree.StrLit("in a constructor")).asArg :: Nil) ne_:: Nil)(CallMetadata.mlsFunWithEffect))
     if h.inTopLevel then
-      return translateIllegalEffectCtx(b, Call(paths.topLevelEffectPath, (Value.Lit(Tree.BoolLit(opt.debug)).asArg :: Nil) ne_:: Nil)(true, false, false))
+      return translateIllegalEffectCtx(b, Call.raw(paths.topLevelEffectPath, (Value.Lit(Tree.BoolLit(opt.debug)).asArg :: Nil) ne_:: Nil)(CallMetadata.defaultMlsFun))
     val ctx = h.asInstanceOf[HandlerCtx.FunctionLike].ctx
     if ctx.inGetter then
-      return translateIllegalEffectCtx(b, Call(paths.illegalEffectPath, (Value.Lit(Tree.StrLit("in a getter")).asArg :: Nil) ne_:: Nil)(true, false, false))
+      return translateIllegalEffectCtx(b, Call.raw(paths.illegalEffectPath, (Value.Lit(Tree.StrLit("in a getter")).asArg :: Nil) ne_:: Nil)(CallMetadata.defaultMlsFun))
     given FunctionCtx = ctx
     val parts = partitionBlock(b)
     stackSafetyMap += ctx.resumeInfo.currentStackSafetySym ->
@@ -694,7 +694,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
     def getSaved(off: BigInt): (Block => Block, Path) =
       if off == 0 then
         return (id, DynSelect(paths.runtimePath.selSN("resumeArr"), paths.runtimePath.selSN("resumeIdx"), true))
-      val addOne = Assign(getSavedTmp, Call(State.builtinOpsMap("+").asSimpleRef, (paths.runtimePath.selSN("resumeIdx").asArg :: intLit(off).asArg :: Nil) ne_:: Nil)(false, false, false), _)
+      val addOne = Assign(getSavedTmp, Call(State.builtinOpsMap("+").asSimpleRef, (paths.runtimePath.selSN("resumeIdx").asArg :: intLit(off).asArg :: Nil) ne_:: Nil)(CallMetadata.defaultFun), _)
       (addOne, DynSelect(paths.runtimePath.selSN("resumeArr"), getSavedTmp.asSimpleRef, true))
 
     val resumeArrIndexed = DynSelect(paths.runtimePath.selSN("resumeArr"), getSavedTmp.asSimpleRef, true)
@@ -704,7 +704,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
         .scopedVars(Set(getSavedTmp))
     val restoreVars = vars.zipWithIndex.foldLeft(preRestore):
       case (builder, (local, idx)) => builder
-        .assign(getSavedTmp, if idx == 0 then paths.resumeIdx else Call(plus, (getSavedTmp.asSimpleRef.asArg :: intLit(1).asArg :: Nil) ne_:: Nil)(false, false, false))
+        .assign(getSavedTmp, if idx == 0 then paths.resumeIdx else Call(plus, (getSavedTmp.asSimpleRef.asArg :: intLit(1).asArg :: Nil) ne_:: Nil)(CallMetadata.defaultFun))
         .assign(local, resumeArrIndexed)
 
     Scoped(
@@ -732,12 +732,12 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
         .rest(rst)
     val topLevelTransform = new BlockTransformerShallow(SymbolSubst.Id):
       override def applyBlock(b: Block) = b match
-        case Assign(lhs, EffectfulResult(r), rest) =>
+        case Assign(lhs, r @ EffectfulResult(), rest) =>
           // Optimization to reuse lhs instead of fresh local
           effectCheck(lhs, r, applyBlock(rest))
         case _ => super.applyBlock(b)
       override def applyResult(r: Result)(k: Result => Block) = r match
-        case EffectfulResult(r) =>
+        case r @ EffectfulResult() =>
           // Fallback case, this may lead to unnecessary assignments if it is assign-like
           val l = freshTmp()
           Scoped(Set(l), effectCheck(l, r, k(l.asSimpleRef)))
@@ -750,7 +750,10 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
     val ctx = HandlerCtx.TopLevel
     val transformed = translateBlock(preTransformed, ctx, Set.empty)
     val blk = blockBuilder
-      .assign(State.noSymbol, Call(paths.resetEffects, Nil ne_:: Nil)(true, false, false))
+      .staticif(
+        !opt.doNotInstrumentTopLevelModCtor,
+        _.assign(NoSymbol, Call(paths.resetEffects, Nil ne_:: Nil)(CallMetadata.defaultMlsFun))
+      )
       .rest(transformed)
     (blk, stackSafetyMap)
     

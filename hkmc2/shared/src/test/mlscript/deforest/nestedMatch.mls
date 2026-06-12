@@ -219,8 +219,8 @@ fun c(x, y) = if x is
     let t = if y is
       A then 2
     t + x.AA#x
-let y = A
-c(AA(2), y)
+let y = A in
+  c(AA(2), y)
 //│ deforest > >>> fusing >>>
 //│ deforest > AA⁰(2) ->
 //│ deforest > 	match: x¹¹
@@ -229,7 +229,6 @@ c(AA(2), y)
 //│ deforest > 	match: y¹
 //│ deforest > <<< fusing <<<
 //│ = 4
-//│ y = fun
 
 
 :expect 9
@@ -239,8 +238,8 @@ fun c(x, y) = if x is
       A then 2 + x.AA#x
     t + x.AA#x
 fun c2(y) = if y is A then 3
-let y = A
-c(AA(2), y) + c2(y)
+let y = A in
+  c(AA(2), y) + c2(y)
 //│ deforest > >>> fusing >>>
 //│ deforest > AA⁰(2) ->
 //│ deforest > 	match: x¹²
@@ -248,7 +247,6 @@ c(AA(2), y) + c2(y)
 //│ deforest > 	fields: x¹².x¹
 //│ deforest > <<< fusing <<<
 //│ = 9
-//│ y = A
 
 
 // need to include computations of `rest` from more than one levels of parent matches
@@ -503,11 +501,23 @@ fun f(x, y, z, k) =
         AA then m + k
 f(AA(3), 3, true, 10) + f(AA(5), 4, false, 20)
 //│ deforest > >>> fusing >>>
+//│ deforest > BB⁰(tmp¹⁰) ->
+//│ deforest > 	match: tmp¹¹
+//│ deforest > 	fields: tmp¹¹.x²
+//│ deforest > BB⁰(tmp¹²) ->
+//│ deforest > 	match: tmp¹¹
+//│ deforest > 	fields: tmp¹¹.x²
 //│ deforest > AA⁰(2) ->
 //│ deforest > 	match: scrut³
 //│ deforest > 	fields: scrut³.x¹
 //│ deforest > AA⁰(3) ->
 //│ deforest > 	match: scrut⁴
+//│ deforest > BB⁰(tmp¹⁰) ->
+//│ deforest > 	match: tmp¹¹
+//│ deforest > 	fields: tmp¹¹.x²
+//│ deforest > BB⁰(tmp¹²) ->
+//│ deforest > 	match: tmp¹¹
+//│ deforest > 	fields: tmp¹¹.x²
 //│ deforest > AA⁰(2) ->
 //│ deforest > 	match: scrut³
 //│ deforest > 	fields: scrut³.x¹
@@ -515,6 +525,12 @@ f(AA(3), 3, true, 10) + f(AA(5), 4, false, 20)
 //│ deforest > 	match: scrut⁴
 //│ deforest > AA⁰(5) ->
 //│ deforest > 	match: x²⁰
+//│ deforest > BB⁰(tmp¹⁰) ->
+//│ deforest > 	match: tmp¹¹
+//│ deforest > 	fields: tmp¹¹.x²
+//│ deforest > BB⁰(tmp¹²) ->
+//│ deforest > 	match: tmp¹¹
+//│ deforest > 	fields: tmp¹¹.x²
 //│ deforest > AA⁰(2) ->
 //│ deforest > 	match: scrut³
 //│ deforest > 	fields: scrut³.x¹
@@ -583,11 +599,11 @@ fun sum(ls) = if ls is
   h :: t then h + sum(t)
 sum(prodDouble(4))
 //│ deforest > >>> fusing >>>
-//│ deforest > Cons⁰(n⁰, tmp¹⁰) ->
+//│ deforest > Cons⁰(n⁰, tmp¹³) ->
 //│ deforest > 	match: ls⁰
 //│ deforest > 	fields: ls⁰.h⁰
 //│ deforest > 	fields: ls⁰.t⁰
-//│ deforest > Cons⁰(n⁰, tmp¹¹) ->
+//│ deforest > Cons⁰(n⁰, tmp¹⁴) ->
 //│ deforest > 	match: ls⁰
 //│ deforest > 	fields: ls⁰.h⁰
 //│ deforest > 	fields: ls⁰.t⁰

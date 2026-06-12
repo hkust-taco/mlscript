@@ -15,38 +15,35 @@ data class (::) Cons(h, t)
 //│ deforest > <<< fusing <<<
 
 :sir
-let lsit = [2, 1]
-let useless = if lsit is [a, b] then 0
+let lsit = [2, 1] in
+  let useless = if lsit is [a, b] then 0
 //│ deforest > >>> fusing >>>
 //│ deforest > [2, 1] ->
 //│ deforest > 	match: lsit⁰
-//│ deforest > 	fields: runtime⁰.Tuple﹖.get⁰(lsit⁰, 0)
-//│ deforest > 	fields: runtime⁰.Tuple﹖.get⁰(lsit⁰, 1)
+//│ deforest > 	fields: runtime⁰.Tuple⁰.get⁰(lsit⁰, 0)
+//│ deforest > 	fields: runtime⁰.Tuple⁰.get⁰(lsit⁰, 1)
 //│ deforest > <<< fusing <<<
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let lsit⁰, useless⁰, a⁰, b⁰, element1$, element0$, tmp, $lsit_tup2⁰, $lsit_rest⁰, tup2_0, tup2_1;
+//│ let lsit, useless, a, b, element1$, element0$, tmp, $lsit_tup2, $lsit_rest, tup2_0, tup2_1;
 //│ @affine(1) @private
-//│ define $lsit_tup2⁰ as fun $lsit_tup2¹(tup2_01, tup2_11)() {
+//│ define $lsit_tup2 as fun $lsit_tup2⁰(tup2_01, tup2_11)() {
 //│   set element0$ = tup2_01;
 //│   set element1$ = tup2_11;
-//│   set b⁰ = element1$;
-//│   set a⁰ = element0$;
+//│   set b = element1$;
+//│   set a = element0$;
 //│   set tmp = 0;
-//│   return $lsit_rest¹()
+//│   set useless = tmp;
+//│   return runtime⁰.Unit⁰
 //│ };
 //│ @private
-//│ define $lsit_rest⁰ as fun $lsit_rest¹() {
-//│   set useless⁰ = tmp;
+//│ define $lsit_rest as fun $lsit_rest⁰() {
 //│   return null
 //│ };
 //│ set tup2_0 = 2;
 //│ set tup2_1 = 1;
-//│ set lsit⁰ = $lsit_tup2¹(tup2_0, tup2_1);
-//│ return lsit⁰()
+//│ set lsit = $lsit_tup2⁰(tup2_0, tup2_1);
+//│ return lsit()
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
-//│ = null
-//│ lsit = fun
-//│ useless = 0
 
 :expect O
 fun p() = X(O)
@@ -56,7 +53,7 @@ c(p())
 //│ deforest > >>> fusing >>>
 //│ deforest > X⁰(O⁰) ->
 //│ deforest > 	match: x⁰
-//│ deforest > 	fields: x⁰.a¹
+//│ deforest > 	fields: x⁰.a⁰
 //│ deforest > <<< fusing <<<
 //│ = O
 
@@ -70,44 +67,44 @@ f(p())
 //│ deforest > >>> fusing >>>
 //│ deforest > X⁰(tmp⁰) ->
 //│ deforest > 	match: x¹
-//│ deforest > 	fields: x¹.a¹
+//│ deforest > 	fields: x¹.a⁰
 //│ deforest > Y⁰(O⁰) ->
 //│ deforest > 	match: arg$X$0$⁰
-//│ deforest > 	fields: arg$X$0$⁰.b¹
+//│ deforest > 	fields: arg$X$0$⁰.b⁰
 //│ deforest > <<< fusing <<<
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let p⁰, f⁰, tmp, p_8$p⁰, f_10$f⁰, f_10$x_X⁰, f_10$x_rest⁰, f_10$arg$X$0$_Y⁰, f_10$arg$X$0$_rest⁰;
+//│ let tmp, p_8$p, f_10$f, f_10$x_X, f_10$x_rest, f_10$arg$X$0$_Y, f_10$arg$X$0$_rest;
 //│ @private
-//│ define p_8$p⁰ as fun p_8$p¹()(eta$0$0, eta$0$1, eta$0$2) {
+//│ define p_8$p as fun p_8$p⁰()(eta$0$0, eta$0$1, eta$0$2) {
 //│   let tmp1, Y_b, X_a;
 //│   set Y_b = O⁰;
-//│   set tmp1 = f_10$arg$X$0$_Y¹(Y_b);
+//│   set tmp1 = f_10$arg$X$0$_Y⁰(Y_b);
 //│   set X_a = tmp1;
-//│   return f_10$x_X¹(X_a)(eta$0$0, eta$0$1, eta$0$2)
+//│   return f_10$x_X⁰(X_a)(eta$0$0, eta$0$1, eta$0$2)
 //│ };
 //│ @private
-//│ define f_10$f⁰ as fun f_10$f¹(x) {
+//│ define f_10$f as fun f_10$f⁰(x) {
 //│   let y, arg$X$0$, arg$Y$0$;
 //│   return x(y, arg$X$0$, arg$Y$0$)
 //│ };
 //│ @affine(1) @private
-//│ define f_10$x_X⁰ as fun f_10$x_X¹(X_a)(fv_y, fv_arg$X$0$, fv_arg$Y$0$) {
+//│ define f_10$x_X as fun f_10$x_X⁰(X_a)(fv_y, fv_arg$X$0$, fv_arg$Y$0$) {
 //│   set fv_arg$X$0$ = X_a;
 //│   return fv_arg$X$0$(fv_y, fv_arg$Y$0$)
 //│ };
 //│ @affine(1) @private
-//│ define f_10$arg$X$0$_Y⁰ as fun f_10$arg$X$0$_Y¹(Y_b)(fv_y, fv_arg$Y$0$) {
+//│ define f_10$arg$X$0$_Y as fun f_10$arg$X$0$_Y⁰(Y_b)(fv_y, fv_arg$Y$0$) {
 //│   set fv_arg$Y$0$ = Y_b;
 //│   set fv_y = fv_arg$Y$0$;
 //│   return fv_y
 //│ };
 //│ @private
-//│ define f_10$x_rest⁰ as fun f_10$x_rest¹() {
+//│ define f_10$x_rest as fun f_10$x_rest⁰() {
 //│   return null
 //│ };
 //│ @private
-//│ define f_10$arg$X$0$_rest⁰ as fun f_10$arg$X$0$_rest¹() {
-//│   return f_10$x_rest¹()
+//│ define f_10$arg$X$0$_rest as fun f_10$arg$X$0$_rest⁰() {
+//│   return f_10$x_rest⁰()
 //│ };
 //│ define p⁰ as fun p¹() {
 //│   let tmp1;
@@ -118,10 +115,10 @@ f(p())
 //│   let y, arg$X$0$, arg$Y$0$;
 //│   match x
 //│     X¹ =>
-//│       set arg$X$0$ = x.a¹;
+//│       set arg$X$0$ = x.a⁰;
 //│       match arg$X$0$
 //│         Y¹ =>
-//│           set arg$Y$0$ = arg$X$0$.b¹;
+//│           set arg$Y$0$ = arg$X$0$.b⁰;
 //│           set y = arg$Y$0$;
 //│           return y
 //│         else
@@ -131,8 +128,8 @@ f(p())
 //│       throw new globalThis⁰.Error⁰("match error")
 //│   end
 //│ };
-//│ set tmp = p_8$p¹();
-//│ return f_10$f¹(tmp)
+//│ set tmp = p_8$p⁰();
+//│ return f_10$f⁰(tmp)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = O
 
@@ -148,10 +145,10 @@ f(p(), 2)
 //│ deforest > >>> fusing >>>
 //│ deforest > X⁰(tmp¹) ->
 //│ deforest > 	match: x²
-//│ deforest > 	fields: x².a¹
+//│ deforest > 	fields: x².a⁰
 //│ deforest > Y⁰(O⁰) ->
-//│ deforest > 	match: a²
-//│ deforest > 	fields: a².b¹
+//│ deforest > 	match: a¹
+//│ deforest > 	fields: a¹.b⁰
 //│ deforest > <<< fusing <<<
 //│ = 14
 
@@ -169,7 +166,7 @@ f(X(1), Y(2), 3)
 //│ deforest > >>> fusing >>>
 //│ deforest > X⁰(1) ->
 //│ deforest > 	match: x³
-//│ deforest > 	fields: x³.a¹
+//│ deforest > 	fields: x³.a⁰
 //│ deforest > <<< fusing <<<
 //│ = 16
 
@@ -179,18 +176,18 @@ fun c(x, d) = if x is
   X(a) then c(X(a), d)
 () => c(X(3), 2)
 //│ deforest > >>> fusing >>>
-//│ deforest > X⁰(a³) ->
+//│ deforest > X⁰(a²) ->
 //│ deforest > 	match: x⁴
-//│ deforest > 	fields: x⁴.a¹
+//│ deforest > 	fields: x⁴.a⁰
 //│ deforest > X⁰(3) ->
 //│ deforest > 	match: x⁴
-//│ deforest > 	fields: x⁴.a¹
-//│ deforest > X⁰(a³) ->
+//│ deforest > 	fields: x⁴.a⁰
+//│ deforest > X⁰(a²) ->
 //│ deforest > 	match: x⁴
-//│ deforest > 	fields: x⁴.a¹
+//│ deforest > 	fields: x⁴.a⁰
 //│ deforest > X⁰(3) ->
 //│ deforest > 	match: x⁴
-//│ deforest > 	fields: x⁴.a¹
+//│ deforest > 	fields: x⁴.a⁰
 //│ deforest > <<< fusing <<<
 //│ = fun lambda_7$lambda
 
@@ -216,26 +213,26 @@ if [1, 2] is
 //│ deforest > >>> fusing >>>
 //│ deforest > [1, 2] ->
 //│ deforest > 	match: scrut⁰
-//│ deforest > 	fields: runtime⁰.Tuple﹖.get⁰(scrut⁰, 0)
-//│ deforest > 	fields: runtime⁰.Tuple﹖.get⁰(scrut⁰, 1)
+//│ deforest > 	fields: runtime⁰.Tuple⁰.get⁰(scrut⁰, 0)
+//│ deforest > 	fields: runtime⁰.Tuple⁰.get⁰(scrut⁰, 1)
 //│ deforest > <<< fusing <<<
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let scrut, a⁴, b², element1$, element0$, $scrut_tup2⁰, $scrut_rest⁰, tup2_0, tup2_1;
+//│ let scrut, a, b, element1$, element0$, $scrut_tup2, $scrut_rest, tup2_0, tup2_1;
 //│ @affine(1) @private
-//│ define $scrut_tup2⁰ as fun $scrut_tup2¹(tup2_01, tup2_11)() {
+//│ define $scrut_tup2 as fun $scrut_tup2⁰(tup2_01, tup2_11)() {
 //│   set element0$ = tup2_01;
 //│   set element1$ = tup2_11;
-//│   set b² = element1$;
-//│   set a⁴ = element0$;
-//│   return +⁰(a⁴, b²)
+//│   set b = element1$;
+//│   set a = element0$;
+//│   return +⁰(a, b)
 //│ };
 //│ @private
-//│ define $scrut_rest⁰ as fun $scrut_rest¹() {
+//│ define $scrut_rest as fun $scrut_rest⁰() {
 //│   return null
 //│ };
 //│ set tup2_0 = 1;
 //│ set tup2_1 = 2;
-//│ set scrut = $scrut_tup2¹(tup2_0, tup2_1);
+//│ set scrut = $scrut_tup2⁰(tup2_0, tup2_1);
 //│ return scrut()
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 3
@@ -248,8 +245,8 @@ f([1,2])
 //│ deforest > >>> fusing >>>
 //│ deforest > [1, 2] ->
 //│ deforest > 	match: x⁶
-//│ deforest > 	fields: runtime⁰.Tuple﹖.get⁰(x⁶, 0)
-//│ deforest > 	fields: runtime⁰.Tuple﹖.get⁰(x⁶, 1)
+//│ deforest > 	fields: runtime⁰.Tuple⁰.get⁰(x⁶, 0)
+//│ deforest > 	fields: runtime⁰.Tuple⁰.get⁰(x⁶, 1)
 //│ deforest > <<< fusing <<<
 //│ = 3
 
@@ -362,8 +359,14 @@ f()
 //│ deforest > 	match: scrut³
 //│ deforest > <<< fusing <<<
 //│ = 1
-//│ f = fun f
-//│ x = 1
+//│ f = undefined
+//│ x = undefined
+
+:fixme
+f()
+//│ deforest > >>> fusing >>>
+//│ deforest > <<< fusing <<<
+//│ ═══[RUNTIME ERROR] TypeError: f10 is not a function
 
 
 :expect B(0)

@@ -4,7 +4,7 @@ package flow
 
 import scala.collection.mutable
 
-import mlscript.utils.*, shorthands.*
+import hkmc2.utils.*, shorthands.*
 import utils.TraceLogger
 import Message.MessageContext
 import semantics.*, semantics.Term.*, semantics.AnySelTerm

@@ -17,19 +17,19 @@ f(1, 2).get()
 //│ dead-param-elim > prodfun f#0 @ <root> -> eliminable: {1}
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let C⁰, f⁰, tmp;
-//│ define C⁰ as class C¹ {
+//│ let C, tmp;
+//│ define C as class C⁰ {
 //│   private val used⁰;
 //│   constructor(used) {
-//│     set C¹.this.used⁰ = used;
+//│     set C⁰.this.used⁰ = used;
 //│     end
 //│   }
 //│   method get⁰ = fun get¹() {
-//│     return C¹.this.used⁰
+//│     return C⁰.this.used⁰
 //│   }
 //│ };
 //│ @private
-//│ define f⁰ as fun f¹(used) { return new C¹(used) };
+//│ define f⁰ as fun f¹(used) { return new C⁰(used) };
 //│ set tmp = f¹(1);
 //│ return tmp.get﹖()
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————

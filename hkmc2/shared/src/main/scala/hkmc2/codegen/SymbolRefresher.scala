@@ -3,7 +3,7 @@ package codegen
 
 import scala.collection.mutable.{Map => MutMap, Set => MutSet, Buffer}
 
-import mlscript.utils.*, shorthands.*
+import hkmc2.utils.*, shorthands.*
 import hkmc2.utils.*
 
 import semantics.*
@@ -47,7 +47,9 @@ class SymbolRefresherWalker(mapping: MutMap[Symbol, Symbol])(using State) extend
     assertUpdate(s, new TopLevelSymbol(s.nme))
 
   private def refreshClassCtorSymbol(s: ClassCtorSymbol) =
-    assertUpdate(s, new ClassCtorSymbol(s.k, S(mapping.getOrElse(s.owner.value, s.owner.value).asInstanceOf[ClassSymbol]), s.id))
+    assertUpdate(s, new ClassCtorSymbol(s.k,
+      s.owner.map(o => mapping.getOrElse(o, o).asInstanceOf[InnerSymbol]),
+      mapping.getOrElse(s.associatedCls, s.associatedCls).asInstanceOf[ClassSymbol]))
 
   private def refreshParamList(pl: ParamList) =
     for
@@ -156,7 +158,7 @@ private class SymbolRefresherInternal(m: MutMap[Symbol, Symbol])(using State) ex
   override def applyImportSymbol(s: ImportSymbol): ImportSymbol = m.getOrElse(s, s).asInstanceOf[ImportSymbol]
   
   override def applyAssignLhs(s: Assignable): Assignable = s match
-    case s: NoSymbol => s
+    case NoSymbol => NoSymbol
     case s: LocalVarSymbol => m.getOrElse(s, s).asInstanceOf[LocalVarSymbol]
   
 class SymbolRefresher(m: Map[Symbol, Symbol])(using State) extends SymbolRefresherInternal(MutMap.from(m))

@@ -5,7 +5,7 @@ import scala.collection.mutable
 
 import semantics.*
 import Message.MessageContext
-import mlscript.utils.*, shorthands.*
+import hkmc2.utils.*, shorthands.*
 import utils.*
 import utils.Scope
 

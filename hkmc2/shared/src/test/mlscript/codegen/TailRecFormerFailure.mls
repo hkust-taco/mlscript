@@ -11,7 +11,6 @@ fun go(x) = if x is
   Cons(_, _) then "Z"
   n then go([])
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let go⁰;
 //│ define go⁰ as fun go¹(x) {
 //│   loop loopLabel:
 //│     let n, arg$Cons$0$, arg$Cons$1$, tmp;
@@ -37,7 +36,6 @@ fun go(x) = if x is
   Cons(_, Nil) then "Z"
   n then go([])
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let go²;
 //│ define go² as fun go³(x) {
 //│   loop loopLabel:
 //│     let n, arg$Cons$0$, arg$Cons$1$, tmp, tmp1;
@@ -73,7 +71,6 @@ fun go(x) = if x is
   Cons(_, Nil) then "Z"
   n then go([])
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let go⁴;
 //│ define go⁴ as fun go⁵(x) {
 //│   loop loopLabel:
 //│     let n, arg$Cons$0$, arg$Cons$1$, tmp;

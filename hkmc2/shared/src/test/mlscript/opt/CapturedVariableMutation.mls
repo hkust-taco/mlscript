@@ -12,7 +12,6 @@ in
       set emptyItemCount = 0
       print(emptyItemCount')
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let emptyItemCount⁰;
 //│ set emptyItemCount⁰ = 0;
 //│ set emptyItemCount⁰ = 1;
 //│ match true

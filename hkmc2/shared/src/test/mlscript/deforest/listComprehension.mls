@@ -246,9 +246,6 @@ if A is
 //│ deforest > <<< fusing <<<
 //│ = Cons(2, Cons(3, Cons(4, Nil)))
 
-
-// TODO: fix lifter
-:fixme
 :lift
 :deforest
 fun h() =
@@ -290,50 +287,6 @@ h()
 //│ deforest > 	fields: ls².t⁰
 //│ deforest > Nil⁰ ->
 //│ deforest > 	match: ls²
-//│ deforest > <<< fusing <<<
-//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Cannot resolve overloaded member symbol lscomp2: no principal disambiguation found
-
-// Same but without lifting:
-:deforest
-fun h() =
-  fun lscomp1(ls) = if ls is
-    Nil then Nil
-    x :: xs then
-      fun lscomp2(ls) = if ls is
-        Nil then lscomp1(xs)
-        y :: ys then [x, y] :: lscomp2(ys)
-      lscomp2(1 :: 2 :: 3 :: Nil)
-  lscomp1(1 :: 2 :: 3 :: Nil)
-h()
-//│ deforest > >>> fusing >>>
-//│ deforest > Cons⁰(1, tmp¹⁶) ->
-//│ deforest > 	match: ls³
-//│ deforest > 	fields: ls³.h⁰
-//│ deforest > 	fields: ls³.t⁰
-//│ deforest > Cons⁰(2, tmp¹⁷) ->
-//│ deforest > 	match: ls³
-//│ deforest > 	fields: ls³.h⁰
-//│ deforest > 	fields: ls³.t⁰
-//│ deforest > Cons⁰(3, Nil⁰) ->
-//│ deforest > 	match: ls³
-//│ deforest > 	fields: ls³.h⁰
-//│ deforest > 	fields: ls³.t⁰
-//│ deforest > Nil⁰ ->
-//│ deforest > 	match: ls³
-//│ deforest > Cons⁰(1, tmp¹⁶) ->
-//│ deforest > 	match: ls³
-//│ deforest > 	fields: ls³.h⁰
-//│ deforest > 	fields: ls³.t⁰
-//│ deforest > Cons⁰(2, tmp¹⁷) ->
-//│ deforest > 	match: ls³
-//│ deforest > 	fields: ls³.h⁰
-//│ deforest > 	fields: ls³.t⁰
-//│ deforest > Cons⁰(3, Nil⁰) ->
-//│ deforest > 	match: ls³
-//│ deforest > 	fields: ls³.h⁰
-//│ deforest > 	fields: ls³.t⁰
-//│ deforest > Nil⁰ ->
-//│ deforest > 	match: ls³
 //│ deforest > <<< fusing <<<
 //│ = Cons(
 //│   [1, 1],

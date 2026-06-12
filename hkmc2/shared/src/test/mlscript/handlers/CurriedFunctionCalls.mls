@@ -7,7 +7,7 @@
 :sir
 fun f(x)(y) = x + y
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let f⁰; do runtime⁰.resetEffects﹖(); define f⁰ as fun f¹(x)(y) { return +⁰(x, y) }; end
+//│ do runtime⁰.resetEffects﹖(); define f⁰ as fun f¹(x)(y) { return +⁰(x, y) }; end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 :lift
@@ -31,13 +31,13 @@ f(1)(2)
 :soir
 fun g(a)(b) = f(a)(b) + f(b)(a)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let g⁰, g$worker⁰;
+//│ let g$worker;
 //│ do runtime⁰.resetEffects﹖();
 //│ @inline
 //│ define g⁰ as fun g¹(a)(b) {
-//│   return g$worker¹(a, b)
+//│   return g$worker⁰(a, b)
 //│ };
-//│ define g$worker⁰ as fun g$worker¹(a, b) {
+//│ define g$worker as fun g$worker⁰(a, b) {
 //│   let tmp, tmp1, pc;
 //│   match runtime⁰.resumePc﹖
 //│     -1 =>

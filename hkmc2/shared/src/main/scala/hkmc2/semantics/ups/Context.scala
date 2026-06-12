@@ -2,7 +2,7 @@ package hkmc2
 package semantics
 package ups
 
-import mlscript.utils.*, shorthands.*
+import hkmc2.utils.*, shorthands.*
 import Pattern.{Instantiation, Never}
 import Message.MessageContext, ucs.bug
 import sourcecode.{FileName, Line, Name}

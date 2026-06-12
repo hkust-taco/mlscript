@@ -96,7 +96,7 @@ f(O) + g(O)
 //│ dead-param-elim > >>> dead-param-elim results >>>
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let f⁰, g⁰, tmp, tmp1;
+//│ let tmp, tmp1;
 //│ @private
 //│ define f⁰ as fun f¹(O) {
 //│   return O.I⁰.x⁰
@@ -120,7 +120,7 @@ f(O.I) + g(O.I)
 //│ dead-param-elim > >>> dead-param-elim results >>>
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let f², g³, tmp, tmp1;
+//│ let tmp, tmp1;
 //│ @private
 //│ define f² as fun f³(I) {
 //│   return I.x⁰

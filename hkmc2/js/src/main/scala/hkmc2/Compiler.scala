@@ -4,8 +4,7 @@ import scala.util.Try
 import scala.scalajs.js.annotation.*
 import org.scalajs.dom
 import org.scalajs.dom.document
-import mlscript.utils._
-import mlscript.utils.shorthands._
+import hkmc2.utils.shorthands._
 import scala.util.matching.Regex
 import scala.scalajs.js, js.JSConverters.*
 import scala.collection.immutable

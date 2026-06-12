@@ -15,11 +15,10 @@ f(undefined)
 //│ dead-param-elim > prodfun g#0 @ <root> -> eliminable: {0}
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let f⁰, g⁰;
 //│ @private
-//│ define f⁰ as fun f¹() { return g¹() };
+//│ define f⁰ as fun f¹() { return g⁰() };
 //│ @private
-//│ define g⁰ as fun g¹() { return 2 };
+//│ define g¹ as fun g⁰() { return 2 };
 //│ return f¹()
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 2
@@ -37,7 +36,7 @@ if f(42) is Box(v) then 0
 //│ dead-param-elim > prodfun f#0 @ <root> -> eliminable: {0}
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let f², scrut;
+//│ let scrut;
 //│ @private
 //│ define f² as fun f³() {
 //│   return Box⁰(undefined)
@@ -63,7 +62,7 @@ f(42)
 //│ dead-param-elim > prodfun f#0 @ <root> -> eliminable: {0}
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let f⁴; @private define f⁴ as fun f⁵() { return 0 }; return f⁵()
+//│ @private define f⁴ as fun f⁵() { return 0 }; return f⁵()
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 0
 

@@ -12,25 +12,25 @@ fun foo() =
   xs.push(bar)
   set x = 2
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let bar⁰, foo⁰, Capture$scope0⁰, bar$⁰;
-//│ define Capture$scope0⁰ as class Capture$scope0² {
-//│   constructor Capture$scope0¹(x$0) {
+//│ let bar, Capture$scope0, bar$;
+//│ define Capture$scope0 as class Capture$scope0¹ {
+//│   constructor Capture$scope0⁰(x$0) {
 //│     define x$0⁰ as val x$0¹ = x$0;
 //│     end
 //│   }
 //│ };
 //│ @inline
-//│ define bar$⁰ as fun bar$¹(scope0$cap)() {
-//│   return bar¹(scope0$cap)
+//│ define bar$ as fun bar$⁰(scope0$cap)() {
+//│   return bar⁰(scope0$cap)
 //│ };
-//│ define bar⁰ as fun bar¹(scope0$cap) {
+//│ define bar as fun bar⁰(scope0$cap) {
 //│   return scope0$cap.x$0¹
 //│ };
 //│ define foo⁰ as fun foo¹() {
 //│   let x, scope0$cap, bar$here;
-//│   set scope0$cap = new mut Capture$scope0²(x);
+//│   set scope0$cap = new mut Capture$scope0¹(x);
 //│   set scope0$cap.x$0¹ = 1;
-//│   set bar$here = bar$¹(scope0$cap);
+//│   set bar$here = bar$⁰(scope0$cap);
 //│   do xs⁰.push﹖(bar$here);
 //│   set scope0$cap.x$0¹ = 2;
 //│   return runtime⁰.Unit⁰
@@ -96,9 +96,9 @@ fun foo() =
     x
   bar
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let bar², foo²;
-//│ define bar² as fun bar³() { let x; return x };
-//│ define foo² as fun foo³() { return bar³ };
+//│ let bar;
+//│ define bar as fun bar¹() { let x; return x };
+//│ define foo² as fun foo³() { return bar¹ };
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 

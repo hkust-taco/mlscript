@@ -2,7 +2,7 @@ package hkmc2
 package semantics
 package ups
 
-import mlscript.utils.*, shorthands.*
+import hkmc2.utils.*, shorthands.*
 import Message.MessageContext
 import ucs.{TermSynthesizer, FlatPattern, error, warn, safeRef}, ucs.extractors.*
 import syntax.{Fun, Keyword, Tree}, Tree.{Ident, StrLit}, Keyword.{`as`, `=>`}

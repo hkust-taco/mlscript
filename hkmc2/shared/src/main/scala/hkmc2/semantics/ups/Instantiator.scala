@@ -2,7 +2,7 @@ package hkmc2
 package semantics
 package ups
 
-import mlscript.utils.*, shorthands.*
+import hkmc2.utils.*, shorthands.*
 import Elaborator.{Ctx, State, ctx}
 import Message.MessageContext, ucs.{error, warn}
 import semantics.Pattern as SP, Pattern.*

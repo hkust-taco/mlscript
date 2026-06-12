@@ -5,13 +5,12 @@ import scala.collection.mutable.{Map => MutMap, Set => MutSet, Buffer}
 import scala.annotation.tailrec
 import sourcecode.{Line, FileName}
 
-import mlscript.utils.*, shorthands.*
+import hkmc2.utils.*, shorthands.*
 import hkmc2.utils.*
 
 import semantics.*
 import semantics.Elaborator.{State, Ctx, ctx}
-import mlscript.utils.algorithms.partitionScc
-import java.util.IdentityHashMap
+import hkmc2.utils.algorithms.partitionScc
 import hkmc2.syntax.Literal
 import hkmc2.{codegen => argss}
 
@@ -405,17 +404,82 @@ class BlockSimplifier
       
     end apply
     
+    // * A reference we may substitute for another reference, together with
+    // * the assignment facts that must still be current for the substitution
+    // * to be sound. Requirements are compared by object identity below, so
+    // * they precisely describe the data-flow state observed when the fact
+    // * was recorded.
+    case class TrackedRef(ref: Value.RefLike, requirements: Set[LocalVar -> AssignInfo]):
+      def isCurrent: Bool =
+        requirements.forall((loc, asst) => assignedResults(loc) is asst)
     
+    // * Summary of the direct value that can be propagated for a local.
+    // *   - `false` means no known value.
+    // *   - `true` means definitely uninitialized,
+    // *     meaning any variable access can be replaced by `undefined`, ie, `Value.Lit(UnitLit(false))`.
+    // *   - `Value` means this exact value is still available for propagation.
+    type KnownValue = Bool | Value
+    
+    // * The propagated value fact for an assignment, plus equivalent
+    // * references that could be substituted while their requirements hold.
+    case class ValueAnalysis(litValue: KnownValue, refs: List[TrackedRef])
+    
+    object ValueAnalysis:
+      
+      val conservative: ValueAnalysis = ValueAnalysis(false, Nil)
+      
+      // * Keep a value fact only when all merged control-flow paths agree.
+      def mergeLitValues(l: KnownValue, r: KnownValue): KnownValue =
+        (l, r) match
+        case (false, _) | (_, false) => false
+        case (true, true) => true
+        case (true, v: Value) => v
+        case (v: Value, true) => v
+        case (v1: Value, v2: Value) if v1 === v2 => v1
+        case _ => false
+      
+      def mergeRefs(l: List[TrackedRef], r: List[TrackedRef]): List[TrackedRef] =
+        l.flatMap: lr =>
+          r.collect:
+            case rr if lr.ref === rr.ref =>
+              TrackedRef(lr.ref, lr.requirements ++ rr.requirements)
+    
+    end ValueAnalysis
+    
+    // * An unsaturated pure call that can be spliced into a later call, as in
+    // * `let f = foo(x); f(y)` ~> `foo(x)(y)`, provided every local captured
+    // * by the prefix still denotes the same assignment fact.
+    case class TrackedPureCall(call: Call, requirements: Set[LocalVar -> AssignInfo]):
+      def isCurrent: Bool =
+        requirements.forall((loc, asst) => !capturedVars(loc) && (assignedResults(loc) is asst))
+    
+    // * Data-flow fact for the latest assignment known for a local variable.
+    // * Facts are intentionally immutable so derived analyses can be cached in
+    // * lazy values and compared by identity when validating requirements.
     enum AssignInfo:
       case Unknown
       case Uninitialized
-      case Assigned(asst: Assign, varAsst: Opt[Value.RefLike -> AssignInfo])
+      // * `varAsst` is defined if the RHS is a direct reference to some local L,
+      // * so that the current variable can be treated as an alias of L as long as L's
+      // * associated `AssignInfo` assignment facts remain current.
+      // * `rhsRequirements` tracks
+      // * all local variables mentioned by the RHS so pure-call prefixes do not
+      // * outlive locals that were only valid in a narrower scope.
+      case Assigned(
+        lhs: LocalVar,
+        rhs: Result,
+        varAsst: Opt[Value.RefLike -> AssignInfo],
+        rhsRequirements: Set[LocalVar -> AssignInfo],
+      )
       case Merge(asst1: AssignInfo, asst2: AssignInfo)
       
       override def toString: String = this match
         case Unknown => "?"
         case Uninitialized => "∅"
-        case Assigned(asst, varAsst) => s"${asst.rhs}${varAsst.fold("")("‹"+_+"›")}"
+        case Assigned(l, r, varAsst, _) => s"${r.showDbg}${
+            varAsst.fold(""):
+              case (l, r) => "‹"+l.showDbg+":="+r+"›"
+          }"
         case Merge(a1, a2) => s"{${a1.toString} | ${a2.toString}}"
       
       def merge(that: AssignInfo): AssignInfo =
@@ -430,6 +494,79 @@ class BlockSimplifier
               case Uninitialized => that
               case _: Assigned | _: Merge => Merge(this, that)
       
+      // * This lazy val is used to avoid retraversing the DAG and to deduplicate entries.
+      // * There are more efficient ways of traversing the DAG (e.g. using a mutable visited set),
+      // * which could avoid merging so many intermediate sets,
+      // * but this is simpler and should be sufficient for now.
+      lazy val assigns: Opt[Set[Assigned]] = this match
+        case a: Assigned => S(Set.single(a))
+        case Merge(asst1, asst2) =>
+          // * `for` is only for rich kids
+          asst1.assigns match
+          case N => N
+          case S(set1) =>
+            asst2.assigns match
+            case N => S(set1)
+            case S(set2) => S(set1 ++ set2)
+        case Uninitialized => S(Set.empty)
+        case Unknown => N
+      
+      lazy val valueAnalysis: ValueAnalysis = this match
+        case Unknown =>
+          ValueAnalysis.conservative
+        case Uninitialized =>
+          ValueAnalysis(true, Nil)
+        case Assigned(lhs, rhs, opt, _) =>
+          val litValue = rhs match
+            case v @ Value.Lit(_) => v
+            case _ => false
+          val refs = opt match
+            case S((r @ Value.SimpleRef(lv: LocalVar)) -> rhs) =>
+              val requirement = lv -> rhs
+              TrackedRef(r, Set.single(requirement)) :: rhs.valueAnalysis.refs
+            case S(ref -> rhs) =>
+              TrackedRef(ref,
+                // * Other types of direct references don't need requirements because they cannot be reassigned:
+                // * indeed, `mut val` is not valid outside of an object/module scope,
+                // * and if defined in such a scope, a `mut val x` would be referred to through `this.x`.
+                Set.empty
+              ) :: rhs.valueAnalysis.refs
+            case N => Nil
+          ValueAnalysis(litValue, refs)
+        case Merge(asst1, asst2) =>
+          // * [Future: dead assignment removal]
+          // FIXME: this currently short-circuits, which will miss some live assignments...
+          val l = asst1.valueAnalysis
+          if l.refs.isEmpty && l.litValue === false then
+            ValueAnalysis.conservative
+          else
+            val r = asst2.valueAnalysis
+            ValueAnalysis(
+              ValueAnalysis.mergeLitValues(l.litValue, r.litValue),
+              ValueAnalysis.mergeRefs(l.refs, r.refs))
+      
+      lazy val pureCallPrefix: Opt[TrackedPureCall] = this match
+        case Unknown | Uninitialized => N
+        case Assigned(lhs, rhs, opt, rhsRequirements) =>
+          rhs match
+          case call: Call if call.isKnownUnsaturatedCall && call.isPure =>
+            S(TrackedPureCall(call, rhsRequirements))
+          case _ =>
+            opt match
+            case S((Value.SimpleRef(next: LocalVar), originalAsst)) =>
+              // * If the RHS was a variable that was at the time assigned to a pure call prefix,
+              // * we can directly pick up that call, regardless of the current status of that variable.
+              originalAsst.pureCallPrefix
+            case _ => N
+        case Merge(asst1, asst2) =>
+          asst1.pureCallPrefix match
+          case S(call1) =>
+            asst2.pureCallPrefix match
+            case S(call2) if call1.call === call2.call =>
+              S(TrackedPureCall(call1.call, call1.requirements ++ call2.requirements))
+            case _ => N
+          case N => N
+    
     import AssignInfo.*
     
     
@@ -498,8 +635,13 @@ class BlockSimplifier
       res
     
     
+    private def showMap: Str = assignedResults
+      .iterator.map: (k, v) =>
+        s"${k.showDbg} -> ${v.toString}"
+      .mkString("{", ", ", "}")
+    
     override def applyBlock(b: Block): Block =
-    // trace[Block](s"Applying block: ${b.abbreviate} with map: ${assignedResults}", res => s"|= ${assignedResults}"):
+    // trace[Block](s"Applying block: ${b.showDbg.abbreviate} with map:\n${showMap}", res => s"|= ${showMap}"):
       b match
       
       // * Discard local variables that are assigned just to be returned
@@ -511,23 +653,28 @@ class BlockSimplifier
         applyBlock(Return(rhs))
       
       case ass @ Assign(lhs: LocalVar, rhs, rst) if !capturedVars(lhs) =>
-        // log(s"Propagating ${lhs} := ${rhs} (${assignedResults.get(lhs)})")
+        // log(s"Propagating ${lhs.showDbg} := ${rhs.showDbg} (${assignedResults.get(lhs)})")
         
-        assignedResults += lhs -> Assigned(ass, rhs.match
-          case r @ Value.SimpleRef(sym: LocalVar) =>
-            if capturedVars(sym) then N
-            else
-              val rhs2 = assignedResults(sym)
-              S(r -> rhs2)
-          case r: Value.RefLike =>
-            S(r -> Unknown)
-          case _ => N
-        )
+        applyResult(rhs): rhs2 =>
         
-        super.applyBlock(b)
+          val lhs2 = applyAssignLhs(lhs).asInstanceOf[LocalVar]
+          
+          val varAsst = rhs2.match
+            case r @ Value.SimpleRef(sym: LocalVar) =>
+              if capturedVars(sym) then N
+              else S(r -> assignedResults(sym))
+            case r: Value.RefLike => S(r -> Unknown)
+            case _ => N
+          val rhsRequirements = rhs2.freeVars.iterator.collect:
+            case sym: LocalVar if !capturedVars(sym) =>
+              sym -> assignedResults(sym)
+          assignedResults += lhs2 -> Assigned(lhs2, rhs2, varAsst, rhsRequirements.toSet)
+          
+          val rst2 = applyBlock(rst)
+          if (lhs2 is lhs) && (rhs2 is rhs) && (rst2 is rst) then ass else Assign(lhs, rhs2, rst2)
         
       case Assign(lhs, rhs, rst) =>
-        // log(s"Not propagating ${lhs} := ${rhs}")
+        // log(s"Not propagating ${lhs } := ${rhs}")
         
         super.applyBlock(b)
       
@@ -605,39 +752,38 @@ class BlockSimplifier
             Set.empty[Shape]
           def getCtorShape(path: Path): Opt[Shape] =
             path.targetSymbol.flatMap:
-              case ccs: ClassCtorSymbol => ccs.owner
+              case ccs: ClassCtorSymbol => S(ccs.associatedCls)
               case sym => sym.asClsOrMod
           def isSaturatedClassCall(sym: ClassSymbol, argss: NELs[Ls[Arg]]): Bool =
             sym.irClsLikeDefn.exists: defn =>
               val paramLists = defn.paramsOpt.toList ::: defn.auxParams
               paramLists.lengthCompare(argss.length) === 0
-          def getShapesA(a: AssignInfo): Set[Shape] =
-          // trace[Set[Shape]](s"Getting shapes for assignment ${a}", r => s"= ${r}"):
-            a match
-            case Unknown => giveUp
-            case Uninitialized => Set.empty
-            case Merge(a1, a2) => getShapesA(a1) | getShapesA(a2)
-            case Assigned(asst, varAsst) =>
-              varAsst match
-              case S(Value.MemberRef(r, sym: ModuleOrObjectSymbol) -> _) =>
-                Set.single(sym)
-              case S(_ -> ass) =>
-                getShapesA(ass)
-              case N =>
-                asst.rhs match
-                case p: Path => getShapes(p)
-                case Call(path, args) =>
-                  getCtorShape(path) match
-                  case S(sym: ClassSymbol) if isSaturatedClassCall(sym, args) =>
-                    Set.single(sym)
+          def getAssignInfoShapes(a: AssignInfo): Set[Shape] =
+            if gaveUp then Set.empty
+            a.assigns match
+            case N => giveUp
+            case S(assts) => assts.flatMap:
+              case Assigned(lhs, rhs, varAsst, _) =>
+                varAsst match
+                case S(Value.MemberRef(r, sym: ModuleOrObjectSymbol) -> _) =>
+                  Set.single(sym)
+                case S(_ -> ass) =>
+                  getAssignInfoShapes(ass)
+                case N =>
+                  rhs match
+                  case p: Path => getShapes(p)
+                  case Call(path, args) =>
+                    getCtorShape(path) match
+                    case S(sym: ClassSymbol) if isSaturatedClassCall(sym, args) =>
+                      Set.single(sym)
+                    case _ => giveUp
+                  case Instantiate(_, cls, _) =>
+                    // * Note: Instantiate nodes are globally assumed to be saturated
+                    getCtorShape(cls) match
+                    case S(sym) =>
+                      Set.single(sym)
+                    case _ => giveUp
                   case _ => giveUp
-                case Instantiate(_, cls, _) =>
-                  // * Note: Instantiate nodes are globally assumed to be saturated
-                  getCtorShape(cls) match
-                  case S(sym) =>
-                    Set.single(sym)
-                  case _ => giveUp
-                case _ => giveUp
           def getShapes(p: Path): Set[Shape] =
             if gaveUp then Set.empty
             else
@@ -645,7 +791,7 @@ class BlockSimplifier
               case Value.SimpleRef(r: LocalVar) if capturedVars(r) =>
                 giveUp
               case Value.SimpleRef(r: LocalVar) =>
-                assignedResults.get(r).fold(giveUp)(getShapesA)
+                assignedResults.get(r).fold(giveUp)(getAssignInfoShapes)
               case Value.MemberRef(r, sym: ModuleOrObjectSymbol) =>
                 Set.single(sym)
               case Value.Lit(lit) => Set.single(lit)
@@ -731,65 +877,12 @@ class BlockSimplifier
         val rs = assignedResults(loc)
         // log(s"Ref ${loc.showDbg} ${rs} ${localVars(loc)} ${capturedVars(loc)}")
         
-        def analyzeAssignments(asst: AssignInfo): Unit =
-          asst match
-          case Unknown | Uninitialized => ()
-          case Merge(a1, a2) =>
-            analyzeAssignments(a1)
-            analyzeAssignments(a2)
-          case Assigned(ass, _) =>
-            // * [Future: dead assignment removal]
-            // liveAssignments.put(ass, ())
+        val analysis = rs.valueAnalysis
+        val refs = analysis.refs.iterator.filter(_.isCurrent).map(_.ref).toList
         
-        var litValue: Bool | Value = true
-        var emptyHanded = false
+        // log(s"Analysis: litValue: ${analysis.litValue}, unchanged vars: ${refs}")
         
-        def analyzeValues(asst: AssignInfo): Set[Value.RefLike] =
-          if emptyHanded && litValue === false then
-            analyzeAssignments(asst)
-            Set.empty
-          else asst match
-            case Unknown =>
-              litValue = false
-              Set.empty
-            case Uninitialized => Set.empty
-            case Assigned(ass, opt) =>
-              // * [Future: dead assignment removal]
-              // liveAssignments.put(ass, ())
-              
-              if litValue =/= false then
-                ass.rhs match
-                case v @ Value.Lit(lit) =>
-                  if litValue === true then
-                    litValue = v
-                  else if litValue =/= v then
-                    litValue = false
-                case _ =>
-                  litValue = false
-              opt match
-              case S((r @ Value.SimpleRef(lv: LocalVar)) -> rhs) =>
-                if assignedResults(lv) is rhs
-                then Set.single(r) ++ analyzeValues(rhs)
-                else Set.empty
-              case S(lv -> rhs) =>
-                Set.single(lv) ++ analyzeValues(rhs)
-              case N => Set.empty
-            case Merge(a1, a2) =>
-              // * [Future: dead assignment removal]
-              // FIXME: this currently short-circuits, which will miss some live assignments...
-              
-              val l = analyzeValues(a1)
-              if l.isEmpty && litValue === false then
-                emptyHanded = true
-                analyzeAssignments(a2)
-                Set.empty
-              else l & analyzeValues(a2)
-        
-        val vars = analyzeValues(rs)
-        
-        // log(s"Analysis: litValue: ${litValue}, unchanged vars: ${vars}")
-        
-        litValue match
+        analysis.litValue match
         case true =>
           registerChange(s"${loc.showDbg} ~> undefined")
           return k(Value.Lit(syntax.Tree.UnitLit(false)))
@@ -797,33 +890,20 @@ class BlockSimplifier
           registerChange(s"${loc.showDbg} ~> ${lit.showDbg}")
           return k(lit)
         case false =>
-          vars.minByOption(_.symbol.uid) match
+          refs.minByOption(_.symbol.uid) match
           case N => k(v)
           case S(v2) =>
-            registerChange(s"${loc.showDbg} ~> ${v2.showDbg} (via ${vars.map(_.showDbg).mkString(", ")})")
+            registerChange(s"${loc.showDbg} ~> ${v2.showDbg} (via ${refs.map(_.showDbg).mkString(", ")})")
             k(v2)
         
       case _ => super.applyValue(v)(k)
     
     
     private def assignedPureCallPrefix(loc: LocalVar): Opt[Call] =
-      def loop(asst: AssignInfo, seen: Set[LocalVar]): Opt[Call] =
-        asst match
-        case Unknown | Uninitialized => N
-        case Assigned(ass, opt) =>
-          ass.rhs match
-          case call: Call if call.isKnownUnsaturatedCall && call.isPure => S(call)
-          case _ =>
-            opt match
-            case S((Value.SimpleRef(next: LocalVar), nextAsst))
-              if !capturedVars(next) && !seen(next) && (assignedResults(next) is nextAsst) =>
-              loop(nextAsst, seen + next)
-            case _ => N
-        case Merge(asst1, asst2) =>
-          (loop(asst1, seen), loop(asst2, seen)) match
-          case (S(call1), S(call2)) if call1 == call2 => S(call1)
-          case _ => N
-      loop(assignedResults(loc), Set.single(loc))
+      // * Only expose prefixes whose dependency facts still match the current
+      // * data-flow state; otherwise the prefix may mention stale scoped locals.
+      assignedResults(loc).pureCallPrefix.collect:
+        case prefix if prefix.isCurrent => prefix.call
     
     
     override def applyResult(r: Result)(k: Result => Block): Block =
@@ -845,50 +925,26 @@ class BlockSimplifier
         case S(prefix) =>
           registerChange(s"${loc.showDbg} call prefix ~> ${prefix.showDbg}")
           val combined = Call(prefix.fun, (prefix.argss ::: argss).ne_!)(
-            prefix.isMlsFun, prefix.mayRaiseEffects || c.mayRaiseEffects, c.explicitTailCall,
+            CallMetadata(
+              prefix.metadata.isMlsFun,
+              prefix.metadata.mayRaiseEffects || c.metadata.mayRaiseEffects,
+              prefix.metadata.annotations ++ c.metadata.annotations,
+            ),
           ).withLocOf(c)
           super.applyResult(combined)(k)
         case N => super.applyResult(r)(k)
       
       // * Remove uses of the strange builtin comma operator
+      // * This is not implemented as a smart constructor (unlike usual constant folding)
+      // * because it needs to insert an Assign statement.
       case Call(Value.SimpleRef(sym: BuiltinSymbol), (arg1 :: arg2 :: Nil) :: Nil)
         if sym.nme === "," && arg1.spread.isEmpty && arg2.spread.isEmpty
         =>
           Assign.discard(arg1.value, k(arg2.value))
       
-      // * Partially evaluate calls to known builtins with literal arguments
-      case Call(Value.SimpleRef(sym: BuiltinSymbol), args :: Nil) if args.forall(_.value.isInstanceOf[Value]) =>
-        val argValues = args.map(_.value.asInstanceOf[Value])
-        args.foreach(a => assert(a.spread.isEmpty))
-        builtinEval.lift((sym.nme, argValues)) match
-        case S(v) =>
-          registerChange(s"Evaluating builtin ${sym.nme} with args ${argValues.map(_.showDbg).mkString(", ")} ~> ${v.showDbg}")
-          k(v)
-        case N => super.applyResult(r)(k)
-      
       case r =>
         super.applyResult(r)(k)
     
-    
-    // TODO: mv to smart ctor of Call
-    import syntax.Tree.*, Value.Lit
-    val builtinEval: PartialFunction[(Str, List[Value]), Value] =
-      case ("+", (lit @ Lit(IntLit(v1))) :: Nil) => lit
-      case ("+", Lit(IntLit(v1)) :: Lit(IntLit(v2)) :: Nil) => Lit(IntLit(v1 + v2))
-      case ("-", Lit(IntLit(v1)) :: Nil) => Lit(IntLit(-v1))
-      case ("-", Lit(IntLit(v1)) :: Lit(IntLit(v2)) :: Nil) => Lit(IntLit(v1 - v2))
-      case ("*", Lit(IntLit(v1)) :: Lit(IntLit(v2)) :: Nil) => Lit(IntLit(v1 * v2))
-      // * For "/", should check for 0 and return a DecLit
-      case ("%", Lit(IntLit(v1)) :: Lit(IntLit(v2)) :: Nil) => Lit(IntLit(v1 % v2))
-      case ("===", Lit(l1) :: Lit(l2) :: Nil) => Lit(BoolLit(l1 == l2))
-      case ("!==", Lit(l1) :: Lit(l2) :: Nil) => Lit(BoolLit(l1 != l2))
-      case ("<", Lit(IntLit(v1)) :: Lit(IntLit(v2)) :: Nil) => Lit(BoolLit(v1 < v2))
-      case ("<=", Lit(IntLit(v1)) :: Lit(IntLit(v2)) :: Nil) => Lit(BoolLit(v1 <= v2))
-      case (">", Lit(IntLit(v1)) :: Lit(IntLit(v2)) :: Nil) => Lit(BoolLit(v1 > v2))
-      case (">=", Lit(IntLit(v1)) :: Lit(IntLit(v2)) :: Nil) => Lit(BoolLit(v1 >= v2))
-      case ("&&", Lit(BoolLit(v1)) :: Lit(BoolLit(v2)) :: Nil) => Lit(BoolLit(v1 && v2))
-      case ("||", Lit(BoolLit(v1)) :: Lit(BoolLit(v2)) :: Nil) => Lit(BoolLit(v1 || v2))
-      case ("!", Lit(BoolLit(v)) :: Nil) => Lit(BoolLit(!v))
     
   end DataFlowAnalysis
   
@@ -1188,7 +1244,10 @@ class BlockSimplifier
                         acc(Scoped(Set.single(resSym), newBlk(k(resSym.asSimpleRef))))
                       else
                         acc(Scoped(Set(resSym), newBlk(
-                          k(Call(resSym.asSimpleRef, extraArgss.ne_!)(c.isMlsFun, c.mayRaiseEffects, false)))))
+                          k(Call(resSym.asSimpleRef, extraArgss.ne_!)(
+                            c.metadata.copy(
+                              annotations = c.metadata.annotations.filterNot(_ == Annot.TailCall),
+                            ))))))
                     case (sym, value) :: argRest =>
                       val newSym = VarSymbol(sym.id)
                       go(acc.assignScoped(newSym, value), argRest, mapping + (sym -> newSym))

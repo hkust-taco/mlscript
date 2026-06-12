@@ -3,7 +3,7 @@ package semantics
 
 import scala.collection.mutable.{Buffer, Set as MutSet}
 
-import mlscript.utils.*, shorthands.*
+import hkmc2.utils.*, shorthands.*
 import syntax.*
 import hkmc2.utils.Scope
 import hkmc2.utils.Scope.scope
@@ -27,6 +27,8 @@ enum Annot extends AutoLocated:
   case TailRec
   case TailCall
   case Inline
+  // Whether the function is guaranteed to not raise effects.
+  case MayNotRaiseEffects
   case Config(modify: hkmc2.Config => hkmc2.Config)
   // Marks if a function or lambda is one-shot, i.e. called at most once.
   // Functions with multiple parameter lists are considered here as a chain of
@@ -46,11 +48,14 @@ enum Annot extends AutoLocated:
   
   def subTerms: Vector[Term] = this match
     case Trm(trm) => Vector.single(trm)
-    case _: Modifier | Untyped | TailRec | TailCall | Inline | _: Config | _: Affine => Vector.empty
+    case _: Modifier | Untyped | TailRec | TailCall | Inline
+      | MayNotRaiseEffects | _: Config | _: Affine => Vector.empty
   
   def children: Vector[Located] = this match
     case Trm(trm) => Vector.single(trm)
-    case _: Modifier | Untyped | TailRec | TailCall | Inline | _: Config | _: Affine => Vector.empty
+    // case Modifier(kw) => Vector.single(kw) // TODO: make `kw` a `Keywrd`
+    case _: Modifier | Untyped | TailRec | TailCall | Inline
+      | MayNotRaiseEffects | _: Config | _: Affine => Vector.empty
   
   def show(using Scope, ShowCfg, Raise): Document = this match
     case Untyped => doc"@untyped"
@@ -59,6 +64,7 @@ enum Annot extends AutoLocated:
     case TailCall => doc"@tailcall"
     case Affine(n) => doc"@affine($n)"
     case Modifier(mod) => doc"@${mod.name}"
+    case MayNotRaiseEffects => doc"@mayNotRaiseEffects"
     case Trm(trm) => doc"@${trm.show}"
     case Config(_) => doc"@config(...)"
   
@@ -69,6 +75,7 @@ enum Annot extends AutoLocated:
     case TailRec => TailRec
     case TailCall => TailCall
     case Inline => Inline
+    case MayNotRaiseEffects => MayNotRaiseEffects
     case c: Config => c
     case a: Affine => a
 
@@ -1015,10 +1022,15 @@ final case class TermDefinition(
   require(k is tsym.k)
   def bsym: BlockMemberSymbol = sym
   val owner = tsym.owner
-  def visibility: Visibility = annotations.collectFirst:
-    case Annot.Modifier(Keyword.`private`) => Visibility.Private
-    case Annot.Modifier(Keyword.`public`) => Visibility.Public
-  .getOrElse(Visibility.Public)
+  def visibility: Visibility = annotations
+    .collectFirst:
+      case Annot.Modifier(Keyword.`private`) => Visibility.Private
+      case Annot.Modifier(Keyword.`public`) => Visibility.Public
+    .getOrElse(Visibility.Public)
+  lazy val mayRaiseEffects: Bool =
+    annotations.forall:
+      case Annot.MayNotRaiseEffects => false
+      case _ => true
   def extraAnnotations: Ls[Annot] = annotations.filter:
     case Annot.Modifier(Keyword.`declare` | Keyword.`abstract`) => false
     case _ => true

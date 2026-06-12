@@ -9,7 +9,7 @@ fun test =
   true && return 42
   43
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let test⁰; define test⁰ as fun test¹() { match true true => return 42 else return 43 end }; end
+//│ define test⁰ as fun test¹() { match true true => return 42 else return 43 end }; end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 :expect 42

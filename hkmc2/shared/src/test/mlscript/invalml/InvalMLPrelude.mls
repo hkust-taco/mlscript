@@ -88,6 +88,7 @@ declare module annotations with
   object compile
   object buffered
   object bufferable
+  object mayNotRaiseEffects
 
 declare module scope with
   fun locally

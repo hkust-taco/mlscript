@@ -3,7 +3,7 @@ package semantics
 package ups
 
 
-import mlscript.utils.*, shorthands.*
+import hkmc2.utils.*, shorthands.*
 import semantics.Pattern as SP
 import syntax.{Tree, SpreadKind}, Tree.{Ident, StrLit}
 import Message.MessageContext

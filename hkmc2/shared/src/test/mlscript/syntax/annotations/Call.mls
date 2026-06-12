@@ -1,0 +1,77 @@
+:sir
+
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ import "..." as Predef; end
+object special
+object static
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define special⁰ as object special¹; define static⁰ as object static¹; end
+
+
+fun identity(x) = x
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define identity⁰ as fun identity¹(x) { return x }; end
+
+@special identity(1)
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ return @special identity¹(1)
+
+
+@special @static identity(2)
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ return @special @static1 identity¹(2)
+
+
+fun curried(x)(y) = x
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define curried⁰ as fun curried¹(x)(y) { return x }; end
+
+@special curried(1)(2)
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ return @special curried¹(1)(2)
+
+
+@special identity(1)(2)
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let baseCall; set baseCall = identity¹(1); return @special baseCall(2)
+
+
+fun nullary = 1
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define nullary⁰ as fun nullary¹() { return 1 }; end
+
+@special nullary
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ return @special nullary¹()
+
+
+class Box(value: Int)
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define Box⁰ as class Box² {
+//│   private val value⁰;
+//│   constructor Box¹(value) { set Box².this.value⁰ = value; end }
+//│ };
+//│ end
+
+@special new Box(1)
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ return @special new Box²(1)
+
+
+class CurriedBox(first: Int)(second: Int)
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define CurriedBox⁰ as class CurriedBox² {
+//│   private val first⁰;
+//│   private val second⁰;
+//│   constructor CurriedBox¹(first, second) {
+//│     set CurriedBox².this.first⁰ = first;
+//│     set CurriedBox².this.second⁰ = second;
+//│     end
+//│   }
+//│ };
+//│ end
+
+@special new CurriedBox(1)(2)
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ return @special new CurriedBox²(1, 2)
+

@@ -12,7 +12,6 @@ fun innerUpdatesOuterCondition() =
       set y -= 1
   x
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let innerUpdatesOuterCondition⁰;
 //│ define innerUpdatesOuterCondition⁰ as fun innerUpdatesOuterCondition¹() {
 //│   let x;
 //│   set x = 2;
@@ -61,7 +60,6 @@ fun nestedLoopBackPost(flag) =
     set flag = false
   x
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let nestedLoopBackPost⁰;
 //│ define nestedLoopBackPost⁰ as fun nestedLoopBackPost¹(flag) {
 //│   let x;
 //│   set x = 1;
@@ -108,7 +106,6 @@ fun innerReturnDoesNotPolluteOuterExit(flag) =
     set flag = false
   x
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let innerReturnDoesNotPolluteOuterExit⁰;
 //│ define innerReturnDoesNotPolluteOuterExit⁰ as fun innerReturnDoesNotPolluteOuterExit¹(flag) {
 //│   let x;
 //│   set x = 1;
@@ -147,7 +144,6 @@ fun nestedInnerMaySkip(flag, innerFlag) =
     set flag = false
   x
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let nestedInnerMaySkip⁰;
 //│ define nestedInnerMaySkip⁰ as fun nestedInnerMaySkip¹(flag, innerFlag) {
 //│   let x;
 //│   set x = 1;
@@ -195,7 +191,6 @@ fun labelContinueFiltersPath(limit) =
     set i += 1
     loop.continue
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let labelContinueFiltersPath⁰;
 //│ define labelContinueFiltersPath⁰ as fun labelContinueFiltersPath¹(limit) {
 //│   let i, acc, loop$result, scrut, scrut1, tmp, tmp1, tmp2, tmp3;
 //│   set i = 0;

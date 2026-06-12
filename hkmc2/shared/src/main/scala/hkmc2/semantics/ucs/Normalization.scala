@@ -2,7 +2,7 @@ package hkmc2
 package semantics
 package ucs
 
-import mlscript.utils.*, shorthands.*
+import hkmc2.utils.*, shorthands.*
 import syntax.{Literal, Tree, Keyword}, utils.*
 import Message.MessageContext
 import Elaborator.{Ctx, State, ctx}
@@ -368,7 +368,7 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
             for (_, s) <- entries do LoweringCtx.loweringCtx.collectScopedSym(s)
             val objectSym = ctx.builtins.Object
             mkMatch( // checking that we have an object
-              Case.Cls(objectSym, BuiltinSymbol(objectSym.nme, false, false, true, false).asSimpleRef),
+              Case.Cls(objectSym, Select(State.globalThisSymbol.asThis, Tree.Ident(objectSym.nme))(S(objectSym))),
               entries.foldRight(lowerSplit(tail, cont)):
                 case ((fieldName, fieldSymbol), blk) =>
                   mkMatch(
@@ -417,7 +417,7 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
     */
   private def throwMatchErrorBlock =
     Throw(Instantiate(mut = false, Select(State.globalThisSymbol.asThis, Tree.Ident("Error"))(S(ctx.builtins.Error)),
-        (Value.Lit(syntax.Tree.StrLit("match error")).asArg :: Nil) :: Nil)) // TODO add failed-match scrutinee info
+        (Value.Lit(syntax.Tree.StrLit("match error")).asArg :: Nil) :: Nil)(InstantiateMetadata.empty)) // TODO add failed-match scrutinee info
   
   import syntax.Keyword.{`if`, `while`}
   
@@ -469,7 +469,7 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
       // NOTE: `shouldRewriteWhile` is not the same as `config.rewriteWhileLoops`
       // as shouldRewriteWhile is always true when effect handler lowering is on
       lazy val loopCont = if config.shouldRewriteWhile
-        then Return(Call(f.asMemberRef(tSym), Nil ne_:: Nil)(true, true, false))
+        then Return(Call(f.asMemberRef(tSym), Nil ne_:: Nil)(CallMetadata.mlsFunWithEffect))
         else Continue(loopLabel)
       val cont =
         form match
@@ -505,11 +505,11 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
               Select(State.runtimeSymbol.asSimpleRef, Tree.Ident("LoopEnd"))(S(State.loopEndSymbol))
             val blk = blockBuilder
               .define(FunDefn(N, f, tSym, PlainParamList(Nil) :: Nil, Begin(body, Return(loopEnd)))(configOverride = N, annotations = Nil))
-              .assign(loopResult, Call(f.asMemberRef(tSym), Nil ne_:: Nil)(true, true, false))
+              .assign(loopResult, Call(f.asMemberRef(tSym), Nil ne_:: Nil)(CallMetadata.mlsFunWithEffect))
             if summon[LoweringCtx].mayRet then
               blk
                 .assign(isReturned, Call(State.builtinOpsMap("!==").asSimpleRef,
-                  (loopResult.asPath.asArg :: loopEnd.asArg :: Nil) ne_:: Nil)(true, false, false))
+                  (loopResult.asPath.asArg :: loopEnd.asArg :: Nil) ne_:: Nil)(CallMetadata.defaultMlsFun))
                 .ifthen(isReturned.asSimpleRef, Case.Lit(Tree.BoolLit(true)),
                   Return(loopResult.asSimpleRef),
                   N

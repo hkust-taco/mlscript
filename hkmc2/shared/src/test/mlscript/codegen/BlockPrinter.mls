@@ -2,7 +2,7 @@
 :sir
 
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ import Predef; end
+//│ import "..." as Predef; end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 #config(commentGeneratedCode: true)
@@ -14,7 +14,7 @@
 
 2 + 2 + 2
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let tmp; set tmp = +⁰(2, 2); return +⁰(tmp, 2)
+//│ return 6
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 6
 
@@ -24,20 +24,19 @@ let x = 1
 x + 1
 //│ —————————————| Lowered IR Tree |————————————————————————————————————————————————————————————————————
 //│ Program:
-//│   main = Scoped(syms = {x⁰}): 
-//│     body = Assign:
-//│       lhs = x⁰
-//│       rhs = Lit of IntLit of 1
-//│       rest = Return of Call:
-//│         fun = SimpleRef of builtin:+⁰
-//│         argss = Ls of 
-//│           Ls of 
-//│             Arg:
-//│               value = SimpleRef of x⁰
-//│             Arg:
-//│               value = Lit of IntLit of 1
+//│   main = Assign:
+//│     lhs = x⁰
+//│     rhs = Lit of IntLit of 1
+//│     rest = Return of Call:
+//│       fun = SimpleRef of builtin:+⁰
+//│       argss = Ls of 
+//│         Ls of 
+//│           Arg:
+//│             value = SimpleRef of x⁰
+//│           Arg:
+//│             value = Lit of IntLit of 1
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let x⁰; set x⁰ = 1; return +⁰(x⁰, 1)
+//│ set x⁰ = 1; return +⁰(x⁰, 1)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 2
 //│ x = 1
@@ -51,7 +50,7 @@ x
 let x = 1
 x + 1
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let x¹; set x¹ = 1; return +⁰(x¹, 1)
+//│ set x¹ = 1; return +⁰(x¹, 1)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 2
 //│ x = 1
@@ -66,7 +65,7 @@ x + 1
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let x2; x2 = 1; return x2 + 1
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let x²; define x² as val x³ = 1; return +⁰(x³, 1)
+//│ define x² as val x³ = 1; return +⁰(x³, 1)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 2
 //│ x = 1
@@ -76,16 +75,16 @@ case
   []         then print("empty")
   [x, ...xs] then print("non-empty", x)
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let lambda⁰;
+//│ let lambda;
 //│ @private
-//│ define lambda⁰ as fun lambda¹(caseScrut) {
+//│ define lambda as fun lambda⁰(caseScrut) {
 //│   let x, xs, middleElements, element0$;
 //│   match caseScrut
 //│     Array(0) =>
 //│       return Predef⁰.print⁰("empty")
 //│     Array(1+) =>
-//│       set element0$ = runtime⁰.Tuple﹖.get⁰(caseScrut, 0);
-//│       set middleElements = runtime⁰.Tuple﹖.slice⁰(caseScrut, 1, 0);
+//│       set element0$ = runtime⁰.Tuple⁰.get⁰(caseScrut, 0);
+//│       set middleElements = runtime⁰.Tuple⁰.slice⁰(caseScrut, 1, 0);
 //│       set xs = middleElements;
 //│       set x = element0$;
 //│       return Predef⁰.print⁰("non-empty", x)
@@ -93,7 +92,7 @@ case
 //│       throw new globalThis⁰.Error⁰("match error")
 //│   end
 //│ };
-//│ return lambda¹
+//│ return lambda⁰
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = fun
 
@@ -101,20 +100,19 @@ case
 fun f(x) =
   let y = 1 in x + y
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let f⁰; define f⁰ as fun f¹(x) { let y; set y = 1; return +⁰(x, y) }; end
+//│ define f⁰ as fun f¹(x) { let y; set y = 1; return +⁰(x, y) }; end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 fun f(x) =
   let y = 1 in x + y
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let f²; define f² as fun f³(x) { let y; set y = 1; return +⁰(x, y) }; end
+//│ define f² as fun f³(x) { let y; set y = 1; return +⁰(x, y) }; end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 
 fun incr(n) = n + 1
 fun (|>) pipe(x, f) = f(x)
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let incr⁰, pipe⁰;
 //│ define incr⁰ as fun incr¹(n) {
 //│   return +⁰(n, 1)
 //│ };
@@ -126,9 +124,9 @@ let x = 1
 let x = if x == 0 then 1 else 0
 let x = x + 1
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let x⁴, x⁵, scrut, x⁶, tmp;
-//│ set x⁴ = 1;
-//│ set scrut = Predef⁰.equals⁰(x⁴, 0);
+//│ let x, x1, scrut, tmp;
+//│ set x = 1;
+//│ set scrut = Predef⁰.equals⁰(x, 0);
 //│ match scrut
 //│   true =>
 //│     set tmp = 1;
@@ -136,8 +134,8 @@ let x = x + 1
 //│   else
 //│     set tmp = 0;
 //│     end
-//│ set x⁵ = tmp;
-//│ set x⁶ = +⁰(x⁵, 1);
+//│ set x1 = tmp;
+//│ set x⁴ = +⁰(x1, 1);
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ x = 1
@@ -147,10 +145,9 @@ class C(x)
 C(123)
 new C(123)
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let C⁰;
 //│ define C⁰ as class C² {
-//│   private val x⁷;
-//│   constructor C¹(x) { set C².this.x⁷ = x; end }
+//│   private val x⁵;
+//│   constructor C¹(x) { set C².this.x⁵ = x; end }
 //│ };
 //│ do C¹(123);
 //│ return new C²(123)
@@ -165,18 +162,17 @@ module A with
   fun g(x) = 3
 A.x
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let A⁰;
 //│ define A⁰ as class A¹
 //│ module A² {
 //│   private val y⁰;
-//│   val x⁸;
+//│   val x⁶;
 //│   constructor {
-//│     define x⁸ as val x⁹ = 2;
+//│     define x⁶ as val x⁷ = 2;
 //│     set A².this.y⁰ = 3;
 //│     define C³ as class C⁵ {
-//│       private val x¹⁰;
+//│       private val x⁸;
 //│       constructor C⁴(x) {
-//│         set C⁵.this.x¹⁰ = x;
+//│         set C⁵.this.x⁸ = x;
 //│         end
 //│       }
 //│       method f⁴ = fun f⁵(x1) {
@@ -187,7 +183,7 @@ A.x
 //│   }
 //│   method g⁰ = fun g¹(x) { return 3 }
 //│ };
-//│ return A².x⁹
+//│ return A².x⁷
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 2
 
@@ -195,10 +191,9 @@ module A with
   val x = 3
 A.x
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let A³;
 //│ define A³ as class A⁴
-//│ module A⁵ { val x¹¹; constructor { define x¹¹ as val x¹² = 3; end } };
-//│ return A⁵.x¹²
+//│ module A⁵ { val x⁹; constructor { define x⁹ as val x¹⁰ = 3; end } };
+//│ return A⁵.x¹⁰
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 3
 
@@ -206,19 +201,17 @@ class A
 class B(x) extends A with
   val y = 2
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let A⁶, B⁰;
 //│ define A⁶ as class A⁷;
-//│ define B⁰ as class extends A⁷ B² {
-//│   private val x¹³;
+//│ define B⁰ as class B² extends A⁷ {
+//│   private val x¹¹;
 //│   val y¹;
-//│   constructor B¹(x) { do super⁰(); end; set B².this.x¹³ = x; define y¹ as val y² = 2; end }
+//│   constructor B¹(x) { do super⁰(); end; set B².this.x¹¹ = x; define y¹ as val y² = 2; end }
 //│ };
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 pattern P = B
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let P⁰;
 //│ define P⁰ as pattern P¹ {
 //│   method unapply⁰ = fun unapply¹(input) {
 //│     match input
@@ -238,16 +231,16 @@ pattern P = B
 object A with
   fun f = 42
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let A⁸; define A⁸ as object A⁹ { method f⁶ = fun f⁷ { return 42 } }; end
+//│ define A⁸ as object A⁹ { method f⁶ = fun f⁷ { return 42 } }; end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 let x = [1, 2, 3]
 x.0
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let x¹⁴, selRes;
-//│ set x¹⁴ = [1, 2, 3];
-//│ set selRes = x¹⁴.0﹖;
-//│ do x¹⁴.0$__checkNotMethod﹖;
+//│ let selRes;
+//│ set x¹² = [1, 2, 3];
+//│ set selRes = x¹².0﹖;
+//│ do x¹².0$__checkNotMethod﹖;
 //│ match selRes
 //│   undefined =>
 //│     throw new globalThis⁰.Error﹖("Access to required field '0' yielded 'undefined'")
@@ -261,7 +254,7 @@ x.0
 let y = { x: 2 }
 y!x
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let y³, x¹⁵; set x¹⁵ = 2; set y³ = { "x": x¹⁵ }; return y³!"x"
+//│ let x; set x = 2; set y³ = { "x": x }; return y³!"x"
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 2
 //│ y = {x: 2}
@@ -271,7 +264,7 @@ fun foo =
   class A
   new A
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let foo⁰; define foo⁰ as fun foo¹() { let A; define A as class A¹⁰; return new A¹⁰() }; end
+//│ define foo⁰ as fun foo¹() { let A; define A as class A¹⁰; return new A¹⁰() }; end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 

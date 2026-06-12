@@ -2,7 +2,7 @@ package hkmc2
 package codegen
 package js
 
-import mlscript.utils.*, shorthands.*
+import hkmc2.utils.*, shorthands.*
 import utils.*
 import document.*
 import document.Document.{braced, bracketed}
@@ -207,7 +207,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
       val calls = argss.foldLeft(base): (acc, args) =>
         val argsDoc = args.map(argument).mkDocument(", ")
         doc"${acc}(${argsDoc})"
-      if c.isMlsFun
+      if c.metadata.isMlsFun
       then if checkMLsCalls
         then doc"$runtimeVar.checkCall(${calls})"
         else doc"${calls}"
@@ -338,7 +338,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
   def returningTerm(t: Block, endSemi: Bool)(using Raise, Scope): Document =
     def mkSemi = if endSemi then ";" else ""
     t match
-    case Assign(l: NoSymbol, r, rst) =>
+    case Assign(NoSymbol, r, rst) =>
       doc" # ${result(r)};${returningTerm(rst, endSemi)}"
     case Assign(l: (LocalVarSymbol | TermSymbol), r, rst) =>
       doc" # ${
@@ -393,18 +393,16 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
             
             val symName = sym.nme
             
-            // * If the name is a valid JavaScript identifier, use it in the generated function code.
+            // * If the name is a valid JavaScript identifier, try to use it as the generated inner function name.
+            // * This is only a convenience for users, as this name will be printed in logs and stack traces.
             if sym.nameIsMeaningful && isValidIdentifier(symName)
             then
               val varName = scope.lookup_!(sym, dSym.toLoc)
               scope.reverseLookup(sym.nme) match
               // * Maybe the function's internal name was already bound in scope;
-              // * in that case, we need to forward it to a different variable to avoid unintended capture.
-              case S(otherSym: FreeSymbol) if (otherSym isnt sym) && bod.freeVars.contains(otherSym) => scope.nest.givenIn:
-                val externalName = scope.allocateName(otherSym, prefix = "proxy$", shadow = true)
-                val (params, bodyDoc) = setupFunction(displayName, ps, result, isLambda = false)
-                doc"const $externalName = $symName; ${
-                  varName} = function $symName($params) ${ braced(bodyDoc) };"
+              // * in that case, we can't really use it as an inner name, as this would result in unintended capture.
+              case S(otherSym: FreeSymbol) if (otherSym isnt sym) && bod.freeVars.contains(otherSym) =>
+                doc"${varName} = function ($params) ${ braced(bodyDoc) };"
               case _ =>
                 doc"${varName} = function ${sym.nme}($params) ${ braced(bodyDoc) };"
             else

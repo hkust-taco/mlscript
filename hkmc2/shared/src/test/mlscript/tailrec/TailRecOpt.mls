@@ -18,8 +18,8 @@ fun f(a, b, c) =
     else c
 f(10000, 20000, 0)
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let f⁰, g⁰, g_f⁰;
-//│ define g_f⁰ as fun g_f¹(id, param0, param1, param2, param3) {
+//│ let g_f;
+//│ define g_f as fun g_f⁰(id, param0, param1, param2, param3) {
 //│   loop loopLabel:
 //│     match id
 //│       0 =>
@@ -57,9 +57,9 @@ f(10000, 20000, 0)
 //│   end
 //│ };
 //│ define g⁰ as fun g¹(a, b, c, d) {
-//│   return g_f¹(0, a, b, c, d)
+//│   return g_f⁰(0, a, b, c, d)
 //│ };
-//│ define f⁰ as fun f¹(a, b, c) { return g_f¹(1, a, b, c, undefined) };
+//│ define f⁰ as fun f¹(a, b, c) { return g_f⁰(1, a, b, c, undefined) };
 //│ return f¹(10000, 20000, 0)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 50000
@@ -141,8 +141,8 @@ fun f(n, a, b, c, d, ...e) =
 fun g(n) =
   @tailcall f(n, ...[1, 2], 3, ...[3, 4], ...[5, n], 7, n)
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let f², g², f_g⁰;
-//│ define f_g⁰ as fun f_g¹(id, param0, param1, param2, param3, param4, param5) {
+//│ let f_g;
+//│ define f_g as fun f_g⁰(id, param0, param1, param2, param3, param4, param5) {
 //│   loop loopLabel:
 //│     match id
 //│       0 =>
@@ -178,10 +178,10 @@ fun g(n) =
 //│   end
 //│ };
 //│ define f² as fun f³(n, a, b, c, d, ...e) {
-//│   return f_g¹(0, n, a, b, c, d, e)
+//│   return f_g⁰(0, n, a, b, c, d, e)
 //│ };
 //│ define g² as fun g³(n) {
-//│   return f_g¹(1, n, undefined, undefined, undefined, undefined, undefined)
+//│   return f_g⁰(1, n, undefined, undefined, undefined, undefined, undefined)
 //│ };
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
@@ -214,7 +214,6 @@ fun f(x, y) =
   else
     f(x - 1, x)
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let f⁴;
 //│ define f⁴ as fun f⁵(x, y) {
 //│   loop loopLabel:
 //│     let scrut, tmp;
@@ -286,10 +285,10 @@ module A with
     @tailcall g(x - 1)
 A.f(10000)
 //│ ╔══[COMPILATION ERROR] This tail call exits the current scope and is not optimized.
-//│ ║  l.285: 	    fun g(x) = if x < 0 then 0 else @tailcall f(x)
+//│ ║  l.284: 	    fun g(x) = if x < 0 then 0 else @tailcall f(x)
 //│ ╙──       	                                              ^^^^
 //│ ╔══[COMPILATION ERROR] This tail call exits the current scope and is not optimized.
-//│ ║  l.286: 	    @tailcall g(x - 1)
+//│ ║  l.285: 	    @tailcall g(x - 1)
 //│ ╙──       	              ^^^^^^^^
 //│ ═══[RUNTIME ERROR] RangeError: Maximum call stack size exceeded
 
@@ -316,12 +315,12 @@ class A with
   fun g(x) = if x == 0 then 1 else @tailcall f(x - 1)
 (new A).f(10)
 //│ ╔══[COMPILATION ERROR] Calls from class methods cannot yet be marked @tailcall.
-//│ ║  l.315: 	  @tailrec fun f(x) = if x == 0 then 0 else @tailcall g(x - 1)
+//│ ║  l.314: 	  @tailrec fun f(x) = if x == 0 then 0 else @tailcall g(x - 1)
 //│ ╙──       	                                                      ^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Class methods may not yet be marked @tailrec.
-//│ ║  l.315: 	  @tailrec fun f(x) = if x == 0 then 0 else @tailcall g(x - 1)
+//│ ║  l.314: 	  @tailrec fun f(x) = if x == 0 then 0 else @tailcall g(x - 1)
 //│ ╙──       	               ^
 //│ ╔══[COMPILATION ERROR] Calls from class methods cannot yet be marked @tailcall.
-//│ ║  l.316: 	  fun g(x) = if x == 0 then 1 else @tailcall f(x - 1)
+//│ ║  l.315: 	  fun g(x) = if x == 0 then 1 else @tailcall f(x - 1)
 //│ ╙──       	                                             ^^^^^^^^
 //│ = 0

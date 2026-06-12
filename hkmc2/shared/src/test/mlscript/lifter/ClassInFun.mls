@@ -80,16 +80,16 @@ fun f(x) =
     fun y = x
   new C
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let C⁰, f⁰;
-//│ define C⁰ as class C¹ {
+//│ let C;
+//│ define C as class C⁰ {
 //│   private val x⁰;
 //│   constructor(x) {
-//│     set C¹.this.x⁰ = x;
+//│     set C⁰.this.x⁰ = x;
 //│     end
 //│   }
-//│   method y⁰ = fun y¹ { return C¹.this.x⁰ }
+//│   method y⁰ = fun y¹ { return C⁰.this.x⁰ }
 //│ };
-//│ define f⁰ as fun f¹(x) { return new C¹(x) };
+//│ define f⁰ as fun f¹(x) { return new C⁰(x) };
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
@@ -113,53 +113,53 @@ fun f() =
   Good()
 f().foo()
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let Bad⁰, Good⁰, f², tmp, Capture$scope0⁰;
-//│ define Capture$scope0⁰ as class Capture$scope0² {
-//│   constructor Capture$scope0¹(z$0, w$1) {
+//│ let Bad, Good, tmp, Capture$scope0;
+//│ define Capture$scope0 as class Capture$scope0¹ {
+//│   constructor Capture$scope0⁰(z$0, w$1) {
 //│     define w$1⁰ as val w$1¹ = w$1;
 //│     define z$0⁰ as val z$0¹ = z$0;
 //│     end
 //│   }
 //│ };
-//│ define Good⁰ as class Good² {
+//│ define Good as class Good¹ {
 //│   private val scope0$cap⁰;
 //│   private val x¹;
 //│   private val y²;
-//│   constructor Good¹(scope0$cap, x, y) {
-//│     set Good².this.scope0$cap⁰ = scope0$cap;
-//│     set Good².this.x¹ = x;
-//│     set Good².this.y² = y;
+//│   constructor Good⁰(scope0$cap, x, y) {
+//│     set Good¹.this.scope0$cap⁰ = scope0$cap;
+//│     set Good¹.this.x¹ = x;
+//│     set Good¹.this.y² = y;
 //│     end
 //│   }
 //│   method foo⁰ = fun foo¹() {
 //│     let tmp1, tmp2;
-//│     set Good².this.scope0$cap⁰.z$0¹ = 100;
-//│     set tmp1 = +⁰(Good².this.x¹, Good².this.y²);
-//│     set tmp2 = +⁰(tmp1, Good².this.scope0$cap⁰.z$0¹);
-//│     return +⁰(tmp2, Good².this.scope0$cap⁰.w$1¹)
+//│     set Good¹.this.scope0$cap⁰.z$0¹ = 100;
+//│     set tmp1 = +⁰(Good¹.this.x¹, Good¹.this.y²);
+//│     set tmp2 = +⁰(tmp1, Good¹.this.scope0$cap⁰.z$0¹);
+//│     return +⁰(tmp2, Good¹.this.scope0$cap⁰.w$1¹)
 //│   }
 //│ };
-//│ define Bad⁰ as class Bad² {
+//│ define Bad as class Bad¹ {
 //│   private val scope0$cap¹;
-//│   constructor Bad¹(scope0$cap) {
-//│     set Bad².this.scope0$cap¹ = scope0$cap;
+//│   constructor Bad⁰(scope0$cap) {
+//│     set Bad¹.this.scope0$cap¹ = scope0$cap;
 //│     end
 //│   }
 //│   method foo² = fun foo³() {
-//│     set Bad².this.scope0$cap¹.w$1¹ = 10000;
+//│     set Bad¹.this.scope0$cap¹.w$1¹ = 10000;
 //│     return runtime⁰.Unit⁰
 //│   }
 //│ };
 //│ define f² as fun f³() {
 //│   let x, y, z, w, tmp1, scope0$cap;
-//│   set scope0$cap = new mut Capture$scope0²(z, w);
+//│   set scope0$cap = new mut Capture$scope0¹(z, w);
 //│   set x = 1;
 //│   set y = 10;
 //│   set scope0$cap.z$0¹ = 10;
 //│   set scope0$cap.w$1¹ = 1000;
-//│   set tmp1 = new Bad²(scope0$cap);
+//│   set tmp1 = new Bad¹(scope0$cap);
 //│   do tmp1.foo³();
-//│   return new Good²(scope0$cap, x, y)
+//│   return new Good¹(scope0$cap, x, y)
 //│ };
 //│ set tmp = f³();
 //│ return tmp.foo﹖()
@@ -283,22 +283,22 @@ fun main() =
   set e.a = 0
   [c.a, c.b, d.a, e.a]
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let C², main⁰;
-//│ define C² as class C⁴ {
+//│ let C;
+//│ define C as class C² {
 //│   val a⁰;
-//│   constructor C³(a) {
+//│   constructor C¹(a) {
 //│     define a⁰ as val a¹ = a;
 //│     end
 //│   }
 //│ };
 //│ define main⁰ as fun main¹() {
 //│   let c, d, e;
-//│   set c = new mut C⁴(123);
+//│   set c = new mut C²(123);
 //│   set c.a﹖ = 0;
 //│   set c.b﹖ = "hi";
-//│   set d = new C⁴(456);
+//│   set d = new C²(456);
 //│   set d.a﹖ = 0;
-//│   set e = C³(789);
+//│   set e = C¹(789);
 //│   set e.a﹖ = 0;
 //│   return [c.a﹖, c.b﹖, d.a﹖, e.a﹖]
 //│ };
@@ -339,27 +339,27 @@ fun main(x) =
   set e.a = 0
   [c.a, c.b, d.a, e.a, c.get, d.get, e.get]
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let C⁵, main²;
-//│ define C⁵ as class C⁷ {
+//│ let C;
+//│ define C as class C⁴ {
 //│   private val x²;
 //│   val a²;
-//│   constructor C⁶(a, x) {
-//│     set C⁷.this.x² = x;
+//│   constructor C³(a, x) {
+//│     set C⁴.this.x² = x;
 //│     define a² as val a³ = a;
 //│     end
 //│   }
 //│   method get⁰ = fun get¹ {
-//│     return +⁰(C⁷.this.x², C⁷.this.a³)
+//│     return +⁰(C⁴.this.x², C⁴.this.a³)
 //│   }
 //│ };
 //│ define main² as fun main³(x) {
 //│   let c, d, e;
-//│   set c = new mut C⁷(123, x);
+//│   set c = new mut C⁴(123, x);
 //│   set c.a﹖ = 0;
 //│   set c.b﹖ = "hi";
-//│   set d = new C⁷(456, x);
+//│   set d = new C⁴(456, x);
 //│   set d.a﹖ = 0;
-//│   set e = new C⁷(789, x);
+//│   set e = new C⁴(789, x);
 //│   set e.a﹖ = 0;
 //│   return [c.a﹖, c.b﹖, d.a﹖, e.a﹖, c.get﹖, d.get﹖, e.get﹖]
 //│ };
@@ -425,4 +425,180 @@ test(0).toString()
 //   return ret;
 // }
 
+:sir
+fun f(x, y, z) =
+  data class C(a) with
+    fun getX = x
+    fun getY = y
+    fun setY = set y += 1
+  class D extends C(y)
+  [new C(0), new D]
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let C, D, Capture$f;
+//│ @data
+//│ define C as class C⁶ {
+//│   private val f$cap⁰;
+//│   private val x³;
+//│   val a⁴;
+//│   constructor C⁵(a, f$cap, x) {
+//│     set C⁶.this.f$cap⁰ = f$cap;
+//│     set C⁶.this.x³ = x;
+//│     define a⁴ as val a⁵ = a;
+//│     end
+//│   }
+//│   method getX⁰ = fun getX¹ {
+//│     return C⁶.this.x³
+//│   }
+//│   method getY⁰ = fun getY¹ {
+//│     return C⁶.this.f$cap⁰.y$0⁰
+//│   }
+//│   method setY⁰ = fun setY¹ {
+//│     let tmp;
+//│     set tmp = +⁰(C⁶.this.f$cap⁰.y$0⁰, 1);
+//│     set C⁶.this.f$cap⁰.y$0⁰ = tmp;
+//│     return runtime⁰.Unit⁰
+//│   }
+//│ };
+//│ define D as class D⁰ extends C⁶ {
+//│   private val f$cap¹;
+//│   private val x⁴;
+//│   constructor(f$cap, x) {
+//│     do super⁰(f$cap².y$0⁰, f$cap², x⁵);
+//│     end;
+//│     set D⁰.this.f$cap¹ = f$cap;
+//│     set D⁰.this.x⁴ = x;
+//│     end
+//│   }
+//│ };
+//│ define Capture$f as class Capture$f¹ {
+//│   constructor Capture$f⁰(y$0) {
+//│     define y$0¹ as val y$0⁰ = y$0;
+//│     end
+//│   }
+//│ };
+//│ define f⁴ as fun f⁵(x, y, z) {
+//│   let tmp, tmp1, f$cap;
+//│   set f$cap = new mut Capture$f¹(y);
+//│   set tmp = new C⁶(0, f$cap, x);
+//│   set tmp1 = new D⁰(f$cap, x);
+//│   return [tmp, tmp1]
+//│ };
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
+:expect [2, (), 3, 2]
+let res = f(1, 2, 3)
+let c = res.0
+let d = res.1
+[c.getY, c.setY, c.getY, d.a]
+//│ = [2, (), 3, 2]
+//│ c = C(0)
+//│ d = D { a: 2 }
+//│ res = [C(0), D { a: 2 }]
+
+:expect 0
+class A(val x)
+class B(y) extends A(y)
+(new B(0)).x
+//│ = 0
+
+:expect [1, 2]
+class A(val x)(val y)
+class B extends A(1)(2)
+[(new B).x, (new B).y]
+//│ = [1, 2]
+
+:w
+:sir
+fun f(x, y, z) =
+  data class C(a) with
+    fun getX = x
+    fun getY = y
+    fun setY = set y += 1
+  class D extends C(y)
+  let x = D // force D unlifted
+  [new C(0), new D]
+//│ ═══[WARNING] Cannot yet lift class `D` as it is used as a first-class class.
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let C, Capture$f;
+//│ @data
+//│ define C as class C⁸ {
+//│   private val f$cap³;
+//│   private val x⁶;
+//│   val a⁶;
+//│   constructor C⁷(a, f$cap, x) {
+//│     set C⁸.this.f$cap³ = f$cap;
+//│     set C⁸.this.x⁶ = x;
+//│     define a⁶ as val a⁷ = a;
+//│     end
+//│   }
+//│   method getX² = fun getX³ {
+//│     return C⁸.this.x⁶
+//│   }
+//│   method getY² = fun getY³ {
+//│     return C⁸.this.f$cap³.y$0²
+//│   }
+//│   method setY² = fun setY³ {
+//│     let tmp;
+//│     set tmp = +⁰(C⁸.this.f$cap³.y$0², 1);
+//│     set C⁸.this.f$cap³.y$0² = tmp;
+//│     return runtime⁰.Unit⁰
+//│   }
+//│ };
+//│ define Capture$f as class Capture$f³ {
+//│   constructor Capture$f²(y$0) {
+//│     define y$0³ as val y$0² = y$0;
+//│     end
+//│   }
+//│ };
+//│ define f⁶ as fun f⁷(x, y, z) {
+//│   let D, x1, tmp, tmp1, f$cap;
+//│   set f$cap = new mut Capture$f³(y);
+//│   define D as class D¹ extends C⁸ {};
+//│   set x1 = D¹;
+//│   set tmp = new C⁸(0, f$cap, x);
+//│   set tmp1 = new D¹();
+//│   return [tmp, tmp1]
+//│ };
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+:expect [2, (), 3, 2]
+let res = f(1, 2, 3)
+let c = res.0
+let d = res.1
+[c.getY, c.setY, c.getY, d.a]
+//│ = [2, (), 3, 2]
+//│ c = C(0)
+//│ d = D { a: 2 }
+//│ res = [C(0), D { a: 2 }]
+
+:w
+fun f(x, y, z) =
+  data class C(a) with
+    fun getX = x
+    fun getY = y
+    fun setY = set y += 1
+  class D extends C(y)
+  if x is C do print("a") // force C unlifted
+  [new C(0), new D]
+//│ ═══[WARNING] Cannot yet lift class/module `C` as it is used in an instance check.
+//│ ═══[WARNING] Cannot yet lift definition `D` as it extends an unliftable class.
+
+:expect [2, (), 3, 2]
+let res = f(1, 2, 3)
+let c = res.0
+let d = res.1
+[c.getY, c.setY, c.getY, d.a]
+//│ = [2, (), 3, 2]
+//│ c = C(0)
+//│ d = D { a: 2 }
+//│ res = [C(0), D { a: 2 }]
+
+
+:expect 3
+class Box(val x) with
+    fun get() = x
+    fun inc() = Box(x + 1).get()
+Box(2).inc()
+//│ = 3

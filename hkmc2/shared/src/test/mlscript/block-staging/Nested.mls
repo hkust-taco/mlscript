@@ -4,11 +4,11 @@
 :staging
 
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ import Predef; end
+//│ import "..." as Predef; end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 staged fun direct() = 1
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let direct⁰; @staged define direct⁰ as staged fun direct¹() { return 1 }; end
+//│ @staged define direct⁰ as staged fun direct¹() { return 1 }; end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 
@@ -17,38 +17,36 @@ staged module LiftedNested with
     fun g() = 1
     g()
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let g⁰, LiftedNested⁰, symbolMap⁰, tmp, tmp1, tmp2;
+//│ let g, symbolMap, tmp, tmp1, tmp2;
 //│ set tmp = new globalThis⁰.Map﹖();
 //│ set tmp1 = new globalThis⁰.Map﹖();
 //│ set tmp2 = new Block⁰.SymbolMap﹖(tmp, tmp1);
-//│ set symbolMap⁰ = tmp2;
+//│ set symbolMap = tmp2;
 //│ @staged
-//│ define g⁰ as staged fun g¹() {
+//│ define g as staged fun g⁰() {
 //│   return 1
 //│ };
 //│ define LiftedNested⁰ as class LiftedNested¹
 //│ staged module LiftedNested² {
 //│   constructor {
 //│     let tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10, sym, tmp11, tmp12, tmp13, tmp14, tmp15, tmp16;
-//│     begin
-//│       set tmp6 = LiftedNested².this.f_instr﹖();
-//│       set tmp7 = [tmp6, 1];
-//│       set tmp8 = ["f", tmp7];
-//│       set tmp9 = [tmp8];
-//│       set tmp10 = new globalThis⁰.Map﹖(tmp9);
-//│       set sym = Block⁰.ModuleSymbol﹖("LiftedNested", LiftedNested².this);
-//│       set tmp11 = symbolMap⁰.checkMap﹖("moduleMap", LiftedNested².this, sym);
-//│       set tmp12 = new SpecializeHelpers⁰.FunCache﹖(tmp11, tmp10);
-//│       define cache$LiftedNested⁰ as val cache$LiftedNested¹ = tmp12;
-//│       set tmp3 = ["f", LiftedNested².this.f_gen﹖];
-//│       set tmp4 = [tmp3];
-//│       set tmp5 = new globalThis⁰.Map﹖(tmp4);
-//│       define generatorMap$LiftedNested⁰ as val generatorMap$LiftedNested¹ = tmp5;
-//│       end;
+//│     set tmp6 = LiftedNested².this.f_instr﹖();
+//│     set tmp7 = [tmp6, 1];
+//│     set tmp8 = ["f", tmp7];
+//│     set tmp9 = [tmp8];
+//│     set tmp10 = new globalThis⁰.Map﹖(tmp9);
+//│     set sym = Block⁰.ModuleSymbol﹖("LiftedNested", LiftedNested².this);
+//│     set tmp11 = symbolMap.checkMap﹖("moduleMap", LiftedNested².this, sym);
+//│     set tmp12 = new SpecializeHelpers⁰.FunCache﹖(tmp11, tmp10);
+//│     define cache$LiftedNested⁰ as val cache$LiftedNested¹ = tmp12;
+//│     set tmp3 = ["f", LiftedNested².this.f_gen﹖];
+//│     set tmp4 = [tmp3];
+//│     set tmp5 = new globalThis⁰.Map﹖(tmp4);
+//│     define generatorMap$LiftedNested⁰ as val generatorMap$LiftedNested¹ = tmp5;
 //│     set tmp13 = LiftedNested².this.cache$LiftedNested﹖.toString﹖();
 //│     set tmp14 = globalThis⁰.console﹖.log﹖(tmp13);
 //│     set tmp15 = globalThis⁰.console﹖.log﹖(LiftedNested².this.generatorMap$LiftedNested﹖);
-//│     set tmp16 = globalThis⁰.console﹖.log﹖(symbolMap⁰);
+//│     set tmp16 = globalThis⁰.console﹖.log﹖(symbolMap);
 //│     end
 //│   }
 //│   method ctor$_instr⁰ = fun ctor$_instr¹() {
@@ -102,9 +100,9 @@ staged module LiftedLambda with
   fun foo(x) = y => x + y
 //│ ═══[COMPILATION ERROR] Staged classes with private fields are not supported.
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let LiftedLambda⁰, lambda⁰, Function$⁰;
+//│ let lambda, Function$;
 //│ @staged @private
-//│ define lambda⁰ as staged fun lambda¹(x, y) { return +⁰(x, y) };
+//│ define lambda as staged fun lambda⁰(x, y) { return +⁰(x, y) };
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
@@ -113,8 +111,5 @@ staged module LiftedMultParams with
   fun foo(x)(y) = x + y
 //│ ═══[COMPILATION ERROR] Staged classes with private fields are not supported.
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let LiftedMultParams⁰, lambda$⁰, Function$¹;
-//│ @staged
-//│ define lambda$⁰ as staged fun lambda$¹(x, y) { return +⁰(x, y) };
-//│ end
+//│ let lambda$, Function$; @staged define lambda$ as staged fun lambda$⁰(x, y) { return +⁰(x, y) }; end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————

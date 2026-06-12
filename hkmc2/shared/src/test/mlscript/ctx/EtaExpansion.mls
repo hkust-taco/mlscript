@@ -31,11 +31,7 @@ using Num = 0.42
 :sir
 let f1 = foo
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let f1⁰, f1¹;
-//│ @private
-//│ define f1¹ as fun f1²() { return foo⁰()(instance$Ident(Int)⁰) };
-//│ set f1⁰ = f1²;
-//│ end
+//│ let f1; @private define f1 as fun f1⁰() { return foo⁰()(instance$Ident(Int)⁰) }; set f1¹ = f1⁰; end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ f1 = fun f1
 
@@ -51,10 +47,10 @@ f1()
 :sir
 let f2 = bar
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let f2⁰, f2¹;
+//│ let f2;
 //│ @private
-//│ define f2¹ as fun f2²(x) { return bar⁰(x)(instance$Ident(Int)⁰) };
-//│ set f2⁰ = f2²;
+//│ define f2 as fun f2⁰(x) { return bar⁰(x)(instance$Ident(Int)⁰) };
+//│ set f2¹ = f2⁰;
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ f2 = fun f2
@@ -71,9 +67,9 @@ f2(0.42)
 :sir
 let f3 = baz
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let f3⁰, f3¹;
+//│ let f3;
 //│ @private
-//│ define f3¹ as fun f3²(x) {
+//│ define f3 as fun f3⁰(x) {
 //│   let lambda;
 //│   @private
 //│   define lambda as fun lambda⁰(y) {
@@ -81,7 +77,7 @@ let f3 = baz
 //│   };
 //│   return lambda⁰
 //│ };
-//│ set f3⁰ = f3²;
+//│ set f3¹ = f3⁰;
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ f3 = fun f3
@@ -114,7 +110,6 @@ module Test with
   fun test(j)(using Int) = 0
   fun main(using Int) = test
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let Test⁰;
 //│ define Test⁰ as class Test¹
 //│ module Test² {
 //│   method test⁰ = fun test¹(j)(tmp) {

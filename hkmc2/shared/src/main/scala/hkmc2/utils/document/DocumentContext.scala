@@ -5,7 +5,7 @@ import collection.immutable.ArraySeq
 import collection.immutable.ArraySeq.unsafeWrapArray
 import util.matching.Regex
 
-import mlscript.utils.*, shorthands.*
+import hkmc2.utils.*, shorthands.*
 import utils.*
 
 import Document._
@@ -41,9 +41,9 @@ object DocumentContext:
   case class RawDocText(s: String) // avoids the "\n chars" warning of DocText
 import DocumentContext.*
 
-class DocumentContext(ctx: StringContext) {
+class DocumentContext(ctx: StringContext):
   
-  object doc {
+  object doc:
   
     def apply(docs: Document*): Document =
       
@@ -108,7 +108,5 @@ class DocumentContext(ctx: StringContext) {
       end process
       process(empty, Insert)
       
-  }
   
-}
 
