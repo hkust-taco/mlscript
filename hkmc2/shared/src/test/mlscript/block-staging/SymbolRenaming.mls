@@ -2,19 +2,41 @@
 :staging
 
 staged module TempVariable with
-  fun f() =
+  fun f(x, x) =
     let x
     let x
     x
-//│ > fun ctor_() = ()
-//│ > fun f() =
-//│ >   let {x, x1}
-//│ >   x1
+//│ > module TempVariable with
+//│ >   ()
+//│ >   fun f(x, x) =
+//│ >     let {x, x}
+//│ >     x
+//│ > Map(1) { 'f' => [Function: f_gen] }
+//│ > SymbolMap {
+//│ >   classMap: Map(0) {},
+//│ >   moduleMap: Map(1) {
+//│ >     [class TempVariable] {
+//│ >       'cache$TempVariable': [FunCache],
+//│ >       'generatorMap$TempVariable': [Map]
+//│ >     } => ModuleSymbol { name: 'TempVariable', value: [Function] }
+//│ >   }
+//│ > }
 
 staged module DupeFunctionName with
   fun f() = 1
-//│ > fun ctor_() = ()
-//│ > fun f() = 1
+//│ > module DupeFunctionName with
+//│ >   ()
+//│ >   fun f() = 1
+//│ > Map(1) { 'f' => [Function: f_gen] }
+//│ > SymbolMap {
+//│ >   classMap: Map(0) {},
+//│ >   moduleMap: Map(1) {
+//│ >     [class DupeFunctionName] {
+//│ >       'cache$DupeFunctionName': [FunCache],
+//│ >       'generatorMap$DupeFunctionName': [Map]
+//│ >     } => ModuleSymbol { name: 'DupeFunctionName', value: [Function] }
+//│ >   }
+//│ > }
 
 class C(val x)
 
@@ -22,21 +44,59 @@ staged module Selection with
   fun f(x) =
     x.call()
     C(1).x is Bool
-//│ > fun ctor_() = ()
-//│ > fun f(x) =
-//│ >   let {scrut, tmp}
-//│ >   x.call()
-//│ >   tmp = C(1)
-//│ >   scrut = tmp.x
-//│ >   if scrut is
-//│ >     Bool then true
-//│ >     else false
+//│ > module Selection with
+//│ >   ()
+//│ >   fun f(x) =
+//│ >     let {scrut, tmp}
+//│ >     x.call()
+//│ >     tmp = C(1)
+//│ >     scrut = tmp.x
+//│ >     if scrut is
+//│ >       Bool then true
+//│ >       else false
+//│ > Map(1) { 'f' => [Function: f_gen] }
+//│ > SymbolMap {
+//│ >   classMap: Map(2) {
+//│ >     [Function: C] { class: [Function] } => ConcreteClassSymbol {
+//│ >       name: 'C',
+//│ >       value: [Function],
+//│ >       paramsOpt: [Some],
+//│ >       auxParams: []
+//│ >     },
+//│ >     'Bool' => VirtualClassSymbol { name: 'Bool' }
+//│ >   },
+//│ >   moduleMap: Map(1) {
+//│ >     [class Selection] {
+//│ >       'cache$Selection': [FunCache],
+//│ >       'generatorMap$Selection': [Map]
+//│ >     } => ModuleSymbol { name: 'Selection', value: [Function] }
+//│ >   }
+//│ > }
 
-:fixme
 staged module DupeClass with
   class C(val y)
   fun f() = C(1).y
-//│ ═══[COMPILATION ERROR] Value.This not supported in staged module.
-//│ > fun ctor_() =
+//│ > module DupeClass with
 //│ >   class C(y)
-//│ ═══[RUNTIME ERROR] Error: MLscript call unexpectedly returned `undefined`, the forbidden value.
+//│ >   fun f() =
+//│ >     let {tmp}
+//│ >     tmp = this.C(1)
+//│ >     tmp.y
+//│ > Map(1) { 'f' => [Function: f_gen] }
+//│ > SymbolMap {
+//│ >   classMap: Map(1) {
+//│ >     [Function: C] { class: [Function] } => ConcreteClassSymbol {
+//│ >       name: 'C',
+//│ >       value: [Function],
+//│ >       paramsOpt: [Some],
+//│ >       auxParams: []
+//│ >     }
+//│ >   },
+//│ >   moduleMap: Map(1) {
+//│ >     [class DupeClass] {
+//│ >       C: [Function],
+//│ >       'cache$DupeClass': [FunCache],
+//│ >       'generatorMap$DupeClass': [Map]
+//│ >     } => ModuleSymbol { name: 'DupeClass', value: [Function] }
+//│ >   }
+//│ > }

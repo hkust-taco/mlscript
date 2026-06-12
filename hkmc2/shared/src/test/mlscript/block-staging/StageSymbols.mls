@@ -1,14 +1,33 @@
 :js
 :staging
 
-:fixme
 staged module M with
   class C with
     fun f() = 1
     fun g() = f()
-//│ ═══[COMPILATION ERROR] Value.This not supported in staged module.
-//│ ═══[COMPILATION ERROR] Value.This not supported in staged module.
-//│ ═══[RUNTIME ERROR] Error: MLscript call unexpectedly returned `undefined`, the forbidden value.
+//│ > module M with
+//│ >   class C with
+//│ >     fun f() = 1
+//│ >     fun g() = this.f()
+//│ >   
+//│ > Map(0) {}
+//│ > SymbolMap {
+//│ >   classMap: Map(1) {
+//│ >     [class C] { Symbol(mlscript.definitionMetadata): [Array] } => ConcreteClassSymbol {
+//│ >       name: 'C',
+//│ >       value: [Function],
+//│ >       paramsOpt: None {},
+//│ >       auxParams: []
+//│ >     }
+//│ >   },
+//│ >   moduleMap: Map(1) {
+//│ >     [class M] {
+//│ >       C: [Function],
+//│ >       'cache$M': [FunCache],
+//│ >       'generatorMap$M': Map(0) {}
+//│ >     } => ModuleSymbol { name: 'M', value: [Function] }
+//│ >   }
+//│ > }
 
 staged module A with
   fun f() = 1
@@ -19,74 +38,300 @@ staged module D with
   class E
   fun f() =
     A.f()
-    B.f()
+    B.f is Bool
   fun matching() =
     1 is Int
     1 is C
-//│ > fun ctor_() = ()
-//│ > fun f() = 1
-//│ > fun ctor_() =
+//│ > module A with
+//│ >   ()
+//│ >   fun f() = 1
+//│ > Map(1) { 'f' => [Function: f_gen] }
+//│ > SymbolMap {
+//│ >   classMap: Map(0) {},
+//│ >   moduleMap: Map(1) {
+//│ >     [class A] { 'cache$A': [FunCache], 'generatorMap$A': [Map] } => ModuleSymbol { name: 'A', value: [Function] }
+//│ >   }
+//│ > }
+//│ > module D with
 //│ >   class E
-//│ > fun f() =
-//│ >   A.f_gen()
-//│ >   B.f()
-//│ > fun matching() =
-//│ >   let {scrut, scrut1, tmp}
-//│ >   scrut = 1
-//│ >   if scrut is
-//│ >     Int then
-//│ >       tmp = true
-//│ >     else
-//│ >       tmp = false
-//│ >   scrut1 = 1
-//│ >   if scrut1 is
-//│ >     C then true
-//│ >     else false
+//│ >   fun f() =
+//│ >     let {scrut}
+//│ >     A.f()
+//│ >     scrut = B.f
+//│ >     if scrut is
+//│ >       Bool then true
+//│ >       else false
+//│ >   fun matching() =
+//│ >     let {scrut1, scrut2, tmp}
+//│ >     scrut1 = 1
+//│ >     if scrut1 is
+//│ >       Int then
+//│ >         tmp = true
+//│ >       else
+//│ >         tmp = false
+//│ >     scrut2 = 1
+//│ >     if scrut2 is
+//│ >       C then true
+//│ >       else false
+//│ > Map(2) {
+//│ >   'f' => [Function: f_gen],
+//│ >   'matching' => [Function: matching_gen]
+//│ > }
+//│ > SymbolMap {
+//│ >   classMap: Map(4) {
+//│ >     'Bool' => VirtualClassSymbol { name: 'Bool' },
+//│ >     'Int' => VirtualClassSymbol { name: 'Int' },
+//│ >     [Function: C] { class: [Function] } => ConcreteClassSymbol {
+//│ >       name: 'C',
+//│ >       value: [Function],
+//│ >       paramsOpt: [Some],
+//│ >       auxParams: [Array]
+//│ >     },
+//│ >     [class E] { Symbol(mlscript.definitionMetadata): [Array] } => ConcreteClassSymbol {
+//│ >       name: 'E',
+//│ >       value: [Function],
+//│ >       paramsOpt: None {},
+//│ >       auxParams: []
+//│ >     }
+//│ >   },
+//│ >   moduleMap: Map(3) {
+//│ >     [class A] {
+//│ >       'cache$A': [FunCache],
+//│ >       'generatorMap$A': [Map],
+//│ >       Symbol(mlscript.definitionMetadata): [Array]
+//│ >     } => ModuleSymbol { name: 'A', value: [Function] },
+//│ >     [class B] { Symbol(mlscript.definitionMetadata): [Array] } => ModuleSymbol { name: 'B', value: [Function] },
+//│ >     [class D] {
+//│ >       E: [Function],
+//│ >       'cache$D': [FunCache],
+//│ >       'generatorMap$D': [Map]
+//│ >     } => ModuleSymbol { name: 'D', value: [Function] }
+//│ >   }
+//│ > }
 
-:fixme
 module A with
   module B with
     class C(a)
 staged module M with
   class E
   fun f() = 
-    D.E
-    A.B.C
-    A.B.C(1)
+    let x = D.E
+    x = A.B.C
+    A.B.C(2)
     E
-//│ ═══[COMPILATION ERROR] Value.This not supported in staged module.
-//│ > fun ctor_() =
-//│ >   class E
-//│ ═══[RUNTIME ERROR] Error: MLscript call unexpectedly returned `undefined`, the forbidden value.
+//│ > module M with
+//│ >   class E1
+//│ >   fun f() =
+//│ >     let {x}
+//│ >     x = D.E
+//│ >     x = A.B.C
+//│ >     A.B.C(2)
+//│ >     this.E1
+//│ > Map(1) { 'f' => [Function: f_gen] }
+//│ > SymbolMap {
+//│ >   classMap: Map(3) {
+//│ >     [class E] { Symbol(mlscript.definitionMetadata): [Array] } => ConcreteClassSymbol {
+//│ >       name: 'E',
+//│ >       value: [Function],
+//│ >       paramsOpt: None {},
+//│ >       auxParams: []
+//│ >     },
+//│ >     [Function: C] { class: [Function] } => ConcreteClassSymbol {
+//│ >       name: 'C',
+//│ >       value: [Function],
+//│ >       paramsOpt: [Some],
+//│ >       auxParams: []
+//│ >     },
+//│ >     [class E1] { Symbol(mlscript.definitionMetadata): [Array] } => ConcreteClassSymbol {
+//│ >       name: 'E1',
+//│ >       value: [Function],
+//│ >       paramsOpt: None {},
+//│ >       auxParams: []
+//│ >     }
+//│ >   },
+//│ >   moduleMap: Map(4) {
+//│ >     [class D] {
+//│ >       E: [Function],
+//│ >       'cache$D': [FunCache],
+//│ >       'generatorMap$D': [Map],
+//│ >       Symbol(mlscript.definitionMetadata): [Array]
+//│ >     } => ModuleSymbol { name: 'D', value: [Function] },
+//│ >     [class A2] {
+//│ >       B: [Function],
+//│ >       Symbol(mlscript.definitionMetadata): [Array]
+//│ >     } => ModuleSymbol { name: 'A', value: [Function] },
+//│ >     [class B2] {
+//│ >       C: [Function],
+//│ >       Symbol(mlscript.definitionMetadata): [Array]
+//│ >     } => ModuleSymbol { name: 'B', value: [Function] },
+//│ >     [class M2] {
+//│ >       E: [Function],
+//│ >       'cache$M': [FunCache],
+//│ >       'generatorMap$M': [Map]
+//│ >     } => ModuleSymbol { name: 'M', value: [Function] }
+//│ >   }
+//│ > }
 
 :e
 staged module M with
   fun g()() = 1
 //│ ╔══[COMPILATION ERROR] :ftc must be enabled to desugar functions with multiple parameter lists.
-//│ ║  l.64: 	  fun g()() = 1
-//│ ╙──      	  ^^^^^^^^^^^^^
-//│ > fun ctor_() = ()
-//│ > fun g()() = 1
+//│ ║  l.177: 	  fun g()() = 1
+//│ ╙──       	  ^^^^^^^^^^^^^
+//│ > module M with
+//│ >   ()
+//│ >   fun g()() = 1
+//│ > Map(1) { 'g' => [Function: g_gen] }
+//│ > SymbolMap {
+//│ >   classMap: Map(0) {},
+//│ >   moduleMap: Map(1) {
+//│ >     [class M4] { 'cache$M': [FunCache], 'generatorMap$M': [Map] } => ModuleSymbol { name: 'M', value: [Function] }
+//│ >   }
+//│ > }
 
 :ftc
 staged module M with
   fun f() = x => x
   fun g()() = 1
-//│ > fun ctor_() = ()
-//│ > fun f() =
-//│ >   let {tmp}
-//│ >   tmp = new Function_
-//│ >   tmp
-//│ > fun g() =
-//│ >   let {tmp1}
-//│ >   tmp1 = new Function_1
-//│ >   tmp1
+//│ > class Function$() extends Function() with
+//│ >   ()
+//│ >   fun call() = lambda_()
+//│ > Map(1) { 'call' => [Function: call_gen] }
+//│ > SymbolMap {
+//│ >   classMap: Map(2) {
+//│ >     [class Function$ extends Function] {
+//│ >       'class$cache$Function$': [FunCache],
+//│ >       'class$generatorMap$Function$': [Map]
+//│ >     } => ConcreteClassSymbol {
+//│ >       name: 'Function$',
+//│ >       value: [Function],
+//│ >       paramsOpt: None {},
+//│ >       auxParams: [Array]
+//│ >     },
+//│ >     [Function: Function] => ConcreteClassSymbol {
+//│ >       name: 'Function',
+//│ >       value: [Function: Function],
+//│ >       paramsOpt: None {},
+//│ >       auxParams: []
+//│ >     }
+//│ >   },
+//│ >   moduleMap: Map(0) {}
+//│ > }
+//│ > class Function$1() extends Function() with
+//│ >   ()
+//│ >   fun call(x) = lambda(x)
+//│ > Map(1) { 'call' => [Function: call_gen] }
+//│ > SymbolMap {
+//│ >   classMap: Map(3) {
+//│ >     [class Function$ extends Function] {
+//│ >       'class$cache$Function$': [FunCache],
+//│ >       'class$generatorMap$Function$': [Map],
+//│ >       Symbol(mlscript.definitionMetadata): [Array]
+//│ >     } => ConcreteClassSymbol {
+//│ >       name: 'Function$',
+//│ >       value: [Function],
+//│ >       paramsOpt: None {},
+//│ >       auxParams: [Array]
+//│ >     },
+//│ >     [Function: Function] => ConcreteClassSymbol {
+//│ >       name: 'Function',
+//│ >       value: [Function: Function],
+//│ >       paramsOpt: None {},
+//│ >       auxParams: []
+//│ >     },
+//│ >     [class Function$1 extends Function] {
+//│ >       'class$cache$Function$': [FunCache],
+//│ >       'class$generatorMap$Function$': [Map]
+//│ >     } => ConcreteClassSymbol {
+//│ >       name: 'Function$1',
+//│ >       value: [Function],
+//│ >       paramsOpt: None {},
+//│ >       auxParams: [Array]
+//│ >     }
+//│ >   },
+//│ >   moduleMap: Map(0) {}
+//│ > }
+//│ > module M with
+//│ >   ()
+//│ >   fun f() =
+//│ >     let {tmp}
+//│ >     tmp = new Function_1
+//│ >     tmp
+//│ >   fun g() =
+//│ >     let {tmp1}
+//│ >     tmp1 = new Function_
+//│ >     tmp1
+//│ > Map(2) { 'f' => [Function: f_gen], 'g' => [Function: g_gen] }
+//│ > SymbolMap {
+//│ >   classMap: Map(3) {
+//│ >     [class Function$ extends Function] {
+//│ >       'class$cache$Function$': [FunCache],
+//│ >       'class$generatorMap$Function$': [Map],
+//│ >       Symbol(mlscript.definitionMetadata): [Array]
+//│ >     } => ConcreteClassSymbol {
+//│ >       name: 'Function$',
+//│ >       value: [Function],
+//│ >       paramsOpt: None {},
+//│ >       auxParams: [Array]
+//│ >     },
+//│ >     [Function: Function] => ConcreteClassSymbol {
+//│ >       name: 'Function',
+//│ >       value: [Function: Function],
+//│ >       paramsOpt: None {},
+//│ >       auxParams: []
+//│ >     },
+//│ >     [class Function$1 extends Function] {
+//│ >       'class$cache$Function$': [FunCache],
+//│ >       'class$generatorMap$Function$': [Map],
+//│ >       Symbol(mlscript.definitionMetadata): [Array]
+//│ >     } => ConcreteClassSymbol {
+//│ >       name: 'Function$1',
+//│ >       value: [Function],
+//│ >       paramsOpt: None {},
+//│ >       auxParams: [Array]
+//│ >     }
+//│ >   },
+//│ >   moduleMap: Map(1) {
+//│ >     [class M6] { 'cache$M': [FunCache], 'generatorMap$M': [Map] } => ModuleSymbol { name: 'M', value: [Function] }
+//│ >   }
+//│ > }
 
-// TODO: these need to be printed, somehow:
 :noModuleCheck
+:silent
 let x = M."f_instr"().body.rest.rhs.cls.l.value
 let y = M."g_instr"().body.rest.rhs.cls.l.value
-//│ x = class Function$
-//│ y = class Function$
-(new x).call(2)
-//│ = 2
+assert x != y
+
+staged module Shadowing with
+  fun f(x, x) = x
+//│ > module Shadowing with
+//│ >   ()
+//│ >   fun f(x, x) = x
+//│ > Map(1) { 'f' => [Function: f_gen] }
+//│ > SymbolMap {
+//│ >   classMap: Map(0) {},
+//│ >   moduleMap: Map(1) {
+//│ >     [class Shadowing] {
+//│ >       'cache$Shadowing': [FunCache],
+//│ >       'generatorMap$Shadowing': [Map]
+//│ >     } => ModuleSymbol { name: 'Shadowing', value: [Function] }
+//│ >   }
+//│ > }
+
+staged module RetUnit with
+  fun f() = ()
+//│ > module RetUnit with
+//│ >   ()
+//│ >   fun f() = ()
+//│ > Map(1) { 'f' => [Function: f_gen] }
+//│ > SymbolMap {
+//│ >   classMap: Map(0) {},
+//│ >   moduleMap: Map(2) {
+//│ >     Unit {} => ModuleSymbol { name: 'Unit', value: Unit {} },
+//│ >     [class RetUnit] {
+//│ >       'cache$RetUnit': [FunCache],
+//│ >       'generatorMap$RetUnit': [Map]
+//│ >     } => ModuleSymbol { name: 'RetUnit', value: [Function] }
+//│ >   }
+//│ > }
+

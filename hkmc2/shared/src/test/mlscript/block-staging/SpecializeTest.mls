@@ -1,0 +1,48 @@
+:js
+:staging
+:noModuleCheck
+
+import "../../mlscript-compile/Shape.mls"
+
+open Shape
+
+staged module M with  
+  fun f(x) =
+    let y = x * 2
+    y
+  fun f_gen
+//│ > module M with
+//│ >   ()
+//│ >   fun f(x) =
+//│ >     let {y}
+//│ >     y = *(x, 2)
+//│ >     y
+//│ > Map(1) { 'f' => [Function: f_gen] }
+//│ > SymbolMap {
+//│ >   classMap: Map(0) {},
+//│ >   moduleMap: Map(1) {
+//│ >     [class M] { 'cache$M': [FunCache], 'generatorMap$M': [Map] } => ModuleSymbol { name: 'M', value: [Function] }
+//│ >   }
+//│ > }
+
+M.f_gen(Dyn())
+//│ = [Symbol("f_Dyn_28_29"), [[Dyn()]]]
+
+M.f_gen(Lit(2))
+//│ = [Symbol("f_Lit_282_29"), [[Lit(2)]]]
+
+print(M."cache$M")
+//│ > module M with
+//│ >   ()
+//│ >   fun f(x) =
+//│ >     let {y}
+//│ >     y = *(x, 2)
+//│ >     y
+//│ >   fun f_Dyn_28_29(x) =
+//│ >     let {y}
+//│ >     y = *(x, 2)
+//│ >     y
+//│ >   fun f_Lit_282_29(x) =
+//│ >     let {y}
+//│ >     y = *(x, 2)
+//│ >     y

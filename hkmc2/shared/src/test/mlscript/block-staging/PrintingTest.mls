@@ -1,0 +1,32 @@
+:js
+:staging
+
+fun f(_) = 1
+class C(val x)
+
+staged class D(val x)(val y, val z)(val a) extends C([2, z + f(z)]."0") with
+  val b = z + z
+  fun f() = a + x
+//│ > class D(x)(y, z)(a) extends C([2, z + f(z)].("0")) with
+//│ >   let {tmp3}
+//│ >   tmp3 = this.z + this.z
+//│ >   val b = tmp3
+//│ >   fun f() = this.a + this.x
+//│ > Map(1) { 'f' => [Function: f_gen] }
+//│ > SymbolMap {
+//│ >   classMap: Map(2) {
+//│ >     [Function: D] { class: [Function] } => ConcreteClassSymbol {
+//│ >       name: 'D',
+//│ >       value: [Function],
+//│ >       paramsOpt: [Some],
+//│ >       auxParams: [Array]
+//│ >     },
+//│ >     [Function: C] { class: [Function] } => ConcreteClassSymbol {
+//│ >       name: 'C',
+//│ >       value: [Function],
+//│ >       paramsOpt: [Some],
+//│ >       auxParams: []
+//│ >     }
+//│ >   },
+//│ >   moduleMap: Map(0) {}
+//│ > }

@@ -1,0 +1,75 @@
+:js
+:staging
+
+staged class M() with
+  fun f() = 1
+staged module M with
+  fun g() = 1
+//│ > module M with
+//│ >   ()
+//│ >   fun g() = 1
+//│ > Map(1) { 'g' => [Function: g_gen] }
+//│ > SymbolMap {
+//│ >   classMap: Map(0) {},
+//│ >   moduleMap: Map(1) {
+//│ >     [class M] { 'cache$M': [FunCache], 'generatorMap$M': [Map] } => ModuleSymbol { name: 'M', value: [Function] }
+//│ >   }
+//│ > }
+//│ > class M1() with
+//│ >   ()
+//│ >   fun f() = 1
+//│ > Map(1) { 'f' => [Function: f_gen] }
+//│ > SymbolMap {
+//│ >   classMap: Map(1) {
+//│ >     [Function: M] { class: [Function] } => ConcreteClassSymbol {
+//│ >       name: 'M1',
+//│ >       value: [Function],
+//│ >       paramsOpt: [Some],
+//│ >       auxParams: []
+//│ >     }
+//│ >   },
+//│ >   moduleMap: Map(1) {
+//│ >     [class M] {
+//│ >       'cache$M': [FunCache],
+//│ >       'generatorMap$M': [Map],
+//│ >       'class$cache$M': [FunCache],
+//│ >       'class$generatorMap$M': [Map]
+//│ >     } => ModuleSymbol { name: 'M', value: [Function] }
+//│ >   }
+//│ > }
+
+module N with
+  staged class NM()
+  staged module NM
+//│ > module NM with
+//│ >   ()
+//│ >   
+//│ > Map(0) {}
+//│ > SymbolMap {
+//│ >   classMap: Map(0) {},
+//│ >   moduleMap: Map(1) {
+//│ >     [class NM] { 'cache$NM': [FunCache], 'generatorMap$NM': Map(0) {} } => ModuleSymbol { name: 'NM', value: [Function] }
+//│ >   }
+//│ > }
+//│ > class NM1() with
+//│ >   ()
+//│ >   
+//│ > Map(0) {}
+//│ > SymbolMap {
+//│ >   classMap: Map(1) {
+//│ >     [Function: NM] { class: [Function] } => ConcreteClassSymbol {
+//│ >       name: 'NM1',
+//│ >       value: [Function],
+//│ >       paramsOpt: [Some],
+//│ >       auxParams: []
+//│ >     }
+//│ >   },
+//│ >   moduleMap: Map(1) {
+//│ >     [class NM] {
+//│ >       'cache$NM': [FunCache],
+//│ >       'generatorMap$NM': Map(0) {},
+//│ >       'class$cache$NM': [FunCache],
+//│ >       'class$generatorMap$NM': Map(0) {}
+//│ >     } => ModuleSymbol { name: 'NM', value: [Function] }
+//│ >   }
+//│ > }

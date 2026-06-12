@@ -36,7 +36,8 @@ class FirstClassFunctionTransformer
         End()), End(), None, None)(N, annotations = Nil)
 
   private def getParamList(l: BlockMemberSymbol): Option[ParamList] = funDefns.get(l) match
-    case Some(fd) => fd.params.headOption
+    case Some(fd) => fd.params.headOption.map(pl =>
+      ParamList(pl.flags, pl.params.map(p => Param(p.flags, VarSymbol(p.sym.id), p.sign, p.modulefulness)), pl.restParam))
     case _ => l.tsym.flatMap(getParamList)
 
   private def getParamList(ts: TermSymbol): Option[ParamList] =

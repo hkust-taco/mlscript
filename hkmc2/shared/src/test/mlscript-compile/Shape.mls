@@ -1,12 +1,14 @@
 import "./Block.mls"
 import "./Option.mls"
 
-open Block { Literal, ClassSymbol, showSymbol, isPrimitiveType, isPrimitiveTypeOf }
+open Block { Literal, ClassSymbol, isPrimitiveType, isPrimitiveTypeOf }
 open Option
 
 type Shape = Shape.Shape
 
 module Shape with...
+
+val printer = Block.Printer(None)
 
 class Shape with
   constructor
@@ -18,9 +20,9 @@ class Shape with
 fun show(s: Shape) =
   if s is
     Dyn then "Dyn"
-    Lit(lit) then "Lit(" + Block.showLiteral(lit) + ")"
+    Lit(lit) then "Lit(" + printer.showLiteral(lit) + ")"
     Arr(shapes) then "Arr(" + shapes.map(show).join(", ") + ")"
-    Class(sym, params) then "Class(" + showSymbol(sym) + ", [" + params.map(show).join(", ") + "])"
+    Class(sym, params) then "Class(" + printer.showSymbol(sym) + ", [" + params.map(show).join(", ") + "])"
 
 fun sel(s1: Shape, s2: Shape): Array[Shape] = 
   if [s1, s2] is

@@ -1,0 +1,197 @@
+:js
+:staging
+
+import "../../mlscript-compile/Block.mls"
+
+// TODO: copy C# annotation to Block IR
+class C with
+  fun call(x) = x + 1
+staged module M with
+  fun f(x) = x.C#call(10)
+//│ > module M with
+//│ >   ()
+//│ >   fun f(x) = x.call(10)
+//│ > Map(1) { 'f' => [Function: f_gen] }
+//│ > SymbolMap {
+//│ >   classMap: Map(0) {},
+//│ >   moduleMap: Map(1) {
+//│ >     [class M] { 'cache$M': [FunCache], 'generatorMap$M': [Map] } => ModuleSymbol { name: 'M', value: [Function] }
+//│ >   }
+//│ > }
+
+staged class A(val a)
+//│ > class A(a) with
+//│ >   ()
+//│ >   
+//│ > Map(0) {}
+//│ > SymbolMap {
+//│ >   classMap: Map(1) {
+//│ >     [Function: A] { class: [Function] } => ConcreteClassSymbol {
+//│ >       name: 'A',
+//│ >       value: [Function],
+//│ >       paramsOpt: [Some],
+//│ >       auxParams: []
+//│ >     }
+//│ >   },
+//│ >   moduleMap: Map(0) {}
+//│ > }
+
+staged module C with
+  class I
+//│ > module C with
+//│ >   class I
+//│ >   
+//│ > Map(0) {}
+//│ > SymbolMap {
+//│ >   classMap: Map(1) {
+//│ >     [class I] { Symbol(mlscript.definitionMetadata): [Array] } => ConcreteClassSymbol {
+//│ >       name: 'I',
+//│ >       value: [Function],
+//│ >       paramsOpt: None {},
+//│ >       auxParams: []
+//│ >     }
+//│ >   },
+//│ >   moduleMap: Map(1) {
+//│ >     [class C2] {
+//│ >       I: [Function],
+//│ >       'cache$C': [FunCache],
+//│ >       'generatorMap$C': Map(0) {}
+//│ >     } => ModuleSymbol { name: 'C', value: [Function] }
+//│ >   }
+//│ > }
+
+class C
+staged module M with
+  fun f() = C
+//│ > module M with
+//│ >   ()
+//│ >   fun f() = C
+//│ > Map(1) { 'f' => [Function: f_gen] }
+//│ > SymbolMap {
+//│ >   classMap: Map(1) {
+//│ >     [class C4] { Symbol(mlscript.definitionMetadata): [Array] } => ConcreteClassSymbol {
+//│ >       name: 'C',
+//│ >       value: [Function],
+//│ >       paramsOpt: None {},
+//│ >       auxParams: []
+//│ >     }
+//│ >   },
+//│ >   moduleMap: Map(1) {
+//│ >     [class M2] { 'cache$M': [FunCache], 'generatorMap$M': [Map] } => ModuleSymbol { name: 'M', value: [Function] }
+//│ >   }
+//│ > }
+
+staged class C with
+  fun f() = 1
+//│ > class C with
+//│ >   ()
+//│ >   fun f() = 1
+//│ > Map(1) { 'f' => [Function: f_gen] }
+//│ > SymbolMap {
+//│ >   classMap: Map(1) {
+//│ >     [class C6] {
+//│ >       'class$cache$C': [FunCache],
+//│ >       'class$generatorMap$C': [Map]
+//│ >     } => ConcreteClassSymbol {
+//│ >       name: 'C',
+//│ >       value: [Function],
+//│ >       paramsOpt: None {},
+//│ >       auxParams: []
+//│ >     }
+//│ >   },
+//│ >   moduleMap: Map(0) {}
+//│ > }
+
+:e
+staged class C(x)
+//│ ╔══[COMPILATION ERROR] Staged classes with private fields are not supported.
+//│ ║  l.106: 	staged class C(x)
+//│ ╙──       	       ^^^^^^^^^^
+
+staged class B(val x) with
+  fun f(y) = this.x + y
+staged class D(val x) extends B(x+1) with
+  val y = 1
+  fun f() = 42
+//│ > class B(x) with
+//│ >   ()
+//│ >   fun f(y) = this.x + y
+//│ > Map(1) { 'f' => [Function: f_gen] }
+//│ > SymbolMap {
+//│ >   classMap: Map(1) {
+//│ >     [Function: B] { class: [Function] } => ConcreteClassSymbol {
+//│ >       name: 'B',
+//│ >       value: [Function],
+//│ >       paramsOpt: [Some],
+//│ >       auxParams: []
+//│ >     }
+//│ >   },
+//│ >   moduleMap: Map(0) {}
+//│ > }
+//│ > class D(x) extends B(x + 1) with
+//│ >   val y = 1
+//│ >   fun f() = 42
+//│ > Map(1) { 'f' => [Function: f_gen] }
+//│ > SymbolMap {
+//│ >   classMap: Map(2) {
+//│ >     [Function: B] { class: [Function] } => ConcreteClassSymbol {
+//│ >       name: 'B',
+//│ >       value: [Function],
+//│ >       paramsOpt: [Some],
+//│ >       auxParams: []
+//│ >     },
+//│ >     [Function: D] { class: [Function] } => ConcreteClassSymbol {
+//│ >       name: 'D',
+//│ >       value: [Function],
+//│ >       paramsOpt: [Some],
+//│ >       auxParams: []
+//│ >     }
+//│ >   },
+//│ >   moduleMap: Map(0) {}
+//│ > }
+
+class Unstaged
+staged class Staged(val x) with
+ fun inner() = 1
+staged module M with
+  fun f() =
+    Unstaged;
+    Staged
+//│ > class Staged(x) with
+//│ >   ()
+//│ >   fun inner() = 1
+//│ > Map(1) { 'inner' => [Function: inner_gen] }
+//│ > SymbolMap {
+//│ >   classMap: Map(1) {
+//│ >     [Function: Staged] { class: [Function] } => ConcreteClassSymbol {
+//│ >       name: 'Staged',
+//│ >       value: [Function],
+//│ >       paramsOpt: [Some],
+//│ >       auxParams: []
+//│ >     }
+//│ >   },
+//│ >   moduleMap: Map(0) {}
+//│ > }
+//│ > module M with
+//│ >   ()
+//│ >   fun f() = ,(Unstaged, Staged)
+//│ > Map(1) { 'f' => [Function: f_gen] }
+//│ > SymbolMap {
+//│ >   classMap: Map(2) {
+//│ >     [Function: Staged] { class: [Function] } => ConcreteClassSymbol {
+//│ >       name: 'Staged',
+//│ >       value: [Function],
+//│ >       paramsOpt: [Some],
+//│ >       auxParams: []
+//│ >     },
+//│ >     [class Unstaged] { Symbol(mlscript.definitionMetadata): [Array] } => ConcreteClassSymbol {
+//│ >       name: 'Unstaged',
+//│ >       value: [Function],
+//│ >       paramsOpt: None {},
+//│ >       auxParams: []
+//│ >     }
+//│ >   },
+//│ >   moduleMap: Map(1) {
+//│ >     [class M4] { 'cache$M': [FunCache], 'generatorMap$M': [Map] } => ModuleSymbol { name: 'M', value: [Function] }
+//│ >   }
+//│ > }

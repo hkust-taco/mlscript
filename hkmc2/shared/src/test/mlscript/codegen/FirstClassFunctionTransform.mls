@@ -31,14 +31,11 @@ x => x
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = class anonymous
 
-:fixme // TODO: fix IR rebinding issue (each symbol should be bound at most once)
 :checkIR
 :noInline
 x => x
-//│ ╔══[INTERNAL ERROR] [BlockChecker] Invalid IR: symbol x⁰ is bound more than once
-//│ ║  l.37: 	x => x
-//│ ╙──      	^
 //│ = class anonymous
+
 
 
 fun f(x, y, b) =
@@ -96,12 +93,12 @@ let f = foo in bar(f)
 bar([foo].0)
 bar([foo, x => x].1)
 //│ ╔══[COMPILATION ERROR] Cannot determine if 0 is a function.
-//│ ║  l.96: 	bar([foo].0)
+//│ ║  l.93: 	bar([foo].0)
 //│ ╙──      	         ^^
 //│ ═══[COMPILATION ERROR] Cannot determine if 0$__checkNotMethod is a function.
 //│ ═══[COMPILATION ERROR] Cannot determine if Error is a function.
 //│ ╔══[COMPILATION ERROR] Cannot determine if 1 is a function.
-//│ ║  l.97: 	bar([foo, x => x].1)
+//│ ║  l.94: 	bar([foo, x => x].1)
 //│ ╙──      	                 ^^
 //│ ═══[COMPILATION ERROR] Cannot determine if 1$__checkNotMethod is a function.
 //│ ═══[COMPILATION ERROR] Cannot determine if Error is a function.
@@ -118,7 +115,7 @@ bar([foo, x => x].(i))
 :ge
 [foo, x => x].(i)(0)
 //│ ╔══[COMPILATION ERROR] Cannot determine if the dynamic selection is a function object.
-//│ ║  l.119: 	[foo, x => x].(i)(0)
+//│ ║  l.116: 	[foo, x => x].(i)(0)
 //│ ╙──       	               ^
 
 
@@ -132,10 +129,10 @@ let foo = Foo()
 foo.("f")(0)
 foo.("h")(1)
 //│ ╔══[COMPILATION ERROR] Cannot determine if the dynamic selection is a function object.
-//│ ║  l.132: 	foo.("f")(0)
+//│ ║  l.129: 	foo.("f")(0)
 //│ ╙──       	^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Cannot determine if the dynamic selection is a function object.
-//│ ║  l.133: 	foo.("h")(1)
+//│ ║  l.130: 	foo.("h")(1)
 //│ ╙──       	^^^^^^^^
 //│ = 0
 //│ foo = Foo()
@@ -283,7 +280,7 @@ y => x + y
 //│ let lambda, Function$, tmp;
 //│ @private
 //│ define lambda as fun lambda⁵(y) {
-//│   return +⁰(x¹, y)
+//│   return +⁰(x⁰, y)
 //│ };
 //│ define Function$ as class Function$⁵ extends globalThis⁰.Function⁰ {
 //│   method call¹⁰ = fun call¹¹(y) { return lambda⁵(y) }
@@ -380,7 +377,7 @@ foo.Foo#x
 :ge
 foo.f(0)
 //│ ╔══[COMPILATION ERROR] Cannot determine if f is a function object.
-//│ ║  l.381: 	foo.f(0)
+//│ ║  l.378: 	foo.f(0)
 //│ ╙──       	^^^^^
 //│ = 1
 
@@ -398,7 +395,7 @@ foo.Foo#f(0)
 :ge
 foo.x(0)
 //│ ╔══[COMPILATION ERROR] Cannot determine if x is a function object.
-//│ ║  l.399: 	foo.x(0)
+//│ ║  l.396: 	foo.x(0)
 //│ ╙──       	^^^^^
 
 
@@ -471,15 +468,15 @@ fun foo(x)(y) = x + y
 //│   return +⁰(x, y)
 //│ };
 //│ define Function$ as class Function$⁶ extends globalThis⁰.Function⁰ {
-//│   private val x²;
+//│   private val x¹;
 //│   constructor(x) {
 //│     do super⁰();
 //│     end;
-//│     set Function$⁶.this.x² = x;
+//│     set Function$⁶.this.x¹ = x;
 //│     end
 //│   }
 //│   method call¹² = fun call¹³(y) {
-//│     return lambda$⁰(Function$⁶.this.x², y)
+//│     return lambda$⁰(Function$⁶.this.x¹, y)
 //│   }
 //│ };
 //│ define foo⁵ as fun foo⁶(x) { let tmp; set tmp = new Function$⁶(x); return tmp };
@@ -516,7 +513,7 @@ print("abc")
 :e
 foo(print)
 //│ ╔══[COMPILATION ERROR] Cannot get print's parameter list.
-//│ ║  l.517: 	foo(print)
+//│ ║  l.514: 	foo(print)
 //│ ╙──       	    ^^^^^
 //│ ═══[RUNTIME ERROR] Error: Function 'call' expected 0 arguments but got 1
 
@@ -528,7 +525,7 @@ foo(print(_))
 :expect ["abc"]
 foo(tuple)
 //│ ╔══[COMPILATION ERROR] Cannot get tuple's parameter list.
-//│ ║  l.529: 	foo(tuple)
+//│ ║  l.526: 	foo(tuple)
 //│ ╙──       	    ^^^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let Function$, tmp;

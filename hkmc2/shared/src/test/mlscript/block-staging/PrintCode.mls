@@ -1,11 +1,13 @@
-:staging
 :js
+:staging
 
 import "../../mlscript-compile/Block.mls"
 import "../../mlscript-compile/Option.mls"
 
 open Block
 open Option
+
+fun printCode(x) = Printer.default.printCode(x)
 
 printCode(FunDefn(Symbol("f"), [[Symbol("x")]], Return(ValueLit(1))))
 //│ > fun f(x) = 1
@@ -30,26 +32,26 @@ printCode(DynSelect(ValueSimpleRef(Symbol("p")), ValueSimpleRef(Symbol("field"))
 //│ > p.(field)
 
 :silent
-class A(val x)(y)
 class B
-let aSym = ConcreteClassSymbol("A", A, Some([Symbol("x")]), [[Symbol("y")]])
+class D(val x)(y) extends B
 let bSym = ConcreteClassSymbol("B", B, None, [])
+let dSym = ConcreteClassSymbol("D", D, Some([Symbol("x")]), [[Symbol("y")]])
 
 printCode(Call(ValueSimpleRef(Symbol("f")), [Arg(ValueLit(3))]))
-printCode(Instantiate(ValueMemberRef(aSym), [Arg(ValueLit(0))]))
+printCode(Instantiate(ValueMemberRef(dSym), [Arg(ValueLit(0))]))
 printCode(Tuple([Arg(ValueSimpleRef(Symbol("x"))), Arg(ValueSimpleRef(Symbol("y")))]))
 //│ > f(3)
-//│ > new A(0)
+//│ > new D(0)
 //│ > [x, y]
 
 :silent
 let f = FunDefn(Symbol("f"), [[Symbol("x")]], Return(ValueLit(1)))
 
 printCode(f)
-printCode(ClsLikeDefn(aSym, [f], None))
-printCode(ClsLikeDefn(bSym, [], None))
+printCode(ClsLikeDefn(dSym, [f], []))
+printCode(ClsLikeDefn(bSym, [], []))
 //│ > fun f(x) = 1
-//│ > class A(x) with
+//│ > class D(x)(y) with
 //│ >   fun f(x) = 1
 //│ > class B
 
@@ -58,15 +60,22 @@ printCode(Scoped([Symbol("x"), Symbol("y")], Assign(Symbol("x"), ValueLit(4.2), 
 //│ > x = 4.2
 //│ > x
 
-printCode(Define(ValDefn(Some(aSym), Symbol("x"), ValueLit(1)), End()))
-printCode(Define(ValDefn(None, Symbol("a"), ValueLit(1)), End()))
-//│ > val x = 1
-//│ > val a = 1
-
-printCode(Match(ValueSimpleRef(Symbol("x")), [Arm(Lit(1), Return(ValueLit(2))), Arm(Cls(aSym, ValueMemberRef(aSym)), Return(ValueLit(3)))], Some(Return(ValueSimpleRef(Symbol("x")))), End()))
+printCode(Match(ValueSimpleRef(Symbol("x")), [Arm(Lit(1), Return(ValueLit(2))), Arm(Cls(dSym, ValueSimpleRef(dSym)), Return(ValueLit(3)))], Some(Return(ValueSimpleRef(Symbol("x")))), End()))
 //│ > if x is
 //│ >   1 then 2
-//│ >   A then 3
+//│ >   D then 3
+//│ >   else x
+
+printCode(Define(ValDefn(Some(dSym), Symbol("x"), ValueLit(1)), End()))
+//│ > val x = 1
+
+printCode(Define(ValDefn(None, Symbol("a"), ValueLit(1)), End()))
+//│ > val a = 1
+
+printCode(Match(ValueSimpleRef(Symbol("x")), [Arm(Lit(1), Return(ValueLit(2))), Arm(Cls(bSym, ValueMemberRef(bSym)), Return(ValueLit(3)))], Some(Return(ValueSimpleRef(Symbol("x")))), End()))
+//│ > if x is
+//│ >   1 then 2
+//│ >   B then 3
 //│ >   else x
 
 printCode(Scoped([Symbol("y")], Match(
@@ -80,10 +89,10 @@ printCode(Scoped([Symbol("y")], Match(
 //│ >   else 1
 //│ > y
 
-printCode(Scoped([Symbol("y")],  Match(
-    ValueLit(1),
-    [Arm(Lit(1), Assign(Symbol("y"), ValueLit(1), Return(ValueSimpleRef(Symbol("y")))))],
-    Some(Assign(Symbol("y"), ValueLit(2), Return(ValueSimpleRef(Symbol("y"))))),
+printCode(Scoped([Symbol("y")], Match(
+    ValueLit(1), 
+    [Arm(Lit(1), Assign(Symbol("y"), ValueLit(1), Return(ValueSimpleRef(Symbol("y")))))], 
+    Some(Assign(Symbol("y"), ValueLit(2), Return(ValueSimpleRef(Symbol("y"))))), 
     End())))
 //│ > let {y}
 //│ > if 1 is
@@ -117,3 +126,6 @@ printCode(Scoped([Symbol("y")], Match(
 //│ >   else
 //│ >     y = 3
 //│ >     y
+
+Printer(Some(dSym)).printCode(Select(ValueSimpleRef(dSym), Symbol("x")))
+//│ > x

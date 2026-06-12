@@ -804,17 +804,15 @@ final case class ClsLikeBody(
     ctor.freeVars ++ methods.flatMap(_.freeVars)
   lazy val size = 1 + methods.map(_.size).sum + ctor.size
 
-/*
 object ClsLikeBody:
-  // TODO rm `empty`? it's currently unused
   def empty(id: Tree.Ident)(using State) = ClsLikeBody(
     isym = ModuleOrObjectSymbol(Tree.DummyTypeDef(syntax.Mod), id),
     methods = Nil,
     privateFields = Nil,
     publicFields = Nil,
     ctor = End(),
+    annotations = Nil,
   )
-*/
 
 final case class Handler(
     sym: BlockMemberSymbol,

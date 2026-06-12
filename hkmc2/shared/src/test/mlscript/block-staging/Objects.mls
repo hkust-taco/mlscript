@@ -1,0 +1,22 @@
+:js
+:staging
+
+staged module M with
+  object A
+  fun f() = ()
+//│ > module M with
+//│ >   object A
+//│ >   fun f() = ()
+//│ > Map(1) { 'f' => [Function: f_gen] }
+//│ > SymbolMap {
+//│ >   classMap: Map(0) {},
+//│ >   moduleMap: Map(3) {
+//│ >     Unit {} => ModuleSymbol { name: 'Unit', value: Unit {} },
+//│ >     [class M] {
+//│ >       A: A {},
+//│ >       'cache$M': [FunCache],
+//│ >       'generatorMap$M': [Map]
+//│ >     } => ModuleSymbol { name: 'M', value: [Function] },
+//│ >     A {} => ModuleSymbol { name: 'A', value: A {} }
+//│ >   }
+//│ > }

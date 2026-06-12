@@ -1,0 +1,99 @@
+import "./Block.mls"
+import "./Shape.mls"
+import "./Option.mls"
+
+open Block
+open Shape
+open Option
+
+module SpecializeHelpers with ...
+
+// FIXME: implement proper mangling
+// percent encoding to create valid symbol name
+fun specializeName(funName, shapes) =
+  [... funName + "_" + shapes.toString()]
+    .map((s, _, _) => if s is
+      "[" then "_5b"
+      "]" then "_5d"
+      "(" then "_28"
+      ")" then "_29"
+      "\\" then "_5c"
+      "\"" then "_22"
+      " " then "_20"
+      "," then "_2c"
+      else s
+    ).join("")
+fun propStub(block, shapes) = [block, shapes]
+
+fun specialize(cache, funName, dflt, shapes) =
+  // replace function symbol in block definition to new name
+  let newName = specializeName(funName, shapes)
+  // console.log(cache.getFun(newName))
+  if cache.getFun(newName) is
+    Some(x) then [x.0.sym, x.1]
+    None then
+      let defn = dflt()
+      if defn is FunDefn(Symbol(_), ps, _) then
+        let res = propStub(defn, shapes)
+        let entry = cache.setFun(newName, [FunDefn(Symbol(newName), ps, res.0.body), res.1])
+        [entry.0.sym, entry.1]
+
+class FunCache(val owner: ConcreteClassSymbol | ModuleSymbol, val cache: Map[Any, [Block.Block, Shape]]) with
+  val printer = Printer(Some(owner))
+  fun getFun(k) = if cache.has(k) then Some(cache.get(k)) else None
+  // NOTE: this will be called at the beginning of specialization to avoid infinite calls when specializing recursive functions
+  fun setFun(k, v) = cache.set(k, v); v
+  fun toString() =
+    let decl = if owner is
+      ConcreteClassSymbol then "class "
+      ModuleSymbol then "module "
+    let runtimeClass = if owner is
+      ConcreteClassSymbol(_, _, Some, _) then owner.value.class
+      else owner.value
+    
+    val paramList = if owner is 
+      ConcreteClassSymbol and owner.paramsOpt is
+        Some(ps) then [ps, ...owner.auxParams]
+        else owner.auxParams
+      ModuleSymbol then []
+
+    // process preCtor: inline temp variable when printing
+    class InlinePrinter(ctx: Map[Symbol, String]) extends Printer(Some(owner)) with
+      fun showPath(p) = if p is
+        ValueSimpleRef(s) | ValueMemberRef(s) and ctx.has(s) then ctx.get(s)
+        Select(qual, name) and
+          qual is ValueThis(Symbol("globalThis")) then this.showSymbol(name)
+          else showPath(qual) + "." + this.showSymbol(name)
+        DynSelect(qual, fld, false) then showPath(qual) + ".(" + showPath(fld) + ")"
+        DynSelect(qual, fld, true) then showPath(qual) + ".[" + showPath(fld) + "]"
+        ValueSimpleRef(s) | ValueMemberRef(s) then this.showSymbol(s)
+        ValueThis(_) then Error("Unexpected reference to `this` within preCtor")
+        ValueLit(lit) then this.showLiteral(lit)
+    
+    fun inlineResult(ctx: Map[Result, String])(r) = InlinePrinter(ctx).showResult(r)
+    
+    fun inlineAssigments(ctx: Map[Symbol, String])(b) = if b is 
+      Return(res) then inlineResult(ctx)(res)
+      Scoped(syms, rest) then
+        let ctx = syms.reduce((ctx, sym) => ctx.set(sym, sym.nme), ctx)
+        inlineAssigments(ctx)(rest)
+      // print the last call to the parent
+      Assign(NoSymbol, rhs, End) then inlineResult(ctx)(rhs)
+      Assign(lhs, rhs, rest) then inlineAssigments(ctx.set(lhs, inlineResult(ctx)(rhs)))(rest)
+      End then ""
+      else throw Error("unexpected Block type in constructor: " + b.toString())
+    
+    let extendsClause = if owner is ConcreteClassSymbol then
+      let preCtor = runtimeClass."preCtor$_instr"().body
+      assert preCtor is Block.Block
+      inlineAssigments(new Map())(preCtor)
+    else ""
+    
+    let ctor = runtimeClass.((if owner is ConcreteClassSymbol then "class$" else "") + "ctor$_instr")()
+    assert ctor is FunDefn
+
+    decl + owner.name + printer.showParamList(paramList)
+      + if extendsClause == "" then "" else (" extends " + extendsClause)
+      + if cache.length == 0 then "" else " with"
+      + indent("\n" + printer.showBlock(ctor.body))
+      + indent("\n" + cache.values().map(p => printer.showDefn(p.0)).toArray().join("\n"))

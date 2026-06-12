@@ -20,6 +20,7 @@ abstract class MLsDiffMaker extends DiffMaker:
   val termFile: io.Path = predefFile.up / "Term.mjs" // * Contains MLscript runtime term definitions
   val blockFile: io.Path = predefFile.up / "Block.mjs" // * Contains MLscript runtime block definitions
   val optionFile: io.Path = predefFile.up / "Option.mjs" // * Contains MLscipt runtime option definition
+  val specializeHelpersFile: io.Path = predefFile.up / "SpecializeHelpers.mjs" // * Contains MLscipt runtime specialization helpers
   
   val wd = file.up
   
