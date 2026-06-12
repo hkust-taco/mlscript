@@ -207,29 +207,30 @@ class ReflectionInstrumenter(using State, Raise, Ctx) extends BlockTransformer(S
         case clsSym: ClassSymbol if Elaborator.ctx.builtins.virtualClasses(clsSym) =>
           blockCtor("VirtualClassSymbol", Ls(toValue(name)), symName)(checkMap("checkClassMap", toValue(name), _, ctx))
         case baseSym: BaseTypeSymbol =>
-          val (owner, bsym, paramsOpt, auxParams, ctorSym) = (baseSym.defn, defnMap.get(baseSym)) match
-            case (S(defn), _) => (defn.owner, defn.bsym, defn.paramsOpt, defn.auxParams, defn.ctorSym)
-            case (_, S(defn: ClsLikeDefn)) => (defn.owner, defn.sym, defn.paramsOpt, defn.auxParams, defn.ctorSym)
-            // FIXME: hack to patch in staging for returning the object Unit.
-            case _ if baseSym == State.unitSymbol => (N, baseSym, N, Nil, N)
-            case _ =>
-              raise(ErrorReport(msg"Unable to infer parameters from symbol in staged module, which are necessary to reconstruct class instances: ${sym.toString()}" -> baseSym.toLoc :: Nil))
-              return End()
-          
-          val path = (pOpt, owner, ctorSym) match
-            case (S(p), _, _) => p
-            case (N, S(owner), _) => owner.asThis.selSN(baseSym.nme)
-            case (N, N, S(ctorSym)) => bsym.asBlkMember.get.asMemberRef(ctorSym)
-            case _ => bsym.asBlkMember.get.asMemberRef(baseSym.asClsOrMod.get)
+          util.boundary:
+            val (owner, bsym, paramsOpt, auxParams, ctorSym) = (baseSym.defn, defnMap.get(baseSym)) match
+              case (S(defn), _) => (defn.owner, defn.bsym, defn.paramsOpt, defn.auxParams, defn.ctorSym)
+              case (_, S(defn: ClsLikeDefn)) => (defn.owner, defn.sym, defn.paramsOpt, defn.auxParams, defn.ctorSym)
+              // FIXME: hack to patch in staging for returning the object Unit.
+              case _ if baseSym == State.unitSymbol => (N, baseSym, N, Nil, N)
+              case _ =>
+                raise(ErrorReport(msg"Unable to infer parameters from symbol in staged module, which are necessary to reconstruct class instances: ${sym.toString()}" -> baseSym.toLoc :: Nil))
+                util.boundary.break(End())
+            
+            val path = (pOpt, owner, ctorSym) match
+              case (S(p), _, _) => p
+              case (N, S(owner), _) => owner.asThis.selSN(baseSym.nme)
+              case (N, N, S(ctorSym)) => bsym.asBlkMember.get.asMemberRef(ctorSym)
+              case _ => bsym.asBlkMember.get.asMemberRef(baseSym.asClsOrMod.get)
 
-          baseSym match
-            case _: ClassSymbol =>
-              transformParamsOpt(paramsOpt): (paramsOpt, ctx) =>
-                auxParams.map(ps => ctx => transformParamList(ps)(using ctx)).chainContext: (auxParams, ctx) =>
-                  tuple(auxParams): auxParams =>
-                    blockCtor("ConcreteClassSymbol", Ls(toValue(name), path, paramsOpt, auxParams, toValue(rename)), symName)(checkMap("checkClassMap", path, _, ctx))
-            case _: ModuleOrObjectSymbol =>
-              blockCtor("ModuleSymbol", Ls(toValue(name), path, toValue(rename)), symName)(checkMap("checkModuleMap", path, _, ctx))
+            baseSym match
+              case _: ClassSymbol =>
+                transformParamsOpt(paramsOpt): (paramsOpt, ctx) =>
+                  auxParams.map(ps => ctx => transformParamList(ps)(using ctx)).chainContext: (auxParams, ctx) =>
+                    tuple(auxParams): auxParams =>
+                      blockCtor("ConcreteClassSymbol", Ls(toValue(name), path, paramsOpt, auxParams, toValue(rename)), symName)(checkMap("checkClassMap", path, _, ctx))
+              case _: ModuleOrObjectSymbol =>
+                blockCtor("ModuleSymbol", Ls(toValue(name), path, toValue(rename)), symName)(checkMap("checkModuleMap", path, _, ctx))
         case _ =>
           blockCtor("Symbol", Ls(toValue(name)), symName)(cachedK(_, ctx))
 
@@ -588,18 +589,25 @@ class ReflectionInstrumenter(using State, Raise, Ctx) extends BlockTransformer(S
         val sym = BlockMemberSymbol(name, Nil)
 
         // reconstructs the Path from the top-level to the current symbol
+        // TODO: we may be able to avoid matching on PatternDef if we kept a map from the symbol to its elaborated path during instrumentation of the symbol
         def reconstruct(s: DefinitionSymbol[? <: ModuleOrObjectDef | ClassDef] & InnerSymbol): Path =
           s.defn.orElse(defnMap.get(key)) match
             case S(defn) =>
               val owner: Option[InnerSymbol] = defn match
                 case l: (ModuleOrObjectDef | ClassDef) => l.owner
                 case l: ClsLikeDefn => l.owner
+                case pd: PatternDef =>
+                  raise(ErrorReport(msg"Unexpected PatternDef when constructing full path of symbol." -> pd.toLoc :: Nil))
+                  N
               owner match
               case S(owner: DefinitionSymbol[ModuleOrObjectDef | ClassDef]) =>
                 Select(reconstruct(owner), Tree.Ident(s.nme))(N)
               case N => defn match
                 case l: (ModuleOrObjectDef | ClassDef) => Value.MemberRef(l.bsym, s)
                 case l: ClsLikeDefn => Value.MemberRef(l.sym, s)
+                case pd: PatternDef =>
+                  raise(ErrorReport(msg"Unexpected PatternDef when constructing full path of symbol." -> pd.toLoc :: Nil))
+                  Value.Lit(Tree.UnitLit(false))
             case N =>
               // TODO: get this case to trigger, where the symbol has no definition and isn't collected in defnMap
               raise(ErrorReport(msg"Cannot recover definition from symbol" -> s.toLoc :: Nil))
