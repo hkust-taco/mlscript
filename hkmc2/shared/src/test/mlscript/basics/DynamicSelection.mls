@@ -29,7 +29,7 @@ r! a
 //│ ╙──      	   ^
 //│ ╔══[COMPILATION ERROR] Builtin '!' is not a binary operator
 //│ ║  l.26: 	r! a
-//│ ╙──      	^^
+//│ ╙──      	^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :e
@@ -40,7 +40,7 @@ r ! a
 //│ ╙──      	    ^
 //│ ╔══[COMPILATION ERROR] Builtin '!' is not a binary operator
 //│ ║  l.37: 	r ! a
-//│ ╙──      	^^^
+//│ ╙──      	^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 // * Note: artifact from BbML/InvalML

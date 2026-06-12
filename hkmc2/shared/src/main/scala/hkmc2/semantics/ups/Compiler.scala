@@ -84,7 +84,7 @@ class Compiler(using Context)(using tl: TL)(using Ctx, State, Raise) extends Ter
     def toFlatPattern: FlatPattern = head match
       case lit: syntax.Literal => FlatPattern.Lit(lit)
       case sym: (ClassSymbol | ModuleOrObjectSymbol) =>
-        val constructor = reference(sym, head.toLoc).getOrElse(Term.Error)
+        val constructor = reference(sym, head.toLoc).getOrElse(Term.Error().withLocOf(head))
         FlatPattern.ClassLike(constructor, sym, N, false)(Tree.Dummy)
     def showDbg: Str = head match
       case lit: syntax.Literal => lit.idStr
@@ -289,7 +289,7 @@ class Compiler(using Context)(using tl: TL)(using Ctx, State, Raise) extends Ter
       val rebuildNeeded = fields.iterator.exists((_, pattern) => !pattern.preservesOriginalScrutinee)
       val constructor = sym match
         case symbol: (ClassSymbol | ModuleOrObjectSymbol) =>
-          reference(symbol, symbol.toLoc).getOrElse(Term.Error)
+          reference(symbol, symbol.toLoc).getOrElse(Term.Error().withLocOf(pattern))
       val makeMakeSplit = fields.iterator.foldRight(
         (fields: Ls[(Ident, Term)], bindingsSymbols: Ls[TempSymbol]) =>
           ((makeConsequent, alternative) =>

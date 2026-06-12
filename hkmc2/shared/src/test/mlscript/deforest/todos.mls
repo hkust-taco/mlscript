@@ -194,7 +194,14 @@ test()
 //│ deforest > 	match: scrut⁰
 //│ deforest > 	fields: scrut⁰.x²
 //│ deforest > <<< fusing <<<
-//│ /!!!\ Uncaught error: java.lang.AssertionError: assertion failed
+//│ ╔══[COMPILATION ERROR] No definition found in scope for member 'Local'
+//│ ║  l.187: 	    Global(x) then Local(x + 1)
+//│ ║         	                   ^^^^^
+//│ ╟── which references the symbol introduced here
+//│ ║  l.185: 	  data class Local(x)
+//│ ╙──       	             ^^^^^^^^
+//│ ═══[RUNTIME ERROR] ReferenceError: Local is not defined
+//│ ═══[RUNTIME ERROR] Expected: 'Local(2)', got: 'undefined'
 
 
 // TODO: fusion opportunity is lost

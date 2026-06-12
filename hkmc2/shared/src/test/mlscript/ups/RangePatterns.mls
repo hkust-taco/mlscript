@@ -55,12 +55,14 @@ pattern UnsignedByte = 0..< 256
 //│ ╔══[COMPILATION ERROR] Name not found: .<
 //│ ║  l.51: 	pattern UnsignedByte = 0..< 256
 //│ ╙──      	                         ^^
-//│ ═══[COMPILATION ERROR] Cannot use this ‹error› as a pattern.
+//│ ╔══[COMPILATION ERROR] Cannot use this ‹error› as a pattern.
+//│ ║  l.51: 	pattern UnsignedByte = 0..< 256
+//│ ╙──      	                         ^^
 
 :e
 pattern BadRange = "s"..=0
 //│ ╔══[COMPILATION ERROR] The upper and lower bounds of range patterns should be literals of the same type.
-//│ ║  l.61: 	pattern BadRange = "s"..=0
+//│ ║  l.63: 	pattern BadRange = "s"..=0
 //│ ╙──      	                   ^^^^^^^
 
 // It becomes an absurd pattern.
@@ -70,14 +72,14 @@ pattern BadRange = "s"..=0
 :e
 pattern BadRange = 0 ..= "s"
 //│ ╔══[COMPILATION ERROR] The upper and lower bounds of range patterns should be literals of the same type.
-//│ ║  l.71: 	pattern BadRange = 0 ..= "s"
+//│ ║  l.73: 	pattern BadRange = 0 ..= "s"
 //│ ╙──      	                   ^^^^^^^^^
 
 :e
 pattern BadRange = "yolo" ..= "swag"
 //│ ╔══[COMPILATION ERROR] The lower bound of character ranges must be a single character.
-//│ ║  l.77: 	pattern BadRange = "yolo" ..= "swag"
+//│ ║  l.79: 	pattern BadRange = "yolo" ..= "swag"
 //│ ║        	                   ^^^^^^
 //│ ╟── The upper bound of character ranges must be a single character.
-//│ ║  l.77: 	pattern BadRange = "yolo" ..= "swag"
+//│ ║  l.79: 	pattern BadRange = "yolo" ..= "swag"
 //│ ╙──      	                              ^^^^^^

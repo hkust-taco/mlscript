@@ -67,13 +67,13 @@ suffixes(range(0, -1))
 suffixes(range(0, 0))
 //│ = Cons(Cons(0, Nil), Cons(Nil, Nil))
 
-if 5 is a & b & c then a+b+c
+if 5 is (a & b & c) then a+b+c
 //│ = 15
 
 data class C(a)
 
 fun foo(x) = if x is
-  {a:_ & a} & C and
+  ({a:_ & a} & C) and
     a is 1 then 10
     a is 2 then 20
     else 30
@@ -91,8 +91,8 @@ foo(C(2))
 foo(C("a"))
 //│ = 30
 
-if C(1) is {:a} & C then a
+if C(1) is ({:a} & C) then a
 //│ = 1
 
-if C(1) is C & {:a} then a
+if C(1) is (C & {:a}) then a
 //│ = 1

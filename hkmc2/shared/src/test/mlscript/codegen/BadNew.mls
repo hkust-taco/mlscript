@@ -96,6 +96,8 @@ let xs = new Oopsie
 //│ ║  l.94: 	let xs = new Oopsie
 //│ ╙──      	             ^^^^^^
 //│ ╔══[COMPILATION ERROR] Expected a statically known class; found ‹error›.
+//│ ║  l.94: 	let xs = new Oopsie
+//│ ║        	             ^^^^^^
 //│ ╙── The 'new' keyword requires a statically known class; use the 'new!' operator for dynamic instantiation.
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ xs = undefined

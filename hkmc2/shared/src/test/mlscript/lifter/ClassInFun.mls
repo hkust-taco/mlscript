@@ -459,7 +459,7 @@ fun f(x, y, z) =
 //│     return runtime⁰.Unit⁰
 //│   }
 //│ };
-//│ define D as class extends C⁶ D⁰ {
+//│ define D as class D⁰ extends C⁶ {
 //│   private val f$cap¹;
 //│   private val x⁴;
 //│   constructor(f$cap, x) {
@@ -554,7 +554,7 @@ fun f(x, y, z) =
 //│ define f⁶ as fun f⁷(x, y, z) {
 //│   let D, x1, tmp, tmp1, f$cap;
 //│   set f$cap = new mut Capture$f³(y);
-//│   define D as class extends C⁸ D¹ {};
+//│   define D as class D¹ extends C⁸ {};
 //│   set x1 = D¹;
 //│   set tmp = new C⁸(0, f$cap, x);
 //│   set tmp1 = new D¹();

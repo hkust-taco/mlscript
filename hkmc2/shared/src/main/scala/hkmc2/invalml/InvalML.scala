@@ -357,11 +357,11 @@ class InvalTyper(using elState: Elaborator.State, tl: TL)(using Ctx):
               }
               val ext = clsDef.ext match
                 case S(Term.New(p: Term, _, _)) => p
-                case _ => Term.Error
+                case _ => Term.Error()
               (clsDef.paramsOpt.map(p => p.params).getOrElse(Nil), clsDef.tparams, isGeneric, ext)
             case N =>
               error(msg"${sym.toString} is not a valid constructor." -> split.toLoc :: Nil)
-              (Nil, Nil, false, Term.Error)
+              (Nil, Nil, false, Term.Error())
           val params = paramsOpt.getOrElse(Nil)
           if params.length != paramList.length then
             error(msg"${sym.toString} is not a valid constructor." -> split.toLoc :: Nil)
@@ -780,7 +780,7 @@ class InvalTyper(using elState: Elaborator.State, tl: TL)(using Ctx):
         val (ty, eff) = typeCheck(e)
         constrain(tryMkMono(ty, e), InvalCtx.errTy)
         (Bot, eff)
-      case Term.Error =>
+      case Term.Error() =>
         (Bot, Bot) // TODO: error type?
       case _ =>
         (error(msg"Term shape not yet supported by InvalML: ${t.toString}" -> t.toLoc :: Nil), Bot)

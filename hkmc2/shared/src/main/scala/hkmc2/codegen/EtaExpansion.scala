@@ -182,7 +182,7 @@ class EtaExpansionRewrite(val etaExpansionSolver: EtaExpansionSolver)(using Rais
           lastWords("not the same shape?")
     
     private def etaCall(base: Path): Result =
-      Call(base, activeEtaArgss.ne_!)(isMlsFun = true, mayRaiseEffects = true, explicitTailCall = false)
+      Call(base, activeEtaArgss.ne_!)(CallMetadata.mlsFunWithEffect)
     
     override def applyBlock(b: Block): Block = b match
       case Return(res) if activeEtaArgss.nonEmpty =>
@@ -193,7 +193,7 @@ class EtaExpansionRewrite(val etaExpansionSolver: EtaExpansionSolver)(using Rais
             Return(etaCall(p).withLocOf(res2))
           case c @ Call(fun, argss) =>
             Return(
-              Call(fun, (argss ++ activeEtaArgss).ne_!)(c.isMlsFun, c.mayRaiseEffects, c.explicitTailCall))
+              Call(fun, (argss ++ activeEtaArgss).ne_!)(c.metadata))
           case _ =>
             val tmp = TempSymbol(N, "eta$res")
             Scoped(

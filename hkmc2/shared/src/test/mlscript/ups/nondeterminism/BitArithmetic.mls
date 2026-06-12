@@ -10,10 +10,10 @@ data
 
 pattern Truthy =
   true | And(Truthy, Truthy) | Or(Truthy, Truthy) |
-  Or(Truthy, Falsy) | Or(Falsy, Truthy) | Not(Falsy)
+    Or(Truthy, Falsy) | Or(Falsy, Truthy) | Not(Falsy)
 pattern Falsy =
   false | And(Falsy, Falsy) | And(Falsy, Truthy) |
-  And(Truthy, Falsy) | Or(Falsy, Falsy) | Not(Truthy)
+    And(Truthy, Falsy) | Or(Falsy, Falsy) | Not(Truthy)
 
 :expect [true, false, false, true]
 [

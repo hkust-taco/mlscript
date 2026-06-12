@@ -55,24 +55,23 @@ let res =
 //│   lhs = IntLit of 1
 //│   op = Ident of "+"
 //│   rhss = Ls of 
-//│     App:
-//│       lhs = Ident of "|"
-//│       rhs = Tup of Ls of 
-//│         OpApp:
-//│           lhs = IntLit of 2
-//│           op = Ident of "+"
-//│           rhss = Ls of 
-//│             IntLit of 3
+//│     PrefixApp:
+//│       kw = Keywrd of keyword '|'
+//│       rhs = OpApp:
+//│         lhs = IntLit of 2
+//│         op = Ident of "+"
+//│         rhss = Ls of 
+//│           IntLit of 3
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 6
 
-:fixme // ?
+:e
 | 1
 | 2
-//│ ╔══[COMPILATION ERROR] Unexpected term form in expression position (composed type)
-//│ ║  l.70: 	| 1
+//│ ╔══[COMPILATION ERROR] Unexpected term form in expression position (alternation)
+//│ ║  l.69: 	| 1
 //│ ║        	  ^
-//│ ║  l.71: 	| 2
+//│ ║  l.70: 	| 2
 //│ ╙──      	^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -123,37 +122,49 @@ x(2, 3)
 //│ = 5
 
 
-:e
+:pe
+:re
 let x = |
-//│ ╔══[COMPILATION ERROR] Unexpected use of special operator '|'
+//│ ╔══[PARSE ERROR] Expected expression after prefix keyword '|'; found end of input instead
 //│ ║  l.127: 	let x = |
-//│ ╙──       	        ^
-//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
-//│ x = undefined
-
-:e
-let x = (|)
-//│ ╔══[COMPILATION ERROR] Unexpected use of special operator '|'
-//│ ║  l.135: 	let x = (|)
 //│ ╙──       	         ^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ x = undefined
 
-:e
+:pe
+:re
+let x = (|)
+//│ ╔══[PARSE ERROR] Expected expression after prefix keyword '|'; found end of input instead
+//│ ║  l.136: 	let x = (|)
+//│ ╙──       	          ^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ x = undefined
+
+:pe
+:re
 &
-//│ ╔══[COMPILATION ERROR] Unexpected use of special operator '&'
-//│ ║  l.143: 	&
-//│ ╙──       	^
+//│ ╔══[PARSE ERROR] Expected expression after prefix keyword '&'; found end of input instead
+//│ ║  l.145: 	&
+//│ ╙──       	 ^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
-fun (|) test = 1
-
+:pe
 :e
+fun (|) test = 1
+//│ ╔══[PARSE ERROR] Expected expression after prefix keyword '|'; found end of input instead
+//│ ║  l.154: 	fun (|) test = 1
+//│ ╙──       	      ^
+//│ ╔══[COMPILATION ERROR] This ‹erroneous syntax› is not a valid symbolic name
+//│ ║  l.154: 	fun (|) test = 1
+//│ ╙──       	      ^
+
+:pe
+:re
 let x = |
-//│ ╔══[COMPILATION ERROR] Unexpected use of special operator '|'
-//│ ║  l.153: 	let x = |
-//│ ╙──       	        ^
+//│ ╔══[PARSE ERROR] Expected expression after prefix keyword '|'; found end of input instead
+//│ ║  l.164: 	let x = |
+//│ ╙──       	         ^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ x = undefined
 

@@ -384,6 +384,8 @@ class ParseRules(using State):
           discard
         *)
     ) { case (kw, body) => Tree.PrefixApp(kw, body) },
+    prefixed(`|`),
+    prefixed(`&`),
     prefixed(`drop`),
     prefixed(`not`),
     prefixed(`new!`),
@@ -469,6 +471,8 @@ class ParseRules(using State):
     makeInfixRule(`or`),
     makeInfixRule(`is`),
     makeInfixRule(`as`),
+    makeInfixRule(`|`),
+    makeInfixRule(`&`),
     makeInfixRule(`then`),
     makeInfixRule(`:`),
     makeInfixRule(`extends`),

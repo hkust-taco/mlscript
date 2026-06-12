@@ -116,20 +116,20 @@ class TailRecOpt(using State, TL, Raise):
       case TailCallShape(r, c) => getFun(r) match
         case Some(value) =>
           if c.argss.size != value.params.size then
-            if c.explicitTailCall then
+            if c.metadata.explicitTailCall then
               raise(ErrorReport(msg"Only fully applied calls may be marked @tailcall." -> c.toLoc :: Nil))
           else edges ::= CallEdge.TailCall(f.dSym, r)(c)
         case None =>
-          if c.explicitTailCall then
+          if c.metadata.explicitTailCall then
             raise(ErrorReport(msg"Only functions in this compilation unit may be marked @tailcall." -> c.toLoc :: Nil))
       case Return(c: Call) =>
-        if c.explicitTailCall then
+        if c.metadata.explicitTailCall then
           raise(ErrorReport(msg"Only direct calls in tail position may be marked @tailcall." -> c.toLoc :: Nil))
       case _ => super.applyBlock(b)
     
     override def applyResult(r: Result): Unit = r match
       case c: Call =>
-        if c.explicitTailCall then
+        if c.metadata.explicitTailCall then
           raise(ErrorReport(msg"This call is not in tail position." -> c.toLoc :: Nil))
         c match
           case CallToFun(r) => edges ::= CallEdge.NormalCall(f.dSym, r)(c)
@@ -150,7 +150,7 @@ class TailRecOpt(using State, TL, Raise):
     val cg = buildCallGraph(fs).filter: c =>
       val cond = defnSyms.contains(c.f1) && defnSyms.contains(c.f2)
       c.match
-        case c: CallEdge.TailCall if c.call.explicitTailCall && !cond =>
+        case c: CallEdge.TailCall if c.call.metadata.explicitTailCall && !cond =>
           raise(ErrorReport(
             msg"This tail call exits the current scope and is not optimized." -> c.call.toLoc :: Nil))
         case _ =>
@@ -167,7 +167,7 @@ class TailRecOpt(using State, TL, Raise):
       .groupBy: c =>
         val s1 = sccMap(c.f1)
         val s2 = sccMap(c.f2)
-        if s1 =/= s2 && c.call.explicitTailCall then
+        if s1 =/= s2 && c.call.metadata.explicitTailCall then
           raise(ErrorReport(
             msg"This call is not optimized as it does not directly recurse through its parent function." -> c.call.toLoc :: Nil))
           -1
@@ -448,7 +448,7 @@ class TailRecOpt(using State, TL, Raise):
                               :: Value.Lit(Tree.IntLit(paramList.length)).asArg
                               :: Value.Lit(Tree.IntLit(0)).asArg
                               :: Nil) ne_:: Nil
-                          )(true, false, false)
+                          )(CallMetadata.defaultMlsFun)
                           val blk = blockBuilder
                             .assignScoped(tupleSym, tupleRes)
                             .assignScoped(sliceResSym, sliceRes)
@@ -499,7 +499,7 @@ class TailRecOpt(using State, TL, Raise):
             :: paramArgs
             ::: List.fill(maxParamLen - paramArgs.length)(Value.Lit(Tree.UnitLit(false)).asArg)
         val newBod = Return(
-          Call(sel, args ne_:: Nil)(true, false, false),
+          Call(sel, args ne_:: Nil)(CallMetadata.defaultMlsFun),
         )
         FunDefn(f.owner, f.sym, f.dSym, f.params, newBod)(N, f.annotations)
     
@@ -530,7 +530,7 @@ class TailRecOpt(using State, TL, Raise):
           case Some(value) => Select(value.asThis, Tree.Ident(loopBms.nme))(S(loopDSym))
           case None => loopBms.asMemberRef(loopDSym)
         val wrapperBod = Return(
-          Call(internalSel, paramArgs ne_:: Nil)(true, false, false),
+          Call(internalSel, paramArgs ne_:: Nil)(CallMetadata.defaultMlsFun),
         )
         val wrapperDefn = FunDefn(f.owner, f.sym, f.dSym, f.params, wrapperBod)(
           f.configOverride, annotations = f.annotations)
@@ -556,7 +556,7 @@ class TailRecOpt(using State, TL, Raise):
         if f.tailRec then
           raise(ErrorReport(msg"Class methods may not yet be marked @tailrec." -> f.dSym.toLoc :: Nil))
       override def applyResult(r: Result): Unit = r match
-        case c: Call if c.explicitTailCall =>
+        case c: Call if c.metadata.explicitTailCall =>
           raise(ErrorReport(msg"Calls from class methods cannot yet be marked @tailcall." -> c.toLoc :: Nil))
         case _ => super.applyResult(r)
   

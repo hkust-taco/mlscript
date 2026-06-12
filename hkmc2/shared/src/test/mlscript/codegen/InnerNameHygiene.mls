@@ -1,5 +1,4 @@
 :js
-:noInline
 
 
 // * Functions
@@ -7,26 +6,83 @@
 
 fun f(x) = x
 
+:noInline
 :sjs
 fun f(x) = x
 fun f1(x) = f(x) + 1
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let f1, f11;
-//│ f1 = function f(x) {
-//│   return x
-//│ };
-//│ const proxy$f = f1; f11 = function f1(x) { let tmp; tmp = proxy$f(x); return tmp + 1 };
+//│ f1 = function f(x) { return x };
+//│ f11 = function (x) { let tmp; tmp = f1(x); return tmp + 1 };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 :expect 42
 f1(41)
 //│ = 42
 
+// * Note: for the definitions above, we used to generate the following code:
+// *    f1 = function f(x) {
+// *      return x
+// *    };
+// *    const proxy$f = f1; f11 = function f1(x) { let tmp; tmp = proxy$f(x); return tmp + 1 };
+// * But this approach does not work in general, as the proxied variable may not have been initialized yet
+// * and may even be reassigned later, in case it is let-bound.
+// * So, we no longer try to generate such proxies at all and simply omit the inner name in such cases.
+// * The problem with the old proxy would manifest in:
+:sjs
+let k(x) = f(x)
+fun f(x) = if x > 0 then k(x - 1) + 1 else x
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ let f2, k, k1;
+//│ f2 = function f(x) {
+//│   let scrut, tmp, tmp1;
+//│   scrut = x > 0;
+//│   if (scrut === true) {
+//│     tmp = x - 1;
+//│     tmp1 = runtime.safeCall(k(tmp));
+//│     return tmp1 + 1
+//│   }
+//│   return x;
+//│ };
+//│ k1 = function (x) {
+//│   let scrut, tmp, tmp1;
+//│   scrut = x > 0;
+//│   if (scrut === true) {
+//│     tmp = x - 1;
+//│     tmp1 = runtime.safeCall(k(tmp));
+//│     return tmp1 + 1
+//│   }
+//│   return x;
+//│ };
+//│ k = k1;
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ k = fun k1
+// * Where we would generate the incorrect:
+// *    const proxy$k = k; k1 = function k(x) {
+// *      let scrut, tmp, tmp1;
+// *      scrut = x > 0;
+// *      if (scrut === true) {
+// *        tmp = x - 1;
+// *        tmp1 = runtime.safeCall(proxy$k(tmp));
+// *        return tmp1 + 1
+// *      }
+// *      return x;
+// *    };
+// *    k = k1;
+
+:expect 2
+f(2)
+//│ = 2
+
+
+:global
+:noInline
+
 
 :sjs
 fun g(x) = g(x) + 1
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let g; g = function g(x) { let tmp; tmp = g(x); return tmp + 1 };
+//│ let g; g = function g(x) { let tmp1; tmp1 = g(x); return tmp1 + 1 };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 
@@ -42,11 +98,7 @@ fun g() =
 //│ ff1 = function ff(x) {
 //│   return x
 //│ };
-//│ g1 = function g() {
-//│   let ff11;
-//│   const proxy$ff = ff1; ff11 = function ff1(x) { return proxy$ff(x) };
-//│   return ff11
-//│ };
+//│ g1 = function g() { let ff11; ff11 = function (x) { return ff1(x) }; return ff11 };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 :expect 42
@@ -66,7 +118,12 @@ fun g() =
 //│ };
 //│ g2 = function g() {
 //│   let h1;
-//│   h1 = function h1(x) { let tmp, tmp1; tmp = h(x); tmp1 = h1(x); return tmp + tmp1 };
+//│   h1 = function h1(x) {
+//│     let tmp1, tmp2;
+//│     tmp1 = h(x);
+//│     tmp2 = h1(x);
+//│     return tmp1 + tmp2
+//│   };
 //│   return h1
 //│ };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————

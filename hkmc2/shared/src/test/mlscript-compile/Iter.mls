@@ -279,4 +279,4 @@ fun fromStack(stack) = Iterable of () =>
 fun toStack(xs) = xs rightFolded of Nil, Cons
 
 // Important: This function is used by runtime directly. Do not call any function or make any lambda here.
-fun isArrayLike(xs) = xs is Array | IterableBase
+fun isArrayLike(xs) = xs is (Array | IterableBase)

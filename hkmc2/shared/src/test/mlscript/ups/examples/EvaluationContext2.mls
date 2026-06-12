@@ -113,6 +113,9 @@ eval(Add(t, a))
 assert Add(t, t) is CBV.Steps(res), res
 //│ = Lit(18)
 
+assert Lit(0) is CBV.Steps(res), res
+//│ = Lit(0)
+
 
 CBV.Step.unapply(x)
 //│ = MatchFailure(null)

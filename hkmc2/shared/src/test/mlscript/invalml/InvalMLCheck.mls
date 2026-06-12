@@ -138,7 +138,17 @@ id as [A] -> A -> A
 (id as [A] -> A -> A) as [A] -> A -> A
 //│ Type: ['A] -> ('A) ->{⊥} 'A
 
+:e
 42 as Int | Num
+//│ ╔══[COMPILATION ERROR] Unexpected term form in expression position (alternation)
+//│ ║  l.142: 	42 as Int | Num
+//│ ╙──       	^^^^^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Term shape not yet supported by InvalML: CompType(Asc(Lit(IntLit(42)),Ref(member:Int)),Ref(member:Num),true)
+//│ ║  l.142: 	42 as Int | Num
+//│ ╙──       	^^^^^^^^^^^^^^^
+//│ Type: ⊥
+
+42 as (Int | Num)
 //│ Type: Int ∨ Num
 
 42 as [A] -> Int
@@ -165,7 +175,7 @@ foo
 :e
 foo(42, 1)
 //│ ╔══[COMPILATION ERROR] Type error in integer literal with expected type ¬'A
-//│ ║  l.166: 	foo(42, 1)
+//│ ║  l.176: 	foo(42, 1)
 //│ ║         	        ^
 //│ ╟── because: cannot constrain  Int  <:  ¬'A
 //│ ╟── because: cannot constrain  'A  <:  ¬{Int}
@@ -183,12 +193,12 @@ f
 
 fun f: ([A] -> ([B] -> A | B -> B)) -> ([A] -> ([B] -> A | B -> B))
 f
-//│ Type: (['B] -> (⊤) ->{⊥} 'B) ->{⊥} ['B] -> (⊤) ->{⊥} 'B
+//│ Type: (['B] -> 'B -> 'B) ->{⊥} ['B] -> 'B -> 'B
 
 
 fun f: ([A] -> ([B] -> A & B -> B)) -> ([A] -> ([B] -> A & B -> B))
 f
-//│ Type: (['B] -> ('B) ->{⊥} 'B) ->{⊥} ['B] -> ('B) ->{⊥} 'B
+//│ Type: (⊥) ->{⊥} ⊥
 
 
 fun f: ([A] -> ([B] -> A -> B & A)) -> ([A] -> ([B] -> A -> B | A))
@@ -198,19 +208,19 @@ f
 
 fun f: ([A] -> ([B] -> A | B -> B) -> A) -> ([A] -> ([B] -> A | B -> B) -> A)
 f
-//│ Type: ((['B] -> ('B) ->{⊥} 'B) ->{⊥} ⊥) ->{⊥} (['B] -> ('B) ->{⊥} 'B) ->{⊥} ⊥
+//│ Type: (['A] -> (['B] -> 'A ∨ ('B -> 'B)) ->{⊥} 'A) ->{⊥} ['A] -> (['B] -> 'A ∨ ('B -> 'B)) ->{⊥} 'A
 
 
 fun f: ([A] -> ([B] -> A | B -> B | A) -> A) -> ([A] -> ([B] -> A | B -> B | A) -> A)
 f
-//│ Type: (['A] -> (['B] -> ('A ∨ 'B) ->{⊥} 'B ∨ 'A) ->{⊥} 'A) ->{⊥} ['A] -> (['B] -> ('A ∨ 'B) ->{⊥} 'B ∨ 'A) ->{⊥} 'A
+//│ Type: (['A] -> (['B] -> 'A ∨ ('B -> ('B ∨ 'A))) ->{⊥} 'A) ->{⊥} ['A] -> (['B] -> 'A ∨ ('B -> ('B ∨ 'A))) ->{⊥} 'A
 
 
 fun f: [A] -> [B] -> ([C] -> A | B -> B | C -> A | C) -> B
 f
-//│ Type: ['A] -> (['C] -> ('A) ->{⊥} ('C) ->{⊥} 'A ∨ 'C) ->{⊥} ⊥
+//│ Type: ['B] -> (⊤) ->{⊥} 'B
 
 
 fun f: [A, B] -> ([C] -> A | B -> B | C -> A | B | C) -> B
 f
-//│ Type: ['A, 'B] -> (['C] -> ('A ∨ 'B) ->{⊥} ('B ∨ 'C) ->{⊥} ('A ∨ 'B) ∨ 'C) ->{⊥} 'B
+//│ Type: ['B] -> (⊤) ->{⊥} 'B

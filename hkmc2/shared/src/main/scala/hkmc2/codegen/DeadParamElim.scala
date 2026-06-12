@@ -270,7 +270,7 @@ class Rewrite(val deadParamElimSolver: DeadParamElimSolver)(using Raise):
           rewriteArgs(args, eliminable): args2 =>
             k(
               if (fun2 is fun) && (args2 is args) then c
-              else Call(fun2, args2 ne_:: restArgss)(c.isMlsFun, c.mayRaiseEffects, c.explicitTailCall).withLocOf(c)
+              else Call(fun2, args2 ne_:: restArgss)(c.metadata).withLocOf(c)
             )
       case i@Instantiate(mut, cls, args :: restArgss) if args.forall(_.spread.isEmpty) =>
         val eliminable = deadParamElimSolver.eliminableCallSiteArgsById(ConcreteId(i.uid, instId))
@@ -278,7 +278,7 @@ class Rewrite(val deadParamElimSolver: DeadParamElimSolver)(using Raise):
           rewriteArgs(args, eliminable): args2 =>
             k(
               if (cls2 is cls) && (args2 is args) then i
-              else Instantiate(mut, cls2, args2 :: restArgss).withLocOf(i)
+              else Instantiate(mut, cls2, args2 :: restArgss)(i.metadata).withLocOf(i)
             )
       case _ => super.applyResult(r)(k)
     
