@@ -1,0 +1,226 @@
+#config(noFreeze: true)
+
+module SeqHelper with
+  fun push(arr, ele) =
+    arr.push(ele)
+    arr
+  fun concat(lhs, rhs) = lhs.concat(rhs)
+  fun has(arr, ele) = arr.includes(ele)
+  fun len(s) = s.length
+  fun eq(arr1, arr2) =
+    arr1.length == arr2.length and arr1.every((v, i) => v == arr2.(i))
+  fun setEq(s1, s2) =
+    s1.slice().sort()
+    s2.slice().sort()
+    s1.length == s2.length and s1.every((v, i) => v.eq(s2.(i)))
+
+module CharSet with
+  fun alphabet() = [
+    "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z",
+    "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"
+  ]
+  fun space() = [" ", "\n", "\t", "\r"]
+  fun digit() = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]
+
+module SimpleRegExp with
+  class Some(val x)
+  class None
+
+  fun len(s) = SeqHelper.len(s)
+  fun has(arr, ele) = SeqHelper.has(arr, ele)
+  fun arrEq(arr1, arr2) = SeqHelper.eq(arr1, arr2)
+  fun push(arr, ele) = SeqHelper.push(arr, ele)
+  fun concat(lhs, rhs) = SeqHelper.concat(lhs, rhs)
+  fun setEq(s1, s2) = SeqHelper.setEq(s1, s2)
+
+  class DedupSet(val arr) with
+    fun addImp(e, i) =
+      let s = len(arr)
+      if i == s then new DedupSet(push(arr, e))
+      else 
+        let e' = arr.(i)
+        if e.eq(e') then this else addImp(e, i + 1)
+    fun add(e) =
+      addImp(e, 0)
+
+  class RegExp() with
+    fun derive(c)
+    fun canBeEmpty()
+    fun normalize()
+    fun eq(other)
+    fun startsWith(c)
+
+  class Nothing() extends RegExp() with
+    fun derive(c) = this
+    fun canBeEmpty() = false
+    fun normalize() = this
+    fun eq(other) = other is Nothing
+    fun startsWith(c) = false
+
+  class Empty() extends RegExp() with
+    fun derive(c) = new Nothing()
+    fun canBeEmpty() = true
+    fun normalize() = this
+    fun eq(other) = other is Empty
+    fun startsWith(c) = false
+
+  class Exact(val ch) extends RegExp() with
+    fun derive(c) =
+      if startsWith(c) then new Empty()
+      else new Nothing()
+    fun canBeEmpty() = false
+    fun normalize() = this
+    fun eq(other) =
+      if other is Exact(ch') then ch == ch' else false
+    fun startsWith(c) = ch == c
+
+  class Any() extends RegExp() with
+    fun derive(c) = new Empty()
+    fun canBeEmpty() = false
+    fun normalize() = this
+    fun eq(other) = other is Any()
+    fun startsWith(c) = true
+
+  class Not(val chars) extends RegExp() with
+    fun derive(c) =
+      if startsWith(c) then new Empty() else new Nothing()
+    fun canBeEmpty() = false
+    fun normalize() = this
+    fun eq(other) =
+      if other is Not(chars') then arrEq(chars, chars') else false
+    fun startsWith(c) = not has(chars, c)
+
+  fun notWord() = new Not(CharSet.alphabet())
+  fun notSpace() = new Not(CharSet.space())
+  fun notDigit() = new Not(CharSet.digit())
+
+  fun mkUnion(arr, i, s) =
+    if i == s - 1 then arr.(i)
+    else
+      if arr.(i) is
+        Nothing() then mkUnion(arr, i + 1, s)
+        else new Union(arr.(i), mkUnion(arr, i + 1, s))
+
+  class Union(val p1, val p2) extends RegExp() with
+    fun derive(c) = (new Union(p1.derive(c), p2.derive(c))).normalize()
+    fun canBeEmpty() = p1.canBeEmpty() || p2.canBeEmpty()
+    fun flat() =
+      let p1' = if p1 is Union then p1.flat() else [p1]
+      let p2' = if p2 is Union then p2.flat() else [p2]
+      concat(p1', p2')
+    fun iter(st, arr, i, s) =
+      if i == s then st
+      else iter(st.add(arr.(i)), arr, i + 1, s)
+    fun normalize() =
+      let p1' = p1.normalize()
+      let p2' = p2.normalize()
+      let arr1 = if p1' is Union then p1'.flat() else [p1']
+      let arr2 = if p2' is Union then p2'.flat() else [p2']
+      let s = iter(new DedupSet(arr1), arr2, 0, len(arr2))
+      mkUnion(s.arr, 0, len(s.arr))
+    fun eq(other) =
+      let n = other.normalize()
+      if n is
+        Union then setEq(normalize().flat(), n.flat())
+        else false
+    fun startsWith(c) = p1.startsWith(c) || p2.startsWith(c)
+
+  fun question(r) = new Union(r, new Empty())
+
+  class In(val chars) extends RegExp() with
+    fun derive(c) =
+      if startsWith(c) then new Empty() else new Nothing()
+    fun canBeEmpty() = false
+    fun normalize() = this
+    fun eq(other) =
+      if other is In(chars') then arrEq(chars, chars') else false
+    fun startsWith(c) = has(chars, c)
+
+  fun words() = new In(CharSet.alphabet())
+  fun spaces() = new In(CharSet.space())
+  fun digits() = new In(CharSet.digit())
+
+  class Concat(val p1, val p2) extends RegExp() with
+    fun derive(c) =
+      let p1' = p1.derive(c)
+      if p1.canBeEmpty() then
+        (new Union(new Concat(p1', p2), p2.derive(c))).normalize()
+      else (new Concat(p1', p2)).normalize()
+    fun canBeEmpty() = p1.canBeEmpty() and p2.canBeEmpty()
+    fun normalize() =
+      let p1' = p1.normalize()
+      if p1' is
+        Empty() then p2.normalize()
+        Nothing() then p1'
+        else new Concat(p1', p2.normalize())
+    fun eq(other) =
+      if other is Concat(p1', p2') then p1.eq(p1') and p2.eq(p2') else false
+    fun startsWith(c) = p1.startsWith(c) || (p1.canBeEmpty() and p2.startsWith(c))
+
+  fun nTimes(r, i) =
+    if i == 1 then r
+    else new Concat(r, nTimes(r, i - 1))
+
+  class Star(val p) extends RegExp() with
+    fun derive(c) = (new Concat(p.derive(c), new Star(p))).normalize()
+    fun canBeEmpty() = true
+    fun normalize() = new Star(p.normalize())
+    fun eq(other) =
+      if other is Star(p') then p.eq(p') else false
+    fun startsWith(c) = p.startsWith(c)
+
+  fun plus(r) = new Concat(r, new Star(r))
+
+  fun matchImpl(p, s, acc) = if
+    len(s) == 0 and
+      p.canBeEmpty() then new Some(acc)
+      else new None
+    p is Nothing then new None
+    let c = s.0
+    p.startsWith(c) then matchImpl(p.derive(c), s.slice(1), acc + c)
+    p.canBeEmpty() then new Some(acc)
+    else new None
+  fun match(p, s) =
+    matchImpl(p, s, "")
+
+  fun matchAllImpl(p, s, res) =
+    if len(s) == 0 then res
+    else
+      if match(p, s) is
+        Some(ss) then
+          if len(ss) > 0 then matchAllImpl(p, s.slice(len(ss)), SeqHelper.push(res, ss))
+          else matchAllImpl(p, s.slice(1), res)
+        else matchAllImpl(p, s.slice(1), res)
+  fun matchAll(p, s) =
+    matchAllImpl(p, s, [])
+
+  // [\w\.-]+@[\w\.-]+\.[\w\.-]+
+  fun matchAllEmail(s) =
+    let p = plus(new In(SeqHelper.concat(CharSet.alphabet(), ["-", "."])))
+    let email = new Concat(p, new Concat(new Exact("@"), new Concat(p, new Concat(new Exact("."), p))))
+    matchAll(email, s)
+
+  // \w+://[^/\s?#]+[^\s?#]+(\?[^\s#]*)?(#[^\s]*)?
+  fun matchAllURI(s) =
+    let n1 = new Not(["/", "?", "#", " ", "\n", "\t", "\r"])
+    let n2 = new Not(["?", "#", " ", "\n", "\t", "\r"])
+    let n3 = new Not(["#", " ", "\n", "\t", "\r"])
+    let w = words()
+    let d = digits()
+    let p = SeqHelper.concat(CharSet.alphabet(), SeqHelper.concat(CharSet.digit(), ["-", "_"]))
+    let head = new Concat(plus(w), new Concat(new Exact(":"), new Concat(new Exact("/"), new Exact("/"))))
+    let body = new Concat(plus(n1), plus(n2))
+    let params = new Concat(question(new Concat(new Exact("?"), new Star(new In(p)))), question(new Concat(new Exact("#"), new Star(new In(p)))))
+    let uri = new Concat(head, new Concat(body, params))
+    matchAll(uri, s)
+
+  // ((25[0-5]|2[0-4][0-9]|1?[0-9]?[0-9])\.){3}(25[0-5]|2[0-4][0-9]|1?[0-9]?[0-9])
+  fun matchAllIPv4(s) =
+    let fo = new In(["0", "1", "2", "3", "4"])
+    let fi = new In(["0", "1", "2", "3", "4", "5"])
+    let segment = new Union(new Concat(new Exact("2"), new Concat(new Exact("5"), fi)), new Union(
+      new Concat(new Exact("2"), new Concat(fo, digits())),
+      new Concat(question(new Exact("1")), new Concat(question(digits()), digits()))
+    ))
+    let ipv4 = new Concat(nTimes(new Concat(segment, new Exact(".")), 3), segment)
+    matchAll(ipv4, s)

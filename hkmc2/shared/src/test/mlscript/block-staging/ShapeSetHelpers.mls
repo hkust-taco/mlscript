@@ -1,0 +1,621 @@
+:js
+
+import "../../mlscript-compile/Block.mls"
+import "../../mlscript-compile/Shape.mls"
+import "../../mlscript-compile/ShapeSet.mls"
+import "../../mlscript-compile/Option.mls"
+import "../../mlscript-compile/CachedHash.mls"
+import "../../mlscript-compile/SpecializeHelpers.mls"
+import "../../mlscript-compile/Runtime.mls"
+open Option
+open Block { Param, Symbol, ConcreteClassSymbol, Tup, Case, Printer }
+open Shape { Arr, Class, Dyn, Lit }
+open ShapeSet
+open SpecializeHelpers { sov }
+
+fun printCode(b) = Printer.default.printCode(b)
+
+mkBot()
+//│ = {}
+
+mkLit(0)
+//│ = {Lit(0)}
+
+mkDyn()
+//│ = {Dyn()}
+
+mkDyn() == mkDyn()
+//│ = false
+
+mkArr([mkLit(0)])
+//│ = {Arr([{Lit(0)}])}
+
+assert(mkBot().isEmpty())
+
+Shape.static(Shape.Lit("Hi"))
+//│ = true
+
+// valOf
+:re
+valOf(Dyn())
+//│ ═══[RUNTIME ERROR] Error: valOf on Dyn
+
+valOf(Arr([mkLit(1), lift(Arr([mkLit(2), mkLit(3)]))]))
+//│ = [1, [2, 3]]
+
+:re
+valOf(mkDyn())
+//│ ═══[RUNTIME ERROR] Error: Unknown shape: {Dyn()}
+
+valOfSet(mkLit(0))
+//│ = 0
+
+// sel
+
+let arrSp = mkArr([mkLit(0), mkDyn()])
+//│ arrSp = {Arr([{Lit(0)}, {Dyn()}])}
+
+selSet(arrSp, mkLit(0))
+//│ = {Lit(0)}
+
+selSet(arrSp, mkLit(1))
+//│ = {Dyn()}
+
+selSet(mkDyn(), mkLit(5))
+//│ = {Dyn()}
+
+:silent
+class A(val a, val b)
+let aSym = ConcreteClassSymbol("A", A, Some([Param(None, Symbol("a")), Param(None, Symbol("b"))]), [], false)
+
+let a = Class(aSym, [mkLit(42), mkLit("c")])
+let x = liftMany([Dyn(), a, Arr([mkLit(100), mkLit(false), mkLit(undefined)])])
+selSet(x, union(mkLit("a"), mkLit(2)))
+//│ = {Dyn()}
+//│ a = Class(
+//│   ConcreteClassSymbol(
+//│     "A",
+//│     fun A { class: class A },
+//│     Some([Param(None, Symbol("a")), Param(None, Symbol("b"))]),
+//│     [],
+//│     false
+//│   ),
+//│   [{Lit(42)}, {Lit("c")}]
+//│ )
+//│ x = {Dyn()}
+
+selSet(lift(Arr([mkDyn(), mkLit(1), lift(a)])), mkLit(1))
+//│ = {Lit(1)}
+
+// union
+mkClass(aSym, [union2(mkLit(42), mkLit(43)), union2(mkLit("c"), mkLit("d"))])
+//│ = {Class(ConcreteClassSymbol("A", fun A { class: class A }, Some([Param(None, Symbol("a")), Param(None, Symbol("b"))]), [], false), [{Lit(42),Lit(43)}, {Lit("c"),Lit("d")}])}
+
+mkArr([union2(mkLit(42), mkLit(43)), union2(mkLit("c"), mkLit("d"))])
+//│ = {Arr([{Lit(42),Lit(43)}, {Lit("c"),Lit("d")}])}
+
+
+let x = liftMany([Lit(1), Lit(2)])
+let y = liftMany([Arr([mkLit(2)]), Lit(1), Arr([mkLit(1)])])
+union(x, y) 
+//│ = {Arr([{Lit(1)}]),Arr([{Lit(2)}]),Lit(1),Lit(2)}
+//│ x = {Lit(1),Lit(2)}
+//│ y = {Arr([{Lit(1)}]),Arr([{Lit(2)}]),Lit(1)}
+
+// filterSet
+
+filterSet(mkDyn(), Block.Lit("a"))
+//│ = {Lit("a")}
+
+filterSet(mkDyn(), Block.Tup(2))
+//│ = {Arr([{Dyn()}, {Dyn()}])}
+
+let filterShapes = liftMany([Lit(1), Lit(null), Arr([mkDyn()]), Arr([mkLit(1), mkLit(2), mkLit(3)]), a])
+//│ filterShapes = {Arr([{Dyn()}]),Arr([{Lit(1)}, {Lit(2)}, {Lit(3)}]),Class(ConcreteClassSymbol("A", fun A { class: class A }, Some([Param(None, Symbol("a")), Param(None, Symbol("b"))]), [], false), [{Lit(42)}, {Lit("c")}]),Lit(1),Lit(null)}
+
+// wildcard is represented as dflt in Match
+
+filterSet(filterShapes, Block.Lit(1))
+//│ = {Lit(1)}
+
+assert(filterSet(filterShapes, Block.Lit(2)).isEmpty())
+
+filterSet(filterShapes, Block.Cls(aSym, undefined))
+//│ = {Class(ConcreteClassSymbol("A", fun A { class: class A }, Some([Param(None, Symbol("a")), Param(None, Symbol("b"))]), [], false), [{Lit(42)}, {Lit("c")}])}
+
+filterSet(filterShapes, Block.Cls(Symbol("Int"), undefined))
+//│ = {Lit(1)}
+
+filterSet(filterShapes, Tup(3))
+//│ = {Arr([{Lit(1)}, {Lit(2)}, {Lit(3)}])}
+
+filterSet(filterShapes, Tup(4))
+//│ = {}
+
+assert(filterSet(filterShapes, Tup(0)).isEmpty())
+
+open Block
+open SpecializeHelpers { Ctx, sop, sor, prop }
+
+// Ctx
+
+let ctx = Ctx.empty()
+let x = ValueSimpleRef(Symbol("x"))
+//│ ctx = Ctx(Map(0) {}, Map(0) {}, Map(0) {}, [], None)
+//│ x = ValueSimpleRef(Symbol("x"))
+
+ctx.add(x, mkLit(1))
+ctx.get(x)
+//│ = Some({Lit(1)})
+
+ctx.add(x, mkLit(2))
+ctx.get(x)
+//│ = Some({Lit(1),Lit(2)})
+
+let y = ValueSimpleRef(Symbol("y"))
+ctx.add(y, mkLit("a"))
+ctx.get(y)
+//│ = Some({Lit("a")})
+//│ y = ValueSimpleRef(Symbol("y"))
+
+let ctx2 = ctx.clone
+ctx2.add(y, mkLit("b"))
+ctx2.get(y)
+//│ = Some({Lit("a"),Lit("b")})
+//│ ctx2 = Ctx(
+//│   Map(2) {"Symbol(x)" => {Lit(1),Lit(2)}, "Symbol(y)" => {Lit("a"),Lit("b")}},
+//│   Map(0) {},
+//│   Map(0) {},
+//│   [],
+//│   None
+//│ )
+
+ctx.get(y)
+//│ = Some({Lit("a")})
+
+
+// DefCtx
+
+
+// Cache
+
+
+// sop
+
+sop(Ctx.empty(), ValueLit(42))
+//│ = {Lit(42)}
+
+sop(Ctx.empty(), ValueLit(false))
+//│ = {Lit(false)}
+
+sop(Ctx.empty().add(ValueSimpleRef(Symbol("x")), mkBot()), ValueSimpleRef(Symbol("x")))
+//│ = {}
+
+
+val x = Symbol("x")
+val C = ConcreteClassSymbol("C", undefined, Some([Param(None, "a")]), [], false)
+val selPath = DynSelect(ValueSimpleRef(x), ValueLit("a"), false)
+let ctx = Ctx.empty()
+ctx.add(ValueSimpleRef(x), mkClass(C, [mkLit("pass")]))
+sop(ctx, selPath)
+//│ = {}
+//│ C = ConcreteClassSymbol("C", undefined, Some([Param(None, "a")]), [], false)
+//│ ctx = Ctx(
+//│   Map(1) {
+//│     "Symbol(x)" => {Class(ConcreteClassSymbol("C", undefined, Some([Param(None, "a")]), [], false), [{Lit("pass")}])}
+//│   },
+//│   Map(0) {},
+//│   Map(0) {},
+//│   [],
+//│   None
+//│ )
+//│ selPath = DynSelect(ValueSimpleRef(Symbol("x")), ValueLit("a"), false)
+//│ x = Symbol("x")
+
+// sor 
+
+val tup = Tuple([Arg(ValueLit(1)), Arg(ValueLit(true))])
+sor(Ctx.empty(), tup)
+//│ = [
+//│   End(),
+//│   Tuple([Arg(ValueLit(1)), Arg(ValueLit(true))]),
+//│   {Arr([{Lit(1)}, {Lit(true)}])}
+//│ ]
+//│ tup = Tuple([Arg(ValueLit(1)), Arg(ValueLit(true))])
+
+class C(val p)
+let c = ConcreteClassSymbol("C", C, Some([Symbol("p")]), [], false)
+let inst = Instantiate(ValueMemberRef(c), [Arg(ValueLit(123))])
+sor(Ctx.empty(), inst)
+//│ = [
+//│   End(),
+//│   Instantiate(
+//│     ValueMemberRef(
+//│       ConcreteClassSymbol(
+//│         "C",
+//│         fun C { class: class C },
+//│         Some([Symbol("p")]),
+//│         [],
+//│         false
+//│       )
+//│     ),
+//│     [Arg(ValueLit(123))]
+//│   ),
+//│   {Class(ConcreteClassSymbol("C", fun C { class: class C }, Some([Symbol("p")]), [], false), [{Lit(123)}])}
+//│ ]
+//│ c = ConcreteClassSymbol(
+//│   "C",
+//│   fun C { class: class C },
+//│   Some([Symbol("p")]),
+//│   [],
+//│   false
+//│ )
+//│ inst = Instantiate(
+//│   ValueMemberRef(
+//│     ConcreteClassSymbol(
+//│       "C",
+//│       fun C { class: class C },
+//│       Some([Symbol("p")]),
+//│       [],
+//│       false
+//│     )
+//│   ),
+//│   [Arg(ValueLit(123))]
+//│ )
+
+fun testBinOp(op, v1, v2) =
+  let args = [Arg(ValueLit(v1)), Arg(ValueLit(v2))]
+  let c = Call(ValueSimpleRef(Symbol(op)), args)
+  sor(Ctx.empty(), c).1.lit
+
+:expect 12
+testBinOp("+", 10, 2)
+//│ = 12
+
+:expect true
+testBinOp("==", 10, 10) 
+//│ = true
+
+:expect false 
+testBinOp("===", 10, "10") 
+//│ = false
+
+:expect false
+testBinOp("&&", true, false)
+//│ = false
+
+fun testUnaryOp(op, v) =
+  let args = [Arg(ValueLit(v))]
+  let c = Call(ValueSimpleRef(Symbol(op)), args)
+  sor(Ctx.empty(), c).1.lit
+
+:expect -10
+testUnaryOp("-", 10)
+//│ = -10
+
+:expect false
+testUnaryOp("!", true)
+//│ = false
+
+:re
+testUnaryOp("~", 10)
+//│ ═══[RUNTIME ERROR] Error: Access to required field 'lit' yielded 'undefined'
+
+// prop
+
+let x = Symbol("x")
+let y = Symbol("y")
+let z = Symbol("z")
+let plus = ValueSimpleRef(Symbol("+"))
+//│ plus = ValueSimpleRef(Symbol("+"))
+//│ x = Symbol("x")
+//│ y = Symbol("y")
+//│ z = Symbol("z")
+
+// let x
+// x = 1 + 1
+// x + 1
+let c = Scoped([x], Assign(x, Call(plus, [Arg(ValueLit(1)), Arg(ValueLit(1))]), Return(Call(plus, [Arg(ValueSimpleRef(x)), Arg(ValueLit(1))]))))
+prop(Ctx.empty(), c)
+//│ = [
+//│   Scoped(
+//│     [Symbol("x")],
+//│     Assign(Symbol("x"), ValueLit(2), Return(ValueLit(3)))
+//│   ),
+//│   {Lit(3)},
+//│   false
+//│ ]
+//│ c = Scoped(
+//│   [Symbol("x")],
+//│   Assign(
+//│     Symbol("x"),
+//│     Call(ValueSimpleRef(Symbol("+")), [Arg(ValueLit(1)), Arg(ValueLit(1))]),
+//│     Return(
+//│       Call(
+//│         ValueSimpleRef(Symbol("+")),
+//│         [Arg(ValueSimpleRef(Symbol("x"))), Arg(ValueLit(1))]
+//│       )
+//│     )
+//│   )
+//│ )
+
+let c = Scoped([x], Assign(x, ValueLit(9), Match(ValueSimpleRef(x), [Arm(Cls(VirtualClassSymbol("Bool"), Select(ValueMemberRef(Symbol("runtime")), Symbol("unreachable"))), Return(ValueLit(1))), Arm(Lit(8), Return(ValueLit(2))), Arm(Cls(VirtualClassSymbol("Int"), Select(ValueMemberRef(Symbol("runtime")), Symbol("unreachable"))), Return(ValueLit(3)))], Some(Return(ValueLit(0))), End())))
+prop(Ctx.empty(), c)
+//│ = [
+//│   Scoped(
+//│     [Symbol("x")],
+//│     Assign(Symbol("x"), ValueLit(9), Return(ValueLit(3)))
+//│   ),
+//│   {Lit(3)},
+//│   true
+//│ ]
+//│ c = Scoped(
+//│   [Symbol("x")],
+//│   Assign(
+//│     Symbol("x"),
+//│     ValueLit(9),
+//│     Match(
+//│       ValueSimpleRef(Symbol("x")),
+//│       [
+//│         Arm(
+//│           Cls(
+//│             VirtualClassSymbol("Bool"),
+//│             Select(ValueMemberRef(Symbol("runtime")), Symbol("unreachable"))
+//│           ),
+//│           Return(ValueLit(1))
+//│         ),
+//│         Arm(Lit(8), Return(ValueLit(2))),
+//│         Arm(
+//│           Cls(
+//│             VirtualClassSymbol("Int"),
+//│             Select(ValueMemberRef(Symbol("runtime")), Symbol("unreachable"))
+//│           ),
+//│           Return(ValueLit(3))
+//│         )
+//│       ],
+//│       Some(Return(ValueLit(0))),
+//│       End()
+//│     )
+//│   )
+//│ )
+
+fun f_gen(args) = 
+  [mkLit(24), Symbol("f1")] // A stub for the actual f_gen
+
+module M with
+  fun f(args) = 24
+
+:ignore
+val MSym = ValueMemberRef(ModuleSymbol("M", M, false))
+//│ ╔══[COMPILATION ERROR] Unexpected moduleful reference of type M.
+//│ ║  l.389: 	val MSym = ValueMemberRef(ModuleSymbol("M", M, false))
+//│ ║         	                                            ^
+//│ ╙── Module argument passed to a non-module parameter.
+//│ MSym = ValueMemberRef(ModuleSymbol("M", class M, false))
+
+val fSym = Symbol("f")
+val fPath = Select(MSym, fSym)
+//│ fPath = Select(ValueMemberRef(ModuleSymbol("M", class M, false)), Symbol("f"))
+//│ fSym = Symbol("f")
+
+val callF = Call(fPath, [Arg(ValueLit(12))])
+sor(Ctx.empty(), callF)
+//│ = [End(), ValueLit(24), {Lit(24)}]
+//│ callF = Call(
+//│   Select(ValueMemberRef(ModuleSymbol("M", class M, false)), Symbol("f")),
+//│   [Arg(ValueLit(12))]
+//│ )
+
+val ctxXY = Ctx.empty()
+  .add(ValueSimpleRef(x), mkLit(10))
+  .add(ValueSimpleRef(y), mkLit(32))
+//│ ctxXY = Ctx(
+//│   Map(2) {"Symbol(x)" => {Lit(10)}, "Symbol(y)" => {Lit(32)}},
+//│   Map(0) {},
+//│   Map(0) {},
+//│   [],
+//│   None
+//│ )
+
+// x + y
+val blockAdd = Return(Call(plus, [Arg(ValueSimpleRef(x)), Arg(ValueSimpleRef(y))]))
+printCode(blockAdd)
+prop(ctxXY, blockAdd)
+//│ > x + y
+//│ = [Return(ValueLit(42)), {Lit(42)}, false]
+//│ blockAdd = Return(
+//│   Call(
+//│     ValueSimpleRef(Symbol("+")),
+//│     [Arg(ValueSimpleRef(Symbol("x"))), Arg(ValueSimpleRef(Symbol("y")))]
+//│   )
+//│ )
+
+val blockBranch = Scoped([z], Match(ValueLit(1), [Arm(Lit(1), Assign(z, ValueLit(1), End())), Arm(Lit(2), Assign(z, ValueLit(2), End()))], Some(Assign(z, ValueLit(3), End())), Return(ValueSimpleRef(z))))
+printCode(blockBranch)
+prop(Ctx.empty(), blockBranch)
+//│ > let {z}
+//│ > if 1 is
+//│ >   1 then
+//│ >     z = 1
+//│ >   2 then
+//│ >     z = 2
+//│ >   else
+//│ >     z = 3
+//│ > z
+//│ = [
+//│   Scoped(
+//│     [Symbol("z")],
+//│     Assign(Symbol("z"), ValueLit(1), Return(ValueLit(1)))
+//│   ),
+//│   {Lit(1)},
+//│   true
+//│ ]
+//│ blockBranch = Scoped(
+//│   [Symbol("z")],
+//│   Match(
+//│     ValueLit(1),
+//│     [
+//│       Arm(Lit(1), Assign(Symbol("z"), ValueLit(1), End())),
+//│       Arm(Lit(2), Assign(Symbol("z"), ValueLit(2), End()))
+//│     ],
+//│     Some(Assign(Symbol("z"), ValueLit(3), End())),
+//│     Return(ValueSimpleRef(Symbol("z")))
+//│   )
+//│ )
+
+val earlyRetBlock = Scoped([x, y], Assign(x, ValueLit(false), Match(ValueSimpleRef(x), [Arm(Lit(true), Return(ValueLit(10))), Arm(Lit(false), Assign(y, ValueLit(20), End()))], End(), Return(ValueSimpleRef(y)))))
+printCode(earlyRetBlock)
+prop(Ctx.empty(), earlyRetBlock)
+//│ > let {x, y}
+//│ > x = false
+//│ > if x is
+//│ >   true then 10
+//│ >   false then
+//│ >     y = 20
+//│ > y
+//│ = [
+//│   Scoped(
+//│     [Symbol("x"), Symbol("y")],
+//│     Assign(
+//│       Symbol("x"),
+//│       ValueLit(false),
+//│       Assign(Symbol("y"), ValueLit(20), Return(ValueLit(20)))
+//│     )
+//│   ),
+//│   {Lit(20)},
+//│   true
+//│ ]
+//│ earlyRetBlock = Scoped(
+//│   [Symbol("x"), Symbol("y")],
+//│   Assign(
+//│     Symbol("x"),
+//│     ValueLit(false),
+//│     Match(
+//│       ValueSimpleRef(Symbol("x")),
+//│       [
+//│         Arm(Lit(true), Return(ValueLit(10))),
+//│         Arm(Lit(false), Assign(Symbol("y"), ValueLit(20), End()))
+//│       ],
+//│       End(),
+//│       Return(ValueSimpleRef(Symbol("y")))
+//│     )
+//│   )
+//│ )
+
+:silent
+val nestedBlock = Scoped([x, y], Assign(x, ValueLit(true), Assign(y, ValueLit(false), Match(ValueSimpleRef(x), [Arm(Lit(true), Match(ValueSimpleRef(y), [Arm(Lit(true), Return(ValueLit(1)))], Some(Return(ValueLit(2))), End()))], Some(Return(ValueLit(3))), Return(ValueLit(4))))))
+val res = prop(Ctx.empty(), nestedBlock)
+printCode(nestedBlock)
+printCode(res.0)
+//│ > let {x, y}
+//│ > x = true
+//│ > y = false
+//│ > if x is
+//│ >   true then
+//│ >     if y is
+//│ >       true then 1
+//│ >       else 2
+//│ >   else 3
+//│ > 4
+//│ > let {x, y}
+//│ > x = true
+//│ > y = false
+//│ > 2
+
+val res = prop(Ctx.empty(), nestedBlock)
+//│ res = [
+//│   Scoped(
+//│     [Symbol("x"), Symbol("y")],
+//│     Assign(
+//│       Symbol("x"),
+//│       ValueLit(true),
+//│       Assign(Symbol("y"), ValueLit(false), Return(ValueLit(2)))
+//│     )
+//│   ),
+//│   {Lit(2)},
+//│   false
+//│ ]
+
+:expect {Lit(2)}
+res.1
+//│ = {Lit(2)}
+
+shapeset2path(sov(1), mut[])
+//│ = [End(), ValueLit(1)]
+
+shapeset2path(sov([1, 2, 3]), mut [])
+//│ = [
+//│   Assign(
+//│     Symbol("tup_1"),
+//│     Tuple([Arg(ValueLit(1)), Arg(ValueLit(2)), Arg(ValueLit(3))]),
+//│     End()
+//│   ),
+//│   ValueSimpleRef(Symbol("tup_1"))
+//│ ]
+
+class TestClass(val a, val b)
+val sym = ConcreteClassSymbol("TestClass", TestClass, Some([Param(None, Symbol("a")), Param(None, Symbol("b"))]), [], false)
+//│ sym = ConcreteClassSymbol(
+//│   "TestClass",
+//│   fun TestClass { class: class TestClass },
+//│   Some([Param(None, Symbol("a")), Param(None, Symbol("b"))]),
+//│   [],
+//│   false
+//│ )
+
+Runtime.SymbolMap.classMap.set(TestClass.class, sym)
+//│ = Map(1) {
+//│   class TestClass => ConcreteClassSymbol(
+//│     "TestClass",
+//│     fun TestClass { class: class TestClass },
+//│     Some([Param(None, Symbol("a")), Param(None, Symbol("b"))]),
+//│     [],
+//│     false
+//│   )
+//│ }
+
+shapeset2path(sov(TestClass(1, 2)), mut [])
+//│ = [
+//│   Assign(
+//│     Symbol("obj_2"),
+//│     Instantiate(
+//│       ValueMemberRef(
+//│         ConcreteClassSymbol(
+//│           "TestClass",
+//│           fun TestClass { class: class TestClass },
+//│           Some([Param(None, Symbol("a")), Param(None, Symbol("b"))]),
+//│           [],
+//│           false
+//│         )
+//│       ),
+//│       [Arg(ValueLit(1)), Arg(ValueLit(2))]
+//│     ),
+//│     End()
+//│   ),
+//│   ValueSimpleRef(Symbol("obj_2"))
+//│ ]
+
+shapeset2path(sov(TestClass(1, [1,2])), mut [])
+//│ = [
+//│   Assign(
+//│     Symbol("tup_3"),
+//│     Tuple([Arg(ValueLit(1)), Arg(ValueLit(2))]),
+//│     Assign(
+//│       Symbol("obj_4"),
+//│       Instantiate(
+//│         ValueMemberRef(
+//│           ConcreteClassSymbol(
+//│             "TestClass",
+//│             fun TestClass { class: class TestClass },
+//│             Some([Param(None, Symbol("a")), Param(None, Symbol("b"))]),
+//│             [],
+//│             false
+//│           )
+//│         ),
+//│         [Arg(ValueLit(1)), Arg(ValueSimpleRef(Symbol("tup_3")))]
+//│       ),
+//│       End()
+//│     )
+//│   ),
+//│   ValueSimpleRef(Symbol("obj_4"))
+//│ ]

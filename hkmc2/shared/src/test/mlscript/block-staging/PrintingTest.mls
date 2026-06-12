@@ -1,0 +1,9 @@
+:js
+:staging
+
+fun f(_) = 1
+class C(val x)
+
+staged class D(val x)(val y, val z)(val a) extends C([2, z + f(z)]."0") with
+  val b = z + z
+  fun f() = a + x

@@ -41,8 +41,11 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
   val termNme = baseScp.allocateName(Elaborator.State.termSymbol)(using throw _)
   val blockNme = baseScp.allocateName(Elaborator.State.blockSymbol)(using throw _)
   val optionNme = baseScp.allocateName(Elaborator.State.optionSymbol)(using throw _)
+  val shapeSetNme = baseScp.allocateName(Elaborator.State.shapeSetSymbol)(using throw _)
+  val specializationHelpersNme = baseScp.allocateName(Elaborator.State.specializeHelpersSymbol)(using throw _)
   val definitionMetadataNme = baseScp.allocateName(Elaborator.State.definitionMetadataSymbol)(using throw _)
   val prettyPrintNme = baseScp.allocateName(Elaborator.State.prettyPrintSymbol)(using throw _)
+  
   
   val ltl = new TraceLogger:
     override def doTrace = debugLowering.isSet || scope.exists:
@@ -73,6 +76,8 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
     if stageCode.isSet then
       importRuntimeModule(blockNme, blockFile)
       importRuntimeModule(optionNme, optionFile)
+      importRuntimeModule(shapeSetNme, shapeSetFile)
+      importRuntimeModule(specializationHelpersNme, specializeHelpersFile)
     h
   
   private var hostCreated = false

@@ -1,0 +1,140 @@
+:js
+:staging
+:noModuleCheck
+
+fun gen(M, name) =
+  M."generate"("../" + name + ".mls", "./hkmc2/shared/src/test/mlscript-compile/staging/out/" + name + ".mls")
+
+import "../../mlscript-compile/staging/SimpleStagedExample.mls"
+
+gen(SimpleStagedExample, "SimpleStagedExample")
+
+import "../../mlscript-compile/staging/out/SimpleStagedExample.mls"
+
+:expect 60
+SimpleStagedExample.foo()
+//│ = 60
+
+
+:expect 6
+SimpleStagedExample.f(1, 5)
+//│ = 6
+
+
+:expect 5
+SimpleStagedExample.fib(5)
+//│ = 5
+
+:expect 2
+SimpleStagedExample.baz()
+//│ = 2
+
+
+:expect false
+SimpleStagedExample.bazbaz(true)
+//│ = false
+
+
+import "../../mlscript-compile/staging/LinkingGeneratedClasses.mls"
+
+gen(LinkingGeneratedClasses, "LinkingGeneratedClasses")
+
+import "../../mlscript-compile/staging/out/LinkingGeneratedClasses.mls"
+
+:expect C
+LinkingGeneratedClasses.test1
+//│ = C
+
+:expect S
+LinkingGeneratedClasses.test2(false)
+//│ = S
+
+:expect D
+LinkingGeneratedClasses.test3
+//│ = D
+
+:expect 3
+LinkingGeneratedClasses.f().call(3)
+//│ = 3
+
+:expect 5
+LinkingGeneratedClasses.g().call(3)
+//│ = 5
+
+import "../../mlscript-compile/staging/StagedClass.mls"
+
+
+gen(StagedClass, "StagedClass")
+
+
+import "../../mlscript-compile/staging/out/StagedClass.mls"
+
+
+StagedClass.foo()
+//│ = Foo
+
+
+StagedClass.bar(false)
+//│ = Bar(1)
+
+StagedClass.bar(true)
+//│ = Bar(0)
+
+
+StagedClass.baz(true)
+//│ = Baz(1)
+
+let baz = StagedClass.baz(false)
+//│ baz = Baz(2)
+
+
+baz.x
+//│ = 2
+
+StagedClass.f(baz)
+//│ = 3
+
+
+assert StagedClass.D() is StagedClass.B
+
+assert StagedClass.g() is StagedClass.D
+
+assert StagedClass.C().h() is StagedClass.D
+
+:expect 3
+StagedClass.xx().f(1, 2)
+//│ = 3
+
+
+StagedClass.X(1).f(0)
+//│ = Bar(0)
+
+
+assert StagedClass.X(1).f(0) is StagedClass.Bar
+
+
+:fixme we need to support redirection in classes
+:expect 2
+StagedClass.X(0).g(1)
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'foo')
+//│ ═══[RUNTIME ERROR] Expected: '2', got: 'undefined'
+
+
+:expect 2
+StagedClass.X(0).h(1)
+//│ = 2
+
+
+import "../../mlscript-compile/staging/ImportingFiles.mls"
+
+gen(ImportingFiles, "ImportingFiles")
+
+import "../../mlscript-compile/staging/out/ImportingFiles.mls"
+
+import "../../mlscript-compile/staging/AdjacentClasses.mls"
+
+gen(AdjacentClasses, "AdjacentClasses")
+
+:expect C(1)
+AdjacentClasses.D().f()
+//│ = C(1)

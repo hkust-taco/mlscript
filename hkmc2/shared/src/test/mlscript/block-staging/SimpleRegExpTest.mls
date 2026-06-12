@@ -1,0 +1,159 @@
+:js
+:staging
+:noModuleCheck
+
+import "../../mlscript-compile/SimpleRegExp.mls"
+
+open SimpleRegExp
+
+match(Exact("x"), "x")
+//│ = Some("x")
+
+match(Exact("x"), "")
+//│ = None
+
+match(Exact("x"), "xyz")
+//│ = Some("x")
+
+
+match(Any(), "x")
+//│ = Some("x")
+
+match(Any(), "")
+//│ = None
+
+match(Any(), "xyz")
+//│ = Some("x")
+
+
+match(Not(["x", "y", "z"]), "xyz")
+//│ = None
+
+match(Not(["x", "y", "z"]), "w")
+//│ = Some("w")
+
+
+match(Union(Union(Exact("x"), Exact("y")), Exact("z")), "z")
+//│ = Some("z")
+
+match(Union(Union(Exact("x"), Exact("y")), Exact("z")), "y")
+//│ = Some("y")
+
+match(Union(Union(Exact("x"), Exact("y")), Exact("z")), "w")
+//│ = None
+
+
+match(question(Exact("x")), "x")
+//│ = Some("x")
+
+match(question(Exact("x")), "y")
+//│ = Some("")
+
+match(question(Exact("x")), "xx")
+//│ = Some("x")
+
+match(question(Any()), "y")
+//│ = Some("y")
+
+
+match(new Concat(new Exact("x"), new Concat(new Exact("y"), new Not(["z"]))), "xyy")
+//│ = Some("xyy")
+
+match(new Concat(new Exact("x"), new Concat(new Exact("y"), new Not(["z"]))), "xyz")
+//│ = None
+
+match(new Concat(new Exact("x"), new Concat(new Exact("y"), new Not(["z"]))), "yyy")
+//│ = None
+
+
+// x{3}, equivalent to xxx
+match(nTimes(Exact("x"), 3), "xxx")
+//│ = Some("xxx")
+
+match(nTimes(Exact("x"), 3), "xxy")
+//│ = None
+
+match(nTimes(Exact("x"), 3), "xx")
+//│ = None
+
+
+match(Concat(Star(Exact("x")), Exact("y")), "x")
+//│ = None
+
+match(Concat(Star(Exact("x")), Exact("y")), "y")
+//│ = Some("y")
+
+match(Concat(Star(Exact("x")), Exact("y")), "xxxxxy")
+//│ = Some("xxxxxy")
+
+match(Concat(Star(Exact("x")), Exact("y")), "xyyyy")
+//│ = Some("xy")
+
+
+match(plus(Exact("x")), "")
+//│ = None
+
+match(plus(Exact("x")), "x")
+//│ = Some("x")
+
+
+match(plus(Exact("x")), "y")
+//│ = None
+
+
+match(plus(Exact("x")), "xxx")
+//│ = Some("xxx")
+
+
+match(plus(Exact("x")), "xxxy")
+//│ = Some("xxx")
+
+
+:silent
+let p = Concat(In(["T", "t"]), Concat(Star(words()), notWord())) 
+
+
+matchAll(p, "To be or not to be, that is the question.")
+//│ = ["To ", "t ", "to ", "that ", "the ", "tion."]
+
+
+matchAllEmail("foo@bar.baz")
+//│ = ["foo@bar.baz"]
+
+matchAllEmail("foo-foo@bar.baz")
+//│ = ["foo-foo@bar.baz"]
+
+matchAllEmail("a.b.c.d@e-f.g.h")
+//│ = ["a.b.c.d@e-f.g.h"]
+
+matchAllEmail("a-b.c.d@e-f.g.h")
+//│ = ["a-b.c.d@e-f.g.h"]
+
+matchAllEmail("foo@bar@baz")
+//│ = []
+
+matchAllEmail("f@a")
+//│ = []
+
+
+matchAllURI("http://foo.bar.com")
+//│ = ["http://foo.bar.com"]
+
+
+matchAllURI("http://foo.bar.com?xxx")
+//│ = ["http://foo.bar.com?xxx"]
+
+
+matchAllURI("http://foo.bar.com?xxx#42")
+//│ = ["http://foo.bar.com?xxx#42"]
+
+
+matchAllURI("http://foo.bar.com#42")
+//│ = ["http://foo.bar.com#42"]
+
+
+matchAllIPv4("8.8.8.8")
+//│ = ["8.8.8.8"]
+
+matchAllIPv4("192.168.1.1")
+//│ = ["192.168.1.1"]

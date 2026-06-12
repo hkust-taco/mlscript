@@ -1,0 +1,7 @@
+#config(noFreeze: true, noModuleCheck: true, liftDefns: None, disableDataFlowAnalysis: true, deadParamElim: Some(DeadParamElim(debug: false, mono: true)))
+import "../Inheritance.mls" as Inheritance__Legacy
+module Inheritance with
+    class B(val x) with
+      ()
+    class D(val x) extends B(x + 1) with
+      ()

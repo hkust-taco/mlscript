@@ -1,0 +1,5 @@
+#config(noFreeze: true, noModuleCheck: true, liftDefns: None, disableDataFlowAnalysis: true, deadParamElim: Some(DeadParamElim(debug: false, mono: true)))
+import "../ImportingFiles.mls" as ImportingFiles__Legacy
+module ImportingFiles with
+    ()
+    fun f() = 21

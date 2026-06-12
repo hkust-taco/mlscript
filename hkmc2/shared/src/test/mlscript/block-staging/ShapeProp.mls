@@ -1,0 +1,374 @@
+:js
+:staging
+:noFreeze
+:noModuleCheck
+:noSanityCheck
+
+import "../../mlscript-compile/ShapeSet.mls"
+open ShapeSet
+module NonStaged with
+  fun sq(x) = x * x
+
+staged module Staged with
+  fun sq(x) = x * x
+  fun fib(n) = if n is 
+    1 then 1
+    2 then 1
+    n then fib(n - 1) + fib(n - 2)
+
+staged module Simple with
+  fun f(x, y) = x + y + 1 - 1
+  fun fib(n) = if n is
+    1 then 1
+    2 then 1
+    n then fib(n - 1) + fib(n - 2)
+  fun pyth(x, y) = NonStaged.sq(x) + NonStaged.sq(y)
+  fun pyth2(x, y) = Staged.sq(x) + Staged.sq(y)
+  fun test() =
+    let four = f(2, 2)
+    let three = fib(four)
+    let two = Staged.fib(three)
+    pyth(two, 4)
+  fun test2(n) =
+    let dyn = pyth(n, 2)
+    fib(dyn * 2)
+
+Simple."test_gen"()
+Simple."test2_gen"(mkDyn())
+print(Simple."cache$Simple")
+//│ > module Simple with
+//│ >   ()
+//│ >   fun fib(n) =
+//│ >     let {n1, tmp2, tmp3, tmp4, tmp5}
+//│ >     if n is
+//│ >       1 then 1
+//│ >       2 then 1
+//│ >       else
+//│ >         n1 = n
+//│ >         tmp2 = n1 - 1
+//│ >         tmp3 = fib(tmp2)
+//│ >         tmp4 = n1 - 2
+//│ >         tmp5 = fib(tmp4)
+//│ >         tmp3 + tmp5
+//│ >   fun test() = 20
+//│ >   fun test2(n) =
+//│ >     let {dyn, tmp10}
+//│ >     dyn = pyth_Simple_sp_1(n, 2)
+//│ >     tmp10 = *(dyn, 2)
+//│ >     fib(tmp10)
+//│ > fun f_Simple_sp_0(x, y) = 4
+//│ > fun fib_Simple_sp_0(n) = 3
+//│ > fun fib_Simple_sp_1(n) = 2
+//│ > fun fib_Simple_sp_2(n) = 1
+//│ > fun fib_Simple_sp_3(n) = 1
+//│ > fun pyth_Simple_sp_0(x, y) = 20
+//│ > fun pyth_Simple_sp_1(x, y) =
+//│ >   let {tmp6, tmp7}
+//│ >   tmp6 = Simple__Legacy."NonStaged$Simple".sq(x)
+//│ >   tmp7 = 4
+//│ >   tmp6 + 4
+
+class C(val x)
+
+staged module If with
+  fun f(x) = if x is
+    C(2) then "C(2) "
+    C then "C "
+    else "else "
+  fun test() = 
+    f(C(2)) + f(C(3)) + f(2)
+  fun test2(x, y) = 
+    if x is 1 and
+      y is 1 then
+        return 1
+      else 
+        2
+    else 
+      3
+    4
+
+If."test_gen"()
+//│ = ["test", {Lit("C(2) C else ")}]
+
+If."test2_gen"(mkLit(1), mkDyn())
+//│ = ["test2_If_sp_0", {Lit(1),Lit(4)}]
+
+print(If."cache$If")
+//│ > module If with
+//│ >   ()
+//│ >   fun test() = "C(2) C else "
+//│ > fun f_If_sp_0(x) = "C(2) "
+//│ > fun f_If_sp_1(x) = "C "
+//│ > fun f_If_sp_2(x) = "else "
+//│ > fun test2_If_sp_0(x, y) =
+//│ >   let {tmp6}
+//│ >   if y is
+//│ >     1 then 1
+//│ >     else
+//│ >       tmp6 = 2
+//│ >       4
+
+class C(val n)
+staged module If2 with
+  fun f(x) =
+    let y
+    if x is C then
+      y = x.n
+    else
+      y = 0
+    y + 1
+  fun test() = f(C(2))
+  fun test2(dyn) = f(C(dyn))
+  fun test3() = f(0)
+
+If2."test_gen"()
+If2."test2_gen"(mkDyn())
+If2."test3_gen"()
+print(If2."cache$If2")
+//│ > module If2 with
+//│ >   ()
+//│ >   fun test() = 3
+//│ >   fun test2(dyn) =
+//│ >     let {tmp2}
+//│ >     tmp2 = If2__Legacy."C$If2"(dyn)
+//│ >     f_If2_sp_1(tmp2)
+//│ >   fun test3() = 1
+//│ > fun f_If2_sp_0(x) = 3
+//│ > fun f_If2_sp_1(x) =
+//│ >   let {y, tmp}
+//│ >   y = x.n
+//│ >   tmp = runtime.Unit
+//│ >   y + 1
+//│ > fun f_If2_sp_2(x) = 1
+
+staged module LinearAlgebra with
+  fun _dot(v1, v2, n, acc) = 
+    if n ==
+      v1.length then acc
+      else _dot(v1, v2, n + 1, v1.(n) * v2.(n) + acc)
+  fun dot(v1, v2) = _dot(v1, v2, 0, 0)
+  fun test(x) = dot([x, 1, 2], [3, 4, 1])
+
+LinearAlgebra."test_gen"(mkDyn())
+print(LinearAlgebra."cache$LinearAlgebra")
+//│ > module LinearAlgebra with
+//│ >   ()
+//│ >   fun test(x) =
+//│ >     let {tmp3, tmp4}
+//│ >     tmp3 = [x, 1, 2]
+//│ >     tmp4 = [3, 4, 1]
+//│ >     dot_LinearAlgebra_sp_0(tmp3, tmp4)
+//│ > fun _dot_LinearAlgebra_sp_0(v1, v2, n, acc) =
+//│ >   let {scrut, tmp, tmp1, tmp2}
+//│ >   scrut = false
+//│ >   tmp = 1
+//│ >   tmp1 = *(v1.(0), 3)
+//│ >   tmp2 = tmp1 + 0
+//│ >   _dot_LinearAlgebra_sp_1(v1, v2, tmp, tmp2)
+//│ > fun _dot_LinearAlgebra_sp_1(v1, v2, n, acc) =
+//│ >   let {scrut, tmp, tmp1, tmp2}
+//│ >   scrut = false
+//│ >   tmp = 2
+//│ >   tmp1 = 4
+//│ >   tmp2 = 4 + acc
+//│ >   _dot_LinearAlgebra_sp_2(v1, v2, tmp, tmp2)
+//│ > fun _dot_LinearAlgebra_sp_2(v1, v2, n, acc) =
+//│ >   let {scrut, tmp, tmp1, tmp2}
+//│ >   scrut = false
+//│ >   tmp = 3
+//│ >   tmp1 = 2
+//│ >   tmp2 = 2 + acc
+//│ >   _dot_LinearAlgebra_sp_3(v1, v2, tmp, tmp2)
+//│ > fun _dot_LinearAlgebra_sp_3(v1, v2, n, acc) =
+//│ >   let {scrut, tmp, tmp1, tmp2}
+//│ >   scrut = true
+//│ >   acc
+//│ > fun dot_LinearAlgebra_sp_0(v1, v2) = _dot_LinearAlgebra_sp_0(v1, v2, 0, 0)
+
+staged class L1(val y) with
+  fun call(x) = x + 2 + y
+staged class L2(val y) with
+  fun call(x) = x + y
+staged class L3(val y) with
+  fun call(x) = x * 2 + y
+class L4(val y) with
+  fun call(x) = x + y
+
+staged module Dispatching with
+  fun twice(f, x) = f.call(f.call(x))
+  fun pick(x, y, b) = if b then x else y
+  fun test(b) = 
+    let y = twice(new L1(1), 5)
+    let m = pick(new L2(2), new L3(3), b)
+    twice(m, 5)
+
+Dispatching."test_gen"(mkLit(true))
+//│ = ["test_Dispatching_sp_0", {Lit(9)}]
+
+Dispatching."test_gen"(mkLit(false))
+//│ = ["test_Dispatching_sp_1", {Lit(29)}]
+
+Dispatching."test_gen"(mkDyn())
+//│ = ["test", {Lit(15),Lit(17),Lit(29),Lit(9)}]
+
+print(Dispatching."cache$Dispatching")
+//│ > module Dispatching with
+//│ >   ()
+//│ >   fun test(b) =
+//│ >     let {y1, m, tmp1, tmp2, tmp3}
+//│ >     tmp1 = new L1.class(1)
+//│ >     y1 = twice_Dispatching_sp_0(tmp1, 5)
+//│ >     tmp2 = new L2.class(2)
+//│ >     tmp3 = new L3.class(3)
+//│ >     m = pick_Dispatching_sp_2(tmp2, tmp3, b)
+//│ >     twice_Dispatching_sp_3(m, 5)
+//│ > fun pick_Dispatching_sp_0(x, y, b) = x
+//│ > fun pick_Dispatching_sp_1(x, y, b) = y
+//│ > fun pick_Dispatching_sp_2(x, y, b) =
+//│ >   if b is
+//│ >     true then x
+//│ >     else y
+//│ > fun test_Dispatching_sp_0(b) = 9
+//│ > fun test_Dispatching_sp_1(b) = 29
+//│ > fun twice_Dispatching_sp_0(f, x) = 11
+//│ > fun twice_Dispatching_sp_1(f, x) = 9
+//│ > fun twice_Dispatching_sp_2(f, x) = 29
+//│ > fun twice_Dispatching_sp_3(f, x) =
+//│ >   let {tmp}
+//│ >   if f is
+//│ >     L2 then
+//│ >       tmp = call_L2_sp_0(f, x)
+//│ >     L3 then
+//│ >       tmp = call_L3_sp_0(f, x)
+//│ >   if f is
+//│ >     L2 then call_L2_sp_2(f, tmp)
+//│ >     L3 then call_L3_sp_2(f, tmp)
+
+print(L1.class."class$cache$L1")
+print(L2.class."class$cache$L2")
+print(L3.class."class$cache$L3")
+//│ > class L1(val y) with
+//│ >   ()
+//│ > fun call_L1_sp_0(self, x) = 8
+//│ > fun call_L1_sp_1(self, x) = 11
+//│ > class L2(val y) with
+//│ >   ()
+//│ > fun call_L2_sp_0(self, x) = 7
+//│ > fun call_L2_sp_1(self, x) = 9
+//│ > fun call_L2_sp_2(self, x) = x + 2
+//│ > class L3(val y) with
+//│ >   ()
+//│ > fun call_L3_sp_0(self, x) = 13
+//│ > fun call_L3_sp_1(self, x) = 29
+//│ > fun call_L3_sp_2(self, x) =
+//│ >   let {tmp1}
+//│ >   tmp1 = *(x, 2)
+//│ >   tmp1 + 3
+
+staged class Bar(val x) with
+  fun bar() = x
+staged class Foo(val x) with
+  fun foo(b) =
+    if b is
+      1 then x.bar() + 1
+      2 then x.bar() + 2
+      else x.bar()
+
+staged module Dispatching2 with
+  fun baz(b) = Foo(Bar(1)).foo(b)
+
+Dispatching2."baz_gen"(mkDyn())
+//│ = ["baz", {Lit(1),Lit(2),Lit(3)}]
+
+staged class A(val x: Int) with
+  fun f(y: Int) = x + y
+staged class B(val x: Int) with
+  fun f(y: A) = x + y.f(x)
+
+staged module This with
+  fun test(x) = B(x).f(A(1))
+  fun test2(y) = B(1).x + y
+
+This."test_gen"(mkLit(1))
+This."test2_gen"(mkLit(1))
+print(This."cache$This")
+//│ > module This with
+//│ >   ()
+//│ > fun test2_This_sp_0(y) = 2
+//│ > fun test_This_sp_0(x) = 3
+
+print(A.class."class$cache$A")
+print(B.class."class$cache$B")
+//│ > class A(val x) with
+//│ >   ()
+//│ > fun f_A_sp_0(self, y) = 2
+//│ > class B(val x) with
+//│ >   ()
+//│ > fun f_B_sp_0(self, y) = 3
+
+staged class B(val x, val y) with
+  val z = x + y
+
+staged class D(val x, val y) extends B(x + 1, x + 2)
+
+staged module Inheritance with
+  fun test() = 
+    let d = D(1, 2)
+    if d is
+      B then d.z
+      else "not B"
+
+Inheritance."test_gen"()
+//│ = ["test", {Lit(5)}]
+
+staged module NonTermination with
+  fun f(x, y) = if y
+    == x then 0
+    else f(x, y + 1)
+
+:re
+// NonTermination."f_gen"(mkDyn(), mkLit(0))
+
+fun g(x, y) = x + y
+
+staged module GlobalFunction with
+  fun test(x) = g(x, x)
+
+GlobalFunction."test_gen"(mkLit(1))
+//│ = ["test_GlobalFunction_sp_0", {Dyn()}]
+
+staged module Comparison with
+  fun test(x) = x < 5
+
+Comparison."test_gen"(union(mkLit(3), mkLit(4)))
+//│ = ["test_Comparison_sp_0", {Lit(true)}]
+
+Comparison."test_gen"(union(mkLit(4), mkLit(6)))
+//│ = ["test_Comparison_sp_1", {Dyn()}]
+
+class C
+module Opaque with
+  fun f() = new C
+staged module M with
+  fun f() = Opaque.f()
+M."f_gen"()
+//│ = ["f", {Dyn()}]
+
+staged module M with
+  fun f(x, y) = x * y
+  fun g(y) = f(2, y)
+
+M."propagate"()
+
+M."cache$M"
+//│ = module M with \
+//│     () \
+//│     fun f(x, y) = *(x, y) \
+//│     fun g(y) = f_M_sp_0(2, y) \
+//│   fun f_M_sp_0(x, y) = *(2, y)
+
+staged module M with
+  fun f(x) = x.2
+
+M."f_gen"(mkArr([mkLit(1), mkDyn(), mkLit(2)]))
+//│ = ["f_M_sp_0", {Lit(2)}]

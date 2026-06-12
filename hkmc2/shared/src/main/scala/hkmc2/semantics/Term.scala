@@ -1290,11 +1290,17 @@ case class TypeDef(
   annotations: Ls[Annot],
 ) extends TypeLikeDef
 
+enum ReflectionConstraint:
+  case Dynamic, Static
+  def str: Str = this match
+    case Dynamic => "@dynamic"
+    case Static => "@static"
 
 // TODO Store optional source locations for the flags instead of booleans
-final case class FldFlags(mut: Bool, spec: Bool, pat: Bool, isVal: Bool):
+final case class FldFlags(reflConstraint: Opt[ReflectionConstraint], mut: Bool, spec: Bool, pat: Bool, isVal: Bool):
   def show: Str = 
     val flags = Buffer.empty[String]
+    reflConstraint.map(flags += _.str)
     if mut then flags += "mut"
     if spec then flags += "spec"
     if pat then flags += "pattern"
@@ -1303,7 +1309,7 @@ final case class FldFlags(mut: Bool, spec: Bool, pat: Bool, isVal: Bool):
   override def toString: String = "‹" + show + "›"
 
 object FldFlags:
-  val empty: FldFlags = FldFlags(false, false, false, false)
+  val empty: FldFlags = FldFlags(N, false, false, false, false)
   object benign:
     // * Some flags like `mut` and `module` are "benign" in the sense that they don't affect code-gen
     def unapply(flags: FldFlags): Bool =

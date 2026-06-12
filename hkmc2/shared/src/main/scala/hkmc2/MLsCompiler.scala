@@ -39,6 +39,10 @@ object MLsCompiler:
     def preludeFile: io.Path
     def runtimeFile: io.Path
     def termFile: io.Path
+    def blockFile: io.Path
+    def specializeHelpersFile: io.Path
+    def optionFile: io.Path
+    def shapeSetFile: io.Path
 
 /**
   * The compiler that compiles MLscript code into JavaScript modules.
@@ -103,14 +107,27 @@ class MLsCompiler
         case Term.Quoted(_) | Term.Unquoted(_) => true
         case Term.Ref(sym) => sym === State.termSymbol
         case _ => t.subTerms.exists(findQuote)
+      def findStage(t: semantics.Statement): Bool = t match
+        case d: semantics.Definition => d.hasStagedModifier.isDefined
+        case _ => t.subStatements.exists(findStage)
+      
       val hasQuote = findQuote(blk0)
+      val isStaged = findStage(blk0)
+      // println(s"yydz: ${blk0.subTerms}")
       val blk = new Term.Blk(
         Import(State.runtimeSymbol, runtimeFile.toString, runtimeFile) ::
-          // Only import `Term.mls` when necessary.
+          // Only import files when necessary.
           (if hasQuote then
-            Import(State.termSymbol, termFile.toString, termFile) :: blk0.stats
+            Import(State.termSymbol, termFile.toString, termFile) :: Nil
           else
-            blk0.stats),
+            Nil) :::
+          (if isStaged then
+            Import(State.optionSymbol, optionFile.toString, optionFile) ::
+            Import(State.shapeSetSymbol, shapeSetFile.toString, shapeSetFile) ::
+            Import(State.blockSymbol, blockFile.toString, blockFile) ::
+            Import(State.specializeHelpersSymbol, specializeHelpersFile.toString, specializeHelpersFile) :: Nil
+          else
+            Nil) ::: blk0.stats,
         blk0.res
       )
       val low = ltl.givenIn:

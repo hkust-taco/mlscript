@@ -1,0 +1,32 @@
+:js
+:staging
+:noModuleCheck
+
+import "../../mlscript-compile/staging/SimpleStagedExample.mls"
+import "../../mlscript-compile/staging/LinkingGeneratedClasses.mls"
+import "../../mlscript-compile/Block.mls"
+
+
+Block.generateAll("CombinedModule", "./hkmc2/shared/src/test/mlscript-compile/staging/out/CombinedModule.mls", [SimpleStagedExample, "SimpleStagedExample", "../SimpleStagedExample.mls"], [LinkingGeneratedClasses, "LinkingGeneratedClasses", "../LinkingGeneratedClasses.mls"])
+
+
+import "../../mlscript-compile/staging/out/CombinedModule.mls"
+open CombinedModule
+
+
+SimpleStagedExample.foo()
+//│ = 60
+
+:expect 6
+SimpleStagedExample.f(1, 5)
+//│ = 6
+
+:expect 5
+SimpleStagedExample.fib(5)
+//│ = 5
+
+LinkingGeneratedClasses.test1
+//│ = C
+
+LinkingGeneratedClasses.test3
+//│ = D

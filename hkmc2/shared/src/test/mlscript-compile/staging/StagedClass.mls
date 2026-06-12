@@ -1,0 +1,30 @@
+module Helper with
+  fun foo(x) = x + 1
+
+staged module StagedClass with
+  class Foo
+  class Bar(val x) with
+    fun f(y, z) = x + y + z
+  staged class Baz(val x)
+  fun foo() = new Foo
+  fun bar(b) = if b then Bar(0) else new Bar(1)
+  fun baz(b) = if b then Baz(1) else new Baz(2)
+  fun f(x) =
+    if x is
+      Foo then 0
+      Bar(x') then x'
+      Baz(y) then y + 1
+      else -1
+  staged class FooBar(val x)
+  staged class B()
+  staged class D() extends B()
+  fun g() = new D()
+  staged class C() with
+    fun h() = new D()
+  staged class X(val x) with
+    fun f(y) = if x < y then new Bar(x) else new Bar(y)
+    fun g(y) = Helper.foo(x + y)
+    fun h(y) = helpFoo(x + y)
+  fun xx() = new X(0).f(1)
+  fun helpFoo(x) = Helper.foo(x)
+

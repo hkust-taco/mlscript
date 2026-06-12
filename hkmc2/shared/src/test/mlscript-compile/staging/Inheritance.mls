@@ -1,0 +1,3 @@
+staged module Inheritance with
+  staged class B(val x)
+  staged class D(val x) extends B(x + 1)

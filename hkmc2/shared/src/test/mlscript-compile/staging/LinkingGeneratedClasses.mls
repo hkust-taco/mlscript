@@ -1,0 +1,12 @@
+#config(funcToCls: true)
+
+class C
+staged class S with
+  fun f(x) = x
+staged module LinkingGeneratedClasses with
+  class D
+  fun test1 = new C
+  fun test2(x) = if x then (new S).f(1) else new S
+  fun test3 = new D
+  fun f() = x => x
+  fun g() = x => x + 2

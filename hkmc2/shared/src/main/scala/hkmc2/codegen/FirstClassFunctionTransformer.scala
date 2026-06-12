@@ -36,7 +36,8 @@ class FirstClassFunctionTransformer
         End()), End(), None, None)(N, annotations = Nil)
 
   private def getParamList(l: BlockMemberSymbol): Option[ParamList] = funDefns.get(l) match
-    case Some(fd) => fd.params.headOption
+    case Some(fd) => fd.params.headOption.map(pl =>
+      ParamList(pl.flags, pl.params.map(p => Param(p.flags, VarSymbol(p.sym.id), p.sign, p.modulefulness)), pl.restParam))
     case _ => l.tsym.flatMap(getParamList)
 
   private def getParamList(ts: TermSymbol): Option[ParamList] =
@@ -111,4 +112,19 @@ class FirstClassFunctionTransformer
   def transform(b: Block): Block =
     val desugared = new DesugarMultipleParamList().applyBlock(b)
     new CollectFunDefns().applyBlock(desugared)
-    applyBlock(desugared)
+    new LabelTransformer().applyBlock(applyBlock(desugared))
+
+
+class LabelTransformer(using State, Raise) extends BlockTransformer(new SymbolSubst()):
+  private val contMap = HashMap.empty[LabelSymbol, BlockMemberSymbol]
+
+  override def applyBlock(b: Block): Block = b match
+    case Label(label, false, body, rest) =>
+      val contSym = BlockMemberSymbol("cont$", Nil, false)
+      val contFun = FunDefn.withFreshSymbol(N, contSym, PlainParamList(Nil) :: Nil, rest)(N, Nil)
+      contMap.addOne(label -> contSym)
+      super.applyBlock(Scoped(Set(contSym), Define(contFun, body)))
+    case Break(label) => contMap.get(label) match
+      case S(sym) => Return(Call(sym.asPath, Nil ne_:: Nil)(CallMetadata.defaultMlsFun))
+      case _ => super.applyBlock(b)
+    case _ => super.applyBlock(b)

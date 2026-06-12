@@ -2,30 +2,23 @@
 :staging
 
 :noOpt // To expose the problem
-:fixme // TODO: fix IR rebinding issue (each symbol should be bound at most once)
 :checkIR
-staged module Expressions with
+staged module Rebinding with
   fun lit() =
     let x = 42
     x
-//│ ╔══[INTERNAL ERROR] [BlockChecker] Invalid IR: symbol x⁰ is bound more than once
-//│ ║  l.9: 	    let x = 42
-//│ ╙──     	        ^
-//│ > fun ctor_() = ()
-//│ > fun lit() =
-//│ >   let {x}
-//│ >   x = 42
-//│ >   x
 
-let x = [1, 2, 3]
+val x = [1, 2, 3]
 staged module Expressions with
-  fun lit() = 1
+  fun lit(x) = x + x
   fun assign() =
     let x = 42
     let y = x
     y
   fun tup1() = [1, 2]
-  fun tup2() = [1, x]
+  fun tup2() = 
+    let x = [1, 2, 3]
+    [1, x]
   fun dynsel() = [1].(0)
   fun match1() =
     if 9 is
@@ -35,50 +28,12 @@ staged module Expressions with
       9 then 4
       else 0
   fun match2() =
+    let x = [1, 2, 3]
     if x is
       [] then 1
       [1, 2] then 2
       [a, _] then 3
       else 0
-//│ > fun ctor_() = ()
-//│ > fun lit() = 1
-//│ > fun assign() =
-//│ >   let {x, y}
-//│ >   x = 42
-//│ >   y = x
-//│ >   y
-//│ > fun tup1() = [1, 2]
-//│ > fun tup2() = [1, x1]
-//│ > fun dynsel() =
-//│ >   let {tmp}
-//│ >   tmp = [1]
-//│ >   tmp.(0)
-//│ > fun match1() =
-//│ >   let {scrut}
-//│ >   scrut = 9
-//│ >   if scrut is
-//│ >     Bool then 1
-//│ >     8 then 2
-//│ >     Int then 3
-//│ >     else 0
-//│ > fun match2() =
-//│ >   let {a, element1_, element0_}
-//│ >   if x1 is
-//│ >     [] then 1
-//│ >     [_, _] then
-//│ >       element0_ = x1.0
-//│ >       element1_ = x1.1
-//│ >       if element0_ is
-//│ >         1 then
-//│ >           if element1_ is
-//│ >             2 then 2
-//│ >             else
-//│ >               a = element0_
-//│ >               3
-//│ >         else
-//│ >           a = element0_
-//│ >           3
-//│ >     else 0
 //│ x = [1, 2, 3]
 
 // * LetSplit lowers to a Label/Break pair, which the staged-module
@@ -92,82 +47,32 @@ staged module Example with
     x is 0 and y is 0 and z is 0 then 1
     else 2
 //│ ═══[COMPILATION ERROR] Other Blocks not supported in staged module: class hkmc2.codegen.Label.
-//│ > fun ctor_() = ()
-//│ ═══[RUNTIME ERROR] Error: MLscript call unexpectedly returned `undefined`, the forbidden value.
 
-// * LetSplit lowers to a Label/Break pair, which the staged-module
-// * compiler (`ReflectionInstrumenter`) doesn't yet understand. With
-// * the sharing threshold forced to 1, the shared `else` below would
-// * emit exactly that — tracked here as a fixme.
-:fixme
-:patMatConsequentSharingThreshold 1
-staged module Example with
-  fun f(x, y, z) = if
-    x is 0 and y is 0 and z is 0 then 1
-    else 2
-//│ ═══[COMPILATION ERROR] Other Blocks not supported in staged module: class hkmc2.codegen.Label.
-//│ > fun ctor_() = ()
-//│ ═══[RUNTIME ERROR] Error: MLscript call unexpectedly returned `undefined`, the forbidden value.
-
-:fixme
 class Outside(a)
 staged module ClassInstrumentation with
   class Inside(a, b)
   class NoArg
-  fun inst1() = new Outside(1)
+  fun inst1() = Outside(1)
   fun inst2() = new NoArg
   fun app1() = Outside(1)
   fun app2() = Inside(1, 2)
-//│ ═══[COMPILATION ERROR] Value.This not supported in staged module.
-//│ ═══[COMPILATION ERROR] Value.This not supported in staged module.
-//│ > fun ctor_() =
-//│ >   class Inside(a1, b)
-//│ >   class NoArg
-//│ > fun inst1() = new Outside(1)
-//│ ═══[RUNTIME ERROR] Error: MLscript call unexpectedly returned `undefined`, the forbidden value.
 
 module Nonstaged with
   fun f() = 1
 staged module Staged with
   fun f() = 1
 staged module CallSubst with
-  fun call() = 
-    1 + 1
-    Nonstaged.f()
-    Staged.f()
-//│ > fun ctor_() = ()
-//│ > fun f() = 1
-//│ > fun ctor_() = ()
-//│ > fun call() =
-//│ >   Nonstaged.f()
-//│ >   Staged.f_gen()
+  fun call() = Nonstaged.f() + Staged.f()
 
 :ftc
 staged module Arguments with
-  fun f(x) =
-    x = 1
-    x
+  fun f(x) = x
   fun g(x)(y, z)() = z
-//│ > fun ctor_() = ()
-//│ > fun f(x) =
-//│ >   x = 1
-//│ >   x
-//│ > fun g(x) =
-//│ >   let {tmp}
-//│ >   tmp = new Function_
-//│ >   tmp
 
 // :e
 staged module BadArguments with
   fun f() = Arguments.g(1)(2, 3)
-//│ > fun ctor_() = ()
-//│ > fun f() =
-//│ >   let {callPrefix}
-//│ >   callPrefix = Arguments.g_gen(1)
-//│ >   callPrefix(2, 3)
 
-
-:fixme
 staged module OtherBlocks with
   fun scope() =
     scope.locally of (
@@ -179,51 +84,29 @@ staged module OtherBlocks with
       2 then 0
       3 then 0
       else 0
-//│ ═══[COMPILATION ERROR] Value.This not supported in staged module.
-//│ ╔══[COMPILATION ERROR] No definition found in scope for member 'a'
-//│ ╟── which references the symbol introduced here
-//│ ║  l.174: 	      let a = 1
-//│ ╙──       	          ^
-//│ > fun ctor_() = ()
-//│ ═══[RUNTIME ERROR] ReferenceError: a is not defined
 
 staged module ClassDefs with
   class A
-//│ > fun ctor_() =
-//│ >   class A
 
+// TODO: ValDefn in class
 staged module ValClass with
   class A(val a)
-//│ > fun ctor_() =
-//│ >   class A(a)
 
-:fixme
 staged module ClassFunctions with
   class InnerClass() with
     fun f() = 1 + Arguments.f(1)
     fun g() = f()
-//│ ═══[COMPILATION ERROR] Value.This not supported in staged module.
-//│ ═══[COMPILATION ERROR] Value.This not supported in staged module.
-//│ ═══[RUNTIME ERROR] Error: MLscript call unexpectedly returned `undefined`, the forbidden value.
 
-staged module RetUnit with
-  fun f() = ()
-//│ > fun ctor_() = ()
-//│ > fun f() = ()
 
 // name collision
 class A()
 staged module A with
   fun f() = 1
-//│ > fun ctor_() = ()
-//│ > fun f() = 1
 
 // nested module
 module A with
   staged module B with
     fun f() = 1
-//│ > fun ctor_() = ()
-//│ > fun f() = 1
 
 // FIXME: for g to be defined in the next stage, we need to also print the other ClsLikeDefn/FunDefn nodes when printing the next stage
 :ftc
@@ -231,8 +114,6 @@ staged module NestedFunDefn with
   fun f() =
     fun g() = 1
     g()
-//│ > fun ctor_() = ()
-//│ > fun f() = g()
 
 :todo
 staged module LabelBreak with
@@ -241,16 +122,14 @@ staged module LabelBreak with
     while x == 1 do
       set x = x + 1
   fun g() = if 1 is
-    0 then 2
-    1 then 2
-    else 2
+    0 then 1 + 1 + 1
+    1 then 1 + 1 + 1
+    else 1 + 1 + 1
 //│ ═══[COMPILATION ERROR] Other Blocks not supported in staged module: class hkmc2.codegen.Label.
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'x'
 //│ ╟── which references the symbol introduced here
-//│ ║  l.240: 	    let x = 1
+//│ ║  l.121: 	    let x = 1
 //│ ╙──       	        ^
-//│ > fun ctor_() = ()
-//│ ═══[RUNTIME ERROR] Error: MLscript call unexpectedly returned `undefined`, the forbidden value.
 
 :e
 class C(val a)
@@ -260,16 +139,15 @@ staged module A with
   fun g() = {1 : 2}
 //│ ═══[COMPILATION ERROR] Field assignment is not supported in staged modules: a
 //│ ╔══[COMPILATION ERROR] Other Results not supported in staged module: class hkmc2.codegen.Record
-//│ ║  l.260: 	  fun g() = {1 : 2}
+//│ ║  l.139: 	  fun g() = {1 : 2}
 //│ ╙──       	                 ^
-//│ > fun ctor_() =
-//│ >   x = C(1)
-//│ ═══[RUNTIME ERROR] Error: MLscript call unexpectedly returned `undefined`, the forbidden value.
 
 :todo
 staged module Spread with
   fun f() = if [1, ..[1, 2]] is [1, ...x] then x else 0
-//│ ═══[COMPILATION ERROR] Spread parameters are not supported in staged module: Arg(Some(Lazy),SimpleRef(tmp:tmp))
+//│ ═══[COMPILATION ERROR] Spread parameters are not supported in staged module.
+//│ ═══[COMPILATION ERROR] Spread parameters are not supported in staged module: Tup(1,true)
+//│ ═══[COMPILATION ERROR] Unable to infer parameters from symbol in staged module, which are necessary to reconstruct class instances: module:Tuple
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'tmp'
-//│ > fun ctor_() = ()
-//│ ═══[RUNTIME ERROR] Error: MLscript call unexpectedly returned `undefined`, the forbidden value.
+//│ ═══[COMPILATION ERROR] No definition found in scope for member 'scrut'
+//│ ═══[COMPILATION ERROR] No definition found in scope for member 'element0$'

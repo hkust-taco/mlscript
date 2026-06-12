@@ -51,10 +51,11 @@ class BlockSimplifier
       changed ||= dce.changed
       if dce.changed then log("▶ DCE:\n" + printRes)
       
-      val vp = new DataFlowAnalysis(LocalVars.analyze(res.main))
-      res = vp.apply(res)
-      changed ||= vp.changed
-      if vp.changed then log("▶ VP:\n" + printRes)
+      if !config.disableDataFlowAnalysis then // FIXME: remove it. it now leads to timeout in staged reg exp output
+        val vp = new DataFlowAnalysis(LocalVars.analyze(res.main))
+        res = vp.apply(res)
+        changed ||= vp.changed
+        if vp.changed then log("▶ VP:\n" + printRes)
       
       summon[Config].inlining.foreach: cfg =>
         val inl = new Inliner(using cfg)

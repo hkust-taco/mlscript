@@ -1,0 +1,3918 @@
+#config(noFreeze: true, noModuleCheck: true, liftDefns: None, disableDataFlowAnalysis: true, deadParamElim: Some(DeadParamElim(debug: false, mono: true)))
+import "../Transform3D.mls" as Transform3D__Legacy
+module Transform3D with
+    class Matrix(val arr, val r, val c)
+    fun ident(w) =
+      let {m3}
+      m3 = zeros(w, w)
+      iterID_Transform3D_sp_0(m3, w, w)
+    fun iter(sum, x, y, colX, i, j, k) =
+      let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+      scrut = >(k, 0)
+      if scrut is
+        true then
+          tmp = *(i, x.c)
+          tmp1 = tmp + colX
+          tmp2 = tmp1 - k
+          tmp3 = colX - k
+          tmp4 = *(tmp3, y.c)
+          tmp5 = tmp4 + j
+          tmp6 = *(x.arr.(tmp2), y.arr.(tmp5))
+          tmp7 = sum + tmp6
+          tmp8 = k - 1
+          iter(tmp7, x, y, colX, i, j, tmp8)
+        else sum
+    fun iterCol(m, x, y, colX, colY, i, j) =
+      let {scrut1, tmp9, tmp10, tmp11, tmp12, tmp13}
+      scrut1 = ===(j, 0)
+      if scrut1 is
+        true then m
+        else
+          tmp9 = colY - j
+          tmp10 = colY - j
+          tmp11 = iter_Transform3D_sp_0(0, x, y, colX, i, tmp10, colX)
+          tmp12 = update(m, i, tmp9, tmp11)
+          tmp13 = j - 1
+          iterCol_Transform3D_sp_0(tmp12, x, y, colX, colY, i, tmp13)
+    fun iterID(m, w, i) =
+      let {scrut3, tmp17, tmp18, tmp19, tmp20}
+      scrut3 = ===(i, 0)
+      if scrut3 is
+        true then m
+        else
+          tmp17 = w - i
+          tmp18 = w - i
+          tmp19 = update_Transform3D_sp_1(m, tmp17, tmp18, 1)
+          tmp20 = i - 1
+          iterID_Transform3D_sp_0(tmp19, w, tmp20)
+    fun iterRow(m, x, y, rowX, colX, colY, i) =
+      let {scrut2, tmp14, tmp15, tmp16}
+      scrut2 = ===(i, 0)
+      if scrut2 is
+        true then m
+        else
+          tmp14 = rowX - i
+          tmp15 = iterCol(m, x, y, colX, colY, tmp14, colY)
+          tmp16 = i - 1
+          iterRow(tmp15, x, y, rowX, colX, colY, tmp16)
+    fun model(local, position, scaling, rotation) =
+      let {rot, res1, tmp47, tmp48, tmp49, tmp50, tmp51, tmp52, tmp53, tmp54, tmp55, tmp56, tmp57, tmp58}
+      tmp47 = rotateZ(rotation.2)
+      tmp48 = rotateY(rotation.1)
+      tmp49 = rotateX(rotation.0)
+      tmp50 = ident_Transform3D_sp_0(4)
+      tmp51 = multiply_Transform3D_sp_0(tmp49, tmp50)
+      tmp52 = multiply_Transform3D_sp_1(tmp48, tmp51)
+      rot = multiply_Transform3D_sp_1(tmp47, tmp52)
+      tmp53 = transform(position.0, position.1, position.2)
+      tmp54 = scale(scaling.0, scaling.1, scaling.2)
+      tmp55 = [local.0, local.1, local.2, 1]
+      tmp56 = new Matrix(tmp55, 4, 1)
+      tmp57 = multiply_Transform3D_sp_2(tmp54, tmp56)
+      tmp58 = multiply_Transform3D_sp_3(rot, tmp57)
+      res1 = multiply_Transform3D_sp_3(tmp53, tmp58)
+      [res1.arr.0, res1.arr.1, res1.arr.2]
+    fun model0(local) =
+      let {tmp59, tmp60, tmp61, tmp62}
+      tmp59 = [11, 4, 51]
+      tmp60 = [0.4, 0.19, 0.19]
+      tmp61 = 2.51327412
+      tmp62 = [tmp61, 3.1415926535, 0]
+      model_Transform3D_sp_0(local, tmp59, tmp60, tmp62)
+    fun moveBy(v, dx, dy, dz) =
+      let {m5, tmp63, tmp64}
+      m5 = transform(dx, dy, dz)
+      tmp63 = [v.0, v.1, v.2, 1]
+      tmp64 = new Matrix(tmp63, 4, 1)
+      multiply_Transform3D_sp_2(m5, tmp64)
+    fun multiply(x, y) =
+      let {res}
+      res = zeros(x.r, y.c)
+      iterRow_Transform3D_sp_0(res, x, y, x.r, x.c, y.c, x.r)
+    fun rotateX(angle) =
+      let {s, c2, tmp32, tmp33, tmp34, tmp35, tmp36}
+      s = Math.sin(angle)
+      c2 = Math.cos(angle)
+      tmp32 = ident_Transform3D_sp_0(4)
+      tmp33 = update_Transform3D_sp_13(tmp32, 1, 1, c2)
+      tmp34 = -(s)
+      tmp35 = update_Transform3D_sp_14(tmp33, 1, 2, tmp34)
+      tmp36 = update_Transform3D_sp_15(tmp35, 2, 1, s)
+      update_Transform3D_sp_12(tmp36, 2, 2, c2)
+    fun rotateY(angle) =
+      let {s1, c3, tmp37, tmp38, tmp39, tmp40, tmp41}
+      s1 = Math.sin(angle)
+      c3 = Math.cos(angle)
+      tmp37 = ident_Transform3D_sp_0(4)
+      tmp38 = update_Transform3D_sp_10(tmp37, 0, 0, c3)
+      tmp39 = update_Transform3D_sp_16(tmp38, 0, 2, s1)
+      tmp40 = -(s1)
+      tmp41 = update_Transform3D_sp_17(tmp39, 2, 0, tmp40)
+      update_Transform3D_sp_12(tmp41, 2, 2, c3)
+    fun rotateZ(angle) =
+      let {s2, c4, tmp42, tmp43, tmp44, tmp45, tmp46}
+      s2 = Math.sin(angle)
+      c4 = Math.cos(angle)
+      tmp42 = ident_Transform3D_sp_0(4)
+      tmp43 = update_Transform3D_sp_10(tmp42, 0, 0, c4)
+      tmp44 = -(s2)
+      tmp45 = update_Transform3D_sp_18(tmp43, 0, 1, tmp44)
+      tmp46 = update_Transform3D_sp_19(tmp45, 1, 0, s2)
+      update_Transform3D_sp_11(tmp46, 1, 1, c4)
+    fun scale(sx, sy, sz) =
+      let {tmp29, tmp30, tmp31}
+      tmp29 = ident_Transform3D_sp_0(4)
+      tmp30 = update_Transform3D_sp_10(tmp29, 0, 0, sx)
+      tmp31 = update_Transform3D_sp_11(tmp30, 1, 1, sy)
+      update_Transform3D_sp_12(tmp31, 2, 2, sz)
+    fun transform(dx, dy, dz) =
+      let {tmp26, tmp27, tmp28}
+      tmp26 = ident_Transform3D_sp_0(4)
+      tmp27 = update_Transform3D_sp_7(tmp26, 0, 3, dx)
+      tmp28 = update_Transform3D_sp_8(tmp27, 1, 3, dy)
+      update_Transform3D_sp_9(tmp28, 2, 3, dz)
+    fun update(m, i, j, v) =
+      let {tmp23, tmp24, tmp25}
+      tmp23 = *(i, m.c)
+      tmp24 = tmp23 + j
+      tmp25 = Transform3D__Legacy."Mx$Transform3D".setAt(m.arr, tmp24, v)
+      new Matrix(tmp25, m.r, m.c)
+    fun zeros(r, c) =
+      let {tmp21, tmp22}
+      tmp21 = *(r, c)
+      tmp22 = Transform3D__Legacy."Mx$Transform3D".init(tmp21, 0)
+      new Matrix(tmp22, r, c)
+open Transform3D
+fun ident_Transform3D_sp_0(w) =
+  let {m3}
+  m3 = zeros_Transform3D_sp_0(w, w)
+  iterID_Transform3D_sp_1(m3, w, w)
+fun iterCol_Transform3D_sp_0(m, x, y, colX, colY, i, j) =
+  let {scrut1, tmp9, tmp10, tmp11, tmp12, tmp13}
+  scrut1 = ===(j, 0)
+  if scrut1 is
+    true then m
+    else
+      tmp9 = colY - j
+      tmp10 = colY - j
+      tmp11 = iter_Transform3D_sp_0(0, x, y, colX, i, tmp10, colX)
+      tmp12 = update_Transform3D_sp_0(m, i, tmp9, tmp11)
+      tmp13 = j - 1
+      iterCol_Transform3D_sp_0(tmp12, x, y, colX, colY, i, tmp13)
+fun iterCol_Transform3D_sp_1(m, x, y, colX, colY, i, j) =
+  let {scrut1, tmp9, tmp10, tmp11, tmp12, tmp13}
+  scrut1 = false
+  tmp9 = 0
+  tmp10 = 0
+  tmp11 = iter_Transform3D_sp_1(0, x, y, colX, i, tmp10, colX)
+  tmp12 = update_Transform3D_sp_20(m, i, tmp9, tmp11)
+  tmp13 = 3
+  iterCol_Transform3D_sp_2(tmp12, x, y, colX, colY, i, tmp13)
+fun iterCol_Transform3D_sp_10(m, x, y, colX, colY, i, j) =
+  let {scrut1, tmp9, tmp10, tmp11, tmp12, tmp13}
+  scrut1 = true
+  m
+fun iterCol_Transform3D_sp_11(m, x, y, colX, colY, i, j) =
+  let {scrut1, tmp9, tmp10, tmp11, tmp12, tmp13}
+  scrut1 = false
+  tmp9 = 0
+  tmp10 = 0
+  tmp11 = iter_Transform3D_sp_41(0, x, y, colX, i, tmp10, colX)
+  tmp12 = update_Transform3D_sp_17(m, i, tmp9, tmp11)
+  tmp13 = 3
+  iterCol_Transform3D_sp_12(tmp12, x, y, colX, colY, i, tmp13)
+fun iterCol_Transform3D_sp_12(m, x, y, colX, colY, i, j) =
+  let {scrut1, tmp9, tmp10, tmp11, tmp12, tmp13}
+  scrut1 = false
+  tmp9 = 1
+  tmp10 = 1
+  tmp11 = iter_Transform3D_sp_46(0, x, y, colX, i, tmp10, colX)
+  tmp12 = update_Transform3D_sp_15(m, i, tmp9, tmp11)
+  tmp13 = 2
+  iterCol_Transform3D_sp_13(tmp12, x, y, colX, colY, i, tmp13)
+fun iterCol_Transform3D_sp_13(m, x, y, colX, colY, i, j) =
+  let {scrut1, tmp9, tmp10, tmp11, tmp12, tmp13}
+  scrut1 = false
+  tmp9 = 2
+  tmp10 = 2
+  tmp11 = iter_Transform3D_sp_51(0, x, y, colX, i, tmp10, colX)
+  tmp12 = update_Transform3D_sp_12(m, i, tmp9, tmp11)
+  tmp13 = 1
+  iterCol_Transform3D_sp_14(tmp12, x, y, colX, colY, i, tmp13)
+fun iterCol_Transform3D_sp_14(m, x, y, colX, colY, i, j) =
+  let {scrut1, tmp9, tmp10, tmp11, tmp12, tmp13}
+  scrut1 = false
+  tmp9 = 3
+  tmp10 = 3
+  tmp11 = iter_Transform3D_sp_56(0, x, y, colX, i, tmp10, colX)
+  tmp12 = update_Transform3D_sp_9(m, i, tmp9, tmp11)
+  tmp13 = 0
+  iterCol_Transform3D_sp_15(tmp12, x, y, colX, colY, i, tmp13)
+fun iterCol_Transform3D_sp_15(m, x, y, colX, colY, i, j) =
+  let {scrut1, tmp9, tmp10, tmp11, tmp12, tmp13}
+  scrut1 = true
+  m
+fun iterCol_Transform3D_sp_16(m, x, y, colX, colY, i, j) =
+  let {scrut1, tmp9, tmp10, tmp11, tmp12, tmp13}
+  scrut1 = false
+  tmp9 = 0
+  tmp10 = 0
+  tmp11 = iter_Transform3D_sp_61(0, x, y, colX, i, tmp10, colX)
+  tmp12 = update_Transform3D_sp_22(m, i, tmp9, tmp11)
+  tmp13 = 3
+  iterCol_Transform3D_sp_17(tmp12, x, y, colX, colY, i, tmp13)
+fun iterCol_Transform3D_sp_17(m, x, y, colX, colY, i, j) =
+  let {scrut1, tmp9, tmp10, tmp11, tmp12, tmp13}
+  scrut1 = false
+  tmp9 = 1
+  tmp10 = 1
+  tmp11 = iter_Transform3D_sp_66(0, x, y, colX, i, tmp10, colX)
+  tmp12 = update_Transform3D_sp_23(m, i, tmp9, tmp11)
+  tmp13 = 2
+  iterCol_Transform3D_sp_18(tmp12, x, y, colX, colY, i, tmp13)
+fun iterCol_Transform3D_sp_18(m, x, y, colX, colY, i, j) =
+  let {scrut1, tmp9, tmp10, tmp11, tmp12, tmp13}
+  scrut1 = false
+  tmp9 = 2
+  tmp10 = 2
+  tmp11 = iter_Transform3D_sp_71(0, x, y, colX, i, tmp10, colX)
+  tmp12 = update_Transform3D_sp_24(m, i, tmp9, tmp11)
+  tmp13 = 1
+  iterCol_Transform3D_sp_19(tmp12, x, y, colX, colY, i, tmp13)
+fun iterCol_Transform3D_sp_19(m, x, y, colX, colY, i, j) =
+  let {scrut1, tmp9, tmp10, tmp11, tmp12, tmp13}
+  scrut1 = false
+  tmp9 = 3
+  tmp10 = 3
+  tmp11 = iter_Transform3D_sp_76(0, x, y, colX, i, tmp10, colX)
+  tmp12 = update_Transform3D_sp_25(m, i, tmp9, tmp11)
+  tmp13 = 0
+  iterCol_Transform3D_sp_20(tmp12, x, y, colX, colY, i, tmp13)
+fun iterCol_Transform3D_sp_2(m, x, y, colX, colY, i, j) =
+  let {scrut1, tmp9, tmp10, tmp11, tmp12, tmp13}
+  scrut1 = false
+  tmp9 = 1
+  tmp10 = 1
+  tmp11 = iter_Transform3D_sp_6(0, x, y, colX, i, tmp10, colX)
+  tmp12 = update_Transform3D_sp_18(m, i, tmp9, tmp11)
+  tmp13 = 2
+  iterCol_Transform3D_sp_3(tmp12, x, y, colX, colY, i, tmp13)
+fun iterCol_Transform3D_sp_20(m, x, y, colX, colY, i, j) =
+  let {scrut1, tmp9, tmp10, tmp11, tmp12, tmp13}
+  scrut1 = true
+  m
+fun iterCol_Transform3D_sp_21(m, x, y, colX, colY, i, j) =
+  let {scrut1, tmp9, tmp10, tmp11, tmp12, tmp13}
+  scrut1 = false
+  tmp9 = 0
+  tmp10 = 0
+  tmp11 = iter_Transform3D_sp_81(0, x, y, colX, i, tmp10, colX)
+  tmp12 = update_Transform3D_sp_20(m, i, tmp9, tmp11)
+  tmp13 = 3
+  iterCol_Transform3D_sp_22(tmp12, x, y, colX, colY, i, tmp13)
+fun iterCol_Transform3D_sp_22(m, x, y, colX, colY, i, j) =
+  let {scrut1, tmp9, tmp10, tmp11, tmp12, tmp13}
+  scrut1 = false
+  tmp9 = 1
+  tmp10 = 1
+  tmp11 = iter_Transform3D_sp_86(0, x, y, colX, i, tmp10, colX)
+  tmp12 = update_Transform3D_sp_18(m, i, tmp9, tmp11)
+  tmp13 = 2
+  iterCol_Transform3D_sp_23(tmp12, x, y, colX, colY, i, tmp13)
+fun iterCol_Transform3D_sp_23(m, x, y, colX, colY, i, j) =
+  let {scrut1, tmp9, tmp10, tmp11, tmp12, tmp13}
+  scrut1 = false
+  tmp9 = 2
+  tmp10 = 2
+  tmp11 = iter_Transform3D_sp_91(0, x, y, colX, i, tmp10, colX)
+  tmp12 = update_Transform3D_sp_16(m, i, tmp9, tmp11)
+  tmp13 = 1
+  iterCol_Transform3D_sp_24(tmp12, x, y, colX, colY, i, tmp13)
+fun iterCol_Transform3D_sp_24(m, x, y, colX, colY, i, j) =
+  let {scrut1, tmp9, tmp10, tmp11, tmp12, tmp13}
+  scrut1 = false
+  tmp9 = 3
+  tmp10 = 3
+  tmp11 = iter_Transform3D_sp_96(0, x, y, colX, i, tmp10, colX)
+  tmp12 = update_Transform3D_sp_21(m, i, tmp9, tmp11)
+  tmp13 = 0
+  iterCol_Transform3D_sp_25(tmp12, x, y, colX, colY, i, tmp13)
+fun iterCol_Transform3D_sp_25(m, x, y, colX, colY, i, j) =
+  let {scrut1, tmp9, tmp10, tmp11, tmp12, tmp13}
+  scrut1 = true
+  m
+fun iterCol_Transform3D_sp_26(m, x, y, colX, colY, i, j) =
+  let {scrut1, tmp9, tmp10, tmp11, tmp12, tmp13}
+  scrut1 = false
+  tmp9 = 0
+  tmp10 = 0
+  tmp11 = iter_Transform3D_sp_101(0, x, y, colX, i, tmp10, colX)
+  tmp12 = update_Transform3D_sp_19(m, i, tmp9, tmp11)
+  tmp13 = 3
+  iterCol_Transform3D_sp_27(tmp12, x, y, colX, colY, i, tmp13)
+fun iterCol_Transform3D_sp_27(m, x, y, colX, colY, i, j) =
+  let {scrut1, tmp9, tmp10, tmp11, tmp12, tmp13}
+  scrut1 = false
+  tmp9 = 1
+  tmp10 = 1
+  tmp11 = iter_Transform3D_sp_106(0, x, y, colX, i, tmp10, colX)
+  tmp12 = update_Transform3D_sp_11(m, i, tmp9, tmp11)
+  tmp13 = 2
+  iterCol_Transform3D_sp_28(tmp12, x, y, colX, colY, i, tmp13)
+fun iterCol_Transform3D_sp_28(m, x, y, colX, colY, i, j) =
+  let {scrut1, tmp9, tmp10, tmp11, tmp12, tmp13}
+  scrut1 = false
+  tmp9 = 2
+  tmp10 = 2
+  tmp11 = iter_Transform3D_sp_111(0, x, y, colX, i, tmp10, colX)
+  tmp12 = update_Transform3D_sp_14(m, i, tmp9, tmp11)
+  tmp13 = 1
+  iterCol_Transform3D_sp_29(tmp12, x, y, colX, colY, i, tmp13)
+fun iterCol_Transform3D_sp_29(m, x, y, colX, colY, i, j) =
+  let {scrut1, tmp9, tmp10, tmp11, tmp12, tmp13}
+  scrut1 = false
+  tmp9 = 3
+  tmp10 = 3
+  tmp11 = iter_Transform3D_sp_116(0, x, y, colX, i, tmp10, colX)
+  tmp12 = update_Transform3D_sp_8(m, i, tmp9, tmp11)
+  tmp13 = 0
+  iterCol_Transform3D_sp_30(tmp12, x, y, colX, colY, i, tmp13)
+fun iterCol_Transform3D_sp_3(m, x, y, colX, colY, i, j) =
+  let {scrut1, tmp9, tmp10, tmp11, tmp12, tmp13}
+  scrut1 = false
+  tmp9 = 2
+  tmp10 = 2
+  tmp11 = iter_Transform3D_sp_11(0, x, y, colX, i, tmp10, colX)
+  tmp12 = update_Transform3D_sp_16(m, i, tmp9, tmp11)
+  tmp13 = 1
+  iterCol_Transform3D_sp_4(tmp12, x, y, colX, colY, i, tmp13)
+fun iterCol_Transform3D_sp_30(m, x, y, colX, colY, i, j) =
+  let {scrut1, tmp9, tmp10, tmp11, tmp12, tmp13}
+  scrut1 = true
+  m
+fun iterCol_Transform3D_sp_31(m, x, y, colX, colY, i, j) =
+  let {scrut1, tmp9, tmp10, tmp11, tmp12, tmp13}
+  scrut1 = false
+  tmp9 = 0
+  tmp10 = 0
+  tmp11 = iter_Transform3D_sp_121(0, x, y, colX, i, tmp10, colX)
+  tmp12 = update_Transform3D_sp_17(m, i, tmp9, tmp11)
+  tmp13 = 3
+  iterCol_Transform3D_sp_32(tmp12, x, y, colX, colY, i, tmp13)
+fun iterCol_Transform3D_sp_32(m, x, y, colX, colY, i, j) =
+  let {scrut1, tmp9, tmp10, tmp11, tmp12, tmp13}
+  scrut1 = false
+  tmp9 = 1
+  tmp10 = 1
+  tmp11 = iter_Transform3D_sp_126(0, x, y, colX, i, tmp10, colX)
+  tmp12 = update_Transform3D_sp_15(m, i, tmp9, tmp11)
+  tmp13 = 2
+  iterCol_Transform3D_sp_33(tmp12, x, y, colX, colY, i, tmp13)
+fun iterCol_Transform3D_sp_33(m, x, y, colX, colY, i, j) =
+  let {scrut1, tmp9, tmp10, tmp11, tmp12, tmp13}
+  scrut1 = false
+  tmp9 = 2
+  tmp10 = 2
+  tmp11 = iter_Transform3D_sp_131(0, x, y, colX, i, tmp10, colX)
+  tmp12 = update_Transform3D_sp_12(m, i, tmp9, tmp11)
+  tmp13 = 1
+  iterCol_Transform3D_sp_34(tmp12, x, y, colX, colY, i, tmp13)
+fun iterCol_Transform3D_sp_34(m, x, y, colX, colY, i, j) =
+  let {scrut1, tmp9, tmp10, tmp11, tmp12, tmp13}
+  scrut1 = false
+  tmp9 = 3
+  tmp10 = 3
+  tmp11 = iter_Transform3D_sp_136(0, x, y, colX, i, tmp10, colX)
+  tmp12 = update_Transform3D_sp_9(m, i, tmp9, tmp11)
+  tmp13 = 0
+  iterCol_Transform3D_sp_35(tmp12, x, y, colX, colY, i, tmp13)
+fun iterCol_Transform3D_sp_35(m, x, y, colX, colY, i, j) =
+  let {scrut1, tmp9, tmp10, tmp11, tmp12, tmp13}
+  scrut1 = true
+  m
+fun iterCol_Transform3D_sp_36(m, x, y, colX, colY, i, j) =
+  let {scrut1, tmp9, tmp10, tmp11, tmp12, tmp13}
+  scrut1 = false
+  tmp9 = 0
+  tmp10 = 0
+  tmp11 = iter_Transform3D_sp_141(0, x, y, colX, i, tmp10, colX)
+  tmp12 = update_Transform3D_sp_22(m, i, tmp9, tmp11)
+  tmp13 = 3
+  iterCol_Transform3D_sp_37(tmp12, x, y, colX, colY, i, tmp13)
+fun iterCol_Transform3D_sp_37(m, x, y, colX, colY, i, j) =
+  let {scrut1, tmp9, tmp10, tmp11, tmp12, tmp13}
+  scrut1 = false
+  tmp9 = 1
+  tmp10 = 1
+  tmp11 = iter_Transform3D_sp_146(0, x, y, colX, i, tmp10, colX)
+  tmp12 = update_Transform3D_sp_23(m, i, tmp9, tmp11)
+  tmp13 = 2
+  iterCol_Transform3D_sp_38(tmp12, x, y, colX, colY, i, tmp13)
+fun iterCol_Transform3D_sp_38(m, x, y, colX, colY, i, j) =
+  let {scrut1, tmp9, tmp10, tmp11, tmp12, tmp13}
+  scrut1 = false
+  tmp9 = 2
+  tmp10 = 2
+  tmp11 = iter_Transform3D_sp_151(0, x, y, colX, i, tmp10, colX)
+  tmp12 = update_Transform3D_sp_24(m, i, tmp9, tmp11)
+  tmp13 = 1
+  iterCol_Transform3D_sp_39(tmp12, x, y, colX, colY, i, tmp13)
+fun iterCol_Transform3D_sp_39(m, x, y, colX, colY, i, j) =
+  let {scrut1, tmp9, tmp10, tmp11, tmp12, tmp13}
+  scrut1 = false
+  tmp9 = 3
+  tmp10 = 3
+  tmp11 = iter_Transform3D_sp_156(0, x, y, colX, i, tmp10, colX)
+  tmp12 = update_Transform3D_sp_25(m, i, tmp9, tmp11)
+  tmp13 = 0
+  iterCol_Transform3D_sp_40(tmp12, x, y, colX, colY, i, tmp13)
+fun iterCol_Transform3D_sp_4(m, x, y, colX, colY, i, j) =
+  let {scrut1, tmp9, tmp10, tmp11, tmp12, tmp13}
+  scrut1 = false
+  tmp9 = 3
+  tmp10 = 3
+  tmp11 = iter_Transform3D_sp_16(0, x, y, colX, i, tmp10, colX)
+  tmp12 = update_Transform3D_sp_21(m, i, tmp9, tmp11)
+  tmp13 = 0
+  iterCol_Transform3D_sp_5(tmp12, x, y, colX, colY, i, tmp13)
+fun iterCol_Transform3D_sp_40(m, x, y, colX, colY, i, j) =
+  let {scrut1, tmp9, tmp10, tmp11, tmp12, tmp13}
+  scrut1 = true
+  m
+fun iterCol_Transform3D_sp_41(m, x, y, colX, colY, i, j) =
+  let {scrut1, tmp9, tmp10, tmp11, tmp12, tmp13}
+  scrut1 = false
+  tmp9 = 0
+  tmp10 = 0
+  tmp11 = iter_Transform3D_sp_161(0, x, y, colX, i, tmp10, colX)
+  tmp12 = update_Transform3D_sp_26(m, i, tmp9, tmp11)
+  tmp13 = 0
+  iterCol_Transform3D_sp_42(tmp12, x, y, colX, colY, i, tmp13)
+fun iterCol_Transform3D_sp_42(m, x, y, colX, colY, i, j) =
+  let {scrut1, tmp9, tmp10, tmp11, tmp12, tmp13}
+  scrut1 = true
+  m
+fun iterCol_Transform3D_sp_43(m, x, y, colX, colY, i, j) =
+  let {scrut1, tmp9, tmp10, tmp11, tmp12, tmp13}
+  scrut1 = false
+  tmp9 = 0
+  tmp10 = 0
+  tmp11 = iter_Transform3D_sp_166(0, x, y, colX, i, tmp10, colX)
+  tmp12 = update_Transform3D_sp_27(m, i, tmp9, tmp11)
+  tmp13 = 0
+  iterCol_Transform3D_sp_44(tmp12, x, y, colX, colY, i, tmp13)
+fun iterCol_Transform3D_sp_44(m, x, y, colX, colY, i, j) =
+  let {scrut1, tmp9, tmp10, tmp11, tmp12, tmp13}
+  scrut1 = true
+  m
+fun iterCol_Transform3D_sp_45(m, x, y, colX, colY, i, j) =
+  let {scrut1, tmp9, tmp10, tmp11, tmp12, tmp13}
+  scrut1 = false
+  tmp9 = 0
+  tmp10 = 0
+  tmp11 = iter_Transform3D_sp_171(0, x, y, colX, i, tmp10, colX)
+  tmp12 = update_Transform3D_sp_28(m, i, tmp9, tmp11)
+  tmp13 = 0
+  iterCol_Transform3D_sp_46(tmp12, x, y, colX, colY, i, tmp13)
+fun iterCol_Transform3D_sp_46(m, x, y, colX, colY, i, j) =
+  let {scrut1, tmp9, tmp10, tmp11, tmp12, tmp13}
+  scrut1 = true
+  m
+fun iterCol_Transform3D_sp_47(m, x, y, colX, colY, i, j) =
+  let {scrut1, tmp9, tmp10, tmp11, tmp12, tmp13}
+  scrut1 = false
+  tmp9 = 0
+  tmp10 = 0
+  tmp11 = iter_Transform3D_sp_176(0, x, y, colX, i, tmp10, colX)
+  tmp12 = update_Transform3D_sp_29(m, i, tmp9, tmp11)
+  tmp13 = 0
+  iterCol_Transform3D_sp_48(tmp12, x, y, colX, colY, i, tmp13)
+fun iterCol_Transform3D_sp_48(m, x, y, colX, colY, i, j) =
+  let {scrut1, tmp9, tmp10, tmp11, tmp12, tmp13}
+  scrut1 = true
+  m
+fun iterCol_Transform3D_sp_49(m, x, y, colX, colY, i, j) =
+  let {scrut1, tmp9, tmp10, tmp11, tmp12, tmp13}
+  scrut1 = false
+  tmp9 = 0
+  tmp10 = 0
+  tmp11 = iter_Transform3D_sp_181(0, x, y, colX, i, tmp10, colX)
+  tmp12 = update_Transform3D_sp_26(m, i, tmp9, tmp11)
+  tmp13 = 0
+  iterCol_Transform3D_sp_50(tmp12, x, y, colX, colY, i, tmp13)
+fun iterCol_Transform3D_sp_5(m, x, y, colX, colY, i, j) =
+  let {scrut1, tmp9, tmp10, tmp11, tmp12, tmp13}
+  scrut1 = true
+  m
+fun iterCol_Transform3D_sp_50(m, x, y, colX, colY, i, j) =
+  let {scrut1, tmp9, tmp10, tmp11, tmp12, tmp13}
+  scrut1 = true
+  m
+fun iterCol_Transform3D_sp_51(m, x, y, colX, colY, i, j) =
+  let {scrut1, tmp9, tmp10, tmp11, tmp12, tmp13}
+  scrut1 = false
+  tmp9 = 0
+  tmp10 = 0
+  tmp11 = iter_Transform3D_sp_186(0, x, y, colX, i, tmp10, colX)
+  tmp12 = update_Transform3D_sp_27(m, i, tmp9, tmp11)
+  tmp13 = 0
+  iterCol_Transform3D_sp_52(tmp12, x, y, colX, colY, i, tmp13)
+fun iterCol_Transform3D_sp_52(m, x, y, colX, colY, i, j) =
+  let {scrut1, tmp9, tmp10, tmp11, tmp12, tmp13}
+  scrut1 = true
+  m
+fun iterCol_Transform3D_sp_53(m, x, y, colX, colY, i, j) =
+  let {scrut1, tmp9, tmp10, tmp11, tmp12, tmp13}
+  scrut1 = false
+  tmp9 = 0
+  tmp10 = 0
+  tmp11 = iter_Transform3D_sp_191(0, x, y, colX, i, tmp10, colX)
+  tmp12 = update_Transform3D_sp_28(m, i, tmp9, tmp11)
+  tmp13 = 0
+  iterCol_Transform3D_sp_54(tmp12, x, y, colX, colY, i, tmp13)
+fun iterCol_Transform3D_sp_54(m, x, y, colX, colY, i, j) =
+  let {scrut1, tmp9, tmp10, tmp11, tmp12, tmp13}
+  scrut1 = true
+  m
+fun iterCol_Transform3D_sp_55(m, x, y, colX, colY, i, j) =
+  let {scrut1, tmp9, tmp10, tmp11, tmp12, tmp13}
+  scrut1 = false
+  tmp9 = 0
+  tmp10 = 0
+  tmp11 = iter_Transform3D_sp_196(0, x, y, colX, i, tmp10, colX)
+  tmp12 = update_Transform3D_sp_29(m, i, tmp9, tmp11)
+  tmp13 = 0
+  iterCol_Transform3D_sp_56(tmp12, x, y, colX, colY, i, tmp13)
+fun iterCol_Transform3D_sp_56(m, x, y, colX, colY, i, j) =
+  let {scrut1, tmp9, tmp10, tmp11, tmp12, tmp13}
+  scrut1 = true
+  m
+fun iterCol_Transform3D_sp_57(m, x, y, colX, colY, i, j) =
+  let {scrut1, tmp9, tmp10, tmp11, tmp12, tmp13}
+  scrut1 = false
+  tmp9 = 0
+  tmp10 = 0
+  tmp11 = iter_Transform3D_sp_201(0, x, y, colX, i, tmp10, colX)
+  tmp12 = update_Transform3D_sp_26(m, i, tmp9, tmp11)
+  tmp13 = 0
+  iterCol_Transform3D_sp_58(tmp12, x, y, colX, colY, i, tmp13)
+fun iterCol_Transform3D_sp_58(m, x, y, colX, colY, i, j) =
+  let {scrut1, tmp9, tmp10, tmp11, tmp12, tmp13}
+  scrut1 = true
+  m
+fun iterCol_Transform3D_sp_59(m, x, y, colX, colY, i, j) =
+  let {scrut1, tmp9, tmp10, tmp11, tmp12, tmp13}
+  scrut1 = false
+  tmp9 = 0
+  tmp10 = 0
+  tmp11 = iter_Transform3D_sp_206(0, x, y, colX, i, tmp10, colX)
+  tmp12 = update_Transform3D_sp_27(m, i, tmp9, tmp11)
+  tmp13 = 0
+  iterCol_Transform3D_sp_60(tmp12, x, y, colX, colY, i, tmp13)
+fun iterCol_Transform3D_sp_6(m, x, y, colX, colY, i, j) =
+  let {scrut1, tmp9, tmp10, tmp11, tmp12, tmp13}
+  scrut1 = false
+  tmp9 = 0
+  tmp10 = 0
+  tmp11 = iter_Transform3D_sp_21(0, x, y, colX, i, tmp10, colX)
+  tmp12 = update_Transform3D_sp_19(m, i, tmp9, tmp11)
+  tmp13 = 3
+  iterCol_Transform3D_sp_7(tmp12, x, y, colX, colY, i, tmp13)
+fun iterCol_Transform3D_sp_60(m, x, y, colX, colY, i, j) =
+  let {scrut1, tmp9, tmp10, tmp11, tmp12, tmp13}
+  scrut1 = true
+  m
+fun iterCol_Transform3D_sp_61(m, x, y, colX, colY, i, j) =
+  let {scrut1, tmp9, tmp10, tmp11, tmp12, tmp13}
+  scrut1 = false
+  tmp9 = 0
+  tmp10 = 0
+  tmp11 = iter_Transform3D_sp_211(0, x, y, colX, i, tmp10, colX)
+  tmp12 = update_Transform3D_sp_28(m, i, tmp9, tmp11)
+  tmp13 = 0
+  iterCol_Transform3D_sp_62(tmp12, x, y, colX, colY, i, tmp13)
+fun iterCol_Transform3D_sp_62(m, x, y, colX, colY, i, j) =
+  let {scrut1, tmp9, tmp10, tmp11, tmp12, tmp13}
+  scrut1 = true
+  m
+fun iterCol_Transform3D_sp_63(m, x, y, colX, colY, i, j) =
+  let {scrut1, tmp9, tmp10, tmp11, tmp12, tmp13}
+  scrut1 = false
+  tmp9 = 0
+  tmp10 = 0
+  tmp11 = iter_Transform3D_sp_216(0, x, y, colX, i, tmp10, colX)
+  tmp12 = update_Transform3D_sp_36(m, i, tmp9, tmp11)
+  tmp13 = 0
+  iterCol_Transform3D_sp_64(tmp12, x, y, colX, colY, i, tmp13)
+fun iterCol_Transform3D_sp_64(m, x, y, colX, colY, i, j) =
+  let {scrut1, tmp9, tmp10, tmp11, tmp12, tmp13}
+  scrut1 = true
+  m
+fun iterCol_Transform3D_sp_65(m, x, y, colX, colY, i, j) =
+  let {scrut1, tmp9, tmp10, tmp11, tmp12, tmp13}
+  scrut1 = false
+  tmp9 = 0
+  tmp10 = 0
+  tmp11 = iter_Transform3D_sp_221(0, x, y, colX, i, tmp10, colX)
+  tmp12 = update_Transform3D_sp_26(m, i, tmp9, tmp11)
+  tmp13 = 0
+  iterCol_Transform3D_sp_66(tmp12, x, y, colX, colY, i, tmp13)
+fun iterCol_Transform3D_sp_66(m, x, y, colX, colY, i, j) =
+  let {scrut1, tmp9, tmp10, tmp11, tmp12, tmp13}
+  scrut1 = true
+  m
+fun iterCol_Transform3D_sp_67(m, x, y, colX, colY, i, j) =
+  let {scrut1, tmp9, tmp10, tmp11, tmp12, tmp13}
+  scrut1 = false
+  tmp9 = 0
+  tmp10 = 0
+  tmp11 = iter_Transform3D_sp_226(0, x, y, colX, i, tmp10, colX)
+  tmp12 = update_Transform3D_sp_27(m, i, tmp9, tmp11)
+  tmp13 = 0
+  iterCol_Transform3D_sp_68(tmp12, x, y, colX, colY, i, tmp13)
+fun iterCol_Transform3D_sp_68(m, x, y, colX, colY, i, j) =
+  let {scrut1, tmp9, tmp10, tmp11, tmp12, tmp13}
+  scrut1 = true
+  m
+fun iterCol_Transform3D_sp_69(m, x, y, colX, colY, i, j) =
+  let {scrut1, tmp9, tmp10, tmp11, tmp12, tmp13}
+  scrut1 = false
+  tmp9 = 0
+  tmp10 = 0
+  tmp11 = iter_Transform3D_sp_231(0, x, y, colX, i, tmp10, colX)
+  tmp12 = update_Transform3D_sp_28(m, i, tmp9, tmp11)
+  tmp13 = 0
+  iterCol_Transform3D_sp_70(tmp12, x, y, colX, colY, i, tmp13)
+fun iterCol_Transform3D_sp_7(m, x, y, colX, colY, i, j) =
+  let {scrut1, tmp9, tmp10, tmp11, tmp12, tmp13}
+  scrut1 = false
+  tmp9 = 1
+  tmp10 = 1
+  tmp11 = iter_Transform3D_sp_26(0, x, y, colX, i, tmp10, colX)
+  tmp12 = update_Transform3D_sp_11(m, i, tmp9, tmp11)
+  tmp13 = 2
+  iterCol_Transform3D_sp_8(tmp12, x, y, colX, colY, i, tmp13)
+fun iterCol_Transform3D_sp_70(m, x, y, colX, colY, i, j) =
+  let {scrut1, tmp9, tmp10, tmp11, tmp12, tmp13}
+  scrut1 = true
+  m
+fun iterCol_Transform3D_sp_71(m, x, y, colX, colY, i, j) =
+  let {scrut1, tmp9, tmp10, tmp11, tmp12, tmp13}
+  scrut1 = false
+  tmp9 = 0
+  tmp10 = 0
+  tmp11 = iter_Transform3D_sp_236(0, x, y, colX, i, tmp10, colX)
+  tmp12 = update_Transform3D_sp_29(m, i, tmp9, tmp11)
+  tmp13 = 0
+  iterCol_Transform3D_sp_72(tmp12, x, y, colX, colY, i, tmp13)
+fun iterCol_Transform3D_sp_72(m, x, y, colX, colY, i, j) =
+  let {scrut1, tmp9, tmp10, tmp11, tmp12, tmp13}
+  scrut1 = true
+  m
+fun iterCol_Transform3D_sp_8(m, x, y, colX, colY, i, j) =
+  let {scrut1, tmp9, tmp10, tmp11, tmp12, tmp13}
+  scrut1 = false
+  tmp9 = 2
+  tmp10 = 2
+  tmp11 = iter_Transform3D_sp_31(0, x, y, colX, i, tmp10, colX)
+  tmp12 = update_Transform3D_sp_14(m, i, tmp9, tmp11)
+  tmp13 = 1
+  iterCol_Transform3D_sp_9(tmp12, x, y, colX, colY, i, tmp13)
+fun iterCol_Transform3D_sp_9(m, x, y, colX, colY, i, j) =
+  let {scrut1, tmp9, tmp10, tmp11, tmp12, tmp13}
+  scrut1 = false
+  tmp9 = 3
+  tmp10 = 3
+  tmp11 = iter_Transform3D_sp_36(0, x, y, colX, i, tmp10, colX)
+  tmp12 = update_Transform3D_sp_8(m, i, tmp9, tmp11)
+  tmp13 = 0
+  iterCol_Transform3D_sp_10(tmp12, x, y, colX, colY, i, tmp13)
+fun iterID_Transform3D_sp_0(m, w, i) =
+  let {scrut3, tmp17, tmp18, tmp19, tmp20}
+  scrut3 = ===(i, 0)
+  if scrut3 is
+    true then m
+    else
+      tmp17 = w - i
+      tmp18 = w - i
+      tmp19 = update_Transform3D_sp_2(m, tmp17, tmp18, 1)
+      tmp20 = i - 1
+      iterID_Transform3D_sp_0(tmp19, w, tmp20)
+fun iterID_Transform3D_sp_1(m, w, i) =
+  let {scrut3, tmp17, tmp18, tmp19, tmp20}
+  scrut3 = false
+  tmp17 = 0
+  tmp18 = 0
+  tmp19 = update_Transform3D_sp_3(m, tmp17, tmp18, 1)
+  tmp20 = 3
+  iterID_Transform3D_sp_2(tmp19, w, tmp20)
+fun iterID_Transform3D_sp_2(m, w, i) =
+  let {scrut3, tmp17, tmp18, tmp19, tmp20}
+  scrut3 = false
+  tmp17 = 1
+  tmp18 = 1
+  tmp19 = update_Transform3D_sp_4(m, tmp17, tmp18, 1)
+  tmp20 = 2
+  iterID_Transform3D_sp_3(tmp19, w, tmp20)
+fun iterID_Transform3D_sp_3(m, w, i) =
+  let {scrut3, tmp17, tmp18, tmp19, tmp20}
+  scrut3 = false
+  tmp17 = 2
+  tmp18 = 2
+  tmp19 = update_Transform3D_sp_5(m, tmp17, tmp18, 1)
+  tmp20 = 1
+  iterID_Transform3D_sp_4(tmp19, w, tmp20)
+fun iterID_Transform3D_sp_4(m, w, i) =
+  let {scrut3, tmp17, tmp18, tmp19, tmp20}
+  scrut3 = false
+  tmp17 = 3
+  tmp18 = 3
+  tmp19 = update_Transform3D_sp_6(m, tmp17, tmp18, 1)
+  tmp20 = 0
+  iterID_Transform3D_sp_5(tmp19, w, tmp20)
+fun iterID_Transform3D_sp_5(m, w, i) =
+  let {scrut3, tmp17, tmp18, tmp19, tmp20}
+  scrut3 = true
+  m
+fun iterRow_Transform3D_sp_0(m, x, y, rowX, colX, colY, i) =
+  let {scrut2, tmp14, tmp15, tmp16}
+  scrut2 = ===(i, 0)
+  if scrut2 is
+    true then m
+    else
+      tmp14 = rowX - i
+      tmp15 = iterCol_Transform3D_sp_0(m, x, y, colX, colY, tmp14, colY)
+      tmp16 = i - 1
+      iterRow(tmp15, x, y, rowX, colX, colY, tmp16)
+fun iterRow_Transform3D_sp_1(m, x, y, rowX, colX, colY, i) =
+  let {scrut2, tmp14, tmp15, tmp16}
+  scrut2 = false
+  tmp14 = 0
+  tmp15 = iterCol_Transform3D_sp_1(m, x, y, colX, colY, tmp14, colY)
+  tmp16 = 3
+  iterRow_Transform3D_sp_2(tmp15, x, y, rowX, colX, colY, tmp16)
+fun iterRow_Transform3D_sp_10(m, x, y, rowX, colX, colY, i) =
+  let {scrut2, tmp14, tmp15, tmp16}
+  scrut2 = true
+  m
+fun iterRow_Transform3D_sp_11(m, x, y, rowX, colX, colY, i) =
+  let {scrut2, tmp14, tmp15, tmp16}
+  scrut2 = false
+  tmp14 = 0
+  tmp15 = iterCol_Transform3D_sp_41(m, x, y, colX, colY, tmp14, colY)
+  tmp16 = 3
+  iterRow_Transform3D_sp_12(tmp15, x, y, rowX, colX, colY, tmp16)
+fun iterRow_Transform3D_sp_12(m, x, y, rowX, colX, colY, i) =
+  let {scrut2, tmp14, tmp15, tmp16}
+  scrut2 = false
+  tmp14 = 1
+  tmp15 = iterCol_Transform3D_sp_43(m, x, y, colX, colY, tmp14, colY)
+  tmp16 = 2
+  iterRow_Transform3D_sp_13(tmp15, x, y, rowX, colX, colY, tmp16)
+fun iterRow_Transform3D_sp_13(m, x, y, rowX, colX, colY, i) =
+  let {scrut2, tmp14, tmp15, tmp16}
+  scrut2 = false
+  tmp14 = 2
+  tmp15 = iterCol_Transform3D_sp_45(m, x, y, colX, colY, tmp14, colY)
+  tmp16 = 1
+  iterRow_Transform3D_sp_14(tmp15, x, y, rowX, colX, colY, tmp16)
+fun iterRow_Transform3D_sp_14(m, x, y, rowX, colX, colY, i) =
+  let {scrut2, tmp14, tmp15, tmp16}
+  scrut2 = false
+  tmp14 = 3
+  tmp15 = iterCol_Transform3D_sp_47(m, x, y, colX, colY, tmp14, colY)
+  tmp16 = 0
+  iterRow_Transform3D_sp_15(tmp15, x, y, rowX, colX, colY, tmp16)
+fun iterRow_Transform3D_sp_15(m, x, y, rowX, colX, colY, i) =
+  let {scrut2, tmp14, tmp15, tmp16}
+  scrut2 = true
+  m
+fun iterRow_Transform3D_sp_16(m, x, y, rowX, colX, colY, i) =
+  let {scrut2, tmp14, tmp15, tmp16}
+  scrut2 = false
+  tmp14 = 0
+  tmp15 = iterCol_Transform3D_sp_49(m, x, y, colX, colY, tmp14, colY)
+  tmp16 = 3
+  iterRow_Transform3D_sp_17(tmp15, x, y, rowX, colX, colY, tmp16)
+fun iterRow_Transform3D_sp_17(m, x, y, rowX, colX, colY, i) =
+  let {scrut2, tmp14, tmp15, tmp16}
+  scrut2 = false
+  tmp14 = 1
+  tmp15 = iterCol_Transform3D_sp_51(m, x, y, colX, colY, tmp14, colY)
+  tmp16 = 2
+  iterRow_Transform3D_sp_18(tmp15, x, y, rowX, colX, colY, tmp16)
+fun iterRow_Transform3D_sp_18(m, x, y, rowX, colX, colY, i) =
+  let {scrut2, tmp14, tmp15, tmp16}
+  scrut2 = false
+  tmp14 = 2
+  tmp15 = iterCol_Transform3D_sp_53(m, x, y, colX, colY, tmp14, colY)
+  tmp16 = 1
+  iterRow_Transform3D_sp_19(tmp15, x, y, rowX, colX, colY, tmp16)
+fun iterRow_Transform3D_sp_19(m, x, y, rowX, colX, colY, i) =
+  let {scrut2, tmp14, tmp15, tmp16}
+  scrut2 = false
+  tmp14 = 3
+  tmp15 = iterCol_Transform3D_sp_55(m, x, y, colX, colY, tmp14, colY)
+  tmp16 = 0
+  iterRow_Transform3D_sp_20(tmp15, x, y, rowX, colX, colY, tmp16)
+fun iterRow_Transform3D_sp_2(m, x, y, rowX, colX, colY, i) =
+  let {scrut2, tmp14, tmp15, tmp16}
+  scrut2 = false
+  tmp14 = 1
+  tmp15 = iterCol_Transform3D_sp_6(m, x, y, colX, colY, tmp14, colY)
+  tmp16 = 2
+  iterRow_Transform3D_sp_3(tmp15, x, y, rowX, colX, colY, tmp16)
+fun iterRow_Transform3D_sp_20(m, x, y, rowX, colX, colY, i) =
+  let {scrut2, tmp14, tmp15, tmp16}
+  scrut2 = true
+  m
+fun iterRow_Transform3D_sp_21(m, x, y, rowX, colX, colY, i) =
+  let {scrut2, tmp14, tmp15, tmp16}
+  scrut2 = false
+  tmp14 = 0
+  tmp15 = iterCol_Transform3D_sp_57(m, x, y, colX, colY, tmp14, colY)
+  tmp16 = 3
+  iterRow_Transform3D_sp_22(tmp15, x, y, rowX, colX, colY, tmp16)
+fun iterRow_Transform3D_sp_22(m, x, y, rowX, colX, colY, i) =
+  let {scrut2, tmp14, tmp15, tmp16}
+  scrut2 = false
+  tmp14 = 1
+  tmp15 = iterCol_Transform3D_sp_59(m, x, y, colX, colY, tmp14, colY)
+  tmp16 = 2
+  iterRow_Transform3D_sp_23(tmp15, x, y, rowX, colX, colY, tmp16)
+fun iterRow_Transform3D_sp_23(m, x, y, rowX, colX, colY, i) =
+  let {scrut2, tmp14, tmp15, tmp16}
+  scrut2 = false
+  tmp14 = 2
+  tmp15 = iterCol_Transform3D_sp_61(m, x, y, colX, colY, tmp14, colY)
+  tmp16 = 1
+  iterRow_Transform3D_sp_24(tmp15, x, y, rowX, colX, colY, tmp16)
+fun iterRow_Transform3D_sp_24(m, x, y, rowX, colX, colY, i) =
+  let {scrut2, tmp14, tmp15, tmp16}
+  scrut2 = false
+  tmp14 = 3
+  tmp15 = iterCol_Transform3D_sp_63(m, x, y, colX, colY, tmp14, colY)
+  tmp16 = 0
+  iterRow_Transform3D_sp_25(tmp15, x, y, rowX, colX, colY, tmp16)
+fun iterRow_Transform3D_sp_25(m, x, y, rowX, colX, colY, i) =
+  let {scrut2, tmp14, tmp15, tmp16}
+  scrut2 = true
+  m
+fun iterRow_Transform3D_sp_26(m, x, y, rowX, colX, colY, i) =
+  let {scrut2, tmp14, tmp15, tmp16}
+  scrut2 = false
+  tmp14 = 0
+  tmp15 = iterCol_Transform3D_sp_65(m, x, y, colX, colY, tmp14, colY)
+  tmp16 = 3
+  iterRow_Transform3D_sp_27(tmp15, x, y, rowX, colX, colY, tmp16)
+fun iterRow_Transform3D_sp_27(m, x, y, rowX, colX, colY, i) =
+  let {scrut2, tmp14, tmp15, tmp16}
+  scrut2 = false
+  tmp14 = 1
+  tmp15 = iterCol_Transform3D_sp_67(m, x, y, colX, colY, tmp14, colY)
+  tmp16 = 2
+  iterRow_Transform3D_sp_28(tmp15, x, y, rowX, colX, colY, tmp16)
+fun iterRow_Transform3D_sp_28(m, x, y, rowX, colX, colY, i) =
+  let {scrut2, tmp14, tmp15, tmp16}
+  scrut2 = false
+  tmp14 = 2
+  tmp15 = iterCol_Transform3D_sp_69(m, x, y, colX, colY, tmp14, colY)
+  tmp16 = 1
+  iterRow_Transform3D_sp_29(tmp15, x, y, rowX, colX, colY, tmp16)
+fun iterRow_Transform3D_sp_29(m, x, y, rowX, colX, colY, i) =
+  let {scrut2, tmp14, tmp15, tmp16}
+  scrut2 = false
+  tmp14 = 3
+  tmp15 = iterCol_Transform3D_sp_71(m, x, y, colX, colY, tmp14, colY)
+  tmp16 = 0
+  iterRow_Transform3D_sp_30(tmp15, x, y, rowX, colX, colY, tmp16)
+fun iterRow_Transform3D_sp_3(m, x, y, rowX, colX, colY, i) =
+  let {scrut2, tmp14, tmp15, tmp16}
+  scrut2 = false
+  tmp14 = 2
+  tmp15 = iterCol_Transform3D_sp_11(m, x, y, colX, colY, tmp14, colY)
+  tmp16 = 1
+  iterRow_Transform3D_sp_4(tmp15, x, y, rowX, colX, colY, tmp16)
+fun iterRow_Transform3D_sp_30(m, x, y, rowX, colX, colY, i) =
+  let {scrut2, tmp14, tmp15, tmp16}
+  scrut2 = true
+  m
+fun iterRow_Transform3D_sp_4(m, x, y, rowX, colX, colY, i) =
+  let {scrut2, tmp14, tmp15, tmp16}
+  scrut2 = false
+  tmp14 = 3
+  tmp15 = iterCol_Transform3D_sp_16(m, x, y, colX, colY, tmp14, colY)
+  tmp16 = 0
+  iterRow_Transform3D_sp_5(tmp15, x, y, rowX, colX, colY, tmp16)
+fun iterRow_Transform3D_sp_5(m, x, y, rowX, colX, colY, i) =
+  let {scrut2, tmp14, tmp15, tmp16}
+  scrut2 = true
+  m
+fun iterRow_Transform3D_sp_6(m, x, y, rowX, colX, colY, i) =
+  let {scrut2, tmp14, tmp15, tmp16}
+  scrut2 = false
+  tmp14 = 0
+  tmp15 = iterCol_Transform3D_sp_21(m, x, y, colX, colY, tmp14, colY)
+  tmp16 = 3
+  iterRow_Transform3D_sp_7(tmp15, x, y, rowX, colX, colY, tmp16)
+fun iterRow_Transform3D_sp_7(m, x, y, rowX, colX, colY, i) =
+  let {scrut2, tmp14, tmp15, tmp16}
+  scrut2 = false
+  tmp14 = 1
+  tmp15 = iterCol_Transform3D_sp_26(m, x, y, colX, colY, tmp14, colY)
+  tmp16 = 2
+  iterRow_Transform3D_sp_8(tmp15, x, y, rowX, colX, colY, tmp16)
+fun iterRow_Transform3D_sp_8(m, x, y, rowX, colX, colY, i) =
+  let {scrut2, tmp14, tmp15, tmp16}
+  scrut2 = false
+  tmp14 = 2
+  tmp15 = iterCol_Transform3D_sp_31(m, x, y, colX, colY, tmp14, colY)
+  tmp16 = 1
+  iterRow_Transform3D_sp_9(tmp15, x, y, rowX, colX, colY, tmp16)
+fun iterRow_Transform3D_sp_9(m, x, y, rowX, colX, colY, i) =
+  let {scrut2, tmp14, tmp15, tmp16}
+  scrut2 = false
+  tmp14 = 3
+  tmp15 = iterCol_Transform3D_sp_36(m, x, y, colX, colY, tmp14, colY)
+  tmp16 = 0
+  iterRow_Transform3D_sp_10(tmp15, x, y, rowX, colX, colY, tmp16)
+fun iter_Transform3D_sp_0(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = >(k, 0)
+  if scrut is
+    true then
+      tmp = *(i, x.c)
+      tmp1 = tmp + colX
+      tmp2 = tmp1 - k
+      tmp3 = colX - k
+      tmp4 = *(tmp3, y.c)
+      tmp5 = tmp4 + j
+      tmp6 = *(x.arr.(tmp2), y.arr.(tmp5))
+      tmp7 = 0 + tmp6
+      tmp8 = k - 1
+      iter(tmp7, x, y, colX, i, j, tmp8)
+    else 0
+fun iter_Transform3D_sp_1(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 0
+  tmp1 = 4
+  tmp2 = 0
+  tmp3 = 0
+  tmp4 = 0
+  tmp5 = 0
+  tmp6 = *(x.arr.(0), 1)
+  tmp7 = 0 + tmp6
+  tmp8 = 3
+  iter_Transform3D_sp_2(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_10(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = false
+  sum
+fun iter_Transform3D_sp_100(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = false
+  sum
+fun iter_Transform3D_sp_101(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 4
+  tmp1 = 8
+  tmp2 = 4
+  tmp3 = 0
+  tmp4 = 0
+  tmp5 = 0
+  tmp6 = *(x.arr.(4), y.arr.(0))
+  tmp7 = 0 + tmp6
+  tmp8 = 3
+  iter_Transform3D_sp_102(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_102(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 4
+  tmp1 = 8
+  tmp2 = 5
+  tmp3 = 1
+  tmp4 = 4
+  tmp5 = 4
+  tmp6 = *(x.arr.(5), y.arr.(4))
+  tmp7 = sum + tmp6
+  tmp8 = 2
+  iter_Transform3D_sp_103(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_103(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 4
+  tmp1 = 8
+  tmp2 = 6
+  tmp3 = 2
+  tmp4 = 8
+  tmp5 = 8
+  tmp6 = *(x.arr.(6), y.arr.(8))
+  tmp7 = sum + tmp6
+  tmp8 = 1
+  iter_Transform3D_sp_104(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_104(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 4
+  tmp1 = 8
+  tmp2 = 7
+  tmp3 = 3
+  tmp4 = 12
+  tmp5 = 12
+  tmp6 = *(x.arr.(7), y.arr.(12))
+  tmp7 = sum + tmp6
+  tmp8 = 0
+  iter_Transform3D_sp_105(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_105(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = false
+  sum
+fun iter_Transform3D_sp_106(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 4
+  tmp1 = 8
+  tmp2 = 4
+  tmp3 = 0
+  tmp4 = 0
+  tmp5 = 1
+  tmp6 = *(x.arr.(4), y.arr.(1))
+  tmp7 = 0 + tmp6
+  tmp8 = 3
+  iter_Transform3D_sp_107(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_107(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 4
+  tmp1 = 8
+  tmp2 = 5
+  tmp3 = 1
+  tmp4 = 4
+  tmp5 = 5
+  tmp6 = *(x.arr.(5), y.arr.(5))
+  tmp7 = sum + tmp6
+  tmp8 = 2
+  iter_Transform3D_sp_108(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_108(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 4
+  tmp1 = 8
+  tmp2 = 6
+  tmp3 = 2
+  tmp4 = 8
+  tmp5 = 9
+  tmp6 = *(x.arr.(6), y.arr.(9))
+  tmp7 = sum + tmp6
+  tmp8 = 1
+  iter_Transform3D_sp_109(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_109(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 4
+  tmp1 = 8
+  tmp2 = 7
+  tmp3 = 3
+  tmp4 = 12
+  tmp5 = 13
+  tmp6 = *(x.arr.(7), y.arr.(13))
+  tmp7 = sum + tmp6
+  tmp8 = 0
+  iter_Transform3D_sp_110(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_11(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 0
+  tmp1 = 4
+  tmp2 = 0
+  tmp3 = 0
+  tmp4 = 0
+  tmp5 = 2
+  tmp6 = 0
+  tmp7 = 0
+  tmp8 = 3
+  iter_Transform3D_sp_12(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_110(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = false
+  sum
+fun iter_Transform3D_sp_111(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 4
+  tmp1 = 8
+  tmp2 = 4
+  tmp3 = 0
+  tmp4 = 0
+  tmp5 = 2
+  tmp6 = *(x.arr.(4), y.arr.(2))
+  tmp7 = 0 + tmp6
+  tmp8 = 3
+  iter_Transform3D_sp_112(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_112(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 4
+  tmp1 = 8
+  tmp2 = 5
+  tmp3 = 1
+  tmp4 = 4
+  tmp5 = 6
+  tmp6 = *(x.arr.(5), y.arr.(6))
+  tmp7 = sum + tmp6
+  tmp8 = 2
+  iter_Transform3D_sp_113(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_113(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 4
+  tmp1 = 8
+  tmp2 = 6
+  tmp3 = 2
+  tmp4 = 8
+  tmp5 = 10
+  tmp6 = *(x.arr.(6), y.arr.(10))
+  tmp7 = sum + tmp6
+  tmp8 = 1
+  iter_Transform3D_sp_114(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_114(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 4
+  tmp1 = 8
+  tmp2 = 7
+  tmp3 = 3
+  tmp4 = 12
+  tmp5 = 14
+  tmp6 = *(x.arr.(7), y.arr.(14))
+  tmp7 = sum + tmp6
+  tmp8 = 0
+  iter_Transform3D_sp_115(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_115(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = false
+  sum
+fun iter_Transform3D_sp_116(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 4
+  tmp1 = 8
+  tmp2 = 4
+  tmp3 = 0
+  tmp4 = 0
+  tmp5 = 3
+  tmp6 = *(x.arr.(4), y.arr.(3))
+  tmp7 = 0 + tmp6
+  tmp8 = 3
+  iter_Transform3D_sp_117(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_117(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 4
+  tmp1 = 8
+  tmp2 = 5
+  tmp3 = 1
+  tmp4 = 4
+  tmp5 = 7
+  tmp6 = *(x.arr.(5), y.arr.(7))
+  tmp7 = sum + tmp6
+  tmp8 = 2
+  iter_Transform3D_sp_118(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_118(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 4
+  tmp1 = 8
+  tmp2 = 6
+  tmp3 = 2
+  tmp4 = 8
+  tmp5 = 11
+  tmp6 = *(x.arr.(6), y.arr.(11))
+  tmp7 = sum + tmp6
+  tmp8 = 1
+  iter_Transform3D_sp_119(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_119(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 4
+  tmp1 = 8
+  tmp2 = 7
+  tmp3 = 3
+  tmp4 = 12
+  tmp5 = 15
+  tmp6 = *(x.arr.(7), y.arr.(15))
+  tmp7 = sum + tmp6
+  tmp8 = 0
+  iter_Transform3D_sp_120(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_12(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 0
+  tmp1 = 4
+  tmp2 = 1
+  tmp3 = 1
+  tmp4 = 4
+  tmp5 = 6
+  tmp6 = 0
+  tmp7 = 0
+  tmp8 = 2
+  iter_Transform3D_sp_13(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_120(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = false
+  sum
+fun iter_Transform3D_sp_121(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 8
+  tmp1 = 12
+  tmp2 = 8
+  tmp3 = 0
+  tmp4 = 0
+  tmp5 = 0
+  tmp6 = *(x.arr.(8), y.arr.(0))
+  tmp7 = 0 + tmp6
+  tmp8 = 3
+  iter_Transform3D_sp_122(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_122(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 8
+  tmp1 = 12
+  tmp2 = 9
+  tmp3 = 1
+  tmp4 = 4
+  tmp5 = 4
+  tmp6 = *(x.arr.(9), y.arr.(4))
+  tmp7 = sum + tmp6
+  tmp8 = 2
+  iter_Transform3D_sp_123(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_123(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 8
+  tmp1 = 12
+  tmp2 = 10
+  tmp3 = 2
+  tmp4 = 8
+  tmp5 = 8
+  tmp6 = *(x.arr.(10), y.arr.(8))
+  tmp7 = sum + tmp6
+  tmp8 = 1
+  iter_Transform3D_sp_124(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_124(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 8
+  tmp1 = 12
+  tmp2 = 11
+  tmp3 = 3
+  tmp4 = 12
+  tmp5 = 12
+  tmp6 = *(x.arr.(11), y.arr.(12))
+  tmp7 = sum + tmp6
+  tmp8 = 0
+  iter_Transform3D_sp_125(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_125(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = false
+  sum
+fun iter_Transform3D_sp_126(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 8
+  tmp1 = 12
+  tmp2 = 8
+  tmp3 = 0
+  tmp4 = 0
+  tmp5 = 1
+  tmp6 = *(x.arr.(8), y.arr.(1))
+  tmp7 = 0 + tmp6
+  tmp8 = 3
+  iter_Transform3D_sp_127(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_127(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 8
+  tmp1 = 12
+  tmp2 = 9
+  tmp3 = 1
+  tmp4 = 4
+  tmp5 = 5
+  tmp6 = *(x.arr.(9), y.arr.(5))
+  tmp7 = sum + tmp6
+  tmp8 = 2
+  iter_Transform3D_sp_128(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_128(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 8
+  tmp1 = 12
+  tmp2 = 10
+  tmp3 = 2
+  tmp4 = 8
+  tmp5 = 9
+  tmp6 = *(x.arr.(10), y.arr.(9))
+  tmp7 = sum + tmp6
+  tmp8 = 1
+  iter_Transform3D_sp_129(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_129(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 8
+  tmp1 = 12
+  tmp2 = 11
+  tmp3 = 3
+  tmp4 = 12
+  tmp5 = 13
+  tmp6 = *(x.arr.(11), y.arr.(13))
+  tmp7 = sum + tmp6
+  tmp8 = 0
+  iter_Transform3D_sp_130(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_13(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 0
+  tmp1 = 4
+  tmp2 = 2
+  tmp3 = 2
+  tmp4 = 8
+  tmp5 = 10
+  tmp6 = *(x.arr.(2), 1)
+  tmp7 = 0 + tmp6
+  tmp8 = 1
+  iter_Transform3D_sp_14(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_130(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = false
+  sum
+fun iter_Transform3D_sp_131(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 8
+  tmp1 = 12
+  tmp2 = 8
+  tmp3 = 0
+  tmp4 = 0
+  tmp5 = 2
+  tmp6 = *(x.arr.(8), y.arr.(2))
+  tmp7 = 0 + tmp6
+  tmp8 = 3
+  iter_Transform3D_sp_132(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_132(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 8
+  tmp1 = 12
+  tmp2 = 9
+  tmp3 = 1
+  tmp4 = 4
+  tmp5 = 6
+  tmp6 = *(x.arr.(9), y.arr.(6))
+  tmp7 = sum + tmp6
+  tmp8 = 2
+  iter_Transform3D_sp_133(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_133(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 8
+  tmp1 = 12
+  tmp2 = 10
+  tmp3 = 2
+  tmp4 = 8
+  tmp5 = 10
+  tmp6 = *(x.arr.(10), y.arr.(10))
+  tmp7 = sum + tmp6
+  tmp8 = 1
+  iter_Transform3D_sp_134(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_134(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 8
+  tmp1 = 12
+  tmp2 = 11
+  tmp3 = 3
+  tmp4 = 12
+  tmp5 = 14
+  tmp6 = *(x.arr.(11), y.arr.(14))
+  tmp7 = sum + tmp6
+  tmp8 = 0
+  iter_Transform3D_sp_135(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_135(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = false
+  sum
+fun iter_Transform3D_sp_136(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 8
+  tmp1 = 12
+  tmp2 = 8
+  tmp3 = 0
+  tmp4 = 0
+  tmp5 = 3
+  tmp6 = *(x.arr.(8), y.arr.(3))
+  tmp7 = 0 + tmp6
+  tmp8 = 3
+  iter_Transform3D_sp_137(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_137(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 8
+  tmp1 = 12
+  tmp2 = 9
+  tmp3 = 1
+  tmp4 = 4
+  tmp5 = 7
+  tmp6 = *(x.arr.(9), y.arr.(7))
+  tmp7 = sum + tmp6
+  tmp8 = 2
+  iter_Transform3D_sp_138(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_138(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 8
+  tmp1 = 12
+  tmp2 = 10
+  tmp3 = 2
+  tmp4 = 8
+  tmp5 = 11
+  tmp6 = *(x.arr.(10), y.arr.(11))
+  tmp7 = sum + tmp6
+  tmp8 = 1
+  iter_Transform3D_sp_139(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_139(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 8
+  tmp1 = 12
+  tmp2 = 11
+  tmp3 = 3
+  tmp4 = 12
+  tmp5 = 15
+  tmp6 = *(x.arr.(11), y.arr.(15))
+  tmp7 = sum + tmp6
+  tmp8 = 0
+  iter_Transform3D_sp_140(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_14(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 0
+  tmp1 = 4
+  tmp2 = 3
+  tmp3 = 3
+  tmp4 = 12
+  tmp5 = 14
+  tmp6 = 0
+  tmp7 = sum + 0
+  tmp8 = 0
+  iter_Transform3D_sp_15(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_140(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = false
+  sum
+fun iter_Transform3D_sp_141(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 12
+  tmp1 = 16
+  tmp2 = 12
+  tmp3 = 0
+  tmp4 = 0
+  tmp5 = 0
+  tmp6 = *(x.arr.(12), y.arr.(0))
+  tmp7 = 0 + tmp6
+  tmp8 = 3
+  iter_Transform3D_sp_142(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_142(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 12
+  tmp1 = 16
+  tmp2 = 13
+  tmp3 = 1
+  tmp4 = 4
+  tmp5 = 4
+  tmp6 = *(x.arr.(13), y.arr.(4))
+  tmp7 = sum + tmp6
+  tmp8 = 2
+  iter_Transform3D_sp_143(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_143(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 12
+  tmp1 = 16
+  tmp2 = 14
+  tmp3 = 2
+  tmp4 = 8
+  tmp5 = 8
+  tmp6 = *(x.arr.(14), y.arr.(8))
+  tmp7 = sum + tmp6
+  tmp8 = 1
+  iter_Transform3D_sp_144(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_144(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 12
+  tmp1 = 16
+  tmp2 = 15
+  tmp3 = 3
+  tmp4 = 12
+  tmp5 = 12
+  tmp6 = *(x.arr.(15), y.arr.(12))
+  tmp7 = sum + tmp6
+  tmp8 = 0
+  iter_Transform3D_sp_145(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_145(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = false
+  sum
+fun iter_Transform3D_sp_146(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 12
+  tmp1 = 16
+  tmp2 = 12
+  tmp3 = 0
+  tmp4 = 0
+  tmp5 = 1
+  tmp6 = *(x.arr.(12), y.arr.(1))
+  tmp7 = 0 + tmp6
+  tmp8 = 3
+  iter_Transform3D_sp_147(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_147(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 12
+  tmp1 = 16
+  tmp2 = 13
+  tmp3 = 1
+  tmp4 = 4
+  tmp5 = 5
+  tmp6 = *(x.arr.(13), y.arr.(5))
+  tmp7 = sum + tmp6
+  tmp8 = 2
+  iter_Transform3D_sp_148(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_148(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 12
+  tmp1 = 16
+  tmp2 = 14
+  tmp3 = 2
+  tmp4 = 8
+  tmp5 = 9
+  tmp6 = *(x.arr.(14), y.arr.(9))
+  tmp7 = sum + tmp6
+  tmp8 = 1
+  iter_Transform3D_sp_149(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_149(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 12
+  tmp1 = 16
+  tmp2 = 15
+  tmp3 = 3
+  tmp4 = 12
+  tmp5 = 13
+  tmp6 = *(x.arr.(15), y.arr.(13))
+  tmp7 = sum + tmp6
+  tmp8 = 0
+  iter_Transform3D_sp_150(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_15(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = false
+  sum
+fun iter_Transform3D_sp_150(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = false
+  sum
+fun iter_Transform3D_sp_151(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 12
+  tmp1 = 16
+  tmp2 = 12
+  tmp3 = 0
+  tmp4 = 0
+  tmp5 = 2
+  tmp6 = *(x.arr.(12), y.arr.(2))
+  tmp7 = 0 + tmp6
+  tmp8 = 3
+  iter_Transform3D_sp_152(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_152(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 12
+  tmp1 = 16
+  tmp2 = 13
+  tmp3 = 1
+  tmp4 = 4
+  tmp5 = 6
+  tmp6 = *(x.arr.(13), y.arr.(6))
+  tmp7 = sum + tmp6
+  tmp8 = 2
+  iter_Transform3D_sp_153(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_153(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 12
+  tmp1 = 16
+  tmp2 = 14
+  tmp3 = 2
+  tmp4 = 8
+  tmp5 = 10
+  tmp6 = *(x.arr.(14), y.arr.(10))
+  tmp7 = sum + tmp6
+  tmp8 = 1
+  iter_Transform3D_sp_154(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_154(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 12
+  tmp1 = 16
+  tmp2 = 15
+  tmp3 = 3
+  tmp4 = 12
+  tmp5 = 14
+  tmp6 = *(x.arr.(15), y.arr.(14))
+  tmp7 = sum + tmp6
+  tmp8 = 0
+  iter_Transform3D_sp_155(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_155(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = false
+  sum
+fun iter_Transform3D_sp_156(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 12
+  tmp1 = 16
+  tmp2 = 12
+  tmp3 = 0
+  tmp4 = 0
+  tmp5 = 3
+  tmp6 = *(x.arr.(12), y.arr.(3))
+  tmp7 = 0 + tmp6
+  tmp8 = 3
+  iter_Transform3D_sp_157(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_157(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 12
+  tmp1 = 16
+  tmp2 = 13
+  tmp3 = 1
+  tmp4 = 4
+  tmp5 = 7
+  tmp6 = *(x.arr.(13), y.arr.(7))
+  tmp7 = sum + tmp6
+  tmp8 = 2
+  iter_Transform3D_sp_158(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_158(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 12
+  tmp1 = 16
+  tmp2 = 14
+  tmp3 = 2
+  tmp4 = 8
+  tmp5 = 11
+  tmp6 = *(x.arr.(14), y.arr.(11))
+  tmp7 = sum + tmp6
+  tmp8 = 1
+  iter_Transform3D_sp_159(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_159(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 12
+  tmp1 = 16
+  tmp2 = 15
+  tmp3 = 3
+  tmp4 = 12
+  tmp5 = 15
+  tmp6 = *(x.arr.(15), y.arr.(15))
+  tmp7 = sum + tmp6
+  tmp8 = 0
+  iter_Transform3D_sp_160(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_16(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 0
+  tmp1 = 4
+  tmp2 = 0
+  tmp3 = 0
+  tmp4 = 0
+  tmp5 = 3
+  tmp6 = 0
+  tmp7 = 0
+  tmp8 = 3
+  iter_Transform3D_sp_17(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_160(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = false
+  sum
+fun iter_Transform3D_sp_161(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 0
+  tmp1 = 4
+  tmp2 = 0
+  tmp3 = 0
+  tmp4 = 0
+  tmp5 = 0
+  tmp6 = *(x.arr.(0), y.arr.(0))
+  tmp7 = 0 + tmp6
+  tmp8 = 3
+  iter_Transform3D_sp_162(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_162(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 0
+  tmp1 = 4
+  tmp2 = 1
+  tmp3 = 1
+  tmp4 = 1
+  tmp5 = 1
+  tmp6 = *(x.arr.(1), y.arr.(1))
+  tmp7 = sum + tmp6
+  tmp8 = 2
+  iter_Transform3D_sp_163(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_163(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 0
+  tmp1 = 4
+  tmp2 = 2
+  tmp3 = 2
+  tmp4 = 2
+  tmp5 = 2
+  tmp6 = *(x.arr.(2), y.arr.(2))
+  tmp7 = sum + tmp6
+  tmp8 = 1
+  iter_Transform3D_sp_164(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_164(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 0
+  tmp1 = 4
+  tmp2 = 3
+  tmp3 = 3
+  tmp4 = 3
+  tmp5 = 3
+  tmp6 = *(x.arr.(3), 1)
+  tmp7 = sum + tmp6
+  tmp8 = 0
+  iter_Transform3D_sp_165(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_165(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = false
+  sum
+fun iter_Transform3D_sp_166(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 4
+  tmp1 = 8
+  tmp2 = 4
+  tmp3 = 0
+  tmp4 = 0
+  tmp5 = 0
+  tmp6 = *(x.arr.(4), y.arr.(0))
+  tmp7 = 0 + tmp6
+  tmp8 = 3
+  iter_Transform3D_sp_167(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_167(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 4
+  tmp1 = 8
+  tmp2 = 5
+  tmp3 = 1
+  tmp4 = 1
+  tmp5 = 1
+  tmp6 = *(x.arr.(5), y.arr.(1))
+  tmp7 = sum + tmp6
+  tmp8 = 2
+  iter_Transform3D_sp_168(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_168(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 4
+  tmp1 = 8
+  tmp2 = 6
+  tmp3 = 2
+  tmp4 = 2
+  tmp5 = 2
+  tmp6 = *(x.arr.(6), y.arr.(2))
+  tmp7 = sum + tmp6
+  tmp8 = 1
+  iter_Transform3D_sp_169(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_169(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 4
+  tmp1 = 8
+  tmp2 = 7
+  tmp3 = 3
+  tmp4 = 3
+  tmp5 = 3
+  tmp6 = *(x.arr.(7), 1)
+  tmp7 = sum + tmp6
+  tmp8 = 0
+  iter_Transform3D_sp_170(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_17(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 0
+  tmp1 = 4
+  tmp2 = 1
+  tmp3 = 1
+  tmp4 = 4
+  tmp5 = 7
+  tmp6 = 0
+  tmp7 = 0
+  tmp8 = 2
+  iter_Transform3D_sp_18(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_170(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = false
+  sum
+fun iter_Transform3D_sp_171(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 8
+  tmp1 = 12
+  tmp2 = 8
+  tmp3 = 0
+  tmp4 = 0
+  tmp5 = 0
+  tmp6 = *(x.arr.(8), y.arr.(0))
+  tmp7 = 0 + tmp6
+  tmp8 = 3
+  iter_Transform3D_sp_172(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_172(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 8
+  tmp1 = 12
+  tmp2 = 9
+  tmp3 = 1
+  tmp4 = 1
+  tmp5 = 1
+  tmp6 = *(x.arr.(9), y.arr.(1))
+  tmp7 = sum + tmp6
+  tmp8 = 2
+  iter_Transform3D_sp_173(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_173(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 8
+  tmp1 = 12
+  tmp2 = 10
+  tmp3 = 2
+  tmp4 = 2
+  tmp5 = 2
+  tmp6 = *(x.arr.(10), y.arr.(2))
+  tmp7 = sum + tmp6
+  tmp8 = 1
+  iter_Transform3D_sp_174(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_174(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 8
+  tmp1 = 12
+  tmp2 = 11
+  tmp3 = 3
+  tmp4 = 3
+  tmp5 = 3
+  tmp6 = *(x.arr.(11), 1)
+  tmp7 = sum + tmp6
+  tmp8 = 0
+  iter_Transform3D_sp_175(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_175(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = false
+  sum
+fun iter_Transform3D_sp_176(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 12
+  tmp1 = 16
+  tmp2 = 12
+  tmp3 = 0
+  tmp4 = 0
+  tmp5 = 0
+  tmp6 = *(x.arr.(12), y.arr.(0))
+  tmp7 = 0 + tmp6
+  tmp8 = 3
+  iter_Transform3D_sp_177(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_177(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 12
+  tmp1 = 16
+  tmp2 = 13
+  tmp3 = 1
+  tmp4 = 1
+  tmp5 = 1
+  tmp6 = *(x.arr.(13), y.arr.(1))
+  tmp7 = sum + tmp6
+  tmp8 = 2
+  iter_Transform3D_sp_178(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_178(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 12
+  tmp1 = 16
+  tmp2 = 14
+  tmp3 = 2
+  tmp4 = 2
+  tmp5 = 2
+  tmp6 = *(x.arr.(14), y.arr.(2))
+  tmp7 = sum + tmp6
+  tmp8 = 1
+  iter_Transform3D_sp_179(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_179(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 12
+  tmp1 = 16
+  tmp2 = 15
+  tmp3 = 3
+  tmp4 = 3
+  tmp5 = 3
+  tmp6 = *(x.arr.(15), 1)
+  tmp7 = sum + tmp6
+  tmp8 = 0
+  iter_Transform3D_sp_180(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_18(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 0
+  tmp1 = 4
+  tmp2 = 2
+  tmp3 = 2
+  tmp4 = 8
+  tmp5 = 11
+  tmp6 = 0
+  tmp7 = 0
+  tmp8 = 1
+  iter_Transform3D_sp_19(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_180(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = false
+  sum
+fun iter_Transform3D_sp_181(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 0
+  tmp1 = 4
+  tmp2 = 0
+  tmp3 = 0
+  tmp4 = 0
+  tmp5 = 0
+  tmp6 = *(x.arr.(0), y.arr.(0))
+  tmp7 = 0 + tmp6
+  tmp8 = 3
+  iter_Transform3D_sp_182(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_182(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 0
+  tmp1 = 4
+  tmp2 = 1
+  tmp3 = 1
+  tmp4 = 1
+  tmp5 = 1
+  tmp6 = *(x.arr.(1), y.arr.(1))
+  tmp7 = sum + tmp6
+  tmp8 = 2
+  iter_Transform3D_sp_183(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_183(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 0
+  tmp1 = 4
+  tmp2 = 2
+  tmp3 = 2
+  tmp4 = 2
+  tmp5 = 2
+  tmp6 = *(x.arr.(2), y.arr.(2))
+  tmp7 = sum + tmp6
+  tmp8 = 1
+  iter_Transform3D_sp_184(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_184(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 0
+  tmp1 = 4
+  tmp2 = 3
+  tmp3 = 3
+  tmp4 = 3
+  tmp5 = 3
+  tmp6 = *(x.arr.(3), y.arr.(3))
+  tmp7 = sum + tmp6
+  tmp8 = 0
+  iter_Transform3D_sp_185(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_185(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = false
+  sum
+fun iter_Transform3D_sp_186(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 4
+  tmp1 = 8
+  tmp2 = 4
+  tmp3 = 0
+  tmp4 = 0
+  tmp5 = 0
+  tmp6 = *(x.arr.(4), y.arr.(0))
+  tmp7 = 0 + tmp6
+  tmp8 = 3
+  iter_Transform3D_sp_187(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_187(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 4
+  tmp1 = 8
+  tmp2 = 5
+  tmp3 = 1
+  tmp4 = 1
+  tmp5 = 1
+  tmp6 = *(x.arr.(5), y.arr.(1))
+  tmp7 = sum + tmp6
+  tmp8 = 2
+  iter_Transform3D_sp_188(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_188(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 4
+  tmp1 = 8
+  tmp2 = 6
+  tmp3 = 2
+  tmp4 = 2
+  tmp5 = 2
+  tmp6 = *(x.arr.(6), y.arr.(2))
+  tmp7 = sum + tmp6
+  tmp8 = 1
+  iter_Transform3D_sp_189(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_189(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 4
+  tmp1 = 8
+  tmp2 = 7
+  tmp3 = 3
+  tmp4 = 3
+  tmp5 = 3
+  tmp6 = *(x.arr.(7), y.arr.(3))
+  tmp7 = sum + tmp6
+  tmp8 = 0
+  iter_Transform3D_sp_190(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_19(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 0
+  tmp1 = 4
+  tmp2 = 3
+  tmp3 = 3
+  tmp4 = 12
+  tmp5 = 15
+  tmp6 = *(x.arr.(3), 1)
+  tmp7 = 0 + tmp6
+  tmp8 = 0
+  iter_Transform3D_sp_20(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_190(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = false
+  sum
+fun iter_Transform3D_sp_191(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 8
+  tmp1 = 12
+  tmp2 = 8
+  tmp3 = 0
+  tmp4 = 0
+  tmp5 = 0
+  tmp6 = *(x.arr.(8), y.arr.(0))
+  tmp7 = 0 + tmp6
+  tmp8 = 3
+  iter_Transform3D_sp_192(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_192(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 8
+  tmp1 = 12
+  tmp2 = 9
+  tmp3 = 1
+  tmp4 = 1
+  tmp5 = 1
+  tmp6 = *(x.arr.(9), y.arr.(1))
+  tmp7 = sum + tmp6
+  tmp8 = 2
+  iter_Transform3D_sp_193(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_193(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 8
+  tmp1 = 12
+  tmp2 = 10
+  tmp3 = 2
+  tmp4 = 2
+  tmp5 = 2
+  tmp6 = *(x.arr.(10), y.arr.(2))
+  tmp7 = sum + tmp6
+  tmp8 = 1
+  iter_Transform3D_sp_194(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_194(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 8
+  tmp1 = 12
+  tmp2 = 11
+  tmp3 = 3
+  tmp4 = 3
+  tmp5 = 3
+  tmp6 = *(x.arr.(11), y.arr.(3))
+  tmp7 = sum + tmp6
+  tmp8 = 0
+  iter_Transform3D_sp_195(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_195(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = false
+  sum
+fun iter_Transform3D_sp_196(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 12
+  tmp1 = 16
+  tmp2 = 12
+  tmp3 = 0
+  tmp4 = 0
+  tmp5 = 0
+  tmp6 = *(x.arr.(12), y.arr.(0))
+  tmp7 = 0 + tmp6
+  tmp8 = 3
+  iter_Transform3D_sp_197(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_197(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 12
+  tmp1 = 16
+  tmp2 = 13
+  tmp3 = 1
+  tmp4 = 1
+  tmp5 = 1
+  tmp6 = *(x.arr.(13), y.arr.(1))
+  tmp7 = sum + tmp6
+  tmp8 = 2
+  iter_Transform3D_sp_198(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_198(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 12
+  tmp1 = 16
+  tmp2 = 14
+  tmp3 = 2
+  tmp4 = 2
+  tmp5 = 2
+  tmp6 = *(x.arr.(14), y.arr.(2))
+  tmp7 = sum + tmp6
+  tmp8 = 1
+  iter_Transform3D_sp_199(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_199(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 12
+  tmp1 = 16
+  tmp2 = 15
+  tmp3 = 3
+  tmp4 = 3
+  tmp5 = 3
+  tmp6 = *(x.arr.(15), y.arr.(3))
+  tmp7 = sum + tmp6
+  tmp8 = 0
+  iter_Transform3D_sp_200(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_2(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 0
+  tmp1 = 4
+  tmp2 = 1
+  tmp3 = 1
+  tmp4 = 4
+  tmp5 = 4
+  tmp6 = 0
+  tmp7 = sum + 0
+  tmp8 = 2
+  iter_Transform3D_sp_3(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_20(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = false
+  sum
+fun iter_Transform3D_sp_200(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = false
+  sum
+fun iter_Transform3D_sp_201(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 0
+  tmp1 = 4
+  tmp2 = 0
+  tmp3 = 0
+  tmp4 = 0
+  tmp5 = 0
+  tmp6 = *(0.4, y.arr.(0))
+  tmp7 = 0 + tmp6
+  tmp8 = 3
+  iter_Transform3D_sp_202(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_202(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 0
+  tmp1 = 4
+  tmp2 = 1
+  tmp3 = 1
+  tmp4 = 1
+  tmp5 = 1
+  tmp6 = 0
+  tmp7 = sum + 0
+  tmp8 = 2
+  iter_Transform3D_sp_203(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_203(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 0
+  tmp1 = 4
+  tmp2 = 2
+  tmp3 = 2
+  tmp4 = 2
+  tmp5 = 2
+  tmp6 = 0
+  tmp7 = sum + 0
+  tmp8 = 1
+  iter_Transform3D_sp_204(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_204(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 0
+  tmp1 = 4
+  tmp2 = 3
+  tmp3 = 3
+  tmp4 = 3
+  tmp5 = 3
+  tmp6 = 0
+  tmp7 = sum + 0
+  tmp8 = 0
+  iter_Transform3D_sp_205(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_205(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = false
+  sum
+fun iter_Transform3D_sp_206(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 4
+  tmp1 = 8
+  tmp2 = 4
+  tmp3 = 0
+  tmp4 = 0
+  tmp5 = 0
+  tmp6 = 0
+  tmp7 = 0
+  tmp8 = 3
+  iter_Transform3D_sp_207(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_207(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 4
+  tmp1 = 8
+  tmp2 = 5
+  tmp3 = 1
+  tmp4 = 1
+  tmp5 = 1
+  tmp6 = *(0.19, y.arr.(1))
+  tmp7 = 0 + tmp6
+  tmp8 = 2
+  iter_Transform3D_sp_208(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_208(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 4
+  tmp1 = 8
+  tmp2 = 6
+  tmp3 = 2
+  tmp4 = 2
+  tmp5 = 2
+  tmp6 = 0
+  tmp7 = sum + 0
+  tmp8 = 1
+  iter_Transform3D_sp_209(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_209(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 4
+  tmp1 = 8
+  tmp2 = 7
+  tmp3 = 3
+  tmp4 = 3
+  tmp5 = 3
+  tmp6 = 0
+  tmp7 = sum + 0
+  tmp8 = 0
+  iter_Transform3D_sp_210(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_21(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 4
+  tmp1 = 8
+  tmp2 = 4
+  tmp3 = 0
+  tmp4 = 0
+  tmp5 = 0
+  tmp6 = *(x.arr.(4), 1)
+  tmp7 = 0 + tmp6
+  tmp8 = 3
+  iter_Transform3D_sp_22(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_210(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = false
+  sum
+fun iter_Transform3D_sp_211(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 8
+  tmp1 = 12
+  tmp2 = 8
+  tmp3 = 0
+  tmp4 = 0
+  tmp5 = 0
+  tmp6 = 0
+  tmp7 = 0
+  tmp8 = 3
+  iter_Transform3D_sp_212(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_212(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 8
+  tmp1 = 12
+  tmp2 = 9
+  tmp3 = 1
+  tmp4 = 1
+  tmp5 = 1
+  tmp6 = 0
+  tmp7 = 0
+  tmp8 = 2
+  iter_Transform3D_sp_213(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_213(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 8
+  tmp1 = 12
+  tmp2 = 10
+  tmp3 = 2
+  tmp4 = 2
+  tmp5 = 2
+  tmp6 = *(0.19, y.arr.(2))
+  tmp7 = 0 + tmp6
+  tmp8 = 1
+  iter_Transform3D_sp_214(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_214(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 8
+  tmp1 = 12
+  tmp2 = 11
+  tmp3 = 3
+  tmp4 = 3
+  tmp5 = 3
+  tmp6 = 0
+  tmp7 = sum + 0
+  tmp8 = 0
+  iter_Transform3D_sp_215(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_215(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = false
+  sum
+fun iter_Transform3D_sp_216(sum, x, y, colX, i, j, k) = 1
+fun iter_Transform3D_sp_217(sum, x, y, colX, i, j, k) = 1
+fun iter_Transform3D_sp_218(sum, x, y, colX, i, j, k) = 1
+fun iter_Transform3D_sp_219(sum, x, y, colX, i, j, k) = 1
+fun iter_Transform3D_sp_22(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 4
+  tmp1 = 8
+  tmp2 = 5
+  tmp3 = 1
+  tmp4 = 4
+  tmp5 = 4
+  tmp6 = 0
+  tmp7 = sum + 0
+  tmp8 = 2
+  iter_Transform3D_sp_23(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_220(sum, x, y, colX, i, j, k) = 1
+fun iter_Transform3D_sp_221(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 0
+  tmp1 = 4
+  tmp2 = 0
+  tmp3 = 0
+  tmp4 = 0
+  tmp5 = 0
+  tmp6 = *(1, y.arr.(0))
+  tmp7 = 0 + tmp6
+  tmp8 = 3
+  iter_Transform3D_sp_222(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_222(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 0
+  tmp1 = 4
+  tmp2 = 1
+  tmp3 = 1
+  tmp4 = 1
+  tmp5 = 1
+  tmp6 = 0
+  tmp7 = sum + 0
+  tmp8 = 2
+  iter_Transform3D_sp_223(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_223(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 0
+  tmp1 = 4
+  tmp2 = 2
+  tmp3 = 2
+  tmp4 = 2
+  tmp5 = 2
+  tmp6 = 0
+  tmp7 = sum + 0
+  tmp8 = 1
+  iter_Transform3D_sp_224(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_224(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 0
+  tmp1 = 4
+  tmp2 = 3
+  tmp3 = 3
+  tmp4 = 3
+  tmp5 = 3
+  tmp6 = *(11, y.arr.(3))
+  tmp7 = sum + tmp6
+  tmp8 = 0
+  iter_Transform3D_sp_225(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_225(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = false
+  sum
+fun iter_Transform3D_sp_226(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 4
+  tmp1 = 8
+  tmp2 = 4
+  tmp3 = 0
+  tmp4 = 0
+  tmp5 = 0
+  tmp6 = 0
+  tmp7 = 0
+  tmp8 = 3
+  iter_Transform3D_sp_227(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_227(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 4
+  tmp1 = 8
+  tmp2 = 5
+  tmp3 = 1
+  tmp4 = 1
+  tmp5 = 1
+  tmp6 = *(1, y.arr.(1))
+  tmp7 = 0 + tmp6
+  tmp8 = 2
+  iter_Transform3D_sp_228(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_228(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 4
+  tmp1 = 8
+  tmp2 = 6
+  tmp3 = 2
+  tmp4 = 2
+  tmp5 = 2
+  tmp6 = 0
+  tmp7 = sum + 0
+  tmp8 = 1
+  iter_Transform3D_sp_229(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_229(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 4
+  tmp1 = 8
+  tmp2 = 7
+  tmp3 = 3
+  tmp4 = 3
+  tmp5 = 3
+  tmp6 = *(4, y.arr.(3))
+  tmp7 = sum + tmp6
+  tmp8 = 0
+  iter_Transform3D_sp_230(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_23(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 4
+  tmp1 = 8
+  tmp2 = 6
+  tmp3 = 2
+  tmp4 = 8
+  tmp5 = 8
+  tmp6 = 0
+  tmp7 = sum + 0
+  tmp8 = 1
+  iter_Transform3D_sp_24(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_230(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = false
+  sum
+fun iter_Transform3D_sp_231(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 8
+  tmp1 = 12
+  tmp2 = 8
+  tmp3 = 0
+  tmp4 = 0
+  tmp5 = 0
+  tmp6 = 0
+  tmp7 = 0
+  tmp8 = 3
+  iter_Transform3D_sp_232(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_232(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 8
+  tmp1 = 12
+  tmp2 = 9
+  tmp3 = 1
+  tmp4 = 1
+  tmp5 = 1
+  tmp6 = 0
+  tmp7 = 0
+  tmp8 = 2
+  iter_Transform3D_sp_233(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_233(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 8
+  tmp1 = 12
+  tmp2 = 10
+  tmp3 = 2
+  tmp4 = 2
+  tmp5 = 2
+  tmp6 = *(1, y.arr.(2))
+  tmp7 = 0 + tmp6
+  tmp8 = 1
+  iter_Transform3D_sp_234(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_234(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 8
+  tmp1 = 12
+  tmp2 = 11
+  tmp3 = 3
+  tmp4 = 3
+  tmp5 = 3
+  tmp6 = *(51, y.arr.(3))
+  tmp7 = sum + tmp6
+  tmp8 = 0
+  iter_Transform3D_sp_235(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_235(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = false
+  sum
+fun iter_Transform3D_sp_236(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 12
+  tmp1 = 16
+  tmp2 = 12
+  tmp3 = 0
+  tmp4 = 0
+  tmp5 = 0
+  tmp6 = 0
+  tmp7 = 0
+  tmp8 = 3
+  iter_Transform3D_sp_237(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_237(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 12
+  tmp1 = 16
+  tmp2 = 13
+  tmp3 = 1
+  tmp4 = 1
+  tmp5 = 1
+  tmp6 = 0
+  tmp7 = 0
+  tmp8 = 2
+  iter_Transform3D_sp_238(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_238(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 12
+  tmp1 = 16
+  tmp2 = 14
+  tmp3 = 2
+  tmp4 = 2
+  tmp5 = 2
+  tmp6 = 0
+  tmp7 = 0
+  tmp8 = 1
+  iter_Transform3D_sp_239(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_239(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 12
+  tmp1 = 16
+  tmp2 = 15
+  tmp3 = 3
+  tmp4 = 3
+  tmp5 = 3
+  tmp6 = *(1, y.arr.(3))
+  tmp7 = 0 + tmp6
+  tmp8 = 0
+  iter_Transform3D_sp_240(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_24(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 4
+  tmp1 = 8
+  tmp2 = 7
+  tmp3 = 3
+  tmp4 = 12
+  tmp5 = 12
+  tmp6 = 0
+  tmp7 = sum + 0
+  tmp8 = 0
+  iter_Transform3D_sp_25(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_240(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = false
+  sum
+fun iter_Transform3D_sp_25(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = false
+  sum
+fun iter_Transform3D_sp_26(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 4
+  tmp1 = 8
+  tmp2 = 4
+  tmp3 = 0
+  tmp4 = 0
+  tmp5 = 1
+  tmp6 = 0
+  tmp7 = 0
+  tmp8 = 3
+  iter_Transform3D_sp_27(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_27(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 4
+  tmp1 = 8
+  tmp2 = 5
+  tmp3 = 1
+  tmp4 = 4
+  tmp5 = 5
+  tmp6 = *(x.arr.(5), 1)
+  tmp7 = 0 + tmp6
+  tmp8 = 2
+  iter_Transform3D_sp_28(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_28(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 4
+  tmp1 = 8
+  tmp2 = 6
+  tmp3 = 2
+  tmp4 = 8
+  tmp5 = 9
+  tmp6 = 0
+  tmp7 = sum + 0
+  tmp8 = 1
+  iter_Transform3D_sp_29(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_29(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 4
+  tmp1 = 8
+  tmp2 = 7
+  tmp3 = 3
+  tmp4 = 12
+  tmp5 = 13
+  tmp6 = 0
+  tmp7 = sum + 0
+  tmp8 = 0
+  iter_Transform3D_sp_30(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_3(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 0
+  tmp1 = 4
+  tmp2 = 2
+  tmp3 = 2
+  tmp4 = 8
+  tmp5 = 8
+  tmp6 = 0
+  tmp7 = sum + 0
+  tmp8 = 1
+  iter_Transform3D_sp_4(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_30(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = false
+  sum
+fun iter_Transform3D_sp_31(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 4
+  tmp1 = 8
+  tmp2 = 4
+  tmp3 = 0
+  tmp4 = 0
+  tmp5 = 2
+  tmp6 = 0
+  tmp7 = 0
+  tmp8 = 3
+  iter_Transform3D_sp_32(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_32(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 4
+  tmp1 = 8
+  tmp2 = 5
+  tmp3 = 1
+  tmp4 = 4
+  tmp5 = 6
+  tmp6 = 0
+  tmp7 = 0
+  tmp8 = 2
+  iter_Transform3D_sp_33(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_33(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 4
+  tmp1 = 8
+  tmp2 = 6
+  tmp3 = 2
+  tmp4 = 8
+  tmp5 = 10
+  tmp6 = *(x.arr.(6), 1)
+  tmp7 = 0 + tmp6
+  tmp8 = 1
+  iter_Transform3D_sp_34(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_34(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 4
+  tmp1 = 8
+  tmp2 = 7
+  tmp3 = 3
+  tmp4 = 12
+  tmp5 = 14
+  tmp6 = 0
+  tmp7 = sum + 0
+  tmp8 = 0
+  iter_Transform3D_sp_35(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_35(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = false
+  sum
+fun iter_Transform3D_sp_36(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 4
+  tmp1 = 8
+  tmp2 = 4
+  tmp3 = 0
+  tmp4 = 0
+  tmp5 = 3
+  tmp6 = 0
+  tmp7 = 0
+  tmp8 = 3
+  iter_Transform3D_sp_37(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_37(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 4
+  tmp1 = 8
+  tmp2 = 5
+  tmp3 = 1
+  tmp4 = 4
+  tmp5 = 7
+  tmp6 = 0
+  tmp7 = 0
+  tmp8 = 2
+  iter_Transform3D_sp_38(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_38(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 4
+  tmp1 = 8
+  tmp2 = 6
+  tmp3 = 2
+  tmp4 = 8
+  tmp5 = 11
+  tmp6 = 0
+  tmp7 = 0
+  tmp8 = 1
+  iter_Transform3D_sp_39(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_39(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 4
+  tmp1 = 8
+  tmp2 = 7
+  tmp3 = 3
+  tmp4 = 12
+  tmp5 = 15
+  tmp6 = *(x.arr.(7), 1)
+  tmp7 = 0 + tmp6
+  tmp8 = 0
+  iter_Transform3D_sp_40(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_4(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 0
+  tmp1 = 4
+  tmp2 = 3
+  tmp3 = 3
+  tmp4 = 12
+  tmp5 = 12
+  tmp6 = 0
+  tmp7 = sum + 0
+  tmp8 = 0
+  iter_Transform3D_sp_5(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_40(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = false
+  sum
+fun iter_Transform3D_sp_41(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 8
+  tmp1 = 12
+  tmp2 = 8
+  tmp3 = 0
+  tmp4 = 0
+  tmp5 = 0
+  tmp6 = *(x.arr.(8), 1)
+  tmp7 = 0 + tmp6
+  tmp8 = 3
+  iter_Transform3D_sp_42(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_42(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 8
+  tmp1 = 12
+  tmp2 = 9
+  tmp3 = 1
+  tmp4 = 4
+  tmp5 = 4
+  tmp6 = 0
+  tmp7 = sum + 0
+  tmp8 = 2
+  iter_Transform3D_sp_43(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_43(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 8
+  tmp1 = 12
+  tmp2 = 10
+  tmp3 = 2
+  tmp4 = 8
+  tmp5 = 8
+  tmp6 = 0
+  tmp7 = sum + 0
+  tmp8 = 1
+  iter_Transform3D_sp_44(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_44(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 8
+  tmp1 = 12
+  tmp2 = 11
+  tmp3 = 3
+  tmp4 = 12
+  tmp5 = 12
+  tmp6 = 0
+  tmp7 = sum + 0
+  tmp8 = 0
+  iter_Transform3D_sp_45(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_45(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = false
+  sum
+fun iter_Transform3D_sp_46(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 8
+  tmp1 = 12
+  tmp2 = 8
+  tmp3 = 0
+  tmp4 = 0
+  tmp5 = 1
+  tmp6 = 0
+  tmp7 = 0
+  tmp8 = 3
+  iter_Transform3D_sp_47(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_47(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 8
+  tmp1 = 12
+  tmp2 = 9
+  tmp3 = 1
+  tmp4 = 4
+  tmp5 = 5
+  tmp6 = *(x.arr.(9), 1)
+  tmp7 = 0 + tmp6
+  tmp8 = 2
+  iter_Transform3D_sp_48(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_48(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 8
+  tmp1 = 12
+  tmp2 = 10
+  tmp3 = 2
+  tmp4 = 8
+  tmp5 = 9
+  tmp6 = 0
+  tmp7 = sum + 0
+  tmp8 = 1
+  iter_Transform3D_sp_49(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_49(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 8
+  tmp1 = 12
+  tmp2 = 11
+  tmp3 = 3
+  tmp4 = 12
+  tmp5 = 13
+  tmp6 = 0
+  tmp7 = sum + 0
+  tmp8 = 0
+  iter_Transform3D_sp_50(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_5(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = false
+  sum
+fun iter_Transform3D_sp_50(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = false
+  sum
+fun iter_Transform3D_sp_51(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 8
+  tmp1 = 12
+  tmp2 = 8
+  tmp3 = 0
+  tmp4 = 0
+  tmp5 = 2
+  tmp6 = 0
+  tmp7 = 0
+  tmp8 = 3
+  iter_Transform3D_sp_52(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_52(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 8
+  tmp1 = 12
+  tmp2 = 9
+  tmp3 = 1
+  tmp4 = 4
+  tmp5 = 6
+  tmp6 = 0
+  tmp7 = 0
+  tmp8 = 2
+  iter_Transform3D_sp_53(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_53(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 8
+  tmp1 = 12
+  tmp2 = 10
+  tmp3 = 2
+  tmp4 = 8
+  tmp5 = 10
+  tmp6 = *(x.arr.(10), 1)
+  tmp7 = 0 + tmp6
+  tmp8 = 1
+  iter_Transform3D_sp_54(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_54(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 8
+  tmp1 = 12
+  tmp2 = 11
+  tmp3 = 3
+  tmp4 = 12
+  tmp5 = 14
+  tmp6 = 0
+  tmp7 = sum + 0
+  tmp8 = 0
+  iter_Transform3D_sp_55(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_55(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = false
+  sum
+fun iter_Transform3D_sp_56(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 8
+  tmp1 = 12
+  tmp2 = 8
+  tmp3 = 0
+  tmp4 = 0
+  tmp5 = 3
+  tmp6 = 0
+  tmp7 = 0
+  tmp8 = 3
+  iter_Transform3D_sp_57(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_57(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 8
+  tmp1 = 12
+  tmp2 = 9
+  tmp3 = 1
+  tmp4 = 4
+  tmp5 = 7
+  tmp6 = 0
+  tmp7 = 0
+  tmp8 = 2
+  iter_Transform3D_sp_58(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_58(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 8
+  tmp1 = 12
+  tmp2 = 10
+  tmp3 = 2
+  tmp4 = 8
+  tmp5 = 11
+  tmp6 = 0
+  tmp7 = 0
+  tmp8 = 1
+  iter_Transform3D_sp_59(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_59(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 8
+  tmp1 = 12
+  tmp2 = 11
+  tmp3 = 3
+  tmp4 = 12
+  tmp5 = 15
+  tmp6 = *(x.arr.(11), 1)
+  tmp7 = 0 + tmp6
+  tmp8 = 0
+  iter_Transform3D_sp_60(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_6(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 0
+  tmp1 = 4
+  tmp2 = 0
+  tmp3 = 0
+  tmp4 = 0
+  tmp5 = 1
+  tmp6 = 0
+  tmp7 = 0
+  tmp8 = 3
+  iter_Transform3D_sp_7(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_60(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = false
+  sum
+fun iter_Transform3D_sp_61(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 12
+  tmp1 = 16
+  tmp2 = 12
+  tmp3 = 0
+  tmp4 = 0
+  tmp5 = 0
+  tmp6 = *(x.arr.(12), 1)
+  tmp7 = 0 + tmp6
+  tmp8 = 3
+  iter_Transform3D_sp_62(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_62(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 12
+  tmp1 = 16
+  tmp2 = 13
+  tmp3 = 1
+  tmp4 = 4
+  tmp5 = 4
+  tmp6 = 0
+  tmp7 = sum + 0
+  tmp8 = 2
+  iter_Transform3D_sp_63(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_63(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 12
+  tmp1 = 16
+  tmp2 = 14
+  tmp3 = 2
+  tmp4 = 8
+  tmp5 = 8
+  tmp6 = 0
+  tmp7 = sum + 0
+  tmp8 = 1
+  iter_Transform3D_sp_64(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_64(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 12
+  tmp1 = 16
+  tmp2 = 15
+  tmp3 = 3
+  tmp4 = 12
+  tmp5 = 12
+  tmp6 = 0
+  tmp7 = sum + 0
+  tmp8 = 0
+  iter_Transform3D_sp_65(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_65(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = false
+  sum
+fun iter_Transform3D_sp_66(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 12
+  tmp1 = 16
+  tmp2 = 12
+  tmp3 = 0
+  tmp4 = 0
+  tmp5 = 1
+  tmp6 = 0
+  tmp7 = 0
+  tmp8 = 3
+  iter_Transform3D_sp_67(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_67(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 12
+  tmp1 = 16
+  tmp2 = 13
+  tmp3 = 1
+  tmp4 = 4
+  tmp5 = 5
+  tmp6 = *(x.arr.(13), 1)
+  tmp7 = 0 + tmp6
+  tmp8 = 2
+  iter_Transform3D_sp_68(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_68(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 12
+  tmp1 = 16
+  tmp2 = 14
+  tmp3 = 2
+  tmp4 = 8
+  tmp5 = 9
+  tmp6 = 0
+  tmp7 = sum + 0
+  tmp8 = 1
+  iter_Transform3D_sp_69(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_69(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 12
+  tmp1 = 16
+  tmp2 = 15
+  tmp3 = 3
+  tmp4 = 12
+  tmp5 = 13
+  tmp6 = 0
+  tmp7 = sum + 0
+  tmp8 = 0
+  iter_Transform3D_sp_70(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_7(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 0
+  tmp1 = 4
+  tmp2 = 1
+  tmp3 = 1
+  tmp4 = 4
+  tmp5 = 5
+  tmp6 = *(x.arr.(1), 1)
+  tmp7 = 0 + tmp6
+  tmp8 = 2
+  iter_Transform3D_sp_8(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_70(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = false
+  sum
+fun iter_Transform3D_sp_71(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 12
+  tmp1 = 16
+  tmp2 = 12
+  tmp3 = 0
+  tmp4 = 0
+  tmp5 = 2
+  tmp6 = 0
+  tmp7 = 0
+  tmp8 = 3
+  iter_Transform3D_sp_72(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_72(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 12
+  tmp1 = 16
+  tmp2 = 13
+  tmp3 = 1
+  tmp4 = 4
+  tmp5 = 6
+  tmp6 = 0
+  tmp7 = 0
+  tmp8 = 2
+  iter_Transform3D_sp_73(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_73(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 12
+  tmp1 = 16
+  tmp2 = 14
+  tmp3 = 2
+  tmp4 = 8
+  tmp5 = 10
+  tmp6 = *(x.arr.(14), 1)
+  tmp7 = 0 + tmp6
+  tmp8 = 1
+  iter_Transform3D_sp_74(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_74(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 12
+  tmp1 = 16
+  tmp2 = 15
+  tmp3 = 3
+  tmp4 = 12
+  tmp5 = 14
+  tmp6 = 0
+  tmp7 = sum + 0
+  tmp8 = 0
+  iter_Transform3D_sp_75(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_75(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = false
+  sum
+fun iter_Transform3D_sp_76(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 12
+  tmp1 = 16
+  tmp2 = 12
+  tmp3 = 0
+  tmp4 = 0
+  tmp5 = 3
+  tmp6 = 0
+  tmp7 = 0
+  tmp8 = 3
+  iter_Transform3D_sp_77(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_77(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 12
+  tmp1 = 16
+  tmp2 = 13
+  tmp3 = 1
+  tmp4 = 4
+  tmp5 = 7
+  tmp6 = 0
+  tmp7 = 0
+  tmp8 = 2
+  iter_Transform3D_sp_78(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_78(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 12
+  tmp1 = 16
+  tmp2 = 14
+  tmp3 = 2
+  tmp4 = 8
+  tmp5 = 11
+  tmp6 = 0
+  tmp7 = 0
+  tmp8 = 1
+  iter_Transform3D_sp_79(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_79(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 12
+  tmp1 = 16
+  tmp2 = 15
+  tmp3 = 3
+  tmp4 = 12
+  tmp5 = 15
+  tmp6 = *(x.arr.(15), 1)
+  tmp7 = 0 + tmp6
+  tmp8 = 0
+  iter_Transform3D_sp_80(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_8(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 0
+  tmp1 = 4
+  tmp2 = 2
+  tmp3 = 2
+  tmp4 = 8
+  tmp5 = 9
+  tmp6 = 0
+  tmp7 = sum + 0
+  tmp8 = 1
+  iter_Transform3D_sp_9(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_80(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = false
+  sum
+fun iter_Transform3D_sp_81(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 0
+  tmp1 = 4
+  tmp2 = 0
+  tmp3 = 0
+  tmp4 = 0
+  tmp5 = 0
+  tmp6 = *(x.arr.(0), y.arr.(0))
+  tmp7 = 0 + tmp6
+  tmp8 = 3
+  iter_Transform3D_sp_82(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_82(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 0
+  tmp1 = 4
+  tmp2 = 1
+  tmp3 = 1
+  tmp4 = 4
+  tmp5 = 4
+  tmp6 = *(x.arr.(1), y.arr.(4))
+  tmp7 = sum + tmp6
+  tmp8 = 2
+  iter_Transform3D_sp_83(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_83(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 0
+  tmp1 = 4
+  tmp2 = 2
+  tmp3 = 2
+  tmp4 = 8
+  tmp5 = 8
+  tmp6 = *(x.arr.(2), y.arr.(8))
+  tmp7 = sum + tmp6
+  tmp8 = 1
+  iter_Transform3D_sp_84(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_84(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 0
+  tmp1 = 4
+  tmp2 = 3
+  tmp3 = 3
+  tmp4 = 12
+  tmp5 = 12
+  tmp6 = *(x.arr.(3), y.arr.(12))
+  tmp7 = sum + tmp6
+  tmp8 = 0
+  iter_Transform3D_sp_85(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_85(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = false
+  sum
+fun iter_Transform3D_sp_86(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 0
+  tmp1 = 4
+  tmp2 = 0
+  tmp3 = 0
+  tmp4 = 0
+  tmp5 = 1
+  tmp6 = *(x.arr.(0), y.arr.(1))
+  tmp7 = 0 + tmp6
+  tmp8 = 3
+  iter_Transform3D_sp_87(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_87(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 0
+  tmp1 = 4
+  tmp2 = 1
+  tmp3 = 1
+  tmp4 = 4
+  tmp5 = 5
+  tmp6 = *(x.arr.(1), y.arr.(5))
+  tmp7 = sum + tmp6
+  tmp8 = 2
+  iter_Transform3D_sp_88(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_88(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 0
+  tmp1 = 4
+  tmp2 = 2
+  tmp3 = 2
+  tmp4 = 8
+  tmp5 = 9
+  tmp6 = *(x.arr.(2), y.arr.(9))
+  tmp7 = sum + tmp6
+  tmp8 = 1
+  iter_Transform3D_sp_89(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_89(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 0
+  tmp1 = 4
+  tmp2 = 3
+  tmp3 = 3
+  tmp4 = 12
+  tmp5 = 13
+  tmp6 = *(x.arr.(3), y.arr.(13))
+  tmp7 = sum + tmp6
+  tmp8 = 0
+  iter_Transform3D_sp_90(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_9(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 0
+  tmp1 = 4
+  tmp2 = 3
+  tmp3 = 3
+  tmp4 = 12
+  tmp5 = 13
+  tmp6 = 0
+  tmp7 = sum + 0
+  tmp8 = 0
+  iter_Transform3D_sp_10(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_90(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = false
+  sum
+fun iter_Transform3D_sp_91(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 0
+  tmp1 = 4
+  tmp2 = 0
+  tmp3 = 0
+  tmp4 = 0
+  tmp5 = 2
+  tmp6 = *(x.arr.(0), y.arr.(2))
+  tmp7 = 0 + tmp6
+  tmp8 = 3
+  iter_Transform3D_sp_92(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_92(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 0
+  tmp1 = 4
+  tmp2 = 1
+  tmp3 = 1
+  tmp4 = 4
+  tmp5 = 6
+  tmp6 = *(x.arr.(1), y.arr.(6))
+  tmp7 = sum + tmp6
+  tmp8 = 2
+  iter_Transform3D_sp_93(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_93(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 0
+  tmp1 = 4
+  tmp2 = 2
+  tmp3 = 2
+  tmp4 = 8
+  tmp5 = 10
+  tmp6 = *(x.arr.(2), y.arr.(10))
+  tmp7 = sum + tmp6
+  tmp8 = 1
+  iter_Transform3D_sp_94(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_94(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 0
+  tmp1 = 4
+  tmp2 = 3
+  tmp3 = 3
+  tmp4 = 12
+  tmp5 = 14
+  tmp6 = *(x.arr.(3), y.arr.(14))
+  tmp7 = sum + tmp6
+  tmp8 = 0
+  iter_Transform3D_sp_95(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_95(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = false
+  sum
+fun iter_Transform3D_sp_96(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 0
+  tmp1 = 4
+  tmp2 = 0
+  tmp3 = 0
+  tmp4 = 0
+  tmp5 = 3
+  tmp6 = *(x.arr.(0), y.arr.(3))
+  tmp7 = 0 + tmp6
+  tmp8 = 3
+  iter_Transform3D_sp_97(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_97(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 0
+  tmp1 = 4
+  tmp2 = 1
+  tmp3 = 1
+  tmp4 = 4
+  tmp5 = 7
+  tmp6 = *(x.arr.(1), y.arr.(7))
+  tmp7 = sum + tmp6
+  tmp8 = 2
+  iter_Transform3D_sp_98(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_98(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 0
+  tmp1 = 4
+  tmp2 = 2
+  tmp3 = 2
+  tmp4 = 8
+  tmp5 = 11
+  tmp6 = *(x.arr.(2), y.arr.(11))
+  tmp7 = sum + tmp6
+  tmp8 = 1
+  iter_Transform3D_sp_99(tmp7, x, y, colX, i, j, tmp8)
+fun iter_Transform3D_sp_99(sum, x, y, colX, i, j, k) =
+  let {scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8}
+  scrut = true
+  tmp = 0
+  tmp1 = 4
+  tmp2 = 3
+  tmp3 = 3
+  tmp4 = 12
+  tmp5 = 15
+  tmp6 = *(x.arr.(3), y.arr.(15))
+  tmp7 = sum + tmp6
+  tmp8 = 0
+  iter_Transform3D_sp_100(tmp7, x, y, colX, i, j, tmp8)
+fun model_Transform3D_sp_0(local, position, scaling, rotation) =
+  let {rot, res1, tmp47, tmp48, tmp49, tmp50, tmp51, tmp52, tmp53, tmp54, tmp55, tmp56, tmp57, tmp58}
+  tmp47 = rotateZ_Transform3D_sp_0(rotation.2)
+  tmp48 = rotateY_Transform3D_sp_0(rotation.1)
+  tmp49 = rotateX_Transform3D_sp_0(rotation.0)
+  tmp50 = ident_Transform3D_sp_0(4)
+  tmp51 = multiply_Transform3D_sp_0(tmp49, tmp50)
+  tmp52 = multiply_Transform3D_sp_1(tmp48, tmp51)
+  rot = multiply_Transform3D_sp_1(tmp47, tmp52)
+  tmp53 = transform_Transform3D_sp_0(position.0, position.1, position.2)
+  tmp54 = scale_Transform3D_sp_0(scaling.0, scaling.1, scaling.2)
+  tmp55 = [local.0, local.1, local.2, 1]
+  tmp56 = new Matrix(tmp55, 4, 1)
+  tmp57 = multiply_Transform3D_sp_4(tmp54, tmp56)
+  tmp58 = multiply_Transform3D_sp_3(rot, tmp57)
+  res1 = multiply_Transform3D_sp_5(tmp53, tmp58)
+  [res1.arr.0, res1.arr.1, res1.arr.2]
+fun multiply_Transform3D_sp_0(x, y) =
+  let {res}
+  res = zeros_Transform3D_sp_0(x.r, y.c)
+  iterRow_Transform3D_sp_1(res, x, y, x.r, x.c, y.c, x.r)
+fun multiply_Transform3D_sp_1(x, y) =
+  let {res}
+  res = zeros_Transform3D_sp_0(x.r, y.c)
+  iterRow_Transform3D_sp_6(res, x, y, x.r, x.c, y.c, x.r)
+fun multiply_Transform3D_sp_2(x, y) =
+  let {res}
+  res = zeros_Transform3D_sp_1(x.r, y.c)
+  iterRow_Transform3D_sp_11(res, x, y, x.r, x.c, y.c, x.r)
+fun multiply_Transform3D_sp_3(x, y) =
+  let {res}
+  res = zeros_Transform3D_sp_1(x.r, y.c)
+  iterRow_Transform3D_sp_16(res, x, y, x.r, x.c, y.c, x.r)
+fun multiply_Transform3D_sp_4(x, y) =
+  let {res}
+  res = zeros_Transform3D_sp_1(x.r, y.c)
+  iterRow_Transform3D_sp_21(res, x, y, x.r, x.c, y.c, x.r)
+fun multiply_Transform3D_sp_5(x, y) =
+  let {res}
+  res = zeros_Transform3D_sp_1(x.r, y.c)
+  iterRow_Transform3D_sp_26(res, x, y, x.r, x.c, y.c, x.r)
+fun rotateX_Transform3D_sp_0(angle) =
+  let {s, c2, tmp32, tmp33, tmp34, tmp35, tmp36}
+  s = Math.sin(2.51327412)
+  c2 = Math.cos(2.51327412)
+  tmp32 = ident_Transform3D_sp_0(4)
+  tmp33 = update_Transform3D_sp_13(tmp32, 1, 1, c2)
+  tmp34 = -(s)
+  tmp35 = update_Transform3D_sp_14(tmp33, 1, 2, tmp34)
+  tmp36 = update_Transform3D_sp_15(tmp35, 2, 1, s)
+  update_Transform3D_sp_12(tmp36, 2, 2, c2)
+fun rotateY_Transform3D_sp_0(angle) =
+  let {s1, c3, tmp37, tmp38, tmp39, tmp40, tmp41}
+  s1 = Math.sin(3.1415926535)
+  c3 = Math.cos(3.1415926535)
+  tmp37 = ident_Transform3D_sp_0(4)
+  tmp38 = update_Transform3D_sp_10(tmp37, 0, 0, c3)
+  tmp39 = update_Transform3D_sp_16(tmp38, 0, 2, s1)
+  tmp40 = -(s1)
+  tmp41 = update_Transform3D_sp_17(tmp39, 2, 0, tmp40)
+  update_Transform3D_sp_12(tmp41, 2, 2, c3)
+fun rotateZ_Transform3D_sp_0(angle) =
+  let {s2, c4, tmp42, tmp43, tmp44, tmp45, tmp46}
+  s2 = Math.sin(0)
+  c4 = Math.cos(0)
+  tmp42 = ident_Transform3D_sp_0(4)
+  tmp43 = update_Transform3D_sp_10(tmp42, 0, 0, c4)
+  tmp44 = -(s2)
+  tmp45 = update_Transform3D_sp_18(tmp43, 0, 1, tmp44)
+  tmp46 = update_Transform3D_sp_19(tmp45, 1, 0, s2)
+  update_Transform3D_sp_11(tmp46, 1, 1, c4)
+fun scale_Transform3D_sp_0(sx, sy, sz) =
+  let {tmp29, tmp30, tmp31}
+  tmp29 = ident_Transform3D_sp_0(4)
+  tmp30 = update_Transform3D_sp_33(tmp29, 0, 0, sx)
+  tmp31 = update_Transform3D_sp_34(tmp30, 1, 1, sy)
+  update_Transform3D_sp_35(tmp31, 2, 2, sz)
+fun transform_Transform3D_sp_0(dx, dy, dz) =
+  let {tmp26, tmp27, tmp28}
+  tmp26 = ident_Transform3D_sp_0(4)
+  tmp27 = update_Transform3D_sp_30(tmp26, 0, 3, dx)
+  tmp28 = update_Transform3D_sp_31(tmp27, 1, 3, dy)
+  update_Transform3D_sp_32(tmp28, 2, 3, dz)
+fun update_Transform3D_sp_0(m, i, j, v) =
+  let {tmp23, tmp24, tmp25}
+  tmp23 = *(i, m.c)
+  tmp24 = tmp23 + j
+  tmp25 = Transform3D__Legacy."Mx$Transform3D".setAt(m.arr, tmp24, v)
+  new Matrix(tmp25, m.r, m.c)
+fun update_Transform3D_sp_1(m, i, j, v) =
+  let {tmp23, tmp24, tmp25}
+  tmp23 = *(i, m.c)
+  tmp24 = tmp23 + j
+  tmp25 = Transform3D__Legacy."Mx$Transform3D".setAt(m.arr, tmp24, 1)
+  new Matrix(tmp25, m.r, m.c)
+fun update_Transform3D_sp_10(m, i, j, v) =
+  let {tmp23, tmp24, tmp25}
+  tmp23 = 0
+  tmp24 = 0
+  tmp25 = Transform3D__Legacy."Mx$Transform3D".setAt(m.arr, 0, v)
+  new Matrix(tmp25, m.r, m.c)
+fun update_Transform3D_sp_11(m, i, j, v) =
+  let {tmp23, tmp24, tmp25}
+  tmp23 = 4
+  tmp24 = 5
+  tmp25 = Transform3D__Legacy."Mx$Transform3D".setAt(m.arr, 5, v)
+  new Matrix(tmp25, m.r, m.c)
+fun update_Transform3D_sp_12(m, i, j, v) =
+  let {tmp23, tmp24, tmp25}
+  tmp23 = 8
+  tmp24 = 10
+  tmp25 = Transform3D__Legacy."Mx$Transform3D".setAt(m.arr, 10, v)
+  new Matrix(tmp25, m.r, m.c)
+fun update_Transform3D_sp_13(m, i, j, v) =
+  let {tmp23, tmp24, tmp25}
+  tmp23 = 4
+  tmp24 = 5
+  tmp25 = Transform3D__Legacy."Mx$Transform3D".setAt(m.arr, 5, v)
+  new Matrix(tmp25, m.r, m.c)
+fun update_Transform3D_sp_14(m, i, j, v) =
+  let {tmp23, tmp24, tmp25}
+  tmp23 = 4
+  tmp24 = 6
+  tmp25 = Transform3D__Legacy."Mx$Transform3D".setAt(m.arr, 6, v)
+  new Matrix(tmp25, m.r, m.c)
+fun update_Transform3D_sp_15(m, i, j, v) =
+  let {tmp23, tmp24, tmp25}
+  tmp23 = 8
+  tmp24 = 9
+  tmp25 = Transform3D__Legacy."Mx$Transform3D".setAt(m.arr, 9, v)
+  new Matrix(tmp25, m.r, m.c)
+fun update_Transform3D_sp_16(m, i, j, v) =
+  let {tmp23, tmp24, tmp25}
+  tmp23 = 0
+  tmp24 = 2
+  tmp25 = Transform3D__Legacy."Mx$Transform3D".setAt(m.arr, 2, v)
+  new Matrix(tmp25, m.r, m.c)
+fun update_Transform3D_sp_17(m, i, j, v) =
+  let {tmp23, tmp24, tmp25}
+  tmp23 = 8
+  tmp24 = 8
+  tmp25 = Transform3D__Legacy."Mx$Transform3D".setAt(m.arr, 8, v)
+  new Matrix(tmp25, m.r, m.c)
+fun update_Transform3D_sp_18(m, i, j, v) =
+  let {tmp23, tmp24, tmp25}
+  tmp23 = 0
+  tmp24 = 1
+  tmp25 = Transform3D__Legacy."Mx$Transform3D".setAt(m.arr, 1, v)
+  new Matrix(tmp25, m.r, m.c)
+fun update_Transform3D_sp_19(m, i, j, v) =
+  let {tmp23, tmp24, tmp25}
+  tmp23 = 4
+  tmp24 = 4
+  tmp25 = Transform3D__Legacy."Mx$Transform3D".setAt(m.arr, 4, v)
+  new Matrix(tmp25, m.r, m.c)
+fun update_Transform3D_sp_2(m, i, j, v) =
+  let {tmp23, tmp24, tmp25}
+  tmp23 = *(i, m.c)
+  tmp24 = tmp23 + j
+  tmp25 = Transform3D__Legacy."Mx$Transform3D".setAt(m.arr, tmp24, 1)
+  new Matrix(tmp25, m.r, m.c)
+fun update_Transform3D_sp_20(m, i, j, v) =
+  let {tmp23, tmp24, tmp25}
+  tmp23 = 0
+  tmp24 = 0
+  tmp25 = Transform3D__Legacy."Mx$Transform3D".setAt(m.arr, 0, v)
+  new Matrix(tmp25, m.r, m.c)
+fun update_Transform3D_sp_21(m, i, j, v) =
+  let {tmp23, tmp24, tmp25}
+  tmp23 = 0
+  tmp24 = 3
+  tmp25 = Transform3D__Legacy."Mx$Transform3D".setAt(m.arr, 3, v)
+  new Matrix(tmp25, m.r, m.c)
+fun update_Transform3D_sp_22(m, i, j, v) =
+  let {tmp23, tmp24, tmp25}
+  tmp23 = 12
+  tmp24 = 12
+  tmp25 = Transform3D__Legacy."Mx$Transform3D".setAt(m.arr, 12, v)
+  new Matrix(tmp25, m.r, m.c)
+fun update_Transform3D_sp_23(m, i, j, v) =
+  let {tmp23, tmp24, tmp25}
+  tmp23 = 12
+  tmp24 = 13
+  tmp25 = Transform3D__Legacy."Mx$Transform3D".setAt(m.arr, 13, v)
+  new Matrix(tmp25, m.r, m.c)
+fun update_Transform3D_sp_24(m, i, j, v) =
+  let {tmp23, tmp24, tmp25}
+  tmp23 = 12
+  tmp24 = 14
+  tmp25 = Transform3D__Legacy."Mx$Transform3D".setAt(m.arr, 14, v)
+  new Matrix(tmp25, m.r, m.c)
+fun update_Transform3D_sp_25(m, i, j, v) =
+  let {tmp23, tmp24, tmp25}
+  tmp23 = 12
+  tmp24 = 15
+  tmp25 = Transform3D__Legacy."Mx$Transform3D".setAt(m.arr, 15, v)
+  new Matrix(tmp25, m.r, m.c)
+fun update_Transform3D_sp_26(m, i, j, v) =
+  let {tmp23, tmp24, tmp25}
+  tmp23 = 0
+  tmp24 = 0
+  tmp25 = Transform3D__Legacy."Mx$Transform3D".setAt(m.arr, 0, v)
+  new Matrix(tmp25, m.r, m.c)
+fun update_Transform3D_sp_27(m, i, j, v) =
+  let {tmp23, tmp24, tmp25}
+  tmp23 = 1
+  tmp24 = 1
+  tmp25 = Transform3D__Legacy."Mx$Transform3D".setAt(m.arr, 1, v)
+  new Matrix(tmp25, m.r, m.c)
+fun update_Transform3D_sp_28(m, i, j, v) =
+  let {tmp23, tmp24, tmp25}
+  tmp23 = 2
+  tmp24 = 2
+  tmp25 = Transform3D__Legacy."Mx$Transform3D".setAt(m.arr, 2, v)
+  new Matrix(tmp25, m.r, m.c)
+fun update_Transform3D_sp_29(m, i, j, v) =
+  let {tmp23, tmp24, tmp25}
+  tmp23 = 3
+  tmp24 = 3
+  tmp25 = Transform3D__Legacy."Mx$Transform3D".setAt(m.arr, 3, v)
+  new Matrix(tmp25, m.r, m.c)
+fun update_Transform3D_sp_3(m, i, j, v) =
+  let {tmp23, tmp24, tmp25, tup_2}
+  tmp23 = 0
+  tmp24 = 0
+  tup_2 = [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+  tmp25 = tup_2
+  new Matrix(tmp25, m.r, m.c)
+fun update_Transform3D_sp_30(m, i, j, v) =
+  let {tmp23, tmp24, tmp25, tup_7}
+  tmp23 = 0
+  tmp24 = 3
+  tup_7 = [1, 0, 0, 11, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]
+  tmp25 = tup_7
+  new Matrix(tmp25, m.r, m.c)
+fun update_Transform3D_sp_31(m, i, j, v) =
+  let {tmp23, tmp24, tmp25, tup_8}
+  tmp23 = 4
+  tmp24 = 7
+  tup_8 = [1, 0, 0, 11, 0, 1, 0, 4, 0, 0, 1, 0, 0, 0, 0, 1]
+  tmp25 = tup_8
+  new Matrix(tmp25, m.r, m.c)
+fun update_Transform3D_sp_32(m, i, j, v) =
+  let {tmp23, tmp24, tmp25, tup_9}
+  tmp23 = 8
+  tmp24 = 11
+  tup_9 = [1, 0, 0, 11, 0, 1, 0, 4, 0, 0, 1, 51, 0, 0, 0, 1]
+  tmp25 = tup_9
+  new Matrix(tmp25, m.r, m.c)
+fun update_Transform3D_sp_33(m, i, j, v) =
+  let {tmp23, tmp24, tmp25, tup_10}
+  tmp23 = 0
+  tmp24 = 0
+  tup_10 = [0.4, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]
+  tmp25 = tup_10
+  new Matrix(tmp25, m.r, m.c)
+fun update_Transform3D_sp_34(m, i, j, v) =
+  let {tmp23, tmp24, tmp25, tup_11}
+  tmp23 = 4
+  tmp24 = 5
+  tup_11 = [0.4, 0, 0, 0, 0, 0.19, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]
+  tmp25 = tup_11
+  new Matrix(tmp25, m.r, m.c)
+fun update_Transform3D_sp_35(m, i, j, v) =
+  let {tmp23, tmp24, tmp25, tup_12}
+  tmp23 = 8
+  tmp24 = 10
+  tup_12 = [0.4, 0, 0, 0, 0, 0.19, 0, 0, 0, 0, 0.19, 0, 0, 0, 0, 1]
+  tmp25 = tup_12
+  new Matrix(tmp25, m.r, m.c)
+fun update_Transform3D_sp_36(m, i, j, v) =
+  let {tmp23, tmp24, tmp25}
+  tmp23 = 3
+  tmp24 = 3
+  tmp25 = Transform3D__Legacy."Mx$Transform3D".setAt(m.arr, 3, 1)
+  new Matrix(tmp25, m.r, m.c)
+fun update_Transform3D_sp_4(m, i, j, v) =
+  let {tmp23, tmp24, tmp25, tup_3}
+  tmp23 = 4
+  tmp24 = 5
+  tup_3 = [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+  tmp25 = tup_3
+  new Matrix(tmp25, m.r, m.c)
+fun update_Transform3D_sp_5(m, i, j, v) =
+  let {tmp23, tmp24, tmp25, tup_4}
+  tmp23 = 8
+  tmp24 = 10
+  tup_4 = [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0]
+  tmp25 = tup_4
+  new Matrix(tmp25, m.r, m.c)
+fun update_Transform3D_sp_6(m, i, j, v) =
+  let {tmp23, tmp24, tmp25, tup_5}
+  tmp23 = 12
+  tmp24 = 15
+  tup_5 = [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]
+  tmp25 = tup_5
+  new Matrix(tmp25, m.r, m.c)
+fun update_Transform3D_sp_7(m, i, j, v) =
+  let {tmp23, tmp24, tmp25}
+  tmp23 = 0
+  tmp24 = 3
+  tmp25 = Transform3D__Legacy."Mx$Transform3D".setAt(m.arr, 3, v)
+  new Matrix(tmp25, m.r, m.c)
+fun update_Transform3D_sp_8(m, i, j, v) =
+  let {tmp23, tmp24, tmp25}
+  tmp23 = 4
+  tmp24 = 7
+  tmp25 = Transform3D__Legacy."Mx$Transform3D".setAt(m.arr, 7, v)
+  new Matrix(tmp25, m.r, m.c)
+fun update_Transform3D_sp_9(m, i, j, v) =
+  let {tmp23, tmp24, tmp25}
+  tmp23 = 8
+  tmp24 = 11
+  tmp25 = Transform3D__Legacy."Mx$Transform3D".setAt(m.arr, 11, v)
+  new Matrix(tmp25, m.r, m.c)
+fun zeros_Transform3D_sp_0(r, c) =
+  let {tmp21, tmp22, tup_1}
+  tmp21 = 16
+  tup_1 = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+  tmp22 = tup_1
+  new Matrix(tmp22, r, c)
+fun zeros_Transform3D_sp_1(r, c) =
+  let {tmp21, tmp22, tup_6}
+  tmp21 = 4
+  tup_6 = [0, 0, 0, 0]
+  tmp22 = tup_6
+  new Matrix(tmp22, r, c)

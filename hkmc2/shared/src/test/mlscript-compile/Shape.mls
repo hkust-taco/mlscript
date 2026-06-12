@@ -1,69 +1,84 @@
+#config(liftDefns: None)
+
 import "./Block.mls"
 import "./Option.mls"
+import "./CachedHash.mls"
+import "./ShapeSet.mjs"
 
-open Block { Literal, ClassSymbol, showSymbol, isPrimitiveType, isPrimitiveTypeOf }
+open Block { Literal, ConcreteClassSymbol, isPrimitiveType, isPrimitiveTypeOf }
 open Option
 
 type Shape = Shape.Shape
+type ShSet = ShapeSet.ShapeSet
 
 module Shape with...
 
-class Shape with
+val printer = Block.Printer(None)
+
+class Shape extends CachedHash with
   constructor
     Dyn()
     Lit(val l: Literal)
-    Arr(val shapes: Array[Shape])
-    Class(val sym: ClassSymbol, val params: Array[Shape])
+    Arr(val shapes: Array[ShSet])
+    Class(val sym: ConcreteClassSymbol, val fields: Array[ShSet]) // TODO: track the auxParams as well
 
 fun show(s: Shape) =
   if s is
     Dyn then "Dyn"
-    Lit(lit) then "Lit(" + Block.showLiteral(lit) + ")"
-    Arr(shapes) then "Arr(" + shapes.map(show).join(", ") + ")"
-    Class(sym, params) then "Class(" + showSymbol(sym) + ", [" + params.map(show).join(", ") + "])"
+    Lit(lit) then "Lit(" + printer.showLiteral(lit) + ")"
+    Arr(shapes) then "Arr(" + shapes.map(_.toString()).join(", ") + ")"
+    Class(sym, fields) then "Class(" + printer.showSymbol(sym) + ", {" + [...fields.entries()].map(e => e.0 + ": " + e.1.toString()).join(", ") + "})" 
 
 fun sel(s1: Shape, s2: Shape): Array[Shape] = 
   if [s1, s2] is
-    [Class(sym, params), Lit(n)] and n is Str
-      and sym.args is Some(args)
-      and args.find(_ == n)
-        == () then []
-        is i then [params.(i)]
-    [Dyn, Lit(n)] and n is Str
-      then [Dyn()]
-    [Arr(shapes), Lit(n)] and n is Int
-      then [shapes.(n)]
+    [Class(ConcreteClassSymbol(_, _, paramsOpt, auxParams, _), params), Lit(n)] and n is Str and paramsOpt is Some(paramsSymb) and
+      paramsSymb.map(_.sym.name).indexOf(n) is
+        -1 then []
+        n then params.(n).values()
+    [Class(ConcreteClassSymbol, p), Dyn] then [Dyn()]
+    [Dyn, Lit(n)] and 
+      n is Str then [Dyn()]
+      n is Int then [Dyn()]
+      else throw Error("Unknown selection")
+    [Arr(shapes), Lit(n)] and // n can be both string or integer
+      n < shapes.length then shapes.(n).values() // This utilizes the string and number conversion in JS lol
+      else throw Error("Array out of bound")
     [Arr(shapes), Dyn] then
-      shapes
-    [Dyn, Lit(n)] and n is Int
-      then [Dyn()]
-    [Dyn, Dyn]
-      then [Dyn()]
-    else [] // TODO: return no possibility instead of err?
+      shapes.flatMap(_.values())
+    [Dyn, Dyn] then [Dyn()]
+    else []
 
 fun static(s: Shape) = 
   if s is
     Dyn then false
     Lit(l) then not (l is Str and isPrimitiveType(l)) // redundant bracket?
-    Class(_, params) then params.every(static)
-    Arr(shapes) then shapes.every(static)
+    Class(_, params) then params.every(_.values() is [v] and static(v))
+    Arr(shapes) then shapes.every(_.values() is [v] and static(v))    
 
 open Block { Case }
 
 fun silh(p: Case): Shape = if p is
   Block.Lit(l) then Lit(l)
-  Block.Cls(sym, path) then
-    val size = if sym.args is Some(i) then i else 0
-    Class(sym, Array(size).fill(Dyn))
-  Block.Tup(n) then Arr(Array(n).fill(Dyn))
+  Block.Cls(clsSymb, path) then
+    let paramsSize = if clsSymb.paramsOpt is Some(params) then params.length else 0
+    Class(clsSymb, Array(paramsSize).fill(ShapeSet.mkDyn()))
+  Block.Tup(n) then Arr(Array(n).fill(ShapeSet.mkDyn()))
 
-// TODO: use Option instead, since all of them return at most one shape
+fun getActualClass(c) = if not (c."class" is undefined) then c.class else c
+fun isSubClassOf(d, b) =
+  let dClass = getActualClass(d)
+  let bClass = getActualClass(b)
+  dClass == bClass || bClass.isPrototypeOf(dClass)
+
 fun filter(s: Shape, p: Case): Array[Shape] =
   if [s, p] is
     [Lit(l1), Block.Lit(l2)] and l1 == l2 then [s]
-    [Lit(l), Block.Cls(c, _)] and isPrimitiveTypeOf(c, l) then [s]
+    [Lit(l), Block.Cls(c, _)] and isPrimitiveTypeOf(c, l) then [s] 
     [Arr(ls), Block.Tup(n)] and ls.length == n then [s]
-    [Class(c1, _), Block.Cls(c2, _)] and c1.name == c2.name then [s]
+    [Class(c1, _), Block.Cls(c2, _)] and c1 is ConcreteClassSymbol and c2 is ConcreteClassSymbol and 
+      c1 == c2 then [s] // TODO: is === possible?
+    [Class(c1, _), Block.Cls(c2, _)] and c1 is ConcreteClassSymbol and c2 is ConcreteClassSymbol and 
+      isSubClassOf(c1.value, c2.value) then [s]
     [Dyn, _] then [silh(p)]
     else []
 
@@ -72,6 +87,10 @@ fun rest(s: Shape, p: Case): Array[Shape] =
     [Lit(l1), Block.Lit(l2)] and l1 == l2 then []
     [Lit(l), Block.Cls(c, _)] and isPrimitiveTypeOf(c, l) then []
     [Arr(ls), Block.Tup(n)] and ls.length == n then []
-    [Class(c1, _), Block.Cls(c2, _)] and c1.name == c2.name then []
+    [Class(c1, _), Block.Cls(c2, _)] and c1 is ConcreteClassSymbol and c2 is ConcreteClassSymbol and 
+      c1 == c2 then [] // TODO: is === possible?
+    [Class(c1, _), Block.Cls(c2, _)] and c1 is ConcreteClassSymbol and c2 is ConcreteClassSymbol and 
+      isSubClassOf(c1.value, c2.value) then []
+    [Class(c1, _), Block.Cls(c2, _)] and c1.name == c2.name then [s]
     [Dyn, _] then [s]
     else [s]

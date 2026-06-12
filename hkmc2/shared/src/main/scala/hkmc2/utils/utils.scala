@@ -74,8 +74,9 @@ class DebugPrinter:
         val flags = Buffer.empty[Str]
         if isMethod then flags += "method"
         flags.mkString("(", ", ", ")")
-      case FldFlags(mut, spec, pat, value) =>
+      case FldFlags(reflConstraint, mut, spec, pat, value) =>
         val flags = Buffer.empty[Str]
+        reflConstraint.map(flags += _.str)
         if mut then flags += "mut"
         if spec then flags += "spec"
         if pat then flags += "pat"

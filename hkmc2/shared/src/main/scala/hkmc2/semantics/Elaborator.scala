@@ -342,6 +342,8 @@ object Elaborator:
     val prettyPrintSymbol = TempSymbol(N, "prettyPrint")
     val termSymbol = TempSymbol(N, "Term")
     val blockSymbol = TempSymbol(N, "Block")
+    val shapeSetSymbol = TempSymbol(N, "ShapeSet")
+    val specializeHelpersSymbol = TempSymbol(N, "SpecializeHelpers")
     val optionSymbol = TempSymbol(N, "option")
     val wasmSymbol = TempSymbol(N, "wasm")
     val nonLocalRetHandlerTrm =
@@ -1737,9 +1739,9 @@ extends Importer with ucs.SplitElaborator:
             val allParams = ps.fold(Nil):
               _.params.flatMap:
                 // Only `pat` flag is `true`.
-                case p @ Param(flags = FldFlags(false, false, true, false)) => S(p)
+                case p @ Param(flags = FldFlags(N, false, false, true, false)) => S(p)
                 // All flags are `false`.
-                case p @ Param(flags = FldFlags(false, false, false, false)) => S(p)
+                case p @ Param(flags = FldFlags(N, false, false, false, false)) => S(p)
                 case Param(flags, sym, _, _) =>
                   raise(ErrorReport(msg"Unexpected pattern parameter ${sym.name} with modifiers: ${flags.show}" -> sym.toLoc :: Nil))
                   N

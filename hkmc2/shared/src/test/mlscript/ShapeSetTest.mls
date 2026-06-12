@@ -1,0 +1,74 @@
+:js
+
+import "../mlscript-compile/ShapeSet.mls"
+import "../mlscript-compile/Block.mls"
+import "../mlscript-compile/Shape.mls"
+import "../mlscript-compile/Option.mls"
+
+open ShapeSet
+open Shape { Lit, Arr, Class, Dyn }
+open Option
+open Block { Tup, ConcreteClassSymbol, Param, Symbol }
+
+let x = mkBot()
+//│ x = {}
+
+if x.isEmpty() then 0
+//│ = 0
+
+let x = liftMany([Lit(1), Lit(2)])
+let y = liftMany([Arr([Lit(1)]), Arr([Lit(2)])])
+//│ x = {Lit(1),Lit(2)}
+//│ y = {Arr([Lit(1)]),Arr([Lit(2)])}
+
+union2(x, y)
+//│ = {Arr([Lit(1)]),Arr([Lit(2)]),Lit(1),Lit(2)}
+
+union2(mkDyn(), x)
+//│ = {Dyn()}
+
+union(mkLit(1), mkLit(2), mkLit(3))
+//│ = {Lit(1),Lit(2),Lit(3)}
+
+mkArr([x, y])
+//│ = {Arr([{Lit(1),Lit(2)}, {Arr([Lit(1)]),Arr([Lit(2)])}])}
+
+class C(val a)
+val clsSym = ConcreteClassSymbol("C", C, Some([Param(None, Symbol("a"))]), [], false)
+//│ clsSym = ConcreteClassSymbol(
+//│   "C",
+//│   fun C { class: class C },
+//│   Some([Param(None, Symbol("a"))]),
+//│   [],
+//│   false
+//│ )
+
+:fixme
+let x = liftMany([Class(clsSym, [mkLit(42)]), Arr([mkLit(1), mkLit("a")])])
+let y = liftMany([Lit(1), Lit("a")])
+selSet(x, y)
+//│ ═══[RUNTIME ERROR] Error: Array out of bound
+//│ x = {Arr([{Lit(1)}, {Lit("a")}]),Class(ConcreteClassSymbol("C", fun C { class: class C }, Some([Param(None, Symbol("a"))]), [], false), [{Lit(42)}])}
+//│ y = {Lit("a"),Lit(1)}
+
+mkClass(clsSym, [mkLit(1)])
+//│ = {Class(ConcreteClassSymbol("C", fun C { class: class C }, Some([Param(None, Symbol("a"))]), [], false), [{Lit(1)}])}
+
+filterSet(liftMany([Lit(1), Lit("s"), Arr([Lit(1), Lit(2), Lit(3)])]), Tup(3))
+//│ = {Arr([Lit(1), Lit(2), Lit(3)])}
+
+let x = mkLit(1)
+let y = Block.Cls(Block.Symbol("Bool"), 0)
+filterSet(x, y)
+//│ = {}
+//│ x = {Lit(1)}
+//│ y = Cls(Symbol("Bool"), 0)
+
+Shape.filter(Shape.Lit(1), Block.Lit(1))
+//│ = [Lit(1)]
+
+[Shape.Lit(1), Block.Lit(1)] is [Shape.Lit(l1), Block.Lit(l2)]
+//│ = true
+
+Shape.silh(Block.Lit(1))
+//│ = Lit(1)

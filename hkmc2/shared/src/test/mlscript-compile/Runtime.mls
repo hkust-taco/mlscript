@@ -120,6 +120,24 @@ module Str with
   @mayNotRaiseEffects
   fun leave(string, n) = string.slice(n)
 
+// A global map for Symbols defined during reflection instrumentation to ensure uniqueness of symbols across different staged functions and compilation units
+// A staged class with no parameters has the same runtime value as its staged companion,
+// and this causes an unwated collision when creating a symbol for both the class and the module, 
+// so we need to split the map into the which type of symbol used.
+module SymbolMap with
+  val classMap = new Map()
+  val moduleMap = new Map()
+
+  fun checkClassMap(key: Class, value) = if
+    let v = classMap.get(key)
+    v is Unit then classMap.set(key, value); value
+    else v
+  
+  fun checkModuleMap(key: Class, value) = if
+    let v = moduleMap.get(key)
+    v is Unit then moduleMap.set(key, value); value
+    else v
+
 // Re-export rendering functions
 val render = Rendering.render
 

@@ -21,7 +21,7 @@ class CompilerTest extends AnyFunSuite:
         None
     .toMap + ("/std/Prelude.mls" -> node.fs.readFileSync(preludePath, "utf-8"))
   
-  private val paths = new Paths("/std/Prelude.mls", "/std/Runtime.mjs", "/std/Term.mjs")
+  private val paths = new Paths("/std/Prelude.mls", "/std/Runtime.mjs", "/std/Term.mjs", "/std/Block.mls", "/std/SpecializeHelpers.mls", "/std/Option.mls", "/std/ShapeSet.mls")
   
   private def createCompiler(): (InMemoryFileSystem, Compiler) =
     val stdLib = loadStandardLibrary()

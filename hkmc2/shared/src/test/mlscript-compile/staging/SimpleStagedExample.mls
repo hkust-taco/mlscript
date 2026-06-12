@@ -1,0 +1,28 @@
+#config(noFreeze: true)
+
+staged module SimpleStagedExample with
+  fun f(x, y) = x + y
+  fun fib(n) = if n is 
+    1 then 1
+    2 then 1
+    n then fib(n - 1) + fib(n - 2)
+  fun foo() = 
+    f(2, 3) + fib(10)
+  fun spaces() = ["\t", "\n", "\r"]
+  staged class Bar(val x) with
+    fun bar() = x
+  staged class Foo(val x) with
+    fun foo(b) =
+      if b is
+        1 then x.bar() + 1
+        2 then x.bar() + 2
+        else x.bar()
+  fun baz() = Foo(Bar(1)).foo(1)
+  fun foobar(x) =
+    let y = if x is 0 then 1 else 0
+    let z = if y is Num then 0 else 1
+    y + z
+  fun bazbaz(x) = not x
+
+
+

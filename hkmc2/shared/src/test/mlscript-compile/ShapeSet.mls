@@ -1,0 +1,210 @@
+#config(liftDefns: None)
+
+import "./Block.mls"
+import "./CachedHash.mls"
+import "./Option.mls"
+import "./Predef.mls"
+import "./Shape.mls"
+import "./StrOps.mls"
+import "./Runtime.mls"
+
+open Block {ConcreteClassSymbol, Path, Symbol, Param}
+open Shape {Dyn, Lit, Arr, Class}
+open Predef
+open Option
+open StrOps
+
+type ShapeSet = ShapeSet.ShapeSet
+
+module ShapeSet with...
+
+class ShapeSet(val shapeset: Map[String, Shape]) extends CachedHash with
+  fun keys() = shapeset.keys().toArray().toSorted()
+
+  fun values() = shapeset.values().toArray()
+
+  fun isEmpty() = shapeset.size == 0
+ 
+  fun contains(s: Shape) = shapeset.has(s.hash())
+
+  fun flatMap(f) = liftMany(values().flatMap(f))
+
+  fun toString() = "{" ~ keys().toSorted().toString() ~ "}"
+
+  fun isDyn() = shapeset.size == 1 and values().0 is Dyn
+
+module ShapeSet with
+  fun empty = ShapeSet(new Map)
+
+fun mkShapeSet(entries) =
+  let shapeMap = new Map(entries)
+  let dyn = Dyn()
+  if shapeMap.has(dyn.hash()) then ShapeSet(new Map([[dyn.hash(), dyn]]))
+  else ShapeSet(shapeMap)
+
+fun lift(s: Shape) = mkShapeSet([[s.hash(), s]])
+
+fun liftMany(arr: Array[Shape]) = 
+  mkShapeSet(arr.map(s => [s.hash(), s]))
+
+fun union2(s1: ShapeSet, s2: ShapeSet) = 
+  if s1.isDyn() then s1
+  else if s2.isDyn() then s2
+  else mkShapeSet([...s1.shapeset, ...s2.shapeset])
+
+fun union(...s) =
+  if s.length is 0 then ShapeSet.empty
+  else s.reduce((acc, next) => union2(acc, next))
+
+fun flat(arr: Array[ShapeSet]) = mkShapeSet(arr.map(_.shapeset.entries().toArray()).flat())
+
+fun prod(xs) = xs.reduce((a, b) => a.flatMap(d => b.map(e => [...d, e])), [[]])
+
+// lifted constructors
+
+fun mkBot() = ShapeSet.empty
+
+fun mkDyn() = lift(Dyn())
+
+fun mkLit(l) = lift(Lit(l))
+
+fun mkArr(shapes: Array[ShapeSet]) = 
+  lift(Arr(shapes))
+
+fun mkClass(sym: ConcreteClassSymbol, params: Array[ShapeSet]) = 
+  lift(Class(sym, params))
+
+fun mkClassFromMap(sym: ConcreteClassSymbol, paramsMap: Map[String, ShapeSet], psOpt: Option[Array[Array[Param]]]) =
+  if sym is ConcreteClassSymbol(name, value, paramsOpt, auxParams, redir) then
+    let entries = [...paramsMap.entries()]
+    let keys = entries.map(a =>
+      let s = Symbol(a.0)
+      if psOpt is Some(pss) then 
+        let found = pss.flat().find(p => p.sym.name === a.0)
+        if found is Runtime.Unit then Param(None, s)
+        else found
+      else Param(None, s)
+    )
+    let params = entries.map(_.1)
+    let newSym = ConcreteClassSymbol(name, value, Some(keys), auxParams, redir)
+    lift(Class(newSym, params))
+
+fun filterSet(s: ShapeSet, p: Block.Case) = s.flatMap(Shape.filter(_, p))
+
+fun restSet(s: ShapeSet, p: Block.Case) = s.flatMap(Shape.rest(_, p))
+
+fun isLitShape(s: ShapeSet) = s.values().length is 1 and s.values().0 is Lit(l)
+fun isFalseShape(s: ShapeSet) = s.values().length is 1 and s.values().0 is Lit(l) and l is false
+fun isTrueShape(s: ShapeSet) = s.values().length is 1 and s.values().0 is Lit(l) and l is true
+fun isZeroShape(s: ShapeSet) = s.values().length is 1 and s.values().0 is Lit(l) and l is 0
+
+fun binOpSet(op: Str, s1: ShapeSet, s2: ShapeSet) = 
+  if 
+    op is 
+      "&&" and 
+        isFalseShape(s1) then mkLit(false)
+        isFalseShape(s2) then mkLit(false)
+      "||" and
+        isTrueShape(s1) then mkLit(true)
+        isTrueShape(s2) then mkLit(true)
+      "*" and
+        isZeroShape(s1) then mkLit(0) // unsound if user writes 0 * "hello" => NaN
+        isZeroShape(s2) then mkLit(0)
+    s1.isDyn() then mkDyn()
+    s2.isDyn() then mkDyn()
+    else
+      let pairs = prod([s1.values(), s2.values()])
+      let res = pairs.map(pair => 
+        if pair.0 is Lit(l1) and pair.1 is Lit(l2) and op is
+          "+" then Lit(l1 + l2)
+          "-" then Lit(l1 - l2)
+          "*" then Lit(l1 * l2)
+          "/" then Lit(l1 / l2)
+          "%" then Lit(l1 % l2)
+          "==" then Lit(l1 == l2)
+          "!=" then Lit(l1 != l2)
+          "<" then Lit(l1 < l2)
+          "<=" then Lit(l1 <= l2)
+          ">" then Lit(l1 > l2)
+          ">=" then Lit(l1 >= l2)
+          "===" then Lit(l1 === l2)
+          "!==" then Lit(l1 !== l2)
+          "&&" then Lit(l1 && l2)
+          "||" then Lit(l1 || l2)
+        else Dyn()
+      )
+      if res.some(_ is Dyn) then mkDyn()
+      else
+        let st = liftMany(res)
+        let isBoolOp = if op is
+          "==" then true
+          "!=" then true
+          "<" then true
+          "<=" then true
+          ">" then true
+          ">=" then true
+          "===" then true
+          "!==" then true
+          "&&" then true
+          "||" then true
+          else false
+        if isBoolOp and st.values().length > 1 then mkDyn()
+        else st
+
+fun selSet(s1: ShapeSet, s2: ShapeSet) = 
+  prod([s1.values(), s2.values()])
+    .flatMap(pair => Shape.sel(pair.0, pair.1))
+    |> liftMany
+  
+fun staticSet(s: ShapeSet) =
+  let v = s.values()
+  if v.length ==
+    1 then Shape.static(v.0)
+    else false
+
+fun valOf(s : Shape) =
+  if s is
+    Dyn() then throw Error("valOf on Dyn")
+    Lit(l) then l
+    Arr(shapes) then shapes.map((x, _, _) => valOfSet(x))
+    Class(ConcreteClassSymbol(name, value, paramsOpt, auxParams, _), params) then new! value(...params.map(valOfSet))
+    else throw Error("Unknown shape: " + s)
+
+fun valOfSet(s : ShapeSet) = 
+  if s.values().length ==
+    1 then valOf(s.values().0)
+    else throw Error("valOfSet on non-singleton ShapeSet")
+  
+let idCounter = 0
+fun freshId(prefix) =
+  set idCounter = idCounter + 1
+  Block.Symbol(prefix + "_" + idCounter.toString())
+
+private fun shape2path(s: Shape, allocs) =
+  // assert Shape.static(s)
+  if s is
+    Lit(l) then [Block.End(), Block.ValueLit(l)]
+    Arr(v) then
+      let mapped = v.map(shapeset2path(_, allocs))
+      let blocks = mapped.map(_.0)
+      blocks.reverse()
+      let paths = mapped.map(_.1) 
+      let tupSym = freshId("tup")
+      allocs.push(tupSym)
+      let tupAssign = Block.Assign(tupSym, Block.Tuple(paths.map(Block.Arg(_))), Block.End())
+      let fullBlock = foldr((acc, b) => Block.concat(b, acc))(tupAssign, ...blocks)
+      [fullBlock, Block.ValueSimpleRef(tupSym)]
+    Class(sym, fields) then
+      let mapped = fields.map(shapeset2path(_, allocs))
+      let blocks = mapped.map(_.0)
+      blocks.reverse()
+      let paths = mapped.map(_.1) 
+      let clsSym = freshId("obj")
+      allocs.push(clsSym)
+      let clsAssign = Block.Assign(clsSym, Block.Instantiate(Block.ValueMemberRef(sym), paths.map(Block.Arg(_))), Block.End())
+      let fullBlock = foldr((acc, b) => Block.concat(b, acc))(clsAssign, ...blocks)
+      [fullBlock, Block.ValueSimpleRef(clsSym)]
+  
+fun shapeset2path(s: ShapeSet, allocs) =
+  assert staticSet(s)
+  shape2path(s.values().0, allocs)

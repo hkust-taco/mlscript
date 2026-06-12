@@ -1,0 +1,87 @@
+#config(noFreeze: true, noModuleCheck: true, liftDefns: None, disableDataFlowAnalysis: true, deadParamElim: Some(DeadParamElim(debug: false, mono: true)))
+import "../SimpleStagedExample.mls" as SimpleStagedExample__Legacy
+import "../LinkingGeneratedClasses.mls" as LinkingGeneratedClasses__Legacy
+
+module CombinedModule with
+  module SimpleStagedExample with
+      class Bar(val x) with
+        ()
+        fun bar() = x
+      class Foo(val x) with
+        ()
+        fun foo(b) =
+          let {tmp, tmp1}
+          if b is
+            1 then
+              tmp = x.bar()
+              tmp + 1
+            2 then
+              tmp1 = x.bar()
+              tmp1 + 2
+            else x.bar()
+      fun baz() = 2
+      fun bazbaz(x) = not x
+      fun f(x, y) = x + y
+      fun fib(n) =
+        let {n1, tmp2, tmp3, tmp4, tmp5}
+        if n is
+          1 then 1
+          2 then 1
+          else
+            n1 = n
+            tmp2 = n1 - 1
+            tmp3 = fib(tmp2)
+            tmp4 = n1 - 2
+            tmp5 = fib(tmp4)
+            tmp3 + tmp5
+      fun foo() = 60
+      fun foobar(x) =
+        let {y1, z, tmp10, tmp11}
+        if x is
+          0 then
+            tmp10 = 1
+          else
+            tmp10 = 0
+        y1 = tmp10
+        tmp11 = 0
+        z = 0
+        y1 + 0
+      fun spaces() = ["\t", "\n", "\r"]
+  class S with
+    ()
+  module LinkingGeneratedClasses with
+      class D
+      fun f() =
+        let {tmp1}
+        tmp1 = new LinkingGeneratedClasses__Legacy."Function$1$LinkingGeneratedClasses"()
+        tmp1
+      fun g() =
+        let {tmp2}
+        tmp2 = new LinkingGeneratedClasses__Legacy."Function$$LinkingGeneratedClasses"()
+        tmp2
+      fun test1 = new LinkingGeneratedClasses__Legacy."C$LinkingGeneratedClasses"()
+      fun test2(x) =
+        let {tmp}
+        if x is
+          true then
+            tmp = new S()
+            f_S_sp_0(tmp, 1)
+          else new S()
+      fun test3 = new D()
+open CombinedModule
+open SimpleStagedExample
+open LinkingGeneratedClasses
+fun f_SimpleStagedExample_sp_0(x, y) = 5
+fun fib_SimpleStagedExample_sp_0(n) = 55
+fun fib_SimpleStagedExample_sp_1(n) = 34
+fun fib_SimpleStagedExample_sp_2(n) = 21
+fun fib_SimpleStagedExample_sp_3(n) = 13
+fun fib_SimpleStagedExample_sp_4(n) = 8
+fun fib_SimpleStagedExample_sp_5(n) = 5
+fun fib_SimpleStagedExample_sp_6(n) = 3
+fun fib_SimpleStagedExample_sp_7(n) = 2
+fun fib_SimpleStagedExample_sp_8(n) = 1
+fun fib_SimpleStagedExample_sp_9(n) = 1
+fun bar_Bar_sp_0(self) = 1
+fun foo_Foo_sp_0(self, b) = 2
+fun f_S_sp_0(self, x) = 1

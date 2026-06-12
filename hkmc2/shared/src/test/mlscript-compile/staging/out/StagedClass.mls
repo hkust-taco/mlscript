@@ -1,0 +1,69 @@
+#config(noFreeze: true, noModuleCheck: true, liftDefns: None, disableDataFlowAnalysis: true, deadParamElim: Some(DeadParamElim(debug: false, mono: true)))
+import "../StagedClass.mls" as StagedClass__Legacy
+module StagedClass with
+    class Foo
+    class Bar(val x) with
+      fun f(y, z) =
+        let {tmp}
+        tmp = x + y
+        tmp + z
+    class Baz(val x) with
+      ()
+    class FooBar(val x) with
+      ()
+    class B() with
+      ()
+    class D() extends B() with
+      ()
+    class C() with
+      ()
+      fun h() = new D()
+    class X(val x) with
+      ()
+      fun f(y) =
+        let {scrut}
+        scrut = <(x, y)
+        if scrut is
+          true then new Bar(x)
+          else new Bar(y)
+      fun g(y) =
+        let {tmp1}
+        tmp1 = x + y
+        X."Helper$X".foo(tmp1)
+      fun h(y) =
+        let {tmp2}
+        tmp2 = x + y
+        helpFoo(tmp2)
+    fun bar(b) =
+      if b is
+        true then Bar(0)
+        else new Bar.class(1)
+    fun baz(b) =
+      if b is
+        true then Baz(1)
+        else new Baz.class(2)
+    fun f(x) =
+      let {x__, y4, arg_Baz_0_, arg_Bar_0_}
+      if x is
+        Foo then 0
+        Bar then
+          arg_Bar_0_ = x.x
+          x__ = arg_Bar_0_
+          x__
+        Baz then
+          arg_Baz_0_ = x.x
+          y4 = arg_Baz_0_
+          y4 + 1
+        else -1
+    fun foo() = new Foo()
+    fun g() = new D()
+    fun helpFoo(x) = StagedClass__Legacy."Helper$StagedClass".foo(x)
+    fun xx() =
+      let {tmp3}
+      tmp3 = new X(0)
+      f_X_sp_0(tmp3, 1)
+open StagedClass
+fun f_X_sp_0(self, y) =
+  let {scrut}
+  scrut = true
+  new Bar(self.x)

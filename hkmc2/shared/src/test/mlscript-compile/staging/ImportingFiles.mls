@@ -1,0 +1,10 @@
+#config(noModuleCheck: true)
+
+import "./SimpleStagedExample.mls"
+import "./StagedClass.mls"
+
+staged module ImportingFiles with
+  fun f() = SimpleStagedExample.fib(8) // what about importing classes?
+  // FIXME: import the file "./StagedClass.mls" in next stage
+  // fun g(x) = (new StagedClass.Bar(x)).f(1, 2)
+  // val a = StagedClass.Bar

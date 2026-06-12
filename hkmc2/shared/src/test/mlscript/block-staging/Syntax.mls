@@ -8,10 +8,10 @@ staged module A
 //│     k = Mod
 //│     head = Ident of "A"
 
+staged class Foo
+
 // TODO: reject these annotations?
 staged object Foo
-
-staged class Foo
 
 staged fun f() = 0
 
@@ -23,21 +23,61 @@ staged module A
 //│ define A⁰ as class A¹
 //│ staged module A² {
 //│   constructor {
-//│     let tmp, tmp1;
-//│     set tmp = A².this.ctor$_instr﹖();
-//│     set tmp1 = Block⁰.printCode﹖(tmp);
+//│     let tmp, tmp1, sym, tmp2, tmp3, tmp4, tmp5, tmp6;
+//│     set sym = Block⁰.ModuleSymbol﹖("A", A².this, false);
+//│     set tmp2 = runtime⁰.SymbolMap﹖.checkModuleMap﹖(A².this, sym);
+//│     set tmp3 = new globalThis⁰.Map﹖();
+//│     set tmp4 = [];
+//│     set tmp5 = new globalThis⁰.Set﹖(tmp4);
+//│     set tmp6 = new SpecializeHelpers⁰.FunCache﹖(tmp2, tmp3, tmp5);
+//│     define cache$A⁰ as val cache$A¹ = tmp6;
+//│     set tmp = [];
+//│     set tmp1 = new globalThis⁰.Map﹖(tmp);
+//│     define generatorMap$A⁰ as val generatorMap$A¹ = tmp1;
+//│     end
+//│   }
+//│   method generate⁰ = fun generate¹(source, path) {
+//│     let tmp, tmp1, tmp2;
+//│     set tmp = A².this.propagate﹖();
+//│     set tmp1 = [];
+//│     set tmp2 = Block⁰.codegen﹖("A", A².this.cache$A﹖, source, path, tmp1);
 //│     end
 //│   }
 //│   method ctor$_instr⁰ = fun ctor$_instr¹() {
-//│     let end, tmp, tmp1, tmp2, tmp3;
+//│     let sym, tmp, tmp1, end, tmp2;
+//│     set sym = Block⁰.Symbol﹖("ctor$");
+//│     set tmp = [];
+//│     set tmp1 = [tmp];
 //│     set end = Block⁰.End﹖();
-//│     set tmp = Block⁰.Symbol﹖("ctor$");
-//│     set tmp1 = [];
-//│     set tmp2 = [tmp1];
-//│     set tmp3 = Block⁰.FunDefn﹖(tmp, tmp2, end, true);
-//│     return tmp3
+//│     set tmp2 = Block⁰.FunDefn﹖(sym, tmp1, end);
+//│     return tmp2
+//│   }
+//│   method propagate⁰ = fun propagate¹() {
+//│     let tmp_dyn;
+//│     set tmp_dyn = ShapeSet⁰.mkDyn﹖();
+//│     end
+//│   }
+//│   method toCode⁰ = fun toCode¹() {
+//│     let tmp, tmp1;
+//│     set tmp = [];
+//│     set tmp1 = Block⁰.toCode﹖("A", A².this.cache$A﹖, tmp);
+//│     return tmp1
 //│   }
 //│ };
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
-//│ > fun ctor_() = ()
+
+:el
+fun f(@dynamic x) = x
+//│ Elab: { fun member:f(@dynamicx) = x⁰; }
+
+fun g(@static x) = x
+
+:e
+fun h(@dynamic @static x) = x
+//│ ╔══[COMPILATION ERROR] At most one reflection constraint can be added for each parameter.
+//│ ║  l.77: 	fun h(@dynamic @static x) = x
+//│ ╙──      	               ^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Name not found: x
+//│ ║  l.77: 	fun h(@dynamic @static x) = x
+//│ ╙──      	                            ^

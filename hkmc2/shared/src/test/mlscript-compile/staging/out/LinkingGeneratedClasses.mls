@@ -1,0 +1,25 @@
+#config(noFreeze: true, noModuleCheck: true, liftDefns: None, disableDataFlowAnalysis: true, deadParamElim: Some(DeadParamElim(debug: false, mono: true)))
+import "../LinkingGeneratedClasses.mls" as LinkingGeneratedClasses__Legacy
+class S with
+  ()
+module LinkingGeneratedClasses with
+    class D
+    fun f() =
+      let {tmp1}
+      tmp1 = new LinkingGeneratedClasses__Legacy."Function$1$LinkingGeneratedClasses"()
+      tmp1
+    fun g() =
+      let {tmp2}
+      tmp2 = new LinkingGeneratedClasses__Legacy."Function$$LinkingGeneratedClasses"()
+      tmp2
+    fun test1 = new LinkingGeneratedClasses__Legacy."C$LinkingGeneratedClasses"()
+    fun test2(x) =
+      let {tmp}
+      if x is
+        true then
+          tmp = new S()
+          f_S_sp_0(tmp, 1)
+        else new S()
+    fun test3 = new D()
+open LinkingGeneratedClasses
+fun f_S_sp_0(self, x) = 1

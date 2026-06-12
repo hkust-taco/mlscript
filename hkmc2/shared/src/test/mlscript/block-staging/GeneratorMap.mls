@@ -1,0 +1,11 @@
+:js
+:staging
+:noModuleCheck
+
+staged module A with
+  fun f() = 1
+  fun g(x) = x
+
+A."generatorMap$A"
+//│ = Map(2) {"f" => fun f_gen, "g" => fun g_gen}
+

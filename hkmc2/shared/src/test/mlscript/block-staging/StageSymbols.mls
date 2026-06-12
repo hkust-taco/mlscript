@@ -1,14 +1,11 @@
 :js
 :staging
+:noModuleCheck
 
-:fixme
 staged module M with
   class C with
     fun f() = 1
     fun g() = f()
-//│ ═══[COMPILATION ERROR] Value.This not supported in staged module.
-//│ ═══[COMPILATION ERROR] Value.This not supported in staged module.
-//│ ═══[RUNTIME ERROR] Error: MLscript call unexpectedly returned `undefined`, the forbidden value.
 
 staged module A with
   fun f() = 1
@@ -19,74 +16,76 @@ staged module D with
   class E
   fun f() =
     A.f()
-    B.f()
+    B.f is Bool
   fun matching() =
     1 is Int
     1 is C
-//│ > fun ctor_() = ()
-//│ > fun f() = 1
-//│ > fun ctor_() =
-//│ >   class E
-//│ > fun f() =
-//│ >   A.f_gen()
-//│ >   B.f()
-//│ > fun matching() =
-//│ >   let {scrut, scrut1, tmp}
-//│ >   scrut = 1
-//│ >   if scrut is
-//│ >     Int then
-//│ >       tmp = true
-//│ >     else
-//│ >       tmp = false
-//│ >   scrut1 = 1
-//│ >   if scrut1 is
-//│ >     C then true
-//│ >     else false
 
-:fixme
 module A with
   module B with
     class C(a)
 staged module M with
   class E
   fun f() = 
-    D.E
-    A.B.C
-    A.B.C(1)
+    let x = D.E
+    x = A.B.C
+    A.B.C(2)
     E
-//│ ═══[COMPILATION ERROR] Value.This not supported in staged module.
-//│ > fun ctor_() =
-//│ >   class E
-//│ ═══[RUNTIME ERROR] Error: MLscript call unexpectedly returned `undefined`, the forbidden value.
 
 :e
 staged module M with
   fun g()() = 1
 //│ ╔══[COMPILATION ERROR] :ftc must be enabled to desugar functions with multiple parameter lists.
-//│ ║  l.64: 	  fun g()() = 1
+//│ ║  l.37: 	  fun g()() = 1
 //│ ╙──      	  ^^^^^^^^^^^^^
-//│ > fun ctor_() = ()
-//│ > fun g()() = 1
 
 :ftc
 staged module M with
   fun f() = x => x
   fun g()() = 1
-//│ > fun ctor_() = ()
-//│ > fun f() =
-//│ >   let {tmp}
-//│ >   tmp = new Function_
-//│ >   tmp
-//│ > fun g() =
-//│ >   let {tmp1}
-//│ >   tmp1 = new Function_1
-//│ >   tmp1
 
-// TODO: these need to be printed, somehow:
 :noModuleCheck
-let x = M."f_instr"().body.rest.rhs.cls.l.value
-let y = M."g_instr"().body.rest.rhs.cls.l.value
-//│ x = class Function$
-//│ y = class Function$
-(new x).call(2)
-//│ = 2
+:silent
+let x = M."f_instr"().body.rest.rhs.cls.l
+let y = M."g_instr"().body.rest.rhs.cls.l
+assert x.value != y.value
+// check that the two functions will be printed differently
+assert x.name != y.name
+
+staged module Shadowing with
+  fun f(x, x) = x
+
+staged module RetUnit with
+  fun f() = ()
+
+// should use same symbol across compilation units
+import "../../mlscript-compile/Runtime.mls"
+module M with
+  fun f() = 1
+
+staged module One with
+  fun f() = M.f()
+
+staged module Two with
+  fun f() = M.f()
+
+:silent
+let x = One."f_instr"().body.res._fun.qual.l
+let y = Two."f_instr"().body.res._fun.qual.l
+assert x === y
+
+:fixme Array should be skipped for redirection
+staged module M with
+  val a = Math.cos(1) is Array // doesn't handle Array
+//│ ╔══[COMPILATION ERROR] No definition found in scope for member 'Array'
+//│ ╟── which references the symbol introduced here
+//│ ║  l.105: 	declare class Array[T]
+//│ ╙──       	              ^^^^^^^^
+//│ ╔══[COMPILATION ERROR] No definition found in scope for member 'Array'
+//│ ╟── which references the symbol introduced here
+//│ ║  l.105: 	declare class Array[T]
+//│ ╙──       	              ^^^^^^^^
+//│ ╔══[COMPILATION ERROR] No definition found in scope for member 'Array'
+//│ ╟── which references the symbol introduced here
+//│ ║  l.105: 	declare class Array[T]
+//│ ╙──       	              ^^^^^^^^

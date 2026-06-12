@@ -1,7 +1,14 @@
+#config(liftDefns: None)
+
 import "./Predef.mls"
 import "./Option.mls"
 import "./StrOps.mls"
 import "./Runtime.mls"
+
+import "fs"
+import "process"
+import "path"
+import "url"
 
 open Predef
 open StrOps
@@ -9,21 +16,61 @@ open Option
 
 module Block with...
 
+module StagingUtility with
+  let moduleGenMapPrefix = "generatorMap$"
+  let classGenMapPrefix = "class$generatorMap$"
+  let moduleCachePrefix = "cache$"
+  let classCachePrefix = "class$cache$"
+
+  fun isStagedClass(c) = 
+    not (getClassGenMap(c) is undefined)
+
+  fun getGenMapName(name, isClass) =
+    (if isClass then classGenMapPrefix else moduleGenMapPrefix) + name
+
+  fun getCacheName(name, isClass) =
+    (if isClass then classCachePrefix else moduleCachePrefix) + name
+
+  fun getActualClass(c) = if not (c."class" is undefined) then c.class else c
+
+  fun legacyName(name) = name + "__Legacy"
+
+  fun getStagedClassInfo(c) =
+    let actualClass = getActualClass(c)
+    let clsName = actualClass.(Symbols.definitionMetadata).1
+    [actualClass, clsName]
+
+  fun getClassGenMap(c) =
+    let info = getStagedClassInfo(c)
+    info.0.(getGenMapName(info.1, true))
+
+  fun getClassCache(c) =
+    let info = getStagedClassInfo(c)
+    info.0.(getCacheName(info.1, true))
+
+open StagingUtility {isStagedClass, getClassCache, legacyName}
+
 type Opt[A] = Option[A]
 
 // dependancies referenced in Block classes, referencing implementation in Term.mls
 
 type Literal = null | undefined | Str | Int | Num | Bool
 
-type ParamList = Array[Symbol]
+type ParamList = Array[Param]
 
 class Symbol(val name: Str)
-// this is so that we're able to retrieve information about the class from the symbol
 class ClassSymbol(val name: Str) extends Symbol(name)
 class VirtualClassSymbol(val name: Str) extends ClassSymbol(name)
-class ConcreteClassSymbol(val name: Str, val value: Class, val paramsOpt: Opt[ParamList], val auxParams: Array[ParamList]) extends ClassSymbol(name)
-class ModuleSymbol(val name: Str, val value: Class) extends Symbol(name)
+class ConcreteClassSymbol(val name: Str, val value: Class, val paramsOpt: Opt[ParamList], val auxParams: Array[ParamList], val redirect: Bool) extends ClassSymbol(name)
+class ModuleSymbol(val name: Str, val value: Class, val redirect: Bool) extends Symbol(name)
 class NoSymbol() extends Symbol("$no_symbol$")
+
+class Constraint with
+  constructor
+    Dynamic()
+    Static()
+
+class Param(val constraint: Opt[Constraint], val sym: Symbol)
 class Arm(val cse: Case, val body: Block)
 
 fun isPrimitiveType(sym: Symbol) =
@@ -42,18 +89,16 @@ fun isPrimitiveTypeOf(sym: Symbol, l: Literal) =
     ["Bool", b] and b is Bool then true
     else false
 
-
-// Classes defined in Block.scala
-
+// TODO: spread parameters will be as another field to Arg
 class Arg(val value: Path) 
 
 class Case with
   constructor
     Lit(val lit: Literal)
-    Cls(val cls: Symbol, val path: Path)
+    Cls(val cls: ClassSymbol, val path: Path)
     Tup(val len: Int)
 
-class Result with 
+class Result with
   constructor
     Call(val _fun: Path, val args: Array[Arg])
     Instantiate(val cls: Path, val args: Array[Arg]) // assume immutable
@@ -63,9 +108,11 @@ class Path extends Result with
   constructor
     Select(val qual: Path, val name: Symbol)
     DynSelect(val qual: Path, val fld: Path, val arrayIdx: Bool) // is arrayIdx used?
+    // we use Value as a prefix here to diambiguate from Case.Lit
     ValueSimpleRef(val l: Symbol)
     ValueMemberRef(val l: Symbol)
     ValueLit(val lit: Literal)
+    ValueThis(val sym: Symbol)
 
 class Defn with 
   constructor 
@@ -85,122 +132,372 @@ class Block with
     End()
   
 fun concat(b1: Block, b2: Block) = if b1 is
+  Return then b1
+  End then b2
   Match(scrut, arms, dflt, rest) then Match(scrut, arms, dflt, concat(rest, b2))
-  Return(res) then b1
   Assign(lhs, rhs, rest) then Assign(lhs, rhs, concat(rest, b2))
   Define(defn, rest) then Define(defn, concat(rest, b2))
   Scoped(symbols, rest) then Scoped(symbols, concat(rest, b2))
-  End() then b2
 
 fun indent(s: Str) = s.replaceAll("\n", "\n  ")
 
-fun showLiteral(l: Literal) =
-  if l is 
-    undefined then "undefined"
-    null then "null"
-    Str then "\"" + l.toString() + "\""
-    else l.toString()
+// we write .map(f(_)) instead of .map(f) here because of method debinding, see https://github.com/hkust-taco/mlscript/issues/450
+class Printer(val owner: Opt[Symbol]) with
+  fun showLiteral(l: Literal) =
+    if l is 
+      undefined then "undefined"
+      null then "null"
+      Str then "\"" + l
+        .replaceAll("\\", "\\\\")
+        .replaceAll("\"", "\\\"")
+        .replaceAll("\n", "\\n")
+        .replaceAll("\t", "\\t")
+        .replaceAll("\r", "\\r")
+        + "\""
+      else l.toString()
 
-fun showSymbol(s: Symbol) = s.name.replaceAll("$", "_")
+  fun showDefnSymbol(s: Symbol) =
+    s.name.replaceAll("$", "_")
 
-fun showPath(p: Path): Str =
-  if p is
-    // avoids needing to import the runtime module
-    Select(ValueSimpleRef(Symbol("runtime")), ModuleSymbol("Unit", Runtime.Unit)) then "()"
-    Select(qual, name) then showPath(qual) + "." + showSymbol(name)
-    DynSelect(qual, fld, false) then showPath(qual) + ".(" + showPath(fld) + ")"
-    DynSelect(qual, fld, true) then showPath(qual) + ".[" + showPath(fld) + "]"
-    ValueSimpleRef(l) then showSymbol(l)
-    ValueMemberRef(l) then showSymbol(l)
-    ValueLit(lit) then showLiteral(lit)
+  fun isGeneratedStagedClass(s: Symbol) =
+    if s is
+      ConcreteClassSymbol(_, value, _, _, _) then isStagedClass(value)
+      else false
 
-fun showArg(arg: Arg) =
-  showPath(arg.value)
+  fun showGeneratedStagedClassCache(cache): Str =
+    cache.printDefinitions()
 
-fun showArgs(args: Array[Arg]) =
-  args.map(showArg).join(", ")
+  fun showSymbol(s: Symbol) =
+    if s.redirect and owner is
+      Some(owner) and owner is
+        ModuleSymbol then // TODO: this must be a top-level module symbol
+          legacyName(owner.name) + ".\"" + s.name + "$" + owner.name + "\""
+        else owner.name + ".\"" + s.name + "$" + owner.name + "\""
+    else s.name.replaceAll("$", "_")
 
-fun showResult(r: Result): Str =
-  if r is
-    Path then showPath(r)
-    Call(fun_, args) and
-      // use infix to avoid parsing + and - as taking a unary argument
-      args is [lhs, rhs] and fun_ is
-        ValueSimpleRef(Symbol("+")) then showArg(lhs) + " + " + showArg(rhs)
-        ValueSimpleRef(Symbol("-")) then showArg(lhs) + " - " + showArg(rhs)
-      else showPath(fun_) + "(" + showArgs(args) + ")"
-    Instantiate(cls, args) then "new " + showPath(cls) + (if args.length != 0 then "(" + showArgs(args) + ")" else "")
-    Tuple(elems) then "[" + showArgs(elems) + "]"
-    _ then "<unknown result>"
+  fun showPath(p: Path): Str =
+    if p is
+      Select(qual, name) and
+        qual is
+          // avoids needing to import the runtime module
+          ValueMemberRef(Symbol("runtime")) and name is ModuleSymbol("Unit", Runtime.Unit, _) then "()"
+          // remove selection to owner for values defined within the owner
+          // TODO: does this pattern exist, or is it replaced by the case below?
+          ValueMemberRef(sym) and owner is Some(owner) and sym === owner then showSymbol(name)
+          // NOTE: ValueThis carries information about the class, but the elaborator can infer it for us
+          ValueThis then showSymbol(name)
+        else showPath(qual) + "." + showSymbol(name)
+      DynSelect(qual, fld, false) then showPath(qual) + ".(" + showPath(fld) + ")"
+      DynSelect(qual, fld, true) then showPath(qual) + ".[" + showPath(fld) + "]"
+      ValueSimpleRef(l) | ValueMemberRef(l) then showSymbol(l)
+      ValueLit(lit) then showLiteral(lit)
+      ValueThis then "this"
 
-// Case (match arm patterns)
-fun showCase(c) =
-  if c is
-    Lit(l) then showLiteral(l)
-    Cls(cls, _) then showSymbol(cls)
-    Tup(len) then "[" + Array(len).fill("_").join(", ") + "]"
-    _ then "<unknown case>"
+  fun showArg(arg: Arg) =
+    showPath(arg.value)
 
-fun showArm(a) =
-  showCase(a.cse) + " then" + (if a.body is Return then " " else "\n  ") + indent(showBlock(a.body))
+  fun showArgs(args: Array[Arg]) =
+    args.map(showArg(_)).join(", ")
+  
+  fun hasClassValue(cls: Path) =
+    if cls is
+      Select(ValueMemberRef(sym), name) and
+        owner is Some(owner) and sym == owner and isGeneratedStagedClass(name) then false
+      ValueMemberRef(ConcreteClassSymbol(_, value, _, _, _)) then not (value."class" is undefined)
+      Select(_, ConcreteClassSymbol(_, value, _, _, _)) then not (value."class" is undefined)
+      else false
 
-fun showParams(p: ParamList) =
-  "(" + p.map(showSymbol(_)).join(", ") + ")"
+  fun showInstantiatePath(cls: Path) =
+    showPath(cls) + (if hasClassValue(cls) then ".class" else "")
 
-fun showParamsOpt(p) =
-  if p is
-    Some(s) then showParams(s)
-    None then ""
+  fun showResult(r: Result): Str =
+    if r is
+      Path then showPath(r)
+      Call(fun_, args) and
+        args is [arg] and fun_ is
+          ValueSimpleRef(Symbol("!")) then "not " + showArg(arg)
+        // use infix to avoid parsing + and - as taking a unary argument
+        args is [lhs, rhs] and fun_ is
+          ValueSimpleRef(Symbol("+")) then showArg(lhs) + " + " + showArg(rhs)
+          ValueSimpleRef(Symbol("-")) then showArg(lhs) + " - " + showArg(rhs)
+        else showPath(fun_) + "(" + showArgs(args) + ")"
+      Instantiate(cls, args) then 
+        let classPath = showInstantiatePath(cls)
+        // redirections must be dynamic selections, hence the use of new! is required
+        // NOTE: noModuleCheck is enabled, so we don't need to switch to new! for dynamic selections from a module
+        "new " + classPath + "(" + showArgs(args) + ")"
+      Tuple(elems) then "[" + showArgs(elems) + "]"
+      _ then "<unknown result>"
 
-fun showParamList(ps: Array[ParamList]) =
-  ps.map(showParams).join("")
+  // Case (match arm patterns)
+  fun showCase(c) =
+    if c is
+      Lit(l) then showLiteral(l)
+      Cls(cls, _) then showSymbol(cls)
+      Tup(len) then "[" + Array(len).fill("_").join(", ") + "]"
+      _ then "<unknown case>"
 
-fun showDefn(d: Defn): Str =
-  if d is
-    FunDefn(sym, ps, body) then
-      "fun " + showSymbol(sym) + showParamList(ps) + " =" +
-      (if body is Return | End then " " else "\n  ") + indent(showBlock(body))
-    ClsLikeDefn(sym, methods, _) then
-      "class " + showSymbol(sym) + showParamsOpt(sym.paramsOpt)
-        + indent((if methods is [] then "" else " with\n") + methods.map(showDefn).join("\n"))
-    // TODO: used to represent assignments in constructors, which still need some adjustments
-    ValDefn(owner, sym, rhs) then
-      "val " + showSymbol(sym) + " = " + showPath(rhs)
-    _ then "<unknown defn: " + d.toString() + " >"
+  fun showArm(a) =
+    showCase(a.cse) + " then" + (if a.body is Return then " " else "\n  ") + indent(showBlock(a.body))
 
-fun showBlock(b) =
-  if b is
-    Assign(lhs, rhs, rest) then
-      (if lhs is NoSymbol then "" else showSymbol(lhs) + " = ")
-        + showResult(rhs) + showRestBlock(rest)
-    Define(d, rest) then
-      showDefn(d) + showRestBlock(rest)
-    Return(res) then
-      showResult(res)
-    Match(scrut, arms, dflt, rest) then
-      "if " + showPath(scrut) + " is"
-      + indent("\n" + arms.map(showArm).join("\n"))
-      + if dflt is Some(db) then indent("\nelse" + indent((if db is Return then " " else "\n") + showBlock(db))) else ""
-      + showRestBlock(rest)
-    Scoped(symbols, rest) then
-      // initialize symbols
-      "let {" + symbols.map(showSymbol).join(", ") + "}" + showRestBlock(rest)
-    End() then "()"
-    _ then "<unknown block>" + b
+  fun showParams(pl: ParamList) =
+    // do not print constraints to next stage
+    "(" + pl.map(p => showSymbol(p.sym)).join(", ") + ")"
 
-// removes trailing newline
-fun showRestBlock(b : Block): Str =
-  if b is End then "" else "\n" + showBlock(b)
+  fun showCtorParams(pl: ParamList) =  
+    "(" + pl.map(p => "val " + showSymbol(p.sym)).join(", ") + ")"
 
-fun show(x) =
-  if x is
-    Symbol then showSymbol(x)
-    Path then showPath(x)
-    Result then showResult(x)
-    Case then showCase(x)
-    Defn then showDefn(x)
-    Block then showBlock(x)
-  else
-    "<unknown>"
+  fun showParamsOpt(p) =
+    if p is
+      Some(s) then showCtorParams(s)
+      None then ""
 
-fun printCode(x) = print(show(x))
+  fun showParamList(ps: Array[ParamList]) =
+    ps.map(showParams(_)).join("")
+
+  fun collectSymbolName(names: Set[String], sym: Symbol) =
+    if not sym is NoSymbol do names.add(showSymbol(sym))
+
+  fun collectParamNames(names: Set[String], ps: Array[ParamList]) =
+    let printer = this
+    ps.forEach(pl => pl.forEach(p => printer.collectSymbolName(names, p.sym)))
+
+  fun collectDefnSymbolNames(names: Set[String], d: Defn) =
+    let printer = this
+    if d is
+      FunDefn(_, ps, body) then
+        printer.collectParamNames(names, ps)
+        printer.collectBlockSymbolNames(names, body)
+      ClsLikeDefn(sym, methods, _) then
+        printer.collectSymbolName(names, sym)
+        methods.forEach(m => printer.collectDefnSymbolNames(names, m))
+      ValDefn(_, sym, _) then printer.collectSymbolName(names, sym)
+
+  fun collectBlockSymbolNames(names: Set[String], b: Block) =
+    let printer = this
+    if b is
+      Assign(lhs, _, rest) then
+        printer.collectSymbolName(names, lhs)
+        printer.collectBlockSymbolNames(names, rest)
+      Define(d, rest) then
+        printer.collectDefnSymbolNames(names, d)
+        printer.collectBlockSymbolNames(names, rest)
+      Match(_, arms, dflt, rest) then
+        arms.forEach(a => printer.collectBlockSymbolNames(names, a.body))
+        if dflt is Some(db) do printer.collectBlockSymbolNames(names, db)
+        printer.collectBlockSymbolNames(names, rest)
+      Scoped(symbols, rest) then
+        symbols.forEach(s => printer.collectSymbolName(names, s))
+        printer.collectBlockSymbolNames(names, rest)
+      Return | End then ()
+
+  fun freshSelfSymbol(ps: Array[ParamList], body: Block) =
+    let names = new Set()
+    collectParamNames(names, ps)
+    collectBlockSymbolNames(names, body)
+    let
+      base = "self"
+      idx = 0
+      name = base
+    while names.has(name) do
+      set
+        idx += 1
+        name = base + idx
+    Symbol(name)
+
+  fun prependParam(ps: Array[ParamList], p: Param) =
+    if ps is
+      [] then [[p]]
+      [first, ...rest] then [[p, ...first], ...rest]
+
+  fun showFunDefn(prefix: Str, sym: Symbol, ps: Array[ParamList], body: Block): Str =
+    prefix + "fun " + showDefnSymbol(sym) + showParamList(ps) + " =" +
+    (if body is Return | End then " " else "\n  ") + indent(showBlock(body))
+
+  fun showDefn(d: Defn): Str =
+    if d is
+      FunDefn(sym, ps, body) then
+        showFunDefn("", sym, ps, body)
+      ClsLikeDefn(sym, methods, _) and sym is ConcreteClassSymbol(_, v, _, _, _) and
+        isGeneratedStagedClass(sym) then getClassCache(v).printDefinitions()
+        else 
+          "class " + showDefnSymbol(sym) + showParamsOpt(sym.paramsOpt) + sym.auxParams.map(showParams(_)).join("")
+            + indent((if methods is [] then "" else " with\n") + methods.map(showDefn(_)).join("\n"))
+      // TODO: used to represent assignments in constructors, which still need some adjustments
+      ValDefn(owner, sym, rhs) then
+        "val " + showSymbol(sym) + " = " + showPath(rhs)
+      _ then "<unknown defn: " + d.toString() + " >"
+
+  fun showPrivateDefn(d: Defn): Str =
+    if d is
+      FunDefn(sym, ps, body) then showFunDefn("", sym, ps, body)
+      else showDefn(d)
+
+  fun showPrivateMethodDefn(d: Defn): Str =
+    if d is
+      FunDefn(sym, ps, body) then
+        let selfSym = freshSelfSymbol(ps, body)
+        let psWithSelf = prependParam(ps, Param(None, selfSym))
+        // substitute `this` with `self`
+        class SelfPrinter(val selfSym: Symbol) extends Printer(owner) with
+          fun showPath(p: Path): Str =
+            if p is
+              Select(qual, name) and
+                qual is
+                  // avoids needing to import the runtime module
+                  ValueMemberRef(Symbol("runtime")) and name is ModuleSymbol("Unit", Runtime.Unit, _) then "()"
+                  ValueThis(ConcreteClassSymbol) then this.showSymbol(selfSym) + "." + this.showSymbol(name)
+                  ValueThis then this.showSymbol(name)
+                  ValueMemberRef(sym) and owner is Some(owner) and sym === owner and owner is ConcreteClassSymbol then this.showSymbol(selfSym) + "." + this.showSymbol(name)
+                  ValueMemberRef(sym) and owner is Some(owner) and sym === owner then this.showSymbol(name)
+                else showPath(qual) + "." + this.showSymbol(name)
+              DynSelect(qual, fld, false) then showPath(qual) + ".(" + showPath(fld) + ")"
+              DynSelect(qual, fld, true) then showPath(qual) + ".[" + showPath(fld) + "]"
+              ValueSimpleRef(l) | ValueMemberRef(l) then this.showSymbol(l)
+              ValueLit(lit) then this.showLiteral(lit)
+              ValueThis(ConcreteClassSymbol) then this.showSymbol(selfSym)
+        SelfPrinter(selfSym).showFunDefn("", sym, psWithSelf, body)
+      else showPrivateDefn(d)
+
+  fun showBlock(b) =
+    if b is
+      Assign(lhs, rhs, rest) then
+        (if lhs is NoSymbol then "" else showSymbol(lhs) + " = ")
+          + showResult(rhs) + showRestBlock(rest)
+      Define(d, rest) then
+        showDefn(d) + showRestBlock(rest)
+      Return(res) then showResult(res)
+      Match(scrut, arms, dflt, rest) then
+        "if " + showPath(scrut) + " is"
+        + indent("\n" + arms.map(showArm(_)).join("\n"))
+        + if dflt is Some(db) then indent("\nelse" + indent((if db is Return then " " else "\n") + showBlock(db))) else ""
+        + showRestBlock(rest)
+      Scoped(symbols, rest) then
+        // but this one must use the function argument instead of a lambda...
+        "let {" + symbols.map(showSymbol).join(", ") + "}" + showRestBlock(rest)
+      End() then "()"
+      _ then "<unknown block>"
+
+  // removes trailing newline
+  fun showRestBlock(b : Block): Str =
+    if b is End then "" else "\n" + showBlock(b)
+
+  fun show(x) =
+    if x is
+      Symbol then showSymbol(x)
+      Path then showPath(x)
+      Result then showResult(x)
+      Case then showCase(x)
+      Defn then showDefn(x)
+      Block then showBlock(x)
+    else
+      "<unknown>"
+  
+  fun printCode(x) =
+    print(show(x))
+
+  fun printModule(name, methods) = print("module " + name + " with" + indent("\n" + methods.map(showDefn(_)).join("\n")))
+
+module Printer with
+  val default = Printer(None)
+
+let configs = 
+  let options = [
+    "noFreeze: true",
+    "noModuleCheck: true",
+    "liftDefns: None",
+    "disableDataFlowAnalysis: true", // FIXME: remove it. it now leads to timeout in staged reg exp output
+    "deadParamElim: Some(DeadParamElim(debug: false, mono: true))"
+  ]
+  "#config(" + options.join(", ") + ")\n"
+
+fun mkImport(source, name) = 
+  "import \"" + source + "\" as " + legacyName(name)
+
+fun printPrivateMember(cache) =
+  let printer = Printer(Some(cache.owner))
+  cache.cache.values().map(e =>
+    if e.isPrivate then
+      if cache.owner is ConcreteClassSymbol then printer.showPrivateMethodDefn(e.defn)
+      else printer.showPrivateDefn(e.defn)
+    else ""
+  ).toArray().filter(_ != "").sort().join("\n")
+
+fun collectClassInModule(block) =
+  if block is
+    Define(ClsLikeDefn(sym, _, _), rest) and sym is ConcreteClassSymbol(_, value, _, _, _) and isStagedClass(value) then
+      [printCachedPrivateCode(getClassCache(value)), collectClassInModule(rest)].filter(_ != "").join("\n")
+    Define(_, rest) then collectClassInModule(rest)
+    else ""
+
+fun checkCtor(cache) =
+  if cache.owner is ModuleSymbol then
+    let runtimeClass = cache.owner.value
+    let ctor = runtimeClass."ctor$_instr"()
+    assert ctor is FunDefn
+    collectClassInModule(ctor.body)
+  else ""
+
+// collect and print private functions & methods in the given cache
+fun printCachedPrivateCode(cache) =
+  [printPrivateMember(cache), checkCtor(cache)].filter(_ != "").join("\n")
+
+fun printPrivateCodeIn(name, cache, usedStagedClasses) =
+  let usedCaches = usedStagedClasses.map(getClassCache(_))
+  let privateText = [...usedCaches.map(printCachedPrivateCode), printCachedPrivateCode(cache)].filter(_ != "").join("\n")
+  if privateText == "" then "" else "open " + name + "\n" + privateText
+
+fun toCode(name, cache, usedStagedClasses) =
+  let usedCaches = usedStagedClasses.map(getClassCache(_))
+  let prefix = usedCaches.map(_.printDefinitions() + "\n").join("")
+  let publicText = prefix + indent(cache.printDefinitions())
+  let privateText = printPrivateCodeIn(name, cache, usedStagedClasses)
+  publicText + if privateText == "" then "" else "\n" + privateText
+
+fun codegen(name, cache, source, file, usedStagedClasses) =
+  let fullpath = path.join of process.cwd(), file
+  let code = mkImport(source, name) + "\n" + toCode(name, cache, usedStagedClasses)
+  if not fs.existsSync(fullpath) do
+    fs.mkdirSync(path.dirname(fullpath), recursive: true)
+    fs.writeFileSync(fullpath, "", "utf8")
+  let originData = fs.readFileSync(fullpath, "utf8")
+  let newData = configs + code
+  if newData != originData do
+    fs.writeFileSync(fullpath, newData, "utf8")
+
+fun generateAll(name, file, ...modules) =
+  let fullpath = path.join of process.cwd(), file
+  if not fs.existsSync(fullpath) do
+    fs.mkdirSync(path.dirname(fullpath), recursive: true)
+    fs.writeFileSync(fullpath, "", "utf8")
+  fun splitCodeText(text) =
+    if text.split("\nopen ") is
+      [publicText] then [publicText, "", ""]
+      [publicText, ...privatePieces] then
+        let privateText = "open " + privatePieces.join("\nopen ")
+        let privateLines = privateText.split("\n")
+        [
+          publicText,
+          privateLines.filter(_.startsWith("open ")).join("\n"),
+          privateLines.filter(l => not l.startsWith("open ")).join("\n"),
+        ]
+  let code = fold((res, p) => if p is
+    [mod, modName, source] then
+      mod.propagate()
+      let parts = splitCodeText(mod.toCode())
+      [
+        res.0 + mkImport(source, modName) + "\n",
+        res.1 + parts.0 + "\n",
+        res.2 + parts.1 + "\n",
+        res.3 + parts.2 + "\n",
+      ]
+  )(["", "", "", ""], ...modules)
+  let originData = fs.readFileSync(fullpath, "utf8")
+  let publicText = code.1.trim()
+  let openText = code.2.trim()
+  let privateText = code.3.trim()
+  let opens = ["open " + name, openText].filter(_ != "").join("\n")
+  let privateSuffix = if privateText == "" then "" else "\n" + opens + "\n" + privateText
+  let newData = configs + code.0 + "\n" + "module " + name + " with" + indent("\n" + publicText) + privateSuffix
+  if newData != originData do
+    fs.writeFileSync(fullpath, newData, "utf8")

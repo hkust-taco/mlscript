@@ -1,0 +1,42 @@
+:js
+:staging
+
+import "../../mlscript-compile/Block.mls"
+
+// TODO: copy C# annotation to Block IR
+class C with
+  fun call(x) = x + 1
+staged module M with
+  fun f(x) = x.C#call(10)
+
+staged class A(val a)
+
+staged module C with
+  class I
+
+class C
+staged module M with
+  fun f() = C
+
+staged class C with
+  fun f() = 1
+
+:e
+staged class C(x)
+//│ ╔══[COMPILATION ERROR] Staged classes with private fields are not supported.
+//│ ║  l.25: 	staged class C(x)
+//│ ╙──      	       ^^^^^^^^^^
+
+staged class B(val x) with
+  fun f(y) = this.x + y
+staged class D(val x) extends B(x+1) with
+  val y = 1
+  fun f() = 42
+
+class Unstaged
+staged class Staged(val x) with
+ fun inner() = 1
+staged module M with
+  fun f() =
+    Unstaged;
+    Staged

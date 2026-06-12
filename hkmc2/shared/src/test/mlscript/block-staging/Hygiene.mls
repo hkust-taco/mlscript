@@ -1,0 +1,25 @@
+:js
+:staging
+:noModuleCheck
+
+
+import "../../mlscript-compile/ShapeSet.mls"
+
+open ShapeSet
+
+
+staged module Foo with
+  fun foo(x) = x + 1
+  fun foo_Foo_sp_0(x) = x - 1
+  fun foo_Foo_sp_1(x) = x - 2
+
+
+Foo."foo_gen"(mkLit(0))
+//│ = ["foo_Foo_sp_2", {Lit(1)}]
+
+
+print(Foo."cache$Foo")
+//│ > module Foo with
+//│ >   ()
+//│ > fun foo_Foo_sp_2(x) = 1
+

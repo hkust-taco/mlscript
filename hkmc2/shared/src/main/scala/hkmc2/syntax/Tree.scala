@@ -9,7 +9,7 @@ import hkmc2.utils.*, shorthands.*
 import hkmc2.utils.*
 
 import hkmc2.Message.MessageContext
-import semantics.{FldFlags, TermDefFlags, Modulefulness}
+import semantics.{FldFlags, TermDefFlags, Modulefulness, ReflectionConstraint}
 import semantics.Elaborator.State
 import Tree._
 
@@ -382,6 +382,18 @@ enum Tree extends AutoLocated:
       // fun f(using <...>)
       case TermDef(Ins, inner, N) =>
         go(inner, flags, modifiers + Ins)
+      // fun f(@dynamic <...>)
+      case Annotated(Ident("dynamic"), inner) =>
+        if flags.reflConstraint.isDefined then L:
+          ErrorReport:
+            msg"At most one reflection constraint can be added for each parameter." -> t.toLoc :: Nil
+        else go(inner, flags.copy(reflConstraint = S(ReflectionConstraint.Dynamic)), modifiers)
+      // fun f(@static <...>)
+      case Annotated(Ident("static"), inner) =>
+        if flags.reflConstraint.isDefined then L:
+          ErrorReport:
+            msg"At most one reflection constraint can be added for each parameter." -> t.toLoc :: Nil
+        else go(inner, flags.copy(reflConstraint = S(ReflectionConstraint.Static)), modifiers)
       
       // * Base Case (for `using` clause)
       // fun f(using A)

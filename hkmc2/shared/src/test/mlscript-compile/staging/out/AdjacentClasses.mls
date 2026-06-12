@@ -1,0 +1,8 @@
+#config(noFreeze: true, noModuleCheck: true, liftDefns: None, disableDataFlowAnalysis: true, deadParamElim: Some(DeadParamElim(debug: false, mono: true)))
+import "../AdjacentClasses.mls" as AdjacentClasses__Legacy
+module AdjacentClasses with
+    class C(val x) with
+      ()
+    class D() with
+      ()
+      fun f() = new C(1)

@@ -1,0 +1,9 @@
+:js
+:staging
+
+class C(val x)
+
+staged module A with
+  fun g() = C(1)
+  fun h() = C(2)
+

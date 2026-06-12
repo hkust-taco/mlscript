@@ -1,0 +1,4 @@
+staged module AdjacentClasses with
+  staged class C(val x)
+  staged class D() with
+    fun f() = new C(1)

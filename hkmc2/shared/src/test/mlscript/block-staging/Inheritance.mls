@@ -1,0 +1,12 @@
+:js
+:staging
+:noModuleCheck
+
+
+fun gen(M, name) =
+  M."generate"("../" + name + ".mls", "./hkmc2/shared/src/test/mlscript-compile/staging/out/" + name + ".mls")
+
+import "../../mlscript-compile/staging/Inheritance.mls"
+
+gen(Inheritance, "Inheritance")
+
