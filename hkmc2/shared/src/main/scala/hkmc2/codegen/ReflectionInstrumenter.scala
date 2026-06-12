@@ -138,19 +138,20 @@ class ReflectionInstrumenter(using State, Raise, Ctx) extends BlockTransformer(S
         case baseSym: BaseTypeSymbol =>
           util.boundary:
             val name = scope.allocateOrGetName(baseSym)
-            val (owner, bsym, paramsOpt, auxParams, ctorSym) = (baseSym.defn, defnMap.get(baseSym)) match
-              case (S(defn), _) => (defn.owner, defn.bsym, defn.paramsOpt, defn.auxParams, defn.ctorSym)
-              case (_, S(defn: ClsLikeDefn)) => (defn.owner, defn.sym, defn.paramsOpt, defn.auxParams, defn.ctorSym)
-              // FIXME: hack to patch in staging for returning the object Unit.
-              case _ if baseSym == State.unitSymbol => (N, baseSym, N, Nil, N)
+
+            val (owner, bsym, paramsOpt, auxParams, ctorSym) = (baseSym.defn, defnMap.get(baseSym), baseSym) match
+              case (S(defn), _, _) => (defn.owner, defn.bsym, defn.paramsOpt, defn.auxParams, defn.ctorSym)
+              case (_, S(defn: ClsLikeDefn), _) => (defn.owner, defn.sym, defn.paramsOpt, defn.auxParams, defn.ctorSym)
+              // path to the module can be recovered from pOpt
+              case (_, _, _: ModuleOrObjectSymbol) if pOpt.isDefined => (N, baseSym, N, Nil, N)
               case _ =>
                 raise(ErrorReport(msg"Unable to infer parameters from symbol in staged module, which are necessary to reconstruct class instances: ${baseSym.toString()}" -> baseSym.toLoc :: Nil))
                 util.boundary.break(End())
-            
-            val path = pOpt.getOrElse((owner, ctorSym) match
-              case (S(owner), _) => owner.asThis.selSN(baseSym.nme)
-              case (N, S(ctorSym)) => bsym.asBlkMember.get.asMemberRef(ctorSym)
-              case _ => bsym.asBlkMember.get.asMemberRef(baseSym.asClsOrMod.get))
+            val path = (pOpt, owner, ctorSym) match
+              case (S(p), _, _) => p
+              case (N, S(owner), _) => owner.asThis.selSN(baseSym.nme)
+              case (N, N, S(ctorSym)) => bsym.asBlkMember.get.asMemberRef(ctorSym)
+              case _ => bsym.asBlkMember.get.asMemberRef(baseSym.asClsOrMod.get)
 
             baseSym match
               case _: ClassSymbol =>

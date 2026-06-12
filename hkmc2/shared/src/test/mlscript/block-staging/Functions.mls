@@ -445,7 +445,11 @@ staged module Spread with
 //│ > Map(1) { 'f' => [Function: f_gen] }
 //│ > SymbolMap {
 //│ >   classMap: Map(0) {},
-//│ >   moduleMap: Map(1) {
+//│ >   moduleMap: Map(2) {
+//│ >     [class Tuple] {
+//│ >       split: SpliceMarker {},
+//│ >       Symbol(mlscript.definitionMetadata): [Array]
+//│ >     } => ModuleSymbol { name: 'Tuple', value: [Function] },
 //│ >     [class Spread] {
 //│ >       'cache$Spread': [FunCache],
 //│ >       'generatorMap$Spread': [Map]
