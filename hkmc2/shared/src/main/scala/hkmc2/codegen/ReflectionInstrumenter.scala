@@ -136,29 +136,30 @@ class ReflectionInstrumenter(using State, Raise, Ctx) extends BlockTransformer(S
         case clsSym: ClassSymbol if ctx.builtins.virtualClasses(clsSym) =>
           blockCtor("VirtualClassSymbol", Ls(toValue(sym.nme)), symName)(checkMap("classMap", toValue(sym.nme), _, stagingCtx))
         case baseSym: BaseTypeSymbol =>
-          val name = scope.allocateOrGetName(baseSym)
-          val (owner, bsym, paramsOpt, auxParams, ctorSym) = (baseSym.defn, defnMap.get(baseSym)) match
-            case (S(defn), _) => (defn.owner, defn.bsym, defn.paramsOpt, defn.auxParams, defn.ctorSym)
-            case (_, S(defn: ClsLikeDefn)) => (defn.owner, defn.sym, defn.paramsOpt, defn.auxParams, defn.ctorSym)
-            // FIXME: hack to patch in staging for returning the object Unit.
-            case _ if baseSym == State.unitSymbol => (N, baseSym, N, Nil, N)
-            case _ =>
-              raise(ErrorReport(msg"Unable to infer parameters from symbol in staged module, which are necessary to reconstruct class instances: ${baseSym.toString()}" -> baseSym.toLoc :: Nil))
-              return End()
-          
-          val path = pOpt.getOrElse((owner, ctorSym) match
-            case (S(owner), _) => owner.asThis.selSN(baseSym.nme)
-            case (N, S(ctorSym)) => bsym.asBlkMember.get.asMemberRef(ctorSym)
-            case _ => bsym.asBlkMember.get.asMemberRef(baseSym.asClsOrMod.get))
+          util.boundary:
+            val name = scope.allocateOrGetName(baseSym)
+            val (owner, bsym, paramsOpt, auxParams, ctorSym) = (baseSym.defn, defnMap.get(baseSym)) match
+              case (S(defn), _) => (defn.owner, defn.bsym, defn.paramsOpt, defn.auxParams, defn.ctorSym)
+              case (_, S(defn: ClsLikeDefn)) => (defn.owner, defn.sym, defn.paramsOpt, defn.auxParams, defn.ctorSym)
+              // FIXME: hack to patch in staging for returning the object Unit.
+              case _ if baseSym == State.unitSymbol => (N, baseSym, N, Nil, N)
+              case _ =>
+                raise(ErrorReport(msg"Unable to infer parameters from symbol in staged module, which are necessary to reconstruct class instances: ${baseSym.toString()}" -> baseSym.toLoc :: Nil))
+                util.boundary.break(End())
+            
+            val path = pOpt.getOrElse((owner, ctorSym) match
+              case (S(owner), _) => owner.asThis.selSN(baseSym.nme)
+              case (N, S(ctorSym)) => bsym.asBlkMember.get.asMemberRef(ctorSym)
+              case _ => bsym.asBlkMember.get.asMemberRef(baseSym.asClsOrMod.get))
 
-          baseSym match
-            case _: ClassSymbol =>
-              transformParamsOpt(paramsOpt): (paramsOpt, ctx) =>
-                auxParams.map(ps => ctx => transformParamList(ps)(using ctx)).chainContext: (auxParams, ctx) =>
-                  tuple(auxParams): auxParams =>
-                    blockCtor("ConcreteClassSymbol", Ls(toValue(name), path, paramsOpt, auxParams), symName)(checkMap("classMap", path, _, stagingCtx))
-            case _: ModuleOrObjectSymbol =>
-              blockCtor("ModuleSymbol", Ls(toValue(name), path), symName)(checkMap("moduleMap", path, _, stagingCtx))
+            baseSym match
+              case _: ClassSymbol =>
+                transformParamsOpt(paramsOpt): (paramsOpt, ctx) =>
+                  auxParams.map(ps => ctx => transformParamList(ps)(using ctx)).chainContext: (auxParams, ctx) =>
+                    tuple(auxParams): auxParams =>
+                      blockCtor("ConcreteClassSymbol", Ls(toValue(name), path, paramsOpt, auxParams), symName)(checkMap("classMap", path, _, stagingCtx))
+              case _: ModuleOrObjectSymbol =>
+                blockCtor("ModuleSymbol", Ls(toValue(name), path), symName)(checkMap("moduleMap", path, _, stagingCtx))
         // preserve names to builtin symbols
         case _: SimpleSymbol =>
           blockCtor("Symbol", Ls(toValue(sym.nme)), symName)(cachedK(_, stagingCtx))
