@@ -63,18 +63,19 @@ object FixedPointCompiler:
   * — into an iterative matcher that does *not* restart the redex search from
   * the root of the scrutinee after every rewriting step.
   *
-  * Note that `as` binds looser than `|`, so the definition above reads
-  * `Step as (Steps | _)`: one step must succeed, after which the iteration
-  * continues until no further step is possible. Hence the compiled matcher
-  * fails when not even one rewriting step applies, and otherwise outputs the
-  * normal form of the scrutinee.
+  * Note that `as` binds tighter than `|`, so the definition above reads
+  * `(Step as Steps) | _`: the `Step as Steps` alternative iterates the step
+  * until no further step is possible, and the trailing `_` keeps the result.
+  * Since the alternatives are left-biased and `_` is total, the matcher
+  * always succeeds, outputting the normal form of the scrutinee — which is
+  * the scrutinee itself when not even one rewriting step applies.
   *
-  * The recognized shape is `pattern S = P as (S | a1 | ... | ak | _)` — the
-  * middle alternatives `a1 ... ak` are optional and, since the recursive
-  * alternative fails exactly when `P` cannot step, are matched once against
-  * the final normal form — where `P` instantiates (possibly through synonyms)
-  * to a self-recursive "evaluation context" disjunction whose alternatives
-  * are, in order:
+  * The recognized shape is `pattern S = P as S | a1 | ... | ak | _`, read as
+  * `(P as S) | a1 | ... | ak | _` — the middle alternatives `a1 ... ak` are
+  * optional and, since the recursive alternative fails exactly when `P`
+  * cannot step, are matched once against the final normal form — where `P`
+  * instantiates (possibly through synonyms) to a self-recursive "evaluation
+  * context" disjunction whose alternatives are, in order:
   *
   *   1. *redex alternatives*: patterns that do not mention the recursive
   *      context (typically transform patterns rewriting a focused subterm); and
@@ -130,7 +131,7 @@ class FixedPointCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynt
     *     output-matching shorthand, `x is @compile S(q)`).
     *   - The fixed-point body itself, when the annotation is placed on a
     *     definition's right-hand side: `pattern S = @compile (P as S | _)`.
-    *     The `unapply` translation then reaches this method with the chain.
+    *     The `unapply` translation then reaches this method with the body.
     *
     * Returns `N` when the pattern is not fixed-point shaped — in which case
     * the caller should proceed with the regular efficient compilation. */
@@ -153,12 +154,12 @@ class FixedPointCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynt
                 case N =>
                   val shape = recognizeShape(stripAnnotations(defn.pattern))
                   val recognized = shape.filter(_._1 is patternSymbol).flatMap:
-                    (_, stepPattern, rest, requireProgress) =>
+                    (_, stepPattern, rest) =>
                       classifyRest(rest).map((middles, catchAll) =>
-                        (stepPattern, middles, catchAll, requireProgress))
+                        (stepPattern, middles, catchAll))
                   val machine = recognized match
-                    case S((stepPattern, middles, catchAll, requireProgress)) =>
-                      scoped("ucs:fixpoint")(compileMachine(stepPattern, middles, catchAll, requireProgress))
+                    case S((stepPattern, middles, catchAll)) =>
+                      scoped("ucs:fixpoint")(compileMachine(stepPattern, middles, catchAll))
                         .map((_, !catchAll))
                     case N =>
                       // The definition may instead be a link of an indirect
@@ -174,26 +175,26 @@ class FixedPointCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynt
           case _ => N
     case body: (SP.Chain | SP.Composition) =>
       // The body-annotated form. The body must belong to the very definition
-      // its self-references refer to — `P as (Other | _)` with a foreign
-      // `Other` is a plain chain, not a fixed point. The `eq` check suffices
-      // because the `unapply` translation passes the definition's own body
-      // node down to here.
+      // its self-references refer to — `(P as Other) | _` with a foreign
+      // `Other` is not a fixed point. The `eq` check suffices because the
+      // `unapply` translation passes the definition's own body node down to
+      // here.
       def isOwnBody(patternSymbol: PatternSymbol): Bool =
         patternSymbol.defn.exists(defn =>
           (stripAnnotations(defn.pattern) eq body) &&
             defn.patternParams.isEmpty && defn.extractionParams.isEmpty)
       recognizeShape(body) match
-        case S((patternSymbol, stepPattern, rest, requireProgress)) if isOwnBody(patternSymbol) =>
+        case S((patternSymbol, stepPattern, rest)) if isOwnBody(patternSymbol) =>
           val recognized = classifyRest(rest)
           val machine = recognized.flatMap: (middles, catchAll) =>
-            scoped("ucs:fixpoint")(compileMachine(stepPattern, middles, catchAll, requireProgress))
+            scoped("ucs:fixpoint")(compileMachine(stepPattern, middles, catchAll))
               .map((_, !catchAll))
           machine match
             case S((machine, needsFallback)) =>
               patternSymbol.fixedPointMachine = S((machine, needsFallback))
               S(Outcome.Compiled(machine, N, if needsFallback then S(body) else N))
             case N => unsupported(recognized.isDefined, true, body.toLoc)
-        case S((tailSymbol, _, _, _)) =>
+        case S((tailSymbol, _, _)) =>
           // The body may be a link of an indirect recursion cycle; its tail
           // then refers to the next link rather than the definition itself.
           // Locate the definition the body belongs to in the cycle and
@@ -250,27 +251,22 @@ class FixedPointCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynt
       if middles.exists(p => p.isInstanceOf[SP.Wildcard] || p.isInstanceOf[SP.Chain]) then N
       else S((middles, catchAll))
 
-  /** Recognize the two fixed-point shapes, discovering the pattern symbol
-    * `S` the recursive alternatives refer to (the definition itself, or the
-    * next link of an indirect recursion cycle):
+  /** Recognize the fixed-point shape, discovering the pattern symbol `S` the
+    * recursive alternatives refer to (the definition itself, or the next link
+    * of an indirect recursion cycle).
     *
-    *   - `P as (S | rest)`, the chain shape: at least one `P` step is
-    *     required.
-    *   - `(P1 as S) | ... | (Pn as S) | rest`, the disjunction shape: the
-    *     steps `P1 ... Pn` are tried in order at every iteration, and — the
-    *     trailing alternatives being disjuncts of the whole chains rather
-    *     than of their tails — zero steps are allowed, in which case the
-    *     alternatives process the original scrutinee.
+    * Since `as` binds tighter than `|`, a definition such as
+    * `pattern S = P1 as S | ... | Pn as S | rest` reads
+    * `(P1 as S) | ... | (Pn as S) | rest`: the leading alternatives are
+    * self-chains whose steps `P1 ... Pn` are tried in order at every
+    * iteration, and — the trailing alternatives `rest` being disjuncts of the
+    * whole chains rather than of their tails — zero steps are allowed, in
+    * which case `rest` processes the original scrutinee.
     *
-    * Return the symbol, the step pattern (the disjunction of the steps), the
-    * trailing alternatives (to be validated with `classifyRest`), and
-    * whether at least one step is required. */
-  private def recognizeShape(pattern: SP): Opt[(PatternSymbol, SP, Ls[SP], Bool)] =
+    * Return the symbol, the step pattern (the disjunction of the steps), and
+    * the trailing alternatives (to be validated with `classifyRest`). */
+  private def recognizeShape(pattern: SP): Opt[(PatternSymbol, SP, Ls[SP])] =
     pattern match
-      case SP.Chain(stepPattern, tail) => disjuncts(tail) match
-        case SP.Constructor(target, N) :: rest =>
-          target.resolvedSym.flatMap(_.asPat).map((_, stepPattern, rest, true))
-        case _ => N
       case composition: SP.Composition => disjuncts(composition) match
         case SP.Chain(_, SP.Constructor(target, N)) :: _ =>
           target.resolvedSym.flatMap(_.asPat).map: symbol =>
@@ -280,17 +276,18 @@ class FixedPointCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynt
               case SP.Chain(_, SP.Constructor(target, N)) => isSelf(target)
               case _ => false
             val steps = selfChains.collect { case SP.Chain(step, _) => step }
-            (symbol, steps.reduceLeft(SP.Composition(true, _, _)), rest, false)
+            (symbol, steps.reduceLeft(SP.Composition(true, _, _)), rest)
         case _ => N
       case _ => N
 
-  /** Recognize an indirect recursion cycle of chain-shaped definitions
-    * starting from `start`: each body is `step as (Next | rest)` where
+  /** Recognize an indirect recursion cycle of fixed-point definitions
+    * starting from `start`: each body is `(step as Next) | rest` where
     * `Next` refers to the following definition, and the last one refers back
-    * to `start`. The semantics is strict alternation: the steps fire in
-    * cycle order, the first one is required, and whenever the next step
-    * fails, the alternatives of the last fired link process the current
-    * term. Returns the links in cycle order, beginning with `start`'s own. */
+    * to `start`. The semantics is left-biased alternation: the steps fire in
+    * cycle order, and whenever a step fails, the failing link's alternatives
+    * process the current term — the original scrutinee when even the first
+    * step fails. Returns the links in cycle order, beginning with `start`'s
+    * own. */
   private def recognizeCycle(start: PatternSymbol)
       : Opt[Ls[(PatternSymbol, SP, Ls[SP], Bool)]] =
     @tailrec def walk(
@@ -300,8 +297,7 @@ class FixedPointCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynt
       val linkOpt = current.defn match
         case S(defn) if defn.patternParams.isEmpty && defn.extractionParams.isEmpty =>
           recognizeShape(stripAnnotations(defn.pattern)) match
-            // Only chain-shaped bodies (`step as (Next | rest)`) form links.
-            case S((next, stepPattern, rest, true)) =>
+            case S((next, stepPattern, rest)) =>
               classifyRest(rest).map: (middles, catchAll) =>
                 (next, (current, stepPattern, middles, catchAll))
             case _ => N
@@ -312,7 +308,7 @@ class FixedPointCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynt
           else if (next is current) || acc.exists(_._1 is next) then N
           else walk(next, link :: acc)
         case N => N
-    // Cycles of length one are the direct shape, handled by `recognizeBody`.
+    // Cycles of length one are the direct shape, handled in `compile`.
     walk(start, Nil).filter(_.sizeIs > 1)
 
   /** Does `pattern` mention the given instantiation anywhere? Used to locate
@@ -348,7 +344,7 @@ class FixedPointCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynt
       if middles.isEmpty then N else S(Or(middles :+ Wildcard))
     else S(Or(middles))
 
-  private def compileMachine(stepPattern: SP, middles: Ls[SP], catchAll: Bool, requireProgress: Bool): Opt[Machine] =
+  private def compileMachine(stepPattern: SP, middles: Ls[SP], catchAll: Bool): Opt[Machine] =
     val (instantiated, context) = instantiateGroups((stepPattern :: middles) :: Nil)
     val entry = instantiated.head.head
     val post = postPattern(instantiated.head.tail, catchAll)
@@ -367,7 +363,7 @@ class FixedPointCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynt
         // point degenerates to a flat contraction loop: keep applying the
         // step pattern to its own output until it fails.
         log(s"No recursive context; compiling a flat contraction loop.")
-        S(assemble(entry, Nil, post, requireProgress))
+        S(assemble(entry, Nil, post))
       case S((ctxInst, body)) =>
         log(s"Recursive context: ${ctxInst.showDbg}")
         val alternatives = body match
@@ -377,7 +373,7 @@ class FixedPointCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynt
           val redexPattern = redexAlternatives match
             case single :: Nil => single
             case multiple => Or(multiple)
-          assemble(redexPattern, classes, post, requireProgress)
+          assemble(redexPattern, classes, post)
 
   /** Split the context's alternatives into the leading redex alternatives and
     * the trailing descent alternatives, validating the restrictions of the
@@ -475,9 +471,13 @@ class FixedPointCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynt
 
   /** Assemble the flat alternation loop for an indirect recursion cycle: in
     * phase `i`, step `i` is applied to the current term; on success the
-    * machine moves to the next phase in the cycle, and on failure it exits
-    * and the last fired link's alternatives process the final term. No step
-    * ever firing means the first chain failed, so the match fails. */
+    * machine moves to the next phase in the cycle, and on failure it records
+    * the failing phase and exits. The failing link's alternatives then process
+    * the current term — which is the original scrutinee when the very first
+    * step fails, so zero steps are allowed, exactly as for the direct shape.
+    * When those alternatives don't match either, the run fails and the caller
+    * retries it with the naive translation, which performs the deepest-first
+    * backtracking through the intermediate terms. */
   private def assembleAlternating(links: Ls[(Pat, Opt[Pat])])(using Context): Machine =
     // Like in `assemble`, every matcher gets its own compiler instance
     // because the matcher memoization is instance-bound.
@@ -492,7 +492,10 @@ class FixedPointCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynt
     val inputSymbol = VarSymbol(Ident("input"))
     val phaseSymbol = TempSymbol(N, "phase")
     val focusSymbol = TempSymbol(N, "focus")
-    val firedSymbol = TempSymbol(N, "lastFired")
+    // The phase whose step failed, selecting the link whose alternatives
+    // process the final term. Since the loop only ever exits through a step
+    // failure, it is always set before `result` runs.
+    val failPhaseSymbol = TempSymbol(N, "failPhase")
     val size = links.size
 
     val loop = matchers.iterator.zipWithIndex.foldRight(Split.End: Split):
@@ -504,10 +507,12 @@ class FixedPointCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynt
             Branch(resultSym.safeRef, matchSuccessPattern(S(outputSym :: Nil)),
               perform(
                 setStmt(focusSymbol, outputSym.safeRef),
-                setStmt(firedSymbol, int(index)),
                 setStmt(phaseSymbol, int((index + 1) % size)))
-            // No phase matches `size`, which makes the `while` form exit.
-            ) ~: perform(setStmt(phaseSymbol, int(size))))
+            // The step failed: record this phase and exit (no phase matches
+            // `size`, which makes the `while` form exit).
+            ) ~: perform(
+                setStmt(failPhaseSymbol, int(index)),
+                setStmt(phaseSymbol, int(size))))
         ) ~: rest
 
     val result = Term.SynthIf(
@@ -517,7 +522,7 @@ class FixedPointCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynt
             case S((postMatcher, _)) =>
               callMatcher(postMatcher, focusSymbol.safeRef, "post-processed result")
             case N => makeMatchSuccess(focusSymbol.safeRef)
-          Branch(firedSymbol.safeRef, intPattern(index), Split.Else(success)) ~: rest)
+          Branch(failPhaseSymbol.safeRef, intPattern(index), Split.Else(success)) ~: rest)
 
     val prelude =
       matchers.flatMap((_, stepImpls, postMatcherOpt) =>
@@ -527,14 +532,14 @@ class FixedPointCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynt
       ::: List(
         LetDecl(phaseSymbol, Nil), DefineVar(phaseSymbol, int(0)),
         LetDecl(focusSymbol, Nil), DefineVar(focusSymbol, inputSymbol.safeRef),
-        LetDecl(firedSymbol, Nil), DefineVar(firedSymbol, int(-1)))
+        LetDecl(failPhaseSymbol, Nil), DefineVar(failPhaseSymbol, int(-1)))
 
     Machine(paramList(param(inputSymbol)), prelude, loop, result)
 
   /** Assemble the machine: matcher functions for the redex and the side
     * conditions (reusing the non-backtracking `ups.Compiler`), the state
     * variables, and the `find`/`up` transition split executed in a loop. */
-  private def assemble(redexPattern: Pat, classes: Ls[ClassInfo], post: Opt[Pat], requireProgress: Bool)(using Context): Machine =
+  private def assemble(redexPattern: Pat, classes: Ls[ClassInfo], post: Opt[Pat])(using Context): Machine =
     // The redex matcher runs in `Full` mode: on success it returns
     // `MatchSuccess(contractum, bindings)` where the output is the rewritten
     // subterm. Side conditions only need Booleans (`MatchOnly`). The two
@@ -567,16 +572,10 @@ class FixedPointCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynt
     val focusSymbol = TempSymbol(N, "focus")
     val stackSymbol = TempSymbol(N, "stack")
     val resultSymbol = TempSymbol(N, "finalResult")
-    // Whether at least one contraction has fired. Only `requireProgress`
-    // machines track it: the chain `P as (S | _)` requires the first step to
-    // succeed, so a run with zero contractions is a match failure.
-    val progressedSymbol = TempSymbol(N, "progressed")
 
     def bool(value: Bool): Term = Term.Lit(BoolLit(value))
-    def markProgress: Ls[Statement] =
-      if requireProgress then setStmt(progressedSymbol, bool(true)) :: Nil else Nil
     def constructorTerm(cls: ClassInfo): Term =
-      Compiler.reference(cls.symbol, N).getOrElse(Term.Error)
+      Compiler.reference(cls.symbol, N).getOrElse(Term.Error())
     def classPattern(cls: ClassInfo, children: Ls[TempSymbol]): FlatPattern =
       FlatPattern.ClassLike(constructorTerm(cls), cls.symbol, S(children.map(_ -> N)), false)(Tree.Dummy)
 
@@ -636,8 +635,7 @@ class FixedPointCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynt
       matchRedex(focusSymbol.safeRef,
         // A contraction: refocus on the contractum and keep searching. This
         // is the step that avoids restarting from the root.
-        contractum => perform((
-          setStmt(focusSymbol, contractum.safeRef) :: markProgress)*),
+        contractum => perform(setStmt(focusSymbol, contractum.safeRef)),
         classChain)
 
     // ---- `up` mode: the focus is inert; re-examine the topmost frame ----
@@ -677,10 +675,10 @@ class FixedPointCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynt
             Branch(unchangedSymbol.safeRef, Split.Else(nodeSym.safeRef)) ~:
             Split.Else(`new`(constructorTerm(cls), tup(List.tabulate(cls.paramCount)(child)) :: Nil, s"rebuilt ${cls.symbol.nme}"))),
           matchRedex(rebuiltSymbol.safeRef,
-            contractum => perform((
-              setStmt(stackSymbol, tailSym.safeRef) ::
-              setStmt(focusSymbol, contractum.safeRef) ::
-              setStmt(modeSymbol, int(ModeFind)) :: markProgress)*),
+            contractum => perform(
+              setStmt(stackSymbol, tailSym.safeRef),
+              setStmt(focusSymbol, contractum.safeRef),
+              setStmt(modeSymbol, int(ModeFind))),
             altChain)))
     def upClass(cls: ClassInfo): Split =
       val children = List.tabulate(cls.paramCount)(index => TempSymbol(N, s"frameChild$index"))
@@ -732,23 +730,15 @@ class FixedPointCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynt
         LetDecl(focusSymbol, Nil), DefineVar(focusSymbol, inputSymbol.safeRef),
         LetDecl(stackSymbol, Nil), DefineVar(stackSymbol, `null`),
         LetDecl(resultSymbol, Nil), DefineVar(resultSymbol, `null`))
-      ::: (if requireProgress then
-        LetDecl(progressedSymbol, Nil) :: DefineVar(progressedSymbol, bool(false)) :: Nil
-      else Nil)
 
-    // Succeed with the normal form, post-processed by the middle
-    // alternatives when present. In the chain shape, the first step is
-    // required, so a run with zero contractions fails instead; in the
-    // disjunction shape, zero contractions are fine and the alternatives
-    // process the original scrutinee.
+    // Succeed with the normal form, post-processed by the trailing
+    // alternatives when present. Zero contractions are fine: the trailing
+    // alternatives then process the original scrutinee, and the (total)
+    // wildcard, when present, keeps it.
     val success = postMatcherOpt match
       case S((postMatcher, _)) =>
         callMatcher(postMatcher, resultSymbol.safeRef, "post-processed result")
       case N => makeMatchSuccess(resultSymbol.safeRef)
-    val result = Term.SynthIf(
-      if requireProgress then
-        Branch(progressedSymbol.safeRef, Split.Else(success)) ~:
-        Split.Else(makeMatchFailure())
-      else Split.Else(success))
+    val result = Term.SynthIf(Split.Else(success))
 
     Machine(paramList(param(inputSymbol)), prelude, loop, result)

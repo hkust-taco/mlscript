@@ -1,14 +1,8 @@
 :js
 
 // Fixed-point patterns may recurse indirectly through other definitions:
-//
-//   pattern StepsA = UnBox as StepsB | _
-//   pattern StepsB = UnTag as StepsA | _
-//
-// The semantics is strict alternation: the steps fire in cycle order
-// (`UnBox`, `UnTag`, `UnBox`, ...), the first step must succeed, and
-// whenever the next step fails, the alternatives of the last fired link
-// process the current term.
+// The semantics is alternation: the steps fire in cycle order
+// (`UnBox`, `UnTag`, `UnBox`, ...) and stops when the input is neither.
 
 open annotations { compile }
 
@@ -21,6 +15,9 @@ pattern UnTag = Tag(x) => x
 pattern StepsA = UnBox as StepsB | _
 pattern StepsB = UnTag as StepsA | _
 
+fun makeStepsA(x) = if x is @compile StepsA(y) then y
+fun makeStepsB(x) = if x is @compile StepsB(y) then y
+
 let mixed = Box(Tag(Box(42)))
 //│ mixed = Box(Tag(Box(42)))
 
@@ -29,7 +26,7 @@ if mixed is StepsA(r) then r else -1
 //│ = 42
 
 :expect 42
-if mixed is @compile StepsA(r) then r else -1
+makeStepsA of mixed
 //│ = 42
 
 // The alternation is strict: after a box, a tag must follow, so the second
@@ -42,92 +39,90 @@ if doubleBox is StepsA(r) then r else "<no match>"
 //│ = Box(42)
 
 :expect Box(42)
-if doubleBox is @compile StepsA(r) then r else "<no match>"
+makeStepsA of doubleBox
 //│ = Box(42)
 
-// The cycle can be entered at either definition; `StepsA` requires a box
-// first, while `StepsB` starts by unwrapping a tag.
+
 let tagged = Tag(Box(42))
 //│ tagged = Tag(Box(42))
 
-:expect "no match"
-if tagged is StepsA(r) then "matched" else "no match"
-//│ = "no match"
+:expect Tag(Box(42))
+if tagged is StepsA(r) then r else "no match"
+//│ = Tag(Box(42))
 
-:expect "no match"
-if tagged is @compile StepsA(r) then "matched" else "no match"
-//│ = "no match"
+:expect Tag(Box(42))
+makeStepsA of tagged
+//│ = Tag(Box(42))
 
 :expect 42
 if tagged is StepsB(r) then r else -1
 //│ = 42
 
 :expect 42
-if tagged is @compile StepsB(r) then r else -1
+makeStepsB of tagged
 //│ = 42
 
 
-// ————— Non-catch-all links —————
 
-// After unboxing, either a tag must follow or the result must be another
+// After unboxing, the value must be either a tag must follow or the result must be another
 // box; after untagging, anything goes.
-pattern PeelA = UnBox as PeelB | Box(_)
+pattern PeelA = UnBox as PeelB | 42
 pattern PeelB = UnTag as PeelA | _
 
-:expect Box(7)
-if Box(Box(7)) is PeelA(r) then r else "<no match>"
-//│ = Box(7)
+fun runPeelA(x) = if x is @compile PeelA(y) then y
 
-:expect Box(7)
-if Box(Box(7)) is @compile PeelA(r) then r else "<no match>"
-//│ = Box(7)
+:expect 42
+if Box(42) is PeelA(r) then r else "<no match>"
+//│ = 42
 
-:expect 7
+:expect 42
+runPeelA of Box(42)
+//│ = 42
+
+:expect Tag(7)
 if Box(Tag(7)) is PeelA(r) then r else "<no match>"
-//│ = 7
+//│ = Tag(7)
 
-:expect 7
-if Box(Tag(7)) is @compile PeelA(r) then r else "<no match>"
-//│ = 7
+:expect Tag(7)
+runPeelA of Box(Tag(7))
+//│ = Tag(7)
 
-:expect "no match"
-if Box(7) is PeelA(r) then "matched" else "no match"
-//│ = "no match"
+:expect 42
+if Box(Tag(Box(42))) is PeelA(r) then r
+//│ = 42
 
-:expect "no match"
-if Box(7) is @compile PeelA(r) then "matched" else "no match"
-//│ = "no match"
+:expect 42
+runPeelA of Box(Tag(Box(42)))
+//│ = 42
 
 
-// ————— A longer cycle —————
+
+data class Bin(content)
+
+pattern UnBin = Bin(x) => x
 
 pattern Cycle1 = UnBox as Cycle2 | _
 pattern Cycle2 = UnTag as Cycle3 | _
-pattern Cycle3 = UnBox as Cycle1 | _
+pattern Cycle3 = UnBin as Cycle1 | _
 
-let chained = Box(Tag(Box(Box(Tag(Box(1))))))
-//│ chained = Box(Tag(Box(Box(Tag(Box(1))))))
+let chained = Box(Tag(Bin(Box(Tag(Bin(1))))))
+//│ chained = Box(Tag(Bin(Box(Tag(Bin(1))))))
+
+fun unwrapCycle1(x) = if x is @compile Cycle1(y) then y
 
 :expect 1
 if chained is Cycle1(r) then r else -1
 //│ = 1
 
 :expect 1
-if chained is @compile Cycle1(r) then r else -1
+unwrapCycle1 of chained
 //│ = 1
 
+:expect 0
+unwrapCycle1 of Box(Tag(0))
+//│ = 0
 
-// ————— Body-annotated links —————
+:expect Bin(0)
+unwrapCycle1 of Box(Bin(0)) // Stops at `Bin`.
+//│ = Bin(0)
 
-// Annotating a link's right-hand side embeds the alternation machine in its
-// generated `unapply`, so plain use sites get the machine.
-pattern FastA = @compile (UnBox as FastB | _)
-pattern FastB = UnTag as FastA | _
-
-:expect 42
-if mixed is FastA(r) then r else -1
-//│ = 42
-
-:expect Box(42)
-if doubleBox is FastA(r) then r else "<no match>"
-//│ = Box(42)

@@ -112,7 +112,6 @@ if Box(Tag(7)) is PeelToLit(r) then "matched" else "no match"
 if Box(Tag(7)) is @compile PeelToLit(r) then "matched" else "no match"
 //│ = "no match"
 
-// Zero steps: the alternative applies to the scrutinee directly.
 :expect Lit(5)
 if Lit(5) is PeelToLit(r) then r else "<no match>"
 //│ = Lit(5)

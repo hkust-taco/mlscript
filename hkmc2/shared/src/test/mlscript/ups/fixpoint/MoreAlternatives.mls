@@ -1,0 +1,77 @@
+:js
+
+open annotations { compile }
+
+data class Box(val value) with
+  print("new Box(" + render(value) + ")")
+
+data class Tag(val value) with
+  print("new Tag(" + render(value) + ")")
+
+pattern UnBox = Box(x) => x
+
+// Peel all boxes if any. Then, untag or return the value
+pattern PeelUntag = UnBox as PeelUntag | Tag(x) => x | _
+
+fun peelUntag(x) = if x is @compile PeelUntag(x') then x'
+
+// Test: `Tag` in `Box`es.
+
+let boxedTag = Box(Box(Tag(5)))
+//│ > new Tag(5)
+//│ > new Box(Tag(5))
+//│ > new Box(Box(Tag(5)))
+//│ boxedTag = Box(Box(Tag(5)))
+
+:expect 5
+if boxedTag is PeelUntag(r) then r else -1
+//│ = 5
+
+:expect 5
+peelUntag(boxedTag)
+//│ = 5
+
+// Test: No `Tag`.
+
+let boxedNum = Box(Box(7))
+//│ > new Box(7)
+//│ > new Box(Box(7))
+//│ boxedNum = Box(Box(7))
+
+:expect 7
+if boxedNum is PeelUntag(r) then r
+//│ = 7
+
+:expect 7
+peelUntag(boxedNum)
+//│ = 7
+
+// Test: No `Box`es at all.
+
+:expect 5
+if Tag(5) is PeelUntag(r) then r
+//│ > new Tag(5)
+//│ = 5
+
+:expect 5
+peelUntag of Tag(5)
+//│ > new Tag(5)
+//│ = 5
+
+// Test: Interleaved `Tag` and `Box`.
+
+let boxedTaggedBox = Box(Box(Tag(Box(Tag(5)))))
+//│ > new Tag(5)
+//│ > new Box(Tag(5))
+//│ > new Tag(Box(Tag(5)))
+//│ > new Box(Tag(Box(Tag(5))))
+//│ > new Box(Box(Tag(Box(Tag(5)))))
+//│ boxedTaggedBox = Box(Box(Tag(Box(Tag(5)))))
+
+:expect Box(Tag(5))
+if boxedTaggedBox is PeelUntag(r) then r
+//│ = Box(Tag(5))
+
+:expect Box(Tag(5))
+peelUntag of boxedTaggedBox
+//│ = Box(Tag(5))

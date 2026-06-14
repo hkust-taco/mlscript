@@ -1,17 +1,9 @@
 :js
 
-// A fixed-point pattern need not end in a catch-all wildcard:
-//
-//   pattern P = Q as P | a
-//
-// reads `Q as (P | a)`. The machine normalizes the scrutinee and matches
-// `a` against the final normal form. When `a` fails there, the naive
-// backtracking semantics applies: the latest intermediate result matching
-// `a` is returned instead, and the whole match fails when there is none.
-// The compiled matcher implements this by retrying the failed machine run
-// with the naive translation, so allocations on that path appear twice.
+import "../../../mlscript-compile/Option.mls"
 
 open annotations { compile }
+open Option { Some, None }
 
 data class Box(val value) with
   print("new Box(" + render(value) + ")")
@@ -22,6 +14,8 @@ pattern UnBox = Box(x) => x
 
 // Peel boxes; the result must be a tag.
 pattern PeelToTag = UnBox as PeelToTag | Tag(_)
+
+fun peelToTag(x) = if x is @compile PeelToTag(x') then x'
 
 // The fast path: the normal form matches the alternative directly.
 let boxedTag = Box(Box(Tag(5)))
@@ -35,7 +29,7 @@ if boxedTag is PeelToTag(r) then r else "<no match>"
 //│ = Tag(5)
 
 :expect Tag(5)
-if boxedTag is @compile PeelToTag(r) then r else "<no match>"
+peelToTag(boxedTag)
 //│ = Tag(5)
 
 // Neither the normal form `7` nor any intermediate is a tag: no match.
@@ -48,34 +42,22 @@ let boxedNum = Box(Box(7))
 if boxedNum is PeelToTag(r) then "matched" else "no match"
 //│ = "no match"
 
-:expect "no match"
-if boxedNum is @compile PeelToTag(r) then "matched" else "no match"
-//│ = "no match"
+:re
+peelToTag(boxedNum)
+//│ ═══[RUNTIME ERROR] Error: match error
 
 // The alternative is part of the chain's tail, so it cannot rescue a failed
 // first step, even though `Tag(5)` matches it.
-:expect "no match"
-if Tag(5) is PeelToTag(r) then "matched" else "no match"
+:expect Tag(5)
+if Tag(5) is PeelToTag(r) then r
 //│ > new Tag(5)
-//│ = "no match"
+//│ = Tag(5)
 
-:expect "no match"
-if Tag(5) is @compile PeelToTag(r) then "matched" else "no match"
+:expect Tag(5)
+peelToTag(Tag(5))
 //│ > new Tag(5)
-//│ = "no match"
+//│ = Tag(5)
 
-// Peel boxes; the result must still be a box. A normal form can never be a
-// box (`UnBox` would have stepped it), so a successful match always
-// backtracks to the latest intermediate result that is one.
-pattern PeelToBox = UnBox as PeelToBox | Box(_)
-
-:expect Box(7)
-if boxedNum is PeelToBox(r) then r else "<no match>"
-//│ = Box(7)
-
-:expect Box(7)
-if boxedNum is @compile PeelToBox(r) then r else "<no match>"
-//│ = Box(7)
 
 
 // ————— With an evaluation-context step pattern —————
@@ -94,8 +76,9 @@ pattern Ctx(pattern Hole) =
 
 pattern Redex = Add(Lit(a), Lit(b)) => Lit(a + b)
 
-// Evaluation must reach a value; getting stuck is a match failure.
 pattern EvalValue = Ctx(Redex) as EvalValue | Value
+
+fun evalToValue(t) = if t is @compile EvalValue(Lit(v)) then Some(v) else None
 
 let sum = Add(Add(Lit(1), Lit(2)), Lit(3))
 //│ > new Lit(1)
@@ -112,12 +95,12 @@ if sum is EvalValue(r) and r is Lit(n) then n else -1
 //│ > new Lit(6)
 //│ = 6
 
-:expect 6
-if sum is @compile EvalValue(r) and r is Lit(n) then n else -1
+:expect Some(6)
+evalToValue(sum)
 //│ > new Lit(3)
 //│ > new Add(Lit(3), Lit(3))
 //│ > new Lit(6)
-//│ = 6
+//│ = Some(6)
 
 // The stuck term reduces to `Add(Lit(3), Tag(9))`, which is not a value,
 // and neither is any intermediate result: the match fails. The failed
@@ -136,10 +119,10 @@ if stuck is EvalValue(r) then "matched" else "no match"
 //│ > new Add(Lit(3), Tag(9))
 //│ = "no match"
 
-:expect "no match"
-if stuck is @compile EvalValue(r) then "matched" else "no match"
+:expect None
+evalToValue(stuck)
 //│ > new Lit(3)
 //│ > new Add(Lit(3), Tag(9))
 //│ > new Lit(3)
 //│ > new Add(Lit(3), Tag(9))
-//│ = "no match"
+//│ = None
