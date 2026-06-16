@@ -194,3 +194,38 @@ fun g(n)(m) =
 :expect [[4, 5, 1, 7, 1], 9]
 g(10)(0)
 //│ = [[4, 5, 1, 7, 1], 9]
+
+:sir
+fun f(a)(...z) = if z is
+  [] then a
+  [x, ...xs] then f(a + 1)(...xs)
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let f$tailrec;
+//│ @private
+//│ define f$tailrec as fun f$tailrec⁰(a, z) {
+//│   loop loopLabel:
+//│     let x, xs, middleElements, element0$, tmp;
+//│     match z
+//│       Array(0) =>
+//│         return a
+//│       Array(1+) =>
+//│         set element0$ = runtime⁰.Tuple⁰.get⁰(z, 0);
+//│         set middleElements = runtime⁰.Tuple⁰.slice⁰(z, 1, 0);
+//│         set xs = middleElements;
+//│         set x = element0$;
+//│         set tmp = +⁰(a, 1);
+//│         set a = tmp;
+//│         set z = xs;
+//│         continue loopLabel
+//│       else
+//│         throw new globalThis⁰.Error⁰("match error")
+//│     end
+//│   end
+//│ };
+//│ define f² as fun f³(a)(...z) { return f$tailrec⁰(a, z) };
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+:expect 4
+f(0)(1, 2, 3, 4)
+//│ = 4
