@@ -229,3 +229,55 @@ fun f(a)(...z) = if z is
 :expect 4
 f(0)(1, 2, 3, 4)
 //│ = 4
+
+
+// Ensure that the internal loop and the outer-facing definition have different param symbol IDs.
+:lot
+:noInline
+fun f(a)(b) = f(a)(b)
+//│ —————————————| Lowered IR Tree |————————————————————————————————————————————————————————————————————
+//│ Program:
+//│   main = Scoped(syms = {member:f$tailrec¹}):
+//│     body = Define:
+//│       defn = FunDefn:
+//│         sym = member:f$tailrec¹
+//│         dSym = term:f$tailrec²
+//│         params = Ls of 
+//│           ParamList:
+//│             params = Ls of 
+//│               Param:
+//│                 sym = a⁰
+//│                 modulefulness = Modulefulness of N
+//│               Param:
+//│                 sym = b⁰
+//│                 modulefulness = Modulefulness of N
+//│         body = Label:
+//│           label = label:loopLabel⁰
+//│           loop = true
+//│           body = Continue of label:loopLabel⁰
+//│       rest = Define: \
+//│       defn = FunDefn:
+//│         sym = member:f⁴
+//│         dSym = term:f⁵
+//│         params = Ls of 
+//│           ParamList:
+//│             params = Ls of 
+//│               Param:
+//│                 sym = a¹
+//│                 modulefulness = Modulefulness of N
+//│           ParamList:
+//│             params = Ls of 
+//│               Param:
+//│                 sym = b¹
+//│                 modulefulness = Modulefulness of N
+//│         body = Return of Call:
+//│           fun = MemberRef{disamb=term:f$tailrec²}:
+//│             bms = member:f$tailrec¹
+//│             disamb = term:f$tailrec²
+//│           argss = Ls of 
+//│             Ls of 
+//│               Arg:
+//│                 value = SimpleRef of a¹
+//│               Arg:
+//│                 value = SimpleRef of b¹
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————

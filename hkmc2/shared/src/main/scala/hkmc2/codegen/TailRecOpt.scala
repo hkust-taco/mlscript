@@ -264,7 +264,13 @@ class TailRecOpt(using State, TL, Raise):
 
     val maxParamLen = maxInt(funs, paramsLen)
     val paramSyms =
-        if funs.length === 1 then (getParamSyms(funs.head))
+        if funs.length === 1 then
+          val syms = getParamSyms(funs.head)
+          if funs.head.params.length === 1 then syms
+          else
+            // Duplicate the params for the internal loop defn (see the doc at the 
+            // end of this function), but preserve the names.
+            syms.map(v => VarSymbol(Tree.Ident(v.id.name)))
         else
           for i <- 0 until maxParamLen yield VarSymbol(Tree.Ident("param" + i))
       .toList
