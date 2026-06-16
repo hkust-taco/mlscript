@@ -508,9 +508,13 @@ class TailRecOpt(using State, TL, Raise):
       if funs.length === 1 then initial
       else Param.simple(curIdSym) :: initial
     
+    val newParamLists =
+      if funs.length === 1 && funs.head.params.size <= 1 then funs.head.params
+      else PlainParamList(params) :: Nil
+    
     val loopDefn = FunDefn(
       owner, bms, dSym,
-      PlainParamList(params) :: Nil,
+      newParamLists,
       loop)(N, annotations = Nil) // Q: maybe should be Private?
     
     if funs.size === 1 then
