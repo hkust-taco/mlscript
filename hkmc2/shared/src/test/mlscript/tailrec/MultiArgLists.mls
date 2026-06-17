@@ -20,7 +20,7 @@ fun loop(x)(y) =
 loop(1000)(0)
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let loop$tailrec;
-//│ @inline @private
+//│ @private
 //│ define loop$tailrec as fun loop$tailrec⁰(x, y) {
 //│   loop loopLabel:
 //│     let scrut, tmp, tmp1;
@@ -37,7 +37,7 @@ loop(1000)(0)
 //│     end
 //│   end
 //│ };
-//│ @tailrec
+//│ @inline @tailrec
 //│ define loop⁰ as fun loop¹(x)(y) { return loop$tailrec⁰(x, y) };
 //│ return loop¹(1000)(0)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
@@ -52,7 +52,7 @@ fun count(start)(stop) =
 count(0)(100)
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let count$tailrec;
-//│ @inline @private
+//│ @private
 //│ define count$tailrec as fun count$tailrec⁰(start, stop) {
 //│   loop loopLabel:
 //│     let scrut, tmp;
@@ -67,6 +67,7 @@ count(0)(100)
 //│     end
 //│   end
 //│ };
+//│ @inline
 //│ define count⁰ as fun count¹(start)(stop) {
 //│   return count$tailrec⁰(start, stop)
 //│ };
@@ -201,7 +202,7 @@ fun f(a)(...z) = if z is
   [x, ...xs] then f(a + 1)(...xs)
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let f$tailrec;
-//│ @inline @private
+//│ @private
 //│ define f$tailrec as fun f$tailrec⁰(a, z) {
 //│   loop loopLabel:
 //│     let x, xs, middleElements, element0$, tmp;
@@ -222,6 +223,7 @@ fun f(a)(...z) = if z is
 //│     end
 //│   end
 //│ };
+//│ @inline
 //│ define f² as fun f³(a)(...z) { return f$tailrec⁰(a, z) };
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————

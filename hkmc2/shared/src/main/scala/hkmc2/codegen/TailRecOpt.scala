@@ -516,7 +516,7 @@ class TailRecOpt(using State, TL, Raise):
         val defn = FunDefn(
           owner, bms, dSym,
           f.params,
-          loop)(N, annotations = Nil)
+          loop)(N, annotations = f.annotations)
         (N, defn :: Nil)
       case f :: Nil =>
         // When a function has multiple param lists, TailRecOpt flattens them into a single
@@ -529,7 +529,7 @@ class TailRecOpt(using State, TL, Raise):
         val internalLoopDefn = FunDefn(
           owner, loopBms, loopDSym,
           PlainParamList(params) :: Nil,
-          loop)(N, annotations = Annot.Inline :: Annot.Private :: Nil)
+          loop)(N, annotations = Annot.Private :: Nil)
         val paramArgs = getParamSyms(f).map(s => s.asSimpleRef.asArg)
         val internalSel = owner match
           case Some(value) => Select(value.asThis, Tree.Ident(loopBms.nme))(S(loopDSym))
@@ -537,8 +537,9 @@ class TailRecOpt(using State, TL, Raise):
         val wrapperBod = Return(
           Call(internalSel, paramArgs ne_:: Nil)(CallMetadata.defaultMlsFun),
         )
+        val newAnnots = if f.annotations.contains(Annot.Inline) then f.annotations else Annot.Inline :: f.annotations
         val wrapperDefn = FunDefn(f.owner, f.sym, f.dSym, f.params, wrapperBod)(
-          f.configOverride, annotations = f.annotations)
+          f.configOverride, annotations = newAnnots)
         (S(internalLoopDefn), wrapperDefn :: Nil)
       case _ =>
         val newParamLists =
