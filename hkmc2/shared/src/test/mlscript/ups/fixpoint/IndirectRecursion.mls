@@ -64,8 +64,9 @@ makeStepsB of tagged
 
 
 
-// After unboxing, the value must be either a tag must follow or the result must be another
-// box; after untagging, anything goes.
+// `PeelA` is non-catch-all: after unboxing, a tag must follow (via `PeelB`),
+// or — when the value is not a box and so cannot be unboxed — it must be the
+// literal `42`. `PeelB` ends in `_`, so after untagging anything goes.
 pattern PeelA = UnBox as PeelB | 42
 pattern PeelB = UnTag as PeelA | _
 

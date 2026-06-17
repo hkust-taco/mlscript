@@ -1,21 +1,39 @@
 :js
 
+// A fixed-point pattern need not end in a catch-all wildcard:
+//
+//     pattern P = Q as P | a
+//
+// reads `(Q as P) | a`. The machine normalizes the scrutinee and matches
+// `a` against the final normal form. When `a` fails there, the naive
+// backtracking semantics applies: the latest intermediate result matching
+// `a` is returned instead, and the whole match fails when there is none.
+// The compiled matcher implements this by retrying the failed machine run
+// with the naive translation, so allocations on that path appear twice.
+
 import "../../../mlscript-compile/Option.mls"
 
 open annotations { compile }
 open Option { Some, None }
 
+let shouldPrint = true
+//│ shouldPrint = true
+
 data class Box(val value) with
-  print("new Box(" + render(value) + ")")
+  if shouldPrint do
+    print("new Box(" + render(value) + ")")
 data class Tag(val value) with
-  print("new Tag(" + render(value) + ")")
+  if shouldPrint do
+    print("new Tag(" + render(value) + ")")
 
 pattern UnBox = Box(x) => x
 
 // Peel boxes; the result must be a tag.
 pattern PeelToTag = UnBox as PeelToTag | Tag(_)
 
-fun peelToTag(x) = if x is @compile PeelToTag(x') then x'
+fun peelSlow(x) = if x is PeelToTag(x') then Some(x') else None
+
+fun peelFast(x) = if x is @compile PeelToTag(x') then Some(x') else None
 
 // The fast path: the normal form matches the alternative directly.
 let boxedTag = Box(Box(Tag(5)))
@@ -24,13 +42,13 @@ let boxedTag = Box(Box(Tag(5)))
 //│ > new Box(Box(Tag(5)))
 //│ boxedTag = Box(Box(Tag(5)))
 
-:expect Tag(5)
-if boxedTag is PeelToTag(r) then r else "<no match>"
-//│ = Tag(5)
+:expect Some(Tag(5))
+peelSlow(boxedTag)
+//│ = Some(Tag(5))
 
-:expect Tag(5)
-peelToTag(boxedTag)
-//│ = Tag(5)
+:expect Some(Tag(5))
+peelFast(boxedTag)
+//│ = Some(Tag(5))
 
 // Neither the normal form `7` nor any intermediate is a tag: no match.
 let boxedNum = Box(Box(7))
@@ -38,25 +56,55 @@ let boxedNum = Box(Box(7))
 //│ > new Box(Box(7))
 //│ boxedNum = Box(Box(7))
 
-:expect "no match"
-if boxedNum is PeelToTag(r) then "matched" else "no match"
-//│ = "no match"
+:expect None
+peelSlow(boxedNum)
+//│ = None
 
+:expect None
+peelFast(boxedNum)
+//│ = None
+
+fun boxify(gem, depth) =
+  let
+    wrapped = gem
+    remaining = depth
+  set shouldPrint = false
+  while remaining > 0 do
+    set
+      wrapped = Box(wrapped)
+      remaining -= 1
+  set shouldPrint = true
+  wrapped
+
+:silent
+let excessiveWrapped42 =
+  let temp = Tag(42)
+  // This will definitely cause stack overflow in most settings.
+  set temp = boxify(temp, 1200)
+  set temp = boxify(temp, 1200)
+  set temp = boxify(temp, 1200)
+  set temp = boxify(temp, 1200)
+  set temp = boxify(temp, 1200)
+  set temp = boxify(temp, 1200)
+  set temp = boxify(temp, 1200)
+  set temp = boxify(temp, 1200)
+  set temp = boxify(temp, 1200)
+  set temp = boxify(temp, 1200)
+  temp
+//│ > new Tag(42)
+
+// With no step to take, the alternative matches the scrutinee directly:
+// `UnBox` cannot peel a bare `Tag`, so `Tag(_)` matches `Tag(5)` as-is.
 :re
-peelToTag(boxedNum)
-//│ ═══[RUNTIME ERROR] Error: match error
+peelSlow(excessiveWrapped42)
+//│ ═══[RUNTIME ERROR] RangeError: Maximum call stack size exceeded
 
-// The alternative is part of the chain's tail, so it cannot rescue a failed
-// first step, even though `Tag(5)` matches it.
-:expect Tag(5)
-if Tag(5) is PeelToTag(r) then r
-//│ > new Tag(5)
-//│ = Tag(5)
-
-:expect Tag(5)
-peelToTag(Tag(5))
-//│ > new Tag(5)
-//│ = Tag(5)
+:expect Some(Tag(42))
+// Becuase the refocusing machine uses `while` loop, even in simple cases where
+// naive matchers don't construct unnecessary objects, the optimized compilation
+// is still more efficient.
+peelFast(excessiveWrapped42)
+//│ = Some(Tag(42))
 
 
 
@@ -76,9 +124,12 @@ pattern Ctx(pattern Hole) =
 
 pattern Redex = Add(Lit(a), Lit(b)) => Lit(a + b)
 
+// Evaluation must reach a value; getting stuck is a match failure.
 pattern EvalValue = Ctx(Redex) as EvalValue | Value
 
-fun evalToValue(t) = if t is @compile EvalValue(Lit(v)) then Some(v) else None
+fun slowEvalToValue(t) = if t is EvalValue(Lit(v)) then Some(v) else None
+
+fun fastEvalToValue(t) = if t is @compile EvalValue(Lit(v)) then Some(v) else None
 
 let sum = Add(Add(Lit(1), Lit(2)), Lit(3))
 //│ > new Lit(1)
@@ -88,15 +139,15 @@ let sum = Add(Add(Lit(1), Lit(2)), Lit(3))
 //│ > new Add(Add(Lit(1), Lit(2)), Lit(3))
 //│ sum = Add(Add(Lit(1), Lit(2)), Lit(3))
 
-:expect 6
-if sum is EvalValue(r) and r is Lit(n) then n else -1
+:expect Some(6)
+slowEvalToValue(sum)
 //│ > new Lit(3)
 //│ > new Add(Lit(3), Lit(3))
 //│ > new Lit(6)
-//│ = 6
+//│ = Some(6)
 
 :expect Some(6)
-evalToValue(sum)
+fastEvalToValue(sum)
 //│ > new Lit(3)
 //│ > new Add(Lit(3), Lit(3))
 //│ > new Lit(6)
@@ -113,14 +164,15 @@ let stuck = Add(Add(Lit(1), Lit(2)), Tag(9))
 //│ > new Add(Add(Lit(1), Lit(2)), Tag(9))
 //│ stuck = Add(Add(Lit(1), Lit(2)), Tag(9))
 
-:expect "no match"
-if stuck is EvalValue(r) then "matched" else "no match"
+:expect None
+slowEvalToValue(stuck)
 //│ > new Lit(3)
 //│ > new Add(Lit(3), Tag(9))
-//│ = "no match"
+//│ = None
 
 :expect None
-evalToValue(stuck)
+// TODO: Get rid of the unnecessary computation here.
+fastEvalToValue(stuck)
 //│ > new Lit(3)
 //│ > new Add(Lit(3), Tag(9))
 //│ > new Lit(3)

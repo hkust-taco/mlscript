@@ -19,26 +19,33 @@ pattern UnBox = Box(x) => x
 pattern UnTag = Tag(x) => x
 
 // Peel boxes and tags in any interleaving.
-pattern PeelBoth = (UnBox as PeelBoth) | (UnTag as PeelBoth) | _
+pattern PeelBoth =
+  | UnBox as PeelBoth
+  | UnTag as PeelBoth
+  | _
 
 let wrapped = Box(Tag(Box(42)))
 //│ wrapped = Box(Tag(Box(42)))
 
+fun peelBothSlow(x) = if x is PeelBoth(r) then r
+
+fun peelBothFast(x) = if x is @compile PeelBoth(r) then r
+
 :expect 42
-if wrapped is PeelBoth(r) then r else -1
+peelBothSlow(wrapped)
 //│ = 42
 
 :expect 42
-if wrapped is @compile PeelBoth(r) then r else -1
+peelBothFast(wrapped)
 //│ = 42
 
 // Zero steps are allowed: the wildcard accepts the unwrappable scrutinee.
 :expect 7
-if 7 is PeelBoth(r) then r else -1
+peelBothSlow(7)
 //│ = 7
 
 :expect 7
-if 7 is @compile PeelBoth(r) then r else -1
+peelBothFast(7)
 //│ = 7
 
 
@@ -60,62 +67,81 @@ pattern Ctx(pattern Hole) =
 pattern ProperStep = Ctx(Add(Lit(a), Lit(b)) => Lit(a + b))
 pattern SloppyStep = Ctx(Add(Lit(a), _) => Lit(a))
 
-pattern EvalSloppy = (ProperStep as EvalSloppy) | (SloppyStep as EvalSloppy) | _
+pattern EvalSloppy =
+  | ProperStep as EvalSloppy
+  | SloppyStep as EvalSloppy
+  | _
+
+fun evalSloppySlow(x) = if x is EvalSloppy(y) then y
+
+fun evalSloppyFast(x) = if x is @compile EvalSloppy(y) then y
 
 // Both operands are literals: the proper step must win.
-:expect 3
-if Add(Lit(1), Lit(2)) is EvalSloppy(r) and r is Lit(n) then n else -1
-//│ = 3
+:expect Lit(3)
+evalSloppySlow of Add(Lit(1), Lit(2))
+//│ = Lit(3)
 
-:expect 3
-if Add(Lit(1), Lit(2)) is @compile EvalSloppy(r) and r is Lit(n) then n else -1
-//│ = 3
+:expect Lit(3)
+evalSloppyFast of Add(Lit(1), Lit(2))
+//│ = Lit(3)
 
 // The right operand is stuck: only the sloppy step applies.
-:expect 1
-if Add(Lit(1), Tag(9)) is EvalSloppy(r) and r is Lit(n) then n else -1
-//│ = 1
+:expect Lit(1)
+evalSloppySlow of Add(Lit(1), Tag(9))
+//│ = Lit(1)
 
-:expect 1
-if Add(Lit(1), Tag(9)) is @compile EvalSloppy(r) and r is Lit(n) then n else -1
-//│ = 1
+:expect Lit(1)
+evalSloppyFast of Add(Lit(1), Tag(9))
+//│ = Lit(1)
 
 // The steps alternate as needed: the left sum is reduced properly before
 // the sloppy step drops the stuck right operand.
-:expect 3
-if Add(Add(Lit(1), Lit(2)), Tag(9)) is EvalSloppy(r) and r is Lit(n) then n else -1
-//│ = 3
+:expect Lit(3)
+evalSloppySlow of Add(Add(Lit(1), Lit(2)), Tag(9))
+//│ = Lit(3)
 
-:expect 3
-if Add(Add(Lit(1), Lit(2)), Tag(9)) is @compile EvalSloppy(r) and r is Lit(n) then n else -1
-//│ = 3
+:expect Lit(3)
+evalSloppyFast of Add(Add(Lit(1), Lit(2)), Tag(9))
+//│ = Lit(3)
 
 
 // ————— Without a catch-all —————
 
 // Peel boxes and tags; the result must be a literal.
-pattern PeelToLit = (UnBox as PeelToLit) | (UnTag as PeelToLit) | Lit(_)
+pattern PeelToLit =
+  | UnBox as PeelToLit
+  | UnTag as PeelToLit
+  | Lit(_)
 
-:expect Lit(1)
-if Box(Tag(Lit(1))) is PeelToLit(r) then r else "<no match>"
-//│ = Lit(1)
+fun peelToLitSlow(x) = if x is PeelToLit(Lit(y)) then y
 
-:expect Lit(1)
-if Box(Tag(Lit(1))) is @compile PeelToLit(r) then r else "<no match>"
-//│ = Lit(1)
+fun peelToLitFast(x) = if x is @compile PeelToLit(Lit(y)) then y
 
-:expect "no match"
-if Box(Tag(7)) is PeelToLit(r) then "matched" else "no match"
-//│ = "no match"
+let input1 = Box(Tag(Lit(1)))
+//│ input1 = Box(Tag(Lit(1)))
 
-:expect "no match"
-if Box(Tag(7)) is @compile PeelToLit(r) then "matched" else "no match"
-//│ = "no match"
+peelToLitSlow(input1)
+//│ = 1
 
-:expect Lit(5)
-if Lit(5) is PeelToLit(r) then r else "<no match>"
-//│ = Lit(5)
+peelToLitFast(input1)
+//│ = 1
 
-:expect Lit(5)
-if Lit(5) is @compile PeelToLit(r) then r else "<no match>"
-//│ = Lit(5)
+let input2 = Box(Tag(7))
+//│ input2 = Box(Tag(7))
+
+:re
+peelToLitSlow(input2)
+//│ ═══[RUNTIME ERROR] Error: match error
+
+:re
+peelToLitFast(input2)
+//│ ═══[RUNTIME ERROR] Error: match error
+
+let input3 = Lit(5)
+//│ input3 = Lit(5)
+
+peelToLitSlow(input3)
+//│ = 5
+
+peelToLitFast(input3)
+//│ = 5
