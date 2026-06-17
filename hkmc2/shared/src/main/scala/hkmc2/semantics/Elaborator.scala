@@ -498,7 +498,7 @@ extends Importer with ucs.SplitElaborator:
       val modify = ConfigParser.parseOverrides(args)
       S(Annot.Config(modify))
     case _ => term(tree) match
-      case Term.Error => N
+      case Term.Error() => N
       case trm =>
         trm.symbol match
         case S(sym) =>
@@ -620,6 +620,8 @@ extends Importer with ucs.SplitElaborator:
   def subterm(tree: Tree): Ctxl[UnderCtx ?=> Term] =
   trace[Term](s"Elab subterm ${tree.showDbg}", r => s"~> $r"):
     
+    def error = Term.Error().withLocOf(tree)
+    
     /** Fallback to a normal selection + application when label-specific handling does not apply. */
     def mkNonLabelSelectionApp(tree: App, sel: Sel, args: Ls[Tree]): Term =
       val sym = FlowSymbol.app()
@@ -674,14 +676,14 @@ extends Importer with ucs.SplitElaborator:
       raise(ErrorReport(
         msg"Expected a right-hand side for this assignment" ->
           tree.toLoc :: Nil))
-      Term.Error
+      error
     case LetLike(Keywrd(`set`), lhs, S(rhs), S(bod)) =>
       // * Backtracking assignment
       if config.effectHandlers.isDefined then
         raise(ErrorReport(
           msg"Backtracking assignment is not supported with effect handlers enabled" ->
             tree.toLoc :: Nil))
-        Term.Error
+        error
       else
         val lt = subterm(lhs)
         val sym = TempSymbol(S(lt), "old")
@@ -693,7 +695,7 @@ extends Importer with ucs.SplitElaborator:
     case LetLike(Keywrd(Keyword.`set`), _, N, S(_)) =>
       raise:
         ErrorReport(msg"Expected a right-hand side for this assignment" -> tree.toLoc :: Nil)
-      Term.Error
+      error
     case (hd @ Hndl(id: Ident, c, Block(sts_), S(bod))) => ctx.nest(OuterCtx.LambdaOrHandlerBlock).givenIn:
       
       val sym = VarSymbol(id)
@@ -741,21 +743,17 @@ extends Importer with ucs.SplitElaborator:
       raise(ErrorReport(
         msg"Unsupported handle binding shape" ->
           h.toLoc :: Nil))
-      Term.Error
+      error
     case id @ Ident("this") =>
       ctx.getOuter match
       case S(sym) => sym.ref(id)
       case N =>
         raise:
           ErrorReport(msg"Cannot use 'this' outside of an object scope" -> tree.toLoc :: Nil)
-        Term.Error
-    case id @ Ident("|" | "&") =>
-      raise:
-        ErrorReport(msg"Unexpected use of special operator '${id.name}'" -> id.toLoc :: Nil)
-      Term.Error
+        error
     case id @ Ident(name) => ident(id).getOrElse:
       raise(ErrorReport(msg"Name not found: $name" -> id.toLoc :: Nil))
-      Term.Error
+      error
     case TyApp(lhs, targs) =>
       Term.TyApp(subterm(lhs), targs.map {
         case Modified(Keywrd(Keyword.`in`), arg) => Term.WildcardTy(S(subterm(arg)), N)
@@ -789,7 +787,7 @@ extends Importer with ucs.SplitElaborator:
       
       if syms.length + outer.count(_ => true) =/= tvs.length then
         raise(ErrorReport(msg"Illegal forall annotation." -> tree.toLoc :: Nil))
-        Term.Error
+        error
       else
         given Ctx = ctx ++ boundVars
         val bds = syms.map:
@@ -833,21 +831,21 @@ extends Importer with ucs.SplitElaborator:
           raise(ErrorReport(msg"Identifier `${idn.name}` does not name a known class symbol." -> idn.toLoc :: Nil))
           N
       Term.SelProj(subterm(pre), c, idp)(f, FlowSymbol.selProj(idp.name), N, S(summon))
+    case InfixApp(lhs, op @ Keywrd(Keyword.`|`), rhs) =>
+      Term.CompType(subterm(lhs), subterm(rhs), true)//.withLocOf(tree)
+    case InfixApp(lhs, op @ Keywrd(Keyword.`&`), rhs) =>
+      Term.CompType(subterm(lhs), subterm(rhs), false)//.withLocOf(tree)
     case InfixApp(lhs, kw, rhs) =>
       raise:
         ErrorReport(msg"Unexpected infix use of keyword '${kw.name}' here" -> tree.toLoc :: Nil)
-      Term.Error
-    case OpApp(lhs, Ident("|"), rhs :: Nil) =>
-      Term.CompType(subterm(lhs), subterm(rhs), true)
-    case OpApp(lhs, Ident("&"), rhs :: Nil) =>
-      Term.CompType(subterm(lhs), subterm(rhs), false)
+      error
     case OpApp(lhs, Ident(":="),rhs :: Nil) =>
       Term.SetRef(subterm(lhs), subterm(rhs))
     case App(Ident("!"), Tup(rhs :: Nil)) =>
       Term.Deref(subterm(rhs))
     case App(Ident("~"), Tup(rhs :: Nil)) =>
       Term.Neg(subterm(rhs))
-    case App(Ident("|" | "&"), Tup(rhs :: Nil)) =>
+    case PrefixApp(Keywrd(Keyword.`|` | Keyword.`&`), rhs) =>
       subterm(rhs)
     case tree @ OpSplit(lhs, rhss) =>
       val tree = rhss.foldLeft(lhs):
@@ -891,7 +889,7 @@ extends Importer with ucs.SplitElaborator:
           raise:
             ErrorReport(msg"Non-local 'continue' is only supported with effect handlers enabled."
               -> labelId.toLoc :: Nil)
-          Term.Error
+          error
         else
           mkNonLocalContinueInvocation(binding, nme)
       case LabelLookup.NotFound =>
@@ -923,7 +921,7 @@ extends Importer with ucs.SplitElaborator:
           raise:
             ErrorReport(msg"Non-local 'break' is only supported with effect handlers enabled."
               -> labelId.toLoc :: Nil)
-          Term.Error
+          error
         else
           markEffectMethodUsed(binding.nonLocalBreakMethodMarker, nme)
           mkNonLocalEffectInvocation(binding.nonLocalHandlerSymbol, "break", nme, Nil, Nil)
@@ -938,7 +936,7 @@ extends Importer with ucs.SplitElaborator:
           raise:
             ErrorReport(msg"Non-local 'continue' is only supported with effect handlers enabled."
               -> labelId.toLoc :: Nil)
-          Term.Error
+          error
         else
           mkNonLocalContinueInvocation(binding, nme)
       case LabelLookup.NotFound =>
@@ -1047,20 +1045,20 @@ extends Importer with ucs.SplitElaborator:
         if config.effectHandlers.isEmpty then
           raise:
             ErrorReport(msg"Non-local return statements are only supported with effect handlers enabled." -> tree.toLoc :: Nil)
-          Term.Error
+          error
         else
           val callSiteId = new Ident("return").withLocOf(kw)
           mkNonLocalEffectInvocation(sym, "ret", callSiteId, body :: Nil, subterm(body) :: Nil)
       case ReturnHandler.NotInFunction =>
         raise:
           ErrorReport(msg"Return statements are not allowed outside of functions." -> tree.toLoc :: Nil)
-        Term.Error
+        error
       case ReturnHandler.Direct =>
         Term.Ret(subterm(body))
       case ReturnHandler.Forbidden =>
         raise:
           ErrorReport(msg"Return statements are not allowed in this context." -> tree.toLoc :: Nil)
-        Term.Error
+        error
     case PrefixApp(kw @ Keywrd(Keyword.`throw`), body) =>
       Term.Throw(subterm(body)).mkLocWith(kw)
     case PrefixApp(kw @ Keywrd(Keyword.`do`), InfixApp(labelId: Ident, Keywrd(Keyword.`:`), body)) =>
@@ -1086,23 +1084,23 @@ extends Importer with ucs.SplitElaborator:
     case RegRef(reg, value) => Term.RegRef(subterm(reg), subterm(value))
     case Outer(S(_)) =>
       raise(ErrorReport(msg"Illegal outer binding." -> tree.toLoc :: Nil))
-      Term.Error
+      error
     case Outer(N) => ctx.get("outer") match
       case S(sym) => sym.ref(Ident("outer"))
       case N =>
         raise(ErrorReport(msg"Illegal outer reference." -> tree.toLoc :: Nil))
-        Term.Error
+        error
     case Empty() =>
       raise(ErrorReport(msg"A term was expected in this position, but no term was found." -> tree.toLoc :: Nil))
-      Term.Error
+      error
     case Error() =>
-      Term.Error
+      error
     case TermDef(k, nme, rhs) =>
       raise(ErrorReport(msg"Illegal definition in term position." -> tree.toLoc :: Nil))
-      Term.Error
+      error
     case TypeDef(k, head, rhs) =>
       raise(ErrorReport(msg"Illegal type declaration in term position." -> tree.toLoc :: Nil))
-      Term.Error
+      error
     case Modified(Keywrd(Keyword.`mut`), body: Block) =>
       blockOrRcd(body, hasResult = true) match
       case (Blk(Nil, Term.UnitVal()), ctx) =>
@@ -1145,7 +1143,7 @@ extends Importer with ucs.SplitElaborator:
       go(subterm(lhs), rhs :: Nil)
     case Open(op) =>
       raise(ErrorReport(msg"Illegal position for 'open' statement." -> tree.toLoc :: Nil))
-      Term.Error
+      error
     case OpenIn(op, body) =>
       subterm(Block(Open(op) :: body :: Nil))
     case DynAccess(obj, rhs) =>
@@ -1156,15 +1154,15 @@ extends Importer with ucs.SplitElaborator:
         Term.DynSel(subterm(obj), Term.Lit(StrLit(id.name)).withLocOf(id), false)
       case _ =>
         raise(ErrorReport(msg"Illegal dynamic field access selector (${rhs.describe})." -> tree.toLoc :: Nil))
-        Term.Error
+        error
     case Spread(kw, body) =>
       raise(ErrorReport(msg"Illegal position for '${kw.name}' spread operator." -> kw.toLoc :: Nil))
-      Term.Error
+      error
     case und: Under =>
       summon[UnderCtx].unders match
       case N =>
         raise(ErrorReport(msg"Illegal position for '_' placeholder." -> tree.toLoc :: Nil))
-        Term.Error
+        error
       case S(unds) =>
         val sym = VarSymbol(Ident("_" + unds.size))
         unds += sym
@@ -1174,15 +1172,15 @@ extends Importer with ucs.SplitElaborator:
         Term.Annotated(ann, subterm(rhs)))
     case Keywrd(kw) =>
       raise(ErrorReport(msg"Unexpected keyword '${kw.name}' in this position." -> tree.toLoc :: Nil))
-      Term.Error
+      error
     case Constructor(delc) =>
       raise(ErrorReport(msg"Unsupported constructor in this position." -> tree.toLoc :: Nil))
-      Term.Error
+      error
     case Dummy | _: SplitPoint | _: LexicalNew | _: Region | _: Effectful =>
       lastWords(s"Unexpected ${tree.describe} in subterm position: $tree")
     case Dummy | _: SplitPoint | _: Pun | _: LetLike | _: TyTup | _: Directive =>
       raise(ErrorReport(msg"Unsupported term in this position (${tree.describe})." -> tree.toLoc :: Nil))
-      Term.Error
+      error
   
   def arg(tree: Tree)(using UnderCtx): Ctxl[Term] = tree match
     case u: Under => subterm(tree) // Note: currently `f(a, _, c)` is treated the same as `f of a, _, c`
@@ -1426,7 +1424,7 @@ extends Importer with ucs.SplitElaborator:
             RcdField(term(inner), rhs_t) :: acc
           case _ =>
             raise(ErrorReport(msg"Unexpected record key shape." -> rlhs.toLoc :: Nil))
-            RcdField(Term.Error, rhs_t) :: acc
+            RcdField(Term.Error().withLocOf(rlhs), rhs_t) :: acc
         newCtx.givenIn:
           go(sts, Nil, newAcc)
       case (hd @ LetLike(kw @ Keywrd(`let`), Apps(id: Ident, tups), rhso, N)) :: sts
@@ -1450,7 +1448,7 @@ extends Importer with ucs.SplitElaborator:
           go(sts, Nil, newAcc)
       case (tree @ LetLike(Keywrd(`let`), lhs, _, N)) :: sts =>
         raise(ErrorReport(msg"Unsupported let binding shape" -> tree.toLoc :: Nil))
-        go(sts, Nil, Term.Error :: acc)
+        go(sts, Nil, Term.Error().withLocOf(tree) :: acc)
       case Def(lhs, rhs) :: sts =>
         reportUnusedAnnotations
         lhs match
@@ -1462,20 +1460,20 @@ extends Importer with ucs.SplitElaborator:
             case S(sym: (LocalSymbol | TermSymbol)) => go(sts, Nil, DefineVar(sym, r) :: acc)
             case S(sym) =>
               raise(ErrorReport(msg"Symbol '${id.name}' is not a variable and cannot be reassigned" -> id.toLoc :: Nil))
-              go(sts, Nil, Term.Error :: acc)
+              go(sts, Nil, Term.Error().withLocOf(id) :: acc)
             case N =>
               raise(ErrorReport(msg"Name not found: ${id.name}" -> id.toLoc :: Nil))
-              go(sts, Nil, Term.Error :: acc)
+              go(sts, Nil, Term.Error().withLocOf(id) :: acc)
           case N =>
             // TODO lookup in members? inherited/refined stuff?
             raise(ErrorReport(msg"Name not found: ${id.name}" -> id.toLoc :: Nil))
-            go(sts, Nil, Term.Error :: acc)
+            go(sts, Nil, Term.Error().withLocOf(id) :: acc)
         case App(base, args) =>
           go(Def(base, InfixApp(args, Keywrd(Keyword.`=>`), rhs)) :: sts, Nil, acc)
         case _ =>
           raise(ErrorReport(msg"Unrecognized definitional assignment left-hand side: ${lhs.describe}"
             -> lhs.toLoc :: Nil)) // TODO BE
-          go(sts, Nil, Term.Error :: acc)
+          go(sts, Nil, Term.Error().withLocOf(lhs) :: acc)
       case (td @ TermDef(k, nme, rhs)) :: sts =>
         log(s"Processing term definition $nme")
         td.symbName match
@@ -2113,10 +2111,10 @@ extends Importer with ucs.SplitElaborator:
       case app @ App(Ident("-"), Tup(DecLit(n) :: Nil)) =>
         Literal(DecLit(-n).withLocOf(app))
       // Union and intersection patterns: `p | q` and `p & q`
-      case App(Ident(op @ ("|" | "&")), Tup(rhs :: Nil)) =>
+      case PrefixApp(Keywrd(Keyword.`|` | Keyword.`&`), rhs) =>
         go(rhs) // unary uses of `|` and `&` are no-ops
-      case OpApp(lhs, Ident(op @ ("|" | "&")), rhs :: Nil) =>
-        Composition(op === "|", go(lhs), go(rhs))
+      case InfixApp(lhs, Keywrd(op @ (Keyword.`|` | Keyword.`&`)), rhs) =>
+        Composition(op is Keyword.`|`, go(lhs), go(rhs))
       // Constructor patterns with pattern arguments and arguments.
       case App(ctor: Ctor, Tup(argTrees)) =>
         Constructor(term(ctor), S(argTrees.map(go(_))))

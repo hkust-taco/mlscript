@@ -3,14 +3,14 @@
 
 :ge
 1 | 2
-//│ ╔══[COMPILATION ERROR] Unexpected term form in expression position (composed type)
+//│ ╔══[COMPILATION ERROR] Unexpected term form in expression position (alternation)
 //│ ║  l.5: 	1 | 2
 //│ ╙──     	^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :ge
 print("A") & print("B")
-//│ ╔══[COMPILATION ERROR] Unexpected term form in expression position (composed type)
+//│ ╔══[COMPILATION ERROR] Unexpected term form in expression position (composition)
 //│ ║  l.12: 	print("A") & print("B")
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.

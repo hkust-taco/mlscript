@@ -11,4 +11,4 @@
 
 [(Int & Str) <:< (Int | Str)] => Int
 //│ Parsed:
-//│ 	InfixApp(TyTup(List(OpApp(Bra(Round,OpApp(Ident(Int),Ident(&),List(Ident(Str)))),Ident(<:<),List(Bra(Round,OpApp(Ident(Int),Ident(|),List(Ident(Str)))))))),Keywrd(keyword '=>'),Ident(Int))
+//│ 	InfixApp(TyTup(List(OpApp(Bra(Round,InfixApp(Ident(Int),Keywrd(keyword '&'),Ident(Str))),Ident(<:<),List(Bra(Round,InfixApp(Ident(Int),Keywrd(keyword '|'),Ident(Str))))))),Keywrd(keyword '=>'),Ident(Int))

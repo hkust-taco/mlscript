@@ -222,7 +222,7 @@ Int ->{Any} Int
 
 A | B
 //│ Parsed:
-//│ 	OpApp(Ident(A),Ident(|),List(Ident(B)))
+//│ 	InfixApp(Ident(A),Keywrd(keyword '|'),Ident(B))
 
 [A extends Int] -> A -> A
 //│ Parsed:

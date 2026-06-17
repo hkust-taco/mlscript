@@ -220,9 +220,9 @@ pattern DropZ = ((:x, :y, :z)) => (x: x, y: y)
 //│ = false
 
 pattern ShapeArea = 
-  (((:radius)) => Math.PI * radius * radius) |  // Circle
-  (((:width, :height)) => width * height) |     // Rectangle
-  (((:base, :height)) => base * height / 2)     // Triangle
+  | ((:radius)) => Math.PI * radius * radius  // Circle
+  | ((:width, :height)) => width * height     // Rectangle
+  | ((:base, :height)) => base * height / 2   // Triangle
 
 fun area(shape) = if shape is
   ShapeArea(area) then print("area: " + area)

@@ -75,7 +75,15 @@ fun foo[outer, R <: outer](r1: Region[R]) =
 //│ ╔══[COMPILATION ERROR] Name not found: R
 //│ ║  l.67: 	fun foo[outer, R <: outer](r1: Region[R]) =
 //│ ╙──      	                                      ^
-//│ ═══[COMPILATION ERROR] Expected a type, got a non-type ‹error›
-//│ ═══[COMPILATION ERROR] Expected a type, got ‹error›
-//│ ═══[COMPILATION ERROR] Expected a type, got a non-type ‹error›
-//│ ═══[COMPILATION ERROR] Invalid type
+//│ ╔══[COMPILATION ERROR] Expected a type, got a non-type ‹error›
+//│ ║  l.67: 	fun foo[outer, R <: outer](r1: Region[R]) =
+//│ ╙──      	                                      ^
+//│ ╔══[COMPILATION ERROR] Expected a type, got ‹error›
+//│ ║  l.67: 	fun foo[outer, R <: outer](r1: Region[R]) =
+//│ ╙──      	                                      ^
+//│ ╔══[COMPILATION ERROR] Expected a type, got a non-type ‹error›
+//│ ║  l.67: 	fun foo[outer, R <: outer](r1: Region[R]) =
+//│ ╙──      	                                      ^
+//│ ╔══[COMPILATION ERROR] Invalid type
+//│ ║  l.67: 	fun foo[outer, R <: outer](r1: Region[R]) =
+//│ ╙──      	                                      ^

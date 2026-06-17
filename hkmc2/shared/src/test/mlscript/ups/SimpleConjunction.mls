@@ -43,8 +43,8 @@ fun observeRight(x) =
   x
 
 pattern LoggedOverlappedIntervals =
-  (((0 ..= 2) as x) => observeLeft(x)) &
-  (((1 ..= 3) as y) => observeRight(y))
+  ((0 ..= 2) as x) => observeLeft(x) &
+    ((1 ..= 3) as y) => observeRight(y)
 
 print of 1 is @compile LoggedOverlappedIntervals
 //│ > true
@@ -59,8 +59,8 @@ data class A(x: Int)
 data class B(x: Int)
 
 pattern BothTransformedConjunction =
-  (((0 ..= 2) as x) => A(x)) &
-  (((1 ..= 3) as y) => B(y))
+  & ((0 ..= 2) as x) => A(x)
+  & ((1 ..= 3) as y) => B(y)
 
 fun show(n) = if n is (@compile BothTransformedConjunction) as v then Some(v) else None
 
@@ -76,8 +76,8 @@ print of "42:", show of 42
 //│ > 42: None
 
 pattern RightTransformedConjunction =
-  (0 ..= 2) &
-  (((1 ..= 3) as y) => B(y))
+  & 0 ..= 2
+  & ((1 ..= 3) as y) => B(y)
 
 fun show(n) = if n is (@compile RightTransformedConjunction) as v then Some(v) else None
 
@@ -93,8 +93,8 @@ print of "42:", show of 42
 //│ > 42: None
 
 pattern LeftTransformedConjunction =
-  (((0 ..= 2) as x) => A(x)) &
-  (1 ..= 3)
+  ((0 ..= 2) as x) => A(x) &
+    (1 ..= 3)
 
 fun show(n) = if n is (@compile LeftTransformedConjunction) as v then Some(v) else None
 

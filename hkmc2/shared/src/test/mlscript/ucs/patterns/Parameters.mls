@@ -175,8 +175,8 @@ foo([])
 //│ = None
 
 pattern AtPrec =
-  ( "+" => 2 ) |
-  ( "*" => 5 )
+  | "+" => 2
+  | "*" => 5
 
 fun f(x) = if x is str as AtPrec as prec then [str, prec]
 f("+")

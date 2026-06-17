@@ -310,7 +310,7 @@ object SrcScope:
   given s: Ctx => SrcScope = summon[Ctx].scope
 
 enum Term extends Statement:
-  case Error
+  case Error()
   case UnitVal()
   case Missing // Placeholder terms that were not elaborated due to the "lightweight" elaboration mode `Mode.Light`
   case Lit(lit: Literal)
@@ -476,7 +476,7 @@ enum Term extends Statement:
   
   override def mkClone(using State): Term = 
     val that = this match
-      case Error => Error
+      case Error() => Error()
       case UnitVal() => UnitVal()
       case Missing => Missing
       case Lit(Tree.StrLit(value)) => Lit(Tree.StrLit(value))
@@ -626,7 +626,7 @@ sealed trait Statement extends AutoLocated, ProductWithExtraInfo:
   
   def describe: Str =
     val desc = this match
-      case Error => "‹error›"
+      case Error() => "‹error›"
       case UnitVal() => "unit value"
       case Lit(lit) => lit.describeLit
       case Ref(sym) => "reference"
@@ -652,7 +652,7 @@ sealed trait Statement extends AutoLocated, ProductWithExtraInfo:
       case New(cls, args, rft) => "object creation"
       case SelProj(pre, cls, proj) => "field selection"
       case Asc(term, ty) => "type ascription"
-      case CompType(lhs, rhs, pol) => "composed type"
+      case CompType(lhs, rhs, pol) => if pol then "alternation" else "composition"
       case Neg(rhs) => "negation type"
       case Region(name, body) => "region expression"
       case RegRef(reg, value) => "reference creation"
@@ -689,7 +689,7 @@ sealed trait Statement extends AutoLocated, ProductWithExtraInfo:
     case Blk(stats, res) => stats.toVector :+ res
     case _ => subTerms
   def subTerms: Vector[Term] = this match
-    case Error | Missing | _: Lit | _: Ref | _: UnitVal => Vector.empty
+    case Error() | Missing | _: Lit | _: Ref | _: UnitVal => Vector.empty
     case Resolved(t, sym) => Vector.single(t)
     case App(lhs, rhs) => Vector.double(lhs, rhs)
     case RcdField(lhs, rhs) => Vector.double(lhs, rhs)
@@ -827,7 +827,7 @@ sealed trait Statement extends AutoLocated, ProductWithExtraInfo:
       case imp: Import =>
         doc"import ${"\""}.../${imp.file.last}${"\""} as ${imp.sym.showName}"
       case LeadingDotSel(name) => doc"_?_.${name.name}"
-      case Error => doc"‹error›"
+      case Error() => doc"‹error›"
       case _ =>
         doc"TODO[show:${getClass.getSimpleName}](${toString})"
     this match
@@ -913,7 +913,7 @@ sealed trait Statement extends AutoLocated, ProductWithExtraInfo:
     case Deref(term) => s"!$term"
     case Neg(ty) => s"~${ty.showDbg}"
     case CompType(lhs, rhs, pol) => s"${lhs.showDbg} ${if pol then "|" else "&"} ${rhs.showDbg}"
-    case Error => "<error>"
+    case Error() => "<error>"
     case Tup(fields) => fields.map(_.showDbg).mkString("[", ", ", "]")
     case Mut(und) => s"mut ${und.showDbg}"
     case CtxTup(fields) => fields.map(_.showDbg).mkString("‹using›[", ", ", "]")

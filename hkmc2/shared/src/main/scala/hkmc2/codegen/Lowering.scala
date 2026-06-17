@@ -1053,7 +1053,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
         msg"Unexpected term form in expression position (${t.describe})" ->
           t.toLoc :: Nil,
         source = Diagnostic.Source.Compilation)
-    case Error => compError
+    case Error() => compError
     
     // case _ =>
     //   subTerm(t)(k)

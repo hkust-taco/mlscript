@@ -1006,7 +1006,7 @@ class Resolver(tl: TraceLogger)
           raise(ErrorReport(
             msg"Cannot query instance of type ${ictx.showTy(ty)} for call: " -> lhs.toLoc ::
             msg"Required by contextual parameter declaration: " -> p.toLoc :: msgs))
-          Fld(FldFlags.empty, Term.Error, N)
+          Fld(FldFlags.empty, Term.Error(), N)
       case N =>
         // By the syntax of contextual parameter, 
         // the type signature should be present.

@@ -55,7 +55,7 @@ abstract class Symbol(using State) extends MaybeSymbol with Located:
   def ref(id: Tree.Ident =
     Tree.Ident("") // FIXME hack
   ): Term.Ref =
-    val res = new Term.Ref(this)(id, directRefs.size, N)
+    val res = new Term.Ref(this)(id, directRefs.size, N).withLocOf(id)
     directRefs += res
     res
   def refsNumber: Int = directRefs.size

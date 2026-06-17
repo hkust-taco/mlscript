@@ -14,25 +14,11 @@ pattern Test = 1 | 2 => 3
 // part of the right hand side term of `1 => 2`. Currently, our implementation
 // does not support patterns as lambda parameters.
 
-:todo
 pattern Test = 1 => 2 | 4 => 8
-//│ ╔══[COMPILATION ERROR] Expected a valid parameter, found integer literal
-//│ ║  l.18: 	pattern Test = 1 => 2 | 4 => 8
-//│ ╙──      	                        ^
-//│ elaborated pattern body: 1 => 2 | λ(). 8
-//│ ╔══[COMPILATION ERROR] Unexpected term form in expression position (composed type)
-//│ ║  l.18: 	pattern Test = 1 => 2 | 4 => 8
-//│ ╙──      	                        ^
+//│ elaborated pattern body: 1 => 2 ∨ 4 => 8
 
-:todo
 pattern Test = 1 => 2 | (4 => 8)
-//│ ╔══[COMPILATION ERROR] Expected a valid parameter, found integer literal
-//│ ║  l.28: 	pattern Test = 1 => 2 | (4 => 8)
-//│ ╙──      	                         ^
-//│ elaborated pattern body: 1 => 2 | λ(). 8
-//│ ╔══[COMPILATION ERROR] Unexpected term form in expression position (composed type)
-//│ ║  l.28: 	pattern Test = 1 => 2 | (4 => 8)
-//│ ╙──      	                         ^
+//│ elaborated pattern body: 1 => 2 ∨ 4 => 8
 
 pattern Test = (1 => 2) | 4 => 8
 //│ elaborated pattern body: 1 => 2 ∨ 4 => 8
@@ -45,21 +31,14 @@ pattern Test = 0 as x => 2
 pattern Test = (0 as x) => 2
 //│ elaborated pattern body: (0 as x) => 2
 
-:e
 pattern Test(x) = 0 as x | 1 as x
-//│ ╔══[COMPILATION ERROR] Found an inconsistent variable in disjunction patterns.
-//│ ║  l.49: 	pattern Test(x) = 0 as x | 1 as x
-//│ ║        	                       ^
-//│ ╟── The variable is missing from this sub-pattern.
-//│ ║  l.49: 	pattern Test(x) = 0 as x | 1 as x
-//│ ╙──      	                           ^
-//│ elaborated pattern body: (0 as (x ∨ 1)) as x
+//│ elaborated pattern body: 0 as x ∨ 1 as x
 
 pattern Test(x) = 0 as x | (1 as x)
-//│ elaborated pattern body: 0 as (x ∨ 1 as x)
+//│ elaborated pattern body: 0 as x ∨ 1 as x
 
 pattern Test(x) = 0 as x | (1 as x)
-//│ elaborated pattern body: 0 as (x ∨ 1 as x)
+//│ elaborated pattern body: 0 as x ∨ 1 as x
 
 pattern Test(x) = (0 as x) | (1 as x)
 //│ elaborated pattern body: 0 as x ∨ 1 as x
