@@ -283,3 +283,60 @@ fun f(a)(b) = f(a)(b)
 //│               Arg:
 //│                 value = SimpleRef of b¹
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+
+// Ensure the function is inlined
+:soir
+@tailrec @inline
+fun loop(x)(y) =
+  if x == 0 then y
+  else loop(x - 1)(y + x)
+fun f = loop(1000)(0)
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ @tailrec @inline
+//│ define loop² as fun loop³(x)(y) {
+//│   let x1, y1, inlinedVal;
+//│   set x1 = x;
+//│   set y1 = y;
+//│   block inlinedLbl:
+//│     loop loopLabel:
+//│       let scrut, tmp, tmp1;
+//│       set scrut = Predef⁰.equals⁰(x1, 0);
+//│       match scrut
+//│         true =>
+//│           set inlinedVal = y1;
+//│           break inlinedLbl
+//│         else
+//│           set tmp = -⁰(x1, 1);
+//│           set tmp1 = +⁰(y1, x1);
+//│           set x1 = tmp;
+//│           set y1 = tmp1;
+//│           continue loopLabel
+//│       end
+//│     unreachable /* Rest of abortive labelled block */
+//│   return inlinedVal
+//│ };
+//│ define f⁶ as fun f⁷() {
+//│   let x, y, inlinedVal;
+//│   set x = 1000;
+//│   set y = 0;
+//│   block inlinedLbl:
+//│     loop loopLabel:
+//│       let scrut, tmp, tmp1;
+//│       set scrut = Predef⁰.equals⁰(x, 0);
+//│       match scrut
+//│         true =>
+//│           set inlinedVal = y;
+//│           break inlinedLbl
+//│         else
+//│           set tmp = -⁰(x, 1);
+//│           set tmp1 = +⁰(y, x);
+//│           set x = tmp;
+//│           set y = tmp1;
+//│           continue loopLabel
+//│       end
+//│     unreachable /* Rest of abortive labelled block */
+//│   return inlinedVal
+//│ };
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————

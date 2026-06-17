@@ -526,10 +526,13 @@ class TailRecOpt(using State, TL, Raise):
         
         val loopBms = BlockMemberSymbol(bms.nme + "$tailrec", Nil, true)
         val loopDSym = TermSymbol(syntax.Fun, owner, Tree.Ident(loopBms.nme))
+        val loopAnnots =
+          if f.inline then Annot.Inline :: Annot.Private :: Nil
+          else Annot.Private :: Nil
         val internalLoopDefn = FunDefn(
           owner, loopBms, loopDSym,
           PlainParamList(params) :: Nil,
-          loop)(N, annotations = Annot.Private :: Nil)
+          loop)(N, annotations = loopAnnots)
         val paramArgs = getParamSyms(f).map(s => s.asSimpleRef.asArg)
         val internalSel = owner match
           case Some(value) => Select(value.asThis, Tree.Ident(loopBms.nme))(S(loopDSym))
@@ -537,7 +540,7 @@ class TailRecOpt(using State, TL, Raise):
         val wrapperBod = Return(
           Call(internalSel, paramArgs ne_:: Nil)(CallMetadata.defaultMlsFun),
         )
-        val newAnnots = if f.annotations.contains(Annot.Inline) then f.annotations else Annot.Inline :: f.annotations
+        val newAnnots = if f.inline then f.annotations else Annot.Inline :: f.annotations
         val wrapperDefn = FunDefn(f.owner, f.sym, f.dSym, f.params, wrapperBod)(
           f.configOverride, annotations = newAnnots)
         (S(internalLoopDefn), wrapperDefn :: Nil)
