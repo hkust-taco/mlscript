@@ -1,7 +1,4 @@
 
-import "./Predef.mls"
-open Predef
-
 
 type Stack[A] = Stack.{ Cons[A] | Nil }
 
