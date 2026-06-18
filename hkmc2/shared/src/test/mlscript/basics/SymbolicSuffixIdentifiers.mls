@@ -24,27 +24,36 @@ box_#.add_++(1)
 //│ = 43
 
 
-// FIXME
+// A definition cannot provide two source-level symbolic names at once.
 :e
 :sjs
 fun (++) foo_+(x) = x + 1
+//│ ╔══[COMPILATION ERROR] Cannot combine an explicit symbolic name with a symbolic suffix identifier.
+//│ ║  l.30: 	fun (++) foo_+(x) = x + 1
+//│ ╙──      	         ^^^^^
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let foo_$_; foo_$_ = (undefined, function (x) { return x + 1 });
+//│ let foo; foo = function foo(x) { return x + 1 };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
-//│ FAILURE: Unexpected lack of compilation or type error
 
+:e
 :sjs
 foo_+
+//│ ╔══[COMPILATION ERROR] Name not found: foo_+
+//│ ║  l.40: 	foo_+
+//│ ╙──      	^^^^^
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ return foo_$_
+//│ throw "This code cannot be run as its compilation yielded an error."
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
-//│ = fun
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
+:e
 :sjs
 (++)
+//│ ╔══[COMPILATION ERROR] Name not found: ++
+//│ ║  l.51: 	(++)
+//│ ╙──      	 ^^
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ return foo_$_
+//│ throw "This code cannot be run as its compilation yielded an error."
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
-//│ = fun
-
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 

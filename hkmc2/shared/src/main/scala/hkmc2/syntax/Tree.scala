@@ -543,13 +543,16 @@ trait TypeOrTermDef extends Located:
       (Opt[MaybeIdent], MaybeIdent, Ls[Tup], Opt[TyTup], Opt[Tree]) = 
       def canonicalize(id: Ident): Ident =
         symbolicSuffixBase(id.name) match
-        case S(base) if symbName.isEmpty =>
+        case S(base) =>
           new Ident(base).withLocOf(id)
         case _ =>
           id
       def symbolicName(id: Ident): Opt[MaybeIdent] =
         symbolicSuffixBase(id.name) match
         case S(_) if symbName.isEmpty => S(R(id))
+        case S(_) => S(L:
+          ErrorReport:
+            msg"Cannot combine an explicit symbolic name with a symbolic suffix identifier." -> id.toLoc :: Nil)
         case _ => symbName
       t match
       
