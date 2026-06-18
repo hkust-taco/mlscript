@@ -178,3 +178,79 @@ fastEvalToValue(stuck)
 //│ > new Lit(3)
 //│ > new Add(Lit(3), Tag(9))
 //│ = None
+
+// —— An evidence of duplicated reductions when the default is not a wildcard ——
+
+open annotations { compile }
+
+
+data class Lit(val value: Int) with
+  print("new Lit(" + render(value) + ")")
+data class Add(val lhs, val rhs) with
+  print("new Add(" + render(lhs) + ", " + render(rhs) + ")")
+
+pattern AddStep =
+  | Add(Lit(a), Lit(b)) => (let c = a + b in print("reduce " + a + " + " + b + " = " + c); Lit(c))
+  | Add(AddStep, _)
+  | Add(Lit, AddStep)
+
+
+pattern AddSteps = @compile ((AddStep as AddSteps) | Add(Lit, Lit))
+
+let t1 = Add(Add(Lit(2), Lit(3)), Lit(1))
+//│ > new Lit(2)
+//│ > new Lit(3)
+//│ > new Add(Lit(2), Lit(3))
+//│ > new Lit(1)
+//│ > new Add(Add(Lit(2), Lit(3)), Lit(1))
+//│ t1 = Add(Add(Lit(2), Lit(3)), Lit(1))
+
+// Note that reductions are performed more than once.
+assert t1 is AddSteps(s), s
+//│ > reduce 2 + 3 = 5
+//│ > new Lit(5)
+//│ > new Add(Lit(5), Lit(1))
+//│ > reduce 5 + 1 = 6
+//│ > new Lit(6)
+//│ > reduce 2 + 3 = 5
+//│ > new Lit(5)
+//│ > new Add(Lit(5), Lit(1))
+//│ > reduce 5 + 1 = 6
+//│ > new Lit(6)
+//│ > reduce 5 + 1 = 6
+//│ > new Lit(6)
+//│ = Add(Lit(5), Lit(1))
+
+let t2 = Add(t1, Lit(4))
+//│ > new Lit(4)
+//│ > new Add(Add(Add(Lit(2), Lit(3)), Lit(1)), Lit(4))
+//│ t2 = Add(Add(Add(Lit(2), Lit(3)), Lit(1)), Lit(4))
+
+// It looks like the number of times each node is repeatedly reduced is
+// proportional to its size.
+assert t2 is AddSteps(s), s
+//│ > reduce 2 + 3 = 5
+//│ > new Lit(5)
+//│ > new Add(Lit(5), Lit(1))
+//│ > reduce 5 + 1 = 6
+//│ > new Lit(6)
+//│ > new Add(Lit(6), Lit(4))
+//│ > reduce 6 + 4 = 10
+//│ > new Lit(10)
+//│ > reduce 2 + 3 = 5
+//│ > new Lit(5)
+//│ > new Add(Lit(5), Lit(1))
+//│ > new Add(Add(Lit(5), Lit(1)), Lit(4))
+//│ > reduce 5 + 1 = 6
+//│ > new Lit(6)
+//│ > new Add(Lit(6), Lit(4))
+//│ > reduce 6 + 4 = 10
+//│ > new Lit(10)
+//│ > reduce 5 + 1 = 6
+//│ > new Lit(6)
+//│ > new Add(Lit(6), Lit(4))
+//│ > reduce 6 + 4 = 10
+//│ > new Lit(10)
+//│ > reduce 6 + 4 = 10
+//│ > new Lit(10)
+//│ = Add(Lit(6), Lit(4))
