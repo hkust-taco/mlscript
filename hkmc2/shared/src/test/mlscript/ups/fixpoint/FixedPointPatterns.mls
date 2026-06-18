@@ -1,0 +1,379 @@
+:js
+
+// Fixed-point patterns are patterns that pipe their own output back into
+// themselves through a chain, e.g. `pattern Steps = Step as Steps | _`.
+// Since `as` binds tighter than `|`, this reads `(Step as Steps) | _`:
+// stepping is iterated until it fails, and the trailing `_` keeps the normal
+// form — so zero steps simply return the scrutinee unchanged.
+//
+// Like the rest of efficient pattern compilation, the iterative matcher
+// machine (see `ups.FixedPointCompiler`) is opted into with the `@compile`
+// pattern annotation — either on the definition's right-hand side, so that
+// the generated `unapply` embeds the machine, or at an individual match
+// site. The machine does not restart the redex search from the root of the
+// scrutinee after each rewriting step.
+
+open annotations { compile }
+
+import "../../../mlscript-compile/Option.mls"
+
+open Option { Some, None }
+
+
+// ————— A flat fixed point: peeling nested wrappers —————
+// 
+// No object construction in unwrapping only scenarios.
+
+class Wrap(val value) with
+  print("Wrapping " + render(value))
+
+Wrap(100)
+//│ > Wrapping 100
+//│ = Wrap(100)
+
+pattern Peel = (Wrap(x) => x) as Peel | _
+
+let tripleWrap = Wrap(Wrap(Wrap(42)))
+//│ > Wrapping 42
+//│ > Wrapping Wrap(42)
+//│ > Wrapping Wrap(Wrap(42))
+//│ tripleWrap = Wrap(Wrap(Wrap(42)))
+
+:expect 42
+if tripleWrap is Peel(x) then x else -1
+//│ = 42
+
+:expect 42
+if tripleWrap is @compile Peel(x) then x else -1
+//│ = 42
+
+// A value already in normal form takes no step, so it matches itself.
+:expect 42
+if 42 is Peel(x) then x else -1
+//│ = 42
+
+
+// ————— A full evaluation-context fixed point —————
+// 
+// Construction prints make every object allocation visible, so unnecessary
+// reconstruction of term nodes would show up as extra `new ...` lines.
+
+data class Lit(val value: Int) with
+  print("new Lit(" + render(value) + ")")
+data class Var(val name: Str) with
+  print("new Var(" + render(name) + ")")
+data class Add(val lhs, val rhs) with
+  print("new Add(" + render(lhs) + ", " + render(rhs) + ")")
+data class Mul(val lhs, val rhs) with
+  print("new Mul(" + render(lhs) + ", " + render(rhs) + ")")
+
+pattern Value = Lit
+
+pattern Ctx(pattern Hole) =
+  | Hole
+  | Add(Ctx(Hole), _)
+  | Add(Value, Ctx(Hole))
+  | Mul(Ctx(Hole), _)
+  | Mul(Value, Ctx(Hole))
+
+fun add(a, b) =
+  let c = a + b
+  print("reduce " + a + " + " + b + " = " + c)
+  Lit(c)
+
+fun multiply(a, b) =
+  let c = a * b
+  print("reduce " + a + " + " + b + " = " + c)
+  Lit(c)
+
+pattern Redex =
+  | Add(Lit(a), Lit(b)) => add(a, b)
+  | Mul(Lit(a), Lit(b)) => multiply(a, b)
+
+pattern Step = Ctx(Redex)
+
+pattern Eval = Step as Eval | _
+
+fun evalSlow(t) = if t is Eval(t') and t' is Lit(v) then v
+fun evalFast(t) = if t is @compile Eval(t') and t' is Lit(v) then v
+
+let term1 = Add(Mul(Lit(2), Lit(3)), Add(Lit(3), Lit(5)))
+//│ > new Lit(2)
+//│ > new Lit(3)
+//│ > new Mul(Lit(2), Lit(3))
+//│ > new Lit(3)
+//│ > new Lit(5)
+//│ > new Add(Lit(3), Lit(5))
+//│ > new Add(Mul(Lit(2), Lit(3)), Add(Lit(3), Lit(5)))
+//│ term1 = Add(Mul(Lit(2), Lit(3)), Add(Lit(3), Lit(5)))
+
+:expect 14
+evalSlow(term1)
+//│ > reduce 2 + 3 = 6
+//│ > new Lit(6)
+//│ > new Add(Lit(6), Add(Lit(3), Lit(5)))
+//│ > reduce 3 + 5 = 8
+//│ > new Lit(8)
+//│ > new Add(Lit(6), Lit(8))
+//│ > reduce 6 + 8 = 14
+//│ > new Lit(14)
+//│ = 14
+
+:expect 14
+evalFast(term1)
+//│ > reduce 2 + 3 = 6
+//│ > new Lit(6)
+//│ > new Add(Lit(6), Add(Lit(3), Lit(5)))
+//│ > reduce 3 + 5 = 8
+//│ > new Lit(8)
+//│ > new Add(Lit(6), Lit(8))
+//│ > reduce 6 + 8 = 14
+//│ > new Lit(14)
+//│ = 14
+
+let term2 = Mul(Add(Lit(1), Lit(2)), Add(Lit(3), Lit(4)))
+//│ > new Lit(1)
+//│ > new Lit(2)
+//│ > new Add(Lit(1), Lit(2))
+//│ > new Lit(3)
+//│ > new Lit(4)
+//│ > new Add(Lit(3), Lit(4))
+//│ > new Mul(Add(Lit(1), Lit(2)), Add(Lit(3), Lit(4)))
+//│ term2 = Mul(Add(Lit(1), Lit(2)), Add(Lit(3), Lit(4)))
+
+:expect 21
+evalSlow(term2)
+//│ > reduce 1 + 2 = 3
+//│ > new Lit(3)
+//│ > new Mul(Lit(3), Add(Lit(3), Lit(4)))
+//│ > reduce 3 + 4 = 7
+//│ > new Lit(7)
+//│ > new Mul(Lit(3), Lit(7))
+//│ > reduce 3 + 7 = 21
+//│ > new Lit(21)
+//│ = 21
+
+:expect 21
+// In this example, matchers compiled from both approaches construct the same
+// objects, because we the constructor containing the reduced term (`Mul` in
+// this case) still needs to be reconstructed to continue stepping.
+evalFast(term2)
+//│ > reduce 1 + 2 = 3
+//│ > new Lit(3)
+//│ > new Mul(Lit(3), Add(Lit(3), Lit(4)))
+//│ > reduce 3 + 4 = 7
+//│ > new Lit(7)
+//│ > new Mul(Lit(3), Lit(7))
+//│ > reduce 3 + 7 = 21
+//│ > new Lit(21)
+//│ = 21
+
+let term3 = Add(Add(Add(Add(Lit(1), Lit(2)), Lit(3)), Lit(4)), Lit(5))
+//│ > new Lit(1)
+//│ > new Lit(2)
+//│ > new Add(Lit(1), Lit(2))
+//│ > new Lit(3)
+//│ > new Add(Add(Lit(1), Lit(2)), Lit(3))
+//│ > new Lit(4)
+//│ > new Add(Add(Add(Lit(1), Lit(2)), Lit(3)), Lit(4))
+//│ > new Lit(5)
+//│ > new Add(Add(Add(Add(Lit(1), Lit(2)), Lit(3)), Lit(4)), Lit(5))
+//│ term3 = Add(Add(Add(Add(Lit(1), Lit(2)), Lit(3)), Lit(4)), Lit(5))
+
+:expect 15
+evalSlow(term3)
+//│ > reduce 1 + 2 = 3
+//│ > new Lit(3)
+//│ > new Add(Lit(3), Lit(3))
+//│ > new Add(Add(Lit(3), Lit(3)), Lit(4))
+//│ > new Add(Add(Add(Lit(3), Lit(3)), Lit(4)), Lit(5))
+//│ > reduce 3 + 3 = 6
+//│ > new Lit(6)
+//│ > new Add(Lit(6), Lit(4))
+//│ > new Add(Add(Lit(6), Lit(4)), Lit(5))
+//│ > reduce 6 + 4 = 10
+//│ > new Lit(10)
+//│ > new Add(Lit(10), Lit(5))
+//│ > reduce 10 + 5 = 15
+//│ > new Lit(15)
+//│ = 15
+
+:expect 15
+// It can be observed that it only constructs the reduced term.
+evalFast(term3)
+//│ > reduce 1 + 2 = 3
+//│ > new Lit(3)
+//│ > new Add(Lit(3), Lit(3))
+//│ > reduce 3 + 3 = 6
+//│ > new Lit(6)
+//│ > new Add(Lit(6), Lit(4))
+//│ > reduce 6 + 4 = 10
+//│ > new Lit(10)
+//│ > new Add(Lit(10), Lit(5))
+//│ > reduce 10 + 5 = 15
+//│ > new Lit(15)
+//│ = 15
+
+// A value takes no step, so it is returned unchanged — here already a `Lit`.
+let term4 = Lit(7)
+//│ > new Lit(7)
+//│ term4 = Lit(7)
+
+:expect 7
+evalSlow(term4)
+//│ = 7
+
+:expect 7
+evalFast(term4)
+//│ = 7
+
+// A stuck term is reduced as far as the strategy allows: the left operand
+// becomes a value, then nothing else can fire.
+let term5 = Add(Add(Lit(1), Lit(2)), Var("x"))
+//│ > new Lit(1)
+//│ > new Lit(2)
+//│ > new Add(Lit(1), Lit(2))
+//│ > new Var("x")
+//│ > new Add(Add(Lit(1), Lit(2)), Var("x"))
+//│ term5 = Add(Add(Lit(1), Lit(2)), Var("x"))
+
+:expect 3
+if term5 is Eval(r) and r is Add(Lit(n), Var(_)) then n else -1
+//│ > reduce 1 + 2 = 3
+//│ > new Lit(3)
+//│ > new Add(Lit(3), Var("x"))
+//│ = 3
+
+:expect 3
+if term5 is @compile Eval(r) and r is Add(Lit(n), Var(_)) then n else -1
+//│ > reduce 1 + 2 = 3
+//│ > new Lit(3)
+//│ > new Add(Lit(3), Var("x"))
+//│ = 3
+
+// The strategy is left-to-right: the right operand must not be reduced when
+// the left one is not a value. This term cannot take even one step, so it is
+// returned unchanged — not a `Lit`, so `evalSlow`/`evalFast` find no value.
+let term6 = Add(Var("x"), Add(Lit(1), Lit(2)))
+//│ > new Var("x")
+//│ > new Lit(1)
+//│ > new Lit(2)
+//│ > new Add(Lit(1), Lit(2))
+//│ > new Add(Var("x"), Add(Lit(1), Lit(2)))
+//│ term6 = Add(Var("x"), Add(Lit(1), Lit(2)))
+
+:re
+evalSlow(term6)
+//│ ═══[RUNTIME ERROR] Error: match error
+
+:re
+evalFast(term6)
+//│ ═══[RUNTIME ERROR] Error: match error
+
+
+
+
+// ————— Steps at least once ——————
+
+pattern StepPlus = Step as (StepPlus | _)
+
+fun stepAtLeastOnceSlow(t) = if t is StepPlus(r) then Some(r) else None
+
+fun stepAtLeastOnceFast(t) = if t is @compile StepPlus as r then Some(r) else None
+
+stepAtLeastOnceSlow of Lit(3)
+//│ > new Lit(3)
+//│ = None
+
+stepAtLeastOnceFast of Lit(3)
+//│ > new Lit(3)
+//│ = None
+
+stepAtLeastOnceSlow of term3
+//│ > reduce 1 + 2 = 3
+//│ > new Lit(3)
+//│ > new Add(Lit(3), Lit(3))
+//│ > new Add(Add(Lit(3), Lit(3)), Lit(4))
+//│ > new Add(Add(Add(Lit(3), Lit(3)), Lit(4)), Lit(5))
+//│ > reduce 3 + 3 = 6
+//│ > new Lit(6)
+//│ > new Add(Lit(6), Lit(4))
+//│ > new Add(Add(Lit(6), Lit(4)), Lit(5))
+//│ > reduce 6 + 4 = 10
+//│ > new Lit(10)
+//│ > new Add(Lit(10), Lit(5))
+//│ > reduce 10 + 5 = 15
+//│ > new Lit(15)
+//│ = Some(Lit(15))
+
+stepAtLeastOnceFast of term3
+//│ > reduce 1 + 2 = 3
+//│ > new Lit(3)
+//│ > new Add(Lit(3), Lit(3))
+//│ > reduce 3 + 3 = 6
+//│ > new Lit(6)
+//│ > new Add(Lit(6), Lit(4))
+//│ > reduce 6 + 4 = 10
+//│ > new Lit(10)
+//│ > new Add(Lit(10), Lit(5))
+//│ > reduce 10 + 5 = 15
+//│ > new Lit(15)
+//│ = Some(Lit(15))
+
+
+// ————— A body-annotated fixed-point definition —————
+//
+// Annotating the definition's right-hand side embeds the machine in the
+// generated `unapply`, so plain use sites get the machine without a use-site
+// annotation — the trace below is the machine's, matching the `@compile Eval`
+// use site above.
+pattern EvalFast = @compile (Step as EvalFast | _)
+
+:expect true
+term3 is EvalFast(Lit(15))
+//│ > reduce 1 + 2 = 3
+//│ > new Lit(3)
+//│ > new Add(Lit(3), Lit(3))
+//│ > reduce 3 + 3 = 6
+//│ > new Lit(6)
+//│ > new Add(Lit(6), Lit(4))
+//│ > reduce 6 + 4 = 10
+//│ > new Lit(10)
+//│ > new Add(Lit(10), Lit(5))
+//│ > reduce 10 + 5 = 15
+//│ > new Lit(15)
+//│ = true
+
+
+
+// ————— Annotated alternatives —————
+
+// Only annotating the wildcard doesn't compile the entire pattern.
+pattern EvalAnnotated = Ctx(Redex) as EvalAnnotated | (@compile _)
+
+:expect 15
+// There are still visible unnecessary object constructions.
+if term3 is EvalAnnotated(r) and r is Lit(n) then n
+//│ > reduce 1 + 2 = 3
+//│ > new Lit(3)
+//│ > new Add(Lit(3), Lit(3))
+//│ > new Add(Add(Lit(3), Lit(3)), Lit(4))
+//│ > new Add(Add(Add(Lit(3), Lit(3)), Lit(4)), Lit(5))
+//│ > reduce 3 + 3 = 6
+//│ > new Lit(6)
+//│ > new Add(Lit(6), Lit(4))
+//│ > new Add(Add(Lit(6), Lit(4)), Lit(5))
+//│ > reduce 6 + 4 = 10
+//│ > new Lit(10)
+//│ > new Add(Lit(10), Lit(5))
+//│ > reduce 10 + 5 = 15
+//│ > new Lit(15)
+//│ = 15
+
+:w
+// Only annotating the chained pattern doesn't work.
+pattern EvalAnnotatedStep = @compile (Ctx(Redex) as EvalAnnotatedStep) | _
+//│ ╔══[WARNING] This fixed-point pattern is not supported by the machine compilation.
+//│ ║  l.375: 	pattern EvalAnnotatedStep = @compile (Ctx(Redex) as EvalAnnotatedStep) | _
+//│ ║         	                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙── Falling back to the naive translation.
