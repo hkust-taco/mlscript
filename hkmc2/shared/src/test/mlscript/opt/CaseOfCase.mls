@@ -22,7 +22,7 @@ fun fromStr(s) = if s is
 :soir
 fun foo(x) = x toStr() fromStr()
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let foo⁰; define foo⁰ as fun foo¹(x) { match x true => return true else return false end }; end
+//│ define foo⁰ as fun foo¹(x) { match x true => return true else return false end }; end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 :expect true
@@ -34,7 +34,6 @@ foo(true)
 :soir
 fun foo(x) = x fromStr() toStr() fromStr()
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let foo²;
 //│ define foo² as fun foo³(x) {
 //│   match x
 //│     "ok" =>
@@ -63,18 +62,25 @@ fun map(opt, f) = if opt is
 :soir
 fun test(x) = x map(_ + 1) map(_ * 2)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let test⁰;
 //│ define test⁰ as fun test¹(x) {
 //│   let inlinedVal, arg$Some$0$, arg$Some$0$1;
 //│   match x
 //│     Some⁰ =>
-//│       let inlinedVal1, inlinedVal2;
+//│       let inlinedVal1;
 //│       set arg$Some$0$1 = x.value⁰;
 //│       set inlinedVal1 = +⁰(arg$Some$0$1, 1);
 //│       set inlinedVal = Option⁰.Some¹(inlinedVal1);
-//│       set arg$Some$0$ = inlinedVal.value⁰;
-//│       set inlinedVal2 = *⁰(arg$Some$0$, 2);
-//│       return Option⁰.Some¹(inlinedVal2)
+//│       match inlinedVal
+//│         Some⁰ =>
+//│           let inlinedVal2;
+//│           set arg$Some$0$ = inlinedVal.value⁰;
+//│           set inlinedVal2 = *⁰(arg$Some$0$, 2);
+//│           return Option⁰.Some¹(inlinedVal2)
+//│         None⁰ =>
+//│           return Option⁰.None⁰
+//│         else
+//│           throw new globalThis⁰.Error⁰("match error")
+//│       end
 //│     None⁰ =>
 //│       set inlinedVal = Option⁰.None⁰;
 //│       return Option⁰.None⁰
@@ -90,21 +96,37 @@ fun test(x) = x map(_ + 1) map(_ * 2)
 :soir
 fun test(x) = x map(_ + 1) map(_ * 2) map("Result: " + _)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let test²;
 //│ define test² as fun test³(x) {
 //│   let inlinedVal, inlinedVal1, arg$Some$0$, arg$Some$0$1, arg$Some$0$2;
 //│   match x
 //│     Some⁰ =>
-//│       let inlinedVal2, inlinedVal3, inlinedVal4;
+//│       let inlinedVal2;
 //│       set arg$Some$0$2 = x.value⁰;
 //│       set inlinedVal2 = +⁰(arg$Some$0$2, 1);
 //│       set inlinedVal = Option⁰.Some¹(inlinedVal2);
-//│       set arg$Some$0$1 = inlinedVal.value⁰;
-//│       set inlinedVal3 = *⁰(arg$Some$0$1, 2);
-//│       set inlinedVal1 = Option⁰.Some¹(inlinedVal3);
-//│       set arg$Some$0$ = inlinedVal1.value⁰;
-//│       set inlinedVal4 = +⁰("Result: ", arg$Some$0$);
-//│       return Option⁰.Some¹(inlinedVal4)
+//│       match inlinedVal
+//│         Some⁰ =>
+//│           let inlinedVal3;
+//│           set arg$Some$0$1 = inlinedVal.value⁰;
+//│           set inlinedVal3 = *⁰(arg$Some$0$1, 2);
+//│           set inlinedVal1 = Option⁰.Some¹(inlinedVal3);
+//│           match inlinedVal1
+//│             Some⁰ =>
+//│               let inlinedVal4;
+//│               set arg$Some$0$ = inlinedVal1.value⁰;
+//│               set inlinedVal4 = +⁰("Result: ", arg$Some$0$);
+//│               return Option⁰.Some¹(inlinedVal4)
+//│             None⁰ =>
+//│               return Option⁰.None⁰
+//│             else
+//│               throw new globalThis⁰.Error⁰("match error")
+//│           end
+//│         None⁰ =>
+//│           set inlinedVal1 = Option⁰.None⁰;
+//│           return Option⁰.None⁰
+//│         else
+//│           throw new globalThis⁰.Error⁰("match error")
+//│       end
 //│     None⁰ =>
 //│       set inlinedVal = Option⁰.None⁰;
 //│       set inlinedVal1 = Option⁰.None⁰;
@@ -124,7 +146,6 @@ fun test(x) = if x map(_ + 1) is
   Some(x) then [x]
   None then null
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let test⁴;
 //│ define test⁴ as fun test⁵(x) {
 //│   let arg$Some$0$, inlinedVal, arg$Some$0$1;
 //│   match x
@@ -133,12 +154,19 @@ fun test(x) = if x map(_ + 1) is
 //│       set arg$Some$0$1 = x.value⁰;
 //│       set inlinedVal1 = +⁰(arg$Some$0$1, 1);
 //│       set inlinedVal = Option⁰.Some¹(inlinedVal1);
-//│       set arg$Some$0$ = inlinedVal.value⁰;
-//│       match arg$Some$0$
-//│         0 =>
-//│           return []
+//│       match inlinedVal
+//│         Some⁰ =>
+//│           set arg$Some$0$ = inlinedVal.value⁰;
+//│           match arg$Some$0$
+//│             0 =>
+//│               return []
+//│             else
+//│               return [arg$Some$0$]
+//│           end
+//│         None⁰ =>
+//│           return null
 //│         else
-//│           return [arg$Some$0$]
+//│           throw new globalThis⁰.Error⁰("match error")
 //│       end
 //│     None⁰ =>
 //│       set inlinedVal = Option⁰.None⁰;
@@ -164,9 +192,9 @@ x => if multiProducer(x) is
   0 then print("Z")
   1 then print("O")
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let lambda⁰;
+//│ let lambda;
 //│ @private
-//│ define lambda⁰ as fun lambda¹(x) {
+//│ define lambda as fun lambda⁰(x) {
 //│   match x
 //│     "" =>
 //│       return Predef⁰.print⁰("Z")
@@ -178,7 +206,7 @@ x => if multiProducer(x) is
 //│       throw new globalThis⁰.Error⁰("match error")
 //│   end
 //│ };
-//│ return lambda¹
+//│ return lambda⁰
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = fun
 
@@ -193,7 +221,6 @@ fun prefixDependency(x) =
   if produced is
     PrefixBox(_) then copy
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let prefixDependency⁰;
 //│ define prefixDependency⁰ as fun prefixDependency¹(x) {
 //│   let copy, tmp;
 //│   match x
@@ -238,9 +265,9 @@ x => if partlyKnownProducer(x) is
   1 then print("O")
   else print("?")
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let lambda²;
+//│ let lambda;
 //│ @private
-//│ define lambda² as fun lambda³(x) {
+//│ define lambda as fun lambda¹(x) {
 //│   let selRes;
 //│   match x
 //│     "" =>
@@ -264,7 +291,7 @@ x => if partlyKnownProducer(x) is
 //│       throw new globalThis⁰.Error⁰("match error")
 //│   end
 //│ };
-//│ return lambda³
+//│ return lambda¹
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = fun
 
@@ -277,9 +304,9 @@ x => if multiProducer(x) is
     "Hello", "hello", "hello", "hello", "hello", "hello", "hello", "hello", "hello", "hello"
   1 then print("?")
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let lambda⁴;
+//│ let lambda;
 //│ @private
-//│ define lambda⁴ as fun lambda⁵(x) {
+//│ define lambda as fun lambda²(x) {
 //│   let inlinedVal;
 //│   match x
 //│     "" =>
@@ -302,7 +329,7 @@ x => if multiProducer(x) is
 //│       throw new globalThis⁰.Error⁰("match error")
 //│   end
 //│ };
-//│ return lambda⁵
+//│ return lambda²
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = fun
 
@@ -314,9 +341,9 @@ x => if partlyKnownProducer(x) is
   else print of
     "Hello", "hello", "hello", "hello", "hello", "hello", "hello", "hello", "hello", "hello"
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let lambda⁶;
+//│ let lambda;
 //│ @private
-//│ define lambda⁶ as fun lambda⁷(x) {
+//│ define lambda as fun lambda³(x) {
 //│   let inlinedVal, selRes;
 //│   match x
 //│     "" =>
@@ -344,7 +371,7 @@ x => if partlyKnownProducer(x) is
 //│       return Predef⁰.print⁰("Hello", "hello", "hello", "hello", "hello", "hello", "hello", "hello", "hello", "hello")
 //│   end
 //│ };
-//│ return lambda⁷
+//│ return lambda³
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = fun
 
@@ -357,9 +384,9 @@ x => if partlyKnownProducer(x) is
   else print of
     "Hello", "hello", "hello", "hello", "hello", "hello", "hello", "hello", "hello", "hello"
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let lambda⁸;
+//│ let lambda;
 //│ @private
-//│ define lambda⁸ as fun lambda⁹(x) {
+//│ define lambda as fun lambda⁴(x) {
 //│   let selRes;
 //│   match x
 //│     "" =>
@@ -383,7 +410,7 @@ x => if partlyKnownProducer(x) is
 //│       throw new globalThis⁰.Error⁰("match error")
 //│   end
 //│ };
-//│ return lambda⁹
+//│ return lambda⁴
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = fun
 

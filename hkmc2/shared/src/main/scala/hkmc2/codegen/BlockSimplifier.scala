@@ -974,7 +974,6 @@ class BlockSimplifier
     
     def getCtorShape(path: Path): Opt[ClassLikeSymbol] =
       path.targetSymbol.flatMap:
-        case ccs: ClassCtorSymbol => ccs.owner
         case sym: ClassLikeSymbol => S(sym)
         case _ => N
     
@@ -990,8 +989,11 @@ class BlockSimplifier
       case Value.Lit(lit) => S(lit)
       case path: Path => path.targetSymbol.flatMap(_.asModOrObj)
       case Call(path, args) =>
-        getCtorShape(path).collect:
-          case sym: ClassSymbol if isSaturatedClassCall(sym, args) => sym
+        path.targetSymbol
+          .collect:
+            case ccs: ClassCtorSymbol => ccs.associatedCls
+          .collect:
+            case sym: ClassSymbol if isSaturatedClassCall(sym, args) => sym
       case Instantiate(_, cls, _) => getCtorShape(cls)
       case _ => N
     

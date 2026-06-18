@@ -140,40 +140,6 @@ fun f(x) =
 //│     pc = runtime.resumePc;
 //│     runtime.resumePc = -1;
 //│   }
-<<<<<<< HEAD
-//│   main: while (true) {
-//│     switch (pc) {
-//│       case 2:
-//│         runtime.resumeValue;
-//│         pc = 1;
-//│         return runtime.Unit;
-//│       case 1:
-//│         return runtime.Unit;
-//│       case 0:
-//│         if (x === true) {
-//│           runtime.resumeValue = 3;
-//│           if (runtime.curEffect === null) {
-//│             pc = 2;
-//│             continue main
-//│           }
-//│           return runtime.unwind(f4, 2, "ScopedBlocksAndHandlers.mls:103:7", null, null, 1, 1, x, 0);
-||||||| 16527af9a
-//│   main: while (true) {
-//│     switch (pc) {
-//│       case 2:
-//│         runtime.resumeValue;
-//│         pc = 1;
-//│       case 1:
-//│         return runtime.Unit;
-//│       case 0:
-//│         if (x === true) {
-//│           runtime.resumeValue = 3;
-//│           if (runtime.curEffect === null) {
-//│             pc = 2;
-//│             continue main
-//│           }
-//│           return runtime.unwind(f4, 2, "ScopedBlocksAndHandlers.mls:103:7", null, null, 1, 1, x, 0);
-=======
 //│   switch (pc) {
 //│     case 0:
 //│       if (x === true) {
@@ -182,7 +148,6 @@ fun f(x) =
 //│           pc = 1;
 //│         } else {
 //│           return runtime.unwind(f4, 1, "ScopedBlocksAndHandlers.mls:131:7", null, null, 1, 1, x, 0)
->>>>>>> hkmc2
 //│         }
 //│       } else { return runtime.Unit }
 //│     case 1:
