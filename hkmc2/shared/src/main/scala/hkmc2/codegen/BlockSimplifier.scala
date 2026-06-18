@@ -345,6 +345,32 @@ class BlockSimplifier
   
   // ——————————————————————————————————————————————————————————————————————————————————————————— //
   
+  def getInstCtorShape(path: Path): Opt[ClassLikeSymbol] =
+    path.targetSymbol.flatMap:
+      case sym: ClassLikeSymbol => S(sym)
+      case _ => N
+  
+  def getCallCtorShape(path: Path, argss: NELs[Ls[Arg]]): Opt[ClassLikeSymbol] =
+    path.targetSymbol
+      .collect:
+        case ccs: ClassCtorSymbol => ccs.associatedCls
+      .collect:
+        case sym: ClassSymbol if isSaturatedClassCtorCall(sym, argss) => sym
+  
+  def isSaturatedClassCtorCall(sym: ClassSymbol, argss: NELs[Ls[Arg]]): Bool =
+    sym.irClsLikeDefn
+    .fold(
+        // FIXME: remove this case.
+        //    IR passes should NOT access `sym.defn` at all;
+        //    but this access is currently necessary because we do not yet store `irClsLikeDefn` in imported symbols.
+        sym.defn.map(defn => defn.paramsOpt.size + defn.auxParams.size)
+      ): ird =>
+        S(ird.paramsOpt.size + ird.auxParams.size)
+    .exists: paramListsSize =>
+      argss.sizeCompare(paramListsSize) === 0
+  
+  // ——————————————————————————————————————————————————————————————————————————————————————————— //
+  
   
   /** Basic intraprocedural flow-sensitive analysis to figure out which assignments may flow into which variables,
     * at each point of the program.
@@ -763,14 +789,6 @@ class BlockSimplifier
           def giveUp =
             gaveUp = true
             Set.empty[Shape]
-          def getCtorShape(path: Path): Opt[Shape] =
-            path.targetSymbol.flatMap:
-              case ccs: ClassCtorSymbol => S(ccs.associatedCls)
-              case sym => sym.asClsOrMod
-          def isSaturatedClassCall(sym: ClassSymbol, argss: NELs[Ls[Arg]]): Bool =
-            sym.irClsLikeDefn.exists: defn =>
-              val paramLists = defn.paramsOpt.toList ::: defn.auxParams
-              paramLists.lengthCompare(argss.length) === 0
           def getAssignInfoShapes(a: AssignInfo): Set[Shape] =
             if gaveUp then Set.empty
             a.assigns match
@@ -785,14 +803,14 @@ class BlockSimplifier
                 case N =>
                   rhs match
                   case p: Path => getShapes(p)
-                  case Call(path, args) =>
-                    getCtorShape(path) match
-                    case S(sym: ClassSymbol) if isSaturatedClassCall(sym, args) =>
+                  case Call(path, argss) =>
+                    getCallCtorShape(path, argss) match
+                    case S(sym: ClassSymbol) =>
                       Set.single(sym)
                     case _ => giveUp
                   case Instantiate(_, cls, _) =>
                     // * Note: Instantiate nodes are globally assumed to be saturated
-                    getCtorShape(cls) match
+                    getInstCtorShape(cls) match
                     case S(sym) =>
                       Set.single(sym)
                     case _ => giveUp
@@ -808,7 +826,10 @@ class BlockSimplifier
               case Value.MemberRef(r, sym: ModuleOrObjectSymbol) =>
                 Set.single(sym)
               case Value.Lit(lit) => Set.single(lit)
-              case _ => giveUp
+              case _ =>
+                p.targetSymbol match
+                case S(sym: ModuleOrObjectSymbol) => Set.single(sym)
+                case _ => giveUp
           
           var shapes = if deadBranchRemoval then getShapes(scrut2) else giveUp
           // TODO: if analysis gave up, make the shapes the set of cases of the patmat, to rm redundant arms
@@ -980,29 +1001,12 @@ class BlockSimplifier
     
     import ProducerPlan.*
     
-    def getCtorShape(path: Path): Opt[ClassLikeSymbol] =
-      path.targetSymbol.flatMap:
-        case sym: ClassLikeSymbol => S(sym)
-        case _ => N
-    
-    def isSaturatedClassCall(sym: ClassSymbol, argss: NELs[Ls[Arg]]): Bool =
-      sym.irClsLikeDefn
-        .map(defn => defn.paramsOpt.toList ::: defn.auxParams)
-        .orElse(sym.defn.map(defn => defn.paramsOpt.toList ::: defn.auxParams))
-        .exists: paramLists =>
-        paramLists.lengthCompare(argss.length) === 0
-    
     def getShape(result: Result): Opt[Shape] = result match
       case Value.MemberRef(_, sym: ModuleOrObjectSymbol) => S(sym)
       case Value.Lit(lit) => S(lit)
       case path: Path => path.targetSymbol.flatMap(_.asModOrObj)
-      case Call(path, args) =>
-        path.targetSymbol
-          .collect:
-            case ccs: ClassCtorSymbol => ccs.associatedCls
-          .collect:
-            case sym: ClassSymbol if isSaturatedClassCall(sym, args) => sym
-      case Instantiate(_, cls, _) => getCtorShape(cls)
+      case Call(path, argss) => getCallCtorShape(path, argss)
+      case Instantiate(_, cls, _) => getInstCtorShape(cls)
       case _ => N
     
     /** Find the shape held by `target` after a straight-line producer arm.
@@ -1027,7 +1031,7 @@ class BlockSimplifier
           case sym: ModuleOrObjectSymbol => sym.irClsLikeDefn
         ).flatMap: defn =>
           defn.parentPath match
-            case S(parent) => getCtorShape(parent).map(S(_))
+            case S(parent) => getInstCtorShape(parent).map(S(_))
             case N => S(N)
         .orElse:
           (sym match
