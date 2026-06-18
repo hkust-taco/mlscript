@@ -1,0 +1,65 @@
+:js
+
+
+fun funny = 
+  case n then funny(n - 1) + 1
+
+:soir
+funny
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let lambda;
+//│ @private
+//│ define lambda as fun lambda²(caseScrut) {
+//│   let tmp, inlinedVal, tmp1, inlinedVal1, tmp2, inlinedVal2, tmp3, inlinedVal3, tmp4, inlinedVal4, tmp5, tmp6, caseScrut1, inlinedVal5, tmp7, tmp8, lambda1, caseScrut2, inlinedVal6;
+//│   set tmp = -⁰(caseScrut, 1);
+//│   set tmp1 = -⁰(tmp, 1);
+//│   set tmp2 = -⁰(tmp1, 1);
+//│   set tmp3 = -⁰(tmp2, 1);
+//│   set tmp4 = -⁰(tmp3, 1);
+//│   set tmp5 = -⁰(tmp4, 1);
+//│   set caseScrut1 = tmp5;
+//│   set tmp7 = -⁰(tmp5, 1);
+//│   set caseScrut2 = tmp7;
+//│   block inlinedLbl:
+//│     let tmp9, tmp10, tmp11, inlinedVal7, lambda2;
+//│     @private
+//│     define lambda2 as fun lambda¹(caseScrut3) {
+//│       let tmp12, tmp13, tmp14, inlinedVal8;
+//│       block inlinedLbl1:
+//│         let lambda3;
+//│         @private
+//│         define lambda3 as fun lambda⁰(caseScrut4) {
+//│           let tmp15, tmp16, tmp17;
+//│           set tmp15 = funny⁰();
+//│           set tmp16 = -⁰(caseScrut4, 1);
+//│           set tmp17 = tmp15(tmp16);
+//│           return +⁰(tmp17, 1)
+//│         };
+//│         set inlinedVal8 = lambda⁰;
+//│         break inlinedLbl1
+//│       set tmp12 = inlinedVal8;
+//│       set tmp13 = -⁰(caseScrut3, 1);
+//│       set tmp14 = tmp12(tmp13);
+//│       return +⁰(tmp14, 1)
+//│     };
+//│     set inlinedVal7 = lambda¹;
+//│     set tmp9 = lambda¹;
+//│     set tmp10 = -⁰(caseScrut2, 1);
+//│     set tmp11 = lambda¹(tmp10);
+//│     set inlinedVal6 = +⁰(tmp11, 1);
+//│     break inlinedLbl
+//│   set tmp8 = inlinedVal6;
+//│   set inlinedVal5 = +⁰(tmp8, 1);
+//│   set tmp6 = inlinedVal5;
+//│   set inlinedVal4 = +⁰(inlinedVal5, 1);
+//│   set inlinedVal3 = +⁰(inlinedVal4, 1);
+//│   set inlinedVal2 = +⁰(inlinedVal3, 1);
+//│   set inlinedVal1 = +⁰(inlinedVal2, 1);
+//│   set inlinedVal = +⁰(inlinedVal1, 1);
+//│   return +⁰(inlinedVal, 1)
+//│ };
+//│ return lambda²
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = fun
+
+

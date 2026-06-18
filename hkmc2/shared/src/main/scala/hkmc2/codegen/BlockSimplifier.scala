@@ -27,6 +27,7 @@ class BlockSimplifier
   val deadBranchRemoval = config.deadBranchRemoval
   
   val MaxIterations = 10
+  val MaxDCEIterationsPerIter = 10
   
   
   def apply(prog: Program): Program =
@@ -46,14 +47,15 @@ class BlockSimplifier
       
       log(s"⬤ Simplif. iter. $iteration")
       
+      var dceIteration = 0
       while
         val dce = new DeadCodeElim()
         res = dce.apply(res)
         changed ||= dce.changed
         if dce.changed then
           log("▶ DCE:\n" + printRes)
-          iteration += 1
-          true
+          dceIteration += 1
+          dceIteration < MaxDCEIterationsPerIter
         else false
       do ()
       

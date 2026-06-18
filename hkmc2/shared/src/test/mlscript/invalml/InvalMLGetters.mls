@@ -79,77 +79,43 @@ test2()(5)
 :w
 :e
 :sjs
+:noInline
 fun test2() =
   fun funny = 
     case 0 then 0
     case n then funny(n - 1) + 1
   funny
 //│ ╔══[WARNING] Pure expression in statement position
-//│ ║  l.84: 	    case 0 then 0
+//│ ║  l.85: 	    case 0 then 0
 //│ ╙──      	    ^^^^^^^^^^^^^
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let test22;
 //│ test22 = function test2() {
-//│   let funny, lambda1;
+//│   let funny;
 //│   funny = function funny() {
-//│     let lambda2;
-//│     lambda2 = (undefined, function (caseScrut) {
+//│     let lambda1;
+//│     lambda1 = (undefined, function (caseScrut) {
 //│       let tmp, tmp1, tmp2;
 //│       tmp = funny();
 //│       tmp1 = caseScrut - 1;
 //│       tmp2 = runtime.safeCall(tmp(tmp1));
 //│       return tmp2 + 1
 //│     });
-//│     return lambda2
+//│     return lambda1
 //│   };
-//│   lambda1 = (undefined, function (caseScrut) {
-//│     let tmp, tmp1, caseScrut1, inlinedVal;
-//│     tmp = caseScrut - 1;
-//│     caseScrut1 = tmp;
-//│     inlinedLbl: {
-//│       let tmp2, tmp3, tmp4, inlinedVal1, lambda2;
-//│       lambda2 = (undefined, function (caseScrut2) {
-//│         let tmp5, tmp6, tmp7, inlinedVal2;
-//│         inlinedLbl1: {
-//│           let lambda3;
-//│           lambda3 = (undefined, function (caseScrut3) {
-//│             let tmp8, tmp9, tmp10;
-//│             tmp8 = funny();
-//│             tmp9 = caseScrut3 - 1;
-//│             tmp10 = runtime.safeCall(tmp8(tmp9));
-//│             return tmp10 + 1
-//│           });
-//│           inlinedVal2 = lambda3;
-//│           break inlinedLbl1;
-//│         }
-//│         tmp5 = inlinedVal2;
-//│         tmp6 = caseScrut2 - 1;
-//│         tmp7 = runtime.safeCall(tmp5(tmp6));
-//│         return tmp7 + 1
-//│       });
-//│       inlinedVal1 = lambda2;
-//│       tmp2 = lambda2;
-//│       tmp3 = caseScrut1 - 1;
-//│       tmp4 = runtime.safeCall(lambda2(tmp3));
-//│       inlinedVal = tmp4 + 1;
-//│       break inlinedLbl;
-//│     }
-//│     tmp1 = inlinedVal;
-//│     return tmp1 + 1
-//│   });
-//│   return lambda1
+//│   return funny()
 //│ };
 //│ ╔══[WARNING] Pure expression in statement position
-//│ ║  l.84: 	    case 0 then 0
+//│ ║  l.85: 	    case 0 then 0
 //│ ╙──      	    ^^^^^^^^^^^^^
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ ╔══[COMPILATION ERROR] Function definition shape not yet supported for funny
-//│ ║  l.84: 	    case 0 then 0
+//│ ║  l.85: 	    case 0 then 0
 //│ ║        	         ^^^^^^^^
-//│ ║  l.85: 	    case n then funny(n - 1) + 1
+//│ ║  l.86: 	    case n then funny(n - 1) + 1
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Variable not found: funny
-//│ ║  l.86: 	  funny
+//│ ║  l.87: 	  funny
 //│ ╙──      	  ^^^^^
 
 
@@ -157,7 +123,7 @@ fun test2() =
 fun test3 =
   print("Hi")
 //│ ╔══[COMPILATION ERROR] Function definition shape not yet supported for test3
-//│ ║  l.158: 	  print("Hi")
+//│ ║  l.124: 	  print("Hi")
 //│ ╙──       	  ^^^^^^^^^^^
 
 

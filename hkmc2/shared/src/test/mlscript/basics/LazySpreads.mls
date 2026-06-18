@@ -50,18 +50,18 @@ fun sum2 = case
 //│ let sum2;
 //│ sum2 = function sum2() {
 //│   let lambda;
-//│   lambda = (undefined, function (caseScrut1) {
-//│     let lastElement1$3, middleElements3, element0$, tmp6, tmp7, tmp8;
-//│     if (runtime.Tuple.isArrayLike(caseScrut1) && caseScrut1.length === 0) {
+//│   lambda = (undefined, function (caseScrut) {
+//│     let lastElement1$3, middleElements3, element0$, tmp3, tmp4, tmp5;
+//│     if (runtime.Tuple.isArrayLike(caseScrut) && caseScrut.length === 0) {
 //│       return 0
-//│     } else if (runtime.Tuple.isArrayLike(caseScrut1) && caseScrut1.length >= 2) {
-//│       element0$ = runtime.Tuple.get(caseScrut1, 0);
-//│       middleElements3 = runtime.Tuple.slice(caseScrut1, 1, 1);
-//│       lastElement1$3 = runtime.Tuple.get(caseScrut1, -1);
-//│       tmp6 = element0$ + lastElement1$3;
-//│       tmp7 = sum2();
-//│       tmp8 = runtime.safeCall(tmp7(middleElements3));
-//│       return tmp6 + tmp8
+//│     } else if (runtime.Tuple.isArrayLike(caseScrut) && caseScrut.length >= 2) {
+//│       element0$ = runtime.Tuple.get(caseScrut, 0);
+//│       middleElements3 = runtime.Tuple.slice(caseScrut, 1, 1);
+//│       lastElement1$3 = runtime.Tuple.get(caseScrut, -1);
+//│       tmp3 = element0$ + lastElement1$3;
+//│       tmp4 = sum2();
+//│       tmp5 = runtime.safeCall(tmp4(middleElements3));
+//│       return tmp3 + tmp5
 //│     }
 //│     throw globalThis.Object.freeze(new globalThis.Error("match error"));
 //│   });
