@@ -272,6 +272,37 @@ object ConfigParser:
         source = Diagnostic.Source.Compilation))
       N
 
+  private def parseLanguage(tree: Tree)(using Raise): Opt[Config.Language] =
+    def parseVersionName(tree: Tree): Opt[Str] = tree match
+      case StrLit(name) => S(name)
+      case Ident(name) => S(name)
+      case IntLit(value) => S(value.toString)
+      case DecLit(value) => S(value.toString)
+      case Sel(prefix, Ident(suffix)) =>
+        parseVersionName(prefix).map: prefix =>
+          s"${prefix}.${suffix}"
+      case _ =>
+        raise(ErrorReport(
+          msg"Expected a language version name" -> tree.toLoc :: Nil,
+          source = Diagnostic.Source.Compilation))
+        N
+    val versionName = parseVersionName(tree)
+    versionName.flatMap: name =>
+      Config.Language.presets.get(name) match
+        case S(language) => S(language)
+        case N =>
+          raise(ErrorReport(
+            msg"Unknown language version '${name}'" -> tree.toLoc ::
+              msg"Available language versions: ${Config.Language.presets.keys.toList.sorted.mkString(", ")}" -> N ::
+              Nil,
+            source = Diagnostic.Source.Compilation))
+          N
+
+  private def parseLanguageOverride(value: Tree)(using Raise): Config => Config =
+    parseLanguage(value) match
+      case S(v) => _.copy(language = v)
+      case N => identity
+
   /** Parse the `None`/`Some(...)` syntax for optional config fields.
     * Also accepts unwrapped values as a convenience (treated as `Some(value)`). */
   private def parseOpt[A](tree: Tree)(parseInner: Tree => Opt[A])(using Raise): Opt[Opt[A]] = tree match
@@ -417,6 +448,7 @@ object ConfigParser:
   
   /** Parse a single field override like `tailRecOpt: false`. */
   private def parseField(name: Str, value: Tree)(using Raise): Config => Config = name match
+    case "language" => parseLanguageOverride(value)
     case "tailRecOpt" => parseBool(value) match
       case S(v) => _.copy(tailRecOpt = v)
       case N => identity
@@ -486,5 +518,15 @@ object ConfigParser:
         msg"Unknown config field '${name}'" -> value.toLoc :: Nil,
         source = Diagnostic.Source.Compilation))
       identity
-end ConfigParser
 
+  /** Parse a `#lang(version)` directive as shorthand for `#config(language: version)`. */
+  def parseLanguageDirective(args: Ls[Tree])(using Raise): Config => Config =
+    args match
+      case language :: Nil =>
+        parseLanguageOverride(language)
+      case _ =>
+        raise(ErrorReport(
+          msg"Expected exactly one language version argument" -> args.headOption.flatMap(_.toLoc) :: Nil,
+          source = Diagnostic.Source.Compilation))
+        identity
+end ConfigParser
