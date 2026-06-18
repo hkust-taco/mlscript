@@ -1,6 +1,8 @@
 # MLscript Language Reference
 
-This document is a comprehensive reference for the MLscript programming language (hkmc2 dialect), derived from the test files in `hkmc2/shared/src/test/mlscript/`.
+This document is a best-effort reference for the MLscript programming language
+as found in the `hkmc2` branch of this repository,
+which is an evolving language that has not stabilized just yet.
 
 ---
 
@@ -31,13 +33,27 @@ This document is a comprehensive reference for the MLscript programming language
 
 ## 1. File Format and Test Directives
 
-`.mls` (MLscript) files contain both source code and *golden test output*. Lines beginning with `//│` are compiler output — not source code. Regular `//` comment lines are source code.
+The repository contains two kinds of MLscript files:
 
-Test-mode directives (not language syntax) that appear at the start of a block:
+* **Compilation files**, in `hkmc2/shared/src/test/mlscript-compile/`, which are compiled to JavaScript `.mls` modules.
+* **Diff-test files**, in `hkmc2/shared/src/test/mlscript/`, which contain both source code and *golden test output*.
+  Lines beginning with `//│` are compiler output that is updated automatically — not source code.
+  Regular `//` comment lines are source code.
+  Diff-test blocks are separated by empty lines and tested one after the other.
+
+The latter kind of files supports test-mode directives that control how the tests are run and what output is expected.
+These are not part of the language syntax.
+They must appear at the start of a block or at the very start of the file
+(in which case they apply to the entire file).
+
+Some examples:
 
 | Directive | Meaning |
 |---|---|
 | `:js` | Run block in JS mode |
+| `:wasm` | Run block in WASM mode |
+| `:sjs` | Show generated JavaScript code |
+| `:wat` | Show generated WebAssembly Text format |
 | `:e` | Expect compilation error |
 | `:pe` | Expect parse error |
 | `:re` | Expect runtime error |
@@ -49,8 +65,11 @@ Test-mode directives (not language syntax) that appear at the start of a block:
 | `:todo` | Planned but not yet implemented |
 | `:silent` | Suppress output |
 | `:effectHandlers` | Enable effect handler support |
-| `:flow` | Enable flow type checking |
-| `:lift` | Enable lambda lifting |
+| `:flow` | Enable flow inference for resolution |
+| `:lift` | Enable function and class lifting |
+
+Some of the other available commands are documented in
+.github/skills/hkmc2-difftests/references/commands-and-policies.md.
 
 ---
 
@@ -62,10 +81,25 @@ Test-mode directives (not language syntax) that appear at the start of a block:
 
 Multi-line comments are not supported; use consecutive `//` lines.
 
-MLscript is **indentation-sensitive**. An indented block creates a continuation of the enclosing expression. Explicit blocks use `{}`. Semicolons `;` sequence expressions on one line:
+MLscript is **indentation-sensitive**. An indented block creates a continuation of the enclosing expression. Explicit blocks use `{}`. Semicolons `;` sequence *expressions* (not statements) on one line:
 
 ```mlscript
 1; id(2)
+```
+
+Statements are separated by commas `,`,
+but commas can be omitted at the end of lines:
+
+```mlscript
+let x = 1, x + 1
+// same as
+let x = 1
+x + 1
+
+// Alternative syntax for *local* `let`, also supported:
+let x = 1 in
+  x + 1
+// `x` is not visible after the `in` block
 ```
 
 ---
@@ -99,10 +133,16 @@ undefined   // Undefined
 r.'fieldName   // field access using symbol literal
 ```
 
-**Array literals:**
+**Arrays:**
 ```mlscript
 [1, 2, 3]
-[1, ..xs, 4]   // spread syntax
+[1, ...xs, 4]   // spread syntax
+```
+
+**Sequences:**
+```mlscript
+[1, 2, 3]
+[1, ..xs, 4]   // "lazy spread" syntax, which builds/analyzes a sequence lazily
 ```
 
 ---
@@ -116,7 +156,7 @@ let x = 42
 let x = 1 in x + 1       // scoped let
 ```
 
-`let` with indented block creates local definitions:
+`let` creates local definitions:
 ```mlscript
 let x = 1
 let y = 2
@@ -128,6 +168,13 @@ Multiple bindings under one `let`:
 let
   x = 1
   y = 2
+```
+
+Lets support shadowing and "compound shadowing":
+```mlscript
+let x = 1
+let x = x + 1   // shadows previous x, can refer to it
+let x += 1      // same as above; no mutation is performed
 ```
 
 ### Mutable Value (`mut val`)
@@ -274,12 +321,13 @@ Operators can also be used as ordinary identifiers:
 f(x)             // standard call
 f(x, y)          // multi-arg call
 f of x, y        // `of` keyword: f(x, y)
-f @ x            // `@` operator: left-associative application
+f @ x            // `@` operator: left-associative application, f(x)
 x |> f           // pipe forward: f(x)
 f <| x           // pipe backward: f(x)
-x !> f           // tap/tee: f(x) and returns x
+x !> f           // tap/tee: f(x) and returns x, ie, `let tmp = x in f(tmp); tmp`
 x \f(args)       // receiver syntax: f(x, args)
-f(a: 0)          // named argument (becomes record {a: 0})
+x f(args)        // "juxtaposition" syntax: f(x, args) – will probably be removed in the future
+f(1, 2, a: 3, 4, b: 5)  // named argument (becomes record, as in f(1, 2, 4, {a: 3, b: 5}))
 f(using x)       // pass context/implicit argument
 ```
 
@@ -295,7 +343,7 @@ test @              // indented block as arg
 `case` creates a function that pattern-matches its argument:
 
 ```mlscript
-case x then x
+case x then x      // identity function: x => x
 case { x then x }
 
 case
@@ -356,6 +404,16 @@ Operator sections with `_`:
 Prefix a comma before an operator to apply it to the entire LHS:
 ```mlscript
 2 + 2 ,* 3        // = (2 + 2) * 3 = 12
+// or
+2 + 2 , * 3
+```
+This can also be laid out on several lines, where as usual the comma is optional at the end of the line:
+```mlscript
+2 + 2
+* 3
+// NOTE: different from
+2 + 2
+  * 3
 ```
 
 ### Pipe and Application Operators (from Predef)
@@ -632,8 +690,8 @@ set xs.[0] = v       // index assignment
 **Spread syntax:**
 ```mlscript
 [1, ..xs, 4]         // lazy spread — xs is expanded in the middle
-[..xs]               // all of xs
-[...xs]              // JS-style spread (same semantics)
+[..xs]               // all of xs – does not do anything
+[...xs]              // JS-style spread (expands into a JS array)
 ```
 
 **Array methods** (from Predef/Iter):
@@ -657,7 +715,7 @@ f(1, 2, 3)               // xs = [1, 2, 3]
 
 ---
 
-## 11. Universal Case Syntax (UCS)
+## 11. Universal Conditional Syntax (UCS)
 
 UCS is MLscript's unified `if`/`while`/`case` expression supporting pattern matching, guards, and multi-way branching. It replaces traditional `match`/`switch` constructs.
 
@@ -692,7 +750,7 @@ if x is Some(v) then v else 0
 if
   x > 0  then "positive"
   x == 0 then "zero"
-  else      "negative"
+  else        "negative"
 ```
 
 ### `and` Guards
@@ -726,7 +784,8 @@ if x is
 
 ### `do` Consequent
 
-`do` is like `then` but does not require a result value; it is used for side effects. The overall expression continues on the next line:
+`do` is like `then` but does not return a value and does not require exhaustiveness; it is used for side effects.
+The overall expression continues on the next line:
 
 ```mlscript
 if x do
@@ -736,6 +795,13 @@ if x is
   Some(0) do set x = None
   Some(v) and v % 2 == 0 do set x = Some(v / 2)
 x
+```
+
+NOTE: misusing `then` here won't work, as `then` reuqires exhaustiveness:
+
+```mlscript
+if x then  // will crash with Match Error when `x` is not true
+  print("executed")
 ```
 
 ### `else` Clause
@@ -1312,7 +1378,7 @@ fun foo(x) = if x is @compile Box then "yes" else "no"
 
 ---
 
-## 17. Flow Types
+## 17. Flow Inference and Leading Dot Access
 
 Flow types (`:flow` mode) enable type inference with a structural/flow-sensitive type system.
 
@@ -1441,14 +1507,36 @@ print of
 ```mlscript
 assert true
 assert xs is Array
+```
+
+Adding an `else` clause to `assert` allows a form of early exit (from the enclosing syntactic block):
+```mlscript
 assert arg is [l, r] else arg
+
+fun foo(x) =
+  assert x is Some(value) else None
+  // ...
+  Some(x + 1)
+// equivalent to:
+fun foo(x) =
+  if x is Some(value) then
+    // ...
+    Some(x + 1)
+  else
+    None
+
+fun bar(x) =
+  ...
+  while ... do
+    assert x is Some(value) else return None
+  ...
 ```
 
 ### Drop / Do
 
 ```mlscript
 drop expr           // evaluate and discard the result
-do expr             // execute expression as a statement
+do expr             // execute unit-returning expression as a statement
 ```
 
 ### Throw
