@@ -46,10 +46,16 @@ class BlockSimplifier
       
       log(s"⬤ Simplif. iter. $iteration")
       
-      val dce = new DeadCodeElim()
-      res = dce.apply(res)
-      changed ||= dce.changed
-      if dce.changed then log("▶ DCE:\n" + printRes)
+      while
+        val dce = new DeadCodeElim()
+        res = dce.apply(res)
+        changed ||= dce.changed
+        if dce.changed then
+          log("▶ DCE:\n" + printRes)
+          iteration += 1
+          true
+        else false
+      do ()
       
       val vp = new DataFlowAnalysis(LocalVars.analyze(res.main))
       res = vp.apply(res)

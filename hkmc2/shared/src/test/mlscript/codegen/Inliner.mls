@@ -237,25 +237,29 @@ fun foo(x)(y) =
   lam
 foo(1)(2)(3)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let lam$, foo$worker;
+//│ let lam$, foo$worker, x, y, z, inlinedVal, tmp;
 //│ @inline @private
-//│ define lam$ as fun lam$⁰(x, y)(z) {
-//│   let tmp;
-//│   set tmp = +⁰(x, y);
-//│   return +⁰(tmp, z)
+//│ define lam$ as fun lam$⁰(x1, y1)(z1) {
+//│   let tmp1;
+//│   set tmp1 = +⁰(x1, y1);
+//│   return +⁰(tmp1, z1)
 //│ };
 //│ @inline
-//│ define foo⁰ as fun foo¹(x)(y) {
-//│   return foo$worker⁰(x, y)
+//│ define foo⁰ as fun foo¹(x1)(y1) {
+//│   return foo$worker⁰(x1, y1)
 //│ };
-//│ define foo$worker as fun foo$worker⁰(x, y) {
-//│   let inlinedVal, tmp;
-//│   set tmp = +⁰(x, y);
-//│   set inlinedVal = +⁰(tmp, 4);
-//│   do Predef⁰.print⁰(inlinedVal);
-//│   return lam$⁰(x, y)
+//│ define foo$worker as fun foo$worker⁰(x1, y1) {
+//│   let inlinedVal1, tmp1;
+//│   set tmp1 = +⁰(x1, y1);
+//│   set inlinedVal1 = +⁰(tmp1, 4);
+//│   do Predef⁰.print⁰(inlinedVal1);
+//│   return lam$⁰(x1, y1)
 //│ };
 //│ do Predef⁰.print⁰(7);
+//│ set x = 1;
+//│ set y = 2;
+//│ set z = 3;
+//│ set tmp = 3;
 //│ return 6
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > 7

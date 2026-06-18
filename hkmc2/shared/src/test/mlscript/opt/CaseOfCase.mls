@@ -66,21 +66,13 @@ fun test(x) = x map(_ + 1) map(_ * 2)
 //│   let inlinedVal, arg$Some$0$, arg$Some$0$1;
 //│   match x
 //│     Some⁰ =>
-//│       let inlinedVal1;
+//│       let inlinedVal1, inlinedVal2;
 //│       set arg$Some$0$1 = x.value⁰;
 //│       set inlinedVal1 = +⁰(arg$Some$0$1, 1);
 //│       set inlinedVal = Option⁰.Some¹(inlinedVal1);
-//│       match inlinedVal
-//│         Some⁰ =>
-//│           let inlinedVal2;
-//│           set arg$Some$0$ = inlinedVal.value⁰;
-//│           set inlinedVal2 = *⁰(arg$Some$0$, 2);
-//│           return Option⁰.Some¹(inlinedVal2)
-//│         None⁰ =>
-//│           return Option⁰.None⁰
-//│         else
-//│           throw new globalThis⁰.Error⁰("match error")
-//│       end
+//│       set arg$Some$0$ = inlinedVal.value⁰;
+//│       set inlinedVal2 = *⁰(arg$Some$0$, 2);
+//│       return Option⁰.Some¹(inlinedVal2)
 //│     None⁰ =>
 //│       set inlinedVal = Option⁰.None⁰;
 //│       return Option⁰.None⁰
@@ -100,33 +92,16 @@ fun test(x) = x map(_ + 1) map(_ * 2) map("Result: " + _)
 //│   let inlinedVal, inlinedVal1, arg$Some$0$, arg$Some$0$1, arg$Some$0$2;
 //│   match x
 //│     Some⁰ =>
-//│       let inlinedVal2;
+//│       let inlinedVal2, inlinedVal3, inlinedVal4;
 //│       set arg$Some$0$2 = x.value⁰;
 //│       set inlinedVal2 = +⁰(arg$Some$0$2, 1);
 //│       set inlinedVal = Option⁰.Some¹(inlinedVal2);
-//│       match inlinedVal
-//│         Some⁰ =>
-//│           let inlinedVal3;
-//│           set arg$Some$0$1 = inlinedVal.value⁰;
-//│           set inlinedVal3 = *⁰(arg$Some$0$1, 2);
-//│           set inlinedVal1 = Option⁰.Some¹(inlinedVal3);
-//│           match inlinedVal1
-//│             Some⁰ =>
-//│               let inlinedVal4;
-//│               set arg$Some$0$ = inlinedVal1.value⁰;
-//│               set inlinedVal4 = +⁰("Result: ", arg$Some$0$);
-//│               return Option⁰.Some¹(inlinedVal4)
-//│             None⁰ =>
-//│               return Option⁰.None⁰
-//│             else
-//│               throw new globalThis⁰.Error⁰("match error")
-//│           end
-//│         None⁰ =>
-//│           set inlinedVal1 = Option⁰.None⁰;
-//│           return Option⁰.None⁰
-//│         else
-//│           throw new globalThis⁰.Error⁰("match error")
-//│       end
+//│       set arg$Some$0$1 = inlinedVal.value⁰;
+//│       set inlinedVal3 = *⁰(arg$Some$0$1, 2);
+//│       set inlinedVal1 = Option⁰.Some¹(inlinedVal3);
+//│       set arg$Some$0$ = inlinedVal1.value⁰;
+//│       set inlinedVal4 = +⁰("Result: ", arg$Some$0$);
+//│       return Option⁰.Some¹(inlinedVal4)
 //│     None⁰ =>
 //│       set inlinedVal = Option⁰.None⁰;
 //│       set inlinedVal1 = Option⁰.None⁰;
@@ -154,19 +129,12 @@ fun test(x) = if x map(_ + 1) is
 //│       set arg$Some$0$1 = x.value⁰;
 //│       set inlinedVal1 = +⁰(arg$Some$0$1, 1);
 //│       set inlinedVal = Option⁰.Some¹(inlinedVal1);
-//│       match inlinedVal
-//│         Some⁰ =>
-//│           set arg$Some$0$ = inlinedVal.value⁰;
-//│           match arg$Some$0$
-//│             0 =>
-//│               return []
-//│             else
-//│               return [arg$Some$0$]
-//│           end
-//│         None⁰ =>
-//│           return null
+//│       set arg$Some$0$ = inlinedVal.value⁰;
+//│       match arg$Some$0$
+//│         0 =>
+//│           return []
 //│         else
-//│           throw new globalThis⁰.Error⁰("match error")
+//│           return [arg$Some$0$]
 //│       end
 //│     None⁰ =>
 //│       set inlinedVal = Option⁰.None⁰;

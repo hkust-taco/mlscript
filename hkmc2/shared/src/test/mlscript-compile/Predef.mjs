@@ -190,7 +190,7 @@ lambda = (undefined, function (Predef2, a, b, field) {
     }
   }
   static equals(a, b) {
-    let scrut, scrut1, scrut2, ac, scrut3, md, scrut4, scrut5, scrut6, scrut7, scrut8, scrut9, lambda$here, lambda$here1;
+    let scrut, scrut1, scrut2, ac, scrut3, md, scrut4, scrut5, scrut6, scrut7, scrut8, scrut9, tmp, lambda$here, lambda$here1;
     scrut = a === b;
     if (scrut === true) {
       return true
@@ -223,14 +223,22 @@ lambda = (undefined, function (Predef2, a, b, field) {
                   lambda$here1 = lambda$(Predef, a, b);
                   scrut5 = runtime.safeCall(md[2].every(lambda$here1));
                   if (scrut5 === true) {
+                    tmp = true;
+                  } else {
+                    tmp = false;
+                  }
+                  if (tmp === true) {
                     return true
                   }
                   return false;
                 }
+                tmp = false;
                 return false;
               }
+              tmp = false;
               return false;
             }
+            tmp = false;
             return false;
           }
           return false;

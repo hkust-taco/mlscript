@@ -52,7 +52,7 @@ in
 //│ ▶ DCE:
 //│ >  return Predef⁰.print⁰(6)
 //│ Captured variables: HashSet()
-//│ ⬤ Simplif. iter. 3
+//│ ⬤ Simplif. iter. 4
 //│ Captured variables: HashSet()
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ return Predef⁰.print⁰(6)

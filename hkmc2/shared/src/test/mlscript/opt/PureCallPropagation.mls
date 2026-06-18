@@ -80,7 +80,7 @@ let f = foo(1)(2)
 print("hello")
 f(3)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let foo$worker, lambda;
+//│ let foo$worker, lambda, inlinedVal;
 //│ @inline
 //│ define foo¹ as fun foo²(x)(y) {
 //│   return foo$worker⁰(x, y)
