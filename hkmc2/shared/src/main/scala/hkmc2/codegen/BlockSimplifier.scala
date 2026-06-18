@@ -47,6 +47,9 @@ class BlockSimplifier
       
       log(s"⬤ Simplif. iter. $iteration")
       
+      // * Running DCE once sometimes produces more DCE opportunities;
+      // * it is important to apply all of them so that later passes, such as COC,
+      // * are not impeded by things like unused labels from inlining.
       var dceIteration = 0
       while
         val dce = new DeadCodeElim()
@@ -65,6 +68,8 @@ class BlockSimplifier
       if vp.changed then log("▶ VP:\n" + printRes)
       
       summon[Config].inlining.foreach: cfg =>
+        
+        // * Runs after DCE so that unused labels from inlining and already removed
         val coc = new CaseOfCase(using cfg)
         res = coc.applyProgram(res)
         changed ||= coc.changed
@@ -987,7 +992,17 @@ class BlockSimplifier
   
   
   /** Specialize a match whose scrutinee was assigned known constructors by an earlier match.
-    * The remaining unknown path, if any, keeps the original consumer match. */
+    * The remaining unknown path, if any, keeps the original consumer match.
+    * More specifically, we optimize successive Match blocks where all of the following hold:
+    * - the branches of the previous match assign known constructors to some variable,
+    *   except at most one branch which can be assigning an unknown value or not assigning at all to this variable;
+    * - the second match scrutinizes that variable and either:
+    *     - the branches of the second match can be inlined into the first match
+    *       without introducing any code duplication; or
+    *     - the branches that would be duplicated are below the inlining threshold;
+    * - all the statements between the two matches are pure and can thus be moved out of the way,
+    *   similar to how `MergeMatchArmTransformer` works (in `Lowering.scala`) – we reuse `TrivialStatementsAndMatch`.
+    * See examples in [test:case-of-case]. */
   class CaseOfCase(using cfg: Config.Inliner) extends BlockTransformer(SymbolSubst.Id), Helper:
     
     type Shape = Literal | ClassLikeSymbol
@@ -1034,6 +1049,7 @@ class BlockSimplifier
             case S(parent) => getInstCtorShape(parent).map(S(_))
             case N => S(N)
         .orElse:
+          // FIXME: remove this fallback once imported classes have their `irClsLikeDefn` properly linked
           (sym match
             case sym: ClassSymbol => sym.defn
             case sym: ModuleOrObjectSymbol => sym.defn
@@ -1041,7 +1057,6 @@ class BlockSimplifier
             defn.ext match
               case S(parent) => parent.cls.resolvedSym.flatMap(_.asClsOrMod).map(S(_))
               case N => S(N)
-      
       @tailrec
       def loop(cur: ClassLikeSymbol, seen: Set[ClassLikeSymbol]): Opt[Bool] =
         if cur is expected then S(true)
@@ -1053,7 +1068,7 @@ class BlockSimplifier
       loop(actual, Set.empty)
     
     /** Return whether a known shape matches a case, or `None` if deciding would
-      * require reasoning that this optimization deliberately leaves alone. */
+      * require reasoning that this optimization deliberately does not attempt. */
     def matches(cse: Case, shape: Shape): Opt[Bool] = (cse, shape) match
       case (Case.Lit(expected), actual: Literal) => S(expected == actual)
       case (Case.Lit(_), _: ClassLikeSymbol) => S(false)
@@ -1070,17 +1085,12 @@ class BlockSimplifier
         case Nil => dflt.map(Selected(index, _))
       loop(arms, 0)
     
-    def canMove(path: Path): Bool = path match
-      case _: Value => true
-      case sel @ Select(qual, _) => canMove(qual) && sel.symbol.exists(_.isPure)
-      case _ => false
-    
     def canMove(prefix: Block): Bool = prefix match
       case _: End => true
       case Assign(_, _: Value, rest) => canMove(rest)
-      case Assign(_, path: Select, rest) => canMove(path) && canMove(rest)
+      case Assign(_, path: Select, rest) => path.isPure && canMove(rest)
       case Define(defn: ValDefn, rest) =>
-        canMove(defn.rhs) && defn.tsym.owner.isEmpty && canMove(rest)
+        defn.rhs.isPure && defn.tsym.owner.isEmpty && canMove(rest)
       case Define(defn: FunDefn, rest) => defn.owner.isEmpty && canMove(rest)
       case Define(defn: ClsLikeDefn, rest) => defn.isPure && canMove(rest)
       case _ => false
@@ -1093,10 +1103,13 @@ class BlockSimplifier
           .fold(Unknown(body))(Known(body, _))
     
     override def applyBlock(b: Block): Block = super.applyBlock(b) match
-      case m @ Match(scrut, arms, dflt, TrivialStatementsAndMatch(k,
-          consumer @ Match(Value.SimpleRef(target: LocalVarSymbol), _, _, consumerRest))) =>
+      case m @ Match(scrut, arms, dflt,
+        TrivialStatementsAndMatch(k,
+          consumer @ Match(Value.SimpleRef(target: LocalVarSymbol), _, _, consumerRest)))
+      =>
         
         val prefix = k.fold[Block](End())(_(End()))
+        
         val producerDefinedVars: Set[Symbol] = arms.iterator.flatMap(_._2.definedVars).toSet
           ++ dflt.iterator.flatMap(_.definedVars)
         
