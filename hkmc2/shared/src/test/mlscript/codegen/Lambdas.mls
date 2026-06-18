@@ -1,9 +1,7 @@
 :js
 
-:global
+
 :sjs
-
-
 x =>
   let y = x
   y
@@ -13,10 +11,67 @@ x =>
 //│ = fun
 
 
+:sjs
 (acc, _) => acc
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let lambda1; lambda1 = (undefined, function (acc, _) { return acc }); return lambda1
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = fun
+
+
+let f = (b, c) => b and c
+//│ f = fun
+
+f(true, false)
+//│ = false
+
+f(true, true)
+//│ = true
+
+
+:e
+x => if x is 0 | 1 then 1
+//│ ╔══[COMPILATION ERROR] Unexpected term form in expression position (alternation)
+//│ ║  l.33: 	x => if x is 0 | 1 then 1
+//│ ╙──      	        ^^^^^^^^^^
+//│ = fun
+
+:sjs
+x => if x is (0 | 1) then 1
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ let lambda4;
+//│ lambda4 = (undefined, function (x) {
+//│   switch (x) {
+//│     case 0:
+//│       return 1;
+//│     case 1:
+//│       return 1;
+//│   }
+//│   throw globalThis.Object.freeze(new globalThis.Error("match error"))
+//│ });
+//│ return lambda4
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = fun
+
+
+(x => if x is 0 then 1)(0)
+//│ = 1
+
+
+fun foo(f) = f(0) > 0
+
+if (foo of x => x + 1) then 1
+//│ = 1
+
+:e
+if foo of x => x + 1 then 1
+//│ ╔══[COMPILATION ERROR] Unrecognized term split (application)
+//│ ║  l.67: 	if foo of x => x + 1 then 1
+//│ ╙──      	   ^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] Error: match error
+
+
+(x => if x === 0.0 then 1.0 else x)(42)
+//│ = 42
 
 

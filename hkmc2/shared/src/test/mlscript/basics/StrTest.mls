@@ -65,7 +65,9 @@ concat of
 //│ ╔══[PARSE ERROR] Expected end of input; found literal instead
 //│ ║  l.61: 	~ of "a", "b"
 //│ ╙──      	     ^^^
-//│ ═══[COMPILATION ERROR] Unexpected term form in expression position (negation type)
+//│ ╔══[COMPILATION ERROR] Unexpected term form in expression position (negation type)
+//│ ║  l.61: 	~ of "a", "b"
+//│ ╙──      	     ^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 (~) of "a", "b"

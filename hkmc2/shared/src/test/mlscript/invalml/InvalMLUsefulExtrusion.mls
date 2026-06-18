@@ -173,19 +173,33 @@ fun foo[outer, R <: outer](r1: Region[R]) =
 //│ ╔══[COMPILATION ERROR] Name not found: R
 //│ ║  l.162: 	fun foo[outer, R <: outer](r1: Region[R]) =
 //│ ╙──       	                                      ^
-//│ ═══[COMPILATION ERROR] Expected a type, got a non-type ‹error›
-//│ ═══[COMPILATION ERROR] Expected a type, got ‹error›
-//│ ═══[COMPILATION ERROR] Expected a type, got a non-type ‹error›
-//│ ═══[COMPILATION ERROR] Expected a type, got a non-type ‹error›
-//│ ═══[COMPILATION ERROR] Invalid type
+//│ ╔══[COMPILATION ERROR] Expected a type, got a non-type ‹error›
+//│ ║  l.162: 	fun foo[outer, R <: outer](r1: Region[R]) =
+//│ ╙──       	                                      ^
+//│ ╔══[COMPILATION ERROR] Expected a type, got ‹error›
+//│ ║  l.162: 	fun foo[outer, R <: outer](r1: Region[R]) =
+//│ ╙──       	                                      ^
+//│ ╔══[COMPILATION ERROR] Expected a type, got a non-type ‹error›
+//│ ║  l.162: 	fun foo[outer, R <: outer](r1: Region[R]) =
+//│ ╙──       	                                      ^
+//│ ╔══[COMPILATION ERROR] Expected a type, got a non-type ‹error›
+//│ ║  l.162: 	fun foo[outer, R <: outer](r1: Region[R]) =
+//│ ╙──       	                                      ^
+//│ ╔══[COMPILATION ERROR] Invalid type
+//│ ║  l.162: 	fun foo[outer, R <: outer](r1: Region[R]) =
+//│ ╙──       	                                      ^
 
 :fixme
 fun foo: [outer, R <: outer] -> Region[R] -> ()
 //│ ╔══[COMPILATION ERROR] Illegal forall annotation.
-//│ ║  l.183: 	fun foo: [outer, R <: outer] -> Region[R] -> ()
+//│ ║  l.193: 	fun foo: [outer, R <: outer] -> Region[R] -> ()
 //│ ╙──       	         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ═══[COMPILATION ERROR] Expected a type, got ‹error›
-//│ ═══[COMPILATION ERROR] Invalid type
+//│ ╔══[COMPILATION ERROR] Expected a type, got ‹error›
+//│ ║  l.193: 	fun foo: [outer, R <: outer] -> Region[R] -> ()
+//│ ╙──       	         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Invalid type
+//│ ║  l.193: 	fun foo: [outer, R <: outer] -> Region[R] -> ()
+//│ ╙──       	         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
 
@@ -216,7 +230,7 @@ region s in
   foo of () =>
     freeze(s, () => wield(s))
 //│ ╔══[COMPILATION ERROR] Type error in function literal with expected type () ->{¬'R ∧ 'E} 'T
-//│ ║  l.217: 	    freeze(s, () => wield(s))
+//│ ║  l.231: 	    freeze(s, () => wield(s))
 //│ ║         	              ^^^^^^^^^^^^^^
 //│ ╟── because: cannot constrain  'R1  <:  ¬'R ∧ 'E
 //│ ╟── because: cannot constrain  'R1  <:  ¬'R

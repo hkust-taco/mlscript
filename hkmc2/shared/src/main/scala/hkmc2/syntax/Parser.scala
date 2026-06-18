@@ -717,7 +717,10 @@ abstract class Parser(
             case ((v, r), acc) => Quoted(LetLike(new Keywrd(`let`).withLoc(S(l0)), v, S(Unquoted(r)), S(Unquoted(acc))))
         case (IDENT("if", _), l0) :: _ =>
           consume
-          val term = simpleExprImpl(prec, allowNewlines = false)
+          // A quoted conditional is parsed as a complete conditional expression, independently
+          // of the precedence of the context in which the quote occurs. In particular, a quoted
+          // conditional used as a lambda RHS must still consume its `then` branch.
+          val term = simpleExprImpl(Keyword.`if`.rightPrecOrMin, allowNewlines = false)
           yeetSpaces match
             case (IDENT("else", _), l1) :: _ =>
               consume
@@ -1115,6 +1118,17 @@ abstract class Parser(
         infixRules.getKwAlt(kw, S(l0)) match
           case S(subRule) =>
             consume
+            /* // * Disabled for the sake of consistency
+            // These operators used to follow the symbolic-operator path, which accepts an RHS
+            // on the next line. Preserve that behavior now that they are parsed as keywords.
+            // Example:
+            //    foo |
+            //    bar
+            if (kw is Keyword.`|`) || (kw is Keyword.`&`) then
+              yeetSpaces match
+                case (_: NEWLINE_COMMA, _) :: _ => consume
+                case _ =>
+            */
             if verbose then printDbg(s"$$ proceed with rule: ${subRule.name}")
             subRule.exprAlt match
               case S(exprAlt) =>
@@ -1160,6 +1174,3 @@ abstract class Parser(
     case Nil =>
       printDbg(s"stops at the end of input")
       acc  
-
-
-

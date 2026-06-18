@@ -43,10 +43,9 @@ pattern ParseStep =
   | ("(" :: ParseStep(rest)) =>
       "(" :: rest
 
-pattern Parse = (ParseStep as Parse) | (
-    | ((Expr as e) :: Nil) => ["Success:", e]
-    | toks => ["Failure: can't parse:", toks]
-  )
+pattern Parse = ParseStep as Parse |
+  | ((Expr as e) :: Nil) => ["Success:", e]
+  | toks => ["Failure: can't parse:", toks]
 
 fun parse(tokens) = print of ...
   if tokens is Parse(res) then res
@@ -141,10 +140,10 @@ f("*")
 :e
 fun f(x) = assert x is str as AtPrec as prec, [str, prec]
 //│ ╔══[COMPILATION ERROR] Name not found: str
-//│ ║  l.142: 	fun f(x) = assert x is str as AtPrec as prec, [str, prec]
+//│ ║  l.141: 	fun f(x) = assert x is str as AtPrec as prec, [str, prec]
 //│ ╙──       	                                               ^^^
 //│ ╔══[COMPILATION ERROR] Name not found: prec
-//│ ║  l.142: 	fun f(x) = assert x is str as AtPrec as prec, [str, prec]
+//│ ║  l.141: 	fun f(x) = assert x is str as AtPrec as prec, [str, prec]
 //│ ╙──       	                                                    ^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 

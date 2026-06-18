@@ -62,17 +62,25 @@ fun foo(x: return "whoops") = 1
 //│ ╔══[COMPILATION ERROR] Return statements are not allowed in this context.
 //│ ║  l.61: 	fun foo(x: return "whoops") = 1
 //│ ╙──      	           ^^^^^^^^^^^^^^^
-//│ ═══[COMPILATION ERROR] Expected a type, got a non-type ‹error›
-//│ ═══[COMPILATION ERROR] Expected a type, got ‹error›
+//│ ╔══[COMPILATION ERROR] Expected a type, got a non-type ‹error›
+//│ ║  l.61: 	fun foo(x: return "whoops") = 1
+//│ ╙──      	           ^^^^^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Expected a type, got ‹error›
+//│ ║  l.61: 	fun foo(x: return "whoops") = 1
+//│ ╙──      	           ^^^^^^^^^^^^^^^
 
 :e
 fun foo() =
   fun bar(x: return "whoops") = 1
   bar(123)
 //│ ╔══[COMPILATION ERROR] Return statements are not allowed in this context.
-//│ ║  l.70: 	  fun bar(x: return "whoops") = 1
+//│ ║  l.74: 	  fun bar(x: return "whoops") = 1
 //│ ╙──      	             ^^^^^^^^^^^^^^^
-//│ ═══[COMPILATION ERROR] Expected a type, got a non-type ‹error›
-//│ ═══[COMPILATION ERROR] Expected a type, got ‹error›
+//│ ╔══[COMPILATION ERROR] Expected a type, got a non-type ‹error›
+//│ ║  l.74: 	  fun bar(x: return "whoops") = 1
+//│ ╙──      	             ^^^^^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Expected a type, got ‹error›
+//│ ║  l.74: 	  fun bar(x: return "whoops") = 1
+//│ ╙──      	             ^^^^^^^^^^^^^^^
 
 

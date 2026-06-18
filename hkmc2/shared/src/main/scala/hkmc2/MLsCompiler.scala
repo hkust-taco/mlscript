@@ -118,7 +118,7 @@ class MLsCompiler
           with codegen.LoweringSelSanityChecks
       val jsb = ltl.givenIn:
         codegen.js.JSBuilder()
-      val lowered = low.program(blk)
+      val lowered = low.program(blk, symbolsToPreserve = Set.empty)
       var optimized = lowered
       val nme = file.baseName
       val exportedSymbol = parsed.definedSymbols.find(_._1 === nme).map(_._2)

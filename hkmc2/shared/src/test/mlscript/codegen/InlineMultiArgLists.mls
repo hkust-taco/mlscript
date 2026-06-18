@@ -8,7 +8,7 @@
 private fun add(x)(y) = x + y
 add(1)(2)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let add⁰; @inline @private define add⁰ as fun add¹(x)(y) { return +⁰(x, y) }; return 3
+//│ @inline @private define add⁰ as fun add¹(x)(y) { return +⁰(x, y) }; return 3
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 3
 
@@ -20,7 +20,6 @@ private fun mkAdder(x) =
   (y) => x + y
 mkAdder(10)(20)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let mkAdder⁰;
 //│ @private
 //│ define mkAdder⁰ as fun mkAdder¹(x) {
 //│   let lambda;
@@ -38,11 +37,7 @@ private fun add2(x)(y) = x + y
 let f = add2(10)
 f(5)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let add2⁰, f⁰;
-//│ @inline @private
-//│ define add2⁰ as fun add2¹(x)(y) { return +⁰(x, y) };
-//│ set f⁰ = add2¹(10);
-//│ return 15
+//│ @inline @private define add2⁰ as fun add2¹(x)(y) { return +⁰(x, y) }; set f⁰ = add2¹(10); return 15
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 15
 //│ f = fun
@@ -53,7 +48,6 @@ f(5)
 private fun triple(x)(y)(z) = x + y + z
 triple(1)(2)(3)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let triple⁰;
 //│ @inline @private
 //│ define triple⁰ as fun triple¹(x)(y)(z) { let tmp; set tmp = +⁰(x, y); return +⁰(tmp, z) };
 //│ return 6

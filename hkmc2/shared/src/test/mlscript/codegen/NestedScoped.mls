@@ -19,7 +19,7 @@ scope.locally of 42
 :sir
 let x = 42 in x
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let x⁰; set x⁰ = 42; return x⁰
+//│ let x; set x = 42; return x
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 42
 
@@ -28,7 +28,7 @@ let x = 42 in x
 scope.locally of
   let x = 42 in x
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let x¹; set x¹ = 42; return x¹
+//│ let x; set x = 42; return x
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 42
 
@@ -48,7 +48,7 @@ scope.locally of scope.locally of (
   x
 )
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let x²; set x² = 42; return x²
+//│ let x; set x = 42; return x
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 42
 
@@ -84,7 +84,6 @@ fun f() =
     let b = 5
     b + 9
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let f⁰;
 //│ define f⁰ as fun f¹() {
 //│   let scrut, b;
 //│   set scrut = true;
@@ -154,7 +153,7 @@ fun foo(x, y) =
 :ge
 scope.locally()
 //│ ╔══[COMPILATION ERROR] Unsupported form for scope.locally.
-//│ ║  l.155: 	scope.locally()
+//│ ║  l.154: 	scope.locally()
 //│ ╙──       	^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -162,7 +161,7 @@ scope.locally()
 :ge
 scope.locally of (let x = 1 in x), (let y = 2 in y)
 //│ ╔══[COMPILATION ERROR] Unsupported form for scope.locally.
-//│ ║  l.163: 	scope.locally of (let x = 1 in x), (let y = 2 in y)
+//│ ║  l.162: 	scope.locally of (let x = 1 in x), (let y = 2 in y)
 //│ ╙──       	^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -171,10 +170,10 @@ scope.locally of (let x = 1 in x), (let y = 2 in y)
 :ge
 scope.locally of (let x = 1 in x), (let y = 2 in x)
 //│ ╔══[COMPILATION ERROR] Name not found: x
-//│ ║  l.172: 	scope.locally of (let x = 1 in x), (let y = 2 in x)
+//│ ║  l.171: 	scope.locally of (let x = 1 in x), (let y = 2 in x)
 //│ ╙──       	                                                 ^
 //│ ╔══[COMPILATION ERROR] Unsupported form for scope.locally.
-//│ ║  l.172: 	scope.locally of (let x = 1 in x), (let y = 2 in x)
+//│ ║  l.171: 	scope.locally of (let x = 1 in x), (let y = 2 in x)
 //│ ╙──       	^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 

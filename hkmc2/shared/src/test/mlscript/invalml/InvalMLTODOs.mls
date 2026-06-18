@@ -23,7 +23,9 @@ fun id: [A] -> A -> A => x = x
 //│ ╙──      	                             ^
 //│ ╔══[COMPILATION ERROR] Expected a type, got function literal
 //│ ║  l.17: 	fun id: [A] -> A -> A => x = x
-//│ ╙──      	                    ^
-//│ ═══[COMPILATION ERROR] Function definition shape not yet supported for id
+//│ ╙──      	                    ^^^^^^
+//│ ╔══[COMPILATION ERROR] Function definition shape not yet supported for id
+//│ ║  l.17: 	fun id: [A] -> A -> A => x = x
+//│ ╙──      	                             ^
 
 

@@ -56,9 +56,9 @@ fun bmi'(record) = if record is (@compile MatchOrNone(RoundedBMI)) as value then
 
 // Calculate the area of different shapes
 pattern ShapeArea = 
-  (((:radius)) => Math.PI * radius * radius) |  // Circle
-  (((:width, :height)) => width * height) |     // Rectangle
-  (((:base, :height)) => base * height / 2)     // Triangle
+  | ((:radius)) => Math.PI * radius * radius  // Circle
+  | ((:width, :height)) => width * height     // Rectangle
+  | ((:base, :height)) => base * height / 2   // Triangle
 
 fun area(shape) = if shape is ShapeArea as a then Some(a) else None
 

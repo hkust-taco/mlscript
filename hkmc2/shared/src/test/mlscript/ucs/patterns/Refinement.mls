@@ -11,7 +11,9 @@ x => if x is
 //│ ╔══[COMPILATION ERROR] Name not found: refined
 //│ ║  l.10: 	  refined(None) then x
 //│ ╙──      	  ^^^^^^^
-//│ ═══[COMPILATION ERROR] Cannot use this ‹error› as a pattern.
+//│ ╔══[COMPILATION ERROR] Cannot use this ‹error› as a pattern.
+//│ ║  l.10: 	  refined(None) then x
+//│ ╙──      	  ^^^^^^^
 //│ Normalized:
 //│ >  ‹if|while›
 
@@ -19,9 +21,11 @@ x => if x is
 x => if x is
   refined(Some) then x
 //│ ╔══[COMPILATION ERROR] Name not found: refined
-//│ ║  l.20: 	  refined(Some) then x
+//│ ║  l.22: 	  refined(Some) then x
 //│ ╙──      	  ^^^^^^^
-//│ ═══[COMPILATION ERROR] Cannot use this ‹error› as a pattern.
+//│ ╔══[COMPILATION ERROR] Cannot use this ‹error› as a pattern.
+//│ ║  l.22: 	  refined(Some) then x
+//│ ╙──      	  ^^^^^^^
 //│ Normalized:
 //│ >  ‹if|while›
 
@@ -30,9 +34,11 @@ x => if x is
   refined(None) then x
   Some then x
 //│ ╔══[COMPILATION ERROR] Name not found: refined
-//│ ║  l.30: 	  refined(None) then x
+//│ ║  l.34: 	  refined(None) then x
 //│ ╙──      	  ^^^^^^^
-//│ ═══[COMPILATION ERROR] Cannot use this ‹error› as a pattern.
+//│ ╔══[COMPILATION ERROR] Cannot use this ‹error› as a pattern.
+//│ ║  l.34: 	  refined(None) then x
+//│ ╙──      	  ^^^^^^^
 //│ Normalized:
 //│ >  ‹if|while› x is Option.Some then x⁰
 
@@ -40,12 +46,16 @@ x => if x is
   refined(None) then x
   refined(Some) then x
 //│ ╔══[COMPILATION ERROR] Name not found: refined
-//│ ║  l.40: 	  refined(None) then x
+//│ ║  l.46: 	  refined(None) then x
 //│ ╙──      	  ^^^^^^^
 //│ ╔══[COMPILATION ERROR] Name not found: refined
-//│ ║  l.41: 	  refined(Some) then x
+//│ ║  l.47: 	  refined(Some) then x
 //│ ╙──      	  ^^^^^^^
-//│ ═══[COMPILATION ERROR] Cannot use this ‹error› as a pattern.
-//│ ═══[COMPILATION ERROR] Cannot use this ‹error› as a pattern.
+//│ ╔══[COMPILATION ERROR] Cannot use this ‹error› as a pattern.
+//│ ║  l.46: 	  refined(None) then x
+//│ ╙──      	  ^^^^^^^
+//│ ╔══[COMPILATION ERROR] Cannot use this ‹error› as a pattern.
+//│ ║  l.47: 	  refined(Some) then x
+//│ ╙──      	  ^^^^^^^
 //│ Normalized:
 //│ >  ‹if|while›

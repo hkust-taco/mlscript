@@ -46,7 +46,7 @@ new Foo(1, 2)(3)
 :sir
 new Foo(1, 2)
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let lambda⁰; @private define lambda⁰ as fun lambda¹(z) { return new Foo⁰(1, 2, z) }; return lambda¹
+//│ let lambda; @private define lambda as fun lambda⁰(z) { return new Foo⁰(1, 2, z) }; return lambda⁰
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = fun
 

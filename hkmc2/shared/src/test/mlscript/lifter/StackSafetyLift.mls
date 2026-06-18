@@ -24,7 +24,7 @@ fun hi(n) =
   else hi(n - 1)
 hi(0)
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let hi⁰, tmp, ‹stack safe body›⁰;
+//│ let tmp, ‹stack safe body›;
 //│ do runtime⁰.resetEffects﹖();
 //│ define hi⁰ as fun hi¹(n) {
 //│   let stackDelayRes;
@@ -46,10 +46,10 @@ hi(0)
 //│       return runtime⁰.unwind﹖(hi¹, -1, "StackSafetyLift.mls:22:1", null, null, 1, 1, n, 0)
 //│   end
 //│ };
-//│ define ‹stack safe body›⁰ as fun ‹stack safe body›¹() {
+//│ define ‹stack safe body› as fun ‹stack safe body›⁰() {
 //│   return hi¹(0)
 //│ };
-//│ set tmp = runtime⁰.runStackSafe﹖(6, ‹stack safe body›¹);
+//│ set tmp = runtime⁰.runStackSafe﹖(6, ‹stack safe body›⁰);
 //│ match runtime⁰.curEffect﹖
 //│   null =>
 //│     return tmp
@@ -70,7 +70,7 @@ fun sum(n) =
     n + sum(n - 1)
 sum(10000)
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let sum⁰, tmp, ‹stack safe body›²;
+//│ let tmp, ‹stack safe body›;
 //│ do runtime⁰.resetEffects﹖();
 //│ define sum⁰ as fun sum¹(n) {
 //│   let curDepth, stackDelayRes;
@@ -125,10 +125,10 @@ sum(10000)
 //│       return runtime⁰.unwind﹖(sum¹, -1, "StackSafetyLift.mls:67:1", null, null, 1, 1, n, 0)
 //│   end
 //│ };
-//│ define ‹stack safe body›² as fun ‹stack safe body›³() {
+//│ define ‹stack safe body› as fun ‹stack safe body›¹() {
 //│   return sum¹(10000)
 //│ };
-//│ set tmp = runtime⁰.runStackSafe﹖(1000, ‹stack safe body›³);
+//│ set tmp = runtime⁰.runStackSafe﹖(1000, ‹stack safe body›¹);
 //│ match runtime⁰.curEffect﹖
 //│   null =>
 //│     return tmp
@@ -235,7 +235,6 @@ foo(h)
 :sir
 fun max(a, b) = if a < b then b else a
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let max⁰;
 //│ do runtime⁰.resetEffects﹖();
 //│ define max⁰ as fun max¹(a, b) {
 //│   let scrut;
@@ -257,7 +256,7 @@ fun hi(n) = n
 hi(0)
 //│ /!!!\ Option ':stackSafe' requires ':effectHandlers' to be set
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let hi²; define hi² as fun hi³(n) { return n }; return hi³(0)
+//│ define hi² as fun hi³(n) { return n }; return hi³(0)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 0
 

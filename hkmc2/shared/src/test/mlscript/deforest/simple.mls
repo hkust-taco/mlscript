@@ -43,7 +43,7 @@ test(AA(AA(10)))
 
 
 :expect 1
-let x = if true then A else B
+let x = if true then A else B in...
 if x is
   A then 1
   B then 2
@@ -54,10 +54,9 @@ if x is
 //│ deforest > 	match: x¹
 //│ deforest > <<< fusing <<<
 //│ = 1
-//│ x = fun
 
 :expect A
-let x = if true then AA(A) else BB(B)
+let x = if true then AA(A) else BB(B) in...
 if x is
   AA(x) then x
   BB(x) then x
@@ -70,14 +69,13 @@ if x is
 //│ deforest > 	fields: x².aa⁰
 //│ deforest > <<< fusing <<<
 //│ = A
-//│ x = fun
 
 
 :expect 1
 fun f(a) = if a is
   A then 1
   B then 2
-let x = if true then AA(A) else BB(B)
+let x = if true then AA(A) else BB(B) in...
 if x is
   AA(x) then f(x)
   BB(x) then f(x)
@@ -94,7 +92,6 @@ if x is
 //│ deforest > 	match: a⁰
 //│ deforest > <<< fusing <<<
 //│ = 1
-//│ x = fun
 
 
 // `x.x` is successfully fused
@@ -107,7 +104,7 @@ fun f2(a) = if a is
   A then 4
   B then 5
   C then 6
-let x = if true then AA(A) else BB(B)
+let x = if true then AA(A) else BB(B) in...
 if x is
   AA then f1(x.AA#aa)
   BB then f2(x.BB#bb)
@@ -124,7 +121,6 @@ if x is
 //│ deforest > 	match: a²
 //│ deforest > <<< fusing <<<
 //│ = 1
-//│ x = fun
 
 
 :expect 11
@@ -162,7 +158,7 @@ if x is
 
 
 :expect 2
-let x = A
+let x = A in...
 let y = B
 if x is
   A then 1
@@ -175,8 +171,6 @@ if y is
 //│ deforest > 	match: x⁶
 //│ deforest > <<< fusing <<<
 //│ = 2
-//│ x = fun
-//│ y = fun
 
 
 :expect 3
@@ -246,7 +240,7 @@ f(Some(2))
 
 
 :expect 2
-let x = A
+let x = A in...
 let y = B
 if x is
   A then 1
@@ -259,8 +253,6 @@ if y is
 //│ deforest > 	match: x⁸
 //│ deforest > <<< fusing <<<
 //│ = 2
-//│ x = fun
-//│ y = fun
 
 
 
@@ -472,7 +464,7 @@ k + 2
 //│ deforest > 	match: A⁰
 //│ deforest > <<< fusing <<<
 //│ = 5
-//│ k = 3
+//│ k = undefined
 
 :expect 4
 fun test(a) = if a is
@@ -517,7 +509,7 @@ fun test(x) =
       AA(CCC(a)) then a
       BB(CCC(a)) then a
   t(123).AA#aa + 5 * 4 - 3 + 2 - 1
-let p = if true then AA(CCC(AA)) else BB(CCC(AA))
+let p = if true then AA(CCC(AA)) else BB(CCC(AA)) in...
 test(p)
 //│ deforest > >>> fusing >>>
 //│ deforest > BB⁰(tmp⁵) ->
@@ -534,7 +526,6 @@ test(p)
 //│ deforest > 	fields: arg$AA$0$¹.c⁰
 //│ deforest > <<< fusing <<<
 //│ = 141
-//│ p = fun
 
 
 :expect 141
@@ -545,7 +536,7 @@ fun test(x, y) =
         AA(a) then a
         BB(a) then a
   t(123).CCC#c + 5 * 4 - 3 + 2 - 1
-let p = if true then AA(CCC) else BB(CCC)
+let p = if true then AA(CCC) else BB(CCC) in...
 test(p, id(CCC(123)))
 //│ deforest > >>> fusing >>>
 //│ deforest > BB⁰(CCC⁰) ->
@@ -556,7 +547,6 @@ test(p, id(CCC(123)))
 //│ deforest > 	fields: x²¹.aa⁰
 //│ deforest > <<< fusing <<<
 //│ = 141
-//│ p = fun
 
 
 :sir
@@ -569,17 +559,17 @@ f(id(A)) + f(A)
 //│ deforest > 	match: x²²
 //│ deforest > <<< fusing <<<
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let f⁰, tmp, tmp1, tmp2, f_8$f⁰, f_8$x_A⁰, f_8$x_rest⁰, deforest$lam;
+//│ let tmp, tmp1, tmp2, f_8$f, f_8$x_A, f_8$x_rest, deforest$lam;
 //│ @private
-//│ define f_8$f⁰ as fun f_8$f¹(x) {
+//│ define f_8$f as fun f_8$f⁰(x) {
 //│   return x()
 //│ };
 //│ @affine(1) @private
-//│ define f_8$x_A⁰ as fun f_8$x_A¹()() {
+//│ define f_8$x_A as fun f_8$x_A⁰()() {
 //│   return 1
 //│ };
 //│ @private
-//│ define f_8$x_rest⁰ as fun f_8$x_rest¹() {
+//│ define f_8$x_rest as fun f_8$x_rest⁰() {
 //│   return null
 //│ };
 //│ define f⁰ as fun f¹(x) {
@@ -592,8 +582,8 @@ f(id(A)) + f(A)
 //│ };
 //│ set tmp = Predef⁰.id⁰(A⁰);
 //│ set tmp1 = f¹(tmp);
-//│ set deforest$lam = f_8$x_A¹();
-//│ set tmp2 = f_8$f¹(deforest$lam);
+//│ set deforest$lam = f_8$x_A⁰();
+//│ set tmp2 = f_8$f⁰(deforest$lam);
 //│ return +⁰(tmp1, tmp2)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 2
@@ -1053,7 +1043,7 @@ f1(wrap(true)) + f2(g2(false))
 
 :expect 10
 fun p(x) = AA(x)
-let one = p(1)
+let one = p(1) in...
 let two = p(2)
 fun f1(p) = if p is AA(a) then a + 1
 fun f2(p) = if p is AA(b) then b + 2
@@ -1065,8 +1055,6 @@ f1(one) + f2(one) + f3(two)
 //│ deforest > 	fields: p².aa⁰
 //│ deforest > <<< fusing <<<
 //│ = 10
-//│ one = AA(1)
-//│ two = fun
 
 
 :expect 4

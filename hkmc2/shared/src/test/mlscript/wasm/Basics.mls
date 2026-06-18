@@ -67,7 +67,6 @@ foo() + foo()
 //│       (ref.i31
 //│         (i32.const 42))))
 //│   (func $entry (export "entry") (type $entry) (result (ref null any))
-//│     (local $foo (ref null any))
 //│     (block (result (ref null any))
 //│       (nop)
 //│       (return
@@ -304,5 +303,5 @@ fun bar() = 42
 fun foo() = bar
 foo()()
 //│ ╔══[COMPILATION ERROR] Returning function instances is not supported
-//│ ║  l.304: 	fun foo() = bar
+//│ ║  l.303: 	fun foo() = bar
 //│ ╙──       	            ^^^

@@ -57,9 +57,7 @@ object Keyword:
   val `val` = Keyword("val", N, curPrec)
 
   val eqPrec = nextPrec
-  val ascPrec = nextPrec // * `x => x : T` should parsed as `x => (x : T)`
   val `=` = Keyword("=", eqPrec, eqPrec)
-  val `:` = Keyword(":", ascPrec, eqPrec)
   val `..` = Keyword("..", N, N)
   val `...` = Keyword("...", N, N)
   // val `;` = Keyword(";", ascPrec, eqPrec)
@@ -72,6 +70,9 @@ object Keyword:
   val `case` = Keyword("case", N, curPrec)
   
   val thenPrec = nextPrec
+  
+  val whereLhsPrec = nextPrec
+  
   val `then` = Keyword("then", thenPrec, eqPrec)
   val `do` = Keyword("do", thenPrec, eqPrec)
   val `drop` = Keyword("drop", thenPrec, eqPrec)
@@ -86,20 +87,49 @@ object Keyword:
   val `fun` = Keyword("fun", N, N)
   // val `val` = Keyword("val", N, N)
   val `var` = Keyword("var", N, N)
-  val `where` = Keyword("where", nextPrec, curPrec)
+  val `where` = Keyword("where", whereLhsPrec, curPrec)
   val `of` = Keyword("of", N, N) // * Note that `of` is parsed specially, so its precedence is not listed here
+  
+  val `in` = Keyword("in", nextPrec, curPrec)
+  val `out` = Keyword("out", N, curPrec)
+  
+  // * `|` should bind looser than `=>` RHS, so that `0 => false | 1 => true` works
+  val pipePrec = nextPrec
+  val ampPrec = nextPrec
+  val `|` = Keyword("|", pipePrec, pipePrec)
+  val `&` = Keyword("&", ampPrec, ampPrec)
+  
+  val lamRhsPrec = nextPrec
+  // * ^ `x => x as T` should parsed as `x => (x as T)`
+  // * ^ `(a, b) => a and b` should parsed as `(a, b) => (a and b)`
+  // *    so `=>` RHS should bind looser than `and` and `or`
+  
   val `or` = Keyword("or", nextPrec, curPrec)
   val `and` = Keyword("and", nextPrec, nextPrec)
+  
+  // * Ideally, `is` RHS should bind looser than `|`, so that `x is A | B` works
+  // * However, we also want `is` RHS to bing stronger than `and`/`or`, so that `x is A and b is B` works!
+  // * So, for now, we settle on requiring parentheses in `x is (A | B)`
+  val isRhsPrec = nextPrec
+  // * We have a similar conundrum for `as`; we adopt a similar resolution:
+  val `as` = Keyword("as", nextPrec,
+    // isRhsPrec // * Allows `42 as Int | Num` to parse as `42 as (Int | Num)`
+    curPrec // * Allows `pattern Steps = Steps as Step | _` to parse as `(Steps as Step) | _`, which is more natural
+  )
+  
+  // * `x => x : T` should parsed as `x => (x : T)`
+  // * (though this is not very important, since we now use `as` for type ascription)
+  val colonPrec = nextPrec
+  val `:` = Keyword(":", colonPrec, eqPrec)
+  
   val `not` = Keyword("not", nextPrec, nextPrec)
-  val `is` = Keyword("is", nextPrec, curPrec, canStartInfixOnNewLine = false)
-  val `as` = Keyword("as", nextPrec, curPrec)
+  val `is` = Keyword("is", nextPrec, isRhsPrec, canStartInfixOnNewLine = false)
+  
   // val `let` = Keyword("let", nextPrec, curPrec)
   val `let` = Keyword("let", N, N)
   val `handle` = Keyword("handle", N, N)
   val `region` = Keyword("region", N, N)
   val `rec` = Keyword("rec", N, N)
-  val `in` = Keyword("in", curPrec, curPrec)
-  val `out` = Keyword("out", N, curPrec)
   val `set` = Keyword("set", N, curPrec)
   val `declare` = Keyword("declare", N, N)
   val `data` = Keyword("data", N, N)
@@ -139,7 +169,7 @@ object Keyword:
   // *  so that we can write things like `f() |> x => x is 0` ie `(f()) |> (x => (x is 0))`
   // * Currently, the precedence of normal operators starts at the maximum precedence of keywords,
   // * so we need to start the precedence of `=>` to account for that.
-  val `=>` = Keyword("=>", S(maxPrec.get + charPrecList.length), eqPrec)
+  val `=>` = Keyword("=>", S(maxPrec.get + charPrecList.length), lamRhsPrec)
 
   // * `new` is a strange keyword:
   // * it has a very high precedence that sits between that of selection and that of application.
@@ -170,10 +200,12 @@ object Keyword:
     `abstract`, mut, virtual, `override`, declare, public, `private`)
   
   type Prefix =
-    `do`.type | `drop`.type | `not`.type | `new!`.type | `else`.type | `return`.type | `throw`.type | `import`.type
+    `do`.type | `drop`.type | `not`.type | `new!`.type | `else`.type | `return`.type | `throw`.type | `import`.type |
+    `|`.type | `&`.type
   
   type Infix =
-    `is`.type | `:`.type | `->`.type | `=>`.type | `extends`.type | `restricts`.type | `as`.type | `do`.type |
+    `is`.type | `:`.type | `->`.type | `=>`.type | `extends`.type | `restricts`.type | `as`.type |
+    `|`.type | `&`.type | `do`.type |
     `where`.type | `with`.type | `and`.type | `or`.type | `then`.type | `else`.type | `#`.type
   
   type InfixSplittable =

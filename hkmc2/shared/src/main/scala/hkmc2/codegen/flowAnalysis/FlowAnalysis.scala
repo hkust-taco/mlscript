@@ -140,7 +140,7 @@ object CtorProducer:
   def unapply(r: Result)(using Elaborator.State): Opt[(ctorCls: CtorCls, args: Ls[Arg], selectedFrom: Opt[Path])] =
     r match
     case Instantiate(_, MemberRefTo(cls: ClassSymbol, qual), argss) => S(cls, argss.flatten, qual)
-    case Call(MemberRefTo(cls: ClassCtorSymbol, qual), argss) => S(cls.owner.get, argss.flatten, qual)
+    case Call(MemberRefTo(cls: ClassCtorSymbol, qual), argss) => S(cls.associatedCls, argss.flatten, qual)
     case MemberRefTo(ctor: ModuleOrObjectSymbol, qual) => S(ctor, Nil, qual)
     case Tuple(_, args) => S(args.size, args, N)
     case _ => N
@@ -895,7 +895,7 @@ class FlowConstraintsCollector(
       case Assign(lhs, rhs, rest) =>
         val rhsStrat = processResult(rhs)
         lhs.match
-          case _: NoSymbol => ()
+          case NoSymbol => ()
           case lhs: (LocalVarSymbol | TermSymbol) => cc.constrain(rhsStrat, generatedProdVars(lhs).asConsStrat)
         processBlock(rest)
       case TryBlock(sub, finallyDo, rest) =>

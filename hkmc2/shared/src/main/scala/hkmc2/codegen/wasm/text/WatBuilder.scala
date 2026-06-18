@@ -926,7 +926,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
 
     def splitSuperTail(block: Block): Opt[Block -> Ls[Arg]] = block match
       case End(_) => N
-      case Assign(_: NoSymbol, Call(Value.SimpleRef(State.superSymbol), argss), _: End)
+      case Assign(NoSymbol, Call(Value.SimpleRef(State.superSymbol), argss), _: End)
       =>
         S(End("") -> argss.flatten)
       case b: NonBlockTail =>
@@ -1634,7 +1634,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
 
   def returningTerm(t: Block)(using Ctx, FunctionCtx, Raise, SessionExportCtx): Expr =
     t match
-      case Assign(l: NoSymbol, r, rst) =>
+      case Assign(NoSymbol, r, rst) =>
         val rExpr = result(r)
         val evalExpr = rExpr.resultType match
           case S(_) => drop(rExpr)

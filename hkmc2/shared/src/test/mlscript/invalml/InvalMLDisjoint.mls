@@ -158,19 +158,27 @@ fun badanno: outer
 //│ ╔══[COMPILATION ERROR] Illegal outer reference.
 //│ ║  l.157: 	fun badanno: outer
 //│ ╙──       	             ^^^^^
-//│ ═══[COMPILATION ERROR] Expected a type, got ‹error›
-//│ ═══[COMPILATION ERROR] Invalid type
+//│ ╔══[COMPILATION ERROR] Expected a type, got ‹error›
+//│ ║  l.157: 	fun badanno: outer
+//│ ╙──       	             ^^^^^
+//│ ╔══[COMPILATION ERROR] Invalid type
+//│ ║  l.157: 	fun badanno: outer
+//│ ╙──       	             ^^^^^
 
 :e
 fun badanno2: [outer A, outer B] -> Int ->{A | B} Int
 //│ ╔══[COMPILATION ERROR] Only one outer variable can be bound.
-//│ ║  l.165: 	fun badanno2: [outer A, outer B] -> Int ->{A | B} Int
+//│ ║  l.169: 	fun badanno2: [outer A, outer B] -> Int ->{A | B} Int
 //│ ╙──       	              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Illegal forall annotation.
-//│ ║  l.165: 	fun badanno2: [outer A, outer B] -> Int ->{A | B} Int
+//│ ║  l.169: 	fun badanno2: [outer A, outer B] -> Int ->{A | B} Int
 //│ ╙──       	              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ═══[COMPILATION ERROR] Expected a type, got ‹error›
-//│ ═══[COMPILATION ERROR] Invalid type
+//│ ╔══[COMPILATION ERROR] Expected a type, got ‹error›
+//│ ║  l.169: 	fun badanno2: [outer A, outer B] -> Int ->{A | B} Int
+//│ ╙──       	              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Invalid type
+//│ ║  l.169: 	fun badanno2: [outer A, outer B] -> Int ->{A | B} Int
+//│ ╙──       	              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
 fun annohelper: [outer, T extends outer] -> Region[out T] ->{T} Pair[out Ref[Int, out T], out Ref[Int, out ~outer]]
@@ -211,13 +219,13 @@ fun foo(r1) =
     fork((_ => r1.ref 1), (_ => r2.ref 2))
     foo(r2)
 //│ ╔══[COMPILATION ERROR] Type error in function literal
-//│ ║  l.209: 	fun foo(r1) =
+//│ ║  l.217: 	fun foo(r1) =
 //│ ║         	       ^^^^^^
-//│ ║  l.210: 	  region r2 in
+//│ ║  l.218: 	  region r2 in
 //│ ║         	^^^^^^^^^^^^^^
-//│ ║  l.211: 	    fork((_ => r1.ref 1), (_ => r2.ref 2))
+//│ ║  l.219: 	    fork((_ => r1.ref 1), (_ => r2.ref 2))
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.212: 	    foo(r2)
+//│ ║  l.220: 	    foo(r2)
 //│ ║         	^^^^^^^^^^^
 //│ ╟── because: cannot constrain  ('r1) ->{'eff} ('app)  <:  'foo
 //│ ╟── because: cannot constrain  ('r1) ->{'eff} ('app)  <:  (Region[in ⊥ out 'r2]) ->{'eff1} ('app1)

@@ -30,7 +30,6 @@ let f = foo(1)(2)
 print("hello")
 f(3) + f(4)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let f⁰;
 //│ set f⁰ = foo⁰(1)(2);
 //│ do Predef⁰.print⁰("hello");
 //│ do Predef⁰.print⁰("hi");
@@ -65,7 +64,7 @@ let f = foo(1)(2)
 print("hello")
 f(3)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let f¹; set f¹ = foo⁰(1)(2); do Predef⁰.print⁰("hello"); do Predef⁰.print⁰("hi"); return 6
+//│ set f¹ = foo⁰(1)(2); do Predef⁰.print⁰("hello"); do Predef⁰.print⁰("hi"); return 6
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > hello
 //│ > hi
@@ -81,26 +80,26 @@ let f = foo(1)(2)
 print("hello")
 f(3)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let foo¹, f², foo$worker⁰, lambda⁰;
+//│ let foo$worker, lambda;
 //│ @inline
 //│ define foo¹ as fun foo²(x)(y) {
-//│   return foo$worker¹(x, y)
+//│   return foo$worker⁰(x, y)
 //│ };
-//│ define foo$worker⁰ as fun foo$worker¹(x, y) {
-//│   let lambda;
+//│ define foo$worker as fun foo$worker⁰(x, y) {
+//│   let lambda1;
 //│   do Predef⁰.print⁰("hi");
 //│   @private
-//│   define lambda as fun lambda¹(z) {
+//│   define lambda1 as fun lambda⁰(z) {
 //│     return 42
 //│   };
-//│   return lambda¹
+//│   return lambda⁰
 //│ };
 //│ do Predef⁰.print⁰("hi");
 //│ @private
-//│ define lambda⁰ as fun lambda²(z) {
+//│ define lambda as fun lambda¹(z) {
 //│   return 42
 //│ };
-//│ set f² = lambda²;
+//│ set f² = lambda¹;
 //│ do Predef⁰.print⁰("hello");
 //│ return 42
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
@@ -115,7 +114,7 @@ f(3)
 :soir
 foo(1)(2)(3)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let inlinedVal; set inlinedVal = foo$worker¹(1, 2); return inlinedVal(3)
+//│ let inlinedVal; set inlinedVal = foo$worker⁰(1, 2); return inlinedVal(3)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > hi
 //│ = 42
@@ -126,8 +125,8 @@ let f = foo(1)(2)
 print("hello")
 f(3) + f(4)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let f³, tmp, tmp1, inlinedVal;
-//│ set inlinedVal = foo$worker¹(1, 2);
+//│ let tmp, tmp1, inlinedVal;
+//│ set inlinedVal = foo$worker⁰(1, 2);
 //│ set f³ = inlinedVal;
 //│ do Predef⁰.print⁰("hello");
 //│ set tmp = inlinedVal(3);
@@ -157,13 +156,13 @@ fun scopedPrefixFoo(x)(y) = x + y
     "Hello", "Hello", "Hello", "Hello", "Hello", "Hello", "Hello", "Hello", "Hello", "Hello", "Hello"
   f(2)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let scopedPrefixFoo⁰, lambda³;
+//│ let lambda;
 //│ @inline
 //│ define scopedPrefixFoo⁰ as fun scopedPrefixFoo¹(x)(y) {
 //│   return +⁰(x, y)
 //│ };
 //│ @private
-//│ define lambda³ as fun lambda⁴() {
+//│ define lambda as fun lambda²() {
 //│   let f, scrut;
 //│   set scrut = Predef⁰.maybe⁰;
 //│   match scrut
@@ -179,7 +178,7 @@ fun scopedPrefixFoo(x)(y) = x + y
 //│   do Predef⁰.print⁰("Hello", "Hello", "Hello", "Hello", "Hello", "Hello", "Hello", "Hello", "Hello", "Hello", "Hello");
 //│   return f(2)
 //│ };
-//│ return lambda⁴
+//│ return lambda²
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = fun
 

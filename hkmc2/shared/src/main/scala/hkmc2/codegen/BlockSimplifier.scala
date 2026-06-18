@@ -471,7 +471,8 @@ class BlockSimplifier
       // * all local variables mentioned by the RHS so pure-call prefixes do not
       // * outlive locals that were only valid in a narrower scope.
       case Assigned(
-        asst: Assign,
+        lhs: LocalVar,
+        rhs: Result,
         varAsst: Opt[Value.RefLike -> AssignInfo],
         rhsRequirements: Set[LocalVar -> AssignInfo],
       )
@@ -480,7 +481,10 @@ class BlockSimplifier
       override def toString: String = this match
         case Unknown => "?"
         case Uninitialized => "∅"
-        case Assigned(asst, varAsst, _) => s"${asst.rhs}${varAsst.fold("")("‹"+_+"›")}"
+        case Assigned(l, r, varAsst, _) => s"${r.showDbg}${
+            varAsst.fold(""):
+              case (l, r) => "‹"+l.showDbg+":="+r+"›"
+          }"
         case Merge(a1, a2) => s"{${a1.toString} | ${a2.toString}}"
       
       def merge(that: AssignInfo): AssignInfo =
@@ -517,8 +521,8 @@ class BlockSimplifier
           ValueAnalysis.conservative
         case Uninitialized =>
           ValueAnalysis(true, Nil)
-        case Assigned(ass, opt, _) =>
-          val litValue = ass.rhs match
+        case Assigned(lhs, rhs, opt, _) =>
+          val litValue = rhs match
             case v @ Value.Lit(_) => v
             case _ => false
           val refs = opt match
@@ -548,8 +552,8 @@ class BlockSimplifier
       
       lazy val pureCallPrefix: Opt[TrackedPureCall] = this match
         case Unknown | Uninitialized => N
-        case Assigned(ass, opt, rhsRequirements) =>
-          ass.rhs match
+        case Assigned(lhs, rhs, opt, rhsRequirements) =>
+          rhs match
           case call: Call if call.isKnownUnsaturatedCall && call.isPure =>
             S(TrackedPureCall(call, rhsRequirements))
           case _ =>
@@ -636,8 +640,13 @@ class BlockSimplifier
       res
     
     
+    private def showMap: Str = assignedResults
+      .iterator.map: (k, v) =>
+        s"${k.showDbg} -> ${v.toString}"
+      .mkString("{", ", ", "}")
+    
     override def applyBlock(b: Block): Block =
-    // trace[Block](s"Applying block: ${b.abbreviate} with map: ${assignedResults}", res => s"|= ${assignedResults}"):
+    // trace[Block](s"Applying block: ${b.showDbg.abbreviate} with map:\n${showMap}", res => s"|= ${showMap}"):
       b match
       
       // * Discard local variables that are assigned just to be returned
@@ -649,23 +658,28 @@ class BlockSimplifier
         applyBlock(Return(rhs))
       
       case ass @ Assign(lhs: LocalVar, rhs, rst) if !capturedVars(lhs) =>
-        // log(s"Propagating ${lhs} := ${rhs} (${assignedResults.get(lhs)})")
+        // log(s"Propagating ${lhs.showDbg} := ${rhs.showDbg} (${assignedResults.get(lhs)})")
         
-        val varAsst = rhs.match
-          case r @ Value.SimpleRef(sym: LocalVar) =>
-            if capturedVars(sym) then N
-            else S(r -> assignedResults(sym))
-          case r: Value.RefLike => S(r -> Unknown)
-          case _ => N
-        val rhsRequirements = rhs.freeVars.iterator.collect:
-          case sym: LocalVar if !capturedVars(sym) =>
-            sym -> assignedResults(sym)
-        assignedResults += lhs -> Assigned(ass, varAsst, rhsRequirements.toSet)
+        applyResult(rhs): rhs2 =>
         
-        super.applyBlock(b)
+          val lhs2 = applyAssignLhs(lhs).asInstanceOf[LocalVar]
+          
+          val varAsst = rhs2.match
+            case r @ Value.SimpleRef(sym: LocalVar) =>
+              if capturedVars(sym) then N
+              else S(r -> assignedResults(sym))
+            case r: Value.RefLike => S(r -> Unknown)
+            case _ => N
+          val rhsRequirements = rhs2.freeVars.iterator.collect:
+            case sym: LocalVar if !capturedVars(sym) =>
+              sym -> assignedResults(sym)
+          assignedResults += lhs2 -> Assigned(lhs2, rhs2, varAsst, rhsRequirements.toSet)
+          
+          val rst2 = applyBlock(rst)
+          if (lhs2 is lhs) && (rhs2 is rhs) && (rst2 is rst) then ass else Assign(lhs, rhs2, rst2)
         
       case Assign(lhs, rhs, rst) =>
-        // log(s"Not propagating ${lhs} := ${rhs}")
+        // log(s"Not propagating ${lhs } := ${rhs}")
         
         super.applyBlock(b)
       
@@ -743,7 +757,7 @@ class BlockSimplifier
             Set.empty[Shape]
           def getCtorShape(path: Path): Opt[Shape] =
             path.targetSymbol.flatMap:
-              case ccs: ClassCtorSymbol => ccs.owner
+              case ccs: ClassCtorSymbol => S(ccs.associatedCls)
               case sym => sym.asClsOrMod
           def isSaturatedClassCall(sym: ClassSymbol, argss: NELs[Ls[Arg]]): Bool =
             sym.irClsLikeDefn.exists: defn =>
@@ -754,14 +768,14 @@ class BlockSimplifier
             a.assigns match
             case N => giveUp
             case S(assts) => assts.flatMap:
-              case Assigned(asst, varAsst, _) =>
+              case Assigned(lhs, rhs, varAsst, _) =>
                 varAsst match
                 case S(Value.MemberRef(r, sym: ModuleOrObjectSymbol) -> _) =>
                   Set.single(sym)
                 case S(_ -> ass) =>
                   getAssignInfoShapes(ass)
                 case N =>
-                  asst.rhs match
+                  rhs match
                   case p: Path => getShapes(p)
                   case Call(path, args) =>
                     getCtorShape(path) match
@@ -916,50 +930,26 @@ class BlockSimplifier
         case S(prefix) =>
           registerChange(s"${loc.showDbg} call prefix ~> ${prefix.showDbg}")
           val combined = Call(prefix.fun, (prefix.argss ::: argss).ne_!)(
-            prefix.isMlsFun, prefix.mayRaiseEffects || c.mayRaiseEffects, c.explicitTailCall,
+            CallMetadata(
+              prefix.metadata.isMlsFun,
+              prefix.metadata.mayRaiseEffects || c.metadata.mayRaiseEffects,
+              prefix.metadata.annotations ++ c.metadata.annotations,
+            ),
           ).withLocOf(c)
           super.applyResult(combined)(k)
         case N => super.applyResult(r)(k)
       
       // * Remove uses of the strange builtin comma operator
+      // * This is not implemented as a smart constructor (unlike usual constant folding)
+      // * because it needs to insert an Assign statement.
       case Call(Value.SimpleRef(sym: BuiltinSymbol), (arg1 :: arg2 :: Nil) :: Nil)
         if sym.nme === "," && arg1.spread.isEmpty && arg2.spread.isEmpty
         =>
           Assign.discard(arg1.value, k(arg2.value))
       
-      // * Partially evaluate calls to known builtins with literal arguments
-      case Call(Value.SimpleRef(sym: BuiltinSymbol), args :: Nil) if args.forall(_.value.isInstanceOf[Value]) =>
-        val argValues = args.map(_.value.asInstanceOf[Value])
-        args.foreach(a => assert(a.spread.isEmpty))
-        builtinEval.lift((sym.nme, argValues)) match
-        case S(v) =>
-          registerChange(s"Evaluating builtin ${sym.nme} with args ${argValues.map(_.showDbg).mkString(", ")} ~> ${v.showDbg}")
-          k(v)
-        case N => super.applyResult(r)(k)
-      
       case r =>
         super.applyResult(r)(k)
     
-    
-    // TODO: mv to smart ctor of Call
-    import syntax.Tree.*, Value.Lit
-    val builtinEval: PartialFunction[(Str, List[Value]), Value] =
-      case ("+", (lit @ Lit(IntLit(v1))) :: Nil) => lit
-      case ("+", Lit(IntLit(v1)) :: Lit(IntLit(v2)) :: Nil) => Lit(IntLit(v1 + v2))
-      case ("-", Lit(IntLit(v1)) :: Nil) => Lit(IntLit(-v1))
-      case ("-", Lit(IntLit(v1)) :: Lit(IntLit(v2)) :: Nil) => Lit(IntLit(v1 - v2))
-      case ("*", Lit(IntLit(v1)) :: Lit(IntLit(v2)) :: Nil) => Lit(IntLit(v1 * v2))
-      // * For "/", should check for 0 and return a DecLit
-      case ("%", Lit(IntLit(v1)) :: Lit(IntLit(v2)) :: Nil) => Lit(IntLit(v1 % v2))
-      case ("===", Lit(l1) :: Lit(l2) :: Nil) => Lit(BoolLit(l1 == l2))
-      case ("!==", Lit(l1) :: Lit(l2) :: Nil) => Lit(BoolLit(l1 != l2))
-      case ("<", Lit(IntLit(v1)) :: Lit(IntLit(v2)) :: Nil) => Lit(BoolLit(v1 < v2))
-      case ("<=", Lit(IntLit(v1)) :: Lit(IntLit(v2)) :: Nil) => Lit(BoolLit(v1 <= v2))
-      case (">", Lit(IntLit(v1)) :: Lit(IntLit(v2)) :: Nil) => Lit(BoolLit(v1 > v2))
-      case (">=", Lit(IntLit(v1)) :: Lit(IntLit(v2)) :: Nil) => Lit(BoolLit(v1 >= v2))
-      case ("&&", Lit(BoolLit(v1)) :: Lit(BoolLit(v2)) :: Nil) => Lit(BoolLit(v1 && v2))
-      case ("||", Lit(BoolLit(v1)) :: Lit(BoolLit(v2)) :: Nil) => Lit(BoolLit(v1 || v2))
-      case ("!", Lit(BoolLit(v)) :: Nil) => Lit(BoolLit(!v))
     
   end DataFlowAnalysis
   
@@ -1437,7 +1427,10 @@ class BlockSimplifier
                         acc(Scoped(Set.single(resSym), newBlk(k(resSym.asSimpleRef))))
                       else
                         acc(Scoped(Set(resSym), newBlk(
-                          k(Call(resSym.asSimpleRef, extraArgss.ne_!)(c.isMlsFun, c.mayRaiseEffects, false)))))
+                          k(Call(resSym.asSimpleRef, extraArgss.ne_!)(
+                            c.metadata.copy(
+                              annotations = c.metadata.annotations.filterNot(_ == Annot.TailCall),
+                            ))))))
                     case (sym, value) :: argRest =>
                       val newSym = VarSymbol(sym.id)
                       go(acc.assignScoped(newSym, value), argRest, mapping + (sym -> newSym))

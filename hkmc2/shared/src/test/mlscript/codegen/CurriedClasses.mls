@@ -23,7 +23,6 @@ class A(val x)(val y)
 //│   static [definitionMetadata] = ["class", "A", ["x"]];
 //│ });
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let A⁰;
 //│ define A⁰ as class A² {
 //│   val x⁰;
 //│   val y⁰;
@@ -107,22 +106,22 @@ h.y
 class A(x1, x2, ...xs)(y1, ...ys) with
   fun fields = [x1, x2, xs, y1, ys]
 //│ ╔══[COMPILATION ERROR] Spread parameters are not supported in class parameters.
-//│ ║  l.107: 	class A(x1, x2, ...xs)(y1, ...ys) with
+//│ ║  l.106: 	class A(x1, x2, ...xs)(y1, ...ys) with
 //│ ╙──       	                   ^^
 //│ ╔══[COMPILATION ERROR] Spread parameters are not supported in class parameters.
-//│ ║  l.107: 	class A(x1, x2, ...xs)(y1, ...ys) with
+//│ ║  l.106: 	class A(x1, x2, ...xs)(y1, ...ys) with
 //│ ╙──       	                              ^^
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'xs'
-//│ ║  l.108: 	  fun fields = [x1, x2, xs, y1, ys]
+//│ ║  l.107: 	  fun fields = [x1, x2, xs, y1, ys]
 //│ ║         	                        ^^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.107: 	class A(x1, x2, ...xs)(y1, ...ys) with
+//│ ║  l.106: 	class A(x1, x2, ...xs)(y1, ...ys) with
 //│ ╙──       	                   ^^
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'ys'
-//│ ║  l.108: 	  fun fields = [x1, x2, xs, y1, ys]
+//│ ║  l.107: 	  fun fields = [x1, x2, xs, y1, ys]
 //│ ║         	                                ^^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.107: 	class A(x1, x2, ...xs)(y1, ...ys) with
+//│ ║  l.106: 	class A(x1, x2, ...xs)(y1, ...ys) with
 //│ ╙──       	                              ^^
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let A3;

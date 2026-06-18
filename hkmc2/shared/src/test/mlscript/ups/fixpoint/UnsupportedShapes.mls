@@ -1,0 +1,96 @@
+:js
+
+// Fixed-point-shaped patterns that the machine compilation does not support
+// must not be handed to the regular efficient compilation, which cannot
+// handle chains at all. Instead, they get a warning and fall back to the
+// naive backtracking translation, so `@compile` never changes the meaning
+// of a match.
+
+open annotations { compile }
+
+data class Box(val value)
+data class Tag(val value)
+data class Pair(val first, val second)
+data class Lit(val value)
+
+pattern UnBox = Box(x) => x
+pattern UnTag = Tag(x) => x
+
+
+// ————— A chain to a pattern that is not part of a cycle —————
+// 
+// `Rest` is an ordinary pattern, so `PeelOnce` is a chain, not a fixed
+// point; under `@compile` it falls back to the naive translation.
+pattern Rest = Lit(_)
+pattern PeelOnce = UnBox as Rest | _
+
+:expect Lit(7)
+if Box(Lit(7)) is PeelOnce(r) then r else "<no match>"
+//│ = Lit(7)
+
+:w
+:expect Lit(7)
+if Box(Lit(7)) is @compile PeelOnce(r) then r else "<no match>"
+//│ ╔══[WARNING] This fixed-point pattern is not supported by the machine compilation.
+//│ ║  l.33: 	if Box(Lit(7)) is @compile PeelOnce(r) then r else "<no match>"
+//│ ║        	                           ^^^^^^^^^^
+//│ ╙── Falling back to the naive translation.
+//│ = Lit(7)
+
+
+// ————— An unsupported context alternative —————
+// 
+// The recursive context must occur as exactly one direct constructor
+// argument, so a two-hole alternative is rejected with a warning.
+pattern TwoHoles(pattern H) = H | Pair(TwoHoles(H), TwoHoles(H))
+pattern SumLits = TwoHoles(Pair(Lit(a), Lit(b)) => Lit(a + b)) as SumLits | _
+
+let nested = Pair(Pair(Lit(1), Lit(2)), Pair(Lit(3), Lit(4)))
+//│ nested = Pair(Pair(Lit(1), Lit(2)), Pair(Lit(3), Lit(4)))
+
+:expect Lit(10)
+if nested is SumLits(r) then r else "<no match>"
+//│ = Lit(10)
+
+:w
+:expect Lit(10)
+if nested is @compile SumLits(r) then r else "<no match>"
+//│ ╔══[WARNING] The recursive context must occur as exactly one direct constructor argument.
+//│ ║  l.45: 	pattern TwoHoles(pattern H) = H | Pair(TwoHoles(H), TwoHoles(H))
+//│ ║        	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.46: 	pattern SumLits = TwoHoles(Pair(Lit(a), Lit(b)) => Lit(a + b)) as SumLits | _
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ = Lit(10)
+
+
+// ————— A context grammar without a redex alternative —————
+//
+// Every alternative of this context descends, so no rewriting step can ever
+// fire. A compiled machine would search forever, so the compilation warns
+// and falls back to the naive translation; with no step possible, the
+// trailing `_` simply keeps the scrutinee.
+
+// This never reduce because it doesn't use `H` at all.
+pattern NoRedex(pattern H) =
+  | Pair(NoRedex(H), _)
+  | Pair(Lit(_), NoRedex(H))
+
+pattern Sum = Pair(Lit(a), Lit(b)) => Lit(a + b)
+
+pattern Reduce = NoRedex(Sum) as Reduce | _
+
+fun reduce(t) = if t is Reduce(r) then r
+
+reduce(Pair(Lit(1), Lit(2)))
+//│ = Pair(Lit(1), Lit(2))
+
+reduce(Pair(Lit(1), Pair(Lit(3), Lit(2))))
+//│ = Pair(Lit(1), Pair(Lit(3), Lit(2)))
+
+:w
+:expect Pair(Lit(1), Lit(2))
+if Pair(Lit(1), Lit(2)) is @compile Reduce(r) then r else "<no match>"
+//│ ╔══[WARNING] The recursive context has no redex alternative, so no rewriting step can apply.
+//│ ║  l.80: 	pattern Reduce = NoRedex(Sum) as Reduce | _
+//│ ╙──      	                 ^^^^^^^^^^^
+//│ = Pair(Lit(1), Lit(2))

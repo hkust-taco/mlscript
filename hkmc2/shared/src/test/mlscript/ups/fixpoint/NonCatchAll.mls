@@ -1,0 +1,255 @@
+:js
+
+// A fixed-point pattern need not end in a catch-all wildcard:
+//
+//     pattern P = Q as P | a
+//
+// reads `(Q as P) | a`. The machine normalizes the scrutinee and matches
+// `a` against the final normal form. When `a` fails there, the naive
+// backtracking semantics applies: the latest intermediate result matching
+// `a` is returned instead, and the whole match fails when there is none.
+// The compiled matcher implements this by retrying the failed machine run
+// with the naive translation, so allocations on that path appear twice.
+
+import "../../../mlscript-compile/Option.mls"
+
+open annotations { compile }
+open Option { Some, None }
+
+
+let shouldPrint = true
+//│ shouldPrint = true
+
+data class Box(val value) with
+  if shouldPrint do
+    print("new Box(" + render(value) + ")")
+data class Tag(val value) with
+  if shouldPrint do
+    print("new Tag(" + render(value) + ")")
+
+pattern UnBox = Box(x) => x
+
+// Peel boxes; the result must be a tag.
+pattern PeelToTag = UnBox as PeelToTag | Tag(_)
+
+fun peelSlow(x) = if x is PeelToTag(x') then Some(x') else None
+
+fun peelFast(x) = if x is @compile PeelToTag(x') then Some(x') else None
+
+// The fast path: the normal form matches the alternative directly.
+let boxedTag = Box(Box(Tag(5)))
+//│ > new Tag(5)
+//│ > new Box(Tag(5))
+//│ > new Box(Box(Tag(5)))
+//│ boxedTag = Box(Box(Tag(5)))
+
+:expect Some(Tag(5))
+peelSlow(boxedTag)
+//│ = Some(Tag(5))
+
+:expect Some(Tag(5))
+peelFast(boxedTag)
+//│ = Some(Tag(5))
+
+// Neither the normal form `7` nor any intermediate is a tag: no match.
+let boxedNum = Box(Box(7))
+//│ > new Box(7)
+//│ > new Box(Box(7))
+//│ boxedNum = Box(Box(7))
+
+:expect None
+peelSlow(boxedNum)
+//│ = None
+
+:expect None
+peelFast(boxedNum)
+//│ = None
+
+fun boxify(gem, depth) =
+  let
+    wrapped = gem
+    remaining = depth
+  set shouldPrint = false
+  while remaining > 0 do
+    set
+      wrapped = Box(wrapped)
+      remaining -= 1
+  set shouldPrint = true
+  wrapped
+
+:silent
+let excessiveWrapped42 =
+  let temp = Tag(42)
+  // This will definitely cause stack overflow in most settings.
+  set temp = boxify(temp, 1200)
+  set temp = boxify(temp, 1200)
+  set temp = boxify(temp, 1200)
+  set temp = boxify(temp, 1200)
+  set temp = boxify(temp, 1200)
+  set temp = boxify(temp, 1200)
+  set temp = boxify(temp, 1200)
+  set temp = boxify(temp, 1200)
+  set temp = boxify(temp, 1200)
+  set temp = boxify(temp, 1200)
+  temp
+//│ > new Tag(42)
+
+// With no step to take, the alternative matches the scrutinee directly:
+// `UnBox` cannot peel a bare `Tag`, so `Tag(_)` matches `Tag(5)` as-is.
+:re
+peelSlow(excessiveWrapped42)
+//│ ═══[RUNTIME ERROR] RangeError: Maximum call stack size exceeded
+
+:expect Some(Tag(42))
+// Becuase the refocusing machine uses `while` loop, even in simple cases where
+// naive matchers don't construct unnecessary objects, the optimized compilation
+// is still more efficient.
+peelFast(excessiveWrapped42)
+//│ = Some(Tag(42))
+
+
+
+// ————— With an evaluation-context step pattern —————
+
+data class Lit(val value) with
+  print("new Lit(" + render(value) + ")")
+data class Add(val lhs, val rhs) with
+  print("new Add(" + render(lhs) + ", " + render(rhs) + ")")
+
+pattern Value = Lit
+
+pattern Ctx(pattern Hole) =
+  | Hole
+  | Add(Ctx(Hole), _)
+  | Add(Value, Ctx(Hole))
+
+pattern Redex = Add(Lit(a), Lit(b)) => Lit(a + b)
+
+// Evaluation must reach a value; getting stuck is a match failure.
+pattern EvalValue = Ctx(Redex) as EvalValue | Value
+
+fun slowEvalToValue(t) = if t is EvalValue(Lit(v)) then Some(v) else None
+
+fun fastEvalToValue(t) = if t is @compile EvalValue(Lit(v)) then Some(v) else None
+
+let sum = Add(Add(Lit(1), Lit(2)), Lit(3))
+//│ > new Lit(1)
+//│ > new Lit(2)
+//│ > new Add(Lit(1), Lit(2))
+//│ > new Lit(3)
+//│ > new Add(Add(Lit(1), Lit(2)), Lit(3))
+//│ sum = Add(Add(Lit(1), Lit(2)), Lit(3))
+
+:expect Some(6)
+slowEvalToValue(sum)
+//│ > new Lit(3)
+//│ > new Add(Lit(3), Lit(3))
+//│ > new Lit(6)
+//│ = Some(6)
+
+:expect Some(6)
+fastEvalToValue(sum)
+//│ > new Lit(3)
+//│ > new Add(Lit(3), Lit(3))
+//│ > new Lit(6)
+//│ = Some(6)
+
+// The stuck term reduces to `Add(Lit(3), Tag(9))`, which is not a value,
+// and neither is any intermediate result: the match fails. The failed
+// machine run is retried naively, so its allocations show up twice.
+let stuck = Add(Add(Lit(1), Lit(2)), Tag(9))
+//│ > new Lit(1)
+//│ > new Lit(2)
+//│ > new Add(Lit(1), Lit(2))
+//│ > new Tag(9)
+//│ > new Add(Add(Lit(1), Lit(2)), Tag(9))
+//│ stuck = Add(Add(Lit(1), Lit(2)), Tag(9))
+
+:expect None
+slowEvalToValue(stuck)
+//│ > new Lit(3)
+//│ > new Add(Lit(3), Tag(9))
+//│ = None
+
+:expect None
+// TODO: Get rid of the unnecessary computation here.
+fastEvalToValue(stuck)
+//│ > new Lit(3)
+//│ > new Add(Lit(3), Tag(9))
+//│ > new Lit(3)
+//│ > new Add(Lit(3), Tag(9))
+//│ = None
+
+
+// —— FIXME: duplicated reductions when the default is not a wildcard!! ——
+
+// TODO: either reject this pattern with a warning or support it properly.
+
+
+pattern AddStep =
+  | Add(Lit(a), Lit(b)) => (let c = a + b in print("reduce " + a + " + " + b + " = " + c); Lit(c))
+  | Add(AddStep, _)
+  | Add(Lit, AddStep)
+
+pattern AddSteps = @compile ((AddStep as AddSteps) | Add(Lit, Lit))
+
+
+let t1 = Add(Add(Lit(2), Lit(3)), Lit(1))
+//│ > new Lit(2)
+//│ > new Lit(3)
+//│ > new Add(Lit(2), Lit(3))
+//│ > new Lit(1)
+//│ > new Add(Add(Lit(2), Lit(3)), Lit(1))
+//│ t1 = Add(Add(Lit(2), Lit(3)), Lit(1))
+
+// Note that reductions are performed more than once.
+assert t1 is AddSteps(s), s
+//│ > reduce 2 + 3 = 5
+//│ > new Lit(5)
+//│ > new Add(Lit(5), Lit(1))
+//│ > reduce 5 + 1 = 6
+//│ > new Lit(6)
+//│ > reduce 2 + 3 = 5
+//│ > new Lit(5)
+//│ > new Add(Lit(5), Lit(1))
+//│ > reduce 5 + 1 = 6
+//│ > new Lit(6)
+//│ > reduce 5 + 1 = 6
+//│ > new Lit(6)
+//│ = Add(Lit(5), Lit(1))
+
+let t2 = Add(t1, Lit(4))
+//│ > new Lit(4)
+//│ > new Add(Add(Add(Lit(2), Lit(3)), Lit(1)), Lit(4))
+//│ t2 = Add(Add(Add(Lit(2), Lit(3)), Lit(1)), Lit(4))
+
+// It looks like the number of times each node is repeatedly reduced is
+// proportional to its size.
+assert t2 is AddSteps(s), s
+//│ > reduce 2 + 3 = 5
+//│ > new Lit(5)
+//│ > new Add(Lit(5), Lit(1))
+//│ > reduce 5 + 1 = 6
+//│ > new Lit(6)
+//│ > new Add(Lit(6), Lit(4))
+//│ > reduce 6 + 4 = 10
+//│ > new Lit(10)
+//│ > reduce 2 + 3 = 5
+//│ > new Lit(5)
+//│ > new Add(Lit(5), Lit(1))
+//│ > new Add(Add(Lit(5), Lit(1)), Lit(4))
+//│ > reduce 5 + 1 = 6
+//│ > new Lit(6)
+//│ > new Add(Lit(6), Lit(4))
+//│ > reduce 6 + 4 = 10
+//│ > new Lit(10)
+//│ > reduce 5 + 1 = 6
+//│ > new Lit(6)
+//│ > new Add(Lit(6), Lit(4))
+//│ > reduce 6 + 4 = 10
+//│ > new Lit(10)
+//│ > reduce 6 + 4 = 10
+//│ > new Lit(10)
+//│ = Add(Lit(6), Lit(4))
+
+

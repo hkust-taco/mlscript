@@ -25,7 +25,7 @@ class BlockTraverser:
   
   
   def applyMaybeSymbol(sym: MaybeSymbol): Unit = sym match
-    case _: NoSymbol => ()
+    case NoSymbol => ()
     case sym: Symbol => applySymbol(sym)
   
   def applySymbol(sym: Symbol): Unit = ()

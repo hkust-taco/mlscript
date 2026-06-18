@@ -52,67 +52,65 @@ test(p) + f(p) + test(AA(AA(AA(10)))) + test(B)
 //│ deforest > 	fields: arg$AA$0$¹.x¹
 //│ deforest > <<< fusing <<<
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let test⁰, f⁰, p⁰, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10, test_29$test⁰, test_29$x_dflt⁰, test_29$x_rest⁰, test_26$test⁰, test_26$x_AA⁰, test_26$x_rest⁰, test_26$arg$AA$0$_AA⁰, test_26$arg$AA$0$_rest⁰, test_26$arg$AA$0$_AA¹, test_26$arg$AA$0$_rest¹, AA_x, AA_x1, AA_x2, deforest$lam;
+//│ let tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10, test_28$test, test_28$x_dflt, test_28$x_rest, test_25$test, test_25$x_AA, test_25$x_rest, test_25$arg$AA$0$_AA, test_25$arg$AA$0$_rest, test_25$arg$AA$0$_AA1, test_25$arg$AA$0$_rest1, AA_x, AA_x1, AA_x2, deforest$lam;
 //│ @private
-//│ define test_29$test⁰ as fun test_29$test¹(x) {
-//│   let t, a, arg$AA$0$, arg$AA$0$1, arg$AA$0$2, tmp11, tmp12, tmp13, tmp14, tmp15;
-//│   return x(tmp11, t, tmp11, tmp12, tmp13, tmp14, tmp15)
+//│ define test_28$test as fun test_28$test⁰(x) {
+//│   let t, a, arg$AA$0$, arg$AA$0$1, arg$AA$0$2, tmp11, tmp12, tmp13, tmp14;
+//│   return x(tmp11, t, tmp11, tmp12, tmp13, tmp14)
 //│ };
 //│ @private
-//│ define test_26$test⁰ as fun test_26$test¹(x) {
-//│   let t, a, arg$AA$0$, arg$AA$0$1, arg$AA$0$2, tmp11, tmp12, tmp13, tmp14, tmp15;
-//│   return x(t, a, arg$AA$0$, arg$AA$0$1, arg$AA$0$2, tmp11, tmp12, tmp13, tmp14, tmp15, t, tmp11, tmp12, tmp13, tmp14, tmp15)
+//│ define test_25$test as fun test_25$test⁰(x) {
+//│   let t, a, arg$AA$0$, arg$AA$0$1, arg$AA$0$2, tmp11, tmp12, tmp13, tmp14;
+//│   return x(t, a, arg$AA$0$, arg$AA$0$1, arg$AA$0$2, tmp11, tmp12, tmp13, tmp14, t, tmp11, tmp12, tmp13, tmp14)
 //│ };
 //│ @affine(1) @private
-//│ define test_29$x_dflt⁰ as fun test_29$x_dflt¹()(fv_tmp, fv_t, fv_tmp1, fv_tmp2, fv_tmp3, fv_tmp4, fv_tmp5) {
+//│ define test_28$x_dflt as fun test_28$x_dflt⁰()(fv_tmp, fv_t, fv_tmp1, fv_tmp2, fv_tmp3, fv_tmp4) {
 //│   set fv_tmp1 = 4;
-//│   return test_29$x_rest¹(fv_t, fv_tmp1, fv_tmp2, fv_tmp3, fv_tmp4, fv_tmp5)
+//│   return test_28$x_rest⁰(fv_t, fv_tmp1, fv_tmp2, fv_tmp3, fv_tmp4)
 //│ };
 //│ @affine(1) @private
-//│ define test_26$x_AA⁰ as fun test_26$x_AA¹(AA_x3)(fv_t, fv_a, fv_arg$AA$0$, fv_arg$AA$0$1, fv_arg$AA$0$2, fv_tmp, fv_tmp1, fv_tmp2, fv_tmp3, fv_tmp4, fv_t1, fv_tmp5, fv_tmp6, fv_tmp7, fv_tmp8, fv_tmp9) {
+//│ define test_25$x_AA as fun test_25$x_AA⁰(AA_x3)(fv_t, fv_a, fv_arg$AA$0$, fv_arg$AA$0$1, fv_arg$AA$0$2, fv_tmp, fv_tmp1, fv_tmp2, fv_tmp3, fv_t1, fv_tmp4, fv_tmp5, fv_tmp6, fv_tmp7) {
 //│   set fv_arg$AA$0$ = AA_x3;
-//│   return fv_arg$AA$0$(fv_t1, fv_a, fv_arg$AA$0$1, fv_arg$AA$0$2, fv_tmp5, fv_tmp6, fv_tmp7, fv_tmp8, fv_tmp9, fv_t1, fv_tmp5, fv_tmp6, fv_tmp7, fv_tmp8, fv_tmp9)
+//│   return fv_arg$AA$0$(fv_t1, fv_a, fv_arg$AA$0$1, fv_arg$AA$0$2, fv_tmp4, fv_tmp5, fv_tmp6, fv_tmp7, fv_t1, fv_tmp4, fv_tmp5, fv_tmp6, fv_tmp7)
 //│ };
 //│ @affine(1) @private
-//│ define test_26$arg$AA$0$_AA⁰ as fun test_26$arg$AA$0$_AA²(AA_x3)(fv_t, fv_a, fv_arg$AA$0$, fv_arg$AA$0$1, fv_tmp, fv_tmp1, fv_tmp2, fv_tmp3, fv_tmp4, fv_t1, fv_tmp5, fv_tmp6, fv_tmp7, fv_tmp8, fv_tmp9) {
+//│ define test_25$arg$AA$0$_AA as fun test_25$arg$AA$0$_AA⁰(AA_x3)(fv_t, fv_a, fv_arg$AA$0$, fv_arg$AA$0$1, fv_tmp, fv_tmp1, fv_tmp2, fv_tmp3, fv_t1, fv_tmp4, fv_tmp5, fv_tmp6, fv_tmp7) {
 //│   set fv_arg$AA$0$ = AA_x3;
-//│   return fv_arg$AA$0$(fv_a, fv_arg$AA$0$1, fv_tmp5, fv_t1, fv_tmp5, fv_tmp6, fv_tmp7, fv_tmp8, fv_tmp9)
+//│   return fv_arg$AA$0$(fv_a, fv_arg$AA$0$1, fv_tmp4, fv_t1, fv_tmp4, fv_tmp5, fv_tmp6, fv_tmp7)
 //│ };
 //│ @affine(1) @private
-//│ define test_26$arg$AA$0$_AA¹ as fun test_26$arg$AA$0$_AA³(AA_x3)(fv_a, fv_arg$AA$0$, fv_tmp, fv_t, fv_tmp1, fv_tmp2, fv_tmp3, fv_tmp4, fv_tmp5) {
+//│ define test_25$arg$AA$0$_AA1 as fun test_25$arg$AA$0$_AA¹(AA_x3)(fv_a, fv_arg$AA$0$, fv_tmp, fv_t, fv_tmp1, fv_tmp2, fv_tmp3, fv_tmp4) {
 //│   set fv_arg$AA$0$ = AA_x3;
 //│   set fv_a = fv_arg$AA$0$;
 //│   set fv_tmp1 = fv_a;
-//│   return test_26$arg$AA$0$_rest²(fv_t, fv_tmp1, fv_tmp2, fv_tmp3, fv_tmp4, fv_tmp5)
+//│   return test_25$arg$AA$0$_rest⁰(fv_t, fv_tmp1, fv_tmp2, fv_tmp3, fv_tmp4)
 //│ };
 //│ @private
-//│ define test_29$x_rest⁰ as fun test_29$x_rest¹(fv_t, fv_tmp, fv_tmp1, fv_tmp2, fv_tmp3, fv_tmp4) {
+//│ define test_28$x_rest as fun test_28$x_rest⁰(fv_t, fv_tmp, fv_tmp1, fv_tmp2, fv_tmp3) {
 //│   set fv_t = fv_tmp;
-//│   set fv_tmp1 = *⁰(5, 4);
-//│   set fv_tmp2 = +⁰(fv_t, fv_tmp1);
-//│   set fv_tmp3 = -⁰(fv_tmp2, 3);
-//│   set fv_tmp4 = +⁰(fv_tmp3, 2);
-//│   return -⁰(fv_tmp4, 1)
+//│   set fv_tmp1 = +⁰(fv_t, 20);
+//│   set fv_tmp2 = -⁰(fv_tmp1, 3);
+//│   set fv_tmp3 = +⁰(fv_tmp2, 2);
+//│   return -⁰(fv_tmp3, 1)
 //│ };
 //│ @private
-//│ define test_26$x_rest⁰ as fun test_26$x_rest¹(fv_t, fv_tmp, fv_tmp1, fv_tmp2, fv_tmp3, fv_tmp4) {
+//│ define test_25$x_rest as fun test_25$x_rest⁰(fv_t, fv_tmp, fv_tmp1, fv_tmp2, fv_tmp3) {
 //│   set fv_t = fv_tmp;
-//│   set fv_tmp1 = *⁰(5, 4);
-//│   set fv_tmp2 = +⁰(fv_t, fv_tmp1);
-//│   set fv_tmp3 = -⁰(fv_tmp2, 3);
-//│   set fv_tmp4 = +⁰(fv_tmp3, 2);
-//│   return -⁰(fv_tmp4, 1)
+//│   set fv_tmp1 = +⁰(fv_t, 20);
+//│   set fv_tmp2 = -⁰(fv_tmp1, 3);
+//│   set fv_tmp3 = +⁰(fv_tmp2, 2);
+//│   return -⁰(fv_tmp3, 1)
 //│ };
 //│ @private
-//│ define test_26$arg$AA$0$_rest⁰ as fun test_26$arg$AA$0$_rest³(fv_t, fv_tmp, fv_tmp1, fv_tmp2, fv_tmp3, fv_tmp4) {
-//│   return test_26$x_rest¹(fv_t, fv_tmp, fv_tmp1, fv_tmp2, fv_tmp3, fv_tmp4)
+//│ define test_25$arg$AA$0$_rest as fun test_25$arg$AA$0$_rest¹(fv_t, fv_tmp, fv_tmp1, fv_tmp2, fv_tmp3) {
+//│   return test_25$x_rest⁰(fv_t, fv_tmp, fv_tmp1, fv_tmp2, fv_tmp3)
 //│ };
 //│ @private
-//│ define test_26$arg$AA$0$_rest¹ as fun test_26$arg$AA$0$_rest²(fv_t, fv_tmp, fv_tmp1, fv_tmp2, fv_tmp3, fv_tmp4) {
-//│   return test_26$arg$AA$0$_rest³(fv_t, fv_tmp, fv_tmp1, fv_tmp2, fv_tmp3, fv_tmp4)
+//│ define test_25$arg$AA$0$_rest1 as fun test_25$arg$AA$0$_rest⁰(fv_t, fv_tmp, fv_tmp1, fv_tmp2, fv_tmp3) {
+//│   return test_25$arg$AA$0$_rest¹(fv_t, fv_tmp, fv_tmp1, fv_tmp2, fv_tmp3)
 //│ };
 //│ define test⁰ as fun test¹(x) {
-//│   let t, a, arg$AA$0$, arg$AA$0$1, arg$AA$0$2, tmp11, tmp12, tmp13, tmp14, tmp15;
+//│   let t, a, arg$AA$0$, arg$AA$0$1, arg$AA$0$2, tmp11, tmp12, tmp13, tmp14;
 //│   match x
 //│     AA¹ =>
 //│       set arg$AA$0$ = x.x¹;
@@ -137,11 +135,10 @@ test(p) + f(p) + test(AA(AA(AA(10)))) + test(B)
 //│       set tmp11 = 4;
 //│       end
 //│   set t = tmp11;
-//│   set tmp12 = *⁰(5, 4);
-//│   set tmp13 = +⁰(t, tmp12);
-//│   set tmp14 = -⁰(tmp13, 3);
-//│   set tmp15 = +⁰(tmp14, 2);
-//│   return -⁰(tmp15, 1)
+//│   set tmp12 = +⁰(t, 20);
+//│   set tmp13 = -⁰(tmp12, 3);
+//│   set tmp14 = +⁰(tmp13, 2);
+//│   return -⁰(tmp14, 1)
 //│ };
 //│ define f⁰ as fun f¹(a) {
 //│   let arg$AA$0$;
@@ -165,15 +162,15 @@ test(p) + f(p) + test(AA(AA(AA(10)))) + test(B)
 //│ set tmp3 = f¹(p⁰);
 //│ set tmp4 = +⁰(tmp2, tmp3);
 //│ set AA_x = 10;
-//│ set tmp5 = test_26$arg$AA$0$_AA³(AA_x);
+//│ set tmp5 = test_25$arg$AA$0$_AA¹(AA_x);
 //│ set AA_x1 = tmp5;
-//│ set tmp6 = test_26$arg$AA$0$_AA²(AA_x1);
+//│ set tmp6 = test_25$arg$AA$0$_AA⁰(AA_x1);
 //│ set AA_x2 = tmp6;
-//│ set tmp7 = test_26$x_AA¹(AA_x2);
-//│ set tmp8 = test_26$test¹(tmp7);
+//│ set tmp7 = test_25$x_AA⁰(AA_x2);
+//│ set tmp8 = test_25$test⁰(tmp7);
 //│ set tmp9 = +⁰(tmp4, tmp8);
-//│ set deforest$lam = test_29$x_dflt¹();
-//│ set tmp10 = test_29$test¹(deforest$lam);
+//│ set deforest$lam = test_28$x_dflt⁰();
+//│ set tmp10 = test_28$test⁰(deforest$lam);
 //│ return +⁰(tmp9, tmp10)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 78
@@ -197,7 +194,14 @@ test()
 //│ deforest > 	match: scrut⁰
 //│ deforest > 	fields: scrut⁰.x²
 //│ deforest > <<< fusing <<<
-//│ /!!!\ Uncaught error: java.lang.AssertionError: assertion failed
+//│ ╔══[COMPILATION ERROR] No definition found in scope for member 'Local'
+//│ ║  l.187: 	    Global(x) then Local(x + 1)
+//│ ║         	                   ^^^^^
+//│ ╟── which references the symbol introduced here
+//│ ║  l.185: 	  data class Local(x)
+//│ ╙──       	             ^^^^^^^^
+//│ ═══[RUNTIME ERROR] ReferenceError: Local is not defined
+//│ ═══[RUNTIME ERROR] Expected: 'Local(2)', got: 'undefined'
 
 
 // TODO: fusion opportunity is lost

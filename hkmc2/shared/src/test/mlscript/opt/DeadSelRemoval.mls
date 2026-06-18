@@ -87,7 +87,7 @@ let a = Foo.y in Foo.x
   42
 )
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let a⁰; define a⁰ as val a¹ = Foo⁰.y⁰; return 42
+//│ let a; define a as val a⁰ = Foo⁰.y⁰; return 42
 //│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
 //│ let a;
 //│ a = Foo1.y; block$res13 = 42;

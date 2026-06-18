@@ -170,6 +170,9 @@ package object utils:
   
   implicit final class OptionHelpers[A](opt: Opt[A]):
     def dlof[B](f: A => B)(b: => B): B = opt.fold(b)(f)
+    inline def foreachInline(inline f: A => Unit): Unit = opt match
+      case S(value) => f(value)
+      case N => ()
   
   implicit class MutSetHelpers[A](self: mutable.Set[A]):
     def setAndIfUnset(x: A)(thunk: => Unit): Unit =

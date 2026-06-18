@@ -9,28 +9,28 @@ data class A(x) with
     fun getB() = x + y
   fun getA() = B(2).getB()
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let B⁰, A⁰;
+//│ let B;
 //│ @data
-//│ define B⁰ as class B² {
-//│   private val A¹;
+//│ define B as class B¹ {
+//│   private val A⁰;
 //│   val y⁰;
-//│   constructor B¹(y, A) {
-//│     set B².this.A¹ = A;
+//│   constructor B⁰(y, A) {
+//│     set B¹.this.A⁰ = A;
 //│     define y⁰ as val y¹ = y;
 //│     end
 //│   }
 //│   method getB⁰ = fun getB¹() {
-//│     return +⁰(B².this.A¹.x⁰, B².this.y¹)
+//│     return +⁰(B¹.this.A⁰.x⁰, B¹.this.y¹)
 //│   }
 //│ };
 //│ @data
-//│ define A⁰ as class A³ {
+//│ define A¹ as class A³ {
 //│   val x¹;
 //│   constructor A²(x) {
 //│     define x¹ as val x⁰ = x;
 //│     end
 //│   }
-//│   method getA⁰ = fun getA¹() { let tmp; set tmp = new B²(2, A³.this); return tmp.getB¹() }
+//│   method getA⁰ = fun getA¹() { let tmp; set tmp = new B¹(2, A³.this); return tmp.getB¹() }
 //│ };
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
@@ -55,13 +55,13 @@ class A with
     g
 (new A).x()
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let g⁰, A⁴, tmp;
-//│ define g⁰ as fun g¹() {
+//│ let g, tmp;
+//│ define g as fun g⁰() {
 //│   return 2
 //│ };
 //│ define A⁴ as class A⁵ {
 //│   val x²;
-//│   constructor() { define x² as val x³ = g¹; end }
+//│   constructor() { define x² as val x³ = g⁰; end }
 //│ };
 //│ set tmp = new A⁵();
 //│ return tmp.x³()

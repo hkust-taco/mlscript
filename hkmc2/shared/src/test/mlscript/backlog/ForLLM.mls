@@ -114,3 +114,36 @@ if 2
 //│ = 2
 
 // ——— ——— ———
+
+:fixme
+pattern ShapeArea = 
+  | (:radius) => 0
+  | x => 1
+//│ ╔══[COMPILATION ERROR] Found an inconsistent variable in disjunction patterns.
+//│ ║  l.120: 	  | (:radius) => 0
+//│ ║         	      ^^^^^^
+//│ ╟── The variable is missing from this sub-pattern.
+//│ ║  l.121: 	  | x => 1
+//│ ╙──       	    ^^^^^^
+
+:fixme
+pattern P = {:radius} => radius
+//│ ╔══[COMPILATION ERROR] Expected a valid parameter, found type definition
+//│ ║  l.130: 	pattern P = {:radius} => radius
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Name not found: radius
+//│ ║  l.130: 	pattern P = {:radius} => radius
+//│ ╙──       	                         ^^^^^^
+//│ = fun
+
+pattern P = ({:radius}) => radius
+
+pattern P = ((:radius)) => radius
+
+:fixme
+pattern P = (:radius) => radius
+//│ ╔══[WARNING] Unused pattern binding: radius.
+//│ ║  l.144: 	pattern P = (:radius) => radius
+//│ ╙──       	              ^^^^^^
+
+// ——— ——— ———

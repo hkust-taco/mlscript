@@ -245,13 +245,13 @@ trait SplitElaborator:
         Head.Match(scrutinee(), firstPattern, split) ~: End
     case _ =>
       error(msg"Unrecognized pattern split (${t.describe})." -> t.toLoc)
-      Else(Term.Error)(N).withLocOf(t) // To inspect the source of errors.
+      Else(Term.Error().withLocOf(t))(N).withLocOf(t) // To inspect the source of errors.
   
   extension (term: Term)
     private inline def reference(continuation: Reference => SimpleSplit): SimpleSplit =
       term match
         // If the term is already a reference, we can re-reference its symbol.
-        case Term.Ref(symbol) => continuation(() => symbol.ref())
+        case Term.Ref(symbol) => continuation(() => symbol.ref().withLocOf(term))
         // Otherwise, we need to create a temporary symbol holding the term.
         case term: Term =>
           val symbol = TempSymbol(N, "scrut")
