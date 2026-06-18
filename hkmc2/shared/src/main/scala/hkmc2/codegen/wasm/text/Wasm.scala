@@ -416,12 +416,13 @@ case class FoldedInstr(
     case Seq() => N
     case Seq(ty) => S(ty)
     case tys => 
-      lastWords(s"resultType called on instruction `$mnemonic` with multi-value result type: ${tys.map(ty => doc"`${ty.toWat}`").mkDocument(doc"[", doc", ", doc"]").mkString()}")
+      lastWords:
+        s"resultType called on instruction `$mnemonic` with multi-value result type: ${tys.map(ty => doc"`${ty.toWat}`").mkDocument(doc"[", doc", ", doc"]").mkString()}"
 
   /** Returns the singular result type of this instruction, otherwise throws an exception. */
   def resultType_! : Type = resultType.getOrElse:
     lastWords:
-      s"resultType_! called on instruction `$mnemonic` with non-unique result type(s): ${resultTypes.map(_.toWat).mkDocument(doc"[", doc", ", doc"]").mkString()}"
+      s"resultType_! called on instruction `$mnemonic` with no result type: ${resultTypes.map(_.toWat).mkDocument(doc"[", doc", ", doc"]").mkString()}"
 
   def toWat: Document = doc"($mnemonic${
       instrargs.map: a =>
