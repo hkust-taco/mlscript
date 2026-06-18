@@ -22,3 +22,16 @@
 //│ ║        	      ^^^^^
 //│ ╙── Available language versions: 0.2.x, 0.3.x
 
+
+:e
+#lang(unknownLanguageField: true)
+//│ ╔══[COMPILATION ERROR] Unsupported Language argument
+//│ ║  l.27: 	#lang(unknownLanguageField: true)
+//│ ╙──      	      ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+:e
+#lang(versionName: "custom")
+//│ ╔══[COMPILATION ERROR] Unsupported Language argument
+//│ ║  l.34: 	#lang(versionName: "custom")
+//│ ╙──      	      ^^^^^^^^^^^^^^^^^^^^^

@@ -272,22 +272,33 @@ object ConfigParser:
         source = Diagnostic.Source.Compilation))
       N
 
-  private def parseLanguage(tree: Tree)(using Raise): Opt[Config.Language] =
-    def parseVersionName(tree: Tree): Opt[Str] = tree match
-      case StrLit(name) => S(name)
-      case Ident(name) => S(name)
-      case IntLit(value) => S(value.toString)
-      case DecLit(value) => S(value.toString)
-      case Sel(prefix, Ident(suffix)) =>
-        parseVersionName(prefix).map: prefix =>
-          s"${prefix}.${suffix}"
-      case _ =>
-        raise(ErrorReport(
-          msg"Expected a language version name" -> tree.toLoc :: Nil,
-          source = Diagnostic.Source.Compilation))
-        N
-    val versionName = parseVersionName(tree)
-    versionName.flatMap: name =>
+  private def parseVersionName(tree: Tree)(using Raise): Opt[Str] = tree match
+    case StrLit(name) => S(name)
+    case Ident(name) => S(name)
+    case IntLit(value) => S(value.toString)
+    case DecLit(value) => S(value.toString)
+    case Sel(prefix, Ident(suffix)) =>
+      parseVersionName(prefix).map: prefix =>
+        s"${prefix}.${suffix}"
+    case _ =>
+      raise(ErrorReport(
+        msg"Expected a language version name" -> tree.toLoc :: Nil,
+        source = Diagnostic.Source.Compilation))
+      N
+
+  private def parseTypeChecking(tree: Tree)(using Raise): Opt[Config.TypeChecking] = tree match
+    case Ident("TypeChecking") =>
+      S(Config.TypeChecking())
+    case App(Ident("TypeChecking"), Tup(Nil)) =>
+      S(Config.TypeChecking())
+    case _ =>
+      raise(ErrorReport(
+        msg"Expected TypeChecking()" -> tree.toLoc :: Nil,
+        source = Diagnostic.Source.Compilation))
+      N
+
+  private def parseLanguagePreset(tree: Tree)(using Raise): Opt[Config.Language] =
+    parseVersionName(tree).flatMap: name =>
       Config.Language.presets.get(name) match
         case S(language) => S(language)
         case N =>
@@ -298,9 +309,93 @@ object ConfigParser:
             source = Diagnostic.Source.Compilation))
           N
 
+  private def withLanguage(
+    base: Config.Language,
+    allowUnresolvedAccesses: Bool,
+    useNewResolution: Bool,
+    typeCheck: Opt[Config.TypeChecking],
+  ): Config.Language =
+    Config.Language(
+      allowUnresolvedAccesses,
+      useNewResolution,
+      typeCheck,
+    )(
+      base.versionName,
+    )
+
+  private def parseLanguageFieldModifiers(args: Ls[Tree])(using Raise): Opt[Ls[Config.Language => Config.Language]] =
+    var modifiers = Ls.empty[Config.Language => Config.Language]
+    var ok = true
+    args.foreach:
+      case InfixApp(Ident("allowUnresolvedAccesses"), Keywrd(Keyword.`:`), value) =>
+        parseBool(value) match
+          case S(v) =>
+            modifiers ::= (language =>
+              withLanguage(language, v, language.useNewResolution, language.typeCheck))
+          case N => ok = false
+      case InfixApp(Ident("useNewResolution"), Keywrd(Keyword.`:`), value) =>
+        parseBool(value) match
+          case S(v) =>
+            modifiers ::= (language =>
+              withLanguage(language, language.allowUnresolvedAccesses, v, language.typeCheck))
+          case N => ok = false
+      case InfixApp(Ident("typeCheck"), Keywrd(Keyword.`:`), value) =>
+        parseOpt(value)(parseTypeChecking) match
+          case S(v) =>
+            modifiers ::= (language =>
+              withLanguage(language, language.allowUnresolvedAccesses, language.useNewResolution, v))
+          case N => ok = false
+      case other =>
+        ok = false
+        raise(ErrorReport(
+          msg"Unsupported Language argument" -> other.toLoc :: Nil,
+          source = Diagnostic.Source.Compilation))
+    if ok then S(modifiers.reverse) else N
+
+  private def applyLanguageFieldModifiers(
+    base: Config.Language,
+    modifiers: Ls[Config.Language => Config.Language],
+  ): Config.Language =
+    modifiers.foldLeft(base):
+      case (language, modify) => modify(language)
+
+  private def parseLanguage(tree: Tree)(using Raise): Opt[Config.Language => Config.Language] = tree match
+    case App(Ident("Language"), Tup(args)) =>
+      parseLanguageFieldModifiers(args).map: modifiers =>
+        language => applyLanguageFieldModifiers(language, modifiers)
+    case _ =>
+      parseLanguagePreset(tree).map: language =>
+        _ => language
+
+  private def parseLanguageDirectiveArgs(args: Ls[Tree])(using Raise): Config => Config =
+    def isNamedArg(tree: Tree): Bool = tree match
+      case InfixApp(_: Ident, Keywrd(Keyword.`:`), _) => true
+      case _ => false
+    args match
+      case Nil =>
+        raise(ErrorReport(
+          msg"Expected at least one language argument" -> N :: Nil,
+          source = Diagnostic.Source.Compilation))
+        identity
+      case head :: tail if isNamedArg(head) =>
+        parseLanguageFieldModifiers(args) match
+          case S(modifiers) =>
+            cfg => cfg.copy(language = applyLanguageFieldModifiers(cfg.language, modifiers))
+          case N => identity
+      case head :: tail =>
+        val languageBase = parseLanguage(head)
+        val tailModifiers = parseLanguageFieldModifiers(tail)
+        (languageBase, tailModifiers) match
+          case (S(makeBase), S(modifiers)) =>
+            cfg =>
+              val base = makeBase(cfg.language)
+              cfg.copy(language = applyLanguageFieldModifiers(base, modifiers))
+          case _ => identity
+
   private def parseLanguageOverride(value: Tree)(using Raise): Config => Config =
     parseLanguage(value) match
-      case S(v) => _.copy(language = v)
+      case S(modify) =>
+        cfg => cfg.copy(language = modify(cfg.language))
       case N => identity
 
   /** Parse the `None`/`Some(...)` syntax for optional config fields.
@@ -521,12 +616,5 @@ object ConfigParser:
 
   /** Parse a `#lang(version)` directive as shorthand for `#config(language: version)`. */
   def parseLanguageDirective(args: Ls[Tree])(using Raise): Config => Config =
-    args match
-      case language :: Nil =>
-        parseLanguageOverride(language)
-      case _ =>
-        raise(ErrorReport(
-          msg"Expected exactly one language version argument" -> args.headOption.flatMap(_.toLoc) :: Nil,
-          source = Diagnostic.Source.Compilation))
-        identity
+    parseLanguageDirectiveArgs(args)
 end ConfigParser
