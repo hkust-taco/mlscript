@@ -19,17 +19,23 @@ class SymbolRefresherWalker(mapping: MutMap[Symbol, Symbol])(using State) extend
     assertUpdate(s, new TempSymbol(s.trm, s.nme))
 
   private def refreshVarSymbol(s: VarSymbol) =
-    assertUpdate(s, new VarSymbol(s.id))
+    val ns = new VarSymbol(s.id)
+    ns.sourceAliases = s.sourceAliases
+    assertUpdate(s, ns)
   
   private def refreshBlockMemberSymbol(s: BlockMemberSymbol) =
-    assertUpdate(s, new BlockMemberSymbol(s.nme, s.trees, s.nameIsMeaningful))
+    val ns = new BlockMemberSymbol(s.nme, s.trees, s.nameIsMeaningful)
+    ns.sourceAliases = s.sourceAliases
+    assertUpdate(s, ns)
 
   private def refreshLabelSymbol(s: LabelSymbol) =
     assertUpdate(s, new LabelSymbol(s.trm, s.nme))
 
   private def refreshTermSymbol(s: TermSymbol) =
     // Inner symbol (if present) must be traversed at this point.
-    assertUpdate(s, new TermSymbol(s.k, s.owner.map(o => mapping.getOrElse(o, o).asInstanceOf[InnerSymbol]), s.id))
+    val ns = new TermSymbol(s.k, s.owner.map(o => mapping.getOrElse(o, o).asInstanceOf[InnerSymbol]), s.id)
+    ns.sourceAliases = s.sourceAliases
+    assertUpdate(s, ns)
 
   private def refreshClassSymbol(s: ClassSymbol) =
     val ns = new ClassSymbol(s.tree, s.id)

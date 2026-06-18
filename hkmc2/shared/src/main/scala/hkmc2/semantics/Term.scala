@@ -1071,10 +1071,21 @@ object ObjBody:
       else R:
         nme -> syms.head._1
     
+    val memMap = mems.toMap
+    val aliasEntries = mems.toList.flatMap: (nme, sym) =>
+      sym.sourceAliases.filter(_ =/= nme).map(_ -> sym)
+    val aliasConflicts = aliasEntries.groupMap(_._1)(_._2).collect:
+      case (alias, syms) if syms.distinct.sizeCompare(1) > 0 =>
+        ErrorReport(msg"Duplicate definition of member alias '${alias}'." -> N :: Nil)
+      case (alias, sym :: _) if memMap.get(alias).exists(_ isnt sym) =>
+        ErrorReport(msg"Member alias '${alias}' conflicts with an existing member." -> N :: Nil)
+
     if errs.nonEmpty then
       L(errs.map(ErrorReport(_)).toList)
+    else if aliasConflicts.nonEmpty then
+      L(aliasConflicts.toList)
     else
-      R(mems.toMap)
+      R(memMap ++ aliasEntries)
 
 case class ObjBody(blk: Term.Blk):
   

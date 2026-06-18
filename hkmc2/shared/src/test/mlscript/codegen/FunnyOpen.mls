@@ -63,11 +63,6 @@ open Mod { (|>>) }
 
 open Mod { printt, |>> }
 
-:fixme
 12 |>> printt
-//│ ╔══[COMPILATION ERROR] Module 'Mod' does not contain member '|>>'
-//│ ║  l.67: 	12 |>> printt
-//│ ╙──      	   ^^^
-//│ ═══[RUNTIME ERROR] TypeError: Mod1.|>> is not a function
-
+//│ > 12
 

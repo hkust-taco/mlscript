@@ -107,6 +107,7 @@ trait BlockImpl(using Elaborator.State):
         case (nme, snmes_tds) =>
           val (symNmes, tds) = snmes_tds.partitionMap(identity)
           val sym = new BlockMemberSymbol(nme, tds)
+          sym.sourceAliases = symNmes
           nme -> sym :: symNmes.map(_ -> sym)
       .toArray.sortBy(_._1)
   

@@ -21,23 +21,28 @@ extension [A](xs: Ls[A])
     case xs: NELs[A] => S(xs)
 
 
-// * Valid JavaScript identifiers, used where names are emitted without escaping.
+// * Valid identifiers for the members of module and class-like definitions
+// * Importantly, these are the same as valid JavaScript identifiers,
+// * so we do not check them in JS code-generation.
 val identifierPattern: scala.util.matching.Regex = "^[A-Za-z_$][A-Za-z0-9_$]*$".r
 
 val symbolicIdentifierChars: Set[Char] = Set(
   '!', '#', '%', '&', '*', '+', '-', '/', ':', '<', '=', '>', '?', '@', '\\', '^', '|', '~')
 
-/** Whether a name can be used as a member identifier in source code.
-  * Besides JavaScript-shaped names, this permits a Scala-style symbolic suffix after `_`.
+/** Split an identifier of the form `foo_<:<` into its canonical name `foo`
+  * and its source-only symbolic spelling.
   */
-def isMemberIdentifier(name: Str): Bool =
-  identifierPattern.matches(name) || {
-    val separator = name.lastIndexOf('_')
-    separator > 0 &&
-      identifierPattern.matches(name.take(separator)) &&
-      name.drop(separator + 1).nonEmpty &&
-      name.drop(separator + 1).forall(symbolicIdentifierChars)
-  }
+def symbolicSuffixBase(name: Str): Opt[Str] =
+  val separator = name.lastIndexOf('_')
+  if separator > 0 then
+    val base = name.take(separator)
+    val suffix = name.drop(separator + 1)
+    if identifierPattern.matches(base) &&
+        suffix.nonEmpty &&
+        suffix.forall(symbolicIdentifierChars)
+    then S(base)
+    else N
+  else N
 
 
 def softAssert(cond: Boolean, msg: => Str = "")(using Line, FileName, Raise): Unit =

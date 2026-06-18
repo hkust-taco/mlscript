@@ -222,7 +222,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
       val field = s.symbol match
         case S(ts: semantics.TermSymbol) => selectPrivateField(ts, s.toLoc)
         case _ => N
-      val name = id.name
+      val name = symbolicSuffixBase(id.name).getOrElse(id.name)
       val fieldDoc = field.getOrElse:
         if isValidFieldName(name)
         then doc".$name"
@@ -348,7 +348,8 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
       val field = assign.symbol match
         case S(ts: semantics.TermSymbol) => selectPrivateField(ts, n.toLoc)
         case _ => N
-      doc" # ${result(p)}${field.getOrElse(fieldSelect(n.name))} = ${result(r)};${returningTerm(rst, endSemi)}"
+      val name = symbolicSuffixBase(n.name).getOrElse(n.name)
+      doc" # ${result(p)}${field.getOrElse(fieldSelect(name))} = ${result(r)};${returningTerm(rst, endSemi)}"
     case AssignDynField(p, f, ai, r, rst) =>
       doc" # ${result(p)}[${result(f)}] = ${result(r)};${returningTerm(rst, endSemi)}"
     case Define(defn, rst) =>
@@ -438,9 +439,9 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
                       Return(Lambda(ps, block)(Nil))
                   val (params, bodyDoc) = scope.nest.givenIn:
                     setupFunction(S(td.sym.nme), ps, result, isLambda = false)
-                  doc" # $mtdPrefix${escapeField(td.sym.nme, "")}($params) ${ braced(bodyDoc) }"
+                  doc" # $mtdPrefix${td.sym.nme}($params) ${ braced(bodyDoc) }"
                 case td @ FunDefn(params = Nil, body = bod) =>
-                  doc" # ${mtdPrefix}get ${escapeField(td.sym.nme, "")}() ${ braced(body(bod, endSemi = true)) }"
+                  doc" # ${mtdPrefix}get ${td.sym.nme}() ${ braced(body(bod, endSemi = true)) }"
               .mkDocument(doc"")
             
             def mkPrivs(pubFlds: Ls[BlockMemberSymbol -> TermSymbol], privFlds: Ls[TermSymbol],
@@ -512,7 +513,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
                 val fz = doc" # $freeze(this);"
                 ownr match
                 case S(owner) =>
-                  (doc" # ${result(owner.asThis)}${fieldSelect(sym.nme)} = this;", fz)
+                  (doc" # ${result(owner.asThis)}.${sym.nme} = this;", fz)
                 case N =>
                   (doc" # ${scope.lookup_!(sym, sym.toLoc)} = this;", fz)
               else (doc"", doc"")
@@ -536,7 +537,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
                   else
                     ownr match
                     case S(owner) =>
-                      doc" # ${result(owner.asThis)}${fieldSelect(sym.nme)}$extraPath = $v"
+                      doc" # ${result(owner.asThis)}.${sym.nme}$extraPath = $v"
                     case N =>
                       doc" # ${scope.lookup_!(sym, sym.toLoc)}$extraPath = $v"
               }} :: (
@@ -556,7 +557,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
                   then mtds
                     .flatMap:
                       case td @ FunDefn(params = ps :: pss, body = bod) => S:
-                        doc" # get ${escapeField(td.sym.nme + "$__checkNotMethod", "")}() { ${
+                        doc" # get ${td.sym.nme}$$__checkNotMethod() { ${
                           runtimeVar
                         }.deboundMethod(${makeStringLiteral(td.sym.nme)}, ${
                           makeStringLiteral(sym.nme)
@@ -604,15 +605,13 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
                   val pss = pss_.map(setupFunction(N, _, End(), isLambda = false)._1)
                   val argsDoc = allSourceParams.flatMap(_.paramSyms)
                     .map(p => scope.lookup_!(p, p.toLoc)).mkDocument(", ")
-                  val innerName =
-                    if isValidIdentifier(sym.nme) then sym.nme
-                    else "$" + Scope.replaceInvalidCharacters(sym.nme)
-                  val inner = doc"new $innerName.class($argsDoc)"
+                  val inner = doc"new ${sym.nme}.class($argsDoc)"
                   val bod = braced(doc" # return $freeze($inner);")
                   val funBod = pss.foldRight(bod):
                     case (psDoc, doc_) => doc"($psDoc) => $doc_"
                   val funBodRet = if pss.isEmpty then funBod else braced(doc" # return $funBod")
-                  S(doc"function $innerName($ps) ${ funBodRet }")
+                  val nme = if isValidIdentifier(sym.nme) then sym.nme else ""
+                  S(doc"function $nme($ps) ${ funBodRet }")
                 case _ => N
               
               ownr match
@@ -620,7 +619,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
                 val ths = mkThis(owner)
                 fun match
                 case S(f) =>
-                  doc"${ths}${fieldSelect(sym.nme)} = ${f}; # $freezeDefns($clsJS);"
+                  doc"${ths}.${sym.nme} = ${f}; # $freezeDefns($clsJS);"
                 case N =>
                   doc"$freezeDefns(${clsJS});"
               case N =>

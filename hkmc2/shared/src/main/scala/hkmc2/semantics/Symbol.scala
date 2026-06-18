@@ -247,6 +247,7 @@ class InstSymbol(val origin: Symbol)(using State) extends LocalSymbol:
 
 class VarSymbol(val id: Ident)(using State) extends LocalVarSymbol(id.name) with NamedSymbol:
   val name: Str = id.name
+  var sourceAliases: Ls[Str] = Nil
   override def toLoc: Opt[Loc] = id.toLoc
   // override def toString: Str = s"$name@$uid"
   override def subst(using s: SymbolSubst): VarSymbol = s.mapVarSym(this)
@@ -289,6 +290,7 @@ class BlockMemberSymbol(val nme: Str, val trees: Ls[TypeOrTermDef], val nameIsMe
   
   // * This is a hack for that `TermDef` currently doesn't have a symbol. 
   var tsym: Opt[TermSymbol] = N
+  var sourceAliases: Ls[Str] = Nil
   
   def toLoc: Option[Loc] = Loc(trees)
   
@@ -338,6 +340,7 @@ class TermSymbol(val k: TermDefKind, val owner: Opt[InnerSymbol], val id: Tree.I
     extends MemberSymbol
     with DefinitionSymbol[TermDefinition]
     with NamedSymbol:
+  var sourceAliases: Ls[Str] = Nil
   def nme: Str = id.name
   def name: Str = nme
   
