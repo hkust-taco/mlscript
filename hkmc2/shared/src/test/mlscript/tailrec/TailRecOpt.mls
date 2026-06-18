@@ -134,6 +134,14 @@ fun f(n, x, y, z) =
 f(10, 0, 0, 0)
 //│ = 2
 
+fun f(a, ...z) = if z is
+  [] then a
+  [x, ...xs] then f(a + 1, ...xs)
+
+:expect 4
+f(0, 1, 2, 3, 4)
+//│ = 4
+
 :sir
 fun f(n, a, b, c, d, ...e) =
   if n > 0 then @tailcall g(n - 1)
@@ -198,7 +206,7 @@ fun f(x) =
     @tailcall f(x)
   @tailcall g()
 //│ ╔══[COMPILATION ERROR] This call is not in tail position.
-//│ ║  l.197: 	    @tailcall f(x)
+//│ ║  l.205: 	    @tailcall f(x)
 //│ ╙──       	              ^^^^
 
 :lift
@@ -285,10 +293,10 @@ module A with
     @tailcall g(x - 1)
 A.f(10000)
 //│ ╔══[COMPILATION ERROR] This tail call exits the current scope and is not optimized.
-//│ ║  l.284: 	    fun g(x) = if x < 0 then 0 else @tailcall f(x)
+//│ ║  l.292: 	    fun g(x) = if x < 0 then 0 else @tailcall f(x)
 //│ ╙──       	                                              ^^^^
 //│ ╔══[COMPILATION ERROR] This tail call exits the current scope and is not optimized.
-//│ ║  l.285: 	    @tailcall g(x - 1)
+//│ ║  l.293: 	    @tailcall g(x - 1)
 //│ ╙──       	              ^^^^^^^^
 //│ ═══[RUNTIME ERROR] RangeError: Maximum call stack size exceeded
 
@@ -315,12 +323,12 @@ class A with
   fun g(x) = if x == 0 then 1 else @tailcall f(x - 1)
 (new A).f(10)
 //│ ╔══[COMPILATION ERROR] Calls from class methods cannot yet be marked @tailcall.
-//│ ║  l.314: 	  @tailrec fun f(x) = if x == 0 then 0 else @tailcall g(x - 1)
+//│ ║  l.322: 	  @tailrec fun f(x) = if x == 0 then 0 else @tailcall g(x - 1)
 //│ ╙──       	                                                      ^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Class methods may not yet be marked @tailrec.
-//│ ║  l.314: 	  @tailrec fun f(x) = if x == 0 then 0 else @tailcall g(x - 1)
+//│ ║  l.322: 	  @tailrec fun f(x) = if x == 0 then 0 else @tailcall g(x - 1)
 //│ ╙──       	               ^
 //│ ╔══[COMPILATION ERROR] Calls from class methods cannot yet be marked @tailcall.
-//│ ║  l.315: 	  fun g(x) = if x == 0 then 1 else @tailcall f(x - 1)
+//│ ║  l.323: 	  fun g(x) = if x == 0 then 1 else @tailcall f(x - 1)
 //│ ╙──       	                                             ^^^^^^^^
 //│ = 0

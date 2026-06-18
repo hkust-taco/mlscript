@@ -233,10 +233,12 @@ class TailRecOpt(using State, TL, Raise):
   def optScc(scc: SccOfCalls, owner: Opt[InnerSymbol])(using accessInfo: (ScopeData, AccessMap)): (Opt[FunDefn], List[FunDefn]) =
     // sort the functions so the order is more predictable
     val funs = scc.funs.sortBy(f => f.dSym.uid)
-    val fSyms = funs.map(_.dSym).toSet
-    val funsMap = funs.map: f =>
+    val fSyms = funs.iterator.map(_.dSym).toSet
+    val funsMap = funs.iterator.map: f =>
         f.dSym -> f
       .toMap
+    
+    val funsLen = funs.length
     
     // remove calls which don't flow into this scc
     val calls = scc.calls.filter(c => fSyms.contains(c.f2)) 
@@ -264,28 +266,34 @@ class TailRecOpt(using State, TL, Raise):
 
     val maxParamLen = maxInt(funs, paramsLen)
     val paramSyms =
-        if funs.length === 1 then (getParamSyms(funs.head))
+        if funs.length === 1 then
+          val syms = getParamSyms(funs.head)
+          if funs.head.params.length === 1 then syms
+          else
+            // Duplicate the params for the internal loop defn (see the doc at the 
+            // end of this function), but preserve the names.
+            syms.map(v => VarSymbol(Tree.Ident(v.id.name)))
         else
           for i <- 0 until maxParamLen yield VarSymbol(Tree.Ident("param" + i))
       .toList
     val paramSymsArr = ArrayBuffer.from(paramSyms)
     // Function -> param -> param symbol in the rewritten function
     val paramSymsMap: Map[TermSymbol, Map[VarSymbol, VarSymbol]] = 
-      funs.map: f =>
-        val flattenedSyms = f.params.flatMap(_.paramSyms)
+      funs.iterator.map: f =>
+        val flattenedSyms = f.params.iterator.flatMap(_.paramSyms)
         val mp = flattenedSyms.zipWithIndex.map:
             case (l, i) => l -> paramSymsArr(i)
           .toMap
         f.dSym -> mp
       .toMap
     
-    val dSymIds = funs.map(_.dSym).zipWithIndex.toMap
-    val dSymToDefn = funs.map(f => f.dSym -> f).toMap
+    val dSymIds = funs.iterator.map(_.dSym).zipWithIndex.toMap
+    val dSymToDefn = funs.iterator.map(f => f.dSym -> f).toMap
     val bms =
-      if funs.size === 1 then funs.head.sym
-      else BlockMemberSymbol(funs.map(_.sym.nme).mkString("_"), Nil, true)
+      if funsLen === 1 then funs.head.sym
+      else BlockMemberSymbol(funs.iterator.map(_.sym.nme).mkString("_"), Nil, true)
     val dSym =
-      if funs.size === 1 then funs.head.dSym
+      if funsLen === 1 then funs.head.dSym
       else TermSymbol(syntax.Fun, owner, Tree.Ident(bms.nme))
     val loopSym = LabelSymbol(N, "loopLabel")
     val curIdSym = VarSymbol(Tree.Ident("id"))
@@ -349,7 +357,7 @@ class TailRecOpt(using State, TL, Raise):
             else
               // The code used to continute the loop.
               val cont =
-                if scc.funs.size === 1 then Continue(loopSym)
+                if funsLen === 1 then Continue(loopSym)
                 else Assign(curIdSym, Value.Lit(Tree.IntLit(dSymIds(calleeSym))), Continue(loopSym))
               // In some cases, we could have assignments like this:
               // param0 = whatever
@@ -491,7 +499,7 @@ class TailRecOpt(using State, TL, Raise):
       case None => bms.asMemberRef(dSym)
     
     val rewrittenFuns =
-      if funs.size === 1 then Nil
+      if funsLen === 1 then Nil
       else funs.map: f =>
         val paramArgs = getParamSyms(f).map(s => s.asSimpleRef.asArg)
         val args = 
@@ -503,28 +511,28 @@ class TailRecOpt(using State, TL, Raise):
         )
         FunDefn(f.owner, f.sym, f.dSym, f.params, newBod)(N, f.annotations)
     
-    val params =
-      val initial = paramSyms.map(Param.simple(_))
-      if funs.length === 1 then initial
-      else Param.simple(curIdSym) :: initial
-    
-    val loopDefn = FunDefn(
-      owner, bms, dSym,
-      PlainParamList(params) :: Nil,
-      loop)(N, annotations = Nil) // Q: maybe should be Private?
-    
-    if funs.size === 1 then
-      val f = funs.head
-      if f.params.length > 1 then
+    funs match
+      case (f @ FunDefn(params = _ :: Nil | Nil)) :: Nil =>
+        val defn = FunDefn(
+          owner, bms, dSym,
+          f.params,
+          loop)(N, annotations = f.annotations)
+        (N, defn :: Nil)
+      case f :: Nil =>
         // When a function has multiple param lists, TailRecOpt flattens them into a single
         // param list for the internal loop. We need a wrapper function that preserves the
         // original multi-param-list interface and delegates to the flattened internal loop.
+        val params = paramSyms.map(Param.simple(_))
+        
         val loopBms = BlockMemberSymbol(bms.nme + "$tailrec", Nil, true)
         val loopDSym = TermSymbol(syntax.Fun, owner, Tree.Ident(loopBms.nme))
+        val loopAnnots =
+          if f.inline then Annot.Inline :: Annot.Private :: Nil
+          else Annot.Private :: Nil
         val internalLoopDefn = FunDefn(
           owner, loopBms, loopDSym,
           PlainParamList(params) :: Nil,
-          loop)(N, annotations = Annot.Private :: Nil)
+          loop)(N, annotations = loopAnnots)
         val paramArgs = getParamSyms(f).map(s => s.asSimpleRef.asArg)
         val internalSel = owner match
           case Some(value) => Select(value.asThis, Tree.Ident(loopBms.nme))(S(loopDSym))
@@ -532,12 +540,21 @@ class TailRecOpt(using State, TL, Raise):
         val wrapperBod = Return(
           Call(internalSel, paramArgs ne_:: Nil)(CallMetadata.defaultMlsFun),
         )
+        val newAnnots = if f.inline then f.annotations else Annot.Inline :: f.annotations
         val wrapperDefn = FunDefn(f.owner, f.sym, f.dSym, f.params, wrapperBod)(
-          f.configOverride, annotations = f.annotations)
+          f.configOverride, annotations = newAnnots)
         (S(internalLoopDefn), wrapperDefn :: Nil)
-      else
-        (N, loopDefn :: Nil)
-    else (S(loopDefn), rewrittenFuns)
+      case _ =>
+        val newParamLists =
+          val initial = paramSyms.map(Param.simple(_))
+          PlainParamList(Param.simple(curIdSym) :: initial) :: Nil
+        
+        val loopDefn = FunDefn(
+          owner, bms, dSym,
+          newParamLists,
+          loop)(N, annotations = Nil) // Q: maybe should be Private?
+        
+        (S(loopDefn), rewrittenFuns)
   
   def optFunctions(fs: List[FunDefn], owner: Opt[InnerSymbol])(using (ScopeData, AccessMap)) =
     val (newFsOpt, fsOpt) = partFns(fs).map(optScc(_, owner)).foldLeft[(List[FunDefn], List[FunDefn])](Nil, Nil):

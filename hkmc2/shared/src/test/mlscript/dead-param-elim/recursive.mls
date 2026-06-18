@@ -40,6 +40,7 @@ countdown(5)
 //│ dead-param-elim > >>> dead-param-elim results >>>
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ @private
 //│ define countdown² as fun countdown³(n) {
 //│   loop loopLabel:
 //│     let scrut, tmp;
