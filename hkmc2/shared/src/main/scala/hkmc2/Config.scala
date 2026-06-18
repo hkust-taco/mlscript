@@ -19,6 +19,7 @@ type Cfg[A] = Config ?=> A
 
 case class Config(
   baseDir: io.Path,
+  language: Language,
   sanityChecks: Opt[SanityChecks],
   effectHandlers: Opt[EffectHandlers],
   liftDefns: Opt[LiftDefns],
@@ -59,6 +60,7 @@ end Config
 object Config:
   
   def default(baseDir: io.Path): Config = Config(
+    language = Language.default,
     baseDir = baseDir,
     sanityChecks = N, // TODO make the default S
     // sanityChecks = S(SanityChecks(light = true)),
@@ -84,6 +86,42 @@ object Config:
     val patMatConsequentSharingThreshold = S(15)
     val deadBranchRemoval = false // TODO
     val inlineThreshold = 10
+  
+  case class Language(
+    allowUnresolvedAccesses: Bool,
+    useNewResolution: Bool,
+    typeCheck: Opt[TypeChecking],
+  )(val versionName: Str)
+  
+  object Language:
+    
+    val v0_2_x = Language(
+      typeCheck = N,
+      useNewResolution = false,
+      allowUnresolvedAccesses = true,
+    )(
+      versionName = "0.2.x",
+    )
+    
+    val v0_3_x = Language(
+      typeCheck = N,
+      useNewResolution = true,
+      allowUnresolvedAccesses = false,
+    )(
+      versionName = "0.3.x",
+    )
+    
+    val presets: Map[Str, Language] = Ls(
+      v0_2_x,
+      v0_3_x,
+    ).map(l => l.versionName -> l).toMap
+    
+    val default = v0_2_x
+    
+  end Language
+  
+  // TODO
+  case class TypeChecking()
   
   case class SanityChecks(light: Bool, checkUnreachable: Bool)
   
@@ -198,6 +236,57 @@ object ConfigParser:
   import syntax.Tree
   import syntax.Tree.*
   import syntax.Keyword
+
+  private object NamedArg:
+    def unapply(tree: Tree): Opt[(Str, Tree)] = tree match
+      case InfixApp(Ident(name), Keywrd(Keyword.`:`), value) => S(name -> value)
+      case _ => N
+
+  private object Call:
+    def unapply(tree: Tree): Opt[(Str, Ls[Tree])] = tree match
+      case App(Ident(name), Tup(args)) => S(name -> args)
+      case _ => N
+
+  private def unsupported(context: Str, tree: Tree)(using Raise): Unit =
+    raise(ErrorReport(
+      msg"Unsupported ${context} argument" -> tree.toLoc :: Nil,
+      source = Diagnostic.Source.Compilation))
+
+  private def expect(context: Str)(tree: Tree)(using Raise): Unit =
+    raise(ErrorReport(
+      msg"Expected ${context}" -> tree.toLoc :: Nil,
+      source = Diagnostic.Source.Compilation))
+
+  private def setFrom[A](tree: Tree)(parse: Tree => Opt[A])(assign: A => Unit)(using Raise): Bool =
+    parse(tree) match
+      case S(value) =>
+        assign(value)
+        true
+      case N => false
+
+  private def parsedField[A](value: Tree)(parse: Tree => Opt[A])(set: A => Config => Config)(using Raise): Config => Config =
+    parse(value) match
+      case S(v) => set(v)
+      case N => identity
+
+  private def optionalField[A](value: Tree)(parse: Tree => Opt[A])(set: Opt[A] => Config => Config)(using Raise): Config => Config =
+    parseOpt(value)(parse) match
+      case S(v) => set(v)
+      case N => identity
+
+  private def optionalFieldWithCurrent[A](
+    value: Tree,
+  )(
+    current: Config => Opt[A],
+  )(
+    parse: (Tree, Opt[A]) => Opt[A],
+  )(
+    set: Opt[A] => Config => Config,
+  )(using Raise): Config => Config =
+    cfg =>
+      parseOpt(value)(tree => parse(tree, current(cfg))) match
+        case S(v) => set(v)(cfg)
+        case N => cfg
   
   /** Parse a list of config override arguments (from the Tup tree) into a Config modification function. */
   def parseOverrides(args: Ls[Tree])(using Raise): Config => Config =
@@ -207,7 +296,7 @@ object ConfigParser:
   
   /** Parse a single config override argument. */
   def parseOverride(arg: Tree)(using Raise): Config => Config = arg match
-    case InfixApp(Ident(name), Keywrd(Keyword.`:`), value) =>
+    case NamedArg(name, value) =>
       parseField(name, value)
     case _ =>
       raise(ErrorReport(
@@ -220,19 +309,140 @@ object ConfigParser:
     case Ident("true") => S(true)
     case Ident("false") => S(false)
     case _ =>
-      raise(ErrorReport(
-        msg"Expected a boolean value" -> tree.toLoc :: Nil,
-        source = Diagnostic.Source.Compilation))
+      expect("a boolean value")(tree)
       N
   
   private def parseInt(tree: Tree)(using Raise): Opt[Int] = tree match
     case IntLit(v) => S(v.toInt)
     case App(Ident("-"), Tup(IntLit(v) :: Nil)) => S(-v.toInt)
     case _ =>
-      raise(ErrorReport(
-        msg"Expected an integer value" -> tree.toLoc :: Nil,
-        source = Diagnostic.Source.Compilation))
+      expect("an integer value")(tree)
       N
+
+  private def parseVersionName(tree: Tree)(using Raise): Opt[Str] = tree match
+    case StrLit(name) => S(name)
+    case Ident(name) => S(name)
+    case IntLit(value) => S(value.toString)
+    case DecLit(value) => S(value.toString)
+    case Sel(prefix, Ident(suffix)) =>
+      parseVersionName(prefix).map: prefix =>
+        s"${prefix}.${suffix}"
+    case _ =>
+      expect("a language version name")(tree)
+      N
+
+  private def parseTypeChecking(tree: Tree)(using Raise): Opt[Config.TypeChecking] = tree match
+    case Ident("TypeChecking") =>
+      S(Config.TypeChecking())
+    case Call("TypeChecking", Nil) =>
+      S(Config.TypeChecking())
+    case _ =>
+      expect("TypeChecking()")(tree)
+      N
+
+  private def parseLanguagePreset(tree: Tree)(using Raise): Opt[Config.Language] =
+    parseVersionName(tree).flatMap: name =>
+      Config.Language.presets.get(name) match
+        case S(language) => S(language)
+        case N =>
+          raise(ErrorReport(
+            msg"Unknown language version '${name}'" -> tree.toLoc ::
+              msg"Available language versions: ${Config.Language.presets.keys.toList.sorted.mkString(", ")}" -> N ::
+              Nil,
+            source = Diagnostic.Source.Compilation))
+          N
+
+  private def withLanguage(
+    base: Config.Language,
+    allowUnresolvedAccesses: Bool,
+    useNewResolution: Bool,
+    typeCheck: Opt[Config.TypeChecking],
+  ): Config.Language =
+    Config.Language(
+      allowUnresolvedAccesses,
+      useNewResolution,
+      typeCheck,
+    )(
+      base.versionName,
+    )
+
+  private def parsedLanguageModifier[A](
+    value: Tree,
+  )(
+    parse: Tree => Opt[A],
+  )(
+    modify: A => Config.Language => Config.Language,
+  )(using Raise): Opt[Config.Language => Config.Language] =
+    parse(value).map(modify)
+
+  private def parseLanguageFieldModifier(tree: Tree)(using Raise): Opt[Config.Language => Config.Language] = tree match
+    case NamedArg("allowUnresolvedAccesses", value) =>
+      parsedLanguageModifier(value)(parseBool): v =>
+        language => withLanguage(language, v, language.useNewResolution, language.typeCheck)
+    case NamedArg("useNewResolution", value) =>
+      parsedLanguageModifier(value)(parseBool): v =>
+        language => withLanguage(language, language.allowUnresolvedAccesses, v, language.typeCheck)
+    case NamedArg("typeCheck", value) =>
+      parsedLanguageModifier(value)(tree => parseOpt(tree)(parseTypeChecking)): v =>
+        language => withLanguage(language, language.allowUnresolvedAccesses, language.useNewResolution, v)
+    case other =>
+      unsupported("Language", other)
+      N
+
+  private def parseLanguageFieldModifiers(args: Ls[Tree])(using Raise): Opt[Ls[Config.Language => Config.Language]] =
+    var modifiers = Ls.empty[Config.Language => Config.Language]
+    var ok = true
+    args.foreach: arg =>
+      parseLanguageFieldModifier(arg) match
+        case S(modifier) => modifiers ::= modifier
+        case N => ok = false
+    if ok then S(modifiers.reverse) else N
+
+  private def applyLanguageFieldModifiers(
+    base: Config.Language,
+    modifiers: Ls[Config.Language => Config.Language],
+  ): Config.Language =
+    modifiers.foldLeft(base):
+      case (language, modify) => modify(language)
+
+  private def parseLanguage(tree: Tree)(using Raise): Opt[Config.Language => Config.Language] = tree match
+    case Call("Language", args) =>
+      parseLanguageFieldModifiers(args).map: modifiers =>
+        language => applyLanguageFieldModifiers(language, modifiers)
+    case _ =>
+      parseLanguagePreset(tree).map: language =>
+        _ => language
+
+  private def parseLanguageDirectiveArgs(args: Ls[Tree])(using Raise): Config => Config =
+    def isNamedArg(tree: Tree): Bool = tree match
+      case NamedArg(_, _) => true
+      case _ => false
+    args match
+      case Nil =>
+        raise(ErrorReport(
+          msg"Expected at least one language argument" -> N :: Nil,
+          source = Diagnostic.Source.Compilation))
+        identity
+      case head :: tail if isNamedArg(head) =>
+        parseLanguageFieldModifiers(args) match
+          case S(modifiers) =>
+            cfg => cfg.copy(language = applyLanguageFieldModifiers(cfg.language, modifiers))
+          case N => identity
+      case head :: tail =>
+        val languageBase = parseLanguage(head)
+        val tailModifiers = parseLanguageFieldModifiers(tail)
+        (languageBase, tailModifiers) match
+          case (S(makeBase), S(modifiers)) =>
+            cfg =>
+              val base = makeBase(cfg.language)
+              cfg.copy(language = applyLanguageFieldModifiers(base, modifiers))
+          case _ => identity
+
+  private def parseLanguageOverride(value: Tree)(using Raise): Config => Config =
+    parseLanguage(value) match
+      case S(modify) =>
+        cfg => cfg.copy(language = modify(cfg.language))
+      case N => identity
 
   /** Parse the `None`/`Some(...)` syntax for optional config fields.
     * Also accepts unwrapped values as a convenience (treated as `Some(value)`). */
@@ -245,28 +455,24 @@ object ConfigParser:
       parseInner(other).map(v => S(v))
   
   private def parseStackSafety(tree: Tree)(using Raise): Opt[Config.StackSafety] = tree match
-    case App(Ident("StackSafety"), Tup(args)) =>
+    case Call("StackSafety", args) =>
       var stackLimit = Config.StackSafety.default.stackLimit
       args.foreach:
-        case InfixApp(Ident("stackLimit"), Keywrd(Keyword.`:`), value) =>
-          parseInt(value).foreach(v => stackLimit = v)
+        case NamedArg("stackLimit", value) =>
+          setFrom(value)(parseInt)(v => stackLimit = v)
         case IntLit(v) =>
           stackLimit = v.toInt
         case other =>
-          raise(ErrorReport(
-            msg"Unsupported StackSafety argument" -> other.toLoc :: Nil,
-            source = Diagnostic.Source.Compilation))
+          unsupported("StackSafety", other)
       S(Config.StackSafety(stackLimit))
     case IntLit(v) =>
       S(Config.StackSafety(v.toInt))
     case _ =>
-      raise(ErrorReport(
-        msg"Expected StackSafety(...) or an integer" -> tree.toLoc :: Nil,
-        source = Diagnostic.Source.Compilation))
+      expect("StackSafety(...) or an integer")(tree)
       N
   
   private def parseEffectHandlers(tree: Tree, current: Opt[Config.EffectHandlers])(using Raise): Opt[Config.EffectHandlers] = tree match
-    case App(Ident("EffectHandlers"), Tup(args)) =>
+    case Call("EffectHandlers", args) =>
       val base = current.getOrElse(Config.EffectHandlers(debug = false, stackSafety = N))
       var debug = base.debug
       var stackSafety = base.stackSafety
@@ -274,25 +480,21 @@ object ConfigParser:
       var softLifterError = base.softLifterError
       var doNotInstrumentTopLevelModCtor = base.doNotInstrumentTopLevelModCtor
       args.foreach:
-        case InfixApp(Ident("debug"), Keywrd(Keyword.`:`), value) =>
-          parseBool(value).foreach(v => debug = v)
-        case InfixApp(Ident("stackSafety"), Keywrd(Keyword.`:`), value) =>
-          parseOpt(value)(parseStackSafety).foreach(v => stackSafety = v)
-        case InfixApp(Ident("checkInstantiateEffect"), Keywrd(Keyword.`:`), value) =>
-          parseBool(value).foreach(v => checkInstantiateEffect = v)
-        case InfixApp(Ident("softLifterError"), Keywrd(Keyword.`:`), value) =>
-          parseBool(value).foreach(v => softLifterError = v)
-        case InfixApp(Ident("doNotInstrumentTopLevelModCtor"), Keywrd(Keyword.`:`), value) =>
-          parseBool(value).foreach(v => doNotInstrumentTopLevelModCtor = v)
+        case NamedArg("debug", value) =>
+          setFrom(value)(parseBool)(v => debug = v)
+        case NamedArg("stackSafety", value) =>
+          setFrom(value)(tree => parseOpt(tree)(parseStackSafety))(v => stackSafety = v)
+        case NamedArg("checkInstantiateEffect", value) =>
+          setFrom(value)(parseBool)(v => checkInstantiateEffect = v)
+        case NamedArg("softLifterError", value) =>
+          setFrom(value)(parseBool)(v => softLifterError = v)
+        case NamedArg("doNotInstrumentTopLevelModCtor", value) =>
+          setFrom(value)(parseBool)(v => doNotInstrumentTopLevelModCtor = v)
         case other =>
-          raise(ErrorReport(
-            msg"Unsupported EffectHandlers argument" -> other.toLoc :: Nil,
-            source = Diagnostic.Source.Compilation))
+          unsupported("EffectHandlers", other)
       S(Config.EffectHandlers(debug, stackSafety, checkInstantiateEffect, softLifterError, doNotInstrumentTopLevelModCtor))
     case _ =>
-      raise(ErrorReport(
-        msg"Expected EffectHandlers(...)" -> tree.toLoc :: Nil,
-        source = Diagnostic.Source.Compilation))
+      expect("EffectHandlers(...)")(tree)
       N
 
   private def parseFlowAnalysisConfig(
@@ -303,7 +505,7 @@ object ConfigParser:
   )(using Raise): Opt[FlowAnalysisConfig] =
     val base = current.getOrElse(default)
     tree match
-    case App(Ident(name), Tup(args)) if name == passName =>
+    case Call(name, args) if name == passName =>
       var debug = base.debug
       var mono = base.mono
       var trackNonAffine = base.trackNonAffine
@@ -311,22 +513,20 @@ object ConfigParser:
       var logNonAffine = base.logNonAffine
       var logAccumulator = base.logAccumulator
       args.foreach:
-        case InfixApp(Ident("debug"), Keywrd(Keyword.`:`), value) =>
-          parseBool(value).foreach(v => debug = v)
-        case InfixApp(Ident("mono"), Keywrd(Keyword.`:`), value) =>
-          parseBool(value).foreach(v => mono = v)
-        case InfixApp(Ident("trackNonAffine"), Keywrd(Keyword.`:`), value) =>
-          parseBool(value).foreach(v => trackNonAffine = v)
-        case InfixApp(Ident("trackAccumulator"), Keywrd(Keyword.`:`), value) =>
-          parseBool(value).foreach(v => trackAccumulator = v)
-        case InfixApp(Ident("logNonAffine"), Keywrd(Keyword.`:`), value) =>
-          parseBool(value).foreach(v => logNonAffine = v)
-        case InfixApp(Ident("logAccumulator"), Keywrd(Keyword.`:`), value) =>
-          parseBool(value).foreach(v => logAccumulator = v)
+        case NamedArg("debug", value) =>
+          setFrom(value)(parseBool)(v => debug = v)
+        case NamedArg("mono", value) =>
+          setFrom(value)(parseBool)(v => mono = v)
+        case NamedArg("trackNonAffine", value) =>
+          setFrom(value)(parseBool)(v => trackNonAffine = v)
+        case NamedArg("trackAccumulator", value) =>
+          setFrom(value)(parseBool)(v => trackAccumulator = v)
+        case NamedArg("logNonAffine", value) =>
+          setFrom(value)(parseBool)(v => logNonAffine = v)
+        case NamedArg("logAccumulator", value) =>
+          setFrom(value)(parseBool)(v => logAccumulator = v)
         case other =>
-          raise(ErrorReport(
-            msg"Unsupported ${passName} argument" -> other.toLoc :: Nil,
-            source = Diagnostic.Source.Compilation))
+          unsupported(passName, other)
       S(Config.FlowAnalysisConfig(
         debug,
         mono,
@@ -336,9 +536,7 @@ object ConfigParser:
         logAccumulator,
       ))
     case _ =>
-      raise(ErrorReport(
-        msg"Expected ${passName}(...)" -> tree.toLoc :: Nil,
-        source = Diagnostic.Source.Compilation))
+      expect(s"${passName}(...)")(tree)
       N
 
   private def parseDeforest(tree: Tree, current: Opt[Config.Deforest])(using Raise): Opt[Config.Deforest] =
@@ -361,92 +559,70 @@ object ConfigParser:
 
   private def parseEtaExpansion(tree: Tree, current: Opt[Config.EtaExpansion])(using Raise): Opt[Config.EtaExpansion] =
     tree match
-    case App(Ident("EtaExpansion"), Tup(args)) =>
+    case Call("EtaExpansion", args) =>
       var debug = current.getOrElse(Config.EtaExpansion.default).debug
       args.foreach:
-        case InfixApp(Ident("debug"), Keywrd(Keyword.`:`), value) =>
-          parseBool(value).foreach(v => debug = v)
+        case NamedArg("debug", value) =>
+          setFrom(value)(parseBool)(v => debug = v)
         case other =>
-          raise(ErrorReport(
-            msg"Unsupported EtaExpansion argument" -> other.toLoc :: Nil,
-            source = Diagnostic.Source.Compilation))
+          unsupported("EtaExpansion", other)
       S(Config.EtaExpansion.withDebug(debug))
     case _ =>
-      raise(ErrorReport(
-        msg"Expected EtaExpansion(...)" -> tree.toLoc :: Nil,
-        source = Diagnostic.Source.Compilation))
+      expect("EtaExpansion(...)")(tree)
       N
   
   /** Parse a single field override like `tailRecOpt: false`. */
   private def parseField(name: Str, value: Tree)(using Raise): Config => Config = name match
-    case "tailRecOpt" => parseBool(value) match
-      case S(v) => _.copy(tailRecOpt = v)
-      case N => identity
-    case "noFreeze" => parseBool(value) match
-      case S(v) => _.copy(noFreeze = v)
-      case N => identity
-    case "noModuleCheck" => parseBool(value) match
-      case S(v) => _.copy(noModuleCheck = v)
-      case N => identity
-    case "rewriteWhileLoops" => parseBool(value) match
-      case S(v) => _.copy(rewriteWhileLoops = v)
-      case N => identity
-    case "stageCode" => parseBool(value) match
-      case S(v) => _.copy(stageCode = v)
-      case N => identity
-    case "qqEnabled" => parseBool(value) match
-      case S(v) => _.copy(qqEnabled = v)
-      case N => identity
-    case "funcToCls" => parseBool(value) match
-      case S(v) => _.copy(funcToCls = v)
-      case N => identity
-    case "commentGeneratedCode" => parseBool(value) match
-      case S(v) => _.copy(commentGeneratedCode = v)
-      case N => identity
+    case "language" => parseLanguageOverride(value)
+    case "tailRecOpt" =>
+      parsedField(value)(parseBool)(v => _.copy(tailRecOpt = v))
+    case "noFreeze" =>
+      parsedField(value)(parseBool)(v => _.copy(noFreeze = v))
+    case "noModuleCheck" =>
+      parsedField(value)(parseBool)(v => _.copy(noModuleCheck = v))
+    case "rewriteWhileLoops" =>
+      parsedField(value)(parseBool)(v => _.copy(rewriteWhileLoops = v))
+    case "stageCode" =>
+      parsedField(value)(parseBool)(v => _.copy(stageCode = v))
+    case "qqEnabled" =>
+      parsedField(value)(parseBool)(v => _.copy(qqEnabled = v))
+    case "funcToCls" =>
+      parsedField(value)(parseBool)(v => _.copy(funcToCls = v))
+    case "commentGeneratedCode" =>
+      parsedField(value)(parseBool)(v => _.copy(commentGeneratedCode = v))
     case "effectHandlers" =>
-      cfg =>
-        parseOpt(value)(v => parseEffectHandlers(v, cfg.effectHandlers)) match
-          case S(v) => cfg.copy(effectHandlers = v)
-          case N => cfg
+      optionalFieldWithCurrent(value)(_.effectHandlers)(
+        (tree, current) => parseEffectHandlers(tree, current)
+      )(v => _.copy(effectHandlers = v))
     case "liftDefns" =>
-      parseOpt(value)(_ => S(Config.LiftDefns())) match
-        case S(v) => _.copy(liftDefns = v)
-        case N => _.copy(liftDefns = N)
+      optionalField(value)(_ => S(Config.LiftDefns()))(v => _.copy(liftDefns = v))
     case "deforest" =>
-      cfg =>
-        parseOpt(value)(v => parseDeforest(v, cfg.deforest)) match
-          case S(v) => cfg.copy(deforest = v)
-          case N => cfg
+      optionalFieldWithCurrent(value)(_.deforest)(
+        (tree, current) => parseDeforest(tree, current)
+      )(v => _.copy(deforest = v))
     case "etaExpansion" =>
-      cfg =>
-        parseOpt(value)(v => parseEtaExpansion(v, cfg.etaExpansion)) match
-          case S(v) => cfg.copy(etaExpansion = v)
-          case N => cfg
+      optionalFieldWithCurrent(value)(_.etaExpansion)(
+        (tree, current) => parseEtaExpansion(tree, current)
+      )(v => _.copy(etaExpansion = v))
     case "deadParamElim" =>
-      cfg =>
-        parseOpt(value)(v => parseDeadParamElim(v, cfg.deadParamElim)) match
-          case S(v) => cfg.copy(deadParamElim = v)
-          case N => cfg
+      optionalFieldWithCurrent(value)(_.deadParamElim)(
+        (tree, current) => parseDeadParamElim(tree, current)
+      )(v => _.copy(deadParamElim = v))
     case "sanityChecks" =>
-      parseOpt(value)(_ => S(Config.SanityChecks(light = true, checkUnreachable = true))) match
-        case S(v) => _.copy(sanityChecks = v)
-        case N => identity
+      optionalField(value)(_ => S(Config.SanityChecks(light = true, checkUnreachable = true)))(v => _.copy(sanityChecks = v))
     case "patMatConsequentSharingThreshold" =>
-      parseInt(value) match
-        case S(v) => _.copy(patMatConsequentSharingThreshold = S(v))
-        case N => identity
+      parsedField(value)(parseInt)(v => _.copy(patMatConsequentSharingThreshold = S(v)))
     case "inlining" =>
-      parseOpt(value)(parseInt) match
-        case S(v) => _.copy(inlining = v.map(Inliner(_)))
-        case _ => identity
+      optionalField(value)(parseInt)(v => _.copy(inlining = v.map(Inliner(_))))
     case "deadBranchRemoval" =>
-      parseBool(value) match
-        case S(v) => _.copy(deadBranchRemoval = v)
-        case N => identity
+      parsedField(value)(parseBool)(v => _.copy(deadBranchRemoval = v))
     case _ =>
       raise(ErrorReport(
         msg"Unknown config field '${name}'" -> value.toLoc :: Nil,
         source = Diagnostic.Source.Compilation))
       identity
-end ConfigParser
 
+  /** Parse a `#lang(version)` directive as shorthand for `#config(language: version)`. */
+  def parseLanguageDirective(args: Ls[Tree])(using Raise): Config => Config =
+    parseLanguageDirectiveArgs(args)
+end ConfigParser
