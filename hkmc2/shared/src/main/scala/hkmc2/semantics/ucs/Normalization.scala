@@ -433,6 +433,14 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
   
   def apply(split: Split)(k: Result => Block)(using Config, LoweringCtx): Block =
     this(split, IfLikeForm.ReturningIf, N, k)
+
+  /** Lower a synthesized `while` loop: branch consequents are evaluated for
+    * their effects and the loop is re-entered; the loop exits when no branch
+    * matches (i.e., when the split falls through to `Split.End`). Such terms
+    * are created by `ups.FixedPointCompiler` to drive the generated matcher
+    * machine. */
+  def apply(t: Term.SynthWhile)(k: Result => Block)(using Config, LoweringCtx): Block =
+    this(t.split, IfLikeForm.While, N, k)
   
   private def apply(inputSplit: Split, form: IfLikeForm, t: Opt[Term], k: Result => Block)(using cfg: Config, outerCtx: LoweringCtx) =
     // if it's `while`, we always make sure that loop bodies are proper nested scoped

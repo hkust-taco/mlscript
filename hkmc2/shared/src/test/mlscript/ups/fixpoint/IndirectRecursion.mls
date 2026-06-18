@@ -1,0 +1,129 @@
+:js
+
+// Fixed-point patterns may recurse indirectly through other definitions:
+// The semantics is alternation: the steps fire in cycle order
+// (`UnBox`, `UnTag`, `UnBox`, ...) and stops when the input is neither.
+
+open annotations { compile }
+
+data class Box(val value)
+data class Tag(val value)
+
+pattern UnBox = Box(x) => x
+pattern UnTag = Tag(x) => x
+
+pattern StepsA = UnBox as StepsB | _
+pattern StepsB = UnTag as StepsA | _
+
+fun makeStepsA(x) = if x is @compile StepsA(y) then y
+fun makeStepsB(x) = if x is @compile StepsB(y) then y
+
+let mixed = Box(Tag(Box(42)))
+//│ mixed = Box(Tag(Box(42)))
+
+:expect 42
+if mixed is StepsA(r) then r else -1
+//│ = 42
+
+:expect 42
+makeStepsA of mixed
+//│ = 42
+
+// The alternation is strict: after a box, a tag must follow, so the second
+// box is left alone.
+let doubleBox = Box(Box(42))
+//│ doubleBox = Box(Box(42))
+
+:expect Box(42)
+if doubleBox is StepsA(r) then r else "<no match>"
+//│ = Box(42)
+
+:expect Box(42)
+makeStepsA of doubleBox
+//│ = Box(42)
+
+
+let tagged = Tag(Box(42))
+//│ tagged = Tag(Box(42))
+
+:expect Tag(Box(42))
+if tagged is StepsA(r) then r else "no match"
+//│ = Tag(Box(42))
+
+:expect Tag(Box(42))
+makeStepsA of tagged
+//│ = Tag(Box(42))
+
+:expect 42
+if tagged is StepsB(r) then r else -1
+//│ = 42
+
+:expect 42
+makeStepsB of tagged
+//│ = 42
+
+
+
+// `PeelA` is non-catch-all: after unboxing, a tag must follow (via `PeelB`),
+// or — when the value is not a box and so cannot be unboxed — it must be the
+// literal `42`. `PeelB` ends in `_`, so after untagging anything goes.
+pattern PeelA = UnBox as PeelB | 42
+pattern PeelB = UnTag as PeelA | _
+
+fun runPeelA(x) = if x is @compile PeelA(y) then y
+
+:expect 42
+if Box(42) is PeelA(r) then r else "<no match>"
+//│ = 42
+
+:expect 42
+runPeelA of Box(42)
+//│ = 42
+
+:expect Tag(7)
+if Box(Tag(7)) is PeelA(r) then r else "<no match>"
+//│ = Tag(7)
+
+:expect Tag(7)
+runPeelA of Box(Tag(7))
+//│ = Tag(7)
+
+:expect 42
+if Box(Tag(Box(42))) is PeelA(r) then r
+//│ = 42
+
+:expect 42
+runPeelA of Box(Tag(Box(42)))
+//│ = 42
+
+
+
+data class Bin(content)
+
+pattern UnBin = Bin(x) => x
+
+pattern Cycle1 = UnBox as Cycle2 | _
+pattern Cycle2 = UnTag as Cycle3 | _
+pattern Cycle3 = UnBin as Cycle1 | _
+
+let chained = Box(Tag(Bin(Box(Tag(Bin(1))))))
+//│ chained = Box(Tag(Bin(Box(Tag(Bin(1))))))
+
+fun unwrapCycle1(x) = if x is @compile Cycle1(y) then y
+
+:expect 1
+if chained is Cycle1(r) then r else -1
+//│ = 1
+
+:expect 1
+unwrapCycle1 of chained
+//│ = 1
+
+:expect 0
+unwrapCycle1 of Box(Tag(0))
+//│ = 0
+
+:expect Bin(0)
+unwrapCycle1 of Box(Bin(0)) // Stops at `Bin`.
+//│ = Bin(0)
+

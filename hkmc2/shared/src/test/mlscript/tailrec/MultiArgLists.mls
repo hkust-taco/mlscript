@@ -37,7 +37,7 @@ loop(1000)(0)
 //│     end
 //│   end
 //│ };
-//│ @tailrec
+//│ @inline @tailrec
 //│ define loop⁰ as fun loop¹(x)(y) { return loop$tailrec⁰(x, y) };
 //│ return loop¹(1000)(0)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
@@ -67,6 +67,7 @@ count(0)(100)
 //│     end
 //│   end
 //│ };
+//│ @inline
 //│ define count⁰ as fun count¹(start)(stop) {
 //│   return count$tailrec⁰(start, stop)
 //│ };
@@ -194,3 +195,148 @@ fun g(n)(m) =
 :expect [[4, 5, 1, 7, 1], 9]
 g(10)(0)
 //│ = [[4, 5, 1, 7, 1], 9]
+
+:sir
+fun f(a)(...z) = if z is
+  [] then a
+  [x, ...xs] then f(a + 1)(...xs)
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let f$tailrec;
+//│ @private
+//│ define f$tailrec as fun f$tailrec⁰(a, z) {
+//│   loop loopLabel:
+//│     let x, xs, middleElements, element0$, tmp;
+//│     match z
+//│       Array(0) =>
+//│         return a
+//│       Array(1+) =>
+//│         set element0$ = runtime⁰.Tuple⁰.get⁰(z, 0);
+//│         set middleElements = runtime⁰.Tuple⁰.slice⁰(z, 1, 0);
+//│         set xs = middleElements;
+//│         set x = element0$;
+//│         set tmp = +⁰(a, 1);
+//│         set a = tmp;
+//│         set z = xs;
+//│         continue loopLabel
+//│       else
+//│         throw new globalThis⁰.Error⁰("match error")
+//│     end
+//│   end
+//│ };
+//│ @inline
+//│ define f² as fun f³(a)(...z) { return f$tailrec⁰(a, z) };
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+:expect 4
+f(0)(1, 2, 3, 4)
+//│ = 4
+
+
+// Ensure that the internal loop and the outer-facing definition have different param symbol IDs.
+:lot
+:noInline
+fun f(a)(b) = f(a)(b)
+//│ —————————————| Lowered IR Tree |————————————————————————————————————————————————————————————————————
+//│ Program:
+//│   main = Scoped(syms = {member:f$tailrec¹}):
+//│     body = Define:
+//│       defn = FunDefn:
+//│         sym = member:f$tailrec¹
+//│         dSym = term:f$tailrec²
+//│         params = Ls of 
+//│           ParamList:
+//│             params = Ls of 
+//│               Param:
+//│                 sym = a⁰
+//│                 modulefulness = Modulefulness of N
+//│               Param:
+//│                 sym = b⁰
+//│                 modulefulness = Modulefulness of N
+//│         body = Label:
+//│           label = label:loopLabel⁰
+//│           loop = true
+//│           body = Continue of label:loopLabel⁰
+//│       rest = Define: \
+//│       defn = FunDefn:
+//│         sym = member:f⁴
+//│         dSym = term:f⁵
+//│         params = Ls of 
+//│           ParamList:
+//│             params = Ls of 
+//│               Param:
+//│                 sym = a¹
+//│                 modulefulness = Modulefulness of N
+//│           ParamList:
+//│             params = Ls of 
+//│               Param:
+//│                 sym = b¹
+//│                 modulefulness = Modulefulness of N
+//│         body = Return of Call:
+//│           fun = MemberRef{disamb=term:f$tailrec²}:
+//│             bms = member:f$tailrec¹
+//│             disamb = term:f$tailrec²
+//│           argss = Ls of 
+//│             Ls of 
+//│               Arg:
+//│                 value = SimpleRef of a¹
+//│               Arg:
+//│                 value = SimpleRef of b¹
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+
+// Ensure the function is inlined
+:soir
+@tailrec @inline
+fun loop(x)(y) =
+  if x == 0 then y
+  else loop(x - 1)(y + x)
+fun f = loop(1000)(0)
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ @tailrec @inline
+//│ define loop² as fun loop³(x)(y) {
+//│   let x1, y1, inlinedVal;
+//│   set x1 = x;
+//│   set y1 = y;
+//│   block inlinedLbl:
+//│     loop loopLabel:
+//│       let scrut, tmp, tmp1;
+//│       set scrut = Predef⁰.equals⁰(x1, 0);
+//│       match scrut
+//│         true =>
+//│           set inlinedVal = y1;
+//│           break inlinedLbl
+//│         else
+//│           set tmp = -⁰(x1, 1);
+//│           set tmp1 = +⁰(y1, x1);
+//│           set x1 = tmp;
+//│           set y1 = tmp1;
+//│           continue loopLabel
+//│       end
+//│     unreachable /* Rest of abortive labelled block */
+//│   return inlinedVal
+//│ };
+//│ define f⁶ as fun f⁷() {
+//│   let x, y, inlinedVal;
+//│   set x = 1000;
+//│   set y = 0;
+//│   block inlinedLbl:
+//│     loop loopLabel:
+//│       let scrut, tmp, tmp1;
+//│       set scrut = Predef⁰.equals⁰(x, 0);
+//│       match scrut
+//│         true =>
+//│           set inlinedVal = y;
+//│           break inlinedLbl
+//│         else
+//│           set tmp = -⁰(x, 1);
+//│           set tmp1 = +⁰(y, x);
+//│           set x = tmp;
+//│           set y = tmp1;
+//│           continue loopLabel
+//│       end
+//│     unreachable /* Rest of abortive labelled block */
+//│   return inlinedVal
+//│ };
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————

@@ -524,7 +524,12 @@ class PatternSymbol(val id: Tree.Ident, val params: Opt[Tree.Tup], val body: Tre
   def nme = id.name
   def toLoc: Option[Loc] = id.toLoc // TODO track source tree of pattern here
   override def prefix: Str = "pattern:"
-  
+
+  /** The fixed-point machine compiled from this definition, paired with
+    * whether a failed run must be retried with the naive translation;
+    * memoized across `@compile` match sites (see `ups.FixedPointCompiler`). */
+  var fixedPointMachine: Opt[(ups.FixedPointCompiler.Machine, Bool)] = N
+
   override def subst(using sub: SymbolSubst): PatternSymbol = sub.mapPatSym(this)
 
 class TopLevelSymbol(blockNme: Str)(using State)

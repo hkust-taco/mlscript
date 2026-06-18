@@ -1,10 +1,8 @@
 #config(liftDefns: Some(LiftDefns))
 
-import "./Predef.mls"
 import "./Option.mls"
 import "./Stack.mls"
 
-open Predef
 open Option { Some, None }
 open Stack { Nil, Cons }
 

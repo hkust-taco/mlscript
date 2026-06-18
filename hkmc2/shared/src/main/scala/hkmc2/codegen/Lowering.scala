@@ -959,6 +959,8 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
     case iftrm: st.IfLike => ucs.Normalization(this)(iftrm)(k)
     
     case iftrm: st.SynthIf => ucs.Normalization(this)(iftrm)(k)
+
+    case whltrm: st.SynthWhile => ucs.Normalization(this)(whltrm)(k)
       
     case sel @ Sel(prefix, nme) =>
       setupSelection(prefix, nme, N)(k)

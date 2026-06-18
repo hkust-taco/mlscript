@@ -1121,10 +1121,65 @@ class SplitCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
   def compilePattern(scrutinee: Scrut, pattern: SP): MakeSplit =
     compilePattern(scrutinee, pattern, true)
 
-  /** This method handles the efficient and non-backtracking pattern compilation. 
+  /** This method handles the efficient and non-backtracking pattern compilation.
     * Note that we still have not supported accessing pattern parameters in the
     * naive pattern declaration in the efficient pattern compilation. */
   def compilePattern(scrutinee: Scrut, pattern: SP, outputNeeded: Bool): MakeSplit =
+    // Fixed-point patterns — patterns piping their own output back into
+    // themselves, such as `pattern S = P as S | _` — are compiled to an
+    // iterative matcher machine instead of the multi-matcher scheme below
+    // (see `FixedPointCompiler`). Fixed-point-shaped patterns the machine
+    // compilation does not support fall back to the naive translation.
+    FixedPointCompiler().compile(pattern) match
+      case S(FixedPointCompiler.Outcome.Compiled(machine, outputPattern, fallback)) =>
+        // A body-annotated definition is fully machine-compiled, so mirror
+        // the eager diagnostics of `compilePatternImpl` here. At a match
+        // site, the shorthand sub-pattern is matched naively and warns on
+        // its own, and the definition itself has no extraction parameters.
+        if pattern.isInstanceOf[SP.Chain] || pattern.isInstanceOf[SP.Composition] then
+          warnOnDiscardedExtractionOutputs(pattern)
+        makeFixedPointMatchSplit(scrutinee, machine, outputPattern, outputNeeded, fallback)
+      case S(FixedPointCompiler.Outcome.Unsupported) =>
+        makeMatchSplit(scrutinee, pattern, outputNeeded)
+      case N => compilePatternImpl(scrutinee, pattern, outputNeeded)
+
+  /** Embed a compiled fixed-point machine at a match site: bind the machine
+    * as a local function, call it on the scrutinee, and destructure the
+    * resulting `MatchSuccess`. The optional `outputPattern` comes from the
+    * output-matching shorthand `x is P(Q) === x is P as Q`. When
+    * `fallbackPattern` is given (non-catch-all definitions), a failed machine
+    * run is retried with the naive backtracking translation of the original
+    * pattern, which implements the deepest-first try order on intermediate
+    * results that the machine does not keep around. */
+  private def makeFixedPointMatchSplit(
+      scrutinee: Scrut,
+      machine: FixedPointCompiler.Machine,
+      outputPattern: Opt[SP],
+      outputNeeded: Bool,
+      fallbackPattern: Opt[SP]
+  ): MakeSplit = (makeConsequent, alternative) =>
+    val matcherSymbol = TempSymbol(N, "fixedPointMatcher")
+    val matcherBody = Term.Blk(
+      machine.prelude :+ Term.SynthWhile(machine.loop), machine.result)
+    val callTerm = app(matcherSymbol.safeRef, tup(fld(scrutinee())), "fixed-point match result")
+    Split.Let(matcherSymbol, Term.Lam(machine.params, matcherBody),
+      tempLet("fixedPointResult", callTerm): resultSymbol =>
+        val outputSymbol = TempSymbol(N, "output").toScrut
+        val consequent = outputPattern match
+          case N => makeConsequent(outputSymbol, SeqMap.empty)
+          case S(subPattern) =>
+            makeMatchSplit(outputSymbol, subPattern, outputNeeded)(makeConsequent, Split.End)
+        val onFailure = fallbackPattern match
+          case S(original) =>
+            makeMatchSplit(scrutinee, original, outputNeeded)(makeConsequent, alternative)
+          case N => alternative
+        Branch(
+          resultSymbol.safeRef,
+          matchSuccessPattern(S(outputSymbol.symbol :: Nil)),
+          consequent
+        ) ~: onFailure)
+
+  private def compilePatternImpl(scrutinee: Scrut, pattern: SP, outputNeeded: Bool): MakeSplit =
   (makeConsequent, alternative) => scoped("ucs:ups:compilation"):
     warnOnDiscardedExtractionOutputs(pattern)
     // Instantiate the pattern and all patterns used in it.
@@ -1219,7 +1274,7 @@ class SplitCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
    */
   def compilePattern(pd: PatternDef): Ls[(BlockMemberSymbol, ParamList, Split)] =
   trace(
-    pre = s"compilePattern <<< ${pd.showDbg}", 
+    pre = s"compilePattern <<< ${pd.showDbg}",
     post = (blk: Ls[(BlockMemberSymbol, ParamList, Split)]) =>
       s"compilePattern >>> $blk"
   ):
