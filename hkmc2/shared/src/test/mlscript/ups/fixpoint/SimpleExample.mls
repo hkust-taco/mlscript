@@ -352,3 +352,32 @@ pattern Steps = @compile (Step as Steps | _)
 //│ };
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+
+let term3 = Add(Add(Add(Add(Lit(1), Lit(2)), Lit(3)), Lit(4)), Lit(5))
+//│ > new Lit(1)
+//│ > new Lit(2)
+//│ > new Add(Lit(1), Lit(2))
+//│ > new Lit(3)
+//│ > new Add(Add(Lit(1), Lit(2)), Lit(3))
+//│ > new Lit(4)
+//│ > new Add(Add(Add(Lit(1), Lit(2)), Lit(3)), Lit(4))
+//│ > new Lit(5)
+//│ > new Add(Add(Add(Add(Lit(1), Lit(2)), Lit(3)), Lit(4)), Lit(5))
+//│ term3 = Add(Add(Add(Add(Lit(1), Lit(2)), Lit(3)), Lit(4)), Lit(5))
+
+// * Notice that the term is not fully rebuilt after each reduction; reduction stays focused
+assert term3 is Steps as r
+//│ > reduce 1 + 2 = 3
+//│ > new Lit(3)
+//│ > new Add(Lit(3), Lit(3))
+//│ > reduce 3 + 3 = 6
+//│ > new Lit(6)
+//│ > new Add(Lit(6), Lit(4))
+//│ > reduce 6 + 4 = 10
+//│ > new Lit(10)
+//│ > new Add(Lit(10), Lit(5))
+//│ > reduce 10 + 5 = 15
+//│ > new Lit(15)
+
+

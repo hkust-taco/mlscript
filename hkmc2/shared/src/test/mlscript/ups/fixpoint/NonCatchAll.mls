@@ -16,6 +16,7 @@ import "../../../mlscript-compile/Option.mls"
 open annotations { compile }
 open Option { Some, None }
 
+
 let shouldPrint = true
 //│ shouldPrint = true
 
@@ -179,23 +180,19 @@ fastEvalToValue(stuck)
 //│ > new Add(Lit(3), Tag(9))
 //│ = None
 
-// —— An evidence of duplicated reductions when the default is not a wildcard ——
 
-open annotations { compile }
+// —— FIXME: duplicated reductions when the default is not a wildcard!! ——
 
+// TODO: either reject this pattern with a warning or support it properly.
 
-data class Lit(val value: Int) with
-  print("new Lit(" + render(value) + ")")
-data class Add(val lhs, val rhs) with
-  print("new Add(" + render(lhs) + ", " + render(rhs) + ")")
 
 pattern AddStep =
   | Add(Lit(a), Lit(b)) => (let c = a + b in print("reduce " + a + " + " + b + " = " + c); Lit(c))
   | Add(AddStep, _)
   | Add(Lit, AddStep)
 
-
 pattern AddSteps = @compile ((AddStep as AddSteps) | Add(Lit, Lit))
+
 
 let t1 = Add(Add(Lit(2), Lit(3)), Lit(1))
 //│ > new Lit(2)
@@ -254,3 +251,5 @@ assert t2 is AddSteps(s), s
 //│ > reduce 6 + 4 = 10
 //│ > new Lit(10)
 //│ = Add(Lit(6), Lit(4))
+
+
