@@ -19,6 +19,7 @@ type Cfg[A] = Config ?=> A
 
 case class Config(
   baseDir: io.Path,
+  language: Language,
   sanityChecks: Opt[SanityChecks],
   effectHandlers: Opt[EffectHandlers],
   liftDefns: Opt[LiftDefns],
@@ -59,6 +60,7 @@ end Config
 object Config:
   
   def default(baseDir: io.Path): Config = Config(
+    language = Language.default,
     baseDir = baseDir,
     sanityChecks = N, // TODO make the default S
     // sanityChecks = S(SanityChecks(light = true)),
@@ -84,6 +86,42 @@ object Config:
     val patMatConsequentSharingThreshold = S(15)
     val deadBranchRemoval = false // TODO
     val inlineThreshold = 10
+  
+  case class Language(
+    allowUnresolvedAccesses: Bool,
+    useNewResolution: Bool,
+    typeCheck: Opt[TypeChecking],
+  )(val versionName: Str)
+  
+  object Language:
+    
+    val v0_2_x = Language(
+      typeCheck = N,
+      useNewResolution = false,
+      allowUnresolvedAccesses = true,
+    )(
+      versionName = "0.2.x",
+    )
+    
+    val v0_3_x = Language(
+      typeCheck = N,
+      useNewResolution = true,
+      allowUnresolvedAccesses = false,
+    )(
+      versionName = "0.3.x",
+    )
+    
+    val presets: Map[Str, Language] = Ls(
+      v0_2_x,
+      v0_3_x,
+    ).map(l => l.versionName -> l).toMap
+    
+    val default = v0_2_x
+    
+  end Language
+  
+  // TODO
+  case class TypeChecking()
   
   case class SanityChecks(light: Bool, checkUnreachable: Bool)
   
