@@ -1,0 +1,387 @@
+// * [test:case-of-case]
+:js
+
+
+open annotations { inline }
+
+import "../../mlscript-compile/Option.mls"
+open Option
+
+
+:global
+:inlineThreshold 100
+
+
+
+fun toStr(b) = if b then "ok" else "nope"
+fun fromStr(s) = if s is
+  "ok" then true
+  "nope" then false
+
+
+// Optimizes by distributing the branches of the second match over the first
+:soir
+fun foo(x) = x toStr() fromStr()
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ define foo⁰ as fun foo¹(x) { match x true => return true else return false end }; end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+:expect true
+foo(true)
+//│ = true
+
+
+// Optimizes by distributing the branches of the successive matches over the first
+:soir
+fun foo(x) = x fromStr() toStr() fromStr()
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ define foo² as fun foo³(x) {
+//│   match x
+//│     "ok" =>
+//│       return true
+//│     "nope" =>
+//│       return false
+//│     else
+//│       throw new globalThis⁰.Error⁰("match error")
+//│   end
+//│ };
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+:expect true
+foo("ok")
+//│ = true
+
+
+
+fun map(opt, f) = if opt is
+  Some(value) then Some(f(value))
+  None then None
+
+
+// Optimizes similarly
+:soir
+fun test(x) = x map(_ + 1) map(_ * 2)
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ define test⁰ as fun test¹(x) {
+//│   let inlinedVal, arg$Some$0$, arg$Some$0$1;
+//│   match x
+//│     Some⁰ =>
+//│       let inlinedVal1, inlinedVal2;
+//│       set arg$Some$0$1 = x.value⁰;
+//│       set inlinedVal1 = +⁰(arg$Some$0$1, 1);
+//│       set inlinedVal = Option⁰.Some¹(inlinedVal1);
+//│       set arg$Some$0$ = inlinedVal.value⁰;
+//│       set inlinedVal2 = *⁰(arg$Some$0$, 2);
+//│       return Option⁰.Some¹(inlinedVal2)
+//│     None⁰ =>
+//│       set inlinedVal = Option⁰.None⁰;
+//│       return Option⁰.None⁰
+//│     else
+//│       throw new globalThis⁰.Error⁰("match error")
+//│   end
+//│ };
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+
+// Optimizes similarly
+:soir
+fun test(x) = x map(_ + 1) map(_ * 2) map("Result: " + _)
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ define test² as fun test³(x) {
+//│   let inlinedVal, inlinedVal1, arg$Some$0$, arg$Some$0$1, arg$Some$0$2;
+//│   match x
+//│     Some⁰ =>
+//│       let inlinedVal2, inlinedVal3, inlinedVal4;
+//│       set arg$Some$0$2 = x.value⁰;
+//│       set inlinedVal2 = +⁰(arg$Some$0$2, 1);
+//│       set inlinedVal = Option⁰.Some¹(inlinedVal2);
+//│       set arg$Some$0$1 = inlinedVal.value⁰;
+//│       set inlinedVal3 = *⁰(arg$Some$0$1, 2);
+//│       set inlinedVal1 = Option⁰.Some¹(inlinedVal3);
+//│       set arg$Some$0$ = inlinedVal1.value⁰;
+//│       set inlinedVal4 = +⁰("Result: ", arg$Some$0$);
+//│       return Option⁰.Some¹(inlinedVal4)
+//│     None⁰ =>
+//│       set inlinedVal = Option⁰.None⁰;
+//│       set inlinedVal1 = Option⁰.None⁰;
+//│       return Option⁰.None⁰
+//│     else
+//│       throw new globalThis⁰.Error⁰("match error")
+//│   end
+//│ };
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+
+// Optimizes similarly
+:soir
+fun test(x) = if x map(_ + 1) is
+  Some(0) then []
+  Some(x) then [x]
+  None then null
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ define test⁴ as fun test⁵(x) {
+//│   let arg$Some$0$, inlinedVal, arg$Some$0$1;
+//│   match x
+//│     Some⁰ =>
+//│       let inlinedVal1;
+//│       set arg$Some$0$1 = x.value⁰;
+//│       set inlinedVal1 = +⁰(arg$Some$0$1, 1);
+//│       set inlinedVal = Option⁰.Some¹(inlinedVal1);
+//│       set arg$Some$0$ = inlinedVal.value⁰;
+//│       match arg$Some$0$
+//│         0 =>
+//│           return []
+//│         else
+//│           return [arg$Some$0$]
+//│       end
+//│     None⁰ =>
+//│       set inlinedVal = Option⁰.None⁰;
+//│       return null
+//│     else
+//│       throw new globalThis⁰.Error⁰("match error")
+//│   end
+//│ };
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+
+
+fun multiProducer(x) = if x is
+  "" then 0
+  "1" then 1
+  "2" then 0
+
+
+// Optimizes because the branches can be duplicated, as they are small (below inlining threshold)
+:soir
+x => if multiProducer(x) is
+  0 then print("Z")
+  1 then print("O")
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let lambda;
+//│ @private
+//│ define lambda as fun lambda⁰(x) {
+//│   match x
+//│     "" =>
+//│       return Predef⁰.print⁰("Z")
+//│     "1" =>
+//│       return Predef⁰.print⁰("O")
+//│     "2" =>
+//│       return Predef⁰.print⁰("Z")
+//│     else
+//│       throw new globalThis⁰.Error⁰("match error")
+//│   end
+//│ };
+//│ return lambda⁰
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = fun
+
+
+// Note: should NOT move the prefix before the producer match because it reads the produced value
+class PrefixBox(val value)
+
+:soir
+fun prefixDependency(x) =
+  let produced = if x then PrefixBox(x) else PrefixBox(false)
+  let copy = produced.PrefixBox#value
+  if produced is
+    PrefixBox(_) then copy
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ define prefixDependency⁰ as fun prefixDependency¹(x) {
+//│   let copy, tmp;
+//│   match x
+//│     true =>
+//│       set tmp = PrefixBox⁰(x);
+//│       end
+//│     else
+//│       set tmp = PrefixBox⁰(false);
+//│       end
+//│   set copy = tmp.value¹;
+//│   match tmp
+//│     PrefixBox¹ =>
+//│       return copy
+//│     else
+//│       throw new globalThis⁰.Error⁰("match error")
+//│   end
+//│ };
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+:expect true
+prefixDependency(true)
+//│ = true
+
+:expect false
+prefixDependency(false)
+//│ = false
+
+
+
+@inline
+fun partlyKnownProducer(x) = if x is
+  "" then 0
+  "1" then x.length
+  "2" then 1
+
+
+// Note: should optimize the known branches while retaining the second match on the one unknown branch
+:soir
+x => if partlyKnownProducer(x) is
+  0 then print("Z")
+  1 then print("O")
+  else print("?")
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let lambda;
+//│ @private
+//│ define lambda as fun lambda¹(x) {
+//│   let selRes;
+//│   match x
+//│     "" =>
+//│       return Predef⁰.print⁰("Z")
+//│     "1" =>
+//│       set selRes = x.length﹖;
+//│       do x.length$__checkNotMethod﹖;
+//│       match selRes
+//│         undefined =>
+//│           throw new globalThis⁰.Error﹖("Access to required field 'length' yielded 'undefined'")
+//│         0 =>
+//│           return Predef⁰.print⁰("Z")
+//│         1 =>
+//│           return Predef⁰.print⁰("O")
+//│         else
+//│           return Predef⁰.print⁰("?")
+//│       end
+//│     "2" =>
+//│       return Predef⁰.print⁰("O")
+//│     else
+//│       throw new globalThis⁰.Error⁰("match error")
+//│   end
+//│ };
+//│ return lambda¹
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = fun
+
+
+// Note: should NOT optimize because that would lead to duplicating a branch whose size is above the inlining threshold
+:inlineThreshold 10
+:soir
+x => if multiProducer(x) is
+  0 then print of
+    "Hello", "hello", "hello", "hello", "hello", "hello", "hello", "hello", "hello", "hello"
+  1 then print("?")
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let lambda;
+//│ @private
+//│ define lambda as fun lambda²(x) {
+//│   let inlinedVal;
+//│   match x
+//│     "" =>
+//│       set inlinedVal = 0;
+//│       end
+//│     "1" =>
+//│       set inlinedVal = 1;
+//│       end
+//│     "2" =>
+//│       set inlinedVal = 0;
+//│       end
+//│     else
+//│       throw new globalThis⁰.Error⁰("match error")
+//│   match inlinedVal
+//│     0 =>
+//│       return Predef⁰.print⁰("Hello", "hello", "hello", "hello", "hello", "hello", "hello", "hello", "hello", "hello")
+//│     1 =>
+//│       return Predef⁰.print⁰("?")
+//│     else
+//│       throw new globalThis⁰.Error⁰("match error")
+//│   end
+//│ };
+//│ return lambda²
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = fun
+
+
+// Note: should NOT optimize because that would lead to duplicating a branch whose size is above the inlining threshold
+:soir
+x => if partlyKnownProducer(x) is
+  1 then print("O")
+  else print of
+    "Hello", "hello", "hello", "hello", "hello", "hello", "hello", "hello", "hello", "hello"
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let lambda;
+//│ @private
+//│ define lambda as fun lambda³(x) {
+//│   let inlinedVal, selRes;
+//│   match x
+//│     "" =>
+//│       set inlinedVal = 0;
+//│       end
+//│     "1" =>
+//│       set selRes = x.length﹖;
+//│       do x.length$__checkNotMethod﹖;
+//│       match selRes
+//│         undefined =>
+//│           throw new globalThis⁰.Error﹖("Access to required field 'length' yielded 'undefined'")
+//│         else
+//│           set inlinedVal = selRes;
+//│           end
+//│       end
+//│     "2" =>
+//│       set inlinedVal = 1;
+//│       end
+//│     else
+//│       throw new globalThis⁰.Error⁰("match error")
+//│   match inlinedVal
+//│     1 =>
+//│       return Predef⁰.print⁰("O")
+//│     else
+//│       return Predef⁰.print⁰("Hello", "hello", "hello", "hello", "hello", "hello", "hello", "hello", "hello", "hello")
+//│   end
+//│ };
+//│ return lambda³
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = fun
+
+
+// Note: should be optimized as the large branch is not duplicated in this case
+:soir
+x => if partlyKnownProducer(x) is
+  0 then print("Z")
+  1 then print("O")
+  else print of
+    "Hello", "hello", "hello", "hello", "hello", "hello", "hello", "hello", "hello", "hello"
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let lambda;
+//│ @private
+//│ define lambda as fun lambda⁴(x) {
+//│   let selRes;
+//│   match x
+//│     "" =>
+//│       return Predef⁰.print⁰("Z")
+//│     "1" =>
+//│       set selRes = x.length﹖;
+//│       do x.length$__checkNotMethod﹖;
+//│       match selRes
+//│         undefined =>
+//│           throw new globalThis⁰.Error﹖("Access to required field 'length' yielded 'undefined'")
+//│         0 =>
+//│           return Predef⁰.print⁰("Z")
+//│         1 =>
+//│           return Predef⁰.print⁰("O")
+//│         else
+//│           return Predef⁰.print⁰("Hello", "hello", "hello", "hello", "hello", "hello", "hello", "hello", "hello", "hello")
+//│       end
+//│     "2" =>
+//│       return Predef⁰.print⁰("O")
+//│     else
+//│       throw new globalThis⁰.Error⁰("match error")
+//│   end
+//│ };
+//│ return lambda⁴
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = fun
+
+
+
