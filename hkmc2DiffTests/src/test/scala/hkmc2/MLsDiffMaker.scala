@@ -124,6 +124,7 @@ abstract class MLsDiffMaker extends DiffMaker:
     if inlineThreshold.isSet && noInlineOpt.isSet then
       output(s"$errMarker Option ':noInline' conflicts with option ':inlineThreshold'")
     Config(
+      language = Config.Language.default,
       baseDir = wd,
       sanityChecks = Opt.when(noSanityCheck.isUnset)(SanityChecks(light = true, checkUnreachable = true)),
       effectHandlers = Opt.when(effectHandlers.isSet)(EffectHandlers(

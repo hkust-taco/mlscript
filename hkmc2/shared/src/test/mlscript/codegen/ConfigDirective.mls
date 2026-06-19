@@ -203,3 +203,20 @@ applyTwice(fst, Pair(1, 2))
 //│ deforest > x_for_applyTwice@55
 //│ deforest > <<< non-affine syms <<<
 //│ = 2
+
+
+#config(deforest: None)
+#config(language: 0.3.x)
+#lang(0.2.x)
+
+#lang(useNewResolution: true)
+
+#lang(0.3.x,
+  allowUnresolvedAccesses: true,
+  useNewResolution: false,
+  typeCheck: Some(TypeChecking()))
+
+#config(language: Language(
+  allowUnresolvedAccesses: false,
+  useNewResolution: true,
+  typeCheck: None))
