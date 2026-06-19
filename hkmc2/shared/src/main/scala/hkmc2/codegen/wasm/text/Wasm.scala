@@ -411,7 +411,23 @@ case class FoldedInstr(
     resultTypes: Seq[Type],
 ) extends Instruction:
 
-  /** Returns the result type of this instruction if this instruction only has 0-1 result values. */
+  /** Returns the result type of this instruction if this instruction has exactly 0-1 result values.
+    *
+    * This is provided as a shorthand since the majority of instruction builders (in [[Instructions]]) are designed to
+    * take one value per operand argument, and either place no value (represented by `N`) or one value (represented by
+    * `S(ty)`) on the stack.
+    * 
+    * The use of these APIs with multi-value instructions, for instance:
+    *
+    * ```scala
+    * i32.add(
+    *   call(returnTypes = Seq(Result(I32Type), Result(I32Type)), /* ... */),
+    *   i32.const(1),
+    * )
+    * ```
+    *
+    * is not supported and is therefore rejected by this function, which throws an exception.
+    */
   def resultType: Opt[Type] = resultTypes match
     case Seq() => N
     case Seq(ty) => S(ty)
