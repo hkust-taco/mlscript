@@ -19,15 +19,14 @@ which is an evolving language that has not stabilized just yet.
 9. [Records and Tuples](#9-records-and-tuples)
 10. [Arrays](#10-arrays)
 11. [The Ultimate Conditional Syntax (UCS)](#11-the-ultimate-conditional-syntax-ucs)
-12. [Pattern Matching](#12-pattern-matching)
-13. [Algebraic Effects and Handlers](#13-algebraic-effects-and-handlers)
-14. [Context Parameters (Type Classes)](#14-context-parameters-type-classes)
-15. [Types and Type Aliases](#15-types-and-type-aliases)
-16. [Modules, Imports, and Namespaces](#16-modules-imports-and-namespaces)
-17. [Flow Types](#17-flow-types)
-18. [Indentation and Block Syntax](#18-indentation-and-block-syntax)
-19. [Miscellaneous](#19-miscellaneous)
-20. [Built-in Types and Prelude](#20-built-in-types-and-prelude)
+12. [Algebraic Effects and Handlers](#12-algebraic-effects-and-handlers)
+13. [Context Parameters (Type Classes)](#13-context-parameters-type-classes)
+14. [Types and Type Aliases](#14-types-and-type-aliases)
+15. [Modules, Imports, and Namespaces](#15-modules-imports-and-namespaces)
+16. [Flow Inference and Leading Dot Access](#16-flow-inference-and-leading-dot-access)
+17. [Indentation and Block Syntax](#17-indentation-and-block-syntax)
+18. [Miscellaneous](#18-miscellaneous)
+19. [Built-in Types and Prelude](#19-built-in-types-and-prelude)
 
 ---
 
@@ -881,10 +880,6 @@ Inline `case`:
 1 |> case x then x + 1
 ```
 
----
-
-## 12. Pattern Matching
-
 ### Constructor Patterns
 
 ```mlscript
@@ -1050,7 +1045,7 @@ fun foo(x) = if x is @compile 42 then "yes" else "no"
 
 ---
 
-## 13. Algebraic Effects and Handlers
+## 12. Algebraic Effects and Handlers
 
 MLscript supports algebraic effects and handlers, enabled with `:effectHandlers` directive.
 
@@ -1156,7 +1151,7 @@ foo()
 
 ---
 
-## 14. Context Parameters (Type Classes)
+## 13. Context Parameters (Type Classes)
 
 MLscript has context parameters (`using`) which enable type-class-style programming.
 
@@ -1238,7 +1233,7 @@ using Monoid[Int] = IntAddMonoid
 
 ---
 
-## 15. Types and Type Aliases
+## 14. Types and Type Aliases
 
 ### Type Aliases
 
@@ -1320,7 +1315,7 @@ declare fun parseInt(str: Str, radix: Int): Int
 
 ---
 
-## 16. Modules, Imports, and Namespaces
+## 15. Modules, Imports, and Namespaces
 
 ### Importing Files
 
@@ -1378,7 +1373,7 @@ fun foo(x) = if x is @compile Box then "yes" else "no"
 
 ---
 
-## 17. Flow Inference and Leading Dot Access
+## 16. Flow Inference and Leading Dot Access
 
 Flow types (`:flow` mode) enable type inference with a structural/flow-sensitive type system.
 
@@ -1406,7 +1401,7 @@ This allows passing module values implicitly when the expected type is known.
 
 ---
 
-## 18. Indentation and Block Syntax
+## 17. Indentation and Block Syntax
 
 MLscript uses indentation to delimit blocks. Rules:
 
@@ -1500,7 +1495,7 @@ print of
 
 ---
 
-## 19. Miscellaneous
+## 18. Miscellaneous
 
 ### Assertions
 
@@ -1642,7 +1637,7 @@ js.try_catch(f)
 
 ---
 
-## 20. Built-in Types and Prelude
+## 19. Built-in Types and Prelude
 
 ### Primitive Types
 
