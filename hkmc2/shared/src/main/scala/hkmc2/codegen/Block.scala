@@ -141,9 +141,9 @@ sealed abstract class Block extends Product:
       rst.isAbortive
     case Scoped(_, body) => body.isAbortive
   
-  // * Note: it seems most historical uses of `definedVars` would be better removed,
-  // * now that we properly put everything in proper Scoped blocks;
-  // * and `definedVars` itself should be removed.
+  // * Note: this function is only for rather fringe use-cases in the optimizer;
+  // * it should not be used for scope analysis purposes
+  // * (like it used to before we added Scoped blocks).
   lazy val definedVars: Set[BoundSymbol] = this match
     case _: Return | _: Throw | _: Unreachable => Set.empty
     case Begin(sub, rst) => sub.definedVars ++ rst.definedVars
@@ -161,7 +161,7 @@ sealed abstract class Block extends Product:
       if defn.isOwned then rest else rest + defn.sym
     case TryBlock(sub, fin, rst) => sub.definedVars ++ fin.definedVars ++ rst.definedVars
     case Label(lbl, _, bod, rst) => bod.definedVars ++ rst.definedVars
-    case Scoped(syms, body) => body.definedVars ++ syms
+    case Scoped(syms, body) => body.definedVars -- syms
   
   lazy val size: Int = 1 + this.match
     case Return(r: Result) => r.size

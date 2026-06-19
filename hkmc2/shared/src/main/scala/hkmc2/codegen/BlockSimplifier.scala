@@ -69,7 +69,7 @@ class BlockSimplifier
       
       summon[Config].inlining.foreach: cfg =>
         
-        // * Runs after DCE so that unused labels from inlining and already removed
+        // * Runs after DCE so that unused labels from inlining are already removed
         val coc = new CaseOfCase(using cfg)
         res = coc.applyProgram(res)
         changed ||= coc.changed
@@ -1030,7 +1030,7 @@ class BlockSimplifier
       def loop(body: Block, shape: Opt[Shape])(k: Opt[Shape] => Opt[Shape]): Opt[Shape] = body match
         case _: End => k(shape)
         case Assign(`target`, rhs, rest) => loop(rest, getShape(rhs))(k)
-        case Assign(_, _, rest) => loop(rest, shape)(k)
+        case Assign(_, rhs, rest) if rhs.isPure => loop(rest, shape)(k)
         case AssignField(_, _, _, rest) => loop(rest, shape)(k)
         case AssignDynField(_, _, _, _, rest) => loop(rest, shape)(k)
         case Define(_, rest) => loop(rest, shape)(k)
