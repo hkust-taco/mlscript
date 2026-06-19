@@ -1857,6 +1857,10 @@ extends Importer with ucs.SplitElaborator:
         reportUnusedAnnotations
         val modify = ConfigParser.parseOverrides(args)
         go(sts, Nil, SetConfig(modify) :: acc)
+      case Directive(Ident("lang"), Tup(args)) :: sts =>
+        reportUnusedAnnotations
+        val modify = ConfigParser.parseLanguageDirective(args)
+        go(sts, Nil, SetConfig(modify) :: acc)
       case Directive(Ident(name), _) :: sts =>
         raise(ErrorReport(
           msg"Unknown directive '#${name}'" -> sts.headOption.flatMap(_.toLoc) :: Nil,
