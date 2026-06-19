@@ -18,7 +18,7 @@ which is an evolving language that has not stabilized just yet.
 8. [Objects, Modules, and Companions](#8-objects-modules-and-companions)
 9. [Records and Tuples](#9-records-and-tuples)
 10. [Arrays](#10-arrays)
-11. [Universal Case Syntax (UCS)](#11-universal-case-syntax-ucs)
+11. [The Ultimate Conditional Syntax (UCS)](#11-the-ultimate-conditional-syntax-ucs)
 12. [Pattern Matching](#12-pattern-matching)
 13. [Algebraic Effects and Handlers](#13-algebraic-effects-and-handlers)
 14. [Context Parameters (Type Classes)](#14-context-parameters-type-classes)
@@ -715,9 +715,9 @@ f(1, 2, 3)               // xs = [1, 2, 3]
 
 ---
 
-## 11. Universal Conditional Syntax (UCS)
+## 11. The Ultimate Conditional Syntax (UCS)
 
-UCS is MLscript's unified `if`/`while`/`case` expression supporting pattern matching, guards, and multi-way branching. It replaces traditional `match`/`switch` constructs.
+The UCS is MLscript's unified `if`/`while`/`case` expression supporting pattern matching, guards, and multi-way branching. It replaces traditional `match`/`switch` constructs.
 
 ### Basic `if` Expression
 
