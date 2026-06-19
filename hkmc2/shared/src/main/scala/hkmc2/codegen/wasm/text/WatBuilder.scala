@@ -2103,6 +2103,17 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
             boundary:
               val armExprs = arms.zipWithIndex.flatMap: (caseAndBody, armIdx) =>
                 val (cse, body) = caseAndBody
+                lazy val ifTrue =
+                  funcCtx.withLabel(LabelSymbol(N, "arm"), hasContinueLabel = false):
+                    case LabelTarget(armLabel, _) =>
+                      val bodyExpr = returningTerm(body)
+                      val armBodyExpr = lowerMatchBody(bodyExpr)
+                      blockInstr(
+                        label = S(armLabel),
+                        children = armBodyExpr :+ br(matchLabel),
+                        resultTypes = Seq.empty,
+                      )
+                
                 cse match
                   case Case.Lit(lit) =>
                     val testExpr: FoldedInstr = lit match
@@ -2117,20 +2128,12 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                       case _ =>
                         break(errExpr(Ls(msg"Pattern matching for unit literals not implemented yet" -> lit.toLoc)))
 
-                    val bodyExpr = returningTerm(body)
-                    val armBodyExpr = lowerMatchBody(bodyExpr)
-                    funcCtx.withLabel(LabelSymbol(N, "arm"), hasContinueLabel = false):
-                      case LabelTarget(armLabel, _) =>
-                        S(`if`(
-                          condition = testExpr,
-                          ifTrue = blockInstr(
-                            label = S(armLabel),
-                            children = armBodyExpr.toVector :+ br(matchLabel),
-                            resultTypes = Seq.empty,
-                          ),
-                          ifFalse = N,
-                          resultTypes = Seq.empty,
-                        ))
+                    S(`if`(
+                      condition = testExpr,
+                      ifTrue = ifTrue,
+                      ifFalse = N,
+                      resultTypes = Seq.empty,
+                    ))
 
                   case Case.Cls(cls, _) =>
                     val clsBlkMemberSym = cls.asBlkMember getOrElse:
@@ -2143,26 +2146,17 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                     val targetRtti = getClassTypeInfoGlobal(clsBlkMemberSym).get
                     val classMatchExpr = isSubtypeByTypeInfo(scrutRtti, targetRtti)
 
-                    val bodyExpr = returningTerm(body)
-                    val armBodyExpr = lowerMatchBody(bodyExpr)
-
-                    funcCtx.withLabel(LabelSymbol(N, "arm"), hasContinueLabel = false):
-                      case LabelTarget(armLabel, _) =>
-                        S(`if`(
-                          condition = isStructCompatible,
-                          ifTrue = `if`(
-                            condition = classMatchExpr,
-                            ifTrue = blockInstr(
-                              label = S(armLabel),
-                              children = armBodyExpr.toVector :+ br(matchLabel),
-                              resultTypes = Seq.empty,
-                            ),
-                            ifFalse = N,
-                            resultTypes = Seq.empty,
-                          ),
-                          ifFalse = N,
-                          resultTypes = Seq.empty,
-                        ))
+                    S(`if`(
+                      condition = isStructCompatible,
+                      ifTrue = `if`(
+                        condition = classMatchExpr,
+                        ifTrue = ifTrue,
+                        ifFalse = N,
+                        resultTypes = Seq.empty,
+                      ),
+                      ifFalse = N,
+                      resultTypes = Seq.empty,
+                    ))
                   case Case.Tup(len, inf) =>
                     val arrayRefType = RefType(HeapType.Array, nullable = true)
                     val isArrayTest = ref.test(getScrutExpr, arrayRefType)
@@ -2176,20 +2170,12 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                       i32.eq(arrayLength, i32.const(len))
 
                     val testExpr = i32.and(isArrayTest, lengthTest)
-                    val bodyExpr = returningTerm(body)
-                    val armBodyExpr = lowerMatchBody(bodyExpr)
-                    funcCtx.withLabel(LabelSymbol(N, "arm"), hasContinueLabel = false):
-                      case LabelTarget(armLabel, _) =>
-                        S(`if`(
-                          condition = testExpr,
-                          ifTrue = blockInstr(
-                            label = S(armLabel),
-                            children = armBodyExpr.toVector :+ br(matchLabel),
-                            resultTypes = Seq.empty,
-                          ),
-                          ifFalse = N,
-                          resultTypes = Seq.empty,
-                        ))
+                    S(`if`(
+                      condition = testExpr,
+                      ifTrue = ifTrue,
+                      ifFalse = N,
+                      resultTypes = Seq.empty,
+                    ))
                   case _ =>
                     break(errExpr(
                       Ls(
