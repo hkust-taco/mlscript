@@ -184,8 +184,7 @@ if Bar(true) is
 //│                             (block $arm1
 //│                               (return
 //│                                 (ref.i31
-//│                                   (i32.const 3)))
-//│                               (br $match1))))
+//│                                   (i32.const 3))))))
 //│                         (return
 //│                           (ref.i31
 //│                             (i32.const 4))))
@@ -238,8 +237,7 @@ if Bar(true) is
 //│                   (return
 //│                     (struct.get $Baz $z
 //│                       (ref.cast (ref $Baz)
-//│                         (local.get $scrut))))
-//│                   (br $match))))))
+//│                         (local.get $scrut)))))))))
 //│         (return
 //│           (ref.i31
 //│             (i32.const 2))))

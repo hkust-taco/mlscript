@@ -162,8 +162,7 @@ c.Parent#x + (c is Parent)
 //│                         (ref.cast (ref $Parent)
 //│                           (global.get $c)))
 //│                       (ref.i31
-//│                         (i32.const 1))))
-//│                   (br $match))))))
+//│                         (i32.const 1)))))))))
 //│         (return
 //│           (call $plus_impl
 //│             (struct.get $Parent $x
@@ -268,5 +267,5 @@ class B
 class A extends B
 class B extends A
 //│ ╔══[COMPILATION ERROR] Inheritance cycles are not supported.
-//│ ║  l.268: 	class A extends B
+//│ ║  l.267: 	class A extends B
 //│ ╙──       	^^^^^^^^^^^^^^^^^

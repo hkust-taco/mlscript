@@ -2108,9 +2108,10 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                     case LabelTarget(armLabel, _) =>
                       val bodyExpr = returningTerm(body)
                       val armBodyExpr = lowerMatchBody(bodyExpr)
+                      val armIsCtrlXfer = armBodyExpr.lastOption.exists(_.isControlTransfer)
                       blockInstr(
                         label = S(armLabel),
-                        children = armBodyExpr :+ br(matchLabel),
+                        children = armBodyExpr ++ br(matchLabel).optionUnless(armIsCtrlXfer).toVector,
                         resultTypes = Seq.empty,
                       )
                 
