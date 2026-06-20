@@ -4,25 +4,6 @@
 
 
 
-:fixme
-:sir
-:soir
-module M with
-  private fun g(b) = b
-  g(2)
-//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ define M⁰ as class M¹
-//│ module M² { constructor { do M².this.g⁰(2); end } method g¹ = fun g⁰(b) { return b } };
-//│ end
-//│ dead-param-elim > >>> dead-param-elim results >>>
-//│ dead-param-elim > prodfun g#0 @ <root> -> eliminable: {0}
-//│ dead-param-elim > <<< dead-param-elim results <<<
-//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ define M⁰ as class M¹
-//│ module M² { constructor { do M².this.g⁰(); end } method g¹ = fun g⁰() { return undefined } };
-//│ end
-//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
-//│ ═══[RUNTIME ERROR] Error: MLscript call unexpectedly returned `undefined`, the forbidden value.
 
 module M with
   private fun f(a) = 0
@@ -118,11 +99,11 @@ f(O) + g(O)
 //│   return O.I⁰.x⁰
 //│ };
 //│ @private
-//│ define g² as fun g⁴(O) {
-//│   return O.I⁰.g³()
+//│ define g⁰ as fun g²(O) {
+//│   return O.I⁰.g¹()
 //│ };
 //│ set tmp = f¹(O⁰);
-//│ set tmp1 = g⁴(O⁰);
+//│ set tmp1 = g²(O⁰);
 //│ return +⁰(tmp, tmp1)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 26
@@ -142,11 +123,11 @@ f(O.I) + g(O.I)
 //│   return I.x⁰
 //│ };
 //│ @private
-//│ define g⁵ as fun g⁶(I) {
-//│   return I.g³()
+//│ define g³ as fun g⁴(I) {
+//│   return I.g¹()
 //│ };
 //│ set tmp = f³(O⁰.I⁰);
-//│ set tmp1 = g⁶(O⁰.I⁰);
+//│ set tmp1 = g⁴(O⁰.I⁰);
 //│ return +⁰(tmp, tmp1)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 26

@@ -136,10 +136,10 @@ c.x
 :w
 fun oops = undefined
 
+// * This used to throw, but we now emit `Unit` upon compiling MIR's `return undefined`
 :noInline
-:re
-oops
-//│ ═══[RUNTIME ERROR] Error: MLscript call unexpectedly returned `undefined`, the forbidden value.
+print(oops)
+//│ > ()
 
 // ——— ——— ———
 

@@ -655,7 +655,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
       
       doc" # $resJS"
       
-    case Return(Value.Lit(UnitLit(false))) => doc" # return${mkSemi}"
+    case Return(Value.Lit(UnitLit(false))) => doc" # return $runtimeVar.Unit$mkSemi"
     case Return(res) => doc" # return ${result(res)}${mkSemi}"
     
     case Match(scrut, Nil, els, rest) =>

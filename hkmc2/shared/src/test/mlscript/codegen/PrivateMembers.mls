@@ -1,6 +1,18 @@
 :js
 
 
+// * Notice that `b` is removed by DPE
+:soir
+module M with
+  private fun g(b) = b
+  g(2)
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ define M⁰ as class M¹
+//│ module M² { constructor { do M².this.g⁰(); end } method g¹ = fun g⁰() { return undefined } };
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+
 :ssjs
 class Foo with
   private fun y() = 42
@@ -112,20 +124,20 @@ LiftedPrivateObject.mkInc(41)
 :e
 PrivateObject.x
 //│ ╔══[COMPILATION ERROR] Cannot access private member 'x' outside its declaring owner
-//│ ║  l.113: 	PrivateObject.x
+//│ ║  l.125: 	PrivateObject.x
 //│ ║         	             ^^
 //│ ╟── private member declared here
-//│ ║  l.98: 	  private val x = 40
-//│ ╙──      	              ^
+//│ ║  l.110: 	  private val x = 40
+//│ ╙──       	              ^
 
 :e
 PrivateObject.inc()
 //│ ╔══[COMPILATION ERROR] Cannot access private member 'inc' outside its declaring owner
-//│ ║  l.122: 	PrivateObject.inc()
+//│ ║  l.134: 	PrivateObject.inc()
 //│ ║         	             ^^^^
 //│ ╟── private member declared here
-//│ ║  l.99: 	  private fun inc() = x + 2
-//│ ╙──      	              ^^^
+//│ ║  l.111: 	  private fun inc() = x + 2
+//│ ╙──       	              ^^^
 //│ ═══[RUNTIME ERROR] TypeError: PrivateObject1[inc$accessorSymbol1] is not a function
 
 
