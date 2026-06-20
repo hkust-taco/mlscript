@@ -48,13 +48,10 @@ c.Parent#x + (c is Parent)
 //│     (global.get $Parent_typeinfo)))
 //│   (func $Parent_init (type $Parent_init) (param $this (ref null any)) (param $x (ref null any)) (result (ref null any))
 //│     (block (result (ref null any))
-//│       (nop)
-//│       (block
-//│         (struct.set $Parent $x
-//│           (ref.cast (ref $Parent)
-//│             (local.get $this))
-//│           (local.get $x))
-//│         (nop))
+//│       (struct.set $Parent $x
+//│         (ref.cast (ref $Parent)
+//│           (local.get $this))
+//│         (local.get $x))
 //│       (return
 //│         (local.get $this))))
 //│   (func $Parent_ctor (export "Parent") (type $Parent_ctor) (param $x (ref null any)) (result (ref null any))
@@ -73,24 +70,19 @@ c.Parent#x + (c is Parent)
 //│   (func $Child_init (type $Child_init) (param $this (ref null any)) (param $y (ref null any)) (result (ref null any))
 //│     (local $tmp (ref null any))
 //│     (block (result (ref null any))
-//│       (block
-//│         (block
-//│           (local.set $tmp
-//│             (call $plus_impl
-//│               (local.get $y)
-//│               (ref.i31
-//│                 (i32.const 1))))
-//│           (nop))
-//│         (drop
-//│           (call $Parent_init
-//│             (local.get $this)
-//│             (local.get $tmp))))
-//│       (block
-//│         (struct.set $Child $y
-//│           (ref.cast (ref $Child)
-//│             (local.get $this))
-//│           (local.get $y))
-//│         (nop))
+//│       (local.set $tmp
+//│         (call $plus_impl
+//│           (local.get $y)
+//│           (ref.i31
+//│             (i32.const 1))))
+//│       (drop
+//│         (call $Parent_init
+//│           (local.get $this)
+//│           (local.get $tmp)))
+//│       (struct.set $Child $y
+//│         (ref.cast (ref $Child)
+//│           (local.get $this))
+//│         (local.get $y))
 //│       (return
 //│         (local.get $this))))
 //│   (func $Child_ctor (export "Child") (type $Child_ctor) (param $y (ref null any)) (result (ref null any))
@@ -117,74 +109,68 @@ c.Parent#x + (c is Parent)
 //│         (call $Child_ctor
 //│           (ref.i31
 //│             (i32.const 2))))
-//│       (block (result (ref null any))
-//│         (nop)
-//│         (block (result (ref null any))
-//│           (nop)
-//│           (block (result (ref null any))
-//│             (block $match
-//│               (local.set $matchRes
-//│                 (ref.null any))
-//│               (if
-//│                 (ref.test (ref $Object)
-//│                   (global.get $c))
-//│                 (then
-//│                   (if
-//│                     (block (result i32)
-//│                       (local.set $currentTypeInfo
-//│                         (struct.get $Object $$typeinfo
-//│                           (ref.cast (ref $Object)
-//│                             (global.get $c))))
-//│                       (local.set $targetTypeInfo
-//│                         (global.get $Parent_typeinfo))
-//│                       (local.set $typeInfoMatch
-//│                         (ref.i31
-//│                           (i32.const 0)))
-//│                       (block $typeInfo
-//│                         (loop $typeInfo_cont
-//│                           (if
-//│                             (ref.is_null
-//│                               (local.get $currentTypeInfo))
-//│                             (then
-//│                               (br $typeInfo)))
-//│                           (if
-//│                             (ref.eq
-//│                               (ref.cast (ref null eq)
-//│                                 (local.get $currentTypeInfo))
-//│                               (ref.cast (ref null eq)
-//│                                 (local.get $targetTypeInfo)))
-//│                             (then
-//│                               (block
-//│                                 (local.set $typeInfoMatch
-//│                                   (ref.i31
-//│                                     (i32.const 1)))
-//│                                 (br $typeInfo))))
-//│                           (local.set $currentTypeInfo
-//│                             (struct.get $TypeInfoBase $$parent
-//│                               (ref.cast (ref $TypeInfoBase)
-//│                                 (local.get $currentTypeInfo))))
-//│                           (br $typeInfo_cont)))
-//│                       (i31.get_s
-//│                         (ref.cast (ref null i31)
-//│                           (local.get $typeInfoMatch))))
-//│                     (then
-//│                       (block $arm
-//│                         (return
-//│                           (call $plus_impl
-//│                             (struct.get $Parent $x
-//│                               (ref.cast (ref $Parent)
-//│                                 (global.get $c)))
-//│                             (ref.i31
-//│                               (i32.const 1))))
-//│                         (br $match))))))
-//│               (return
-//│                 (call $plus_impl
-//│                   (struct.get $Parent $x
-//│                     (ref.cast (ref $Parent)
-//│                       (global.get $c)))
+//│       (block $match
+//│         (local.set $matchRes
+//│           (ref.null any))
+//│         (if
+//│           (ref.test (ref $Object)
+//│             (global.get $c))
+//│           (then
+//│             (if
+//│               (block (result i32)
+//│                 (local.set $currentTypeInfo
+//│                   (struct.get $Object $$typeinfo
+//│                     (ref.cast (ref $Object)
+//│                       (global.get $c))))
+//│                 (local.set $targetTypeInfo
+//│                   (global.get $Parent_typeinfo))
+//│                 (local.set $typeInfoMatch
 //│                   (ref.i31
-//│                     (i32.const 0)))))
-//│             (local.get $matchRes))))))
+//│                     (i32.const 0)))
+//│                 (block $typeInfo
+//│                   (loop $typeInfo_cont
+//│                     (if
+//│                       (ref.is_null
+//│                         (local.get $currentTypeInfo))
+//│                       (then
+//│                         (br $typeInfo)))
+//│                     (if
+//│                       (ref.eq
+//│                         (ref.cast (ref null eq)
+//│                           (local.get $currentTypeInfo))
+//│                         (ref.cast (ref null eq)
+//│                           (local.get $targetTypeInfo)))
+//│                       (then
+//│                         (block
+//│                           (local.set $typeInfoMatch
+//│                             (ref.i31
+//│                               (i32.const 1)))
+//│                           (br $typeInfo))))
+//│                     (local.set $currentTypeInfo
+//│                       (struct.get $TypeInfoBase $$parent
+//│                         (ref.cast (ref $TypeInfoBase)
+//│                           (local.get $currentTypeInfo))))
+//│                     (br $typeInfo_cont)))
+//│                 (i31.get_s
+//│                   (ref.cast (ref null i31)
+//│                     (local.get $typeInfoMatch))))
+//│               (then
+//│                 (block $arm
+//│                   (return
+//│                     (call $plus_impl
+//│                       (struct.get $Parent $x
+//│                         (ref.cast (ref $Parent)
+//│                           (global.get $c)))
+//│                       (ref.i31
+//│                         (i32.const 1)))))))))
+//│         (return
+//│           (call $plus_impl
+//│             (struct.get $Parent $x
+//│               (ref.cast (ref $Parent)
+//│                 (global.get $c)))
+//│             (ref.i31
+//│               (i32.const 0)))))
+//│       (local.get $matchRes)))
 //│   (elem $Parent_init declare func $Parent_init)
 //│   (elem $Parent_ctor declare func $Parent_ctor)
 //│   (elem $Child_init declare func $Child_init)
@@ -281,5 +267,5 @@ class B
 class A extends B
 class B extends A
 //│ ╔══[COMPILATION ERROR] Inheritance cycles are not supported.
-//│ ║  l.281: 	class A extends B
+//│ ║  l.267: 	class A extends B
 //│ ╙──       	^^^^^^^^^^^^^^^^^

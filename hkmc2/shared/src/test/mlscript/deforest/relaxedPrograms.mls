@@ -105,9 +105,7 @@ if AA(1) is
 
 
 
-// TODO: rewriting for nested classes
 :deforest
-:fixme
 fun nestedClass() =
   class Local() with
     fun get() = 0
@@ -123,7 +121,7 @@ nestedClass()
 //│ deforest > 	match: scrut⁵
 //│ deforest > 	fields: scrut⁵.x¹
 //│ deforest > <<< fusing <<<
-//│ /!!!\ Uncaught error: java.lang.AssertionError: assertion failed
+//│ = 1
 
 
 

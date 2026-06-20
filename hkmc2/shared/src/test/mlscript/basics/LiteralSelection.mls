@@ -108,46 +108,41 @@ let obj =
 obj." "
 //│ = 1
 
+:w
+obj."¯\_(ツ)_/¯"
+//│ ╔══[WARNING] Found invalid escape character
+//│ ║  l.112: 	obj."¯\_(ツ)_/¯"
+//│ ╙──       	       ^
+//│ = 2
+
 :fixme
 :expect 2
 obj."¯\\_(ツ)_/¯"
 //│ ═══[RUNTIME ERROR] Expected: '2', got: 'undefined'
 
-:fixme
+:w
 "¯\_(ツ)_/¯"
-:fixme
+//│ ╔══[WARNING] Found invalid escape character
+//│ ║  l.124: 	"¯\_(ツ)_/¯"
+//│ ╙──       	   ^
+//│ = "¯_(ツ)_/¯"
+
+:w
 let obj = "¯\_(ツ)_/¯": 2
 //│ ╔══[WARNING] Found invalid escape character
-//│ ║  l.117: 	"¯\_(ツ)_/¯"
-//│ ╙──       	   ^
-//│ ╔══[WARNING] Found invalid escape character
-//│ ║  l.119: 	let obj = "¯\_(ツ)_/¯": 2
+//│ ║  l.131: 	let obj = "¯\_(ツ)_/¯": 2
 //│ ╙──       	             ^
-//│ ╔══[COMPILATION ERROR] Name not found: fixme
-//│ ║  l.118: 	:fixme
-//│ ╙──       	 ^^^^^
-//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
-//│ ╔══[COMPILATION ERROR] No definition found in scope for member 'obj'
-//│ ╟── which references the symbol introduced here
-//│ ║  l.119: 	let obj = "¯\_(ツ)_/¯": 2
-//│ ╙──       	    ^^^
-//│ obj = {a: 1}
-:fixme
+//│ obj = {"¯_(ツ)_/¯": 2}
+
+:w
 obj."¯\_(ツ)_/¯"
 //│ ╔══[WARNING] Found invalid escape character
-//│ ║  l.136: 	obj."¯\_(ツ)_/¯"
+//│ ║  l.138: 	obj."¯\_(ツ)_/¯"
 //│ ╙──       	       ^
-//│ ╔══[COMPILATION ERROR] No definition found in scope for member 'obj'
-//│ ║  l.136: 	obj."¯\_(ツ)_/¯"
-//│ ║         	^^^
-//│ ╟── which references the symbol introduced here
-//│ ║  l.119: 	let obj = "¯\_(ツ)_/¯": 2
-//│ ╙──       	    ^^^
+//│ = 2
 
-:fixme
-:expect ¯\\_(ツ)_/¯
+:expect "¯\\_(ツ)_/¯"
 "¯\\_(ツ)_/¯"
-//│ ═══[RUNTIME ERROR] Expected: '¯\\_(ツ)_/¯', got: '"¯\\_(ツ)_/¯"'
 //│ = "¯\\_(ツ)_/¯"
 
 

@@ -1,0 +1,18 @@
+:js
+
+
+pattern P = 0 => false | 1 => true
+
+0 is P
+//│ = true
+
+2 is P
+//│ = false
+
+assert 0 is P as r, r
+//│ = false
+
+assert 1 is P as r, r
+//│ = true
+
+

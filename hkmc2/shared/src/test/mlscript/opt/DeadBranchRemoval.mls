@@ -41,10 +41,12 @@ in if c is
 // * Properly removes the `E` branch
 :soir
 let c = if hide(true) then C(123) else D(456)
-in if c is
-  C(x) then print(x)
-  D(y) then print(y)
-  E(z) then print(z)
+in
+  print(c) // * Prevents case-of-case optimization from distributing the match into the branches
+  if c is
+    C(x) then print(x)
+    D(y) then print(y)
+    E(z) then print(z)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ let scrut, tmp, arg$D$0$, arg$C$0$;
 //│ set scrut = Predef⁰.hide⁰(true);
@@ -55,6 +57,7 @@ in if c is
 //│   else
 //│     set tmp = D⁰(456);
 //│     end
+//│ do Predef⁰.print⁰(tmp);
 //│ match tmp
 //│   C¹ =>
 //│     set arg$C$0$ = tmp.a⁰;
@@ -66,6 +69,7 @@ in if c is
 //│     unreachable /* exhaustive match */
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ > C(123)
 //│ > 123
 
 

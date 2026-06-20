@@ -34,7 +34,6 @@ O.gy
 :soir
 class Foo(x, val y, mut val z)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let Foo⁰;
 //│ define Foo⁰ as class Foo² {
 //│   val y⁰;
 //│   val z⁰;
@@ -47,7 +46,6 @@ class Foo(x, val y, mut val z)
 class Foo(x, val y, mut val z) with
   print(x)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let Foo³;
 //│ define Foo³ as class Foo⁵ {
 //│   private val x⁰;
 //│   val y²;

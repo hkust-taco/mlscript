@@ -1,0 +1,43 @@
+:js
+
+// Diagnostics parity: warnings produced by the other compilation paths must
+// not be lost — nor duplicated — when a pattern is compiled to a fixed-point
+// machine.
+
+open annotations { compile }
+
+data class Box(val value)
+
+pattern UnBox = Box(x) => x
+pattern Bit = 0 | 1
+pattern ZeroToOne = 0 => 1
+pattern CaptureBit(value) = Bit as value
+
+pattern Steps = UnBox as Steps | _
+
+// The match-site shorthand sub-pattern is matched naively, so its
+// diagnostics fire there — exactly once.
+:w
+:expect "matched"
+if Box(0) is @compile Steps(CaptureBit(ZeroToOne)) then "matched" else "no match"
+//│ ╔══[WARNING] This extraction argument's transformation result is discarded by pattern `CaptureBit`.
+//│ ║  l.22: 	if Box(0) is @compile Steps(CaptureBit(ZeroToOne)) then "matched" else "no match"
+//│ ║        	                                       ^^^^^^^^^
+//│ ╙── Write `... as _` to discard it explicitly.
+//│ = "matched"
+
+// A body-annotated definition is fully machine-compiled, so the discarded
+// extraction output is reported eagerly, just like on the other paths. (The
+// errors are the pre-existing limitation that efficient compilation does
+// not support extraction arguments.)
+:e
+:w
+pattern FastSteps = @compile ((Box(CaptureBit(ZeroToOne)) => 0) as FastSteps | _)
+//│ ╔══[COMPILATION ERROR] Pattern `CaptureBit` has zero pattern parameters.
+//│ ╟── But one pattern argument were provided.
+//│ ║  l.35: 	pattern FastSteps = @compile ((Box(CaptureBit(ZeroToOne)) => 0) as FastSteps | _)
+//│ ╙──      	                                   ^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[WARNING] This extraction argument's transformation result is discarded by pattern `CaptureBit`.
+//│ ║  l.35: 	pattern FastSteps = @compile ((Box(CaptureBit(ZeroToOne)) => 0) as FastSteps | _)
+//│ ║        	                                              ^^^^^^^^^
+//│ ╙── Write `... as _` to discard it explicitly.

@@ -374,8 +374,14 @@ class Id(name: UnboundName)
 //│ ╔══[COMPILATION ERROR] Name not found: UnboundName
 //│ ║  l.373: 	class Id(name: UnboundName)
 //│ ╙──       	               ^^^^^^^^^^^
-//│ ═══[COMPILATION ERROR] Expected a type, got a non-type ‹error›
-//│ ═══[COMPILATION ERROR] Expected a type, got ‹error›
-//│ ═══[COMPILATION ERROR] Expected a type, got a non-type ‹error›
+//│ ╔══[COMPILATION ERROR] Expected a type, got a non-type ‹error›
+//│ ║  l.373: 	class Id(name: UnboundName)
+//│ ╙──       	               ^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Expected a type, got ‹error›
+//│ ║  l.373: 	class Id(name: UnboundName)
+//│ ╙──       	               ^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Expected a type, got a non-type ‹error›
+//│ ║  l.373: 	class Id(name: UnboundName)
+//│ ╙──       	               ^^^^^^^^^^^
 
 // ——— ——— ———

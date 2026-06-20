@@ -1,7 +1,7 @@
 package hkmc2
 package invalml
 
-import mlscript.utils.*, shorthands.*
+import hkmc2.utils.*, shorthands.*
 import syntax.*
 import semantics.*, semantics.Term.*
 import utils.*

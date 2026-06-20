@@ -13,8 +13,8 @@ fun f(x) =
 //│ ║  l.10: 	  module A
 //│ ╙──      	         ^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let g⁰, f⁰;
-//│ define g⁰ as fun g¹(A$) {
+//│ let g;
+//│ define g as fun g⁰(A$) {
 //│   return new A$()
 //│ };
 //│ define f⁰ as fun f¹(x) {

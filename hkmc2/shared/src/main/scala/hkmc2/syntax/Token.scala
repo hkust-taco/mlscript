@@ -1,7 +1,7 @@
 package hkmc2
 package syntax
 
-import mlscript.utils._, shorthands._
+import hkmc2.utils.*, shorthands.*
 
 
 /** Type of general Tokens */

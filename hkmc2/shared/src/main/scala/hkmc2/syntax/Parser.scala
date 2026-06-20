@@ -3,7 +3,7 @@ package syntax
 
 import scala.util.boundary
 import sourcecode.{Name, Line}
-import mlscript.utils.*, shorthands.*
+import hkmc2.utils.*, shorthands.*
 import hkmc2.Message._
 import BracketKind._
 
@@ -76,7 +76,7 @@ object Parser:
   private val AnnotBodyPrec = Keyword.maxPrec.get + 1
   
   final def opCharPrec(opChar: Char): Int = precOf(opChar)
-  final def opPrec(opStr: Str): (Int, Int) = opStr match {
+  final def opPrec(opStr: Str): (Int, Int) = opStr match
     case "+." | "-." | "*." =>
       (precOf(opStr.head), precOf(opStr.head))
     case _ if opStr.exists(_.isLetter) =>
@@ -84,7 +84,6 @@ object Parser:
     case _ =>
       val r = opStr.last
       (precOf(opStr.head), precOf(r) - (if r === ',' || r === ':' then 1 else 0))
-  }
   val prefixOps: Set[Str] = Set("!", "+", "-", "~", "@", "|", "&")
   
   type Indent_Curly = Curly.type | Indent.type
@@ -581,7 +580,7 @@ abstract class Parser(
   
   // TODO refactor? This is only used for quotes, which should parse like normal code
   final def bindings(acc: Ls[Tree -> Tree]): Ls[Tree -> Tree] = 
-    cur match {
+    cur match
       case (SPACE, _) :: _ =>
         consume
         bindings(acc)
@@ -596,16 +595,14 @@ abstract class Parser(
           case _ => die
         val rhs = simpleExprImpl(0, allowNewlines = true)
         val v = Tree.Ident(nme).withLoc(S(l0))
-        cur match {
+        cur match
           case (COMMA, l1) :: _ =>
             consume
             bindings((v -> rhs) :: acc)
           case _ =>
             ((v -> rhs) :: acc).reverse
-        }
       case _ =>
         Nil
-  }
   
   
   def expr(prec: Int, allowNewlines: Bool)(using Line): Tree =
@@ -701,7 +698,7 @@ abstract class Parser(
           exprCont(res, prec, allowNewlines = allowNewlines)
     case (QUOTE, loc) :: _ =>
       consume
-      cur match {
+      cur match
         case (IDENT("let", _), l0) :: _ =>
           consume
           val bs = bindings(Nil)
@@ -716,12 +713,14 @@ abstract class Parser(
             case Nil =>
               err(msg"Expected '`in'; found end of input instead" -> lastLoc :: Nil)
               errExpr
-          bs.foldRight(body) {
+          bs.foldRight(body):
             case ((v, r), acc) => Quoted(LetLike(new Keywrd(`let`).withLoc(S(l0)), v, S(Unquoted(r)), S(Unquoted(acc))))
-          }
         case (IDENT("if", _), l0) :: _ =>
           consume
-          val term = simpleExprImpl(prec, allowNewlines = false)
+          // A quoted conditional is parsed as a complete conditional expression, independently
+          // of the precedence of the context in which the quote occurs. In particular, a quoted
+          // conditional used as a lambda RHS must still consume its `then` branch.
+          val term = simpleExprImpl(Keyword.`if`.rightPrecOrMin, allowNewlines = false)
           yeetSpaces match
             case (IDENT("else", _), l1) :: _ =>
               consume
@@ -750,7 +749,6 @@ abstract class Parser(
           consume
           exprCont(Tree.Quoted(lit.asTree.withLoc(S(l0))), prec, allowNewlines = false)
         case _ => unsupportedQuote(S(loc))
-      }
     case (BRACKETS(_: Indent_Curly, _), loc) :: _ =>
       err(msg"Expected an expression; found block instead" -> lastLoc :: Nil)
       errExpr
@@ -778,10 +776,9 @@ abstract class Parser(
       errExpr
   
   
-  private def unsupportedQuote(loc: Opt[Loc]) = {
+  private def unsupportedQuote(loc: Opt[Loc]) =
     err(msg"This quote syntax is not supported yet" -> loc :: Nil)
     errExpr
-  }
   
   
   def effectfulRhs(prec: Int, allowNewlines: Bool)(using Line): Tree =
@@ -882,7 +879,7 @@ abstract class Parser(
         case Sel(reg, Ident("ref")) => RegRef(reg, simpleExprImpl(0, allowNewlines = false))
         case _ => exprCont(acc, prec, allowNewlines = allowNewlines)
         
-      case (QUOTE, l) :: _ => cur match {
+      case (QUOTE, l) :: _ => cur match
         case _ :: (KEYWORD(kw @ (Keyword.`=>` | Keyword.`->`)), l0) :: _ if kw.leftPrecOrMin > prec =>
           consume
           consume
@@ -895,20 +892,18 @@ abstract class Parser(
           val res = App(Unquoted(acc), Tup(as).withLoc(S(loc)))
           exprCont(Quoted(res), prec, allowNewlines = allowNewlines)
         case _ :: (OP(opStr), l0) :: _ =>
-          if opPrec(opStr)._1 > prec then {
+          if opPrec(opStr)._1 > prec then
             consume
             consume
             val v = Ident(opStr).withLoc(S(l0))
-            yeetSpaces match {
+            yeetSpaces match
               case (_: NEWLINE_COMMA, l0) :: _ => consume
               case _ =>
-            }
             val rhs = expr(opPrec(opStr)._2, allowNewlines = allowNewlines)
             exprCont(opStr match {
                 case "with" => unsupportedQuote(S(l0))
                 case _ => Quoted(App(v, PlainTup(Unquoted(acc), Unquoted(rhs))))
               }, prec, allowNewlines = allowNewlines)
-          }
           else acc
         case _ :: (KEYWORD(Keyword("in")), _) :: _ =>
           acc
@@ -916,7 +911,6 @@ abstract class Parser(
           consume
           unsupportedQuote(acc.toLoc)
           acc
-      }
       case (COMMA, l0) :: _ if prec === 0 =>
         consume
         err(msg"Unexpected comma in this position" -> S(l0) :: Nil)
@@ -1030,10 +1024,9 @@ abstract class Parser(
       case (OP(opStr), l0) :: _ if /* isInfix(opStr) && */ opPrec(opStr)._1 > prec =>
         consume
         val v = Ident(opStr).withLoc(S(l0))
-        yeetSpaces match {
+        yeetSpaces match
           case (_: NEWLINE_COMMA, l0) :: _ => consume
           case _ =>
-        }
         printDbg(s"! found operator `$opStr` with prec ${opPrec(opStr)}")
         yeetSpaces match
           case (BRACKETS(_: Indent_Curly, toks), l0) :: _ =>
@@ -1125,6 +1118,17 @@ abstract class Parser(
         infixRules.getKwAlt(kw, S(l0)) match
           case S(subRule) =>
             consume
+            /* // * Disabled for the sake of consistency
+            // These operators used to follow the symbolic-operator path, which accepts an RHS
+            // on the next line. Preserve that behavior now that they are parsed as keywords.
+            // Example:
+            //    foo |
+            //    bar
+            if (kw is Keyword.`|`) || (kw is Keyword.`&`) then
+              yeetSpaces match
+                case (_: NEWLINE_COMMA, _) :: _ => consume
+                case _ =>
+            */
             if verbose then printDbg(s"$$ proceed with rule: ${subRule.name}")
             subRule.exprAlt match
               case S(exprAlt) =>
@@ -1170,6 +1174,3 @@ abstract class Parser(
     case Nil =>
       printDbg(s"stops at the end of input")
       acc  
-
-
-

@@ -3,7 +3,7 @@ package semantics
 
 import sourcecode.{FileName, Line, Name}
 import syntax.{Keyword, Tree}, Tree.{Ident, InfixApp, Keywrd, Sel, SynthSel}
-import mlscript.utils.*, shorthands.*
+import hkmc2.utils.*, shorthands.*
 
 package object ucs:
   def error(using Line, FileName, Name, Raise)(msgs: (Message, Option[Loc])*): Unit =

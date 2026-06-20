@@ -4,7 +4,7 @@ import scala.collection.mutable
 import scala.annotation.tailrec
 import collection.mutable.Map as MutMap
 
-import mlscript.utils.*, shorthands.*
+import hkmc2.utils.*, shorthands.*
 import hkmc2.utils.*
 import hkmc2.Message.MessageContext
 import hkmc2.io

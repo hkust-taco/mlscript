@@ -19,11 +19,8 @@
 //│     (ref.null $TypeInfoBase)))
 //│   (global $Unit$inst (export "Unit$inst") (mut (ref null $Unit)) (ref.null $Unit))
 //│   (func $Unit_init (type $Unit_init) (param $this (ref null any)) (result (ref null any))
-//│     (block (result (ref null any))
-//│       (nop)
-//│       (nop)
-//│       (return
-//│         (local.get $this))))
+//│     (return
+//│       (local.get $this)))
 //│   (func $Unit_Unit (type $Unit_ctor) (result (ref null any))
 //│     (local $this (ref null any))
 //│     (block (result (ref null any))
@@ -36,10 +33,9 @@
 //│       (return
 //│         (local.get $this))))
 //│   (func $start (type $start)
-//│     (block
-//│       (global.set $Unit$inst
-//│         (ref.cast (ref null $Unit)
-//│           (call $Unit_Unit)))))
+//│     (global.set $Unit$inst
+//│       (ref.cast (ref null $Unit)
+//│         (call $Unit_Unit))))
 //│   (func $entry (export "entry") (type $entry) (result (ref null any))
 //│     (return
 //│       (global.get $Unit$inst)))

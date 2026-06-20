@@ -1,0 +1,51 @@
+:js
+
+
+:pe
+:e
+:re
+0 |
+//│ ╔══[PARSE ERROR] Expected start of expression in this position; found end of input instead
+//│ ║  l.7: 	0 |
+//│ ╙──     	   ^
+//│ ╔══[COMPILATION ERROR] Unexpected term form in expression position (alternation)
+//│ ║  l.7: 	0 |
+//│ ╙──     	^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+
+:pe
+:e
+:re
+0 |
+1
+//│ ╔══[PARSE ERROR] Expected start of expression in this position; found new line instead
+//│ ║  l.20: 	0 |
+//│ ║        	   ^
+//│ ║  l.21: 	1
+//│ ╙──      	
+//│ ╔══[COMPILATION ERROR] Unexpected term form in expression position (alternation)
+//│ ║  l.20: 	0 |
+//│ ║        	^^^
+//│ ║  l.21: 	1
+//│ ╙──      	^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+
+fun inc(x) = x + 1
+
+:todo // ?
+inc of 1 | + 1
+//│ ╔══[COMPILATION ERROR] Unexpected term form in expression position (alternation)
+//│ ║  l.38: 	inc of 1 | + 1
+//│ ╙──      	       ^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+:todo // ?
+1 |> inc | + 1
+//│ ╔══[COMPILATION ERROR] Unexpected term form in expression position (alternation)
+//│ ║  l.45: 	1 |> inc | + 1
+//│ ╙──      	^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+

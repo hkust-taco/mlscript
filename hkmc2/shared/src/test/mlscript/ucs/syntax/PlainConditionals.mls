@@ -53,7 +53,7 @@ fun foo(x) = x is
 [foo(2), foo(3.14159), foo(Pair(0, 1))]
 //│ = [true, false, true]
 
-fun foo(x) = x is Pair | Int
+fun foo(x) = x is (Pair | Int)
 
 :expect [true, false, true]
 [foo(2), foo(3.14159), foo(Pair(0, 1))]
@@ -83,18 +83,9 @@ fun foo(x) = x is
 
 :e
 fun foo(x) = x is Pair(a, b) | Int
-//│ ╔══[COMPILATION ERROR] Found an inconsistent variable in disjunction patterns.
+//│ ╔══[COMPILATION ERROR] Unexpected term form in expression position (alternation)
 //│ ║  l.85: 	fun foo(x) = x is Pair(a, b) | Int
-//│ ║        	                       ^
-//│ ╟── The variable is missing from this sub-pattern.
-//│ ║  l.85: 	fun foo(x) = x is Pair(a, b) | Int
-//│ ╙──      	                               ^^^
-//│ ╔══[COMPILATION ERROR] Found an inconsistent variable in disjunction patterns.
-//│ ║  l.85: 	fun foo(x) = x is Pair(a, b) | Int
-//│ ║        	                          ^
-//│ ╟── The variable is missing from this sub-pattern.
-//│ ║  l.85: 	fun foo(x) = x is Pair(a, b) | Int
-//│ ╙──      	                               ^^^
+//│ ╙──      	             ^^^^^^^^^^^^^^^^^^^^^
 
 // Test how shorthand conditionals work together with lambda functions.
 // ====================================================================

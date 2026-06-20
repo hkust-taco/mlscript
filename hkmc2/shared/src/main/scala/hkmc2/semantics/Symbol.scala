@@ -4,7 +4,7 @@ package semantics
 import scala.collection.mutable
 import scala.collection.mutable.{Set => MutSet}
 
-import mlscript.utils.*, shorthands.*
+import hkmc2.utils.*, shorthands.*
 import syntax.*
 import hkmc2.utils.*
 
@@ -55,7 +55,7 @@ abstract class Symbol(using State) extends MaybeSymbol with Located:
   def ref(id: Tree.Ident =
     Tree.Ident("") // FIXME hack
   ): Term.Ref =
-    val res = new Term.Ref(this)(id, directRefs.size, N)
+    val res = new Term.Ref(this)(id, directRefs.size, N).withLocOf(id)
     directRefs += res
     res
   def refsNumber: Int = directRefs.size
@@ -154,9 +154,10 @@ end Symbol
 
 
 // * Used, eg, as the Assign receiver of intermediate computations whose result is not used
-final class NoSymbol(using State) extends MaybeSymbol:
+object NoSymbol extends MaybeSymbol:
   def nme: Str = "‹no symbol›"
   override def toString: Str = nme
+type NoSymbol = NoSymbol.type
 
 
 /** Symbols bound by `Program.imports`.
@@ -174,8 +175,6 @@ abstract class FlowSymbol(label: Str)(using State) extends Symbol:
   val outFlows: mutable.Buffer[FlowSymbol] = mutable.Buffer.empty
   val consumers: mutable.Buffer[Consumer] = mutable.Buffer.empty
   val producers: mutable.Buffer[ConcreteProd] = mutable.Buffer.empty
-  def showDbg: Str =
-    label + s"‹$uid›"
 
 object FlowSymbol:
   
@@ -356,18 +355,25 @@ class TermSymbol(val k: TermDefKind, val owner: Opt[InnerSymbol], val id: Tree.I
       ((k is LetBind) || isExplicitlyPrivate)
   
   def subst(using sub: SymbolSubst): TermSymbol = sub.mapTermSym(this)
+  def mayRaiseEffects(using Config) =
+    defn.forall(_.mayRaiseEffects)
 
 object TermSymbol:
   def fromFunBms(b: BlockMemberSymbol, owner: Opt[InnerSymbol])(using State) =
     TermSymbol(syntax.Fun, owner, Tree.Ident(b.nme))
 
 
+/** Represents the companion constructor function of parameterized classes,
+  * which is the one that is accessed on plain `C` references for a definition like `class C(...)`.
+  * Note that the owner of this function is NOT the class; it is the same as the class's own owner. */
 class ClassCtorSymbol(
   override val k: syntax.Fun.type,
-  override val owner: S[ClassSymbol],
-  id: Tree.Ident
-)(using State) extends TermSymbol(k, owner, id):
+  override val owner: Opt[InnerSymbol],
+  val associatedCls: ClassSymbol,
+)(using State) extends TermSymbol(k, owner, associatedCls.id):
   override def subst(using sub: SymbolSubst): ClassCtorSymbol = sub.mapClassCtorSym(this)
+  override def mayRaiseEffects(using Config) =
+    super.mayRaiseEffects || config.checkInstantiateEffect
 
 
 sealed trait CtorSymbol extends Symbol:
@@ -525,7 +531,12 @@ class PatternSymbol(val id: Tree.Ident, val params: Opt[Tree.Tup], val body: Tre
   def nme = id.name
   def toLoc: Option[Loc] = id.toLoc // TODO track source tree of pattern here
   override def prefix: Str = "pattern:"
-  
+
+  /** The fixed-point machine compiled from this definition, paired with
+    * whether a failed run must be retried with the naive translation;
+    * memoized across `@compile` match sites (see `ups.FixedPointCompiler`). */
+  var fixedPointMachine: Opt[(ups.FixedPointCompiler.Machine, Bool)] = N
+
   override def subst(using sub: SymbolSubst): PatternSymbol = sub.mapPatSym(this)
 
 class TopLevelSymbol(blockNme: Str)(using State)

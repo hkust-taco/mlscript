@@ -20,7 +20,7 @@ jobs:
       - name: Run test
         id: run_test
         # Not running all tests because those outside of hkmc2 are obsolete (will be removed)
-        run: sbt -J-Xmx4096M -J-Xss8M hkmc2AllTests/test
+        run: sbt -J-Xmx4096M -J-Xss8M test
         # It's useful to see how the tests fail by seeing the diff through the next step
         continue-on-error: true
       - name: Check no changes

@@ -37,33 +37,33 @@ class Foo(x) with
         set state += 1
         state + y
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let Foo⁰, $anon⁰;
-//│ define $anon⁰ as class extends globalThis⁰.Object⁰ $anon¹ {
-//│   private val Foo¹;
+//│ let $anon;
+//│ define $anon as class $anon⁰ extends globalThis⁰.Object⁰ {
+//│   private val Foo⁰;
 //│   private val y⁰;
 //│   private val state⁰;
 //│   constructor(Foo, y) {
 //│     do super⁰();
 //│     end;
-//│     set $anon¹.this.Foo¹ = Foo;
-//│     set $anon¹.this.y⁰ = y;
-//│     set $anon¹.this.state⁰ = $anon¹.this.Foo¹.x⁰;
+//│     set $anon⁰.this.Foo⁰ = Foo;
+//│     set $anon⁰.this.y⁰ = y;
+//│     set $anon⁰.this.state⁰ = $anon⁰.this.Foo⁰.x⁰;
 //│     end
 //│   }
 //│   method test⁰ = fun test¹ {
 //│     let tmp;
-//│     set tmp = +⁰($anon¹.this.state⁰, 1);
-//│     set $anon¹.this.state⁰ = tmp;
-//│     return +⁰($anon¹.this.state⁰, $anon¹.this.y⁰)
+//│     set tmp = +⁰($anon⁰.this.state⁰, 1);
+//│     set $anon⁰.this.state⁰ = tmp;
+//│     return +⁰($anon⁰.this.state⁰, $anon⁰.this.y⁰)
 //│   }
 //│ };
-//│ define Foo⁰ as class Foo³ {
+//│ define Foo¹ as class Foo³ {
 //│   private val x⁰;
 //│   constructor Foo²(x) {
 //│     set Foo³.this.x⁰ = x;
 //│     end
 //│   }
-//│   method foo⁰ = fun foo¹(y) { return new $anon¹(Foo³.this, y) }
+//│   method foo⁰ = fun foo¹(y) { return new $anon⁰(Foo³.this, y) }
 //│ };
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————

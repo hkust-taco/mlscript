@@ -36,11 +36,24 @@ q.x
 
 declare class C
 
+:sjs
+fun isC(x) = x is C
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ let isC; isC = function isC(x) { if (x instanceof globalThis.C) { return true } return false; };
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+
 module M with
   declare class D
 
+:sjs
+fun isMD(x) = x is M.D
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ let isMD; isMD = function isMD(x) { if (x instanceof M1.D) { return true } return false; };
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
-// * FIXME LP: @Harry why is this not resolved?
+
+// * Resolved
 :rt
 C
 //│ ——————————————| Resolved tree |—————————————————————————————————————————————————————————————————————
@@ -49,7 +62,7 @@ C
 //│     t = Ref{sym=member:C¹} of member:C¹
 //│     sym = class:C⁰
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
-// * whereas this is:
+// * Also resolved
 M.D
 //│ ——————————————| Resolved tree |—————————————————————————————————————————————————————————————————————
 //│ Blk:
@@ -64,19 +77,7 @@ M.D
 
 :fixme // FIXME: Should report a proper error about lack of declared C companion module
 C.oops
-//│ ╔══[COMPILATION ERROR] No definition found in scope for member 'C'
-//│ ║  l.66: 	C.oops
-//│ ║        	^
-//│ ╟── which references the symbol introduced here
-//│ ║  l.37: 	declare class C
-//│ ╙──      	              ^
-//│ ╔══[COMPILATION ERROR] No definition found in scope for member 'C'
-//│ ║  l.66: 	C.oops
-//│ ║        	^
-//│ ╟── which references the symbol introduced here
-//│ ║  l.37: 	declare class C
-//│ ╙──      	              ^
-//│ ═══[RUNTIME ERROR] ReferenceError: C is not defined
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'oops')
 
 :re
 M.D.oops

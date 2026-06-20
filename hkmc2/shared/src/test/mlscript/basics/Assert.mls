@@ -25,9 +25,7 @@ assert xs is Array
 :fixme
 assert(true); 123
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let scrut;
-//│ scrut = 123;
-//│ if (scrut === true) {
+//│ if (123 === true) {
 //│   return runtime.Unit
 //│ }
 //│ return runtime.safeCall(runtime.assertFail("Assert.mls", "27"));

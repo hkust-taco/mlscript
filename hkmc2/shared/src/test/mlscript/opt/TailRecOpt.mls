@@ -14,7 +14,6 @@ fun merge(t1, t2) =
     t2 is Empty then t1
     t1 is Node then merge(t2, t1)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let merge⁰;
 //│ define merge⁰ as fun merge¹(t1, t2) {
 //│   loop loopLabel:
 //│     match t1

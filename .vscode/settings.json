@@ -5,7 +5,7 @@
     },
     "typescript.validate.enable": false,
     "files.watcherExclude": {
-        "**/target": true
+        "**/target/**": true
     },
     "[typescript]": {
         "editor.quickSuggestions": {

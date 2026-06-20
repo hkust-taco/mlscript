@@ -48,6 +48,18 @@ rcd
 
 
 let rcd =
+  a: x => (b: y => (c: x + y))
+//│ rcd = {a: fun a}
+
+:fixme
+let rcd =
+  a: x => {b: y => c: x + y}
+//│ ╔══[PARSE ERROR] Expected start of expression in this position; found end of input instead
+//│ ║  l.56: 	  a: x => {b: y => c: x + y}
+//│ ╙──      	                            ^
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Unexpected effectful in subterm position: Effectful(InfixApp(Ident(b),Keywrd(keyword ':'),InfixApp(Tup(List(Ident(y))),Keywrd(keyword '=>'),InfixApp(Ident(c),Keywrd(keyword ':'),OpApp(Ident(x),Ident(+),List(Ident(y)))))),Error())
+
+let rcd =
   a: x => b: y => c: x + y
 //│ rcd = {a: fun a}
 

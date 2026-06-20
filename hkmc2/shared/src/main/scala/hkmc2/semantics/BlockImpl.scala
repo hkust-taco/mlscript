@@ -1,7 +1,7 @@
 package hkmc2
 package semantics
 
-import mlscript.utils.*, shorthands.*
+import hkmc2.utils.*, shorthands.*
 import syntax.Tree
 import syntax.Tree.*
 import hkmc2.syntax.{PossiblyAnnotated, TypeOrTermDef}

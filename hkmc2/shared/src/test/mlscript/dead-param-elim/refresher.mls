@@ -69,8 +69,8 @@ wrapper(42, 0)
 //│ dead-param-elim > prodfun wrapper#0 @ wrapper@3 -> eliminable: {1}
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let wrapper⁰, wrapper_3$wrapper⁰;
-//│ define wrapper_3$wrapper⁰ as fun wrapper_3$wrapper¹(val1) {
+//│ let wrapper_3$wrapper;
+//│ define wrapper_3$wrapper as fun wrapper_3$wrapper⁰(val1) {
 //│   let A, tmp, tmp1;
 //│   define A as class A⁰ {
 //│     method makeB⁰ = fun makeB¹() {
@@ -104,7 +104,7 @@ wrapper(42, 0)
 //│   set tmp1 = tmp.makeB³();
 //│   return tmp1.getVal﹖()
 //│ };
-//│ return wrapper_3$wrapper¹(42)
+//│ return wrapper_3$wrapper⁰(42)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 42
 

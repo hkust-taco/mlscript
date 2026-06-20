@@ -1,7 +1,7 @@
 package hkmc2
 package semantics
 
-import mlscript.utils.*, shorthands.*
+import hkmc2.utils.*, shorthands.*
 import collection.immutable.HashMap, collection.mutable.Buffer
 import syntax.{Keyword, SpreadKind, Tree}, Tree.{Ident, StrLit}
 import Elaborator.State, Message.MessageContext, ucs.error
@@ -254,7 +254,7 @@ enum Pattern extends AutoLocated:
   /** Annotate the pattern using the given term. If the term is `Error`, then
     * use the location of the original tree for error reporting. */
   inline def annotate(annotation: Term, treeLoc: Opt[Loc]): Pattern.Annotated =
-    val elem = if annotation is Term.Error then L(treeLoc) else R(annotation)
+    val elem = if annotation.isInstanceOf[Term.Error] then L(treeLoc) else R(annotation)
     this match
       case Annotated(pattern, annotations) =>
         Annotated(pattern, annotations :+ elem)

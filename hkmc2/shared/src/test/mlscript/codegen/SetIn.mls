@@ -121,7 +121,6 @@ fun example() =
   y
 example()
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let example⁰;
 //│ define example⁰ as fun example¹() {
 //│   let x, get_x, old, tmp, tmp1, tmp2, tmp3, get_x1;
 //│   set x = 0;

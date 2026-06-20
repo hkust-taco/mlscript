@@ -23,9 +23,9 @@ int(nat(42))
 :expect true
 nat(0) is @compile NatBox
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let scrut, matcher__NatBox$, matchSuccess, lambda⁰;
+//│ let scrut, matcher__NatBox$, matchSuccess, lambda;
 //│ set scrut = nat⁰(0);
-//│ define lambda⁰ as fun lambda¹(input) {
+//│ define lambda as fun lambda⁰(input) {
 //│   let p_0$, value, value1, p_0$1, result0$, p_0$2, tmp, tmp1, tmp2, tmp3, tmp4;
 //│   match input
 //│     null =>
@@ -65,7 +65,7 @@ nat(0) is @compile NatBox
 //│       return p_0$2
 //│   end
 //│ };
-//│ set matcher__NatBox$ = lambda¹;
+//│ set matcher__NatBox$ = lambda⁰;
 //│ set matchSuccess = matcher__NatBox$(scrut);
 //│ match matchSuccess
 //│   true =>

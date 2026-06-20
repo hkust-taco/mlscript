@@ -24,28 +24,32 @@
 //│ ╔══[COMPILATION ERROR] Identifier `Foo` does not name a known class symbol.
 //│ ║  l.20: 	(1).Foo#a()
 //│ ╙──      	   ^^^^
-//│ ═══[COMPILATION ERROR] Expected a statically known class; found ‹error›.
-//│ ═══[COMPILATION ERROR] Not a valid class: ‹error›
+//│ ╔══[COMPILATION ERROR] Expected a statically known class; found ‹error›.
+//│ ║  l.20: 	(1).Foo#a()
+//│ ╙──      	   ^^^^
+//│ ╔══[COMPILATION ERROR] Not a valid class: ‹error›
+//│ ║  l.20: 	(1).Foo#a()
+//│ ╙──      	   ^^^^
 //│ Type: ⊥
 
 
 fun Oops() = 1
 Oops().Oops#a()
 //│ ╔══[COMPILATION ERROR] Identifier `Oops` does not name a known class symbol.
-//│ ║  l.33: 	Oops().Oops#a()
+//│ ║  l.37: 	Oops().Oops#a()
 //│ ╙──      	      ^^^^^
 //│ ╔══[COMPILATION ERROR] Not a valid class: reference
-//│ ║  l.33: 	Oops().Oops#a()
+//│ ║  l.37: 	Oops().Oops#a()
 //│ ╙──      	      ^^^^^
 //│ Type: ⊥
 
 data class Oops2()
 (new Oops2()).Oops2#a()
 //│ ╔══[COMPILATION ERROR] Class 'Oops2' does not contain member 'a'.
-//│ ║  l.43: 	(new Oops2()).Oops2#a()
+//│ ║  l.47: 	(new Oops2()).Oops2#a()
 //│ ╙──      	                    ^
 //│ ╔══[COMPILATION ERROR] a is not a valid member in class Oops2
-//│ ║  l.43: 	(new Oops2()).Oops2#a()
+//│ ║  l.47: 	(new Oops2()).Oops2#a()
 //│ ╙──      	 ^^^^^^^^^^^^^^^^^^^^
 //│ Type: ⊥
 
@@ -54,7 +58,7 @@ data class Oops2()
 fun inc(x) = x + 1
 inc("oops")
 //│ ╔══[COMPILATION ERROR] Type error in string literal with expected type 'x
-//│ ║  l.55: 	inc("oops")
+//│ ║  l.59: 	inc("oops")
 //│ ║        	    ^^^^^^
 //│ ╟── because: cannot constrain  Str  <:  'x
 //│ ╙── because: cannot constrain  Str  <:  Int
@@ -63,7 +67,7 @@ inc("oops")
 fun inc(x) = x + 1
 inc as Int
 //│ ╔══[COMPILATION ERROR] Type error in reference with expected type Int
-//│ ║  l.64: 	inc as Int
+//│ ║  l.68: 	inc as Int
 //│ ║        	^^^
 //│ ╙── because: cannot constrain  ('x) ->{⊥} (Int)  <:  Int
 //│ Type: Int

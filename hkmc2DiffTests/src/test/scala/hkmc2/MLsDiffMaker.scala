@@ -2,7 +2,7 @@ package hkmc2
 
 import scala.collection.mutable
 
-import mlscript.utils.*, shorthands.*
+import hkmc2.utils.*, shorthands.*
 import utils.*
 
 import hkmc2.semantics.{Elaborator, Resolver, Resolvable, Symbol, SymbolPrinter}
@@ -124,6 +124,7 @@ abstract class MLsDiffMaker extends DiffMaker:
     if inlineThreshold.isSet && noInlineOpt.isSet then
       output(s"$errMarker Option ':noInline' conflicts with option ':inlineThreshold'")
     Config(
+      language = Config.Language.default,
       baseDir = wd,
       sanityChecks = Opt.when(noSanityCheck.isUnset)(SanityChecks(light = true, checkUnreachable = true)),
       effectHandlers = Opt.when(effectHandlers.isSet)(EffectHandlers(

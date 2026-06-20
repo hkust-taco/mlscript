@@ -7,7 +7,7 @@
 fun f() = 0
 f()
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let f⁰; define f⁰ as fun f¹() { return 0 }; return 0
+//│ define f⁰ as fun f¹() { return 0 }; return 0
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 0
 
@@ -15,7 +15,7 @@ f()
 fun f(x) = x
 f(100)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let f²; define f² as fun f³(x) { return x }; return 100
+//│ define f² as fun f³(x) { return x }; return 100
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 100
 
@@ -25,7 +25,6 @@ fun f() =
   let done(x) = x
   done
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let f⁴;
 //│ define f⁴ as fun f⁵() {
 //│   let done;
 //│   @private
@@ -42,7 +41,7 @@ fun f(a, b, c) = a + b + c
 print(f(1, 2, 3))
 print(f(1, 2, ...[1]))
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let f⁶, tmp, tmp1;
+//│ let tmp, tmp1;
 //│ define f⁶ as fun f⁷(a, b, c) {
 //│   let tmp2;
 //│   set tmp2 = +⁰(a, b);
@@ -65,7 +64,6 @@ let
   v = 4
 f(...us, v)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let f⁸, us⁰, v⁰;
 //│ define f⁸ as fun f⁹(x, ...ys) {
 //│   return [x, ys]
 //│ };
@@ -86,7 +84,7 @@ fun f(a, ...b) =
 f(1, ...[2])
 f(1, ...[2], ...[3])
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let f¹⁰, tmp, tmp1, tmp2;
+//│ let tmp, tmp1, tmp2;
 //│ define f¹⁰ as fun f¹¹(a, ...b) {
 //│   do Predef⁰.print⁰(a);
 //│   return Predef⁰.print⁰(b)
@@ -113,22 +111,22 @@ f(1, 2)
 f(1, 2, 3)
 f(1, 2, 3, 4)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let f¹², c⁰, c¹, c²;
-//│ define f¹² as fun f¹³(a, b, ...c) {
+//│ let c, c1, c2;
+//│ define f¹² as fun f¹³(a, b, ...c3) {
 //│   let tmp;
 //│   set tmp = +⁰(a, b);
 //│   do Predef⁰.print⁰(tmp);
-//│   return Predef⁰.print⁰(c)
+//│   return Predef⁰.print⁰(c3)
 //│ };
-//│ set c⁰ = mut [];
+//│ set c = mut [];
 //│ do Predef⁰.print⁰(3);
-//│ do Predef⁰.print⁰(c⁰);
-//│ set c¹ = mut [3];
+//│ do Predef⁰.print⁰(c);
+//│ set c1 = mut [3];
 //│ do Predef⁰.print⁰(3);
-//│ do Predef⁰.print⁰(c¹);
-//│ set c² = mut [3, 4];
+//│ do Predef⁰.print⁰(c1);
+//│ set c2 = mut [3, 4];
 //│ do Predef⁰.print⁰(3);
-//│ return Predef⁰.print⁰(c²)
+//│ return Predef⁰.print⁰(c2)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > 3
 //│ > []
@@ -198,7 +196,7 @@ fun f() =
   g(g(true))
 f()
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let f¹⁴; define f¹⁴ as fun f¹⁵() { return true }; return true
+//│ define f¹⁴ as fun f¹⁵() { return true }; return true
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = true
 
@@ -239,23 +237,23 @@ fun foo(x)(y) =
   lam
 foo(1)(2)(3)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let foo⁰, lam$⁰, foo$worker⁰;
+//│ let lam$, foo$worker;
 //│ @inline @private
-//│ define lam$⁰ as fun lam$¹(x, y)(z) {
+//│ define lam$ as fun lam$⁰(x, y)(z) {
 //│   let tmp;
 //│   set tmp = +⁰(x, y);
 //│   return +⁰(tmp, z)
 //│ };
 //│ @inline
 //│ define foo⁰ as fun foo¹(x)(y) {
-//│   return foo$worker¹(x, y)
+//│   return foo$worker⁰(x, y)
 //│ };
-//│ define foo$worker⁰ as fun foo$worker¹(x, y) {
+//│ define foo$worker as fun foo$worker⁰(x, y) {
 //│   let inlinedVal, tmp;
 //│   set tmp = +⁰(x, y);
 //│   set inlinedVal = +⁰(tmp, 4);
 //│   do Predef⁰.print⁰(inlinedVal);
-//│   return lam$¹(x, y)
+//│   return lam$⁰(x, y)
 //│ };
 //│ do Predef⁰.print⁰(7);
 //│ return 6
@@ -268,7 +266,7 @@ foo(1)(2)(3)
 :noTailRec
 @inline fun f() = f()
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let f¹⁶; @inline define f¹⁶ as fun f¹⁷() { return f¹⁷() }; end
+//│ @inline define f¹⁶ as fun f¹⁷() { return f¹⁷() }; end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 // inlining done inside function with inline annotation
@@ -276,12 +274,7 @@ foo(1)(2)(3)
 @inline fun f() = 1
 @inline fun g() = f()
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let f¹⁸, g⁰;
-//│ @inline
-//│ define f¹⁸ as fun f¹⁹() { return 1 };
-//│ @inline
-//│ define g⁰ as fun g¹() { return 1 };
-//│ end
+//│ @inline define f¹⁸ as fun f¹⁹() { return 1 }; @inline define g⁰ as fun g¹() { return 1 }; end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 // Methods (not implemented currently)
@@ -309,7 +302,6 @@ module A with
 //│   static [definitionMetadata] = ["class", "A"];
 //│ });
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let A⁰;
 //│ define A⁰ as class A¹
 //│ module A² { method f²⁰ = fun f²¹() { return 1 } method g² = fun g³() { return A².f²¹() } };
 //│ end
@@ -322,7 +314,6 @@ module A with
 fun f() = if hide(false) do f() + 1
 f()
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let f²²;
 //│ define f²² as fun f²³() {
 //│   let scrut;
 //│   set scrut = Predef⁰.hide⁰(false);
@@ -344,7 +335,7 @@ fun g() =
   fun f() = f()
   f()
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let g⁴; define g⁴ as fun g⁵() { let f; define f as fun f²⁴() { return f²⁴() }; return f²⁴() }; end
+//│ define g⁴ as fun g⁵() { let f; define f as fun f²⁴() { return f²⁴() }; return f²⁴() }; end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 
@@ -355,17 +346,17 @@ fun g() =
   Foo()
 makeFoo()
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let makeFoo⁰, Foo⁰;
+//│ let Foo;
 //│ @inline
 //│ define makeFoo⁰ as fun makeFoo¹() {
-//│   let Foo;
-//│   define Foo as class Foo² {
-//│     constructor Foo¹
+//│   let Foo1;
+//│   define Foo1 as class Foo¹ {
+//│     constructor Foo⁰
 //│   };
-//│   return Foo¹()
+//│   return Foo⁰()
 //│ };
-//│ define Foo⁰ as class Foo⁴ { constructor Foo³ };
-//│ return Foo³()
+//│ define Foo as class Foo³ { constructor Foo² };
+//│ return Foo²()
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = Foo()
 
@@ -382,22 +373,22 @@ scope.locally of (
   test()
 )
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let A³, B⁰, lambda⁰;
-//│ define A³ as class A⁴
-//│ module A⁵ {
+//│ let A, B, lambda;
+//│ define A as class A³
+//│ module A⁴ {
 //│   method foo² = fun foo³ {
-//│     return B¹.bar⁰()
+//│     return B⁰.bar⁰()
 //│   }
 //│ };
-//│ define B⁰ as class B²
-//│ module B¹ {
+//│ define B as class B¹
+//│ module B⁰ {
 //│   method bar¹ = fun bar⁰() {
-//│     return A⁵.foo³
+//│     return A⁴.foo³
 //│   }
 //│ };
 //│ @private
-//│ define lambda⁰ as fun lambda¹() { return A⁵.foo³ };
-//│ return lambda¹
+//│ define lambda as fun lambda⁰() { return A⁴.foo³ };
+//│ return lambda⁰
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = fun
 

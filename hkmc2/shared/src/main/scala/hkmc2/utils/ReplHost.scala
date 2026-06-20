@@ -2,13 +2,13 @@ package hkmc2
 
 import java.io.{BufferedWriter, BufferedReader, InputStreamReader, OutputStreamWriter}
 
-import mlscript.utils.*, shorthands.*
+import hkmc2.utils.*, shorthands.*
 import hkmc2.utils.*
 
 /**
  * A helper class to manipulate an interactive Node.js process.
  */
-class ReplHost(rootPath: Str)(using TL) {
+class ReplHost(rootPath: Str)(using TL):
   
   private val builder = new java.lang.ProcessBuilder()
   // `--interactive` always enters the REPL even if stdin is not a terminal.
@@ -32,39 +32,34 @@ class ReplHost(rootPath: Str)(using TL) {
    * @return when there are syntax errors, returns `Error` where `syntax` is 
    *         `true`; otherwise, returns the result
    */
-  private def collectUntilPrompt(): ReplHost.Error | Str = {
+  private def collectUntilPrompt(): ReplHost.Error | Str =
     val buffer = new StringBuilder()
-    while !buffer.endsWith("\n> ") do {
+    while !buffer.endsWith("\n> ") do
       val c = stdout.read()
       if c === -1 then lastWords(s"ReplHost could not read more from NodeJS stdout.")
       buffer.append(c.toChar)
-    }
     // Remove the trailing `"\n> "`
     buffer.delete(buffer.length - 3, buffer.length)
     val reply = buffer.toString()
     // tl.log(s"REPL> Collected (raw):\n${reply}")
-    val res = reply.linesIterator.find(_.startsWith(ReplHost.syntaxErrorHead)) match {
-      case None => reply.linesIterator.find(_.startsWith(ReplHost.uncaughtErrorHead)) match {
+    val res = reply.linesIterator.find(_.startsWith(ReplHost.syntaxErrorHead)) match
+      case None => reply.linesIterator.find(_.startsWith(ReplHost.uncaughtErrorHead)) match
         case None => reply
         case Some(uncaughtErrorLine) => {
           val message = uncaughtErrorLine.substring(ReplHost.uncaughtErrorHead.length)
           ReplHost.Error(false, message, reply.take(reply.indexOf(uncaughtErrorLine)).trim())
         }
-      }
       case Some(syntaxErrorLine) =>
         val message = syntaxErrorLine.substring(ReplHost.syntaxErrorHead.length)
         ReplHost.Error(true, message, reply.take(reply.indexOf(syntaxErrorLine)).trim())
-    }
     tl.log(s"REPL> Collected:\n${res}")
     res
-  }
 
-  private def consumeStderr(): String = {
+  private def consumeStderr(): String =
     val buffer = new StringBuilder()
     while stderr.ready() do
       buffer.append(stderr.read().toChar)
     buffer.toString()
-  }
 
   /**
    * Parse query results from collected output from Node.js.
@@ -119,20 +114,18 @@ class ReplHost(rootPath: Str)(using TL) {
     * @param code the code to execute
     * @return
     */
-  def execute(code: Str): ReplHost.Reply = {
+  def execute(code: Str): ReplHost.Reply =
     send(code)
     collectUntilPrompt() match
     case res: Str => ReplHost.Result(res)
     case error: ReplHost.Error => error
-  }
 
   /**
     * Kills the Node.js process.
     */
   def terminate(): Unit = proc.destroy()
-}
 
-object ReplHost {
+object ReplHost:
 
   /**
     * The syntax error beginning text from Node.js.
@@ -143,7 +136,7 @@ object ReplHost {
   /**
     * The base class of all kinds of REPL replies.
     */
-  sealed abstract class Reply {
+  sealed abstract class Reply:
 
     /**
       * Maps the successful part. Like `Option[T].map`.
@@ -152,34 +145,30 @@ object ReplHost {
       * @return
       */
     def map(f: Str => Reply): Reply
-  }
 
   /**
     * Represents a successful reply from Node.js.
     *
     * @param content the reply content, i.e. the final result
     */
-  final case class Result(content: Str) extends Reply {
+  final case class Result(content: Str) extends Reply:
     override def map(f: Str => Reply): Reply = f(content)
     override def toString(): Str = s"[success] $content"
-  }
 
   /**
     * If the query is `Empty`, we will receive this.
     */
-  object Empty extends Reply {
+  object Empty extends Reply:
     override def map(f: Str => Reply): Reply = this
     override def toString(): Str = "[empty]"
-  }
 
   /**
     * If the query is `Unexecuted`, we will receive this.
     * @param message the error message
     */
-  final case class Unexecuted(message: Str) extends Reply {
+  final case class Unexecuted(message: Str) extends Reply:
     override def map(f: Str => Reply): Reply = this
     override def toString(): Str = s"[unexecuted] $message"
-  }
 
   /**
     * If the `ReplHost` captured errors, it will response with `Error`.
@@ -187,12 +176,10 @@ object ReplHost {
     *               runtime error
     * @param message the error message
     */
-  final case class Error(syntax: Bool, message: Str, otherOutputs: Str) extends Reply {
+  final case class Error(syntax: Bool, message: Str, otherOutputs: Str) extends Reply:
     override def map(f: Str => Reply): Reply = this
     override def toString(): Str =
       if syntax then
         s"[syntax error] $message"
       else
         s"[runtime error] $message"
-  }
-}

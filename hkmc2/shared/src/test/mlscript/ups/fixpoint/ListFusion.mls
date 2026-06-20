@@ -1,0 +1,191 @@
+:js
+
+// Integer list pipelines fused by a fixed-point pattern. `MapInc` and
+// `FilterNonZero` stage nodes are pushed into the list until none remain.
+//
+// Note that the two compilations find redexes in different (both valid)
+// orders: the naive matcher restarts from the root after every step, where
+// the `Hole` alternative gives outermost redexes priority, so the two
+// stages run interleaved; the machine resumes inside the freshly produced
+// contractum, so it finishes all `MapInc` steps before popping back up to
+// the `FilterNonZero` frame. The rules are confluent, so both reach the
+// same normal form — but the machine allocates strictly less along the
+// way, because the naive matcher also rebuilds the entire prefix above the
+// redex after every step.
+
+import "../../../mlscript-compile/Option.mls"
+
+open annotations { compile }
+open Option { Some, None }
+
+// Construction prints make every allocation visible, so unnecessary
+// reconstruction of list nodes shows up as extra `new ...` lines.
+
+// Those `toString()` pretty-print nodes into Haskell expressions.
+
+let numObjectConstructed = 0
+//│ numObjectConstructed = 0
+
+fun withCounting(f) =
+  let before = numObjectConstructed
+  let result = f()
+  print("Constructed " + (numObjectConstructed - before) + " object(s)")
+  result
+
+object Nil
+data class Cons(val head, val tail) with
+  print("new: " + this.toString())
+  set numObjectConstructed += 1
+  fun toString() = render(head) + " :: " + tail.toString()
+
+data class MapInc(val source) with
+  print("new: " + this.toString())
+  set numObjectConstructed += 1
+  fun toString() = "map (+ 1) (" + source.toString() + ")"
+
+data class FilterNonZero(val source) with
+  print("new: " + this.toString())
+  set numObjectConstructed += 1
+  fun toString() = "filter (!= 0) (" + source.toString() + ")"
+
+data class Item(val value) with
+  print("new: " + this.toString())
+  set numObjectConstructed += 1
+  fun toString() = render(value)
+
+pattern Ctx(pattern Hole) =
+  | Hole
+  | Cons(_, Ctx(Hole))
+  | MapInc(Ctx(Hole))
+  | FilterNonZero(Ctx(Hole))
+
+pattern Redex =
+  | MapInc(Nil) => 
+      (print("reduce(MapInc): done"); Nil)
+  | MapInc(Cons(Item(a), tail)) => 
+      (let b = a + 1 in print("reduce(MapInc): " + a + " to " + b); Cons(Item(b), MapInc(tail)))
+  | FilterNonZero(Nil) => 
+      (print("reduce: done"); Nil)
+  | FilterNonZero(Cons(Item(0), tail)) => 
+      (print("reduce(FilterNonZero): drop 0"); FilterNonZero(tail))
+  | FilterNonZero(Cons(Item(a), tail)) => 
+      (print("reduce(FilterNonZero): keep " + a); Cons(Item(a), FilterNonZero(tail)))
+
+pattern Step = Ctx(Redex)
+
+pattern Steps = Step as Steps | _
+
+fun runSlow(ops) = if ops is Steps(result) then result
+
+fun runFast(ops) = if ops is @compile Steps(result) then result
+
+let items = Cons(Item(0), Cons(Item(1), Cons(Item(-1), Nil)))
+//│ > new: 0
+//│ > new: 1
+//│ > new: -1
+//│ > new: -1 :: Nil
+//│ > new: 1 :: -1 :: Nil
+//│ > new: 0 :: 1 :: -1 :: Nil
+//│ items = 0 :: 1 :: -1 :: Nil
+
+let pipeline = FilterNonZero(MapInc(items))
+//│ > new: map (+ 1) (0 :: 1 :: -1 :: Nil)
+//│ > new: filter (!= 0) (map (+ 1) (0 :: 1 :: -1 :: Nil))
+//│ pipeline = filter (!= 0) (map (+ 1) (0 :: 1 :: -1 :: Nil))
+
+:expect 1 :: 2 :: Nil
+withCounting of () => runSlow(pipeline)
+//│ > reduce(MapInc): 0 to 1
+//│ > new: 1
+//│ > new: map (+ 1) (1 :: -1 :: Nil)
+//│ > new: 1 :: map (+ 1) (1 :: -1 :: Nil)
+//│ > new: filter (!= 0) (1 :: map (+ 1) (1 :: -1 :: Nil))
+//│ > reduce(FilterNonZero): keep 1
+//│ > new: 1
+//│ > new: filter (!= 0) (map (+ 1) (1 :: -1 :: Nil))
+//│ > new: 1 :: filter (!= 0) (map (+ 1) (1 :: -1 :: Nil))
+//│ > reduce(MapInc): 1 to 2
+//│ > new: 2
+//│ > new: map (+ 1) (-1 :: Nil)
+//│ > new: 2 :: map (+ 1) (-1 :: Nil)
+//│ > new: filter (!= 0) (2 :: map (+ 1) (-1 :: Nil))
+//│ > new: 1 :: filter (!= 0) (2 :: map (+ 1) (-1 :: Nil))
+//│ > reduce(FilterNonZero): keep 2
+//│ > new: 2
+//│ > new: filter (!= 0) (map (+ 1) (-1 :: Nil))
+//│ > new: 2 :: filter (!= 0) (map (+ 1) (-1 :: Nil))
+//│ > new: 1 :: 2 :: filter (!= 0) (map (+ 1) (-1 :: Nil))
+//│ > reduce(MapInc): -1 to 0
+//│ > new: 0
+//│ > new: map (+ 1) (Nil)
+//│ > new: 0 :: map (+ 1) (Nil)
+//│ > new: filter (!= 0) (0 :: map (+ 1) (Nil))
+//│ > new: 2 :: filter (!= 0) (0 :: map (+ 1) (Nil))
+//│ > new: 1 :: 2 :: filter (!= 0) (0 :: map (+ 1) (Nil))
+//│ > reduce(FilterNonZero): drop 0
+//│ > new: filter (!= 0) (map (+ 1) (Nil))
+//│ > new: 2 :: filter (!= 0) (map (+ 1) (Nil))
+//│ > new: 1 :: 2 :: filter (!= 0) (map (+ 1) (Nil))
+//│ > reduce(MapInc): done
+//│ > new: filter (!= 0) (Nil)
+//│ > new: 2 :: filter (!= 0) (Nil)
+//│ > new: 1 :: 2 :: filter (!= 0) (Nil)
+//│ > reduce: done
+//│ > new: 2 :: Nil
+//│ > new: 1 :: 2 :: Nil
+//│ > Constructed 30 object(s)
+//│ = 1 :: 2 :: Nil
+
+:expect 1 :: 2 :: Nil
+// Note that it doesn't build the entire expression.
+withCounting of () => runFast(pipeline)
+//│ > reduce(MapInc): 0 to 1
+//│ > new: 1
+//│ > new: map (+ 1) (1 :: -1 :: Nil)
+//│ > new: 1 :: map (+ 1) (1 :: -1 :: Nil)
+//│ > reduce(MapInc): 1 to 2
+//│ > new: 2
+//│ > new: map (+ 1) (-1 :: Nil)
+//│ > new: 2 :: map (+ 1) (-1 :: Nil)
+//│ > reduce(MapInc): -1 to 0
+//│ > new: 0
+//│ > new: map (+ 1) (Nil)
+//│ > new: 0 :: map (+ 1) (Nil)
+//│ > reduce(MapInc): done
+//│ > new: 0 :: Nil
+//│ > new: 2 :: 0 :: Nil
+//│ > new: 1 :: 2 :: 0 :: Nil
+//│ > new: filter (!= 0) (1 :: 2 :: 0 :: Nil)
+//│ > reduce(FilterNonZero): keep 1
+//│ > new: 1
+//│ > new: filter (!= 0) (2 :: 0 :: Nil)
+//│ > new: 1 :: filter (!= 0) (2 :: 0 :: Nil)
+//│ > reduce(FilterNonZero): keep 2
+//│ > new: 2
+//│ > new: filter (!= 0) (0 :: Nil)
+//│ > new: 2 :: filter (!= 0) (0 :: Nil)
+//│ > reduce(FilterNonZero): drop 0
+//│ > new: filter (!= 0) (Nil)
+//│ > reduce: done
+//│ > new: 2 :: Nil
+//│ > new: 1 :: 2 :: Nil
+//│ > Constructed 22 object(s)
+//│ = 1 :: 2 :: Nil
+
+// An already-normal list contains no stage nodes and cannot take a single
+// step, so it matches itself. Plugging preserves identity: popping out of
+// the `Cons` frames the machine descended through allocates nothing, because
+// nothing below them changed.
+
+items
+//│ = 0 :: 1 :: -1 :: Nil
+
+:expect true
+withCounting of () => runSlow(items) is items
+//│ > Constructed 0 object(s)
+//│ = true
+
+:expect true
+withCounting of () => runFast(items) is items
+//│ > Constructed 0 object(s)
+//│ = true

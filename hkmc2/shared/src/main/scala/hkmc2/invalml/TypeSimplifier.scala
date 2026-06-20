@@ -5,7 +5,7 @@ import scala.collection.immutable.{SortedMap, SortedSet}
 import scala.util.boundary, boundary.break
 import scala.util.chaining._
 
-import mlscript.utils.*, shorthands.*
+import hkmc2.utils.*, shorthands.*
 import hkmc2.utils.*
 
 import Type.*

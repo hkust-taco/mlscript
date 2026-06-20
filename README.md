@@ -182,8 +182,7 @@ and then use one of the following commands.
 - `~hkmc2DiffTests/Test/run` for running the test watcher,
   which updates test files as you save them and recompiles the Scala sources automatically on change.
 - `test` for compiling all JVM and JS subprojects
-  and running every single test in the repository,
-  including obsolete ones.
+  and running every single test in the repository.
 
 Individual tests can be run with `-z`.
 For example, `~mlscriptJVM/testOnly mlscript.DiffTests -- -z parser` will watch for file changes and continuously run all parser tests (those that have "parser" in their name).

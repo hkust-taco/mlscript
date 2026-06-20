@@ -33,9 +33,9 @@ pattern IdentifierStart = Char.Letter | "_"
 pattern IdentifierBody = Char.Letter | Char.Digit | "_" | "'"
 
 pattern Operator =
-  "," | ";" |
-  "!" | "#" | "%" | "&" | "*" | "+" | "-" | "/" | ":" | "<" |
-  "=" | ">" | "?" | "@" | "\\" | "^" | "|" | "~" | "."
+  "," | ";"
+  | "!" | "#" | "%" | "&" | "*" | "+" | "-" | "/" | ":" | "<"
+  | "=" | ">" | "?" | "@" | "\\" | "^" | "|" | "~" | "."
 
 pattern Bracket = "(" | ")" | "[" | "]" | "{" | "}"
 

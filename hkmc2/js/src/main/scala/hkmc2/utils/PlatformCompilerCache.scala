@@ -3,7 +3,7 @@ package utils
 
 import CompilerCache.Artifact
 import collection.mutable.Map as MutMap
-import mlscript.utils.*, shorthands.*
+import hkmc2.utils.*, shorthands.*
 
 class PlatformCompilerCache extends CompilerCache:
   

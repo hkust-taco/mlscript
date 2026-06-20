@@ -13,7 +13,6 @@ object Foo with
     do test1
     state
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let Foo⁰;
 //│ define Foo⁰ as object Foo¹ {
 //│   private val state⁰;
 //│   constructor() {
@@ -61,7 +60,6 @@ module Bar with
     do test1
     state
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let Bar⁰;
 //│ define Bar⁰ as class Bar¹
 //│ module Bar² {
 //│   private val state¹;
@@ -108,7 +106,6 @@ module UnusedModulePrivate with
   let unused = print(4)
   fun get = used
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let UnusedModulePrivate⁰, UnusedObjectPrivate⁰;
 //│ define UnusedObjectPrivate⁰ as object UnusedObjectPrivate¹ {
 //│   private val used⁰;
 //│   constructor() {

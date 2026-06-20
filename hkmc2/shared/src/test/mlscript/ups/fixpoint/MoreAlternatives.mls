@@ -1,0 +1,126 @@
+:js
+
+// Fixed-point patterns may list extra non-recursive alternatives between the
+// self-reference and the trailing wildcard:
+//
+//   pattern P = Q as P | a | _
+//
+// reads `(Q as P) | a | _`. The recursive alternative fails exactly when `Q`
+// cannot step, so `a` is matched exactly once, against the final normal form:
+// if it matches, its output replaces the result; otherwise the wildcard keeps
+// the normal form.
+
+open annotations { compile }
+
+data class Box(val value) with
+  print("new Box(" + render(value) + ")")
+
+data class Tag(val value) with
+  print("new Tag(" + render(value) + ")")
+
+pattern UnBox = Box(x) => x
+pattern UnTag = Tag(x) => x
+
+// Peel all boxes if any. Then, untag or return the value
+pattern PeelUntag = UnBox as PeelUntag | Tag(x) => x | _
+
+fun peelUntagSlow(x) = if x is PeelUntag(x') then x'
+fun peelUntagFast(x) = if x is @compile PeelUntag(x') then x'
+
+// Test: `Tag` in `Box`es.
+
+let boxedTag = Box(Box(Tag(5)))
+//│ > new Tag(5)
+//│ > new Box(Tag(5))
+//│ > new Box(Box(Tag(5)))
+//│ boxedTag = Box(Box(Tag(5)))
+
+:expect 5
+peelUntagSlow(boxedTag)
+//│ = 5
+
+:expect 5
+peelUntagFast(boxedTag)
+//│ = 5
+
+// Test: No `Tag`.
+
+let boxedNum = Box(Box(7))
+//│ > new Box(7)
+//│ > new Box(Box(7))
+//│ boxedNum = Box(Box(7))
+
+:expect 7
+peelUntagSlow(boxedNum)
+//│ = 7
+
+:expect 7
+peelUntagFast(boxedNum)
+//│ = 7
+
+// Test: No `Box`es at all.
+
+:expect 5
+if Tag(5) is PeelUntag(r) then r
+//│ > new Tag(5)
+//│ = 5
+
+:expect 5
+peelUntagFast of Tag(5)
+//│ > new Tag(5)
+//│ = 5
+
+// Test: Interleaved `Tag` and `Box`.
+
+let boxedTaggedBox = Box(Box(Tag(Box(Tag(5)))))
+//│ > new Tag(5)
+//│ > new Box(Tag(5))
+//│ > new Tag(Box(Tag(5)))
+//│ > new Box(Tag(Box(Tag(5))))
+//│ > new Box(Box(Tag(Box(Tag(5)))))
+//│ boxedTaggedBox = Box(Box(Tag(Box(Tag(5)))))
+
+:expect Box(Tag(5))
+peelUntagSlow of boxedTaggedBox
+//│ = Box(Tag(5))
+
+:expect Box(Tag(5))
+peelUntagFast of boxedTaggedBox
+//│ = Box(Tag(5))
+
+
+// ————— Multiple recursive step alternatives —————
+//
+// A fixed point may list several recursive steps; combined, they are tried
+// in order at each iteration. Here both `UnBox` and `UnTag` step, so nested
+// boxes and tags are peeled in any order until a bare value remains.
+
+pattern PeelMixed =
+  | UnBox as PeelMixed
+  | UnTag as PeelMixed
+  | _
+
+fun peelMixedSlow(x) = if x is PeelMixed(x') then x'
+
+fun peelMixedFast(x) = if x is @compile PeelMixed(x') then x'
+
+let mixed = Box(Tag(Box(42)))
+//│ > new Box(42)
+//│ > new Tag(Box(42))
+//│ > new Box(Tag(Box(42)))
+//│ mixed = Box(Tag(Box(42)))
+
+:expect 42
+peelMixedSlow(mixed)
+//│ = 42
+
+:expect 42
+peelMixedFast(mixed)
+//│ = 42
+
+// Body-annotated, so every plain use site gets the machine.
+pattern PeelMixedFast = @compile (UnBox as PeelMixedFast | (UnTag as PeelMixedFast) | _)
+
+:expect 42
+if mixed is PeelMixedFast(r) then r else -1
+//│ = 42

@@ -32,55 +32,55 @@ fun f(x) =
     fun getX() = x
   [new A(x + 1)(x + 2), A, A(x + 1), A(x + 1)(x + 2)]
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let A⁰, f⁰, Capture$f⁰, A$⁰;
+//│ let A, Capture$f, A$;
 //│ @inline
-//│ define A$⁰ as fun A$¹(f$cap)(y)(z) {
-//│   return new A¹(y, f$cap, z)
+//│ define A$ as fun A$⁰(f$cap)(y)(z) {
+//│   return new A⁰(y, f$cap, z)
 //│ };
-//│ define A⁰ as class A¹ {
+//│ define A as class A⁰ {
 //│   private val f$cap⁰;
 //│   val y⁰;
 //│   val z⁰;
-//│   constructor A²(y, f$cap, z) {
-//│     set A¹.this.f$cap⁰ = f$cap;
+//│   constructor A¹(y, f$cap, z) {
+//│     set A⁰.this.f$cap⁰ = f$cap;
 //│     define y⁰ as val y¹ = y;
 //│     define z⁰ as val z¹ = z;
 //│     end
 //│   }
 //│   method newA⁰ = fun newA¹() {
 //│     let tmp, tmp1;
-//│     set tmp = +⁰(A¹.this.y¹, 1);
-//│     set tmp1 = +⁰(A¹.this.z¹, 1);
-//│     return new A¹(tmp, A¹.this.f$cap⁰, tmp1)
+//│     set tmp = +⁰(A⁰.this.y¹, 1);
+//│     set tmp1 = +⁰(A⁰.this.z¹, 1);
+//│     return new A⁰(tmp, A⁰.this.f$cap⁰, tmp1)
 //│   }
 //│   method foo⁰ = fun foo¹() {
 //│     let tmp;
-//│     set tmp = +⁰(A¹.this.f$cap⁰.x$0⁰, 1);
-//│     set A¹.this.f$cap⁰.x$0⁰ = tmp;
-//│     return A¹.this.f$cap⁰.x$0⁰
+//│     set tmp = +⁰(A⁰.this.f$cap⁰.x$0⁰, 1);
+//│     set A⁰.this.f$cap⁰.x$0⁰ = tmp;
+//│     return A⁰.this.f$cap⁰.x$0⁰
 //│   }
 //│   method getX⁰ = fun getX¹() {
-//│     return A¹.this.f$cap⁰.x$0⁰
+//│     return A⁰.this.f$cap⁰.x$0⁰
 //│   }
 //│ };
-//│ define Capture$f⁰ as class Capture$f² {
-//│   constructor Capture$f¹(x$0) {
+//│ define Capture$f as class Capture$f¹ {
+//│   constructor Capture$f⁰(x$0) {
 //│     define x$0¹ as val x$0⁰ = x$0;
 //│     end
 //│   }
 //│ };
 //│ define f⁰ as fun f¹(x) {
 //│   let tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, f$cap, A$here;
-//│   set f$cap = new mut Capture$f²(x);
+//│   set f$cap = new mut Capture$f¹(x);
 //│   set tmp = +⁰(f$cap.x$0⁰, 1);
 //│   set tmp1 = +⁰(f$cap.x$0⁰, 2);
-//│   set tmp2 = new A¹(tmp, f$cap, tmp1);
+//│   set tmp2 = new A⁰(tmp, f$cap, tmp1);
 //│   set tmp3 = +⁰(f$cap.x$0⁰, 1);
-//│   set tmp4 = A$¹(f$cap)(tmp3);
+//│   set tmp4 = A$⁰(f$cap)(tmp3);
 //│   set tmp5 = +⁰(f$cap.x$0⁰, 1);
 //│   set tmp6 = +⁰(f$cap.x$0⁰, 2);
-//│   set tmp7 = new A¹(tmp5, f$cap, tmp6);
-//│   set A$here = A$¹(f$cap);
+//│   set tmp7 = new A⁰(tmp5, f$cap, tmp6);
+//│   set A$here = A$⁰(f$cap);
 //│   return [tmp2, A$here, tmp4, tmp7]
 //│ };
 //│ end

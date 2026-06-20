@@ -75,11 +75,23 @@ data class C(x, y)
 let f = new! C()
 //│ f = C(undefined, undefined)
 
+// * Note: we do _not_ eta-expand C here because this is a dynamic `new!` call
+// * on the constructor function, not on the class!
+:sjs
 let f = new! C
-//│ f = fun f
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ let f3; f3 = globalThis.Object.freeze(new C3());
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ f = C(undefined, undefined)
 
+:re
 f(1, 2)
+//│ ═══[RUNTIME ERROR] TypeError: f3 is not a function
+
+
+new! C.class(1, 2)
 //│ = C(1, 2)
+
 
 let f = x => new! (id(C))(x, x)
 //│ f = fun f

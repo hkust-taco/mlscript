@@ -1,0 +1,147 @@
+:js
+
+// A fixed-point pattern may have several recursive alternatives:
+//
+//   pattern P = (Q as P) | (R as P) | _
+//
+// The steps are tried in order at every iteration: an `R` step is taken
+// only when no `Q` step applies, and after it, `Q` regains priority. Note
+// that unlike the chain shape, the trailing alternatives are disjuncts of
+// the whole chains rather than of their tails, so a match with zero steps
+// is allowed: the alternatives then process the original scrutinee.
+
+open annotations { compile }
+
+data class Box(val value)
+data class Tag(val value)
+
+pattern UnBox = Box(x) => x
+pattern UnTag = Tag(x) => x
+
+// Peel boxes and tags in any interleaving.
+pattern PeelBoth =
+  | UnBox as PeelBoth
+  | UnTag as PeelBoth
+  | _
+
+let wrapped = Box(Tag(Box(42)))
+//│ wrapped = Box(Tag(Box(42)))
+
+fun peelBothSlow(x) = if x is PeelBoth(r) then r
+
+fun peelBothFast(x) = if x is @compile PeelBoth(r) then r
+
+:expect 42
+peelBothSlow(wrapped)
+//│ = 42
+
+:expect 42
+peelBothFast(wrapped)
+//│ = 42
+
+// Zero steps are allowed: the wildcard accepts the unwrappable scrutinee.
+:expect 7
+peelBothSlow(7)
+//│ = 7
+
+:expect 7
+peelBothFast(7)
+//│ = 7
+
+
+// ————— Step priority —————
+
+data class Lit(val value)
+data class Add(val lhs, val rhs)
+
+pattern Value = Lit
+
+pattern Ctx(pattern Hole) =
+  | Hole
+  | Add(Ctx(Hole), _)
+  | Add(Value, Ctx(Hole))
+
+// The proper step adds two literals; the sloppy step gives up on the right
+// operand. Both match `Add(Lit(1), Lit(2))`, so the result tells which one
+// was prioritized.
+pattern ProperStep = Ctx(Add(Lit(a), Lit(b)) => Lit(a + b))
+pattern SloppyStep = Ctx(Add(Lit(a), _) => Lit(a))
+
+pattern EvalSloppy =
+  | ProperStep as EvalSloppy
+  | SloppyStep as EvalSloppy
+  | _
+
+fun evalSloppySlow(x) = if x is EvalSloppy(y) then y
+
+fun evalSloppyFast(x) = if x is @compile EvalSloppy(y) then y
+
+// Both operands are literals: the proper step must win.
+:expect Lit(3)
+evalSloppySlow of Add(Lit(1), Lit(2))
+//│ = Lit(3)
+
+:expect Lit(3)
+evalSloppyFast of Add(Lit(1), Lit(2))
+//│ = Lit(3)
+
+// The right operand is stuck: only the sloppy step applies.
+:expect Lit(1)
+evalSloppySlow of Add(Lit(1), Tag(9))
+//│ = Lit(1)
+
+:expect Lit(1)
+evalSloppyFast of Add(Lit(1), Tag(9))
+//│ = Lit(1)
+
+// The steps alternate as needed: the left sum is reduced properly before
+// the sloppy step drops the stuck right operand.
+:expect Lit(3)
+evalSloppySlow of Add(Add(Lit(1), Lit(2)), Tag(9))
+//│ = Lit(3)
+
+:expect Lit(3)
+evalSloppyFast of Add(Add(Lit(1), Lit(2)), Tag(9))
+//│ = Lit(3)
+
+
+// ————— Without a catch-all —————
+
+// Peel boxes and tags; the result must be a literal.
+pattern PeelToLit =
+  | UnBox as PeelToLit
+  | UnTag as PeelToLit
+  | Lit(_)
+
+fun peelToLitSlow(x) = if x is PeelToLit(Lit(y)) then y
+
+fun peelToLitFast(x) = if x is @compile PeelToLit(Lit(y)) then y
+
+let input1 = Box(Tag(Lit(1)))
+//│ input1 = Box(Tag(Lit(1)))
+
+peelToLitSlow(input1)
+//│ = 1
+
+peelToLitFast(input1)
+//│ = 1
+
+let input2 = Box(Tag(7))
+//│ input2 = Box(Tag(7))
+
+:re
+peelToLitSlow(input2)
+//│ ═══[RUNTIME ERROR] Error: match error
+
+:re
+peelToLitFast(input2)
+//│ ═══[RUNTIME ERROR] Error: match error
+
+let input3 = Lit(5)
+//│ input3 = Lit(5)
+
+peelToLitSlow(input3)
+//│ = 5
+
+peelToLitFast(input3)
+//│ = 5
