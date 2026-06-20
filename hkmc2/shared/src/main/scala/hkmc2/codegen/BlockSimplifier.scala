@@ -27,6 +27,7 @@ class BlockSimplifier
   val deadBranchRemoval = config.deadBranchRemoval
   
   val MaxIterations = 10
+  val MaxDCEIterationsPerIter = 10
   
   
   def apply(prog: Program): Program =
@@ -46,10 +47,20 @@ class BlockSimplifier
       
       log(s"⬤ Simplif. iter. $iteration")
       
-      val dce = new DeadCodeElim()
-      res = dce.apply(res)
-      changed ||= dce.changed
-      if dce.changed then log("▶ DCE:\n" + printRes)
+      // * Running DCE once sometimes produces more DCE opportunities;
+      // * it is important to apply all of them so that later passes, such as COC,
+      // * are not impeded by things like unused labels from inlining.
+      var dceIteration = 0
+      while
+        val dce = new DeadCodeElim()
+        res = dce.apply(res)
+        changed ||= dce.changed
+        if dce.changed then
+          log("▶ DCE:\n" + printRes)
+          dceIteration += 1
+          dceIteration < MaxDCEIterationsPerIter
+        else false
+      do ()
       
       val vp = new DataFlowAnalysis(LocalVars.analyze(res.main))
       res = vp.apply(res)
@@ -57,6 +68,13 @@ class BlockSimplifier
       if vp.changed then log("▶ VP:\n" + printRes)
       
       summon[Config].inlining.foreach: cfg =>
+        
+        // * Runs after DCE so that unused labels from inlining are already removed
+        val coc = new CaseOfCase(using cfg)
+        res = coc.applyProgram(res)
+        changed ||= coc.changed
+        if coc.changed then log("▶ COC:\n" + printRes)
+        
         val inl = new Inliner(using cfg)
         res = inl.apply(res)
         changed ||= inl.changed
@@ -329,6 +347,32 @@ class BlockSimplifier
     
   end DeadCodeElim
   
+  
+  // ——————————————————————————————————————————————————————————————————————————————————————————— //
+  
+  def getInstCtorShape(path: Path): Opt[ClassLikeSymbol] =
+    path.targetSymbol.flatMap:
+      case sym: ClassLikeSymbol => S(sym)
+      case _ => N
+  
+  def getCallCtorShape(path: Path, argss: NELs[Ls[Arg]]): Opt[ClassLikeSymbol] =
+    path.targetSymbol
+      .collect:
+        case ccs: ClassCtorSymbol => ccs.associatedCls
+      .collect:
+        case sym: ClassSymbol if isSaturatedClassCtorCall(sym, argss) => sym
+  
+  def isSaturatedClassCtorCall(sym: ClassSymbol, argss: NELs[Ls[Arg]]): Bool =
+    sym.irClsLikeDefn
+    .fold(
+        // FIXME: remove this case.
+        //    IR passes should NOT access `sym.defn` at all;
+        //    but this access is currently necessary because we do not yet store `irClsLikeDefn` in imported symbols.
+        sym.defn.map(defn => defn.paramsOpt.size + defn.auxParams.size)
+      ): ird =>
+        S(ird.paramsOpt.size + ird.auxParams.size)
+    .exists: paramListsSize =>
+      argss.sizeCompare(paramListsSize) === 0
   
   // ——————————————————————————————————————————————————————————————————————————————————————————— //
   
@@ -750,14 +794,6 @@ class BlockSimplifier
           def giveUp =
             gaveUp = true
             Set.empty[Shape]
-          def getCtorShape(path: Path): Opt[Shape] =
-            path.targetSymbol.flatMap:
-              case ccs: ClassCtorSymbol => S(ccs.associatedCls)
-              case sym => sym.asClsOrMod
-          def isSaturatedClassCall(sym: ClassSymbol, argss: NELs[Ls[Arg]]): Bool =
-            sym.irClsLikeDefn.exists: defn =>
-              val paramLists = defn.paramsOpt.toList ::: defn.auxParams
-              paramLists.lengthCompare(argss.length) === 0
           def getAssignInfoShapes(a: AssignInfo): Set[Shape] =
             if gaveUp then Set.empty
             a.assigns match
@@ -772,14 +808,14 @@ class BlockSimplifier
                 case N =>
                   rhs match
                   case p: Path => getShapes(p)
-                  case Call(path, args) =>
-                    getCtorShape(path) match
-                    case S(sym: ClassSymbol) if isSaturatedClassCall(sym, args) =>
+                  case Call(path, argss) =>
+                    getCallCtorShape(path, argss) match
+                    case S(sym: ClassSymbol) =>
                       Set.single(sym)
                     case _ => giveUp
                   case Instantiate(_, cls, _) =>
                     // * Note: Instantiate nodes are globally assumed to be saturated
-                    getCtorShape(cls) match
+                    getInstCtorShape(cls) match
                     case S(sym) =>
                       Set.single(sym)
                     case _ => giveUp
@@ -795,7 +831,10 @@ class BlockSimplifier
               case Value.MemberRef(r, sym: ModuleOrObjectSymbol) =>
                 Set.single(sym)
               case Value.Lit(lit) => Set.single(lit)
-              case _ => giveUp
+              case _ =>
+                p.targetSymbol match
+                case S(sym: ModuleOrObjectSymbol) => Set.single(sym)
+                case _ => giveUp
           
           var shapes = if deadBranchRemoval then getShapes(scrut2) else giveUp
           // TODO: if analysis gave up, make the shapes the set of cases of the patmat, to rm redundant arms
@@ -947,6 +986,177 @@ class BlockSimplifier
     
     
   end DataFlowAnalysis
+  
+  
+  // ——————————————————————————————————————————————————————————————————————————————————————————— //
+  
+  
+  /** Specialize a match whose scrutinee was assigned known constructors by an earlier match.
+    * The remaining unknown path, if any, keeps the original consumer match.
+    * More specifically, we optimize successive Match blocks where all of the following hold:
+    * - the branches of the previous match assign known constructors to some variable,
+    *   except at most one branch which can be assigning an unknown value or not assigning at all to this variable;
+    * - the second match scrutinizes that variable and either:
+    *     - the branches of the second match can be inlined into the first match
+    *       without introducing any code duplication; or
+    *     - the branches that would be duplicated are below the inlining threshold;
+    * - all the statements between the two matches are pure and can thus be moved out of the way,
+    *   similar to how `MergeMatchArmTransformer` works (in `Lowering.scala`) – we reuse `TrivialStatementsAndMatch`.
+    * See examples in [test:case-of-case]. */
+  class CaseOfCase(using cfg: Config.Inliner) extends BlockTransformer(SymbolSubst.Id), Helper:
+    
+    type Shape = Literal | ClassLikeSymbol
+    
+    case class Selected(index: Int, body: Block)
+    
+    enum ProducerPlan:
+      case Abortive(body: Block)
+      case Known(body: Block, selected: Selected)
+      case Unknown(body: Block)
+    
+    import ProducerPlan.*
+    
+    def getShape(result: Result): Opt[Shape] = result match
+      case Value.MemberRef(_, sym: ModuleOrObjectSymbol) => S(sym)
+      case Value.Lit(lit) => S(lit)
+      case path: Path => path.targetSymbol.flatMap(_.asModOrObj)
+      case Call(path, argss) => getCallCtorShape(path, argss)
+      case Instantiate(_, cls, _) => getInstCtorShape(cls)
+      case _ => N
+    
+    /** Find the shape held by `target` after a straight-line producer arm.
+      * Complex control flow remains on the unspecialized path. */
+    def getAssignedShape(body: Block, target: LocalVarSymbol): Opt[Shape] =
+      def loop(body: Block, shape: Opt[Shape])(k: Opt[Shape] => Opt[Shape]): Opt[Shape] = body match
+        case _: End => k(shape)
+        case Assign(`target`, rhs, rest) => loop(rest, getShape(rhs))(k)
+        case Assign(_, rhs, rest) if rhs.isPure => loop(rest, shape)(k)
+        case AssignField(_, _, _, rest) => loop(rest, shape)(k)
+        case AssignDynField(_, _, _, _, rest) => loop(rest, shape)(k)
+        case Define(_, rest) => loop(rest, shape)(k)
+        case Scoped(_, body) => loop(body, shape)(k)
+        case Begin(sub, rest) => loop(sub, shape)(loop(rest, _)(k))
+        case _ => N
+      loop(body, N)(identity)
+    
+    def isSubtypeOf(actual: ClassLikeSymbol, expected: ClassLikeSymbol): Opt[Bool] =
+      def parentOf(sym: ClassLikeSymbol): Opt[Opt[ClassLikeSymbol]] =
+        (sym match
+          case sym: ClassSymbol => sym.irClsLikeDefn
+          case sym: ModuleOrObjectSymbol => sym.irClsLikeDefn
+        ).flatMap: defn =>
+          defn.parentPath match
+            case S(parent) => getInstCtorShape(parent).map(S(_))
+            case N => S(N)
+        .orElse:
+          // FIXME: remove this fallback once imported classes have their `irClsLikeDefn` properly linked
+          (sym match
+            case sym: ClassSymbol => sym.defn
+            case sym: ModuleOrObjectSymbol => sym.defn
+          ).flatMap: defn =>
+            defn.ext match
+              case S(parent) => parent.cls.resolvedSym.flatMap(_.asClsOrMod).map(S(_))
+              case N => S(N)
+      @tailrec
+      def loop(cur: ClassLikeSymbol, seen: Set[ClassLikeSymbol]): Opt[Bool] =
+        if cur is expected then S(true)
+        else if seen(cur) then N
+        else parentOf(cur) match
+          case S(S(parent)) => loop(parent, seen + cur)
+          case S(N) => S(false)
+          case N => N
+      loop(actual, Set.empty)
+    
+    /** Return whether a known shape matches a case, or `None` if deciding would
+      * require reasoning that this optimization deliberately does not attempt. */
+    def matches(cse: Case, shape: Shape): Opt[Bool] = (cse, shape) match
+      case (Case.Lit(expected), actual: Literal) => S(expected == actual)
+      case (Case.Lit(_), _: ClassLikeSymbol) => S(false)
+      case (Case.Cls(expected, _), actual: ClassLikeSymbol) => isSubtypeOf(actual, expected)
+      case _ => N
+    
+    def select(shape: Shape, arms: Ls[Case -> Block], dflt: Opt[Block]): Opt[Selected] =
+      @tailrec
+      def loop(arms: Ls[Case -> Block], index: Int): Opt[Selected] = arms match
+        case (cse, body) :: rest => matches(cse, shape) match
+          case S(true) => S(Selected(index, body))
+          case S(false) => loop(rest, index + 1)
+          case N => N
+        case Nil => dflt.map(Selected(index, _))
+      loop(arms, 0)
+    
+    def canMove(prefix: Block): Bool = prefix match
+      case _: End => true
+      case Assign(_, _: Value, rest) => canMove(rest)
+      case Assign(_, path: Select, rest) => path.isPure && canMove(rest)
+      case Define(defn: ValDefn, rest) =>
+        defn.rhs.isPure && defn.tsym.owner.isEmpty && canMove(rest)
+      case Define(defn: FunDefn, rest) => defn.owner.isEmpty && canMove(rest)
+      case Define(defn: ClsLikeDefn, rest) => defn.isPure && canMove(rest)
+      case _ => false
+    
+    def plan(body: Block, target: LocalVarSymbol, consumer: Match): ProducerPlan =
+      if body.isAbortive then Abortive(body)
+      else
+        getAssignedShape(body, target)
+          .flatMap(select(_, consumer.arms, consumer.dflt))
+          .fold(Unknown(body))(Known(body, _))
+    
+    override def applyBlock(b: Block): Block = super.applyBlock(b) match
+      case m @ Match(scrut, arms, dflt,
+        TrivialStatementsAndMatch(k,
+          consumer @ Match(Value.SimpleRef(target: LocalVarSymbol), _, _, consumerRest)))
+      =>
+        
+        val prefix = k.fold[Block](End())(_(End()))
+        
+        val producerDefinedVars: Set[Symbol] = arms.iterator.flatMap(_._2.definedVars).toSet
+          ++ dflt.iterator.flatMap(_.definedVars)
+        
+        if !canMove(prefix) || prefix.freeVars.exists(producerDefinedVars.contains) then m
+        else
+          val armPlans = arms.map((cse, body) => cse -> plan(body, target, consumer))
+          val dfltPlan = dflt.fold[ProducerPlan](Unknown(End()))(plan(_, target, consumer))
+          val allPlans = armPlans.map(_._2) :+ dfltPlan
+          val unknownCount = allPlans.count(_.isInstanceOf[Unknown])
+          
+          if unknownCount > 1 then m
+          else
+            val selected = allPlans.collect:
+              case Known(_, selected) => selected
+            
+            if selected.isEmpty then m
+            else
+              val selectedCounts = selected.groupMapReduce(_.index)(_ => 1)(_ + _)
+              val originalConsumerRetained = unknownCount === 1
+              val wouldDuplicate = selected.exists: selected =>
+                selectedCounts(selected.index) + (if originalConsumerRetained then 1 else 0) > 1
+                  && selected.body.size > cfg.inlineThreshold
+              
+              if wouldDuplicate then m
+              else
+                registerChange(s"case-of-case on ${target.showDbg}")
+                val usedOriginals = MutSet.empty[Int]
+                def materialize(selected: Selected): Block =
+                  if originalConsumerRetained || usedOriginals(selected.index) then
+                    SymbolRefresher(Map.empty).applyBlock(selected.body)
+                  else
+                    usedOriginals += selected.index
+                    selected.body
+                def consumerWithoutRest: Block =
+                  Match(consumer.scrut, consumer.arms, consumer.dflt, End())
+                def rewrite(plan: ProducerPlan): Block = plan match
+                  case Abortive(body) => body
+                  case Known(body, selected) => Begin(body, materialize(selected))
+                  case Unknown(body) => Begin(body, consumerWithoutRest)
+                val newArms = armPlans.map((cse, plan) => cse -> rewrite(plan))
+                val newDflt = S(rewrite(dfltPlan))
+                k.getOrElse(identity[Block]):
+                  Match(scrut, newArms, newDflt, consumerRest)
+      
+      case b => b
+    
+  end CaseOfCase
   
   
   // ——————————————————————————————————————————————————————————————————————————————————————————— //

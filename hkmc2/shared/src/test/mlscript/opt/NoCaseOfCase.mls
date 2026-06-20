@@ -1,0 +1,66 @@
+:js
+
+
+// * Case-of-case should not commute past possibly effectful statements
+
+:expect false
+:noOpt
+fun foo(x) =
+  let y
+  let f = hide(w => set y = w)
+  if x then
+    set y = "ok"
+    f("nope")
+  else
+    set y = "nope"
+  if y is "ok" then
+    true
+  else
+    false
+foo(true)
+//│ = false
+
+:soir
+fun foo(x) =
+  let y
+  let f = hide(w => set y = w)
+  if x then
+    set y = "ok"
+    f("nope")
+  else
+    set y = "nope"
+  if y is "ok" then
+    true
+  else
+    false
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ define foo⁰ as fun foo¹(x) {
+//│   let y, f, lambda;
+//│   define lambda as fun lambda⁰(w) {
+//│     set y = w;
+//│     return runtime⁰.Unit⁰
+//│   };
+//│   set f = Predef⁰.hide⁰(lambda⁰);
+//│   match x
+//│     true =>
+//│       set y = "ok";
+//│       do f("nope");
+//│       match y
+//│         "ok" =>
+//│           return true
+//│         else
+//│           return false
+//│       end
+//│     else
+//│       set y = "nope";
+//│       return false
+//│   end
+//│ };
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+:expect false
+foo(true)
+//│ = false
+
+

@@ -1575,18 +1575,13 @@ object TrivialStatementsAndMatch:
         val newR = k.getOrElse(identity: Block => Block)(r)
         assign(newR)
       S(S(newK), m)
-    
     b match
-      case m: Match => S(N, m)
-      case Assign(lhs, rhs: Path, TrivialStatementsAndMatch(k, m)) =>
-        handleAssignAndMatch(r => Assign(lhs, rhs, r), m, k)
-      case a@AssignField(lhs, nme, rhs: Path, TrivialStatementsAndMatch(k, m)) =>
-        handleAssignAndMatch(r => AssignField(lhs, nme, rhs, r)(a.symbol), m, k)
-      case AssignDynField(lhs, fld, arrayIdx, rhs: Path, TrivialStatementsAndMatch(k, m)) =>
-        handleAssignAndMatch(r =>  AssignDynField(lhs, fld, arrayIdx, rhs, r), m, k)
-      case Define(defn, TrivialStatementsAndMatch(k, m)) => 
-        handleAssignAndMatch(r => Define(defn, r), m, k)
-      case _ => N
+    case m: Match => S(N, m)
+    case Assign(lhs, rhs, TrivialStatementsAndMatch(k, m)) if rhs.isPure =>
+      handleAssignAndMatch(r => Assign(lhs, rhs, r), m, k)
+    case Define(defn, TrivialStatementsAndMatch(k, m)) if defn.isPure =>
+      handleAssignAndMatch(r => Define(defn, r), m, k)
+    case _ => N
 
 
 object MergeMatchArmTransformer extends BlockTransformer(SymbolSubst.Id):
