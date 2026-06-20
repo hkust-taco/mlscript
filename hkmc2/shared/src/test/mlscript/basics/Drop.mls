@@ -49,7 +49,7 @@ do
 //│   rhs = Ident of "id"
 //│ PrefixApp:
 //│   kw = Keywrd of keyword 'do'
-//│   rhs = Block of Ls of 
+//│   rhs = Block of Ls of
 //│     Ident of "id"
 //│     Ident of "id"
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————

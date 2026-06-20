@@ -57,13 +57,13 @@ module A with
 //│   head = InfixApp:
 //│     lhs = Ident of "A"
 //│     kw = Keywrd of keyword 'with'
-//│     rhs = Block of Ls of 
+//│     rhs = Block of Ls of
 //│       TypeDef:
 //│         k = Mod
 //│         head = InfixApp:
 //│           lhs = Ident of "B"
 //│           kw = Keywrd of keyword 'with'
-//│           rhs = Block of Ls of 
+//│           rhs = Block of Ls of
 //│             TermDef:
 //│               k = ImmutVal
 //│               head = Ident of "a"

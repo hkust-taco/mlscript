@@ -81,7 +81,7 @@ let r = 10 in r
 //│   body = S of Ident of "r"
 //│ App:
 //│   lhs = Ident of "-"
-//│   rhs = Tup of Ls of 
+//│   rhs = Tup of Ls of
 //│     IntLit of 1
 //│ ╔══[WARNING] Pure expression in statement position
 //│ ║  l.74: 	let r = 10 in r
@@ -112,11 +112,11 @@ let r = id(10)
 //│   lhs = Ident of "r"
 //│   rhs = S of App:
 //│     lhs = Ident of "id"
-//│     rhs = Tup of Ls of 
+//│     rhs = Tup of Ls of
 //│       IntLit of 10
 //│ App:
 //│   lhs = Ident of "!"
-//│   rhs = Tup of Ls of 
+//│   rhs = Tup of Ls of
 //│     Bra:
 //│       k = Round
 //│       inner = Ident of "r"
@@ -378,7 +378,7 @@ ys |> Arr.len
 //│ ║  l.375: 	,+
 //│ ║         	  ^
 //│ ║  l.376: 	ys |> Arr.len
-//│ ╙──       	
+//│ ╙──
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 xs |> Arr.len
@@ -394,7 +394,7 @@ ys |> Arr.len
 //│ ║  l.391: 	+,
 //│ ║         	  ^
 //│ ║  l.392: 	ys |> Arr.len
-//│ ╙──       	
+//│ ╙──
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 xs |> Arr.len

@@ -269,6 +269,7 @@ declare module annotations with
   object tailrec
   object tailcall
   object inline
+  object noInline
   object compile
   object buffered
   object bufferable

@@ -27,6 +27,7 @@ enum Annot extends AutoLocated:
   case TailRec
   case TailCall
   case Inline
+  case NoInline
   // Whether the function is guaranteed to not raise effects.
   case MayNotRaiseEffects
   case Config(modify: hkmc2.Config => hkmc2.Config)
@@ -48,18 +49,19 @@ enum Annot extends AutoLocated:
   
   def subTerms: Vector[Term] = this match
     case Trm(trm) => Vector.single(trm)
-    case _: Modifier | Untyped | TailRec | TailCall | Inline
+    case _: Modifier | Untyped | TailRec | TailCall | Inline | NoInline
       | MayNotRaiseEffects | _: Config | _: Affine => Vector.empty
   
   def children: Vector[Located] = this match
     case Trm(trm) => Vector.single(trm)
     // case Modifier(kw) => Vector.single(kw) // TODO: make `kw` a `Keywrd`
-    case _: Modifier | Untyped | TailRec | TailCall | Inline
+    case _: Modifier | Untyped | TailRec | TailCall | Inline | NoInline
       | MayNotRaiseEffects | _: Config | _: Affine => Vector.empty
   
   def show(using Scope, ShowCfg, Raise): Document = this match
     case Untyped => doc"@untyped"
     case Inline => doc"@inline"
+    case NoInline => doc"@noInline"
     case TailRec => doc"@tailrec"
     case TailCall => doc"@tailcall"
     case Affine(n) => doc"@affine($n)"
@@ -75,6 +77,7 @@ enum Annot extends AutoLocated:
     case TailRec => TailRec
     case TailCall => TailCall
     case Inline => Inline
+    case NoInline => NoInline
     case MayNotRaiseEffects => MayNotRaiseEffects
     case c: Config => c
     case a: Affine => a

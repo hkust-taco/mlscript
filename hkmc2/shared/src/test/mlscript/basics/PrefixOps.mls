@@ -54,13 +54,13 @@ let res =
 //│ OpApp:
 //│   lhs = IntLit of 1
 //│   op = Ident of "+"
-//│   rhss = Ls of 
+//│   rhss = Ls of
 //│     PrefixApp:
 //│       kw = Keywrd of keyword '|'
 //│       rhs = OpApp:
 //│         lhs = IntLit of 2
 //│         op = Ident of "+"
-//│         rhss = Ls of 
+//│         rhss = Ls of
 //│           IntLit of 3
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 6

@@ -246,20 +246,20 @@ fun f(x) = x
 //│   k = Fun
 //│   head = App:
 //│     lhs = Ident of "f"
-//│     rhs = Tup of Ls of 
+//│     rhs = Tup of Ls of
 //│       Ident of "x"
 //│   rhs = S of OpSplit:
 //│     lhs = Ident of "x"
-//│     ops_rhss = Ls of 
+//│     ops_rhss = Ls of
 //│       OpApp:
 //│         lhs = SplitPoint
 //│         op = Ident of "+"
-//│         rhss = Ls of 
+//│         rhss = Ls of
 //│           IntLit of 1
 //│       OpApp:
 //│         lhs = SplitPoint
 //│         op = Ident of "*"
-//│         rhss = Ls of 
+//│         rhss = Ls of
 //│           IntLit of 2
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
@@ -276,16 +276,16 @@ fun f(x) = x
 //│   k = Fun
 //│   head = App:
 //│     lhs = Ident of "f"
-//│     rhs = Tup of Ls of 
+//│     rhs = Tup of Ls of
 //│       Ident of "x"
 //│   rhs = S of OpApp:
 //│     lhs = Ident of "x"
 //│     op = Ident of "+"
-//│     rhss = Ls of 
+//│     rhss = Ls of
 //│       OpApp:
 //│         lhs = IntLit of 1
 //│         op = Ident of "*"
-//│         rhss = Ls of 
+//│         rhss = Ls of
 //│           IntLit of 2
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
@@ -308,18 +308,18 @@ fun f(x) = if x
 //│   k = Fun
 //│   head = App:
 //│     lhs = Ident of "f"
-//│     rhs = Tup of Ls of 
+//│     rhs = Tup of Ls of
 //│       Ident of "x"
 //│   rhs = S of IfLike:
 //│     kw = Keywrd of keyword 'if'
 //│     split = OpSplit:
 //│       lhs = Ident of "x"
-//│       ops_rhss = Ls of 
+//│       ops_rhss = Ls of
 //│         InfixApp:
 //│           lhs = OpApp:
 //│             lhs = SplitPoint
 //│             op = Ident of "=="
-//│             rhss = Ls of 
+//│             rhss = Ls of
 //│               IntLit of 0
 //│           kw = Keywrd of keyword 'then'
 //│           rhs = StrLit of "a"
@@ -327,7 +327,7 @@ fun f(x) = if x
 //│           lhs = OpApp:
 //│             lhs = SplitPoint
 //│             op = Ident of ">"
-//│             rhss = Ls of 
+//│             rhss = Ls of
 //│               IntLit of 1
 //│           kw = Keywrd of keyword 'then'
 //│           rhs = StrLit of "b"
@@ -403,10 +403,10 @@ id of id of 1
 //│ ———————————————| Parsed tree |——————————————————————————————————————————————————————————————————————
 //│ App:
 //│   lhs = Ident of "id"
-//│   rhs = Tup of Ls of 
+//│   rhs = Tup of Ls of
 //│     App:
 //│       lhs = Ident of "id"
-//│       rhs = Tup of Ls of 
+//│       rhs = Tup of Ls of
 //│         IntLit of 1
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 1

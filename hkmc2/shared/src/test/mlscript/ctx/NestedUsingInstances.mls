@@ -19,13 +19,13 @@ module Ex with
   get
 //│ ——————————————| Resolved tree |—————————————————————————————————————————————————————————————————————
 //│ Blk:
-//│   stats = Ls of 
+//│   stats = Ls of
 //│     ModuleOrObjectDef:
 //│       sym = module:Ex⁰
 //│       bsym = member:Ex¹
 //│       kind = Mod
 //│       body = ObjBody of Blk:
-//│         stats = Ls of 
+//│         stats = Ls of
 //│           TermDefinition:
 //│             k = Ins
 //│             sym = member:instance$Ident(Int)⁰
@@ -39,7 +39,7 @@ module Ex with
 //│           lhs = Resolved{sym=term:get⁰}:
 //│             t = Ref{sym=member:get¹} of member:get¹
 //│             sym = term:get⁰
-//│           rhs = Tup of Ls of 
+//│           rhs = Tup of Ls of
 //│             Fld:
 //│               term = Resolved{sym=term:instance$Ident(Int)¹,typ=class:Int⁰}:
 //│                 t = Ref{sym=member:instance$Ident(Int)⁰} of member:instance$Ident(Int)⁰

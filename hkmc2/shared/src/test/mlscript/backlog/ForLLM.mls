@@ -46,7 +46,7 @@ if maybe
 //│   kw = Keywrd of keyword 'if'
 //│   split = OpSplit:
 //│     lhs = Ident of "maybe"
-//│     ops_rhss = Ls of 
+//│     ops_rhss = Ls of
 //│       PrefixApp:
 //│         kw = Keywrd of keyword 'do'
 //│         rhs = IntLit of 1
@@ -64,7 +64,7 @@ if maybe
 //│ ———————————————| Parsed tree |——————————————————————————————————————————————————————————————————————
 //│ IfLike:
 //│   kw = Keywrd of keyword 'if'
-//│   split = Block of Ls of 
+//│   split = Block of Ls of
 //│     InfixApp:
 //│       lhs = Ident of "maybe"
 //│       kw = Keywrd of keyword 'then'
@@ -85,17 +85,17 @@ if 2
 //│   kw = Keywrd of keyword 'if'
 //│   split = OpSplit:
 //│     lhs = IntLit of 2
-//│     ops_rhss = Ls of 
+//│     ops_rhss = Ls of
 //│       InfixApp:
 //│         lhs = OpApp:
 //│           lhs = SplitPoint
 //│           op = Ident of ">"
-//│           rhss = Ls of 
+//│           rhss = Ls of
 //│             IntLit of 1
 //│         kw = Keywrd of keyword 'do'
 //│         rhs = App:
 //│           lhs = Ident of "print"
-//│           rhs = Tup of Ls of 
+//│           rhs = Tup of Ls of
 //│             StrLit of "hi"
 //│       PrefixApp:
 //│         kw = Keywrd of keyword 'else'
@@ -116,7 +116,7 @@ if 2
 // ——— ——— ———
 
 :fixme
-pattern ShapeArea = 
+pattern ShapeArea =
   | (:radius) => 0
   | x => 1
 //│ ╔══[COMPILATION ERROR] Found an inconsistent variable in disjunction patterns.

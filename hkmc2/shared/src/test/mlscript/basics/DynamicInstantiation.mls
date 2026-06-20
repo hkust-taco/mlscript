@@ -36,7 +36,7 @@ new! id(C)
 //│   lhs = PrefixApp:
 //│     kw = Keywrd of keyword 'new!'
 //│     rhs = Ident of "id"
-//│   rhs = Tup of Ls of 
+//│   rhs = Tup of Ls of
 //│     Ident of "C"
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ return globalThis.Object.freeze(new Predef.id(C1))

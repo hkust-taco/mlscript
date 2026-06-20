@@ -244,9 +244,9 @@ fun f(a)(b) = f(a)(b)
 //│       defn = FunDefn:
 //│         sym = member:f$tailrec¹
 //│         dSym = term:f$tailrec²
-//│         params = Ls of 
+//│         params = Ls of
 //│           ParamList:
-//│             params = Ls of 
+//│             params = Ls of
 //│               Param:
 //│                 sym = a⁰
 //│                 modulefulness = Modulefulness of N
@@ -261,14 +261,14 @@ fun f(a)(b) = f(a)(b)
 //│       defn = FunDefn:
 //│         sym = member:f⁴
 //│         dSym = term:f⁵
-//│         params = Ls of 
+//│         params = Ls of
 //│           ParamList:
-//│             params = Ls of 
+//│             params = Ls of
 //│               Param:
 //│                 sym = a¹
 //│                 modulefulness = Modulefulness of N
 //│           ParamList:
-//│             params = Ls of 
+//│             params = Ls of
 //│               Param:
 //│                 sym = b¹
 //│                 modulefulness = Modulefulness of N
@@ -276,8 +276,8 @@ fun f(a)(b) = f(a)(b)
 //│           fun = MemberRef{disamb=term:f$tailrec²}:
 //│             bms = member:f$tailrec¹
 //│             disamb = term:f$tailrec²
-//│           argss = Ls of 
-//│             Ls of 
+//│           argss = Ls of
+//│             Ls of
 //│               Arg:
 //│                 value = SimpleRef of a¹
 //│               Arg:

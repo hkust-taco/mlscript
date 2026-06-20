@@ -14,13 +14,13 @@ fun f(x, y, z) = if x then y else z
 //│   k = Fun
 //│   head = App:
 //│     lhs = Ident of "f"
-//│     rhs = Tup of Ls of 
+//│     rhs = Tup of Ls of
 //│       Ident of "x"
 //│       Ident of "y"
 //│       Ident of "z"
 //│   rhs = S of IfLike:
 //│     kw = Keywrd of keyword 'if'
-//│     split = Block of Ls of 
+//│     split = Block of Ls of
 //│       InfixApp:
 //│         lhs = Ident of "x"
 //│         kw = Keywrd of keyword 'then'

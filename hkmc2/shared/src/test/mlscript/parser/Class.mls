@@ -85,7 +85,7 @@ Foo
 //│ ║  l.82: 	class
 //│ ║        	     ^
 //│ ║  l.83: 	Foo
-//│ ╙──      	
+//│ ╙──
 //│ Parsed:
 //│ 	Error()
 //│ 	Ident(Foo)

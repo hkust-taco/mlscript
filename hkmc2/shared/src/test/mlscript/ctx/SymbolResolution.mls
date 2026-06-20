@@ -206,17 +206,17 @@ R.bar
 //│               sym = module:R⁰
 //│             nme = Ident of "bar"
 //│           sym = term:R⁰/bar²
-//│         rhs = Tup of Ls of 
+//│         rhs = Tup of Ls of
 //│           Fld:
 //│             term = Resolved{sym=term:instance$Ident(Int)⁰,typ=class:Int⁰}:
 //│               t = Ref{sym=member:instance$Ident(Int)¹} of member:instance$Ident(Int)¹
 //│               sym = term:instance$Ident(Int)⁰
-//│       rhs = Tup of Ls of 
+//│       rhs = Tup of Ls of
 //│         Fld:
 //│           term = Resolved{sym=term:instance$Ident(Num)⁰,typ=class:Num⁰}:
 //│             t = Ref{sym=member:instance$Ident(Num)¹} of member:instance$Ident(Num)¹
 //│             sym = term:instance$Ident(Num)⁰
-//│     rhs = Tup of Ls of 
+//│     rhs = Tup of Ls of
 //│       Fld:
 //│         term = Resolved{sym=term:instance$Ident(Str)⁰,typ=class:Str⁰}:
 //│           t = Ref{sym=member:instance$Ident(Str)¹} of member:instance$Ident(Str)¹
@@ -232,17 +232,17 @@ foo
 //│         lhs = Resolved{sym=term:foo⁴}:
 //│           t = Ref{sym=member:foo⁵} of member:foo⁵
 //│           sym = term:foo⁴
-//│         rhs = Tup of Ls of 
+//│         rhs = Tup of Ls of
 //│           Fld:
 //│             term = Resolved{sym=term:instance$Ident(Int)⁰,typ=class:Int⁰}:
 //│               t = Ref{sym=member:instance$Ident(Int)¹} of member:instance$Ident(Int)¹
 //│               sym = term:instance$Ident(Int)⁰
-//│       rhs = Tup of Ls of 
+//│       rhs = Tup of Ls of
 //│         Fld:
 //│           term = Resolved{sym=term:instance$Ident(Num)⁰,typ=class:Num⁰}:
 //│             t = Ref{sym=member:instance$Ident(Num)¹} of member:instance$Ident(Num)¹
 //│             sym = term:instance$Ident(Num)⁰
-//│     rhs = Tup of Ls of 
+//│     rhs = Tup of Ls of
 //│       Fld:
 //│         term = Resolved{sym=term:instance$Ident(Str)⁰,typ=class:Str⁰}:
 //│           t = Ref{sym=member:instance$Ident(Str)¹} of member:instance$Ident(Str)¹
@@ -264,21 +264,21 @@ R.bar[Int]
 //│                 sym = module:R⁰
 //│               nme = Ident of "bar"
 //│             sym = term:R⁰/bar²
-//│           targs = Ls of 
+//│           targs = Ls of
 //│             Resolved{sym=class:Int⁰}:
 //│               t = Ref{sym=member:Int¹} of member:Int¹
 //│               sym = class:Int⁰
-//│         rhs = Tup of Ls of 
+//│         rhs = Tup of Ls of
 //│           Fld:
 //│             term = Resolved{sym=term:instance$Ident(Int)⁰,typ=class:Int⁰}:
 //│               t = Ref{sym=member:instance$Ident(Int)¹} of member:instance$Ident(Int)¹
 //│               sym = term:instance$Ident(Int)⁰
-//│       rhs = Tup of Ls of 
+//│       rhs = Tup of Ls of
 //│         Fld:
 //│           term = Resolved{sym=term:instance$Ident(Num)⁰,typ=class:Num⁰}:
 //│             t = Ref{sym=member:instance$Ident(Num)¹} of member:instance$Ident(Num)¹
 //│             sym = term:instance$Ident(Num)⁰
-//│     rhs = Tup of Ls of 
+//│     rhs = Tup of Ls of
 //│       Fld:
 //│         term = Resolved{sym=term:instance$Ident(Str)⁰,typ=class:Str⁰}:
 //│           t = Ref{sym=member:instance$Ident(Str)¹} of member:instance$Ident(Str)¹
@@ -296,21 +296,21 @@ foo[Int]
 //│           lhs = Resolved{sym=term:foo⁴}:
 //│             t = Ref{sym=member:foo⁵} of member:foo⁵
 //│             sym = term:foo⁴
-//│           targs = Ls of 
+//│           targs = Ls of
 //│             Resolved{sym=class:Int⁰}:
 //│               t = Ref{sym=member:Int¹} of member:Int¹
 //│               sym = class:Int⁰
-//│         rhs = Tup of Ls of 
+//│         rhs = Tup of Ls of
 //│           Fld:
 //│             term = Resolved{sym=term:instance$Ident(Int)⁰,typ=class:Int⁰}:
 //│               t = Ref{sym=member:instance$Ident(Int)¹} of member:instance$Ident(Int)¹
 //│               sym = term:instance$Ident(Int)⁰
-//│       rhs = Tup of Ls of 
+//│       rhs = Tup of Ls of
 //│         Fld:
 //│           term = Resolved{sym=term:instance$Ident(Num)⁰,typ=class:Num⁰}:
 //│             t = Ref{sym=member:instance$Ident(Num)¹} of member:instance$Ident(Num)¹
 //│             sym = term:instance$Ident(Num)⁰
-//│     rhs = Tup of Ls of 
+//│     rhs = Tup of Ls of
 //│       Fld:
 //│         term = Resolved{sym=term:instance$Ident(Str)⁰,typ=class:Str⁰}:
 //│           t = Ref{sym=member:instance$Ident(Str)¹} of member:instance$Ident(Str)¹

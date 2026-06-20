@@ -103,7 +103,7 @@ class ReportFormatter(
             val lastCol = if l =:= endLineNum then endLineCol else curLine.length + 1
             while c < lastCol do { tickBuilder += ('^'); c += 1 }
             if c =:= startLineCol then tickBuilder += ('^')
-            text(tickBuilder.toString)
+            text(tickBuilder.toString.stripTrailing)
             c = 1
             l += 1
         }

@@ -29,8 +29,8 @@ x + 1
 //│     rhs = Lit of IntLit of 1
 //│     rest = Return of Call:
 //│       fun = SimpleRef of builtin:+⁰
-//│       argss = Ls of 
-//│         Ls of 
+//│       argss = Ls of
+//│         Ls of
 //│           Arg:
 //│             value = SimpleRef of x⁰
 //│           Arg:

@@ -667,6 +667,7 @@ final case class FunDefn(
   val asPath = sym.asMemberRef(dSym)
   lazy val tailRec: Bool = annotations.contains(Annot.TailRec)
   lazy val inline: Bool = annotations.contains(Annot.Inline)
+  lazy val noInline: Bool = annotations.contains(Annot.NoInline)
   lazy val visibility: Visibility = annotations.collectFirst:
     case Annot.Modifier(Keyword.`private`) => Visibility.Private
     case Annot.Modifier(Keyword.`public`) => Visibility.Public

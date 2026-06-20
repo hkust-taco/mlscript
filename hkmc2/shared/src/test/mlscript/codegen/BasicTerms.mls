@@ -50,8 +50,8 @@ print("Hi")
 //│           bms = member:Predef¹
 //│           disamb = module:Predef⁰
 //│         name = Ident of "print"
-//│       argss = Ls of 
-//│         Ls of 
+//│       argss = Ls of
+//│         Ls of
 //│           Arg:
 //│             value = Lit of StrLit of "Hi"
 //│     rest = Return of Lit of IntLit of 2

@@ -34,9 +34,9 @@ Example .!. oops(2)
 //│   lhs = OpApp:
 //│     lhs = Ident of "Example"
 //│     op = Ident of ".!."
-//│     rhss = Ls of 
+//│     rhss = Ls of
 //│       Ident of "oops"
-//│   rhs = Tup of Ls of 
+//│   rhs = Tup of Ls of
 //│     IntLit of 2
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ return runtime.safeCall(oops.call(Example1, 2))
@@ -99,10 +99,10 @@ Example .> oops(2)
 //│ OpApp:
 //│   lhs = Ident of "Example"
 //│   op = Ident of ".>"
-//│   rhss = Ls of 
+//│   rhss = Ls of
 //│     App:
 //│       lhs = Ident of "oops"
-//│       rhs = Tup of Ls of 
+//│       rhs = Tup of Ls of
 //│         IntLit of 2
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let tmp7; tmp7 = runtime.safeCall(oops(2)); return call1(Example1, tmp7)

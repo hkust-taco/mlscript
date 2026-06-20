@@ -1231,12 +1231,13 @@ class BlockSimplifier
         // Whether this function can be inlined without causing any code duplication,
         // i.e. the original definition can be removed and there is only one usage.
         def canBeInlineEliminated: Bool =
-          isPrivate && !isMethod && useCount <= 1 && !disallowElimination && !isLoopBreaker
+          isPrivate && !isMethod && !defn.noInline && useCount <= 1 && !disallowElimination && !isLoopBreaker
           // false
         
         def shouldBeInlined(newBlk: Block, threshold: Int): Bool =
           // method requires the capturing of `this`, which is not supported currently.
           if isMethod then return false
+          if defn.noInline then return false
           // If the definition is marked with inline, we should inline it regardless of the size of the body.
           // If both callee and caller are marked with inline, inlining will ignore the stricter @inline limits.
           // Remark: the case of a recursive function marked with inline will be blocked by loop breaker logic.

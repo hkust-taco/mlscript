@@ -10,13 +10,13 @@
 //│ OpApp loc[1:1-1:10]:
 //│   lhs = IntLit loc[1:1-1:4] of 111
 //│   op = Ident loc[1:5-1:6] of "+"
-//│   rhss = Ls of 
+//│   rhss = Ls of
 //│     IntLit loc[1:7-1:10] of 222
 //│ ——————————————| Resolved tree |—————————————————————————————————————————————————————————————————————
 //│ Blk loc[1:1-1:10]:
 //│   res = App loc[1:1-1:10]:
 //│     lhs = Ref{sym=builtin:+⁰} loc[1:5-1:6] of builtin:+⁰
-//│     rhs = Tup loc[1:1-1:10] of Ls of 
+//│     rhs = Tup loc[1:1-1:10] of Ls of
 //│       Fld loc[1:1-1:4]:
 //│         term = Lit loc[1:1-1:4] of IntLit loc[1:1-1:4] of 111
 //│       Fld loc[1:7-1:10]:

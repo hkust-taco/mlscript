@@ -9,8 +9,8 @@
 //│ OpApp:
 //│   lhs = IntLit of 1
 //│   op = Ident of "+"
-//│   rhss = Ls of 
-//│     Block of Ls of 
+//│   rhss = Ls of
+//│     Block of Ls of
 //│       IntLit of 2
 //│       IntLit of 3
 
@@ -23,16 +23,16 @@ if f(x) ==
 //│   split = OpApp:
 //│     lhs = App:
 //│       lhs = Ident of "f"
-//│       rhs = Tup of Ls of 
+//│       rhs = Tup of Ls of
 //│         Ident of "x"
 //│     op = Ident of "=="
-//│     rhss = Ls of 
-//│       Block of Ls of 
+//│     rhss = Ls of
+//│       Block of Ls of
 //│         InfixApp:
 //│           lhs = OpApp:
 //│             lhs = IntLit of 1
 //│             op = Ident of "+"
-//│             rhss = Ls of 
+//│             rhss = Ls of
 //│               IntLit of 1
 //│           kw = Keywrd of keyword 'then'
 //│           rhs = IntLit of 0
@@ -57,13 +57,13 @@ if x +
 //│   split = OpApp:
 //│     lhs = Ident of "x"
 //│     op = Ident of "+"
-//│     rhss = Ls of 
-//│       Block of Ls of 
+//│     rhss = Ls of
+//│       Block of Ls of
 //│         OpApp:
 //│           lhs = IntLit of 1
 //│           op = Ident of "*"
-//│           rhss = Ls of 
-//│             Block of Ls of 
+//│           rhss = Ls of
+//│             Block of Ls of
 //│               InfixApp:
 //│                 lhs = IntLit of 2
 //│                 kw = Keywrd of keyword 'then'
@@ -75,12 +75,12 @@ if x +
 //│         OpApp:
 //│           lhs = Ident of "y"
 //│           op = Ident of "/"
-//│           rhss = Ls of 
-//│             Block of Ls of 
+//│           rhss = Ls of
+//│             Block of Ls of
 //│               InfixApp:
 //│                 lhs = IntLit of 6
 //│                 kw = Keywrd of keyword 'is'
-//│                 rhs = Block of Ls of 
+//│                 rhs = Block of Ls of
 //│                   InfixApp:
 //│                     lhs = Ident of "A"
 //│                     kw = Keywrd of keyword 'then'
@@ -110,7 +110,7 @@ x
 //│ OpApp:
 //│   lhs = Ident of "x"
 //│   op = Ident of "+"
-//│   rhss = Ls of 
+//│   rhss = Ls of
 //│     IntLit of 1
 
 x
@@ -120,19 +120,19 @@ x
 //│ ———————————————| Parsed tree |——————————————————————————————————————————————————————————————————————
 //│ OpSplit:
 //│   lhs = Ident of "x"
-//│   ops_rhss = Ls of 
+//│   ops_rhss = Ls of
 //│     OpApp:
 //│       lhs = SplitPoint
 //│       op = Ident of "+"
-//│       rhss = Ls of 
+//│       rhss = Ls of
 //│         IntLit of 1
 //│     OpApp:
 //│       lhs = SplitPoint
 //│       op = Ident of "+"
-//│       rhss = Ls of 
+//│       rhss = Ls of
 //│         IntLit of 2
 //│     OpApp:
 //│       lhs = SplitPoint
 //│       op = Ident of "+"
-//│       rhss = Ls of 
+//│       rhss = Ls of
 //│         IntLit of 3

@@ -91,14 +91,14 @@ foo.foo
 fun f(x: Foo) = x
 //│ ——————————————| Resolved tree |—————————————————————————————————————————————————————————————————————
 //│ Blk:
-//│   stats = Ls of 
+//│   stats = Ls of
 //│     TermDefinition:
 //│       k = Fun
 //│       sym = member:f⁰
 //│       tsym = term:f¹
-//│       params = Ls of 
+//│       params = Ls of
 //│         ParamList:
-//│           params = Ls of 
+//│           params = Ls of
 //│             Param:
 //│               sym = x⁰
 //│               sign = S of Resolved{sym=class:Foo⁰}:
@@ -151,14 +151,14 @@ o
 fun f(module m: M): module M = m
 //│ ——————————————| Resolved tree |—————————————————————————————————————————————————————————————————————
 //│ Blk:
-//│   stats = Ls of 
+//│   stats = Ls of
 //│     TermDefinition:
 //│       k = Fun
 //│       sym = member:f²
 //│       tsym = term:f³
-//│       params = Ls of 
+//│       params = Ls of
 //│         ParamList:
-//│           params = Ls of 
+//│           params = Ls of
 //│             Param:
 //│               sym = m²
 //│               sign = S of Resolved{sym=module:M⁰,typ=module:M⁰}:
@@ -176,14 +176,14 @@ fun f(module m: M): module M = m
 fun f(o: O) = o
 //│ ——————————————| Resolved tree |—————————————————————————————————————————————————————————————————————
 //│ Blk:
-//│   stats = Ls of 
+//│   stats = Ls of
 //│     TermDefinition:
 //│       k = Fun
 //│       sym = member:f⁴
 //│       tsym = term:f⁵
-//│       params = Ls of 
+//│       params = Ls of
 //│         ParamList:
-//│           params = Ls of 
+//│           params = Ls of
 //│             Param:
 //│               sym = o²
 //│               sign = S of Resolved{sym=object:O⁰,typ=object:O⁰}:
@@ -201,13 +201,13 @@ class Foo with
   foo
 //│ ——————————————| Resolved tree |—————————————————————————————————————————————————————————————————————
 //│ Blk:
-//│   stats = Ls of 
+//│   stats = Ls of
 //│     Plain:
 //│       kind = Cls
 //│       sym = class:Foo²
 //│       bsym = member:Foo³
 //│       body = ObjBody of Blk:
-//│         stats = Ls of 
+//│         stats = Ls of
 //│           TermDefinition:
 //│             k = ImmutVal
 //│             sym = member:foo⁸
@@ -229,13 +229,13 @@ class Foo with
   this.foo
 //│ ——————————————| Resolved tree |—————————————————————————————————————————————————————————————————————
 //│ Blk:
-//│   stats = Ls of 
+//│   stats = Ls of
 //│     Plain:
 //│       kind = Cls
 //│       sym = class:Foo⁴
 //│       bsym = member:Foo⁵
 //│       body = ObjBody of Blk:
-//│         stats = Ls of 
+//│         stats = Ls of
 //│           TermDefinition:
 //│             k = ImmutVal
 //│             sym = member:foo¹⁰
