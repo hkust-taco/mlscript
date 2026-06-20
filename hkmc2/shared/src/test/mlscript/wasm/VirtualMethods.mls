@@ -48,11 +48,8 @@ callF(B())
 //│     (global.get $A_typeinfo)
 //│     (ref.func $B_f)))
 //│   (func $A_init (type $A_init) (param $this (ref null any)) (result (ref null any))
-//│     (block (result (ref null any))
-//│       (nop)
-//│       (nop)
-//│       (return
-//│         (local.get $this))))
+//│     (return
+//│       (local.get $this)))
 //│   (func $A_ctor (export "A") (type $A_ctor) (result (ref null any))
 //│     (local $this (ref null any))
 //│     (block (result (ref null any))
@@ -72,12 +69,9 @@ callF(B())
 //│           (i32.const 1)))))
 //│   (func $B_init (type $B_init) (param $this (ref null any)) (result (ref null any))
 //│     (block (result (ref null any))
-//│       (block
-//│         (nop)
-//│         (drop
-//│           (call $A_init
-//│             (local.get $this))))
-//│       (nop)
+//│       (drop
+//│         (call $A_init
+//│           (local.get $this)))
 //│       (return
 //│         (local.get $this))))
 //│   (func $B_ctor (export "B") (type $B_ctor) (result (ref null any))
@@ -116,27 +110,21 @@ callF(B())
 //│     (local $tmp (ref null any))
 //│     (local $receiver (ref null any))
 //│     (block (result (ref null any))
-//│       (nop)
-//│       (block (result (ref null any))
-//│         (nop)
+//│       (local.set $tmp
+//│         (call $B_ctor))
+//│       (return
 //│         (block (result (ref null any))
-//│           (nop)
-//│           (block (result (ref null any))
-//│             (local.set $tmp
-//│               (call $B_ctor))
-//│             (return
-//│               (block (result (ref null any))
-//│                 (local.set $receiver
-//│                   (local.get $tmp))
-//│                 (call_ref $virtual2
-//│                   (local.get $receiver)
-//│                   (ref.i31
-//│                     (i32.const 5))
-//│                   (struct.get $A_typeinfo $slot0
-//│                     (ref.cast (ref $A_typeinfo)
-//│                       (struct.get $Object $$typeinfo
-//│                         (ref.cast (ref $Object)
-//│                           (local.get $receiver)))))))))))))
+//│           (local.set $receiver
+//│             (local.get $tmp))
+//│           (call_ref $virtual2
+//│             (local.get $receiver)
+//│             (ref.i31
+//│               (i32.const 5))
+//│             (struct.get $A_typeinfo $slot0
+//│               (ref.cast (ref $A_typeinfo)
+//│                 (struct.get $Object $$typeinfo
+//│                   (ref.cast (ref $Object)
+//│                     (local.get $receiver))))))))))
 //│   (elem $A_init declare func $A_init)
 //│   (elem $A_ctor declare func $A_ctor)
 //│   (elem $A_f declare func $A_f)

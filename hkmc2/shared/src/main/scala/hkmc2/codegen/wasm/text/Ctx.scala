@@ -130,7 +130,7 @@ final case class SessionSingleton(
     globalTy: RefType,
 ) extends SessionBinding:
   def bindingKey: Str = s"singleton:$moduleName:$exportName"
-  def bindingSyms: Seq[ValueSymbol] = blockSym +: objectSym.toSeq
+  def bindingSyms: Ls[ValueSymbol] = blockSym +: objectSym.toList
   override def exportNameOpt: Opt[Str] = S(exportName)
 
 /** The emitted Wasm module together with REPL/session export metadata.

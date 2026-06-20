@@ -18,40 +18,9 @@ let i = 0 in
 //│   (type $Object (sub (struct (field $$typeinfo (mut (ref $TypeInfoBase))))))
 //│   (type $lt_impl (func (param $lhs (ref null any)) (param $rhs (ref null any)) (result (ref null any))))
 //│   (type $plus_impl (func (param $lhs (ref null any)) (param $rhs (ref null any)) (result (ref null any))))
-//│   (type $Unit_typeinfo (sub $TypeInfoBase (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
-//│   (type $Unit (sub $Object (struct (field $$typeinfo (mut (ref $TypeInfoBase))))))
-//│   (type $Unit_init (func (param $this (ref null any)) (result (ref null any))))
-//│   (type $Unit_ctor (func (result (ref null any))))
 //│   (type $entry (func (result (ref null any))))
-//│   (type $start (func))
 //│   (import "system" "lt_impl" (func $lt_impl (type $lt_impl)))
 //│   (import "system" "plus_impl" (func $plus_impl (type $plus_impl)))
-//│   (global $Unit_typeinfo (export "Unit_typeinfo") (ref $Unit_typeinfo) (struct.new $Unit_typeinfo
-//│     (i32.const 1)
-//│     (ref.null $TypeInfoBase)))
-//│   (global $Unit$inst (export "Unit$inst") (mut (ref null $Unit)) (ref.null $Unit))
-//│   (func $Unit_init (type $Unit_init) (param $this (ref null any)) (result (ref null any))
-//│     (block (result (ref null any))
-//│       (nop)
-//│       (nop)
-//│       (return
-//│         (local.get $this))))
-//│   (func $Unit_Unit (type $Unit_ctor) (result (ref null any))
-//│     (local $this (ref null any))
-//│     (block (result (ref null any))
-//│       (local.set $this
-//│         (struct.new $Unit
-//│           (global.get $Unit_typeinfo)))
-//│       (drop
-//│         (call $Unit_init
-//│           (local.get $this)))
-//│       (return
-//│         (local.get $this))))
-//│   (func $start (type $start)
-//│     (block
-//│       (global.set $Unit$inst
-//│         (ref.cast (ref null $Unit)
-//│           (call $Unit_Unit)))))
 //│   (func $entry (export "entry") (type $entry) (result (ref null any))
 //│     (local $i (ref null any))
 //│     (local $scrut (ref null any))
@@ -61,54 +30,38 @@ let i = 0 in
 //│       (local.set $i
 //│         (ref.i31
 //│           (i32.const 0)))
-//│       (block (result (ref null any))
-//│         (block $lbl
-//│           (loop $lbl_cont
-//│             (drop
-//│               (block (result (ref null any))
-//│                 (local.set $scrut
-//│                   (call $lt_impl
-//│                     (local.get $i)
-//│                     (ref.i31
-//│                       (i32.const 10))))
-//│                 (block (result (ref null any))
-//│                   (block $match
-//│                     (local.set $matchRes
-//│                       (ref.null any))
-//│                     (if
-//│                       (i32.eq
-//│                         (i31.get_s
-//│                           (ref.cast (ref null i31)
-//│                             (local.get $scrut)))
-//│                         (i32.const 1))
-//│                       (then
-//│                         (block $arm
-//│                           (block
-//│                             (block
-//│                               (local.set $tmp
-//│                                 (call $plus_impl
-//│                                   (local.get $i)
-//│                                   (ref.i31
-//│                                     (i32.const 1))))
-//│                               (block
-//│                                 (local.set $i
-//│                                   (local.get $tmp))
-//│                                 (br $lbl_cont)))
-//│                             (local.set $matchRes
-//│                               (global.get $Unit$inst)))
-//│                           (br $match))))
-//│                     (block
-//│                       (nop)
-//│                       (local.set $matchRes
-//│                         (global.get $Unit$inst))))
-//│                   (local.get $matchRes))))))
-//│         (return
-//│           (local.get $i)))))
-//│   (elem $Unit_init declare func $Unit_init)
-//│   (elem $Unit_Unit declare func $Unit_Unit)
-//│   (elem $start declare func $start)
-//│   (elem $entry declare func $entry)
-//│   (start $start))
+//│       (block $lbl
+//│         (loop $lbl_cont
+//│           (drop
+//│             (block (result (ref null any))
+//│               (local.set $scrut
+//│                 (call $lt_impl
+//│                   (local.get $i)
+//│                   (ref.i31
+//│                     (i32.const 10))))
+//│               (block $match
+//│                 (local.set $matchRes
+//│                   (ref.null any))
+//│                 (if
+//│                   (i32.eq
+//│                     (i31.get_s
+//│                       (ref.cast (ref null i31)
+//│                         (local.get $scrut)))
+//│                     (i32.const 1))
+//│                   (then
+//│                     (block $arm
+//│                       (local.set $tmp
+//│                         (call $plus_impl
+//│                           (local.get $i)
+//│                           (ref.i31
+//│                             (i32.const 1))))
+//│                       (local.set $i
+//│                         (local.get $tmp))
+//│                       (br $lbl_cont)))))
+//│               (local.get $matchRes)))))
+//│       (return
+//│         (local.get $i))))
+//│   (elem $entry declare func $entry))
 //│ Wasm result:
 //│ = 10
 
@@ -209,8 +162,7 @@ tailMatchAllValue(1)
 //│             (block $arm
 //│               (return
 //│                 (ref.i31
-//│                   (i32.const 10)))
-//│               (br $match))))
+//│                   (i32.const 10))))))
 //│         (if
 //│           (i32.eq
 //│             (i31.get_s
@@ -221,8 +173,7 @@ tailMatchAllValue(1)
 //│             (block $arm
 //│               (return
 //│                 (ref.i31
-//│                   (i32.const 20)))
-//│               (br $match))))
+//│                   (i32.const 20))))))
 //│         (return
 //│           (ref.i31
 //│             (i32.const 30))))
@@ -230,41 +181,37 @@ tailMatchAllValue(1)
 //│   (func $entry (export "entry") (type $entry) (result (ref null any))
 //│     (local $matchRes (ref null any))
 //│     (block (result (ref null any))
-//│       (nop)
-//│       (block (result (ref null any))
-//│         (block $match
-//│           (local.set $matchRes
-//│             (ref.null any))
-//│           (if
-//│             (i32.eq
-//│               (i31.get_s
-//│                 (ref.cast (ref null i31)
-//│                   (ref.i31
-//│                     (i32.const 1))))
-//│               (i32.const 0))
-//│             (then
-//│               (block $arm
-//│                 (return
-//│                   (ref.i31
-//│                     (i32.const 10)))
-//│                 (br $match))))
-//│           (if
-//│             (i32.eq
-//│               (i31.get_s
-//│                 (ref.cast (ref null i31)
-//│                   (ref.i31
-//│                     (i32.const 1))))
-//│               (i32.const 1))
-//│             (then
-//│               (block $arm
-//│                 (return
-//│                   (ref.i31
-//│                     (i32.const 20)))
-//│                 (br $match))))
-//│           (return
-//│             (ref.i31
-//│               (i32.const 30))))
-//│         (local.get $matchRes))))
+//│       (block $match
+//│         (local.set $matchRes
+//│           (ref.null any))
+//│         (if
+//│           (i32.eq
+//│             (i31.get_s
+//│               (ref.cast (ref null i31)
+//│                 (ref.i31
+//│                   (i32.const 1))))
+//│             (i32.const 0))
+//│           (then
+//│             (block $arm
+//│               (return
+//│                 (ref.i31
+//│                   (i32.const 10))))))
+//│         (if
+//│           (i32.eq
+//│             (i31.get_s
+//│               (ref.cast (ref null i31)
+//│                 (ref.i31
+//│                   (i32.const 1))))
+//│             (i32.const 1))
+//│           (then
+//│             (block $arm
+//│               (return
+//│                 (ref.i31
+//│                   (i32.const 20))))))
+//│         (return
+//│           (ref.i31
+//│             (i32.const 30))))
+//│       (local.get $matchRes)))
 //│   (elem $tailMatchAllValue declare func $tailMatchAllValue)
 //│   (elem $entry declare func $entry))
 //│ Wasm result:

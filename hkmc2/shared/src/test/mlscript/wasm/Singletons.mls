@@ -33,14 +33,11 @@ Bar.y
 //│   (global $Bar$inst (export "Bar$inst") (mut (ref null $Bar)) (ref.null $Bar))
 //│   (func $Foo_init (type $Foo_init) (param $this (ref null any)) (result (ref null any))
 //│     (block (result (ref null any))
-//│       (nop)
-//│       (block
-//│         (struct.set $Foo $x
-//│           (ref.cast (ref $Foo)
-//│             (local.get $this))
-//│           (ref.i31
-//│             (i32.const 1)))
-//│         (nop))
+//│       (struct.set $Foo $x
+//│         (ref.cast (ref $Foo)
+//│           (local.get $this))
+//│         (ref.i31
+//│           (i32.const 1)))
 //│       (return
 //│         (local.get $this))))
 //│   (func $Foo_ctor (type $Foo_ctor) (result (ref null any))
@@ -57,14 +54,11 @@ Bar.y
 //│         (local.get $this))))
 //│   (func $Bar_init (type $Bar_init) (param $this (ref null any)) (result (ref null any))
 //│     (block (result (ref null any))
-//│       (nop)
-//│       (block
-//│         (struct.set $Bar $y
-//│           (ref.cast (ref $Bar)
-//│             (local.get $this))
-//│           (ref.i31
-//│             (i32.const 2)))
-//│         (nop))
+//│       (struct.set $Bar $y
+//│         (ref.cast (ref $Bar)
+//│           (local.get $this))
+//│         (ref.i31
+//│           (i32.const 2)))
 //│       (return
 //│         (local.get $this))))
 //│   (func $Bar_ctor (type $Bar_ctor) (result (ref null any))
@@ -88,14 +82,10 @@ Bar.y
 //│         (ref.cast (ref null $Bar)
 //│           (call $Bar_ctor)))))
 //│   (func $entry (export "entry") (type $entry) (result (ref null any))
-//│     (block (result (ref null any))
-//│       (nop)
-//│       (block (result (ref null any))
-//│         (nop)
-//│         (return
-//│           (struct.get $Bar $y
-//│             (ref.cast (ref $Bar)
-//│               (global.get $Bar$inst)))))))
+//│     (return
+//│       (struct.get $Bar $y
+//│         (ref.cast (ref $Bar)
+//│           (global.get $Bar$inst)))))
 //│   (elem $Foo_init declare func $Foo_init)
 //│   (elem $Foo_ctor declare func $Foo_ctor)
 //│   (elem $Bar_init declare func $Bar_init)

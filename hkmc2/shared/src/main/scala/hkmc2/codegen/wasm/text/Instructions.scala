@@ -103,7 +103,7 @@ object Instructions:
     mnemonic = "drop",
     instrargs = Seq.empty,
     stackargs = Seq(value),
-    resultType = N,
+    resultTypes = value.resultTypes.init,
   )
 
   /** Creates a `return` instruction with an optional return value. */
@@ -440,7 +440,7 @@ object Instructions:
     /** Creates a `struct.set` instruction. */
     def set(index: FieldIdx, ref: Expr, value: FoldedInstr): FoldedInstr = FoldedInstr(
       mnemonic = "struct.set",
-      instrargs = Seq(ref.resultType_!.asInstanceOf[RefType].heapType, index),
+      instrargs = Seq(ref.resultType.map(_.asInstanceOf[RefType].heapType).get, index),
       stackargs = Seq(ref, value),
       resultType = N,
     )
@@ -448,7 +448,7 @@ object Instructions:
     /** Creates a `struct.get` instruction. */
     def get(index: FieldIdx, ref: Expr, ty: Type): FoldedInstr = FoldedInstr(
       mnemonic = "struct.get",
-      instrargs = Seq(ref.resultType_!.asInstanceOf[RefType].heapType, index),
+      instrargs = Seq(ref.resultType.map(_.asInstanceOf[RefType].heapType).get, index),
       stackargs = Seq(ref),
       resultType = S(ty),
     )

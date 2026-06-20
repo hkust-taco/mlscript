@@ -26,13 +26,10 @@ a.A#get() + A(2).get()
 //│     (ref.null $TypeInfoBase)))
 //│   (func $A_init (type $A_init) (param $this (ref null any)) (param $x (ref null any)) (result (ref null any))
 //│     (block (result (ref null any))
-//│       (nop)
-//│       (block
-//│         (struct.set $A $x
-//│           (ref.cast (ref $A)
-//│             (local.get $this))
-//│           (local.get $x))
-//│         (nop))
+//│       (struct.set $A $x
+//│         (ref.cast (ref $A)
+//│           (local.get $this))
+//│         (local.get $x))
 //│       (return
 //│         (local.get $this))))
 //│   (func $A_ctor (export "A") (type $A_ctor) (param $x (ref null any)) (result (ref null any))
@@ -58,29 +55,24 @@ a.A#get() + A(2).get()
 //│     (local $tmp1 (ref null any))
 //│     (local $tmp2 (ref null any))
 //│     (block (result (ref null any))
-//│       (nop)
-//│       (block (result (ref null any))
-//│         (global.set $a
-//│           (call $A_ctor
-//│             (ref.i31
-//│               (i32.const 1))))
-//│         (block (result (ref null any))
-//│           (local.set $tmp
-//│             (call $A_get
-//│               (global.get $a)))
-//│           (block (result (ref null any))
-//│             (local.set $tmp1
-//│               (call $A_ctor
-//│                 (ref.i31
-//│                   (i32.const 2))))
-//│             (block (result (ref null any))
-//│               (local.set $tmp2
-//│                 (call $A_get
-//│                   (local.get $tmp1)))
-//│               (return
-//│                 (call $plus_impl
-//│                   (local.get $tmp)
-//│                   (local.get $tmp2)))))))))
+//│       (global.set $a
+//│         (call $A_ctor
+//│           (ref.i31
+//│             (i32.const 1))))
+//│       (local.set $tmp
+//│         (call $A_get
+//│           (global.get $a)))
+//│       (local.set $tmp1
+//│         (call $A_ctor
+//│           (ref.i31
+//│             (i32.const 2))))
+//│       (local.set $tmp2
+//│         (call $A_get
+//│           (local.get $tmp1)))
+//│       (return
+//│         (call $plus_impl
+//│           (local.get $tmp)
+//│           (local.get $tmp2)))))
 //│   (elem $A_init declare func $A_init)
 //│   (elem $A_ctor declare func $A_ctor)
 //│   (elem $A_get declare func $A_get)
@@ -188,7 +180,7 @@ let d = Counter(c.Counter#get())
 :todo
 d.Counter#inc().Counter#double().Counter#get()
 //│ ╔══[COMPILATION ERROR] Cannot find variable `d` (VarSymbol) in local or global scope.
-//│ ║  l.185: 	let d = Counter(c.Counter#get())
+//│ ║  l.177: 	let d = Counter(c.Counter#get())
 //│ ╙──       	    ^
 //│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Missing type definition for symbol `member:Counter`
 
@@ -209,5 +201,5 @@ class A(val x) with
   fun get() = x
 A(1).get
 //│ ╔══[COMPILATION ERROR] `member:get` is neither a field access nor a callable method
-//│ ║  l.210: 	A(1).get
+//│ ║  l.202: 	A(1).get
 //│ ╙──       	    ^^^^
