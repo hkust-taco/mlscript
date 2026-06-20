@@ -92,11 +92,13 @@ class Foo(a) with
 val f = Foo(42)
 //│ f = Foo(_)
 
+:expect 131
 f.f(1)
-//│ = 130
+//│ = 131
 
+:expect 179
 f.g()(1)
-//│ = 177
+//│ = 179
 
 
 // * Same, but not lifted:
@@ -114,12 +116,12 @@ class Foo(a) with
 val f = Foo(42)
 //│ f = Foo(_)
 
-:fixme
+:expect 131
 f.f(1)
-//│ ═══[RUNTIME ERROR] TypeError: Cannot add property b, object is not extensible
+//│ = 131
 
-:fixme
+:expect 179
 f.g()(1)
-//│ ═══[RUNTIME ERROR] TypeError: Cannot add property b, object is not extensible
+//│ = 179
 
 

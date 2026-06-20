@@ -531,19 +531,19 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
       WarningReport(msg"Pure expression in statement position" -> loc :: Nil, extraInfo,
         source = Diagnostic.Source.Compilation)
 
-  private def assignSymbol(sym: Symbol, rhs: Result, rest: Block, loco: Opt[Loc])(using LoweringCtx): Block =
+  private def assignSymbol(target: Symbol, diagnostic: Symbol, rhs: Result, rest: Block, loco: Opt[Loc])(using LoweringCtx): Block =
     def nope = fail:
       ErrorReport(
-        msg"Cannot assign to ${sym match
+        msg"Cannot assign to ${diagnostic match
             case sym: BlockMemberSymbol => sym.describe
             case sym => "symbol"
-          } '${sym.nme}'" -> loco
-          :: sym.toLoc.match
+          } '${diagnostic.nme}'" -> loco
+          :: diagnostic.toLoc.match
             case s @ S(_) => msg"Defined here:" -> s :: Nil
             case N => Nil,
         source = Diagnostic.Source.Compilation,
-        extraInfo = S(sym.getClass))
-    sym match
+        extraInfo = S(target.getClass))
+    target match
     case sym: TermSymbol if (sym.k is MutVal) || (sym.k is LetBind) =>
       sym.owner match
       case S(owner) => AssignField(owner.asThis, sym.id, rhs, rest)(S(sym))
@@ -916,18 +916,33 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
             k(resSym.asSimpleRef))
     case st.Blk(sts, res) => block(sts, R(res), inStmtPos = inStmtPos)(k)
     case Assgn(lhs, rhs) =>
-      lhs match
+      // * An assignment LHS is an l-value: normal term lowering would read the
+      // * selected field, possibly with access instrumentation, while here we
+      // * need the selected prefix/name/symbol in order to emit `AssignField`.
+      // * Still, resolver expansions matter: `Resolved(lhs, sym)` carries the
+      // * disambiguated member symbol needed for private fields and overloads.
+      val (target, resolvedSelectionSymbol) = lhs.instantiated match
+        case Resolved(inner, sym) => inner -> S(sym)
+        case target => target -> N
+      target match
       case Ref(sym) =>
         subTerm(rhs): r =>
-          assignSymbol(sym, r, k(unit), trm.toLoc)
-      case sel @ SynthSel(prefix, nme) =>
-        subTerm(prefix): p =>
-          subTerm_nonTail(rhs): r =>
-            AssignField(p, nme, r, k(unit))(sel.sym)
+          assignSymbol(resolvedSelectionSymbol.getOrElse(sym), sym, r, k(unit), trm.toLoc)
       case sel @ Sel(prefix, nme) =>
         subTerm(prefix): p =>
           subTerm_nonTail(rhs): r =>
-            AssignField(p, nme, r, k(unit))(sel.sym)
+            AssignField(p, nme, r, k(unit))(resolvedSelectionSymbol)
+      case sel @ SynthSel(prefix, nme) =>
+        // * See the doc in the `term` case for `SynthSel` for why we fall back to `sel.sym` here
+        val sym = resolvedSelectionSymbol match
+          case S(sym) => S(sym)
+          case N => sel.sym match
+            case S(sym: DefinitionSymbol[?]) => S(sym)
+            case _ => N
+        softAssert(sym.nonEmpty, s"Missing symbol for synthetic assignment target ${sel.showDbg}")
+        subTerm(prefix): p =>
+          subTerm_nonTail(rhs): r =>
+            AssignField(p, nme, r, k(unit))(sym)
       case sel @ DynSel(prefix, fld, ai) =>
         subTerm(prefix): p =>
           subTerm_nonTail(fld): f =>
@@ -936,7 +951,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
       case sel @ SelProj(prefix, _, proj) =>
         subTerm(prefix): p =>
           subTerm_nonTail(rhs): r =>
-            AssignField(p, proj, r, k(unit))(sel.sym)
+            AssignField(p, proj, r, k(unit))(resolvedSelectionSymbol)
       case _ => fail:
         ErrorReport(
           msg"Unexpected left-hand side in assignment (${lhs.describe})" -> lhs.toLoc :: Nil, S(lhs),
@@ -969,6 +984,12 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
     
     case sel @ SynthSel(prefix, nme) =>
       // * Not using `setupSelection` as these selections are not meant to be sanity-checked
+      // * Unlike source `Sel`s, compiler-synthesized selections may carry a known
+      // * member symbol directly in `sel.sym` without being wrapped in `Resolved`.
+      // * This reflects the current IR convention: `sel.sym` records the selected
+      // * member/representative, while `Resolved(sel, sym)` records a disambiguated
+      // * definition when one exists. Do not use this fallback for ordinary `Sel`
+      // * lowering unless that convention is changed at the source.
       subTerm(prefix): p =>
         k(Select(p, nme)(sel.sym.collect:
           case s: DefinitionSymbol[?] => s
