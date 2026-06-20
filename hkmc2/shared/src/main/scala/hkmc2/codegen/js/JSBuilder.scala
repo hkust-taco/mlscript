@@ -571,17 +571,15 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
                   if checkSelections
                   then mtds
                     .flatMap:
-                      case td @ FunDefn(params = ps :: pss, body = bod) => S:
-                        val checkName = td.visibility match
-                          case Visibility.Private if td.dSym.isPrivate =>
-                            doc"#${isym.privatesScope.allocateOrGetName(td.dSym)}$$__checkNotMethod"
-                          case Visibility.Private | Visibility.Public =>
-                            doc"${td.sym.nme}$$__checkNotMethod"
-                        doc" # get $checkName() { ${
-                          runtimeVar
-                        }.deboundMethod(${makeStringLiteral(td.sym.nme)}, ${
-                          makeStringLiteral(sym.nme)
-                        }); }"
+                      case td @ FunDefn(params = ps :: pss, body = bod) =>
+                        softAssert(td.dSym.isPrivate === (td.visibility is Visibility.Private),
+                          s"Mismatched visibility for ${td.sym.nme}: ${td.dSym.isPrivate} vs ${td.visibility}")
+                        if td.dSym.isPrivate then N else S:
+                          doc" # get ${td.sym.nme}$$__checkNotMethod() { ${
+                            runtimeVar
+                          }.deboundMethod(${makeStringLiteral(td.sym.nme)}, ${
+                            makeStringLiteral(sym.nme)
+                          }); }"
                       case _ => N
                     .mkDocument(" ")
                   else doc""

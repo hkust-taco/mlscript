@@ -346,7 +346,7 @@ class TermSymbol(val k: TermDefKind, val owner: Opt[InnerSymbol], val id: Tree.I
   override def showPrefix(using Scope, ShowCfg, Raise): Str =
     "term:" + owner.map(_.showName + "/").getOrElse("")
   def isExplicitlyPrivate: Bool = defn.exists(_.visibility is Visibility.Private)
-  def isPrivate: Bool =
+  lazy val isPrivate: Bool =
     // Top-level term symbols have `owner = None`, but the synthetic global
     // object itself is represented by a `TopLevelSymbol`; excluding it here
     // keeps global definitions and builtins out of JS `#` private lowering if a

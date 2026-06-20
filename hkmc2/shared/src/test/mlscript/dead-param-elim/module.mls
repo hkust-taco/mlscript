@@ -4,120 +4,92 @@
 
 
 
+:fixme
+:sir
+:soir
+module M with
+  private fun g(b) = b
+  g(2)
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define M⁰ as class M¹
+//│ module M² { constructor { do M².this.g⁰(2); end } method g¹ = fun g⁰(b) { return b } };
+//│ end
+//│ dead-param-elim > >>> dead-param-elim results >>>
+//│ dead-param-elim > prodfun g#0 @ <root> -> eliminable: {0}
+//│ dead-param-elim > <<< dead-param-elim results <<<
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ define M⁰ as class M¹
+//│ module M² { constructor { do M².this.g⁰(); end } method g¹ = fun g⁰() { return undefined } };
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ ═══[RUNTIME ERROR] Error: MLscript call unexpectedly returned `undefined`, the forbidden value.
 
-:e
 module M with
   private fun f(a) = 0
   private fun g(b) = b
-M.f(1)
-M.g(2)
-//│ ╔══[COMPILATION ERROR] Cannot access private member 'f' outside its declaring owner
-//│ ║  l.12: 	M.f(1)
-//│ ║        	 ^^
-//│ ╟── private member declared here
-//│ ║  l.10: 	  private fun f(a) = 0
-//│ ╙──      	              ^
-//│ ╔══[COMPILATION ERROR] Cannot access private member 'g' outside its declaring owner
-//│ ║  l.13: 	M.g(2)
-//│ ║        	 ^^
-//│ ╟── private member declared here
-//│ ║  l.11: 	  private fun g(b) = b
-//│ ╙──      	              ^
+  print(f(1))
+  print(g(2))
 //│ dead-param-elim > >>> dead-param-elim results >>>
 //│ dead-param-elim > prodfun f#0 @ <root> -> eliminable: {0}
 //│ dead-param-elim > <<< dead-param-elim results <<<
-//│ = 2
+//│ > 0
+//│ > 2
 
 
-:e
 module M with
   val x = 3
   private fun f(a) = x
   private fun main() = M.f(42)
-M.main()
-//│ ╔══[COMPILATION ERROR] Cannot access private member 'main' outside its declaring owner
-//│ ║  l.37: 	M.main()
-//│ ║        	 ^^^^^
-//│ ╟── private member declared here
-//│ ║  l.36: 	  private fun main() = M.f(42)
-//│ ╙──      	              ^^^^
+  print(M.main())
 //│ dead-param-elim > >>> dead-param-elim results >>>
 //│ dead-param-elim > prodfun f#0 @ <root> -> eliminable: {0}
 //│ dead-param-elim > <<< dead-param-elim results <<<
-//│ = 3
+//│ > 3
 
 
-:e
 module M with
   private fun f(a) = a
   private fun main() = M.f(42)
-M.main()
-//│ ╔══[COMPILATION ERROR] Cannot access private member 'main' outside its declaring owner
-//│ ║  l.54: 	M.main()
-//│ ║        	 ^^^^^
-//│ ╟── private member declared here
-//│ ║  l.53: 	  private fun main() = M.f(42)
-//│ ╙──      	              ^^^^
+  print(M.main())
 //│ dead-param-elim > >>> dead-param-elim results >>>
 //│ dead-param-elim > <<< dead-param-elim results <<<
-//│ = 42
+//│ > 42
 
 
 :lift
-:e
 module M with
   private fun f(a) = a
   private fun withF() = x => f(x)
-M.withF()(42)
-//│ ╔══[COMPILATION ERROR] Cannot access private member 'withF' outside its declaring owner
-//│ ║  l.71: 	M.withF()(42)
-//│ ║        	 ^^^^^^
-//│ ╟── private member declared here
-//│ ║  l.70: 	  private fun withF() = x => f(x)
-//│ ╙──      	              ^^^^^
+  print(M.withF()(42))
 //│ dead-param-elim > >>> dead-param-elim results >>>
 //│ dead-param-elim > <<< dead-param-elim results <<<
-//│ = 42
+//│ > 42
 
 
 
 
-:e
 module M with
   private fun f(a) = a
   private fun g(b) = 0
   private fun pick(x)(y) = if false then x else y
   private fun main() = M.pick(M.f)(M.g)(5)
-M.main()
-//│ ╔══[COMPILATION ERROR] Cannot access private member 'main' outside its declaring owner
-//│ ║  l.91: 	M.main()
-//│ ║        	 ^^^^^
-//│ ╟── private member declared here
-//│ ║  l.90: 	  private fun main() = M.pick(M.f)(M.g)(5)
-//│ ╙──      	              ^^^^
+  print(M.main())
 //│ dead-param-elim > >>> dead-param-elim results >>>
 //│ dead-param-elim > <<< dead-param-elim results <<<
-//│ = 0
+//│ > 0
 
 
 
-:e
 module M with
   data class Foo(x) with
     private fun m() = this.x + 1
     private fun n(y) = this.x + y
-let foo = M.Foo(123)
-foo M.Foo::n(2)
-//│ ╔══[COMPILATION ERROR] Cannot access private member 'n' outside its declaring owner
-//│ ║  l.110: 	foo M.Foo::n(2)
-//│ ║         	           ^
-//│ ╟── private member declared here
-//│ ║  l.108: 	    private fun n(y) = this.x + y
-//│ ╙──       	                ^
+    fun test(f) = f M.Foo::n(2)
+  let foo = M.Foo(123)
+  print(foo.test(foo))
 //│ dead-param-elim > >>> dead-param-elim results >>>
 //│ dead-param-elim > <<< dead-param-elim results <<<
-//│ = 125
-//│ foo = Foo(123)
+//│ > 125
 
 
 
@@ -146,11 +118,11 @@ f(O) + g(O)
 //│   return O.I⁰.x⁰
 //│ };
 //│ @private
-//│ define g⁰ as fun g²(O) {
-//│   return O.I⁰.g¹()
+//│ define g² as fun g⁴(O) {
+//│   return O.I⁰.g³()
 //│ };
 //│ set tmp = f¹(O⁰);
-//│ set tmp1 = g²(O⁰);
+//│ set tmp1 = g⁴(O⁰);
 //│ return +⁰(tmp, tmp1)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 26
@@ -170,11 +142,11 @@ f(O.I) + g(O.I)
 //│   return I.x⁰
 //│ };
 //│ @private
-//│ define g³ as fun g⁴(I) {
-//│   return I.g¹()
+//│ define g⁵ as fun g⁶(I) {
+//│   return I.g³()
 //│ };
 //│ set tmp = f³(O⁰.I⁰);
-//│ set tmp1 = g⁴(O⁰.I⁰);
+//│ set tmp1 = g⁶(O⁰.I⁰);
 //│ return +⁰(tmp, tmp1)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 26
@@ -197,3 +169,5 @@ g(f(O), O)
 //│ dead-param-elim > >>> dead-param-elim results >>>
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ = 5
+
+
