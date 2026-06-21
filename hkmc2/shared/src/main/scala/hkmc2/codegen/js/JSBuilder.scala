@@ -223,7 +223,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
       val field = s.symbol match
         case S(ts: semantics.TermSymbol) => selectPrivateField(ts, s.toLoc)
         case _ => N
-      val name = id.name
+      val name = symbolicSuffixBase(id.name).getOrElse(id.name)
       val fieldDoc = field.getOrElse:
         if isValidFieldName(name)
         then doc".$name"
@@ -349,7 +349,8 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
       val field = assign.symbol match
         case S(ts: semantics.TermSymbol) => selectPrivateField(ts, n.toLoc)
         case _ => N
-      doc" # ${result(p)}${field.getOrElse(fieldSelect(n.name))} = ${result(r)};${returningTerm(rst, endSemi)}"
+      val name = symbolicSuffixBase(n.name).getOrElse(n.name)
+      doc" # ${result(p)}${field.getOrElse(fieldSelect(name))} = ${result(r)};${returningTerm(rst, endSemi)}"
     case AssignDynField(p, f, ai, r, rst) =>
       doc" # ${result(p)}[${result(f)}] = ${result(r)};${returningTerm(rst, endSemi)}"
     case Define(defn, rst) =>

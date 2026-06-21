@@ -5,7 +5,7 @@ class Reg[Rg, Br]
 
 fun letreg: [E, Res] -> ([Rg] -> Reg[Rg, E] ->{E | Rg} Res) ->{E} Res
 
-fun use_: [Rg, Br] -> Reg[Rg, Br] ->{Rg} Int
+fun use_ : [Rg, Br] -> Reg[Rg, Br] ->{Rg} Int
 
 
 class MutVec[A, Rg, Br]
@@ -182,5 +182,4 @@ letreg of r =>
 //│ ║  l.177: 	    123
 //│ ╙──       	    ^^^
 //│ Type: ⊥
-
 

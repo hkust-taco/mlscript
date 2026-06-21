@@ -84,7 +84,7 @@ print of
 //│ ║  l.78: 	print of 
 //│ ║        	         ^
 //│ ║  l.79: 	123
-//│ ╙──      	
+//│ ╙──
 //│ Parsed:
 //│ 	App(Ident(print),Tup(List(IntLit(123))))
 
@@ -99,7 +99,7 @@ print of
 //│ ║  l.92: 	print of 
 //│ ║        	         ^
 //│ ║  l.93: 	1
-//│ ╙──      	
+//│ ╙──
 //│ Parsed:
 //│ 	App(Ident(print),Tup(List(IntLit(1))))
 //│ 	IntLit(2)

@@ -78,7 +78,7 @@ tuple(
 //│ ║  l.71: 	tuple(
 //│ ║        	      ^
 //│ ║  l.72: 	1
-//│ ╙──      	
+//│ ╙──
 //│ = [1]
 
 tuple(
@@ -195,10 +195,10 @@ P.x
 //│   head = InfixApp:
 //│     lhs = Ident of "P"
 //│     kw = Keywrd of keyword 'with'
-//│     rhs = Block of Ls of 
+//│     rhs = Block of Ls of
 //│       App:
 //│         lhs = Ident of "print"
-//│         rhs = Tup of Ls of 
+//│         rhs = Tup of Ls of
 //│           IntLit of 2
 //│       TermDef:
 //│         k = ImmutVal

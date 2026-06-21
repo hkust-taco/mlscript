@@ -36,7 +36,7 @@ if x
 //│ ———————————————| Parsed tree |——————————————————————————————————————————————————————————————————————
 //│ IfLike:
 //│   kw = Keywrd of keyword 'if'
-//│   split = Block of Ls of 
+//│   split = Block of Ls of
 //│     InfixApp:
 //│       lhs = InfixApp:
 //│         lhs = Ident of "x"
@@ -56,7 +56,7 @@ if x is
 //│   split = InfixApp:
 //│     lhs = Ident of "x"
 //│     kw = Keywrd of keyword 'is'
-//│     rhs = Block of Ls of 
+//│     rhs = Block of Ls of
 //│       InfixApp:
 //│         lhs = InfixApp:
 //│           lhs = Ident of "A"
@@ -75,12 +75,12 @@ if x is
 //│   split = InfixApp:
 //│     lhs = Ident of "x"
 //│     kw = Keywrd of keyword 'is'
-//│     rhs = Block of Ls of 
+//│     rhs = Block of Ls of
 //│       InfixApp:
 //│         lhs = InfixApp:
 //│           lhs = App:
 //│             lhs = Ident of "A"
-//│             rhs = Tup of Ls of 
+//│             rhs = Tup of Ls of
 //│               Ident of "u"
 //│               Ident of "v"
 //│               Ident of "w"
@@ -104,11 +104,11 @@ if x is
 //│   split = InfixApp:
 //│     lhs = Ident of "x"
 //│     kw = Keywrd of keyword 'is'
-//│     rhs = Block of Ls of 
+//│     rhs = Block of Ls of
 //│       InfixApp:
 //│         lhs = App:
 //│           lhs = Ident of "A"
-//│           rhs = Tup of Ls of 
+//│           rhs = Tup of Ls of
 //│             Ident of "u"
 //│             Ident of "v"
 //│             Ident of "w"
@@ -116,7 +116,7 @@ if x is
 //│         rhs = InfixApp:
 //│           lhs = Ident of "v"
 //│           kw = Keywrd of keyword 'is'
-//│           rhs = Block of Ls of 
+//│           rhs = Block of Ls of
 //│             InfixApp:
 //│               lhs = Ident of "B"
 //│               kw = Keywrd of keyword 'then'
@@ -143,11 +143,11 @@ if x is
 //│   split = InfixApp:
 //│     lhs = Ident of "x"
 //│     kw = Keywrd of keyword 'is'
-//│     rhs = Block of Ls of 
+//│     rhs = Block of Ls of
 //│       InfixApp:
 //│         lhs = App:
 //│           lhs = Ident of "A"
-//│           rhs = Tup of Ls of 
+//│           rhs = Tup of Ls of
 //│             Ident of "u"
 //│             Ident of "v"
 //│             Ident of "w"
@@ -176,13 +176,13 @@ if x is
 //│   split = InfixApp:
 //│     lhs = Ident of "x"
 //│     kw = Keywrd of keyword 'is'
-//│     rhs = Block of Ls of 
+//│     rhs = Block of Ls of
 //│       InfixApp:
 //│         lhs = InfixApp:
 //│           lhs = InfixApp:
 //│             lhs = App:
 //│               lhs = Ident of "A"
-//│               rhs = Tup of Ls of 
+//│               rhs = Tup of Ls of
 //│                 Ident of "u"
 //│                 Ident of "v"
 //│                 Ident of "w"
@@ -214,12 +214,12 @@ if x is
 //│   split = InfixApp:
 //│     lhs = Ident of "x"
 //│     kw = Keywrd of keyword 'is'
-//│     rhs = Block of Ls of 
+//│     rhs = Block of Ls of
 //│       InfixApp:
 //│         lhs = InfixApp:
 //│           lhs = App:
 //│             lhs = Ident of "A"
-//│             rhs = Tup of Ls of 
+//│             rhs = Tup of Ls of
 //│               Ident of "u"
 //│               Ident of "v"
 //│               Ident of "w"

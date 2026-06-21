@@ -80,9 +80,9 @@ xs
 //│   lhs = OpApp:
 //│     lhs = Ident of "xs"
 //│     op = Ident of "\\"
-//│     rhss = Ls of 
+//│     rhss = Ls of
 //│       Ident of "map"
-//│   rhs = Tup of Ls of 
+//│   rhs = Tup of Ls of
 //│     Ident of "f"
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > [2, 1, 0] 2

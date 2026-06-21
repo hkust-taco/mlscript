@@ -276,6 +276,7 @@ object Elaborator:
         val tailrec = assumeObject("tailrec")
         val tailcall = assumeObject("tailcall")
         val inline = assumeObject("inline")
+        val noInline = assumeObject("noInline")
         val compile = assumeObject("compile")
         val buffered = assumeObject("buffered")
         val bufferable = assumeObject("bufferable")
@@ -511,6 +512,8 @@ extends Importer with ucs.SplitElaborator:
             return S(Annot.TailRec)
           case ctx.builtins.annotations.inline =>
             return S(Annot.Inline)
+          case ctx.builtins.annotations.noInline =>
+            return S(Annot.NoInline)
           case ctx.builtins.annotations.mayNotRaiseEffects =>
             return S(Annot.MayNotRaiseEffects)
           case _ => ()
@@ -1644,7 +1647,9 @@ extends Importer with ucs.SplitElaborator:
               then
                 val k = if p.flags.mut then MutVal else ImmutVal
                 val fsym = BlockMemberSymbol(p.sym.nme, Nil)
+                fsym.sourceAliases = p.sym.sourceAliases
                 val tsym = cp
+                tsym.sourceAliases = p.sym.sourceAliases
                 cp.decl = S(p)
                 val fdef = TermDefinition(
                   k,
@@ -1664,6 +1669,7 @@ extends Importer with ucs.SplitElaborator:
                 fdef :: Nil
               else
                 val psym = TermSymbol(LetBind, owner, p.sym.id)
+                psym.sourceAliases = p.sym.sourceAliases
                 val decl = LetDecl(psym, Nil)
                 val defn = DefineVar(psym, p.sym.ref())
                 p.fldSym = S(psym)
@@ -1676,6 +1682,7 @@ extends Importer with ucs.SplitElaborator:
                 case s: InnerSymbol => S(s)
                 case _: TypeAliasSymbol => die
               val psym = TermSymbol(LetBind, owner, p.sym.id)
+              psym.sourceAliases = p.sym.sourceAliases
               val decl = LetDecl(psym, Nil)
               val defn = DefineVar(psym, p.sym.ref())
               p.fldSym = S(psym)
@@ -1684,12 +1691,19 @@ extends Importer with ucs.SplitElaborator:
           val allFields = fields ::: ctorFields
           
           val ctxWithFields =
-            val valParams = allFields.collect:
+            val valParams = allFields.flatMap:
               case f: TermDefinition =>
-                f.sym.nme -> f.sym
-            val params = allFields.collect:
+                (f.sym.nme -> f.sym) :: f.sym.sourceAliases.map(_ -> f.sym)
+              case _ =>
+                Nil
+            val params = allFields.flatMap:
               case (f: LetDecl) =>
-                f.sym.nme -> f.sym
+                val aliases = f.sym match
+                  case sym: TermSymbol => sym.sourceAliases
+                  case _ => Nil
+                (f.sym.nme -> f.sym) :: aliases.map(_ -> f.sym)
+              case _ =>
+                Nil
             ctx.withMembers(valParams) ++ params
           
           val (blk, c) = fn(using ctxWithFields)
@@ -1914,16 +1928,22 @@ extends Importer with ucs.SplitElaborator:
     if ctx.outer.inner.isDefined then TermSymbol(k, ctx.outer.inner, id)
     else VarSymbol(id)
   
-  def param(t: Tree, inUsing: Bool, inDataClass: Bool): Ctxl[Diagnostic \/ (Param, Opt[SpreadKind])] =
+  def param(t: Tree, inUsing: Bool, inDataClass: Bool): Ctxl[Diagnostic \/ (Param, Opt[SpreadKind], Ls[Str])] =
     t.desugared.asParam(inUsing).map:
       case pt @ ParamTree(flags, id, sign, spd, modifiers) =>
         log(s"Elaborating ParamTree: ${pt}")
         val flg = flags.copy(isVal = flags.isVal || inDataClass)
-        val sym = VarSymbol(id)
+        val (canonicalId, aliases) = symbolicSuffixBase(id.name) match
+          case S(base) =>
+            new Ident(base).withLocOf(id) -> (id.name :: Nil)
+          case N =>
+            id -> Nil
+        val sym = VarSymbol(canonicalId)
+        sym.sourceAliases = aliases
         val sig = sign.map(term(_))
         val p = Param(flg, sym, sig, Modulefulness.ofSign(sig)(Mod in modifiers))
         sym.decl = S(p)
-        (p, spd)
+        (p, spd, aliases)
   
   def funParams(t: Tree): Ctxl[(ParamList, Ctx)] =
     val ps_ctx = params(t, inDataClass = false, inPattern = false)
@@ -1967,10 +1987,11 @@ extends Importer with ucs.SplitElaborator:
           val isCtxParam = hd.isModified(Ins)
           val inUsing = flags.ctx || isCtxParam
           param(hd, inUsing, inDataClass)(using ctx) match
-          case R((p, spd)) =>
+          case R((p, spd, aliases)) =>
             if isCtxParam && acc.nonEmpty then
               raise(ErrorReport(msg"Keyword `using` must occur before all parameters." -> hd.toLoc :: Nil))
-            val newCtx = if !inPattern || p.flags.pat then ctx + (p.sym.name -> p.sym) else ctx
+            val bindings = (p.sym.name -> p.sym) :: aliases.map(_ -> p.sym)
+            val newCtx = if !inPattern || p.flags.pat then ctx ++ bindings else ctx
             val newFlags = flags.copy(ctx = inUsing)
             spd match
             case S(spd) =>

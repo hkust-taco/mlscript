@@ -16,11 +16,7 @@ class Lexer(origin: Origin, dbg: Bool)(using raise: Raise):
   private val length = bytes.length
   type State = Int
   
-  private val isOpChar = Set(
-    '!', '#', '%', '&', '*', '+', '-', '/', ':', '<', '=', '>', '?', '@', '\\', '^', '|', '~', '.',
-    // ',', 
-    // ';'
-  )
+  private val isOpChar = symbolicIdentifierChars + '.'
   def isIdentFirstChar(c: Char): Bool =
     c.isLetter || c === '_' || c === '\''
   def isIdentChar(c: Char): Bool =
@@ -63,6 +59,16 @@ class Lexer(origin: Origin, dbg: Bool)(using raise: Raise):
   def takeWhile(i: Int, cur: Ls[Char] = Nil)(pred: Char => Bool): (Str, Int) =
     if i < length && pred(bytes(i)) then takeWhile(i + 1, bytes(i) :: cur)(pred)
     else (cur.reverseIterator.mkString, i)
+
+  /** Take an alphanumeric identifier, including a Scala-style symbolic suffix after `_`.
+    * Dots are excluded from suffixes so that, for example, `foo_.bar` remains a selection.
+    */
+  final def takeIdent(i: Int): (Str, Int) =
+    val (name, j) = takeWhile(i)(isIdentChar)
+    if name.endsWith("_") && name.exists(c => c.isLetter || isDigit(c)) then
+      val (suffix, k) = takeWhile(j)(symbolicIdentifierChars)
+      (name + suffix, k)
+    else (name, j)
 
   final def num(i: Int): (Literal, Int) =
     def test(i: Int, p: Char => Bool): Bool = i < length && p(bytes(i))
@@ -296,7 +302,7 @@ class Lexer(origin: Origin, dbg: Bool)(using raise: Raise):
       case '$' if isUnquoteOpening(i) =>
         go(i + 2, OPEN_BRACKET(BracketKind.Unquote))
       case '$' if i + 1 < length && isIdentFirstChar(bytes(i + 1)) =>
-        val (n, j) = takeWhile(i + 1)(isIdentChar)
+        val (n, j) = takeIdent(i + 1)
         go(j, BRACKETS(BracketKind.Unquote, (
             IDENT(n, false),
             loc(i + 1, j)
@@ -366,7 +372,7 @@ class Lexer(origin: Origin, dbg: Bool)(using raise: Raise):
             else (NEWLINE, loc(i, k)) :: acc
           )
       case _ if isIdentFirstChar(c) =>
-        val (n, j) = takeWhile(i)(isIdentChar)
+        val (n, j) = takeIdent(i)
         go(j, IDENT(n, false))
       case _ if isOpChar(c) =>
         val (n, j) = takeWhile(i)(isOpChar)
@@ -376,7 +382,7 @@ class Lexer(origin: Origin, dbg: Bool)(using raise: Raise):
           inline def mkSelect(str: Str) = SELECT(str, n === "!")
           val nc = bytes(j)
           if isIdentFirstChar(nc) then
-            val (name, k) = takeWhile(j)(isIdentChar)
+            val (name, k) = takeIdent(j)
             go(k, mkSelect(name))
           else if
             // The first character is '0' and the next character is not a digit
@@ -608,4 +614,3 @@ object Lexer:
     ts.iterator.map(printToken).mkString(SEP, SEP, SEP)
   
   
-

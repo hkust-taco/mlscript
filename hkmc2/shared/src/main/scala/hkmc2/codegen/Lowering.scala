@@ -141,6 +141,20 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
   def unit: Path =
     Select(State.runtimeSymbol.asSimpleRef, Tree.Ident("Unit"))(S(State.unitSymbol))
   
+  private def memberIdent(nme: Tree.Ident, sym: Opt[MemberSymbol]): Tree.Ident =
+    sym match
+    case S(sym) =>
+      new Tree.Ident(sym.nme).withLocOf(nme)
+    case N =>
+      symbolicSuffixBase(nme.name) match
+      case S(base) =>
+        new Tree.Ident(base).withLocOf(nme)
+      case N =>
+        nme
+
+  private def definitionIdent(nme: Tree.Ident, sym: DefinitionSymbol[?]): Tree.Ident =
+    new Tree.Ident(sym.nme).withLocOf(nme)
+
   // type Rcd = (mut: Bool, args: List[RcdArg]) // * Better, but Scala's patmat exhaustiveness chokes on it
   type Rcd = (Bool, List[RcdArg])
   
@@ -882,13 +896,13 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
           conclude(Select(p, nme)(N).withLocOf(sel))
       case Resolved(sel @ Sel(prefix, nme), sym) =>
         subTerm(prefix): p =>
-          conclude(Select(p, nme)(S(sym)).withLocOf(sel))
+          conclude(Select(p, definitionIdent(nme, sym))(S(sym)).withLocOf(sel))
       case sel @ SelProj(prefix, _, nme) =>
         subTerm(prefix): p =>
           conclude(Select(p, nme)(N).withLocOf(sel))
       case Resolved(sel @ SelProj(prefix, _, nme), sym) =>
         subTerm(prefix): p =>
-          conclude(Select(p, nme)(S(sym)).withLocOf(sel))
+          conclude(Select(p, definitionIdent(nme, sym))(S(sym)).withLocOf(sel))
       case _ => subTerm(baseF)(conclude)
     case h @ Handle(lhs, rhs, as, cls, defs, bod) =>
       if !lowerHandlers then
@@ -942,7 +956,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
         softAssert(sym.nonEmpty, s"Missing symbol for synthetic assignment target ${sel.showDbg}")
         subTerm(prefix): p =>
           subTerm_nonTail(rhs): r =>
-            AssignField(p, nme, r, k(unit))(sym)
+            AssignField(p, memberIdent(nme, sel.sym), r, k(unit))(sym)
       case sel @ DynSel(prefix, fld, ai) =>
         subTerm(prefix): p =>
           subTerm_nonTail(fld): f =>
@@ -951,7 +965,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
       case sel @ SelProj(prefix, _, proj) =>
         subTerm(prefix): p =>
           subTerm_nonTail(rhs): r =>
-            AssignField(p, proj, r, k(unit))(resolvedSelectionSymbol)
+            AssignField(p, memberIdent(proj, sel.sym), r, k(unit))(resolvedSelectionSymbol)
       case _ => fail:
         ErrorReport(
           msg"Unexpected left-hand side in assignment (${lhs.describe})" -> lhs.toLoc :: Nil, S(lhs),
@@ -991,13 +1005,13 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
       // * definition when one exists. Do not use this fallback for ordinary `Sel`
       // * lowering unless that convention is changed at the source.
       subTerm(prefix): p =>
-        k(Select(p, nme)(sel.sym.collect:
+        k(Select(p, memberIdent(nme, sel.sym))(sel.sym.collect:
           case s: DefinitionSymbol[?] => s
         ))
     case Resolved(sel @ SynthSel(prefix, nme), sym) =>
       // * Not using `setupSelection` as these selections are not meant to be sanity-checked
       subTerm(prefix): p =>
-        k(Select(p, nme)(S(sym)))
+        k(Select(p, definitionIdent(nme, sym))(S(sym)))
     
     case DynSel(prefix, fld, ai) =>
       subTerm(prefix): p =>
@@ -1409,7 +1423,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
   
   def setupSelection(prefix: Term, nme: Tree.Ident, disamb: Opt[DefinitionSymbol[?]])(k: Result => Block)(using LoweringCtx): Block =
     subTerm(prefix): p =>
-      k(Select(p, nme)(disamb))
+      k(Select(p, disamb.fold(memberIdent(nme, N))(definitionIdent(nme, _)))(disamb))
   
   final def setupFunctionOrByNameDef(paramLists: List[ParamList], bodyTerm: Term, name: Option[Str])
       (using LoweringCtx): (List[ParamList], Block) =
@@ -1441,10 +1455,11 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
         case N => WarningReport(msg"This annotation has no effect." -> annot.toLoc :: Nil)
     annotations.foreach:
       case Annot.Untyped => ()
-      case a @ (Annot.TailRec | Annot.Inline) =>
+      case a @ (Annot.TailRec | Annot.Inline | Annot.NoInline) =>
         val annot = a match
           case Annot.TailRec => "@tailrec"
           case Annot.Inline => "@inline"
+          case Annot.NoInline => "@noInline"
         target match
           case TermDefinition(body = S(bod), k = syntax.Fun) => ()
           case TermDefinition(k = syntax.Fun) => warn(a, S(msg"Only functions with a body may be marked as $annot."))

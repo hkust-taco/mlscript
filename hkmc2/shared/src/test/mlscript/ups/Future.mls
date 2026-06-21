@@ -123,10 +123,10 @@ pattern Email(name, domain) = ...
 //│   k = Pat
 //│   head = App:
 //│     lhs = Ident of "Email"
-//│     rhs = Tup of Ls of 
+//│     rhs = Tup of Ls of
 //│       Ident of "name"
 //│       Ident of "domain"
-//│   rhs = S of Block of Ls of 
+//│   rhs = S of Block of Ls of
 //│     UnitLit of false
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 

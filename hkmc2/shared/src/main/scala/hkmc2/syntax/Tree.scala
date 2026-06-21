@@ -541,6 +541,19 @@ trait TypeOrTermDef extends Located:
       case td: TermDef => td.k
     def rec(t: Tree, symbName: Opt[MaybeIdent], annot: Opt[Tree]): 
       (Opt[MaybeIdent], MaybeIdent, Ls[Tup], Opt[TyTup], Opt[Tree]) = 
+      def canonicalize(id: Ident): Ident =
+        symbolicSuffixBase(id.name) match
+        case S(base) =>
+          new Ident(base).withLocOf(id)
+        case _ =>
+          id
+      def symbolicName(id: Ident): Opt[MaybeIdent] =
+        symbolicSuffixBase(id.name) match
+        case S(_) if symbName.isEmpty => S(R(id))
+        case S(_) => S(L:
+          ErrorReport:
+            msg"Cannot combine an explicit symbolic name with a symbolic suffix identifier." -> id.toLoc :: Nil)
+        case _ => symbName
       t match
       
       // use Foo as foo = ...
@@ -561,13 +574,13 @@ trait TypeOrTermDef extends Located:
       // fun f(n1: Int)
       // fun f(n1: Int)(nn: Int)
       case Apps(PossiblyParenthesized(id: Ident), paramLists) =>
-        (symbName, R(id), paramLists, N, annot)
+        (symbolicName(id), R(canonicalize(id)), paramLists, N, annot)
       
       // fun f[T]
       // fun f[T](n1: Int)
       // fun f[T](n1: Int)(nn: Int)
       case Apps(App(PossiblyParenthesized(id: Ident), typeParams: TyTup), paramLists) =>
-        (symbName, R(id), paramLists, S(typeParams), annot)
+        (symbolicName(id), R(canonicalize(id)), paramLists, S(typeParams), annot)
       
       case Jux(id: Ident, rhs) =>
         val err = L:

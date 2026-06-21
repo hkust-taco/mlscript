@@ -23,7 +23,7 @@
 //│ ║  l.20: 	0 |
 //│ ║        	   ^
 //│ ║  l.21: 	1
-//│ ╙──      	
+//│ ╙──
 //│ ╔══[COMPILATION ERROR] Unexpected term form in expression position (alternation)
 //│ ║  l.20: 	0 |
 //│ ║        	^^^

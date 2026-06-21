@@ -1,70 +1,59 @@
 :js
 
-:global
+
 :sjs
-
-
-1
+fun foo_bar_<:<(value_?!) = value_?! + 1
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ return 1
+//│ let foo_bar; foo_bar = function foo_bar(value) { return value + 1 };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
-//│ = 1
 
-:lot
-:w
-1
-2
-//│ ╔══[WARNING] Pure expression in statement position
-//│ ║  l.15: 	1
-//│ ╙──      	^
+foo_bar_<:<(41)
+//│ = 42
+
+
+class Box_#(val value_?!) with
+  fun add_++(delta) = value_?! + delta
+
+let box_# = new Box_#(42)
+//│ box_# = Box(42)
+
+box_#.value_?!
+//│ = 42
+
+box_#.add_++(1)
+//│ = 43
+
+
+// A definition cannot provide two source-level symbolic names at once.
+:e
+:sjs
+fun (++) foo_+(x) = x + 1
+//│ ╔══[COMPILATION ERROR] Cannot combine an explicit symbolic name with a symbolic suffix identifier.
+//│ ║  l.30: 	fun (++) foo_+(x) = x + 1
+//│ ╙──      	         ^^^^^
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ return 2
-//│ ╔══[WARNING] Pure expression in statement position
-//│ ║  l.15: 	1
-//│ ╙──      	^
-//│ —————————————| Lowered IR Tree |————————————————————————————————————————————————————————————————————
-//│ Program:
-//│   main = Return of Lit of IntLit of 2
+//│ let foo; foo = function foo(x) { return x + 1 };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
-//│ = 2
 
-
-print("Hi")
+:e
+:sjs
+foo_+
+//│ ╔══[COMPILATION ERROR] Name not found: foo_+
+//│ ║  l.40: 	foo_+
+//│ ╙──      	^^^^^
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ return Predef.print("Hi")
+//│ throw "This code cannot be run as its compilation yielded an error."
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
-//│ > Hi
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
-:lot
-print("Hi")
-2
+:e
+:sjs
+(++)
+//│ ╔══[COMPILATION ERROR] Name not found: ++
+//│ ║  l.51: 	(++)
+//│ ╙──      	 ^^
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ Predef.print("Hi"); return 2
-//│ —————————————| Lowered IR Tree |————————————————————————————————————————————————————————————————————
-//│ Program:
-//│   main = Assign:
-//│     lhs = ‹no symbol›
-//│     rhs = Call:
-//│       fun = Select{sym=term:Predef⁰/print⁰}:
-//│         qual = MemberRef{disamb=module:Predef⁰}:
-//│           bms = member:Predef¹
-//│           disamb = module:Predef⁰
-//│         name = Ident of "print"
-//│       argss = Ls of
-//│         Ls of
-//│           Arg:
-//│             value = Lit of StrLit of "Hi"
-//│     rest = Return of Lit of IntLit of 2
+//│ throw "This code cannot be run as its compilation yielded an error."
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
-//│ > Hi
-//│ = 2
-
-
-:re
-2(2)
-//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ return runtime.safeCall(2(2))
-//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
-//│ ═══[RUNTIME ERROR] TypeError: 2 is not a function
-
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 

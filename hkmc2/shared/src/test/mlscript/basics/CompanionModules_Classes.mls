@@ -35,7 +35,7 @@ new C()
 //│     cls = Resolved{sym=class:C⁰}:
 //│       t = Ref{sym=member:C²} of member:C²
 //│       sym = class:C⁰
-//│     args = Ls of 
+//│     args = Ls of
 //│       Tup of Nil
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = C()

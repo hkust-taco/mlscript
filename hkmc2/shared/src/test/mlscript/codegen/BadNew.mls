@@ -70,7 +70,7 @@ new! {}
 new { x = 1 }
 //│ ———————————————| Parsed tree |——————————————————————————————————————————————————————————————————————
 //│ LexicalNew:
-//│   body = S of Block of Ls of 
+//│   body = S of Block of Ls of
 //│     Def:
 //│       lhs = Ident of "x"
 //│       rhs = IntLit of 1

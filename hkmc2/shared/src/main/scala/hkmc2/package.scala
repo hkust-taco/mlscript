@@ -26,6 +26,24 @@ extension [A](xs: Ls[A])
 // * so we do not check them in JS code-generation.
 val identifierPattern: scala.util.matching.Regex = "^[A-Za-z_$][A-Za-z0-9_$]*$".r
 
+val symbolicIdentifierChars: Set[Char] = Set(
+  '!', '#', '%', '&', '*', '+', '-', '/', ':', '<', '=', '>', '?', '@', '\\', '^', '|', '~')
+
+/** Split an identifier of the form `foo_<:<` into its canonical name `foo`
+  * and its source-only symbolic spelling.
+  */
+def symbolicSuffixBase(name: Str): Opt[Str] =
+  val separator = name.lastIndexOf('_')
+  if separator > 0 then
+    val base = name.take(separator)
+    val suffix = name.drop(separator + 1)
+    if identifierPattern.matches(base) &&
+        suffix.nonEmpty &&
+        suffix.forall(symbolicIdentifierChars)
+    then S(base)
+    else N
+  else N
+
 
 def softAssert(cond: Boolean, msg: => Str = "")(using Line, FileName, Raise): Unit =
   if !cond then
@@ -46,4 +64,3 @@ def softTODO(cond: Boolean, msg: => Str = "")(using Line, FileName, Raise): Unit
         :: msg"The compilation result may be incorrect." -> N
         :: msg"This is a known compiler limitation; if it is a blocker for you, please report it to the maintainers." -> N
         :: Nil)
-

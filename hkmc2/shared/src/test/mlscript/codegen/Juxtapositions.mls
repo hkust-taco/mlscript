@@ -106,13 +106,13 @@ inc(2) * 2
 //│ OpApp:
 //│   lhs = App:
 //│     lhs = Ident of "inc"
-//│     rhs = Tup of Ls of 
+//│     rhs = Tup of Ls of
 //│       IntLit of 2
 //│   op = Ident of "*"
-//│   rhss = Ls of 
+//│   rhss = Ls of
 //│     Jux:
 //│       lhs = IntLit of 2
-//│       rhs = Block of Ls of 
+//│       rhs = Block of Ls of
 //│         App:
 //│           lhs = Ident of "inc"
 //│           rhs = Tup of Nil
