@@ -40,19 +40,6 @@ class CompilerCtx(
     
     // println(s"Cache has: ${cache.elabCache.contains(file)} ${cache.elabCache.keys}")
     
-    // * FIXME:
-    // * This is not quite correct, but might be good enough for now
-    // * (to be fixed when we overhaul the symbol and elaboration systems).
-    // * The problem is that different modules will see different builtin symbols
-    // * for things like `unitSymbol` and `termSymbol`, which could in theory cause problems
-    // * if the compiler later wants to compare them as part of the type checking/compilation/optimization logic.
-    // * Technically, we should also have the same problem with the symbols loaded from the prelude,
-    // * which are passed on to imported modules from the first importer
-    // * (and the "first importer" is nondeterministic, due to concurrent tests),
-    // * and since the imported modules are cached,
-    // * this means subsequent importers will not have see same prelude symbols.
-    // * The correct approach should be to only cache a *single* State and prelude Ctx at the start,
-    // * and reuse it for every compilation unit (each compilation unit duplicating the root State).
     given Elaborator.State = new Elaborator.State
     
     val lastMod = fs.getLastChangedTimestamp(file)
@@ -74,6 +61,27 @@ class CompilerCtx(
       case cur @ S(art) =>
         if art.lastChangedTimestamp < lastMod then mk
         else art
+
+  def getPrelude
+        (file: io.Path, dbgParsing: Bool)
+        (using tl: TL, raise: Raise, config: Config)
+        : PreludeArtifact =
+    // The prelude context is shared so every compilation unit sees the same prelude
+    // symbols. Callers still elaborate their own files with a fresh State; the frozen
+    // State remains the owner captured by the prelude symbols themselves.
+    val lastMod = fs.getLastChangedTimestamp(file)
+    cache.upsertPrelude(file):
+      case cur @ S(art) if !dbgParsing && art.lastChangedTimestamp >= lastMod && art.config === config =>
+        art
+      case _ =>
+        val state = new Elaborator.State
+        given Elaborator.State = state
+        given CompilerCtx = this
+        val parse = ParserSetup(file, dbgParsing)
+        val elab = Elaborator(tl, file.up, Ctx.empty)
+        val initCtx = State.init.nestLocal("prelude")
+        val (blk, ctx) = elab.importFrom(parse.resultBlk)(using initCtx)
+        PreludeArtifact(parse.resultBlk, blk, ctx, state, config, lastMod)
   
   
 object CompilerCtx:
@@ -89,6 +97,15 @@ end CompilerCtx
 object CompilerCache:
   
   class Artifact(val tree: syntax.Tree.Block, val term: semantics.Term.Blk, val lastChangedTimestamp: Long)
+
+  class PreludeArtifact(
+    val tree: syntax.Tree.Block,
+    val term: semantics.Term.Blk,
+    val ctx: Elaborator.Ctx,
+    val state: Elaborator.State,
+    val config: Config,
+    val lastChangedTimestamp: Long,
+  )
   
 end CompilerCache
 
@@ -97,6 +114,8 @@ trait CompilerCache:
   // TODO also use hash comparison to avoid needless re-parses?
   
   def elabCache: MutMap[io.Path, Artifact]
+
+  private val preludeCache: MutMap[io.Path, PreludeArtifact] = MutMap.empty
   
   /** Create or update an artifact at the given path in the cache. */
   def upsert(path: io.Path)(update: Option[Artifact] => Artifact): Artifact =
@@ -107,6 +126,20 @@ trait CompilerCache:
           val newArt = update(cur)
           if newArt is oldArt then cur else S(newArt)
       .get // * above, we always returns Some
+
+  /** Synchronized because diff-test and compile-test runners compile files in parallel.
+    *
+    * Only the first requester elaborates the prelude; concurrent requesters block and reuse
+    * the same frozen artifact once it is available. */
+  def upsertPrelude(path: io.Path)(update: Option[PreludeArtifact] => PreludeArtifact): PreludeArtifact =
+    this.synchronized:
+      preludeCache
+        .updateWith(path):
+          case N => S(update(N))
+          case cur @ S(oldArt) =>
+            val newArt = update(cur)
+            if newArt is oldArt then cur else S(newArt)
+        .get
   
 end CompilerCache
 

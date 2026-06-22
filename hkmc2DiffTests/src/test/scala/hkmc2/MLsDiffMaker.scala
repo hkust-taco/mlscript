@@ -283,8 +283,12 @@ abstract class MLsDiffMaker extends DiffMaker:
   override def run(): Unit =
     if file =/= preludeFile then 
       given Config = mkConfig
-      importFile(preludeFile, verbose = false)
-      prelude = curCtx
+      given Raise = d =>
+        output(s"Error: $d")
+        ()
+      val preludeArtifact = cctx.getPrelude(preludeFile, dbgParsing.isSet)
+      curCtx = preludeArtifact.ctx
+      prelude = preludeArtifact.ctx
     super.run()
   
   
