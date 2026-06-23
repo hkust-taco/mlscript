@@ -187,7 +187,7 @@ Infix("**", Literal(1), Literal(2)) is EvaluatedTerm
 fun evaluate(term) = if term is
   (@compile EvaluatedTerm) as v then Some(v)
   else None
-//│ Lines of IR: 3624
+//│ Lines of IR: 3136
 
 
 evaluate of Literal(1)
