@@ -21,6 +21,13 @@ getter
 //│ > 42
 
 
+module Foo with
+  fun getter = print(42)
+
+Foo.getter
+//│ > 42
+
+
 import "../../mlscript-compile/Runtime.mls"
 
 :re
@@ -49,7 +56,7 @@ x => x
 :noInline
 x => x
 //│ ╔══[INTERNAL ERROR] [BlockChecker] Invalid IR: symbol x⁰ is bound more than once
-//│ ║  l.50: 	x => x
+//│ ║  l.57: 	x => x
 //│ ╙──      	^
 //│ = class anonymous
 
@@ -109,12 +116,12 @@ let f = foo in bar(f)
 bar([foo].0)
 bar([foo, x => x].1)
 //│ ╔══[COMPILATION ERROR] Cannot determine if 0 is a function.
-//│ ║  l.109: 	bar([foo].0)
+//│ ║  l.116: 	bar([foo].0)
 //│ ╙──       	         ^^
 //│ ═══[COMPILATION ERROR] Cannot determine if 0$__checkNotMethod is a function.
 //│ ═══[COMPILATION ERROR] Cannot determine if Error is a function.
 //│ ╔══[COMPILATION ERROR] Cannot determine if 1 is a function.
-//│ ║  l.110: 	bar([foo, x => x].1)
+//│ ║  l.117: 	bar([foo, x => x].1)
 //│ ╙──       	                 ^^
 //│ ═══[COMPILATION ERROR] Cannot determine if 1$__checkNotMethod is a function.
 //│ ═══[COMPILATION ERROR] Cannot determine if Error is a function.
@@ -131,7 +138,7 @@ bar([foo, x => x].(i))
 :ge
 [foo, x => x].(i)(0)
 //│ ╔══[COMPILATION ERROR] Cannot determine if the dynamic selection is a function object.
-//│ ║  l.132: 	[foo, x => x].(i)(0)
+//│ ║  l.139: 	[foo, x => x].(i)(0)
 //│ ╙──       	               ^
 
 
@@ -145,10 +152,10 @@ let foo = Foo()
 foo.("f")(0)
 foo.("h")(1)
 //│ ╔══[COMPILATION ERROR] Cannot determine if the dynamic selection is a function object.
-//│ ║  l.145: 	foo.("f")(0)
+//│ ║  l.152: 	foo.("f")(0)
 //│ ╙──       	^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Cannot determine if the dynamic selection is a function object.
-//│ ║  l.146: 	foo.("h")(1)
+//│ ║  l.153: 	foo.("h")(1)
 //│ ╙──       	^^^^^^^^
 //│ = 0
 //│ foo = Foo()
@@ -393,7 +400,7 @@ foo.Foo#x
 :ge
 foo.f(0)
 //│ ╔══[COMPILATION ERROR] Cannot determine if f is a function object.
-//│ ║  l.394: 	foo.f(0)
+//│ ║  l.401: 	foo.f(0)
 //│ ╙──       	^^^^^
 //│ = 1
 
@@ -411,7 +418,7 @@ foo.Foo#f(0)
 :ge
 foo.x(0)
 //│ ╔══[COMPILATION ERROR] Cannot determine if x is a function object.
-//│ ║  l.412: 	foo.x(0)
+//│ ║  l.419: 	foo.x(0)
 //│ ╙──       	^^^^^
 
 
@@ -587,3 +594,5 @@ let foo = Foo(1) in foo.Foo#x
 
 let foo = new Foo(1) in foo.Foo#x
 //│ = 1
+
+

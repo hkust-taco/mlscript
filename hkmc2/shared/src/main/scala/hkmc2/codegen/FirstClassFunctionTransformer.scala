@@ -41,27 +41,28 @@ class FirstClassFunctionTransformer
 
   private def getParamList(ts: TermSymbol): Option[ParamList] =
     ts.irFunDefn.flatMap(_.params.headOption).orElse:
-      // FIXME: remove this fallback once imported functions have their
-      // `irFunDefn` properly linked.
+      // FIXME: remove this fallback once imported functions have their `irFunDefn` properly linked.
       ts.defn.collectFirst:
         case TermDefinition(k = syntax.Fun, params = params @ (_ :: _)) =>
           params.head
-
+  
   private def isGetter(l: BlockMemberSymbol): Bool = funDefns.get(l) match
     case Some(fd) => fd.params.isEmpty
     case _ => l.tsym.exists(isGetter)
-
+  
   private def isGetter(ts: TermSymbol): Bool =
-    ts.irFunDefn.exists(_.params.isEmpty) || ts.defn.exists:
-      case TermDefinition(k = syntax.Fun, params = Nil) => true
-      case _ => false
-
+    ts.irFunDefn.exists(_.params.isEmpty) ||
+      // FIXME: remove this fallback once imported functions have their `irFunDefn` properly linked.
+      ts.defn.exists:
+        case TermDefinition(k = syntax.Fun, params = Nil) => true
+        case _ => false
+  
   private def etaExpandPath(p: Path, params: ParamList)(k: Path => Block): Block =
     val clsDef = generateFCFunctionClass(p, params)
     val tmp = new TempSymbol(None)
     val cls = clsDef.sym.asMemberRef(clsDef.isym)
     Scoped(Set(clsDef.sym, tmp), Define(clsDef, Assign(tmp, Instantiate(false, cls, Nil :: Nil)(InstantiateMetadata.empty), k(tmp.asSimpleRef))))
-
+  
   override def applyPath(p: Path)(k: Path => Block): Block = p match
     case ref @ Value.MemberRef(l, disamb) => disamb match
       case s: TermSymbol if s.k is syntax.Fun =>
