@@ -1,5 +1,5 @@
 import "./RuntimeJS.mjs"
-import "./Rendering.mls"
+import "./Rendering.mjs"
 import "./LazyArray.mjs"
 import "./Iter.mjs"
 

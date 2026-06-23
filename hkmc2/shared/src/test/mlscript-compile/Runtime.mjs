@@ -61,7 +61,7 @@ lambda1 = (undefined, function (scope29$cap, cont, m, marker) {
 lambda = (undefined, function (l) {
   let tmp, tmp1;
   tmp = l.localName + "=";
-  tmp1 = Rendering.render(l.value);
+  tmp1 = runtime.safeCall(Rendering.render(l.value));
   return tmp + tmp1
 });
 lambda$1 = (undefined, function (Runtime2) {
