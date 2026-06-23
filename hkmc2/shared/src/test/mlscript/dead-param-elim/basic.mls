@@ -304,7 +304,7 @@ fun f(c) = Runtime.Tuple.get(c, 1) + 1
 //│   match runtime⁰.curEffect﹖
 //│     null =>
 //│       let tmp;
-//│       set tmp = Runtime⁰.Tuple¹.get¹(c, 1);
+//│       set tmp = Runtime⁰.Tuple⁰.get⁰(c, 1);
 //│       return +⁰(tmp, 1)
 //│     else
 //│       return runtime⁰.unwind﹖(f²⁴, -1, "basic.mls:296:1", null, null, 1, 1, c, 0)

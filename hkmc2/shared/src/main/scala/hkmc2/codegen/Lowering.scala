@@ -136,7 +136,10 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
   )
 
   lazy val unreachableFn =
-    Select(State.runtimeSymbol.asSimpleRef, Tree.Ident("unreachable"))(S(State.unreachableSymbol))
+    // Used only as the ignored constructor path for virtual-class cases.
+    // Keep this as a non-function path so later first-class-function rewriting
+    // does not try to eta-expand Runtime.unreachable.
+    State.runtimeSymbol.asSimpleRef
   
   def unit: Path =
     Select(State.runtimeSymbol.asSimpleRef, Tree.Ident("Unit"))(S(State.unitSymbol))

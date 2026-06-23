@@ -325,16 +325,93 @@ object Elaborator:
   
   transparent inline def ctx(using Ctx): Ctx = summon
   
+  final case class RuntimeSymbols(
+      unit: ModuleOrObjectSymbol,
+      loopEnd: ModuleOrObjectSymbol,
+      tuple: ModuleOrObjectSymbol,
+      str: ModuleOrObjectSymbol,
+      unreachable: TermSymbol,
+      tupleGet: TermSymbol,
+      tupleSlice: TermSymbol,
+      tupleLazySlice: TermSymbol,
+      strStartsWith: TermSymbol,
+      strGet: TermSymbol,
+      strTake: TermSymbol,
+      strLeave: TermSymbol,
+      matchSuccessCls: ClassSymbol,
+      matchSuccessTrm: TermSymbol,
+      matchFailureCls: ClassSymbol,
+      matchFailureTrm: TermSymbol,
+  )
+
+  object RuntimeSymbols:
+    def fromBlock(blk: Term.Blk): RuntimeSymbols =
+      val topLevelMembers = ObjBody.extractMembers(blk) match
+        case R(members) => members
+        case L(errs) =>
+          lastWords:
+            errs.map(_.mainMsg).mkString("\n")
+      val members =
+        topLevelMembers
+          .get("Runtime")
+          .flatMap(_.asMod)
+          .flatMap(_.defn)
+          .map(_.body.members)
+          .getOrElse(lastWords("Runtime.mls does not define module 'Runtime'."))
+      def member(name: Str): BlockMemberSymbol =
+        members.getOrElse(name, lastWords(s"Runtime.mls does not define member '$name'."))
+      def term(name: Str): TermSymbol =
+        member(name).asTrm.getOrElse(lastWords(s"Runtime.mls member '$name' is not a term."))
+      def cls(name: Str): ClassSymbol =
+        member(name).asCls.getOrElse(lastWords(s"Runtime.mls member '$name' is not a class."))
+      def modOrObj(name: Str): ModuleOrObjectSymbol =
+        member(name).asModOrObj.getOrElse(lastWords(s"Runtime.mls member '$name' is not a module or object."))
+      def moduleMember(module: ModuleOrObjectSymbol, memberName: Str): TermSymbol =
+        module.defn
+          .flatMap(_.body.members.get(memberName))
+          .flatMap(_.asTrm)
+          .getOrElse(lastWords(s"Runtime.mls module '${module.nme}' does not define term '$memberName'."))
+
+      val tuple = modOrObj("Tuple")
+      val str = modOrObj("Str")
+      RuntimeSymbols(
+        unit = modOrObj("Unit"),
+        loopEnd = modOrObj("LoopEnd"),
+        tuple = tuple,
+        str = str,
+        unreachable = term("unreachable"),
+        tupleGet = moduleMember(tuple, "get"),
+        tupleSlice = moduleMember(tuple, "slice"),
+        tupleLazySlice = moduleMember(tuple, "lazySlice"),
+        strStartsWith = moduleMember(str, "startsWith"),
+        strGet = moduleMember(str, "get"),
+        strTake = moduleMember(str, "take"),
+        strLeave = moduleMember(str, "leave"),
+        matchSuccessCls = cls("MatchSuccess"),
+        matchSuccessTrm = term("MatchSuccess"),
+        matchFailureCls = cls("MatchFailure"),
+        matchFailureTrm = term("MatchFailure"),
+      )
+
   class State:
     val suid = new Uid.Symbol.State
     given State = this
     val globalThisSymbol = TopLevelSymbol("globalThis")
-    val unitSymbol = ModuleOrObjectSymbol(DummyTypeDef(syntax.Obj), Ident("Unit"))
+    private var cachedRuntimeSymbols: Opt[RuntimeSymbols] = N
+    def initRuntimeSymbolsFromBlock(blk: Term.Blk): Unit =
+      cachedRuntimeSymbols = S(RuntimeSymbols.fromBlock(blk))
+    def initRuntimeSymbolsFromFile(file: io.Path, prelude: Ctx)(using TL, Raise, Config, CompilerCtx): Unit =
+      if cachedRuntimeSymbols.isEmpty then
+        cachedRuntimeSymbols = S(RuntimeSymbols.fromBlock(CompilerCtx.get.getElaboratedBlock(file, prelude).term))
+    private def runtimeSymbols: RuntimeSymbols =
+      cachedRuntimeSymbols.getOrElse:
+        lastWords("Runtime symbols have not been initialized from Runtime.mls.")
+    def unitSymbol: ModuleOrObjectSymbol = runtimeSymbols.unit
     // Stable symbol for the synthetic Wasm Unit singleton
     val unitBlockMemberSymbol = BlockMemberSymbol("Unit", Nil)
-    val loopEndSymbol = ModuleOrObjectSymbol(DummyTypeDef(syntax.Obj), Ident("LoopEnd"))
-    val tupleSymbol = ModuleOrObjectSymbol(DummyTypeDef(syntax.Mod), Ident("Tuple"))
-    val strSymbol = ModuleOrObjectSymbol(DummyTypeDef(syntax.Mod), Ident("Str"))
+    def loopEndSymbol: ModuleOrObjectSymbol = runtimeSymbols.loopEnd
+    def tupleSymbol: ModuleOrObjectSymbol = runtimeSymbols.tuple
+    def strSymbol: ModuleOrObjectSymbol = runtimeSymbols.str
     // In JavaScript, `import` can be used for getting current file path, as `import.meta`
     val importSymbol = new VarSymbol(Ident("import"))
     val noSymbol = NoSymbol
@@ -355,46 +432,18 @@ object Elaborator:
     val nonLocalRet =
       val id = new Ident("ret")
       BlockMemberSymbol(id.name, Nil, true)
-    val unreachableSymbol = TermSymbol(syntax.ImmutVal, N, new Ident("unreachable"))
-    val tupleGetSymbol =
-      createFunSymbolInMod("get", "xs" :: "i" :: Nil, tupleSymbol, mayRaiseEffects = false)
-    val tupleSliceSymbol =
-      createFunSymbolInMod("slice", "xs" :: "i" :: "j" :: Nil, tupleSymbol, mayRaiseEffects = false)
-    val tupleLazySliceSymbol =
-      createFunSymbolInMod("lazySlice", "xs" :: "i" :: "j" :: Nil, tupleSymbol)
-    val strStartsWithSymbol =
-      createFunSymbolInMod("startsWith", "string" :: "prefix" :: Nil, strSymbol)
-    val strGetSymbol =
-      createFunSymbolInMod("get", "string" :: "i" :: Nil, strSymbol)
-    val strTakeSymbol =
-      createFunSymbolInMod("take", "string" :: "n" :: Nil, strSymbol)
-    val strLeaveSymbol =
-      createFunSymbolInMod("leave", "string" :: "n" :: Nil, strSymbol)
-    val (matchSuccessClsSymbol, matchSuccessTrmSymbol) =
-      val id = new Ident("MatchSuccess")
-      val td = TypeDef(syntax.Cls, App(id, Tup(Ident("output") :: Ident("bindings") :: Nil)), N)
-      val cs = ClassSymbol(td, id)
-      val ts = TermSymbol(syntax.Fun, N, id)
-      val flag = FldFlags.empty.copy(isVal = true)
-      val ps = PlainParamList(
-        Param(flag, VarSymbol(Ident("output")), N, Modulefulness(N)(false)) ::
-        Param(flag, VarSymbol(Ident("bindings")), N, Modulefulness(N)(false)) ::
-        Nil)
-      val ctsym = ClassCtorSymbol(Fun, N/* note: no owner isn't quite right */, cs)
-      cs.defn = S(ClassDef.Parameterized(N, syntax.Cls, cs, BlockMemberSymbol(cs.name, Nil), S(ctsym),
-        Nil, ps, Nil, N, ObjBody(Blk(Nil, Term.Lit(UnitLit(false)))), N, Nil))
-      cs -> ts
-    val (matchFailureClsSymbol, matchFailureTrmSymbol) =
-      val id = new Ident("MatchFailure")
-      val td = DummyTypeDef(syntax.Cls)
-      val cs = ClassSymbol(td, id)
-      val ts = TermSymbol(syntax.Fun, N, id)
-      val flag = FldFlags.empty.copy(isVal = true)
-      val ps = PlainParamList(Param(flag, VarSymbol(Ident("errors")), N, Modulefulness(N)(false)) :: Nil)
-      val ctsym = ClassCtorSymbol(Fun, N/* note: no owner isn't quite right */, cs)
-      cs.defn = S(ClassDef.Parameterized(N, syntax.Cls, cs, BlockMemberSymbol(cs.name, td :: Nil), S(ctsym),
-        Nil, ps, Nil, N, ObjBody(Blk(Nil, Term.Lit(UnitLit(false)))), N, Nil))
-      cs -> ts
+    def unreachableSymbol: TermSymbol = runtimeSymbols.unreachable
+    def tupleGetSymbol: TermSymbol = runtimeSymbols.tupleGet
+    def tupleSliceSymbol: TermSymbol = runtimeSymbols.tupleSlice
+    def tupleLazySliceSymbol: TermSymbol = runtimeSymbols.tupleLazySlice
+    def strStartsWithSymbol: TermSymbol = runtimeSymbols.strStartsWith
+    def strGetSymbol: TermSymbol = runtimeSymbols.strGet
+    def strTakeSymbol: TermSymbol = runtimeSymbols.strTake
+    def strLeaveSymbol: TermSymbol = runtimeSymbols.strLeave
+    def matchSuccessClsSymbol: ClassSymbol = runtimeSymbols.matchSuccessCls
+    def matchSuccessTrmSymbol: TermSymbol = runtimeSymbols.matchSuccessTrm
+    def matchFailureClsSymbol: ClassSymbol = runtimeSymbols.matchFailureCls
+    def matchFailureTrmSymbol: TermSymbol = runtimeSymbols.matchFailureTrm
     val builtinOpsMap =
       val baseBuiltins = builtins.map: op =>
           op -> BuiltinSymbol(op,
@@ -417,17 +466,6 @@ object Elaborator:
     def dbgUid(uid: Uid[Symbol]): Str =
       if dbg then s"‹$uid›" else ""
       // ^ we do not display the uid by default to avoid polluting diff-test outputs
-    // Create a term symbol for a function defined in the given module
-    private def createFunSymbolInMod
-        (name: Str, paramNames: List[Str], mod: ModuleOrObjectSymbol, mayRaiseEffects: Bool = true) =
-      val sym = TermSymbol(syntax.Fun, N, Ident(name))
-      val bsym = BlockMemberSymbol(name, Nil, true)
-      val ps = PlainParamList(paramNames.map(s => Param.simple(VarSymbol(Ident(s)))))
-      sym.defn = S(TermDefinition(syntax.Fun, bsym, sym, ps :: Nil, N, N, N,
-        TermDefFlags(true), Modulefulness(S(mod))(false),
-        if !mayRaiseEffects then Annot.MayNotRaiseEffects :: Nil else Nil,
-        N))
-      sym
   transparent inline def State(using state: State): State = state
   
   /** Extracts all parameter lists from a `constructor(...)...` declaration.

@@ -17,6 +17,7 @@ abstract class MLsDiffMaker extends DiffMaker:
   val preludeFile: io.Path // * Contains declarations of JS builtins
   val predefFile: io.Path // * Contains MLscript standard library definitions
   val runtimeFile: io.Path = predefFile.up / "Runtime.mjs" // * Contains MLscript runtime definitions
+  val runtimeSourceFile: io.Path = predefFile.up / "Runtime.mls"
   val termFile: io.Path = predefFile.up / "Term.mjs" // * Contains MLscript runtime term definitions
   val blockFile: io.Path = predefFile.up / "Block.mjs" // * Contains MLscript runtime block definitions
   val optionFile: io.Path = predefFile.up / "Option.mjs" // * Contains MLscipt runtime option definition
@@ -357,6 +358,8 @@ abstract class MLsDiffMaker extends DiffMaker:
     try
       val resBlk = new syntax.Tree.Block(res)
       val (e, newCtx) = elab.importFrom(resBlk)
+      if file.toString === runtimeSourceFile.toString then
+        State.initRuntimeSymbolsFromBlock(e)
       val ctxWithImports = newCtx.withMembers(resBlk.definedSymbols)
       if verbose then
         output(s"Imported ${resBlk.definedSymbols.size} member(s)")
@@ -442,6 +445,8 @@ abstract class MLsDiffMaker extends DiffMaker:
   def processTerm(trm: semantics.Term.Blk, inImport: Bool)(using Config, Raise): Unit =
     given Ctx = curCtx
     given Config = Config.extractConfigFromStats(trm)
+    if file.toString =/= runtimeSourceFile.toString then
+      State.initRuntimeSymbolsFromFile(runtimeSourceFile, prelude)
     val resolver = Resolver(rtl)
     curICtx = resolver.traverseBlock(trm)(using curICtx)
     
@@ -469,4 +474,3 @@ abstract class MLsDiffMaker extends DiffMaker:
           doc" #{ ${trm.showTopLevel(using flowScp)} #} \nwhere #{ ${floan.showFlows(using flowScp)} #} ".mkString()
     
   
-
