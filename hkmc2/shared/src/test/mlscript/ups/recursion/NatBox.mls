@@ -26,7 +26,7 @@ nat(0) is @compile NatBox
 //│ let scrut, matcher__NatBox$, matchSuccess, lambda;
 //│ set scrut = nat⁰(0);
 //│ define lambda as fun lambda⁰(input) {
-//│   let p_0$, value, value1, p_0$1, result0$, p_0$2, tmp, tmp1, tmp2, tmp3;
+//│   let p_0$, value, value1, p_0$1, result0$, p_0$2, tmp, tmp1, tmp2;
 //│   match input
 //│     null =>
 //│       set tmp = true;
@@ -34,21 +34,20 @@ nat(0) is @compile NatBox
 //│       return p_0$
 //│     Box⁰ =>
 //│       set value = input.value⁰;
-//│       set tmp1 = matcher__NatBox$(value);
-//│       set value1 = { "input": value, "result": tmp1 };
-//│       set result0$ = value1.result﹖;
+//│       set value1 = matcher__NatBox$(value);
+//│       set result0$ = value1;
 //│       match result0$
 //│         true =>
-//│           set tmp2 = true;
+//│           set tmp1 = true;
 //│           end
 //│         else
-//│           set tmp2 = false;
+//│           set tmp1 = false;
 //│           end
-//│       set p_0$1 = tmp2;
+//│       set p_0$1 = tmp1;
 //│       return p_0$1
 //│     else
-//│       set tmp3 = false;
-//│       set p_0$2 = tmp3;
+//│       set tmp2 = false;
+//│       set p_0$2 = tmp2;
 //│       return p_0$2
 //│   end
 //│ };
