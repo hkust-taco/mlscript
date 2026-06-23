@@ -356,8 +356,7 @@ object Elaborator:
           .get("Runtime")
           .flatMap(_.asMod)
           .flatMap(_.defn)
-          .map(_.body.members)
-          .getOrElse(lastWords("Runtime.mls does not define module 'Runtime'."))
+          .fold(lastWords("Runtime.mls does not define module 'Runtime'."))(_.body.members)
       def member(name: Str): BlockMemberSymbol =
         members.getOrElse(name, lastWords(s"Runtime.mls does not define member '$name'."))
       def term(name: Str): TermSymbol =
