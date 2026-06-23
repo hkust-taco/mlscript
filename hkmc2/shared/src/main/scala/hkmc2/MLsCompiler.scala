@@ -38,6 +38,7 @@ object MLsCompiler:
   trait Paths:
     def preludeFile: io.Path
     def runtimeFile: io.Path
+    def runtimeSourceFile: io.Path
     def termFile: io.Path
 
 /**
@@ -85,9 +86,6 @@ class MLsCompiler
     val preludeArtifact = cctx.getPrelude(preludeFile, dbgParsing)(using etl, summon[Raise], config)
     val preludeCtx = preludeArtifact.ctx
     val mainParse = ParserSetup(file, dbgParsing)
-    val runtimeSourceFile =
-      if runtimeFile.ext === "mls" then runtimeFile
-      else runtimeFile.up / (runtimeFile.baseName + ".mls")
     
     preludeCtx.nestLocal("file:"+file.baseName).givenIn:
       given CompilerCtx = cctx.derive(file)
