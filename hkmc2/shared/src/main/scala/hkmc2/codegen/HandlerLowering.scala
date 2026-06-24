@@ -16,50 +16,8 @@ import semantics.*
 import semantics.Elaborator.ctx
 import semantics.Elaborator.State
 import hkmc2.Config.EffectHandlers
+import hkmc2.syntax.Keyword.`override`
 
-
-/** - For function bodies, fuse all shallowly-nested scopes into one top-level one
-  * - Assume all definitions are already lifted, such that local variables float out
-  *   cannot be possibly observed, warning will be thrown later if this is violated.
-  */
-class ScopeFlattener extends BlockTransformer(new SymbolSubst):
-  
-  private var scopedSymForCurrentFun: List[mutable.Set[ScopedSymbol]] = Nil
-  private var disallowNested = false
-  private val modCtorBlock: mutable.Set[Identity[Block]] = mutable.Set.empty
-  override def applyFunBodyLikeBlock(b: Block): Block =
-    // assert(!disallowNested, "Lifting must be applied before HandlerLowering")
-    if !modCtorBlock(Identity(b)) then
-      disallowNested = true
-    val resBlk = b match
-      case Scoped(syms, body) =>
-        val tmp = mutable.Set.from(syms)
-        scopedSymForCurrentFun = tmp :: scopedSymForCurrentFun
-        val newBody = applySubBlock(body)
-        if (newBody is body) && tmp.sizeCompare(syms) === 0
-        then b
-        else Scoped(tmp, newBody)
-      case _ =>
-        val tmp = mutable.Set.empty[ScopedSymbol]
-        scopedSymForCurrentFun = tmp :: scopedSymForCurrentFun
-        val newBlk = applySubBlock(b)
-        Scoped(tmp, newBlk)
-    scopedSymForCurrentFun = scopedSymForCurrentFun.tail
-    disallowNested = false
-    resBlk
-  
-  override def applyScopedBlock(b: Block): Block = b match
-    case Scoped(syms, body) =>
-      scopedSymForCurrentFun.headOption match
-        case N => super.applyScopedBlock(b)
-        case S(scopedForCurrentFun) =>
-          scopedForCurrentFun.addAll(syms)
-          super.applySubBlock(body)
-    case _ => super.applySubBlock(b)
-  
-  override def applyObjBody(defn: ClsLikeBody): ClsLikeBody =
-    modCtorBlock.add(Identity(defn.ctor))
-    super.applyObjBody(defn)
 
 object HandlerLowering:
 
@@ -89,6 +47,7 @@ object HandlerLowering:
     case ModCtor(trulyNested: Bool)
     case TopLevel
 
+    // Since constructor are not named, they cannot be resumed
     def inCtor = this === Ctor || this.isInstanceOf[ModCtor]
     def currentBlockIsTrulyNested = this match
       case FunctionLike(_) => true
@@ -572,9 +531,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
     given HandlerCtx = h
 
     def translateFunLike(fun: FunDefn, funcPath: Path, thisPath: Option[Path], debugNme: Str) =
-      val scopedVars = fun.body match
-        case Scoped(syms, body) => syms
-        case _ => Set()
+      val scopedVars = fun.body.scopedVars
       val varList = scopedVars.collect:
         case sym: LocalVarSymbol => sym
       val sortedVars = varList.toList.sortBy(_.uid)
@@ -822,9 +779,8 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
 
 
   def translateTopLevel(b: Block): Block =
-    val preTransformed = new ScopeFlattener().applyBlock(b)
     val ctx = HandlerCtx.TopLevel
-    val transformed = translateBlock(preTransformed, ctx, Set.empty)
+    val transformed = translateBlock(b, ctx, Set.empty)
     blockBuilder
       .staticif(
         !opt.doNotInstrumentTopLevelModCtor,
