@@ -27,19 +27,18 @@ hi(0)
 //│ let tmp, ‹stack safe body›;
 //│ do runtime⁰.resetEffects﹖();
 //│ define hi⁰ as fun hi¹(n) {
-//│   let stackDelayRes;
-//│   set runtime⁰.stackDepth﹖ = +⁰(runtime⁰.stackDepth﹖, 1);
-//│   set stackDelayRes = runtime⁰.checkDepth﹖();
+//│   let scrut, tmp1, pc, curDepth;
+//│   do runtime⁰.checkDepth﹖();
 //│   match runtime⁰.curEffect﹖
 //│     null =>
-//│       let scrut, tmp1;
+//│       set curDepth = +⁰(runtime⁰.stackDepth﹖, 1);
 //│       set scrut = ===⁰(n, 0);
 //│       match scrut
 //│         true =>
 //│           return 0
 //│         else
-//│           let res;
 //│           set tmp1 = -⁰(n, 1);
+//│           set runtime⁰.stackDepth﹖ = curDepth;
 //│           return hi¹(tmp1)
 //│       end
 //│     else
@@ -73,22 +72,20 @@ sum(10000)
 //│ let tmp, ‹stack safe body›;
 //│ do runtime⁰.resetEffects﹖();
 //│ define sum⁰ as fun sum¹(n) {
-//│   let curDepth, stackDelayRes;
-//│   set runtime⁰.stackDepth﹖ = +⁰(runtime⁰.stackDepth﹖, 1);
-//│   set curDepth = runtime⁰.stackDepth﹖;
-//│   set stackDelayRes = runtime⁰.checkDepth﹖();
+//│   let scrut, tmp1, tmp2, pc, curDepth;
+//│   match runtime⁰.resumePc﹖
+//│     -1 =>
+//│       set pc = 0;
+//│       end
+//│     else
+//│       let saveOffset;
+//│       set pc = runtime⁰.resumePc﹖;
+//│       set runtime⁰.resumePc﹖ = -1;
+//│       end
+//│   do runtime⁰.checkDepth﹖();
 //│   match runtime⁰.curEffect﹖
 //│     null =>
-//│       let scrut, tmp1, tmp2, pc;
-//│       match runtime⁰.resumePc﹖
-//│         -1 =>
-//│           set pc = 0;
-//│           end
-//│         else
-//│           let saveOffset;
-//│           set pc = runtime⁰.resumePc﹖;
-//│           set runtime⁰.resumePc﹖ = -1;
-//│           end
+//│       set curDepth = +⁰(runtime⁰.stackDepth﹖, 1);
 //│       loop main:
 //│         match pc
 //│           0 =>
@@ -98,17 +95,14 @@ sum(10000)
 //│                 true =>
 //│                   return 0
 //│                 else
-//│                   let res;
 //│                   set tmp1 = -⁰(n, 1);
-//│                   set res = sum¹(tmp1);
 //│                   set runtime⁰.stackDepth﹖ = curDepth;
-//│                   set runtime⁰.resumeValue﹖ = res;
+//│                   set runtime⁰.resumeValue﹖ = sum¹(tmp1);
 //│                   match runtime⁰.curEffect﹖
 //│                     null =>
 //│                       break brk0
 //│                     else
-//│                       let res1;
-//│                       return runtime⁰.unwind﹖(sum¹, 1, "StackSafetyLift.mls:70:9", null, null, 1, 1, n, 0)
+//│                       return runtime⁰.unwind﹖(sum¹, 1, "StackSafetyLift.mls:69:9", null, null, 1, 1, n, 0)
 //│                   end
 //│               end
 //│             set pc = 1;
@@ -122,7 +116,7 @@ sum(10000)
 //│         end
 //│       end
 //│     else
-//│       return runtime⁰.unwind﹖(sum¹, -1, "StackSafetyLift.mls:67:1", null, null, 1, 1, n, 0)
+//│       return runtime⁰.unwind﹖(sum¹, pc, "StackSafetyLift.mls:66:1", null, null, 1, 1, n, 0)
 //│   end
 //│ };
 //│ define ‹stack safe body› as fun ‹stack safe body›¹() {

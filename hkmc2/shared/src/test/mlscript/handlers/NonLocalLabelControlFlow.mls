@@ -70,12 +70,6 @@ continueFromNestedFunctionWithEffects()
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let loop, handleBlock$, NonLocalLabelEffectbreak, NonLocalLabelEffectcontinue, NonLocalLabelEffect, Capture$scope0, handleBlock$$, NonLocalLabelEffectbreak$, tmp;
 //│ do runtime⁰.resetEffects﹖();
-//│ define Capture$scope0 as class Capture$scope0¹ {
-//│   constructor Capture$scope0⁰(i$0) {
-//│     define i$0⁰ as val i$0¹ = i$0;
-//│     end
-//│   }
-//│ };
 //│ define NonLocalLabelEffectcontinue as fun NonLocalLabelEffectcontinue⁰(resume) {
 //│   return runtime⁰.Continue﹖
 //│ };
@@ -105,14 +99,14 @@ continueFromNestedFunctionWithEffects()
 //│         end
 //│     match pc
 //│       1 =>
-//│         set tmp1 = +⁰(scope0$cap.i$0¹, 1);
-//│         set scope0$cap.i$0¹ = tmp1;
+//│         set tmp1 = +⁰(scope0$cap.i$0⁰, 1);
+//│         set scope0$cap.i$0⁰ = tmp1;
 //│         return nonLocalHandler$root.continue﹖()
 //│       0 =>
-//│         set scrut = >=⁰(scope0$cap.i$0¹, 3);
+//│         set scrut = >=⁰(scope0$cap.i$0⁰, 3);
 //│         match scrut
 //│           true =>
-//│             set runtime⁰.resumeValue﹖ = nonLocalHandler$root.break﹖(scope0$cap.i$0¹);
+//│             set runtime⁰.resumeValue﹖ = nonLocalHandler$root.break﹖(scope0$cap.i$0⁰);
 //│             match runtime⁰.curEffect﹖
 //│               null =>
 //│                 set pc = 2;
@@ -147,6 +141,12 @@ continueFromNestedFunctionWithEffects()
 //│ define handleBlock$ as fun handleBlock$⁰(scope0$cap, nonLocalHandler$root) {
 //│   return loop⁰(scope0$cap, nonLocalHandler$root)
 //│ };
+//│ define Capture$scope0 as class Capture$scope0¹ {
+//│   constructor Capture$scope0⁰(i$0) {
+//│     define i$0¹ as val i$0⁰ = i$0;
+//│     end
+//│   }
+//│ };
 //│ define continueFromNestedFunctionWithEffects⁰ as fun continueFromNestedFunctionWithEffects¹() {
 //│   let i, root$result, nonLocalHandler$root, labelBodyResult, labelContinueDispatch, tmp1, scope0$cap, handleBlock$$here, pc;
 //│   match runtime⁰.resumePc﹖
@@ -164,7 +164,7 @@ continueFromNestedFunctionWithEffects()
 //│     match pc
 //│       0 =>
 //│         set scope0$cap = new mut Capture$scope0¹(i);
-//│         set scope0$cap.i$0¹ = 0;
+//│         set scope0$cap.i$0⁰ = 0;
 //│         set pc = 1;
 //│         end
 //│     match pc

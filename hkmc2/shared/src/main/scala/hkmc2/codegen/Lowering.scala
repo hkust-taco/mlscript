@@ -1377,24 +1377,18 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
     val etaExpanded =
       EtaExpansion(Program(imps.map(imp => imp.sym -> imp.str), deforested)).main
     
-    val handlerPaths = new HandlerPaths
-    
-    val shouldFlattenScopes = config.effectHandlers.isDefined
-    
-    val scopeFlattened =
-      if shouldFlattenScopes then ScopeFlattener().applyBlock(etaExpanded)
+    val lifted =
+      if lift then Lifter(etaExpanded).transform
       else etaExpanded
     
-    val lifted =
-      if lift then Lifter(scopeFlattened).transform
-      else scopeFlattened
+    val handlerPaths = new HandlerPaths
     
-    val (withHandlers2, stackSafetyInfo) = config.effectHandlers.fold((lifted, Map.empty)): opt =>
+    val withHandlers = config.effectHandlers.fold(lifted): opt =>
       HandlerLowering(handlerPaths, opt).translateTopLevel(lifted)
     
     val stackSafe = config.stackSafety match
-      case N => withHandlers2
-      case S(sts) => StackSafeTransform(sts.stackLimit, handlerPaths, stackSafetyInfo).transformTopLevel(withHandlers2)
+      case N => withHandlers
+      case S(sts) => StackSafeTransform(sts.stackLimit, handlerPaths).transformTopLevel(withHandlers)
     
     val flattened = stackSafe.flattened
     

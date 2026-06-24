@@ -52,7 +52,7 @@ case class Config(
   // see https://github.com/hkust-taco/mlscript/pull/356#discussion_r2579529893
   // and https://github.com/hkust-taco/mlscript/pull/356#discussion_r2585183902
   def shouldRewriteWhile: Bool =
-    rewriteWhileLoops || effectHandlers.isDefined
+    rewriteWhileLoops
   
 end Config
 
