@@ -25,7 +25,6 @@ fun test(x) =
 //│     arg$Some$0$ = tmp1.value;
 //│     return Predef.print(arg$Some$0$)
 //│   } else if (x instanceof None1.class) {
-//│     tmp1 = None1;
 //│     return Predef.print("none")
 //│   }
 //│   throw globalThis.Object.freeze(new globalThis.Error("match error"));

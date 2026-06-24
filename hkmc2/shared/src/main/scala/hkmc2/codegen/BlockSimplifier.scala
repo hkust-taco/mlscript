@@ -397,6 +397,10 @@ class BlockSimplifier
     
     
     lazy val liveAssignInfosUntilChangeTriggered: Buffer[AssignInfo] = Buffer.empty
+    // Locals read through a conservative/unknown flow state, such as in a `finally`
+    // block, must keep all of their assignments: we cannot identify one precise
+    // assignment fact to mark live, but the read is still semantically real.
+    val impreciselyReadVars: MutSet[LocalVar] = MutSet.empty
     
     
     def apply(prog: Program): Program =
@@ -438,12 +442,14 @@ class BlockSimplifier
         def rec(assnd: AssignInfo): Unit =
           if traversedAssignedInfos.put(assnd, ()) is null then
             assnd match
-            case ass: AssignInfo.Assigned =>
+            case ass @ AssignInfo.Assigned(_, _, varAsst, rhsRequirements) =>
               liveAssigns.put(ass.originalAssignment, ())
+              varAsst.foreach((_, rhsAsst) => rec(rhsAsst))
+              rhsRequirements.foreach((_, rhsAsst) => rec(rhsAsst))
             case AssignInfo.Merge(l, r) =>
               rec(l)
               rec(r)
-            case AssignInfo.Uninitialized | AssignInfo.Unknown => ()
+            case AssignInfo.Uninitialized | AssignInfo.Unknown() => ()
         
         liveAssignInfosUntilChangeTriggered.foreach(rec)
         
@@ -454,7 +460,8 @@ class BlockSimplifier
           override def applyBlock(b: Block): Block =
             b match
             case ass @ Assign(lhs: LocalVar, rhs, rst)
-            if localVars(lhs) && !capturedVars(lhs) && !symbolsToPreserve(lhs) && !liveAssigns.containsKey(ass)
+            if localVars(lhs) && !capturedVars(lhs) && !symbolsToPreserve(lhs)
+              && !impreciselyReadVars(lhs) && !liveAssigns.containsKey(ass)
             =>
               registerChange(s"rm ass ${lhs.showDbg} = ${rhs.showDbg}")
               Assign.discard(rhs, applyBlock(rst))
@@ -521,7 +528,7 @@ class BlockSimplifier
     // * Facts are intentionally immutable so derived analyses can be cached in
     // * lazy values and compared by identity when validating requirements.
     enum AssignInfo:
-      case Unknown
+      case Unknown()
       case Uninitialized
       // * `varAsst` is defined if the RHS is a direct reference to some local L,
       // * so that the current variable can be treated as an alias of L as long as L's
@@ -538,7 +545,7 @@ class BlockSimplifier
       case Merge(asst1: AssignInfo, asst2: AssignInfo)
       
       override def toString: String = this match
-        case Unknown => "?"
+        case Unknown() => "?"
         case Uninitialized => "∅"
         case Assigned(l, r, varAsst, _) => s"${r.showDbg}${
             varAsst.fold(""):
@@ -548,15 +555,12 @@ class BlockSimplifier
       
       def merge(that: AssignInfo): AssignInfo =
         if this is that then this
-        else that match
-          case Unknown => that
-          case Uninitialized => this
-          // case Merge(l, r) => Merge(merge(this, l), r)
-          case _: Assigned | _: Merge =>
-            this match
-              case Unknown => this
-              case Uninitialized => that
-              case _: Assigned | _: Merge => Merge(this, that)
+        else this match
+          case Uninitialized => that
+          case _ =>
+            that match
+            case Uninitialized => this
+            case _ => Merge(this, that)
       
       // * This lazy val is used to avoid retraversing the DAG and to deduplicate entries.
       // * There are more efficient ways of traversing the DAG (e.g. using a mutable visited set),
@@ -570,13 +574,13 @@ class BlockSimplifier
           case N => N
           case S(set1) =>
             asst2.assigns match
-            case N => S(set1)
+            case N => N
             case S(set2) => S(set1 ++ set2)
         case Uninitialized => S(Set.empty)
-        case Unknown => N
+        case Unknown() => N
       
       lazy val valueAnalysis: ValueAnalysis = this match
-        case Unknown =>
+        case Unknown() =>
           ValueAnalysis.conservative
         case Uninitialized =>
           ValueAnalysis(true, Nil)
@@ -610,7 +614,7 @@ class BlockSimplifier
               ValueAnalysis.mergeRefs(l.refs, r.refs))
       
       lazy val pureCallPrefix: Opt[TrackedPureCall] = this match
-        case Unknown | Uninitialized => N
+        case Unknown() | Uninitialized => N
         case Assigned(lhs, rhs, opt, rhsRequirements) =>
           rhs match
           case call: Call if call.isKnownUnsaturatedCall && call.isPure =>
@@ -636,10 +640,10 @@ class BlockSimplifier
     
     type AssignedResults = Map[LocalVar, AssignInfo]
     
-    val emptyAssignedResults: AssignedResults = Map.empty.withDefaultValue(Unknown)
+    val emptyAssignedResults: AssignedResults = Map.empty[LocalVar, AssignInfo].withDefault(_ => Unknown())
     
     def impossible: AssignedResults =
-      assignedResults.view.mapValues(_ => Uninitialized).toMap.withDefaultValue(Unknown)
+      assignedResults.view.mapValues(_ => Uninitialized).toMap.withDefault(_ => Unknown())
     inline def makeImpossibleAfter[R](inline code: => R) =
       val res = code
       assignedResults = impossible
@@ -649,9 +653,15 @@ class BlockSimplifier
     var assignedResults: AssignedResults = emptyAssignedResults
     
     def accessAssignedResults(sym: LocalVar): AssignInfo =
-      val res = assignedResults(sym)
+      val res = assignedResults.getOrElse(sym, {
+        val res = Unknown()
+        assignedResults += sym -> res
+        res
+      })
       if !changed then
-        liveAssignInfosUntilChangeTriggered += res
+        res match
+        case Unknown() => impreciselyReadVars += sym
+        case _ => liveAssignInfosUntilChangeTriggered += res
       res
     
     var inDryRun = false // for traversing loop bodies once before actually transforming the program
@@ -676,7 +686,7 @@ class BlockSimplifier
           k -> ar1(k).merge(v)
         )
         .toMap
-        .withDefaultValue(Unknown)
+        .withDefault(_ => Unknown())
     
     
     override def applyDefn(defn: Defn)(k: Defn => Block): Block =
@@ -738,7 +748,7 @@ class BlockSimplifier
             case r @ Value.SimpleRef(sym: LocalVar) =>
               if capturedVars(sym) then N
               else S(r -> accessAssignedResults(sym))
-            case r: Value.RefLike => S(r -> Unknown)
+            case r: Value.RefLike => S(r -> Unknown())
             case _ => N
           val rhsRequirements = rhs2.freeVars.iterator.collect:
             case sym: LocalVar if !capturedVars(sym) =>
@@ -764,10 +774,10 @@ class BlockSimplifier
         // * (not exponentially many times).
         if loop then
           atLabelBegin.put(label, assignedResults)
-          // * Would seem to make sense to make the below `impossible`, but it doesn't work,
-          // * even if we add `atLabelEnd.put(label, merge(atLabelEnd(label), assignedResults))`
-          // * after the `applyBlock` call. Not entirely sure why.
-          atLabelEnd.put(label, emptyAssignedResults)
+          // * Initially, no `break` path reaches this loop's rest block.
+          // * Starting from `impossible` makes a loop with no breaks preserve
+          // * the ordinary fallthrough facts instead of merging them with `Unknown`.
+          atLabelEnd.put(label, impossible)
           val oldDryRun = inDryRun
           inDryRun = true
           applyBlock(body)
@@ -894,6 +904,13 @@ class BlockSimplifier
           
           val newArms = arms2.mapConserve:
             case arm @ (cse, body) =>
+              // Case constructor paths are tested before the arm body runs.
+              // This matters for abortive arms: visiting the body first can make
+              // the data-flow state impossible and hide the constructor path's
+              // dependencies from dead-assignment removal.
+              cse.freeVars.iterator.foreach:
+                case sym: LocalVar if !capturedVars(sym) => accessAssignedResults(sym)
+                case _ =>
               val newBody = applyBlock(body)
               curAssigned = merge(curAssigned, assignedResults)
               assignedResults = oldAssigned
@@ -1010,6 +1027,7 @@ class BlockSimplifier
       case Call(Value.SimpleRef(sym: BuiltinSymbol), (arg1 :: arg2 :: Nil) :: Nil)
         if sym.nme === "," && arg1.spread.isEmpty && arg2.spread.isEmpty
         =>
+          registerChange(s"rm comma ${arg1.value.showDbg}, ${arg2.value.showDbg}")
           Assign.discard(arg1.value, k(arg2.value))
       
       case r =>

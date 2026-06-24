@@ -73,23 +73,26 @@ fun loopBackPost(flag) =
   x
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ define loopBackPost⁰ as fun loopBackPost¹(flag) {
+//│   let x;
+//│   set x = 1;
 //│   loop lbl:
 //│     match flag
 //│       true =>
+//│         set x = 2;
 //│         set flag = false;
 //│         continue lbl
 //│       else
 //│         end
 //│     end
-//│   return undefined
+//│   return x
 //│ };
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 print(loopBackPost(false))
 print(loopBackPost(true))
-//│ > undefined
-//│ > undefined
+//│ > 1
+//│ > 2
 
 
 // * The `else` branch sees assignments that reached the next iteration.
@@ -121,8 +124,8 @@ fun loopElseReturn(flag) =
 
 print(loopElseReturn(false))
 print(loopElseReturn(true))
-//│ > undefined
-//│ > undefined
+//│ > 1
+//│ > 2
 
 
 // * Assignments on abortive loop-body paths must not pollute the ordinary loop exit.
@@ -165,7 +168,6 @@ print(loopReturnDoesNotPolluteExit(false))
 print(loopReturnDoesNotPolluteExit(true))
 //│ > 1
 //│ > 2
-
 
 
 
