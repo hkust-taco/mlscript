@@ -36,3 +36,10 @@ let y = x in print(y)
 //│ > 1
 //│ x = 1
 
+
+// :dopt
+let x = hide(1)
+in print(x)
+//│ > 1
+
+

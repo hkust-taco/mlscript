@@ -75,7 +75,6 @@ fun test(x) = x map(_ + 1) map(_ * 2)
 //│       set inlinedVal2 = *⁰(arg$Some$0$, 2);
 //│       return Option⁰.Some¹(inlinedVal2)
 //│     None⁰ =>
-//│       set inlinedVal = Option⁰.None⁰;
 //│       return Option⁰.None⁰
 //│     else
 //│       throw new globalThis⁰.Error⁰("match error")
@@ -104,8 +103,6 @@ fun test(x) = x map(_ + 1) map(_ * 2) map("Result: " + _)
 //│       set inlinedVal4 = +⁰("Result: ", arg$Some$0$);
 //│       return Option⁰.Some¹(inlinedVal4)
 //│     None⁰ =>
-//│       set inlinedVal = Option⁰.None⁰;
-//│       set inlinedVal1 = Option⁰.None⁰;
 //│       return Option⁰.None⁰
 //│     else
 //│       throw new globalThis⁰.Error⁰("match error")
@@ -138,7 +135,6 @@ fun test(x) = if x map(_ + 1) is
 //│           return [arg$Some$0$]
 //│       end
 //│     None⁰ =>
-//│       set inlinedVal = Option⁰.None⁰;
 //│       return null
 //│     else
 //│       throw new globalThis⁰.Error⁰("match error")

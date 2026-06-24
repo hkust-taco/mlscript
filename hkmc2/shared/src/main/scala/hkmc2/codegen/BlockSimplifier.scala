@@ -396,6 +396,9 @@ class BlockSimplifier
     //    because that variable will be treated as unknown, since nested definitions start from an empty environment.
     
     
+    lazy val liveAssignInfosUntilChangeTriggered: Buffer[AssignInfo] = Buffer.empty
+    
+    
     def apply(prog: Program): Program =
       
       var cur = prog
@@ -421,28 +424,45 @@ class BlockSimplifier
       
       cur = applyProgram(prog)
       
-      // * [Future: dead assignment removal]
-      // * Technically, if nothing in the program changed, we could remove dead assignments using a simple flag.
-      /* 
+      // * Dead assignment removal: if nothing in the program changed, we can remove dead assignments.
+      // * We mark live assignments by traversing all live AssignInfo objects that were observed during the analysis.
       if !changed then cur =
+        
+        import scala.jdk.CollectionConverters._
+        import java.util.IdentityHashMap
+        
+        val traversedAssignedInfos: IdentityHashMap[AssignInfo, Unit] = new IdentityHashMap()
+        
+        val liveAssigns: IdentityHashMap[Assign, Unit] = new IdentityHashMap()
+        
+        def rec(assnd: AssignInfo): Unit =
+          if traversedAssignedInfos.put(assnd, ()) is null then
+            assnd match
+            case ass: AssignInfo.Assigned =>
+              liveAssigns.put(ass.originalAssignment, ())
+            case AssignInfo.Merge(l, r) =>
+              rec(l)
+              rec(r)
+            case AssignInfo.Uninitialized | AssignInfo.Unknown => ()
+        
+        liveAssignInfosUntilChangeTriggered.foreach(rec)
+        
+        // log(s"Live assignments: ${liveAssigns.keySet.asScala.toList.map(_.toString).sorted}")
+        
         (new BlockTransformer(SymbolSubst.Id):
           
           override def applyBlock(b: Block): Block =
             b match
             case ass @ Assign(lhs: LocalVar, rhs, rst)
-            if localVars(lhs) && !capturedVars(lhs) && !symbolsToPreserve(lhs) && !liveAssignments.containsKey(ass)
+            if localVars(lhs) && !capturedVars(lhs) && !symbolsToPreserve(lhs) && !liveAssigns.containsKey(ass)
             =>
-              import scala.jdk.CollectionConverters._
-              log(s"Live assignments: ${liveAssignments.keySet.asScala.toList.sortBy(_.toString)
-                  .map(a => a.showDbg + System.identityHashCode(a))
-                }")
               registerChange(s"rm ass ${lhs.showDbg} = ${rhs.showDbg}")
-              registerChange(s"rm id ${System.identityHashCode(this)}")
               Assign.discard(rhs, applyBlock(rst))
             case _ => super.applyBlock(b)
           
         ).applyProgram(cur)
-      */
+      
+      end if
       
       cur
       
@@ -514,7 +534,7 @@ class BlockSimplifier
         rhs: Result,
         varAsst: Opt[Value.RefLike -> AssignInfo],
         rhsRequirements: Set[LocalVar -> AssignInfo],
-      )
+      )(val originalAssignment: Assign)
       case Merge(asst1: AssignInfo, asst2: AssignInfo)
       
       override def toString: String = this match
@@ -627,6 +647,13 @@ class BlockSimplifier
     
     // *** ASSUMPTION (should be an invariant of the IR): only LocalVar symbols can be Assign'ed ***
     var assignedResults: AssignedResults = emptyAssignedResults
+    
+    def accessAssignedResults(sym: LocalVar): AssignInfo =
+      val res = assignedResults(sym)
+      if !changed then
+        liveAssignInfosUntilChangeTriggered += res
+      res
+    
     var inDryRun = false // for traversing loop bodies once before actually transforming the program
     
     def withFreshAssignedResults[T](thunk: => T): T =
@@ -650,10 +677,6 @@ class BlockSimplifier
         )
         .toMap
         .withDefaultValue(Unknown)
-    
-    
-    // * [Future: dead assignment removal]
-    // val liveAssignments: IdentityHashMap[Block, Unit] = new IdentityHashMap()
     
     
     override def applyDefn(defn: Defn)(k: Defn => Block): Block =
@@ -684,6 +707,14 @@ class BlockSimplifier
         s"${k.showDbg} -> ${v.toString}"
       .mkString("{", ", ", "}")
     
+    // /* 
+    override def applySimpleSymbol(sym: SimpleSymbol): SimpleSymbol = sym match
+      case sym: LocalVar =>
+        accessAssignedResults(sym)
+        super.applySimpleSymbol(sym)
+      case _ => super.applySimpleSymbol(sym)
+    // */
+    
     override def applyBlock(b: Block): Block =
     // trace[Block](s"Applying block: ${b.showDbg.abbreviate} with map:\n${showMap}", res => s"|= ${showMap}"):
       b match
@@ -706,13 +737,13 @@ class BlockSimplifier
           val varAsst = rhs2.match
             case r @ Value.SimpleRef(sym: LocalVar) =>
               if capturedVars(sym) then N
-              else S(r -> assignedResults(sym))
+              else S(r -> accessAssignedResults(sym))
             case r: Value.RefLike => S(r -> Unknown)
             case _ => N
           val rhsRequirements = rhs2.freeVars.iterator.collect:
             case sym: LocalVar if !capturedVars(sym) =>
-              sym -> assignedResults(sym)
-          assignedResults += lhs2 -> Assigned(lhs2, rhs2, varAsst, rhsRequirements.toSet)
+              sym -> accessAssignedResults(sym)
+          assignedResults += lhs2 -> Assigned(lhs2, rhs2, varAsst, rhsRequirements.toSet)(ass)
           
           val rst2 = applyBlock(rst)
           if (lhs2 is lhs) && (rhs2 is rhs) && (rst2 is rst) then ass else Assign(lhs, rhs2, rst2)
@@ -913,7 +944,7 @@ class BlockSimplifier
       v match
       case Value.SimpleRef(loc: LocalVar) if !inDryRun && !capturedVars(loc) =>
         
-        val rs = assignedResults(loc)
+        val rs = accessAssignedResults(loc)
         // log(s"Ref ${loc.showDbg} ${rs} ${localVars(loc)} ${capturedVars(loc)}")
         
         val analysis = rs.valueAnalysis

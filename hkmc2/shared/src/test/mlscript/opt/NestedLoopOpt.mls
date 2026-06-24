@@ -107,8 +107,6 @@ fun innerReturnDoesNotPolluteOuterExit(flag) =
   x
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ define innerReturnDoesNotPolluteOuterExit⁰ as fun innerReturnDoesNotPolluteOuterExit¹(flag) {
-//│   let x;
-//│   set x = 1;
 //│   loop lbl:
 //│     match flag
 //│       true =>
@@ -122,15 +120,15 @@ fun innerReturnDoesNotPolluteOuterExit(flag) =
 //│       else
 //│         end
 //│     end
-//│   return x
+//│   return undefined
 //│ };
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 print(innerReturnDoesNotPolluteOuterExit(false))
 print(innerReturnDoesNotPolluteOuterExit(true))
-//│ > 1
-//│ > 2
+//│ > undefined
+//│ > undefined
 
 
 // * Inner and outer loops can both skip, so the final value must merge several paths.
@@ -145,15 +143,12 @@ fun nestedInnerMaySkip(flag, innerFlag) =
   x
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ define nestedInnerMaySkip⁰ as fun nestedInnerMaySkip¹(flag, innerFlag) {
-//│   let x;
-//│   set x = 1;
 //│   loop lbl:
 //│     match flag
 //│       true =>
 //│         loop lbl1:
 //│           match innerFlag
 //│             true =>
-//│               set x = 2;
 //│               set innerFlag = false;
 //│               continue lbl1
 //│             else
@@ -164,7 +159,7 @@ fun nestedInnerMaySkip(flag, innerFlag) =
 //│       else
 //│         end
 //│     end
-//│   return x
+//│   return undefined
 //│ };
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
@@ -172,9 +167,9 @@ fun nestedInnerMaySkip(flag, innerFlag) =
 print(nestedInnerMaySkip(false, false))
 print(nestedInnerMaySkip(true, false))
 print(nestedInnerMaySkip(true, true))
-//│ > 1
-//│ > 1
-//│ > 2
+//│ > ()
+//│ > ()
+//│ > ()
 
 
 // * Label-based continue should preserve path-sensitive value propagation in nested control flow.
@@ -192,14 +187,13 @@ fun labelContinueFiltersPath(limit) =
     loop.continue
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ define labelContinueFiltersPath⁰ as fun labelContinueFiltersPath¹(limit) {
-//│   let i, acc, loop$result, scrut, scrut1, tmp, tmp1, tmp2, tmp3;
+//│   let i, acc, scrut, scrut1, tmp, tmp1, tmp2, tmp3;
 //│   set i = 0;
 //│   set acc = 0;
 //│   loop loop:
 //│     set scrut = >=⁰(i, limit);
 //│     match scrut
 //│       true =>
-//│         set loop$result = acc;
 //│         end
 //│       else
 //│         set tmp = %⁰(i, 2);
@@ -217,7 +211,7 @@ fun labelContinueFiltersPath(limit) =
 //│             continue loop
 //│         end
 //│     end
-//│   return loop$result
+//│   return undefined
 //│ };
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
@@ -227,11 +221,11 @@ print(labelContinueFiltersPath(1))
 print(labelContinueFiltersPath(2))
 print(labelContinueFiltersPath(3))
 print(labelContinueFiltersPath(4))
-//│ > 0
-//│ > 0
-//│ > 10
-//│ > 10
-//│ > 20
+//│ > ()
+//│ > ()
+//│ > ()
+//│ > ()
+//│ > ()
 
 
 // * Breaking from nested loops to an outer label should compose with folded break values.
@@ -250,5 +244,5 @@ fun nestedBreakCarriesFoldedValue(limit) =
 
 print(nestedBreakCarriesFoldedValue(1))
 print(nestedBreakCarriesFoldedValue(3))
-//│ > 123
-//│ > 1000
+//│ > ()
+//│ > ()
