@@ -1381,18 +1381,10 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
       if lift then Lifter(etaExpanded).transform
       else etaExpanded
     
-    val handlerPaths = new HandlerPaths
-    
     val withHandlers = config.effectHandlers.fold(lifted): opt =>
-      HandlerLowering(handlerPaths, opt).translateTopLevel(lifted)
+      HandlerLowering(new HandlerPaths, opt).translateTopLevel(lifted)
     
-    val stackSafe = config.stackSafety match
-      case N => withHandlers
-      case S(sts) => StackSafeTransform(sts.stackLimit, handlerPaths).transformTopLevel(withHandlers)
-    
-    val flattened = stackSafe.flattened
-    
-    val bufferable = BufferableTransform().transform(flattened)
+    val bufferable = BufferableTransform().transform(withHandlers.flattened)
     
     // * TODO[Anto]: Can we remove MergeMatchArmTransformer? Seems no longer necessary
     val merged = MergeMatchArmTransformer.applyBlock(bufferable)
