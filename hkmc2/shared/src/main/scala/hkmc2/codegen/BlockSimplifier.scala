@@ -105,10 +105,16 @@ class BlockSimplifier
   
   object LocalVars extends CachedAnalysis[Block, Set[LocalVar]]:
     
-    def analyzeUncached(block: Block): Set[LocalVar] = block match
+    def analyzeUncached(block: Block): Set[LocalVar] =
+      def default =
+        block.subBlocks.iterator.flatMap(analyze).toSet
+      block match
+      case Define(fd: FunDefn, rest) =>
+        fd.params.iterator.flatMap(_.params).collect {
+          case Param(sym = v: LocalVar) => v }.toSet ++ default
       case Scoped(syms, rest) =>
         rest.analyze ++ syms.iterator.collect { case v: LocalVar => v }
-      case _ => block.subBlocks.iterator.flatMap(analyze).toSet
+      case _ => default
     
   end LocalVars
   
@@ -463,7 +469,8 @@ class BlockSimplifier
         
         liveAssignInfosUntilChangeTriggered.foreach(rec)
         
-        // log(s"Live assignments: ${liveAssigns.keySet.asScala.toList.map(_.toString).sorted}")
+        // log(s"Live assignments: ${liveAssigns.keySet.asScala.toList.map(a =>
+        //   s"${a.lhs.showDbg} := ${a.rhs.showDbg}").sorted}")
         // log(s"Imprecisely accessed: ${impreciselyReadVars.toList.map(_.toString).sorted}")
         
         (new BlockTransformer(SymbolSubst.Id):

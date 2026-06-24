@@ -78,7 +78,7 @@ print of Box(foo()).value
 fun foo(x) =
   set x = 1
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let foo7; foo7 = function foo(x) { x = 1; return runtime.Unit };
+//│ let foo7; foo7 = function foo(x) { return runtime.Unit };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 print of Box(foo(1)).value

@@ -38,7 +38,7 @@ in
 //│ > 5
 
 
-// TODO: rm dead assignment
+// * Note that the dead assignment to parameter x is removed
 :sir
 :soir
 fun f(x) =
@@ -47,7 +47,7 @@ fun f(x) =
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define f⁰ as fun f¹(x) { set x = 1; return 42 }; end
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ define f⁰ as fun f¹(x) { set x = 1; return 42 }; end
+//│ define f⁰ as fun f¹(x) { return 42 }; end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 
