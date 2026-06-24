@@ -16,7 +16,6 @@ import semantics.*
 import semantics.Elaborator.ctx
 import semantics.Elaborator.State
 import hkmc2.Config.EffectHandlers
-import hkmc2.syntax.Keyword.`override`
 
 
 object HandlerLowering:
