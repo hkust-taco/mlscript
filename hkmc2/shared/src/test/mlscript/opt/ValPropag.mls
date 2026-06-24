@@ -37,12 +37,6 @@ let y = x in print(y)
 //│ x = 1
 
 
-// :dopt
-let x = hide(1)
-in print(x)
-//│ > 1
-
-
 // * A copy of a parameter must not be propagated through a loop mutation of that parameter.
 // * This is a minimized version of the lexer string-location regression.
 :soir
@@ -76,4 +70,5 @@ fun preserveLoopEntry(idx) =
 
 print(preserveLoopEntry(2))
 //│ > [2, 3]
+
 

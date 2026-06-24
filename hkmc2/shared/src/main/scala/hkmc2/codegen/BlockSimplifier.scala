@@ -379,13 +379,19 @@ class BlockSimplifier
   
   /** Basic intraprocedural flow-sensitive analysis to figure out which assignments may flow into which variables,
     * at each point of the program.
+    * 
     * For loops, it is enough to pass through the loop body once without transforming it ("dry run")
     * to get the data flow information from loop-back edges, and then to actually transform the loop.
     * When in dry-run mode, nested loops are also traversed in dry-run mode,
     * so overall each Block is traversed at most twice.
+    * 
     * We keep track of a tree of assignments where, if the RHS was a local variable, we also store its analysis value
     * that was in effect at this point, which allows us to eliminate useless transitive assignments.
-    * We keep track of variables going out of scope to avoid using them afterwards. */
+    * We keep track of variables going out of scope to avoid using them afterwards.
+    * 
+    * Note that if the program tree is changed, it is imperative to register the change,
+    * otherwise dead assignment removal (which runs when no change was detected) will not work correctly,
+    * as it relies on object identity. */
   class DataFlowAnalysis(localVars: Set[LocalVar]) extends BlockTransformer(SymbolSubst.Id), Helper:
     
     
@@ -430,7 +436,11 @@ class BlockSimplifier
       
       // * Dead assignment removal: if nothing in the program changed, we can remove dead assignments.
       // * We mark live assignments by traversing all live AssignInfo objects that were observed during the analysis.
-      if !changed then cur =
+      if !changed && {
+        val ok = cur is prog
+        softAssert(ok, "A change in the program was not properly registered during data-flow analysis")
+        ok
+      } then cur =
         
         import scala.jdk.CollectionConverters._
         import java.util.IdentityHashMap
@@ -449,11 +459,12 @@ class BlockSimplifier
             case AssignInfo.Merge(l, r) =>
               rec(l)
               rec(r)
-            case AssignInfo.Uninitialized | AssignInfo.Unknown() => ()
+            case AssignInfo.Uninitialized | AssignInfo.Unknown => ()
         
         liveAssignInfosUntilChangeTriggered.foreach(rec)
         
         // log(s"Live assignments: ${liveAssigns.keySet.asScala.toList.map(_.toString).sorted}")
+        // log(s"Imprecisely accessed: ${impreciselyReadVars.toList.map(_.toString).sorted}")
         
         (new BlockTransformer(SymbolSubst.Id):
           
@@ -528,7 +539,7 @@ class BlockSimplifier
     // * Facts are intentionally immutable so derived analyses can be cached in
     // * lazy values and compared by identity when validating requirements.
     enum AssignInfo:
-      case Unknown()
+      case Unknown
       case Uninitialized
       // * `varAsst` is defined if the RHS is a direct reference to some local L,
       // * so that the current variable can be treated as an alias of L as long as L's
@@ -545,7 +556,7 @@ class BlockSimplifier
       case Merge(asst1: AssignInfo, asst2: AssignInfo)
       
       override def toString: String = this match
-        case Unknown() => "?"
+        case Unknown => "?"
         case Uninitialized => "∅"
         case Assigned(l, r, varAsst, _) => s"${r.showDbg}${
             varAsst.fold(""):
@@ -554,13 +565,21 @@ class BlockSimplifier
         case Merge(a1, a2) => s"{${a1.toString} | ${a2.toString}}"
       
       def merge(that: AssignInfo): AssignInfo =
-        if this is that then this
-        else this match
-          case Uninitialized => that
-          case _ =>
-            that match
-            case Uninitialized => this
-            case _ => Merge(this, that)
+        // * Important note: we intentionally do not simplify to Unknown merges with Unknown,
+        // * although that's a logically valid simplification,
+        // * because we want the result to have a distinct object identity,
+        // * otherwise we would sometimes mistakenly conclude that
+        // * a variable re-assigned an Unknown value has not actually changed.
+        this match
+        case Uninitialized => that
+        case Unknown => Merge(this, that)
+        case _: Assigned | _: Merge =>
+          that match
+          case Uninitialized => this
+          case Unknown => Merge(this, that)
+          case _: Assigned | _: Merge =>
+            if this is that then this
+            else Merge(this, that)
       
       // * This lazy val is used to avoid retraversing the DAG and to deduplicate entries.
       // * There are more efficient ways of traversing the DAG (e.g. using a mutable visited set),
@@ -577,10 +596,10 @@ class BlockSimplifier
             case N => N
             case S(set2) => S(set1 ++ set2)
         case Uninitialized => S(Set.empty)
-        case Unknown() => N
+        case Unknown => N
       
       lazy val valueAnalysis: ValueAnalysis = this match
-        case Unknown() =>
+        case Unknown =>
           ValueAnalysis.conservative
         case Uninitialized =>
           ValueAnalysis(true, Nil)
@@ -614,7 +633,7 @@ class BlockSimplifier
               ValueAnalysis.mergeRefs(l.refs, r.refs))
       
       lazy val pureCallPrefix: Opt[TrackedPureCall] = this match
-        case Unknown() | Uninitialized => N
+        case Unknown | Uninitialized => N
         case Assigned(lhs, rhs, opt, rhsRequirements) =>
           rhs match
           case call: Call if call.isKnownUnsaturatedCall && call.isPure =>
@@ -640,10 +659,10 @@ class BlockSimplifier
     
     type AssignedResults = Map[LocalVar, AssignInfo]
     
-    val emptyAssignedResults: AssignedResults = Map.empty[LocalVar, AssignInfo].withDefault(_ => Unknown())
+    val emptyAssignedResults: AssignedResults = Map.empty.withDefaultValue(Unknown)
     
     def impossible: AssignedResults =
-      assignedResults.view.mapValues(_ => Uninitialized).toMap.withDefault(_ => Unknown())
+      assignedResults.view.mapValues(_ => Uninitialized).toMap.withDefault(_ => Unknown)
     inline def makeImpossibleAfter[R](inline code: => R) =
       val res = code
       assignedResults = impossible
@@ -653,14 +672,10 @@ class BlockSimplifier
     var assignedResults: AssignedResults = emptyAssignedResults
     
     def accessAssignedResults(sym: LocalVar): AssignInfo =
-      val res = assignedResults.getOrElse(sym, {
-        val res = Unknown()
-        assignedResults += sym -> res
-        res
-      })
+      val res = assignedResults(sym)
       if !changed then
         res match
-        case Unknown() => impreciselyReadVars += sym
+        case Unknown => impreciselyReadVars += sym
         case _ => liveAssignInfosUntilChangeTriggered += res
       res
     
@@ -686,7 +701,7 @@ class BlockSimplifier
           k -> ar1(k).merge(v)
         )
         .toMap
-        .withDefault(_ => Unknown())
+        .withDefaultValue(Unknown)
     
     
     override def applyDefn(defn: Defn)(k: Defn => Block): Block =
@@ -717,13 +732,11 @@ class BlockSimplifier
         s"${k.showDbg} -> ${v.toString}"
       .mkString("{", ", ", "}")
     
-    // /* 
     override def applySimpleSymbol(sym: SimpleSymbol): SimpleSymbol = sym match
       case sym: LocalVar =>
         accessAssignedResults(sym)
         super.applySimpleSymbol(sym)
       case _ => super.applySimpleSymbol(sym)
-    // */
     
     override def applyBlock(b: Block): Block =
     // trace[Block](s"Applying block: ${b.showDbg.abbreviate} with map:\n${showMap}", res => s"|= ${showMap}"):
@@ -748,7 +761,7 @@ class BlockSimplifier
             case r @ Value.SimpleRef(sym: LocalVar) =>
               if capturedVars(sym) then N
               else S(r -> accessAssignedResults(sym))
-            case r: Value.RefLike => S(r -> Unknown())
+            case r: Value.RefLike => S(r -> Unknown)
             case _ => N
           val rhsRequirements = rhs2.freeVars.iterator.collect:
             case sym: LocalVar if !capturedVars(sym) =>
@@ -904,19 +917,23 @@ class BlockSimplifier
           
           val newArms = arms2.mapConserve:
             case arm @ (cse, body) =>
-              // Case constructor paths are tested before the arm body runs.
-              // This matters for abortive arms: visiting the body first can make
-              // the data-flow state impossible and hide the constructor path's
-              // dependencies from dead-assignment removal.
-              cse.freeVars.iterator.foreach:
-                case sym: LocalVar if !capturedVars(sym) => accessAssignedResults(sym)
+              // * We need to visit the symbols of the cases to register the liveness of their AssignedInfo.
+              // * Normally, the Match case uses `applyCase`, which uses `applyPath`, and they both take a continuation,
+              // * making things unnecessarily awkward for the data-flow analysis.
+              cse.freeVars.foreach:
+                case sym: SimpleSymbol => applySimpleSymbol(sym)
                 case _ =>
               val newBody = applyBlock(body)
               curAssigned = merge(curAssigned, assignedResults)
               assignedResults = oldAssigned
               if newBody is body then arm else cse -> newBody
-          val newDflt = if !gaveUp && shapes.isEmpty
-            then S(Unreachable("exhaustive match"))
+          val newDflt =
+            if !gaveUp && shapes.isEmpty
+            then
+              val res = S(Unreachable("exhaustive match"))
+              if dflt === res then dflt else
+                registerChange(s"Default arm is unreachable because all shapes are covered")
+                res
             else dflt.mapConserve:
               case body =>
                 val newBody = applyBlock(body)
