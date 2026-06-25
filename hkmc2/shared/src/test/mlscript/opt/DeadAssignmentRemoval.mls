@@ -137,39 +137,19 @@ let x in
 //│ > 1
 //│ ═══[RUNTIME ERROR] Error: Not implemented
 
-:soir
-:re
-let x in
+:expect 2
+fun test =
+  let x
   try
     set x = 1
     if maybe do
       set x = 2
       throw 42
-    else print("long long long long long long long")
+    else print("hello")
     set x = 3
-  finally print(x)
-//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let x, scrut, tmp;
-//│ try
-//│   set x = 1;
-//│   set scrut = Predef⁰.maybe⁰;
-//│   match scrut
-//│     true =>
-//│       set x = 2;
-//│       throw 42
-//│     else
-//│       do Predef⁰.print⁰("long long long long long long long");
-//│       set x = 3;
-//│       set tmp = runtime⁰.Unit⁰;
-//│       end
-//│   end
-//│ finally
-//│   do Predef⁰.print⁰(x);
-//│   end;
-//│   return tmp
-//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
-//│ > 2
-//│ ═══[RUNTIME ERROR] 42
+  finally return x
+test
+//│ = 2
 
 :soir
 let x = 1 in

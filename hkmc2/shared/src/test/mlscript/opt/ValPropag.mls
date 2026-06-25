@@ -38,7 +38,7 @@ let y = x in print(y)
 
 
 // * A copy of a parameter must not be propagated through a loop mutation of that parameter.
-// * This is a minimized version of the lexer string-location regression.
+// * This is a minimized version of lexer location regressions that occurred several times in the past.
 :soir
 fun preserveLoopEntry(idx) =
   let startIndex = idx

@@ -101,6 +101,7 @@ class BlockSimplifier
   end Helper
   
   
+  // * Only such variables can be assigned directly in the IR
   type LocalVar = LocalVarSymbol
   
   object LocalVars extends CachedAnalysis[Block, Set[LocalVar]]:
@@ -572,21 +573,26 @@ class BlockSimplifier
         case Merge(a1, a2) => s"{${a1.toString} | ${a2.toString}}"
       
       def merge(that: AssignInfo): AssignInfo =
-        // * Important note: we intentionally do not simplify to Unknown merges with Unknown,
-        // * although that's a logically valid simplification,
-        // * because we want the result to have a distinct object identity,
-        // * otherwise we would sometimes mistakenly conclude that
-        // * a variable re-assigned an Unknown value has not actually changed.
-        this match
+        // * Important note: we intentionally do not simplify merges with Unknown,
+        // * although it would be logically valid to simplify them to Unknown.
+        // * We can't do that here, though, as it would lose information which is currently
+        // * used to determine whether a variable has changed or not:
+        // * when a variable is reassigned, we always map it to a fresh Assigned node;
+        // * the analysis then checks whether a variable has changed by comparing the object identity
+        // * of the node that was originally assigned to the variable with the variable's current node.
+        // * Now, if the original node was Unknown and we have a control-flow split leading to a merged
+        // * of, eg, (Unknown, Assigned(...)), then simplifying that to Unknown would leave the object
+        // * identity unchanged, wrongly indicating that the variable has not changed,
+        // * when in fact it may have been reassigned (in one of the two control-flow paths).
+        if this is that then this
+        else this match
         case Uninitialized => that
         case Unknown => Merge(this, that)
         case _: Assigned | _: Merge =>
           that match
           case Uninitialized => this
           case Unknown => Merge(this, that)
-          case _: Assigned | _: Merge =>
-            if this is that then this
-            else Merge(this, that)
+          case _: Assigned | _: Merge => Merge(this, that)
       
       // * This lazy val is used to avoid retraversing the DAG and to deduplicate entries.
       // * There are more efficient ways of traversing the DAG (e.g. using a mutable visited set),
@@ -669,13 +675,12 @@ class BlockSimplifier
     val emptyAssignedResults: AssignedResults = Map.empty.withDefaultValue(Unknown)
     
     def impossible: AssignedResults =
-      assignedResults.view.mapValues(_ => Uninitialized).toMap.withDefault(_ => Unknown)
+      assignedResults.view.mapValues(_ => Uninitialized).toMap.withDefaultValue(Unknown)
     inline def makeImpossibleAfter[R](inline code: => R) =
       val res = code
       assignedResults = impossible
       res
     
-    // *** ASSUMPTION (should be an invariant of the IR): only LocalVar symbols can be Assign'ed ***
     var assignedResults: AssignedResults = emptyAssignedResults
     
     def accessAssignedResults(sym: LocalVar): AssignInfo =
@@ -792,9 +797,9 @@ class BlockSimplifier
         // * (not exponentially many times).
         if loop then
           atLabelBegin.put(label, assignedResults)
-          // * Initially, no `break` path reaches this loop's rest block.
-          // * Starting from `impossible` makes a loop with no breaks preserve
-          // * the ordinary fallthrough facts instead of merging them with `Unknown`.
+          // * Initially, we treat this loop's rest block as unreachable.
+          // * Then, when non-abortive loops are found to either `break` or fall-through,
+          // * we will get merges that make the rest recognized as reachable.
           atLabelEnd.put(label, impossible)
           val oldDryRun = inDryRun
           inDryRun = true
