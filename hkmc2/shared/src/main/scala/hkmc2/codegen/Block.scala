@@ -209,6 +209,10 @@ sealed abstract class Block extends Product:
     case End(msg) => Set.empty
     case Unreachable(msg) => Set.empty
   
+  lazy val scopedVars: collection.Set[ScopedSymbol] = this match
+    case Scoped(syms, body) => syms ++ body.scopedVars
+    case _ => this.subBlocks.iterator.flatMap(_.scopedVars).toSet
+  
   lazy val subBlocks: Ls[Block] = this match
     case Match(p, arms, dflt, rest) => p.subBlocks ++ arms.map(_._2) ++ dflt.toList :+ rest
     case Begin(sub, rest) => sub :: rest :: Nil
