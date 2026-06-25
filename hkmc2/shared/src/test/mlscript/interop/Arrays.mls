@@ -17,7 +17,7 @@ arr.map((e, ...) => e === false)
 //│ lambda1 = (undefined, function (e, ..._) {
 //│   return e === false
 //│ });
-//│ return runtime.safeCall(arr.map(lambda1))
+//│ block$res3 = runtime.safeCall(arr.map(lambda1));
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = [false, true]
 
@@ -25,15 +25,17 @@ arr.map((e, ...) => e === false)
 arr.map((_, ...) => 1)
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let lambda2;
-//│ lambda2 = (undefined, function (_, ..._1) { return 1 });
-//│ return runtime.safeCall(arr.map(lambda2))
+//│ lambda2 = (undefined, function (_, ..._1) {
+//│   return 1
+//│ });
+//│ block$res4 = runtime.safeCall(arr.map(lambda2));
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = [1, 1]
 
 :e
 arr.map((..., ...) => 1)
 //│ ╔══[COMPILATION ERROR] Spread parameters must be the last in the parameter list.
-//│ ║  l.34: 	arr.map((..., ...) => 1)
+//│ ║  l.36: 	arr.map((..., ...) => 1)
 //│ ╙──      	         ^^^
 //│ = [1, 1]
 
@@ -41,7 +43,7 @@ arr.map((..., ...) => 1)
 :re
 arr.map((..., e) => e)
 //│ ╔══[COMPILATION ERROR] Spread parameters must be the last in the parameter list.
-//│ ║  l.42: 	arr.map((..., e) => e)
+//│ ║  l.44: 	arr.map((..., e) => e)
 //│ ╙──      	         ^^^
 //│ ═══[RUNTIME ERROR] Error: Function expected 2 arguments but got 3
 
@@ -80,10 +82,10 @@ if arr is Array then "ok"
 :fixme // TODO handle?
 if arr is Array(n) then n
 //│ ╔══[COMPILATION ERROR] Class Array does not have a parameter list
-//│ ║  l.81: 	if arr is Array(n) then n
+//│ ║  l.83: 	if arr is Array(n) then n
 //│ ║        	          ^^^^^
 //│ ╟── but the pattern has one sub-pattern
-//│ ║  l.81: 	if arr is Array(n) then n
+//│ ║  l.83: 	if arr is Array(n) then n
 //│ ╙──      	                ^
 //│ ═══[RUNTIME ERROR] Error: match error
 

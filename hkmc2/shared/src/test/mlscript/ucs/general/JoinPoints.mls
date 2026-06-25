@@ -12,7 +12,7 @@ x => if x is 0 then 1
 //│   }
 //│   throw globalThis.Object.freeze(new globalThis.Error("match error"));
 //│ });
-//│ return lambda
+//│ block$res1 = lambda;
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = fun
 
@@ -36,7 +36,7 @@ x => if x is [[0]] then 1
 //│   }
 //│   throw globalThis.Object.freeze(new globalThis.Error("match error"));
 //│ });
-//│ return lambda1
+//│ block$res2 = lambda1;
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = fun
 

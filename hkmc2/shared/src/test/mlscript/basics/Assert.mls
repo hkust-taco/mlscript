@@ -8,14 +8,13 @@ let xs = [1, 2, 3]
 assert true
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ if (true === true) {
-//│   return runtime.Unit
-//│ }
-//│ return runtime.safeCall(runtime.assertFail("Assert.mls", "9"));
+//│   block$res2 = runtime.Unit;
+//│ } else { block$res2 = runtime.safeCall(runtime.assertFail("Assert.mls", "9")); }
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 :re
 assert false
-//│ ═══[RUNTIME ERROR] Error: Assertion failed (Assert.mls:18)
+//│ ═══[RUNTIME ERROR] Error: Assertion failed (Assert.mls:17)
 
 assert xs is Array
 
@@ -26,11 +25,10 @@ assert xs is Array
 assert(true); 123
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ if (123 === true) {
-//│   return runtime.Unit
-//│ }
-//│ return runtime.safeCall(runtime.assertFail("Assert.mls", "27"));
+//│   block$res5 = runtime.Unit;
+//│ } else { block$res5 = runtime.safeCall(runtime.assertFail("Assert.mls", "26")); }
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
-//│ ═══[RUNTIME ERROR] Error: Assertion failed (Assert.mls:27)
+//│ ═══[RUNTIME ERROR] Error: Assertion failed (Assert.mls:26)
 
 // * FIXME: the `else` is parsed as part of the `assert`!
 :sjs
@@ -41,11 +39,11 @@ if 1 is
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ if (1 === 2) {
 //│   if (true === true) {
-//│     return runtime.Unit
+//│     block$res6 = runtime.Unit;
+//│   } else {
+//│     block$res6 = 3;
 //│   }
-//│   return 3;
-//│ }
-//│ throw globalThis.Object.freeze(new globalThis.Error("match error"));
+//│ } else { throw globalThis.Object.freeze(new globalThis.Error("match error")) }
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ ═══[RUNTIME ERROR] Error: match error
 

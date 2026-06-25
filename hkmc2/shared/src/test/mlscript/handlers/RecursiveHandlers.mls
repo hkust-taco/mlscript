@@ -316,12 +316,9 @@ str
 //│   h11 = new Handler$h1$3();
 //│   runtime.enterHandleBlock(h11, handleBlock$10);
 //│   if (runtime.curEffect === null) {
-//│     return str
-//│   }
-//│   runtime.topLevelEffect(false);
-//│   return str;
-//│ }
-//│ return str;
+//│     block$res11 = str;
+//│   } else { runtime.topLevelEffect(false); block$res11 = str; }
+//│ } else { block$res11 = str; }
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = "BABABA"
 //│ str = "BABABA"

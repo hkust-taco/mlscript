@@ -96,7 +96,7 @@ A.sum(20000)
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "A"];
 //│ });
-//│ return A1.sum(20000)
+//│ block$res4 = A1.sum(20000);
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 200010000
 

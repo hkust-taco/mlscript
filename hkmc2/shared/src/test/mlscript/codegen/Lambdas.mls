@@ -6,7 +6,7 @@ x =>
   let y = x
   y
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let lambda; lambda = (undefined, function (x) { return x }); return lambda
+//│ let lambda; lambda = (undefined, function (x) { return x }); block$res1 = lambda;
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = fun
 
@@ -14,7 +14,7 @@ x =>
 :sjs
 (acc, _) => acc
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let lambda1; lambda1 = (undefined, function (acc, _) { return acc }); return lambda1
+//│ let lambda1; lambda1 = (undefined, function (acc, _) { return acc }); block$res2 = lambda1;
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = fun
 
@@ -49,7 +49,7 @@ x => if x is (0 | 1) then 1
 //│   }
 //│   throw globalThis.Object.freeze(new globalThis.Error("match error"))
 //│ });
-//│ return lambda4
+//│ block$res7 = lambda4;
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = fun
 

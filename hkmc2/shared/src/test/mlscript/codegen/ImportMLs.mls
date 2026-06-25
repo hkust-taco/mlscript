@@ -20,7 +20,7 @@ open Option
 :sjs
 None isDefined()
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ return Option.isDefined(Option.None)
+//│ block$res6 = Option.isDefined(Option.None);
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = false
 
@@ -40,7 +40,9 @@ Some(1)
 :sjs
 (new Some(1)) isDefined()
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let tmp3; tmp3 = globalThis.Object.freeze(new Option.Some.class(1)); return Option.isDefined(tmp3)
+//│ let tmp3;
+//│ tmp3 = globalThis.Object.freeze(new Option.Some.class(1));
+//│ block$res11 = Option.isDefined(tmp3);
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = true
 
@@ -68,14 +70,14 @@ None == Option.None
 :re
 Option.oops
 //│ ╔══[COMPILATION ERROR] Module 'Option' does not contain member 'oops'
-//│ ║  l.69: 	Option.oops
+//│ ║  l.71: 	Option.oops
 //│ ╙──      	      ^^^^^
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'oops' yielded 'undefined'
 
 :e
 open Option { oops }
 //│ ╔══[COMPILATION ERROR] Module 'Option' does not contain member 'oops'
-//│ ║  l.76: 	open Option { oops }
+//│ ║  l.78: 	open Option { oops }
 //│ ╙──      	              ^^^^
 
 oops
@@ -84,7 +86,7 @@ oops
 :re
 Option.None.oops
 //│ ╔══[COMPILATION ERROR] Object 'None' does not contain member 'oops'
-//│ ║  l.85: 	Option.None.oops
+//│ ║  l.87: 	Option.None.oops
 //│ ╙──      	           ^^^^^
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'oops' yielded 'undefined'
 

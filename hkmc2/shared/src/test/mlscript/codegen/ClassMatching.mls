@@ -12,9 +12,8 @@ if Some(0) is Some(x) then x
 //│ let scrut;
 //│ scrut = Some1(0);
 //│ if (scrut instanceof Some1.class) {
-//│   return scrut.value
-//│ }
-//│ throw globalThis.Object.freeze(new globalThis.Error("match error"));
+//│   block$res3 = scrut.value;
+//│ } else { throw globalThis.Object.freeze(new globalThis.Error("match error")) }
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 0
 
@@ -27,9 +26,8 @@ if s is
   Some(x) then x
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ if (s instanceof Some1.class) {
-//│   return s.value
-//│ }
-//│ throw globalThis.Object.freeze(new globalThis.Error("match error"));
+//│   block$res5 = s.value;
+//│ } else { throw globalThis.Object.freeze(new globalThis.Error("match error")) }
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 0
 
@@ -95,7 +93,7 @@ x => if x is Some(x) then x
 //│   }
 //│   throw globalThis.Object.freeze(new globalThis.Error("match error"));
 //│ });
-//│ return lambda
+//│ block$res9 = lambda;
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = fun
 

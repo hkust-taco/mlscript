@@ -31,7 +31,7 @@ fun foo =
 :sjs
 foo
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ Predef.print(1); Predef.print("..."); return runtime.Unit
+//│ Predef.print(1); Predef.print("..."); block$res6 = runtime.Unit;
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > 1
 //│ > ...

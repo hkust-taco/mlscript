@@ -179,9 +179,9 @@ result
 //│   }
 //│ });
 //│ runtime.enterHandleBlock(h7, handleBlock$7);
-//│ if (runtime.curEffect === null) { return result }
-//│ runtime.topLevelEffect(false);
-//│ return result;
+//│ if (runtime.curEffect === null) {
+//│   block$res10 = result;
+//│ } else { runtime.topLevelEffect(false); block$res10 = result; }
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = "54321"
 //│ result = "54321"

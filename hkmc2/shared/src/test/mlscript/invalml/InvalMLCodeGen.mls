@@ -7,7 +7,7 @@
 :sjs
 42
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ return 42
+//│ block$res2 = 42;
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 42
 //│ Type: Int
@@ -15,7 +15,7 @@
 :sjs
 1 + 1
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ return 1 + 1
+//│ block$res3 = 1 + 1;
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 2
 //│ Type: Int
@@ -24,7 +24,7 @@
 :sjs
 1.0 +. 2.14
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ return 1.0 + 2.14
+//│ block$res4 = 1.0 + 2.14;
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 3.14
 //│ Type: Num
@@ -33,7 +33,7 @@
 :sjs
 let x = 1 in x + 1
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ return 1 + 1
+//│ block$res5 = 1 + 1;
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 2
 //│ Type: Int
@@ -42,7 +42,7 @@ let x = 1 in x + 1
 :sjs
 "abc"
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ return "abc"
+//│ block$res6 = "abc";
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = "abc"
 //│ Type: Str
@@ -50,7 +50,7 @@ let x = 1 in x + 1
 :sjs
 false
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ return false
+//│ block$res7 = false;
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = false
 //│ Type: Bool
@@ -58,7 +58,7 @@ false
 :sjs
 (x => x) as [T] -> T -> T
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let lambda1; lambda1 = (undefined, function (x) { return x }); return lambda1
+//│ let lambda1; lambda1 = (undefined, function (x) { return x }); block$res8 = lambda1;
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = fun
 //│ Type: ['T] -> ('T) ->{⊥} 'T
@@ -87,7 +87,7 @@ data class Foo(x: Int)
 :sjs
 new Foo(42)
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ return globalThis.Object.freeze(new Foo1.class(42))
+//│ block$res10 = globalThis.Object.freeze(new Foo1.class(42));
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = Foo(42)
 //│ Type: Foo
@@ -96,7 +96,7 @@ new Foo(42)
 :sjs
 let foo = new Foo(42) in foo.Foo#x
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let foo; foo = globalThis.Object.freeze(new Foo1.class(42)); return foo.x
+//│ let foo; foo = globalThis.Object.freeze(new Foo1.class(42)); block$res11 = foo.x;
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 42
 //│ Type: Int
@@ -112,7 +112,7 @@ fun inc(x) = x + 1
 :sjs
 inc(41)
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ return 41 + 1
+//│ block$res13 = 41 + 1;
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 42
 //│ Type: Int
@@ -121,7 +121,7 @@ inc(41)
 :sjs
 if 1 == 2 then 0 else 42
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let scrut; scrut = 1 == 2; if (scrut === true) { return 0 } return 42;
+//│ let scrut; scrut = 1 == 2; if (scrut === true) { block$res14 = 0; } else { block$res14 = 42; }
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 42
 //│ Type: Int
@@ -130,7 +130,7 @@ if 1 == 2 then 0 else 42
 :sjs
 if 1 is Int then 1 else 0
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ if (globalThis.Number.isInteger(1)) { return 1 } return 0;
+//│ if (globalThis.Number.isInteger(1)) { block$res15 = 1; } else { block$res15 = 0; }
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 1
 //│ Type: Int
@@ -146,8 +146,7 @@ if foo is Foo then 1 else 0
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let foo1;
 //│ foo1 = globalThis.Object.freeze(new Foo3.class());
-//│ if (foo1 instanceof Foo3.class) { return 1 }
-//│ return 0;
+//│ if (foo1 instanceof Foo3.class) { block$res17 = 1; } else { block$res17 = 0; }
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 1
 //│ foo = Foo()
@@ -204,11 +203,10 @@ fun nott = case
 nott of false
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ if (false === true) {
-//│   return false
+//│   block$res20 = false;
 //│ } else if (false === false) {
-//│   return true
-//│ }
-//│ throw globalThis.Object.freeze(new globalThis.Error.class("match error"));
+//│   block$res20 = true;
+//│ } else { throw globalThis.Object.freeze(new globalThis.Error.class("match error")) }
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = true
 //│ Type: Bool
@@ -246,7 +244,7 @@ fact(3)
 :sjs
 region x in 42
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ new globalThis.Region(); return 42
+//│ new globalThis.Region(); block$res23 = 42;
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 42
 //│ Type: Int
@@ -255,7 +253,7 @@ region x in 42
 :sjs
 region x in x
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ return new globalThis.Region()
+//│ block$res24 = new globalThis.Region();
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = Region
 //│ Type: Region[?]
@@ -264,7 +262,7 @@ region x in x
 :sjs
 region x in x.ref 42
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let x; x = new globalThis.Region(); return new globalThis.Ref(x, 42)
+//│ let x; x = new globalThis.Region(); block$res25 = new globalThis.Ref(x, 42);
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = Ref(Region, 42)
 //│ Type: Ref[Int, ?]
@@ -273,7 +271,7 @@ region x in x.ref 42
 :sjs
 region x in let y = x.ref 42 in !(y)
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let x1, y; x1 = new globalThis.Region(); y = new globalThis.Ref(x1, 42); return y.value
+//│ let x1, y; x1 = new globalThis.Region(); y = new globalThis.Ref(x1, 42); block$res26 = y.value;
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 42
 //│ Type: Int
@@ -282,7 +280,11 @@ region x in let y = x.ref 42 in !(y)
 :sjs
 region x in let y = x.ref 42 in y := 0
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let x2, y1; x2 = new globalThis.Region(); y1 = new globalThis.Ref(x2, 42); y1.value = 0; return 0
+//│ let x2, y1;
+//│ x2 = new globalThis.Region();
+//│ y1 = new globalThis.Ref(x2, 42);
+//│ y1.value = 0;
+//│ block$res27 = 0;
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 0
 //│ Type: Int

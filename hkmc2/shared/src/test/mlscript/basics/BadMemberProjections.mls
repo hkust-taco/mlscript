@@ -17,7 +17,7 @@
 //│ lambda = (undefined, function (self, ...args) {
 //│   return runtime.safeCall(self.x(...args))
 //│ });
-//│ return lambda
+//│ block$res1 = lambda;
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = fun
 

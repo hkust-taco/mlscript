@@ -22,9 +22,8 @@ globalThis
 if false then 0
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ if (false === true) {
-//│   return 0
-//│ }
-//│ throw globalThis.Object.freeze(new globalThis.Error("match error"));
+//│   block$res4 = 0;
+//│ } else { throw globalThis.Object.freeze(new globalThis.Error("match error")) }
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'freeze')
 //│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'freeze')
@@ -45,9 +44,8 @@ foo()
 //│   throw globalThis.Object.freeze(new globalThis.Error("match error"));
 //│ };
 //│ if (false === true) {
-//│   return 0
-//│ }
-//│ throw globalThis.Object.freeze(new globalThis.Error("match error"));
+//│   block$res5 = 0;
+//│ } else { throw globalThis.Object.freeze(new globalThis.Error("match error")) }
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'freeze')
 //│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'freeze')

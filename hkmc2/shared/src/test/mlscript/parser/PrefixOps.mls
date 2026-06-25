@@ -20,10 +20,7 @@
 //│ ║  l.16: 	1
 //│ ╙──      	^
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ return 3
-//│ ╔══[WARNING] Pure expression in statement position
-//│ ║  l.16: 	1
-//│ ╙──      	^
+//│ block$res4 = 3;
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 3
 
@@ -32,7 +29,7 @@
 + 2
 + 3
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ return 6
+//│ block$res5 = 6;
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 6
 
@@ -50,7 +47,7 @@
 :sjs
 +
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let lambda; lambda = (undefined, function (arg1, arg2) { return arg1 + arg2 }); return lambda
+//│ let lambda; lambda = (undefined, function (arg1, arg2) { return arg1 + arg2 }); block$res8 = lambda;
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = fun
 
@@ -61,7 +58,7 @@
 1
 *
 //│ ╔══[WARNING] Pure expression in statement position
-//│ ║  l.61: 	1
+//│ ║  l.58: 	1
 //│ ╙──      	^
 //│ = fun
 
@@ -90,7 +87,7 @@ fun (??) foo(x, y) = x + y
 :pe
 ?? 1
 //│ ╔══[PARSE ERROR] Expected end of input; found literal instead
-//│ ║  l.91: 	?? 1
+//│ ║  l.88: 	?? 1
 //│ ╙──      	   ^
 //│ = fun foo
 

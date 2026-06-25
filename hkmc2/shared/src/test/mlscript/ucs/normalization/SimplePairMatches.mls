@@ -25,7 +25,7 @@ x => if x is Pair(A, B) then 1
 //│   }
 //│   throw globalThis.Object.freeze(new globalThis.Error("match error"));
 //│ });
-//│ return lambda
+//│ block$res2 = lambda;
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = fun
 

@@ -103,12 +103,11 @@ if xs is
 //│ if (runtime.Tuple.isArrayLike(xs1) && xs1.length >= 1) {
 //│   element0$ = runtime.Tuple.get(xs1, 0);
 //│   middleElements = runtime.Tuple.slice(xs1, 1, 0);
-//│   return globalThis.Object.freeze([
+//│   block$res35 = globalThis.Object.freeze([
 //│     element0$,
 //│     middleElements
-//│   ])
-//│ }
-//│ throw globalThis.Object.freeze(new globalThis.Error("match error"));
+//│   ]);
+//│ } else { throw globalThis.Object.freeze(new globalThis.Error("match error")) }
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = [1, [2, 3]]
 

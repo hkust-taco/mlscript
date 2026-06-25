@@ -59,7 +59,7 @@ xs \
 //│   return x * 2
 //│ });
 //│ tmp1 = map(lambda5);
-//│ return Predef.passTo(xs1, tmp1)
+//│ block$res15 = Predef.passTo(xs1, tmp1);
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ ═══[RUNTIME ERROR] Error: Function 'map' expected 2 arguments but got 1
 
