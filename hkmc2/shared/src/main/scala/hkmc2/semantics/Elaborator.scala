@@ -736,6 +736,8 @@ extends Importer with ucs.SplitElaborator:
       raise:
         ErrorReport(msg"Expected a right-hand side for this assignment" -> tree.toLoc :: Nil)
       error
+    case TryFinally(tryBody, finallyBody) =>
+      Term.Try(subterm(tryBody), subterm(finallyBody))
     case (hd @ Hndl(id: Ident, c, Block(sts_), S(bod))) => ctx.nest(OuterCtx.LambdaOrHandlerBlock).givenIn:
       
       val sym = VarSymbol(id)
