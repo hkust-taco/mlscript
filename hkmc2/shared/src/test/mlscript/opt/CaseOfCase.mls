@@ -237,16 +237,14 @@ x => if partlyKnownProducer(x) is
 //│ let lambda;
 //│ @private
 //│ define lambda as fun lambda¹(x) {
-//│   let selRes;
+//│   let inlinedVal;
 //│   match x
 //│     "" =>
+//│       set inlinedVal = 0;
 //│       return Predef⁰.print⁰("Z")
 //│     "1" =>
-//│       set selRes = x.length﹖;
-//│       do x.length$__checkNotMethod﹖;
-//│       match selRes
-//│         undefined =>
-//│           throw new globalThis⁰.Error﹖("Access to required field 'length' yielded 'undefined'")
+//│       set inlinedVal = x.length﹖;
+//│       match inlinedVal
 //│         0 =>
 //│           return Predef⁰.print⁰("Z")
 //│         1 =>
@@ -255,6 +253,7 @@ x => if partlyKnownProducer(x) is
 //│           return Predef⁰.print⁰("?")
 //│       end
 //│     "2" =>
+//│       set inlinedVal = 1;
 //│       return Predef⁰.print⁰("O")
 //│     else
 //│       throw new globalThis⁰.Error⁰("match error")
@@ -313,20 +312,13 @@ x => if partlyKnownProducer(x) is
 //│ let lambda;
 //│ @private
 //│ define lambda as fun lambda³(x) {
-//│   let inlinedVal, selRes;
+//│   let inlinedVal;
 //│   match x
 //│     "" =>
 //│       set inlinedVal = 0;
 //│       end
 //│     "1" =>
-//│       set selRes = x.length﹖;
-//│       do x.length$__checkNotMethod﹖;
-//│       match selRes
-//│         undefined =>
-//│           throw new globalThis⁰.Error﹖("Access to required field 'length' yielded 'undefined'")
-//│         else
-//│           set inlinedVal = selRes;
-//│           end
+//│       set inlinedVal = x.length﹖;
 //│       end
 //│     "2" =>
 //│       set inlinedVal = 1;
@@ -356,16 +348,14 @@ x => if partlyKnownProducer(x) is
 //│ let lambda;
 //│ @private
 //│ define lambda as fun lambda⁴(x) {
-//│   let selRes;
+//│   let inlinedVal;
 //│   match x
 //│     "" =>
+//│       set inlinedVal = 0;
 //│       return Predef⁰.print⁰("Z")
 //│     "1" =>
-//│       set selRes = x.length﹖;
-//│       do x.length$__checkNotMethod﹖;
-//│       match selRes
-//│         undefined =>
-//│           throw new globalThis⁰.Error﹖("Access to required field 'length' yielded 'undefined'")
+//│       set inlinedVal = x.length﹖;
+//│       match inlinedVal
 //│         0 =>
 //│           return Predef⁰.print⁰("Z")
 //│         1 =>
@@ -374,6 +364,7 @@ x => if partlyKnownProducer(x) is
 //│           return Predef⁰.print⁰("Hello", "hello", "hello", "hello", "hello", "hello", "hello", "hello", "hello", "hello")
 //│       end
 //│     "2" =>
+//│       set inlinedVal = 1;
 //│       return Predef⁰.print⁰("O")
 //│     else
 //│       throw new globalThis⁰.Error⁰("match error")

@@ -217,6 +217,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
       val (params, bodyDoc) = setupFunction(none, ps, bod, isLambda = true)
       doc"($params) => ${ braced(bodyDoc) }"
     case s @ Select(qual, id) => 
+      val checkCurrentSelection = checkSelections && s.sanitize
       val dotClass = s.symbol match
         case S(ds) if ds.shouldBeLifted => doc".class"
         case _ => doc""
@@ -230,7 +231,11 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
         else name.toIntOption match
           case S(index) => doc"[$index]"
           case N => doc"[${makeStringLiteral(name)}]"
-      doc"${resultQual(qual)}${fieldDoc}${dotClass}"
+      val qualJS = resultQual(qual)
+      val sel = doc"${qualJS}${fieldDoc}${dotClass}"
+      if checkCurrentSelection then
+        doc"($runtimeVar.checkSelect($sel, ${makeStringLiteral(id.name)}, $qualJS))"
+      else sel
     case DynSelect(qual, fld, ai) =>
       if ai
       then doc"${resultQual(qual)}.at(${result(fld)})"

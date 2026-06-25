@@ -41,6 +41,13 @@ fun checkArgs(functionName, expected, isUB, got) =
       + (if expected === 1 then "" else "s")
       + " but got " + got
 
+fun checkSelect(sel, nme, qual) =
+  if sel === undefined then
+    throw Error("Access to required field '" + nme + "' yielded 'undefined'")
+  else
+    qual.(nme + "$__checkNotMethod")
+    sel
+
 fun safeCall(x) =
   if x is undefined then () else x
 
