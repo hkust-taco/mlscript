@@ -46,7 +46,7 @@ object HandlerLowering:
     case ModCtor(trulyNested: Bool)
     case TopLevel
 
-    // Since constructor are not named, they cannot be resumed
+    // Since constructors are not named, they cannot be resumed
     def inCtor = this === Ctor || this.isInstanceOf[ModCtor]
     def currentBlockIsTrulyNested = this match
       case FunctionLike(_) => true
