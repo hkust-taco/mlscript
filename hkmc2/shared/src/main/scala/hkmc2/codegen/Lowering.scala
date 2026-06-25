@@ -1503,17 +1503,7 @@ trait LoweringSelSanityChecks(using Config, TL, Raise, State)
     // || disamb.exists(_.defn.exists(_.hasDeclareModifier.isEmpty)) // * This checks `declare` members, which is normally unwanted
     then super.setupSelection(prefix, nme, disamb)(k)
     else subTerm(prefix): p =>
-      // val selRes = loweringCtx.registerTempSymbol(N, "selRes")
-      // * We are careful to access `x.f` before `x.f$__checkNotMethod` in case `x` is, eg, `undefined` and
-      // * the access should throw an error like `TypeError: Cannot read property 'f' of undefined`.
       k(Select(p, nme)(disamb, sanitize = true))
-        // .assign(NoSymbol, Select(p, Tree.Ident(nme.name+"$__checkNotMethod"))(N))
-        //   .ifthen(selRes.asSimpleRef,
-        //     Case.Lit(syntax.Tree.UnitLit(false)),
-        //     Throw(Instantiate(mut = false, Select(State.globalThisSymbol.asThis, Tree.Ident("Error"))(N),
-        //       (Value.Lit(syntax.Tree.StrLit(s"Access to required field '${nme.name}' yielded 'undefined'")).asArg :: Nil) :: Nil)(InstantiateMetadata.empty))
-        //   )
-        //   .rest(k(selRes.asSimpleRef))
 
 
 

@@ -234,6 +234,8 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
       val qualJS = resultQual(qual)
       val sel = doc"${qualJS}${fieldDoc}${dotClass}"
       if checkCurrentSelection then
+        // * We are careful to access `x.f` before `x.f$__checkNotMethod` in case `x` is, eg, `undefined` and
+        // * the access should throw an error like `TypeError: Cannot read property 'f' of undefined`.
         doc"($runtimeVar.checkSelect($sel, ${makeStringLiteral(id.name)}, $qualJS))"
       else sel
     case DynSelect(qual, fld, ai) =>
