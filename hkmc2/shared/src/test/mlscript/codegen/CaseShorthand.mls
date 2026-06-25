@@ -7,7 +7,7 @@ case x then x
 :sjs
 case { x then x }
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let lambda1; lambda1 = (undefined, function (caseScrut) { return caseScrut }); block$res2 = lambda1;
+//│ let lambda1; lambda1 = (undefined, function (caseScrut) { return caseScrut }); return lambda1
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = fun
 
@@ -22,7 +22,7 @@ x => if x is
 //│   }
 //│   throw globalThis.Object.freeze(new globalThis.Error("match error"));
 //│ });
-//│ block$res3 = lambda2;
+//│ return lambda2
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = fun
 
@@ -36,7 +36,7 @@ case 0 then true
 //│   }
 //│   throw globalThis.Object.freeze(new globalThis.Error("match error"));
 //│ });
-//│ block$res4 = lambda3;
+//│ return lambda3
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = fun
 
@@ -54,7 +54,7 @@ case
 //│   }
 //│   return runtime.Unit;
 //│ });
-//│ block$res5 = lambda4;
+//│ return lambda4
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = fun
 
@@ -94,7 +94,7 @@ case
 //│   if (caseScrut === 0) { return true }
 //│   return false;
 //│ });
-//│ block$res12 = lambda10;
+//│ return lambda10
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = fun
 

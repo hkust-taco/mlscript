@@ -23,17 +23,15 @@ if a is
   D then 4
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ if (a instanceof A1.class) {
-//│   block$res4 = 1;
+//│   return 1
 //│ } else if (a instanceof B1.class) {
-//│   block$res4 = 2;
+//│   return 2
 //│ } else if (a instanceof C1.class) {
-//│   block$res4 = 3;
+//│   return 3
 //│ } else if (a instanceof D1.class) {
-//│   block$res4 = 4;
-//│ } else {
-//│   throw globalThis.Object.freeze(new globalThis.Error("match error"))
+//│   return 4
 //│ }
-//│ /* Rest moved to non-abortive branch(es) */
+//│ throw globalThis.Object.freeze(new globalThis.Error("match error"));
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 1
 
@@ -48,15 +46,13 @@ if a is
       C then 3
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ if (a instanceof A1.class) {
-//│   block$res5 = 1;
+//│   return 1
 //│ } else if (a instanceof B1.class) {
-//│   block$res5 = 2;
+//│   return 2
 //│ } else if (a instanceof C1.class) {
-//│   block$res5 = 3;
-//│ } else {
-//│   throw globalThis.Object.freeze(new globalThis.Error("match error"))
+//│   return 3
 //│ }
-//│ /* Rest moved to non-abortive branch(es) */
+//│ throw globalThis.Object.freeze(new globalThis.Error("match error"));
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 1
 
@@ -71,21 +67,17 @@ if a is
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ if (a instanceof A1.class) {
 //│   if (b instanceof A1.class) {
-//│     block$res6 = 1;
+//│     return 1
 //│   } else if (b instanceof B1.class) {
-//│     block$res6 = 2;
-//│   } else {
-//│     throw globalThis.Object.freeze(new globalThis.Error("match error"))
+//│     return 2
 //│   }
-//│   /* Rest moved to non-abortive branch(es) */
+//│   throw globalThis.Object.freeze(new globalThis.Error("match error"));
 //│ } else if (a instanceof B1.class) {
-//│   block$res6 = 2;
+//│   return 2
 //│ } else if (a instanceof C1.class) {
-//│   block$res6 = 3;
-//│ } else {
-//│   throw globalThis.Object.freeze(new globalThis.Error("match error"))
+//│   return 3
 //│ }
-//│ /* Rest moved to non-abortive branch(es) */
+//│ throw globalThis.Object.freeze(new globalThis.Error("match error"));
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 2
 
@@ -126,7 +118,7 @@ print(x)
 //│   throw globalThis.Object.freeze(new globalThis.Error("match error"))
 //│ }
 //│ x = tmp;
-//│ block$res7 = Predef.print(tmp);
+//│ return Predef.print(tmp)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > 1
 //│ x = 1
@@ -141,13 +133,11 @@ if a is
   B then 2 + tmp
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ if (a instanceof A1.class) {
-//│   block$res8 = 1;
+//│   return 1
 //│ } else if (a instanceof B1.class) {
-//│   block$res8 = 4;
-//│ } else {
-//│   throw globalThis.Object.freeze(new globalThis.Error("match error"))
+//│   return 4
 //│ }
-//│ /* Rest moved to non-abortive branch(es) */
+//│ throw globalThis.Object.freeze(new globalThis.Error("match error"));
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 1
 
@@ -165,17 +155,13 @@ if a is
   B then 2 + tmp
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ if (a instanceof A1.class) {
-//│   block$res10 = 1;
-//│ } else {
-//│   Predef.print(3);
-//│   if (a instanceof B1.class) {
-//│     block$res10 = 5;
-//│   } else {
-//│     throw globalThis.Object.freeze(new globalThis.Error("match error"))
-//│   }
-//│   /* Rest moved to non-abortive branch(es) */
+//│   return 1
 //│ }
-//│ /* Rest moved to non-abortive branch(es) */
+//│ Predef.print(3);
+//│ if (a instanceof B1.class) {
+//│   return 5
+//│ }
+//│ throw globalThis.Object.freeze(new globalThis.Error("match error"));
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 1
 
@@ -192,15 +178,13 @@ if a is
     print(x)
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ if (a instanceof A1.class) {
-//│   block$res11 = 1;
+//│   return 1
 //│ } else if (a instanceof B1.class) {
-//│   block$res11 = Predef.print(2);
+//│   return Predef.print(2)
 //│ } else if (a instanceof C1.class) {
-//│   block$res11 = Predef.print(3);
-//│ } else {
-//│   throw globalThis.Object.freeze(new globalThis.Error("match error"))
+//│   return Predef.print(3)
 //│ }
-//│ /* Rest moved to non-abortive branch(es) */
+//│ throw globalThis.Object.freeze(new globalThis.Error("match error"));
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 1
 
@@ -221,22 +205,20 @@ if a is
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let tmp1, tmp2, tmp3;
 //│ if (a instanceof B1.class) {
-//│   block$res12 = 1;
-//│ } else {
-//│   if (a instanceof A1.class) {
-//│     tmp1 = 2;
-//│   } else if (a instanceof C1.class) {
-//│     tmp1 = 3;
-//│   } else {
-//│     throw globalThis.Object.freeze(new globalThis.Error("match error"))
-//│   }
-//│   Predef.print(tmp1);
-//│   tmp2 = tmp1 + 1;
-//│   Predef.print(tmp2);
-//│   tmp3 = tmp1 + 2;
-//│   block$res12 = Predef.print(tmp3);
+//│   return 1
 //│ }
-//│ /* Rest moved to non-abortive branch(es) */
+//│ if (a instanceof A1.class) {
+//│   tmp1 = 2;
+//│ } else if (a instanceof C1.class) {
+//│   tmp1 = 3;
+//│ } else {
+//│   throw globalThis.Object.freeze(new globalThis.Error("match error"))
+//│ }
+//│ Predef.print(tmp1);
+//│ tmp2 = tmp1 + 1;
+//│ Predef.print(tmp2);
+//│ tmp3 = tmp1 + 2;
+//│ return Predef.print(tmp3);
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > 2
 //│ > 3

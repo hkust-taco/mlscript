@@ -77,12 +77,10 @@ do
 //│ let f, lambda;
 //│ f = 1;
 //│ lambda = (undefined, function () {
-//│   loopLabel: while (true) {
-//│     continue loopLabel;
-//│   }
+//│   loopLabel: while (true) { continue loopLabel; }
 //│ });
 //│ Predef.print(lambda);
-//│ block$res6 = runtime.Unit;
+//│ return runtime.Unit
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > fun
 //│ f = 1
@@ -92,10 +90,10 @@ do
 let foo = 1
 fun foo(x) = foo
 //│ ╔══[COMPILATION ERROR] Name 'foo' is already used
-//│ ║  l.92: 	let foo = 1
+//│ ║  l.90: 	let foo = 1
 //│ ║        	    ^^^^^^^
 //│ ╟── by a member declared in the same block
-//│ ║  l.93: 	fun foo(x) = foo
+//│ ║  l.91: 	fun foo(x) = foo
 //│ ╙──      	^^^^^^^^^^^^^^^^
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let foo4; foo4 = 1;
@@ -106,7 +104,7 @@ fun foo(x) = foo
 :re
 foo(1)
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ block$res8 = runtime.safeCall(foo4(1));
+//│ return runtime.safeCall(foo4(1))
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ ═══[RUNTIME ERROR] TypeError: foo4 is not a function
 

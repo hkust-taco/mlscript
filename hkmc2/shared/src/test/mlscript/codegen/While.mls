@@ -70,7 +70,7 @@ f
 //│     break inlinedLbl;
 //│   }
 //│ }
-//│ block$res10 = inlinedVal;
+//│ return inlinedVal
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > Hello World
 //│ = 42
@@ -255,7 +255,7 @@ while x is {} do()
 //│   if (x3 instanceof globalThis.Object) { continue lbl11 }
 //│   break;
 //│ }
-//│ block$res31 = runtime.Unit;
+//│ return runtime.Unit
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 

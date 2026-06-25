@@ -27,10 +27,10 @@ true and test(42)
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ if (true === true) {
 //│   Predef.print(42);
-//│   if (42 === true) {
-//│     block$res5 = true;
-//│   } else { block$res5 = false; }
-//│ } else { block$res5 = false; }
+//│   if (42 === true) { return true }
+//│   return false;
+//│ }
+//│ return false;
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > 42
 //│ = false

@@ -18,7 +18,7 @@ foo()
 //│   return M1.concat(tmp1, "c")
 //│ };
 //│ tmp = M1.concat("a", "b");
-//│ block$res3 = M1.concat(tmp, "c");
+//│ return M1.concat(tmp, "c")
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = "abc"
 

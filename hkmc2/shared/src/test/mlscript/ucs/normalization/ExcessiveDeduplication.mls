@@ -20,12 +20,10 @@ if
   y then 0
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ if (x === true) {
-//│   block$res2 = 0;
-//│ } else {
-//│   if (y === true) {
-//│     block$res2 = 0;
-//│   } else { throw globalThis.Object.freeze(new globalThis.Error("match error")) }
+//│   return 0
 //│ }
+//│ if (y === true) { return 0 }
+//│ throw globalThis.Object.freeze(new globalThis.Error("match error"));
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 0
 
@@ -36,12 +34,10 @@ if
   y then 1
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ if (x === true) {
-//│   block$res3 = 0;
-//│ } else {
-//│   if (y === true) {
-//│     block$res3 = 1;
-//│   } else { throw globalThis.Object.freeze(new globalThis.Error("match error")) }
+//│   return 0
 //│ }
+//│ if (y === true) { return 1 }
+//│ throw globalThis.Object.freeze(new globalThis.Error("match error"));
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 0
 
@@ -112,7 +108,7 @@ if false do ()
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ return 123
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ block$res5 = 123;
+//│ return 123
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 123
 
@@ -136,7 +132,7 @@ object Obj with
 :sjs
 if Obj.test do ()
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ Obj1.test; block$res8 = runtime.Unit;
+//│ Obj1.test; return runtime.Unit
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > hi
 

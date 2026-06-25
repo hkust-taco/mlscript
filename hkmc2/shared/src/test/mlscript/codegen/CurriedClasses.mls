@@ -44,7 +44,7 @@ h.y
 :expect 2
 A(1)(2).y
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let tmp; tmp = globalThis.Object.freeze(new A1.class(1, 2)); block$res4 = tmp.y;
+//│ let tmp; tmp = globalThis.Object.freeze(new A1.class(1, 2)); return tmp.y
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 2
 
@@ -71,7 +71,7 @@ new A(...[4])(...[5]).y
 //│   5
 //│ ]);
 //│ tmp3 = globalThis.Object.freeze(new A1.class(...tmp1, ...tmp2));
-//│ block$res7 = tmp3.y;
+//│ return tmp3.y
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 5
 
