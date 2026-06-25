@@ -46,7 +46,7 @@ class ClassParamFlattener(using State) extends BlockTransformer(SymbolSubst.Id):
   
   private def classPathFor(fun: Path, cls: ClassSymbol): Opt[Path] = fun match
     case Value.MemberRef(bms, _) => S(bms.asMemberRef(cls))
-    case Select(qual, name) => S(Select(qual, name)(S(cls)))
+    case s @ Select(qual, name) => S(Select(qual, name)(S(cls))(s.sanitize))
     case _ => N
 
   private def saturatedCurriedClassCall(fun: Path, argss: NELs[Ls[Arg]]): Opt[Path] =

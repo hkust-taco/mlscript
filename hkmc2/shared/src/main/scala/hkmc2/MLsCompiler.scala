@@ -115,7 +115,6 @@ class MLsCompiler
       )
       val low = ltl.givenIn:
         new codegen.Lowering()
-          with codegen.LoweringSelSanityChecks
       val jsb = ltl.givenIn:
         codegen.js.JSBuilder()
       val lowered = low.program(blk, symbolsToPreserve = Set.empty)

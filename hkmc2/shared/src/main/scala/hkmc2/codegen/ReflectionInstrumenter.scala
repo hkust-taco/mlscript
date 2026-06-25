@@ -214,13 +214,13 @@ class ReflectionInstrumenter(using State, Raise, Ctx) extends BlockTransformer(n
           End()
     // desugar Runtime.Tuple.get into Select
     case Call(fun, Ls(Arg(_, scrut), Arg(_, Value.Lit(Tree.IntLit(idx)))) :: _) if fun == Value.SimpleRef(State.runtimeSymbol).selSN("Tuple").selSN("get") =>
-      transformPath(Select(scrut, Tree.Ident(idx.toString()))(N))(k)
+      transformPath(Select(scrut, Tree.Ident(idx.toString()))(N)(false))(k)
     case Call(fun, argss) =>
       val stagedFunPath = fun match
         case s @ Select(qual, Tree.Ident(name)) => s.symbol.flatMap({
             case t: TermSymbol => t.owner.flatMap({ case sym: DefinitionSymbol[?] =>
                 sym.defn.flatMap(_.hasStagedModifier.map(_ =>
-                  Select(qual, Tree.Ident(name + "_gen"))(N)
+                  Select(qual, Tree.Ident(name + "_gen"))(N)(false)
                 ))
               })
             case _ => N
@@ -304,7 +304,7 @@ class ReflectionInstrumenter(using State, Raise, Ctx) extends BlockTransformer(n
                 // * owned field symbol is selected on its owner rather than emitted as a
                 // * plain reference (which would otherwise reach `JSBuilder`'s owned-`SimpleRef` path).
                 ((cont: Block) => AssignField(lhs, nme, xStaged, cont)(S(ts))):
-                  given Context = ctx.clone() += Select(lhs, nme)(S(ts)) -> xStaged
+                  given Context = ctx.clone() += Select(lhs, nme)(S(ts))(false) -> xStaged
                   transformBlock(rest): (z, ctx) =>
                     blockCtor("Assign", Ls(xSym, y, z), "assign")(k(_, ctx))
         case _ =>

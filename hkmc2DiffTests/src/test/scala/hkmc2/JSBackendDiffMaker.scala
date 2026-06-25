@@ -119,7 +119,6 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
       given Elaborator.Ctx = curCtx
       val low = ltl.givenIn:
         new codegen.Lowering()
-          with codegen.LoweringSelSanityChecks
           with codegen.LoweringTraceLog(traceJS.isSet)
       
       var lowered = low.program(blk, symbolsToPreserve = symbolsToPreserve)

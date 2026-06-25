@@ -1036,8 +1036,8 @@ case class Record(mut: Bool, elems: Ls[RcdArg]) extends Result
 
 
 sealed abstract class Path extends TrivialResult:
-  def selN(id: Tree.Ident): Path = Select(this, id)(N)
-  def sel(id: Tree.Ident, sym: DefinitionSymbol[?]): Path = Select(this, id)(S(sym))
+  def selN(id: Tree.Ident): Path = Select(this, id)(N)(false)
+  def sel(id: Tree.Ident, sym: DefinitionSymbol[?]): Path = Select(this, id)(S(sym))(false)
   def selSN(id: Str): Path = selN(new Tree.Ident(id))
   def asArg = Arg(spread = N, this)
   def targetSymbol: Opt[DefinitionSymbol[?]] = this match
@@ -1048,7 +1048,7 @@ sealed abstract class Path extends TrivialResult:
 /**
  * @param symbol The symbol representing the definition that the selection refers to, if known.
  */
-case class Select(qual: Path, name: Tree.Ident)(val symbol: Opt[DefinitionSymbol[?]], val sanitize: Boolean = false) extends Path with ProductWithExtraInfo:
+case class Select(qual: Path, name: Tree.Ident)(val symbol: Opt[DefinitionSymbol[?]])(val sanitize: Boolean) extends Path with ProductWithExtraInfo:
   def extraInfo(using DebugPrinter): Str = symbol.map(s => s"sym=${s.showAsPlain}").mkString
 
 case class DynSelect(qual: Path, fld: Path, arrayIdx: Bool) extends Path

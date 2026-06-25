@@ -30,7 +30,7 @@ class FirstClassFunctionTransformer
     val callDef = FunDefn.withFreshSymbol(Some(clsSym), new BlockMemberSymbol("call", Nil, true), params :: Nil,
       Return(Call(p, params.params.map(_.sym.asSimpleRef.asArg) ne_:: Nil)(CallMetadata.defaultMlsFun)))(N, annotations = Nil)
     ClsLikeDefn(None, clsSym, defSym, None, syntax.Cls, None, Nil,
-      Some(Select(State.globalThisSymbol.asThis, Tree.Ident("Function"))(Some(ctx.builtins.Function))),
+      Some(Select(State.globalThisSymbol.asThis, Tree.Ident("Function"))(Some(ctx.builtins.Function))(false)),
       callDef :: Nil, Nil, Nil, Assign.discard(
         Call(State.builtinOpsMap("super").asSimpleRef, Nil ne_:: Nil)(CallMetadata.defaultFun),
         End()), End(), None, None)(N, annotations = Nil)
