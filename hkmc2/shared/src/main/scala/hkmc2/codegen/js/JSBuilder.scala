@@ -170,6 +170,12 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
     val res = result(r)
     if r.isInstanceOf[Value.Lit] then doc"(${res})" else res
   
+  def resultInst(r: Result)(using Raise, Scope): Document = 
+    val res = result(r)
+    r match
+    case s: Select if s.sanitize => doc"(${res})"
+    case _ => res
+  
   def result(r: Result)(using Raise, Scope): Document = r match
     case Value.This(ts: semantics.ModuleOrObjectSymbol) if ts.asMod.isDefined =>
       // * Module self-references use the module name itself instead of `this`
@@ -236,14 +242,14 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
       if checkCurrentSelection then
         // * We are careful to access `x.f` before `x.f$__checkNotMethod` in case `x` is, eg, `undefined` and
         // * the access should throw an error like `TypeError: Cannot read property 'f' of undefined`.
-        doc"($runtimeVar.checkSelect($sel, ${makeStringLiteral(id.name)}, $qualJS))"
+        doc"$runtimeVar.checkSelect($sel, ${makeStringLiteral(id.name)}, $qualJS)"
       else sel
     case DynSelect(qual, fld, ai) =>
       if ai
       then doc"${resultQual(qual)}.at(${result(fld)})"
       else doc"${result(qual)}[${result(fld)}]"
     case Instantiate(mut, cls, argss) =>
-      val calls = argss.foldLeft(result(cls)): (acc, args) =>
+      val calls = argss.foldLeft(resultInst(cls)): (acc, args) =>
         doc"${acc}(${args.map(argument).mkDocument(", ")})"
       val inner = doc"new $calls"
       if mut then inner else doc"$freeze(${inner})"

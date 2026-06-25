@@ -190,7 +190,7 @@ if M.A(1).y is
 //│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
 //│ let scrut, scrut1, tmp6;
 //│ tmp6 = runtime.checkCall(M1.A(1));
-//│ scrut = (runtime.checkSelect(tmp6.y, "y", tmp6));
+//│ scrut = runtime.checkSelect(tmp6.y, "y", tmp6);
 //│ scrut1 = runtime.checkCall(Predef.equals(scrut, 1));
 //│ if (scrut1 === true) { block$res17 = scrut; } else { block$res17 = 0; }
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
