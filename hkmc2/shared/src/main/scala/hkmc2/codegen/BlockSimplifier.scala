@@ -412,7 +412,7 @@ class BlockSimplifier
     // Locals read through a conservative/unknown flow state, such as in a `finally`
     // block, must keep all of their assignments: we cannot identify one precise
     // assignment fact to mark live, but the read is still semantically real.
-    val impreciselyReadVars: MutSet[LocalVar] = MutSet.empty
+    val impreciselyTrackedVars: MutSet[LocalVar] = MutSet.empty
     
     
     def apply(prog: Program): Program =
@@ -479,7 +479,7 @@ class BlockSimplifier
             b match
             case ass @ Assign(lhs: LocalVar, rhs, rst)
             if localVars(lhs) && !capturedVars(lhs) && !symbolsToPreserve(lhs)
-              && !impreciselyReadVars(lhs) && !liveAssigns.containsKey(ass)
+              && !impreciselyTrackedVars(lhs) && !liveAssigns.containsKey(ass)
             =>
               registerChange(s"rm ass ${lhs.showDbg} = ${rhs.showDbg}")
               Assign.discard(rhs, applyBlock(rst))
@@ -681,9 +681,7 @@ class BlockSimplifier
     def accessAssignedResults(sym: LocalVar): AssignInfo =
       val res = assignedResults(sym)
       if !changed then
-        res match
-        case Unknown => impreciselyReadVars += sym
-        case _ => liveAssignInfosUntilChangeTriggered += res
+        liveAssignInfosUntilChangeTriggered += res
       res
     
     var inDryRun = false // for traversing loop bodies once before actually transforming the program
@@ -831,9 +829,18 @@ class BlockSimplifier
       case TryBlock(sub, finallyDo, rest) =>
         val sub2 = applyBlock(sub)
         val finallyDo2 =
-          // * This block might be executed from an unknown point in the previous block,
+          // * This block might be executed from an unknown point in `sub` (where the first exception is thrown),
           // * so we have to be conservative and not propagate any information.
+          assignedResults.valuesIterator.foreach(liveAssignInfosUntilChangeTriggered += _)
+          // * ^ all assigned infos are still to be considered live, even though we reset `assignedResults`
           assignedResults = emptyAssignedResults
+          // * Moreover, we have to special-case all assigned local variables, as the corresponding assignments
+          // * might be end up being live eve though local flow analysis would think they are not.
+          sub.definedVars.foreach:
+            case sym: LocalVar =>
+              log(s"Variable ${sym.showDbg} is written in a `finally` block; marking it as imprecise tracked")
+              impreciselyTrackedVars += sym
+            case _ =>
           applyBlock(finallyDo)
         val rest2 = applySubBlock(rest)
         if (sub2 is sub) && (finallyDo2 is finallyDo) && (rest2 is rest) then b
