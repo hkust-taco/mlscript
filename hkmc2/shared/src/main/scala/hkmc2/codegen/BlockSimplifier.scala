@@ -409,10 +409,12 @@ class BlockSimplifier
     //    because that variable will be treated as unknown, since nested definitions start from an empty environment.
     
     
-    lazy val liveAssignInfosUntilChangeTriggered: Buffer[AssignInfo] = Buffer.empty
-    // Locals read through a conservative/unknown flow state, such as in a `finally`
-    // block, must keep all of their assignments: we cannot identify one precise
-    // assignment fact to mark live, but the read is still semantically real.
+    val liveAssignInfosUntilChangeTriggered: Buffer[AssignInfo] = Buffer.empty
+    
+    // * We might need to opt out of tracking some locals, such as those that are assigned
+    // * in places with observable non-local control flow, such as in a `try` block.
+    // * We can't remove assignments to these variables even if they locally look dead,
+    // * as they might in fact not be.
     val impreciselyTrackedVars: MutSet[LocalVar] = MutSet.empty
     
     
