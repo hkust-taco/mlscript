@@ -211,7 +211,7 @@ sealed abstract class Block extends Product:
   
   lazy val scopedVars: collection.Set[ScopedSymbol] = this match
     case Scoped(syms, body) => syms ++ body.scopedVars
-    case _ => this.subBlocks.foldLeft(Set.empty)((vars, blk) => vars ++ blk.scopedVars)
+    case _ => this.subBlocks.iterator.flatMap(_.scopedVars).toSet
   
   lazy val subBlocks: Ls[Block] = this match
     case Match(p, arms, dflt, rest) => p.subBlocks ++ arms.map(_._2) ++ dflt.toList :+ rest
