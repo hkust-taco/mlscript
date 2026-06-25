@@ -63,11 +63,11 @@ val try_catch = RuntimeJS.try_catch
 class EffectHandle(_reified) with
   val reified = _reified
   fun resumeWith(value) =
-    Runtime.try(() => resume(reified.contTrace)(value))
+    _try(() => resume(reified.contTrace)(value))
   fun raise() =
     set curEffect = reified
 
-fun try(f) =
+fun _try(f) =
   let res = f()
   if curEffect !== null then
     let tmp = curEffect

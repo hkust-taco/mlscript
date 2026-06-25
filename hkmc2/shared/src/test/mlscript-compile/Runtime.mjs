@@ -174,7 +174,7 @@ lambda$ = (undefined, function (Runtime2, EffectHandle1, value) {
       resumeWith(value) {
         let lambda$here;
         lambda$here = lambda$(Runtime, this, value);
-        return Runtime.try(lambda$here)
+        return Runtime._try(lambda$here)
       }
       raise() {
         Runtime.curEffect = this.reified;
@@ -775,7 +775,7 @@ lambda$ = (undefined, function (Runtime2, EffectHandle1, value) {
     tmp3 = tmp2 + "' was accessed without being called.";
     throw runtime.safeCall(globalThis.Error(tmp3))
   }
-  static try(f) {
+  static _try(f) {
     let res, scrut, tmp;
     res = runtime.safeCall(f());
     scrut = Runtime.curEffect !== null;

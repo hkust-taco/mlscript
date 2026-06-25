@@ -80,6 +80,9 @@ object Keyword:
   val `else` = Keyword("else", N, eqPrec)
   type `else` = `else`.type
   
+  val `try` = Keyword("try", N, curPrec)
+  val `finally` = Keyword("finally", N, curPrec, canStartInfixOnNewLine = true)
+  
   val `return` = Keyword("return", N, curPrec)
   val `throw` = Keyword("throw", N, curPrec)
   val `import` = Keyword("import", N, curPrec)

@@ -1,0 +1,60 @@
+:js
+
+
+try 42 finally print("done")
+//│ > done
+//│ = 42
+
+
+:re
+try throw 42 finally print("done")
+//│ > done
+//│ ═══[RUNTIME ERROR] 42
+
+
+try 42
+finally print("done")
+//│ > done
+//│ = 42
+
+try
+  42
+finally print("done")
+//│ > done
+//│ = 42
+
+:pe
+:re
+try
+  42 finally print("done")
+//│ ╔══[PARSE ERROR] Unexpected 'finally' keyword here
+//│ ║  l.29: 	  42 finally print("done")
+//│ ╙──      	     ^^^^^^^
+//│ ╔══[PARSE ERROR] Expected 'finally' keyword after `try` body; found end of input instead
+//│ ║  l.29: 	  42 finally print("done")
+//│ ╙──      	  ^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+:pe
+:re
+try
+  42
+  finally print("done")
+//│ ╔══[PARSE ERROR] Expected start of expression in this position; found 'finally' keyword instead
+//│ ║  l.42: 	  finally print("done")
+//│ ╙──      	  ^^^^^^^
+//│ ╔══[PARSE ERROR] Unexpected identifier here
+//│ ║  l.42: 	  finally print("done")
+//│ ╙──      	          ^^^^^
+//│ ╔══[PARSE ERROR] Expected 'finally' keyword after `try` body; found end of input instead
+//│ ║  l.41: 	  42
+//│ ╙──      	  ^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+try
+    42
+  finally print("done")
+//│ > done
+//│ = 42
+
+

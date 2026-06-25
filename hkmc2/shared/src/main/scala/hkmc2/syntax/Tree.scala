@@ -93,6 +93,7 @@ enum Tree extends AutoLocated:
   case MemberProj(cls: Tree, name: Ident)
   case PrefixApp(kw: Keywrd[Keyword.Prefix], rhs: Tree)
   case InfixApp(lhs: Tree, kw: Keywrd[Keyword.Infix], rhs: Tree)
+  case TryFinally(tryBody: Tree, finallyBody: Tree)
   case LexicalNew(body: Opt[Tree], rft: Opt[Block]) // * New as it is parsed, with its weird precedence – eg (new C)(123)
   case ProperNew(body: Opt[Tree], rft: Opt[Block]) // * A desugared version of New that sets it right – eg new(C(123))
   case DynamicNew(cls: Tree) // * Dynamic version – eg new! C(123)
@@ -170,6 +171,7 @@ enum Tree extends AutoLocated:
     case Dummy => Vector.empty
     case OpSplit(lhs, ops_rhss) => lhs +: ops_rhss.toVector
     case SplitPoint() => Vector.empty
+    case TryFinally(tryBody, finallyBody) => Vector.double(tryBody, finallyBody)
     case Trm(trm) => Vector.single(trm)
   
   def describe: Str = this match
@@ -221,13 +223,13 @@ enum Tree extends AutoLocated:
     case MemberProj(_, _) => "member projection"
     case Keywrd(kw) => s"'${kw.name}' keyword"
     case Dummy => "‹dummy›"
-    case Trm(t) => t.describe + " term"
     case Pun(eql, id) => "pun"
     case SplitPoint() => "split point"
     case OpSplit(lhs, ops_rhss) => "operator split"
     case OpenIn(opened, body) => "open-in"
     case Assert(_, _, _, _) => "assertion"
-    
+    case TryFinally(_, _) => "try-finally"
+    case Trm(t) => t.describe + " term"
   def deparenthesized: Tree = this match
     case Bra(BracketKind.Round, inner) => inner.deparenthesized
     case _ => this
