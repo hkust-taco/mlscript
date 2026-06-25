@@ -106,7 +106,7 @@ lambda_test(() =>
 import "../../mlscript-compile/Runtime.mls"
 
 :silent
-let res = Runtime.try(f)
+let res = Runtime._try(f)
 
 res.reified.contTrace.next.getLocals
 //│ = [LocalVarInfo("i", 0), LocalVarInfo("j", 100), LocalVarInfo("k", 2000)]
@@ -146,7 +146,7 @@ let res =
   handle h = Debugger with
     fun break(payload)(resume) = resume
   using Debugger = h
-  Runtime.try(() => Test.main())
+  Runtime._try(() => Test.main())
 //│ res = EffectHandle(_)
 
 :re
