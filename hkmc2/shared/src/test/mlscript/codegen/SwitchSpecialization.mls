@@ -58,45 +58,29 @@ fun f(x) =
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let f1;
 //│ f1 = function f(x) {
-//│   let tmp, tmp1, tmp2, tmp3, tmp4;
 //│   switch (x) {
 //│     case 0:
-//│       tmp = "" + "a";
-//│       tmp1 = tmp + "b";
-//│       tmp2 = tmp1 + "c";
-//│       tmp3 = tmp2 + "d";
-//│       tmp4 = tmp3 + "e";
 //│       return globalThis.Object.freeze([
-//│         tmp4,
+//│         "abcde",
 //│         4
 //│       ]);
 //│     case 1:
-//│       tmp1 = "" + "b";
-//│       tmp2 = tmp1 + "c";
-//│       tmp3 = tmp2 + "d";
-//│       tmp4 = tmp3 + "e";
 //│       return globalThis.Object.freeze([
-//│         tmp4,
+//│         "bcde",
 //│         4
 //│       ]);
 //│     case 2:
-//│       tmp2 = "" + "c";
-//│       tmp3 = tmp2 + "d";
-//│       tmp4 = tmp3 + "e";
 //│       return globalThis.Object.freeze([
-//│         tmp4,
+//│         "cde",
 //│         4
 //│       ]);
 //│     case 3:
-//│       tmp3 = "" + "d";
-//│       tmp4 = tmp3 + "e";
 //│       return globalThis.Object.freeze([
-//│         tmp4,
+//│         "de",
 //│         4
 //│       ]);
 //│     case 4:
-//│       tmp4 = "" + "e";
-//│       return globalThis.Object.freeze([ tmp4, x ]);
+//│       return globalThis.Object.freeze([ "e", x ]);
 //│   }
 //│   return globalThis.Object.freeze([ "", x ])
 //│ };
@@ -138,26 +122,19 @@ fun f(x) =
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let f2;
 //│ f2 = function f(x) {
-//│   let tmp, tmp1, tmp2, tmp3;
 //│   switch (x) {
 //│     case 0:
-//│       tmp = "" + "a";
-//│       tmp1 = tmp + "b";
-//│       return tmp1 + "c";
+//│       return "abc";
 //│     case 1:
-//│       tmp1 = "" + "b";
-//│       return tmp1 + "c";
+//│       return "bc";
 //│     case 2:
-//│       return "" + "c";
+//│       return "c";
 //│     case 3:
-//│       tmp2 = "" + "A";
-//│       tmp3 = tmp2 + "B";
-//│       return tmp3 + "C";
+//│       return "ABC";
 //│     case 4:
-//│       tmp3 = "" + "B";
-//│       return tmp3 + "C";
+//│       return "BC";
 //│     case 5:
-//│       return "" + "C";
+//│       return "C";
 //│     case 6:
 //│       return "EndA";
 //│     case 7:
@@ -206,15 +183,13 @@ fun f(x) =
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let f3;
 //│ f3 = function f(x) {
-//│   let tmp;
 //│   switch (x) {
 //│     case 0:
-//│       tmp = "" + "M";
-//│       return tmp + "1";
+//│       return "M1";
 //│     case 1:
-//│       return "" + "1";
+//│       return "1";
 //│     case 2:
-//│       return "" + "2";
+//│       return "2";
 //│   }
 //│   return "fail"
 //│ };
@@ -247,17 +222,15 @@ fun f(x) =
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let f4;
 //│ f4 = function f(x) {
-//│   let tmp3;
 //│   switch (x) {
 //│     case 0:
-//│       tmp3 = "" + "M";
-//│       return tmp3 + "1";
+//│       return "M1";
 //│     case 1:
-//│       return "" + "1";
+//│       return "1";
 //│     case 2:
-//│       return "" + "2";
+//│       return "2";
 //│   }
-//│   return "" + "3"
+//│   return "3"
 //│ };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 

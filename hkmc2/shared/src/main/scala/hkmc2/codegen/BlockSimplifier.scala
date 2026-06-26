@@ -463,8 +463,6 @@ class BlockSimplifier
             assnd match
             case ass @ AssignInfo.Assigned(_, _, varAsst, rhsRequirements) =>
               liveAssigns.put(ass.originalAssignment, ())
-              varAsst.foreach((_, rhsAsst) => rec(rhsAsst))
-              rhsRequirements.foreach((_, rhsAsst) => rec(rhsAsst))
             case AssignInfo.Merge(l, r) =>
               rec(l)
               rec(r)
@@ -589,7 +587,9 @@ class BlockSimplifier
         if this is that then this
         else this match
         case Uninitialized => that
-        case Unknown => Merge(this, that)
+        case Unknown =>
+          if that is Uninitialized then this
+          else Merge(this, that)
         case _: Assigned | _: Merge =>
           that match
           case Uninitialized => this
@@ -838,11 +838,12 @@ class BlockSimplifier
         val finallyDo2 =
           // * This block might be executed from an unknown point in `sub` (where the first exception is thrown),
           // * so we have to be conservative and not propagate any information.
-          assignedResults.valuesIterator.foreach(liveAssignInfosUntilChangeTriggered += _)
-          // * ^ all assigned infos are still to be considered live, even though we reset `assignedResults`
+          if !changed then
+            assignedResults.valuesIterator.foreach(liveAssignInfosUntilChangeTriggered += _)
+            // * ^ all assigned infos are still to be considered live, even though we reset `assignedResults`
           assignedResults = emptyAssignedResults
           // * Moreover, we have to special-case all assigned local variables, as the corresponding assignments
-          // * might be end up being live eve though local flow analysis would think they are not.
+          // * might end up being live even though local flow analysis would think they are not.
           sub.definedVars.foreach:
             case sym: LocalVar =>
               log(s"Variable ${sym.showDbg} is written in a `finally` block; marking it as imprecise tracked")
