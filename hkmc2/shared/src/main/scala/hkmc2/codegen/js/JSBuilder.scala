@@ -828,6 +828,9 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
       case _ => blk.subBlocks.foreach(go)
     go(p.main)
   
+  // * TODO: make JSBuilder never raise;
+  // *    Currently, it may raise if the IR is invalid (symbol not defined).
+  // *    Instead, run an IR well-formedness checking pass before the backend codegen.
   def program(p: Program, exprt: Opt[BlockMemberSymbol], wd: io.Path)(using Raise, Scope): Document =
     scope.allocateName(State.definitionMetadataSymbol)
     scope.allocateName(State.prettyPrintSymbol)

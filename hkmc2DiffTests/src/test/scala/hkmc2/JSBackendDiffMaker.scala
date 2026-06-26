@@ -189,9 +189,6 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
         (pgrm: Program, definedValues: ComputeDefinedValues, symbolsToPreserve: Set[BoundSymbol])
         (using Config, Raise, Elaborator.Ctx): Unit =
     
-    val outerRaise: Raise = summon
-    val reportedMessages = mutable.Set.empty[Str]
-    
     if js.isSet then
       
       // * We used to do this to avoid needlessly generating new variable names in separate blocks:
@@ -205,7 +202,7 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
       
       val resSym = new TempSymbol(N, "block$res")
       
-      val resNme = nestedScp.allocateName(resSym)(using outerRaise)
+      val resNme = nestedScp.allocateName(resSym)
       
       val loweredMapped = pgrm.copy(main = Scoped(exportedScoped, pgrm.main.mapReturn:
         case Return(res) =>
@@ -213,11 +210,6 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
       ))
     
       if showJS.isSet then config.copy(sanityChecks = N).givenIn:
-        given Raise =
-          case d @ ErrorReport(source = Source.Compilation) =>
-            reportedMessages += d.mainMsg
-            outerRaise(d)
-          case d => outerRaise(d)
         val jsb = ltl.givenIn:
           new JSBuilder
         val je = nestedScp.nest.givenIn:
@@ -225,11 +217,6 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
         val jsStr = je.stripBreaks.mkString(output.ColWidth)
         outputSeparator("JS (unsanitized)")
         output(jsStr)
-      given Raise =
-        case e: ErrorReport if reportedMessages.contains(e.mainMsg) =>
-          if verbose.isSet then
-            output(s"Skipping already reported diagnostic: ${e.mainMsg}")
-        case d => outerRaise(d)
       
       val jsb = ltl.givenIn:
         new JSBuilder
