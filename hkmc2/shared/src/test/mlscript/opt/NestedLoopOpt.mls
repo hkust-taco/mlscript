@@ -107,8 +107,6 @@ fun innerReturnDoesNotPolluteOuterExit(flag) =
   x
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ define innerReturnDoesNotPolluteOuterExit⁰ as fun innerReturnDoesNotPolluteOuterExit¹(flag) {
-//│   let x;
-//│   set x = 1;
 //│   loop lbl:
 //│     match flag
 //│       true =>
@@ -122,7 +120,7 @@ fun innerReturnDoesNotPolluteOuterExit(flag) =
 //│       else
 //│         end
 //│     end
-//│   return x
+//│   return 1
 //│ };
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————

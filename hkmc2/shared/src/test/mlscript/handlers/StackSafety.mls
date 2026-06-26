@@ -17,15 +17,16 @@ hi(0)
 //│ let hi, tmp, $_stack$_safe$_body$_;
 //│ runtime.resetEffects();
 //│ hi = function hi(n) {
-//│   runtime.stackDepth = runtime.stackDepth + 1;
+//│   let scrut, tmp1, curDepth;
 //│   runtime.checkDepth();
 //│   if (runtime.curEffect === null) {
-//│     let scrut, tmp1;
+//│     curDepth = runtime.stackDepth + 1;
 //│     scrut = n === 0;
 //│     if (scrut === true) {
 //│       return 0
 //│     }
 //│     tmp1 = n - 1;
+//│     runtime.stackDepth = curDepth;
 //│     return hi(tmp1);
 //│   }
 //│   return runtime.unwind(hi, -1, "StackSafety.mls:12:1", null, null, 1, 1, n, 0);
@@ -51,42 +52,36 @@ sum(10000)
 //│ let sum, tmp1, $_stack$_safe$_body$_1;
 //│ runtime.resetEffects();
 //│ sum = function sum(n) {
-//│   let curDepth;
-//│   runtime.stackDepth = runtime.stackDepth + 1;
-//│   curDepth = runtime.stackDepth;
+//│   let scrut, tmp2, tmp3, pc, curDepth;
+//│   if (runtime.resumePc === -1) {
+//│     pc = 0;
+//│   } else {
+//│     pc = runtime.resumePc;
+//│     runtime.resumePc = -1;
+//│   }
 //│   runtime.checkDepth();
 //│   if (runtime.curEffect === null) {
-//│     let scrut, tmp2, tmp3, pc;
-//│     if (runtime.resumePc === -1) {
-//│       pc = 0;
-//│     } else {
-//│       pc = runtime.resumePc;
-//│       runtime.resumePc = -1;
-//│     }
+//│     curDepth = runtime.stackDepth + 1;
 //│     switch (pc) {
 //│       case 0:
 //│         scrut = n === 0;
 //│         if (scrut === true) {
 //│           return 0
 //│         }
-//│         {
-//│           let res;
-//│           tmp2 = n - 1;
-//│           res = sum(tmp2);
-//│           runtime.stackDepth = curDepth;
-//│           runtime.resumeValue = res;
-//│           if (runtime.curEffect === null) {
-//│             pc = 1;
-//│           } else {
-//│             return runtime.unwind(sum, 1, "StackSafety.mls:48:9", null, null, 1, 1, n, 0)
-//│           }
+//│         tmp2 = n - 1;
+//│         runtime.stackDepth = curDepth;
+//│         runtime.resumeValue = sum(tmp2);
+//│         if (runtime.curEffect === null) {
+//│           pc = 1;
+//│         } else {
+//│           return runtime.unwind(sum, 1, "StackSafety.mls:49:9", null, null, 1, 1, n, 0)
 //│         }
 //│       case 1:
 //│         tmp3 = runtime.resumeValue;
 //│         return n + tmp3;
 //│     }
 //│   } else {
-//│     return runtime.unwind(sum, -1, "StackSafety.mls:45:1", null, null, 1, 1, n, 0)
+//│     return runtime.unwind(sum, pc, "StackSafety.mls:46:1", null, null, 1, 1, n, 0)
 //│   }
 //│ };
 //│ $_stack$_safe$_body$_1 = (undefined, function () {
@@ -121,6 +116,17 @@ val foo =
 foo
 //│ = 50005000
 //│ foo = 50005000
+
+:stackSafe
+:expect 50005000
+fun foo() =
+  let f = ()
+  set f = n =>
+    if n <= 0 then 0
+    else n + f(n-1)
+  f(10000)
+foo()
+//│ = 50005000
 
 :stackSafe 100
 :expect 50005000
@@ -234,7 +240,7 @@ fun f(h) =
     set n += 1
   n
 handle h = Object with
-  fun perform()(k) = 
+  fun perform()(k) =
     k()
 f(h)
 //│ = 10000

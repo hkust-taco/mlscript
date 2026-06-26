@@ -101,7 +101,6 @@ fun f() =
 f()
 //│ = 100
 
-// TODO(inliner): something is wrong here
 // broken due to handlers currently not handling `object` properly
 :fixme
 :expect 100
@@ -111,10 +110,10 @@ fun f() =
   4
 f()
 //│ ╔══[WARNING] Objects are not yet lifted.
-//│ ║  l.109: 	  object A with
+//│ ║  l.108: 	  object A with
 //│ ╙──       	         ^
 //│ ╔══[INTERNAL ERROR] Unexpected nested class: lambdas may not function correctly.
-//│ ║  l.109: 	  object A with
+//│ ║  l.108: 	  object A with
 //│ ╙──       	         ^
 //│ ═══[RUNTIME ERROR] Error: Effect $_non$_local$_return$_effect$_18 is raised in a constructor
 //│ ═══[RUNTIME ERROR] Expected: '100', got: 'undefined'
@@ -138,10 +137,10 @@ fun f() =
   4
 f()
 //│ ╔══[WARNING] Objects are not yet lifted.
-//│ ║  l.136: 	  object A with
+//│ ║  l.135: 	  object A with
 //│ ╙──       	         ^
 //│ ╔══[INTERNAL ERROR] Unexpected nested class: lambdas may not function correctly.
-//│ ║  l.136: 	  object A with
+//│ ║  l.135: 	  object A with
 //│ ╙──       	         ^
 //│ ═══[RUNTIME ERROR] Error: Effect $_non$_local$_return$_effect$_22 is raised in a constructor
 //│ ═══[RUNTIME ERROR] Expected: '100', got: 'undefined'

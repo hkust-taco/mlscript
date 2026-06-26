@@ -4,7 +4,7 @@
 
 module M
 
-// * Notice that the two module definitions are lifted to the top of the block.
+// * Not compatible with non-liftable modules due to possible captures.
 :ssjs
 :fixme
 fun foo(h): module M =

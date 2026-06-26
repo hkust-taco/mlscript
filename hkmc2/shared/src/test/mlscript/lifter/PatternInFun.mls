@@ -10,3 +10,15 @@ fun foo() =
 //│ ═══[WARNING] Cannot yet lift class `P` as it is used as a first-class class.
 
 
+module ScratchPrelude with ...
+abstract class List[out T]: Cons[T] | Nil
+data class Cons(head, tail) extends List
+object Nil extends List
+fun listLen(ls) =
+  fun l(ls, a) = if ls is
+    Nil then a
+    Cons(h, t) then l(t, a + 1)
+  l(ls, 0)
+print(listLen(Cons(1, Nil)))
+//│ > 1
+

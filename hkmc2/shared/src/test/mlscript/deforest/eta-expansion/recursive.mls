@@ -35,7 +35,7 @@ sum(enum(5), 0)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ let enum_13$enum$worker;
 //│ @private
-//│ define enum_13$enum$worker as fun enum_13$enum$worker⁰(x, eta$0$1, eta$0$6) {
+//│ define enum_13$enum$worker as fun enum_13$enum$worker⁰(x, eta$0$1) {
 //│   let scrut, tmp;
 //│   set scrut = <⁰(x, 0);
 //│   match scrut
@@ -44,9 +44,8 @@ sum(enum(5), 0)
 //│     else
 //│       let fv_tmp;
 //│       set tmp = -⁰(x, 1);
-//│       set fv_tmp = eta$0$6;
 //│       set fv_tmp = +⁰(x, eta$0$1);
-//│       return enum_13$enum$worker⁰(tmp, fv_tmp, undefined)
+//│       return enum_13$enum$worker⁰(tmp, fv_tmp)
 //│   end
 //│ };
 //│ define enum⁰ as fun enum¹(x) {
@@ -79,7 +78,7 @@ sum(enum(5), 0)
 //│     end
 //│   unreachable /* Rest of abortive labelled block */
 //│ };
-//│ return enum_13$enum$worker⁰(5, 0, undefined)
+//│ return enum_13$enum$worker⁰(5, 0)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 15
 

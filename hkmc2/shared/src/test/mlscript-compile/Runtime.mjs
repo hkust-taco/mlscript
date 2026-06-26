@@ -887,7 +887,6 @@ lambda$ = (undefined, function (Runtime2, EffectHandle1, value) {
               tmp7 = tmp6 + loc;
               tmp8 = tmp7 + ")";
               tmp9 = msg + tmp8;
-              msg = tmp9;
               tmp10 = tmp9 + tmp4;
               msg = tmp10;
               cur = cur.next;
@@ -1145,7 +1144,6 @@ lambda$ = (undefined, function (Runtime2, EffectHandle1, value) {
       }
       return runtime.Unit;
     }
-    tmp1 = false;
     return runtime.Unit;
   }
   static runStackSafe(limit, f) {
