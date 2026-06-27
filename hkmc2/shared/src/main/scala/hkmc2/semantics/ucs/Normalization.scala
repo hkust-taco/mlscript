@@ -346,7 +346,7 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
                   Case.Cls(ctorSym, st) -> lowerSplit(tail, cont)
                 case (param, arg) :: args =>
                   val (cse, blk) = mkArgs(args)
-                  (cse, Assign(arg, Select(sr, new Tree.Ident(param.id.name).withLocOf(arg))(S(param)), blk))
+                  (cse, Assign(arg, Select(sr, new Tree.Ident(param.id.name).withLocOf(arg))(S(param))(false), blk))
               mkMatch(mkArgs(clsParams.iterator.zip(args).toList))
             symbol match
               case cls: ClassSymbol if ctx.builtins.virtualClasses contains cls =>
@@ -368,12 +368,12 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
             for (_, s) <- entries do LoweringCtx.loweringCtx.collectScopedSym(s)
             val objectSym = ctx.builtins.Object
             mkMatch( // checking that we have an object
-              Case.Cls(objectSym, Select(State.globalThisSymbol.asThis, Tree.Ident(objectSym.nme))(S(objectSym))),
+              Case.Cls(objectSym, Select(State.globalThisSymbol.asThis, Tree.Ident(objectSym.nme))(S(objectSym))(false)),
               entries.foldRight(lowerSplit(tail, cont)):
                 case ((fieldName, fieldSymbol), blk) =>
                   mkMatch(
                     Case.Field(fieldName, safe = true), // we know we have an object, no need to check again
-                    Assign(fieldSymbol, Select(sr, fieldName)(N), blk)
+                    Assign(fieldSymbol, Select(sr, fieldName)(N)(false), blk)
                   )
             )
     case Split.Else(els) =>
@@ -416,7 +416,7 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
     * match failure in the future.
     */
   private def throwMatchErrorBlock =
-    Throw(Instantiate(mut = false, Select(State.globalThisSymbol.asThis, Tree.Ident("Error"))(S(ctx.builtins.Error)),
+    Throw(Instantiate(mut = false, Select(State.globalThisSymbol.asThis, Tree.Ident("Error"))(S(ctx.builtins.Error))(false),
         (Value.Lit(syntax.Tree.StrLit("match error")).asArg :: Nil) :: Nil)(InstantiateMetadata.empty)) // TODO add failed-match scrutinee info
   
   import syntax.Keyword.{`if`, `while`}
@@ -510,7 +510,7 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
             outerCtx.collectScopedSym(loopResult)
             outerCtx.collectScopedSym(isReturned)
             val loopEnd: Path =
-              Select(State.runtimeSymbol.asSimpleRef, Tree.Ident("LoopEnd"))(S(State.loopEndSymbol))
+              Select(State.runtimeSymbol.asSimpleRef, Tree.Ident("LoopEnd"))(S(State.loopEndSymbol))(false)
             val blk = blockBuilder
               .define(FunDefn(N, f, tSym, PlainParamList(Nil) :: Nil, Begin(body, Return(loopEnd)))(configOverride = N, annotations = Nil))
               .assign(loopResult, Call(f.asMemberRef(tSym), Nil ne_:: Nil)(CallMetadata.mlsFunWithEffect))

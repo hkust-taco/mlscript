@@ -64,6 +64,7 @@ abstract class CompileTestRunnerBase(
           paths = new MLsCompiler.Paths:
             val preludeFile = mainTestDir / "mlscript" / "decls" / "Prelude.mls"
             val runtimeFile = mainTestDir / "mlscript-compile" / "Runtime.mjs"
+            val runtimeSourceFile = mainTestDir / "mlscript-compile" / "Runtime.mls"
             val termFile = mainTestDir / "mlscript-compile" / "Term.mjs",
           mkRaise = report.mkRaise
         )

@@ -20,7 +20,7 @@ val globalThis = "oops"
 
 :re
 globalThis.clearInterval
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'freeze')
+//│ ═══[RUNTIME ERROR] TypeError: globalThis.Error is not a function
 //│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'freeze')
 
 :re

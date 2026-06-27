@@ -15,6 +15,26 @@ fun aux(f) = f(1) + f(10)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 
+fun getter = print(42)
+
+getter
+//│ > 42
+
+
+module Foo with
+  fun getter = print(42)
+
+Foo.getter
+//│ > 42
+
+
+import "../../mlscript-compile/Runtime.mls"
+
+:re
+Runtime.unreachable
+//│ ═══[RUNTIME ERROR] Error: unreachable
+
+
 :sir
 x => x
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
@@ -36,7 +56,7 @@ x => x
 :noInline
 x => x
 //│ ╔══[INTERNAL ERROR] [BlockChecker] Invalid IR: symbol x⁰ is bound more than once
-//│ ║  l.37: 	x => x
+//│ ║  l.57: 	x => x
 //│ ╙──      	^
 //│ = class anonymous
 
@@ -96,15 +116,11 @@ let f = foo in bar(f)
 bar([foo].0)
 bar([foo, x => x].1)
 //│ ╔══[COMPILATION ERROR] Cannot determine if 0 is a function.
-//│ ║  l.96: 	bar([foo].0)
-//│ ╙──      	         ^^
-//│ ═══[COMPILATION ERROR] Cannot determine if 0$__checkNotMethod is a function.
-//│ ═══[COMPILATION ERROR] Cannot determine if Error is a function.
+//│ ║  l.116: 	bar([foo].0)
+//│ ╙──       	         ^^
 //│ ╔══[COMPILATION ERROR] Cannot determine if 1 is a function.
-//│ ║  l.97: 	bar([foo, x => x].1)
-//│ ╙──      	                 ^^
-//│ ═══[COMPILATION ERROR] Cannot determine if 1$__checkNotMethod is a function.
-//│ ═══[COMPILATION ERROR] Cannot determine if Error is a function.
+//│ ║  l.117: 	bar([foo, x => x].1)
+//│ ╙──       	                 ^^
 //│ = 0
 
 
@@ -118,7 +134,7 @@ bar([foo, x => x].(i))
 :ge
 [foo, x => x].(i)(0)
 //│ ╔══[COMPILATION ERROR] Cannot determine if the dynamic selection is a function object.
-//│ ║  l.119: 	[foo, x => x].(i)(0)
+//│ ║  l.135: 	[foo, x => x].(i)(0)
 //│ ╙──       	               ^
 
 
@@ -132,10 +148,10 @@ let foo = Foo()
 foo.("f")(0)
 foo.("h")(1)
 //│ ╔══[COMPILATION ERROR] Cannot determine if the dynamic selection is a function object.
-//│ ║  l.132: 	foo.("f")(0)
+//│ ║  l.148: 	foo.("f")(0)
 //│ ╙──       	^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Cannot determine if the dynamic selection is a function object.
-//│ ║  l.133: 	foo.("h")(1)
+//│ ║  l.149: 	foo.("h")(1)
 //│ ╙──       	^^^^^^^^
 //│ = 0
 //│ foo = Foo()
@@ -380,7 +396,7 @@ foo.Foo#x
 :ge
 foo.f(0)
 //│ ╔══[COMPILATION ERROR] Cannot determine if f is a function object.
-//│ ║  l.381: 	foo.f(0)
+//│ ║  l.397: 	foo.f(0)
 //│ ╙──       	^^^^^
 //│ = 1
 
@@ -398,7 +414,7 @@ foo.Foo#f(0)
 :ge
 foo.x(0)
 //│ ╔══[COMPILATION ERROR] Cannot determine if x is a function object.
-//│ ║  l.399: 	foo.x(0)
+//│ ║  l.415: 	foo.x(0)
 //│ ╙──       	^^^^^
 
 
@@ -512,13 +528,10 @@ fun foo(f) = f("abc")
 print("abc")
 //│ > abc
 
-// TODO: should be able to find this info
-:e
+// TODO: should print "abc"; imported vararg functions are eta-expanded but
+// their rest parameters are not forwarded yet.
 foo(print)
-//│ ╔══[COMPILATION ERROR] Cannot get print's parameter list.
-//│ ║  l.517: 	foo(print)
-//│ ╙──       	    ^^^^^
-//│ ═══[RUNTIME ERROR] Error: Function 'call' expected 0 arguments but got 1
+//│ > 
 
 foo(print(_))
 //│ > abc
@@ -527,21 +540,18 @@ foo(print(_))
 :sir
 :expect ["abc"]
 foo(tuple)
-//│ ╔══[COMPILATION ERROR] Cannot get tuple's parameter list.
-//│ ║  l.529: 	foo(tuple)
-//│ ╙──       	    ^^^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let Function$, tmp;
 //│ define Function$ as class Function$⁷ extends globalThis⁰.Function⁰ {
-//│   method call¹⁴ = fun call¹⁵() {
+//│   method call¹⁴ = fun call¹⁵(...xs) {
 //│     return Predef⁰.tuple⁰()
 //│   }
 //│ };
 //│ set tmp = new Function$⁷();
 //│ return foo⁷(tmp)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
-//│ ═══[RUNTIME ERROR] Error: Function 'call' expected 0 arguments but got 1
-//│ ═══[RUNTIME ERROR] Expected: '["abc"]', got: 'undefined'
+//│ ═══[RUNTIME ERROR] Expected: '["abc"]', got: '[]'
+//│ = []
 
 
 if true is true then print("true")

@@ -111,6 +111,7 @@ class Watcher(dirs: Ls[File]):
           paths = new MLsCompiler.Paths:
             val preludeFile = preludePath
             val runtimeFile = testBasePath/"mlscript-compile"/"Runtime.mjs"
+            val runtimeSourceFile = testBasePath/"mlscript-compile"/"Runtime.mls"
             val termFile = testBasePath/"mlscript-compile"/"Term.mjs",
           mkRaise = ReportFormatter(System.out.println, colorize = true).mkRaise
         ).compileModule(path)

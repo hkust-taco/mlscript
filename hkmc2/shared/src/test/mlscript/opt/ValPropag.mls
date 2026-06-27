@@ -36,3 +36,39 @@ let y = x in print(y)
 //│ > 1
 //│ x = 1
 
+
+// * A copy of a parameter must not be propagated through a loop mutation of that parameter.
+// * This is a minimized version of lexer location regressions that occurred several times in the past.
+:soir
+fun preserveLoopEntry(idx) =
+  let startIndex = idx
+  let done = false
+  while done is false do
+    set done = true
+    set idx += 1
+  [startIndex, idx]
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ define preserveLoopEntry⁰ as fun preserveLoopEntry¹(idx) {
+//│   let startIndex, done;
+//│   set startIndex = idx;
+//│   set done = false;
+//│   loop lbl:
+//│     let tmp;
+//│     match done
+//│       false =>
+//│         set done = true;
+//│         set tmp = +⁰(idx, 1);
+//│         set idx = tmp;
+//│         continue lbl
+//│       else
+//│         end
+//│     end
+//│   return [startIndex, idx]
+//│ };
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+print(preserveLoopEntry(2))
+//│ > [2, 3]
+
+

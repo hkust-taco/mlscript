@@ -117,7 +117,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
       case Sym(l) => l.asSimpleRef
       case ThisPath(sym) => sym.asThis
       case BmsRef(l, d) => l.asMemberRef(d)
-      case Field(path, field) => Select(path, field.id)(S(field))
+      case Field(path, field) => Select(path, field.id)(S(field))(false)
       
     def asArg(using ctx: LifterCtxNew) = read.asArg
     
@@ -154,7 +154,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
       case Sym(l) => l.asSimpleRef
       case PathRef(path) => path
       case InScope(l, d) => l.asMemberRef(d)
-      case Field(isym, l, d) => Select(ctx.symbolsMap(isym).read, Tree.Ident(l.nme))(S(d))
+      case Field(isym, l, d) => Select(ctx.symbolsMap(isym).read, Tree.Ident(l.nme))(S(d))(false)
     
     def asArg(using ctx: LifterCtxNew) = read.asArg
   
@@ -869,7 +869,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
     */
   sealed trait ClsLikeRewrittenScope[T](sym: InnerSymbol) extends RewrittenScope[T]:
     lazy val captureSym = TermSymbol(syntax.ImmutVal, S(sym), Tree.Ident(obj.nme + "$cap"))
-    override lazy val capturePath = Select(Value.This(sym), captureSym.id)(S(captureSym))
+    override lazy val capturePath = Select(Value.This(sym), captureSym.id)(S(captureSym))(false)
     protected val liftedObjsOrdered: List[InnerSymbol] = node.liftedObjSyms.toList.sortBy(_.uid)
     protected val liftedObjsSyms: Map[InnerSymbol, TermSymbol] = liftedObjsOrdered.map: s =>
         s -> TermSymbol(syntax.ImmutVal, S(sym), Tree.Ident(s.nme + "$"))
@@ -945,7 +945,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
       with ClsLikeRewrittenScope[ClsLikeDefn](obj.cls.isym):
     
     private val captureSym = TermSymbol(syntax.ImmutVal, S(obj.cls.isym), Tree.Ident(obj.nme + "$cap"))
-    override lazy val capturePath: Path = Select(Value.This(obj.cls.isym), captureSym.id)(S(captureSym))
+    override lazy val capturePath: Path = Select(Value.This(obj.cls.isym), captureSym.id)(S(captureSym))(false)
     
     override def rewriteImpl: LifterResult[ClsLikeDefn] =
       val liftedSuper = obj.cls.parentPath.flatMap:
@@ -973,7 +973,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
       with ClsLikeRewrittenScope[ClsLikeBody](obj.clsBody.isym):
     
     private val captureSym = TermSymbol(syntax.ImmutVal, S(obj.clsBody.isym), Tree.Ident(obj.nme + "$cap"))
-    override lazy val capturePath: Path = Select(Value.This(obj.clsBody.isym), captureSym.id)(S(captureSym))
+    override lazy val capturePath: Path = Select(Value.This(obj.clsBody.isym), captureSym.id)(S(captureSym))(false)
       
     override def rewriteImpl: LifterResult[ClsLikeBody] =
       val rewriterCtor = new BlockRewriter(N)
@@ -1092,7 +1092,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
       with ClsLikeRewrittenScope[ClsLikeDefn](obj.cls.isym):
     
     private val captureSym = TermSymbol(syntax.ImmutVal, S(obj.cls.isym), Tree.Ident(obj.nme + "$cap"))
-    override lazy val capturePath: Path = Select(Value.This(obj.cls.isym), captureSym.id)(S(captureSym))
+    override lazy val capturePath: Path = Select(Value.This(obj.cls.isym), captureSym.id)(S(captureSym))(false)
     
     private val passedSymsMap_ : Map[ValueSymbol, (vs: VarSymbol, ts: TermSymbol)] = passedSymsOrdered.map: s =>
         s ->

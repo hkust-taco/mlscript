@@ -63,7 +63,8 @@ class Compiler(paths: MLsCompiler.Paths)(using cctx: CompilerCtx):
     perFileDiagnostics
 
 @JSExportTopLevel("Paths")
-final class Paths(prelude: Str, runtime: Str, term: Str) extends MLsCompiler.Paths:
+final class Paths(prelude: Str, runtime: Str, runtimeSource: Str, term: Str) extends MLsCompiler.Paths:
   val preludeFile = Path(prelude)
   val runtimeFile = Path(runtime)
+  val runtimeSourceFile = Path(runtimeSource)
   val termFile = Path(term)

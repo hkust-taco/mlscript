@@ -4,6 +4,13 @@
 :sir
 :sjs
 class A(val x)(val y)
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define A⁰ as class A² {
+//│   val x⁰;
+//│   val y⁰;
+//│   constructor A¹(x, y) { define x⁰ as val x¹ = x; define y⁰ as val y¹ = y; end }
+//│ };
+//│ end
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let A1;
 //│ A1 = function A(x) {
@@ -22,13 +29,6 @@ class A(val x)(val y)
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "A", ["x"]];
 //│ });
-//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ define A⁰ as class A² {
-//│   val x⁰;
-//│   val y⁰;
-//│   constructor A¹(x, y) { define x⁰ as val x¹ = x; define y⁰ as val y¹ = y; end }
-//│ };
-//│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 
@@ -154,6 +154,18 @@ class A(x1, x2, ...xs)(y1, ...ys) with
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "A", [null, null]];
 //│ });
+//│ ╔══[COMPILATION ERROR] No definition found in scope for member 'xs'
+//│ ║  l.107: 	  fun fields = [x1, x2, xs, y1, ys]
+//│ ║         	                        ^^
+//│ ╟── which references the symbol introduced here
+//│ ║  l.106: 	class A(x1, x2, ...xs)(y1, ...ys) with
+//│ ╙──       	                   ^^
+//│ ╔══[COMPILATION ERROR] No definition found in scope for member 'ys'
+//│ ║  l.107: 	  fun fields = [x1, x2, xs, y1, ys]
+//│ ║         	                                ^^
+//│ ╟── which references the symbol introduced here
+//│ ║  l.106: 	class A(x1, x2, ...xs)(y1, ...ys) with
+//│ ╙──       	                              ^^
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 :todo

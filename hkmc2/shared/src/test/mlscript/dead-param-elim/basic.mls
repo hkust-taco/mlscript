@@ -258,26 +258,18 @@ fun f() = case [...x, y, z] then x
 //│ do runtime⁰.resetEffects﹖();
 //│ @private
 //│ define lambda as fun lambda⁰(caseScrut) {
-//│   let stackDelayRes;
-//│   set runtime⁰.stackDepth﹖ = +⁰(runtime⁰.stackDepth﹖, 1);
-//│   set stackDelayRes = runtime⁰.checkDepth﹖();
-//│   match runtime⁰.curEffect﹖
-//│     null =>
-//│       let x, y, z, lastElement1$, lastElement2$, middleElements;
-//│       match caseScrut
-//│         Array(2+) =>
-//│           set middleElements = runtime⁰.Tuple⁰.slice⁰(caseScrut, 0, 2);
-//│           set lastElement2$ = runtime⁰.Tuple⁰.get⁰(caseScrut, -2);
-//│           set lastElement1$ = runtime⁰.Tuple⁰.get⁰(caseScrut, -1);
-//│           set y = lastElement1$;
-//│           set z = lastElement2$;
-//│           set x = middleElements;
-//│           return x
-//│         else
-//│           throw new globalThis⁰.Error⁰("match error")
-//│       end
+//│   let x, y, z, lastElement1$, lastElement2$, middleElements;
+//│   match caseScrut
+//│     Array(2+) =>
+//│       set middleElements = runtime⁰.Tuple⁰.slice⁰(caseScrut, 0, 2);
+//│       set lastElement2$ = runtime⁰.Tuple⁰.get⁰(caseScrut, -2);
+//│       set lastElement1$ = runtime⁰.Tuple⁰.get⁰(caseScrut, -1);
+//│       set y = lastElement1$;
+//│       set z = lastElement2$;
+//│       set x = middleElements;
+//│       return x
 //│     else
-//│       return runtime⁰.unwind﹖(lambda⁰, -1, null, null, null, 1, 1, caseScrut, 0)
+//│       throw new globalThis⁰.Error⁰("match error")
 //│   end
 //│ };
 //│ define f²¹ as fun f²²() { return lambda⁰ };
@@ -298,16 +290,15 @@ fun f(c) = Runtime.Tuple.get(c, 1) + 1
 //│ import "..." as Runtime;
 //│ do runtime⁰.resetEffects﹖();
 //│ define f²³ as fun f²⁴(c) {
-//│   let stackDelayRes;
-//│   set runtime⁰.stackDepth﹖ = +⁰(runtime⁰.stackDepth﹖, 1);
-//│   set stackDelayRes = runtime⁰.checkDepth﹖();
+//│   let tmp, pc, curDepth;
+//│   do runtime⁰.checkDepth﹖();
 //│   match runtime⁰.curEffect﹖
 //│     null =>
-//│       let tmp;
-//│       set tmp = Runtime⁰.Tuple¹.get¹(c, 1);
+//│       set curDepth = +⁰(runtime⁰.stackDepth﹖, 1);
+//│       set tmp = Runtime⁰.Tuple⁰.get⁰(c, 1);
 //│       return +⁰(tmp, 1)
 //│     else
-//│       return runtime⁰.unwind﹖(f²⁴, -1, "basic.mls:296:1", null, null, 1, 1, c, 0)
+//│       return runtime⁰.unwind﹖(f²⁴, -1, "basic.mls:288:1", null, null, 1, 1, c, 0)
 //│   end
 //│ };
 //│ end

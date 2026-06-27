@@ -170,6 +170,12 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
     val res = result(r)
     if r.isInstanceOf[Value.Lit] then doc"(${res})" else res
   
+  def resultInst(r: Result)(using Raise, Scope): Document = 
+    val res = result(r)
+    r match
+    case s: Select if s.sanitize => doc"(${res})"
+    case _ => res
+  
   def result(r: Result)(using Raise, Scope): Document = r match
     case Value.This(ts: semantics.ModuleOrObjectSymbol) if ts.asMod.isDefined =>
       // * Module self-references use the module name itself instead of `this`
@@ -217,6 +223,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
       val (params, bodyDoc) = setupFunction(none, ps, bod, isLambda = true)
       doc"($params) => ${ braced(bodyDoc) }"
     case s @ Select(qual, id) => 
+      val checkCurrentSelection = checkSelections && s.sanitize
       val dotClass = s.symbol match
         case S(ds) if ds.shouldBeLifted => doc".class"
         case _ => doc""
@@ -230,13 +237,19 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
         else name.toIntOption match
           case S(index) => doc"[$index]"
           case N => doc"[${makeStringLiteral(name)}]"
-      doc"${resultQual(qual)}${fieldDoc}${dotClass}"
+      val qualJS = resultQual(qual)
+      val sel = doc"${qualJS}${fieldDoc}${dotClass}"
+      if checkCurrentSelection then
+        // * We are careful to access `x.f` before `x.f$__checkNotMethod` in case `x` is, eg, `undefined` and
+        // * the access should throw an error like `TypeError: Cannot read property 'f' of undefined`.
+        doc"$runtimeVar.checkSelect($sel, ${makeStringLiteral(id.name)}, $qualJS)"
+      else sel
     case DynSelect(qual, fld, ai) =>
       if ai
       then doc"${resultQual(qual)}.at(${result(fld)})"
       else doc"${result(qual)}[${result(fld)}]"
     case Instantiate(mut, cls, argss) =>
-      val calls = argss.foldLeft(result(cls)): (acc, args) =>
+      val calls = argss.foldLeft(resultInst(cls)): (acc, args) =>
         doc"${acc}(${args.map(argument).mkDocument(", ")})"
       val inner = doc"new $calls"
       if mut then inner else doc"$freeze(${inner})"
@@ -815,6 +828,9 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
       case _ => blk.subBlocks.foreach(go)
     go(p.main)
   
+  // * TODO: make JSBuilder never raise;
+  // *    Currently, it may raise if the IR is invalid (symbol not defined).
+  // *    Instead, run an IR well-formedness checking pass before the backend codegen.
   def program(p: Program, exprt: Opt[BlockMemberSymbol], wd: io.Path)(using Raise, Scope): Document =
     scope.allocateName(State.definitionMetadataSymbol)
     scope.allocateName(State.prettyPrintSymbol)

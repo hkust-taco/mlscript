@@ -187,7 +187,7 @@ class BlockTransformer(subst: SymbolSubst):
     case p @ Select(qual, name) =>
       applyPath(qual): qual2 =>
         val sym2 = p.symbol.mapConserve(_.subst)
-        k(if (qual2 is qual) && (sym2 is p.symbol) then p else Select(qual2, name)(sym2).withLocOf(p))
+        k(if (qual2 is qual) && (sym2 is p.symbol) then p else Select(qual2, name)(sym2)(p.sanitize).withLocOf(p))
     case v: Value => applyValue(v)(k)
   
   def applyValue(v: Value)(k: Value => Block) = v match

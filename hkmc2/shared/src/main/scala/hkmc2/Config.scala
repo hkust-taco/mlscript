@@ -44,15 +44,16 @@ case class Config(
 
   def checkInstantiateEffect: Bool = effectHandlers.exists(_.checkInstantiateEffect)
   
-  // NOTE: We force the rewriting of while loops to functions when handler lowering is on
-  // to prevent the "floating out" of definitions done by handler lowering,
-  // which currently does not respect scopes introduced by `Scoped` blocks.
-  // Currently, this is only a problem with while loops because we do not yet
-  // construct nested Scoped blocks in other places (but will in the future).
+  // NOTE: Historically, we force the rewriting of while loops to functions when
+  // handler lowering is on to prevent the "floating out" of definitions done by
+  // handler lowering, which currently does not respect scopes introduced by
+  // `Scoped` blocks. Currently, handler lowering relies on lifting instead which
+  // will lift inner definitions out safely. As such, we no longer require this
+  // rewrite.
   // see https://github.com/hkust-taco/mlscript/pull/356#discussion_r2579529893
   // and https://github.com/hkust-taco/mlscript/pull/356#discussion_r2585183902
   def shouldRewriteWhile: Bool =
-    rewriteWhileLoops || effectHandlers.isDefined
+    rewriteWhileLoops
   
 end Config
 

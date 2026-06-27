@@ -495,7 +495,7 @@ class TailRecOpt(using State, TL, Raise):
     val loop = Label(loopSym, true, switch, End())
     
     val sel = owner match
-      case Some(value) => Select(value.asThis, Tree.Ident(bms.nme))(S(dSym))
+      case Some(value) => Select(value.asThis, Tree.Ident(bms.nme))(S(dSym))(false)
       case None => bms.asMemberRef(dSym)
     
     val rewrittenFuns =
@@ -535,7 +535,7 @@ class TailRecOpt(using State, TL, Raise):
           loop)(N, annotations = loopAnnots)
         val paramArgs = getParamSyms(f).map(s => s.asSimpleRef.asArg)
         val internalSel = owner match
-          case Some(value) => Select(value.asThis, Tree.Ident(loopBms.nme))(S(loopDSym))
+          case Some(value) => Select(value.asThis, Tree.Ident(loopBms.nme))(S(loopDSym))(false)
           case None => loopBms.asMemberRef(loopDSym)
         val wrapperBod = Return(
           Call(internalSel, paramArgs ne_:: Nil)(CallMetadata.defaultMlsFun),

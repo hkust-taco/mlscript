@@ -53,7 +53,7 @@ if
 //│ Normalized:
 //│ >  ‹if|while›
 //│ >    let-split σ = y is []=1 and
-//│ >      let tmp:element0$ = ((tmp:runtime⁰.)Tuple‹module:Tuple›.)get‹term:get›(y⁰, 0)
+//│ >      let tmp:element0$ = ((tmp:runtime⁰.)Tuple‹module:Tuple›.)get‹term:Tuple/get›(y⁰, 0)
 //│ >      let b = tmp:element0$⁰
 //│ >      else
 //│ >        let x
@@ -103,11 +103,11 @@ if
 :sjs
 if false do ()
 123
-//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ return 123
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let scrut; set scrut = false; return 123
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ return 123
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ return 123
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 123

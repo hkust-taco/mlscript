@@ -7,8 +7,10 @@ data class C(a)
 data class D(b)
 data class E(c)
 
+
 if true then 1 else 0
 //│ = 1
+
 
 // * Properly removes the `D` branch and the whole match
 // :dopt
@@ -21,6 +23,7 @@ if C(123) is
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > 123
 
+
 // * Properly removes the `else` branch
 :soir
 if C(123) is
@@ -31,6 +34,7 @@ if C(123) is
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > 123
 
+
 // :dopt
 let c = if hide(true) then C(123) else D(456)
 in if c is
@@ -38,15 +42,48 @@ in if c is
   else print("?")
 //│ > 123
 
+:expect 0
+:soir
+let c = if hide(true) then C(123) else D(456)
+in
+  print(c)
+  if c is
+    C then 0
+    D then 1
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let scrut, tmp;
+//│ set scrut = Predef⁰.hide⁰(true);
+//│ match scrut
+//│   true =>
+//│     set tmp = C⁰(123);
+//│     end
+//│   else
+//│     set tmp = D⁰(456);
+//│     end
+//│ do Predef⁰.print⁰(tmp);
+//│ match tmp
+//│   C¹ =>
+//│     return 0
+//│   D¹ =>
+//│     return 1
+//│   else
+//│     unreachable /* exhaustive match */
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ > C(123)
+//│ = 0
+
+
 // * Properly removes the `E` branch
+:expect 123
 :soir
 let c = if hide(true) then C(123) else D(456)
 in
   print(c) // * Prevents case-of-case optimization from distributing the match into the branches
   if c is
-    C(x) then print(x)
-    D(y) then print(y)
-    E(z) then print(z)
+    C(x) then {print(x), x}
+    D(y) then {print(y), y}
+    E(z) then {print(z), z}
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ let scrut, tmp, arg$D$0$, arg$C$0$;
 //│ set scrut = Predef⁰.hide⁰(true);
@@ -61,15 +98,18 @@ in
 //│ match tmp
 //│   C¹ =>
 //│     set arg$C$0$ = tmp.a⁰;
-//│     return Predef⁰.print⁰(arg$C$0$)
+//│     do Predef⁰.print⁰(arg$C$0$);
+//│     return arg$C$0$
 //│   D¹ =>
 //│     set arg$D$0$ = tmp.b⁰;
-//│     return Predef⁰.print⁰(arg$D$0$)
+//│     do Predef⁰.print⁰(arg$D$0$);
+//│     return arg$D$0$
 //│   else
 //│     unreachable /* exhaustive match */
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > C(123)
 //│ > 123
+//│ = 123
 
 

@@ -1,5 +1,5 @@
 import "./RuntimeJS.mjs"
-import "./Rendering.mls"
+import "./Rendering.mjs"
 import "./LazyArray.mjs"
 import "./Iter.mjs"
 
@@ -41,6 +41,13 @@ fun checkArgs(functionName, expected, isUB, got) =
       + (if expected === 1 then "" else "s")
       + " but got " + got
 
+fun checkSelect(sel, nme, qual) =
+  if sel === undefined then
+    throw Error("Access to required field '" + nme + "' yielded 'undefined'")
+  else
+    qual.(nme + "$__checkNotMethod")
+    sel
+
 fun safeCall(x) =
   if x is undefined then () else x
 
@@ -63,11 +70,11 @@ val try_catch = RuntimeJS.try_catch
 class EffectHandle(_reified) with
   val reified = _reified
   fun resumeWith(value) =
-    Runtime.try(() => resume(reified.contTrace)(value))
+    _try(() => resume(reified.contTrace)(value))
   fun raise() =
     set curEffect = reified
 
-fun try(f) =
+fun _try(f) =
   let res = f()
   if curEffect !== null then
     let tmp = curEffect

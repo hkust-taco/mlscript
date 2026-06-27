@@ -286,6 +286,10 @@ foo(1)(2)(3)
 module A with
   fun f() = 1
   fun g() = A.f()
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ define A⁰ as class A¹
+//│ module A² { method f²⁰ = fun f²¹() { return 1 } method g² = fun g³() { return A².f²¹() } };
+//│ end
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let A1;
 //│ (class A {
@@ -301,10 +305,6 @@ module A with
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "A"];
 //│ });
-//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ define A⁰ as class A¹
-//│ module A² { method f²⁰ = fun f²¹() { return 1 } method g² = fun g³() { return A².f²¹() } };
-//│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 
