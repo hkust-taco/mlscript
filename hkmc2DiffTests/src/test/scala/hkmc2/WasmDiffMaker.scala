@@ -163,7 +163,7 @@ abstract class WasmDiffMaker extends InvalMLDiffMaker:
               WatBuilder().intrinsicSupportModule().mkString(output.ColWidth),
         )
         host.execute(
-          doc"""await (async () => {
+          doc"""(() => {
             # const mem = new WebAssembly.Memory({ initial: ${systemMemMinPages} });
             # const decodeUtf16 = new TextDecoder("utf-16le");
             # const system = {
@@ -171,8 +171,8 @@ abstract class WasmDiffMaker extends InvalMLDiffMaker:
             #   mlx_str_from_utf16: (ptr, byteLen) =>
             #     decodeUtf16.decode(new Uint8Array(mem.buffer, ptr, byteLen)),
             # };
-            # const intrinsicModule = await $wasmSuppNme.binaryenCompileToModule($intrinsicWatJsLit, {});
-            # Object.assign(system, intrinsicModule.instance.exports);
+            # const intrinsicModule = $wasmSuppNme.binaryenCompileToModule($intrinsicWatJsLit, {});
+            # Object.assign(system, intrinsicModule.exports);
             # $wasmReplImportsRef = {
             #   repl: Object.create(null),
             #   system,
@@ -209,7 +209,7 @@ abstract class WasmDiffMaker extends InvalMLDiffMaker:
         else
           s"""return exports["$mainFnNme"]();"""
       val jsStr =
-        s"""await wasm.binaryenPrintFuncRes($modWatJsLit, $wasmReplImportsRef, exports => { $jsBody });"""
+        s"""wasm.binaryenPrintFuncRes($modWatJsLit, $wasmReplImportsRef, exports => { $jsBody });"""
       output("Wasm result:")
       mkQuery("", jsStr): out =>
         // Omit the last line which is always "undefined" or the unit.

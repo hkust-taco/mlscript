@@ -209,8 +209,6 @@ declare val fs // TODO make `module`
 declare val Infinity
 
 // Wasm support
-declare class Promise
-declare val Promise
 declare object WebAssembly with
   declare class Instance
   declare class Memory
