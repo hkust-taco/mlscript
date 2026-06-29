@@ -17,23 +17,23 @@ fun dumpWasmImpExp(wasmMod) =
 
 // Binaryen helpers
 fun binaryenFmtWat(wat, foldExprs): String =
-  val mod = binaryen.parseTextWithFeatures of wat, binaryen.Features.All
+  let mod = binaryen.parseTextWithFeatures of wat, binaryen.Features.All
   
   // Note: it seems `mod.validate()` sometimes returns `1` instead of `true`; so we don't use `assert` here
   Predef.js_assert of mod.validate()
 
-  val fmtWat = if foldExprs then mod.emitText() else mod.emitStackIR()
+  let fmtWat = if foldExprs then mod.emitText() else mod.emitStackIR()
 
   mod.dispose()
   fmtWat
 
 fun binaryenCompileToModule(wat, importObject): Promise =
-  val mod = binaryen.parseTextWithFeatures of wat, binaryen.Features.All
+  let mod = binaryen.parseTextWithFeatures of wat, binaryen.Features.All
 
   // Note: it seems `mod.validate()` sometimes returns `1` instead of `true`; so we don't use `assert` here
   Predef.js_assert of mod.validate()
 
-  val modBuf = mod.emitBinary()
+  let modBuf = mod.emitBinary()
   mod.dispose()
 
   Promise.resolve(modBuf).then(modBuf =>
