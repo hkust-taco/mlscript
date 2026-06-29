@@ -17,8 +17,7 @@ fun dumpWasmImpExp(wasmMod) =
 
 // Binaryen helpers
 fun binaryenFmtWat(wat, foldExprs): String =
-  val mod = binaryen.parseText of wat
-  mod.setFeatures(binaryen.Features.All)
+  val mod = binaryen.parseTextWithFeatures of wat, binaryen.Features.All
   
   // Note: it seems `mod.validate()` sometimes returns `1` instead of `true`; so we don't use `assert` here
   Predef.js_assert of mod.validate()
@@ -29,8 +28,7 @@ fun binaryenFmtWat(wat, foldExprs): String =
   fmtWat
 
 fun binaryenCompileToModule(wat, importObject): Promise =
-  val mod = binaryen.parseText of wat
-  mod.setFeatures(binaryen.Features.All)
+  val mod = binaryen.parseTextWithFeatures of wat, binaryen.Features.All
 
   // Note: it seems `mod.validate()` sometimes returns `1` instead of `true`; so we don't use `assert` here
   Predef.js_assert of mod.validate()

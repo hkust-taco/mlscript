@@ -5,9 +5,8 @@
 // Helper functions
 import "binaryen"
 fun compileWatToWasm(wat) = 
-  let mod = binaryen.parseText(wat)
-  mod.setFeatures(binaryen.Features.All)
-  assert mod.validate() != false
+  let mod = binaryen.parseTextWithFeatures of wat, binaryen.Features.All
+  Predef.js_assert of mod.validate()
   val modBuf = mod.emitBinary()
   mod.dispose()
   modBuf
