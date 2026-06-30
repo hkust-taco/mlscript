@@ -35,17 +35,20 @@ f(4)(2)
 
 fun f(n1: Int)(n2: Int)(n3: Int): Int = 10 * (10 * n1 + n2) + n3
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let f2;
+//│ let f2, f$worker;
 //│ f2 = function f(n1) {
 //│   return (n2) => {
 //│     return (n3) => {
-//│       let tmp, tmp1, tmp2;
-//│       tmp = 10 * n1;
-//│       tmp1 = tmp + n2;
-//│       tmp2 = 10 * tmp1;
-//│       return tmp2 + n3
+//│       return f$worker(n1, n2, n3)
 //│     }
 //│   }
+//│ };
+//│ f$worker = function f$worker(n1, n2, n3) {
+//│   let tmp, tmp1, tmp2;
+//│   tmp = 10 * n1;
+//│   tmp1 = tmp + n2;
+//│   tmp2 = 10 * tmp1;
+//│   return tmp2 + n3
 //│ };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
@@ -57,21 +60,24 @@ f(4)(2)(0)
 
 fun f(n1: Int)(n2: Int)(n3: Int)(n4: Int): Int = 10 * (10 * (10 * n1 + n2) + n3) + n4
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let f3;
+//│ let f3, f$worker1;
 //│ f3 = function f(n1) {
 //│   return (n2) => {
 //│     return (n3) => {
 //│       return (n4) => {
-//│         let tmp, tmp1, tmp2, tmp3, tmp4;
-//│         tmp = 10 * n1;
-//│         tmp1 = tmp + n2;
-//│         tmp2 = 10 * tmp1;
-//│         tmp3 = tmp2 + n3;
-//│         tmp4 = 10 * tmp3;
-//│         return tmp4 + n4
+//│         return f$worker1(n1, n2, n3, n4)
 //│       }
 //│     }
 //│   }
+//│ };
+//│ f$worker1 = function f$worker(n1, n2, n3, n4) {
+//│   let tmp, tmp1, tmp2, tmp3, tmp4;
+//│   tmp = 10 * n1;
+//│   tmp1 = tmp + n2;
+//│   tmp2 = 10 * tmp1;
+//│   tmp3 = tmp2 + n3;
+//│   tmp4 = 10 * tmp3;
+//│   return tmp4 + n4
 //│ };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 

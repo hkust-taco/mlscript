@@ -118,13 +118,9 @@ bar([foo, x => x].1)
 //│ ╔══[COMPILATION ERROR] Cannot determine if 0 is a function.
 //│ ║  l.116: 	bar([foo].0)
 //│ ╙──       	         ^^
-//│ ═══[COMPILATION ERROR] Cannot determine if 0$__checkNotMethod is a function.
-//│ ═══[COMPILATION ERROR] Cannot determine if Error is a function.
 //│ ╔══[COMPILATION ERROR] Cannot determine if 1 is a function.
 //│ ║  l.117: 	bar([foo, x => x].1)
 //│ ╙──       	                 ^^
-//│ ═══[COMPILATION ERROR] Cannot determine if 1$__checkNotMethod is a function.
-//│ ═══[COMPILATION ERROR] Cannot determine if Error is a function.
 //│ = 0
 
 
@@ -138,7 +134,7 @@ bar([foo, x => x].(i))
 :ge
 [foo, x => x].(i)(0)
 //│ ╔══[COMPILATION ERROR] Cannot determine if the dynamic selection is a function object.
-//│ ║  l.139: 	[foo, x => x].(i)(0)
+//│ ║  l.135: 	[foo, x => x].(i)(0)
 //│ ╙──       	               ^
 
 
@@ -152,10 +148,10 @@ let foo = Foo()
 foo.("f")(0)
 foo.("h")(1)
 //│ ╔══[COMPILATION ERROR] Cannot determine if the dynamic selection is a function object.
-//│ ║  l.152: 	foo.("f")(0)
+//│ ║  l.148: 	foo.("f")(0)
 //│ ╙──       	^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Cannot determine if the dynamic selection is a function object.
-//│ ║  l.153: 	foo.("h")(1)
+//│ ║  l.149: 	foo.("h")(1)
 //│ ╙──       	^^^^^^^^
 //│ = 0
 //│ foo = Foo()
@@ -400,7 +396,7 @@ foo.Foo#x
 :ge
 foo.f(0)
 //│ ╔══[COMPILATION ERROR] Cannot determine if f is a function object.
-//│ ║  l.401: 	foo.f(0)
+//│ ║  l.397: 	foo.f(0)
 //│ ╙──       	^^^^^
 //│ = 1
 
@@ -418,7 +414,7 @@ foo.Foo#f(0)
 :ge
 foo.x(0)
 //│ ╔══[COMPILATION ERROR] Cannot determine if x is a function object.
-//│ ║  l.419: 	foo.x(0)
+//│ ║  l.415: 	foo.x(0)
 //│ ╙──       	^^^^^
 
 

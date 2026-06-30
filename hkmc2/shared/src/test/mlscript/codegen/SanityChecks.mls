@@ -188,15 +188,11 @@ if M.A(1).y is
   x and x == 1 then x
   else 0
 //│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
-//│ let scrut, tmp6, selRes1;
+//│ let scrut, scrut1, tmp6;
 //│ tmp6 = runtime.checkCall(M1.A(1));
-//│ selRes1 = tmp6.y;
-//│ tmp6.y$__checkNotMethod;
-//│ if (selRes1 === undefined) {
-//│   throw globalThis.Object.freeze(new globalThis.Error("Access to required field 'y' yielded 'undefined'"))
-//│ }
-//│ scrut = runtime.checkCall(Predef.equals(selRes1, 1));
-//│ if (scrut === true) { block$res17 = selRes1; } else { block$res17 = 0; }
+//│ scrut = runtime.checkSelect(tmp6.y, "y", tmp6);
+//│ scrut1 = runtime.checkCall(Predef.equals(scrut, 1));
+//│ if (scrut1 === true) { block$res17 = scrut; } else { block$res17 = 0; }
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'y' yielded 'undefined'
 

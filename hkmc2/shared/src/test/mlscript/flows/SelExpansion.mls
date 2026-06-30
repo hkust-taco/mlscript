@@ -433,6 +433,6 @@ e.next
 //│     e⁰  <~  Test(123)
 //│     e⁰  ~>  {next: ⋅next⁰}
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
-//│ ═══[RUNTIME ERROR] TypeError: selRes7.next is not a function
+//│ ═══[RUNTIME ERROR] TypeError: runtime.checkSelect(...).next is not a function
 
 

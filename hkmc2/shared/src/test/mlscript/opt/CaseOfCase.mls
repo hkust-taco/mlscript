@@ -75,7 +75,6 @@ fun test(x) = x map(_ + 1) map(_ * 2)
 //│       set inlinedVal2 = *⁰(arg$Some$0$, 2);
 //│       return Option⁰.Some¹(inlinedVal2)
 //│     None⁰ =>
-//│       set inlinedVal = Option⁰.None⁰;
 //│       return Option⁰.None⁰
 //│     else
 //│       throw new globalThis⁰.Error⁰("match error")
@@ -104,8 +103,6 @@ fun test(x) = x map(_ + 1) map(_ * 2) map("Result: " + _)
 //│       set inlinedVal4 = +⁰("Result: ", arg$Some$0$);
 //│       return Option⁰.Some¹(inlinedVal4)
 //│     None⁰ =>
-//│       set inlinedVal = Option⁰.None⁰;
-//│       set inlinedVal1 = Option⁰.None⁰;
 //│       return Option⁰.None⁰
 //│     else
 //│       throw new globalThis⁰.Error⁰("match error")
@@ -138,7 +135,6 @@ fun test(x) = if x map(_ + 1) is
 //│           return [arg$Some$0$]
 //│       end
 //│     None⁰ =>
-//│       set inlinedVal = Option⁰.None⁰;
 //│       return null
 //│     else
 //│       throw new globalThis⁰.Error⁰("match error")
@@ -237,16 +233,13 @@ x => if partlyKnownProducer(x) is
 //│ let lambda;
 //│ @private
 //│ define lambda as fun lambda¹(x) {
-//│   let selRes;
+//│   let inlinedVal;
 //│   match x
 //│     "" =>
 //│       return Predef⁰.print⁰("Z")
 //│     "1" =>
-//│       set selRes = x.length﹖;
-//│       do x.length$__checkNotMethod﹖;
-//│       match selRes
-//│         undefined =>
-//│           throw new globalThis⁰.Error﹖("Access to required field 'length' yielded 'undefined'")
+//│       set inlinedVal = x.length﹖;
+//│       match inlinedVal
 //│         0 =>
 //│           return Predef⁰.print⁰("Z")
 //│         1 =>
@@ -313,20 +306,13 @@ x => if partlyKnownProducer(x) is
 //│ let lambda;
 //│ @private
 //│ define lambda as fun lambda³(x) {
-//│   let inlinedVal, selRes;
+//│   let inlinedVal;
 //│   match x
 //│     "" =>
 //│       set inlinedVal = 0;
 //│       end
 //│     "1" =>
-//│       set selRes = x.length﹖;
-//│       do x.length$__checkNotMethod﹖;
-//│       match selRes
-//│         undefined =>
-//│           throw new globalThis⁰.Error﹖("Access to required field 'length' yielded 'undefined'")
-//│         else
-//│           set inlinedVal = selRes;
-//│           end
+//│       set inlinedVal = x.length﹖;
 //│       end
 //│     "2" =>
 //│       set inlinedVal = 1;
@@ -356,16 +342,13 @@ x => if partlyKnownProducer(x) is
 //│ let lambda;
 //│ @private
 //│ define lambda as fun lambda⁴(x) {
-//│   let selRes;
+//│   let inlinedVal;
 //│   match x
 //│     "" =>
 //│       return Predef⁰.print⁰("Z")
 //│     "1" =>
-//│       set selRes = x.length﹖;
-//│       do x.length$__checkNotMethod﹖;
-//│       match selRes
-//│         undefined =>
-//│           throw new globalThis⁰.Error﹖("Access to required field 'length' yielded 'undefined'")
+//│       set inlinedVal = x.length﹖;
+//│       match inlinedVal
 //│         0 =>
 //│           return Predef⁰.print⁰("Z")
 //│         1 =>

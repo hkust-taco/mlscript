@@ -38,10 +38,17 @@ in
 //│ > 5
 
 
-// TODO: rm dead assignment
+// * Note that the dead assignment to parameter x is removed
+:sir
+:soir
 fun f(x) =
   x = 1
   42
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define f⁰ as fun f¹(x) { set x = 1; return 42 }; end
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ define f⁰ as fun f¹(x) { return 42 }; end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 
 // :dopt
@@ -56,7 +63,6 @@ fun main =
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 
-
 // :dopt
 // :sir
 let x = if maybe then 1 else 1
@@ -64,5 +70,96 @@ print(x)
 //│ > 1
 //│ x = 1
 
+
+:soir
+:re
+let x in
+  try
+    set x = 1
+    if maybe do throw 42
+    set x = 2
+  finally print(x)
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let x, scrut, tmp;
+//│ try
+//│   set x = 1;
+//│   set scrut = Predef⁰.maybe⁰;
+//│   match scrut
+//│     true =>
+//│       throw 42
+//│     else
+//│       set x = 2;
+//│       set tmp = runtime⁰.Unit⁰;
+//│       end
+//│   end
+//│ finally
+//│   do Predef⁰.print⁰(x);
+//│   end;
+//│   return tmp
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ > 1
+//│ ═══[RUNTIME ERROR] 42
+
+:sir
+:soir
+:re
+let x in
+  try
+    set x = 1
+    (???)
+    set x = 2
+  finally print(x)
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let x, tmp, tmp1;
+//│ try
+//│   set x = 1;
+//│   do Predef⁰.notImplementedError⁰;
+//│   set x = 2;
+//│   set tmp = runtime⁰.Unit⁰;
+//│   end
+//│ finally
+//│   set tmp1 = Predef⁰.print⁰(x);
+//│   end;
+//│   return tmp
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let x, tmp;
+//│ try
+//│   set x = 1;
+//│   do Predef⁰.notImplementedError⁰;
+//│   set x = 2;
+//│   set tmp = runtime⁰.Unit⁰;
+//│   end
+//│ finally
+//│   do Predef⁰.print⁰(x);
+//│   end;
+//│   return tmp
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ > 1
+//│ ═══[RUNTIME ERROR] Error: Not implemented
+
+:expect 2
+fun test =
+  let x
+  try
+    set x = 1
+    if maybe do
+      set x = 2
+      throw 42
+    else print("hello")
+    set x = 3
+  finally return x
+test
+//│ = 2
+
+:soir
+let x = 1 in
+  let y
+  set x = 2 in
+    set y = 3
+  y
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let y; try set y = 3; end finally end; return y
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 3
 
 

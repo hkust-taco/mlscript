@@ -54,7 +54,10 @@ module Test with
 //│     Test.a = 3;
 //│   }
 //│   static test1(x) {
-//│     return test1(x)
+//│     return globalThis.Object.freeze([
+//│       globalThis.a,
+//│       x
+//│     ])
 //│   }
 //│   static test2(x) {
 //│     return globalThis.Object.freeze([

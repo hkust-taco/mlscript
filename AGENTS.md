@@ -6,9 +6,12 @@
 It is best to leave the SBT shell open (by just typing the `sbt` command line)
 and issue commands directly in that shell, as SBT startup is very slow.
 
-Before running individual tests, make sure to first run `hkmc2JVM/test`,
+Before running individual tests, make sure to first run `ctest`,
 so that the compilation-tests (in `hkmc2/shared/src/test/mlscript-compile/`) are run
 and produce the JS files that are needed at runtime for the other tests (in `hkmc2/shared/src/test/mlscript/`).
+Note that this only affects the main compilation tests;
+there is also `cntest` for nofib compilation tests, `catest` for application compilation tests,
+and `cwtest` for WASM compilation tests.
 
 Before finishing your work, run `hkmc2AllTests/test` to make sure the codebase compiles and all tests succeed.
 
@@ -43,6 +46,11 @@ rather than to introduce temporary workarounds that bypass bugs just to make the
 ## Coding Style
 
 Never use `asInstanceOf` unless absolutely necessary. If you find yourself using `asInstanceOf`, it's a sign that your code may need to be refactored to be more type-safe.
+
+Never use non-local mutation unless absolutely necessary.
+In particular, you should always refrain from adding new global mutable state to things like the Symbol classes
+unless there is no reasonable alternative, in which case you should document in the code
+exactly where the mutable state is supposed to be defined and used.
 
 Never use default arguments in core business logic.
 Default arguments should be reserved for user-facing APIs.

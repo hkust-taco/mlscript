@@ -82,9 +82,6 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
   override def processTerm(blk: semantics.Term.Blk, inImport: Bool)(using Config, Raise): Unit =
     super.processTerm(blk, inImport)
     
-    val outerRaise: Raise = summon
-    val reportedMessages = mutable.Set.empty[Str]
-    
     val importAliases = blk.stats.collect:
         case Import(sym = sym: VarSymbol) => sym
       .toSet
@@ -118,39 +115,10 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
     
     Config.extractConfigFromStats(blk).givenIn {
     
-    if showJS.isSet then config.copy(sanityChecks = N).givenIn:
-      given Raise =
-        case d @ ErrorReport(source = Source.Compilation) =>
-          reportedMessages += d.mainMsg
-          outerRaise(d)
-        case d => outerRaise(d)
-      given Elaborator.Ctx = curCtx
-      val low = ltl.givenIn:
-        codegen.Lowering()
-      val jsb = ltl.givenIn:
-        new JSBuilder
-      var lowered = low.program(blk, symbolsToPreserve = Set.empty)
-      if noOptimizations.isUnset then
-        lowered = BlockSimplifier(symbolsToPreserve, dtl, print)(lowered)
-        ltl.givenIn:
-          lowered = DeadParamElim(lowered)
-      val nestedScp = baseScp.nest
-      val je = nestedScp.givenIn:
-        jsb.programBody(lowered, N, wd)
-      val jsStr = je.stripBreaks.mkString(output.ColWidth)
-      outputSeparator("JS (unsanitized)")
-      output(jsStr)
-    
     if noCodeGen.isUnset then
       given Elaborator.Ctx = curCtx
-      given Raise =
-        case e: ErrorReport if reportedMessages.contains(e.mainMsg) =>
-          if verbose.isSet then
-            output(s"Skipping already reported diagnostic: ${e.mainMsg}")
-        case d => outerRaise(d)
       val low = ltl.givenIn:
         new codegen.Lowering()
-          with codegen.LoweringSelSanityChecks
           with codegen.LoweringTraceLog(traceJS.isSet)
       
       var lowered = low.program(blk, symbolsToPreserve = symbolsToPreserve)
@@ -240,6 +208,16 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
         case Return(res) =>
           Assign(resSym, res, End())
       ))
+    
+      if showJS.isSet then config.copy(sanityChecks = N).givenIn:
+        val jsb = ltl.givenIn:
+          new JSBuilder
+        val je = nestedScp.nest.givenIn:
+          jsb.programBody(pgrm.copy(main = Scoped(exportedScoped, pgrm.main)), N, wd)
+        val jsStr = je.stripBreaks.mkString(output.ColWidth)
+        outputSeparator("JS (unsanitized)")
+        output(jsStr)
+      
       val jsb = ltl.givenIn:
         new JSBuilder
           with JSBuilderArgNumSanityChecks

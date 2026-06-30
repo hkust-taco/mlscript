@@ -105,9 +105,6 @@ fun test2() =
 //│   };
 //│   return funny()
 //│ };
-//│ ╔══[WARNING] Pure expression in statement position
-//│ ║  l.85: 	    case 0 then 0
-//│ ╙──      	    ^^^^^^^^^^^^^
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ ╔══[COMPILATION ERROR] Function definition shape not yet supported for funny
 //│ ║  l.85: 	    case 0 then 0
@@ -123,7 +120,7 @@ fun test2() =
 fun test3 =
   print("Hi")
 //│ ╔══[COMPILATION ERROR] Function definition shape not yet supported for test3
-//│ ║  l.124: 	  print("Hi")
+//│ ║  l.121: 	  print("Hi")
 //│ ╙──       	  ^^^^^^^^^^^
 
 

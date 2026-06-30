@@ -23,16 +23,6 @@ fun f(x) =
     if x do
       let z = 3
       fun g() = z
-//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let f;
-//│ runtime.resetEffects();
-//│ f = function f(x) {
-//│   if (x === true) {
-//│     if (x === true) { return runtime.Unit }
-//│     return runtime.Unit;
-//│   }
-//│   return runtime.Unit;
-//│ };
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ do runtime⁰.resetEffects﹖();
 //│ define f⁰ as fun f¹(x) {
@@ -49,6 +39,16 @@ fun f(x) =
 //│   end
 //│ };
 //│ end
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ let f;
+//│ runtime.resetEffects();
+//│ f = function f(x) {
+//│   if (x === true) {
+//│     if (x === true) { return runtime.Unit }
+//│     return runtime.Unit;
+//│   }
+//│   return runtime.Unit;
+//│ };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 

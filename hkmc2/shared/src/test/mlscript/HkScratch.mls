@@ -9,4 +9,21 @@
 // :todo
 
 
+fun (??) ex = 0
+
+let x
+let y
+//│ x = undefined
+//│ y = undefined
+
+:fixme
+:sir
+set x = 1
+??
+set y = 1
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let tmp; set tmp = ex⁰(); set x⁰ = 1; set y⁰ = 1; return tmp(runtime⁰.Unit⁰, runtime⁰.Unit⁰)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ ═══[RUNTIME ERROR] TypeError: 0 is not a function
+
 
