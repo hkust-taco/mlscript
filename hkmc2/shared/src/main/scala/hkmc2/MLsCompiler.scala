@@ -6,6 +6,7 @@ import hkmc2.utils.*, shorthands.*
 import hkmc2.io
 import utils.*
 
+import hkmc2.codegen.CompilationPipeline
 import hkmc2.semantics.*
 import hkmc2.syntax.Keyword.`override`
 import semantics.Elaborator.{Ctx, State}
@@ -117,7 +118,8 @@ class MLsCompiler
         new codegen.Lowering()
       val jsb = ltl.givenIn:
         codegen.js.JSBuilder()
-      val lowered = low.program(blk, symbolsToPreserve = Set.empty)
+      val lowered = ltl.givenIn:
+        CompilationPipeline.run(low.program(blk, symbolsToPreserve = Set.empty))
       var optimized = lowered
       val nme = file.baseName
       val exportedSymbol = parsed.definedSymbols.find(_._1 === nme).map(_._2)

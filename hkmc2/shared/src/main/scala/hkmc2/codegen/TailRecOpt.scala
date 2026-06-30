@@ -597,7 +597,7 @@ class TailRecOpt(using State, TL, Raise):
         comp.copy(methods = cMtds)
       c.copy(methods = mtds, companion = companion)(c.configOverride, c.annotations)
   
-  def transform(b: Block) =
+  def transform(prog: Program) =
     /* To avoid `x` being overridden in the following when the lifter is not run:
      * 
      * let lam
@@ -608,7 +608,7 @@ class TailRecOpt(using State, TL, Raise):
      * we need to do some analysis on what nested functions use what variables. We
      * re-use the analysis from the lifter to do this.
      */
-    
+    val b = prog.main
     given (ScopeData, AccessMap) = 
       // IgnoredScoes can be an empty set, since that information is only relevant for lifting
       given IgnoredScopes = IgnoredScopes(S(Set.empty))
@@ -665,4 +665,6 @@ class TailRecOpt(using State, TL, Raise):
         case _ => super.applyDefn(defn)
     .applyBlock(result)
     
-    result
+    if result is b
+    then prog
+    else Program(prog.imports, result)

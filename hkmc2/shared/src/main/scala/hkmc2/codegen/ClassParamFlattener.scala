@@ -105,6 +105,3 @@ end ClassParamFlattener
 object ClassParamFlattener:
   def apply(program: Program)(using State): Program =
     new ClassParamFlattener().applyProgram(program)
-  
-  def apply(block: Block)(using State): Block =
-    new ClassParamFlattener().applyBlock(block)

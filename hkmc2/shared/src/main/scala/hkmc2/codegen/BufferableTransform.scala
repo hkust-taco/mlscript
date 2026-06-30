@@ -15,7 +15,7 @@ import hkmc2.Message.MessageContext
 import hkmc2.syntax.Tree.DummyTypeDef
 
 class BufferableTransform()(using Ctx, State, Raise):
-  def transform(blk: Block): Block =
+  def transform(prog: Program): Program =
     val transformer = new BlockTransformer(SymbolSubst.Id):
       override def applyDefn(defn: Defn)(k: Defn => Block): Block = defn match
         case cls: ClsLikeDefn if cls.k is syntax.Cls =>
@@ -113,4 +113,4 @@ class BufferableTransform()(using Ctx, State, Raise):
                 cls.bufferable,
               )(cls.configOverride, cls.annotations)
         case _ => super.applyDefn(defn)(k)
-    transformer.applyBlock(blk)
+    transformer.applyProgram(prog)

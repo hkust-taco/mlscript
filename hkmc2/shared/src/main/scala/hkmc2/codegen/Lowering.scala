@@ -93,7 +93,6 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
       case t => t
   
   val lowerHandlers: Bool = config.effectHandlers.isDefined
-  val lift: Bool = config.liftDefns.isDefined
 
   private lazy val wasmBinaryIntrinsicMap: Map[Str, Str] = Map(
     "+" -> "plus_impl",
@@ -1364,46 +1363,9 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
       inScopedBlockExcept(symbolsToPreserve)(using LoweringCtx.empty):
         block(funs ::: rest, R(main.res))(ImplctRet)
     
-    val desug = LambdaRewriter.desugar(blk)
-    
-    val deforested =
-      val outterTl = tl
-      config.deforest match
-        case None => desug
-        case Some(dCfg) =>
-          flowAnalysis.FlowAnalysis.mkTraceLogger(dCfg.config, "deforest > ", outterTl).givenIn:
-            deforest.Deforest(Program(imps.map(imp => imp.sym -> imp.str), desug)).main
-    
-    val etaExpanded =
-      EtaExpansion(Program(imps.map(imp => imp.sym -> imp.str), deforested)).main
-    
-    val lifted =
-      if lift then Lifter(etaExpanded).transform
-      else etaExpanded
-    
-    val withHandlers = config.effectHandlers.fold(lifted): opt =>
-      HandlerLowering(new HandlerPaths, opt).translateTopLevel(lifted)
-    
-    val bufferable = BufferableTransform().transform(withHandlers.flattened)
-    
-    // * TODO[Anto]: Can we remove MergeMatchArmTransformer? Seems no longer necessary
-    val merged = MergeMatchArmTransformer.applyBlock(bufferable)
-    
-    val funcToCls =
-      if config.funcToCls then Lifter(FirstClassFunctionTransformer().transform(merged)).transform
-      else merged
-    
-    val flatClassParams = ClassParamFlattener(funcToCls)
-
-    val staged = ReflectionInstrumenter(using summon).apply(flatClassParams)
-    
-    val res =
-      if config.tailRecOpt then TailRecOpt().transform(staged)
-      else staged
-    
     Program(
       imps.map(imp => imp.sym -> imp.str),
-      res
+      blk
     )
   
   

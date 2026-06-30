@@ -10,7 +10,7 @@ import hkmc2.syntax.Tree
 
 object LambdaRewriter:
   
-  def desugar(b: Block)(using State) =
+  def desugar(b: Program)(using State) =
     
     val transformer = new BlockTransformer(SymbolSubst.Id):
       
@@ -38,6 +38,6 @@ object LambdaRewriter:
           Scoped(Set.single(newSym), blk)
         case _ => super.applyBlock(b)
     
-    transformer.applyBlock(b)
+    transformer.applyProgram(b)
   
   

@@ -777,12 +777,17 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
     topLevelPostTransform.applyBlock(b)
 
 
-  def translateTopLevel(b: Block): Block =
+  def translateProgram(prog: Program): Program =
     val ctx = HandlerCtx.TopLevel
-    val transformed = translateBlock(b, ctx, Set.empty)
-    blockBuilder
-      .staticif(
-        !opt.doNotInstrumentTopLevelModCtor,
-        _.assign(NoSymbol, Call(paths.resetEffects, Nil ne_:: Nil)(CallMetadata.defaultMlsFun))
+    val transformed = blockBuilder
+        .staticif(
+          !opt.doNotInstrumentTopLevelModCtor,
+          _.assign(NoSymbol, Call(paths.resetEffects, Nil ne_:: Nil)(CallMetadata.defaultMlsFun))
+        )
+        .rest(translateBlock(prog.main, ctx, Set.empty))
+    if transformed is prog.main then prog
+    else
+      Program(
+        prog.imports,
+        transformed
       )
-      .rest(transformed)

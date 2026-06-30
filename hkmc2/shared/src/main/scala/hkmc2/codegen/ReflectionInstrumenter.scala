@@ -430,6 +430,6 @@ class ReflectionInstrumenter(using State, Raise, Ctx) extends BlockTransformer(n
         case _ => super.applyDefn(defn)
     transformer.applyBlock(b)
 
-  def apply(b: Block) =
-    mkDefnMap(b)
-    applyBlock(b)
+  def apply(prog: Program) =
+    mkDefnMap(prog.main)
+    applyProgram(prog)

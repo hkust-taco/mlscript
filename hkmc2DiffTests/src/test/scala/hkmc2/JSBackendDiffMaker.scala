@@ -121,7 +121,8 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
         new codegen.Lowering()
           with codegen.LoweringTraceLog(traceJS.isSet)
       
-      var lowered = low.program(blk, symbolsToPreserve = symbolsToPreserve)
+      var lowered = ltl.givenIn:
+        CompilationPipeline.run(low.program(blk, symbolsToPreserve = symbolsToPreserve))
       
       var optimized = lowered
       
