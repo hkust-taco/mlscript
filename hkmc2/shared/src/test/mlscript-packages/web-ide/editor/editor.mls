@@ -1,13 +1,103 @@
 import "https://esm.sh/codemirror@6.0.1" { EditorView, basicSetup }
-import "https://esm.sh/@codemirror/view@^6.0.0?target=es2022" { keymap }
+import "https://esm.sh/@codemirror/view@^6.0.0?target=es2022" { keymap, Decoration, ViewPlugin }
+import "https://esm.sh/@codemirror/state@^6.0.0?target=es2022" { EditorState }
 import "https://esm.sh/@codemirror/commands@^6.0.0?target=es2022" { indentWithTab }
 import "https://esm.sh/@codemirror/lang-javascript@6.2.4" { javascript }
-import "https://esm.sh/@codemirror/language@6.11.3" { StreamLanguage, defaultHighlightStyle, syntaxHighlighting }
+import "https://esm.sh/@codemirror/language@6.11.3" { StreamLanguage, defaultHighlightStyle, syntaxHighlighting, foldService, indentUnit }
 import "https://esm.sh/@uiw/codemirror-theme-vscode" { vscodeLight as theme }
 import "./Highlight.mls"
 import "../filesystem/fs.mls"
 
 module editor with...
+
+let foldStart = new RegExp("^\\s*(?:(?:data\\s+)?class|trait|object|module|fun|constructor)\\b")
+
+let nonBlank = new RegExp("\\S")
+
+fun indentationColumns(text) =
+  let
+    columns = 0
+    index = 0
+    done = false
+  while not done and index < text.length do
+    let char = text.charAt(index)
+    if char is
+      " " then
+        set columns += 1
+        set index += 1
+      "\t" then
+        set columns += 2
+        set index += 1
+      else set done = true
+  columns
+
+fun foldableStructureLine(text) =
+  foldStart.test(text)
+
+fun foldRange(state, lineStart, lineEnd) =
+  let startLine = state.doc.lineAt(lineStart)
+  if not foldableStructureLine(startLine.text) then null
+  else
+    let
+      startIndent = indentationColumns(startLine.text)
+      lineNumber = startLine.number + 1
+      lastContentLine = null
+      foundChildLine = false
+      done = false
+    while not done and lineNumber <= state.doc.lines do
+      let currentLine = state.doc.line(lineNumber)
+      if nonBlank.test(currentLine.text) then
+        let currentIndent = indentationColumns(currentLine.text)
+        if currentIndent <= startIndent then set done = true
+        else
+          set foundChildLine = true
+          set lastContentLine = currentLine
+          set lineNumber += 1
+      else
+        if foundChildLine do set lastContentLine = currentLine
+        set lineNumber += 1
+    if foundChildLine and lastContentLine !== null and lastContentLine.to > startLine.to then
+      mut { from: startLine.to, to: lastContentLine.to }
+    else null
+
+fun mlscriptFolding() =
+  foldService.of((state, lineStart, lineEnd) => foldRange(state, lineStart, lineEnd))
+
+fun indentGuideStyle(columns) =
+  "--mls-indent-guide-width: " + columns + "ch"
+
+fun indentGuideLineDecoration(columns) =
+  let attributes = mut
+    style: indentGuideStyle(columns)
+  set attributes.'class = "mls-indent-guides"
+  Decoration.line(mut { :attributes })
+
+fun buildIndentGuideDecorations(view) =
+  let ranges = mut []
+  view.visibleRanges.forEach of (range, ...) =>
+    let position = range.from
+    while position <= range.to do
+      let line = view.state.doc.lineAt(position)
+      let columns = indentationColumns(line.text)
+      if columns > 0 do
+        ranges.push(indentGuideLineDecoration(columns).range(line.from))
+      set position = line.to + 1
+  Decoration.set(ranges, true)
+
+fun indentGuidePluginValue(view) =
+  let plugin = mut
+    decorations: buildIndentGuideDecorations(view)
+  set plugin.update = update =>
+    if update.docChanged then
+      set plugin.decorations = buildIndentGuideDecorations(update.view)
+    else if update.viewportChanged do
+      set plugin.decorations = buildIndentGuideDecorations(update.view)
+  plugin
+
+fun mlscriptIndentGuides() =
+  ViewPlugin.define(view => indentGuidePluginValue(view), mut
+    decorations: plugin => plugin.decorations
+  )
 
 fun editorThemeSpec() = mut
   "&": mut
@@ -37,6 +127,7 @@ fun languageExtensions(extension) =
       extensions.push(javascript())
     "mls" then
       extensions.push(StreamLanguage.define(Highlight.mlscript))
+      extensions.push(mlscriptFolding())
     else ()
   extensions
 
@@ -52,6 +143,9 @@ fun saveOnChange(filePath, isReadonly) =
 fun editorExtensions(filePath, extension, isReadonly) =
   let extensions = mut [basicSetup]
   extensions.push(keymap.of([indentWithTab]))
+  extensions.push(indentUnit.of("  "))
+  extensions.push(EditorState.tabSize.of(2))
+  extensions.push(mlscriptIndentGuides())
   extensions.push(syntaxHighlighting(defaultHighlightStyle))
   languageExtensions(extension).forEach of (extension, ...) =>
     extensions.push(extension)

@@ -1809,6 +1809,48 @@ editor-panel .cm-gutters {
   border-right: 1px solid var(--ide-border);
 }
 
+editor-panel .cm-lineNumbers .cm-gutterElement {
+  padding-left: 8px;
+  padding-right: 6px;
+}
+
+editor-panel .cm-foldGutter .cm-gutterElement {
+  min-width: 14px;
+  padding: 0 3px;
+  color: var(--ide-text-subtle);
+}
+
+editor-panel .cm-foldGutter .cm-gutterElement:hover {
+  color: var(--ide-accent-strong);
+}
+
+editor-panel .cm-line.mls-indent-guides {
+  --mls-indent-guide-color: #dce1db;
+  --mls-indent-guide-left: 6px;
+  --mls-indent-guide-width: 0ch;
+  position: relative;
+}
+
+editor-panel .cm-line.mls-indent-guides::before {
+  background-image: repeating-linear-gradient(
+    to right,
+    transparent 0,
+    transparent calc(2ch - 1px),
+    var(--mls-indent-guide-color) calc(2ch - 1px),
+    var(--mls-indent-guide-color) 2ch
+  );
+  background-position: left top;
+  background-repeat: repeat-x;
+  background-size: 2ch 100%;
+  bottom: -1px;
+  content: "";
+  left: var(--mls-indent-guide-left);
+  pointer-events: none;
+  position: absolute;
+  top: -1px;
+  width: calc(var(--mls-indent-guide-width) + 1px);
+}
+
 editor-panel .cm-panels.cm-panels-bottom {
   position: absolute;
   left: 50%;

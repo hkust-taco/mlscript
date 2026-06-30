@@ -9,7 +9,7 @@ let makeWordRegex(...words) = new RegExp("^(?:" + words.join("|") + ")$")
 let keywords = makeWordRegex of
   "val", "class", "trait", "type", "pattern", "object"
   "this", "super", "true", "false", "null", "undefined"
-  "forall", "declare", "where", "with", "fun", "let"
+  "forall", "declare", "where", "with", "fun", "let", "constructor"
 
 let moduleKeywords = makeWordRegex("module", "open", "import")
 
