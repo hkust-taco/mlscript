@@ -202,7 +202,8 @@ class Compiler(using Context)(using tl: TL)(using Ctx, State, Raise) extends Ter
       log(s"subPattern for field ${field.showDbg}: ${
         subPatterns.iterator.map(_.showDbg).mkString("{", ", ", "}")}")
       val subMatcherSymbol = buildMultiMatcher(subPatterns)
-      val makeResult = (fieldSymbol: LocalVarSymbol) => matcherResult(
+      /** Shorthands for the result of the matcher branch. */
+      def makeResult(fieldSymbol: LocalVarSymbol) = matcherResult(
           fieldSymbol.safeRef,
           app(subMatcherSymbol.safeRef, tup(fld(fieldSymbol.safeRef)), "result"))
       val result = knownFields.get(field) match

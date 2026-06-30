@@ -144,46 +144,8 @@ case @compile (Box(0) | Box(1)) then 1
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = fun
 
-:soir
+
 case @compile (Box(0) & Box(0 | 1)) then 1
-//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let lambda;
-//│ @private
-//│ define lambda as fun lambda⁵(caseScrut) {
-//│   let value, result1$, result2$;
-//│   match caseScrut
-//│     Box⁰ =>
-//│       let inlinedVal;
-//│       set value = caseScrut.value⁰;
-//│       match value
-//│         0 =>
-//│           set inlinedVal = { "p_1": true, "p_2": true };
-//│           end
-//│         1 =>
-//│           set inlinedVal = { "p_1": false, "p_2": true };
-//│           end
-//│         else
-//│           set inlinedVal = { "p_1": false, "p_2": false };
-//│           end
-//│       set result1$ = inlinedVal.p_1﹖;
-//│       match result1$
-//│         true =>
-//│           set result2$ = inlinedVal.p_2﹖;
-//│           match result2$
-//│             true =>
-//│               return 1
-//│             else
-//│               throw new globalThis⁰.Error⁰("match error")
-//│           end
-//│         else
-//│           throw new globalThis⁰.Error⁰("match error")
-//│       end
-//│     else
-//│       throw new globalThis⁰.Error⁰("match error")
-//│   end
-//│ };
-//│ return lambda⁵
-//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = fun
 
 class Add2(val x, val y, z)
@@ -191,9 +153,9 @@ class Add2(val x, val y, z)
 :e
 case @compile (Add2(0, _, _) | Add2(_, 1, _)) then 0
 //│ ╔══[COMPILATION ERROR] Parameter `z` is not accessible.
-//│ ║  l.188: 	class Add2(val x, val y, z)
+//│ ║  l.151: 	class Add2(val x, val y, z)
 //│ ╙──       	                         ^
 //│ ╔══[COMPILATION ERROR] Parameter `z` is not accessible.
-//│ ║  l.188: 	class Add2(val x, val y, z)
+//│ ║  l.151: 	class Add2(val x, val y, z)
 //│ ╙──       	                         ^
 //│ = fun

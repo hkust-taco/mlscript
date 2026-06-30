@@ -18,48 +18,8 @@ fun int(n) = if n is
 int(nat(42))
 //│ = 42
 
-// FIXME: why are we checking `Object` and `{ value }` patterns?
-:sir
 :expect true
 nat(0) is @compile NatBox
-//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let scrut, matcher__NatBox$, matchSuccess, lambda;
-//│ set scrut = nat⁰(0);
-//│ define lambda as fun lambda⁰(input) {
-//│   let p_0$, value, value1, p_0$1, result0$, p_0$2, tmp, tmp1, tmp2;
-//│   match input
-//│     null =>
-//│       set tmp = true;
-//│       set p_0$ = tmp;
-//│       return p_0$
-//│     Box⁰ =>
-//│       set value = input.value⁰;
-//│       set value1 = matcher__NatBox$(value);
-//│       set result0$ = value1;
-//│       match result0$
-//│         true =>
-//│           set tmp1 = true;
-//│           end
-//│         else
-//│           set tmp1 = false;
-//│           end
-//│       set p_0$1 = tmp1;
-//│       return p_0$1
-//│     else
-//│       set tmp2 = false;
-//│       set p_0$2 = tmp2;
-//│       return p_0$2
-//│   end
-//│ };
-//│ set matcher__NatBox$ = lambda⁰;
-//│ set matchSuccess = matcher__NatBox$(scrut);
-//│ match matchSuccess
-//│   true =>
-//│     return true
-//│   else
-//│     return false
-//│ end
-//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = true
 
 :expect true
