@@ -101,6 +101,7 @@ case @compile Add(0, 0) then 1
 
 data class Box(val value)
 
+// * TODO: We should find a way of optimizing away the local intermediate records in cases like this.
 :soir
 case @compile (Box(0) | Box(1)) then 1
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
