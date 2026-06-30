@@ -2,7 +2,7 @@
   "name": "mlscript",
   "dependencies": {
     "benchmark": "^2.1.4",
-    "binaryen": "github:Derppening/binaryen.js#v130.0.0-mlscript",
+    "binaryen": "github:hkust-taco/binaryen.js#mlscript",
     "typescript": "^4.7.4"
   }
 }
