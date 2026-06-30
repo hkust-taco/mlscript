@@ -73,10 +73,10 @@ x =>
 //│   lhs = OpApp:
 //│     lhs = IntLit of 1
 //│     op = Ident of "+"
-//│     rhss = Ls of 
+//│     rhss = Ls of
 //│       IntLit of 2
 //│   op = Ident of "+"
-//│   rhss = Ls of 
+//│   rhss = Ls of
 //│     IntLit of 3
 
 1 +

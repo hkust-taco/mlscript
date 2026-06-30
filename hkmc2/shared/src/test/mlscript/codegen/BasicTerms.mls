@@ -17,16 +17,14 @@
 //│ ╔══[WARNING] Pure expression in statement position
 //│ ║  l.15: 	1
 //│ ╙──      	^
-//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ 
-//│ ╔══[WARNING] Pure expression in statement position
-//│ ║  l.15: 	1
-//│ ╙──      	^
 //│ —————————————| Lowered IR Tree |————————————————————————————————————————————————————————————————————
 //│ Program:
 //│   main = Return of Lit of IntLit of 2
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ 
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 2
+//│
 
 
 print("Hi")
@@ -38,23 +36,23 @@ print("Hi")
 :lot
 print("Hi")
 2
-//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ Predef.print("Hi");
 //│ —————————————| Lowered IR Tree |————————————————————————————————————————————————————————————————————
 //│ Program:
 //│   main = Assign:
-//│     lhs = ‹no symbol›⁰
+//│     lhs = ‹no symbol›
 //│     rhs = Call:
 //│       fun = Select{sym=term:Predef⁰/print⁰}:
 //│         qual = MemberRef{disamb=module:Predef⁰}:
 //│           bms = member:Predef¹
 //│           disamb = module:Predef⁰
 //│         name = Ident of "print"
-//│       argss = Ls of 
-//│         Ls of 
+//│       argss = Ls of
+//│         Ls of
 //│           Arg:
 //│             value = Lit of StrLit of "Hi"
 //│     rest = Return of Lit of IntLit of 2
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ Predef.print("Hi");
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > Hi
 //│ = 2

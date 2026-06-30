@@ -4,7 +4,7 @@ package flow
 
 import scala.collection.mutable
 
-import mlscript.utils.*, shorthands.*
+import hkmc2.utils.*, shorthands.*
 import hkmc2.utils.Scope
 import hkmc2.utils.Scope.scope
 import hkmc2.document.*

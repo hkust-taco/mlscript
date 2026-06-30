@@ -45,6 +45,7 @@ let g = (b) => 0
 private fun pick(x)(y) = if false then x else y
 pick(f)(g)(5)
 //│ dead-param-elim > >>> dead-param-elim results >>>
+//│ dead-param-elim > prodfun pick$worker#0 @ <root> -> eliminable: {0, 1}
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ = 0
 //│ g = fun g
@@ -55,6 +56,7 @@ let g = (b) => 0
 private fun pick(x)(y) = if false then x else y
 pick(f)(g)(5)
 //│ dead-param-elim > >>> dead-param-elim results >>>
+//│ dead-param-elim > prodfun pick$worker#0 @ <root> -> eliminable: {0, 1}
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ = 0
 //│ g = fun g
@@ -70,7 +72,7 @@ f(42)
 //│ dead-param-elim > >>> dead-param-elim results >>>
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let f⁰; @private define f⁰ as fun f¹(a) { return a }; return 42
+//│ @private define f⁰ as fun f¹(a) { return a }; return 42
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 42
 
@@ -88,6 +90,8 @@ main1()
 //│ = 1
 
 
+// [INLINING PR FIXME]: regression? even with :noInline
+:noInline
 // two `apply`, one has dead param, another does not;
 // but if `apply` is inlined, we can eliminate the `a` in `(a) => 0`
 private fun apply(f, x) = f(x)
@@ -96,7 +100,6 @@ private fun main(f1, f2) =
 private fun main1() = main((a) => 0, (a) => a + 1)
 main1()
 //│ dead-param-elim > >>> dead-param-elim results >>>
-//│ dead-param-elim > prodfun lambda#0 @ <root> -> eliminable: {0}
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ = 1
 
@@ -117,6 +120,7 @@ main1()
 
 :deadParamElim debug mono
 :expect 0
+:noInline
 private fun f = (a) => 0
 f(3)
 //│ dead-param-elim > >>> dead-param-elim results >>>

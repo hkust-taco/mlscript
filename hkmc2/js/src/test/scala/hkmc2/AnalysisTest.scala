@@ -2,7 +2,7 @@ package hkmc2
 
 import org.scalatest.funsuite.AnyFunSuite
 import io.{InMemoryFileSystem, Path, node}
-import mlscript.utils.*, shorthands.*
+import hkmc2.utils.*, shorthands.*
 
 class AnalysisTest extends AnyFunSuite:
   val projectRoot = node.process.cwd()
@@ -23,7 +23,7 @@ class AnalysisTest extends AnyFunSuite:
       + ("/std/RuntimeJS.mjs" -> node.fs.readFileSync(runtimePath, "utf-8"))
       + ("/std/Prelude.mls" -> node.fs.readFileSync(preludePath, "utf-8"))
 
-  private val paths = new Paths("/std/Prelude.mls", "/std/Runtime.mjs", "/std/Term.mjs", "/std")
+  private val paths = new Paths("/std/Prelude.mls", "/std/Runtime.mjs", "/std/Runtime.mls", "/std/Term.mjs", "/std")
 
   private def createCompiler(): (InMemoryFileSystem, Compiler) =
     val fs = new InMemoryFileSystem(loadStandardLibrary())

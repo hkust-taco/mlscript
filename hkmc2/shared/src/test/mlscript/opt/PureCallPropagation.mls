@@ -18,7 +18,7 @@ fun foo(x)(y)(z) =
 :soir
 foo(1)(2)(3)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ return foo$worker⁰(1, 2, 3)
+//│ do Predef⁰.print⁰("hi"); return 6
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > hi
 //│ = 6
@@ -30,12 +30,11 @@ let f = foo(1)(2)
 print("hello")
 f(3) + f(4)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let f⁰, inlinedVal, inlinedVal1;
 //│ set f⁰ = foo⁰(1)(2);
 //│ do Predef⁰.print⁰("hello");
-//│ set inlinedVal = foo$worker⁰(1, 2, 3);
-//│ set inlinedVal1 = foo$worker⁰(1, 2, 4);
-//│ return +⁰(inlinedVal, inlinedVal1)
+//│ do Predef⁰.print⁰("hi");
+//│ do Predef⁰.print⁰("hi");
+//│ return 13
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > hello
 //│ > hi
@@ -65,7 +64,7 @@ let f = foo(1)(2)
 print("hello")
 f(3)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let f¹; set f¹ = foo⁰(1)(2); do Predef⁰.print⁰("hello"); do Predef⁰.print⁰("hi"); return 6
+//│ set f¹ = foo⁰(1)(2); do Predef⁰.print⁰("hello"); do Predef⁰.print⁰("hi"); return 6
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > hello
 //│ > hi
@@ -81,26 +80,26 @@ let f = foo(1)(2)
 print("hello")
 f(3)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let foo¹, f², foo$worker¹, lambda⁰;
+//│ let foo$worker, lambda;
 //│ @inline
 //│ define foo¹ as fun foo²(x)(y) {
-//│   return foo$worker²(x, y)
+//│   return foo$worker⁰(x, y)
 //│ };
-//│ define foo$worker¹ as fun foo$worker²(x, y) {
-//│   let lambda;
+//│ define foo$worker as fun foo$worker⁰(x, y) {
+//│   let lambda1;
 //│   do Predef⁰.print⁰("hi");
 //│   @private
-//│   define lambda as fun lambda¹(z) {
+//│   define lambda1 as fun lambda⁰(z) {
 //│     return 42
 //│   };
-//│   return lambda¹
+//│   return lambda⁰
 //│ };
 //│ do Predef⁰.print⁰("hi");
 //│ @private
-//│ define lambda⁰ as fun lambda²(z) {
+//│ define lambda as fun lambda¹(z) {
 //│   return 42
 //│ };
-//│ set f² = lambda²;
+//│ set f² = lambda¹;
 //│ do Predef⁰.print⁰("hello");
 //│ return 42
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
@@ -115,7 +114,7 @@ f(3)
 :soir
 foo(1)(2)(3)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let inlinedVal; set inlinedVal = foo$worker²(1, 2); return inlinedVal(3)
+//│ let inlinedVal; set inlinedVal = foo$worker⁰(1, 2); return inlinedVal(3)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > hi
 //│ = 42
@@ -126,8 +125,8 @@ let f = foo(1)(2)
 print("hello")
 f(3) + f(4)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let f³, tmp, tmp1, inlinedVal;
-//│ set inlinedVal = foo$worker²(1, 2);
+//│ let tmp, tmp1, inlinedVal;
+//│ set inlinedVal = foo$worker⁰(1, 2);
 //│ set f³ = inlinedVal;
 //│ do Predef⁰.print⁰("hello");
 //│ set tmp = inlinedVal(3);
@@ -139,4 +138,47 @@ f(3) + f(4)
 //│ = 84
 //│ f = fun
 
+
+// * Do not propagate an unsaturated call prefix if it mentions a local
+// * that has gone out of scope by the later call site.
+:soir
+fun scopedPrefixFoo(x)(y) = x + y
+() =>
+  let f
+  if maybe is
+    false then 0
+    true then
+      scope.locally of (
+        let x = hide(0)
+        f = scopedPrefixFoo(x)
+      )
+  print of
+    "Hello", "Hello", "Hello", "Hello", "Hello", "Hello", "Hello", "Hello", "Hello", "Hello", "Hello"
+  f(2)
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let lambda;
+//│ @inline
+//│ define scopedPrefixFoo⁰ as fun scopedPrefixFoo¹(x)(y) {
+//│   return +⁰(x, y)
+//│ };
+//│ @private
+//│ define lambda as fun lambda²() {
+//│   let f, scrut;
+//│   set scrut = Predef⁰.maybe⁰;
+//│   match scrut
+//│     false =>
+//│       end
+//│     true =>
+//│       let x;
+//│       set x = Predef⁰.hide⁰(0);
+//│       set f = scopedPrefixFoo¹(x);
+//│       end
+//│     else
+//│       throw new globalThis⁰.Error⁰("match error")
+//│   do Predef⁰.print⁰("Hello", "Hello", "Hello", "Hello", "Hello", "Hello", "Hello", "Hello", "Hello", "Hello", "Hello");
+//│   return f(2)
+//│ };
+//│ return lambda²
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = fun
 

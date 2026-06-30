@@ -1,7 +1,7 @@
 
 package hkmc2
 
-import mlscript.utils.*, shorthands.*
+import hkmc2.utils.*, shorthands.*
 import ModuleResolver.*
 import io.PlatformPath.{given}
 import LocalModuleResolver.Vendor

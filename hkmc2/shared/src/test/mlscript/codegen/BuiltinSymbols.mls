@@ -32,3 +32,45 @@ Bool
 //│ = 1
 
 
+// * Note that the path used for "virtual" classes line Int is `runtime.unreachable`
+:lot
+case Int then 0
+//│ —————————————| Lowered IR Tree |————————————————————————————————————————————————————————————————————
+//│ Program:
+//│   main = Scoped(syms = {member:lambda⁰}):
+//│     body = Define:
+//│       defn = FunDefn:
+//│         sym = member:lambda⁰
+//│         dSym = term:lambda¹
+//│         params = Ls of
+//│           ParamList:
+//│             params = Ls of
+//│               Param:
+//│                 sym = caseScrut⁰
+//│                 modulefulness = Modulefulness of N
+//│         body = Match:
+//│           scrut = SimpleRef of caseScrut⁰
+//│           arms = Ls of
+//│             Tuple2:
+//│               _1 = Cls:
+//│                 cls = class:Int⁰
+//│                 path = Select{sym=term:Runtime⁰/unreachable⁰}:
+//│                   qual = SimpleRef of tmp:runtime⁰
+//│                   name = Ident of "unreachable"
+//│               _2 = Return of Lit of IntLit of 0
+//│           dflt = S of Throw of Instantiate:
+//│             mut = false
+//│             cls = Select{sym=class:Error⁰}:
+//│               qual = This of globalThis:globalThis⁰
+//│               name = Ident of "Error"
+//│             argss = Ls of
+//│               Ls of
+//│                 Arg:
+//│                   value = Lit of StrLit of "match error"
+//│       rest = Return of MemberRef{disamb=term:lambda¹}:
+//│         bms = member:lambda⁰
+//│         disamb = term:lambda¹
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = fun
+
+

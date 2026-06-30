@@ -4,15 +4,9 @@ import "../../mlscript-compile/apps/Accounting.mls"
 
 
 val acc = new Accounting
-//│ acc = Accounting {
-//│   warnings: [],
-//│   Project: fun Project { class: class Project },
-//│   Line: fun Line { class: class Line },
-//│   lines: [],
-//│   Report: fun Report { class: class Report }
-//│ }
+//│ acc = Accounting { warnings: [], mkProject: fun Project { class: class Project }, lines: [] }
 
-val proj = acc.Project("P1")
+val proj = acc.mkProject("P1")
 //│ proj = Project("P1")
 
 val l1 = acc.mkLine("L1", proj, 200_000, true)

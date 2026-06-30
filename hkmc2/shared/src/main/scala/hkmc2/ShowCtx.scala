@@ -6,7 +6,7 @@ import scala.collection.immutable.SortedMap
 
 import math.Ordered.orderingToOrdered
 
-import mlscript.utils._, shorthands._
+import hkmc2.utils.*, shorthands.*
 
 
 final case class ShowCtx(

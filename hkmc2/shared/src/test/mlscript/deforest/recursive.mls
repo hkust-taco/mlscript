@@ -20,8 +20,8 @@ object L
 fun map(f, ls_map) = if ls_map is
   h :: t then f(h) :: map(f, t)
   Nil then Nil
-let c = Cons(1, Nil)
-map(x => x + 1, c)
+let c = Cons(1, Nil) in
+  map(x => x + 1, c)
 //│ deforest > >>> fusing >>>
 //│ deforest > Cons⁰(1, Nil⁰) ->
 //│ deforest > 	match: ls_map⁰
@@ -31,7 +31,6 @@ map(x => x + 1, c)
 //│ deforest > 	match: ls_map⁰
 //│ deforest > <<< fusing <<<
 //│ = Cons(2, Nil)
-//│ c = fun
 
 // :sir
 fun map(f, ls_map) = if ls_map is
@@ -860,7 +859,7 @@ f
 //│ deforest > B⁰ ->
 //│ deforest > 	match: x⁵
 //│ deforest > <<< fusing <<<
-//│ = fun f_17$f
+//│ = fun f_18$f
 
 
 :deforest
@@ -890,7 +889,7 @@ f
 //│ deforest > B⁰ ->
 //│ deforest > 	match: x⁶
 //│ deforest > <<< fusing <<<
-//│ = fun f_9$f
+//│ = fun f_10$f
 
 
 
@@ -925,4 +924,4 @@ f
 //│ deforest > B⁰ ->
 //│ deforest > 	match: x⁷
 //│ deforest > <<< fusing <<<
-//│ = fun f_13$f
+//│ = fun f_14$f

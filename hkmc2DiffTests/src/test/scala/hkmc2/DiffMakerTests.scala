@@ -4,7 +4,7 @@ import java.nio.file.Files
 
 import org.scalatest.funsuite.AnyFunSuite
 
-import mlscript.utils.*, shorthands.*
+import hkmc2.utils.*, shorthands.*
 import io.{FileSystem, PlatformPath}
 import io.PlatformPath.given
 

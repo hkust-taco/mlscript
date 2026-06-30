@@ -10,9 +10,9 @@ C()
 //│ ——————————————| Resolved tree |—————————————————————————————————————————————————————————————————————
 //│ Blk:
 //│   res = App{typ=class:C⁰}:
-//│     lhs = Resolved{sym=term:C⁰/C¹}:
+//│     lhs = Resolved{sym=term:C¹}:
 //│       t = Ref{sym=member:C²} of member:C²
-//│       sym = term:C⁰/C¹
+//│       sym = term:C¹
 //│     rhs = Tup of Nil
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = C()
@@ -20,7 +20,7 @@ C()
 :sir
 let f = new C
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let f⁰, f¹; @private define f¹ as fun f²() { return new C⁰() }; set f⁰ = f²; end
+//│ let f; @private define f as fun f⁰() { return new C⁰() }; set f¹ = f⁰; end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ f = fun f
 
@@ -35,7 +35,7 @@ new C()
 //│     cls = Resolved{sym=class:C⁰}:
 //│       t = Ref{sym=member:C²} of member:C²
 //│       sym = class:C⁰
-//│     args = Ls of 
+//│     args = Ls of
 //│       Tup of Nil
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = C()
@@ -90,7 +90,7 @@ Test.test.hi
 //│ = 42
 
 
-mut val state = 10
+let state = 10
 //│ state = 10
 
 // * The order of evaluation of modules matters;
@@ -133,7 +133,7 @@ Foo.res
 fun bar =
   using Int = 42
   Foo.foo
-mut val x = 1
+let x = 1
 print(x)
 module Foo with
   set x += 1
@@ -144,5 +144,4 @@ bar
 //│ > 2
 //│ = 42
 //│ x = 2
-
 

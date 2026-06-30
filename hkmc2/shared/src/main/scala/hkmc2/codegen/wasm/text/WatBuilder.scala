@@ -3,7 +3,7 @@ package codegen
 package wasm
 package text
 
-import mlscript.utils.*, shorthands.*
+import hkmc2.utils.*, shorthands.*
 import hkmc2.utils.*
 
 import document.*
@@ -25,6 +25,27 @@ extension (instr: FoldedInstr)
     */
   private def mnemonicPrefix: Opt[Str] =
     instr.mnemonic.split('.').optionUnless(_.size == 1).map(_.head)
+
+extension (exprs: Seq[Expr])
+  /** Merges a sequence of expressions to a single `block` expression if needed. */
+  def mergeAsBlock: Opt[Expr] =
+    exprs match
+      case Seq() => N
+      case Seq(e) => S(e)
+      case exprs => S(Instructions.block(
+          label = N,
+          children = exprs,
+          resultTypes = exprs
+            .flatMap(_.resultTypes)
+            .optionUnless(_.exists(_ is UnreachableType))
+            .fold(Seq.empty)(_.map(ty => Result(ty.asValType_!))),
+        ))
+
+  /** Similar to [[`mergeAsBlock`]], but throws an exception if `exprs` is empty. */
+  def mergeAsBlock_! : Expr =
+    exprs.mergeAsBlock.getOrElse:
+      lastWords("Merging zero expressions into a block should not occur")
+end extension
 
 object WatBuilder:
   /** The maximum number of characters taken to be part of the identifier asscoiated with string constants. */
@@ -135,66 +156,58 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
     val resultTmp = mkTempLocal("typeInfoMatch")
     funcCtx.withLabel(LabelSymbol(N, "typeInfo"), hasContinueLabel = true):
       case LabelTarget(breakLabel, S(continueLabel)) =>
-        blockInstr(
-          label = N,
-          children = Seq(
-            local.set(currentTmp, scrutTypeInfo),
-            local.set(targetTmp, targetTypeInfo),
-            local.set(resultTmp, ref.i31(i32.const(0))),
-            blockInstr(
-              label = S(breakLabel),
-              children = Seq(
-                loopInstr(
-                  label = S(continueLabel),
-                  children = Seq(
-                    `if`(
-                      condition = ref.is_null(getLocalAnyref(currentTmp)),
-                      ifTrue = br(breakLabel),
-                      ifFalse = N,
-                      resultTypes = Seq.empty,
-                    ),
-                    `if`(
-                      condition = ref.eq(
-                        ref.cast(getLocalAnyref(currentTmp), RefType(HeapType.Eq, nullable = true)),
-                        ref.cast(getLocalAnyref(targetTmp), RefType(HeapType.Eq, nullable = true)),
-                      ),
-                      ifTrue = blockInstr(
-                        label = N,
-                        children = Seq(
-                          local.set(resultTmp, ref.i31(i32.const(1))),
-                          br(breakLabel),
-                        ),
-                        resultTypes = Seq.empty,
-                      ),
-                      ifFalse = N,
-                      resultTypes = Seq.empty,
-                    ),
-                    local.set(currentTmp, readTypeInfoParent(getLocalAnyref(currentTmp))),
-                    br(continueLabel),
+        Seq(
+          local.set(currentTmp, scrutTypeInfo),
+          local.set(targetTmp, targetTypeInfo),
+          local.set(resultTmp, ref.i31(i32.const(0))),
+          blockInstr(
+            label = S(breakLabel),
+            children = Seq(
+              loopInstr(
+                label = S(continueLabel),
+                children = Seq(
+                  `if`(
+                    condition = ref.is_null(getLocalAnyref(currentTmp)),
+                    ifTrue = br(breakLabel),
+                    ifFalse = N,
+                    resultTypes = Seq.empty,
                   ),
-                  resultTypes = Seq.empty,
+                  `if`(
+                    condition = ref.eq(
+                      ref.cast(getLocalAnyref(currentTmp), RefType(HeapType.Eq, nullable = true)),
+                      ref.cast(getLocalAnyref(targetTmp), RefType(HeapType.Eq, nullable = true)),
+                    ),
+                    ifTrue = Seq(
+                      local.set(resultTmp, ref.i31(i32.const(1))),
+                      br(breakLabel),
+                    ).mergeAsBlock_!,
+                    ifFalse = N,
+                    resultTypes = Seq.empty,
+                  ),
+                  local.set(currentTmp, readTypeInfoParent(getLocalAnyref(currentTmp))),
+                  br(continueLabel),
                 ),
+                resultTypes = Seq.empty,
               ),
-              resultTypes = Seq.empty,
             ),
-            i31.get(ref.cast(getLocalAnyref(resultTmp), RefType.i31ref), signed = true),
+            resultTypes = Seq.empty,
           ),
-          resultTypes = Seq(Result(I32Type)),
-        )
+          i31.get(ref.cast(getLocalAnyref(resultTmp), RefType.i31ref), signed = true),
+        ).mergeAsBlock_!
       case LabelTarget(_, N) =>
         lastWords("unreachable: loop-based RTTI traversal expects a continue label")
+  end isSubtypeByTypeInfo
 
   /** True if this top-level class can be declared as a Wasm struct type. */
   private def isSupportedTopLevelClass(defn: ClsLikeDefn): Bool =
     defn.owner.isEmpty
       && ((defn.k is syntax.Cls) || (defn.k is syntax.Obj))
-      && defn.auxParams.isEmpty
       && (!(defn.k is syntax.Obj) || defn.parentPath.isEmpty)
       && (!(defn.k is syntax.Obj) || defn.methods.isEmpty)
       && defn.companion.isEmpty
 
   /** Returns singleton metadata when `sym` resolves to a registered singleton object. */
-  private def singletonInfoFor(sym: Local)(using Ctx): Opt[SingletonInfo] =
+  private def singletonInfoFor(sym: ValueSymbol)(using Ctx): Opt[SingletonInfo] =
     ctx.getSingletonInfo(sym)
 
   /** Loads the singleton object reference from its backing mutable global. */
@@ -210,7 +223,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       ctorSym = N,
       k = syntax.Obj,
       paramsOpt = N,
-      auxParams = Nil,
+      auxParams = PlainParamList(Nil) :: Nil,
       parentPath = N,
       methods = Nil,
       privateFields = Nil,
@@ -251,7 +264,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       objectTag = typeInfo.objectTag,
       rttiTypeInfo = unitRttiTypeInfo,
       rttiGlobalExportName = unitTypeInfoGlobalInfo.exportName.get,
-      aliasSyms = singletonOwner.toSeq,
+      aliasSyms = singletonOwner.toList,
     ))
     summon[SessionExportCtx].emit(SessionSingleton(
       blockSym = unitDefn.sym,
@@ -269,7 +282,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       typeref: TypeIdx,
   )(using Ctx, Raise): Unit =
     if ctx.containsSingleton(clsLikeDefn.sym) then return
-  
+    
     val globalSym = BlockMemberSymbol(s"${clsLikeDefn.sym.nme}$$inst", Nil, nameIsMeaningful = false)
     val globalTy = RefType(typeref, nullable = true)
 
@@ -440,6 +453,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
         virtualMethodSlots = virtualMethodSlots.toMap,
       ),
     )
+  end predeclareClassVirtualTable
 
   /** Declares one supported top-level class type for early wasm registration. */
   private def predeclareClassType(defn: ClsLikeDefn)(using Ctx, Raise): Unit =
@@ -467,11 +481,12 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       objectTag = S(runtimeTag),
     ))
   end predeclareClassType
+  
   /** Declares the shared Wasm function type used by a class-associated function placeholder. */
   private def declareClassFuncType(
       defn: ClsLikeDefn,
       suffix: Str,
-      params: Seq[Local -> SymIdx],
+      params: Seq[ValueSymbol -> SymIdx],
   )(using Ctx, Raise): TypeIdx =
     ctx.addType(TypeInfo(
       sym = TempSymbol(N, defn.sym.nme),
@@ -509,7 +524,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
   private def predeclareClassFunc(
       defn: ClsLikeDefn,
       suffix: Str,
-      params: Seq[Local -> SymIdx],
+      params: Seq[ValueSymbol -> SymIdx],
       sym: BlockMemberSymbol,
       exportName: Opt[Str],
   )(using Ctx, Raise): Unit =
@@ -520,7 +535,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
   private def predeclareClassFuncWithType(
       defn: ClsLikeDefn,
       suffix: Str,
-      params: Seq[Local -> SymIdx],
+      params: Seq[ValueSymbol -> SymIdx],
       sym: BlockMemberSymbol,
       exportName: Opt[Str],
       funcTy: TypeIdx,
@@ -537,19 +552,32 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
     ))
   end predeclareClassFuncWithType
 
+  /** Returns the single flattened constructor parameter list. After ClassParamFlattener, all classes have paramsOpt = N
+    * and exactly one auxParams entry.
+    */
+  private def classCtorParamList(defn: ClsLikeDefn): ParamList =
+    assert(
+      defn.paramsOpt.isEmpty,
+      s"WatBuilder: expected paramsOpt to be None after flattening for class ${defn.sym.nme}",
+    )
+    assert(
+      defn.auxParams.sizeCompare(1) == 0,
+      s"WatBuilder: expected exactly one auxParams entry after flattening for class ${defn.sym.nme}",
+    )
+    defn.auxParams.head
+
   /** Declares one top-level class init function. */
   private def predeclareClassInit(defn: ClsLikeDefn)(using Ctx, Raise): Unit =
+    val pl = classCtorParamList(defn)
     val initParams = (defn.isym -> SymIdx("this")) +:
-      defn.paramsOpt.fold(Nil): ps =>
-        ps.params.map: p =>
-          p.sym -> SymIdx(p.sym.nme)
+      pl.params.map: p =>
+        p.sym -> SymIdx(p.sym.nme)
     predeclareClassFunc(defn, "init", initParams, initFuncSym(defn.sym), N)
 
   /** Declares one top-level class constructor. */
   private def predeclareClassConstructor(defn: ClsLikeDefn)(using Ctx, Raise): Unit =
-    val ctorParams = defn.paramsOpt.fold(Nil): ps =>
-      ps.params.map: p =>
-        p.sym -> SymIdx(p.sym.nme)
+    val ctorParams = classCtorParamList(defn).params.map: p =>
+      p.sym -> SymIdx(p.sym.nme)
     val ctorExportName = defn.sym
       .optionIf: sym =>
         !(defn.k is syntax.Obj) && sym.nameIsMeaningful
@@ -574,7 +602,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
   private def collectSessionGlobalSymbols(
       b: Block,
       sessionExportCtx: SessionExportCtx,
-  ): Set[Symbol] =
+  ): Set[ValueSymbol] =
     def restOf(block: Block): Opt[Block] = block match
       case Define(_, rst) => S(rst)
       case Assign(_, _, rst) => S(rst)
@@ -585,16 +613,16 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       case Label(_, _, _, rst) => S(rst)
       case _ => N
 
-    def recur(block: Block): Set[Symbol] = block match
+    def recur(block: Block): Set[ValueSymbol] = block match
       case Scoped(_, body) =>
         recur(body)
       case Begin(sub, rst) =>
         recur(sub) ++ recur(rst)
-      case Define(ValDefn(_, sym, _), rst) if sessionExportCtx.shouldExport(sym) =>
-        recur(rst) + sym
+      case Define(defn: ValDefn, rst) if sessionExportCtx.shouldExport(defn.sym) =>
+        recur(rst) + defn.sym
       case Define(_, rst) =>
         recur(rst)
-      case Assign(sym: Symbol, _, rst) if sessionExportCtx.shouldExport(sym) =>
+      case Assign(sym: ValueSymbol, _, rst) if sessionExportCtx.shouldExport(sym) =>
         recur(rst) + sym
       case _: BlockTail =>
         Set.empty
@@ -606,7 +634,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
 
   /** Declares a mutable exported global for a REPL-visible binding produced by the current block. */
   private def registerSessionGlobal(
-      sym: Symbol,
+      sym: ValueSymbol,
   )(using Ctx, Raise, SessionExportCtx): Unit =
     if ctx.containsGlobal(sym) then return
     val exportName = sym.nme
@@ -754,6 +782,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
     )
     val globalIdx = ctx.addGlobal(globalInfo)
     typeInfoGlobals(defn.sym) = globalIdx
+  end predeclareClassTypeInfoGlobal
 
   /** Declares one top-level class method. */
   private def predeclareMethod(methodDefn: FunDefn, ownerCls: ClsLikeDefn)(using Ctx, Raise): Unit =
@@ -878,26 +907,18 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
 
   /** Binds constructor self (`thisSym`) to the Wasm local name `this` in the current function context.
     */
-  private def bindCtorThis(thisSym: Local)(using Ctx, FunctionCtx, Raise): LocalIdx =
+  private def bindCtorThis(thisSym: ValueSymbol)(using Ctx, FunctionCtx, Raise): LocalIdx =
     funcCtx.addLocal(thisSym, S("this"))
 
   /** Compiles a class init body under its own Wasm-local frame with explicit `this`. */
   private def setupInitLocals(
       clsLikeDefn: ClsLikeDefn,
   )(using Ctx, Raise, SessionExportCtx): (Expr, FunctionCtx) =
-    genFuncBody(clsLikeDefn.paramsOpt.toList, thisSym = S(clsLikeDefn.isym)):
+    genFuncBody(classCtorParamList(clsLikeDefn) :: Nil, thisSym = S(clsLikeDefn.isym)):
       val thisVar = funcCtx.lookupLocal_!(clsLikeDefn.isym, N)
       val preCtorWat = compilePreCtor(clsLikeDefn, thisVar)
       val ctorWat = block(clsLikeDefn.ctor)
-      blockInstr(
-        label = N,
-        children = Seq(
-          preCtorWat,
-          ctorWat,
-          `return`(S(local.get(thisVar, RefType.anyref))),
-        ),
-        resultTypes = Seq(Result(RefType.anyref)),
-      )
+      (preCtorWat ++ ctorWat :+ `return`(S(local.get(thisVar, RefType.anyref)))).mergeAsBlock_!
 
   /** Lowers an inherited pre-constructor by preserving its setup code and rewriting the final `super(...)` into
     * `Parent_init(this, ...)`.
@@ -905,7 +926,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
   private def compilePreCtor(
       clsLikeDefn: ClsLikeDefn,
       thisVar: LocalIdx,
-  )(using Ctx, FunctionCtx, Raise, SessionExportCtx): Expr =
+  )(using Ctx, FunctionCtx, Raise, SessionExportCtx): Vector[Expr] =
     def withRest(block: NonBlockTail, rest: Block): Block = block match
       case Scoped(syms, _) => Scoped(syms, rest)
       case Begin(sub, _) => Begin(sub, rest)
@@ -919,9 +940,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
 
     def splitSuperTail(block: Block): Opt[Block -> Ls[Arg]] = block match
       case End(_) => N
-      case Assign(lhs, Call(Value.SimpleRef(bs: BuiltinSymbol), argss), _: End)
-        if (lhs is State.noSymbol) && (bs is State.superSymbol)
-      =>
+      case Assign(NoSymbol, Call(Value.SimpleRef(State.superSymbol), argss), _: End) =>
         S(End("") -> argss.flatten)
       case b: NonBlockTail =>
         splitSuperTail(b.rest).map: (prefix, args) =>
@@ -929,7 +948,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       case _ => N
 
     clsLikeDefn.preCtor match
-      case End(_) => nop
+      case End(_) => Vector.empty
       case _ =>
         splitSuperTail(clsLikeDefn.preCtor) match
           case S((prefixBlock, args)) =>
@@ -942,13 +961,8 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                   operands = local.get(thisVar, RefType.anyref) +: args.map(argument),
                   returnTypes = Seq(Result(RefType.anyref)),
                 )
-                blockInstr(
-                  label = N,
-                  children = Seq(asStatement(prefixWat), drop(superCall)),
-                  resultTypes = Seq.empty,
-                )
-              case N =>
-                nop
+                prefixWat :+ drop(superCall)
+              case N => Vector.empty
           case N =>
             raise(ErrorReport(
               msg"Wasm preCtor lowering only supports lowered super(...) shapes." ->
@@ -956,28 +970,23 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
               extraInfo = S(clsLikeDefn.preCtor.showAsTree),
               source = Diagnostic.Source.Compilation,
             ))
-            nop
+            Vector.empty
     end match
   end compilePreCtor
 
-  /** Converts expression result types to WAT result clauses, dropping unreachable types. */
-  private def resultClauses(expr: Expr): Seq[Result] =
-    if expr.resultTypes.exists(_ is UnreachableType) then Seq.empty
-    else expr.resultTypes.map(ty => Result(ty.asValType_!))
-
-  /** Normalizes the exported `entry` body so it always returns single result. */
-  private def normalizeEntryExpr(
-      expr: Expr,
+  /** Normalizes a [[`Vector`]] of expressions such that it always leaves at least one more value on the stack.
+    *
+    * If the expressions do not emit any values on the stack, this method appends a `$Unit` value on the stack for
+    * consumption.
+    */
+  private def normalizeValueExprs(
+      exprs: Vector[Expr],
       isAbortive: Bool,
-  )(using Ctx, FunctionCtx, Raise, SessionExportCtx): Expr =
-    if expr.resultTypes.isEmpty && !isAbortive then
-      blockInstr(
-        label = N,
-        children = Seq(expr, result(State.unitBlockMemberSymbol.asMemberRef(State.unitSymbol))),
-        resultTypes = Seq(Result(RefType.anyref)),
-      )
+  )(using Ctx, FunctionCtx, Raise, SessionExportCtx): Vector[Expr] =
+    if exprs.forall(_.resultTypes.isEmpty) && !isAbortive then
+      exprs.toVector :+ result(State.unitBlockMemberSymbol.asMemberRef(State.unitSymbol))
     else
-      expr
+      exprs
 
   /** Validates an IntLit value fits signed 32-bit and delegates codegen to `onValid`.
     */
@@ -1056,11 +1065,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
             resultTypes = Seq(Result(I32Type)),
           )
 
-          blockInstr(
-            label = N,
-            children = Seq(storeIdx, normalizedIdx),
-            resultTypes = Seq(Result(I32Type)),
-          )
+          Seq(storeIdx, normalizedIdx).mergeAsBlock_!
 
   /** Raises a [[WarningReport]] with the given `warnMsgs` and `extraInfo`, and emits the `defaultValue` instruction.
     */
@@ -1080,9 +1085,9 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
     raise(ErrorReport(errMsgs, source = Diagnostic.Source.Compilation, extraInfo = extraInfo))
     unreachable
 
-  def getVar(l: Local, loc: Opt[Loc])(using Ctx, FunctionCtx, Raise): Expr = l match
-    case ts: (semantics.TermSymbol | semantics.InnerSymbol) => 
-      lastWords(s"Symbol `$ts` (${ts.getClass.getSimpleName}) cannot be resolved as a variable")
+  def getVar(l: ValueSymbol, loc: Opt[Loc])(using Ctx, FunctionCtx, Raise): Expr = l match
+    case ts: semantics.InnerSymbol =>
+      lastWords(s"ValueSymbol `$ts` (${ts.getClass.getSimpleName}) cannot be resolved as a variable")
     case l =>
       funcCtx.lookupLocal(l) match
         case S(localIdx) => local.get(localIdx, RefType.anyref)
@@ -1119,10 +1124,9 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
     case r => result(r)
 
   /** Returns the owning class symbol for a resolved field/member symbol, when available. */
-  private def fieldOwner(sym: Symbol): Opt[BlockMemberSymbol] = sym match
+  private def fieldOwner(sym: MemberSymbol): Opt[BlockMemberSymbol] = sym match
     case ts: TermSymbol => ts.owner.flatMap(_.asBlkMember)
     case ms: MemberSymbol => ms.asTrm.flatMap(_.owner.flatMap(_.asBlkMember))
-    case _ => N
 
   def fieldSelect(thisSym: BlockMemberSymbol, sym: DefinitionSymbol[?])(using Ctx, Raise): FieldIdx =
     val structInfo = ctx.getTypeInfo_!(thisSym)
@@ -1146,7 +1150,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       qual: Path,
       methodSym: BlockMemberSymbol,
       args: Seq[Arg],
-  )(using Ctx, FunctionCtx, Raise, SessionExportCtx): Expr =
+  )(using Ctx, FunctionCtx, Raise, SessionExportCtx): Ls[Expr] =
     val ownerCls = fieldOwner(methodSym).get
     ctx.getVirtualTable(ownerCls).flatMap(_.virtualMethodSlots.get(methodSym)) match
       case S(slot) =>
@@ -1171,17 +1175,15 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
           typeIdx = virtualMethodTypeIdx,
           funcType = virtualMethodSignature(virtualArity),
         )
-        blockInstr(
-          label = N,
-          children = Seq(receiverExpr, virtualCall),
-          resultTypes = Seq(Result(RefType.anyref)),
-        )
+        Ls(receiverExpr, virtualCall)
       case N =>
-        call(
+        Ls(call(
           funcidx = ctx.getFunc_!(methodSym),
           operands = result(qual) +: args.map(argument),
           returnTypes = Seq(Result(RefType.anyref)),
-        )
+        ))
+    end match
+  end lowerClassMethodCall
 
   def result(r: codegen.Result)(using Ctx, FunctionCtx, Raise, SessionExportCtx): Expr = r match
     case Value.Lit(BoolLit(value)) =>
@@ -1251,7 +1253,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
         )
       val args = argss.flatten
       val methodSym = sel.symbol.flatMap(predeclaredClassMethodSym).get
-      lowerClassMethodCall(qual, methodSym, args)
+      lowerClassMethodCall(qual, methodSym, args).mergeAsBlock_!
 
     case c @ Call(fun, argss) =>
       if argss.length > 1 then
@@ -1292,7 +1294,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
 
               call(
                 funcidx = baseFuncIdx,
-                operands = wasmArgs.toSeq,
+                operands = wasmArgs,
                 returnTypes = baseTypeInfo.compType.asInstanceOf[FunctionType].sigType.results,
               )
             case Value.MemberRef(l, _) =>
@@ -1308,7 +1310,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
 
               call(
                 funcidx = baseFuncIdx,
-                operands = wasmArgs.toSeq,
+                operands = wasmArgs,
                 returnTypes = baseTypeInfo.compType.asInstanceOf[FunctionType].sigType.results,
               )
             case _ =>
@@ -1335,10 +1337,11 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
 
               call_ref(
                 target = base,
-                operands = wasmArgs.toSeq,
+                operands = wasmArgs,
                 typeIdx = baseTypeIdx,
                 funcType = baseTypeInfo.compType.asInstanceOf[FunctionType],
               )
+      end match
 
     case sel @ Select(qual, id) =>
       sel.symbol match
@@ -1357,7 +1360,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
           val methodSym = predeclaredClassMethodSym(selSym).get
           methodSym.asTrm.flatMap(_.defn) match
             case S(defn: TermDefinition) if defn.params.isEmpty =>
-              lowerClassMethodCall(qual, methodSym, Nil)
+              lowerClassMethodCall(qual, methodSym, Nil).mergeAsBlock_!
             case _ =>
               errExpr(
                 Ls(
@@ -1479,7 +1482,8 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
   /** Returns the intrinsic name if `path` refers to a builtin under `wasm`, or `N` otherwise.
     */
   private def wasmIntrinsicName(path: Path): Opt[Str] = path match
-    case Select(Value.SimpleRef(sym), ident) if (sym eq State.wasmSymbol) && wasmIntrinsicNameSet.contains(ident.name) =>
+    case Select(Value.SimpleRef(sym), ident)
+        if (sym eq State.wasmSymbol) && wasmIntrinsicNameSet.contains(ident.name) =>
       S(ident.name)
     case _ => N
 
@@ -1503,8 +1507,8 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
     else if unaryOps.contains(name) then createUnaryInt31Func(name, unaryOps(name), exportName)
     else lastWords(s"Unsupported wasm intrinsic '$name'")
 
-  private def intrinsicParamSuffixes(name: Str): Seq[Str] =
-    if binaryOps.contains(name) then Seq("lhs", "rhs") else Seq("arg")
+  private def intrinsicParamSuffixes(name: Str): Ls[Str] =
+    if binaryOps.contains(name) then Ls("lhs", "rhs") else Ls("arg")
 
   private def declareIntrinsicType(name: Str)(using Ctx, Raise): TypeIdx =
     ctx.addType(TypeInfo(
@@ -1523,7 +1527,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       op: (Expr, Expr) => Expr,
       exportName: Opt[Str],
   )(using Ctx, Raise): FuncIdx =
-    val params = mkIntrinsicParams(name, Seq("lhs", "rhs"))
+    val params = mkIntrinsicParams(name, Ls("lhs", "rhs"))
     val lhsName = params.head._2
     val rhsName = params(1)._2
     val body = binaryInt31Body(LocalIdx(lhsName), LocalIdx(rhsName), op)
@@ -1536,7 +1540,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       op: Expr => Expr,
       exportName: Opt[Str],
   )(using Ctx, Raise): FuncIdx =
-    val params = mkIntrinsicParams(name, Seq("arg"))
+    val params = mkIntrinsicParams(name, Ls("arg"))
     val argName = params.head._2
     val body = unaryInt31Body(LocalIdx(argName), op)
     createIntrinsicFunc(name, params, body, exportName)
@@ -1545,7 +1549,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
     */
   private def createIntrinsicFunc(
       name: Str,
-      params: Seq[TempSymbol -> SymIdx],
+      params: Ls[TempSymbol -> SymIdx],
       body: Expr,
       exportName: Opt[Str],
   )(using Ctx, Raise): FuncIdx =
@@ -1564,7 +1568,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
   def intrinsicSupportModule()(using Raise): Document =
     val ctx = Ctx.empty
     given Ctx = ctx
-    wasmIntrinsicNameSet.toSeq.sorted.foreach: name =>
+    wasmIntrinsicNameSet.toVector.sorted.foreach: name =>
       createIntrinsic(name, S(name))
     ctx.toWat
 
@@ -1601,7 +1605,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
 
   /** Creates parameters for an intrinsic.
     */
-  private def mkIntrinsicParams(name: Str, suffixes: Seq[Str]): Seq[TempSymbol -> SymIdx] =
+  private def mkIntrinsicParams(name: Str, suffixes: Ls[Str]): Ls[TempSymbol -> SymIdx] =
     suffixes.map: suffix =>
       val sym = TempSymbol(N, suffix)
       sym -> SymIdx(suffix)
@@ -1623,25 +1627,23 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
   private def asStatement(expr: Expr): Expr =
     if expr.isControlTransfer then expr
     else
-      expr.resultType match
-        case S(_) => drop(expr)
-        case N => expr
+      (1 to expr.resultTypes.size).foldRight(expr): (_, acc) =>
+        drop(acc)
 
-  def returningTerm(t: Block)(using Ctx, FunctionCtx, Raise, SessionExportCtx): Expr =
+  private def asStatement(exprs: Seq[Expr]): Opt[Expr] =
+    exprs.mergeAsBlock.map(asStatement(_))
+
+  def returningTerm(t: Block)(using Ctx, FunctionCtx, Raise, SessionExportCtx): Vector[Expr] =
     t match
-      case Assign(l, r, rst) if l is State.noSymbol =>
+      case Assign(NoSymbol, r, rst) =>
         val rExpr = result(r)
         val evalExpr = rExpr.resultType match
           case S(_) => drop(rExpr)
           case N => rExpr
         val rstBlk = returningTerm(rst)
-        blockInstr(
-          label = N,
-          children = Seq(evalExpr, rstBlk),
-          resultTypes = rstBlk.resultTypes.map(r => Result(r.asValType_!)),
-        )
+        evalExpr +: rstBlk
 
-      case Assign(l, r, rst) =>
+      case Assign(l: ValueSymbol, r, rst) =>
         val lExpr = getVar(l, l.toLoc)
         val rExpr = result(r)
         val assignExpr = lExpr.mnemonicPrefix match
@@ -1655,11 +1657,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
             )
 
         val rstBlk = returningTerm(rst)
-        blockInstr(
-          label = N,
-          children = Seq(assignExpr, rstBlk),
-          resultTypes = resultClauses(rstBlk),
-        )
+        assignExpr +: rstBlk
 
       case assign @ AssignField(lhs, nme, rhs, rst) =>
         val lhsExpr = result(lhs)
@@ -1697,11 +1695,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
             )
 
         val rstBlk = returningTerm(rst)
-        blockInstr(
-          label = N,
-          children = Seq(assignInstr, rstBlk),
-          resultTypes = resultClauses(rstBlk),
-        )
+        assignInstr +: rstBlk
 
       case assign @ AssignDynField(lhs, fld, arrayIdx, rhs, rst) =>
         val lhsExpr = result(lhs)
@@ -1726,11 +1720,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
             )
 
         val rstBlk = returningTerm(rst)
-        blockInstr(
-          label = N,
-          children = Seq(assignInstr, rstBlk),
-          resultTypes = resultClauses(rstBlk),
-        )
+        assignInstr +: rstBlk
 
       case Define(defn, rst) =>
         def mkThis(sym: InnerSymbol): Expr = result(sym.asThis)
@@ -1740,7 +1730,8 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
             // * in which case it has no owner and is just a glorified local variable rather than a field
             tsym.owner match
               case N =>
-                val symExpr = getVar(sym, sym.toLoc)
+                val localStorageSym = defn.sym
+                val symExpr = getVar(localStorageSym, localStorageSym.toLoc)
                 val defineExpr = symExpr.mnemonicPrefix match
                   case S("global") =>
                     global.set(symExpr.instrargs(0).asInstanceOf[GlobalIdx], result(p))
@@ -1751,44 +1742,31 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                       s"Expected `global.*` or `local.*` when compiling definition for `$sym`, but got ${symExpr.mnemonic}",
                     )
                 val rstWat = returningTerm(rst)
-                blockInstr(
-                  label = N,
-                  children = Seq(
-                    defineExpr,
-                    rstWat,
-                  ),
-                  resultTypes = rstWat.resultTypes.map(r => Result(r.asValType_!)),
-                )
+                defineExpr +: rstWat
               case S(owner) =>
                 val ownerBlkMem = owner.asBlkMember.get
-                val rstWat = returningTerm(rst)
-                blockInstr(
-                  label = N,
-                  children = Seq(
-                    struct.set(
-                      index = fieldSelect(ownerBlkMem, tsym),
-                      ref = mkThis(owner),
-                      value = result(p),
-                    ),
-                    rstWat,
-                  ),
-                  resultTypes = resultClauses(rstWat),
+                val assignInstr = struct.set(
+                  index = fieldSelect(ownerBlkMem, tsym),
+                  ref = mkThis(owner),
+                  value = result(p),
                 )
+                val rstWat = returningTerm(rst)
+                assignInstr +: rstWat
 
           case defn: (FunDefn | ClsLikeDefn) =>
-            val res = boundary:
+            val res: Opt[Expr] = boundary:
               defn match
                 case FunDefn(params = Nil) =>
                   lastWords("cannot generate function with no parameter list")
                 case fd @ FunDefn(own, sym, dSym, ps :: pss, bod) =>
                   if own.nonEmpty then
-                    break(errExpr(
+                    break(S(errExpr(
                       Ls(
                         msg"WatBuilder::returningTerm for Define(...) with `owner.nonEmpty` not implemented yet" ->
                           defn.sym.toLoc,
                       ),
                       extraInfo = S(defn.showAsTree),
-                    ))
+                    )))
 
                   val result = pss.foldRight(bod):
                     case (ps, block) =>
@@ -1825,34 +1803,33 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                         funcType = FunctionType(funcInfo.getSignatureType),
                       ))
 
-                    nop
+                    N
                   else
-                    errExpr(
+                    S(errExpr(
                       Ls(
                         msg"WatBuilder::returningTerm for FunDefn(...) where `!sym.nameIsMeaningful` not implemented yet" ->
                           defn.sym.toLoc,
                       ),
                       extraInfo = S(defn.showAsTree),
-                    )
+                    ))
                   end if
                 case clsLikeDefn: ClsLikeDefn =>
                   // Guard against unsupported features
-                  def errUnimplExpr(cond: Str): Nothing = break(errExpr(
+                  def errUnimplExpr(cond: Str): Nothing = break(S(errExpr(
                     Ls(
                       msg"WatBuilder::returningTerm for ClsLikeDefn(...) where `$cond` not implemented yet" ->
                         clsLikeDefn.sym.toLoc,
                     ),
                     extraInfo = S(defn.showAsTree),
-                  ))
+                  )))
                   val isSingletonObj = clsLikeDefn.k is syntax.Obj
                   if clsLikeDefn.owner.nonEmpty then
                     break(errUnimplExpr("owner.nonEmpty"))
                   if !(clsLikeDefn.k is syntax.Cls) && !isSingletonObj then
                     break(errUnimplExpr("unsupported ClsLikeDefn kind"))
-                  if isSingletonObj && clsLikeDefn.paramsOpt.nonEmpty then
-                    break(errUnimplExpr("paramsOpt.nonEmpty for object"))
-                  if clsLikeDefn.auxParams.nonEmpty then
-                    break(errUnimplExpr("auxParams.nonEmpty"))
+                  val ctorParamList = classCtorParamList(clsLikeDefn)
+                  if isSingletonObj && ctorParamList.params.nonEmpty then
+                    break(errUnimplExpr("constructor parameters for object"))
                   if isSingletonObj && clsLikeDefn.parentPath.nonEmpty then
                     break(errUnimplExpr("parentPath.nonEmpty for object"))
                   if isSingletonObj && clsLikeDefn.methods.nonEmpty then
@@ -1860,23 +1837,12 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                   if clsLikeDefn.companion.isDefined then
                     break(errUnimplExpr("companion.isDefined"))
 
-                  val ctorAuxParams = clsLikeDefn.auxParams.map: ps =>
-                    ps.params.map: p =>
-                      p -> errUnimplExpr("auxParams.nonEmpty")
-
                   // Use the symbolic type reference (e.g. `$Foo`) in emitted WAT for readability.
                   // Numeric indices are only needed for `$tag` values.
                   val typeref = ctx.getType_!(clsLikeDefn.sym)
                   val typeinfo = ctx.getTypeInfo_!(typeref)
 
                   val (initWat, initFnCtx) = setupInitLocals(clsLikeDefn)
-
-                  // * If there are no ctor params, pop one param list off the aux params
-                  val newCtorAuxParams = clsLikeDefn.paramsOpt match
-                    case None => ctorAuxParams match
-                        case head :: next => next
-                        case Nil => ctorAuxParams
-                    case Some(_) => ctorAuxParams
 
                   val tagValue = typeinfo.objectTag getOrElse:
                     lastWords(s"Expected class ${clsLikeDefn.sym} to have an object tag")
@@ -1893,7 +1859,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                       lastWords(s"Expected struct type for ${clsLikeDefn.sym}, found ${other.toWat.mkString()}")
 
                   val initFuncRef = initFuncSym(clsLikeDefn.sym)
-                  val (ctorCode, ctorFnCtx) = genFuncBody(clsLikeDefn.paramsOpt.toList, thisSym = N):
+                  val (ctorCode, ctorFnCtx) = genFuncBody(ctorParamList :: Nil, thisSym = N):
                     val thisVar = bindCtorThis(clsLikeDefn.isym)
                     val initCall = call(
                       funcidx = ctx.getFunc_!(initFuncRef),
@@ -1901,19 +1867,13 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                         funcCtx.params.map((_, nme) => getLocalAnyref(LocalIdx(nme))),
                       returnTypes = Seq(Result(RefType.anyref)),
                     )
-                    blockInstr(
-                      label = N,
-                      Seq(
-                        local.set(thisVar, struct.`new`(typeref, instanceFields)),
-                        drop(initCall),
-                        `return`(S(local.get(thisVar, RefType(typeref, nullable = false)))),
-                      ),
-                      resultTypes = Seq(Result(RefType.anyref)),
-                    )
-
-                  val ctorAux =
-                    if newCtorAuxParams.isEmpty then ctorCode
-                    else break(errUnimplExpr("newCtorAuxParams.nonEmpty"))
+                    Seq(
+                      local.set(thisVar, struct.`new`(typeref, instanceFields)),
+                      drop(initCall),
+                      // TODO(Derppening): Restore once we fix custom reftypes
+                      // `return`(S(local.get(thisVar, RefType(typeref, nullable = false)))),
+                      `return`(S(local.get(thisVar, RefType.anyref))),
+                    ).mergeAsBlock_!
 
                   val predeclaredInit = ctx.getFuncInfo_!(initFuncRef)
                   ctx.addFunc(FuncInfo(
@@ -1933,9 +1893,9 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                     wrapId = S(clsLikeDefn.sym.nme) -> N,
                     typeUse = predeclaredCtor.typeUse,
                     params = ctorFnCtx.params,
-                    resultTypes = ctorAux.resultTypes.map(ty => Result(ty.asValType_!)),
+                    resultTypes = ctorCode.resultTypes.map(ty => Result(ty.asValType_!)),
                     locals = ctorFnCtx.locals,
-                    body = ctorAux,
+                    body = ctorCode,
                     exportName = predeclaredCtor.exportName,
                   )
                   ctx.addFunc(ctorFuncInfo)
@@ -2010,22 +1970,17 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                           exportName = info.globalName,
                           globalTy = info.globalTy,
                         ))
-
-                  nop
+                  N
 
                 case defn =>
-                  errExpr(
+                  S(errExpr(
                     Ls(msg"WatBuilder::returningTerm for Define(...) not implemented yet" -> defn.sym.toLoc),
                     extraInfo = S(defn.showAsTree),
-                  )
+                  ))
               end match
 
             val rstBlk = returningTerm(rst)
-            blockInstr(
-              label = N,
-              children = Seq(res, rstBlk),
-              resultTypes = resultClauses(rstBlk),
-            )
+            res.toVector ++ rstBlk
         end match
 
       case Return(res) =>
@@ -2040,40 +1995,40 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
               case _ => ()
           case _ => ()
 
-        `return`(S(resWat))
+        Vector(`return`(S(resWat)))
 
       case Scoped(syms, body) =>
         blockPreamble(syms)
         returningTerm(body)
       case Break(label) =>
         funcCtx.lookupLabel(label) match
-          case S(target) => br(target.breakLabel)
+          case S(target) => Vector(br(target.breakLabel))
           case N =>
-            errExpr(
+            Vector(errExpr(
               Ls(
                 msg"WatBuilder::returningTerm for Break(...) to unknown label `${label.nme}`" -> label.toLoc,
               ),
               extraInfo = S(t.showAsTree),
-            )
+            ))
       case Continue(label) =>
         funcCtx.lookupLabel(label) match
           case S(target) =>
             target.continueLabel match
-              case S(continueLabel) => br(continueLabel)
+              case S(continueLabel) => Vector(br(continueLabel))
               case N =>
-                errExpr(
+                Vector(errExpr(
                   Ls(
                     msg"WatBuilder::returningTerm for Continue(...) to non-loop label `${label.nme}`" -> label.toLoc,
                   ),
                   extraInfo = S(t.showAsTree),
-                )
+                ))
           case N =>
-            errExpr(
+            Vector(errExpr(
               Ls(
                 msg"WatBuilder::returningTerm for Continue(...) to unknown label `${label.nme}`" -> label.toLoc,
               ),
               extraInfo = S(t.showAsTree),
-            )
+            ))
       case Label(label, loop, body, rst) =>
         val labeledRegion = funcCtx.withLabel(label, hasContinueLabel = loop):
           case LabelTarget(breakLabel, continueLabel) =>
@@ -2086,7 +2041,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                 children = Seq(
                   loopInstr(
                     label = continueLabel,
-                    children = Seq(bodyStmt),
+                    children = bodyStmt.toList,
                     resultTypes = Seq.empty,
                   ),
                 ),
@@ -2095,17 +2050,12 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
             else
               blockInstr(
                 label = S(breakLabel),
-                children = Seq(bodyStmt),
+                children = bodyStmt.toList,
                 resultTypes = Seq.empty,
               )
 
         val rstExpr = returningTerm(rst)
-        val rstResultTypes = rstExpr.resultTypes.flatMap(ty => ty.asValType.map(Result(_)))
-        blockInstr(
-          label = N,
-          children = Seq(labeledRegion, rstExpr),
-          resultTypes = rstResultTypes,
-        )
+        labeledRegion +: rstExpr
       case Match(scrut, arms, dflt, rst) =>
         val tailMode = rst.isInstanceOf[End]
         val matchResLocal =
@@ -2121,24 +2071,28 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
         def getScrutExpr: Expr =
           scrutLocalResult.fold(result(scrut))(getLocalAnyref)
 
-        def assignTailResult(target: LocalIdx, expr: Expr): Expr =
-          if expr.isControlTransfer then expr
+        def assignTailResult(target: LocalIdx, exprs: Vector[Expr]): Vector[Expr] =
+          if exprs.lastOption.forall(_.isControlTransfer) then exprs
           else
-            expr.resultType match
-              case S(_) => local.set(target, expr)
-              case N => blockInstr(
-                  label = N,
-                  children = Seq(
-                    expr,
-                    local.set(target, result(State.unitBlockMemberSymbol.asMemberRef(State.unitSymbol))),
+            (exprs.mergeAsBlock, exprs.flatMap(_.resultTypes)) match
+              case (S(expr), Seq(_)) => Vector(local.set(target, expr))
+              case (S(expr), Seq()) => exprs :+
+                  local.set(target, result(State.unitBlockMemberSymbol.asMemberRef(State.unitSymbol)))
+              case (S(expr), _) => Vector(errExpr(
+                  Ls(
+                    msg"WatBuilder::assignTailResult expected 0 or 1 values on the stack, but got ${
+                        exprs.flatMap(_.resultTypes).size
+                      }" -> N,
                   ),
-                  resultTypes = Seq.empty,
-                )
+                  extraInfo = S(exprs.map(_.toString).mkString(", ")),
+                ))
+              case (N, _) => Vector.empty
 
-        def lowerMatchBody(expr: Expr): Expr =
+        def lowerMatchBody(exprs: Vector[Expr]): Vector[Expr] =
           matchResLocal match
-            case S(localIdx) => assignTailResult(localIdx, expr)
-            case N => asStatement(expr)
+            case S(localIdx) =>
+              assignTailResult(localIdx, exprs)
+            case N => asStatement(exprs).toVector
 
         val matchResInitExpr = matchResLocal.map: localIdx =>
           local.set(localIdx, ref.`null`(HeapType.Any))
@@ -2149,6 +2103,18 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
             boundary:
               val armExprs = arms.zipWithIndex.flatMap: (caseAndBody, armIdx) =>
                 val (cse, body) = caseAndBody
+                lazy val ifTrue =
+                  funcCtx.withLabel(LabelSymbol(N, "arm"), hasContinueLabel = false):
+                    case LabelTarget(armLabel, _) =>
+                      val bodyExpr = returningTerm(body)
+                      val armBodyExpr = lowerMatchBody(bodyExpr)
+                      val armIsCtrlXfer = armBodyExpr.lastOption.exists(_.isControlTransfer)
+                      blockInstr(
+                        label = S(armLabel),
+                        children = armBodyExpr ++ br(matchLabel).optionUnless(armIsCtrlXfer).toVector,
+                        resultTypes = Seq.empty,
+                      )
+                
                 cse match
                   case Case.Lit(lit) =>
                     val testExpr: FoldedInstr = lit match
@@ -2163,20 +2129,12 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                       case _ =>
                         break(errExpr(Ls(msg"Pattern matching for unit literals not implemented yet" -> lit.toLoc)))
 
-                    val bodyExpr = returningTerm(body)
-                    val armBodyExpr = lowerMatchBody(bodyExpr)
-                    funcCtx.withLabel(LabelSymbol(N, "arm"), hasContinueLabel = false):
-                      case LabelTarget(armLabel, _) =>
-                        S(`if`(
-                          condition = testExpr,
-                          ifTrue = blockInstr(
-                            label = S(armLabel),
-                            children = Seq(armBodyExpr, br(matchLabel)),
-                            resultTypes = Seq.empty,
-                          ),
-                          ifFalse = N,
-                          resultTypes = Seq.empty,
-                        ))
+                    S(`if`(
+                      condition = testExpr,
+                      ifTrue = ifTrue,
+                      ifFalse = N,
+                      resultTypes = Seq.empty,
+                    ))
 
                   case Case.Cls(cls, _) =>
                     val clsBlkMemberSym = cls.asBlkMember getOrElse:
@@ -2189,26 +2147,17 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                     val targetRtti = getClassTypeInfoGlobal(clsBlkMemberSym).get
                     val classMatchExpr = isSubtypeByTypeInfo(scrutRtti, targetRtti)
 
-                    val bodyExpr = returningTerm(body)
-                    val armBodyExpr = lowerMatchBody(bodyExpr)
-
-                    funcCtx.withLabel(LabelSymbol(N, "arm"), hasContinueLabel = false):
-                      case LabelTarget(armLabel, _) =>
-                        S(`if`(
-                          condition = isStructCompatible,
-                          ifTrue = `if`(
-                            condition = classMatchExpr,
-                            ifTrue = blockInstr(
-                              label = S(armLabel),
-                              children = Seq(armBodyExpr, br(matchLabel)),
-                              resultTypes = Seq.empty,
-                            ),
-                            ifFalse = N,
-                            resultTypes = Seq.empty,
-                          ),
-                          ifFalse = N,
-                          resultTypes = Seq.empty,
-                        ))
+                    S(`if`(
+                      condition = isStructCompatible,
+                      ifTrue = `if`(
+                        condition = classMatchExpr,
+                        ifTrue = ifTrue,
+                        ifFalse = N,
+                        resultTypes = Seq.empty,
+                      ),
+                      ifFalse = N,
+                      resultTypes = Seq.empty,
+                    ))
                   case Case.Tup(len, inf) =>
                     val arrayRefType = RefType(HeapType.Array, nullable = true)
                     val isArrayTest = ref.test(getScrutExpr, arrayRefType)
@@ -2222,20 +2171,12 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                       i32.eq(arrayLength, i32.const(len))
 
                     val testExpr = i32.and(isArrayTest, lengthTest)
-                    val bodyExpr = returningTerm(body)
-                    val armBodyExpr = lowerMatchBody(bodyExpr)
-                    funcCtx.withLabel(LabelSymbol(N, "arm"), hasContinueLabel = false):
-                      case LabelTarget(armLabel, _) =>
-                        S(`if`(
-                          condition = testExpr,
-                          ifTrue = blockInstr(
-                            label = S(armLabel),
-                            children = Seq(armBodyExpr, br(matchLabel)),
-                            resultTypes = Seq.empty,
-                          ),
-                          ifFalse = N,
-                          resultTypes = Seq.empty,
-                        ))
+                    S(`if`(
+                      condition = testExpr,
+                      ifTrue = ifTrue,
+                      ifFalse = N,
+                      resultTypes = Seq.empty,
+                    ))
                   case _ =>
                     break(errExpr(
                       Ls(
@@ -2246,56 +2187,44 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                     ))
                 end match
 
-              val defaultExpr =
-                val rawDefaultExpr = dflt match
-                  case S(defaultBody) => returningTerm(defaultBody)
-                  case N => nop
-                lowerMatchBody(rawDefaultExpr)
+              val defaultExpr = lowerMatchBody(dflt.toVector.flatMap(returningTerm))
 
               // Generate the match block
               blockInstr(
                 label = S(matchLabel),
-                children = scrutInitExpr.toSeq ++ matchResInitExpr.toSeq ++ armExprs :+ defaultExpr,
+                children = scrutInitExpr.toVector ++ matchResInitExpr.toVector ++ armExprs ++ defaultExpr,
                 resultTypes = Seq.empty,
               )
 
         if tailMode then
-          blockInstr(
-            label = N,
-            children = Seq(
-              matchBlock,
-              local.get(matchResLocal.get, RefType.anyref),
-            ),
-            resultTypes = Seq(Result(RefType.anyref)),
+          Vector(
+            matchBlock,
+            local.get(matchResLocal.get, RefType.anyref),
           )
         else
           val rstExpr = returningTerm(rst)
-          blockInstr(
-            label = N,
-            children = Seq(matchBlock, rstExpr),
-            resultTypes = rstExpr.resultTypes.flatMap(ty => ty.asValType.map(Result(_))),
-          )
+          matchBlock +: rstExpr
 
       // * Try/finally lowering is intentionally rejected for now: the previous implementation required `exnref` support
       // * which can only be enabled with the `--experimental-wasm-exnref` flag.
       // * Later, it will be implemented using intrinsic function.
       case TryBlock(sub, _, _) =>
-        errExpr(
+        Vector(errExpr(
           Ls(msg"WatBuilder::returningTerm for TryBlock(...) not implemented yet" -> N),
           extraInfo = S(sub.showAsTree),
-        )
+        ))
 
       case Throw(res) =>
         val excWat = result(res)
-        `throw`(exnTagIdx, Seq(excWat))
+        Vector(`throw`(exnTagIdx, Seq(excWat)))
 
-      case End(_) => nop
+      case End(_) => Vector.empty
 
       case t =>
-        errExpr(
+        Vector(errExpr(
           Ls(msg"WatBuilder::returningTerm for ${t.getClass.getSimpleName} block not implemented yet" -> N),
           extraInfo = S(t.showAsTree),
-        )
+        ))
     end match
   end returningTerm
 
@@ -2304,7 +2233,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       exprt: Opt[BlockMemberSymbol],
       wd: io.Path,
       sessionImports: Seq[SessionBinding],
-      preservedSessionSymbols: Set[Local],
+      preservedSessionSymbols: Set[BoundSymbol],
   )(using Raise): CompiledWasmModule =
     for imprt <- p.imports do
       raise(
@@ -2339,7 +2268,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       ).fold(0)(_.memType.lim.min)
 
     def compiledModule(entryName: Str): CompiledWasmModule =
-      CompiledWasmModule(ctx.toWat, entryName, systemMemMinPages, sessionExportCtx.collectedBindings.toSeq)
+      CompiledWasmModule(ctx.toWat, entryName, systemMemMinPages, sessionExportCtx.collectedBindings.toVector)
 
     // Create the two Wasm intrinsic struct types shared across class lowering:
     // the base RTTI layout (`TypeInfoBase`) and the base object layout (`Object`).
@@ -2369,7 +2298,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
     collectSessionGlobalSymbols(
       p.main,
       sessionExportCtx,
-    ).toSeq.sortBy(_.uid).foreach: sym =>
+    ).toVector.sortBy(_.uid).foreach: sym =>
       registerSessionGlobal(sym)
 
     boundary[CompiledWasmModule]:
@@ -2389,8 +2318,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       // Compile the entry function under a dedicated local scope so that any temp locals introduced
       // during codegen (e.g., via `local.tee`) are declared in the entry function.
       val (entryFnExpr, entryFnCtx) = genFuncBody(Nil, thisSym = N):
-        val rawEntryFnExpr = block(p.main)
-        normalizeEntryExpr(rawEntryFnExpr, p.main.isAbortive)
+        normalizeValueExprs(block(p.main), p.main.isAbortive).mergeAsBlock.getOrElse(nop)
 
       val entrySym = BlockMemberSymbol("entry", Nil)
 
@@ -2426,16 +2354,12 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
           compType = FunctionType(params = Seq.empty, results = Seq.empty),
           objectTag = N,
         ))
-        val initBody = blockInstr(
-          label = N,
-          children = initActions,
-          resultTypes = Seq.empty,
-        )
+        val initBody = initActions.mergeAsBlock_!
         val initFn = ctx.addFunc(FuncInfo(
           sym = TempSymbol(N, "start"),
           typeUse = TypeUse(initTy),
           params = Seq.empty,
-          resultTypes = Seq.empty,
+          resultTypes = initBody.resultTypes.map(ty => Result(ty.asValType_!)),
           locals = Seq.empty,
           body = initBody,
           exportName = N,
@@ -2448,21 +2372,21 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       compiledModule(entrySym.nme)
   end program
 
-  def blockPreamble(ss: Iterable[Symbol])(using Ctx, FunctionCtx, Raise): Unit =
-    ss.toArray.sortBy(_.uid).toSeq.filter: sym =>
+  def blockPreamble(ss: Iterable[ValueSymbol])(using Ctx, FunctionCtx, Raise): Unit =
+    ss.toVector.sortBy(_.uid).filter: sym =>
       !ctx.containsGlobal(sym) && ctx.getFunc(sym).isEmpty
     .foreach: sym =>
       funcCtx.addLocal(sym)
 
   def nonNestedScoped(
       blk: Block,
-  )(k: Block => Expr)(using Ctx, FunctionCtx, Raise, SessionExportCtx): Expr = blk match
+  )(k: Block => Vector[Expr])(using Ctx, FunctionCtx, Raise, SessionExportCtx): Vector[Expr] = blk match
     case Scoped(syms, body) =>
       blockPreamble(syms.view.filter(body.freeVars))
       k(body)
     case _ => k(blk)
 
-  def block(t: Block)(using Ctx, FunctionCtx, Raise, SessionExportCtx): Expr =
+  def block(t: Block)(using Ctx, FunctionCtx, Raise, SessionExportCtx): Vector[Expr] =
     nonNestedScoped(t)(returningTerm)
 
   def setupFunction(
@@ -2471,6 +2395,6 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       body: Block,
   )(using Ctx, Raise, SessionExportCtx): (Expr, FunctionCtx) =
     genFuncBody(params :: Nil, thisSym = thisParam):
-      block(body)
+      block(body).mergeAsBlock.getOrElse(nop)
 
 end WatBuilder

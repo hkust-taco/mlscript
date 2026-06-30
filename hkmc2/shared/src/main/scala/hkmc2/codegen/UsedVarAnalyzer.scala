@@ -2,7 +2,7 @@ package hkmc2
 
 import scala.collection.mutable
 
-import mlscript.utils.*, shorthands.*
+import hkmc2.utils.*, shorthands.*
 import utils.*
 
 import hkmc2.codegen.*
@@ -16,10 +16,11 @@ import scala.collection.mutable.Map as MutMap
 import scala.collection.mutable.Set as MutSet
 import scala.collection.mutable.Buffer
 
+
 object UsedVarAnalyzer:
   case class MutAccessInfo(
-    accessed: MutSet[Local], 
-    mutated: MutSet[Local], 
+    accessed: MutSet[ScopedOrInnerSymbol], 
+    mutated: MutSet[ScopedOrInnerSymbol], 
     refdDefns: MutSet[ScopedInfo]
   ):
     def toIMut = AccessInfo(accessed.toSet, mutated.toSet, refdDefns.toSet)
@@ -56,12 +57,16 @@ class UsedVarAnalyzer(b: Block, scopeData: ScopeData)(using State):
         case s: Scoped =>
           accessed.refdDefns.add(scopeData.getUID(s))
         case Assign(lhs, rhs, rest) =>
-          accessed.accessed.add(lhs)
-          accessed.mutated.add(lhs)
+          lhs match
+          case NoSymbol => ()
+          case lhs: ScopedOrInnerSymbol =>
+            accessed.accessed.add(lhs)
+            accessed.mutated.add(lhs)
           applyResult(rhs)
           applyBlock(rest)
         case l: Label if l.loop =>
           accessed.refdDefns.add(l.label)
+          applySubBlock(l.rest)
         case d: Define => d.defn match
           case v: ValDefn =>
             applyDefn(v)
@@ -74,7 +79,7 @@ class UsedVarAnalyzer(b: Block, scopeData: ScopeData)(using State):
       
       override def applyPath(p: Path): Unit = p match
         case Value.SimpleRef(_: BuiltinSymbol) => super.applyPath(p)
-        case RefOfBms(_, SDSym(dSym), _) =>
+        case RefOfDefn(SDSym(dSym), _) =>
           val node = scopeData.getNode(dSym)
           node.obj match
             // Here, we add an edge to a definition, even if it is the result of a field selection, if it is:
@@ -90,6 +95,8 @@ class UsedVarAnalyzer(b: Block, scopeData: ScopeData)(using State):
             case ScopedObject.Func(isMethod = N) =>
               accessed.refdDefns.add(node.obj.toInfo)
               super.applyPath(p)
+            case ScopedObject.ValDef(_) =>
+              accessed.refdDefns.add(node.obj.toInfo)
             case _ if node.isLifted && !isObj(node) => accessed.refdDefns.add(node.obj.toInfo)
             case ScopedObject.ClassCtor(cls) if scopeData.getNode(cls).isLifted => accessed.refdDefns.add(node.obj.toInfo)
             case _ => p match
@@ -102,10 +109,14 @@ class UsedVarAnalyzer(b: Block, scopeData: ScopeData)(using State):
                 case _ => ()
               case _ => super.applyPath(p)
         
-        case r: Value.RefLike =>
-          accessed.accessed.add(r.symbol)
+        case Value.RefLike(sym: ScopedOrInnerSymbol) =>
+          accessed.accessed.add(sym)
         case _ => super.applyPath(p)
     accessed.toIMut
+  
+  def getParentCls(c: ClsLikeDefn) = c.parentPath.flatMap:
+    case RefOfDefn(SDSym(parentCls), _) => S(parentCls)
+    case _ => N
     
   /**
     * Finds the variables belonging to a parent scope which this scoped object could possibly 
@@ -127,7 +138,8 @@ class UsedVarAnalyzer(b: Block, scopeData: ScopeData)(using State):
         // When the class symbol is referenced once, that symbol may be used in
         // arbitrary ways, which includes calling any of this class's methods.
         val res = blkAccessesShallow(c.preCtor) ++ blkAccessesShallow(c.ctor)
-        res.copy(refdDefns = res.refdDefns ++ c.methods.map(_.dSym))
+        val parentClsSym = getParentCls(c)
+        res.copy(refdDefns = res.refdDefns ++ c.methods.map(_.dSym) ++ parentClsSym.toSet)
       case ScopedObject.ClassCtor(cls) =>
         // Recall that we interpret the ctor as just another function in the same scope
         // as the corresponding class, and initializes the class.
@@ -139,6 +151,7 @@ class UsedVarAnalyzer(b: Block, scopeData: ScopeData)(using State):
         val res = blkAccessesShallow(c.ctor)
         res.copy(refdDefns = res.refdDefns ++ c.methods.map(_.dSym))
       case ScopedObject.Loop(_, b) => blkAccessesShallow(b)
+      case ScopedObject.ValDef(v) => AccessInfo.empty
     // Variables introduced by this scoped object do not belong to a parent scope, so
     // we remove them
     accessed.withoutLocals(obj.definedLocals)
@@ -252,47 +265,54 @@ class UsedVarAnalyzer(b: Block, scopeData: ScopeData)(using State):
     subCases.foldLeft((m1, m2)):
       case ((acc1, acc2), (new1, new2)) => (combineInfos(acc1, new1), combineInfos(acc2, new2))
 
-  private def reqdCaptureLocals(s: ScopeNode): Map[ScopedInfo, Set[Local]] =
-    val blk = s.obj match
+  private def reqdCaptureLocals(s: ScopeNode): Map[ScopedInfo, Set[ScopedOrInnerSymbol]] =
+    val (blk, parentCls) = s.obj match
       case ScopedObject.Top(b) => lastWords("reqdCaptureLocals called on top block")
-      case ScopedObject.ClassCtor(cls) => return Map.empty + (s.obj.toInfo -> Set.empty)
-      case ScopedObject.Class(cls, _) => Begin(cls.preCtor, cls.ctor)
-      case ScopedObject.Companion(comp, _) => comp.ctor
-      case ScopedObject.Func(fun, _) => fun.body
-      case ScopedObject.ScopedBlock(uid, block) => block
-      case ScopedObject.Loop(sym, block) => block
+      case ScopedObject.Class(cls, _) => (Begin(cls.preCtor, cls.ctor), getParentCls(cls))
+      case ScopedObject.Companion(comp, _) => (comp.ctor, N)
+      case ScopedObject.Func(fun, _) => (fun.body, N)
+      case ScopedObject.ScopedBlock(uid, block) => (block, N)
+      case ScopedObject.Loop(sym, block) => (block, N)
+      case ScopedObject.ValDef(_) | ScopedObject.ClassCtor(_) => return Map.empty + (s.obj.toInfo -> Set.empty)
 
     val (nodes, nexts) = s.partitionTree2:
-      case obj: (ScopedObject.ScopedBlock | ScopedObject.Loop) => false
+      case obj: (ScopedObject.ScopedBlock | ScopedObject.Loop | ScopedObject.ValDef) => false
       case _ => true
     
     val locals = nodes.flatMap(_.obj.definedLocals).toSet
     
-    val cap = reqdCaptureLocalsBlk(blk, nexts.toList, s.obj.definedLocals, locals)
+    val cap = reqdCaptureLocalsBlk(blk, parentCls, nexts.toList, s.obj.definedLocals, locals)
     
-    val cur: Map[ScopedInfo, Set[Local]] = nodes.map: n =>
-        n.obj.toInfo -> cap.intersect(n.obj.definedLocals)
+    val cur: Map[ScopedInfo, Set[ScopedOrInnerSymbol]] = nodes.map: n =>
+        n.obj.toInfo -> cap.intersect(n.obj.definedLocals.map(s => s: ScopedOrInnerSymbol))
       .toMap
     
     nexts.foldLeft(cur):
       case (mp, acc) => mp ++ reqdCaptureLocals(acc)
 
   // readers-mutators analysis
-  private def reqdCaptureLocalsBlk(b: Block, nextNodes: List[ScopeNode], startingVars: Set[Local], thisVars: Set[Local]): Set[Local] =
+  private def reqdCaptureLocalsBlk(
+    b: Block,
+    superClass: Opt[DefinitionSymbol[?]],
+    nextNodes: List[ScopeNode],
+    startingVars: Set[ScopedOrInnerSymbol],
+    thisVars: Set[ScopedOrInnerSymbol]
+  ): Set[ScopedOrInnerSymbol] =
     val scopeInfos: Map[ScopedInfo, ScopeNode] = nextNodes.map(node => node.obj.toInfo -> node).toMap
 
-    case class CaptureInfo(reqCapture: Set[Local], hasReader: Set[Local], hasMutator: Set[Local], mutated: Set[Local])
+    case class CaptureInfo(reqCapture: Set[ScopedOrInnerSymbol], hasReader: Set[ScopedOrInnerSymbol], hasMutator: Set[ScopedOrInnerSymbol], mutated: Set[ScopedOrInnerSymbol])
     
     // linearVars denotes the variables defined inside the scopes up to the nearest loop or the top level block.
     // If a loop modifies a non-linear variable and then one of its nested definitions accesses it, we must put put
     // that variable in a capture.
-    def go(b: Block, reqCapture_ : Set[Local], hasReader_ : Set[Local], hasMutator_ : Set[Local], mutated_ : Set[Local])(using linearVars: Set[Local]): CaptureInfo =
+    def go(b: Block, reqCapture_ : Set[ScopedOrInnerSymbol], hasReader_ : Set[ScopedOrInnerSymbol], hasMutator_ : Set[ScopedOrInnerSymbol], mutated_ : Set[ScopedOrInnerSymbol])(using linearVars: Set[ScopedOrInnerSymbol]): CaptureInfo =
       var reqCapture = reqCapture_
       var hasReader = hasReader_
       var hasMutator = hasMutator_
       // note: the meaning of `mutated` is a bit strange: it basically means variables which are currently not linear that have been mutated
       // if a variable is in this set but is linear, then it's ignored
       var mutated = mutated_
+      def linearValueVars = linearVars.map(s => s: ValueSymbol)
 
       inline def merge(c: CaptureInfo) =
         reqCapture ++= c.reqCapture
@@ -300,7 +320,7 @@ class UsedVarAnalyzer(b: Block, scopeData: ScopeData)(using State):
         hasMutator ++= c.hasMutator
         mutated ++= c.mutated
 
-      def rec(blk: Block)(using linearVars: Set[Local]) =
+      def rec(blk: Block)(using linearVars: Set[ScopedOrInnerSymbol]) =
         go(blk, reqCapture, hasReader, hasMutator, mutated_)
       
       new BlockTraverserShallow:
@@ -314,11 +334,17 @@ class UsedVarAnalyzer(b: Block, scopeData: ScopeData)(using State):
             applySubBlock(l.rest)
           case Assign(lhs, rhs, rest) =>
             applyResult(rhs)
-            if hasReader.contains(lhs) || hasMutator.contains(lhs) then reqCapture += lhs
-            if !linearVars.contains(lhs) then mutated += lhs
+            lhs match
+            case NoSymbol => ()
+            case lhs: ScopedOrInnerSymbol =>
+              if hasReader.contains(lhs) || hasMutator.contains(lhs) then reqCapture += lhs
+              if !linearValueVars.contains(lhs) then mutated += lhs
             applySubBlock(rest)
           case Define(c @ ClsLikeDefn(k = syntax.Obj), rest) =>
             handleCalledScope(c.isym)
+            applySubBlock(rest)
+          case Define(v: ValDefn, rest) =>
+            applyPath(v.rhs)
             applySubBlock(rest)
           case Match(scrut, arms, dflt, rest) =>
             applyPath(scrut)
@@ -365,7 +391,7 @@ class UsedVarAnalyzer(b: Block, scopeData: ScopeData)(using State):
             // so the "one writer" rule applies.
             // However, if the control flow is not linear, we are forced to add all the mutated variables
             for l <- muts do
-              if hasReader.contains(l) || hasMutator.contains(l) || !linearVars.contains(l) then
+              if hasReader.contains(l) || hasMutator.contains(l) || !linearValueVars.contains(l) then
                 reqCapture += l
               hasReader += l
               hasMutator += l
@@ -373,7 +399,7 @@ class UsedVarAnalyzer(b: Block, scopeData: ScopeData)(using State):
             for l <- reads do
               if hasMutator.contains(l) then
                 reqCapture += l
-              if mutated.contains(l) && !linearVars.contains(l) then
+              if mutated.contains(l) && !linearValueVars.contains(l) then
                 reqCapture += l
               hasReader += l
             // if this defn calls another defn that creates a class or has a naked reference to a
@@ -405,7 +431,7 @@ class UsedVarAnalyzer(b: Block, scopeData: ScopeData)(using State):
               for l <- reads do
                 if hasMutator.contains(l) then
                   reqCapture += l
-                if mutated.contains(l) && !linearVars.contains(l) then
+                if mutated.contains(l) && !linearValueVars.contains(l) then
                   reqCapture += l
                 hasReader += l
               // if this defn calls another defn that creates a class or has a naked reference to a
@@ -420,27 +446,32 @@ class UsedVarAnalyzer(b: Block, scopeData: ScopeData)(using State):
 
         override def applyResult(r: Result): Unit = 
           r match
-          case Call(RefOfBms(_, SDSym(d), _), argss) =>
+          case Call(Value.RefLike(sym), argss) if sym === State.superSymbol =>
+            argss.foreach(_.foreach(super.applyArg(_)))
+            superClass.foreach: d =>
+              handleCalledScope(d)
+          case Call(RefOfDefn(SDSym(d), _), argss) =>
             argss.foreach(_.foreach(super.applyArg(_)))
             val numArgLists = scopeData.getNode(d).obj match
               case ScopedObject.Func(fun, _) => fun.params.size.min(1)
               case ScopedObject.Class(c, false) => c.paramsOpt.map(_.params.size).getOrElse(0).min(1)
               case ScopedObject.ClassCtor(c) => c.paramsOpt.map(_.params.size).getOrElse(0).min(1)
+              case _: ScopedObject.ValDef => return
               case _ => die
             
             // Partial call; the resulting object requiring access to the scope may linger
             if numArgLists != argss.size then handleScopeRef(d)
              // Fully applied, we can treat it as a call
             else handleCalledScope(d)
-          case Instantiate(mut, RefOfBms(_, SDSym(d), _), argss) =>
+          case Instantiate(mut, RefOfDefn(SDSym(d), _), argss) =>
             argss.foreach(_.foreach(super.applyArg(_)))
             handleCalledScope(d)
           case _ => super.applyResult(r)
         
         override def applyPath(p: Path): Unit = p match
-          case RefOfBms(_, SDSym(d), _) => handleScopeRef(d)
-          case r: Value.RefLike =>
-            if hasMutator.contains(r.symbol) then reqCapture += r.symbol
+          case RefOfDefn(SDSym(d), _) => handleScopeRef(d)
+          case Value.RefLike(sym: ScopedOrInnerSymbol) =>
+            if hasMutator.contains(sym) then reqCapture += sym
           case _ => super.applyPath(p)
         
         override def applyDefn(defn: Defn): Unit = defn match
@@ -487,7 +518,7 @@ class UsedVarAnalyzer(b: Block, scopeData: ScopeData)(using State):
   
   // We make these lazy, because not all users of UsedVarAnalyzer need this analysis. For now, only the lifter needs it.
   
-  lazy val reqdCaptures: Map[ScopedInfo, Set[Local]] = scopeData.root.children.foldLeft(Map.empty):
+  lazy val reqdCaptures: Map[ScopedInfo, Set[ScopedOrInnerSymbol]] = scopeData.root.children.foldLeft(Map.empty):
     case (acc, node) => acc ++ reqdCaptureLocals(node)
   
   // For local inside a capture, finds the node to which this local belongs.

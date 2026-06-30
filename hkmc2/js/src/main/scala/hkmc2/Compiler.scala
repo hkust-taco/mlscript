@@ -4,8 +4,7 @@ import scala.util.Try
 import scala.scalajs.js.annotation.*
 import org.scalajs.dom
 import org.scalajs.dom.document
-import mlscript.utils._
-import mlscript.utils.shorthands._
+import hkmc2.utils.shorthands._
 import scala.util.matching.Regex
 import scala.scalajs.js, js.JSConverters.*
 import scala.collection.immutable
@@ -103,7 +102,8 @@ class BrowserCompiler(fs: DummyFileSystem, paths: MLsCompiler.Paths):
     compiler.analyze(filePath)
 
 @JSExportTopLevel("Paths")
-final class Paths(prelude: Str, runtime: Str, term: Str, std: Str) extends MLsCompiler.Paths:
+final class Paths(prelude: Str, runtime: Str, runtimeSource: Str, term: Str, std: Str) extends MLsCompiler.Paths:
   val preludeFile = Path(prelude)
   val runtimeFile = Path(runtime)
+  val runtimeSourceFile = Path(runtimeSource)
   val termFile = Path(term)

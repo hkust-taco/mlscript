@@ -4,7 +4,7 @@ package codegen
 import scala.annotation.tailrec
 import scala.collection.mutable.{Map as MutMap, Set as MutSet}
 
-import mlscript.utils.*, shorthands.*
+import hkmc2.utils.*, shorthands.*
 import utils.*
 
 import hkmc2.codegen.flowAnalysis.*
@@ -45,6 +45,7 @@ class EtaExpansionSolver(val constraintSolver: FlowConstraintSolver):
         case (fSym: TermSymbol, whichPl: Int) =>
           val fnDefn = constraintSolver.collector.preAnalyzer.res.funSymToFunDefn(fSym)
           fnDefn.affineInfo.contains(whichPl)
+        case (sym, _) => lastWords(s"prodFunIsAffine: expected TermSymbol funId, got $sym")
       end prodFunIsAffine
       
       res match
@@ -180,8 +181,8 @@ class EtaExpansionRewrite(val etaExpansionSolver: EtaExpansionSolver)(using Rais
         else
           lastWords("not the same shape?")
     
-    private def etaCall(base: Path): Call =
-      Call(base, activeEtaArgss.ne_!)(isMlsFun = true, mayRaiseEffects = true, explicitTailCall = false)
+    private def etaCall(base: Path): Result =
+      Call(base, activeEtaArgss.ne_!)(CallMetadata.mlsFunWithEffect)
     
     override def applyBlock(b: Block): Block = b match
       case Return(res) if activeEtaArgss.nonEmpty =>
@@ -192,7 +193,7 @@ class EtaExpansionRewrite(val etaExpansionSolver: EtaExpansionSolver)(using Rais
             Return(etaCall(p).withLocOf(res2))
           case c @ Call(fun, argss) =>
             Return(
-              Call(fun, (argss ++ activeEtaArgss).ne_!)(c.isMlsFun, c.mayRaiseEffects, c.explicitTailCall))
+              Call(fun, (argss ++ activeEtaArgss).ne_!)(c.metadata))
           case _ =>
             val tmp = TempSymbol(N, "eta$res")
             Scoped(

@@ -2,7 +2,7 @@ package hkmc2
 
 import scala.collection.mutable
 
-import mlscript.utils.*, shorthands.*
+import hkmc2.utils.*, shorthands.*
 import utils.*
 
 import semantics.*
@@ -82,18 +82,21 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
   override def processTerm(blk: semantics.Term.Blk, inImport: Bool)(using Config, Raise): Unit =
     super.processTerm(blk, inImport)
     
-    val outerRaise: Raise = summon
-    val reportedMessages = mutable.Set.empty[Str]
+    val importAliases = blk.stats.collect:
+        case Import(sym = sym: VarSymbol) => sym
+      .toSet
     
-    def definedValues(includeNonTerms: Bool) =
+    def definedValues(includeNonTerms: Bool): Ls[(Str, BoundSymbol, N)] =
       import Elaborator.Ctx.*
       curCtx.env.iterator.flatMap:
         case (nme, e @ (_: RefElem | SelElem(base = RefElem(_: InnerSymbol)))) =>
           e.symbol match
           case S(ts: TermSymbol) if ts.k.isInstanceOf[syntax.ValLike] => S((nme, ts, N))
           case S(ts: BlockMemberSymbol)
-            if includeNonTerms || ts.trmImplTree.exists(_.k.isInstanceOf[syntax.ValLike]) => S((nme, ts, N))
-          case S(vs: VarSymbol) => S((nme, vs, N))
+            if includeNonTerms
+            || ts.trmImplTree.exists(t => t.k.isInstanceOf[syntax.ValLike] && (t.k isnt syntax.Ins))
+          => S((nme, ts, N))
+          case S(vs: VarSymbol) if !importAliases(vs) => S((nme, vs, N))
           case _ => N
         case _ => N
       .toList
@@ -112,42 +115,14 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
     
     Config.extractConfigFromStats(blk).givenIn {
     
-    if showJS.isSet then config.copy(sanityChecks = N).givenIn:
-      given Raise =
-        case d @ ErrorReport(source = Source.Compilation) =>
-          reportedMessages += d.mainMsg
-          outerRaise(d)
-        case d => outerRaise(d)
-      given Elaborator.Ctx = curCtx
-      val low = ltl.givenIn:
-        codegen.Lowering()
-      val jsb = ltl.givenIn:
-        new JSBuilder
-      var lowered = low.program(blk)
-      if noOptimizations.isUnset then
-        lowered = BlockSimplifier(symbolsToPreserve, dtl, print)(lowered)
-        ltl.givenIn:
-          lowered = DeadParamElim(lowered)
-      val nestedScp = baseScp.nest
-      val je = nestedScp.givenIn:
-        jsb.programBody(lowered, N, wd)
-      val jsStr = je.stripBreaks.mkString(output.ColWidth)
-      outputSeparator("JS (unsanitized)")
-      output(jsStr)
-    
     if noCodeGen.isUnset then
       given Elaborator.Ctx = curCtx
-      given Raise =
-        case e: ErrorReport if reportedMessages.contains(e.mainMsg) =>
-          if verbose.isSet then
-            output(s"Skipping already reported diagnostic: ${e.mainMsg}")
-        case d => outerRaise(d)
       val low = ltl.givenIn:
         new codegen.Lowering()
-          with codegen.LoweringSelSanityChecks
           with codegen.LoweringTraceLog(traceJS.isSet)
       
-      var lowered = low.program(blk)
+      var lowered = low.program(blk, symbolsToPreserve = symbolsToPreserve)
+      
       var optimized = lowered
       
       if showLoweredTree.isSet then
@@ -203,14 +178,16 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
         outputSeparator("Optimized IR Tree")
         output(optimized.showAsTree)
       
-      processIRBlock(optimized, definedValues)
+      processIRBlock(optimized, definedValues, symbolsToPreserve)
       
       }
   end processTerm
   
-  type ComputeDefinedValues = (includeNonTerms: Bool) => Ls[(Str, Symbol, Opt[Str])]
+  type ComputeDefinedValues = (includeNonTerms: Bool) => Ls[(Str, ValueSymbol, Opt[Str])]
   
-  def processIRBlock(pgrm: Program, definedValues: ComputeDefinedValues)(using Config, Raise, Elaborator.Ctx): Unit =
+  def processIRBlock
+        (pgrm: Program, definedValues: ComputeDefinedValues, symbolsToPreserve: Set[BoundSymbol])
+        (using Config, Raise, Elaborator.Ctx): Unit =
     
     if js.isSet then
       
@@ -219,14 +196,30 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
       val nestedScp = baseScp
       // val nestedScp = codegen.js.Scope(S(baseScp), curCtx.outer, collection.mutable.Map.empty) // * not needed
       
+      val importedSymbols: Set[ScopedSymbol] = pgrm.imports.iterator.collect:
+        case ImportSpec(sym: ScopedSymbol, _, _) => sym
+      .toSet
+      val exportedScoped = symbolsToPreserve.collect:
+        case sym: ScopedSymbol if !importedSymbols.contains(sym) => sym
+      
       val resSym = new TempSymbol(N, "block$res")
       
       val resNme = nestedScp.allocateName(resSym)
       
-      val loweredMapped = pgrm.copy(main = pgrm.main.mapReturn:
+      val loweredMapped = pgrm.copy(main = Scoped(exportedScoped, pgrm.main.mapReturn:
         case Return(res) =>
           Assign(resSym, res, End())
-      )
+      ))
+    
+      if showJS.isSet then config.copy(sanityChecks = N).givenIn:
+        val jsb = ltl.givenIn:
+          new JSBuilder
+        val je = nestedScp.nest.givenIn:
+          jsb.programBody(pgrm.copy(main = Scoped(exportedScoped, pgrm.main)), N, wd)
+        val jsStr = je.stripBreaks.mkString(output.ColWidth)
+        outputSeparator("JS (unsanitized)")
+        output(jsStr)
+      
       val jsb = ltl.givenIn:
         new JSBuilder
           with JSBuilderArgNumSanityChecks
@@ -288,7 +281,7 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
               Elaborator.State.noSymbol,
               Call(
                 Elaborator.State.runtimeSymbol.asSimpleRef.selSN("printRaw"),
-                (Arg(N, sym.asPath) :: Nil) ne_:: Nil)(true, false, false),
+                (Arg(N, sym.asPath) :: Nil) ne_:: Nil)(CallMetadata.defaultMlsFun),
               End())
           val je = nestedScp.givenIn:
             jsb.block(le, endSemi = false)

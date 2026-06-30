@@ -2,7 +2,7 @@ package hkmc2
 
 import scala.util.chaining.scalaUtilChainingOps
 
-import mlscript.utils.*, shorthands.*
+import hkmc2.utils.*, shorthands.*
 
 given utils.TraceLogger => DebugPrinter =
   summon[utils.TraceLogger].debugPrinter
@@ -67,8 +67,8 @@ class DebugPrinter:
       case Some(v) => "S of " + aux(v)
       case None => "N"
       case Nil => "Nil"
-      case xs: List[_] => "Ls of \n" + xs.iterator.map(aux(_)).mkString("\n").indent("  ")
-      case xs: Vector[_] => "Vector of \n" + xs.iterator.map(aux(_)).mkString("\n").indent("  ")
+      case xs: List[_] => "Ls of\n" + xs.iterator.map(aux(_)).mkString("\n").indent("  ")
+      case xs: Vector[_] => "Vector of\n" + xs.iterator.map(aux(_)).mkString("\n").indent("  ")
       case s: Str => s.escaped
       case TermDefFlags(isMethod) =>
         val flags = Buffer.empty[Str]
@@ -91,7 +91,7 @@ class DebugPrinter:
         s"Loc at :$sl:$sc-$el:$ec"
       case codegen.Scoped(syms, body) =>
         val symsStr = "{" + syms.toArray.sortBy(_.uid).map(_.showAsPlain).mkString(", ") + "}"
-        s"Scoped(syms = $symsStr): \n" + s"body = ${printProduct(false, body)}".indent("  ")
+        s"Scoped(syms = $symsStr):\n" + s"body = ${printProduct(false, body)}".indent("  ")
       
       case t: Product => printProduct(inTailPos, t)
       case v => printPlain(v)
@@ -197,5 +197,11 @@ extension (str: Str)
   /** Formats a number and a noun as a human-readable string. */
   infix def countBy(n: Int): Str =
     s"${n.spelled} ${if n === 1 then str else str.toLowerCase.pluralize}"
+
+def enumerate(strs: NELs[Str], connective: Str): Str =
+  strs match
+  case str :: Nil => str
+  case str1 :: str2 :: Nil => s"$str1, $connective $str2"
+  case str :: rest => s"$str, ${enumerate(rest.ne_!, connective)}"
 
 

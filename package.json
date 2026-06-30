@@ -2,7 +2,7 @@
   "name": "mlscript",
   "dependencies": {
     "benchmark": "^2.1.4",
-    "binaryen": "^129.0.0",
+    "binaryen": "github:hkust-taco/binaryen.js#mlscript",
     "typescript": "^4.7.4"
   }
 }

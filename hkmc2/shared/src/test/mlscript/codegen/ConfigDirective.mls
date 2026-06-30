@@ -5,7 +5,6 @@
 :sir
 fun test_before(n, acc) = if n == 0 then acc else test_before(n - 1, n + acc)
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let test_before⁰;
 //│ define test_before⁰ as fun test_before¹(n, acc) {
 //│   loop loopLabel:
 //│     let scrut, tmp, tmp1;
@@ -31,7 +30,6 @@ fun test_before(n, acc) = if n == 0 then acc else test_before(n - 1, n + acc)
 :sir
 fun test_after(n, acc) = if n == 0 then acc else test_after(n - 1, n + acc)
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let test_after⁰;
 //│ define test_after⁰ as fun test_after¹(n, acc) {
 //│   let scrut, tmp, tmp1;
 //│   set scrut = Predef⁰.equals⁰(n, 0);
@@ -53,7 +51,6 @@ fun test_after(n, acc) = if n == 0 then acc else test_after(n - 1, n + acc)
 :sir
 fun test_reenabled(n, acc) = if n == 0 then acc else test_reenabled(n - 1, n + acc)
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let test_reenabled⁰;
 //│ define test_reenabled⁰ as fun test_reenabled¹(n, acc) {
 //│   loop loopLabel:
 //│     let scrut, tmp, tmp1;
@@ -78,7 +75,6 @@ fun test_reenabled(n, acc) = if n == 0 then acc else test_reenabled(n - 1, n + a
 @config(tailRecOpt: false)
 fun foo(n, acc) = if n == 0 then acc else foo(n - 1, n + acc)
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let foo⁰;
 //│ @config(...)
 //│ define foo⁰ as fun foo¹(n, acc) {
 //│   let scrut, tmp, tmp1;
@@ -99,7 +95,6 @@ fun foo(n, acc) = if n == 0 then acc else foo(n - 1, n + acc)
 :sir
 fun bar(n, acc) = if n == 0 then acc else bar(n - 1, n + acc)
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let bar⁰;
 //│ define bar⁰ as fun bar¹(n, acc) {
 //│   loop loopLabel:
 //│     let scrut, tmp, tmp1;
@@ -126,7 +121,7 @@ fun bar(n, acc) = if n == 0 then acc else bar(n - 1, n + acc)
 :sir
 fun foo(x) = { x.call(), print(42) }
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let foo²; define foo² as fun foo³(x) { do x.call﹖(); return Predef⁰.print⁰(42) }; end
+//│ define foo² as fun foo³(x) { do x.call﹖(); return Predef⁰.print⁰(42) }; end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 
@@ -199,12 +194,29 @@ fun fst(p) = if p is Pair(x, y) then x
 fun applyTwice(f, x) = f(x) + f(x)
 applyTwice(fst, Pair(1, 2))
 //│ deforest > >>> non-affine syms >>>
-//│ deforest > cap_ub_(term:fst,0)_for_fst@36
-//│ deforest > f_for_applyTwice@25
-//│ deforest > f_for_applyTwice@58
-//│ deforest > fst_for_fst@33
+//│ deforest > cap_ub_(term:fst,0)_for_fst@35
+//│ deforest > f_for_applyTwice@24
+//│ deforest > f_for_applyTwice@55
+//│ deforest > fst_for_fst@32
 //│ deforest > tmp@1
-//│ deforest > x_for_applyTwice@24
-//│ deforest > x_for_applyTwice@57
+//│ deforest > x_for_applyTwice@23
+//│ deforest > x_for_applyTwice@54
 //│ deforest > <<< non-affine syms <<<
 //│ = 2
+
+
+#config(deforest: None)
+#config(language: 0.3.x)
+#lang(0.2.x)
+
+#lang(useNewResolution: true)
+
+#lang(0.3.x,
+  allowUnresolvedAccesses: true,
+  useNewResolution: false,
+  typeCheck: Some(TypeChecking()))
+
+#config(language: Language(
+  allowUnresolvedAccesses: false,
+  useNewResolution: true,
+  typeCheck: None))

@@ -3,7 +3,7 @@ package semantics
 package ups
 
 
-import mlscript.utils.*, shorthands.*
+import hkmc2.utils.*, shorthands.*
 import semantics.Pattern as SP
 import syntax.{Tree, SpreadKind}, Tree.{Ident, StrLit}
 import Message.MessageContext
@@ -118,8 +118,8 @@ sealed abstract class Pattern[+K <: Kind.Complete] extends AutoLocated:
    *  not defined at a node, the node is left unchanged.
    *  @param f The partial function to apply to each node.
    */
-  def map[L <: Kind.Complete](f: NonCompositional[K] => Pattern[L]): Pattern[L] = this match
-    case p: NonCompositional[K] => f(p)
+  def map[L <: Kind.Complete](f: NonCompositional[? <: K] => Pattern[L]): Pattern[L] = this match
+    case p: NonCompositional[? <: K] => f(p)
     case And(patterns) => And[L](patterns.map(_.map(f)))
     case Or(patterns) => Or[L](patterns.map(_.map(f)))
     case Not(pattern) => Not[L](pattern.map(f))
@@ -135,7 +135,7 @@ sealed abstract class Pattern[+K <: Kind.Complete] extends AutoLocated:
     * a list is merged (for ``And`` and ``Or`` nodes)
     */
   def reduce[A](merge: List[A] => A)(f: PartialFunction[Pattern[K], A]): A = this match
-    case p: NonCompositional[K] =>
+    case p: NonCompositional[? <: K] =>
       if f.isDefinedAt(p) then f(p) else merge(Nil)
     case And(patterns) => merge(patterns.map(_.reduce(merge)(f)))
     case Or(patterns) => merge(patterns.map(_.reduce(merge)(f)))
@@ -242,6 +242,7 @@ sealed abstract class Pattern[+K <: Kind.Complete] extends AutoLocated:
     case pattern: Record => pattern
     case pattern: Tuple => pattern
     case pattern: Literal => pattern
+    case _: MatchedClassLike => lastWords("MatchedClassLike encountered during expansion")
   
   /** Unwrap `Rename` patterns until we reach a non-`Rename` pattern. Collect
    *  the symbols on the way. Maybe we can make `Rename` a property of each
@@ -400,6 +401,7 @@ extension (pattern: ExPat)
     case Literal(`lit`) => Wildcard
     case _: (Literal | ClassLike) => Never
     case pattern: (Record | Tuple) => pattern
+    case _: (MatchedClassLike | Synonym) => lastWords("unexpected specialized/complete node in specialize(lit)")
   
   /** Modifies the pattern under the assumption that the scrutinee matches the
    *  given class. */
@@ -421,3 +423,4 @@ extension (pattern: ExPat)
     case None => pattern.map:
       case _: (Literal | ClassLike) => Never
       case pattern: (Record | Tuple) => pattern
+      case _: (MatchedClassLike | Synonym) => lastWords("unexpected specialized/complete node in specialize(None)")

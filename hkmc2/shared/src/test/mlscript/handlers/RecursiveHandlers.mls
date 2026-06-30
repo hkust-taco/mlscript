@@ -163,7 +163,7 @@ str
 //│   }
 //│ };
 //│ Handler$h1$perform1 = function Handler$h1$perform(arg, k) {
-//│   let tmp10, tmp11, pc;
+//│   let tmp9, tmp10, pc;
 //│   if (runtime.resumePc === -1) {
 //│     pc = 0;
 //│   } else {
@@ -172,8 +172,8 @@ str
 //│   }
 //│   switch (pc) {
 //│     case 0:
-//│       tmp10 = str + "A";
-//│       str = tmp10;
+//│       tmp9 = str + "A";
+//│       str = tmp9;
 //│       runtime.resumeValue = runtime.safeCall(k(arg));
 //│       if (runtime.curEffect === null) {
 //│         pc = 1;
@@ -182,8 +182,8 @@ str
 //│       }
 //│     case 1:
 //│       runtime.resumeValue;
-//│       tmp11 = str + "A";
-//│       str = tmp11;
+//│       tmp10 = str + "A";
+//│       str = tmp10;
 //│       return runtime.Unit;
 //│   }
 //│ };
@@ -193,7 +193,7 @@ str
 //│   }
 //│ };
 //│ Handler$h2$perform1 = function Handler$h2$perform(arg, k) {
-//│   let tmp10, tmp11, tmp12, tmp13, pc;
+//│   let tmp9, tmp10, tmp11, tmp12, pc;
 //│   if (runtime.resumePc === -1) {
 //│     pc = 0;
 //│   } else {
@@ -202,9 +202,9 @@ str
 //│   }
 //│   switch (pc) {
 //│     case 0:
-//│       tmp10 = str + "B";
-//│       tmp11 = str + tmp10;
-//│       str = tmp11;
+//│       tmp9 = str + "B";
+//│       tmp10 = str + tmp9;
+//│       str = tmp10;
 //│       runtime.resumeValue = runtime.safeCall(k(arg));
 //│       if (runtime.curEffect === null) {
 //│         pc = 1;
@@ -213,9 +213,9 @@ str
 //│       }
 //│     case 1:
 //│       runtime.resumeValue;
-//│       tmp12 = str + "B";
-//│       tmp13 = str + tmp12;
-//│       str = tmp13;
+//│       tmp11 = str + "B";
+//│       tmp12 = str + tmp11;
+//│       str = tmp12;
 //│       return runtime.Unit;
 //│   }
 //│ };
@@ -285,12 +285,18 @@ str
 //│   let h22, handleBlock$$here, pc;
 //│   if (runtime.resumePc === -1) {
 //│     pc = 0;
+//│     h22 = new Handler$h2$3();
+//│     handleBlock$$here = handleBlock$$2(h22);
+//│     runtime.resumeValue = runtime.enterHandleBlock(h22, handleBlock$$here);
+//│     if (runtime.curEffect === null) {
+//│       pc = 1;
+//│     } else {
+//│       return runtime.unwind(handleBlock$10, 1, null, null, null, 1, 0, 0)
+//│     }
 //│   } else {
 //│     pc = runtime.resumePc;
 //│     runtime.resumePc = -1;
-//│   }
-//│   switch (pc) {
-//│     case 0:
+//│     if (pc === 0) {
 //│       h22 = new Handler$h2$3();
 //│       handleBlock$$here = handleBlock$$2(h22);
 //│       runtime.resumeValue = runtime.enterHandleBlock(h22, handleBlock$$here);
@@ -299,8 +305,10 @@ str
 //│       } else {
 //│         return runtime.unwind(handleBlock$10, 1, null, null, null, 1, 0, 0)
 //│       }
-//│     case 1:
-//│       return runtime.resumeValue;
+//│     }
+//│   }
+//│   if (pc === 1) {
+//│     return runtime.resumeValue
 //│   }
 //│ });
 //│ str = "";

@@ -4,8 +4,7 @@ import hkmc2.*
 import hkmc2.io
 import hkmc2.semantics.*
 import hkmc2.semantics.Elaborator.{Ctx, State}
-import hkmc2.utils.*
-import mlscript.utils.*, shorthands.*
+import hkmc2.utils.*, shorthands.*
 
 class Analyzer(paths: MLsCompiler.Paths, mkRaise: io.Path => Raise)(using cctx: CompilerCtx, config: Config):
   import paths.*

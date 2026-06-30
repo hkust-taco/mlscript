@@ -4,14 +4,14 @@ package semantics
 import scala.collection.mutable
 import scala.annotation.tailrec
 
-import mlscript.utils.*, shorthands.*
+import hkmc2.utils.*, shorthands.*
 import hkmc2.utils.*
 import hkmc2.Message.MessageContext
 import hkmc2.io
 import utils.TraceLogger
 
 import Elaborator.*
-import hkmc2.syntax.{LetBind, Tree}, Tree.{Ident, StrLit}
+import hkmc2.syntax.Tree, Tree.{Ident, StrLit}
 
 enum ImportSelection:
   case Default(alias: Opt[Ident])
@@ -30,7 +30,7 @@ class Importer:
         // The path resolves to a platform dependent specifier, which is NOT a
         // path and should be used as-is, e.g., Node.js built-in modules.
         val id = localId(selection, moduleName)
-        val sym = TermSymbol(LetBind, N, id)
+        val sym = VarSymbol(id)
         Import(sym, specifier, wd / io.RelPath(moduleName), importKind(selection, moduleName))
       case S(ModuleResolver.ResolvedModule.File(sourceFile, targetFile, moduleName)) =>
         // The specifier is resolved to a file path.
@@ -58,7 +58,7 @@ class Importer:
     val id = localId(selection, nme)
     val kind = importKind(selection, nme)
     
-    lazy val sym = TermSymbol(LetBind, N, id)
+    lazy val sym = VarSymbol(id)
     
     log(s"importing $actualFile")
     
@@ -78,7 +78,7 @@ class Importer:
           false
       } =>
         
-        val importedSym = tl.trace(s">>> Importing $actualFile"):
+        val importedSym: ImportSymbol = tl.trace(s">>> Importing $actualFile"):
           given TL = tl
           val artifact = cctx.getElaboratedBlock(actualFile, prelude)
           kind match
@@ -95,14 +95,8 @@ class Importer:
                   rawPath.toLoc :: Nil)
             sym
         val selectedSym = (selection, importedSym) match
-          case (DefaultSelection(S(alias)), base: BlockMemberSymbol) =>
-            val res = BlockMemberSymbol(alias.name, base.trees, base.nameIsMeaningful)
-            res.tsym = base.tsym
-            res
-          case (NamedSelection(_, S(alias)), base: BlockMemberSymbol) if kind === DefaultImport =>
-            val res = BlockMemberSymbol(alias.name, base.trees, base.nameIsMeaningful)
-            res.tsym = base.tsym
-            res
+          case (DefaultSelection(S(alias)), _) => VarSymbol(alias)
+          case (NamedSelection(_, S(alias)), _) if kind === DefaultImport => VarSymbol(alias)
           case _ => importedSym
         
         val jsFile =

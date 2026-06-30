@@ -1,7 +1,7 @@
 package hkmc2.analysis
 
 import hkmc2.{Diagnostic, Loc}
-import mlscript.utils.*, shorthands.*
+import hkmc2.utils.*, shorthands.*
 
 enum SymbolKind(val wireName: Str):
   case File extends SymbolKind("file")

@@ -45,17 +45,31 @@ fun f = while x
   then
     print("Hello World")
     set x = false
-  else return 42 // TODO: support `break`
+  else return 42 // TODO: support `break` here
 f
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let f;
+//│ let f, inlinedVal;
 //│ f = function f() {
 //│   lbl4: while (true) {
-//│     if (x2 === true) { Predef.print("Hello World"); x2 = false; continue lbl4 }
+//│     if (x2 === true) {
+//│       Predef.print("Hello World");
+//│       x2 = false;
+//│       continue lbl4
+//│     }
 //│     return 42;
 //│   }
 //│ };
-//│ f();
+//│ inlinedLbl: {
+//│   lbl4: while (true) {
+//│     if (x2 === true) {
+//│       Predef.print("Hello World");
+//│       x2 = false;
+//│       continue lbl4
+//│     }
+//│     inlinedVal = 42;
+//│     break inlinedLbl;
+//│   }
+//│ }
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > Hello World
 //│ = 42
@@ -186,14 +200,14 @@ fun f(ls) =
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let f6;
 //│ f6 = function f(ls) {
-//│   lbl6: while (true) {
+//│   lbl9: while (true) {
 //│     let arg$Cons$0$, arg$Cons$1$;
 //│     if (ls instanceof Cons1.class) {
 //│       arg$Cons$0$ = ls.hd;
 //│       arg$Cons$1$ = ls.tl;
 //│       ls = arg$Cons$1$;
 //│       Predef.print(arg$Cons$0$);
-//│       continue lbl6
+//│       continue lbl9
 //│     }
 //│     break;
 //│   }
@@ -236,7 +250,7 @@ let x = 1
 :sjs
 while x is {} do()
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ lbl7: while (true) { if (x3 instanceof Object) { continue lbl7 } break; }
+//│ lbl11: while (true) { if (x3 instanceof globalThis.Object) { continue lbl11 } break; }
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 
@@ -308,10 +322,10 @@ while print("Hello World"); false
   then 0(0)
   else 1
 //│ ╔══[PARSE ERROR] Unexpected 'then' keyword here
-//│ ║  l.308: 	  then 0(0)
+//│ ║  l.322: 	  then 0(0)
 //│ ╙──       	  ^^^^
 //│ ╔══[COMPILATION ERROR] Unrecognized term split (false literal)
-//│ ║  l.307: 	while print("Hello World"); false
+//│ ║  l.321: 	while print("Hello World"); false
 //│ ╙──       	                            ^^^^^
 //│ > Hello World
 
@@ -320,12 +334,12 @@ while { print("Hello World"), false }
   then 0(0)
   else 1
 //│ ╔══[COMPILATION ERROR] Unexpected infix use of keyword 'then' here
-//│ ║  l.319: 	while { print("Hello World"), false }
+//│ ║  l.333: 	while { print("Hello World"), false }
 //│ ║         	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.320: 	  then 0(0)
+//│ ║  l.334: 	  then 0(0)
 //│ ╙──       	^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Illegal position for prefix keyword 'else'.
-//│ ║  l.321: 	  else 1
+//│ ║  l.335: 	  else 1
 //│ ╙──       	  ^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -336,14 +350,14 @@ while
   then 0(0)
   else 1
 //│ ╔══[COMPILATION ERROR] Unexpected infix use of keyword 'then' here
-//│ ║  l.334: 	    print("Hello World")
+//│ ║  l.348: 	    print("Hello World")
 //│ ║         	    ^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.335: 	    false
+//│ ║  l.349: 	    false
 //│ ║         	^^^^^^^^^
-//│ ║  l.336: 	  then 0(0)
+//│ ║  l.350: 	  then 0(0)
 //│ ╙──       	^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Illegal position for prefix keyword 'else'.
-//│ ║  l.337: 	  else 1
+//│ ║  l.351: 	  else 1
 //│ ╙──       	  ^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 

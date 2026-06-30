@@ -192,7 +192,7 @@ class FileExplorer extends HTMLElement with
       .replace(new RegExp("/+$"), "")
 
   fun invalidPathPart(part) =
-    part is "." | ".."
+    part is ("." | "..")
 
   fun submitNewFile(input) =
     let fileName = input.value.trim()

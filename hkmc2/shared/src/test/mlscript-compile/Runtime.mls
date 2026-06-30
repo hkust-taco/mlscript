@@ -3,6 +3,8 @@ import "./Rendering.mls"
 import "./LazyArray.mls"
 import "./Iter.mls"
 
+open annotations { mayNotRaiseEffects }
+
 
 module Runtime with ...
 
@@ -39,6 +41,13 @@ fun checkArgs(functionName, expected, isUB, got) =
       + (if expected === 1 then "" else "s")
       + " but got " + got
 
+fun checkSelect(sel, nme, qual) =
+  if sel === undefined then
+    throw Error("Access to required field '" + nme + "' yielded 'undefined'")
+  else
+    qual.(nme + "$__checkNotMethod")
+    sel
+
 fun safeCall(x) =
   if x is undefined then () else x
 
@@ -61,11 +70,11 @@ val try_catch = RuntimeJS.try_catch
 class EffectHandle(_reified) with
   val reified = _reified
   fun resumeWith(value) =
-    Runtime.try(() => resume(reified.contTrace)(value))
+    _try(() => resume(reified.contTrace)(value))
   fun raise() =
     set curEffect = reified
 
-fun try(f) =
+fun _try(f) =
   let res = f()
   if curEffect !== null then
     let tmp = curEffect
@@ -80,31 +89,42 @@ data class MatchFailure(errors)
 
 // For pattern matching on tuples
 module Tuple with
+  
+  @mayNotRaiseEffects
   fun slice(xs, i, j) = xs.slice(i, xs.length - j)
-
+  
+  @mayNotRaiseEffects
   fun lazySlice(xs, i, j) = LazyArray.dropLeftRight(i, j)(xs)
+  @mayNotRaiseEffects
   fun lazyConcat(...args) = LazyArray.__concat(...args)
-
+  
+  @mayNotRaiseEffects
   fun get(xs, i) =
     if i >= xs.length do
       throw RangeError("Tuple.get: index out of bounds")
     if i < -xs.length do
       throw RangeError("Tuple.get: negative index out of bounds")
     xs.[i]
-
+  
+  @mayNotRaiseEffects
   fun isArrayLike(xs) = Iter.isArrayLike(xs)
   val split = LazyArray.__split
 
 module Str with
+  
+  @mayNotRaiseEffects
   fun startsWith(string, prefix) = string.startsWith(prefix)
-
+  
+  @mayNotRaiseEffects
   fun get(string, i) =
     if i >= string.length then
       throw RangeError("Str.get: index out of bounds")
     else string.at(i)
   
+  @mayNotRaiseEffects
   fun take(string, n) = string.slice(0, n)
-
+  
+  @mayNotRaiseEffects
   fun leave(string, n) = string.slice(n)
 
 // Re-export rendering functions

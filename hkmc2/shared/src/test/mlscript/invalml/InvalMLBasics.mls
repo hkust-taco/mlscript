@@ -69,18 +69,22 @@ new Nothingness(0)
 //│ ║  l.67: 	new Nothingness(0)
 //│ ╙──      	    ^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Expected a statically known class; found ‹error›.
+//│ ║  l.67: 	new Nothingness(0)
+//│ ║        	    ^^^^^^^^^^^
 //│ ╙── The 'new' keyword requires a statically known class; use the 'new!' operator for dynamic instantiation.
-//│ ═══[COMPILATION ERROR] Not a valid class: ‹error›
+//│ ╔══[COMPILATION ERROR] Not a valid class: ‹error›
+//│ ║  l.67: 	new Nothingness(0)
+//│ ╙──      	    ^^^^^^^^^^^
 //│ Type: ⊥
 
 :e
 new 42
 //│ ╔══[COMPILATION ERROR] Expected a statically known class; found integer literal.
-//│ ║  l.77: 	new 42
+//│ ║  l.81: 	new 42
 //│ ║        	    ^^
 //│ ╙── The 'new' keyword requires a statically known class; use the 'new!' operator for dynamic instantiation.
 //│ ╔══[COMPILATION ERROR] Not a valid class: integer literal
-//│ ║  l.77: 	new 42
+//│ ║  l.81: 	new 42
 //│ ╙──      	    ^^
 //│ Type: ⊥
 
@@ -98,8 +102,8 @@ new Point(0.0, 0.0, 0.0)
 :e
 new Foo("1!5!")
 //│ ╔══[COMPILATION ERROR] Type error in string literal with expected type Int
-//│ ║  l.99: 	new Foo("1!5!")
-//│ ║        	        ^^^^^^
+//│ ║  l.103: 	new Foo("1!5!")
+//│ ║         	        ^^^^^^
 //│ ╙── because: cannot constrain  Str  <:  Int
 //│ Type: Foo
 
@@ -126,10 +130,10 @@ let t = new Some(true) in t.Some#value
 :pe
 42.Some#value
 //│ ╔══[LEXICAL ERROR] Expected at least one digit after the  decimal point
-//│ ║  l.127: 	42.Some#value
+//│ ║  l.131: 	42.Some#value
 //│ ╙──       	   ^
 //│ ╔══[COMPILATION ERROR] Illegal juxtaposition right-hand side (infix operator '#').
-//│ ║  l.127: 	42.Some#value
+//│ ║  l.131: 	42.Some#value
 //│ ╙──       	   ^^^^^^^^^^
 //│ Type: Num
 
@@ -150,7 +154,7 @@ let ip = new Printer(foofoo) in ip.Printer#f(42)
 :e
 let ip = new Printer(foofoo) in ip.Printer#f("42")
 //│ ╔══[COMPILATION ERROR] Type error in string literal with expected type 'T
-//│ ║  l.151: 	let ip = new Printer(foofoo) in ip.Printer#f("42")
+//│ ║  l.155: 	let ip = new Printer(foofoo) in ip.Printer#f("42")
 //│ ║         	                                             ^^^^
 //│ ╟── because: cannot constrain  Str  <:  'T
 //│ ╟── because: cannot constrain  Str  <:  'T
@@ -173,7 +177,7 @@ let tf = new TFun(inc) in tf.TFun#f(1)
 :e
 let tf = new TFun(inc) in tf.TFun#f("1")
 //│ ╔══[COMPILATION ERROR] Type error in string literal with expected type 'T
-//│ ║  l.174: 	let tf = new TFun(inc) in tf.TFun#f("1")
+//│ ║  l.178: 	let tf = new TFun(inc) in tf.TFun#f("1")
 //│ ║         	                                    ^^^
 //│ ╟── because: cannot constrain  Str  <:  'T
 //│ ╟── because: cannot constrain  Str  <:  'T
@@ -285,7 +289,7 @@ throw new Error("oops")
 :e
 throw 42
 //│ ╔══[COMPILATION ERROR] Type error in throw
-//│ ║  l.286: 	throw 42
+//│ ║  l.290: 	throw 42
 //│ ║         	^^^^^^^^
 //│ ╙── because: cannot constrain  Int  <:  Error
 //│ Type: ⊥

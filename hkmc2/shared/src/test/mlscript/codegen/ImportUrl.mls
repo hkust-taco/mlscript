@@ -2,9 +2,3 @@
 import "https://esm.sh/@floating-ui/dom"
 import "https://esm.sh/@floating-ui/dom" { computePosition, shift }
 import "https://esm.sh/@floating-ui/dom" as FloatingUI
-//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ import dom from "https://esm.sh/@floating-ui/dom";
-//│ import { computePosition as computePosition } from "https://esm.sh/@floating-ui/dom";
-//│ import { shift as shift } from "https://esm.sh/@floating-ui/dom";
-//│ import * as FloatingUI from "https://esm.sh/@floating-ui/dom";
-//│ 

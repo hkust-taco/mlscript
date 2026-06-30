@@ -2,7 +2,7 @@ package hkmc2
 package semantics
 package ucs
 
-import mlscript.utils.*, shorthands.*
+import hkmc2.utils.*, shorthands.*
 import syntax.Tree, Tree.*, Elaborator.{Ctx, State, ctx}
 
 /** This trait includes some helpers for synthesizing `Term`s which look like 
@@ -30,7 +30,7 @@ trait TermSynthesizer(using State):
     Term.New(cls, args, N)(N)
   protected final def rcd(fields: RcdField*): Term.Rcd = Term.Rcd(false, fields.toList)
   
-  protected final def splitLet(sym: BlockLocalSymbol, term: Term)(inner: Split): Split =
+  protected final def splitLet(sym: LocalVarSymbol, term: Term)(inner: Split): Split =
     Split.Let(sym, term, inner)
   
   protected final def param = Param(FldFlags.empty, _, N, Modulefulness.none)
@@ -43,7 +43,7 @@ trait TermSynthesizer(using State):
     sel(runtimeRef, "MatchSuccess", State.matchSuccessClsSymbol).resolved(State.matchSuccessClsSymbol)
 
   /** Make a pattern that looks like `runtime.MatchSuccess.class`. */
-  protected def matchSuccessPattern(parametersOpt: Opt[Ls[BlockLocalSymbol]]): FlatPattern.ClassLike =
+  protected def matchSuccessPattern(parametersOpt: Opt[Ls[LocalVarSymbol]]): FlatPattern.ClassLike =
     val parameters = parametersOpt.map(_.map(_ -> N))
     FlatPattern.ClassLike(matchSuccessClass, State.matchSuccessClsSymbol, parameters, false)(Tree.Dummy)
 
@@ -52,17 +52,17 @@ trait TermSynthesizer(using State):
     sel(runtimeRef, "MatchFailure", State.matchFailureClsSymbol).resolved(State.matchFailureClsSymbol)
 
   /** Make a pattern that looks like `runtime.MatchFailure.class`. */
-  protected def matchFailurePattern(parametersOpt: Opt[Ls[BlockLocalSymbol]]): FlatPattern.ClassLike =
+  protected def matchFailurePattern(parametersOpt: Opt[Ls[LocalVarSymbol]]): FlatPattern.ClassLike =
     val parameters = parametersOpt.map(_.map(_ -> N))
     FlatPattern.ClassLike(matchFailureClass, State.matchFailureClsSymbol, parameters, false)(Tree.Dummy)
 
-  protected lazy val tupleSlice = sel(sel(runtimeRef, "Tuple"), "slice", State.tupleSliceSymbol)
-  protected lazy val tupleLazySlice = sel(sel(runtimeRef, "Tuple"), "lazySlice", State.tupleLazySliceSymbol)
-  protected lazy val tupleGet = sel(sel(runtimeRef, "Tuple"), "get", State.tupleGetSymbol)
-  protected lazy val stringStartsWith = sel(sel(runtimeRef, "Str"), "startsWith", State.strStartsWithSymbol)
-  protected lazy val stringGet = sel(sel(runtimeRef, "Str"), "get", State.strGetSymbol)
-  protected lazy val stringTake = sel(sel(runtimeRef, "Str"), "take", State.strTakeSymbol)
-  protected lazy val stringLeave = sel(sel(runtimeRef, "Str"), "leave", State.strLeaveSymbol)
+  protected lazy val tupleSlice = sel(sel(runtimeRef, "Tuple", State.tupleSymbol), "slice", State.tupleSliceSymbol)
+  protected lazy val tupleLazySlice = sel(sel(runtimeRef, "Tuple", State.tupleSymbol), "lazySlice", State.tupleLazySliceSymbol)
+  protected lazy val tupleGet = sel(sel(runtimeRef, "Tuple", State.tupleSymbol), "get", State.tupleGetSymbol)
+  protected lazy val stringStartsWith = sel(sel(runtimeRef, "Str", State.strSymbol), "startsWith", State.strStartsWithSymbol)
+  protected lazy val stringGet = sel(sel(runtimeRef, "Str", State.strSymbol), "get", State.strGetSymbol)
+  protected lazy val stringTake = sel(sel(runtimeRef, "Str", State.strSymbol), "take", State.strTakeSymbol)
+  protected lazy val stringLeave = sel(sel(runtimeRef, "Str", State.strSymbol), "leave", State.strLeaveSymbol)
 
   /** Make a term that looks like `runtime.Tuple.get(t, i)`. */
   protected final def callTupleGet(t: Term, i: Int, label: Str): Term =
@@ -118,7 +118,7 @@ trait TermSynthesizer(using State):
   /** Make a `Branch` that calls `Pattern` symbols' `unapply` functions. */
   def makeLocalPatternBranch(
       scrut: => Term.Ref,
-      localPatternSymbol: BlockLocalSymbol,
+      localPatternSymbol: LocalVarSymbol,
       inner: => Split,
   )(fallback: Split): Split =
     val call = app(localPatternSymbol.safeRef, tup(fld(scrut)), s"result of ${localPatternSymbol.nme}")
@@ -127,7 +127,7 @@ trait TermSynthesizer(using State):
   
   protected final def makeTupleBranch(
     scrut: => Term.Ref,
-    subScrutinees: Ls[BlockLocalSymbol],
+    subScrutinees: Ls[LocalVarSymbol],
     consequent: => Split,
     alternative: Split
   ): Split =
@@ -140,9 +140,9 @@ trait TermSynthesizer(using State):
   
   protected final def makeTupleBranch(
     scrut: => Term.Ref,
-    leading: Ls[BlockLocalSymbol],
-    spread: BlockLocalSymbol,
-    trailing: Ls[BlockLocalSymbol],
+    leading: Ls[LocalVarSymbol],
+    spread: LocalVarSymbol,
+    trailing: Ls[LocalVarSymbol],
     consequent: => Split,
     alternative: Split
   ): Split =

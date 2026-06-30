@@ -79,13 +79,14 @@ test2()(5)
 :w
 :e
 :sjs
+:noInline
 fun test2() =
   fun funny = 
     case 0 then 0
     case n then funny(n - 1) + 1
   funny
 //│ ╔══[WARNING] Pure expression in statement position
-//│ ║  l.84: 	    case 0 then 0
+//│ ║  l.85: 	    case 0 then 0
 //│ ╙──      	    ^^^^^^^^^^^^^
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let test22;
@@ -104,17 +105,14 @@ fun test2() =
 //│   };
 //│   return funny()
 //│ };
-//│ ╔══[WARNING] Pure expression in statement position
-//│ ║  l.84: 	    case 0 then 0
-//│ ╙──      	    ^^^^^^^^^^^^^
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ ╔══[COMPILATION ERROR] Function definition shape not yet supported for funny
-//│ ║  l.84: 	    case 0 then 0
+//│ ║  l.85: 	    case 0 then 0
 //│ ║        	         ^^^^^^^^
-//│ ║  l.85: 	    case n then funny(n - 1) + 1
+//│ ║  l.86: 	    case n then funny(n - 1) + 1
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Variable not found: funny
-//│ ║  l.86: 	  funny
+//│ ║  l.87: 	  funny
 //│ ╙──      	  ^^^^^
 
 
@@ -122,7 +120,7 @@ fun test2() =
 fun test3 =
   print("Hi")
 //│ ╔══[COMPILATION ERROR] Function definition shape not yet supported for test3
-//│ ║  l.123: 	  print("Hi")
+//│ ║  l.121: 	  print("Hi")
 //│ ╙──       	  ^^^^^^^^^^^
 
 

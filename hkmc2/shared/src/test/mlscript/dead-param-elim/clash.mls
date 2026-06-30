@@ -89,10 +89,10 @@ m()
 //│ dead-param-elim > >>> dead-param-elim results >>>
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let tmp, lambda⁰;
+//│ let tmp, lambda;
 //│ set tmp = [1, 2, 3];
-//│ define lambda⁰ as fun lambda¹(x, i, a) { return +⁰(x, 1) };
-//│ return tmp.map﹖(lambda¹)
+//│ define lambda as fun lambda⁰(x, i, a) { return +⁰(x, 1) };
+//│ return tmp.map﹖(lambda⁰)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = [2, 3, 4]
 

@@ -1,7 +1,7 @@
 package hkmc2
 package io
 
-import mlscript.utils.shorthands._
+import hkmc2.utils.shorthands._
 import scala.scalajs.js
 import scala.scalajs.js.annotation.JSExportTopLevel
 

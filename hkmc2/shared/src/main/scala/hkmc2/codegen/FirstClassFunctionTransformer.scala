@@ -1,7 +1,7 @@
 package hkmc2
 package codegen
 
-import mlscript.utils.*, shorthands.*
+import hkmc2.utils.*, shorthands.*
 import utils.*
 import semantics.*
 import syntax.Tree
@@ -28,11 +28,11 @@ class FirstClassFunctionTransformer
     )
     val defSym = new BlockMemberSymbol("Function$", Nil, false)
     val callDef = FunDefn.withFreshSymbol(Some(clsSym), new BlockMemberSymbol("call", Nil, true), params :: Nil,
-      Return(Call(p, params.params.map(_.sym.asSimpleRef.asArg) ne_:: Nil)(true, false, false)))(N, annotations = Nil)
+      Return(Call(p, params.params.map(_.sym.asSimpleRef.asArg) ne_:: Nil)(CallMetadata.defaultMlsFun)))(N, annotations = Nil)
     ClsLikeDefn(None, clsSym, defSym, None, syntax.Cls, None, Nil,
-      Some(Select(State.globalThisSymbol.asThis, Tree.Ident("Function"))(Some(ctx.builtins.Function))),
+      Some(Select(State.globalThisSymbol.asThis, Tree.Ident("Function"))(Some(ctx.builtins.Function))(false)),
       callDef :: Nil, Nil, Nil, Assign.discard(
-        Call(State.builtinOpsMap("super").asSimpleRef, Nil ne_:: Nil)(false, false, false),
+        Call(State.builtinOpsMap("super").asSimpleRef, Nil ne_:: Nil)(CallMetadata.defaultFun),
         End()), End(), None, None)(N, annotations = Nil)
 
   private def getParamList(l: BlockMemberSymbol): Option[ParamList] = funDefns.get(l) match
@@ -40,29 +40,46 @@ class FirstClassFunctionTransformer
     case _ => l.tsym.flatMap(getParamList)
 
   private def getParamList(ts: TermSymbol): Option[ParamList] =
-    ts.irFunDefn.flatMap(_.params.headOption)
-
+    ts.irFunDefn.flatMap(_.params.headOption).orElse:
+      // FIXME: remove this fallback once imported functions have their `irFunDefn` properly linked.
+      ts.defn.collectFirst:
+        case TermDefinition(k = syntax.Fun, params = params @ (_ :: _)) =>
+          params.head
+  
+  private def isGetter(l: BlockMemberSymbol): Bool = funDefns.get(l) match
+    case Some(fd) => fd.params.isEmpty
+    case _ => l.tsym.exists(isGetter)
+  
+  private def isGetter(ts: TermSymbol): Bool =
+    ts.irFunDefn.exists(_.params.isEmpty) ||
+      // FIXME: remove this fallback once imported functions have their `irFunDefn` properly linked.
+      ts.defn.exists:
+        case TermDefinition(k = syntax.Fun, params = Nil) => true
+        case _ => false
+  
+  private def etaExpandPath(p: Path, params: ParamList)(k: Path => Block): Block =
+    val clsDef = generateFCFunctionClass(p, params)
+    val tmp = new TempSymbol(None)
+    val cls = clsDef.sym.asMemberRef(clsDef.isym)
+    Scoped(Set(clsDef.sym, tmp), Define(clsDef, Assign(tmp, Instantiate(false, cls, Nil :: Nil)(InstantiateMetadata.empty), k(tmp.asSimpleRef))))
+  
   override def applyPath(p: Path)(k: Path => Block): Block = p match
     case ref @ Value.MemberRef(l, disamb) => disamb match
       case s: TermSymbol if s.k is syntax.Fun =>
-        val params = getParamList(l).getOrElse(lastWords(s"Cannot get ${l.nme}'s parameter list."))
-        val clsDef = generateFCFunctionClass(ref, params)
-        val tmp = new TempSymbol(None)
-        val cls = clsDef.sym.asMemberRef(clsDef.isym)
-        Scoped(Set(clsDef.sym, tmp), Define(clsDef, Assign(tmp, Instantiate(false, cls, Nil :: Nil), k(tmp.asSimpleRef))))
+        if isGetter(l) then k(p)
+        else etaExpandPath(ref, getParamList(l).getOrElse(lastWords(s"Cannot get ${l.nme}'s parameter list.")))(k)
       case _ => k(p)
     case sel: Select => sel.symbol match
       case Some(s: TermSymbol) if (s.k is syntax.Fun) =>
-        val params = getParamList(s).getOrElse:
-          raise:
-            ErrorReport(msg"Cannot get ${s.nme}'s parameter list."
-              -> sel.toLoc :: Nil,
-              source = Diagnostic.Source.Compilation)
-          PlainParamList(Nil)
-        val clsDef = generateFCFunctionClass(sel, params)
-        val tmp = new TempSymbol(None)
-        val cls = clsDef.sym.asMemberRef(clsDef.isym)
-        Scoped(Set(clsDef.sym, tmp), Define(clsDef, Assign(tmp, Instantiate(false, cls, Nil :: Nil), k(tmp.asSimpleRef))))
+        if isGetter(s) then k(p)
+        else
+          val params = getParamList(s).getOrElse:
+            raise:
+              ErrorReport(msg"Cannot get ${s.nme}'s parameter list."
+                -> sel.toLoc :: Nil,
+                source = Diagnostic.Source.Compilation)
+            PlainParamList(Nil)
+          etaExpandPath(sel, params)(k)
       case Some(_) => k(p)
       case _ =>
         raise(ErrorReport(msg"Cannot determine if ${sel.name.name} is a function." -> sel.toLoc :: Nil,
@@ -70,15 +87,9 @@ class FirstClassFunctionTransformer
         k(p)
     case _ => k(p)
 
-  private def pathStartsWith(p: Path, symbol: Local): Bool = p match
-    case r: Value.Ref => r.symbol is symbol
-    case Select(p, _) => pathStartsWith(p, symbol)
-    case DynSelect(p, _, _) => pathStartsWith(p, symbol)
-    case _ => false
-
   override def applyResult(r: Result)(k: Result => Block): Block = r match
     case c @ Call(fun, argss) => applyListOf(argss, (args, k2) => applyArgs(args)(k2)): argss2 =>
-      def call(f: Path) = Call(f, argss2.ne_!)(c.isMlsFun, c.mayRaiseEffects, c.explicitTailCall)
+      def call(f: Path) = Call(f, argss2.ne_!)(c.metadata)
       fun match
         case ref @ Value.SimpleRef(sym) => sym match
           case _: VarSymbol |  _: TempSymbol => k(call(ref.selSN("call")))

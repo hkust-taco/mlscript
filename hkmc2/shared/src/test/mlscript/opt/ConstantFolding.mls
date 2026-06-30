@@ -9,15 +9,15 @@
 //│ = 4
 
 
-// TODO: improve (currently takes multiple iterations)
-:soir
+:sir // * Done immediately upon lowering thanks to Call's smart constructor
 2 + 2 * 3 > 0
-//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ return true
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = true
 
 
+:dopt // * Correctly done in only 2 passes: first, folding; second, removing dead vars
 :soir
 let x = 2
 in let y = 2
@@ -25,6 +25,35 @@ in let x += 1
 in
   set y += 1
   print(x + y)
+//│ ⬤ Simplif. iter. 1
+//│ Captured variables: HashSet()
+//│ !! Change triggered { x⁰ ~> 2 }
+//│ !! Change triggered { y⁰ ~> 2 }
+//│ !! Change triggered { tmp:tmp⁰ ~> 3 }
+//│ !! Change triggered { x¹ ~> 3 }
+//│ !! Change triggered { y⁰ ~> 3 }
+//│ !! Change triggered { tmp:tmp¹ ~> 6 }
+//│ ▶ VP:
+//│ >  let x, y, x1, tmp, tmp1;
+//│ >  set x = 2;
+//│ >  set y = 2;
+//│ >  set x1 = 3;
+//│ >  set tmp = 3;
+//│ >  set y = 3;
+//│ >  set tmp1 = 6;
+//│ >  return Predef⁰.print⁰(6)
+//│ ⬤ Simplif. iter. 2
+//│ !! Change triggered { rm x⁰ = 2 }
+//│ !! Change triggered { rm y⁰ = 2 }
+//│ !! Change triggered { rm x¹ = 3 }
+//│ !! Change triggered { rm tmp:tmp⁰ = 3 }
+//│ !! Change triggered { rm y⁰ = 3 }
+//│ !! Change triggered { rm tmp:tmp¹ = 6 }
+//│ ▶ DCE:
+//│ >  return Predef⁰.print⁰(6)
+//│ Captured variables: HashSet()
+//│ ⬤ Simplif. iter. 3
+//│ Captured variables: HashSet()
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ return Predef⁰.print⁰(6)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
@@ -38,7 +67,7 @@ let last = peek
 set peek = 1
 last
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let peek⁰, last⁰; set peek⁰ = Predef⁰.hide⁰(4); set last⁰ = peek⁰; set peek⁰ = 1; return last⁰
+//│ set peek⁰ = Predef⁰.hide⁰(4); set last⁰ = peek⁰; set peek⁰ = 1; return last⁰
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 4
 //│ last = 4

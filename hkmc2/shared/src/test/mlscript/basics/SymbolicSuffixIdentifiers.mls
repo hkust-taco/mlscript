@@ -1,0 +1,59 @@
+:js
+
+
+:sjs
+fun foo_bar_<:<(value_?!) = value_?! + 1
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ let foo_bar; foo_bar = function foo_bar(value) { return value + 1 };
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+foo_bar_<:<(41)
+//│ = 42
+
+
+class Box_#(val value_?!) with
+  fun add_++(delta) = value_?! + delta
+
+let box_# = new Box_#(42)
+//│ box_# = Box(42)
+
+box_#.value_?!
+//│ = 42
+
+box_#.add_++(1)
+//│ = 43
+
+
+// A definition cannot provide two source-level symbolic names at once.
+:e
+:sjs
+fun (++) foo_+(x) = x + 1
+//│ ╔══[COMPILATION ERROR] Cannot combine an explicit symbolic name with a symbolic suffix identifier.
+//│ ║  l.30: 	fun (++) foo_+(x) = x + 1
+//│ ╙──      	         ^^^^^
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ let foo; foo = function foo(x) { return x + 1 };
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+:e
+:sjs
+foo_+
+//│ ╔══[COMPILATION ERROR] Name not found: foo_+
+//│ ║  l.40: 	foo_+
+//│ ╙──      	^^^^^
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ throw "This code cannot be run as its compilation yielded an error."
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+:e
+:sjs
+(++)
+//│ ╔══[COMPILATION ERROR] Name not found: ++
+//│ ║  l.51: 	(++)
+//│ ╙──      	 ^^
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ throw "This code cannot be run as its compilation yielded an error."
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+

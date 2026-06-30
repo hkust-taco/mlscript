@@ -7,7 +7,7 @@
 // * Note: We observe the value `2` even though the branch where the assignment occurs is dead
 :expect 2
 :soir
-let x
+let x in...
 let y = 1
 if hide(false) then
   x = 2
@@ -15,12 +15,10 @@ else
   print('hi)
 hide of hide of hide of hide of hide of x // big expression so it's not folded into the `else`
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let x⁰, y⁰, scrut, tmp, tmp1, tmp2, tmp3;
-//│ set y⁰ = 1;
+//│ let scrut, tmp, tmp1, tmp2, tmp3;
 //│ set scrut = Predef⁰.hide⁰(false);
 //│ match scrut
 //│   true =>
-//│     set x⁰ = 2;
 //│     end
 //│   else
 //│     do Predef⁰.print⁰("hi");
@@ -33,12 +31,10 @@ hide of hide of hide of hide of hide of x // big expression so it's not folded i
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > hi
 //│ = 2
-//│ x = undefined
-//│ y = 1
 
 :expect undefined
 :soir
-let x
+let x in...
 let y = 1
 if hide(false) then
   x = 2
@@ -46,12 +42,10 @@ else
   print('hi)
 x // folded into the `else`; no longer observe the value `2`
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let x¹, y¹, scrut;
-//│ set y¹ = 1;
+//│ let scrut;
 //│ set scrut = Predef⁰.hide⁰(false);
 //│ match scrut
 //│   true =>
-//│     set x¹ = 2;
 //│     return 2
 //│   else
 //│     do Predef⁰.print⁰("hi");
@@ -59,20 +53,19 @@ x // folded into the `else`; no longer observe the value `2`
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > hi
-//│ x = undefined
-//│ y = 1
 
 
 // * Reading an uninitialized top-level variable yields undefined.
 // :dopt
 :soir
-let x
-print(x)
+scope.locally of (
+  let x
+  print(x)
+)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let x²; return Predef⁰.print⁰(undefined)
+//│ return Predef⁰.print⁰(undefined)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > undefined
-//│ x = undefined
 
 // * Keep the uninitialized binding visible to the following block.
 let x
@@ -80,3 +73,5 @@ let x
 
 // :dopt
 if x is 0 do print()
+
+

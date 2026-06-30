@@ -109,3 +109,12 @@ val isDefined = case
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ isDefined = fun
 
+
+:todo
+case 0 | 1
+//│ ╔══[COMPILATION ERROR] Unrecognized pattern split (infix operator '|').
+//│ ║  l.114: 	case 0 | 1
+//│ ╙──       	     ^^^^^
+//│ = fun
+
+

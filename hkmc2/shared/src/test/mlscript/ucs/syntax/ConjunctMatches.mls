@@ -18,7 +18,7 @@ if
 //│ ———————————————| Parsed tree |——————————————————————————————————————————————————————————————————————
 //│ IfLike:
 //│   kw = Keywrd of keyword 'if'
-//│   split = Block of Ls of 
+//│   split = Block of Ls of
 //│     InfixApp:
 //│       lhs = InfixApp:
 //│         lhs = InfixApp:
@@ -46,7 +46,7 @@ if
 //│ ———————————————| Parsed tree |——————————————————————————————————————————————————————————————————————
 //│ IfLike:
 //│   kw = Keywrd of keyword 'if'
-//│   split = Block of Ls of 
+//│   split = Block of Ls of
 //│     InfixApp:
 //│       lhs = InfixApp:
 //│         lhs = InfixApp:

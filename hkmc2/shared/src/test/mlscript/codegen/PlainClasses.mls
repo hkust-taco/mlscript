@@ -97,7 +97,19 @@ fun test() =
 
 let t = test()
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let t; t = test();
+//│ let t, Foo6;
+//│ (class Foo5 {
+//│   static {
+//│     Foo6 = this
+//│   }
+//│   constructor() {
+//│     Predef.print("hi");
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "Foo"];
+//│ });
+//│ Predef.print("ok");
+//│ t = Foo6;
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > ok
 //│ t = class Foo
@@ -105,7 +117,7 @@ let t = test()
 :e
 new t
 //│ ╔══[COMPILATION ERROR] Expected a statically known class; found reference.
-//│ ║  l.106: 	new t
+//│ ║  l.118: 	new t
 //│ ║         	    ^
 //│ ╙── The 'new' keyword requires a statically known class; use the 'new!' operator for dynamic instantiation.
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
@@ -124,7 +136,7 @@ new! t
 :e
 new t()
 //│ ╔══[COMPILATION ERROR] Expected a statically known class; found reference.
-//│ ║  l.125: 	new t()
+//│ ║  l.137: 	new t()
 //│ ║         	    ^
 //│ ╙── The 'new' keyword requires a statically known class; use the 'new!' operator for dynamic instantiation.
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
@@ -146,10 +158,10 @@ class Foo with
   let y = x + 1
   fun z() = y + x
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let Foo6;
-//│ (class Foo5 {
+//│ let Foo8;
+//│ (class Foo7 {
 //│   static {
-//│     Foo6 = this
+//│     Foo8 = this
 //│   }
 //│   constructor() {
 //│     this.x = 1;
@@ -174,10 +186,10 @@ class Foo with
   fun z2() = 6
   print("hello")
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let Foo8;
-//│ (class Foo7 {
+//│ let Foo10;
+//│ (class Foo9 {
 //│   static {
-//│     Foo8 = this
+//│     Foo10 = this
 //│   }
 //│   constructor() {
 //│     this.x1 = 1;
@@ -201,10 +213,10 @@ class Foo with
   fun foo(y) = x + y
   fun bar(z) = foo(z) + 1
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let Foo10;
-//│ (class Foo9 {
+//│ let Foo12;
+//│ (class Foo11 {
 //│   static {
-//│     Foo10 = this
+//│     Foo12 = this
 //│   }
 //│   constructor() {
 //│     this.x = 1;
@@ -228,7 +240,7 @@ print(a.foo(1))
 print(a.bar(1))
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let a, tmp, tmp1;
-//│ a = globalThis.Object.freeze(new Foo10());
+//│ a = globalThis.Object.freeze(new Foo12());
 //│ Predef.print(a.x);
 //│ tmp = runtime.safeCall(a.foo(1));
 //│ Predef.print(tmp);
@@ -248,16 +260,16 @@ class Foo with
   val x = 2
 //│ ╔══[COMPILATION ERROR] Multiple definitions of symbol 'x'
 //│ ╟── defined here
-//│ ║  l.247: 	  val x = 1
+//│ ║  l.259: 	  val x = 1
 //│ ║         	  ^^^^^^^^^
 //│ ╟── defined here
-//│ ║  l.248: 	  val x = 2
+//│ ║  l.260: 	  val x = 2
 //│ ╙──       	  ^^^^^^^^^
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let Foo12;
-//│ (class Foo11 {
+//│ let Foo14;
+//│ (class Foo13 {
 //│   static {
-//│     Foo12 = this
+//│     Foo14 = this
 //│   }
 //│   constructor() {
 //│     this.x = 1;
@@ -273,16 +285,16 @@ class Foo with
   val x = 1
   let x = 2
 //│ ╔══[COMPILATION ERROR] Name 'x' is already used
-//│ ║  l.274: 	  let x = 2
+//│ ║  l.286: 	  let x = 2
 //│ ║         	      ^^^^^
 //│ ╟── by a member declared in the same block
-//│ ║  l.273: 	  val x = 1
+//│ ║  l.285: 	  val x = 1
 //│ ╙──       	  ^^^^^^^^^
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let Foo14;
-//│ (class Foo13 {
+//│ let Foo16;
+//│ (class Foo15 {
 //│   static {
-//│     Foo14 = this
+//│     Foo16 = this
 //│   }
 //│   constructor() {
 //│     this.x = 1;
@@ -302,13 +314,13 @@ class Foo with
 :e
 class Foo with val x = 1
 //│ ╔══[COMPILATION ERROR] Illegal body of class definition (should be a block; found term definition).
-//│ ║  l.303: 	class Foo with val x = 1
+//│ ║  l.315: 	class Foo with val x = 1
 //│ ╙──       	               ^^^^^^^^^
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let Foo16;
-//│ (class Foo15 {
+//│ let Foo18;
+//│ (class Foo17 {
 //│   static {
-//│     Foo16 = this
+//│     Foo18 = this
 //│   }
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "Foo"];

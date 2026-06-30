@@ -22,9 +22,7 @@ assert xs is Array
 :fixme
 assert(true); 123
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let scrut;
-//│ scrut = 123;
-//│ if (scrut !== true) { runtime.safeCall(runtime.assertFail("Assert.mls", "24")); }
+//│ if (123 !== true) { runtime.safeCall(runtime.assertFail("Assert.mls", "24")); }
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ ═══[RUNTIME ERROR] Error: Assertion failed (Assert.mls:24)
 

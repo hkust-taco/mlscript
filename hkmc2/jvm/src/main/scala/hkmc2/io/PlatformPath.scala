@@ -1,7 +1,7 @@
 package hkmc2
 package io
 
-import mlscript.utils._, shorthands._
+import hkmc2.utils.*, shorthands.*
 
 /**
  * JVM implementation of [[Path]] that wraps [[os.Path]].

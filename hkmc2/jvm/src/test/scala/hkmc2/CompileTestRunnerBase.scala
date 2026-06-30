@@ -4,7 +4,7 @@ import org.scalatest.{funsuite, ParallelTestExecution}
 import org.scalatest.time._
 import org.scalatest.concurrent.{TimeLimitedTests, Signaler}
 
-import mlscript.utils._, shorthands._
+import hkmc2.utils.*, shorthands.*
 import io.PlatformPath.given
 
 
@@ -64,6 +64,7 @@ abstract class CompileTestRunnerBase(
           paths = new MLsCompiler.Paths:
             val preludeFile = mainTestDir / "mlscript" / "decls" / "Prelude.mls"
             val runtimeFile = mainTestDir / "mlscript-compile" / "Runtime.mjs"
+            val runtimeSourceFile = mainTestDir / "mlscript-compile" / "Runtime.mls"
             val termFile = mainTestDir / "mlscript-compile" / "Term.mjs",
           mkRaise = report.mkRaise
         )

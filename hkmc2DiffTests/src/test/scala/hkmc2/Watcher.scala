@@ -3,7 +3,7 @@ package hkmc2
 import scala.collection.mutable
 import scala.jdk.CollectionConverters.*
 
-import mlscript.utils.*, shorthands.*
+import hkmc2.utils.*, shorthands.*
 
 import better.files.*
 import _root_.io.methvin
@@ -42,6 +42,7 @@ class Watcher(dirs: Ls[File]):
   val compilerPaths = new MLsCompiler.Paths:
     val preludeFile = preludePath
     val runtimeFile = testDir/"mlscript-compile"/"Runtime.mjs"
+    val runtimeSourceFile = testDir/"mlscript-compile"/"Runtime.mls"
     val termFile = testDir/"mlscript-compile"/"Term.mjs"
   val nodeModulesPath = rootPath/"node_modules"
   
@@ -122,6 +123,7 @@ class Watcher(dirs: Ls[File]):
           paths = new MLsCompiler.Paths:
             val preludeFile = preludePath
             val runtimeFile = testBasePath/"mlscript-compile"/"Runtime.mjs"
+            val runtimeSourceFile = testBasePath/"mlscript-compile"/"Runtime.mls"
             val termFile = testBasePath/"mlscript-compile"/"Term.mjs",
           mkRaise = ReportFormatter(System.out.println, colorize = true).mkRaise
         ).compileModule(path)

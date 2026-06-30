@@ -3,7 +3,6 @@
 
 
 import "../../js/MyClass.mjs"
-//│ MyClass = class MyClass
 
 MyClass
 //│ = class MyClass
@@ -30,7 +29,7 @@ fun foo() =
   import "../../js/MyClass.mjs"
   ()
 //│ ╔══[COMPILATION ERROR] Imports must be at the top level
-//│ ║  l.30: 	  import "../../js/MyClass.mjs"
+//│ ║  l.29: 	  import "../../js/MyClass.mjs"
 //│ ╙──      	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 

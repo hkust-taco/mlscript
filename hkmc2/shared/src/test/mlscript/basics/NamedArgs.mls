@@ -37,7 +37,7 @@ id(a: 0)
 //│     lhs = SynthSel{sym=member:id⁰}:
 //│       prefix = Ref{sym=member:Predef⁰} of member:Predef⁰
 //│       nme = Ident of "id"
-//│     rhs = Tup of Ls of 
+//│     rhs = Tup of Ls of
 //│       Fld:
 //│         term = Lit of StrLit of "a"
 //│         asc = S of Lit of IntLit of 0

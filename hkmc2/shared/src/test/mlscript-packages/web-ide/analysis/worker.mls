@@ -73,6 +73,7 @@ fun compilerPaths(MLscript) =
   Reflect.construct of MLscript.Paths, [
     "/std/Prelude.mls",
     "/std/Runtime.mjs",
+    "/std/Runtime.mls",
     "/std/Term.mjs",
     "/std"
   ]

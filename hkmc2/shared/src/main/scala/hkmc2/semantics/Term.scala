@@ -3,7 +3,7 @@ package semantics
 
 import scala.collection.mutable.{Buffer, Set as MutSet}
 
-import mlscript.utils.*, shorthands.*
+import hkmc2.utils.*, shorthands.*
 import syntax.*
 import hkmc2.utils.Scope
 import hkmc2.utils.Scope.scope
@@ -27,9 +27,20 @@ enum Annot extends AutoLocated:
   case TailRec
   case TailCall
   case Inline
+  case NoInline
+  // Whether the function is guaranteed to not raise effects.
+  case MayNotRaiseEffects
   case Config(modify: hkmc2.Config => hkmc2.Config)
-  // marks if a function or lambda is affine, i.e. called at most once.
-  // for functions with multiple parameter lists, `whichParamList` is the zero-based parameter-list index.
+  // Marks if a function or lambda is one-shot, i.e. called at most once.
+  // Functions with multiple parameter lists are considered here as a chain of
+  // function values. `whichParamList` is the zero-based index of the parameter
+  // list whose corresponding function value is one-shot.
+  // For example, on `fun f(a)(b)`,
+  // - its list of annotations containing `Affine(0)` says that `f` is one-shot;
+  // - its list of annotations containing `Affine(1)` says that
+  //   each function value produced by `f(a)` is one-shot;
+  // - its list of annotations containing both `Affine(0)` and `Affine(1)` says that
+  //   `f` is one-shot and each function value produced by `f(a)` is also one-shot.
   case Affine(whichParamList: Int)
   
   def symbol: Opt[Symbol] = this match
@@ -38,18 +49,24 @@ enum Annot extends AutoLocated:
   
   def subTerms: Vector[Term] = this match
     case Trm(trm) => Vector.single(trm)
-    case _: Modifier | Untyped | TailRec | TailCall | Inline | _: Config => Vector.empty
+    case _: Modifier | Untyped | TailRec | TailCall | Inline | NoInline
+      | MayNotRaiseEffects | _: Config | _: Affine => Vector.empty
   
   def children: Vector[Located] = this match
     case Trm(trm) => Vector.single(trm)
-    case _: Modifier | Untyped | TailRec | TailCall | Inline | _: Config => Vector.empty
+    // case Modifier(kw) => Vector.single(kw) // TODO: make `kw` a `Keywrd`
+    case _: Modifier | Untyped | TailRec | TailCall | Inline | NoInline
+      | MayNotRaiseEffects | _: Config | _: Affine => Vector.empty
   
   def show(using Scope, ShowCfg, Raise): Document = this match
     case Untyped => doc"@untyped"
     case Inline => doc"@inline"
+    case NoInline => doc"@noInline"
     case TailRec => doc"@tailrec"
+    case TailCall => doc"@tailcall"
     case Affine(n) => doc"@affine($n)"
     case Modifier(mod) => doc"@${mod.name}"
+    case MayNotRaiseEffects => doc"@mayNotRaiseEffects"
     case Trm(trm) => doc"@${trm.show}"
     case Config(_) => doc"@config(...)"
   
@@ -60,7 +77,10 @@ enum Annot extends AutoLocated:
     case TailRec => TailRec
     case TailCall => TailCall
     case Inline => Inline
+    case NoInline => NoInline
+    case MayNotRaiseEffects => MayNotRaiseEffects
     case c: Config => c
+    case a: Affine => a
 
 object Annot:
   
@@ -127,6 +147,7 @@ sealed trait ResolvableImpl:
       case t: Term.Sel => t.copy()(S(sym), t.resSym, t.typ, t.originalCtx)
       case t: Term.SynthSel => t.copy()(S(sym), t.resSym, t.typ, t.originalCtx)
       case t: Term.SelProj => t.copy()(S(sym), t.resSym, t.typ, t.originalCtx)
+      case _ => lastWords(s"withSym called on non-selection term: $this")
     .withLocOf(this)
     .asInstanceOf
   
@@ -292,7 +313,7 @@ object SrcScope:
   given s: Ctx => SrcScope = summon[Ctx].scope
 
 enum Term extends Statement:
-  case Error
+  case Error()
   case UnitVal()
   case Missing // Placeholder terms that were not elaborated due to the "lightweight" elaboration mode `Mode.Light`
   case Lit(lit: Literal)
@@ -325,6 +346,12 @@ enum Term extends Statement:
    *  split are correctly resolved. In the future, we might look for a way to
    *  remove `SynthIf` by generating IR `Match` blocks directly. */
   case SynthIf(split: Split)
+  /** `while` loops synthesized by the pattern compiler, subject to the same
+   *  restrictions as `SynthIf`. The split's branch consequents are evaluated
+   *  for their effects and the loop is re-entered; the loop exits when no
+   *  branch matches. Used by `ups.FixedPointCompiler` to drive the generated
+   *  matcher machine. */
+  case SynthWhile(split: Split)
   case Lam(params: ParamList, body: Term)
   case FunTy(lhs: Term, rhs: Term, eff: Opt[Term])
   case Forall(tvs: Ls[QuantVar], outer: Opt[VarSymbol], body: Term)
@@ -428,6 +455,7 @@ enum Term extends Statement:
       Term.blkFreeVars(stats, res.freeVars)
     case IfLike(_, _, split) => split.freeVars
     case SynthIf(split) => split.freeVars
+    case SynthWhile(split) => split.freeVars
     case Region(name, body) =>
       body.freeVars - name.nme
     case Handle(lhs, rhs, args, _, defs, body) =>
@@ -458,7 +486,7 @@ enum Term extends Statement:
   
   override def mkClone(using State): Term = 
     val that = this match
-      case Error => Error
+      case Error() => Error()
       case UnitVal() => UnitVal()
       case Missing => Missing
       case Lit(Tree.StrLit(value)) => Lit(Tree.StrLit(value))
@@ -472,6 +500,7 @@ enum Term extends Statement:
       case term @ TyApp(lhs, targs) => TyApp(lhs.mkClone, targs.map(_.mkClone))(term.typ)
       case term @ Sel(prefix, nme) => Sel(prefix.mkClone, Tree.Ident(nme.name))(term.sym, term.resSym, term.typ, term.originalCtx)
       case term @ SynthSel(prefix, nme) => SynthSel(prefix.mkClone, Tree.Ident(nme.name))(term.sym, term.resSym, term.typ, term.originalCtx)
+      case term @ LeadingDotSel(nme) => LeadingDotSel(Tree.Ident(nme.name))(term.originalCtx)
       case DynSel(prefix, fld, arrayIdx) => DynSel(prefix.mkClone, fld.mkClone, arrayIdx)
       case term @ Tup(fields) => Tup(fields.map {
         case f: Fld => f.copy(term = f.term.mkClone, asc = f.asc.map(_.mkClone))
@@ -484,6 +513,7 @@ enum Term extends Statement:
       })(term.tree)
       case IfLike(kw, form, split) => IfLike(kw, form, split.mkClone)
       case SynthIf(split) => SynthIf(split.mkClone)
+      case SynthWhile(split) => SynthWhile(split.mkClone)
       case Lam(params, body) => Lam(params, body.mkClone)
       case FunTy(lhs, rhs, eff) => FunTy(lhs.mkClone, rhs.mkClone, eff.map(_.mkClone))
       case Forall(tvs, outer, body) => Forall(tvs, outer, body.mkClone)
@@ -607,7 +637,7 @@ sealed trait Statement extends AutoLocated, ProductWithExtraInfo:
   
   def describe: Str =
     val desc = this match
-      case Error => "‹error›"
+      case Error() => "‹error›"
       case UnitVal() => "unit value"
       case Lit(lit) => lit.describeLit
       case Ref(sym) => "reference"
@@ -622,6 +652,7 @@ sealed trait Statement extends AutoLocated, ProductWithExtraInfo:
       case IfLike(_, IfLikeForm.ImperativeIf, body) => "`if` statement"
       case IfLike(_, IfLikeForm.While, body) => "`while` statement"
       case SynthIf(split) => "synthetic `if` expression"
+      case SynthWhile(split) => "synthetic `while` expression"
       case Lam(params, body) => "function literal"
       case FunTy(lhs, rhs, eff) => "function type"
       case Forall(tvs, outer, body) => "universal quantification"
@@ -633,7 +664,7 @@ sealed trait Statement extends AutoLocated, ProductWithExtraInfo:
       case New(cls, args, rft) => "object creation"
       case SelProj(pre, cls, proj) => "field selection"
       case Asc(term, ty) => "type ascription"
-      case CompType(lhs, rhs, pol) => "composed type"
+      case CompType(lhs, rhs, pol) => if pol then "alternation" else "composition"
       case Neg(rhs) => "negation type"
       case Region(name, body) => "region expression"
       case RegRef(reg, value) => "reference creation"
@@ -670,7 +701,7 @@ sealed trait Statement extends AutoLocated, ProductWithExtraInfo:
     case Blk(stats, res) => stats.toVector :+ res
     case _ => subTerms
   def subTerms: Vector[Term] = this match
-    case Error | Missing | _: Lit | _: Ref | _: UnitVal => Vector.empty
+    case Error() | Missing | _: Lit | _: Ref | _: UnitVal => Vector.empty
     case Resolved(t, sym) => Vector.single(t)
     case App(lhs, rhs) => Vector.double(lhs, rhs)
     case RcdField(lhs, rhs) => Vector.double(lhs, rhs)
@@ -685,6 +716,7 @@ sealed trait Statement extends AutoLocated, ProductWithExtraInfo:
     case CtxTup(fields) => fields.flatMap(_.subTerms).toVector
     case IfLike(_, _, split) => split.subTerms
     case SynthIf(split) => split.subTerms
+    case SynthWhile(split) => split.subTerms
     case Lam(params, body) => params.allParams.iterator.flatMap(_.sign).toVector :+ body
     case Blk(stats, res) => stats.flatMap(_.subTerms).toVector :+ res
     case Rcd(mut, stats) => stats.flatMap(_.subTerms).toVector
@@ -742,6 +774,7 @@ sealed trait Statement extends AutoLocated, ProductWithExtraInfo:
     case t: App => treeOrSubterms(t.tree)
     case IfLike(_, _, split) => Vector.single(split)
     case SynthIf(split) => Vector.single(split)
+    case SynthWhile(split) => Vector.single(split)
     case SynthSel(pre, nme) => Vector.double(pre, nme)
     case Sel(pre, nme) => Vector.double(pre, nme)
     case SelProj(prefix, cls, proj) => Vector.triple(prefix, cls, proj)
@@ -808,7 +841,7 @@ sealed trait Statement extends AutoLocated, ProductWithExtraInfo:
       case imp: Import =>
         doc"import ${"\""}.../${imp.file.last}${"\""} as ${imp.sym.showName}"
       case LeadingDotSel(name) => doc"_?_.${name.name}"
-      case Error => doc"‹error›"
+      case Error() => doc"‹error›"
       case _ =>
         doc"TODO[show:${getClass.getSimpleName}](${toString})"
     this match
@@ -868,6 +901,7 @@ sealed trait Statement extends AutoLocated, ProductWithExtraInfo:
     case DynSel(pre, fld, _) => s"${pre.showDbg}[${fld.showDbg}]"
     case IfLike(kw, _, split) => s"${kw.name} { ${split.showDbg} }"
     case SynthIf(split) => s"if { ${split.showDbg} }"
+    case SynthWhile(split) => s"while { ${split.showDbg} }"
     case Lam(params, body) => s"λ${params.showDbg}. ${body.showDbg}"
     case Blk(stats, res) =>
       (stats.map(_.showDbg + "; ") :+ (res match { case Lit(Tree.UnitLit(false)) => "" case x => x.showDbg + " " }))
@@ -894,7 +928,7 @@ sealed trait Statement extends AutoLocated, ProductWithExtraInfo:
     case Deref(term) => s"!$term"
     case Neg(ty) => s"~${ty.showDbg}"
     case CompType(lhs, rhs, pol) => s"${lhs.showDbg} ${if pol then "|" else "&"} ${rhs.showDbg}"
-    case Error => "<error>"
+    case Error() => "<error>"
     case Tup(fields) => fields.map(_.showDbg).mkString("[", ", ", "]")
     case Mut(und) => s"mut ${und.showDbg}"
     case CtxTup(fields) => fields.map(_.showDbg).mkString("‹using›[", ", ", "]")
@@ -924,13 +958,14 @@ sealed trait Statement extends AutoLocated, ProductWithExtraInfo:
       s"type ${sym}${tparams.mkStringOr(", ", "[", "]")} = ${rhs.fold("")(x => x.showDbg)}"
     case Missing => "missing"
     case LeadingDotSel(nme) => s"_?_.${nme.name}"
+    case SetConfig(_) => "#config(...)"
 
-final case class LetDecl(sym: LocalSymbol, annotations: Ls[Annot]) extends Statement
+final case class LetDecl(sym: LocalVarSymbol | TermSymbol, annotations: Ls[Annot]) extends Statement
 
 final case class RcdField(field: Term, rhs: Term) extends Statement
 final case class RcdSpread(rcd: Term) extends Statement
 
-final case class DefineVar(sym: LocalSymbol, rhs: Term) extends Statement
+final case class DefineVar(sym: LocalSymbol | TermSymbol, rhs: Term) extends Statement
 
 /** A global configuration change directive (`#config(...)`).
   * Records a function that modifies the current compiler configuration. */
@@ -1002,10 +1037,15 @@ final case class TermDefinition(
   require(k is tsym.k)
   def bsym: BlockMemberSymbol = sym
   val owner = tsym.owner
-  def visibility: Visibility = annotations.collectFirst:
-    case Annot.Modifier(Keyword.`private`) => Visibility.Private
-    case Annot.Modifier(Keyword.`public`) => Visibility.Public
-  .getOrElse(Visibility.Public)
+  def visibility: Visibility = annotations
+    .collectFirst:
+      case Annot.Modifier(Keyword.`private`) => Visibility.Private
+      case Annot.Modifier(Keyword.`public`) => Visibility.Public
+    .getOrElse(Visibility.Public)
+  lazy val mayRaiseEffects: Bool =
+    annotations.forall:
+      case Annot.MayNotRaiseEffects => false
+      case _ => true
   def extraAnnotations: Ls[Annot] = annotations.filter:
     case Annot.Modifier(Keyword.`declare` | Keyword.`abstract`) => false
     case _ => true
@@ -1034,10 +1074,21 @@ object ObjBody:
       else R:
         nme -> syms.head._1
     
+    val memMap = mems.toMap
+    val aliasEntries = mems.toList.flatMap: (nme, sym) =>
+      sym.sourceAliases.filter(_ =/= nme).map(_ -> sym)
+    val aliasConflicts = aliasEntries.groupMap(_._1)(_._2).collect:
+      case (alias, syms) if syms.distinct.sizeCompare(1) > 0 =>
+        ErrorReport(msg"Duplicate definition of member alias '${alias}'." -> N :: Nil)
+      case (alias, sym :: _) if memMap.get(alias).exists(_ isnt sym) =>
+        ErrorReport(msg"Member alias '${alias}' conflicts with an existing member." -> N :: Nil)
+
     if errs.nonEmpty then
       L(errs.map(ErrorReport(_)).toList)
+    else if aliasConflicts.nonEmpty then
+      L(aliasConflicts.toList)
     else
-      R(mems.toMap)
+      R(memMap ++ aliasEntries)
 
 case class ObjBody(blk: Term.Blk):
   
@@ -1066,11 +1117,13 @@ enum ImportKind:
   case Namespace
   case Named(importedName: Str)
 
-/** `sym` is a `MemberSymbol` when the import is made by the user and can be referred to by name,
+/** `sym` is a `MemberSymbol` or a `VarSymbol` when the import is made by the user
+  * and can be referred to by name (it's either the MemberSymbol of the imported module
+  * or the VarSymbol of the alias, in an aliased import `import "..." as alias`),
   * in which case it is a `BlockMemberSymbol` when importing files explicitly
   * and a `TermSymbol` when the import is made implicitly by the compiler (eg, importing "Predef").
   * Note that the `file` Path may not represent a real file; eg when importing "fs". */
-case class Import(sym: TempSymbol | MemberSymbol, str: Str, file: io.Path, kind: ImportKind) extends Statement
+case class Import(sym: ImportSymbol, str: Str, file: io.Path, kind: ImportKind) extends Statement
 
 
 sealed abstract class Declaration:
@@ -1212,14 +1265,15 @@ object ClassDef:
       body: ObjBody,
       annotations: Ls[Annot],
       comp: Opt[ClassCompanionSymbol],
+      auxCtorParams: Ls[ParamList],
   ): ClassDef =
     params match
       case ps :: pss => Parameterized(owner, kind, sym.asInstanceOf// TODO: improve
         , bsym, S(ctorSym.getOrElse(lastWords("Parameterized classes should have a ctor symbol.")))
-        , tparams, ps, pss, ext, body, comp, annotations)
+        , tparams, ps, pss ::: auxCtorParams, ext, body, comp, annotations)
       case Nil => Plain(owner, kind, sym.asInstanceOf// TODO: improve
         , bsym
-        , tparams, ext, body, comp, annotations)
+        , tparams, ext, body, comp, annotations, auxParams = auxCtorParams, ctorSym = ctorSym)
   
   def unapply(cls: ClassDef): Opt[(ClassSymbol, Ls[TyParam], Opt[ParamList], ObjBody)] =
     S((cls.sym, cls.tparams, cls.paramsOpt, cls.body))
@@ -1249,11 +1303,11 @@ object ClassDef:
       ext: Opt[New],
       body: ObjBody,
       companion: Opt[ClassCompanionSymbol],
-      annotations: Ls[Annot]
+      annotations: Ls[Annot],
+      auxParams: List[ParamList],
+      ctorSym: Opt[ClassCtorSymbol],
   ) extends ClassDef:
     val paramsOpt: Opt[ParamList] = N
-    val auxParams: List[ParamList] = Nil
-    val ctorSym: Opt[ClassCtorSymbol] = N
   
 end ClassDef
 

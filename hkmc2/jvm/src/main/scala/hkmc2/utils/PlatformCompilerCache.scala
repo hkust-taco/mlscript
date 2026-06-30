@@ -3,7 +3,7 @@ package utils
 
 import CompilerCache.Artifact
 import collection.concurrent.{Map => ConcMap, TrieMap}
-import mlscript.utils.*, shorthands.*
+import hkmc2.utils.*, shorthands.*
 
 class PlatformCompilerCache extends CompilerCache:
   

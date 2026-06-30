@@ -5,7 +5,7 @@ import scala.annotation.tailrec
 import scala.collection.mutable
 import sourcecode.Line
 
-import mlscript.utils.*, shorthands.*
+import hkmc2.utils.*, shorthands.*
 import hkmc2.utils.*
 
 import hkmc2.Message.MessageContext
@@ -93,6 +93,7 @@ enum Tree extends AutoLocated:
   case MemberProj(cls: Tree, name: Ident)
   case PrefixApp(kw: Keywrd[Keyword.Prefix], rhs: Tree)
   case InfixApp(lhs: Tree, kw: Keywrd[Keyword.Infix], rhs: Tree)
+  case TryFinally(tryBody: Tree, finallyBody: Tree)
   case LexicalNew(body: Opt[Tree], rft: Opt[Block]) // * New as it is parsed, with its weird precedence – eg (new C)(123)
   case ProperNew(body: Opt[Tree], rft: Opt[Block]) // * A desugared version of New that sets it right – eg new(C(123))
   case DynamicNew(cls: Tree) // * Dynamic version – eg new! C(123)
@@ -170,6 +171,7 @@ enum Tree extends AutoLocated:
     case Dummy => Vector.empty
     case OpSplit(lhs, ops_rhss) => lhs +: ops_rhss.toVector
     case SplitPoint() => Vector.empty
+    case TryFinally(tryBody, finallyBody) => Vector.double(tryBody, finallyBody)
     case Trm(trm) => Vector.single(trm)
   
   def describe: Str = this match
@@ -221,12 +223,13 @@ enum Tree extends AutoLocated:
     case MemberProj(_, _) => "member projection"
     case Keywrd(kw) => s"'${kw.name}' keyword"
     case Dummy => "‹dummy›"
-    case Trm(t) => t.describe + " term"
     case Pun(eql, id) => "pun"
     case SplitPoint() => "split point"
     case OpSplit(lhs, ops_rhss) => "operator split"
     case OpenIn(opened, body) => "open-in"
-    
+    case Assert(_, _, _, _) => "assertion"
+    case TryFinally(_, _) => "try-finally"
+    case Trm(t) => t.describe + " term"
   def deparenthesized: Tree = this match
     case Bra(BracketKind.Round, inner) => inner.deparenthesized
     case _ => this
@@ -500,7 +503,7 @@ case object MutVal extends Val("mut val", "mutable value")
 case object LetBind extends ValLike("let", "let binding")
 case object HandlerBind extends TermDefKind("handler", "handler binding")
 case object Fun extends TermDefKind("fun", "function")
-case object Ins extends TermDefKind("using", "implicit instance")
+case object Ins extends Val("using", "implicit instance")
 sealed abstract class TypeDefKind(str: Str, desc: Str)(using Line) extends DeclKind(str, desc)
 sealed trait ObjDefKind
 sealed trait ClsLikeKind extends ObjDefKind:
@@ -540,6 +543,19 @@ trait TypeOrTermDef extends Located:
       case td: TermDef => td.k
     def rec(t: Tree, symbName: Opt[MaybeIdent], annot: Opt[Tree]): 
       (Opt[MaybeIdent], MaybeIdent, Ls[Tup], Opt[TyTup], Opt[Tree]) = 
+      def canonicalize(id: Ident): Ident =
+        symbolicSuffixBase(id.name) match
+        case S(base) =>
+          new Ident(base).withLocOf(id)
+        case _ =>
+          id
+      def symbolicName(id: Ident): Opt[MaybeIdent] =
+        symbolicSuffixBase(id.name) match
+        case S(_) if symbName.isEmpty => S(R(id))
+        case S(_) => S(L:
+          ErrorReport:
+            msg"Cannot combine an explicit symbolic name with a symbolic suffix identifier." -> id.toLoc :: Nil)
+        case _ => symbName
       t match
       
       // use Foo as foo = ...
@@ -560,13 +576,13 @@ trait TypeOrTermDef extends Located:
       // fun f(n1: Int)
       // fun f(n1: Int)(nn: Int)
       case Apps(PossiblyParenthesized(id: Ident), paramLists) =>
-        (symbName, R(id), paramLists, N, annot)
+        (symbolicName(id), R(canonicalize(id)), paramLists, N, annot)
       
       // fun f[T]
       // fun f[T](n1: Int)
       // fun f[T](n1: Int)(nn: Int)
       case Apps(App(PossiblyParenthesized(id: Ident), typeParams: TyTup), paramLists) =>
-        (symbName, R(id), paramLists, S(typeParams), annot)
+        (symbolicName(id), R(canonicalize(id)), paramLists, S(typeParams), annot)
       
       case Jux(id: Ident, rhs) =>
         val err = L:
@@ -638,13 +654,11 @@ trait TypeDefImpl(using State) extends TypeOrTermDef:
     this.paramLists.map: tup =>
       val pts = tup.fields
       val inUsing = pts.headOption.exists(_.isModified(Ins))
-      pts.flatMap(_.desugared.asParam(inUsing = inUsing).toOption).map:
-        // case ParamTree(spd = S(_)) => lastWords("spreads are not allowed in class parameters") // TODO: properly report this in Elaborator
-        case pt @ ParamTree(ident = id) =>
+      pts.flatMap(_.desugared.asParam(inUsing = inUsing).toOption).collect:
+        case pt @ ParamTree(ident = id, spd = N) =>
           val k = if pt.flags.mut then MutVal else ImmutVal
           TermSymbol(k, symbol.asClsLike, id)
       .toList
     
   lazy val allSymbols = definedSymbols ++
     clsParams.iterator.flatMap(_.iterator.map(s => s.nme -> s)).toMap
-

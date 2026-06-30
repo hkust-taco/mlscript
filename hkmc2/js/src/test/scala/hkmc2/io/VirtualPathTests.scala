@@ -1,7 +1,7 @@
 package hkmc2.io
 
 import org.scalatest.funsuite.AnyFunSuite
-import mlscript.utils._, shorthands._
+import hkmc2.utils.*, shorthands.*
 
 class VirtualPathTests extends AnyFunSuite:
   

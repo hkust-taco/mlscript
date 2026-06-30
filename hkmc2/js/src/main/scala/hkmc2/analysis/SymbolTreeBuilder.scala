@@ -5,7 +5,7 @@ import hkmc2.io
 import hkmc2.semantics.*
 import hkmc2.syntax
 import hkmc2.syntax.Tree
-import mlscript.utils.*, shorthands.*
+import hkmc2.utils.*, shorthands.*
 
 class SymbolTreeBuilder(
     rootFile: io.Path,

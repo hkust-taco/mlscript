@@ -37,15 +37,16 @@ hi(0)
 //│ runtime.resetEffects();
 //│ hi = function hi(n) {
 //│   loopLabel: while (true) {
-//│     runtime.stackDepth = runtime.stackDepth + 1;
+//│     let scrut, tmp2, curDepth;
 //│     runtime.checkDepth();
 //│     if (runtime.curEffect === null) {
-//│       let scrut, tmp2;
+//│       curDepth = runtime.stackDepth + 1;
 //│       scrut = n === 0;
 //│       if (scrut === true) {
 //│         return 0
 //│       }
 //│       tmp2 = n - 1;
+//│       runtime.stackDepth = curDepth;
 //│       n = tmp2;
 //│       continue loopLabel;
 //│     }

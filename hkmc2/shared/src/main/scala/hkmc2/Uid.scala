@@ -1,6 +1,6 @@
 package hkmc2
 
-import mlscript.utils.*, shorthands.*
+import hkmc2.utils.*, shorthands.*
 
 opaque type Uid[T] = Int
 
@@ -18,6 +18,7 @@ object Uid:
 
 extension [T] (x: Uid[T])
   def <=(rhs: Uid[T]) = x <= rhs
+  def asInt: Int = x
 
 private val ord = Ordering.Int
 given [A]: Ordering[Uid[A]] = ord

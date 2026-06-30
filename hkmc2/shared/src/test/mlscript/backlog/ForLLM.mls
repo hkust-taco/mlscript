@@ -46,7 +46,7 @@ if maybe
 //│   kw = Keywrd of keyword 'if'
 //│   split = OpSplit:
 //│     lhs = Ident of "maybe"
-//│     ops_rhss = Ls of 
+//│     ops_rhss = Ls of
 //│       PrefixApp:
 //│         kw = Keywrd of keyword 'do'
 //│         rhs = IntLit of 1
@@ -64,7 +64,7 @@ if maybe
 //│ ———————————————| Parsed tree |——————————————————————————————————————————————————————————————————————
 //│ IfLike:
 //│   kw = Keywrd of keyword 'if'
-//│   split = Block of Ls of 
+//│   split = Block of Ls of
 //│     InfixApp:
 //│       lhs = Ident of "maybe"
 //│       kw = Keywrd of keyword 'then'
@@ -85,17 +85,17 @@ if 2
 //│   kw = Keywrd of keyword 'if'
 //│   split = OpSplit:
 //│     lhs = IntLit of 2
-//│     ops_rhss = Ls of 
+//│     ops_rhss = Ls of
 //│       InfixApp:
 //│         lhs = OpApp:
 //│           lhs = SplitPoint
 //│           op = Ident of ">"
-//│           rhss = Ls of 
+//│           rhss = Ls of
 //│             IntLit of 1
 //│         kw = Keywrd of keyword 'do'
 //│         rhs = App:
 //│           lhs = Ident of "print"
-//│           rhs = Tup of Ls of 
+//│           rhs = Tup of Ls of
 //│             StrLit of "hi"
 //│       PrefixApp:
 //│         kw = Keywrd of keyword 'else'
@@ -112,5 +112,38 @@ if 2
 //│ ║  l.110: 	+(1,2)
 //│ ╙──       	  ^
 //│ = 2
+
+// ——— ——— ———
+
+:fixme
+pattern ShapeArea =
+  | (:radius) => 0
+  | x => 1
+//│ ╔══[COMPILATION ERROR] Found an inconsistent variable in disjunction patterns.
+//│ ║  l.120: 	  | (:radius) => 0
+//│ ║         	      ^^^^^^
+//│ ╟── The variable is missing from this sub-pattern.
+//│ ║  l.121: 	  | x => 1
+//│ ╙──       	    ^^^^^^
+
+:fixme
+pattern P = {:radius} => radius
+//│ ╔══[COMPILATION ERROR] Expected a valid parameter, found type definition
+//│ ║  l.130: 	pattern P = {:radius} => radius
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Name not found: radius
+//│ ║  l.130: 	pattern P = {:radius} => radius
+//│ ╙──       	                         ^^^^^^
+//│ = fun
+
+pattern P = ({:radius}) => radius
+
+pattern P = ((:radius)) => radius
+
+:fixme
+pattern P = (:radius) => radius
+//│ ╔══[WARNING] Unused pattern binding: radius.
+//│ ║  l.144: 	pattern P = (:radius) => radius
+//│ ╙──       	              ^^^^^^
 
 // ——— ——— ———

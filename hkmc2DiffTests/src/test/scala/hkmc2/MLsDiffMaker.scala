@@ -2,7 +2,7 @@ package hkmc2
 
 import scala.collection.mutable
 
-import mlscript.utils.*, shorthands.*
+import hkmc2.utils.*, shorthands.*
 import utils.*
 
 import hkmc2.semantics.{Elaborator, Resolver, Resolvable, Symbol, SymbolPrinter}
@@ -16,7 +16,8 @@ abstract class MLsDiffMaker extends DiffMaker:
   val rootPath: Str // * Absolute path to the root of the project
   val preludeFile: io.Path // * Contains declarations of JS builtins
   val predefFile: io.Path // * Contains MLscript standard library definitions
-  val runtimeFile: io.Path = predefFile.up / "Runtime.mjs" // * Contains MLscript runtime definitions
+  val runtimeFile: io.Path = predefFile.up / "Runtime.mjs" // * Contains MLscript runtime
+  val runtimeSourceFile: io.Path = predefFile.up / "Runtime.mls" // * Contains MLscript runtime sources
   val termFile: io.Path = predefFile.up / "Term.mjs" // * Contains MLscript runtime term definitions
   val blockFile: io.Path = predefFile.up / "Block.mjs" // * Contains MLscript runtime block definitions
   val optionFile: io.Path = predefFile.up / "Option.mjs" // * Contains MLscipt runtime option definition
@@ -124,6 +125,7 @@ abstract class MLsDiffMaker extends DiffMaker:
     if inlineThreshold.isSet && noInlineOpt.isSet then
       output(s"$errMarker Option ':noInline' conflicts with option ':inlineThreshold'")
     Config(
+      language = Config.Language.default,
       baseDir = wd,
       sanityChecks = Opt.when(noSanityCheck.isUnset)(SanityChecks(light = true, checkUnreachable = true)),
       effectHandlers = Opt.when(effectHandlers.isSet)(EffectHandlers(
@@ -179,7 +181,8 @@ abstract class MLsDiffMaker extends DiffMaker:
             reportExclusiveFlagConflict(":etaExpansion", etaExpansionFlags, "on", "off")
             if etaExpansionFlags.contains("off") then N
             else S(EtaExpansion.withDebug(etaExpansionFlags.contains("debug"))),
-      inlining = Opt.when(!noInlineOpt.isSet)(Config.Inliner(inlineThreshold.get.getOrElse(1))),
+      inlining = Opt.when(!noInlineOpt.isSet)(Config.Inliner(inlineThreshold =
+        inlineThreshold.get.getOrElse(Config.default.inlineThreshold))),
       deadBranchRemoval = Config.default.deadBranchRemoval,
       qqEnabled = importQQ.isSet,
       funcToCls = funcToCls.isSet,
@@ -281,8 +284,12 @@ abstract class MLsDiffMaker extends DiffMaker:
   override def run(): Unit =
     if file =/= preludeFile then 
       given Config = mkConfig
-      importFile(preludeFile, verbose = false)
-      prelude = curCtx
+      given Raise = d =>
+        output(s"Error: $d")
+        ()
+      val preludeArtifact = cctx.getPrelude(preludeFile, dbgParsing.isSet)
+      curCtx = preludeArtifact.ctx
+      prelude = preludeArtifact.ctx
     super.run()
   
   
@@ -351,6 +358,8 @@ abstract class MLsDiffMaker extends DiffMaker:
     try
       val resBlk = new syntax.Tree.Block(res)
       val (e, newCtx) = elab.importFrom(resBlk)
+      if file.toString === runtimeSourceFile.toString then
+        State.initRuntimeSymbolsFromBlock(e)
       val ctxWithImports = newCtx.withMembers(resBlk.definedSymbols)
       if verbose then
         output(s"Imported ${resBlk.definedSymbols.size} member(s)")
@@ -436,6 +445,8 @@ abstract class MLsDiffMaker extends DiffMaker:
   def processTerm(trm: semantics.Term.Blk, inImport: Bool)(using Config, Raise): Unit =
     given Ctx = curCtx
     given Config = Config.extractConfigFromStats(trm)
+    if file.toString =/= runtimeSourceFile.toString then
+      State.initRuntimeSymbolsFromFile(runtimeSourceFile, prelude)
     val resolver = Resolver(rtl)
     curICtx = resolver.traverseBlock(trm)(using curICtx)
     
@@ -463,4 +474,3 @@ abstract class MLsDiffMaker extends DiffMaker:
           doc" #{ ${trm.showTopLevel(using flowScp)} #} \nwhere #{ ${floan.showFlows(using flowScp)} #} ".mkString()
     
   
-

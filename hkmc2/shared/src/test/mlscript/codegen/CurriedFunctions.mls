@@ -5,12 +5,12 @@
 fun foo(x)(y) = z => x + y + z
 foo(1)(2)(3)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let foo⁰, foo$worker⁰, inlinedVal;
+//│ let foo$worker;
 //│ @inline
 //│ define foo⁰ as fun foo¹(x)(y) {
-//│   return foo$worker¹(x, y)
+//│   return foo$worker⁰(x, y)
 //│ };
-//│ define foo$worker⁰ as fun foo$worker¹(x, y) {
+//│ define foo$worker as fun foo$worker⁰(x, y) {
 //│   let lambda;
 //│   @private
 //│   define lambda as fun lambda⁰(z) {
@@ -20,8 +20,7 @@ foo(1)(2)(3)
 //│   };
 //│   return lambda⁰
 //│ };
-//│ set inlinedVal = foo$worker¹(1, 2);
-//│ return inlinedVal(3)
+//│ return 6
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 6
 
@@ -33,34 +32,34 @@ foo(1)(2)(3)
 fun foo(x)(y) = z => x + y + z
 foo(1)(2)(3)
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let foo², baseCall, lambda¹, lambda$⁰;
+//│ let baseCall, lambda, lambda$;
 //│ @inline @private
-//│ define lambda$⁰ as fun lambda$¹(x, y)(z) {
-//│   return lambda²(x, y, z)
+//│ define lambda$ as fun lambda$⁰(x, y)(z) {
+//│   return lambda¹(x, y, z)
 //│ };
 //│ @private
-//│ define lambda¹ as fun lambda²(x, y, z) {
+//│ define lambda as fun lambda¹(x, y, z) {
 //│   let tmp;
 //│   set tmp = +⁰(x, y);
 //│   return +⁰(tmp, z)
 //│ };
 //│ define foo² as fun foo³(x)(y) {
 //│   let lambda$here;
-//│   set lambda$here = lambda$¹(x, y);
+//│   set lambda$here = lambda$⁰(x, y);
 //│   return lambda$here
 //│ };
 //│ set baseCall = foo³(1)(2);
 //│ return baseCall(3)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let foo², lambda$⁰;
+//│ let lambda$;
 //│ @inline @private
-//│ define lambda$⁰ as fun lambda$¹(x, y)(z) {
+//│ define lambda$ as fun lambda$⁰(x, y)(z) {
 //│   let tmp;
 //│   set tmp = +⁰(x, y);
 //│   return +⁰(tmp, z)
 //│ };
 //│ @inline
-//│ define foo² as fun foo³(x)(y) { return lambda$¹(x, y) };
+//│ define foo² as fun foo³(x)(y) { return lambda$⁰(x, y) };
 //│ return 6
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 6

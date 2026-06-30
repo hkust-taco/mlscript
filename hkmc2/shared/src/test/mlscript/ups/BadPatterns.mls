@@ -15,12 +15,17 @@ pattern Foo1[A]: ...
 
 :fixme
 pattern Foo2[pattern A]: ...
-//│ /!!!\ Uncaught error: scala.MatchError: TypeDef(Pat,Ident(A),None) (of class hkmc2.syntax.Tree$TypeDef)
+//│ ╔══[COMPILATION ERROR] Unsupported type parameter type definition
+//│ ║  l.17: 	pattern Foo2[pattern A]: ...
+//│ ╙──      	             ^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Pattern definitions must have a body.
+//│ ║  l.17: 	pattern Foo2[pattern A]: ...
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 :e
 pattern Foo(pattern T)
 //│ ╔══[COMPILATION ERROR] Pattern definitions must have a body.
-//│ ║  l.21: 	pattern Foo(pattern T)
+//│ ║  l.26: 	pattern Foo(pattern T)
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^
 
 

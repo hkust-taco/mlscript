@@ -1,0 +1,143 @@
+:js
+
+
+// * Notice that `b` is removed by DPE
+:soir
+module M with
+  private fun g(b) = b
+  g(2)
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ define M⁰ as class M¹
+//│ module M² { constructor { do M².this.g⁰(); end } method g¹ = fun g⁰() { return undefined } };
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+
+:ssjs
+class Foo with
+  private fun y() = 42
+  print(y() + this.y())
+//│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
+//│ let Foo1;
+//│ globalThis.Object.freeze(class Foo {
+//│   static {
+//│     Foo1 = this
+//│   }
+//│   constructor() {
+//│     let tmp, tmp1, tmp2;
+//│     tmp = runtime.checkCall(this.#y());
+//│     tmp1 = runtime.checkCall(this.#y());
+//│     tmp2 = tmp + tmp1;
+//│     runtime.checkCall(Predef.print(tmp2));
+//│   }
+//│   #y() {
+//│     runtime.checkArgs("y", 0, true, arguments.length);
+//│     return 42
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "Foo"];
+//│ });
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+new Foo
+//│ > 84
+//│ = Foo
+
+
+class Foo with
+  private fun y() = 42
+  print(id(this).y())
+
+:re
+new Foo
+//│ ═══[RUNTIME ERROR] TypeError: tmp.y is not a function
+
+
+class Foo(a) with
+  private val x = a
+  private fun y() = x + 1
+  fun z = y() + 1
+  fun oops = y
+  fun oops2 = this.y
+
+let f = new Foo(1)
+//│ f = Foo(_)
+
+:re
+f.x
+//│ ═══[RUNTIME ERROR] Error: Access to required field 'x' yielded 'undefined'
+
+:re
+f.y
+//│ ═══[RUNTIME ERROR] Error: Access to required field 'y' yielded 'undefined'
+
+:re
+f.y()
+//│ ═══[RUNTIME ERROR] TypeError: f.y is not a function
+
+:expect 3
+f.z
+//│ = 3
+
+let y = f.oops
+//│ y = fun #y
+
+// * This is actually a case of method debindng
+:re
+y()
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading '#x')
+
+y.call(f)
+//│ = 2
+
+// * Privacy in JS is class-based, not instance-based, so this works
+:expect 3
+y.call(new Foo(2))
+//│ = 3
+
+let y = f.oops2
+//│ y = fun #y
+
+:re
+y()
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading '#x')
+
+y.call(f)
+//│ = 2
+
+
+object PrivateObject with
+  private val x = 40
+  private fun inc() = x + 2
+  fun read = inc()
+PrivateObject.read
+//│ = 42
+
+:lift
+:expect 42
+object LiftedPrivateObject with
+  private fun inc(x) = x + 1
+  fun mkInc = x => inc(x)
+LiftedPrivateObject.mkInc(41)
+//│ = 42
+
+:e
+PrivateObject.x
+//│ ╔══[COMPILATION ERROR] Cannot access private member 'x' outside its declaring owner
+//│ ║  l.125: 	PrivateObject.x
+//│ ║         	             ^^
+//│ ╟── private member declared here
+//│ ║  l.110: 	  private val x = 40
+//│ ╙──       	              ^
+
+:e
+PrivateObject.inc()
+//│ ╔══[COMPILATION ERROR] Cannot access private member 'inc' outside its declaring owner
+//│ ║  l.134: 	PrivateObject.inc()
+//│ ║         	             ^^^^
+//│ ╟── private member declared here
+//│ ║  l.111: 	  private fun inc() = x + 2
+//│ ╙──       	              ^^^
+//│ ═══[RUNTIME ERROR] TypeError: PrivateObject1[inc$accessorSymbol1] is not a function
+
+

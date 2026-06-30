@@ -83,14 +83,16 @@ foo.Foo#m()
 //│ ╔══[COMPILATION ERROR] Identifier `Foo` does not name a known class symbol.
 //│ ║  l.79: 	foo.Foo#m()
 //│ ╙──      	   ^^^^
-//│ ═══[COMPILATION ERROR] Expected a statically known class; found ‹error›.
+//│ ╔══[COMPILATION ERROR] Expected a statically known class; found ‹error›.
+//│ ║  l.79: 	foo.Foo#m()
+//│ ╙──      	   ^^^^
 //│ = 124
 
 :e
 :re
 foo.M.Foo::m()
 //│ ╔══[COMPILATION ERROR] Selection is not a known class.
-//│ ║  l.91: 	foo.M.Foo::m()
+//│ ║  l.93: 	foo.M.Foo::m()
 //│ ║        	^^^^^^^^^
 //│ ╟── Note: any expression of the form `‹expression›::‹identifier›` is a member projection;
 //│ ╙──   add a space before ‹identifier› to make it an operator application.
@@ -100,25 +102,29 @@ foo.M.Foo::m()
 :re
 foo.M.Foo#m()
 //│ ╔══[COMPILATION ERROR] Name not found: Foo
-//│ ║  l.101: 	foo.M.Foo#m()
+//│ ║  l.103: 	foo.M.Foo#m()
 //│ ╙──       	     ^^^^
 //│ ╔══[COMPILATION ERROR] Identifier `Foo` does not name a known class symbol.
-//│ ║  l.101: 	foo.M.Foo#m()
+//│ ║  l.103: 	foo.M.Foo#m()
 //│ ╙──       	     ^^^^
-//│ ═══[COMPILATION ERROR] Expected a statically known class; found ‹error›.
+//│ ╔══[COMPILATION ERROR] Expected a statically known class; found ‹error›.
+//│ ║  l.103: 	foo.M.Foo#m()
+//│ ╙──       	     ^^^^
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'M' yielded 'undefined'
 
 :e
 Foo::m
 //│ ╔══[COMPILATION ERROR] Name not found: Foo
-//│ ║  l.112: 	Foo::m
+//│ ║  l.116: 	Foo::m
 //│ ╙──       	^^^
 //│ ╔══[COMPILATION ERROR] Identifier is not a known class.
-//│ ║  l.112: 	Foo::m
+//│ ║  l.116: 	Foo::m
 //│ ║         	^^^
 //│ ╟── Note: any expression of the form `‹expression›::‹identifier›` is a member projection;
 //│ ╙──   add a space before ‹identifier› to make it an operator application.
-//│ ═══[COMPILATION ERROR] Expected a statically known class; found ‹error›.
+//│ ╔══[COMPILATION ERROR] Expected a statically known class; found ‹error›.
+//│ ║  l.116: 	Foo::m
+//│ ╙──       	^^^
 //│ = fun
 
 :e
@@ -126,14 +132,16 @@ Foo::m
 :noInline
 Foo::n(foo, 2)
 //│ ╔══[COMPILATION ERROR] Name not found: Foo
-//│ ║  l.127: 	Foo::n(foo, 2)
+//│ ║  l.133: 	Foo::n(foo, 2)
 //│ ╙──       	^^^
 //│ ╔══[COMPILATION ERROR] Identifier is not a known class.
-//│ ║  l.127: 	Foo::n(foo, 2)
+//│ ║  l.133: 	Foo::n(foo, 2)
 //│ ║         	^^^
 //│ ╟── Note: any expression of the form `‹expression›::‹identifier›` is a member projection;
 //│ ╙──   add a space before ‹identifier› to make it an operator application.
-//│ ═══[COMPILATION ERROR] Expected a statically known class; found ‹error›.
+//│ ╔══[COMPILATION ERROR] Expected a statically known class; found ‹error›.
+//│ ║  l.133: 	Foo::n(foo, 2)
+//│ ╙──       	^^^
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let lambda2;
 //│ lambda2 = (undefined, function (self, ...args7) {

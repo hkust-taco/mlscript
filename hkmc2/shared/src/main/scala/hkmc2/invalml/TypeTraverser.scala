@@ -1,6 +1,6 @@
 package hkmc2.invalml
 
-import mlscript.utils.*, shorthands.*
+import hkmc2.utils.*, shorthands.*
 
 import Type.*
 

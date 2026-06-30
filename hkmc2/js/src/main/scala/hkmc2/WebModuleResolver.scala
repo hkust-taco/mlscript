@@ -1,6 +1,6 @@
 package hkmc2
 
-import mlscript.utils.*, shorthands.*
+import hkmc2.utils.*, shorthands.*
 import ModuleResolver.*
 
 /** Browser resolver for imports that should not be treated as virtual files.

@@ -9,16 +9,26 @@ fun fib(a) = if
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let fib;
 //│ fib = function fib(a) {
-//│   let scrut, tmp, tmp1, tmp2, tmp3;
+//│   let scrut, traceLogEnterMsg, traceLogPrevIndent, traceLogRetMsg, traceLogParam_a, traceLogResInspected, tmp, tmp1, tmp2, tmp3, tmp4;
+//│   traceLogParam_a = globalThis.util.inspect(a);
+//│   traceLogEnterMsg = globalThis.String.prototype.concat.call("CALL fib(", traceLogParam_a, ")");
+//│   runtime.TraceLogger.log(traceLogEnterMsg);
+//│   traceLogPrevIndent = runtime.TraceLogger.indent();
 //│   scrut = a <= 1;
 //│   if (scrut === true) {
-//│     return a
+//│     tmp = a;
+//│   } else {
+//│     tmp1 = a - 1;
+//│     tmp2 = fib(tmp1);
+//│     tmp3 = a - 2;
+//│     tmp4 = fib(tmp3);
+//│     tmp = tmp2 + tmp4;
 //│   }
-//│   tmp = a - 1;
-//│   tmp1 = fib(tmp);
-//│   tmp2 = a - 2;
-//│   tmp3 = fib(tmp2);
-//│   return tmp1 + tmp3;
+//│   traceLogResInspected = globalThis.util.inspect(tmp);
+//│   traceLogRetMsg = globalThis.String.prototype.concat.call("=> ", traceLogResInspected);
+//│   runtime.TraceLogger.resetIndent(traceLogPrevIndent);
+//│   runtime.TraceLogger.log(traceLogRetMsg);
+//│   return tmp
 //│ };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 

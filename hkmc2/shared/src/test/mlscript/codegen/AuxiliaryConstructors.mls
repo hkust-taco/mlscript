@@ -1,0 +1,141 @@
+:js
+
+
+// === Basic constructor with single param list ===
+
+// Plain class with constructor(x, y) generates JS constructor with field assignments
+:sjs
+class Foo with
+  constructor(x, y)
+  fun getX = x
+  fun getY = y
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ let Foo1;
+//│ (class Foo {
+//│   static {
+//│     Foo1 = this
+//│   }
+//│   constructor(x, y) {
+//│     this.#x = x;
+//│     this.#y = y;
+//│   }
+//│   #x;
+//│   #y;
+//│   get getX() {
+//│     return this.#x;
+//│   }
+//│   get getY() {
+//│     return this.#y;
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "Foo"];
+//│ });
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+let f = new Foo(1, 2)
+//│ f = Foo
+
+f.getX
+//│ = 1
+
+f.getY
+//│ = 2
+
+
+// === Multiple constructor param lists ===
+
+// constructor(x, y)(u, v) flattens into single JS constructor
+class Bar with
+  constructor(x, y)(u, v)
+  fun sum() = x + y + u + v
+
+let b = new Bar(1, 2)(3, 4)
+//│ b = Bar
+
+b.sum()
+//│ = 10
+
+
+// === Main params + constructor (aux params) ===
+
+// Foo(a, b) with { constructor(x, y)(u, v) } should have (a, b) as main
+// and [(x, y), (u, v)] as aux param lists
+class Baz(a, b) with
+  constructor(x, y)(u, v)
+  fun total() = a + b + x + y + u + v
+
+:expect 21
+Baz(1, 2)(3, 4)(5, 6).total()
+//│ = 21
+
+let mk = Baz(1, 2)(3, 4)
+//│ mk = fun
+
+mk(5, 6).total()
+//│ = 21
+
+
+// === Data class with constructor ===
+
+data class Point(label) with
+  constructor(x, y)
+  fun coords() = [x, y]
+
+Point("A")(1, 2).coords()
+//│ = [1, 2]
+
+
+// === Single aux param list on class with main params ===
+
+class Qux(a) with
+  constructor(extra)
+  fun both() = a + extra
+
+:expect 133
+Qux(10)(123).both()
+//│ = 133
+
+// === Extending classes with multiple parameter lists ===
+
+class A(val x)(val y)
+class B extends A(1)(2)
+
+:expect B { x: 1, y: 2 }
+new B
+//│ = B { x: 1, y: 2 }
+
+class A(val x) with
+  constructor(y)(z) 
+  fun bruh = x + y + z
+
+class B extends A(1)(2)(3)
+
+:expect 6
+(new B).bruh
+//│ = 6
+
+:e
+class B extends A(0)
+//│ ═══[COMPILATION ERROR] Extending a partially applied class is not supported
+
+new B
+//│ = B { x: 0 }
+
+class C
+
+:e
+class D extends C(0)
+//│ ═══[COMPILATION ERROR] Too many parameter lists for parent class
+
+:e
+new A(1)(2) with
+  fun a = 0
+//│ ═══[COMPILATION ERROR] Extending a partially applied class is not supported
+//│ = $anon { x: 1 }
+
+:e
+new A(1)(2)(3)(4) with
+  fun a = 0
+//? = $anon { x: 1 }
+//│ ═══[COMPILATION ERROR] Too many parameter lists for parent class
+//│ = $anon { x: 1 }

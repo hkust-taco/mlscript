@@ -34,8 +34,8 @@ let f = case
   A & B then "A & B"
   A then "A"
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let f⁰, lambda⁰;
-//│ define lambda⁰ as fun lambda¹(caseScrut) {
+//│ let lambda;
+//│ define lambda as fun lambda⁰(caseScrut) {
 //│   match caseScrut
 //│     A⁰ =>
 //│       match caseScrut
@@ -48,7 +48,7 @@ let f = case
 //│       throw new globalThis⁰.Error⁰("match error")
 //│   end
 //│ };
-//│ set f⁰ = lambda¹;
+//│ set f⁰ = lambda⁰;
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ f = fun

@@ -5,7 +5,7 @@ import org.scalatest.time._
 import org.scalatest.concurrent.{TimeLimitedTests, Signaler}
 import os.up
 
-import mlscript.utils._, shorthands._
+import hkmc2.utils.*, shorthands.*
 import io.PlatformPath.given, io.FileSystem
 
 

@@ -3,7 +3,7 @@ package hkmc2
 import org.scalatest.{funsuite, ParallelTestExecution}
 import org.scalatest.time._
 
-import mlscript.utils._
+import hkmc2.utils._
 import os.Path
 import io.PlatformPath.given
 

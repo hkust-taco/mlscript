@@ -71,11 +71,11 @@ if 1 + 2
 //│     lhs = OpApp:
 //│       lhs = IntLit of 1
 //│       op = Ident of "+"
-//│       rhss = Ls of 
+//│       rhss = Ls of
 //│         OpApp:
 //│           lhs = IntLit of 2
 //│           op = Ident of "*"
-//│           rhss = Ls of 
+//│           rhss = Ls of
 //│             IntLit of 3
 //│     kw = Keywrd of keyword 'then'
 //│     rhs = IntLit of 0
@@ -96,10 +96,10 @@ if 1 * 2
 //│       lhs = OpApp:
 //│         lhs = IntLit of 1
 //│         op = Ident of "*"
-//│         rhss = Ls of 
+//│         rhss = Ls of
 //│           IntLit of 2
 //│       op = Ident of "+"
-//│       rhss = Ls of 
+//│       rhss = Ls of
 //│         IntLit of 3
 //│     kw = Keywrd of keyword 'then'
 //│     rhs = IntLit of 0
@@ -147,14 +147,14 @@ if (1 + 2)
 //│       inner = OpApp:
 //│         lhs = IntLit of 1
 //│         op = Ident of "+"
-//│         rhss = Ls of 
+//│         rhss = Ls of
 //│           IntLit of 2
-//│     ops_rhss = Ls of 
+//│     ops_rhss = Ls of
 //│       InfixApp:
 //│         lhs = OpApp:
 //│           lhs = SplitPoint
 //│           op = Ident of "*"
-//│           rhss = Ls of 
+//│           rhss = Ls of
 //│             IntLit of 3
 //│         kw = Keywrd of keyword 'then'
 //│         rhs = IntLit of 0
@@ -162,7 +162,7 @@ if (1 + 2)
 //│         lhs = OpApp:
 //│           lhs = SplitPoint
 //│           op = Ident of "+"
-//│           rhss = Ls of 
+//│           rhss = Ls of
 //│             IntLit of 4
 //│         kw = Keywrd of keyword 'then'
 //│         rhs = IntLit of 1

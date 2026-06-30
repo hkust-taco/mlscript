@@ -4,7 +4,7 @@ import scala.scalajs.js
 import js.JSConverters.*
 
 import hkmc2.{Diagnostic, Message, ShowCtx}
-import mlscript.utils.*, shorthands.*
+import hkmc2.utils.*, shorthands.*
 
 object AnalysisJsCodec:
 

@@ -2,7 +2,7 @@ package hkmc2
 
 import org.scalatest.{funspec, ParallelTestExecution}
 
-import mlscript.utils.*, shorthands.*
+import hkmc2.utils.*, shorthands.*
 import io.PlatformPath.given
 
 import hkmc2.io.FileSystem
@@ -92,6 +92,7 @@ object PackageTestRunner:
   def pathsForPackage(packageDir: os.Path): MLsCompiler.Paths = new MLsCompiler.Paths:
     val preludeFile = mainTestDir / "mlscript" / "decls" / "Prelude.mls"
     val runtimeFile = PackageModuleResolver.runtimeTarget(packageDir)
+    val runtimeSourceFile = stdlibDir / "Runtime.mls"
     val termFile = PackageModuleResolver.termTarget(packageDir)
   
   val nodeModulesPath = os.pwd / "node_modules"

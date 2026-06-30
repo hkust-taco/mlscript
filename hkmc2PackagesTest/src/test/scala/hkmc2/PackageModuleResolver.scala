@@ -3,7 +3,7 @@ package hkmc2
 import scala.collection.immutable.ListMap
 import scala.collection.mutable.{LinkedHashMap as MutLinkedHashMap, Map as MutMap, Queue as MutQueue, Set as MutSet}
 
-import mlscript.utils.*, shorthands.*
+import hkmc2.utils.*, shorthands.*
 import io.PlatformPath.given
 
 import hkmc2.io.FileSystem
@@ -274,7 +274,7 @@ object PackageModuleResolver:
   
   def runtimeTarget(packageDir: os.Path): os.Path =
     vendorTargetRoot(packageDir, StandardLibraryPrefix) / "Runtime.mjs"
-  
+
   def termTarget(packageDir: os.Path): os.Path =
     vendorTargetRoot(packageDir, StandardLibraryPrefix) / "Term.mjs"
   

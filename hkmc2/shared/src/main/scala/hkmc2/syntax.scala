@@ -2,7 +2,7 @@ package hkmc2
 
 import scala.util.boundary
 
-import mlscript.utils._, shorthands._
+import hkmc2.utils.*, shorthands.*
 
 import math.Ordered.orderingToOrdered
 

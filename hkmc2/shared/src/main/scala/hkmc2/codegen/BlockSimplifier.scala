@@ -5,13 +5,12 @@ import scala.collection.mutable.{Map => MutMap, Set => MutSet, Buffer}
 import scala.annotation.tailrec
 import sourcecode.{Line, FileName}
 
-import mlscript.utils.*, shorthands.*
+import hkmc2.utils.*, shorthands.*
 import hkmc2.utils.*
 
 import semantics.*
 import semantics.Elaborator.{State, Ctx, ctx}
-import mlscript.utils.algorithms.partitionScc
-import java.util.IdentityHashMap
+import hkmc2.utils.algorithms.partitionScc
 import hkmc2.syntax.Literal
 import hkmc2.{codegen => argss}
 
@@ -20,7 +19,7 @@ import hkmc2.{codegen => argss}
   * typically, these will be top-level symbols that are being exported from a diff-test block;
   * we don't want to eliminate these. */
 class BlockSimplifier
-    (symbolsToPreserve: Set[Local], tl: TL, printer: Program => Str)
+    (symbolsToPreserve: Set[BoundSymbol], tl: TL, printer: Program => Str)
     (using DebugPrinter, State, Config, Raise, Ctx):
   import tl.*
   
@@ -28,6 +27,7 @@ class BlockSimplifier
   val deadBranchRemoval = config.deadBranchRemoval
   
   val MaxIterations = 10
+  val MaxDCEIterationsPerIter = 10
   
   
   def apply(prog: Program): Program =
@@ -47,10 +47,20 @@ class BlockSimplifier
       
       log(s"⬤ Simplif. iter. $iteration")
       
-      val dce = new DeadCodeElim()
-      res = dce.apply(res)
-      changed ||= dce.changed
-      if dce.changed then log("▶ DCE:\n" + printRes)
+      // * Running DCE once sometimes produces more DCE opportunities;
+      // * it is important to apply all of them so that later passes, such as COC,
+      // * are not impeded by things like unused labels from inlining.
+      var dceIteration = 0
+      while
+        val dce = new DeadCodeElim()
+        res = dce.apply(res)
+        changed ||= dce.changed
+        if dce.changed then
+          log("▶ DCE:\n" + printRes)
+          dceIteration += 1
+          dceIteration < MaxDCEIterationsPerIter
+        else false
+      do ()
       
       val vp = new DataFlowAnalysis(LocalVars.analyze(res.main))
       res = vp.apply(res)
@@ -58,6 +68,13 @@ class BlockSimplifier
       if vp.changed then log("▶ VP:\n" + printRes)
       
       summon[Config].inlining.foreach: cfg =>
+        
+        // * Runs after DCE so that unused labels from inlining are already removed
+        val coc = new CaseOfCase(using cfg)
+        res = coc.applyProgram(res)
+        changed ||= coc.changed
+        if coc.changed then log("▶ COC:\n" + printRes)
+        
         val inl = new Inliner(using cfg)
         res = inl.apply(res)
         changed ||= inl.changed
@@ -84,14 +101,21 @@ class BlockSimplifier
   end Helper
   
   
+  // * Only such variables can be assigned directly in the IR
   type LocalVar = LocalVarSymbol
   
   object LocalVars extends CachedAnalysis[Block, Set[LocalVar]]:
     
-    def analyzeUncached(block: Block): Set[LocalVar] = block match
+    def analyzeUncached(block: Block): Set[LocalVar] =
+      def default =
+        block.subBlocks.iterator.flatMap(analyze).toSet
+      block match
+      case Define(fd: FunDefn, rest) =>
+        fd.params.iterator.flatMap(_.params).collect {
+          case Param(sym = v: LocalVar) => v }.toSet ++ default
       case Scoped(syms, rest) =>
         rest.analyze ++ syms.iterator.collect { case v: LocalVar => v }
-      case _ => block.subBlocks.iterator.flatMap(analyze).toSet
+      case _ => default
     
   end LocalVars
   
@@ -106,9 +130,9 @@ class BlockSimplifier
     var analysisDone = false
     
     val usedLabels = MutSet.empty[LabelSymbol]
-    val definedVars = MutSet.empty[Local]
-    val localVars = MutSet.empty[Local]
-    val usedVars = MutSet.empty[Local]
+    val definedVars = MutSet.empty[ScopedSymbol]
+    val localVars = MutSet.empty[ScopedSymbol]
+    val usedVars = MutSet.empty[ScopedSymbol]
     val privateVars = MutSet.empty[TermSymbol]
     val usedPrivateFields = MutSet.empty[TermSymbol]
     lazy val privateFieldsToRemove: Set[TermSymbol] =
@@ -129,7 +153,7 @@ class BlockSimplifier
                 case ts: TermSymbol =>
                   usedPrivateFields += ts
                 case _ =>
-            case Value.SimpleRef(loc) =>
+            case Value.SimpleRef(loc: LocalVarSymbol) =>
               usedVars += loc
             case Value.MemberRef(loc, _) =>
               usedVars += loc
@@ -140,7 +164,7 @@ class BlockSimplifier
           privateVars ++= defn.privateFields
           defn.companion.foreach(body => privateVars ++= body.privateFields)
           super.applyClsLikeDefn(defn)
-
+        
         override def applyBlock(b: Block): Unit =
           b match
             case Define(defn, rst) =>
@@ -149,11 +173,11 @@ class BlockSimplifier
               localVars ++= syms
             case Break(lbl) => usedLabels += lbl
             case Continue(lbl) => usedLabels += lbl
-            case Assign(lhs, rhs, rst) =>
+            case Assign(lhs: LocalVarSymbol, rhs, rst) =>
               definedVars += lhs
             case _ =>
           super.applyBlock(b)
-
+      
       analysisDone = true
       applyProgram(prog)
     
@@ -216,7 +240,7 @@ class BlockSimplifier
     
     override def applyValue(v: Value)(k: Value => Block) = v match
       // * Replace with `undefined` those references to local variables that are never assigned
-      case Value.SimpleRef(loc) if localVars.contains(loc) && !definedVars.contains(loc) =>
+      case Value.SimpleRef(loc: LocalVarSymbol) if localVars.contains(loc) && !definedVars.contains(loc) =>
         registerChange(s"${loc.showDbg} is never assigned; replacing read with undefined")
         // if !symbolsToPreserve(loc) then removedLocals += loc
         k(Value.Lit(syntax.Tree.UnitLit(false)))
@@ -224,10 +248,10 @@ class BlockSimplifier
     
     override def applyBlock(b: Block): Block = b match
       // * Discard assignments to local variables that are never read (and are not preserved)
-      case Assign(lhs, rhs, rst) if localVars(lhs) && !usedVars(lhs) && !symbolsToPreserve(lhs) =>
+      case Assign(lhs: LocalVarSymbol, rhs, rst) if localVars(lhs) && !usedVars(lhs) && !symbolsToPreserve(lhs) =>
         registerChange(s"rm ${lhs.showDbg} = ${rhs.showDbg}")
         applyResult(rhs)(r => Assign.discard(r, applyBlock(rst)))
-      
+
       // * Discard writes to private fields that are never read
       case assign @ AssignField(lhs, _, rhs, rst) =>
         assign.symbol match
@@ -240,13 +264,14 @@ class BlockSimplifier
 
       // * Remove local pure definitions that are never read (and are not preserved)
       case Define(defn, rest) =>
+        val defnSym = defn.sym
         if !defn.isPure
-        || !localVars(defn.sym)
-        || usedVars(defn.sym)
-        || symbolsToPreserve(defn.sym)
+        || !localVars(defnSym)
+        || usedVars(defnSym)
+        || symbolsToPreserve(defnSym)
         then super.applyBlock(b)
         else
-          registerChange(s"rm unused pure defn ${defn.sym.showDbg}")
+          registerChange(s"rm unused pure defn ${defnSym.showDbg}")
           applyBlock(rest)
       
       // * Simplify labelled blocks
@@ -301,7 +326,7 @@ class BlockSimplifier
             else cls.copy(privateFields = privateFields2)(cls.configOverride, cls.annotations)
           k(cls2)
         case other => k(other)
-
+    
     
     // FIXME: refactor transformers so this is not so error-prone (adding this case to `applyBlock` doesn't work)
     override def applyScopedBlock(b: Block): Block = b match
@@ -313,7 +338,7 @@ class BlockSimplifier
           // * Avoid building sets of symbols if we know that nothing needs to be removed
           val needsCleanup = syms.exists: sym =>
             !fvs.contains(sym) && !symbolsToPreserve(sym)
-          if needsCleanup then syms.filter(fvs | symbolsToPreserve)
+          if needsCleanup then syms.filter(sym => fvs.contains(sym) || symbolsToPreserve(sym))
           else syms
         if (syms2 is syms) && (body2 is body) then b
         else Scoped(syms2, body2)
@@ -332,16 +357,48 @@ class BlockSimplifier
   
   // ——————————————————————————————————————————————————————————————————————————————————————————— //
   
+  def getInstCtorShape(path: Path): Opt[ClassLikeSymbol] =
+    path.targetSymbol.flatMap:
+      case sym: ClassLikeSymbol => S(sym)
+      case _ => N
+  
+  def getCallCtorShape(path: Path, argss: NELs[Ls[Arg]]): Opt[ClassLikeSymbol] =
+    path.targetSymbol
+      .collect:
+        case ccs: ClassCtorSymbol => ccs.associatedCls
+      .collect:
+        case sym: ClassSymbol if isSaturatedClassCtorCall(sym, argss) => sym
+  
+  def isSaturatedClassCtorCall(sym: ClassSymbol, argss: NELs[Ls[Arg]]): Bool =
+    sym.irClsLikeDefn
+    .fold(
+        // FIXME: remove this case.
+        //    IR passes should NOT access `sym.defn` at all;
+        //    but this access is currently necessary because we do not yet store `irClsLikeDefn` in imported symbols.
+        sym.defn.map(defn => defn.paramsOpt.size + defn.auxParams.size)
+      ): ird =>
+        S(ird.paramsOpt.size + ird.auxParams.size)
+    .exists: paramListsSize =>
+      argss.sizeCompare(paramListsSize) === 0
+  
+  // ——————————————————————————————————————————————————————————————————————————————————————————— //
+  
   
   /** Basic intraprocedural flow-sensitive analysis to figure out which assignments may flow into which variables,
     * at each point of the program.
+    * 
     * For loops, it is enough to pass through the loop body once without transforming it ("dry run")
     * to get the data flow information from loop-back edges, and then to actually transform the loop.
     * When in dry-run mode, nested loops are also traversed in dry-run mode,
     * so overall each Block is traversed at most twice.
+    * 
     * We keep track of a tree of assignments where, if the RHS was a local variable, we also store its analysis value
     * that was in effect at this point, which allows us to eliminate useless transitive assignments.
-    * We keep track of variables going out of scope to avoid using them afterwards. */
+    * We keep track of variables going out of scope to avoid using them afterwards.
+    * 
+    * Note that if the program tree is changed, it is imperative to register the change,
+    * otherwise dead assignment removal (which runs when no change was detected) will not work correctly,
+    * as it relies on object identity. */
   class DataFlowAnalysis(localVars: Set[LocalVar]) extends BlockTransformer(SymbolSubst.Id), Helper:
     
     
@@ -350,6 +407,15 @@ class BlockSimplifier
     //    so we should compute that instead in the future.
     //    Note that the capturing definitions won't see the assignments of the captured variable anyway
     //    because that variable will be treated as unknown, since nested definitions start from an empty environment.
+    
+    
+    val liveAssignInfosUntilChangeTriggered: Buffer[AssignInfo] = Buffer.empty
+    
+    // * We might need to opt out of tracking some locals, such as those that are assigned
+    // * in places with observable non-local control flow, such as in a `try` block.
+    // * We can't remove assignments to these variables even if they locally look dead,
+    // * as they might in fact not be.
+    val impreciselyTrackedVars: MutSet[LocalVar] = MutSet.empty
     
     
     def apply(prog: Program): Program =
@@ -377,58 +443,232 @@ class BlockSimplifier
       
       cur = applyProgram(prog)
       
-      // * [Future: dead assignment removal]
-      // * Technically, if nothing in the program changed, we could remove dead assignments using a simple flag.
-      /* 
-      if !changed then cur =
+      // * Dead assignment removal: if nothing in the program changed, we can remove dead assignments.
+      // * We mark live assignments by traversing all live AssignInfo objects that were observed during the analysis.
+      if !changed && {
+        val ok = cur is prog
+        softAssert(ok, "A change in the program was not properly registered during data-flow analysis")
+        ok
+      } then cur =
+        
+        import scala.jdk.CollectionConverters._
+        import java.util.IdentityHashMap
+        
+        val traversedAssignedInfos: IdentityHashMap[AssignInfo, Unit] = new IdentityHashMap()
+        
+        val liveAssigns: IdentityHashMap[Assign, Unit] = new IdentityHashMap()
+        
+        def rec(assnd: AssignInfo): Unit =
+          if traversedAssignedInfos.put(assnd, ()) is null then
+            assnd match
+            case ass @ AssignInfo.Assigned(_, _, varAsst, rhsRequirements) =>
+              liveAssigns.put(ass.originalAssignment, ())
+            case AssignInfo.Merge(l, r) =>
+              rec(l)
+              rec(r)
+            case AssignInfo.Uninitialized | AssignInfo.Unknown => ()
+        
+        liveAssignInfosUntilChangeTriggered.foreach(rec)
+        
+        // log(s"Live assignments: ${liveAssigns.keySet.asScala.toList.map(a =>
+        //   s"${a.lhs.showDbg} := ${a.rhs.showDbg}").sorted}")
+        // log(s"Imprecisely accessed: ${impreciselyReadVars.toList.map(_.toString).sorted}")
+        
         (new BlockTransformer(SymbolSubst.Id):
           
           override def applyBlock(b: Block): Block =
             b match
             case ass @ Assign(lhs: LocalVar, rhs, rst)
-            if localVars(lhs) && !capturedVars(lhs) && !symbolsToPreserve(lhs) && !liveAssignments.containsKey(ass)
+            if localVars(lhs) && !capturedVars(lhs) && !symbolsToPreserve(lhs)
+              && !impreciselyTrackedVars(lhs) && !liveAssigns.containsKey(ass)
             =>
-              import scala.jdk.CollectionConverters._
-              log(s"Live assignments: ${liveAssignments.keySet.asScala.toList.sortBy(_.toString)
-                  .map(a => a.showDbg + System.identityHashCode(a))
-                }")
               registerChange(s"rm ass ${lhs.showDbg} = ${rhs.showDbg}")
-              registerChange(s"rm id ${System.identityHashCode(this)}")
               Assign.discard(rhs, applyBlock(rst))
             case _ => super.applyBlock(b)
           
         ).applyProgram(cur)
-      */
+      
+      end if
       
       cur
       
     end apply
     
+    // * A reference we may substitute for another reference, together with
+    // * the assignment facts that must still be current for the substitution
+    // * to be sound. Requirements are compared by object identity below, so
+    // * they precisely describe the data-flow state observed when the fact
+    // * was recorded.
+    case class TrackedRef(ref: Value.RefLike, requirements: Set[LocalVar -> AssignInfo]):
+      def isCurrent: Bool =
+        requirements.forall((loc, asst) => assignedResults(loc) is asst)
     
+    // * Summary of the direct value that can be propagated for a local.
+    // *   - `false` means no known value.
+    // *   - `true` means definitely uninitialized,
+    // *     meaning any variable access can be replaced by `undefined`, ie, `Value.Lit(UnitLit(false))`.
+    // *   - `Value` means this exact value is still available for propagation.
+    type KnownValue = Bool | Value
+    
+    // * The propagated value fact for an assignment, plus equivalent
+    // * references that could be substituted while their requirements hold.
+    case class ValueAnalysis(litValue: KnownValue, refs: List[TrackedRef])
+    
+    object ValueAnalysis:
+      
+      val conservative: ValueAnalysis = ValueAnalysis(false, Nil)
+      
+      // * Keep a value fact only when all merged control-flow paths agree.
+      def mergeLitValues(l: KnownValue, r: KnownValue): KnownValue =
+        (l, r) match
+        case (false, _) | (_, false) => false
+        case (true, true) => true
+        case (true, v: Value) => v
+        case (v: Value, true) => v
+        case (v1: Value, v2: Value) if v1 === v2 => v1
+        case _ => false
+      
+      def mergeRefs(l: List[TrackedRef], r: List[TrackedRef]): List[TrackedRef] =
+        l.flatMap: lr =>
+          r.collect:
+            case rr if lr.ref === rr.ref =>
+              TrackedRef(lr.ref, lr.requirements ++ rr.requirements)
+    
+    end ValueAnalysis
+    
+    // * An unsaturated pure call that can be spliced into a later call, as in
+    // * `let f = foo(x); f(y)` ~> `foo(x)(y)`, provided every local captured
+    // * by the prefix still denotes the same assignment fact.
+    case class TrackedPureCall(call: Call, requirements: Set[LocalVar -> AssignInfo]):
+      def isCurrent: Bool =
+        requirements.forall((loc, asst) => !capturedVars(loc) && (assignedResults(loc) is asst))
+    
+    // * Data-flow fact for the latest assignment known for a local variable.
+    // * Facts are intentionally immutable so derived analyses can be cached in
+    // * lazy values and compared by identity when validating requirements.
     enum AssignInfo:
       case Unknown
       case Uninitialized
-      case Assigned(asst: Assign, varAsst: Opt[Value.RefLike -> AssignInfo])
+      // * `varAsst` is defined if the RHS is a direct reference to some local L,
+      // * so that the current variable can be treated as an alias of L as long as L's
+      // * associated `AssignInfo` assignment facts remain current.
+      // * `rhsRequirements` tracks
+      // * all local variables mentioned by the RHS so pure-call prefixes do not
+      // * outlive locals that were only valid in a narrower scope.
+      case Assigned(
+        lhs: LocalVar,
+        rhs: Result,
+        varAsst: Opt[Value.RefLike -> AssignInfo],
+        rhsRequirements: Set[LocalVar -> AssignInfo],
+      )(val originalAssignment: Assign)
       case Merge(asst1: AssignInfo, asst2: AssignInfo)
       
       override def toString: String = this match
         case Unknown => "?"
         case Uninitialized => "∅"
-        case Assigned(asst, varAsst) => s"${asst.rhs}${varAsst.fold("")("‹"+_+"›")}"
+        case Assigned(l, r, varAsst, _) => s"${r.showDbg}${
+            varAsst.fold(""):
+              case (l, r) => "‹"+l.showDbg+":="+r+"›"
+          }"
         case Merge(a1, a2) => s"{${a1.toString} | ${a2.toString}}"
       
       def merge(that: AssignInfo): AssignInfo =
+        // * Important note: we intentionally do not simplify merges with Unknown,
+        // * although it would be logically valid to simplify them to Unknown.
+        // * We can't do that here, though, as it would lose information which is currently
+        // * used to determine whether a variable has changed or not:
+        // * when a variable is reassigned, we always map it to a fresh Assigned node;
+        // * the analysis then checks whether a variable has changed by comparing the object identity
+        // * of the node that was originally assigned to the variable with the variable's current node.
+        // * Now, if the original node was Unknown and we have a control-flow split leading to a merged
+        // * of, eg, (Unknown, Assigned(...)), then simplifying that to Unknown would leave the object
+        // * identity unchanged, wrongly indicating that the variable has not changed,
+        // * when in fact it may have been reassigned (in one of the two control-flow paths).
         if this is that then this
-        else that match
-          case Unknown => that
+        else this match
+        case Uninitialized => that
+        case Unknown =>
+          if that is Uninitialized then this
+          else Merge(this, that)
+        case _: Assigned | _: Merge =>
+          that match
           case Uninitialized => this
-          // case Merge(l, r) => Merge(merge(this, l), r)
-          case _: Assigned | _: Merge =>
-            this match
-              case Unknown => this
-              case Uninitialized => that
-              case _: Assigned | _: Merge => Merge(this, that)
+          case Unknown => Merge(this, that)
+          case _: Assigned | _: Merge => Merge(this, that)
       
+      // * This lazy val is used to avoid retraversing the DAG and to deduplicate entries.
+      // * There are more efficient ways of traversing the DAG (e.g. using a mutable visited set),
+      // * which could avoid merging so many intermediate sets,
+      // * but this is simpler and should be sufficient for now.
+      lazy val assigns: Opt[Set[Assigned]] = this match
+        case a: Assigned => S(Set.single(a))
+        case Merge(asst1, asst2) =>
+          // * `for` is only for rich kids
+          asst1.assigns match
+          case N => N
+          case S(set1) =>
+            asst2.assigns match
+            case N => N
+            case S(set2) => S(set1 ++ set2)
+        case Uninitialized => S(Set.empty)
+        case Unknown => N
+      
+      lazy val valueAnalysis: ValueAnalysis = this match
+        case Unknown =>
+          ValueAnalysis.conservative
+        case Uninitialized =>
+          ValueAnalysis(true, Nil)
+        case Assigned(lhs, rhs, opt, _) =>
+          val litValue = rhs match
+            case v @ Value.Lit(_) => v
+            case _ => false
+          val refs = opt match
+            case S((r @ Value.SimpleRef(lv: LocalVar)) -> rhs) =>
+              val requirement = lv -> rhs
+              TrackedRef(r, Set.single(requirement)) :: rhs.valueAnalysis.refs
+            case S(ref -> rhs) =>
+              TrackedRef(ref,
+                // * Other types of direct references don't need requirements because they cannot be reassigned:
+                // * indeed, `mut val` is not valid outside of an object/module scope,
+                // * and if defined in such a scope, a `mut val x` would be referred to through `this.x`.
+                Set.empty
+              ) :: rhs.valueAnalysis.refs
+            case N => Nil
+          ValueAnalysis(litValue, refs)
+        case Merge(asst1, asst2) =>
+          // * [Future: dead assignment removal]
+          // FIXME: this currently short-circuits, which will miss some live assignments...
+          val l = asst1.valueAnalysis
+          if l.refs.isEmpty && l.litValue === false then
+            ValueAnalysis.conservative
+          else
+            val r = asst2.valueAnalysis
+            ValueAnalysis(
+              ValueAnalysis.mergeLitValues(l.litValue, r.litValue),
+              ValueAnalysis.mergeRefs(l.refs, r.refs))
+      
+      lazy val pureCallPrefix: Opt[TrackedPureCall] = this match
+        case Unknown | Uninitialized => N
+        case Assigned(lhs, rhs, opt, rhsRequirements) =>
+          rhs match
+          case call: Call if call.isKnownUnsaturatedCall && call.isPure =>
+            S(TrackedPureCall(call, rhsRequirements))
+          case _ =>
+            opt match
+            case S((Value.SimpleRef(next: LocalVar), originalAsst)) =>
+              // * If the RHS was a variable that was at the time assigned to a pure call prefix,
+              // * we can directly pick up that call, regardless of the current status of that variable.
+              originalAsst.pureCallPrefix
+            case _ => N
+        case Merge(asst1, asst2) =>
+          asst1.pureCallPrefix match
+          case S(call1) =>
+            asst2.pureCallPrefix match
+            case S(call2) if call1.call === call2.call =>
+              S(TrackedPureCall(call1.call, call1.requirements ++ call2.requirements))
+            case _ => N
+          case N => N
+    
     import AssignInfo.*
     
     
@@ -443,8 +683,14 @@ class BlockSimplifier
       assignedResults = impossible
       res
     
-    // *** ASSUMPTION (should be an invariant of the IR): only LocalVar symbols can be Assign'ed ***
     var assignedResults: AssignedResults = emptyAssignedResults
+    
+    def accessAssignedResults(sym: LocalVar): AssignInfo =
+      val res = assignedResults(sym)
+      if !changed then
+        liveAssignInfosUntilChangeTriggered += res
+      res
+    
     var inDryRun = false // for traversing loop bodies once before actually transforming the program
     
     def withFreshAssignedResults[T](thunk: => T): T =
@@ -470,10 +716,6 @@ class BlockSimplifier
         .withDefaultValue(Unknown)
     
     
-    // * [Future: dead assignment removal]
-    // val liveAssignments: IdentityHashMap[Block, Unit] = new IdentityHashMap()
-    
-    
     override def applyDefn(defn: Defn)(k: Defn => Block): Block =
       defn match
       case _: ValDefn => super.applyDefn(defn)(k)
@@ -497,8 +739,19 @@ class BlockSimplifier
       res
     
     
+    private def showMap: Str = assignedResults
+      .iterator.map: (k, v) =>
+        s"${k.showDbg} -> ${v.toString}"
+      .mkString("{", ", ", "}")
+    
+    override def applySimpleSymbol(sym: SimpleSymbol): SimpleSymbol = sym match
+      case sym: LocalVar =>
+        accessAssignedResults(sym)
+        super.applySimpleSymbol(sym)
+      case _ => super.applySimpleSymbol(sym)
+    
     override def applyBlock(b: Block): Block =
-    // trace[Block](s"Applying block: ${b.abbreviate} with map: ${assignedResults}", res => s"|= ${assignedResults}"):
+    // trace[Block](s"Applying block: ${b.showDbg.abbreviate} with map:\n${showMap}", res => s"|= ${showMap}"):
       b match
       
       // * Discard local variables that are assigned just to be returned
@@ -510,25 +763,31 @@ class BlockSimplifier
         applyBlock(Return(rhs))
       
       case ass @ Assign(lhs: LocalVar, rhs, rst) if !capturedVars(lhs) =>
-        // log(s"Propagating ${lhs} := ${rhs} (${assignedResults.get(lhs)})")
+        // log(s"Propagating ${lhs.showDbg} := ${rhs.showDbg} (${assignedResults.get(lhs)})")
         
-        assignedResults += lhs -> Assigned(ass, rhs.match
-          case r @ Value.SimpleRef(sym: LocalVar) =>
-            if capturedVars(sym) then N
-            else
-              val rhs2 = assignedResults(sym)
-              S(r -> rhs2)
-          case r: Value.RefLike =>
-            S(r -> Unknown)
-          case _ => N
-        )
-        super.applyBlock(b)
+        applyResult(rhs): rhs2 =>
+        
+          val lhs2 = applyAssignLhs(lhs).asInstanceOf[LocalVar]
+          
+          val varAsst = rhs2.match
+            case r @ Value.SimpleRef(sym: LocalVar) =>
+              if capturedVars(sym) then N
+              else S(r -> accessAssignedResults(sym))
+            case r: Value.RefLike => S(r -> Unknown)
+            case _ => N
+          val rhsRequirements = rhs2.freeVars.iterator.collect:
+            case sym: LocalVar if !capturedVars(sym) =>
+              sym -> accessAssignedResults(sym)
+          assignedResults += lhs2 -> Assigned(lhs2, rhs2, varAsst, rhsRequirements.toSet)(ass)
+          
+          val rst2 = applyBlock(rst)
+          if (lhs2 is lhs) && (rhs2 is rhs) && (rst2 is rst) then ass else Assign(lhs, rhs2, rst2)
         
       case Assign(lhs, rhs, rst) =>
-        // log(s"Not propagating ${lhs} := ${rhs}")
+        // log(s"Not propagating ${lhs } := ${rhs}")
         
         super.applyBlock(b)
-        
+      
       case Label(label, loop, body, rest) =>
         
         // TODO: fix the rest of the compiler so this invariant actually holds
@@ -540,10 +799,10 @@ class BlockSimplifier
         // * (not exponentially many times).
         if loop then
           atLabelBegin.put(label, assignedResults)
-          // * Would seem to make sense to make the below `impossible`, but it doesn't work,
-          // * even if we add `atLabelEnd.put(label, merge(atLabelEnd(label), assignedResults))`
-          // * after the `applyBlock` call. Not entirely sure why.
-          atLabelEnd.put(label, emptyAssignedResults)
+          // * Initially, we treat this loop's rest block as unreachable.
+          // * Then, when non-abortive loops are found to either `break` or fall-through,
+          // * we will get merges that make the rest recognized as reachable.
+          atLabelEnd.put(label, impossible)
           val oldDryRun = inDryRun
           inDryRun = true
           applyBlock(body)
@@ -577,9 +836,19 @@ class BlockSimplifier
       case TryBlock(sub, finallyDo, rest) =>
         val sub2 = applyBlock(sub)
         val finallyDo2 =
-          // * This block might be executed from an unknown point in the previous block,
+          // * This block might be executed from an unknown point in `sub` (where the first exception is thrown),
           // * so we have to be conservative and not propagate any information.
+          if !changed then
+            assignedResults.valuesIterator.foreach(liveAssignInfosUntilChangeTriggered += _)
+            // * ^ all assigned infos are still to be considered live, even though we reset `assignedResults`
           assignedResults = emptyAssignedResults
+          // * Moreover, we have to special-case all assigned local variables, as the corresponding assignments
+          // * might end up being live even though local flow analysis would think they are not.
+          sub.definedVars.foreach:
+            case sym: LocalVar =>
+              log(s"Variable ${sym.showDbg} is written in a `finally` block; marking it as imprecise tracked")
+              impreciselyTrackedVars += sym
+            case _ =>
           applyBlock(finallyDo)
         val rest2 = applySubBlock(rest)
         if (sub2 is sub) && (finallyDo2 is finallyDo) && (rest2 is rest) then b
@@ -601,44 +870,32 @@ class BlockSimplifier
           def giveUp =
             gaveUp = true
             Set.empty[Shape]
-          def getShapesA(a: AssignInfo): Set[Shape] =
-          // trace[Set[Shape]](s"Getting shapes for assignment ${a}", r => s"= ${r}"):
-            a match
-            case Unknown => giveUp
-            case Uninitialized => Set.empty
-            case Merge(a1, a2) => getShapesA(a1) | getShapesA(a2)
-            case Assigned(asst, varAsst) =>
-              varAsst match
-              case S(Value.MemberRef(r, sym: ModuleOrObjectSymbol) -> _) =>
-                Set.single(sym)
-              case S(_ -> ass) =>
-                getShapesA(ass)
-              case N =>
-                asst.rhs match
-                case p: Path => getShapes(p)
-                case Call(path, args) =>
-                  path.targetSymbol match
-                  case S(tsym: TermSymbol) =>
-                    tsym.owner match
+          def getAssignInfoShapes(a: AssignInfo): Set[Shape] =
+            if gaveUp then Set.empty
+            a.assigns match
+            case N => giveUp
+            case S(assts) => assts.flatMap:
+              case Assigned(lhs, rhs, varAsst, _) =>
+                varAsst match
+                case S(Value.MemberRef(r, sym: ModuleOrObjectSymbol) -> _) =>
+                  Set.single(sym)
+                case S(_ -> ass) =>
+                  getAssignInfoShapes(ass)
+                case N =>
+                  rhs match
+                  case p: Path => getShapes(p)
+                  case Call(path, argss) =>
+                    getCallCtorShape(path, argss) match
                     case S(sym: ClassSymbol) =>
-                      sym.irClsLikeDefn match
-                      case S(cls: ClsLikeDefn)
-                        if cls.auxParams.isEmpty
-                        => Set.single(sym)
-                      case _ => giveUp
+                      Set.single(sym)
+                    case _ => giveUp
+                  case Instantiate(_, cls, _) =>
+                    // * Note: Instantiate nodes are globally assumed to be saturated
+                    getInstCtorShape(cls) match
+                    case S(sym) =>
+                      Set.single(sym)
                     case _ => giveUp
                   case _ => giveUp
-                case Instantiate(mut, cls, args) =>
-                  cls.targetSymbol match
-                  case S(sym: ClassSymbol) =>
-                    sym.irClsLikeDefn match
-                    case S(cls: ClsLikeDefn)
-                      // if the instantiation call is saturated
-                      if cls.auxParams.isEmpty || cls.paramsOpt.isEmpty && cls.auxParams.sizeCompare(1) <= 0
-                      => Set.single(sym)
-                    case _ => giveUp
-                  case _ => giveUp
-                case _ => giveUp
           def getShapes(p: Path): Set[Shape] =
             if gaveUp then Set.empty
             else
@@ -646,11 +903,14 @@ class BlockSimplifier
               case Value.SimpleRef(r: LocalVar) if capturedVars(r) =>
                 giveUp
               case Value.SimpleRef(r: LocalVar) =>
-                assignedResults.get(r).fold(giveUp)(getShapesA)
+                assignedResults.get(r).fold(giveUp)(getAssignInfoShapes)
               case Value.MemberRef(r, sym: ModuleOrObjectSymbol) =>
                 Set.single(sym)
               case Value.Lit(lit) => Set.single(lit)
-              case _ => giveUp
+              case _ =>
+                p.targetSymbol match
+                case S(sym: ModuleOrObjectSymbol) => Set.single(sym)
+                case _ => giveUp
           
           var shapes = if deadBranchRemoval then getShapes(scrut2) else giveUp
           // TODO: if analysis gave up, make the shapes the set of cases of the patmat, to rm redundant arms
@@ -679,12 +939,23 @@ class BlockSimplifier
           
           val newArms = arms2.mapConserve:
             case arm @ (cse, body) =>
+              // * We need to visit the symbols of the cases to register the liveness of their AssignedInfo.
+              // * Normally, the Match case uses `applyCase`, which uses `applyPath`, and they both take a continuation,
+              // * making things unnecessarily awkward for the data-flow analysis.
+              cse.freeVars.foreach:
+                case sym: SimpleSymbol => applySimpleSymbol(sym)
+                case _ =>
               val newBody = applyBlock(body)
               curAssigned = merge(curAssigned, assignedResults)
               assignedResults = oldAssigned
               if newBody is body then arm else cse -> newBody
-          val newDflt = if !gaveUp && shapes.isEmpty
-            then S(Unreachable("exhaustive match"))
+          val newDflt =
+            if !gaveUp && shapes.isEmpty
+            then
+              val res = S(Unreachable("exhaustive match"))
+              if dflt === res then dflt else
+                registerChange(s"Default arm is unreachable because all shapes are covered")
+                res
             else dflt.mapConserve:
               case body =>
                 val newBody = applyBlock(body)
@@ -729,68 +1000,15 @@ class BlockSimplifier
       v match
       case Value.SimpleRef(loc: LocalVar) if !inDryRun && !capturedVars(loc) =>
         
-        val rs = assignedResults(loc)
+        val rs = accessAssignedResults(loc)
         // log(s"Ref ${loc.showDbg} ${rs} ${localVars(loc)} ${capturedVars(loc)}")
         
-        def analyzeAssignments(asst: AssignInfo): Unit =
-          asst match
-          case Unknown | Uninitialized => ()
-          case Merge(a1, a2) =>
-            analyzeAssignments(a1)
-            analyzeAssignments(a2)
-          case Assigned(ass, _) =>
-            // * [Future: dead assignment removal]
-            // liveAssignments.put(ass, ())
+        val analysis = rs.valueAnalysis
+        val refs = analysis.refs.iterator.filter(_.isCurrent).map(_.ref).toList
         
-        var litValue: Bool | Value = true
-        var emptyHanded = false
+        // log(s"Analysis: litValue: ${analysis.litValue}, unchanged vars: ${refs}")
         
-        def analyzeValues(asst: AssignInfo): Set[Value.RefLike] =
-          if emptyHanded && litValue === false then
-            analyzeAssignments(asst)
-            Set.empty
-          else asst match
-            case Unknown =>
-              litValue = false
-              Set.empty
-            case Uninitialized => Set.empty
-            case Assigned(ass, opt) =>
-              // * [Future: dead assignment removal]
-              // liveAssignments.put(ass, ())
-              
-              if litValue =/= false then
-                ass.rhs match
-                case v @ Value.Lit(lit) =>
-                  if litValue === true then
-                    litValue = v
-                  else if litValue =/= v then
-                    litValue = false
-                case _ =>
-                  litValue = false
-              opt match
-              case S((r @ Value.SimpleRef(lv: LocalVar)) -> rhs) =>
-                if assignedResults(lv) is rhs
-                then Set.single(r) ++ analyzeValues(rhs)
-                else Set.empty
-              case S(lv -> rhs) =>
-                Set.single(lv) ++ analyzeValues(rhs)
-              case N => Set.empty
-            case Merge(a1, a2) =>
-              // * [Future: dead assignment removal]
-              // FIXME: this currently short-circuits, which will miss some live assignments...
-              
-              val l = analyzeValues(a1)
-              if l.isEmpty && litValue === false then
-                emptyHanded = true
-                analyzeAssignments(a2)
-                Set.empty
-              else l & analyzeValues(a2)
-        
-        val vars = analyzeValues(rs)
-        
-        // log(s"Analysis: litValue: ${litValue}, unchanged vars: ${vars}")
-        
-        litValue match
+        analysis.litValue match
         case true =>
           registerChange(s"${loc.showDbg} ~> undefined")
           return k(Value.Lit(syntax.Tree.UnitLit(false)))
@@ -798,33 +1016,20 @@ class BlockSimplifier
           registerChange(s"${loc.showDbg} ~> ${lit.showDbg}")
           return k(lit)
         case false =>
-          vars.minByOption(_.symbol.uid) match
+          refs.minByOption(_.symbol.uid) match
           case N => k(v)
           case S(v2) =>
-            registerChange(s"${loc.showDbg} ~> ${v2.showDbg} (via ${vars.map(_.showDbg).mkString(", ")})")
+            registerChange(s"${loc.showDbg} ~> ${v2.showDbg} (via ${refs.map(_.showDbg).mkString(", ")})")
             k(v2)
         
       case _ => super.applyValue(v)(k)
     
     
     private def assignedPureCallPrefix(loc: LocalVar): Opt[Call] =
-      def loop(asst: AssignInfo, seen: Set[LocalVar]): Opt[Call] =
-        asst match
-        case Unknown | Uninitialized => N
-        case Assigned(ass, opt) =>
-          ass.rhs match
-          case call: Call if call.isKnownUnsaturatedCall && call.isPure => S(call)
-          case _ =>
-            opt match
-            case S((Value.SimpleRef(next: LocalVar), nextAsst))
-              if !capturedVars(next) && !seen(next) && (assignedResults(next) is nextAsst) =>
-              loop(nextAsst, seen + next)
-            case _ => N
-        case Merge(asst1, asst2) =>
-          (loop(asst1, seen), loop(asst2, seen)) match
-          case (S(call1), S(call2)) if call1 == call2 => S(call1)
-          case _ => N
-      loop(assignedResults(loc), Set.single(loc))
+      // * Only expose prefixes whose dependency facts still match the current
+      // * data-flow state; otherwise the prefix may mention stale scoped locals.
+      assignedResults(loc).pureCallPrefix.collect:
+        case prefix if prefix.isCurrent => prefix.call
     
     
     override def applyResult(r: Result)(k: Result => Block): Block =
@@ -846,52 +1051,200 @@ class BlockSimplifier
         case S(prefix) =>
           registerChange(s"${loc.showDbg} call prefix ~> ${prefix.showDbg}")
           val combined = Call(prefix.fun, (prefix.argss ::: argss).ne_!)(
-            prefix.isMlsFun, prefix.mayRaiseEffects || c.mayRaiseEffects, c.explicitTailCall,
+            CallMetadata(
+              prefix.metadata.isMlsFun,
+              prefix.metadata.mayRaiseEffects || c.metadata.mayRaiseEffects,
+              prefix.metadata.annotations ++ c.metadata.annotations,
+            ),
           ).withLocOf(c)
           super.applyResult(combined)(k)
         case N => super.applyResult(r)(k)
       
       // * Remove uses of the strange builtin comma operator
+      // * This is not implemented as a smart constructor (unlike usual constant folding)
+      // * because it needs to insert an Assign statement.
       case Call(Value.SimpleRef(sym: BuiltinSymbol), (arg1 :: arg2 :: Nil) :: Nil)
         if sym.nme === "," && arg1.spread.isEmpty && arg2.spread.isEmpty
         =>
+          registerChange(s"rm comma ${arg1.value.showDbg}, ${arg2.value.showDbg}")
           Assign.discard(arg1.value, k(arg2.value))
-      
-      // * Partially evaluate calls to known builtins with literal arguments
-      case Call(Value.SimpleRef(sym: BuiltinSymbol), args :: Nil) if args.forall(_.value.isInstanceOf[Value]) =>
-        val argValues = args.map(_.value.asInstanceOf[Value])
-        args.foreach(a => assert(a.spread.isEmpty))
-        builtinEval.lift((sym.nme, argValues)) match
-        case S(v) =>
-          registerChange(s"Evaluating builtin ${sym.nme} with args ${argValues.map(_.showDbg).mkString(", ")} ~> ${v.showDbg}")
-          k(v)
-        case N => super.applyResult(r)(k)
       
       case r =>
         super.applyResult(r)(k)
     
     
-    // TODO: mv to smart ctor of Call
-    import syntax.Tree.*, Value.Lit
-    val builtinEval: PartialFunction[(Str, List[Value]), Value] =
-      case ("+", (lit @ Lit(IntLit(v1))) :: Nil) => lit
-      case ("+", Lit(IntLit(v1)) :: Lit(IntLit(v2)) :: Nil) => Lit(IntLit(v1 + v2))
-      case ("-", Lit(IntLit(v1)) :: Nil) => Lit(IntLit(-v1))
-      case ("-", Lit(IntLit(v1)) :: Lit(IntLit(v2)) :: Nil) => Lit(IntLit(v1 - v2))
-      case ("*", Lit(IntLit(v1)) :: Lit(IntLit(v2)) :: Nil) => Lit(IntLit(v1 * v2))
-      // * For "/", should check for 0 and return a DecLit
-      case ("%", Lit(IntLit(v1)) :: Lit(IntLit(v2)) :: Nil) => Lit(IntLit(v1 % v2))
-      case ("===", Lit(l1) :: Lit(l2) :: Nil) => Lit(BoolLit(l1 == l2))
-      case ("!==", Lit(l1) :: Lit(l2) :: Nil) => Lit(BoolLit(l1 != l2))
-      case ("<", Lit(IntLit(v1)) :: Lit(IntLit(v2)) :: Nil) => Lit(BoolLit(v1 < v2))
-      case ("<=", Lit(IntLit(v1)) :: Lit(IntLit(v2)) :: Nil) => Lit(BoolLit(v1 <= v2))
-      case (">", Lit(IntLit(v1)) :: Lit(IntLit(v2)) :: Nil) => Lit(BoolLit(v1 > v2))
-      case (">=", Lit(IntLit(v1)) :: Lit(IntLit(v2)) :: Nil) => Lit(BoolLit(v1 >= v2))
-      case ("&&", Lit(BoolLit(v1)) :: Lit(BoolLit(v2)) :: Nil) => Lit(BoolLit(v1 && v2))
-      case ("||", Lit(BoolLit(v1)) :: Lit(BoolLit(v2)) :: Nil) => Lit(BoolLit(v1 || v2))
-      case ("!", Lit(BoolLit(v)) :: Nil) => Lit(BoolLit(!v))
-    
   end DataFlowAnalysis
+  
+  
+  // ——————————————————————————————————————————————————————————————————————————————————————————— //
+  
+  
+  /** Specialize a match whose scrutinee was assigned known constructors by an earlier match.
+    * The remaining unknown path, if any, keeps the original consumer match.
+    * More specifically, we optimize successive Match blocks where all of the following hold:
+    * - the branches of the previous match assign known constructors to some variable,
+    *   except at most one branch which can be assigning an unknown value or not assigning at all to this variable;
+    * - the second match scrutinizes that variable and either:
+    *     - the branches of the second match can be inlined into the first match
+    *       without introducing any code duplication; or
+    *     - the branches that would be duplicated are below the inlining threshold;
+    * - all the statements between the two matches are pure and can thus be moved out of the way,
+    *   similar to how `MergeMatchArmTransformer` works (in `Lowering.scala`) – we reuse `TrivialStatementsAndMatch`.
+    * See examples in [test:case-of-case]. */
+  class CaseOfCase(using cfg: Config.Inliner) extends BlockTransformer(SymbolSubst.Id), Helper:
+    
+    type Shape = Literal | ClassLikeSymbol
+    
+    case class Selected(index: Int, body: Block)
+    
+    enum ProducerPlan:
+      case Abortive(body: Block)
+      case Known(body: Block, selected: Selected)
+      case Unknown(body: Block)
+    
+    import ProducerPlan.*
+    
+    def getShape(result: Result): Opt[Shape] = result match
+      case Value.MemberRef(_, sym: ModuleOrObjectSymbol) => S(sym)
+      case Value.Lit(lit) => S(lit)
+      case path: Path => path.targetSymbol.flatMap(_.asModOrObj)
+      case Call(path, argss) => getCallCtorShape(path, argss)
+      case Instantiate(_, cls, _) => getInstCtorShape(cls)
+      case _ => N
+    
+    /** Find the shape held by `target` after a straight-line producer arm.
+      * Complex control flow remains on the unspecialized path. */
+    def getAssignedShape(body: Block, target: LocalVarSymbol): Opt[Shape] =
+      def loop(body: Block, shape: Opt[Shape])(k: Opt[Shape] => Opt[Shape]): Opt[Shape] = body match
+        case _: End => k(shape)
+        case Assign(`target`, rhs, rest) => loop(rest, getShape(rhs))(k)
+        case Assign(_, rhs, rest) if rhs.isPure => loop(rest, shape)(k)
+        case AssignField(_, _, _, rest) => loop(rest, shape)(k)
+        case AssignDynField(_, _, _, _, rest) => loop(rest, shape)(k)
+        case Define(_, rest) => loop(rest, shape)(k)
+        case Scoped(_, body) => loop(body, shape)(k)
+        case Begin(sub, rest) => loop(sub, shape)(loop(rest, _)(k))
+        case _ => N
+      loop(body, N)(identity)
+    
+    def isSubtypeOf(actual: ClassLikeSymbol, expected: ClassLikeSymbol): Opt[Bool] =
+      def parentOf(sym: ClassLikeSymbol): Opt[Opt[ClassLikeSymbol]] =
+        (sym match
+          case sym: ClassSymbol => sym.irClsLikeDefn
+          case sym: ModuleOrObjectSymbol => sym.irClsLikeDefn
+        ).flatMap: defn =>
+          defn.parentPath match
+            case S(parent) => getInstCtorShape(parent).map(S(_))
+            case N => S(N)
+        .orElse:
+          // FIXME: remove this fallback once imported classes have their `irClsLikeDefn` properly linked
+          (sym match
+            case sym: ClassSymbol => sym.defn
+            case sym: ModuleOrObjectSymbol => sym.defn
+          ).flatMap: defn =>
+            defn.ext match
+              case S(parent) => parent.cls.resolvedSym.flatMap(_.asClsOrMod).map(S(_))
+              case N => S(N)
+      @tailrec
+      def loop(cur: ClassLikeSymbol, seen: Set[ClassLikeSymbol]): Opt[Bool] =
+        if cur is expected then S(true)
+        else if seen(cur) then N
+        else parentOf(cur) match
+          case S(S(parent)) => loop(parent, seen + cur)
+          case S(N) => S(false)
+          case N => N
+      loop(actual, Set.empty)
+    
+    /** Return whether a known shape matches a case, or `None` if deciding would
+      * require reasoning that this optimization deliberately does not attempt. */
+    def matches(cse: Case, shape: Shape): Opt[Bool] = (cse, shape) match
+      case (Case.Lit(expected), actual: Literal) => S(expected == actual)
+      case (Case.Lit(_), _: ClassLikeSymbol) => S(false)
+      case (Case.Cls(expected, _), actual: ClassLikeSymbol) => isSubtypeOf(actual, expected)
+      case _ => N
+    
+    def select(shape: Shape, arms: Ls[Case -> Block], dflt: Opt[Block]): Opt[Selected] =
+      @tailrec
+      def loop(arms: Ls[Case -> Block], index: Int): Opt[Selected] = arms match
+        case (cse, body) :: rest => matches(cse, shape) match
+          case S(true) => S(Selected(index, body))
+          case S(false) => loop(rest, index + 1)
+          case N => N
+        case Nil => dflt.map(Selected(index, _))
+      loop(arms, 0)
+    
+    def canMove(prefix: Block): Bool = prefix match
+      case _: End => true
+      case Assign(_, _: Value, rest) => canMove(rest)
+      case Assign(_, path: Select, rest) => path.isPure && canMove(rest)
+      case Define(defn: ValDefn, rest) =>
+        defn.rhs.isPure && defn.tsym.owner.isEmpty && canMove(rest)
+      case Define(defn: FunDefn, rest) => defn.owner.isEmpty && canMove(rest)
+      case Define(defn: ClsLikeDefn, rest) => defn.isPure && canMove(rest)
+      case _ => false
+    
+    def plan(body: Block, target: LocalVarSymbol, consumer: Match): ProducerPlan =
+      if body.isAbortive then Abortive(body)
+      else
+        getAssignedShape(body, target)
+          .flatMap(select(_, consumer.arms, consumer.dflt))
+          .fold(Unknown(body))(Known(body, _))
+    
+    override def applyBlock(b: Block): Block = super.applyBlock(b) match
+      case m @ Match(scrut, arms, dflt,
+        TrivialStatementsAndMatch(k,
+          consumer @ Match(Value.SimpleRef(target: LocalVarSymbol), _, _, consumerRest)))
+      =>
+        
+        val prefix = k.fold[Block](End())(_(End()))
+        
+        val producerDefinedVars: Set[Symbol] = arms.iterator.flatMap(_._2.definedVars).toSet
+          ++ dflt.iterator.flatMap(_.definedVars)
+        
+        if !canMove(prefix) || prefix.freeVars.exists(producerDefinedVars.contains) then m
+        else
+          val armPlans = arms.map((cse, body) => cse -> plan(body, target, consumer))
+          val dfltPlan = dflt.fold[ProducerPlan](Unknown(End()))(plan(_, target, consumer))
+          val allPlans = armPlans.map(_._2) :+ dfltPlan
+          val unknownCount = allPlans.count(_.isInstanceOf[Unknown])
+          
+          if unknownCount > 1 then m
+          else
+            val selected = allPlans.collect:
+              case Known(_, selected) => selected
+            
+            if selected.isEmpty then m
+            else
+              val selectedCounts = selected.groupMapReduce(_.index)(_ => 1)(_ + _)
+              val originalConsumerRetained = unknownCount === 1
+              val wouldDuplicate = selected.exists: selected =>
+                selectedCounts(selected.index) + (if originalConsumerRetained then 1 else 0) > 1
+                  && selected.body.size > cfg.inlineThreshold
+              
+              if wouldDuplicate then m
+              else
+                registerChange(s"case-of-case on ${target.showDbg}")
+                val usedOriginals = MutSet.empty[Int]
+                def materialize(selected: Selected): Block =
+                  if originalConsumerRetained || usedOriginals(selected.index) then
+                    SymbolRefresher(Map.empty).applyBlock(selected.body)
+                  else
+                    usedOriginals += selected.index
+                    selected.body
+                def consumerWithoutRest: Block =
+                  Match(consumer.scrut, consumer.arms, consumer.dflt, End())
+                def rewrite(plan: ProducerPlan): Block = plan match
+                  case Abortive(body) => body
+                  case Known(body, selected) => Begin(body, materialize(selected))
+                  case Unknown(body) => Begin(body, consumerWithoutRest)
+                val newArms = armPlans.map((cse, plan) => cse -> rewrite(plan))
+                val newDflt = S(rewrite(dfltPlan))
+                k.getOrElse(identity[Block]):
+                  Match(scrut, newArms, newDflt, consumerRest)
+      
+      case b => b
+    
+  end CaseOfCase
   
   
   // ——————————————————————————————————————————————————————————————————————————————————————————— //
@@ -966,12 +1319,13 @@ class BlockSimplifier
         // Whether this function can be inlined without causing any code duplication,
         // i.e. the original definition can be removed and there is only one usage.
         def canBeInlineEliminated: Bool =
-          isPrivate && !isMethod && useCount <= 1 && !disallowElimination && !isLoopBreaker
+          isPrivate && !isMethod && !defn.noInline && useCount <= 1 && !disallowElimination && !isLoopBreaker
           // false
         
         def shouldBeInlined(newBlk: Block, threshold: Int): Bool =
           // method requires the capturing of `this`, which is not supported currently.
           if isMethod then return false
+          if defn.noInline then return false
           // If the definition is marked with inline, we should inline it regardless of the size of the body.
           // If both callee and caller are marked with inline, inlining will ignore the stricter @inline limits.
           // Remark: the case of a recursive function marked with inline will be blocked by loop breaker logic.
@@ -1089,7 +1443,7 @@ class BlockSimplifier
     
     object InlinerReplacer:
       
-      class Copier(resSym: Symbol, existingMapping: Map[Symbol, Symbol])(using State):
+      class Copier(resSym: LocalVarSymbol, existingMapping: Map[Symbol, Symbol])(using State):
         val lblSym = LabelSymbol(N, "inlinedLbl")
         
         object Copier extends SymbolRefresher(existingMapping):
@@ -1109,7 +1463,7 @@ class BlockSimplifier
             case _ => super.applyBlock(b)
         
         def applyBlock(blk: Block) =
-          Label(lblSym, false, Copier.applyBlock(blk), _)
+          Label(lblSym, false, Copier.apply(blk), _)
       
       class Transformer(m: InlinerMap) extends BlockTransformer(SymbolSubst()):
         
@@ -1189,7 +1543,10 @@ class BlockSimplifier
                         acc(Scoped(Set.single(resSym), newBlk(k(resSym.asSimpleRef))))
                       else
                         acc(Scoped(Set(resSym), newBlk(
-                          k(Call(resSym.asSimpleRef, extraArgss.ne_!)(c.isMlsFun, c.mayRaiseEffects, false)))))
+                          k(Call(resSym.asSimpleRef, extraArgss.ne_!)(
+                            c.metadata.copy(
+                              annotations = c.metadata.annotations.filterNot(_ == Annot.TailCall),
+                            ))))))
                     case (sym, value) :: argRest =>
                       val newSym = VarSymbol(sym.id)
                       go(acc.assignScoped(newSym, value), argRest, mapping + (sym -> newSym))

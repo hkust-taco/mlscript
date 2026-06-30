@@ -1,0 +1,161 @@
+:js
+
+open annotations
+
+data class Add(val lhs, val rhs)
+
+:sir
+case Add(0, 0) then 1
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let lambda;
+//│ @private
+//│ define lambda as fun lambda⁰(caseScrut) {
+//│   let arg$Add$0$, arg$Add$1$;
+//│   match caseScrut
+//│     Add⁰ =>
+//│       set arg$Add$0$ = caseScrut.lhs⁰;
+//│       set arg$Add$1$ = caseScrut.rhs⁰;
+//│       match arg$Add$0$
+//│         0 =>
+//│           match arg$Add$1$
+//│             0 =>
+//│               return 1
+//│             else
+//│               throw new globalThis⁰.Error⁰("match error")
+//│           end
+//│         else
+//│           throw new globalThis⁰.Error⁰("match error")
+//│       end
+//│     else
+//│       throw new globalThis⁰.Error⁰("match error")
+//│   end
+//│ };
+//│ return lambda⁰
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = fun
+
+:sir
+case @compile Add(0, 0) then 1
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let lambda;
+//│ @private
+//│ define lambda as fun lambda³(caseScrut) {
+//│   let matcher__Addʿ0ꓹ0ʾ$, matcher__0$, matchSuccess, lambda1, lambda2;
+//│   define lambda1 as fun lambda¹(input) {
+//│     let p_1$, p_1$1, tmp, tmp1;
+//│     match input
+//│       0 =>
+//│         set tmp = true;
+//│         set p_1$ = tmp;
+//│         return p_1$
+//│       else
+//│         set tmp1 = false;
+//│         set p_1$1 = tmp1;
+//│         return p_1$1
+//│     end
+//│   };
+//│   set matcher__0$ = lambda¹;
+//│   define lambda2 as fun lambda²(input) {
+//│     let lhs, rhs, lhs1, rhs1, p_0$, result1$, result1$1, p_0$1, tmp, tmp1;
+//│     match input
+//│       Add⁰ =>
+//│         set lhs = input.lhs⁰;
+//│         set rhs = input.rhs⁰;
+//│         set lhs1 = matcher__0$(lhs);
+//│         set rhs1 = matcher__0$(rhs);
+//│         set result1$1 = lhs1;
+//│         match result1$1
+//│           true =>
+//│             set result1$ = rhs1;
+//│             match result1$
+//│               true =>
+//│                 set tmp = true;
+//│                 end
+//│               else
+//│                 set tmp = false;
+//│                 end
+//│             end
+//│           else
+//│             set tmp = false;
+//│             end
+//│         set p_0$ = tmp;
+//│         return p_0$
+//│       else
+//│         set tmp1 = false;
+//│         set p_0$1 = tmp1;
+//│         return p_0$1
+//│     end
+//│   };
+//│   set matcher__Addʿ0ꓹ0ʾ$ = lambda²;
+//│   set matchSuccess = matcher__Addʿ0ꓹ0ʾ$(caseScrut);
+//│   match matchSuccess
+//│     true =>
+//│       return 1
+//│     else
+//│       throw new globalThis⁰.Error⁰("match error")
+//│   end
+//│ };
+//│ return lambda³
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = fun
+
+data class Box(val value)
+
+// * TODO: We should find a way of optimizing away the local intermediate records in cases like this.
+:soir
+case @compile (Box(0) | Box(1)) then 1
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let lambda;
+//│ @private
+//│ define lambda as fun lambda⁴(caseScrut) {
+//│   let value, result1$, result2$;
+//│   match caseScrut
+//│     Box⁰ =>
+//│       let inlinedVal;
+//│       set value = caseScrut.value⁰;
+//│       match value
+//│         0 =>
+//│           set inlinedVal = { "p_1": true, "p_2": false };
+//│           end
+//│         1 =>
+//│           set inlinedVal = { "p_1": false, "p_2": true };
+//│           end
+//│         else
+//│           set inlinedVal = { "p_1": false, "p_2": false };
+//│           end
+//│       set result1$ = inlinedVal.p_1﹖;
+//│       match result1$
+//│         true =>
+//│           return 1
+//│         else
+//│           set result2$ = inlinedVal.p_2﹖;
+//│           match result2$
+//│             true =>
+//│               return 1
+//│             else
+//│               throw new globalThis⁰.Error⁰("match error")
+//│           end
+//│       end
+//│     else
+//│       throw new globalThis⁰.Error⁰("match error")
+//│   end
+//│ };
+//│ return lambda⁴
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = fun
+
+
+case @compile (Box(0) & Box(0 | 1)) then 1
+//│ = fun
+
+class Add2(val x, val y, z)
+
+:e
+case @compile (Add2(0, _, _) | Add2(_, 1, _)) then 0
+//│ ╔══[COMPILATION ERROR] Parameter `z` is not accessible.
+//│ ║  l.151: 	class Add2(val x, val y, z)
+//│ ╙──       	                         ^
+//│ ╔══[COMPILATION ERROR] Parameter `z` is not accessible.
+//│ ║  l.151: 	class Add2(val x, val y, z)
+//│ ╙──       	                         ^
+//│ = fun

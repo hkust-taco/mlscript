@@ -47,7 +47,6 @@ fun foo(x) = x is Cross
 // Keep the IR output to prevent regressions.
 fun isCompiledCross(x) = x is @compile Cross
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let isCompiledCross⁰;
 //│ define isCompiledCross⁰ as fun isCompiledCross¹(x) {
 //│   let matcher__Cross$, matchSuccess, lambda;
 //│   define lambda as fun lambda⁰(input) {

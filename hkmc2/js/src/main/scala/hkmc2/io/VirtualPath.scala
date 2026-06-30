@@ -1,7 +1,7 @@
 package hkmc2.io
 
 import scala.scalajs.js
-import mlscript.utils._, shorthands._
+import hkmc2.utils.*, shorthands.*
 import VirtualPath.sep
 
 /**

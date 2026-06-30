@@ -4,7 +4,7 @@ package codegen
 import scala.collection.mutable.{Map => MutMap, Set => MutSet}
 import sourcecode.Line
 
-import mlscript.utils.*, shorthands.*
+import hkmc2.utils.*, shorthands.*
 import hkmc2.utils.*
 import hkmc2.Message.MessageContext
 
@@ -17,9 +17,9 @@ import semantics.Elaborator.State
   * This class checks this invariant. */
 class BlockChecker()(using DebugPrinter, State, Raise) extends BlockTraverser:
   
-  val definedSyms = MutSet.empty[Local]
+  val definedSyms = MutSet.empty[BoundSymbol]
   
-  private def checkSymbol(sym: Local, info: => Any): Unit =
+  private def checkSymbol(sym: BoundSymbol, info: => Any): Unit =
     if !definedSyms.add(sym) then
       raise:
         InternalError(
@@ -40,5 +40,4 @@ class BlockChecker()(using DebugPrinter, State, Raise) extends BlockTraverser:
     super.applyParamList(pl)
   
 end BlockChecker
-
 

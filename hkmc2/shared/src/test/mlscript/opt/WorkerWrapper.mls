@@ -14,18 +14,18 @@ fun foo(x)(y) =
   x + y + x + y
 foo(1)(2)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let foo⁰, foo$worker⁰;
+//│ let foo$worker;
 //│ @inline
 //│ define foo⁰ as fun foo¹(x)(y) {
-//│   return foo$worker¹(x, y)
+//│   return foo$worker⁰(x, y)
 //│ };
-//│ define foo$worker⁰ as fun foo$worker¹(x, y) {
+//│ define foo$worker as fun foo$worker⁰(x, y) {
 //│   let tmp, tmp1;
 //│   set tmp = +⁰(x, y);
 //│   set tmp1 = +⁰(tmp, x);
 //│   return +⁰(tmp1, y)
 //│ };
-//│ return foo$worker¹(1, 2)
+//│ return 6
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 6
 
@@ -35,7 +35,7 @@ foo(1)(2)
 fun tiny(x)(y) = y
 tiny(1)(2)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let tiny⁰; @inline define tiny⁰ as fun tiny¹(x)(y) { return y }; return 2
+//│ @inline define tiny⁰ as fun tiny¹(x)(y) { return y }; return 2
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 2
 
@@ -48,7 +48,6 @@ fun noInlineFoo(x)(y) =
   x + y + x + y
 noInlineFoo(1)(2)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let noInlineFoo⁰;
 //│ define noInlineFoo⁰ as fun noInlineFoo¹(x)(y) {
 //│   let tmp, tmp1;
 //│   set tmp = +⁰(x, y);

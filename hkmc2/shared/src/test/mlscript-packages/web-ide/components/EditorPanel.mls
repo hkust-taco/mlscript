@@ -72,7 +72,7 @@ class EditorPanel extends HTMLElement with
     Array.from(this.openTabs.keys()).forEach of (tabId, ...) => panel.closeTab(tabId)
 
   fun shouldHandleFsEvent(kind) =
-    kind is "write" | "delete" | "rename" | "readonly" | "attr"
+    kind is ("write" | "delete" | "rename" | "readonly" | "attr")
 
   fun nodeAttrs(event) = if
     event.node is Absent then mut {}

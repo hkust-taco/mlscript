@@ -8,10 +8,10 @@ fun f() =
   object A
   42
 f()
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ define f⁰ as fun f¹() { return 42 }; return 42
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let f; f = function f() { return 42 };
-//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let f⁰; define f⁰ as fun f¹() { return 42 }; return 42
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 42
 
@@ -23,16 +23,30 @@ fun f() =
     print("Hello")
   42
 f()
-//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let f1;
-//│ f1 = function f() {
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let A;
+//│ define f² as fun f³() {
 //│   let A1;
+//│   define A1 as object A⁰ {
+//│     constructor() {
+//│       do Predef⁰.print⁰("Hello");
+//│       end
+//│     }
+//│   };
+//│   return 42
+//│ };
+//│ define A as object A¹ { constructor() { do Predef⁰.print⁰("Hello"); end } };
+//│ return 42
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ let f1, A2;
+//│ f1 = function f() {
+//│   let A3;
 //│   (class A {
 //│     static {
 //│       new this
 //│     }
 //│     constructor() {
-//│       A1 = this;
+//│       A3 = this;
 //│       Predef.print("Hello");
 //│       Object.defineProperty(this, "class", {
 //│         value: A
@@ -44,17 +58,21 @@ f()
 //│   });
 //│   return 42
 //│ };
-//│ f1();
-//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let f²;
-//│ define f² as fun f³() {
-//│   let A;
-//│   define A as object A⁰ {
-//│     constructor { do Predef⁰.print⁰("Hello"); end }
-//│   };
-//│   return 42
-//│ };
-//│ return f³()
+//│ (class A1 {
+//│   static {
+//│     new this
+//│   }
+//│   constructor() {
+//│     A2 = this;
+//│     Predef.print("Hello");
+//│     Object.defineProperty(this, "class", {
+//│       value: A1
+//│     });
+//│     globalThis.Object.freeze(this);
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["object", "A"];
+//│ });
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > Hello
 //│ = 42

@@ -2,7 +2,7 @@ package hkmc2
 package codegen
 
 import utils.*
-import mlscript.utils.*, shorthands.*
+import hkmc2.utils.*, shorthands.*
 import semantics.*
 import syntax.Tree
 import hkmc2.codegen.flowAnalysis.*
@@ -228,10 +228,11 @@ class Rewrite(val deadParamElimSolver: DeadParamElimSolver)(using Raise):
           (funToSccRepMap(lastRefedSymbol), funToSccRepMap(refSym)) match
             case (Some(a), Some(b)) if a is b => instId
             case _ => instId :+ refId
+        case _ => lastWords(s"newRefId: impossible InstantiationId shape $instId")
       end newRefId
     
       p match
-      case ref@FunRef(f) if newPolyFnSyms.isDefinedAt(newRefId(ref.uid, f)) =>
+      case ref@FunRef(f, _) if newPolyFnSyms.isDefinedAt(newRefId(ref.uid, f)) =>
         val (bms, tSym) = newPolyFnSyms(newRefId(ref.uid, f))(f)
         k(bms.asMemberRef(tSym))
       case _ => super.applyPath(p)(k)
@@ -269,7 +270,7 @@ class Rewrite(val deadParamElimSolver: DeadParamElimSolver)(using Raise):
           rewriteArgs(args, eliminable): args2 =>
             k(
               if (fun2 is fun) && (args2 is args) then c
-              else Call(fun2, args2 ne_:: restArgss)(c.isMlsFun, c.mayRaiseEffects, c.explicitTailCall).withLocOf(c)
+              else Call(fun2, args2 ne_:: restArgss)(c.metadata).withLocOf(c)
             )
       case i@Instantiate(mut, cls, args :: restArgss) if args.forall(_.spread.isEmpty) =>
         val eliminable = deadParamElimSolver.eliminableCallSiteArgsById(ConcreteId(i.uid, instId))
@@ -277,7 +278,7 @@ class Rewrite(val deadParamElimSolver: DeadParamElimSolver)(using Raise):
           rewriteArgs(args, eliminable): args2 =>
             k(
               if (cls2 is cls) && (args2 is args) then i
-              else Instantiate(mut, cls2, args2 :: restArgss).withLocOf(i)
+              else Instantiate(mut, cls2, args2 :: restArgss)(i.metadata).withLocOf(i)
             )
       case _ => super.applyResult(r)(k)
     
@@ -355,7 +356,7 @@ class Rewrite(val deadParamElimSolver: DeadParamElimSolver)(using Raise):
         val filteredParams = filterFunParams(fDefn.dSym, fDefn.params, instId)
         val transformedBody = new Rewriter(instId).rewriteFunBody(fDefn.dSym, fDefn.params, fDefn.body)
         val (refreshedParams, refreshParamMap) = makeRefreshedParams(filteredParams)
-        val bodyWithCorrectSymbols = new RefreshSymbol(refreshParamMap).applyBlock(transformedBody)
+        val bodyWithCorrectSymbols = new RefreshSymbol(refreshParamMap).apply(transformedBody)
         FunDefn(
           N, bms, tSym, refreshedParams,
           bodyWithCorrectSymbols)(fDefn.configOverride, fDefn.annotations)

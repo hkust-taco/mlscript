@@ -3,7 +3,7 @@ package codegen
 
 import scala.annotation.tailrec
 
-import mlscript.utils.*, shorthands.*
+import hkmc2.utils.*, shorthands.*
 import hkmc2.utils.*
 import hkmc2.utils.SymbolSubst
 
@@ -26,7 +26,7 @@ class BufferableTransform()(using Ctx, State, Raise):
             val pubFieldMap: Map[Symbol, Symbol] = cls.publicFields.toMap
             val fields = cls.privateFields ++ cls.publicFields.map(_._2)
             val fieldMap: Map[Symbol, Int] = fields.zipWithIndex.toMap
-            def mkSymbolReplacer(params: List[ParamList]): (List[ParamList], Map[Symbol, Symbol]) =
+            def mkSymbolReplacer(params: List[ParamList]): (List[ParamList], Map[SimpleSymbol, SimpleSymbol]) =
               val allVars = params.flatMap(_.allParams).map(_.sym)
               val varMap = allVars
                 .map: sym =>
@@ -35,19 +35,19 @@ class BufferableTransform()(using Ctx, State, Raise):
               def mapParam(p: Param) =
                 Param(p.flags, varMap(p.sym), p.sign, p.modulefulness)
               (params.map(pl => ParamList(pl.flags, pl.params.map(mapParam), pl.restParam.map(mapParam))), varMap.toMap)
-            def mkFieldReplacer(buf: VarSymbol, baseIdx: VarSymbol, symMap: Map[Symbol, Symbol]) =
+            def mkFieldReplacer(buf: VarSymbol, baseIdx: VarSymbol, symMap: Map[SimpleSymbol, SimpleSymbol]) =
               def getOffset(off: Int)(k: Path => Block): Block =
                 val idxSymbol = new TempSymbol(N, "idx")
-                Scoped(Set.single(idxSymbol), Assign(idxSymbol, Call(State.builtinOpsMap("+").asSimpleRef, (baseIdx.asSimpleRef.asArg :: Value.Lit(Tree.IntLit(off)).asArg :: Nil) ne_:: Nil)(true, false, false),
+                Scoped(Set.single(idxSymbol), Assign(idxSymbol, Call(State.builtinOpsMap("+").asSimpleRef, (baseIdx.asSimpleRef.asArg :: Value.Lit(Tree.IntLit(off)).asArg :: Nil) ne_:: Nil)(CallMetadata.defaultMlsFun),
                   k(DynSelect(buf.asSimpleRef.selSN("buf"), idxSymbol.asSimpleRef, true))))
               def assignToOffset(off: Int, r: Result, rst: Block) =
                 val idxSymbol = new TempSymbol(N, "idx")
-                Scoped(Set.single(idxSymbol), Assign(idxSymbol, Call(State.builtinOpsMap("+").asSimpleRef, (baseIdx.asSimpleRef.asArg :: Value.Lit(Tree.IntLit(off)).asArg :: Nil) ne_:: Nil)(true, false, false),
+                Scoped(Set.single(idxSymbol), Assign(idxSymbol, Call(State.builtinOpsMap("+").asSimpleRef, (baseIdx.asSimpleRef.asArg :: Value.Lit(Tree.IntLit(off)).asArg :: Nil) ne_:: Nil)(CallMetadata.defaultMlsFun),
                   AssignDynField(buf.asSimpleRef.selSN("buf"), idxSymbol.asSimpleRef, true, r, applyBlock(rst))))
               new BlockTransformer(SymbolSubst.Id):
-                override def applyLocal(sym: Local): Local = symMap.getOrElse(sym, sym)
+                override def applySimpleSymbol(sym: SimpleSymbol): SimpleSymbol = symMap.getOrElse(sym, sym)
                 override def applyBlock(b: Block): Block = b match
-                  case Assign(l, r, rst) =>
+                  case Assign(l: (LocalVarSymbol | TermSymbol), r, rst) =>
                     fieldMap.get(l).fold(super.applyBlock(b)): off =>
                       applyResult(r): r2 =>
                         assignToOffset(off, r2, applyBlock(rst))
@@ -83,7 +83,7 @@ class BufferableTransform()(using Ctx, State, Raise):
             val fakeCtor = transformFunDefn(FunDefn.withFreshSymbol(
                 S(companionSym), 
                 BlockMemberSymbol("ctor", Nil, false), 
-                cls.paramsOpt.toList,
+                cls.paramsOpt.toList ::: cls.auxParams,
                 Begin(cls.preCtor, cls.ctor),
               )(N, annotations = Nil), true)
             val fakeCompanion = ClsLikeBody(

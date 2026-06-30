@@ -159,7 +159,7 @@ fun showDefn(d: Defn): Str =
   if d is
     FunDefn(sym, ps, body) then
       "fun " + showSymbol(sym) + showParamList(ps) + " =" +
-      (if body is Return | End then " " else "\n  ") + indent(showBlock(body))
+      (if body is (Return | End) then " " else "\n  ") + indent(showBlock(body))
     ClsLikeDefn(sym, methods, _) then
       "class " + showSymbol(sym) + showParamsOpt(sym.paramsOpt)
         + indent((if methods is [] then "" else " with\n") + methods.map(showDefn).join("\n"))

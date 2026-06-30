@@ -1,0 +1,48 @@
+:js
+
+
+:inlineThreshold 0
+:soir
+:lift
+fun main() =
+  let x =
+    if
+      0 and maybe then 1
+      _ then
+        print("hi")
+        print("hi")
+  print("bye")
+  print("bye")
+  fun f() = x
+  fun foo() = f()
+  foo
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let foo$;
+//│ @inline
+//│ define foo$ as fun foo$⁰(x)() {
+//│   return x
+//│ };
+//│ define main⁰ as fun main¹() {
+//│   let scrut, tmp;
+//│   block σ$x:
+//│     match 0
+//│       true =>
+//│         set scrut = Predef⁰.maybe⁰;
+//│         match scrut
+//│           true =>
+//│             set tmp = 1;
+//│             break σ$x
+//│           else
+//│             end
+//│         end
+//│     do Predef⁰.print⁰("hi");
+//│     set tmp = Predef⁰.print⁰("hi");
+//│     end
+//│   do Predef⁰.print⁰("bye");
+//│   do Predef⁰.print⁰("bye");
+//│   return foo$⁰(tmp)
+//│ };
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+

@@ -1,0 +1,127 @@
+:js
+
+
+:sjs
+:lift
+:noInline
+class Foo(a) with
+  private val b = a + 1
+  private fun y() = a + b
+  val f = x => y() + a + x
+  fun g() = x => f(x) + a + x
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ const a$accessorSymbol = globalThis.Symbol("a");
+//│ const y$accessorSymbol = globalThis.Symbol("y");
+//│ let Foo1, lambda, lambda1, lambda$, lambda$1;
+//│ lambda$1 = (undefined, function (Foo2) {
+//│   return (x) => {
+//│     return lambda1(Foo2, x)
+//│   }
+//│ });
+//│ lambda1 = (undefined, function (Foo2, x) {
+//│   let tmp, tmp1;
+//│   tmp = runtime.safeCall(Foo2.f(x));
+//│   tmp1 = tmp + Foo2[a$accessorSymbol];
+//│   return tmp1 + x
+//│ });
+//│ lambda$ = (undefined, function (Foo2) {
+//│   return (x) => {
+//│     return lambda(Foo2, x)
+//│   }
+//│ });
+//│ lambda = (undefined, function (Foo2, x) {
+//│   let tmp, tmp1;
+//│   tmp = Foo2[y$accessorSymbol]();
+//│   tmp1 = tmp + Foo2[a$accessorSymbol];
+//│   return tmp1 + x
+//│ });
+//│ Foo1 = function Foo(a) {
+//│   return globalThis.Object.freeze(new Foo.class(a));
+//│ };
+//│ (class Foo {
+//│   static {
+//│     Foo1.class = this
+//│   }
+//│   constructor(a) {
+//│     let tmp, lambda$here;
+//│     this.#a = a;
+//│     tmp = this.#a + 1;
+//│     this.#b = tmp;
+//│     lambda$here = lambda$(this);
+//│     this.f = lambda$here;
+//│   }
+//│   #a;
+//│   #b;
+//│   get [a$accessorSymbol]() { return this.#a; }
+//│   set [a$accessorSymbol](value) { this.#a = value; }
+//│   get [y$accessorSymbol]() { return this.#y; }
+//│   #y() {
+//│     return this.#a + this.#b
+//│   }
+//│   g() {
+//│     return lambda$1(this)
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "Foo", [null]];
+//│ });
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+val f = Foo(42)
+//│ f = Foo(_)
+
+:expect 128
+f.f(1)
+//│ = 128
+
+:expect 171
+f.g()(1)
+//│ = 171
+
+
+:lift
+class Foo(a) with
+  private mut val b = a + 1
+  private fun y() = a + b
+  val f = x =>
+    set
+      a += 1
+      b += 1
+    y() + a + x
+  fun g() = x => f(x) + a + x
+
+val f = Foo(42)
+//│ f = Foo(_)
+
+:expect 131
+f.f(1)
+//│ = 131
+
+:expect 179
+f.g()(1)
+//│ = 179
+
+
+// * Same, but not lifted:
+
+class Foo(a) with
+  private mut val b = a + 1
+  private fun y() = a + b
+  val f = x =>
+    set
+      a += 1
+      b += 1
+    y() + a + x
+  fun g() = x => f(x) + a + x
+
+val f = Foo(42)
+//│ f = Foo(_)
+
+:expect 131
+f.f(1)
+//│ = 131
+
+:expect 179
+f.g()(1)
+//│ = 179
+
+

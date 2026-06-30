@@ -29,8 +29,8 @@ process(Numb(1), 10)
 
 // class Vec(xs: Array[Numb | Vec]) // Array is not available
 data abstract class Vec[out T](n: Int)
-data class Cons[out T](head: T, tail: Vec[T]) extends Vec[T]
-object Nil extends Vec[Nothing]
+data class Cons[out T](head: T, tail: Vec[T]) extends Vec[T](tail.n + 1)
+object Nil extends Vec[Nothing](0)
 
 data class Pair[A, B](a: A, b: B)
 

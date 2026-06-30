@@ -2,9 +2,10 @@ package hkmc2.invalml
 
 import scala.collection.mutable.{Map => MutMap, Set => MutSet, LinkedHashMap, LinkedHashSet}
 import scala.collection.immutable.{SortedMap, SortedSet}
+import scala.util.boundary, boundary.break
 import scala.util.chaining._
 
-import mlscript.utils.*, shorthands.*
+import hkmc2.utils.*, shorthands.*
 import hkmc2.utils.*
 
 import Type.*
@@ -73,14 +74,14 @@ class TypeSimplifier(tl: TraceLogger):
         case N => tv
       }
       
-      override def apply(pol: Bool)(ty: GeneralType): Unit =
+      override def apply(pol: Bool)(ty: GeneralType): Unit = boundary:
         trace(s"Analyse[${printPol(pol)}] ${ty.showDbg}  [${curPath.reverseIterator.mkString(" ~> ")}]"):
           ty match
             case ty if ty.lvl <= lvl =>
               log(s"Level is < $lvl")
             case tv: IV if { occsNum(tv) = occsNum.getOrElse(tv, 0) + 1; false } =>
             case tv: IV =>
-              if varSubst.contains(tv) then return log(s"Already subst'd") // * If the IV was set to be substituted, it means it's been found recursive and we don't need to traverse it again
+              if varSubst.contains(tv) then break(log(s"Already subst'd")) // * If the IV was set to be substituted, it means it's been found recursive and we don't need to traverse it again
               var continue = true
               // if (!traversedTVs.contains(tv)) {
               if curPath.exists(_ is tv) then // TODO opt

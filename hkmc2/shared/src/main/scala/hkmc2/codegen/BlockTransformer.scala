@@ -1,7 +1,7 @@
 package hkmc2
 package codegen
 
-import mlscript.utils.*, shorthands.*
+import hkmc2.utils.*, shorthands.*
 import hkmc2.utils.*
 
 import semantics.*
@@ -22,7 +22,7 @@ class BlockTransformer(subst: SymbolSubst):
     applyBlock(main)
   
   def applyImport(imp: ImportSpec): ImportSpec =
-    val l2 = applyLocal(imp.local)
+    val l2 = applyImportSymbol(imp.local)
     if l2 is imp.local then imp else imp.copy(local = l2)
   
   def applySubBlock(b: Block): Block = applyBlock(b)
@@ -80,7 +80,7 @@ class BlockTransformer(subst: SymbolSubst):
       if (sub2 is sub) && (fin2 is fin) && (rst2 is rst) then b else TryBlock(sub2, fin2, rst2)
     case Assign(l, r, rst) =>
       applyResult(r): r2 =>
-        val l2 = applyLocal(l)
+        val l2 = applyAssignLhs(l)
         val rst2 = applySubBlock(rst)
         if (l2 is l) && (r2 is r) && (rst2 is rst) then b else Assign(l2, r2, rst2)
     case b @ AssignField(l, n, r, rst) =>
@@ -116,7 +116,20 @@ class BlockTransformer(subst: SymbolSubst):
   def applyScopedBlock(b: Block): Block = b match
     case Scoped(s, bd) =>
       val nb = applySubBlock(bd)
-      if nb is bd then b else Scoped(s, nb)
+
+      // Set does not have .mapConserve
+      var hasDiff = false
+      val ns = s.map[ScopedSymbol]:
+        case s: LocalVarSymbol =>
+          val ns = s.subst
+          if ns isnt s then hasDiff = true
+          ns
+        case s: BlockMemberSymbol =>
+          val ns = s.subst
+          if ns isnt s then hasDiff = true
+          ns
+        
+      if (nb is bd) && !hasDiff then b else Scoped(ns, nb)
     case _ => applySubBlock(b)
   
   
@@ -150,12 +163,12 @@ class BlockTransformer(subst: SymbolSubst):
       applyPath(fun): fun2 =>
         applyListOf(argss, (args, k2) => applyArgs(args)(k2)): argss2 =>
           k(if (fun2 is fun) && (argss2 is argss) then r
-            else Call(fun2, argss2.ne_!)(r.isMlsFun, r.mayRaiseEffects, r.explicitTailCall).withLocOf(r))
-    case Instantiate(mut, cls, argss) =>
+            else Call(fun2, argss2.ne_!)(r.metadata).withLocOf(r))
+    case r @ Instantiate(mut, cls, argss) =>
       applyPath(cls): cls2 =>
         applyListOf(argss, (args, k2) => applyArgs(args)(k2)): argss2 =>
           k(if (cls2 is cls) && (argss2 is argss) then r
-            else Instantiate(mut, cls2, argss2).withLocOf(r))
+            else Instantiate(mut, cls2, argss2)(r.metadata).withLocOf(r))
     case l: Lambda => k(applyLam(l))
     case Tuple(mut, elems) =>
       applyArgs(elems): elems2 =>
@@ -173,15 +186,12 @@ class BlockTransformer(subst: SymbolSubst):
     case p @ Select(qual, name) =>
       applyPath(qual): qual2 =>
         val sym2 = p.symbol.mapConserve(_.subst)
-        k(if (qual2 is qual) && (sym2 is p.symbol) then p else Select(qual2, name)(sym2).withLocOf(p))
+        k(if (qual2 is qual) && (sym2 is p.symbol) then p else Select(qual2, name)(sym2)(p.sanitize).withLocOf(p))
     case v: Value => applyValue(v)(k)
   
   def applyValue(v: Value)(k: Value => Block) = v match
     case Value.SimpleRef(l) =>
-      val l2 = applyLocal(l) match
-        case l: (LocalVarSymbol | BuiltinSymbol) => l
-        case l2 =>
-          lastWords(s"Expected applyValue on `$l` (${l.getClass.getSimpleName}) to create a symbol of the same type, but got `$l2` (${l2.getClass.getSimpleName})")
+      val l2 = applySimpleSymbol(l)
       k(if (l2 is l) then v else l2.asSimpleRef.withLocOf(v))
     case Value.MemberRef(bms, disamb) =>
       val bms2 = bms.subst
@@ -192,7 +202,19 @@ class BlockTransformer(subst: SymbolSubst):
       k(if (sym2 is sym) then v else sym2.asThis.withLocOf(v))
     case Value.Lit(lit) => k(v)
   
-  def applyLocal(sym: Local): Local = sym.subst
+  def applySimpleSymbol(sym: SimpleSymbol): SimpleSymbol = sym match
+    case sym: LocalVarSymbol => sym.subst
+    case sym: BuiltinSymbol => sym.subst
+  
+  def applyImportSymbol(sym: ImportSymbol): ImportSymbol = sym match
+    case sym: TempSymbol => sym.subst
+    case sym: VarSymbol => sym.subst
+    case sym: MemberSymbol => sym.subst
+  
+  def applyAssignLhs(sym: Assignable): Assignable = sym match
+    case NoSymbol => NoSymbol
+    case sym: TempSymbol => sym.subst
+    case sym: VarSymbol => sym.subst
   
   def applyFunDefn(fun: FunDefn): FunDefn =
     val own2 = fun.owner.mapConserve(_.subst)
@@ -326,4 +348,3 @@ class BlockTransformerShallow(subst: SymbolSubst) extends BlockTransformer(subst
 // to traverse sub-blocks while using this class to perform more complicated transformations on the blocks themselves.
 class BlockDataTransformer(subst: SymbolSubst) extends BlockTransformerShallow(subst):
   override def applySubBlock(b: Block): Block = b
-

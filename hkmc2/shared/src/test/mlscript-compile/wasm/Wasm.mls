@@ -6,41 +6,41 @@ import "../Runtime.mls"
 module Wasm with ...
 
 // WebAssembly utilities
-fun loadWasmBinary(modBuf, importObject): Promise =
+fun instantiateWasmBinary(modBuf, importObject): WebAssembly.Instance =
   assert WebAssembly.validate of modBuf
+  let mod = new WebAssembly.Module(modBuf)
+  new WebAssembly.Instance(mod, importObject)
 
-  WebAssembly.instantiate of modBuf, importObject
+fun dumpWasmModImpExp(wasmMod) =
+  console.log of "Imports: %s", WebAssembly.Module.imports(wasmMod)
+  console.log of "Exports: %s", WebAssembly.Module.exports(wasmMod)
 
-fun dumpWasmImpExp(wasmMod) =
-  console.log of "Imports: %s", WebAssembly.Module.imports(wasmMod.module)
-  console.log of "Exports: %s", WebAssembly.Module.exports(wasmMod.module)
+fun dumpWasmInstImpExp(wasmInst) =
+  console.log of "Imports: %s", wasmInst.imports
+  console.log of "Exports: %s", wasmInst.exports
 
 // Binaryen helpers
 fun binaryenFmtWat(wat, foldExprs): String =
-  val mod = binaryen.parseText of wat
-  mod.setFeatures(binaryen.Features.All)
+  let mod = binaryen.parseTextWithFeatures of wat, binaryen.Features.All
   
   // Note: it seems `mod.validate()` sometimes returns `1` instead of `true`; so we don't use `assert` here
   Predef.js_assert of mod.validate()
 
-  val fmtWat = if foldExprs then mod.emitText() else mod.emitStackIR()
+  let fmtWat = if foldExprs then mod.emitText() else mod.emitStackIR()
 
   mod.dispose()
   fmtWat
 
-fun binaryenCompileToModule(wat, importObject): Promise =
-  val mod = binaryen.parseText of wat
-  mod.setFeatures(binaryen.Features.All)
+fun binaryenCompileToModule(wat, importObject): WebAssembly.Instance =
+  let mod = binaryen.parseTextWithFeatures of wat, binaryen.Features.All
 
   // Note: it seems `mod.validate()` sometimes returns `1` instead of `true`; so we don't use `assert` here
   Predef.js_assert of mod.validate()
 
-  val modBuf = mod.emitBinary()
+  let modBuf = mod.emitBinary()
   mod.dispose()
 
-  Promise.resolve(modBuf).then(modBuf =>
-    loadWasmBinary of modBuf, importObject
-  )
+  instantiateWasmBinary of modBuf, importObject
 
 fun unwrapWasmException(err, tag) =
   if (
@@ -53,17 +53,13 @@ fun unwrapWasmException(err, tag) =
   then err.getArg(tag, 0)
   else err
 
-fun binaryenRunFunc(wat, importObject, func): Promise =
-  binaryenCompileToModule(wat, importObject)
-    .then(wasmMod =>
-      let exnTag = wasmMod.instance.exports.mlx_exn
-      Runtime.try_catch of
-        () => func(wasmMod.instance.exports)
-        err => throw unwrapWasmException(err, exnTag)
-    )
+fun binaryenRunFunc(wat, importObject, func): Any =
+  let wasmInst = binaryenCompileToModule of wat, importObject
+  let exnTag = wasmInst.exports.mlx_exn
+  Runtime.try_catch of
+    () => func(wasmInst.exports)
+    err => throw unwrapWasmException(err, exnTag)
 
-fun binaryenPrintFuncRes(wat, importObject, func): Promise = 
-  binaryenRunFunc(wat, importObject, func)
-    .then(result =>
-      Predef.print of Runtime.render of result
-    )
+fun binaryenPrintFuncRes(wat, importObject, func) = 
+  let result = binaryenRunFunc of wat, importObject, func
+  Predef.print of Runtime.render of result

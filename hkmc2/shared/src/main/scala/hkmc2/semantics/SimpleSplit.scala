@@ -1,7 +1,7 @@
 package hkmc2
 package semantics
 
-import mlscript.utils.*, shorthands.*, syntax.*, Tree.{BoolLit, Keywrd}
+import hkmc2.utils.*, shorthands.*, syntax.*, Tree.{BoolLit, Keywrd}
 import Keyword.{`do`, `else`, `then`}, utils.TL, Elaborator.{Ctx, State}
 
 /**
@@ -107,7 +107,7 @@ object SimpleSplit:
   /** Represents a single branch of a simple split. */
   enum Head extends AutoLocated:
     case Match(scrutinee: Term.Ref, pattern: Pattern, consequent: SimpleSplit)
-    case Let(binding: BlockLocalSymbol, term: Term)
+    case Let(binding: LocalVarSymbol, term: Term)
     
     def subTerms: Vector[Term] = this match
       case Match(scrutinee, pattern, consequent) =>

@@ -90,9 +90,9 @@ pattern BadNegated = ~(Int as x) => x
 //│   head = Ident of "BadNegated"
 //│   rhs = S of App:
 //│     lhs = Ident of "~"
-//│     rhs = Tup of Ls of 
+//│     rhs = Tup of Ls of
 //│       InfixApp:
-//│         lhs = Tup of Ls of 
+//│         lhs = Tup of Ls of
 //│           InfixApp:
 //│             lhs = Ident of "Int"
 //│             kw = Keywrd of keyword 'as'

@@ -13,7 +13,7 @@ Foo(42).x
 //│   res = Sel:
 //│     prefix = App:
 //│       lhs = Ref{sym=member:Foo⁰} of member:Foo⁰
-//│       rhs = Tup of Ls of 
+//│       rhs = Tup of Ls of
 //│         Fld:
 //│           term = Lit of IntLit of 42
 //│     nme = Ident of "x"
@@ -57,7 +57,7 @@ case
 //│ Blk:
 //│   res = Lam:
 //│     params = ParamList:
-//│       params = Ls of 
+//│       params = Ls of
 //│         Param:
 //│           sym = caseScrut⁰
 //│           modulefulness = Modulefulness of N
@@ -69,16 +69,16 @@ case
 //│           scrutinee = Ref{sym=caseScrut⁰} of caseScrut⁰
 //│           pattern = Constructor:
 //│             target = Ref{sym=member:Foo⁰} of member:Foo⁰
-//│             arguments = S of Ls of 
+//│             arguments = S of Ls of
 //│               Alias:
 //│                 pattern = Wildcard
 //│                 id = Ident of "a"
 //│           consequent = Else of Ref{sym=a⁰} of a⁰
 //│         tail = End
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let lambda⁰;
+//│ let lambda;
 //│ @private
-//│ define lambda⁰ as fun lambda¹(caseScrut) {
+//│ define lambda as fun lambda⁰(caseScrut) {
 //│   let a, arg$Foo$0$;
 //│   match caseScrut
 //│     Foo¹ =>
@@ -89,7 +89,7 @@ case
 //│       throw new globalThis⁰.Error⁰("match error")
 //│   end
 //│ };
-//│ return lambda¹
+//│ return lambda⁰
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = fun
 

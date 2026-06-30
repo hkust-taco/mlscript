@@ -1,5 +1,6 @@
 :js
 :deadParamElim debug
+:noInline
 
 
 :expect 0
@@ -13,7 +14,6 @@ countdown(5, 42)
 //│ dead-param-elim > prodfun countdown#0 @ <root> -> eliminable: {1}
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let countdown⁰;
 //│ @private
 //│ define countdown⁰ as fun countdown¹(n) {
 //│   let scrut, tmp;
@@ -40,7 +40,7 @@ countdown(5)
 //│ dead-param-elim > >>> dead-param-elim results >>>
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let countdown²;
+//│ @private
 //│ define countdown² as fun countdown³(n) {
 //│   loop loopLabel:
 //│     let scrut, tmp;
@@ -80,7 +80,6 @@ ping(5, 99)
 //│ dead-param-elim > prodfun pong#0 @ <root> -> eliminable: {1}
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let ping⁰, pong⁰;
 //│ @private
 //│ define ping⁰ as fun ping¹(n) {
 //│   let scrut, tmp;
@@ -90,11 +89,11 @@ ping(5, 99)
 //│       return 0
 //│     else
 //│       set tmp = -⁰(n, 1);
-//│       return pong¹(tmp)
+//│       return pong⁰(tmp)
 //│   end
 //│ };
 //│ @private
-//│ define pong⁰ as fun pong¹(n) {
+//│ define pong¹ as fun pong⁰(n) {
 //│   let scrut, tmp;
 //│   set scrut = Predef⁰.equals⁰(n, 0);
 //│   match scrut
@@ -119,7 +118,6 @@ ping(5, 99)
 //│ dead-param-elim > >>> dead-param-elim results >>>
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let ping², pong²;
 //│ define ping² as fun ping³(n, unused) {
 //│   let scrut, tmp;
 //│   set scrut = Predef⁰.equals⁰(n, 0);
@@ -128,10 +126,10 @@ ping(5, 99)
 //│       return 0
 //│     else
 //│       set tmp = -⁰(n, 1);
-//│       return pong³(tmp, unused)
+//│       return pong²(tmp, unused)
 //│   end
 //│ };
-//│ define pong² as fun pong³(n, unused) {
+//│ define pong³ as fun pong²(n, unused) {
 //│   let scrut, tmp;
 //│   set scrut = Predef⁰.equals⁰(n, 0);
 //│   match scrut
@@ -153,23 +151,17 @@ pong(5, 0)
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ = 0
 
+// [INLINING PR FIXME]: regression? no worker/wrapper anymore -> should have an option to only disable inlining of big functions and keep worker/wrapper!
 :soir
 :noTailRec
 private fun ping(n)(unused) = if n == 0 then 0 else pong(n - 1)(unused)
 private fun pong(n)(unused) = if n == 0 then 0 else ping(n - 1)(unused)
 ping(5)(99)
 //│ dead-param-elim > >>> dead-param-elim results >>>
-//│ dead-param-elim > prodfun ping$worker#0 @ <root> -> eliminable: {1}
-//│ dead-param-elim > prodfun pong$worker#0 @ <root> -> eliminable: {1}
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let ping⁴, pong⁴, pong$worker⁰, ping$worker⁰;
-//│ @inline @private
+//│ @private
 //│ define ping⁴ as fun ping⁵(n)(unused) {
-//│   return ping$worker¹(n)
-//│ };
-//│ @private
-//│ define ping$worker⁰ as fun ping$worker¹(n) {
 //│   let scrut, tmp;
 //│   set scrut = Predef⁰.equals⁰(n, 0);
 //│   match scrut
@@ -177,15 +169,11 @@ ping(5)(99)
 //│       return 0
 //│     else
 //│       set tmp = -⁰(n, 1);
-//│       return pong$worker¹(tmp)
+//│       return pong⁴(tmp)(unused)
 //│   end
 //│ };
-//│ @inline @private
-//│ define pong⁴ as fun pong⁵(n)(unused) {
-//│   return pong$worker¹(n)
-//│ };
 //│ @private
-//│ define pong$worker⁰ as fun pong$worker¹(n) {
+//│ define pong⁵ as fun pong⁴(n)(unused) {
 //│   let scrut, tmp;
 //│   set scrut = Predef⁰.equals⁰(n, 0);
 //│   match scrut
@@ -193,10 +181,10 @@ ping(5)(99)
 //│       return 0
 //│     else
 //│       set tmp = -⁰(n, 1);
-//│       return ping$worker¹(tmp)
+//│       return ping⁵(tmp)(unused)
 //│   end
 //│ };
-//│ return ping$worker¹(5)
+//│ return ping⁵(5)(99)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 0
 
@@ -230,7 +218,6 @@ class Test(a) with
 //│ dead-param-elim > prodfun pong#0 @ <root> -> eliminable: {1}
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let Test⁰, pong⁶, M⁰;
 //│ @private
 //│ define pong⁶ as fun pong⁷(n) {
 //│   let scrut, tmp;
@@ -240,11 +227,11 @@ class Test(a) with
 //│       return 0
 //│     else
 //│       set tmp = -⁰(n, 1);
-//│       return M¹.ping⁶(tmp, undefined)
+//│       return M⁰.ping⁶(tmp, undefined)
 //│   end
 //│ };
-//│ define M⁰ as class M²
-//│ module M¹ {
+//│ define M¹ as class M²
+//│ module M⁰ {
 //│   method ping⁷ = fun ping⁶(n, unused) {
 //│     let scrut, tmp;
 //│     set scrut = Predef⁰.equals⁰(n, 0);
@@ -257,7 +244,7 @@ class Test(a) with
 //│     end
 //│   }
 //│ };
-//│ define Test⁰ as class Test¹(a) { method f⁰ = fun f¹() { return pong⁷(3) } };
+//│ define Test⁰ as class Test² { constructor Test¹ method f⁰ = fun f¹() { return pong⁷(3) } };
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 

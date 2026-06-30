@@ -58,7 +58,7 @@ let identifierPattern = new RegExp of
   "u" // The Unicode flag is required for `\p{...}` Unicode property escapes.
 
 // Return `true` if the identifier needs to be enclosed in quotes.
-let noNeedForQuotes(id) = identifierPattern.test(id)
+private fun noNeedForQuotes(id) = identifierPattern.test(id)
 
 // Use this object instead when no options object is given.
 let emptyOptions = new Object
@@ -68,18 +68,18 @@ let DEFAULT_BREAK_LENGTH = 80
 let symbolsForArray =
   start: "[", end: "]", separator: ",", empty: "[]", padding: true
 
-let symbolsForSet(n: Int) =
+private fun symbolsForSet(n: Int) =
   let headline = "Set(" + n + ") "
   start: headline + "{", end: "}", separator: ",",
   empty: headline + "{}", padding: true
 
-let symbolsForClass(name: Str) =
+private fun symbolsForClass(name: Str) =
   start: name + "(", end: ")", separator: ",", empty: name + "()", padding: false
 
 let symbolsForObject =
   start: "{", end: "}", entrySeparator: ",", keyValueSeparator: ": ", empty: "{}", padding: true
 
-let symbolsForMap(n: Int) =
+private fun symbolsForMap(n: Int) =
   let headline = "Map(" + n + ")"
   start: headline + " {", end: "}",
   entrySeparator: ",", keyValueSeparator: " => ", empty: headline + " {}", padding: true

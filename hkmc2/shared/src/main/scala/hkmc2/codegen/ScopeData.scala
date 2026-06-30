@@ -1,6 +1,6 @@
 package hkmc2
 
-import mlscript.utils.*, shorthands.*
+import hkmc2.utils.*, shorthands.*
 import utils.*
 
 import hkmc2.codegen.*
@@ -9,16 +9,16 @@ import hkmc2.ScopeData.*
 import hkmc2.semantics.Elaborator.State
 
 import hkmc2.syntax.Tree
-import hkmc2.codegen.llir.FreshInt
 import java.util.IdentityHashMap
 import scala.collection.mutable.Map as MutMap
 import scala.collection.mutable.Set as MutSet
 
+
 object ScopeData:
   opaque type ScopeUID = Int
   class FreshUID:
-    private val underlying = FreshInt()
-    def make: ScopeUID = underlying.make
+    private val underlying = new Uid.Symbol.State
+    def make: ScopeUID = underlying.nextUid.asInt
   
   class ScopeFinder(fresh: FreshUID, ignoredClasses: Set[DefinitionSymbol[?] & InnerSymbol]) extends BlockTraverserShallow:
     var objs: List[ScopedObject] = Nil
@@ -42,7 +42,7 @@ object ScopeData:
             case None => ()
           c.companion.map: comp =>
             objs ::= ScopedObject.Companion(comp, c)
-        
+      case v: ValDefn if !v.owner.isDefined => objs ::= ScopedObject.ValDef(v)
       case _ => super.applyDefn(defn)
   type ScopedInfo = DefinitionSymbol[?] | LabelSymbol | ScopeUID | Unit
 
@@ -87,6 +87,7 @@ object ScopeData:
         case Func(fun, _) => fun.dSym
         case ScopedBlock(uid, block) => uid
         case Loop(sym, _) => sym
+        case ValDef(v) => v.tsym
       
       // note: not unique
       lazy val nme = this match
@@ -97,19 +98,20 @@ object ScopeData:
         case Func(fun, isMethod) => fun.dSym.nme
         case Loop(sym, block) => "loop$" + sym.uid.toString()
         case ScopedBlock(uid, block) => "scope" + uid
+        case ValDef(v) => v.tsym.nme
       
       // Locals defined by a scoped object.
-      lazy val definedLocals: Set[Local] = this match
+      lazy val definedLocals: Set[ScopedOrInnerSymbol] = this match
         // we want definedLocals for the top level scope to be empty, because otherwise,
         // the lifter may try to capture those locals.
         case Top(b) => Set.empty
         case Class(cls, _) =>
           // Public/private fields are not included, as they are accessed using
           // a field selection rather than directly using the symbol.
-          val paramsSet: Set[Local] = cls.paramsOpt match
+          val paramsSet: Set[ScopedOrInnerSymbol] = cls.paramsOpt match
             case Some(value) => value.params.map(_.sym).toSet
             case None => Set.empty
-          val auxSet: Set[Local] = cls.auxParams.flatMap: p =>
+          val auxSet: Set[ScopedOrInnerSymbol] = cls.auxParams.flatMap: p =>
               p.params.map(_.sym)
             .toSet
           paramsSet ++ auxSet + cls.isym
@@ -120,6 +122,7 @@ object ScopeData:
           .toSet
         case ScopedBlock(_, block) => block.syms.toSet
         case _: Loop => Set.empty
+        case ValDef(_) => Set.empty
     
       def contents: T = this match
         case Top(b) => b
@@ -129,6 +132,7 @@ object ScopeData:
         case Func(fun, _) => fun
         case ScopedBlock(_, block) => block
         case Loop(_, blk) => blk
+        case ValDef(v) => v
     
     // Scoped nodes which may be referenced using a symbol.
     sealed abstract class Referencable[T] extends TScopedObject[T]:
@@ -137,16 +141,19 @@ object ScopeData:
         case Companion(clsBody, compDefn) => clsBody.isym
         case Func(fun, isMethod) => fun.dSym
         case ClassCtor(cls) => cls.ctorSym.get
+        case ValDef(v) => v.tsym
       def bsym: BlockMemberSymbol = this match
         case Class(cls, _) => cls.sym
         case Companion(clsBody, compDefn) => compDefn.sym
         case Func(fun, isMethod) => fun.sym
         case ClassCtor(cls) => cls.sym
+        case ValDef(v) => v.sym
       def owner: Opt[InnerSymbol] = this match
         case Class(cls, _) => cls.owner
         case Companion(clsBody, compDefn) => compDefn.owner
         case ClassCtor(cls) => cls.owner
         case Func(fun, isMethod) => fun.owner
+        case ValDef(v) => v.owner
       
     
     // Scoped nodes which could possibly be lifted to the top level.
@@ -170,6 +177,7 @@ object ScopeData:
     // a scoped block.
     case class Loop(sym: LabelSymbol, body: Block) extends ScopedObject[Block]
     case class ScopedBlock(uid: ScopeUID, block: Scoped) extends ScopedObject[Block]
+    case class ValDef(defn: ValDefn) extends Referencable[ValDefn]
   
   extension (traverser: BlockTraverser)
     def applyScopedObject(obj: ScopedObject) = 
@@ -200,6 +208,7 @@ object ScopeData:
       case ScopedObject.ScopedBlock(uid, block) => traverser.applyBlock(block)
       case ScopedObject.ClassCtor(c) => ()
       case ScopedObject.Loop(_, b) => traverser.applyBlock(b)
+      case ScopedObject.ValDef(v) => traverser.applyDefn(v)
     
   // A simple tree data structure representing the nesting relation of definitions and scopes.
   class NestedScopeTree(val root: TScopeNode[Block]):
@@ -223,7 +232,7 @@ object ScopeData:
       lazy val allChildren: List[ScopedObject] = allChildNodes.map(_.obj)
       
       // does not include variables introduced by itself
-      lazy val existingVars: Set[Local] = ancestor match
+      lazy val existingVars: Set[ScopedOrInnerSymbol] = ancestor match
         case Some(value) => value.existingVars ++ value.obj.definedLocals ++ value.nestedModObjSyms
         case None => Set.empty
       
@@ -235,7 +244,7 @@ object ScopeData:
         case None => true
       
       // Scoped blocks include the BlockMemberSymbols of their nested definitions. This removes them.
-      lazy val localsWithoutBms: Set[Local] = obj match
+      lazy val localsWithoutBms: Set[ScopedOrInnerSymbol] = obj match
         case s: ScopedObject.ScopedBlock =>
           val rmv = children.collect:
             case c @ ScopeNode(obj = s: ScopedObject.Referencable[?]) => s.bsym
@@ -251,7 +260,7 @@ object ScopeData:
           case n @ ScopeNode(obj = c: ScopedObject.Class) if c.isObj && n.isLifted => c.cls.isym
         .toSet
       
-      lazy val inScopeISyms: Set[Local] =
+      lazy val inScopeISyms: Set[InnerSymbol] =
         val parVals = ancestor match
           case Some(value) => value.inScopeISyms
           case None => Set.empty
@@ -311,7 +320,7 @@ object ScopeData:
             case _ if inModOrTopLevel => false
             case ScopedObject.Func(isMethod = S(_)) => false
             case c: ScopedObject.Class if c.isObj => false
-            case _: ScopedObject.Loop | _: ScopedObject.ClassCtor | _: ScopedObject.ScopedBlock | _: ScopedObject.Companion => false
+            case _: ScopedObject.Loop | _: ScopedObject.ClassCtor | _: ScopedObject.ScopedBlock | _: ScopedObject.Companion | _: ScopedObject.ValDef => false
             case _ => true
         impl
       
@@ -423,6 +432,7 @@ class ScopeData(b: Block)(using State, IgnoredScopes):
         finder.applyBlock(block.body)
       case ScopedObject.ClassCtor(c) => ()
       case ScopedObject.Loop(_, b) => finder.applyBlock(b)
+      case ScopedObject.ValDef(_) => ()
     val mtdObjs = obj match
       case ScopedObject.Class(cls, _) =>
         val k = if cls.k is syntax.Obj then MethodKind.ObjMethod else MethodKind.ClsMethod
