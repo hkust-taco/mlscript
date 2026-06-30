@@ -2,6 +2,11 @@ import "../common/JS.mls"
 
 open JS { Absent }
 
+fun escapeHtml(text) =
+  let div = document.createElement("div")
+  set div.textContent = text
+  div.innerHTML
+
 class EditorWorkbench extends HTMLElement with
   let
     activeFilePath = null
@@ -93,13 +98,29 @@ class EditorWorkbench extends HTMLElement with
     null then "No file"
     path then path
 
+  fun breadcrumbSegmentHtml(label, active) =
+    let className = if active then "editor-breadcrumb-segment editor-breadcrumb-active" else "editor-breadcrumb-segment"
+    """<span class="""" + className + """">""" + escapeHtml(label) + """</span>"""
+
+  fun breadcrumbHtml() =
+    let html = """<span class="editor-breadcrumb-root">workspace</span>"""
+    if activeFilePath is
+      null then html + """<i class="icon-chevron-right"></i>""" + breadcrumbSegmentHtml("No file", true)
+      path then
+        let parts = path.split("/").filter((part, ...) => part !== "")
+        if parts.length === 0 then html
+        else
+          parts.forEach of (part, index) =>
+            set html += """<i class="icon-chevron-right"></i>""" + breadcrumbSegmentHtml(part, index === parts.length - 1)
+          html
+
   fun activeFileName() = if activeFilePath is
     null then "untitled"
     path then path.split("/").pop()
 
   fun updateBreadcrumbs() =
-    if this.querySelector(".editor-breadcrumb-active") is ~null as breadcrumb do
-      set breadcrumb.textContent = activeFileLabel()
+    if this.querySelector(".editor-breadcrumbs") is ~null as breadcrumbs do
+      set breadcrumbs.innerHTML = breadcrumbHtml()
 
   fun openCompiledOutput() =
     set

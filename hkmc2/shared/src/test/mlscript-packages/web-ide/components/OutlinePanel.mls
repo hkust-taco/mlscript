@@ -38,7 +38,6 @@ class OutlinePanel extends HTMLElement with
       <div class="outline-panel-shell">
         <div class="outline-panel-header">
           <h2>Outline</h2>
-          <span>""" + headerDetail() + """</span>
         </div>
         <div class="outline-tree" role="tree">
           """ + treeHtml() + """
@@ -46,14 +45,6 @@ class OutlinePanel extends HTMLElement with
       </div>
     """
     attachNodeListeners()
-
-  fun headerDetail() = if
-    status is "loading" and documentData is null then "Loading"
-    status is "loading" then "Updating"
-    status is "error" then "Error"
-    documentData is null then "No symbols"
-    root() is null then "No symbols"
-    else documentData.rootFile
 
   fun unavailableText() =
     if errorText === "" then "Outline is not available" else errorText

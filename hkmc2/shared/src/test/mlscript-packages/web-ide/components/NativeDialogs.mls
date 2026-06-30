@@ -485,12 +485,12 @@ class CommandPaletteDialog extends HTMLElement with
       if item.id === activeCommandId do set index = itemIndex
     index
 
-  fun syncActiveCommand() =
+  fun syncActiveCommand(shouldScroll) =
     this.querySelectorAll(".command-row").forEach of (button, ...) =>
       let isActive = button.dataset.commandId === activeCommandId
       button.classList.toggle("active", isActive)
       button.setAttribute("aria-selected", if isActive then "true" else "false")
-      if isActive do button.scrollIntoView(mut { block: "nearest" })
+      if isActive and shouldScroll do button.scrollIntoView(mut { block: "nearest" })
 
   fun moveActiveCommand(delta) =
     let items = selectableCommands(filteredCommands())
@@ -498,7 +498,7 @@ class CommandPaletteDialog extends HTMLElement with
       let currentIndex = activeCommandIndex(items)
       let nextIndex = if currentIndex < 0 then 0 else (currentIndex + delta + items.length) % items.length
       set activeCommandId = items.at(nextIndex).id
-      syncActiveCommand()
+      syncActiveCommand(true)
 
   fun activeSymbolIndex(items) =
     let index = -1
@@ -506,12 +506,12 @@ class CommandPaletteDialog extends HTMLElement with
       if item.stableId === activeSymbolId do set index = itemIndex
     index
 
-  fun syncActiveSymbol() =
+  fun syncActiveSymbol(shouldScroll) =
     this.querySelectorAll(".command-symbol-row").forEach of (button, ...) =>
       let isActive = button.dataset.symbolId === activeSymbolId
       button.classList.toggle("active", isActive)
       button.setAttribute("aria-selected", if isActive then "true" else "false")
-      if isActive do button.scrollIntoView(mut { block: "nearest" })
+      if isActive and shouldScroll do button.scrollIntoView(mut { block: "nearest" })
 
   fun moveActiveSymbol(delta) =
     let items = filteredSymbolEntries().slice(0, resultLimit)
@@ -519,7 +519,7 @@ class CommandPaletteDialog extends HTMLElement with
       let currentIndex = activeSymbolIndex(items)
       let nextIndex = if currentIndex < 0 then 0 else (currentIndex + delta + items.length) % items.length
       set activeSymbolId = items.at(nextIndex).stableId
-      syncActiveSymbol()
+      syncActiveSymbol(true)
 
   fun moveActiveItem(delta) =
     if paletteMode() is
@@ -582,7 +582,7 @@ class CommandPaletteDialog extends HTMLElement with
         button.addEventListener("click", () => palette.executeCommand(button.dataset.commandId))
         button.addEventListener of "mouseenter", () =>
           set palette.activeCommandId = button.dataset.commandId
-          palette.syncActiveCommand()
+          palette.syncActiveCommand(false)
 
   fun attachSymbolRows() =
     let palette = this
@@ -591,7 +591,7 @@ class CommandPaletteDialog extends HTMLElement with
         if palette.symbolEntryById(button.dataset.symbolId, palette.filteredSymbolEntries()) is ~null as entry do palette.executeSymbolEntry(entry)
       button.addEventListener of "mouseenter", () =>
         set palette.activeSymbolId = button.dataset.symbolId
-        palette.syncActiveSymbol()
+        palette.syncActiveSymbol(false)
 
   fun handleSymbolIndexUpdated(detail) =
     if detail is ~Absent as payload do

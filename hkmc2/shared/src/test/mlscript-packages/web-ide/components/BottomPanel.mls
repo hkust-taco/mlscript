@@ -132,8 +132,9 @@ class BottomPanel extends HTMLElement with
 
   fun tabButtonHtml(id, label, icon) =
     let
-      activeClass = if activeTab === id then " active" else ""
-      selected = if activeTab === id then "true" else "false"
+      active = activeTab === id and not isCollapsed
+      activeClass = if active then " active" else ""
+      selected = if active then "true" else "false"
       tabIndex = if activeTab === id then "0" else "-1"
     """
       <button class="bottom-panel-tab""" + activeClass + """" type="button" role="tab" data-bottom-tab="""" + id + """" aria-selected="""" + selected + """" tabindex="""" + tabIndex + """">

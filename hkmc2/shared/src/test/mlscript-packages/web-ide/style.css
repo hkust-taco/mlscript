@@ -52,6 +52,21 @@ button {
   font-family: inherit;
 }
 
+button > i[class^="icon-"],
+button > i[class*=" icon-"] {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  line-height: 1;
+}
+
+button > i[class^="icon-"]::before,
+button > i[class*=" icon-"]::before {
+  display: block;
+  line-height: 1;
+}
+
 body {
   background: var(--ide-bg);
   color: var(--ide-text);
@@ -327,18 +342,22 @@ file-explorer .button:first-of-type {
 }
 
 file-explorer .button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   flex-shrink: 0;
+  width: 24px;
+  height: 24px;
   background: none;
   border: none;
   color: var(--ide-text-muted);
   cursor: pointer;
   font-size: 1rem;
-  padding: 0.25rem;
+  padding: 0;
   line-height: 1rem;
 }
 
 file-explorer .button i {
-  display: block;
   height: 1rem;
   width: 1rem;
 }
@@ -355,7 +374,8 @@ file-explorer .tree-view {
   min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;
-  padding: 8px;
+  font-size: 0.86rem;
+  padding: 4px 6px;
 }
 
 file-explorer.collapsed .tree-view {
@@ -396,13 +416,13 @@ file-explorer summary:hover {
 
 file-explorer .folder-icon {
   flex-shrink: 0;
-  font-size: 1rem;
+  font-size: 0.9rem;
   color: var(--ide-text-muted);
 }
 
 file-explorer .file-icon {
   flex-shrink: 0;
-  font-size: 1rem;
+  font-size: 0.9rem;
   color: var(--ide-text-muted);
 }
 
@@ -484,9 +504,9 @@ file-explorer .file-name-text.scrolling {
 
 file-explorer .mjs-button {
   flex-shrink: 0;
-  padding: 1px 6px;
+  padding: 1px 3px;
   font-size: 0.75rem;
-  font-weight: 600;
+  font-weight: 400;
   border: 1px solid color-mix(in srgb, var(--ide-accent) 35%, var(--ide-border));
   background: var(--ide-accent-soft);
   color: var(--ide-accent-strong);
@@ -920,6 +940,7 @@ examples-panel {
   background: var(--ide-surface);
   color: var(--ide-text-muted);
   cursor: pointer;
+  line-height: 1;
 }
 
 .search-clear-button:hover,
@@ -1269,6 +1290,7 @@ editor-workbench .editor-breadcrumbs {
   align-items: center;
   gap: 5px;
   min-width: 0;
+  overflow: hidden;
   color: var(--ide-text-muted);
   font-size: 0.78rem;
   line-height: 1;
@@ -1280,13 +1302,25 @@ editor-workbench .editor-breadcrumbs i {
   color: var(--ide-text-subtle);
 }
 
-editor-workbench .editor-breadcrumb-active {
+editor-workbench .editor-breadcrumb-root,
+editor-workbench .editor-breadcrumb-segment {
   min-width: 0;
   overflow: hidden;
-  color: var(--ide-text);
-  font-family: var(--monospace);
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+editor-workbench .editor-breadcrumb-root {
+  flex: 0 0 auto;
+}
+
+editor-workbench .editor-breadcrumb-segment {
+  flex: 0 1 auto;
+}
+
+editor-workbench .editor-breadcrumb-active {
+  color: var(--ide-text);
+  font-family: var(--monospace);
 }
 
 editor-workbench .editor-chrome-actions {
@@ -2050,6 +2084,7 @@ diagnostics-inspector .diagnostics-mode-button {
   align-items: center;
   justify-content: center;
   gap: 4px;
+  height: 28px;
   min-width: 0;
   border: 1px solid var(--ide-border);
   border-radius: var(--ide-radius-sm);
@@ -2058,7 +2093,7 @@ diagnostics-inspector .diagnostics-mode-button {
   cursor: pointer;
   font-size: 0.74rem;
   line-height: 1;
-  padding: 6px 4px;
+  padding: 0 4px;
 }
 
 diagnostics-inspector .diagnostics-mode-button:hover:not(.active) {
@@ -2082,6 +2117,14 @@ diagnostics-inspector .diagnostics-mode-button.active:hover {
 diagnostics-inspector .diagnostics-mode-button i {
   width: 0.86rem;
   height: 0.86rem;
+}
+
+diagnostics-inspector .diagnostics-mode-button span {
+  min-width: 0;
+  overflow: hidden;
+  line-height: 1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 diagnostics-inspector .diagnostics-content {
@@ -2522,31 +2565,39 @@ toolbar-panel .status-tooltip {
 toolbar-panel .actions {
   justify-self: end;
   display: flex;
+  align-items: center;
   gap: 8px;
 }
 
 toolbar-panel .compile-btn {
-  background: var(--ide-text);
-  color: var(--ide-surface);
-  border: 1px solid var(--ide-text);
-  padding: 0.25rem 0.5rem;
+  min-height: 32px;
+  height: 32px;
+  background: var(--ide-surface);
+  color: var(--ide-text-muted);
+  border: 1px solid var(--ide-border);
+  padding: 0 10px;
   border-radius: var(--ide-radius-sm);
-  font-size: 1rem;
+  font-size: 0.9rem;
   font-weight: 500;
   cursor: pointer;
-  transition: background 0.2s ease;
-  display: flex;
-  flex-direction: row;
+  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+  display: inline-flex;
   align-items: center;
+  justify-content: center;
+  gap: 5px;
+  line-height: 1;
 }
 
 toolbar-panel .compile-btn i {
-  margin-right: 0.25rem;
+  width: 1rem;
+  height: 1rem;
+  margin-right: 0;
 }
 
 toolbar-panel .toolbar-icon-btn {
   width: 32px;
   height: 32px;
+  flex: 0 0 32px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -2557,6 +2608,7 @@ toolbar-panel .toolbar-icon-btn {
   cursor: pointer;
   font-size: 0.95rem;
   line-height: 1;
+  padding: 0;
 }
 
 toolbar-panel .toolbar-icon-btn:hover {
@@ -2571,11 +2623,13 @@ toolbar-panel .toolbar-icon-btn i {
 }
 
 toolbar-panel .compile-btn:hover {
-  background: color-mix(in srgb, var(--ide-text) 88%, var(--ide-accent));
+  background: var(--ide-accent-soft);
+  border-color: color-mix(in srgb, var(--ide-accent) 38%, var(--ide-border));
+  color: var(--ide-accent-strong);
 }
 
 toolbar-panel .compile-btn:active {
-  background: var(--ide-text);
+  background: color-mix(in srgb, var(--ide-accent-soft) 82%, var(--ide-surface));
   transform: translateY(1px);
 }
 
@@ -2588,14 +2642,15 @@ toolbar-panel .compile-btn:disabled {
 }
 
 toolbar-panel .compile-btn.loading {
-  background: var(--ide-accent);
+  background: var(--ide-accent-soft);
   border-color: var(--ide-accent);
+  color: var(--ide-accent-strong);
   cursor: not-allowed;
   pointer-events: none;
 }
 
 toolbar-panel .compile-btn.loading:hover {
-  background: var(--ide-accent);
+  background: var(--ide-accent-soft);
 }
 
 @keyframes spin {
@@ -2677,6 +2732,7 @@ bottom-panel .terminal-form button {
   align-items: center;
   justify-content: center;
   gap: 5px;
+  height: 28px;
   border: 1px solid var(--ide-border);
   border-radius: var(--ide-radius-sm);
   background: var(--ide-surface);
@@ -2684,8 +2740,7 @@ bottom-panel .terminal-form button {
   cursor: pointer;
   font-size: 0.8rem;
   line-height: 1;
-  min-height: 28px;
-  padding: 5px 8px;
+  padding: 0 8px;
 }
 
 bottom-panel .bottom-panel-tab:hover,
@@ -2707,6 +2762,13 @@ bottom-panel .download-btn i,
 bottom-panel .terminal-form button i {
   width: 0.9rem;
   height: 0.9rem;
+}
+
+bottom-panel .bottom-panel-tab span,
+bottom-panel .clear-btn span,
+bottom-panel .download-btn span,
+bottom-panel .terminal-form button span {
+  line-height: 1;
 }
 
 bottom-panel .bottom-panel-actions {
@@ -2834,8 +2896,9 @@ bottom-panel .terminal-content {
 
 bottom-panel .console-message {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 8px;
+  min-height: 24px;
   padding: 3px 12px;
   border-bottom: 1px solid transparent;
   font-family: var(--monospace);
@@ -2847,14 +2910,26 @@ bottom-panel .console-message:hover {
 }
 
 bottom-panel .console-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   flex: 0 0 auto;
   width: 16px;
+  line-height: 1;
   text-align: center;
+}
+
+bottom-panel .console-icon i {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
 }
 
 bottom-panel .console-text {
   flex: 1;
   min-width: 0;
+  line-height: 1.4;
   word-break: break-word;
   white-space: pre-wrap;
 }
@@ -3214,15 +3289,19 @@ share-dialog dialog {
 }
 
 .command-symbol-kind {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   width: 30px;
+  min-height: 18px;
   border: 1px solid color-mix(in srgb, var(--outline-symbol) 38%, var(--ide-border));
   border-radius: var(--ide-radius-sm);
   background: color-mix(in srgb, var(--outline-symbol) 12%, var(--ide-surface));
   color: var(--outline-symbol-strong);
   font-size: 0.68rem;
   font-weight: 700;
-  line-height: 1.1;
-  padding: 1px 4px;
+  line-height: 1;
+  padding: 0 4px;
   text-align: center;
 }
 
@@ -3575,16 +3654,20 @@ project-switcher dialog.project-switcher-native::backdrop {
 
 .project-switcher-body {
   display: grid;
-  grid-template-columns: 280px 1fr;
+  grid-template-columns: max-content minmax(0, 1fr);
   min-height: 0;
   overflow: hidden;
 }
 
 .project-switcher-list {
+  width: 280px;
+  min-width: 200px;
+  max-width: min(440px, 45vw);
   border-right: 1px solid var(--ide-border);
   background: var(--ide-surface-subtle);
-  overflow-y: auto;
+  overflow: auto;
   padding: 8px;
+  resize: horizontal;
 }
 
 .project-switcher-card {
@@ -3824,7 +3907,7 @@ project-switcher dialog.project-switcher-native::backdrop {
 .project-switcher-preview {
   margin: 0;
   display: grid;
-  grid-template-columns: 220px 1fr;
+  grid-template-columns: max-content minmax(0, 1fr);
   gap: 0;
   flex: 1 1 auto;
   min-height: 220px;
@@ -3835,13 +3918,17 @@ project-switcher dialog.project-switcher-native::backdrop {
 }
 
 .project-switcher-preview-tree {
+  width: 220px;
+  min-width: 160px;
+  max-width: min(420px, 55vw);
   display: flex;
   flex-direction: column;
   background: var(--ide-surface-subtle);
   border-right: 1px solid var(--ide-border);
   padding: 4px;
-  overflow-y: auto;
+  overflow: auto;
   min-height: 0;
+  resize: horizontal;
 }
 
 .ps-preview-row {
@@ -3931,7 +4018,7 @@ button.ps-preview-folder {
 }
 
 .project-switcher-preview-path {
-  font-family: var(--monospace);
+  font-family: inherit;
   font-size: 0.74rem;
   color: var(--ide-text-muted);
   overflow: hidden;
@@ -3942,7 +4029,7 @@ button.ps-preview-folder {
 }
 
 .project-switcher-preview-mtime {
-  font-family: var(--monospace);
+  font-family: inherit;
   font-size: 0.7rem;
   color: var(--ide-text-subtle);
   white-space: nowrap;
