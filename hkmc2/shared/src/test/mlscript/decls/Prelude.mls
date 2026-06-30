@@ -85,6 +85,9 @@ declare module BigInt64Array
 declare class BigUint64Array
 declare module BigUint64Array
 
+declare class Promise
+declare val Promise
+
 // MLscript-specific types
 declare class Bool
 declare class Int
@@ -209,8 +212,6 @@ declare val fs // TODO make `module`
 declare val Infinity
 
 // Wasm support
-declare class Promise
-declare val Promise
 declare object WebAssembly with
   declare class Instance
   declare class Memory

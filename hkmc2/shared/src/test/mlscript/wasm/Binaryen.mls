@@ -5,9 +5,8 @@
 // Helper functions
 import "binaryen"
 fun compileWatToWasm(wat) = 
-  let mod = binaryen.parseText(wat)
-  mod.setFeatures(binaryen.Features.All)
-  assert mod.validate() != false
+  let mod = binaryen.parseTextWithFeatures of wat, binaryen.Features.All
+  Predef.js_assert of mod.validate()
   val modBuf = mod.emitBinary()
   mod.dispose()
   modBuf
@@ -91,3 +90,21 @@ mod.dispose()
 let inst = instantiateWasm of wasmMod, {}
 inst.exports.main() |> print
 //│ > 3
+
+
+// Regression Test for Binaryen:
+// `error: invalid type: distinct rec groups would be identical after binary writing (to resolve this, use --enable-gc)`
+//
+// The error will occur if the module is parsed using `binaryen.parseText` - `parseText` only enables MVP features
+// (not GC)
+compileWatToWasm of 
+    """
+    (module
+        (type $Foo (struct (field $i i32)))
+        (type $GetI_t (func (param (ref $Foo)) (result i32)))
+        (type $Twin (func (param (ref null any)) (result i32)))
+        (func $getI (type $GetI_t) (param $f (ref $Foo)) (result i32)
+            (struct.get $Foo $i (local.get $f)))
+        (func $twin (type $Twin) (param $x (ref null any)) (result i32)
+            (i32.const 0)))
+    """
