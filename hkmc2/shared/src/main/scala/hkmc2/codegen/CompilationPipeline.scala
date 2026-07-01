@@ -11,56 +11,79 @@ import hkmc2.utils.TL
 
 class CompilationPipeline(using Config, Raise, State, Ctx, SymbolPrinter):
   
-  case class CompilationPass(name: Str, transform: Program => Program)
+  def preOptimizeHook(prog: Program) = ()
   
-  // For printing IR after transformations like lifting and before optimization
-  def preOptimizeHook(prog: Program): Program =
-    prog
+  def passHook(passName: Str, before: Program, after: Program) = ()
   
-  def passHook(pass: CompilationPass, before: Program, after: Program): Program =
-    after
-  
-  private def blockPass(pass: Block => Block)(prog: Program): Program =
+  private inline def blockPass(prog: Program, inline pass: Block => Block): Program =
     val blk = pass(prog.main)
     if blk is prog.main then prog else Program(prog.imports, blk)
   
   def run(prog: Program, printer: Program => Str, symbolsToPreserve: Set[BoundSymbol], otl: TL)(using TL): Program =
-    val allPasses = List(
-      CompilationPass("LambdaRewriter", LambdaRewriter.desugar),
-      CompilationPass("Deforest", prog =>
-        val outterTl = tl
-        config.deforest match
-          case None => prog
-          case Some(dCfg) =>
-            flowAnalysis.FlowAnalysis.mkTraceLogger(dCfg.config, "deforest > ", outterTl).givenIn:
-              deforest.Deforest(prog)),
-      CompilationPass("EtaExpansion", EtaExpansion.apply),
-      CompilationPass("Lifter", prog =>
-        if config.liftDefns.isDefined then
-          blockPass(Lifter(_).transform)(prog)
-        else prog),
-      CompilationPass("HandlerLowering", prog =>
-        config.effectHandlers.fold(prog): opt =>
-          HandlerLowering(new HandlerPaths, opt).translateProgram(prog)),
-      CompilationPass("Flattening", blockPass(_.flattened)),
-      CompilationPass("BufferableTransform", BufferableTransform().transform),
-      CompilationPass("MergeMatchArmTransformer", MergeMatchArmTransformer.applyProgram),
-      CompilationPass("FirstClassFunctionTransformer", prog =>
-        if config.funcToCls then
-          blockPass(FirstClassFunctionTransformer().transform(_))(prog)
-        else prog),
-      CompilationPass("Lifter after FirstClassFunctionTransformer", prog =>
-        if config.funcToCls then
-          blockPass(Lifter(_).transform)(prog)
-        else prog),
-      CompilationPass("ClassParamFlattener", ClassParamFlattener.apply),
-      CompilationPass("ReflectionInstrumenter", ReflectionInstrumenter(using summon).apply),
-      CompilationPass("TailRecOpt", TailRecOpt().transform),
-      CompilationPass("PreOptimizeHook", preOptimizeHook),
-      CompilationPass("WorkerWrapper", WorkerWrapper(symbolsToPreserve, otl, printer)),
-      CompilationPass("BlockSimplifier", BlockSimplifier(symbolsToPreserve, otl, printer).apply),
-      CompilationPass("DeadParamElim", otl.givenIn(DeadParamElim.apply)),
-    )
-    allPasses.foldLeft(prog): (before, pass) =>
-      val after = pass.transform(before)
-      passHook(pass, before, after)
+    
+    var result = prog
+    var lastPassProg = prog
+    def hook(passName: Str) =
+      passHook(passName, lastPassProg, result)
+      lastPassProg = result
+    
+    result = LambdaRewriter.desugar(result)
+    hook("LambdaRewriter")
+    
+    result =
+      val outterTl = tl
+      config.deforest match
+        case None => result
+        case Some(dCfg) =>
+          flowAnalysis.FlowAnalysis.mkTraceLogger(dCfg.config, "deforest > ", outterTl).givenIn:
+            deforest.Deforest(result)
+    hook("Deforest")
+    
+    result = EtaExpansion(result)
+    hook("EtaExpansion")
+    
+    if config.liftDefns.isDefined then
+      result = blockPass(result, Lifter(_).transform)
+    hook("Lifter")
+    
+    result = config.effectHandlers.fold(result): opt =>
+      HandlerLowering(new HandlerPaths, opt).translateProgram(result)
+    hook("HandlerLowering")
+    
+    result = blockPass(result, _.flattened)
+    hook("Flattening")
+    
+    result = BufferableTransform().transform(result)
+    hook("BufferableTransform")
+    
+    result = blockPass(result, MergeMatchArmTransformer.applyBlock(_))
+    hook("MergeMatchArmTransformer")
+    
+    if config.funcToCls then
+      result = blockPass(result, FirstClassFunctionTransformer().transform(_))
+      hook("FirstClassFunctionTransformer")
+      result = blockPass(result, Lifter(_).transform)
+      hook("Lifter after FirstClassFunctionTransformer")
+    
+    result = ClassParamFlattener(result)
+    hook("ClassParamFlattener")
+    
+    result = ReflectionInstrumenter(using summon).apply(result)
+    hook("ReflectionInstrumenter")
+    
+    if config.tailRecOpt then
+      result = TailRecOpt().transform(result)
+      hook("TailRecOpt")
+    
+    preOptimizeHook(result)
+    
+    result = WorkerWrapper(symbolsToPreserve, otl, printer)(result)
+    hook("WorkerWrapper")
+    
+    result = BlockSimplifier(symbolsToPreserve, otl, printer)(result)
+    hook("BlockSimplifier")
+    
+    result = otl.givenIn(DeadParamElim(result))
+    hook("DeadParamElim")
+    
+    result

@@ -126,11 +126,11 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
       
       val optimized = ltl.givenIn:
         val customPipeline = new CompilationPipeline:
-          override def passHook(pass: CompilationPass, before: Program, after: Program): Program =
+          override def passHook(passName: Str, before: Program, after: Program) =
             // TODO: fix these passes
             val excludedPassNames = Set("Lifter", "Lifter after FirstClassFunctionTransformer")
-            if !excludedPassNames.contains(pass.name) && (before isnt after) && (before === after) then
-              output(s"/!\\ Warning: object identity between equal objects was not preserved by ${pass.name}")
+            if !excludedPassNames.contains(passName) && (before isnt after) && (before === after) then
+              output(s"/!\\ Warning: object identity between equal objects was not preserved by ${passName}")
               def rec(lhs: Product, rhs: Product): Bool =
                 (lhs is rhs) || {
                   if
@@ -146,7 +146,6 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
                   else false
                 }
               rec(before.main, after.main)
-            after
           override def preOptimizeHook(prog: Program) =
             if showLoweredTree.isSet then
               outputSeparator("Lowered IR Tree")
