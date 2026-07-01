@@ -597,7 +597,8 @@ class TailRecOpt(using State, TL, Raise):
         comp.copy(methods = cMtds)
       c.copy(methods = mtds, companion = companion)(c.configOverride, c.annotations)
   
-  def transform(prog: Program) =
+  def transform(prog: Program)(using Config): Program =
+    if !config.tailRecOpt then return prog
     /* To avoid `x` being overridden in the following when the lifter is not run:
      * 
      * let lam

@@ -85,15 +85,7 @@ object Config:
     commentGeneratedCode = false,
     noFreeze = false,
     noModuleCheck = false,
-    optimizer = Optimizer(
-      deforest = N,
-      tailRecOpt = true,
-      inlining = S(Inliner(default.inlineThreshold)),
-      deadBranchRemoval = default.deadBranchRemoval,
-      deadCodeElim = true,
-      dataFlowAnalysis = true,
-      deadParamElim = S(DeadParamElim.default),
-    ),
+    optimizer = Optimizer.FastOpt,
   )
   object default:
     val patMatConsequentSharingThreshold = S(15)
@@ -253,7 +245,7 @@ object Config:
   )
   
   object Optimizer:
-    val noOpt = Optimizer(
+    val NoOpt = Optimizer(
       N,
       false,
       N,
@@ -261,6 +253,16 @@ object Config:
       false,
       false,
       N
+    )
+    
+    val FastOpt = Optimizer(
+      deforest = N,
+      tailRecOpt = true,
+      inlining = S(Inliner(default.inlineThreshold)),
+      deadBranchRemoval = default.deadBranchRemoval,
+      deadCodeElim = true,
+      dataFlowAnalysis = true,
+      deadParamElim = S(DeadParamElim.default),
     )
 
 end Config
@@ -609,7 +611,7 @@ object ConfigParser:
   private def parseField(name: Str, value: Tree)(using Raise): Config => Config = name match
     case "language" => parseLanguageOverride(value)
     case "noOpt" =>
-      parsedField(value)(parseBool)(v => _.mapOptimizer(_ => Optimizer.noOpt))
+      parsedField(value)(parseBool)(v => _.mapOptimizer(_ => Optimizer.NoOpt))
     case "tailRecOpt" =>
       parsedField(value)(parseBool)(v => _.mapOptimizer(_.copy(tailRecOpt = v)))
     case "noFreeze" =>
