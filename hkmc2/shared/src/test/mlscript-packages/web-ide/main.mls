@@ -170,12 +170,27 @@ fun markPathCompiled(path) =
 fun markAsCompiled(paths) =
   paths.forEach of (path, ...) => markPathCompiled(path)
 
+fun markPathUncompiled(path) =
+  let node = fs.stat(path)
+  if not isStandardNode(node) do fs.setAttr(path, "compiled", false)
+
+fun markAsUncompiled(paths) =
+  paths.forEach of (path, ...) => markPathUncompiled(path)
+
 fun diagnosticsInspector() =
   document.querySelector("diagnostics-inspector")
 
 fun setDiagnostics(diagnosticsPerFile) =
   if diagnosticsInspector() is
     ~null as panel do panel.setDiagnostics(diagnosticsPerFile)
+
+fun revealDiagnostics(diagnosticsPerFile) =
+  document.dispatchEvent(new CustomEvent("sidebar-toggle-requested", mut
+    detail: mut { side: "right", panel: "problems", forceOpen: true }
+  ))
+  if diagnosticsInspector() is ~null as panel do
+    panel.setMode("workspace")
+    panel.setDiagnostics(diagnosticsPerFile)
 
 fun bottomPanel() =
   document.querySelector("bottom-panel")
@@ -227,8 +242,109 @@ fun compilerFatalDiagnostics(path, error) =
       diagnostics: [fatalDiagnostic(path, error)]
   ]
 
+fun filePathOfDiagnostics(fileData) = if fileData.path is
+  Absent then "Unknown file"
+  path then path
+
+fun diagnosticKind(diagnostic) =
+  let kind = if diagnostic.kind is
+    Absent then "info"
+    value then value
+  if kind is
+    "error" then "error"
+    "internal" then "internal"
+    "warning" then "warning"
+    else "info"
+
+fun isBlockingDiagnostic(diagnostic) = if diagnosticKind(diagnostic) is
+  "error" then true
+  "internal" then true
+  else false
+
+fun hasBlockingDiagnostics(diagnosticsPerFile) =
+  let found = false
+  if diagnosticsPerFile is ~Absent do
+    diagnosticsPerFile.forEach of (fileData, ...) =>
+      if not found and fileData.diagnostics is ~Absent as diagnostics do
+        diagnostics.forEach of (diagnostic, ...) =>
+          if not found and isBlockingDiagnostic(diagnostic) do set found = true
+  found
+
+fun messageText(message) =
+  let text = ""
+  if message.messageBits is ~Absent as bits do
+    bits.forEach of (bit, ...) =>
+      if bit.text is ~Absent as bitText do set text += bitText
+      if bit.code is ~Absent as bitCode do set text += bitCode
+  text
+
+fun firstDiagnosticText(diagnostic) = if
+  diagnostic.allMessages is Absent then "Diagnostic"
+  diagnostic.allMessages.length === 0 then "Diagnostic"
+  else messageText(diagnostic.allMessages.at(0))
+
+fun primaryLocation(diagnostic) =
+  let result = null
+  if diagnostic.allMessages is ~Absent as messages do
+    messages.forEach of (message, ...) =>
+      if result is null do
+        if message.location is ~Absent as location do set result = location
+  result
+
+fun sourceText(filePath) =
+  if typeof(filePath) is "string" and fs.pathExists(filePath) then fs.read(filePath)
+  else ""
+
+fun lineColumn(line, column) =
+  mut { :line, :column }
+
+fun lineColumnFromOffset(text, offset) =
+  let lines = text.substring(0, offset).split("\n")
+  lineColumn(lines.length, lines.at(lines.length - 1).length + 1)
+
+fun diagnosticLocation(diagnostic, filePath) = if diagnostic.line is
+  ~Absent as line then lineColumn(line, 1)
+  else if primaryLocation(diagnostic) is
+    ~null as location then lineColumnFromOffset(sourceText(filePath), location.start)
+    else null
+
+fun diagnosticMainMessage(diagnostic) = if diagnostic.mainMessage is
+  Absent then firstDiagnosticText(diagnostic)
+  message then message
+
+fun diagnosticDetailText(diagnostic) =
+  let text = ""
+  if diagnostic.allMessages is ~Absent as messages do
+    messages.forEach of (message, ...) =>
+      let content = messageText(message)
+      if content !== "" do
+        if text === "" then set text = content
+        else set text += " " + content
+  if text === "" then diagnosticMainMessage(diagnostic) else text
+
+fun diagnosticLocationSuffix(filePath, diagnostic) = if diagnosticLocation(diagnostic, filePath) is
+  ~null as location then ":" + location.line + ":" + location.column
+  else ""
+
+fun diagnosticOutputLine(filePath, diagnostic) =
+  "[" + diagnosticKind(diagnostic) + "] " + filePath + diagnosticLocationSuffix(filePath, diagnostic) + " - " + diagnosticMainMessage(diagnostic)
+
+fun emitDiagnosticOutput(diagnosticsPerFile) =
+  if bottomPanel() is ~null as panel do
+    panel.showOutput()
+    panel.log("error", "Compilation failed with diagnostics:")
+    diagnosticsPerFile.forEach of (fileData, ...) =>
+      let filePath = filePathOfDiagnostics(fileData)
+      if fileData.diagnostics is ~Absent as diagnostics do
+        diagnostics.forEach of (diagnostic, ...) =>
+          if isBlockingDiagnostic(diagnostic) do
+            panel.log("error", diagnosticOutputLine(filePath, diagnostic))
+            let detail = diagnosticDetailText(diagnostic)
+            if detail !== diagnosticMainMessage(diagnostic) do panel.log("error", detail)
+
 fun handleCompileFatal(targetPath, error) =
-  setDiagnostics(compilerFatalDiagnostics(targetPath, error))
+  markPathUncompiled(targetPath)
+  revealDiagnostics(compilerFatalDiagnostics(targetPath, error))
   Logger.error("Compiler", "Compiler internal error",
     mut
       name: errorName(error)
@@ -239,8 +355,18 @@ fun handleCompileFatal(targetPath, error) =
   showLoggingPanel()
 
 fun compileSuccess(targetPaths, response) =
-  markAsCompiled(targetPaths)
-  setDiagnostics(response.result)
+  let diagnostics = response.result
+  setDiagnostics(diagnostics)
+  if hasBlockingDiagnostics(diagnostics) then
+    markAsUncompiled(targetPaths)
+    revealDiagnostics(diagnostics)
+    emitDiagnosticOutput(diagnostics)
+    dispatchCompilationStatus("error", null)
+    false
+  else
+    markAsCompiled(targetPaths)
+    dispatchCompilationStatus("done", null)
+    true
 
 fun autoRunAfterCompileEnabled() =
   SettingsStore.getSetting("compile.autoRunAfterCompile", "false") === "true"
@@ -258,8 +384,7 @@ fun compileTarget(targetPath) =
     targetPaths = collected.at(1)
   index.compile(targetPaths, allFiles)
     .then(response =>
-      compileSuccess(targetPaths, response)
-      if autoRunAfterCompileEnabled() do executeFile(targetPath)
+      if compileSuccess(targetPaths, response) and autoRunAfterCompileEnabled() do executeFile(targetPath)
     )
     .'catch(error => handleCompileFatal(targetPath, error))
 
@@ -277,6 +402,16 @@ fun compiledPath(filePath) = if
   filePath.endsWith(".mls") then filePath.slice(0, filePath.length - 4) + ".mjs"
   else filePath
 
+fun compiledOutputHasCompileError(mjsPath) =
+  if fs.pathExists(mjsPath) then sourceText(mjsPath).includes("compilation yielded an error")
+  else false
+
+fun shouldCompileBeforeExecution(filePath, mjsPath) =
+  if isMlsPath(filePath) then
+    if shouldCompile(filePath) then true
+    else compiledOutputHasCompileError(mjsPath)
+  else false
+
 fun runCompiledFile(sourcePath, mjsPath) =
   if fs.pathExists(mjsPath) then runner.execute(mjsPath, sourcePath)
   else Logger.error("Execution", "Compiled file not found after compilation", mjsPath)
@@ -287,9 +422,8 @@ fun compileThenExecute(filePath, mjsPath) =
     collected = collectFilesForCompilation(filePath)
     allFiles = collected.at(0)
     targetPaths = collected.at(1)
-    compilePromise = index.compile(targetPaths, allFiles).then of _ =>
-      markAsCompiled(targetPaths)
-      runCompiledFile(filePath, mjsPath)
+    compilePromise = index.compile(targetPaths, allFiles).then of response =>
+      if compileSuccess(targetPaths, response) do runCompiledFile(filePath, mjsPath)
   compilePromise.'catch(error => handleCompileFatal(filePath, error))
 
 fun expandConsolePanel() =
@@ -299,12 +433,12 @@ fun expandConsolePanel() =
 fun handleExecuteRequested(event) =
   expandConsolePanel()
   let filePath = event.detail.filePath
-  if
-    typeof(filePath) is ~"string" then Logger.error("Execution", "Invalid file path for execution", filePath)
-    else
-      let mjsPath = compiledPath(filePath)
-      if fs.pathExists(mjsPath) then runner.execute(mjsPath, filePath)
-      else compileThenExecute(filePath, mjsPath)
+  if typeof(filePath) is ~"string" then Logger.error("Execution", "Invalid file path for execution", filePath)
+  else
+    let mjsPath = compiledPath(filePath)
+    if shouldCompileBeforeExecution(filePath, mjsPath) then compileThenExecute(filePath, mjsPath)
+    else if fs.pathExists(mjsPath) then runner.execute(mjsPath, filePath)
+    else compileThenExecute(filePath, mjsPath)
 
 fun handleOpenFileAtLocation(event) =
   let editorPanel = document.querySelector("editor-panel")

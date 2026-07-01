@@ -46,7 +46,15 @@ class DiagnosticsInspector extends HTMLElement with
       files then files
     set
       diagnosticsData = nextData
+    enableKindsForDiagnostics(nextData)
     this.render()
+
+  fun enableKindsForDiagnostics(files) =
+    if files is ~Absent do
+      files.forEach of (fileData, ...) =>
+        if fileData.diagnostics is ~Absent as diagnostics do
+          diagnostics.forEach of (diagnostic, ...) =>
+            enabledKinds.add(diagnosticKind(diagnostic))
 
   fun activeFileFromDetail(detail) =
     if
