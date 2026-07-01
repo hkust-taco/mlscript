@@ -107,8 +107,11 @@ fun foldRange(state, lineStart, lineEnd) =
 fun mlscriptFolding() =
   foldService.of((state, lineStart, lineEnd) => foldRange(state, lineStart, lineEnd))
 
+fun indentGuideColumns(columns) =
+  Math.floor(columns / 2) * 2
+
 fun indentGuideStyle(columns) =
-  "--mls-indent-guide-width: " + columns + "ch"
+  "--mls-indent-guide-width: " + indentGuideColumns(columns) + "ch"
 
 fun indentGuideLineDecoration(columns) =
   let attributes = mut
@@ -157,10 +160,21 @@ fun editorThemeSpec() = mut
     fontFamily: "'Google Sans Code', 'Monaco', 'Menlo', 'Ubuntu Mono', monospace"
   ".cm-cursor": mut
     borderLeftColor: "var(--sand-12)"
-  ".cm-editor .cm-gutters": mut
+  ".cm-gutters": mut
     backgroundColor: "var(--sand-2)"
     color: "var(--sand-11)"
-    borderRight: "1px solid var(--sand-6)"
+    borderRight: "none"
+    paddingLeft: "0"
+  ".cm-gutter": mut
+    borderRight: "none"
+  ".cm-lineNumbers .cm-gutterElement": mut
+    minWidth: "2.6ch"
+    paddingLeft: "14px"
+    paddingRight: "4px"
+    textAlign: "right"
+  ".cm-foldGutter .cm-gutterElement": mut
+    minWidth: "10px"
+    padding: "0"
   ".cm-activeLineGutter": mut
     backgroundColor: "var(--sand-2)"
 

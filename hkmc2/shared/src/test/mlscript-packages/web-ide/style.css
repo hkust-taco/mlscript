@@ -1807,20 +1807,29 @@ editor-panel .cm-editor {
 editor-panel .cm-gutters {
   background: var(--ide-editor-bg);
   color: var(--ide-text-subtle);
-  border-right: 1px solid var(--ide-border);
+  border-right: none !important;
   font-family: var(--monospace);
   font-size: var(--editor-font-size);
+  padding-left: 0;
+}
+
+editor-panel .cm-gutter,
+editor-panel .cm-lineNumbers,
+editor-panel .cm-foldGutter {
+  border-right: none !important;
 }
 
 editor-panel .cm-lineNumbers .cm-gutterElement {
   font-size: var(--editor-font-size);
-  padding-left: 8px;
-  padding-right: 6px;
+  min-width: 2.6ch !important;
+  padding-left: 14px !important;
+  padding-right: 4px !important;
+  text-align: right !important;
 }
 
 editor-panel .cm-foldGutter .cm-gutterElement {
-  min-width: 14px;
-  padding: 0 3px;
+  min-width: 10px !important;
+  padding: 0 !important;
   color: var(--ide-text-subtle);
 }
 
@@ -1829,8 +1838,8 @@ editor-panel .cm-foldGutter .cm-gutterElement:hover {
 }
 
 editor-panel .cm-line.mls-indent-guides {
-  --mls-indent-guide-color: #dce1db;
-  --mls-indent-guide-left: 6px;
+  --mls-indent-guide-color: #dfe3de;
+  --mls-indent-guide-left: 0px;
   --mls-indent-guide-width: 0ch;
   position: relative;
 }
@@ -1838,10 +1847,10 @@ editor-panel .cm-line.mls-indent-guides {
 editor-panel .cm-line.mls-indent-guides::before {
   background-image: repeating-linear-gradient(
     to right,
-    transparent 0,
-    transparent calc(2ch - 1px),
-    var(--mls-indent-guide-color) calc(2ch - 1px),
-    var(--mls-indent-guide-color) 2ch
+    var(--mls-indent-guide-color) 0,
+    var(--mls-indent-guide-color) 1px,
+    transparent 1px,
+    transparent 2ch
   );
   background-position: left top;
   background-repeat: repeat-x;
