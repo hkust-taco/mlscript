@@ -15,75 +15,50 @@ class CompilationPipeline(using Config, Raise, State, Ctx, SymbolPrinter):
   
   def passHook(passName: Str, before: Program, after: Program) = ()
   
-  private inline def blockPass(prog: Program, inline pass: Block => Block): Program =
+  private inline def blockPass(inline pass: Block => Block)(prog: Program): Program =
     val blk = pass(prog.main)
     if blk is prog.main then prog else Program(prog.imports, blk)
   
   def run(prog: Program, printer: Program => Str, symbolsToPreserve: Set[BoundSymbol], otl: TL)(using TL): Program =
-    
     var result = prog
-    var lastPassProg = prog
-    def hook(passName: Str) =
-      passHook(passName, lastPassProg, result)
-      lastPassProg = result
+    inline def runPass(passName: Str)(inline transform: Program => Program) =
+      val before = result
+      result = transform(before)
+      passHook(passName, before, result)
     
-    result = LambdaRewriter.desugar(result)
-    hook("LambdaRewriter")
-    
-    result =
+    runPass("LambdaRewriter")(LambdaRewriter.desugar)
+    runPass("Deforest"): prog =>
       val outterTl = tl
       config.deforest match
-        case None => result
+        case None => prog
         case Some(dCfg) =>
           flowAnalysis.FlowAnalysis.mkTraceLogger(dCfg.config, "deforest > ", outterTl).givenIn:
-            deforest.Deforest(result)
-    hook("Deforest")
-    
-    result = EtaExpansion(result)
-    hook("EtaExpansion")
-    
-    if config.liftDefns.isDefined then
-      result = blockPass(result, Lifter(_).transform)
-    hook("Lifter")
-    
-    result = config.effectHandlers.fold(result): opt =>
-      HandlerLowering(new HandlerPaths, opt).translateProgram(result)
-    hook("HandlerLowering")
-    
-    result = blockPass(result, _.flattened)
-    hook("Flattening")
-    
-    result = BufferableTransform().transform(result)
-    hook("BufferableTransform")
-    
-    result = blockPass(result, MergeMatchArmTransformer.applyBlock(_))
-    hook("MergeMatchArmTransformer")
-    
-    if config.funcToCls then
-      result = blockPass(result, FirstClassFunctionTransformer().transform(_))
-      hook("FirstClassFunctionTransformer")
-      result = blockPass(result, Lifter(_).transform)
-      hook("Lifter")
-    
-    result = ClassParamFlattener(result)
-    hook("ClassParamFlattener")
-    
-    result = ReflectionInstrumenter(using summon).apply(result)
-    hook("ReflectionInstrumenter")
-    
-    if config.tailRecOpt then
-      result = TailRecOpt().transform(result)
-      hook("TailRecOpt")
-    
+            deforest.Deforest(prog)
+    runPass("EtaExpansion")(EtaExpansion.apply)
+    runPass("Lifter"): prog =>
+      if config.liftDefns.isDefined then
+        blockPass(Lifter(_).transform)(prog)
+      else prog
+    runPass("HandlerLowering"): prog =>
+      config.effectHandlers.fold(prog): opt =>
+        HandlerLowering(new HandlerPaths, opt).translateProgram(prog)
+    runPass("Flattening")(blockPass(_.flattened))
+    runPass("BufferableTransform")(BufferableTransform().transform)
+    runPass("MergeMatchArmTransformer")(MergeMatchArmTransformer.applyProgram)
+    runPass("FirstClassFunctionTransformer"): prog =>
+      if config.funcToCls then
+        blockPass(FirstClassFunctionTransformer().transform(_))(prog)
+      else prog
+    runPass("Lifter"): prog =>
+      if config.funcToCls then
+        blockPass(Lifter(_).transform)(prog)
+      else prog
+    runPass("ClassParamFlattener")(ClassParamFlattener.apply)
+    runPass("ReflectionInstrumenter")(ReflectionInstrumenter(using summon).apply)
+    runPass("TailRecOpt")(TailRecOpt().transform)
     preOptimizeHook(result)
-    
-    result = WorkerWrapper(symbolsToPreserve, otl, printer)(result)
-    hook("WorkerWrapper")
-    
-    result = BlockSimplifier(symbolsToPreserve, otl, printer)(result)
-    hook("BlockSimplifier")
-    
-    result = otl.givenIn(DeadParamElim(result))
-    hook("DeadParamElim")
+    runPass("WorkerWrapper")(WorkerWrapper(symbolsToPreserve, otl, printer))
+    runPass("BlockSimplifier")(BlockSimplifier(symbolsToPreserve, otl, printer).apply)
+    runPass("DeadParamElim")(otl.givenIn(DeadParamElim.apply))
     
     result
