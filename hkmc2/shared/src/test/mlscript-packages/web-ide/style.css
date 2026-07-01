@@ -1808,9 +1808,12 @@ editor-panel .cm-gutters {
   background: var(--ide-editor-bg);
   color: var(--ide-text-subtle);
   border-right: 1px solid var(--ide-border);
+  font-family: var(--monospace);
+  font-size: var(--editor-font-size);
 }
 
 editor-panel .cm-lineNumbers .cm-gutterElement {
+  font-size: var(--editor-font-size);
   padding-left: 8px;
   padding-right: 6px;
 }
