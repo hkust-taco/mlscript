@@ -1,4 +1,5 @@
 import "../filesystem/fs.mls"
+import "./PanelPersistence.mls"
 import "../common/JS.mls"
 
 open JS { Absent }
@@ -12,6 +13,7 @@ class DiagnosticsInspector extends HTMLElement with
     expandedKeys = new Set()
 
   fun connectedCallback() =
+    this.restoreModeFromStorage()
     this.render()
     this.restoreSizeFromStorage()
     this.attachDocumentListeners()
@@ -27,6 +29,13 @@ class DiagnosticsInspector extends HTMLElement with
 
   fun saveSizeToStorage(width) =
     localStorage.setItem("diagnostics-inspector-width", width)
+
+  fun normalizeMode(value) = if value is
+    "current" then "current"
+    else "workspace"
+
+  fun restoreModeFromStorage() =
+    set mode = normalizeMode(PanelPersistence.restoreString("diagnostics-inspector-mode", "workspace"))
 
   fun setDiagnostics(diagnosticsPerFile) =
     let nextData = if diagnosticsPerFile is
@@ -384,6 +393,7 @@ class DiagnosticsInspector extends HTMLElement with
   fun setMode(nextMode) = if nextMode is
     "workspace" | "current" then
       set mode = nextMode
+      PanelPersistence.saveString("diagnostics-inspector-mode", mode)
       render()
     else ()
 
@@ -405,9 +415,15 @@ class DiagnosticsInspector extends HTMLElement with
         options = mut { :detail }
       document.dispatchEvent(new CustomEvent("open-file-at-location", options))
 
-  fun copyEntryMarkdown(key) =
+  fun copyEntryMarkdown(key, button) =
     if entryByKey(key) is ~null as entry do
       window.navigator.clipboard.writeText(diagnosticMarkdown(entry))
+      if button is ~Absent do
+        let label = button.querySelector("span")
+        if label is ~null as labelElement do
+          let previousText = labelElement.textContent
+          set labelElement.textContent = "Copied!"
+          window.setTimeout(() => set labelElement.textContent = previousText, 1000)
 
   fun attachEventListeners() =
     let panel = this
@@ -420,7 +436,7 @@ class DiagnosticsInspector extends HTMLElement with
     this.querySelectorAll(".diagnostics-open-location").forEach of (button, ...) =>
       button.addEventListener("click", () => panel.dispatchOpenEntry(button.dataset.diagnosticKey))
     this.querySelectorAll(".diagnostics-copy-markdown").forEach of (button, ...) =>
-      button.addEventListener("click", () => panel.copyEntryMarkdown(button.dataset.diagnosticKey))
+      button.addEventListener("click", () => panel.copyEntryMarkdown(button.dataset.diagnosticKey, button))
 
   fun attachDocumentListeners() =
     let panel = this

@@ -22,6 +22,7 @@ class BottomPanel extends HTMLElement with
     logSortOrder = "asc"
 
   fun connectedCallback() =
+    this.restoreStateFromStorage()
     this.render()
     this.restoreSizeFromStorage()
     this.attachLogEventListener()
@@ -42,6 +43,16 @@ class BottomPanel extends HTMLElement with
 
   fun saveSizeToStorage(height) =
     PanelPersistence.savePanelHeight("bottom-panel-height", height)
+
+  fun normalizedTabName(value) = if value is
+    "logging" then "logging"
+    else "output"
+
+  fun restoreStateFromStorage() =
+    set
+      activeTab = normalizedTabName(PanelPersistence.restoreString("bottom-panel-active-tab", "output"))
+      logLevelFilter = normalizeLogLevelFilter(PanelPersistence.restoreString("logs-level-filter", "all"))
+      logSourceFilter = PanelPersistence.restoreString("logs-source-filter", "all")
 
   fun render() =
     set this.innerHTML = """
@@ -449,12 +460,14 @@ class BottomPanel extends HTMLElement with
     set
       logLevelFilter = normalizeLogLevelFilter(value)
       feedbackText = ""
+    PanelPersistence.saveString("logs-level-filter", logLevelFilter)
     render()
 
   fun setLogSourceFilter(value) =
     set
       logSourceFilter = if String(value) === "" then "all" else String(value)
       feedbackText = ""
+    PanelPersistence.saveString("logs-source-filter", logSourceFilter)
     render()
 
   fun setLogSortOrder(value) =
@@ -465,6 +478,7 @@ class BottomPanel extends HTMLElement with
 
   fun setActiveTab(tabName) = if tabName is
     "output" | "logging" | "terminal" then
+      PanelPersistence.saveString("bottom-panel-active-tab", tabName)
       if tabName === activeTab then
         toggleCollapse()
       else
@@ -573,13 +587,25 @@ class BottomPanel extends HTMLElement with
 
   fun showOutput() =
     set activeTab = "output"
+    PanelPersistence.saveString("bottom-panel-active-tab", activeTab)
     expand()
     if not shouldExpand() do render()
 
   fun showLogging() =
     set activeTab = "logging"
+    PanelPersistence.saveString("bottom-panel-active-tab", activeTab)
     expand()
     if not shouldExpand() do render()
+
+  fun clearOutput() =
+    set activeTab = "output"
+    PanelPersistence.saveString("bottom-panel-active-tab", activeTab)
+    clear()
+
+  fun clearLogs() =
+    set activeTab = "logging"
+    PanelPersistence.saveString("bottom-panel-active-tab", activeTab)
+    clear()
 
   fun scrollLoggingToLatest() =
     if activeTab === "logging" and not isCollapsed do

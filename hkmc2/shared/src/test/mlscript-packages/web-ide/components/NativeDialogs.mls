@@ -58,6 +58,7 @@ class CommandPaletteDialog extends HTMLElement with
 
   fun commands() =
     [
+      command("new-file", "New File", "Create a file in the workspace.", "icon-file-plus", false, "")
       command("compile", "Compile current file", "Run the compiler for the active MLscript file.", "icon-binary", false, "")
       command("execute", "Run compiled output", "Execute the active compiled program.", "icon-play", false, "")
       // command("open-generated", "Open generated output", "Open the compiled-output split view.", "icon-columns-3", false, "")
@@ -69,6 +70,9 @@ class CommandPaletteDialog extends HTMLElement with
       command("search-files", "Search across files", "Open the Search activity panel.", "icon-search", false, "")
       command("toggle-problems", "Toggle Problems panel", "Show or hide the Problems panel.", "icon-circle-alert", false, "")
       command("toggle-output", "Toggle output panel", "Show or hide the bottom panel.", "icon-panel-bottom", false, "")
+      command("clear-output", "Clear Output", "Clear the Output tab.", "icon-square-x", false, "")
+      command("clear-logs", "Clear Logs", "Clear the Logging tab.", "icon-square-x", false, "")
+      command("export-project", "Export Project", "Open project export options.", "icon-download", false, "")
       command("toggle-theme", "Toggle theme", "Future visual command.", "icon-sun-moon", true, "Theme switching is mocked in Phase 7.")
     ]
 
@@ -442,6 +446,10 @@ class CommandPaletteDialog extends HTMLElement with
   fun bottomPanel() =
     document.querySelector("bottom-panel")
 
+  fun requestNewFile() =
+    dispatchSidebar("left", "files")
+    document.dispatchEvent(new CustomEvent("new-file-requested"))
+
   fun openGeneratedOutput(target) =
     if editorWorkbench() is ~null as shell do
       shell.openCompiledOutput()
@@ -449,6 +457,7 @@ class CommandPaletteDialog extends HTMLElement with
 
   fun executeCommand(id) =
     if id is
+      "new-file" then requestNewFile()
       "compile" then document.dispatchEvent(new CustomEvent("compile-requested", fileEventOptions()))
       "execute" then document.dispatchEvent(new CustomEvent("execute-requested", fileEventOptions()))
       // "open-generated" then openGeneratedOutput("mjs")
@@ -461,6 +470,11 @@ class CommandPaletteDialog extends HTMLElement with
       "toggle-problems" then dispatchSidebar("right", "problems")
       "toggle-output" then
         if bottomPanel() is ~null as panel do panel.toggleCollapse()
+      "clear-output" then
+        if bottomPanel() is ~null as panel do panel.clearOutput()
+      "clear-logs" then
+        if bottomPanel() is ~null as panel do panel.clearLogs()
+      "export-project" then document.dispatchEvent(new CustomEvent("share-dialog-open-requested"))
       else ()
     if id !== "go-local-symbol" and id !== "go-workspace-symbol" do closePalette()
 

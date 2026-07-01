@@ -22,6 +22,7 @@ class FileExplorer extends HTMLElement with
     openFiles = new Set()
     unsubscribe = null
     openFilesChangedListener = null
+    newFileRequestedListener = null
 
   fun connectedCallback() =
     this.render()
@@ -30,7 +31,9 @@ class FileExplorer extends HTMLElement with
     this.restoreSizeFromStorage()
     let explorer = this
     set openFilesChangedListener = event => explorer.handleOpenFilesChanged(event)
+    set newFileRequestedListener = () => explorer.startCreatingFile()
     document.addEventListener("open-files-changed", openFilesChangedListener)
+    document.addEventListener("new-file-requested", newFileRequestedListener)
     set unsubscribe = fs.subscribe(event => explorer.handleFsEvent(event), undefined)
 
   fun restoreSizeFromStorage() =
@@ -46,6 +49,8 @@ class FileExplorer extends HTMLElement with
       set tooltipTimeout = null
     if openFilesChangedListener is ~Absent as listener do
       document.removeEventListener("open-files-changed", listener)
+    if newFileRequestedListener is ~Absent as listener do
+      document.removeEventListener("new-file-requested", listener)
 
   fun render() =
     set this.innerHTML = """

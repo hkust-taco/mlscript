@@ -42,3 +42,10 @@ fun restoreNumber(storageKey, fallback, minSize, maxSize) =
 
 fun saveNumber(storageKey, value) =
   localStorage.setItem(storageKey, value)
+
+fun restoreString(storageKey, fallback) =
+  let savedValue = localStorage.getItem(storageKey)
+  if savedValue is ~Absent and savedValue !== "" then savedValue else fallback
+
+fun saveString(storageKey, value) =
+  localStorage.setItem(storageKey, value)

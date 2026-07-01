@@ -169,6 +169,9 @@ class EditorPanel extends HTMLElement with
         isKey(event, "e", "E") then
           event.preventDefault()
           dispatchExecute()
+        isKey(event, "b", "B") and event.shiftKey then
+          event.preventDefault()
+          dispatchSidebarToggle("right", "problems")
         isKey(event, "b", "B") then
           event.preventDefault()
           dispatchSidebarToggle("left", "files")
