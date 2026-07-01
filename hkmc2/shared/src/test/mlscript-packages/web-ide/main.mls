@@ -5,6 +5,7 @@ import "./execution/runner.mls"
 import "./compiler/index.mls"
 import "./common/JS.mls"
 import "./common/Logger.mls"
+import "./common/SettingsStore.mls"
 
 open JS { Absent }
 
@@ -241,13 +242,25 @@ fun compileSuccess(targetPaths, response) =
   markAsCompiled(targetPaths)
   setDiagnostics(response.result)
 
+fun autoRunAfterCompileEnabled() =
+  SettingsStore.getSetting("compile.autoRunAfterCompile", "false") === "true"
+
+fun executeFile(filePath) =
+  document.dispatchEvent(new CustomEvent("execute-requested", mut
+    bubbles: true
+    detail: mut { :filePath }
+  ))
+
 fun compileTarget(targetPath) =
   let
     collected = collectFilesForCompilation(targetPath)
     allFiles = collected.at(0)
     targetPaths = collected.at(1)
   index.compile(targetPaths, allFiles)
-    .then(response => compileSuccess(targetPaths, response))
+    .then(response =>
+      compileSuccess(targetPaths, response)
+      if autoRunAfterCompileEnabled() do executeFile(targetPath)
+    )
     .'catch(error => handleCompileFatal(targetPath, error))
 
 fun isMlsPath(path) =

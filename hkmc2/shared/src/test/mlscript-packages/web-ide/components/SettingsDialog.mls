@@ -100,6 +100,9 @@ class SettingsDialog extends HTMLElement with
     toggleRowHtml("Indentation guides", "editor.indentGuides", "true") +
     toggleRowHtml("Show whitespace", "editor.showWhitespace", "false")
 
+  fun appearanceRowsHtml() =
+    toggleRowHtml("Use dark editor theme", "appearance.editorDarkTheme", "false")
+
   fun workbenchRowsHtml() =
     buttonRowHtml("Layout", "reset-layout", "Reset Layout to Default") +
     toggleRowHtml("Show Problems panel on startup", "workbench.showProblemsOnStartup", "true") +
@@ -107,7 +110,9 @@ class SettingsDialog extends HTMLElement with
 
   fun compileRunRowsHtml() =
     selectRowHtml("Default Problems scope", "problems.defaultScope", "workspace", problemsScopeOptionsHtml()) +
-    selectRowHtml("Default Logs level", "logs.defaultLevel", "all", logsLevelOptionsHtml())
+    selectRowHtml("Default Logs level", "logs.defaultLevel", "all", logsLevelOptionsHtml()) +
+    toggleRowHtml("Auto-compile on save", "compile.autoCompileOnSave", "false") +
+    toggleRowHtml("Auto-run after compile", "compile.autoRunAfterCompile", "false")
 
   fun keyboardShortcutsRowsHtml() =
     staticRowHtml("Command Palette", "Cmd/Ctrl+K") +
@@ -124,11 +129,16 @@ class SettingsDialog extends HTMLElement with
     staticRowHtml("Version", "Development build") +
     staticRowHtml("Project", """<a href="https://github.com/hkust-taco/mlscript" target="_blank" rel="noreferrer">https://github.com/hkust-taco/mlscript</a>""")
 
+  fun dataRowsHtml() =
+    buttonRowHtml("Defaults", "reset-app-defaults", "Reset app to defaults")
+
   fun tabPanelContent(id) = if id is
+    "appearance" then appearanceRowsHtml()
     "editor" then editorRowsHtml()
     "workbench" then workbenchRowsHtml()
     "compile-run" then compileRunRowsHtml()
     "keyboard-shortcuts" then keyboardShortcutsRowsHtml()
+    "data" then dataRowsHtml()
     "about" then aboutRowsHtml()
     else ""
 
@@ -218,9 +228,35 @@ class SettingsDialog extends HTMLElement with
     ].forEach of (key, ...) => localStorage.removeItem(key)
     window.location.reload()
 
+  fun removeSettingsKeys() =
+    let
+      keys = mut []
+      index = 0
+    while index < localStorage.length do
+      let key = localStorage.key(index)
+      if key is ~Absent as storageKey do
+        if storageKey.startsWith("settings.") do keys.push(storageKey)
+      set index += 1
+    keys.forEach of (key, ...) => localStorage.removeItem(key)
+
+  fun resetAppToDefaults() =
+    if window.confirm("Reset app settings and layout to defaults?") do
+      removeSettingsKeys()
+      [
+        "file-explorer-width"
+        "diagnostics-inspector-width"
+        "bottom-panel-height"
+        "bottom-panel-active-tab"
+        "diagnostics-inspector-mode"
+        "logs-level-filter"
+        "logs-source-filter"
+      ].forEach of (key, ...) => localStorage.removeItem(key)
+      window.location.reload()
+
   fun handleSettingAction(action) =
     if action is
       "reset-layout" then resetLayoutToDefault()
+      "reset-app-defaults" then resetAppToDefaults()
       else ()
 
   fun handleSettingsChange(event) =

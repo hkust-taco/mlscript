@@ -4,7 +4,7 @@ import "https://esm.sh/@codemirror/state@^6.0.0?target=es2022" { EditorState }
 import "https://esm.sh/@codemirror/commands@^6.0.0?target=es2022" { indentWithTab }
 import "https://esm.sh/@codemirror/lang-javascript@6.2.4" { javascript }
 import "https://esm.sh/@codemirror/language@6.11.3" { StreamLanguage, defaultHighlightStyle, syntaxHighlighting, foldService, indentUnit }
-import "https://esm.sh/@uiw/codemirror-theme-vscode" { vscodeLight as theme }
+import "https://esm.sh/@uiw/codemirror-theme-vscode" { vscodeLight, vscodeDark }
 import "./Highlight.mls"
 import "../filesystem/fs.mls"
 import "../common/SettingsStore.mls"
@@ -54,6 +54,9 @@ fun bumpEditorFontSize(delta) =
 
 fun settingEnabled(key, fallback) =
   SettingsStore.getSetting(key, if fallback then "true" else "false") === "true"
+
+fun editorThemeExtension() =
+  if settingEnabled("appearance.editorDarkTheme", false) then vscodeDark else vscodeLight
 
 fun indentationColumns(text) =
   let
@@ -162,7 +165,7 @@ fun editorThemeSpec() = mut
     backgroundColor: "var(--sand-2)"
 
 fun languageExtensions(extension) =
-  let extensions = mut [theme]
+  let extensions = mut [editorThemeExtension()]
   if extension is
     "mjs" | "js" then
       extensions.push(javascript())
@@ -180,6 +183,11 @@ fun saveOnChange(filePath, isReadonly) =
     if not isReadonly and update.docChanged do
       let newContent = update.state.doc.toString()
       fs.write(filePath, newContent)
+      if settingEnabled("compile.autoCompileOnSave", false) do
+        document.dispatchEvent(new CustomEvent("compile-requested", mut
+          bubbles: true
+          detail: mut { :filePath }
+        ))
 
 fun selectedLength(selection) =
   let total = 0
