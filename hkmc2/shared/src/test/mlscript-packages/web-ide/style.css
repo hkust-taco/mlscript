@@ -45,6 +45,11 @@
   --ide-toolbar-height: 44px;
   --ide-status-bar-height: 24px;
   --editor-font-size: 14px;
+  --editor-font-family: var(--monospace);
+  --editor-font-variation-normal: 'wght' 400;
+  --editor-font-variation-bold: 'wght' 700;
+  --editor-font-variation-italic: 'wght' 400;
+  --editor-font-variation-bold-italic: 'wght' 700;
   --panel-header-height: var(--ide-panel-header-height);
   font-family: var(--sans-serif);
 }
@@ -1808,9 +1813,31 @@ editor-panel .cm-gutters {
   background: var(--ide-editor-bg);
   color: var(--ide-text-subtle);
   border-right: none !important;
-  font-family: var(--monospace);
+  font-family: var(--editor-font-family);
+  font-variation-settings: var(--editor-font-variation-normal);
   font-size: var(--editor-font-size);
   padding-left: 0;
+}
+
+editor-panel .cm-content {
+  font-family: var(--editor-font-family);
+  font-variation-settings: var(--editor-font-variation-normal);
+}
+
+editor-panel .cm-content :is(b, strong),
+editor-panel .cm-content [style*="font-weight"] {
+  font-variation-settings: var(--editor-font-variation-bold);
+}
+
+editor-panel .cm-content :is(i, em),
+editor-panel .cm-content [style*="font-style: italic"] {
+  font-variation-settings: var(--editor-font-variation-italic);
+}
+
+editor-panel .cm-content :is(b, strong) :is(i, em),
+editor-panel .cm-content :is(i, em) :is(b, strong),
+editor-panel .cm-content [style*="font-weight"][style*="font-style: italic"] {
+  font-variation-settings: var(--editor-font-variation-bold-italic);
 }
 
 editor-panel .cm-gutter,
@@ -3570,7 +3597,8 @@ settings-dialog dialog {
   accent-color: var(--ide-accent);
 }
 
-.settings-select {
+.settings-select,
+.settings-input {
   min-width: 160px;
   border: 1px solid var(--ide-border);
   border-radius: var(--ide-radius-sm);
@@ -3579,6 +3607,15 @@ settings-dialog dialog {
   font: inherit;
   font-size: 0.82rem;
   padding: 5px 7px;
+}
+
+.settings-input {
+  min-width: min(340px, 46vw);
+}
+
+.settings-number-input {
+  min-width: 72px;
+  width: 72px;
 }
 
 .settings-action-button {

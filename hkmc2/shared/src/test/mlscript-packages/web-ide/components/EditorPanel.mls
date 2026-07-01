@@ -1,6 +1,8 @@
 import "../filesystem/fs.mls"
+import "../filesystem/projects.mls"
 import "../editor/editor.mls"
 import "./FileTooltip.mls" as fileTooltipModule
+import "../common/SettingsStore.mls"
 import "../common/JS.mls"
 import "../common/Logger.mls"
 
@@ -17,6 +19,7 @@ class EditorPanel extends HTMLElement with
     this.unsubscribe = null
     this.resizeObserver = null
     this.updateArrowVisibility = null
+    this.suppressOpenTabsPersistence = false
   this.emitOpenFilesChange()
 
   fun connectedCallback() =
@@ -67,9 +70,93 @@ class EditorPanel extends HTMLElement with
     let paths = Array.from(this.openTabs.values()).map((tab, ...) => tab.path)
     document.dispatchEvent(new CustomEvent("open-files-changed", eventOptions(pathsDetail(paths))))
 
+  fun openTabsSettingKey() =
+    "editor.openTabs." + projects.currentId()
+
+  fun activeTabPath() =
+    if activeTab() is
+      Absent then null
+      tab then tab.path
+
+  fun openTabsSnapshot() =
+    mut
+      paths: Array.from(this.openTabs.values()).map((tab, ...) => tab.path)
+      activePath: activeTabPath()
+
+  fun persistOpenTabs() =
+    if not this.suppressOpenTabsPersistence do
+      SettingsStore.setSetting(openTabsSettingKey(), JSON.stringify(openTabsSnapshot()))
+
+  fun savedOpenTabsRecord() =
+    let raw = SettingsStore.getSetting(openTabsSettingKey(), "")
+    if raw === "" then null
+    else js.try_catch(
+      () =>
+        let parsed = JSON.parse(raw)
+        if Array.isArray(parsed) then mut { paths: parsed, activePath: null }
+        else if parsed is Object then parsed
+        else null
+      error =>
+        Logger.warn("Editor", "Ignored invalid open-tabs snapshot", error)
+        null
+    )
+
+  fun savedOpenPaths(record) =
+    if
+      record is Absent then []
+      Array.isArray(record.paths) then record.paths
+      else []
+
+  fun savedActivePath(record) =
+    if
+      record is Absent then null
+      typeof(record.activePath) is "string" then record.activePath
+      else null
+
+  fun restorableFile(path) =
+    if typeof(path) is ~"string" then false
+    else
+      let node = fs.stat(path)
+      if node is Absent then false
+      else node.'type === "file"
+
+  fun restoreOpenTabsForCurrentProject() =
+    if this.openTabs.size > 0 then ()
+    else if savedOpenTabsRecord() is ~null as snapshot do
+      let
+        seen = new Set()
+        paths = savedOpenPaths(snapshot)
+        activePath = savedActivePath(snapshot)
+      set this.suppressOpenTabsPersistence = true
+      paths.forEach of (path, ...) =>
+        if not seen.has(path) and restorableFile(path) do
+          seen.add(path)
+          this.openFile(path, path.split("/").pop())
+      if activePath is ~null and restorableFile(activePath) do
+        if existingTabIdFor(activePath) is ~Absent as activeTabId do
+          this.switchTab(activeTabId)
+      set this.suppressOpenTabsPersistence = false
+      this.updateDisplay()
+
+  fun scheduleOpenTabsRestore() =
+    window.setTimeout(() => this.restoreOpenTabsForCurrentProject(), 0)
+
   fun closeAllTabs() =
     let panel = this
     Array.from(this.openTabs.keys()).forEach of (tabId, ...) => panel.closeTab(tabId)
+
+  fun destroyTab(tab) =
+    if tab.editorView is ~Absent as editorView do
+      editorView.destroy()
+    tab.editorDiv.remove()
+
+  fun resetTabsAfterFsReset() =
+    set this.suppressOpenTabsPersistence = true
+    Array.from(this.openTabs.values()).forEach of (tab, ...) => destroyTab(tab)
+    this.openTabs.clear()
+    set this.activeTabId = null
+    this.updateDisplay()
+    set this.suppressOpenTabsPersistence = false
 
   fun shouldHandleFsEvent(kind) =
     kind is ("write" | "delete" | "rename" | "readonly" | "attr")
@@ -112,7 +199,7 @@ class EditorPanel extends HTMLElement with
     else ()
 
   fun handleFsEvent(event) = if
-    event.'type is "reset" then this.closeAllTabs()
+    event.'type is "reset" then this.resetTabsAfterFsReset()
     shouldHandleFsEvent(event.'type) then
       Array.from(this.openTabs.entries()).forEach of (entry, ...) =>
         this.handleFsEventForTab(entry.at(0), entry.at(1), event)
@@ -192,6 +279,7 @@ class EditorPanel extends HTMLElement with
     window.addEventListener of "file-open", event =>
       panel.openFile(event.detail.path, event.detail.fileName)
     document.addEventListener("keydown", event => panel.handleShortcut(event))
+    document.addEventListener("current-project-changed", () => panel.scheduleOpenTabsRestore())
 
   fun showArrow(arrow) = if not arrow.classList.contains("visible") do
     set arrow.style.display = "flex"
@@ -510,6 +598,7 @@ class EditorPanel extends HTMLElement with
       else emptyState.classList.add("hidden")
     this.notifyActiveTabChange(activeTab())
     this.emitOpenFilesChange()
+    this.persistOpenTabs()
     tabBar.querySelectorAll(".tab").forEach of (tabEl, ...) =>
       setupTabElement(tabEl, tooltip)
     tabBar.querySelectorAll(".tab-close").forEach of (btn, ...) =>

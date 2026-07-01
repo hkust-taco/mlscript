@@ -241,7 +241,7 @@ class TreeNode extends HTMLElement with
     if ext is
       ".mls" | ".mjs" | ".js" then "file-code"
       ".json" then "braces"
-      ".md" then "file-text"
+      ".md" | ".markdown" then "file-text"
       else "file"
 
   fun fileOpenDetail(openPath, fileName) =

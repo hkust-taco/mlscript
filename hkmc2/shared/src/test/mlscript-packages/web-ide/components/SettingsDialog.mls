@@ -6,6 +6,11 @@ open JS { Absent }
 
 class SettingsDialog extends HTMLElement with
   let activeTab = "appearance"
+  let defaultEditorFontFamily = "'Google Sans Code', 'Monaco', 'Menlo', 'Ubuntu Mono', monospace"
+  let defaultEditorFontVariationNormal = "'wght' 400"
+  let defaultEditorFontVariationBold = "'wght' 700"
+  let defaultEditorFontVariationItalic = "'wght' 400"
+  let defaultEditorFontVariationBoldItalic = "'wght' 700"
 
   fun connectedCallback() =
     this.render()
@@ -55,6 +60,20 @@ class SettingsDialog extends HTMLElement with
       </label>
     """
 
+  fun inputRowHtml(label, key, defaultValue, inputType, inputClass, attrs) =
+    """
+      <label class="settings-row">
+        <span class="settings-row-label">""" + label + """</span>
+        <input type="""" + inputType + """" class="settings-input """ + inputClass + """" data-setting-key="""" + key + """" data-setting-default="""" + defaultValue + """" """ + attrs + """/>
+      </label>
+    """
+
+  fun textInputRowHtml(label, key, defaultValue) =
+    inputRowHtml(label, key, defaultValue, "text", "settings-text-input", "")
+
+  fun numberInputRowHtml(label, key, defaultValue, min, max) =
+    inputRowHtml(label, key, defaultValue, "number", "settings-number-input", """min="""" + min + """" max="""" + max + """" step="1"""")
+
   fun buttonRowHtml(label, action, text) =
     """
       <div class="settings-row">
@@ -65,18 +84,6 @@ class SettingsDialog extends HTMLElement with
 
   fun optionHtml(value, label) =
     """<option value="""" + value + """">""" + label + """</option>"""
-
-  fun fontSizeOptionsHtml() =
-    [
-      optionHtml("10", "10px")
-      optionHtml("12", "12px")
-      optionHtml("14", "14px")
-      optionHtml("16", "16px")
-      optionHtml("18", "18px")
-      optionHtml("20", "20px")
-      optionHtml("22", "22px")
-      optionHtml("24", "24px")
-    ].join("")
 
   fun problemsScopeOptionsHtml() =
     [
@@ -95,7 +102,12 @@ class SettingsDialog extends HTMLElement with
     ].join("")
 
   fun editorRowsHtml() =
-    selectRowHtml("Font size", "editor.fontSize", "14", fontSizeOptionsHtml()) +
+    numberInputRowHtml("Font size", "editor.fontSize", "14", "10", "24") +
+    textInputRowHtml("Font family", "editor.fontFamily", defaultEditorFontFamily) +
+    textInputRowHtml("Normal font variation", "editor.fontVariation.normal", defaultEditorFontVariationNormal) +
+    textInputRowHtml("Bold font variation", "editor.fontVariation.bold", defaultEditorFontVariationBold) +
+    textInputRowHtml("Italic font variation", "editor.fontVariation.italic", defaultEditorFontVariationItalic) +
+    textInputRowHtml("Bold italic font variation", "editor.fontVariation.boldItalic", defaultEditorFontVariationBoldItalic) +
     toggleRowHtml("Word wrap", "editor.wordWrap", "false") +
     toggleRowHtml("Indentation guides", "editor.indentGuides", "true") +
     toggleRowHtml("Show whitespace", "editor.showWhitespace", "false")
@@ -194,6 +206,25 @@ class SettingsDialog extends HTMLElement with
     else if element.classList.contains("settings-toggle") then "false"
     else element.value
 
+  fun isNaN(value) =
+    value !== value
+
+  fun parsedNumber(value, fallback) =
+    let parsed = parseInt(value, 10)
+    if isNaN(parsed) then fallback else parsed
+
+  fun normalizedInputValue(element) =
+    if element.classList.contains("settings-number-input") then
+      let
+        fallback = parsedNumber(settingDefaultValue(element), 14)
+        parsed = parsedNumber(element.value, fallback)
+        min = parsedNumber(element.min, parsed)
+        max = parsedNumber(element.max, parsed)
+        clamped = Math.max(min, Math.min(max, parsed))
+      set element.value = "" + clamped
+      "" + clamped
+    else element.value
+
   fun applySettingElement(element) =
     if element.dataset.settingKey is ~Absent as key do
       let value = SettingsStore.getSetting(key, settingDefaultValue(element))
@@ -209,10 +240,13 @@ class SettingsDialog extends HTMLElement with
     if element.dataset.settingKey is ~Absent as key do
       let value = if element.classList.contains("settings-toggle") then
         if element.checked then "true" else "false"
+      else if element.classList.contains("settings-input") then normalizedInputValue(element)
       else element.value
       if element.classList.contains("settings-toggle") then
         SettingsStore.setSetting(key, value)
       else if element.classList.contains("settings-select") do
+        SettingsStore.setSetting(key, value)
+      else if element.classList.contains("settings-input") do
         SettingsStore.setSetting(key, value)
       document.dispatchEvent(new CustomEvent("setting-changed", mut { detail: mut { :key, :value } }))
 
@@ -263,6 +297,7 @@ class SettingsDialog extends HTMLElement with
     if event.target is ~Absent as target do
       if target.matches(".settings-toggle[data-setting-key]") then persistSettingElement(target)
       else if target.matches(".settings-select[data-setting-key]") do persistSettingElement(target)
+      else if target.matches(".settings-input[data-setting-key]") do persistSettingElement(target)
 
   fun attachEventListeners() =
     let panel = this

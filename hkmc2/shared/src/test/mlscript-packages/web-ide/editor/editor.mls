@@ -3,6 +3,7 @@ import "https://esm.sh/@codemirror/view@^6.0.0?target=es2022" { keymap, Decorati
 import "https://esm.sh/@codemirror/state@^6.0.0?target=es2022" { EditorState }
 import "https://esm.sh/@codemirror/commands@^6.0.0?target=es2022" { indentWithTab }
 import "https://esm.sh/@codemirror/lang-javascript@6.2.4" { javascript }
+import "https://esm.sh/@codemirror/lang-markdown@6.3.4" { markdown }
 import "https://esm.sh/@codemirror/language@6.11.3" { StreamLanguage, defaultHighlightStyle, syntaxHighlighting, foldService, indentUnit }
 import "https://esm.sh/@uiw/codemirror-theme-vscode" { vscodeLight, vscodeDark }
 import "./Highlight.mls"
@@ -15,9 +16,19 @@ open JS { Absent }
 module editor with...
 
 let editorFontSizeStorageKey = "editor.fontSize"
+let editorFontFamilyStorageKey = "editor.fontFamily"
+let editorFontVariationNormalStorageKey = "editor.fontVariation.normal"
+let editorFontVariationBoldStorageKey = "editor.fontVariation.bold"
+let editorFontVariationItalicStorageKey = "editor.fontVariation.italic"
+let editorFontVariationBoldItalicStorageKey = "editor.fontVariation.boldItalic"
 let defaultEditorFontSize = 14
 let minEditorFontSize = 10
 let maxEditorFontSize = 24
+let defaultEditorFontFamily = "'Google Sans Code', 'Monaco', 'Menlo', 'Ubuntu Mono', monospace"
+let defaultEditorFontVariationNormal = "'wght' 400"
+let defaultEditorFontVariationBold = "'wght' 700"
+let defaultEditorFontVariationItalic = "'wght' 400"
+let defaultEditorFontVariationBoldItalic = "'wght' 700"
 
 let foldStart = new RegExp("^\\s*(?:(?:data\\s+)?class|trait|object|module|fun|constructor)\\b")
 
@@ -34,12 +45,43 @@ fun applyEditorFontSize(size) =
   document.documentElement.style.setProperty("--editor-font-size", clamped + "px")
   clamped
 
+fun cssSettingValue(value, fallback) =
+  if value is Absent then fallback
+  else if value.trim() === "" then fallback
+  else value
+
+fun applyEditorCssSetting(variableName, value, fallback) =
+  document.documentElement.style.setProperty(variableName, cssSettingValue(value, fallback))
+
+fun applyEditorFontFamily(value) =
+  applyEditorCssSetting("--editor-font-family", value, defaultEditorFontFamily)
+
+fun applyEditorFontVariationNormal(value) =
+  applyEditorCssSetting("--editor-font-variation-normal", value, defaultEditorFontVariationNormal)
+
+fun applyEditorFontVariationBold(value) =
+  applyEditorCssSetting("--editor-font-variation-bold", value, defaultEditorFontVariationBold)
+
+fun applyEditorFontVariationItalic(value) =
+  applyEditorCssSetting("--editor-font-variation-italic", value, defaultEditorFontVariationItalic)
+
+fun applyEditorFontVariationBoldItalic(value) =
+  applyEditorCssSetting("--editor-font-variation-bold-italic", value, defaultEditorFontVariationBoldItalic)
+
 fun editorFontSizeFromSetting(value) =
   let parsed = parseInt(value, 10)
   if isNaN(parsed) then defaultEditorFontSize else parsed
 
 fun restoreEditorFontSize() =
   applyEditorFontSize(editorFontSizeFromSetting(SettingsStore.getSetting(editorFontSizeStorageKey, "" + defaultEditorFontSize)))
+
+fun restoreEditorTypography() =
+  restoreEditorFontSize()
+  applyEditorFontFamily(SettingsStore.getSetting(editorFontFamilyStorageKey, defaultEditorFontFamily))
+  applyEditorFontVariationNormal(SettingsStore.getSetting(editorFontVariationNormalStorageKey, defaultEditorFontVariationNormal))
+  applyEditorFontVariationBold(SettingsStore.getSetting(editorFontVariationBoldStorageKey, defaultEditorFontVariationBold))
+  applyEditorFontVariationItalic(SettingsStore.getSetting(editorFontVariationItalicStorageKey, defaultEditorFontVariationItalic))
+  applyEditorFontVariationBoldItalic(SettingsStore.getSetting(editorFontVariationBoldItalicStorageKey, defaultEditorFontVariationBoldItalic))
 
 fun currentEditorFontSize() =
   let
@@ -154,10 +196,12 @@ fun editorThemeSpec() = mut
     overflow: "auto"
   ".cm-content": mut
     caretColor: "var(--sand-12)"
-    fontFamily: "'Google Sans Code', 'Monaco', 'Menlo', 'Ubuntu Mono', monospace"
+    fontFamily: "var(--editor-font-family)"
+    fontVariationSettings: "var(--editor-font-variation-normal)"
   ".cm-lineNumbers": mut
     caretColor: "var(--sand-12)"
-    fontFamily: "'Google Sans Code', 'Monaco', 'Menlo', 'Ubuntu Mono', monospace"
+    fontFamily: "var(--editor-font-family)"
+    fontVariationSettings: "var(--editor-font-variation-normal)"
   ".cm-cursor": mut
     borderLeftColor: "var(--sand-12)"
   ".cm-gutters": mut
@@ -186,6 +230,8 @@ fun languageExtensions(extension) =
     "mls" then
       extensions.push(StreamLanguage.define(Highlight.mlscript))
       extensions.push(mlscriptFolding())
+    "md" | "markdown" then
+      extensions.push(markdown())
     else ()
   extensions
 
@@ -229,12 +275,18 @@ fun cursorPositionOnChange(filePath) =
 
 fun handleSettingChanged(detail) =
   if detail is ~Absent as setting do
-    if setting.key === editorFontSizeStorageKey do applyEditorFontSize(editorFontSizeFromSetting(setting.value))
+    if setting.key === editorFontSizeStorageKey then applyEditorFontSize(editorFontSizeFromSetting(setting.value))
+    else if setting.key === editorFontFamilyStorageKey then applyEditorFontFamily(setting.value)
+    else if setting.key === editorFontVariationNormalStorageKey then applyEditorFontVariationNormal(setting.value)
+    else if setting.key === editorFontVariationBoldStorageKey then applyEditorFontVariationBold(setting.value)
+    else if setting.key === editorFontVariationItalicStorageKey then applyEditorFontVariationItalic(setting.value)
+    else if setting.key === editorFontVariationBoldItalicStorageKey do applyEditorFontVariationBoldItalic(setting.value)
 
 document.addEventListener("setting-changed", event => handleSettingChanged(event.detail))
+restoreEditorTypography()
 
 fun editorExtensions(filePath, extension, isReadonly) =
-  restoreEditorFontSize()
+  restoreEditorTypography()
   let extensions = mut [basicSetup]
   extensions.push(keymap.of([indentWithTab]))
   extensions.push(indentUnit.of("  "))

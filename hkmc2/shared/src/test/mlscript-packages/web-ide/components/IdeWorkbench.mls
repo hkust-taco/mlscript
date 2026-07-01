@@ -140,6 +140,8 @@ class IdeWorkbench extends HTMLElement with
       path is Absent then "No language"
       path.endsWith(".mls") then "MLscript"
       path.endsWith(".mjs") then "JavaScript"
+      path.endsWith(".md") then "Markdown"
+      path.endsWith(".markdown") then "Markdown"
       else "File"
 
   fun updateText(selector, value) =
