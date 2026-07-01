@@ -89,6 +89,7 @@ class BottomPanel extends HTMLElement with
     """
     this.classList.toggle("collapsed", isCollapsed)
     attachEventListeners()
+    scrollOutputToLatest()
     scrollLoggingToLatest()
 
   fun checkedAttr() =
@@ -616,6 +617,11 @@ class BottomPanel extends HTMLElement with
           logSortOrder === "desc" then set content.scrollTop = 0
           else set content.scrollTop = content.scrollHeight
         )
+
+  fun scrollOutputToLatest() =
+    if activeTab === "output" and not isCollapsed do
+      if this.querySelector(".bottom-panel-content") is ~null as content do
+        window.requestAnimationFrame(() => set content.scrollTop = content.scrollHeight)
 
   fun attachEventListeners() =
     let panel = this
