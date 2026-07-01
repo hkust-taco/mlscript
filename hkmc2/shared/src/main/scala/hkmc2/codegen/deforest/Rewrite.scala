@@ -198,7 +198,7 @@ class DeforestRewriter(val solver: DeforestFusionSolver)(using Raise):
         
         val (parents, _) = getParentLabelOrMatchesAndRestBefore(dest.exprId)
         for needRest <- Iterator.single(pre.res.matchScrutToMatchBlock(dest._1)) ++ parents do
-          val (matchOrLabelId, nme) = needRest match
+          val (matchOrLabelId, nme): MatchOrLabelId -> Str = needRest match
             case Match(scrut, arms, dflt, rest) => scrut.uid -> scrut.uid.getReferredSym.nme
             case Label(label, loop, body, rest) => label -> label.nme
           val restFunId = matchOrLabelId.withInstId(dest.instId)

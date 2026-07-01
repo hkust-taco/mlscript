@@ -78,7 +78,7 @@ class EtaExpansionSolver(val constraintSolver: FlowConstraintSolver):
             case _: Ctor => Nil
         end go
         
-        go(constraintSolver.lowerBounds(s.uid), N)
+        go(constraintSolver.lowerBounds(s), N)
       case UnknownProd => Nil
       case _: Ctor => Nil
     end funResShape

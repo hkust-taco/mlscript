@@ -559,17 +559,17 @@ f(id(A)) + f(A)
 //│ deforest > 	match: x²²
 //│ deforest > <<< fusing <<<
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let tmp, tmp1, tmp2, f_8$f, f_8$x_A, f_8$x_rest, deforest$lam;
+//│ let tmp, tmp1, tmp2, f_f$f, f_f$x_A, f_f$x_rest, deforest$lam;
 //│ @private
-//│ define f_8$f as fun f_8$f⁰(x) {
+//│ define f_f$f as fun f_f$f⁰(x) {
 //│   return x()
 //│ };
 //│ @affine(1) @private
-//│ define f_8$x_A as fun f_8$x_A⁰()() {
+//│ define f_f$x_A as fun f_f$x_A⁰()() {
 //│   return 1
 //│ };
 //│ @private
-//│ define f_8$x_rest as fun f_8$x_rest⁰() {
+//│ define f_f$x_rest as fun f_f$x_rest⁰() {
 //│   return null
 //│ };
 //│ define f⁰ as fun f¹(x) {
@@ -582,8 +582,8 @@ f(id(A)) + f(A)
 //│ };
 //│ set tmp = Predef⁰.id⁰(A⁰);
 //│ set tmp1 = f¹(tmp);
-//│ set deforest$lam = f_8$x_A⁰();
-//│ set tmp2 = f_8$f⁰(deforest$lam);
+//│ set deforest$lam = f_f$x_A⁰();
+//│ set tmp2 = f_f$f⁰(deforest$lam);
 //│ return +⁰(tmp1, tmp2)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 2

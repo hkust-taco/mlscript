@@ -52,41 +52,41 @@ test(p) + f(p) + test(AA(AA(AA(10)))) + test(B)
 //│ deforest > 	fields: arg$AA$0$¹.x¹
 //│ deforest > <<< fusing <<<
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10, test_28$test, test_28$x_dflt, test_28$x_rest, test_25$test, test_25$x_AA, test_25$x_rest, test_25$arg$AA$0$_AA, test_25$arg$AA$0$_rest, test_25$arg$AA$0$_AA1, test_25$arg$AA$0$_rest1, AA_x, AA_x1, AA_x2, deforest$lam;
+//│ let tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10, test_test$test, test_test$x_dflt, test_test$x_rest, test_test$test1, test_test$x_AA, test_test$x_rest1, test_test$arg$AA$0$_AA, test_test$arg$AA$0$_rest, test_test$arg$AA$0$_AA1, test_test$arg$AA$0$_rest1, AA_x, AA_x1, AA_x2, deforest$lam;
 //│ @private
-//│ define test_28$test as fun test_28$test⁰(x) {
+//│ define test_test$test as fun test_test$test⁰(x) {
 //│   let t, a, arg$AA$0$, arg$AA$0$1, arg$AA$0$2, tmp11, tmp12, tmp13, tmp14;
 //│   return x(tmp11, t, tmp11, tmp12, tmp13, tmp14)
 //│ };
 //│ @private
-//│ define test_25$test as fun test_25$test⁰(x) {
+//│ define test_test$test1 as fun test_test$test¹(x) {
 //│   let t, a, arg$AA$0$, arg$AA$0$1, arg$AA$0$2, tmp11, tmp12, tmp13, tmp14;
 //│   return x(t, a, arg$AA$0$, arg$AA$0$1, arg$AA$0$2, tmp11, tmp12, tmp13, tmp14, t, tmp11, tmp12, tmp13, tmp14)
 //│ };
 //│ @affine(1) @private
-//│ define test_28$x_dflt as fun test_28$x_dflt⁰()(fv_tmp, fv_t, fv_tmp1, fv_tmp2, fv_tmp3, fv_tmp4) {
+//│ define test_test$x_dflt as fun test_test$x_dflt⁰()(fv_tmp, fv_t, fv_tmp1, fv_tmp2, fv_tmp3, fv_tmp4) {
 //│   set fv_tmp1 = 4;
-//│   return test_28$x_rest⁰(fv_t, fv_tmp1, fv_tmp2, fv_tmp3, fv_tmp4)
+//│   return test_test$x_rest⁰(fv_t, fv_tmp1, fv_tmp2, fv_tmp3, fv_tmp4)
 //│ };
 //│ @affine(1) @private
-//│ define test_25$x_AA as fun test_25$x_AA⁰(AA_x3)(fv_t, fv_a, fv_arg$AA$0$, fv_arg$AA$0$1, fv_arg$AA$0$2, fv_tmp, fv_tmp1, fv_tmp2, fv_tmp3, fv_t1, fv_tmp4, fv_tmp5, fv_tmp6, fv_tmp7) {
+//│ define test_test$x_AA as fun test_test$x_AA⁰(AA_x3)(fv_t, fv_a, fv_arg$AA$0$, fv_arg$AA$0$1, fv_arg$AA$0$2, fv_tmp, fv_tmp1, fv_tmp2, fv_tmp3, fv_t1, fv_tmp4, fv_tmp5, fv_tmp6, fv_tmp7) {
 //│   set fv_arg$AA$0$ = AA_x3;
 //│   return fv_arg$AA$0$(fv_t1, fv_a, fv_arg$AA$0$1, fv_arg$AA$0$2, fv_tmp4, fv_tmp5, fv_tmp6, fv_tmp7, fv_t1, fv_tmp4, fv_tmp5, fv_tmp6, fv_tmp7)
 //│ };
 //│ @affine(1) @private
-//│ define test_25$arg$AA$0$_AA as fun test_25$arg$AA$0$_AA⁰(AA_x3)(fv_t, fv_a, fv_arg$AA$0$, fv_arg$AA$0$1, fv_tmp, fv_tmp1, fv_tmp2, fv_tmp3, fv_t1, fv_tmp4, fv_tmp5, fv_tmp6, fv_tmp7) {
+//│ define test_test$arg$AA$0$_AA as fun test_test$arg$AA$0$_AA⁰(AA_x3)(fv_t, fv_a, fv_arg$AA$0$, fv_arg$AA$0$1, fv_tmp, fv_tmp1, fv_tmp2, fv_tmp3, fv_t1, fv_tmp4, fv_tmp5, fv_tmp6, fv_tmp7) {
 //│   set fv_arg$AA$0$ = AA_x3;
 //│   return fv_arg$AA$0$(fv_a, fv_arg$AA$0$1, fv_tmp4, fv_t1, fv_tmp4, fv_tmp5, fv_tmp6, fv_tmp7)
 //│ };
 //│ @affine(1) @private
-//│ define test_25$arg$AA$0$_AA1 as fun test_25$arg$AA$0$_AA¹(AA_x3)(fv_a, fv_arg$AA$0$, fv_tmp, fv_t, fv_tmp1, fv_tmp2, fv_tmp3, fv_tmp4) {
+//│ define test_test$arg$AA$0$_AA1 as fun test_test$arg$AA$0$_AA¹(AA_x3)(fv_a, fv_arg$AA$0$, fv_tmp, fv_t, fv_tmp1, fv_tmp2, fv_tmp3, fv_tmp4) {
 //│   set fv_arg$AA$0$ = AA_x3;
 //│   set fv_a = fv_arg$AA$0$;
 //│   set fv_tmp1 = fv_a;
-//│   return test_25$arg$AA$0$_rest⁰(fv_t, fv_tmp1, fv_tmp2, fv_tmp3, fv_tmp4)
+//│   return test_test$arg$AA$0$_rest⁰(fv_t, fv_tmp1, fv_tmp2, fv_tmp3, fv_tmp4)
 //│ };
 //│ @private
-//│ define test_28$x_rest as fun test_28$x_rest⁰(fv_t, fv_tmp, fv_tmp1, fv_tmp2, fv_tmp3) {
+//│ define test_test$x_rest as fun test_test$x_rest⁰(fv_t, fv_tmp, fv_tmp1, fv_tmp2, fv_tmp3) {
 //│   set fv_t = fv_tmp;
 //│   set fv_tmp1 = +⁰(fv_t, 20);
 //│   set fv_tmp2 = -⁰(fv_tmp1, 3);
@@ -94,7 +94,7 @@ test(p) + f(p) + test(AA(AA(AA(10)))) + test(B)
 //│   return -⁰(fv_tmp3, 1)
 //│ };
 //│ @private
-//│ define test_25$x_rest as fun test_25$x_rest⁰(fv_t, fv_tmp, fv_tmp1, fv_tmp2, fv_tmp3) {
+//│ define test_test$x_rest1 as fun test_test$x_rest¹(fv_t, fv_tmp, fv_tmp1, fv_tmp2, fv_tmp3) {
 //│   set fv_t = fv_tmp;
 //│   set fv_tmp1 = +⁰(fv_t, 20);
 //│   set fv_tmp2 = -⁰(fv_tmp1, 3);
@@ -102,12 +102,12 @@ test(p) + f(p) + test(AA(AA(AA(10)))) + test(B)
 //│   return -⁰(fv_tmp3, 1)
 //│ };
 //│ @private
-//│ define test_25$arg$AA$0$_rest as fun test_25$arg$AA$0$_rest¹(fv_t, fv_tmp, fv_tmp1, fv_tmp2, fv_tmp3) {
-//│   return test_25$x_rest⁰(fv_t, fv_tmp, fv_tmp1, fv_tmp2, fv_tmp3)
+//│ define test_test$arg$AA$0$_rest as fun test_test$arg$AA$0$_rest¹(fv_t, fv_tmp, fv_tmp1, fv_tmp2, fv_tmp3) {
+//│   return test_test$x_rest¹(fv_t, fv_tmp, fv_tmp1, fv_tmp2, fv_tmp3)
 //│ };
 //│ @private
-//│ define test_25$arg$AA$0$_rest1 as fun test_25$arg$AA$0$_rest⁰(fv_t, fv_tmp, fv_tmp1, fv_tmp2, fv_tmp3) {
-//│   return test_25$arg$AA$0$_rest¹(fv_t, fv_tmp, fv_tmp1, fv_tmp2, fv_tmp3)
+//│ define test_test$arg$AA$0$_rest1 as fun test_test$arg$AA$0$_rest⁰(fv_t, fv_tmp, fv_tmp1, fv_tmp2, fv_tmp3) {
+//│   return test_test$arg$AA$0$_rest¹(fv_t, fv_tmp, fv_tmp1, fv_tmp2, fv_tmp3)
 //│ };
 //│ define test⁰ as fun test¹(x) {
 //│   let t, a, arg$AA$0$, arg$AA$0$1, arg$AA$0$2, tmp11, tmp12, tmp13, tmp14;
@@ -162,15 +162,15 @@ test(p) + f(p) + test(AA(AA(AA(10)))) + test(B)
 //│ set tmp3 = f¹(p⁰);
 //│ set tmp4 = +⁰(tmp2, tmp3);
 //│ set AA_x = 10;
-//│ set tmp5 = test_25$arg$AA$0$_AA¹(AA_x);
+//│ set tmp5 = test_test$arg$AA$0$_AA¹(AA_x);
 //│ set AA_x1 = tmp5;
-//│ set tmp6 = test_25$arg$AA$0$_AA⁰(AA_x1);
+//│ set tmp6 = test_test$arg$AA$0$_AA⁰(AA_x1);
 //│ set AA_x2 = tmp6;
-//│ set tmp7 = test_25$x_AA⁰(AA_x2);
-//│ set tmp8 = test_25$test⁰(tmp7);
+//│ set tmp7 = test_test$x_AA⁰(AA_x2);
+//│ set tmp8 = test_test$test¹(tmp7);
 //│ set tmp9 = +⁰(tmp4, tmp8);
-//│ set deforest$lam = test_28$x_dflt⁰();
-//│ set tmp10 = test_28$test⁰(deforest$lam);
+//│ set deforest$lam = test_test$x_dflt⁰();
+//│ set tmp10 = test_test$test⁰(deforest$lam);
 //│ return +⁰(tmp9, tmp10)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 78

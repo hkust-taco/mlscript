@@ -17,5 +17,3 @@ class SymbolPrinter(val dbgScp: Scope) extends DebugPrinter:
     sym.showName(using dbgScp, summon)
   
 end SymbolPrinter
-
-

@@ -13,8 +13,6 @@ object Uid:
         curUid
       def reset = curUid = -1
   object Symbol extends Handler[semantics.Symbol]
-  object Result extends Handler[codegen.Result]
-  object StratVar extends Handler[codegen.flowAnalysis.StratVar]
 
 extension [T] (x: Uid[T])
   def <=(rhs: Uid[T]) = x <= rhs
@@ -22,4 +20,3 @@ extension [T] (x: Uid[T])
 
 private val ord = Ordering.Int
 given [A]: Ordering[Uid[A]] = ord
-

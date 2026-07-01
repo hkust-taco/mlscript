@@ -73,38 +73,38 @@ f(p())
 //│ deforest > 	fields: arg$X$0$⁰.b⁰
 //│ deforest > <<< fusing <<<
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let tmp, p_8$p, f_10$f, f_10$x_X, f_10$x_rest, f_10$arg$X$0$_Y, f_10$arg$X$0$_rest;
+//│ let tmp, p_p$p, f_f$f, f_f$x_X, f_f$x_rest, f_f$arg$X$0$_Y, f_f$arg$X$0$_rest;
 //│ @private
-//│ define p_8$p as fun p_8$p⁰()(eta$0$0, eta$0$1, eta$0$2) {
+//│ define p_p$p as fun p_p$p⁰()(eta$0$0, eta$0$1, eta$0$2) {
 //│   let tmp1, Y_b, X_a;
 //│   set Y_b = O⁰;
-//│   set tmp1 = f_10$arg$X$0$_Y⁰(Y_b);
+//│   set tmp1 = f_f$arg$X$0$_Y⁰(Y_b);
 //│   set X_a = tmp1;
-//│   return f_10$x_X⁰(X_a)(eta$0$0, eta$0$1, eta$0$2)
+//│   return f_f$x_X⁰(X_a)(eta$0$0, eta$0$1, eta$0$2)
 //│ };
 //│ @private
-//│ define f_10$f as fun f_10$f⁰(x) {
+//│ define f_f$f as fun f_f$f⁰(x) {
 //│   let y, arg$X$0$, arg$Y$0$;
 //│   return x(y, arg$X$0$, arg$Y$0$)
 //│ };
 //│ @affine(1) @private
-//│ define f_10$x_X as fun f_10$x_X⁰(X_a)(fv_y, fv_arg$X$0$, fv_arg$Y$0$) {
+//│ define f_f$x_X as fun f_f$x_X⁰(X_a)(fv_y, fv_arg$X$0$, fv_arg$Y$0$) {
 //│   set fv_arg$X$0$ = X_a;
 //│   return fv_arg$X$0$(fv_y, fv_arg$Y$0$)
 //│ };
 //│ @affine(1) @private
-//│ define f_10$arg$X$0$_Y as fun f_10$arg$X$0$_Y⁰(Y_b)(fv_y, fv_arg$Y$0$) {
+//│ define f_f$arg$X$0$_Y as fun f_f$arg$X$0$_Y⁰(Y_b)(fv_y, fv_arg$Y$0$) {
 //│   set fv_arg$Y$0$ = Y_b;
 //│   set fv_y = fv_arg$Y$0$;
 //│   return fv_y
 //│ };
 //│ @private
-//│ define f_10$x_rest as fun f_10$x_rest⁰() {
+//│ define f_f$x_rest as fun f_f$x_rest⁰() {
 //│   return null
 //│ };
 //│ @private
-//│ define f_10$arg$X$0$_rest as fun f_10$arg$X$0$_rest⁰() {
-//│   return f_10$x_rest⁰()
+//│ define f_f$arg$X$0$_rest as fun f_f$arg$X$0$_rest⁰() {
+//│   return f_f$x_rest⁰()
 //│ };
 //│ define p⁰ as fun p¹() {
 //│   let tmp1;
@@ -128,8 +128,8 @@ f(p())
 //│       throw new globalThis⁰.Error⁰("match error")
 //│   end
 //│ };
-//│ set tmp = p_8$p⁰();
-//│ return f_10$f⁰(tmp)
+//│ set tmp = p_p$p⁰();
+//│ return f_f$f⁰(tmp)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = O
 
@@ -189,7 +189,7 @@ fun c(x, d) = if x is
 //│ deforest > 	match: x⁴
 //│ deforest > 	fields: x⁴.a⁰
 //│ deforest > <<< fusing <<<
-//│ = fun lambda_7$lambda
+//│ = fun lambda_lambda$lambda
 
 
 :expect 2

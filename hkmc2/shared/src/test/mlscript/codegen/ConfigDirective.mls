@@ -156,7 +156,7 @@ print(42)
 private fun deadParamConfig(a) = 0
 deadParamConfig(42)
 //│ dead-param-elim > >>> dead-param-elim results >>>
-//│ dead-param-elim > prodfun deadParamConfig#0 @ <root> -> eliminable: {0}
+//│ dead-param-elim > prodfun deadParamConfig⁰#0 @ <root> -> eliminable: {0}
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ = 0
 
@@ -194,13 +194,13 @@ fun fst(p) = if p is Pair(x, y) then x
 fun applyTwice(f, x) = f(x) + f(x)
 applyTwice(fst, Pair(1, 2))
 //│ deforest > >>> non-affine syms >>>
-//│ deforest > cap_ub_(term:fst,0)_for_fst@35
-//│ deforest > f_for_applyTwice@24
-//│ deforest > f_for_applyTwice@55
-//│ deforest > fst_for_fst@32
-//│ deforest > tmp@1
-//│ deforest > x_for_applyTwice@23
-//│ deforest > x_for_applyTwice@54
+//│ deforest > cap_ub_(term:fst,0)_for_fst_for_fst⁰
+//│ deforest > f_for_applyTwice¹
+//│ deforest > f_for_applyTwice⁰
+//│ deforest > fst_for_fst⁰
+//│ deforest > tmp⁰
+//│ deforest > x_for_applyTwice¹
+//│ deforest > x_for_applyTwice⁰
 //│ deforest > <<< non-affine syms <<<
 //│ = 2
 
