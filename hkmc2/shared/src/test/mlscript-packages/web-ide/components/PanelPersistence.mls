@@ -32,3 +32,13 @@ fun restorePanelHeight(panel, storageKey, minSize, maxSize) =
 
 fun savePanelHeight(storageKey, height) =
   localStorage.setItem(storageKey, height)
+
+fun restoreNumber(storageKey, fallback, minSize, maxSize) =
+  let savedValue = localStorage.getItem(storageKey)
+  if savedValue is ~Absent and savedValue !== "" then
+    let value = parseInt(savedValue, 10)
+    if value >= minSize and value <= maxSize then value else fallback
+  else fallback
+
+fun saveNumber(storageKey, value) =
+  localStorage.setItem(storageKey, value)

@@ -44,6 +44,7 @@
   --ide-panel-header-height: 40px;
   --ide-toolbar-height: 44px;
   --ide-status-bar-height: 24px;
+  --editor-font-size: 14px;
   --panel-header-height: var(--ide-panel-header-height);
   font-family: var(--sans-serif);
 }

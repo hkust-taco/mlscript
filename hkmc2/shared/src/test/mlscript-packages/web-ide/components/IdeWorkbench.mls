@@ -68,6 +68,10 @@ class IdeWorkbench extends HTMLElement with
         <div class="workbench-status-bar" aria-label="Workbench status">
           <span class="status-segment workbench-state-status">Ready</span>
           <span class="status-spacer"></span>
+          <span class="status-segment cursor-position-status" hidden>Ln 1, Col 1</span>
+          <span class="status-segment selection-status" hidden></span>
+          <span class="status-segment encoding-status">UTF-8 LF</span>
+          <span class="status-segment indentation-status">Spaces: 2</span>
           <span class="status-segment active-file-status">No file</span>
           <span class="status-segment active-file-kind">No language</span>
         </div>
@@ -140,6 +144,14 @@ class IdeWorkbench extends HTMLElement with
     if this.querySelector(selector) is ~null as element do
       set element.textContent = value
 
+  fun setHidden(selector, isHidden) =
+    if this.querySelector(selector) is ~null as element do
+      set element.hidden = isHidden
+
+  fun hideEditorPositionStatus() =
+    setHidden(".cursor-position-status", true)
+    setHidden(".selection-status", true)
+
   fun updateActiveFileStatus(detail) =
     let path = if
       detail is Absent then "No file"
@@ -147,6 +159,16 @@ class IdeWorkbench extends HTMLElement with
       else detail.path
     updateText(".active-file-status", path)
     updateText(".active-file-kind", fileKind(path))
+    if path === "No file" do hideEditorPositionStatus()
+
+  fun updateCursorPositionStatus(detail) =
+    if detail is ~Absent as position do
+      updateText(".cursor-position-status", "Ln " + position.line + ", Col " + position.column)
+      setHidden(".cursor-position-status", false)
+      if position.selected > 0 then
+        updateText(".selection-status", "(" + position.selected + " selected)")
+        setHidden(".selection-status", false)
+      else setHidden(".selection-status", true)
 
   fun updateWorkbenchStatus(status) =
     if status is
@@ -201,6 +223,7 @@ class IdeWorkbench extends HTMLElement with
     attachActivityButtons()
     document.addEventListener("sidebar-toggle-requested", event => handleSidebarToggleRequested(event))
     document.addEventListener("active-tab-changed", event => updateActiveFileStatus(event.detail))
+    document.addEventListener("cursor-position-changed", event => updateCursorPositionStatus(event.detail))
     document.addEventListener("compilation-status-change", event => updateCompilationStatus(event.detail.status))
     window.addEventListener("execution-status-change", event => updateWorkbenchStatus(event.detail.status))
 

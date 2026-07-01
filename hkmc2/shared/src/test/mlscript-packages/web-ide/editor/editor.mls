@@ -7,12 +7,43 @@ import "https://esm.sh/@codemirror/language@6.11.3" { StreamLanguage, defaultHig
 import "https://esm.sh/@uiw/codemirror-theme-vscode" { vscodeLight as theme }
 import "./Highlight.mls"
 import "../filesystem/fs.mls"
+import "../components/PanelPersistence.mls"
 
 module editor with...
+
+let editorFontSizeStorageKey = "editor-font-size"
+let defaultEditorFontSize = 14
+let minEditorFontSize = 10
+let maxEditorFontSize = 24
 
 let foldStart = new RegExp("^\\s*(?:(?:data\\s+)?class|trait|object|module|fun|constructor)\\b")
 
 let nonBlank = new RegExp("\\S")
+
+fun isNaN(value) =
+  value !== value
+
+fun clampEditorFontSize(size) =
+  Math.max(minEditorFontSize, Math.min(maxEditorFontSize, size))
+
+fun applyEditorFontSize(size) =
+  let clamped = clampEditorFontSize(size)
+  document.documentElement.style.setProperty("--editor-font-size", clamped + "px")
+  clamped
+
+fun restoreEditorFontSize() =
+  applyEditorFontSize(PanelPersistence.restoreNumber(editorFontSizeStorageKey, defaultEditorFontSize, minEditorFontSize, maxEditorFontSize))
+
+fun currentEditorFontSize() =
+  let
+    rawValue = window.getComputedStyle(document.documentElement).getPropertyValue("--editor-font-size")
+    parsed = parseInt(rawValue, 10)
+  if isNaN(parsed) then defaultEditorFontSize else clampEditorFontSize(parsed)
+
+fun bumpEditorFontSize(delta) =
+  let nextSize = applyEditorFontSize(currentEditorFontSize() + delta)
+  PanelPersistence.saveNumber(editorFontSizeStorageKey, nextSize)
+  nextSize
 
 fun indentationColumns(text) =
   let
@@ -102,7 +133,7 @@ fun mlscriptIndentGuides() =
 fun editorThemeSpec() = mut
   "&": mut
     height: "100%"
-    fontSize: "14px"
+    fontSize: "var(--editor-font-size)"
   ".cm-scroller": mut
     overflow: "auto"
   ".cm-content": mut
@@ -140,7 +171,32 @@ fun saveOnChange(filePath, isReadonly) =
       let newContent = update.state.doc.toString()
       fs.write(filePath, newContent)
 
+fun selectedLength(selection) =
+  let total = 0
+  selection.ranges.forEach of (range, ...) =>
+    set total += Math.abs(range.to - range.from)
+  total
+
+fun cursorPositionDetail(state, filePath) =
+  let
+    head = state.selection.main.head
+    line = state.doc.lineAt(head)
+  mut
+    :filePath
+    line: line.number
+    column: head - line.from + 1
+    selected: selectedLength(state.selection)
+
+fun dispatchCursorPosition(state, filePath) =
+  document.dispatchEvent(new CustomEvent("cursor-position-changed", mut { detail: cursorPositionDetail(state, filePath) }))
+
+fun cursorPositionOnChange(filePath) =
+  EditorView.updateListener.of of update =>
+    if update.selectionSet then dispatchCursorPosition(update.state, filePath)
+    else if update.docChanged do dispatchCursorPosition(update.state, filePath)
+
 fun editorExtensions(filePath, extension, isReadonly) =
+  restoreEditorFontSize()
   let extensions = mut [basicSetup]
   extensions.push(keymap.of([indentWithTab]))
   extensions.push(indentUnit.of("  "))
@@ -150,6 +206,7 @@ fun editorExtensions(filePath, extension, isReadonly) =
   languageExtensions(extension).forEach of (extension, ...) =>
     extensions.push(extension)
   extensions.push(saveOnChange(filePath, isReadonly))
+  extensions.push(cursorPositionOnChange(filePath))
   extensions.push(readonlyExtension(isReadonly))
   extensions.push(EditorView.theme(editorThemeSpec()))
   extensions
@@ -161,6 +218,8 @@ fun editorOptions(container, initialContent, filePath, extension, isReadonly) =
     parent: container
 
 fun createEditor(container, initialContent, filePath, extension, isReadonly) =
-  Reflect.construct of EditorView, [
+  let view = Reflect.construct of EditorView, [
     editorOptions(container, initialContent, filePath, extension, isReadonly)
   ]
+  dispatchCursorPosition(view.state, filePath)
+  view

@@ -145,6 +145,18 @@ class EditorPanel extends HTMLElement with
       event.key === upper then true
       else false
 
+  fun isFontSizeIncreaseKey(event) =
+    if
+      event.key === "=" then true
+      event.key === "+" then true
+      else false
+
+  fun isFontSizeDecreaseKey(event) =
+    if
+      event.key === "-" then true
+      event.key === "_" then true
+      else false
+
   fun handleShortcut(event) =
     let
       isMac = window.navigator.platform.toUpperCase().indexOf("MAC") >= 0
@@ -160,6 +172,12 @@ class EditorPanel extends HTMLElement with
         isKey(event, "b", "B") then
           event.preventDefault()
           dispatchSidebarToggle("left", "files")
+        isFontSizeIncreaseKey(event) then
+          event.preventDefault()
+          editor.bumpEditorFontSize(1)
+        isFontSizeDecreaseKey(event) then
+          event.preventDefault()
+          editor.bumpEditorFontSize(-1)
         else ()
     if event.ctrlKey and isKey(event, "w", "W") do
       event.preventDefault()
@@ -312,6 +330,7 @@ class EditorPanel extends HTMLElement with
       tab.editorDiv.classList.add("active")
       set this.activeTabId = tabId
       tab.editorView.focus()
+      editor.dispatchCursorPosition(tab.editorView.state, tab.path)
     this.updateDisplay()
     this.scrollTabIntoView(tabId)
 
@@ -437,6 +456,13 @@ class EditorPanel extends HTMLElement with
   fun setupTabElement(tabEl, tooltip) =
     let panel = this
     setupNameScroll(tabEl.querySelector(".tab-name"))
+    tabEl.addEventListener of "mousedown", event =>
+      if event.button === 1 do event.preventDefault()
+    tabEl.addEventListener of "auxclick", event =>
+      if event.button === 1 do
+        event.preventDefault()
+        event.stopPropagation()
+        panel.closeTab(tabEl.getAttribute("data-tab-id"))
     tabEl.addEventListener of "click", event =>
       if event.target.closest(".tab-close") is Absent do
         panel.switchTab(tabEl.getAttribute("data-tab-id"))
