@@ -67,9 +67,9 @@ lazy val hkmc2 = crossProject(JSPlatform, JVMPlatform).in(file("hkmc2"))
       val declsDir = rootDir / "hkmc2" / "shared" / "src" / "test" / "mlscript" / "decls"
       val out = (Compile / sourceManaged).value / "hkmc2" / "WebIDEStd.scala"
       val preludeFile = declsDir / "Prelude.mls"
-      val stdFiles = ((stdDir * "*.mls") +++ (stdDir * "*.mjs")).get
+      val stdFiles = ((stdDir * "*.mls") +++ (stdDir * "*.mjs") +++ (stdDir / "quotes" * "*.mls") +++ (stdDir / "quotes" * "*.mjs")).get
         .filterNot(_.getName == "Prelude.mls")
-        .sortBy(_.getName)
+        .sortBy(file => stdDir.toPath.relativize(file.toPath).toString)
 
       def scalaString(value: String): String =
         "\"" + value.flatMap {
@@ -83,7 +83,8 @@ lazy val hkmc2 = crossProject(JSPlatform, JVMPlatform).in(file("hkmc2"))
         } + "\""
 
       val entries = stdFiles.map { file =>
-        s"""js.Array(${scalaString("/std/" + file.getName)}, ${scalaString(IO.read(file))})"""
+        val relativePath = stdDir.toPath.relativize(file.toPath).toString.replace(java.io.File.separatorChar, '/')
+        s"""js.Array(${scalaString("/std/" + relativePath)}, ${scalaString(IO.read(file))})"""
       }
       val source =
         s"""|package hkmc2

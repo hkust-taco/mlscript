@@ -34,8 +34,7 @@ class PackageTestRunner
     
     // The compiler context is created per package to avoid interference.
     given cctx: CompilerCtx = CompilerCtx.fresh(fs, moduleResolver)
-    // We might need to read `Config` from a config file later.
-    given Config = Config.default(mainTestDir)
+    given Config = configForPackage(packageName)
     
     val wrap: (=> Unit) => Unit = body => PackageTestRunner.synchronized(body)
     val report = ReportFormatter(System.out.println, colorize = true, wrap = Some(wrap))
@@ -94,6 +93,13 @@ object PackageTestRunner:
     val runtimeFile = PackageModuleResolver.runtimeTarget(packageDir)
     val runtimeSourceFile = stdlibDir / "Runtime.mls"
     val termFile = PackageModuleResolver.termTarget(packageDir)
+
+  def configForPackage(packageName: Str): Config =
+    val defaultConfig = Config.default(mainTestDir)
+    // Definition lifting currently changes callback interop in generated JS for web IDE code.
+    // Keep this package on the pre-lifting codegen path until that compiler bug is fixed.
+    if packageName == "web-ide" then defaultConfig.copy(liftDefns = N)
+    else defaultConfig
   
   val nodeModulesPath = os.pwd / "node_modules"
   
