@@ -155,22 +155,7 @@ abstract class MLsDiffMaker extends DiffMaker:
       stageCode = stageCode.isSet,
       target = if wasm.isSet then CompilationTarget.Wasm else CompilationTarget.JS,
       rewriteWhileLoops = rewriteWhile.isSet,
-      tailRecOpt = !noTailRecOpt.isSet,
-      deforest = Opt.when(deforest.isSet):
-        val flags = parseFlags(deforest.get)
-        reportUnknownFlags(":deforest", flags, DeforestKnownFlags)
-        reportExclusiveFlagConflict(":deforest", flags, "trackNonAffine", "noTrackNonAffine")
-        reportExclusiveFlagConflict(":deforest", flags, "trackAccumulator", "noTrackAccumulator")
-        reportExclusiveFlagConflict(":deforest", flags, "logNonAffine", "noLogNonAffine")
-        reportExclusiveFlagConflict(":deforest", flags, "logAccumulator", "noLogAccumulator")
-        Deforest(FlowAnalysisConfig(
-          debug = true,
-          mono = flags.contains("mono"),
-          trackNonAffine = resolveFlag(flags, "trackNonAffine", "noTrackNonAffine", default = true),
-          trackAccumulator = resolveFlag(flags, "trackAccumulator", "noTrackAccumulator", default = flags.contains("logAccumulator")),
-          logNonAffine = resolveFlag(flags, "logNonAffine", "noLogNonAffine", default = false),
-          logAccumulator = resolveFlag(flags, "logAccumulator", "noLogAccumulator", default = false),
-        )),
+
       etaExpansion =
         val etaExpansionFlags =
           if etaExpansion.isUnset then Set.empty[Str]
@@ -181,33 +166,52 @@ abstract class MLsDiffMaker extends DiffMaker:
             reportExclusiveFlagConflict(":etaExpansion", etaExpansionFlags, "on", "off")
             if etaExpansionFlags.contains("off") then N
             else S(EtaExpansion.withDebug(etaExpansionFlags.contains("debug"))),
-      inlining = Opt.when(!noInlineOpt.isSet)(Config.Inliner(inlineThreshold =
-        inlineThreshold.get.getOrElse(Config.default.inlineThreshold))),
-      deadBranchRemoval = Config.default.deadBranchRemoval,
       qqEnabled = importQQ.isSet,
       funcToCls = funcToCls.isSet,
       commentGeneratedCode = debug.isSet,
       noFreeze = noFreeze.isSet,
-      noOpt = noOptimizations.isSet,
       noModuleCheck = noModuleCheck.isSet,
-      deadParamElim =
-        if deadParamElim.isUnset then S(DeadParamElim.default)
-        else
-          val flags = parseFlags(deadParamElim.get)
-          reportUnknownFlags(":deadParamElim", flags, DeadParamElimKnownFlags)
-          reportExclusiveFlagConflict(":deadParamElim", flags, "mono", "poly")
-          if flags.contains("off") && (flags - "off").nonEmpty then
-            output(s"$errMarker ':deadParamElim off' conflicts with other flags")
-          if flags.contains("off") then N
+      optimizer = Optimizer(
+        deforest = Opt.when(deforest.isSet):
+          val flags = parseFlags(deforest.get)
+          reportUnknownFlags(":deforest", flags, DeforestKnownFlags)
+          reportExclusiveFlagConflict(":deforest", flags, "trackNonAffine", "noTrackNonAffine")
+          reportExclusiveFlagConflict(":deforest", flags, "trackAccumulator", "noTrackAccumulator")
+          reportExclusiveFlagConflict(":deforest", flags, "logNonAffine", "noLogNonAffine")
+          reportExclusiveFlagConflict(":deforest", flags, "logAccumulator", "noLogAccumulator")
+          Deforest(FlowAnalysisConfig(
+            debug = true,
+            mono = flags.contains("mono"),
+            trackNonAffine = resolveFlag(flags, "trackNonAffine", "noTrackNonAffine", default = true),
+            trackAccumulator = resolveFlag(flags, "trackAccumulator", "noTrackAccumulator", default = flags.contains("logAccumulator")),
+            logNonAffine = resolveFlag(flags, "logNonAffine", "noLogNonAffine", default = false),
+            logAccumulator = resolveFlag(flags, "logAccumulator", "noLogAccumulator", default = false),
+          )),
+        tailRecOpt = !noTailRecOpt.isSet,
+        inlining = Opt.when(!noInlineOpt.isSet)(Config.Inliner(inlineThreshold =
+          inlineThreshold.get.getOrElse(Config.default.inlineThreshold))),
+        deadBranchRemoval = Config.default.deadBranchRemoval,
+        deadCodeElim = noOptimizations.isUnset,
+        deadParamElim =
+          if deadParamElim.isUnset then S(DeadParamElim.default)
           else
-            S(DeadParamElim(FlowAnalysisConfig(
-              debug = flags.contains("debug"),
-              mono = !flags.contains("poly"),
-              trackNonAffine = false,
-              trackAccumulator = false,
-              logNonAffine = false,
-              logAccumulator = false,
-            ))),
+            val flags = parseFlags(deadParamElim.get)
+            reportUnknownFlags(":deadParamElim", flags, DeadParamElimKnownFlags)
+            reportExclusiveFlagConflict(":deadParamElim", flags, "mono", "poly")
+            if flags.contains("off") && (flags - "off").nonEmpty then
+              output(s"$errMarker ':deadParamElim off' conflicts with other flags")
+            if flags.contains("off") then N
+            else
+              S(DeadParamElim(FlowAnalysisConfig(
+                debug = flags.contains("debug"),
+                mono = !flags.contains("poly"),
+                trackNonAffine = false,
+                trackAccumulator = false,
+                logNonAffine = false,
+                logAccumulator = false,
+              ))),
+        dataFlowAnalysis = noOptimizations.isUnset,
+      )
     )
   
   
@@ -303,7 +307,7 @@ abstract class MLsDiffMaker extends DiffMaker:
       ()
     if file != preludeFile then
       val cfg = mkConfig
-      given Config = cfg.copy(
+      given Config = cfg.copy(optimizer = cfg.optimizer.copy(
         deforest = cfg.deforest.map: d =>
           d.copy(config = d.config.copy(
             debug = false,
@@ -316,7 +320,7 @@ abstract class MLsDiffMaker extends DiffMaker:
             logAccumulator = false,
             logNonAffine = false
           ))
-      )
+      ))
       processTrees(
         PrefixApp(Keywrd(`import`), StrLit(predefFile.toString))
         :: Open(Ident("Predef"))

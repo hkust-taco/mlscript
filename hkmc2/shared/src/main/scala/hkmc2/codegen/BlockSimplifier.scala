@@ -47,25 +47,27 @@ class BlockSimplifier
       
       log(s"⬤ Simplif. iter. $iteration")
       
-      // * Running DCE once sometimes produces more DCE opportunities;
-      // * it is important to apply all of them so that later passes, such as COC,
-      // * are not impeded by things like unused labels from inlining.
-      var dceIteration = 0
-      while
-        val dce = new DeadCodeElim()
-        res = dce.apply(res)
-        changed ||= dce.changed
-        if dce.changed then
-          log("▶ DCE:\n" + printRes)
-          dceIteration += 1
-          dceIteration < MaxDCEIterationsPerIter
-        else false
-      do ()
+      if summon[Config].optimizer.deadCodeElim then
+        // * Running DCE once sometimes produces more DCE opportunities;
+        // * it is important to apply all of them so that later passes, such as COC,
+        // * are not impeded by things like unused labels from inlining.
+        var dceIteration = 0
+        while
+          val dce = new DeadCodeElim()
+          res = dce.apply(res)
+          changed ||= dce.changed
+          if dce.changed then
+            log("▶ DCE:\n" + printRes)
+            dceIteration += 1
+            dceIteration < MaxDCEIterationsPerIter
+          else false
+        do ()
       
-      val vp = new DataFlowAnalysis(LocalVars.analyze(res.main))
-      res = vp.apply(res)
-      changed ||= vp.changed
-      if vp.changed then log("▶ VP:\n" + printRes)
+      if summon[Config].optimizer.dataFlowAnalysis then
+        val vp = new DataFlowAnalysis(LocalVars.analyze(res.main))
+        res = vp.apply(res)
+        changed ||= vp.changed
+        if vp.changed then log("▶ VP:\n" + printRes)
       
       summon[Config].inlining.foreach: cfg =>
         

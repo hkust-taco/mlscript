@@ -14,6 +14,10 @@ class CompilationPipeline(using Config, Raise, State, Ctx, SymbolPrinter):
   def preOptimizeHook(prog: Program): Program =
     prog
   
+  private inline def blockPass(prog: Program, inline pass: Block => Block): Program =
+    val blk = pass(prog.main)
+    if blk is prog.main then prog else Program(prog.imports, blk)
+  
   def run(prog: Program, printer: Program => Str, symbolsToPreserve: Set[BoundSymbol], otl: TL)(using TL): Program =
     
     var result = prog
@@ -40,7 +44,6 @@ class CompilationPipeline(using Config, Raise, State, Ctx, SymbolPrinter):
     
     result = BufferableTransform().transform(result)
     
-    // * TODO[Anto]: Can we remove MergeMatchArmTransformer? Seems no longer necessary
     result = Program(result.imports, MergeMatchArmTransformer.applyBlock(result.main))
     
     if config.funcToCls then
@@ -55,9 +58,10 @@ class CompilationPipeline(using Config, Raise, State, Ctx, SymbolPrinter):
     
     result = preOptimizeHook(result)
     
-    if !summon[Config].noOpt then
-      result = WorkerWrapper(symbolsToPreserve, otl, printer)(result)
-      result = BlockSimplifier(symbolsToPreserve, otl, printer)(result)
-      result = otl.givenIn(DeadParamElim(result))
+    result = WorkerWrapper(symbolsToPreserve, otl, printer)(result)
+    
+    result = BlockSimplifier(symbolsToPreserve, otl, printer)(result)
+    
+    result = otl.givenIn(DeadParamElim(result))
     
     result
