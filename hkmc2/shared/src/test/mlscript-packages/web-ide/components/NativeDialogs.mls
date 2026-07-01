@@ -2,6 +2,7 @@ import "../filesystem/fs.mls"
 import "../filesystem/projects.mls"
 import "../common/JS.mls"
 import "../common/Zip.mls"
+import "../common/DialogHelpers.mls"
 
 open JS { Absent }
 
@@ -24,11 +25,6 @@ fun manifestEntry(project) =
       project: project
     content = JSON.stringify(payload, null, 2)
   mut { path: EXPORT_MANIFEST_PATH, :content }
-
-fun closeDismissibleDialogFromBackdrop(targetDialog) =
-  targetDialog.addEventListener of "click", event =>
-    if targetDialog.dataset.dismissible === "true" and event.target === targetDialog do
-      targetDialog.close()
 
 class CommandPaletteDialog extends HTMLElement with
   let query = ""
@@ -440,6 +436,11 @@ class CommandPaletteDialog extends HTMLElement with
   fun dispatchSidebar(side, panel) =
     document.dispatchEvent(new CustomEvent("sidebar-toggle-requested", sidebarEventOptions(side, panel)))
 
+  fun dispatchSidebarOpen(side, panel) =
+    document.dispatchEvent(new CustomEvent("sidebar-toggle-requested", mut
+      detail: mut { :side, :panel, forceOpen: true }
+    ))
+
   fun editorWorkbench() =
     document.querySelector("editor-workbench")
 
@@ -447,7 +448,7 @@ class CommandPaletteDialog extends HTMLElement with
     document.querySelector("bottom-panel")
 
   fun requestNewFile() =
-    dispatchSidebar("left", "files")
+    dispatchSidebarOpen("left", "files")
     document.dispatchEvent(new CustomEvent("new-file-requested"))
 
   fun openGeneratedOutput(target) =
@@ -616,7 +617,7 @@ class CommandPaletteDialog extends HTMLElement with
 
   fun attachEventListeners() =
     let palette = this
-    if dialog() is ~null as commandDialog do closeDismissibleDialogFromBackdrop(commandDialog)
+    if dialog() is ~null as commandDialog do DialogHelpers.closeDismissibleDialogFromBackdrop(commandDialog)
     document.addEventListener("command-palette-open-requested", () => palette.openPalette())
     document.addEventListener("analysis-symbol-index-updated", event => palette.handleSymbolIndexUpdated(event.detail))
     document.addEventListener of "keydown", event =>
@@ -707,7 +708,7 @@ class ShareDialog extends HTMLElement with
 
   fun attachEventListeners() =
     let share = this
-    if dialog() is ~null as shareDialog do closeDismissibleDialogFromBackdrop(shareDialog)
+    if dialog() is ~null as shareDialog do DialogHelpers.closeDismissibleDialogFromBackdrop(shareDialog)
     document.addEventListener("share-dialog-open-requested", () => share.openDialog())
     if this.querySelector(".share-download-all-button") is ~null as downloadButton do
       downloadButton.addEventListener("click", () => share.downloadZip(path => share.allFilesFilter(path), "mlscript-workspace.zip"))

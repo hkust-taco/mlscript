@@ -194,8 +194,12 @@ class IdeWorkbench extends HTMLElement with
         side = if detail.side is ~Absent then detail.side else "left"
         panelName = if detail.panel is ~Absent then detail.panel else "files"
       if side is
-        "right" then toggleProblems()
-        else toggleLeftPanel(panelName)
+        "right" then
+          if detail.forceOpen === true then setProblemsState(true)
+          else toggleProblems()
+        else
+          if detail.forceOpen === true then setLeftPanelState(panelName, true)
+          else toggleLeftPanel(panelName)
 
   fun syncLayoutState() =
     setLeftPanelState(leftActivePanel, leftPanelOpen)

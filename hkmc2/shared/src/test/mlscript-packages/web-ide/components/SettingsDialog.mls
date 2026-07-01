@@ -1,5 +1,5 @@
 import "../common/SettingsStore.mls"
-import "./NativeDialogs.mls" as NativeDialogs
+import "../common/DialogHelpers.mls"
 import "../common/JS.mls"
 
 open JS { Absent }
@@ -266,7 +266,7 @@ class SettingsDialog extends HTMLElement with
 
   fun attachEventListeners() =
     let panel = this
-    if dialog() is ~null as settingsDialog do NativeDialogs.closeDismissibleDialogFromBackdrop(settingsDialog)
+    if dialog() is ~null as settingsDialog do DialogHelpers.closeDismissibleDialogFromBackdrop(settingsDialog)
     document.addEventListener("settings-dialog-open-requested", () => panel.openDialog())
     this.addEventListener("change", event => panel.handleSettingsChange(event))
     this.querySelectorAll("[data-settings-tab]").forEach of (button, ...) =>

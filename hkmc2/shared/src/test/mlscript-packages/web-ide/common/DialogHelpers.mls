@@ -1,0 +1,6 @@
+module DialogHelpers with...
+
+fun closeDismissibleDialogFromBackdrop(targetDialog) =
+  targetDialog.addEventListener of "click", event =>
+    if targetDialog.dataset.dismissible === "true" and event.target === targetDialog do
+      targetDialog.close()

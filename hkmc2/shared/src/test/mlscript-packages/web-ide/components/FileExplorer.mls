@@ -156,6 +156,15 @@ class FileExplorer extends HTMLElement with
         Absent | "" then container.style.removeProperty("--file-explorer-width")
         savedWidth then container.style.setProperty("--file-explorer-width", savedWidth + "px")
 
+  fun focusNewFileInput(input) =
+    if input is ~Absent do
+      window.setTimeout(
+        () =>
+          input.focus()
+          input.select(),
+        0
+      )
+
   fun startCreatingFile() = if not isCreatingFile and this.querySelector(".tree-view") is
     ~null as treeView do
       let explorer = this
@@ -174,10 +183,12 @@ class FileExplorer extends HTMLElement with
       fileEntry.appendChild(input)
       treeView.insertBefore(fileEntry, treeView.firstChild)
       set newFileInput = input
-      input.focus()
+      focusNewFileInput(input)
       input.addEventListener("keydown", event => explorer.handleNewFileKeydown(event, input))
       input.addEventListener of "blur", () =>
         window.setTimeout(() => explorer.cancelIfCreatingFile(), 200)
+    else if isCreatingFile do
+      focusNewFileInput(newFileInput)
 
   fun cancelIfCreatingFile() = if isCreatingFile do this.cancelCreatingFile()
 
