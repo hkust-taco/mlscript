@@ -44,20 +44,35 @@ class SettingsDialog extends HTMLElement with
 
   fun toggleRowHtml(label, key, defaultValue) =
     """
-      <label class="settings-row">
+      <label class="settings-row settings-switch-row">
         <span class="settings-row-label">""" + label + """</span>
-        <input type="checkbox" class="settings-toggle" data-setting-key="""" + key + """" data-setting-default="""" + defaultValue + """"/>
+        <span class="settings-switch-control">
+          <input type="checkbox" class="settings-toggle settings-switch-input" role="switch" data-setting-key="""" + key + """" data-setting-default="""" + defaultValue + """"/>
+          <span class="settings-switch-track" aria-hidden="true">
+            <span class="settings-switch-thumb"></span>
+          </span>
+        </span>
       </label>
     """
 
+  fun selectId(key) =
+    "settings-select-" + key.replaceAll(".", "-")
+
   fun selectRowHtml(label, key, defaultValue, optionsHtml) =
+    let id = selectId(key)
     """
-      <label class="settings-row">
+      <div class="settings-row">
         <span class="settings-row-label">""" + label + """</span>
-        <select class="settings-select" data-setting-key="""" + key + """" data-setting-default="""" + defaultValue + """">
-          """ + optionsHtml + """
-        </select>
-      </label>
+        <div class="settings-select-root" data-setting-key="""" + key + """" data-setting-default="""" + defaultValue + """">
+          <button class="settings-select-trigger" type="button" aria-label="""" + label + """" aria-haspopup="listbox" aria-expanded="false" aria-controls="""" + id + """">
+            <span class="settings-select-value"></span>
+            <i class="icon-chevron-down" aria-hidden="true"></i>
+          </button>
+          <div id="""" + id + """" class="settings-select-content" role="listbox" aria-label="""" + label + """" hidden>
+            """ + optionsHtml + """
+          </div>
+        </div>
+      </div>
     """
 
   fun inputRowHtml(label, key, defaultValue, inputType, inputClass, attrs) =
@@ -83,7 +98,7 @@ class SettingsDialog extends HTMLElement with
     """
 
   fun optionHtml(value, label) =
-    """<option value="""" + value + """">""" + label + """</option>"""
+    """<button class="settings-select-option" type="button" role="option" tabindex="-1" data-option-value="""" + value + """" aria-selected="false">""" + label + """</button>"""
 
   fun problemsScopeOptionsHtml() =
     [
@@ -127,21 +142,23 @@ class SettingsDialog extends HTMLElement with
     toggleRowHtml("Auto-run after compile", "compile.autoRunAfterCompile", "false")
 
   fun keyboardShortcutsRowsHtml() =
-    staticRowHtml("Command Palette", "Cmd/Ctrl+K") +
-    staticRowHtml("Workspace Symbols", "Cmd/Ctrl+T") +
-    staticRowHtml("Compile current file", "Cmd/Ctrl+S") +
-    staticRowHtml("Execute current file", "Cmd/Ctrl+E") +
-    staticRowHtml("Toggle Files panel", "Cmd/Ctrl+B") +
-    staticRowHtml("Toggle Problems panel", "Cmd/Ctrl+Shift+B") +
-    staticRowHtml("Increase editor font", "Cmd/Ctrl+=") +
-    staticRowHtml("Decrease editor font", "Cmd/Ctrl+-") +
+    let primary = primaryShortcutModifier()
+    staticRowHtml("Command Palette", primary + "+K") +
+    staticRowHtml("Workspace Symbols", primary + "+T") +
+    staticRowHtml("Compile current file", primary + "+S") +
+    staticRowHtml("Execute current file", primary + "+E") +
+    staticRowHtml("Toggle Files panel", primary + "+B") +
+    staticRowHtml("Toggle Problems panel", primary + "+Shift+B") +
+    staticRowHtml("Increase editor font", primary + "+=") +
+    staticRowHtml("Decrease editor font", primary + "+-") +
     staticRowHtml("Close current tab", "Ctrl+W")
 
   fun aboutRowsHtml() =
     staticRowHtml("Version", "Development build") +
-    staticRowHtml("Project", """<a href="https://github.com/hkust-taco/mlscript" target="_blank" rel="noreferrer">https://github.com/hkust-taco/mlscript</a>""")
+    staticRowHtml("Project", """<a class="settings-link" href="https://github.com/hkust-taco/mlscript" target="_blank" rel="noopener noreferrer">https://github.com/hkust-taco/mlscript</a>""")
 
   fun dataRowsHtml() =
+    """<div class="settings-data-overview" data-settings-data-overview></div>""" +
     buttonRowHtml("Defaults", "reset-app-defaults", "Reset app to defaults")
 
   fun tabPanelContent(id) = if id is
@@ -189,6 +206,7 @@ class SettingsDialog extends HTMLElement with
 
   fun openDialog() =
     loadSettingsIntoDialog()
+    if activeTab === "data" do refreshDataOverview()
     if dialog() is ~null as settingsDialog do
       if not settingsDialog.open do settingsDialog.showModal()
     if this.querySelector(".settings-tab.active") is ~null as activeTabButton do
@@ -200,6 +218,13 @@ class SettingsDialog extends HTMLElement with
       button.classList.toggle("active", button.dataset.settingsTab === id)
     this.querySelectorAll("[data-settings-tab-panel]").forEach of (panel, ...) =>
       panel.classList.toggle("active", panel.dataset.settingsTabPanel === id)
+    if id === "data" do refreshDataOverview()
+
+  fun isMacPlatform() =
+    window.navigator.platform.toUpperCase().indexOf("MAC") >= 0
+
+  fun primaryShortcutModifier() =
+    if isMacPlatform() then "Cmd" else "Ctrl"
 
   fun settingDefaultValue(element) =
     if element.dataset.settingDefault is ~Absent as fallback then fallback
@@ -229,7 +254,9 @@ class SettingsDialog extends HTMLElement with
     if element.dataset.settingKey is ~Absent as key do
       let value = SettingsStore.getSetting(key, settingDefaultValue(element))
       if element.classList.contains("settings-toggle") then
-        set element.checked = value === "true"
+        setSwitchChecked(element, value === "true")
+      else if element.classList.contains("settings-select-root") then
+        setCustomSelectValue(element, value, false)
       else set element.value = value
 
   fun loadSettingsIntoDialog() =
@@ -240,15 +267,220 @@ class SettingsDialog extends HTMLElement with
     if element.dataset.settingKey is ~Absent as key do
       let value = if element.classList.contains("settings-toggle") then
         if element.checked then "true" else "false"
+      else if element.classList.contains("settings-select-root") then element.dataset.value
       else if element.classList.contains("settings-input") then normalizedInputValue(element)
       else element.value
       if element.classList.contains("settings-toggle") then
+        setSwitchChecked(element, element.checked)
         SettingsStore.setSetting(key, value)
-      else if element.classList.contains("settings-select") do
+      else if element.classList.contains("settings-select-root") then
         SettingsStore.setSetting(key, value)
       else if element.classList.contains("settings-input") do
         SettingsStore.setSetting(key, value)
       document.dispatchEvent(new CustomEvent("setting-changed", mut { detail: mut { :key, :value } }))
+
+  fun setSwitchChecked(element, checked) =
+    set element.checked = checked
+    element.setAttribute("aria-checked", if checked then "true" else "false")
+
+  fun selectOptions(root) =
+    Array.from(root.querySelectorAll(".settings-select-option"))
+
+  fun optionForValue(root, value) =
+    let selected = null
+    selectOptions(root).forEach of (option, ...) =>
+      if selected is null and option.dataset.optionValue === value do
+        set selected = option
+    selected
+
+  fun selectedOrFirstOption(root, value) =
+    let selected = optionForValue(root, value)
+    if selected is ~null then selected
+    else root.querySelector(".settings-select-option")
+
+  fun setCustomSelectValue(root, value, persist) =
+    let option = selectedOrFirstOption(root, value)
+    if option is ~Absent as selected do
+      set root.dataset.value = selected.dataset.optionValue
+      if root.querySelector(".settings-select-value") is ~null as valueEl do
+        set valueEl.textContent = selected.textContent
+      selectOptions(root).forEach of (current, ...) =>
+        current.setAttribute("aria-selected", if current === selected then "true" else "false")
+      if persist do persistSettingElement(root)
+
+  fun closeCustomSelect(root, restoreFocus) =
+    if root is ~Absent do
+      if root.querySelector(".settings-select-trigger") is ~null as trigger do
+        trigger.setAttribute("aria-expanded", "false")
+        if restoreFocus do trigger.focus()
+      if root.querySelector(".settings-select-content") is ~null as content do
+        set content.hidden = true
+
+  fun closeOtherCustomSelects(activeRoot) =
+    this.querySelectorAll(".settings-select-root").forEach of (root, ...) =>
+      if root !== activeRoot do closeCustomSelect(root, false)
+
+  fun closeAllCustomSelects() =
+    closeOtherCustomSelects(null)
+
+  fun openCustomSelect(root, focusSelected) =
+    closeOtherCustomSelects(root)
+    if root.querySelector(".settings-select-trigger") is ~null as trigger do
+      trigger.setAttribute("aria-expanded", "true")
+    if root.querySelector(".settings-select-content") is ~null as content do
+      set content.hidden = false
+    if focusSelected do
+      let selected = selectedOrFirstOption(root, root.dataset.value)
+      if selected is ~Absent as selectedOption do selectedOption.focus()
+
+  fun toggleCustomSelect(root) =
+    if root.querySelector(".settings-select-trigger") is ~null as trigger do
+      if trigger.getAttribute("aria-expanded") === "true" then closeCustomSelect(root, false)
+      else openCustomSelect(root, false)
+
+  fun optionIndex(options, option) =
+    let index = -1
+    options.forEach of (current, i) =>
+      if index < 0 and current === option do set index = i
+    index
+
+  fun focusSelectOption(root, offset) =
+    let
+      options = selectOptions(root)
+      active = document.activeElement
+      currentIndex = optionIndex(options, active)
+      baseIndex = if currentIndex < 0 then 0 else currentIndex
+      nextIndex = Math.max(0, Math.min(options.length - 1, baseIndex + offset))
+    if options.at(nextIndex) is ~Absent as nextOption do nextOption.focus()
+
+  fun focusSelectEdge(root, edge) =
+    let options = selectOptions(root)
+    let index = if edge === "start" then 0 else options.length - 1
+    if options.at(index) is ~Absent as option do option.focus()
+
+  fun selectActiveOption(option) =
+    let root = option.closest(".settings-select-root")
+    if root is ~Absent as selectRoot do
+      setCustomSelectValue(selectRoot, option.dataset.optionValue, true)
+      closeCustomSelect(selectRoot, true)
+
+  fun handleCustomSelectClick(event) =
+    let option = event.target.closest(".settings-select-option")
+    if option is ~Absent as selectedOption do
+      event.preventDefault()
+      selectActiveOption(selectedOption)
+    else
+      let trigger = event.target.closest(".settings-select-trigger")
+      if trigger is ~Absent as selectTrigger do
+        event.preventDefault()
+        if selectTrigger.closest(".settings-select-root") is ~Absent as root do
+          toggleCustomSelect(root)
+      else if event.target.closest(".settings-select-root") is Absent do
+        closeAllCustomSelects()
+
+  fun handleCustomSelectKeydown(event) =
+    let trigger = event.target.closest(".settings-select-trigger")
+    let option = event.target.closest(".settings-select-option")
+    if trigger is ~Absent as selectTrigger do
+      if selectTrigger.closest(".settings-select-root") is ~Absent as root do
+        if event.key is
+          "Enter" | " " | "ArrowDown" then
+            event.preventDefault()
+            openCustomSelect(root, true)
+          "ArrowUp" then
+            event.preventDefault()
+            openCustomSelect(root, true)
+            focusSelectEdge(root, "end")
+          else ()
+    else if option is ~Absent as selectedOption do
+      if selectedOption.closest(".settings-select-root") is ~Absent as root do
+        if event.key is
+          "ArrowDown" then
+            event.preventDefault()
+            focusSelectOption(root, 1)
+          "ArrowUp" then
+            event.preventDefault()
+            focusSelectOption(root, -1)
+          "Home" then
+            event.preventDefault()
+            focusSelectEdge(root, "start")
+          "End" then
+            event.preventDefault()
+            focusSelectEdge(root, "end")
+          "Enter" | " " then
+            event.preventDefault()
+            selectActiveOption(selectedOption)
+          "Escape" then
+            event.preventDefault()
+            closeCustomSelect(root, true)
+          else ()
+
+  fun handleExternalLinkClick(event) =
+    if event.target.closest(".settings-link[href]") is ~Absent as link do
+      event.preventDefault()
+      window.open(link.href, "_blank", "noopener,noreferrer")
+
+  fun storageStatsForPrefix(prefix) =
+    let
+      stats = mut { count: 0, bytes: 0 }
+      index = 0
+    while index < localStorage.length do
+      let key = localStorage.key(index)
+      if key is ~Absent as storageKey do
+        if storageKey.startsWith(prefix) do
+          let value = localStorage.getItem(storageKey)
+          set stats.count += 1
+          set stats.bytes += storageKey.length + if value is Absent then 0 else value.length
+      set index += 1
+    stats
+
+  fun storageStatsForKeys(keys) =
+    let stats = mut { count: 0, bytes: 0 }
+    keys.forEach of (key, ...) =>
+      if localStorage.getItem(key) is ~Absent as value do
+        set stats.count += 1
+        set stats.bytes += key.length + value.length
+    stats
+
+  fun allStorageStats() =
+    let
+      stats = mut { count: localStorage.length, bytes: 0 }
+      index = 0
+    while index < localStorage.length do
+      let key = localStorage.key(index)
+      if key is ~Absent as storageKey do
+        let value = localStorage.getItem(storageKey)
+        set stats.bytes += storageKey.length + if value is Absent then 0 else value.length
+      set index += 1
+    stats
+
+  fun formatBytes(bytes) =
+    if bytes < 1024 then bytes + " B"
+    else if bytes < 1024 * 1024 then (bytes / 1024).toFixed(1) + " KB"
+    else (bytes / (1024 * 1024)).toFixed(1) + " MB"
+
+  fun dataStatRowHtml(label, stats) =
+    staticRowHtml(label, stats.count + " items · " + formatBytes(stats.bytes))
+
+  fun dataOverviewRowsHtml() =
+    dataStatRowHtml("Projects", storageStatsForKeys(["mlscript.projects.v1", "mlscript.project.current.v1", "mlscript.projects.schema"])) +
+    dataStatRowHtml("Persisted files", storageStatsForPrefix("mlscript-fs:proj:")) +
+    dataStatRowHtml("File path indexes", storageStatsForPrefix("mlscript-fs-paths:proj:")) +
+    dataStatRowHtml("Settings", storageStatsForPrefix("settings.")) +
+    dataStatRowHtml("Layout state", storageStatsForKeys([
+      "file-explorer-width"
+      "diagnostics-inspector-width"
+      "bottom-panel-height"
+      "bottom-panel-active-tab"
+      "diagnostics-inspector-mode"
+      "logs-level-filter"
+      "logs-source-filter"
+    ])) +
+    dataStatRowHtml("Total browser storage", allStorageStats())
+
+  fun refreshDataOverview() =
+    if this.querySelector("[data-settings-data-overview]") is ~null as overview do
+      set overview.innerHTML = dataOverviewRowsHtml()
 
   fun resetLayoutToDefault() =
     [
@@ -296,13 +528,15 @@ class SettingsDialog extends HTMLElement with
   fun handleSettingsChange(event) =
     if event.target is ~Absent as target do
       if target.matches(".settings-toggle[data-setting-key]") then persistSettingElement(target)
-      else if target.matches(".settings-select[data-setting-key]") do persistSettingElement(target)
       else if target.matches(".settings-input[data-setting-key]") do persistSettingElement(target)
 
   fun attachEventListeners() =
     let panel = this
     if dialog() is ~null as settingsDialog do DialogHelpers.closeDismissibleDialogFromBackdrop(settingsDialog)
     document.addEventListener("settings-dialog-open-requested", () => panel.openDialog())
+    this.addEventListener("click", event => panel.handleCustomSelectClick(event))
+    this.addEventListener("click", event => panel.handleExternalLinkClick(event))
+    this.addEventListener("keydown", event => panel.handleCustomSelectKeydown(event))
     this.addEventListener("change", event => panel.handleSettingsChange(event))
     this.querySelectorAll("[data-settings-tab]").forEach of (button, ...) =>
       button.addEventListener("click", () => panel.switchTab(button.dataset.settingsTab))

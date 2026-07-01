@@ -3542,6 +3542,7 @@ settings-dialog dialog {
   cursor: pointer;
   font: inherit;
   font-size: 0.82rem;
+  font-variation-settings: 'wght' 520;
   line-height: 1.2;
   padding: 7px 9px;
   text-align: left;
@@ -3552,6 +3553,7 @@ settings-dialog dialog {
   background: var(--ide-accent-soft);
   border-color: color-mix(in srgb, var(--ide-accent) 34%, var(--ide-border));
   color: var(--ide-accent-strong);
+  font-variation-settings: 'wght' 580;
 }
 
 .settings-tab-panels {
@@ -3591,13 +3593,60 @@ settings-dialog dialog {
   white-space: nowrap;
 }
 
-.settings-toggle {
-  width: 16px;
-  height: 16px;
-  accent-color: var(--ide-accent);
+.settings-switch-control {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 20px;
 }
 
-.settings-select,
+.settings-switch-input {
+  position: absolute;
+  inset: 0;
+  width: 36px;
+  height: 20px;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.settings-switch-track {
+  display: inline-flex;
+  align-items: center;
+  width: 36px;
+  height: 20px;
+  border: 1px solid var(--ide-border-strong);
+  border-radius: 999px;
+  background: var(--ide-surface-muted);
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.settings-switch-thumb {
+  width: 16px;
+  height: 16px;
+  margin-left: 1px;
+  border-radius: 50%;
+  background: var(--ide-surface);
+  box-shadow: 0 1px 2px rgba(24, 26, 22, 0.18);
+  transition: transform 0.15s ease;
+}
+
+.settings-switch-input:checked + .settings-switch-track {
+  border-color: var(--ide-accent);
+  background: var(--ide-accent);
+}
+
+.settings-switch-input:checked + .settings-switch-track .settings-switch-thumb {
+  transform: translateX(16px);
+}
+
+.settings-switch-input:focus-visible + .settings-switch-track {
+  outline: 2px solid color-mix(in srgb, var(--ide-accent) 42%, transparent);
+  outline-offset: 2px;
+}
+
 .settings-input {
   min-width: 160px;
   border: 1px solid var(--ide-border);
@@ -3607,6 +3656,84 @@ settings-dialog dialog {
   font: inherit;
   font-size: 0.82rem;
   padding: 5px 7px;
+}
+
+.settings-select-root {
+  position: relative;
+  min-width: 180px;
+}
+
+.settings-select-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  min-height: 30px;
+  border: 1px solid var(--ide-border);
+  border-radius: var(--ide-radius-sm);
+  background: var(--ide-surface);
+  color: var(--ide-text);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.82rem;
+  padding: 5px 7px 5px 9px;
+}
+
+.settings-select-trigger:hover,
+.settings-select-trigger[aria-expanded="true"] {
+  border-color: color-mix(in srgb, var(--ide-accent) 42%, var(--ide-border));
+  background: var(--ide-surface-subtle);
+}
+
+.settings-select-trigger:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--ide-accent) 36%, transparent);
+  outline-offset: 2px;
+}
+
+.settings-select-trigger > i {
+  color: var(--ide-text-subtle);
+  font-size: 0.78rem;
+}
+
+.settings-select-content {
+  position: absolute;
+  z-index: 40;
+  top: calc(100% + 4px);
+  right: 0;
+  width: 100%;
+  max-height: 220px;
+  overflow: auto;
+  border: 1px solid var(--ide-border-strong);
+  border-radius: var(--ide-radius-sm);
+  background: var(--ide-surface);
+  box-shadow: var(--ide-shadow-md);
+  padding: 4px;
+}
+
+.settings-select-option {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-height: 28px;
+  border: 1px solid transparent;
+  border-radius: var(--ide-radius-sm);
+  background: transparent;
+  color: var(--ide-text);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.82rem;
+  padding: 5px 7px;
+  text-align: left;
+}
+
+.settings-select-option:hover,
+.settings-select-option:focus-visible,
+.settings-select-option[aria-selected="true"] {
+  background: var(--ide-accent-soft);
+  border-color: color-mix(in srgb, var(--ide-accent) 30%, var(--ide-border));
+  color: var(--ide-accent-strong);
+  outline: none;
 }
 
 .settings-input {
@@ -3638,6 +3765,22 @@ settings-dialog dialog {
 .settings-row-static .settings-row-value {
   color: var(--ide-text-muted);
   font-size: 0.78rem;
+}
+
+.settings-row-value a {
+  color: var(--ide-accent-strong);
+  text-decoration: none;
+  text-underline-offset: 2px;
+}
+
+.settings-row-value a:hover {
+  color: var(--ide-accent);
+  text-decoration: underline;
+}
+
+.settings-data-overview {
+  display: grid;
+  gap: 8px;
 }
 
 .share-download-button {
