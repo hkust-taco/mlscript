@@ -124,10 +124,25 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
       val lowered = ltl.givenIn:
         low.program(blk, symbolsToPreserve = symbolsToPreserve)
       
-      var preOptimize: Opt[Program] = N
-      
       val optimized = ltl.givenIn:
         val customPipeline = new CompilationPipeline:
+          override def passHook(pass: CompilationPass, before: Program, after: Program): Program =
+            // TODO: fix these passes
+            val excludedPassNames = Set("ClassParamFlattener", "TailRecOpt", "Lifter", "FirstClassFunctionTransformer")
+            if !excludedPassNames.contains(pass.name) && (before isnt after) && (before === after) then
+              output(s"/!\\ Warning: object identity between equal objects was not preserved by ${pass.name}")
+              def rec(lhs: Block, rhs: Block): Bool =
+                (lhs is rhs) || {
+                  if
+                    lhs.subBlocks.iterator.zip(rhs.subBlocks.iterator).forall:
+                      case (s1: Block, s2: Block) => rec(s1, s2)
+                  then
+                    output(s"/!\\ Offending subblock: ${lhs.showAsTree}") 
+                    false
+                  else false
+                }
+              rec(before.main, after.main)
+            after
           override def preOptimizeHook(prog: Program) =
             if showLoweredTree.isSet then
               outputSeparator("Lowered IR Tree")
@@ -144,26 +159,9 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
               if showIR.isSet then
                 outputSeparator("Lowered IR")
                 output(irStr)
-            preOptimize = S(prog)
             super.preOptimizeHook(prog)
         customPipeline.run(lowered, print, symbolsToPreserve, dtl)
       
-      // TODO: remove this and make sure all transformer preserve object identity
-      val loweredTransformed = preOptimize.get
-      // TODO: Test that transformers retain object identity when there are no changes
-      if (optimized isnt loweredTransformed) && (optimized === loweredTransformed) then
-        output("/!\\ Warning: object identity between equal objects was not preserved by BlockSimplifier or DeadParamElim")
-        def rec(lhs: Block, rhs: Block): Bool =
-          (lhs is rhs) || {
-            if
-              lhs.subBlocks.iterator.zip(rhs.subBlocks.iterator).forall:
-                case (s1: Block, s2: Block) => rec(s1, s2)
-            then
-              output(s"/!\\ Offending subblock: ${lhs.showAsTree}") 
-              false
-            else false
-          }
-        rec(optimized.main, loweredTransformed.main)
       if checkIR.isSet then
         BlockChecker().applyProgram(optimized)
       
