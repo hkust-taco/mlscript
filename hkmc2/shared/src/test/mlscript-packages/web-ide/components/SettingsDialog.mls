@@ -206,7 +206,7 @@ class SettingsDialog extends HTMLElement with
         <form class="settings-dialog-form" method="dialog">
           <div class="settings-dialog-titlebar">
             <h2>Settings</h2>
-            <button class="settings-dialog-close" type="submit" aria-label="Close">
+            <button class="settings-dialog-close" type="button" aria-label="Close">
               <i class="icon-x"></i>
             </button>
           </div>
@@ -229,9 +229,13 @@ class SettingsDialog extends HTMLElement with
     loadSettingsIntoDialog()
     if activeTab === "data" do refreshDataOverview()
     if dialog() is ~null as settingsDialog do
-      if not settingsDialog.open do settingsDialog.showModal()
+      DialogHelpers.showDialogWithTransition(settingsDialog)
     if this.querySelector(".settings-tab.active") is ~null as activeTabButton do
       window.setTimeout(() => activeTabButton.focus(), 0)
+
+  fun closeDialog() =
+    if dialog() is ~null as settingsDialog do
+      DialogHelpers.closeDialogWithTransition(settingsDialog)
 
   fun switchTab(id) =
     set activeTab = id
@@ -561,12 +565,14 @@ class SettingsDialog extends HTMLElement with
 
   fun attachEventListeners() =
     let panel = this
-    if dialog() is ~null as settingsDialog do DialogHelpers.closeDismissibleDialogFromBackdrop(settingsDialog)
+    if dialog() is ~null as settingsDialog do DialogHelpers.closeDismissibleDialogFromBackdropWithTransition(settingsDialog)
     document.addEventListener("settings-dialog-open-requested", () => panel.openDialog())
     this.addEventListener("click", event => panel.handleCustomSelectClick(event))
     this.addEventListener("click", event => panel.handleExternalLinkClick(event))
     this.addEventListener("keydown", event => panel.handleCustomSelectKeydown(event))
     this.addEventListener("change", event => panel.handleSettingsChange(event))
+    if this.querySelector(".settings-dialog-close") is ~null as closeButton do
+      closeButton.addEventListener("click", () => panel.closeDialog())
     this.querySelectorAll("[data-settings-tab]").forEach of (button, ...) =>
       button.addEventListener("click", () => panel.switchTab(button.dataset.settingsTab))
     this.querySelectorAll("[data-setting-action]").forEach of (button, ...) =>

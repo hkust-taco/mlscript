@@ -3326,6 +3326,61 @@ settings-dialog dialog {
   max-height: min(560px, calc(100vh - 48px));
 }
 
+settings-dialog dialog.settings-dialog-native,
+project-switcher dialog.project-switcher-native {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  transition:
+    opacity 150ms ease,
+    transform 170ms cubic-bezier(0.16, 1, 0.3, 1),
+    overlay 170ms allow-discrete,
+    display 170ms allow-discrete;
+  transition-behavior: allow-discrete;
+  will-change: opacity, transform;
+}
+
+settings-dialog dialog.settings-dialog-native::backdrop,
+project-switcher dialog.project-switcher-native::backdrop {
+  transition:
+    background 170ms ease,
+    overlay 170ms allow-discrete,
+    display 170ms allow-discrete;
+  transition-behavior: allow-discrete;
+}
+
+@starting-style {
+  settings-dialog dialog.settings-dialog-native[open],
+  project-switcher dialog.project-switcher-native[open] {
+    opacity: 0;
+    transform: translateY(8px) scale(0.985);
+  }
+
+  settings-dialog dialog.settings-dialog-native[open]::backdrop,
+  project-switcher dialog.project-switcher-native[open]::backdrop {
+    background: rgba(24, 26, 22, 0);
+  }
+}
+
+settings-dialog dialog.settings-dialog-native[data-dialog-closing="true"],
+project-switcher dialog.project-switcher-native[data-dialog-closing="true"] {
+  opacity: 0;
+  transform: translateY(6px) scale(0.985);
+}
+
+settings-dialog dialog.settings-dialog-native[data-dialog-closing="true"]::backdrop,
+project-switcher dialog.project-switcher-native[data-dialog-closing="true"]::backdrop {
+  background: rgba(24, 26, 22, 0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  settings-dialog dialog.settings-dialog-native,
+  project-switcher dialog.project-switcher-native,
+  settings-dialog dialog.settings-dialog-native::backdrop,
+  project-switcher dialog.project-switcher-native::backdrop {
+    transition: none;
+  }
+}
+
 .command-palette-form,
 .share-dialog-form,
 .settings-dialog-form {

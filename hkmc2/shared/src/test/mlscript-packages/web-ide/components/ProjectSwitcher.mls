@@ -4,6 +4,7 @@ import "../filesystem/projects.mls"
 import "../common/JS.mls"
 import "../common/Logger.mls"
 import "../common/Zip.mls"
+import "../common/DialogHelpers.mls"
 import "../editor/editor.mls"
 
 open JS { Absent }
@@ -184,11 +185,11 @@ class ProjectSwitcher extends HTMLElement with
     this.renderList()
     this.renderDetail()
     if dialog() is ~null as d do
-      if not d.open do d.showModal()
+      DialogHelpers.showDialogWithTransition(d)
 
   fun close() =
     if dialog() is ~null as d do
-      if d.open do d.close()
+      DialogHelpers.closeDialogWithTransition(d)
 
   fun cardHtml(project) =
     let
@@ -793,7 +794,7 @@ class ProjectSwitcher extends HTMLElement with
 
   fun attachEventListeners() =
     let panel = this
-    if dialog() is ~null as d do closeOnBackdropClick(d)
+    if dialog() is ~null as d do DialogHelpers.closeDismissibleDialogFromBackdropWithTransition(d)
     if subDialog("create") is ~null as sub do closeOnBackdropClick(sub)
     if subDialog("rename") is ~null as sub do closeOnBackdropClick(sub)
     if subDialog("import") is ~null as sub do closeOnBackdropClick(sub)
