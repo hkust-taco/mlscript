@@ -119,16 +119,12 @@ class MLsCompiler
       val jsb = ltl.givenIn:
         codegen.js.JSBuilder()
       val lowered = ltl.givenIn:
-        CompilationPipeline.run(low.program(blk, symbolsToPreserve = Set.empty))
-      var optimized = lowered
+        low.program(blk, symbolsToPreserve = Set.empty)
       val nme = file.baseName
       val exportedSymbol = parsed.definedSymbols.find(_._1 === nme).map(_._2)
-      optimized =
-        val printer = (p: codegen.Program) => p.showAsTree // TODO: proper printing like in diff-tests
-        optimized = codegen.WorkerWrapper(exportedSymbol.toSet, dtl, printer)(optimized)
-        codegen.BlockSimplifier(exportedSymbol.toSet, dtl, printer)(optimized)
-      ltl.givenIn:
-        optimized = codegen.DeadParamElim(optimized)
+      val optimized = ltl.givenIn:
+        val printer = (p: codegen.Program) => p.showAsTree
+        CompilationPipeline().run(lowered, printer, exportedSymbol.toSet, dtl)
       val baseScp: utils.Scope =
         utils.Scope.empty(utils.Scope.Cfg.default)
       // * This line serves for `import.meta.url`, which retrieves directory and file names of mjs files.

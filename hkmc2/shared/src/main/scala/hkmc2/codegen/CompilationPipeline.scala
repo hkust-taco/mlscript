@@ -9,11 +9,14 @@ import hkmc2.semantics.Elaborator.{Ctx, State}
 import hkmc2.semantics.SymbolPrinter
 import hkmc2.utils.TL
 
-object CompilationPipeline:
+class CompilationPipeline(using Config, Raise, State, Ctx, SymbolPrinter):
   
-  def run(program: Program)(using Config, TL, Raise, State, Ctx, SymbolPrinter): Program =
+  def preOptimizeHook(prog: Program): Program =
+    prog
+  
+  def run(prog: Program, printer: Program => Str, symbolsToPreserve: Set[BoundSymbol], otl: TL)(using TL): Program =
     
-    var result = program
+    var result = prog
     
     result = LambdaRewriter.desugar(result)
     
@@ -49,5 +52,12 @@ object CompilationPipeline:
     
     if config.tailRecOpt then
       result = TailRecOpt().transform(result)
+    
+    result = preOptimizeHook(result)
+    
+    if !summon[Config].noOpt then
+      result = WorkerWrapper(symbolsToPreserve, otl, printer)(result)
+      result = BlockSimplifier(symbolsToPreserve, otl, printer)(result)
+      result = otl.givenIn(DeadParamElim(result))
     
     result

@@ -121,37 +121,37 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
         new codegen.Lowering()
           with codegen.LoweringTraceLog(traceJS.isSet)
       
-      var lowered = ltl.givenIn:
-        CompilationPipeline.run(low.program(blk, symbolsToPreserve = symbolsToPreserve))
+      val lowered = ltl.givenIn:
+        low.program(blk, symbolsToPreserve = symbolsToPreserve)
       
-      var optimized = lowered
+      var preOptimize: Opt[Program] = N
       
-      if showLoweredTree.isSet then
-        outputSeparator("Lowered IR Tree")
-        output(optimized.showAsTree)
+      val optimized = ltl.givenIn:
+        val customPipeline = new CompilationPipeline:
+          override def preOptimizeHook(prog: Program) =
+            if showLoweredTree.isSet then
+              outputSeparator("Lowered IR Tree")
+              output(prog.showAsTree)
+            if showIR.isSet || showIRLines.isSet then
+              given ShowCfg = ShowCfg(
+                showExpansionMappings = false,
+                showFlowSymbols = true,
+                debug = debug.isSet,
+              )
+              val irStr = Printer().worksheet(prog)(using irPrintingScp).mkString(output.ColWidth)
+              val sloc = irStr.count(_ == '\n') + 1
+              if showIRLines.isSet then output(s"Lines of IR: ${sloc}")
+              if showIR.isSet then
+                outputSeparator("Lowered IR")
+                output(irStr)
+            preOptimize = S(prog)
+            super.preOptimizeHook(prog)
+        customPipeline.run(lowered, print, symbolsToPreserve, dtl)
       
-      if showIR.isSet || showIRLines.isSet then
-        given ShowCfg = ShowCfg(
-          showExpansionMappings = false,
-          showFlowSymbols = true,
-          debug = debug.isSet,
-        )
-        val irStr = Printer().worksheet(optimized)(using irPrintingScp).mkString(output.ColWidth)
-        val sloc = irStr.count(_ == '\n') + 1
-        if showIRLines.isSet then output(s"Lines of IR: ${sloc}")
-        if showIR.isSet then
-          outputSeparator("Lowered IR")
-          output(irStr)
-      
-      if noOptimizations.isUnset then
-        optimized = WorkerWrapper(symbolsToPreserve, dtl, print)(optimized)
-        
-        optimized = BlockSimplifier(symbolsToPreserve, dtl, print)(optimized)
-        ltl.givenIn:
-          optimized = DeadParamElim(optimized)
-      
+      // TODO: remove this and make sure all transformer preserve object identity
+      val loweredTransformed = preOptimize.get
       // TODO: Test that transformers retain object identity when there are no changes
-      if (optimized isnt lowered) && (optimized === lowered) then
+      if (optimized isnt loweredTransformed) && (optimized === loweredTransformed) then
         output("/!\\ Warning: object identity between equal objects was not preserved by BlockSimplifier or DeadParamElim")
         def rec(lhs: Block, rhs: Block): Bool =
           (lhs is rhs) || {
@@ -163,7 +163,7 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
               false
             else false
           }
-        rec(optimized.main, lowered.main)
+        rec(optimized.main, loweredTransformed.main)
       if checkIR.isSet then
         BlockChecker().applyProgram(optimized)
       

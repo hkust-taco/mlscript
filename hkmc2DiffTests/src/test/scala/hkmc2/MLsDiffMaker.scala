@@ -188,6 +188,7 @@ abstract class MLsDiffMaker extends DiffMaker:
       funcToCls = funcToCls.isSet,
       commentGeneratedCode = debug.isSet,
       noFreeze = noFreeze.isSet,
+      noOpt = noOptimizations.isSet,
       noModuleCheck = noModuleCheck.isSet,
       deadParamElim =
         if deadParamElim.isUnset then S(DeadParamElim.default)

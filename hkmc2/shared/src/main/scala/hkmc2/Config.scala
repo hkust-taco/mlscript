@@ -36,6 +36,7 @@ case class Config(
   funcToCls: Bool,
   commentGeneratedCode: Bool,
   noFreeze: Bool,
+  noOpt: Bool,
   noModuleCheck: Bool,
   deadParamElim: Opt[DeadParamElim],
 ):
@@ -80,6 +81,7 @@ object Config:
     funcToCls = false,
     commentGeneratedCode = false,
     noFreeze = false,
+    noOpt = false,
     noModuleCheck = false,
     deadParamElim = S(DeadParamElim.default)
   )
@@ -577,6 +579,8 @@ object ConfigParser:
     case "language" => parseLanguageOverride(value)
     case "tailRecOpt" =>
       parsedField(value)(parseBool)(v => _.copy(tailRecOpt = v))
+    case "noOpt" =>
+      parsedField(value)(parseBool)(v => _.copy(noOpt = v))
     case "noFreeze" =>
       parsedField(value)(parseBool)(v => _.copy(noFreeze = v))
     case "noModuleCheck" =>
