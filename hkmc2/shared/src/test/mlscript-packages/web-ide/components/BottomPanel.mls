@@ -1,0 +1,653 @@
+import "./PanelPersistence.mls"
+import "./ResizeHandle.mls"
+import "../mockWorkbenchData.mls"
+import "../common/JS.mls"
+import "../common/Logger.mls"
+import "../common/SettingsStore.mls"
+
+open JS { Absent }
+
+class BottomPanel extends HTMLElement with
+  let
+    messages = mut []
+    logEntries = mut []
+    terminalLines = Array.from(mockWorkbenchData.terminalLines)
+    activeTab = "output"
+    isCollapsed = false
+    preserveLogs = false
+    feedbackText = ""
+    logEventListener = null
+    logBufferLimit = 500
+    logLevelFilter = "all"
+    logSourceFilter = "all"
+    logSortOrder = "asc"
+
+  fun connectedCallback() =
+    this.restoreStateFromStorage()
+    this.render()
+    this.restoreSizeFromStorage()
+    this.attachLogEventListener()
+
+  fun disconnectedCallback() =
+    if logEventListener is ~null as listener do
+      document.removeEventListener(Logger.LOG_EVENT, listener)
+      set logEventListener = null
+
+  fun attachLogEventListener() =
+    if logEventListener is null do
+      let panel = this
+      set logEventListener = event => panel.addLogEntry(event.detail)
+      document.addEventListener(Logger.LOG_EVENT, logEventListener)
+
+  fun restoreSizeFromStorage() =
+    PanelPersistence.restorePanelHeight(this, "bottom-panel-height", 100, 600)
+
+  fun saveSizeToStorage(height) =
+    PanelPersistence.savePanelHeight("bottom-panel-height", height)
+
+  fun normalizedTabName(value) = if value is
+    "logging" then "logging"
+    else "output"
+
+  fun restoreStateFromStorage() =
+    let defaultLogLevel = SettingsStore.getSetting("logs.defaultLevel", "all")
+    set
+      activeTab = normalizedTabName(PanelPersistence.restoreString("bottom-panel-active-tab", "output"))
+      logLevelFilter = normalizeLogLevelFilter(PanelPersistence.restoreString("logs-level-filter", defaultLogLevel))
+      logSourceFilter = PanelPersistence.restoreString("logs-source-filter", "all")
+
+  fun render() =
+    set this.innerHTML = """
+      <resize-handle direction="vertical" side="top" min-size="100" max-size="600"></resize-handle>
+      <div class="bottom-panel-header">
+        <div class="bottom-panel-tabs" role="tablist" aria-label="Bottom panel">
+          """ + tabButtonHtml("output", "Output", "icon-scroll-text") + """
+          """ + tabButtonHtml("logging", "Logging", "icon-list") + """
+          <!--
+          """ + tabButtonHtml("terminal", "Terminal", "icon-square-terminal") + """
+          -->
+        </div>
+        <div class="bottom-panel-actions">
+          """ + logFilterControlsHtml() + """
+          <label class="preserve-logs-label" title="Preserve panel content between clear actions">
+            <input type="checkbox" class="preserve-logs-checkbox"""" + checkedAttr() + """ />
+            <span>Preserve logs</span>
+          </label>
+          <button class="clear-btn" type="button" title="Clear visible panel content">
+            <i class="icon-square-x"></i>
+            <span>Clear</span>
+          </button>
+          <button class="download-btn" type="button" title="Download visible panel text">
+            <i class="icon-download"></i>
+            <span>Download</span>
+          </button>
+        </div>
+      </div>
+      <div class="bottom-panel-content" role="tabpanel" aria-label="""" + tabLabel(activeTab) + """">
+        """ + activeContentHtml() + """
+      </div>
+    """
+    this.classList.toggle("collapsed", isCollapsed)
+    attachEventListeners()
+    scrollOutputToLatest()
+    scrollLoggingToLatest()
+
+  fun checkedAttr() =
+    if preserveLogs then " checked" else ""
+
+  fun selectedAttr(value, selectedValue) =
+    if value === selectedValue then " selected" else ""
+
+  fun logLevelOptionHtml(value, label) =
+    """<option value="""" + value + """"""" + selectedAttr(value, logLevelFilter) + """>""" + label + """</option>"""
+
+  fun sourceOptionsHtml() =
+    let
+      sources = mut []
+      html = """<option value="all"""" + selectedAttr("all", logSourceFilter) + """>All sources</option>"""
+    logEntries.forEach of (entry, ...) =>
+      if not sources.includes(entry.source) do sources.push(entry.source)
+    if logSourceFilter !== "all" and not sources.includes(logSourceFilter) do sources.push(logSourceFilter)
+    sources.sort()
+    sources.forEach of (source, ...) =>
+      set html += """<option value="""" + escapeHtml(source) + """"""" + selectedAttr(source, logSourceFilter) + """>""" + escapeHtml(source) + """</option>"""
+    html
+
+  fun logFilterControlsHtml() =
+    if activeTab !== "logging" then ""
+    else """
+      <div class="log-filter-controls" aria-label="Logging filters">
+        <label class="log-filter-field">
+          <span>Level</span>
+          <select class="log-level-filter" aria-label="Filter logs by level">
+            """ + logLevelOptionHtml("all", "All levels") + """
+            """ + logLevelOptionHtml("error", "Error") + """
+            """ + logLevelOptionHtml("warn", "Warn") + """
+            """ + logLevelOptionHtml("info", "Info") + """
+            """ + logLevelOptionHtml("debug", "Debug") + """
+            """ + logLevelOptionHtml("trace", "Trace") + """
+          </select>
+        </label>
+        <label class="log-filter-field log-source-filter-field">
+          <span>Source</span>
+          <select class="log-source-filter" aria-label="Filter logs by source">
+            """ + sourceOptionsHtml() + """
+          </select>
+        </label>
+        <label class="log-filter-field">
+          <span>Sort</span>
+          <select class="log-sort-order" aria-label="Sort logs by time">
+            <option value="asc"""" + selectedAttr("asc", logSortOrder) + """>Oldest first</option>
+            <option value="desc"""" + selectedAttr("desc", logSortOrder) + """>Newest first</option>
+          </select>
+        </label>
+      </div>
+    """
+
+  fun tabButtonHtml(id, label, icon) =
+    let
+      active = activeTab === id and not isCollapsed
+      activeClass = if active then " active" else ""
+      selected = if active then "true" else "false"
+      tabIndex = if activeTab === id then "0" else "-1"
+    """
+      <button class="bottom-panel-tab""" + activeClass + """" type="button" role="tab" data-bottom-tab="""" + id + """" aria-selected="""" + selected + """" tabindex="""" + tabIndex + """">
+        <i class="""" + icon + """"></i>
+        <span>""" + label + """</span>
+      </button>
+    """
+
+  fun activeContentHtml() = if activeTab is
+    "logging" then loggingHtml()
+    "terminal" then terminalHtml()
+    else outputHtml()
+
+  fun outputHtml() =
+    let html = """<div class="output-content">"""
+    set html += feedbackHtml()
+    if messages.length is 0 then
+      set html += emptyHtml("Output is empty")
+    else
+      messages.forEach of (entry, ...) =>
+        set html += messageRowHtml(entry)
+    set html += """</div>"""
+    html
+
+  fun loggingHtml() =
+    let html = """<div class="logging-content">"""
+    let visibleEntries = visibleLogEntries()
+    set html += feedbackHtml()
+    if logEntries.length is 0 then
+      set html += emptyHtml("Logging buffer is empty")
+    else if visibleEntries.length is 0 then
+      set html += emptyHtml("No log entries match the filters")
+    else
+      visibleEntries.forEach of (entry, ...) =>
+        set html += logEntryHtml(entry)
+    set html += """</div>"""
+    html
+
+  fun terminalHtml() =
+    let html = """<div class="terminal-content">"""
+    if terminalLines.length is 0 then
+      set html += emptyHtml("Terminal is empty")
+    else
+      set html += """<pre class="terminal-transcript">""" + escapeHtml(terminalLines.join("\n")) + """</pre>"""
+    set html += """
+      <form class="terminal-form">
+        <span>$</span>
+        <input class="terminal-input" type="text" autocomplete="off" aria-label="Terminal command" />
+        <button type="submit" title="Run mock command">
+          <i class="icon-corner-down-left"></i>
+          <span>Run</span>
+        </button>
+      </form>
+    """
+    set html += feedbackHtml()
+    set html += """</div>"""
+    html
+
+  fun emptyHtml(label) =
+    """<div class="bottom-panel-empty">""" + label + """</div>"""
+
+  fun feedbackHtml() =
+    if feedbackText === "" then ""
+    else """<div class="bottom-panel-feedback">""" + escapeHtml(feedbackText) + """</div>"""
+
+  fun message(kind, args) =
+    mut { :kind, content: args, timestamp: new Date() }
+
+  fun log(kind, ...args) =
+    messages.push(message(kind, args))
+    addLogEntry(mut
+      level: outputLogLevel(kind)
+      timestamp: new Date().toISOString()
+      source: "Output"
+      message: formattedArgs(args)
+      body: args
+    )
+    if activeTab === "output" do render()
+
+  fun outputLogLevel(kind) = if kind is
+    "error" then "error"
+    "warn" then "warn"
+    "info" then "info"
+    else "debug"
+
+  fun stringifyArg(arg) = if typeof(arg) is
+    "object" then
+      js.try_catch(
+        () => JSON.stringify(arg, null, 2)
+        error => String(arg)
+      )
+    else String(arg)
+
+  fun formattedArgs(args) =
+    args.map(arg => stringifyArg(arg)).join(" ")
+
+  fun formattedContent(message) =
+    formattedArgs(message.content)
+
+  fun valueOrDefault(value, fallback) = if value is
+    Absent then fallback
+    null then fallback
+    else value
+
+  fun normalizeLevel(level) = if String(valueOrDefault(level, "info")) is
+    "error" then "error"
+    "warn" then "warn"
+    "debug" then "debug"
+    "trace" then "trace"
+    else "info"
+
+  fun normalizeBody(body) = if body is
+    Absent then []
+    null then []
+    else Array.from(body)
+
+  fun normalizeLogEntry(entry) =
+    let body = normalizeBody(entry.body)
+    mut
+      level: normalizeLevel(entry.level)
+      timestamp: String(valueOrDefault(entry.timestamp, new Date().toISOString()))
+      source: String(valueOrDefault(entry.source, "Web IDE"))
+      message: String(valueOrDefault(entry.message, formattedArgs(body)))
+      body: body
+
+  fun addLogEntry(entry) =
+    logEntries.push(normalizeLogEntry(entry))
+    while logEntries.length > logBufferLimit do logEntries.shift()
+    if activeTab === "logging" do render()
+
+  fun logTimestampValue(entry) =
+    let date = new Date(entry.timestamp)
+    if Number.isFinite(date.getTime()) then date.getTime() else 0
+
+  fun logSourceMatches(entry) =
+    if
+      logSourceFilter === "all" then true
+      else entry.source === logSourceFilter
+
+  fun logEntryMatches(entry) =
+    if
+      logLevelFilter === "all" then logSourceMatches(entry)
+      entry.level === logLevelFilter then logSourceMatches(entry)
+      else false
+
+  fun visibleLogEntries() =
+    let entries = logEntries.filter(entry => logEntryMatches(entry))
+    entries.sort((a, b) => if
+      logSortOrder === "desc" then logTimestampValue(b) - logTimestampValue(a)
+      else logTimestampValue(a) - logTimestampValue(b)
+    )
+    entries
+
+  fun iconClassName(kind) = if kind is
+    "error" then "icon-x"
+    "warn" then "icon-triangle-alert"
+    "info" then "icon-info"
+    else "icon-chevron-right"
+
+  fun logLevelClass(level) = if level is
+    "error" then "log-level-error"
+    "warn" then "log-level-warn"
+    "debug" then "log-level-debug"
+    "trace" then "log-level-trace"
+    else "log-level-info"
+
+  fun logIconClassName(level) = if level is
+    "error" then "icon-x"
+    "warn" then "icon-triangle-alert"
+    "debug" then "icon-bug"
+    "trace" then "icon-route"
+    else "icon-info"
+
+  fun logBodyText(entry) =
+    entry.body.map(arg => stringifyArg(arg)).join("\n")
+
+  fun isWhitespaceChar(ch) = if ch is
+    " " then true
+    "\n" then true
+    "\r" then true
+    "\t" then true
+    else false
+
+  fun compactLogText(text) =
+    let
+      compact = ""
+      pendingSpace = false
+      i = 0
+    while i < text.length do
+      let ch = text.charAt(i)
+      if isWhitespaceChar(ch) then
+        if compact !== "" do set pendingSpace = true
+      else
+        if pendingSpace do
+          set compact += " "
+          set pendingSpace = false
+        set compact += ch
+      set i += 1
+    if compact.length > 96 then compact.slice(0, 95) + "…" else compact
+
+  fun logDate(timestamp) =
+    let date = new Date(timestamp)
+    if Number.isFinite(date.getTime()) then date else null
+
+  fun formatLogTime(timestamp) =
+    let date = logDate(timestamp)
+    if date is
+      null then String(timestamp)
+      else date.toLocaleTimeString(undefined,
+        hour: "2-digit"
+        minute: "2-digit"
+      )
+
+  fun formatLogDateTime(timestamp) =
+    let date = logDate(timestamp)
+    if date is
+      null then String(timestamp)
+      else date.toLocaleString(undefined,
+        year: "numeric"
+        month: "short"
+        day: "numeric"
+        hour: "2-digit"
+        minute: "2-digit"
+        second: "2-digit"
+      )
+
+  fun logEntryRowHtml(entry, bodyText, rowTag) =
+    let preview = compactLogText(bodyText)
+    let bodyPreview = if preview === "" then ""
+      else """<span class="log-entry-body-preview">""" + escapeHtml(preview) + """</span>"""
+    """
+        <""" + rowTag + """ class="log-entry-row">
+          <span class="log-entry-icon"><i class='""" + logIconClassName(entry.level) + """'></i></span>
+          <span class="log-entry-level">""" + entry.level.toUpperCase() + """</span>
+          <time class="log-entry-time" datetime="""" + escapeHtml(entry.timestamp) + """" title="""" + escapeHtml(formatLogDateTime(entry.timestamp)) + """">""" + escapeHtml(formatLogTime(entry.timestamp)) + """</time>
+          <span class="log-entry-source">""" + escapeHtml(entry.source) + """</span>
+          <span class="log-entry-message">""" + escapeHtml(entry.message) + """</span>
+          """ + bodyPreview + """
+        </""" + rowTag + """>
+      """
+
+  fun logBodyHtml(entry) =
+    let text = logBodyText(entry)
+    if text === "" then ""
+    else """
+        <details class="log-entry-body">
+          """ + logEntryRowHtml(entry, text, "summary") + """
+          <pre>""" + escapeHtml(text) + """</pre>
+        </details>
+      """
+
+  fun logEntryText(entry) =
+    let header = "[" + formatLogDateTime(entry.timestamp) + "] " + entry.level.toUpperCase() + " " + entry.source + " - " + entry.message
+    let body = logBodyText(entry)
+    if body === "" then header else header + "\n" + body
+
+  fun logEntryHtml(entry) =
+    let body = logBodyText(entry)
+    if body === "" then """
+        <article class="log-entry """ + logLevelClass(entry.level) + """">
+          """ + logEntryRowHtml(entry, body, "div") + """
+        </article>
+      """
+    else """
+        <article class="log-entry """ + logLevelClass(entry.level) + """">
+          """ + logBodyHtml(entry) + """
+        </article>
+      """
+
+  fun messageRowHtml(message) =
+    """
+      <div class="console-message console-""" + message.kind + """">
+        <span class="console-icon"><i class='""" + iconClassName(message.kind) + """'></i></span>
+        <span class="console-text">""" + escapeHtml(formattedContent(message)) + """</span>
+      </div>
+    """
+
+  fun clear() = if preserveLogs then
+    set feedbackText = "Preserve logs is on"
+    render()
+  else
+    if activeTab is
+      "logging" then
+        let hadEntries = logEntries.length > 0
+        set
+          logEntries = mut []
+          feedbackText = if hadEntries then "Logging buffer cleared" else ""
+      "terminal" then
+        set
+          terminalLines = mut []
+          feedbackText = "Terminal cleared"
+      else
+        let hadMessages = messages.length > 0
+        set
+          messages = mut []
+          feedbackText = if hadMessages then "Output cleared" else ""
+    render()
+
+  fun setPreserveLogs(value) =
+    set preserveLogs = value
+    render()
+
+  fun normalizeLogLevelFilter(value) = if String(value) is
+    "error" then "error"
+    "warn" then "warn"
+    "info" then "info"
+    "debug" then "debug"
+    "trace" then "trace"
+    else "all"
+
+  fun setLogLevelFilter(value) =
+    set
+      logLevelFilter = normalizeLogLevelFilter(value)
+      feedbackText = ""
+    PanelPersistence.saveString("logs-level-filter", logLevelFilter)
+    render()
+
+  fun setLogSourceFilter(value) =
+    set
+      logSourceFilter = if String(value) === "" then "all" else String(value)
+      feedbackText = ""
+    PanelPersistence.saveString("logs-source-filter", logSourceFilter)
+    render()
+
+  fun setLogSortOrder(value) =
+    set
+      logSortOrder = if String(value) === "desc" then "desc" else "asc"
+      feedbackText = ""
+    render()
+
+  fun setActiveTab(tabName) = if tabName is
+    "output" | "logging" | "terminal" then
+      PanelPersistence.saveString("bottom-panel-active-tab", tabName)
+      if tabName === activeTab then
+        toggleCollapse()
+      else
+        set
+          activeTab = tabName
+          feedbackText = ""
+        if isCollapsed do
+          set isCollapsed = false
+          restoreSavedSize()
+        render()
+    else ()
+
+  fun tabLabel(tabName) = if tabName is
+    "logging" then "Logging"
+    "terminal" then "Terminal"
+    else "Output"
+
+  fun visibleText() = if activeTab is
+    "logging" then visibleLogEntries().map(entry => logEntryText(entry)).join("\n\n")
+    "terminal" then terminalLines.join("\n")
+    else messages.map(entry => formattedContent(entry)).join("\n")
+
+  fun downloadVisibleContent() =
+    let
+      blob = new! window.Blob([visibleText()], mut { 'type: "text/plain" })
+      url = window.URL.createObjectURL(blob)
+      link = document.createElement("a")
+    set
+      link.href = url
+      link.download = "mlscript-" + activeTab + ".txt"
+      link.style.display = "none"
+    document.body.appendChild(link)
+    link.click()
+    link.remove()
+    window.URL.revokeObjectURL(url)
+    set feedbackText = "Downloaded " + tabLabel(activeTab)
+    render()
+
+  fun runTerminalCommand(command) =
+    let trimmed = command.trim()
+    if trimmed !== "" do
+      terminalLines.push("$ " + trimmed)
+      terminalLines.push("Command queued in the mock terminal")
+      set feedbackText = ""
+      render()
+
+  fun valueOrEmpty(value) = if value is
+    Absent then ""
+    present then present
+
+  fun saveCurrentSize() =
+    set
+      this.dataset.lastHeight = valueOrEmpty(this.style.height)
+      this.dataset.lastMinHeight = valueOrEmpty(this.style.minHeight)
+      this.dataset.lastMaxHeight = valueOrEmpty(this.style.maxHeight)
+      this.style.height = "40px"
+      this.style.minHeight = "40px"
+      this.style.maxHeight = "40px"
+      this.style.flexBasis = "40px"
+      this.style.flexGrow = "0"
+      this.style.flexShrink = "0"
+
+  fun restoreSavedSize() =
+    let
+      lastHeight = this.dataset.lastHeight
+      lastMinHeight = this.dataset.lastMinHeight
+      lastMaxHeight = this.dataset.lastMaxHeight
+    if lastHeight is
+      Absent then
+        resetInlineSize()
+      "" then
+        resetInlineSize()
+      "40px" then
+        resetInlineSize()
+      savedHeight then
+        set
+          this.style.height = savedHeight
+          this.style.minHeight = valueOrEmpty(lastMinHeight)
+          this.style.maxHeight = valueOrEmpty(lastMaxHeight)
+          this.style.flexBasis = savedHeight
+
+  fun resetInlineSize() =
+    set
+      this.style.height = ""
+      this.style.minHeight = ""
+      this.style.maxHeight = ""
+      this.style.flexBasis = ""
+      this.style.flexGrow = ""
+      this.style.flexShrink = ""
+
+  fun toggleCollapse() =
+    set isCollapsed = not isCollapsed
+    if
+      isCollapsed then saveCurrentSize()
+      else restoreSavedSize()
+    render()
+
+  fun shouldExpand() = if
+    isCollapsed then true
+    else this.classList.contains("collapsed")
+
+  fun expand() = if shouldExpand() do
+    set isCollapsed = false
+    restoreSavedSize()
+    render()
+
+  fun showOutput() =
+    set activeTab = "output"
+    PanelPersistence.saveString("bottom-panel-active-tab", activeTab)
+    expand()
+    if not shouldExpand() do render()
+
+  fun showLogging() =
+    set activeTab = "logging"
+    PanelPersistence.saveString("bottom-panel-active-tab", activeTab)
+    expand()
+    if not shouldExpand() do render()
+
+  fun clearOutput() =
+    set activeTab = "output"
+    PanelPersistence.saveString("bottom-panel-active-tab", activeTab)
+    clear()
+
+  fun clearLogs() =
+    set activeTab = "logging"
+    PanelPersistence.saveString("bottom-panel-active-tab", activeTab)
+    clear()
+
+  fun scrollLoggingToLatest() =
+    if activeTab === "logging" and not isCollapsed do
+      if this.querySelector(".bottom-panel-content") is ~null as content do
+        window.requestAnimationFrame(() => if
+          logSortOrder === "desc" then set content.scrollTop = 0
+          else set content.scrollTop = content.scrollHeight
+        )
+
+  fun scrollOutputToLatest() =
+    if activeTab === "output" and not isCollapsed do
+      if this.querySelector(".bottom-panel-content") is ~null as content do
+        window.requestAnimationFrame(() => set content.scrollTop = content.scrollHeight)
+
+  fun attachEventListeners() =
+    let panel = this
+    this.querySelectorAll(".bottom-panel-tab").forEach of (button, ...) =>
+      button.addEventListener("click", () => panel.setActiveTab(button.dataset.bottomTab))
+    if this.querySelector(".clear-btn") is ~null as clearBtn do
+      clearBtn.addEventListener("click", () => panel.clear())
+    if this.querySelector(".download-btn") is ~null as downloadBtn do
+      downloadBtn.addEventListener("click", () => panel.downloadVisibleContent())
+    if this.querySelector(".log-level-filter") is ~null as levelFilter do
+      levelFilter.addEventListener("change", event => panel.setLogLevelFilter(event.target.value))
+    if this.querySelector(".log-source-filter") is ~null as sourceFilter do
+      sourceFilter.addEventListener("change", event => panel.setLogSourceFilter(event.target.value))
+    if this.querySelector(".log-sort-order") is ~null as sortOrder do
+      sortOrder.addEventListener("change", event => panel.setLogSortOrder(event.target.value))
+    if this.querySelector(".preserve-logs-checkbox") is ~null as preserveLogsCheckbox do
+      preserveLogsCheckbox.addEventListener("change", event => panel.setPreserveLogs(event.target.checked))
+    if this.querySelector(".terminal-form") is ~null as form do
+      form.addEventListener of "submit", event =>
+        event.preventDefault()
+        if form.querySelector(".terminal-input") is ~null as input do
+          panel.runTerminalCommand(input.value)
+
+  fun escapeHtml(text) =
+    let div = document.createElement("div")
+    set div.textContent = text
+    div.innerHTML
+
+customElements.define("bottom-panel", BottomPanel)

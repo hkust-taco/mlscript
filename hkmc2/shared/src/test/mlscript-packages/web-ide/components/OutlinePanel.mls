@@ -1,0 +1,261 @@
+import "../analysis/SymbolTree.mls"
+import "../common/JS.mls"
+
+open JS { Absent }
+
+fun escapeHtml(text) =
+  let div = document.createElement("div")
+  set div.textContent = text
+  div.innerHTML
+
+class OutlinePanel extends HTMLElement with
+  let
+    documentData = null
+    status = "loading"
+    errorText = ""
+    expandedKeys = new Set()
+    collapsedKeys = new Set()
+    selectedKey = ""
+
+  fun connectedCallback() =
+    this.restoreLatestDocument()
+    this.render()
+    this.attachEventListeners()
+
+  fun restoreLatestDocument() =
+    if window.__mlscriptAnalysisDocument is ~Absent as document do
+      set
+        documentData = SymbolTree.normalizeDocument(document, document.revision)
+        status = "ready"
+
+  fun root() = if
+    documentData is null then null
+    documentData.root is Absent then null
+    else documentData.root
+
+  fun render() =
+    set this.innerHTML = """
+      <div class="outline-panel-shell">
+        <div class="outline-panel-header">
+          <h2>Outline</h2>
+        </div>
+        <div class="outline-tree" role="tree">
+          """ + treeHtml() + """
+        </div>
+      </div>
+    """
+    attachNodeListeners()
+
+  fun unavailableText() =
+    if errorText === "" then "Outline is not available" else errorText
+
+  fun treeHtml() = if
+    status is "error" then """<div class="outline-empty">""" + escapeHtml(unavailableText()) + """</div>"""
+    root() is null then """<div class="outline-empty">No symbols</div>"""
+    else nodeHtml(root(), 0)
+
+  fun nodeKey(node) =
+    SymbolTree.stableExpansionKey(node, documentData.rootFile)
+
+  fun nodeLocationLabel(node) =
+    let detail = SymbolTree.rangeToNavigationDetail(node, documentData.rootFile)
+    "L" + detail.line
+
+  fun hasChildren(node) =
+    node.children is ~Absent and node.children.length > 0
+
+  fun iconFor(kind) = if kind is
+    "file" then "icon-file-code"
+    "module" then "icon-box"
+    "class" then "icon-boxes"
+    "object" then "icon-circle-dot"
+    "function" then "icon-braces"
+    "type" then "icon-type"
+    "pattern" then "icon-regex"
+    "value" then "icon-variable"
+    else "icon-dot"
+
+  fun kindLabel(kind) = if kind is
+    "function" then "fun"
+    "module" then "mod"
+    "object" then "obj"
+    "class" then "cls"
+    "pattern" then "pat"
+    "type" then "typ"
+    "parameter" then "arg"
+    "mutable-value" then "mut"
+    "constructor" then "ctor"
+    "value" then "val"
+    else kind
+
+  fun nodeKindClass(kind) = if kind is
+    "file" then "outline-kind-file"
+    "module" then "outline-kind-module"
+    "class" then "outline-kind-class"
+    "object" then "outline-kind-object"
+    "function" then "outline-kind-function"
+    "type" then "outline-kind-type"
+    "pattern" then "outline-kind-pattern"
+    "value" then "outline-kind-value"
+    "mutable-value" then "outline-kind-mutable-value"
+    "parameter" then "outline-kind-parameter"
+    "constructor" then "outline-kind-constructor"
+    else "outline-kind-symbol"
+
+  fun nodeMainHtml(node) =
+    """
+      <span class="outline-node-kind">""" + escapeHtml(kindLabel(node.kind)) + """</span>
+      <i class="outline-node-icon """ + iconFor(node.kind) + """"></i>
+      <span class="outline-node-name">""" + escapeHtml(node.name) + """</span>
+      <span class="outline-node-location">""" + escapeHtml(nodeLocationLabel(node)) + """</span>
+    """
+
+  fun caretHtml(node) =
+    """<span class="outline-node-caret" role="button" tabindex="0" aria-label="Toggle children of """ + escapeHtml(node.name) + """"></span>"""
+
+  fun spacerHtml() =
+    """<span class="outline-node-spacer"></span>"""
+
+  fun childNodesHtml(node, depth) =
+    node.children.map(child => nodeHtml(child, depth + 1)).join("")
+
+  fun defaultOpen(depth) =
+    depth < 3
+
+  fun isExpanded(key, depth) =
+    if collapsedKeys.has(key) then false
+    else if expandedKeys.has(key) then true
+    else defaultOpen(depth)
+
+  fun nodeHtml(node, depth) =
+    let
+      key = nodeKey(node)
+      selectedClass = if selectedKey === key then " selected" else ""
+      kindClass = nodeKindClass(node.kind)
+      depthStyle = " style=\"--outline-depth: " + depth + "\""
+    if hasChildren(node) then
+      let openAttr = if isExpanded(key, depth) then " open" else ""
+      """
+        <details class="outline-node """ + kindClass + selectedClass + """" data-outline-key="""" + escapeHtml(key) + """"""" + depthStyle + openAttr + """>
+          <summary class="outline-node-summary" data-outline-key="""" + escapeHtml(key) + """" role="treeitem">
+            """ + caretHtml(node) + """
+            """ + nodeMainHtml(node) + """
+          </summary>
+          <div class="outline-node-children" role="group">
+            """ + childNodesHtml(node, depth) + """
+          </div>
+        </details>
+      """
+    else
+      """
+        <button class="outline-node-leaf """ + kindClass + selectedClass + """" type="button" data-outline-key="""" + escapeHtml(key) + """" role="treeitem"""" + depthStyle + """>
+          """ + spacerHtml() + """
+          """ + nodeMainHtml(node) + """
+        </button>
+      """
+
+  fun findNodeByKey(key) =
+    let found = null
+    fun visit(node) =
+      if found is null do
+        if nodeKey(node) === key then set found = node
+        else if node.children is ~Absent do
+          node.children.forEach of (child, ...) => visit(child)
+    if root() is ~null as rootNode do visit(rootNode)
+    found
+
+  fun markSelected(element, key) =
+    set selectedKey = key
+    this.querySelectorAll(".selected").forEach of (selected, ...) =>
+      selected.classList.remove("selected")
+    if element.classList.contains("outline-node-summary") then
+      if element.parentElement is ~Absent as parent do parent.classList.add("selected")
+    else element.classList.add("selected")
+
+  fun dispatchOpenNode(key, element) =
+    if findNodeByKey(key) is ~null as node do
+      markSelected(element, key)
+      let detail = SymbolTree.rangeToNavigationDetail(node, documentData.rootFile)
+      document.dispatchEvent(new CustomEvent("open-file-at-location", mut { detail: detail }))
+
+  fun handleDetailsToggle(details) =
+    let key = details.dataset.outlineKey
+    if details.open then
+      expandedKeys.add(key)
+      collapsedKeys.delete(key)
+    else
+      expandedKeys.delete(key)
+      collapsedKeys.add(key)
+
+  fun toggleDetails(details) =
+    let key = details.dataset.outlineKey
+    if details.open then
+      set details.open = false
+      expandedKeys.delete(key)
+      collapsedKeys.add(key)
+    else
+      set details.open = true
+      expandedKeys.add(key)
+      collapsedKeys.delete(key)
+
+  fun isCaretTarget(event) =
+    if event.target is
+      Absent then false
+      target then
+        if target.closest(".outline-node-caret") is
+          null then false
+          else true
+
+  fun handleSummaryClick(event, summary) =
+    event.preventDefault()
+    if isCaretTarget(event) then
+      if summary.parentElement is ~Absent as details do toggleDetails(details)
+    else dispatchOpenNode(summary.dataset.outlineKey, summary)
+
+  fun handleCaretKey(event, summary) =
+    if event.key is
+      "Enter" | " " then
+        event.preventDefault()
+        if summary.parentElement is ~Absent as details do toggleDetails(details)
+      else ()
+
+  fun attachNodeListeners() =
+    let panel = this
+    this.querySelectorAll(".outline-node").forEach of (details, ...) =>
+      details.addEventListener("toggle", event => panel.handleDetailsToggle(details))
+    this.querySelectorAll(".outline-node-summary").forEach of (summary, ...) =>
+      summary.addEventListener("click", event => panel.handleSummaryClick(event, summary))
+      if summary.querySelector(".outline-node-caret") is ~null as caret do
+        caret.addEventListener("keydown", event => panel.handleCaretKey(event, summary))
+    this.querySelectorAll(".outline-node-leaf").forEach of (button, ...) =>
+      button.addEventListener("click", event => panel.dispatchOpenNode(button.dataset.outlineKey, button))
+
+  fun setDocument(document) =
+    set
+      documentData = SymbolTree.normalizeDocument(document, document.revision)
+      status = "ready"
+      errorText = ""
+    render()
+
+  fun setStatus(detail) =
+    if detail.status is
+      "loading" then
+        set status = "loading"
+        render()
+      "error" then
+        set
+          status = "error"
+          documentData = null
+          errorText = if detail.error is Absent then "Analysis error" else detail.error.message
+        render()
+      "ready" then
+        set status = "ready"
+        render()
+      else ()
+
+  fun attachEventListeners() =
+    let panel = this
+    document.addEventListener("analysis-document-updated", event => panel.setDocument(event.detail.document))
+    document.addEventListener("analysis-status-changed", event => panel.setStatus(event.detail))
+
+customElements.define("outline-panel", OutlinePanel)

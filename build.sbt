@@ -61,6 +61,49 @@ lazy val hkmc2 = crossProject(JSPlatform, JVMPlatform).in(file("hkmc2"))
       _.withModuleKind(ModuleKind.ESModule)
         .withOutputPatterns(OutputPatterns.fromJSFile("MLscript.mjs"))
     },
+    Compile / sourceGenerators += Def.task {
+      val rootDir = (ThisBuild / baseDirectory).value
+      val stdDir = rootDir / "hkmc2" / "shared" / "src" / "test" / "mlscript-compile"
+      val declsDir = rootDir / "hkmc2" / "shared" / "src" / "test" / "mlscript" / "decls"
+      val out = (Compile / sourceManaged).value / "hkmc2" / "WebIDEStd.scala"
+      val preludeFile = declsDir / "Prelude.mls"
+      val stdFiles = ((stdDir * "*.mls") +++ (stdDir * "*.mjs") +++ (stdDir / "quotes" * "*.mls") +++ (stdDir / "quotes" * "*.mjs")).get
+        .filterNot(_.getName == "Prelude.mls")
+        .sortBy(file => stdDir.toPath.relativize(file.toPath).toString)
+
+      def scalaString(value: String): String =
+        "\"" + value.flatMap {
+          case '\\' => "\\\\"
+          case '"' => "\\\""
+          case '\n' => "\\n"
+          case '\r' => "\\r"
+          case '\t' => "\\t"
+          case c if c.isControl => f"\\u${c.toInt}%04x"
+          case c => c.toString
+        } + "\""
+
+      val entries = stdFiles.map { file =>
+        val relativePath = stdDir.toPath.relativize(file.toPath).toString.replace(java.io.File.separatorChar, '/')
+        s"""js.Array(${scalaString("/std/" + relativePath)}, ${scalaString(IO.read(file))})"""
+      }
+      val source =
+        s"""|package hkmc2
+            |
+            |import scala.scalajs.js
+            |import scala.scalajs.js.annotation.JSExportTopLevel
+            |
+            |object WebIDEStd:
+            |  @JSExportTopLevel("std")
+            |  val std: js.Dynamic = js.Dynamic.literal(
+            |    prelude = ${scalaString(IO.read(preludeFile))},
+            |    files = js.Array(
+            |      ${entries.mkString(",\n      ")}
+            |    )
+            |  )
+            |""".stripMargin
+      IO.write(out, source)
+      Seq(out)
+    }.taskValue,
     libraryDependencies += "org.scala-js" %%% "scalajs-dom" % "2.2.0",
   )
   .dependsOn(core)
@@ -112,6 +155,20 @@ lazy val hkmc2NofibTests = hkmc2TestSubproject("hkmc2NofibTests", Some("NofibCom
 lazy val hkmc2AppsTests = hkmc2TestSubproject("hkmc2AppsTests", Some("AppsCompileTestRunner"), "AppsDiffTestRunner")
 lazy val hkmc2WasmTests = hkmc2TestSubproject("hkmc2WasmTests", Some("WasmCompileTestRunner"), "WasmDiffTestRunner")
 
+lazy val hkmc2PackagesTest = project.in(file("hkmc2PackagesTest"))
+  .dependsOn(hkmc2JVM % "compile->compile;test->test")
+  .settings(
+    scalaVersion := scala3Version,
+
+    libraryDependencies += "org.scalactic" %%% "scalactic" % scalaTestVersion,
+    libraryDependencies += "org.scalatest" %%% "scalatest" % scalaTestVersion % "test",
+    libraryDependencies += "com.lihaoyi" %% "ujson" % "4.4.3",
+
+    Test / test := (Test / testOnly).toTask(" hkmc2.PackageTestRunner").value,
+
+    Test/run/fork := true, // so that CTRL+C actually terminates the watcher
+  )
+
 lazy val hkmc2MainTests = project.in(file("hkmc2MainTests"))
   .settings(
     Test / test := (
@@ -126,6 +183,7 @@ lazy val hkmc2MostTests = project.in(file("hkmc2MostTests"))
       (hkmc2DiffTests / Test / test)
         .dependsOn(hkmc2NofibTests / Test / test)
         .dependsOn(hkmc2AppsTests / Test / test)
+        .dependsOn(hkmc2PackagesTest / Test / test)
         .dependsOn(hkmc2WasmTests / Test / test)
         .dependsOn(hkmc2JVM / Test / test)
     ).value
@@ -133,12 +191,13 @@ lazy val hkmc2MostTests = project.in(file("hkmc2MostTests"))
 
 lazy val hkmc2AllTests = project.in(file("hkmc2AllTests"))
   .settings(
-    Test / test := (
+    Test / test := Def.sequential(
+      hkmc2JVM / Test / test, // prepares compile-test `.mjs` outputs used by JS tests
       (hkmc2DiffTests / Test / test)
         .dependsOn(hkmc2NofibTests / Test / test)
         .dependsOn(hkmc2AppsTests / Test / test)
+        .dependsOn(hkmc2PackagesTest / Test / test)
         .dependsOn(hkmc2WasmTests / Test / test)
-        .dependsOn(hkmc2JVM / Test / test)
         .dependsOn(hkmc2JS / Test / test)
         .dependsOn(hkmc2Benchmarks / Test / compile)
     ).value

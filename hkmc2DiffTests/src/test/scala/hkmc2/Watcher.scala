@@ -34,7 +34,19 @@ class Watcher(dirs: Ls[File]):
   val completionTime = mutable.Map.empty[File, LocalDateTime]
   val fileHasher = FileHasher.DEFAULT_FILE_HASHER
   
-  given cctx: CompilerCtx = CompilerCtx.fresh(FileSystem.default)
+  val rootPath = os.pwd/os.up
+  val testDir = rootPath/"hkmc2"/"shared"/"src"/"test"
+  val preludePath = testDir/"mlscript"/"decls"/"Prelude.mls"
+  val predefPath = testDir/"mlscript-compile"/"Predef.mls"
+  val stdPath = testDir/"mlscript-compile"
+  val compilerPaths = new MLsCompiler.Paths:
+    val preludeFile = preludePath
+    val runtimeFile = testDir/"mlscript-compile"/"Runtime.mjs"
+    val runtimeSourceFile = testDir/"mlscript-compile"/"Runtime.mls"
+    val termFile = testDir/"mlscript-compile"/"Term.mjs"
+  val nodeModulesPath = rootPath/"node_modules"
+  
+  given cctx: CompilerCtx = CompilerCtx.fresh(FileSystem.default, LocalModuleResolver(stdPath, S(nodeModulesPath)))
   
   val watcher: DirectoryWatcher = DirectoryWatcher.builder()
     .logger(org.slf4j.helpers.NOPLogger.NOP_LOGGER)

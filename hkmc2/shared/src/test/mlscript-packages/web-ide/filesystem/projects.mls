@@ -1,0 +1,291 @@
+import "../common/JS.mls"
+import "../common/Logger.mls"
+import "../common/SettingsStore.mls"
+
+open JS { Absent }
+
+module projects with...
+
+val PROJECTS_KEY = "mlscript.projects.v1"
+val CURRENT_KEY = "mlscript.project.current.v1"
+val SCHEMA_KEY = "mlscript.projects.schema"
+val SCHEMA_VERSION = "v1"
+val LEGACY_PATHS_KEY = "mlscript-fs-paths"
+val LEGACY_FILE_PREFIX = "mlscript-fs:"
+val FILE_PREFIX = "mlscript-fs:proj:"
+val PATHS_PREFIX = "mlscript-fs-paths:proj:"
+// Storage-bucket id reused by the one-shot legacy migration so existing
+// users keep their files. After migration the resulting meta is a normal
+// project entry — nothing special about this id at runtime.
+val LEGACY_BUCKET_ID = "default"
+val INITIAL_PROJECT_NAME = "My project"
+
+val state = mut
+  registry: mut []
+  currentId: ""
+
+fun fileKey(id, path) =
+  FILE_PREFIX + id + ":" + path
+
+fun pathsKey(id) =
+  PATHS_PREFIX + id
+
+fun currentId() =
+  state.currentId
+
+fun listProjects() =
+  state.registry
+
+// Note: avoid Array.prototype.find — `runtime.safeCall(undefined)` rewrites a
+// miss to `runtime.Unit`, which slips past the `Absent` pattern at call sites.
+// A manual loop keeps the miss as a real `null`.
+fun findProjectLoop(id) =
+  let
+    result = null
+    i = 0
+  while i < state.registry.length do
+    let p = state.registry.at(i)
+    if result is null and p.id === id do set result = p
+    set i += 1
+  result
+
+fun currentProject() =
+  findProjectLoop(state.currentId)
+
+fun today() =
+  new Date().toISOString().slice(0, 10)
+
+fun makeProject(id, name) =
+  mut
+    id: id
+    name: name
+    description: ""
+    color: "accent"
+    icon: ""
+    createdAt: today()
+    modifiedAt: today()
+    activeFile: "/main.mls"
+
+fun writeText(key, value) =
+  localStorage.setItem(key, value)
+
+fun readText(key) =
+  localStorage.getItem(key)
+
+fun removeText(key) =
+  localStorage.removeItem(key)
+
+fun writeJSON(key, value) =
+  writeText(key, JSON.stringify(value))
+
+fun readJSON(key) = if readText(key) is
+  Absent then null
+  text then JSON.parse(text)
+
+fun saveRegistry() =
+  writeJSON(PROJECTS_KEY, state.registry)
+  writeText(CURRENT_KEY, state.currentId)
+
+fun loadRegistry() =
+  let parsed = readJSON(PROJECTS_KEY)
+  if parsed is
+    Absent then false
+    else
+      if Array.isArray(parsed) then
+        set state.registry = parsed
+        true
+      else false
+
+fun bumpModified(id) =
+  state.registry.forEach of (p, ...) =>
+    if p.id === id do set p.modifiedAt = today()
+
+fun setActiveFile(id, path) =
+  state.registry.forEach of (p, ...) =>
+    if p.id === id do set p.activeFile = path
+
+fun migrateLegacyFile(path) =
+  let key = LEGACY_FILE_PREFIX + path
+  if readText(key) is
+    ~Absent as blob do
+      writeText(fileKey(LEGACY_BUCKET_ID, path), blob)
+      removeText(key)
+
+fun migrateLegacyIfNeeded() =
+  if readText(SCHEMA_KEY) is
+    ~Absent then false
+    else
+      let legacyText = readText(LEGACY_PATHS_KEY)
+      if legacyText is
+        Absent then false
+        text then
+          Logger.info("Projects", "Migrating legacy persistence into v1 namespace", LEGACY_BUCKET_ID)
+          let
+            parsed = JSON.parse(text)
+            paths = if Array.isArray(parsed) then parsed else []
+          paths.forEach of (path, ...) => migrateLegacyFile(path)
+          writeText(pathsKey(LEGACY_BUCKET_ID), JSON.stringify(paths))
+          removeText(LEGACY_PATHS_KEY)
+          Logger.info("Projects", "Migrated legacy files", paths.length)
+          true
+
+// Make sure the registry has at least one project. The only time this fires
+// after the first boot is when a user has wiped localStorage, since the
+// delete guard refuses to remove the last remaining project. If we just
+// migrated legacy data we adopt the migration bucket; otherwise we mint a
+// fresh project with a random id — no project id is ever "the" default.
+fun ensureAtLeastOneProject(migrated) =
+  if state.registry.length === 0 do
+    if migrated then
+      state.registry.push(makeProject(LEGACY_BUCKET_ID, INITIAL_PROJECT_NAME))
+    else
+      let id = generateUniqueId()
+      state.registry.push(makeProject(id, INITIAL_PROJECT_NAME))
+
+fun setCurrentTo(id) =
+  set state.currentId = id
+
+fun fallbackToFirstProject() =
+  if state.registry.length > 0 do
+    setCurrentTo(state.registry.at(0).id)
+
+fun shouldReopenLastProject() =
+  SettingsStore.getSetting("workbench.reopenLastProject", "true") !== "false"
+
+fun selectInitialCurrent() =
+  if not shouldReopenLastProject() then fallbackToFirstProject()
+  else
+    let stored = readText(CURRENT_KEY)
+    if stored is
+      Absent then fallbackToFirstProject()
+      id then
+        let known = state.registry.some of (p, ...) => p.id === id
+        if known then setCurrentTo(id)
+        else fallbackToFirstProject()
+
+fun markSchema() =
+  writeText(SCHEMA_KEY, SCHEMA_VERSION)
+
+fun bootstrap() =
+  Logger.info("Projects", "Bootstrapping project registry")
+  let migrated = migrateLegacyIfNeeded()
+  loadRegistry()
+  ensureAtLeastOneProject(migrated)
+  selectInitialCurrent()
+  markSchema()
+  saveRegistry()
+  Logger.info("Projects", "Project registry ready",
+    "count:", state.registry.length,
+    "current:", state.currentId)
+
+// ─── Registry mutations ───────────────────────────────────────
+
+fun randomId() =
+  "proj-" + Math.random().toString(36).slice(2, 8)
+
+fun idExists(id) =
+  state.registry.some of (p, ...) => p.id === id
+
+fun generateUniqueId() =
+  let
+    candidate = randomId()
+    collisions = 0
+  while idExists(candidate) do
+    set candidate = randomId()
+    set collisions += 1
+    if collisions > 16 do throw Error("Could not allocate a unique project id")
+  candidate
+
+fun findProject(id) =
+  findProjectLoop(id)
+
+fun isCurrent(id) =
+  id === state.currentId
+
+fun createProject(name) =
+  let
+    id = generateUniqueId()
+    project = makeProject(id, name)
+  state.registry.push(project)
+  saveRegistry()
+  Logger.info("Projects", "Created project", id, name)
+  project
+
+// For Import. The incoming meta keeps its descriptive fields but is given a
+// fresh id (to avoid collisions with any existing project) and a current
+// modifiedAt. Missing fields fall back to the same defaults as makeProject.
+fun adoptProject(incoming) =
+  let
+    id = generateUniqueId()
+    fallbackName = if incoming.name is ~Absent then incoming.name else "Imported project"
+    project = makeProject(id, fallbackName)
+  if incoming.description is ~Absent do set project.description = incoming.description
+  if incoming.color is ~Absent do set project.color = incoming.color
+  if incoming.icon is ~Absent do set project.icon = incoming.icon
+  if incoming.createdAt is ~Absent do set project.createdAt = incoming.createdAt
+  if incoming.activeFile is ~Absent do set project.activeFile = incoming.activeFile
+  state.registry.push(project)
+  saveRegistry()
+  Logger.info("Projects", "Adopted imported project", id, project.name)
+  project
+
+fun deleteProject(id) = if
+  isCurrent(id) then
+    Logger.warn("Projects", "Refused to delete current project", id)
+    false
+  state.registry.length <= 1 then
+    Logger.warn("Projects", "Refused to delete the only remaining project", id)
+    false
+  else
+    let index = state.registry.findIndex of (p, ...) => p.id === id
+    if index < 0 then
+      Logger.warn("Projects", "Unknown project id for delete", id)
+      false
+    else
+      state.registry.splice(index, 1)
+      purgeProjectStorage(id)
+      saveRegistry()
+      Logger.info("Projects", "Deleted project", id)
+      true
+
+fun commitCurrent(id) =
+  set state.currentId = id
+  saveRegistry()
+
+fun renameProject(id, name) =
+  let trimmed = if name is Absent then "" else name.trim()
+  if trimmed is
+    "" then
+      Logger.warn("Projects", "Refused to rename project to empty name", id)
+      false
+    else
+      let project = findProjectLoop(id)
+      if project is
+        null then
+          Logger.warn("Projects", "Unknown project id for rename", id)
+          false
+        else
+          set
+            project.name = trimmed
+            project.modifiedAt = today()
+          saveRegistry()
+          Logger.info("Projects", "Renamed project", id, trimmed)
+          true
+
+fun purgeProjectStorage(id) =
+  let pathsText = readText(pathsKey(id))
+  if pathsText is
+    ~Absent as text do
+      let parsed = JSON.parse(text)
+      if Array.isArray(parsed) do
+        parsed.forEach of (path, ...) => removeText(fileKey(id, path))
+  removeText(pathsKey(id))
+
+fun fileCount(id) =
+  let pathsText = readText(pathsKey(id))
+  if pathsText is
+    Absent then 0
+    text then
+      let parsed = JSON.parse(text)
+      if Array.isArray(parsed) then parsed.length
+      else 0

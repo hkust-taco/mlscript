@@ -1,0 +1,165 @@
+import "../mockWorkbenchData.mls"
+import "../filesystem/fs.mls"
+import "../common/JS.mls"
+
+open JS { Absent }
+
+fun escapeHtml(text) =
+  let div = document.createElement("div")
+  set div.textContent = text
+  div.innerHTML
+
+fun panelHeader(title, detail) =
+  let detailHtml = if detail === "" then "" else """<span>""" + detail + """</span>"""
+  """
+    <div class="mock-panel-header">
+      <h2>""" + title + """</h2>
+      """ + detailHtml + """
+    </div>
+  """
+
+val examples = [
+  mut {id: "pattern-matching", title: "Pattern Matching", code: "data class Cons(head, tail)\ndata object Nil\n\nfun sum(list) = if list is\n  Cons(h, t) then h + sum(t)\n  Nil then 0\n\nsum(Cons(1, Cons(2, Cons(3, Nil))))"}
+  mut {id: "recursion", title: "Recursion", code: "fun factorial(n) =\n  if n <= 1 then 1\n  else n * factorial(n - 1)\n\nfactorial(5)"}
+]
+
+class SourceControlPanel extends HTMLElement with
+  let stagedPaths = new Set()
+
+  fun connectedCallback() =
+    this.render()
+
+  fun isStaged(change) =
+    stagedPaths.has(change.path)
+
+  fun sectionChanges(inStageSection) =
+    mockWorkbenchData.sourceChanges.filter(change => isStaged(change) === inStageSection)
+
+  fun changeHtml(change, inStageSection) =
+    let
+      action = if inStageSection then "Unstage" else "Stage"
+      icon = if inStageSection then "icon-minus" else "icon-plus"
+    """
+      <div class="mock-change-row" data-file-path="""" + escapeHtml(change.path) + """">
+        <div class="mock-change-main">
+          <span class="mock-change-path">""" + escapeHtml(change.path) + """</span>
+          <span class="mock-change-summary">""" + escapeHtml(change.summary) + """</span>
+        </div>
+        <span class="mock-change-status">""" + escapeHtml(change.status) + """</span>
+        <button class="mock-icon-button mock-stage-button" type="button" data-file-path="""" + escapeHtml(change.path) + """" aria-label="""" + action + " " + escapeHtml(change.path) + """" title="""" + action + " " + escapeHtml(change.path) + """">
+          <i class="""" + icon + """"></i>
+        </button>
+      </div>
+    """
+
+  fun sectionContent(changes, inStageSection) =
+    if changes.length is
+      0 then """<div class="mock-empty">Nothing here</div>"""
+      else changes.map(change => changeHtml(change, inStageSection)).join("")
+
+  fun sectionHtml(title, inStageSection) =
+    let changes = sectionChanges(inStageSection)
+    """
+      <section class="mock-scm-section">
+        <div class="mock-section-title">
+          <span>""" + title + """</span>
+          <span class="mock-count">""" + changes.length + """</span>
+        </div>
+        """ + sectionContent(changes, inStageSection) + """
+      </section>
+    """
+
+  fun render() =
+    set this.innerHTML = """
+      <div class="mock-panel source-control-panel">
+        """ + panelHeader("Source Control", "Mock changes") + """
+        <div class="mock-panel-body">
+          """ + sectionHtml("Staged", true) + """
+          """ + sectionHtml("Changes", false) + """
+        </div>
+      </div>
+    """
+    attachStageButtons()
+
+  fun toggleStage(path) =
+    if stagedPaths.has(path) then stagedPaths.delete(path)
+    else stagedPaths.add(path)
+    render()
+
+  fun attachStageButtons() =
+    let panel = this
+    this.querySelectorAll(".mock-stage-button").forEach of (button, ...) =>
+      button.addEventListener("click", () => panel.toggleStage(button.dataset.filePath))
+
+class ExamplesPanel extends HTMLElement with
+  let selectedId = "pattern-matching"
+
+  fun connectedCallback() =
+    this.render()
+
+  fun selectedExample() =
+    let match = examples.find(example => example.id === selectedId)
+    if match is
+      Absent then examples.at(0)
+      example then example
+
+  fun exampleButtonHtml(example) =
+    let activeClass = if example.id === selectedId then " active" else ""
+    """
+      <button class="mock-example-row""" + activeClass + """" type="button" data-example-id="""" + escapeHtml(example.id) + """">
+        <span class="mock-example-title">""" + escapeHtml(example.title) + """</span>
+      </button>
+    """
+
+  fun detailHtml(example) =
+    """
+      <div class="mock-example-detail">
+        <div class="mock-example-detail-title">""" + escapeHtml(example.title) + """</div>
+        <pre class="mock-example-preview">""" + escapeHtml(example.code) + """</pre>
+        <button class="mock-load-example-button" type="button" data-example-id="""" + escapeHtml(example.id) + """">Load example</button>
+      </div>
+    """
+
+  fun render() =
+    let example = selectedExample()
+    set this.innerHTML = """
+      <div class="mock-panel examples-panel">
+        """ + panelHeader("Examples", "") + """
+        <div class="mock-panel-body">
+          <div class="mock-example-list">""" + examples.map(item => exampleButtonHtml(item)).join("") + """</div>
+          """ + detailHtml(example) + """
+        </div>
+      </div>
+    """
+    attachExampleRows()
+
+  fun selectExample(id) =
+    set selectedId = id
+    render()
+
+  fun forceOptions() =
+    mut { force: true }
+
+  fun examplePath(example) =
+    "/examples/" + example.id + ".mls"
+
+  fun fileOpenOptions(path, fileName) =
+    mut { detail: mut { :path, :fileName }, bubbles: true }
+
+  fun loadExample(id) =
+    let example = examples.find(item => item.id === id)
+    if example is ~Absent as selected do
+      let path = examplePath(selected)
+      if fs.pathExists(path) then fs.write(path, selected.code)
+      else fs.createFile(path, selected.code, forceOptions())
+      this.dispatchEvent(new CustomEvent("file-open", fileOpenOptions(path, path.split("/").pop())))
+
+  fun attachExampleRows() =
+    let panel = this
+    this.querySelectorAll(".mock-example-row").forEach of (button, ...) =>
+      button.addEventListener("click", () => panel.selectExample(button.dataset.exampleId))
+    this.querySelectorAll(".mock-load-example-button").forEach of (button, ...) =>
+      button.addEventListener("click", () => panel.loadExample(button.dataset.exampleId))
+
+customElements.define("source-control-panel", SourceControlPanel)
+customElements.define("examples-panel", ExamplesPanel)

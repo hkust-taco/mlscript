@@ -1,0 +1,248 @@
+import "../common/JS.mls"
+import "../common/SettingsStore.mls"
+import "./ResizeHandle.mls"
+
+open JS { Absent }
+
+class IdeWorkbench extends HTMLElement with
+  let
+    leftActivePanel = "files"
+    leftPanelOpen = true
+    problemsOpen = true
+    viewportResizeListener = null
+
+  fun connectedCallback() =
+    this.restoreStartupSettings()
+    this.render()
+    this.attachEventListeners()
+    this.syncLayoutState()
+    this.attachViewportListener()
+    this.applyNarrowLayout()
+
+  fun disconnectedCallback() =
+    if viewportResizeListener is ~Absent as listener do
+      window.removeEventListener("resize", listener)
+
+  fun restoreStartupSettings() =
+    set problemsOpen = SettingsStore.getSetting("workbench.showProblemsOnStartup", "true") !== "false"
+
+  fun render() =
+    set this.innerHTML = """
+      <div class="app-layout">
+        <toolbar-panel class="toolbar"></toolbar-panel>
+        <div class="app-container" data-left-active-panel="files">
+          <aside class="activity-rail activity-rail-left" aria-label="Left sidebar">
+            <button class="activity-button active" data-sidebar-side="left" data-sidebar-panel="files" aria-label="Files" aria-pressed="true" title="Files">
+              <i class="icon-files"></i>
+            </button>
+            <button class="activity-button" data-sidebar-side="left" data-sidebar-panel="search" aria-label="Search" aria-pressed="false" title="Search">
+              <i class="icon-search"></i>
+            </button>
+            <!--
+            <button class="activity-button" data-sidebar-side="left" data-sidebar-panel="source-control" aria-label="Source Control" aria-pressed="false" title="Source Control">
+              <i class="icon-git-branch"></i>
+            </button>
+            -->
+            <button class="activity-button" data-sidebar-side="left" data-sidebar-panel="outline" aria-label="Outline" aria-pressed="false" title="Outline">
+              <i class="icon-list-tree"></i>
+            </button>
+            <button class="activity-button" data-sidebar-side="left" data-sidebar-panel="examples" aria-label="Examples" aria-pressed="false" title="Examples">
+              <i class="icon-book-open"></i>
+            </button>
+          </aside>
+          <file-explorer class="sidebar-panel left-sidebar-panel active" data-sidebar-side="left" data-sidebar-panel="files"></file-explorer>
+          <search-panel class="sidebar-panel left-sidebar-panel" data-sidebar-side="left" data-sidebar-panel="search"></search-panel>
+          <source-control-panel class="sidebar-panel left-sidebar-panel" data-sidebar-side="left" data-sidebar-panel="source-control"></source-control-panel>
+          <outline-panel class="sidebar-panel left-sidebar-panel" data-sidebar-side="left" data-sidebar-panel="outline"></outline-panel>
+          <examples-panel class="sidebar-panel left-sidebar-panel" data-sidebar-side="left" data-sidebar-panel="examples"></examples-panel>
+          <resize-handle class="sidebar-resize-handle left-sidebar-resize" direction="horizontal" side="left" target=".left-sidebar-panel.active" min-size="150" max-size="600"></resize-handle>
+          <editor-workbench class="editor"></editor-workbench>
+          <diagnostics-inspector class="sidebar-panel right-sidebar-panel active" data-sidebar-side="right" data-sidebar-panel="problems"></diagnostics-inspector>
+          <resize-handle class="sidebar-resize-handle right-sidebar-resize" direction="horizontal" side="right" target=".right-sidebar-panel.active" min-size="150" max-size="600"></resize-handle>
+          <aside class="activity-rail activity-rail-right" aria-label="Right sidebar">
+            <button class="activity-button active" data-sidebar-side="right" data-sidebar-panel="problems" aria-label="Problems" aria-pressed="true" title="Problems">
+              <i class="icon-circle-alert"></i>
+            </button>
+          </aside>
+        </div>
+        <bottom-panel class="console"></bottom-panel>
+        <div class="workbench-status-bar" aria-label="Workbench status">
+          <span class="status-segment workbench-state-status">Ready</span>
+          <span class="status-spacer"></span>
+          <span class="status-segment cursor-position-status" hidden>Ln 1, Col 1</span>
+          <span class="status-segment selection-status" hidden></span>
+          <span class="status-segment encoding-status">UTF-8 LF</span>
+          <span class="status-segment indentation-status">Spaces: 2</span>
+          <span class="status-segment active-file-status">No file</span>
+          <span class="status-segment active-file-kind">No language</span>
+        </div>
+      </div>
+      <command-palette-dialog></command-palette-dialog>
+      <share-dialog></share-dialog>
+      <settings-dialog></settings-dialog>
+      <project-switcher></project-switcher>
+    """
+
+  fun appContainer() =
+    this.querySelector(".app-container")
+
+  fun activePanelAttribute(side) =
+    "data-" + side + "-active-panel"
+
+  fun sidebarPanelSelector(side) =
+    ".sidebar-panel[data-sidebar-side=\"" + side + "\"][data-sidebar-panel]"
+
+  fun sidebarButtonSelector(side) =
+    ".activity-button[data-sidebar-side=\"" + side + "\"]"
+
+  fun panelIsActive(panel, panelName, isOpen) =
+    if isOpen then panel.dataset.sidebarPanel === panelName else false
+
+  fun setSidebarButtons(side, panelName, isOpen) =
+    this.querySelectorAll(sidebarButtonSelector(side)).forEach of (button, ...) =>
+      let isActive = panelIsActive(button, panelName, isOpen)
+      button.classList.toggle("active", isActive)
+      button.setAttribute("aria-pressed", if isActive then "true" else "false")
+
+  fun setSidebarPanels(side, panelName, isOpen) =
+    this.querySelectorAll(sidebarPanelSelector(side)).forEach of (panel, ...) =>
+      let isActive = panelIsActive(panel, panelName, isOpen)
+      panel.classList.toggle("active", isActive)
+      set panel.hidden = not isActive
+
+  fun setLeftPanelState(panelName, isOpen) =
+    set
+      leftActivePanel = panelName
+      leftPanelOpen = isOpen
+    if appContainer() is ~null as container do
+      container.setAttribute(activePanelAttribute("left"), panelName)
+      container.classList.toggle("left-sidebar-closed", not isOpen)
+    setSidebarPanels("left", panelName, isOpen)
+    setSidebarButtons("left", panelName, isOpen)
+
+  fun toggleLeftPanel(panelName) =
+    if
+      leftActivePanel === panelName and leftPanelOpen then setLeftPanelState(panelName, false)
+      else setLeftPanelState(panelName, true)
+
+  fun setProblemsState(isOpen) =
+    set problemsOpen = isOpen
+    if appContainer() is ~null as container do
+      container.classList.toggle("right-sidebar-closed", not isOpen)
+    setSidebarPanels("right", "problems", isOpen)
+    setSidebarButtons("right", "problems", isOpen)
+
+  fun toggleProblems() =
+    setProblemsState(not problemsOpen)
+
+  fun fileKind(path) =
+    if
+      path is Absent then "No language"
+      path.endsWith(".mls") then "MLscript"
+      path.endsWith(".mjs") then "JavaScript"
+      path.endsWith(".md") then "Markdown"
+      path.endsWith(".markdown") then "Markdown"
+      else "File"
+
+  fun updateText(selector, value) =
+    if this.querySelector(selector) is ~null as element do
+      set element.textContent = value
+
+  fun setHidden(selector, isHidden) =
+    if this.querySelector(selector) is ~null as element do
+      set element.hidden = isHidden
+
+  fun finiteNumber(value) =
+    typeof(value) is "number" and value === value
+
+  fun statusNumber(value, fallback) =
+    if finiteNumber(value) then value else fallback
+
+  fun hideEditorPositionStatus() =
+    setHidden(".cursor-position-status", true)
+    setHidden(".selection-status", true)
+
+  fun updateActiveFileStatus(detail) =
+    let path = if
+      detail is Absent then "No file"
+      detail.path is Absent then "No file"
+      else detail.path
+    updateText(".active-file-status", path)
+    updateText(".active-file-kind", fileKind(path))
+    if path === "No file" do hideEditorPositionStatus()
+
+  fun updateCursorPositionStatus(detail) =
+    if detail is ~Absent as position do
+      let
+        line = statusNumber(position.line, 1)
+        column = statusNumber(position.column, 1)
+        selected = statusNumber(position.selected, 0)
+      updateText(".cursor-position-status", "Ln " + line + ", Col " + column)
+      setHidden(".cursor-position-status", false)
+      if selected > 0 then
+        updateText(".selection-status", "(" + selected + " selected)")
+        setHidden(".selection-status", false)
+      else setHidden(".selection-status", true)
+
+  fun updateWorkbenchStatus(status) =
+    if status is
+      "running" then updateText(".workbench-state-status", "Running")
+      "done" then updateText(".workbench-state-status", "Ready")
+      "error" then updateText(".workbench-state-status", "Error")
+      "aborted" then updateText(".workbench-state-status", "Aborted")
+      "fatal" then updateText(".workbench-state-status", "Fatal error")
+      else updateText(".workbench-state-status", "Ready")
+
+  fun updateCompilationStatus(status) =
+    if status is
+      "running" then updateText(".workbench-state-status", "Compiling")
+      "fatal" then updateText(".workbench-state-status", "Fatal error")
+      "error" then updateText(".workbench-state-status", "Error")
+      else updateText(".workbench-state-status", "Ready")
+
+  fun handleSidebarToggleRequested(event) =
+    if event.detail is ~Absent as detail do
+      let
+        side = if detail.side is ~Absent then detail.side else "left"
+        panelName = if detail.panel is ~Absent then detail.panel else "files"
+      if side is
+        "right" then
+          if detail.forceOpen === true then setProblemsState(true)
+          else toggleProblems()
+        else
+          if detail.forceOpen === true then setLeftPanelState(panelName, true)
+          else toggleLeftPanel(panelName)
+
+  fun syncLayoutState() =
+    setLeftPanelState(leftActivePanel, leftPanelOpen)
+    setProblemsState(problemsOpen)
+
+  fun isNarrowLayout() =
+    window.matchMedia("(max-width: 760px)").matches
+
+  fun applyNarrowLayout() =
+    if isNarrowLayout() do
+      if leftPanelOpen do setLeftPanelState(leftActivePanel, false)
+      if problemsOpen do setProblemsState(false)
+
+  fun attachViewportListener() =
+    let workbench = this
+    set viewportResizeListener = () => workbench.applyNarrowLayout()
+    window.addEventListener("resize", viewportResizeListener)
+
+  fun attachActivityButtons() =
+    this.querySelectorAll(".activity-button[data-sidebar-side]").forEach of (button, ...) =>
+      button.addEventListener of "click", () =>
+        if button.dataset.sidebarSide is
+          "right" then toggleProblems()
+          else toggleLeftPanel(button.dataset.sidebarPanel)
+
+  fun attachEventListeners() =
+    attachActivityButtons()
+    document.addEventListener("sidebar-toggle-requested", event => handleSidebarToggleRequested(event))
+    document.addEventListener("active-tab-changed", event => updateActiveFileStatus(event.detail))
+    document.addEventListener("cursor-position-changed", event => updateCursorPositionStatus(event.detail))
+    document.addEventListener("compilation-status-change", event => updateCompilationStatus(event.detail.status))
+    window.addEventListener("execution-status-change", event => updateWorkbenchStatus(event.detail.status))
+
+customElements.define("ide-workbench", IdeWorkbench)

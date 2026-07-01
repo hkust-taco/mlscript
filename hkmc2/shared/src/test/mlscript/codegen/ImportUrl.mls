@@ -1,0 +1,4 @@
+:sjs
+import "https://esm.sh/@floating-ui/dom"
+import "https://esm.sh/@floating-ui/dom" { computePosition, shift }
+import "https://esm.sh/@floating-ui/dom" as FloatingUI

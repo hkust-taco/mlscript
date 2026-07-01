@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- HTML Meta Tags -->
+    <title>MLscript Web IDE</title>
+    <meta name="description" content="" />
+    <!-- Facebook Meta Tags -->
+    <meta property="og:url" content="https://mlscript.fun" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="MLscript Web IDE" />
+    <meta property="og:description" content="A simple web IDE for MLscript, made by HKUST TACO." />
+    <meta property="og:image" content="" />
+    <!-- Twitter Meta Tags -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta property="twitter:domain" content="mlscript.fun" />
+    <meta property="twitter:url" content="https://mlscript.fun" />
+    <meta name="twitter:title" content="MLscript Web IDE" />
+    <meta name="twitter:description" content="" />
+    <meta name="twitter:image" content="" />
+    <link rel="icon" href="data:," />
+
+    <!-- Radix Colors from CDN -->
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/@radix-ui/colors@latest/sand.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/@radix-ui/colors@latest/sand-dark.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/@radix-ui/colors@latest/red.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/@radix-ui/colors@latest/red-dark.css"
+    />
+
+    <!-- Google Fonts - Variable Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Rubik:ital,wght@0,300..900;1,300..900&family=Google+Sans+Code:ital,wght@0,300..800;1,300..800&family=Instrument+Serif:ital@0;1&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/lucide-static@0.556.0/font/lucide.css"
+    />
+
+    <link rel="stylesheet" href="./style.css" />
+
+    <!-- Rewrite paths before module scripts load. -->
+    <script type="importmap">
+      {
+        "imports": {
+          "/editor/editor.mjs": "./editor/editor.mjs",
+          "/editor/Highlight.mjs": "./editor/Highlight.mjs",
+          "./Runtime.mjs": "./mlscript-std/Runtime.mjs",
+          "./Rendering.mjs": "./mlscript-std/Rendering.mjs",
+          "./RuntimeJS.mjs": "./mlscript-std/RuntimeJS.mjs",
+          "./Iter.mjs": "./mlscript-std/Iter.mjs",
+          "./LazyArray.mjs": "./mlscript-std/LazyArray.mjs"
+        }
+      }
+    </script>
+
+    <!-- Each of the following files registers a custom element. -->
+    <script type="module" src="./components/ResizeHandle.mjs"></script>
+    <script type="module" src="./components/TreeNode.mjs"></script>
+    <script type="module" src="./components/FileExplorer.mjs"></script>
+    <script type="module" src="./components/EditorPanel.mjs"></script>
+    <script type="module" src="./components/EditorWorkbench.mjs"></script>
+    <script type="module" src="./components/DiagnosticsInspector.mjs"></script>
+    <script type="module" src="./components/ToolbarPanel.mjs"></script>
+    <script type="module" src="./components/BottomPanel.mjs"></script>
+    <script type="module" src="./components/SearchPanel.mjs"></script>
+    <script type="module" src="./components/OutlinePanel.mjs"></script>
+    <script type="module" src="./components/MockActivityPanels.mjs"></script>
+    <script type="module" src="./components/NativeDialogs.mjs"></script>
+    <script type="module" src="./components/SettingsDialog.mjs"></script>
+    <script type="module" src="./components/ProjectSwitcher.mjs"></script>
+    <script type="module" src="./components/IdeWorkbench.mjs"></script>
+  </head>
+
+  <body>
+    <ide-workbench></ide-workbench>
+
+    <script type="module" src="./main.mjs"></script>
+  </body>
+</html>

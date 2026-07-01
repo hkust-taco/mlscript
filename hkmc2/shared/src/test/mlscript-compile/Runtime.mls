@@ -1,7 +1,7 @@
 import "./RuntimeJS.mjs"
-import "./Rendering.mjs"
-import "./LazyArray.mjs"
-import "./Iter.mjs"
+import "./Rendering.mls"
+import "./LazyArray.mls"
+import "./Iter.mls"
 
 open annotations { mayNotRaiseEffects }
 

@@ -1,0 +1,203 @@
+import "../common/JS.mls"
+
+open JS { Absent }
+
+module Highlight with...
+
+let makeWordRegex(...words) = new RegExp("^(?:" + words.join("|") + ")$")
+
+let keywords = makeWordRegex of
+  "val", "class", "trait", "type", "pattern", "object"
+  "this", "super", "true", "false", "null", "undefined"
+  "forall", "declare", "where", "with", "fun", "let", "constructor"
+
+let moduleKeywords = makeWordRegex("module", "open", "import")
+
+let controlKeywords = makeWordRegex of
+  "if", "then", "else", "case", "while", "do", "throw", "return"
+
+let operatorKeywords = makeWordRegex of
+  "and", "or", "not", "set", "new", "new!"
+  "restricts", "extends", "in", "as", "is", "of"
+
+let modifiers = makeWordRegex("mut", "abstract", "data")
+
+let types = makeWordRegex of
+  "Int", "Bool", "String", "Unit", "Num", "Nothing", "Anything"
+  "Object", "Array", "Function", "Error", "List", "Option", "Some", "None"
+
+let digit = new RegExp("[\\d.]")
+
+let operator = new RegExp("[+\\-*/%<>=!&|^~\\.]")
+
+let identiferStart = new RegExp("[$\\w_]")
+
+let identiferPart = new RegExp("[$\\w\\d_]")
+
+let capitalized = new RegExp("^[A-Z]")
+
+let debugCounters = mut {}
+
+fun streamText(stream) = if stream.string is
+  Absent then ""
+  null then ""
+  text then text
+
+fun streamPos(stream) = if stream.pos is
+  Absent then -1
+  null then -1
+  pos then pos
+
+fun streamStart(stream) = if stream.start is
+  Absent then -1
+  null then -1
+  start then start
+
+fun streamEnded(value) = if value is
+  Absent then true
+  null then true
+  else false
+
+fun maxTokenIterations(stream) =
+  Math.max(8, streamText(stream).length + 2)
+
+fun parseName(state) = if
+  state.parse is Absent then "unknown"
+  state.parse.name is Absent then "anonymous"
+  else state.parse.name
+
+fun trace(kind, stream, state, detail) =
+  let count = if debugCounters.(kind) is Absent then 0 else debugCounters.(kind)
+  set debugCounters.(kind) = count + 1
+  if count < 40 do
+    console.warn("[MLscript Highlight] " + kind, mut
+      count: count + 1
+      pos: streamPos(stream)
+      start: streamStart(stream)
+      lineLength: streamText(stream).length
+      line: streamText(stream)
+      parse: parseName(state)
+      detail: detail
+    )
+
+fun normal(stream, state) = if stream.eol() then null else
+  let ch = stream.next()
+  if
+    streamEnded(ch) then null
+    ch is
+      "/" and
+        stream.eat("/") is Str then
+          stream.skipToEnd()
+          "comment"
+        stream.eat("*") is Str then
+          set state.parse = blockComment
+          state.parse(stream, state)
+      "\"" then
+        set state.parse = stringContent
+        state.parse(stream, state)
+      "=" and stream.eat(">") is Str then "operator"
+    digit.test(ch) then
+      stream.eatWhile(digit)
+      "number"
+    operator.test(ch) then
+      stream.eatWhile(operator)
+      "operator"
+    identiferStart.test(ch) and
+      do stream.eatWhile(identiferPart)
+      let word = stream.current()
+      keywords.test(word) then
+        set state.lastKeyword = word
+        "keyword"
+      moduleKeywords.test(word) then
+        set state.lastKeyword = null
+        "moduleKeyword"
+      controlKeywords.test(word) then
+        set state.lastKeyword = null
+        "controlKeyword"
+      operatorKeywords.test(word) then
+        set state.lastKeyword = null
+        "operatorKeyword"
+      modifiers.test(word) then
+        set state.lastKeyword = null
+        "modifier"
+      types.test(word) then
+        set state.lastKeyword = null
+        "typeName"
+      capitalized.test(word) then
+        set state.lastKeyword = null
+        "typeName"
+      state.lastKeyword is "fun" then
+        set state.lastKeyword = null
+        "propertyName"
+      else
+        set state.lastKeyword = null
+        "variableName"
+    else null
+
+fun blockComment(stream, state) =
+  let
+    shouldStop = false
+    iterations = 0
+    maxIterations = maxTokenIterations(stream)
+  while not shouldStop do
+    set iterations += 1
+    if iterations > maxIterations then
+      trace("block-comment-loop-guard", stream, state, mut { iterations: iterations })
+      set shouldStop = true
+    else if stream.eol() then
+      set shouldStop = true
+    else
+      let ch = stream.next()
+      if
+        streamEnded(ch) then set shouldStop = true
+        ch is "*" and stream.eat("/") is Str then
+          set {state.parse = normal, shouldStop = true}
+        else set shouldStop = false
+  "comment"
+
+fun stringContent(stream, state) =
+  let
+    shouldStop = false
+    escaped = false
+    iterations = 0
+    maxIterations = maxTokenIterations(stream)
+  while not shouldStop do
+    set iterations += 1
+    if iterations > maxIterations then
+      trace("string-loop-guard", stream, state, mut { iterations: iterations, escaped: escaped })
+      set shouldStop = true
+    else if stream.eol() then
+      set shouldStop = true
+    else
+      let ch = stream.next()
+      if
+        streamEnded(ch) then set shouldStop = true
+        ch is "\"" and not escaped then
+          set {state.parse = normal, shouldStop = true}
+        else
+          set escaped = not escaped and ch is "\\"
+  "string"
+
+fun startState() = mut { parse: normal, lastKeyword: null }
+
+fun token(stream, state) =
+  let before = streamPos(stream)
+  let style = if stream.eatSpace() then
+    null
+  else
+    state.parse(stream, state)
+  let after = streamPos(stream)
+  if after === before and not stream.eol() do
+    trace("token-no-progress", stream, state, mut { style: style })
+  style
+
+val mlscript =
+  name: "mlscript"
+  startState: startState
+  token: token
+  languageData:
+    commentTokens:
+      line: "//"
+      block:
+        "open": "/*"
+        close: "*/"

@@ -196,7 +196,9 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
       val nestedScp = baseScp
       // val nestedScp = codegen.js.Scope(S(baseScp), curCtx.outer, collection.mutable.Map.empty) // * not needed
       
-      val importedSymbols: Set[ScopedSymbol] = pgrm.imports.iterator.map(_._1).toSet
+      val importedSymbols: Set[ScopedSymbol] = pgrm.imports.iterator.collect:
+        case ImportSpec(sym: ScopedSymbol, _, _) => sym
+      .toSet
       val exportedScoped = symbolsToPreserve.collect:
         case sym: ScopedSymbol if !importedSymbols.contains(sym) => sym
       

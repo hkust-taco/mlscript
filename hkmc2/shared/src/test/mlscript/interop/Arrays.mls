@@ -17,7 +17,7 @@ arr.map((e, ...) => e === false)
 //│ lambda1 = (undefined, function (e, ..._) {
 //│   return e === false
 //│ });
-//│ return runtime.safeCall(arr.map(lambda1))
+//│ runtime.safeCall(arr.map(lambda1));
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = [false, true]
 
@@ -26,7 +26,7 @@ arr.map((_, ...) => 1)
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let lambda2;
 //│ lambda2 = (undefined, function (_, ..._1) { return 1 });
-//│ return runtime.safeCall(arr.map(lambda2))
+//│ runtime.safeCall(arr.map(lambda2));
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = [1, 1]
 

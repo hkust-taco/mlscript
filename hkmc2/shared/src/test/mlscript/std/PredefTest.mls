@@ -103,7 +103,7 @@ tuple passing(1, 2, 3) of 4, 5, 6
 :sjs
 ???
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ return Predef.notImplementedError
+//│ Predef.notImplementedError;
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ ═══[RUNTIME ERROR] Error: Not implemented
 

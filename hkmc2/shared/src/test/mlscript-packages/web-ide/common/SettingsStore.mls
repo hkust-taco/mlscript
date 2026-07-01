@@ -1,0 +1,17 @@
+import "./JS.mls"
+
+open JS { Absent }
+
+module SettingsStore with...
+
+let settingsPrefix = "settings."
+
+fun storageKey(key) =
+  settingsPrefix + key
+
+fun getSetting(key, fallback) =
+  let storedValue = localStorage.getItem(storageKey(key))
+  if storedValue is ~Absent and storedValue !== "" then storedValue else fallback
+
+fun setSetting(key, value) =
+  localStorage.setItem(storageKey(key), value)

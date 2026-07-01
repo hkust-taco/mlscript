@@ -154,7 +154,7 @@ c(AA(1))
 //│ deforest > <<< fusing <<<
 //│ = 0
 
-
+// TODO: The variable numbering in flow analysis is not stable.
 // non-affinity propagates through nested ctors
 fun c1(x) = if x is AA(AA(AA(v))) then v else 0
 fun c2(x) = if x is AA(AA(_)) then 1 else 0

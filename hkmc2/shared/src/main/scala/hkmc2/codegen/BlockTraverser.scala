@@ -20,8 +20,8 @@ class BlockTraverser:
     prog.imports.foreach(applyImport)
     applyBlock(prog.main)
   
-  def applyImport(imp: ImportSymbol -> Str): Unit =
-    applySymbol(imp._1)
+  def applyImport(imp: ImportSpec): Unit =
+    applySymbol(imp.local)
   
   
   def applyMaybeSymbol(sym: MaybeSymbol): Unit = sym match

@@ -22,6 +22,7 @@ class CompilerCtx(
     val importing: Opt[(io.Path, CompilerCtx)],
     val beingCompiled: Set[io.Path],
     val fs: io.FileSystem,
+    val moduleResolver: ModuleResolver,
     cache: CompilerCache,
 ):
   
@@ -31,7 +32,7 @@ class CompilerCtx(
     case N => Nil
   
   def derive(newFile: io.Path): CompilerCtx =
-    CompilerCtx(S(newFile, this), beingCompiled + newFile, fs, cache)
+    CompilerCtx(S(newFile, this), beingCompiled + newFile, fs, moduleResolver, cache)
   
   def getElaboratedBlock
         (file: io.Path, prelude: Ctx)
@@ -88,7 +89,8 @@ object CompilerCtx:
   
   inline def get(using cctx: CompilerCtx) = cctx
   
-  def fresh(fs: io.FileSystem): CompilerCtx = CompilerCtx(N, Set.empty, fs, new PlatformCompilerCache)
+  def fresh(fs: io.FileSystem, moduleResolver: io.FileSystem ?=> ModuleResolver): CompilerCtx =
+    CompilerCtx(N, Set.empty, fs, moduleResolver(using fs), new PlatformCompilerCache)
   
 end CompilerCtx
 

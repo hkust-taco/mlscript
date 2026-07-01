@@ -14,6 +14,7 @@ import semantics.*
 import semantics.Term.*
 import sem.Elaborator.State
 
+case class ImportSpec(local: ImportSymbol, specifier: Str, kind: ImportKind)
 
 /* Important design notes.
 
@@ -35,10 +36,7 @@ must refresh the corresponding symbols – see SymbolRefresher for this purpose.
 */
 
 
-case class Program(
-  imports: Ls[ImportSymbol -> Str],
-  main: Block,
-)
+case class Program(imports: Ls[ImportSpec], main: Block)
 
 
 /** Symbol that can be used in a `SimpleRef`. */

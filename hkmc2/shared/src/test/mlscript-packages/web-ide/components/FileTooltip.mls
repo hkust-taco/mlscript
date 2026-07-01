@@ -1,0 +1,203 @@
+import "../filesystem/fs.mls"
+import "../common/JS.mls"
+import "../common/Logger.mls"
+import "https://esm.sh/@floating-ui/dom" { computePosition, shift, offset }
+
+open JS { Absent }
+
+module fileTooltip with...
+
+fun textOf(value) =
+  String(value)
+
+fun escapeChar(ch) = if ch is
+  "&" then "&amp;"
+  "<" then "&lt;"
+  ">" then "&gt;"
+  "\"" then "&quot;"
+  "'" then "&#39;"
+  else ch
+
+fun escapeHtml(value) =
+  let
+    text = textOf(value)
+    result = ""
+    i = 0
+  while i < text.length do
+    set result += escapeChar(text.charAt(i))
+    set i += 1
+  result
+
+fun attrFallback(value) = if
+  value is Absent then "-"
+  typeof(value) is "object" then JSON.stringify(value)
+  value is true then "true"
+  value is false then "false"
+  else textOf(value)
+
+fun relativeTimeOptions() =
+  mut { numeric: "auto" }
+
+fun makeRelativeTimeFormatter() = if
+  Intl is Absent then null
+  Intl.RelativeTimeFormat is Absent then null
+  else Reflect.construct(Intl.RelativeTimeFormat, [undefined, relativeTimeOptions()])
+
+fun dateFrom(value) =
+  new Date(value)
+
+class FileTooltip extends HTMLElement with
+  let
+    relativeTimeFormatter = makeRelativeTimeFormatter()
+    showRequestId = 0
+  
+  fun connectedCallback() =
+    this.classList.add("file-tooltip")
+    this.setAttribute("role", "tooltip")
+  
+  fun formatRelativeTime(timestamp) = if
+    relativeTimeFormatter is Absent then ""
+    not Number.isFinite(timestamp) then ""
+    else
+      let divisions = [
+        (amount: 60, unit: "seconds")
+        (amount: 60, unit: "minutes")
+        (amount: 24, unit: "hours")
+        (amount: 7, unit: "days")
+        (amount: 4.34524, unit: "weeks")
+        (amount: 12, unit: "months")
+        (amount: Number.POSITIVE_INFINITY, unit: "years")
+      ]
+      let
+        duration = (timestamp - Date.now()) / 1000
+        result = ""
+        i = 0
+      while result === "" and i < divisions.length do
+        let division = divisions.at(i)
+        if Math.abs(duration) < division.amount then
+          set result = relativeTimeFormatter.format(
+            Math.round(duration)
+            division.unit.slice(0, -1)
+          )
+        else
+          set duration /= division.amount
+          set i += 1
+      result
+  
+  fun formatTimestamp(value) = if not Number.isFinite(value) then "-"
+    else
+      let absolute = dateFrom(value).toLocaleString(undefined,
+        year: "numeric"
+        month: "short"
+        day: "numeric"
+        hour: "2-digit"
+        minute: "2-digit"
+      )
+      let relative = this.formatRelativeTime(value)
+      if
+        relative !== "" then absolute + " - " + relative
+        else absolute
+  
+  fun formatSize(size) = if
+    not Number.isFinite(size) then "-"
+    size < 0 then "-"
+    size === 1 then "1 byte"
+    size < 1024 then textOf(size) + " bytes"
+    let kb = size / 1024
+    kb < 1024 then kb.toFixed(1) + " KB"
+    else (kb / 1024).toFixed(1) + " MB"
+  
+  fun attrText(attrs) = if
+    attrs is Absent then "-"
+    Object.keys(attrs).length === 0 then "-"
+    else Object.entries(attrs)
+      .map((entry, ...) =>
+        entry.at(0) + ": " + escapeHtml(attrFallback(entry.at(1)))
+      )
+      .join(", ")
+  
+  fun displayName(path, node, name) = if
+    name is ~Absent and name !== "" then name
+    node.name is ~Absent and node.name !== "" then node.name
+    else path.split("/").pop()
+  
+  fun fileSize(node, sizeOverride) = if
+    sizeOverride is ~Absent then sizeOverride
+    typeof(node.content) is "string" then node.content.length
+    else undefined
+  
+  fun tooltipContent(path, name, sizeOverride) = if
+    path is Absent then null
+    path !== "" then
+      let node = fs.stat(path)
+      if node is Absent then null
+      else
+        let
+          size = fileSize(node, sizeOverride)
+          attrs = attrText(node.attrs)
+          shownName = displayName(path, node, name)
+        """
+      <div class="tooltip-grid">
+        <div class="tooltip-label">Name</div>
+        <div class="tooltip-value">""" + escapeHtml(shownName) + """</div>
+        <div class="tooltip-label">Path</div>
+        <div class="tooltip-value">""" + escapeHtml(path) + """</div>
+        <div class="tooltip-label">Size</div>
+        <div class="tooltip-value">""" + this.formatSize(size) + """</div>
+        <div class="tooltip-label">Modified</div>
+        <div class="tooltip-value">""" + this.formatTimestamp(node.mtime) + """</div>
+        <div class="tooltip-label">Created</div>
+        <div class="tooltip-value">""" + this.formatTimestamp(node.birthtime) + """</div>
+        <div class="tooltip-label">Readonly</div>
+        <div class="tooltip-value">""" + (if node.readonly then "Yes" else "No") + """</div>
+        <div class="tooltip-label">Attributes</div>
+        <div class="tooltip-value">""" + attrs + """</div>
+      </div>
+    """
+    else null
+  
+  fun show(targetEl, optionsArg) =
+    let
+      options = if optionsArg is Absent then new Object else optionsArg
+      path = options.path
+      name = options.name
+      placement = if
+        options.placement is Absent then "right"
+        else options.placement
+      content = this.tooltipContent(path, name, options.size)
+    if content is ~Absent and targetEl is ~Absent do
+      Logger.debug("File Tooltip", "Request show",
+        path: path
+        name: name
+        placement: placement
+        targetPath: if targetEl.dataset is Absent then undefined else targetEl.dataset.path
+        targetName: if targetEl.dataset is Absent then undefined else targetEl.dataset.name
+      )
+      set this.innerHTML = content
+      set this.dataset.placement = placement
+      set showRequestId += 1
+      let requestId = showRequestId
+      computePosition(targetEl, this,
+        placement: placement
+        strategy: "fixed"
+        middleware: [shift(padding: 5), offset(8)]
+      ).then of position =>
+        if requestId === showRequestId do
+          set
+            this.style.top = position.y + "px"
+            this.style.left = position.x + "px"
+          this.classList.add("visible")
+          Logger.debug("File Tooltip", "Shown",
+            path: path
+            placement: placement
+            x: position.x
+            y: position.y
+          )
+  
+  fun hide() =
+    set showRequestId += 1
+    this.classList.remove("visible")
+    Reflect.deleteProperty(this.dataset, "placement")
+    Logger.debug("File Tooltip", "Hide")
+
+customElements.define("file-tooltip", FileTooltip)

@@ -6,7 +6,7 @@ x =>
   let y = x
   y
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let lambda; lambda = (undefined, function (x) { return x }); return lambda
+//│ let lambda; lambda = (undefined, function (x) { return x });
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = fun
 
@@ -14,7 +14,7 @@ x =>
 :sjs
 (acc, _) => acc
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let lambda1; lambda1 = (undefined, function (acc, _) { return acc }); return lambda1
+//│ let lambda1; lambda1 = (undefined, function (acc, _) { return acc });
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = fun
 
@@ -49,7 +49,6 @@ x => if x is (0 | 1) then 1
 //│   }
 //│   throw globalThis.Object.freeze(new globalThis.Error("match error"))
 //│ });
-//│ return lambda4
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = fun
 
@@ -66,7 +65,7 @@ if (foo of x => x + 1) then 1
 :e
 if foo of x => x + 1 then 1
 //│ ╔══[COMPILATION ERROR] Unrecognized term split (application)
-//│ ║  l.67: 	if foo of x => x + 1 then 1
+//│ ║  l.66: 	if foo of x => x + 1 then 1
 //│ ╙──      	   ^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] Error: match error
 

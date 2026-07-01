@@ -1,0 +1,377 @@
+import "../filesystem/fs.mls"
+import "../common/JS.mls"
+import "../common/Logger.mls"
+
+open JS { Absent }
+
+fun emptyElements() =
+  mut
+    fileItem: null
+    fileNameText: null
+    compiledDot: null
+    details: null
+    summary: null
+    childrenContainer: null
+    fileIcon: null
+    fileName: null
+    mjsButton: null
+    folderIcon: null
+    folderName: null
+
+fun parentPathOf(path) =
+  path.substring(0, path.lastIndexOf("/"))
+
+fun fileNameOf(path) =
+  path.substring(path.lastIndexOf("/") + 1)
+
+fun basenameWithoutExt(name) =
+  name.slice(0, -4)
+
+fun childrenOf(node) = if node.children is
+  Absent then []
+  else node.children
+
+fun nodeAttrs(node) = if node.attrs is
+  Absent then null
+  else node.attrs
+
+fun attrIsTrue(node, name) =
+  let attrs = nodeAttrs(node)
+  if attrs is
+    Absent then false
+    else attrs.(name) === true
+
+class TreeNode extends HTMLElement with
+  let
+    node = null
+    path = ""
+    parentFolderNode = null
+    elements = emptyElements()
+    childTreeNodes = new Map()
+    unsubscribe = null
+
+  fun setupNameScroll(container, textEl) = if
+    container is Absent then ()
+    textEl is Absent then ()
+    container.dataset.scrollInit is ~Absent then ()
+    else
+      set container.dataset.scrollInit = "true"
+      let start = () =>
+        let distance = textEl.scrollWidth - container.clientWidth + 16
+        if distance > 0 do
+          let duration = Math.min(12, Math.max(4, distance / 40))
+          textEl.style.setProperty("--scroll-distance", distance + "px")
+          textEl.style.setProperty("--scroll-duration", duration + "s")
+          textEl.classList.add("scrolling")
+      let stop = () =>
+        textEl.classList.remove("scrolling")
+        textEl.style.removeProperty("--scroll-distance")
+        textEl.style.removeProperty("--scroll-duration")
+      container.addEventListener("mouseenter", start)
+      container.addEventListener("mouseleave", stop)
+      container.addEventListener("focus", start)
+      container.addEventListener("blur", stop)
+
+  fun connectedCallback() =
+    let treeNode = this
+    set unsubscribe = fs.subscribe(event => treeNode.handleFsEvent(event), undefined)
+    this.render()
+
+  fun disconnectedCallback() =
+    if unsubscribe is ~Absent as unsubscribeCallback do unsubscribeCallback()
+    childTreeNodes.clear()
+
+  fun setData(nextNode, nextPath, nextParentFolderNode) =
+    set
+      node = nextNode
+      path = nextPath
+      parentFolderNode = nextParentFolderNode
+    if this.isConnected do this.render()
+
+  fun currentPath() =
+    path
+
+  fun currentNodeName() = if node is
+    Absent then ""
+    else node.name
+
+  fun handleFsEvent(event) = if event.'type is
+    "create" | "delete" then handleStructuralEvent(event)
+    "rename" then handleRenameEvent(event)
+    "readonly" | "attr" then handleRefreshEvent(event)
+    else ()
+
+  fun handleStructuralEvent(event) =
+    updateFolderForChildEvent(event.path)
+    updateMjsButtonForSiblingEvent(event.path)
+
+  fun handleRenameEvent(event) =
+    if event.path === path do this.updateName()
+    updateFolderForChildEvent(event.path)
+
+  fun handleRefreshEvent(event) =
+    if event.path === path do this.render()
+
+  fun updateFolderForChildEvent(eventPath) = if node is ~Absent as current and current.'type is "folder" do
+    let eventParentPath = parentPathOf(eventPath)
+    if eventParentPath === path do this.updateChildren()
+
+  fun updateMjsButtonForSiblingEvent(eventPath) = if node is ~Absent as current and current.'type is "file" and current.name.endsWith(".mls") do
+    let
+      eventParentPath = parentPathOf(eventPath)
+      myParentPath = parentPathOf(path)
+    if eventParentPath === myParentPath and eventPath.endsWith(".mjs") do
+      let
+        eventBasename = basenameWithoutExt(fileNameOf(eventPath))
+        myBasename = basenameWithoutExt(current.name)
+      if eventBasename === myBasename do this.render()
+
+  fun updateName() = if
+    node is Absent then ()
+    node.'type is
+      "file" and elements.fileItem is ~Absent then
+        set elements.fileItem.textContent = node.name
+      "folder" and elements.summary is ~Absent then
+        set elements.summary.textContent = node.name + "/"
+      else ()
+
+  fun childPath(child) = if path is "" then child.name else path + "/" + child.name
+
+  fun updateChildren() = if
+    node is Absent then ()
+    node.'type !== "folder" then ()
+    elements.childrenContainer is Absent then ()
+    else
+      let
+        filteredChildren = filterMjsFiles(childrenOf(node))
+        newChildPaths = new Set()
+      filteredChildren.forEach of (child, ...) =>
+        newChildPaths.add(childPath(child))
+      Array.from(childTreeNodes.entries()).forEach of (entry, ...) =>
+        let
+          existingPath = entry.at(0)
+          childElement = entry.at(1)
+        if not newChildPaths.has(existingPath) do
+          childElement.remove()
+          childTreeNodes.delete(existingPath)
+      filteredChildren.forEach of (child, index) =>
+        let nextPath = childPath(child)
+        if
+          not childTreeNodes.has(nextPath) then
+            let newChildElement = document.createElement("tree-node")
+            newChildElement.setData(child, nextPath, node)
+            childTreeNodes.set(nextPath, newChildElement)
+            let nextChild = elements.childrenContainer.children.(index)
+            if
+              nextChild is ~Absent then elements.childrenContainer.insertBefore(newChildElement, nextChild)
+              else elements.childrenContainer.appendChild(newChildElement)
+          else
+            let childElement = childTreeNodes.get(nextPath)
+            childElement.setData(child, nextPath, node)
+            let currentPosition = Array.from(elements.childrenContainer.children).indexOf(childElement)
+            if currentPosition !== index do
+              let nextChild = elements.childrenContainer.children.(index)
+              if nextChild !== childElement do
+                elements.childrenContainer.insertBefore(childElement, nextChild)
+
+  fun filterMjsFiles(children) =
+    let mlsFiles = new Set()
+    children.forEach of (child, ...) =>
+      if child.'type is "file" and child.name.endsWith(".mls") do
+        mlsFiles.add(basenameWithoutExt(child.name))
+    children.filter of (child, ...) =>
+      if
+        child.'type is "file" and child.name.endsWith(".mjs") then
+          let basename = basenameWithoutExt(child.name)
+          not mlsFiles.has(basename)
+        else true
+
+  fun hasMjsFile() = if
+    node is Absent then false
+    node.'type !== "file" then false
+    not node.name.endsWith(".mls") then false
+    else hasSiblingMjsFile(node.name)
+
+  fun hasSiblingMjsFile(name) =
+    let
+      mjsFileName = basenameWithoutExt(name) + ".mjs"
+      children = parentChildren()
+    children.some of (child, ...) =>
+      child.'type is "file" and child.name === mjsFileName
+
+  fun parentChildren() = if
+    parentFolderNode is Absent then dynamicParentChildren()
+    Array.isArray(parentFolderNode) then parentFolderNode
+    parentFolderNode.'type === "folder" then childrenOf(parentFolderNode)
+    else []
+
+  fun dynamicParentChildren() =
+    let parentPath = parentPathOf(path)
+    if
+      parentPath === "" and
+        let rootArray = fs.stat("/")
+        Array.isArray(rootArray) then rootArray
+      parentPath === "" then []
+      let parentNode = fs.stat(parentPath)
+      parentNode is Absent then []
+      parentNode.'type !== "folder" then []
+      else childrenOf(parentNode)
+
+  fun updateOpenState(openFiles) = if openFiles is ~Absent as currentOpenFiles do
+    updateOwnOpenState(currentOpenFiles)
+    Array.from(childTreeNodes.values()).forEach of (child, ...) =>
+      child.updateOpenState(currentOpenFiles)
+
+  fun updateOwnOpenState(openFiles) = if
+    node is Absent then ()
+    node.'type !== "file" then ()
+    elements.fileItem is Absent then ()
+    else elements.fileItem.classList.toggle("open-in-editor", openFiles.has(path))
+
+  fun getMjsPath() = if not this.hasMjsFile() then null
+  else
+    let
+      mjsFileName = basenameWithoutExt(node.name) + ".mjs"
+      pathParts = path.split("/")
+    set pathParts.(pathParts.length - 1) = mjsFileName
+    pathParts.join("/")
+
+  fun getFileIcon(fileName) =
+    let ext = fileName.substring(fileName.lastIndexOf("."))
+    if ext is
+      ".mls" | ".mjs" | ".js" then "file-code"
+      ".json" then "braces"
+      ".md" | ".markdown" then "file-text"
+      else "file"
+
+  fun fileOpenDetail(openPath, fileName) =
+    mut { path: openPath, :fileName }
+
+  fun fileOpenOptions(openPath, fileName) =
+    mut { detail: fileOpenDetail(openPath, fileName), bubbles: true }
+
+  fun dispatchFileOpen(openPath, fileName) =
+    this.dispatchEvent(new CustomEvent("file-open", fileOpenOptions(openPath, fileName)))
+
+  fun render() = if
+    node is Absent then ()
+    node.'type is
+      "file" then renderFile(node)
+      "folder" then renderFolder(node)
+      else ()
+
+  fun ensureFileElements() = if elements.fileItem is Absent do
+    let treeNode = this
+    set
+      elements.fileItem = document.createElement("div")
+      elements.fileIcon = document.createElement("i")
+      elements.fileName = document.createElement("span")
+      elements.fileNameText = document.createElement("span")
+      elements.compiledDot = document.createElement("span")
+      elements.fileItem.className = "file-item"
+      elements.fileName.className = "file-name"
+      elements.fileNameText.className = "file-name-text"
+      elements.compiledDot.className = "compiled-dot"
+    elements.fileName.appendChild(elements.fileNameText)
+    setupNameScroll(elements.fileName, elements.fileNameText)
+    elements.fileName.addEventListener of "click", () =>
+      treeNode.dispatchFileOpen(treeNode.currentPath(), treeNode.currentNodeName())
+    elements.fileItem.appendChild(elements.fileIcon)
+    elements.fileItem.appendChild(elements.fileName)
+    elements.fileItem.appendChild(elements.compiledDot)
+    this.appendChild(elements.fileItem)
+
+  fun renderFile(current) =
+    ensureFileElements()
+    if current.readonly then
+      set elements.fileIcon.className = "file-icon icon-file-lock"
+    else
+      let icon = getFileIcon(current.name)
+      set elements.fileIcon.className = "file-icon icon-" + icon
+    set
+      elements.fileNameText.textContent = current.name
+      elements.fileItem.dataset.path = path
+      elements.fileItem.dataset.name = current.name
+    updateCompiledDot(current)
+    updateMjsButton(current)
+
+  fun updateCompiledDot(current) =
+    let
+      isMls = current.name.endsWith(".mls")
+      isStd = attrIsTrue(current, "std")
+      isCompiled = attrIsTrue(current, "compiled")
+      shouldHide = if isMls then isStd else true
+      needsCompile = if
+        shouldHide then false
+        isCompiled then false
+        else true
+    elements.compiledDot.classList.toggle("hidden", shouldHide)
+    elements.compiledDot.classList.toggle("needs-compile", needsCompile)
+    set elements.compiledDot.title = if
+      shouldHide then ""
+      isCompiled then "Compiled"
+      else "Needs compile"
+
+  fun updateMjsButton(current) = if
+    current.name.endsWith(".mls") and hasMjsFile() then ensureMjsButton(current)
+    current.name.endsWith(".mls") then removeMjsButton()
+    else ()
+
+  fun ensureMjsButton(current) = if elements.mjsButton is Absent do
+    let treeNode = this
+    set
+      elements.mjsButton = document.createElement("button")
+      elements.mjsButton.className = "mjs-button"
+      elements.mjsButton.textContent = ".mjs"
+      elements.mjsButton.title = "Open compiled .mjs file"
+    elements.mjsButton.addEventListener of "click", event =>
+      event.stopPropagation()
+      let mjsPath = treeNode.getMjsPath()
+      if mjsPath is ~Absent as mjsFilePath do
+        let basename = basenameWithoutExt(treeNode.currentNodeName())
+        treeNode.dispatchFileOpen(mjsFilePath, basename + ".mjs")
+    elements.fileItem.appendChild(elements.mjsButton)
+
+  fun removeMjsButton() = if elements.mjsButton is ~Absent as mjsButton do
+    mjsButton.remove()
+    set elements.mjsButton = null
+
+  fun ensureFolderElements(current) = if elements.details is Absent do
+    let
+      treeNode = this
+      isCollapsed = attrIsTrue(current, "collapsed")
+    set
+      elements.details = document.createElement("details")
+      elements.summary = document.createElement("summary")
+      elements.folderIcon = document.createElement("i")
+      elements.folderName = document.createElement("span")
+      elements.childrenContainer = document.createElement("div")
+      elements.details.open = not isCollapsed
+      elements.summary.dataset.path = path
+      elements.summary.dataset.name = current.name + "/"
+      elements.folderIcon.className = if isCollapsed then "folder-icon icon-folder" else "folder-icon icon-folder-open"
+      elements.folderName.textContent = current.name
+      elements.childrenContainer.className = "folder-children"
+      elements.childrenContainer.style.paddingLeft = "12px"
+    Logger.debug("File Tree", "Folder attributes", path, current.attrs)
+    elements.summary.appendChild(elements.folderIcon)
+    elements.summary.appendChild(elements.folderName)
+    elements.details.appendChild(elements.summary)
+    elements.details.appendChild(elements.childrenContainer)
+    elements.details.addEventListener("toggle", () => treeNode.updateFolderIcon())
+    this.appendChild(elements.details)
+
+  fun updateFolderIcon() = if elements.details is ~Absent and elements.folderIcon is ~Absent do
+    set elements.folderIcon.className = if
+      elements.details.open then "folder-icon icon-folder-open"
+      else "folder-icon icon-folder"
+
+  fun renderFolder(current) =
+    ensureFolderElements(current)
+    set
+      elements.folderName.textContent = current.name
+      elements.summary.dataset.path = path
+      elements.summary.dataset.name = current.name
+    updateChildren()
+
+customElements.define("tree-node", TreeNode)

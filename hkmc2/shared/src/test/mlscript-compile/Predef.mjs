@@ -4,7 +4,6 @@ import runtime from "./Runtime.mjs";
 import RuntimeJS from "./RuntimeJS.mjs";
 import Runtime from "./Runtime.mjs";
 import Rendering from "./Rendering.mjs";
-import Term from "./Term.mjs";
 let Predef1, lambda, lambda1, lambda$, lambda$1, lambda$2;
 lambda$2 = (undefined, function (Predef2) {
   return (acc, x) => {
@@ -111,19 +110,6 @@ lambda = (undefined, function (Predef2, a, b, field) {
     Predef.render = Rendering.render;
     Predef.js_assert = globalThis.console["assert"];
     Predef.foldl = Predef.fold;
-    (class meta {
-      static {
-        Predef.meta = this
-      }
-      static codegen(t, file) {
-        return runtime.safeCall(Term.codegen(t, file))
-      }
-      static print(t) {
-        return runtime.safeCall(Term.print(t))
-      }
-      toString() { return runtime.render(this); }
-      static [definitionMetadata] = ["class", "meta"];
-    });
   }
   static id(x) {
     return x

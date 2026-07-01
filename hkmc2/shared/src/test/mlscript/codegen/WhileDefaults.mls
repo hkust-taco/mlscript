@@ -11,15 +11,11 @@
 //│ let lambda;
 //│ lambda = (undefined, function () {
 //│   lbl: while (true) {
-//│     if (false === true) {
-//│       Predef.print(1);
-//│       continue lbl
-//│     }
+//│     if (false === true) { Predef.print(1); continue lbl }
 //│     Predef.print(2);
 //│     continue lbl;
 //│   }
 //│ });
-//│ return lambda
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = fun
 

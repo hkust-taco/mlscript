@@ -1,0 +1,35 @@
+module DialogHelpers with...
+
+val transitionDurationMs = 170
+
+fun prefersReducedMotion() =
+  window.matchMedia("(prefers-reduced-motion: reduce)").matches
+
+fun showDialogWithTransition(targetDialog) =
+  targetDialog.removeAttribute("data-dialog-closing")
+  if not targetDialog.open do targetDialog.showModal()
+
+fun finishTransitionClose(targetDialog) =
+  targetDialog.removeAttribute("data-dialog-closing")
+  if targetDialog.open do targetDialog.close()
+
+fun closeDialogWithTransition(targetDialog) =
+  if targetDialog.open do
+    if prefersReducedMotion() then finishTransitionClose(targetDialog)
+    else if targetDialog.getAttribute("data-dialog-closing") === "true" then ()
+    else
+      targetDialog.setAttribute("data-dialog-closing", "true")
+      window.setTimeout(() => finishTransitionClose(targetDialog), transitionDurationMs)
+
+fun closeDismissibleDialogFromBackdrop(targetDialog) =
+  targetDialog.addEventListener of "click", event =>
+    if targetDialog.dataset.dismissible === "true" and event.target === targetDialog do
+      targetDialog.close()
+
+fun closeDismissibleDialogFromBackdropWithTransition(targetDialog) =
+  targetDialog.addEventListener of "click", event =>
+    if targetDialog.dataset.dismissible === "true" and event.target === targetDialog do
+      closeDialogWithTransition(targetDialog)
+  targetDialog.addEventListener of "cancel", event =>
+    event.preventDefault()
+    closeDialogWithTransition(targetDialog)

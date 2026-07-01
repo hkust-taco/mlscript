@@ -10,6 +10,7 @@ declare module Object with
     create
     freeze
     assign
+    keys
     entries
     prototype
     fromEntries
@@ -20,6 +21,7 @@ declare module Object with
 declare class JSON
 declare module JSON with
   fun
+    parse
     stringify
 declare class Number
 declare module Number with
@@ -30,6 +32,8 @@ declare module Number with
     MAX_SAFE_INTEGER
     NEGATIVE_INFINITY
     POSITIVE_INFINITY
+  fun
+    isFinite
 declare class BigInt
 declare module BigInt
 declare class Function
@@ -54,7 +58,9 @@ declare class Error//(info) // TODO: handle JS classes that can be instantiated 
 declare class TypeError//(info) // TODO: handle JS classes that can be instantiated without `new` specially in codegen.
 declare class RangeError//(info) // TODO: handle JS classes that can be instantiated without `new` specially in codegen.
 declare class Date
-declare module Date
+declare module Date with
+  fun
+    now
 
 declare class ArrayBuffer
 declare module ArrayBuffer
@@ -184,6 +190,7 @@ declare module Reflect with
     getPrototypeOf
     apply
     construct
+    deleteProperty
 declare module console with
   declare
     fun
@@ -288,5 +295,11 @@ declare module runtime with
 // HTML DOM API definitions.
 // Move them to a separate Prelude file when there are enough of them.
 declare val document
+declare val window
+declare val localStorage
+declare val self
 declare val customElements
 declare class HTMLElement
+declare class CustomEvent
+declare class Worker
+declare val Intl

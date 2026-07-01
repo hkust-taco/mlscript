@@ -111,3 +111,14 @@ private[io] class VirtualRelPath(val pathString: String) extends RelPath:
     else
       pathString + sep + other.toString
     new VirtualRelPath(combined)
+  
+  def last: String =
+    val idx = pathString.lastIndexOf(sep)
+    if idx < 0 then pathString
+    else pathString.substring(idx + 1)
+  
+  def baseName: String =
+    val filename = last
+    val dotIdx = filename.lastIndexOf('.')
+    if dotIdx <= 0 then filename  // .hidden files or no extension
+    else filename.substring(0, dotIdx)

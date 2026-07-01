@@ -1,0 +1,6 @@
+{
+  "name": "web-ide",
+  "main": "editor/Highlight.mls",
+  "moduleName": "Highlight",
+  "vendors": []
+}

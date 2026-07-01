@@ -2238,7 +2238,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
     for imprt <- p.imports do
       raise(
         ErrorReport(
-          msg"Import of symbol `${imprt._2}` not implemented yet" -> imprt._1.toLoc :: Nil,
+          msg"Import of symbol `${imprt.specifier}` not implemented yet" -> imprt.local.toLoc :: Nil,
           extraInfo = S(imprt),
           source = Diagnostic.Source.Compilation,
         ),

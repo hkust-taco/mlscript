@@ -1,0 +1,512 @@
+import "./filesystem/fs.mls"
+import "./filesystem/projects.mls"
+import "./filesystem/persistent.mls"
+import "./execution/runner.mls"
+import "./compiler/index.mls"
+import "./common/JS.mls"
+import "./common/Logger.mls"
+import "./common/SettingsStore.mls"
+
+open JS { Absent }
+
+module main with...
+
+fun dynamicImport(specifier) =
+  let importModule = Function("specifier", "return import(specifier)")
+  importModule(specifier)
+
+fun compilerModule(loaded) = if loaded.'default is
+  Absent then loaded
+  defaultModule then defaultModule
+
+fun loadMLscript() =
+  dynamicImport("./build/MLscript.mjs").then(loaded => compilerModule(loaded))
+
+fun loadAnalysis() =
+  dynamicImport("./analysis/index.mjs?v=symbol-index").then(loaded => compilerModule(loaded))
+
+fun folderAttrs() =
+  mut { collapsed: true }
+
+fun standardAttrs() =
+  mut { std: true, compiled: true }
+
+fun createStandardFile(path, content) =
+  Logger.debug("Main", "Loading standard library file", path)
+  fs.createFile(path, content,
+    force: true
+    attrs: standardAttrs()
+  )
+
+fun loadStandardLibraryBody(compiler) =
+  fs.createFolder("/std", force: true, attrs: folderAttrs())
+  fs.createFile("/std/Prelude.mls", compiler.std.prelude,
+    force: true
+    attrs: standardAttrs()
+  )
+  compiler.std.files.forEach of (entry, ...) =>
+    createStandardFile(entry.at(0), entry.at(1))
+
+fun loadStandardLibrary(compiler) =
+  Logger.info("Main", "Loading standard library files")
+  js.try_catch(
+    () =>
+      loadStandardLibraryBody(compiler)
+      Logger.info("Main", "Loaded standard library files")
+    error =>
+      Logger.error("Main", "Failed to load standard library files", error)
+      throw error
+  )
+
+let defaultMainSource = "import \"./std/Predef.mls\"\n\n" +
+  "open Predef\n\n" +
+  "print of \"Welcome to MLscript Web IDE!\"\n" +
+  "print of \"============================\"\n\n" +
+  "print of \"Press Ctrl-S to compile.\"\n" +
+  "print of \"Press Ctrl-E to execute.\"\n"
+
+fun ensureDefaultMainFile() =
+  if persistent.loadPersistedFiles() is 0 do
+    fs.createFile("/main.mls", defaultMainSource, force: true)
+
+fun attrsOf(node) = if
+  node is Absent then null
+  node.attrs is
+    Absent then null
+    attrs then attrs
+
+fun isStandardNode(node) = if attrsOf(node) is
+  null then false
+  attrs and attrs.("std") is true then true
+  else false
+
+fun isCompiledNode(node) = if attrsOf(node) is
+  null then false
+  attrs and attrs.("compiled") is true then true
+  else false
+
+fun shouldCompile(path) =
+  let node = fs.stat(path)
+  if
+    not path.endsWith(".mls") then false
+    isStandardNode(node) then false
+    isCompiledNode(node) then false
+    else true
+
+fun isCompilationFile(path) = if
+  path.endsWith(".mls") then true
+  path.endsWith(".mjs") then true
+  else false
+
+fun filesForCompilation() =
+  fs.getAllFiles((path, ...) => isCompilationFile(path))
+
+fun parentPath(path) =
+  let index = path.lastIndexOf("/")
+  if index <= 0 then "/"
+  else path.slice(0, index)
+
+fun normalizePath(path) =
+  let
+    parts = path.split("/")
+    stack = mut []
+  parts.forEach of (part, ...) =>
+    if
+      part is "" then ()
+      part is "." then ()
+      part is ".." then stack.pop()
+      else stack.push(part)
+  "/" + stack.join("/")
+
+fun resolveImportPath(fromPath, specifier) = if
+  specifier.startsWith(".") then normalizePath(parentPath(fromPath) + "/" + specifier)
+  specifier.startsWith("/") then normalizePath(specifier)
+  else normalizePath("/" + specifier)
+
+fun mlsImportTarget(files, fromPath, specifier) =
+  let resolved = resolveImportPath(fromPath, specifier)
+  if
+    resolved.endsWith(".mls") and Reflect.has(files, resolved) then resolved
+    not resolved.endsWith(".mjs") and Reflect.has(files, resolved + ".mls") then resolved + ".mls"
+    else null
+
+fun importSpecifiers(content) =
+  let
+    specs = mut []
+    importPattern = new RegExp("^\\s*import\\s+[\"']([^\"']+)[\"']")
+  content.split("\n").forEach of (line, ...) =>
+    if not line.trimStart().startsWith("//") do
+      if line.match(importPattern) is
+        ~null as match do specs.push(match.at(1))
+  specs
+
+fun collectImportClosure(files, targetPath) =
+  let
+    targets = new Set()
+    queue = mut []
+  if targetPath is ~Absent as path and path !== "" and path.endsWith(".mls") and Reflect.has(files, path) do
+    targets.add(path)
+    queue.push(path)
+  while queue.length > 0 do
+    let current = queue.shift()
+    importSpecifiers(files.(current)).forEach of (specifier, ...) =>
+      if mlsImportTarget(files, current, specifier) is
+        ~null as dependency do
+          if not targets.has(dependency) do
+            targets.add(dependency)
+            queue.push(dependency)
+  Array.from(targets)
+
+fun collectFilesForCompilation(targetPath) =
+  let
+    files = filesForCompilation()
+    targets = collectImportClosure(files, targetPath)
+  [files, targets]
+
+fun markPathCompiled(path) =
+  let node = fs.stat(path)
+  if not isStandardNode(node) do fs.setAttr(path, "compiled", true)
+
+fun markAsCompiled(paths) =
+  paths.forEach of (path, ...) => markPathCompiled(path)
+
+fun markPathUncompiled(path) =
+  let node = fs.stat(path)
+  if not isStandardNode(node) do fs.setAttr(path, "compiled", false)
+
+fun markAsUncompiled(paths) =
+  paths.forEach of (path, ...) => markPathUncompiled(path)
+
+fun diagnosticsInspector() =
+  document.querySelector("diagnostics-inspector")
+
+fun setDiagnostics(diagnosticsPerFile) =
+  if diagnosticsInspector() is
+    ~null as panel do panel.setDiagnostics(diagnosticsPerFile)
+
+fun revealDiagnostics(diagnosticsPerFile) =
+  document.dispatchEvent(new CustomEvent("sidebar-toggle-requested", mut
+    detail: mut { side: "right", panel: "problems", forceOpen: true }
+  ))
+  if diagnosticsInspector() is ~null as panel do
+    panel.setMode("workspace")
+    panel.setDiagnostics(diagnosticsPerFile)
+
+fun bottomPanel() =
+  document.querySelector("bottom-panel")
+
+fun showLoggingPanel() =
+  if bottomPanel() is
+    ~null as panel do panel.showLogging()
+
+fun compilationStatusDetail(status, error) =
+  mut { :status, :error }
+
+fun dispatchCompilationStatus(status, error) =
+  document.dispatchEvent(new CustomEvent("compilation-status-change", mut
+    detail: compilationStatusDetail(status, error)
+  ))
+
+fun errorName(error) = if error.name is
+  Absent then "CompilerError"
+  name then name
+
+fun errorMessage(error) = if error.message is
+  Absent then String(error)
+  message then message
+
+fun errorStack(error) = if error.stack is
+  Absent then ""
+  stack then stack
+
+fun fatalDiagnostic(path, error) =
+  mut
+    kind: "internal"
+    source: "compiler"
+    mainMessage: "Compiler internal error: " + errorMessage(error)
+    excerpt: errorStack(error)
+    line: 1
+    allMessages: [
+      mut
+        messageBits: [
+          mut { text: errorName(error) + ": " + errorMessage(error) }
+          mut { text: errorStack(error) }
+        ]
+        location: mut { start: 0, end: 0 }
+    ]
+
+fun compilerFatalDiagnostics(path, error) =
+  [
+    mut
+      path: if path is "" then "/compiler" else path
+      diagnostics: [fatalDiagnostic(path, error)]
+  ]
+
+fun filePathOfDiagnostics(fileData) = if fileData.path is
+  Absent then "Unknown file"
+  path then path
+
+fun diagnosticKind(diagnostic) =
+  let kind = if diagnostic.kind is
+    Absent then "info"
+    value then value
+  if kind is
+    "error" then "error"
+    "internal" then "internal"
+    "warning" then "warning"
+    else "info"
+
+fun isBlockingDiagnostic(diagnostic) = if diagnosticKind(diagnostic) is
+  "error" then true
+  "internal" then true
+  else false
+
+fun hasBlockingDiagnostics(diagnosticsPerFile) =
+  let found = false
+  if diagnosticsPerFile is ~Absent do
+    diagnosticsPerFile.forEach of (fileData, ...) =>
+      if not found and fileData.diagnostics is ~Absent as diagnostics do
+        diagnostics.forEach of (diagnostic, ...) =>
+          if not found and isBlockingDiagnostic(diagnostic) do set found = true
+  found
+
+fun messageText(message) =
+  let text = ""
+  if message.messageBits is ~Absent as bits do
+    bits.forEach of (bit, ...) =>
+      if bit.text is ~Absent as bitText do set text += bitText
+      if bit.code is ~Absent as bitCode do set text += bitCode
+  text
+
+fun firstDiagnosticText(diagnostic) = if
+  diagnostic.allMessages is Absent then "Diagnostic"
+  diagnostic.allMessages.length === 0 then "Diagnostic"
+  else messageText(diagnostic.allMessages.at(0))
+
+fun primaryLocation(diagnostic) =
+  let result = null
+  if diagnostic.allMessages is ~Absent as messages do
+    messages.forEach of (message, ...) =>
+      if result is null do
+        if message.location is ~Absent as location do set result = location
+  result
+
+fun sourceText(filePath) =
+  if typeof(filePath) is "string" and fs.pathExists(filePath) then fs.read(filePath)
+  else ""
+
+fun lineColumn(line, column) =
+  mut { :line, :column }
+
+fun lineColumnFromOffset(text, offset) =
+  let lines = text.substring(0, offset).split("\n")
+  lineColumn(lines.length, lines.at(lines.length - 1).length + 1)
+
+fun diagnosticLocation(diagnostic, filePath) = if diagnostic.line is
+  ~Absent as line then lineColumn(line, 1)
+  else if primaryLocation(diagnostic) is
+    ~null as location then lineColumnFromOffset(sourceText(filePath), location.start)
+    else null
+
+fun diagnosticMainMessage(diagnostic) = if diagnostic.mainMessage is
+  Absent then firstDiagnosticText(diagnostic)
+  message then message
+
+fun diagnosticDetailText(diagnostic) =
+  let text = ""
+  if diagnostic.allMessages is ~Absent as messages do
+    messages.forEach of (message, ...) =>
+      let content = messageText(message)
+      if content !== "" do
+        if text === "" then set text = content
+        else set text += " " + content
+  if text === "" then diagnosticMainMessage(diagnostic) else text
+
+fun diagnosticLocationSuffix(filePath, diagnostic) = if diagnosticLocation(diagnostic, filePath) is
+  ~null as location then ":" + location.line + ":" + location.column
+  else ""
+
+fun diagnosticOutputLine(filePath, diagnostic) =
+  "[" + diagnosticKind(diagnostic) + "] " + filePath + diagnosticLocationSuffix(filePath, diagnostic) + " - " + diagnosticMainMessage(diagnostic)
+
+fun emitDiagnosticOutput(diagnosticsPerFile) =
+  if bottomPanel() is ~null as panel do
+    panel.showOutput()
+    panel.log("error", "Compilation failed with diagnostics:")
+    diagnosticsPerFile.forEach of (fileData, ...) =>
+      let filePath = filePathOfDiagnostics(fileData)
+      if fileData.diagnostics is ~Absent as diagnostics do
+        diagnostics.forEach of (diagnostic, ...) =>
+          if isBlockingDiagnostic(diagnostic) do
+            panel.log("error", diagnosticOutputLine(filePath, diagnostic))
+            let detail = diagnosticDetailText(diagnostic)
+            if detail !== diagnosticMainMessage(diagnostic) do panel.log("error", detail)
+
+fun handleCompileFatal(targetPath, error) =
+  markPathUncompiled(targetPath)
+  revealDiagnostics(compilerFatalDiagnostics(targetPath, error))
+  Logger.error("Compiler", "Compiler internal error",
+    mut
+      name: errorName(error)
+      message: errorMessage(error)
+      stack: errorStack(error)
+  )
+  dispatchCompilationStatus("fatal", error)
+  showLoggingPanel()
+
+fun compileSuccess(targetPaths, response) =
+  let diagnostics = response.result
+  setDiagnostics(diagnostics)
+  if hasBlockingDiagnostics(diagnostics) then
+    markAsUncompiled(targetPaths)
+    revealDiagnostics(diagnostics)
+    emitDiagnosticOutput(diagnostics)
+    dispatchCompilationStatus("error", null)
+    false
+  else
+    markAsCompiled(targetPaths)
+    dispatchCompilationStatus("done", null)
+    true
+
+fun autoRunAfterCompileEnabled() =
+  SettingsStore.getSetting("compile.autoRunAfterCompile", "false") === "true"
+
+fun executeFile(filePath) =
+  document.dispatchEvent(new CustomEvent("execute-requested", mut
+    bubbles: true
+    detail: mut { :filePath }
+  ))
+
+fun compileTarget(targetPath) =
+  let
+    collected = collectFilesForCompilation(targetPath)
+    allFiles = collected.at(0)
+    targetPaths = collected.at(1)
+  index.compile(targetPaths, allFiles)
+    .then(response =>
+      if compileSuccess(targetPaths, response) and autoRunAfterCompileEnabled() do executeFile(targetPath)
+    )
+    .'catch(error => handleCompileFatal(targetPath, error))
+
+fun isMlsPath(path) =
+  typeof(path) is "string" and path.endsWith(".mls")
+
+fun handleCompileRequested(event) =
+  let filePath = event.detail.filePath
+  if
+    isMlsPath(filePath) then compileTarget(filePath)
+    else Logger.warn("Compiler", "Compile skipped: active file is not an .mls file", filePath)
+
+
+fun compiledPath(filePath) = if
+  filePath.endsWith(".mls") then filePath.slice(0, filePath.length - 4) + ".mjs"
+  else filePath
+
+fun compiledOutputHasCompileError(mjsPath) =
+  if fs.pathExists(mjsPath) then sourceText(mjsPath).includes("compilation yielded an error")
+  else false
+
+fun shouldCompileBeforeExecution(filePath, mjsPath) =
+  if isMlsPath(filePath) then
+    if shouldCompile(filePath) then true
+    else compiledOutputHasCompileError(mjsPath)
+  else false
+
+fun runCompiledFile(sourcePath, mjsPath) =
+  if fs.pathExists(mjsPath) then runner.execute(mjsPath, sourcePath)
+  else Logger.error("Execution", "Compiled file not found after compilation", mjsPath)
+
+fun compileThenExecute(filePath, mjsPath) =
+  Logger.warn("Execution", "Compiled file not found, compiling first", mjsPath)
+  let
+    collected = collectFilesForCompilation(filePath)
+    allFiles = collected.at(0)
+    targetPaths = collected.at(1)
+    compilePromise = index.compile(targetPaths, allFiles).then of response =>
+      if compileSuccess(targetPaths, response) do runCompiledFile(filePath, mjsPath)
+  compilePromise.'catch(error => handleCompileFatal(filePath, error))
+
+fun expandConsolePanel() =
+  if document.querySelector("bottom-panel") is
+    ~null as panel do panel.showOutput()
+
+fun handleExecuteRequested(event) =
+  expandConsolePanel()
+  let filePath = event.detail.filePath
+  if typeof(filePath) is ~"string" then Logger.error("Execution", "Invalid file path for execution", filePath)
+  else
+    let mjsPath = compiledPath(filePath)
+    if shouldCompileBeforeExecution(filePath, mjsPath) then compileThenExecute(filePath, mjsPath)
+    else if fs.pathExists(mjsPath) then runner.execute(mjsPath, filePath)
+    else compileThenExecute(filePath, mjsPath)
+
+fun handleOpenFileAtLocation(event) =
+  let editorPanel = document.querySelector("editor-panel")
+  if editorPanel is
+    ~null as panel do panel.openFileAtLine(event.detail.filePath, event.detail.line, event.detail.column, event.detail.length)
+
+fun dispatchProjectChange() =
+  let detail = mut
+    id: projects.currentId()
+    project: projects.currentProject()
+  document.dispatchEvent(new CustomEvent("current-project-changed", mut { :detail }))
+
+let runtimeRef = mut { compiler: null, analysis: null }
+
+fun switchProject(nextId) =
+  if projects.currentId() === nextId then ()
+  else
+    let
+      current = projects.currentId()
+      target = projects.findProject(nextId)
+    if target is
+      null then Logger.warn("Projects", "Switch ignored: unknown project id", nextId)
+      else
+        Logger.info("Projects", "Switching project", current, "→", nextId)
+        // 1. Tear down the in-memory tree. Subscribers (FileExplorer,
+        //    EditorPanel) react to the `reset` event by clearing their state.
+        //    Persistence ignores it, so the outgoing project's files remain
+        //    safe in localStorage.
+        fs.resetAll()
+        setDiagnostics([])
+        // 2. Re-inject the standard library. Std files carry `attrs.std = true`
+        //    so they are skipped by persistence.
+        if runtimeRef.compiler is ~null as compiler do loadStandardLibrary(compiler)
+        // 3. Commit the new current id so subsequent persistence reads/writes
+        //    target the right namespace.
+        projects.commitCurrent(nextId)
+        // 4. Restore the new project's persisted files. If none yet, seed
+        //    /main.mls so the editor has something to open.
+        let restored = persistent.loadPersistedFiles()
+        if restored is 0 do fs.createFile("/main.mls", defaultMainSource, force: true)
+        // 5. Reinitialize the analysis worker so its symbol index reflects
+        //    the new file set instead of incrementally folding the reset.
+        if runtimeRef.analysis is ~null as analysis do analysis.reinitialize()
+        // 6. Notify the toolbar pill and anything else that cares.
+        dispatchProjectChange()
+        Logger.info("Projects", "Switched", nextId, "files:", restored)
+
+fun handleProjectOpenRequested(event) =
+  if
+    event.detail is Absent then Logger.warn("Projects", "project-open-requested missing detail")
+    event.detail.id is Absent then Logger.warn("Projects", "project-open-requested missing id")
+    else switchProject(event.detail.id)
+
+fun start(compiler, analysis) =
+  set
+    runtimeRef.compiler = compiler
+    runtimeRef.analysis = analysis
+  projects.bootstrap()
+  dispatchProjectChange()
+  loadStandardLibrary(compiler)
+  ensureDefaultMainFile()
+  analysis.start()
+
+  document.addEventListener("compile-requested", handleCompileRequested)
+  document.addEventListener("execute-requested", handleExecuteRequested)
+  document.addEventListener("terminate-requested", () => runner.terminate())
+  document.addEventListener("open-file-at-location", handleOpenFileAtLocation)
+  document.addEventListener("project-open-requested", handleProjectOpenRequested)
+
+let startPromise = loadMLscript().then(compiler => loadAnalysis().then(analysis => start(compiler, analysis)))
+startPromise.'catch(error => Logger.error("Main", "Failed to load MLscript compiler or analysis module", error))

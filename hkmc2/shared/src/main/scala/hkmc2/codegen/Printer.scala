@@ -210,11 +210,11 @@ class Printer(using Raise, ShowCfg, State, SymbolPrinter, Config):
       } }"
     case x: Path => print(x)
   
-  def print(imports: Ls[ImportSymbol -> Str])(using Scope): Document =
-    imports.map: (local, path) =>
-        val docLocal = scope.allocateName(local)
-        doc"""import "..." as ${docLocal}; # """
-      .mkDocument()
+  def print(imports: Ls[ImportSpec])(using Scope): Document =
+    imports.map: importSpec =>
+      val docLocal = scope.allocateName(importSpec.local)
+      doc"""import "..." as ${docLocal}; # """
+    .mkDocument()
   
   def print(prog: Program)(using Scope): Document =
     doc"${print(prog.imports)}${print(prog.main)}"

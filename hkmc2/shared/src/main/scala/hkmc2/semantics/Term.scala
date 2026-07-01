@@ -628,7 +628,7 @@ sealed trait Statement extends AutoLocated, ProductWithExtraInfo:
   def mkClone(using State): Statement = this match
     case t: Term => lastWords(s"overridden implementation")
     case d: Definition => ???
-    case imp: Import => Import(imp.sym, imp.str, imp.file)
+    case imp: Import => Import(imp.sym, imp.str, imp.file, imp.kind)
     case LetDecl(sym, annotations) => LetDecl(sym, annotations.map(_.mkClone))
     case RcdField(field, rhs) => RcdField(field.mkClone, rhs.mkClone)
     case RcdSpread(rcd) => RcdSpread(rcd.mkClone)
@@ -753,7 +753,7 @@ sealed trait Statement extends AutoLocated, ProductWithExtraInfo:
       td.rhs.toVector ++ td.annotations.flatMap(_.subTerms).toVector
     case pat: PatternDef =>
       (pat.paramsOpt.toVector.flatMap(_.subTerms) :+ pat.body.blk) ++ pat.annotations.flatMap(_.subTerms).toVector
-    case Import(sym, str, pth) => Vector.empty
+    case Import(sym, str, pth, kind) => Vector.empty
     case Try(body, finallyDo) => Vector.single(body) ++ Vector.single(finallyDo)
     case Handle(lhs, rhs, args, derivedClsSym, defs, bod) => (rhs +: args.toVector) ++ defs.flatMap(_.td.subTerms).toVector :+ bod
     case Neg(e) => Vector.single(e)
@@ -946,7 +946,7 @@ sealed trait Statement extends AutoLocated, ProductWithExtraInfo:
       s"${cls.kind} ${cls.sym.nme}${
         cls.tparams.map(_.showDbg).mkStringOr(", ", "[", "]")}${
         cls.paramsOpt.fold("")(_.toString)} ${cls.body}"
-    case Import(sym, str, file) => s"import $str from ${file}"
+    case Import(sym, str, file, kind) => s"import $str from ${file}"
     case Annotated(ann, target) => s"@${ann} ${target.showDbg}"
     case Throw(res) => s"throw ${res.showDbg}"
     case Label(label, _, body, _) => s"do ${label.nme}: ${body.showDbg}"
@@ -1112,13 +1112,18 @@ case class ObjBody(blk: Term.Blk):
 end ObjBody
 
 
-/** `sym` is a `BlockMemberSymbol` or a `VarSymbol` when the import is made by the user
-  * and can be referred to by name (it's either the BMS of the imported module
+enum ImportKind:
+  case Default
+  case Namespace
+  case Named(importedName: Str)
+
+/** `sym` is a `MemberSymbol` or a `VarSymbol` when the import is made by the user
+  * and can be referred to by name (it's either the MemberSymbol of the imported module
   * or the VarSymbol of the alias, in an aliased import `import "..." as alias`),
   * in which case it is a `BlockMemberSymbol` when importing files explicitly
   * and a `TermSymbol` when the import is made implicitly by the compiler (eg, importing "Predef").
   * Note that the `file` Path may not represent a real file; eg when importing "fs". */
-case class Import(sym: ImportSymbol, str: Str, file: io.Path) extends Statement
+case class Import(sym: ImportSymbol, str: Str, file: io.Path, kind: ImportKind) extends Statement
 
 
 sealed abstract class Declaration:

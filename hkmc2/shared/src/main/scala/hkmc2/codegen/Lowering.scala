@@ -1372,10 +1372,10 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
         case None => desug
         case Some(dCfg) =>
           flowAnalysis.FlowAnalysis.mkTraceLogger(dCfg.config, "deforest > ", outterTl).givenIn:
-            deforest.Deforest(Program(imps.map(imp => imp.sym -> imp.str), desug)).main
+            deforest.Deforest(Program(imps.map(imp => ImportSpec(imp.sym, imp.str, imp.kind)), desug)).main
     
     val etaExpanded =
-      EtaExpansion(Program(imps.map(imp => imp.sym -> imp.str), deforested)).main
+      EtaExpansion(Program(imps.map(imp => ImportSpec(imp.sym, imp.str, imp.kind)), deforested)).main
     
     val lifted =
       if lift then Lifter(etaExpanded).transform
@@ -1402,7 +1402,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
       else staged
     
     Program(
-      imps.map(imp => imp.sym -> imp.str),
+      imps.map(imp => ImportSpec(imp.sym, imp.str, imp.kind)),
       res
     )
   

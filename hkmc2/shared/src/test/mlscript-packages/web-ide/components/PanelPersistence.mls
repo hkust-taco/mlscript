@@ -1,0 +1,51 @@
+import "../common/JS.mls"
+
+open JS { Absent }
+
+module PanelPersistence with...
+
+fun panelWidthCssVar(panel) =
+  "--" + panel.tagName.toLowerCase() + "-width"
+
+fun restorePanelWidth(panel, storageKey, minSize, maxSize) =
+  let savedWidth = localStorage.getItem(storageKey)
+  if savedWidth is ~Absent and savedWidth !== "" do
+    let width = parseInt(savedWidth, 10)
+    if width >= minSize and width <= maxSize do
+      let container = document.querySelector(".app-container")
+      container.style.setProperty(panelWidthCssVar(panel), width + "px")
+      panel.setAttribute("width", width)
+
+fun savePanelWidth(storageKey, width) =
+  localStorage.setItem(storageKey, width)
+
+fun restorePanelHeight(panel, storageKey, minSize, maxSize) =
+  let savedHeight = localStorage.getItem(storageKey)
+  if savedHeight is ~Absent and savedHeight !== "" do
+    let height = parseInt(savedHeight, 10)
+    if height >= minSize and height <= maxSize do
+      set
+        panel.style.height = height + "px"
+        panel.style.minHeight = height + "px"
+        panel.style.maxHeight = height + "px"
+      panel.setAttribute("height", height)
+
+fun savePanelHeight(storageKey, height) =
+  localStorage.setItem(storageKey, height)
+
+fun restoreNumber(storageKey, fallback, minSize, maxSize) =
+  let savedValue = localStorage.getItem(storageKey)
+  if savedValue is ~Absent and savedValue !== "" then
+    let value = parseInt(savedValue, 10)
+    if value >= minSize and value <= maxSize then value else fallback
+  else fallback
+
+fun saveNumber(storageKey, value) =
+  localStorage.setItem(storageKey, value)
+
+fun restoreString(storageKey, fallback) =
+  let savedValue = localStorage.getItem(storageKey)
+  if savedValue is ~Absent and savedValue !== "" then savedValue else fallback
+
+fun saveString(storageKey, value) =
+  localStorage.setItem(storageKey, value)

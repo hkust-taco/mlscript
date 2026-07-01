@@ -1,0 +1,316 @@
+import "../filesystem/fs.mls"
+import "./PanelPersistence.mls"
+import "./TreeNode.mls"
+import "../common/JS.mls"
+
+open JS { Absent }
+
+fun basenameWithoutExt(name) =
+  name.slice(0, -4)
+
+fun forceOptions() =
+  mut { force: true }
+
+class FileExplorer extends HTMLElement with
+  let
+    isCollapsed = false
+    rootNodes = new Map()
+    isCreatingFile = false
+    newFileInput = null
+    tooltipTimeout = null
+    activeTooltipTarget = null
+    openFiles = new Set()
+    unsubscribe = null
+    openFilesChangedListener = null
+    newFileRequestedListener = null
+
+  fun connectedCallback() =
+    this.render()
+    this.attachEventListeners()
+    this.attachTooltipHandlers()
+    this.restoreSizeFromStorage()
+    let explorer = this
+    set openFilesChangedListener = event => explorer.handleOpenFilesChanged(event)
+    set newFileRequestedListener = () => explorer.startCreatingFile()
+    document.addEventListener("open-files-changed", openFilesChangedListener)
+    document.addEventListener("new-file-requested", newFileRequestedListener)
+    set unsubscribe = fs.subscribe(event => explorer.handleFsEvent(event), undefined)
+
+  fun restoreSizeFromStorage() =
+    PanelPersistence.restorePanelWidth(this, "file-explorer-width", 150, 600)
+
+  fun saveSizeToStorage(width) =
+    PanelPersistence.savePanelWidth("file-explorer-width", width)
+
+  fun disconnectedCallback() =
+    if unsubscribe is ~Absent as removeSubscription do removeSubscription()
+    if tooltipTimeout is ~Absent as timeout do
+      window.clearTimeout(timeout)
+      set tooltipTimeout = null
+    if openFilesChangedListener is ~Absent as listener do
+      document.removeEventListener("open-files-changed", listener)
+    if newFileRequestedListener is ~Absent as listener do
+      document.removeEventListener("new-file-requested", listener)
+
+  fun render() =
+    set this.innerHTML = """
+      <div class="header">
+        <h2>Files</h2>
+        <button class="button create-file-button" title="Create new file">
+          <i class="icon-file-plus"></i>
+        </button>
+      </div>
+      <div class="tree-view"></div>
+      <file-tooltip class="tree-tooltip"></file-tooltip>
+    """
+    this.updateTree()
+
+  fun handleOpenFilesChanged(event) =
+    let paths = if
+      event.detail is Absent then []
+      event.detail.paths is Absent then []
+      else event.detail.paths
+    set openFiles = new Set(paths)
+    this.updateOpenFlags()
+
+  fun resetRootNodes() =
+    Array.from(rootNodes.values()).forEach of (element, ...) => element.remove()
+    rootNodes.clear()
+
+  fun handleFsEvent(event) = if event.'type is
+    "reset" then
+      resetRootNodes()
+      this.updateTree()
+    "create" | "delete" | "rename" then updateTreeForRootEvent(event)
+    else ()
+
+  fun updateTreeForRootEvent(event) =
+    let pathParts = event.path.replace(new RegExp("^/"), "").split("/")
+    if pathParts.length is 1 do this.updateTree()
+
+  fun filterMjsFiles(children) =
+    let mlsFiles = new Set()
+    children.forEach of (child, ...) =>
+      if child.'type is "file" and child.name.endsWith(".mls") do
+        mlsFiles.add(basenameWithoutExt(child.name))
+    children.filter of (child, ...) =>
+      if
+        child.'type is "file" and child.name.endsWith(".mjs") then
+          let basename = basenameWithoutExt(child.name)
+          not mlsFiles.has(basename)
+        else true
+
+  fun rootPath(node) =
+    "/" + node.name
+
+  fun updateTree() = if this.querySelector(".tree-view") is
+    ~null as treeView do
+      let
+        filteredRootNodes = filterMjsFiles(fs.fileTree)
+        newRootPaths = new Set()
+      filteredRootNodes.forEach of (node, ...) =>
+        newRootPaths.add(rootPath(node))
+      Array.from(rootNodes.entries()).forEach of (entry, ...) =>
+        let
+          existingPath = entry.at(0)
+          element = entry.at(1)
+        if not newRootPaths.has(existingPath) do
+          element.remove()
+          rootNodes.delete(existingPath)
+      filteredRootNodes.forEach of (node, index) =>
+        let path = rootPath(node)
+        if
+          not rootNodes.has(path) then
+            let treeNode = document.createElement("tree-node")
+            treeNode.setData(node, path, fs.fileTree)
+            rootNodes.set(path, treeNode)
+            let nextChild = treeView.children.(index)
+            if nextChild is
+              ~Absent as child then treeView.insertBefore(treeNode, child)
+              Absent then treeView.appendChild(treeNode)
+          else
+            let treeNode = rootNodes.get(path)
+            treeNode.setData(node, path, fs.fileTree)
+            let currentPosition = Array.from(treeView.children).indexOf(treeNode)
+            if currentPosition !== index do
+              let nextChild = treeView.children.(index)
+              if nextChild !== treeNode do treeView.insertBefore(treeNode, nextChild)
+      this.updateOpenFlags()
+
+  fun toggleCollapse() =
+    set isCollapsed = not isCollapsed
+    this.classList.toggle("collapsed", isCollapsed)
+    syncWidthForCollapseState(document.querySelector(".app-container"))
+
+  fun syncWidthForCollapseState(container) = if
+    container is Absent then ()
+    isCollapsed then container.style.removeProperty("--file-explorer-width")
+    else restoreWidthIfExpanded(container)
+
+  fun restoreWidthIfExpanded(container) = if
+    isCollapsed then ()
+    container is Absent then ()
+    else
+      let width = this.getAttribute("width")
+      if width is
+        Absent | "" then container.style.removeProperty("--file-explorer-width")
+        savedWidth then container.style.setProperty("--file-explorer-width", savedWidth + "px")
+
+  fun focusNewFileInput(input) =
+    if input is ~Absent do
+      window.setTimeout(
+        () =>
+          input.focus()
+          input.select(),
+        0
+      )
+
+  fun startCreatingFile() = if not isCreatingFile and this.querySelector(".tree-view") is
+    ~null as treeView do
+      let explorer = this
+      set isCreatingFile = true
+      let
+        fileEntry = document.createElement("div")
+        fileIcon = document.createElement("i")
+        input = document.createElement("input")
+      set
+        fileEntry.className = "file-item new-file-entry"
+        fileIcon.className = "file-icon icon-file-code"
+        input.'type = "text"
+        input.className = "new-file-input"
+        input.placeholder = "path/to/file.mls"
+      fileEntry.appendChild(fileIcon)
+      fileEntry.appendChild(input)
+      treeView.insertBefore(fileEntry, treeView.firstChild)
+      set newFileInput = input
+      focusNewFileInput(input)
+      input.addEventListener("keydown", event => explorer.handleNewFileKeydown(event, input))
+      input.addEventListener of "blur", () =>
+        window.setTimeout(() => explorer.cancelIfCreatingFile(), 200)
+    else if isCreatingFile do
+      focusNewFileInput(newFileInput)
+
+  fun cancelIfCreatingFile() = if isCreatingFile do this.cancelCreatingFile()
+
+  fun handleNewFileKeydown(event, input) = if event.key is
+    "Enter" then
+      event.preventDefault()
+      submitNewFile(input)
+    "Escape" then
+      event.preventDefault()
+      cancelCreatingFile()
+    else ()
+
+  fun normalizeInputPath(fileName) =
+    fileName
+      .replaceAll("\\", "/")
+      .replace(new RegExp("^/+"), "")
+      .replace(new RegExp("/+$"), "")
+
+  fun invalidPathPart(part) =
+    part is ("." | "..")
+
+  fun submitNewFile(input) =
+    let fileName = input.value.trim()
+    if
+      fileName is "" then cancelCreatingFile()
+      else
+        let
+          normalizedInput = normalizeInputPath(fileName)
+          parts = normalizedInput.split("/").filter of (part, ...) => part !== ""
+          hasInvalidPart = parts.some of (part, ...) => invalidPathPart(part)
+        if
+          parts.length is 0 then
+            window.alert("Please enter a valid file name (e.g. path/to/file.mls)")
+            input.focus()
+          hasInvalidPart then
+            window.alert("File name cannot contain \".\" or \"..\" path segments")
+            input.focus()
+          else
+            let
+              path = "/" + parts.join("/")
+              success = fs.createFile(path, "", forceOptions())
+            if
+              success then
+                cancelCreatingFile()
+                dispatchFileOpen(path, fileName)
+              else
+                window.alert("Failed to create file. File may already exist.")
+                input.focus()
+
+  fun cancelCreatingFile() = if isCreatingFile do
+    set isCreatingFile = false
+    if this.querySelector(".new-file-entry") is
+      ~null as entry do entry.remove()
+    set newFileInput = null
+
+  fun fileOpenDetail(path, fileName) =
+    mut { :path, :fileName }
+
+  fun fileOpenOptions(path, fileName) =
+    mut { detail: fileOpenDetail(path, fileName), bubbles: true }
+
+  fun dispatchFileOpen(path, fileName) =
+    this.dispatchEvent(new CustomEvent("file-open", fileOpenOptions(path, fileName)))
+
+  fun attachEventListeners() =
+    let explorer = this
+    if this.querySelector(".create-file-button") is
+      ~null as createFileBtn do createFileBtn.addEventListener("click", () => explorer.startCreatingFile())
+
+  fun attachTooltipHandlers() =
+    let
+      treeView = this.querySelector(".tree-view")
+      tooltip = this.querySelector("file-tooltip.tree-tooltip")
+    if
+      treeView is Absent then ()
+      tooltip is Absent then ()
+      else
+        let explorer = this
+        treeView.addEventListener("mouseover", event => explorer.handleTreeMouseOver(event, treeView, tooltip))
+        treeView.addEventListener("mouseout", event => explorer.handleTreeMouseOut(event, tooltip))
+        treeView.addEventListener("scroll", () => explorer.hideTooltip(tooltip))
+        this.addEventListener("mouseleave", () => explorer.hideTooltip(tooltip))
+
+  fun hideTooltip(tooltip) =
+    if tooltipTimeout is ~Absent as timeout do
+      window.clearTimeout(timeout)
+      set tooltipTimeout = null
+    tooltip.hide()
+    set activeTooltipTarget = null
+
+  fun handleTreeMouseOver(event, treeView, tooltip) =
+    let target = event.target.closest(".file-item, summary")
+    if target is ~Absent as targetElement and treeView.contains(targetElement) do
+      if activeTooltipTarget !== targetElement do
+        hideTooltip(tooltip)
+        set activeTooltipTarget = targetElement
+      let currentTarget = targetElement
+      set tooltipTimeout = window.setTimeout of
+        () => this.showTooltipIfActive(currentTarget, tooltip)
+        5000
+
+  fun tooltipName(target) = if target.dataset.name is
+    Absent | "" then target.textContent.trim()
+    name then name
+
+  fun tooltipOptions(targetPath, targetName) =
+    mut { path: targetPath, name: targetName }
+
+  fun showTooltipIfActive(currentTarget, tooltip) =
+    if currentTarget.dataset.path is ~Absent as targetPath and targetPath !== "" and activeTooltipTarget === currentTarget do
+      tooltip.show(currentTarget, tooltipOptions(targetPath, tooltipName(currentTarget)))
+
+  fun handleTreeMouseOut(event, tooltip) =
+    if activeTooltipTarget is ~Absent as tooltipTarget do
+      let related = event.relatedTarget
+      if related is
+        ~Absent as nextTarget and tooltipTarget.contains(nextTarget) then ()
+        ~Absent as nextTarget and nextTarget.closest(".file-item, summary") === tooltipTarget then ()
+        else hideTooltip(tooltip)
+
+  fun updateOpenFlags() =
+    Array.from(rootNodes.values()).forEach of (treeNode, ...) =>
+      treeNode.updateOpenState(openFiles)
+
+customElements.define("file-explorer", FileExplorer)

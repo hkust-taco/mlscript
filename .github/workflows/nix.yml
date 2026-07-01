@@ -10,6 +10,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
       - name: Install Nix
         uses: DeterminateSystems/nix-installer-action@main
       - uses: rrbutani/use-nix-shell-action@v1
@@ -30,3 +32,37 @@ jobs:
       - name: Fail if tests failed
         if: steps.run_test.outcome == 'failure'
         run: exit 1
+      - name: Check Web IDE deploy changes
+        if: github.event_name == 'push' && github.ref == 'refs/heads/hkmc2'
+        id: web_ide_changes
+        run: |
+          before="${{ github.event.before }}"
+          after="${{ github.sha }}"
+          if [ "$before" = "0000000000000000000000000000000000000000" ]; then
+            changed=true
+          elif git diff --quiet "$before" "$after" -- wrangler.toml hkmc2/shared/src/test/mlscript-packages/web-ide/; then
+            changed=false
+          else
+            diff_status=$?
+            if [ "$diff_status" -eq 1 ]; then
+              changed=true
+            else
+              exit "$diff_status"
+            fi
+          fi
+          echo "changed=${changed}" >> "$GITHUB_OUTPUT"
+      - name: Build Web IDE deploy assets
+        if: github.event_name == 'push' && github.ref == 'refs/heads/hkmc2' && steps.web_ide_changes.outputs.changed == 'true'
+        run: |
+          sbt -J-Xmx4096M -J-Xss8M hkmc2JS/fullOptJS
+          rm -rf hkmc2/shared/src/test/mlscript-packages/web-ide/build
+          mkdir -p hkmc2/shared/src/test/mlscript-packages/web-ide/build
+          cp -R hkmc2/js/target/scala-*/hkmc2-opt/. hkmc2/shared/src/test/mlscript-packages/web-ide/build/
+      - name: Deploy Web IDE to Cloudflare Workers
+        if: github.event_name == 'push' && github.ref == 'refs/heads/hkmc2' && steps.web_ide_changes.outputs.changed == 'true'
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          wranglerVersion: "4.29.0"
+          command: deploy --config wrangler.toml

@@ -4,11 +4,15 @@ import java.nio.file.Files
 
 import org.scalatest.funsuite.AnyFunSuite
 
+import hkmc2.utils.*, shorthands.*
 import io.{FileSystem, PlatformPath}
 import io.PlatformPath.given
 
 class DiffMakerTests extends AnyFunSuite:
   
+  private object NoModuleResolver extends ModuleResolver:
+    def tryResolveModulePath(path: Str): Opt[ModuleResolver.ResolvedModule] =
+      ModuleResolver.tryResolveUrl(path)
   private class StubDiffMaker(
     val cctx: CompilerCtx,
     val file: io.Path,
@@ -25,7 +29,7 @@ class DiffMakerTests extends AnyFunSuite:
     val dir = os.Path(Files.createTempDirectory("diff-maker-tests").toString)
     val testFile = dir / s"Test-${System.nanoTime}.mls"
     os.write.over(testFile, source)
-    val compilerCtx = CompilerCtx.fresh(FileSystem.default)
+    val compilerCtx = CompilerCtx.fresh(FileSystem.default, NoModuleResolver)
     try
       val dm = new StubDiffMaker(compilerCtx, testFile, "Test")
       dm.run()

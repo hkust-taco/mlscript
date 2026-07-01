@@ -22,7 +22,6 @@ object DiffTestRunner:
   
   class State:
     
-    val cctx: CompilerCtx = CompilerCtx.fresh(io.FileSystem.default)
     
     val pwd = os.pwd
     
@@ -37,6 +36,9 @@ object DiffTestRunner:
     
     // To be overridden in subproject-specific State classes
     def testDir: os.Path = dir
+    val nodeModulesPath = workingDir/"node_modules"
+    
+    val cctx: CompilerCtx = CompilerCtx.fresh(io.FileSystem.default, LocalModuleResolver(dir/"mlscript-compile", S(nodeModulesPath)))
     
     val validExt = Set("mls")
     

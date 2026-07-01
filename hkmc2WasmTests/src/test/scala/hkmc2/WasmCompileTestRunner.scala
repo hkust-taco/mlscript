@@ -14,6 +14,11 @@ end WasmCompileTestRunner
 
 object WasmCompileTestRunner:
   
-  given cctx: CompilerCtx = CompilerCtx.fresh(io.FileSystem.default)
+  private val workingDir = os.pwd
+  private val stdPath = TestFolders.compileTestDir(workingDir)
+  private val nodeModulesPath = workingDir / "node_modules"
+  
+  given cctx: CompilerCtx =
+    CompilerCtx.fresh(io.FileSystem.default, LocalModuleResolver(stdPath, S(nodeModulesPath)))
 
 end WasmCompileTestRunner

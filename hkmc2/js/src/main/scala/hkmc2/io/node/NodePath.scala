@@ -46,8 +46,12 @@ private[io] case class NodePath(val pathString: String) extends Path:
 private[io] class NodeRelPath(val pathString: String) extends RelPath:
   override def toString: String = pathString
   
+  private lazy val parsed = path.parse(pathString)
+  
   def segments: Ls[String] =
     pathString.split(path.sep).toList.filter(_.nonEmpty)
   
   def /(other: RelPath): RelPath =
     new NodeRelPath(path.join(pathString, other.toString))
+  
+  def baseName: String = parsed.name

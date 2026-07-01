@@ -165,7 +165,7 @@ type NoSymbol = NoSymbol.type
   * User-facing imports bind variable or member symbols, while compiler-generated imports
   * such as prelude/runtime imports may bind temporary term values directly.
   */
-type ImportSymbol = TempSymbol | VarSymbol | BlockMemberSymbol
+type ImportSymbol = TempSymbol | VarSymbol | MemberSymbol
 
 
 abstract class FlowSymbol(label: Str)(using State) extends Symbol:

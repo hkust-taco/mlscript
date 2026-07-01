@@ -1,0 +1,22 @@
+{
+  "name": "generalized-pratt-parsing",
+  "main": "Parser.mls",
+  "moduleName": "Parser",
+  "vendors": [
+    {
+      "prefix": "std/",
+      "path": "../../mlscript-compile",
+      "files": [
+        "Predef.mls",
+        "Char.mls",
+        "Stack.mls",
+        "StrOps.mls",
+        "Option.mls",
+        "Iter.mls",
+        "MutMap.mls",
+        "TreeTracer.mls",
+        "XML.mls"
+      ]
+    }
+  ]
+}

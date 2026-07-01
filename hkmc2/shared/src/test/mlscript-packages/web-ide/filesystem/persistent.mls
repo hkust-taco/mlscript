@@ -1,0 +1,153 @@
+import "./fs.mls"
+import "./projects.mls"
+import "../common/JS.mls"
+import "../common/Logger.mls"
+
+open JS { Absent }
+
+module persistent with...
+
+fun isFile(node) = if node is
+  Absent then false
+  value and value.'type is "file" then true
+  else false
+
+fun isStandardLibraryNode(node) = if node is
+  Absent then false
+  value and value.attrs.("std") is true then true
+  else false
+
+fun persistedKey(path) =
+  projects.fileKey(projects.currentId(), path)
+
+fun pathsKey() =
+  projects.pathsKey(projects.currentId())
+
+fun getPersistedPaths() =
+  let storedText = localStorage.getItem(pathsKey())
+  if storedText is
+    Absent then new Set()
+    text then new Set(JSON.parse(text))
+
+fun savePersistedPaths(paths) =
+  localStorage.setItem(pathsKey(), JSON.stringify(Array.from(paths)))
+
+fun loadPersistedFile(path) =
+  let storedText = localStorage.getItem(persistedKey(path))
+  if storedText is
+    Absent then null
+    text then JSON.parse(text)
+
+fun fileData(node) =
+  content: node.content
+  readonly: node.readonly
+  atime: node.atime
+  mtime: node.mtime
+  ctime: node.ctime
+  birthtime: node.birthtime
+  attrs: node.attrs
+
+fun saveFile(path, node) =
+  localStorage.setItem(persistedKey(path), JSON.stringify(fileData(node)))
+
+fun rememberFile(paths, path, node) =
+  if isFile(node) do
+    saveFile(path, node)
+    paths.add(path)
+    savePersistedPaths(paths)
+
+fun forgetFile(paths, path, node) =
+  if isFile(node) do
+    localStorage.removeItem(persistedKey(path))
+    paths.delete(path)
+    savePersistedPaths(paths)
+
+fun moveFile(paths, path, newPath, node) =
+  if isFile(node) and newPath is ~Absent as nextPath do
+    localStorage.removeItem(persistedKey(path))
+    saveFile(nextPath, node)
+    paths.delete(path)
+    paths.add(nextPath)
+    savePersistedPaths(paths)
+
+fun updateFile(path, node) =
+  if isFile(node) do
+    saveFile(path, node)
+
+fun restoreTimestamps(node, fileData) =
+  set
+    node.atime = fileData.atime
+    node.mtime = fileData.mtime
+    node.ctime = fileData.ctime
+    node.birthtime = fileData.birthtime
+
+fun restoreFile(path, fileData) =
+  Logger.debug("Persistence", "Restoring file", path)
+  fs.createFile(path, fileData.content,
+    force: true
+    readonly: fileData.readonly
+    attrs: fileData.attrs
+  )
+  if fs.findNode(path) is
+    ~null as node do restoreTimestamps(node, fileData)
+  true
+
+fun loadPersistedFiles() =
+  let
+    counter = 0
+    paths = getPersistedPaths()
+  Logger.info("Persistence", "Loading persisted files from localStorage")
+  paths.forEach of (path, ...) =>
+    if loadPersistedFile(path) is
+      Object as fileData do
+        restoreFile(path, fileData)
+        set counter += 1
+  Logger.info("Persistence", "Loaded persisted files", counter)
+  counter
+
+fun persistChange(event) =
+  if not isStandardLibraryNode(event.node) do
+    let paths = getPersistedPaths()
+    if event.'type is
+      "create" | "write" then rememberFile(paths, event.path, event.node)
+      "delete" then forgetFile(paths, event.path, event.node)
+      "rename" then moveFile(paths, event.path, event.newPath, event.node)
+      "attr" | "readonly" then updateFile(event.path, event.node)
+      else ()
+
+// ─── Per-project snapshot / restore (used by export & import) ───
+
+fun readPathsArray(id) =
+  let raw = localStorage.getItem(projects.pathsKey(id))
+  if raw is
+    Absent then []
+    text then
+      let parsed = JSON.parse(text)
+      if Array.isArray(parsed) then parsed else []
+
+fun savePathsArray(id, paths) =
+  localStorage.setItem(projects.pathsKey(id), JSON.stringify(paths))
+
+fun snapshotEntry(id, path) =
+  let raw = localStorage.getItem(projects.fileKey(id, path))
+  if raw is
+    Absent then null
+    text then
+      let parsed = JSON.parse(text)
+      mut { :path, payload: parsed }
+
+fun snapshotProject(id) =
+  let result = mut []
+  readPathsArray(id).forEach of (path, ...) =>
+    let entry = snapshotEntry(id, path)
+    if entry is ~null do result.push(entry)
+  result
+
+fun writeProjectFile(id, path, payload) =
+  localStorage.setItem(projects.fileKey(id, path), JSON.stringify(payload))
+  let paths = readPathsArray(id)
+  if not paths.includes(path) do
+    paths.push(path)
+    savePathsArray(id, paths)
+
+fs.subscribe(persistChange, undefined)

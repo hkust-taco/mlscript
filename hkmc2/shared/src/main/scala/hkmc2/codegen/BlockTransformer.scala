@@ -21,10 +21,9 @@ class BlockTransformer(subst: SymbolSubst):
   def applyMainBlock(main: Block): Block =
     applyBlock(main)
   
-  def applyImport(imp: ImportSymbol -> Str): ImportSymbol -> Str =
-    val (l, s) = imp
-    val l2 = applyImportSymbol(l)
-    if l2 is l then imp else l2 -> s
+  def applyImport(imp: ImportSpec): ImportSpec =
+    val l2 = applyImportSymbol(imp.local)
+    if l2 is imp.local then imp else imp.copy(local = l2)
   
   def applySubBlock(b: Block): Block = applyBlock(b)
   
@@ -210,7 +209,7 @@ class BlockTransformer(subst: SymbolSubst):
   def applyImportSymbol(sym: ImportSymbol): ImportSymbol = sym match
     case sym: TempSymbol => sym.subst
     case sym: VarSymbol => sym.subst
-    case sym: BlockMemberSymbol => sym.subst
+    case sym: MemberSymbol => sym.subst
   
   def applyAssignLhs(sym: Assignable): Assignable = sym match
     case NoSymbol => NoSymbol

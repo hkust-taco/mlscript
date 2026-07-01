@@ -25,12 +25,7 @@ fun test(x) =
 :sjs
 true and test(42)
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ if (true === true) {
-//│   Predef.print(42);
-//│   if (42 === true) { return true }
-//│   return false;
-//│ }
-//│ return false;
+//│ if (true === true) { Predef.print(42); }
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > 42
 //│ = false
@@ -38,7 +33,7 @@ true and test(42)
 :fixme
 true or test(42)
 //│ ╔══[COMPILATION ERROR] Logical `or` is not yet supported.
-//│ ║  l.39: 	true or test(42)
+//│ ║  l.34: 	true or test(42)
 //│ ╙──      	^^^^^^^^^^^^^^^^
 //│ > 42
 //│ = false

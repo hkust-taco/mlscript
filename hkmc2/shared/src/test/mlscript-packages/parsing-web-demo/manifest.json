@@ -1,0 +1,32 @@
+{
+  "name": "parsing-web-demo",
+  "main": "main.mls",
+  "moduleName": "Main",
+  "vendors": [
+    {
+      "prefix": "std/",
+      "path": "../../mlscript-compile",
+      "files": [
+        "Predef.mls",
+        "MutMap.mls",
+        "StrOps.mls",
+        "Iter.mls",
+        "XML.mls",
+        "Option.mls"
+      ]
+    },
+    {
+      "prefix": "gpp/",
+      "path": "../generalized-pratt-parsing",
+      "files": [
+        "Parser.mls",
+        "Lexer.mls",
+        "TreeHelpers.mls",
+        "Extension.mls",
+        "ParseRuleVisualizer.mls",
+        "Rules.mls"
+      ]
+    },
+    {"prefix": "rd/", "path": "../recursive-descent-parsing", "files": ["RecursiveDescent.mls"]}
+  ]
+}

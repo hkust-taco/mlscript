@@ -11,6 +11,7 @@ import scala.collection.immutable
 import scala.collection.mutable.Map as MutMap
 
 import io.*
+import analysis.*
 import scala.collection.mutable.{ArrayBuffer, Buffer}
 
 @JSExportTopLevel("Compiler")
@@ -23,17 +24,23 @@ class Compiler(paths: MLsCompiler.Paths)(using cctx: CompilerCtx):
     pathDiagnosticsMap.getOrElseUpdate(path.toString, (pathDiagnosticsMap.size, Buffer.empty))._2 += d
   
   private val compiler = MLsCompiler(paths, mkRaise)
-  
+  private val analyzer = Analyzer(paths, mkRaise)
+
+  private def collectDiagnosticFiles(): Ls[FileDiagnostics] =
+    pathDiagnosticsMap.toList.sortBy(_._2._1).map:
+      case (path, (_, diagnostics)) =>
+        FileDiagnostics(path, diagnostics.toList)
+
   private def collectDiagnostics(): js.Array[js.Dynamic] =
-    pathDiagnosticsMap.toArray.sortBy(_._2._1).map:
-      case (path, (_, diagnostics)) => js.Dynamic.literal(
-        path = path,
-        diagnostics = diagnostics.iterator.map: d =>
+    collectDiagnosticFiles().map: file =>
+      js.Dynamic.literal(
+        path = file.path,
+        diagnostics = file.diagnostics.map: d =>
           js.Dynamic.literal(
             kind = d.kind.toString().toLowerCase(),
             source = d.source.toString().toLowerCase(),
             mainMessage = d.theMsg,
-            allMessages = d.allMsgs.iterator.map:
+            allMessages = d.allMsgs.map:
               case (message, loc) =>
                 lazy val ctx = ShowCtx.mk:
                   message.bits.collect:
@@ -54,16 +61,48 @@ class Compiler(paths: MLsCompiler.Paths)(using cctx: CompilerCtx):
           )
         .toJSArray)
     .toJSArray
-  
+
+  private def resetDiagnostics(): Unit =
+    pathDiagnosticsMap = MutMap.empty
+
   @JSExport
   def compile(filePath: Str): js.Array[js.Dynamic] =
     compiler.compileModule(Path(filePath))
     val perFileDiagnostics = collectDiagnostics()
-    pathDiagnosticsMap = MutMap.empty
+    resetDiagnostics()
     perFileDiagnostics
 
+  def analyzeDocument(filePath: Str): AnalysisDocument =
+    val document = analyzer.analyze(Path(filePath))
+    val result = document.copy(diagnostics = collectDiagnosticFiles())
+    resetDiagnostics()
+    result
+
+  @JSExport
+  def analyze(filePath: Str): js.Dynamic =
+    AnalysisJsCodec.document(analyzeDocument(filePath))
+
+/** JS-facing wrapper for browser workers.
+  *
+  * The regular `Compiler` needs a Scala `CompilerCtx`. This wrapper builds it
+  * from the browser's virtual filesystem. Module resolution is delegated to
+  * `WebModuleResolver`, which is currently minimal.
+  */
+@JSExportTopLevel("BrowserCompiler")
+class BrowserCompiler(fs: DummyFileSystem, paths: MLsCompiler.Paths):
+  private given CompilerCtx = CompilerCtx.fresh(fs, WebModuleResolver())
+  private val compiler = new Compiler(paths)
+
+  @JSExport
+  def compile(filePath: Str): js.Array[js.Dynamic] =
+    compiler.compile(filePath)
+
+  @JSExport
+  def analyze(filePath: Str): js.Dynamic =
+    compiler.analyze(filePath)
+
 @JSExportTopLevel("Paths")
-final class Paths(prelude: Str, runtime: Str, runtimeSource: Str, term: Str) extends MLsCompiler.Paths:
+final class Paths(prelude: Str, runtime: Str, runtimeSource: Str, term: Str, std: Str) extends MLsCompiler.Paths:
   val preludeFile = Path(prelude)
   val runtimeFile = Path(runtime)
   val runtimeSourceFile = Path(runtimeSource)

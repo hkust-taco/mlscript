@@ -8,34 +8,44 @@ import scala.scalajs.js.annotation._
 import scala.scalajs.js.Dynamic.global
 
 class CompilerTest extends AnyFunSuite:
+  val projectRoot = node.process.cwd()
+  val compilePath = node.path.join(projectRoot, "hkmc2", "shared", "src", "test", "mlscript-compile")
+  val runtimePath = node.path.join(projectRoot, "hkmc2", "shared", "src", "test", "mlscript-compile", "RuntimeJS.mjs")
+  val preludePath = node.path.join(projectRoot, "hkmc2", "shared", "src", "test", "mlscript", "decls", "Prelude.mls")
+  
   private def loadStandardLibrary(): Map[String, String] =
-    val projectRoot = node.process.cwd()
-    val compilePath = node.path.join(projectRoot, "hkmc2", "shared", "src", "test", "mlscript-compile")
-    val preludePath = node.path.join(projectRoot, "hkmc2", "shared", "src", "test", "mlscript", "decls", "Prelude.mls")
     
-    node.fs.readdirSync(compilePath).filter(_.endsWith(".mls")).toSeq.flatMap: fileName =>
+    // Actually, there's no need to load `.mjs` files. But we did it since we
+    // were importing them to reduce duplicated parsing and elaboration. The
+    // imports can be reverted back to `.mls` files, but we should check that
+    // doing so does not cause any significant slowdown first.
+    node.fs.readdirSync(compilePath).filter:
+      fileName => fileName.endsWith(".mls") || fileName.endsWith(".mjs")
+    .toSeq.flatMap: fileName =>
       val filePath = node.path.join(compilePath, fileName)
       if node.fs.existsSync(filePath) then
         Some(s"/std/$fileName" -> node.fs.readFileSync(filePath, "utf-8"))
       else
         None
-    .toMap + ("/std/Prelude.mls" -> node.fs.readFileSync(preludePath, "utf-8"))
+    .toMap
+      + ("/std/RuntimeJS.mjs" -> node.fs.readFileSync(runtimePath, "utf-8"))
+      + ("/std/Prelude.mls" -> node.fs.readFileSync(preludePath, "utf-8"))
   
-  private val paths = new Paths("/std/Prelude.mls", "/std/Runtime.mjs", "/std/Runtime.mls", "/std/Term.mjs")
+  private val paths = new Paths("/std/Prelude.mls", "/std/Runtime.mjs", "/std/Runtime.mls", "/std/Term.mjs", "/std")
   
   private def createCompiler(): (InMemoryFileSystem, Compiler) =
     val stdLib = loadStandardLibrary()
     val fs = new InMemoryFileSystem(stdLib)
-    given CompilerCtx = CompilerCtx.fresh(fs)
+    given CompilerCtx = CompilerCtx.fresh(fs, WebModuleResolver())
     (fs, new Compiler(paths))
   
   test("compiler can compile a simple program"):
     val (fs, compiler) = createCompiler()
     
     // Write test program to the file system
-    val code = """|import "./std/Option.mls"
-                  |import "./std/Stack.mls"
-                  |import "./std/Predef.mls"
+    val code = """|import "/std/Option.mls"
+                  |import "/std/Stack.mls"
+                  |import "/std/Predef.mls"
                   |
                   |open Stack
                   |open Option
@@ -57,8 +67,11 @@ class CompilerTest extends AnyFunSuite:
     
     val diagnostics = compiler.compile(inputPath)
     
+    global.console.log(fs.allFiles.keys.mkString("\n"))
+    
     val hasErrors = diagnostics.exists: perFile =>
       val fileDiagnostics = perFile.diagnostics.asInstanceOf[scala.scalajs.js.Array[scala.scalajs.js.Dynamic]]
+      global.console.log(fileDiagnostics)
       fileDiagnostics.exists(_.kind is "error")
     assert(!hasErrors, "Compilation should succeed without errors")
     

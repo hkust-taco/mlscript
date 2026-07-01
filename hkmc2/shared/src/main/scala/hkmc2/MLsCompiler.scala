@@ -9,6 +9,7 @@ import utils.*
 import hkmc2.semantics.*
 import hkmc2.syntax.Keyword.`override`
 import semantics.Elaborator.{Ctx, State}
+import hkmc2.io.Path
 
 
 class ParserSetup(file: io.Path, dbgParsing: Bool)(using state: Elaborator.State, raise: Raise, cctx: CompilerCtx):
@@ -61,8 +62,14 @@ class MLsCompiler
   
   
   def compileModule(file: io.Path): Unit =
+    compileModule(file, N)
+  
+  /** Compile a MLscript module into JavaScript with the given output path. */
+  def compileModule(file: io.Path, outputFile: Opt[io.Path]): Unit =
     
     val wd = file.up
+    val out = outputFile.getOrElse(file.up / io.RelPath(file.baseName + ".mjs"))
+    val outputWd = out.up
     
     given Raise = mkRaise(file)
     
@@ -105,10 +112,10 @@ class MLsCompiler
         case _ => t.subTerms.exists(findQuote)
       val hasQuote = findQuote(blk0)
       val blk = new Term.Blk(
-        Import(State.runtimeSymbol, runtimeFile.toString, runtimeFile) ::
+        Import(State.runtimeSymbol, runtimeFile.toString, runtimeFile, ImportKind.Default) ::
           // Only import `Term.mls` when necessary.
           (if hasQuote then
-            Import(State.termSymbol, termFile.toString, termFile) :: blk0.stats
+            Import(State.termSymbol, termFile.toString, termFile, ImportKind.Default) :: blk0.stats
           else
             blk0.stats),
         blk0.res
@@ -134,9 +141,8 @@ class MLsCompiler
       baseScp.addToBindings(Elaborator.State.importSymbol, "import", shadow = false)
       val nestedScp = baseScp.nest
       val je = nestedScp.givenIn:
-        jsb.program(optimized, exportedSymbol, wd)
+        jsb.program(optimized, exportedSymbol, outputWd)
       val jsStr = je.stripBreaks.mkString(100)
-      val out = file.up / io.RelPath(file.baseName + ".mjs")
       cctx.fs.write(out, jsStr)
       }
   

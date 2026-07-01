@@ -1,0 +1,174 @@
+import "../filesystem/fs.mls"
+import "../common/JS.mls"
+import "../common/Logger.mls"
+
+open JS { Absent }
+
+module index with...
+
+fun workerOptions() =
+  mut { 'type: 'module }
+
+val compilerWorker = new Worker("/compiler/worker.mjs", workerOptions())
+
+val callbackMap = new Map()
+
+fun statusDetail(status) =
+  mut { :status }
+
+fun statusEventOptions(status) =
+  mut { detail: statusDetail(status) }
+
+fun dispatchStatus(status) =
+  let event = new CustomEvent("compilation-status-change", statusEventOptions(status))
+  document.dispatchEvent(event)
+
+fun callbackRecord(resolve, reject) =
+  mut { :resolve, :reject }
+
+fun successResult(diagnostics, changes) =
+  mut { result: diagnostics, :changes }
+
+fun compilePayload(id, filePaths, allFiles) =
+  mut { :id, :filePaths, :allFiles }
+
+fun compileMessage(id, filePaths, allFiles) =
+  mut { 'type: 'compile, payload: compilePayload(id, filePaths, allFiles) }
+
+fun diagnosticsFrom(result) = if
+  result is Absent then result
+  result.diagnostics is
+    Absent then result
+    diagnostics then diagnostics
+
+fun compiledFilesFrom(result) = if
+  result is Absent then []
+  result.compiledFiles is
+    Absent then []
+    compiledFiles then compiledFiles
+
+fun messageOrFallback(value, fallback) = if
+  value is Absent then fallback
+  value is null then fallback
+  else String(value)
+
+fun errorEventMessage(event) =
+  messageOrFallback(event.message, "Compiler worker error")
+
+fun errorEventStack(event) = if
+  event.error is Absent then ""
+  event.error is null then ""
+  event.error.stack is Absent then String(event.error)
+  else String(event.error.stack)
+
+fun errorName(error) =
+  messageOrFallback(error.name, "CompilerError")
+
+fun errorMessage(error) =
+  messageOrFallback(error.message, String(error))
+
+fun errorStack(error) =
+  messageOrFallback(error.stack, "")
+
+fun objectOrEmpty(value) = if
+  value is Absent then mut {}
+  value is null then mut {}
+  else value
+
+fun applyChanges(changes) =
+  Object.entries(objectOrEmpty(changes)).forEach of (entry, ...) =>
+    fs.write(entry.at(0), entry.at(1))
+
+fun resolveCallback(id, diagnostics, changes) = if callbackMap.get(id) is
+  Absent then Logger.error("Compiler", "No callback found for id", id)
+  callbacks then
+    callbacks.resolve(successResult(diagnostics, changes))
+    callbackMap.delete(id)
+
+fun rejectCallback(id, name, message, stack) = if callbackMap.get(id) is
+  Absent then Logger.error("Compiler", "No callback found for id", id)
+  callbacks then
+    callbacks.reject(mut
+      name: name
+      message: message
+      stack: stack
+    )
+    callbackMap.delete(id)
+
+fun rejectAllCallbacks(name, message, stack) =
+  Array.from(callbackMap.keys()).forEach of (id, ...) =>
+    rejectCallback(id, name, message, stack)
+
+fun handleProtocolError(detail, message) =
+  Logger.error("Compiler Worker", detail, message)
+  rejectAllCallbacks("CompilerWorkerProtocolError", detail, "")
+
+fun handleCompileSuccessWithId(id, message) =
+  js.try_catch(
+    () =>
+      let
+        result = message.result
+        changes = objectOrEmpty(message.changes)
+        diagnostics = diagnosticsFrom(result)
+      Logger.info("Compiler", "Compilation finished", diagnostics)
+      applyChanges(changes)
+      resolveCallback(id, diagnostics, changes)
+    error => rejectCallback(id, errorName(error), errorMessage(error), errorStack(error))
+  )
+
+fun handleCompileSuccess(message) = if message.id is
+  Absent then handleProtocolError("Compiler worker success message missing callback id", message)
+  id then handleCompileSuccessWithId(id, message)
+
+fun handleCompileErrorWithId(id, message) =
+  let
+    name = messageOrFallback(message.name, "CompilerError")
+    detail = messageOrFallback(message.message, "Compiler failed without an error message")
+    stack = messageOrFallback(message.stack, "")
+  Logger.error("Compiler", name + ": " + detail, stack)
+  rejectCallback(id, name, detail, stack)
+
+fun handleCompileError(message) = if message.id is
+  Absent then handleProtocolError("Compiler worker error message missing callback id", message)
+  id then handleCompileErrorWithId(id, message)
+
+fun handleWorkerMessage(event) =
+  let message = event.data
+  Logger.debug("Compiler Worker", "Message received", message)
+  if message.'type is
+    "compile-success" then handleCompileSuccess(message)
+    "compile-error" then handleCompileError(message)
+    else
+      let detail = if message.error is
+        Absent then "Unknown compiler worker message type: " + String(message.'type)
+        error then String(error)
+      handleProtocolError(detail, message)
+
+fun handleWorkerError(error) =
+  Logger.error("Compiler Worker", "Worker error", error)
+  rejectAllCallbacks("CompilerWorkerError", errorEventMessage(error), errorEventStack(error))
+
+fun handleWorkerMessageError(event) =
+  Logger.error("Compiler Worker", "Worker message error", event)
+  rejectAllCallbacks("CompilerWorkerMessageError", "Failed to deserialize message from compiler worker", "")
+
+compilerWorker.addEventListener("message", handleWorkerMessage)
+compilerWorker.addEventListener("error", handleWorkerError)
+compilerWorker.addEventListener("messageerror", handleWorkerMessageError)
+
+fun makeUniqueID() =
+  let nonce = Math.floor(Math.random() * 65535).toString(16).padStart(4, "0")
+  new Date().toISOString() + "_" + nonce
+
+fun compile(filePaths, allFiles) =
+  Reflect.construct of Promise, [(resolve, reject) =>
+    dispatchStatus("running")
+    let id = makeUniqueID()
+    callbackMap.set(id, callbackRecord(resolve, reject))
+    js.try_catch(
+      () => compilerWorker.postMessage(compileMessage(id, filePaths, allFiles))
+      error =>
+        callbackMap.delete(id)
+        reject(error)
+    )
+  ]

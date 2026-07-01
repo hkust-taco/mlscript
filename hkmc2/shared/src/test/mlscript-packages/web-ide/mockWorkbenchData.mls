@@ -1,0 +1,51 @@
+module mockWorkbenchData with...
+
+val sourceChanges = [
+  mut { path: "/main.mls", status: "modified", summary: "Edited welcome program" }
+  mut { path: "/std/Predef.mls", status: "modified", summary: "Experiment with print helpers" }
+  mut { path: "/std/Option.mls", status: "modified", summary: "Refine option formatting" }
+  mut { path: "/examples/pipeline.mls", status: "added", summary: "Add pipeline example draft" }
+  mut { path: "/notes/compiler-log.md", status: "deleted", summary: "Remove obsolete notes" }
+  mut { path: "/std/Rendering.mls", status: "modified", summary: "Adjust renderer experiment" }
+  mut { path: "/std/Runtime.mls", status: "modified", summary: "Try alternate runtime hook" }
+  mut { path: "/std/XML.mls", status: "modified", summary: "Update XML attribute sketch" }
+  mut { path: "/examples/records.mls", status: "added", summary: "Draft record example" }
+  mut { path: "/examples/channel.mls", status: "added", summary: "Draft CSP channel example" }
+  mut { path: "/notes/old-outline.md", status: "deleted", summary: "Remove old outline note" }
+]
+
+val outlineItems = [
+  mut { name: "imports", kind: "section", line: 1, detail: "Imports and module setup" }
+  mut { name: "Predef", kind: "namespace", line: 3, detail: "Opened standard namespace" }
+  mut { name: "welcome banner", kind: "expression", line: 5, detail: "First console print" }
+  mut { name: "separator", kind: "expression", line: 6, detail: "Console divider" }
+  mut { name: "compile hint", kind: "expression", line: 8, detail: "Compile shortcut message" }
+  mut { name: "execute hint", kind: "expression", line: 9, detail: "Execute shortcut message" }
+  mut { name: "runtime import", kind: "import", line: 12, detail: "Mock generated import" }
+  mut { name: "print helper", kind: "function", line: 18, detail: "Mock helper symbol" }
+  mut { name: "diagnostic hook", kind: "function", line: 24, detail: "Mock compiler hook" }
+  mut { name: "execute hook", kind: "function", line: 31, detail: "Mock runner hook" }
+  mut { name: "status update", kind: "event", line: 39, detail: "Mock status event" }
+  mut { name: "console append", kind: "event", line: 46, detail: "Mock console event" }
+  mut { name: "final expression", kind: "expression", line: 52, detail: "Mock final expression" }
+  mut { name: "module footer", kind: "section", line: 60, detail: "Mock module footer" }
+]
+
+val examples = [
+  mut { id: "hello", title: "Hello IDE", file: "hello.mls", description: "Small executable program that prints several lines to the output panel.", preview: "print of \"Hello from MLscript\"" }
+  mut { id: "adt", title: "Algebraic Data", file: "option-demo.mls", description: "Defines a compact option-like shape and pattern matches on values.", preview: "case value of Some(x) then x else 0" }
+  mut { id: "iterator", title: "Iterator Pipeline", file: "iter-pipeline.mls", description: "Sketches a pipeline over iterable values with map and filter steps.", preview: "items |> Iter.map(fn) |> Iter.toArray" }
+  mut { id: "rendering", title: "Rendering Tree", file: "rendering-tree.mls", description: "Builds a nested rendering term and sends it through the renderer.", preview: "Rendering.render(document)" }
+  mut { id: "records", title: "Records", file: "records.mls", description: "Shows object-like records and simple field updates.", preview: "user.with(name = \"Ada\")" }
+  mut { id: "xml", title: "XML Builder", file: "xml-builder.mls", description: "Creates a compact XML tree and renders it as text.", preview: "XML.node(\"main\", [], children)" }
+  mut { id: "channels", title: "Channels", file: "channels.mls", description: "Mocks a concurrent process example using CSP-style names.", preview: "spawn producer(channel)" }
+  mut { id: "shapes", title: "Shapes", file: "shapes.mls", description: "Explores shape metadata and field labels.", preview: "Shape.of(record)" }
+]
+
+val terminalLines = [
+  "MLscript Web IDE mock terminal"
+  "$ pwd"
+  "/workspace"
+  "$ mlscript --version"
+  "mlscript-dev"
+]

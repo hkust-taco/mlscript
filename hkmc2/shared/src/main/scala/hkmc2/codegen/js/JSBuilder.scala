@@ -843,16 +843,30 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
     reserveNames(p)
     // Allocate names for imported modules.
     p.imports.foreach: i =>
-      i._1 -> scope.allocateName(i._1)
+      i.local -> scope.allocateName(i.local)
     // Generate import statements.
     val imps = p.imports.map: i =>
-      val path = i._2
+      val path = i.specifier
       val relPath = if path.startsWith("/")
         then "./" + io.Path(path).relativeTo(wd).map(_.toString).getOrElse(path)
         else path
-      doc"""import ${scope.lookup_!(i._1, N)} from "${relPath}";"""
+      i.kind match
+      case ImportKind.Default =>
+        doc"""import ${scope.lookup_!(i.local, N)} from "${relPath}";"""
+      case ImportKind.Namespace =>
+        doc"""import * as ${scope.lookup_!(i.local, N)} from "${relPath}";"""
+      case ImportKind.Named(importedName) =>
+        doc"""import { ${importedName} as ${scope.lookup_!(i.local, N)} } from "${relPath}";"""
+    // A module's top-level Block cannot use a JS `return` statement.
+    // Lowering's `program` tail-op (ImplctRet) wraps the final expression in
+    // `Return`, which is correct for the worksheet path (the diff-test maps
+    // Return into an assignment so the result can be displayed) but illegal
+    // when we emit a module. Convert any top-level Return here to a plain
+    // statement before handing the block to `block`.
+    val main = p.main.mapReturn:
+      case Return(res) => Assign(State.noSymbol, res, End())
     withPrivateAccessorDecls(imps.mkDocument(doc" # "))
-    :/: nonNestedScoped(p.main)(block(_, endSemi = false)).stripBreaks
+    :/: nonNestedScoped(main)(block(_, endSemi = false)).stripBreaks
     :: locally:
       exprt match
       case S(sym) =>
@@ -863,17 +877,22 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
     collectExternalPrivateAccessors(p)
     reserveNames(p)
     lazy val imps = p.imports.map: i =>
-      doc"""${scope.lookup_!(i._1, N)} = await import("${i._2.toString}").then(m => m.default ?? m);"""
+      val importPrefix = doc"""${scope.lookup_!(i.local, N)} = await import("${i.specifier}")"""
+      i.kind match
+      case ImportKind.Default => importPrefix :: doc".then(m => m.default ?? m);"
+      case ImportKind.Namespace => importPrefix :: doc";"
+      case ImportKind.Named(importedName) =>
+        importPrefix :: doc".then(m => m[${makeStringLiteral(importedName)}]);"
     p.main match
     case Scoped(syms, body) =>
       val fvs = body.freeVars
-      blockPreamble(p.imports.map(_._1) ++ syms.view.filter(s =>
+      blockPreamble(p.imports.map(_.local) ++ syms.view.filter(s =>
           !s.isInstanceOf[TempSymbol]
           // ^ VarSymbols and TermSymbols should be kept as their value will be acessed and printed by the worksheet
           || fvs(s))) ->
         (withPrivateAccessorDecls(imps.mkDocument(doc" # ")) :/: block(body, endSemi = false).stripBreaks)
     case body =>
-      blockPreamble(p.imports.map(_._1)) ->
+      blockPreamble(p.imports.map(_.local)) ->
         (withPrivateAccessorDecls(imps.mkDocument(doc" # ")) :/: returningTerm(body, endSemi = false).stripBreaks)
   
   def genLetDecls(vars: Iterator[(Symbol, Str)]): Document =

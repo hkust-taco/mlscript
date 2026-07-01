@@ -1,0 +1,235 @@
+import "../filesystem/fs.mls"
+import "../common/JS.mls"
+import "../common/Logger.mls"
+
+open JS { Absent }
+
+module runner with...
+
+let latestExecution = null
+
+fun workerOptions() =
+  mut { 'type: 'module }
+
+fun statusDetail(status, runningTime) =
+  mut { :status, :runningTime }
+
+fun customEventOptions(status, runningTime) =
+  mut { detail: statusDetail(status, runningTime), bubbles: true }
+
+fun dispatchStatusChange(status, runningTime) =
+  let event = new CustomEvent("execution-status-change", customEventOptions(status, runningTime))
+  window.dispatchEvent(event)
+
+fun consolePanel() =
+  document.querySelector("bottom-panel")
+
+fun diagnosticsInspector() =
+  document.querySelector("diagnostics-inspector")
+
+fun clearConsolePanel() =
+  if consolePanel() is
+    ~null as panel do panel.clear()
+
+fun runMessage(id, mainPath, files) =
+  mut { 'type: 'run, :id, :mainPath, :files }
+
+fun workerErrorDetails(event) =
+  mut
+    message: event.message
+    filename: event.filename
+    lineno: event.lineno
+    colno: event.colno
+    error: event.error
+    fullEvent: event
+
+fun errorStack(error) = if
+  error is Absent then null
+  error.stack is Absent then null
+  else error.stack
+
+fun appendWorkerLocation(panel, event) =
+  if event.filename is ~Absent as filename do
+    panel.log("error", "  at " + filename + ":" + event.lineno + ":" + event.colno)
+
+fun appendWorkerStack(panel, event) =
+  if errorStack(event.error) is
+    ~null as stack do panel.log("error", stack)
+
+fun workerErrorMessage(event) =
+  let message = "Worker Error:\n"
+  if event.message is ~Absent as messageText do set message += "Message: " + messageText + "\n"
+  if event.filename is ~Absent as filename do set message += "File: " + filename + "\n"
+  if event.lineno is ~Absent as lineno do set message += "Line: " + lineno + ":" + event.colno + "\n"
+  if errorStack(event.error) is
+    ~null as stack do set message += "\nStack:\n" + stack
+  if event.error is ~Absent as error and errorStack(error) is Absent do
+    set message += "\nStack:\n" + error
+  message
+
+fun payloadName(payload) = if payload.name is
+  Absent then "Error"
+  name then String(name)
+
+fun payloadMessage(payload) = if payload.message is
+  Absent then String(payload)
+  message then String(message)
+
+fun payloadStack(payload) = if payload.stack is
+  Absent then ""
+  stack then String(stack)
+
+fun executionErrorSummary(sourcePath, mainPath, payload) =
+  "Execution error in " + sourcePath + " while running " + mainPath + ": " + payloadMessage(payload)
+
+fun executionErrorDetail(sourcePath, mainPath, payload) =
+  let detail = payloadName(payload) + ": " + payloadMessage(payload) + "\n\nCulprit: " + sourcePath + "\nExecuted module: " + mainPath
+  if payloadStack(payload) is
+    "" then detail
+    stack then detail + "\n\nStack:\n" + stack
+
+fun executionDiagnostic(sourcePath, mainPath, payload) =
+  let detail = executionErrorDetail(sourcePath, mainPath, payload)
+  mut
+    kind: "error"
+    source: "execution"
+    mainMessage: executionErrorSummary(sourcePath, mainPath, payload)
+    excerpt: detail
+    line: 1
+    allMessages: [
+      mut
+        messageBits: [mut { text: detail }]
+        location: mut { start: 0, end: 0 }
+    ]
+
+fun setExecutionDiagnostics(sourcePath, mainPath, payload) =
+  if diagnosticsInspector() is
+    ~null as panel do panel.setDiagnostics([
+      mut
+        path: sourcePath
+        diagnostics: [executionDiagnostic(sourcePath, mainPath, payload)]
+    ])
+
+fun logExecutionErrorToOutput(sourcePath, mainPath, payload) =
+  if consolePanel() is
+    ~null as panel do panel.log("error", executionErrorSummary(sourcePath, mainPath, payload))
+
+fun handleExecutionError(execution, sourcePath, mainPath, payload) =
+  let summary = executionErrorSummary(sourcePath, mainPath, payload)
+  Logger.error("Execution Worker", summary, payload)
+  set execution.isRunning = false
+  setExecutionDiagnostics(sourcePath, mainPath, payload)
+  logExecutionErrorToOutput(sourcePath, mainPath, payload)
+  dispatchStatusChange("error", null)
+
+fun makeExecution(id) =
+  mut
+    :id
+    worker: new Worker("execution/worker.mjs", workerOptions())
+    isRunning: false
+    startTime: null
+
+fun run(execution, id, mainPath) =
+  let files = fs.getAllFiles(undefined)
+  Logger.debug("Execution", "Files sent to worker", Object.keys(files))
+  execution.worker.postMessage(runMessage(id, mainPath, files))
+
+fun isOutdated(id) = if latestExecution is
+  null then true
+  execution and execution.id !== id then true
+  else false
+
+fun handleVmConsole(kind, logMethod, payload) =
+  if consolePanel() is
+    ~null as panel do panel.log(kind, ...payload)
+
+fun handleWorkerMessage(execution, id, sourcePath, mainPath, event) =
+  if isOutdated(id) then
+    Logger.warn("Execution", "Received message from outdated worker, terminating it")
+    execution.worker.terminate()
+  else
+    let
+      messageData = event.data
+      kind = messageData.'type
+      payload = messageData.payload
+    if kind is
+      "ready" then
+        Logger.info("Execution", "Worker ready to run")
+        set
+          execution.isRunning = true
+          execution.startTime = Date.now()
+        dispatchStatusChange("running", null)
+        run(execution, id, mainPath)
+      "internal-log" then Logger.emit(payload.level, payload.source, payload.message, payload.body)
+      "log" then Logger.debug("Execution Worker", String(payload))
+      "runtime-error" then handleExecutionError(execution, sourcePath, mainPath, payload)
+      "error" then
+        handleExecutionError(execution, sourcePath, mainPath, payload)
+      "done" then
+        Logger.info("Execution", "Execution finished", payload)
+        set execution.isRunning = false
+        let runningTime = if
+          execution.startTime is Absent then null
+          else Date.now() - execution.startTime
+        dispatchStatusChange("done", runningTime)
+      "console.log" then handleVmConsole("log", "log", payload)
+      "console.error" then handleVmConsole("error", "error", payload)
+      "console.warn" then handleVmConsole("warn", "warn", payload)
+      else ()
+
+fun handleWorkerError(execution, event) =
+  Logger.error("Execution Worker", "Worker error event", workerErrorDetails(event))
+  set execution.isRunning = false
+  dispatchStatusChange("fatal", null)
+  if consolePanel() is
+    ~null as panel do
+      let message = if
+        event.message is Absent then "Unknown error"
+        else event.message
+      panel.log("error", "Worker Error: " + message)
+      appendWorkerLocation(panel, event)
+      appendWorkerStack(panel, event)
+  if diagnosticsInspector() is
+    ~null as panel do panel.setOutput(workerErrorMessage(event))
+
+fun handleMessageError(execution, event) =
+  Logger.error("Execution Worker", "Worker message error", event)
+  set execution.isRunning = false
+  dispatchStatusChange("fatal", null)
+  if consolePanel() is
+    ~null as panel do panel.log("error", "Worker Message Error: Failed to deserialize message from worker")
+  if diagnosticsInspector() is
+    ~null as panel do panel.setOutput("Worker Message Error: Failed to deserialize message from worker")
+
+fun cleanupPreviousExecution() = if latestExecution is
+  null then true
+  execution and
+    execution.isRunning then
+      Logger.warn("Execution", "The previous execution is still running. Stop it before starting a new one")
+      false
+    else
+      Logger.debug("Execution", "Clean up the previous execution")
+      execution.worker.terminate()
+      set latestExecution = null
+      true
+
+fun execute(mainPath, sourcePath) = if cleanupPreviousExecution() do
+  clearConsolePanel()
+  Logger.info("Execution", "Starting new execution", mainPath)
+  let
+    id = Date.now().toString()
+    execution = makeExecution(id)
+  set latestExecution = execution
+  set execution.worker.onmessage = event => handleWorkerMessage(execution, id, sourcePath, mainPath, event)
+  set execution.worker.onerror = event => handleWorkerError(execution, event)
+  execution.worker.addEventListener("messageerror", event => handleMessageError(execution, event))
+
+fun terminate() = if latestExecution is
+  ~null as execution and execution.isRunning do
+    Logger.warn("Execution", "Terminating worker")
+    execution.worker.terminate()
+    set execution.isRunning = false
+    dispatchStatusChange("aborted", null)
+    if consolePanel() is
+      ~null as panel do panel.log("warn", "Execution terminated by user")
+    set latestExecution = null
