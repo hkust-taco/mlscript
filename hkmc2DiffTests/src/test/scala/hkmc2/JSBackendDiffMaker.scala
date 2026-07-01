@@ -128,7 +128,7 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
         val customPipeline = new CompilationPipeline:
           override def passHook(passName: Str, before: Program, after: Program) =
             // TODO: fix these passes
-            val excludedPassNames = Set("Lifter", "Lifter after FirstClassFunctionTransformer")
+            val excludedPassNames = Set.single("Lifter")
             if !excludedPassNames.contains(passName) && (before isnt after) && (before === after) then
               output(s"/!\\ Warning: object identity between equal objects was not preserved by ${passName}")
               def rec(lhs: Product, rhs: Product): Bool =

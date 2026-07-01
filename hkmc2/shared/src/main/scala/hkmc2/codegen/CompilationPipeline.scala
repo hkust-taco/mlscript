@@ -63,7 +63,7 @@ class CompilationPipeline(using Config, Raise, State, Ctx, SymbolPrinter):
       result = blockPass(result, FirstClassFunctionTransformer().transform(_))
       hook("FirstClassFunctionTransformer")
       result = blockPass(result, Lifter(_).transform)
-      hook("Lifter after FirstClassFunctionTransformer")
+      hook("Lifter")
     
     result = ClassParamFlattener(result)
     hook("ClassParamFlattener")
