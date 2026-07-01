@@ -34,6 +34,7 @@ class ClassParamFlattener(using State) extends BlockTransformer(SymbolSubst.Id):
   
   /** Normalize class params so that `paramsOpt = N` and `auxParams` has exactly one element. */
   private def flattenClsParams(cls: ClsLikeDefn): ClsLikeDefn =
+    if cls.paramsOpt.isEmpty && cls.auxParams.sizeIs == 1 then return cls
     val paramss = cls.paramsOpt.toList ::: cls.auxParams
     val flatAux = paramss match
       case Nil => PlainParamList(Nil)
