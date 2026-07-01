@@ -1,5 +1,5 @@
 import "https://esm.sh/codemirror@6.0.1" { EditorView, basicSetup }
-import "https://esm.sh/@codemirror/view@^6.0.0?target=es2022" { keymap, Decoration, ViewPlugin }
+import "https://esm.sh/@codemirror/view@^6.0.0?target=es2022" { keymap, Decoration, ViewPlugin, highlightWhitespace }
 import "https://esm.sh/@codemirror/state@^6.0.0?target=es2022" { EditorState }
 import "https://esm.sh/@codemirror/commands@^6.0.0?target=es2022" { indentWithTab }
 import "https://esm.sh/@codemirror/lang-javascript@6.2.4" { javascript }
@@ -7,11 +7,14 @@ import "https://esm.sh/@codemirror/language@6.11.3" { StreamLanguage, defaultHig
 import "https://esm.sh/@uiw/codemirror-theme-vscode" { vscodeLight as theme }
 import "./Highlight.mls"
 import "../filesystem/fs.mls"
-import "../components/PanelPersistence.mls"
+import "../common/SettingsStore.mls"
+import "../common/JS.mls"
+
+open JS { Absent }
 
 module editor with...
 
-let editorFontSizeStorageKey = "editor-font-size"
+let editorFontSizeStorageKey = "editor.fontSize"
 let defaultEditorFontSize = 14
 let minEditorFontSize = 10
 let maxEditorFontSize = 24
@@ -31,8 +34,12 @@ fun applyEditorFontSize(size) =
   document.documentElement.style.setProperty("--editor-font-size", clamped + "px")
   clamped
 
+fun editorFontSizeFromSetting(value) =
+  let parsed = parseInt(value, 10)
+  if isNaN(parsed) then defaultEditorFontSize else parsed
+
 fun restoreEditorFontSize() =
-  applyEditorFontSize(PanelPersistence.restoreNumber(editorFontSizeStorageKey, defaultEditorFontSize, minEditorFontSize, maxEditorFontSize))
+  applyEditorFontSize(editorFontSizeFromSetting(SettingsStore.getSetting(editorFontSizeStorageKey, "" + defaultEditorFontSize)))
 
 fun currentEditorFontSize() =
   let
@@ -42,8 +49,11 @@ fun currentEditorFontSize() =
 
 fun bumpEditorFontSize(delta) =
   let nextSize = applyEditorFontSize(currentEditorFontSize() + delta)
-  PanelPersistence.saveNumber(editorFontSizeStorageKey, nextSize)
+  SettingsStore.setSetting(editorFontSizeStorageKey, "" + nextSize)
   nextSize
+
+fun settingEnabled(key, fallback) =
+  SettingsStore.getSetting(key, if fallback then "true" else "false") === "true"
 
 fun indentationColumns(text) =
   let
@@ -195,13 +205,21 @@ fun cursorPositionOnChange(filePath) =
     if update.selectionSet then dispatchCursorPosition(update.state, filePath)
     else if update.docChanged do dispatchCursorPosition(update.state, filePath)
 
+fun handleSettingChanged(detail) =
+  if detail is ~Absent as setting do
+    if setting.key === editorFontSizeStorageKey do applyEditorFontSize(editorFontSizeFromSetting(setting.value))
+
+document.addEventListener("setting-changed", event => handleSettingChanged(event.detail))
+
 fun editorExtensions(filePath, extension, isReadonly) =
   restoreEditorFontSize()
   let extensions = mut [basicSetup]
   extensions.push(keymap.of([indentWithTab]))
   extensions.push(indentUnit.of("  "))
   extensions.push(EditorState.tabSize.of(2))
-  extensions.push(mlscriptIndentGuides())
+  if settingEnabled("editor.indentGuides", true) do extensions.push(mlscriptIndentGuides())
+  if settingEnabled("editor.showWhitespace", false) do extensions.push(highlightWhitespace())
+  if settingEnabled("editor.wordWrap", false) do extensions.push(EditorView.lineWrapping)
   extensions.push(syntaxHighlighting(defaultHighlightStyle))
   languageExtensions(extension).forEach of (extension, ...) =>
     extensions.push(extension)

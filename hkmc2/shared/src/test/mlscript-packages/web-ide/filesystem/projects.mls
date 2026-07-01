@@ -1,5 +1,6 @@
 import "../common/JS.mls"
 import "../common/Logger.mls"
+import "../common/SettingsStore.mls"
 
 open JS { Absent }
 
@@ -148,14 +149,19 @@ fun fallbackToFirstProject() =
   if state.registry.length > 0 do
     setCurrentTo(state.registry.at(0).id)
 
+fun shouldReopenLastProject() =
+  SettingsStore.getSetting("workbench.reopenLastProject", "true") !== "false"
+
 fun selectInitialCurrent() =
-  let stored = readText(CURRENT_KEY)
-  if stored is
-    Absent then fallbackToFirstProject()
-    id then
-      let known = state.registry.some of (p, ...) => p.id === id
-      if known then setCurrentTo(id)
-      else fallbackToFirstProject()
+  if not shouldReopenLastProject() then fallbackToFirstProject()
+  else
+    let stored = readText(CURRENT_KEY)
+    if stored is
+      Absent then fallbackToFirstProject()
+      id then
+        let known = state.registry.some of (p, ...) => p.id === id
+        if known then setCurrentTo(id)
+        else fallbackToFirstProject()
 
 fun markSchema() =
   writeText(SCHEMA_KEY, SCHEMA_VERSION)

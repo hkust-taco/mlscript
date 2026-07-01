@@ -1,4 +1,5 @@
 import "../common/JS.mls"
+import "../common/SettingsStore.mls"
 import "./ResizeHandle.mls"
 
 open JS { Absent }
@@ -11,6 +12,7 @@ class IdeWorkbench extends HTMLElement with
     viewportResizeListener = null
 
   fun connectedCallback() =
+    this.restoreStartupSettings()
     this.render()
     this.attachEventListeners()
     this.syncLayoutState()
@@ -20,6 +22,9 @@ class IdeWorkbench extends HTMLElement with
   fun disconnectedCallback() =
     if viewportResizeListener is ~Absent as listener do
       window.removeEventListener("resize", listener)
+
+  fun restoreStartupSettings() =
+    set problemsOpen = SettingsStore.getSetting("workbench.showProblemsOnStartup", "true") !== "false"
 
   fun render() =
     set this.innerHTML = """

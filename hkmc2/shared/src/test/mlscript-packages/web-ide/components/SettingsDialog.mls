@@ -34,22 +34,22 @@ class SettingsDialog extends HTMLElement with
   fun tabPanelHtml(tabInfo) =
     let activeClass = if tabInfo.id === activeTab then " active" else ""
     """
-      <div class="settings-tab-content""" + activeClass + """" data-settings-tab-panel="""" + tabInfo.id + """"></div>
+      <div class="settings-tab-content""" + activeClass + """" data-settings-tab-panel="""" + tabInfo.id + """">""" + tabPanelContent(tabInfo.id) + """</div>
     """
 
-  fun toggleRowHtml(label, key) =
+  fun toggleRowHtml(label, key, defaultValue) =
     """
       <label class="settings-row">
         <span class="settings-row-label">""" + label + """</span>
-        <input type="checkbox" class="settings-toggle" data-setting-key="""" + key + """" data-setting-default="false"/>
+        <input type="checkbox" class="settings-toggle" data-setting-key="""" + key + """" data-setting-default="""" + defaultValue + """"/>
       </label>
     """
 
-  fun selectRowHtml(label, key, optionsHtml) =
+  fun selectRowHtml(label, key, defaultValue, optionsHtml) =
     """
       <label class="settings-row">
         <span class="settings-row-label">""" + label + """</span>
-        <select class="settings-select" data-setting-key="""" + key + """">
+        <select class="settings-select" data-setting-key="""" + key + """" data-setting-default="""" + defaultValue + """">
           """ + optionsHtml + """
         </select>
       </label>
@@ -62,6 +62,37 @@ class SettingsDialog extends HTMLElement with
         <button class="settings-action-button" type="button" data-setting-action="""" + action + """">""" + text + """</button>
       </div>
     """
+
+  fun optionHtml(value, label) =
+    """<option value="""" + value + """">""" + label + """</option>"""
+
+  fun fontSizeOptionsHtml() =
+    [
+      optionHtml("10", "10px")
+      optionHtml("12", "12px")
+      optionHtml("14", "14px")
+      optionHtml("16", "16px")
+      optionHtml("18", "18px")
+      optionHtml("20", "20px")
+      optionHtml("22", "22px")
+      optionHtml("24", "24px")
+    ].join("")
+
+  fun editorRowsHtml() =
+    selectRowHtml("Font size", "editor.fontSize", "14", fontSizeOptionsHtml()) +
+    toggleRowHtml("Word wrap", "editor.wordWrap", "false") +
+    toggleRowHtml("Indentation guides", "editor.indentGuides", "true") +
+    toggleRowHtml("Show whitespace", "editor.showWhitespace", "false")
+
+  fun workbenchRowsHtml() =
+    buttonRowHtml("Layout", "reset-layout", "Reset Layout to Default") +
+    toggleRowHtml("Show Problems panel on startup", "workbench.showProblemsOnStartup", "true") +
+    toggleRowHtml("Reopen last project on launch", "workbench.reopenLastProject", "true")
+
+  fun tabPanelContent(id) = if id is
+    "editor" then editorRowsHtml()
+    "workbench" then workbenchRowsHtml()
+    else ""
 
   fun staticRowHtml(label, value) =
     """
@@ -128,10 +159,31 @@ class SettingsDialog extends HTMLElement with
 
   fun persistSettingElement(element) =
     if element.dataset.settingKey is ~Absent as key do
+      let value = if element.classList.contains("settings-toggle") then
+        if element.checked then "true" else "false"
+      else element.value
       if element.classList.contains("settings-toggle") then
-        SettingsStore.setSetting(key, if element.checked then "true" else "false")
+        SettingsStore.setSetting(key, value)
       else if element.classList.contains("settings-select") do
-        SettingsStore.setSetting(key, element.value)
+        SettingsStore.setSetting(key, value)
+      document.dispatchEvent(new CustomEvent("setting-changed", mut { detail: mut { :key, :value } }))
+
+  fun resetLayoutToDefault() =
+    [
+      "file-explorer-width"
+      "diagnostics-inspector-width"
+      "bottom-panel-height"
+      "bottom-panel-active-tab"
+      "diagnostics-inspector-mode"
+      "logs-level-filter"
+      "logs-source-filter"
+    ].forEach of (key, ...) => localStorage.removeItem(key)
+    window.location.reload()
+
+  fun handleSettingAction(action) =
+    if action is
+      "reset-layout" then resetLayoutToDefault()
+      else ()
 
   fun handleSettingsChange(event) =
     if event.target is ~Absent as target do
@@ -145,5 +197,7 @@ class SettingsDialog extends HTMLElement with
     this.addEventListener("change", event => panel.handleSettingsChange(event))
     this.querySelectorAll("[data-settings-tab]").forEach of (button, ...) =>
       button.addEventListener("click", () => panel.switchTab(button.dataset.settingsTab))
+    this.querySelectorAll("[data-setting-action]").forEach of (button, ...) =>
+      button.addEventListener("click", () => panel.handleSettingAction(button.dataset.settingAction))
 
 customElements.define("settings-dialog", SettingsDialog)
