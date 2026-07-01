@@ -80,6 +80,17 @@ when adding, completing, hiding, or intentionally deferring UI behavior.
   reopening the last project, default Problems scope, default Logs level,
   auto-compile on save, auto-run after compile, layout reset, and app-settings
   reset.
+- Completed the remaining polish audit:
+  CodeMirror folding and fold-gutter styling had no clear local defect;
+  command palette and Share rely on native dialog Escape dismissal while Project
+  Switcher has explicit Escape cancellation; removed focus outlines have
+  replacement focus styles; semantic status colors meet the current contrast
+  target; the favicon is present; visible shortcut documentation matches the
+  actual shortcut bindings; and ZIP export/import paths include manifest
+  handling and sorted file entries.
+- Confirmed the dirty-dot undo check is not applicable to the current editor
+  tabs because no tab dirty indicator is implemented; the only compile-state dot
+  belongs to file tree rows.
 - Refined outline presentation:
   symbol kind colors, badges, type/pattern icons, shorter `L5` locations,
   reduced indentation, child guide rule, monospace symbol names, and exact
@@ -136,6 +147,8 @@ removed when implemented or deleted.
 - Strengthen outline symbol coverage as the compiler analysis API evolves.
 - Continue expanding command palette command coverage as real actions are added.
 - Extend Settings only with preferences that are backed by real behavior.
+- Design full workbench dark mode separately; the current shipped theme setting
+  is intentionally editor-only.
 - Audit all remaining uses of mock/prototype naming and remove any that are
   visible to users.
 - Keep `README.md`, `AGENTS.md`, and this `PLAN.md` synchronized with the actual
