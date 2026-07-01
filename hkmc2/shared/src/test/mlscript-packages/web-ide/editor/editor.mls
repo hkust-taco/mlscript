@@ -1,6 +1,6 @@
 import "https://esm.sh/codemirror@6.0.1" { EditorView, basicSetup }
 import "https://esm.sh/@codemirror/view@^6.0.0?target=es2022" { keymap, Decoration, ViewPlugin, highlightWhitespace }
-import "https://esm.sh/@codemirror/state@^6.0.0?target=es2022" { EditorState }
+import "https://esm.sh/@codemirror/state@^6.0.0?target=es2022" { EditorState, Compartment }
 import "https://esm.sh/@codemirror/commands@^6.0.0?target=es2022" { indentWithTab }
 import "https://esm.sh/@codemirror/lang-javascript@6.2.4" { javascript }
 import "https://esm.sh/@codemirror/lang-markdown@6.3.4" { markdown }
@@ -21,6 +21,11 @@ let editorFontVariationNormalStorageKey = "editor.fontVariation.normal"
 let editorFontVariationBoldStorageKey = "editor.fontVariation.bold"
 let editorFontVariationItalicStorageKey = "editor.fontVariation.italic"
 let editorFontVariationBoldItalicStorageKey = "editor.fontVariation.boldItalic"
+let editorVariableFontFeaturesStorageKey = "editor.variableFontFeatures"
+let editorLineHeightStorageKey = "editor.lineHeight"
+let editorFontLigaturesStorageKey = "editor.fontLigatures"
+let editorLetterSpacingStorageKey = "editor.letterSpacing"
+let editorRulersStorageKey = "editor.rulers"
 let defaultEditorFontSize = 14
 let minEditorFontSize = 10
 let maxEditorFontSize = 24
@@ -29,6 +34,16 @@ let defaultEditorFontVariationNormal = "'wght' 400"
 let defaultEditorFontVariationBold = "'wght' 700"
 let defaultEditorFontVariationItalic = "'wght' 400"
 let defaultEditorFontVariationBoldItalic = "'wght' 700"
+let defaultEditorLineHeight = "1.45"
+let defaultEditorFontLigatures = "normal"
+let defaultEditorLetterSpacing = "0"
+let defaultEditorRulers = ""
+
+let wordWrapCompartment = new! Compartment()
+let indentGuidesCompartment = new! Compartment()
+let whitespaceCompartment = new! Compartment()
+let rulersCompartment = new! Compartment()
+let editorViews = new Set()
 
 let foldStart = new RegExp("^\\s*(?:(?:data\\s+)?class|trait|object|module|fun|constructor)\\b")
 
@@ -37,6 +52,12 @@ let nonBlank = new RegExp("\\S")
 fun isNaN(value) =
   value !== value
 
+fun finiteNumber(value) =
+  typeof(value) is "number" and value === value
+
+fun numberOr(value, fallback) =
+  if finiteNumber(value) then value else fallback
+
 fun clampEditorFontSize(size) =
   Math.max(minEditorFontSize, Math.min(maxEditorFontSize, size))
 
@@ -44,6 +65,10 @@ fun applyEditorFontSize(size) =
   let clamped = clampEditorFontSize(size)
   document.documentElement.style.setProperty("--editor-font-size", clamped + "px")
   clamped
+
+fun parseCssNumber(value, fallback) =
+  let parsed = parseFloat(value)
+  if isNaN(parsed) then fallback else parsed
 
 fun cssSettingValue(value, fallback) =
   if value is Absent then fallback
@@ -68,6 +93,50 @@ fun applyEditorFontVariationItalic(value) =
 fun applyEditorFontVariationBoldItalic(value) =
   applyEditorCssSetting("--editor-font-variation-bold-italic", value, defaultEditorFontVariationBoldItalic)
 
+fun fontVariationValue(value, fallback) =
+  if settingEnabled(editorVariableFontFeaturesStorageKey, false) then cssSettingValue(value, fallback)
+  else "normal"
+
+fun restoreEditorFontVariations() =
+  applyEditorCssSetting("--editor-font-variation-normal",
+    fontVariationValue(SettingsStore.getSetting(editorFontVariationNormalStorageKey, defaultEditorFontVariationNormal), defaultEditorFontVariationNormal),
+    "normal")
+  applyEditorCssSetting("--editor-font-variation-bold",
+    fontVariationValue(SettingsStore.getSetting(editorFontVariationBoldStorageKey, defaultEditorFontVariationBold), defaultEditorFontVariationBold),
+    "normal")
+  applyEditorCssSetting("--editor-font-variation-italic",
+    fontVariationValue(SettingsStore.getSetting(editorFontVariationItalicStorageKey, defaultEditorFontVariationItalic), defaultEditorFontVariationItalic),
+    "normal")
+  applyEditorCssSetting("--editor-font-variation-bold-italic",
+    fontVariationValue(SettingsStore.getSetting(editorFontVariationBoldItalicStorageKey, defaultEditorFontVariationBoldItalic), defaultEditorFontVariationBoldItalic),
+    "normal")
+
+fun applyEditorLineHeight(value) =
+  let parsed = Math.max(1, Math.min(3, parseCssNumber(value, parseCssNumber(defaultEditorLineHeight, 1.45))))
+  document.documentElement.style.setProperty("--editor-line-height", "" + parsed)
+
+fun applyEditorFontLigatures(value) =
+  applyEditorCssSetting("--editor-font-ligatures", value, defaultEditorFontLigatures)
+
+fun applyEditorLetterSpacing(value) =
+  let parsed = Math.max(-2, Math.min(8, parseCssNumber(value, parseCssNumber(defaultEditorLetterSpacing, 0))))
+  document.documentElement.style.setProperty("--editor-letter-spacing", parsed + "px")
+
+fun rulerColumns(value) =
+  let columns = mut []
+  cssSettingValue(value, defaultEditorRulers).split(",").forEach of (part, ...) =>
+    let parsed = parseInt(part.trim(), 10)
+    if not isNaN(parsed) and parsed >= 0 do columns.push(parsed)
+  columns
+
+fun rulerGradient(column) =
+  "linear-gradient(to right, transparent " + column + "ch, var(--editor-ruler-color) " + column + "ch, var(--editor-ruler-color) calc(" + column + "ch + 1px), transparent calc(" + column + "ch + 1px))"
+
+fun applyEditorRulers(value) =
+  let columns = rulerColumns(value)
+  let background = if columns.length === 0 then "none" else columns.map(column => rulerGradient(column)).join(", ")
+  document.documentElement.style.setProperty("--editor-rulers-background", background)
+
 fun editorFontSizeFromSetting(value) =
   let parsed = parseInt(value, 10)
   if isNaN(parsed) then defaultEditorFontSize else parsed
@@ -78,10 +147,11 @@ fun restoreEditorFontSize() =
 fun restoreEditorTypography() =
   restoreEditorFontSize()
   applyEditorFontFamily(SettingsStore.getSetting(editorFontFamilyStorageKey, defaultEditorFontFamily))
-  applyEditorFontVariationNormal(SettingsStore.getSetting(editorFontVariationNormalStorageKey, defaultEditorFontVariationNormal))
-  applyEditorFontVariationBold(SettingsStore.getSetting(editorFontVariationBoldStorageKey, defaultEditorFontVariationBold))
-  applyEditorFontVariationItalic(SettingsStore.getSetting(editorFontVariationItalicStorageKey, defaultEditorFontVariationItalic))
-  applyEditorFontVariationBoldItalic(SettingsStore.getSetting(editorFontVariationBoldItalicStorageKey, defaultEditorFontVariationBoldItalic))
+  restoreEditorFontVariations()
+  applyEditorLineHeight(SettingsStore.getSetting(editorLineHeightStorageKey, defaultEditorLineHeight))
+  applyEditorFontLigatures(SettingsStore.getSetting(editorFontLigaturesStorageKey, defaultEditorFontLigatures))
+  applyEditorLetterSpacing(SettingsStore.getSetting(editorLetterSpacingStorageKey, defaultEditorLetterSpacing))
+  applyEditorRulers(SettingsStore.getSetting(editorRulersStorageKey, defaultEditorRulers))
 
 fun currentEditorFontSize() =
   let
@@ -198,6 +268,11 @@ fun editorThemeSpec() = mut
     caretColor: "var(--sand-12)"
     fontFamily: "var(--editor-font-family)"
     fontVariationSettings: "var(--editor-font-variation-normal)"
+    fontVariantLigatures: "var(--editor-font-ligatures)"
+    letterSpacing: "var(--editor-letter-spacing)"
+    lineHeight: "var(--editor-line-height)"
+    backgroundImage: "var(--editor-rulers-background)"
+    backgroundRepeat: "repeat-y"
   ".cm-lineNumbers": mut
     caretColor: "var(--sand-12)"
     fontFamily: "var(--editor-font-family)"
@@ -255,14 +330,19 @@ fun selectedLength(selection) =
     set total += Math.abs(range.to - range.from)
   total
 
+fun safeLineAt(state, head) =
+  state.doc.lineAt(Math.max(0, Math.min(state.doc.length, head)))
+
 fun cursorPositionDetail(state, filePath) =
   let
-    head = state.selection.main.head
-    line = state.doc.lineAt(head)
+    head = numberOr(state.selection.main.head, 0)
+    line = safeLineAt(state, head)
+    lineFrom = numberOr(line.from, head)
+    column = Math.max(1, head - lineFrom + 1)
   mut
     :filePath
     line: line.number
-    column: head - line.from + 1
+    column: column
     selected: selectedLength(state.selection)
 
 fun dispatchCursorPosition(state, filePath) =
@@ -273,14 +353,44 @@ fun cursorPositionOnChange(filePath) =
     if update.selectionSet then dispatchCursorPosition(update.state, filePath)
     else if update.docChanged do dispatchCursorPosition(update.state, filePath)
 
+fun configuredWordWrap() =
+  if settingEnabled("editor.wordWrap", false) then EditorView.lineWrapping else []
+
+fun configuredIndentGuides() =
+  if settingEnabled("editor.indentGuides", true) then mlscriptIndentGuides() else []
+
+fun configuredWhitespace() =
+  if settingEnabled("editor.showWhitespace", false) then highlightWhitespace() else []
+
+fun configuredRulers() =
+  EditorView.theme(mut
+    ".cm-content": mut
+      backgroundImage: "var(--editor-rulers-background)"
+      backgroundRepeat: "repeat-y"
+  )
+
+fun reconfigureAll(compartment, extension) =
+  editorViews.forEach of (view, ...) =>
+    view.dispatch(mut { effects: compartment.reconfigure(extension) })
+
 fun handleSettingChanged(detail) =
   if detail is ~Absent as setting do
     if setting.key === editorFontSizeStorageKey then applyEditorFontSize(editorFontSizeFromSetting(setting.value))
     else if setting.key === editorFontFamilyStorageKey then applyEditorFontFamily(setting.value)
-    else if setting.key === editorFontVariationNormalStorageKey then applyEditorFontVariationNormal(setting.value)
-    else if setting.key === editorFontVariationBoldStorageKey then applyEditorFontVariationBold(setting.value)
-    else if setting.key === editorFontVariationItalicStorageKey then applyEditorFontVariationItalic(setting.value)
-    else if setting.key === editorFontVariationBoldItalicStorageKey do applyEditorFontVariationBoldItalic(setting.value)
+    else if setting.key === editorVariableFontFeaturesStorageKey then restoreEditorFontVariations()
+    else if setting.key === editorFontVariationNormalStorageKey then restoreEditorFontVariations()
+    else if setting.key === editorFontVariationBoldStorageKey then restoreEditorFontVariations()
+    else if setting.key === editorFontVariationItalicStorageKey then restoreEditorFontVariations()
+    else if setting.key === editorFontVariationBoldItalicStorageKey then restoreEditorFontVariations()
+    else if setting.key === editorLineHeightStorageKey then applyEditorLineHeight(setting.value)
+    else if setting.key === editorFontLigaturesStorageKey then applyEditorFontLigatures(setting.value)
+    else if setting.key === editorLetterSpacingStorageKey then applyEditorLetterSpacing(setting.value)
+    else if setting.key === editorRulersStorageKey then
+      applyEditorRulers(setting.value)
+      reconfigureAll(rulersCompartment, configuredRulers())
+    else if setting.key === "editor.wordWrap" then reconfigureAll(wordWrapCompartment, configuredWordWrap())
+    else if setting.key === "editor.indentGuides" then reconfigureAll(indentGuidesCompartment, configuredIndentGuides())
+    else if setting.key === "editor.showWhitespace" do reconfigureAll(whitespaceCompartment, configuredWhitespace())
 
 document.addEventListener("setting-changed", event => handleSettingChanged(event.detail))
 restoreEditorTypography()
@@ -291,9 +401,10 @@ fun editorExtensions(filePath, extension, isReadonly) =
   extensions.push(keymap.of([indentWithTab]))
   extensions.push(indentUnit.of("  "))
   extensions.push(EditorState.tabSize.of(2))
-  if settingEnabled("editor.indentGuides", true) do extensions.push(mlscriptIndentGuides())
-  if settingEnabled("editor.showWhitespace", false) do extensions.push(highlightWhitespace())
-  if settingEnabled("editor.wordWrap", false) do extensions.push(EditorView.lineWrapping)
+  extensions.push(wordWrapCompartment.of(configuredWordWrap()))
+  extensions.push(indentGuidesCompartment.of(configuredIndentGuides()))
+  extensions.push(whitespaceCompartment.of(configuredWhitespace()))
+  extensions.push(rulersCompartment.of(configuredRulers()))
   extensions.push(syntaxHighlighting(defaultHighlightStyle))
   languageExtensions(extension).forEach of (extension, ...) =>
     extensions.push(extension)
@@ -313,5 +424,10 @@ fun createEditor(container, initialContent, filePath, extension, isReadonly) =
   let view = Reflect.construct of EditorView, [
     editorOptions(container, initialContent, filePath, extension, isReadonly)
   ]
+  let destroy = view.destroy.bind(view)
+  set view.destroy = () =>
+    editorViews.delete(view)
+    destroy()
+  editorViews.add(view)
   dispatchCursorPosition(view.state, filePath)
   view

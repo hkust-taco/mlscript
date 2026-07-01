@@ -152,6 +152,12 @@ class IdeWorkbench extends HTMLElement with
     if this.querySelector(selector) is ~null as element do
       set element.hidden = isHidden
 
+  fun finiteNumber(value) =
+    typeof(value) is "number" and value === value
+
+  fun statusNumber(value, fallback) =
+    if finiteNumber(value) then value else fallback
+
   fun hideEditorPositionStatus() =
     setHidden(".cursor-position-status", true)
     setHidden(".selection-status", true)
@@ -167,10 +173,14 @@ class IdeWorkbench extends HTMLElement with
 
   fun updateCursorPositionStatus(detail) =
     if detail is ~Absent as position do
-      updateText(".cursor-position-status", "Ln " + position.line + ", Col " + position.column)
+      let
+        line = statusNumber(position.line, 1)
+        column = statusNumber(position.column, 1)
+        selected = statusNumber(position.selected, 0)
+      updateText(".cursor-position-status", "Ln " + line + ", Col " + column)
       setHidden(".cursor-position-status", false)
-      if position.selected > 0 then
-        updateText(".selection-status", "(" + position.selected + " selected)")
+      if selected > 0 then
+        updateText(".selection-status", "(" + selected + " selected)")
         setHidden(".selection-status", false)
       else setHidden(".selection-status", true)
 

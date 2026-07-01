@@ -50,6 +50,11 @@
   --editor-font-variation-bold: 'wght' 700;
   --editor-font-variation-italic: 'wght' 400;
   --editor-font-variation-bold-italic: 'wght' 700;
+  --editor-line-height: 1.45;
+  --editor-font-ligatures: normal;
+  --editor-letter-spacing: 0px;
+  --editor-ruler-color: color-mix(in srgb, var(--ide-border-strong) 50%, transparent);
+  --editor-rulers-background: none;
   --panel-header-height: var(--ide-panel-header-height);
   font-family: var(--sans-serif);
 }
@@ -278,6 +283,11 @@ ide-workbench {
   gap: 4px;
   min-height: 20px;
   white-space: nowrap;
+}
+
+.workbench-status-bar .status-spacer ~ .status-segment:not([hidden]) {
+  border-left: 1px solid color-mix(in srgb, var(--ide-border-strong) 64%, transparent);
+  padding-left: 10px;
 }
 
 .workbench-status-bar .status-spacer {
@@ -1326,7 +1336,6 @@ editor-workbench .editor-breadcrumb-segment {
 
 editor-workbench .editor-breadcrumb-active {
   color: var(--ide-text);
-  font-family: var(--monospace);
 }
 
 editor-workbench .editor-chrome-actions {
@@ -1810,7 +1819,9 @@ editor-panel .cm-editor {
 }
 
 editor-panel .cm-gutters {
-  background: var(--ide-editor-bg);
+  background-color: #f4f5f2 !important;
+  background-image: radial-gradient(circle, color-mix(in srgb, var(--ide-border-strong) 36%, transparent) 0.65px, transparent 0.75px) !important;
+  background-size: 6px 6px !important;
   color: var(--ide-text-subtle);
   border-right: none !important;
   font-family: var(--editor-font-family);
@@ -1822,6 +1833,11 @@ editor-panel .cm-gutters {
 editor-panel .cm-content {
   font-family: var(--editor-font-family);
   font-variation-settings: var(--editor-font-variation-normal);
+  font-variant-ligatures: var(--editor-font-ligatures);
+  letter-spacing: var(--editor-letter-spacing);
+  line-height: var(--editor-line-height);
+  background-image: var(--editor-rulers-background);
+  background-repeat: repeat-y;
 }
 
 editor-panel .cm-content :is(b, strong),
@@ -1862,6 +1878,10 @@ editor-panel .cm-foldGutter .cm-gutterElement {
 
 editor-panel .cm-foldGutter .cm-gutterElement:hover {
   color: var(--ide-accent-strong);
+}
+
+editor-panel .cm-activeLineGutter {
+  background-color: color-mix(in srgb, var(--ide-surface-muted) 62%, transparent) !important;
 }
 
 editor-panel .cm-line.mls-indent-guides {
@@ -2224,14 +2244,15 @@ diagnostics-inspector .diagnostics-empty {
   align-items: center;
   justify-content: center;
   gap: 10px;
-  color: var(--ide-success);
+  color: var(--ide-text-subtle);
   font-size: 0.88rem;
-  font-weight: 600;
+  font-weight: 500;
 }
 
 diagnostics-inspector .diagnostics-empty i {
+  color: color-mix(in srgb, var(--ide-success) 46%, var(--ide-text-subtle));
   font-size: 2.5rem;
-  opacity: 0.85;
+  opacity: 0.55;
 }
 
 diagnostics-inspector .diagnostics-list,
@@ -3569,6 +3590,27 @@ settings-dialog dialog {
 
 .settings-tab-content.active {
   display: grid;
+}
+
+.settings-cascade {
+  display: grid;
+  gap: 8px;
+}
+
+.settings-cascade-children {
+  display: none;
+  gap: 8px;
+  margin-left: 12px;
+  padding-left: 12px;
+  border-left: 1px solid color-mix(in srgb, var(--ide-border-strong) 72%, transparent);
+}
+
+.settings-cascade.settings-cascade-open .settings-cascade-children {
+  display: grid;
+}
+
+.settings-cascade-children .settings-row {
+  background: color-mix(in srgb, var(--ide-surface) 74%, var(--ide-surface-subtle));
 }
 
 .settings-row {

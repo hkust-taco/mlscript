@@ -11,6 +11,10 @@ class SettingsDialog extends HTMLElement with
   let defaultEditorFontVariationBold = "'wght' 700"
   let defaultEditorFontVariationItalic = "'wght' 400"
   let defaultEditorFontVariationBoldItalic = "'wght' 700"
+  let defaultEditorLineHeight = "1.45"
+  let defaultEditorFontLigatures = "normal"
+  let defaultEditorLetterSpacing = "0"
+  let defaultEditorRulers = ""
 
   fun connectedCallback() =
     this.render()
@@ -87,7 +91,10 @@ class SettingsDialog extends HTMLElement with
     inputRowHtml(label, key, defaultValue, "text", "settings-text-input", "")
 
   fun numberInputRowHtml(label, key, defaultValue, min, max) =
-    inputRowHtml(label, key, defaultValue, "number", "settings-number-input", """min="""" + min + """" max="""" + max + """" step="1"""")
+    inputRowHtml(label, key, defaultValue, "number", "settings-number-input", "min=\"" + min + "\" max=\"" + max + "\" step=\"1\"")
+
+  fun numberInputRowHtmlWithStep(label, key, defaultValue, min, max, step) =
+    inputRowHtml(label, key, defaultValue, "number", "settings-number-input", "min=\"" + min + "\" max=\"" + max + "\" step=\"" + step + "\"")
 
   fun buttonRowHtml(label, action, text) =
     """
@@ -119,13 +126,27 @@ class SettingsDialog extends HTMLElement with
   fun editorRowsHtml() =
     numberInputRowHtml("Font size", "editor.fontSize", "14", "10", "24") +
     textInputRowHtml("Font family", "editor.fontFamily", defaultEditorFontFamily) +
-    textInputRowHtml("Normal font variation", "editor.fontVariation.normal", defaultEditorFontVariationNormal) +
-    textInputRowHtml("Bold font variation", "editor.fontVariation.bold", defaultEditorFontVariationBold) +
-    textInputRowHtml("Italic font variation", "editor.fontVariation.italic", defaultEditorFontVariationItalic) +
-    textInputRowHtml("Bold italic font variation", "editor.fontVariation.boldItalic", defaultEditorFontVariationBoldItalic) +
+    numberInputRowHtmlWithStep("Line height", "editor.lineHeight", defaultEditorLineHeight, "1", "3", "0.05") +
+    textInputRowHtml("Font ligatures", "editor.fontLigatures", defaultEditorFontLigatures) +
+    numberInputRowHtmlWithStep("Letter spacing", "editor.letterSpacing", defaultEditorLetterSpacing, "-2", "8", "0.1") +
+    textInputRowHtml("Rulers", "editor.rulers", defaultEditorRulers) +
+    variableFontFeaturesHtml() +
     toggleRowHtml("Word wrap", "editor.wordWrap", "false") +
     toggleRowHtml("Indentation guides", "editor.indentGuides", "true") +
     toggleRowHtml("Show whitespace", "editor.showWhitespace", "false")
+
+  fun variableFontFeaturesHtml() =
+    """
+      <div class="settings-cascade" data-settings-cascade-key="editor.variableFontFeatures">
+        """ + toggleRowHtml("Variable font features", "editor.variableFontFeatures", "false") + """
+        <div class="settings-cascade-children">
+          """ + textInputRowHtml("Normal", "editor.fontVariation.normal", defaultEditorFontVariationNormal) + """
+          """ + textInputRowHtml("Bold", "editor.fontVariation.bold", defaultEditorFontVariationBold) + """
+          """ + textInputRowHtml("Italic", "editor.fontVariation.italic", defaultEditorFontVariationItalic) + """
+          """ + textInputRowHtml("Bold italic", "editor.fontVariation.boldItalic", defaultEditorFontVariationBoldItalic) + """
+        </div>
+      </div>
+    """
 
   fun appearanceRowsHtml() =
     toggleRowHtml("Use dark editor theme", "appearance.editorDarkTheme", "false")
@@ -235,7 +256,7 @@ class SettingsDialog extends HTMLElement with
     value !== value
 
   fun parsedNumber(value, fallback) =
-    let parsed = parseInt(value, 10)
+    let parsed = parseFloat(value)
     if isNaN(parsed) then fallback else parsed
 
   fun normalizedInputValue(element) =
@@ -262,6 +283,13 @@ class SettingsDialog extends HTMLElement with
   fun loadSettingsIntoDialog() =
     this.querySelectorAll("[data-setting-key]").forEach of (element, ...) =>
       applySettingElement(element)
+    updateCascades()
+
+  fun updateCascades() =
+    this.querySelectorAll("[data-settings-cascade-key]").forEach of (cascade, ...) =>
+      let toggle = cascade.querySelector(".settings-toggle")
+      let enabled = if toggle is ~null as toggleInput then toggleInput.checked else false
+      cascade.classList.toggle("settings-cascade-open", enabled)
 
   fun persistSettingElement(element) =
     if element.dataset.settingKey is ~Absent as key do
@@ -273,6 +301,7 @@ class SettingsDialog extends HTMLElement with
       if element.classList.contains("settings-toggle") then
         setSwitchChecked(element, element.checked)
         SettingsStore.setSetting(key, value)
+        updateCascades()
       else if element.classList.contains("settings-select-root") then
         SettingsStore.setSetting(key, value)
       else if element.classList.contains("settings-input") do

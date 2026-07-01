@@ -297,16 +297,18 @@ class TreeNode extends HTMLElement with
 
   fun updateCompiledDot(current) =
     let
+      isMls = current.name.endsWith(".mls")
       isStd = attrIsTrue(current, "std")
       isCompiled = attrIsTrue(current, "compiled")
+      shouldHide = if isMls then isStd else true
       needsCompile = if
+        shouldHide then false
         isCompiled then false
-        isStd then false
         else true
-    elements.compiledDot.classList.toggle("hidden", isStd)
+    elements.compiledDot.classList.toggle("hidden", shouldHide)
     elements.compiledDot.classList.toggle("needs-compile", needsCompile)
     set elements.compiledDot.title = if
-      isStd then ""
+      shouldHide then ""
       isCompiled then "Compiled"
       else "Needs compile"
 
