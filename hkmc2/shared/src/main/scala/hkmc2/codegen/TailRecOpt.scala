@@ -563,7 +563,7 @@ class TailRecOpt(using State, TL, Raise):
         case None => (newFns, fns_ ::: fns)
     // preserve the order of function defns
     val fMap = fsOpt.map(f => (f.dSym, f)).toMap
-    val fsRet = fs.map(f => fMap(f.dSym))
+    val fsRet = fs.mapConserve(f => fMap(f.dSym))
     (newFsOpt, fsRet)
   
   def reportClassesTailrec(c: ClsLikeDefn) =
@@ -586,16 +586,24 @@ class TailRecOpt(using State, TL, Raise):
     
     if c.k is syntax.Cls then
       reportClassesTailrec(c)
-      val companion = c.companion.map: comp =>
+      val companion = c.companion.mapConserve: comp =>
         val cMtds = optFunctionsFlat(comp.methods, S(comp.isym))
-        comp.copy(methods = cMtds)
-      c.copy(companion = companion)(c.configOverride, c.annotations)
+        if cMtds is comp.methods
+        then comp
+        else comp.copy(methods = cMtds)
+      if (c.companion is companion)
+      then c
+      else c.copy(companion = companion)(c.configOverride, c.annotations)
     else
       val mtds = optFunctionsFlat(c.methods, S(c.isym))
-      val companion = c.companion.map: comp =>
+      val companion = c.companion.mapConserve: comp =>
         val cMtds = optFunctionsFlat(comp.methods, S(comp.isym))
-        comp.copy(methods = cMtds)
-      c.copy(methods = mtds, companion = companion)(c.configOverride, c.annotations)
+        if cMtds is comp.methods
+        then comp
+        else comp.copy(methods = cMtds)
+      if (c.methods is mtds) && (c.companion is companion)
+      then c
+      else c.copy(methods = mtds, companion = companion)(c.configOverride, c.annotations)
   
   def transform(prog: Program)(using Config): Program =
     if !config.tailRecOpt then return prog
