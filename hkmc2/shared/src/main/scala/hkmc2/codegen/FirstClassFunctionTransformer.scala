@@ -89,7 +89,10 @@ class FirstClassFunctionTransformer
 
   override def applyResult(r: Result)(k: Result => Block): Block = r match
     case c @ Call(fun, argss) => applyListOf(argss, (args, k2) => applyArgs(args)(k2)): argss2 =>
-      def call(f: Path) = Call(f, argss2.ne_!)(c.metadata)
+      def call(f: Path) =
+        if (f is fun) && (argss is argss2)
+        then c
+        else Call(f, argss2.ne_!)(c.metadata)
       fun match
         case ref @ Value.SimpleRef(sym) => sym match
           case _: VarSymbol |  _: TempSymbol => k(call(ref.selSN("call")))

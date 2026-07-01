@@ -13,6 +13,7 @@ class CompilationPipeline(using Config, Raise, State, Ctx, SymbolPrinter):
   
   case class CompilationPass(name: Str, transform: Program => Program)
   
+  // For printing IR after transformations like lifting and before optimization
   def preOptimizeHook(prog: Program): Program =
     prog
   
@@ -46,7 +47,11 @@ class CompilationPipeline(using Config, Raise, State, Ctx, SymbolPrinter):
       CompilationPass("MergeMatchArmTransformer", MergeMatchArmTransformer.applyProgram),
       CompilationPass("FirstClassFunctionTransformer", prog =>
         if config.funcToCls then
-          blockPass(blk => Lifter(FirstClassFunctionTransformer().transform(blk)).transform)(prog)
+          blockPass(FirstClassFunctionTransformer().transform(_))(prog)
+        else prog),
+      CompilationPass("Lifter after FirstClassFunctionTransformer", prog =>
+        if config.funcToCls then
+          blockPass(Lifter(_).transform)(prog)
         else prog),
       CompilationPass("ClassParamFlattener", ClassParamFlattener.apply),
       CompilationPass("ReflectionInstrumenter", ReflectionInstrumenter(using summon).apply),
