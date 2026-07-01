@@ -1,0 +1,149 @@
+import "../common/SettingsStore.mls"
+import "./NativeDialogs.mls" as NativeDialogs
+import "../common/JS.mls"
+
+open JS { Absent }
+
+class SettingsDialog extends HTMLElement with
+  let activeTab = "appearance"
+
+  fun connectedCallback() =
+    this.render()
+    this.attachEventListeners()
+
+  fun tab(id, label) =
+    mut { :id, :label }
+
+  fun tabs() =
+    [
+      tab("appearance", "Appearance")
+      tab("editor", "Editor")
+      tab("workbench", "Workbench")
+      tab("compile-run", "Compile & Run")
+      tab("keyboard-shortcuts", "Keyboard Shortcuts")
+      tab("data", "Data")
+      tab("about", "About")
+    ]
+
+  fun tabButtonHtml(tabInfo) =
+    let activeClass = if tabInfo.id === activeTab then " active" else ""
+    """
+      <button class="settings-tab""" + activeClass + """" type="button" data-settings-tab="""" + tabInfo.id + """">""" + tabInfo.label + """</button>
+    """
+
+  fun tabPanelHtml(tabInfo) =
+    let activeClass = if tabInfo.id === activeTab then " active" else ""
+    """
+      <div class="settings-tab-content""" + activeClass + """" data-settings-tab-panel="""" + tabInfo.id + """"></div>
+    """
+
+  fun toggleRowHtml(label, key) =
+    """
+      <label class="settings-row">
+        <span class="settings-row-label">""" + label + """</span>
+        <input type="checkbox" class="settings-toggle" data-setting-key="""" + key + """" data-setting-default="false"/>
+      </label>
+    """
+
+  fun selectRowHtml(label, key, optionsHtml) =
+    """
+      <label class="settings-row">
+        <span class="settings-row-label">""" + label + """</span>
+        <select class="settings-select" data-setting-key="""" + key + """">
+          """ + optionsHtml + """
+        </select>
+      </label>
+    """
+
+  fun buttonRowHtml(label, action, text) =
+    """
+      <div class="settings-row">
+        <span class="settings-row-label">""" + label + """</span>
+        <button class="settings-action-button" type="button" data-setting-action="""" + action + """">""" + text + """</button>
+      </div>
+    """
+
+  fun staticRowHtml(label, value) =
+    """
+      <div class="settings-row settings-row-static">
+        <span class="settings-row-label">""" + label + """</span>
+        <span class="settings-row-value">""" + value + """</span>
+      </div>
+    """
+
+  fun render() =
+    set this.innerHTML = """
+      <dialog class="settings-dialog-native" data-dismissible="true">
+        <form class="settings-dialog-form" method="dialog">
+          <div class="settings-dialog-titlebar">
+            <h2>Settings</h2>
+            <button class="settings-dialog-close" type="submit" aria-label="Close">
+              <i class="icon-x"></i>
+            </button>
+          </div>
+          <div class="settings-dialog-body">
+            <div class="settings-tabs" role="tablist" aria-label="Settings sections">
+              """ + tabs().map(tabInfo => tabButtonHtml(tabInfo)).join("") + """
+            </div>
+            <div class="settings-tab-panels">
+              """ + tabs().map(tabInfo => tabPanelHtml(tabInfo)).join("") + """
+            </div>
+          </div>
+        </form>
+      </dialog>
+    """
+
+  fun dialog() =
+    this.querySelector("dialog")
+
+  fun openDialog() =
+    loadSettingsIntoDialog()
+    if dialog() is ~null as settingsDialog do
+      if not settingsDialog.open do settingsDialog.showModal()
+    if this.querySelector(".settings-tab.active") is ~null as activeTabButton do
+      window.setTimeout(() => activeTabButton.focus(), 0)
+
+  fun switchTab(id) =
+    set activeTab = id
+    this.querySelectorAll("[data-settings-tab]").forEach of (button, ...) =>
+      button.classList.toggle("active", button.dataset.settingsTab === id)
+    this.querySelectorAll("[data-settings-tab-panel]").forEach of (panel, ...) =>
+      panel.classList.toggle("active", panel.dataset.settingsTabPanel === id)
+
+  fun settingDefaultValue(element) =
+    if element.dataset.settingDefault is ~Absent as fallback then fallback
+    else if element.classList.contains("settings-toggle") then "false"
+    else element.value
+
+  fun applySettingElement(element) =
+    if element.dataset.settingKey is ~Absent as key do
+      let value = SettingsStore.getSetting(key, settingDefaultValue(element))
+      if element.classList.contains("settings-toggle") then
+        set element.checked = value === "true"
+      else set element.value = value
+
+  fun loadSettingsIntoDialog() =
+    this.querySelectorAll("[data-setting-key]").forEach of (element, ...) =>
+      applySettingElement(element)
+
+  fun persistSettingElement(element) =
+    if element.dataset.settingKey is ~Absent as key do
+      if element.classList.contains("settings-toggle") then
+        SettingsStore.setSetting(key, if element.checked then "true" else "false")
+      else if element.classList.contains("settings-select") do
+        SettingsStore.setSetting(key, element.value)
+
+  fun handleSettingsChange(event) =
+    if event.target is ~Absent as target do
+      if target.matches(".settings-toggle[data-setting-key]") then persistSettingElement(target)
+      else if target.matches(".settings-select[data-setting-key]") do persistSettingElement(target)
+
+  fun attachEventListeners() =
+    let panel = this
+    if dialog() is ~null as settingsDialog do NativeDialogs.closeDismissibleDialogFromBackdrop(settingsDialog)
+    document.addEventListener("settings-dialog-open-requested", () => panel.openDialog())
+    this.addEventListener("change", event => panel.handleSettingsChange(event))
+    this.querySelectorAll("[data-settings-tab]").forEach of (button, ...) =>
+      button.addEventListener("click", () => panel.switchTab(button.dataset.settingsTab))
+
+customElements.define("settings-dialog", SettingsDialog)

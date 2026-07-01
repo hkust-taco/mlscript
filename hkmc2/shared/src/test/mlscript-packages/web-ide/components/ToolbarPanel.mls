@@ -169,6 +169,9 @@ class ToolbarPanel extends HTMLElement with
         <button id="share" class="toolbar-icon-btn" type="button" aria-label="Share workspace" title="Share">
           <i class="icon-share-2"></i>
         </button>
+        <button id="settings" class="toolbar-icon-btn" type="button" aria-label="Open settings" title="Settings">
+          <i class="icon-settings"></i>
+        </button>
         <button id="compile" class="compile-btn disabled" disabled>
           <i class="icon-binary"></i>
           Compile
@@ -218,6 +221,9 @@ class ToolbarPanel extends HTMLElement with
 
   fun handleShare() =
     document.dispatchEvent(new CustomEvent("share-dialog-open-requested"))
+
+  fun handleSettings() =
+    document.dispatchEvent(new CustomEvent("settings-dialog-open-requested"))
 
   fun setCompilationStatus(nextStatus) =
     set isCompiling = nextStatus === "running"
@@ -292,6 +298,8 @@ class ToolbarPanel extends HTMLElement with
       ~null as commandPaletteBtn do commandPaletteBtn.addEventListener("click", () => panel.handleCommandPalette())
     if panel.querySelector("#share") is
       ~null as shareBtn do shareBtn.addEventListener("click", () => panel.handleShare())
+    if panel.querySelector("#settings") is
+      ~null as settingsBtn do settingsBtn.addEventListener("click", () => panel.handleSettings())
     if panel.querySelector("#compile") is
       ~null as compileBtn do compileBtn.addEventListener("click", () => panel.handleCompile())
     if panel.querySelector("#execute") is

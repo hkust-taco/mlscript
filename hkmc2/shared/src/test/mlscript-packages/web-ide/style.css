@@ -3210,7 +3210,8 @@ bottom-panel .terminal-input:focus {
 
 /* Native Dialogs */
 command-palette-dialog dialog,
-share-dialog dialog {
+share-dialog dialog,
+settings-dialog dialog {
   width: min(720px, calc(100vw - 32px));
   max-height: min(720px, calc(100vh - 48px));
   border: 1px solid var(--ide-border);
@@ -3226,12 +3227,14 @@ share-dialog dialog {
 }
 
 command-palette-dialog dialog::backdrop,
-share-dialog dialog::backdrop {
+share-dialog dialog::backdrop,
+settings-dialog dialog::backdrop {
   background: rgba(24, 26, 22, 0.36);
 }
 
 command-palette-dialog dialog,
-share-dialog dialog {
+share-dialog dialog,
+settings-dialog dialog {
   position: fixed;
   inset: 0;
   margin: auto;
@@ -3257,11 +3260,22 @@ share-dialog dialog {
   max-height: min(260px, calc(100vh - 32px));
 }
 
+settings-dialog dialog {
+  width: min(760px, calc(100vw - 32px));
+  height: min(560px, calc(100vh - 48px));
+  max-height: min(560px, calc(100vh - 48px));
+}
+
 .command-palette-form,
-.share-dialog-form {
+.share-dialog-form,
+.settings-dialog-form {
   display: flex;
   flex-direction: column;
   min-height: 0;
+}
+
+.settings-dialog-form {
+  height: 100%;
 }
 
 .command-palette-form {
@@ -3425,6 +3439,156 @@ share-dialog dialog {
   justify-content: center;
   gap: 8px;
   padding: 14px;
+}
+
+.settings-dialog-titlebar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--ide-border);
+  background: var(--ide-surface-subtle);
+}
+
+.settings-dialog-titlebar h2 {
+  margin: 0;
+  color: var(--ide-text);
+  font-size: 0.95rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.settings-dialog-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: 1px solid transparent;
+  border-radius: var(--ide-radius-sm);
+  background: transparent;
+  color: var(--ide-text-muted);
+  cursor: pointer;
+  padding: 0;
+}
+
+.settings-dialog-close:hover {
+  background: var(--ide-surface-muted);
+  color: var(--ide-text);
+}
+
+.settings-dialog-body {
+  display: grid;
+  grid-template-columns: 180px minmax(0, 1fr);
+  flex: 1;
+  min-height: 0;
+}
+
+.settings-tabs {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  padding: 10px;
+  background: var(--ide-surface-subtle);
+  border-right: 1px solid var(--ide-border);
+}
+
+.settings-tab {
+  border: 1px solid transparent;
+  border-radius: var(--ide-radius-sm);
+  background: transparent;
+  color: var(--ide-text-muted);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.82rem;
+  line-height: 1.2;
+  padding: 7px 9px;
+  text-align: left;
+}
+
+.settings-tab:hover,
+.settings-tab.active {
+  background: var(--ide-accent-soft);
+  border-color: color-mix(in srgb, var(--ide-accent) 34%, var(--ide-border));
+  color: var(--ide-accent-strong);
+}
+
+.settings-tab-panels {
+  min-height: 0;
+  overflow: auto;
+  padding: 12px 14px;
+}
+
+.settings-tab-content {
+  display: none;
+  gap: 8px;
+}
+
+.settings-tab-content.active {
+  display: grid;
+}
+
+.settings-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  min-height: 34px;
+  border: 1px solid var(--ide-border);
+  border-radius: var(--ide-radius-sm);
+  background: var(--ide-surface);
+  color: var(--ide-text);
+  font-size: 0.82rem;
+  padding: 7px 9px;
+}
+
+.settings-row-label {
+  min-width: 0;
+  color: var(--ide-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.settings-toggle {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--ide-accent);
+}
+
+.settings-select {
+  min-width: 160px;
+  border: 1px solid var(--ide-border);
+  border-radius: var(--ide-radius-sm);
+  background: var(--ide-surface);
+  color: var(--ide-text);
+  font: inherit;
+  font-size: 0.82rem;
+  padding: 5px 7px;
+}
+
+.settings-action-button {
+  border: 1px solid var(--ide-border);
+  border-radius: var(--ide-radius-sm);
+  background: var(--ide-surface);
+  color: var(--ide-text);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.82rem;
+  padding: 5px 9px;
+}
+
+.settings-action-button:hover {
+  background: var(--ide-accent-soft);
+  border-color: color-mix(in srgb, var(--ide-accent) 34%, var(--ide-border));
+  color: var(--ide-accent-strong);
+}
+
+.settings-row-static .settings-row-value {
+  color: var(--ide-text-muted);
+  font-size: 0.78rem;
 }
 
 .share-download-button {
