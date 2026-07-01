@@ -906,9 +906,14 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
       val liftedChildSyms = node.allChildNodes.collect:
         case s @ ScopeNode(obj = l: ScopedObject.Liftable[?]) if s.isLifted => l.defn.sym
       
-      val (syms, rewritten) = (obj.block.syms.toSet -- liftedChildSyms, rewriter.rewrite(obj.block.body))
+      val syms = if obj.block.syms.forall(!liftedChildSyms.contains(_))
+        then obj.block.syms else obj.block.syms.toSet -- liftedChildSyms
+      val rewritten = rewriter.rewrite(obj.block.body)
       val withCapture = addExtraSyms(rewritten)
-      LifterResult(Scoped(syms, withCapture), rewriter.extraDefns.toList)
+      if (syms is obj.block.syms) && (withCapture is obj.block.body) then
+        LifterResult(obj.block, Nil)
+      else
+        LifterResult(Scoped(syms, withCapture), rewriter.extraDefns.toList)
   
   class RewrittenLoop(override val obj: ScopedObject.Loop)(using ctx: LifterCtxNew) extends RewrittenScope[Block](obj) with GenericRewrittenScope[Block]:
     override def rewriteImpl: LifterResult[Block] =
@@ -958,15 +963,21 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
       val rewrittenCtor = rewriterCtor.rewrite(obj.cls.ctor)
       val rewrittenPrector = rewriterPreCtor.rewrite(obj.cls.preCtor)
       val ctorWithCap = initCaptureField(rewrittenCtor)
+      val rewrittenPrivateFields = appendCaptureField(liftedObjsOrdered.map(liftedObjsSyms) ::: obj.cls.privateFields)
       
       val LifterResult(newMtds, extras) = rewriteMethods(node, obj.cls.methods)
-      val newCls = obj.cls.copy(
-        ctor = ctorWithCap,
-        preCtor = rewrittenPrector,
-        privateFields = appendCaptureField(liftedObjsOrdered.map(liftedObjsSyms) ::: obj.cls.privateFields),
-        methods = newMtds,
-      )(obj.cls.configOverride, obj.cls.annotations)
-      LifterResult(newCls, rewriterCtor.extraDefns.toList ::: rewriterPreCtor.extraDefns.toList ::: extras)
+      if (obj.cls.ctor is ctorWithCap) && (obj.cls.preCtor is rewrittenPrector) &&
+          (obj.cls.privateFields is rewrittenPrivateFields) && (obj.cls.methods is newMtds)
+      then LifterResult(obj.cls, Nil)
+      else
+        val newCls = obj.cls.copy(
+          ctor = ctorWithCap,
+          preCtor = rewrittenPrector,
+          privateFields = rewrittenPrivateFields,
+          methods = newMtds,
+        )(obj.cls.configOverride, obj.cls.annotations)
+        LifterResult(newCls, rewriterCtor.extraDefns.toList ::: rewriterPreCtor.extraDefns.toList ::: extras)
+      
 
   class RewrittenCompanion(override val obj: ScopedObject.Companion)(using ctx: LifterCtxNew)
       extends RewrittenScope[ClsLikeBody](obj)
@@ -979,13 +990,18 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
       val rewriterCtor = new BlockRewriter(N)
       val rewrittenCtor = rewriterCtor.rewrite(obj.clsBody.ctor)
       val ctorWithCap = initCaptureField(rewrittenCtor)
+      val rewrittenPrivateFields = appendCaptureField(liftedObjsOrdered.map(liftedObjsSyms) ::: obj.clsBody.privateFields)
       val LifterResult(newMtds, extras) = rewriteMethods(node, obj.clsBody.methods)
-      val newComp = obj.clsBody.copy(
-        ctor = ctorWithCap,
-        privateFields = appendCaptureField(liftedObjsOrdered.map(liftedObjsSyms) ::: obj.clsBody.privateFields),
-        methods = newMtds
-      )
-      LifterResult(newComp, rewriterCtor.extraDefns.toList ::: extras)
+      if (obj.clsBody.ctor is ctorWithCap) && (obj.clsBody.privateFields is rewrittenPrivateFields) &&
+          (obj.clsBody.methods is newMtds)
+      then LifterResult(obj.clsBody, Nil)
+      else
+        val newComp = obj.clsBody.copy(
+          ctor = ctorWithCap,
+          privateFields = rewrittenPrivateFields,
+          methods = newMtds
+        )
+        LifterResult(newComp, rewriterCtor.extraDefns.toList ::: extras)
   
   class LiftedFunc(override val obj: ScopedObject.Func)(using ctx: LifterCtxNew) extends LiftedScope[FunDefn](obj) with GenericRewrittenScope[FunDefn]:
     private val passedSymsMap_ : Map[ValueSymbol, VarSymbol] = passedSymsOrdered.map: s =>
