@@ -3,6 +3,7 @@ import "./ResizeHandle.mls"
 import "../mockWorkbenchData.mls"
 import "../common/JS.mls"
 import "../common/Logger.mls"
+import "../common/SettingsStore.mls"
 
 open JS { Absent }
 
@@ -49,9 +50,10 @@ class BottomPanel extends HTMLElement with
     else "output"
 
   fun restoreStateFromStorage() =
+    let defaultLogLevel = SettingsStore.getSetting("logs.defaultLevel", "all")
     set
       activeTab = normalizedTabName(PanelPersistence.restoreString("bottom-panel-active-tab", "output"))
-      logLevelFilter = normalizeLogLevelFilter(PanelPersistence.restoreString("logs-level-filter", "all"))
+      logLevelFilter = normalizeLogLevelFilter(PanelPersistence.restoreString("logs-level-filter", defaultLogLevel))
       logSourceFilter = PanelPersistence.restoreString("logs-source-filter", "all")
 
   fun render() =

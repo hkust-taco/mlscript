@@ -1,6 +1,7 @@
 import "../filesystem/fs.mls"
 import "./PanelPersistence.mls"
 import "../common/JS.mls"
+import "../common/SettingsStore.mls"
 
 open JS { Absent }
 
@@ -35,7 +36,8 @@ class DiagnosticsInspector extends HTMLElement with
     else "workspace"
 
   fun restoreModeFromStorage() =
-    set mode = normalizeMode(PanelPersistence.restoreString("diagnostics-inspector-mode", "workspace"))
+    let defaultMode = SettingsStore.getSetting("problems.defaultScope", "workspace")
+    set mode = normalizeMode(PanelPersistence.restoreString("diagnostics-inspector-mode", defaultMode))
 
   fun setDiagnostics(diagnosticsPerFile) =
     let nextData = if diagnosticsPerFile is

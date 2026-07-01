@@ -78,6 +78,22 @@ class SettingsDialog extends HTMLElement with
       optionHtml("24", "24px")
     ].join("")
 
+  fun problemsScopeOptionsHtml() =
+    [
+      optionHtml("workspace", "Workspace")
+      optionHtml("current", "Current file")
+    ].join("")
+
+  fun logsLevelOptionsHtml() =
+    [
+      optionHtml("all", "All levels")
+      optionHtml("error", "Error")
+      optionHtml("warn", "Warn")
+      optionHtml("info", "Info")
+      optionHtml("debug", "Debug")
+      optionHtml("trace", "Trace")
+    ].join("")
+
   fun editorRowsHtml() =
     selectRowHtml("Font size", "editor.fontSize", "14", fontSizeOptionsHtml()) +
     toggleRowHtml("Word wrap", "editor.wordWrap", "false") +
@@ -89,9 +105,31 @@ class SettingsDialog extends HTMLElement with
     toggleRowHtml("Show Problems panel on startup", "workbench.showProblemsOnStartup", "true") +
     toggleRowHtml("Reopen last project on launch", "workbench.reopenLastProject", "true")
 
+  fun compileRunRowsHtml() =
+    selectRowHtml("Default Problems scope", "problems.defaultScope", "workspace", problemsScopeOptionsHtml()) +
+    selectRowHtml("Default Logs level", "logs.defaultLevel", "all", logsLevelOptionsHtml())
+
+  fun keyboardShortcutsRowsHtml() =
+    staticRowHtml("Command Palette", "Cmd/Ctrl+K") +
+    staticRowHtml("Workspace Symbols", "Cmd/Ctrl+T") +
+    staticRowHtml("Compile current file", "Cmd/Ctrl+S") +
+    staticRowHtml("Execute current file", "Cmd/Ctrl+E") +
+    staticRowHtml("Toggle Files panel", "Cmd/Ctrl+B") +
+    staticRowHtml("Toggle Problems panel", "Cmd/Ctrl+Shift+B") +
+    staticRowHtml("Increase editor font", "Cmd/Ctrl+=") +
+    staticRowHtml("Decrease editor font", "Cmd/Ctrl+-") +
+    staticRowHtml("Close current tab", "Ctrl+W")
+
+  fun aboutRowsHtml() =
+    staticRowHtml("Version", "Development build") +
+    staticRowHtml("Project", """<a href="https://github.com/hkust-taco/mlscript" target="_blank" rel="noreferrer">https://github.com/hkust-taco/mlscript</a>""")
+
   fun tabPanelContent(id) = if id is
     "editor" then editorRowsHtml()
     "workbench" then workbenchRowsHtml()
+    "compile-run" then compileRunRowsHtml()
+    "keyboard-shortcuts" then keyboardShortcutsRowsHtml()
+    "about" then aboutRowsHtml()
     else ""
 
   fun staticRowHtml(label, value) =
