@@ -62,11 +62,11 @@ explicitly says to `cd` into this package.
 - `common/`: shared browser utilities.
   - `JS.mls`: helpers for JavaScript interop and missing values.
   - `Logger.mls`: centralized logging event emitter.
+  - `SettingsStore.mls`: `settings.`-prefixed localStorage preferences.
 - `components/`: custom elements. Each file usually registers one custom element
   with `customElements.define`.
-- `mockWorkbenchData.mls`: legacy prototype data. Do not use it for production
-  behavior. When a mock-only panel is hidden or retained for future work,
-  document that in `PLAN.md`.
+- `mockWorkbenchData.mls`: legacy prototype data used by hidden/deferred mock
+  panels. Do not use it for newly shipped production behavior.
 - `vendors/std/` and `mlscript-std/` outputs: standard library assets used by
   the package tests and browser runtime.
 - `build/`: ignored local compiler bundle output. It normally contains
@@ -85,7 +85,8 @@ The app is a static document containing `<ide-workbench>`.
 - right rail and panel: Problems via `<diagnostics-inspector>`;
 - bottom panel: `<bottom-panel>` for Output and Logs;
 - status bar;
-- native custom elements for command palette and share dialogs.
+- native custom elements for command palette, share, Settings, and project
+  switcher dialogs.
 
 Panels are switched by rail buttons using `data-sidebar-side` and
 `data-sidebar-panel`. The active panel receives the `active` class and is not
@@ -111,6 +112,8 @@ Important events:
   line/column/range.
 - `active-tab-changed`: editor announces the active file path; workbench status
   and analysis listen to it.
+- `cursor-position-changed`: editor announces line, column, and selection
+  length for the status bar.
 - `compilation-status-change`: compiler status updates the toolbar/workbench.
 - `execution-status-change`: runner status updates the toolbar/workbench.
 - `analysis-document-updated`: outline receives the active file symbol tree.
@@ -119,6 +122,10 @@ Important events:
 - `web-ide-log`: centralized log entries consumed by the Logs tab.
 - `sidebar-toggle-requested`: components can ask the workbench to fold/unfold a
   side panel.
+- `new-file-requested`: command palette asks the File Explorer to start the
+  existing new-file flow.
+- `settings-dialog-open-requested`: toolbar asks the Settings dialog to open.
+- `setting-changed`: Settings dialog announces a persisted preference change.
 
 ## Error Surfacing Contracts
 
@@ -414,4 +421,3 @@ not ready to ship.
 - Reverting unrelated dirty files.
 - Removing blank lines while touching nearby code.
 - Letting browser-generated `.playwright-mcp/` files enter the commit.
-

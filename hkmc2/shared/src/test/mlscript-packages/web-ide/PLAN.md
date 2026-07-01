@@ -9,7 +9,8 @@ when adding, completing, hiding, or intentionally deferring UI behavior.
   `<ide-workbench>`, `<toolbar-panel>`, `<editor-workbench>`,
   `<file-explorer>`, `<search-panel>`, `<outline-panel>`,
   `<diagnostics-inspector>`, `<bottom-panel>`,
-  `<command-palette-dialog>`, and `<share-dialog>`.
+  `<command-palette-dialog>`, `<share-dialog>`, and
+  `<settings-dialog>`.
 - Moved sidebars to persistent activity rails with collapsible, resizable
   panels.
 - Fixed sidebar collapse after resize for left and right panels.
@@ -41,7 +42,8 @@ when adding, completing, hiding, or intentionally deferring UI behavior.
   Logging behavior.
 - Improved the Problems panel narrow-width layout.
 - Hid Source Control on the left rail, keeping source code for later.
-- Hid Examples on the left rail, keeping source code for later.
+- Enabled an Examples panel with curated Pattern Matching and Recursion
+  snippets that can be loaded into workspace files.
 - Hid Terminal and Generated bottom panels, keeping source code where useful for
   future work.
 - Implemented grouped global search in the left sidebar:
@@ -55,6 +57,8 @@ when adding, completing, hiding, or intentionally deferring UI behavior.
 - Improved the command palette:
   centered position, fixed input, max height, smaller entries, inline
   descriptions, keyboard navigation, and Enter confirmation.
+- Added command palette actions for New File, Clear Output, Clear Logs, and
+  Export Project.
 - Added centralized Logs in the bottom panel:
   bounded log buffer, compact one-line rows, folded body previews, formatted
   time, level/source filters, time sort, and auto-scroll.
@@ -65,6 +69,17 @@ when adding, completing, hiding, or intentionally deferring UI behavior.
 - Removed outline mock fallback. The outline now shows real symbols or a clear
   unavailable/error state.
 - Added command-palette symbol navigation using the analysis symbol index.
+- Added editor cursor/selection status bar details, static `UTF-8 LF` and
+  `Spaces: 2` labels, editor font-size shortcuts, and middle-click tab close.
+- Persisted the bottom tab, Problems scope, and Logs level/source filters.
+- Added a Settings dialog with Appearance, Editor, Workbench, Compile & Run,
+  Keyboard Shortcuts, Data, and About tabs.
+- Added Settings-backed editor preferences for font size, word wrap,
+  indentation guides, whitespace markers, and editor-only dark theme.
+- Added Settings-backed workbench preferences for Problems startup visibility,
+  reopening the last project, default Problems scope, default Logs level,
+  auto-compile on save, auto-run after compile, layout reset, and app-settings
+  reset.
 - Refined outline presentation:
   symbol kind colors, badges, type/pattern icons, shorter `L5` locations,
   reduced indentation, child guide rule, monospace symbol names, and exact
@@ -85,7 +100,8 @@ when adding, completing, hiding, or intentionally deferring UI behavior.
 
 ## In Progress
 
-- Converging the Outline panel visual density and symbol taxonomy.
+- Keeping the Settings rows and related preferences aligned with future UI
+  polish.
 - Keeping package-local agent documentation current as the Web IDE diverges from
   the rest of the repository.
 - Reducing remaining prototype/mock surfaces before the UI is considered
@@ -105,15 +121,12 @@ removed when implemented or deleted.
 - Generated panel:
   currently hidden because the supported flow is compile to JavaScript and view
   or edit generated `.mjs` files directly.
-- Examples panel:
-  currently hidden/commented from the left rail. Source files remain because the
-  feature may return with real curated examples later.
 - `mockWorkbenchData.mls`:
-  legacy prototype data. Do not wire it into production-facing panels.
+  legacy prototype data still used by hidden/deferred prototype panels. Do not
+  wire it into newly shipped production-facing panels.
 
 ## Left For Future
 
-- Restore Examples only with real curated examples.
 - Restore Source Control with real repository or workspace integration.
 - Restore Terminal only when there is a real execution model and command set.
 - Add a first-class generated-output experience only if it improves on direct
@@ -121,9 +134,8 @@ removed when implemented or deleted.
 - Add automated browser regression coverage for the most important UI flows
   instead of relying only on manual Playwright smoke checks.
 - Strengthen outline symbol coverage as the compiler analysis API evolves.
-- Improve command palette command coverage beyond file and symbol navigation.
-- Add persistent user preferences for panel sizes, active tabs, and log filters
-  where not already persisted.
+- Continue expanding command palette command coverage as real actions are added.
+- Extend Settings only with preferences that are backed by real behavior.
 - Audit all remaining uses of mock/prototype naming and remove any that are
   visible to users.
 - Keep `README.md`, `AGENTS.md`, and this `PLAN.md` synchronized with the actual
@@ -152,4 +164,3 @@ run:
 ```sh
 sbt --client hkmc2AllTests/test
 ```
-
