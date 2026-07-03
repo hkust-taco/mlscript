@@ -18,6 +18,11 @@ fun loop(x)(y) =
   if x == 0 then y
   else loop(x - 1)(y + x)
 loop(1000)(0)
+//│ FAILURE: Unexpected warning
+//│ FAILURE LOCATION: optScc (TailRecOpt.scala:252)
+//│ ╔══[WARNING] This function does not directly self-recurse, but is marked @tailrec.
+//│ ║  l.17: 	fun loop(x)(y) =
+//│ ╙──      	    ^^^^
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ let loop$tailrec;
 //│ @private
@@ -298,6 +303,11 @@ fun loop(x)(y) =
   if x == 0 then y
   else loop(x - 1)(y + x)
 fun f = loop(1000)(0)
+//│ FAILURE: Unexpected warning
+//│ FAILURE LOCATION: optScc (TailRecOpt.scala:252)
+//│ ╔══[WARNING] This function does not directly self-recurse, but is marked @tailrec.
+//│ ║  l.302: 	fun loop(x)(y) =
+//│ ╙──       	    ^^^^
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ @tailrec @inline
 //│ define loop² as fun loop³(x)(y) {

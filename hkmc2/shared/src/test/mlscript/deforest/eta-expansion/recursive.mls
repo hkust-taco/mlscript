@@ -36,16 +36,20 @@ sum(enum(5), 0)
 //│ let enum_13$enum$worker;
 //│ @private
 //│ define enum_13$enum$worker as fun enum_13$enum$worker⁰(x, eta$0$1) {
-//│   let scrut, tmp;
-//│   set scrut = <⁰(x, 0);
-//│   match scrut
-//│     true =>
-//│       return eta$0$1
-//│     else
-//│       let fv_tmp;
-//│       set tmp = -⁰(x, 1);
-//│       set fv_tmp = +⁰(x, eta$0$1);
-//│       return enum_13$enum$worker⁰(tmp, fv_tmp)
+//│   loop loopLabel:
+//│     let scrut, tmp;
+//│     set scrut = <⁰(x, 0);
+//│     match scrut
+//│       true =>
+//│         return eta$0$1
+//│       else
+//│         let fv_tmp;
+//│         set tmp = -⁰(x, 1);
+//│         set fv_tmp = +⁰(x, eta$0$1);
+//│         set x = tmp;
+//│         set eta$0$1 = fv_tmp;
+//│         continue loopLabel
+//│     end
 //│   end
 //│ };
 //│ define enum⁰ as fun enum¹(x) {
@@ -108,26 +112,39 @@ len(flatten(id((1 :: 2 :: Nil) :: (3 :: Nil) :: Nil)))
 //│ eta-expansion > flatten_31$flatten: [1, 6]
 //│ eta-expansion > <<< eta-expansion targets shapes <<<
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let tmp, tmp1, tmp2, tmp3, tmp4, tmp5, flatten_31$flatten, flatten_31_append_19$append$worker, flatten_31$flatten$worker;
+//│ let tmp, tmp1, tmp2, tmp3, tmp4, tmp5, flatten_31$flatten, flatten_31_append_19$append$worker, flatten_31$flatten$worker, flatten_31$flatten_flatten_31$flatten$worker;
+//│ define flatten_31$flatten_flatten_31$flatten$worker as fun flatten_31$flatten_flatten_31$flatten$worker⁰(id, param0) {
+//│   loop loopLabel:
+//│     match id
+//│       0 =>
+//│         set id = 1;
+//│         continue loopLabel
+//│       1 =>
+//│         let arg$Cons$0$, arg$Cons$1$;
+//│         match param0
+//│           Nil⁰ =>
+//│             return 0
+//│           Cons¹ =>
+//│             let ys;
+//│             set arg$Cons$0$ = param0.h⁰;
+//│             set arg$Cons$1$ = param0.t⁰;
+//│             set ys = flatten_31$flatten⁰(arg$Cons$1$);
+//│             return flatten_31_append_19$append$worker⁰(arg$Cons$0$, ys)
+//│           else
+//│             throw new globalThis⁰.Error⁰("match error")
+//│         end
+//│       else
+//│         end
+//│     end
+//│   end
+//│ };
 //│ @inline @private
 //│ define flatten_31$flatten as fun flatten_31$flatten⁰(xss)() {
-//│   return flatten_31$flatten$worker⁰(xss)
+//│   return flatten_31$flatten_flatten_31$flatten$worker⁰(0, xss)
 //│ };
 //│ @private
 //│ define flatten_31$flatten$worker as fun flatten_31$flatten$worker⁰(xss) {
-//│   let arg$Cons$0$, arg$Cons$1$;
-//│   match xss
-//│     Nil⁰ =>
-//│       return 0
-//│     Cons¹ =>
-//│       let ys;
-//│       set arg$Cons$0$ = xss.h⁰;
-//│       set arg$Cons$1$ = xss.t⁰;
-//│       set ys = flatten_31$flatten⁰(arg$Cons$1$);
-//│       return flatten_31_append_19$append$worker⁰(arg$Cons$0$, ys)
-//│     else
-//│       throw new globalThis⁰.Error⁰("match error")
-//│   end
+//│   return flatten_31$flatten_flatten_31$flatten$worker⁰(1, xss)
 //│ };
 //│ @private
 //│ define flatten_31_append_19$append$worker as fun flatten_31_append_19$append$worker⁰(xs, ys) {

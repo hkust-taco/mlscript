@@ -610,95 +610,126 @@ lambda$ = (undefined, function (Runtime2, EffectHandle1, value) {
       static [definitionMetadata] = ["class", "Int31", [null]];
     });
   }
-  static handleEffects_handleEffect_resume(id, param0, param1) {
+  static handleEffect_resume_handleEffects_handleEffect_resume(id, param0, param1, param2) {
     loopLabel: while (true) {
       switch (id) {
         case 0:
-          lbl: while (true) {
-            let nxt, scrut;
-            if (param0 instanceof Runtime.EffectSig.class) {
-              nxt = Runtime.handleEffect(param0);
-              scrut = param0 === nxt;
-              if (scrut === true) {
-                Runtime.curEffect = param0;
-                return null
-              }
-              param0 = nxt;
-              continue lbl;
-            }
-            return param0;
+          {
+            let param0_tmp;
+            param0_tmp = param0;
+            param0 = 1;
+            param1 = param0_tmp;
+            param2 = undefined;
+            id = 2;
+            continue loopLabel;
           }
         case 1:
           {
-            let prevHandlerFrame, scrut, handlerFrame, saved, old, scrut1, scrut2, scrut3, tmp, tmp1, tmp2, tmp3;
-            prevHandlerFrame = param0.contTrace;
-            lbl1: while (true) {
-              let scrut4, scrut5;
-              scrut4 = prevHandlerFrame.nextHandler !== null;
-              if (scrut4 === true) {
-                scrut5 = prevHandlerFrame.nextHandler.handler !== param0.handler;
-                if (scrut5 === true) {
-                  prevHandlerFrame = prevHandlerFrame.nextHandler;
-                  continue lbl1
-                }
-              }
-              break;
-            }
-            scrut = prevHandlerFrame.nextHandler === null;
-            if (scrut === true) {
-              return param0
-            }
-            handlerFrame = prevHandlerFrame.nextHandler;
-            saved = new Runtime.ContTrace.class(handlerFrame.next, param0.contTrace.last, handlerFrame.nextHandler, param0.contTrace.lastHandler, false);
-            param0.contTrace.last = handlerFrame;
-            param0.contTrace.lastHandler = handlerFrame;
-            handlerFrame.next = null;
-            handlerFrame.nextHandler = null;
-            Runtime.curEffect = null;
-            old = Runtime.stackDepth;
-            try {
-              tmp1 = Runtime.stackDepth + 2;
-              Runtime.stackDepth = tmp1;
-              tmp2 = Runtime.resume(param0.contTrace);
-              tmp3 = runtime.safeCall(param0.handlerFun(tmp2));
-              tmp = tmp3;
-            } finally {
-              Runtime.stackDepth = old;
-            }
-            scrut1 = Runtime.curEffect !== null;
-            if (scrut1 === true) {
-              param0 = Runtime.curEffect;
-              scrut2 = saved.next !== null;
-              if (scrut2 === true) {
-                param0.contTrace.last.next = saved.next;
-                param0.contTrace.last = saved.last;
-              }
-              scrut3 = saved.nextHandler !== null;
-              if (scrut3 === true) {
-                param0.contTrace.lastHandler.nextHandler = saved.nextHandler;
-                param0.contTrace.lastHandler = saved.lastHandler;
-                return param0
-              }
-              return param0;
-            }
-            return Runtime.resumeContTrace(saved, tmp);
-          }
-        case 2:
-          {
-            let scrut, tmp;
-            scrut = param0.resumed;
-            if (scrut === true) {
-              throw runtime.safeCall(globalThis.Error("Multiple resumption"))
-            }
-            param0.resumed = true;
-            tmp = Runtime.resumeContTrace(param0, param1);
-            param0 = tmp;
-            id = 0;
+            let param1_tmp, param0_tmp;
+            param1_tmp = param1;
+            param0_tmp = param0;
+            param0 = 2;
+            param1 = param0_tmp;
+            param2 = param1_tmp;
+            id = 2;
             continue loopLabel;
           }
+        case 2:
+          loopLabel1: while (true) {
+            switch (param0) {
+              case 0:
+                lbl: while (true) {
+                  let nxt, scrut;
+                  if (param1 instanceof Runtime.EffectSig.class) {
+                    nxt = Runtime.handleEffect(param1);
+                    scrut = param1 === nxt;
+                    if (scrut === true) {
+                      Runtime.curEffect = param1;
+                      return null
+                    }
+                    param1 = nxt;
+                    continue lbl;
+                  }
+                  return param1;
+                }
+              case 1:
+                {
+                  let prevHandlerFrame, scrut, handlerFrame, saved, old, scrut1, scrut2, scrut3, tmp, tmp1, tmp2, tmp3;
+                  prevHandlerFrame = param1.contTrace;
+                  lbl1: while (true) {
+                    let scrut4, scrut5;
+                    scrut4 = prevHandlerFrame.nextHandler !== null;
+                    if (scrut4 === true) {
+                      scrut5 = prevHandlerFrame.nextHandler.handler !== param1.handler;
+                      if (scrut5 === true) {
+                        prevHandlerFrame = prevHandlerFrame.nextHandler;
+                        continue lbl1
+                      }
+                    }
+                    break;
+                  }
+                  scrut = prevHandlerFrame.nextHandler === null;
+                  if (scrut === true) {
+                    return param1
+                  }
+                  handlerFrame = prevHandlerFrame.nextHandler;
+                  saved = new Runtime.ContTrace.class(handlerFrame.next, param1.contTrace.last, handlerFrame.nextHandler, param1.contTrace.lastHandler, false);
+                  param1.contTrace.last = handlerFrame;
+                  param1.contTrace.lastHandler = handlerFrame;
+                  handlerFrame.next = null;
+                  handlerFrame.nextHandler = null;
+                  Runtime.curEffect = null;
+                  old = Runtime.stackDepth;
+                  try {
+                    tmp1 = Runtime.stackDepth + 2;
+                    Runtime.stackDepth = tmp1;
+                    tmp2 = Runtime.resume(param1.contTrace);
+                    tmp3 = runtime.safeCall(param1.handlerFun(tmp2));
+                    tmp = tmp3;
+                  } finally {
+                    Runtime.stackDepth = old;
+                  }
+                  scrut1 = Runtime.curEffect !== null;
+                  if (scrut1 === true) {
+                    param1 = Runtime.curEffect;
+                    scrut2 = saved.next !== null;
+                    if (scrut2 === true) {
+                      param1.contTrace.last.next = saved.next;
+                      param1.contTrace.last = saved.last;
+                    }
+                    scrut3 = saved.nextHandler !== null;
+                    if (scrut3 === true) {
+                      param1.contTrace.lastHandler.nextHandler = saved.nextHandler;
+                      param1.contTrace.lastHandler = saved.lastHandler;
+                      return param1
+                    }
+                    return param1;
+                  }
+                  return Runtime.resumeContTrace(saved, tmp);
+                }
+              case 2:
+                {
+                  let scrut, tmp;
+                  scrut = param1.resumed;
+                  if (scrut === true) {
+                    throw runtime.safeCall(globalThis.Error("Multiple resumption"))
+                  }
+                  param1.resumed = true;
+                  tmp = Runtime.resumeContTrace(param1, param2);
+                  param1 = tmp;
+                  param0 = 0;
+                  continue loopLabel1;
+                }
+            }
+            break;
+          }
+          break;
       }
       break;
     }
+  }
+  static handleEffects_handleEffect_resume(id, param0, param1) {
+    return Runtime.handleEffect_resume_handleEffects_handleEffect_resume(2, id, param0, param1)
   }
   static get unreachable() {
     throw runtime.safeCall(globalThis.Error("unreachable"));
@@ -1080,11 +1111,11 @@ lambda$ = (undefined, function (Runtime2, EffectHandle1, value) {
     return Runtime.handleEffects_handleEffect_resume(0, cur, undefined)
   }
   static handleEffect(cur) {
-    return Runtime.handleEffects_handleEffect_resume(1, cur, undefined)
+    return Runtime.handleEffect_resume_handleEffects_handleEffect_resume(0, cur, undefined, undefined)
   }
   static resume(contTrace) {
     return (value) => {
-      return Runtime.handleEffects_handleEffect_resume(2, contTrace, value)
+      return Runtime.handleEffect_resume_handleEffects_handleEffect_resume(1, contTrace, value, undefined)
     }
   }
   static resumeContTrace(contTrace, value) {
