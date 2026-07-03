@@ -55,8 +55,8 @@ class CompilationPipeline(using Config, Raise, State, Ctx, SymbolPrinter):
       else prog
     runPass("ClassParamFlattener")(ClassParamFlattener.apply)
     runPass("ReflectionInstrumenter")(ReflectionInstrumenter(using summon).apply)
-    runPass("TailRecOpt")(TailRecOpt().transform)
     preOptimizeHook(result)
+    runPass("TailRecOpt")(TailRecOpt().transform)
     runPass("WorkerWrapper")(WorkerWrapper(symbolsToPreserve, otl, printer))
     runPass("BlockSimplifier")(BlockSimplifier(symbolsToPreserve, otl, printer).apply)
     runPass("DeadParamElim")(otl.givenIn(DeadParamElim.apply))
