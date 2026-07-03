@@ -10,9 +10,12 @@ import "../../mlscript-compile/Char.mls"
 pattern Input =
   ((Char.Whitespace ~ (Input as inp)) => inp) | ((c ~ (Input as inp)) => [c, ..inp]) | ("" => [])
 
-:fixme
+// Note: the wildcard `c` is greedy — it consumes as much as the rest of the
+// sequence permits — so it takes the whole input here (`Input` accepts the
+// empty remainder). This used to overflow the stack in the backtracking
+// translation; string patterns now compile to automata and always terminate.
 if "a b c" is Input as chars then chars
-//│ ═══[RUNTIME ERROR] RangeError: Maximum call stack size exceeded
+//│ = [a b c]
 
 // ——— ——— ———
 
@@ -47,7 +50,7 @@ if tokens is @compile Parse as stack do print(stack)
 if tokens is
   @compile Parse as stack do print(stack)
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'stack'
-//│ ║  l.48: 	  @compile Parse as stack do print(stack)
+//│ ║  l.51: 	  @compile Parse as stack do print(stack)
 //│ ╙──      	                                   ^^^^^
 
 // What's actually intended:

@@ -657,7 +657,10 @@ class SplitCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
           case S(objectSymbol: ModuleOrObjectSymbol) =>
             makeMatchObjectSplit(pattern.toLoc, scrutinee, target, objectSymbol, arguments)
           case S(patternSymbol: PatternSymbol) =>
-            makeMatchPatternSplit(scrutinee, target, patternSymbol, arguments)
+            if isParametricStringSite(patternSymbol, arguments) then
+              makeStringRegionSplit(scrutinee, pattern, outputNeeded)
+            else
+              makeMatchPatternSplit(scrutinee, target, patternSymbol, arguments)
           case N =>
             error(msg"Cannot use this ${target.describe} as a pattern." -> target.toLoc)
             RejectSplit
@@ -699,27 +702,42 @@ class SplitCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
         Branch(scrutinee(), FlatPattern.Lit(literal), makeConsequent(scrutinee, SeqMap.empty)) ~: alternative
       case Range(lower, upper, rightInclusive) => (makeConsequent, alternative) =>
         makeRangeTest(scrutinee, lower, upper, rightInclusive, makeConsequent(scrutinee, SeqMap.empty)) ~~: alternative
-      case Concatenation(left, right) => (makeConsequent, alternative) =>
-        makeStringPrefixMatchSplit(scrutinee, left)(
-          (consumedOutput, remainingOutput, bindingsFromConsumed) =>
-            makeMatchSplit(remainingOutput, right, outputNeeded)(
-              (postfixOutput, bindingsFromRemaining) =>
-                if outputNeeded then
-                  val combinedOutput = new LazyScrut(S("concatenatedOutput"))
-                  val combinedTerm = app(
-                    add.ref(),
-                    tup(fld(consumedOutput()), fld(postfixOutput())),
-                    "concatenated string output"
-                  )
-                  combinedOutput.toLet(
-                    combinedTerm,
-                    makeConsequent(combinedOutput, bindingsFromConsumed ++ bindingsFromRemaining)
-                  ) ~~: alternative
-                else
-                  makeConsequent(scrutinee, bindingsFromConsumed ++ bindingsFromRemaining) ~~: alternative,
-              alternative),
-          alternative
-        )
+      case Concatenation(left, right) =>
+        if !regionSupported(pattern, Set.empty) then
+          // Either this sequence occurs in the body of a parametric pattern
+          // definition — its pattern parameters are only known at use sites,
+          // which compile their own automata (see `isParametricStringSite`) —
+          // or it contains constructs the automaton does not compile yet
+          // (guards, chains, extraction arguments). Such sequences remain on
+          // the legacy greedy prefix composition.
+          (makeConsequent, alternative) =>
+            makeStringPrefixMatchSplit(scrutinee, left)(
+              (consumedOutput, remainingOutput, bindingsFromConsumed) =>
+                makeMatchSplit(remainingOutput, right, outputNeeded)(
+                  (postfixOutput, bindingsFromRemaining) =>
+                    if outputNeeded then
+                      val combinedOutput = new LazyScrut(S("concatenatedOutput"))
+                      val combinedTerm = app(
+                        add.ref(),
+                        tup(fld(consumedOutput()), fld(postfixOutput())),
+                        "concatenated string output"
+                      )
+                      combinedOutput.toLet(
+                        combinedTerm,
+                        makeConsequent(combinedOutput, bindingsFromConsumed ++ bindingsFromRemaining)
+                      ) ~~: alternative
+                    else
+                      makeConsequent(scrutinee, bindingsFromConsumed ++ bindingsFromRemaining) ~~: alternative,
+                  alternative),
+              alternative
+            )
+        else
+          // String sequences are compiled as a whole — together with
+          // everything nested in them, including recursive pattern references
+          // — into a finite automaton. Splitting decisions are global to the
+          // sequence, so no prefix-protocol composition (with its greedy
+          // misbehavior) takes place anymore.
+          makeStringRegionSplit(scrutinee, pattern, outputNeeded)
       case Tuple(elements, N) => (makeConsequent, alternative) =>
         // Fixed-length tuple patterns are similar to constructor patterns.
         val (subScrutinees, makeChainedConsequent) =
@@ -1118,6 +1136,167 @@ class SplitCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
         msg"String patterns are not yet supported by efficient compilation." -> pattern.toLoc
       makeStringPrefixMatchSplit(scrutinee, pattern)
   
+  /** Whether the pattern transitively contains a string sequencing construct
+    * (`~`), looking through the definitions of referenced pattern symbols.
+    * Such patterns are compiled to finite automata (see `StringCompiler`).
+    */
+  private def containsStringSeq(pattern: SP): Bool =
+    val visited = collection.mutable.Set.empty[PatternSymbol]
+    def loop(pattern: SP): Bool = pattern match
+      case Concatenation(_, _) => true
+      case Constructor(target, arguments) =>
+        arguments.exists(_.exists(loop)) ||
+        target.resolvedSym.flatMap(_.asPat).exists: patternSymbol =>
+          visited.add(patternSymbol) &&
+            patternSymbol.defn.exists(defn => loop(defn.pattern))
+      case Composition(_, left, right) => loop(left) || loop(right)
+      case Negation(pattern) => loop(pattern)
+      case Wildcard() | Literal(_) | Range(_, _, _) => false
+      case Tuple(leading, spread) => leading.exists(loop) || spread.exists:
+        case (_, middle, trailing) => loop(middle) || trailing.exists(loop)
+      case Record(fields) => fields.exists((_, pattern) => loop(pattern))
+      case Chain(first, second) => loop(first) || loop(second)
+      case Alias(pattern, _) => loop(pattern)
+      case Transform(pattern, _, _) => loop(pattern)
+      case Annotated(pattern, _) => loop(pattern)
+      case Guarded(pattern, _) => loop(pattern)
+    loop(pattern)
+
+  /** Whether the pattern (and every pattern definition it references) only
+    * uses constructs that the string automaton compiles faithfully. Patterns
+    * failing this check keep the legacy backtracking translation:
+    *
+    *  - Guards and chains may fail after consumption based on information the
+    *    automaton does not track;
+    *  - references to pattern symbols with extraction arguments (including
+    *    the output-matching shorthand) bind values that cannot cross the
+    *    automaton boundary;
+    *  - pattern parameter references are only meaningful once bound: they are
+    *    accepted when `boundParams` says an instantiation will substitute
+    *    them (at use sites of parametric patterns), and rejected inside the
+    *    ahead-of-time compilation of the parametric definition itself.
+    */
+  private def regionSupported(pattern: SP, boundParams: Set[VarSymbol]): Bool =
+    val visited = collection.mutable.Set.empty[PatternSymbol]
+    def loop(pattern: SP, bound: Set[VarSymbol]): Bool = pattern match
+      case Guarded(_, _) | Chain(_, _) => false
+      case Constructor(target, arguments) => target.resolvedSym match
+        case S(symbol: VarSymbol) =>
+          bound.contains(symbol) && arguments.isEmpty
+        case symbolOption => symbolOption.flatMap(_.asPat) match
+          case S(patternSymbol) => patternSymbol.defn match
+            case N => false
+            case S(defn) =>
+              arguments.fold(0)(_.length) == defn.patternParams.length &&
+              arguments.getOrElse(Nil).forall(loop(_, bound)) &&
+              (!visited.add(patternSymbol) ||
+                loop(defn.pattern, defn.patternParams.iterator.map(_.sym).toSet))
+          // Class and object patterns cannot match a string, so they are
+          // harmless dead alternatives within a region; still check their
+          // sub-patterns, whose transforms would otherwise be miscompiled.
+          case N => arguments.forall(_.forall(loop(_, bound)))
+      case Composition(_, left, right) => loop(left, bound) && loop(right, bound)
+      case Negation(pattern) => loop(pattern, bound)
+      case Wildcard() | Literal(_) | Range(_, _, _) => true
+      case Concatenation(left, right) => loop(left, bound) && loop(right, bound)
+      case Tuple(leading, spread) => leading.forall(loop(_, bound)) && spread.forall:
+        case (_, middle, trailing) => loop(middle, bound) && trailing.forall(loop(_, bound))
+      case Record(fields) => fields.forall((_, pattern) => loop(pattern, bound))
+      case Alias(pattern, _) => loop(pattern, bound)
+      case Transform(pattern, _, _) => loop(pattern, bound)
+      case Annotated(pattern, _) => loop(pattern, bound)
+    loop(pattern, boundParams)
+
+  /** Parametric pattern definitions cannot precompile their matcher methods —
+    * the pattern arguments are only known at the use site — so use sites of
+    * parametric string patterns compile the fully instantiated pattern into an
+    * automaton in place. (Non-parametric definitions keep calling their
+    * automaton-backed `unapply` instead, avoiding per-site code duplication.)
+    * This is the case exactly when every argument is a pattern argument and
+    * a string sequence occurs in the definition or the arguments.
+    */
+  private def isParametricStringSite(patternSymbol: PatternSymbol, arguments: Opt[Ls[SP]]): Bool =
+    patternSymbol.defn.exists: defn =>
+      defn.patternParams.nonEmpty &&
+      arguments.fold(0)(_.length) == defn.patternParams.length &&
+      (containsStringSeq(defn.pattern) || arguments.getOrElse(Nil).exists(containsStringSeq)) &&
+      // The definition body is checked with its own parameters considered
+      // bound (instantiation will substitute them); the arguments themselves
+      // must be closed, which also rules out references like `Rep(S)` inside
+      // the body of another parametric definition.
+      regionSupported(defn.pattern, defn.patternParams.iterator.map(_.sym).toSet) &&
+      arguments.getOrElse(Nil).forall(regionSupported(_, Set.empty))
+
+  /** Compile a whole-match string region rooted at `pattern` into a finite
+    * automaton and emit the split that runs it (see `StringCompiler`).
+    *
+    * When the region carries no transforms and neither output nor bindings
+    * are demanded, recognition alone suffices: a single backward scan with no
+    * allocation. Transforms, however, always force the parsing entry point —
+    * they run exactly once on the committed parse, even when the match is
+    * only used as a condition. Then the result array `[output, bindings...]`
+    * is destructured.
+    */
+  private def makeStringRegionSplit(scrutinee: Scrut, pattern: SP, outputNeeded: Bool): MakeSplit =
+    val instantiator = new Instantiator
+    val (instantiated, context) = instantiator(pattern)
+    val compiler = new StringCompiler(using context)
+    compiler.compile(instantiated, StringCompiler.Mode.Whole) match
+      case N => RejectSplit // Errors have been reported; compile nothing.
+      case S(compiled) =>
+        if compiled.pure ||
+            (!outputNeeded && compiled.visibleSlots.isEmpty && compiled.actions.isEmpty) then
+          (makeConsequent, alternative) =>
+            val callTerm = app(strPatMatchWhole,
+              tup(fld(str(compiled.table)), fld(scrutinee())), "whole string match")
+            tempLet("stringMatched", callTerm): resultSymbol =>
+              Branch(resultSymbol.safeRef, makeConsequent(scrutinee, SeqMap.empty)) ~: alternative
+        else (makeConsequent, alternative) =>
+          val callTerm = app(strPatParseWhole,
+            tup(fld(str(compiled.table)), fld(actionsTuple(compiled.actions, pattern.toLoc)), fld(scrutinee())),
+            "whole string parse")
+          tempLet("parseResult", callTerm): resultSymbol =>
+            val outputSymbol = TempSymbol(N, "stringOutput")
+            val slotSymbols = compiled.visibleSlots.map: (symbol, slot) =>
+              (symbol, slot, TempSymbol(N, s"${symbol.name}$$"))
+            val bindings: BindingMap = SeqMap.from(slotSymbols.map:
+              (symbol, _, local) => symbol -> local.toScrut)
+            val consequent = slotSymbols.foldRight(makeConsequent(outputSymbol.toScrut, bindings)):
+              case ((_, slot, local), inner) =>
+                Split.Let(local, callTupleGet(resultSymbol.safeRef, 1 + slot, "string binding"), inner)
+            Branch(
+              resultSymbol.safeRef,
+              // The engine returns null on failure and an array on success.
+              FlatPattern.Tuple(1, true),
+              Split.Let(outputSymbol, callTupleGet(resultSymbol.safeRef, 0, "string output"), consequent)
+            ) ~: alternative
+
+  /** Compile the body of a pattern definition into a prefix-matching
+    * automaton for its `unapplyStringPrefix` method. The result follows the
+    * established protocol: `MatchSuccess([consumed, remaining], null)`.
+    */
+  private def makeStringPrefixAutomatonSplit(inputSymbol: VarSymbol, pattern: SP)(using Raise): Split =
+    val instantiator = new Instantiator
+    val (instantiated, context) = instantiator(pattern)
+    val compiler = new StringCompiler(using context)
+    compiler.compile(instantiated, StringCompiler.Mode.Prefix) match
+      case N => failure
+      case S(compiled) =>
+        val callTerm = app(strPatParsePrefix,
+          tup(fld(str(compiled.table)), fld(actionsTuple(compiled.actions, pattern.toLoc)), fld(inputSymbol.safeRef)),
+          "string prefix parse")
+        tempLet("prefixResult", callTerm): resultSymbol =>
+          val consumedSymbol = TempSymbol(N, "consumed")
+          val remainingSymbol = TempSymbol(N, "remaining")
+          Branch(
+            resultSymbol.safeRef,
+            FlatPattern.Tuple(2, true),
+            Split.Let(consumedSymbol, callTupleGet(resultSymbol.safeRef, 0, "consumed prefix"),
+              Split.Let(remainingSymbol, callTupleGet(resultSymbol.safeRef, 1, "remaining input"),
+                Split.Else(makeMatchSuccess(
+                  tup(fld(consumedSymbol.safeRef), fld(remainingSymbol.safeRef))))))
+          ) ~: failure
+
   def compilePattern(scrutinee: Scrut, pattern: SP): MakeSplit =
     compilePattern(scrutinee, pattern, true)
 
@@ -1307,9 +1486,21 @@ class SplitCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
       // the translation of `unapply` function.
       given Raise = Function.const(())
       val inputSymbol = VarSymbol(Ident("input"))
-      val topmost = makeStringPrefixMatchSplit(inputSymbol.toScrut, pd.pattern)
-        ((consumedOutput, remainingOutput, bindings) => Split.Else:
-          makeMatchSuccess(tup(fld(consumedOutput()), fld(remainingOutput()))), failure)
+      val topmost =
+        if pd.patternParams.isEmpty && containsStringSeq(pd.pattern)
+            && regionSupported(pd.pattern, Set.empty) then
+          // The whole body — including alternatives without `~` — is compiled
+          // into one prefix automaton, so alternation and splitting decisions
+          // are resolved jointly rather than by greedy composition.
+          makeStringPrefixAutomatonSplit(inputSymbol, pd.pattern)
+        else
+          // Bodies without string sequences have no splitting ambiguity, and
+          // parametric definitions cannot be compiled ahead of the use site
+          // (their use sites compile in-place automata instead; this legacy
+          // method remains only for direct calls).
+          makeStringPrefixMatchSplit(inputSymbol.toScrut, pd.pattern)
+            ((consumedOutput, remainingOutput, bindings) => Split.Else:
+              makeMatchSuccess(tup(fld(consumedOutput()), fld(remainingOutput()))), failure)
       log(s"Translated `unapplyStringPrefix`: ${topmost.prettyPrint}")
       makeMethod("unapplyStringPrefix", pd.patternParams, inputSymbol, topmost)
     unapply :: unapplyStringPrefix :: Nil

@@ -17,28 +17,22 @@ pattern Xss = Xs ~ (Xss | "")
 
 pattern XsX = Xs ~ "x"
 
-// In the following tests, the left-hand side of concatenation should not
-// eagerly consume all letters. We should compile these string patterns even in
-// naive compilation, rather than just transliterate them.
+// In the following tests, the left-hand side of concatenation must not
+// eagerly consume all letters. String patterns are compiled to automata whose
+// splitting decisions are global to the whole sequence, so these all match.
 
 :expect true
-:fixme
 "xxxxxxxxxxxxxx" is XsX
-//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
-//│ = false
+//│ = true
 
 pattern XssX = Xss ~ "x"
 
 :expect true
-:fixme
 "xxxxxxxx" is XssX
-//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
-//│ = false
+//│ = true
 
 pattern XsXs = Xs ~ Xs
 
 :expect true
-:fixme
 "xxxxxx" is XsXs
-//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
-//│ = false
+//│ = true

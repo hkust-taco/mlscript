@@ -335,7 +335,8 @@ class FixedPointCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynt
     case Not(pattern) => mentions(pattern, target)
     case Rename(pattern, _) => mentions(pattern, target)
     case Extract(pattern, _, _) => mentions(pattern, target)
-    case Literal(_) => false
+    case Concat(patterns) => patterns.exists(mentions(_, target))
+    case Literal(_) | CharClass(_, _) => false
 
   /** Instantiate the pattern groups with a shared `Instantiator`,
     * monomorphizing higher-order patterns such as `Ctx(Redex)` into

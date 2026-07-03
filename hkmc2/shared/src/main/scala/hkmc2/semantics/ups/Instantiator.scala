@@ -124,20 +124,28 @@ class Instantiator(using tl: TL)(using Ctx, State, Raise):
     case SP.Wildcard() => Wildcard
     case SP.Literal(literal) => Literal(literal)
     case SP.Range(lower, upper, rightInclusive) =>
-      // Currently, we expand the range pattern into a list of literals. After
-      // the `where` clause or chain patterns are implemented, we could directly
-      // expand the range pattern into a range test.
       (lower, upper) match
-        case (StrLit(lower), StrLit(upper)) =>
-          Or((lower.head to upper.head).map(c => Literal(StrLit(c.toString))).toList)
+        case (StrLit(lower), StrLit(upper)) if lower.nonEmpty && upper.nonEmpty =>
+          // String ranges compare the first UTF-16 code unit, mirroring the
+          // previous expansion `(lower.head to upper.head)`. Keeping the range
+          // symbolic lets the string pattern compiler emit compact
+          // character-class transitions instead of wide disjunctions.
+          CharClass(lower.head.toInt, upper.head.toInt).withLocOf(pattern)
         case (IntLit(lower), IntLit(upper)) =>
+          // Integer ranges are still expanded into a list of literals. After
+          // the `where` clause or chain patterns are implemented, we could
+          // directly expand the range pattern into a range test.
           Or((lower to upper).map(i => Literal(IntLit(i))).toList)
         case _ =>
           error(msg"Range patterns are not supported in pattern compilation." -> pattern.toLoc)
           Never
     case SP.Concatenation(left, right) =>
-      error(msg"String concatenation is not supported in pattern compilation." -> pattern.toLoc)
-      Never
+      // Flatten nested concatenations into one sequence so that the string
+      // pattern compiler sees the whole `~`-spine at once.
+      def parts(pattern: Pat): Ls[Pat] = pattern match
+        case Concat(patterns) => patterns
+        case pattern => pattern :: Nil
+      Concat(parts(instantiate(left)) ::: parts(instantiate(right))).withLocOf(pattern)
     case SP.Tuple(leading, spread) =>
       val instantiatedSpread = spread.map:
         case (spreadKind, middle, trailing) =>
@@ -171,4 +179,9 @@ class Instantiator(using tl: TL)(using Ctx, State, Raise):
             acc
           case N => true
       instantiate(pattern)
-    case _: SP.Guarded => TODO("instantiate for Guarded")
+    case _: SP.Guarded =>
+      // Guards may fail after consumption based on information the automaton
+      // cannot track, which would reintroduce backtracking; they are excluded
+      // from compiled patterns for now.
+      error(msg"Guarded patterns are not supported in pattern compilation." -> pattern.toLoc)
+      Never

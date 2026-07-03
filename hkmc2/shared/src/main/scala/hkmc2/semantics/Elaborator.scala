@@ -332,6 +332,7 @@ object Elaborator:
       loopEnd: ModuleOrObjectSymbol,
       tuple: ModuleOrObjectSymbol,
       str: ModuleOrObjectSymbol,
+      strPat: ModuleOrObjectSymbol,
       unreachable: TermSymbol,
       tupleGet: TermSymbol,
       tupleSlice: TermSymbol,
@@ -340,6 +341,9 @@ object Elaborator:
       strGet: TermSymbol,
       strTake: TermSymbol,
       strLeave: TermSymbol,
+      strPatMatchWhole: TermSymbol,
+      strPatParseWhole: TermSymbol,
+      strPatParsePrefix: TermSymbol,
       matchSuccessCls: ClassSymbol,
       matchSuccessTrm: TermSymbol,
       matchFailureCls: ClassSymbol,
@@ -375,11 +379,13 @@ object Elaborator:
 
       val tuple = modOrObj("Tuple")
       val str = modOrObj("Str")
+      val strPat = modOrObj("StrPat")
       RuntimeSymbols(
         unit = modOrObj("Unit"),
         loopEnd = modOrObj("LoopEnd"),
         tuple = tuple,
         str = str,
+        strPat = strPat,
         unreachable = term("unreachable"),
         tupleGet = moduleMember(tuple, "get"),
         tupleSlice = moduleMember(tuple, "slice"),
@@ -388,6 +394,9 @@ object Elaborator:
         strGet = moduleMember(str, "get"),
         strTake = moduleMember(str, "take"),
         strLeave = moduleMember(str, "leave"),
+        strPatMatchWhole = moduleMember(strPat, "matchWhole"),
+        strPatParseWhole = moduleMember(strPat, "parseWhole"),
+        strPatParsePrefix = moduleMember(strPat, "parsePrefix"),
         matchSuccessCls = cls("MatchSuccess"),
         matchSuccessTrm = term("MatchSuccess"),
         matchFailureCls = cls("MatchFailure"),
@@ -441,6 +450,10 @@ object Elaborator:
     def strGetSymbol: TermSymbol = runtimeSymbols.strGet
     def strTakeSymbol: TermSymbol = runtimeSymbols.strTake
     def strLeaveSymbol: TermSymbol = runtimeSymbols.strLeave
+    def strPatSymbol: ModuleOrObjectSymbol = runtimeSymbols.strPat
+    def strPatMatchWholeSymbol: TermSymbol = runtimeSymbols.strPatMatchWhole
+    def strPatParseWholeSymbol: TermSymbol = runtimeSymbols.strPatParseWhole
+    def strPatParsePrefixSymbol: TermSymbol = runtimeSymbols.strPatParsePrefix
     def matchSuccessClsSymbol: ClassSymbol = runtimeSymbols.matchSuccessCls
     def matchSuccessTrmSymbol: TermSymbol = runtimeSymbols.matchSuccessTrm
     def matchFailureClsSymbol: ClassSymbol = runtimeSymbols.matchFailureCls

@@ -135,15 +135,10 @@ pattern Word = Letter ~ (Word | "")
 "b0rked" is Word
 //│ = false
 
-:e
 fun isWord(x) = x is @compile Word
-//│ ╔══[COMPILATION ERROR] String concatenation is not supported in pattern compilation.
-//│ ║  l.120: 	pattern Word = Letter ~ (Word | "")
-//│ ╙──       	               ^^^^^^^^^^^^^^^^^^^
 
-// Unsupported patterns are equivalent to `Never`.
 isWord of "pattern"
-//│ = false
+//│ = true
 
 pattern ManyDigits = ("0" ..= "9") ~ (ManyDigits | "")
 
@@ -157,6 +152,11 @@ pattern ManyDigits = ("0" ..= "9") ~ (ManyDigits | "")
 
 :expect true
 "1234" is ManyDigits
+//│ = true
+
+fun isManyDigits(str) = str is @compile ManyDigits
+
+isManyDigits("5678")
 //│ = true
 
 pattern Integer = "0" | ("1" ..= "9") ~ (ManyDigits | "")

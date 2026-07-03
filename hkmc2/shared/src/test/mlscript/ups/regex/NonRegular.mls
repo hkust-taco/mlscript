@@ -1,0 +1,81 @@
+:js
+
+// Recursive string patterns compile to finite automata, which is possible
+// exactly when every recursive reference sits in tail position of a sequence
+// (the grammar is right-linear, hence regular). Self-embedding patterns are
+// rejected with an error pinning the culprit reference, and nothing is
+// compiled: the pattern never matches.
+
+:e
+pattern Parens = ("(" ~ Parens ~ ")") | ""
+//│ ╔══[COMPILATION ERROR] This recursive use of pattern `Parens` is not in tail position.
+//│ ║  l.10: 	pattern Parens = ("(" ~ Parens ~ ")") | ""
+//│ ║        	                        ^^^^^^
+//│ ╟── Only self references at the end of a string sequence can be compiled to a finite string matcher.
+//│ ╟── The recursion involves this pattern.
+//│ ║  l.10: 	pattern Parens = ("(" ~ Parens ~ ")") | ""
+//│ ╙──      	                        ^^^^^^
+
+"(())" is Parens
+//│ = false
+
+// Left recursion is not right-linear either. (The backtracking translation
+// used to loop forever on it.)
+
+:e
+pattern Lefty = (Lefty ~ "a") | "b"
+//│ ╔══[COMPILATION ERROR] This recursive use of pattern `Lefty` is not in tail position.
+//│ ║  l.26: 	pattern Lefty = (Lefty ~ "a") | "b"
+//│ ║        	                 ^^^^^
+//│ ╟── Only self references at the end of a string sequence can be compiled to a finite string matcher.
+//│ ╟── The recursion involves this pattern.
+//│ ║  l.26: 	pattern Lefty = (Lefty ~ "a") | "b"
+//│ ╙──      	                 ^^^^^
+
+"baa" is Lefty
+//│ = false
+
+// Mutual recursion is fine as long as all the references are in tail
+// position. Here `Even` matches (aba)* and `Odd` matches a(aba)*.
+
+pattern Even = ("ab" ~ Odd) | ""
+pattern Odd = "a" ~ Even
+
+:expect true
+"a" is Odd
+//│ = true
+
+:expect true
+"aaba" is Odd
+//│ = true
+
+:expect true
+"abaaba" is Even
+//│ = true
+
+:expect false
+"ab" is Even
+//│ = false
+
+// ... and rejected when one of them is not.
+
+:e
+pattern Outer = ("a" ~ Inner ~ "c") | ""
+pattern Inner = "b" ~ Outer
+//│ ╔══[COMPILATION ERROR] This recursive use of pattern `Inner` is not in tail position.
+//│ ║  l.63: 	pattern Outer = ("a" ~ Inner ~ "c") | ""
+//│ ║        	                       ^^^^^
+//│ ╟── Only self references at the end of a string sequence can be compiled to a finite string matcher.
+//│ ╟── The recursion involves this pattern.
+//│ ║  l.64: 	pattern Inner = "b" ~ Outer
+//│ ╙──      	                      ^^^^^
+//│ ╔══[COMPILATION ERROR] This recursive use of pattern `Inner` is not in tail position.
+//│ ║  l.63: 	pattern Outer = ("a" ~ Inner ~ "c") | ""
+//│ ║        	                       ^^^^^
+//│ ╟── Only self references at the end of a string sequence can be compiled to a finite string matcher.
+//│ ╟── The recursion involves this pattern.
+//│ ║  l.64: 	pattern Inner = "b" ~ Outer
+//│ ╙──      	                      ^^^^^
+
+"abc" is Outer
+//│ = false
