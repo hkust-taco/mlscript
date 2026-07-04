@@ -112,13 +112,22 @@ class TailRecOpt(checkAnnotations: Bool)(using State, TL, Raise):
         case _ => N
       else N
     
+    def executesCallee(c: Call, f: FunDefn): Bool =
+      c.argss.size >= f.params.size
+
     override def applyBlock(b: Block): Unit = b match
       case TailCallShape(r, c) => getFun(r) match
         case Some(value) =>
-          if c.argss.size != value.params.size then
+          // Only exactly saturated calls can be rewritten as direct loop jumps.
+          // Over-applied calls do execute the callee, but then apply the
+          // returned value to extra argument lists, so they are normal edges.
+          if c.argss.size === value.params.size then
+            edges ::= CallEdge.TailCall(f.dSym, r)(c)
+          else
             if checkAnnotations && c.metadata.explicitTailCall then
               raise(ErrorReport(msg"Only fully applied calls may be marked @tailcall." -> c.toLoc :: Nil))
-          else edges ::= CallEdge.TailCall(f.dSym, r)(c)
+            if executesCallee(c, value) then
+              edges ::= CallEdge.NormalCall(f.dSym, r)(c)
         case None =>
           if checkAnnotations && c.metadata.explicitTailCall then
             raise(ErrorReport(msg"Only functions in this compilation unit may be marked @tailcall." -> c.toLoc :: Nil))
@@ -132,7 +141,13 @@ class TailRecOpt(checkAnnotations: Bool)(using State, TL, Raise):
         if checkAnnotations && c.metadata.explicitTailCall then
           raise(ErrorReport(msg"This call is not in tail position." -> c.toLoc :: Nil))
         c match
-          case CallToFun(r) => edges ::= CallEdge.NormalCall(f.dSym, r)(c)
+          case CallToFun(r) => getFun(r) match
+            // Under-applied curried calls only build closures for later argument
+            // lists; they do not execute the callee body and therefore do not
+            // form recursive call-graph edges.
+            case Some(value) if executesCallee(c, value) =>
+              edges ::= CallEdge.NormalCall(f.dSym, r)(c)
+            case _ =>
           case _ =>
       case _ => super.applyResult(r)
   
@@ -570,10 +585,10 @@ class TailRecOpt(checkAnnotations: Bool)(using State, TL, Raise):
     new BlockTraverserShallow():
       for f <- c.methods do
         applyBlock(f.body)
-        if checkAnnotations && f.tailRec then
+        if f.tailRec then
           raise(ErrorReport(msg"Class methods may not yet be marked @tailrec." -> f.dSym.toLoc :: Nil))
       override def applyResult(r: Result): Unit = r match
-        case c: Call if checkAnnotations && c.metadata.explicitTailCall =>
+        case c: Call if c.metadata.explicitTailCall =>
           raise(ErrorReport(msg"Calls from class methods cannot yet be marked @tailcall." -> c.toLoc :: Nil))
         case _ => super.applyResult(r)
   
@@ -585,7 +600,7 @@ class TailRecOpt(checkAnnotations: Bool)(using State, TL, Raise):
     // Class methods cannot yet be optimized as they cannot yet be marked final.
     
     if c.k is syntax.Cls then
-      reportClassesTailrec(c)
+      if checkAnnotations then reportClassesTailrec(c)
       val companion = c.companion.mapConserve: comp =>
         val cMtds = optFunctionsFlat(comp.methods, S(comp.isym))
         if cMtds is comp.methods
