@@ -72,6 +72,23 @@ class TailRecOpt(checkAnnotations: Bool)(using State, TL, Raise):
   
   type AccessMap = Map[ScopedInfo, AccessInfo]
   
+  private def compareCallArgListCount(c: Call, f: FunDefn): Int =
+    val cmp = c.argss.sizeCompare(f.params.size)
+    // A zero-argument-list definition may still be invoked by a `Call` node:
+    // the callee body is evaluated as a nullary thunk, and the call's argument
+    // lists are then applied to the returned value. For non-nullary callees,
+    // passing more argument lists than the callee can receive should not happen;
+    // leave this assertion here so that invariant can be enabled once existing
+    // nullary call sites have been audited.
+    // softAssert(
+    //   cmp <= 0 || f.params.isEmpty,
+    //   s"Call node passes ${c.argss.size} argument lists to ${f.dSym.showDbg}, which can receive ${f.params.size}.",
+    // )
+    cmp
+  
+  private def appliesResultOfNullaryCallee(f: FunDefn, cmp: Int): Bool =
+    cmp > 0 && f.params.isEmpty
+  
   object CallToFun:
     def unapply(c: Call): Opt[TermSymbol] = c match
       case Call(fun = Value.MemberRef(_, r: TermSymbol)) => S(r)
@@ -112,22 +129,22 @@ class TailRecOpt(checkAnnotations: Bool)(using State, TL, Raise):
         case _ => N
       else N
     
-    def executesCallee(c: Call, f: FunDefn): Bool =
-      c.argss.size >= f.params.size
-
     override def applyBlock(b: Block): Unit = b match
       case TailCallShape(r, c) => getFun(r) match
         case Some(value) =>
           // Only exactly saturated calls can be rewritten as direct loop jumps.
-          // Over-applied calls do execute the callee, but then apply the
-          // returned value to extra argument lists, so they are normal edges.
-          if c.argss.size === value.params.size then
-            edges ::= CallEdge.TailCall(f.dSym, r)(c)
-          else
-            if checkAnnotations && c.metadata.explicitTailCall then
-              raise(ErrorReport(msg"Only fully applied calls may be marked @tailcall." -> c.toLoc :: Nil))
-            if executesCallee(c, value) then
+          // Under-applied calls only build closures for later argument lists,
+          // while calls to zero-argument-list definitions execute the callee
+          // and then apply the returned value, so they are non-tail edges.
+          val cmp = compareCallArgListCount(c, value)
+          cmp match
+            case 0 => edges ::= CallEdge.TailCall(f.dSym, r)(c)
+            case n if n < 0 =>
+              if checkAnnotations && c.metadata.explicitTailCall then
+                raise(ErrorReport(msg"Only fully applied calls may be marked @tailcall." -> c.toLoc :: Nil))
+            case _ if appliesResultOfNullaryCallee(value, cmp) =>
               edges ::= CallEdge.NormalCall(f.dSym, r)(c)
+            case _ =>
         case None =>
           if checkAnnotations && c.metadata.explicitTailCall then
             raise(ErrorReport(msg"Only functions in this compilation unit may be marked @tailcall." -> c.toLoc :: Nil))
@@ -145,8 +162,13 @@ class TailRecOpt(checkAnnotations: Bool)(using State, TL, Raise):
             // Under-applied curried calls only build closures for later argument
             // lists; they do not execute the callee body and therefore do not
             // form recursive call-graph edges.
-            case Some(value) if executesCallee(c, value) =>
-              edges ::= CallEdge.NormalCall(f.dSym, r)(c)
+            case Some(value) =>
+              val cmp = compareCallArgListCount(c, value)
+              cmp match
+                case 0 => edges ::= CallEdge.NormalCall(f.dSym, r)(c)
+                case _ if appliesResultOfNullaryCallee(value, cmp) =>
+                  edges ::= CallEdge.NormalCall(f.dSym, r)(c)
+                case _ =>
             case _ =>
           case _ =>
       case _ => super.applyResult(r)
@@ -365,11 +387,11 @@ class TailRecOpt(checkAnnotations: Bool)(using State, TL, Raise):
           case None => super.applyBlock(b)
           case Some(id) =>
             val callee = dSymToDefn(calleeSym)
-            val calleeParamsMap = paramSymsMap(callee.dSym)
             // We require the call to be fully applied.
-            if c.argss.size != callee.params.size then
+            if compareCallArgListCount(c, callee) != 0 then
               super.applyBlock(b)
             else
+              val calleeParamsMap = paramSymsMap(callee.dSym)
               // The code used to continute the loop.
               val cont =
                 if funsLen === 1 then Continue(loopSym)
