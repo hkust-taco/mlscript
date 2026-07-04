@@ -1179,9 +1179,9 @@ lambda$ = (undefined, function (Runtime2, EffectHandle1, value) {
       if (rhs instanceof Runtime.Int31.class) {
         return lhs + rhs
       }
-      return runtime.safeCall(Runtime.unreachable());
+      return Runtime.unreachable;
     }
-    return runtime.safeCall(Runtime.unreachable());
+    return Runtime.unreachable;
   }
   toString() { return runtime.render(this); }
   static [definitionMetadata] = ["class", "Runtime"];

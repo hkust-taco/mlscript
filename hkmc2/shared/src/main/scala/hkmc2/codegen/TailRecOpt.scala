@@ -77,13 +77,13 @@ class TailRecOpt(checkAnnotations: Bool)(using State, TL, Raise):
     // A zero-argument-list definition may still be invoked by a `Call` node:
     // the callee body is evaluated as a nullary thunk, and the call's argument
     // lists are then applied to the returned value. For non-nullary callees,
-    // passing more argument lists than the callee can receive violates the
-    // expected IR shape. Once the known producers of such calls have been fixed,
-    // we should restore a softAssert here to report that invariant violation.
-    // softAssert(
-    //   cmp <= 0 || f.params.isEmpty,
-    //   s"Call node passes ${c.argss.size} argument lists to ${f.dSym.showDbg}, which can receive ${f.params.size}.",
-    // )
+    // passing more argument lists than the callee can receive violates the IR
+    // invariant that a `Call` node does not apply the result of a non-nullary
+    // callee.
+    softAssert(
+      cmp <= 0 || f.params.isEmpty,
+      s"Call node passes ${c.argss.size} argument lists to ${f.dSym.showDbg}, which can receive ${f.params.size}.",
+    )
     cmp === 0
   
   object CallToFun:
