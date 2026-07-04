@@ -55,6 +55,9 @@ def softAssert(cond: Boolean, msg: => Str = "")(using Line, FileName, Raise): Un
         :: msg"This is a compiler bug; please report it to the maintainers." -> N
         :: Nil)
 
+def softTODO(subject: Any)(using Line, FileName, Raise): Unit =
+  softTODO(false, s"TODO: handle `$subject`")
+
 def softTODO(cond: Boolean, msg: => Str = "")(using Line, FileName, Raise): Unit =
   if !cond then
     raise:

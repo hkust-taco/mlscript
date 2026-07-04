@@ -212,8 +212,12 @@ let x
 {2 { + 1 }} * 2
 //│ = 6
 
+:e // Note: this used to parse as a juxtaposition (the curly braces were treated equally to an indented section)
 2 { * 1 { + 2 } }
-//│ = 4
+//│ ╔══[COMPILATION ERROR] Unsupported refinement in this position.
+//│ ║  l.216: 	2 { * 1 { + 2 } }
+//│ ╙──       	      ^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 // :dp
 2
@@ -318,10 +322,10 @@ let incr = _ + 1
 :w
 2, * 3
 //│ ╔══[PARSE ERROR] Expected end of input; found literal instead
-//│ ║  l.319: 	2, * 3
+//│ ║  l.323: 	2, * 3
 //│ ╙──       	     ^
 //│ ╔══[WARNING] Pure expression in statement position
-//│ ║  l.319: 	2, * 3
+//│ ║  l.323: 	2, * 3
 //│ ╙──       	^
 //│ = fun
 
@@ -375,9 +379,9 @@ xs |> Arr.len
 ,+
 ys |> Arr.len
 //│ ╔══[PARSE ERROR] Expected start of expression in this position; found new line instead
-//│ ║  l.375: 	,+
+//│ ║  l.379: 	,+
 //│ ║         	  ^
-//│ ║  l.376: 	ys |> Arr.len
+//│ ║  l.380: 	ys |> Arr.len
 //│ ╙──
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -391,9 +395,9 @@ xs |> Arr.len
 +,
 ys |> Arr.len
 //│ ╔══[PARSE ERROR] Expected start of expression in this position; found new line instead
-//│ ║  l.391: 	+,
+//│ ║  l.395: 	+,
 //│ ║         	  ^
-//│ ║  l.392: 	ys |> Arr.len
+//│ ║  l.396: 	ys |> Arr.len
 //│ ╙──
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -424,10 +428,10 @@ new Foo(1) is Foo
 :fixme // ?
 new Foo(1) ,is Foo
 //│ ╔══[PARSE ERROR] Expected start of expression in this position; found 'is' keyword instead
-//│ ║  l.425: 	new Foo(1) ,is Foo
+//│ ║  l.429: 	new Foo(1) ,is Foo
 //│ ╙──       	            ^^
 //│ ╔══[PARSE ERROR] Expected end of input; found identifier instead
-//│ ║  l.425: 	new Foo(1) ,is Foo
+//│ ║  l.429: 	new Foo(1) ,is Foo
 //│ ╙──       	               ^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -435,10 +439,10 @@ new Foo(1) ,is Foo
 new Foo(1)
 is Foo
 //│ ╔══[PARSE ERROR] Expected start of expression in this position; found 'is' keyword instead
-//│ ║  l.436: 	is Foo
+//│ ║  l.440: 	is Foo
 //│ ╙──       	^^
 //│ ╔══[PARSE ERROR] Expected end of input; found identifier instead
-//│ ║  l.436: 	is Foo
+//│ ║  l.440: 	is Foo
 //│ ╙──       	   ^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 

@@ -21,6 +21,12 @@ Any commit that does not include the latest changes to test outputs will fail th
 
 Please also read the files in `.github/skills/hkmc2-difftests`.
 
+When you create a commit, author it under your (the agent's) own identity,
+not under the user's identity.
+Set this identity for the commit command only
+(e.g., `git -c user.name=... -c user.email=... commit ...`).
+Do not change repository-local or global Git identity configuration.
+
 
 ## Design Philosophy
 
