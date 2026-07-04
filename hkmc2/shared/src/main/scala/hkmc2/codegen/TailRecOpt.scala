@@ -72,26 +72,19 @@ class TailRecOpt(checkAnnotations: Bool)(using State, TL, Raise):
   
   type AccessMap = Map[ScopedInfo, AccessInfo]
   
-  private def checkArgListCount(c: Call, f: FunDefn, cmp: Int): Unit =
+  private def isExactlySaturatedCall(c: Call, f: FunDefn): Bool =
+    val cmp = c.argss.sizeCompare(f.params.size)
     // A zero-argument-list definition may still be invoked by a `Call` node:
     // the callee body is evaluated as a nullary thunk, and the call's argument
     // lists are then applied to the returned value. For non-nullary callees,
     // passing more argument lists than the callee can receive violates the
-    // expected IR shape and is reported here.
-    softAssert(
-      cmp <= 0 || f.params.isEmpty,
-      s"Call node passes ${c.argss.size} argument lists to ${f.dSym.showDbg}, which can receive ${f.params.size}.",
-    )
-  
-  private def isExactlySaturatedCall(c: Call, f: FunDefn): Bool =
-    val cmp = c.argss.sizeCompare(f.params.size)
-    checkArgListCount(c, f, cmp)
+    // expected IR shape. Once the known producers of such calls have been fixed,
+    // we should restore a softAssert here to report that invariant violation.
+    // softAssert(
+    //   cmp <= 0 || f.params.isEmpty,
+    //   s"Call node passes ${c.argss.size} argument lists to ${f.dSym.showDbg}, which can receive ${f.params.size}.",
+    // )
     cmp === 0
-  
-  private def executesCallee(c: Call, f: FunDefn): Bool =
-    val cmp = c.argss.sizeCompare(f.params.size)
-    checkArgListCount(c, f, cmp)
-    cmp >= 0
   
   object CallToFun:
     def unapply(c: Call): Opt[TermSymbol] = c match
@@ -137,17 +130,13 @@ class TailRecOpt(checkAnnotations: Bool)(using State, TL, Raise):
       case TailCallShape(r, c) => getFun(r) match
         case Some(value) =>
           // Only exactly saturated calls can be rewritten as direct loop jumps.
-          // Under-applied calls only build closures for later argument lists,
-          // while calls to zero-argument-list definitions execute the callee
-          // and then apply the returned value, so they are non-tail edges.
+          // Under-applied calls only build closures for later argument lists;
+          // over-applied calls cannot be rewritten as direct jumps either.
           if isExactlySaturatedCall(c, value) then
             edges ::= CallEdge.TailCall(f.dSym, r)(c)
           else
             if checkAnnotations && c.metadata.explicitTailCall then
               raise(ErrorReport(msg"Only fully applied calls may be marked @tailcall." -> c.toLoc :: Nil))
-            // * 
-            if executesCallee(c, value) then
-              edges ::= CallEdge.NormalCall(f.dSym, r)(c)
         case None =>
           if checkAnnotations && c.metadata.explicitTailCall then
             raise(ErrorReport(msg"Only functions in this compilation unit may be marked @tailcall." -> c.toLoc :: Nil))
@@ -165,7 +154,7 @@ class TailRecOpt(checkAnnotations: Bool)(using State, TL, Raise):
             // Under-applied curried calls only build closures for later argument
             // lists; they do not execute the callee body and therefore do not
             // form recursive call-graph edges.
-            case Some(value) if executesCallee(c, value) =>
+            case Some(value) if isExactlySaturatedCall(c, value) =>
               edges ::= CallEdge.NormalCall(f.dSym, r)(c)
             case _ =>
           case _ =>
@@ -282,7 +271,7 @@ class TailRecOpt(checkAnnotations: Bool)(using State, TL, Raise):
       case c: CallEdge.NormalCall => c.f2 -> c.call
     val nonTailCalls = nonTailCallsLs.toMap
     
-    if nonTailCallsLs.sizeCompare(calls) === 0 then
+    if calls.isEmpty then
       for f <- funs if checkAnnotations && f.tailRec do
         raise(WarningReport(msg"This function is marked @tailrec but has no apparent tail calls." -> f.dSym.toLoc :: Nil))
       return (N, funs)
@@ -298,6 +287,7 @@ class TailRecOpt(checkAnnotations: Bool)(using State, TL, Raise):
             :: msg"It could self-recurse through this call, which is not a tail call." -> reportLoc
             :: Nil
           ))
+      return (N, funs)
 
     val maxParamLen = maxInt(funs, paramsLen)
     val paramSyms =

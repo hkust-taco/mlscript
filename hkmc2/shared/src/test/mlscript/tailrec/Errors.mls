@@ -176,20 +176,22 @@ module M with
 //│ ╙──       	      ^
 
 
-:w
+:e
 @tailrec
 fun foo(x) =
   foo(1) + 1
-//│ ╔══[WARNING] This function is marked @tailrec but has no apparent tail calls.
+//│ ╔══[COMPILATION ERROR] This function is not tail recursive.
 //│ ║  l.181: 	fun foo(x) =
-//│ ╙──       	    ^^^
+//│ ║         	    ^^^
+//│ ╟── It could self-recurse through this call, which is not a tail call.
+//│ ║  l.182: 	  foo(1) + 1
+//│ ╙──       	  ^^^^^^
 
 :w
 @tailrec
 fun foo(x) =
   1 |> foo
 //│ ╔══[WARNING] This function is marked @tailrec but has no apparent tail calls.
-//│ ║  l.189: 	fun foo(x) =
+//│ ║  l.192: 	fun foo(x) =
 //│ ╙──       	    ^^^
-
 
