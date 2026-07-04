@@ -71,7 +71,7 @@ module A with
 :w
 @tailrec
 fun f = 2
-//│ ╔══[WARNING] This function does not directly self-recurse, but is marked @tailrec.
+//│ ╔══[WARNING] This function is marked @tailrec but has no apparent tail calls.
 //│ ║  l.73: 	fun f = 2
 //│ ╙──      	    ^
 
@@ -79,7 +79,7 @@ fun f = 2
 module A with
   @tailrec
   fun f() = 2
-//│ ╔══[WARNING] This function does not directly self-recurse, but is marked @tailrec.
+//│ ╔══[WARNING] This function is marked @tailrec but has no apparent tail calls.
 //│ ║  l.81: 	  fun f() = 2
 //│ ╙──      	      ^
 
@@ -88,7 +88,7 @@ module A with
 fun foo() = Foo.bar()
 module Foo with
   fun bar() = foo()
-//│ ╔══[WARNING] This function does not directly self-recurse, but is marked @tailrec.
+//│ ╔══[WARNING] This function is marked @tailrec but has no apparent tail calls.
 //│ ║  l.88: 	fun foo() = Foo.bar()
 //│ ╙──      	    ^^^
 
@@ -117,7 +117,7 @@ fun scan(idx, acc) =
   @tailrec
   fun go(idx, tok) = scan(idx, tok)
   go(idx, acc)
-//│ ╔══[WARNING] This function does not directly self-recurse, but is marked @tailrec.
+//│ ╔══[WARNING] This function is marked @tailrec but has no apparent tail calls.
 //│ ║  l.116: 	fun scan(idx, acc) =
 //│ ╙──       	    ^^^^
 //│ ╔══[COMPILATION ERROR] This @tailrec function was not processed by the tail-call optimizer.
@@ -157,3 +157,39 @@ fun g(x)(y) =
 //│ ╔══[COMPILATION ERROR] This call is not optimized as it does not directly recurse through its parent function.
 //│ ║  l.151: 	  @tailcall g(x)(0)
 //│ ╙──       	            ^^^^^^^
+
+
+:w
+module M with
+  @tailrec
+  fun f = print("ok"); f
+//│ ╔══[WARNING] This function is marked @tailrec but has no apparent tail calls.
+//│ ║  l.165: 	  fun f = print("ok"); f
+//│ ╙──       	      ^
+
+:w
+module M with
+  @tailrec
+  fun f = case 0 then f(1)
+//│ ╔══[WARNING] This function is marked @tailrec but has no apparent tail calls.
+//│ ║  l.173: 	  fun f = case 0 then f(1)
+//│ ╙──       	      ^
+
+
+:w
+@tailrec
+fun foo(x) =
+  foo(1) + 1
+//│ ╔══[WARNING] This function is marked @tailrec but has no apparent tail calls.
+//│ ║  l.181: 	fun foo(x) =
+//│ ╙──       	    ^^^
+
+:w
+@tailrec
+fun foo(x) =
+  1 |> foo
+//│ ╔══[WARNING] This function is marked @tailrec but has no apparent tail calls.
+//│ ║  l.189: 	fun foo(x) =
+//│ ╙──       	    ^^^
+
+

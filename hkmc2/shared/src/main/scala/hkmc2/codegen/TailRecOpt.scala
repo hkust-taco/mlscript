@@ -145,6 +145,7 @@ class TailRecOpt(checkAnnotations: Bool)(using State, TL, Raise):
           else
             if checkAnnotations && c.metadata.explicitTailCall then
               raise(ErrorReport(msg"Only fully applied calls may be marked @tailcall." -> c.toLoc :: Nil))
+            // * 
             if executesCallee(c, value) then
               edges ::= CallEdge.NormalCall(f.dSym, r)(c)
         case None =>
@@ -283,7 +284,7 @@ class TailRecOpt(checkAnnotations: Bool)(using State, TL, Raise):
     
     if nonTailCallsLs.sizeCompare(calls) === 0 then
       for f <- funs if checkAnnotations && f.tailRec do
-        raise(WarningReport(msg"This function does not directly self-recurse, but is marked @tailrec." -> f.dSym.toLoc :: Nil))
+        raise(WarningReport(msg"This function is marked @tailrec but has no apparent tail calls." -> f.dSym.toLoc :: Nil))
       return (N, funs)
     
     if !nonTailCalls.isEmpty then
