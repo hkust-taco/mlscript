@@ -23,11 +23,6 @@ class A
 @tailrec
 fun f = g
 fun g = f
-//│ FAILURE: Unexpected warning
-//│ FAILURE LOCATION: optScc (TailRecOpt.scala:252)
-//│ ╔══[WARNING] This function does not directly self-recurse, but is marked @tailrec.
-//│ ║  l.24: 	fun f = g
-//│ ╙──      	    ^
 
 :w
 @tailcall
@@ -43,7 +38,7 @@ fun test =
   @tailcall f
 //│ ╔══[WARNING] This annotation has no effect.
 //│ ╟── This annotation is not supported on reference terms.
-//│ ║  l.43: 	  @tailcall f
+//│ ║  l.38: 	  @tailcall f
 //│ ╙──      	            ^
 //│ f = 0
 
@@ -53,10 +48,7 @@ class A with
   fun f() = g()
   fun g() = f()
 //│ ╔══[COMPILATION ERROR] Class methods may not yet be marked @tailrec.
-//│ ║  l.53: 	  fun f() = g()
-//│ ╙──      	      ^
-//│ ╔══[COMPILATION ERROR] Class methods may not yet be marked @tailrec.
-//│ ║  l.53: 	  fun f() = g()
+//│ ║  l.48: 	  fun f() = g()
 //│ ╙──      	      ^
 
 :w
@@ -71,10 +63,7 @@ module A with
   @tailrec
   fun f = 2
 //│ ╔══[WARNING] This function does not directly self-recurse, but is marked @tailrec.
-//│ ║  l.72: 	  fun f = 2
-//│ ╙──      	      ^
-//│ ╔══[WARNING] This function does not directly self-recurse, but is marked @tailrec.
-//│ ║  l.72: 	  fun f = 2
+//│ ║  l.64: 	  fun f = 2
 //│ ╙──      	      ^
 
 :w
@@ -98,5 +87,5 @@ fun test =
   @tailcall 1 + 2
 //│ ╔══[WARNING] This annotation has no effect.
 //│ ╟── The @tailcall annotation has no effect on calls to built-in symbols.
-//│ ║  l.98: 	  @tailcall 1 + 2
+//│ ║  l.87: 	  @tailcall 1 + 2
 //│ ╙──      	            ^^^^^

@@ -59,7 +59,7 @@ class CompilationPipeline(using Config, Raise, State, Ctx, SymbolPrinter):
     
     // * We run this pass here first, before inlining so that the @tailrec/@tailcall annotations
     // * can be properly checked.
-    runPass("TailRecOpt")(TailRecOpt().transform)
+    runPass("TailRecOpt")(TailRecOpt(true).transform)
     
     runPass("WorkerWrapper")(WorkerWrapper(symbolsToPreserve, otl, printer))
     runPass("BlockSimplifier")(BlockSimplifier(symbolsToPreserve, otl, printer).apply)
@@ -68,6 +68,6 @@ class CompilationPipeline(using Config, Raise, State, Ctx, SymbolPrinter):
     // * More tailrec opportunities might be revealed after WorkerWrapper + BlockSimplifier,
     // * which might bring split curried recursive calls (such as those coming out of Deforest + EtaExpansion)
     // * into proper tail positions.
-    runPass("TailRecOpt")(TailRecOpt().transform)
+    runPass("TailRecOpt")(TailRecOpt(false).transform)
     
     result
