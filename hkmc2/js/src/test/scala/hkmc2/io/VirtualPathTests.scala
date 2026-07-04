@@ -3,6 +3,7 @@ package hkmc2.io
 import org.scalatest.funsuite.AnyFunSuite
 import hkmc2.utils.*, shorthands.*
 
+
 class VirtualPathTests extends AnyFunSuite:
   
   test("basic path creation and toString"):
@@ -130,3 +131,5 @@ class VirtualPathTests extends AnyFunSuite:
     val rel2 = VirtualRelPath("baz")
     val result = rel1 / rel2
     assert(result.toString == "foo/bar/baz")
+
+

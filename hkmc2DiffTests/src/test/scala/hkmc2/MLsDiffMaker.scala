@@ -439,7 +439,7 @@ abstract class MLsDiffMaker extends DiffMaker:
     // If elaborated tree is displayed, don't show the string serialization.
     if (showElab.isSet || debug.isSet) && !showElaboratedTree.isSet then
       output(s"Elab: ${e.showDbg}")
-    showElaboratedTree.get.foreach: post =>
+    if showElaboratedTree.isSet then
       outputSeparator(s"Elaborated tree")
       output(e.showAsTree)
     
@@ -457,7 +457,7 @@ abstract class MLsDiffMaker extends DiffMaker:
     
     if showResolve.isSet then
       output(s"Resolved: ${trm.showDbg}")
-    showResolvedTree.get.foreach: post =>
+    if showResolvedTree.isSet then
       outputSeparator(s"Resolved tree")
       output(trm.showAsTree)
     

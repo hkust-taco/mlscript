@@ -1492,6 +1492,9 @@ extends Importer:
     case Constructor(delc) =>
       raise(ErrorReport(msg"Unsupported constructor in this position." -> tree.toLoc :: Nil))
       error
+    case Reft(base, body) =>
+      raise(ErrorReport(msg"Unsupported refinement in this position." -> tree.toLoc :: Nil))
+      error
     case Dummy | _: SplitPoint | _: LexicalNew | _: Region | _: Effectful =>
       lastWords(s"Unexpected ${tree.describe} in subterm position: $tree")
     case Dummy | _: SplitPoint | _: Pun | _: LetLike | _: TyTup | _: Directive =>
@@ -1644,6 +1647,9 @@ extends Importer:
         reportUnusedAnnotations
         bod match
           case Jux(bse, Block(sts)) =>
+            // * Old parse of `Option { Some, None }`; I guess the indented version still parses like this
+            some(bse -> some(sts))
+          case Reft(bse, Block(sts)) =>
             some(bse -> some(sts))
           // * There could be other shapes of open statements...
           case bse: Ident =>
@@ -1829,7 +1835,7 @@ extends Importer:
                 newCtx = newCtx2
                 res
               // * Elaborate signature
-              val st = td.annotatedResultType.orElse(newSignatureTrees.get(id.name))
+              val st = td.annotatedResultType.orElse(newSignatureTrees.get(id.name)) // FIXME: may elaborate external sig twice!!
               val s = st.map:
                 // unwrap possible module modifier
                 // e.g, `fun f: module M`
@@ -1877,7 +1883,12 @@ extends Importer:
         val owner = ctx.outer.inner
         
         softTODO((k is Als) || (k is Cls) || (k is Mod) || (k is Obj) || (k is Pat), k.desc + " not yet supported")
-        val body = td.withPart
+        val body = td.reft ++ td.withPart match
+          case Nil => N
+          case hd :: Nil => S(hd)
+          case hd :: hd2 :: tl =>
+            raise(ErrorReport(msg"Multiple type definition bodies are not supported." -> hd2.toLoc :: Nil))
+            S(hd)
         
         td.symbName match
         case S(L(d)) => raise(d)
@@ -2333,7 +2344,6 @@ extends Importer:
   
   def pattern(t: Tree): Ctxl[Pattern] =
     import ucs.{Ctor, unapply, error}, ucs.extractors.*, Keyword.*, Pattern.*, InvalidReason.*
-    given TraceLogger = tl
     /** String range bounds must be single characters. */
     def isInvalidStringBounds(lo: StrLit, hi: StrLit)(using Raise): Bool =
       val ds = collection.mutable.Buffer.empty[(Message, Option[Loc])]

@@ -1319,7 +1319,7 @@ case class TypeDef(
 
 // TODO Store optional source locations for the flags instead of booleans
 final case class FldFlags(mut: Bool, spec: Bool, pat: Bool, isVal: Bool):
-  def show: Str = 
+  def show: Str =
     val flags = Buffer.empty[String]
     if mut then flags += "mut"
     if spec then flags += "spec"
@@ -1371,7 +1371,7 @@ final case class TyParam(flags: FldFlags, vce: Opt[Bool], sym: VarSymbol) extend
     (if isCovariant then
       if isContravariant then "" else "out "
       else if isContravariant then "in " else "in out ") +
-    flags.show + sym
+    "‹" + flags.show + "›" + sym
 
 
 object Param:
