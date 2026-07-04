@@ -5,55 +5,55 @@ import RuntimeJS from "./RuntimeJS.mjs";
 import Rendering from "./Rendering.mjs";
 import LazyArray from "./LazyArray.mjs";
 import Iter from "./Iter.mjs";
-let Runtime1, lambda, lambda1, lambda2, lambda3, lambda4, lambda5, lambda6, lambda7, lambda8, lambda9, lambda$, Capture$scope281, lambda$1, lambda$2, lambda$3, lambda$4, lambda$5, Capture$scope631, lambda$6, Capture$scope651, lambda$7;
-(class Capture$scope65 {
+let Runtime1, lambda, lambda1, lambda2, lambda3, lambda4, lambda5, lambda6, lambda7, lambda8, lambda9, lambda$, Capture$scope201, lambda$1, lambda$2, lambda$3, lambda$4, lambda$5, Capture$scope691, lambda$6, Capture$scope711, lambda$7;
+(class Capture$scope71 {
   static {
-    Capture$scope651 = this
+    Capture$scope711 = this
   }
   constructor(result$0) {
     this.result$0 = result$0;
   }
   toString() { return runtime.render(this); }
-  static [definitionMetadata] = ["class", "Capture$scope65"];
+  static [definitionMetadata] = ["class", "Capture$scope71"];
 });
-lambda$7 = (undefined, function (scope65$cap, cont) {
+lambda$7 = (undefined, function (scope71$cap, cont) {
   return (m, marker) => {
-    return lambda2(scope65$cap, cont, m, marker)
+    return lambda2(scope71$cap, cont, m, marker)
   }
 });
-lambda2 = (undefined, function (scope65$cap, cont, m, marker) {
+lambda2 = (undefined, function (scope71$cap, cont, m, marker) {
   let scrut, tmp, tmp1;
   scrut = runtime.safeCall(m.has(cont));
   if (scrut === true) {
     tmp = ", " + marker;
-    tmp1 = scope65$cap.result$0 + tmp;
-    scope65$cap.result$0 = tmp1;
+    tmp1 = scope71$cap.result$0 + tmp;
+    scope71$cap.result$0 = tmp1;
     return runtime.Unit
   }
   return runtime.Unit;
 });
-(class Capture$scope63 {
+(class Capture$scope69 {
   static {
-    Capture$scope631 = this
+    Capture$scope691 = this
   }
   constructor(result$0) {
     this.result$0 = result$0;
   }
   toString() { return runtime.render(this); }
-  static [definitionMetadata] = ["class", "Capture$scope63"];
+  static [definitionMetadata] = ["class", "Capture$scope69"];
 });
-lambda$6 = (undefined, function (scope63$cap, cont) {
+lambda$6 = (undefined, function (scope69$cap, cont) {
   return (m, marker) => {
-    return lambda1(scope63$cap, cont, m, marker)
+    return lambda1(scope69$cap, cont, m, marker)
   }
 });
-lambda1 = (undefined, function (scope63$cap, cont, m, marker) {
+lambda1 = (undefined, function (scope69$cap, cont, m, marker) {
   let scrut, tmp, tmp1;
   scrut = runtime.safeCall(m.has(cont));
   if (scrut === true) {
     tmp = ", " + marker;
-    tmp1 = scope63$cap.result$0 + tmp;
-    scope63$cap.result$0 = tmp1;
+    tmp1 = scope69$cap.result$0 + tmp;
+    scope69$cap.result$0 = tmp1;
     return runtime.Unit
   }
   return runtime.Unit;
@@ -70,9 +70,9 @@ lambda$5 = (undefined, function (Runtime2) {
     return runtime.Unit
   }
 });
-(class Capture$scope28 {
+(class Capture$scope20 {
   static {
-    Capture$scope281 = this
+    Capture$scope201 = this
   }
   constructor(cur$0, pos$1, remStart$2) {
     this.remStart$2 = remStart$2;
@@ -80,16 +80,16 @@ lambda$5 = (undefined, function (Runtime2) {
     this.cur$0 = cur$0;
   }
   toString() { return runtime.render(this); }
-  static [definitionMetadata] = ["class", "Capture$scope28"];
+  static [definitionMetadata] = ["class", "Capture$scope20"];
 });
 lambda$4 = (undefined, function (bindings) {
   return (slot, overlay) => {
     return lambda4(bindings, slot, overlay)
   }
 });
-lambda$3 = (undefined, function (scope28$cap, actions, input, valStack, markStack, bindings, readSlot) {
+lambda$3 = (undefined, function (scope20$cap, actions, input, valStack, markStack, bindings, readSlot) {
   return (ops, k, overlay) => {
-    return lambda5(scope28$cap, actions, input, valStack, markStack, bindings, readSlot, ops, k, overlay)
+    return lambda5(scope20$cap, actions, input, valStack, markStack, bindings, readSlot, ops, k, overlay)
   }
 });
 lambda$2 = (undefined, function (execValueOp) {
@@ -114,16 +114,16 @@ lambda4 = (undefined, function (bindings, slot, overlay) {
   }
   return runtime.safeCall(bindings.get(slot));
 });
-lambda5 = (undefined, function (scope28$cap, actions, input, valStack, markStack, bindings, readSlot, ops, k, overlay) {
+lambda5 = (undefined, function (scope20$cap, actions, input, valStack, markStack, bindings, readSlot, ops, k, overlay) {
   let op, b, a, actionId, argCount, args, j, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9;
   op = ops.at(k);
   switch (op) {
     case 0:
-      runtime.safeCall(markStack.push(scope28$cap.pos$1));
+      runtime.safeCall(markStack.push(scope20$cap.pos$1));
       return k + 1;
     case 1:
       tmp = runtime.safeCall(markStack.pop());
-      tmp1 = runtime.safeCall(input.slice(tmp, scope28$cap.pos$1));
+      tmp1 = runtime.safeCall(input.slice(tmp, scope20$cap.pos$1));
       runtime.safeCall(valStack.push(tmp1));
       return k + 1;
     case 2:
@@ -166,7 +166,7 @@ lambda5 = (undefined, function (scope28$cap, actions, input, valStack, markStack
       tmp8 = k + 3;
       return tmp8 + argCount;
     case 8:
-      scope28$cap.remStart$2 = scope28$cap.pos$1;
+      scope20$cap.remStart$2 = scope20$cap.pos$1;
       return k + 1;
   }
   tmp9 = "StrPat: malformed operation " + op;
@@ -258,13 +258,13 @@ lambda7 = (undefined, function (prog, frames, bindings, execValueOp, runFrameOps
   }
   return runtime.Unit
 });
-lambda8 = (undefined, function (scope28$cap, parentState, parentOps, runOps, state) {
+lambda8 = (undefined, function (scope20$cap, parentState, parentOps, runOps, state) {
   let chain, w, idx;
   chain = [];
   w = state;
   lbl: while (true) {
     let scrut, opsId, scrut1, tmp;
-    scrut = w !== scope28$cap.cur$0;
+    scrut = w !== scope20$cap.cur$0;
     if (scrut === true) {
       opsId = runtime.safeCall(parentOps.get(w));
       scrut1 = opsId !== -1;
@@ -523,7 +523,7 @@ lambda$ = (undefined, function (Runtime2, EffectHandle1, value) {
         Runtime.StrPat = this
       }
       static {
-        let tmp;
+        let tmp, tmp1;
         StrPat.Program = function Program(stateCount, start, accept, slotCount, classCount, seedRev, bounds, states, opsPool, revTrans, viability) {
           return globalThis.Object.freeze(new Program.class(stateCount, start, accept, slotCount, classCount, seedRev, bounds, states, opsPool, revTrans, viability));
         };
@@ -547,8 +547,27 @@ lambda$ = (undefined, function (Runtime2, EffectHandle1, value) {
           toString() { return runtime.render(this); }
           static [definitionMetadata] = ["class", "Program", ["stateCount", "start", "accept", "slotCount", "classCount", "seedRev", "bounds", "states", "opsPool", "revTrans", "viability"]];
         });
+        StrPat.Matcher = function Matcher(classCount, seedRev, bounds, revTrans, starts) {
+          return globalThis.Object.freeze(new Matcher.class(classCount, seedRev, bounds, revTrans, starts));
+        };
+        (class Matcher {
+          static {
+            StrPat.Matcher.class = this
+          }
+          constructor(classCount, seedRev, bounds, revTrans, starts) {
+            this.classCount = classCount;
+            this.seedRev = seedRev;
+            this.bounds = bounds;
+            this.revTrans = revTrans;
+            this.starts = starts;
+          }
+          toString() { return runtime.render(this); }
+          static [definitionMetadata] = ["class", "Matcher", ["classCount", "seedRev", "bounds", "revTrans", "starts"]];
+        });
         tmp = globalThis.Object.freeze(new globalThis.Map());
         StrPat.programs = tmp;
+        tmp1 = globalThis.Object.freeze(new globalThis.Map());
+        StrPat.matchers = tmp1;
       }
       static decodeInts(s) {
         let scrut, tmp;
@@ -559,8 +578,73 @@ lambda$ = (undefined, function (Runtime2, EffectHandle1, value) {
         tmp = runtime.safeCall(s.split(","));
         return runtime.safeCall(tmp.map(lambda3));
       }
+      static sextet(code) {
+        let scrut, scrut1, scrut2, scrut3;
+        scrut = code >= 97;
+        if (scrut === true) {
+          return code - 71
+        }
+        scrut1 = code >= 65;
+        if (scrut1 === true) {
+          return code - 65
+        }
+        scrut2 = code >= 48;
+        if (scrut2 === true) {
+          return code + 4
+        }
+        scrut3 = code === 43;
+        if (scrut3 === true) {
+          return 62
+        }
+        return 63;
+      }
+      static decodeBits(packed) {
+        let thresholds, bits, i;
+        thresholds = globalThis.Object.freeze([
+          32,
+          16,
+          8,
+          4,
+          2,
+          1
+        ]);
+        bits = [];
+        i = 0;
+        lbl: while (true) {
+          let scrut, v, j, tmp, tmp1;
+          scrut = i < packed.length;
+          if (scrut === true) {
+            tmp = runtime.safeCall(packed.charCodeAt(i));
+            v = StrPat.sextet(tmp);
+            j = 0;
+            lbl1: while (true) {
+              let scrut1, scrut2, tmp2, tmp3;
+              scrut1 = j < 6;
+              if (scrut1 === true) {
+                scrut2 = v >= thresholds.at(j);
+                if (scrut2 === true) {
+                  runtime.safeCall(bits.push(true));
+                  tmp2 = v - thresholds.at(j);
+                  v = tmp2;
+                } else {
+                  runtime.safeCall(bits.push(false));
+                }
+                tmp3 = j + 1;
+                j = tmp3;
+                continue lbl1
+              }
+              break;
+            }
+            tmp1 = i + 1;
+            i = tmp1;
+            continue lbl
+          }
+          break;
+        }
+        return bits
+      }
       static decodeProgram(table) {
-        let sections, header, stateCount, nfaInts, states, cursor, opsInts, opsPool, opsCount, tmp, tmp1;
+        let sections, header, stateCount, nfaInts, states, cursor, opsInts, opsPool, opsCount, tmp, tmp1, tmp2;
         sections = runtime.safeCall(table.split(";"));
         header = StrPat.decodeInts(sections.at(0));
         stateCount = header.at(0);
@@ -568,50 +652,50 @@ lambda$ = (undefined, function (Runtime2, EffectHandle1, value) {
         states = [];
         cursor = 0;
         lbl: while (true) {
-          let scrut, edgeCount, edges, tmp2;
+          let scrut, edgeCount, edges, tmp3;
           scrut = states.length < stateCount;
           if (scrut === true) {
             edgeCount = nfaInts.at(cursor);
             edges = [];
-            tmp2 = cursor + 1;
-            cursor = tmp2;
+            tmp3 = cursor + 1;
+            cursor = tmp3;
             lbl1: while (true) {
-              let scrut1, kind, target, scrut2, rangeCount, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10, tmp11, tmp12, tmp13, tmp14, tmp15, tmp16;
+              let scrut1, kind, target, scrut2, rangeCount, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10, tmp11, tmp12, tmp13, tmp14, tmp15, tmp16, tmp17;
               scrut1 = edges.length < edgeCount;
               if (scrut1 === true) {
                 kind = nfaInts.at(cursor);
-                tmp3 = cursor + 1;
-                target = nfaInts.at(tmp3);
+                tmp4 = cursor + 1;
+                target = nfaInts.at(tmp4);
                 scrut2 = kind === 0;
                 if (scrut2 === true) {
-                  tmp4 = cursor + 2;
-                  rangeCount = nfaInts.at(tmp4);
-                  tmp5 = cursor + 3;
+                  tmp5 = cursor + 2;
+                  rangeCount = nfaInts.at(tmp5);
                   tmp6 = cursor + 3;
-                  tmp7 = rangeCount * 2;
-                  tmp8 = tmp6 + tmp7;
-                  tmp9 = runtime.safeCall(nfaInts.slice(tmp5, tmp8));
-                  tmp10 = globalThis.Object.freeze([
+                  tmp7 = cursor + 3;
+                  tmp8 = rangeCount * 2;
+                  tmp9 = tmp7 + tmp8;
+                  tmp10 = runtime.safeCall(nfaInts.slice(tmp6, tmp9));
+                  tmp11 = globalThis.Object.freeze([
                     0,
                     target,
-                    tmp9
+                    tmp10
                   ]);
-                  runtime.safeCall(edges.push(tmp10));
-                  tmp11 = rangeCount * 2;
-                  tmp12 = 3 + tmp11;
-                  tmp13 = cursor + tmp12;
-                  cursor = tmp13;
+                  runtime.safeCall(edges.push(tmp11));
+                  tmp12 = rangeCount * 2;
+                  tmp13 = 3 + tmp12;
+                  tmp14 = cursor + tmp13;
+                  cursor = tmp14;
                   continue lbl1
                 }
-                tmp14 = cursor + 2;
-                tmp15 = globalThis.Object.freeze([
+                tmp15 = cursor + 2;
+                tmp16 = globalThis.Object.freeze([
                   1,
                   target,
-                  nfaInts.at(tmp14)
+                  nfaInts.at(tmp15)
                 ]);
-                runtime.safeCall(edges.push(tmp15));
-                tmp16 = cursor + 3;
-                cursor = tmp16;
+                runtime.safeCall(edges.push(tmp16));
+                tmp17 = cursor + 3;
+                cursor = tmp17;
                 continue lbl1;
               }
               break;
@@ -626,25 +710,26 @@ lambda$ = (undefined, function (Runtime2, EffectHandle1, value) {
         opsCount = opsInts.at(0);
         cursor = 1;
         lbl1: while (true) {
-          let scrut, len, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7;
+          let scrut, len, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8;
           scrut = opsPool.length < opsCount;
           if (scrut === true) {
             len = opsInts.at(cursor);
-            tmp2 = cursor + 1;
             tmp3 = cursor + 1;
-            tmp4 = tmp3 + len;
-            tmp5 = runtime.safeCall(opsInts.slice(tmp2, tmp4));
-            runtime.safeCall(opsPool.push(tmp5));
-            tmp6 = 1 + len;
-            tmp7 = cursor + tmp6;
-            cursor = tmp7;
+            tmp4 = cursor + 1;
+            tmp5 = tmp4 + len;
+            tmp6 = runtime.safeCall(opsInts.slice(tmp3, tmp5));
+            runtime.safeCall(opsPool.push(tmp6));
+            tmp7 = 1 + len;
+            tmp8 = cursor + tmp7;
+            cursor = tmp8;
             continue lbl1
           }
           break;
         }
         tmp = StrPat.decodeInts(sections.at(1));
         tmp1 = StrPat.decodeInts(sections.at(4));
-        return StrPat.Program(stateCount, header.at(1), header.at(2), header.at(3), header.at(4), header.at(6), tmp, states, opsPool, tmp1, sections.at(5))
+        tmp2 = StrPat.decodeBits(sections.at(5));
+        return StrPat.Program(stateCount, header.at(1), header.at(2), header.at(3), header.at(4), header.at(6), tmp, states, opsPool, tmp1, tmp2)
       }
       static getProgram(table) {
         let scrut, prog;
@@ -655,6 +740,24 @@ lambda$ = (undefined, function (Runtime2, EffectHandle1, value) {
         prog = StrPat.decodeProgram(table);
         runtime.safeCall(StrPat.programs.set(table, prog));
         return prog;
+      }
+      static decodeMatcher(table) {
+        let sections, header, tmp, tmp1;
+        sections = runtime.safeCall(table.split(";"));
+        header = StrPat.decodeInts(sections.at(0));
+        tmp = StrPat.decodeInts(sections.at(1));
+        tmp1 = StrPat.decodeInts(sections.at(2));
+        return StrPat.Matcher(header.at(0), header.at(1), tmp, tmp1, sections.at(3))
+      }
+      static getMatcher(table) {
+        let scrut, matcher;
+        scrut = runtime.safeCall(StrPat.matchers.has(table));
+        if (scrut === true) {
+          return runtime.safeCall(StrPat.matchers.get(table))
+        }
+        matcher = StrPat.decodeMatcher(table);
+        runtime.safeCall(StrPat.matchers.set(table, matcher));
+        return matcher;
       }
       static classOf(prog, unit) {
         let bounds, i;
@@ -676,11 +779,10 @@ lambda$ = (undefined, function (Runtime2, EffectHandle1, value) {
         return i
       }
       static viable(prog, revState, state) {
-        let tmp, tmp1, tmp2;
+        let tmp, tmp1;
         tmp = revState * prog.stateCount;
         tmp1 = tmp + state;
-        tmp2 = runtime.safeCall(prog.viability.charCodeAt(tmp1));
-        return tmp2 === 49
+        return prog.viability.at(tmp1)
       }
       static unitInRanges(ranges, unit) {
         let i;
@@ -709,30 +811,31 @@ lambda$ = (undefined, function (Runtime2, EffectHandle1, value) {
         return false
       }
       static matchWhole(table, input) {
-        let prog, rev, i;
-        prog = StrPat.getProgram(table);
-        rev = prog.seedRev;
+        let matcher, rev, i, tmp;
+        matcher = StrPat.getMatcher(table);
+        rev = matcher.seedRev;
         i = input.length - 1;
         lbl: while (true) {
-          let scrut, tmp, tmp1, tmp2, tmp3, tmp4;
+          let scrut, tmp1, tmp2, tmp3, tmp4, tmp5;
           scrut = i >= 0;
           if (scrut === true) {
-            tmp = rev * prog.classCount;
-            tmp1 = runtime.safeCall(input.charCodeAt(i));
-            tmp2 = StrPat.classOf(prog, tmp1);
-            tmp3 = tmp + tmp2;
-            rev = prog.revTrans.at(tmp3);
-            tmp4 = i - 1;
-            i = tmp4;
+            tmp1 = rev * matcher.classCount;
+            tmp2 = runtime.safeCall(input.charCodeAt(i));
+            tmp3 = StrPat.classOf(matcher, tmp2);
+            tmp4 = tmp1 + tmp3;
+            rev = matcher.revTrans.at(tmp4);
+            tmp5 = i - 1;
+            i = tmp5;
             continue lbl
           }
           break;
         }
-        return StrPat.viable(prog, rev, prog.start)
+        tmp = runtime.safeCall(matcher.starts.charCodeAt(rev));
+        return tmp === 49
       }
       static parseRun(table, actions, input, prefix) {
-        let prog, n, revArr, rev, i, scrut, gen, visited, parentState, parentOps, valStack, markStack, frames, bindings, readSlot, execValueOp, runFrameOps, scrut1, result, s, tmp, tmp1, scope28$cap;
-        scope28$cap = new Capture$scope281(undefined, undefined, undefined);
+        let prog, n, revArr, rev, i, scrut, gen, visited, parentState, parentOps, valStack, markStack, frames, bindings, readSlot, execValueOp, runFrameOps, scrut1, result, s, tmp, tmp1, scope20$cap;
+        scope20$cap = new Capture$scope201(undefined, undefined, undefined);
         prog = StrPat.getProgram(table);
         n = input.length;
         revArr = [];
@@ -759,8 +862,8 @@ lambda$ = (undefined, function (Runtime2, EffectHandle1, value) {
         if (scrut === false) {
           return null
         }
-        scope28$cap.cur$0 = prog.start;
-        scope28$cap.pos$1 = 0;
+        scope20$cap.cur$0 = prog.start;
+        scope20$cap.pos$1 = 0;
         gen = 0;
         visited = globalThis.Object.freeze(new globalThis.Map());
         parentState = globalThis.Object.freeze(new globalThis.Map());
@@ -769,15 +872,15 @@ lambda$ = (undefined, function (Runtime2, EffectHandle1, value) {
         markStack = [];
         frames = [];
         bindings = globalThis.Object.freeze(new globalThis.Map());
-        scope28$cap.remStart$2 = n;
+        scope20$cap.remStart$2 = n;
         readSlot = lambda$4(bindings);
-        execValueOp = lambda$3(scope28$cap, actions, input, valStack, markStack, bindings, readSlot);
+        execValueOp = lambda$3(scope20$cap, actions, input, valStack, markStack, bindings, readSlot);
         runFrameOps = lambda$2(execValueOp);
         lbl1: while (true) {
           let stack, committed, tmp2, tmp3, tmp4;
-          tmp2 = scope28$cap.cur$0 === prog.accept;
+          tmp2 = scope20$cap.cur$0 === prog.accept;
           if (tmp2 === true) {
-            tmp3 = scope28$cap.pos$1 === n;
+            tmp3 = scope20$cap.pos$1 === n;
           } else {
             tmp3 = false;
           }
@@ -785,9 +888,9 @@ lambda$ = (undefined, function (Runtime2, EffectHandle1, value) {
             let state;
             tmp4 = gen + 1;
             gen = tmp4;
-            runtime.safeCall(visited.set(scope28$cap.cur$0, tmp4));
+            runtime.safeCall(visited.set(scope20$cap.cur$0, tmp4));
             stack = [];
-            state = scope28$cap.cur$0;
+            state = scope20$cap.cur$0;
             lambda9(prog, stack, state);
             committed = false;
             lbl2: while (true) {
@@ -802,21 +905,21 @@ lambda$ = (undefined, function (Runtime2, EffectHandle1, value) {
                 edge = item.at(1);
                 scrut3 = edge.at(0) === 0;
                 if (scrut3 === true) {
-                  tmp5 = scope28$cap.pos$1 < n;
+                  tmp5 = scope20$cap.pos$1 < n;
                   if (tmp5 === true) {
-                    tmp7 = runtime.safeCall(input.charCodeAt(scope28$cap.pos$1));
+                    tmp7 = runtime.safeCall(input.charCodeAt(scope20$cap.pos$1));
                     tmp6 = StrPat.unitInRanges(edge.at(2), tmp7);
                     if (tmp6 === true) {
-                      tmp9 = scope28$cap.pos$1 + 1;
+                      tmp9 = scope20$cap.pos$1 + 1;
                       tmp10 = n - tmp9;
                       tmp8 = StrPat.viable(prog, revArr.at(tmp10), edge.at(1));
                       if (tmp8 === true) {
                         let runOps;
                         runOps = lambda$1(prog, frames, bindings, execValueOp, runFrameOps);
-                        lambda8(scope28$cap, parentState, parentOps, runOps, source);
-                        scope28$cap.cur$0 = edge.at(1);
-                        tmp11 = scope28$cap.pos$1 + 1;
-                        scope28$cap.pos$1 = tmp11;
+                        lambda8(scope20$cap, parentState, parentOps, runOps, source);
+                        scope20$cap.cur$0 = edge.at(1);
+                        tmp11 = scope20$cap.pos$1 + 1;
+                        scope20$cap.pos$1 = tmp11;
                         committed = true;
                         continue lbl2
                       }
@@ -829,14 +932,14 @@ lambda$ = (undefined, function (Runtime2, EffectHandle1, value) {
                 target = edge.at(1);
                 scrut4 = target === prog.accept;
                 if (scrut4 === true) {
-                  scrut5 = scope28$cap.pos$1 === n;
+                  scrut5 = scope20$cap.pos$1 === n;
                   if (scrut5 === true) {
                     let runOps;
                     runtime.safeCall(parentState.set(target, source));
                     runtime.safeCall(parentOps.set(target, edge.at(2)));
                     runOps = lambda$1(prog, frames, bindings, execValueOp, runFrameOps);
-                    lambda8(scope28$cap, parentState, parentOps, runOps, target);
-                    scope28$cap.cur$0 = target;
+                    lambda8(scope20$cap, parentState, parentOps, runOps, target);
+                    scope20$cap.cur$0 = target;
                     committed = true;
                     continue lbl2
                   }
@@ -845,7 +948,7 @@ lambda$ = (undefined, function (Runtime2, EffectHandle1, value) {
                 tmp12 = runtime.safeCall(visited.get(target));
                 tmp13 = tmp12 !== tmp4;
                 if (tmp13 === true) {
-                  tmp15 = n - scope28$cap.pos$1;
+                  tmp15 = n - scope20$cap.pos$1;
                   tmp14 = StrPat.viable(prog, revArr.at(tmp15), target);
                   if (tmp14 === true) {
                     runtime.safeCall(visited.set(target, tmp4));
@@ -873,7 +976,7 @@ lambda$ = (undefined, function (Runtime2, EffectHandle1, value) {
         result = [];
         runtime.safeCall(result.push(tmp));
         if (prefix === true) {
-          tmp1 = runtime.safeCall(input.slice(scope28$cap.remStart$2));
+          tmp1 = runtime.safeCall(input.slice(scope20$cap.remStart$2));
           runtime.safeCall(result.push(tmp1));
         }
         s = 0;
@@ -1543,12 +1646,12 @@ lambda$ = (undefined, function (Runtime2, EffectHandle1, value) {
     return header;
   }
   static showFunctionContChain(cont, hl, vis, reps) {
-    let scrut, scrut1, scrut2, tmp, tmp1, tmp2, tmp3, tmp4, scope63$cap, lambda$here;
-    scope63$cap = new Capture$scope631(undefined);
+    let scrut, scrut1, scrut2, tmp, tmp1, tmp2, tmp3, tmp4, scope69$cap, lambda$here;
+    scope69$cap = new Capture$scope691(undefined);
     if (cont instanceof Runtime.FunctionContFrame.class) {
       tmp = cont.constructor.name + "(pc=";
-      scope63$cap.result$0 = tmp + cont.saved.at(1);
-      lambda$here = lambda$6(scope63$cap, cont);
+      scope69$cap.result$0 = tmp + cont.saved.at(1);
+      lambda$here = lambda$6(scope69$cap, cont);
       runtime.safeCall(hl.forEach(lambda$here));
       scrut = runtime.safeCall(vis.has(cont));
       if (scrut === true) {
@@ -1558,12 +1661,12 @@ lambda$ = (undefined, function (Runtime2, EffectHandle1, value) {
         if (scrut1 === true) {
           throw runtime.safeCall(globalThis.Error("10 repeated continuation frame (loop?)"))
         }
-        tmp2 = scope63$cap.result$0 + ", REPEAT";
-        scope63$cap.result$0 = tmp2;
+        tmp2 = scope69$cap.result$0 + ", REPEAT";
+        scope69$cap.result$0 = tmp2;
       } else {
         runtime.safeCall(vis.add(cont));
       }
-      tmp3 = scope63$cap.result$0 + ") -> ";
+      tmp3 = scope69$cap.result$0 + ") -> ";
       tmp4 = Runtime.showFunctionContChain(cont.next, hl, vis, reps);
       return tmp3 + tmp4
     }
@@ -1574,11 +1677,11 @@ lambda$ = (undefined, function (Runtime2, EffectHandle1, value) {
     return "(NOT CONT)";
   }
   static showHandlerContChain(cont, hl, vis, reps) {
-    let scrut, scrut1, scrut2, tmp, tmp1, tmp2, tmp3, scope65$cap, lambda$here;
-    scope65$cap = new Capture$scope651(undefined);
+    let scrut, scrut1, scrut2, tmp, tmp1, tmp2, tmp3, scope71$cap, lambda$here;
+    scope71$cap = new Capture$scope711(undefined);
     if (cont instanceof Runtime.HandlerContFrame.class) {
-      scope65$cap.result$0 = cont.handler.constructor.name;
-      lambda$here = lambda$7(scope65$cap, cont);
+      scope71$cap.result$0 = cont.handler.constructor.name;
+      lambda$here = lambda$7(scope71$cap, cont);
       runtime.safeCall(hl.forEach(lambda$here));
       scrut = runtime.safeCall(vis.has(cont));
       if (scrut === true) {
@@ -1588,12 +1691,12 @@ lambda$ = (undefined, function (Runtime2, EffectHandle1, value) {
         if (scrut1 === true) {
           throw runtime.safeCall(globalThis.Error("10 repeated continuation frame (loop?)"))
         }
-        tmp1 = scope65$cap.result$0 + ", REPEAT";
-        scope65$cap.result$0 = tmp1;
+        tmp1 = scope71$cap.result$0 + ", REPEAT";
+        scope71$cap.result$0 = tmp1;
       } else {
         runtime.safeCall(vis.add(cont));
       }
-      tmp2 = scope65$cap.result$0 + " -> ";
+      tmp2 = scope71$cap.result$0 + " -> ";
       tmp3 = Runtime.showFunctionContChain(cont.next, hl, vis, reps);
       return tmp2 + tmp3
     }

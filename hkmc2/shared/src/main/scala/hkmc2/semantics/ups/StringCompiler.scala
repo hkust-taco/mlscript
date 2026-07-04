@@ -104,6 +104,10 @@ object StringCompiler:
   /** The result of compiling one string region.
     *
     * @param table the encoded automaton program (see `encode` for the layout)
+    * @param matchTable the recognition-only program for `matchWhole`: just
+    *        the reverse scan, omitting the NFA, the operation pool, and the
+    *        viability matrix — call sites that only ask *whether* the
+    *        scrutinee matches should embed this much smaller table
     * @param actions transform closures, in `actionId` order
     * @param visibleSlots the root-visible bindings and their slot indices, in
     *        the order the caller should destructure them
@@ -112,6 +116,7 @@ object StringCompiler:
     */
   final case class Compiled(
       table: Str,
+      matchTable: Str,
       actions: Ls[Term],
       visibleSlots: Ls[(VarSymbol, Int)],
       pure: Bool,
@@ -530,6 +535,149 @@ class StringCompiler(using context: Context)(using tl: TL)(using Ctx, State, Rai
     entries(inst)
 
   // ------------------------------------------------------------------------
+  // NFA reduction
+  // ------------------------------------------------------------------------
+
+  private def edgeTarget(edge: Edge): Int = edge match
+    case Edge.Chr(_, target) => target
+    case Edge.Eps(target, _) => target
+
+  private def retarget(edge: Edge, target: Int): Edge = edge match
+    case Edge.Chr(ranges, _) => Edge.Chr(ranges, target)
+    case Edge.Eps(_, ops) => Edge.Eps(target, ops)
+
+  /** Rewrite the target of every edge through `f`; returns whether any
+    * edge changed. */
+  private def retargetAll(edges: Buffer[Edge])(f: Int => Int): Bool =
+    var changed = false
+    var i = 0
+    while i < edges.size do
+      val edge = edges(i)
+      val target = edgeTarget(edge)
+      val mapped = f(target)
+      if mapped != target then
+        edges(i) = retarget(edge, mapped)
+        changed = true
+      i += 1
+    changed
+
+  /** Shrink the NFA in place before encoding; returns the renumbered
+    * (start, accept) pair. Three semantics-preserving reductions run to a
+    * fixed point, then unreachable states are pruned:
+    *
+    *  1. Edges into states that cannot reach `accept` are dropped. No path
+    *     through them completes for any input, so neither recognition nor
+    *     the committed parse changes (the forward walk would refuse them
+    *     via the viability oracle anyway, at run-time cost).
+    *  2. States whose entire content is a single operation-free ε-edge are
+    *     contracted: in-edges are redirected to the ε-target. No choice
+    *     point and no operation is involved, so priorities are unaffected.
+    *  3. States with identical ordered edge lists are merged: they have
+    *     identical futures, including alternation priorities. The accept
+    *     state is never merged away (acceptance is not visible in edges).
+    *
+    * The construction above is deliberately generous with ε-plumbing, and
+    * cross-SCC references are inlined per reference, so this typically
+    * removes a quarter of the states. Size matters twice: the encoded NFA
+    * section shrinks linearly and the viability matrix — one bit per
+    * (reverse state, NFA state) pair — shrinks with the state count.
+    */
+  private def reduceStates(start: Int, accept: Int): (Int, Int) =
+    var entry = start
+    def dropDeadEdges(): Bool =
+      val live = new Array[Bool](states.size)
+      val preds = Array.fill(states.size)(Buffer.empty[Int])
+      states.iterator.zipWithIndex.foreach: (edges, source) =>
+        edges.foreach(edge => preds(edgeTarget(edge)) += source)
+      val worklist = Buffer(accept)
+      live(accept) = true
+      while worklist.nonEmpty do
+        val state = worklist.remove(worklist.size - 1)
+        preds(state).foreach: source =>
+          if !live(source) then
+            live(source) = true
+            worklist += source
+      var changed = false
+      states.foreach: edges =>
+        val kept = edges.filter(edge => live(edgeTarget(edge)))
+        if kept.size != edges.size then
+          changed = true
+          edges.clear()
+          edges ++= kept
+      changed
+    def contractTrivial(): Bool =
+      val next = Array.fill(states.size)(-1)
+      states.iterator.zipWithIndex.foreach: (edges, source) =>
+        if source != accept && edges.size == 1 then edges(0) match
+          case Edge.Eps(target, Nil) if target != source => next(source) = target
+          case _ => ()
+      // Follow chains of trivial states; the path set guards against cycles
+      // (an all-trivial ε-cycle is dead and gets dismantled by the other
+      // reductions, but resolution must not hang on it meanwhile).
+      def resolve(state: Int): Int =
+        val path = MutSet.empty[Int]
+        var cur = state
+        while next(cur) != -1 && path.add(cur) do cur = next(cur)
+        cur
+      var changed = false
+      states.foreach: edges =>
+        changed |= retargetAll(edges)(resolve)
+      val resolvedEntry = resolve(entry)
+      if resolvedEntry != entry then
+        entry = resolvedEntry
+        changed = true
+      changed
+    def mergeIdentical(): Bool =
+      val representative = MutMap.empty[(Bool, Ls[Edge]), Int]
+      val rep = Array.tabulate(states.size)(identity)
+      states.iterator.zipWithIndex.foreach: (edges, state) =>
+        val key = (state == accept, edges.toList)
+        representative.get(key) match
+          case S(canonical) => rep(state) = canonical
+          case N => representative(key) = state
+      var changed = false
+      states.foreach: edges =>
+        changed |= retargetAll(edges)(rep(_))
+      if rep(entry) != entry then
+        entry = rep(entry)
+        changed = true
+      changed
+    var changed = true
+    while changed do
+      changed = false
+      changed |= dropDeadEdges()
+      changed |= contractTrivial()
+      changed |= mergeIdentical()
+    // Prune states unreachable from the entry and renumber the survivors.
+    // The accept state is kept even if unreachable (a never-matching region):
+    // the encoding refers to it.
+    val keep = new Array[Bool](states.size)
+    keep(entry) = true
+    val worklist = Buffer(entry)
+    while worklist.nonEmpty do
+      val state = worklist.remove(worklist.size - 1)
+      states(state).foreach: edge =>
+        val target = edgeTarget(edge)
+        if !keep(target) then
+          keep(target) = true
+          worklist += target
+    keep(accept) = true
+    val renumber = new Array[Int](states.size)
+    var nextId = 0
+    states.indices.foreach: state =>
+      if keep(state) then
+        renumber(state) = nextId
+        nextId += 1
+    val compacted = Buffer.empty[Buffer[Edge]]
+    states.iterator.zipWithIndex.foreach: (edges, state) =>
+      if keep(state) then
+        retargetAll(edges)(renumber(_))
+        compacted += edges
+    states.clear()
+    states ++= compacted
+    (renumber(entry), renumber(accept))
+
+  // ------------------------------------------------------------------------
   // Reverse determinization (the viability oracle)
   // ------------------------------------------------------------------------
 
@@ -561,11 +709,11 @@ class StringCompiler(using context: Context)(using tl: TL)(using Ctx, State, Rai
     * accept state by consuming `input[i..n)`. The forward walk then only
     * follows transitions into states proved viable by this oracle.
     *
-    * @return (transition table by [revState * nClasses + class], viability
-    *         as a '0'/'1' character per [revState * stateCount + state], seed
+    * @return (transition table by [revState * nClasses + class], the subset
+    *         of NFA states denoted by each reverse state in id order, seed
     *         state id)
     */
-  private def reverseDeterminize(accept: Int, bounds: Ls[Int]): (Buffer[Int], Str, Int) =
+  private def reverseDeterminize(accept: Int, bounds: Ls[Int]): (Buffer[Int], Ls[Set[Int]], Int) =
     val stateCount = states.size
     val classes = classCount(bounds)
     // Reverse ε-adjacency: epsPre(t) lists the sources of ε-edges into t.
@@ -610,16 +758,7 @@ class StringCompiler(using context: Context)(using tl: TL)(using Ctx, State, Rai
         val next = close(set.iterator.flatMap(t => pre.get(t).iterator.flatMap(_.iterator)).toSet)
         transitions(id * classes + classId) = idOf(next)
         classId += 1
-    // Viability is encoded one character per (reverse state, NFA state) pair:
-    // the runtime tests membership with a single `charCodeAt`, avoiding any
-    // need for bit manipulation primitives.
-    val viability = new StringBuilder
-    ids.foreach: (set, _) =>
-      var state = 0
-      while state < stateCount do
-        viability += (if set contains state then '1' else '0')
-        state += 1
-    (transitions, viability.result(), seedId)
+    (transitions, ids.keysIterator.toList, seedId)
 
   // ------------------------------------------------------------------------
   // Encoding
@@ -644,8 +783,32 @@ class StringCompiler(using context: Context)(using tl: TL)(using Ctx, State, Rai
         pool.size - 1
       case index => index
 
-  /** Encode the whole program as semicolon-separated sections of
-    * comma-separated integers (except the last section):
+  /** The alphabet for bit-packed sections: six bits per character, highest
+    * bit first, using the standard Base64 characters — they need no escaping
+    * in string literals and clash with neither the `;` section separator nor
+    * the `,` integer separator. */
+  private val packAlphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
+
+  private def packBits(bits: Iterator[Bool]): Str =
+    val packed = new StringBuilder
+    var value = 0
+    var count = 0
+    bits.foreach: bit =>
+      value = value * 2 + (if bit then 1 else 0)
+      count += 1
+      if count == 6 then
+        packed += packAlphabet.charAt(value)
+        value = 0
+        count = 0
+    if count > 0 then
+      while count < 6 do
+        value = value * 2
+        count += 1
+      packed += packAlphabet.charAt(value)
+    packed.result()
+
+  /** Encode the program as semicolon-separated sections of comma-separated
+    * integers (except the last section). The full parsing table:
     *
     *  0. header: stateCount, start, accept, slotCount, classCount,
     *     revStateCount, seedRevState
@@ -655,15 +818,27 @@ class StringCompiler(using context: Context)(using tl: TL)(using Ctx, State, Rai
     *     1, target, opsId (ε-edge, -1 when it carries no operations)
     *  3. operation pool: entryCount, then per entry: length, integers
     *  4. reverse transitions (revStateCount * classCount integers)
-    *  5. viability: one '0'/'1' character per (revState, state) pair
+    *  5. viability: one bit per (revState, state) pair, row-major,
+    *     bit-packed six per character (see `packAlphabet`)
+    *
+    * Recognition alone runs only the reverse scan, so `matchWhole` call
+    * sites embed a much smaller table instead:
+    *
+    *  0. header: classCount, seedRevState
+    *  1. class boundaries
+    *  2. reverse transitions
+    *  3. one '0'/'1' character per reverse state: whether its subset
+    *     contains the start state (the whole-match acceptance test)
     *
     * String literals are interned by the JavaScript engine, so the runtime
     * caches the decoded program keyed by this very string: the table is built
     * once per program, not once per call.
+    *
+    * @return (the full parsing table, the recognition-only table)
     */
-  private def encode(start: Int, accept: Int): Str =
+  private def encode(start: Int, accept: Int): (Str, Str) =
     val bounds = computeBounds()
-    val (revTransitions, viability, seedId) = reverseDeterminize(accept, bounds)
+    val (revTransitions, revSets, seedId) = reverseDeterminize(accept, bounds)
     val classes = classCount(bounds)
     val opsPool = Buffer.empty[Ls[Int]]
     val nfa = Buffer.empty[Int]
@@ -686,10 +861,13 @@ class StringCompiler(using context: Context)(using tl: TL)(using Ctx, State, Rai
     opsPool.foreach: entry =>
       opsSection += entry.size
       opsSection ++= entry
-    val revStateCount = viability.length / states.size
-    val header = states.size :: start :: accept :: slots.size :: classes ::
-      revStateCount :: seedId :: Nil
-    Iterator(
+    val stateCount = states.size
+    val viability = packBits:
+      revSets.iterator.flatMap: set =>
+        (0 until stateCount).iterator.map(set.contains)
+    val header = stateCount :: start :: accept :: slots.size :: classes ::
+      revSets.size :: seedId :: Nil
+    val table = Iterator(
       header.mkString(","),
       bounds.mkString(","),
       nfa.mkString(","),
@@ -697,6 +875,14 @@ class StringCompiler(using context: Context)(using tl: TL)(using Ctx, State, Rai
       revTransitions.mkString(","),
       viability,
     ).mkString(";")
+    val starts = revSets.iterator.map(set => if set contains start then '1' else '0').mkString
+    val matchTable = Iterator(
+      s"$classes,$seedId",
+      bounds.mkString(","),
+      revTransitions.mkString(","),
+      starts,
+    ).mkString(";")
+    (table, matchTable)
 
   // ------------------------------------------------------------------------
   // Entry point
@@ -730,7 +916,12 @@ class StringCompiler(using context: Context)(using tl: TL)(using Ctx, State, Rai
           addEps(boundary, star, Op.Rem :: Nil)
           build(root, boundary, needValue = true, Nil, N)
       if failed then N else
-        log(s"String region: ${states.size} states, ${slots.size} slots, ${actions.size} actions")
-        val table = encode(entry, accept)
+        val builtCount = states.size
+        val (reducedEntry, reducedAccept) = reduceStates(entry, accept)
+        log(s"String region: ${states.size} states (built $builtCount), " +
+          s"${slots.size} slots, ${actions.size} actions")
+        val (table, matchTable) = encode(reducedEntry, reducedAccept)
         log(s"Encoded table (${table.length} characters): $table")
-        S(Compiled(table, actions.toList, visible, pure = !anyOps && slots.isEmpty && actions.isEmpty))
+        log(s"Encoded match table (${matchTable.length} characters): $matchTable")
+        S(Compiled(table, matchTable, actions.toList, visible,
+          pure = !anyOps && slots.isEmpty && actions.isEmpty))

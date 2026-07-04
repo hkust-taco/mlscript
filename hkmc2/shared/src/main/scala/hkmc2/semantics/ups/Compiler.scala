@@ -285,13 +285,13 @@ class Compiler(using Context)(using tl: TL)(using Ctx, State, Raise) extends Ter
           case fragment => StringCompiler().compile(fragment, StringCompiler.Mode.Whole) match
             case N => emptyMatchResult("rejected string pattern")
             case S(compiled) =>
-              val tableTerm = str(compiled.table)
+              val matchTableTerm = str(compiled.matchTable)
               if isMatchOnly then
-                app(strPatMatchWhole, tup(fld(tableTerm), fld(scrutinee.safeRef)), "string match")
+                app(strPatMatchWhole, tup(fld(matchTableTerm), fld(scrutinee.safeRef)), "string match")
               else if compiled.pure then
                 // An operation-free whole match preserves the scrutinee.
                 val matchedSymbol = TempSymbol(N, "stringMatched")
-                val call = app(strPatMatchWhole, tup(fld(tableTerm), fld(scrutinee.safeRef)), "string match")
+                val call = app(strPatMatchWhole, tup(fld(matchTableTerm), fld(scrutinee.safeRef)), "string match")
                 SynthIf(Split.Let(matchedSymbol, call,
                   Branch(matchedSymbol.safeRef,
                     Split.Else(makeMatchSuccess(scrutinee.safeRef))
@@ -302,7 +302,7 @@ class Compiler(using Context)(using tl: TL)(using Ctx, State, Raise) extends Ter
                 // not usable here; the helper pins the first action's own
                 // location instead (the surrounding terms are location-free).
                 val call = app(strPatParseWhole,
-                  tup(fld(tableTerm), fld(actionsTuple(compiled.actions, N)), fld(scrutinee.safeRef)),
+                  tup(fld(str(compiled.table)), fld(actionsTuple(compiled.actions, N)), fld(scrutinee.safeRef)),
                   "string parse")
                 val resultSymbol = TempSymbol(N, "parseResult")
                 val outputSymbol = TempSymbol(N, "stringOutput")

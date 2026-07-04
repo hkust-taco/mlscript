@@ -130,7 +130,7 @@ module Str with
 // The engine for compiled string patterns. The compiler (`ups.StringCompiler`)
 // encodes a prioritized NFA together with its determinized reverse automaton
 // as a string of integers; this module decodes and runs such programs. Refer
-// to `StringCompiler.scala` for the table layout and the algorithm. In short:
+// to `StringCompiler.scala` for the table layouts and the algorithm. In short:
 // matching follows the two-pass scheme of Frisch and Cardelli. A backward scan
 // of the reverse automaton computes, for every position, the set of NFA states
 // that can still reach acceptance ("viability"). Recognition needs only that
@@ -138,18 +138,57 @@ module Str with
 // choice point, the first viable alternative — reproducing the parse an
 // unlimited-backtracking matcher would commit to, in linear time — while
 // executing the value operations recorded on the taken ε-transitions.
+//
+// There are two table formats: full parsing tables (decoded to `Program`,
+// run by `parseWhole`/`parsePrefix`) and recognition-only tables that keep
+// just the reverse scan (decoded to `Matcher`, run by `matchWhole`).
 module StrPat with
 
   data class Program(
       stateCount, start, accept, slotCount, classCount, seedRev,
       bounds, states, opsPool, revTrans, viability)
 
+  // A recognition-only program: the reverse scan needs neither the NFA, nor
+  // the operation pool, nor the viability matrix. `starts` records, for each
+  // reverse state, whether the subset it denotes contains the NFA start
+  // state — the whole-match acceptance test.
+  data class Matcher(classCount, seedRev, bounds, revTrans, starts)
+
   // Decoded programs are cached keyed by the (interned) table string, so each
   // table is decoded once per program, not once per call.
   val programs = new Map()
+  val matchers = new Map()
 
   fun decodeInts(s) =
     if s.length === 0 then [] else s.split(",").map(x => parseInt(x, 10))
+
+  // The value of a character of the Base64 alphabet used for bit-packed
+  // sections (six bits per character, highest bit first).
+  fun sextet(code) =
+    if code >= 97 then code - 71 // 'a'..'z' denote 26..51
+    else if code >= 65 then code - 65 // 'A'..'Z' denote 0..25
+    else if code >= 48 then code + 4 // '0'..'9' denote 52..61
+    else if code === 43 then 62 // '+'
+    else 63 // '/'
+
+  // Unpack a bit-packed section into an array of booleans (possibly with up
+  // to five padding entries at the end, which are never indexed).
+  fun decodeBits(packed) =
+    let thresholds = [32, 16, 8, 4, 2, 1]
+    let bits = mut []
+    let i = 0
+    while i < packed.length do
+      let v = sextet(packed.charCodeAt(i))
+      let j = 0
+      while j < 6 do
+        if v >= thresholds.[j] then
+          bits.push(true)
+          set v -= thresholds.[j]
+        else
+          bits.push(false)
+        set j += 1
+      set i += 1
+    bits
 
   fun decodeProgram(table) =
     let sections = table.split(";")
@@ -183,7 +222,8 @@ module StrPat with
       set cursor += 1 + len
     Program(
       stateCount, header.[1], header.[2], header.[3], header.[4], header.[6],
-      decodeInts(sections.[1]), states, opsPool, decodeInts(sections.[4]), sections.[5])
+      decodeInts(sections.[1]), states, opsPool, decodeInts(sections.[4]),
+      decodeBits(sections.[5]))
 
   fun getProgram(table) =
     if programs.has(table) then programs.get(table)
@@ -192,7 +232,21 @@ module StrPat with
       programs.set(table, prog)
       prog
 
-  // The index of the character class of the given code unit.
+  fun decodeMatcher(table) =
+    let sections = table.split(";")
+    let header = decodeInts(sections.[0])
+    Matcher(header.[0], header.[1],
+      decodeInts(sections.[1]), decodeInts(sections.[2]), sections.[3])
+
+  fun getMatcher(table) =
+    if matchers.has(table) then matchers.get(table)
+    else
+      let matcher = decodeMatcher(table)
+      matchers.set(table, matcher)
+      matcher
+
+  // The index of the character class of the given code unit. Works on both
+  // programs and matchers (it only reads their `bounds`).
   fun classOf(prog, unit) =
     let bounds = prog.bounds
     let i = 0
@@ -202,7 +256,7 @@ module StrPat with
 
   // Is `state` in the co-reachable set denoted by `revState`?
   fun viable(prog, revState, state) =
-    prog.viability.charCodeAt(revState * prog.stateCount + state) === 49
+    prog.viability.[revState * prog.stateCount + state]
 
   fun unitInRanges(ranges, unit) =
     let i = 0
@@ -212,16 +266,17 @@ module StrPat with
     false
 
   // Whether the program matches the whole input: a single right-to-left scan
-  // of the determinized reverse automaton, with no allocation.
+  // of the determinized reverse automaton, with no allocation. Takes a
+  // recognition-only table, not a full parsing table.
   @mayNotRaiseEffects
   fun matchWhole(table, input) =
-    let prog = getProgram(table)
-    let rev = prog.seedRev
+    let matcher = getMatcher(table)
+    let rev = matcher.seedRev
     let i = input.length - 1
     while i >= 0 do
-      set rev = prog.revTrans.[rev * prog.classCount + classOf(prog, input.charCodeAt(i))]
+      set rev = matcher.revTrans.[rev * matcher.classCount + classOf(matcher, input.charCodeAt(i))]
       set i -= 1
-    viable(prog, rev, prog.start)
+    matcher.starts.charCodeAt(rev) === 49
 
   // The committed forward walk. Returns null when the input does not match;
   // otherwise returns [output, slot values...] (or, in prefix mode,

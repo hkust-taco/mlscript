@@ -1248,7 +1248,7 @@ class SplitCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
             (!outputNeeded && compiled.visibleSlots.isEmpty && compiled.actions.isEmpty) then
           (makeConsequent, alternative) =>
             val callTerm = app(strPatMatchWhole,
-              tup(fld(str(compiled.table)), fld(scrutinee())), "whole string match")
+              tup(fld(str(compiled.matchTable)), fld(scrutinee())), "whole string match")
             tempLet("stringMatched", callTerm): resultSymbol =>
               Branch(resultSymbol.safeRef, makeConsequent(scrutinee, SeqMap.empty)) ~: alternative
         else (makeConsequent, alternative) =>
