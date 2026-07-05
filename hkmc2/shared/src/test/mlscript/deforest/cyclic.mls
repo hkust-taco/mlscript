@@ -84,23 +84,7 @@ modSome(Some(17), 3)
 //│ deforest > 	fields: x⁰.x¹
 //│ deforest > <<< fusing <<<
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let modSome_12$x_Some$worker;
-//│ @affine(1) @private
-//│ define modSome_12$x_Some$worker as fun modSome_12$x_Some$worker⁰(Some_x, fv_m, fv_scrut, fv_tmp) {
-//│   loop loopLabel:
-//│     set fv_scrut = >=⁰(Some_x, fv_m);
-//│     match fv_scrut
-//│       true =>
-//│         set fv_tmp = -⁰(Some_x, fv_m);
-//│         set Some_x = fv_tmp;
-//│         set fv_scrut = undefined;
-//│         set fv_tmp = undefined;
-//│         continue loopLabel
-//│       else
-//│         return Some⁰(Some_x)
-//│     end
-//│   end
-//│ };
+//│ let Some_x, fv_scrut, fv_tmp, inlinedVal;
 //│ define modSome⁰ as fun modSome¹(x, m) {
 //│   loop loopLabel:
 //│     let scrut, arg$Some$0$, tmp, tmp1;
@@ -124,7 +108,21 @@ modSome(Some(17), 3)
 //│     end
 //│   unreachable /* Rest of abortive labelled block */
 //│ };
-//│ return modSome_12$x_Some$worker⁰(17, 3, undefined, undefined)
+//│ set Some_x = 17;
+//│ block inlinedLbl:
+//│   loop loopLabel:
+//│     set fv_scrut = >=⁰(Some_x, 3);
+//│     match fv_scrut
+//│       true =>
+//│         set fv_tmp = -⁰(Some_x, 3);
+//│         set Some_x = fv_tmp;
+//│         continue loopLabel
+//│       else
+//│         set inlinedVal = Some⁰(Some_x);
+//│         break inlinedLbl
+//│     end
+//│   unreachable /* Rest of abortive labelled block */
+//│ return inlinedVal
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = Some(2)
 

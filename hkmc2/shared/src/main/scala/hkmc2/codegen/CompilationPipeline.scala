@@ -62,12 +62,18 @@ class CompilationPipeline(using Config, Raise, State, Ctx, SymbolPrinter):
     runPass("TailRecOpt")(TailRecOpt(true).transform)
     
     runPass("WorkerWrapper")(WorkerWrapper(symbolsToPreserve, otl, printer))
-    runPass("BlockSimplifier")(BlockSimplifier(symbolsToPreserve, otl, printer).apply)
+    
+    // * First simplification pass
+    runPass("BlockSimplifier 1")(BlockSimplifier(symbolsToPreserve, otl, printer).apply)
+    
     runPass("DeadParamElim")(otl.givenIn(DeadParamElim.apply))
     
     // * More tailrec opportunities might be revealed after WorkerWrapper + BlockSimplifier,
     // * which might bring split curried recursive calls (such as those coming out of Deforest + EtaExpansion)
     // * into proper tail positions.
     runPass("TailRecOpt")(TailRecOpt(false).transform)
+    
+    // * Final simplification pass
+    runPass("BlockSimplifier 2")(BlockSimplifier(symbolsToPreserve, otl, printer).apply)
     
     result
