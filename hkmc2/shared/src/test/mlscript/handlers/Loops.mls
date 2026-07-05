@@ -1,0 +1,19 @@
+:js
+:lift
+:effectHandlers
+
+:expect 10
+fun bugLazySpread() =
+  let count = 0
+  while count < 10 do
+    if not maybe then
+      hide(0)
+      set count += 1
+    else
+      set count += 2
+  count
+bugLazySpread()
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: processIRBlock (JSBackendDiffMaker.scala:295)
+//│ ═══[RUNTIME ERROR] Expected: '10', got: '2'
+//│ = 2
