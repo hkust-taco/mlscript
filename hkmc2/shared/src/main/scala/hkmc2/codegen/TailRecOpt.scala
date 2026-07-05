@@ -78,8 +78,8 @@ class TailRecOpt(checkAnnotations: Bool)(using State, TL, Raise):
     // the callee body is evaluated as a nullary thunk, and the call's argument
     // lists are then applied to the returned value. For non-nullary callees,
     // passing more argument lists than the callee can receive violates the IR
-    // invariant that a `Call` node does not apply the result of a non-nullary
-    // callee.
+    // invariant that a `Call` node does not pass more arguments than a non-nullary
+    // callee can receive.
     softAssert(
       cmp <= 0 || f.params.isEmpty,
       s"Call node passes ${c.argss.size} argument lists to ${f.dSym.showDbg}, which can receive ${f.params.size}.",
