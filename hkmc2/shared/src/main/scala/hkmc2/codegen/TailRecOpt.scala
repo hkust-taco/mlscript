@@ -272,12 +272,12 @@ class TailRecOpt(checkAnnotations: Bool)(using State, TL, Raise):
     val nonTailCalls = nonTailCallsLs.toMap
     
     if calls.isEmpty then
-      for f <- funs if checkAnnotations && f.tailRec do
+      if checkAnnotations then for f <- funs if f.tailRec do
         raise(WarningReport(msg"This function is marked @tailrec but has no direct self-recursion." -> f.dSym.toLoc :: Nil))
       return (N, funs)
     
     if !nonTailCalls.isEmpty then
-      for f <- funs if checkAnnotations && f.tailRec do
+      if checkAnnotations then for f <- funs if f.tailRec do
         val reportLoc = nonTailCalls.get(f.dSym) match
           // always display a call to f, if possible
           case Some(value) => value.toLoc 
