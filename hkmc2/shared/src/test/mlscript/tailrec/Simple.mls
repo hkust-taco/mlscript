@@ -26,15 +26,20 @@ module Foo with
 
 fun f(x) = f(x + 1)
 
-// The inner self-call in this source expression is evaluated before the final
-// call and becomes a normal recursive edge in ANF. TailRecOpt must therefore
-// leave the function unrewritten: optimizing only the final call would still
-// keep one stack-consuming recursive call and would silently change the shape
-// of the generated code without making the function tail-recursive.
+// * We can still optimize functions that have only some of their calls in tail positions.
 :sjs
 fun f(x) = f(f(x) + 1)
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let f3; f3 = function f(x) { let tmp, tmp1; tmp = f3(x); tmp1 = tmp + 1; return f3(tmp1) };
+//│ let f3;
+//│ f3 = function f(x) {
+//│   loopLabel: while (true) {
+//│     let tmp, tmp1;
+//│     tmp = f3(x);
+//│     tmp1 = tmp + 1;
+//│     x = tmp1;
+//│     continue loopLabel;
+//│   }
+//│ };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 module A with
@@ -48,6 +53,6 @@ module A with
 module B with
   fun g(x) = A.f(x * 2)
 //│ ╔══[WARNING] This function is marked @tailrec but has no direct self-recursion.
-//│ ║  l.47: 	  fun f(x) = B.g(x + 1)
+//│ ║  l.52: 	  fun f(x) = B.g(x + 1)
 //│ ╙──      	      ^
 

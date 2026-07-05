@@ -287,7 +287,6 @@ class TailRecOpt(checkAnnotations: Bool)(using State, TL, Raise):
             :: msg"It could self-recurse through this call, which is not a tail call." -> reportLoc
             :: Nil
           ))
-      return (N, funs)
 
     val maxParamLen = maxInt(funs, paramsLen)
     val paramSyms =
