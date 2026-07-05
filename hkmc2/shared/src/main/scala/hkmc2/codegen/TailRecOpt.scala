@@ -273,7 +273,7 @@ class TailRecOpt(checkAnnotations: Bool)(using State, TL, Raise):
     
     if calls.isEmpty then
       for f <- funs if checkAnnotations && f.tailRec do
-        raise(WarningReport(msg"This function is marked @tailrec but has no apparent tail calls." -> f.dSym.toLoc :: Nil))
+        raise(WarningReport(msg"This function is marked @tailrec but has no direct self-recursion." -> f.dSym.toLoc :: Nil))
       return (N, funs)
     
     if !nonTailCalls.isEmpty then
@@ -283,7 +283,7 @@ class TailRecOpt(checkAnnotations: Bool)(using State, TL, Raise):
           case Some(value) => value.toLoc 
           case None => nonTailCalls.head._2.toLoc
         raise(ErrorReport(
-            msg"This function is not tail recursive." -> f.dSym.toLoc
+            msg"This function is marked @tailrec but is not tail recursive." -> f.dSym.toLoc
             :: msg"It could self-recurse through this call, which is not a tail call." -> reportLoc
             :: Nil
           ))
