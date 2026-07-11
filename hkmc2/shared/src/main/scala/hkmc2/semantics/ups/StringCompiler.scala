@@ -578,7 +578,7 @@ class StringCompiler(using context: Context)(using tl: TL)(using Ctx, State, Rai
     changed
 
   /** Shrink the NFA in place before encoding; returns the renumbered
-    * (start, accept) pair. Three semantics-preserving reductions run to a
+    * (start, accept) pair. Four semantics-preserving reductions run to a
     * fixed point, then unreachable states are pruned:
     *
     *  1. Edges into states that cannot reach `accept` are dropped. No path
@@ -588,7 +588,16 @@ class StringCompiler(using context: Context)(using tl: TL)(using Ctx, State, Rai
     *  2. States whose entire content is a single operation-free ε-edge are
     *     contracted: in-edges are redirected to the ε-target. No choice
     *     point and no operation is involved, so priorities are unaffected.
-    *  3. States with identical ordered edge lists are merged: they have
+    *  3. States whose entire content is a single op-carrying ε-edge are
+    *     fused into their ε-predecessors: an ε-edge into such a state
+    *     absorbs the state's operations after its own. The operations move
+    *     across no character edge (so positions read by Mark/Slice/Rem are
+    *     unchanged) and no choice point (a single edge offers no
+    *     alternative), and viability of the fused state and its target
+    *     coincide, so the committed parse and all effects are preserved.
+    *     Character edges cannot carry operations, so in-edges consuming a
+    *     character keep the state alive instead.
+    *  4. States with identical ordered edge lists are merged: they have
     *     identical futures, including alternation priorities. The accept
     *     state is never merged away (acceptance is not visible in edges).
     *
@@ -643,6 +652,43 @@ class StringCompiler(using context: Context)(using tl: TL)(using Ctx, State, Rai
         entry = resolvedEntry
         changed = true
       changed
+    def fuseOpsChains(): Bool =
+      // The single op-carrying ε-edge of each fusible state. A fusible chain
+      // that closes into a cycle consists of states with no other way out,
+      // which therefore cannot reach `accept`; edges into them are removed
+      // by `dropDeadEdges`, so `resolve` only needs to terminate on them.
+      val fused = Array.fill[Opt[(Int, Ls[Op])]](states.size)(N)
+      states.iterator.zipWithIndex.foreach: (edges, state) =>
+        if state != accept && edges.size == 1 then edges(0) match
+          case Edge.Eps(target, ops) if ops.nonEmpty && target != state =>
+            fused(state) = S((target, ops))
+          case _ => ()
+      def resolve(target: Int, ops: Ls[Op]): Opt[(Int, Ls[Op])] =
+        val path = MutSet.empty[Int]
+        var cur = target
+        var acc = ops
+        var dead = false
+        while !dead && fused(cur).isDefined do
+          if path.add(cur) then
+            val (next, moreOps) = fused(cur).getOrElse(lastWords("unreachable"))
+            acc = acc ::: moreOps
+            cur = next
+          else dead = true
+        if dead then N else S((cur, acc))
+      var changed = false
+      states.foreach: edges =>
+        var i = 0
+        while i < edges.size do
+          edges(i) match
+            case Edge.Eps(target, ops) if fused(target).isDefined =>
+              resolve(target, ops) match
+                case S((newTarget, newOps)) =>
+                  edges(i) = Edge.Eps(newTarget, newOps)
+                  changed = true
+                case N => () // dead ε-cycle: dropDeadEdges removes this edge
+            case _ => ()
+          i += 1
+      changed
     def mergeIdentical(): Bool =
       val representative = MutMap.empty[(Bool, Ls[Edge]), Int]
       val rep = Array.tabulate(states.size)(identity)
@@ -663,6 +709,7 @@ class StringCompiler(using context: Context)(using tl: TL)(using Ctx, State, Rai
       changed = false
       changed |= dropDeadEdges()
       changed |= contractTrivial()
+      changed |= fuseOpsChains()
       changed |= mergeIdentical()
     // Prune states unreachable from the entry and renumber the survivors.
     // The accept state is kept even if unreachable (a never-matching region):
