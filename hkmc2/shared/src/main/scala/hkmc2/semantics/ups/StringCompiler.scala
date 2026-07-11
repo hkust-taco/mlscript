@@ -823,6 +823,54 @@ class StringCompiler(using context: Context)(using tl: TL)(using Ctx, State, Rai
         classId += 1
     (transitions, ids.keysIterator.toList, seedId)
 
+  /** Minimize the reverse DFA for recognition-only use (Moore's partition
+    * refinement). Recognition observes exactly one bit per reverse state:
+    * whether its subset contains the NFA start state (the whole-match
+    * acceptance test), so states are merged when that bit and their
+    * transition behaviors coincide.
+    *
+    * The *parsing* table cannot use this: there, every reverse state is
+    * observed through its full viability row, and subset construction never
+    * produces two states with the same row — the parsing reverse DFA is
+    * already minimal for its observable.
+    *
+    * @return (quotient transitions, per-state start-membership, seed id)
+    */
+  private def minimizeRecognition(
+      transitions: Buffer[Int],
+      revSets: Ls[Set[Int]],
+      seedId: Int,
+      classes: Int,
+      start: Int,
+  ): (IndexedSeq[Int], Str, Int) =
+    val stateCount = revSets.size
+    val accepts = revSets.iterator.map(_ contains start).toArray
+    // Initial partition by the acceptance bit; refine by transition signature
+    // until stable. Block ids are assigned by first occurrence in state
+    // order, keeping the output deterministic.
+    var block = Array.tabulate(stateCount)(s => if accepts(s) then 1 else 0)
+    var blockCount = 2
+    var stable = false
+    while !stable do
+      val ids = LinkedHashMap.empty[(Int, Ls[Int]), Int]
+      val next = new Array[Int](stateCount)
+      for s <- 0 until stateCount do
+        val signature = (block(s),
+          (0 until classes).iterator.map(c => block(transitions(s * classes + c))).toList)
+        next(s) = ids.getOrElseUpdate(signature, ids.size)
+      stable = ids.size == blockCount
+      blockCount = ids.size
+      block = next
+    val representative = new Array[Int](blockCount)
+    for s <- (stateCount - 1) to 0 by -1 do representative(block(s)) = s
+    val quotient =
+      for b <- 0 until blockCount; c <- 0 until classes
+      yield block(transitions(representative(b) * classes + c))
+    val starts = (0 until blockCount).iterator.map: b =>
+      if accepts(representative(b)) then '1' else '0'
+    .mkString
+    (quotient, starts, block(seedId))
+
   // ------------------------------------------------------------------------
   // Encoding
   // ------------------------------------------------------------------------
@@ -938,12 +986,15 @@ class StringCompiler(using context: Context)(using tl: TL)(using Ctx, State, Rai
       revTransitions.mkString(","),
       viability,
     ).mkString(";")
-    val starts = revSets.iterator.map(set => if set contains start then '1' else '0').mkString
+    // Recognition observes less of the reverse DFA than parsing does, so the
+    // recognition-only table gets a smaller, minimized copy of it.
+    val (minTransitions, minStarts, minSeedId) =
+      minimizeRecognition(revTransitions, revSets, seedId, classes, start)
     val matchTable = Iterator(
-      s"$classes,$seedId",
+      s"$classes,$minSeedId",
       bounds.mkString(","),
-      revTransitions.mkString(","),
-      starts,
+      minTransitions.mkString(","),
+      minStarts,
     ).mkString(";")
     (table, matchTable)
 
