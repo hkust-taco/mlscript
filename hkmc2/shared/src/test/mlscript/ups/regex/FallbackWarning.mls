@@ -1,0 +1,105 @@
+:js
+
+// String regions containing constructs the automaton does not compile —
+// guards, chains, extraction arguments — fall back to the legacy
+// backtracking translation, whose observable behavior differs (transforms
+// may run on abandoned parses, and splitting is greedy rather than decided
+// jointly for the whole sequence). Falling back therefore warns, pointing
+// at the offending construct.
+
+
+// Guards may fail after consumption based on information the automaton
+// does not track.
+
+:w
+fun guarded(x) = if x is ("a" where true) ~ "b" then "yes" else "no"
+//│ ╔══[WARNING] This string pattern falls back to matching with backtracking.
+//│ ║  l.15: 	fun guarded(x) = if x is ("a" where true) ~ "b" then "yes" else "no"
+//│ ║        	                          ^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Guards are not supported by string pattern compilation.
+//│ ║  l.15: 	fun guarded(x) = if x is ("a" where true) ~ "b" then "yes" else "no"
+//│ ╙──      	                          ^^^^^^^^^^^^^^
+
+guarded("ab")
+//│ = "yes"
+
+guarded("ax")
+//│ = "no"
+
+// The offending construct may sit inside a referenced definition; the
+// warning points into it.
+
+pattern Loud = ("A" ..= "Z") where true
+
+:w
+fun loud(x) = if x is Loud ~ "!" then "yes" else "no"
+//│ ╔══[WARNING] This string pattern falls back to matching with backtracking.
+//│ ║  l.35: 	fun loud(x) = if x is Loud ~ "!" then "yes" else "no"
+//│ ║        	                      ^^^^^^^^^^
+//│ ╟── Guards are not supported by string pattern compilation.
+//│ ║  l.32: 	pattern Loud = ("A" ..= "Z") where true
+//│ ╙──      	                ^^^^^^^^^^^^^^^^^^^^^^^
+
+loud("A!")
+//│ = "yes"
+
+
+// Extraction arguments bind values that cannot cross the automaton
+// boundary. (The legacy translation they fall back to currently
+// miscompiles the extractor call — a pre-existing bug, hence :fixme —
+// but the warning already tells the user the automaton is not in play.)
+
+pattern Vowel = ("a" | "e" | "i" | "o" | "u") => "vowel"
+
+:w
+:fixme
+fun vowel(x) = if x is Vowel(v) ~ "!" then v else "none"
+//│ ╔══[WARNING] This string pattern falls back to matching with backtracking.
+//│ ║  l.56: 	fun vowel(x) = if x is Vowel(v) ~ "!" then v else "none"
+//│ ║        	                       ^^^^^^^^^^^^^^
+//│ ╟── Extraction arguments are not supported by string pattern compilation.
+//│ ║  l.56: 	fun vowel(x) = if x is Vowel(v) ~ "!" then v else "none"
+//│ ╙──      	                       ^^^^^^^
+//│ ═══[COMPILATION ERROR] No definition found in scope for member 'arg$Vowel$0$'
+//│ ═══[COMPILATION ERROR] No definition found in scope for member 'arg$Vowel$0$'
+
+vowel("a!")
+//│ = "none"
+
+vowel("b!")
+//│ = "none"
+
+
+// Chained patterns pipe one match's output into another pattern, which may
+// reject it after the sequence has already committed a split.
+
+:w
+fun chained(x) = if x is (("a" | "e") as Vowel) ~ "!" then "yes" else "no"
+//│ ╔══[WARNING] This string pattern falls back to matching with backtracking.
+//│ ║  l.77: 	fun chained(x) = if x is (("a" | "e") as Vowel) ~ "!" then "yes" else "no"
+//│ ║        	                           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Chained patterns are not supported by string pattern compilation.
+//│ ║  l.77: 	fun chained(x) = if x is (("a" | "e") as Vowel) ~ "!" then "yes" else "no"
+//│ ╙──      	                           ^^^^^^^^^^^^^^^^^^^
+
+chained("a!")
+//│ = "yes"
+
+
+// Sequences in parametric definition bodies are not warned about: their
+// pattern parameters are only known at use sites, which compile their own
+// automata.
+
+pattern Rep(pattern P) = (P ~ Rep(P)) | ""
+
+"ababab" is Rep("ab")
+//│ = true
+
+"ababa" is Rep("ab")
+//│ = false
+
+
+// Fully supported regions compile to automata and stay silent.
+
+"ab" is "a" ~ "b"
+//│ = true

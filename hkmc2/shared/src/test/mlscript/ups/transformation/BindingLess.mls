@@ -73,7 +73,16 @@ fun toUppercaseList(input) = if input is ToUppercaseList as output then output
 toUppercaseList of "a" :: "X" :: "c" :: Nil
 //│ = Cons("A", Cons("X", Cons("C", Nil)))
 
+// The sequence references `ToUppercase`, which bottoms out in the guarded
+// `Char.AnyChar`, so it cannot be compiled to an automaton and warns.
+:w
 pattern ToUppercaseString = ToUppercase ~ (ToUppercaseString | "")
+//│ ╔══[WARNING] This string pattern falls back to matching with backtracking.
+//│ ║  l.79: 	pattern ToUppercaseString = ToUppercase ~ (ToUppercaseString | "")
+//│ ║        	                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Guards are not supported by string pattern compilation.
+//│ ║  l.2: 	  pattern AnyChar = (Str as s where s.length is 1) => s
+//│ ╙──     	                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 fun toUppercase(input) = if input is ToUppercaseString as output then output
 

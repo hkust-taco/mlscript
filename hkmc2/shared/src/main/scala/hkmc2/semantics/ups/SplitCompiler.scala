@@ -703,13 +703,20 @@ class SplitCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
       case Range(lower, upper, rightInclusive) => (makeConsequent, alternative) =>
         makeRangeTest(scrutinee, lower, upper, rightInclusive, makeConsequent(scrutinee, SeqMap.empty)) ~~: alternative
       case Concatenation(left, right) =>
-        if !regionSupported(pattern, Set.empty) then
+        unsupportedRegionConstruct(pattern, Set.empty) match
+        case S(unsupported) =>
           // Either this sequence occurs in the body of a parametric pattern
           // definition — its pattern parameters are only known at use sites,
           // which compile their own automata (see `isParametricStringSite`) —
           // or it contains constructs the automaton does not compile yet
           // (guards, chains, extraction arguments). Such sequences remain on
-          // the legacy greedy prefix composition.
+          // the legacy greedy prefix composition. The latter case is warned
+          // about, because the backtracking translation matches with
+          // observably different semantics (transforms may run on abandoned
+          // parses, and splitting is greedy rather than jointly decided).
+          if !unsupported.parametric then warn(
+            msg"This string pattern falls back to matching with backtracking." -> pattern.toLoc,
+            msg"${unsupported.description} are not supported by string pattern compilation." -> unsupported.loc)
           (makeConsequent, alternative) =>
             makeStringPrefixMatchSplit(scrutinee, left)(
               (consumedOutput, remainingOutput, bindingsFromConsumed) =>
@@ -731,7 +738,7 @@ class SplitCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
                   alternative),
               alternative
             )
-        else
+        case N =>
           // String sequences are compiled as a whole — together with
           // everything nested in them, including recursive pattern references
           // — into a finite automaton. Splitting decisions are global to the
@@ -1162,9 +1169,19 @@ class SplitCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
       case Guarded(pattern, _) => loop(pattern)
     loop(pattern)
 
-  /** Whether the pattern (and every pattern definition it references) only
-    * uses constructs that the string automaton compiles faithfully. Patterns
-    * failing this check keep the legacy backtracking translation:
+  /** A construct within a string region that the automaton does not compile.
+    * `description` is a plural noun phrase for the fallback warning;
+    * `parametric` marks references to pattern parameters, which are not
+    * warned about (they only occur in parametric definition bodies, whose
+    * use sites compile their own automata).
+    */
+  private final case class UnsupportedConstruct(
+      description: Str, loc: Opt[Loc], parametric: Bool)
+
+  /** The first construct in the pattern (or in a pattern definition it
+    * references) that the string automaton does not compile faithfully, if
+    * any. Regions containing such a construct keep the legacy backtracking
+    * translation:
     *
     *  - Guards and chains may fail after consumption based on information the
     *    automaton does not track;
@@ -1176,36 +1193,47 @@ class SplitCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
     *    them (at use sites of parametric patterns), and rejected inside the
     *    ahead-of-time compilation of the parametric definition itself.
     */
-  private def regionSupported(pattern: SP, boundParams: Set[VarSymbol]): Bool =
+  private def unsupportedRegionConstruct(pattern: SP, boundParams: Set[VarSymbol]): Opt[UnsupportedConstruct] =
     val visited = collection.mutable.Set.empty[PatternSymbol]
-    def loop(pattern: SP, bound: Set[VarSymbol]): Bool = pattern match
-      case Guarded(_, _) | Chain(_, _) => false
+    def firstIn(patterns: IterableOnce[SP], bound: Set[VarSymbol]): Opt[UnsupportedConstruct] =
+      patterns.iterator.map(loop(_, bound)).find(_.isDefined).flatten
+    def loop(pattern: SP, bound: Set[VarSymbol]): Opt[UnsupportedConstruct] = pattern match
+      case Guarded(_, _) => S(UnsupportedConstruct("Guards", pattern.toLoc, false))
+      case Chain(_, _) => S(UnsupportedConstruct("Chained patterns", pattern.toLoc, false))
       case Constructor(target, arguments) => target.resolvedSym match
         case S(symbol: VarSymbol) =>
-          bound.contains(symbol) && arguments.isEmpty
+          if bound.contains(symbol) && arguments.isEmpty then N
+          else S(UnsupportedConstruct("References to pattern parameters", pattern.toLoc, true))
         case symbolOption => symbolOption.flatMap(_.asPat) match
           case S(patternSymbol) => patternSymbol.defn match
-            case N => false
+            case N => S(UnsupportedConstruct("References to unresolved patterns", pattern.toLoc, false))
             case S(defn) =>
-              arguments.fold(0)(_.length) == defn.patternParams.length &&
-              arguments.getOrElse(Nil).forall(loop(_, bound)) &&
-              (!visited.add(patternSymbol) ||
-                loop(defn.pattern, defn.patternParams.iterator.map(_.sym).toSet))
+              if arguments.fold(0)(_.length) != defn.patternParams.length then
+                S(UnsupportedConstruct("Extraction arguments", pattern.toLoc, false))
+              else firstIn(arguments.getOrElse(Nil), bound).orElse:
+                if visited.add(patternSymbol)
+                then loop(defn.pattern, defn.patternParams.iterator.map(_.sym).toSet)
+                else N
           // Class and object patterns cannot match a string, so they are
           // harmless dead alternatives within a region; still check their
           // sub-patterns, whose transforms would otherwise be miscompiled.
-          case N => arguments.forall(_.forall(loop(_, bound)))
-      case Composition(_, left, right) => loop(left, bound) && loop(right, bound)
+          case N => firstIn(arguments.iterator.flatten, bound)
+      case Composition(_, left, right) => loop(left, bound).orElse(loop(right, bound))
       case Negation(pattern) => loop(pattern, bound)
-      case Wildcard() | Literal(_) | Range(_, _, _) => true
-      case Concatenation(left, right) => loop(left, bound) && loop(right, bound)
-      case Tuple(leading, spread) => leading.forall(loop(_, bound)) && spread.forall:
-        case (_, middle, trailing) => loop(middle, bound) && trailing.forall(loop(_, bound))
-      case Record(fields) => fields.forall((_, pattern) => loop(pattern, bound))
+      case Wildcard() | Literal(_) | Range(_, _, _) => N
+      case Concatenation(left, right) => loop(left, bound).orElse(loop(right, bound))
+      case Tuple(leading, spread) => firstIn(leading, bound).orElse(spread.flatMap:
+        case (_, middle, trailing) => loop(middle, bound).orElse(firstIn(trailing, bound)))
+      case Record(fields) => firstIn(fields.iterator.map((_, pattern) => pattern), bound)
       case Alias(pattern, _) => loop(pattern, bound)
       case Transform(pattern, _, _) => loop(pattern, bound)
       case Annotated(pattern, _) => loop(pattern, bound)
     loop(pattern, boundParams)
+
+  /** Whether the pattern (and every pattern definition it references) only
+    * uses constructs that the string automaton compiles faithfully. */
+  private def regionSupported(pattern: SP, boundParams: Set[VarSymbol]): Bool =
+    unsupportedRegionConstruct(pattern, boundParams).isEmpty
 
   /** Parametric pattern definitions cannot precompile their matcher methods —
     * the pattern arguments are only known at the use site — so use sites of
