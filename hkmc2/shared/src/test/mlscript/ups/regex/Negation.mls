@@ -1,0 +1,170 @@
+:js
+
+open annotations
+
+// A negated pattern in a string sequence matches any consumed segment that
+// the negated pattern itself does not match: the negated fragment is
+// determinized forward and its complement is embedded into the region's
+// automaton. Negations are recognition-only: patterns under `~` must not
+// carry bindings or transformations.
+
+
+pattern NotB = ("[" ~ ((~"b") as x) ~ "]") => x
+
+:expect "a"
+if "[a]" is NotB as x then x else "no"
+//│ = "a"
+
+// Two characters are not one character.
+:expect "bb"
+if "[bb]" is NotB as x then x else "no"
+//│ = "bb"
+
+// The empty segment is not "b" either.
+:expect ""
+if "[]" is NotB as x then x else "no"
+//│ = ""
+
+"[b]" is NotB
+//│ = false
+
+
+// The complement consumes greedily, like the wildcard...
+
+pattern SplitLast = (((~"") as x) ~ (_ as y)) => [x, y]
+
+:expect ["ab", ""]
+if "ab" is SplitLast as parts then parts
+//│ = ["ab", ""]
+
+// ... but yields to what the rest of the sequence needs.
+
+pattern NonEmptyThenB = (((~"") as x) ~ ("b" as y)) => [x, y]
+
+:expect ["ab", "b"]
+if "abb" is NonEmptyThenB as parts then parts
+//│ = ["ab", "b"]
+
+// The negated pattern must consume something here.
+"b" is NonEmptyThenB
+//│ = false
+
+
+// Negated alternations.
+
+pattern Neither = ("<" ~ ((~("a" | "bb")) as x) ~ ">") => x
+
+:expect "b"
+if "<b>" is Neither as x then x else "no"
+//│ = "b"
+
+:expect "aa"
+if "<aa>" is Neither as x then x else "no"
+//│ = "aa"
+
+"<a>" is Neither
+//│ = false
+
+"<bb>" is Neither
+//│ = false
+
+
+// Negated character classes: anything except a single digit.
+
+pattern NotDigit = ("#" ~ ((~("0" ..= "9")) as x)) => x
+
+:expect "x"
+if "#x" is NotDigit as x then x else "no"
+//│ = "x"
+
+:expect "55"
+if "#55" is NotDigit as x then x else "no"
+//│ = "55"
+
+:expect ""
+if "#" is NotDigit as x then x else "no"
+//│ = ""
+
+"#5" is NotDigit
+//│ = false
+
+
+// Negating a (tail-)recursive pattern: the pure component is copied into
+// the fragment and complemented with it.
+
+pattern ABs = ("ab" ~ ABs) | ""
+
+pattern NotABs = ("<" ~ ((~ABs) as x) ~ ">") => x
+
+:expect "aba"
+if "<aba>" is NotABs as x then x else "no"
+//│ = "aba"
+
+"<abab>" is NotABs
+//│ = false
+
+"<>" is NotABs
+//│ = false
+
+
+// Double negation cancels out.
+
+pattern JustAB = "<" ~ (~(~"ab")) ~ ">"
+
+"<ab>" is JustAB
+//│ = true
+
+"<a>" is JustAB
+//│ = false
+
+
+// A negated `Str` matches nothing, so the sequence can never match.
+
+"ax" is (~Str) ~ "x"
+//│ = false
+
+
+// Recognition-only multi-matchers embed the complement too.
+
+fun plain(x) = x is @compile JustAB
+
+plain("<ab>")
+//│ = true
+
+plain("<ba>")
+//│ = false
+
+
+// Same-component recursion under a negation is not in tail position (the
+// complement is a self-contained fragment), and is rejected as usual.
+
+:e
+pattern Weird = ("a" ~ (~Weird)) | ""
+//│ ╔══[COMPILATION ERROR] This recursive use of pattern `Weird` is not in tail position.
+//│ ║  l.142: 	pattern Weird = ("a" ~ (~Weird)) | ""
+//│ ║         	                         ^^^^^
+//│ ╟── Only self references at the end of a string sequence can be compiled to a finite string matcher.
+//│ ╟── The recursion involves this pattern.
+//│ ║  l.142: 	pattern Weird = ("a" ~ (~Weird)) | ""
+//│ ╙──       	                         ^^^^^
+
+
+// Transforms under a negation can never be observed and are rejected.
+// (Aliases directly under a negation are already dropped during
+// elaboration — negations bind nothing — so transforms are the only way
+// impurity can reach a negated fragment, possibly through a referenced
+// definition.)
+
+pattern Vowelish = ("a" | "e") => "vowel"
+
+:e
+fun bad(x) = if x is (~Vowelish) ~ "b" then "yes" else "no"
+//│ ╔══[COMPILATION ERROR] Negations of patterns with bindings or transformations are not supported within string patterns.
+//│ ║  l.158: 	pattern Vowelish = ("a" | "e") => "vowel"
+//│ ╙──       	        ^^^^^^^^
+
+:e
+fun bad2(x) = if x is (~("a" => "z")) ~ "b" then "yes" else "no"
+//│ ╔══[COMPILATION ERROR] Negations of patterns with bindings or transformations are not supported within string patterns.
+//│ ║  l.167: 	fun bad2(x) = if x is (~("a" => "z")) ~ "b" then "yes" else "no"
+//│ ╙──       	                         ^^^^^^^^^^

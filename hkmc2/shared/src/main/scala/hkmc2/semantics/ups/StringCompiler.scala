@@ -449,9 +449,33 @@ class StringCompiler(using context: Context)(using tl: TL)(using Ctx, State, Rai
       case And(_) =>
         fail(msg"Conjunctions are not supported within string patterns yet." -> pattern.toLoc)
         newState()
-      case Not(_) =>
-        fail(msg"Negations are not supported within string patterns yet." -> pattern.toLoc)
-        newState()
+      case Not(p) =>
+        if !isPureDeep(p) then
+          // Bindings and transforms inside a negation could never be
+          // observed (a negation succeeds precisely when its pattern does
+          // not match), so requiring purity loses no expressiveness.
+          fail(msg"Negations of patterns with bindings or transformations are not supported within string patterns." -> pattern.toLoc)
+          newState()
+        else
+          // `Not` of a pure pattern is itself pure, so the pure-subtree
+          // shortcut above has already handled any demanded value.
+          softAssert(!needValue && exitOps.isEmpty, "negation with pending value operations")
+          // Build the negated pattern as a self-contained fragment (same-SCC
+          // references inside it are rejected by the tail-position check, so
+          // it never jumps out), forward-determinize it, and embed the
+          // complement: a state may exit to the continuation exactly when
+          // its subset does not accept the fragment — the consumed slice is
+          // then not in the negated language. Consuming edges come first:
+          // like the wildcard, the complement consumes greedily.
+          val subAccept = newState()
+          val subEntry = build(p, subAccept, needValue = false, Nil, scc)
+          val dfa = determinizeFragment(subEntry, subAccept)
+          val embedded = Array.fill(dfa.stateCount)(newState())
+          for state <- 0 until dfa.stateCount do
+            dfa.outEdges(state).foreach: (ranges, target) =>
+              addChr(embedded(state), ranges, embedded(target))
+            if !dfa.accepting(state) then addEps(embedded(state), cont, Nil)
+          embedded(0)
       case Rename(p, symbol) =>
         val ops = Op.Bind(slotOf(symbol)) :: (if needValue then exitOps else Op.Drop :: exitOps)
         build(p, cont, true, ops, scc)
@@ -549,6 +573,92 @@ class StringCompiler(using context: Context)(using tl: TL)(using Ctx, State, Rai
       val bodyEntry = build(bodies(member), cont, needValue = !pure, Nil, S(sccContext))
       addEps(entries(member), bodyEntry, Nil)
     entries(inst)
+
+  // ------------------------------------------------------------------------
+  // Fragment determinization (for complement and product)
+  // ------------------------------------------------------------------------
+
+  /** A forward-determinized copy of a pure sub-automaton, complete over the
+    * whole alphabet (the empty subset acts as the sink state). State 0 is
+    * the start state. `classRanges` partitions the alphabet into contiguous
+    * ranges behaving identically within the fragment.
+    */
+  private final case class FragmentDfa(
+      classRanges: Ls[CharRange],
+      transitions: Buffer[Int],
+      accepting: Buffer[Bool],
+  ):
+    def stateCount: Int = accepting.size
+    def classCount: Int = classRanges.size
+    /** The outgoing character edges of a state, one per distinct target,
+      * with the ranges of consecutive same-target classes merged. */
+    def outEdges(state: Int): Ls[(Ls[CharRange], Int)] =
+      val byTarget = LinkedHashMap.empty[Int, Buffer[CharRange]]
+      classRanges.iterator.zipWithIndex.foreach: (range, classId) =>
+        val target = transitions(state * classCount + classId)
+        val ranges = byTarget.getOrElseUpdate(target, Buffer.empty)
+        ranges.lastOption match
+          case S((lo, hi)) if hi + 1 == range._1 =>
+            ranges(ranges.size - 1) = (lo, range._2)
+          case _ => ranges += range
+      byTarget.iterator.map((target, ranges) => (ranges.toList, target)).toList
+
+  /** Forward-determinize the sub-automaton reachable from `entry`, whose
+    * every path ends at `accept` and whose ε-edges carry no operations
+    * (the caller guarantees the fragment is pure). The subset construction
+    * runs over alphabet classes local to the fragment.
+    */
+  private def determinizeFragment(entry: Int, accept: Int): FragmentDfa =
+    // The reachable fragment states, for computing local alphabet classes.
+    val reachable = MutSet(entry)
+    val pendingStates = Buffer(entry)
+    while pendingStates.nonEmpty do
+      val state = pendingStates.remove(pendingStates.size - 1)
+      states(state).foreach: edge =>
+        val target = edgeTarget(edge)
+        if reachable.add(target) then pendingStates += target
+    val points = MutSet.empty[Int]
+    reachable.foreach: state =>
+      states(state).foreach:
+        case Edge.Chr(ranges, _) =>
+          ranges.foreach: (lo, hi) =>
+            points += lo
+            if hi < MaxUnit then points += hi + 1
+        case Edge.Eps(_, ops) =>
+          softAssert(ops.isEmpty, "operations inside a determinized fragment")
+    val bounds = points.toList.sorted
+    val classRanges = (0 :: bounds).zip(bounds.map(_ - 1) ::: MaxUnit :: Nil)
+    def close(seed: Set[Int]): Set[Int] =
+      val result = MutSet.from(seed)
+      val worklist = Buffer.from(seed)
+      while worklist.nonEmpty do
+        val state = worklist.remove(worklist.size - 1)
+        states(state).foreach:
+          case Edge.Eps(target, _) =>
+            if result.add(target) then worklist += target
+          case _ => ()
+      result.toSet
+    val ids = LinkedHashMap.empty[Set[Int], Int]
+    val pendingSets = Buffer.empty[Set[Int]]
+    def idOf(set: Set[Int]): Int = ids.getOrElseUpdate(set, {
+      pendingSets += set
+      ids.size
+    })
+    idOf(close(Set(entry)))
+    val transitions = Buffer.empty[Int]
+    val accepting = Buffer.empty[Bool]
+    // Subsets are processed in discovery order, which is id order, so the
+    // transition rows are appended in order.
+    while pendingSets.nonEmpty do
+      val set = pendingSets.remove(0)
+      accepting += set.contains(accept)
+      classRanges.foreach: (representative, _) =>
+        val moved = set.iterator.flatMap: state =>
+          states(state).iterator.collect:
+            case Edge.Chr(ranges, target) if rangesContain(ranges, representative) => target
+        .toSet
+        transitions += idOf(close(moved))
+    FragmentDfa(classRanges, transitions, accepting)
 
   // ------------------------------------------------------------------------
   // NFA reduction
