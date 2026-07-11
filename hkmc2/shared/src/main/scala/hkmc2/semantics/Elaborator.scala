@@ -2350,9 +2350,13 @@ extends Importer:
     /** String range bounds must be single characters. */
     def isInvalidStringBounds(lo: StrLit, hi: StrLit)(using Raise): Bool =
       val ds = collection.mutable.Buffer.empty[(Message, Option[Loc])]
-      if lo.value.length =/= 1 then
+      // A bound is a single character when it is one code point; astral
+      // characters (two UTF-16 code units) are accepted.
+      def isSingleCharacter(s: Str): Bool =
+        s.nonEmpty && s.codePointCount(0, s.length) == 1
+      if !isSingleCharacter(lo.value) then
         ds += msg"The lower bound of character ranges must be a single character." -> lo.toLoc
-      if hi.value.length =/= 1 then
+      if !isSingleCharacter(hi.value) then
         ds += msg"The upper bound of character ranges must be a single character." -> hi.toLoc
       if ds.nonEmpty then error(ds.toSeq*)
       ds.nonEmpty

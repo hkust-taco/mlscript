@@ -126,11 +126,16 @@ class Instantiator(using tl: TL)(using Ctx, State, Raise):
     case SP.Range(lower, upper, rightInclusive) =>
       (lower, upper) match
         case (StrLit(lower), StrLit(upper)) if lower.nonEmpty && upper.nonEmpty =>
-          // String ranges compare the first UTF-16 code unit, mirroring the
-          // previous expansion `(lower.head to upper.head)`. Keeping the range
-          // symbolic lets the string pattern compiler emit compact
-          // character-class transitions instead of wide disjunctions.
-          CharClass(lower.head.toInt, upper.head.toInt).withLocOf(pattern)
+          // Character ranges span the code points between their two bounds
+          // (the elaborator has checked that each bound is one code point).
+          // Keeping ranges symbolic lets the string pattern compiler emit
+          // compact character-class transitions instead of wide disjunctions;
+          // ranges reaching beyond the Basic Multilingual Plane additionally
+          // decompose into surrogate-pair sequences (see `codePointRange`).
+          val lo = lower.codePointAt(0)
+          val included = upper.codePointAt(0)
+          val hi = if rightInclusive then included else included - 1
+          codePointRange(lo, hi).withLocOf(pattern)
         case (IntLit(lower), IntLit(upper)) =>
           // Integer ranges are still expanded into a list of literals. After
           // the `where` clause or chain patterns are implemented, we could
@@ -185,3 +190,36 @@ class Instantiator(using tl: TL)(using Ctx, State, Raise):
       // from compiled patterns for now.
       error(msg"Guarded patterns are not supported in pattern compilation." -> pattern.toLoc)
       Never
+
+  /** The inclusive code-point range `lo` to `hi` as a pattern over UTF-16
+    * code units. A range within the Basic Multilingual Plane is a single
+    * character class; a range of astral code points becomes high-surrogate/
+    * low-surrogate pairs, split into at most three alternatives (a partial
+    * first high surrogate, the full middle high surrogates, and a partial
+    * last high surrogate) — the standard decomposition used by regular
+    * expression engines. A range spanning both planes is the disjunction of
+    * its two halves.
+    */
+  private def codePointRange(lo: Int, hi: Int): Pat =
+    def surrogates(cp: Int): (Int, Int) =
+      (0xD800 + ((cp - 0x10000) >> 10), 0xDC00 + ((cp - 0x10000) & 0x3FF))
+    def pairRange(highLo: Int, highHi: Int, lowLo: Int, lowHi: Int): Pat =
+      Concat(CharClass(highLo, highHi) :: CharClass(lowLo, lowHi) :: Nil)
+    // An empty range matches nothing. This must be a fresh node (not the
+    // shared `Never` singleton) because the caller attaches a location to it.
+    if hi < lo then And(Nil)
+    else if hi <= 0xFFFF then CharClass(lo, hi)
+    else if lo <= 0xFFFF then
+      CharClass(lo, 0xFFFF) or codePointRange(0x10000, hi)
+    else
+      val (loHigh, loLow) = surrogates(lo)
+      val (hiHigh, hiLow) = surrogates(hi)
+      if loHigh == hiHigh then pairRange(loHigh, loHigh, loLow, hiLow)
+      else
+        val first = pairRange(loHigh, loHigh, loLow, 0xDFFF)
+        val middle =
+          if hiHigh > loHigh + 1
+          then pairRange(loHigh + 1, hiHigh - 1, 0xDC00, 0xDFFF) :: Nil
+          else Nil
+        val last = pairRange(hiHigh, hiHigh, 0xDC00, hiLow)
+        Or(first :: middle ::: last :: Nil)
