@@ -62,6 +62,22 @@ import collection.mutable.{Buffer, Map as MutMap, LinkedHashMap, Set as MutSet}
   */
 object StringCompiler:
 
+  /** Measurement hook for table-size experiments. When a sink is installed
+    * (the JVM test runner does so when the `HKMC2_STRPAT_STATS` environment
+    * variable names an output file), every table literal embedded in
+    * generated code is reported as a `file,blockLine,kind,length` line.
+    * A no-op otherwise. Shared code must not touch the file system directly:
+    * this file also compiles under Scala.js, hence the pluggable sink.
+    */
+  object TableStats:
+    private var sink: Opt[Str => Unit] = N
+    def install(f: Str => Unit): Unit = sink = S(f)
+    def record(loc: Opt[Loc], kind: Str, table: Str): Unit = sink.foreach: f =>
+      val position = loc match
+        case S(loc) => s"${loc.origin.fileName},${loc.origin.startLineNum}"
+        case N => "?,0"
+      f(s"$position,$kind,${table.length}")
+
   /** An inclusive range of UTF-16 code units. Matching is code-unit-based,
     * mirroring the previous runtime helpers (`Str.get`/`startsWith`). */
   type CharRange = (Int, Int)

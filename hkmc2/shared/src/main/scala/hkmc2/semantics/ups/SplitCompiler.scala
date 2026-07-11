@@ -1244,8 +1244,12 @@ class SplitCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
     compiler.compile(instantiated, StringCompiler.Mode.Whole) match
       case N => RejectSplit // Errors have been reported; compile nothing.
       case S(compiled) =>
-        if compiled.pure ||
-            (!outputNeeded && compiled.visibleSlots.isEmpty && compiled.actions.isEmpty) then
+        val recognitionOnly = compiled.pure ||
+          (!outputNeeded && compiled.visibleSlots.isEmpty && compiled.actions.isEmpty)
+        StringCompiler.TableStats.record(pattern.toLoc,
+          if recognitionOnly then "whole-match" else "whole-parse",
+          if recognitionOnly then compiled.matchTable else compiled.table)
+        if recognitionOnly then
           (makeConsequent, alternative) =>
             val callTerm = app(strPatMatchWhole,
               tup(fld(str(compiled.matchTable)), fld(scrutinee())), "whole string match")
@@ -1282,6 +1286,7 @@ class SplitCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
     compiler.compile(instantiated, StringCompiler.Mode.Prefix) match
       case N => failure
       case S(compiled) =>
+        StringCompiler.TableStats.record(pattern.toLoc, "prefix-parse", compiled.table)
         val callTerm = app(strPatParsePrefix,
           tup(fld(str(compiled.table)), fld(actionsTuple(compiled.actions, pattern.toLoc)), fld(inputSymbol.safeRef)),
           "string prefix parse")
@@ -1385,6 +1390,7 @@ class SplitCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
       else ResultMode.MatchOnly
     // Initiate the compilation.
     val compiler = new Compiler(using context)
+    compiler.statsSiteLoc = pattern.toLoc
     val (matcherSymbol, implementations) = compiler.buildMatcher(synonym, resultMode)
     val innermostSplit = resultMode match
       case ResultMode.MatchOnly =>

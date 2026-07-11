@@ -23,6 +23,12 @@ class Compiler(using Context)(using tl: TL)(using Ctx, State, Raise) extends Ter
   import Compiler.*, tl.*
   import Pattern.*
 
+  /** The location of the match site this compiler serves, used only to label
+    * `StringCompiler.TableStats` measurement records. Expanded patterns
+    * aggregate sub-trees from several blocks, so their own locations are not
+    * usable for this purpose. */
+  var statsSiteLoc: Opt[Loc] = N
+
   /** A previously-computed matcher result for one field of the current
     * multi-matcher. In full mode the value also carries the original field
     * input, which is needed when a successful field pattern preserves its
@@ -285,6 +291,10 @@ class Compiler(using Context)(using tl: TL)(using Ctx, State, Raise) extends Ter
           case fragment => StringCompiler().compile(fragment, StringCompiler.Mode.Whole) match
             case N => emptyMatchResult("rejected string pattern")
             case S(compiled) =>
+              val embedsMatchTable = isMatchOnly || compiled.pure
+              StringCompiler.TableStats.record(statsSiteLoc,
+                if embedsMatchTable then "mm-match" else "mm-parse",
+                if embedsMatchTable then compiled.matchTable else compiled.table)
               val matchTableTerm = str(compiled.matchTable)
               if isMatchOnly then
                 app(strPatMatchWhole, tup(fld(matchTableTerm), fld(scrutinee.safeRef)), "string match")

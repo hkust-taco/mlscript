@@ -21,9 +21,18 @@ import io.PlatformPath.given, io.FileSystem
 object DiffTestRunner:
   
   class State:
-    
+
     val cctx: CompilerCtx = CompilerCtx.fresh(io.FileSystem.default)
-    
+
+    // Table-size measurement for compiled string patterns: when the
+    // environment variable names an output file, record one line per table
+    // literal embedded in generated code. Suites run in parallel, so writes
+    // are synchronized on the writer.
+    sys.env.get("HKMC2_STRPAT_STATS").foreach: path =>
+      val writer = new java.io.PrintWriter(new java.io.FileWriter(path, true), true)
+      semantics.ups.StringCompiler.TableStats.install: line =>
+        writer.synchronized(writer.println(line))
+
     val pwd = os.pwd
     
     // println(s"INITIALIZING DiffTestRunner.State in ${pwd}")
