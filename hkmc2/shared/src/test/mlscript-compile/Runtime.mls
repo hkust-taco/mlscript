@@ -159,8 +159,26 @@ module StrPat with
   val programs = new Map()
   val matchers = new Map()
 
+  // Unpack a variable-length integer section: five value bits per Base64
+  // character, least significant group first, sixth bit flagging
+  // continuation (the encoding of `StringCompiler.packInts`).
   fun decodeInts(s) =
-    if s.length === 0 then [] else s.split(",").map(x => parseInt(x, 10))
+    let values = mut []
+    let value = 0
+    let shift = 1
+    let i = 0
+    while i < s.length do
+      let d = sextet(s.charCodeAt(i))
+      if d >= 32 then
+        set value += (d - 32) * shift
+        set shift *= 32
+      else
+        set value += d * shift
+        values.push(value)
+        set value = 0
+        set shift = 1
+      set i += 1
+    values
 
   // The value of a character of the Base64 alphabet used for bit-packed
   // sections (six bits per character, highest bit first).
@@ -209,7 +227,9 @@ module StrPat with
           edges.push([0, target, nfaInts.slice(cursor + 3, cursor + 3 + rangeCount * 2)])
           set cursor += 3 + rangeCount * 2
         else
-          edges.push([1, target, nfaInts.[cursor + 2]])
+          // The table stores opsId + 1 so the encoding stays non-negative;
+          // 0 denotes an operation-free edge (-1 internally).
+          edges.push([1, target, nfaInts.[cursor + 2] - 1])
           set cursor += 3
       states.push(edges)
     let opsInts = decodeInts(sections.[3])

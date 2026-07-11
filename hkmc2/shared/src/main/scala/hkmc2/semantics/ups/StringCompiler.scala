@@ -894,11 +894,28 @@ class StringCompiler(using context: Context)(using tl: TL)(using Ctx, State, Rai
         pool.size - 1
       case index => index
 
-  /** The alphabet for bit-packed sections: six bits per character, highest
-    * bit first, using the standard Base64 characters — they need no escaping
-    * in string literals and clash with neither the `;` section separator nor
-    * the `,` integer separator. */
+  /** The alphabet for packed sections, using the standard Base64 characters —
+    * they need no escaping in string literals and do not clash with the `;`
+    * section separator. Bit-packed sections use six bits per character,
+    * highest bit first. Integer sections use a variable-length encoding in
+    * the style of source maps: five value bits per character, least
+    * significant group first, with the sixth bit flagging continuation. */
   private val packAlphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
+
+  private def packInts(values: IterableOnce[Int]): Str =
+    val packed = new StringBuilder
+    values.iterator.foreach: value =>
+      softAssert(value >= 0, "packed integers must be non-negative")
+      var v = value
+      var done = false
+      while !done do
+        val digit = v % 32
+        v /= 32
+        if v > 0 then packed += packAlphabet.charAt(digit + 32)
+        else
+          packed += packAlphabet.charAt(digit)
+          done = true
+    packed.result()
 
   private def packBits(bits: Iterator[Bool]): Str =
     val packed = new StringBuilder
@@ -918,15 +935,16 @@ class StringCompiler(using context: Context)(using tl: TL)(using Ctx, State, Rai
       packed += packAlphabet.charAt(value)
     packed.result()
 
-  /** Encode the program as semicolon-separated sections of comma-separated
-    * integers (except the last section). The full parsing table:
+  /** Encode the program as semicolon-separated sections. Integer sections
+    * are variable-length packed (see `packInts`); the viability section is
+    * bit-packed (see `packBits`). The full parsing table:
     *
     *  0. header: stateCount, start, accept, slotCount, classCount,
     *     revStateCount, seedRevState
     *  1. class boundaries (classCount - 1 integers)
     *  2. NFA: per state: edgeCount, then per edge either
     *     0, target, rangeCount, lo, hi, ... (character edge) or
-    *     1, target, opsId (ε-edge, -1 when it carries no operations)
+    *     1, target, opsId + 1 (ε-edge, 0 when it carries no operations)
     *  3. operation pool: entryCount, then per entry: length, integers
     *  4. reverse transitions (revStateCount * classCount integers)
     *  5. viability: one bit per (revState, state) pair, row-major,
@@ -937,13 +955,15 @@ class StringCompiler(using context: Context)(using tl: TL)(using Ctx, State, Rai
     *
     *  0. header: classCount, seedRevState
     *  1. class boundaries
-    *  2. reverse transitions
+    *  2. reverse transitions (minimized, see `minimizeRecognition`)
     *  3. one '0'/'1' character per reverse state: whether its subset
     *     contains the start state (the whole-match acceptance test)
     *
-    * String literals are interned by the JavaScript engine, so the runtime
-    * caches the decoded program keyed by this very string: the table is built
-    * once per program, not once per call.
+    * Tables are not human-readable; the automaton and the reverse DFA are
+    * logged in a readable form under the `ucs:string-compiler` scope
+    * instead. String literals are interned by the JavaScript engine, so the
+    * runtime caches the decoded program keyed by this very string: the table
+    * is built once per program, not once per call.
     *
     * @return (the full parsing table, the recognition-only table)
     */
@@ -951,6 +971,7 @@ class StringCompiler(using context: Context)(using tl: TL)(using Ctx, State, Rai
     val bounds = computeBounds()
     val (revTransitions, revSets, seedId) = reverseDeterminize(accept, bounds)
     val classes = classCount(bounds)
+    logAutomaton(start, accept, bounds, revTransitions, revSets, seedId)
     val opsPool = Buffer.empty[Ls[Int]]
     val nfa = Buffer.empty[Int]
     states.foreach: edges =>
@@ -966,7 +987,7 @@ class StringCompiler(using context: Context)(using tl: TL)(using Ctx, State, Rai
         case Edge.Eps(target, ops) =>
           nfa += 1
           nfa += target
-          nfa += (if ops.isEmpty then -1 else encodeOps(ops, opsPool))
+          nfa += (if ops.isEmpty then 0 else encodeOps(ops, opsPool) + 1)
     val opsSection = Buffer.empty[Int]
     opsSection += opsPool.size
     opsPool.foreach: entry =>
@@ -979,11 +1000,11 @@ class StringCompiler(using context: Context)(using tl: TL)(using Ctx, State, Rai
     val header = stateCount :: start :: accept :: slots.size :: classes ::
       revSets.size :: seedId :: Nil
     val table = Iterator(
-      header.mkString(","),
-      bounds.mkString(","),
-      nfa.mkString(","),
-      opsSection.mkString(","),
-      revTransitions.mkString(","),
+      packInts(header),
+      packInts(bounds),
+      packInts(nfa),
+      packInts(opsSection),
+      packInts(revTransitions),
       viability,
     ).mkString(";")
     // Recognition observes less of the reverse DFA than parsing does, so the
@@ -991,12 +1012,47 @@ class StringCompiler(using context: Context)(using tl: TL)(using Ctx, State, Rai
     val (minTransitions, minStarts, minSeedId) =
       minimizeRecognition(revTransitions, revSets, seedId, classes, start)
     val matchTable = Iterator(
-      s"$classes,$minSeedId",
-      bounds.mkString(","),
-      minTransitions.mkString(","),
+      packInts(classes :: minSeedId :: Nil),
+      packInts(bounds),
+      packInts(minTransitions),
       minStarts,
     ).mkString(";")
     (table, matchTable)
+
+  /** Log the automaton and its reverse DFA in a readable form. With packed
+    * tables, this dump is the debugging surface the comma-separated encoding
+    * used to provide. */
+  private def logAutomaton(
+      start: Int, accept: Int, bounds: Ls[Int],
+      revTransitions: Buffer[Int], revSets: Ls[Set[Int]], seedId: Int,
+  ): Unit =
+    def showChar(unit: Int): Str =
+      if unit >= 0x21 && unit <= 0x7E then s"'${unit.toChar}'" else s"u+${unit.toHexString}"
+    def showOps(ops: Ls[Op]): Str = ops.iterator.map:
+      case Op.Defer(deferred, captured) =>
+        s"Defer(${showOps(deferred)} | cap ${captured.mkString(",")})"
+      case op => op.toString
+    .mkString(" [", "; ", "]")
+    log:
+      val classes = classCount(bounds)
+      val lines = Buffer.empty[Str]
+      lines += s"NFA: start $start, accept $accept, ${slots.size} slots"
+      states.iterator.zipWithIndex.foreach: (edges, state) =>
+        val shown = edges.iterator.map:
+          case Edge.Chr(ranges, target) =>
+            val rangesText = ranges.iterator.map: (lo, hi) =>
+              if lo == hi then showChar(lo) else s"${showChar(lo)}..${showChar(hi)}"
+            .mkString(", ")
+            s"$rangesText -> $target"
+          case Edge.Eps(target, ops) =>
+            s"eps -> $target${if ops.isEmpty then "" else showOps(ops)}"
+        .mkString("; ")
+        lines += s"  $state: $shown"
+      lines += s"Reverse DFA: seed $seedId, ${revSets.size} states over $classes classes"
+      revSets.iterator.zipWithIndex.foreach: (set, id) =>
+        val row = (0 until classes).iterator.map(c => revTransitions(id * classes + c)).mkString(" ")
+        lines += s"  $id {${set.toList.sorted.mkString(",")}}: $row"
+      lines.mkString("\n")
 
   // ------------------------------------------------------------------------
   // Entry point

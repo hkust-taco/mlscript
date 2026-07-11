@@ -15,7 +15,7 @@ pattern Oops = "" ~ (Oops | "")
 //│ let inlinedVal;
 //│ match ""
 //│   Str⁰ =>
-//│     set inlinedVal = runtime⁰.StrPat⁰.matchWhole⁰("1,0;;1,1;10", "");
+//│     set inlinedVal = runtime⁰.StrPat⁰.matchWhole⁰("BA;;BB;10", "");
 //│     match inlinedVal
 //│       true =>
 //│         return true
@@ -39,7 +39,7 @@ pattern Funny = "" ~ "" ~ ""
 //│ let inlinedVal;
 //│ match ""
 //│   Str⁰ =>
-//│     set inlinedVal = runtime⁰.StrPat⁰.matchWhole⁰("1,0;;1,1;10", "");
+//│     set inlinedVal = runtime⁰.StrPat⁰.matchWhole⁰("BA;;BB;10", "");
 //│     match inlinedVal
 //│       true =>
 //│         return true
