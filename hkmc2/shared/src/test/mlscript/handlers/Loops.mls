@@ -2,16 +2,21 @@
 :lift
 :effectHandlers
 
-:expect 5
+:expect 7
 fun loops() =
   let count = 0
   do lbl:
     if count < 5 do
       set count += 1
       lbl.continue
+    if count < 6 do
+      hide(0)
+      set count += 2
+      lbl.continue
+    lbl.break
   count
 loops()
-//│ = 5
+//│ = 7
 
 :expect 1
 fun loops() =
@@ -20,6 +25,11 @@ fun loops() =
     if count < 5 do
       set count += 1
       lbl.break
+    if count < 6 do
+      hide(0)
+      set count += 2
+      lbl.continue
+    hide(0)
   count
 loops()
 //│ = 1
