@@ -446,9 +446,80 @@ class StringCompiler(using context: Context)(using tl: TL)(using Ctx, State, Rai
               case Nil => lastWords("unreachable: empty concatenation")
             go(patterns)
       case And(Nil) => newState() // `Never` matches nothing: a dead state.
-      case And(_) =>
-        fail(msg"Conjunctions are not supported within string patterns yet." -> pattern.toLoc)
-        newState()
+      case And(patterns) =>
+        // All conjuncts consume the same slice, so a pure conjunct's value
+        // is that slice and only an impure conjunct can contribute a
+        // distinct value (or bindings). Hence one conjunct — the only
+        // impure one, or the first when all are pure — acts as the
+        // *driver*: it is built as an ordinary prioritized fragment whose
+        // priorities and operations determine the committed parse and the
+        // conjunction's value. Every other conjunct is pure and runs in
+        // lockstep as a determinized constraint: the product of the driver
+        // fragment with the constraint DFAs may complete only in states
+        // where every constraint accepts the consumed slice. DFAs add no
+        // choice points, so the committed parse is the driver's
+        // highest-priority parse among the slices all constraints admit.
+        val (impure, pureConjuncts) = patterns.partition(p => !isPureDeep(p))
+        if impure.sizeIs >= 2 then
+          fail(msg"Conjunctions where more than one branch carries bindings or transformations are not supported within string patterns." -> pattern.toLoc)
+          newState()
+        else
+          softAssert(impure.nonEmpty || (!needValue && exitOps.isEmpty),
+            "value operations on a pure conjunction")
+          val driver = impure.headOption.getOrElse(patterns.head)
+          val constraints = if impure.isEmpty then patterns.tail else pureConjuncts
+          // Completion edges into `driverAccept` carry the conjunction's
+          // pending operations; the product retargets them to states that
+          // exit to the continuation exactly when every constraint accepts.
+          val driverAccept = newState()
+          val driverEntry = build(driver, driverAccept, needValue, exitOps, scc)
+          val dfas = constraints.map: constraint =>
+            val accept = newState()
+            val entry = build(constraint, accept, needValue = false, Nil, scc)
+            determinizeFragment(entry, accept)
+          val productIds = LinkedHashMap.empty[(Int, Ls[Int]), Int]
+          val worklist = Buffer.empty[(Int, Ls[Int])]
+          def productState(key: (Int, Ls[Int])): Int =
+            productIds.getOrElseUpdate(key, {
+              worklist += key
+              newState()
+            })
+          val entry = productState((driverEntry, dfas.map(_ => 0)))
+          while worklist.nonEmpty do
+            val key = worklist.remove(worklist.size - 1)
+            val (driverState, constraintStates) = key
+            val source = productIds(key)
+            if driverState == driverAccept then
+              if constraintStates.iterator.zip(dfas).forall(dfas => dfas._2.accepting(dfas._1)) then
+                addEps(source, cont, Nil)
+            else states(driverState).foreach:
+              case Edge.Eps(target, ops) =>
+                addEps(source, productState((target, constraintStates)), ops)
+              case Edge.Chr(ranges, target) =>
+                // Split the ranges wherever some constraint changes class,
+                // so that each product edge advances every DFA
+                // deterministically. The pieces of one driver edge are
+                // disjoint, so their relative order does not affect the
+                // committed parse.
+                val byTarget = LinkedHashMap.empty[Int, Buffer[CharRange]]
+                ranges.foreach: (lo, hi) =>
+                  var unit = lo
+                  while unit <= hi do
+                    var segmentEnd = hi
+                    val advanced = constraintStates.iterator.zip(dfas).map: (state, dfa) =>
+                      val classId = dfa.classAt(unit)
+                      segmentEnd = segmentEnd min dfa.classRanges(classId)._2
+                      dfa.step(state, classId)
+                    .toList
+                    val segments = byTarget.getOrElseUpdate(productState((target, advanced)), Buffer.empty)
+                    segments.lastOption match
+                      case S((plo, phi)) if phi + 1 == unit =>
+                        segments(segments.size - 1) = (plo, segmentEnd)
+                      case _ => segments += ((unit, segmentEnd))
+                    unit = segmentEnd + 1
+                byTarget.foreach: (productTarget, segments) =>
+                  addChr(source, segments.toList, productTarget)
+          entry
       case Not(p) =>
         if !isPureDeep(p) then
           // Bindings and transforms inside a negation could never be
@@ -584,12 +655,21 @@ class StringCompiler(using context: Context)(using tl: TL)(using Ctx, State, Rai
     * ranges behaving identically within the fragment.
     */
   private final case class FragmentDfa(
-      classRanges: Ls[CharRange],
+      classRanges: Vector[CharRange],
       transitions: Buffer[Int],
       accepting: Buffer[Bool],
   ):
     def stateCount: Int = accepting.size
     def classCount: Int = classRanges.size
+    /** The class containing the given code unit. */
+    def classAt(unit: Int): Int =
+      var classId = 0
+      while classId + 1 < classRanges.size && unit > classRanges(classId)._2 do
+        classId += 1
+      classId
+    /** The state reached from `state` by consuming a unit of class `classId`. */
+    def step(state: Int, classId: Int): Int =
+      transitions(state * classCount + classId)
     /** The outgoing character edges of a state, one per distinct target,
       * with the ranges of consecutive same-target classes merged. */
     def outEdges(state: Int): Ls[(Ls[CharRange], Int)] =
@@ -627,7 +707,7 @@ class StringCompiler(using context: Context)(using tl: TL)(using Ctx, State, Rai
         case Edge.Eps(_, ops) =>
           softAssert(ops.isEmpty, "operations inside a determinized fragment")
     val bounds = points.toList.sorted
-    val classRanges = (0 :: bounds).zip(bounds.map(_ - 1) ::: MaxUnit :: Nil)
+    val classRanges = (0 :: bounds).zip(bounds.map(_ - 1) ::: MaxUnit :: Nil).toVector
     def close(seed: Set[Int]): Set[Int] =
       val result = MutSet.from(seed)
       val worklist = Buffer.from(seed)

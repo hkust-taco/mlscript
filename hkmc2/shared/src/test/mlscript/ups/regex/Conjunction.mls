@@ -1,0 +1,132 @@
+:js
+
+open annotations
+
+// A conjunction in a string sequence matches a segment satisfying all of
+// its conjuncts. At most one conjunct — the "driver" — may carry bindings
+// or transformations; it determines the committed parse and the output.
+// The remaining (pure) conjuncts are determinized and run in lockstep as
+// constraints gating completion.
+
+
+// Starts with "a" and ends with "b".
+
+pattern Fenced = "<" ~ (("a" ~ Str) & (Str ~ "b")) ~ ">"
+
+"<ab>" is Fenced
+//│ = true
+
+"<axxb>" is Fenced
+//│ = true
+
+// Starts with "a" but does not end with "b".
+"<a>" is Fenced
+//│ = false
+
+"<b>" is Fenced
+//│ = false
+
+"<ba>" is Fenced
+//│ = false
+
+"<>" is Fenced
+//│ = false
+
+
+// A binding on a pure conjunction captures the consumed slice.
+
+pattern FencedX = ("<" ~ ((("a" ~ Str) & (Str ~ "b")) as x) ~ ">") => x
+
+:expect "aXb"
+if "<aXb>" is FencedX as x then x else "no"
+//│ = "aXb"
+
+
+// The committed parse is the driver's highest-priority parse among the
+// slices the constraints admit: the driver would prefer "a" here, but the
+// constraint vetoes it.
+
+pattern Choose = (((("a" | "ab" | "abc") as x) & ("ab" | "abc")) ~ (_ as rest)) => [x, rest]
+
+:expect ["ab", "c"]
+if "abc" is Choose as parts then parts
+//│ = ["ab", "c"]
+
+// ... and stays with the driver's preference when the constraint admits it.
+
+pattern Choose2 = (((("a" | "ab") as x) & ("a" | "b")) ~ (_ as rest)) => [x, rest]
+
+:expect ["a", ""]
+if "a" is Choose2 as parts then parts
+//│ = ["a", ""]
+
+
+// Transforms in the driver run exactly once, and only on the committed
+// parse — a conjunction whose constraint fails runs no transform.
+
+fun probe(s) = if s is ((("a" ~ Str) => print("ran")) & (Str ~ "b")) ~ "!" then "yes" else "no"
+
+probe("aXb!")
+//│ > ran
+//│ = "yes"
+
+probe("aX!")
+//│ = "no"
+
+
+// The conjunction's value is the driver's value.
+
+pattern Digit = (((("0" ..= "9") as d) & Str) ~ "!") => d
+
+:expect "7"
+if "7!" is Digit as d then d else "no"
+//│ = "7"
+
+
+// Conjunctions compose with negations: starts with "a", ends with "c",
+// and is not exactly "ac".
+
+pattern Strict = "<" ~ (("a" ~ Str) & (Str ~ "c") & (~"ac")) ~ ">"
+
+"<abc>" is Strict
+//│ = true
+
+"<axyc>" is Strict
+//│ = true
+
+"<ac>" is Strict
+//│ = false
+
+"<bc>" is Strict
+//│ = false
+
+
+// Contradictory conjuncts simply never match.
+
+pattern Contradiction = ("a" & "b") ~ "!"
+
+"a!" is Contradiction
+//│ = false
+
+"b!" is Contradiction
+//│ = false
+
+
+// Recognition-only multi-matchers embed the product too.
+
+fun isFenced(s) = s is @compile Fenced
+
+isFenced("<ab>")
+//│ = true
+
+isFenced("<x>")
+//│ = false
+
+
+// At most one conjunct may carry bindings or transformations.
+
+:e
+fun bad(s) = if s is ((("a" ~ Str) as x) & ((Str ~ "b") as y)) ~ "!" then [x, y] else "no"
+//│ ╔══[COMPILATION ERROR] Conjunctions where more than one branch carries bindings or transformations are not supported within string patterns.
+//│ ║  l.129: 	fun bad(s) = if s is ((("a" ~ Str) as x) & ((Str ~ "b") as y)) ~ "!" then [x, y] else "no"
+//│ ╙──       	                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
