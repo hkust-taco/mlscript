@@ -6,95 +6,82 @@ open Stack
 
 
 // Note: tail-rec optimized
-:sir
+:soir
 fun go(x) = if x is
   Cons(_, _) then "Z"
   n then go([])
-//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ define go⁰ as fun go¹(x) {
 //│   loop loopLabel:
-//│     let n, arg$Cons$0$, arg$Cons$1$, tmp;
+//│     let tmp;
 //│     match x
 //│       Cons⁰ =>
-//│         set arg$Cons$0$ = x.head⁰;
-//│         set arg$Cons$1$ = x.tail⁰;
 //│         return "Z"
 //│       else
-//│         set n = x;
 //│         set tmp = [];
 //│         set x = tmp;
 //│         continue loopLabel
 //│     end
-//│   end
+//│   unreachable /* Rest of abortive labelled block */
 //│ };
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 // Note: tail-rec optimized
-:sir
+:soir
 fun go(x) = if x is
   Cons(_, Nil) then "Z"
   n then go([])
-//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ define go² as fun go³(x) {
 //│   loop loopLabel:
-//│     let n, arg$Cons$0$, arg$Cons$1$, tmp, tmp1;
+//│     let arg$Cons$1$, tmp, tmp1;
 //│     match x
 //│       Cons⁰ =>
-//│         set arg$Cons$0$ = x.head⁰;
 //│         set arg$Cons$1$ = x.tail⁰;
 //│         match arg$Cons$1$
 //│           Nil⁰ =>
 //│             return "Z"
 //│           else
-//│             set n = x;
 //│             set tmp = [];
 //│             set x = tmp;
 //│             continue loopLabel
 //│         end
 //│       else
-//│         set n = x;
 //│         set tmp1 = [];
 //│         set x = tmp1;
 //│         continue loopLabel
 //│     end
-//│   end
+//│   unreachable /* Rest of abortive labelled block */
 //│ };
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 // Note: Used not to be tail-rec optimized; now fixed
-:sir
+:soir
 :patMatConsequentSharingThreshold 1
  // ^ The default value allowed duplicating "Z" in the above version
 fun go(x) = if x is
   Cons(_, Nil) then "Z"
   n then go([])
-//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ define go⁴ as fun go⁵(x) {
 //│   loop loopLabel:
-//│     let n, arg$Cons$0$, arg$Cons$1$, tmp;
-//│     block σ:
-//│       match x
-//│         Cons⁰ =>
-//│           set arg$Cons$0$ = x.head⁰;
-//│           set arg$Cons$1$ = x.tail⁰;
-//│           match arg$Cons$1$
-//│             Nil⁰ =>
-//│               return "Z"
-//│             else
-//│               break σ
-//│           end
-//│         else
-//│           break σ
-//│       end
-//│     set n = x;
+//│     let arg$Cons$1$, tmp;
+//│     match x
+//│       Cons⁰ =>
+//│         set arg$Cons$1$ = x.tail⁰;
+//│         match arg$Cons$1$
+//│           Nil⁰ =>
+//│             return "Z"
+//│           else
+//│             end
+//│         end
 //│     set tmp = [];
 //│     set x = tmp;
 //│     continue loopLabel
-//│   end
+//│   unreachable /* Rest of abortive labelled block */
 //│ };
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
-
 

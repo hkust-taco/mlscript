@@ -55,10 +55,25 @@ class CompilationPipeline(using Config, Raise, State, Ctx, SymbolPrinter):
       else prog
     runPass("ClassParamFlattener")(ClassParamFlattener.apply)
     runPass("ReflectionInstrumenter")(ReflectionInstrumenter(using summon).apply)
-    runPass("TailRecOpt")(TailRecOpt().transform)
     preOptimizeHook(result)
+    
+    // * We run this pass here first, before inlining so that the @tailrec/@tailcall annotations
+    // * can be properly checked.
+    runPass("TailRecOpt")(TailRecOpt(true).transform)
+    
     runPass("WorkerWrapper")(WorkerWrapper(symbolsToPreserve, otl, printer))
-    runPass("BlockSimplifier")(BlockSimplifier(symbolsToPreserve, otl, printer).apply)
+    
+    // * First simplification pass
+    runPass("BlockSimplifier 1")(BlockSimplifier(symbolsToPreserve, otl, printer).apply)
+    
     runPass("DeadParamElim")(otl.givenIn(DeadParamElim.apply))
+    
+    // * More tailrec opportunities might be revealed after WorkerWrapper + BlockSimplifier,
+    // * which might bring split curried recursive calls (such as those coming out of Deforest + EtaExpansion)
+    // * into proper tail positions.
+    runPass("TailRecOpt")(TailRecOpt(false).transform)
+    
+    // * Final simplification pass
+    runPass("BlockSimplifier 2")(BlockSimplifier(symbolsToPreserve, otl, printer).apply)
     
     result

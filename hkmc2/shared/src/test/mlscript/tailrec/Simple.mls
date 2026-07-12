@@ -13,7 +13,7 @@ fun f = f
 module Foo with
   @tailrec
   fun bar = bar
-//│ ╔══[WARNING] This function does not directly self-recurse, but is marked @tailrec.
+//│ ╔══[WARNING] This function is marked @tailrec but has no direct self-recursion.
 //│ ║  l.15: 	  fun bar = bar
 //│ ╙──      	      ^^^
 
@@ -26,6 +26,7 @@ module Foo with
 
 fun f(x) = f(x + 1)
 
+// * We can still optimize functions that have only some of their calls in tail positions.
 :sjs
 fun f(x) = f(f(x) + 1)
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
@@ -51,8 +52,7 @@ module A with
   fun f(x) = B.g(x + 1)
 module B with
   fun g(x) = A.f(x * 2)
-//│ ╔══[WARNING] This function does not directly self-recurse, but is marked @tailrec.
-//│ ║  l.51: 	  fun f(x) = B.g(x + 1)
+//│ ╔══[WARNING] This function is marked @tailrec but has no direct self-recursion.
+//│ ║  l.52: 	  fun f(x) = B.g(x + 1)
 //│ ╙──      	      ^
-
 

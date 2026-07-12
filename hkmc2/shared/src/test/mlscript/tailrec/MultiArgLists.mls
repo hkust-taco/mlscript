@@ -12,13 +12,13 @@ sum(100, 0)
 // a multi-param-list function, so the self-recursive tail call is recognized
 // and optimized by TailRecOpt.
 :expect 500500
-:sir
+:soir
 @tailrec
 fun loop(x)(y) =
   if x == 0 then y
   else loop(x - 1)(y + x)
 loop(1000)(0)
-//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ let loop$tailrec;
 //│ @private
 //│ define loop$tailrec as fun loop$tailrec⁰(x, y) {
@@ -35,51 +35,66 @@ loop(1000)(0)
 //│         set y = tmp1;
 //│         continue loopLabel
 //│     end
-//│   end
+//│   unreachable /* Rest of abortive labelled block */
 //│ };
 //│ @inline @tailrec
 //│ define loop⁰ as fun loop¹(x)(y) { return loop$tailrec⁰(x, y) };
-//│ return loop¹(1000)(0)
+//│ return loop$tailrec⁰(1000, 0)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 500500
 
 // Test: Function with multiple parameter lists, non-annotated (should still optimize to a loop)
-:sir
+:soir
 :expect 100
 fun count(start)(stop) =
   if start == stop then start
   else count(start + 1)(stop)
 count(0)(100)
-//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let count$tailrec;
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let count$tailrec, start, inlinedVal;
 //│ @private
-//│ define count$tailrec as fun count$tailrec⁰(start, stop) {
+//│ define count$tailrec as fun count$tailrec⁰(start1, stop) {
 //│   loop loopLabel:
 //│     let scrut, tmp;
-//│     set scrut = Predef⁰.equals⁰(start, stop);
+//│     set scrut = Predef⁰.equals⁰(start1, stop);
 //│     match scrut
 //│       true =>
-//│         return start
+//│         return start1
+//│       else
+//│         set tmp = +⁰(start1, 1);
+//│         set start1 = tmp;
+//│         continue loopLabel
+//│     end
+//│   unreachable /* Rest of abortive labelled block */
+//│ };
+//│ @inline
+//│ define count⁰ as fun count¹(start1)(stop) {
+//│   return count$tailrec⁰(start1, stop)
+//│ };
+//│ set start = 0;
+//│ block inlinedLbl:
+//│   loop loopLabel:
+//│     let scrut, tmp;
+//│     set scrut = Predef⁰.equals⁰(start, 100);
+//│     match scrut
+//│       true =>
+//│         set inlinedVal = start;
+//│         break inlinedLbl
 //│       else
 //│         set tmp = +⁰(start, 1);
 //│         set start = tmp;
 //│         continue loopLabel
 //│     end
-//│   end
-//│ };
-//│ @inline
-//│ define count⁰ as fun count¹(start)(stop) {
-//│   return count$tailrec⁰(start, stop)
-//│ };
-//│ return count¹(0)(100)
+//│   unreachable /* Rest of abortive labelled block */
+//│ return inlinedVal
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 100
 
 // Test: Mutually recursive functions with multiple parameter lists
-:sir
+:soir
 fun even(n)(dummy) = if n == 0 then [true, dummy] else odd(n - 1)(dummy + 1)
 fun odd(n)(dummy) = if n == 0 then [false, dummy] else even(n - 1)(dummy + 1)
-//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ let even_odd;
 //│ define even_odd as fun even_odd⁰(id, param0, param1) {
 //│   loop loopLabel:
@@ -117,9 +132,11 @@ fun odd(n)(dummy) = if n == 0 then [false, dummy] else even(n - 1)(dummy + 1)
 //│     end
 //│   end
 //│ };
+//│ @inline
 //│ define even⁰ as fun even¹(n)(dummy) {
 //│   return even_odd⁰(0, n, dummy)
 //│ };
+//│ @inline
 //│ define odd⁰ as fun odd¹(n)(dummy) { return even_odd⁰(1, n, dummy) };
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
@@ -133,16 +150,65 @@ even(9)(0)
 //│ = [false, 9]
 
 
+// A partial application of a curried recursive function must not count as an
+// executable recursive call edge. In the generated code for this block, the
+// first TailRecOpt pass creates a shared loop plus a curried wrapper for
+// `resume`. The body of the shared loop keeps the partial application
+// `resume(x)`, which only constructs the closure waiting for `y`; it does not
+// execute `resume`'s body. If TailRecOpt treats that partial application as a
+// normal call edge, a later TailRecOpt pass incorrectly sees a cycle between the
+// shared loop and the wrapper and wraps the already-optimized loop in a second,
+// larger loop.
+:soir
+let sink = mut []
+fun handleEffects(x) = handleEffect(x)
+fun handleEffect(x) =
+  sink.push(resume(x))
+  handleEffects(x)
+fun resume(x)(y) = handleEffects(x)
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let handleEffects_handleEffect;
+//│ define handleEffects_handleEffect as fun handleEffects_handleEffect⁰(id, param0) {
+//│   loop loopLabel:
+//│     match id
+//│       0 =>
+//│         set id = 1;
+//│         continue loopLabel
+//│       1 =>
+//│         let tmp;
+//│         set tmp = resume⁰(param0);
+//│         do sink⁰.push﹖(tmp);
+//│         set id = 0;
+//│         continue loopLabel
+//│       else
+//│         end
+//│     end
+//│   end
+//│ };
+//│ define handleEffects⁰ as fun handleEffects¹(x) {
+//│   return handleEffects_handleEffect⁰(0, x)
+//│ };
+//│ define handleEffect⁰ as fun handleEffect¹(x) {
+//│   return handleEffects_handleEffect⁰(1, x)
+//│ };
+//│ @inline
+//│ define resume¹ as fun resume⁰(x)(y) { return handleEffects¹(x) };
+//│ set sink⁰ = mut [];
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ sink = []
+
+
 // Spreads
 
 // This is the same as a test in `TailRecOpt.mls` but with some parameters separated and changed.
-:sir
+:soir
 fun f(n)(a, b, c, d, ...e)(m) =
   if n > 0 then @tailcall g(n)(m + 1)
   else [e, m]
 fun g(n)(m) =
   @tailcall f(n - 1)(...[1, 2], 3, ...[3, 4], ...[5, n], 7, n)(m)
-//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ let f_g;
 //│ define f_g as fun f_g⁰(id, param0, param1, param2, param3, param4, param5, param6) {
 //│   loop loopLabel:
@@ -171,9 +237,9 @@ fun g(n)(m) =
 //│         set argList = [...tmp1, 3, ...tmp2, ...tmp3, 7, param0_tmp];
 //│         set sliceRes = runtime⁰.Tuple⁰.slice⁰(argList, 4, 0);
 //│         set param1 = argList.0;
-//│         set param2 = argList.1;
-//│         set param3 = argList.2;
-//│         set param4 = argList.3;
+//│         do argList.1;
+//│         do argList.2;
+//│         do argList.3;
 //│         set param5 = sliceRes;
 //│         set param6 = param1_tmp;
 //│         set id = 0;
@@ -186,6 +252,7 @@ fun g(n)(m) =
 //│ define f⁰ as fun f¹(n)(a, b, c, d, ...e)(m) {
 //│   return f_g⁰(0, n, a, b, c, d, e, m)
 //│ };
+//│ @inline
 //│ define g⁰ as fun g¹(n)(m) {
 //│   return f_g⁰(1, n, m, undefined, undefined, undefined, undefined, undefined)
 //│ };
@@ -196,32 +263,30 @@ fun g(n)(m) =
 g(10)(0)
 //│ = [[4, 5, 1, 7, 1], 9]
 
-:sir
+:soir
 fun f(a)(...z) = if z is
   [] then a
   [x, ...xs] then f(a + 1)(...xs)
-//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ let f$tailrec;
 //│ @private
 //│ define f$tailrec as fun f$tailrec⁰(a, z) {
 //│   loop loopLabel:
-//│     let x, xs, middleElements, element0$, tmp;
+//│     let middleElements, tmp;
 //│     match z
 //│       Array(0) =>
 //│         return a
 //│       Array(1+) =>
-//│         set element0$ = runtime⁰.Tuple⁰.get⁰(z, 0);
+//│         do runtime⁰.Tuple⁰.get⁰(z, 0);
 //│         set middleElements = runtime⁰.Tuple⁰.slice⁰(z, 1, 0);
-//│         set xs = middleElements;
-//│         set x = element0$;
 //│         set tmp = +⁰(a, 1);
 //│         set a = tmp;
-//│         set z = xs;
+//│         set z = middleElements;
 //│         continue loopLabel
 //│       else
 //│         throw new globalThis⁰.Error⁰("match error")
 //│     end
-//│   end
+//│   unreachable /* Rest of abortive labelled block */
 //│ };
 //│ @inline
 //│ define f² as fun f³(a)(...z) { return f$tailrec⁰(a, z) };
@@ -234,10 +299,10 @@ f(0)(1, 2, 3, 4)
 
 
 // Ensure that the internal loop and the outer-facing definition have different param symbol IDs.
-:lot
+:olot
 :noInline
 fun f(a)(b) = f(a)(b)
-//│ —————————————| Lowered IR Tree |————————————————————————————————————————————————————————————————————
+//│ ————————————| Optimized IR Tree |———————————————————————————————————————————————————————————————————
 //│ Program:
 //│   main = Scoped(syms = {member:f$tailrec¹}):
 //│     body = Define:
@@ -245,18 +310,12 @@ fun f(a)(b) = f(a)(b)
 //│         sym = member:f$tailrec¹
 //│         dSym = term:f$tailrec²
 //│         params = Ls of
-//│           ParamList:
-//│             params = Ls of
-//│               Param:
-//│                 sym = a⁰
-//│                 modulefulness = Modulefulness of N
-//│               Param:
-//│                 sym = b⁰
-//│                 modulefulness = Modulefulness of N
+//│           ParamList: ‹empty›
 //│         body = Label:
 //│           label = label:loopLabel⁰
 //│           loop = true
 //│           body = Continue of label:loopLabel⁰
+//│           rest = Unreachable of "Rest of abortive labelled block"
 //│       rest = Define: \
 //│       defn = FunDefn:
 //│         sym = member:f⁴
@@ -265,23 +324,19 @@ fun f(a)(b) = f(a)(b)
 //│           ParamList:
 //│             params = Ls of
 //│               Param:
-//│                 sym = a¹
+//│                 sym = a⁰
 //│                 modulefulness = Modulefulness of N
 //│           ParamList:
 //│             params = Ls of
 //│               Param:
-//│                 sym = b¹
+//│                 sym = b⁰
 //│                 modulefulness = Modulefulness of N
 //│         body = Return of Call:
 //│           fun = MemberRef{disamb=term:f$tailrec²}:
 //│             bms = member:f$tailrec¹
 //│             disamb = term:f$tailrec²
 //│           argss = Ls of
-//│             Ls of
-//│               Arg:
-//│                 value = SimpleRef of a¹
-//│               Arg:
-//│                 value = SimpleRef of b¹
+//│             Nil
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 

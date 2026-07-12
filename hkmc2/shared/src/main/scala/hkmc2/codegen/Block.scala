@@ -969,6 +969,16 @@ case class Call(fun: Path, argss: NELs[Ls[Arg]])(val metadata: CallMetadata) ext
         case fd: FunDefn => argss.lengthCompare(fd.params.length) < 0
         case _ => false
     case _ => false
+  // `metadata` lives in a secondary constructor list, so case-class equality
+  // would otherwise ignore annotations such as @tailcall.
+  override def equals(obj: Any): Bool = obj match
+    case that: Call =>
+      fun == that.fun &&
+        argss == that.argss &&
+        metadata == that.metadata
+    case _ => false
+  override def hashCode: Int =
+    (fun, argss, metadata).hashCode
 
 object Call:
   
