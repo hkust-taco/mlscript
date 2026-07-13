@@ -72,23 +72,16 @@ f
 :e
 :re
 use{[Some[Int]].value}
-//│ ╔══[COMPILATION ERROR] Illegal juxtaposition right-hand side (selection).
+//│ ╔══[COMPILATION ERROR] Unsupported refinement in this position.
 //│ ║  l.74: 	use{[Some[Int]].value}
-//│ ╙──      	    ^^^^^^^^^^^^^^^^^
-//│ ╔══[COMPILATION ERROR] Cannot query instance of type ‹unspecified› (type parameter T) for call: 
-//│ ║  l.74: 	use{[Some[Int]].value}
-//│ ║        	^^^
-//│ ╟── Required by contextual parameter declaration: 
-//│ ║  l.130: 	fun use[T](using instance: T) = instance
-//│ ║         	                 ^^^^^^^^^^^
-//│ ╙── Illegal query for an unspecified type variable T.
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :e
 :re
 use([Some[Int]].value)
 //│ ╔══[COMPILATION ERROR] Cannot query instance of type ‹unspecified› (type parameter T) for call: 
-//│ ║  l.89: 	use([Some[Int]].value)
+//│ ║  l.82: 	use([Some[Int]].value)
 //│ ║        	^^^
 //│ ╟── Required by contextual parameter declaration: 
 //│ ║  l.130: 	fun use[T](using instance: T) = instance
@@ -107,11 +100,11 @@ f[Int]
 :re
 f
 //│ ╔══[COMPILATION ERROR] Cannot query instance of type ‹unspecified› (type parameter T) for call: 
-//│ ║  l.108: 	f
+//│ ║  l.101: 	f
 //│ ║         	^
 //│ ╟── Required by contextual parameter declaration: 
-//│ ║  l.101: 	fun f[T](using T) = use[T]
-//│ ║         	               ^
+//│ ║  l.94: 	fun f[T](using T) = use[T]
+//│ ║        	               ^
 //│ ╙── Illegal query for an unspecified type variable T.
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 

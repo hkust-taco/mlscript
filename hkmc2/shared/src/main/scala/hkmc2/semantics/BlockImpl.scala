@@ -77,10 +77,11 @@ trait BlockImpl(using Elaborator.State):
         PossiblyAnnotated(anns, td) :: (
           ctors.map(head => PossiblyAnnotated(getPossibleGenericAnns(head, anns), TypeDef(syntax.Cls,
             td.name match
-                case L(_) => head
-                case R(name) =>
-                  InfixApp(insertVal(genCtorHead(head)), Keywrd(syntax.Keyword.`extends`), genExt(head))
-            , N)))
+              case L(_) => head
+              case R(name) =>
+                InfixApp(insertVal(genCtorHead(head)), Keywrd(syntax.Keyword.`extends`), genExt(head))
+            , N
+          )))
         ) ::: desug(stmts)
       case stmt :: stmts =>
         stmt.desugared match

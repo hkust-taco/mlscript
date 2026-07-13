@@ -1158,7 +1158,13 @@ abstract class Parser(
     if prec < AppPrec && !Keyword.all.contains(id) =>
       val res = exprCont(Jux(acc, expr(AppPrec, allowNewlines = allowNewlines)), prec, allowNewlines = allowNewlines)
       exprJux(res, prec, allowNewlines = allowNewlines)
-    case (br @ BRACKETS(_: Indent_Curly, toks), l0) :: _
+    // case (br @ BRACKETS(_: Indent_Curly, toks), l0) :: _
+    case (br @ BRACKETS(Curly, toks), l0) :: _
+    if prec <= AppPrec =>
+      consume
+      val res = rec(toks, S(br.innerLoc), br.describe).concludeWith(_.blockMaybeIndented)
+      exprCont(Reft(acc, Block(res).withLoc(S(l0))), prec, allowNewlines = allowNewlines)
+    case (br @ BRACKETS(Indent, toks), l0) :: _
     if prec < AppPrec && (toks.headOption match
       case S((IDENT(nme, sym), _)) => !sym && !Keyword.all.contains(nme)
       case _ => true

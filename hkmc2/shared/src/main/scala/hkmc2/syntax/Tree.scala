@@ -88,6 +88,7 @@ enum Tree extends AutoLocated:
   case App(lhs: Tree, rhs: Tree)
   case OpApp(lhs: Tree, op: Tree, rhss: Ls[Tree])
   case Jux(lhs: Tree, rhs: Tree)
+  case Reft(base: Tree, body: Block)
   case SynthSel(prefix: Tree, name: Ident)
   case Sel(prefix: Tree, name: Ident)
   case MemberProj(cls: Tree, name: Ident)
@@ -142,6 +143,7 @@ enum Tree extends AutoLocated:
     case App(lhs, rhs) => Vector.double(lhs, rhs)
     case OpApp(lhs, op, rhss) => lhs +: op +: rhss.toVector
     case Jux(lhs, rhs) => Vector.double(lhs, rhs)
+    case Reft(base, reft) => Vector.double(base, reft)
     case PrefixApp(kw, rhs) => Vector.double(kw, rhs)
     case InfixApp(lhs, kw, rhs) => Vector.triple(lhs, kw, rhs)
     case TermDef(k, head, rhs) => head +: rhs.toVector
@@ -198,6 +200,7 @@ enum Tree extends AutoLocated:
     case App(lhs, rhs) => "application"
     case OpApp(lhs, op, rhss) => "operator application"
     case Jux(lhs, rhs) => "juxtaposition"
+    case Reft(base, reft) => "refinement"
     case Sel(prefix, name) => "selection"
     case SynthSel(prefix, name) => "synthetic selection"
     case DynAccess(prefix, name) => "dynamic field access"
@@ -234,7 +237,8 @@ enum Tree extends AutoLocated:
     case Bra(BracketKind.Round, inner) => inner.deparenthesized
     case _ => this
   
-  def showDbg: Str = toString // TODO
+  def showDbg(using DebugPrinter): Str =
+    this.showAsPlain
   
   lazy val desugared: Tree =
     
@@ -536,13 +540,14 @@ trait TypeOrTermDef extends Located:
   
   type MaybeIdent = Diagnostic \/ Ident
   
-  lazy val (symbName, name, paramLists, typeParams, annotatedResultType)
-      : (Opt[MaybeIdent], MaybeIdent, Ls[Tup], Opt[TyTup], Opt[Tree]) =
+  lazy val (symbName, name, paramLists, typeParams, annotatedResultType, reft)
+      : (Opt[MaybeIdent], MaybeIdent, Ls[Tup], Opt[TyTup], Opt[Tree], Ls[Block]) =
+    
     val k = this match
       case td: TypeDef => td.k
       case td: TermDef => td.k
-    def rec(t: Tree, symbName: Opt[MaybeIdent], annot: Opt[Tree]): 
-      (Opt[MaybeIdent], MaybeIdent, Ls[Tup], Opt[TyTup], Opt[Tree]) = 
+    def rec(t: Tree, symbName: Opt[MaybeIdent], annot: Opt[Tree], refts: Ls[Block]):
+      (Opt[MaybeIdent], MaybeIdent, Ls[Tup], Opt[TyTup], Opt[Tree], Ls[Block]) =
       def canonicalize(id: Ident): Ident =
         symbolicSuffixBase(id.name) match
         case S(base) =>
@@ -560,35 +565,38 @@ trait TypeOrTermDef extends Located:
       
       // use Foo as foo = ...
       case InfixApp(typ, Keywrd(Keyword.`as`), id: Ident) if k == Ins =>
-        (S(R(id)), R(id), Nil, N, S(typ))
+        (S(R(id)), R(id), Nil, N, S(typ), refts)
       
       // use Foo = ...
       case typ if k == Ins =>
-        val name = typ.showDbg
+        val name = typ.toString // FIXME! This is an extremely hacky way of naming implicit instances
         val id: Ident = Ident(s"instance$$$name")
-        (S(R(id)), R(id), Nil, N, S(typ))
+        (S(R(id)), R(id), Nil, N, S(typ), refts)
       
+      // class C { ... }
+      case Reft(base, body) =>
+        rec(base, symbName, annot, body :: refts)
       
       case InfixApp(tree, Keywrd(Keyword.`:`), ann) =>
-        rec(tree, symbName, S(ann))
+        rec(tree, symbName, S(ann), refts)
       
       // fun f
       // fun f(n1: Int)
       // fun f(n1: Int)(nn: Int)
       case Apps(PossiblyParenthesized(id: Ident), paramLists) =>
-        (symbolicName(id), R(canonicalize(id)), paramLists, N, annot)
+        (symbolicName(id), R(canonicalize(id)), paramLists, N, annot, refts)
       
       // fun f[T]
       // fun f[T](n1: Int)
       // fun f[T](n1: Int)(nn: Int)
       case Apps(App(PossiblyParenthesized(id: Ident), typeParams: TyTup), paramLists) =>
-        (symbolicName(id), R(canonicalize(id)), paramLists, S(typeParams), annot)
+        (symbolicName(id), R(canonicalize(id)), paramLists, S(typeParams), annot, refts)
       
       case Jux(id: Ident, rhs) =>
         val err = L:
           ErrorReport:
             msg"Invalid ${k.desc} definition head: unexpected ${rhs.describe} in this position" -> rhs.toLoc :: Nil
-        (S(err), R(id), Nil, N, annot)
+        (S(err), R(id), Nil, N, annot, refts)
       
       case Jux(lhs, rhs) => // happens in `fun (op) nme` form
         val sn = lhs match
@@ -603,25 +611,31 @@ trait TypeOrTermDef extends Located:
             L:
               ErrorReport:
                 msg"Invalid ${k.desc} definition head: unexpected ${lhs.describe} in this position" -> lhs.toLoc :: Nil
-        rec(rhs, S(sn), annot)
+        rec(rhs, S(sn), annot, refts)
         
       case _ =>
         (N, L(ErrorReport(
           msg"Expected a valid ${k.desc} definition head; found ${t.describe} instead" -> t.toLoc :: Nil)),
-          Nil, N, annot)
+          Nil, N, annot, refts)
       
-    rec(baseHead, N, N)
+    rec(baseHead, N, N, extensionRefts)
   
-  val (baseHead, extension, withPart) =
+  val (baseHead, (extension, extensionRefts), withPart) =
+    def splitExt(t: Tree): (Opt[Tree], Ls[Block]) = t match
+      case Reft(base, body) =>
+        val (base2, refts) = splitExt(base)
+        (base2, body :: refts)
+      case _ =>
+        (S(t), Nil)
     head match
     case InfixApp(InfixApp(base, Keywrd(Keyword.`extends`), ext), Keywrd(Keyword.`with`), wp) =>
-      (base, S(ext), S(wp))
+      (base, splitExt(ext), S(wp))
     case InfixApp(base, Keywrd(Keyword.`with`), wp) =>
-      (base, N, S(wp))
+      (base, (N, Nil), S(wp))
     case InfixApp(base, Keywrd(Keyword.`extends`), ext) =>
-      (base, S(ext), N)
+      (base, splitExt(ext), N)
     case h => 
-      (h, N, N)
+      (h, (N, Nil), N)
   
 end TypeOrTermDef
 
