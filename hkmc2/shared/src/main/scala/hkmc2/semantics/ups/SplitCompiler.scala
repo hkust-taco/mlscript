@@ -1191,12 +1191,20 @@ class SplitCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
               arguments.getOrElse(Nil).forall(loop(_, bound)) &&
               (!visited.add(patternSymbol) ||
                 loop(defn.pattern, defn.patternParams.iterator.map(_.sym).toSet))
+          // An unresolved target (elaboration has already reported the error
+          // and left a `Term.Error` behind) carries no symbol for
+          // `Instantiator` to instantiate, which would abort with `lastWords`.
+          case N if target.resolvedSym.isEmpty => false
           // Class and object patterns cannot match a string, so they are
           // harmless dead alternatives within a region; still check their
           // sub-patterns, whose transforms would otherwise be miscompiled.
           case N => arguments.forall(_.forall(loop(_, bound)))
-      case Composition(_, left, right) => loop(left, bound) && loop(right, bound)
-      case Negation(pattern) => loop(pattern, bound)
+      // Disjunctions become `Or` nodes the automaton handles, but conjunctions
+      // and negations are rejected outright by `StringCompiler.build`, and a
+      // rejected region compiles to nothing at all. They stay on the legacy
+      // composition, which does implement them.
+      case Composition(true, left, right) => loop(left, bound) && loop(right, bound)
+      case Composition(false, _, _) | Negation(_) => false
       case Wildcard() | Literal(_) | Range(_, _, _) => true
       case Concatenation(left, right) => loop(left, bound) && loop(right, bound)
       case Tuple(leading, spread) => leading.forall(loop(_, bound)) && spread.forall:
