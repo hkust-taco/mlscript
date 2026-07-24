@@ -1318,6 +1318,40 @@ class SplitCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
                   tup(fld(consumedSymbol.safeRef), fld(remainingSymbol.safeRef))))))
           ) ~: failure
 
+  /** The `Raise` under which `unapplyStringPrefix` is compiled.
+    *
+    * That method is generated for *every* pattern definition, string-shaped or
+    * not, and it recompiles the pattern that `unapply` has just compiled. Its
+    * user-facing diagnostics are noise twice over: the ones caused by the
+    * pattern itself were already reported while compiling `unapply`, and the
+    * ones specific to this compilation complain about a method the pattern may
+    * never need — the legacy prefix translation eagerly reports its own
+    * limitations (it rejects every `@compile`d body, for one), and the
+    * automaton path re-derives the same tail-position errors. So they are
+    * dropped, but only after being logged, so that nothing vanishes silently
+    * while debugging this pass.
+    *
+    * Internal errors are never dropped. `softAssert` and `softTODO` exist
+    * precisely to be seen, and a compiler bug reachable only along this path
+    * would otherwise disappear without a trace — which is what the previous
+    * blanket `Function.const(())` did.
+    *
+    * Suppressing by *duplicate detection* would be better, and is what the
+    * first category really calls for. It does not work while `Raise` is a
+    * constructor parameter of this class: a `given Raise` in one method body
+    * only reaches code that re-takes `(using Raise)` explicitly — which the
+    * two prefix entry points do, and which is why suppression works here at
+    * all — whereas the `unapply` compilation resolves the class parameter, so
+    * there is no way to observe what it reported without threading a `Raise`
+    * through `makeMatchSplit` and everything below it.
+    */
+  private def prefixMethodRaise: Raise =
+    val report = summon[Raise]
+    diagnostic => diagnostic.kind match
+      case Diagnostic.Kind.Internal => report(diagnostic)
+      case Diagnostic.Kind.Error | Diagnostic.Kind.Warning =>
+        log(s"Suppressed while compiling `unapplyStringPrefix`: ${diagnostic.theMsg}")
+
   def compilePattern(scrutinee: Scrut, pattern: SP): MakeSplit =
     compilePattern(scrutinee, pattern, true)
 
@@ -1503,9 +1537,10 @@ class SplitCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
       makeMethod("unapply", pd.patternParams, inputSymbol, topmost)
     // TODO: Use `pd.extractionParams`.
     val unapplyStringPrefix = scoped("ucs:cp"):
-      // We don't report errors here because they have been already reported in
-      // the translation of `unapply` function.
-      given Raise = Function.const(())
+      // See `prefixMethodRaise`: this compilation's user-facing diagnostics
+      // are duplicates or complaints about a method the pattern may not need,
+      // but its internal errors are still reported.
+      given Raise = prefixMethodRaise
       val inputSymbol = VarSymbol(Ident("input"))
       val topmost =
         if pd.patternParams.isEmpty && containsStringSeq(pd.pattern)
@@ -1561,9 +1596,8 @@ class SplitCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
         log(s"Translated `unapply`: ${topmost.prettyPrint}")
         makeUnapplyRecordStatements("unapply", patternParams, inputSymbol, topmost)
       val unapplyStringPrefix = scoped("ucs:cp"):
-        // We don't report errors here because they have been already reported in
-        // the translation of `unapply` function.
-        given Raise = Function.const(())
+        // See `prefixMethodRaise`.
+        given Raise = prefixMethodRaise
         val inputSymbol = VarSymbol(Ident("input"))
         val topmost = makeStringPrefixMatchSplit(inputSymbol.toScrut, pattern)
           ((consumedOutput, remainingOutput, bindings) => Split.Else:
