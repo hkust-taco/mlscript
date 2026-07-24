@@ -456,7 +456,7 @@ extension (pattern: ExPat)
     case _: (Literal | ClassLike | Concat | CharClass) => Never
     case pattern: (Record | Tuple) => pattern
     case _: (MatchedClassLike | Synonym) => lastWords("unexpected specialized/complete node in specialize(lit)")
-
+  
   /** Modifies the pattern under the assumption that the scrutinee matches the
    *  given class. String-shaped patterns are `Never` here because the `Str`
    *  head branch extracts them via `StringCompiler.stringFragment` instead of
@@ -471,7 +471,7 @@ extension (pattern: ExPat)
     case ClassLike(_, _) => Never
     case _: (Concat | CharClass) => Never
     case pattern: (MatchedClassLike | Record | Tuple) => pattern
-
+  
   /** Modifies the pattern under the assumption that the scrutinee matches the
    *  given literal or class. */
   def specialize(head: Option[Head]): SpPat = head match

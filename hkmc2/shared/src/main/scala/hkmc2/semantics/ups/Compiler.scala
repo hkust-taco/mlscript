@@ -260,7 +260,7 @@ class Compiler(using Context)(using tl: TL)(using Ctx, State, Raise) extends Ter
     // Lastly, we return the matcher result, directly for singleton matchers
     // and as a record otherwise.
     Blk(bindings ::: tests.reverse, resultTerm)
-
+  
   /** The branch body for the absorbed `Str` head: each label's string-shaped
     * fragment is compiled to its own whole-match automaton (see the note in
     * `buildMultiMatcherBody`). The per-label result terms follow the same
