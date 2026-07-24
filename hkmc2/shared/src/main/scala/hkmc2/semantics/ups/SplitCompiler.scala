@@ -1236,11 +1236,20 @@ class SplitCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
     * they run exactly once on the committed parse, even when the match is
     * only used as a condition. Then the result array `[output, bindings...]`
     * is destructured.
+    *
+    * The engine indexes the scrutinee as a string (it reads `.length` and
+    * `charCodeAt`), so the emitted calls are guarded by a `Str` class test —
+    * exactly as the absorbed `Str` head of the multi-matcher already is (see
+    * `Compiler.buildMultiMatcherBody`). Without it a non-string scrutinee
+    * reaches `matchWhole`, whose reverse scan then reports a match for anything
+    * whose `length` is falsy.
     */
   private def makeStringRegionSplit(scrutinee: Scrut, pattern: SP, outputNeeded: Bool): MakeSplit =
     val instantiator = new Instantiator
     val (instantiated, context) = instantiator(pattern)
     val compiler = new StringCompiler(using context)
+    def isStr = FlatPattern.ClassLike(
+      ctx.builtins.Str.safeRef, ctx.builtins.Str, N, false)(Tree.Dummy)
     compiler.compile(instantiated, StringCompiler.Mode.Whole) match
       case N => RejectSplit // Errors have been reported; compile nothing.
       case S(compiled) =>
@@ -1249,27 +1258,31 @@ class SplitCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
           (makeConsequent, alternative) =>
             val callTerm = app(strPatMatchWhole,
               tup(fld(str(compiled.matchTable)), fld(scrutinee())), "whole string match")
-            tempLet("stringMatched", callTerm): resultSymbol =>
-              Branch(resultSymbol.safeRef, makeConsequent(scrutinee, SeqMap.empty)) ~: alternative
+            Branch(scrutinee(), isStr,
+              tempLet("stringMatched", callTerm): resultSymbol =>
+                Branch(resultSymbol.safeRef, makeConsequent(scrutinee, SeqMap.empty)) ~: alternative
+            ) ~: alternative
         else (makeConsequent, alternative) =>
           val callTerm = app(strPatParseWhole,
             tup(fld(str(compiled.table)), fld(actionsTuple(compiled.actions, pattern.toLoc)), fld(scrutinee())),
             "whole string parse")
-          tempLet("parseResult", callTerm): resultSymbol =>
-            val outputSymbol = TempSymbol(N, "stringOutput")
-            val slotSymbols = compiled.visibleSlots.map: (symbol, slot) =>
-              (symbol, slot, TempSymbol(N, s"${symbol.name}$$"))
-            val bindings: BindingMap = SeqMap.from(slotSymbols.map:
-              (symbol, _, local) => symbol -> local.toScrut)
-            val consequent = slotSymbols.foldRight(makeConsequent(outputSymbol.toScrut, bindings)):
-              case ((_, slot, local), inner) =>
-                Split.Let(local, callTupleGet(resultSymbol.safeRef, 1 + slot, "string binding"), inner)
-            Branch(
-              resultSymbol.safeRef,
-              // The engine returns null on failure and an array on success.
-              FlatPattern.Tuple(1, true),
-              Split.Let(outputSymbol, callTupleGet(resultSymbol.safeRef, 0, "string output"), consequent)
-            ) ~: alternative
+          Branch(scrutinee(), isStr,
+            tempLet("parseResult", callTerm): resultSymbol =>
+              val outputSymbol = TempSymbol(N, "stringOutput")
+              val slotSymbols = compiled.visibleSlots.map: (symbol, slot) =>
+                (symbol, slot, TempSymbol(N, s"${symbol.name}$$"))
+              val bindings: BindingMap = SeqMap.from(slotSymbols.map:
+                (symbol, _, local) => symbol -> local.toScrut)
+              val consequent = slotSymbols.foldRight(makeConsequent(outputSymbol.toScrut, bindings)):
+                case ((_, slot, local), inner) =>
+                  Split.Let(local, callTupleGet(resultSymbol.safeRef, 1 + slot, "string binding"), inner)
+              Branch(
+                resultSymbol.safeRef,
+                // The engine returns null on failure and an array on success.
+                FlatPattern.Tuple(1, true),
+                Split.Let(outputSymbol, callTupleGet(resultSymbol.safeRef, 0, "string output"), consequent)
+              ) ~: alternative
+          ) ~: alternative
 
   /** Compile the body of a pattern definition into a prefix-matching
     * automaton for its `unapplyStringPrefix` method. The result follows the

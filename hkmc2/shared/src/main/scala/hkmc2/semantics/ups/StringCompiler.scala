@@ -269,18 +269,38 @@ class StringCompiler(using context: Context)(using tl: TL)(using Ctx, State, Rai
     * up pure if every body on it is operation-free. */
   private val pureMemo = MutMap.empty[Instantiation, Bool]
 
+  /** The purity of `pattern`, paired with whether the answer relied on the
+    * optimistic assumption made for a cycle. Such an answer is only valid for
+    * the query that introduced the assumption, so it must not be memoized:
+    * doing so used to let one query's optimistic `true` leak into another's,
+    * which made purity depend on the order alternatives happened to be written
+    * in (an impure component could be compiled as pure, and the pure-subtree
+    * shortcut would then emit an `Op.Mark` whose `Op.Slice` sits on a state the
+    * tail-call goto can never reach). Note that the traversal deliberately does
+    * not short-circuit on the first impure element: it must visit every branch
+    * to learn whether any of them consulted the assumption. */
   private def isPureDeep(pattern: Pat): Bool =
-    def loop(pattern: Pat, visiting: Set[Instantiation]): Bool = pattern match
-      case _: (Rename[?] | Extract[?]) => false
-      case Concat(ps) => ps.forall(loop(_, visiting))
-      case Or(ps) => ps.forall(loop(_, visiting))
-      case And(ps) => ps.forall(loop(_, visiting))
+    def all(patterns: Ls[Pat], visiting: Set[Instantiation]): (Bool, Bool) =
+      patterns.foldLeft((true, false)):
+        case ((pure, assumed), pattern) =>
+          val (pure2, assumed2) = loop(pattern, visiting)
+          (pure && pure2, assumed || assumed2)
+    def loop(pattern: Pat, visiting: Set[Instantiation]): (Bool, Bool) = pattern match
+      case _: (Rename[?] | Extract[?]) => (false, false)
+      case Concat(ps) => all(ps, visiting)
+      case Or(ps) => all(ps, visiting)
+      case And(ps) => all(ps, visiting)
       case Not(p) => loop(p, visiting)
       case Synonym(inst) =>
-        if visiting contains inst then true
-        else pureMemo.getOrElseUpdate(inst, loop(context.get(inst), visiting + inst))
-      case _: (Literal | CharClass | ClassLike | MatchedClassLike | Record | Tuple) => true
-    loop(pattern, Set.empty)
+        if visiting contains inst then (true, true)
+        else pureMemo.get(inst) match
+          case S(pure) => (pure, false)
+          case N =>
+            val (pure, assumed) = loop(context.get(inst), visiting + inst)
+            if !assumed then pureMemo(inst) = pure
+            (pure, assumed)
+      case _: (Literal | CharClass | ClassLike | MatchedClassLike | Record | Tuple) => (true, false)
+    loop(pattern, Set.empty)._1
 
   // ------------------------------------------------------------------------
   // NFA construction

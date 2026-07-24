@@ -126,16 +126,23 @@ class Instantiator(using tl: TL)(using Ctx, State, Raise):
     case SP.Range(lower, upper, rightInclusive) =>
       (lower, upper) match
         case (StrLit(lower), StrLit(upper)) if lower.nonEmpty && upper.nonEmpty =>
-          // String ranges compare the first UTF-16 code unit, mirroring the
-          // previous expansion `(lower.head to upper.head)`. Keeping the range
+          // String ranges compare the first UTF-16 code unit. Keeping the range
           // symbolic lets the string pattern compiler emit compact
           // character-class transitions instead of wide disjunctions.
-          CharClass(lower.head.toInt, upper.head.toInt).withLocOf(pattern)
+          //
+          // Note that the upper bound must be lowered by one for an exclusive
+          // range: the previous expansion `(lower.head to upper.head)` ignored
+          // `rightInclusive` altogether, which silently turned `"a" ..< "z"`
+          // into `"a" ..= "z"`. An empty class matches nothing.
+          val hi = if rightInclusive then upper.head.toInt else upper.head.toInt - 1
+          if hi < lower.head.toInt then Never
+          else CharClass(lower.head.toInt, hi).withLocOf(pattern)
         case (IntLit(lower), IntLit(upper)) =>
           // Integer ranges are still expanded into a list of literals. After
           // the `where` clause or chain patterns are implemented, we could
           // directly expand the range pattern into a range test.
-          Or((lower to upper).map(i => Literal(IntLit(i))).toList)
+          val range = if rightInclusive then lower to upper else lower until upper
+          Or(range.map(i => Literal(IntLit(i))).toList)
         case _ =>
           error(msg"Range patterns are not supported in pattern compilation." -> pattern.toLoc)
           Never

@@ -2,30 +2,26 @@
 
 open annotations
 
-// Known bugs of the compiled string pattern engine (`ups.StringCompiler` and
-// `Runtime.StrPat`). Each block records the *correct* answer with `:expect`
-// and is marked `:fixme` for as long as the implementation disagrees.
-//
-// Every case in this file behaved correctly on the naive translation that the
-// automaton replaced, so these are regressions rather than missing features.
+// Regressions of the compiled string pattern engine (`ups.StringCompiler` and
+// `Runtime.StrPat`) against the naive translation it replaced. Each block
+// records the *correct* answer with `:expect`; the ones still marked `:fixme`
+// are not fixed yet, the rest are regression tests for bugs already fixed.
 
 
 // ——— Purity of a recursive component must not depend on alternative order ———
 //
-// `isPureDeep` memoizes the *optimistic* answer it assumes for an
-// instantiation that is already being visited, so a member of an impure SCC
-// can be recorded as pure. Which member depends on the order in which
-// `Or(ps) => ps.forall(...)` happens to short-circuit, i.e. on the order the
-// alternatives are written in.
+// `isPureDeep` used to memoize the optimistic answer it assumes for an
+// instantiation already being visited, so a member of an impure SCC could be
+// recorded as pure — which member depending on where `forall` happened to
+// short-circuit, i.e. on the order the alternatives are written in. The two
+// spellings below must agree.
 
 pattern Y = ("a" ~ X) | (("b" ~ "c") => "T")
 pattern X = ("d" ~ Y) | "e"
 
 :expect "zae"
-:fixme
 if "zae" is ("z" ~ Y) as r then r else "no"
-//│ ═══[RUNTIME ERROR] Expected: '"zae"', got: '"()z"'
-//│ = "()z"
+//│ = "zae"
 
 // The same grammar with `Y`'s alternatives swapped compiles correctly.
 
@@ -39,25 +35,21 @@ if "zae" is ("z" ~ Y2) as r2 then r2 else "no"
 
 // ——— A string region must not match a non-string scrutinee ———
 //
-// `makeStringRegionSplit` emits the `StrPat` call with no `Str` class test,
-// unlike the `Str` head of the multi-matcher. `matchWhole` then reads
-// `input.length` off whatever it is given.
+// `makeStringRegionSplit` used to emit the `StrPat` call with no `Str` class
+// test, unlike the `Str` head of the multi-matcher, so `matchWhole` read
+// `input.length` off whatever it was given and reported a match.
 
 pattern Funny = "" ~ "" ~ ""
 
 :expect false
-:fixme
 42 is Funny
-//│ ═══[RUNTIME ERROR] Expected: 'false', got: 'true'
-//│ = true
+//│ = false
 
 :expect false
-:fixme
 [] is Funny
-//│ ═══[RUNTIME ERROR] Expected: 'false', got: 'true'
-//│ = true
+//│ = false
 
-// The multi-matcher gets this right, because it tests the `Str` head first.
+// The multi-matcher always got this right: it tests the `Str` head first.
 
 :expect false
 42 is @compile Funny
@@ -66,23 +58,21 @@ pattern Funny = "" ~ "" ~ ""
 
 // ——— Exclusive string ranges ———
 //
-// `Instantiator` drops `rightInclusive` when it builds a `CharClass`, so
-// `..<` becomes `..=` as soon as the range sits inside a `~` sequence.
+// `Instantiator` used to drop `rightInclusive` when building a `CharClass`, so
+// `..<` silently became `..=` as soon as the range sat inside a `~` sequence.
 
 pattern Half = ("a" ..< "z") ~ "!"
 
 :expect false
-:fixme
 "z!" is Half
-//│ ═══[RUNTIME ERROR] Expected: 'false', got: 'true'
-//│ = true
+//│ = false
 
 :expect true
 "y!" is Half
 //│ = true
 
-// Outside a sequence the range still goes through `makeRangeTest`, which
-// honours the flag.
+// Outside a sequence the range goes through `makeRangeTest` instead, which
+// always honoured the flag — the two must agree.
 
 pattern Plain = "a" ..< "z"
 
