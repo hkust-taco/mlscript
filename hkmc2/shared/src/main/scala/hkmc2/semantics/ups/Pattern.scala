@@ -113,6 +113,80 @@ sealed abstract class Pattern[+K <: Kind.Complete] extends AutoLocated:
         else loop(instantiation.body, visiting + instantiation)
     loop(this, Set.empty)
   
+  /** Whether this pattern matches every value. Only the plainly total shapes
+    * are recognized — a wildcard, possibly reached through synonyms, renamings
+    * or a transformation's input — since answering `false` is always safe.
+    * The dual of `matchableHeads`: total patterns are exactly those it can say
+    * the least about.
+    */
+  def isTotal(using Context, Raise): Bool =
+    def loop(pattern: Pat, visiting: Set[Instantiation]): Bool = pattern match
+      case Or(Nil) => true // The wildcard.
+      case Or(patterns) => patterns.exists(loop(_, visiting))
+      case And(Nil) => false // `Never`.
+      case And(patterns) => patterns.forall(loop(_, visiting))
+      case Rename(pattern, _) => loop(pattern, visiting)
+      // A transformation matches whatever its input pattern matches.
+      case Extract(pattern, _, _) => loop(pattern, visiting)
+      case Synonym(instantiation) =>
+        // A pattern that is total only through a cycle matches nothing.
+        !visiting.contains(instantiation) &&
+          loop(instantiation.body, visiting + instantiation)
+      case Literal(_) | ClassLike(_, _) | MatchedClassLike(_, _) |
+        Record(_) | Tuple(_, _) | Not(_) => false
+    loop(this, Set.empty)
+
+  /** An over-approximation of the heads of the values this pattern can match:
+    * `S(heads)` means the heads *cover* the pattern — every value matching it
+    * is an instance of one of these classes, or is one of these literals —
+    * whereas `N` means we know nothing and a value of any shape may match.
+    *
+    * Note that covering is deliberately weaker than "the head is one of
+    * these": a value matching `ClassLike(Parent)` may well have a subclass of
+    * `Parent` as its head. Covering is what deciding overlap needs, because a
+    * value matching two patterns is covered by a head of each, so two
+    * pointwise-disjoint covers witness that no value matches both.
+    *
+    * Unlike `heads`, which collects the heads that are *tested* somewhere in
+    * the pattern, this must account for every way a value can match, so it is
+    * careful to answer `N` for the wildcard and for structural (record and
+    * tuple) patterns, which values of unrelated classes match.
+    *
+    * Like `preservesOriginalScrutinee`, this is context-sensitive because
+    * `Synonym` nodes must look through instantiated pattern definitions.
+    * A cycle contributes no head: matching through it would take an infinite
+    * derivation, so a value matching the pattern matches it some other way.
+    */
+  def matchableHeads(using Context, Raise): Opt[Set[Head]] =
+    def loop(pattern: Pat, visiting: Set[Instantiation]): Opt[Set[Head]] = pattern match
+      case Literal(lit) => S(Set(lit))
+      case ClassLike(sym, _) => S(Set(sym))
+      case MatchedClassLike(sym, _) => S(Set(sym))
+      case Record(_) => N
+      case Tuple(_, _) => N
+      case Synonym(instantiation) =>
+        if visiting contains instantiation then S(Set.empty)
+        else loop(instantiation.body, visiting + instantiation)
+      case Or(Nil) => N // The wildcard matches every value.
+      // A disjunction needs every disjunct's cover, since a value may match
+      // through any of them.
+      case Or(patterns) => patterns.foldLeft(S(Set.empty): Opt[Set[Head]]):
+        (accumulated, pattern) => accumulated.flatMap: heads =>
+          loop(pattern, visiting).map(heads ++ _)
+      case And(Nil) => S(Set.empty) // `Never` matches no value.
+      case And(patterns) =>
+        // A conjunction, on the other hand, is covered by *any one* conjunct's
+        // cover. Intersecting them would be unsound: `Parent & Sub` is covered
+        // by `{Parent}` and by `{Sub}`, but by neither's intersection — covers
+        // are closed downwards, and that does not commute with intersection.
+        // The smallest cover is the most precise of the sound choices.
+        patterns.iterator.flatMap(loop(_, visiting)).minByOption(_.size)
+      case Not(_) => N
+      case Rename(pattern, _) => loop(pattern, visiting)
+      // A transformation matches exactly what its input pattern matches.
+      case Extract(pattern, _, _) => loop(pattern, visiting)
+    loop(this, Set.empty)
+
   /** Apply a partial function to every node in the pattern tree. Replace each
    *  node with the result of the partial function. If the partial function is
    *  not defined at a node, the node is left unchanged.

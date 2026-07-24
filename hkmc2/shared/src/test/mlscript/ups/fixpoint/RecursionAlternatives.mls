@@ -107,6 +107,12 @@ evalSloppyFast of Add(Add(Lit(1), Lit(2)), Tag(9))
 
 // ————— Without a catch-all —————
 
+// Without a trailing wildcard the alternatives are tried against every
+// intermediate result, not just the final one, so the machine — which keeps
+// no intermediates — is only used when no intermediate could have matched.
+// Here the steps only apply to boxes and tags, which `Lit(_)` rejects, so
+// nothing is lost and the machine is used.
+
 // Peel boxes and tags; the result must be a literal.
 pattern PeelToLit =
   | UnBox as PeelToLit
@@ -145,3 +151,41 @@ peelToLitSlow(input3)
 
 peelToLitFast(input3)
 //│ = 5
+
+
+// ————— Without a catch-all, with overlapping steps —————
+//
+// `UnBox` and `Rewrap` both apply to a box, so the naive search is a tree
+// rather than a chain: when the whole `UnBox` subtree fails, `Rewrap` is
+// retried on the *same* term, and the results it leads to are candidates too.
+// The machine only ever follows the first applicable step, so it would report
+// no match where the naive translation succeeds — hence the warning and the
+// fallback. This is what keeps `@compile` from changing the meaning of a
+// match; see also the overlap between step and alternatives in
+// `NonCatchAll.mls`.
+
+pattern Rewrap = Box(x) => Tag(x)
+
+pattern PeelOrRewrap =
+  | UnBox as PeelOrRewrap
+  | Rewrap as PeelOrRewrap
+  | Tag(_)
+
+fun peelOrRewrapSlow(x) = if x is PeelOrRewrap(r) then r else "<no match>"
+
+:w
+fun peelOrRewrapFast(x) = if x is @compile PeelOrRewrap(r) then r else "<no match>"
+//│ ╔══[WARNING] This fixed-point pattern is not supported by the machine compilation.
+//│ ║  l.172: 	  | Tag(_)
+//│ ║         	    ^^^^^
+//│ ╟── Its recursive alternatives can rewrite the same term in more than one way, and the machine takes only the first.
+//│ ╙── Falling back to the naive translation.
+
+// Unboxing leads to the bare `5`, which is not a tag; re-wrapping does match.
+:expect Tag(5)
+peelOrRewrapSlow of Box(5)
+//│ = Tag(5)
+
+:expect Tag(5)
+peelOrRewrapFast of Box(5)
+//│ = Tag(5)

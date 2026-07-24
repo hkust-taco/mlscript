@@ -1131,14 +1131,14 @@ class SplitCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
     // (see `FixedPointCompiler`). Fixed-point-shaped patterns the machine
     // compilation does not support fall back to the naive translation.
     FixedPointCompiler().compile(pattern) match
-      case S(FixedPointCompiler.Outcome.Compiled(machine, outputPattern, fallback)) =>
+      case S(FixedPointCompiler.Outcome.Compiled(machine, outputPattern)) =>
         // A body-annotated definition is fully machine-compiled, so mirror
         // the eager diagnostics of `compilePatternImpl` here. At a match
         // site, the shorthand sub-pattern is matched naively and warns on
         // its own, and the definition itself has no extraction parameters.
         if pattern.isInstanceOf[SP.Chain] || pattern.isInstanceOf[SP.Composition] then
           warnOnDiscardedExtractionOutputs(pattern)
-        makeFixedPointMatchSplit(scrutinee, machine, outputPattern, outputNeeded, fallback)
+        makeFixedPointMatchSplit(scrutinee, machine, outputPattern, outputNeeded)
       case S(FixedPointCompiler.Outcome.Unsupported) =>
         makeMatchSplit(scrutinee, pattern, outputNeeded)
       case N => compilePatternImpl(scrutinee, pattern, outputNeeded)
@@ -1146,17 +1146,18 @@ class SplitCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
   /** Embed a compiled fixed-point machine at a match site: bind the machine
     * as a local function, call it on the scrutinee, and destructure the
     * resulting `MatchSuccess`. The optional `outputPattern` comes from the
-    * output-matching shorthand `x is P(Q) === x is P as Q`. When
-    * `fallbackPattern` is given (non-catch-all definitions), a failed machine
-    * run is retried with the naive backtracking translation of the original
-    * pattern, which implements the deepest-first try order on intermediate
-    * results that the machine does not keep around. */
+    * output-matching shorthand `x is P(Q) === x is P as Q`.
+    *
+    * A machine is only ever built when it fully implements the pattern (see
+    * `FixedPointCompiler.rejectsOverlappingPost`), so a failed run simply
+    * fails the match. There is deliberately no naive retry here: it would
+    * redo every rewriting step the machine already performed, which is
+    * observable whenever a transformation has side effects. */
   private def makeFixedPointMatchSplit(
       scrutinee: Scrut,
       machine: FixedPointCompiler.Machine,
       outputPattern: Opt[SP],
-      outputNeeded: Bool,
-      fallbackPattern: Opt[SP]
+      outputNeeded: Bool
   ): MakeSplit = (makeConsequent, alternative) =>
     val matcherSymbol = TempSymbol(N, "fixedPointMatcher")
     val matcherBody = Term.Blk(
@@ -1169,15 +1170,11 @@ class SplitCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
           case N => makeConsequent(outputSymbol, SeqMap.empty)
           case S(subPattern) =>
             makeMatchSplit(outputSymbol, subPattern, outputNeeded)(makeConsequent, Split.End)
-        val onFailure = fallbackPattern match
-          case S(original) =>
-            makeMatchSplit(scrutinee, original, outputNeeded)(makeConsequent, alternative)
-          case N => alternative
         Branch(
           resultSymbol.safeRef,
           matchSuccessPattern(S(outputSymbol.symbol :: Nil)),
           consequent
-        ) ~: onFailure)
+        ) ~: alternative)
 
   private def compilePatternImpl(scrutinee: Scrut, pattern: SP, outputNeeded: Bool): MakeSplit =
   (makeConsequent, alternative) => scoped("ucs:ups:compilation"):

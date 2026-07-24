@@ -600,9 +600,11 @@ object Normalization:
     // Under the single-inheritance restriction, two classes where neither is a
     // subclass of the other are provably disjoint. When we add matchable
     // class-like things with multiple inheritance (e.g., interfaces), this check
-    // will need to be refined.
+    // will need to be refined. Note that `isSubclassOf` is strict, so the same
+    // class has to be ruled out separately: callers reaching this method with
+    // two occurrences of one class used to be told they were disjoint.
     case (ClassLike(_, lhsSym, _, _), ClassLike(_, rhsSym, _, _)) =>
-      !isSubclassOf(lhsSym, rhsSym) && !isSubclassOf(rhsSym, lhsSym)
+      !(lhsSym === rhsSym) && !isSubclassOf(lhsSym, rhsSym) && !isSubclassOf(rhsSym, lhsSym)
     case _ => false
   
   /** Get the parent class-like symbol from the extends clause of a class or module. */
