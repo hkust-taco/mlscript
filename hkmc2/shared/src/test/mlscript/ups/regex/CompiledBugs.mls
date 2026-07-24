@@ -1,0 +1,187 @@
+:js
+
+open annotations
+
+// Known bugs of the compiled string pattern engine (`ups.StringCompiler` and
+// `Runtime.StrPat`). Each block records the *correct* answer with `:expect`
+// and is marked `:fixme` for as long as the implementation disagrees.
+//
+// Every case in this file behaved correctly on the naive translation that the
+// automaton replaced, so these are regressions rather than missing features.
+
+
+// ——— Purity of a recursive component must not depend on alternative order ———
+//
+// `isPureDeep` memoizes the *optimistic* answer it assumes for an
+// instantiation that is already being visited, so a member of an impure SCC
+// can be recorded as pure. Which member depends on the order in which
+// `Or(ps) => ps.forall(...)` happens to short-circuit, i.e. on the order the
+// alternatives are written in.
+
+pattern Y = ("a" ~ X) | (("b" ~ "c") => "T")
+pattern X = ("d" ~ Y) | "e"
+
+:expect "zae"
+:fixme
+if "zae" is ("z" ~ Y) as r then r else "no"
+//│ ═══[RUNTIME ERROR] Expected: '"zae"', got: '"()z"'
+//│ = "()z"
+
+// The same grammar with `Y`'s alternatives swapped compiles correctly.
+
+pattern Y2 = (("b" ~ "c") => "T") | ("a" ~ X2)
+pattern X2 = ("d" ~ Y2) | "e"
+
+:expect "zae"
+if "zae" is ("z" ~ Y2) as r2 then r2 else "no"
+//│ = "zae"
+
+
+// ——— A string region must not match a non-string scrutinee ———
+//
+// `makeStringRegionSplit` emits the `StrPat` call with no `Str` class test,
+// unlike the `Str` head of the multi-matcher. `matchWhole` then reads
+// `input.length` off whatever it is given.
+
+pattern Funny = "" ~ "" ~ ""
+
+:expect false
+:fixme
+42 is Funny
+//│ ═══[RUNTIME ERROR] Expected: 'false', got: 'true'
+//│ = true
+
+:expect false
+:fixme
+[] is Funny
+//│ ═══[RUNTIME ERROR] Expected: 'false', got: 'true'
+//│ = true
+
+// The multi-matcher gets this right, because it tests the `Str` head first.
+
+:expect false
+42 is @compile Funny
+//│ = false
+
+
+// ——— Exclusive string ranges ———
+//
+// `Instantiator` drops `rightInclusive` when it builds a `CharClass`, so
+// `..<` becomes `..=` as soon as the range sits inside a `~` sequence.
+
+pattern Half = ("a" ..< "z") ~ "!"
+
+:expect false
+:fixme
+"z!" is Half
+//│ ═══[RUNTIME ERROR] Expected: 'false', got: 'true'
+//│ = true
+
+:expect true
+"y!" is Half
+//│ = true
+
+// Outside a sequence the range still goes through `makeRangeTest`, which
+// honours the flag.
+
+pattern Plain = "a" ..< "z"
+
+:expect false
+"z" is Plain
+//│ = false
+
+
+// ——— Bindings of the outer activations of a recursive component ———
+//
+// Binding slots are global to the region and rewritten by every recursion
+// level. `Op.Defer` captures the slots a deferred frame reads before writing,
+// but a slot that a frame *writes* (here `t`) is read back from the global
+// store, so the outermost transform sees the innermost activation's `h`.
+
+pattern Digit = "0" ..= "9"
+pattern Listed = (((Digit as h) ~ (Listed as t)) => h + "," + t) | ("" => "$")
+
+:expect "1,$"
+if "1" is Listed as l1 then l1 else "NOPE"
+//│ = "1,$"
+
+:expect "1,2,$"
+:fixme
+if "12" is Listed as l2 then l2 else "NOPE"
+//│ ═══[RUNTIME ERROR] Expected: '"1,2,$"', got: '"2,2,$"'
+//│ = "2,2,$"
+
+:expect "1,2,3,$"
+:fixme
+if "123" is Listed as l3 then l3 else "NOPE"
+//│ ═══[RUNTIME ERROR] Expected: '"1,2,3,$"', got: '"3,2,3,$"'
+//│ = "3,2,3,$"
+
+// The multi-matcher route compiles the same definition correctly.
+
+fun listedCompiled(s) = if s is @compile Listed as l then l else "NOPE"
+
+:expect "1,2,3,$"
+listedCompiled("123")
+//│ = "1,2,3,$"
+
+
+// ——— Transforms must run exactly once on the committed parse ———
+//
+// `multiMatcherStringBranch` calls `matchWhole` in match-only mode even when
+// the region has transforms, so `@compile` silently drops their effects.
+// (`makeStringRegionSplit` forces the parsing entry point in that case.)
+
+fun probe(x) = if x is ("a" => print("ran")) ~ "b" then "yes" else "no"
+
+probe("ab")
+//│ > ran
+//│ = "yes"
+
+fun probeCompiled(x) = if x is @compile (("a" => print("ran")) ~ "b") then "yes" else "no"
+
+// FIXME: this should also print `ran`, exactly like `probe` above. There is no
+// test command that expects an *absent* line, so the bug is only visible as the
+// missing `//│ > ran` here.
+probeCompiled("ab")
+//│ = "yes"
+
+
+// ——— Use sites of parametric string patterns ignore extraction parameters ———
+//
+// `isParametricStringSite` routes the site to an in-place automaton, which
+// only knows about the region's own output, so the extraction parameter is
+// lost and the whole match is returned instead.
+
+pattern Bracket(pattern P, inner) = "[" ~ (P as inner) ~ "]"
+
+:expect "ab"
+:fixme
+if "[ab]" is Bracket(Str) as bv then bv else "no"
+//│ ═══[RUNTIME ERROR] Expected: '"ab"', got: '"[ab]"'
+//│ = "[ab]"
+
+// Matching the extraction argument directly never worked (pre-existing).
+
+:expect "ab"
+:fixme
+if "[ab]" is Bracket(Str, bx) then bx else "no"
+//│ ═══[RUNTIME ERROR] Expected: '"ab"', got: '"no"'
+//│ = "no"
+
+
+// ——— Transform closures shared across the labels of one multi-matcher ———
+//
+// Each label of a multi-matcher gets its own `StringCompiler`, so a definition
+// reached from two labels emits its transform lambda twice; both copies bind
+// the same parameter symbols, which `SymbolRefresher` asserts against.
+
+class Box(val v)
+
+pattern T = (("a" ~ "b") as w) => [w]
+
+pattern P2 = Box(T ~ "c") | Box(T ~ "d")
+
+:fixme
+fun f2(x) = if x is @compile P2 as y then y else "no"
+//│ /!!!\ Uncaught error: java.lang.AssertionError: assertion failed: already defined: w
