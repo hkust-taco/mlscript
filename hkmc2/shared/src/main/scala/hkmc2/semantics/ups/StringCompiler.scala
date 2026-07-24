@@ -120,12 +120,7 @@ object StringCompiler:
       actions: Ls[Term],
       visibleSlots: Ls[(VarSymbol, Int)],
       pure: Bool,
-  ):
-    /** Elements of the array returned by the parse entry points, before the
-      * binding slots: `[output, slots...]` or `[output, remaining, slots...]`. */
-    def resultPrefixSize(mode: Mode): Int = mode match
-      case Mode.Whole => 1
-      case Mode.Prefix => 2
+  )
 
   /** Extract the string-shaped fragment of an expanded pattern: everything a
     * `Str`-headed multi-matcher branch should try to match. Non-string leaves
@@ -703,14 +698,18 @@ class StringCompiler(using context: Context)(using tl: TL)(using Ctx, State, Rai
 
   /** Split the alphabet into equivalence classes: within a class, all
     * character edges behave identically. Returns the ordered upper boundaries;
-    * `classOf(u)` is the number of boundaries that are ≤ u. */
+    * `classOf(u)` is the number of boundaries that are ≤ u.
+    *
+    * A boundary at 0 is dropped: class 0 would then be `[0, 0)`, i.e. empty,
+    * so it would cost a column in every reverse-transition row and a bit per
+    * state in the viability matrix while `classOf` could never return it. */
   private def computeBounds(): Ls[Int] =
     val points = MutSet.empty[Int]
     states.foreach: edges =>
       edges.foreach:
         case Edge.Chr(ranges, _) =>
           ranges.foreach: (lo, hi) =>
-            points += lo
+            if lo > 0 then points += lo
             if hi < MaxUnit then points += hi + 1
         case _ => ()
     points.toList.sorted
