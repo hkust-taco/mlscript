@@ -326,7 +326,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
     val replaceStaleLabels = new BlockTransformerShallow(SymbolSubst.Id):
       override def applyBlock(b: Block): Block = b match
         case Break(label) if labelIds(label)._2.isUsed => StateTransition(labelIds(label)._2.force_!)
-        case Continue(label) if labelIds(label)._1.isUsed => StateTransition(labelIds(label)._2.force_!)
+        case Continue(label) if labelIds(label)._1.isUsed => StateTransition(labelIds(label)._1.force_!)
         case _ => super.applyBlock(b)
     val newMap = Map.from(result.map: (id, part) =>
       id -> BlockPartition(replaceStaleLabels.applyBlock(part.blk), part.resumable))

@@ -69,42 +69,39 @@ wrapper(42, 0)
 //│ dead-param-elim > prodfun wrapper#0 @ wrapper@3 -> eliminable: {1}
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let wrapper_3$wrapper;
-//│ define wrapper_3$wrapper as fun wrapper_3$wrapper⁰(val1) {
-//│   let A, tmp, tmp1;
-//│   define A as class A⁰ {
+//│ let val1, A, tmp, tmp1;
+//│ define wrapper⁰ as fun wrapper¹(val11, dead) {
+//│   let A1, tmp2, tmp3;
+//│   define A1 as class A⁰ {
 //│     method makeB⁰ = fun makeB¹() {
 //│       let B;
 //│       define B as class B⁰ {
 //│         method getVal⁰ = fun getVal¹() {
-//│           return val1
+//│           return val11
 //│         }
 //│       };
 //│       return new B⁰()
 //│     }
 //│   };
-//│   set tmp = new A⁰();
-//│   set tmp1 = tmp.makeB¹();
-//│   return tmp1.getVal﹖()
+//│   set tmp2 = new A⁰();
+//│   set tmp3 = tmp2.makeB¹();
+//│   return tmp3.getVal﹖()
 //│ };
-//│ define wrapper⁰ as fun wrapper¹(val1, dead) {
-//│   let A, tmp, tmp1;
-//│   define A as class A¹ {
-//│     method makeB² = fun makeB³() {
-//│       let B;
-//│       define B as class B¹ {
-//│         method getVal² = fun getVal³() {
-//│           return val1
-//│         }
-//│       };
-//│       return new B¹()
-//│     }
-//│   };
-//│   set tmp = new A¹();
-//│   set tmp1 = tmp.makeB³();
-//│   return tmp1.getVal﹖()
+//│ set val1 = 42;
+//│ define A as class A¹ {
+//│   method makeB² = fun makeB³() {
+//│     let B;
+//│     define B as class B¹ {
+//│       method getVal² = fun getVal³() {
+//│         return val1
+//│       }
+//│     };
+//│     return new B¹()
+//│   }
 //│ };
-//│ return wrapper_3$wrapper⁰(42)
+//│ set tmp = new A¹();
+//│ set tmp1 = tmp.makeB³();
+//│ return tmp1.getVal﹖()
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 42
 

@@ -62,7 +62,7 @@ class A
 module A with
   @tailrec
   fun f = 2
-//│ ╔══[WARNING] This function does not directly self-recurse, but is marked @tailrec.
+//│ ╔══[WARNING] This function is marked @tailrec but has no direct self-recursion.
 //│ ║  l.64: 	  fun f = 2
 //│ ╙──      	      ^
 
