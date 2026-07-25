@@ -73,26 +73,20 @@ fun toUppercaseList(input) = if input is ToUppercaseList as output then output
 toUppercaseList of "a" :: "X" :: "c" :: Nil
 //│ = Cons("A", Cons("X", Cons("C", Nil)))
 
-// `Char.AnyChar` carries a guard (`Str as s where s.length is 1`), and guards
-// are rejected within string patterns rather than silently compiled with the
-// legacy greedy composition (which this sequence used to fall back to, and
-// which happened to work here only because each step consumes exactly one
-// character). A guard-free `AnyChar` is not expressible today: a bare string
-// range used as a whole pattern compares *strings* lexicographically, so it
-// cannot require the one-character shape the guard enforces.
+// `Char.AnyChar` is a full character range, so this sequence compiles to an
+// automaton. (It used to be defined through a guard, which is rejected
+// within string patterns; the sequence then only worked through the legacy
+// greedy composition, and only because each step consumes exactly one
+// character.)
 
-:e
 pattern ToUppercaseString = ToUppercase ~ (ToUppercaseString | "")
-//│ ╔══[COMPILATION ERROR] Guards are not supported within string patterns.
-//│ ║  l.2: 	  pattern AnyChar = (Str as s where s.length is 1) => s
-//│ ╙──     	                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 fun toUppercase(input) = if input is ToUppercaseString as output then output
 
-:re
+:expect "ABC"
 toUppercase of "abc"
-//│ ═══[RUNTIME ERROR] Error: match error
+//│ = "ABC"
 
-:re
+:expect "THIS IS ALTERNATING CAPS!"
 toUppercase of "ThIs Is AlTeRnAtInG cApS!"
-//│ ═══[RUNTIME ERROR] Error: match error
+//│ = "THIS IS ALTERNATING CAPS!"

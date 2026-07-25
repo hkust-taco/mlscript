@@ -60,9 +60,11 @@ finding sections are left as written, so consult this list first.
   removal. We may later investigate the **two-pass approach to guards**
   sketched in M21 — evaluate guards over already-consumed input on the
   committed forward walk, rejecting the whole match rather than
-  backtracking — to support them properly. Until then, note that
-  `Char.AnyChar` carries a guard and is therefore not usable within string
-  patterns (see `ups/transformation/BindingLess.mls`).
+  backtracking — to support them properly. (`Char.AnyChar` used to carry a
+  guard and was briefly unusable within string patterns as a result; it is
+  now defined as the full character range, which became expressible once
+  range patterns got their typed single-character semantics — see
+  `ups/RangePatterns.mls` and `ups/transformation/BindingLess.mls`.)
 - **Minor M2**: `computeBounds` no longer records a boundary at 0, so the
   empty alphabet class is gone and `classRepresentative(bounds, 0)` is a
   member of the class it names (`3c8010315`). The dead `resultPrefixSize`

@@ -5,7 +5,7 @@ package ups
 import hkmc2.utils.*, shorthands.*
 import Message.MessageContext
 import ucs.{TermSynthesizer, FlatPattern, error, warn, safeRef}, ucs.extractors.*
-import syntax.{Fun, Keyword, Tree}, Tree.{Ident, StrLit}, Keyword.{`as`, `=>`}
+import syntax.{Fun, Keyword, Tree}, Tree.{DecLit, Ident, IntLit, StrLit}, Keyword.{`as`, `=>`}
 import collection.mutable.{Buffer, HashMap}, collection.immutable.SeqMap
 import Elaborator.{Ctx, State, ctx}, utils.TL
 import semantics.Pattern as SP // "SP" is short for "semantic patterns"
@@ -247,12 +247,36 @@ class SplitCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
       extractionMatches.exists(_.nonEmpty)
     case _ => false
   
+  /** Build the test for a range pattern. The bound comparisons are guarded
+    * by a class test on the scrutinee because bare JS comparisons coerce
+    * foreign values (`[]` compares equal to `0`, so `[] is (0 ..< 65536)`
+    * used to match) and compare strings *lexicographically* (`"abc"` fell
+    * within `"a" ..= "z"`). Ranges denote sets of single characters or
+    * numbers — the compiled paths already enumerate integer ranges and match
+    * character ranges one code unit at a time — so the plain path must
+    * agree:
+    *
+    *  - character ranges match single-character strings only;
+    *  - integer ranges match integers only;
+    *  - decimal ranges match any number.
+    */
   private def makeRangeTest(scrut: Scrut, lo: syntax.Literal, hi: syntax.Literal, rightInclusive: Bool, innerSplit: Split) =
     def scrutFld = fld(scrut())
     val test1 = app(lteq.safeRef, tup(fld(Term.Lit(lo)), scrutFld), "isGreaterThanLower")
     val upperOp = if rightInclusive then lteq else lt
     val test2 = app(upperOp.safeRef, tup(scrutFld, fld(Term.Lit(hi))), "isLessThanUpper")
-    plainTest(test1, "isGreaterThanLower")(plainTest(test2, "isLessThanUpper")(innerSplit))
+    val comparisons = plainTest(test1, "isGreaterThanLower")(plainTest(test2, "isLessThanUpper")(innerSplit))
+    def classGuard(symbol: ClassSymbol, continuation: Split): Split =
+      Branch(scrut(), FlatPattern.ClassLike(symbol.safeRef, symbol, N, false)(Tree.Dummy),
+        continuation) ~: Split.End
+    (lo, hi) match
+      case (_: StrLit, _: StrLit) => classGuard(ctx.builtins.Str,
+        tempLet("scrutineeLength", sel(scrut(), "length")): lengthSymbol =>
+          Branch(lengthSymbol.safeRef, FlatPattern.Lit(IntLit(1)), comparisons) ~: Split.End)
+      case (_: IntLit, _: IntLit) => classGuard(ctx.builtins.Int, comparisons)
+      case (_: DecLit, _: DecLit) => classGuard(ctx.builtins.Num, comparisons)
+      // Mixed bound types are rejected during elaboration.
+      case _ => comparisons
   
   extension (patterns: Ls[SP])
     /**
