@@ -702,14 +702,21 @@ class SplitCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
         Branch(scrutinee(), FlatPattern.Lit(literal), makeConsequent(scrutinee, SeqMap.empty)) ~: alternative
       case Range(lower, upper, rightInclusive) => (makeConsequent, alternative) =>
         makeRangeTest(scrutinee, lower, upper, rightInclusive, makeConsequent(scrutinee, SeqMap.empty)) ~~: alternative
-      case Concatenation(left, right) =>
-        if !regionSupported(pattern, Set.empty) then
+      case Concatenation(left, right) => regionSupport(pattern, Set.empty) match
+        case RegionSupport.Rejected(construct, loc) =>
+          // Falling back to the legacy greedy composition here would silently
+          // change the matching relation — a vacuous `where true` used to
+          // flip matches into failures — and that translation is on its way
+          // out, so these constructs are rejected instead of compiled.
+          error(msg"${construct} are not supported within string patterns." -> loc)
+          RejectSplit
+        case RegionSupport.Unsupported =>
           // Either this sequence occurs in the body of a parametric pattern
           // definition — its pattern parameters are only known at use sites,
           // which compile their own automata (see `isParametricStringSite`) —
           // or it contains constructs the automaton does not compile yet
-          // (guards, chains, extraction arguments). Such sequences remain on
-          // the legacy greedy prefix composition.
+          // (conjunctions, negations, extraction arguments). Such sequences
+          // remain on the legacy greedy prefix composition.
           (makeConsequent, alternative) =>
             makeStringPrefixMatchSplit(scrutinee, left)(
               (consumedOutput, remainingOutput, bindingsFromConsumed) =>
@@ -731,7 +738,7 @@ class SplitCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
                   alternative),
               alternative
             )
-        else
+        case RegionSupport.Supported =>
           // String sequences are compiled as a whole — together with
           // everything nested in them, including recursive pattern references
           // — into a finite automaton. Splitting decisions are global to the
@@ -1162,12 +1169,26 @@ class SplitCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
       case Guarded(pattern, _) => loop(pattern)
     loop(pattern)
 
+  /** How a string sequence is allowed to be compiled (see `regionSupport`). */
+  private enum RegionSupport:
+    /** Every construct is compiled faithfully by the string automaton. */
+    case Supported
+    /** The sequence contains a construct that must be rejected with an error
+      * rather than silently changing the compilation scheme: `construct`
+      * names it in the diagnostic and `loc` pins it. */
+    case Rejected(construct: Str, loc: Opt[Loc])
+    /** The sequence stays on the legacy prefix composition. */
+    case Unsupported
+
   /** Whether the pattern (and every pattern definition it references) only
     * uses constructs that the string automaton compiles faithfully. Patterns
-    * failing this check keep the legacy backtracking translation:
+    * are otherwise either rejected with an error or kept on the legacy
+    * backtracking translation:
     *
     *  - Guards and chains may fail after consumption based on information the
-    *    automaton does not track;
+    *    automaton does not track. Falling back to the legacy translation
+    *    would silently change the matching relation (its left-to-right
+    *    composition is greedy), so they are `Rejected` outright;
     *  - references to pattern symbols with extraction arguments (including
     *    the output-matching shorthand) bind values that cannot cross the
     *    automaton boundary;
@@ -1176,44 +1197,66 @@ class SplitCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
     *    them (at use sites of parametric patterns), and rejected inside the
     *    ahead-of-time compilation of the parametric definition itself.
     */
-  private def regionSupported(pattern: SP, boundParams: Set[VarSymbol]): Bool =
+  private def regionSupport(pattern: SP, boundParams: Set[VarSymbol]): RegionSupport =
+    import RegionSupport.*
     val visited = collection.mutable.Set.empty[PatternSymbol]
-    def loop(pattern: SP, bound: Set[VarSymbol]): Bool = pattern match
-      case Guarded(_, _) | Chain(_, _) => false
+    // `Rejected` (a construct to report) dominates `Unsupported` (a silent
+    // fallback), and the first rejection in traversal order wins. Note that
+    // the combination must not stop at the first `Unsupported`: whether a
+    // guard is diagnosed should not depend on what sits next to it.
+    def all(results: Ls[RegionSupport]): RegionSupport =
+      results.foldLeft(Supported: RegionSupport):
+        case (acc: Rejected, _) => acc
+        case (_, next: Rejected) => next
+        case (_, Unsupported) => Unsupported
+        case (acc, Supported) => acc
+    def loop(pattern: SP, bound: Set[VarSymbol]): RegionSupport = pattern match
+      case Guarded(_, _) => Rejected("Guards", pattern.toLoc)
+      case Chain(_, _) => Rejected("Chained patterns", pattern.toLoc)
       case Constructor(target, arguments) => target.resolvedSym match
         case S(symbol: VarSymbol) =>
-          bound.contains(symbol) && arguments.isEmpty
+          if bound.contains(symbol) && arguments.isEmpty then Supported else Unsupported
         case symbolOption => symbolOption.flatMap(_.asPat) match
           case S(patternSymbol) => patternSymbol.defn match
-            case N => false
+            case N => Unsupported
             case S(defn) =>
-              arguments.fold(0)(_.length) == defn.patternParams.length &&
-              arguments.getOrElse(Nil).forall(loop(_, bound)) &&
-              (!visited.add(patternSymbol) ||
-                loop(defn.pattern, defn.patternParams.iterator.map(_.sym).toSet))
+              val arity =
+                if arguments.fold(0)(_.length) == defn.patternParams.length
+                then Supported else Unsupported
+              val body =
+                if visited.add(patternSymbol)
+                then loop(defn.pattern, defn.patternParams.iterator.map(_.sym).toSet)
+                else Supported
+              all(arity :: arguments.getOrElse(Nil).map(loop(_, bound)) ::: body :: Nil)
           // An unresolved target (elaboration has already reported the error
           // and left a `Term.Error` behind) carries no symbol for
           // `Instantiator` to instantiate, which would abort with `lastWords`.
-          case N if target.resolvedSym.isEmpty => false
+          case N if target.resolvedSym.isEmpty => Unsupported
           // Class and object patterns cannot match a string, so they are
           // harmless dead alternatives within a region; still check their
           // sub-patterns, whose transforms would otherwise be miscompiled.
-          case N => arguments.forall(_.forall(loop(_, bound)))
+          case N => all(arguments.getOrElse(Nil).map(loop(_, bound)))
       // Disjunctions become `Or` nodes the automaton handles, but conjunctions
       // and negations are rejected outright by `StringCompiler.build`, and a
       // rejected region compiles to nothing at all. They stay on the legacy
-      // composition, which does implement them.
-      case Composition(true, left, right) => loop(left, bound) && loop(right, bound)
-      case Composition(false, _, _) | Negation(_) => false
-      case Wildcard() | Literal(_) | Range(_, _, _) => true
-      case Concatenation(left, right) => loop(left, bound) && loop(right, bound)
-      case Tuple(leading, spread) => leading.forall(loop(_, bound)) && spread.forall:
-        case (_, middle, trailing) => loop(middle, bound) && trailing.forall(loop(_, bound))
-      case Record(fields) => fields.forall((_, pattern) => loop(pattern, bound))
+      // composition, which does implement them (so their sub-patterns are
+      // deliberately not searched for constructs to reject).
+      case Composition(true, left, right) => all(loop(left, bound) :: loop(right, bound) :: Nil)
+      case Composition(false, _, _) | Negation(_) => Unsupported
+      case Wildcard() | Literal(_) | Range(_, _, _) => Supported
+      case Concatenation(left, right) => all(loop(left, bound) :: loop(right, bound) :: Nil)
+      case Tuple(leading, spread) =>
+        val spreadResults = spread.fold(Nil: Ls[RegionSupport]):
+          case (_, middle, trailing) => loop(middle, bound) :: trailing.map(loop(_, bound))
+        all(leading.map(loop(_, bound)) ::: spreadResults)
+      case Record(fields) => all(fields.map((_, pattern) => loop(pattern, bound)))
       case Alias(pattern, _) => loop(pattern, bound)
       case Transform(pattern, _, _) => loop(pattern, bound)
       case Annotated(pattern, _) => loop(pattern, bound)
     loop(pattern, boundParams)
+
+  private def regionSupported(pattern: SP, boundParams: Set[VarSymbol]): Bool =
+    regionSupport(pattern, boundParams) == RegionSupport.Supported
 
   /** Parametric pattern definitions cannot precompile their matcher methods —
     * the pattern arguments are only known at the use site — so use sites of
