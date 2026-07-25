@@ -86,11 +86,64 @@ made `pattern WA = _ | "a"` lose its wildcard alternative under `@compile`
 and forced `simplify` to keep dead `Never` alternatives. Pinned in
 `ups/EmptyJunctions.mls`.
 
+**Fixed in the follow-up round (after the range-semantics change):**
+
+- **C8**: both region call sites consult one `Compiled.recognitionSuffices`
+  predicate; a match-only region with transforms now parses (and tests the
+  parse for success), so `@compile` no longer drops transform effects
+  (`90e213e48`).
+- **C7**: `unapply` for a non-parametric, string-only definition compiles
+  the whole body as one region (same gate as `unapplyStringPrefix` plus a
+  new `stringOnlyAlternatives` check), putting enclosing transforms inside
+  the automaton where deferred frames capture per-activation slots —
+  `"123" is Listed` is `"1,2,3,$"` on every route (`0173355f7`).
+- **C3** (the regression half): `isParametricStringSite` requires
+  `defn.extractionParams.isEmpty`, so `Bracket(Str)` takes the `unapply`
+  route again and agrees with `Bracket(Str, x)`; actually *extracting*
+  through a parametric string pattern remains the pre-existing limitation,
+  still pinned `:fixme` (`0173355f7`).
+- **M2** / **M3**: the transform calling convention derives both the
+  parameter list and the argument slots from the correspondence-mapped
+  symbols, fixing the argument-binding crash and the cross-instantiation
+  arity divergence; the record-based transform in `Compiler` had the same
+  unguarded lookup (`0173355f7`).
+- **M13** / **M14**: instantiation no longer re-associates nested `~`, and
+  `simplify` no longer drops bare empty string literals, so grouping and
+  output types survive synonyms, substitution, and `@compile`
+  (`0173355f7`).
+- **M15**: diagnostics on instantiated patterns use the new
+  `Pattern.diagnosticLoc` (single-origin merge, first-piece fallback)
+  instead of the asserting `toLoc`; junctions over definitions from
+  different blocks now report the ordinary rejection (`95343ed21`).
+- **M17**: resolved toward the recommended semantics as a consequence of
+  the C7 change: a rejected recursive definition is poisoned wholly, so the
+  surviving `""` alternative fails through both routes (pinned in
+  `NonRegular.mls`).
+- **M19**: erroneous constructor arguments (`Str("x")`, a module with
+  arguments) degrade to `Never` instead of matching like the bare pattern;
+  the dead `Str`-with-arguments branch of `build` became a `softAssert`
+  (`95343ed21`).
+- **M20**: new `ups/regex/Prefix.mls` pins the `unapplyStringPrefix`
+  protocol (remainder, failure, leftmost-first commitment, greediness
+  through recursion, transforms in prefix position) (`95343ed21`).
+- **M26**, **Minor M12**: the `specialize(lit)` string-head invariant is
+  `softAssert`ed, and the final pruning seeds its worklist with the accept
+  state so the kept set is closed under edges by construction
+  (`95343ed21`).
+- **Minor M16**: `Identifier.mls`'s stale expansion comments describe the
+  automaton absorption, and `isManyDigits` gained negative cases
+  (`95343ed21`).
+
 **Still open:** C2 (effectful transforms run inside the uninstrumented
-engine; no test pin — needs `:effectHandlers` infrastructure), C3, C5, C7,
-C8 (pinned in `ups/regex/CompiledBugs.mls`), and the remaining MAJOR/minor
-findings not listed above (notably M2-M6, M11-M15, M17-M20, M22-M26 and the
-performance items).
+engine — the doc's options (a) hoist application out of the engine vs. (b)
+stopgap `curEffect` check are a design choice), C5 (transform closures
+duplicated across multi-matcher labels — needs an emission scheme: a shared
+hoisted action table, or the transforms-as-methods design from the `build`
+TODO), M4 (ε-cycle guard for `mergeIdentical` — rule choice affects table
+sizes), M5/M6/M22 (determinization budget policy), M11 (polymorphic
+recursion hangs `Instantiator` — bound vs. structural check), M18
+(diagnostic deduplication across regions and use sites), and the
+performance/code-size items (M23-M25, minor M1/M3/M11/M13).
 
 ## Confirmed regressions against `hkust-taco/hkmc2`
 
@@ -101,16 +154,14 @@ Each of these was run on this branch and again on a worktree of the base ref.
 | `pattern Y = ("a" ~ X) \| (("b"~"c") => "T")`, `pattern X = ("d" ~ Y) \| "e"`; `"zae" is ("z" ~ Y) as r` | `"zae"` | `"()z"` | fixed (`42a182952`) |
 | `pattern Funny = "" ~ "" ~ ""`; `42 is Funny` | `TypeError` | `true` | fixed (`42a182952`) |
 | `pattern Half = ("a" ..< "z") ~ "!"`; `"z!" is Half` | `false` | `true` | fixed (`42a182952`) |
-| `pattern Listed = (((Digit as h) ~ (Listed as t)) => h+","+t) \| ("" => "$")`; `"123" is Listed` | `"1,2,3,$"` | `"3,2,3,$"` | open (C7) |
-| `@compile (("a" => print("ran")) ~ "b")` in condition position | clean "unsupported" error | transform silently never runs | open (C8) |
+| `pattern Listed = (((Digit as h) ~ (Listed as t)) => h+","+t) \| ("" => "$")`; `"123" is Listed` | `"1,2,3,$"` | `"3,2,3,$"` | fixed (`0173355f7`) |
+| `@compile (("a" => print("ran")) ~ "b")` in condition position | clean "unsupported" error | transform silently never runs | fixed (`90e213e48`) |
 | `pattern P2 = Box(T ~ "c") \| Box(T ~ "d")` under `@compile` | clean "unsupported" error | `AssertionError: already defined: w` | open (C5) |
-| `Bracket(Str) as v`, for `pattern Bracket(pattern P, inner) = "[" ~ (P as inner) ~ "]"` | `"no"` | `"[ab]"` (should be `"ab"`) | open (C3) |
+| `Bracket(Str) as v`, for `pattern Bracket(pattern P, inner) = "[" ~ (P as inner) ~ "]"` | `"no"` | `"[ab]"` (should be `"ab"`) | regression fixed: agrees with base again (`0173355f7`); extraction itself still open |
 
 All seven are pinned in
 `hkmc2/shared/src/test/mlscript/ups/regex/CompiledBugs.mls`: the fixed ones
-as plain regression tests, the open ones as `:expect` + `:fixme` blocks (C8
-as a `FIXME` comment, since no test command asserts an *absent* output
-line).
+as plain regression tests, the open ones as `:expect` + `:fixme` blocks.
 
 ## Pre-existing issues surfaced along the way
 
