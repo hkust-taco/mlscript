@@ -80,6 +80,23 @@ pattern Plain = "a" ..< "z"
 "z" is Plain
 //│ = false
 
+// An empty range — exclusive (`5 ..< 5`) or reversed (`5 ..= 3`) — must
+// collapse to `Never`, not to an empty `Or`: `Or(Nil)` is the *wildcard* in
+// the instantiated pattern language, so expanding the empty range to an empty
+// disjunction used to make these match everything.
+
+:expect false
+5 is @compile (5 ..< 5)
+//│ = false
+
+:expect false
+4 is @compile (5 ..= 3)
+//│ = false
+
+:expect false
+"hello" is (5 ..< 5) ~ ""
+//│ = false
+
 
 // ——— Bindings of the outer activations of a recursive component ———
 //
