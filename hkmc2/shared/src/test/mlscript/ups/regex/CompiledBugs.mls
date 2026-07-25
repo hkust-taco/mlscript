@@ -135,9 +135,10 @@ listedCompiled("123")
 
 // ——— Transforms must run exactly once on the committed parse ———
 //
-// `multiMatcherStringBranch` calls `matchWhole` in match-only mode even when
-// the region has transforms, so `@compile` silently drops their effects.
-// (`makeStringRegionSplit` forces the parsing entry point in that case.)
+// `multiMatcherStringBranch` used to call `matchWhole` in match-only mode
+// even when the region had transforms, so `@compile` silently dropped their
+// effects. Both call sites now consult `Compiled.recognitionSuffices`, so
+// the two spellings below must print alike.
 
 fun probe(x) = if x is ("a" => print("ran")) ~ "b" then "yes" else "no"
 
@@ -147,10 +148,8 @@ probe("ab")
 
 fun probeCompiled(x) = if x is @compile (("a" => print("ran")) ~ "b") then "yes" else "no"
 
-// FIXME: this should also print `ran`, exactly like `probe` above. There is no
-// test command that expects an *absent* line, so the bug is only visible as the
-// missing `//│ > ran` here.
 probeCompiled("ab")
+//│ > ran
 //│ = "yes"
 
 

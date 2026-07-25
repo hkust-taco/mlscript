@@ -1328,8 +1328,7 @@ class SplitCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
     compiler.compile(instantiated, StringCompiler.Mode.Whole) match
       case N => RejectSplit // Errors have been reported; compile nothing.
       case S(compiled) =>
-        if compiled.pure ||
-            (!outputNeeded && compiled.visibleSlots.isEmpty && compiled.actions.isEmpty) then
+        if compiled.recognitionSuffices(outputNeeded) then
           (makeConsequent, alternative) =>
             val callTerm = app(strPatMatchWhole,
               tup(fld(str(compiled.matchTable)), fld(scrutinee())), "whole string match")

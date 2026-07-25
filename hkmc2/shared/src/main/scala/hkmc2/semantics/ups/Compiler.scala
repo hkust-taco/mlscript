@@ -286,8 +286,24 @@ class Compiler(using Context)(using tl: TL)(using Ctx, State, Raise) extends Ter
             case N => emptyMatchResult("rejected string pattern")
             case S(compiled) =>
               val matchTableTerm = str(compiled.matchTable)
-              if isMatchOnly then
+              if isMatchOnly && compiled.recognitionSuffices(false) then
                 app(strPatMatchWhole, tup(fld(matchTableTerm), fld(scrutinee.safeRef)), "string match")
+              else if isMatchOnly then
+                // The region carries transforms (or bindings): even a
+                // condition-position match must run them, exactly once, on
+                // the committed parse. Only the success of the parse is
+                // observed.
+                val call = app(strPatParseWhole,
+                  tup(fld(str(compiled.table)), fld(actionsTuple(compiled.actions, N)), fld(scrutinee.safeRef)),
+                  "string parse")
+                val resultSymbol = TempSymbol(N, "parseResult")
+                SynthIf(Split.Let(resultSymbol, call,
+                  Branch(
+                    resultSymbol.safeRef,
+                    // The engine returns null on failure and an array on success.
+                    FlatPattern.Tuple(1, true),
+                    Split.Else(bool(true))
+                  ) ~: Split.Else(bool(false))))
               else if compiled.pure then
                 // An operation-free whole match preserves the scrutinee.
                 val matchedSymbol = TempSymbol(N, "stringMatched")

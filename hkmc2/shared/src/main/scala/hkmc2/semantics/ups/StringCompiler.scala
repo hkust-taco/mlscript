@@ -120,7 +120,16 @@ object StringCompiler:
       actions: Ls[Term],
       visibleSlots: Ls[(VarSymbol, Int)],
       pure: Bool,
-  )
+  ):
+    /** Whether the recognition-only entry point (`matchWhole`) suffices: the
+      * region carries no operations at all, or nothing demands its value, its
+      * bindings, or its transform effects. Transforms always force the
+      * parsing entry point — they run exactly once, on the committed parse,
+      * even when the match is only used as a condition (pinned by
+      * `ups/regex/CompiledSemantics.mls`). Both region call sites must
+      * consult this one predicate so they cannot drift apart. */
+    def recognitionSuffices(valueNeeded: Bool): Bool =
+      pure || (!valueNeeded && visibleSlots.isEmpty && actions.isEmpty)
 
   /** Extract the string-shaped fragment of an expanded pattern: everything a
     * `Str`-headed multi-matcher branch should try to match. Non-string leaves
