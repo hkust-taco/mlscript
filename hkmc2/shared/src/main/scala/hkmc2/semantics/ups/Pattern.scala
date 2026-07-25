@@ -267,6 +267,11 @@ sealed abstract class Pattern[+K <: Kind.Complete] extends AutoLocated:
       else Tuple(leading2, S((spreadKind, middle2, trailing2)))
     case And(patterns) =>
       // TODO: Complete the simplification logic here.
+      // Note that `Wildcard` conjuncts cannot simply be dropped, even though
+      // they impose no requirement: the output of a conjunction is the tuple
+      // of its conjuncts' outputs, and an untransformed conjunct — including
+      // one specialization reduced to `Wildcard` — contributes the scrutinee
+      // to it (see `ups/SimpleConjunction.mls`).
       val simplified = patterns.foldRight(Nil: Ls[Pattern[K]]):
         case (p, acc) => p.simplify match
           case `Wildcard` => acc match
@@ -275,22 +280,18 @@ sealed abstract class Pattern[+K <: Kind.Complete] extends AutoLocated:
           case simplified => simplified :: acc
       if simplified contains Never then Never else simplified.foldSingleton(And.apply)(identity)
     case Or(patterns) =>
+      // A `Never` alternative can never be chosen, so all of them are
+      // dropped; when every alternative was dead, the resulting empty
+      // disjunction *is* `Never`.
       patterns.foldRight(Nil: Ls[Pattern[K]]):
         case (p, acc) => p.simplify match
-          case Never => acc match
-            // The list should be a list of non-`Never` patterns or a singleton
-            // list of `Never` pattern.
-            case Nil => Never :: Nil
-            case Never :: Nil | _ => acc
+          case Never => acc
           // Should we discard the accumulated patterns?
           // case `Wildcard` => Wildcard :: Nil // Discard the following patterns.
           case `Wildcard` => acc match
-            case `Never` :: Nil => Wildcard :: Nil
             case `Wildcard` :: _ => acc // One consecutive wildcard is enough.
             case acc => Wildcard :: acc
-          case pat => acc match
-            case Nil | Never :: Nil => pat :: Nil
-            case _ => pat :: acc
+          case pat => pat :: acc
       .foldSingleton(Or.apply)(identity)
     case Not(pattern) => Not(pattern.simplify)
     case Rename(pattern, name) => Rename(pattern.simplify, name)
@@ -356,7 +357,7 @@ sealed abstract class Pattern[+K <: Kind.Complete] extends AutoLocated:
     case Or(patterns) =>
       patterns.map(_.showDbg).mkString("(", " ∨ ", ")")
     case Not(pattern) => s"!${pattern.showDbg}"
-    case Rename(Or(Nil), name) => name.name
+    case Rename(And(Nil), name) => name.name
     case Rename(pattern, name) => s"${pattern.showDbg} as $name"
     case Extract(pattern, _, term) => s"${pattern.showDbg} => ${term.showDbg}"
     case Synonym(sym) => sym.showDbg
@@ -443,9 +444,22 @@ object Pattern:
       term: Term
   ) extends Pattern[K]
   
-  val Wildcard = Or(Nil)
+  /** The pattern that matches anything (⊤): the conjunction of no
+    * requirements, i.e. the unit of `And`. Dually, `Never` is the pattern
+    * that matches nothing (⊥): the disjunction of no alternatives, i.e. the
+    * unit of `Or`.
+    *
+    * These identifications matter beyond taste: generic code builds and
+    * shrinks junction lists without special-casing emptiness, so an empty
+    * `Or` *must* mean "no alternative can match" and an empty `And` "no
+    * requirement can fail" for that code to be correct. (They were originally
+    * defined the other way around, which made `Or(range.map(...))` over an
+    * empty range match everything, made `Wildcard or p` collapse to `p` in
+    * the flattening combinators above, and forced `simplify` to keep dead
+    * `Never` alternatives lest dropping the last one produce a wildcard.) */
+  val Wildcard = And(Nil)
   
-  val Never = And(Nil)
+  val Never = Or(Nil)
   
   type Head = syntax.Literal | ClassLikeSymbol
   
