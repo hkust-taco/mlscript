@@ -1118,9 +1118,6 @@ class SplitCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
         msg"String patterns are not yet supported by efficient compilation." -> pattern.toLoc
       makeStringPrefixMatchSplit(scrutinee, pattern)
   
-  def compilePattern(scrutinee: Scrut, pattern: SP): MakeSplit =
-    compilePattern(scrutinee, pattern, true)
-
   /** This method handles the efficient and non-backtracking pattern compilation.
     * Note that we still have not supported accessing pattern parameters in the
     * naive pattern declaration in the efficient pattern compilation. */

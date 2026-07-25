@@ -175,10 +175,10 @@ fun peelOrRewrapSlow(x) = if x is PeelOrRewrap(r) then r else "<no match>"
 
 :w
 fun peelOrRewrapFast(x) = if x is @compile PeelOrRewrap(r) then r else "<no match>"
-//│ ╔══[WARNING] This fixed-point pattern is not supported by the machine compilation.
+//│ ╔══[WARNING] This fixed-point pattern is not supported by pattern compilation.
 //│ ║  l.172: 	  | Tag(_)
 //│ ║         	    ^^^^^
-//│ ╟── Its recursive alternatives can rewrite the same term in more than one way, and the machine takes only the first.
+//│ ╟── Its recursive alternatives can rewrite the same term in more than one way.
 //│ ╙── Falling back to the naive translation.
 
 // Unboxing leads to the bare `5`, which is not a tag; re-wrapping does match.

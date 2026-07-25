@@ -604,7 +604,7 @@ object Normalization:
     // class has to be ruled out separately: callers reaching this method with
     // two occurrences of one class used to be told they were disjoint.
     case (ClassLike(_, lhsSym, _, _), ClassLike(_, rhsSym, _, _)) =>
-      !(lhsSym === rhsSym) && !isSubclassOf(lhsSym, rhsSym) && !isSubclassOf(rhsSym, lhsSym)
+      !(lhsSym === rhsSym) && !isStrictSubclassOf(lhsSym, rhsSym) && !isStrictSubclassOf(rhsSym, lhsSym)
     case _ => false
   
   /** Get the parent class-like symbol from the extends clause of a class or module. */
@@ -615,9 +615,16 @@ object Normalization:
       case mod: ModuleOrObjectSymbol => mod.defn.flatMap(_.ext)
     ext.flatMap(nw => nw.cls.symbol.flatMap(_.asClsOrMod))
   
-  /** Check if `child` is a subclass of `parent` by traversing the class hierarchy.
-    * Uses a visited set to avoid infinite loops in case of cyclic inheritance. */
   private def isSubclassOf(
+      child: ClassSymbol | ModuleOrObjectSymbol,
+      parent: ClassSymbol | ModuleOrObjectSymbol
+  ): Bool =
+    child === parent || isStrictSubclassOf(child, parent)
+  
+  /** Check if `child` is a subclass of `parent` by traversing the class hierarchy.
+    * Uses a visited set to avoid infinite loops in case of cyclic inheritance.
+    * TODO: Cache the subclasses set!! */
+  private def isStrictSubclassOf(
       child: ClassSymbol | ModuleOrObjectSymbol,
       parent: ClassSymbol | ModuleOrObjectSymbol
   ): Bool =

@@ -196,13 +196,14 @@ fastEvalToValue(stuck)
 // discards intermediates, the definition falls back to the naive
 // translation. Note that each reduction is still performed exactly once.
 //
-// TODO: support this properly. The hard part is that the machine would have
-// to decide *which* intermediate matches without materializing it: plugging
-// the focus back through the context spine allocates, and allocation is
-// observable — see the `new Add(...)` lines above. Tracking how far the
-// trailing alternatives match down the spine, as a residual updated when
-// frames are pushed and popped, would let the machine remember the last
-// matching decomposition in constant space and plug it once, at the end.
+// Supporting this properly would be difficult.
+// The hard part is that the machine would have to decide *which* intermediate matches
+// without materializing it: plugging the focus back through the context spine allocates,
+// and allocation is observable — see the `new Add(...)` lines above.
+// Tracking how far the trailing alternatives match down the spine,
+// as a residual updated when frames are pushed and popped,
+// would let the machine remember the last matching decomposition in constant space and plug it once,
+// at the end.
 
 
 pattern AddStep =
@@ -212,10 +213,10 @@ pattern AddStep =
 
 :w
 pattern AddSteps = @compile ((AddStep as AddSteps) | Add(Lit, Lit))
-//│ ╔══[WARNING] This fixed-point pattern is not supported by the machine compilation.
+//│ ╔══[WARNING] This fixed-point pattern is not supported by pattern compilation.
 //│ ║  l.214: 	pattern AddSteps = @compile ((AddStep as AddSteps) | Add(Lit, Lit))
 //│ ║         	                                                     ^^^^^^^^^^^^
-//│ ╟── Its trailing alternatives can match a term that its step pattern can still rewrite, and the machine only ever produces normal forms.
+//│ ╟── Its trailing alternatives can match a term that its recursive part can still rewrite.
 //│ ╙── Falling back to the naive translation.
 
 

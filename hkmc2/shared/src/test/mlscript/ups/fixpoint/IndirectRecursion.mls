@@ -77,10 +77,10 @@ pattern PeelB = UnTag as PeelA | _
 // The machine keeps no intermediates, so the definition is compiled naively.
 :w
 fun runPeelA(x) = if x is @compile PeelA(y) then y
-//│ ╔══[WARNING] This fixed-point pattern is not supported by the machine compilation.
+//│ ╔══[WARNING] This fixed-point pattern is not supported by pattern compilation.
 //│ ║  l.71: 	pattern PeelB = UnTag as PeelA | _
 //│ ║        	                ^^^^^^^^^^^^^^^^^^
-//│ ╟── One of its links accepts any term, while another can fail on the final one.
+//│ ╟── One of its recursive parts accepts any term, while another can fail on the final one.
 //│ ╙── Falling back to the naive translation.
 
 :expect 42
@@ -154,7 +154,7 @@ fun atLeastOneSlow(x) = if x is AtLeastOneA(r) then r else "<no match>"
 
 :w
 fun atLeastOneFast(x) = if x is @compile AtLeastOneA(r) then r else "<no match>"
-//│ ╔══[WARNING] This fixed-point pattern is not supported by the machine compilation.
+//│ ╔══[WARNING] This fixed-point pattern is not supported by pattern compilation.
 //│ ║  l.156: 	fun atLeastOneFast(x) = if x is @compile AtLeastOneA(r) then r else "<no match>"
 //│ ║         	                                         ^^^^^^^^^^^^^
 //│ ╙── Falling back to the naive translation.

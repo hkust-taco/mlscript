@@ -233,7 +233,7 @@ class FixedPointCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynt
   private def unsupported(alreadyWarned: Bool, shaped: Bool, loc: Opt[Loc]): Opt[Outcome] =
     if alreadyWarned then S(Outcome.Unsupported)
     else if shaped then
-      warn(msg"This fixed-point pattern is not supported by the machine compilation." -> loc,
+      warn(msg"This fixed-point pattern is not supported by pattern compilation." -> loc,
         msg"Falling back to the naive translation." -> N)
       S(Outcome.Unsupported)
     else N
@@ -431,15 +431,15 @@ class FixedPointCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynt
     if steps.tails.exists:
       case first :: rest => rest.exists(mayOverlap(first, _))
       case Nil => false
-    then S(msg"Its recursive alternatives can rewrite the same term in more than one way, and the machine takes only the first.")
+    then S(msg"Its recursive alternatives can rewrite the same term in more than one way.")
     else if mayOverlap(step, post) then
-      S(msg"Its trailing alternatives can match a term that its step pattern can still rewrite, and the machine only ever produces normal forms.")
+      S(msg"Its trailing alternatives can match a term that its recursive part can still rewrite.")
     else N
-
+  
   private def warnUnmatchedIntermediates(reason: Message, loc: Opt[Loc]): Unit =
-    warn(msg"This fixed-point pattern is not supported by the machine compilation." -> loc,
+    warn(msg"This fixed-point pattern is not supported by pattern compilation." -> loc,
       reason -> N, msg"Falling back to the naive translation." -> N)
-
+  
   private def compileMachine(stepPattern: SP, middles: Ls[SP], catchAll: Bool, requireProgress: Bool): Opt[Machine] =
     val (instantiated, context) = instantiateGroups((stepPattern :: middles) :: Nil)
     val entry = instantiated.head.head
@@ -589,7 +589,7 @@ class FixedPointCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynt
           val (symbol, _, middles, _) = link
           val reason =
             if isTotal(post) then
-              S(msg"One of its links accepts any term, while another can fail on the final one.")
+              S(msg"One of its recursive parts accepts any term, while another can fail on the final one.")
             else post.flatMap(unmatchedIntermediates(step, _))
           // A total link has no alternatives of its own to point at, so fall
           // back to the whole body of the definition that link comes from.
@@ -597,7 +597,7 @@ class FixedPointCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynt
       offending match
         case S((reason, loc)) => warnUnmatchedIntermediates(reason, loc); N
         case N => S(assembleAlternating(compiled))
-
+  
   /** Assemble the flat alternation loop for an indirect recursion cycle: in
     * phase `i`, step `i` is applied to the current term; on success the
     * machine moves to the next phase in the cycle, and on failure it records
