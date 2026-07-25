@@ -80,13 +80,13 @@ class Instantiator(using tl: TL)(using Ctx, State, Raise):
       // Recursively instantiate the arguments of constructor patterns.
       case S(symbol) => symbol.asClsLike match
         case S(symbol: ClassSymbol) =>
-          val keyedArguments = symbol.defn.get.paramsOpt match
+          symbol.defn.get.paramsOpt match
             case S(ParamList(_, params, _)) => arguments match
               case S(arguments) =>
                 if params.size != arguments.size then
                   error(msg"Class `${symbol.nme}` has ${params.size} parameters." -> Loc(params),
                     msg"But ${arguments.size} arguments were provided." -> Loc(arguments))
-                S(params.iterator.zip(arguments).flatMap:
+                ClassLike(symbol, S(params.iterator.zip(arguments).flatMap:
                   case (param, argument) if param.flags.isVal =>
                     // The names are not from the source and are retrieved from
                     // parameters in class definitions. Therefore, no `Loc`
@@ -95,20 +95,25 @@ class Instantiator(using tl: TL)(using Ctx, State, Raise):
                   case (param, argument) =>
                     error(msg"Parameter `${param.sym.nme}` is not accessible." -> param.toLoc)
                     N
-                .to(SeqMap))
-              case N => N // The class has parameters but no arguments are provided.
+                .to(SeqMap)))
+              // The class has parameters but no arguments are provided.
+              case N => ClassLike(symbol, N)
             case N => arguments match
-              case N => N // No arguments are provided.
+              case N => ClassLike(symbol, N) // No arguments are provided.
               case S(arguments) =>
+                // An erroneous pattern must not match anything: bare
+                // `ClassLike(symbol, N)` would make `Str("x")` behave like
+                // plain `Str` — i.e. match every string — after the error.
                 error(msg"Class `${symbol.nme}` has no parameters." -> Loc(arguments))
-                N
-          ClassLike(symbol, keyedArguments)
+                Never
         case S(symbol: ModuleOrObjectSymbol) =>
           arguments match
             case N => ClassLike(symbol, N)
-            case S(arguments) => error(
-              msg"`${symbol.nme}` is a module, thus it cannot have arguments." -> Loc(arguments))
-          ClassLike(symbol, N)
+            case S(arguments) =>
+              // Same rationale as above: do not match after the error.
+              error(
+                msg"`${symbol.nme}` is a module, thus it cannot have arguments." -> Loc(arguments))
+              Never
         case S(symbol: PatternSymbol) =>
           // TODO(after we defined the semantics of pattern parameters): We need
           // to partition the arguments into pattern arguments and extraction
@@ -118,9 +123,16 @@ class Instantiator(using tl: TL)(using Ctx, State, Raise):
           Synonym(schedule(instantiation))
         case N => lastWords(s"Expected target symbol to be a Class-like Symbol, got ${symbol.getClass.getSimpleName}")
       case N => lastWords(s"Missing symbol for constructor pattern `${target.showAsTree}`")
-    case SP.Composition(true, left, right) => instantiate(left) or instantiate(right)
-    case SP.Composition(false, left, right) => instantiate(left) and instantiate(right)
-    case SP.Negation(pattern) => Not(instantiate(pattern))
+    // The source location is pinned explicitly on the nodes built here:
+    // their auto-computed location spans their children, and a `Synonym`
+    // child locates the referenced *definition*, so a junction over
+    // definitions from different source blocks would mix origins (which
+    // `AutoLocated` asserts against) as soon as a diagnostic asks for it.
+    case SP.Composition(true, left, right) =>
+      (instantiate(left) or instantiate(right)).withLocOf(pattern)
+    case SP.Composition(false, left, right) =>
+      (instantiate(left) and instantiate(right)).withLocOf(pattern)
+    case SP.Negation(pattern2) => Not(instantiate(pattern2)).withLocOf(pattern)
     case SP.Wildcard() => Wildcard
     case SP.Literal(literal) => Literal(literal)
     case SP.Range(lower, upper, rightInclusive) =>

@@ -65,6 +65,25 @@ sealed abstract class Pattern[+K <: Kind.Complete] extends AutoLocated:
     case Extract(pattern, _, term) => Vector.double(pattern, term)
     case Synonym(pattern) => pattern.symbol +: pattern.arguments.toVector
   
+  /** A best-effort location for diagnostics on instantiated patterns. Their
+    * nodes aggregate pieces of unrelated source blocks — a `Synonym`'s
+    * children locate the referenced *definition*, and the compilation
+    * pipeline's `map` rebuilds compositional nodes without their pinned
+    * locations — so the inherited `toLoc`, which asserts a single-origin
+    * span, cannot be used on arbitrary nodes. This merges the sub-locations
+    * when they share an origin and otherwise pins the first piece. */
+  def diagnosticLoc: Opt[Loc] =
+    val locs = children.iterator.flatMap:
+      case p: Pattern[?] => p.diagnosticLoc.iterator
+      case located => located.toLoc.iterator
+    .toList
+    locs match
+      case Nil => N
+      case first :: rest =>
+        if rest.forall(_.origin === first.origin)
+        then S(rest.foldLeft(first)(_ ++ _))
+        else S(first) // Mixed origins: pin the first piece.
+
   lazy val symbols: Ls[VarSymbol] = this match
     case Literal(lit) => Nil
     case ClassLike(sym, arguments) =>
@@ -463,9 +482,19 @@ extension (pattern: ExPat)
    *  literals) are absorbed into a single `Str` class head and handled by the
    *  string pattern compiler, so this function is never called with a `StrLit`
    *  head in their presence. Under any other head, they cannot match. */
-  def specialize(lit: syntax.Literal): SpPat = pattern.map:
+  def specialize(lit: syntax.Literal)(using Raise): SpPat = pattern.map:
     case Literal(`lit`) => Wildcard
-    case _: (Literal | ClassLike | Concat | CharClass) => Never
+    case _: (Literal | ClassLike) => Never
+    case _: (Concat | CharClass) =>
+      // Live and correct for non-string heads (under an integer head a
+      // string-shaped pattern can indeed never match), but a `StrLit` head
+      // must never see one: `buildMultiMatcherBody` absorbs every
+      // string-shaped pattern into the `Str` head *and* filters out every
+      // head a string could take, precisely so that this arm cannot turn a
+      // matchable string pattern into a silent no-match.
+      softAssert(!lit.isInstanceOf[Tree.StrLit],
+        "string-shaped patterns must be absorbed into the `Str` head before literal specialization")
+      Never
     case pattern: (Record | Tuple) => pattern
     case _: (MatchedClassLike | Synonym) => lastWords("unexpected specialized/complete node in specialize(lit)")
   
@@ -486,7 +515,7 @@ extension (pattern: ExPat)
   
   /** Modifies the pattern under the assumption that the scrutinee matches the
    *  given literal or class. */
-  def specialize(head: Option[Head]): SpPat = head match
+  def specialize(head: Option[Head])(using Raise): SpPat = head match
     case Some(h: syntax.Literal) => pattern.specialize(h)
     case Some(h: ClassLikeSymbol) => pattern.specialize(h)
     case None => pattern.map:

@@ -408,19 +408,18 @@ class StringCompiler(using context: Context)(using tl: TL)(using Ctx, State, Rai
         addEps(entry, cont, Nil)
         entry
       case ClassLike(sym, arguments) if sym is ctx.builtins.Str =>
-        arguments match
-          case S(_) =>
-            fail(msg"`${sym.nme}` cannot have arguments in a string pattern." -> pattern.toLoc)
-            newState()
-          case N =>
-            // `Str` literally means all strings, like a wildcard. (The naive
-            // translation used to consume exactly one character here, which
-            // made `Str ~ "!"` unmatchable against "ab!".)
-            softAssert(!needValue && exitOps.isEmpty, "Str with pending value operations")
-            val entry = newState()
-            addChr(entry, AnyChar, entry)
-            addEps(entry, cont, Nil)
-            entry
+        // `Str` with arguments is reported and degraded to `Never` by
+        // `Instantiator`, so only the bare form arrives here: it literally
+        // means all strings, like a wildcard. (The naive translation used to
+        // consume exactly one character here, which made `Str ~ "!"`
+        // unmatchable against "ab!".)
+        softAssert(arguments.isEmpty,
+          "`Str` with arguments must have been rejected during instantiation")
+        softAssert(!needValue && exitOps.isEmpty, "Str with pending value operations")
+        val entry = newState()
+        addChr(entry, AnyChar, entry)
+        addEps(entry, cont, Nil)
+        entry
       case Or(Nil) => newState() // `Never` matches nothing: a dead state.
       case Or(patterns) =>
         val entry = newState()
@@ -455,10 +454,10 @@ class StringCompiler(using context: Context)(using tl: TL)(using Ctx, State, Rai
               case Nil => lastWords("unreachable: empty concatenation")
             go(patterns)
       case And(_) =>
-        fail(msg"Conjunctions are not supported within string patterns yet." -> pattern.toLoc)
+        fail(msg"Conjunctions are not supported within string patterns yet." -> pattern.diagnosticLoc)
         newState()
       case Not(_) =>
-        fail(msg"Negations are not supported within string patterns yet." -> pattern.toLoc)
+        fail(msg"Negations are not supported within string patterns yet." -> pattern.diagnosticLoc)
         newState()
       case Rename(p, symbol) =>
         val ops = Op.Bind(slotOf(symbol)) :: (if needValue then exitOps else Op.Drop :: exitOps)
@@ -685,10 +684,15 @@ class StringCompiler(using context: Context)(using tl: TL)(using Ctx, State, Rai
       changed |= mergeIdentical()
     // Prune states unreachable from the entry and renumber the survivors.
     // The accept state is kept even if unreachable (a never-matching region):
-    // the encoding refers to it.
+    // the encoding refers to it. It seeds the worklist rather than being
+    // force-kept afterwards, so the kept set is closed under edges by
+    // construction — were the accept state ever given outgoing edges, a
+    // force-kept accept would silently retarget them through the
+    // zero-initialized `renumber` slots of their dropped targets.
     val keep = new Array[Bool](states.size)
     keep(entry) = true
-    val worklist = Buffer(entry)
+    keep(accept) = true
+    val worklist = Buffer(entry, accept)
     while worklist.nonEmpty do
       val state = worklist.remove(worklist.size - 1)
       states(state).foreach: edge =>
@@ -696,7 +700,6 @@ class StringCompiler(using context: Context)(using tl: TL)(using Ctx, State, Rai
         if !keep(target) then
           keep(target) = true
           worklist += target
-    keep(accept) = true
     val renumber = new Array[Int](states.size)
     var nextId = 0
     states.indices.foreach: state =>
