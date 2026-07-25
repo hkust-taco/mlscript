@@ -81,9 +81,9 @@ pattern Plain = "a" ..< "z"
 //│ = false
 
 // An empty range — exclusive (`5 ..< 5`) or reversed (`5 ..= 3`) — must
-// collapse to `Never`, not to an empty `Or`: `Or(Nil)` is the *wildcard* in
-// the instantiated pattern language, so expanding the empty range to an empty
-// disjunction used to make these match everything.
+// match nothing. It expands to an empty disjunction, which used to make it
+// match *everything*: `Or(Nil)` was the wildcard until the encoding of the
+// pattern-lattice units was fixed to `Never = Or(Nil)`.
 
 :expect false
 5 is @compile (5 ..< 5)

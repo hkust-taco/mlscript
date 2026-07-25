@@ -140,15 +140,11 @@ class Instantiator(using tl: TL)(using Ctx, State, Raise):
         case (IntLit(lower), IntLit(upper)) =>
           // Integer ranges are still expanded into a list of literals. After
           // the `where` clause or chain patterns are implemented, we could
-          // directly expand the range pattern into a range test.
-          //
-          // An empty range (`5 ..< 5`, or reversed bounds) must collapse to
-          // `Never` explicitly: `Or(Nil)` is the *wildcard*, so building it
-          // from the empty literal list would match everything instead of
-          // nothing.
+          // directly expand the range pattern into a range test. An empty
+          // range (`5 ..< 5`, or reversed bounds) expands to the empty
+          // disjunction, which is `Never`.
           val range = if rightInclusive then lower to upper else lower until upper
-          if range.isEmpty then Never
-          else Or(range.map(i => Literal(IntLit(i))).toList)
+          Or(range.map(i => Literal(IntLit(i))).toList)
         case _ =>
           error(msg"Range patterns are not supported in pattern compilation." -> pattern.toLoc)
           Never
