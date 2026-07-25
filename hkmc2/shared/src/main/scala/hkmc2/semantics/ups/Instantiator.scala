@@ -149,12 +149,15 @@ class Instantiator(using tl: TL)(using Ctx, State, Raise):
           error(msg"Range patterns are not supported in pattern compilation." -> pattern.toLoc)
           Never
     case SP.Concatenation(left, right) =>
-      // Flatten nested concatenations into one sequence so that the string
-      // pattern compiler sees the whole `~`-spine at once.
-      def parts(pattern: Pat): Ls[Pat] = pattern match
-        case Concat(patterns) => patterns
-        case pattern => pattern :: Nil
-      Concat(parts(instantiate(left)) ::: parts(instantiate(right))).withLocOf(pattern)
+      // Nested concatenations are deliberately NOT flattened into the parent
+      // sequence: the output of a sequence is the left fold of its elements'
+      // outputs under JS `+`, which is not associative across mixed operand
+      // types, so re-associating `a ~ (b ~ c)` would change the value a
+      // grouped sub-pattern produces — and flattening happened *after*
+      // substitution, so the same sub-pattern used to produce one value when
+      // referenced through a synonym and another when passed as a pattern
+      // argument. `StringCompiler.build` recurses through nested `Concat`s.
+      Concat(instantiate(left) :: instantiate(right) :: Nil).withLocOf(pattern)
     case SP.Tuple(leading, spread) =>
       val instantiatedSpread = spread.map:
         case (spreadKind, middle, trailing) =>

@@ -481,15 +481,26 @@ class StringCompiler(using context: Context)(using tl: TL)(using Ctx, State, Rai
         // fix is to host each definition's transforms as methods on the
         // pattern object (compiled once, next to `unapply`) and reference
         // them from regions by selection.
+        // The transform's parameters are exactly the symbols the definition
+        // itself binds — the ones `correspondence` maps. `p.symbols` can
+        // contain more: instantiation substitutes pattern arguments into the
+        // body, and a binding inside an argument (`Wrap(("x" as w))`) is
+        // visible here but is no parameter of the transform term. Both the
+        // parameter list and the argument slots must be derived from the
+        // same filtered list: they define the calling convention together,
+        // and the closure is interned only once while `argSlots` used to be
+        // recomputed per occurrence, so deriving them from `p.symbols` let
+        // two instantiations of one definition disagree on arity.
+        val transformSymbols = p.symbols.filter(correspondence.contains)
         val actionId = actionSources.indexWhere(_ eq term) match
           case -1 =>
-            val params = p.symbols.map: symbol =>
+            val params = transformSymbols.map: symbol =>
               Param(FldFlags.empty, correspondence(symbol), N, Modulefulness.none)
             actionSources += term
             actions += Term.Lam(PlainParamList(params), term.mkClone)
             actions.size - 1
           case index => index
-        val argSlots = p.symbols.map(slotOf)
+        val argSlots = transformSymbols.map(slotOf)
         val ops = Op.Call(actionId, argSlots) :: (if needValue then exitOps else Op.Drop :: exitOps)
         build(p, cont, false, ops, scc)
       case Synonym(inst) => scc match

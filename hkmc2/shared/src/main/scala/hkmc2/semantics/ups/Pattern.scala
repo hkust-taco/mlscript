@@ -201,16 +201,14 @@ sealed abstract class Pattern[+K <: Kind.Complete] extends AutoLocated:
         trailing2.contains(Never) then Never
       else Tuple(leading2, S((spreadKind, middle2, trailing2)))
     case Concat(patterns) =>
+      // Note that empty string literals must NOT be dropped, even though
+      // they consume nothing: the output of a sequence is the left fold of
+      // its elements' outputs under JS `+`, so a leading `""` coerces a
+      // non-string element output to a string (`"" + 1` is `"1"`), and this
+      // simplification only runs on the `@compile` path — dropping the
+      // literal made `@compile` change the output's type.
       val simplified = patterns.map(_.simplify)
-      if simplified contains Never then Never else Concat:
-        // Empty string literals consume nothing and contribute nothing to the
-        // output, so they can be dropped as long as one element remains.
-        simplified.filter:
-          case Literal(StrLit("")) => false
-          case _ => true
-        match
-          case Nil => Literal(StrLit("")) :: Nil
-          case simplified => simplified
+      if simplified contains Never then Never else Concat(simplified)
     case CharClass(_, _) => this
     case And(patterns) =>
       // TODO: Complete the simplification logic here.

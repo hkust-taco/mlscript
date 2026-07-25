@@ -1204,6 +1204,34 @@ class SplitCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
     /** The sequence stays on the legacy prefix composition. */
     case Unsupported
 
+  /** Whether every alternative of the pattern can only match strings, so a
+    * definition body may be compiled as a single `Str`-guarded region for
+    * `unapply`. A non-string alternative (a class or numeric pattern, a
+    * wildcard) would be a dead state inside the region while the general
+    * translation dispatches it normally, so mixed bodies must keep the
+    * latter. Only alternative-position nodes are inspected: below a `~`,
+    * everything is string-position by construction, and parametric
+    * references are conservatively rejected (their arguments would need the
+    * same analysis). */
+  private def stringOnlyAlternatives(pattern: SP): Bool =
+    val visited = collection.mutable.Set.empty[PatternSymbol]
+    def loop(pattern: SP): Bool = pattern match
+      case Concatenation(_, _) => true
+      case Literal(_: StrLit) => true
+      case Range(_: StrLit, _: StrLit, _) => true
+      case Composition(true, left, right) => loop(left) && loop(right)
+      case Constructor(target, N) => target.resolvedSym.flatMap(_.asPat) match
+        case S(patternSymbol) => patternSymbol.defn match
+          case S(defn) if defn.patternParams.isEmpty =>
+            !visited.add(patternSymbol) || loop(defn.pattern)
+          case _ => false
+        case N => false
+      case Alias(pattern, _) => loop(pattern)
+      case Transform(pattern, _, _) => loop(pattern)
+      case Annotated(pattern, _) => loop(pattern)
+      case _ => false
+    loop(pattern)
+
   /** Whether the pattern (and every pattern definition it references) only
     * uses constructs that the string automaton compiles faithfully. Patterns
     * are otherwise either rejected with an error or kept on the legacy
@@ -1293,6 +1321,12 @@ class SplitCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
   private def isParametricStringSite(patternSymbol: PatternSymbol, arguments: Opt[Ls[SP]]): Bool =
     patternSymbol.defn.exists: defn =>
       defn.patternParams.nonEmpty &&
+      // A definition with extraction parameters must keep the `unapply`
+      // route: providing exactly the pattern arguments means "all extraction
+      // parameters omitted", and `unapply` then returns the extraction
+      // bindings (see `MixedParameters.mls`) — the in-place automaton only
+      // knows the region's own output, so it would return the whole match.
+      defn.extractionParams.isEmpty &&
       arguments.fold(0)(_.length) == defn.patternParams.length &&
       (containsStringSeq(defn.pattern) || arguments.getOrElse(Nil).exists(containsStringSeq)) &&
       // The definition body is checked with its own parameters considered
@@ -1585,7 +1619,20 @@ class SplitCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
   ):
     val unapply = scoped("ucs:translation"):
       val inputSymbol = VarSymbol(Ident("input"))
-      val topmost = makeMatchSplit(inputSymbol.toScrut, pd.pattern, true)(
+      val makeSplit =
+        if pd.patternParams.isEmpty && containsStringSeq(pd.pattern)
+            && stringOnlyAlternatives(pd.pattern)
+            && regionSupported(pd.pattern, Set.empty) then
+          // The whole body is compiled as ONE region. This is not merely an
+          // optimization: a transform wrapping a recursive sequence must sit
+          // *inside* the automaton, where deferred frames capture the slot
+          // values of their own activation. `makeMatchSplit` dispatches
+          // node-by-node, so only inner `~` nodes would become regions and
+          // an enclosing transform would read the global slot store after
+          // the parse — i.e. the innermost activation's bindings.
+          makeStringRegionSplit(inputSymbol.toScrut, pd.pattern, true)
+        else makeMatchSplit(inputSymbol.toScrut, pd.pattern, true)
+      val topmost = makeSplit(
         makeConsequent = (output, bindings) =>
           def getBinding(p: Param) = bindings.get(p.sym).fold(Term.Error().withLocOf(p))(_())
           pd.extractionParams match

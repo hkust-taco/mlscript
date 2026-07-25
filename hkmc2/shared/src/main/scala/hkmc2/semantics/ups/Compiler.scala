@@ -627,8 +627,10 @@ class Compiler(using Context)(using tl: TL)(using Ctx, State, Raise) extends Ter
         val params = paramList(param(bindingsSymbol))
         // Because we pass the extracted values using recoreds. We need to bind
         // each property to its corresponding variable which is accessible from
-        // then `term`.
-        val letBindings = pattern.symbols.flatMap: symbol =>
+        // then `term`. Only the symbols the definition itself binds are
+        // mapped by `correspondence` (and referenced by `term`); symbols
+        // bound inside substituted pattern arguments are not.
+        val letBindings = pattern.symbols.filter(correspondence.contains).flatMap: symbol =>
           val termSymbol = correspondence(symbol)
           LetDecl(termSymbol, Nil) ::
           DefineVar(termSymbol, sel(bindingsSymbol.safeRef, termSymbol.name)) :: Nil

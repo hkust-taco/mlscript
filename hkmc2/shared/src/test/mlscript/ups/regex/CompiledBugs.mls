@@ -100,10 +100,12 @@ pattern Plain = "a" ..< "z"
 
 // ——— Bindings of the outer activations of a recursive component ———
 //
-// Binding slots are global to the region and rewritten by every recursion
-// level. `Op.Defer` captures the slots a deferred frame reads before writing,
-// but a slot that a frame *writes* (here `t`) is read back from the global
-// store, so the outermost transform sees the innermost activation's `h`.
+// A definition whose body wraps a recursive sequence in a transform used to
+// compile that transform *outside* the automaton in its `unapply` (only the
+// inner `~` became a region), so it read the global slot store after the
+// parse — the innermost activation's bindings. The whole body of a
+// string-only definition is now compiled as one region, putting the
+// transform inside, where deferred frames capture per-activation values.
 
 pattern Digit = "0" ..= "9"
 pattern Listed = (((Digit as h) ~ (Listed as t)) => h + "," + t) | ("" => "$")
@@ -113,16 +115,12 @@ if "1" is Listed as l1 then l1 else "NOPE"
 //│ = "1,$"
 
 :expect "1,2,$"
-:fixme
 if "12" is Listed as l2 then l2 else "NOPE"
-//│ ═══[RUNTIME ERROR] Expected: '"1,2,$"', got: '"2,2,$"'
-//│ = "2,2,$"
+//│ = "1,2,$"
 
 :expect "1,2,3,$"
-:fixme
 if "123" is Listed as l3 then l3 else "NOPE"
-//│ ═══[RUNTIME ERROR] Expected: '"1,2,3,$"', got: '"3,2,3,$"'
-//│ = "3,2,3,$"
+//│ = "1,2,3,$"
 
 // The multi-matcher route compiles the same definition correctly.
 
@@ -153,19 +151,23 @@ probeCompiled("ab")
 //│ = "yes"
 
 
-// ——— Use sites of parametric string patterns ignore extraction parameters ———
+// ——— Use sites of parametric string patterns with extraction parameters ———
 //
-// `isParametricStringSite` routes the site to an in-place automaton, which
-// only knows about the region's own output, so the extraction parameter is
-// lost and the whole match is returned instead.
+// `isParametricStringSite` used to route this site to an in-place automaton,
+// which only knows the region's own output, so the whole match (`"[ab]"`)
+// came back instead of the extraction binding. Definitions with extraction
+// parameters now keep the `unapply` route, so the two spellings below agree
+// again — both still fail to extract, but that is the pre-existing
+// limitation (extraction through parametric string patterns has never
+// worked), not a regression of the automaton path.
 
 pattern Bracket(pattern P, inner) = "[" ~ (P as inner) ~ "]"
 
 :expect "ab"
 :fixme
 if "[ab]" is Bracket(Str) as bv then bv else "no"
-//│ ═══[RUNTIME ERROR] Expected: '"ab"', got: '"[ab]"'
-//│ = "[ab]"
+//│ ═══[RUNTIME ERROR] Expected: '"ab"', got: '"no"'
+//│ = "no"
 
 // Matching the extraction argument directly never worked (pre-existing).
 
@@ -191,3 +193,74 @@ pattern P2 = Box(T ~ "c") | Box(T ~ "d")
 :fixme
 fun f2(x) = if x is @compile P2 as y then y else "no"
 //│ /!!!\ Uncaught error: java.lang.AssertionError: assertion failed: already defined: w
+
+
+// ——— Transform calling convention under substituted pattern arguments ———
+//
+// A transform's parameters are the symbols its own definition binds — the
+// ones its `correspondence` maps. Bindings inside substituted pattern
+// arguments used to leak into the parameter list (an unguarded lookup
+// crashed the compiler) and into the per-occurrence argument slots (so two
+// instantiations of one definition could disagree with the interned
+// closure's arity).
+
+pattern WrapL(pattern L) = ((L as h) ~ "!") => [h]
+
+:expect "yx"
+if "y!x!" is (WrapL("y") ~ WrapL(("x" as w))) as wr then wr else "no"
+//│ = "yx"
+
+pattern WrapR(pattern L) = (L ~ ("!" as h)) => h
+
+:expect "!!"
+if "x!y!" is (WrapR(("x" as w2)) ~ WrapR("y")) as wr2 then wr2 else "no"
+//│ = "!!"
+
+
+// ——— Grouping of `~` must survive substitution and synonyms ———
+//
+// Instantiation used to flatten nested concatenations into the parent
+// sequence, and the output of a sequence is a *left fold* of JS `+`, which
+// is not associative across mixed operand types — so the same grouped
+// sub-pattern produced one value through a synonym and another as a pattern
+// argument. All spellings below must agree.
+
+pattern Grouped = ("a" => 1) ~ ("b" => 2)
+
+:expect 3
+if "ab" is (Grouped as g0) then g0 else "no"
+//│ = 3
+
+:expect "#3"
+if "#ab" is (("#" ~ Grouped) as g1) then g1 else "no"
+//│ = "#3"
+
+pattern WrapG(pattern S) = "#" ~ S
+
+:expect "#3"
+if "#ab" is (WrapG(("a" => 1) ~ ("b" => 2)) as g2) then g2 else "no"
+//│ = "#3"
+
+:expect "#3"
+if "#ab" is (("#" ~ (("a" => 1) ~ ("b" => 2))) as g3) then g3 else "no"
+//│ = "#3"
+
+
+// ——— `@compile` must not change the output's type ———
+//
+// `simplify` (applied on the `@compile` path only) used to drop bare empty
+// string literals from sequences, but a leading `""` coerces the folded
+// output to a string: both spellings below must produce the string "1",
+// not the number 1.
+
+pattern EmptyThenOne = "" ~ ("a" => 1)
+
+:expect "1"
+if "a" is (EmptyThenOne as e1) then e1 else "no"
+//│ = "1"
+
+fun emptyCompiled(x) = if x is (@compile EmptyThenOne) as e then e else "no"
+
+:expect "1"
+emptyCompiled("a")
+//│ = "1"
