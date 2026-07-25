@@ -23,22 +23,92 @@ The whole suite is green on this branch — 814 tests including the WASM ones
 golden rewrites. That is precisely the situation AGENTS.md warns about: passing
 tests are not the bar, and every regression below is invisible to the suite.
 
+## Status update (2026-07-25, after review)
+
+The findings below describe the branch as of the review (`df8ba26` +
+`5cbc7fda1`). Commits landed since then resolve part of them; the individual
+finding sections are left as written, so consult this list first.
+
+**Fixed on this branch:**
+
+- **C1** (and the live manifestation of **M1**): `isPureDeep` no longer
+  memoizes results that consulted the in-cycle assumption, so purity is exact
+  and the pure-subtree shortcut can no longer fire over a same-SCC reference
+  of an impure component (`42a182952`).
+- **C4**: both `makeStringRegionSplit` call sites now sit under a `Str` class
+  test, like the multi-matcher's absorbed `Str` head (`42a182952`).
+- **C6** / **M10** / **M16**: `rightInclusive` is honoured for string ranges
+  (`CharClass` upper bound lowered, empty class collapsing to `Never`) and
+  for integer ranges (`42a182952`). The integer half of that fix initially
+  collapsed an *empty* range (`5 ..< 5`, `5 ..= 3`) to `Or(Nil)`, which at
+  the time was the *wildcard* — caught during verification and guarded in
+  `6095982f2`; the guard was later subsumed by the encoding fix below and
+  removed again (`476705f60`).
+- **M7** / **M9**: conjunctions, negations, and unresolved constructor
+  targets inside a sequence stay on the legacy composition instead of
+  erroring or crashing (`c83320a94`).
+- **M8**: `unapplyStringPrefix` no longer swallows internal errors
+  (`softAssert`/`softTODO` now surface; user-facing duplicates are logged
+  and dropped, see `prefixMethodRaise`, `05920e9ed`), and rejected
+  whole-body regions keep the legacy prefix translation (`c83320a94`), so
+  the silent constant-failure mode is gone.
+- **M21**: resolved by *rejection* rather than by pinning the divergence:
+  guards and chained patterns within string patterns are now compilation
+  errors (`RegionSupport.Rejected` in `regionSupported`/`makeMatchSplit`,
+  `98995d974`), instead of silently flipping the region onto the legacy
+  greedy translation. The greedy translation is incomplete and slated for
+  removal. We may later investigate the **two-pass approach to guards**
+  sketched in M21 — evaluate guards over already-consumed input on the
+  committed forward walk, rejecting the whole match rather than
+  backtracking — to support them properly. Until then, note that
+  `Char.AnyChar` carries a guard and is therefore not usable within string
+  patterns (see `ups/transformation/BindingLess.mls`).
+- **Minor M2**: `computeBounds` no longer records a boundary at 0, so the
+  empty alphabet class is gone and `classRepresentative(bounds, 0)` is a
+  member of the class it names (`3c8010315`). The dead `resultPrefixSize`
+  (Minor **M10**) was removed in the same commit.
+- **Minor M4/M6/M7/M8/M9** (whitespace churn): the seven stripped indented
+  blank lines were restored (`838ec0d7a`).
+- **Minor M14** and part of **M15**: the `Input` case moved out of
+  `UpsBugsBacklog.mls` with shape assertions that do not depend on the
+  array-printing bug, and `Separation.mls` regained the un-annotated
+  variants alongside the `@compile` ones (`330a095cc`).
+- The `unapplyStringPrefix` doc misstatement was corrected — the method is
+  always generated (`c58e2b82b`).
+
+**Fixed via the `hkmc2` merge (`4b854d7f6`, merged in `994f9a83d`):** the
+pattern-lattice units were encoded backwards (`Wildcard = Or(Nil)`,
+`Never = And(Nil)`) — a base-branch defect this review had *not* caught,
+discovered while verifying the C6 fix. Besides the empty-range collapse it
+made `pattern WA = _ | "a"` lose its wildcard alternative under `@compile`
+and forced `simplify` to keep dead `Never` alternatives. Pinned in
+`ups/EmptyJunctions.mls`.
+
+**Still open:** C2 (effectful transforms run inside the uninstrumented
+engine; no test pin — needs `:effectHandlers` infrastructure), C3, C5, C7,
+C8 (pinned in `ups/regex/CompiledBugs.mls`), and the remaining MAJOR/minor
+findings not listed above (notably M2-M6, M11-M15, M17-M20, M22-M26 and the
+performance items).
+
 ## Confirmed regressions against `hkust-taco/hkmc2`
 
 Each of these was run on this branch and again on a worktree of the base ref.
 
-| Program | base | this PR |
-|---|---|---|
-| `pattern Y = ("a" ~ X) \| (("b"~"c") => "T")`, `pattern X = ("d" ~ Y) \| "e"`; `"zae" is ("z" ~ Y) as r` | `"zae"` | `"()z"` |
-| `pattern Funny = "" ~ "" ~ ""`; `42 is Funny` | `TypeError` | `true` |
-| `pattern Half = ("a" ..< "z") ~ "!"`; `"z!" is Half` | `false` | `true` |
-| `pattern Listed = (((Digit as h) ~ (Listed as t)) => h+","+t) \| ("" => "$")`; `"123" is Listed` | `"1,2,3,$"` | `"3,2,3,$"` |
-| `@compile (("a" => print("ran")) ~ "b")` in condition position | clean "unsupported" error | transform silently never runs |
-| `pattern P2 = Box(T ~ "c") \| Box(T ~ "d")` under `@compile` | clean "unsupported" error | `AssertionError: already defined: w` |
-| `Bracket(Str) as v`, for `pattern Bracket(pattern P, inner) = "[" ~ (P as inner) ~ "]"` | `"no"` | `"[ab]"` (should be `"ab"`) |
+| Program | base | this PR | status |
+|---|---|---|---|
+| `pattern Y = ("a" ~ X) \| (("b"~"c") => "T")`, `pattern X = ("d" ~ Y) \| "e"`; `"zae" is ("z" ~ Y) as r` | `"zae"` | `"()z"` | fixed (`42a182952`) |
+| `pattern Funny = "" ~ "" ~ ""`; `42 is Funny` | `TypeError` | `true` | fixed (`42a182952`) |
+| `pattern Half = ("a" ..< "z") ~ "!"`; `"z!" is Half` | `false` | `true` | fixed (`42a182952`) |
+| `pattern Listed = (((Digit as h) ~ (Listed as t)) => h+","+t) \| ("" => "$")`; `"123" is Listed` | `"1,2,3,$"` | `"3,2,3,$"` | open (C7) |
+| `@compile (("a" => print("ran")) ~ "b")` in condition position | clean "unsupported" error | transform silently never runs | open (C8) |
+| `pattern P2 = Box(T ~ "c") \| Box(T ~ "d")` under `@compile` | clean "unsupported" error | `AssertionError: already defined: w` | open (C5) |
+| `Bracket(Str) as v`, for `pattern Bracket(pattern P, inner) = "[" ~ (P as inner) ~ "]"` | `"no"` | `"[ab]"` (should be `"ab"`) | open (C3) |
 
-All seven are pinned as `:expect` + `:fixme` blocks in
-`hkmc2/shared/src/test/mlscript/ups/regex/CompiledBugs.mls`.
+All seven are pinned in
+`hkmc2/shared/src/test/mlscript/ups/regex/CompiledBugs.mls`: the fixed ones
+as plain regression tests, the open ones as `:expect` + `:fixme` blocks (C8
+as a `FIXME` comment, since no test command asserts an *absent* output
+line).
 
 ## Pre-existing issues surfaced along the way
 
