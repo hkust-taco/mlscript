@@ -214,7 +214,7 @@ pattern AddStep =
 :w
 pattern AddSteps = @compile ((AddStep as AddSteps) | Add(Lit, Lit))
 //│ ╔══[WARNING] This fixed-point pattern is not supported by pattern compilation.
-//│ ║  l.214: 	pattern AddSteps = @compile ((AddStep as AddSteps) | Add(Lit, Lit))
+//│ ║  l.215: 	pattern AddSteps = @compile ((AddStep as AddSteps) | Add(Lit, Lit))
 //│ ║         	                                                     ^^^^^^^^^^^^
 //│ ╟── Its trailing alternatives can match a term that its recursive part can still rewrite.
 //│ ╙── Falling back to the naive translation.
