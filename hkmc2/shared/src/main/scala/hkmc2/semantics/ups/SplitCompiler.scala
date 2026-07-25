@@ -1494,14 +1494,19 @@ class SplitCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
   
   /** Translate a list of extractor/matching functions for the given pattern.
    *  There are currently two functions: `unapply` and `unapplyStringPrefix`.
-   *  
+   *
    *  - `unapply` is used for matching the entire scrutinee. It returns the
    *    captured/extracted values.
-   *  - `unapplyStringPrefix` is used for matching the string prefix of the
+   *  - `unapplyStringPrefix` is used for matching a string prefix of the
    *    scrutinee. It returns the remaining string and the captured/extracted
-   *    values. If the given tree does not represent a string pattern, this
-   *    function will not be generated.
-   *  
+   *    values. It is generated for *every* pattern, even one that cannot match
+   *    a string: pattern parameters are dispatched dynamically — a use site
+   *    such as `pattern Rep(pattern P) = P ~ …` selects `P.unapplyStringPrefix`
+   *    on whatever pattern object is passed for `P` — so the method must be
+   *    present on all of them. For a pattern that cannot match as a string
+   *    prefix, its body simply always fails (`makeStringPrefixMatchSplit`
+   *    returns `RejectPrefixSplit`, leaving only the `failure` alternative).
+   *
    *  @param pattern We will eventually generate methods from the omnipotent
    *                 `Pattern` class. Now the new `pattern` parameter and the
    *                 old `body` parameter are mixed.
