@@ -276,7 +276,7 @@ class Compiler(using Context)(using tl: TL)(using Ctx, State, Raise) extends Ter
       case ((stmts, results), (label, pattern)) =>
         val fragment = StringCompiler.stringFragment(pattern).simplify
         val resultTerm = fragment match
-          case And(Nil) =>
+          case Or(Nil) =>
             // This label has no string-shaped alternative: it cannot match.
             emptyMatchResult("not a string pattern")
           // Note that each label needs its own compiler: a compiler instance
@@ -532,13 +532,13 @@ class Compiler(using Context)(using tl: TL)(using Ctx, State, Raise) extends Ter
       error(msg"Tuple patterns are not supported yet." -> pattern.toLoc)
       Split.Else(emptyMatchResult("unsupported tuple pattern"))
     // The wildcard case always succeeds. Thus, the `alternative` is not used.
-    case Or(Nil) => (makeConsequent, _) =>
+    case And(Nil) => (makeConsequent, _) =>
       if isMatchOnly then makeConsequent(scrutinee, rcd()) else
         val bindings = aliases.map:
           alias => RcdField(str(alias.name), scrutinee.safeRef)
         makeConsequent(scrutinee, makeBindings(bindings))
     // The never case should always fail.
-    case And(Nil) => (_, _) => Split.Else(emptyMatchResult("never"))
+    case Or(Nil) => (_, _) => Split.Else(emptyMatchResult("never"))
     // The disjunction case should check the result from each pattern in order.
     case Or(patterns) =>
       // Make those functions first so that symbols are allocated top-down.

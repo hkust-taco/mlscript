@@ -390,7 +390,7 @@ class StringCompiler(using context: Context)(using tl: TL)(using Ctx, State, Rai
         val entry = newState()
         addChr(entry, (lo, hi) :: Nil, cont)
         entry
-      case Or(Nil) =>
+      case And(Nil) =>
         // The wildcard in string position matches any string, preferring to
         // consume as much as possible (the consuming edge comes first).
         softAssert(!needValue && exitOps.isEmpty, "wildcard with pending value operations")
@@ -412,6 +412,7 @@ class StringCompiler(using context: Context)(using tl: TL)(using Ctx, State, Rai
             addChr(entry, AnyChar, entry)
             addEps(entry, cont, Nil)
             entry
+      case Or(Nil) => newState() // `Never` matches nothing: a dead state.
       case Or(patterns) =>
         val entry = newState()
         patterns.foreach: p =>
@@ -444,7 +445,6 @@ class StringCompiler(using context: Context)(using tl: TL)(using Ctx, State, Rai
               case p :: rest => build(p, go(rest), false, Nil, scc)
               case Nil => lastWords("unreachable: empty concatenation")
             go(patterns)
-      case And(Nil) => newState() // `Never` matches nothing: a dead state.
       case And(_) =>
         fail(msg"Conjunctions are not supported within string patterns yet." -> pattern.toLoc)
         newState()
