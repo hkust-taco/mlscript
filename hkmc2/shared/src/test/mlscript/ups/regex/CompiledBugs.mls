@@ -130,6 +130,45 @@ fun listedCompiled(s) = if s is @compile Listed as l then l else "NOPE"
 listedCompiled("123")
 //│ = "1,2,3,$"
 
+// The whole-body region is only taken when *every* alternative is
+// string-shaped: an alternative that can match non-strings would be a dead
+// state inside the `Str`-guarded region, so a mixed definition must keep
+// the general alternative dispatch on both routes.
+
+class Box(val v)
+
+pattern Mixed = ("a" ~ "b") | Box(1)
+
+:expect true
+"ab" is Mixed
+//│ = true
+
+:expect true
+Box(1) is Mixed
+//│ = true
+
+:expect false
+Box(2) is Mixed
+//│ = false
+
+:expect false
+42 is Mixed
+//│ = false
+
+fun mixedCompiled(x) = x is @compile Mixed
+
+:expect true
+mixedCompiled("ab")
+//│ = true
+
+:expect true
+mixedCompiled(Box(1))
+//│ = true
+
+:expect false
+mixedCompiled(Box(2))
+//│ = false
+
 
 // ——— Transforms must run exactly once on the committed parse ———
 //
@@ -183,8 +222,6 @@ if "[ab]" is Bracket(Str, bx) then bx else "no"
 // Each label of a multi-matcher gets its own `StringCompiler`, so a definition
 // reached from two labels emits its transform lambda twice; both copies bind
 // the same parameter symbols, which `SymbolRefresher` asserts against.
-
-class Box(val v)
 
 pattern T = (("a" ~ "b") as w) => [w]
 
