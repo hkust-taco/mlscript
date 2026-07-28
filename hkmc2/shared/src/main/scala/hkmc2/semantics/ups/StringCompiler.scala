@@ -137,11 +137,15 @@ object StringCompiler:
       visibleSlots: Ls[(VarSymbol, Int)],
       pure: Bool,
   ):
-    /** Elements of the array returned by the parse entry points, before the
-      * binding slots: `[output, slots...]` or `[output, remaining, slots...]`. */
-    def resultPrefixSize(mode: Mode): Int = mode match
-      case Mode.Whole => 1
-      case Mode.Prefix => 2
+    /** Whether the recognition-only entry point (`matchWhole`) suffices: the
+      * region carries no operations at all, or nothing demands its value, its
+      * bindings, or its transform effects. Transforms always force the
+      * parsing entry point — they run exactly once, on the committed parse,
+      * even when the match is only used as a condition (pinned by
+      * `ups/regex/CompiledSemantics.mls`). Both region call sites must
+      * consult this one predicate so they cannot drift apart. */
+    def recognitionSuffices(valueNeeded: Bool): Bool =
+      pure || (!valueNeeded && visibleSlots.isEmpty && actions.isEmpty)
 
   /** Extract the string-shaped fragment of an expanded pattern: everything a
     * `Str`-headed multi-matcher branch should try to match. Non-string leaves
@@ -285,18 +289,38 @@ class StringCompiler(using context: Context)(using tl: TL)(using Ctx, State, Rai
     * up pure if every body on it is operation-free. */
   private val pureMemo = MutMap.empty[Instantiation, Bool]
 
+  /** The purity of `pattern`, paired with whether the answer relied on the
+    * optimistic assumption made for a cycle. Such an answer is only valid for
+    * the query that introduced the assumption, so it must not be memoized:
+    * doing so used to let one query's optimistic `true` leak into another's,
+    * which made purity depend on the order alternatives happened to be written
+    * in (an impure component could be compiled as pure, and the pure-subtree
+    * shortcut would then emit an `Op.Mark` whose `Op.Slice` sits on a state the
+    * tail-call goto can never reach). Note that the traversal deliberately does
+    * not short-circuit on the first impure element: it must visit every branch
+    * to learn whether any of them consulted the assumption. */
   private def isPureDeep(pattern: Pat): Bool =
-    def loop(pattern: Pat, visiting: Set[Instantiation]): Bool = pattern match
-      case _: (Rename[?] | Extract[?]) => false
-      case Concat(ps) => ps.forall(loop(_, visiting))
-      case Or(ps) => ps.forall(loop(_, visiting))
-      case And(ps) => ps.forall(loop(_, visiting))
+    def all(patterns: Ls[Pat], visiting: Set[Instantiation]): (Bool, Bool) =
+      patterns.foldLeft((true, false)):
+        case ((pure, assumed), pattern) =>
+          val (pure2, assumed2) = loop(pattern, visiting)
+          (pure && pure2, assumed || assumed2)
+    def loop(pattern: Pat, visiting: Set[Instantiation]): (Bool, Bool) = pattern match
+      case _: (Rename[?] | Extract[?]) => (false, false)
+      case Concat(ps) => all(ps, visiting)
+      case Or(ps) => all(ps, visiting)
+      case And(ps) => all(ps, visiting)
       case Not(p) => loop(p, visiting)
       case Synonym(inst) =>
-        if visiting contains inst then true
-        else pureMemo.getOrElseUpdate(inst, loop(context.get(inst), visiting + inst))
-      case _: (Literal | CharClass | ClassLike | MatchedClassLike | Record | Tuple) => true
-    loop(pattern, Set.empty)
+        if visiting contains inst then (true, true)
+        else pureMemo.get(inst) match
+          case S(pure) => (pure, false)
+          case N =>
+            val (pure, assumed) = loop(context.get(inst), visiting + inst)
+            if !assumed then pureMemo(inst) = pure
+            (pure, assumed)
+      case _: (Literal | CharClass | ClassLike | MatchedClassLike | Record | Tuple) => (true, false)
+    loop(pattern, Set.empty)._1
 
   // ------------------------------------------------------------------------
   // NFA construction
@@ -391,7 +415,7 @@ class StringCompiler(using context: Context)(using tl: TL)(using Ctx, State, Rai
         val entry = newState()
         addChr(entry, (lo, hi) :: Nil, cont)
         entry
-      case Or(Nil) =>
+      case And(Nil) =>
         // The wildcard in string position matches any string, preferring to
         // consume as much as possible (the consuming edge comes first).
         softAssert(!needValue && exitOps.isEmpty, "wildcard with pending value operations")
@@ -400,19 +424,19 @@ class StringCompiler(using context: Context)(using tl: TL)(using Ctx, State, Rai
         addEps(entry, cont, Nil)
         entry
       case ClassLike(sym, arguments) if sym is ctx.builtins.Str =>
-        arguments match
-          case S(_) =>
-            fail(msg"`${sym.nme}` cannot have arguments in a string pattern." -> pattern.toLoc)
-            newState()
-          case N =>
-            // `Str` literally means all strings, like a wildcard. (The naive
-            // translation used to consume exactly one character here, which
-            // made `Str ~ "!"` unmatchable against "ab!".)
-            softAssert(!needValue && exitOps.isEmpty, "Str with pending value operations")
-            val entry = newState()
-            addChr(entry, AnyChar, entry)
-            addEps(entry, cont, Nil)
-            entry
+        // `Str` with arguments is reported and degraded to `Never` by
+        // `Instantiator`, so only the bare form arrives here: it literally
+        // means all strings, like a wildcard. (The naive translation used to
+        // consume exactly one character here, which made `Str ~ "!"`
+        // unmatchable against "ab!".)
+        softAssert(arguments.isEmpty,
+          "`Str` with arguments must have been rejected during instantiation")
+        softAssert(!needValue && exitOps.isEmpty, "Str with pending value operations")
+        val entry = newState()
+        addChr(entry, AnyChar, entry)
+        addEps(entry, cont, Nil)
+        entry
+      case Or(Nil) => newState() // `Never` matches nothing: a dead state.
       case Or(patterns) =>
         val entry = newState()
         patterns.foreach: p =>
@@ -445,7 +469,6 @@ class StringCompiler(using context: Context)(using tl: TL)(using Ctx, State, Rai
               case p :: rest => build(p, go(rest), false, Nil, scc)
               case Nil => lastWords("unreachable: empty concatenation")
             go(patterns)
-      case And(Nil) => newState() // `Never` matches nothing: a dead state.
       case And(patterns) =>
         // All conjuncts consume the same slice, so a pure conjunct's value
         // is that slice and only an impure conjunct can contribute a
@@ -461,7 +484,7 @@ class StringCompiler(using context: Context)(using tl: TL)(using Ctx, State, Rai
         // highest-priority parse among the slices all constraints admit.
         val (impure, pureConjuncts) = patterns.partition(p => !isPureDeep(p))
         if impure.sizeIs >= 2 then
-          fail(msg"Conjunctions where more than one branch carries bindings or transformations are not supported within string patterns." -> pattern.toLoc)
+          fail(msg"Conjunctions where more than one branch carries bindings or transformations are not supported within string patterns." -> pattern.diagnosticLoc)
           newState()
         else
           softAssert(impure.nonEmpty || (!needValue && exitOps.isEmpty),
@@ -525,7 +548,7 @@ class StringCompiler(using context: Context)(using tl: TL)(using Ctx, State, Rai
           // Bindings and transforms inside a negation could never be
           // observed (a negation succeeds precisely when its pattern does
           // not match), so requiring purity loses no expressiveness.
-          fail(msg"Negations of patterns with bindings or transformations are not supported within string patterns." -> pattern.toLoc)
+          fail(msg"Negations of patterns with bindings or transformations are not supported within string patterns." -> pattern.diagnosticLoc)
           newState()
         else
           // `Not` of a pure pattern is itself pure, so the pure-subtree
@@ -568,15 +591,26 @@ class StringCompiler(using context: Context)(using tl: TL)(using Ctx, State, Rai
         // fix is to host each definition's transforms as methods on the
         // pattern object (compiled once, next to `unapply`) and reference
         // them from regions by selection.
+        // The transform's parameters are exactly the symbols the definition
+        // itself binds — the ones `correspondence` maps. `p.symbols` can
+        // contain more: instantiation substitutes pattern arguments into the
+        // body, and a binding inside an argument (`Wrap(("x" as w))`) is
+        // visible here but is no parameter of the transform term. Both the
+        // parameter list and the argument slots must be derived from the
+        // same filtered list: they define the calling convention together,
+        // and the closure is interned only once while `argSlots` used to be
+        // recomputed per occurrence, so deriving them from `p.symbols` let
+        // two instantiations of one definition disagree on arity.
+        val transformSymbols = p.symbols.filter(correspondence.contains)
         val actionId = actionSources.indexWhere(_ eq term) match
           case -1 =>
-            val params = p.symbols.map: symbol =>
+            val params = transformSymbols.map: symbol =>
               Param(FldFlags.empty, correspondence(symbol), N, Modulefulness.none)
             actionSources += term
             actions += Term.Lam(PlainParamList(params), term.mkClone)
             actions.size - 1
           case index => index
-        val argSlots = p.symbols.map(slotOf)
+        val argSlots = transformSymbols.map(slotOf)
         val ops = Op.Call(actionId, argSlots) :: (if needValue then exitOps else Op.Drop :: exitOps)
         build(p, cont, false, ops, scc)
       case Synonym(inst) => scc match
@@ -903,10 +937,15 @@ class StringCompiler(using context: Context)(using tl: TL)(using Ctx, State, Rai
       changed |= mergeIdentical()
     // Prune states unreachable from the entry and renumber the survivors.
     // The accept state is kept even if unreachable (a never-matching region):
-    // the encoding refers to it.
+    // the encoding refers to it. It seeds the worklist rather than being
+    // force-kept afterwards, so the kept set is closed under edges by
+    // construction — were the accept state ever given outgoing edges, a
+    // force-kept accept would silently retarget them through the
+    // zero-initialized `renumber` slots of their dropped targets.
     val keep = new Array[Bool](states.size)
     keep(entry) = true
-    val worklist = Buffer(entry)
+    keep(accept) = true
+    val worklist = Buffer(entry, accept)
     while worklist.nonEmpty do
       val state = worklist.remove(worklist.size - 1)
       states(state).foreach: edge =>
@@ -914,7 +953,6 @@ class StringCompiler(using context: Context)(using tl: TL)(using Ctx, State, Rai
         if !keep(target) then
           keep(target) = true
           worklist += target
-    keep(accept) = true
     val renumber = new Array[Int](states.size)
     var nextId = 0
     states.indices.foreach: state =>
@@ -936,14 +974,18 @@ class StringCompiler(using context: Context)(using tl: TL)(using Ctx, State, Rai
 
   /** Split the alphabet into equivalence classes: within a class, all
     * character edges behave identically. Returns the ordered upper boundaries;
-    * `classOf(u)` is the number of boundaries that are ≤ u. */
+    * `classOf(u)` is the number of boundaries that are ≤ u.
+    *
+    * A boundary at 0 is dropped: class 0 would then be `[0, 0)`, i.e. empty,
+    * so it would cost a column in every reverse-transition row and a bit per
+    * state in the viability matrix while `classOf` could never return it. */
   private def computeBounds(): Ls[Int] =
     val points = MutSet.empty[Int]
     states.foreach: edges =>
       edges.foreach:
         case Edge.Chr(ranges, _) =>
           ranges.foreach: (lo, hi) =>
-            points += lo
+            if lo > 0 then points += lo
             if hi < MaxUnit then points += hi + 1
         case _ => ()
     points.toList.sorted

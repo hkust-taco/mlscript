@@ -5,7 +5,7 @@ package ups
 import hkmc2.utils.*, shorthands.*
 import Message.MessageContext
 import ucs.{TermSynthesizer, FlatPattern, error, warn, safeRef}, ucs.extractors.*
-import syntax.{Fun, Keyword, Tree}, Tree.{Ident, StrLit}, Keyword.{`as`, `=>`}
+import syntax.{Fun, Keyword, Tree}, Tree.{DecLit, Ident, IntLit, StrLit}, Keyword.{`as`, `=>`}
 import collection.mutable.{Buffer, HashMap}, collection.immutable.SeqMap
 import Elaborator.{Ctx, State, ctx}, utils.TL
 import semantics.Pattern as SP // "SP" is short for "semantic patterns"
@@ -247,12 +247,36 @@ class SplitCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
       extractionMatches.exists(_.nonEmpty)
     case _ => false
   
+  /** Build the test for a range pattern. The bound comparisons are guarded
+    * by a class test on the scrutinee because bare JS comparisons coerce
+    * foreign values (`[]` compares equal to `0`, so `[] is (0 ..< 65536)`
+    * used to match) and compare strings *lexicographically* (`"abc"` fell
+    * within `"a" ..= "z"`). Ranges denote sets of single characters or
+    * numbers — the compiled paths already enumerate integer ranges and match
+    * character ranges one code unit at a time — so the plain path must
+    * agree:
+    *
+    *  - character ranges match single-character strings only;
+    *  - integer ranges match integers only;
+    *  - decimal ranges match any number.
+    */
   private def makeRangeTest(scrut: Scrut, lo: syntax.Literal, hi: syntax.Literal, rightInclusive: Bool, innerSplit: Split) =
     def scrutFld = fld(scrut())
     val test1 = app(lteq.safeRef, tup(fld(Term.Lit(lo)), scrutFld), "isGreaterThanLower")
     val upperOp = if rightInclusive then lteq else lt
     val test2 = app(upperOp.safeRef, tup(scrutFld, fld(Term.Lit(hi))), "isLessThanUpper")
-    plainTest(test1, "isGreaterThanLower")(plainTest(test2, "isLessThanUpper")(innerSplit))
+    val comparisons = plainTest(test1, "isGreaterThanLower")(plainTest(test2, "isLessThanUpper")(innerSplit))
+    def classGuard(symbol: ClassSymbol, continuation: Split): Split =
+      Branch(scrut(), FlatPattern.ClassLike(symbol.safeRef, symbol, N, false)(Tree.Dummy),
+        continuation) ~: Split.End
+    (lo, hi) match
+      case (_: StrLit, _: StrLit) => classGuard(ctx.builtins.Str,
+        tempLet("scrutineeLength", sel(scrut(), "length")): lengthSymbol =>
+          Branch(lengthSymbol.safeRef, FlatPattern.Lit(IntLit(1)), comparisons) ~: Split.End)
+      case (_: IntLit, _: IntLit) => classGuard(ctx.builtins.Int, comparisons)
+      case (_: DecLit, _: DecLit) => classGuard(ctx.builtins.Num, comparisons)
+      // Mixed bound types are rejected during elaboration.
+      case _ => comparisons
   
   extension (patterns: Ls[SP])
     /**
@@ -702,21 +726,27 @@ class SplitCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
         Branch(scrutinee(), FlatPattern.Lit(literal), makeConsequent(scrutinee, SeqMap.empty)) ~: alternative
       case Range(lower, upper, rightInclusive) => (makeConsequent, alternative) =>
         makeRangeTest(scrutinee, lower, upper, rightInclusive, makeConsequent(scrutinee, SeqMap.empty)) ~~: alternative
-      case Concatenation(left, right) =>
-        unsupportedRegionConstruct(pattern, Set.empty) match
-        case S(unsupported) =>
+      case Concatenation(left, right) => regionSupport(pattern, Set.empty) match
+        case RegionSupport.Rejected(construct, loc) =>
+          // Falling back to the legacy greedy composition here would silently
+          // change the matching relation — a vacuous `where true` used to
+          // flip matches into failures — and that translation is on its way
+          // out, so these constructs are rejected instead of compiled.
+          error(msg"${construct} are not supported within string patterns." -> loc)
+          RejectSplit
+        case unsupported: RegionSupport.Unsupported =>
           // Either this sequence occurs in the body of a parametric pattern
           // definition — its pattern parameters are only known at use sites,
           // which compile their own automata (see `isParametricStringSite`) —
           // or it contains constructs the automaton does not compile yet
-          // (guards, chains, extraction arguments). Such sequences remain on
-          // the legacy greedy prefix composition. The latter case is warned
-          // about, because the backtracking translation matches with
-          // observably different semantics (transforms may run on abandoned
-          // parses, and splitting is greedy rather than jointly decided).
-          if !unsupported.parametric then warn(
+          // (extraction arguments). Such sequences remain on the legacy greedy
+          // prefix composition. The latter case is warned about, because the
+          // backtracking translation matches with observably different
+          // semantics (transforms may run on abandoned parses, and splitting
+          // is greedy rather than jointly decided).
+          if !unsupported.quiet then warn(
             msg"This string pattern falls back to matching with backtracking." -> pattern.toLoc,
-            msg"${unsupported.description} are not supported by string pattern compilation." -> unsupported.loc)
+            msg"${unsupported.construct} are not supported by string pattern compilation." -> unsupported.loc)
           (makeConsequent, alternative) =>
             makeStringPrefixMatchSplit(scrutinee, left)(
               (consumedOutput, remainingOutput, bindingsFromConsumed) =>
@@ -738,7 +768,8 @@ class SplitCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
                   alternative),
               alternative
             )
-        case N =>
+        case RegionSupport.Supported =>
+
           // String sequences are compiled as a whole — together with
           // everything nested in them, including recursive pattern references
           // — into a finite automaton. Splitting decisions are global to the
@@ -1169,22 +1200,59 @@ class SplitCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
       case Guarded(pattern, _) => loop(pattern)
     loop(pattern)
 
-  /** A construct within a string region that the automaton does not compile.
-    * `description` is a plural noun phrase for the fallback warning;
-    * `parametric` marks references to pattern parameters, which are not
-    * warned about (they only occur in parametric definition bodies, whose
-    * use sites compile their own automata).
-    */
-  private final case class UnsupportedConstruct(
-      description: Str, loc: Opt[Loc], parametric: Bool)
+  /** How a string sequence is allowed to be compiled (see `regionSupport`). */
+  private enum RegionSupport:
+    /** Every construct is compiled faithfully by the string automaton. */
+    case Supported
+    /** The sequence contains a construct that must be rejected with an error
+      * rather than silently changing the compilation scheme: `construct`
+      * names it in the diagnostic and `loc` pins it. */
+    case Rejected(construct: Str, loc: Opt[Loc])
+    /** The sequence stays on the legacy prefix composition. `construct` is a
+      * plural noun phrase naming the construct responsible and `loc` pins it,
+      * both for the fallback warning; `quiet` suppresses that warning where it
+      * would be noise — for references to pattern parameters (which only occur
+      * in parametric definition bodies, whose use sites compile their own
+      * automata) and for targets elaboration has already reported on. */
+    case Unsupported(construct: Str, loc: Opt[Loc], quiet: Bool)
 
-  /** The first construct in the pattern (or in a pattern definition it
-    * references) that the string automaton does not compile faithfully, if
-    * any. Regions containing such a construct keep the legacy backtracking
-    * translation:
+  /** Whether every alternative of the pattern can only match strings, so a
+    * definition body may be compiled as a single `Str`-guarded region for
+    * `unapply`. A non-string alternative (a class or numeric pattern, a
+    * wildcard) would be a dead state inside the region while the general
+    * translation dispatches it normally, so mixed bodies must keep the
+    * latter. Only alternative-position nodes are inspected: below a `~`,
+    * everything is string-position by construction, and parametric
+    * references are conservatively rejected (their arguments would need the
+    * same analysis). */
+  private def stringOnlyAlternatives(pattern: SP): Bool =
+    val visited = collection.mutable.Set.empty[PatternSymbol]
+    def loop(pattern: SP): Bool = pattern match
+      case Concatenation(_, _) => true
+      case Literal(_: StrLit) => true
+      case Range(_: StrLit, _: StrLit, _) => true
+      case Composition(true, left, right) => loop(left) && loop(right)
+      case Constructor(target, N) => target.resolvedSym.flatMap(_.asPat) match
+        case S(patternSymbol) => patternSymbol.defn match
+          case S(defn) if defn.patternParams.isEmpty =>
+            !visited.add(patternSymbol) || loop(defn.pattern)
+          case _ => false
+        case N => false
+      case Alias(pattern, _) => loop(pattern)
+      case Transform(pattern, _, _) => loop(pattern)
+      case Annotated(pattern, _) => loop(pattern)
+      case _ => false
+    loop(pattern)
+
+  /** Whether the pattern (and every pattern definition it references) only
+    * uses constructs that the string automaton compiles faithfully. Patterns
+    * are otherwise either rejected with an error or kept on the legacy
+    * backtracking translation:
     *
     *  - Guards and chains may fail after consumption based on information the
-    *    automaton does not track;
+    *    automaton does not track. Falling back to the legacy translation
+    *    would silently change the matching relation (its left-to-right
+    *    composition is greedy), so they are `Rejected` outright;
     *  - references to pattern symbols with extraction arguments (including
     *    the output-matching shorthand) bind values that cannot cross the
     *    automaton boundary;
@@ -1193,38 +1261,65 @@ class SplitCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
     *    them (at use sites of parametric patterns), and rejected inside the
     *    ahead-of-time compilation of the parametric definition itself.
     */
-  private def unsupportedRegionConstruct(pattern: SP, boundParams: Set[VarSymbol]): Opt[UnsupportedConstruct] =
+  private def regionSupport(pattern: SP, boundParams: Set[VarSymbol]): RegionSupport =
+    import RegionSupport.*
     val visited = collection.mutable.Set.empty[PatternSymbol]
-    def firstIn(patterns: IterableOnce[SP], bound: Set[VarSymbol]): Opt[UnsupportedConstruct] =
-      patterns.iterator.map(loop(_, bound)).find(_.isDefined).flatten
-    def loop(pattern: SP, bound: Set[VarSymbol]): Opt[UnsupportedConstruct] = pattern match
-      case Guarded(_, _) => S(UnsupportedConstruct("Guards", pattern.toLoc, false))
-      case Chain(_, _) => S(UnsupportedConstruct("Chained patterns", pattern.toLoc, false))
+    // `Rejected` (a construct to report) dominates `Unsupported` (a silent
+    // fallback), and the first rejection in traversal order wins. Note that
+    // the combination must not stop at the first `Unsupported`: whether a
+    // guard is diagnosed should not depend on what sits next to it. Among
+    // `Unsupported`s the first one wins, so the fallback warning names the
+    // construct the reader meets first.
+    def all(results: Ls[RegionSupport]): RegionSupport =
+      results.foldLeft(Supported: RegionSupport):
+        case (acc: Rejected, _) => acc
+        case (_, next: Rejected) => next
+        case (acc: Unsupported, _) => acc
+        case (_, next) => next
+    def loop(pattern: SP, bound: Set[VarSymbol]): RegionSupport = pattern match
+      case Guarded(_, _) => Rejected("Guards", pattern.toLoc)
+      case Chain(_, _) => Rejected("Chained patterns", pattern.toLoc)
       case Constructor(target, arguments) => target.resolvedSym match
         case S(symbol: VarSymbol) =>
-          if bound.contains(symbol) && arguments.isEmpty then N
-          else S(UnsupportedConstruct("References to pattern parameters", pattern.toLoc, true))
+          if bound.contains(symbol) && arguments.isEmpty then Supported
+          else Unsupported("References to pattern parameters", pattern.toLoc, true)
         case symbolOption => symbolOption.flatMap(_.asPat) match
           case S(patternSymbol) => patternSymbol.defn match
-            case N => S(UnsupportedConstruct("References to unresolved patterns", pattern.toLoc, false))
+            case N => Unsupported("References to unresolved patterns", pattern.toLoc, true)
             case S(defn) =>
-              if arguments.fold(0)(_.length) != defn.patternParams.length then
-                S(UnsupportedConstruct("Extraction arguments", pattern.toLoc, false))
-              else firstIn(arguments.getOrElse(Nil), bound).orElse:
+              val arity =
+                if arguments.fold(0)(_.length) == defn.patternParams.length
+                then Supported
+                else Unsupported("Extraction arguments", pattern.toLoc, false)
+              val body =
                 if visited.add(patternSymbol)
                 then loop(defn.pattern, defn.patternParams.iterator.map(_.sym).toSet)
-                else N
+                else Supported
+              all(arity :: arguments.getOrElse(Nil).map(loop(_, bound)) ::: body :: Nil)
+          // An unresolved target (elaboration has already reported the error
+          // and left a `Term.Error` behind) carries no symbol for
+          // `Instantiator` to instantiate, which would abort with `lastWords`.
+          case N if target.resolvedSym.isEmpty =>
+            Unsupported("Unresolved constructor patterns", pattern.toLoc, true)
           // Class and object patterns cannot match a string, so they are
           // harmless dead alternatives within a region; still check their
           // sub-patterns, whose transforms would otherwise be miscompiled.
-          case N => firstIn(arguments.iterator.flatten, bound)
-      case Composition(_, left, right) => loop(left, bound).orElse(loop(right, bound))
+          case N => all(arguments.getOrElse(Nil).map(loop(_, bound)))
+      // Conjunctions and negations are compiled by the automaton — as a
+      // constraint product and as a determinized complement respectively (see
+      // `StringCompiler.build`), which is why they are not diverted to the
+      // legacy composition here. The cases the automaton still cannot express
+      // (more than one impure conjunct, an impure negation) are diagnosed
+      // there, where their purity is known.
+      case Composition(_, left, right) => all(loop(left, bound) :: loop(right, bound) :: Nil)
       case Negation(pattern) => loop(pattern, bound)
-      case Wildcard() | Literal(_) | Range(_, _, _) => N
-      case Concatenation(left, right) => loop(left, bound).orElse(loop(right, bound))
-      case Tuple(leading, spread) => firstIn(leading, bound).orElse(spread.flatMap:
-        case (_, middle, trailing) => loop(middle, bound).orElse(firstIn(trailing, bound)))
-      case Record(fields) => firstIn(fields.iterator.map((_, pattern) => pattern), bound)
+      case Wildcard() | Literal(_) | Range(_, _, _) => Supported
+      case Concatenation(left, right) => all(loop(left, bound) :: loop(right, bound) :: Nil)
+      case Tuple(leading, spread) =>
+        val spreadResults = spread.fold(Nil: Ls[RegionSupport]):
+          case (_, middle, trailing) => loop(middle, bound) :: trailing.map(loop(_, bound))
+        all(leading.map(loop(_, bound)) ::: spreadResults)
+      case Record(fields) => all(fields.map((_, pattern) => loop(pattern, bound)))
       case Alias(pattern, _) => loop(pattern, bound)
       case Transform(pattern, _, _) => loop(pattern, bound)
       case Annotated(pattern, _) => loop(pattern, bound)
@@ -1233,7 +1328,7 @@ class SplitCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
   /** Whether the pattern (and every pattern definition it references) only
     * uses constructs that the string automaton compiles faithfully. */
   private def regionSupported(pattern: SP, boundParams: Set[VarSymbol]): Bool =
-    unsupportedRegionConstruct(pattern, boundParams).isEmpty
+    regionSupport(pattern, boundParams) == RegionSupport.Supported
 
   /** Parametric pattern definitions cannot precompile their matcher methods —
     * the pattern arguments are only known at the use site — so use sites of
@@ -1246,6 +1341,12 @@ class SplitCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
   private def isParametricStringSite(patternSymbol: PatternSymbol, arguments: Opt[Ls[SP]]): Bool =
     patternSymbol.defn.exists: defn =>
       defn.patternParams.nonEmpty &&
+      // A definition with extraction parameters must keep the `unapply`
+      // route: providing exactly the pattern arguments means "all extraction
+      // parameters omitted", and `unapply` then returns the extraction
+      // bindings (see `MixedParameters.mls`) — the in-place automaton only
+      // knows the region's own output, so it would return the whole match.
+      defn.extractionParams.isEmpty &&
       arguments.fold(0)(_.length) == defn.patternParams.length &&
       (containsStringSeq(defn.pattern) || arguments.getOrElse(Nil).exists(containsStringSeq)) &&
       // The definition body is checked with its own parameters considered
@@ -1264,16 +1365,24 @@ class SplitCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
     * they run exactly once on the committed parse, even when the match is
     * only used as a condition. Then the result array `[output, bindings...]`
     * is destructured.
+    *
+    * The engine indexes the scrutinee as a string (it reads `.length` and
+    * `charCodeAt`), so the emitted calls are guarded by a `Str` class test —
+    * exactly as the absorbed `Str` head of the multi-matcher already is (see
+    * `Compiler.buildMultiMatcherBody`). Without it a non-string scrutinee
+    * reaches `matchWhole`, whose reverse scan then reports a match for anything
+    * whose `length` is falsy.
     */
   private def makeStringRegionSplit(scrutinee: Scrut, pattern: SP, outputNeeded: Bool): MakeSplit =
     val instantiator = new Instantiator
     val (instantiated, context) = instantiator(pattern)
     val compiler = new StringCompiler(using context)
+    def isStr = FlatPattern.ClassLike(
+      ctx.builtins.Str.safeRef, ctx.builtins.Str, N, false)(Tree.Dummy)
     compiler.compile(instantiated, StringCompiler.Mode.Whole) match
       case N => RejectSplit // Errors have been reported; compile nothing.
       case S(compiled) =>
-        val recognitionOnly = compiled.pure ||
-          (!outputNeeded && compiled.visibleSlots.isEmpty && compiled.actions.isEmpty)
+        val recognitionOnly = compiled.recognitionSuffices(outputNeeded)
         StringCompiler.TableStats.record(pattern.toLoc,
           if recognitionOnly then "whole-match" else "whole-parse",
           if recognitionOnly then compiled.matchTable else compiled.table)
@@ -1281,27 +1390,31 @@ class SplitCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
           (makeConsequent, alternative) =>
             val callTerm = app(strPatMatchWhole,
               tup(fld(str(compiled.matchTable)), fld(scrutinee())), "whole string match")
-            tempLet("stringMatched", callTerm): resultSymbol =>
-              Branch(resultSymbol.safeRef, makeConsequent(scrutinee, SeqMap.empty)) ~: alternative
+            Branch(scrutinee(), isStr,
+              tempLet("stringMatched", callTerm): resultSymbol =>
+                Branch(resultSymbol.safeRef, makeConsequent(scrutinee, SeqMap.empty)) ~: alternative
+            ) ~: alternative
         else (makeConsequent, alternative) =>
           val callTerm = app(strPatParseWhole,
             tup(fld(str(compiled.table)), fld(actionsTuple(compiled.actions, pattern.toLoc)), fld(scrutinee())),
             "whole string parse")
-          tempLet("parseResult", callTerm): resultSymbol =>
-            val outputSymbol = TempSymbol(N, "stringOutput")
-            val slotSymbols = compiled.visibleSlots.map: (symbol, slot) =>
-              (symbol, slot, TempSymbol(N, s"${symbol.name}$$"))
-            val bindings: BindingMap = SeqMap.from(slotSymbols.map:
-              (symbol, _, local) => symbol -> local.toScrut)
-            val consequent = slotSymbols.foldRight(makeConsequent(outputSymbol.toScrut, bindings)):
-              case ((_, slot, local), inner) =>
-                Split.Let(local, callTupleGet(resultSymbol.safeRef, 1 + slot, "string binding"), inner)
-            Branch(
-              resultSymbol.safeRef,
-              // The engine returns null on failure and an array on success.
-              FlatPattern.Tuple(1, true),
-              Split.Let(outputSymbol, callTupleGet(resultSymbol.safeRef, 0, "string output"), consequent)
-            ) ~: alternative
+          Branch(scrutinee(), isStr,
+            tempLet("parseResult", callTerm): resultSymbol =>
+              val outputSymbol = TempSymbol(N, "stringOutput")
+              val slotSymbols = compiled.visibleSlots.map: (symbol, slot) =>
+                (symbol, slot, TempSymbol(N, s"${symbol.name}$$"))
+              val bindings: BindingMap = SeqMap.from(slotSymbols.map:
+                (symbol, _, local) => symbol -> local.toScrut)
+              val consequent = slotSymbols.foldRight(makeConsequent(outputSymbol.toScrut, bindings)):
+                case ((_, slot, local), inner) =>
+                  Split.Let(local, callTupleGet(resultSymbol.safeRef, 1 + slot, "string binding"), inner)
+              Branch(
+                resultSymbol.safeRef,
+                // The engine returns null on failure and an array on success.
+                FlatPattern.Tuple(1, true),
+                Split.Let(outputSymbol, callTupleGet(resultSymbol.safeRef, 0, "string output"), consequent)
+              ) ~: alternative
+          ) ~: alternative
 
   /** Compile the body of a pattern definition into a prefix-matching
     * automaton for its `unapplyStringPrefix` method. The result follows the
@@ -1329,6 +1442,40 @@ class SplitCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
                 Split.Else(makeMatchSuccess(
                   tup(fld(consumedSymbol.safeRef), fld(remainingSymbol.safeRef))))))
           ) ~: failure
+
+  /** The `Raise` under which `unapplyStringPrefix` is compiled.
+    *
+    * That method is generated for *every* pattern definition, string-shaped or
+    * not, and it recompiles the pattern that `unapply` has just compiled. Its
+    * user-facing diagnostics are noise twice over: the ones caused by the
+    * pattern itself were already reported while compiling `unapply`, and the
+    * ones specific to this compilation complain about a method the pattern may
+    * never need — the legacy prefix translation eagerly reports its own
+    * limitations (it rejects every `@compile`d body, for one), and the
+    * automaton path re-derives the same tail-position errors. So they are
+    * dropped, but only after being logged, so that nothing vanishes silently
+    * while debugging this pass.
+    *
+    * Internal errors are never dropped. `softAssert` and `softTODO` exist
+    * precisely to be seen, and a compiler bug reachable only along this path
+    * would otherwise disappear without a trace — which is what the previous
+    * blanket `Function.const(())` did.
+    *
+    * Suppressing by *duplicate detection* would be better, and is what the
+    * first category really calls for. It does not work while `Raise` is a
+    * constructor parameter of this class: a `given Raise` in one method body
+    * only reaches code that re-takes `(using Raise)` explicitly — which the
+    * two prefix entry points do, and which is why suppression works here at
+    * all — whereas the `unapply` compilation resolves the class parameter, so
+    * there is no way to observe what it reported without threading a `Raise`
+    * through `makeMatchSplit` and everything below it.
+    */
+  private def prefixMethodRaise: Raise =
+    val report = summon[Raise]
+    diagnostic => diagnostic.kind match
+      case Diagnostic.Kind.Internal => report(diagnostic)
+      case Diagnostic.Kind.Error | Diagnostic.Kind.Warning =>
+        log(s"Suppressed while compiling `unapplyStringPrefix`: ${diagnostic.theMsg}")
 
   def compilePattern(scrutinee: Scrut, pattern: SP): MakeSplit =
     compilePattern(scrutinee, pattern, true)
@@ -1473,14 +1620,19 @@ class SplitCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
   
   /** Translate a list of extractor/matching functions for the given pattern.
    *  There are currently two functions: `unapply` and `unapplyStringPrefix`.
-   *  
+   *
    *  - `unapply` is used for matching the entire scrutinee. It returns the
    *    captured/extracted values.
-   *  - `unapplyStringPrefix` is used for matching the string prefix of the
+   *  - `unapplyStringPrefix` is used for matching a string prefix of the
    *    scrutinee. It returns the remaining string and the captured/extracted
-   *    values. If the given tree does not represent a string pattern, this
-   *    function will not be generated.
-   *  
+   *    values. It is generated for *every* pattern, even one that cannot match
+   *    a string: pattern parameters are dispatched dynamically — a use site
+   *    such as `pattern Rep(pattern P) = P ~ …` selects `P.unapplyStringPrefix`
+   *    on whatever pattern object is passed for `P` — so the method must be
+   *    present on all of them. For a pattern that cannot match as a string
+   *    prefix, its body simply always fails (`makeStringPrefixMatchSplit`
+   *    returns `RejectPrefixSplit`, leaving only the `failure` alternative).
+   *
    *  @param pattern We will eventually generate methods from the omnipotent
    *                 `Pattern` class. Now the new `pattern` parameter and the
    *                 old `body` parameter are mixed.
@@ -1493,7 +1645,20 @@ class SplitCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
   ):
     val unapply = scoped("ucs:translation"):
       val inputSymbol = VarSymbol(Ident("input"))
-      val topmost = makeMatchSplit(inputSymbol.toScrut, pd.pattern, true)(
+      val makeSplit =
+        if pd.patternParams.isEmpty && containsStringSeq(pd.pattern)
+            && stringOnlyAlternatives(pd.pattern)
+            && regionSupported(pd.pattern, Set.empty) then
+          // The whole body is compiled as ONE region. This is not merely an
+          // optimization: a transform wrapping a recursive sequence must sit
+          // *inside* the automaton, where deferred frames capture the slot
+          // values of their own activation. `makeMatchSplit` dispatches
+          // node-by-node, so only inner `~` nodes would become regions and
+          // an enclosing transform would read the global slot store after
+          // the parse — i.e. the innermost activation's bindings.
+          makeStringRegionSplit(inputSymbol.toScrut, pd.pattern, true)
+        else makeMatchSplit(inputSymbol.toScrut, pd.pattern, true)
+      val topmost = makeSplit(
         makeConsequent = (output, bindings) =>
           def getBinding(p: Param) = bindings.get(p.sym).fold(Term.Error().withLocOf(p))(_())
           pd.extractionParams match
@@ -1516,9 +1681,10 @@ class SplitCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
       makeMethod("unapply", pd.patternParams, inputSymbol, topmost)
     // TODO: Use `pd.extractionParams`.
     val unapplyStringPrefix = scoped("ucs:cp"):
-      // We don't report errors here because they have been already reported in
-      // the translation of `unapply` function.
-      given Raise = Function.const(())
+      // See `prefixMethodRaise`: this compilation's user-facing diagnostics
+      // are duplicates or complaints about a method the pattern may not need,
+      // but its internal errors are still reported.
+      given Raise = prefixMethodRaise
       val inputSymbol = VarSymbol(Ident("input"))
       val topmost =
         if pd.patternParams.isEmpty && containsStringSeq(pd.pattern)
@@ -1574,9 +1740,8 @@ class SplitCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
         log(s"Translated `unapply`: ${topmost.prettyPrint}")
         makeUnapplyRecordStatements("unapply", patternParams, inputSymbol, topmost)
       val unapplyStringPrefix = scoped("ucs:cp"):
-        // We don't report errors here because they have been already reported in
-        // the translation of `unapply` function.
-        given Raise = Function.const(())
+        // See `prefixMethodRaise`.
+        given Raise = prefixMethodRaise
         val inputSymbol = VarSymbol(Ident("input"))
         val topmost = makeStringPrefixMatchSplit(inputSymbol.toScrut, pattern)
           ((consumedOutput, remainingOutput, bindings) => Split.Else:

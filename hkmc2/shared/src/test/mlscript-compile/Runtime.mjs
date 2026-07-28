@@ -5,7 +5,7 @@ import RuntimeJS from "./RuntimeJS.mjs";
 import Rendering from "./Rendering.mjs";
 import LazyArray from "./LazyArray.mjs";
 import Iter from "./Iter.mjs";
-let Runtime1, lambda, lambda1, lambda2, lambda3, lambda4, lambda5, lambda6, lambda7, lambda8, lambda$, Capture$scope211, lambda$1, lambda$2, lambda$3, lambda$4, lambda$5, Capture$scope701, lambda$6, Capture$scope721, lambda$7;
+let Runtime1, lambda, lambda1, lambda2, lambda3, lambda4, lambda5, lambda6, lambda7, lambda8, lambda$, Capture$scope341, lambda$1, lambda$2, lambda$3, lambda$4, lambda$5, Capture$scope701, lambda$6, Capture$scope721, lambda$7;
 (class Capture$scope72 {
   static {
     Capture$scope721 = this
@@ -70,9 +70,9 @@ lambda$5 = (undefined, function (Runtime2) {
     return runtime.Unit
   }
 });
-(class Capture$scope21 {
+(class Capture$scope34 {
   static {
-    Capture$scope211 = this
+    Capture$scope341 = this
   }
   constructor(cur$0, pos$1, remStart$2) {
     this.remStart$2 = remStart$2;
@@ -80,16 +80,16 @@ lambda$5 = (undefined, function (Runtime2) {
     this.cur$0 = cur$0;
   }
   toString() { return runtime.render(this); }
-  static [definitionMetadata] = ["class", "Capture$scope21"];
+  static [definitionMetadata] = ["class", "Capture$scope34"];
 });
 lambda$4 = (undefined, function (bindings) {
   return (slot, overlay) => {
     return lambda3(bindings, slot, overlay)
   }
 });
-lambda$3 = (undefined, function (scope21$cap, actions, input, valStack, markStack, bindings, readSlot) {
+lambda$3 = (undefined, function (scope34$cap, actions, input, valStack, markStack, bindings, readSlot) {
   return (ops, k, overlay) => {
-    return lambda4(scope21$cap, actions, input, valStack, markStack, bindings, readSlot, ops, k, overlay)
+    return lambda4(scope34$cap, actions, input, valStack, markStack, bindings, readSlot, ops, k, overlay)
   }
 });
 lambda$2 = (undefined, function (execValueOp) {
@@ -114,16 +114,16 @@ lambda3 = (undefined, function (bindings, slot, overlay) {
   }
   return runtime.safeCall(bindings.get(slot));
 });
-lambda4 = (undefined, function (scope21$cap, actions, input, valStack, markStack, bindings, readSlot, ops, k, overlay) {
+lambda4 = (undefined, function (scope34$cap, actions, input, valStack, markStack, bindings, readSlot, ops, k, overlay) {
   let op, b, a, actionId, argCount, args, j, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9;
   op = ops.at(k);
   switch (op) {
     case 0:
-      runtime.safeCall(markStack.push(scope21$cap.pos$1));
+      runtime.safeCall(markStack.push(scope34$cap.pos$1));
       return k + 1;
     case 1:
       tmp = runtime.safeCall(markStack.pop());
-      tmp1 = runtime.safeCall(input.slice(tmp, scope21$cap.pos$1));
+      tmp1 = runtime.safeCall(input.slice(tmp, scope34$cap.pos$1));
       runtime.safeCall(valStack.push(tmp1));
       return k + 1;
     case 2:
@@ -166,7 +166,7 @@ lambda4 = (undefined, function (scope21$cap, actions, input, valStack, markStack
       tmp8 = k + 3;
       return tmp8 + argCount;
     case 8:
-      scope21$cap.remStart$2 = scope21$cap.pos$1;
+      scope34$cap.remStart$2 = scope34$cap.pos$1;
       return k + 1;
   }
   tmp9 = "StrPat: malformed operation " + op;
@@ -258,13 +258,13 @@ lambda6 = (undefined, function (prog, frames, bindings, execValueOp, runFrameOps
   }
   return runtime.Unit
 });
-lambda7 = (undefined, function (scope21$cap, parentState, parentOps, runOps, state) {
+lambda7 = (undefined, function (scope34$cap, parentState, parentOps, runOps, state) {
   let chain, w, idx;
   chain = [];
   w = state;
   lbl: while (true) {
     let scrut, opsId, scrut1, tmp;
-    scrut = w !== scope21$cap.cur$0;
+    scrut = w !== scope34$cap.cur$0;
     if (scrut === true) {
       opsId = runtime.safeCall(parentOps.get(w));
       scrut1 = opsId !== -1;
@@ -858,8 +858,8 @@ lambda$ = (undefined, function (Runtime2, EffectHandle1, value) {
         return tmp === 49
       }
       static parseRun(table, actions, input, prefix) {
-        let prog, n, revArr, rev, i, scrut, gen, visited, parentState, parentOps, valStack, markStack, frames, bindings, readSlot, execValueOp, runFrameOps, scrut1, result, s, tmp, tmp1, scope21$cap;
-        scope21$cap = new Capture$scope211(undefined, undefined, undefined);
+        let prog, n, revArr, rev, i, scrut, gen, visited, parentState, parentOps, valStack, markStack, frames, bindings, readSlot, execValueOp, runFrameOps, scrut1, result, s, tmp, tmp1, scope34$cap;
+        scope34$cap = new Capture$scope341(undefined, undefined, undefined);
         prog = StrPat.getProgram(table);
         n = input.length;
         revArr = [];
@@ -886,8 +886,8 @@ lambda$ = (undefined, function (Runtime2, EffectHandle1, value) {
         if (scrut === false) {
           return null
         }
-        scope21$cap.cur$0 = prog.start;
-        scope21$cap.pos$1 = 0;
+        scope34$cap.cur$0 = prog.start;
+        scope34$cap.pos$1 = 0;
         gen = 0;
         visited = globalThis.Object.freeze(new globalThis.Map());
         parentState = globalThis.Object.freeze(new globalThis.Map());
@@ -896,15 +896,15 @@ lambda$ = (undefined, function (Runtime2, EffectHandle1, value) {
         markStack = [];
         frames = [];
         bindings = globalThis.Object.freeze(new globalThis.Map());
-        scope21$cap.remStart$2 = n;
+        scope34$cap.remStart$2 = n;
         readSlot = lambda$4(bindings);
-        execValueOp = lambda$3(scope21$cap, actions, input, valStack, markStack, bindings, readSlot);
+        execValueOp = lambda$3(scope34$cap, actions, input, valStack, markStack, bindings, readSlot);
         runFrameOps = lambda$2(execValueOp);
         lbl1: while (true) {
           let stack, committed, tmp2, tmp3, tmp4;
-          tmp2 = scope21$cap.cur$0 === prog.accept;
+          tmp2 = scope34$cap.cur$0 === prog.accept;
           if (tmp2 === true) {
-            tmp3 = scope21$cap.pos$1 === n;
+            tmp3 = scope34$cap.pos$1 === n;
           } else {
             tmp3 = false;
           }
@@ -912,9 +912,9 @@ lambda$ = (undefined, function (Runtime2, EffectHandle1, value) {
             let state;
             tmp4 = gen + 1;
             gen = tmp4;
-            runtime.safeCall(visited.set(scope21$cap.cur$0, tmp4));
+            runtime.safeCall(visited.set(scope34$cap.cur$0, tmp4));
             stack = [];
-            state = scope21$cap.cur$0;
+            state = scope34$cap.cur$0;
             lambda8(prog, stack, state);
             committed = false;
             lbl2: while (true) {
@@ -929,21 +929,21 @@ lambda$ = (undefined, function (Runtime2, EffectHandle1, value) {
                 edge = item.at(1);
                 scrut3 = edge.at(0) === 0;
                 if (scrut3 === true) {
-                  tmp5 = scope21$cap.pos$1 < n;
+                  tmp5 = scope34$cap.pos$1 < n;
                   if (tmp5 === true) {
-                    tmp7 = runtime.safeCall(input.charCodeAt(scope21$cap.pos$1));
+                    tmp7 = runtime.safeCall(input.charCodeAt(scope34$cap.pos$1));
                     tmp6 = StrPat.unitInRanges(edge.at(2), tmp7);
                     if (tmp6 === true) {
-                      tmp9 = scope21$cap.pos$1 + 1;
+                      tmp9 = scope34$cap.pos$1 + 1;
                       tmp10 = n - tmp9;
                       tmp8 = StrPat.viable(prog, revArr.at(tmp10), edge.at(1));
                       if (tmp8 === true) {
                         let runOps;
                         runOps = lambda$1(prog, frames, bindings, execValueOp, runFrameOps);
-                        lambda7(scope21$cap, parentState, parentOps, runOps, source);
-                        scope21$cap.cur$0 = edge.at(1);
-                        tmp11 = scope21$cap.pos$1 + 1;
-                        scope21$cap.pos$1 = tmp11;
+                        lambda7(scope34$cap, parentState, parentOps, runOps, source);
+                        scope34$cap.cur$0 = edge.at(1);
+                        tmp11 = scope34$cap.pos$1 + 1;
+                        scope34$cap.pos$1 = tmp11;
                         committed = true;
                         continue lbl2
                       }
@@ -956,14 +956,14 @@ lambda$ = (undefined, function (Runtime2, EffectHandle1, value) {
                 target = edge.at(1);
                 scrut4 = target === prog.accept;
                 if (scrut4 === true) {
-                  scrut5 = scope21$cap.pos$1 === n;
+                  scrut5 = scope34$cap.pos$1 === n;
                   if (scrut5 === true) {
                     let runOps;
                     runtime.safeCall(parentState.set(target, source));
                     runtime.safeCall(parentOps.set(target, edge.at(2)));
                     runOps = lambda$1(prog, frames, bindings, execValueOp, runFrameOps);
-                    lambda7(scope21$cap, parentState, parentOps, runOps, target);
-                    scope21$cap.cur$0 = target;
+                    lambda7(scope34$cap, parentState, parentOps, runOps, target);
+                    scope34$cap.cur$0 = target;
                     committed = true;
                     continue lbl2
                   }
@@ -972,7 +972,7 @@ lambda$ = (undefined, function (Runtime2, EffectHandle1, value) {
                 tmp12 = runtime.safeCall(visited.get(target));
                 tmp13 = tmp12 !== tmp4;
                 if (tmp13 === true) {
-                  tmp15 = n - scope21$cap.pos$1;
+                  tmp15 = n - scope34$cap.pos$1;
                   tmp14 = StrPat.viable(prog, revArr.at(tmp15), target);
                   if (tmp14 === true) {
                     runtime.safeCall(visited.set(target, tmp4));
@@ -1000,7 +1000,7 @@ lambda$ = (undefined, function (Runtime2, EffectHandle1, value) {
         result = [];
         runtime.safeCall(result.push(tmp));
         if (prefix === true) {
-          tmp1 = runtime.safeCall(input.slice(scope21$cap.remStart$2));
+          tmp1 = runtime.safeCall(input.slice(scope34$cap.remStart$2));
           runtime.safeCall(result.push(tmp1));
         }
         s = 0;
@@ -1363,96 +1363,6 @@ lambda$ = (undefined, function (Runtime2, EffectHandle1, value) {
       toString() { return runtime.render(this); }
       static [definitionMetadata] = ["class", "Int31", [null]];
     });
-  }
-  static handleEffects_handleEffect_resume(id, param0, param1) {
-    loopLabel: while (true) {
-      switch (id) {
-        case 0:
-          lbl: while (true) {
-            let nxt, scrut;
-            if (param0 instanceof Runtime.EffectSig.class) {
-              nxt = Runtime.handleEffect(param0);
-              scrut = param0 === nxt;
-              if (scrut === true) {
-                Runtime.curEffect = param0;
-                return null
-              }
-              param0 = nxt;
-              continue lbl;
-            }
-            return param0;
-          }
-        case 1:
-          {
-            let prevHandlerFrame, scrut, handlerFrame, saved, old, scrut1, scrut2, scrut3, tmp, tmp1, tmp2, tmp3;
-            prevHandlerFrame = param0.contTrace;
-            lbl1: while (true) {
-              let scrut4, scrut5;
-              scrut4 = prevHandlerFrame.nextHandler !== null;
-              if (scrut4 === true) {
-                scrut5 = prevHandlerFrame.nextHandler.handler !== param0.handler;
-                if (scrut5 === true) {
-                  prevHandlerFrame = prevHandlerFrame.nextHandler;
-                  continue lbl1
-                }
-              }
-              break;
-            }
-            scrut = prevHandlerFrame.nextHandler === null;
-            if (scrut === true) {
-              return param0
-            }
-            handlerFrame = prevHandlerFrame.nextHandler;
-            saved = new Runtime.ContTrace.class(handlerFrame.next, param0.contTrace.last, handlerFrame.nextHandler, param0.contTrace.lastHandler, false);
-            param0.contTrace.last = handlerFrame;
-            param0.contTrace.lastHandler = handlerFrame;
-            handlerFrame.next = null;
-            handlerFrame.nextHandler = null;
-            Runtime.curEffect = null;
-            old = Runtime.stackDepth;
-            try {
-              tmp1 = Runtime.stackDepth + 2;
-              Runtime.stackDepth = tmp1;
-              tmp2 = Runtime.resume(param0.contTrace);
-              tmp3 = runtime.safeCall(param0.handlerFun(tmp2));
-              tmp = tmp3;
-            } finally {
-              Runtime.stackDepth = old;
-            }
-            scrut1 = Runtime.curEffect !== null;
-            if (scrut1 === true) {
-              param0 = Runtime.curEffect;
-              scrut2 = saved.next !== null;
-              if (scrut2 === true) {
-                param0.contTrace.last.next = saved.next;
-                param0.contTrace.last = saved.last;
-              }
-              scrut3 = saved.nextHandler !== null;
-              if (scrut3 === true) {
-                param0.contTrace.lastHandler.nextHandler = saved.nextHandler;
-                param0.contTrace.lastHandler = saved.lastHandler;
-                return param0
-              }
-              return param0;
-            }
-            return Runtime.resumeContTrace(saved, tmp);
-          }
-        case 2:
-          {
-            let scrut, tmp;
-            scrut = param0.resumed;
-            if (scrut === true) {
-              throw runtime.safeCall(globalThis.Error("Multiple resumption"))
-            }
-            param0.resumed = true;
-            tmp = Runtime.resumeContTrace(param0, param1);
-            param0 = tmp;
-            id = 0;
-            continue loopLabel;
-          }
-      }
-      break;
-    }
   }
   static get unreachable() {
     throw runtime.safeCall(globalThis.Error("unreachable"));
@@ -1831,14 +1741,85 @@ lambda$ = (undefined, function (Runtime2, EffectHandle1, value) {
     return Runtime.handleBlockImpl(Runtime.curEffect, handler);
   }
   static handleEffects(cur) {
-    return Runtime.handleEffects_handleEffect_resume(0, cur, undefined)
+    lbl: while (true) {
+      let nxt, scrut;
+      if (cur instanceof Runtime.EffectSig.class) {
+        nxt = Runtime.handleEffect(cur);
+        scrut = cur === nxt;
+        if (scrut === true) {
+          Runtime.curEffect = cur;
+          return null
+        }
+        cur = nxt;
+        continue lbl;
+      }
+      return cur;
+    }
   }
   static handleEffect(cur) {
-    return Runtime.handleEffects_handleEffect_resume(1, cur, undefined)
+    let prevHandlerFrame, scrut, handlerFrame, saved, old, scrut1, scrut2, scrut3, tmp, tmp1, tmp2, tmp3;
+    prevHandlerFrame = cur.contTrace;
+    lbl: while (true) {
+      let scrut4, scrut5;
+      scrut4 = prevHandlerFrame.nextHandler !== null;
+      if (scrut4 === true) {
+        scrut5 = prevHandlerFrame.nextHandler.handler !== cur.handler;
+        if (scrut5 === true) {
+          prevHandlerFrame = prevHandlerFrame.nextHandler;
+          continue lbl
+        }
+      }
+      break;
+    }
+    scrut = prevHandlerFrame.nextHandler === null;
+    if (scrut === true) {
+      return cur
+    }
+    handlerFrame = prevHandlerFrame.nextHandler;
+    saved = new Runtime.ContTrace.class(handlerFrame.next, cur.contTrace.last, handlerFrame.nextHandler, cur.contTrace.lastHandler, false);
+    cur.contTrace.last = handlerFrame;
+    cur.contTrace.lastHandler = handlerFrame;
+    handlerFrame.next = null;
+    handlerFrame.nextHandler = null;
+    Runtime.curEffect = null;
+    old = Runtime.stackDepth;
+    try {
+      tmp1 = Runtime.stackDepth + 2;
+      Runtime.stackDepth = tmp1;
+      tmp2 = Runtime.resume(cur.contTrace);
+      tmp3 = runtime.safeCall(cur.handlerFun(tmp2));
+      tmp = tmp3;
+    } finally {
+      Runtime.stackDepth = old;
+    }
+    scrut1 = Runtime.curEffect !== null;
+    if (scrut1 === true) {
+      cur = Runtime.curEffect;
+      scrut2 = saved.next !== null;
+      if (scrut2 === true) {
+        cur.contTrace.last.next = saved.next;
+        cur.contTrace.last = saved.last;
+      }
+      scrut3 = saved.nextHandler !== null;
+      if (scrut3 === true) {
+        cur.contTrace.lastHandler.nextHandler = saved.nextHandler;
+        cur.contTrace.lastHandler = saved.lastHandler;
+        return cur
+      }
+      return cur;
+    }
+    return Runtime.resumeContTrace(saved, tmp);
   }
   static resume(contTrace) {
     return (value) => {
-      return Runtime.handleEffects_handleEffect_resume(2, contTrace, value)
+      let scrut, tmp;
+      scrut = contTrace.resumed;
+      if (scrut === true) {
+        throw runtime.safeCall(globalThis.Error("Multiple resumption"))
+      }
+      contTrace.resumed = true;
+      tmp = Runtime.resumeContTrace(contTrace, value);
+      return Runtime.handleEffects(tmp);
     }
   }
   static resumeContTrace(contTrace, value) {
@@ -1952,9 +1933,9 @@ lambda$ = (undefined, function (Runtime2, EffectHandle1, value) {
       if (rhs instanceof Runtime.Int31.class) {
         return lhs + rhs
       }
-      return runtime.safeCall(Runtime.unreachable());
+      return Runtime.unreachable;
     }
-    return runtime.safeCall(Runtime.unreachable());
+    return Runtime.unreachable;
   }
   toString() { return runtime.render(this); }
   static [definitionMetadata] = ["class", "Runtime"];

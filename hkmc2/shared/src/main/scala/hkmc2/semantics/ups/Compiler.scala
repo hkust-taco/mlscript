@@ -266,7 +266,7 @@ class Compiler(using Context)(using tl: TL)(using Ctx, State, Raise) extends Ter
     // Lastly, we return the matcher result, directly for singleton matchers
     // and as a record otherwise.
     Blk(bindings ::: tests.reverse, resultTerm)
-
+  
   /** The branch body for the absorbed `Str` head: each label's string-shaped
     * fragment is compiled to its own whole-match automaton (see the note in
     * `buildMultiMatcherBody`). The per-label result terms follow the same
@@ -282,7 +282,7 @@ class Compiler(using Context)(using tl: TL)(using Ctx, State, Raise) extends Ter
       case ((stmts, results), (label, pattern)) =>
         val fragment = StringCompiler.stringFragment(pattern).simplify
         val resultTerm = fragment match
-          case And(Nil) =>
+          case Or(Nil) =>
             // This label has no string-shaped alternative: it cannot match.
             emptyMatchResult("not a string pattern")
           // Note that each label needs its own compiler: a compiler instance
@@ -291,13 +291,32 @@ class Compiler(using Context)(using tl: TL)(using Ctx, State, Raise) extends Ter
           case fragment => StringCompiler().compile(fragment, StringCompiler.Mode.Whole) match
             case N => emptyMatchResult("rejected string pattern")
             case S(compiled) =>
-              val embedsMatchTable = isMatchOnly || compiled.pure
+              // Mirrors the branch chosen below: a match-only region still
+              // needs the parse table when it carries transforms or bindings.
+              val embedsMatchTable =
+                if isMatchOnly then compiled.recognitionSuffices(false) else compiled.pure
               StringCompiler.TableStats.record(statsSiteLoc,
                 if embedsMatchTable then "mm-match" else "mm-parse",
                 if embedsMatchTable then compiled.matchTable else compiled.table)
               val matchTableTerm = str(compiled.matchTable)
-              if isMatchOnly then
+              if isMatchOnly && compiled.recognitionSuffices(false) then
                 app(strPatMatchWhole, tup(fld(matchTableTerm), fld(scrutinee.safeRef)), "string match")
+              else if isMatchOnly then
+                // The region carries transforms (or bindings): even a
+                // condition-position match must run them, exactly once, on
+                // the committed parse. Only the success of the parse is
+                // observed.
+                val call = app(strPatParseWhole,
+                  tup(fld(str(compiled.table)), fld(actionsTuple(compiled.actions, N)), fld(scrutinee.safeRef)),
+                  "string parse")
+                val resultSymbol = TempSymbol(N, "parseResult")
+                SynthIf(Split.Let(resultSymbol, call,
+                  Branch(
+                    resultSymbol.safeRef,
+                    // The engine returns null on failure and an array on success.
+                    FlatPattern.Tuple(1, true),
+                    Split.Else(bool(true))
+                  ) ~: Split.Else(bool(false))))
               else if compiled.pure then
                 // An operation-free whole match preserves the scrutinee.
                 val matchedSymbol = TempSymbol(N, "stringMatched")
@@ -542,13 +561,13 @@ class Compiler(using Context)(using tl: TL)(using Ctx, State, Raise) extends Ter
       error(msg"Tuple patterns are not supported yet." -> pattern.toLoc)
       Split.Else(emptyMatchResult("unsupported tuple pattern"))
     // The wildcard case always succeeds. Thus, the `alternative` is not used.
-    case Or(Nil) => (makeConsequent, _) =>
+    case And(Nil) => (makeConsequent, _) =>
       if isMatchOnly then makeConsequent(scrutinee, rcd()) else
         val bindings = aliases.map:
           alias => RcdField(str(alias.name), scrutinee.safeRef)
         makeConsequent(scrutinee, makeBindings(bindings))
     // The never case should always fail.
-    case And(Nil) => (_, _) => Split.Else(emptyMatchResult("never"))
+    case Or(Nil) => (_, _) => Split.Else(emptyMatchResult("never"))
     // The disjunction case should check the result from each pattern in order.
     case Or(patterns) =>
       // Make those functions first so that symbols are allocated top-down.
@@ -621,8 +640,10 @@ class Compiler(using Context)(using tl: TL)(using Ctx, State, Raise) extends Ter
         val params = paramList(param(bindingsSymbol))
         // Because we pass the extracted values using recoreds. We need to bind
         // each property to its corresponding variable which is accessible from
-        // then `term`.
-        val letBindings = pattern.symbols.flatMap: symbol =>
+        // then `term`. Only the symbols the definition itself binds are
+        // mapped by `correspondence` (and referenced by `term`); symbols
+        // bound inside substituted pattern arguments are not.
+        val letBindings = pattern.symbols.filter(correspondence.contains).flatMap: symbol =>
           val termSymbol = correspondence(symbol)
           LetDecl(termSymbol, Nil) ::
           DefineVar(termSymbol, sel(bindingsSymbol.safeRef, termSymbol.name)) :: Nil

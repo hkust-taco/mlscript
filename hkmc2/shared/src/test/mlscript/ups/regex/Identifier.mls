@@ -14,7 +14,10 @@ pattern Zero = "0"
 
 pattern Binary = "0" | "1"
 
-// Currently, we expand range patterns into disjunction.
+// `Binary` is a plain literal alternation, so the multi-matcher dispatches
+// on literal heads. (Character *ranges* are no longer expanded into
+// disjunctions: they stay symbolic as character classes, and any pattern
+// containing one is absorbed into the automaton-backed `Str` head instead.)
 fun isBinary(x) = x is @compile Binary
 
 check of isBinary, "binary"
@@ -107,8 +110,9 @@ pattern Letter = Lower | Upper
 "9" is Letter
 //│ = false
 
-// Inspect the generated code. The use of `Map` makes the expanded disjunction
-// out of order. I wonder if we should use a `SeqMap` for literals.
+// `Letter` contains character classes, so — unlike `isBinary` above — this
+// matcher is not a disjunction of literal heads: the string-shaped pattern
+// is absorbed into the `Str` head and compiled to an automaton.
 fun isLetter(x) = x is @compile Letter
 
 isLetter of "a"
@@ -156,8 +160,17 @@ pattern ManyDigits = ("0" ..= "9") ~ (ManyDigits | "")
 
 fun isManyDigits(str) = str is @compile ManyDigits
 
+:expect true
 isManyDigits("5678")
 //│ = true
+
+:expect false
+isManyDigits("56a8")
+//│ = false
+
+:expect false
+isManyDigits("")
+//│ = false
 
 pattern Integer = "0" | ("1" ..= "9") ~ (ManyDigits | "")
 

@@ -1,5 +1,7 @@
 :js
 
+open annotations
+
 // Recursive string patterns compile to finite automata, which is possible
 // exactly when every recursive reference sits in tail position of a sequence
 // (the grammar is right-linear, hence regular). Self-embedding patterns are
@@ -9,14 +11,33 @@
 :e
 pattern Parens = ("(" ~ Parens ~ ")") | ""
 //│ ╔══[COMPILATION ERROR] This recursive use of pattern `Parens` is not in tail position.
-//│ ║  l.10: 	pattern Parens = ("(" ~ Parens ~ ")") | ""
+//│ ║  l.12: 	pattern Parens = ("(" ~ Parens ~ ")") | ""
 //│ ║        	                        ^^^^^^
 //│ ╟── Only self references at the end of a string sequence can be compiled to a finite string matcher.
 //│ ╟── The recursion involves this pattern.
-//│ ║  l.10: 	pattern Parens = ("(" ~ Parens ~ ")") | ""
+//│ ║  l.12: 	pattern Parens = ("(" ~ Parens ~ ")") | ""
 //│ ╙──      	                        ^^^^^^
 
 "(())" is Parens
+//│ = false
+
+// The whole definition is poisoned, not just the offending alternative: the
+// surviving `""` alternative must not match either, through any route.
+
+:expect false
+"" is Parens
+//│ = false
+
+:e // The definition-site error is re-reported per `@compile` use site.
+:expect false
+"" is @compile Parens
+//│ ╔══[COMPILATION ERROR] This recursive use of pattern `Parens` is not in tail position.
+//│ ║  l.12: 	pattern Parens = ("(" ~ Parens ~ ")") | ""
+//│ ║        	                        ^^^^^^
+//│ ╟── Only self references at the end of a string sequence can be compiled to a finite string matcher.
+//│ ╟── The recursion involves this pattern.
+//│ ║  l.12: 	pattern Parens = ("(" ~ Parens ~ ")") | ""
+//│ ╙──      	                        ^^^^^^
 //│ = false
 
 // Left recursion is not right-linear either. (The backtracking translation
@@ -25,11 +46,11 @@ pattern Parens = ("(" ~ Parens ~ ")") | ""
 :e
 pattern Lefty = (Lefty ~ "a") | "b"
 //│ ╔══[COMPILATION ERROR] This recursive use of pattern `Lefty` is not in tail position.
-//│ ║  l.26: 	pattern Lefty = (Lefty ~ "a") | "b"
+//│ ║  l.47: 	pattern Lefty = (Lefty ~ "a") | "b"
 //│ ║        	                 ^^^^^
 //│ ╟── Only self references at the end of a string sequence can be compiled to a finite string matcher.
 //│ ╟── The recursion involves this pattern.
-//│ ║  l.26: 	pattern Lefty = (Lefty ~ "a") | "b"
+//│ ║  l.47: 	pattern Lefty = (Lefty ~ "a") | "b"
 //│ ╙──      	                 ^^^^^
 
 "baa" is Lefty
@@ -63,19 +84,73 @@ pattern Odd = "a" ~ Even
 pattern Outer = ("a" ~ Inner ~ "c") | ""
 pattern Inner = "b" ~ Outer
 //│ ╔══[COMPILATION ERROR] This recursive use of pattern `Inner` is not in tail position.
-//│ ║  l.63: 	pattern Outer = ("a" ~ Inner ~ "c") | ""
+//│ ║  l.84: 	pattern Outer = ("a" ~ Inner ~ "c") | ""
 //│ ║        	                       ^^^^^
 //│ ╟── Only self references at the end of a string sequence can be compiled to a finite string matcher.
 //│ ╟── The recursion involves this pattern.
-//│ ║  l.64: 	pattern Inner = "b" ~ Outer
+//│ ║  l.85: 	pattern Inner = "b" ~ Outer
 //│ ╙──      	                      ^^^^^
 //│ ╔══[COMPILATION ERROR] This recursive use of pattern `Inner` is not in tail position.
-//│ ║  l.63: 	pattern Outer = ("a" ~ Inner ~ "c") | ""
+//│ ║  l.84: 	pattern Outer = ("a" ~ Inner ~ "c") | ""
 //│ ║        	                       ^^^^^
 //│ ╟── Only self references at the end of a string sequence can be compiled to a finite string matcher.
 //│ ╟── The recursion involves this pattern.
-//│ ║  l.64: 	pattern Inner = "b" ~ Outer
+//│ ║  l.85: 	pattern Inner = "b" ~ Outer
 //│ ╙──      	                      ^^^^^
 
 "abc" is Outer
+//│ = false
+
+
+// A conjunction of pure branches compiles: the conjuncts run in lockstep as
+// determinized constraints. `ProbeA & ProbeB` admits no slice, so it matches
+// nothing — but it compiles rather than being rejected.
+
+pattern ProbeA = "a"
+
+pattern ProbeB = "b"
+
+fun probeConj(s) = s is @compile ("x" ~ (ProbeA & ProbeB))
+
+:expect false
+probeConj("xa")
+//│ = false
+
+
+// A conjunction over definitions from *different* source blocks must report
+// its rejection without crashing: the instantiated junction spans several
+// origins, which the auto-computed location machinery asserts against, so the
+// diagnostic falls back to `diagnosticLoc`. Two transforming branches is a
+// case the automaton still cannot express.
+
+pattern TaggedA = "a" => "A"
+
+pattern TaggedB = "a" => "B"
+
+:e
+fun probeImpureConj(s) = s is @compile ("x" ~ (TaggedA & TaggedB))
+//│ ╔══[COMPILATION ERROR] Conjunctions where more than one branch carries bindings or transformations are not supported within string patterns.
+//│ ║  l.126: 	pattern TaggedA = "a" => "A"
+//│ ╙──       	        ^^^^^^^
+
+:expect false
+probeImpureConj("xa")
+//│ = false
+
+
+// `Str` cannot take arguments; after the error the pattern matches nothing
+// (it used to behave like a bare `Str` and match every string).
+
+:e
+pattern StrArg = Str("x") ~ "b"
+//│ ╔══[COMPILATION ERROR] Class `Str` has no parameters.
+//│ ║  l.145: 	pattern StrArg = Str("x") ~ "b"
+//│ ╙──       	                     ^^^
+
+:expect false
+"xb" is StrArg
+//│ = false
+
+:expect false
+"zb" is StrArg
 //│ = false

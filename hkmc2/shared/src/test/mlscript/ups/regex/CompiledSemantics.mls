@@ -86,3 +86,29 @@ pattern Exclaimed = "😀" ~ "!"
 :expect false
 "😀?" is Exclaimed
 //│ = false
+
+
+// The wildcard's greediness combines with recursion: `c` takes as much as the
+// rest of the sequence permits, and `Input` accepts the empty remainder, so it
+// takes the whole input. (This used to overflow the stack in the backtracking
+// translation; moved here from `ups/UpsBugsBacklog.mls`, where it no longer
+// belongs now that it terminates.)
+
+import "../../../mlscript-compile/Char.mls"
+
+pattern Input =
+  ((Char.Whitespace ~ (Input as inp)) => inp) | ((c ~ (Input as inp)) => [c, ..inp]) | ("" => [])
+
+if "a b c" is Input as chars then chars
+//│ = [a b c]
+
+// The rendering above does not quote the element, so assert the shape too:
+// one element, holding the whole input.
+
+:expect 1
+if "a b c" is Input as chars then chars.length
+//│ = 1
+
+:expect "a b c"
+if "a b c" is Input as chars then chars.at(0)
+//│ = "a b c"

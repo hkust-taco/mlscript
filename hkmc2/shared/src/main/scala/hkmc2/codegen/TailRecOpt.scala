@@ -68,9 +68,23 @@ connected component are tail calls.
 */
 
 // This optimization assumes the lifter has been run.
-class TailRecOpt(using State, TL, Raise):
+class TailRecOpt(checkAnnotations: Bool)(using State, TL, Raise):
   
   type AccessMap = Map[ScopedInfo, AccessInfo]
+  
+  private def isExactlySaturatedCall(c: Call, f: FunDefn): Bool =
+    val cmp = c.argss.sizeCompare(f.params.size)
+    // A zero-argument-list definition may still be invoked by a `Call` node:
+    // the callee body is evaluated as a nullary thunk, and the call's argument
+    // lists are then applied to the returned value. For non-nullary callees,
+    // passing more argument lists than the callee can receive violates the IR
+    // invariant that a `Call` node does not pass more arguments than a non-nullary
+    // callee can receive.
+    softAssert(
+      cmp <= 0 || f.params.isEmpty,
+      s"Call node passes ${c.argss.size} argument lists to ${f.dSym.showDbg}, which can receive ${f.params.size}.",
+    )
+    cmp === 0
   
   object CallToFun:
     def unapply(c: Call): Opt[TermSymbol] = c match
@@ -115,24 +129,34 @@ class TailRecOpt(using State, TL, Raise):
     override def applyBlock(b: Block): Unit = b match
       case TailCallShape(r, c) => getFun(r) match
         case Some(value) =>
-          if c.argss.size != value.params.size then
-            if c.metadata.explicitTailCall then
+          // Only exactly saturated calls can be rewritten as direct loop jumps.
+          // Under-applied calls only build closures for later argument lists;
+          // over-applied calls cannot be rewritten as direct jumps either.
+          if isExactlySaturatedCall(c, value) then
+            edges ::= CallEdge.TailCall(f.dSym, r)(c)
+          else
+            if checkAnnotations && c.metadata.explicitTailCall then
               raise(ErrorReport(msg"Only fully applied calls may be marked @tailcall." -> c.toLoc :: Nil))
-          else edges ::= CallEdge.TailCall(f.dSym, r)(c)
         case None =>
-          if c.metadata.explicitTailCall then
+          if checkAnnotations && c.metadata.explicitTailCall then
             raise(ErrorReport(msg"Only functions in this compilation unit may be marked @tailcall." -> c.toLoc :: Nil))
       case Return(c: Call) =>
-        if c.metadata.explicitTailCall then
+        if checkAnnotations && c.metadata.explicitTailCall then
           raise(ErrorReport(msg"Only direct calls in tail position may be marked @tailcall." -> c.toLoc :: Nil))
       case _ => super.applyBlock(b)
     
     override def applyResult(r: Result): Unit = r match
       case c: Call =>
-        if c.metadata.explicitTailCall then
+        if checkAnnotations && c.metadata.explicitTailCall then
           raise(ErrorReport(msg"This call is not in tail position." -> c.toLoc :: Nil))
         c match
-          case CallToFun(r) => edges ::= CallEdge.NormalCall(f.dSym, r)(c)
+          case CallToFun(r) => getFun(r) match
+            // Under-applied curried calls only build closures for later argument
+            // lists; they do not execute the callee body and therefore do not
+            // form recursive call-graph edges.
+            case Some(value) if isExactlySaturatedCall(c, value) =>
+              edges ::= CallEdge.NormalCall(f.dSym, r)(c)
+            case _ =>
           case _ =>
       case _ => super.applyResult(r)
   
@@ -150,7 +174,7 @@ class TailRecOpt(using State, TL, Raise):
     val cg = buildCallGraph(fs).filter: c =>
       val cond = defnSyms.contains(c.f1) && defnSyms.contains(c.f2)
       c.match
-        case c: CallEdge.TailCall if c.call.metadata.explicitTailCall && !cond =>
+        case c: CallEdge.TailCall if checkAnnotations && c.call.metadata.explicitTailCall && !cond =>
           raise(ErrorReport(
             msg"This tail call exits the current scope and is not optimized." -> c.call.toLoc :: Nil))
         case _ =>
@@ -167,7 +191,7 @@ class TailRecOpt(using State, TL, Raise):
       .groupBy: c =>
         val s1 = sccMap(c.f1)
         val s2 = sccMap(c.f2)
-        if s1 =/= s2 && c.call.metadata.explicitTailCall then
+        if checkAnnotations && s1 =/= s2 && c.call.metadata.explicitTailCall then
           raise(ErrorReport(
             msg"This call is not optimized as it does not directly recurse through its parent function." -> c.call.toLoc :: Nil))
           -1
@@ -247,19 +271,19 @@ class TailRecOpt(using State, TL, Raise):
       case c: CallEdge.NormalCall => c.f2 -> c.call
     val nonTailCalls = nonTailCallsLs.toMap
     
-    if nonTailCallsLs.sizeCompare(calls) === 0 then
-      for f <- funs if f.tailRec do
-        raise(WarningReport(msg"This function does not directly self-recurse, but is marked @tailrec." -> f.dSym.toLoc :: Nil))
+    if calls.isEmpty then
+      if checkAnnotations then for f <- funs if f.tailRec do
+        raise(WarningReport(msg"This function is marked @tailrec but has no direct self-recursion." -> f.dSym.toLoc :: Nil))
       return (N, funs)
     
     if !nonTailCalls.isEmpty then
-      for f <- funs if f.tailRec do
+      if checkAnnotations then for f <- funs if f.tailRec do
         val reportLoc = nonTailCalls.get(f.dSym) match
           // always display a call to f, if possible
           case Some(value) => value.toLoc 
           case None => nonTailCalls.head._2.toLoc
         raise(ErrorReport(
-            msg"This function is not tail recursive." -> f.dSym.toLoc
+            msg"This function is marked @tailrec but is not tail recursive." -> f.dSym.toLoc
             :: msg"It could self-recurse through this call, which is not a tail call." -> reportLoc
             :: Nil
           ))
@@ -350,11 +374,11 @@ class TailRecOpt(using State, TL, Raise):
           case None => super.applyBlock(b)
           case Some(id) =>
             val callee = dSymToDefn(calleeSym)
-            val calleeParamsMap = paramSymsMap(callee.dSym)
             // We require the call to be fully applied.
-            if c.argss.size != callee.params.size then
+            if !isExactlySaturatedCall(c, callee) then
               super.applyBlock(b)
             else
+              val calleeParamsMap = paramSymsMap(callee.dSym)
               // The code used to continute the loop.
               val cont =
                 if funsLen === 1 then Continue(loopSym)
@@ -585,7 +609,7 @@ class TailRecOpt(using State, TL, Raise):
     // Class methods cannot yet be optimized as they cannot yet be marked final.
     
     if c.k is syntax.Cls then
-      reportClassesTailrec(c)
+      if checkAnnotations then reportClassesTailrec(c)
       val companion = c.companion.mapConserve: comp =>
         val cMtds = optFunctionsFlat(comp.methods, S(comp.isym))
         if cMtds is comp.methods
@@ -659,20 +683,21 @@ class TailRecOpt(using State, TL, Raise):
       optFNew.foldLeft(transformer.applyBlock(b)):
         case (acc, f) => Define(f, acc))
     
-    // Report @tailrec on functions that weren't processed by the optimization above,
-    // e.g. nested functions or functions with @config(tailRecOpt: false).
-    // Class/module methods are handled separately by optClasses and are skipped here.
-    val tailRecFunSyms = tailRecFuns.map(_.dSym).toSet
-    new BlockTraverser:
-      override def applyFunDefn(fun: FunDefn): Unit =
-        if fun.tailRec && !tailRecFunSyms.contains(fun.dSym) then
-          raise(ErrorReport(
-            msg"This @tailrec function was not processed by the tail-call optimizer." -> fun.dSym.toLoc :: Nil))
-        super.applyFunDefn(fun)
-      override def applyDefn(defn: Defn): Unit = defn match
-        case _: ClsLikeDefn => ()
-        case _ => super.applyDefn(defn)
-    .applyBlock(result)
+    if checkAnnotations then
+      // Report @tailrec on functions that weren't processed by the optimization above,
+      // e.g. nested functions or functions with @config(tailRecOpt: false).
+      // Class/module methods are handled separately by optClasses and are skipped here.
+      val tailRecFunSyms = tailRecFuns.map(_.dSym).toSet
+      new BlockTraverser:
+        override def applyFunDefn(fun: FunDefn): Unit =
+          if fun.tailRec && !tailRecFunSyms.contains(fun.dSym) then
+            raise(ErrorReport(
+              msg"This @tailrec function was not processed by the tail-call optimizer." -> fun.dSym.toLoc :: Nil))
+          super.applyFunDefn(fun)
+        override def applyDefn(defn: Defn): Unit = defn match
+          case _: ClsLikeDefn => ()
+          case _ => super.applyDefn(defn)
+      .applyBlock(result)
     
     if result is b
     then prog

@@ -65,6 +65,25 @@ sealed abstract class Pattern[+K <: Kind.Complete] extends AutoLocated:
     case Extract(pattern, _, term) => Vector.double(pattern, term)
     case Synonym(pattern) => pattern.symbol +: pattern.arguments.toVector
   
+  /** A best-effort location for diagnostics on instantiated patterns. Their
+    * nodes aggregate pieces of unrelated source blocks — a `Synonym`'s
+    * children locate the referenced *definition*, and the compilation
+    * pipeline's `map` rebuilds compositional nodes without their pinned
+    * locations — so the inherited `toLoc`, which asserts a single-origin
+    * span, cannot be used on arbitrary nodes. This merges the sub-locations
+    * when they share an origin and otherwise pins the first piece. */
+  def diagnosticLoc: Opt[Loc] =
+    val locs = children.iterator.flatMap:
+      case p: Pattern[?] => p.diagnosticLoc.iterator
+      case located => located.toLoc.iterator
+    .toList
+    locs match
+      case Nil => N
+      case first :: rest =>
+        if rest.forall(_.origin === first.origin)
+        then S(rest.foldLeft(first)(_ ++ _))
+        else S(first) // Mixed origins: pin the first piece.
+
   lazy val symbols: Ls[VarSymbol] = this match
     case Literal(lit) => Nil
     case ClassLike(sym, arguments) =>
@@ -201,19 +220,22 @@ sealed abstract class Pattern[+K <: Kind.Complete] extends AutoLocated:
         trailing2.contains(Never) then Never
       else Tuple(leading2, S((spreadKind, middle2, trailing2)))
     case Concat(patterns) =>
+      // Note that empty string literals must NOT be dropped, even though
+      // they consume nothing: the output of a sequence is the left fold of
+      // its elements' outputs under JS `+`, so a leading `""` coerces a
+      // non-string element output to a string (`"" + 1` is `"1"`), and this
+      // simplification only runs on the `@compile` path — dropping the
+      // literal made `@compile` change the output's type.
       val simplified = patterns.map(_.simplify)
-      if simplified contains Never then Never else Concat:
-        // Empty string literals consume nothing and contribute nothing to the
-        // output, so they can be dropped as long as one element remains.
-        simplified.filter:
-          case Literal(StrLit("")) => false
-          case _ => true
-        match
-          case Nil => Literal(StrLit("")) :: Nil
-          case simplified => simplified
+      if simplified contains Never then Never else Concat(simplified)
     case CharClass(_, _) => this
     case And(patterns) =>
       // TODO: Complete the simplification logic here.
+      // Note that `Wildcard` conjuncts cannot simply be dropped, even though
+      // they impose no requirement: the output of a conjunction is the tuple
+      // of its conjuncts' outputs, and an untransformed conjunct — including
+      // one specialization reduced to `Wildcard` — contributes the scrutinee
+      // to it (see `ups/SimpleConjunction.mls`).
       val simplified = patterns.foldRight(Nil: Ls[Pattern[K]]):
         case (p, acc) => p.simplify match
           case `Wildcard` => acc match
@@ -222,22 +244,18 @@ sealed abstract class Pattern[+K <: Kind.Complete] extends AutoLocated:
           case simplified => simplified :: acc
       if simplified contains Never then Never else simplified.foldSingleton(And.apply)(identity)
     case Or(patterns) =>
+      // A `Never` alternative can never be chosen, so all of them are
+      // dropped; when every alternative was dead, the resulting empty
+      // disjunction *is* `Never`.
       patterns.foldRight(Nil: Ls[Pattern[K]]):
         case (p, acc) => p.simplify match
-          case Never => acc match
-            // The list should be a list of non-`Never` patterns or a singleton
-            // list of `Never` pattern.
-            case Nil => Never :: Nil
-            case Never :: Nil | _ => acc
+          case Never => acc
           // Should we discard the accumulated patterns?
           // case `Wildcard` => Wildcard :: Nil // Discard the following patterns.
           case `Wildcard` => acc match
-            case `Never` :: Nil => Wildcard :: Nil
             case `Wildcard` :: _ => acc // One consecutive wildcard is enough.
             case acc => Wildcard :: acc
-          case pat => acc match
-            case Nil | Never :: Nil => pat :: Nil
-            case _ => pat :: acc
+          case pat => pat :: acc
       .foldSingleton(Or.apply)(identity)
     case Not(pattern) => Not(pattern.simplify)
     case Rename(pattern, name) => Rename(pattern.simplify, name)
@@ -312,7 +330,7 @@ sealed abstract class Pattern[+K <: Kind.Complete] extends AutoLocated:
     case Or(patterns) =>
       patterns.map(_.showDbg).mkString("(", " ∨ ", ")")
     case Not(pattern) => s"!${pattern.showDbg}"
-    case Rename(Or(Nil), name) => name.name
+    case Rename(And(Nil), name) => name.name
     case Rename(pattern, name) => s"${pattern.showDbg} as $name"
     case Extract(pattern, _, term) => s"${pattern.showDbg} => ${term.showDbg}"
     case Synonym(sym) => sym.showDbg
@@ -417,9 +435,22 @@ object Pattern:
       term: Term
   ) extends Pattern[K]
   
-  val Wildcard = Or(Nil)
+  /** The pattern that matches anything (⊤): the conjunction of no
+    * requirements, i.e. the unit of `And`. Dually, `Never` is the pattern
+    * that matches nothing (⊥): the disjunction of no alternatives, i.e. the
+    * unit of `Or`.
+    *
+    * These identifications matter beyond taste: generic code builds and
+    * shrinks junction lists without special-casing emptiness, so an empty
+    * `Or` *must* mean "no alternative can match" and an empty `And` "no
+    * requirement can fail" for that code to be correct. (They were originally
+    * defined the other way around, which made `Or(range.map(...))` over an
+    * empty range match everything, made `Wildcard or p` collapse to `p` in
+    * the flattening combinators above, and forced `simplify` to keep dead
+    * `Never` alternatives lest dropping the last one produce a wildcard.) */
+  val Wildcard = And(Nil)
   
-  val Never = And(Nil)
+  val Never = Or(Nil)
   
   type Head = syntax.Literal | ClassLikeSymbol
   
@@ -451,12 +482,22 @@ extension (pattern: ExPat)
    *  literals) are absorbed into a single `Str` class head and handled by the
    *  string pattern compiler, so this function is never called with a `StrLit`
    *  head in their presence. Under any other head, they cannot match. */
-  def specialize(lit: syntax.Literal): SpPat = pattern.map:
+  def specialize(lit: syntax.Literal)(using Raise): SpPat = pattern.map:
     case Literal(`lit`) => Wildcard
-    case _: (Literal | ClassLike | Concat | CharClass) => Never
+    case _: (Literal | ClassLike) => Never
+    case _: (Concat | CharClass) =>
+      // Live and correct for non-string heads (under an integer head a
+      // string-shaped pattern can indeed never match), but a `StrLit` head
+      // must never see one: `buildMultiMatcherBody` absorbs every
+      // string-shaped pattern into the `Str` head *and* filters out every
+      // head a string could take, precisely so that this arm cannot turn a
+      // matchable string pattern into a silent no-match.
+      softAssert(!lit.isInstanceOf[Tree.StrLit],
+        "string-shaped patterns must be absorbed into the `Str` head before literal specialization")
+      Never
     case pattern: (Record | Tuple) => pattern
     case _: (MatchedClassLike | Synonym) => lastWords("unexpected specialized/complete node in specialize(lit)")
-
+  
   /** Modifies the pattern under the assumption that the scrutinee matches the
    *  given class. String-shaped patterns are `Never` here because the `Str`
    *  head branch extracts them via `StringCompiler.stringFragment` instead of
@@ -471,10 +512,10 @@ extension (pattern: ExPat)
     case ClassLike(_, _) => Never
     case _: (Concat | CharClass) => Never
     case pattern: (MatchedClassLike | Record | Tuple) => pattern
-
+  
   /** Modifies the pattern under the assumption that the scrutinee matches the
    *  given literal or class. */
-  def specialize(head: Option[Head]): SpPat = head match
+  def specialize(head: Option[Head])(using Raise): SpPat = head match
     case Some(h: syntax.Literal) => pattern.specialize(h)
     case Some(h: ClassLikeSymbol) => pattern.specialize(h)
     case None => pattern.map:

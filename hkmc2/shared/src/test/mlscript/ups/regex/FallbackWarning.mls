@@ -1,47 +1,47 @@
 :js
 
-// String regions containing constructs the automaton does not compile —
-// guards, chains, extraction arguments — fall back to the legacy
-// backtracking translation, whose observable behavior differs (transforms
-// may run on abandoned parses, and splitting is greedy rather than decided
-// jointly for the whole sequence). Falling back therefore warns, pointing
-// at the offending construct.
+// String regions containing constructs the automaton does not compile fall
+// into two groups.
+//
+// Guards and chains are *rejected*: the legacy backtracking translation does
+// implement them, but its matching relation differs from the automaton's
+// (splitting is greedy rather than decided jointly for the whole sequence),
+// so quietly falling back would make a vacuous `where true` change the answer.
+//
+// Everything else — extraction arguments, unresolved references — still falls
+// back, and warns while pointing at the offending construct, because the
+// observable behavior differs there too (transforms may run on abandoned
+// parses).
 
 
 // Guards may fail after consumption based on information the automaton
 // does not track.
 
-:w
+:e
 fun guarded(x) = if x is ("a" where true) ~ "b" then "yes" else "no"
-//│ ╔══[WARNING] This string pattern falls back to matching with backtracking.
-//│ ║  l.15: 	fun guarded(x) = if x is ("a" where true) ~ "b" then "yes" else "no"
-//│ ║        	                          ^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── Guards are not supported by string pattern compilation.
-//│ ║  l.15: 	fun guarded(x) = if x is ("a" where true) ~ "b" then "yes" else "no"
+//│ ╔══[COMPILATION ERROR] Guards are not supported within string patterns.
+//│ ║  l.21: 	fun guarded(x) = if x is ("a" where true) ~ "b" then "yes" else "no"
 //│ ╙──      	                          ^^^^^^^^^^^^^^
 
 guarded("ab")
-//│ = "yes"
+//│ = "no"
 
 guarded("ax")
 //│ = "no"
 
 // The offending construct may sit inside a referenced definition; the
-// warning points into it.
+// diagnostic points into it.
 
 pattern Loud = ("A" ..= "Z") where true
 
-:w
+:e
 fun loud(x) = if x is Loud ~ "!" then "yes" else "no"
-//│ ╔══[WARNING] This string pattern falls back to matching with backtracking.
-//│ ║  l.35: 	fun loud(x) = if x is Loud ~ "!" then "yes" else "no"
-//│ ║        	                      ^^^^^^^^^^
-//│ ╟── Guards are not supported by string pattern compilation.
-//│ ║  l.32: 	pattern Loud = ("A" ..= "Z") where true
+//│ ╔══[COMPILATION ERROR] Guards are not supported within string patterns.
+//│ ║  l.35: 	pattern Loud = ("A" ..= "Z") where true
 //│ ╙──      	                ^^^^^^^^^^^^^^^^^^^^^^^
 
 loud("A!")
-//│ = "yes"
+//│ = "no"
 
 
 // Extraction arguments bind values that cannot cross the automaton
@@ -73,17 +73,14 @@ vowel("b!")
 // Chained patterns pipe one match's output into another pattern, which may
 // reject it after the sequence has already committed a split.
 
-:w
+:e
 fun chained(x) = if x is (("a" | "e") as Vowel) ~ "!" then "yes" else "no"
-//│ ╔══[WARNING] This string pattern falls back to matching with backtracking.
-//│ ║  l.77: 	fun chained(x) = if x is (("a" | "e") as Vowel) ~ "!" then "yes" else "no"
-//│ ║        	                           ^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── Chained patterns are not supported by string pattern compilation.
+//│ ╔══[COMPILATION ERROR] Chained patterns are not supported within string patterns.
 //│ ║  l.77: 	fun chained(x) = if x is (("a" | "e") as Vowel) ~ "!" then "yes" else "no"
 //│ ╙──      	                           ^^^^^^^^^^^^^^^^^^^
 
 chained("a!")
-//│ = "yes"
+//│ = "no"
 
 
 // Sequences in parametric definition bodies are not warned about: their

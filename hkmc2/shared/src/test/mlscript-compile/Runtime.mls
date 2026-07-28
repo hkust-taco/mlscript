@@ -111,19 +111,19 @@ module Tuple with
   val split = LazyArray.__split
 
 module Str with
-
+  
   @mayNotRaiseEffects
   fun startsWith(string, prefix) = string.startsWith(prefix)
-
+  
   @mayNotRaiseEffects
   fun get(string, i) =
     if i >= string.length then
       throw RangeError("Str.get: index out of bounds")
     else string.at(i)
-
+  
   @mayNotRaiseEffects
   fun take(string, n) = string.slice(0, n)
-
+  
   @mayNotRaiseEffects
   fun leave(string, n) = string.slice(n)
 
@@ -862,4 +862,4 @@ class Int31(v) with
 
 fun plus_impl(lhs, rhs) = if lhs is
   Int31 and rhs is Int31 then lhs + rhs
-  else unreachable()
+  else unreachable

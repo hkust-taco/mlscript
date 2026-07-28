@@ -67,7 +67,7 @@ maxOpt(id(1 :: 2 :: Nil))
 
 
 :deforest
-:sir
+:soir
 :expect Some(2)
 fun modSome(x, m) = if x is
   Some(n) and
@@ -83,60 +83,46 @@ modSome(Some(17), 3)
 //│ deforest > 	match: x⁰
 //│ deforest > 	fields: x⁰.x¹
 //│ deforest > <<< fusing <<<
-//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let tmp, modSome_12$modSome, modSome_12$x_Some, modSome_12$x_rest, Some_x;
-//│ @private
-//│ define modSome_12$modSome as fun modSome_12$modSome⁰(x, m) {
-//│   let n, scrut, arg$Some$0$, tmp1, tmp2;
-//│   return x(modSome⁰, m, n, scrut, arg$Some$0$, tmp1, tmp2)
-//│ };
-//│ @affine(1) @private
-//│ define modSome_12$x_Some as fun modSome_12$x_Some⁰(Some_x1)(fv_modSome, fv_m, fv_n, fv_scrut, fv_arg$Some$0$, fv_tmp, fv_tmp1) {
-//│   set fv_arg$Some$0$ = Some_x1;
-//│   set fv_n = fv_arg$Some$0$;
-//│   set fv_scrut = >=⁰(fv_n, fv_m);
-//│   match fv_scrut
-//│     true =>
-//│       let Some_x2;
-//│       set fv_tmp = -⁰(fv_n, fv_m);
-//│       set Some_x2 = fv_tmp;
-//│       set fv_tmp1 = modSome_12$x_Some⁰(Some_x2);
-//│       return modSome_12$modSome⁰(fv_tmp1, fv_m)
-//│     else
-//│       return Some⁰(fv_n)
-//│   end
-//│ };
-//│ @private
-//│ define modSome_12$x_rest as fun modSome_12$x_rest⁰() {
-//│   return null
-//│ };
-//│ define modSome¹ as fun modSome⁰(x, m) {
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let Some_x, fv_scrut, fv_tmp, inlinedVal;
+//│ define modSome⁰ as fun modSome¹(x, m) {
 //│   loop loopLabel:
-//│     let n, scrut, arg$Some$0$, tmp1, tmp2;
+//│     let scrut, arg$Some$0$, tmp, tmp1;
 //│     match x
 //│       Some¹ =>
 //│         set arg$Some$0$ = x.x¹;
-//│         set n = arg$Some$0$;
-//│         set scrut = >=⁰(n, m);
+//│         set scrut = >=⁰(arg$Some$0$, m);
 //│         match scrut
 //│           true =>
-//│             set tmp1 = -⁰(n, m);
-//│             set tmp2 = Some⁰(tmp1);
-//│             set x = tmp2;
+//│             set tmp = -⁰(arg$Some$0$, m);
+//│             set tmp1 = Some⁰(tmp);
+//│             set x = tmp1;
 //│             continue loopLabel
 //│           else
-//│             return Some⁰(n)
+//│             return Some⁰(arg$Some$0$)
 //│         end
 //│       None⁰ =>
 //│         return None⁰
 //│       else
 //│         throw new globalThis⁰.Error⁰("match error")
 //│     end
-//│   end
+//│   unreachable /* Rest of abortive labelled block */
 //│ };
 //│ set Some_x = 17;
-//│ set tmp = modSome_12$x_Some⁰(Some_x);
-//│ return modSome_12$modSome⁰(tmp, 3)
+//│ block inlinedLbl:
+//│   loop loopLabel:
+//│     set fv_scrut = >=⁰(Some_x, 3);
+//│     match fv_scrut
+//│       true =>
+//│         set fv_tmp = -⁰(Some_x, 3);
+//│         set Some_x = fv_tmp;
+//│         continue loopLabel
+//│       else
+//│         set inlinedVal = Some⁰(Some_x);
+//│         break inlinedLbl
+//│     end
+//│   unreachable /* Rest of abortive labelled block */
+//│ return inlinedVal
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = Some(2)
 

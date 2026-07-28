@@ -33,31 +33,17 @@ sum(enum(5), 0)
 //│ eta-expansion > enum_13$enum: [1, 7]
 //│ eta-expansion > <<< eta-expansion targets shapes <<<
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let enum_13$enum$worker;
-//│ @private
-//│ define enum_13$enum$worker as fun enum_13$enum$worker⁰(x, eta$0$1) {
-//│   let scrut, tmp;
-//│   set scrut = <⁰(x, 0);
-//│   match scrut
-//│     true =>
-//│       return eta$0$1
-//│     else
-//│       let fv_tmp;
-//│       set tmp = -⁰(x, 1);
-//│       set fv_tmp = +⁰(x, eta$0$1);
-//│       return enum_13$enum$worker⁰(tmp, fv_tmp)
-//│   end
-//│ };
-//│ define enum⁰ as fun enum¹(x) {
+//│ let x, eta$0$1, inlinedVal;
+//│ define enum⁰ as fun enum¹(x1) {
 //│   let scrut, tmp, tmp1;
-//│   set scrut = <⁰(x, 0);
+//│   set scrut = <⁰(x1, 0);
 //│   match scrut
 //│     true =>
 //│       return Nil⁰
 //│     else
-//│       set tmp = -⁰(x, 1);
+//│       set tmp = -⁰(x1, 1);
 //│       set tmp1 = enum¹(tmp);
-//│       return Cons⁰(x, tmp1)
+//│       return Cons⁰(x1, tmp1)
 //│   end
 //│ };
 //│ define sum⁰ as fun sum¹(ls, acc) {
@@ -78,7 +64,26 @@ sum(enum(5), 0)
 //│     end
 //│   unreachable /* Rest of abortive labelled block */
 //│ };
-//│ return enum_13$enum$worker⁰(5, 0)
+//│ set x = 5;
+//│ set eta$0$1 = 0;
+//│ block inlinedLbl:
+//│   loop loopLabel:
+//│     let scrut, tmp;
+//│     set scrut = <⁰(x, 0);
+//│     match scrut
+//│       true =>
+//│         set inlinedVal = eta$0$1;
+//│         break inlinedLbl
+//│       else
+//│         let fv_tmp;
+//│         set tmp = -⁰(x, 1);
+//│         set fv_tmp = +⁰(x, eta$0$1);
+//│         set x = tmp;
+//│         set eta$0$1 = fv_tmp;
+//│         continue loopLabel
+//│     end
+//│   unreachable /* Rest of abortive labelled block */
+//│ return inlinedVal
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 15
 

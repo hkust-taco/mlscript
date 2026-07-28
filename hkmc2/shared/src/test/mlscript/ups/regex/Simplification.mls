@@ -36,3 +36,27 @@ pattern XsXs = Xs ~ Xs
 :expect true
 "xxxxxx" is XsXs
 //│ = true
+
+// Guards and chained patterns inside a sequence used to flip the whole
+// region back onto the legacy greedy composition, silently changing the
+// matching relation: the automaton accepts "xxxx" for `Xs ~ "x"` above,
+// while the greedy translation lets `Xs` eat every letter and then fails.
+// They are rejected outright instead.
+
+:e
+fun guarded(s) = if s is (Xs where true) ~ "x" then true else false
+//│ ╔══[COMPILATION ERROR] Guards are not supported within string patterns.
+//│ ║  l.47: 	fun guarded(s) = if s is (Xs where true) ~ "x" then true else false
+//│ ╙──      	                          ^^^^^^^^^^^^^
+
+guarded("xxxx")
+//│ = false
+
+:e
+fun chained(s) = if s is (Xs as X) ~ "x" then true else false
+//│ ╔══[COMPILATION ERROR] Chained patterns are not supported within string patterns.
+//│ ║  l.56: 	fun chained(s) = if s is (Xs as X) ~ "x" then true else false
+//│ ╙──      	                          ^^^^^^^
+
+chained("xxxx")
+//│ = false

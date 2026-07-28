@@ -1,0 +1,49 @@
+:js
+:lift
+:effectHandlers
+
+:expect 7
+fun loops() =
+  let count = 0
+  do lbl:
+    if count < 5 do
+      set count += 1
+      lbl.continue
+    if count < 6 do
+      hide(0)
+      set count += 2
+      lbl.continue
+    lbl.break
+  count
+loops()
+//│ = 7
+
+:expect 1
+fun loops() =
+  let count = 0
+  do lbl:
+    if count < 5 do
+      set count += 1
+      lbl.break
+    if count < 6 do
+      hide(0)
+      set count += 2
+      lbl.continue
+    hide(0)
+  count
+loops()
+//│ = 1
+
+:expect 10
+fun bugLazySpread() =
+  let count = 0
+  while count < 10 do
+    if not maybe then
+      hide(0)
+      set count += 1
+    else
+      set count += 2
+  count
+bugLazySpread()
+//│ = 10
+

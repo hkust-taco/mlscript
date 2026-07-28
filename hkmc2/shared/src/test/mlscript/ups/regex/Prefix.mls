@@ -1,0 +1,46 @@
+:js
+
+// The prefix protocol (`unapplyStringPrefix`) returns the consumed prefix
+// and the unconsumed remainder. The split is committed leftmost-first by
+// alternation order — the trailing star of the prefix automaton is lazy, so
+// an earlier alternative wins over a longer, later one.
+
+pattern Digit = "0" ..= "9"
+pattern Integer = Digit ~ (Integer | "")
+
+Integer.unapplyStringPrefix("123abc")
+//│ = MatchSuccess(["123", "abc"], null)
+
+Integer.unapplyStringPrefix("abc")
+//│ = MatchFailure(null)
+
+// Leftmost-first, not longest:
+
+pattern Pre = ("a" ~ "b") | ("a" ~ "b" ~ "c")
+
+Pre.unapplyStringPrefix("abcd")
+//│ = MatchSuccess(["ab", "cd"], null)
+
+pattern Pre2 = ("a" ~ "b" ~ "c") | ("a" ~ "b")
+
+Pre2.unapplyStringPrefix("abcd")
+//│ = MatchSuccess(["abc", "d"], null)
+
+// Greediness through a recursive component:
+
+pattern Star = ("a" ~ Star) | ""
+
+Star.unapplyStringPrefix("aaab")
+//│ = MatchSuccess(["aaa", "b"], null)
+
+pattern Xs = "x" ~ (Xs | "")
+
+Xs.unapplyStringPrefix("xxy")
+//│ = MatchSuccess(["xx", "y"], null)
+
+// A transform in prefix position runs exactly once and supplies the output.
+
+pattern Shout = ((Integer as n) => n + "!")
+
+Shout.unapplyStringPrefix("12x")
+//│ = MatchSuccess(["12!", "x"], null)
