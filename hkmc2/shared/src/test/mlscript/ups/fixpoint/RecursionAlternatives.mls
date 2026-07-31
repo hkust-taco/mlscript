@@ -198,3 +198,85 @@ peelOrRewrapSlow of Box(5)
 :expect Tag(5)
 peelOrRewrapFast of Box(5)
 //│ = Tag(5)
+
+
+// ————— Overlapping steps *within* one recursive alternative —————
+//
+// Writing the same two steps as one disjunction, `(P | Q) as S`, is a
+// different pattern: the chain hands its continuation to the disjunction as a
+// whole, which commits to the first of its alternatives that applies and does
+// not reconsider when the rest of the chain fails. The naive search is then a
+// chain and not a tree, so the steps need not be mutually exclusive and the
+// machine — which likewise takes the first applicable step and never looks
+// back — implements it exactly. Only *distinct* recursive alternatives branch
+// the search, which is why `unmatchedIntermediates` compares the steps group
+// by group rather than alternative by alternative.
+
+pattern PeelOrRewrapJoined = (UnBox | Rewrap) as PeelOrRewrapJoined | Tag(_)
+
+fun joinedSlow(x) = if x is PeelOrRewrapJoined(r) then r else "<no match>"
+
+fun joinedFast(x) = if x is @compile PeelOrRewrapJoined(r) then r else "<no match>"
+
+// Unboxing wins and leads to the bare `5`, which is not a tag. Unlike
+// `peelOrRewrapSlow` above, re-wrapping is *not* retried, so there is no match
+// at all — and the compiled version agrees, without falling back.
+:expect "<no match>"
+joinedSlow of Box(5)
+//│ = "<no match>"
+
+:expect "<no match>"
+joinedFast of Box(5)
+//│ = "<no match>"
+
+// A later alternative is still reached when the earlier one does not apply,
+// and the choice is remade at every iteration.
+pattern PeelJoined = (UnBox | UnTag) as PeelJoined | 42
+
+fun peelJoinedSlow(x) = if x is PeelJoined(r) then r else "<no match>"
+
+fun peelJoinedFast(x) = if x is @compile PeelJoined(r) then r else "<no match>"
+
+:expect 42
+peelJoinedSlow of Box(Tag(42))
+//│ = 42
+
+:expect 42
+peelJoinedFast of Box(Tag(42))
+//│ = 42
+
+// The grouping is what is compared: these two steps do branch the search — the
+// joined one commits to `UnBox`, and when that leads nowhere `Rewrap` is
+// retried on the same term — so the definition is still rejected.
+
+pattern MixedSteps =
+  | (UnTag | UnBox) as MixedSteps
+  | Rewrap as MixedSteps
+  | Tag(_)
+
+fun mixedSlow(x) = if x is MixedSteps(r) then r else "<no match>"
+
+:w
+fun mixedFast(x) = if x is @compile MixedSteps(r) then r else "<no match>"
+//│ ╔══[WARNING] This fixed-point pattern is not supported by pattern compilation.
+//│ ║  l.253: 	  | (UnTag | UnBox) as MixedSteps
+//│ ║         	     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.254: 	  | Rewrap as MixedSteps
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.255: 	  | Tag(_)
+//│ ║         	^^^^^^^^^
+//│ ╟── Its recursive alternatives can rewrite the same term in more than one way: this step
+//│ ║  l.253: 	  | (UnTag | UnBox) as MixedSteps
+//│ ║         	             ^^^^^
+//│ ╟── and this one.
+//│ ║  l.254: 	  | Rewrap as MixedSteps
+//│ ║         	    ^^^^^^
+//│ ╙── Falling back to the naive translation.
+
+:expect Tag(5)
+mixedSlow of Box(5)
+//│ = Tag(5)
+
+:expect Tag(5)
+mixedFast of Box(5)
+//│ = Tag(5)

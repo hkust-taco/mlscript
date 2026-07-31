@@ -34,7 +34,7 @@ object FixedPointCompiler:
   /** One link of an indirect recursion cycle: the definition it comes from,
     * its steps, its trailing alternatives, and whether they end in a
     * wildcard. */
-  private type Link = (PatternSymbol, Ls[SP], Ls[SP], Bool)
+  private type Link = (PatternSymbol, Ls[Ls[SP]], Ls[SP], Bool)
 
   /** Why a fixed-point definition cannot be machine-compiled, as the bits to
     * append to the warning. A rejection always names two patterns that are
@@ -296,18 +296,18 @@ class FixedPointCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynt
     * Return the symbol, the steps, the trailing alternatives (to be validated
     * with `classifyRest`), and whether at least one step is required.
     *
-    * The steps are returned one by one rather than merged into a disjunction
-    * because instantiation maps `|` to the flattening `or` combinator, after
-    * which nothing tells which source pattern an alternative came from — and
-    * the rejection checks in `unmatchedIntermediates` need to point at it.
-    * For the same reason a step that is itself written as a disjunction is
-    * split into its alternatives, which also keeps those checks as
-    * conservative as they were when they worked on the merged pattern. */
-  private def recognizeShape(pattern: SP): Opt[(PatternSymbol, Ls[SP], Ls[SP], Bool)] =
+    * A step is returned as the list of its own alternatives, and the steps are
+    * kept apart rather than merged into one disjunction: instantiation maps
+    * `|` to the flattening `or` combinator, which loses both the grouping the
+    * rejection checks depend on and the source pattern their diagnostics point
+    * at. The grouping matters because only *distinct* steps branch the naive
+    * search — a step written as a disjunction commits to the first of its
+    * alternatives that applies (see `unmatchedIntermediates`). */
+  private def recognizeShape(pattern: SP): Opt[(PatternSymbol, Ls[Ls[SP]], Ls[SP], Bool)] =
     pattern match
       case SP.Chain(stepPattern, tail) => disjuncts(tail) match
         case SP.Constructor(target, N) :: rest =>
-          target.resolvedSym.flatMap(_.asPat).map((_, disjuncts(stepPattern), rest, true))
+          target.resolvedSym.flatMap(_.asPat).map((_, disjuncts(stepPattern) :: Nil, rest, true))
         case _ => N
       case composition: SP.Composition => disjuncts(composition) match
         case SP.Chain(_, SP.Constructor(target, N)) :: _ =>
@@ -318,7 +318,7 @@ class FixedPointCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynt
               case SP.Chain(_, SP.Constructor(target, N)) => isSelf(target)
               case _ => false
             val steps = selfChains.collect { case SP.Chain(step, _) => step }
-            (symbol, steps.flatMap(disjuncts), rest, false)
+            (symbol, steps.map(disjuncts), rest, false)
         case _ => N
       case _ => N
 
@@ -388,26 +388,37 @@ class FixedPointCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynt
     else S(Or(middles))
 
   /** A fixed-point definition's two halves — its steps, of which there is
-    * always at least one, and its trailing alternatives — with every source
-    * pattern paired with its instantiation. The rejection checks work on the
-    * instantiated patterns, while their diagnostics point at the source ones:
-    * instantiated patterns are rebuilt nodes, most of which carry no location,
-    * and a synonym's is its definition rather than its use. */
-  private case class Halves(steps: Ls[(SP, Pat)], alternatives: Ls[(SP, Pat)], catchAll: Bool):
+    * always at least one, each given as its own alternatives, and its trailing
+    * alternatives — with every source pattern paired with its instantiation.
+    * The rejection checks work on the instantiated patterns, while their
+    * diagnostics point at the source ones: instantiated patterns are rebuilt
+    * nodes, most of which carry no location, and a synonym's is its definition
+    * rather than its use. */
+  private case class Halves(steps: Ls[Ls[(SP, Pat)]], alternatives: Ls[(SP, Pat)], catchAll: Bool):
     /** The pattern the machine takes its rewriting steps with. */
-    val entry: Pat = steps.iterator.map(_._2).reduceLeft(_ or _)
+    val entry: Pat = steps.iterator.flatten.map(_._2).reduceLeft(_ or _)
     /** The pattern processing the final normal form. */
     val post: Opt[Pat] = postPattern(alternatives.map(_._2), catchAll)
 
+  /** Split `items` into consecutive runs of the given sizes. */
+  private def regroup[A](sizes: Ls[Int], items: Ls[A]): Ls[Ls[A]] = sizes match
+    case Nil => Nil
+    case size :: rest =>
+      val (group, remaining) = items.splitAt(size)
+      group :: regroup(rest, remaining)
+
   /** Instantiate the halves of each definition, sharing one `Instantiator`
     * across them all as `instantiateGroups` does. */
-  private def instantiateHalves(groups: Ls[(Ls[SP], Ls[SP], Bool)]): (Ls[Halves], Context) =
+  private def instantiateHalves(groups: Ls[(Ls[Ls[SP]], Ls[SP], Bool)]): (Ls[Halves], Context) =
     val (instantiated, context) =
-      instantiateGroups(groups.map((steps, middles, _) => steps ::: middles))
+      instantiateGroups(groups.map((steps, middles, _) => steps.flatten ::: middles))
     val halves = instantiated.zip(groups).map: (patterns, group) =>
       val (steps, middles, catchAll) = group
-      val (stepPatterns, middlePatterns) = patterns.splitAt(steps.size)
-      Halves(steps.zip(stepPatterns), middles.zip(middlePatterns), catchAll)
+      val sizes = steps.map(_.size)
+      val (stepPatterns, middlePatterns) = patterns.splitAt(sizes.sum)
+      val stepGroups = steps.zip(regroup(sizes, stepPatterns)).map((sources, instantiated) =>
+        sources.zip(instantiated))
+      Halves(stepGroups, middles.zip(middlePatterns), catchAll)
     (halves, context)
 
   /** Can a single value match both patterns? Conservatively `true` whenever
@@ -454,37 +465,41 @@ class FixedPointCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynt
     *     to be mutually exclusive, which collapses the tree back into that
     *     path.
     *
+    *     Only *distinct* alternatives branch this way. A single step written
+    *     as a disjunction, `(P1 | P2) as S | a`, receives the continuation as
+    *     a whole: it commits to the first of its alternatives that applies and
+    *     does not reconsider when the rest of the chain fails, so it stays a
+    *     chain and needs no mutual exclusion of its own. That is why the steps
+    *     arrive here grouped, and are compared group by group. Both readings
+    *     are pinned in `RecursionAlternatives.mls`.
+    *
     * When either check fails we give up rather than compile a machine and
     * retry a failed run naively: that retry would perform every rewriting
     * step a second time, which is not merely wasteful but observable, since
     * transformations may have side effects. */
   private def unmatchedIntermediates(halves: Halves)(using Context): Opt[Rejection] =
-    // The check on the steps is conservative in one direction: a *single*
-    // step written as a disjunction, `(P1 | P2) as S | a`, arrives here split
-    // into two, even though it commits to its first applicable alternative and
-    // so stays a chain. Telling the two apart would mean having `recognizeShape`
-    // mark which alternatives belong to one step; over-rejecting only costs
-    // the machine.
+    // Two disjunctions overlap exactly when two of their alternatives do, so
+    // taking them apart loses no precision and lets the diagnostics name the
+    // two patterns actually in conflict.
+    def overlapping(left: Ls[(SP, Pat)], right: Ls[(SP, Pat)]): Opt[(SP, SP)] =
+      (for
+        (leftSource, leftPattern) <- left.iterator
+        (rightSource, rightPattern) <- right.iterator
+        if mayOverlap(leftPattern, rightPattern)
+      yield (leftSource, rightSource)).nextOption()
     val overlappingSteps = halves.steps.tails.flatMap:
-      case first :: rest => rest.iterator.map((first, _))
+      case first :: rest => rest.iterator.flatMap(overlapping(first, _))
       case Nil => Iterator.empty
-    .find((one, other) => mayOverlap(one._2, other._2))
+    .nextOption()
     overlappingSteps match
-      case S(((step, _), (other, _))) => S(
+      case S((step, other)) => S(
         msg"Its recursive alternatives can rewrite the same term in more than one way: this step" -> step.toLoc ::
         msg"and this one." -> other.toLoc :: Nil)
-      case N =>
-        // Two disjunctions overlap exactly when two of their alternatives do,
-        // so pairing them up loses no precision and lets the diagnostic name
-        // the two patterns actually in conflict.
-        val overlapping = for
-          (step, stepPattern) <- halves.steps.iterator
-          (alternative, alternativePattern) <- halves.alternatives.iterator
-          if mayOverlap(stepPattern, alternativePattern)
-        yield (step, alternative)
-        overlapping.nextOption().map: (step, alternative) =>
-          msg"A term this step can still rewrite" -> step.toLoc ::
-          msg"can already be matched by this trailing alternative." -> alternative.toLoc :: Nil
+      // Every alternative of every step is checked against the trailing
+      // alternatives: a strict intermediate is one some step produced, whichever.
+      case N => overlapping(halves.steps.flatten, halves.alternatives).map: (step, alternative) =>
+        msg"A term this step can still rewrite" -> step.toLoc ::
+        msg"can already be matched by this trailing alternative." -> alternative.toLoc :: Nil
 
   /** Report a rejection: the head bit states the failure and points at the
     * pattern declaration, and the rejection's own bits point at the individual
@@ -493,7 +508,7 @@ class FixedPointCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynt
     warn(msg"This fixed-point pattern is not supported by pattern compilation." -> declaration ::
       rejection ::: (msg"Falling back to the naive translation." -> N) :: Nil*)
   
-  private def compileMachine(steps: Ls[SP], middles: Ls[SP], catchAll: Bool,
+  private def compileMachine(steps: Ls[Ls[SP]], middles: Ls[SP], catchAll: Bool,
       requireProgress: Bool, declaration: Opt[Loc]): Opt[Machine] =
     val (halves, context) = instantiateHalves((steps, middles, catchAll) :: Nil)
     val definition = halves.head
