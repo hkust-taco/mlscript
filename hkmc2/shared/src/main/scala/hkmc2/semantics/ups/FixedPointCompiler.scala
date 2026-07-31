@@ -186,9 +186,9 @@ class FixedPointCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynt
                   val machine = recognized match
                     case S((steps, middles, catchAll, requireProgress)) =>
                       scoped("ucs:fixpoint")(compileMachine(
-                        steps, middles, catchAll, requireProgress, defn.pattern.toLoc))
+                        steps, middles, catchAll, requireProgress, pattern.toLoc))
                     case N => cycle.flatMap: links =>
-                      scoped("ucs:fixpoint")(compileAlternatingMachine(links))
+                      scoped("ucs:fixpoint")(compileAlternatingMachine(links, pattern.toLoc))
                   machine match
                     case S(machine) =>
                       patternSymbol.fixedPointMachine = S(machine)
@@ -231,7 +231,8 @@ class FixedPointCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynt
               case -1 => N
               case index => S(links.drop(index) ::: links.take(index))
           val machine = rotated.flatMap: links =>
-            scoped("ucs:fixpoint")(compileAlternatingMachine(links)).map((links.head._1, _))
+            scoped("ucs:fixpoint")(compileAlternatingMachine(links, body.toLoc))
+              .map((links.head._1, _))
           machine match
             case S((owner, machine)) =>
               owner.fixedPointMachine = S(machine)
@@ -501,15 +502,17 @@ class FixedPointCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynt
         msg"A term this step can still rewrite" -> step.toLoc ::
         msg"can already be matched by this trailing alternative." -> alternative.toLoc :: Nil
 
-  /** Report a rejection: the head bit states the failure and points at the
-    * pattern declaration, and the rejection's own bits point at the individual
-    * patterns at fault. */
-  private def warnUnmatchedIntermediates(rejection: Rejection, declaration: Opt[Loc]): Unit =
-    warn(msg"This fixed-point pattern is not supported by pattern compilation." -> declaration ::
+  /** Report a rejection. The head bit states the failure at `origin`, the
+    * pattern whose `@compile` asked for the machine — that is where the
+    * warning comes from, and where a definition used at several match sites
+    * produces one warning per site. The rejection's own bits then point at the
+    * individual patterns at fault, which live in the definition. */
+  private def warnUnmatchedIntermediates(rejection: Rejection, origin: Opt[Loc]): Unit =
+    warn(msg"This fixed-point pattern is not supported by pattern compilation." -> origin ::
       rejection ::: (msg"Falling back to the naive translation." -> N) :: Nil*)
   
   private def compileMachine(steps: Ls[Ls[SP]], middles: Ls[SP], catchAll: Bool,
-      requireProgress: Bool, declaration: Opt[Loc]): Opt[Machine] =
+      requireProgress: Bool, origin: Opt[Loc]): Opt[Machine] =
     val (halves, context) = instantiateHalves((steps, middles, catchAll) :: Nil)
     val definition = halves.head
     val entry = definition.entry
@@ -529,7 +532,7 @@ class FixedPointCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynt
     val missing = if post.forall(_.isTotal) then N else unmatchedIntermediates(definition)
     missing match
       case S(rejection) =>
-        warnUnmatchedIntermediates(rejection, declaration)
+        warnUnmatchedIntermediates(rejection, origin)
         N
       case N => chase(entry, Set.empty) match
         case N =>
@@ -636,7 +639,7 @@ class FixedPointCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynt
   /** Compile an indirect recursion cycle. Each link contributes its steps and
     * its trailing alternatives, turned into a post pattern as in
     * `compileMachine`. */
-  private def compileAlternatingMachine(links: Ls[Link]): Opt[Machine] =
+  private def compileAlternatingMachine(links: Ls[Link], origin: Opt[Loc]): Opt[Machine] =
     val (halves, context) =
       instantiateHalves(links.map((_, steps, middles, catchAll) => (steps, middles, catchAll)))
     val compiled = halves.map(link => (link.entry, link.post))
@@ -670,7 +673,7 @@ class FixedPointCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynt
           else unmatchedIntermediates(link)
       offending match
         case S(rejection) =>
-          warnUnmatchedIntermediates(rejection, declarationOf(links.head._1))
+          warnUnmatchedIntermediates(rejection, origin)
           N
         case N => S(assembleAlternating(compiled))
   

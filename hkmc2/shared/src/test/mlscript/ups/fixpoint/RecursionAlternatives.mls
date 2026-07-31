@@ -176,12 +176,8 @@ fun peelOrRewrapSlow(x) = if x is PeelOrRewrap(r) then r else "<no match>"
 :w
 fun peelOrRewrapFast(x) = if x is @compile PeelOrRewrap(r) then r else "<no match>"
 //│ ╔══[WARNING] This fixed-point pattern is not supported by pattern compilation.
-//│ ║  l.170: 	  | UnBox as PeelOrRewrap
-//│ ║         	    ^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.171: 	  | Rewrap as PeelOrRewrap
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.172: 	  | Tag(_)
-//│ ║         	^^^^^^^^^
+//│ ║  l.177: 	fun peelOrRewrapFast(x) = if x is @compile PeelOrRewrap(r) then r else "<no match>"
+//│ ║         	                                           ^^^^^^^^^^^^^^
 //│ ╟── Its recursive alternatives can rewrite the same term in more than one way: this step
 //│ ║  l.170: 	  | UnBox as PeelOrRewrap
 //│ ║         	    ^^^^^
@@ -259,17 +255,13 @@ fun mixedSlow(x) = if x is MixedSteps(r) then r else "<no match>"
 :w
 fun mixedFast(x) = if x is @compile MixedSteps(r) then r else "<no match>"
 //│ ╔══[WARNING] This fixed-point pattern is not supported by pattern compilation.
-//│ ║  l.253: 	  | (UnTag | UnBox) as MixedSteps
-//│ ║         	     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.254: 	  | Rewrap as MixedSteps
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.255: 	  | Tag(_)
-//│ ║         	^^^^^^^^^
+//│ ║  l.256: 	fun mixedFast(x) = if x is @compile MixedSteps(r) then r else "<no match>"
+//│ ║         	                                    ^^^^^^^^^^^^
 //│ ╟── Its recursive alternatives can rewrite the same term in more than one way: this step
-//│ ║  l.253: 	  | (UnTag | UnBox) as MixedSteps
+//│ ║  l.249: 	  | (UnTag | UnBox) as MixedSteps
 //│ ║         	             ^^^^^
 //│ ╟── and this one.
-//│ ║  l.254: 	  | Rewrap as MixedSteps
+//│ ║  l.250: 	  | Rewrap as MixedSteps
 //│ ║         	    ^^^^^^
 //│ ╙── Falling back to the naive translation.
 
