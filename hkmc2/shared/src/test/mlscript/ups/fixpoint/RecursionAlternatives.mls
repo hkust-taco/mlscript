@@ -272,3 +272,50 @@ mixedSlow of Box(5)
 :expect Tag(5)
 mixedFast of Box(5)
 //│ = Tag(5)
+
+
+// ————— Overlapping steps under a trailing wildcard —————
+//
+// Mutual exclusion is only required because the trailing alternatives are
+// tried against every intermediate. A trailing wildcard accepts the machine's
+// own normal form, so no intermediate is ever consulted and the steps may
+// overlap freely. Note the middle alternative: without one there is no post
+// pattern at all, and the wildcard's own totality never gets asked about.
+
+pattern PeelOrRewrapTotal =
+  | UnBox as PeelOrRewrapTotal
+  | Rewrap as PeelOrRewrapTotal
+  | Tag(_)
+  | _
+
+fun peelOrRewrapTotalSlow(x) = if x is PeelOrRewrapTotal(r) then r else "<no match>"
+
+fun peelOrRewrapTotalFast(x) = if x is @compile PeelOrRewrapTotal(r) then r else "<no match>"
+
+:expect 5
+peelOrRewrapTotalSlow of Box(5)
+//│ = 5
+
+:expect 5
+peelOrRewrapTotalFast of Box(5)
+//│ = 5
+
+
+// Dually, a step that matches every value overlaps every other one. This is
+// only visible if the wildcard is read as matching everything rather than
+// nothing, which is the other half of the same distinction.
+
+pattern WildStep = _ as WildStep | UnTag as WildStep | Tag(_)
+
+:w
+fun wildStep(x) = if x is @compile WildStep(r) then r else "<no match>"
+//│ ╔══[WARNING] This fixed-point pattern is not supported by pattern compilation.
+//│ ║  l.311: 	fun wildStep(x) = if x is @compile WildStep(r) then r else "<no match>"
+//│ ║         	                                   ^^^^^^^^^^
+//│ ╟── Some recursive alternatives can rewrite the same term in more than one way, including this one
+//│ ║  l.308: 	pattern WildStep = _ as WildStep | UnTag as WildStep | Tag(_)
+//│ ║         	                   ^
+//│ ╟── and this one.
+//│ ║  l.308: 	pattern WildStep = _ as WildStep | UnTag as WildStep | Tag(_)
+//│ ║         	                                   ^^^^^
+//│ ╙── Falling back to the naive translation.

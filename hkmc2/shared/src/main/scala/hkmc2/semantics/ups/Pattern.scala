@@ -121,9 +121,11 @@ sealed abstract class Pattern[+K <: Kind.Complete] extends AutoLocated:
     */
   def isTotal(using Context, Raise): Bool =
     def loop(pattern: Pat, visiting: Set[Instantiation]): Bool = pattern match
-      case Or(Nil) => true // The wildcard.
+      // The units need no case of their own: `Wildcard` is `And(Nil)`, which
+      // requires nothing of a value, and `Never` is `Or(Nil)`, which offers it
+      // no alternative. Spelling them out separately is how they came to be
+      // read the wrong way round when the encoding was corrected.
       case Or(patterns) => patterns.exists(loop(_, visiting))
-      case And(Nil) => false // `Never`.
       case And(patterns) => patterns.forall(loop(_, visiting))
       case Rename(pattern, _) => loop(pattern, visiting)
       // A transformation matches whatever its input pattern matches.
@@ -167,13 +169,14 @@ sealed abstract class Pattern[+K <: Kind.Complete] extends AutoLocated:
       case Synonym(instantiation) =>
         if visiting contains instantiation then S(Set.empty)
         else loop(instantiation.body, visiting + instantiation)
-      case Or(Nil) => N // The wildcard matches every value.
+      // As in `isTotal`, the units fall out of the general cases: the empty
+      // disjunction is `Never`, covered by no head at all, and the empty
+      // conjunction is `Wildcard`, which no set of heads covers.
       // A disjunction needs every disjunct's cover, since a value may match
       // through any of them.
       case Or(patterns) => patterns.foldLeft(S(Set.empty): Opt[Set[Head]]):
         (accumulated, pattern) => accumulated.flatMap: heads =>
           loop(pattern, visiting).map(heads ++ _)
-      case And(Nil) => S(Set.empty) // `Never` matches no value.
       case And(patterns) =>
         // A conjunction, on the other hand, is covered by *any one* conjunct's
         // cover. Intersecting them would be unsound: `Parent & Sub` is covered
