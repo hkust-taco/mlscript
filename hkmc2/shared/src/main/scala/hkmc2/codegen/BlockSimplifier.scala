@@ -1006,7 +1006,6 @@ class BlockSimplifier
         // log(s"Ref ${loc.showDbg} ${rs} ${localVars(loc)} ${capturedVars(loc)}")
         
         val analysis = rs.valueAnalysis
-        val refs = analysis.refs.iterator.filter(_.isCurrent).map(_.ref).toList
         
         // log(s"Analysis: litValue: ${analysis.litValue}, unchanged vars: ${refs}")
         
@@ -1018,6 +1017,7 @@ class BlockSimplifier
           registerChange(s"${loc.showDbg} ~> ${lit.showDbg}")
           return k(lit)
         case false =>
+          def refs = analysis.refs.iterator.filter(_.isCurrent).map(_.ref)
           refs.minByOption(_.symbol.uid) match
           case N => k(v)
           case S(v2) =>
