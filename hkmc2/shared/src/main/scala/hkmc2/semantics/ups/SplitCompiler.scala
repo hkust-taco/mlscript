@@ -1146,7 +1146,7 @@ class SplitCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
     * output-matching shorthand `x is P(Q) === x is P as Q`.
     *
     * A machine is only ever built when it fully implements the pattern (see
-    * `FixedPointCompiler.rejectsOverlappingPost`), so a failed run simply
+    * `FixedPointCompiler.unmatchedIntermediates`), so a failed run simply
     * fails the match. There is deliberately no naive retry here: it would
     * redo every rewriting step the machine already performed, which is
     * observable whenever a transformation has side effects. */
