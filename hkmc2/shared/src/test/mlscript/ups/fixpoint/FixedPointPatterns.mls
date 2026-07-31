@@ -376,5 +376,5 @@ pattern EvalAnnotatedStep = @compile (Ctx(Redex) as EvalAnnotatedStep) | _
 //│ ╔══[WARNING] This fixed-point pattern is not supported by pattern compilation.
 //│ ║  l.375: 	pattern EvalAnnotatedStep = @compile (Ctx(Redex) as EvalAnnotatedStep) | _
 //│ ║         	                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── `EvalAnnotatedStep` recurses directly rather than through a cycle, so only its whole body can be compiled.
+//│ ╟── `EvalAnnotatedStep` is recursive and must be compiled as a whole (rather than just part of it).
 //│ ╙── Falling back to the naive translation.

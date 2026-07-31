@@ -216,10 +216,10 @@ pattern AddSteps = @compile ((AddStep as AddSteps) | Add(Lit, Lit))
 //│ ╔══[WARNING] This fixed-point pattern is not supported by pattern compilation.
 //│ ║  l.215: 	pattern AddSteps = @compile ((AddStep as AddSteps) | Add(Lit, Lit))
 //│ ║         	                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── A term this step can still rewrite
+//│ ╟── A term this pattern can still rewrite
 //│ ║  l.215: 	pattern AddSteps = @compile ((AddStep as AddSteps) | Add(Lit, Lit))
 //│ ║         	                              ^^^^^^^
-//│ ╟── can already be matched by this trailing alternative.
+//│ ╟── can also be matched by a trailing alternative.
 //│ ║  l.215: 	pattern AddSteps = @compile ((AddStep as AddSteps) | Add(Lit, Lit))
 //│ ║         	                                                     ^^^^^^^^^^^^
 //│ ╙── Falling back to the naive translation.

@@ -230,7 +230,8 @@ class FixedPointCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynt
             links.indexWhere((symbol, _, _, _) =>
               symbol.defn.exists(defn => stripAnnotations(defn.pattern) eq body)) match
               case -1 => L(
-                msg"This is not the body of any link of the recursion cycle through `${tailSymbol.nme}`.")
+                msg"`@compile` has to be placed on the whole body of a definition " +
+                  msg"taking part in the recursion through `${tailSymbol.nme}`.")
               case index =>
                 val rotated = links.drop(index) ::: links.take(index)
                 R(scoped("ucs:fixpoint")(compileAlternatingMachine(rotated, body.toLoc))
@@ -270,7 +271,7 @@ class FixedPointCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynt
     * be. */
   private def classifyRest(rest: Ls[SP]): Message \/ (Ls[SP], Bool) =
     if rest.isEmpty then
-      L(msg"It has no alternative besides its recursive ones, so it never matches.")
+      L(msg"It has only recursive alternatives, so a match can never finish.")
     else
       val catchAll = rest.last.isInstanceOf[SP.Wildcard]
       val middles = if catchAll then rest.init else rest
@@ -348,22 +349,26 @@ class FixedPointCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynt
           recognizeShape(stripAnnotations(defn.pattern)) match
             case S((next, steps, rest, requireProgress)) =>
               if requireProgress then L(
-                msg"`${current.nme}` requires its step to fire, which is not supported for indirect recursion.")
+                msg"`${current.nme}` cannot match without applying its recursive part at least " +
+                  msg"once, which is not supported when definitions recurse through one another.")
               else classifyRest(rest).map: (middles, catchAll) =>
                 (next, (current, steps, middles, catchAll))
-            case N => L(msg"`${current.nme}` is not fixed-point shaped, so the recursion does not come back.")
-        case _ => L(msg"`${current.nme}` is not a parameterless pattern definition.")
+            case N => L(
+              msg"`${current.nme}` does not recurse back, so this pattern applies once rather than repeatedly.")
+        case _ => L(
+          msg"The recursion goes through `${current.nme}`, which is not a parameterless pattern definition.")
       linkOpt match
         case R((next, link)) =>
           if next is start then R((link :: acc).reverse)
           else if (next is current) || acc.exists(_._1 is next) then
-            L(msg"The recursion through `${current.nme}` does not come back to `${start.nme}`.")
+            L(msg"The recursion goes through `${current.nme}` but never comes back to `${start.nme}`.")
           else walk(next, link :: acc)
         case L(reason) => L(reason)
     walk(start, Nil) match
       // Cycles of length one are the direct shape, handled in `compile`.
       case R(_ :: Nil) => L(
-        msg"`${start.nme}` recurses directly rather than through a cycle, so only its whole body can be compiled.")
+        msg"`${start.nme}` is recursive and must be compiled as a whole" +
+          msg" (rather than just part of it).")
       case recognized => recognized
 
   /** Does `pattern` mention the given instantiation anywhere? Used to locate
@@ -504,14 +509,19 @@ class FixedPointCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynt
       case Nil => Iterator.empty
     .nextOption()
     overlappingSteps match
-      case S((step, other)) => S(
-        msg"Its recursive alternatives can rewrite the same term in more than one way: this step" -> step.toLoc ::
-        msg"and this one." -> other.toLoc :: Nil)
+      case S((step, other)) =>
+        val ol = other.toLoc
+        val sl = step.toLoc orElse ol
+        S:
+          msg"Some recursive alternatives can rewrite the same term in more than one way${
+            if sl.isEmpty then msg"" else msg", including this one"}" -> step.toLoc ::
+          (if ol.isEmpty then Nil else
+            msg"and this one." -> other.toLoc :: Nil)
       // Every alternative of every step is checked against the trailing
       // alternatives: a strict intermediate is one some step produced, whichever.
       case N => overlapping(halves.steps.flatten, halves.alternatives).map: (step, alternative) =>
-        msg"A term this step can still rewrite" -> step.toLoc ::
-        msg"can already be matched by this trailing alternative." -> alternative.toLoc :: Nil
+        msg"A term this pattern can still rewrite" -> step.toLoc ::
+        msg"can also be matched by a trailing alternative." -> alternative.toLoc :: Nil
 
   /** Report a rejection. The head bit states the failure at `origin`, the
     * pattern whose `@compile` asked for the machine — that is where the
@@ -679,8 +689,8 @@ class FixedPointCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynt
             // Not every link is total, or we would not be here.
             zipped.collectFirst:
               case (other, (otherSymbol, _, _, _)) if !isTotal(other.post) =>
-                msg"One of its recursive parts accepts any term:" -> declarationOf(symbol) ::
-                msg"while this one can fail on the final term." -> declarationOf(otherSymbol) :: Nil
+                msg"One of its recursive parts accepts any term" -> declarationOf(symbol) ::
+                msg"while another can fail." -> declarationOf(otherSymbol) :: Nil
           else unmatchedIntermediates(link)
       offending match
         case S(rejection) =>

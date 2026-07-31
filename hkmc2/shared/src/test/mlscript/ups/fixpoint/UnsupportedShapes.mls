@@ -34,7 +34,7 @@ if Box(Lit(7)) is @compile PeelOnce(r) then r else "<no match>"
 //│ ╔══[WARNING] This fixed-point pattern is not supported by pattern compilation.
 //│ ║  l.33: 	if Box(Lit(7)) is @compile PeelOnce(r) then r else "<no match>"
 //│ ║        	                           ^^^^^^^^^^
-//│ ╟── `Rest` is not fixed-point shaped, so the recursion does not come back.
+//│ ╟── `Rest` does not recurse back, so this pattern applies once rather than repeatedly.
 //│ ╙── Falling back to the naive translation.
 //│ = Lit(7)
 

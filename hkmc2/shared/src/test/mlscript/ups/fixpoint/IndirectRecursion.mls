@@ -80,10 +80,10 @@ fun runPeelA(x) = if x is @compile PeelA(y) then y
 //│ ╔══[WARNING] This fixed-point pattern is not supported by pattern compilation.
 //│ ║  l.79: 	fun runPeelA(x) = if x is @compile PeelA(y) then y
 //│ ║        	                                   ^^^^^^^
-//│ ╟── One of its recursive parts accepts any term:
+//│ ╟── One of its recursive parts accepts any term
 //│ ║  l.71: 	pattern PeelB = UnTag as PeelA | _
 //│ ║        	                ^^^^^^^^^^^^^^^^^^
-//│ ╟── while this one can fail on the final term.
+//│ ╟── while another can fail.
 //│ ║  l.70: 	pattern PeelA = UnBox as PeelB | 42
 //│ ║        	                ^^^^^^^^^^^^^^^^^^^
 //│ ╙── Falling back to the naive translation.
@@ -162,7 +162,7 @@ fun atLeastOneFast(x) = if x is @compile AtLeastOneA(r) then r else "<no match>"
 //│ ╔══[WARNING] This fixed-point pattern is not supported by pattern compilation.
 //│ ║  l.161: 	fun atLeastOneFast(x) = if x is @compile AtLeastOneA(r) then r else "<no match>"
 //│ ║         	                                         ^^^^^^^^^^^^^
-//│ ╟── `AtLeastOneA` requires its step to fire, which is not supported for indirect recursion.
+//│ ╟── `AtLeastOneA` cannot match without applying its recursive part at least once, which is not supported when definitions recurse through one another.
 //│ ╙── Falling back to the naive translation.
 
 // The first step cannot fire, so the match fails — it must not yield `7`.
