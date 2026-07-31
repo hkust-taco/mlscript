@@ -348,11 +348,11 @@ class FixedPointCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynt
         case S(defn) if defn.patternParams.isEmpty && defn.extractionParams.isEmpty =>
           recognizeShape(stripAnnotations(defn.pattern)) match
             case S((next, steps, rest, requireProgress)) =>
-              if requireProgress then L(
-                msg"`${current.nme}` cannot match without applying its recursive part at least " +
-                  msg"once, which is not supported when definitions recurse through one another.")
-              else classifyRest(rest).map: (middles, catchAll) =>
-                (next, (current, steps, middles, catchAll))
+              classifyRest(rest).flatMap: (middles, catchAll) =>
+                if requireProgress then L(
+                  msg"`${current.nme}` does not match unless its first pattern does, " +
+                    msg"which is not supported for mutually recursive definitions.")
+                else R((next, (current, steps, middles, catchAll)))
             case N => L(
               msg"`${current.nme}` does not recurse back, so this pattern applies once rather than repeatedly.")
         case _ => L(
