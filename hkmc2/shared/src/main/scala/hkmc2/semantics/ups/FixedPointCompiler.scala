@@ -36,6 +36,14 @@ object FixedPointCompiler:
     * wildcard. */
   private type Link = (PatternSymbol, Ls[Ls[SP]], Ls[SP], Bool)
 
+  /** What `compile` makes of a pattern: `N` when it is not fixed-point shaped
+    * at all, so the regular compilation should take over; `L` with the reason
+    * when the shape is recognized but rejected before any machine is built,
+    * which `unsupported` reports at the pattern that asked for it; `R(N)` when
+    * a build was attempted and gave up, having reported its own diagnostic
+    * with its own locations; and `R(S(_))` when it succeeded. */
+  private type Attempt[A] = Opt[Message \/ Opt[A]]
+
   /** Why a fixed-point definition cannot be machine-compiled, as the bits to
     * append to the warning. A rejection always names two patterns that are
     * not adjacent in the source, and a `Loc` is a single contiguous range, so
@@ -175,29 +183,27 @@ class FixedPointCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynt
               patternSymbol.fixedPointMachine match
                 case S(machine) => S(Outcome.Compiled(machine, outputPattern))
                 case N =>
-                  val shape = recognizeShape(stripAnnotations(defn.pattern))
-                  val recognized = shape.filter(_._1 is patternSymbol).flatMap:
-                    (_, steps, rest, requireProgress) =>
-                      classifyRest(rest).map((middles, catchAll) =>
-                        (steps, middles, catchAll, requireProgress))
-                  // The definition may instead be a link of an indirect
+                  // A self-recursive body is the definition's own fixed point;
+                  // otherwise the definition may be a link of an indirect
                   // recursion cycle.
-                  val cycle = if recognized.isDefined then N else recognizeCycle(patternSymbol)
-                  val machine = recognized match
-                    case S((steps, middles, catchAll, requireProgress)) =>
-                      scoped("ucs:fixpoint")(compileMachine(
-                        steps, middles, catchAll, requireProgress, pattern.toLoc))
-                    case N => cycle.flatMap: links =>
-                      scoped("ucs:fixpoint")(compileAlternatingMachine(links, pattern.toLoc))
+                  val machine: Attempt[Machine] =
+                    recognizeShape(stripAnnotations(defn.pattern)).map:
+                      (tailSymbol, steps, rest, requireProgress) =>
+                        if tailSymbol is patternSymbol then
+                          classifyRest(rest).map: (middles, catchAll) =>
+                            scoped("ucs:fixpoint")(compileMachine(
+                              steps, middles, catchAll, requireProgress, pattern.toLoc))
+                        else recognizeCycle(patternSymbol).map: links =>
+                          scoped("ucs:fixpoint")(compileAlternatingMachine(links, pattern.toLoc))
                   machine match
-                    case S(machine) =>
+                    case S(R(S(machine))) =>
                       patternSymbol.fixedPointMachine = S(machine)
                       S(Outcome.Compiled(machine, outputPattern))
-                    // Whenever a machine build was *attempted* and gave up, the
-                    // rejecting check has already reported a specific
-                    // diagnostic, so `unsupported` must not warn again.
-                    case N => unsupported(recognized.isDefined || cycle.isDefined,
-                      shape.isDefined, pattern.toLoc)
+                    // A machine build that was *attempted* and gave up has
+                    // already reported a specific diagnostic of its own.
+                    case S(R(N)) => S(Outcome.Unsupported)
+                    case S(L(reason)) => unsupported(reason, pattern.toLoc)
+                    case N => N
           case _ => N
     case body: (SP.Chain | SP.Composition) =>
       // The body-annotated form. The body must belong to the very definition
@@ -209,49 +215,43 @@ class FixedPointCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynt
         patternSymbol.defn.exists(defn =>
           (stripAnnotations(defn.pattern) eq body) &&
             defn.patternParams.isEmpty && defn.extractionParams.isEmpty)
-      recognizeShape(body) match
-        case S((patternSymbol, steps, rest, requireProgress)) if isOwnBody(patternSymbol) =>
-          val recognized = classifyRest(rest)
-          val machine = recognized.flatMap: (middles, catchAll) =>
+      val machine: Attempt[(PatternSymbol, Machine)] = recognizeShape(body).map:
+        case (patternSymbol, steps, rest, requireProgress) if isOwnBody(patternSymbol) =>
+          classifyRest(rest).map: (middles, catchAll) =>
             scoped("ucs:fixpoint")(compileMachine(
               steps, middles, catchAll, requireProgress, body.toLoc))
-          machine match
-            case S(machine) =>
-              patternSymbol.fixedPointMachine = S(machine)
-              S(Outcome.Compiled(machine, N))
-            case N => unsupported(recognized.isDefined, true, body.toLoc)
-        case S((tailSymbol, _, _, _)) =>
+              .map((patternSymbol, _))
+        case (tailSymbol, _, _, _) =>
           // The body may be a link of an indirect recursion cycle; its tail
           // then refers to the next link rather than the definition itself.
           // Locate the definition the body belongs to in the cycle and
           // rotate its link to the front.
-          val rotated = recognizeCycle(tailSymbol).flatMap: links =>
+          recognizeCycle(tailSymbol).flatMap: links =>
             links.indexWhere((symbol, _, _, _) =>
               symbol.defn.exists(defn => stripAnnotations(defn.pattern) eq body)) match
-              case -1 => N
-              case index => S(links.drop(index) ::: links.take(index))
-          val machine = rotated.flatMap: links =>
-            scoped("ucs:fixpoint")(compileAlternatingMachine(links, body.toLoc))
-              .map((links.head._1, _))
-          machine match
-            case S((owner, machine)) =>
-              owner.fixedPointMachine = S(machine)
-              S(Outcome.Compiled(machine, N))
-            case N => unsupported(rotated.isDefined, true, body.toLoc)
+              case -1 => L(
+                msg"This is not the body of any link of the recursion cycle through `${tailSymbol.nme}`.")
+              case index =>
+                val rotated = links.drop(index) ::: links.take(index)
+                R(scoped("ucs:fixpoint")(compileAlternatingMachine(rotated, body.toLoc))
+                  .map((rotated.head._1, _)))
+      machine match
+        case S(R(S((owner, machine)))) =>
+          owner.fixedPointMachine = S(machine)
+          S(Outcome.Compiled(machine, N))
+        case S(R(N)) => S(Outcome.Unsupported)
+        case S(L(reason)) => unsupported(reason, body.toLoc)
         case N => N
     case _ => N
 
-  /** Handle a pattern the machine compilation rejected: when it is
-    * fixed-point shaped, report a warning (unless the rejection point already
-    * did) and route the caller to the naive translation, which handles all
-    * such shapes; otherwise leave it to the regular efficient compilation. */
-  private def unsupported(alreadyWarned: Bool, shaped: Bool, loc: Opt[Loc]): Opt[Outcome] =
-    if alreadyWarned then S(Outcome.Unsupported)
-    else if shaped then
-      warn(msg"This fixed-point pattern is not supported by pattern compilation." -> loc,
-        msg"Falling back to the naive translation." -> N)
-      S(Outcome.Unsupported)
-    else N
+  /** Report a fixed-point-shaped pattern the machine compilation rejected
+    * before it got as far as building anything, and route the caller to the
+    * naive translation, which handles all such shapes. Rejections found during
+    * the build report themselves, with their own locations. */
+  private def unsupported(reason: Message, loc: Opt[Loc]): Opt[Outcome] =
+    warn(msg"This fixed-point pattern is not supported by pattern compilation." -> loc,
+      reason -> N, msg"Falling back to the naive translation." -> N)
+    S(Outcome.Unsupported)
 
   /** Remove `Annotated` wrappers (such as the `@compile` marking itself). */
   @tailrec private def stripAnnotations(pattern: SP): SP = pattern match
@@ -266,16 +266,21 @@ class FixedPointCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynt
     case stripped => stripped :: Nil
 
   /** Classify the alternatives following the recursive ones into the middle
-    * alternatives and the optional trailing wildcard. */
-  private def classifyRest(rest: Ls[SP]): Opt[(Ls[SP], Bool)] =
-    if rest.isEmpty then N
+    * alternatives and the optional trailing wildcard, or say why they cannot
+    * be. */
+  private def classifyRest(rest: Ls[SP]): Message \/ (Ls[SP], Bool) =
+    if rest.isEmpty then
+      L(msg"It has no alternative besides its recursive ones, so it never matches.")
     else
       val catchAll = rest.last.isInstanceOf[SP.Wildcard]
       val middles = if catchAll then rest.init else rest
       // Reject non-trailing wildcards (they make later alternatives
       // unreachable) and chains (recursive alternatives must be leading).
-      if middles.exists(p => p.isInstanceOf[SP.Wildcard] || p.isInstanceOf[SP.Chain]) then N
-      else S((middles, catchAll))
+      if middles.exists(_.isInstanceOf[SP.Wildcard]) then
+        L(msg"A wildcard alternative makes the alternatives after it unreachable.")
+      else if middles.exists(_.isInstanceOf[SP.Chain]) then
+        L(msg"Its recursive alternatives must come before its other alternatives.")
+      else R((middles, catchAll))
 
   /** Recognize a fixed-point shape, discovering the pattern symbol `S` the
     * recursive alternatives refer to (the definition itself, or the next link
@@ -336,24 +341,30 @@ class FixedPointCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynt
     * outright when their step does not apply, whereas `assembleAlternating`
     * has no notion of required progress and would let the failing link's
     * alternatives process the term regardless. */
-  private def recognizeCycle(start: PatternSymbol): Opt[Ls[Link]] =
-    @tailrec def walk(current: PatternSymbol, acc: Ls[Link]): Opt[Ls[Link]] =
+  private def recognizeCycle(start: PatternSymbol): Message \/ Ls[Link] =
+    @tailrec def walk(current: PatternSymbol, acc: Ls[Link]): Message \/ Ls[Link] =
       val linkOpt = current.defn match
         case S(defn) if defn.patternParams.isEmpty && defn.extractionParams.isEmpty =>
           recognizeShape(stripAnnotations(defn.pattern)) match
-            case S((next, steps, rest, requireProgress)) if !requireProgress =>
-              classifyRest(rest).map: (middles, catchAll) =>
+            case S((next, steps, rest, requireProgress)) =>
+              if requireProgress then L(
+                msg"`${current.nme}` requires its step to fire, which is not supported for indirect recursion.")
+              else classifyRest(rest).map: (middles, catchAll) =>
                 (next, (current, steps, middles, catchAll))
-            case _ => N
-        case _ => N
+            case N => L(msg"`${current.nme}` is not fixed-point shaped, so the recursion does not come back.")
+        case _ => L(msg"`${current.nme}` is not a parameterless pattern definition.")
       linkOpt match
-        case S((next, link)) =>
-          if next is start then S((link :: acc).reverse)
-          else if (next is current) || acc.exists(_._1 is next) then N
+        case R((next, link)) =>
+          if next is start then R((link :: acc).reverse)
+          else if (next is current) || acc.exists(_._1 is next) then
+            L(msg"The recursion through `${current.nme}` does not come back to `${start.nme}`.")
           else walk(next, link :: acc)
-        case N => N
-    // Cycles of length one are the direct shape, handled in `compile`.
-    walk(start, Nil).filter(_.sizeIs > 1)
+        case L(reason) => L(reason)
+    walk(start, Nil) match
+      // Cycles of length one are the direct shape, handled in `compile`.
+      case R(_ :: Nil) => L(
+        msg"`${start.nme}` recurses directly rather than through a cycle, so only its whole body can be compiled.")
+      case recognized => recognized
 
   /** Does `pattern` mention the given instantiation anywhere? Used to locate
     * the recursive occurrences of the context pattern (the "holes"). */

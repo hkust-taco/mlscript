@@ -34,6 +34,7 @@ if Box(Lit(7)) is @compile PeelOnce(r) then r else "<no match>"
 //│ ╔══[WARNING] This fixed-point pattern is not supported by pattern compilation.
 //│ ║  l.33: 	if Box(Lit(7)) is @compile PeelOnce(r) then r else "<no match>"
 //│ ║        	                           ^^^^^^^^^^
+//│ ╟── `Rest` is not fixed-point shaped, so the recursion does not come back.
 //│ ╙── Falling back to the naive translation.
 //│ = Lit(7)
 
@@ -56,9 +57,9 @@ if nested is SumLits(r) then r else "<no match>"
 :expect Lit(10)
 if nested is @compile SumLits(r) then r else "<no match>"
 //│ ╔══[WARNING] The recursive context must occur as exactly one direct constructor argument.
-//│ ║  l.45: 	pattern TwoHoles(pattern H) = H | Pair(TwoHoles(H), TwoHoles(H))
+//│ ║  l.46: 	pattern TwoHoles(pattern H) = H | Pair(TwoHoles(H), TwoHoles(H))
 //│ ║        	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.46: 	pattern SumLits = TwoHoles(Pair(Lit(a), Lit(b)) => Lit(a + b)) as SumLits | _
+//│ ║  l.47: 	pattern SumLits = TwoHoles(Pair(Lit(a), Lit(b)) => Lit(a + b)) as SumLits | _
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ = Lit(10)
 
@@ -91,6 +92,6 @@ reduce(Pair(Lit(1), Pair(Lit(3), Lit(2))))
 :expect Pair(Lit(1), Lit(2))
 if Pair(Lit(1), Lit(2)) is @compile Reduce(r) then r else "<no match>"
 //│ ╔══[WARNING] The recursive context has no redex alternative, so no rewriting step can apply.
-//│ ║  l.80: 	pattern Reduce = NoRedex(Sum) as Reduce | _
+//│ ║  l.81: 	pattern Reduce = NoRedex(Sum) as Reduce | _
 //│ ╙──      	                 ^^^^^^^^^^^
 //│ = Pair(Lit(1), Lit(2))

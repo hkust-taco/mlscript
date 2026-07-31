@@ -162,6 +162,7 @@ fun atLeastOneFast(x) = if x is @compile AtLeastOneA(r) then r else "<no match>"
 //│ ╔══[WARNING] This fixed-point pattern is not supported by pattern compilation.
 //│ ║  l.161: 	fun atLeastOneFast(x) = if x is @compile AtLeastOneA(r) then r else "<no match>"
 //│ ║         	                                         ^^^^^^^^^^^^^
+//│ ╟── `AtLeastOneA` requires its step to fire, which is not supported for indirect recursion.
 //│ ╙── Falling back to the naive translation.
 
 // The first step cannot fire, so the match fails — it must not yield `7`.
