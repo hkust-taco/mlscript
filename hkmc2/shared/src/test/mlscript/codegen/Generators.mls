@@ -23,9 +23,10 @@ yield 1
 @generator
 fun f() =
   let x = yield 1
+  print(x)
   x
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let f; f = function* f() { return yield 1 };
+//│ let f; f = function* f() { let x; x = yield 1; Predef.print(x); return x };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 :sjs
@@ -57,24 +58,25 @@ class C with
   @generator
   fun f =
     yield 1
-//│ ╔══[COMPILATION ERROR] Generator is not supported on functions without a parameter list
-//│ ║  l.58: 	  fun f =
+//│ ╔══[COMPILATION ERROR] Generators are not supported on functions without a parameter list
+//│ ║  l.59: 	  fun f =
 //│ ║        	  ^^^^^^^
-//│ ║  l.59: 	    yield 1
+//│ ║  l.60: 	    yield 1
 //│ ╙──      	^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Yield expressions are not allowed in this context.
-//│ ║  l.59: 	    yield 1
+//│ ║  l.60: 	    yield 1
 //│ ╙──      	    ^^^^^^^
 
 @generator
 fun g() =
-  yield* 1
+  yield* f()
 
-let g = f()
-//│ g =  {}
+let test = g()
+//│ test =  {}
 
-g.next()
+test.next()
 //│ = {value: 1, done: false}
 
-g.next()
-//│ = {value: undefined, done: true}
+test.next(123)
+//│ > 123
+//│ = {value: 123, done: true}
