@@ -85,6 +85,8 @@ object Keyword:
   
   val `return` = Keyword("return", N, curPrec)
   val `throw` = Keyword("throw", N, curPrec)
+  val `yield` = Keyword("yield", N, curPrec)
+  val `yield*` = Keyword("yield*", N, curPrec)
   val `import` = Keyword("import", N, curPrec)
   
   val `fun` = Keyword("fun", N, N)
@@ -203,8 +205,8 @@ object Keyword:
     `abstract`, mut, virtual, `override`, declare, public, `private`)
   
   type Prefix =
-    `do`.type | `drop`.type | `not`.type | `new!`.type | `else`.type | `return`.type | `throw`.type | `import`.type |
-    `|`.type | `&`.type
+    `do`.type | `drop`.type | `not`.type | `new!`.type | `else`.type | `return`.type | `throw`.type | `yield`.type |
+    `yield*`.type | `import`.type | `|`.type | `&`.type
   
   type Infix =
     `is`.type | `:`.type | `->`.type | `=>`.type | `extends`.type | `restricts`.type | `as`.type |

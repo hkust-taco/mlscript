@@ -1,0 +1,80 @@
+:js
+
+open annotations
+
+:ge
+yield 1
+//│ ╔══[COMPILATION ERROR] Yield expressions are not allowed in this context.
+//│ ║  l.6: 	yield 1
+//│ ╙──     	^^^^^^^
+//│ = 1
+
+:w
+@generator
+() => 3
+//│ ╔══[WARNING] This annotation has no effect.
+//│ ╟── This annotation is not supported on function literal terms.
+//│ ║  l.14: 	() => 3
+//│ ╙──      	^^^^^^^
+//│ = fun
+
+
+:sjs
+@generator
+fun f() =
+  let x = yield 1
+  x
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ let f; f = function* f() { return yield 1 };
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+:sjs
+class B with
+  @generator
+  fun f() =
+    yield 1
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ let B1;
+//│ (class B {
+//│   static {
+//│     B1 = this
+//│   }
+//│   f() {
+//│     return yield 1
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "B"];
+//│ });
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ > let B1;try { globalThis.Object.freeze(class B {   static {     B1 = this   }   get f$__checkNotMethod() { runtime.deboundMethod("f", "B"); }   f() {     runtime.checkArgs("f", 0, true, arguments.length);     return yield 1   }   toString() { return runtime.render(this); }   static [definitionMetadata] = ["class", "B"]; });; undefined } catch (e) { console.log('\u200B' + (e.stack ?? e) + '\u200B'); }
+//│ >                                                                                                                                                                                                                        ^^^^^
+//│ FAILURE: Unexpected compilation error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:251)
+//│ ═══[COMPILATION ERROR] [Uncaught SyntaxError] Unexpected strict mode reserved word
+
+:ge
+class C with
+  @generator
+  fun f =
+    yield 1
+//│ ╔══[COMPILATION ERROR] Generator is not supported on functions without a parameter list
+//│ ║  l.58: 	  fun f =
+//│ ║        	  ^^^^^^^
+//│ ║  l.59: 	    yield 1
+//│ ╙──      	^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Yield expressions are not allowed in this context.
+//│ ║  l.59: 	    yield 1
+//│ ╙──      	    ^^^^^^^
+
+@generator
+fun g() =
+  yield* 1
+
+let g = f()
+//│ g =  {}
+
+g.next()
+//│ = {value: 1, done: false}
+
+g.next()
+//│ = {value: undefined, done: true}
