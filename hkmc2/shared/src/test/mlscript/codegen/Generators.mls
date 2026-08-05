@@ -67,6 +67,13 @@ class C with
 //│ ║  l.60: 	    yield 1
 //│ ╙──      	    ^^^^^^^
 
+:ge
+@generator
+fun bad = 1
+//│ ╔══[COMPILATION ERROR] Generators are not supported on functions without a parameter list
+//│ ║  l.72: 	fun bad = 1
+//│ ╙──      	^^^^^^^^^^^
+
 @generator
 fun g() =
   yield* f()
