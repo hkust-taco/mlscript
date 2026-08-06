@@ -40,18 +40,13 @@ class B with
 //│   static {
 //│     B1 = this
 //│   }
-//│   f() {
+//│   *f() {
 //│     return yield 1
 //│   }
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "B"];
 //│ });
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
-//│ > let B1;try { globalThis.Object.freeze(class B {   static {     B1 = this   }   get f$__checkNotMethod() { runtime.deboundMethod("f", "B"); }   f() {     runtime.checkArgs("f", 0, true, arguments.length);     return yield 1   }   toString() { return runtime.render(this); }   static [definitionMetadata] = ["class", "B"]; });; undefined } catch (e) { console.log('\u200B' + (e.stack ?? e) + '\u200B'); }
-//│ >                                                                                                                                                                                                                        ^^^^^
-//│ FAILURE: Unexpected compilation error
-//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:251)
-//│ ═══[COMPILATION ERROR] [Uncaught SyntaxError] Unexpected strict mode reserved word
 
 :ge
 class C with
@@ -59,19 +54,19 @@ class C with
   fun f =
     yield 1
 //│ ╔══[COMPILATION ERROR] Generators are not supported on functions without a parameter list
-//│ ║  l.59: 	  fun f =
+//│ ║  l.54: 	  fun f =
 //│ ║        	  ^^^^^^^
-//│ ║  l.60: 	    yield 1
+//│ ║  l.55: 	    yield 1
 //│ ╙──      	^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Yield expressions are not allowed in this context.
-//│ ║  l.60: 	    yield 1
+//│ ║  l.55: 	    yield 1
 //│ ╙──      	    ^^^^^^^
 
 :ge
 @generator
 fun bad = 1
 //│ ╔══[COMPILATION ERROR] Generators are not supported on functions without a parameter list
-//│ ║  l.72: 	fun bad = 1
+//│ ║  l.67: 	fun bad = 1
 //│ ╙──      	^^^^^^^^^^^
 
 @generator

@@ -42,20 +42,6 @@ case @compile Add(0, 0) then 1
 //│ define lambda as fun lambda³(caseScrut) {
 //│   let matcher__Addʿ0ꓹ0ʾ$, matcher__0$, matchSuccess, lambda1, lambda2;
 //│   define lambda1 as fun lambda¹(input) {
-//│     let p_1$, p_1$1, tmp, tmp1;
-//│     match input
-//│       0 =>
-//│         set tmp = true;
-//│         set p_1$ = tmp;
-//│         return p_1$
-//│       else
-//│         set tmp1 = false;
-//│         set p_1$1 = tmp1;
-//│         return p_1$1
-//│     end
-//│   };
-//│   set matcher__0$ = lambda¹;
-//│   define lambda2 as fun lambda²(input) {
 //│     let lhs, rhs, lhs1, rhs1, p_0$, result1$, result1$1, p_0$1, tmp, tmp1;
 //│     match input
 //│       Add⁰ =>
@@ -86,7 +72,21 @@ case @compile Add(0, 0) then 1
 //│         return p_0$1
 //│     end
 //│   };
-//│   set matcher__Addʿ0ꓹ0ʾ$ = lambda²;
+//│   set matcher__Addʿ0ꓹ0ʾ$ = lambda¹;
+//│   define lambda2 as fun lambda²(input) {
+//│     let p_1$, p_1$1, tmp, tmp1;
+//│     match input
+//│       0 =>
+//│         set tmp = true;
+//│         set p_1$ = tmp;
+//│         return p_1$
+//│       else
+//│         set tmp1 = false;
+//│         set p_1$1 = tmp1;
+//│         return p_1$1
+//│     end
+//│   };
+//│   set matcher__0$ = lambda²;
 //│   set matchSuccess = matcher__Addʿ0ꓹ0ʾ$(caseScrut);
 //│   match matchSuccess
 //│     true =>
