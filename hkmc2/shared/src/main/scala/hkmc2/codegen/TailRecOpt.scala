@@ -654,7 +654,7 @@ class TailRecOpt(checkAnnotations: Bool)(using State, TL, Raise):
       case f: FunDefn => L(f)
       case c: ClsLikeDefn => R(c)
       case _ => die // unreachable as floatOutDefns only floats out FunDefns and ClsLikeDefns
-    // Filter out functions that should not be tail rec optimized
+    // Filter out functions that should not be tail-rec optimized
     val (tailRecFuns, _) = funs.partition: f =>
       f.configOverride.forall(_.tailRecOpt) && !f.generator
     val (optFNew, optF) = optFunctions(tailRecFuns, N)
