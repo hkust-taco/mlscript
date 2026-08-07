@@ -3,16 +3,6 @@
 open annotations
 
 :sjs
-@generator
-fun f() =
-  let x = yield 1
-  print(x)
-  x
-//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let f; f = function* f() { let x; x = yield 1; Predef.print(x); return x };
-//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
-
-:sjs
 class B with
   @generator
   fun f() =
@@ -31,6 +21,16 @@ class B with
 //│ });
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
+:sjs
+@generator
+fun f() =
+  let x = yield 1
+  print(x)
+  x
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ let f; f = function* f() { let x; x = yield 1; Predef.print(x); return x };
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
 @generator
 fun g() =
   yield* f()
@@ -46,11 +46,47 @@ test.next(123)
 //│ = {value: 123, done: true}
 
 
+// Should not be tail-rec optimized, this is not an infinite loop
 :sjs
 @generator
-fun g() =
-  g()
+fun foo() =
+  foo()
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let g1; g1 = function* g() { return g1() };
+//│ let foo; foo = function* foo() { return foo() };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
+:sjs
+@generator
+fun traverse(tree) =
+  if tree is [x, y] then
+    yield* traverse(x)
+    yield* traverse(y)
+  else
+    yield tree
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ let traverse;
+//│ traverse = function* traverse(tree) {
+//│   let element1$, element0$, tmp, tmp1;
+//│   if (runtime.Tuple.isArrayLike(tree) && tree.length === 2) {
+//│     element0$ = runtime.Tuple.get(tree, 0);
+//│     element1$ = runtime.Tuple.get(tree, 1);
+//│     tmp = traverse(element0$);
+//│     yield* tmp;
+//│     tmp1 = traverse(element1$);
+//│     return yield* tmp1
+//│   }
+//│   return yield tree;
+//│ };
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+fun printGenerated(generator) =
+  let result = generator.next()
+  while not result.done do
+    print(result.value)
+    set result = generator.next()
+
+printGenerated(traverse([[1, [2, 3]], 4]))
+//│ > 1
+//│ > 2
+//│ > 3
+//│ > 4

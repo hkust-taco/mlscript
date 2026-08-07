@@ -31,6 +31,7 @@ object Elaborator:
     "&&", "||")
   val unaryOps = Set("-", "+", "!", "~", "typeof", "yield", "yield*")
   val anyOps = Set("super")
+  val impureOps = Set("super", "yield", "yield*")
   val builtins = binaryOps ++ unaryOps ++ anyOps
   val aliasOps = Map(
     ";" -> ",",
@@ -457,7 +458,8 @@ object Elaborator:
             binary = binaryOps(op),
             unary = unaryOps(op),
             nullary = false,
-            functionLike = anyOps(op))
+            functionLike = anyOps(op),
+            isPure = !impureOps(op))
         .toMap
       baseBuiltins ++ aliasOps.map:
         case (alias, base) => alias -> baseBuiltins(base)
