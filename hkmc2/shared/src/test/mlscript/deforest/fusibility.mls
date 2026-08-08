@@ -161,9 +161,9 @@ fun c2(x) = if x is AA(AA(_)) then 1 else 0
 let p = AA(AA(AA(10))) in
   c1(p) + c2(p)
 //│ deforest > >>> non-affine syms >>>
-//│ deforest > p@4
+//│ deforest > p@2
+//│ deforest > tmp@1
 //│ deforest > tmp@3
-//│ deforest > tmp@5
 //│ deforest > <<< non-affine syms <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > <<< fusing <<<

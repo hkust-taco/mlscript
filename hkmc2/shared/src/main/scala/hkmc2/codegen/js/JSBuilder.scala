@@ -398,11 +398,12 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
             
           case FunDefn(params = Nil) =>
             lastWords("cannot generate function with no parameter list")
-          case FunDefn(own, sym, dSym, ps :: pss, bod) =>
+          case defn @ FunDefn(own, sym, dSym, ps :: pss, bod) =>
             val result = pss.foldRight(bod):
               case (ps, block) =>
                 Return(Lambda(ps, block)(Nil))
             val displayName = if sym.nameIsMeaningful then S(dSym.name) else N
+            val functionKeyword = if defn.generator then doc"function*" else doc"function"
             
             // * We may need to set up the function in a nested scope in one case below, so this is marked as lazy.
             lazy val (params, bodyDoc) = setupFunction(displayName, ps, result, isLambda = false)
@@ -418,9 +419,9 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
               // * Maybe the function's internal name was already bound in scope;
               // * in that case, we can't really use it as an inner name, as this would result in unintended capture.
               case S(otherSym: FreeSymbol) if (otherSym isnt sym) && bod.freeVars.contains(otherSym) =>
-                doc"${varName} = function ($params) ${ braced(bodyDoc) };"
+                doc"${varName} = $functionKeyword ($params) ${ braced(bodyDoc) };"
               case _ =>
-                doc"${varName} = function ${sym.nme}($params) ${ braced(bodyDoc) };"
+                doc"${varName} = $functionKeyword ${sym.nme}($params) ${ braced(bodyDoc) };"
             else
               // * In JS, `let x = (0, function (args) {...})` makes the function anonymous;
               // * otherwise, using `let x = function (args) {...}` would name the function `x`,
@@ -459,7 +460,8 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
                       Return(Lambda(ps, block)(Nil))
                   val (params, bodyDoc) = scope.nest.givenIn:
                     setupFunction(S(td.sym.nme), ps, result, isLambda = false)
-                  doc" # $mtdPrefix${mkMethodName(td, owner)}($params) ${ braced(bodyDoc) }"
+                  val generatorPrefix = if td.generator then "*" else ""
+                  doc" # $mtdPrefix$generatorPrefix${mkMethodName(td, owner)}($params) ${ braced(bodyDoc) }"
                 case td @ FunDefn(params = Nil, body = bod) =>
                   doc" # ${mtdPrefix}get ${mkMethodName(td, owner)}() ${ braced(body(bod, endSemi = true)) }"
               .mkDocument(doc"")

@@ -161,6 +161,8 @@ abstract class Parser(
   private def preprocessTokens(tokens: Ls[TokLoc]): Ls[TokLoc] = tokens match
     case (IDENT("new", false), l1) :: (IDENT("!", true), l2) :: rest =>
       (IDENT("new!", false), l1 ++ l2) :: preprocessTokens(rest)
+    case (IDENT("yield", false), l1) :: (IDENT("*", true), l2) :: rest =>
+      (IDENT("yield*", false), l1 ++ l2) :: preprocessTokens(rest)
     // * Remove empty indented sections
     case (BRACKETS(Indent, toks), _) :: rest
     if toks.forall:

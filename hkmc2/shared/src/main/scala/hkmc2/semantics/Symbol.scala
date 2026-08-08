@@ -253,14 +253,12 @@ class VarSymbol(val id: Ident)(using State) extends LocalVarSymbol(id.name) with
   override def subst(using s: SymbolSubst): VarSymbol = s.mapVarSym(this)
 
 class BuiltinSymbol
-    (val nme: Str, val binary: Bool, val unary: Bool, val nullary: Bool, val functionLike: Bool)(using State)
+    (val nme: Str, val binary: Bool, val unary: Bool, val nullary: Bool, val functionLike: Bool, val isPure: Bool)(using State)
     extends Symbol:
   def toLoc: Option[Loc] = N
   override def prefix: Str = "builtin:"
   
   def subst(using sub: SymbolSubst): BuiltinSymbol = sub.mapBuiltInSym(this)
-  
-  def isPure: Bool = nme =/= "super" // * For now, all other builtins are pure
   
   // * A basic approximation of builtin operator types
   lazy val signature : semantics.flow.Producer =
@@ -393,7 +391,7 @@ sealed abstract case class LitSymbol(lit: Literal)(using State) extends CtorSymb
   def toLoc: Option[Loc] = lit.toLoc
   override def prefix: Str = "lit:"
 object LitSymbol:
-  val cache: mutable.Map[Literal, LitSymbol] = mutable.Map.empty
+  val cache: scala.collection.concurrent.Map[Literal, LitSymbol] = scala.collection.concurrent.TrieMap.empty
   def apply(lit: Literal)(using State): LitSymbol =
     cache.getOrElseUpdate(lit, new LitSymbol(lit){})
 

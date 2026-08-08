@@ -1,0 +1,114 @@
+:js
+
+open annotations
+
+fun printGenerated(generator) =
+  let result = generator.next()
+  while not result.done do
+    print(result.value)
+    set result = generator.next(())
+  print("Result: " + render(result.value))
+
+
+:sjs
+class B with
+  @generator
+  fun f() =
+    yield 1
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ let B1;
+//│ (class B {
+//│   static {
+//│     B1 = this
+//│   }
+//│   *f() {
+//│     return yield 1
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "B"];
+//│ });
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+printGenerated((new B).f())
+//│ > 1
+//│ > Result: ()
+
+
+:sjs
+@generator
+fun f() =
+  let x = yield 1
+  print(x)
+  x
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ let f; f = function* f() { let x; x = yield 1; Predef.print(x); return x };
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+printGenerated(f())
+//│ > 1
+//│ > ()
+//│ > Result: ()
+
+
+@generator
+fun g() =
+  yield* f()
+
+let test = g()
+//│ test =  {}
+
+test.next()
+//│ = {value: 1, done: false}
+
+test.next(123)
+//│ > 123
+//│ = {value: 123, done: true}
+
+printGenerated(g())
+//│ > 1
+//│ > ()
+//│ > Result: ()
+
+
+// Should not be tail-rec optimized, this is not an infinite loop
+:sjs
+@generator
+fun foo() =
+  foo()
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ let foo; foo = function* foo() { return foo() };
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+printGenerated(foo())
+//│ > Result:  {}
+
+:sjs
+@generator
+fun traverse(tree) =
+  if tree is [x, y] then
+    yield* traverse(x)
+    yield* traverse(y)
+  else
+    yield tree
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ let traverse;
+//│ traverse = function* traverse(tree) {
+//│   let element1$, element0$, tmp5, tmp6;
+//│   if (runtime.Tuple.isArrayLike(tree) && tree.length === 2) {
+//│     element0$ = runtime.Tuple.get(tree, 0);
+//│     element1$ = runtime.Tuple.get(tree, 1);
+//│     tmp5 = traverse(element0$);
+//│     yield* tmp5;
+//│     tmp6 = traverse(element1$);
+//│     return yield* tmp6
+//│   }
+//│   return yield tree;
+//│ };
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+printGenerated(traverse([[1, [2, 3]], 4]))
+//│ > 1
+//│ > 2
+//│ > 3
+//│ > 4
+//│ > Result: ()

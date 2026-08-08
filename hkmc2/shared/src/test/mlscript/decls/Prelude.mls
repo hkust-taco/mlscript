@@ -275,6 +275,7 @@ declare module annotations with
   object buffered
   object bufferable
   object mayNotRaiseEffects
+  object generator
 
 declare module scope with
   fun locally
