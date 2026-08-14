@@ -637,7 +637,7 @@ object Normalization:
         case S(parentSym) =>
           (parentSym is parent) || go(parentSym, visited + sym)
         case N => false)
-    (child is parent) || go(child, Set.empty)
+    !(child is parent) && go(child, Set.empty)
 
   final case class VarSet(declared: Set[LocalVarSymbol]):
     def +(nme: LocalVarSymbol): VarSet = copy(declared + nme)

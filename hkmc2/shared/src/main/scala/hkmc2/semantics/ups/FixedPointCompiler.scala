@@ -446,11 +446,10 @@ class FixedPointCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynt
     // constructor term of a `FlatPattern.ClassLike` is never inspected by it.
     def flatten(head: Head): FlatPattern = head match
       case lit: syntax.Literal => FlatPattern.Lit(lit)
-      case sym: ClassSymbol => flattenClassLike(sym)
-      case sym: ModuleOrObjectSymbol => flattenClassLike(sym)
-    def flattenClassLike(sym: ClassSymbol | ModuleOrObjectSymbol): FlatPattern =
+      case head: ClassLikeHead => flattenClassLike(head)
+    def flattenClassLike(head: ClassLikeHead): FlatPattern =
       FlatPattern.ClassLike(
-        Compiler.reference(sym, N).getOrElse(Term.Error()), sym, N, false)(Tree.Dummy)
+        Compiler.preservedReference(head.constructor), head.symbol, N, false)(Tree.Dummy)
     (left.matchableHeads, right.matchableHeads) match
       case (S(leftHeads), S(rightHeads)) => leftHeads.exists: leftHead =>
         rightHeads.exists: rightHead =>

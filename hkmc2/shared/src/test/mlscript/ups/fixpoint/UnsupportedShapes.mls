@@ -220,7 +220,7 @@ fun sideGo(x) = if x is @compile SideGo(r) then r else "<no match>"
 //│ ║  l.213: 	pattern SideSum = Pair(Lit(a), Lit(b)) => Lit(a + b)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.214: 	pattern SideCtx(pattern H) = H | Pair(SideCtx(H), SideUnBox)
-//│ ╙──       	^^^^^^^^^^^^^^^
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
 // An alternative that is not a class pattern, so there is no constructor to
@@ -255,7 +255,7 @@ fun arityGo(x) = if x is @compile ArityGo(r) then r else "<no match>"
 //│ ║  l.244: 	pattern AritySum = Pair(Lit(a), Lit(b)) => Lit(a + b)
 //│ ║         	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.245: 	pattern ArityCtx(pattern H) = H | Pair(ArityCtx(H))
-//│ ╙──       	^^^^^^^^^^^^^^^^
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Expected two arguments, but found only one argument.
 //│ ║  l.245: 	pattern ArityCtx(pattern H) = H | Pair(ArityCtx(H))
 //│ ╙──       	                                       ^^^^^^^^^^
@@ -283,4 +283,4 @@ pattern CrashSum = Pair(Lit(a), Lit(b)) => Lit(a + b)
 pattern CrashCtx(pattern H) = H | Pair(CrashCtx(H), CrashUnBox)
 pattern CrashGo = CrashCtx(CrashSum) as CrashGo | _
 fun crashGo(x) = if x is @compile CrashGo(r) then r else "<no match>"
-//│ /!!!\ Uncaught error: java.lang.AssertionError: assertion failed: (List(UnsupportedShapes.mls:+282, UnsupportedShapes.mls:+279),ClassLike(class:Pair,Some(SeqMap(Ident(first) -> Synonym(Instantiation(pattern:CrashCtx,List(Synonym(Instantiation(pattern:CrashSum,List()))))), Ident(second) -> Synonym(Instantiation(pattern:CrashUnBox,List()))))))
+//│ /!!!\ Uncaught error: java.lang.AssertionError: assertion failed: (List(UnsupportedShapes.mls:+282, UnsupportedShapes.mls:+279),ClassLike(hkmc2.semantics.ups.Pattern$ClassLikeHead@3a,Some(SeqMap(Ident(first) -> Synonym(Instantiation(pattern:CrashCtx,List(Synonym(Instantiation(pattern:CrashSum,List()))))), Ident(second) -> Synonym(Instantiation(pattern:CrashUnBox,List()))))))
