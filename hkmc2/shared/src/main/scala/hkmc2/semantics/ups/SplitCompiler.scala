@@ -1333,7 +1333,7 @@ class SplitCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
     // If the `target` refers to a pattern symbol, we can reference the pattern.
     val term = pattern match
       case Constructor(target, N) =>
-        target.symbol.flatMap(_.asPat).flatMap(Compiler.reference(_, target.toLoc))
+        target.resolvedSym.flatMap(_.asPat).map(_ => Compiler.preservedReference(target))
       case _ => N
     term.getOrElse:
       val unapply = scoped("ucs:translation"):

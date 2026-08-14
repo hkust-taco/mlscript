@@ -50,9 +50,9 @@ sealed abstract class Pattern[+K <: Kind.Complete] extends AutoLocated:
   // TODO: Associate with locations.
   protected def children: Vector[Located] = this match
     case Literal(lit) => Vector.single(lit)
-    case ClassLike(sym, arguments) => arguments.fold(Vector.empty):
+    case ClassLike(head, arguments) => head +: arguments.fold(Vector.empty):
       _.map((id, p) => p).toVector
-    case MatchedClassLike(sym, entries) => entries.values.toVector
+    case MatchedClassLike(head, entries) => head +: entries.values.toVector
     case Record(entries) => entries.values.toVector
     case Tuple(leading, spread) => leading.toVector ++ spread.fold(Vector.empty):
       case (_, middle, trailing) => middle +: trailing.toVector
@@ -65,9 +65,9 @@ sealed abstract class Pattern[+K <: Kind.Complete] extends AutoLocated:
   
   lazy val symbols: Ls[VarSymbol] = this match
     case Literal(lit) => Nil
-    case ClassLike(sym, arguments) =>
+    case ClassLike(_, arguments) =>
       arguments.fold(Nil)(_.values.flatMap(_.symbols).toList)
-    case MatchedClassLike(sym, entries) => entries.values.flatMap(_.symbols).toList
+    case MatchedClassLike(_, entries) => entries.values.flatMap(_.symbols).toList
     case Record(entries) => entries.values.flatMap(_.symbols).toList
     case Tuple(leading, spread) => leading.flatMap(_.symbols) ::: spread.fold(Nil):
       case (_, middle, trailing) => middle.symbols ::: trailing.flatMap(_.symbols)
@@ -222,7 +222,7 @@ sealed abstract class Pattern[+K <: Kind.Complete] extends AutoLocated:
 
   def heads: Set[Head] = reduce[Set[Head]](_.toSet.flatten):
     case Literal(lit) => Set(lit)
-    case ClassLike(sym, _) => Set(sym)
+    case ClassLike(head, _) => Set(head)
 
   def fields: Set[Ident | Int] = reduce[Set[Ident | Int]](_.toSet.flatten):
     case MatchedClassLike(_, entries) => entries.keys.toSet
@@ -236,7 +236,7 @@ sealed abstract class Pattern[+K <: Kind.Complete] extends AutoLocated:
   def collectSubPatterns(field: Ident | Int): Set[Pat] = field match
     case id: Ident => this.reduce[Set[Pat]](_.toSet.flatten):
         // TODO: raise a warning
-      case ClassLike(sym, arguments) => /* TODO:raise a warning */ arguments match
+      case ClassLike(_, arguments) => /* TODO:raise a warning */ arguments match
         case None => Set()
         case Some(arguments) =>
           arguments.find((id1, _) => id1 === id).map((_, p) => p).toSet
@@ -249,12 +249,12 @@ sealed abstract class Pattern[+K <: Kind.Complete] extends AutoLocated:
   /** Simplify the pattern by removing `Never` patterns. */
   def simplify: Pattern[K] = this match
     case _: Literal => this
-    case ClassLike(sym, arguments) =>
-      ClassLike(sym, arguments.map(_.map((id, p) => (id, p.simplify))))
-    case MatchedClassLike(sym, entries) =>
+    case ClassLike(head, arguments) =>
+      ClassLike(head, arguments.map(_.map((id, p) => (id, p.simplify))))
+    case MatchedClassLike(head, entries) =>
       val simplified = entries.map((id, p) => (id, p.simplify))
       if simplified.exists((_, p) => p === Never) then Never
-      else MatchedClassLike(sym, simplified)
+      else MatchedClassLike(head, simplified)
     case Record(entries) =>
       val simplify = entries.map((id, p) => (id, p.simplify))
       if simplify.exists((_, p) => p === Never) then Never else Record(simplify)
@@ -331,15 +331,15 @@ sealed abstract class Pattern[+K <: Kind.Complete] extends AutoLocated:
   
   def showDbg(using DebugPrinter): Str = this match
     case Literal(lit) => lit.idStr
-    case ClassLike(sym, arguments) =>
+    case ClassLike(head, arguments) =>
       val argumentsText = arguments.fold(""):
         _.iterator.map((id, p) => s"${id.name}: ${p.showDbg}").mkString(" { ", ", ", " }")
-      s"${sym.nme}$argumentsText"
-    case MatchedClassLike(sym, entries) =>
+      s"${head.symbol.nme}$argumentsText"
+    case MatchedClassLike(head, entries) =>
       val argumentsText = entries.iterator.map:
         case (id, p) => s"${id.name}: ${p.showDbg}"
       .mkString(" { ", ", ", " }")
-      s"${sym.nme}$argumentsText"
+      s"${head.symbol.nme}$argumentsText"
     case Record(entries) =>
       if entries.isEmpty then "{}" else entries.iterator.map:
         case (id, p) => s"${id.name}: ${p.showDbg}"
@@ -370,8 +370,22 @@ object Pattern:
   
   final case class Literal(lit: syntax.Literal) extends NonCompositional[Kind.Expanded]
 
+  /** A source-preserving constructor head. Equality is intentionally based on
+    * the resolved symbol alone so specialization still groups different source
+    * references to the same constructor into one matcher branch.
+    */
+  final class ClassLikeHead(
+      val symbol: ClassSymbol | ModuleOrObjectSymbol,
+      val constructor: Term
+  ) extends Located:
+    def toLoc: Opt[Loc] = constructor.toLoc
+    override def equals(that: Any): Bool = that match
+      case that: ClassLikeHead => that.symbol is symbol
+      case _ => false
+    override def hashCode: Int = symbol.hashCode
+
   /** Represents a constructor or a class, possibly with arguments.
-    * @param sym the class symbol corresponding to the class or the constructor
+    * @param head the source-level constructor term and its resolved symbol
     * @param arguments is None if no arguments were provided (as
     * in ``Foo``, and is Some if there were arguments provided, even if
     *  it is an empty argument list, e.g. ``Bar()``)
@@ -380,10 +394,10 @@ object Pattern:
     * along with the corresponding identifier, even if it was not present before.
     * e.g. if we have a class defintion ``class L = Nil | Cons(hd: Int, tl: L)``
     * then the pattern ``Cons(foo, bar)`` is expected to be
-    * ``ClassLike(sym=Cons, arguments=Some(List((hd, foo), tl, bar)))``
+    * ``ClassLike(head=Cons, arguments=Some(List((hd, foo), tl, bar)))``
     */
   final case class ClassLike(
-      sym: ClassLikeSymbol,
+      head: ClassLikeHead,
       arguments: Opt[SeqMap[Ident, Pat]]
   ) extends NonCompositional[Kind.Expanded]
 
@@ -403,7 +417,7 @@ object Pattern:
     * scrutinee or rebuilds a fresh instance of the same class.
     */
   final case class MatchedClassLike(
-      sym: ClassLikeSymbol,
+      head: ClassLikeHead,
       entries: SeqMap[Ident, Pat]
   ) extends NonCompositional[Kind.Specialized]
 
@@ -464,7 +478,7 @@ object Pattern:
   
   val Never = Or(Nil)
   
-  type Head = syntax.Literal | ClassLikeSymbol
+  type Head = syntax.Literal | ClassLikeHead
   
   /** A representation of fully instantiated first-order patterns. */
   final case class Instantiation(
@@ -496,13 +510,13 @@ extension (pattern: ExPat)
   
   /** Modifies the pattern under the assumption that the scrutinee matches the
    *  given class. */
-  def specialize(symbol: ClassLikeSymbol): SpPat = pattern.map:
+  def specialize(head: ClassLikeHead): SpPat = pattern.map:
     case Literal(_) => Never
     /** Note that `ClassLike` corresponds the syntax sugar of class patterns
      *  intersected with record patterns. So, we need to leave the arguments
      *  part unchanged. If there's no arguments, we return `Wildcard`. */
-    case ClassLike(`symbol`, arguments) =>
-      arguments.fold(Wildcard)(MatchedClassLike(symbol, _))
+    case ClassLike(`head`, arguments) =>
+      arguments.fold(Wildcard)(MatchedClassLike(head, _))
     case ClassLike(_, _) => Never
     case pattern: (MatchedClassLike | Record | Tuple) => pattern
   
@@ -510,7 +524,7 @@ extension (pattern: ExPat)
    *  given literal or class. */
   def specialize(head: Option[Head]): SpPat = head match
     case Some(h: syntax.Literal) => pattern.specialize(h)
-    case Some(h: ClassLikeSymbol) => pattern.specialize(h)
+    case Some(h: ClassLikeHead) => pattern.specialize(h)
     case None => pattern.map:
       case _: (Literal | ClassLike) => Never
       case pattern: (Record | Tuple) => pattern

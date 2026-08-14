@@ -13,7 +13,6 @@ import ucs.{TermSynthesizer, FlatPattern, safeRef}
 import Message.MessageContext, ucs.error
 
 import collection.mutable.{Queue, Map as MutMap}, collection.immutable.{Set, Map}
-import scala.annotation.tailrec
 
 /** The compiler for pattern definitions. It compiles instantiated patterns into
   * a few matcher functions. Each matcher function matches a set of patterns
@@ -88,12 +87,11 @@ class Compiler(using Context)(using tl: TL)(using Ctx, State, Raise) extends Ter
     /** Create a flat pattern that can be used in the UCS expressions. */
     def toFlatPattern(arguments: Opt[Ls[(LocalVarSymbol, Opt[Loc])]]): FlatPattern = head match
       case lit: syntax.Literal => FlatPattern.Lit(lit)
-      case sym: (ClassSymbol | ModuleOrObjectSymbol) =>
-        val constructor = reference(sym, head.toLoc).getOrElse(Term.Error().withLocOf(head))
-        FlatPattern.ClassLike(constructor, sym, arguments, false)(Tree.Dummy)
+      case head: ClassLikeHead =>
+        FlatPattern.ClassLike(Compiler.preservedReference(head.constructor), head.symbol, arguments, false)(Tree.Dummy)
     def showDbg: Str = head match
       case lit: syntax.Literal => lit.idStr
-      case sym: ClassLikeSymbol => sym.nme
+      case head: ClassLikeHead => head.symbol.nme
   
   extension (patterns: Set[(Label, ExPat)])
     /** Specialize a set of patterns. Also display them in the debug log. */
@@ -158,16 +156,18 @@ class Compiler(using Context)(using tl: TL)(using Ctx, State, Raise) extends Ter
       val specialized = expandedPatterns.specializeSet(S(head))
       lazy val empty = (N: Opt[Ls[(LocalVarSymbol, Option[Loc])]], Map.empty[Ident | Int, LocalVarSymbol])
       val (classFieldArguments, classFields) = head match
-        case symbol: ClassSymbol => symbol.defn.getOrElse(lastWords(s"Missing definition for symbol `${symbol.nme}`.")).paramsOpt match
-          case N => empty
-          case S(params) =>
-            val empty: (Ls[(LocalVarSymbol, Opt[Loc])], Map[Ident | Int, LocalVarSymbol]) = (Nil, Map.empty)
-            val (arguments, fields) = params.params.foldLeft(empty): (acc, param) =>
-              val (argAcc, fieldAcc) = acc
-              val fieldSymbol = TempSymbol(N, param.sym.nme)
-              (argAcc :+ (fieldSymbol, param.toLoc), fieldAcc + ((param.sym.id: Ident | Int) -> fieldSymbol))
-            (S(arguments), fields)
-        case _: (syntax.Literal | ModuleOrObjectSymbol) => empty
+        case head: ClassLikeHead => head.symbol match
+          case symbol: ClassSymbol => symbol.defn.getOrElse(lastWords(s"Missing definition for symbol `${symbol.nme}`.")).paramsOpt match
+            case N => empty
+            case S(params) =>
+              val empty: (Ls[(LocalVarSymbol, Opt[Loc])], Map[Ident | Int, LocalVarSymbol]) = (Nil, Map.empty)
+              val (arguments, fields) = params.params.foldLeft(empty): (acc, param) =>
+                val (argAcc, fieldAcc) = acc
+                val fieldSymbol = TempSymbol(N, param.sym.nme)
+                (argAcc :+ (fieldSymbol, param.toLoc), fieldAcc + ((param.sym.id: Ident | Int) -> fieldSymbol))
+              (S(arguments), fields)
+          case _: ModuleOrObjectSymbol => empty
+        case _: syntax.Literal => empty
       val consequent = Split.Else(multiMatcherBranch(specialized, scrutinee, classFields))
       Branch(scrutinee.safeRef, head.toFlatPattern(classFieldArguments), consequent)
     // Assemble the default branch.
@@ -291,7 +291,7 @@ class Compiler(using Context)(using tl: TL)(using Ctx, State, Raise) extends Ter
       aliases: Ls[VarSymbol]
   )(using ResultMode): MakeSplit = trace(pre = s"completePattern: ${pattern.showDbg}"):
     pattern match
-    case MatchedClassLike(sym, fields) if isMatchOnly =>
+    case MatchedClassLike(head, fields) if isMatchOnly =>
       val acceptAll: MakeSplit = (makeConsequent, _) => makeConsequent(scrutinee, rcd())
       fields.iterator.foldRight(acceptAll):
         case ((field, pattern), makeInnerSplit) =>
@@ -302,11 +302,9 @@ class Compiler(using Context)(using tl: TL)(using Ctx, State, Raise) extends Ter
             Split.Let(resultSymbol, target,
               Branch(resultSymbol.safeRef,
                 makeInnerSplit(makeConsequent, Split.End)) ~: alternative)
-    case MatchedClassLike(sym, fields) =>
+    case MatchedClassLike(head, fields) =>
       val rebuildNeeded = fields.iterator.exists((_, pattern) => !pattern.preservesOriginalScrutinee)
-      val constructor = sym match
-        case symbol: (ClassSymbol | ModuleOrObjectSymbol) =>
-          reference(symbol, symbol.toLoc).getOrElse(Term.Error().withLocOf(pattern))
+      val constructor = Compiler.preservedReference(head.constructor)
       val makeMakeSplit = fields.iterator.foldRight(
         (fields: Ls[(Ident, Term)], bindingsSymbols: Ls[TempSymbol]) =>
           ((makeConsequent, alternative) =>
@@ -328,7 +326,7 @@ class Compiler(using Context)(using tl: TL)(using Ctx, State, Raise) extends Ter
                 `new`(
                   constructor,
                   tup(fields.reverseIterator.map(_._2 |> fld).toSeq*) :: Nil,
-                  s"rebuilt ${sym.nme}"
+                  s"rebuilt ${head.symbol.nme}"
                 )
               else
                 scrutinee.safeRef
@@ -570,76 +568,19 @@ object Compiler:
   /** A multi-matcher implementation. */
   type Implementation = (LocalVarSymbol, ParamList, Term)
   
-  /** Perform a reverse lookup for a term that references a symbol in the
-    *  current context. */
-  def reference(symbol: ClassSymbol | ModuleOrObjectSymbol | PatternSymbol, loc: Opt[Loc])(using tl: TL)(using Ctx, State): Opt[Term] =
+  /** Clone a source-level constructor reference for insertion into synthesized
+    * matcher code, preserving the path chosen by source resolution.
+    */
+  def preservedReference(term: Term)(using State): Term =
     /** To make `Lowering` happy about the terms. */
     def fillImplicitArgs(term: Term): Term = term match
-      case ref: Ref => ref.resolve
+      case ref: Ref =>
+        if ref.expansion.isDefined then ref else ref.resolve
       case sel: SynthSel =>
         fillImplicitArgs(sel.prefix)
-        sel.resolve
+        if sel.expansion.isDefined then sel else sel.resolve
       case _: Term => term
-    type ClassLikeDefnSymbol = ClassSymbol | ModuleOrObjectSymbol | PatternSymbol
-    def classLikeCandidates(symbol: Symbol): Iterator[ClassLikeDefnSymbol] = symbol match
-      case symbol: ClassLikeDefnSymbol =>
-        Iterator.single(symbol)
-      case member: BlockMemberSymbol =>
-        (member.clsTree.iterator.map(_.symbol.asClsLike) ++
-          member.modOrObjTree.iterator.map(_.symbol.asClsLike) ++
-          member.patTree.iterator.map(_.symbol.asClsLike))
-        .flatten
-      case _ => Iterator.empty
-    def memberReference(
-        ownerRef: Term,
-        key: Str,
-        member: Symbol
-    ): Opt[Term] =
-      classLikeCandidates(member).collectFirst:
-        case candidate if candidate is symbol =>
-          val memberSymbol = candidate.defn.get.bsym
-          SynthSel(ownerRef, new Ident(key).withLoc(loc))(S(memberSymbol), FlowSymbol.synthSel(key), N, S(summon))
-            .resolved(candidate)
-    def ownerMemberReference(owner: ClassSymbol | ModuleOrObjectSymbol): Opt[Term] =
-      val ownerRef = owner.defn.get.bsym.ref()
-      owner.tree.definedSymbols.iterator.map:
-        case (key, member) => memberReference(ownerRef, key, member)
-      .firstSome
-    def findSymbol(elem: Ctx.Elem): Opt[Term] =
-      val direct = elem.symbol.iterator.flatMap(classLikeCandidates).collectFirst:
-        case candidate if candidate is symbol =>
-          elem.ref(new Ident(candidate.nme)).withLoc(loc).resolved(candidate)
-      direct.orElse:
-        elem.symbol.iterator.collectFirst:
-          case owner: (ClassSymbol | ModuleOrObjectSymbol) =>
-            ownerMemberReference(owner)
-        .flatten
-    def ownerChainReference(symbol: ClassLikeDefnSymbol): Opt[Term] =
-      def mkSelect(prefix: Term, member: BlockMemberSymbol, target: ClassLikeDefnSymbol): Term =
-        SynthSel(prefix, new Ident(member.nme).withLoc(loc))(S(member), FlowSymbol.synthSel(member.nme), N, S(summon))
-          .resolved(target)
-      def go(symbol: ClassLikeDefnSymbol): Term =
-        val defn = symbol.defn.getOrElse(lastWords(s"Missing definition for symbol `${symbol.nme}`."))
-        defn.owner match
-          case S(owner: ClassLikeDefnSymbol) =>
-            mkSelect(go(owner), defn.bsym, symbol)
-          case S(owner) =>
-            mkSelect(owner.ref().resolve, defn.bsym, symbol)
-          case N =>
-            defn.bsym.ref(new Ident(defn.bsym.nme).withLoc(loc)).resolved(symbol)
-      symbol.defn.map(_ => go(symbol))
-    @tailrec def go(ctx: Ctx): Opt[Term] =
-      val fromEnv = ctx.env.values.iterator.map(findSymbol).firstSome
-      val fromOuter = ctx.outer.inner.collectFirst:
-          case owner: (ClassSymbol | ModuleOrObjectSymbol) =>
-            ownerMemberReference(owner)
-        .flatten
-      (fromEnv orElse fromOuter) match
-        case S(term) => S(fillImplicitArgs(term))
-        case N => ctx.parent match
-          case N => N
-          case S(parent) => go(parent)
-    go(ctx).orElse(ownerChainReference(symbol))
+    fillImplicitArgs(term.mkClone)
   
   import Pattern.*
   
@@ -685,14 +626,14 @@ object Compiler:
       case Literal(StrLit(s)) => S(s"str${s.length}")
       case Literal(UnitLit(true)) => S("null")
       case Literal(UnitLit(false)) => S("undefined")
-      case ClassLike(sym, arguments) => arguments.fold(S(sym.nme)): arguments =>
+      case ClassLike(head, arguments) => arguments.fold(S(head.symbol.nme)): arguments =>
         arguments.iterator.mapOption:
           case (_, pat) => pat.shortName(0)
-        .map(_.reverse.mkString(sym.nme + FAKE_LEFT_PAREN, FAKE_COMMA, FAKE_RIGHT_PAREN))
-      case MatchedClassLike(sym, entries) =>
+        .map(_.reverse.mkString(head.symbol.nme + FAKE_LEFT_PAREN, FAKE_COMMA, FAKE_RIGHT_PAREN))
+      case MatchedClassLike(head, entries) =>
         entries.iterator.mapOption:
           case (_, pat) => pat.shortName(0)
-        .map(_.reverse.mkString(sym.nme + FAKE_LEFT_PAREN, FAKE_COMMA, FAKE_RIGHT_PAREN))
+        .map(_.reverse.mkString(head.symbol.nme + FAKE_LEFT_PAREN, FAKE_COMMA, FAKE_RIGHT_PAREN))
       case Synonym(Instantiation(symbol, patterns)) =>
         if patterns.isEmpty then S(symbol.nme) else
           patterns.iterator.mapOption(_.shortName(0)).map:

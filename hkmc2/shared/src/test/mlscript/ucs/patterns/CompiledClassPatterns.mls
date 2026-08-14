@@ -159,3 +159,61 @@ case @compile (Add2(0, _, _) | Add2(_, 1, _)) then 0
 //│ ║  l.151: 	class Add2(val x, val y, z)
 //│ ╙──       	                         ^
 //│ = fun
+
+module Outer with
+  module Inner with
+    data class Wrapped(val value)
+
+:sir
+fun compiledInner(module Inner: Outer.Inner, x) =
+  if x is @compile Inner.Wrapped(3) then true else false
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define compiledInner⁰ as fun compiledInner¹(Inner, x) {
+//│   let matcher__Wrappedʿ3ʾ$, matcher__3$, matchSuccess, lambda, lambda1;
+//│   define lambda as fun lambda⁵(input) {
+//│     let value, value1, p_0$, result1$, p_0$1, tmp, tmp1;
+//│     match input
+//│       Wrapped⁰ =>
+//│         set value = input.value¹;
+//│         set value1 = matcher__3$(value);
+//│         set result1$ = value1;
+//│         match result1$
+//│           true =>
+//│             set tmp = true;
+//│             end
+//│           else
+//│             set tmp = false;
+//│             end
+//│         set p_0$ = tmp;
+//│         return p_0$
+//│       else
+//│         set tmp1 = false;
+//│         set p_0$1 = tmp1;
+//│         return p_0$1
+//│     end
+//│   };
+//│   set matcher__Wrappedʿ3ʾ$ = lambda⁵;
+//│   define lambda1 as fun lambda⁶(input) {
+//│     let p_1$, p_1$1, tmp, tmp1;
+//│     match input
+//│       3 =>
+//│         set tmp = true;
+//│         set p_1$ = tmp;
+//│         return p_1$
+//│       else
+//│         set tmp1 = false;
+//│         set p_1$1 = tmp1;
+//│         return p_1$1
+//│     end
+//│   };
+//│   set matcher__3$ = lambda⁶;
+//│   set matchSuccess = matcher__Wrappedʿ3ʾ$(x);
+//│   match matchSuccess
+//│     true =>
+//│       return true
+//│     else
+//│       return false
+//│   end
+//│ };
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————

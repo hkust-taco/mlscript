@@ -24,7 +24,7 @@ object FixedPointCompiler:
 
   /** A constructor through which the context pattern descends, together with
     * its (ordered) descent alternatives. */
-  final case class ClassInfo(index: Int, symbol: ClassSymbol, paramCount: Int, alts: Ls[AltInfo])
+  final case class ClassInfo(index: Int, head: ClassLikeHead, symbol: ClassSymbol, paramCount: Int, alts: Ls[AltInfo])
 
   /** The compiled fixed-point matcher. The `unapply` body is assembled by
     * `Lowering` as: evaluate `prelude`, run `loop` as a `while` form (the loop
@@ -580,29 +580,33 @@ class FixedPointCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynt
       : Opt[(Ls[Pat], Ls[ClassInfo])] =
     val (redexAlternatives, descentAlternatives) =
       alternatives.span(pattern => !mentions(pattern, ctxInst))
-    def parse(pattern: Pat): Opt[(ClassSymbol, Int, AltInfo)] = pattern match
-      case ClassLike(cls: ClassSymbol, S(arguments)) =>
-        val entries = arguments.toList
-        val holes = entries.iterator.zipWithIndex.collect:
-          case ((_, argument), index) if mentions(argument, ctxInst) => (index, argument)
-        .toList
-        holes match
-          case (holeIndex, Synonym(inst)) :: Nil if inst == ctxInst =>
-            val arity = cls.defn.flatMap(_.paramsOpt).fold(0)(_.params.size)
-            val sides = entries.iterator.zipWithIndex.collect:
-              case ((_, argument), index) if index != holeIndex && argument != Wildcard =>
-                (index, argument)
-            .toList
-            if arity != entries.size then
-              warn(msg"Cannot rebuild `${cls.nme}` because not all of its parameters are accessible." -> pattern.toLoc)
+    def parse(pattern: Pat): Opt[(ClassLikeHead, ClassSymbol, Int, AltInfo)] = pattern match
+      case ClassLike(head, S(arguments)) => head.symbol match
+        case cls: ClassSymbol =>
+          val entries = arguments.toList
+          val holes = entries.iterator.zipWithIndex.collect:
+            case ((_, argument), index) if mentions(argument, ctxInst) => (index, argument)
+          .toList
+          holes match
+            case (holeIndex, Synonym(inst)) :: Nil if inst == ctxInst =>
+              val arity = cls.defn.flatMap(_.paramsOpt).fold(0)(_.params.size)
+              val sides = entries.iterator.zipWithIndex.collect:
+                case ((_, argument), index) if index != holeIndex && argument != Wildcard =>
+                  (index, argument)
+              .toList
+              if arity != entries.size then
+                warn(msg"Cannot rebuild `${cls.nme}` because not all of its parameters are accessible." -> pattern.toLoc)
+                N
+              else if !sides.forall((_, side) => side.preservesOriginalScrutinee) then
+                warn(msg"Side patterns of a context alternative must be transform-free." -> pattern.toLoc)
+                N
+              else S((head, cls, entries.size, AltInfo(holeIndex, sides)))
+            case _ =>
+              warn(msg"The recursive context must occur as exactly one direct constructor argument." -> pattern.toLoc)
               N
-            else if !sides.forall((_, side) => side.preservesOriginalScrutinee) then
-              warn(msg"Side patterns of a context alternative must be transform-free." -> pattern.toLoc)
-              N
-            else S((cls, entries.size, AltInfo(holeIndex, sides)))
-          case _ =>
-            warn(msg"The recursive context must occur as exactly one direct constructor argument." -> pattern.toLoc)
-            N
+        case _: ModuleOrObjectSymbol =>
+          warn(msg"This alternative is not supported by fixed-point pattern compilation." -> pattern.toLoc)
+          N
       case _ =>
         warn(msg"This alternative is not supported by fixed-point pattern compilation." -> pattern.toLoc)
         N
@@ -625,9 +629,10 @@ class FixedPointCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynt
         // of alternatives sharing a constructor. The latter is what the
         // machine's phase scan replays.
         val order = flat.map(_._1).distinct
-        val classes = order.iterator.zipWithIndex.map: (cls, index) =>
-          val altsFor = flat.collect { case (`cls`, paramCount, alt) => (paramCount, alt) }
-          ClassInfo(index, cls, altsFor.head._1, altsFor.map(_._2))
+        val classes = order.iterator.zipWithIndex.map: (head, index) =>
+          val altsFor = flat.collect { case (`head`, cls, paramCount, alt) => (cls, paramCount, alt) }
+          val (cls, paramCount, _) = altsFor.head
+          ClassInfo(index, head, cls, paramCount, altsFor.map(_._3))
         .toList
         S((redexAlternatives, classes))
 
@@ -810,7 +815,7 @@ class FixedPointCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynt
     def markProgress: Ls[Statement] =
       if requireProgress then setStmt(progressedSymbol, bool(true)) :: Nil else Nil
     def constructorTerm(cls: ClassInfo): Term =
-      Compiler.reference(cls.symbol, N).getOrElse(Term.Error())
+      Compiler.preservedReference(cls.head.constructor)
     def classPattern(cls: ClassInfo, children: Ls[TempSymbol]): FlatPattern =
       FlatPattern.ClassLike(constructorTerm(cls), cls.symbol, S(children.map(_ -> N)), false)(Tree.Dummy)
 

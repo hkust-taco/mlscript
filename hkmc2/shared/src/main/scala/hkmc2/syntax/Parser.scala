@@ -1164,7 +1164,7 @@ abstract class Parser(
     case (br @ BRACKETS(Curly, toks), l0) :: _
     if prec <= AppPrec =>
       consume
-      val res = rec(toks, S(br.innerLoc), br.describe).concludeWith(_.blockMaybeIndented)
+      val res = rec(toks, S(br.innerLoc), br.describe).concludeWith(_.block(allowNewlines = true))
       exprCont(Reft(acc, Block(res).withLoc(S(l0))), prec, allowNewlines = allowNewlines)
     case (br @ BRACKETS(Indent, toks), l0) :: _
     if prec < AppPrec && (toks.headOption match
