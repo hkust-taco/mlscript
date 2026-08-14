@@ -607,7 +607,7 @@ object Normalization:
     // reaching this method with two occurrences of one class used to be told
     // they were disjoint.
     case (ClassLike(_, lhsSym, _, _), ClassLike(_, rhsSym, _, _)) =>
-      !(lhsSym === rhsSym) && !isStrictSubclassOf(lhsSym, rhsSym) && !isStrictSubclassOf(rhsSym, lhsSym)
+      !compareCasePattern(lhs, rhs) && !compareCasePattern(rhs, lhs)
     case _ => false
   
   /** Get the parent class-like symbol from the extends clause of a class or module. */
