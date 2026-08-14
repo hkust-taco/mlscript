@@ -90,8 +90,8 @@ declare val Promise
 
 // MLscript-specific types
 declare class Bool
-declare class Int
 declare class Num
+declare class Int extends Num
 declare class Str
 declare class Class
 

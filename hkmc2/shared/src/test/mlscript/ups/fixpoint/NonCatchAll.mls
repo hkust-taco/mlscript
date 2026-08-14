@@ -119,12 +119,13 @@ peelFast(excessiveWrapped42)
 
 // ————— Overlapping virtual classes —————
 
-// Virtual classes do not express their subtyping through `extends`, but the
-// overlap check must still know that every `Int` is a `Num`. The step turns an
-// integer into a string, on which the trailing `Num` alternative fails; the
-// naive translation then backtracks to that alternative at the original
-// integer. A machine would forget the original and incorrectly report no
-// match, so this definition must fall back to the naive translation.
+// The Prelude declares the virtual class `Int` as extending `Num`, so the
+// overlap check must know that every `Int` is a `Num` without a built-in
+// special case. The step turns an integer into a string, on which the trailing
+// `Num` alternative fails; the naive translation then backtracks to that
+// alternative at the original integer. A machine would forget the original
+// and incorrectly report no match, so this definition must fall back to the
+// naive translation.
 
 pattern IntToStr = Int => "done"
 pattern KeepOriginalInt = IntToStr as KeepOriginalInt | Num
@@ -137,13 +138,13 @@ if 42 is KeepOriginalInt(r) then r else "<no match>"
 :expect 42
 if 42 is @compile KeepOriginalInt(r) then r else "<no match>"
 //│ ╔══[WARNING] This fixed-point pattern is not supported by pattern compilation.
-//│ ║  l.138: 	if 42 is @compile KeepOriginalInt(r) then r else "<no match>"
+//│ ║  l.139: 	if 42 is @compile KeepOriginalInt(r) then r else "<no match>"
 //│ ║         	                  ^^^^^^^^^^^^^^^^^
 //│ ╟── A term this pattern can still rewrite
-//│ ║  l.130: 	pattern KeepOriginalInt = IntToStr as KeepOriginalInt | Num
+//│ ║  l.131: 	pattern KeepOriginalInt = IntToStr as KeepOriginalInt | Num
 //│ ║         	                          ^^^^^^^^
 //│ ╟── can also be matched by a trailing alternative.
-//│ ║  l.130: 	pattern KeepOriginalInt = IntToStr as KeepOriginalInt | Num
+//│ ║  l.131: 	pattern KeepOriginalInt = IntToStr as KeepOriginalInt | Num
 //│ ║         	                                                        ^^^
 //│ ╙── Falling back to the naive translation.
 //│ = 42
@@ -246,13 +247,13 @@ pattern AddStep =
 :w
 pattern AddSteps = @compile ((AddStep as AddSteps) | Add(Lit, Lit))
 //│ ╔══[WARNING] This fixed-point pattern is not supported by pattern compilation.
-//│ ║  l.247: 	pattern AddSteps = @compile ((AddStep as AddSteps) | Add(Lit, Lit))
+//│ ║  l.248: 	pattern AddSteps = @compile ((AddStep as AddSteps) | Add(Lit, Lit))
 //│ ║         	                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── A term this pattern can still rewrite
-//│ ║  l.247: 	pattern AddSteps = @compile ((AddStep as AddSteps) | Add(Lit, Lit))
+//│ ║  l.248: 	pattern AddSteps = @compile ((AddStep as AddSteps) | Add(Lit, Lit))
 //│ ║         	                              ^^^^^^^
 //│ ╟── can also be matched by a trailing alternative.
-//│ ║  l.247: 	pattern AddSteps = @compile ((AddStep as AddSteps) | Add(Lit, Lit))
+//│ ║  l.248: 	pattern AddSteps = @compile ((AddStep as AddSteps) | Add(Lit, Lit))
 //│ ║         	                                                     ^^^^^^^^^^^^
 //│ ╙── Falling back to the naive translation.
 

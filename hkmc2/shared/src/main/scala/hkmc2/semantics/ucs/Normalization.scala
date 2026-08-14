@@ -557,9 +557,6 @@ object Normalization:
     case (ClassLike(_, cs: ModuleOrObjectSymbol, _, _), ClassLike(symbol = blt.`Object`)) => true
     case (Tuple(n1, false), Tuple(n2, false)) if n1 === n2 => true
     case (Tuple(n1, _), Tuple(n2, true)) if n2 <= n1 => true
-    // Note: We don't make Int31 compatible with Num, since Int31 needs to know how it should be
-    // sign-extended in order to convert into a Num.
-    case (ClassLike(symbol = blt.`Int`), ClassLike(symbol = blt.`Num`)) => true
     // TODO(Derppening): Do we limit IntLit to (1 << 31) - 1 for `Int31`?
     case (Lit(Tree.IntLit(_)), ClassLike(symbol = blt.`Int` | blt.`Int31` | blt.`Num`)) => true
     case (Lit(Tree.StrLit(_)), ClassLike(symbol = blt.`Str`)) => true
@@ -576,7 +573,10 @@ object Normalization:
       entries.forall { (fieldName, _) => clsParams.exists {
         case Param(flags = FldFlags(isVal = isVal), sym = sym) => isVal && fieldName === sym.id
       }}
-    // Check user-defined class hierarchy via extends clauses.
+    // Check the class hierarchy via extends clauses. This includes virtual
+    // classes such as `Int <: Num`, whose relationship is declared in Prelude.
+    // `Int31` deliberately does not extend `Num`: converting it to a `Num`
+    // needs to know how the value should be sign-extended.
     case (ClassLike(_, lhsSym, _, _), ClassLike(_, rhsSym, _, _)) =>
       isSubclassOf(lhsSym, rhsSym)
     case (_: FlatPattern, _: FlatPattern) => false
@@ -602,10 +602,9 @@ object Normalization:
     // Under the single-inheritance restriction, two classes where neither is a
     // subclass of the other are provably disjoint. When we add matchable
     // class-like things with multiple inheritance (e.g., interfaces), this check
-    // will need to be refined. Note that `isStrictSubclassOf` excludes the
-    // class itself, so the same class has to be ruled out separately: callers
-    // reaching this method with two occurrences of one class used to be told
-    // they were disjoint.
+    // will need to be refined. `compareCasePattern` includes reflexive
+    // subtyping, so two occurrences of the same class are not considered
+    // disjoint.
     case (ClassLike(_, lhsSym, _, _), ClassLike(_, rhsSym, _, _)) =>
       !compareCasePattern(lhs, rhs) && !compareCasePattern(rhs, lhs)
     case _ => false
@@ -618,16 +617,10 @@ object Normalization:
       case mod: ModuleOrObjectSymbol => mod.defn.flatMap(_.ext)
     ext.flatMap(nw => nw.cls.resolvedSym.flatMap(_.asClsOrMod))
   
-  private def isSubclassOf(
-      child: ClassSymbol | ModuleOrObjectSymbol,
-      parent: ClassSymbol | ModuleOrObjectSymbol
-  ): Bool =
-    child === parent || isStrictSubclassOf(child, parent)
-  
   /** Check if `child` is a subclass of `parent` by traversing the class hierarchy.
     * Uses a visited set to avoid infinite loops in case of cyclic inheritance.
     * TODO: Cache the subclasses set!! */
-  private def isStrictSubclassOf(
+  private def isSubclassOf(
       child: ClassSymbol | ModuleOrObjectSymbol,
       parent: ClassSymbol | ModuleOrObjectSymbol
   ): Bool =
@@ -637,7 +630,7 @@ object Normalization:
         case S(parentSym) =>
           (parentSym is parent) || go(parentSym, visited + sym)
         case N => false)
-    !(child is parent) && go(child, Set.empty)
+    (child is parent) || go(child, Set.empty)
 
   final case class VarSet(declared: Set[LocalVarSymbol]):
     def +(nme: LocalVarSymbol): VarSet = copy(declared + nme)
