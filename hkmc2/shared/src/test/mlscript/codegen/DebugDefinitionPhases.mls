@@ -1,0 +1,157 @@
+:js
+
+
+#dbg(showUids: false)
+@dbg('resolution, 'lowering)
+fun selected_debug(x) = x
+fun unrelated(x) = x
+//│ | Resolving definition: TermDefinition(Fun,member:selected_debug,term:selected_debug,List(ParamList(‹›,List(Param(‹›,x,None,Modulefulness(None))),None)),None,None,Some(Ref(x)),‹›,Modulefulness(None),List(Debug(...)),None)
+//│ | | Resolving function definition TermDefinition(Fun,member:selected_debug,term:selected_debug,List(ParamList(‹›,List(Param(‹›,x,None,Modulefulness(None))),None)),None,None,Some(Ref(x)),‹›,Modulefulness(None),List(Debug(...)),None)
+//│ | | Resolving parameter x
+//│ | | Traversing term: Ref(x) (expect = NonModule)
+//│ | | | Resolving resolvable term: Ref(x), (prefer = NonModule, inAppPrefix = false, inCtxPrefix = false, inTyPrefix = false)
+//│ | | | | Resolving symbol for term: Ref(x) (prefer = NonModule)
+//│ | | | | -> (sym = Some(x), typ = None)
+//│ | | | | Resolving the type for term: Ref(x) (prefer = NonModule, sym = Some(x))
+//│ | | | | | Declaration: Some(Param(‹›,x,None,Modulefulness(None)))
+//│ | | | | -> typ = None
+//│ | | | | Resolving resolvable term Ref(x) with sym = Some(x), typ = None
+//│ | | | ~> Ref(x) (sym = Some(x), typ = None)
+//│ | | | Checking Ref(x): expect NonModule, evalsToModule = false, evalsToStaticClass = false
+//│ Lowering.term x⁰ – symbol x
+//│ Expanding term Ref(x)
+//│ ~> Ref(x)
+
+
+module Main with
+  // The IR of `foo1` should be shown
+  @dbg('showParsedTree, 'showElaboratedTree, 'showLoweredTree, 'showOptimizedIR)
+  fun foo1 = 2 + 2
+  // The IR of `foo2` should NOT be shown
+  fun foo2 = 2 + 2
+//│ ———————————————| Parsed tree |——————————————————————————————————————————————————————————————————————
+//│ Annotated:
+//│   annotation = App:
+//│     lhs = Ident of "dbg"
+//│     rhs = Tup of Ls of
+//│       Ident of "'showParsedTree"
+//│       Ident of "'showElaboratedTree"
+//│       Ident of "'showLoweredTree"
+//│       Ident of "'showOptimizedIR"
+//│   target = TermDef:
+//│     k = Fun
+//│     head = Ident of "foo1"
+//│     rhs = S of OpApp:
+//│       lhs = IntLit of 2
+//│       op = Ident of "+"
+//│       rhss = Ls of
+//│         IntLit of 2
+//│ —————————————| Elaborated tree |————————————————————————————————————————————————————————————————————
+//│ TermDefinition:
+//│   k = Fun
+//│   sym = member:foo1⁰
+//│   tsym = term:Main⁰/foo1¹
+//│   body = S of App:
+//│     lhs = Ref{sym=builtin:+⁰} of builtin:+⁰
+//│     rhs = Tup of Ls of
+//│       Fld:
+//│         term = Lit of IntLit of 2
+//│       Fld:
+//│         term = Lit of IntLit of 2
+//│   modulefulness = Modulefulness of N
+//│   annotations = Ls of
+//│     Debug of ...
+//│ —————————————| Lowered IR Tree |————————————————————————————————————————————————————————————————————
+//│ FunDefn:
+//│   owner = S of module:Main⁰
+//│   sym = member:foo1⁰
+//│   dSym = term:Main⁰/foo1¹
+//│   body = Return of Lit of IntLit of 4
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ @dbg(...) define foo1⁰ as fun foo1¹ { return 4 }
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+Main.foo1
+//│ = 4
+
+
+#dbg('showParsedTree, 'showElaboratedTree, 'showLoweredTree)
+fun shown_trees = 42
+//│ ———————————————| Parsed tree |——————————————————————————————————————————————————————————————————————
+//│ App:
+//│   lhs = Directive:
+//│     prefix = Ident of "dbg"
+//│     body = Tup of Nil
+//│   rhs = Tup of Ls of
+//│     Ident of "'showParsedTree"
+//│     Ident of "'showElaboratedTree"
+//│     Ident of "'showLoweredTree"
+//│ TermDef:
+//│   k = Fun
+//│   head = Ident of "shown_trees"
+//│   rhs = S of IntLit of 42
+//│ —————————————| Elaborated tree |————————————————————————————————————————————————————————————————————
+//│ Blk:
+//│   stats = Ls of
+//│     SetConfig of ...
+//│     TermDefinition:
+//│       k = Fun
+//│       sym = member:shown_trees⁰
+//│       tsym = term:shown_trees¹
+//│       body = S of Lit of IntLit of 42
+//│       modulefulness = Modulefulness of N
+//│   res = Lit of UnitLit of false
+//│ —————————————| Lowered IR Tree |————————————————————————————————————————————————————————————————————
+//│ Program:
+//│   main = Define:
+//│     defn = FunDefn:
+//│       sym = member:shown_trees⁰
+//│       dSym = term:shown_trees¹
+//│       params = Ls of
+//│         ParamList: ‹empty›
+//│       body = Return of Lit of IntLit of 42
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+
+#dbg(showParsedTree: false, showElaboratedTree: false, showLoweredTree: false)
+
+
+#dbg('optimizations)
+fun optimization_debug(x) = x
+//│ ⬤ Simplif. iter. 1
+//│ Captured variables: HashSet()
+//│ ⬤ Simplif. iter. 1
+//│ Captured variables: HashSet()
+
+
+#dbg(optimizations: false)
+
+
+:dopt
+fun command_optimization_debug(x) = x
+//│ ⬤ Simplif. iter. 1
+//│ Captured variables: HashSet()
+//│ ⬤ Simplif. iter. 1
+//│ Captured variables: HashSet()
+
+
+#dbg('showIR, 'showOptimizedIR)
+fun shown_ir(x) = x
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define shown_ir⁰ as fun shown_ir¹(x) { return x }; end
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ define shown_ir⁰ as fun shown_ir¹(x) { return x }; end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+
+#dbg(showIR: false, showOptimizedIR: false)
+
+
+:sir
+:soir
+fun command_shown_ir(x) = x
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define command_shown_ir⁰ as fun command_shown_ir¹(x) { return x }; end
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ define command_shown_ir⁰ as fun command_shown_ir¹(x) { return x }; end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————

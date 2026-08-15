@@ -411,7 +411,21 @@ class ParseRules(using State):
     modified(`data`),
     modified(`public`),
     modified(`private`),
-    modified(`out`),
+    Kw(`out`)(
+      ParseRule("'out' keyword")(
+        Kw(`:`)(
+          ParseRule("named 'out' argument colon")(
+            Expr(ParseRule("named 'out' argument value")(end(()))):
+              case (value, ()) => value
+          )
+        ) { case (colon, value) => S(colon) -> value },
+        Expr(ParseRule("'out' modifier body")(end(()))):
+          case (body, ()) => N -> body
+      )
+    ):
+      case (outKw, (S(colon), value)) =>
+        InfixApp(Ident("out").withLocOf(outKw), colon, value).withLocOf(outKw)
+      case (outKw, (N, body)) => Tree.Modified(outKw, body),
     modified(`staged`),
     singleKw(`true`)(BoolLit(true)),
     singleKw(`false`)(BoolLit(false)),
@@ -498,4 +512,3 @@ class ParseRules(using State):
   )
 
 end ParseRules
-

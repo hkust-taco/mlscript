@@ -45,18 +45,26 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
   val prettyPrintNme = baseScp.allocateName(Elaborator.State.prettyPrintSymbol)(using throw _)
   
   val ltl = new TraceLogger:
-    override def doTrace = debugLowering.isSet || scope.exists:
+    override def doTrace = debugLowering.isSet || activeDebug.lowering || scope.exists:
       showUCS.get.getOrElse(Set.empty).contains
+    override protected def defaultDebugOutput: Config.DebugOutput =
+      if activeDebug.lowering then activeDebug.out else Config.DebugOutput.StdIO
     override def emitDbg(str: String): Unit = output(str)
+    override protected[hkmc2] def emitDbg(str: Str, out: Config.DebugOutput): Unit =
+      debugOutputHandler.emit(out, str)
   
   val dtl = new TraceLogger:
-    override def doTrace = debugOptimizations.isSet
+    override def doTrace = debugOptimizations.isSet || activeDebug.optimizations
+    override protected def defaultDebugOutput: Config.DebugOutput =
+      if activeDebug.optimizations then activeDebug.out else Config.DebugOutput.StdIO
     override def emitDbg(str: String): Unit = output(str)
+    override protected[hkmc2] def emitDbg(str: Str, out: Config.DebugOutput): Unit =
+      debugOutputHandler.emit(out, str)
   
   val replTL = new TraceLogger:
     override def doTrace = showRepl.isSet
     override def emitDbg(str: String): Unit = output(str)
-  
+
   lazy val host =
     hostCreated = true
     given TL = replTL
@@ -112,6 +120,37 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
       Printer()
     val print = (p: codegen.Program) =>
       blockPrinter.worksheet(p)(using irPrintingScp).mkString(output.ColWidth)
+    def forEachDefinitionDebug(
+        program: codegen.Program,
+        isEnabled: Config.Debug => Bool,
+    )(display: (Defn, Config) => Unit): Unit =
+      def visit(defn: Defn): Unit =
+        defn.configOverride.foreach: localConfig =>
+          if isEnabled(localConfig.debug) then display(defn, localConfig)
+      new BlockTraverser:
+        override def applyFunDefn(fun: FunDefn): Unit =
+          visit(fun)
+          super.applyFunDefn(fun)
+        override def applyValDefn(defn: ValDefn): Unit =
+          visit(defn)
+          super.applyValDefn(defn)
+        override def applyClsLikeDefn(defn: ClsLikeDefn): Unit =
+          visit(defn)
+          super.applyClsLikeDefn(defn)
+      .applyProgram(program)
+    def showDefinitionDebugIR(
+        title: Str,
+        program: codegen.Program,
+        isEnabled: Config.Debug => Bool,
+    ): Unit =
+      forEachDefinitionDebug(program, isEnabled): (defn, localConfig) =>
+        val ir = blockPrinter.printDefinition(defn)(using irPrintingScp).mkString(output.ColWidth)
+        outputDebugSection(title, ir, localConfig.debug.out)
+    def showDefinitionDebugTree(title: Str, program: codegen.Program): Unit =
+      forEachDefinitionDebug(program, _.showLoweredTree): (defn, localConfig) =>
+        val tree = defn match
+          case product: Product => product.showAsTree
+        outputDebugSection(title, tree, localConfig.debug.out)
     
     Config.extractConfigFromStats(blk).givenIn {
     val loweringState = summon[Elaborator.State]
@@ -150,10 +189,13 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
                 }
               rec(before.main, after.main)
           override def preOptimizeHook(prog: Program) =
-            if showLoweredTree.isSet then
-              outputSeparator("Lowered IR Tree")
-              output(prog.showAsTree)
-            if showIR.isSet || showIRLines.isSet then
+            if showLoweredTree.isSet || config.debug.showLoweredTree then
+              if showLoweredTree.isSet then
+                outputSeparator("Lowered IR Tree")
+                output(prog.showAsTree)
+              else outputDebugSection("Lowered IR Tree", prog.showAsTree, config.debug.out)
+            else showDefinitionDebugTree("Lowered IR Tree", prog)
+            if showIR.isSet || showIRLines.isSet || config.debug.showIR then
               given ShowCfg = ShowCfg(
                 showExpansionMappings = false,
                 showFlowSymbols = true,
@@ -165,20 +207,27 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
               if showIR.isSet then
                 outputSeparator("Lowered IR")
                 output(irStr)
+              else if config.debug.showIR then
+                outputDebugSection("Lowered IR", irStr, config.debug.out)
+            else showDefinitionDebugIR("Lowered IR", prog, _.showIR)
             super.preOptimizeHook(prog)
         customPipeline.run(lowered, print, symbolsToPreserve, dtl)
       
       if checkIR.isSet then
         BlockChecker().applyProgram(optimized)
       
-      if showOptimizedIR.isSet then
-        outputSeparator("Optimized IR")
+      if showOptimizedIR.isSet || config.debug.showOptimizedIR then
         given ShowCfg = ShowCfg(
           showExpansionMappings = false,
           showFlowSymbols = true,
           debug = debug.isSet,
         )
-        output(Printer().worksheet(optimized)(using irPrintingScp).mkString(output.ColWidth))
+        val irStr = Printer().worksheet(optimized)(using irPrintingScp).mkString(output.ColWidth)
+        if showOptimizedIR.isSet then
+          outputSeparator("Optimized IR")
+          output(irStr)
+        else outputDebugSection("Optimized IR", irStr, config.debug.out)
+      else showDefinitionDebugIR("Optimized IR", optimized, _.showOptimizedIR)
       if showOptimizedTree.isSet then
         outputSeparator("Optimized IR Tree")
         output(optimized.showAsTree)

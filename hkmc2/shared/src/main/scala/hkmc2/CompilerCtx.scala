@@ -63,13 +63,23 @@ class CompilerCtx(
         (file: io.Path, prelude: Ctx)
         (using TL, Raise)
         : Artifact =
+    getElaboratedBlock(file, prelude, forceDebugParsing = false)
+
+  def getElaboratedBlock
+        (file: io.Path, prelude: Ctx, forceDebugParsing: Bool)
+        (using TL, Raise)
+        : Artifact =
     
     val lastMod = fs.getLastChangedTimestamp(file)
     
     def mk =
       val dependencies = new CompilerCtx.DependencyRecorder
       val modulePath = (file.up / io.RelPath(file.baseName + ".mjs")).toString
-      val state = new Elaborator.State
+      var stateDebug = false
+      var stateShowUids = true
+      val state = new Elaborator.State:
+        override protected def doDbg: Bool = stateDebug
+        override protected def doShowUids: Bool = stateShowUids
       given Elaborator.State = state
 
       given Config = rootConfig
@@ -81,17 +91,28 @@ class CompilerCtx(
           includeZero = true,
         ))
       )
-      val backendTL = new TraceLogger:
-        override def doTrace: Bool = false
-
+      val outputHandler = DebugOutputHandler(fs, rootConfig.baseDir, println)
       val parse =
         given CompilerCtx = this
-        ParserSetup(file)
+        ParserSetup(file, forceDebugParsing, outputHandler)
+      val phaseConfig = parse.effectiveConfig
+      stateDebug = CompilerCtx.debugTracingEnabled(phaseConfig.debug)
+      stateShowUids = phaseConfig.debug.showUids
+      def traceLogger(enabled: Bool) = new TraceLogger:
+        override def doTrace: Bool = enabled
+        override protected def defaultDebugOutput: Config.DebugOutput = phaseConfig.debug.out
+        override protected[hkmc2] def emitDbg(str: Str, out: Config.DebugOutput): Unit =
+          outputHandler.emit(out, str)
+      val etl = traceLogger(phaseConfig.debug.elaboration)
+      val ltl = traceLogger(phaseConfig.debug.lowering)
+      val dtl = traceLogger(phaseConfig.debug.optimizations)
+      val rtl = traceLogger(phaseConfig.debug.resolution)
+
       given Elaborator.Ctx = prelude
       val artifactCtx = derive(parse.origin.fileName, dependencies)
-      val elab =
+      val elab = phaseConfig.givenIn:
         given CompilerCtx = artifactCtx
-        Elaborator(tl, file.up, prelude)
+        Elaborator(etl, file.up, prelude)
 
       val parsed = parse.resultBlk
       val nme = file.baseName
@@ -108,12 +129,22 @@ class CompilerCtx(
         state.initRuntimeSymbolsFromBlock(blk0)
       else
         state.initRuntimeSymbolsFromFile(paths.runtimeSourceFile, prelude)(
-          using tl, summon[Raise], artifactCtx)
+          using etl, summon[Raise], artifactCtx)
 
       val artifactConfig = Config.extractConfigFromStats(blk0)
+      if artifactConfig.debug.showElaboratedTree then
+        outputHandler.emit(artifactConfig.debug.out, s"Elaborated tree\n${blk0.showAsTree}")
       artifactConfig.givenIn:
         given Elaborator.State = state
-        val resolver = Resolver(backendTL)
+        val resolver = new Resolver(rtl):
+          override protected def preTraverseDefn(defn: Definition): Unit =
+            if !artifactConfig.debug.showElaboratedTree then
+              val modifiers = defn.annotations.collect:
+                case Annot.Debug(modify) => modify
+              if modifiers.nonEmpty then
+                val localConfig = modifiers.foldLeft(artifactConfig)((cfg, modify) => modify(cfg))
+                if localConfig.debug.showElaboratedTree then
+                  outputHandler.emit(localConfig.debug.out, s"Elaborated tree\n${defn.showAsTree}")
         resolver.traverseBlock(blk0)(using Resolver.ICtx.empty)
       def findQuote(t: semantics.Statement): Bool = t match
         case Term.Quoted(_) | Term.Unquoted(_) => true
@@ -146,12 +177,66 @@ class CompilerCtx(
       // and only fully-transformed definitions are valid to splice into another unit.
       def optimize(lowered: codegen.Program): codegen.Program =
         given Config = artifactConfig
-        val printer = (p: codegen.Program) => p.showAsTree // TODO: proper printing like in diff-tests
+        given ShowCfg = ShowCfg(
+          showExpansionMappings = false,
+          showFlowSymbols = true,
+          debug = false,
+        )
+        val irPrintingScp = Scope.empty(Scope.Cfg.default.copy(
+          escapeChars = false,
+          useSuperscripts = false,
+          includeZero = false,
+        ))
+        val printer = (p: codegen.Program) =>
+          codegen.Printer().worksheet(p)(using irPrintingScp).mkString(100)
+        def showDebugIR(title: Str, program: codegen.Program): Unit =
+          outputHandler.emit(artifactConfig.debug.out, s"${title}\n${printer(program)}")
+        def forEachDefinitionDebug(
+            program: codegen.Program,
+            isEnabled: Config.Debug => Bool,
+        )(display: (codegen.Defn, Config) => Unit): Unit =
+          def visit(defn: codegen.Defn): Unit =
+            defn.configOverride.foreach: localConfig =>
+              if isEnabled(localConfig.debug) then display(defn, localConfig)
+          new codegen.BlockTraverser:
+            override def applyFunDefn(fun: codegen.FunDefn): Unit =
+              visit(fun)
+              super.applyFunDefn(fun)
+            override def applyValDefn(defn: codegen.ValDefn): Unit =
+              visit(defn)
+              super.applyValDefn(defn)
+            override def applyClsLikeDefn(defn: codegen.ClsLikeDefn): Unit =
+              visit(defn)
+              super.applyClsLikeDefn(defn)
+          .applyProgram(program)
+        def showDefinitionDebugIR(
+            title: Str,
+            program: codegen.Program,
+            isEnabled: Config.Debug => Bool,
+        ): Unit =
+          val blockPrinter = codegen.Printer()
+          forEachDefinitionDebug(program, isEnabled): (defn, localConfig) =>
+            val ir = blockPrinter.printDefinition(defn)(using irPrintingScp).mkString(100)
+            outputHandler.emit(localConfig.debug.out, s"${title}\n${ir}")
+        def showDefinitionDebugTree(title: Str, program: codegen.Program): Unit =
+          forEachDefinitionDebug(program, _.showLoweredTree): (defn, localConfig) =>
+            val tree = defn match
+              case product: Product => product.showAsTree
+            outputHandler.emit(localConfig.debug.out, s"${title}\n${tree}")
         val pipeline = new codegen.CompilationPipeline:
           override def extraSymbolsToPreserveFrom(prog: codegen.Program): Set[codegen.BoundSymbol] =
             collectCompilationUnitSymbols(prog)
-        backendTL.givenIn:
-          pipeline.run(lowered, printer, exportedSymbol.toSet, backendTL)
+          override def preOptimizeHook(prog: codegen.Program): Unit =
+            if artifactConfig.debug.showLoweredTree then
+              outputHandler.emit(artifactConfig.debug.out, s"Lowered IR Tree\n${prog.showAsTree}")
+            else showDefinitionDebugTree("Lowered IR Tree", prog)
+            if artifactConfig.debug.showIR then showDebugIR("Lowered IR", prog)
+            else showDefinitionDebugIR("Lowered IR", prog, _.showIR)
+        val optimized = ltl.givenIn:
+          pipeline.run(lowered, printer, exportedSymbol.toSet, dtl)
+        if artifactConfig.debug.showOptimizedIR then showDebugIR("Optimized IR", optimized)
+        else showDefinitionDebugIR("Optimized IR", optimized, _.showOptimizedIR)
+        optimized
 
       // Every compilation unit is lowered, so that its symbols carry the IR definitions an
       // importer's inliner may splice in — and so that the importer never has to lower it itself,
@@ -159,8 +244,8 @@ class CompilerCtx(
       val ir =
         artifactConfig.givenIn:
           given Elaborator.State = state
-          val low = backendTL.givenIn:
-            new codegen.Lowering()(using artifactConfig, backendTL, summon[Raise], state, prelude, summon[SymbolPrinter])
+          val low = ltl.givenIn:
+            new codegen.Lowering()(using artifactConfig, ltl, summon[Raise], state, prelude, summon[SymbolPrinter])
           optimize(low.program(blk, Set.empty))
 
       state.publishCompilationUnitAbi:
@@ -193,6 +278,12 @@ class CompilerCtx(
         (file: io.Path)
         (using tl: TL, raise: Raise)
         : PreludeArtifact =
+    getPrelude(file, forceDebugParsing = false)
+
+  def getPrelude
+        (file: io.Path, forceDebugParsing: Bool)
+        (using tl: TL, raise: Raise)
+        : PreludeArtifact =
     // The prelude context is shared so every compilation unit sees the same prelude
     // symbols. Callers still elaborate their own files with a fresh State; the frozen
     // State remains the owner captured by the prelude symbols themselves.
@@ -206,14 +297,29 @@ class CompilerCtx(
         // * See the corresponding assertion in `getElaboratedBlock` above.
         softAssert(art.config === rootConfig,
           s"Cached prelude for $file was elaborated under a different root configuration")
-        art.lastChangedTimestamp >= lastMod,
+        !forceDebugParsing && art.lastChangedTimestamp >= lastMod,
       create =
-        val state = new Elaborator.State
+        var stateDebug = false
+        var stateShowUids = true
+        val state = new Elaborator.State:
+          override protected def doDbg: Bool = stateDebug
+          override protected def doShowUids: Bool = stateShowUids
         given Elaborator.State = state
         given Config = rootConfig
         given CompilerCtx = this
-        val parse = ParserSetup(file)
-        val elab = Elaborator(tl, file.up, Ctx.empty)
+        given DebugPrinter = new DebugPrinter
+        val outputHandler = DebugOutputHandler(fs, rootConfig.baseDir, println)
+        val parse = ParserSetup(file, forceDebugParsing, outputHandler)
+        val phaseConfig = parse.effectiveConfig
+        stateDebug = CompilerCtx.debugTracingEnabled(phaseConfig.debug)
+        stateShowUids = phaseConfig.debug.showUids
+        val etl = new TraceLogger:
+          override def doTrace: Bool = phaseConfig.debug.elaboration
+          override protected def defaultDebugOutput: Config.DebugOutput = phaseConfig.debug.out
+          override protected[hkmc2] def emitDbg(str: Str, out: Config.DebugOutput): Unit =
+            outputHandler.emit(out, str)
+        val elab = phaseConfig.givenIn:
+          Elaborator(etl, file.up, Ctx.empty)
         val initCtx = State.init.nestLocal("prelude")
         val (blk, ctx) = elab.importFrom(parse.resultBlk)(using initCtx)
         PreludeArtifact(parse.resultBlk, blk, ctx, state, rootConfig, lastMod),
@@ -223,6 +329,9 @@ class CompilerCtx(
 object CompilerCtx:
   
   inline def get(using cctx: CompilerCtx) = cctx
+
+  private def debugTracingEnabled(debug: Config.Debug): Bool =
+    debug.parsing || debug.elaboration || debug.resolution || debug.lowering || debug.optimizations
 
 
   /** Collect import provenance after elaboration has assembled all user and synthetic imports.

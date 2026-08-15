@@ -84,6 +84,19 @@ object Lowering:
 import Lowering.*
 
 class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
+
+  private def definitionConfigOverride(annotations: Ls[Annot]): Opt[Config] =
+    val modifiers = annotations.collect:
+      case Annot.Config(modify) => modify
+      case Annot.Debug(modify) => modify
+    if modifiers.isEmpty then N
+    else S(modifiers.foldLeft(config)((cfg, modify) => modify(cfg)))
+
+  private def definitionDebugConfig(annotations: Ls[Annot]): Opt[Config] =
+    val modifiers = annotations.collect:
+      case Annot.Debug(modify) => modify
+    if modifiers.isEmpty then N
+    else S(modifiers.foldLeft(config)((cfg, modify) => modify(cfg)))
   
   extension (t: Term)
     def instantiated = t match
@@ -267,17 +280,27 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
             td.k match
             case knd: syntax.Val =>
               assert(td.params.isEmpty)
-              val cfgOverride = td.extraAnnotations.collectFirst:
-                case Annot.Config(modify) => modify(config)
-              subTerm_nonTail(bod)(r =>
-                // Assign(td.sym, r,
-                //   term(st.Blk(stats, res))(k)))
-                Define(ValDefn(td.tsym, td.sym, r)(cfgOverride, td.annotations),
-                  blockImpl(stats, res)))(using LoweringCtx.nestFunc)
+              val cfgOverride = definitionConfigOverride(td.extraAnnotations)
+              definitionDebugConfig(td.extraAnnotations) match
+                case S(localConfig) =>
+                  State.scopedDebug(localConfig.debug.lowering, localConfig.debug.showUids):
+                    tl.scopedDebug(localConfig.debug.lowering, localConfig.debug.out):
+                      subTerm_nonTail(bod)(r =>
+                        tl.inOuterDebugScope:
+                          Define(ValDefn(td.tsym, td.sym, r)(cfgOverride, td.annotations),
+                            blockImpl(stats, res)))(using LoweringCtx.nestFunc)
+                case N =>
+                  subTerm_nonTail(bod)(r =>
+                    Define(ValDefn(td.tsym, td.sym, r)(cfgOverride, td.annotations),
+                      blockImpl(stats, res)))(using LoweringCtx.nestFunc)
             case syntax.Fun =>
-              val (paramLists, bodyBlock) = setupFunctionOrByNameDef(td.params, bod, S(td.sym.nme))
-              val cfgOverride = td.extraAnnotations.collectFirst:
-                case Annot.Config(modify) => modify(config)
+              val cfgOverride = definitionConfigOverride(td.extraAnnotations)
+              val (paramLists, bodyBlock) = definitionDebugConfig(td.extraAnnotations) match
+                case S(localConfig) =>
+                  State.scopedDebug(localConfig.debug.lowering, localConfig.debug.showUids):
+                    tl.scopedDebug(localConfig.debug.lowering, localConfig.debug.out):
+                      setupFunctionOrByNameDef(td.params, bod, S(td.sym.nme))
+                case N => setupFunctionOrByNameDef(td.params, bod, S(td.sym.nme))
               Define(FunDefn(td.owner, td.sym, td.tsym, paramLists, bodyBlock)(cfgOverride, td.annotations),
                 blockImpl(stats, res))
             case syntax.LetBind | syntax.HandlerBind => fail:
@@ -379,8 +402,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
             case _ => N
           defn.ext match
           case N =>
-            val cfgOverride = defn.extraAnnotations.collectFirst:
-              case Annot.Config(modify) => modify(config)
+            val cfgOverride = definitionConfigOverride(defn.extraAnnotations)
             Define(
               ClsLikeDefn(defn.owner, defn.sym, defn.bsym, defn.ctorSym, defn.kind, defn.paramsOpt, defn.auxParams, N,
                 mtds,
@@ -394,8 +416,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
               blockImpl(stats, res))
           case S(ext) =>
             assert(k isnt syntax.Mod) // modules can't extend things and can't have super calls
-            val cfgOverride = defn.extraAnnotations.collectFirst:
-              case Annot.Config(modify) => modify(config)
+            val cfgOverride = definitionConfigOverride(defn.extraAnnotations)
             subTerm(ext.cls): clsp =>
               val pctor = inScopedBlock(parentConstructor(clsp, ext.cls, ext.args))
               Define(
@@ -1273,8 +1294,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
         td.body.map: bod =>
           val (paramLists, bodyBlock) = setupFunctionDef(td.params, bod, S(td.sym.nme))
           reportAnnotations(td, td.extraAnnotations)
-          val cfgOverride = td.extraAnnotations.collectFirst:
-            case Annot.Config(modify) => modify(config)
+          val cfgOverride = definitionConfigOverride(td.extraAnnotations)
           FunDefn(td.owner, td.sym, td.tsym, paramLists, bodyBlock)(cfgOverride, td.annotations)
     val publicFlds = clsBody.publicFlds.collect:
       case f if !f.tsym.isPrivate =>
@@ -1430,6 +1450,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
       case Annot.Modifier(syntax.Keyword("staged")) => ()
       case Annot.MayNotRaiseEffects => ()
       case _: Annot.Config => () // Config annotations are handled during FunDefn creation
+      case _: Annot.Debug => () // Debug annotations are handled during definition lowering
       case annot => warn(annot)
   
   def reportAnnotations(receiver: Term, annotations: Ls[Annot]): Unit =

@@ -33,6 +33,7 @@ case class Config(
   commentGeneratedCode: Bool,
   noFreeze: Bool,
   noModuleCheck: Bool,
+  debug: Debug,
   optimizer: Optimizer,
 ):
   
@@ -85,6 +86,7 @@ object Config:
     commentGeneratedCode = false,
     noFreeze = false,
     noModuleCheck = false,
+    debug = Debug.default,
     optimizer = Optimizer.FastOpt,
   )
   object default:
@@ -127,6 +129,40 @@ object Config:
   
   // TODO
   case class TypeChecking()
+
+  enum DebugOutput:
+    case StdIO
+    case File(path: Str)
+
+  case class Debug(
+    parsing: Bool,
+    showParsedTree: Bool,
+    elaboration: Bool,
+    showElaboratedTree: Bool,
+    resolution: Bool,
+    lowering: Bool,
+    showLoweredTree: Bool,
+    optimizations: Bool,
+    showIR: Bool,
+    showOptimizedIR: Bool,
+    showUids: Bool,
+    out: DebugOutput,
+  )
+  object Debug:
+    val default = Debug(
+      parsing = false,
+      showParsedTree = false,
+      elaboration = false,
+      showElaboratedTree = false,
+      resolution = false,
+      lowering = false,
+      showLoweredTree = false,
+      optimizations = false,
+      showIR = false,
+      showOptimizedIR = false,
+      showUids = true,
+      out = DebugOutput.StdIO,
+    )
   
   case class SanityChecks(light: Bool, checkUnreachable: Bool)
   
@@ -479,6 +515,83 @@ object ConfigParser:
       case S(modify) =>
         cfg => cfg.copy(language = modify(cfg.language))
       case N => identity
+
+  private def parseDebugOutput(tree: Tree)(using Raise): Opt[Config.DebugOutput] = tree match
+    case Ident("StdIO") | Call("StdIO", Nil) =>
+      S(Config.DebugOutput.StdIO)
+    case Call("File", StrLit(path) :: Nil) =>
+      S(Config.DebugOutput.File(path))
+    case _ =>
+      expect("StdIO or File(\"path\")")(tree)
+      N
+
+  private def updateDebugFlag(name: Str, value: Bool, tree: Tree)(using Raise): Config.Debug => Config.Debug =
+    name match
+      case "parsing" => _.copy(parsing = value)
+      case "showParsedTree" => _.copy(showParsedTree = value)
+      case "elaboration" => _.copy(elaboration = value)
+      case "showElaboratedTree" => _.copy(showElaboratedTree = value)
+      case "resolution" => _.copy(resolution = value)
+      case "lowering" => _.copy(lowering = value)
+      case "showLoweredTree" => _.copy(showLoweredTree = value)
+      case "optimizations" => _.copy(optimizations = value)
+      case "showIR" => _.copy(showIR = value)
+      case "showOptimizedIR" => _.copy(showOptimizedIR = value)
+      case "showUids" => _.copy(showUids = value)
+      case _ =>
+        raise(ErrorReport(
+          msg"Unknown debugging aspect '${name}'" -> tree.toLoc :: Nil,
+          source = Diagnostic.Source.Compilation))
+        identity
+
+  private def parseDebugArg(arg: Tree)(using Raise): Config.Debug => Config.Debug = arg match
+    case Quoted(Ident(name)) =>
+      updateDebugFlag(name, true, arg)
+    case Ident(name) if name.startsWith("'") =>
+      updateDebugFlag(name.drop(1), true, arg)
+    case NamedArg("out", value) =>
+      parseDebugOutput(value) match
+        case S(out) => _.copy(out = out)
+        case N => identity
+    case NamedArg(name, value) =>
+      parseBool(value) match
+        case S(enabled) => updateDebugFlag(name, enabled, arg)
+        case N => identity
+    case _ =>
+      unsupported("debugging", arg)
+      identity
+
+  /** Parse `#dbg(...)` and `@dbg(...)` arguments into a cumulative debug configuration. */
+  def parseDebugDirective(args: Ls[Tree])(using Raise): Config => Config =
+    val modifyDebug = args.foldLeft(identity[Config.Debug]): (acc, arg) =>
+      val modify = parseDebugArg(arg)
+      debug => modify(acc(debug))
+    new (Config => Config):
+      def apply(cfg: Config): Config = cfg.copy(debug = modifyDebug(cfg.debug))
+      override def toString: Str = "..."
+
+  /** Apply top-level debug directives before phase execution begins.
+    *
+    * Parsing itself uses this after a quiet discovery parse, then repeats the parse when requested.
+    * Other phases use it directly before elaborating the parsed block. */
+  def extractDebugFromTrees(trees: Ls[Tree])(using Raise, Config): Config =
+    trees.foldLeft(config):
+      case (cfg, Directive(Ident("dbg"), Tup(args))) => parseDebugDirective(args)(cfg)
+      case (cfg, App(Directive(Ident("dbg"), _), Tup(args))) => parseDebugDirective(args)(cfg)
+      case (cfg, _) => cfg
+
+  /** Discovery variant used before normal elaboration reports directive diagnostics. */
+  def discoverDebugFromTrees(trees: Ls[Tree])(using Config): Config =
+    given Raise = _ => ()
+    extractDebugFromTrees(trees)
+
+  /** Apply `@dbg(...)` syntax annotations without reporting diagnostics during the discovery parse. */
+  def discoverDebugFromAnnotations(annotations: Ls[Tree], base: Config): Opt[Config] =
+    given Raise = _ => ()
+    val modifiers = annotations.collect:
+      case App(Ident("dbg"), Tup(args)) => parseDebugDirective(args)
+    if modifiers.isEmpty then N
+    else S(modifiers.foldLeft(base)((cfg, modify) => modify(cfg)))
 
   /** Parse the `None`/`Some(...)` syntax for optional config fields.
     * Also accepts unwrapped values as a convenience (treated as `Some(value)`). */

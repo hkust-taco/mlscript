@@ -11,6 +11,8 @@ import Lexer._
 import Tree.{IntLit, DecLit, StrLit}
 
 class Lexer(origin: Origin, dbg: Bool)(using raise: Raise):
+
+  protected def doPrintDbg(msg: => Str): Unit = println(msg)
   
   val bytes: Array[Char] = origin.fph.blockStr.toArray
   private val length = bytes.length
@@ -362,8 +364,8 @@ class Lexer(origin: Origin, dbg: Bool)(using raise: Raise):
           val hasNewIndent = newIndBase.headOption.forall(_ < nextInd) && nextInd > 0
           val newInd = if hasNewIndent then nextInd :: newIndBase else newIndBase
           if dbg then
-            println("dbg: " + bytes.drop(i).take(10).map(escapeChar).mkString+"...")
-            println((ind, nextInd, newIndBase, droppedNum, hasNewIndent, newInd))
+            doPrintDbg("dbg: " + bytes.drop(i).take(10).map(escapeChar).mkString+"...")
+            doPrintDbg((ind, nextInd, newIndBase, droppedNum, hasNewIndent, newInd).toString)
           lex(k, newInd,
             if droppedNum > 0 then {
               if hasNewIndent then (INDENT, loc(j, k))

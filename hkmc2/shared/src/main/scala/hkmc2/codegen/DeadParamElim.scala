@@ -411,5 +411,3 @@ object DeadParamElim:
           else
             val rewrite = new Rewrite(deadParamElimSolver)
             rewrite()
-
-

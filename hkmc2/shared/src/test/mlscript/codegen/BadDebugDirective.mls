@@ -1,0 +1,29 @@
+:noCodeGen
+
+
+:e
+#dbg('unknown)
+//│ ╔══[COMPILATION ERROR] Unknown debugging aspect 'unknown'
+//│ ║  l.5: 	#dbg('unknown)
+//│ ╙──     	     ^^^^^^^^
+
+
+:e
+#dbg(elaboration: 1)
+//│ ╔══[COMPILATION ERROR] Expected a boolean value
+//│ ║  l.12: 	#dbg(elaboration: 1)
+//│ ╙──      	                  ^
+
+
+:e
+#dbg(out: File(1))
+//│ ╔══[COMPILATION ERROR] Expected StdIO or File("path")
+//│ ║  l.19: 	#dbg(out: File(1))
+//│ ╙──      	          ^^^^^^^
+
+
+:e
+#dbg(out: Somewhere)
+//│ ╔══[COMPILATION ERROR] Expected StdIO or File("path")
+//│ ║  l.26: 	#dbg(out: Somewhere)
+//│ ╙──      	          ^^^^^^^^^

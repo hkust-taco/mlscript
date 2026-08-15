@@ -1,0 +1,42 @@
+:noCodeGen
+
+
+// Shorthand annotation debugging is scoped to the annotated definition.
+@dbg('elaboration, showUids: false) fun debug_me(x) = x
+fun do_not_debug_me(x) = x
+//│ Processing term definition App(Ident(debug_me),Tup(List(Ident(x))))
+//│ Elaborating ParamTree: ParamTree(‹›,Ident(x),None,None,Set())
+//│ Elab term Ident(x)
+//│ | Elab subterm Ident(x)
+//│ | ~> Ref(x)
+//│ ~> Ref(x)
+
+
+// Named flags can be explicitly disabled, and StdIO is the default destination.
+#dbg(elaboration: false, out: StdIO)
+fun named_debug_config(x) = x
+
+
+// File destinations are accepted even when no phase is enabled.
+#dbg(out: File("unused-debug.log"))
+fun file_debug_config(x) = x
+
+#dbg(out: StdIO)
+
+
+// A top-level directive persists into the following block.
+#dbg(elaboration: true, showUids: false)
+//│ Elab block List(App(Directive(Ident(dbg),Tup(List())),Tup(List(InfixApp(Ident(elaboration),Keywrd(keyword ':'),[...] LocalScope(block:6)
+//│ ~> Blk(List(SetConfig(...)),Lit(UnitLit(false)))
+
+fun persistently_debugged(x) = x
+//│ Elab block List(TermDef(Fun,App(Ident(persistently_debugged),Tup(List(Ident(x)))),Some(Ident(x)))) LocalScope(block:7)
+//│ | Processing term definition App(Ident(persistently_debugged),Tup(List(Ident(x))))
+//│ | Elaborating ParamTree: ParamTree(‹›,Ident(x),None,None,Set())
+//│ | Elab term Ident(x)
+//│ | | Elab subterm Ident(x)
+//│ | | ~> Ref(x)
+//│ | ~> Ref(x)
+//│ ~> Blk(List(TermDefinition(Fun,member:persistently_debugged,term:persistently_debugged,List(ParamList(‹›,List(Param(‹›,x,None,Modulefulness(None))),None)),None,None,Some(Ref(x)),‹›,Modulefulness(None),List(),None)),Lit(UnitLit(false)))
+
+#dbg(elaboration: false)

@@ -32,6 +32,7 @@ enum Annot extends AutoLocated:
   // Whether the function is guaranteed to not raise effects.
   case MayNotRaiseEffects
   case Config(modify: hkmc2.Config => hkmc2.Config)
+  case Debug(modify: hkmc2.Config => hkmc2.Config)
   // Marks if a function or lambda is one-shot, i.e. called at most once.
   // Functions with multiple parameter lists are considered here as a chain of
   // function values. `whichParamList` is the zero-based index of the parameter
@@ -51,13 +52,13 @@ enum Annot extends AutoLocated:
   def subTerms: Vector[Term] = this match
     case Trm(trm) => Vector.single(trm)
     case _: Modifier | Untyped | TailRec | TailCall | Inline | NoInline
-      | Generator | MayNotRaiseEffects | _: Config | _: Affine => Vector.empty
+      | Generator | MayNotRaiseEffects | _: Config | _: Debug | _: Affine => Vector.empty
   
   def children: Vector[Located] = this match
     case Trm(trm) => Vector.single(trm)
     // case Modifier(kw) => Vector.single(kw) // TODO: make `kw` a `Keywrd`
     case _: Modifier | Untyped | TailRec | TailCall | Inline | NoInline
-      | Generator | MayNotRaiseEffects | _: Config | _: Affine => Vector.empty
+      | Generator | MayNotRaiseEffects | _: Config | _: Debug | _: Affine => Vector.empty
   
   def show(using Scope, ShowCfg, Raise): Document = this match
     case Untyped => doc"@untyped"
@@ -71,6 +72,7 @@ enum Annot extends AutoLocated:
     case MayNotRaiseEffects => doc"@mayNotRaiseEffects"
     case Trm(trm) => doc"@${trm.show}"
     case Config(_) => doc"@config(...)"
+    case Debug(_) => doc"@dbg(...)"
   
   def mkClone(using State): Annot = this match
     case Untyped => Untyped
@@ -83,6 +85,7 @@ enum Annot extends AutoLocated:
     case Generator => Generator
     case MayNotRaiseEffects => MayNotRaiseEffects
     case c: Config => c
+    case d: Debug => d
     case a: Affine => a
 
 object Annot:
@@ -972,7 +975,8 @@ final case class DefineVar(sym: LocalSymbol | TermSymbol, rhs: Term) extends Sta
 
 /** A global configuration change directive (`#config(...)`).
   * Records a function that modifies the current compiler configuration. */
-final case class SetConfig(modify: hkmc2.Config => hkmc2.Config) extends Statement
+final case class SetConfig(modify: hkmc2.Config => hkmc2.Config) extends Statement:
+  override def toString: Str = "SetConfig(...)"
 
 enum Visibility:
   case Public, Private
@@ -1477,4 +1481,3 @@ trait BlkImpl:
     (stats ::: (res match
       case Lit(Tree.UnitLit(false)) => Nil
       case res => res :: Nil)).map(_.show).mkDocument(doc", # ")
-

@@ -453,7 +453,10 @@ abstract class Parser(
     //       N
     case (tok @ (id: IDENT), loc) :: _ =>
       Keyword.all.get(id.name) match
-      case S(Keyword.`:`) | N =>
+      case S(Keyword.`:`) if rule.getKwAlt(Keyword.`:`, S(loc)).isEmpty =>
+        // encountering `:` should lead to parsing an expr (likely a pun)
+        tryParseExp(prec, tok, loc, rule, allowNewlines = allowNewlines)
+      case N =>
         // encountering `:` should lead to parsing an expr (likely a pun)
         tryParseExp(prec, tok, loc, rule, allowNewlines = allowNewlines)
       case S(kw) =>

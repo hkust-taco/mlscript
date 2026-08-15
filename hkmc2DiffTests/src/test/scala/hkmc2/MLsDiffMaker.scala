@@ -171,6 +171,7 @@ abstract class MLsDiffMaker extends DiffMaker:
       commentGeneratedCode = debug.isSet,
       noFreeze = noFreeze.isSet,
       noModuleCheck = noModuleCheck.isSet,
+      debug = Config.Debug.default,
       optimizer = Optimizer(
         deforest = Opt.when(deforest.isSet):
           val flags = parseFlags(deforest.get)
@@ -224,12 +225,27 @@ abstract class MLsDiffMaker extends DiffMaker:
     ln.split(" ").iterator.map(x => "ucs:" + x.trim).toSet
   
   
+  protected var activeDebug = Config.Debug.default
+  protected lazy val debugOutputHandler = DebugOutputHandler(cctx.fs, wd, str => output(str))
+
+  protected def outputDebugSection(title: Str, contents: Str, out: Config.DebugOutput): Unit = out match
+    case Config.DebugOutput.StdIO =>
+      outputSeparator(title)
+      output(contents)
+    case _ => debugOutputHandler.emit(out, s"${title}\n${contents}")
+
   given Elaborator.State = new Elaborator.State:
-    override def dbg: Bool =
+    override protected def doDbg: Bool =
       dbgParsing.isSet
       || dbgElab.isSet
       || dbgResolving.isSet
+      || activeDebug.parsing
+      || activeDebug.elaboration
+      || activeDebug.resolution
+      || activeDebug.lowering
+      || activeDebug.optimizations
       || debug.isSet
+    override protected def doShowUids: Bool = activeDebug.showUids
   
   
   protected lazy val dbgScp: utils.Scope = // for unique symbol debug-printing only
@@ -260,19 +276,24 @@ abstract class MLsDiffMaker extends DiffMaker:
   
   
   val etl = new TraceLogger:
-    override def doTrace = dbgElab.isSet || scope.exists:
+    override def doTrace = dbgElab.isSet || activeDebug.elaboration || scope.exists:
       showUCS.get.getOrElse(Set.empty).contains
+    override protected def defaultDebugOutput: Config.DebugOutput =
+      if activeDebug.elaboration then activeDebug.out else Config.DebugOutput.StdIO
     override def emitDbg(str: String): Unit = output(str)
+    override protected[hkmc2] def emitDbg(str: Str, out: Config.DebugOutput): Unit =
+      debugOutputHandler.emit(out, str)
     override def trace[T](pre: => Str, post: T => Str = noPostTrace)(thunk: => T): T =
-      // * This override is for avoiding to increase the indentation when tracing if doTrace is false,
-      // * so that selectively-enabled tracing doesn't get strange indentation.
-      // * Perhaps this should be the default behavior of TraceLogger.
-      if doTrace then super.trace(pre, post)(thunk)
-      else thunk
+      // Avoid accumulating indentation outside selectively-enabled elaboration scopes.
+      if isTracing then super.trace(pre, post)(thunk) else thunk
   
   val rtl = new TraceLogger:
-    override def doTrace = dbgResolving.isSet
+    override def doTrace = dbgResolving.isSet || activeDebug.resolution
+    override protected def defaultDebugOutput: Config.DebugOutput =
+      if activeDebug.resolution then activeDebug.out else Config.DebugOutput.StdIO
     override def emitDbg(str: String): Unit = output(str)
+    override protected[hkmc2] def emitDbg(str: Str, out: Config.DebugOutput): Unit =
+      debugOutputHandler.emit(out, str)
   
   val ftl = new TraceLogger:
     override def doTrace = dbgFlow.isSet
@@ -382,26 +403,51 @@ abstract class MLsDiffMaker extends DiffMaker:
   def processOrigin(origin: Origin)(using Raise): Unit =
     val oldCtx = curCtx
     
-    given Config = configModify(mkConfig)
-    
-    val lexer = new syntax.Lexer(origin, dbg = dbgParsing.isSet)
-    val tokens = lexer.bracketedTokens
-    
-    if showParse.isSet || dbgParsing.isSet then
-      output(syntax.Lexer.printTokens(tokens))
-    
-    val rules = syntax.ParseRules()
-    val p = new syntax.Parser(origin, tokens, rules, raise, dbg = dbgParsing.isSet):
-      def doPrintDbg(msg: => Str): Unit = if dbg then output(msg)
-    val res = p.parseAll(p.block(allowNewlines = true))
+    val baseConfig = configModify(mkConfig)
+    given Config = baseConfig
+
+    def parse(dbg: Bool, out: Config.DebugOutput): Ls[syntax.Tree] =
+      val lexer = new syntax.Lexer(origin, dbg = dbg):
+        override protected def doPrintDbg(msg: => Str): Unit = debugOutputHandler.emit(out, msg)
+      val tokens = lexer.bracketedTokens
+      if showParse.isSet || dbg then
+        if dbg then debugOutputHandler.emit(out, syntax.Lexer.printTokens(tokens))
+        else output(syntax.Lexer.printTokens(tokens))
+      val rules = syntax.ParseRules()
+      val p = new syntax.Parser(origin, tokens, rules, raise, dbg = dbg):
+        def doPrintDbg(msg: => Str): Unit = if this.dbg then debugOutputHandler.emit(out, msg)
+      p.parseAll(p.block(allowNewlines = true))
+
+    val discoveryResult = parse(dbg = false, Config.DebugOutput.StdIO)
+    val phaseConfig = ConfigParser.discoverDebugFromTrees(discoveryResult)
+    activeDebug = phaseConfig.debug
+    val res =
+      if dbgParsing.isSet || phaseConfig.debug.parsing then
+        parse(dbg = true, phaseConfig.debug.out)
+      else discoveryResult
+
+    def showSelectedParsedTrees(): Unit =
+      def visit(tree: syntax.Tree): Unit = tree match
+        case syntax.PossiblyAnnotated(annotations, target) =>
+          ConfigParser.discoverDebugFromAnnotations(annotations, phaseConfig).foreach: localConfig =>
+            if localConfig.debug.showParsedTree then
+              outputDebugSection("Parsed tree", tree.showAsTree, localConfig.debug.out)
+          target.children.foreach:
+            case child: syntax.Tree => visit(child)
+            case _ => ()
+        case _ => ()
+      res.foreach(visit)
     
     // If parsed tree is displayed, don't show the string serialization.
-    if (parseOnly.isSet || showParse.isSet) && !showParsedTree.isSet then
+    if (parseOnly.isSet || showParse.isSet) && !showParsedTree.isSet && !phaseConfig.debug.showParsedTree then
       output(s"Parsed:${res.map("\n\t"+_.showDbg).mkString}")
     
     if showParsedTree.isSet then
       outputSeparator(s"Parsed tree")
       res.foreach(t => output(t.showAsTree))
+    else if phaseConfig.debug.showParsedTree then
+      outputDebugSection("Parsed tree", res.map(_.showAsTree).mkString("\n"), phaseConfig.debug.out)
+    else showSelectedParsedTrees()
     
     // if showParse.isSet then
     //   output(s"AST: $res")
@@ -419,7 +465,10 @@ abstract class MLsDiffMaker extends DiffMaker:
   private var blockNum = 0
   
   def processTrees(trees: Ls[syntax.Tree])(using Config, Raise): Unit =
-    val elab = Elaborator(etl, file.up, prelude)
+    val phaseConfig = ConfigParser.discoverDebugFromTrees(trees)
+    activeDebug = phaseConfig.debug
+    val elab = phaseConfig.givenIn:
+      Elaborator(etl, file.up, prelude)
     // val blockSymbol =
     //   semantics.TopLevelSymbol("block#"+blockNum)
     blockNum += 1
@@ -437,11 +486,13 @@ abstract class MLsDiffMaker extends DiffMaker:
       case _ => ()
     
     // If elaborated tree is displayed, don't show the string serialization.
-    if (showElab.isSet || debug.isSet) && !showElaboratedTree.isSet then
+    if (showElab.isSet || debug.isSet) && !showElaboratedTree.isSet && !phaseConfig.debug.showElaboratedTree then
       output(s"Elab: ${e.showDbg}")
     if showElaboratedTree.isSet then
       outputSeparator(s"Elaborated tree")
       output(e.showAsTree)
+    else if phaseConfig.debug.showElaboratedTree then
+      outputDebugSection("Elaborated tree", e.showAsTree, phaseConfig.debug.out)
     
     processTerm(e, inImport = false)
       
@@ -450,10 +501,19 @@ abstract class MLsDiffMaker extends DiffMaker:
   def processTerm(trm: semantics.Term.Blk, inImport: Bool)(using Config, Raise): Unit =
     given Ctx = curCtx
     given Config = Config.extractConfigFromStats(trm)
+    activeDebug = config.debug
     if file.toString =/= runtimeSourceFile.toString && file.toString =/= preludeFile.toString then
       summon[Elaborator.State].initRuntimeSymbolsFromFile(runtimeSourceFile, prelude)(
         using summon[TL], summon[Raise], cctx)
-    val resolver = Resolver(rtl)
+    val resolver = new Resolver(rtl):
+      override protected def preTraverseDefn(defn: semantics.Definition): Unit =
+        if showElaboratedTree.isUnset && !config.debug.showElaboratedTree then
+          val modifiers = defn.annotations.collect:
+            case semantics.Annot.Debug(modify) => modify
+          if modifiers.nonEmpty then
+            val localConfig = modifiers.foldLeft(config)((cfg, modify) => modify(cfg))
+            if localConfig.debug.showElaboratedTree then
+              outputDebugSection("Elaborated tree", defn.showAsTree, localConfig.debug.out)
     curICtx = resolver.traverseBlock(trm)(using curICtx)
     
     if showResolve.isSet then

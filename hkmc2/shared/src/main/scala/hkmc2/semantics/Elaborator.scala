@@ -519,12 +519,20 @@ object Elaborator:
       "globalThis" -> globalThisSymbol,
     ))
     val superSymbol = builtinOpsMap("super")
-    def dbg: Bool = false
+    // Definition-local debug annotations may independently change whether tracing is active and
+    // whether symbol identities are useful in that trace, so both settings share the same scope.
+    private var debugOverrides = Ls.empty[(Bool, Bool)]
+    protected def doDbg: Bool = false
+    protected def doShowUids: Bool = true
+    final def dbg: Bool = debugOverrides.headOption.map(_._1).getOrElse(doDbg)
+    final def showUids: Bool = debugOverrides.headOption.map(_._2).getOrElse(doShowUids)
+    def scopedDebug[T](enabled: Bool, showUids: Bool)(thunk: => T): T =
+      debugOverrides ::= enabled -> showUids
+      try thunk finally debugOverrides = debugOverrides.tail
     def dbgRefNum(num: Int): Str =
       if dbg then s"#$num" else ""
     def dbgUid(uid: Uid[Symbol]): Str =
-      if dbg then s"‹$uid›" else ""
-      // ^ we do not display the uid by default to avoid polluting diff-test outputs
+      if dbg && showUids then s"‹$uid›" else ""
   transparent inline def State(using state: State): State = state
   
   /** Extracts all parameter lists from a `constructor(...)...` declaration.
@@ -559,6 +567,15 @@ class Elaborator(val tl: TraceLogger, val wd: io.Path, val prelude: Ctx)
 extends Importer:
   import tl.*
   given TraceLogger = tl
+
+  private def debugElaboration[T](annotations: Ls[Annot])(thunk: => T): T =
+    val modifiers = annotations.collect:
+      case Annot.Debug(modify) => modify
+    if modifiers.isEmpty then thunk
+    else
+      val localConfig = modifiers.foldLeft(config)((cfg, modify) => modify(cfg))
+      state.scopedDebug(localConfig.debug.elaboration, localConfig.debug.showUids):
+        tl.scopedDebug(localConfig.debug.elaboration, localConfig.debug.out)(thunk)
   
   lazy val illegalMemberNameTail =
     msg"Member names must start with a letter or underscore, followed by letters, digits, or underscores." -> N
@@ -595,6 +612,9 @@ extends Importer:
     case App(Ident("config"), Tup(args)) =>
       val modify = ConfigParser.parseOverrides(args)
       S(Annot.Config(modify))
+    case App(Ident("dbg"), Tup(args)) =>
+      val modify = ConfigParser.parseDebugDirective(args)
+      S(Annot.Debug(modify))
     case _ => term(tree) match
       case Term.Error() => N
       case trm =>
@@ -1865,7 +1885,6 @@ extends Importer:
             -> lhs.toLoc :: Nil)) // TODO BE
           go(sts, Nil, Term.Error().withLocOf(lhs) :: acc)
       case (td @ TermDef(k, nme, rhs)) :: sts =>
-        log(s"Processing term definition $nme")
         td.symbName match
         case S(L(d)) => raise(d)
         case _ => ()
@@ -1889,62 +1908,64 @@ extends Importer:
                   :: illegalMemberNameTail
               return go(sts, Nil, acc)
             val isMethod = owner.exists(_.isInstanceOf[ClassSymbol])
-            val tdf = ctx.nest(OuterCtx.NonReturnContext).givenIn: newCtx ?=>
-              // * Add type parameters to context
-              val (tps, newCtx1) = td.typeParams match
-                case S(t) =>
-                  val (tps, ctx) = typeParams(t)
-                  (S(tps), ctx)
-                case N => (N, ctx)
-              // * Add parameters to context
-              var newCtx = newCtx1
-              val pss = td.paramLists.map: ps =>
-                val (res, newCtx2) = funParams(ps)(using newCtx)
-                newCtx = newCtx2
-                res
-              // * Elaborate signature
-              val st = td.annotatedResultType.orElse(newSignatureTrees.get(id.name)) // FIXME: may elaborate external sig twice!!
-              val s = st.map:
-                // unwrap possible module modifier
-                // e.g, `fun f: module M`
-                //              ^^^^^^
-                case TypeDef(Mod, st, N) => term(st)(using newCtx)
-                case st => term(st)(using newCtx)
-              val body: Opt[Term] = rhs match
-                case N => N
-                case _ if ctx.mode is Mode.Light => S(Term.Missing)
-                case S(rhs) => S:
-                  val nonLocalRetHandler = TempSymbol(N, s"nonLocalRetHandler$$${id.name}")
-                  val hasGeneratorAnnotation = annotations.contains(Annot.Generator)
-                  if pss.isEmpty && hasGeneratorAnnotation then
-                    raise(ErrorReport(msg"Generators are not supported on functions without a parameter list" -> td.toLoc :: Nil))
-                  newCtx.nest(OuterCtx.Function(nonLocalRetHandler, pss.nonEmpty && hasGeneratorAnnotation)).givenIn: newCtx ?=>
-                    val b = term(rhs)(using newCtx)
-                    if nonLocalRetHandler.directRefs.isEmpty then b else
-                      mkEffectHandleAbortive(
-                        nonLocalRetHandler,
-                        "‹non-local return effect›",
-                        EffectHandlerMethodSpec("ret", S("value"), requireEffectMethodValue("ret", _)) :: Nil,
-                        b,
-                      )
-              val r = FlowSymbol(s"‹result of ${sym}›")
-              
-              val mfn = st match
-                // st.isModified(Mod) indicates if the function marks
-                // its result as "module". e.g, `fun f: module M`
-                //                                      ^^^^^^
-                case S(st) if st.isModified(Mod) =>
-                  Modulefulness.ofSign(s)(true)
-                case _ =>
-                  Modulefulness.none
-              
-              val tsym = TermSymbol(k, owner, id) // TODO?
-              val tdf = TermDefinition(k, sym, tsym, pss, tps, s, body,
-                TermDefFlags.empty.copy(isMethod = isMethod), mfn, annotations, N).withLocOf(td)
-              tsym.defn = S(tdf)
-              sym.tsym = S(tsym)
-              
-              tdf
+            val tdf = debugElaboration(annotations):
+              log(s"Processing term definition $nme")
+              ctx.nest(OuterCtx.NonReturnContext).givenIn: newCtx ?=>
+                // * Add type parameters to context
+                val (tps, newCtx1) = td.typeParams match
+                  case S(t) =>
+                    val (tps, ctx) = typeParams(t)
+                    (S(tps), ctx)
+                  case N => (N, ctx)
+                // * Add parameters to context
+                var newCtx = newCtx1
+                val pss = td.paramLists.map: ps =>
+                  val (res, newCtx2) = funParams(ps)(using newCtx)
+                  newCtx = newCtx2
+                  res
+                // * Elaborate signature
+                val st = td.annotatedResultType.orElse(newSignatureTrees.get(id.name)) // FIXME: may elaborate external sig twice!!
+                val s = st.map:
+                  // unwrap possible module modifier
+                  // e.g, `fun f: module M`
+                  //              ^^^^^^
+                  case TypeDef(Mod, st, N) => term(st)(using newCtx)
+                  case st => term(st)(using newCtx)
+                val body: Opt[Term] = rhs match
+                  case N => N
+                  case _ if ctx.mode is Mode.Light => S(Term.Missing)
+                  case S(rhs) => S:
+                    val nonLocalRetHandler = TempSymbol(N, s"nonLocalRetHandler$$${id.name}")
+                    val hasGeneratorAnnotation = annotations.contains(Annot.Generator)
+                    if pss.isEmpty && hasGeneratorAnnotation then
+                      raise(ErrorReport(msg"Generators are not supported on functions without a parameter list" -> td.toLoc :: Nil))
+                    newCtx.nest(OuterCtx.Function(nonLocalRetHandler, pss.nonEmpty && hasGeneratorAnnotation)).givenIn: newCtx ?=>
+                      val b = term(rhs)(using newCtx)
+                      if nonLocalRetHandler.directRefs.isEmpty then b else
+                        mkEffectHandleAbortive(
+                          nonLocalRetHandler,
+                          "‹non-local return effect›",
+                          EffectHandlerMethodSpec("ret", S("value"), requireEffectMethodValue("ret", _)) :: Nil,
+                          b,
+                        )
+                val r = FlowSymbol(s"‹result of ${sym}›")
+
+                val mfn = st match
+                  // st.isModified(Mod) indicates if the function marks
+                  // its result as "module". e.g, `fun f: module M`
+                  //                                      ^^^^^^
+                  case S(st) if st.isModified(Mod) =>
+                    Modulefulness.ofSign(s)(true)
+                  case _ =>
+                    Modulefulness.none
+
+                val tsym = TermSymbol(k, owner, id) // TODO?
+                val tdf = TermDefinition(k, sym, tsym, pss, tps, s, body,
+                  TermDefFlags.empty.copy(isMethod = isMethod), mfn, annotations, N).withLocOf(td)
+                tsym.defn = S(tdf)
+                sym.tsym = S(tsym)
+
+                tdf
             go(sts, Nil, tdf :: acc)
           case L(d) =>
             reportUnusedAnnotations
@@ -2269,6 +2290,10 @@ extends Importer:
       case Directive(Ident("lang"), Tup(args)) :: sts =>
         reportUnusedAnnotations
         val modify = ConfigParser.parseLanguageDirective(args)
+        go(sts, Nil, SetConfig(modify) :: acc)
+      case Directive(Ident("dbg"), Tup(args)) :: sts =>
+        reportUnusedAnnotations
+        val modify = ConfigParser.parseDebugDirective(args)
         go(sts, Nil, SetConfig(modify) :: acc)
       case Directive(Ident(name), _) :: sts =>
         raise(ErrorReport(
