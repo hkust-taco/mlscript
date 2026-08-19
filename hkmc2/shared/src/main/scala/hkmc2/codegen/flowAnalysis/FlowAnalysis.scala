@@ -1036,13 +1036,41 @@ class FlowConstraintSolver(val collector: FlowConstraintsCollector):
   val upperBounds = MutMap.empty[StratVarId, Ls[ConsStrat]].withDefaultValue(Nil)
   val lowerBounds = MutMap.empty[StratVarId, Ls[ProdStrat]].withDefaultValue(Nil)
   
+  object AllUpperBounds extends SccAnalysis[StratVarId]:
+    private val computed = MutMap.empty[StratVarId, collection.Set[ConsStrat]]
+
+    def apply(lb: StratVarId): collection.Set[ConsStrat] = computed.get(lb) match
+      case S(res) => res
+      case N =>
+        query(lb)
+        computed(lb)
+
+    override protected def successors(v: StratVarId)=
+      upperBounds(v).iterator.collect:
+        case ConsVar(s) => s.uid
+
+    override protected def isHandled(v: StratVarId) = computed.contains(v)
+
+    override protected def handleScc(members: Ls[StratVarId]) =
+      val res = MutSet.empty[ConsStrat]
+      for
+        m <- members
+        ub <- upperBounds(m)
+      do ub match
+        case ConsVar(s) => res.addAll(computed.getOrElse(s.uid, Set.empty[ConsStrat]))
+        case _ => res.add(ub)
+      
+      for m <- members do computed(m) = res
+    
+  end AllUpperBounds
+  
   private def logNonAffineSyms: Unit =
     tl.scoped(FlowAnalysis.TraceScope.NonAffineSyms):
       tl.log(">>> non-affine syms >>>")
       val outputRes =
         for
-          case (uid, bounds) <- upperBounds
-          if bounds.contains(NonAffine)
+          case (uid, _) <- upperBounds
+          if AllUpperBounds(uid).contains(NonAffine)
           stratVar <- fState.stratVarIdToState.get(uid)
         yield s"${stratVar.name}@$uid"
       for nonAffine <- outputRes.toSortedSet do
@@ -1061,9 +1089,9 @@ class FlowConstraintSolver(val collector: FlowConstraintsCollector):
             s"$nme@$uid"
       val outputRes =
         for
-          case (uid, bounds) <- upperBounds
-          if bounds.contains(Accumulator)
-          accumulatorSym <- showAccumulatorSym(uid, bounds)
+          case (uid, _) <- lowerBounds
+          if AllUpperBounds(uid).contains(Accumulator)
+          accumulatorSym <- showAccumulatorSym(uid, AllUpperBounds(uid).toList)
         yield accumulatorSym
       for accumulator <- outputRes.toSortedSet do
         tl.log(accumulator)
@@ -1142,7 +1170,6 @@ class FlowConstraintSolver(val collector: FlowConstraintsCollector):
         handle(UnknownProd, c.res)
       case (p: ProdVar, c: ConsVar) =>
         upperBounds(p.s.uid) ::= c
-        lowerBounds(c.s.uid) ::= p
         for l <- lowerBounds(p.s.uid) do handle(l, c)
         for u <- upperBounds(c.s.uid) do handle(p, u)
       case (p: ProdVar, c) =>

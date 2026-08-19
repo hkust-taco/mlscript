@@ -43,14 +43,14 @@ lscomp1(zip(enumFromTo(1, 3), enumFromTo(2, 4)))
 //│ deforest > 	match: ls2⁰
 //│ deforest > 	fields: ls2⁰.h⁰
 //│ deforest > 	fields: ls2⁰.t⁰
+//│ deforest > Nil⁰ ->
+//│ deforest > 	match: ls2⁰
+//│ deforest > Nil⁰ ->
+//│ deforest > 	match: ls2⁰
 //│ deforest > Pair⁰(x⁰, y⁰) ->
 //│ deforest > 	match: arg$Cons$0$⁰
 //│ deforest > 	fields: arg$Cons$0$⁰.a¹
 //│ deforest > 	fields: arg$Cons$0$⁰.b⁰
-//│ deforest > Nil⁰ ->
-//│ deforest > 	match: ls2⁰
-//│ deforest > Nil⁰ ->
-//│ deforest > 	match: ls2⁰
 //│ deforest > Cons⁰(a⁰, tmp⁰) ->
 //│ deforest > 	match: xs_zip⁰
 //│ deforest > 	fields: xs_zip⁰.h⁰
@@ -67,14 +67,14 @@ lscomp1(zip(enumFromTo(1, 3), enumFromTo(2, 4)))
 //│ deforest > 	match: ls2⁰
 //│ deforest > 	fields: ls2⁰.h⁰
 //│ deforest > 	fields: ls2⁰.t⁰
+//│ deforest > Nil⁰ ->
+//│ deforest > 	match: ls2⁰
+//│ deforest > Nil⁰ ->
+//│ deforest > 	match: ls2⁰
 //│ deforest > Pair⁰(x⁰, y⁰) ->
 //│ deforest > 	match: arg$Cons$0$⁰
 //│ deforest > 	fields: arg$Cons$0$⁰.a¹
 //│ deforest > 	fields: arg$Cons$0$⁰.b⁰
-//│ deforest > Nil⁰ ->
-//│ deforest > 	match: ls2⁰
-//│ deforest > Nil⁰ ->
-//│ deforest > 	match: ls2⁰
 //│ deforest > Nil⁰ ->
 //│ deforest > 	match: ys_zip⁰
 //│ deforest > Cons⁰(a⁰, tmp⁰) ->
@@ -175,12 +175,12 @@ concatMap(f1, Pair(5, 10) :: Nil)
 //│ deforest > 	match: ls⁰
 //│ deforest > Nil⁰ ->
 //│ deforest > 	match: xs⁰
-//│ deforest > Nil⁰ ->
-//│ deforest > 	match: xs⁰
 //│ deforest > Cons⁰(h¹, tmp⁹) ->
 //│ deforest > 	match: xs⁰
 //│ deforest > 	fields: xs⁰.h⁰
 //│ deforest > 	fields: xs⁰.t⁰
+//│ deforest > Nil⁰ ->
+//│ deforest > 	match: xs⁰
 //│ deforest > Cons⁰(tmp¹⁰, Nil⁰) ->
 //│ deforest > 	match: ls⁰
 //│ deforest > 	fields: ls⁰.h⁰

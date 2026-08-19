@@ -336,6 +336,10 @@ sum(append(id(Nil), Nil), 0)
 // === `append(h, h :: ys)`
 // which then means the flow analysis sees
 // the spurious flow `h :: ys` --> `ys`
+//
+// Updated note after keeping only `upperBounds(p.s.uid) ::= c` during constraint solving (var < var case):
+// `ys` is now not reported below as an accumulator just by accident
+// and this does not mean the problem/limitation above is properly fixed.
 fun length(ls) = if ls is
   h :: t then 1 + length(t)
   Nil then 0
@@ -349,10 +353,14 @@ length(flatten(id((1 :: Nil) :: Nil)))
 //│ deforest > >>> non-affine syms >>>
 //│ deforest > <<< non-affine syms <<<
 //│ deforest > >>> accumulator syms >>>
-//│ deforest > ys_for_append_for_flatten@140
-//│ deforest > ys_for_append_for_flatten@73
 //│ deforest > <<< accumulator syms <<<
 //│ deforest > >>> fusing >>>
+//│ deforest > Nil⁰ ->
+//│ deforest > 	match: ls³
+//│ deforest > Cons⁰(h³, tmp⁴) ->
+//│ deforest > 	match: ls³
+//│ deforest > 	fields: ls³.h¹
+//│ deforest > 	fields: ls³.t⁰
 //│ deforest > <<< fusing <<<
 //│ = 1
 
