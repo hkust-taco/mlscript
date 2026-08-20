@@ -29,9 +29,9 @@ object Elaborator:
     "==", "!=", "<", "<=", ">", ">=",
     "===", "!==",
     "&&", "||")
-  val unaryOps = Set("-", "+", "!", "~", "typeof", "yield", "yield*")
+  val unaryOps = Set("-", "+", "!", "~", "typeof", "yield", "yield*", "await")
   val anyOps = Set("super")
-  val impureOps = Set("super", "yield", "yield*")
+  val impureOps = Set("super", "yield", "yield*", "await")
   val builtins = binaryOps ++ unaryOps ++ anyOps
   val aliasOps = Map(
     ";" -> ",",
@@ -1445,6 +1445,8 @@ extends Importer:
         raise:
           ErrorReport(msg"Yield expressions are not allowed in this context." -> tree.toLoc :: Nil)
         subterm(body)
+    case PrefixApp(kw @ Keywrd(Keyword.`await`), body) =>
+      Term.Throw(subterm(body)).mkLocWith(kw)
     case PrefixApp(kw @ Keywrd(Keyword.`do`), InfixApp(labelId: Ident, Keywrd(Keyword.`:`), body)) =>
       val labelSym = new LabelSymbol(N, labelId.name)
       val resultSym = new TempSymbol(N, s"${labelId.name}$$result")

@@ -276,6 +276,7 @@ declare module annotations with
   object bufferable
   object mayNotRaiseEffects
   object generator
+  object async
 
 declare module scope with
   fun locally

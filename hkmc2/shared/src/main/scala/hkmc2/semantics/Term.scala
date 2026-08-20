@@ -29,6 +29,7 @@ enum Annot extends AutoLocated:
   case Inline
   case NoInline
   case Generator
+  case Async
   // Whether the function is guaranteed to not raise effects.
   case MayNotRaiseEffects
   case Config(modify: hkmc2.Config => hkmc2.Config)

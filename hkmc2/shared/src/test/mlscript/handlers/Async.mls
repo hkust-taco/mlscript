@@ -1,0 +1,47 @@
+:js
+:lift
+:effectHandlers
+
+import "fs"
+
+open annotations
+
+
+process.cwd()
+//│ = "/home/attempt0/mlscript/head"
+
+:sjs
+@async
+fun f() =
+  await fs.promises.readFile("./README.md")
+//│ FAILURE: Unexpected warning
+//│ FAILURE LOCATION: warn (Lowering.scala:1416)
+//│ ╔══[WARNING] This annotation has no effect.
+//│ ║  l.14: 	@async
+//│ ╙──      	^^^^^^
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ let f;
+//│ runtime.resetEffects();
+//│ f = function f() {
+//│   let pc;
+//│   if (runtime.resumePc === -1) {
+//│     pc = 0;
+//│   } else {
+//│     pc = runtime.resumePc;
+//│     runtime.resumePc = -1;
+//│   }
+//│   switch (pc) {
+//│     case 0:
+//│       runtime.resumeValue = runtime.safeCall(fs.promises.readFile("./README.md"));
+//│       if (runtime.curEffect === null) {
+//│         pc = 1;
+//│       } else {
+//│         return runtime.unwind(f, 1, "Async.mls:16:9", null, null, 1, 0, 0)
+//│       }
+//│     case 1:
+//│       throw runtime.resumeValue;
+//│   }
+//│ };
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+
