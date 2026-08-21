@@ -672,49 +672,44 @@ class FlowConstraintsCollector(
     val funsToProdStratScheme = MutMap.empty[TermSymbol, ProdStratScheme]
 
     if !mono then
-      // compute scc
-      val sccInOrder: Ls[Ls[TermSymbol]] =
-        import algorithms.partitionScc
-        var edges = Ls.empty[(TermSymbol, TermSymbol)]
-        for (_, f) <- preAnalyzer.res.rootFunDefns do
+      // Computing the ProdStratScheme for each scc group, this way the sccs of the call graph is
+      // never materialized
+      object ProdStratSchemeAnalysisInScc extends SccAnalysis[TermSymbol]:
+        override protected def successors(f: TermSymbol): Ls[TermSymbol] =
+          var callees = Ls.empty[TermSymbol]
           object CollectAllReferredFun extends BlockTraverser:
             override def applyPath(p: Path) = p match
               case FunRef(callee, _) =>
                 if preAnalyzer.res.rootFunDefns.contains(callee) then
-                  edges = (f.dSym -> callee) :: edges
+                  callees ::= callee
               case _ => ()
-          CollectAllReferredFun.applyBlock(f.body)
-        partitionScc(
-          edges,
-          preAnalyzer.res.rootFunDefns.keys
-        ).reverse
-      end sccInOrder
-      for
-        group <- sccInOrder
-        f <- group
-      do funToSccGroups(f) = group
-
-      // compute strat scheme for each scc group
-      for groupedFuns <- sccInOrder do
-        val groupRep = funToSccRep(groupedFuns.head).get
-        new ConstraintsCollector(Some(groupRep)).givenIn: cc ?=>
-          for funSym <- groupedFuns do
-            val fun = preAnalyzer.res.funSymToFunDefn(funSym)
-            val thisFunVar = generatedProdVars(fun.dSym)
-            val funProdStrat = mkFunProdStrat(
-              s"${funSym.nme}_res",
-              fun.params,
-              fun.body,
-              (fun.dSym, -1))
-            cc.constrain(funProdStrat, thisFunVar.asConsStrat)
-          if nonAffineTracking then
-            for
-              sym <- preAnalyzer.res.nonAffineSyms
-              stratVar <- preAnalyzer.res.generatedProdVars.get(sym)
-              if stratVar.generatedForFun.flatMap(funToSccRep).contains(groupRep)
-            do cc.constrain(stratVar.asProdStrat, NonAffine)
-          for funSym <- groupedFuns do
-            funsToProdStratScheme(funSym) = ProdStratScheme(generatedProdVars(funSym), cc.constraints)
+          CollectAllReferredFun.applyBlock(preAnalyzer.res.rootFunDefns(f).body)
+          callees
+        override protected def isHandled(f: TermSymbol) = funsToProdStratScheme.contains(f)
+        override protected def handleScc(groupedFuns: Ls[TermSymbol]): Unit =
+          for f <- groupedFuns do funToSccGroups(f) = groupedFuns
+          val groupRep = groupedFuns.head
+          new ConstraintsCollector(Some(groupRep)).givenIn: cc ?=>
+            for funSym <- groupedFuns do
+              val fun = preAnalyzer.res.funSymToFunDefn(funSym)
+              val thisFunVar = generatedProdVars(fun.dSym)
+              val funProdStrat = mkFunProdStrat(
+                s"${funSym.nme}_res",
+                fun.params,
+                fun.body,
+                (fun.dSym, -1))
+              cc.constrain(funProdStrat, thisFunVar.asConsStrat)
+            if nonAffineTracking then
+              for
+                sym <- preAnalyzer.res.nonAffineSyms
+                stratVar <- preAnalyzer.res.generatedProdVars.get(sym)
+                if stratVar.generatedForFun.flatMap(funToSccRep).contains(groupRep)
+              do cc.constrain(stratVar.asProdStrat, NonAffine)
+            for funSym <- groupedFuns do
+              funsToProdStratScheme(funSym) = ProdStratScheme(generatedProdVars(funSym), cc.constraints)
+      end ProdStratSchemeAnalysisInScc
+      
+      ProdStratSchemeAnalysisInScc.queryAll(preAnalyzer.res.rootFunDefns.keys)
     end if
 
     // collect constraints from the top-level block

@@ -134,24 +134,24 @@ cons(f(0)) + cons1(f(1))
 //│ deforest > 	match: a1⁰
 //│ deforest > 	fields: a1⁰.h⁰
 //│ deforest > 	fields: a1⁰.t⁰
+//│ deforest > Nil⁰ ->
+//│ deforest > 	match: a1⁰
 //│ deforest > Cons⁰(y⁰, tmp⁷) ->
 //│ deforest > 	match: a1⁰
 //│ deforest > 	fields: a1⁰.h⁰
 //│ deforest > 	fields: a1⁰.t⁰
 //│ deforest > Nil⁰ ->
 //│ deforest > 	match: a1⁰
-//│ deforest > Nil⁰ ->
-//│ deforest > 	match: a1⁰
 //│ deforest > Cons⁰(x⁰, tmp⁶) ->
 //│ deforest > 	match: a¹
 //│ deforest > 	fields: a¹.h⁰
 //│ deforest > 	fields: a¹.t⁰
+//│ deforest > Nil⁰ ->
+//│ deforest > 	match: a¹
 //│ deforest > Cons⁰(y⁰, tmp⁷) ->
 //│ deforest > 	match: a¹
 //│ deforest > 	fields: a¹.h⁰
 //│ deforest > 	fields: a¹.t⁰
-//│ deforest > Nil⁰ ->
-//│ deforest > 	match: a¹
 //│ deforest > Nil⁰ ->
 //│ deforest > 	match: a¹
 //│ deforest > <<< fusing <<<
