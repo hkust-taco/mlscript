@@ -156,6 +156,8 @@ type StratVarId = Uid[StratVar]
 class StratVarState(val uid: StratVarId, val name: Str, val generatedForFun: Opt[TermSymbol]):
   lazy val asProdStrat = ProdVar(this)
   lazy val asConsStrat = ConsVar(this)
+  lazy val asIntoParam = IntoParam(this)
+  lazy val asPossibleAccumulator = PossibleAccumulator(this)
   override def toString(): String = s"${if name.isEmpty() then "$stratvar" else name}@${uid}@$generatedForFun"
 
 object StratVarState:
@@ -238,10 +240,11 @@ case object NonAffine extends MarkerConsStrat
 
 case object Accumulator extends MarkerConsStrat
 
-case class IntoParam(s: StratVarState) extends ConsStrat
+class IntoParam(val s: StratVarState) extends ConsStrat:
+  override def toString(): String = s"IntoParam($s)"
 
-case class PossibleAccumulator(s: StratVarState) extends ConsStrat
-
+class PossibleAccumulator(val s: StratVarState) extends ConsStrat:
+  override def toString(): String = s"PossibleAccumulator($s)"
 
 class FieldSel(
   val exprId: ResultId,
@@ -787,8 +790,8 @@ class FlowConstraintsCollector(
         case UnknownCons => UnknownCons
         case NonAffine => NonAffine
         case Accumulator => Accumulator
-        case PossibleAccumulator(s) => PossibleAccumulator(duplicateVarState(s))
-        case IntoParam(s) => IntoParam(duplicateVarState(s))
+        case pAcc: PossibleAccumulator => duplicateVarState(pAcc.s).asPossibleAccumulator
+        case iPrm: IntoParam => duplicateVarState(iPrm.s).asIntoParam
         case fSel: FieldSel =>
           new FieldSel(fSel.exprId, updateInstantiationId(fSel.instantiationId))(
             fSel.field,
@@ -1055,8 +1058,8 @@ class FlowConstraintSolver(val collector: FlowConstraintsCollector):
       def showAccumulatorSym(uid: StratVarId, bounds: Ls[ConsStrat]): Opt[Str] =
         bounds
           .collectFirst:
-            case PossibleAccumulator(s) if s.uid === uid => s.name
-            case IntoParam(s) if s.uid === uid => s.name
+            case pAcc: PossibleAccumulator if pAcc.s.uid === uid => pAcc.s.name
+            case iPrm: IntoParam if iPrm.s.uid === uid => iPrm.s.name
           .map: nme =>
             s"$nme@$uid"
       val outputRes =
@@ -1096,9 +1099,9 @@ class FlowConstraintSolver(val collector: FlowConstraintsCollector):
       case (c: Ctor, x@(NonAffine | Accumulator)) =>
         ctorDests(c) += x
         for (_, argProd) <- c.args do handle(argProd, x)
-      case (c: Ctor, i@IntoParam(s)) =>
-        for (_, argProd) <- c.args do handle(argProd, PossibleAccumulator(s))
-      case (c: Ctor, p@PossibleAccumulator(s)) =>
+      case (c: Ctor, i: IntoParam) =>
+        for (_, argProd) <- c.args do handle(argProd, i.s.asPossibleAccumulator)
+      case (c: Ctor, p: PossibleAccumulator) =>
         for (_, argProd) <- c.args do handle(argProd, p)
       case (p: ProdFun, c: ConsFun) =>
         funDests(p) += c
@@ -1108,7 +1111,7 @@ class FlowConstraintSolver(val collector: FlowConstraintsCollector):
         c.params.take(p.params.size).lazyZip(p.params).foreach: (argC, argP) =>
           handle(argC -> argP)
           if tracksAccumulator then argP match
-            case ConsVar(s) => handle(argC, IntoParam(s))
+            case ConsVar(s) => handle(argC, s.asIntoParam)
             case _ => ()
         for
           restCons <- p.restParam
@@ -1116,7 +1119,7 @@ class FlowConstraintSolver(val collector: FlowConstraintsCollector):
         do
           handle(arg, restCons)
           if tracksAccumulator then restCons match
-            case ConsVar(s) => handle(arg, IntoParam(s))
+            case ConsVar(s) => handle(arg, s.asIntoParam)
             case _ => ()
         handle(p.res, c.res)
       case (p: ProdFun, UnknownCons) =>
@@ -1127,9 +1130,9 @@ class FlowConstraintSolver(val collector: FlowConstraintsCollector):
       case (p: ProdFun, x@(NonAffine | Accumulator)) =>
         funDests(p) += x
         handle(p.capturedVarUpperbound, x)
-      case (p: ProdFun, i@IntoParam(s)) =>
-        handle(p.capturedVarUpperbound, PossibleAccumulator(s))
-      case (p: ProdFun, c@PossibleAccumulator(s)) =>
+      case (p: ProdFun, i: IntoParam) =>
+        handle(p.capturedVarUpperbound, i.s.asPossibleAccumulator)
+      case (p: ProdFun, c: PossibleAccumulator) =>
         handle(p.capturedVarUpperbound, c)
       case (UnknownProd, d: Dtor) =>
         dtorSrcs(d) += UnknownProd
@@ -1148,7 +1151,7 @@ class FlowConstraintSolver(val collector: FlowConstraintsCollector):
       case (p: ProdVar, c) =>
         upperBounds(p.s.uid) ::= c
         c match
-          case PossibleAccumulator(s) if p.s is s =>
+          case pAcc: PossibleAccumulator if p.s is pAcc.s =>
             upperBounds(p.s.uid) ::= Accumulator
             for l <- lowerBounds(p.s.uid) do handle(l, Accumulator)
           case _ => ()
