@@ -55,13 +55,12 @@ class EtaExpansionSolver(val constraintSolver: FlowConstraintSolver):
         else Nil
       case ProdVar(s) =>
         // iterate through all the lower bounds of prodvar
+        val lbs = s.lowerBounds.iterator
         @tailrec
-        def go(lbs: Ls[ProdStrat], res: Opt[Ls[Int]]): Ls[Int] =
-          lbs match
-          case Nil => res.getOrElse(Nil)
-          case h :: t =>
-            h match
-            case ProdVar(s) => go(t, res)
+        def go(res: Opt[Ls[Int]]): Ls[Int] =
+          if !lbs.hasNext then res.getOrElse(Nil)
+          else lbs.next() match
+            case ProdVar(s) => go(res)
             case pf: ProdFun =>
               if isDeclaredNextParamList(pf) then
                 etaExpansionTargetShapes(pf)
@@ -72,13 +71,13 @@ class EtaExpansionSolver(val constraintSolver: FlowConstraintSolver):
                   case S(prevRes) => prevRes.zip(curRes).map: (a, b) =>
                     assert(a === b)
                     a
-                go(t, S(mergedRes))
+                go(S(mergedRes))
               else Nil
             case UnknownProd => Nil
             case _: Ctor => Nil
         end go
         
-        go(s.lowerBounds, N)
+        go(N)
       case UnknownProd => Nil
       case _: Ctor => Nil
     end funResShape

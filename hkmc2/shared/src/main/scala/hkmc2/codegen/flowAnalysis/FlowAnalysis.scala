@@ -154,8 +154,8 @@ object FunRef:
 type StratVarId = Uid[StratVar]
 
 class StratVarState(val uid: StratVarId, val name: Str, val generatedForFun: Opt[TermSymbol]):
-  var upperBounds: Ls[ConsStrat] = Nil
-  var lowerBounds: Ls[ProdStrat] = Nil
+  val upperBounds = LinkedHashSet.empty[ConsStrat]
+  val lowerBounds = LinkedHashSet.empty[ProdStrat]
   lazy val asProdStrat = ProdVar(this)
   lazy val asConsStrat = ConsVar(this)
   lazy val asIntoParam = IntoParam(this)
@@ -1071,11 +1071,10 @@ class FlowConstraintSolver(val collector: FlowConstraintsCollector):
       tl.log("<<< accumulator syms <<<")
   
   locally {
-    val cache = MutSet.empty[ProdStrat -> ConsStrat]
     def hasConcreteInstantiationId(prodOrCons: ProdStrat | ConsStrat): Boolean = prodOrCons match
       case s: StratWithOrigin[?] => s.instantiationId.isDefined
       case _ => true
-    def handle(constraint: ProdStrat -> ConsStrat): Unit = if cache.add(constraint) then
+    def handle(constraint: ProdStrat -> ConsStrat): Unit =
       assert:
         val (prod, cons) = constraint
         hasConcreteInstantiationId(prod) &&
@@ -1142,20 +1141,17 @@ class FlowConstraintSolver(val collector: FlowConstraintsCollector):
         for a <- c.params do handle(a, UnknownCons)
         handle(UnknownProd, c.res)
       case (p: ProdVar, c: ConsVar) =>
-        p.s.upperBounds ::= c
-        c.s.lowerBounds ::= p
-        for l <- p.s.lowerBounds do handle(l, c)
-        for u <- c.s.upperBounds do handle(p, u)
-      case (p: ProdVar, c) =>
-        p.s.upperBounds ::= c
+        if p.s.upperBounds.add(c) & c.s.lowerBounds.add(p) then
+          for l <- p.s.lowerBounds do handle(l, c)
+          for u <- c.s.upperBounds do handle(p, u)
+      case (p: ProdVar, c) => if p.s.upperBounds.add(c) then
         c match
           case pAcc: PossibleAccumulator if p.s is pAcc.s =>
-            p.s.upperBounds ::= Accumulator
+            p.s.upperBounds.add(Accumulator)
             for l <- p.s.lowerBounds do handle(l, Accumulator)
           case _ => ()
         for l <- p.s.lowerBounds do handle(l, c)
-      case (p, c: ConsVar) =>
-        c.s.lowerBounds ::= p
+      case (p, c: ConsVar) => if c.s.lowerBounds.add(p) then
         for u <- c.s.upperBounds do handle(p, u)
       case _ => () // ignore other cases
     end handle
