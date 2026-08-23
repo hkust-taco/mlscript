@@ -20,7 +20,7 @@ object FlowAnalysis:
   class State:
     val resultToResultId = new java.util.IdentityHashMap[Result, ResultId].asScala
     val resultIdToResult = mutable.Map.empty[ResultId, Result]
-    val stratVarIdToState = mutable.Map.empty[StratVarId, StratVarState]
+    val stratVarStates = mutable.Buffer.empty[StratVarState]
     object ResultUidState extends Uid.Result.State
   
     extension (instId: InstantiationId)
@@ -154,6 +154,8 @@ object FunRef:
 type StratVarId = Uid[StratVar]
 
 class StratVarState(val uid: StratVarId, val name: Str, val generatedForFun: Opt[TermSymbol]):
+  var upperBounds: Ls[ConsStrat] = Nil
+  var lowerBounds: Ls[ProdStrat] = Nil
   lazy val asProdStrat = ProdVar(this)
   lazy val asConsStrat = ConsVar(this)
   lazy val asIntoParam = IntoParam(this)
@@ -164,12 +166,12 @@ object StratVarState:
   def freshVar(nme: String)(using vuid: Uid.StratVar.State, fState: FlowAnalysis.State): StratVarState =
     val newId = vuid.nextUid
     val stratVar = StratVarState(newId, nme, N)
-    fState.stratVarIdToState(newId) = stratVar
+    fState.stratVarStates += stratVar
     stratVar
   def freshVar(nme: String, generatedForFun: TermSymbol)(using vuid: Uid.StratVar.State, fState: FlowAnalysis.State): StratVarState =
     val newId = vuid.nextUid
     val stratVar = StratVarState(newId, s"${nme}_for_${generatedForFun.nme}", S(generatedForFun))
-    fState.stratVarIdToState(newId) = stratVar
+    fState.stratVarStates += stratVar
     stratVar
   def freshVar(nme: String, forFunOpt: Opt[TermSymbol])(using vuid: Uid.StratVar.State, fState: FlowAnalysis.State): StratVarState =
     forFunOpt match
@@ -1036,18 +1038,14 @@ class FlowConstraintSolver(val collector: FlowConstraintsCollector):
   val funDests = LinkedHashMap.empty[ProdFun, Set[ConsFun | MarkerConsStrat]].withDefaultValue(Set.empty)
   val funSrcs = LinkedHashMap.empty[ConsFun, Set[ProdFun | MarkerProdStrat]].withDefaultValue(Set.empty)
   
-  val upperBounds = MutMap.empty[StratVarId, Ls[ConsStrat]].withDefaultValue(Nil)
-  val lowerBounds = MutMap.empty[StratVarId, Ls[ProdStrat]].withDefaultValue(Nil)
-  
   private def logNonAffineSyms: Unit =
     tl.scoped(FlowAnalysis.TraceScope.NonAffineSyms):
       tl.log(">>> non-affine syms >>>")
       val outputRes =
         for
-          case (uid, bounds) <- upperBounds
-          if bounds.contains(NonAffine)
-          stratVar <- fState.stratVarIdToState.get(uid)
-        yield s"${stratVar.name}@$uid"
+          stratVar <- fState.stratVarStates
+          if stratVar.upperBounds.contains(NonAffine)
+        yield s"${stratVar.name}@${stratVar.uid}"
       for nonAffine <- outputRes.toSortedSet do
         tl.log(nonAffine)
       tl.log("<<< non-affine syms <<<")
@@ -1055,18 +1053,18 @@ class FlowConstraintSolver(val collector: FlowConstraintsCollector):
   private def logAccumulatorSyms: Unit =
     tl.scoped(FlowAnalysis.TraceScope.AccumulatorSym):
       tl.log(">>> accumulator syms >>>")
-      def showAccumulatorSym(uid: StratVarId, bounds: Ls[ConsStrat]): Opt[Str] =
-        bounds
+      def showAccumulatorSym(stratVar: StratVarState): Opt[Str] =
+        stratVar.upperBounds
           .collectFirst:
-            case pAcc: PossibleAccumulator if pAcc.s.uid === uid => pAcc.s.name
-            case iPrm: IntoParam if iPrm.s.uid === uid => iPrm.s.name
+            case pAcc: PossibleAccumulator if pAcc.s.uid === stratVar.uid => pAcc.s.name
+            case iPrm: IntoParam if iPrm.s.uid === stratVar.uid => iPrm.s.name
           .map: nme =>
-            s"$nme@$uid"
+            s"$nme@${stratVar.uid}"
       val outputRes =
         for
-          case (uid, bounds) <- upperBounds
-          if bounds.contains(Accumulator)
-          accumulatorSym <- showAccumulatorSym(uid, bounds)
+          stratVar <- fState.stratVarStates
+          if stratVar.upperBounds.contains(Accumulator)
+          accumulatorSym <- showAccumulatorSym(stratVar)
         yield accumulatorSym
       for accumulator <- outputRes.toSortedSet do
         tl.log(accumulator)
@@ -1144,21 +1142,21 @@ class FlowConstraintSolver(val collector: FlowConstraintsCollector):
         for a <- c.params do handle(a, UnknownCons)
         handle(UnknownProd, c.res)
       case (p: ProdVar, c: ConsVar) =>
-        upperBounds(p.s.uid) ::= c
-        lowerBounds(c.s.uid) ::= p
-        for l <- lowerBounds(p.s.uid) do handle(l, c)
-        for u <- upperBounds(c.s.uid) do handle(p, u)
+        p.s.upperBounds ::= c
+        c.s.lowerBounds ::= p
+        for l <- p.s.lowerBounds do handle(l, c)
+        for u <- c.s.upperBounds do handle(p, u)
       case (p: ProdVar, c) =>
-        upperBounds(p.s.uid) ::= c
+        p.s.upperBounds ::= c
         c match
           case pAcc: PossibleAccumulator if p.s is pAcc.s =>
-            upperBounds(p.s.uid) ::= Accumulator
-            for l <- lowerBounds(p.s.uid) do handle(l, Accumulator)
+            p.s.upperBounds ::= Accumulator
+            for l <- p.s.lowerBounds do handle(l, Accumulator)
           case _ => ()
-        for l <- lowerBounds(p.s.uid) do handle(l, c)
+        for l <- p.s.lowerBounds do handle(l, c)
       case (p, c: ConsVar) =>
-        lowerBounds(c.s.uid) ::= p
-        for u <- upperBounds(c.s.uid) do handle(p, u)
+        c.s.lowerBounds ::= p
+        for u <- c.s.upperBounds do handle(p, u)
       case _ => () // ignore other cases
     end handle
     
