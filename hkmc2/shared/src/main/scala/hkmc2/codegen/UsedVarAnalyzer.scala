@@ -203,11 +203,13 @@ class UsedVarAnalyzer(b: Block, scopeData: ScopeData)(using State):
     val accessInfoMap = accessInfo.toMap
     val rootInfo = s.obj.toInfo
 
-    // The out-edges of `src` inside the subtree rooted at `s`: self-edges do not affect this
-    // analysis, and (very important) we only care about edges that flow into the subtree rooted at `s`
+    // The out-edges of `src` inside the subtree rooted at `s`
     def refdInSubtree(src: ScopedInfo): Iterator[ScopedInfo] =
       accessInfoMap(src).refdDefns.iterator.filter: r =>
-        src =/= r && childInfo.contains(r) && r =/= rootInfo
+        // remove self-edges: they do not affect this analysis
+        src =/= r &&
+        // very important: we only care about edges that flow into the subtree rooted at `s`
+        childInfo.contains(r) && r =/= rootInfo
     
     // With respect to the current scoped object `s`, we may "ignore" one of its children `c` if and only if
     // it is ignored (not lifted), and `s` is in the subtree rooted at the first lifted parent of `c`. We
