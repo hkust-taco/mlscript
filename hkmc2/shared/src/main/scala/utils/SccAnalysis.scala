@@ -8,7 +8,7 @@ import hkmc2.utils.shorthands.*
 
 /**
   * Methods to override:
-  * - [[successors]]: The succesors of each node
+  * - [[successors]]: The successors of each node
   * - [[handleScc]]: Every node reachable from any query is visited at most once, and each SCC is reported
   * exactly once to [[handleScc]]. By the time `handleScc(scc)` runs, every SCC reachable from `scc` other than `scc`
   * itself has already been handled. [[handleScc]] must not itself start a query.
