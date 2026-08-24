@@ -249,7 +249,7 @@ class UsedVarAnalyzer(b: Block, scopeData: ScopeData)(using State):
     def removeUnused(dp: collection.Map[ScopedInfo, AccessInfo]): Map[ScopedInfo, AccessInfo] =
       dp.map: (info, accesses) =>
         val node = scopeData.getNode(info)
-        info -> accesses.withoutLocals(node.obj.definedLocals).intersectLocals(node.existingVars)
+        info -> accesses.intersectLocals(node.existingVars)
       .toMap
 
     val (m1, m2) = (removeUnused(withIgnored), removeUnused(withoutIgnored))
