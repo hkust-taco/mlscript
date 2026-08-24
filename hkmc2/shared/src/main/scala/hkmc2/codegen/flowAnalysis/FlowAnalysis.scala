@@ -686,7 +686,7 @@ class FlowConstraintsCollector(
           CollectAllReferredFun.applyBlock(preAnalyzer.res.rootFunDefns(f).body)
           callees
         override protected def isHandled(f: TermSymbol) = funsToProdStratScheme.contains(f)
-        override protected def handleScc(groupedFuns: Ls[TermSymbol]): Unit =
+        override protected def handleScc(groupedFuns: Ls[TermSymbol], sccId: Int): Unit =
           for f <- groupedFuns do funToSccGroups(f) = groupedFuns
           val groupRep = groupedFuns.head
           new ConstraintsCollector(Some(groupRep)).givenIn: cc ?=>
@@ -1046,7 +1046,7 @@ class FlowConstraintSolver(val collector: FlowConstraintsCollector):
 
     override protected def isHandled(v: StratVarId) = computed.contains(v)
 
-    override protected def handleScc(members: Ls[StratVarId]) =
+    override protected def handleScc(members: Ls[StratVarId], sccId: Int) =
       val res = MutSet.empty[ConsStrat]
       for
         m <- members

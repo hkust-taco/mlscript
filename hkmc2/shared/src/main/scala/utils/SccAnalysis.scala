@@ -12,6 +12,8 @@ import hkmc2.utils.shorthands.*
   * - [[handleScc]]: Every node reachable from any query is visited at most once, and each SCC is reported
   * exactly once to [[handleScc]]. By the time `handleScc(scc)` runs, every SCC reachable from `scc` other than `scc`
   * itself has already been handled. [[handleScc]] must not itself start a query.
+  * The `sccId` uniquely identifies the SCC and starts from 0.
+  * It stays unique across queries but an SCC handled later does not necessarily get a larger id.
   * - [[isHandled]]: Whether a node's SCC has already been handled. Must become true for every member of an
   * SCC after [[handleScc]] is done.
   * The overridden methods must use a node identity that is consistent with `==`/`##`
@@ -25,7 +27,7 @@ abstract class SccAnalysis[A]:
   protected def isHandled(node: A): Bool
   
   // Called once per SCC; `members` is never empty.
-  protected def handleScc(members: Ls[A]): Unit
+  protected def handleScc(members: Ls[A], sccId: Int): Unit
   
   final def query(root: A): Unit =
     if !isHandled(root) then run(root)
@@ -57,7 +59,7 @@ abstract class SccAnalysis[A]:
         val (n, idx) = stack.last
         stack.remove(n)
         if idx == rootIdx then n :: acc else go(n :: acc)
-      handleScc(go(Nil))
+      handleScc(go(Nil), rootIdx)
     end closeScc
     
     assert(frames.isEmpty)
@@ -87,7 +89,7 @@ end SccAnalysis
 object SccAnalysis:
   
   trait DefaultNoopHandling[A] extends SccAnalysis[A]:
-    override protected def handleScc(members: List[A]): Unit = ()
+    override protected def handleScc(members: List[A], sccId: Int): Unit = ()
   
   trait DefaultCaching[A] extends SccAnalysis[A]:
     val handled = MutSet.empty[A]
@@ -95,16 +97,16 @@ object SccAnalysis:
     final override protected def isHandled(node: A): Bool =
       handled.contains(node)
     
-    abstract override protected def handleScc(members: Ls[A]): Unit =
+    abstract override protected def handleScc(members: Ls[A], sccId: Int): Unit =
       handled.addAll(members)
-      super.handleScc(members)
+      super.handleScc(members, sccId)
   
   trait DefaultCollecting[A] extends SccAnalysis[A]:
     val collected = ListBuffer.empty[Ls[A]]
     
-    abstract override protected def handleScc(members: Ls[A]): Unit =
+    abstract override protected def handleScc(members: Ls[A], sccId: Int): Unit =
       collected.addOne(members)
-      super.handleScc(members)
+      super.handleScc(members, sccId)
   
   abstract class SccFromSuccFun[A](succs: A => IterableOnce[A]) extends SccAnalysis[A]:
     final override protected def successors(node: A) = succs(node)

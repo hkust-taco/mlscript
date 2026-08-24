@@ -226,7 +226,7 @@ class UsedVarAnalyzer(b: Block, scopeData: ScopeData)(using State):
     object sccTraversal extends SccAnalysis[ScopedInfo]:
       protected def successors(n: ScopedInfo) = refdInSubtree(n)
       protected def isHandled(n: ScopedInfo) = withIgnored.contains(n)
-      protected def handleScc(members: Ls[ScopedInfo]): Unit =
+      protected def handleScc(members: Ls[ScopedInfo], sccId: Int): Unit =
         if members.contains(rootInfo) && members.size != 1 then
           lastWords("SCC containing root had a degree other than 1.")
         val united = members.foldLeft(AccessInfo.empty):

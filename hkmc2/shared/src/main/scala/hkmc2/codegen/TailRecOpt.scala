@@ -182,7 +182,7 @@ class TailRecOpt(checkAnnotations: Bool)(using State, TL, Raise):
     
     val sccs = mutable.ListBuffer.empty[SccOfCalls]
     trait BuildSccOfCalls extends SccAnalysis[TermSymbol]:
-      protected def handleScc(members: Ls[TermSymbol]): Unit =
+      protected def handleScc(members: Ls[TermSymbol], sccId: Int): Unit =
         val inScc = members.toSet
         val calls = members
           .flatMap: caller =>
