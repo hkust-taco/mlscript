@@ -205,6 +205,12 @@ sealed trait StratWithOrigin[A <: OriginId]:
 sealed trait MarkerProdStrat extends ProdStrat
 sealed trait MarkerConsStrat extends ConsStrat
 
+sealed trait ConcreteProducer extends ProdStrat with StratWithOrigin[ResultId]:
+  val dests = MutSet.empty[ConcreteConsumer | MarkerConsStrat]
+
+sealed trait ConcreteConsumer extends ConsStrat with StratWithOrigin[ResultId]:
+  val srcs = MutSet.empty[ConcreteProducer | MarkerProdStrat]
+
 class ProdFun(
   val exprId: FunId,
   val instantiationId: Opt[InstantiationId]
@@ -214,6 +220,7 @@ class ProdFun(
   val res: ProdStrat,
   val capturedVarUpperbound: ProdVar
 ) extends ProdStrat with StratWithOrigin[FunId]:
+  val dests = MutSet.empty[ConsFun | MarkerConsStrat]
   override def toString(): String =
     s"(${params.map(_.toString()).mkString(", ")}) -> ${res.toString()}"
 
@@ -225,7 +232,7 @@ class Ctor(
 )(
   val ctor: CtorCls,
   val args: Ls[SelField -> ProdStrat]
-) extends ProdStrat with StratWithOrigin[ResultId]:
+) extends ConcreteProducer:
   override def toString(): String =
     s"$ctor(${args.map(_.toString()).mkString(", ")})"
 
@@ -237,6 +244,7 @@ class ConsFun(
   val params: Ls[ProdStrat],
   val res: ConsStrat
 ) extends ConsStrat with StratWithOrigin[ResultId]:
+  val srcs = MutSet.empty[ProdFun | MarkerProdStrat]
   override def toString(): String =
     s"(${params.map(_.toString()).mkString(", ")}) -> ${res.toString()}"
 
@@ -253,12 +261,12 @@ class FieldSel(
   val field: SelField,
   val selectsFrom: CtorCls,
   val consVar: ConsVar
-) extends ConsStrat with StratWithOrigin[ResultId]
+) extends ConcreteConsumer
 
 class Dtor(
   val exprId: ResultId,
   val instantiationId: Opt[InstantiationId]
-) extends ConsStrat with StratWithOrigin[ResultId]
+) extends ConcreteConsumer
 
 case class ConcreteId[A <: OriginId](exprId: A, instId: InstantiationId):
   def pp(using FlowAnalysis.State): Str = exprId match
@@ -266,8 +274,6 @@ case class ConcreteId[A <: OriginId](exprId: A, instId: InstantiationId):
     case r: ResultId => s"${r.getResult}"
 
 
-type ConcreteProducer = Ctor
-type ConcreteConsumer = Dtor | FieldSel
 
 class ProdStratScheme(val s: StratVarState, val constraints: Ls[ProdStrat -> ConsStrat])
 
@@ -1031,10 +1037,23 @@ class FlowConstraintSolver(val collector: FlowConstraintsCollector):
   given Raise = preAnalyzer.raise
   
   
-  val ctorDests = LinkedHashMap.empty[ConcreteProducer, Set[ConcreteConsumer | MarkerConsStrat]].withDefaultValue(Set.empty)
-  val dtorSrcs = LinkedHashMap.empty[ConcreteConsumer, Set[ConcreteProducer | MarkerProdStrat]].withDefaultValue(Set.empty)
-  val funDests = LinkedHashMap.empty[ProdFun, Set[ConsFun | MarkerConsStrat]].withDefaultValue(Set.empty)
-  val funSrcs = LinkedHashMap.empty[ConsFun, Set[ProdFun | MarkerProdStrat]].withDefaultValue(Set.empty)
+  val ctorsWithDests = mutable.Buffer.empty[Ctor]
+  val consumersWithSrcs = mutable.Buffer.empty[ConcreteConsumer]
+  val prodFunsWithDests = mutable.Buffer.empty[ProdFun]
+  val consFunsWithSrcs = mutable.Buffer.empty[ConsFun]
+  
+  private def addCtorDest(c: Ctor, d: ConcreteConsumer | MarkerConsStrat): Unit =
+    if c.dests.isEmpty then ctorsWithDests += c
+    c.dests += d
+  private def addDtorSrc(d: ConcreteConsumer, p: ConcreteProducer | MarkerProdStrat): Unit =
+    if d.srcs.isEmpty then consumersWithSrcs += d
+    d.srcs += p
+  private def addFunDest(p: ProdFun, c: ConsFun | MarkerConsStrat): Unit =
+    if p.dests.isEmpty then prodFunsWithDests += p
+    p.dests += c
+  private def addFunSrc(c: ConsFun, p: ProdFun | MarkerProdStrat): Unit =
+    if c.srcs.isEmpty then consFunsWithSrcs += c
+    c.srcs += p
   
   private def logNonAffineSyms: Unit =
     tl.scoped(FlowAnalysis.TraceScope.NonAffineSyms):
@@ -1079,28 +1098,28 @@ class FlowConstraintSolver(val collector: FlowConstraintsCollector):
         hasConcreteInstantiationId(cons)
       constraint match
       case (c: Ctor, d: Dtor) =>
-        ctorDests(c) += d
-        dtorSrcs(d) += c
+        addCtorDest(c, d)
+        addDtorSrc(d, c)
       case (c: Ctor, d: FieldSel) =>
         if d.selectsFrom === c.ctor then
-          ctorDests(c) += d
-          dtorSrcs(d) += c
+          addCtorDest(c, d)
+          addDtorSrc(d, c)
           handle(
             c.args.find(_._1 is d.field).get._2,
             d.consVar)
       case (c: Ctor, UnknownCons) =>
-        ctorDests(c) += UnknownCons
+        addCtorDest(c, UnknownCons)
         for (_, argProd) <- c.args do handle(argProd, UnknownCons)
       case (c: Ctor, x@(NonAffine | Accumulator)) =>
-        ctorDests(c) += x
+        addCtorDest(c, x)
         for (_, argProd) <- c.args do handle(argProd, x)
       case (c: Ctor, i: IntoParam) =>
         for (_, argProd) <- c.args do handle(argProd, i.s.asPossibleAccumulator)
       case (c: Ctor, p: PossibleAccumulator) =>
         for (_, argProd) <- c.args do handle(argProd, p)
       case (p: ProdFun, c: ConsFun) =>
-        funDests(p) += c
-        funSrcs(c) += p
+        addFunDest(p, c)
+        addFunSrc(c, p)
         val tracksAccumulator = collector.accumulatorTracking
         
         c.params.take(p.params.size).lazyZip(p.params).foreach: (argC, argP) =>
@@ -1118,24 +1137,24 @@ class FlowConstraintSolver(val collector: FlowConstraintsCollector):
             case _ => ()
         handle(p.res, c.res)
       case (p: ProdFun, UnknownCons) =>
-        funDests(p) += UnknownCons
+        addFunDest(p, UnknownCons)
         for a <- p.params do handle(UnknownProd, a)
         p.restParam.foreach(r => handle(UnknownProd, r))
         handle(p.res, UnknownCons)
       case (p: ProdFun, x@(NonAffine | Accumulator)) =>
-        funDests(p) += x
+        addFunDest(p, x)
         handle(p.capturedVarUpperbound, x)
       case (p: ProdFun, i: IntoParam) =>
         handle(p.capturedVarUpperbound, i.s.asPossibleAccumulator)
       case (p: ProdFun, c: PossibleAccumulator) =>
         handle(p.capturedVarUpperbound, c)
       case (UnknownProd, d: Dtor) =>
-        dtorSrcs(d) += UnknownProd
+        addDtorSrc(d, UnknownProd)
       case (UnknownProd, sel: FieldSel) =>
-        dtorSrcs(sel) += UnknownProd
+        addDtorSrc(sel, UnknownProd)
         handle(UnknownProd, sel.consVar)
       case (UnknownProd, c: ConsFun) =>
-        funSrcs(c) += UnknownProd
+        addFunSrc(c, UnknownProd)
         for a <- c.params do handle(a, UnknownCons)
         handle(UnknownProd, c.res)
       case (p: ProdVar, c: ConsVar) =>

@@ -43,7 +43,7 @@ class DeforestFusionSolver(val constraintSolver: FlowConstraintSolver)(using val
   
   val finalCtorDests = LinkedHashMap.empty[CtorDtorId, FinalDest]
   val finalDtorSrcs = LinkedHashMap.empty[CtorDtorId, Set[CtorDtorId]]
-  val fusingCtorInfo = MutMap.empty[CtorDtorId, ConcreteProducer]
+  val fusingCtorInfo = MutMap.empty[CtorDtorId, Ctor]
   val fusingDtorInfo = MutMap.empty[CtorDtorId, ConcreteConsumer]
   
   locally {
@@ -78,19 +78,19 @@ class DeforestFusionSolver(val constraintSolver: FlowConstraintSolver)(using val
 
     val prodRoots =
       for
-        (ctor, dests) <- constraintSolver.ctorDests
-        if mergeDests(dests).isEmpty
+        ctor <- constraintSolver.ctorsWithDests
+        if mergeDests(ctor.dests.toSet).isEmpty
       yield ctor
     val consRoots =
       for
-        (dtor, srcs) <- constraintSolver.dtorSrcs
-        if srcs.contains(UnknownProd)
+        dtor <- constraintSolver.consumersWithSrcs
+        if dtor.srcs.contains(UnknownProd)
       yield dtor
 
     val result = FlowWebComputation[ConcreteProducer, ConcreteConsumer](
-      p => constraintSolver.ctorDests(p).collect:
+      p => p.dests.collect:
         case c: ConcreteConsumer => c,
-      c => constraintSolver.dtorSrcs(c).collect:
+      c => c.srcs.collect:
         case p: ConcreteProducer => p,
       prodRoots,
       consRoots,
@@ -99,18 +99,18 @@ class DeforestFusionSolver(val constraintSolver: FlowConstraintSolver)(using val
     val toRemoveDtor = result.markedConsumers
 
     for
-      (ctor, dests) <- constraintSolver.ctorDests
+      ctor <- constraintSolver.ctorsWithDests
       if !toRemoveCtor(ctor)
     do
-      finalCtorDests(ctor.concreteId) = mergeDests(dests).get
+      finalCtorDests(ctor.concreteId) = mergeDests(ctor.dests.toSet).get
       fusingCtorInfo(ctor.concreteId) = ctor
     for
-      (dtor, srcs) <- constraintSolver.dtorSrcs
+      dtor <- constraintSolver.consumersWithSrcs
       if !toRemoveDtor(dtor)
     do
       finalDtorSrcs(dtor.concreteId) =
         // srcs are always ConcreteProducers after constraint solving
-        srcs.map(_.asInstanceOf[ConcreteProducer].concreteId)
+        dtor.srcs.iterator.map(_.asInstanceOf[ConcreteProducer].concreteId).toSet
       fusingDtorInfo(dtor.concreteId) = dtor
   }
 

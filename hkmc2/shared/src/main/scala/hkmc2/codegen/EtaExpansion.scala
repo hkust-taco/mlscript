@@ -97,7 +97,7 @@ class EtaExpansionSolver(val constraintSolver: FlowConstraintSolver):
 
   val funShape = LinkedHashMap.empty[TermSymbol | ResultId, Ls[Int]]
 
-  for pf <- constraintSolver.funDests.keysIterator do
+  for pf <- constraintSolver.prodFunsWithDests do
     pf.exprId match
     case lamId: ResultId => funShape.getOrElseUpdate(lamId, etaExpansionTargetShapes(pf)(using Set.empty))
     case (funSym: TermSymbol, 0) => funShape.getOrElseUpdate(funSym, etaExpansionTargetShapes(pf)(using Set.empty))
