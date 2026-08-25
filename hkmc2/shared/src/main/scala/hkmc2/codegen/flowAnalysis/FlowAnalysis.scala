@@ -5,7 +5,6 @@ package flowAnalysis
 import scala.jdk.CollectionConverters.MapHasAsScala
 import utils.*
 import hkmc2.utils.*, shorthands.*
-import hkmc2.utils.SccAnalysis.*
 import hkmc2.Message.MessageContext
 import semantics.*
 import syntax.Tree
@@ -1033,8 +1032,8 @@ class FlowConstraintSolver(val collector: FlowConstraintsCollector):
   val lowerBounds = MutMap.empty[StratVarId, Ls[ProdStrat]].withDefaultValue(Nil)
     
   object AllUpperBounds extends
-    DefaultNoopHandling[StratVarId]
-    with DefaultCachingWithComputedValue[StratVarId, collection.Set[ConsStrat], collection.Set[ConsStrat]]:
+    SccAnalysis.NoopHandling[StratVarId]
+    with SccAnalysis.CachingWithComputedValue[StratVarId, collection.Set[ConsStrat], collection.Set[ConsStrat]]:
       
       override protected def successors(node: StratVarId): IterableOnce[Uid[StratVar]] =
         upperBounds(node).iterator.collect:

@@ -88,10 +88,10 @@ end SccAnalysis
 
 object SccAnalysis:
   
-  trait DefaultNoopHandling[A] extends SccAnalysis[A]:
+  trait NoopHandling[A] extends SccAnalysis[A]:
     override protected def handleScc(members: List[A], sccId: Int): Unit = ()
   
-  trait DefaultCachingWithComputedValue[A, ComputedValuePerNodeType, ComputedValuePerSccType] extends SccAnalysis[A]:
+  trait CachingWithComputedValue[A, ComputedValuePerNodeType, ComputedValuePerSccType] extends SccAnalysis[A]:
     val computed = MutMap.empty[A, ComputedValuePerNodeType]
     
     protected def computeValuePerScc(members: Ls[A], sccId: Int): ComputedValuePerSccType
@@ -107,7 +107,7 @@ object SccAnalysis:
         computed(m) = computeValuePerNode(m, members, sccValue, sccId)
       super.handleScc(members, sccId)
   
-  trait DefaultCaching[A] extends SccAnalysis[A]:
+  trait Caching[A] extends SccAnalysis[A]:
     val handled = MutSet.empty[A]
     
     final override protected def isHandled(node: A): Bool =
@@ -117,7 +117,7 @@ object SccAnalysis:
       handled.addAll(members)
       super.handleScc(members, sccId)
   
-  trait DefaultCollecting[A] extends SccAnalysis[A]:
+  trait Collecting[A] extends SccAnalysis[A]:
     val collected = ListBuffer.empty[Ls[A]]
     
     abstract override protected def handleScc(members: Ls[A], sccId: Int): Unit =
@@ -126,7 +126,7 @@ object SccAnalysis:
   
   
   def sccsFrom[A](succs: A => IterableOnce[A], roots: IterableOnce[A]): Ls[Ls[A]] =
-    object traversal extends DefaultNoopHandling[A] with DefaultCaching[A] with DefaultCollecting[A]:
+    object traversal extends NoopHandling[A] with Caching[A] with Collecting[A]:
       override protected def successors(node: A): IterableOnce[A] = succs(node)
     
     traversal.queryAll(roots)

@@ -197,7 +197,7 @@ class TailRecOpt(checkAnnotations: Bool)(using State, TL, Raise):
                 false
         sccs += SccOfCalls(members.map(defnBySyms.apply), calls)
     
-    object traversal extends BuildSccOfCalls with SccAnalysis.DefaultCaching[TermSymbol]
+    object traversal extends BuildSccOfCalls with SccAnalysis.Caching[TermSymbol]
     
     traversal.queryAll(defnBySyms.keysIterator)
     sccs.toList
