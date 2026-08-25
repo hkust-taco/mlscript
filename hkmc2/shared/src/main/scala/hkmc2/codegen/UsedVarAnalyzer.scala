@@ -253,7 +253,8 @@ class UsedVarAnalyzer(b: Block, scopeData: ScopeData)(using State):
         val node = scopeData.getNode(info)
         info -> accesses.intersectLocals(node.existingVars)
 
-    val (m1, m2) = (removeUnused(withIgnored), removeUnused(withoutIgnored))
+    val m1 = removeUnused(withIgnored)
+    val m2 = removeUnused(withoutIgnored)
     
     val subCases = nexts.map(findAccesses)
     subCases.foldLeft((m1, m2)):
