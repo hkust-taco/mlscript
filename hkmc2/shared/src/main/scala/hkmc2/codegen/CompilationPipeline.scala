@@ -49,6 +49,7 @@ class CompilationPipeline(using Config, Raise, State, Ctx, SymbolPrinter):
     runPass("HandlerLowering"): prog =>
       config.effectHandlers.fold(prog): opt =>
         HandlerLowering(new HandlerPaths, opt).translateProgram(prog)
+    runPass("AsyncLowering")(AsyncLowering().transform)
     runPass("Flattening")(blockPass(_.flattened))
     runPass("BufferableTransform")(BufferableTransform().transform)
     runPass("MergeMatchArmTransformer")(MergeMatchArmTransformer.applyProgram)

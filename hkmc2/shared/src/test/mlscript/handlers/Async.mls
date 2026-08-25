@@ -6,42 +6,174 @@ import "fs"
 
 open annotations
 
-
-process.cwd()
-//│ = "/home/attempt0/mlscript/head"
-
-:sjs
+:sir
 @async
-fun f() =
-  await fs.promises.readFile("./README.md")
-//│ FAILURE: Unexpected warning
-//│ FAILURE LOCATION: warn (Lowering.scala:1416)
-//│ ╔══[WARNING] This annotation has no effect.
-//│ ║  l.14: 	@async
-//│ ╙──      	^^^^^^
-//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+fun f(print_result) =
+  print("Hello, world!")
+  let r = await(fs.promises.readFile("./README.md"))
+  let readme = r.toString()
+  let first = readme.slice(0, readme.indexOf("\n"))
+  if print_result do
+    print(first)
+  first
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let f;
-//│ runtime.resetEffects();
-//│ f = function f() {
-//│   let pc;
-//│   if (runtime.resumePc === -1) {
-//│     pc = 0;
-//│   } else {
-//│     pc = runtime.resumePc;
-//│     runtime.resumePc = -1;
-//│   }
-//│   switch (pc) {
-//│     case 0:
-//│       runtime.resumeValue = runtime.safeCall(fs.promises.readFile("./README.md"));
-//│       if (runtime.curEffect === null) {
-//│         pc = 1;
-//│       } else {
-//│         return runtime.unwind(f, 1, "Async.mls:16:9", null, null, 1, 0, 0)
-//│       }
-//│     case 1:
-//│       throw runtime.resumeValue;
-//│   }
+//│ define f as fun f¹(print_result)() {
+//│   let r, readme, first, tmp, tmp1, pc;
+//│   match runtime⁰.resumePc﹖
+//│     -1 =>
+//│       set pc = 0;
+//│       end
+//│     else
+//│       let saveOffset;
+//│       set pc = runtime⁰.resumePc﹖;
+//│       set saveOffset = runtime⁰.resumeIdx﹖;
+//│       set readme = runtime⁰.resumeArr﹖.saveOffset;
+//│       set saveOffset = +⁰(saveOffset, 1);
+//│       set first = runtime⁰.resumeArr﹖.saveOffset;
+//│       set runtime⁰.resumePc﹖ = -1;
+//│       end
+//│   loop main:
+//│     match pc
+//│       0 =>
+//│         block brk0:
+//│           set runtime⁰.resumeValue﹖ = Predef⁰.print⁰("Hello, world!");
+//│           match runtime⁰.curEffect﹖
+//│             null =>
+//│               break brk0
+//│             else
+//│               return runtime⁰.unwind﹖(f⁰, 7, "Async.mls:12:3", null, null, 1, 1, print_result, 2, readme, first)
+//│           end
+//│         set pc = 7;
+//│         end
+//│     match pc
+//│       7 =>
+//│         block brk7:
+//│           do runtime⁰.resumeValue﹖;
+//│           set runtime⁰.resumeValue﹖ = fs⁰.promises﹖.readFile﹖("./README.md");
+//│           match runtime⁰.curEffect﹖
+//│             null =>
+//│               break brk7
+//│             else
+//│               return runtime⁰.unwind﹖(f⁰, 6, "Async.mls:13:17", null, null, 1, 1, print_result, 2, readme, first)
+//│           end
+//│         set pc = 6;
+//│         end
+//│     match pc
+//│       6 =>
+//│         block brk6:
+//│           set tmp = runtime⁰.resumeValue﹖;
+//│           set runtime⁰.resumeValue﹖ = Predef⁰.await⁰(tmp);
+//│           match runtime⁰.curEffect﹖
+//│             null =>
+//│               break brk6
+//│             else
+//│               return runtime⁰.unwind﹖(f⁰, 5, "Async.mls:13:11", null, null, 1, 1, print_result, 2, readme, first)
+//│           end
+//│         set pc = 5;
+//│         end
+//│     match pc
+//│       5 =>
+//│         block brk5:
+//│           set r = runtime⁰.resumeValue﹖;
+//│           set runtime⁰.resumeValue﹖ = r.toString﹖();
+//│           match runtime⁰.curEffect﹖
+//│             null =>
+//│               break brk5
+//│             else
+//│               return runtime⁰.unwind﹖(f⁰, 4, "Async.mls:14:16", null, null, 1, 1, print_result, 2, readme, first)
+//│           end
+//│         set pc = 4;
+//│         end
+//│     match pc
+//│       4 =>
+//│         block brk4:
+//│           set readme = runtime⁰.resumeValue﹖;
+//│           set runtime⁰.resumeValue﹖ = readme.indexOf﹖("\n");
+//│           match runtime⁰.curEffect﹖
+//│             null =>
+//│               break brk4
+//│             else
+//│               return runtime⁰.unwind﹖(f⁰, 3, "Async.mls:15:31", null, null, 1, 1, print_result, 2, readme, first)
+//│           end
+//│         set pc = 3;
+//│         end
+//│     match pc
+//│       3 =>
+//│         block brk3:
+//│           set tmp1 = runtime⁰.resumeValue﹖;
+//│           set runtime⁰.resumeValue﹖ = readme.slice﹖(0, tmp1);
+//│           match runtime⁰.curEffect﹖
+//│             null =>
+//│               break brk3
+//│             else
+//│               return runtime⁰.unwind﹖(f⁰, 2, "Async.mls:15:15", null, null, 1, 1, print_result, 2, readme, first)
+//│           end
+//│         set pc = 2;
+//│         end
+//│     match pc
+//│       2 =>
+//│         block brk2:
+//│           set first = runtime⁰.resumeValue﹖;
+//│           match print_result
+//│             true =>
+//│               set runtime⁰.resumeValue﹖ = Predef⁰.print⁰(first);
+//│               match runtime⁰.curEffect﹖
+//│                 null =>
+//│                   break brk2
+//│                 else
+//│                   return runtime⁰.unwind﹖(f⁰, 1, "Async.mls:17:5", null, null, 1, 1, print_result, 2, readme, first)
+//│               end
+//│             else
+//│               return first
+//│           end
+//│         set pc = 1;
+//│         end
+//│     match pc
+//│       1 =>
+//│         do runtime⁰.resumeValue﹖;
+//│         return first
+//│       else
+//│         end
+//│     end
+//│   end
 //│ };
+//│ do runtime⁰.resetEffects﹖();
+//│ define f² as fun f⁰(print_result) {
+//│   let tmp;
+//│   set tmp = f¹(print_result);
+//│   return runtime⁰.toJsAsync﹖(tmp)
+//│ };
+//│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
+// Should get a promise here, the promise is used for JavaScript interop
+:sjs
+f(false)
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ let inlinedVal, tmp;
+//│ runtime.resetEffects();
+//│ tmp = f1(false);
+//│ inlinedVal = runtime.toJsAsync(tmp);
+//│ if (runtime.curEffect === null) { return inlinedVal }
+//│ return runtime.topLevelEffect(false);
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ > Hello, world!
+//│ = Promise {}
 
+
+// :await will await the promise returned at the top level for the repl
+:sjs
+:await
+f(true)
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ let inlinedVal1, tmp1;
+//│ runtime.resetEffects();
+//│ tmp1 = f1(true);
+//│ inlinedVal1 = runtime.toJsAsync(tmp1);
+//│ if (runtime.curEffect === null) { return inlinedVal1 }
+//│ return runtime.topLevelEffect(false);
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ > Hello, world!
+//│ > # MLscript
+//│ = "# MLscript"

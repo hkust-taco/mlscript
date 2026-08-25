@@ -87,7 +87,6 @@ object Keyword:
   val `throw` = Keyword("throw", N, curPrec)
   val `yield` = Keyword("yield", N, curPrec)
   val `yield*` = Keyword("yield*", N, curPrec)
-  val `await` = Keyword("await", N, curPrec)
   val `import` = Keyword("import", N, curPrec)
   
   val `fun` = Keyword("fun", N, N)
@@ -207,7 +206,7 @@ object Keyword:
   
   type Prefix =
     `do`.type | `drop`.type | `not`.type | `new!`.type | `else`.type | `return`.type | `throw`.type | `yield`.type |
-    `yield*`.type | `await`.type | `import`.type | `|`.type | `&`.type
+    `yield*`.type | `import`.type | `|`.type | `&`.type
   
   type Infix =
     `is`.type | `:`.type | `->`.type | `=>`.type | `extends`.type | `restricts`.type | `as`.type |

@@ -52,19 +52,20 @@ enum Annot extends AutoLocated:
   def subTerms: Vector[Term] = this match
     case Trm(trm) => Vector.single(trm)
     case _: Modifier | Untyped | TailRec | TailCall | Inline | NoInline
-      | Generator | MayNotRaiseEffects | _: Config | _: Affine => Vector.empty
+      | Generator | Async | MayNotRaiseEffects | _: Config | _: Affine => Vector.empty
   
   def children: Vector[Located] = this match
     case Trm(trm) => Vector.single(trm)
     // case Modifier(kw) => Vector.single(kw) // TODO: make `kw` a `Keywrd`
     case _: Modifier | Untyped | TailRec | TailCall | Inline | NoInline
-      | Generator | MayNotRaiseEffects | _: Config | _: Affine => Vector.empty
+      | Generator | Async | MayNotRaiseEffects | _: Config | _: Affine => Vector.empty
   
   def show(using Scope, ShowCfg, Raise): Document = this match
     case Untyped => doc"@untyped"
     case Inline => doc"@inline"
     case NoInline => doc"@noInline"
     case Generator => doc"@generator"
+    case Async => doc"@async"
     case TailRec => doc"@tailrec"
     case TailCall => doc"@tailcall"
     case Affine(n) => doc"@affine($n)"
@@ -82,6 +83,7 @@ enum Annot extends AutoLocated:
     case Inline => Inline
     case NoInline => NoInline
     case Generator => Generator
+    case Async => Async
     case MayNotRaiseEffects => MayNotRaiseEffects
     case c: Config => c
     case a: Affine => a

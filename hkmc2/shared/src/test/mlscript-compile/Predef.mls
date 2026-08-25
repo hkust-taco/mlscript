@@ -143,6 +143,8 @@ fun enterHandleBlock(handler, body) =
 fun raiseUnhandledEffect() =
   Runtime.mkEffect(Runtime.FatalEffect, null)
 
+fun await(promise) =
+  Runtime.await(promise)
 
 module meta with
   fun codegen(t, file) = Term.codegen(t, file)

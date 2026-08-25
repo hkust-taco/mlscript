@@ -29,9 +29,9 @@ object Elaborator:
     "==", "!=", "<", "<=", ">", ">=",
     "===", "!==",
     "&&", "||")
-  val unaryOps = Set("-", "+", "!", "~", "typeof", "yield", "yield*", "await")
+  val unaryOps = Set("-", "+", "!", "~", "typeof", "yield", "yield*")
   val anyOps = Set("super")
-  val impureOps = Set("super", "yield", "yield*", "await")
+  val impureOps = Set("super", "yield", "yield*")
   val builtins = binaryOps ++ unaryOps ++ anyOps
   val aliasOps = Map(
     ";" -> ",",
@@ -286,6 +286,7 @@ object Elaborator:
         val inline = assumeObject("inline")
         val noInline = assumeObject("noInline")
         val generator = assumeObject("generator")
+        val async = assumeObject("async")
         val compile = assumeObject("compile")
         val buffered = assumeObject("buffered")
         val bufferable = assumeObject("bufferable")
@@ -613,6 +614,8 @@ extends Importer:
             return S(Annot.NoInline)
           case ctx.builtins.annotations.generator =>
             return S(Annot.Generator)
+          case ctx.builtins.annotations.async =>
+            return S(Annot.Async)
           case ctx.builtins.annotations.mayNotRaiseEffects =>
             return S(Annot.MayNotRaiseEffects)
           case _ => ()
@@ -1445,8 +1448,6 @@ extends Importer:
         raise:
           ErrorReport(msg"Yield expressions are not allowed in this context." -> tree.toLoc :: Nil)
         subterm(body)
-    case PrefixApp(kw @ Keywrd(Keyword.`await`), body) =>
-      Term.Throw(subterm(body)).mkLocWith(kw)
     case PrefixApp(kw @ Keywrd(Keyword.`do`), InfixApp(labelId: Ident, Keywrd(Keyword.`:`), body)) =>
       val labelSym = new LabelSymbol(N, labelId.name)
       val resultSym = new TempSymbol(N, s"${labelId.name}$$result")

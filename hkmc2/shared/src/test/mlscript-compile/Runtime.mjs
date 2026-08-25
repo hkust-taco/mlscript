@@ -5,7 +5,30 @@ import RuntimeJS from "./RuntimeJS.mjs";
 import Rendering from "./Rendering.mjs";
 import LazyArray from "./LazyArray.mjs";
 import Iter from "./Iter.mjs";
-let Runtime1, lambda, lambda1, lambda2, lambda3, lambda4, lambda$, lambda$1, Capture$scope301, lambda$2, Capture$scope321, lambda$3;
+let Runtime1, lambda, lambda1, lambda2, lambda3, lambda4, lambda5, lambda6, lambda7, lambda$, lambda$1, Capture$scope301, lambda$2, Capture$scope321, lambda$3, lambda$4, lambda$5;
+lambda$5 = (undefined, function (resume) {
+  return (value) => {
+    return runtime.safeCall(resume(value))
+  }
+});
+lambda3 = (undefined, function (resume, value) {
+  return runtime.safeCall(resume(value))
+});
+lambda4 = (undefined, function (err) {
+  throw err
+});
+lambda$4 = (undefined, function (promise) {
+  return (resume) => {
+    let lambda$here;
+    lambda$here = lambda$5(resume);
+    return runtime.safeCall(promise.then(lambda$here, lambda4))
+  }
+});
+lambda5 = (undefined, function (promise, resume) {
+  let lambda$here;
+  lambda$here = lambda$5(resume);
+  return runtime.safeCall(promise.then(lambda$here, lambda4))
+});
 (class Capture$scope32 {
   static {
     Capture$scope321 = this
@@ -70,7 +93,7 @@ lambda$1 = (undefined, function (Runtime2) {
     return runtime.Unit
   }
 });
-lambda4 = (undefined, function (Runtime2, k) {
+lambda7 = (undefined, function (Runtime2, k) {
   Runtime2.stackResume = k;
   return runtime.Unit
 });
@@ -79,7 +102,7 @@ lambda$ = (undefined, function (Runtime2, EffectHandle1, value) {
     return Runtime2.resume(EffectHandle1.reified.contTrace)(value)
   }
 });
-lambda3 = (undefined, function (Runtime2, EffectHandle1, value) {
+lambda6 = (undefined, function (Runtime2, EffectHandle1, value) {
   return Runtime2.resume(EffectHandle1.reified.contTrace)(value)
 });
 (class Runtime {
@@ -567,6 +590,20 @@ lambda3 = (undefined, function (Runtime2, EffectHandle1, value) {
       }
       [prettyPrint]() { return this.toString(); }
       static [definitionMetadata] = ["class", "CustomStackError", ["stack"]];
+    });
+    (class AsyncEffectMarker {
+      static {
+        new this
+      }
+      constructor() {
+        Runtime.AsyncEffectMarker = this;
+        Object.defineProperty(this, "class", {
+          value: AsyncEffectMarker
+        });
+        globalThis.Object.freeze(this);
+      }
+      toString() { return runtime.render(this); }
+      static [definitionMetadata] = ["object", "AsyncEffectMarker"];
     });
     Runtime.stackLimit = 0;
     Runtime.stackDepth = 0;
@@ -1122,6 +1159,14 @@ lambda3 = (undefined, function (Runtime2, EffectHandle1, value) {
       return value;
     }
   }
+  static await(promise) {
+    let lambda$here;
+    lambda$here = lambda$4(promise);
+    return Runtime.mkEffect(Runtime.AsyncEffectMarker, lambda$here)
+  }
+  static toJsAsync(thunk) {
+    return Runtime.enterHandleBlock(Runtime.AsyncEffectMarker, thunk)
+  }
   static checkDepth() {
     let tmp, tmp1;
     tmp = Runtime.stackDepth >= Runtime.stackLimit;
@@ -1199,10 +1244,15 @@ export { lambda1 as _$_modulePrivate_$_lambda1 };
 export { lambda2 as _$_modulePrivate_$_lambda2 };
 export { lambda3 as _$_modulePrivate_$_lambda3 };
 export { lambda4 as _$_modulePrivate_$_lambda4 };
+export { lambda5 as _$_modulePrivate_$_lambda5 };
+export { lambda6 as _$_modulePrivate_$_lambda6 };
+export { lambda7 as _$_modulePrivate_$_lambda7 };
 export { lambda$ as _$_modulePrivate_$_lambda$ };
 export { lambda$1 as _$_modulePrivate_$_lambda$1 };
 export { Capture$scope301 as _$_modulePrivate_$_Capture$scope30 };
 export { lambda$2 as _$_modulePrivate_$_lambda$2 };
 export { Capture$scope321 as _$_modulePrivate_$_Capture$scope32 };
 export { lambda$3 as _$_modulePrivate_$_lambda$3 };
+export { lambda$4 as _$_modulePrivate_$_lambda$4 };
+export { lambda$5 as _$_modulePrivate_$_lambda$5 };
 let Runtime = Runtime1; export default Runtime;

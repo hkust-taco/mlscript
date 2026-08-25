@@ -24,6 +24,7 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
   val showSanitizedJS = NullaryCommand("ssjs")
   val showJS = NullaryCommand("sjs")
   val showRepl = NullaryCommand("showRepl")
+  val await = NullaryCommand("await")
   val traceJS = NullaryCommand("traceJS")
   val expect = Command("expect"): ln =>
     ln.trim
@@ -274,6 +275,12 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
             output(s"> ${line}")
       if traceJS.isSet then
         host.execute(s"$runtimeNme.TraceLogger.enabled = false")
+      
+      if await.isSet then
+        mkQuery("", s"$resNme = await $resNme"): stdout =>
+          stdout.splitSane('\n').init // should always ends with "undefined" (TODO: check)
+            .foreach: line =>
+              output(s"> ${line}")
       
       if silent.isUnset then
         val valuesToPrint = ("", resSym, expect.get) +: definedValues(includeNonTerms = false).toSeq.sortBy(_._1)

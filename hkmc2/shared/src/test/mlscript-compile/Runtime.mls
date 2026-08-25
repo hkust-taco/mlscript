@@ -236,12 +236,13 @@ fun raisePrintStackEffect(showLocals) =
 fun topLevelEffect(debug) =
   let tr = curEffect
   let v = null
-  while tr is EffectSig and tr.handler === PrintStackEffect do
-    console.log(showStackTrace("Stack Trace:", tr, debug, tr.handlerFun))
-    set
-      curEffect = null
-      v = resume(tr.contTrace)(())
-      tr = curEffect
+  while tr is EffectSig and
+    tr.handler === PrintStackEffect do
+      console.log(showStackTrace("Stack Trace:", tr, debug, tr.handlerFun))
+      set
+        curEffect = null
+        v = resume(tr.contTrace)(())
+        tr = curEffect
   if tr is EffectSig then
     set curEffect = null
     throw CustomStackError(showStackTrace("Error: Unhandled effect " + tr.handler.constructor.name, tr, debug, false))
@@ -468,6 +469,20 @@ fun resumeContTrace(contTrace, value) =
       set handlerCont = handlerCont.nextHandler
     else
       return value
+
+// js async
+object AsyncEffectMarker
+
+fun await(promise) =
+  mkEffect(AsyncEffectMarker, resume =>
+    promise.then(
+      value => resume(value),
+      err => throw err
+    )
+  )
+
+fun toJsAsync(thunk) =
+  enterHandleBlock(AsyncEffectMarker, thunk)
 
 // stack safety
 mut val stackLimit = 0 // How deep the stack can go before heapifying the stack
