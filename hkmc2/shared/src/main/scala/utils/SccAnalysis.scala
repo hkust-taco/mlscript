@@ -1,7 +1,7 @@
 package hkmc2.utils
 
 import scala.annotation.tailrec
-import scala.collection.mutable.{Stack as MutStack, LinkedHashMap, Set as MutSet, ListBuffer}
+import scala.collection.mutable.{Stack as MutStack, LinkedHashMap, Set as MutSet, Map as MutMap, ListBuffer}
 
 import hkmc2.utils.shorthands.*
 
@@ -90,6 +90,22 @@ object SccAnalysis:
   
   trait DefaultNoopHandling[A] extends SccAnalysis[A]:
     override protected def handleScc(members: List[A], sccId: Int): Unit = ()
+  
+  trait DefaultCachingWithComputedValue[A, ComputedValuePerNodeType, ComputedValuePerSccType] extends SccAnalysis[A]:
+    val computed = MutMap.empty[A, ComputedValuePerNodeType]
+    
+    protected def computeValuePerScc(members: Ls[A], sccId: Int): ComputedValuePerSccType
+    
+    protected def computeValuePerNode(node: A, members: Ls[A], computedValueForScc: ComputedValuePerSccType, sccId: Int): ComputedValuePerNodeType
+    
+    final override protected def isHandled(node: A): Bool =
+      computed.contains(node)
+    
+    abstract override protected def handleScc(members: Ls[A], sccId: Int): Unit =
+      val sccValue = computeValuePerScc(members, sccId)
+      for m <- members do
+        computed(m) = computeValuePerNode(m, members, sccValue, sccId)
+      super.handleScc(members, sccId)
   
   trait DefaultCaching[A] extends SccAnalysis[A]:
     val handled = MutSet.empty[A]

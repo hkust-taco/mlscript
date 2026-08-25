@@ -5,6 +5,7 @@ package flowAnalysis
 import scala.jdk.CollectionConverters.MapHasAsScala
 import utils.*
 import hkmc2.utils.*, shorthands.*
+import hkmc2.utils.SccAnalysis.*
 import hkmc2.Message.MessageContext
 import semantics.*
 import syntax.Tree
@@ -1030,34 +1031,36 @@ class FlowConstraintSolver(val collector: FlowConstraintsCollector):
   
   val upperBounds = MutMap.empty[StratVarId, Ls[ConsStrat]].withDefaultValue(Nil)
   val lowerBounds = MutMap.empty[StratVarId, Ls[ProdStrat]].withDefaultValue(Nil)
-  
-  object AllUpperBounds extends SccAnalysis[StratVarId]:
-    private val computed = MutMap.empty[StratVarId, collection.Set[ConsStrat]]
-
-    def apply(lb: StratVarId): collection.Set[ConsStrat] = computed.get(lb) match
-      case S(res) => res
-      case N =>
-        query(lb)
-        computed(lb)
-
-    override protected def successors(v: StratVarId)=
-      upperBounds(v).iterator.collect:
-        case ConsVar(s) => s.uid
-
-    override protected def isHandled(v: StratVarId) = computed.contains(v)
-
-    override protected def handleScc(members: Ls[StratVarId], sccId: Int) =
-      val res = MutSet.empty[ConsStrat]
-      for
-        m <- members
-        ub <- upperBounds(m)
-      do ub match
-        case ConsVar(s) => res.addAll(computed.getOrElse(s.uid, Set.empty[ConsStrat]))
-        case _ => res.add(ub)
-      
-      for m <- members do computed(m) = res
     
-  end AllUpperBounds
+  object AllUpperBounds extends
+    SccFromSuccFun[StratVarId](
+      upperBounds(_).iterator.collect:
+        case ConsVar(s) => s.uid)
+    with DefaultNoopHandling[StratVarId]
+    with DefaultCachingWithComputedValue[StratVarId, collection.Set[ConsStrat], collection.Set[ConsStrat]]:
+      override protected def computeValuePerScc(members: Ls[StratVarId], sccId: Int): collection.Set[ConsStrat] =
+        val res = MutSet.empty[ConsStrat]
+        for
+          m <- members
+          ub <- upperBounds(m)
+        do ub match
+          case ConsVar(s) => res.addAll(computed.getOrElse(s.uid, Set.empty[ConsStrat]))
+          case _ => res.add(ub)
+        res
+    
+      override protected def computeValuePerNode(
+        node: StratVarId,
+        members: Ls[StratVarId],
+        computedValueForScc: collection.Set[ConsStrat],
+        sccId: Int
+      ): collection.Set[ConsStrat] = computedValueForScc
+      
+      def apply(lb: StratVarId): collection.Set[ConsStrat] = computed.get(lb) match
+        case S(res) => res
+        case N =>
+          query(lb)
+          computed(lb)
+    
   
   private def logNonAffineSyms: Unit =
     tl.scoped(FlowAnalysis.TraceScope.NonAffineSyms):
