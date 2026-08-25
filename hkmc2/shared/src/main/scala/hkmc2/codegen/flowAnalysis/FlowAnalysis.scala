@@ -151,13 +151,16 @@ object FunRef:
       if (tSym.k is syntax.Fun) && tSym.owner.forall(_.asMod.isDefined) => S(tSym -> qual)
     case _ => N
 
-type StratVarId = Uid[StratVar]
+type StratVarId = Uid[StratVarState]
+
+sealed abstract class ProdStrat
+sealed abstract class ConsStrat
 
 class StratVarState(val uid: StratVarId, val name: Str, val generatedForFun: Opt[TermSymbol]):
   val upperBounds = LinkedHashSet.empty[ConsStrat]
   val lowerBounds = LinkedHashSet.empty[ProdStrat]
-  lazy val asProdStrat = ProdVar(this)
-  lazy val asConsStrat = ConsVar(this)
+  lazy val asProdStrat = new ProdVar(this)
+  lazy val asConsStrat = new ConsVar(this)
   lazy val asIntoParam = IntoParam(this)
   lazy val asPossibleAccumulator = PossibleAccumulator(this)
   override def toString(): String = s"${if name.isEmpty() then "$stratvar" else name}@${uid}@$generatedForFun"
@@ -178,15 +181,6 @@ object StratVarState:
     case None => freshVar(nme)
     case Some(forFun) => freshVar(nme, forFun)
 
-trait StratVar(s: StratVarState):
-  this: ProdVar | ConsVar =>
-  def asProdStrat = s.asProdStrat
-  def asConsStrat = s.asConsStrat
-  def uid = s.uid
-
-sealed abstract class ProdStrat
-sealed abstract class ConsStrat
-
 sealed trait StratWithOrigin[A <: OriginId]:
   def exprId: A
   def instantiationId: Opt[InstantiationId]
@@ -197,7 +191,8 @@ sealed trait StratWithOrigin[A <: OriginId]:
 sealed trait MarkerProdStrat extends ProdStrat
 sealed trait MarkerConsStrat extends ConsStrat
 
-case class ProdVar(s: StratVarState) extends ProdStrat with StratVar(s)
+class ProdVar(val s: StratVarState) extends ProdStrat:
+  override def toString(): String = s"ProdVar($s)"
 
 class ProdFun(
   val exprId: FunId,
@@ -224,7 +219,8 @@ class Ctor(
     s"$ctor(${args.map(_.toString()).mkString(", ")})"
 
 
-case class ConsVar(s: StratVarState) extends ConsStrat with StratVar(s)
+class ConsVar(val s: StratVarState) extends ConsStrat:
+  override def toString(): String = s"ConsVar($s)"
 
 class ConsFun(
   val exprId: ResultId,
@@ -772,7 +768,7 @@ class FlowConstraintsCollector(
         then stratVarMap.getOrElseUpdate(s, freshVar(s.name, cc.forFunGroup))
         else s
       def duplicateProdStrat(s: ProdStrat): ProdStrat = s match
-        case ProdVar(s) => duplicateVarState(s).asProdStrat
+        case p: ProdVar => duplicateVarState(p.s).asProdStrat
         case p: ProdFun =>
           new ProdFun(p.exprId, updateInstantiationId(p.instantiationId))(
             p.params.map(duplicateConsStrat),
@@ -784,7 +780,7 @@ class FlowConstraintsCollector(
           c.ctor,
           c.args.map((a, b) => a -> duplicateProdStrat(b)))
       def duplicateConsStrat(c: ConsStrat): ConsStrat = c match
-        case ConsVar(s) => duplicateVarState(s).asConsStrat
+        case c: ConsVar => duplicateVarState(c.s).asConsStrat
         case c: ConsFun =>
           new ConsFun(c.exprId, updateInstantiationId(c.instantiationId))(
             c.params.map(duplicateProdStrat),
@@ -839,7 +835,7 @@ class FlowConstraintsCollector(
             v <- capturedSyms
             capturedSymStrat <- generatedProdVars.get(v)
           do
-            cc.constrain(capturedSymStrat.asProdStrat, capUB.asConsStrat)
+            cc.constrain(capturedSymStrat.asProdStrat, capUB.s.asConsStrat)
           new ProdFun(plFunId, cc.instId)(
             ps.params.map(p => generatedProdVars(p.sym).asConsStrat),
             ps.restParam.map(p => generatedProdVars(p.sym).asConsStrat),
@@ -1108,7 +1104,7 @@ class FlowConstraintSolver(val collector: FlowConstraintsCollector):
         c.params.take(p.params.size).lazyZip(p.params).foreach: (argC, argP) =>
           handle(argC -> argP)
           if tracksAccumulator then argP match
-            case ConsVar(s) => handle(argC, s.asIntoParam)
+            case c: ConsVar => handle(argC, c.s.asIntoParam)
             case _ => ()
         for
           restCons <- p.restParam
@@ -1116,7 +1112,7 @@ class FlowConstraintSolver(val collector: FlowConstraintsCollector):
         do
           handle(arg, restCons)
           if tracksAccumulator then restCons match
-            case ConsVar(s) => handle(arg, s.asIntoParam)
+            case c: ConsVar => handle(arg, c.s.asIntoParam)
             case _ => ()
         handle(p.res, c.res)
       case (p: ProdFun, UnknownCons) =>

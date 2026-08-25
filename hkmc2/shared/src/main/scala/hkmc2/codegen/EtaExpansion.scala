@@ -53,14 +53,14 @@ class EtaExpansionSolver(val constraintSolver: FlowConstraintSolver):
         if isDeclaredNextParamList(resPf) || prodFunIsAffine(resPf) then
           etaExpansionTargetShapes(resPf)
         else Nil
-      case ProdVar(s) =>
+      case p: ProdVar =>
         // iterate through all the lower bounds of prodvar
-        val lbs = s.lowerBounds.iterator
+        val lbs = p.s.lowerBounds.iterator
         @tailrec
         def go(res: Opt[Ls[Int]]): Ls[Int] =
           if !lbs.hasNext then res.getOrElse(Nil)
           else lbs.next() match
-            case ProdVar(s) => go(res)
+            case pv: ProdVar => go(res)
             case pf: ProdFun =>
               if isDeclaredNextParamList(pf) then
                 etaExpansionTargetShapes(pf)
