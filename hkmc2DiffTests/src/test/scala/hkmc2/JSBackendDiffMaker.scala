@@ -274,12 +274,13 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
           .foreach: line =>
             output(s"> ${line}")
       
-      mkQuery(preStr, jsStr)(forwardStdout)
+      val awaitResult = (if await.isSet then s"; $resNme = await $resNme" else "")
+      mkQuery(preStr, jsStr + awaitResult): stdout =>
+        stdout.splitSane('\n').init // should always ends with "undefined" (TODO: check)
+          .foreach: line =>
+            output(s"> ${line}")
       if traceJS.isSet then
         host.execute(s"$runtimeNme.TraceLogger.enabled = false")
-      
-      if await.isSet then
-        mkQuery("", s"$resNme = await $resNme")(forwardStdout)
       
       if silent.isUnset then
         val valuesToPrint = ("", resSym, expect.get) +: definedValues(includeNonTerms = false).toSeq.sortBy(_._1)

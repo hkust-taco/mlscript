@@ -17,32 +17,48 @@ fun f(print_result) =
   first
 
 // Should get a promise here, the promise is used for JavaScript interop
-:sjs
 f(false)
-//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let inlinedVal, tmp;
-//│ runtime.resetEffects();
-//│ tmp = f1(false);
-//│ inlinedVal = runtime.toJsAsync(tmp);
-//│ if (runtime.curEffect === null) { return inlinedVal }
-//│ return runtime.topLevelEffect(false);
-//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > Hello, world!
 //│ = Promise {}
 
 
 // :await will await the promise returned at the top level for the repl
-:sjs
 :await
 f(true)
-//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let inlinedVal1, tmp1;
-//│ runtime.resetEffects();
-//│ tmp1 = f1(true);
-//│ inlinedVal1 = runtime.toJsAsync(tmp1);
-//│ if (runtime.curEffect === null) { return inlinedVal1 }
-//│ return runtime.topLevelEffect(false);
-//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > Hello, world!
 //│ > # MLscript
 //│ = "# MLscript"
+
+:re
+:await
+@async
+fun f() =
+  raiseUnhandledEffect()
+f()
+//│ ═══[RUNTIME ERROR] Error: Effect FatalEffect is raised in exported async function
+
+:re
+:await
+@async
+fun f() =
+  print(0)
+  let x = await(Promise.resolve(1))
+  raiseUnhandledEffect()
+  print(1)
+f()
+//│ > 0
+//│ ═══[RUNTIME ERROR] Error: Effect FatalEffect is raised in exported async function
+//│ = Promise {}
+
+:re
+:await
+@async
+fun f() =
+  print(0)
+  let x = await(Promise.reject("Promise error"))
+  raiseUnhandledEffect()
+  print(1)
+f()
+//│ > 0
+//│ ═══[RUNTIME ERROR] Promise error
+//│ = Promise {}
