@@ -159,13 +159,22 @@ sealed abstract class ConsStrat
 class StratVarState(val uid: StratVarId, val name: Str, val generatedForFun: Opt[TermSymbol]):
   val upperBounds = LinkedHashSet.empty[ConsStrat]
   val lowerBounds = LinkedHashSet.empty[ProdStrat]
-  lazy val asProdStrat = new ProdVar(this)
-  lazy val asConsStrat = new ConsVar(this)
-  lazy val asIntoParam = IntoParam(this)
-  lazy val asPossibleAccumulator = PossibleAccumulator(this)
+  lazy val asProdStrat = new StratVarState.ProdVarImpl(this)
+  lazy val asConsStrat = new StratVarState.ConsVarImpl(this)
+  lazy val asIntoParam = new StratVarState.IntoParamImpl(this)
+  lazy val asPossibleAccumulator = new StratVarState.PossibleAccumulatorImpl(this)
   override def toString(): String = s"${if name.isEmpty() then "$stratvar" else name}@${uid}@$generatedForFun"
 
 object StratVarState:
+  final class ProdVarImpl private[StratVarState] (val s: StratVarState) extends ProdStrat:
+    override def toString(): String = s"ProdVar($s)"
+  final class ConsVarImpl private[StratVarState] (val s: StratVarState) extends ConsStrat:
+    override def toString(): String = s"ConsVar($s)"
+  final class IntoParamImpl private[StratVarState] (val s: StratVarState) extends ConsStrat:
+    override def toString(): String = s"IntoParam($s)"
+  final class PossibleAccumulatorImpl private[StratVarState] (val s: StratVarState) extends ConsStrat:
+    override def toString(): String = s"PossibleAccumulator($s)"
+  
   def freshVar(nme: String)(using vuid: Uid.StratVar.State, fState: FlowAnalysis.State): StratVarState =
     val newId = vuid.nextUid
     val stratVar = StratVarState(newId, nme, N)
@@ -181,6 +190,11 @@ object StratVarState:
     case None => freshVar(nme)
     case Some(forFun) => freshVar(nme, forFun)
 
+type ProdVar = StratVarState.ProdVarImpl
+type ConsVar = StratVarState.ConsVarImpl
+type IntoParam = StratVarState.IntoParamImpl
+type PossibleAccumulator = StratVarState.PossibleAccumulatorImpl
+
 sealed trait StratWithOrigin[A <: OriginId]:
   def exprId: A
   def instantiationId: Opt[InstantiationId]
@@ -190,9 +204,6 @@ sealed trait StratWithOrigin[A <: OriginId]:
 // but mark some properties (unknown, non-affine, etc.) of the corresponding upper/lower bounds.
 sealed trait MarkerProdStrat extends ProdStrat
 sealed trait MarkerConsStrat extends ConsStrat
-
-class ProdVar(val s: StratVarState) extends ProdStrat:
-  override def toString(): String = s"ProdVar($s)"
 
 class ProdFun(
   val exprId: FunId,
@@ -219,9 +230,6 @@ class Ctor(
     s"$ctor(${args.map(_.toString()).mkString(", ")})"
 
 
-class ConsVar(val s: StratVarState) extends ConsStrat:
-  override def toString(): String = s"ConsVar($s)"
-
 class ConsFun(
   val exprId: ResultId,
   val instantiationId: Opt[InstantiationId]
@@ -237,12 +245,6 @@ case object UnknownCons extends MarkerConsStrat
 case object NonAffine extends MarkerConsStrat
 
 case object Accumulator extends MarkerConsStrat
-
-class IntoParam(val s: StratVarState) extends ConsStrat:
-  override def toString(): String = s"IntoParam($s)"
-
-class PossibleAccumulator(val s: StratVarState) extends ConsStrat:
-  override def toString(): String = s"PossibleAccumulator($s)"
 
 class FieldSel(
   val exprId: ResultId,
