@@ -1044,7 +1044,7 @@ class FlowConstraintSolver(val collector: FlowConstraintsCollector):
           m <- members
           ub <- upperBounds(m)
         do ub match
-          case ConsVar(s) => res.addAll(computed.getOrElse(s.uid, Set.empty[ConsStrat]))
+          case ConsVar(s) => res.addAll(computed.getOrElse(s.uid, Nil))
           case _ => res.add(ub)
         res
     
