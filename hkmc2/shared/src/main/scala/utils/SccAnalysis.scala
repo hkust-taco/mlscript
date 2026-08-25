@@ -7,7 +7,7 @@ import hkmc2.utils.shorthands.*
 
 
 /**
-  * Methods to override:
+  * Methods to implement:
   * - [[successors]]: The successors of each node
   * - [[handleScc]]: Every node reachable from any query is visited at most once, and each SCC is reported
   * exactly once to [[handleScc]]. By the time `handleScc(scc)` runs, every SCC reachable from `scc` other than `scc`
@@ -16,7 +16,7 @@ import hkmc2.utils.shorthands.*
   * It stays unique across queries but an SCC handled later does not necessarily get a larger id.
   * - [[isHandled]]: Whether a node's SCC has already been handled. Must become true for every member of an
   * SCC after [[handleScc]] is done.
-  * The overridden methods must use a node identity that is consistent with `==`/`##`
+  * The implementations must use a node identity that is consistent with `==`/`##`
   */
 abstract class SccAnalysis[A]:
   
@@ -89,7 +89,7 @@ end SccAnalysis
 object SccAnalysis:
   
   trait NoopHandling[A] extends SccAnalysis[A]:
-    override protected def handleScc(members: List[A], sccId: Int): Unit = ()
+    protected def handleScc(members: List[A], sccId: Int): Unit = ()
   
   trait CachingComputedSccValue[A, ComputedValuePerNodeType, ComputedValuePerSccType] extends SccAnalysis[A]:
     val computed = MutMap.empty[A, ComputedValuePerNodeType]
@@ -98,7 +98,7 @@ object SccAnalysis:
     
     protected def computeValuePerNode(node: A, members: Ls[A], computedValueForScc: ComputedValuePerSccType, sccId: Int): ComputedValuePerNodeType
     
-    final override protected def isHandled(node: A): Bool =
+    final protected def isHandled(node: A): Bool =
       computed.contains(node)
     
     abstract override protected def handleScc(members: Ls[A], sccId: Int): Unit =
@@ -108,7 +108,7 @@ object SccAnalysis:
       super.handleScc(members, sccId)
   
   trait CachingComputedNodeValue[A, ComputedValueType] extends CachingComputedSccValue[A, ComputedValueType, ComputedValueType]:
-    final override protected def computeValuePerNode(
+    final protected def computeValuePerNode(
       node: A,
       members: Ls[A],
       computedValueForScc: ComputedValueType,
@@ -118,7 +118,7 @@ object SccAnalysis:
   trait Caching[A] extends SccAnalysis[A]:
     val handled = MutSet.empty[A]
     
-    final override protected def isHandled(node: A): Bool =
+    final protected def isHandled(node: A): Bool =
       handled.contains(node)
     
     abstract override protected def handleScc(members: Ls[A], sccId: Int): Unit =
@@ -135,7 +135,7 @@ object SccAnalysis:
   
   def sccsFrom[A](succs: A => IterableOnce[A], roots: IterableOnce[A]): Ls[Ls[A]] =
     object traversal extends NoopHandling[A] with Caching[A] with Collecting[A]:
-      override protected def successors(node: A): IterableOnce[A] = succs(node)
+      protected def successors(node: A): IterableOnce[A] = succs(node)
     
     traversal.queryAll(roots)
     traversal.collected.toList

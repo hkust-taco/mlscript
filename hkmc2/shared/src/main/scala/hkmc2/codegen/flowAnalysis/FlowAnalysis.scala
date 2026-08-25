@@ -675,7 +675,7 @@ class FlowConstraintsCollector(
       // Computing the ProdStratScheme for each scc group, this way the sccs of the call graph is
       // never materialized
       object ProdStratSchemeAnalysisInScc extends SccAnalysis[TermSymbol]:
-        override protected def successors(f: TermSymbol): Ls[TermSymbol] =
+        protected def successors(f: TermSymbol): Ls[TermSymbol] =
           var callees = Ls.empty[TermSymbol]
           object CollectAllReferredFun extends BlockTraverser:
             override def applyPath(p: Path) = p match
@@ -685,8 +685,8 @@ class FlowConstraintsCollector(
               case _ => ()
           CollectAllReferredFun.applyBlock(preAnalyzer.res.rootFunDefns(f).body)
           callees
-        override protected def isHandled(f: TermSymbol) = funsToProdStratScheme.contains(f)
-        override protected def handleScc(groupedFuns: Ls[TermSymbol], sccId: Int): Unit =
+        protected def isHandled(f: TermSymbol) = funsToProdStratScheme.contains(f)
+        protected def handleScc(groupedFuns: Ls[TermSymbol], sccId: Int): Unit =
           for f <- groupedFuns do funToSccGroups(f) = groupedFuns
           val groupRep = groupedFuns.head
           new ConstraintsCollector(Some(groupRep)).givenIn: cc ?=>
@@ -1035,11 +1035,11 @@ class FlowConstraintSolver(val collector: FlowConstraintsCollector):
     SccAnalysis.NoopHandling[StratVarId]
     with SccAnalysis.CachingComputedNodeValue[StratVarId, collection.Set[ConsStrat]]:
       
-      override protected def successors(node: StratVarId): IterableOnce[Uid[StratVar]] =
+      protected def successors(node: StratVarId): IterableOnce[Uid[StratVar]] =
         upperBounds(node).iterator.collect:
           case ConsVar(s) => s.uid
       
-      override protected def computeValuePerScc(members: Ls[StratVarId], sccId: Int): collection.Set[ConsStrat] =
+      protected def computeValuePerScc(members: Ls[StratVarId], sccId: Int): collection.Set[ConsStrat] =
         val res = MutSet.empty[ConsStrat]
         for
           m <- members
