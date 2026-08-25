@@ -91,7 +91,7 @@ object SccAnalysis:
   trait NoopHandling[A] extends SccAnalysis[A]:
     override protected def handleScc(members: List[A], sccId: Int): Unit = ()
   
-  trait CachingWithComputedValue[A, ComputedValuePerNodeType, ComputedValuePerSccType] extends SccAnalysis[A]:
+  trait CachingComputedSccValue[A, ComputedValuePerNodeType, ComputedValuePerSccType] extends SccAnalysis[A]:
     val computed = MutMap.empty[A, ComputedValuePerNodeType]
     
     protected def computeValuePerScc(members: Ls[A], sccId: Int): ComputedValuePerSccType
@@ -106,6 +106,14 @@ object SccAnalysis:
       for m <- members do
         computed(m) = computeValuePerNode(m, members, sccValue, sccId)
       super.handleScc(members, sccId)
+  
+  trait CachingComputedNodeValue[A, ComputedValueType] extends CachingComputedSccValue[A, ComputedValueType, ComputedValueType]:
+    final override protected def computeValuePerNode(
+      node: A,
+      members: Ls[A],
+      computedValueForScc: ComputedValueType,
+      sccId: Int
+    ): ComputedValueType = computedValueForScc
   
   trait Caching[A] extends SccAnalysis[A]:
     val handled = MutSet.empty[A]

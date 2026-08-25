@@ -1033,7 +1033,7 @@ class FlowConstraintSolver(val collector: FlowConstraintsCollector):
     
   object AllUpperBounds extends
     SccAnalysis.NoopHandling[StratVarId]
-    with SccAnalysis.CachingWithComputedValue[StratVarId, collection.Set[ConsStrat], collection.Set[ConsStrat]]:
+    with SccAnalysis.CachingComputedNodeValue[StratVarId, collection.Set[ConsStrat]]:
       
       override protected def successors(node: StratVarId): IterableOnce[Uid[StratVar]] =
         upperBounds(node).iterator.collect:
@@ -1048,13 +1048,6 @@ class FlowConstraintSolver(val collector: FlowConstraintsCollector):
           case ConsVar(s) => res.addAll(computed.getOrElse(s.uid, Nil))
           case _ => res.add(ub)
         res
-    
-      override protected def computeValuePerNode(
-        node: StratVarId,
-        members: Ls[StratVarId],
-        computedValueForScc: collection.Set[ConsStrat],
-        sccId: Int
-      ): collection.Set[ConsStrat] = computedValueForScc
       
       def apply(lb: StratVarId): collection.Set[ConsStrat] = computed.get(lb) match
         case S(res) => res
