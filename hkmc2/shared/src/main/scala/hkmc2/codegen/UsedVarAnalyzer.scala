@@ -249,7 +249,7 @@ class UsedVarAnalyzer(b: Block, scopeData: ScopeData)(using State):
 
     // Remove locals that are not yet defined
     def removeUnused(dp: collection.Map[ScopedInfo, AccessInfo]): Map[ScopedInfo, AccessInfo] =
-      dp.map: (info, accesses) =>
+      dp.iterator.map: (info, accesses) =>
         val node = scopeData.getNode(info)
         info -> accesses.intersectLocals(node.existingVars)
       .toMap
