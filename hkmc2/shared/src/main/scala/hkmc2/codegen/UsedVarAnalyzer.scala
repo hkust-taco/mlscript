@@ -158,10 +158,10 @@ class UsedVarAnalyzer(b: Block, scopeData: ScopeData)(using State):
   
   private def combineInfos(m1: Map[ScopedInfo, AccessInfo], m2: Map[ScopedInfo, AccessInfo]): Map[ScopedInfo, AccessInfo] =
     if m2.size < m1.size then combineInfos(m2, m1)
-    else m1.foldLeft(m2):
-      case (acc, info -> accesses) => m2.get(info) match
-        case Some(value) => acc + (info -> (accesses ++ value))
-        case None => acc + (info -> accesses)
+    else
+      m2 ++
+      m1.iterator.map: (k, v) =>
+        k -> m2.get(k).fold(v)(_ ++ v)
   
   // Find:
   // - Map 1:
