@@ -156,12 +156,12 @@ class UsedVarAnalyzer(b: Block, scopeData: ScopeData)(using State):
     // we remove them
     accessed.withoutLocals(obj.definedLocals)
   
-  private def combineInfos(m1: collection.Map[ScopedInfo, AccessInfo], m2: collection.Map[ScopedInfo, AccessInfo]): collection.Map[ScopedInfo, AccessInfo] =
+  private def combineInfos(m1: Map[ScopedInfo, AccessInfo], m2: Map[ScopedInfo, AccessInfo]): Map[ScopedInfo, AccessInfo] =
     if m2.size < m1.size then combineInfos(m2, m1)
-    else
-      m2 ++
-      m1.map: (k, v) =>
-        k -> m2.get(k).map(_ ++ v).getOrElse(v)
+    else m1.foldLeft(m2):
+      case (acc, info -> accesses) => m2.get(info) match
+        case Some(value) => acc + (info -> (accesses ++ value))
+        case None => acc + (info -> accesses)
   
   // Find:
   // - Map 1:
@@ -180,7 +180,7 @@ class UsedVarAnalyzer(b: Block, scopeData: ScopeData)(using State):
   // Note that it is possible for a lifted scoped object to be reached by traversing through an ignored object.
   // 
   // Also observe that if a node is not accesed from any of its children, then we can re-use the result of its parent's analysis.
-  private def findAccesses(s: ScopeNode): (collection.Map[ScopedInfo, AccessInfo], collection.Map[ScopedInfo, AccessInfo]) =
+  private def findAccesses(s: ScopeNode): (Map[ScopedInfo, AccessInfo], Map[ScopedInfo, AccessInfo]) =
     // Note: these include `s`
     val children = s.allChildren
     val childInfo = children.map(_.toInfo).toSet
@@ -248,10 +248,11 @@ class UsedVarAnalyzer(b: Block, scopeData: ScopeData)(using State):
     sccTraversal.queryAll(childInfo)
 
     // Remove locals that are not yet defined
-    def removeUnused(dp: collection.Map[ScopedInfo, AccessInfo]): collection.Map[ScopedInfo, AccessInfo] =
+    def removeUnused(dp: collection.Map[ScopedInfo, AccessInfo]): Map[ScopedInfo, AccessInfo] =
       dp.map: (info, accesses) =>
         val node = scopeData.getNode(info)
         info -> accesses.intersectLocals(node.existingVars)
+      .toMap
 
     val m1 = removeUnused(withIgnored)
     val m2 = removeUnused(withoutIgnored)
