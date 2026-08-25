@@ -124,16 +124,10 @@ object SccAnalysis:
       collected.addOne(members)
       super.handleScc(members, sccId)
   
-  abstract class SccFromSuccFun[A](succs: A => IterableOnce[A]) extends SccAnalysis[A]:
-    final override protected def successors(node: A) = succs(node)
-    
   
   def sccsFrom[A](succs: A => IterableOnce[A], roots: IterableOnce[A]): Ls[Ls[A]] =
-    object traversal extends
-      SccFromSuccFun[A](succs)
-      with DefaultNoopHandling[A]
-      with DefaultCaching[A]
-      with DefaultCollecting[A]
+    object traversal extends DefaultNoopHandling[A] with DefaultCaching[A] with DefaultCollecting[A]:
+      override protected def successors(node: A): IterableOnce[A] = succs(node)
     
     traversal.queryAll(roots)
     traversal.collected.toList

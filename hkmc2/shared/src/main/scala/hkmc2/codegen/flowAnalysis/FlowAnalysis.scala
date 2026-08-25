@@ -1033,11 +1033,13 @@ class FlowConstraintSolver(val collector: FlowConstraintsCollector):
   val lowerBounds = MutMap.empty[StratVarId, Ls[ProdStrat]].withDefaultValue(Nil)
     
   object AllUpperBounds extends
-    SccFromSuccFun[StratVarId](
-      upperBounds(_).iterator.collect:
-        case ConsVar(s) => s.uid)
-    with DefaultNoopHandling[StratVarId]
+    DefaultNoopHandling[StratVarId]
     with DefaultCachingWithComputedValue[StratVarId, collection.Set[ConsStrat], collection.Set[ConsStrat]]:
+      
+      override protected def successors(node: StratVarId): IterableOnce[Uid[StratVar]] =
+        upperBounds(node).iterator.collect:
+          case ConsVar(s) => s.uid
+      
       override protected def computeValuePerScc(members: Ls[StratVarId], sccId: Int): collection.Set[ConsStrat] =
         val res = MutSet.empty[ConsStrat]
         for

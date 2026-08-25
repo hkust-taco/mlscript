@@ -182,6 +182,8 @@ class TailRecOpt(checkAnnotations: Bool)(using State, TL, Raise):
     
     val sccs = mutable.ListBuffer.empty[SccOfCalls]
     trait BuildSccOfCalls extends SccAnalysis[TermSymbol]:
+      protected def successors(node: TermSymbol): IterableOnce[TermSymbol] = cg(node).iterator.map(_.f2)
+      
       protected def handleScc(members: Ls[TermSymbol], sccId: Int): Unit =
         val inScc = members.toSet
         val calls = members
@@ -195,10 +197,7 @@ class TailRecOpt(checkAnnotations: Bool)(using State, TL, Raise):
                 false
         sccs += SccOfCalls(members.map(defnBySyms.apply), calls)
     
-    object traversal extends
-      SccAnalysis.SccFromSuccFun[TermSymbol](f => cg(f).iterator.map(_.f2))
-      with BuildSccOfCalls
-      with SccAnalysis.DefaultCaching[TermSymbol]
+    object traversal extends BuildSccOfCalls with SccAnalysis.DefaultCaching[TermSymbol]
     
     traversal.queryAll(defnBySyms.keysIterator)
     sccs.toList
