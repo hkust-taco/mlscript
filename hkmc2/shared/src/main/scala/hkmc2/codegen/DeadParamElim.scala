@@ -45,7 +45,7 @@ class DeadParamElimSolver(val constraintSolver: FlowConstraintSolver):
       else
         prodFun.params.zipWithIndex.foreach:
           case (c: ConsVar, i) =>
-            val ubs = c.s.upperBounds
+            val ubs = constraintSolver.AllUpperBounds(c.s)
             if ubs.exists:
               case _: ConsVar => false
               case _: IntoParam => false

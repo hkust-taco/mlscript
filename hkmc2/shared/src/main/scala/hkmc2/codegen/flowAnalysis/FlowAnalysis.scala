@@ -681,49 +681,44 @@ class FlowConstraintsCollector(
     val funsToProdStratScheme = MutMap.empty[TermSymbol, ProdStratScheme]
 
     if !mono then
-      // compute scc
-      val sccInOrder: Ls[Ls[TermSymbol]] =
-        import algorithms.partitionScc
-        var edges = Ls.empty[(TermSymbol, TermSymbol)]
-        for (_, f) <- preAnalyzer.res.rootFunDefns do
+      // Computing the ProdStratScheme for each scc group, this way the sccs of the call graph is
+      // never materialized
+      object ProdStratSchemeAnalysisInScc extends SccAnalysis[TermSymbol]:
+        protected def successors(f: TermSymbol): Ls[TermSymbol] =
+          var callees = Ls.empty[TermSymbol]
           object CollectAllReferredFun extends BlockTraverser:
             override def applyPath(p: Path) = p match
               case FunRef(callee, _) =>
                 if preAnalyzer.res.rootFunDefns.contains(callee) then
-                  edges = (f.dSym -> callee) :: edges
+                  callees ::= callee
               case _ => ()
-          CollectAllReferredFun.applyBlock(f.body)
-        partitionScc(
-          edges,
-          preAnalyzer.res.rootFunDefns.keys
-        ).reverse
-      end sccInOrder
-      for
-        group <- sccInOrder
-        f <- group
-      do funToSccGroups(f) = group
-
-      // compute strat scheme for each scc group
-      for groupedFuns <- sccInOrder do
-        val groupRep = funToSccRep(groupedFuns.head).get
-        new ConstraintsCollector(Some(groupRep)).givenIn: cc ?=>
-          for funSym <- groupedFuns do
-            val fun = preAnalyzer.res.funSymToFunDefn(funSym)
-            val thisFunVar = generatedProdVars(fun.dSym)
-            val funProdStrat = mkFunProdStrat(
-              s"${funSym.nme}_res",
-              fun.params,
-              fun.body,
-              (fun.dSym, -1))
-            cc.constrain(funProdStrat, thisFunVar.asConsStrat)
-          if nonAffineTracking then
-            for
-              sym <- preAnalyzer.res.nonAffineSyms
-              stratVar <- preAnalyzer.res.generatedProdVars.get(sym)
-              if stratVar.generatedForFun.flatMap(funToSccRep).contains(groupRep)
-            do cc.constrain(stratVar.asProdStrat, NonAffine)
-          for funSym <- groupedFuns do
-            funsToProdStratScheme(funSym) = ProdStratScheme(generatedProdVars(funSym), cc.constraints)
+          CollectAllReferredFun.applyBlock(preAnalyzer.res.rootFunDefns(f).body)
+          callees
+        protected def isHandled(f: TermSymbol) = funsToProdStratScheme.contains(f)
+        protected def handleScc(groupedFuns: Ls[TermSymbol], sccId: Int): Unit =
+          for f <- groupedFuns do funToSccGroups(f) = groupedFuns
+          val groupRep = groupedFuns.head
+          new ConstraintsCollector(Some(groupRep)).givenIn: cc ?=>
+            for funSym <- groupedFuns do
+              val fun = preAnalyzer.res.funSymToFunDefn(funSym)
+              val thisFunVar = generatedProdVars(fun.dSym)
+              val funProdStrat = mkFunProdStrat(
+                s"${funSym.nme}_res",
+                fun.params,
+                fun.body,
+                (fun.dSym, -1))
+              cc.constrain(funProdStrat, thisFunVar.asConsStrat)
+            if nonAffineTracking then
+              for
+                sym <- preAnalyzer.res.nonAffineSyms
+                stratVar <- preAnalyzer.res.generatedProdVars.get(sym)
+                if stratVar.generatedForFun.flatMap(funToSccRep).contains(groupRep)
+              do cc.constrain(stratVar.asProdStrat, NonAffine)
+            for funSym <- groupedFuns do
+              funsToProdStratScheme(funSym) = ProdStratScheme(generatedProdVars(funSym), cc.constraints)
+      end ProdStratSchemeAnalysisInScc
+      
+      ProdStratSchemeAnalysisInScc.queryAll(preAnalyzer.res.rootFunDefns.keys)
     end if
 
     // collect constraints from the top-level block
@@ -1055,13 +1050,38 @@ class FlowConstraintSolver(val collector: FlowConstraintsCollector):
     if c.srcs.isEmpty then consFunsWithSrcs += c
     c.srcs += p
   
+  object AllUpperBounds extends
+    SccAnalysis.NoopHandling[StratVarState]
+    with SccAnalysis.CachingComputedNodeValue[StratVarState, collection.Set[ConsStrat]]:
+      
+      protected def successors(node: StratVarState): IterableOnce[StratVarState] =
+        node.upperBounds.iterator.collect:
+          case c: ConsVar => c.s
+      
+      protected def computeValuePerScc(members: Ls[StratVarState], sccId: Int): collection.Set[ConsStrat] =
+        val res = MutSet.empty[ConsStrat]
+        for
+          m <- members
+          ub <- m.upperBounds
+        do ub match
+          case c: ConsVar => res.addAll(computed.getOrElse(c.s, Nil))
+          case _ => res.add(ub)
+        res
+      
+      def apply(lb: StratVarState): collection.Set[ConsStrat] = computed.get(lb) match
+        case S(res) => res
+        case N =>
+          query(lb)
+          computed(lb)
+    
+  
   private def logNonAffineSyms: Unit =
     tl.scoped(FlowAnalysis.TraceScope.NonAffineSyms):
       tl.log(">>> non-affine syms >>>")
       val outputRes =
         for
           stratVar <- fState.stratVarStates
-          if stratVar.upperBounds.contains(NonAffine)
+          if AllUpperBounds(stratVar).contains(NonAffine)
         yield s"${stratVar.name}@${stratVar.uid}"
       for nonAffine <- outputRes.toSortedSet do
         tl.log(nonAffine)
@@ -1071,7 +1091,7 @@ class FlowConstraintSolver(val collector: FlowConstraintsCollector):
     tl.scoped(FlowAnalysis.TraceScope.AccumulatorSym):
       tl.log(">>> accumulator syms >>>")
       def showAccumulatorSym(stratVar: StratVarState): Opt[Str] =
-        stratVar.upperBounds
+        AllUpperBounds(stratVar)
           .collectFirst:
             case pAcc: PossibleAccumulator if pAcc.s.uid === stratVar.uid => pAcc.s.name
             case iPrm: IntoParam if iPrm.s.uid === stratVar.uid => iPrm.s.name
@@ -1080,7 +1100,7 @@ class FlowConstraintSolver(val collector: FlowConstraintsCollector):
       val outputRes =
         for
           stratVar <- fState.stratVarStates
-          if stratVar.upperBounds.contains(Accumulator)
+          if AllUpperBounds(stratVar).contains(Accumulator)
           accumulatorSym <- showAccumulatorSym(stratVar)
         yield accumulatorSym
       for accumulator <- outputRes.toSortedSet do
@@ -1158,7 +1178,7 @@ class FlowConstraintSolver(val collector: FlowConstraintsCollector):
         for a <- c.params do handle(a, UnknownCons)
         handle(UnknownProd, c.res)
       case (p: ProdVar, c: ConsVar) =>
-        if p.s.upperBounds.add(c) & c.s.lowerBounds.add(p) then
+        if p.s.upperBounds.add(c) then
           for l <- p.s.lowerBounds do handle(l, c)
           for u <- c.s.upperBounds do handle(p, u)
       case (p: ProdVar, c) => if p.s.upperBounds.add(c) then

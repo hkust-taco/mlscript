@@ -1,7 +1,7 @@
 package hkmc2
 package codegen
 
-import scala.collection.mutable.{Map => MutMap, Set => MutSet, Buffer}
+import scala.collection.mutable.{Map => MutMap, Set => MutSet, Buffer, LinkedHashSet}
 import scala.annotation.tailrec
 import sourcecode.{Line, FileName}
 
@@ -10,7 +10,6 @@ import hkmc2.utils.*
 
 import semantics.*
 import semantics.Elaborator.{State, Ctx, ctx}
-import hkmc2.utils.algorithms.partitionScc
 import hkmc2.syntax.Literal
 import hkmc2.{codegen => argss}
 
@@ -1581,7 +1580,7 @@ class BlockSimplifier
         var map: InlinerMap = Map.empty
         val useCnt = MutMap.WithDefault(MutMap.empty[TermSymbol, Int], _ => 0)
         val usages = MutMap.WithDefault(MutMap.empty[TermSymbol, List[(Option[TermSymbol], Call)]], _ => Nil)
-        val summaryEdges = Buffer.empty[(TermSymbol, TermSymbol)]
+        val summaryAdjLists = MutMap.empty[TermSymbol, Set[TermSymbol]]
         val disallowElimination = MutMap.WithDefault(MutMap.empty[TermSymbol, Bool], _ => false)
         // * Non-local definitions are registered before being appended to this worklist. Recursive
         // * references therefore terminate immediately, while advancing an index discovers the
@@ -1640,9 +1639,8 @@ class BlockSimplifier
         def applyFunctionBody(f: FunDefn, isNonLocal: Bool): Unit =
           if analyzedFunctionBodies.add(f.dSym) then
             val summary = f.getOrComputeInlinerBodySummary
-            summary.transitiveCallTargets.foreach: callee =>
-              summaryEdges.append((f.dSym, callee))
-              registerNonLocalFunction(callee)
+            summaryAdjLists(f.dSym) = summary.transitiveCallTargets
+            summary.transitiveCallTargets.foreach(registerNonLocalFunction)
             nested(S(f.dSym), f.inline, isNonLocal):
               if isNonLocal then replayBodySummary(summary)
               else applyBlock(f.body)
@@ -1721,7 +1719,11 @@ class BlockSimplifier
           map.foreach: (sym, info) =>
             info.useCount = useCnt(sym)
             info.disallowElimination = info.disallowElimination || disallowElimination(sym)
-          val edges = summaryEdges.filter((from, to) => map.contains(from) && map.contains(to))
+          val adjList = MutMap.empty[TermSymbol, LinkedHashSet[TermSymbol]]
+          summaryAdjLists.foreach: (from, tos) =>
+            if map.contains(from) then
+              for to <- tos if map.contains(to) do
+                adjList.getOrElseUpdate(from, LinkedHashSet.empty).add(to)
           usages.foreach: (sym, calls) =>
             calls.foreach: (caller, call) =>
               if map.contains(sym) then
@@ -1731,7 +1733,7 @@ class BlockSimplifier
                 caller.foreach: caller =>
                   softAssert(map.contains(caller),
                     s"Call-graph source ${caller.showDbg} was not registered before traversal")
-                  edges.append((caller, sym))
+                  adjList.getOrElseUpdate(caller, LinkedHashSet.empty).add(sym)
 
           def pickLoopBreaker(sccComp: Ls[TermSymbol]): TermSymbol =
             sccComp.minBy: sym =>
@@ -1739,7 +1741,10 @@ class BlockSimplifier
 
           @tailrec
           def assignLoopBreakers(): Unit =
-            val sccs = partitionScc(edges.filterNot((from, to) => map(to).isLoopBreaker), map.keys)
+            val sccs = SccAnalysis.sccsFrom(
+              (from: TermSymbol) => adjList.getOrElse(from, Nil)
+                .iterator.filterNot(to => map(to).isLoopBreaker),
+              map.keys)
             if sccs.forall(_.sizeIs == 1) then return
             sccs.foreach: sccComp =>
               if sccComp.sizeIs > 1 then
@@ -1747,8 +1752,8 @@ class BlockSimplifier
                 // can still disappear while their workers stop recursive expansion.
                 map(pickLoopBreaker(sccComp))._isLoopBreaker = true
             assignLoopBreakers()
-          edges.foreach: (from, to) =>
-            if from === to then
+          for (from, tos) <- adjList do
+            if tos.contains(from) then
               map(from)._isLoopBreaker = true
           assignLoopBreakers()
           map
