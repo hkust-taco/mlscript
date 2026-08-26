@@ -198,11 +198,8 @@ sealed trait StratWithOrigin[A <: OriginId]:
 sealed trait MarkerProdStrat extends ProdStrat
 sealed trait MarkerConsStrat extends ConsStrat
 
-sealed trait ConcreteProducer extends ProdStrat with StratWithOrigin[ResultId]:
-  val dests = MutSet.empty[ConcreteConsumer | MarkerConsStrat]
-
-sealed trait ConcreteConsumer extends ConsStrat with StratWithOrigin[ResultId]:
-  val srcs = MutSet.empty[ConcreteProducer | MarkerProdStrat]
+sealed trait ConcreteCtorConsumer extends StratWithOrigin[ResultId]:
+  val srcs = MutSet.empty[Ctor | MarkerProdStrat]
 
 class ProdFun(
   val exprId: FunId,
@@ -225,7 +222,8 @@ class Ctor(
 )(
   val ctor: CtorCls,
   val args: Ls[SelField -> ProdStrat]
-) extends ConcreteProducer:
+) extends ProdStrat with StratWithOrigin[ResultId]:
+  val dests = MutSet.empty[ConcreteCtorConsumer | MarkerConsStrat]
   override def toString(): String =
     s"$ctor(${args.map(_.toString()).mkString(", ")})"
 
@@ -254,12 +252,12 @@ class FieldSel(
   val field: SelField,
   val selectsFrom: CtorCls,
   val consVar: StratVar
-) extends ConcreteConsumer
+) extends ConsStrat with ConcreteCtorConsumer
 
 class Dtor(
   val exprId: ResultId,
   val instantiationId: Opt[InstantiationId]
-) extends ConcreteConsumer
+) extends ConsStrat with ConcreteCtorConsumer
 
 case class ConcreteId[A <: OriginId](exprId: A, instId: InstantiationId):
   def pp(using FlowAnalysis.State): Str = exprId match
@@ -1026,14 +1024,14 @@ class FlowConstraintSolver(val collector: FlowConstraintsCollector):
   
   
   val ctorsWithDests = mutable.Buffer.empty[Ctor]
-  val consumersWithSrcs = mutable.Buffer.empty[ConcreteConsumer]
+  val consumersWithSrcs = mutable.Buffer.empty[ConcreteCtorConsumer]
   val prodFunsWithDests = mutable.Buffer.empty[ProdFun]
   val consFunsWithSrcs = mutable.Buffer.empty[ConsFun]
   
-  private def addCtorDest(c: Ctor, d: ConcreteConsumer | MarkerConsStrat): Unit =
+  private def addCtorDest(c: Ctor, d: ConcreteCtorConsumer | MarkerConsStrat): Unit =
     if c.dests.isEmpty then ctorsWithDests += c
     c.dests += d
-  private def addDtorSrc(d: ConcreteConsumer, p: ConcreteProducer | MarkerProdStrat): Unit =
+  private def addDtorSrc(d: ConcreteCtorConsumer, p: Ctor | MarkerProdStrat): Unit =
     if d.srcs.isEmpty then consumersWithSrcs += d
     d.srcs += p
   private def addFunDest(p: ProdFun, c: ConsFun | MarkerConsStrat): Unit =

@@ -44,10 +44,10 @@ class DeforestFusionSolver(val constraintSolver: FlowConstraintSolver)(using val
   val finalCtorDests = LinkedHashMap.empty[CtorDtorId, FinalDest]
   val finalDtorSrcs = LinkedHashMap.empty[CtorDtorId, Set[CtorDtorId]]
   val fusingCtorInfo = MutMap.empty[CtorDtorId, Ctor]
-  val fusingDtorInfo = MutMap.empty[CtorDtorId, ConcreteConsumer]
+  val fusingDtorInfo = MutMap.empty[CtorDtorId, ConcreteCtorConsumer]
   
   locally {
-    def mergeDests(dests: Set[ConcreteConsumer | MarkerConsStrat]): Opt[FinalDest] =
+    def mergeDests(dests: Set[ConcreteCtorConsumer | MarkerConsStrat]): Opt[FinalDest] =
       def selsSelectingTheSameSymbol(sels: Set[FieldSel]) =
         sels.map(s => s.field).size == 1
       if dests.exists(_.isInstanceOf[MarkerConsStrat]) then
@@ -87,11 +87,11 @@ class DeforestFusionSolver(val constraintSolver: FlowConstraintSolver)(using val
         if dtor.srcs.contains(UnknownProd)
       yield dtor
 
-    val result = FlowWebComputation[ConcreteProducer, ConcreteConsumer](
+    val result = FlowWebComputation[Ctor, ConcreteCtorConsumer](
       p => p.dests.collect:
-        case c: ConcreteConsumer => c,
+        case c: ConcreteCtorConsumer => c,
       c => c.srcs.collect:
-        case p: ConcreteProducer => p,
+        case p: Ctor => p,
       prodRoots,
       consRoots,
     )
@@ -109,8 +109,8 @@ class DeforestFusionSolver(val constraintSolver: FlowConstraintSolver)(using val
       if !toRemoveDtor(dtor)
     do
       finalDtorSrcs(dtor.concreteId) =
-        // srcs are always ConcreteProducers after constraint solving
-        dtor.srcs.iterator.map(_.asInstanceOf[ConcreteProducer].concreteId).toSet
+        // srcs are always Ctors after constraint solving
+        dtor.srcs.iterator.map(_.asInstanceOf[Ctor].concreteId).toSet
       fusingDtorInfo(dtor.concreteId) = dtor
   }
 
