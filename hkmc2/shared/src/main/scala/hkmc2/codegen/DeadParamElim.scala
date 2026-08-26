@@ -44,10 +44,10 @@ class DeadParamElimSolver(val constraintSolver: FlowConstraintSolver):
           prodRoots += prodFun -> i
       else
         prodFun.params.zipWithIndex.foreach:
-          case (c: ConsVar, i) =>
-            val ubs = constraintSolver.AllUpperBounds(c.s)
+          case (v: StratVar, i) =>
+            val ubs = constraintSolver.AllUpperBounds(v)
             if ubs.exists:
-              case _: ConsVar => false
+              case _: StratVar => false
               case _: IntoParam => false
               case NonAffine | Accumulator => false
               case _ => true
