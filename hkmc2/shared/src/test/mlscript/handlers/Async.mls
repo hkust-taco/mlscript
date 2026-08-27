@@ -69,6 +69,8 @@ fun f() =
   let readme = r.toString()
   let first = readme.slice(0, readme.indexOf("\n"))
   print(first)
+  let r2 = await(fs.promises.readdir("."))
+  print(r2.indexOf("README.md") != 0)
 
 @async
 fun g() =
@@ -79,8 +81,10 @@ fun g() =
 g()
 //│ > 0
 //│ > # MLscript
+//│ > true
 //│ > 0
 //│ > # MLscript
+//│ > true
 
 @async
 fun g() =
@@ -92,4 +96,6 @@ g()
 //│ > 0
 //│ > # MLscript
 //│ > # MLscript
+//│ > true
+//│ > true
 //│ = [(), ()]
