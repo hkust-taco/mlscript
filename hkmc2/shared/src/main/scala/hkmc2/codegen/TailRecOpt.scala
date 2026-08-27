@@ -337,7 +337,7 @@ class TailRecOpt(checkAnnotations: Bool)(using State, TL, Raise):
       // Multiple functions: Create a wrapper.
       else (true, BlockMemberSymbol(funs.iterator.map(_.sym.nme).mkString("_"), Nil, true))
     val dSym =
-      if bms is funs.head.sym then funs.head.dSym
+      if !hasWrapper then funs.head.dSym
       else TermSymbol(syntax.Fun, owner, Tree.Ident(bms.nme))
     
     val maxParamLen = maxInt(funs, paramsLen)
