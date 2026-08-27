@@ -62,3 +62,34 @@ f()
 //│ > 0
 //│ ═══[RUNTIME ERROR] Promise error
 //│ = Promise {}
+
+fun f() =
+  print(0)
+  let r = await(fs.promises.readFile("./README.md"))
+  let readme = r.toString()
+  let first = readme.slice(0, readme.indexOf("\n"))
+  print(first)
+
+@async
+fun g() =
+  f()
+  f()
+
+:await
+g()
+//│ > 0
+//│ > # MLscript
+//│ > 0
+//│ > # MLscript
+
+@async
+fun g() =
+  await(Promise.all([@async f(), @async f()]))
+
+:await
+g()
+//│ > 0
+//│ > 0
+//│ > # MLscript
+//│ > # MLscript
+//│ = [(), ()]

@@ -707,6 +707,12 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
     
     @tailrec
     def extractAnnots(t: st, acc: List[Annot]): (List[Annot], st) = t match
+      case st.Annotated(Annot.Async, trm) =>
+        val rewritten = st.App(
+          st.SynthSel(State.runtimeSymbol.ref(), Tree.Ident("toJsAsync"))(N, FlowSymbol.sel("toJsAsync"), N, N),
+          st.Tup(PlainFld(st.Lam(sem.ParamList(sem.ParamListFlags.empty, Nil, N), trm)) :: Nil)(Tree.DummyTup)
+        )(Tree.DummyApp, N, FlowSymbol.app())
+        extractAnnots(rewritten, acc)
       case st.Annotated(annot, trm) => extractAnnots(trm.instantiated, annot :: acc)
       case _ => (acc, t)
     
