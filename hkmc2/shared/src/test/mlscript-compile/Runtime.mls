@@ -412,6 +412,10 @@ fun handleEffect(cur) =
     cur.contTrace.lastHandler,
     false
   )
+  
+  if cur.contTrace.last === handlerFrame do set saved.last = saved
+  if cur.contTrace.lastHandler === handlerFrame do set saved.lastHandler = saved
+  
   set
     cur.contTrace.last = handlerFrame
     cur.contTrace.lastHandler = handlerFrame
@@ -425,9 +429,9 @@ fun handleEffect(cur) =
     set cur = curEffect
     // relink the saved frames
     if saved.next !== null do
-      set
-        cur.contTrace.last.next = saved.next
-        cur.contTrace.last = saved.last
+      set cur.contTrace.last.next = saved.next
+    if saved.last !== saved do
+      set cur.contTrace.last = saved.last
     if saved.nextHandler !== null do
       set
         cur.contTrace.lastHandler.nextHandler = saved.nextHandler
