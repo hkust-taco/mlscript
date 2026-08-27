@@ -206,4 +206,3 @@ module M with
 M.F1.res is F
 //│ = true
 
-

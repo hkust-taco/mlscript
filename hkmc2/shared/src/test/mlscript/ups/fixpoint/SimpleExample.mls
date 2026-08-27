@@ -62,21 +62,7 @@ pattern Steps = @compile (Step as Steps | _)
 //│       end
 //│     };
 //│     set matcher0$ = lambda⁰;
-//│     @private
-//│     define lambda4 as fun lambda¹(input1) {
-//│       let tmp;
-//│       set tmp = { "b": input1 };
-//│       return new runtime⁰.MatchSuccess⁰(input1, tmp)
-//│     };
-//│     set matcher4$ = lambda¹;
-//│     @private
-//│     define lambda5 as fun lambda²(input1) {
-//│       let tmp;
-//│       set tmp = { "a": input1 };
-//│       return new runtime⁰.MatchSuccess⁰(input1, tmp)
-//│     };
-//│     set matcher3$ = lambda²;
-//│     define lambda1 as fun lambda³(input1) {
+//│     define lambda1 as fun lambda¹(input1) {
 //│       let value, value1, result3$, output3$, fieldBindings, bindings, tmp, tmp1;
 //│       match input1
 //│         Lit¹ =>
@@ -98,8 +84,8 @@ pattern Steps = @compile (Step as Steps | _)
 //│           return new runtime⁰.MatchFailure⁰("never")
 //│       end
 //│     };
-//│     set matcher1$ = lambda³;
-//│     define lambda2 as fun lambda⁴(input1) {
+//│     set matcher1$ = lambda¹;
+//│     define lambda2 as fun lambda²(input1) {
 //│       let value, value1, result4$, output4$, fieldBindings, bindings, tmp, tmp1;
 //│       match input1
 //│         Lit¹ =>
@@ -121,7 +107,21 @@ pattern Steps = @compile (Step as Steps | _)
 //│           return new runtime⁰.MatchFailure⁰("never")
 //│       end
 //│     };
-//│     set matcher2$ = lambda⁴;
+//│     set matcher2$ = lambda²;
+//│     @private
+//│     define lambda4 as fun lambda³(input1) {
+//│       let tmp;
+//│       set tmp = { "a": input1 };
+//│       return new runtime⁰.MatchSuccess⁰(input1, tmp)
+//│     };
+//│     set matcher3$ = lambda³;
+//│     @private
+//│     define lambda5 as fun lambda⁴(input1) {
+//│       let tmp;
+//│       set tmp = { "b": input1 };
+//│       return new runtime⁰.MatchSuccess⁰(input1, tmp)
+//│     };
+//│     set matcher4$ = lambda⁴;
 //│     define lambda3 as fun lambda⁵(input1) {
 //│       match input1
 //│         Lit¹ =>
@@ -319,5 +319,3 @@ assert term3 is Steps as r
 //│ > new Add(Lit(10), Lit(5))
 //│ > reduce 10 + 5 = 15
 //│ > new Lit(15)
-
-

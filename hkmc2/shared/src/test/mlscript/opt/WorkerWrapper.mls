@@ -1,5 +1,7 @@
 :js
 
+open annotations { noInline }
+
 
 // The worker-wrapper transformation initially turns this into
 //    fun foo(x)(y) = foo$worker(x, y)
@@ -30,6 +32,38 @@ foo(1)(2)
 //│ = 6
 
 
+// @noInline should be transferred to the worker, leaving the forwarding wrapper inlineable.
+@noInline fun annotatedNoInlineFoo(x)(y) =
+  x + y + x + y
+
+:soir
+annotatedNoInlineFoo(1)(2)
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ return annotatedNoInlineFoo$worker⁰(1, 2)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 6
+
+
+// A tiny @noInline body still needs a worker: marking the original function
+// @inline would conflict with @noInline and prevent uncurrying.
+:soir
+@noInline fun tinyNoInline(x)(y) = y
+tinyNoInline(1)(2)
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let tinyNoInline$worker;
+//│ @inline
+//│ define tinyNoInline⁰ as fun tinyNoInline¹(x)(y) {
+//│   return tinyNoInline$worker⁰(x, y)
+//│ };
+//│ @noInline
+//│ define tinyNoInline$worker as fun tinyNoInline$worker⁰(x, y) {
+//│   return y
+//│ };
+//│ return tinyNoInline$worker⁰(1, 2)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 2
+
+
 // Bodies below the alternative inlining threshold should not get a worker.
 :soir
 fun tiny(x)(y) = y
@@ -57,4 +91,3 @@ noInlineFoo(1)(2)
 //│ return noInlineFoo¹(1)(2)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 6
-

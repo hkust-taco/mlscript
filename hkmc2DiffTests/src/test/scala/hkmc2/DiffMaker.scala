@@ -5,6 +5,17 @@ import hkmc2.utils.*, shorthands.*
 import hkmc2.utils.*
 
 
+
+object DiffMaker:
+  
+  /** The project root, resolved from the directory SBT runs a subproject's tests in.
+    * For some reason, when run from ~hkmc2JVM/Test/run in sbt, the pwd is ".../hkmc2/jvm". */
+  def projectRoot(pwd: os.Path): os.Path =
+    if pwd.last == "hkmc2DiffTests" then pwd/os.up else pwd
+  
+end DiffMaker
+
+
 abstract class DiffMaker:
   
   def cctx: CompilerCtx

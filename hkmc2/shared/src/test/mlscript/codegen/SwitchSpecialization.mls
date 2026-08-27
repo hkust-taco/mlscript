@@ -258,7 +258,6 @@ fun f(x, y) =
 //│ f5 = function f(x, y) {
 //│   let scrut;
 //│   if (x === 0) {
-//│     x = 1;
 //│     scrut = Predef.equals(y, 0);
 //│     if (scrut === true) {
 //│       x = 1000;
@@ -297,7 +296,6 @@ fun f(x, y) =
 //│   let scrut;
 //│   switch (x) {
 //│     case 0:
-//│       x = 1;
 //│       scrut = Predef.equals(y, 0);
 //│       if (scrut === true) { x = 1; } else { x = 1; }
 //│     case 1:

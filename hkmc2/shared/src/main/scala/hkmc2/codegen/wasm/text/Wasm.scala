@@ -416,7 +416,7 @@ case class FoldedInstr(
     * This is provided as a shorthand since the majority of instruction builders (in [[Instructions]]) are designed to
     * take one value per operand argument, and either place no value (represented by `N`) or one value (represented by
     * `S(ty)`) on the stack.
-    * 
+    *
     * The use of these APIs with multi-value instructions, for instance:
     *
     * ```scala
@@ -431,7 +431,7 @@ case class FoldedInstr(
   def resultType: Opt[Type] = resultTypes match
     case Seq() => N
     case Seq(ty) => S(ty)
-    case tys => 
+    case tys =>
       lastWords:
         s"resultType called on instruction `$mnemonic` with multi-value result type: ${tys.map(ty => doc"`${ty.toWat}`").mkDocument(doc"[", doc", ", doc"]").mkString()}"
 

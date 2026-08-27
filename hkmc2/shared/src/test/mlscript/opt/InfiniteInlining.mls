@@ -1,85 +1,12 @@
 :js
 
 
-fun funny = 
+fun funny =
   case n then funny(n - 1) + 1
 
 :soir
 funny
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let lambda;
-//│ @private
-//│ define lambda as fun lambda²(caseScrut) {
-//│   let tmp, inlinedVal, tmp1, inlinedVal1, tmp2, inlinedVal2, tmp3, inlinedVal3, tmp4, inlinedVal4, tmp5, inlinedVal5, tmp6, inlinedVal6, tmp7, inlinedVal7, tmp8, inlinedVal8, tmp9, inlinedVal9, tmp10, inlinedVal10, tmp11, inlinedVal11, tmp12, inlinedVal12, tmp13, inlinedVal13, tmp14, inlinedVal14, tmp15, tmp16, caseScrut1, inlinedVal15, tmp17, tmp18, lambda1, caseScrut2, inlinedVal16;
-//│   set tmp = -⁰(caseScrut, 1);
-//│   set tmp1 = -⁰(tmp, 1);
-//│   set tmp2 = -⁰(tmp1, 1);
-//│   set tmp3 = -⁰(tmp2, 1);
-//│   set tmp4 = -⁰(tmp3, 1);
-//│   set tmp5 = -⁰(tmp4, 1);
-//│   set tmp6 = -⁰(tmp5, 1);
-//│   set tmp7 = -⁰(tmp6, 1);
-//│   set tmp8 = -⁰(tmp7, 1);
-//│   set tmp9 = -⁰(tmp8, 1);
-//│   set tmp10 = -⁰(tmp9, 1);
-//│   set tmp11 = -⁰(tmp10, 1);
-//│   set tmp12 = -⁰(tmp11, 1);
-//│   set tmp13 = -⁰(tmp12, 1);
-//│   set tmp14 = -⁰(tmp13, 1);
-//│   set tmp15 = -⁰(tmp14, 1);
-//│   set caseScrut1 = tmp15;
-//│   set tmp17 = -⁰(tmp15, 1);
-//│   set caseScrut2 = tmp17;
-//│   block inlinedLbl:
-//│     let tmp19, tmp20, tmp21, inlinedVal17, lambda2;
-//│     @private
-//│     define lambda2 as fun lambda¹(caseScrut3) {
-//│       let tmp22, tmp23, tmp24, inlinedVal18;
-//│       block inlinedLbl1:
-//│         let lambda3;
-//│         @private
-//│         define lambda3 as fun lambda⁰(caseScrut4) {
-//│           let tmp25, tmp26, tmp27;
-//│           set tmp25 = funny⁰();
-//│           set tmp26 = -⁰(caseScrut4, 1);
-//│           set tmp27 = tmp25(tmp26);
-//│           return +⁰(tmp27, 1)
-//│         };
-//│         set inlinedVal18 = lambda⁰;
-//│         break inlinedLbl1
-//│       set tmp22 = inlinedVal18;
-//│       set tmp23 = -⁰(caseScrut3, 1);
-//│       set tmp24 = tmp22(tmp23);
-//│       return +⁰(tmp24, 1)
-//│     };
-//│     set inlinedVal17 = lambda¹;
-//│     set tmp19 = lambda¹;
-//│     set tmp20 = -⁰(caseScrut2, 1);
-//│     set tmp21 = lambda¹(tmp20);
-//│     set inlinedVal16 = +⁰(tmp21, 1);
-//│     break inlinedLbl
-//│   set tmp18 = inlinedVal16;
-//│   set inlinedVal15 = +⁰(tmp18, 1);
-//│   set tmp16 = inlinedVal15;
-//│   set inlinedVal14 = +⁰(inlinedVal15, 1);
-//│   set inlinedVal13 = +⁰(inlinedVal14, 1);
-//│   set inlinedVal12 = +⁰(inlinedVal13, 1);
-//│   set inlinedVal11 = +⁰(inlinedVal12, 1);
-//│   set inlinedVal10 = +⁰(inlinedVal11, 1);
-//│   set inlinedVal9 = +⁰(inlinedVal10, 1);
-//│   set inlinedVal8 = +⁰(inlinedVal9, 1);
-//│   set inlinedVal7 = +⁰(inlinedVal8, 1);
-//│   set inlinedVal6 = +⁰(inlinedVal7, 1);
-//│   set inlinedVal5 = +⁰(inlinedVal6, 1);
-//│   set inlinedVal4 = +⁰(inlinedVal5, 1);
-//│   set inlinedVal3 = +⁰(inlinedVal4, 1);
-//│   set inlinedVal2 = +⁰(inlinedVal3, 1);
-//│   set inlinedVal1 = +⁰(inlinedVal2, 1);
-//│   set inlinedVal = +⁰(inlinedVal1, 1);
-//│   return +⁰(inlinedVal, 1)
-//│ };
-//│ return lambda²
+//│ return funny⁰()
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = fun
-
-

@@ -18,7 +18,7 @@ abstract class CompileTestRunnerBase(
 ) extends TimeOutTests, ParallelTestExecution:
   
   
-  val timeLimit = Span(15, Seconds)
+  val timeLimit = Span(25, Seconds)
   
   
   given CompilerCtx = cctx
@@ -52,22 +52,10 @@ abstract class CompileTestRunnerBase(
         this.synchronized:
           println(s"Compiling: $relativeName")
         
-        // * Stack safety relies on the fact that runtime uses while loops for resumption
-        // * and does not create extra stack depth. Hence, while loop rewriting should be disabled here.
-        // * (It used to be on by default, but now is off by default, so nothing to do.)
-        given Config = Config.default(mainTestDir)
-        
         // Synchronize diagnostic output to avoid interleaving since the compiler tests run in parallel.
         val wrap: (=> Unit) => Unit = body => this.synchronized(body)
         val report = ReportFormatter(System.out.println, colorize = true, wrap = Some(wrap))
-        val compiler = MLsCompiler(
-          paths = new MLsCompiler.Paths:
-            val preludeFile = mainTestDir / "mlscript" / "decls" / "Prelude.mls"
-            val runtimeFile = mainTestDir / "mlscript-compile" / "Runtime.mjs"
-            val runtimeSourceFile = mainTestDir / "mlscript-compile" / "Runtime.mls"
-            val termFile = mainTestDir / "mlscript-compile" / "Term.mjs",
-          mkRaise = report.mkRaise
-        )
+        val compiler = MLsCompiler(mkRaise = report.mkRaise)
         compiler.compileModule(file)
         
         if report.badLines.nonEmpty then

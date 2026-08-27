@@ -15,11 +15,22 @@ class Foo(x: Int) with
 
 class Foo(x: Int) { val y = x }
 
+class Foo {
+  // Class bodies without `with` are refinements and should remain newline-aware
+  // even when the first line is a comment.
+  fun f = 1
+}
+
+class Foo(pred) {
+  val r = pred.id(42)
+  fun callId(x) = pred.id(x)
+}
+
 :pe
 class Foo(x: Int)
   val y = x
 //│ ╔══[PARSE ERROR] Expected end of input; found indented block instead
-//│ ║  l.20: 	  val y = x
+//│ ║  l.31: 	  val y = x
 //│ ╙──      	^^
 
 class Foo(x: Int) { print("Hello!", x) }
@@ -41,7 +52,7 @@ Foo().x
 :todo
 class Foo() extends Bar { x = 1 }
 //│ ╔══[COMPILATION ERROR] Name not found: x
-//│ ║  l.42: 	class Foo() extends Bar { x = 1 }
+//│ ║  l.53: 	class Foo() extends Bar { x = 1 }
 //│ ╙──      	                          ^
 
 
@@ -49,17 +60,16 @@ class Foo() extends Bar { x = 1 }
 class Foo() extends Bar { val x = 1 } with
   val y = this.x
 //│ ╔══[COMPILATION ERROR] Multiple type definition bodies are not supported.
-//│ ║  l.50: 	  val y = this.x
+//│ ║  l.61: 	  val y = this.x
 //│ ╙──      	  ^^^^^^^^^^^^^^
 
 :e
 class Foo() extends Bar { x = 1 } with
   val y = this.x
 //│ ╔══[COMPILATION ERROR] Multiple type definition bodies are not supported.
-//│ ║  l.57: 	  val y = this.x
+//│ ║  l.68: 	  val y = this.x
 //│ ╙──      	  ^^^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Name not found: x
-//│ ║  l.56: 	class Foo() extends Bar { x = 1 } with
+//│ ║  l.67: 	class Foo() extends Bar { x = 1 } with
 //│ ╙──      	                          ^
-
 

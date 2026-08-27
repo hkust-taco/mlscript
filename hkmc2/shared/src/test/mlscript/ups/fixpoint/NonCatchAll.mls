@@ -5,11 +5,20 @@
 //     pattern P = Q as P | a
 //
 // reads `(Q as P) | a`. The machine normalizes the scrutinee and matches
-// `a` against the final normal form. When `a` fails there, the naive
-// backtracking semantics applies: the latest intermediate result matching
+// `a` against the final normal form. The naive semantics is subtler: when
+// `a` fails on the normal form, the latest *intermediate* result matching
 // `a` is returned instead, and the whole match fails when there is none.
-// The compiled matcher implements this by retrying the failed machine run
-// with the naive translation, so allocations on that path appear twice.
+//
+// The machine keeps no intermediates around, so it only implements such a
+// definition when no intermediate could have matched `a` in the first place.
+// It suffices that `a` and the step pattern cannot match the same value —
+// every intermediate is, by construction, a term the step pattern rewrote —
+// and that is the usual case: a step peels a wrapper that `a` rejects. When
+// they do overlap, the definition is compiled naively, with a warning: the
+// alternative would be to run the machine and retry a failed run naively,
+// which performs every rewriting step twice. (With several recursive
+// alternatives, the steps must additionally be mutually exclusive; see
+// `RecursionAlternatives.mls`.)
 
 import "../../../mlscript-compile/Option.mls"
 
@@ -108,6 +117,39 @@ peelFast(excessiveWrapped42)
 //│ = Some(Tag(42))
 
 
+// ————— Overlapping virtual classes —————
+
+// The Prelude declares the virtual class `Int` as extending `Num`, so the
+// overlap check must know that every `Int` is a `Num` without a built-in
+// special case. The step turns an integer into a string, on which the trailing
+// `Num` alternative fails; the naive translation then backtracks to that
+// alternative at the original integer. A machine would forget the original
+// and incorrectly report no match, so this definition must fall back to the
+// naive translation.
+
+pattern IntToStr = Int => "done"
+pattern KeepOriginalInt = IntToStr as KeepOriginalInt | Num
+
+:expect 42
+if 42 is KeepOriginalInt(r) then r else "<no match>"
+//│ = 42
+
+:w
+:expect 42
+if 42 is @compile KeepOriginalInt(r) then r else "<no match>"
+//│ ╔══[WARNING] This fixed-point pattern is not supported by pattern compilation.
+//│ ║  l.139: 	if 42 is @compile KeepOriginalInt(r) then r else "<no match>"
+//│ ║         	                  ^^^^^^^^^^^^^^^^^
+//│ ╟── A term this pattern can still rewrite
+//│ ║  l.131: 	pattern KeepOriginalInt = IntToStr as KeepOriginalInt | Num
+//│ ║         	                          ^^^^^^^^
+//│ ╟── can also be matched by a trailing alternative.
+//│ ║  l.131: 	pattern KeepOriginalInt = IntToStr as KeepOriginalInt | Num
+//│ ║         	                                                        ^^^
+//│ ╙── Falling back to the naive translation.
+//│ = 42
+
+
 
 // ————— With an evaluation-context step pattern —————
 
@@ -155,8 +197,9 @@ fastEvalToValue(sum)
 //│ = Some(6)
 
 // The stuck term reduces to `Add(Lit(3), Tag(9))`, which is not a value,
-// and neither is any intermediate result: the match fails. The failed
-// machine run is retried naively, so its allocations show up twice.
+// and neither is any intermediate result: the match fails. A `Value` is a
+// `Lit`, which `Ctx(Redex)` can never rewrite, so the machine implements
+// the definition on its own and the reduction is performed exactly once.
 let stuck = Add(Add(Lit(1), Lit(2)), Tag(9))
 //│ > new Lit(1)
 //│ > new Lit(2)
@@ -172,18 +215,28 @@ slowEvalToValue(stuck)
 //│ = None
 
 :expect None
-// TODO: Get rid of the unnecessary computation here.
 fastEvalToValue(stuck)
-//│ > new Lit(3)
-//│ > new Add(Lit(3), Tag(9))
 //│ > new Lit(3)
 //│ > new Add(Lit(3), Tag(9))
 //│ = None
 
 
-// —— FIXME: duplicated reductions when the default is not a wildcard!! ——
-
-// TODO: either reject this pattern with a warning or support it properly.
+// —— When the default overlaps the step: compiled naively ——
+//
+// Here the trailing alternative `Add(Lit, Lit)` *is* one of `AddStep`'s
+// redexes, so an intermediate result can match it — indeed the expected
+// results below are intermediates, not normal forms. Since the machine
+// discards intermediates, the definition falls back to the naive
+// translation. Note that each reduction is still performed exactly once.
+//
+// Supporting this properly would be difficult.
+// The hard part is that the machine would have to decide *which* intermediate matches
+// without materializing it: plugging the focus back through the context spine allocates,
+// and allocation is observable — see the `new Add(...)` lines above.
+// Tracking how far the trailing alternatives match down the spine,
+// as a residual updated when frames are pushed and popped,
+// would let the machine remember the last matching decomposition in constant space and plug it once,
+// at the end.
 
 
 pattern AddStep =
@@ -191,7 +244,18 @@ pattern AddStep =
   | Add(AddStep, _)
   | Add(Lit, AddStep)
 
+:w
 pattern AddSteps = @compile ((AddStep as AddSteps) | Add(Lit, Lit))
+//│ ╔══[WARNING] This fixed-point pattern is not supported by pattern compilation.
+//│ ║  l.248: 	pattern AddSteps = @compile ((AddStep as AddSteps) | Add(Lit, Lit))
+//│ ║         	                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── A term this pattern can still rewrite
+//│ ║  l.248: 	pattern AddSteps = @compile ((AddStep as AddSteps) | Add(Lit, Lit))
+//│ ║         	                              ^^^^^^^
+//│ ╟── can also be matched by a trailing alternative.
+//│ ║  l.248: 	pattern AddSteps = @compile ((AddStep as AddSteps) | Add(Lit, Lit))
+//│ ║         	                                                     ^^^^^^^^^^^^
+//│ ╙── Falling back to the naive translation.
 
 
 let t1 = Add(Add(Lit(2), Lit(3)), Lit(1))
@@ -202,18 +266,10 @@ let t1 = Add(Add(Lit(2), Lit(3)), Lit(1))
 //│ > new Add(Add(Lit(2), Lit(3)), Lit(1))
 //│ t1 = Add(Add(Lit(2), Lit(3)), Lit(1))
 
-// Note that reductions are performed more than once.
 assert t1 is AddSteps(s), s
 //│ > reduce 2 + 3 = 5
 //│ > new Lit(5)
 //│ > new Add(Lit(5), Lit(1))
-//│ > reduce 5 + 1 = 6
-//│ > new Lit(6)
-//│ > reduce 2 + 3 = 5
-//│ > new Lit(5)
-//│ > new Add(Lit(5), Lit(1))
-//│ > reduce 5 + 1 = 6
-//│ > new Lit(6)
 //│ > reduce 5 + 1 = 6
 //│ > new Lit(6)
 //│ = Add(Lit(5), Lit(1))
@@ -223,17 +279,7 @@ let t2 = Add(t1, Lit(4))
 //│ > new Add(Add(Add(Lit(2), Lit(3)), Lit(1)), Lit(4))
 //│ t2 = Add(Add(Add(Lit(2), Lit(3)), Lit(1)), Lit(4))
 
-// It looks like the number of times each node is repeatedly reduced is
-// proportional to its size.
 assert t2 is AddSteps(s), s
-//│ > reduce 2 + 3 = 5
-//│ > new Lit(5)
-//│ > new Add(Lit(5), Lit(1))
-//│ > reduce 5 + 1 = 6
-//│ > new Lit(6)
-//│ > new Add(Lit(6), Lit(4))
-//│ > reduce 6 + 4 = 10
-//│ > new Lit(10)
 //│ > reduce 2 + 3 = 5
 //│ > new Lit(5)
 //│ > new Add(Lit(5), Lit(1))
@@ -243,13 +289,4 @@ assert t2 is AddSteps(s), s
 //│ > new Add(Lit(6), Lit(4))
 //│ > reduce 6 + 4 = 10
 //│ > new Lit(10)
-//│ > reduce 5 + 1 = 6
-//│ > new Lit(6)
-//│ > new Add(Lit(6), Lit(4))
-//│ > reduce 6 + 4 = 10
-//│ > new Lit(10)
-//│ > reduce 6 + 4 = 10
-//│ > new Lit(10)
 //│ = Add(Lit(6), Lit(4))
-
-

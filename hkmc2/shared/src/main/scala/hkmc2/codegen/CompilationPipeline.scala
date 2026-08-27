@@ -15,6 +15,13 @@ class CompilationPipeline(using Config, Raise, State, Ctx, SymbolPrinter):
   
   def passHook(passName: Str, before: Program, after: Program) = ()
   
+  /** Extra symbols the optimization passes must not eliminate, computed from the program as it
+    * enters those passes, ie once the mandatory lowering passes and the first tail-call
+    * optimization have run and the definitions that make up the compilation unit are settled.
+    * Static module compilation uses this to keep such definitions alive as a private ABI:
+    * another compilation unit may inline a body of this one that still refers to them. */
+  def extraSymbolsToPreserveFrom(prog: Program): Set[BoundSymbol] = Set.empty
+  
   private inline def blockPass(inline pass: Block => Block)(prog: Program): Program =
     val blk = pass(prog.main)
     if blk is prog.main then prog else Program(prog.imports, blk)
@@ -61,10 +68,16 @@ class CompilationPipeline(using Config, Raise, State, Ctx, SymbolPrinter):
     // * can be properly checked.
     runPass("TailRecOpt")(TailRecOpt(true).transform)
     
-    runPass("WorkerWrapper")(WorkerWrapper(symbolsToPreserve, otl, printer))
+    val preservedSymbols = symbolsToPreserve ++ extraSymbolsToPreserveFrom(result)
+    
+    runPass("WorkerWrapper")(WorkerWrapper(preservedSymbols, otl, printer))
+    
+    // * The simplifier is instantiated once and applied twice below so that both passes draw from
+    // * a single automatic-inlining growth budget for this compilation unit.
+    val simplifier = BlockSimplifier(preservedSymbols, otl, printer)
     
     // * First simplification pass
-    runPass("BlockSimplifier 1")(BlockSimplifier(symbolsToPreserve, otl, printer).apply)
+    runPass("BlockSimplifier 1")(simplifier.apply)
     
     runPass("DeadParamElim")(otl.givenIn(DeadParamElim.apply))
     
@@ -74,6 +87,6 @@ class CompilationPipeline(using Config, Raise, State, Ctx, SymbolPrinter):
     runPass("TailRecOpt")(TailRecOpt(false).transform)
     
     // * Final simplification pass
-    runPass("BlockSimplifier 2")(BlockSimplifier(symbolsToPreserve, otl, printer).apply)
+    runPass("BlockSimplifier 2")(simplifier.apply)
     
     result

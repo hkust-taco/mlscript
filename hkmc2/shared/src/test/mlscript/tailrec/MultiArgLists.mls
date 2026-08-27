@@ -51,12 +51,12 @@ fun count(start)(stop) =
   else count(start + 1)(stop)
 count(0)(100)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let count$tailrec, start, inlinedVal;
+//│ let count$tailrec, start, stop, inlinedVal;
 //│ @private
-//│ define count$tailrec as fun count$tailrec⁰(start1, stop) {
+//│ define count$tailrec as fun count$tailrec⁰(start1, stop1) {
 //│   loop loopLabel:
 //│     let scrut, tmp;
-//│     set scrut = Predef⁰.equals⁰(start1, stop);
+//│     set scrut = Predef⁰.equals⁰(start1, stop1);
 //│     match scrut
 //│       true =>
 //│         return start1
@@ -68,14 +68,15 @@ count(0)(100)
 //│   unreachable /* Rest of abortive labelled block */
 //│ };
 //│ @inline
-//│ define count⁰ as fun count¹(start1)(stop) {
-//│   return count$tailrec⁰(start1, stop)
+//│ define count⁰ as fun count¹(start1)(stop1) {
+//│   return count$tailrec⁰(start1, stop1)
 //│ };
 //│ set start = 0;
+//│ set stop = 100;
 //│ block inlinedLbl:
 //│   loop loopLabel:
 //│     let scrut, tmp;
-//│     set scrut = Predef⁰.equals⁰(start, 100);
+//│     set scrut = Predef⁰.equals⁰(start, stop);
 //│     match scrut
 //│       true =>
 //│         set inlinedVal = start;
@@ -226,7 +227,7 @@ fun g(n)(m) =
 //│             return [param5, param6]
 //│         end
 //│       1 =>
-//│         let tmp, tmp1, tmp2, tmp3, param1_tmp, argList, param0_tmp, sliceRes;
+//│         let tmp, tmp1, tmp2, tmp3, param1_tmp, argList, param0_tmp, inlinedVal, tmp4;
 //│         set tmp = -⁰(param0, 1);
 //│         set tmp1 = [1, 2];
 //│         set tmp2 = [3, 4];
@@ -235,12 +236,13 @@ fun g(n)(m) =
 //│         set param0_tmp = param0;
 //│         set param0 = tmp;
 //│         set argList = [...tmp1, 3, ...tmp2, ...tmp3, 7, param0_tmp];
-//│         set sliceRes = runtime⁰.Tuple⁰.slice⁰(argList, 4, 0);
+//│         set tmp4 = -¹(argList.length﹖, 0);
+//│         set inlinedVal = argList.slice﹖(4, tmp4);
 //│         set param1 = argList.0;
 //│         do argList.1;
 //│         do argList.2;
 //│         do argList.3;
-//│         set param5 = sliceRes;
+//│         set param5 = inlinedVal;
 //│         set param6 = param1_tmp;
 //│         set id = 0;
 //│         continue loopLabel
@@ -272,16 +274,18 @@ fun f(a)(...z) = if z is
 //│ @private
 //│ define f$tailrec as fun f$tailrec⁰(a, z) {
 //│   loop loopLabel:
-//│     let middleElements, tmp;
+//│     let tmp;
 //│     match z
 //│       Array(0) =>
 //│         return a
 //│       Array(1+) =>
+//│         let inlinedVal, tmp1;
 //│         do runtime⁰.Tuple⁰.get⁰(z, 0);
-//│         set middleElements = runtime⁰.Tuple⁰.slice⁰(z, 1, 0);
+//│         set tmp1 = -¹(z.length﹖, 0);
+//│         set inlinedVal = z.slice﹖(1, tmp1);
 //│         set tmp = +⁰(a, 1);
 //│         set a = tmp;
-//│         set z = middleElements;
+//│         set z = inlinedVal;
 //│         continue loopLabel
 //│       else
 //│         throw new globalThis⁰.Error⁰("match error")

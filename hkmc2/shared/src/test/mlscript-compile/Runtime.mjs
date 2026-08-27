@@ -5,7 +5,7 @@ import RuntimeJS from "./RuntimeJS.mjs";
 import Rendering from "./Rendering.mjs";
 import LazyArray from "./LazyArray.mjs";
 import Iter from "./Iter.mjs";
-let Runtime1, lambda, lambda1, lambda2, lambda3, lambda4, lambda5, lambda6, lambda7, lambda8, lambda$, Capture$scope341, lambda$1, lambda$2, lambda$3, lambda$4, lambda$5, Capture$scope701, lambda$6, Capture$scope721, lambda$7;
+let Runtime1, lambda, lambda1, lambda2, lambda3, lambda4, lambda5, lambda6, lambda7, lambda8, lambda9, lambda10, lambda$, Capture$scope211, lambda$1, lambda$2, lambda$3, lambda$4, lambda$5, lambda$6, lambda$7, Capture$scope701, lambda$8, Capture$scope721, lambda$9;
 (class Capture$scope72 {
   static {
     Capture$scope721 = this
@@ -16,7 +16,7 @@ let Runtime1, lambda, lambda1, lambda2, lambda3, lambda4, lambda5, lambda6, lamb
   toString() { return runtime.render(this); }
   static [definitionMetadata] = ["class", "Capture$scope72"];
 });
-lambda$7 = (undefined, function (scope72$cap, cont) {
+lambda$9 = (undefined, function (scope72$cap, cont) {
   return (m, marker) => {
     return lambda2(scope72$cap, cont, m, marker)
   }
@@ -42,7 +42,7 @@ lambda2 = (undefined, function (scope72$cap, cont, m, marker) {
   toString() { return runtime.render(this); }
   static [definitionMetadata] = ["class", "Capture$scope70"];
 });
-lambda$6 = (undefined, function (scope70$cap, cont) {
+lambda$8 = (undefined, function (scope70$cap, cont) {
   return (m, marker) => {
     return lambda1(scope70$cap, cont, m, marker)
   }
@@ -64,15 +64,19 @@ lambda = (undefined, function (l) {
   tmp1 = runtime.safeCall(Rendering.render(l.value));
   return tmp + tmp1
 });
-lambda$5 = (undefined, function (Runtime2) {
+lambda$7 = (undefined, function (Runtime2) {
   return (k) => {
     Runtime2.stackResume = k;
     return runtime.Unit
   }
 });
-(class Capture$scope34 {
+lambda10 = (undefined, function (Runtime2, k) {
+  Runtime2.stackResume = k;
+  return runtime.Unit
+});
+(class Capture$scope21 {
   static {
-    Capture$scope341 = this
+    Capture$scope211 = this
   }
   constructor(cur$0, pos$1, remStart$2) {
     this.remStart$2 = remStart$2;
@@ -80,29 +84,39 @@ lambda$5 = (undefined, function (Runtime2) {
     this.cur$0 = cur$0;
   }
   toString() { return runtime.render(this); }
-  static [definitionMetadata] = ["class", "Capture$scope34"];
+  static [definitionMetadata] = ["class", "Capture$scope21"];
 });
-lambda$4 = (undefined, function (bindings) {
+lambda$6 = (undefined, function (bindings) {
   return (slot, overlay) => {
-    return lambda3(bindings, slot, overlay)
+    return lambda4(bindings, slot, overlay)
   }
 });
-lambda$3 = (undefined, function (scope34$cap, actions, input, valStack, markStack, bindings, readSlot) {
+lambda$5 = (undefined, function (scope21$cap, actions, input, valStack, markStack, bindings, readSlot) {
   return (ops, k, overlay) => {
-    return lambda4(scope34$cap, actions, input, valStack, markStack, bindings, readSlot, ops, k, overlay)
+    return lambda5(scope21$cap, actions, input, valStack, markStack, bindings, readSlot, ops, k, overlay)
   }
 });
-lambda$2 = (undefined, function (execValueOp) {
+lambda$4 = (undefined, function (execValueOp) {
   return (ops, overlay) => {
-    return lambda5(execValueOp, ops, overlay)
+    return lambda6(execValueOp, ops, overlay)
   }
 });
-lambda$1 = (undefined, function (prog, frames, bindings, execValueOp, runFrameOps) {
+lambda$3 = (undefined, function (prog, frames, bindings, execValueOp, runFrameOps) {
   return (opsId) => {
-    return lambda6(prog, frames, bindings, execValueOp, runFrameOps, opsId)
+    return lambda7(prog, frames, bindings, execValueOp, runFrameOps, opsId)
   }
 });
-lambda3 = (undefined, function (bindings, slot, overlay) {
+lambda$2 = (undefined, function (scope21$cap, parentState, parentOps, runOps) {
+  return (state) => {
+    return lambda8(scope21$cap, parentState, parentOps, runOps, state)
+  }
+});
+lambda$1 = (undefined, function (prog) {
+  return (stack, state) => {
+    return lambda9(prog, stack, state)
+  }
+});
+lambda4 = (undefined, function (bindings, slot, overlay) {
   let tmp, tmp1;
   tmp = overlay !== null;
   if (tmp === true) {
@@ -114,16 +128,16 @@ lambda3 = (undefined, function (bindings, slot, overlay) {
   }
   return runtime.safeCall(bindings.get(slot));
 });
-lambda4 = (undefined, function (scope34$cap, actions, input, valStack, markStack, bindings, readSlot, ops, k, overlay) {
+lambda5 = (undefined, function (scope21$cap, actions, input, valStack, markStack, bindings, readSlot, ops, k, overlay) {
   let op, b, a, actionId, argCount, args, j, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9;
   op = ops.at(k);
   switch (op) {
     case 0:
-      runtime.safeCall(markStack.push(scope34$cap.pos$1));
+      runtime.safeCall(markStack.push(scope21$cap.pos$1));
       return k + 1;
     case 1:
       tmp = runtime.safeCall(markStack.pop());
-      tmp1 = runtime.safeCall(input.slice(tmp, scope34$cap.pos$1));
+      tmp1 = runtime.safeCall(input.slice(tmp, scope21$cap.pos$1));
       runtime.safeCall(valStack.push(tmp1));
       return k + 1;
     case 2:
@@ -166,13 +180,13 @@ lambda4 = (undefined, function (scope34$cap, actions, input, valStack, markStack
       tmp8 = k + 3;
       return tmp8 + argCount;
     case 8:
-      scope34$cap.remStart$2 = scope34$cap.pos$1;
+      scope21$cap.remStart$2 = scope21$cap.pos$1;
       return k + 1;
   }
   tmp9 = "StrPat: malformed operation " + op;
   throw runtime.safeCall(globalThis.Error(tmp9))
 });
-lambda5 = (undefined, function (execValueOp, ops, overlay) {
+lambda6 = (undefined, function (execValueOp, ops, overlay) {
   let k;
   k = 0;
   lbl: while (true) {
@@ -187,7 +201,7 @@ lambda5 = (undefined, function (execValueOp, ops, overlay) {
   }
   return runtime.Unit
 });
-lambda6 = (undefined, function (prog, frames, bindings, execValueOp, runFrameOps, opsId) {
+lambda7 = (undefined, function (prog, frames, bindings, execValueOp, runFrameOps, opsId) {
   let ops, k;
   ops = prog.opsPool.at(opsId);
   k = 0;
@@ -258,13 +272,13 @@ lambda6 = (undefined, function (prog, frames, bindings, execValueOp, runFrameOps
   }
   return runtime.Unit
 });
-lambda7 = (undefined, function (scope34$cap, parentState, parentOps, runOps, state) {
+lambda8 = (undefined, function (scope21$cap, parentState, parentOps, runOps, state) {
   let chain, w, idx;
   chain = [];
   w = state;
   lbl: while (true) {
     let scrut, opsId, scrut1, tmp;
-    scrut = w !== scope34$cap.cur$0;
+    scrut = w !== scope21$cap.cur$0;
     if (scrut === true) {
       opsId = runtime.safeCall(parentOps.get(w));
       scrut1 = opsId !== -1;
@@ -291,7 +305,7 @@ lambda7 = (undefined, function (scope34$cap, parentState, parentOps, runOps, sta
   }
   return runtime.Unit
 });
-lambda8 = (undefined, function (prog, stack, state) {
+lambda9 = (undefined, function (prog, stack, state) {
   let edges, i;
   edges = prog.states.at(state);
   i = edges.length - 1;
@@ -316,6 +330,9 @@ lambda$ = (undefined, function (Runtime2, EffectHandle1, value) {
   return () => {
     return Runtime2.resume(EffectHandle1.reified.contTrace)(value)
   }
+});
+lambda3 = (undefined, function (Runtime2, EffectHandle1, value) {
+  return Runtime2.resume(EffectHandle1.reified.contTrace)(value)
 });
 (class Runtime {
   static {
@@ -858,8 +875,8 @@ lambda$ = (undefined, function (Runtime2, EffectHandle1, value) {
         return tmp === 49
       }
       static parseRun(table, actions, input, prefix) {
-        let prog, n, revArr, rev, i, scrut, gen, visited, parentState, parentOps, valStack, markStack, frames, bindings, readSlot, execValueOp, runFrameOps, scrut1, result, s, tmp, tmp1, scope34$cap;
-        scope34$cap = new Capture$scope341(undefined, undefined, undefined);
+        let prog, n, revArr, rev, i, scrut, gen, visited, parentState, parentOps, valStack, markStack, frames, bindings, readSlot, execValueOp, runFrameOps, scrut1, result, s, tmp, tmp1, scope21$cap;
+        scope21$cap = new Capture$scope211(undefined, undefined, undefined);
         prog = StrPat.getProgram(table);
         n = input.length;
         revArr = [];
@@ -886,8 +903,8 @@ lambda$ = (undefined, function (Runtime2, EffectHandle1, value) {
         if (scrut === false) {
           return null
         }
-        scope34$cap.cur$0 = prog.start;
-        scope34$cap.pos$1 = 0;
+        scope21$cap.cur$0 = prog.start;
+        scope21$cap.pos$1 = 0;
         gen = 0;
         visited = globalThis.Object.freeze(new globalThis.Map());
         parentState = globalThis.Object.freeze(new globalThis.Map());
@@ -896,15 +913,15 @@ lambda$ = (undefined, function (Runtime2, EffectHandle1, value) {
         markStack = [];
         frames = [];
         bindings = globalThis.Object.freeze(new globalThis.Map());
-        scope34$cap.remStart$2 = n;
-        readSlot = lambda$4(bindings);
-        execValueOp = lambda$3(scope34$cap, actions, input, valStack, markStack, bindings, readSlot);
-        runFrameOps = lambda$2(execValueOp);
+        scope21$cap.remStart$2 = n;
+        readSlot = lambda$6(bindings);
+        execValueOp = lambda$5(scope21$cap, actions, input, valStack, markStack, bindings, readSlot);
+        runFrameOps = lambda$4(execValueOp);
         lbl1: while (true) {
           let stack, committed, tmp2, tmp3, tmp4;
-          tmp2 = scope34$cap.cur$0 === prog.accept;
+          tmp2 = scope21$cap.cur$0 === prog.accept;
           if (tmp2 === true) {
-            tmp3 = scope34$cap.pos$1 === n;
+            tmp3 = scope21$cap.pos$1 === n;
           } else {
             tmp3 = false;
           }
@@ -912,10 +929,10 @@ lambda$ = (undefined, function (Runtime2, EffectHandle1, value) {
             let state;
             tmp4 = gen + 1;
             gen = tmp4;
-            runtime.safeCall(visited.set(scope34$cap.cur$0, tmp4));
+            runtime.safeCall(visited.set(scope21$cap.cur$0, tmp4));
             stack = [];
-            state = scope34$cap.cur$0;
-            lambda8(prog, stack, state);
+            state = scope21$cap.cur$0;
+            lambda9(prog, stack, state);
             committed = false;
             lbl2: while (true) {
               let scrut2, item, source, edge, scrut3, target, scrut4, scrut5, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10, tmp11, tmp12, tmp13, tmp14, tmp15;
@@ -929,21 +946,21 @@ lambda$ = (undefined, function (Runtime2, EffectHandle1, value) {
                 edge = item.at(1);
                 scrut3 = edge.at(0) === 0;
                 if (scrut3 === true) {
-                  tmp5 = scope34$cap.pos$1 < n;
+                  tmp5 = scope21$cap.pos$1 < n;
                   if (tmp5 === true) {
-                    tmp7 = runtime.safeCall(input.charCodeAt(scope34$cap.pos$1));
+                    tmp7 = runtime.safeCall(input.charCodeAt(scope21$cap.pos$1));
                     tmp6 = StrPat.unitInRanges(edge.at(2), tmp7);
                     if (tmp6 === true) {
-                      tmp9 = scope34$cap.pos$1 + 1;
+                      tmp9 = scope21$cap.pos$1 + 1;
                       tmp10 = n - tmp9;
                       tmp8 = StrPat.viable(prog, revArr.at(tmp10), edge.at(1));
                       if (tmp8 === true) {
                         let runOps;
-                        runOps = lambda$1(prog, frames, bindings, execValueOp, runFrameOps);
-                        lambda7(scope34$cap, parentState, parentOps, runOps, source);
-                        scope34$cap.cur$0 = edge.at(1);
-                        tmp11 = scope34$cap.pos$1 + 1;
-                        scope34$cap.pos$1 = tmp11;
+                        runOps = lambda$3(prog, frames, bindings, execValueOp, runFrameOps);
+                        lambda8(scope21$cap, parentState, parentOps, runOps, source);
+                        scope21$cap.cur$0 = edge.at(1);
+                        tmp11 = scope21$cap.pos$1 + 1;
+                        scope21$cap.pos$1 = tmp11;
                         committed = true;
                         continue lbl2
                       }
@@ -956,14 +973,14 @@ lambda$ = (undefined, function (Runtime2, EffectHandle1, value) {
                 target = edge.at(1);
                 scrut4 = target === prog.accept;
                 if (scrut4 === true) {
-                  scrut5 = scope34$cap.pos$1 === n;
+                  scrut5 = scope21$cap.pos$1 === n;
                   if (scrut5 === true) {
                     let runOps;
                     runtime.safeCall(parentState.set(target, source));
                     runtime.safeCall(parentOps.set(target, edge.at(2)));
-                    runOps = lambda$1(prog, frames, bindings, execValueOp, runFrameOps);
-                    lambda7(scope34$cap, parentState, parentOps, runOps, target);
-                    scope34$cap.cur$0 = target;
+                    runOps = lambda$3(prog, frames, bindings, execValueOp, runFrameOps);
+                    lambda8(scope21$cap, parentState, parentOps, runOps, target);
+                    scope21$cap.cur$0 = target;
                     committed = true;
                     continue lbl2
                   }
@@ -972,13 +989,13 @@ lambda$ = (undefined, function (Runtime2, EffectHandle1, value) {
                 tmp12 = runtime.safeCall(visited.get(target));
                 tmp13 = tmp12 !== tmp4;
                 if (tmp13 === true) {
-                  tmp15 = n - scope34$cap.pos$1;
+                  tmp15 = n - scope21$cap.pos$1;
                   tmp14 = StrPat.viable(prog, revArr.at(tmp15), target);
                   if (tmp14 === true) {
                     runtime.safeCall(visited.set(target, tmp4));
                     runtime.safeCall(parentState.set(target, source));
                     runtime.safeCall(parentOps.set(target, edge.at(2)));
-                    lambda8(prog, stack, target);
+                    lambda9(prog, stack, target);
                     continue lbl2
                   }
                   continue lbl2;
@@ -1000,7 +1017,7 @@ lambda$ = (undefined, function (Runtime2, EffectHandle1, value) {
         result = [];
         runtime.safeCall(result.push(tmp));
         if (prefix === true) {
-          tmp1 = runtime.safeCall(input.slice(scope34$cap.remStart$2));
+          tmp1 = runtime.safeCall(input.slice(scope21$cap.remStart$2));
           runtime.safeCall(result.push(tmp1));
         }
         s = 0;
@@ -1332,7 +1349,7 @@ lambda$ = (undefined, function (Runtime2, EffectHandle1, value) {
       }
       delay() {
         let lambda$here;
-        lambda$here = lambda$5(Runtime);
+        lambda$here = lambda$7(Runtime);
         return Runtime.mkEffect(this, lambda$here)
       }
       toString() { return runtime.render(this); }
@@ -1585,7 +1602,7 @@ lambda$ = (undefined, function (Runtime2, EffectHandle1, value) {
     if (cont instanceof Runtime.FunctionContFrame.class) {
       tmp = cont.constructor.name + "(pc=";
       scope70$cap.result$0 = tmp + cont.saved.at(1);
-      lambda$here = lambda$6(scope70$cap, cont);
+      lambda$here = lambda$8(scope70$cap, cont);
       runtime.safeCall(hl.forEach(lambda$here));
       scrut = runtime.safeCall(vis.has(cont));
       if (scrut === true) {
@@ -1615,7 +1632,7 @@ lambda$ = (undefined, function (Runtime2, EffectHandle1, value) {
     scope72$cap = new Capture$scope721(undefined);
     if (cont instanceof Runtime.HandlerContFrame.class) {
       scope72$cap.result$0 = cont.handler.constructor.name;
-      lambda$here = lambda$7(scope72$cap, cont);
+      lambda$here = lambda$9(scope72$cap, cont);
       runtime.safeCall(hl.forEach(lambda$here));
       scrut = runtime.safeCall(vis.has(cont));
       if (scrut === true) {
@@ -1940,4 +1957,29 @@ lambda$ = (undefined, function (Runtime2, EffectHandle1, value) {
   toString() { return runtime.render(this); }
   static [definitionMetadata] = ["class", "Runtime"];
 });
+export { Runtime1 as _$_modulePrivate_$_Runtime };
+export { lambda as _$_modulePrivate_$_lambda };
+export { lambda1 as _$_modulePrivate_$_lambda1 };
+export { lambda2 as _$_modulePrivate_$_lambda2 };
+export { lambda3 as _$_modulePrivate_$_lambda3 };
+export { lambda4 as _$_modulePrivate_$_lambda4 };
+export { lambda5 as _$_modulePrivate_$_lambda5 };
+export { lambda6 as _$_modulePrivate_$_lambda6 };
+export { lambda7 as _$_modulePrivate_$_lambda7 };
+export { lambda8 as _$_modulePrivate_$_lambda8 };
+export { lambda9 as _$_modulePrivate_$_lambda9 };
+export { lambda10 as _$_modulePrivate_$_lambda10 };
+export { lambda$ as _$_modulePrivate_$_lambda$ };
+export { Capture$scope211 as _$_modulePrivate_$_Capture$scope21 };
+export { lambda$1 as _$_modulePrivate_$_lambda$1 };
+export { lambda$2 as _$_modulePrivate_$_lambda$2 };
+export { lambda$3 as _$_modulePrivate_$_lambda$3 };
+export { lambda$4 as _$_modulePrivate_$_lambda$4 };
+export { lambda$5 as _$_modulePrivate_$_lambda$5 };
+export { lambda$6 as _$_modulePrivate_$_lambda$6 };
+export { lambda$7 as _$_modulePrivate_$_lambda$7 };
+export { Capture$scope701 as _$_modulePrivate_$_Capture$scope70 };
+export { lambda$8 as _$_modulePrivate_$_lambda$8 };
+export { Capture$scope721 as _$_modulePrivate_$_Capture$scope72 };
+export { lambda$9 as _$_modulePrivate_$_lambda$9 };
 let Runtime = Runtime1; export default Runtime;

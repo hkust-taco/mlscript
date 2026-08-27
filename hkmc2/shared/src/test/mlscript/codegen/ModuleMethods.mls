@@ -8,7 +8,7 @@ module Example with
 :ssjs
 Example.f(123)
 //│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
-//│ block$res2 = runtime.checkCall(Example1.f(123));
+//│ block$res2 = globalThis.Object.freeze([ 123, Example1.a ]);
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = [123, 456]
 

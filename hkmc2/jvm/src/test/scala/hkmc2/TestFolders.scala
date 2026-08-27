@@ -24,6 +24,22 @@ object TestFolders:
   def compileTestDir(wd: os.Path): os.Path =
     mainTestDir(wd)/"mlscript-compile"
   
+  /** The compiler paths of the test layout, which every test runner shares.
+    * They are part of a `CompilerCtx`, so all the runners of one project must agree on them. */
+  def compilerPaths(wd: os.Path): MLsCompiler.Paths =
+    import io.PlatformPath.given
+    new MLsCompiler.Paths:
+      val preludeFile: io.Path = mainTestDir(wd)/"mlscript"/"decls"/"Prelude.mls"
+      val runtimeFile: io.Path = compileTestDir(wd)/"Runtime.mjs"
+      val runtimeSourceFile: io.Path = compileTestDir(wd)/"Runtime.mls"
+      val termFile: io.Path = compileTestDir(wd)/"Term.mjs"
+
+  /** A fresh context for compile tests. Its root configuration is fixed because cached
+    * compilation units are shared between tests and must not depend on test order. */
+  def compilerCtx(wd: os.Path): CompilerCtx =
+    import io.PlatformPath.given
+    CompilerCtx.fresh(io.FileSystem.default, compilerPaths(wd), Config.default(mainTestDir(wd)))
+  
   // ——— Diff test subdirectories excluded from the main DiffTestRunner ———
   
   /** Diff test subdirectories that belong to the hkmc2NofibTests project. */
@@ -81,4 +97,3 @@ object TestFolders:
     compileTestDir(wd)/"wasm" :: Nil
   
 end TestFolders
-

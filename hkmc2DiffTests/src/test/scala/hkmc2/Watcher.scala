@@ -34,7 +34,11 @@ class Watcher(dirs: Ls[File]):
   val completionTime = mutable.Map.empty[File, LocalDateTime]
   val fileHasher = FileHasher.DEFAULT_FILE_HASHER
   
-  given cctx: CompilerCtx = CompilerCtx.fresh(FileSystem.default)
+  // * Pinned to the same root configuration the compile path below uses, so that compilation units
+  // * cached in this long-lived context do not depend on which watched file first imported them.
+  private val watcherWorkingDir = os.pwd/os.up
+  given cctx: CompilerCtx = CompilerCtx.fresh(FileSystem.default,
+    TestFolders.compilerPaths(watcherWorkingDir), Config.default(TestFolders.mainTestDir(watcherWorkingDir)))
   
   val watcher: DirectoryWatcher = DirectoryWatcher.builder()
     .logger(org.slf4j.helpers.NOPLogger.NOP_LOGGER)
@@ -106,13 +110,7 @@ class Watcher(dirs: Ls[File]):
       val isModuleFile = path.segments.contains("mlscript-compile")
       if isModuleFile
       then
-        given Config = Config.default(testBasePath)
         MLsCompiler(
-          paths = new MLsCompiler.Paths:
-            val preludeFile = preludePath
-            val runtimeFile = testBasePath/"mlscript-compile"/"Runtime.mjs"
-            val runtimeSourceFile = testBasePath/"mlscript-compile"/"Runtime.mls"
-            val termFile = testBasePath/"mlscript-compile"/"Term.mjs",
           mkRaise = ReportFormatter(System.out.println, colorize = true).mkRaise
         ).compileModule(path)
       else

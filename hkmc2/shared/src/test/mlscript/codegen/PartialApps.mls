@@ -227,18 +227,21 @@ _ - _ of 1, 2
 :sjs
 1 \ (_ - 2)
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let lambda32;
-//│ lambda32 = (undefined, function (_0) { return _0 - 2 });
-//│ return Predef.passTo(1, lambda32)
+//│ let lambda8;
+//│ lambda8 = (undefined, function (_0) { return _0 - 2 });
+//│ return Predef.passTo(1, lambda8)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = fun
 
 :sjs
 1 \ (_ - 2)()
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let lambda33;
-//│ lambda33 = (undefined, function (_0) { return _0 - 2 });
-//│ return Predef.passTo(1, lambda33)()
+//│ let lambda9, args;
+//│ lambda9 = (undefined, function (_0) {
+//│   return _0 - 2
+//│ });
+//│ args = [];
+//│ return runtime.safeCall(lambda9(1, ...args))
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = -1
 
@@ -251,10 +254,10 @@ _ - _ of 1, 2
 :w
 let f = if _ then 1 else 0
 //│ ╔══[WARNING] This catch-all clause makes the following branches unreachable.
-//│ ║  l.252: 	let f = if _ then 1 else 0
+//│ ║  l.255: 	let f = if _ then 1 else 0
 //│ ║         	             ^^^^^^
 //│ ╟── This branch is unreachable.
-//│ ║  l.252: 	let f = if _ then 1 else 0
+//│ ║  l.255: 	let f = if _ then 1 else 0
 //│ ╙──       	                    ^^^^^^
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let f13; f13 = 1;

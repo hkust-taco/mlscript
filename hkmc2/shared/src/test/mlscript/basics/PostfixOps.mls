@@ -47,5 +47,3 @@ inc of 1 | + 1
 //│ ║  l.45: 	1 |> inc | + 1
 //│ ╙──      	^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
-
-

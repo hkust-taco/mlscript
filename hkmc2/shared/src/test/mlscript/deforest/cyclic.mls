@@ -84,7 +84,7 @@ modSome(Some(17), 3)
 //│ deforest > 	fields: x⁰.x¹
 //│ deforest > <<< fusing <<<
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let Some_x, fv_scrut, fv_tmp, inlinedVal;
+//│ let Some_x, fv_m, fv_scrut, fv_tmp, inlinedVal;
 //│ define modSome⁰ as fun modSome¹(x, m) {
 //│   loop loopLabel:
 //│     let scrut, arg$Some$0$, tmp, tmp1;
@@ -109,12 +109,13 @@ modSome(Some(17), 3)
 //│   unreachable /* Rest of abortive labelled block */
 //│ };
 //│ set Some_x = 17;
+//│ set fv_m = 3;
 //│ block inlinedLbl:
 //│   loop loopLabel:
-//│     set fv_scrut = >=⁰(Some_x, 3);
+//│     set fv_scrut = >=⁰(Some_x, fv_m);
 //│     match fv_scrut
 //│       true =>
-//│         set fv_tmp = -⁰(Some_x, 3);
+//│         set fv_tmp = -⁰(Some_x, fv_m);
 //│         set Some_x = fv_tmp;
 //│         continue loopLabel
 //│       else

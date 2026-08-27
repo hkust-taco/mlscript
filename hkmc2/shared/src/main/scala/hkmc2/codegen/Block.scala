@@ -1,6 +1,8 @@
 package hkmc2
 package codegen
 
+import scala.collection.mutable.Buffer
+
 import hkmc2.utils.*, shorthands.*
 import utils.*
 
@@ -671,7 +673,8 @@ final case class FunDefn(
   val asPath = sym.asMemberRef(dSym)
   lazy val tailRec: Bool = annotations.contains(Annot.TailRec)
   lazy val inline: Bool = annotations.contains(Annot.Inline)
-  lazy val noInline: Bool = annotations.contains(Annot.NoInline)
+  lazy val noInline: Bool = annotations.contains(Annot.NoInline) || generator
+  lazy val generator: Bool = annotations.contains(Annot.Generator)
   lazy val visibility: Visibility = annotations.collectFirst:
     case Annot.Modifier(Keyword.`private`) => Visibility.Private
     case Annot.Modifier(Keyword.`public`) => Visibility.Public
@@ -679,6 +682,18 @@ final case class FunDefn(
   lazy val affineInfo: Ls[Int] =
     annotations.collect:
       case Annot.Affine(whichParamList) => whichParamList
+
+  // * This deliberately is not a lazy val: its initialization would synchronize on the JVM.
+  // * Computing the summary is pure, and a reference write is atomic, so concurrent traversals may
+  // * harmlessly compute equal immutable summaries and overwrite this slot in either order.
+  private var _inlinerBodySummary: InlinerBodySummary = null
+  private[hkmc2] def inlinerBodySummary: InlinerBodySummary = _inlinerBodySummary
+  private[codegen] def getOrComputeInlinerBodySummary: InlinerBodySummary =
+    if _inlinerBodySummary != null then _inlinerBodySummary
+    else
+      val summary = InlinerBodySummary.compute(this)
+      _inlinerBodySummary = summary
+      summary
   
   // `configOverride` and `annotations` live in a secondary constructor list,
   // so case-class equality would otherwise ignore them.
@@ -696,6 +711,75 @@ final case class FunDefn(
     case _ => false
   override def hashCode: Int =
     (owner, sym, dSym, params, body, configOverride, annotations).hashCode
+
+
+/** Configuration-independent facts collected by one structural traversal of a function body.
+  * Importing units replay these entries to rebuild their candidate graph without walking the body.
+  * `transitiveCallTargets` also includes calls under lexically nested function definitions because
+  * those bodies are copied when the enclosing function is inlined.
+  */
+private[codegen] final case class InlinerBodySummary(
+  entries: Ls[InlinerBodySummary.Entry],
+  transitiveCallTargets: Set[TermSymbol],
+)
+
+private[codegen] object InlinerBodySummary:
+  enum Entry:
+    /** A direct call found in the summarized body.
+      *
+      * `hasCallGraphSource` is false for calls in nested constructor bodies: those calls can expose
+      * more inline candidates, but constructors are not function vertices and add no graph edge.
+      */
+    case DirectCall(callee: TermSymbol, call: Call, hasCallGraphSource: Bool)
+    /** A nested function definition, replayed through the importing unit's eligibility checks. */
+    case NestedFunction(defn: FunDefn, isMethod: Bool)
+
+  /** Computes the summary independently from the inliner analysis that will consume it.
+    * Nested function bodies get their own summaries when they are analyzed, so this traversal only
+    * records their definitions and does not enter them.
+    */
+  def compute(fun: FunDefn): InlinerBodySummary =
+    val entries = Buffer.empty[Entry]
+    var transitiveCallTargets = Set.empty[TermSymbol]
+
+    (new BlockTraverser:
+      var hasCallGraphSource = true
+
+      def withoutCallGraphSource(thunk: => Unit): Unit =
+        val previous = hasCallGraphSource
+        hasCallGraphSource = false
+        try thunk
+        finally hasCallGraphSource = previous
+
+      def recordFunction(fun: FunDefn, isMethod: Bool): Unit =
+        entries += Entry.NestedFunction(fun, isMethod)
+        transitiveCallTargets ++= fun.getOrComputeInlinerBodySummary.transitiveCallTargets
+
+      override def applyDefn(defn: Defn): Unit = defn match
+        case fun: FunDefn =>
+          recordFunction(fun, false)
+        case cls: ClsLikeDefn =>
+          cls.parentPath.foreach(applyPath)
+          cls.methods.foreach(recordFunction(_, true))
+          withoutCallGraphSource:
+            applySubBlock(cls.preCtor)
+            applySubBlock(cls.ctor)
+          cls.companion.foreach: module =>
+            module.methods.foreach(recordFunction(_, true))
+            // The module constructor is run with the enclosing constructor and therefore inherits
+            // whether its surrounding block has a call-graph source.
+            applySubBlock(module.ctor)
+        case _ => super.applyDefn(defn)
+
+      override def applyResult(result: Result): Unit = result match
+        case call @ Call(TermSymbolPath(callee), argss) =>
+          entries += Entry.DirectCall(callee, call, hasCallGraphSource)
+          if hasCallGraphSource then transitiveCallTargets += callee
+          argss.foreach(_.foreach(applyArg))
+        case _ => super.applyResult(result)
+    ).applyBlock(fun.body)
+
+    InlinerBodySummary(entries.toList, transitiveCallTargets)
 
 object FunDefn:
   def withFreshSymbol(owner: Opt[InnerSymbol], sym: BlockMemberSymbol, params: Ls[ParamList], body: Block)(configOverride: Opt[Config], annotations: Ls[Annot])(using State) =
@@ -1121,6 +1205,15 @@ object Value:
       case MemberRef(bms, disamb) => S(bms -> S(disamb))
       case This(sym) => S(sym -> N)
       case _ => N
+
+/** Extracts the function symbol from either form of a direct function reference: `f` or `a.f`. */
+object TermSymbolPath:
+  def unapply(path: Path): Opt[TermSymbol] = path match
+    case Value.MemberRef(_, sym: TermSymbol) => S(sym)
+    case selection: Select => selection.symbol match
+      case S(sym: TermSymbol) => S(sym)
+      case _ => N
+    case _ => N
 
 case class Arg(spread: Opt[SpreadKind], value: Path)
 

@@ -9,6 +9,8 @@ import "./Term.mjs"
 // import "./Runtime.mls"
 // import "./Rendering.mls"
 
+open annotations { noInline }
+
 
 
 module Predef with ...
@@ -17,7 +19,7 @@ module Predef with ...
 fun id(x) = x
 
 // * To prevent optimization in dummy test inputs
-fun hide(x) = x
+@noInline fun hide(x) = x
 fun maybe = hide(true)
 
 
@@ -81,15 +83,16 @@ fun (==) equals(a, b) = if
 fun (!=) nequals(a, b) = not a == b
 
 
-val pass1 = Rendering.pass1
-val pass2 = Rendering.pass2
-val pass3 = Rendering.pass3
-val passing = Rendering.passing
-val map = Rendering.map
-val fold = Rendering.fold
-val interleave = Rendering.interleave
-val render = Rendering.render
+fun pass1 = Rendering.pass1
+fun pass2 = Rendering.pass2
+fun pass3 = Rendering.pass3
+fun passing = Rendering.passing
+fun map = Rendering.map
+fun fold = Rendering.fold
+fun interleave = Rendering.interleave
+fun render = Rendering.render
 
+@noInline
 fun print(...xs) =
   console.log(...map(renderAsStr)(...xs))
 

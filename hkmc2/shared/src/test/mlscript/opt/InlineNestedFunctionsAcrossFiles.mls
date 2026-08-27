@@ -1,0 +1,35 @@
+:js
+
+
+import "../../mlscript-compile/NestedFunctionsNoLift.mls"
+
+
+// The imported file disables lifting, so replaying its summary must recover both the containment
+// edge from `recursive` to `loop` and the call edge from `loop` back to `recursive`.
+:soir
+NestedFunctionsNoLift.recursive(4)
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ return NestedFunctionsNoLift⁰.recursive⁰(4)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 4
+
+// We can still inline non-recursive functions that contain recursive functions.
+:soir
+NestedFunctionsNoLift.not_recursive(4)
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let loop;
+//│ define loop as fun loop⁰(i) {
+//│   let scrut, tmp, tmp1;
+//│   set scrut = <=⁰(i, 0);
+//│   match scrut
+//│     true =>
+//│       return 0
+//│     else
+//│       set tmp = -⁰(i, 1);
+//│       set tmp1 = loop⁰(tmp);
+//│       return +⁰(tmp1, 1)
+//│   end
+//│ };
+//│ return loop⁰(4)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 4

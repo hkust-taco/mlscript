@@ -98,7 +98,7 @@ A.sum(20000)
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "A"];
 //│ });
-//│ return A1.sum(20000)
+//│ return A1.sum_impl(20000, 0)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 200010000
 
@@ -168,18 +168,19 @@ fun g(n) =
 //│             return param5
 //│         end
 //│       1 =>
-//│         let tmp, tmp1, tmp2, argList, sliceRes;
+//│         let tmp, tmp1, tmp2, argList, inlinedVal, tmp3;
 //│         set tmp = [1, 2];
 //│         set tmp1 = [3, 4];
 //│         set tmp2 = [5, param0];
 //│         set argList = [param0, ...tmp, 3, ...tmp1, ...tmp2, 7, param0];
-//│         set sliceRes = runtime⁰.Tuple⁰.slice⁰(argList, 5, 0);
+//│         set tmp3 = -¹(argList.length﹖, 0);
+//│         set inlinedVal = argList.slice﹖(5, tmp3);
 //│         set param0 = argList.0;
 //│         do argList.1;
 //│         do argList.2;
 //│         do argList.3;
 //│         do argList.4;
-//│         set param5 = sliceRes;
+//│         set param5 = inlinedVal;
 //│         set id = 0;
 //│         continue loopLabel
 //│       else
@@ -208,7 +209,7 @@ fun f(x) =
     @tailcall f(x)
   @tailcall g()
 //│ ╔══[COMPILATION ERROR] This call is not in tail position.
-//│ ║  l.207: 	    @tailcall f(x)
+//│ ║  l.208: 	    @tailcall f(x)
 //│ ╙──       	              ^^^^
 
 :lift
@@ -303,12 +304,12 @@ module A with
     @tailcall g(x - 1)
 A.f(10000)
 //│ ╔══[COMPILATION ERROR] This tail call exits the current scope and is not optimized.
-//│ ║  l.302: 	    fun g(x) = if x < 0 then 0 else @tailcall f(x)
+//│ ║  l.303: 	    fun g(x) = if x < 0 then 0 else @tailcall f(x)
 //│ ╙──       	                                              ^^^^
 //│ ╔══[COMPILATION ERROR] This tail call exits the current scope and is not optimized.
-//│ ║  l.303: 	    @tailcall g(x - 1)
+//│ ║  l.304: 	    @tailcall g(x - 1)
 //│ ╙──       	              ^^^^^^^^
-//│ ═══[RUNTIME ERROR] RangeError: Maximum call stack size exceeded
+//│ = 0
 
 // These calls are represented as field selections and don't yet have the explicitTailCall parameter.
 :breakme
@@ -333,12 +334,12 @@ class A with
   fun g(x) = if x == 0 then 1 else @tailcall f(x - 1)
 (new A).f(10)
 //│ ╔══[COMPILATION ERROR] Calls from class methods cannot yet be marked @tailcall.
-//│ ║  l.332: 	  @tailrec fun f(x) = if x == 0 then 0 else @tailcall g(x - 1)
+//│ ║  l.333: 	  @tailrec fun f(x) = if x == 0 then 0 else @tailcall g(x - 1)
 //│ ╙──       	                                                      ^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Class methods may not yet be marked @tailrec.
-//│ ║  l.332: 	  @tailrec fun f(x) = if x == 0 then 0 else @tailcall g(x - 1)
+//│ ║  l.333: 	  @tailrec fun f(x) = if x == 0 then 0 else @tailcall g(x - 1)
 //│ ╙──       	               ^
 //│ ╔══[COMPILATION ERROR] Calls from class methods cannot yet be marked @tailcall.
-//│ ║  l.333: 	  fun g(x) = if x == 0 then 1 else @tailcall f(x - 1)
+//│ ║  l.334: 	  fun g(x) = if x == 0 then 1 else @tailcall f(x - 1)
 //│ ╙──       	                                             ^^^^^^^^
 //│ = 0

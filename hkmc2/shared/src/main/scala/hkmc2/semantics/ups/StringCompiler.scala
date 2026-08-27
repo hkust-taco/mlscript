@@ -155,8 +155,8 @@ object StringCompiler:
     case pattern: (Concat | CharClass) => pattern
     case pattern @ Literal(_: StrLit) => pattern
     case Literal(_) => Never
-    case pattern @ ClassLike(sym, _) =>
-      if sym is ctx.builtins.Str then pattern else Never
+    case pattern @ ClassLike(head, _) =>
+      if head.symbol is ctx.builtins.Str then pattern else Never
     case _: (Record | Tuple) => Never
     case _: MatchedClassLike => lastWords("MatchedClassLike encountered in stringFragment")
 
@@ -423,7 +423,7 @@ class StringCompiler(using context: Context)(using tl: TL)(using Ctx, State, Rai
         addChr(entry, AnyChar, entry)
         addEps(entry, cont, Nil)
         entry
-      case ClassLike(sym, arguments) if sym is ctx.builtins.Str =>
+      case ClassLike(head, arguments) if head.symbol is ctx.builtins.Str =>
         // `Str` with arguments is reported and degraded to `Never` by
         // `Instantiator`, so only the bare form arrives here: it literally
         // means all strings, like a wildcard. (The naive translation used to

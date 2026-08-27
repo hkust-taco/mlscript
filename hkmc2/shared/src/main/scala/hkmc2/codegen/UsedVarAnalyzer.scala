@@ -158,10 +158,10 @@ class UsedVarAnalyzer(b: Block, scopeData: ScopeData)(using State):
   
   private def combineInfos(m1: Map[ScopedInfo, AccessInfo], m2: Map[ScopedInfo, AccessInfo]): Map[ScopedInfo, AccessInfo] =
     if m2.size < m1.size then combineInfos(m2, m1)
-    else m1.foldLeft(m2):
-      case (acc, info -> accesses) => m2.get(info) match
-        case Some(value) => acc + (info -> (accesses ++ value))
-        case None => acc + (info -> accesses)
+    else
+      m2 ++
+      m1.iterator.map: (k, v) =>
+        k -> m2.get(k).fold(v)(_ ++ v)
   
   // Find:
   // - Map 1:
@@ -201,25 +201,15 @@ class UsedVarAnalyzer(b: Block, scopeData: ScopeData)(using State):
       )
     
     val accessInfoMap = accessInfo.toMap
-    val edges: Set[(ScopedInfo, ScopedInfo)] =
-      for
-        (src, AccessInfo(_, _, refd)) <- accessInfo
-        r <- refd
-        // remove self-edges: they do not affect this analysis
-        if src =/= r
-        // very important: we only care about edges that flow into the subtree rooted at `s`
-        if childInfo.contains(r) && r =/= s.obj.toInfo
-      yield src -> r
-    .toSet
-    
-    // (sccs, sccEdges) forms a directed acyclic graph (DAG)
-    val algorithms.SccsInfo(sccs, sccEdges, inDegs, outDegs) = algorithms.sccsWithInfo(edges, childInfo)
-
     val rootInfo = s.obj.toInfo
-    val (rootId, rootElems) = sccs.find:
-        case (id, elems) => elems.contains(rootInfo)
-      .get
-    if rootElems.size != 1 then lastWords("SCC containing root had a degree other than 1.")
+
+    // The out-edges of `src` inside the subtree rooted at `s`
+    def refdInSubtree(src: ScopedInfo): Iterator[ScopedInfo] =
+      accessInfoMap(src).refdDefns.iterator.filter: r =>
+        // remove self-edges: they do not affect this analysis
+        src =/= r &&
+        // very important: we only care about edges that flow into the subtree rooted at `s`
+        childInfo.contains(r) && r =/= rootInfo
     
     // With respect to the current scoped object `s`, we may "ignore" one of its children `c` if and only if
     // it is ignored (not lifted), and `s` is in the subtree rooted at the first lifted parent of `c`. We
@@ -228,38 +218,44 @@ class UsedVarAnalyzer(b: Block, scopeData: ScopeData)(using State):
     def isIgnored(c: ScopedInfo) =
       s.inSubtree(scopeData.getNode(c).firstLiftedAncestor.toInfo)
 
-    // All objects in the same scc must have at least the same accesses as each other
-    def go(includeIgnored: Bool) =
-      val base = for (id, scc) <- sccs yield
+    // All objects in the same scc must have at least the same accesses as each other.
+    // An scc is handled only once every scc reachable from it has been handled, which is the
+    // same as materializing the scc dag graph first and then dp on it.
+    val withIgnored = MutMap.empty[ScopedInfo, AccessInfo]
+    val withoutIgnored = MutMap.empty[ScopedInfo, AccessInfo]
+    object sccTraversal extends SccAnalysis[ScopedInfo]:
+      protected def successors(n: ScopedInfo) = refdInSubtree(n)
+      protected def isHandled(n: ScopedInfo) = withIgnored.contains(n)
+      protected def handleScc(members: Ls[ScopedInfo], sccId: Int): Unit =
+        if members.contains(rootInfo) && members.size != 1 then
+          lastWords("SCC containing root had a degree other than 1.")
+        val united = members.foldLeft(AccessInfo.empty):
+          case (acc, sym) => acc ++ accessInfoMap(sym)
+        val succs = members.iterator.flatMap(refdInSubtree).toSet
+        def foldSuccs(dp: MutMap[ScopedInfo, AccessInfo], base: AccessInfo): AccessInfo =
+          succs.iterator.flatMap(dp.get).foldLeft(base):
+            case (acc, next) => acc ++ next
         // If all objects in this SCC are ignored, then we treat it as if it does not access anything,
         // unless we explicitly want to count ignored items (for the readers-mutators analysis)
-        if !includeIgnored && scc.forall(isIgnored) then id -> AccessInfo.empty
-        else id -> scc.foldLeft(AccessInfo.empty):
-          case (acc, sym) => acc ++ accessInfoMap(sym)
-      
-      // dp on DAG
-      val dp: MutMap[Int, AccessInfo] = MutMap.empty
-      def sccAccessInfo(scc: Int): AccessInfo = dp.get(scc) match
-        case Some(value) => value
-        case None =>
-          val ret = sccEdges(scc).foldLeft(base(scc)):
-            case (acc, nextScc) => acc ++ sccAccessInfo(nextScc)
-          dp.addOne(scc -> ret)
-          ret
-      
-      for
-        (id, scc) <- sccs
-        sym <- scc
-      yield
-        sym -> sccAccessInfo(id).withoutLocals(scopeData.getNode(sym).obj.definedLocals)
+        val ignoredDropped = foldSuccs(withoutIgnored,
+          if members.forall(isIgnored) then AccessInfo.empty else united)
+        val ignoredIncluded = foldSuccs(withIgnored, united)
+        members.foreach: sym =>
+          withIgnored(sym) = ignoredIncluded
+          withoutIgnored(sym) = ignoredDropped
+    end sccTraversal
     
+    sccTraversal.queryAll(childInfo)
+
     // Remove locals that are not yet defined
-    def removeUnused(m: Map[ScopedInfo, AccessInfo]) = m.map:
-      case k -> v =>
-        val node = scopeData.getNode(k)
-        k -> v.intersectLocals(node.existingVars)
-    
-    val (m1, m2) = (removeUnused(go(true)), removeUnused(go(false)))
+    def removeUnused(dp: collection.Map[ScopedInfo, AccessInfo]): Map[ScopedInfo, AccessInfo] =
+      dp.iterator.map: (info, accesses) =>
+        val node = scopeData.getNode(info)
+        info -> accesses.intersectLocals(node.existingVars)
+      .toMap
+
+    val m1 = removeUnused(withIgnored)
+    val m2 = removeUnused(withoutIgnored)
     
     val subCases = nexts.map(findAccesses)
     subCases.foldLeft((m1, m2)):

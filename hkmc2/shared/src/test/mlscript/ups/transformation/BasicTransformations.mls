@@ -14,5 +14,3 @@ assert 0 is P as r, r
 
 assert 1 is P as r, r
 //│ = true
-
-

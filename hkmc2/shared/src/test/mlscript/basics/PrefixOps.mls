@@ -167,5 +167,3 @@ let x = |
 //│ ╙──       	         ^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ x = undefined
-
-

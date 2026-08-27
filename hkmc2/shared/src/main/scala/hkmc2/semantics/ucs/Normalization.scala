@@ -41,7 +41,9 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
     /** Checks if two patterns are the same. */
     def =:=(rhs: FlatPattern): Bool = (lhs, rhs) match
       case (lhs: FlatPattern.ClassLike, rhs: FlatPattern.ClassLike) =>
-        lhs.constructor.symbol === rhs.constructor.symbol
+        // Constructor terms may carry the same preliminary overload-set symbol
+        // while resolution selected different class-like definitions.
+        lhs.symbol is rhs.symbol
       case (FlatPattern.Lit(l1), FlatPattern.Lit(l2)) => l1 === l2
       case (FlatPattern.Tuple(n1, b1), FlatPattern.Tuple(n2, b2)) => n1 === n2 && b1 === b2
       case (FlatPattern.Record(ls1), FlatPattern.Record(ls2)) =>
@@ -66,8 +68,8 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
         val filteredEntries = lhs.entries.filter:
           (fieldName1, _) => rhsEntries.forall { (fieldName2, _) => !(fieldName1 === fieldName2)}
         FlatPattern.Record(filteredEntries)
-      case rhs: FlatPattern.ClassLike => rhs.constructor.symbol.flatMap(_.asCls) match
-        case S(cls: ClassSymbol) => cls.defn match
+      case rhs: FlatPattern.ClassLike => rhs.symbol match
+        case cls: ClassSymbol => cls.defn match
           case S(ClassDef.Parameterized(params = paramList)) =>
             // Only `val` parameters are accessible as fields, so only those
             // can subsume a Record entry. This keeps `assuming` consistent
@@ -77,7 +79,7 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
                 case param: Param => !(param.flags.isVal && fieldName1 === param.sym.id)
             FlatPattern.Record(filteredEntries)
           case S(_) | N => lhs
-        case S(_) | N => lhs
+        case _: ModuleOrObjectSymbol => lhs
       case _ => lhs
 
   inline def apply(split: Split): Split = normalize(split)(using VarSet())
@@ -555,9 +557,6 @@ object Normalization:
     case (ClassLike(_, cs: ModuleOrObjectSymbol, _, _), ClassLike(symbol = blt.`Object`)) => true
     case (Tuple(n1, false), Tuple(n2, false)) if n1 === n2 => true
     case (Tuple(n1, _), Tuple(n2, true)) if n2 <= n1 => true
-    // Note: We don't make Int31 compatible with Num, since Int31 needs to know how it should be
-    // sign-extended in order to convert into a Num.
-    case (ClassLike(symbol = blt.`Int`), ClassLike(symbol = blt.`Num`)) => true
     // TODO(Derppening): Do we limit IntLit to (1 << 31) - 1 for `Int31`?
     case (Lit(Tree.IntLit(_)), ClassLike(symbol = blt.`Int` | blt.`Int31` | blt.`Num`)) => true
     case (Lit(Tree.StrLit(_)), ClassLike(symbol = blt.`Str`)) => true
@@ -566,15 +565,18 @@ object Normalization:
     case (Record(entries1), Record(entries2)) =>
       entries1.forall { (fieldName1, _) => entries2.exists { (fieldName2, _) => fieldName1 === fieldName2 } }
     case (Record(entries), rhs: ClassLike) =>
-      val clsParams = rhs.constructor.symbol.flatMap(_.asCls) match
-        case S(symbol) => symbol.defn match
+      val clsParams = rhs.symbol match
+        case symbol: ClassSymbol => symbol.defn match
           case S(ClassDef.Parameterized(params = paramList)) => paramList.params
           case S(_) | N => Nil
-        case (S(_) | N) => Nil
+        case _: ModuleOrObjectSymbol => Nil
       entries.forall { (fieldName, _) => clsParams.exists {
         case Param(flags = FldFlags(isVal = isVal), sym = sym) => isVal && fieldName === sym.id
       }}
-    // Check user-defined class hierarchy via extends clauses.
+    // Check the class hierarchy via extends clauses. This includes virtual
+    // classes such as `Int <: Num`, whose relationship is declared in Prelude.
+    // `Int31` deliberately does not extend `Num`: converting it to a `Num`
+    // needs to know how the value should be sign-extended.
     case (ClassLike(_, lhsSym, _, _), ClassLike(_, rhsSym, _, _)) =>
       isSubclassOf(lhsSym, rhsSym)
     case (_: FlatPattern, _: FlatPattern) => false
@@ -600,9 +602,11 @@ object Normalization:
     // Under the single-inheritance restriction, two classes where neither is a
     // subclass of the other are provably disjoint. When we add matchable
     // class-like things with multiple inheritance (e.g., interfaces), this check
-    // will need to be refined.
+    // will need to be refined. `compareCasePattern` includes reflexive
+    // subtyping, so two occurrences of the same class are not considered
+    // disjoint.
     case (ClassLike(_, lhsSym, _, _), ClassLike(_, rhsSym, _, _)) =>
-      !isSubclassOf(lhsSym, rhsSym) && !isSubclassOf(rhsSym, lhsSym)
+      !compareCasePattern(lhs, rhs) && !compareCasePattern(rhs, lhs)
     case _ => false
   
   /** Get the parent class-like symbol from the extends clause of a class or module. */
@@ -611,10 +615,11 @@ object Normalization:
     val ext: Opt[Term.New] = sym match
       case cls: ClassSymbol => cls.defn.flatMap(_.ext)
       case mod: ModuleOrObjectSymbol => mod.defn.flatMap(_.ext)
-    ext.flatMap(nw => nw.cls.symbol.flatMap(_.asClsOrMod))
+    ext.flatMap(nw => nw.cls.resolvedSym.flatMap(_.asClsOrMod))
   
   /** Check if `child` is a subclass of `parent` by traversing the class hierarchy.
-    * Uses a visited set to avoid infinite loops in case of cyclic inheritance. */
+    * Uses a visited set to avoid infinite loops in case of cyclic inheritance.
+    * TODO: Cache the subclasses set!! */
   private def isSubclassOf(
       child: ClassSymbol | ModuleOrObjectSymbol,
       parent: ClassSymbol | ModuleOrObjectSymbol
@@ -623,9 +628,9 @@ object Normalization:
         visited: Set[ClassSymbol | ModuleOrObjectSymbol]): Bool =
       !visited.contains(sym) && (getParentClassLikeSymbol(sym) match
         case S(parentSym) =>
-          parentSym === parent || go(parentSym, visited + sym)
+          (parentSym is parent) || go(parentSym, visited + sym)
         case N => false)
-    go(child, Set.empty)
+    (child is parent) || go(child, Set.empty)
 
   final case class VarSet(declared: Set[LocalVarSymbol]):
     def +(nme: LocalVarSymbol): VarSet = copy(declared + nme)

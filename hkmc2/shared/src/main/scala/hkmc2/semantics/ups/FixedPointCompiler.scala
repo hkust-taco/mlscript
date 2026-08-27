@@ -24,22 +24,41 @@ object FixedPointCompiler:
 
   /** A constructor through which the context pattern descends, together with
     * its (ordered) descent alternatives. */
-  final case class ClassInfo(index: Int, symbol: ClassSymbol, paramCount: Int, alts: Ls[AltInfo])
+  final case class ClassInfo(index: Int, head: ClassLikeHead, symbol: ClassSymbol, paramCount: Int, alts: Ls[AltInfo])
 
   /** The compiled fixed-point matcher. The `unapply` body is assembled by
     * `Lowering` as: evaluate `prelude`, run `loop` as a `while` form (the loop
     * exits when no branch of the split matches), then return `result`. */
   final case class Machine(params: ParamList, prelude: Ls[Statement], loop: Split, result: Term)
 
+  /** One link of an indirect recursion cycle: the definition it comes from,
+    * its steps, its trailing alternatives, and whether they end in a
+    * wildcard. */
+  private type Link = (PatternSymbol, Ls[Ls[SP]], Ls[SP], Bool)
+
+  /** What `compile` makes of a pattern: `N` when it is not fixed-point shaped
+    * at all, so the regular compilation should take over; `L` with the reason
+    * when the shape is recognized but rejected before any machine is built,
+    * which `unsupported` reports at the pattern that asked for it; `R(N)` when
+    * a build was attempted and gave up, having reported its own diagnostic
+    * with its own locations; and `R(S(_))` when it succeeded. */
+  private type Attempt[A] = Opt[Message \/ Opt[A]]
+
+  /** Why a fixed-point definition cannot be machine-compiled, as the bits to
+    * append to the warning. A rejection always names two patterns that are
+    * not adjacent in the source, and a `Loc` is a single contiguous range, so
+    * each gets a bit of its own rather than one message over a location
+    * spanning everything in between. */
+  private type Rejection = Ls[(Message, Opt[Loc])]
+
   /** The outcome of `compile` on a fixed-point-shaped pattern. */
   enum Outcome:
     /** The compiled machine, paired with the output sub-pattern of the
-      * match-site shorthand (`x is @compile S(q)`). For non-catch-all
-      * definitions, `fallback` holds the pattern with which a failed machine
-      * run must be retried — the naive backtracking translation implements
-      * the deepest-first try order on intermediate results that the machine
-      * does not keep around. */
-    case Compiled(machine: Machine, outputPattern: Opt[SP], fallback: Opt[SP])
+      * match-site shorthand (`x is @compile S(q)`). A compiled machine is
+      * always a *complete* implementation of the pattern: a failed run means
+      * the match failed, never that something else should be tried. This is
+      * what keeps `@compile` from performing any rewriting step twice. */
+    case Compiled(machine: Machine, outputPattern: Opt[SP])
     /** The pattern is fixed-point shaped but not supported by the machine
       * compilation; a warning has been reported and the caller should use the
       * naive backtracking translation. */
@@ -110,6 +129,20 @@ object FixedPointCompiler:
   * order. For non-overlapping grammars such as CBV evaluation contexts the
   * two agree.
   *
+  * A trailing wildcard is not required: `pattern S = P as S | a` is also a
+  * fixed point. Its naive meaning, however, is subtler than "normalize, then
+  * match `a`" — the alternatives are disjuncts of the whole chains rather
+  * than of their tails, so `a` is tried against *every* intermediate result,
+  * latest first. The machine only ever produces the normal form, so it
+  * implements such a definition only when no intermediate could have matched
+  * `a` anyway; `unmatchedIntermediates` decides that and rejects the machine
+  * compilation otherwise. Rejecting is the point: compiling a machine and
+  * retrying a failed run naively — which is what this used to do — performs
+  * every rewriting step twice, and for a definition whose own `unapply`
+  * embeds the machine, the retry re-enters it once per step, for a quadratic
+  * number of contractions. Both are observable as soon as a transformation
+  * has side effects.
+  *
   * Like the rest of the efficient pattern compilation, this is opt-in via
   * the `@compile` pattern annotation — either at a match site
   * (`x is @compile Steps`) or on the definition's right-hand side
@@ -147,31 +180,30 @@ class FixedPointCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynt
               // patterns; let the regular path report the mismatch.
               case S(_) => N
             outputPattern.flatMap: outputPattern =>
-              def compiled(machine: Machine, needsFallback: Bool): Opt[Outcome] =
-                S(Outcome.Compiled(machine, outputPattern, if needsFallback then S(pattern) else N))
               patternSymbol.fixedPointMachine match
-                case S((machine, needsFallback)) => compiled(machine, needsFallback)
+                case S(machine) => S(Outcome.Compiled(machine, outputPattern))
                 case N =>
-                  val shape = recognizeShape(stripAnnotations(defn.pattern))
-                  val recognized = shape.filter(_._1 is patternSymbol).flatMap:
-                    (_, stepPattern, rest, requireProgress) =>
-                      classifyRest(rest).map((middles, catchAll) =>
-                        (stepPattern, middles, catchAll, requireProgress))
-                  val machine = recognized match
-                    case S((stepPattern, middles, catchAll, requireProgress)) =>
-                      scoped("ucs:fixpoint")(compileMachine(stepPattern, middles, catchAll, requireProgress))
-                        .map((_, !catchAll))
-                    case N =>
-                      // The definition may instead be a link of an indirect
-                      // recursion cycle.
-                      recognizeCycle(patternSymbol).flatMap: links =>
-                        scoped("ucs:fixpoint")(compileAlternatingMachine(links))
-                          .map((_, links.exists(!_._4)))
+                  // A self-recursive body is the definition's own fixed point;
+                  // otherwise the definition may be a link of an indirect
+                  // recursion cycle.
+                  val machine: Attempt[Machine] =
+                    recognizeShape(stripAnnotations(defn.pattern)).map:
+                      (tailSymbol, steps, rest, requireProgress) =>
+                        if tailSymbol is patternSymbol then
+                          classifyRest(rest).map: (middles, catchAll) =>
+                            scoped("ucs:fixpoint")(compileMachine(
+                              steps, middles, catchAll, requireProgress, pattern.toLoc))
+                        else recognizeCycle(patternSymbol).map: links =>
+                          scoped("ucs:fixpoint")(compileAlternatingMachine(links, pattern.toLoc))
                   machine match
-                    case S((machine, needsFallback)) =>
-                      patternSymbol.fixedPointMachine = S((machine, needsFallback))
-                      compiled(machine, needsFallback)
-                    case N => unsupported(recognized.isDefined, shape.isDefined, pattern.toLoc)
+                    case S(R(S(machine))) =>
+                      patternSymbol.fixedPointMachine = S(machine)
+                      S(Outcome.Compiled(machine, outputPattern))
+                    // A machine build that was *attempted* and gave up has
+                    // already reported a specific diagnostic of its own.
+                    case S(R(N)) => S(Outcome.Unsupported)
+                    case S(L(reason)) => unsupported(reason, pattern.toLoc)
+                    case N => N
           case _ => N
     case body: (SP.Chain | SP.Composition) =>
       // The body-annotated form. The body must belong to the very definition
@@ -183,49 +215,44 @@ class FixedPointCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynt
         patternSymbol.defn.exists(defn =>
           (stripAnnotations(defn.pattern) eq body) &&
             defn.patternParams.isEmpty && defn.extractionParams.isEmpty)
-      recognizeShape(body) match
-        case S((patternSymbol, stepPattern, rest, requireProgress)) if isOwnBody(patternSymbol) =>
-          val recognized = classifyRest(rest)
-          val machine = recognized.flatMap: (middles, catchAll) =>
-            scoped("ucs:fixpoint")(compileMachine(stepPattern, middles, catchAll, requireProgress))
-              .map((_, !catchAll))
-          machine match
-            case S((machine, needsFallback)) =>
-              patternSymbol.fixedPointMachine = S((machine, needsFallback))
-              S(Outcome.Compiled(machine, N, if needsFallback then S(body) else N))
-            case N => unsupported(recognized.isDefined, true, body.toLoc)
-        case S((tailSymbol, _, _, _)) =>
+      val machine: Attempt[(PatternSymbol, Machine)] = recognizeShape(body).map:
+        case (patternSymbol, steps, rest, requireProgress) if isOwnBody(patternSymbol) =>
+          classifyRest(rest).map: (middles, catchAll) =>
+            scoped("ucs:fixpoint")(compileMachine(
+              steps, middles, catchAll, requireProgress, body.toLoc))
+              .map((patternSymbol, _))
+        case (tailSymbol, _, _, _) =>
           // The body may be a link of an indirect recursion cycle; its tail
           // then refers to the next link rather than the definition itself.
           // Locate the definition the body belongs to in the cycle and
           // rotate its link to the front.
-          val machine = recognizeCycle(tailSymbol).flatMap: links =>
+          recognizeCycle(tailSymbol).flatMap: links =>
             links.indexWhere((symbol, _, _, _) =>
               symbol.defn.exists(defn => stripAnnotations(defn.pattern) eq body)) match
-              case -1 => N
+              case -1 => L(
+                msg"`@compile` has to be placed on the whole body of a definition " +
+                  msg"taking part in the recursion through `${tailSymbol.nme}`.")
               case index =>
                 val rotated = links.drop(index) ::: links.take(index)
-                scoped("ucs:fixpoint")(compileAlternatingMachine(rotated)).map: machine =>
-                  (rotated.head._1, machine, links.exists(!_._4))
-          machine match
-            case S((owner, machine, needsFallback)) =>
-              owner.fixedPointMachine = S((machine, needsFallback))
-              S(Outcome.Compiled(machine, N, if needsFallback then S(body) else N))
-            case N => unsupported(false, true, body.toLoc)
+                R(scoped("ucs:fixpoint")(compileAlternatingMachine(rotated, body.toLoc))
+                  .map((rotated.head._1, _)))
+      machine match
+        case S(R(S((owner, machine)))) =>
+          owner.fixedPointMachine = S(machine)
+          S(Outcome.Compiled(machine, N))
+        case S(R(N)) => S(Outcome.Unsupported)
+        case S(L(reason)) => unsupported(reason, body.toLoc)
         case N => N
     case _ => N
 
-  /** Handle a pattern the machine compilation rejected: when it is
-    * fixed-point shaped, report a warning (unless the rejection point already
-    * did) and route the caller to the naive translation, which handles all
-    * such shapes; otherwise leave it to the regular efficient compilation. */
-  private def unsupported(alreadyWarned: Bool, shaped: Bool, loc: Opt[Loc]): Opt[Outcome] =
-    if alreadyWarned then S(Outcome.Unsupported)
-    else if shaped then
-      warn(msg"This fixed-point pattern is not supported by the machine compilation." -> loc,
-        msg"Falling back to the naive translation." -> N)
-      S(Outcome.Unsupported)
-    else N
+  /** Report a fixed-point-shaped pattern the machine compilation rejected
+    * before it got as far as building anything, and route the caller to the
+    * naive translation, which handles all such shapes. Rejections found during
+    * the build report themselves, with their own locations. */
+  private def unsupported(reason: Message, loc: Opt[Loc]): Opt[Outcome] =
+    warn(msg"This fixed-point pattern is not supported by pattern compilation." -> loc,
+      reason -> N, msg"Falling back to the naive translation." -> N)
+    S(Outcome.Unsupported)
 
   /** Remove `Annotated` wrappers (such as the `@compile` marking itself). */
   @tailrec private def stripAnnotations(pattern: SP): SP = pattern match
@@ -240,16 +267,21 @@ class FixedPointCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynt
     case stripped => stripped :: Nil
 
   /** Classify the alternatives following the recursive ones into the middle
-    * alternatives and the optional trailing wildcard. */
-  private def classifyRest(rest: Ls[SP]): Opt[(Ls[SP], Bool)] =
-    if rest.isEmpty then N
+    * alternatives and the optional trailing wildcard, or say why they cannot
+    * be. */
+  private def classifyRest(rest: Ls[SP]): Message \/ (Ls[SP], Bool) =
+    if rest.isEmpty then
+      L(msg"It has only recursive alternatives, so a match can never finish.")
     else
       val catchAll = rest.last.isInstanceOf[SP.Wildcard]
       val middles = if catchAll then rest.init else rest
       // Reject non-trailing wildcards (they make later alternatives
       // unreachable) and chains (recursive alternatives must be leading).
-      if middles.exists(p => p.isInstanceOf[SP.Wildcard] || p.isInstanceOf[SP.Chain]) then N
-      else S((middles, catchAll))
+      if middles.exists(_.isInstanceOf[SP.Wildcard]) then
+        L(msg"A wildcard alternative makes the alternatives after it unreachable.")
+      else if middles.exists(_.isInstanceOf[SP.Chain]) then
+        L(msg"Its recursive alternatives must come before its other alternatives.")
+      else R((middles, catchAll))
 
   /** Recognize a fixed-point shape, discovering the pattern symbol `S` the
     * recursive alternatives refer to (the definition itself, or the next link
@@ -268,14 +300,21 @@ class FixedPointCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynt
     *     first `P` step, so a run with zero steps is a match failure. The
     *     parentheses around `S | rest` are what distinguish it.
     *
-    * Return the symbol, the step pattern (the disjunction of the steps), the
-    * trailing alternatives (to be validated with `classifyRest`), and whether
-    * at least one step is required. */
-  private def recognizeShape(pattern: SP): Opt[(PatternSymbol, SP, Ls[SP], Bool)] =
+    * Return the symbol, the steps, the trailing alternatives (to be validated
+    * with `classifyRest`), and whether at least one step is required.
+    *
+    * A step is returned as the list of its own alternatives, and the steps are
+    * kept apart rather than merged into one disjunction: instantiation maps
+    * `|` to the flattening `or` combinator, which loses both the grouping the
+    * rejection checks depend on and the source pattern their diagnostics point
+    * at. The grouping matters because only *distinct* steps branch the naive
+    * search — a step written as a disjunction commits to the first of its
+    * alternatives that applies (see `unmatchedIntermediates`). */
+  private def recognizeShape(pattern: SP): Opt[(PatternSymbol, Ls[Ls[SP]], Ls[SP], Bool)] =
     pattern match
       case SP.Chain(stepPattern, tail) => disjuncts(tail) match
         case SP.Constructor(target, N) :: rest =>
-          target.resolvedSym.flatMap(_.asPat).map((_, stepPattern, rest, true))
+          target.resolvedSym.flatMap(_.asPat).map((_, disjuncts(stepPattern) :: Nil, rest, true))
         case _ => N
       case composition: SP.Composition => disjuncts(composition) match
         case SP.Chain(_, SP.Constructor(target, N)) :: _ =>
@@ -286,7 +325,7 @@ class FixedPointCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynt
               case SP.Chain(_, SP.Constructor(target, N)) => isSelf(target)
               case _ => false
             val steps = selfChains.collect { case SP.Chain(step, _) => step }
-            (symbol, steps.reduceLeft(SP.Composition(true, _, _)), rest, false)
+            (symbol, steps.map(disjuncts), rest, false)
         case _ => N
       case _ => N
 
@@ -297,29 +336,40 @@ class FixedPointCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynt
     * cycle order, and whenever a step fails, the failing link's alternatives
     * process the current term — the original scrutinee when even the first
     * step fails. Returns the links in cycle order, beginning with `start`'s
-    * own. */
-  private def recognizeCycle(start: PatternSymbol)
-      : Opt[Ls[(PatternSymbol, SP, Ls[SP], Bool)]] =
-    @tailrec def walk(
-        current: PatternSymbol,
-        acc: Ls[(PatternSymbol, SP, Ls[SP], Bool)]
-    ): Opt[Ls[(PatternSymbol, SP, Ls[SP], Bool)]] =
+    * own.
+    *
+    * One-or-more links (`step as (Next | rest)`) are rejected: they fail
+    * outright when their step does not apply, whereas `assembleAlternating`
+    * has no notion of required progress and would let the failing link's
+    * alternatives process the term regardless. */
+  private def recognizeCycle(start: PatternSymbol): Message \/ Ls[Link] =
+    @tailrec def walk(current: PatternSymbol, acc: Ls[Link]): Message \/ Ls[Link] =
       val linkOpt = current.defn match
         case S(defn) if defn.patternParams.isEmpty && defn.extractionParams.isEmpty =>
           recognizeShape(stripAnnotations(defn.pattern)) match
-            case S((next, stepPattern, rest, _)) =>
-              classifyRest(rest).map: (middles, catchAll) =>
-                (next, (current, stepPattern, middles, catchAll))
-            case _ => N
-        case _ => N
+            case S((next, steps, rest, requireProgress)) =>
+              classifyRest(rest).flatMap: (middles, catchAll) =>
+                if requireProgress then L(
+                  msg"`${current.nme}` does not match unless its first pattern does, " +
+                    msg"which is not supported for mutually recursive definitions.")
+                else R((next, (current, steps, middles, catchAll)))
+            case N => L(
+              msg"`${current.nme}` does not recurse back, so this pattern applies once rather than repeatedly.")
+        case _ => L(
+          msg"The recursion goes through `${current.nme}`, which is not a parameterless pattern definition.")
       linkOpt match
-        case S((next, link)) =>
-          if next is start then S((link :: acc).reverse)
-          else if (next is current) || acc.exists(_._1 is next) then N
+        case R((next, link)) =>
+          if next is start then R((link :: acc).reverse)
+          else if (next is current) || acc.exists(_._1 is next) then
+            L(msg"The recursion goes through `${current.nme}` but never comes back to `${start.nme}`.")
           else walk(next, link :: acc)
-        case N => N
-    // Cycles of length one are the direct shape, handled in `compile`.
-    walk(start, Nil).filter(_.sizeIs > 1)
+        case L(reason) => L(reason)
+    walk(start, Nil) match
+      // Cycles of length one are the direct shape, handled in `compile`.
+      case R(_ :: Nil) => L(
+        msg"`${start.nme}` is recursive and must be compiled as a whole" +
+          msg" (rather than just part of it).")
+      case recognized => recognized
 
   /** Does `pattern` mention the given instantiation anywhere? Used to locate
     * the recursive occurrences of the context pattern (the "holes"). */
@@ -355,10 +405,139 @@ class FixedPointCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynt
       if middles.isEmpty then N else S(Or(middles :+ Wildcard))
     else S(Or(middles))
 
-  private def compileMachine(stepPattern: SP, middles: Ls[SP], catchAll: Bool, requireProgress: Bool): Opt[Machine] =
-    val (instantiated, context) = instantiateGroups((stepPattern :: middles) :: Nil)
-    val entry = instantiated.head.head
-    val post = postPattern(instantiated.head.tail, catchAll)
+  /** A fixed-point definition's two halves — its steps, of which there is
+    * always at least one, each given as its own alternatives, and its trailing
+    * alternatives — with every source pattern paired with its instantiation.
+    * The rejection checks work on the instantiated patterns, while their
+    * diagnostics point at the source ones: instantiated patterns are rebuilt
+    * nodes, most of which carry no location, and a synonym's is its definition
+    * rather than its use. */
+  private case class Halves(steps: Ls[Ls[(SP, Pat)]], alternatives: Ls[(SP, Pat)], catchAll: Bool):
+    /** The pattern the machine takes its rewriting steps with. */
+    val entry: Pat = steps.iterator.flatten.map(_._2).reduceLeft(_ or _)
+    /** The pattern processing the final normal form. */
+    val post: Opt[Pat] = postPattern(alternatives.map(_._2), catchAll)
+
+  /** Split `items` into consecutive runs of the given sizes. */
+  private def regroup[A](sizes: Ls[Int], items: Ls[A]): Ls[Ls[A]] = sizes match
+    case Nil => Nil
+    case size :: rest =>
+      val (group, remaining) = items.splitAt(size)
+      group :: regroup(rest, remaining)
+
+  /** Instantiate the halves of each definition, sharing one `Instantiator`
+    * across them all as `instantiateGroups` does. */
+  private def instantiateHalves(groups: Ls[(Ls[Ls[SP]], Ls[SP], Bool)]): (Ls[Halves], Context) =
+    val (instantiated, context) =
+      instantiateGroups(groups.map((steps, middles, _) => steps.flatten ::: middles))
+    val halves = instantiated.zip(groups).map: (patterns, group) =>
+      val (steps, middles, catchAll) = group
+      val sizes = steps.map(_.size)
+      val (stepPatterns, middlePatterns) = patterns.splitAt(sizes.sum)
+      val stepGroups = steps.zip(regroup(sizes, stepPatterns)).map((sources, instantiated) =>
+        sources.zip(instantiated))
+      Halves(stepGroups, middles.zip(middlePatterns), catchAll)
+    (halves, context)
+
+  /** Can a single value match both patterns? Conservatively `true` whenever
+    * disjointness cannot be proved, reusing the same subtyping knowledge the
+    * UCS normalizer applies to branch elimination. */
+  private def mayOverlap(left: Pat, right: Pat)(using Context): Bool =
+    // Only the symbol and the literal matter to `areProvablyDisjoint`; the
+    // constructor term of a `FlatPattern.ClassLike` is never inspected by it.
+    def flatten(head: Head): FlatPattern = head match
+      case lit: syntax.Literal => FlatPattern.Lit(lit)
+      case head: ClassLikeHead => flattenClassLike(head)
+    def flattenClassLike(head: ClassLikeHead): FlatPattern =
+      FlatPattern.ClassLike(
+        Compiler.preservedReference(head.constructor), head.symbol, N, false)(Tree.Dummy)
+    (left.matchableHeads, right.matchableHeads) match
+      case (S(leftHeads), S(rightHeads)) => leftHeads.exists: leftHead =>
+        rightHeads.exists: rightHead =>
+          !ucs.Normalization.areProvablyDisjoint(flatten(leftHead), flatten(rightHead))
+      case _ => true
+
+  /** Whether the single post-pattern test the machine performs — against the
+    * final normal form — accounts for the whole naive search, and if it does
+    * not, the rejection to report.
+    *
+    * The naive translation of `P as S | a` tries `a` against *every*
+    * intermediate result, latest first: it returns `a(x_k)` for the largest
+    * `k` such that `a` matches, where `x_0` is the scrutinee, `x_{i+1}` is the
+    * result of one `P` step on `x_i`, and `x_n` is the normal form. The
+    * machine, on the other hand, only ever produces `x_n`. Two things can
+    * therefore go missing, and both are checked here.
+    *
+    *  1. The strict intermediates `x_k` (`k < n`). Each of them is in the
+    *     domain of `P` — that is precisely why a further step was taken from
+    *     it — so it is enough that `P` and `a` cannot match the same value.
+    *     That is the common case: a step peels a wrapper that `a` rejects.
+    *
+    *  2. With several recursive alternatives, `P1 as S | ... | Pm as S | a`,
+    *     the naive search is a *tree* rather than a chain: `Chain` hands the
+    *     enclosing alternative to both of its halves, so when the whole
+    *     subtree under `P1` fails, `P2` is retried on the very same term, and
+    *     the leaves it leads to are candidates for `a` too. The machine
+    *     follows the leftmost path only, so we additionally require the steps
+    *     to be mutually exclusive, which collapses the tree back into that
+    *     path.
+    *
+    *     Only *distinct* alternatives branch this way. A single step written
+    *     as a disjunction, `(P1 | P2) as S | a`, receives the continuation as
+    *     a whole: it commits to the first of its alternatives that applies and
+    *     does not reconsider when the rest of the chain fails, so it stays a
+    *     chain and needs no mutual exclusion of its own. That is why the steps
+    *     arrive here grouped, and are compared group by group. Both readings
+    *     are pinned in `RecursionAlternatives.mls`.
+    *
+    * When either check fails we give up rather than compile a machine and
+    * retry a failed run naively: that retry would perform every rewriting
+    * step a second time, which is not merely wasteful but observable, since
+    * transformations may have side effects. */
+  private def unmatchedIntermediates(halves: Halves)(using Context): Opt[Rejection] =
+    // Two disjunctions overlap exactly when two of their alternatives do, so
+    // taking them apart loses no precision and lets the diagnostics name the
+    // two patterns actually in conflict.
+    def overlapping(left: Ls[(SP, Pat)], right: Ls[(SP, Pat)]): Opt[(SP, SP)] =
+      (for
+        (leftSource, leftPattern) <- left.iterator
+        (rightSource, rightPattern) <- right.iterator
+        if mayOverlap(leftPattern, rightPattern)
+      yield (leftSource, rightSource)).nextOption()
+    val overlappingSteps = halves.steps.tails.flatMap:
+      case first :: rest => rest.iterator.flatMap(overlapping(first, _))
+      case Nil => Iterator.empty
+    .nextOption()
+    overlappingSteps match
+      case S((step, other)) =>
+        val ol = other.toLoc
+        val sl = step.toLoc orElse ol
+        S:
+          msg"Some recursive alternatives can rewrite the same term in more than one way${
+            if sl.isEmpty then msg"" else msg", including this one"}" -> step.toLoc ::
+          (if ol.isEmpty then Nil else
+            msg"and this one." -> other.toLoc :: Nil)
+      // Every alternative of every step is checked against the trailing
+      // alternatives: a strict intermediate is one some step produced, whichever.
+      case N => overlapping(halves.steps.flatten, halves.alternatives).map: (step, alternative) =>
+        msg"A term this pattern can still rewrite" -> step.toLoc ::
+        msg"can also be matched by a trailing alternative." -> alternative.toLoc :: Nil
+
+  /** Report a rejection. The head bit states the failure at `origin`, the
+    * pattern whose `@compile` asked for the machine — that is where the
+    * warning comes from, and where a definition used at several match sites
+    * produces one warning per site. The rejection's own bits then point at the
+    * individual patterns at fault, which live in the definition. */
+  private def warnUnmatchedIntermediates(rejection: Rejection, origin: Opt[Loc]): Unit =
+    warn(msg"This fixed-point pattern is not supported by pattern compilation." -> origin ::
+      rejection ::: (msg"Falling back to the naive translation." -> N) :: Nil*)
+  
+  private def compileMachine(steps: Ls[Ls[SP]], middles: Ls[SP], catchAll: Bool,
+      requireProgress: Bool, origin: Opt[Loc]): Opt[Machine] =
+    val (halves, context) = instantiateHalves((steps, middles, catchAll) :: Nil)
+    val definition = halves.head
+    val entry = definition.entry
+    val post = definition.post
     given Context = context
     // Walk through synonym definitions until we find a self-recursive one:
     // that instantiation is the evaluation context.
@@ -368,23 +547,31 @@ class FixedPointCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynt
           val body = inst.body
           if mentions(body, inst) then S((inst, body)) else chase(body, visited + inst)
         case _ => N
-    chase(entry, Set.empty) match
-      case N =>
-        // The step pattern is not built from a recursive context. The fixed
-        // point degenerates to a flat contraction loop: keep applying the
-        // step pattern to its own output until it fails.
-        log(s"No recursive context; compiling a flat contraction loop.")
-        S(assemble(entry, Nil, post, requireProgress))
-      case S((ctxInst, body)) =>
-        log(s"Recursive context: ${ctxInst.showDbg}")
-        val alternatives = body match
-          case Or(alternatives) => alternatives
-          case pattern => pattern :: Nil
-        classify(ctxInst, alternatives).map: (redexAlternatives, classes) =>
-          val redexPattern = redexAlternatives match
-            case single :: Nil => single
-            case multiple => Or(multiple)
-          assemble(redexPattern, classes, post, requireProgress)
+    // A total post pattern — which the definition's trailing wildcard, when
+    // present, guarantees — always accepts the machine's own normal form, so
+    // no intermediate is ever consulted.
+    val missing = if post.forall(_.isTotal) then N else unmatchedIntermediates(definition)
+    missing match
+      case S(rejection) =>
+        warnUnmatchedIntermediates(rejection, origin)
+        N
+      case N => chase(entry, Set.empty) match
+        case N =>
+          // The step pattern is not built from a recursive context. The fixed
+          // point degenerates to a flat contraction loop: keep applying the
+          // step pattern to its own output until it fails.
+          log(s"No recursive context; compiling a flat contraction loop.")
+          S(assemble(entry, Nil, post, requireProgress))
+        case S((ctxInst, body)) =>
+          log(s"Recursive context: ${ctxInst.showDbg}")
+          val alternatives = body match
+            case Or(alternatives) => alternatives
+            case pattern => pattern :: Nil
+          classify(ctxInst, alternatives).map: (redexAlternatives, classes) =>
+            val redexPattern = redexAlternatives match
+              case single :: Nil => single
+              case multiple => Or(multiple)
+            assemble(redexPattern, classes, post, requireProgress)
 
   /** Split the context's alternatives into the leading redex alternatives and
     * the trailing descent alternatives, validating the restrictions of the
@@ -393,29 +580,33 @@ class FixedPointCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynt
       : Opt[(Ls[Pat], Ls[ClassInfo])] =
     val (redexAlternatives, descentAlternatives) =
       alternatives.span(pattern => !mentions(pattern, ctxInst))
-    def parse(pattern: Pat): Opt[(ClassSymbol, Int, AltInfo)] = pattern match
-      case ClassLike(cls: ClassSymbol, S(arguments)) =>
-        val entries = arguments.toList
-        val holes = entries.iterator.zipWithIndex.collect:
-          case ((_, argument), index) if mentions(argument, ctxInst) => (index, argument)
-        .toList
-        holes match
-          case (holeIndex, Synonym(inst)) :: Nil if inst == ctxInst =>
-            val arity = cls.defn.flatMap(_.paramsOpt).fold(0)(_.params.size)
-            val sides = entries.iterator.zipWithIndex.collect:
-              case ((_, argument), index) if index != holeIndex && argument != Wildcard =>
-                (index, argument)
-            .toList
-            if arity != entries.size then
-              warn(msg"Cannot rebuild `${cls.nme}` because not all of its parameters are accessible." -> pattern.toLoc)
+    def parse(pattern: Pat): Opt[(ClassLikeHead, ClassSymbol, Int, AltInfo)] = pattern match
+      case ClassLike(head, S(arguments)) => head.symbol match
+        case cls: ClassSymbol =>
+          val entries = arguments.toList
+          val holes = entries.iterator.zipWithIndex.collect:
+            case ((_, argument), index) if mentions(argument, ctxInst) => (index, argument)
+          .toList
+          holes match
+            case (holeIndex, Synonym(inst)) :: Nil if inst == ctxInst =>
+              val arity = cls.defn.flatMap(_.paramsOpt).fold(0)(_.params.size)
+              val sides = entries.iterator.zipWithIndex.collect:
+                case ((_, argument), index) if index != holeIndex && argument != Wildcard =>
+                  (index, argument)
+              .toList
+              if arity != entries.size then
+                warn(msg"Cannot rebuild `${cls.nme}` because not all of its parameters are accessible." -> pattern.toLoc)
+                N
+              else if !sides.forall((_, side) => side.preservesOriginalScrutinee) then
+                warn(msg"Side patterns of a context alternative must be transform-free." -> pattern.toLoc)
+                N
+              else S((head, cls, entries.size, AltInfo(holeIndex, sides)))
+            case _ =>
+              warn(msg"The recursive context must occur as exactly one direct constructor argument." -> pattern.toLoc)
               N
-            else if !sides.forall((_, side) => side.preservesOriginalScrutinee) then
-              warn(msg"Side patterns of a context alternative must be transform-free." -> pattern.toLoc)
-              N
-            else S((cls, entries.size, AltInfo(holeIndex, sides)))
-          case _ =>
-            warn(msg"The recursive context must occur as exactly one direct constructor argument." -> pattern.toLoc)
-            N
+        case _: ModuleOrObjectSymbol =>
+          warn(msg"This alternative is not supported by fixed-point pattern compilation." -> pattern.toLoc)
+          N
       case _ =>
         warn(msg"This alternative is not supported by fixed-point pattern compilation." -> pattern.toLoc)
         N
@@ -438,9 +629,10 @@ class FixedPointCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynt
         // of alternatives sharing a constructor. The latter is what the
         // machine's phase scan replays.
         val order = flat.map(_._1).distinct
-        val classes = order.iterator.zipWithIndex.map: (cls, index) =>
-          val altsFor = flat.collect { case (`cls`, paramCount, alt) => (paramCount, alt) }
-          ClassInfo(index, cls, altsFor.head._1, altsFor.map(_._2))
+        val classes = order.iterator.zipWithIndex.map: (head, index) =>
+          val altsFor = flat.collect { case (`head`, cls, paramCount, alt) => (cls, paramCount, alt) }
+          val (cls, paramCount, _) = altsFor.head
+          ClassInfo(index, head, cls, paramCount, altsFor.map(_._3))
         .toList
         S((redexAlternatives, classes))
 
@@ -470,25 +662,56 @@ class FixedPointCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynt
       Split.LetSplit(symbol, make(() => Split.UseSplit(symbol)))
     else make(() => rest)
 
-  /** Compile an indirect recursion cycle. Each link contributes its step
-    * pattern and its trailing alternatives, turned into a post pattern as in
+  /** Compile an indirect recursion cycle. Each link contributes its steps and
+    * its trailing alternatives, turned into a post pattern as in
     * `compileMachine`. */
-  private def compileAlternatingMachine(links: Ls[(PatternSymbol, SP, Ls[SP], Bool)]): Opt[Machine] =
-    val (instantiated, context) = instantiateGroups(links.map((_, step, middles, _) => step :: middles))
-    val compiled = instantiated.zip(links).map: (patterns, link) =>
-      (patterns.head, postPattern(patterns.tail, link._4))
+  private def compileAlternatingMachine(links: Ls[Link], origin: Opt[Loc]): Opt[Machine] =
+    val (halves, context) =
+      instantiateHalves(links.map((_, steps, middles, catchAll) => (steps, middles, catchAll)))
+    val compiled = halves.map(link => (link.entry, link.post))
     given Context = context
-    S(assembleAlternating(compiled))
-
+    // The naive translation of a cycle tries link `i`'s alternatives against
+    // every intermediate reached after `i` steps, latest first; the machine
+    // only ever reaches the last one and consults the link whose step failed.
+    // The two agree either because the machine cannot fail — every link's
+    // alternatives are total — or, as in `compileMachine`, because no link's
+    // alternatives can match a term that link's own step can still rewrite.
+    // A mixture of the two is not enough: a partial link can fail on the final
+    // term while a total link would have accepted an earlier intermediate,
+    // which is why a total link is reported here rather than skipped.
+    def isTotal(post: Opt[Pat]): Bool = post.forall(_.isTotal)
+    // A total link is at fault as a whole rather than through one of its
+    // patterns — its alternatives are just the wildcard — so the declaration
+    // it comes from is what the diagnostic points at.
+    def declarationOf(symbol: PatternSymbol): Opt[Loc] = symbol.defn.flatMap(_.pattern.toLoc)
+    if halves.forall(link => isTotal(link.post)) then S(assembleAlternating(compiled))
+    else
+      val zipped = halves.zip(links)
+      val offending = zipped.iterator.collectFirst:
+        Function.unlift: (link, source) =>
+          val (symbol, _, _, _) = source
+          if isTotal(link.post) then
+            // Not every link is total, or we would not be here.
+            zipped.collectFirst:
+              case (other, (otherSymbol, _, _, _)) if !isTotal(other.post) =>
+                msg"One of its recursive parts accepts any term" -> declarationOf(symbol) ::
+                msg"while another can fail." -> declarationOf(otherSymbol) :: Nil
+          else unmatchedIntermediates(link)
+      offending match
+        case S(rejection) =>
+          warnUnmatchedIntermediates(rejection, origin)
+          N
+        case N => S(assembleAlternating(compiled))
+  
   /** Assemble the flat alternation loop for an indirect recursion cycle: in
     * phase `i`, step `i` is applied to the current term; on success the
     * machine moves to the next phase in the cycle, and on failure it records
     * the failing phase and exits. The failing link's alternatives then process
     * the current term — which is the original scrutinee when the very first
     * step fails, so zero steps are allowed, exactly as for the direct shape.
-    * When those alternatives don't match either, the run fails and the caller
-    * retries it with the naive translation, which performs the deepest-first
-    * backtracking through the intermediate terms. */
+    * When those alternatives don't match either, the run fails and so does the
+    * match: `compileAlternatingMachine` only assembles a machine for cycles
+    * whose earlier intermediates could not have matched anyway. */
   private def assembleAlternating(links: Ls[(Pat, Opt[Pat])])(using Context): Machine =
     // Like in `assemble`, every matcher gets its own compiler instance
     // because the matcher memoization is instance-bound.
@@ -592,7 +815,7 @@ class FixedPointCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynt
     def markProgress: Ls[Statement] =
       if requireProgress then setStmt(progressedSymbol, bool(true)) :: Nil else Nil
     def constructorTerm(cls: ClassInfo): Term =
-      Compiler.reference(cls.symbol, N).getOrElse(Term.Error())
+      Compiler.preservedReference(cls.head.constructor)
     def classPattern(cls: ClassInfo, children: Ls[TempSymbol]): FlatPattern =
       FlatPattern.ClassLike(constructorTerm(cls), cls.symbol, S(children.map(_ -> N)), false)(Tree.Dummy)
 

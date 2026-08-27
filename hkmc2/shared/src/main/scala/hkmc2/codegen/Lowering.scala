@@ -117,23 +117,43 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
       val map = if unary then wasmUnaryIntrinsicMap else wasmBinaryIntrinsicMap
       map.get(sym.nme).map(name => State.wasmSymbol.asSimpleRef.selN(Tree.Ident(name)))
     else N
-  private lazy val wasmIntrinsicSymbols: Set[BlockMemberSymbol] = Set(
-    ctx.builtins.wasm.plus_impl,
-    ctx.builtins.wasm.minus_impl,
-    ctx.builtins.wasm.times_impl,
-    ctx.builtins.wasm.div_impl,
-    ctx.builtins.wasm.mod_impl,
-    ctx.builtins.wasm.eq_impl,
-    ctx.builtins.wasm.neq_impl,
-    ctx.builtins.wasm.lt_impl,
-    ctx.builtins.wasm.le_impl,
-    ctx.builtins.wasm.gt_impl,
-    ctx.builtins.wasm.ge_impl,
-    ctx.builtins.wasm.neg_impl,
-    ctx.builtins.wasm.pos_impl,
-    ctx.builtins.wasm.not_impl
-  )
-
+  private lazy val virtualModuleSymbols: Set[BlockMemberSymbol] =
+    val blt = ctx.builtins
+    Set(blt.source.bms, blt.js.bms, blt.wasm.bms, blt.debug.bms, blt.annotations.bms)
+  private lazy val wasmIntrinsicSymbols: Set[BlockMemberSymbol] =
+    val wasm = ctx.builtins.wasm
+    Set(
+      wasm.plus_impl,
+      wasm.minus_impl,
+      wasm.times_impl,
+      wasm.div_impl,
+      wasm.mod_impl,
+      wasm.eq_impl,
+      wasm.neq_impl,
+      wasm.lt_impl,
+      wasm.le_impl,
+      wasm.gt_impl,
+      wasm.ge_impl,
+      wasm.neg_impl,
+      wasm.pos_impl,
+      wasm.not_impl,
+    )
+  private enum SpecialBuiltin:
+    case RuntimeIntrinsic(runtimeName: Str)
+    case DebugPrintStack
+    case ScopeLocally
+  private lazy val specialBuiltinSymbols: Map[BlockMemberSymbol, SpecialBuiltin] =
+    val blt = ctx.builtins
+    Map(
+      blt.js.bitand -> SpecialBuiltin.RuntimeIntrinsic("bitand"),
+      blt.js.bitnot -> SpecialBuiltin.RuntimeIntrinsic("bitnot"),
+      blt.js.bitor -> SpecialBuiltin.RuntimeIntrinsic("bitor"),
+      blt.js.shl -> SpecialBuiltin.RuntimeIntrinsic("shl"),
+      blt.js.try_catch -> SpecialBuiltin.RuntimeIntrinsic("try_catch"),
+      blt.debug.printStack -> SpecialBuiltin.DebugPrintStack,
+      blt.scope.locally -> SpecialBuiltin.ScopeLocally,
+    )
+  
   lazy val unreachableFn =
     Select(State.runtimeSymbol.asSimpleRef, Tree.Ident("unreachable"))(S(State.unreachableSymbol))(false)
   
@@ -282,8 +302,8 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
               mod.classCompanion match
               case S(comp) => comp.defn.getOrElse(wat("Module companion without definition", mod.companion))
               case N =>
-                val stagedAnnots = mod.annotations.collect: 
-                  case Annot.Modifier(Keyword.`staged`) => Annot.Modifier(Keyword.`staged`) 
+                val stagedAnnots = mod.annotations.collect:
+                  case Annot.Modifier(Keyword.`staged`) => Annot.Modifier(Keyword.`staged`)
                 ClassDef.Plain(mod.owner, syntax.Cls, new ClassSymbol(Tree.DummyTypeDef(syntax.Cls), mod.sym.id),
                   mod.bsym,
                   Nil,
@@ -585,13 +605,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
     
     val sym = ref.sym
     sym match
-      case
-          ctx.builtins.source.bms
-        | ctx.builtins.js.bms
-        | ctx.builtins.wasm.bms
-        | ctx.builtins.debug.bms
-        | ctx.builtins.annotations.bms
-      =>
+      case sym: BlockMemberSymbol if virtualModuleSymbols.exists(_ is sym) =>
         return fail:
           ErrorReport(
             msg"Module '${sym.nme}' is virtual (i.e., \"compiler fiction\"); cannot be used directly" -> ref.toLoc ::
@@ -845,25 +859,20 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
       // * Note: now the instantiation is done by `collectAppChain`.
       val instantiated = baseF
       val instantiatedResolvedBms = instantiated.resolvedSym.flatMap(_.asBlkMember)
+      val specialBuiltin = instantiatedResolvedBms.flatMap(specialBuiltinSymbols.get)
+      val runtimeIntrinsic = specialBuiltin.collect:
+        case SpecialBuiltin.RuntimeIntrinsic(runtimeName) => runtimeName
       
       instantiated match
-      case t if instantiatedResolvedBms.exists(_ is ctx.builtins.js.bitand) =>
-        conclude(State.runtimeSymbol.asSimpleRef.selN(Tree.Ident("bitand")))
-      case t if instantiatedResolvedBms.exists(_ is ctx.builtins.js.bitnot) =>
-        conclude(State.runtimeSymbol.asSimpleRef.selN(Tree.Ident("bitnot")))
-      case t if instantiatedResolvedBms.exists(_ is ctx.builtins.js.bitor) =>
-        conclude(State.runtimeSymbol.asSimpleRef.selN(Tree.Ident("bitor")))
-      case t if instantiatedResolvedBms.exists(_ is ctx.builtins.js.shl) =>
-        conclude(State.runtimeSymbol.asSimpleRef.selN(Tree.Ident("shl")))
-      case t if instantiatedResolvedBms.exists(_ is ctx.builtins.js.try_catch) =>
-        conclude(State.runtimeSymbol.asSimpleRef.selN(Tree.Ident("try_catch")))
+      case _ if runtimeIntrinsic.isDefined =>
+        conclude(State.runtimeSymbol.asSimpleRef.selN(Tree.Ident(runtimeIntrinsic.get)))
       case t if t.resolvedSym.exists {
         case sym: BlockMemberSymbol => wasmIntrinsicSymbols.contains(sym)
         case _ => false
       } =>
         val sym = t.resolvedSym.get.asInstanceOf[BlockMemberSymbol]
         conclude(State.wasmSymbol.asSimpleRef.selN(Tree.Ident(sym.nme)))
-      case t if instantiatedResolvedBms.exists(_ is ctx.builtins.debug.printStack) =>
+      case t if specialBuiltin.contains(SpecialBuiltin.DebugPrintStack) =>
         if !config.effectHandlers.exists(_.debug) then
           return fail:
             ErrorReport(
@@ -871,7 +880,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
               t.toLoc :: Nil,
               source = Diagnostic.Source.Compilation)
         conclude(State.runtimeSymbol.asSimpleRef.selSN("raisePrintStackEffect").withLocOf(baseF))
-      case t if instantiatedResolvedBms.exists(_ is ctx.builtins.scope.locally) =>
+      case t if specialBuiltin.contains(SpecialBuiltin.ScopeLocally) =>
         // scope.locally only applies to the innermost call; extra args are applied on top
         if allArgs.length > 1 then
           subTerm(baseF)(conclude)
@@ -912,12 +921,12 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
             source = Diagnostic.Source.Compilation)
       val handlers = defs.map {
         case HandlerTermDefinition(resumeSym, td) => td.body match
-          case None => 
+          case None =>
             raise(ErrorReport(msg"Handler function definitions cannot be empty" -> td.toLoc :: Nil))
             N
           case Some(bod) =>
             reportAnnotations(td, td.annotations)
-            val (paramLists, bodyBlock) = setupFunctionDef(td.params, bod, S(td.sym.nme))      
+            val (paramLists, bodyBlock) = setupFunctionDef(td.params, bod, S(td.sym.nme))
             S(Handler(td.sym, resumeSym, paramLists, bodyBlock))
       }.collect{ case Some(v) => v }
       loweringCtx.collectScopedSym(lhs)
@@ -1290,7 +1299,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
       case spd: Spd => R(S(spd.k) -> spd.term)
     // * The straightforward way to lower arguments creates too much recursion depth
     // * and makes Lowering stack overflow when lowering functions with lots of arguments.
-    /* 
+    /*
     def rec(as: Ls[Bool -> st], asr: Ls[Arg]): Block = as match
       case Nil => k(Call(fr, asr.reverse)(isMlsFun, true))
       case (spd, a) :: as =>
@@ -1407,11 +1416,12 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
         case N => WarningReport(msg"This annotation has no effect." -> annot.toLoc :: Nil)
     annotations.foreach:
       case Annot.Untyped => ()
-      case a @ (Annot.TailRec | Annot.Inline | Annot.NoInline) =>
+      case a @ (Annot.TailRec | Annot.Inline | Annot.NoInline | Annot.Generator) =>
         val annot = a match
           case Annot.TailRec => "@tailrec"
           case Annot.Inline => "@inline"
           case Annot.NoInline => "@noInline"
+          case Annot.Generator => "@generator"
         target match
           case TermDefinition(body = S(bod), k = syntax.Fun) => ()
           case TermDefinition(k = syntax.Fun) => warn(a, S(msg"Only functions with a body may be marked as $annot."))
@@ -1514,7 +1524,7 @@ trait LoweringTraceLog(instrument: Bool)(using TL, Raise, State)
       ),
       tmp1 -> pureCall(traceLogFn, Arg(N, enterMsgSym.asSimpleRef) :: Nil),
       prevIndentLvlSym -> pureCall(traceLogIndentFn, Nil)
-    ) |>: 
+    ) |>:
     term(bod)(r =>
     assignStmts(
       resSym -> r,

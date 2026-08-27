@@ -30,7 +30,7 @@ fun f() =
 //│   "k"
 //│ ]);
 //│ f = function f() {
-//│   let i, j, k, scrut, tmp1, pc;
+//│   let i, j, k, scrut, tmp, pc;
 //│   if (runtime.resumePc === -1) {
 //│     pc = 0;
 //│   } else {
@@ -45,7 +45,7 @@ fun f() =
 //│     saveOffset = saveOffset + 1;
 //│     scrut = runtime.resumeArr.at(saveOffset);
 //│     saveOffset = saveOffset + 1;
-//│     tmp1 = runtime.resumeArr.at(saveOffset);
+//│     tmp = runtime.resumeArr.at(saveOffset);
 //│     runtime.resumePc = -1;
 //│   }
 //│   switch (pc) {
@@ -57,27 +57,29 @@ fun f() =
 //│       if (runtime.curEffect === null) {
 //│         pc = 3;
 //│       } else {
-//│         return runtime.unwind(f, 3, "Debugging.mls:17:6", f$debugInfo, null, 1, 0, 5, 0, 100, 2000, scrut, tmp1)
+//│         return runtime.unwind(f, 3, "Debugging.mls:17:6", f$debugInfo, null, 1, 0, 5, 0, 100, 2000, scrut, tmp)
 //│       }
 //│     case 3:
 //│       scrut = runtime.resumeValue;
 //│       if (scrut === true) {
-//│         runtime.resumeValue = Predef.raiseUnhandledEffect();
+//│         let inlinedVal1;
+//│         inlinedVal1 = runtime.safeCall(Runtime.mkEffect(Runtime.FatalEffect, null));
+//│         runtime.resumeValue = inlinedVal1;
 //│         if (runtime.curEffect === null) {
 //│           pc = 2;
 //│         } else {
-//│           return runtime.unwind(f, 2, "Debugging.mls:18:14", f$debugInfo, null, 1, 0, 5, i, j, k, scrut, tmp1)
+//│           return runtime.unwind(f, 2, "Debugging.mls:18:14", f$debugInfo, null, 1, 0, 5, i, j, k, scrut, tmp)
 //│         }
 //│       } else {
 //│         return j / i
 //│       }
 //│     case 2:
-//│       tmp1 = runtime.resumeValue;
-//│       runtime.resumeValue = Predef.print(tmp1);
+//│       tmp = runtime.resumeValue;
+//│       runtime.resumeValue = Predef.print(tmp);
 //│       if (runtime.curEffect === null) {
 //│         pc = 1;
 //│       } else {
-//│         return runtime.unwind(f, 1, "Debugging.mls:18:5", f$debugInfo, null, 1, 0, 5, i, j, k, scrut, tmp1)
+//│         return runtime.unwind(f, 1, "Debugging.mls:18:5", f$debugInfo, null, 1, 0, 5, i, j, k, scrut, tmp)
 //│       }
 //│     case 1:
 //│       runtime.resumeValue;
@@ -99,8 +101,8 @@ lambda_test(() =>
   raiseUnhandledEffect()
   100)
 //│ ═══[RUNTIME ERROR] Error: Unhandled effect FatalEffect
-//│ 	at lambda (Debugging.mls:99:3)
-//│ 	at lambda_test (Debugging.mls:96:3)
+//│ 	at lambda (Debugging.mls:101:3)
+//│ 	at lambda_test (Debugging.mls:98:3)
 
 
 import "../../mlscript-compile/Runtime.mls"
@@ -152,16 +154,16 @@ let res =
 :re
 res.raise()
 //│ ═══[RUNTIME ERROR] Error: Unhandled effect Handler$h$
-//│ 	at Test.test (Debugging.mls:138:15)
-//│ 	at Test.main (Debugging.mls:141:5)
+//│ 	at Test.test (Debugging.mls:140:15)
+//│ 	at Test.main (Debugging.mls:143:5)
 
 set res = res.resumeWith(42)
 
 :re
 res.raise()
 //│ ═══[RUNTIME ERROR] Error: Unhandled effect Handler$h$
-//│ 	at Test.test (Debugging.mls:138:15)
-//│ 	at Test.main (Debugging.mls:141:16)
+//│ 	at Test.test (Debugging.mls:140:15)
+//│ 	at Test.main (Debugging.mls:143:16)
 
 :expect 0.33676533676533676
 res.resumeWith(666)
@@ -181,8 +183,8 @@ fun f() =
 
 f()
 //│ > Stack Trace:
-//│ > 	at f (Debugging.mls:175:3) with locals: j=200
+//│ > 	at f (Debugging.mls:177:3) with locals: j=200
 //│ > Stack Trace:
-//│ > 	at f (Debugging.mls:177:3)
+//│ > 	at f (Debugging.mls:179:3)
 //│ > Stack Trace:
 //│ > 	at tail position

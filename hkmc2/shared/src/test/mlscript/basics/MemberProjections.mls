@@ -47,7 +47,7 @@ M.Foo:: n(foo, 2)
 :sjs
 let m = M.Foo::m
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let m, m1; m1 = function m(self, ...args5) { return self.m(...args5) }; m = m1;
+//│ let m, m1; m1 = function m(self5, ...args5) { return self5.m(...args5) }; m = m1;
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ m = fun m
 
@@ -144,8 +144,8 @@ Foo::n(foo, 2)
 //│ ╙──       	^^^
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let lambda2;
-//│ lambda2 = (undefined, function (self, ...args7) {
-//│   return runtime.safeCall(self.n(...args7))
+//│ lambda2 = (undefined, function (self7, ...args7) {
+//│   return runtime.safeCall(self7.n(...args7))
 //│ });
 //│ return runtime.safeCall(lambda2(foo, 2))
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————

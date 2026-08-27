@@ -12,22 +12,22 @@ import hkmc2.semantics.Elaborator.State
 import hkmc2.syntax.{Tree, SpreadKind}
 import hkmc2.ScopeData.*
 import hkmc2.Lifter.AccessInfo
-import scala.collection.mutable.ArrayBuffer
+import scala.collection.mutable.{ArrayBuffer, LinkedHashMap}
 import java.lang.instrument.ClassDefinition
 
 /*
 
 DOCUMENTATION OF SEMANTICS OF @tailcall and @tailrec
 
-@tailcall: Used to annotate specific function calls. Calls annotated with @tailcall 
+@tailcall: Used to annotate specific function calls. Calls annotated with @tailcall
 must be tail calls. These calls must be optimized to not consume additional stack
 space. If such an optimization is not possible, then the compiler will report an error.
 
 @tailrec: Used to annotate functions. When this annotation is used on a function, say
-`@tailrec fun foo()`, the compiler will ensure no sequence of statically known recursive calls back 
+`@tailrec fun foo()`, the compiler will ensure no sequence of statically known recursive calls back
 to foo() consumes stack space, i.e. they are all tail calls. For example,
 
-@tailrec 
+@tailrec
 fun foo() =
   bar()
   foo()
@@ -119,7 +119,7 @@ class TailRecOpt(checkAnnotations: Bool)(using State, TL, Raise):
       applyBlock(f.body)
       edges
     
-    def getFun(d: TermSymbol) = 
+    def getFun(d: TermSymbol) =
       if scopeData.contains(d) then
         scopeData.getNode(d) match
         case ScopeNode(obj = ScopedObject.Func(f, _)) => S(f)
@@ -160,51 +160,47 @@ class TailRecOpt(checkAnnotations: Bool)(using State, TL, Raise):
           case _ =>
       case _ => super.applyResult(r)
   
-  def buildCallGraph(fs: List[FunDefn])(using (ScopeData, AccessMap)): List[CallEdge] =
-    fs.flatMap(f => CallFinder(f).find)
-  
   case class SccOfCalls(funs: List[FunDefn], calls: List[CallEdge])
   
   def partFns(fs: List[FunDefn])(using (ScopeData, AccessMap)): List[SccOfCalls] =
-    val defnSyms = fs.map(_.dSym)
-    val tsToDefn = fs.map(f => f.dSym -> f).toMap
+    val defnBySyms: collection.Map[TermSymbol, FunDefn] = LinkedHashMap.from(fs.iterator.map(f => f.dSym -> f))
     
     // Only care about calls to functions in the same scope
     // Note that the results may differ if the lifter has been run.
-    val cg = buildCallGraph(fs).filter: c =>
-      val cond = defnSyms.contains(c.f1) && defnSyms.contains(c.f2)
-      c.match
-        case c: CallEdge.TailCall if checkAnnotations && c.call.metadata.explicitTailCall && !cond =>
-          raise(ErrorReport(
-            msg"This tail call exits the current scope and is not optimized." -> c.call.toLoc :: Nil))
-        case _ =>
-      cond
+    val cg: Map[TermSymbol, Ls[CallEdge]] = fs.iterator
+      .map: f =>
+        f.dSym ->
+        CallFinder(f).find.filter: c =>
+          val inSameScope = defnBySyms.contains(c.f2)
+          c.match
+            case c: CallEdge.TailCall if checkAnnotations && c.call.metadata.explicitTailCall && !inSameScope =>
+              raise(ErrorReport(
+                msg"This tail call exits the current scope and is not optimized." -> c.call.toLoc :: Nil))
+            case _ =>
+          inSameScope
+      .toMap
     
-    val cgTup = cg.map(c => (c.f1, c.f2))
-    val sccs = algorithms.sccsWithInfo(cgTup, defnSyms)
+    val sccs = mutable.ListBuffer.empty[SccOfCalls]
+    trait BuildSccOfCalls extends SccAnalysis[TermSymbol]:
+      protected def successors(node: TermSymbol): IterableOnce[TermSymbol] = cg(node).iterator.map(_.f2)
+      
+      protected def handleScc(members: Ls[TermSymbol], sccId: Int): Unit =
+        val inScc = members.toSet
+        val calls = members
+          .flatMap: caller =>
+            cg(caller).filter: c =>
+              if inScc(c.f2) then true
+              else
+                if checkAnnotations && c.call.metadata.explicitTailCall then
+                  raise(ErrorReport(
+                    msg"This call is not optimized as it does not directly recurse through its parent function." -> c.call.toLoc :: Nil))
+                false
+        sccs += SccOfCalls(members.map(defnBySyms.apply), calls)
     
-    // partition the call graph
-    val sccMap = sccs.sccs.flatMap:
-      case (id, scc) => scc.map(f => f -> id)
+    object traversal extends BuildSccOfCalls with SccAnalysis.Caching[TermSymbol]
     
-    val cgLabelled = cg
-      .groupBy: c =>
-        val s1 = sccMap(c.f1)
-        val s2 = sccMap(c.f2)
-        if checkAnnotations && s1 =/= s2 && c.call.metadata.explicitTailCall then
-          raise(ErrorReport(
-            msg"This call is not optimized as it does not directly recurse through its parent function." -> c.call.toLoc :: Nil))
-          -1
-        else s1
-      .filter:
-        (id, _) => id =/= -1
-    
-    sccs.sccs.toList.map: v =>
-      val (id, tss) = v
-      val cgs = cgLabelled.get(id) match
-        case Some(value) => value
-        case None => Nil
-      SccOfCalls(tss.map(tsToDefn), cgs)
+    traversal.queryAll(defnBySyms.keysIterator)
+    sccs.toList
   
   def maxInt[T](items: List[T], f: T => Int): Int = items.foldLeft(0):
     case (l, item) =>
@@ -265,7 +261,7 @@ class TailRecOpt(checkAnnotations: Bool)(using State, TL, Raise):
     val funsLen = funs.length
     
     // remove calls which don't flow into this scc
-    val calls = scc.calls.filter(c => fSyms.contains(c.f2)) 
+    val calls = scc.calls.filter(c => fSyms.contains(c.f2))
     
     val nonTailCallsLs = calls.collect:
       case c: CallEdge.NormalCall => c.f2 -> c.call
@@ -280,7 +276,7 @@ class TailRecOpt(checkAnnotations: Bool)(using State, TL, Raise):
       if checkAnnotations then for f <- funs if f.tailRec do
         val reportLoc = nonTailCalls.get(f.dSym) match
           // always display a call to f, if possible
-          case Some(value) => value.toLoc 
+          case Some(value) => value.toLoc
           case None => nonTailCalls.head._2.toLoc
         raise(ErrorReport(
             msg"This function is marked @tailrec but is not tail recursive." -> f.dSym.toLoc
@@ -294,7 +290,7 @@ class TailRecOpt(checkAnnotations: Bool)(using State, TL, Raise):
           val syms = getParamSyms(funs.head)
           if funs.head.params.length === 1 then syms
           else
-            // Duplicate the params for the internal loop defn (see the doc at the 
+            // Duplicate the params for the internal loop defn (see the doc at the
             // end of this function), but preserve the names.
             syms.map(v => VarSymbol(Tree.Ident(v.id.name)))
         else
@@ -302,7 +298,7 @@ class TailRecOpt(checkAnnotations: Bool)(using State, TL, Raise):
       .toList
     val paramSymsArr = ArrayBuffer.from(paramSyms)
     // Function -> param -> param symbol in the rewritten function
-    val paramSymsMap: Map[TermSymbol, Map[VarSymbol, VarSymbol]] = 
+    val paramSymsMap: Map[TermSymbol, Map[VarSymbol, VarSymbol]] =
       funs.iterator.map: f =>
         val flattenedSyms = f.params.iterator.flatMap(_.paramSyms)
         val mp = flattenedSyms.zipWithIndex.map:
@@ -332,7 +328,7 @@ class TailRecOpt(checkAnnotations: Bool)(using State, TL, Raise):
       // when they are mutated by a tailrec call, the nested definitions
       // would capture the mutated variable rather than the one defined
       // in the original call. See https://github.com/hkust-taco/mlscript/issues/415
-      val copiedParams: Set[VarSymbol] = 
+      val copiedParams: Set[VarSymbol] =
         // scopeData: A class that wraps a tree describing the scoping relation in the IR. Each node is
         //            an object that introduces a scope, which could be a scoped block, function, class, etc.
         //            A node's children represent that scope's nested scopes, functions, classes, etc.
@@ -350,7 +346,7 @@ class TailRecOpt(checkAnnotations: Bool)(using State, TL, Raise):
             case r: ScopedObject.Referencable[?] => r.sym // Obtains the definition symbol of the nested class/function.
           .flatMap(s => accessMap(s).accessed) // All local variables that each nested class/function could access.
           .collect:
-            case x: VarSymbol => x 
+            case x: VarSymbol => x
           .filter(params.toSet)
           .toSet
       
@@ -426,10 +422,10 @@ class TailRecOpt(checkAnnotations: Bool)(using State, TL, Raise):
               
               // Algorithm: Apply the args from right to left, but have the resulting assignment order
               // be left to right.
-              // 
+              //
               // When applying each arg, keep track of the parameters that must be assigned to be a
               // temporary variable. Also, remove each assigned parameter from `assignedSyms` after assigning
-              // them, so that assignments coming before them will not mistakenly add the param syms from 
+              // them, so that assignments coming before them will not mistakenly add the param syms from
               // future assignments to `requiredTmps`.
               val assignments: Block = argListResults.foldRight(cont):
                 case ((ogParamList, thisParamSyms, ogArgs, argRes), rest) =>
@@ -512,7 +508,7 @@ class TailRecOpt(checkAnnotations: Bool)(using State, TL, Raise):
     val arms = funs.map: f =>
       Case.Lit(Tree.IntLit(dSymIds(f.dSym))) -> FunRewriter(f).rewrite(f.body)
     
-    val switch = 
+    val switch =
       if arms.length === 1 then arms.head._2
       else Match(curIdSym.asSimpleRef, arms, N, End())
     
@@ -526,7 +522,7 @@ class TailRecOpt(checkAnnotations: Bool)(using State, TL, Raise):
       if funsLen === 1 then Nil
       else funs.map: f =>
         val paramArgs = getParamSyms(f).map(s => s.asSimpleRef.asArg)
-        val args = 
+        val args =
           Value.Lit(Tree.IntLit(dSymIds(f.dSym))).asArg
             :: paramArgs
             ::: List.fill(maxParamLen - paramArgs.length)(Value.Lit(Tree.UnitLit(false)).asArg)
@@ -632,17 +628,17 @@ class TailRecOpt(checkAnnotations: Bool)(using State, TL, Raise):
   def transform(prog: Program)(using Config): Program =
     if !config.tailRecOpt then return prog
     /* To avoid `x` being overridden in the following when the lifter is not run:
-     * 
+     *
      * let lam
      * fun f(x) =
      *   set lam = () => x
      *   f(x + 1)
-     * 
+     *
      * we need to do some analysis on what nested functions use what variables. We
      * re-use the analysis from the lifter to do this.
      */
     val b = prog.main
-    given (ScopeData, AccessMap) = 
+    given (ScopeData, AccessMap) =
       // IgnoredScoes can be an empty set, since that information is only relevant for lifting
       given IgnoredScopes = IgnoredScopes(S(Set.empty))
       val scopeData = ScopeData(b)
@@ -654,9 +650,9 @@ class TailRecOpt(checkAnnotations: Bool)(using State, TL, Raise):
       case f: FunDefn => L(f)
       case c: ClsLikeDefn => R(c)
       case _ => die // unreachable as floatOutDefns only floats out FunDefns and ClsLikeDefns
-    // Filter out functions that have a @config annotation disabling tailRecOpt
+    // Filter out functions that should not be tail-rec optimized
     val (tailRecFuns, _) = funs.partition: f =>
-      f.configOverride.forall(_.tailRecOpt)
+      f.configOverride.forall(_.tailRecOpt) && !f.generator
     val (optFNew, optF) = optFunctions(tailRecFuns, N)
     val optC = optClasses(clses)
     
@@ -665,7 +661,7 @@ class TailRecOpt(checkAnnotations: Bool)(using State, TL, Raise):
     val cMap: Map[DefinitionSymbol[? <: ClassLikeDef] & InnerSymbol, ClsLikeDefn] =
       optC.map(c => c.isym -> c).toMap
     
-    // replace them in place 
+    // replace them in place
     val transformer = new BlockTransformerShallow(SymbolSubst.Id):
       override def applyDefn(defn: Defn)(k: Defn => Block): Block = defn match
         case f: FunDefn => fMap.get(f.dSym) match

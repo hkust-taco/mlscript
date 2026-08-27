@@ -50,7 +50,7 @@ class Foo with
 
 :re
 new Foo
-//│ ═══[RUNTIME ERROR] TypeError: tmp.y is not a function
+//│ ═══[RUNTIME ERROR] TypeError: this.y is not a function
 
 
 class Foo(a) with

@@ -14,15 +14,14 @@ import io.*
 import scala.collection.mutable.{ArrayBuffer, Buffer}
 
 @JSExportTopLevel("Compiler")
-class Compiler(paths: MLsCompiler.Paths)(using cctx: CompilerCtx):
-  private given Config = Config.default(io.Path("/"))
+class Compiler(using cctx: CompilerCtx):
   
   private var pathDiagnosticsMap = MutMap.empty[Str, (Int, Buffer[Diagnostic])]
   
   private def mkRaise(path: io.Path): Raise = d =>
     pathDiagnosticsMap.getOrElseUpdate(path.toString, (pathDiagnosticsMap.size, Buffer.empty))._2 += d
   
-  private val compiler = MLsCompiler(paths, mkRaise)
+  private val compiler = MLsCompiler(mkRaise)
   
   private def collectDiagnostics(): js.Array[js.Dynamic] =
     pathDiagnosticsMap.toArray.sortBy(_._2._1).map:

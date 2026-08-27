@@ -292,7 +292,7 @@ abstract class MLsDiffMaker extends DiffMaker:
       given Raise = d =>
         output(s"Error: $d")
         ()
-      val preludeArtifact = cctx.getPrelude(preludeFile, dbgParsing.isSet)
+      val preludeArtifact = cctx.getPrelude(preludeFile)
       curCtx = preludeArtifact.ctx
       prelude = preludeArtifact.ctx
     super.run()
@@ -364,7 +364,7 @@ abstract class MLsDiffMaker extends DiffMaker:
       val resBlk = new syntax.Tree.Block(res)
       val (e, newCtx) = elab.importFrom(resBlk)
       if file.toString === runtimeSourceFile.toString then
-        State.initRuntimeSymbolsFromBlock(e)
+        summon[Elaborator.State].initRuntimeSymbolsFromBlock(e)
       val ctxWithImports = newCtx.withMembers(resBlk.definedSymbols)
       if verbose then
         output(s"Imported ${resBlk.definedSymbols.size} member(s)")
@@ -450,8 +450,9 @@ abstract class MLsDiffMaker extends DiffMaker:
   def processTerm(trm: semantics.Term.Blk, inImport: Bool)(using Config, Raise): Unit =
     given Ctx = curCtx
     given Config = Config.extractConfigFromStats(trm)
-    if file.toString =/= runtimeSourceFile.toString then
-      State.initRuntimeSymbolsFromFile(runtimeSourceFile, prelude)
+    if file.toString =/= runtimeSourceFile.toString && file.toString =/= preludeFile.toString then
+      summon[Elaborator.State].initRuntimeSymbolsFromFile(runtimeSourceFile, prelude)(
+        using summon[TL], summon[Raise], cctx)
     val resolver = Resolver(rtl)
     curICtx = resolver.traverseBlock(trm)(using curICtx)
     

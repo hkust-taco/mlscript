@@ -131,5 +131,42 @@ class VirtualPathTests extends AnyFunSuite:
     val rel2 = VirtualRelPath("baz")
     val result = rel1 / rel2
     assert(result.toString == "foo/bar/baz")
+  
+  // * Paths are used as keys, both of the compilation-unit cache and of the file system,
+  // * so paths built from strings must be canonical and not just those built with `/`.
+  
+  test("paths built from a string are normalized"):
+    assert(Path("/a/./b.mls").toString == "/a/b.mls", "'.' should be removed")
+    assert(Path("/a//b.mls").toString == "/a/b.mls", "Repeated separators should be collapsed")
+    assert(Path("/a/c/../b.mls").toString == "/a/b.mls", "'..' should be resolved")
+    assert(Path("/a/b/").toString == "/a/b", "Trailing separators should be removed")
+    assert(Path("./a/b.mls").toString == "a/b.mls", "Leading '.' should be removed")
+  
+  test("spellings of the same path are equal and usable as one key"):
+    val spellings = Ls("/a/b.mls", "/a/./b.mls", "/a//b.mls", "/a/c/../b.mls", "/./a/b.mls")
+    val paths = spellings.map(Path(_))
+    paths.foreach: p =>
+      assert(p == paths.head, s"'$p' should equal '${paths.head}'")
+      assert(p.hashCode == paths.head.hashCode, s"'$p' should hash like '${paths.head}'")
+    assert(paths.toSet.sizeIs == 1, "All spellings should collapse to a single key")
+  
+  test("a path built from a string matches the same path built with /"):
+    assert(Path("/a") / RelPath("./b.mls") == Path("/a/b.mls"))
+    assert(Path("/a/b") / RelPath("../c.mls") == Path("/a/c.mls"))
 
+  test("'..' is resolved against the most recent segment, not the first one"):
+    // * Only unresolvable leading `..` may be kept; a `..` following a real segment must pop it,
+    // * even when the path starts with `..`.
+    assert(Path("../a/..").toString == "..")
+    assert(Path("../a/b/../..").toString == "..")
+    assert(Path("../../a/..").toString == "../..")
 
+  test("absolute paths cannot escape above the root"):
+    assert(Path("/../a").toString == "/a")
+    assert(Path("/a/../..").toString == "/")
+
+  test("in-memory filesystem string paths use the same normalized keys"):
+    val fs = new InMemoryFileSystem(Map("/a/./b.mls" -> "initial"))
+    assert(fs.read("/a/b.mls") == "initial")
+    fs.write("/a/c/../b.mls", "updated")
+    assert(fs.read("/a/./b.mls") == "updated")

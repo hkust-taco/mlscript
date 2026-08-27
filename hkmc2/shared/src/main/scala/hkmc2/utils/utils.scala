@@ -204,4 +204,3 @@ def enumerate(strs: NELs[Str], connective: Str): Str =
   case str1 :: str2 :: Nil => s"$str1, $connective $str2"
   case str :: rest => s"$str, ${enumerate(rest.ne_!, connective)}"
 
-

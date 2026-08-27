@@ -1063,9 +1063,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
         case Nil => lastWords("tried to make an aux defn for a function with no parameter list")
       val args = restSym match
         case Some(value) =>
-          val tail = Arg(S(SpreadKind.Eager), value.asSimpleRef) :: Nil
-          syms.foldLeft(tail):
-            case (acc, sym) => Arg(N, sym.asSimpleRef) :: acc
+          syms.map(sym => Arg(N, sym.asSimpleRef)) ::: Arg(S(SpreadKind.Eager), value.asSimpleRef) :: Nil
         case None => syms.map(s => Arg(N, s.asSimpleRef))
       
       val call = Call(fun.sym.asMemberRef(fun.dSym), args ne_:: Nil)(CallMetadata.mlsFunWithEffect)
@@ -1077,7 +1075,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
         auxDsym,
         newPlists,
         bod
-      )(N, Annot.Inline :: fun.annotations)
+      )(N, if fun.noInline then fun.annotations else Annot.Inline :: fun.annotations)
     
     private val aux = Lazy[Defn](mkAuxDefn)
     

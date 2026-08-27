@@ -17,7 +17,8 @@ import hkmc2.syntax.LetBind
 class Importer:
   self: Elaborator =>
   import tl.*
-  
+
+
   def importPath(path: Str, alias: Opt[syntax.Tree.Ident])(using cfg: Config): Import =
     // log(s"pwd: ${os.pwd}")
     // log(s"wd: ${wd}")
@@ -43,26 +44,28 @@ class Importer:
       case "mjs" | "js" =>
         Import(sym, file.toString, file)
         
-      case "mls" if {
-        !cctx.beingCompiled.contains(file) `||`:
+      case "mls" =>
+        def reportCycle(files: Ls[io.Path]): Import =
           raise:
             ErrorReport:
                 msg"Circular imports of `mls` files are not yet supported" -> N
-                :: (cctx.allFilesBeingImported :+ file).map(f => msg"  importing ${f.toString}" -> N)
-          false
-      } =>
-        
-        val importedSym = tl.trace(s">>> Importing $file"):
-          given TL = tl
-          val artifact = cctx.getElaboratedBlock(file, prelude)
-          artifact.tree.definedSymbols.find(_._1 === nme) match
-          case Some(nme -> imsym) => imsym
-          case None => lastWords(s"File $file does not define a symbol named $nme")
-        val sym: VarSymbol | BlockMemberSymbol = alias.fold(importedSym): alias =>
-          VarSymbol(alias)
-        
-        val jsFile = file.up / io.RelPath(file.baseName + ".mjs")
-        Import(sym, jsFile.toString, jsFile)
+                :: files.map(f => msg"  importing ${f.toString}" -> N)
+          Import(sym, path, file)
+
+        if cctx.beingCompiled.contains(file) then
+          reportCycle(cctx.allFilesBeingImported :+ file)
+        else
+          cctx.withActiveDependency(file)(reportCycle):
+            val importedSym = tl.trace(s">>> Importing $file"):
+              given TL = tl
+              val artifact = cctx.getElaboratedBlock(file, prelude)
+              artifact.compilationUnit.defaultExport.getOrElse:
+                lastWords(s"File $file does not define a symbol named $nme")
+            val sym: VarSymbol | BlockMemberSymbol = alias.fold(importedSym): alias =>
+              VarSymbol(alias)
+
+            val jsFile = file.up / io.RelPath(file.baseName + ".mjs")
+            Import(sym, jsFile.toString, jsFile)
         
       case _ =>
         if file.ext =/= "mls" then raise:
@@ -72,4 +75,3 @@ class Importer:
     else
       Import(sym, path, file)
     
-

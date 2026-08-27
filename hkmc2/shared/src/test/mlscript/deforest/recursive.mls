@@ -134,24 +134,24 @@ cons(f(0)) + cons1(f(1))
 //│ deforest > 	match: a1⁰
 //│ deforest > 	fields: a1⁰.h⁰
 //│ deforest > 	fields: a1⁰.t⁰
+//│ deforest > Nil⁰ ->
+//│ deforest > 	match: a1⁰
 //│ deforest > Cons⁰(y⁰, tmp⁷) ->
 //│ deforest > 	match: a1⁰
 //│ deforest > 	fields: a1⁰.h⁰
 //│ deforest > 	fields: a1⁰.t⁰
 //│ deforest > Nil⁰ ->
 //│ deforest > 	match: a1⁰
-//│ deforest > Nil⁰ ->
-//│ deforest > 	match: a1⁰
 //│ deforest > Cons⁰(x⁰, tmp⁶) ->
 //│ deforest > 	match: a¹
 //│ deforest > 	fields: a¹.h⁰
 //│ deforest > 	fields: a¹.t⁰
+//│ deforest > Nil⁰ ->
+//│ deforest > 	match: a¹
 //│ deforest > Cons⁰(y⁰, tmp⁷) ->
 //│ deforest > 	match: a¹
 //│ deforest > 	fields: a¹.h⁰
 //│ deforest > 	fields: a¹.t⁰
-//│ deforest > Nil⁰ ->
-//│ deforest > 	match: a¹
 //│ deforest > Nil⁰ ->
 //│ deforest > 	match: a¹
 //│ deforest > <<< fusing <<<
@@ -498,12 +498,12 @@ fun flatten(ls_flatten) = if ls_flatten is
   x :: xs then append(x, flatten(xs))
 sum(flatten(id(mk2d(4))))
 //│ deforest > >>> fusing >>>
-//│ deforest > Nil⁰ ->
-//│ deforest > 	match: ls_sum⁰
 //│ deforest > Cons⁰(x², tmp²⁵) ->
 //│ deforest > 	match: ls_sum⁰
 //│ deforest > 	fields: ls_sum⁰.h⁰
 //│ deforest > 	fields: ls_sum⁰.t⁰
+//│ deforest > Nil⁰ ->
+//│ deforest > 	match: ls_sum⁰
 //│ deforest > <<< fusing <<<
 //│ = 20
 
@@ -568,10 +568,10 @@ map(x => if x is A then 1 else 0, A :: B :: Nil)
 //│ deforest > 	match: xs_map¹
 //│ deforest > 	fields: xs_map¹.h⁰
 //│ deforest > 	fields: xs_map¹.t⁰
-//│ deforest > B⁰ ->
-//│ deforest > 	match: x³
 //│ deforest > Nil⁰ ->
 //│ deforest > 	match: xs_map¹
+//│ deforest > B⁰ ->
+//│ deforest > 	match: x³
 //│ deforest > <<< fusing <<<
 //│ = Cons(1, Cons(0, Nil))
 
@@ -599,23 +599,23 @@ c(T(A, T(B, L, L), T(A, L, L)))
 //│ deforest > 	fields: x⁴.n⁴
 //│ deforest > 	fields: x⁴.l⁰
 //│ deforest > 	fields: x⁴.r⁰
+//│ deforest > L⁰ ->
+//│ deforest > 	match: x⁴
+//│ deforest > L⁰ ->
+//│ deforest > 	match: x⁴
 //│ deforest > A⁰ ->
 //│ deforest > 	match: n⁵
-//│ deforest > L⁰ ->
-//│ deforest > 	match: x⁴
-//│ deforest > L⁰ ->
-//│ deforest > 	match: x⁴
 //│ deforest > T⁰(B⁰, L⁰, L⁰) ->
 //│ deforest > 	match: x⁴
 //│ deforest > 	fields: x⁴.n⁴
 //│ deforest > 	fields: x⁴.l⁰
 //│ deforest > 	fields: x⁴.r⁰
+//│ deforest > L⁰ ->
+//│ deforest > 	match: x⁴
+//│ deforest > L⁰ ->
+//│ deforest > 	match: x⁴
 //│ deforest > B⁰ ->
 //│ deforest > 	match: n⁵
-//│ deforest > L⁰ ->
-//│ deforest > 	match: x⁴
-//│ deforest > L⁰ ->
-//│ deforest > 	match: x⁴
 //│ deforest > <<< fusing <<<
 //│ = T(0, T(1, L, L), T(0, L, L))
 

@@ -74,19 +74,20 @@ class Instantiator(using tl: TL)(using Ctx, State, Raise):
   
   /** Instantiate the given pattern with a substitution map. */
   def instantiate(pattern: SP)(using subst: Map[VarSymbol, Pat]): Pat = pattern match
-    case SP.Constructor(target, arguments) => target.symbol match
+    case SP.Constructor(target, arguments) => target.resolvedSym match
       // Look up the corresponding pattern from the substitution.
       case S(symbol: VarSymbol) => subst(symbol)
       // Recursively instantiate the arguments of constructor patterns.
       case S(symbol) => symbol.asClsLike match
         case S(symbol: ClassSymbol) =>
+          val head = ClassLikeHead(symbol, target)
           symbol.defn.get.paramsOpt match
             case S(ParamList(_, params, _)) => arguments match
               case S(arguments) =>
                 if params.size != arguments.size then
                   error(msg"Class `${symbol.nme}` has ${params.size} parameters." -> Loc(params),
                     msg"But ${arguments.size} arguments were provided." -> Loc(arguments))
-                ClassLike(symbol, S(params.iterator.zip(arguments).flatMap:
+                ClassLike(head, S(params.iterator.zip(arguments).flatMap:
                   case (param, argument) if param.flags.isVal =>
                     // The names are not from the source and are retrieved from
                     // parameters in class definitions. Therefore, no `Loc`
@@ -97,18 +98,19 @@ class Instantiator(using tl: TL)(using Ctx, State, Raise):
                     N
                 .to(SeqMap)))
               // The class has parameters but no arguments are provided.
-              case N => ClassLike(symbol, N)
+              case N => ClassLike(head, N)
             case N => arguments match
-              case N => ClassLike(symbol, N) // No arguments are provided.
+              case N => ClassLike(head, N) // No arguments are provided.
               case S(arguments) =>
                 // An erroneous pattern must not match anything: bare
-                // `ClassLike(symbol, N)` would make `Str("x")` behave like
+                // `ClassLike(head, N)` would make `Str("x")` behave like
                 // plain `Str` — i.e. match every string — after the error.
                 error(msg"Class `${symbol.nme}` has no parameters." -> Loc(arguments))
                 Never
         case S(symbol: ModuleOrObjectSymbol) =>
+          val head = ClassLikeHead(symbol, target)
           arguments match
-            case N => ClassLike(symbol, N)
+            case N => ClassLike(head, N)
             case S(arguments) =>
               // Same rationale as above: do not match after the error.
               error(

@@ -157,7 +157,7 @@ fun (:+) snoc(xs, x) = if toFingerTree(xs) is
     else Deep(s + getNodeSize(x), ax, dt, [...ay, x])
 
 fun mk(...args) = args.reduce(
-    (acc, x) => snoc(acc, x),
+    (acc, x, ...) => snoc(acc, x),
     Empty)
 
 fun isEmpty = case

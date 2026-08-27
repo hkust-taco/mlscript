@@ -15,6 +15,8 @@ import semantics.Elaborator.State
   * the worker. For tiny bodies, creating a worker would only add noise: the
   * wrapper body would inline the worker immediately under the stricter
   * `altSmallThreshold`, so we mark the original function inline directly.
+  * Original `@noInline` and `@generator` annotations are transferred to the
+  * worker, while the forwarding wrapper remains inlineable.
   */
 class WorkerWrapper
     (tl: TL, printer: Program => Str)
@@ -31,11 +33,15 @@ class WorkerWrapper
   private def isPlainParamList(params: ParamList): Bool =
     params.flags == ParamListFlags.empty && params.restParam.isEmpty
   
+  private def effectiveConfig(fun: FunDefn): Config =
+    fun.configOverride.getOrElse(config)
+
   private def canUncurry(fun: FunDefn): Bool =
-    fun.owner.isEmpty && fun.params.lengthCompare(1) > 0 && fun.params.forall(isPlainParamList)
+    effectiveConfig(fun).inlining.isDefined &&
+      fun.owner.isEmpty && fun.params.lengthCompare(1) > 0 && fun.params.forall(isPlainParamList)
   
-  private def isBelowAltInlineThreshold(body: Block): Bool =
-    config.inlining.exists: cfg =>
+  private def isBelowAltInlineThreshold(fun: FunDefn, body: Block): Bool =
+    effectiveConfig(fun).inlining.exists: cfg =>
       body.size <= cfg.altSmallThreshold
   
   private def freshParam(param: Param, mapping: collection.mutable.Map[Symbol, Symbol]): Param =
@@ -78,7 +84,10 @@ class WorkerWrapper
       fun.dSym,
       fun.params,
       wrapperBody,
-    )(fun.configOverride, withInline(fun.annotations))
+    )(fun.configOverride, withInline(fun.annotations.filter:
+      case Annot.NoInline | Annot.Generator => false
+      case _ => true
+    ))
     log(s"▶ Worker-wrapper: ${fun.dSym.showDbg} -> ${worker.dSym.showDbg}")
     Scoped(Set.single(worker.sym), Define(wrapper, Define(worker, rest)))
   
@@ -96,7 +105,7 @@ class WorkerWrapper
     case Define(fun: FunDefn, rest) if canUncurry(fun) =>
       val body = applyFunBodyLikeBlock(fun.body)
       val rest2 = applySubBlock(rest)
-      if isBelowAltInlineThreshold(body) then
+      if isBelowAltInlineThreshold(fun, body) && !fun.noInline then
         val fun2 = mkInlineOnly(fun, body)
         if (fun2 is fun) && (rest2 is rest) then block else Define(fun2, rest2)
       else
@@ -109,5 +118,4 @@ end WorkerWrapper
 object WorkerWrapper:
   def apply(symbolsToPreserve: Set[BoundSymbol], tl: TL, printer: Program => Str)(p: Program)
       (using DebugPrinter, State, Config, Raise): Program =
-    if config.inlining.isEmpty then p
-    else (new WorkerWrapper(tl, printer)).applyProgram(p)
+    (new WorkerWrapper(tl, printer)).applyProgram(p)

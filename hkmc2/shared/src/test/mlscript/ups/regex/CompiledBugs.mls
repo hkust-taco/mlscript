@@ -220,16 +220,35 @@ if "[ab]" is Bracket(Str, bx) then bx else "no"
 // ——— Transform closures shared across the labels of one multi-matcher ———
 //
 // Each label of a multi-matcher gets its own `StringCompiler`, so a definition
-// reached from two labels emits its transform lambda twice; both copies bind
-// the same parameter symbols, which `SymbolRefresher` asserts against.
+// reached from two labels emits its transform lambda twice, and both copies
+// bind the same parameter symbols. This used to trip the duplicate-binder
+// assertion in `SymbolRefresher` (`already defined: w`); the duplicate-binder
+// detection was since taught to look through nested definitions upstream, so
+// the two copies now coexist. The emission scheme is still worth revisiting —
+// hosting each definition's transforms as methods on its pattern object would
+// share one closure instead (see the TODO on `StringCompiler.build`) — but the
+// sharing is now an efficiency question, not a correctness one.
 
 pattern T = (("a" ~ "b") as w) => [w]
 
 pattern P2 = Box(T ~ "c") | Box(T ~ "d")
 
-:fixme
 fun f2(x) = if x is @compile P2 as y then y else "no"
-//│ /!!!\ Uncaught error: java.lang.AssertionError: assertion failed: already defined: w
+
+// The output of `T` is `[w]`, and a sequence folds its elements' outputs with
+// JS `+`, so `["ab"] + "c"` is `"abc"` and the rebuilt `Box` holds it.
+
+:expect Box("abc")
+f2(Box("abc"))
+//│ = Box("abc")
+
+:expect Box("abd")
+f2(Box("abd"))
+//│ = Box("abd")
+
+:expect "no"
+f2(Box("abe"))
+//│ = "no"
 
 
 // ——— Transform calling convention under substituted pattern arguments ———

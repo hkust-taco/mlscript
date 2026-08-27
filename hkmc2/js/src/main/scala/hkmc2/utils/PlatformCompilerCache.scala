@@ -1,11 +1,11 @@
 package hkmc2
 package utils
 
-import CompilerCache.Artifact
 import collection.mutable.Map as MutMap
-import hkmc2.utils.*, shorthands.*
+
+import CompilerCache.*
+
 
 class PlatformCompilerCache extends CompilerCache:
-  
-  val elabCache: MutMap[io.Path, Artifact] = MutMap.empty
-  
+  protected val elabCache = new ArtifactCache[Artifact](MutMap.empty, MutMap.empty)
+  protected val preludeCache = new ArtifactCache[PreludeArtifact](MutMap.empty, MutMap.empty)

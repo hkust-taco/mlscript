@@ -89,12 +89,12 @@ case
   0 then true
   _ then false
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let lambda10;
-//│ lambda10 = (undefined, function (caseScrut) {
+//│ let lambda5;
+//│ lambda5 = (undefined, function (caseScrut) {
 //│   if (caseScrut === 0) { return true }
 //│   return false;
 //│ });
-//│ return lambda10
+//│ return lambda5
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = fun
 
@@ -106,8 +106,8 @@ val isDefined = case
   Some then true
   None then false
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let isDefined, lambda11;
-//│ lambda11 = (undefined, function (caseScrut) {
+//│ let isDefined, lambda6;
+//│ lambda6 = (undefined, function (caseScrut) {
 //│   if (caseScrut instanceof Some1.class) {
 //│     return true
 //│   } else if (caseScrut instanceof None1.class) {
@@ -115,7 +115,7 @@ val isDefined = case
 //│   }
 //│   throw globalThis.Object.freeze(new globalThis.Error("match error"));
 //│ });
-//│ isDefined = lambda11;
+//│ isDefined = lambda6;
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ isDefined = fun
 
@@ -126,5 +126,3 @@ case 0 | 1
 //│ ║  l.124: 	case 0 | 1
 //│ ╙──       	     ^^^^^
 //│ = fun
-
-
