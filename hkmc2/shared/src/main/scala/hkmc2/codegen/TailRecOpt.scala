@@ -249,7 +249,55 @@ class TailRecOpt(checkAnnotations: Bool)(using State, TL, Raise):
       CallArgsResult.Success(hd.appended(rest))
     else
       CallArgsResult.Success(hd)
+  
+  /**
+    * Applies a parameter list to an argument list, both of which could contain arbitrary spreads.
+    *
+    * @param plist The parameter list to apply.
+    * @param args The argument list.
+    * @return A tuple `(Block => Block, List[Path])`, where:
+    * - The first parameter contains the code that breaks up the arguments into the shape expected by the parameter list, and
+    *   should be applied to the remaining code;
+    * - The second parameter is a list of paths containing the arguments in order. If there is a spread parameter, it will be
+    *   the last one.
+    */
+  def forceSpread(plist: ParamList, args: List[Arg]): (Block => Block, List[Path]) =
+    // Forcibly spread the args in an array.
+    // Assume the lengths are correct
+    val paramList = plist.params
+    val restParam = plist.restParam
     
+    val tupleSym = TempSymbol(N, "argList")
+  
+    val tupleRes = Tuple(false, args)
+    
+    // Main args
+    def mainArgs(rest: List[Path]) = (0 until paramList.size).toList.foldRight(rest):
+      case (n, acc) => DynSelect(tupleSym.asSimpleRef, Value.Lit(Tree.IntLit(n)), true) :: acc
+    
+    // If the rest param exists, append a slice
+    val (initialBlk: (Block => Block), pathList: List[Path]) =
+      if restParam.isDefined then
+        val sliceResSym = TempSymbol(N, "sliceRes")
+        // runtime.Tuple.slice(tupleSym, paramList.length, 0)
+        val sliceRes = Call(
+          State.runtimeSymbol.asSimpleRef
+            .sel(Tree.Ident("Tuple"), State.tupleSymbol)
+            .sel(Tree.Ident("slice"), State.tupleSliceSymbol),
+          (tupleSym.asSimpleRef.asArg
+            :: Value.Lit(Tree.IntLit(paramList.length)).asArg
+            :: Value.Lit(Tree.IntLit(0)).asArg
+            :: Nil) ne_:: Nil
+        )(CallMetadata.defaultMlsFun)
+        val blk = blockBuilder
+          .assignScoped(tupleSym, tupleRes)
+          .assignScoped(sliceResSym, sliceRes)
+        (blk, mainArgs(sliceResSym.asSimpleRef :: Nil))
+      else
+        (blockBuilder.assignScoped(tupleSym, tupleRes), mainArgs(Nil))
+    end val
+    (initialBlk, pathList)
+  
   def optScc(scc: SccOfCalls, owner: Opt[InnerSymbol])(using accessInfo: (ScopeData, AccessMap)): (Opt[FunDefn], List[FunDefn]) =
     // sort the functions so the order is more predictable
     val funs = scc.funs.sortBy(f => f.dSym.uid)
@@ -366,6 +414,10 @@ class TailRecOpt(checkAnnotations: Bool)(using State, TL, Raise):
       
       override def applyBlock(b: Block): Block = b match
         // Note: the args in `c` have already been rewritten to point to the symbols in `paramSyms`.
+        // We explicitly rewrite *all* fully applied calls to functions within the SCC. Tail calls are rewritten using a
+        // `continue`, while other calls are rewritten as a call to the merged function. This is to make the tailrec
+        // optimizer pass idempotent. Without this, the subsequent tailrec optimizer passes could see the merged and wrapper
+        // functions as an SCC and try to rewrite the wrapper's tail call.
         case TailCallShape(calleeSym, c) => dSymIds.get(calleeSym) match
           case None => super.applyBlock(b)
           case Some(id) =>
@@ -447,43 +499,13 @@ class TailRecOpt(checkAnnotations: Bool)(using State, TL, Raise):
                   case CallArgsResult.ForceSpread =>
                     // Forcibly spread the args in an array.
                     // Assume the lengths are correct
-                    val paramList = ogParamList.params
-                    val restParam = ogParamList.restParam
-                    
-                    val tupleSym = TempSymbol(N, "argList")
                     
                     // We can safely remove all of the symbols from this parameter list from `assignedSyms` at this stage,
                     // because the RHS of every parameter will be computed when spreading them in the tuple, which happens
                     // before any of the param symbols are assigned to.
                     assignedSyms --= thisParamSyms
                     paramRewriter.applyArgs(ogArgs): newArgs =>
-                      val tupleRes = Tuple(false, newArgs)
-                      
-                      // Main args
-                      def mainArgs(rest: List[Path]) = (0 until paramList.size).toList.foldRight(rest):
-                        case (n, acc) => DynSelect(tupleSym.asSimpleRef, Value.Lit(Tree.IntLit(n)), true) :: acc
-                      
-                      // If the rest param exists, append a slice
-                      val (initialBlk: (Block => Block), pathList: List[Path]) =
-                        if restParam.isDefined then
-                          val sliceResSym = TempSymbol(N, "sliceRes")
-                          // runtime.Tuple.slice(tupleSym, paramList.length, 0)
-                          val sliceRes = Call(
-                            State.runtimeSymbol.asSimpleRef
-                              .sel(Tree.Ident("Tuple"), State.tupleSymbol)
-                              .sel(Tree.Ident("slice"), State.tupleSliceSymbol),
-                            (tupleSym.asSimpleRef.asArg
-                              :: Value.Lit(Tree.IntLit(paramList.length)).asArg
-                              :: Value.Lit(Tree.IntLit(0)).asArg
-                              :: Nil) ne_:: Nil
-                          )(CallMetadata.defaultMlsFun)
-                          val blk = blockBuilder
-                            .assignScoped(tupleSym, tupleRes)
-                            .assignScoped(sliceResSym, sliceRes)
-                          (blk, mainArgs(sliceResSym.asSimpleRef :: Nil))
-                        else
-                          (blockBuilder.assignScoped(tupleSym, tupleRes), mainArgs(Nil))
-                      end val
+                      val (initialBlk, pathList) = forceSpread(ogParamList, newArgs)
                       val paramAssignments = (thisParamSyms zip pathList).foldRight[Block](rest):
                         case ((sym, path), restBlk) => Assign(sym, path, restBlk)
                     

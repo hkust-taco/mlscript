@@ -227,7 +227,7 @@ fun g(n)(m) =
 //│             return [param5, param6]
 //│         end
 //│       1 =>
-//│         let tmp, tmp1, tmp2, tmp3, param1_tmp, argList, param0_tmp, inlinedVal, tmp4;
+//│         let tmp, tmp1, tmp2, tmp3, param1_tmp, param0_tmp, argList, inlinedVal, tmp4;
 //│         set tmp = -⁰(param0, 1);
 //│         set tmp1 = [1, 2];
 //│         set tmp2 = [3, 4];
