@@ -243,15 +243,76 @@ fun infer(env, term)(using gen: Gen) = if term is
     let tv = gen.fresh
     let env1 = env.extend(name, Scheme(new Set([]), tv))
     infer(env1, body) is [s, t] then [s, TFun(s.apply(tv), t)]
+//│ FAILURE: Unexpected exception
+//│ /!!!\ Uncaught error: java.lang.AssertionError: assertion failed
+//│ 	at: scala.runtime.Scala3RunTime$.assertFailed(Scala3RunTime.scala:13)
+//│ 	at: hkmc2.TailRecOpt$FunRewriter$1.applyResult(TailRecOpt.scala:551)
+//│ 	at: hkmc2.codegen.BlockTransformer.applyBlock(BlockTransformer.scala:83)
+//│ 	at: hkmc2.TailRecOpt$FunRewriter$1.applyBlock(TailRecOpt.scala:522)
+//│ 	at: hkmc2.codegen.BlockTransformer.applySubBlock(BlockTransformer.scala:29)
+//│ 	at: hkmc2.codegen.BlockTransformer.applyBlock$$anonfun$4(BlockTransformer.scala:85)
+//│ 	at: hkmc2.codegen.BlockTransformer.applyPath$$anonfun$2(BlockTransformer.scala:190)
+//│ 	at: hkmc2.codegen.BlockTransformer.applyValue(BlockTransformer.scala:196)
+//│ 	at: hkmc2.codegen.BlockTransformer.applyPath(BlockTransformer.scala:191)
+//│ 	at: hkmc2.codegen.BlockTransformer.applyPath(BlockTransformer.scala:188)
 
 // Type inference with generalization
 fun inferTop(env, name, term)(using Gen) =
   if infer(env, term) is [subst, typ] then...
   [subst, env.generalize(typ)]
+//│ FAILURE: Unexpected compilation error
+//│ FAILURE LOCATION: lookup_! (Scope.scala:136)
+//│ FAILURE INFO: Tuple2:
+//│   _1 = Tuple2:
+//│     _1 = member:infer$tailrec⁰
+//│     _2 = class hkmc2.semantics.BlockMemberSymbol
+//│   _2 = Scope:
+//│     parentOrCfg = Right of Scope:
+//│       parentOrCfg = Right of Scope:
+//│         parentOrCfg = Right of Scope:
+//│           parentOrCfg = Left of Cfg:
+//│             escapeChars = true
+//│             useSuperscripts = false
+//│             includeZero = false
+//│             defaultName = "tmp"
+//│           curThis = S of S of globalThis:globalThis⁰
+//│           bindings = HashMap(tmp:runtime -> runtime, tmp:block$res -> block$res12, tmp:definitionMetadata -> definitionMetadata, tmp:prettyPrint -> prettyPrint, tmp:Term -> Term, tmp:Block -> Block, tmp:tmp -> tmp1, tmp:option -> option, tmp:block$res -> block$res13, t1 -> t1, t2 -> t2, tmp:inlinedVal -> inlinedVal, tmp:tmp -> tmp2, tmp:scrut -> scrut, tmp:block$res -> block$res14, tmp:tmp -> tmp3, tmp:tmp -> tmp4, tmp:block$res -> block$res15, tmp:tmp -> tmp5, t2 -> t21, tmp:inlinedVal -> inlinedVal1, member:lambda$ -> lambda$, tmp:block$res -> block$res, tmp:tmp -> tmp6, tmp:scrut -> scrut1, tmp:block$res -> block$res1, tmp:block$res -> block$res16, tmp:block$res -> block$res2, member:Option -> Option, member:Type -> Type1, member:TVar -> TVar1, member:TFun -> TFun1, tmp:tmp -> tmp7, member:TPrim -> TPrim1, tmp:tmp -> tmp8, class:Type -> Type, tmp:tmp -> tmp9, tmp:tmp -> tmp10, tmp:tmp -> tmp11, tmp:tmp -> tmp12, class:TFun -> TFun, tmp:tmp -> tmp13, tmp:block$res -> block$res17, tmp:tmp -> tmp14, tmp:tmp -> tmp15, tmp:tmp -> tmp16, tmp:tmp -> tmp17, tmp:tmp -> tmp18, tmp:tmp -> tmp19, tmp:inlinedVal -> inlinedVal2, tmp:tmp -> tmp20, tmp:scrut -> scrut2, tmp:block$res -> block$res18, tmp:block$res -> block$res7, emptySub -> emptySub, tmp:tmp -> tmp21, tmp:tmp -> tmp22, tmp:tmp -> tmp23, tmp:tmp -> tmp, tmp:tmp -> tmp24, member:Predef -> Predef, tmp:block$res -> block$res8, tmp:block$res -> block$res19, member:applyPattern -> applyPattern, tmp:tmp -> tmp25, tmp:tmp -> tmp26, tmp:tmp -> tmp27, tmp:inlinedVal -> inlinedVal3, tmp:block$res -> block$res9, tmp:tmp -> tmp28, tmp:scrut -> scrut3, member:Unify -> Unify1, tmp:block$res -> block$res20, pattern:Unify -> Unify, member:Env -> Env1, class:Env -> Env, member:Iter -> Iter, class:TVar -> TVar, class:TPrim -> TPrim, member:Runtime -> Runtime, member:inferTop -> inferTop, tmp:block$res -> block$res5, member:Scheme -> Scheme1, class:Scheme -> Scheme, tmp:block$res -> block$res24, tmp:block$res -> block$res10, member:unify' -> unify$_, tmp:block$res -> block$res3, TInt -> TInt, TBool -> TBool, tmp:block$res -> block$res4, member:Term -> Term2, member:IntLit -> IntLit1, member:Var -> Var1, member:App -> App1, tmp:block$res -> block$res11, member:Abs -> Abs1, member:BoolLit -> BoolLit1, member:unify -> unify, member:ShowTerm -> ShowTerm1, pattern:ShowTerm -> ShowTerm, class:Abs -> Abs, class:App -> App, tmp:block$res -> block$res21, emptyEnv -> emptyEnv, tmp:block$res -> block$res6, tmp:tmp -> tmp29, tmp:block$res -> block$res22, member:Subst -> Subst1, class:Subst -> Subst, member:Gen -> Gen1, class:Gen -> Gen, class:Term -> Term1, class:Var -> Var, tmp:block$res -> block$res23, class:IntLit -> IntLit, class:BoolLit -> BoolLit)
+//│           defaultImportBindings = HashMap(/storage/mark/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs -> Iter, /storage/mark/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Option.mjs -> Option, /storage/mark/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Runtime.mjs -> Runtime, /storage/mark/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Predef.mjs -> Predef)
+//│         curThis = S of N
+//│         bindings = HashMap(env -> env, name -> name, term -> term)
+//│         defaultImportBindings = HashMap()
+//│       bindings = HashMap( -> tmp30)
+//│       defaultImportBindings = HashMap()
+//│     bindings = HashMap(tmp:inlinedVal -> inlinedVal4, tmp:element1$ -> element1$, tmp:element0$ -> element0$, tmp:tmp -> tmp31)
+//│     defaultImportBindings = HashMap()
+//│ ═══[COMPILATION ERROR] No definition found in scope for member 'infer$tailrec'
 
 fun (|-) inferType(env, term) =
   using Gen = new Gen
   env.generalize(infer(env, term).1).show
+//│ FAILURE: Unexpected compilation error
+//│ FAILURE LOCATION: lookup_! (Scope.scala:136)
+//│ FAILURE INFO: Tuple2:
+//│   _1 = Tuple2:
+//│     _1 = member:infer$tailrec⁰
+//│     _2 = class hkmc2.semantics.BlockMemberSymbol
+//│   _2 = Scope:
+//│     parentOrCfg = Right of Scope:
+//│       parentOrCfg = Right of Scope:
+//│         parentOrCfg = Left of Cfg:
+//│           escapeChars = true
+//│           useSuperscripts = false
+//│           includeZero = false
+//│           defaultName = "tmp"
+//│         curThis = S of S of globalThis:globalThis⁰
+//│         bindings = HashMap(tmp:runtime -> runtime, tmp:block$res -> block$res12, tmp:definitionMetadata -> definitionMetadata, tmp:prettyPrint -> prettyPrint, tmp:Term -> Term, tmp:Block -> Block, tmp:tmp -> tmp1, tmp:option -> option, tmp:block$res -> block$res13, t1 -> t1, t2 -> t2, tmp:inlinedVal -> inlinedVal, tmp:tmp -> tmp2, tmp:scrut -> scrut, tmp:block$res -> block$res14, tmp:tmp -> tmp3, tmp:tmp -> tmp4, tmp:block$res -> block$res15, tmp:tmp -> tmp5, t2 -> t21, tmp:inlinedVal -> inlinedVal1, member:lambda$ -> lambda$, tmp:block$res -> block$res, tmp:tmp -> tmp6, tmp:scrut -> scrut1, tmp:block$res -> block$res1, tmp:block$res -> block$res16, tmp:block$res -> block$res2, member:Option -> Option, member:Type -> Type1, member:TVar -> TVar1, member:TFun -> TFun1, tmp:tmp -> tmp7, member:TPrim -> TPrim1, tmp:tmp -> tmp8, class:Type -> Type, tmp:tmp -> tmp9, tmp:tmp -> tmp10, tmp:tmp -> tmp11, tmp:tmp -> tmp12, class:TFun -> TFun, tmp:tmp -> tmp13, tmp:block$res -> block$res17, tmp:tmp -> tmp14, tmp:tmp -> tmp15, tmp:tmp -> tmp16, tmp:tmp -> tmp17, tmp:tmp -> tmp18, tmp:tmp -> tmp19, tmp:inlinedVal -> inlinedVal2, tmp:tmp -> tmp20, tmp:scrut -> scrut2, tmp:block$res -> block$res18, tmp:block$res -> block$res7, emptySub -> emptySub, tmp:tmp -> tmp21, tmp:tmp -> tmp22, tmp:tmp -> tmp23, tmp:tmp -> tmp, tmp:tmp -> tmp24, member:Predef -> Predef, tmp:block$res -> block$res8, tmp:block$res -> block$res19, member:applyPattern -> applyPattern, tmp:tmp -> tmp25, tmp:tmp -> tmp26, tmp:tmp -> tmp27, tmp:inlinedVal -> inlinedVal3, tmp:block$res -> block$res9, tmp:tmp -> tmp28, tmp:scrut -> scrut3, member:Unify -> Unify1, tmp:block$res -> block$res20, pattern:Unify -> Unify, member:Env -> Env1, class:Env -> Env, member:Iter -> Iter, class:TVar -> TVar, class:TPrim -> TPrim, member:Runtime -> Runtime, member:inferTop -> inferTop, tmp:block$res -> block$res5, member:Scheme -> Scheme1, class:Scheme -> Scheme, tmp:block$res -> block$res24, tmp:block$res -> block$res10, member:unify' -> unify$_, member:inferType -> inferType, tmp:block$res -> block$res3, TInt -> TInt, TBool -> TBool, tmp:block$res -> block$res4, member:Term -> Term2, member:IntLit -> IntLit1, member:Var -> Var1, member:App -> App1, tmp:block$res -> block$res11, member:Abs -> Abs1, member:BoolLit -> BoolLit1, member:unify -> unify, member:ShowTerm -> ShowTerm1, pattern:ShowTerm -> ShowTerm, class:Abs -> Abs, tmp:block$res -> block$res25, class:App -> App, tmp:block$res -> block$res21, emptyEnv -> emptyEnv, tmp:block$res -> block$res6, tmp:tmp -> tmp29, tmp:block$res -> block$res22, member:Subst -> Subst1, class:Subst -> Subst, member:Gen -> Gen1, class:Gen -> Gen, class:Term -> Term1, class:Var -> Var, tmp:block$res -> block$res23, class:IntLit -> IntLit, class:BoolLit -> BoolLit)
+//│         defaultImportBindings = HashMap(/storage/mark/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs -> Iter, /storage/mark/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Option.mjs -> Option, /storage/mark/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Runtime.mjs -> Runtime, /storage/mark/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Predef.mjs -> Predef)
+//│       curThis = S of N
+//│       bindings = HashMap(env -> env, term -> term)
+//│       defaultImportBindings = HashMap()
+//│     bindings = HashMap(member:instance$Ident(Gen) -> instance$Ident$_Gen$_, tmp:tmp -> tmp30, tmp:tmp -> tmp31, tmp:inlinedVal -> inlinedVal4)
+//│     defaultImportBindings = HashMap()
+//│ ═══[COMPILATION ERROR] No definition found in scope for member 'infer$tailrec'
 
 :silent
 // Example terms
@@ -270,32 +331,268 @@ print of compose.show
 //│ > λf. λg. λx. f (g x)
 
 emptyEnv |- id
-//│ = "∀t₀. t₀ -> t₀"
+//│ FAILURE: Unexpected compilation error
+//│ FAILURE LOCATION: lookup_! (Scope.scala:136)
+//│ FAILURE INFO: Tuple2:
+//│   _1 = Tuple2:
+//│     _1 = member:infer$tailrec⁰
+//│     _2 = class hkmc2.semantics.BlockMemberSymbol
+//│   _2 = Scope:
+//│     parentOrCfg = Left of Cfg:
+//│       escapeChars = true
+//│       useSuperscripts = false
+//│       includeZero = false
+//│       defaultName = "tmp"
+//│     curThis = S of S of globalThis:globalThis⁰
+//│     bindings = HashMap(tmp:runtime -> runtime, tmp:block$res -> block$res12, tmp:definitionMetadata -> definitionMetadata, tmp:prettyPrint -> prettyPrint, tmp:Term -> Term, tmp:Block -> Block, tmp:tmp -> tmp1, tmp:option -> option, tmp:block$res -> block$res13, t1 -> t1, t2 -> t2, tmp:inlinedVal -> inlinedVal, tmp:tmp -> tmp2, tmp:scrut -> scrut, tmp:block$res -> block$res14, tmp:tmp -> tmp3, tmp:tmp -> tmp4, tmp:block$res -> block$res15, tmp:tmp -> tmp5, t2 -> t21, tmp:inlinedVal -> inlinedVal1, member:lambda$ -> lambda$, tmp:block$res -> block$res, tmp:tmp -> tmp6, tmp:scrut -> scrut1, tmp:block$res -> block$res1, tmp:block$res -> block$res16, tmp:block$res -> block$res2, member:Option -> Option, member:Type -> Type1, member:TVar -> TVar1, member:TFun -> TFun1, tmp:tmp -> tmp7, member:TPrim -> TPrim1, tmp:tmp -> tmp8, class:Type -> Type, tmp:tmp -> tmp9, tmp:tmp -> tmp10, tmp:tmp -> tmp11, tmp:tmp -> tmp12, class:TFun -> TFun, tmp:tmp -> tmp13, tmp:block$res -> block$res17, tmp:tmp -> tmp14, tmp:tmp -> tmp15, tmp:tmp -> tmp16, tmp:tmp -> tmp17, tmp:tmp -> tmp18, tmp:tmp -> tmp19, tmp:inlinedVal -> inlinedVal2, tmp:tmp -> tmp20, tmp:scrut -> scrut2, tmp:block$res -> block$res18, tmp:block$res -> block$res7, emptySub -> emptySub, tmp:tmp -> tmp21, tmp:tmp -> tmp22, tmp:tmp -> tmp23, tmp:tmp -> tmp, tmp:tmp -> tmp24, member:Predef -> Predef, tmp:block$res -> block$res8, tmp:block$res -> block$res19, member:applyPattern -> applyPattern, tmp:tmp -> tmp25, tmp:tmp -> tmp26, tmp:tmp -> tmp27, tmp:inlinedVal -> inlinedVal3, tmp:block$res -> block$res9, tmp:tmp -> tmp28, tmp:scrut -> scrut3, member:Unify -> Unify1, tmp:block$res -> block$res20, pattern:Unify -> Unify, member:Env -> Env1, class:Env -> Env, member:Iter -> Iter, class:TVar -> TVar, class:TPrim -> TPrim, member:Runtime -> Runtime, member:inferTop -> inferTop, tmp:block$res -> block$res5, member:Scheme -> Scheme1, class:Scheme -> Scheme, tmp:block$res -> block$res24, tmp:block$res -> block$res10, member:unify' -> unify$_, member:inferType -> inferType, tmp:block$res -> block$res3, TInt -> TInt, TBool -> TBool, tmp:block$res -> block$res4, member:Term -> Term2, member:IntLit -> IntLit1, member:Var -> Var1, member:App -> App1, tmp:block$res -> block$res11, member:Abs -> Abs1, member:BoolLit -> BoolLit1, member:unify -> unify, member:ShowTerm -> ShowTerm1, pattern:ShowTerm -> ShowTerm, class:Abs -> Abs, tmp:block$res -> block$res25, id -> id, const -> const1, class:App -> App, tmp:block$res -> block$res21, emptyEnv -> emptyEnv, apply -> apply, tmp:block$res -> block$res6, tmp:tmp -> tmp29, tmp:block$res -> block$res22, compose -> compose, member:Subst -> Subst1, class:Subst -> Subst, member:Gen -> Gen1, class:Gen -> Gen, tmp:tmp -> tmp30, tmp:tmp -> tmp31, tmp:tmp -> tmp32, tmp:tmp -> tmp33, tmp:tmp -> tmp34, tmp:tmp -> tmp35, tmp:tmp -> tmp36, tmp:tmp -> tmp37, tmp:tmp -> tmp38, tmp:tmp -> tmp39, tmp:tmp -> tmp40, class:Term -> Term1, tmp:tmp -> tmp41, tmp:tmp -> tmp42, tmp:tmp -> tmp43, tmp:block$res -> block$res26, class:Var -> Var, tmp:block$res -> block$res27, env -> env, term -> term, tmp:block$res -> block$res23, member:instance$Ident(Gen) -> instance$Ident$_Gen$_, tmp:tmp -> tmp44, class:IntLit -> IntLit, tmp:tmp -> tmp45, tmp:inlinedVal -> inlinedVal4, tmp:block$res -> block$res28, class:BoolLit -> BoolLit)
+//│     defaultImportBindings = HashMap(/storage/mark/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs -> Iter, /storage/mark/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Option.mjs -> Option, /storage/mark/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Runtime.mjs -> Runtime, /storage/mark/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Predef.mjs -> Predef)
+//│ ═══[COMPILATION ERROR] No definition found in scope for member 'infer$tailrec'
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:259)
+//│ ═══[RUNTIME ERROR] ReferenceError: infer$tailrec is not defined
+//│     at REPL94:1:197
+//│     at ContextifyScript.runInThisContext (node:vm:138:12)
+//│     at defaultEval (node:repl:608:24)
+//│     at REPLEvalInContext (node:repl:691:9)
+//│     at AsyncLocalStorage.run (node:internal/async_local_storage/async_context_frame:66:14)
+//│     at REPLServer.REPLEval [as eval] (node:repl:690:19)
+//│     at REPLServer.onLine (node:repl:828:12)
+//│     at REPLServer.emit (node:events:514:20)
+//│     at [_onLine] [as _onLine] (node:internal/readline/interface:474:12)
+//│     at [_normalWrite] [as _normalWrite] (node:internal/readline/interface:669:18)
 
 emptyEnv |- const
-//│ = "∀t₀, t₁. t₀ -> t₁ -> t₀"
+//│ FAILURE: Unexpected compilation error
+//│ FAILURE LOCATION: lookup_! (Scope.scala:136)
+//│ FAILURE INFO: Tuple2:
+//│   _1 = Tuple2:
+//│     _1 = member:infer$tailrec⁰
+//│     _2 = class hkmc2.semantics.BlockMemberSymbol
+//│   _2 = Scope:
+//│     parentOrCfg = Left of Cfg:
+//│       escapeChars = true
+//│       useSuperscripts = false
+//│       includeZero = false
+//│       defaultName = "tmp"
+//│     curThis = S of S of globalThis:globalThis⁰
+//│     bindings = HashMap(term -> term1, member:instance$Ident(Gen) -> instance$Ident$_Gen$_1, tmp:runtime -> runtime, tmp:block$res -> block$res12, tmp:tmp -> tmp46, tmp:definitionMetadata -> definitionMetadata, tmp:tmp -> tmp47, tmp:prettyPrint -> prettyPrint, tmp:inlinedVal -> inlinedVal5, tmp:Term -> Term, tmp:Block -> Block, tmp:tmp -> tmp1, tmp:block$res -> block$res29, tmp:option -> option, tmp:block$res -> block$res13, t1 -> t1, t2 -> t2, tmp:inlinedVal -> inlinedVal, tmp:tmp -> tmp2, tmp:scrut -> scrut, tmp:block$res -> block$res14, tmp:tmp -> tmp3, tmp:tmp -> tmp4, tmp:block$res -> block$res15, tmp:tmp -> tmp5, t2 -> t21, tmp:inlinedVal -> inlinedVal1, member:lambda$ -> lambda$, tmp:block$res -> block$res, tmp:tmp -> tmp6, tmp:scrut -> scrut1, tmp:block$res -> block$res1, tmp:block$res -> block$res16, tmp:block$res -> block$res2, member:Option -> Option, member:Type -> Type1, member:TVar -> TVar1, member:TFun -> TFun1, tmp:tmp -> tmp7, member:TPrim -> TPrim1, tmp:tmp -> tmp8, class:Type -> Type, tmp:tmp -> tmp9, tmp:tmp -> tmp10, tmp:tmp -> tmp11, tmp:tmp -> tmp12, class:TFun -> TFun, tmp:tmp -> tmp13, tmp:block$res -> block$res17, tmp:tmp -> tmp14, tmp:tmp -> tmp15, tmp:tmp -> tmp16, tmp:tmp -> tmp17, tmp:tmp -> tmp18, tmp:tmp -> tmp19, tmp:inlinedVal -> inlinedVal2, tmp:tmp -> tmp20, tmp:scrut -> scrut2, tmp:block$res -> block$res18, tmp:block$res -> block$res7, emptySub -> emptySub, tmp:tmp -> tmp21, tmp:tmp -> tmp22, tmp:tmp -> tmp23, tmp:tmp -> tmp, tmp:tmp -> tmp24, member:Predef -> Predef, tmp:block$res -> block$res8, tmp:block$res -> block$res19, member:applyPattern -> applyPattern, tmp:tmp -> tmp25, tmp:tmp -> tmp26, tmp:tmp -> tmp27, tmp:inlinedVal -> inlinedVal3, tmp:block$res -> block$res9, tmp:tmp -> tmp28, tmp:scrut -> scrut3, member:Unify -> Unify1, tmp:block$res -> block$res20, pattern:Unify -> Unify, member:Env -> Env1, class:Env -> Env, member:Iter -> Iter, class:TVar -> TVar, class:TPrim -> TPrim, member:Runtime -> Runtime, member:inferTop -> inferTop, tmp:block$res -> block$res5, member:Scheme -> Scheme1, class:Scheme -> Scheme, tmp:block$res -> block$res24, tmp:block$res -> block$res10, member:unify' -> unify$_, member:inferType -> inferType, tmp:block$res -> block$res3, TInt -> TInt, TBool -> TBool, tmp:block$res -> block$res4, member:Term -> Term2, member:IntLit -> IntLit1, member:Var -> Var1, member:App -> App1, tmp:block$res -> block$res11, member:Abs -> Abs1, member:BoolLit -> BoolLit1, member:unify -> unify, member:ShowTerm -> ShowTerm1, pattern:ShowTerm -> ShowTerm, class:Abs -> Abs, tmp:block$res -> block$res25, id -> id, const -> const1, class:App -> App, tmp:block$res -> block$res21, emptyEnv -> emptyEnv, apply -> apply, tmp:block$res -> block$res6, tmp:tmp -> tmp29, tmp:block$res -> block$res22, compose -> compose, member:Subst -> Subst1, class:Subst -> Subst, member:Gen -> Gen1, class:Gen -> Gen, tmp:tmp -> tmp30, tmp:tmp -> tmp31, tmp:tmp -> tmp32, tmp:tmp -> tmp33, tmp:tmp -> tmp34, tmp:tmp -> tmp35, tmp:tmp -> tmp36, tmp:tmp -> tmp37, tmp:tmp -> tmp38, tmp:tmp -> tmp39, tmp:tmp -> tmp40, class:Term -> Term1, tmp:tmp -> tmp41, tmp:tmp -> tmp42, tmp:tmp -> tmp43, tmp:block$res -> block$res26, class:Var -> Var, tmp:block$res -> block$res27, env -> env, term -> term, tmp:block$res -> block$res23, member:instance$Ident(Gen) -> instance$Ident$_Gen$_, tmp:tmp -> tmp44, class:IntLit -> IntLit, tmp:tmp -> tmp45, tmp:inlinedVal -> inlinedVal4, tmp:block$res -> block$res28, class:BoolLit -> BoolLit, env -> env1)
+//│     defaultImportBindings = HashMap(/storage/mark/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs -> Iter, /storage/mark/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Option.mjs -> Option, /storage/mark/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Runtime.mjs -> Runtime, /storage/mark/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Predef.mjs -> Predef)
+//│ ═══[COMPILATION ERROR] No definition found in scope for member 'infer$tailrec'
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:259)
+//│ ═══[RUNTIME ERROR] ReferenceError: infer$tailrec is not defined
+//│     at REPL97:1:207
+//│     at ContextifyScript.runInThisContext (node:vm:138:12)
+//│     at defaultEval (node:repl:608:24)
+//│     at REPLEvalInContext (node:repl:691:9)
+//│     at AsyncLocalStorage.run (node:internal/async_local_storage/async_context_frame:66:14)
+//│     at REPLServer.REPLEval [as eval] (node:repl:690:19)
+//│     at REPLServer.onLine (node:repl:828:12)
+//│     at REPLServer.emit (node:events:514:20)
+//│     at [_onLine] [as _onLine] (node:internal/readline/interface:474:12)
+//│     at [_normalWrite] [as _normalWrite] (node:internal/readline/interface:669:18)
 
 emptyEnv |- apply
-//│ = "∀t₁, t₂. (t₁ -> t₂) -> t₁ -> t₂"
+//│ FAILURE: Unexpected compilation error
+//│ FAILURE LOCATION: lookup_! (Scope.scala:136)
+//│ FAILURE INFO: Tuple2:
+//│   _1 = Tuple2:
+//│     _1 = member:infer$tailrec⁰
+//│     _2 = class hkmc2.semantics.BlockMemberSymbol
+//│   _2 = Scope:
+//│     parentOrCfg = Left of Cfg:
+//│       escapeChars = true
+//│       useSuperscripts = false
+//│       includeZero = false
+//│       defaultName = "tmp"
+//│     curThis = S of S of globalThis:globalThis⁰
+//│     bindings = HashMap(term -> term1, member:instance$Ident(Gen) -> instance$Ident$_Gen$_1, tmp:runtime -> runtime, tmp:block$res -> block$res12, tmp:tmp -> tmp46, tmp:definitionMetadata -> definitionMetadata, tmp:tmp -> tmp47, tmp:prettyPrint -> prettyPrint, tmp:inlinedVal -> inlinedVal5, tmp:Term -> Term, tmp:Block -> Block, tmp:tmp -> tmp1, tmp:block$res -> block$res29, tmp:option -> option, tmp:block$res -> block$res13, env -> env2, term -> term2, t1 -> t1, t2 -> t2, member:instance$Ident(Gen) -> instance$Ident$_Gen$_2, tmp:inlinedVal -> inlinedVal, tmp:tmp -> tmp48, tmp:tmp -> tmp49, tmp:tmp -> tmp2, tmp:inlinedVal -> inlinedVal6, tmp:scrut -> scrut, tmp:block$res -> block$res14, tmp:block$res -> block$res30, tmp:tmp -> tmp3, tmp:tmp -> tmp4, tmp:block$res -> block$res15, tmp:tmp -> tmp5, t2 -> t21, tmp:inlinedVal -> inlinedVal1, member:lambda$ -> lambda$, tmp:block$res -> block$res, tmp:tmp -> tmp6, tmp:scrut -> scrut1, tmp:block$res -> block$res1, tmp:block$res -> block$res16, tmp:block$res -> block$res2, member:Option -> Option, member:Type -> Type1, member:TVar -> TVar1, member:TFun -> TFun1, tmp:tmp -> tmp7, member:TPrim -> TPrim1, tmp:tmp -> tmp8, class:Type -> Type, tmp:tmp -> tmp9, tmp:tmp -> tmp10, tmp:tmp -> tmp11, tmp:tmp -> tmp12, class:TFun -> TFun, tmp:tmp -> tmp13, tmp:block$res -> block$res17, tmp:tmp -> tmp14, tmp:tmp -> tmp15, tmp:tmp -> tmp16, tmp:tmp -> tmp17, tmp:tmp -> tmp18, tmp:tmp -> tmp19, tmp:inlinedVal -> inlinedVal2, tmp:tmp -> tmp20, tmp:scrut -> scrut2, tmp:block$res -> block$res18, tmp:block$res -> block$res7, emptySub -> emptySub, tmp:tmp -> tmp21, tmp:tmp -> tmp22, tmp:tmp -> tmp23, tmp:tmp -> tmp, tmp:tmp -> tmp24, member:Predef -> Predef, tmp:block$res -> block$res8, tmp:block$res -> block$res19, member:applyPattern -> applyPattern, tmp:tmp -> tmp25, tmp:tmp -> tmp26, tmp:tmp -> tmp27, tmp:inlinedVal -> inlinedVal3, tmp:block$res -> block$res9, tmp:tmp -> tmp28, tmp:scrut -> scrut3, member:Unify -> Unify1, tmp:block$res -> block$res20, pattern:Unify -> Unify, member:Env -> Env1, class:Env -> Env, member:Iter -> Iter, class:TVar -> TVar, class:TPrim -> TPrim, member:Runtime -> Runtime, member:inferTop -> inferTop, tmp:block$res -> block$res5, member:Scheme -> Scheme1, class:Scheme -> Scheme, tmp:block$res -> block$res24, tmp:block$res -> block$res10, member:unify' -> unify$_, member:inferType -> inferType, tmp:block$res -> block$res3, TInt -> TInt, TBool -> TBool, tmp:block$res -> block$res4, member:Term -> Term2, member:IntLit -> IntLit1, member:Var -> Var1, member:App -> App1, tmp:block$res -> block$res11, member:Abs -> Abs1, member:BoolLit -> BoolLit1, member:unify -> unify, member:ShowTerm -> ShowTerm1, pattern:ShowTerm -> ShowTerm, class:Abs -> Abs, tmp:block$res -> block$res25, id -> id, const -> const1, class:App -> App, tmp:block$res -> block$res21, emptyEnv -> emptyEnv, apply -> apply, tmp:block$res -> block$res6, tmp:tmp -> tmp29, tmp:block$res -> block$res22, compose -> compose, member:Subst -> Subst1, class:Subst -> Subst, member:Gen -> Gen1, class:Gen -> Gen, tmp:tmp -> tmp30, tmp:tmp -> tmp31, tmp:tmp -> tmp32, tmp:tmp -> tmp33, tmp:tmp -> tmp34, tmp:tmp -> tmp35, tmp:tmp -> tmp36, tmp:tmp -> tmp37, tmp:tmp -> tmp38, tmp:tmp -> tmp39, tmp:tmp -> tmp40, class:Term -> Term1, tmp:tmp -> tmp41, tmp:tmp -> tmp42, tmp:tmp -> tmp43, tmp:block$res -> block$res26, class:Var -> Var, tmp:block$res -> block$res27, env -> env, term -> term, tmp:block$res -> block$res23, member:instance$Ident(Gen) -> instance$Ident$_Gen$_, tmp:tmp -> tmp44, class:IntLit -> IntLit, tmp:tmp -> tmp45, tmp:inlinedVal -> inlinedVal4, tmp:block$res -> block$res28, class:BoolLit -> BoolLit, env -> env1)
+//│     defaultImportBindings = HashMap(/storage/mark/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs -> Iter, /storage/mark/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Option.mjs -> Option, /storage/mark/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Runtime.mjs -> Runtime, /storage/mark/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Predef.mjs -> Predef)
+//│ ═══[COMPILATION ERROR] No definition found in scope for member 'infer$tailrec'
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:259)
+//│ ═══[RUNTIME ERROR] ReferenceError: infer$tailrec is not defined
+//│     at REPL100:1:206
+//│     at ContextifyScript.runInThisContext (node:vm:138:12)
+//│     at defaultEval (node:repl:608:24)
+//│     at REPLEvalInContext (node:repl:691:9)
+//│     at AsyncLocalStorage.run (node:internal/async_local_storage/async_context_frame:66:14)
+//│     at REPLServer.REPLEval [as eval] (node:repl:690:19)
+//│     at REPLServer.onLine (node:repl:828:12)
+//│     at REPLServer.emit (node:events:514:20)
+//│     at [_onLine] [as _onLine] (node:internal/readline/interface:474:12)
+//│     at [_normalWrite] [as _normalWrite] (node:internal/readline/interface:669:18)
 
 emptyEnv |- compose
-//│ = "∀t₃, t₄, t₂. (t₃ -> t₄) -> (t₂ -> t₃) -> t₂ -> t₄"
+//│ FAILURE: Unexpected compilation error
+//│ FAILURE LOCATION: lookup_! (Scope.scala:136)
+//│ FAILURE INFO: Tuple2:
+//│   _1 = Tuple2:
+//│     _1 = member:infer$tailrec⁰
+//│     _2 = class hkmc2.semantics.BlockMemberSymbol
+//│   _2 = Scope:
+//│     parentOrCfg = Left of Cfg:
+//│       escapeChars = true
+//│       useSuperscripts = false
+//│       includeZero = false
+//│       defaultName = "tmp"
+//│     curThis = S of S of globalThis:globalThis⁰
+//│     bindings = HashMap(term -> term1, member:instance$Ident(Gen) -> instance$Ident$_Gen$_1, tmp:runtime -> runtime, tmp:block$res -> block$res12, tmp:tmp -> tmp46, tmp:definitionMetadata -> definitionMetadata, tmp:tmp -> tmp47, tmp:prettyPrint -> prettyPrint, tmp:inlinedVal -> inlinedVal5, tmp:Term -> Term, tmp:Block -> Block, tmp:tmp -> tmp1, tmp:block$res -> block$res29, tmp:option -> option, tmp:block$res -> block$res13, env -> env2, term -> term2, t1 -> t1, t2 -> t2, member:instance$Ident(Gen) -> instance$Ident$_Gen$_2, tmp:inlinedVal -> inlinedVal, tmp:tmp -> tmp48, tmp:tmp -> tmp49, tmp:tmp -> tmp2, tmp:inlinedVal -> inlinedVal6, tmp:scrut -> scrut, tmp:block$res -> block$res14, tmp:block$res -> block$res30, env -> env3, term -> term3, tmp:tmp -> tmp3, tmp:tmp -> tmp4, tmp:block$res -> block$res15, member:instance$Ident(Gen) -> instance$Ident$_Gen$_3, tmp:tmp -> tmp50, tmp:tmp -> tmp51, tmp:inlinedVal -> inlinedVal7, tmp:tmp -> tmp5, tmp:block$res -> block$res31, t2 -> t21, tmp:inlinedVal -> inlinedVal1, member:lambda$ -> lambda$, tmp:block$res -> block$res, tmp:tmp -> tmp6, tmp:scrut -> scrut1, tmp:block$res -> block$res1, tmp:block$res -> block$res16, tmp:block$res -> block$res2, member:Option -> Option, member:Type -> Type1, member:TVar -> TVar1, member:TFun -> TFun1, tmp:tmp -> tmp7, member:TPrim -> TPrim1, tmp:tmp -> tmp8, class:Type -> Type, tmp:tmp -> tmp9, tmp:tmp -> tmp10, tmp:tmp -> tmp11, tmp:tmp -> tmp12, class:TFun -> TFun, tmp:tmp -> tmp13, tmp:block$res -> block$res17, tmp:tmp -> tmp14, tmp:tmp -> tmp15, tmp:tmp -> tmp16, tmp:tmp -> tmp17, tmp:tmp -> tmp18, tmp:tmp -> tmp19, tmp:inlinedVal -> inlinedVal2, tmp:tmp -> tmp20, tmp:scrut -> scrut2, tmp:block$res -> block$res18, tmp:block$res -> block$res7, emptySub -> emptySub, tmp:tmp -> tmp21, tmp:tmp -> tmp22, tmp:tmp -> tmp23, tmp:tmp -> tmp, tmp:tmp -> tmp24, member:Predef -> Predef, tmp:block$res -> block$res8, tmp:block$res -> block$res19, member:applyPattern -> applyPattern, tmp:tmp -> tmp25, tmp:tmp -> tmp26, tmp:tmp -> tmp27, tmp:inlinedVal -> inlinedVal3, tmp:block$res -> block$res9, tmp:tmp -> tmp28, tmp:scrut -> scrut3, member:Unify -> Unify1, tmp:block$res -> block$res20, pattern:Unify -> Unify, member:Env -> Env1, class:Env -> Env, member:Iter -> Iter, class:TVar -> TVar, class:TPrim -> TPrim, member:Runtime -> Runtime, member:inferTop -> inferTop, tmp:block$res -> block$res5, member:Scheme -> Scheme1, class:Scheme -> Scheme, tmp:block$res -> block$res24, tmp:block$res -> block$res10, member:unify' -> unify$_, member:inferType -> inferType, tmp:block$res -> block$res3, TInt -> TInt, TBool -> TBool, tmp:block$res -> block$res4, member:Term -> Term2, member:IntLit -> IntLit1, member:Var -> Var1, member:App -> App1, tmp:block$res -> block$res11, member:Abs -> Abs1, member:BoolLit -> BoolLit1, member:unify -> unify, member:ShowTerm -> ShowTerm1, pattern:ShowTerm -> ShowTerm, class:Abs -> Abs, tmp:block$res -> block$res25, id -> id, const -> const1, class:App -> App, tmp:block$res -> block$res21, emptyEnv -> emptyEnv, apply -> apply, tmp:block$res -> block$res6, tmp:tmp -> tmp29, tmp:block$res -> block$res22, compose -> compose, member:Subst -> Subst1, class:Subst -> Subst, member:Gen -> Gen1, class:Gen -> Gen, tmp:tmp -> tmp30, tmp:tmp -> tmp31, tmp:tmp -> tmp32, tmp:tmp -> tmp33, tmp:tmp -> tmp34, tmp:tmp -> tmp35, tmp:tmp -> tmp36, tmp:tmp -> tmp37, tmp:tmp -> tmp38, tmp:tmp -> tmp39, tmp:tmp -> tmp40, class:Term -> Term1, tmp:tmp -> tmp41, tmp:tmp -> tmp42, tmp:tmp -> tmp43, tmp:block$res -> block$res26, class:Var -> Var, tmp:block$res -> block$res27, env -> env, term -> term, tmp:block$res -> block$res23, member:instance$Ident(Gen) -> instance$Ident$_Gen$_, tmp:tmp -> tmp44, class:IntLit -> IntLit, tmp:tmp -> tmp45, tmp:inlinedVal -> inlinedVal4, tmp:block$res -> block$res28, class:BoolLit -> BoolLit, env -> env1)
+//│     defaultImportBindings = HashMap(/storage/mark/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs -> Iter, /storage/mark/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Option.mjs -> Option, /storage/mark/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Runtime.mjs -> Runtime, /storage/mark/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Predef.mjs -> Predef)
+//│ ═══[COMPILATION ERROR] No definition found in scope for member 'infer$tailrec'
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:259)
+//│ ═══[RUNTIME ERROR] ReferenceError: infer$tailrec is not defined
+//│     at REPL103:1:208
+//│     at ContextifyScript.runInThisContext (node:vm:138:12)
+//│     at defaultEval (node:repl:608:24)
+//│     at REPLEvalInContext (node:repl:691:9)
+//│     at AsyncLocalStorage.run (node:internal/async_local_storage/async_context_frame:66:14)
+//│     at REPLServer.REPLEval [as eval] (node:repl:690:19)
+//│     at REPLServer.onLine (node:repl:828:12)
+//│     at REPLServer.emit (node:events:514:20)
+//│     at [_onLine] [as _onLine] (node:internal/readline/interface:474:12)
+//│     at [_normalWrite] [as _normalWrite] (node:internal/readline/interface:669:18)
 
 :expect "Int"
 emptyEnv |- IntLit(42)
-//│ = "Int"
+//│ FAILURE: Unexpected compilation error
+//│ FAILURE LOCATION: lookup_! (Scope.scala:136)
+//│ FAILURE INFO: Tuple2:
+//│   _1 = Tuple2:
+//│     _1 = member:infer$tailrec⁰
+//│     _2 = class hkmc2.semantics.BlockMemberSymbol
+//│   _2 = Scope:
+//│     parentOrCfg = Left of Cfg:
+//│       escapeChars = true
+//│       useSuperscripts = false
+//│       includeZero = false
+//│       defaultName = "tmp"
+//│     curThis = S of S of globalThis:globalThis⁰
+//│     bindings = HashMap(term -> term1, member:instance$Ident(Gen) -> instance$Ident$_Gen$_1, tmp:runtime -> runtime, tmp:block$res -> block$res12, tmp:tmp -> tmp46, tmp:definitionMetadata -> definitionMetadata, tmp:tmp -> tmp47, tmp:prettyPrint -> prettyPrint, tmp:inlinedVal -> inlinedVal5, tmp:Term -> Term, tmp:Block -> Block, tmp:tmp -> tmp1, tmp:block$res -> block$res29, tmp:option -> option, tmp:block$res -> block$res13, env -> env2, term -> term2, t1 -> t1, t2 -> t2, member:instance$Ident(Gen) -> instance$Ident$_Gen$_2, tmp:inlinedVal -> inlinedVal, tmp:tmp -> tmp48, tmp:tmp -> tmp49, tmp:tmp -> tmp2, tmp:inlinedVal -> inlinedVal6, tmp:scrut -> scrut, tmp:block$res -> block$res14, tmp:block$res -> block$res30, env -> env3, term -> term3, tmp:tmp -> tmp3, tmp:tmp -> tmp4, tmp:block$res -> block$res15, member:instance$Ident(Gen) -> instance$Ident$_Gen$_3, tmp:tmp -> tmp50, tmp:tmp -> tmp51, tmp:inlinedVal -> inlinedVal7, tmp:tmp -> tmp5, tmp:block$res -> block$res31, t2 -> t21, tmp:inlinedVal -> inlinedVal1, member:lambda$ -> lambda$, tmp:tmp -> tmp52, env -> env4, tmp:block$res -> block$res, tmp:tmp -> tmp6, tmp:scrut -> scrut1, tmp:block$res -> block$res1, tmp:block$res -> block$res16, member:instance$Ident(Gen) -> instance$Ident$_Gen$_4, tmp:block$res -> block$res2, tmp:tmp -> tmp53, tmp:tmp -> tmp54, tmp:inlinedVal -> inlinedVal8, member:Option -> Option, tmp:block$res -> block$res32, member:Type -> Type1, member:TVar -> TVar1, member:TFun -> TFun1, tmp:tmp -> tmp7, member:TPrim -> TPrim1, tmp:tmp -> tmp8, class:Type -> Type, tmp:tmp -> tmp9, tmp:tmp -> tmp10, tmp:tmp -> tmp11, tmp:tmp -> tmp12, class:TFun -> TFun, tmp:tmp -> tmp13, tmp:block$res -> block$res17, tmp:tmp -> tmp14, tmp:tmp -> tmp15, tmp:tmp -> tmp16, tmp:tmp -> tmp17, tmp:tmp -> tmp18, tmp:tmp -> tmp19, tmp:inlinedVal -> inlinedVal2, tmp:tmp -> tmp20, tmp:scrut -> scrut2, tmp:block$res -> block$res18, tmp:block$res -> block$res7, emptySub -> emptySub, tmp:tmp -> tmp21, tmp:tmp -> tmp22, tmp:tmp -> tmp23, tmp:tmp -> tmp, tmp:tmp -> tmp24, member:Predef -> Predef, tmp:block$res -> block$res8, tmp:block$res -> block$res19, member:applyPattern -> applyPattern, tmp:tmp -> tmp25, tmp:tmp -> tmp26, tmp:tmp -> tmp27, tmp:inlinedVal -> inlinedVal3, tmp:block$res -> block$res9, tmp:tmp -> tmp28, tmp:scrut -> scrut3, member:Unify -> Unify1, tmp:block$res -> block$res20, pattern:Unify -> Unify, member:Env -> Env1, class:Env -> Env, member:Iter -> Iter, class:TVar -> TVar, class:TPrim -> TPrim, member:Runtime -> Runtime, member:inferTop -> inferTop, tmp:block$res -> block$res5, member:Scheme -> Scheme1, class:Scheme -> Scheme, tmp:block$res -> block$res24, tmp:block$res -> block$res10, member:unify' -> unify$_, member:inferType -> inferType, tmp:block$res -> block$res3, TInt -> TInt, TBool -> TBool, tmp:block$res -> block$res4, member:Term -> Term2, member:IntLit -> IntLit1, member:Var -> Var1, member:App -> App1, tmp:block$res -> block$res11, member:Abs -> Abs1, member:BoolLit -> BoolLit1, member:unify -> unify, member:ShowTerm -> ShowTerm1, pattern:ShowTerm -> ShowTerm, class:Abs -> Abs, tmp:block$res -> block$res25, id -> id, const -> const1, class:App -> App, tmp:block$res -> block$res21, emptyEnv -> emptyEnv, apply -> apply, tmp:block$res -> block$res6, tmp:tmp -> tmp29, tmp:block$res -> block$res22, compose -> compose, member:Subst -> Subst1, class:Subst -> Subst, member:Gen -> Gen1, class:Gen -> Gen, tmp:tmp -> tmp30, tmp:tmp -> tmp31, tmp:tmp -> tmp32, tmp:tmp -> tmp33, tmp:tmp -> tmp34, tmp:tmp -> tmp35, tmp:tmp -> tmp36, tmp:tmp -> tmp37, tmp:tmp -> tmp38, tmp:tmp -> tmp39, tmp:tmp -> tmp40, class:Term -> Term1, tmp:tmp -> tmp41, tmp:tmp -> tmp42, tmp:tmp -> tmp43, tmp:block$res -> block$res26, class:Var -> Var, tmp:block$res -> block$res27, env -> env, term -> term, tmp:block$res -> block$res23, member:instance$Ident(Gen) -> instance$Ident$_Gen$_, tmp:tmp -> tmp44, class:IntLit -> IntLit, tmp:tmp -> tmp45, tmp:inlinedVal -> inlinedVal4, tmp:block$res -> block$res28, class:BoolLit -> BoolLit, env -> env1)
+//│     defaultImportBindings = HashMap(/storage/mark/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs -> Iter, /storage/mark/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Option.mjs -> Option, /storage/mark/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Runtime.mjs -> Runtime, /storage/mark/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Predef.mjs -> Predef)
+//│ ═══[COMPILATION ERROR] No definition found in scope for member 'infer$tailrec'
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:259)
+//│ ═══[RUNTIME ERROR] ReferenceError: infer$tailrec is not defined
+//│     at REPL106:1:231
+//│     at ContextifyScript.runInThisContext (node:vm:138:12)
+//│     at defaultEval (node:repl:608:24)
+//│     at REPLEvalInContext (node:repl:691:9)
+//│     at AsyncLocalStorage.run (node:internal/async_local_storage/async_context_frame:66:14)
+//│     at REPLServer.REPLEval [as eval] (node:repl:690:19)
+//│     at REPLServer.onLine (node:repl:828:12)
+//│     at REPLServer.emit (node:events:514:20)
+//│     at [_onLine] [as _onLine] (node:internal/readline/interface:474:12)
+//│     at [_normalWrite] [as _normalWrite] (node:internal/readline/interface:669:18)
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: processIRBlock (JSBackendDiffMaker.scala:299)
+//│ ═══[RUNTIME ERROR] Expected: '"Int"', got: 'undefined'
 
 :expect "Bool"
 emptyEnv |- BoolLit(true)
-//│ = "Bool"
+//│ FAILURE: Unexpected compilation error
+//│ FAILURE LOCATION: lookup_! (Scope.scala:136)
+//│ FAILURE INFO: Tuple2:
+//│   _1 = Tuple2:
+//│     _1 = member:infer$tailrec⁰
+//│     _2 = class hkmc2.semantics.BlockMemberSymbol
+//│   _2 = Scope:
+//│     parentOrCfg = Left of Cfg:
+//│       escapeChars = true
+//│       useSuperscripts = false
+//│       includeZero = false
+//│       defaultName = "tmp"
+//│     curThis = S of S of globalThis:globalThis⁰
+//│     bindings = HashMap(term -> term1, member:instance$Ident(Gen) -> instance$Ident$_Gen$_1, tmp:runtime -> runtime, tmp:block$res -> block$res12, tmp:tmp -> tmp46, tmp:definitionMetadata -> definitionMetadata, tmp:tmp -> tmp47, tmp:prettyPrint -> prettyPrint, tmp:inlinedVal -> inlinedVal5, tmp:Term -> Term, tmp:Block -> Block, tmp:tmp -> tmp1, tmp:block$res -> block$res29, tmp:option -> option, tmp:block$res -> block$res13, env -> env2, term -> term2, t1 -> t1, t2 -> t2, member:instance$Ident(Gen) -> instance$Ident$_Gen$_2, tmp:inlinedVal -> inlinedVal, tmp:tmp -> tmp48, tmp:tmp -> tmp49, tmp:tmp -> tmp2, tmp:inlinedVal -> inlinedVal6, tmp:scrut -> scrut, tmp:block$res -> block$res14, tmp:block$res -> block$res30, env -> env3, term -> term3, tmp:tmp -> tmp3, tmp:tmp -> tmp4, tmp:block$res -> block$res15, member:instance$Ident(Gen) -> instance$Ident$_Gen$_3, tmp:tmp -> tmp50, tmp:tmp -> tmp51, tmp:inlinedVal -> inlinedVal7, tmp:tmp -> tmp5, tmp:block$res -> block$res31, t2 -> t21, tmp:inlinedVal -> inlinedVal1, member:lambda$ -> lambda$, tmp:tmp -> tmp52, env -> env4, tmp:block$res -> block$res, tmp:tmp -> tmp6, tmp:scrut -> scrut1, tmp:block$res -> block$res1, tmp:block$res -> block$res16, member:instance$Ident(Gen) -> instance$Ident$_Gen$_4, tmp:block$res -> block$res2, tmp:tmp -> tmp53, tmp:tmp -> tmp54, tmp:inlinedVal -> inlinedVal8, member:Option -> Option, tmp:block$res -> block$res32, member:Type -> Type1, member:TVar -> TVar1, member:TFun -> TFun1, tmp:tmp -> tmp7, tmp:tmp -> tmp55, member:TPrim -> TPrim1, tmp:tmp -> tmp8, env -> env5, class:Type -> Type, tmp:tmp -> tmp9, tmp:tmp -> tmp10, tmp:tmp -> tmp11, tmp:tmp -> tmp12, member:instance$Ident(Gen) -> instance$Ident$_Gen$_5, class:TFun -> TFun, tmp:tmp -> tmp13, tmp:tmp -> tmp56, tmp:block$res -> block$res17, tmp:tmp -> tmp57, tmp:inlinedVal -> inlinedVal9, tmp:block$res -> block$res33, tmp:tmp -> tmp14, tmp:tmp -> tmp15, tmp:tmp -> tmp16, tmp:tmp -> tmp17, tmp:tmp -> tmp18, tmp:tmp -> tmp19, tmp:inlinedVal -> inlinedVal2, tmp:tmp -> tmp20, tmp:scrut -> scrut2, tmp:block$res -> block$res18, tmp:block$res -> block$res7, emptySub -> emptySub, tmp:tmp -> tmp21, tmp:tmp -> tmp22, tmp:tmp -> tmp23, tmp:tmp -> tmp, tmp:tmp -> tmp24, member:Predef -> Predef, tmp:block$res -> block$res8, tmp:block$res -> block$res19, member:applyPattern -> applyPattern, tmp:tmp -> tmp25, tmp:tmp -> tmp26, tmp:tmp -> tmp27, tmp:inlinedVal -> inlinedVal3, tmp:block$res -> block$res9, tmp:tmp -> tmp28, tmp:scrut -> scrut3, member:Unify -> Unify1, tmp:block$res -> block$res20, pattern:Unify -> Unify, member:Env -> Env1, class:Env -> Env, member:Iter -> Iter, class:TVar -> TVar, class:TPrim -> TPrim, member:Runtime -> Runtime, member:inferTop -> inferTop, tmp:block$res -> block$res5, member:Scheme -> Scheme1, class:Scheme -> Scheme, tmp:block$res -> block$res24, tmp:block$res -> block$res10, member:unify' -> unify$_, member:inferType -> inferType, tmp:block$res -> block$res3, TInt -> TInt, TBool -> TBool, tmp:block$res -> block$res4, member:Term -> Term2, member:IntLit -> IntLit1, member:Var -> Var1, member:App -> App1, tmp:block$res -> block$res11, member:Abs -> Abs1, member:BoolLit -> BoolLit1, member:unify -> unify, member:ShowTerm -> ShowTerm1, pattern:ShowTerm -> ShowTerm, class:Abs -> Abs, tmp:block$res -> block$res25, id -> id, const -> const1, class:App -> App, tmp:block$res -> block$res21, emptyEnv -> emptyEnv, apply -> apply, tmp:block$res -> block$res6, tmp:tmp -> tmp29, tmp:block$res -> block$res22, compose -> compose, member:Subst -> Subst1, class:Subst -> Subst, member:Gen -> Gen1, class:Gen -> Gen, tmp:tmp -> tmp30, tmp:tmp -> tmp31, tmp:tmp -> tmp32, tmp:tmp -> tmp33, tmp:tmp -> tmp34, tmp:tmp -> tmp35, tmp:tmp -> tmp36, tmp:tmp -> tmp37, tmp:tmp -> tmp38, tmp:tmp -> tmp39, tmp:tmp -> tmp40, class:Term -> Term1, tmp:tmp -> tmp41, tmp:tmp -> tmp42, tmp:tmp -> tmp43, tmp:block$res -> block$res26, class:Var -> Var, tmp:block$res -> block$res27, env -> env, term -> term, tmp:block$res -> block$res23, member:instance$Ident(Gen) -> instance$Ident$_Gen$_, tmp:tmp -> tmp44, class:IntLit -> IntLit, tmp:tmp -> tmp45, tmp:inlinedVal -> inlinedVal4, tmp:block$res -> block$res28, class:BoolLit -> BoolLit, env -> env1)
+//│     defaultImportBindings = HashMap(/storage/mark/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs -> Iter, /storage/mark/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Option.mjs -> Option, /storage/mark/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Runtime.mjs -> Runtime, /storage/mark/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Predef.mjs -> Predef)
+//│ ═══[COMPILATION ERROR] No definition found in scope for member 'infer$tailrec'
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:259)
+//│ ═══[RUNTIME ERROR] ReferenceError: infer$tailrec is not defined
+//│     at REPL109:1:234
+//│     at ContextifyScript.runInThisContext (node:vm:138:12)
+//│     at defaultEval (node:repl:608:24)
+//│     at REPLEvalInContext (node:repl:691:9)
+//│     at AsyncLocalStorage.run (node:internal/async_local_storage/async_context_frame:66:14)
+//│     at REPLServer.REPLEval [as eval] (node:repl:690:19)
+//│     at REPLServer.onLine (node:repl:828:12)
+//│     at REPLServer.emit (node:events:514:20)
+//│     at [_onLine] [as _onLine] (node:internal/readline/interface:474:12)
+//│     at [_normalWrite] [as _normalWrite] (node:internal/readline/interface:669:18)
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: processIRBlock (JSBackendDiffMaker.scala:299)
+//│ ═══[RUNTIME ERROR] Expected: '"Bool"', got: 'undefined'
 
 :expect "Int"
 emptyEnv |- App(id, IntLit(5))
-//│ = "Int"
+//│ FAILURE: Unexpected compilation error
+//│ FAILURE LOCATION: lookup_! (Scope.scala:136)
+//│ FAILURE INFO: Tuple2:
+//│   _1 = Tuple2:
+//│     _1 = member:infer$tailrec⁰
+//│     _2 = class hkmc2.semantics.BlockMemberSymbol
+//│   _2 = Scope:
+//│     parentOrCfg = Left of Cfg:
+//│       escapeChars = true
+//│       useSuperscripts = false
+//│       includeZero = false
+//│       defaultName = "tmp"
+//│     curThis = S of S of globalThis:globalThis⁰
+//│     bindings = HashMap(term -> term1, member:instance$Ident(Gen) -> instance$Ident$_Gen$_1, tmp:runtime -> runtime, tmp:block$res -> block$res12, tmp:tmp -> tmp46, tmp:definitionMetadata -> definitionMetadata, tmp:tmp -> tmp47, tmp:prettyPrint -> prettyPrint, tmp:inlinedVal -> inlinedVal5, tmp:Term -> Term, tmp:Block -> Block, tmp:tmp -> tmp1, tmp:block$res -> block$res29, tmp:option -> option, tmp:block$res -> block$res13, env -> env2, term -> term2, t1 -> t1, t2 -> t2, member:instance$Ident(Gen) -> instance$Ident$_Gen$_2, tmp:inlinedVal -> inlinedVal, tmp:tmp -> tmp48, tmp:tmp -> tmp49, tmp:tmp -> tmp2, tmp:inlinedVal -> inlinedVal6, tmp:scrut -> scrut, tmp:block$res -> block$res14, tmp:block$res -> block$res30, env -> env3, term -> term3, tmp:tmp -> tmp3, tmp:tmp -> tmp4, tmp:block$res -> block$res15, member:instance$Ident(Gen) -> instance$Ident$_Gen$_3, tmp:tmp -> tmp50, tmp:tmp -> tmp51, tmp:inlinedVal -> inlinedVal7, tmp:tmp -> tmp5, tmp:block$res -> block$res31, t2 -> t21, tmp:inlinedVal -> inlinedVal1, member:lambda$ -> lambda$, tmp:tmp -> tmp52, env -> env4, tmp:block$res -> block$res, tmp:tmp -> tmp6, tmp:scrut -> scrut1, tmp:block$res -> block$res1, tmp:block$res -> block$res16, member:instance$Ident(Gen) -> instance$Ident$_Gen$_4, tmp:block$res -> block$res2, tmp:tmp -> tmp53, tmp:tmp -> tmp54, tmp:inlinedVal -> inlinedVal8, member:Option -> Option, tmp:block$res -> block$res32, member:Type -> Type1, member:TVar -> TVar1, member:TFun -> TFun1, tmp:tmp -> tmp7, tmp:tmp -> tmp55, member:TPrim -> TPrim1, tmp:tmp -> tmp8, env -> env5, class:Type -> Type, tmp:tmp -> tmp9, tmp:tmp -> tmp10, tmp:tmp -> tmp11, tmp:tmp -> tmp12, member:instance$Ident(Gen) -> instance$Ident$_Gen$_5, class:TFun -> TFun, tmp:tmp -> tmp13, tmp:tmp -> tmp56, tmp:block$res -> block$res17, tmp:tmp -> tmp57, tmp:inlinedVal -> inlinedVal9, tmp:block$res -> block$res33, tmp:tmp -> tmp58, tmp:tmp -> tmp59, tmp:tmp -> tmp14, env -> env6, tmp:tmp -> tmp15, tmp:tmp -> tmp16, tmp:tmp -> tmp17, tmp:tmp -> tmp18, member:instance$Ident(Gen) -> instance$Ident$_Gen$_6, tmp:tmp -> tmp19, tmp:tmp -> tmp60, tmp:tmp -> tmp61, tmp:inlinedVal -> inlinedVal10, tmp:inlinedVal -> inlinedVal2, tmp:block$res -> block$res34, tmp:tmp -> tmp20, tmp:scrut -> scrut2, tmp:block$res -> block$res18, tmp:block$res -> block$res7, emptySub -> emptySub, tmp:tmp -> tmp21, tmp:tmp -> tmp22, tmp:tmp -> tmp23, tmp:tmp -> tmp, tmp:tmp -> tmp24, member:Predef -> Predef, tmp:block$res -> block$res8, tmp:block$res -> block$res19, member:applyPattern -> applyPattern, tmp:tmp -> tmp25, tmp:tmp -> tmp26, tmp:tmp -> tmp27, tmp:inlinedVal -> inlinedVal3, tmp:block$res -> block$res9, tmp:tmp -> tmp28, tmp:scrut -> scrut3, member:Unify -> Unify1, tmp:block$res -> block$res20, pattern:Unify -> Unify, member:Env -> Env1, class:Env -> Env, member:Iter -> Iter, class:TVar -> TVar, class:TPrim -> TPrim, member:Runtime -> Runtime, member:inferTop -> inferTop, tmp:block$res -> block$res5, member:Scheme -> Scheme1, class:Scheme -> Scheme, tmp:block$res -> block$res24, tmp:block$res -> block$res10, member:unify' -> unify$_, member:inferType -> inferType, tmp:block$res -> block$res3, TInt -> TInt, TBool -> TBool, tmp:block$res -> block$res4, member:Term -> Term2, member:IntLit -> IntLit1, member:Var -> Var1, member:App -> App1, tmp:block$res -> block$res11, member:Abs -> Abs1, member:BoolLit -> BoolLit1, member:unify -> unify, member:ShowTerm -> ShowTerm1, pattern:ShowTerm -> ShowTerm, class:Abs -> Abs, tmp:block$res -> block$res25, id -> id, const -> const1, class:App -> App, tmp:block$res -> block$res21, emptyEnv -> emptyEnv, apply -> apply, tmp:block$res -> block$res6, tmp:tmp -> tmp29, tmp:block$res -> block$res22, compose -> compose, member:Subst -> Subst1, class:Subst -> Subst, member:Gen -> Gen1, class:Gen -> Gen, tmp:tmp -> tmp30, tmp:tmp -> tmp31, tmp:tmp -> tmp32, tmp:tmp -> tmp33, tmp:tmp -> tmp34, tmp:tmp -> tmp35, tmp:tmp -> tmp36, tmp:tmp -> tmp37, tmp:tmp -> tmp38, tmp:tmp -> tmp39, tmp:tmp -> tmp40, class:Term -> Term1, tmp:tmp -> tmp41, tmp:tmp -> tmp42, tmp:tmp -> tmp43, tmp:block$res -> block$res26, class:Var -> Var, tmp:block$res -> block$res27, env -> env, term -> term, tmp:block$res -> block$res23, member:instance$Ident(Gen) -> instance$Ident$_Gen$_, tmp:tmp -> tmp44, class:IntLit -> IntLit, tmp:tmp -> tmp45, tmp:inlinedVal -> inlinedVal4, tmp:block$res -> block$res28, class:BoolLit -> BoolLit, env -> env1)
+//│     defaultImportBindings = HashMap(/storage/mark/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs -> Iter, /storage/mark/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Option.mjs -> Option, /storage/mark/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Runtime.mjs -> Runtime, /storage/mark/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Predef.mjs -> Predef)
+//│ ═══[COMPILATION ERROR] No definition found in scope for member 'infer$tailrec'
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:259)
+//│ ═══[RUNTIME ERROR] ReferenceError: infer$tailrec is not defined
+//│     at REPL112:1:283
+//│     at ContextifyScript.runInThisContext (node:vm:138:12)
+//│     at defaultEval (node:repl:608:24)
+//│     at REPLEvalInContext (node:repl:691:9)
+//│     at AsyncLocalStorage.run (node:internal/async_local_storage/async_context_frame:66:14)
+//│     at REPLServer.REPLEval [as eval] (node:repl:690:19)
+//│     at REPLServer.onLine (node:repl:828:12)
+//│     at REPLServer.emit (node:events:514:20)
+//│     at [_onLine] [as _onLine] (node:internal/readline/interface:474:12)
+//│     at [_normalWrite] [as _normalWrite] (node:internal/readline/interface:669:18)
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: processIRBlock (JSBackendDiffMaker.scala:299)
+//│ ═══[RUNTIME ERROR] Expected: '"Int"', got: 'undefined'
 
 :expect "Int"
 emptyEnv |-  App(id, App(id, IntLit(5)))
-//│ = "Int"
+//│ FAILURE: Unexpected compilation error
+//│ FAILURE LOCATION: lookup_! (Scope.scala:136)
+//│ FAILURE INFO: Tuple2:
+//│   _1 = Tuple2:
+//│     _1 = member:infer$tailrec⁰
+//│     _2 = class hkmc2.semantics.BlockMemberSymbol
+//│   _2 = Scope:
+//│     parentOrCfg = Left of Cfg:
+//│       escapeChars = true
+//│       useSuperscripts = false
+//│       includeZero = false
+//│       defaultName = "tmp"
+//│     curThis = S of S of globalThis:globalThis⁰
+//│     bindings = HashMap(term -> term1, member:instance$Ident(Gen) -> instance$Ident$_Gen$_1, tmp:runtime -> runtime, tmp:block$res -> block$res12, tmp:tmp -> tmp46, tmp:definitionMetadata -> definitionMetadata, tmp:tmp -> tmp47, tmp:prettyPrint -> prettyPrint, tmp:inlinedVal -> inlinedVal5, tmp:Term -> Term, tmp:Block -> Block, tmp:tmp -> tmp1, tmp:block$res -> block$res29, tmp:option -> option, tmp:block$res -> block$res13, env -> env2, term -> term2, t1 -> t1, t2 -> t2, member:instance$Ident(Gen) -> instance$Ident$_Gen$_2, tmp:inlinedVal -> inlinedVal, tmp:tmp -> tmp48, tmp:tmp -> tmp49, tmp:tmp -> tmp2, tmp:inlinedVal -> inlinedVal6, tmp:scrut -> scrut, tmp:block$res -> block$res14, tmp:block$res -> block$res30, env -> env3, term -> term3, tmp:tmp -> tmp3, tmp:tmp -> tmp4, tmp:block$res -> block$res15, member:instance$Ident(Gen) -> instance$Ident$_Gen$_3, tmp:tmp -> tmp50, tmp:tmp -> tmp51, tmp:inlinedVal -> inlinedVal7, tmp:tmp -> tmp5, tmp:block$res -> block$res31, t2 -> t21, tmp:inlinedVal -> inlinedVal1, tmp:tmp -> tmp52, env -> env4, tmp:block$res -> block$res, tmp:tmp -> tmp6, tmp:scrut -> scrut1, tmp:block$res -> block$res1, tmp:block$res -> block$res16, member:instance$Ident(Gen) -> instance$Ident$_Gen$_4, tmp:block$res -> block$res2, tmp:tmp -> tmp53, tmp:tmp -> tmp54, tmp:inlinedVal -> inlinedVal8, member:Option -> Option, tmp:block$res -> block$res32, member:Type -> Type1, member:TVar -> TVar1, member:TFun -> TFun1, tmp:tmp -> tmp7, tmp:tmp -> tmp55, member:TPrim -> TPrim1, tmp:tmp -> tmp8, env -> env5, class:Type -> Type, tmp:tmp -> tmp9, tmp:tmp -> tmp10, tmp:tmp -> tmp11, tmp:tmp -> tmp12, member:instance$Ident(Gen) -> instance$Ident$_Gen$_5, class:TFun -> TFun, tmp:tmp -> tmp13, tmp:tmp -> tmp56, tmp:block$res -> block$res17, tmp:tmp -> tmp57, tmp:inlinedVal -> inlinedVal9, tmp:block$res -> block$res33, tmp:tmp -> tmp58, tmp:tmp -> tmp59, tmp:tmp -> tmp14, env -> env6, tmp:tmp -> tmp15, tmp:tmp -> tmp16, tmp:tmp -> tmp17, tmp:tmp -> tmp18, member:instance$Ident(Gen) -> instance$Ident$_Gen$_6, tmp:tmp -> tmp19, tmp:tmp -> tmp60, tmp:tmp -> tmp61, tmp:inlinedVal -> inlinedVal10, tmp:inlinedVal -> inlinedVal2, tmp:block$res -> block$res34, tmp:tmp -> tmp20, tmp:scrut -> scrut2, tmp:block$res -> block$res18, tmp:tmp -> tmp62, tmp:tmp -> tmp63, tmp:tmp -> tmp64, tmp:block$res -> block$res7, env -> env7, emptySub -> emptySub, tmp:tmp -> tmp21, tmp:tmp -> tmp22, tmp:tmp -> tmp23, member:instance$Ident(Gen) -> instance$Ident$_Gen$_7, tmp:tmp -> tmp, tmp:tmp -> tmp24, tmp:tmp -> tmp65, member:Predef -> Predef, tmp:block$res -> block$res8, tmp:block$res -> block$res19, tmp:tmp -> tmp66, tmp:inlinedVal -> inlinedVal11, member:applyPattern -> applyPattern, tmp:block$res -> block$res35, tmp:tmp -> tmp25, tmp:tmp -> tmp26, tmp:tmp -> tmp27, tmp:inlinedVal -> inlinedVal3, tmp:block$res -> block$res9, tmp:tmp -> tmp28, tmp:scrut -> scrut3, member:Unify -> Unify1, tmp:block$res -> block$res20, pattern:Unify -> Unify, member:Env -> Env1, class:Env -> Env, member:Iter -> Iter, class:TVar -> TVar, class:TPrim -> TPrim, member:Runtime -> Runtime, tmp:block$res -> block$res3, TInt -> TInt, TBool -> TBool, tmp:block$res -> block$res4, member:Term -> Term2, member:IntLit -> IntLit1, member:Var -> Var1, member:App -> App1, member:Abs -> Abs1, member:BoolLit -> BoolLit1, member:ShowTerm -> ShowTerm1, pattern:ShowTerm -> ShowTerm, class:Abs -> Abs, class:App -> App, tmp:block$res -> block$res21, emptyEnv -> emptyEnv, tmp:tmp -> tmp29, tmp:block$res -> block$res22, member:Gen -> Gen1, class:Gen -> Gen, class:Term -> Term1, class:Var -> Var, tmp:block$res -> block$res23, class:IntLit -> IntLit, class:BoolLit -> BoolLit, member:lambda$ -> lambda$, member:inferTop -> inferTop, tmp:block$res -> block$res5, member:Scheme -> Scheme1, class:Scheme -> Scheme, tmp:block$res -> block$res24, tmp:block$res -> block$res10, member:unify' -> unify$_, member:inferType -> inferType, tmp:block$res -> block$res11, member:unify -> unify, tmp:block$res -> block$res25, id -> id, const -> const1, apply -> apply, tmp:block$res -> block$res6, compose -> compose, member:Subst -> Subst1, class:Subst -> Subst, tmp:tmp -> tmp30, tmp:tmp -> tmp31, tmp:tmp -> tmp32, tmp:tmp -> tmp33, tmp:tmp -> tmp34, tmp:tmp -> tmp35, tmp:tmp -> tmp36, tmp:tmp -> tmp37, tmp:tmp -> tmp38, tmp:tmp -> tmp39, tmp:tmp -> tmp40, tmp:tmp -> tmp41, tmp:tmp -> tmp42, tmp:tmp -> tmp43, tmp:block$res -> block$res26, tmp:block$res -> block$res27, env -> env, term -> term, member:instance$Ident(Gen) -> instance$Ident$_Gen$_, tmp:tmp -> tmp44, tmp:tmp -> tmp45, tmp:inlinedVal -> inlinedVal4, tmp:block$res -> block$res28, env -> env1)
+//│     defaultImportBindings = HashMap(/storage/mark/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs -> Iter, /storage/mark/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Option.mjs -> Option, /storage/mark/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Runtime.mjs -> Runtime, /storage/mark/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Predef.mjs -> Predef)
+//│ ═══[COMPILATION ERROR] No definition found in scope for member 'infer$tailrec'
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:259)
+//│ ═══[RUNTIME ERROR] ReferenceError: infer$tailrec is not defined
+//│     at REPL115:1:334
+//│     at ContextifyScript.runInThisContext (node:vm:138:12)
+//│     at defaultEval (node:repl:608:24)
+//│     at REPLEvalInContext (node:repl:691:9)
+//│     at AsyncLocalStorage.run (node:internal/async_local_storage/async_context_frame:66:14)
+//│     at REPLServer.REPLEval [as eval] (node:repl:690:19)
+//│     at REPLServer.onLine (node:repl:828:12)
+//│     at REPLServer.emit (node:events:514:20)
+//│     at [_onLine] [as _onLine] (node:internal/readline/interface:474:12)
+//│     at [_normalWrite] [as _normalWrite] (node:internal/readline/interface:669:18)
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: processIRBlock (JSBackendDiffMaker.scala:299)
+//│ ═══[RUNTIME ERROR] Expected: '"Int"', got: 'undefined'
 
 :silent
 let env1 = emptyEnv.extend of
@@ -304,11 +601,73 @@ let env1 = emptyEnv.extend of
 
 :expect "Int"
 env1 |- App(Var("id"), IntLit(5))
-//│ = "Int"
+//│ FAILURE: Unexpected compilation error
+//│ FAILURE LOCATION: lookup_! (Scope.scala:136)
+//│ FAILURE INFO: Tuple2:
+//│   _1 = Tuple2:
+//│     _1 = member:infer$tailrec⁰
+//│     _2 = class hkmc2.semantics.BlockMemberSymbol
+//│   _2 = Scope:
+//│     parentOrCfg = Left of Cfg:
+//│       escapeChars = true
+//│       useSuperscripts = false
+//│       includeZero = false
+//│       defaultName = "tmp"
+//│     curThis = S of S of globalThis:globalThis⁰
+//│     bindings = HashMap(term -> term1, member:instance$Ident(Gen) -> instance$Ident$_Gen$_1, tmp:runtime -> runtime, tmp:block$res -> block$res12, tmp:tmp -> tmp46, tmp:definitionMetadata -> definitionMetadata, tmp:tmp -> tmp47, tmp:prettyPrint -> prettyPrint, tmp:inlinedVal -> inlinedVal5, tmp:Term -> Term, tmp:Block -> Block, tmp:tmp -> tmp1, tmp:block$res -> block$res29, tmp:option -> option, tmp:block$res -> block$res13, env -> env2, term -> term2, t1 -> t1, t2 -> t2, member:instance$Ident(Gen) -> instance$Ident$_Gen$_2, tmp:inlinedVal -> inlinedVal, tmp:tmp -> tmp48, tmp:tmp -> tmp49, tmp:tmp -> tmp2, tmp:inlinedVal -> inlinedVal6, tmp:scrut -> scrut, tmp:block$res -> block$res14, tmp:block$res -> block$res30, env -> env3, term -> term3, tmp:tmp -> tmp3, tmp:tmp -> tmp4, tmp:block$res -> block$res15, member:instance$Ident(Gen) -> instance$Ident$_Gen$_3, tmp:tmp -> tmp50, tmp:tmp -> tmp51, tmp:inlinedVal -> inlinedVal7, tmp:tmp -> tmp5, tmp:block$res -> block$res31, t2 -> t21, tmp:inlinedVal -> inlinedVal1, tmp:tmp -> tmp52, env -> env4, tmp:block$res -> block$res, tmp:tmp -> tmp6, tmp:scrut -> scrut1, tmp:block$res -> block$res1, tmp:block$res -> block$res16, member:instance$Ident(Gen) -> instance$Ident$_Gen$_4, tmp:block$res -> block$res2, tmp:tmp -> tmp53, tmp:tmp -> tmp54, tmp:inlinedVal -> inlinedVal8, member:Option -> Option, tmp:block$res -> block$res32, member:Type -> Type1, member:TVar -> TVar1, member:TFun -> TFun1, tmp:tmp -> tmp7, tmp:tmp -> tmp55, member:TPrim -> TPrim1, tmp:tmp -> tmp8, env -> env5, class:Type -> Type, tmp:tmp -> tmp9, tmp:tmp -> tmp10, tmp:tmp -> tmp11, tmp:tmp -> tmp12, member:instance$Ident(Gen) -> instance$Ident$_Gen$_5, class:TFun -> TFun, tmp:tmp -> tmp13, tmp:tmp -> tmp56, tmp:block$res -> block$res17, tmp:tmp -> tmp57, tmp:inlinedVal -> inlinedVal9, tmp:block$res -> block$res33, tmp:tmp -> tmp58, tmp:tmp -> tmp59, tmp:tmp -> tmp14, env -> env6, tmp:tmp -> tmp15, tmp:tmp -> tmp16, tmp:tmp -> tmp17, tmp:tmp -> tmp18, member:instance$Ident(Gen) -> instance$Ident$_Gen$_6, tmp:tmp -> tmp19, tmp:tmp -> tmp60, tmp:tmp -> tmp61, tmp:inlinedVal -> inlinedVal10, tmp:inlinedVal -> inlinedVal2, tmp:block$res -> block$res34, tmp:tmp -> tmp20, tmp:scrut -> scrut2, tmp:block$res -> block$res18, tmp:tmp -> tmp62, tmp:tmp -> tmp63, tmp:tmp -> tmp64, tmp:block$res -> block$res7, env -> env7, emptySub -> emptySub, tmp:tmp -> tmp21, tmp:tmp -> tmp22, tmp:tmp -> tmp23, member:instance$Ident(Gen) -> instance$Ident$_Gen$_7, tmp:tmp -> tmp, tmp:tmp -> tmp24, tmp:tmp -> tmp65, member:Predef -> Predef, tmp:block$res -> block$res8, tmp:block$res -> block$res19, tmp:tmp -> tmp66, tmp:inlinedVal -> inlinedVal11, member:applyPattern -> applyPattern, tmp:block$res -> block$res35, env1 -> env11, tmp:tmp -> tmp25, tmp:tmp -> tmp26, tmp:tmp -> tmp27, tmp:inlinedVal -> inlinedVal3, tmp:tmp -> tmp67, tmp:tmp -> tmp68, tmp:block$res -> block$res9, tmp:tmp -> tmp28, tmp:tmp -> tmp69, tmp:scrut -> scrut3, tmp:tmp -> tmp70, member:Unify -> Unify1, tmp:block$res -> block$res20, tmp:tmp -> tmp71, pattern:Unify -> Unify, tmp:tmp -> tmp72, tmp:block$res -> block$res36, member:Env -> Env1, class:Env -> Env, tmp:tmp -> tmp73, tmp:tmp -> tmp74, member:Iter -> Iter, tmp:tmp -> tmp75, class:TVar -> TVar, env -> env8, member:instance$Ident(Gen) -> instance$Ident$_Gen$_8, tmp:tmp -> tmp76, tmp:tmp -> tmp77, tmp:inlinedVal -> inlinedVal12, tmp:block$res -> block$res37, class:TPrim -> TPrim, member:Runtime -> Runtime, tmp:block$res -> block$res3, TInt -> TInt, TBool -> TBool, tmp:block$res -> block$res4, member:Term -> Term2, member:IntLit -> IntLit1, member:Var -> Var1, member:App -> App1, member:Abs -> Abs1, member:BoolLit -> BoolLit1, member:ShowTerm -> ShowTerm1, pattern:ShowTerm -> ShowTerm, class:Abs -> Abs, class:App -> App, tmp:block$res -> block$res21, emptyEnv -> emptyEnv, tmp:tmp -> tmp29, tmp:block$res -> block$res22, member:Gen -> Gen1, class:Gen -> Gen, class:Term -> Term1, class:Var -> Var, tmp:block$res -> block$res23, class:IntLit -> IntLit, class:BoolLit -> BoolLit, member:lambda$ -> lambda$, member:inferTop -> inferTop, tmp:block$res -> block$res5, member:Scheme -> Scheme1, class:Scheme -> Scheme, tmp:block$res -> block$res24, tmp:block$res -> block$res10, member:unify' -> unify$_, member:inferType -> inferType, tmp:block$res -> block$res11, member:unify -> unify, tmp:block$res -> block$res25, id -> id, const -> const1, apply -> apply, tmp:block$res -> block$res6, compose -> compose, member:Subst -> Subst1, class:Subst -> Subst, tmp:tmp -> tmp30, tmp:tmp -> tmp31, tmp:tmp -> tmp32, tmp:tmp -> tmp33, tmp:tmp -> tmp34, tmp:tmp -> tmp35, tmp:tmp -> tmp36, tmp:tmp -> tmp37, tmp:tmp -> tmp38, tmp:tmp -> tmp39, tmp:tmp -> tmp40, tmp:tmp -> tmp41, tmp:tmp -> tmp42, tmp:tmp -> tmp43, tmp:block$res -> block$res26, tmp:block$res -> block$res27, env -> env, term -> term, member:instance$Ident(Gen) -> instance$Ident$_Gen$_, tmp:tmp -> tmp44, tmp:tmp -> tmp45, tmp:inlinedVal -> inlinedVal4, tmp:block$res -> block$res28, env -> env1)
+//│     defaultImportBindings = HashMap(/storage/mark/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs -> Iter, /storage/mark/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Option.mjs -> Option, /storage/mark/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Runtime.mjs -> Runtime, /storage/mark/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Predef.mjs -> Predef)
+//│ ═══[COMPILATION ERROR] No definition found in scope for member 'infer$tailrec'
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:259)
+//│ ═══[RUNTIME ERROR] ReferenceError: infer$tailrec is not defined
+//│     at REPL120:1:329
+//│     at ContextifyScript.runInThisContext (node:vm:138:12)
+//│     at defaultEval (node:repl:608:24)
+//│     at REPLEvalInContext (node:repl:691:9)
+//│     at AsyncLocalStorage.run (node:internal/async_local_storage/async_context_frame:66:14)
+//│     at REPLServer.REPLEval [as eval] (node:repl:690:19)
+//│     at REPLServer.onLine (node:repl:828:12)
+//│     at REPLServer.emit (node:events:514:20)
+//│     at [_onLine] [as _onLine] (node:internal/readline/interface:474:12)
+//│     at [_normalWrite] [as _normalWrite] (node:internal/readline/interface:669:18)
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: processIRBlock (JSBackendDiffMaker.scala:299)
+//│ ═══[RUNTIME ERROR] Expected: '"Int"', got: 'undefined'
 
 :expect "Bool"
 env1 |- App(Var("id"), BoolLit(true))
-//│ = "Bool"
+//│ FAILURE: Unexpected compilation error
+//│ FAILURE LOCATION: lookup_! (Scope.scala:136)
+//│ FAILURE INFO: Tuple2:
+//│   _1 = Tuple2:
+//│     _1 = member:infer$tailrec⁰
+//│     _2 = class hkmc2.semantics.BlockMemberSymbol
+//│   _2 = Scope:
+//│     parentOrCfg = Left of Cfg:
+//│       escapeChars = true
+//│       useSuperscripts = false
+//│       includeZero = false
+//│       defaultName = "tmp"
+//│     curThis = S of S of globalThis:globalThis⁰
+//│     bindings = HashMap(term -> term1, member:instance$Ident(Gen) -> instance$Ident$_Gen$_1, tmp:runtime -> runtime, tmp:block$res -> block$res12, tmp:tmp -> tmp46, tmp:definitionMetadata -> definitionMetadata, tmp:tmp -> tmp47, tmp:prettyPrint -> prettyPrint, tmp:inlinedVal -> inlinedVal5, tmp:Term -> Term, tmp:Block -> Block, tmp:tmp -> tmp1, tmp:block$res -> block$res29, tmp:option -> option, tmp:block$res -> block$res13, env -> env2, term -> term2, t1 -> t1, t2 -> t2, member:instance$Ident(Gen) -> instance$Ident$_Gen$_2, tmp:inlinedVal -> inlinedVal, tmp:tmp -> tmp48, tmp:tmp -> tmp49, tmp:tmp -> tmp2, tmp:inlinedVal -> inlinedVal6, tmp:scrut -> scrut, tmp:block$res -> block$res14, tmp:block$res -> block$res30, env -> env3, term -> term3, tmp:tmp -> tmp3, tmp:tmp -> tmp4, tmp:block$res -> block$res15, member:instance$Ident(Gen) -> instance$Ident$_Gen$_3, tmp:tmp -> tmp50, tmp:tmp -> tmp51, tmp:inlinedVal -> inlinedVal7, tmp:tmp -> tmp5, tmp:block$res -> block$res31, t2 -> t21, tmp:inlinedVal -> inlinedVal1, tmp:tmp -> tmp52, env -> env4, tmp:block$res -> block$res, tmp:tmp -> tmp6, tmp:scrut -> scrut1, tmp:block$res -> block$res1, tmp:block$res -> block$res16, member:instance$Ident(Gen) -> instance$Ident$_Gen$_4, tmp:block$res -> block$res2, tmp:tmp -> tmp53, tmp:tmp -> tmp54, tmp:inlinedVal -> inlinedVal8, member:Option -> Option, tmp:block$res -> block$res32, member:Type -> Type1, member:TVar -> TVar1, member:TFun -> TFun1, tmp:tmp -> tmp7, tmp:tmp -> tmp55, member:TPrim -> TPrim1, tmp:tmp -> tmp8, env -> env5, class:Type -> Type, tmp:tmp -> tmp9, tmp:tmp -> tmp10, tmp:tmp -> tmp11, tmp:tmp -> tmp12, member:instance$Ident(Gen) -> instance$Ident$_Gen$_5, class:TFun -> TFun, tmp:tmp -> tmp13, tmp:tmp -> tmp56, tmp:block$res -> block$res17, tmp:tmp -> tmp57, tmp:inlinedVal -> inlinedVal9, tmp:block$res -> block$res33, tmp:tmp -> tmp58, tmp:tmp -> tmp59, tmp:tmp -> tmp14, env -> env6, tmp:tmp -> tmp15, tmp:tmp -> tmp16, tmp:tmp -> tmp17, tmp:tmp -> tmp18, member:instance$Ident(Gen) -> instance$Ident$_Gen$_6, tmp:tmp -> tmp19, tmp:tmp -> tmp60, tmp:tmp -> tmp61, tmp:inlinedVal -> inlinedVal10, tmp:inlinedVal -> inlinedVal2, tmp:block$res -> block$res34, tmp:tmp -> tmp20, tmp:scrut -> scrut2, tmp:block$res -> block$res18, tmp:tmp -> tmp62, tmp:tmp -> tmp63, tmp:tmp -> tmp64, tmp:block$res -> block$res7, env -> env7, emptySub -> emptySub, tmp:tmp -> tmp21, tmp:tmp -> tmp22, tmp:tmp -> tmp23, member:instance$Ident(Gen) -> instance$Ident$_Gen$_7, tmp:tmp -> tmp, tmp:tmp -> tmp24, tmp:tmp -> tmp65, member:Predef -> Predef, tmp:block$res -> block$res8, tmp:block$res -> block$res19, tmp:tmp -> tmp66, tmp:inlinedVal -> inlinedVal11, member:applyPattern -> applyPattern, tmp:block$res -> block$res35, env1 -> env11, tmp:tmp -> tmp25, tmp:tmp -> tmp26, tmp:tmp -> tmp27, tmp:inlinedVal -> inlinedVal3, tmp:tmp -> tmp67, tmp:tmp -> tmp68, tmp:block$res -> block$res9, tmp:tmp -> tmp28, tmp:tmp -> tmp69, tmp:scrut -> scrut3, tmp:tmp -> tmp70, member:Unify -> Unify1, tmp:block$res -> block$res20, tmp:tmp -> tmp71, pattern:Unify -> Unify, tmp:tmp -> tmp72, tmp:block$res -> block$res36, member:Env -> Env1, class:Env -> Env, tmp:tmp -> tmp73, tmp:tmp -> tmp74, member:Iter -> Iter, tmp:tmp -> tmp75, class:TVar -> TVar, env -> env8, member:instance$Ident(Gen) -> instance$Ident$_Gen$_8, tmp:tmp -> tmp76, tmp:tmp -> tmp77, tmp:inlinedVal -> inlinedVal12, tmp:block$res -> block$res37, class:TPrim -> TPrim, tmp:tmp -> tmp78, member:Runtime -> Runtime, tmp:tmp -> tmp79, tmp:tmp -> tmp80, env -> env9, member:instance$Ident(Gen) -> instance$Ident$_Gen$_9, tmp:tmp -> tmp81, tmp:tmp -> tmp82, tmp:inlinedVal -> inlinedVal13, tmp:block$res -> block$res38, tmp:block$res -> block$res3, TInt -> TInt, TBool -> TBool, tmp:block$res -> block$res4, member:Term -> Term2, member:IntLit -> IntLit1, member:Var -> Var1, member:App -> App1, member:Abs -> Abs1, member:BoolLit -> BoolLit1, member:ShowTerm -> ShowTerm1, pattern:ShowTerm -> ShowTerm, class:Abs -> Abs, class:App -> App, tmp:block$res -> block$res21, emptyEnv -> emptyEnv, tmp:tmp -> tmp29, tmp:block$res -> block$res22, member:Gen -> Gen1, class:Gen -> Gen, class:Term -> Term1, class:Var -> Var, tmp:block$res -> block$res23, class:IntLit -> IntLit, class:BoolLit -> BoolLit, member:lambda$ -> lambda$, member:inferTop -> inferTop, tmp:block$res -> block$res5, member:Scheme -> Scheme1, class:Scheme -> Scheme, tmp:block$res -> block$res24, tmp:block$res -> block$res10, member:unify' -> unify$_, member:inferType -> inferType, tmp:block$res -> block$res11, member:unify -> unify, tmp:block$res -> block$res25, id -> id, const -> const1, apply -> apply, tmp:block$res -> block$res6, compose -> compose, member:Subst -> Subst1, class:Subst -> Subst, tmp:tmp -> tmp30, tmp:tmp -> tmp31, tmp:tmp -> tmp32, tmp:tmp -> tmp33, tmp:tmp -> tmp34, tmp:tmp -> tmp35, tmp:tmp -> tmp36, tmp:tmp -> tmp37, tmp:tmp -> tmp38, tmp:tmp -> tmp39, tmp:tmp -> tmp40, tmp:tmp -> tmp41, tmp:tmp -> tmp42, tmp:tmp -> tmp43, tmp:block$res -> block$res26, tmp:block$res -> block$res27, env -> env, term -> term, member:instance$Ident(Gen) -> instance$Ident$_Gen$_, tmp:tmp -> tmp44, tmp:tmp -> tmp45, tmp:inlinedVal -> inlinedVal4, tmp:block$res -> block$res28, env -> env1)
+//│     defaultImportBindings = HashMap(/storage/mark/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs -> Iter, /storage/mark/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Option.mjs -> Option, /storage/mark/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Runtime.mjs -> Runtime, /storage/mark/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Predef.mjs -> Predef)
+//│ ═══[COMPILATION ERROR] No definition found in scope for member 'infer$tailrec'
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:259)
+//│ ═══[RUNTIME ERROR] ReferenceError: infer$tailrec is not defined
+//│     at REPL123:1:333
+//│     at ContextifyScript.runInThisContext (node:vm:138:12)
+//│     at defaultEval (node:repl:608:24)
+//│     at REPLEvalInContext (node:repl:691:9)
+//│     at AsyncLocalStorage.run (node:internal/async_local_storage/async_context_frame:66:14)
+//│     at REPLServer.REPLEval [as eval] (node:repl:690:19)
+//│     at REPLServer.onLine (node:repl:828:12)
+//│     at REPLServer.emit (node:events:514:20)
+//│     at [_onLine] [as _onLine] (node:internal/readline/interface:474:12)
+//│     at [_normalWrite] [as _normalWrite] (node:internal/readline/interface:669:18)
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: processIRBlock (JSBackendDiffMaker.scala:299)
+//│ ═══[RUNTIME ERROR] Expected: '"Bool"', got: 'undefined'
 
 :silent
 let env2 = env1.extend of
@@ -316,11 +675,55 @@ let env2 = env1.extend of
   Scheme(new Set(), TFun(TInt, TFun(TInt, TInt)))
 
 env2 |- App(App(Var("add"), IntLit(5)), IntLit(5))
-//│ = "Int"
+//│ FAILURE: Unexpected compilation error
+//│ FAILURE LOCATION: lookup_! (Scope.scala:136)
+//│ FAILURE INFO: Tuple2:
+//│   _1 = Tuple2:
+//│     _1 = member:infer$tailrec⁰
+//│     _2 = class hkmc2.semantics.BlockMemberSymbol
+//│   _2 = Scope:
+//│     parentOrCfg = Left of Cfg:
+//│       escapeChars = true
+//│       useSuperscripts = false
+//│       includeZero = false
+//│       defaultName = "tmp"
+//│     curThis = S of S of globalThis:globalThis⁰
+//│     bindings = HashMap(term -> term1, member:instance$Ident(Gen) -> instance$Ident$_Gen$_1, tmp:runtime -> runtime, tmp:block$res -> block$res12, tmp:tmp -> tmp46, tmp:definitionMetadata -> definitionMetadata, tmp:tmp -> tmp47, tmp:prettyPrint -> prettyPrint, tmp:inlinedVal -> inlinedVal5, tmp:Term -> Term, tmp:Block -> Block, tmp:tmp -> tmp1, tmp:block$res -> block$res29, tmp:option -> option, tmp:block$res -> block$res13, env -> env2, term -> term2, t1 -> t1, t2 -> t2, member:instance$Ident(Gen) -> instance$Ident$_Gen$_2, tmp:inlinedVal -> inlinedVal, tmp:tmp -> tmp48, tmp:tmp -> tmp49, tmp:tmp -> tmp2, tmp:inlinedVal -> inlinedVal6, tmp:scrut -> scrut, tmp:block$res -> block$res14, tmp:block$res -> block$res30, env -> env3, term -> term3, tmp:tmp -> tmp3, tmp:tmp -> tmp4, tmp:block$res -> block$res15, member:instance$Ident(Gen) -> instance$Ident$_Gen$_3, tmp:tmp -> tmp50, tmp:tmp -> tmp51, tmp:inlinedVal -> inlinedVal7, tmp:tmp -> tmp5, tmp:block$res -> block$res31, t2 -> t21, tmp:inlinedVal -> inlinedVal1, tmp:tmp -> tmp52, env -> env4, tmp:block$res -> block$res, tmp:tmp -> tmp6, tmp:scrut -> scrut1, tmp:block$res -> block$res1, tmp:block$res -> block$res16, member:instance$Ident(Gen) -> instance$Ident$_Gen$_4, tmp:block$res -> block$res2, tmp:tmp -> tmp53, tmp:tmp -> tmp54, tmp:inlinedVal -> inlinedVal8, member:Option -> Option, tmp:block$res -> block$res32, member:Type -> Type1, member:TVar -> TVar1, member:TFun -> TFun1, tmp:tmp -> tmp7, tmp:tmp -> tmp55, member:TPrim -> TPrim1, tmp:tmp -> tmp8, env -> env5, class:Type -> Type, tmp:tmp -> tmp9, tmp:tmp -> tmp10, tmp:tmp -> tmp11, tmp:tmp -> tmp12, member:instance$Ident(Gen) -> instance$Ident$_Gen$_5, class:TFun -> TFun, tmp:tmp -> tmp13, tmp:tmp -> tmp56, tmp:block$res -> block$res17, tmp:tmp -> tmp57, tmp:inlinedVal -> inlinedVal9, tmp:block$res -> block$res33, tmp:tmp -> tmp58, tmp:tmp -> tmp59, tmp:tmp -> tmp14, env -> env6, tmp:tmp -> tmp15, tmp:tmp -> tmp16, tmp:tmp -> tmp17, tmp:tmp -> tmp18, member:instance$Ident(Gen) -> instance$Ident$_Gen$_6, tmp:tmp -> tmp19, tmp:tmp -> tmp60, tmp:tmp -> tmp61, tmp:inlinedVal -> inlinedVal10, tmp:inlinedVal -> inlinedVal2, tmp:block$res -> block$res34, tmp:tmp -> tmp20, tmp:scrut -> scrut2, tmp:block$res -> block$res18, tmp:tmp -> tmp62, tmp:tmp -> tmp63, tmp:tmp -> tmp64, tmp:block$res -> block$res7, env -> env7, emptySub -> emptySub, tmp:tmp -> tmp21, tmp:tmp -> tmp22, tmp:tmp -> tmp23, member:instance$Ident(Gen) -> instance$Ident$_Gen$_7, tmp:tmp -> tmp, tmp:tmp -> tmp24, tmp:tmp -> tmp65, member:Predef -> Predef, tmp:block$res -> block$res8, tmp:block$res -> block$res19, tmp:tmp -> tmp66, tmp:inlinedVal -> inlinedVal11, member:applyPattern -> applyPattern, tmp:block$res -> block$res35, env1 -> env11, tmp:tmp -> tmp25, tmp:tmp -> tmp26, tmp:tmp -> tmp27, tmp:inlinedVal -> inlinedVal3, tmp:tmp -> tmp67, tmp:tmp -> tmp68, tmp:block$res -> block$res9, tmp:tmp -> tmp28, tmp:tmp -> tmp69, tmp:scrut -> scrut3, tmp:tmp -> tmp70, member:Unify -> Unify1, tmp:block$res -> block$res20, tmp:tmp -> tmp71, pattern:Unify -> Unify, tmp:tmp -> tmp72, tmp:block$res -> block$res36, member:Env -> Env1, class:Env -> Env, tmp:tmp -> tmp73, tmp:tmp -> tmp74, member:Iter -> Iter, tmp:tmp -> tmp75, class:TVar -> TVar, env -> env8, member:instance$Ident(Gen) -> instance$Ident$_Gen$_8, tmp:tmp -> tmp76, tmp:tmp -> tmp77, tmp:inlinedVal -> inlinedVal12, tmp:block$res -> block$res37, class:TPrim -> TPrim, tmp:tmp -> tmp78, member:Runtime -> Runtime, tmp:tmp -> tmp79, tmp:tmp -> tmp80, env -> env9, member:instance$Ident(Gen) -> instance$Ident$_Gen$_9, tmp:tmp -> tmp81, tmp:tmp -> tmp82, tmp:inlinedVal -> inlinedVal13, tmp:block$res -> block$res38, env2 -> env21, tmp:tmp -> tmp83, tmp:tmp -> tmp84, tmp:tmp -> tmp85, tmp:tmp -> tmp86, tmp:block$res -> block$res39, tmp:block$res -> block$res3, tmp:tmp -> tmp87, TInt -> TInt, tmp:tmp -> tmp88, tmp:tmp -> tmp89, TBool -> TBool, tmp:tmp -> tmp90, tmp:tmp -> tmp91, tmp:block$res -> block$res4, env -> env10, member:Term -> Term2, member:IntLit -> IntLit1, member:instance$Ident(Gen) -> instance$Ident$_Gen$_10, member:Var -> Var1, tmp:tmp -> tmp92, member:App -> App1, tmp:tmp -> tmp93, member:Abs -> Abs1, tmp:inlinedVal -> inlinedVal14, member:BoolLit -> BoolLit1, member:ShowTerm -> ShowTerm1, tmp:block$res -> block$res40, pattern:ShowTerm -> ShowTerm, class:Abs -> Abs, class:App -> App, tmp:block$res -> block$res21, emptyEnv -> emptyEnv, tmp:tmp -> tmp29, tmp:block$res -> block$res22, member:Gen -> Gen1, class:Gen -> Gen, class:Term -> Term1, class:Var -> Var, tmp:block$res -> block$res23, class:IntLit -> IntLit, class:BoolLit -> BoolLit, member:lambda$ -> lambda$, member:inferTop -> inferTop, tmp:block$res -> block$res5, member:Scheme -> Scheme1, class:Scheme -> Scheme, tmp:block$res -> block$res24, tmp:block$res -> block$res10, member:unify' -> unify$_, member:inferType -> inferType, tmp:block$res -> block$res11, member:unify -> unify, tmp:block$res -> block$res25, id -> id, const -> const1, apply -> apply, tmp:block$res -> block$res6, compose -> compose, member:Subst -> Subst1, class:Subst -> Subst, tmp:tmp -> tmp30, tmp:tmp -> tmp31, tmp:tmp -> tmp32, tmp:tmp -> tmp33, tmp:tmp -> tmp34, tmp:tmp -> tmp35, tmp:tmp -> tmp36, tmp:tmp -> tmp37, tmp:tmp -> tmp38, tmp:tmp -> tmp39, tmp:tmp -> tmp40, tmp:tmp -> tmp41, tmp:tmp -> tmp42, tmp:tmp -> tmp43, tmp:block$res -> block$res26, tmp:block$res -> block$res27, env -> env, term -> term, member:instance$Ident(Gen) -> instance$Ident$_Gen$_, tmp:tmp -> tmp44, tmp:tmp -> tmp45, tmp:inlinedVal -> inlinedVal4, tmp:block$res -> block$res28, env -> env1)
+//│     defaultImportBindings = HashMap(/storage/mark/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs -> Iter, /storage/mark/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Option.mjs -> Option, /storage/mark/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Runtime.mjs -> Runtime, /storage/mark/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Predef.mjs -> Predef)
+//│ ═══[COMPILATION ERROR] No definition found in scope for member 'infer$tailrec'
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:259)
+//│ ═══[RUNTIME ERROR] ReferenceError: infer$tailrec is not defined
+//│     at REPL128:1:434
+//│     at ContextifyScript.runInThisContext (node:vm:138:12)
+//│     at defaultEval (node:repl:608:24)
+//│     at REPLEvalInContext (node:repl:691:9)
+//│     at AsyncLocalStorage.run (node:internal/async_local_storage/async_context_frame:66:14)
+//│     at REPLServer.REPLEval [as eval] (node:repl:690:19)
+//│     at REPLServer.onLine (node:repl:828:12)
+//│     at REPLServer.emit (node:events:514:20)
+//│     at [_onLine] [as _onLine] (node:internal/readline/interface:474:12)
+//│     at [_normalWrite] [as _normalWrite] (node:internal/readline/interface:669:18)
 
 :re
 env2 |- App(App(Var("add"), IntLit(5)), BoolLit(true))
-//│ ═══[RUNTIME ERROR] Error: Cannot unify Int with Bool
+//│ FAILURE: Unexpected compilation error
+//│ FAILURE LOCATION: lookup_! (Scope.scala:136)
+//│ FAILURE INFO: Tuple2:
+//│   _1 = Tuple2:
+//│     _1 = member:infer$tailrec⁰
+//│     _2 = class hkmc2.semantics.BlockMemberSymbol
+//│   _2 = Scope:
+//│     parentOrCfg = Left of Cfg:
+//│       escapeChars = true
+//│       useSuperscripts = false
+//│       includeZero = false
+//│       defaultName = "tmp"
+//│     curThis = S of S of globalThis:globalThis⁰
+//│     bindings = HashMap(term -> term1, member:instance$Ident(Gen) -> instance$Ident$_Gen$_1, tmp:runtime -> runtime, tmp:block$res -> block$res12, tmp:tmp -> tmp46, tmp:definitionMetadata -> definitionMetadata, tmp:tmp -> tmp47, tmp:prettyPrint -> prettyPrint, tmp:inlinedVal -> inlinedVal5, tmp:Term -> Term, tmp:Block -> Block, tmp:tmp -> tmp1, tmp:block$res -> block$res29, tmp:option -> option, tmp:block$res -> block$res13, env -> env2, term -> term2, t1 -> t1, t2 -> t2, member:instance$Ident(Gen) -> instance$Ident$_Gen$_2, tmp:inlinedVal -> inlinedVal, tmp:tmp -> tmp48, tmp:tmp -> tmp49, tmp:tmp -> tmp2, tmp:inlinedVal -> inlinedVal6, tmp:scrut -> scrut, tmp:block$res -> block$res14, tmp:block$res -> block$res30, env -> env3, term -> term3, tmp:tmp -> tmp3, tmp:tmp -> tmp4, tmp:block$res -> block$res15, member:instance$Ident(Gen) -> instance$Ident$_Gen$_3, tmp:tmp -> tmp50, tmp:tmp -> tmp51, tmp:inlinedVal -> inlinedVal7, tmp:tmp -> tmp5, tmp:block$res -> block$res31, t2 -> t21, tmp:inlinedVal -> inlinedVal1, tmp:tmp -> tmp52, env -> env4, tmp:block$res -> block$res, tmp:tmp -> tmp6, tmp:scrut -> scrut1, tmp:block$res -> block$res1, tmp:block$res -> block$res16, member:instance$Ident(Gen) -> instance$Ident$_Gen$_4, tmp:block$res -> block$res2, tmp:tmp -> tmp53, tmp:tmp -> tmp54, tmp:inlinedVal -> inlinedVal8, member:Option -> Option, tmp:block$res -> block$res32, member:Type -> Type1, member:TVar -> TVar1, member:TFun -> TFun1, tmp:tmp -> tmp7, tmp:tmp -> tmp55, member:TPrim -> TPrim1, tmp:tmp -> tmp8, env -> env5, class:Type -> Type, tmp:tmp -> tmp9, tmp:tmp -> tmp10, tmp:tmp -> tmp11, tmp:tmp -> tmp12, member:instance$Ident(Gen) -> instance$Ident$_Gen$_5, class:TFun -> TFun, tmp:tmp -> tmp13, tmp:tmp -> tmp56, tmp:block$res -> block$res17, tmp:tmp -> tmp57, tmp:inlinedVal -> inlinedVal9, tmp:block$res -> block$res33, tmp:tmp -> tmp58, tmp:tmp -> tmp59, tmp:tmp -> tmp14, env -> env6, tmp:tmp -> tmp15, tmp:tmp -> tmp16, tmp:tmp -> tmp17, tmp:tmp -> tmp18, member:instance$Ident(Gen) -> instance$Ident$_Gen$_6, tmp:tmp -> tmp19, tmp:tmp -> tmp60, tmp:tmp -> tmp61, tmp:inlinedVal -> inlinedVal10, tmp:inlinedVal -> inlinedVal2, tmp:block$res -> block$res34, tmp:tmp -> tmp20, tmp:scrut -> scrut2, tmp:block$res -> block$res18, tmp:tmp -> tmp62, tmp:tmp -> tmp63, tmp:tmp -> tmp64, tmp:block$res -> block$res7, env -> env7, emptySub -> emptySub, tmp:tmp -> tmp21, tmp:tmp -> tmp22, tmp:tmp -> tmp23, member:instance$Ident(Gen) -> instance$Ident$_Gen$_7, tmp:tmp -> tmp, tmp:tmp -> tmp24, tmp:tmp -> tmp65, member:Predef -> Predef, tmp:block$res -> block$res8, tmp:block$res -> block$res19, tmp:tmp -> tmp66, tmp:inlinedVal -> inlinedVal11, member:applyPattern -> applyPattern, tmp:block$res -> block$res35, env1 -> env11, tmp:tmp -> tmp25, tmp:tmp -> tmp26, tmp:tmp -> tmp27, tmp:inlinedVal -> inlinedVal3, tmp:tmp -> tmp67, tmp:tmp -> tmp68, tmp:block$res -> block$res9, tmp:tmp -> tmp28, tmp:tmp -> tmp69, tmp:scrut -> scrut3, tmp:tmp -> tmp70, member:Unify -> Unify1, tmp:block$res -> block$res20, tmp:tmp -> tmp71, pattern:Unify -> Unify, tmp:tmp -> tmp72, tmp:block$res -> block$res36, member:Env -> Env1, class:Env -> Env, tmp:tmp -> tmp73, tmp:tmp -> tmp74, member:Iter -> Iter, tmp:tmp -> tmp75, class:TVar -> TVar, env -> env8, member:instance$Ident(Gen) -> instance$Ident$_Gen$_8, tmp:tmp -> tmp76, tmp:tmp -> tmp77, tmp:inlinedVal -> inlinedVal12, tmp:block$res -> block$res37, class:TPrim -> TPrim, tmp:tmp -> tmp78, member:Runtime -> Runtime, tmp:tmp -> tmp79, tmp:tmp -> tmp80, env -> env9, member:instance$Ident(Gen) -> instance$Ident$_Gen$_9, tmp:tmp -> tmp81, tmp:tmp -> tmp82, tmp:inlinedVal -> inlinedVal13, tmp:block$res -> block$res38, env2 -> env21, tmp:tmp -> tmp83, tmp:tmp -> tmp84, tmp:tmp -> tmp85, tmp:tmp -> tmp86, tmp:block$res -> block$res39, tmp:block$res -> block$res3, tmp:tmp -> tmp87, TInt -> TInt, tmp:tmp -> tmp88, tmp:tmp -> tmp89, TBool -> TBool, tmp:tmp -> tmp90, tmp:tmp -> tmp91, tmp:block$res -> block$res4, env -> env10, member:Term -> Term2, member:IntLit -> IntLit1, member:instance$Ident(Gen) -> instance$Ident$_Gen$_10, member:Var -> Var1, tmp:tmp -> tmp92, member:App -> App1, tmp:tmp -> tmp93, member:Abs -> Abs1, tmp:inlinedVal -> inlinedVal14, member:BoolLit -> BoolLit1, member:ShowTerm -> ShowTerm1, tmp:block$res -> block$res40, pattern:ShowTerm -> ShowTerm, class:Abs -> Abs, tmp:tmp -> tmp94, tmp:tmp -> tmp95, tmp:tmp -> tmp96, tmp:tmp -> tmp97, tmp:tmp -> tmp98, env -> env12, class:App -> App, tmp:block$res -> block$res21, emptyEnv -> emptyEnv, member:instance$Ident(Gen) -> instance$Ident$_Gen$_11, tmp:tmp -> tmp99, tmp:tmp -> tmp29, tmp:tmp -> tmp100, tmp:block$res -> block$res22, tmp:inlinedVal -> inlinedVal15, tmp:block$res -> block$res41, member:Gen -> Gen1, class:Gen -> Gen, class:Term -> Term1, class:Var -> Var, tmp:block$res -> block$res23, class:IntLit -> IntLit, class:BoolLit -> BoolLit, member:lambda$ -> lambda$, member:inferTop -> inferTop, tmp:block$res -> block$res5, member:Scheme -> Scheme1, class:Scheme -> Scheme, tmp:block$res -> block$res24, tmp:block$res -> block$res10, member:unify' -> unify$_, member:inferType -> inferType, tmp:block$res -> block$res11, member:unify -> unify, tmp:block$res -> block$res25, id -> id, const -> const1, apply -> apply, tmp:block$res -> block$res6, compose -> compose, member:Subst -> Subst1, class:Subst -> Subst, tmp:tmp -> tmp30, tmp:tmp -> tmp31, tmp:tmp -> tmp32, tmp:tmp -> tmp33, tmp:tmp -> tmp34, tmp:tmp -> tmp35, tmp:tmp -> tmp36, tmp:tmp -> tmp37, tmp:tmp -> tmp38, tmp:tmp -> tmp39, tmp:tmp -> tmp40, tmp:tmp -> tmp41, tmp:tmp -> tmp42, tmp:tmp -> tmp43, tmp:block$res -> block$res26, tmp:block$res -> block$res27, env -> env, term -> term, member:instance$Ident(Gen) -> instance$Ident$_Gen$_, tmp:tmp -> tmp44, tmp:tmp -> tmp45, tmp:inlinedVal -> inlinedVal4, tmp:block$res -> block$res28, env -> env1)
+//│     defaultImportBindings = HashMap(/storage/mark/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs -> Iter, /storage/mark/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Option.mjs -> Option, /storage/mark/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Runtime.mjs -> Runtime, /storage/mark/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Predef.mjs -> Predef)
+//│ ═══[COMPILATION ERROR] No definition found in scope for member 'infer$tailrec'
+//│ ═══[RUNTIME ERROR] ReferenceError: infer$tailrec is not defined
 
 :silent
 let env3 = env2.extend of
@@ -328,19 +731,91 @@ let env3 = env2.extend of
   Scheme(new Set(["a"]), TFun(TBool, TFun(TVar("a"), TFun(TVar("a"), TVar("a")))))
 
 env3 |- Var("if")
-//│ = "∀t₀. Bool -> t₀ -> t₀ -> t₀"
+//│ FAILURE: Unexpected compilation error
+//│ FAILURE LOCATION: lookup_! (Scope.scala:136)
+//│ FAILURE INFO: Tuple2:
+//│   _1 = Tuple2:
+//│     _1 = member:infer$tailrec⁰
+//│     _2 = class hkmc2.semantics.BlockMemberSymbol
+//│   _2 = Scope:
+//│     parentOrCfg = Left of Cfg:
+//│       escapeChars = true
+//│       useSuperscripts = false
+//│       includeZero = false
+//│       defaultName = "tmp"
+//│     curThis = S of S of globalThis:globalThis⁰
+//│     bindings = HashMap(term -> term1, member:instance$Ident(Gen) -> instance$Ident$_Gen$_1, tmp:runtime -> runtime, tmp:block$res -> block$res12, tmp:tmp -> tmp46, tmp:definitionMetadata -> definitionMetadata, tmp:tmp -> tmp47, tmp:prettyPrint -> prettyPrint, tmp:inlinedVal -> inlinedVal5, tmp:Term -> Term, tmp:Block -> Block, tmp:tmp -> tmp1, tmp:block$res -> block$res29, tmp:option -> option, tmp:block$res -> block$res13, env -> env2, term -> term2, t1 -> t1, t2 -> t2, member:instance$Ident(Gen) -> instance$Ident$_Gen$_2, tmp:inlinedVal -> inlinedVal, tmp:tmp -> tmp48, tmp:tmp -> tmp49, tmp:tmp -> tmp2, tmp:inlinedVal -> inlinedVal6, tmp:scrut -> scrut, tmp:block$res -> block$res14, tmp:block$res -> block$res30, env -> env3, term -> term3, tmp:tmp -> tmp3, tmp:tmp -> tmp4, tmp:block$res -> block$res15, member:instance$Ident(Gen) -> instance$Ident$_Gen$_3, tmp:tmp -> tmp50, tmp:tmp -> tmp51, tmp:inlinedVal -> inlinedVal7, tmp:tmp -> tmp5, tmp:block$res -> block$res31, t2 -> t21, tmp:inlinedVal -> inlinedVal1, tmp:tmp -> tmp52, env -> env4, tmp:block$res -> block$res, tmp:tmp -> tmp6, tmp:scrut -> scrut1, tmp:block$res -> block$res1, tmp:block$res -> block$res16, member:instance$Ident(Gen) -> instance$Ident$_Gen$_4, tmp:block$res -> block$res2, tmp:tmp -> tmp53, tmp:tmp -> tmp54, tmp:inlinedVal -> inlinedVal8, member:Option -> Option, tmp:block$res -> block$res32, member:Type -> Type1, member:TVar -> TVar1, member:TFun -> TFun1, tmp:tmp -> tmp7, tmp:tmp -> tmp55, member:TPrim -> TPrim1, tmp:tmp -> tmp8, env -> env5, class:Type -> Type, tmp:tmp -> tmp9, tmp:tmp -> tmp10, tmp:tmp -> tmp11, tmp:tmp -> tmp12, member:instance$Ident(Gen) -> instance$Ident$_Gen$_5, class:TFun -> TFun, tmp:tmp -> tmp13, tmp:tmp -> tmp56, tmp:block$res -> block$res17, tmp:tmp -> tmp57, tmp:inlinedVal -> inlinedVal9, tmp:block$res -> block$res33, tmp:tmp -> tmp58, tmp:tmp -> tmp59, tmp:tmp -> tmp14, env -> env6, tmp:tmp -> tmp15, tmp:tmp -> tmp16, tmp:tmp -> tmp17, tmp:tmp -> tmp18, member:instance$Ident(Gen) -> instance$Ident$_Gen$_6, tmp:tmp -> tmp19, tmp:tmp -> tmp60, tmp:tmp -> tmp61, tmp:inlinedVal -> inlinedVal10, tmp:inlinedVal -> inlinedVal2, tmp:block$res -> block$res34, tmp:tmp -> tmp20, tmp:scrut -> scrut2, tmp:block$res -> block$res18, tmp:tmp -> tmp62, tmp:tmp -> tmp63, tmp:tmp -> tmp64, tmp:block$res -> block$res7, env -> env7, emptySub -> emptySub, tmp:tmp -> tmp21, tmp:tmp -> tmp22, tmp:tmp -> tmp23, member:instance$Ident(Gen) -> instance$Ident$_Gen$_7, tmp:tmp -> tmp, tmp:tmp -> tmp24, tmp:tmp -> tmp65, member:Predef -> Predef, tmp:block$res -> block$res8, tmp:block$res -> block$res19, tmp:tmp -> tmp66, tmp:inlinedVal -> inlinedVal11, member:applyPattern -> applyPattern, tmp:block$res -> block$res35, env1 -> env11, tmp:tmp -> tmp25, tmp:tmp -> tmp26, tmp:tmp -> tmp27, tmp:inlinedVal -> inlinedVal3, tmp:tmp -> tmp67, tmp:tmp -> tmp68, tmp:block$res -> block$res9, tmp:tmp -> tmp28, tmp:tmp -> tmp69, tmp:scrut -> scrut3, tmp:tmp -> tmp70, member:Unify -> Unify1, tmp:block$res -> block$res20, tmp:tmp -> tmp71, pattern:Unify -> Unify, tmp:tmp -> tmp72, tmp:block$res -> block$res36, member:Env -> Env1, class:Env -> Env, tmp:tmp -> tmp73, tmp:tmp -> tmp74, member:Iter -> Iter, tmp:tmp -> tmp75, class:TVar -> TVar, env -> env8, member:instance$Ident(Gen) -> instance$Ident$_Gen$_8, tmp:tmp -> tmp76, tmp:tmp -> tmp77, tmp:inlinedVal -> inlinedVal12, tmp:block$res -> block$res37, class:TPrim -> TPrim, tmp:tmp -> tmp78, member:Runtime -> Runtime, tmp:tmp -> tmp79, tmp:tmp -> tmp80, env -> env9, member:instance$Ident(Gen) -> instance$Ident$_Gen$_9, tmp:tmp -> tmp81, tmp:tmp -> tmp82, tmp:inlinedVal -> inlinedVal13, tmp:block$res -> block$res38, env2 -> env21, tmp:tmp -> tmp83, tmp:tmp -> tmp84, tmp:tmp -> tmp85, tmp:tmp -> tmp86, tmp:block$res -> block$res39, tmp:block$res -> block$res3, tmp:tmp -> tmp87, TInt -> TInt, tmp:tmp -> tmp88, tmp:tmp -> tmp89, TBool -> TBool, tmp:tmp -> tmp90, tmp:tmp -> tmp91, tmp:block$res -> block$res4, env -> env10, member:Term -> Term2, member:IntLit -> IntLit1, member:instance$Ident(Gen) -> instance$Ident$_Gen$_10, member:Var -> Var1, tmp:tmp -> tmp92, member:App -> App1, tmp:tmp -> tmp93, member:Abs -> Abs1, tmp:inlinedVal -> inlinedVal14, member:BoolLit -> BoolLit1, member:ShowTerm -> ShowTerm1, tmp:block$res -> block$res40, pattern:ShowTerm -> ShowTerm, class:Abs -> Abs, tmp:tmp -> tmp94, tmp:tmp -> tmp95, tmp:tmp -> tmp96, tmp:tmp -> tmp97, tmp:tmp -> tmp98, env -> env12, class:App -> App, tmp:block$res -> block$res21, emptyEnv -> emptyEnv, member:instance$Ident(Gen) -> instance$Ident$_Gen$_11, tmp:tmp -> tmp99, tmp:tmp -> tmp29, tmp:tmp -> tmp100, tmp:block$res -> block$res22, tmp:inlinedVal -> inlinedVal15, tmp:block$res -> block$res41, member:Gen -> Gen1, env3 -> env31, class:Gen -> Gen, tmp:tmp -> tmp101, tmp:tmp -> tmp102, tmp:tmp -> tmp103, tmp:tmp -> tmp104, tmp:tmp -> tmp105, tmp:tmp -> tmp106, tmp:tmp -> tmp107, class:Term -> Term1, tmp:tmp -> tmp108, tmp:tmp -> tmp109, tmp:block$res -> block$res42, class:Var -> Var, tmp:tmp -> tmp110, env -> env13, member:instance$Ident(Gen) -> instance$Ident$_Gen$_12, tmp:tmp -> tmp111, tmp:tmp -> tmp112, tmp:inlinedVal -> inlinedVal16, tmp:block$res -> block$res43, tmp:block$res -> block$res23, class:IntLit -> IntLit, class:BoolLit -> BoolLit, member:lambda$ -> lambda$, member:inferTop -> inferTop, tmp:block$res -> block$res5, member:Scheme -> Scheme1, class:Scheme -> Scheme, tmp:block$res -> block$res24, tmp:block$res -> block$res10, member:unify' -> unify$_, member:inferType -> inferType, tmp:block$res -> block$res11, member:unify -> unify, tmp:block$res -> block$res25, id -> id, const -> const1, apply -> apply, tmp:block$res -> block$res6, compose -> compose, member:Subst -> Subst1, class:Subst -> Subst, tmp:tmp -> tmp30, tmp:tmp -> tmp31, tmp:tmp -> tmp32, tmp:tmp -> tmp33, tmp:tmp -> tmp34, tmp:tmp -> tmp35, tmp:tmp -> tmp36, tmp:tmp -> tmp37, tmp:tmp -> tmp38, tmp:tmp -> tmp39, tmp:tmp -> tmp40, tmp:tmp -> tmp41, tmp:tmp -> tmp42, tmp:tmp -> tmp43, tmp:block$res -> block$res26, tmp:block$res -> block$res27, env -> env, term -> term, member:instance$Ident(Gen) -> instance$Ident$_Gen$_, tmp:tmp -> tmp44, tmp:tmp -> tmp45, tmp:inlinedVal -> inlinedVal4, tmp:block$res -> block$res28, env -> env1)
+//│     defaultImportBindings = HashMap(/storage/mark/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs -> Iter, /storage/mark/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Option.mjs -> Option, /storage/mark/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Runtime.mjs -> Runtime, /storage/mark/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Predef.mjs -> Predef)
+//│ ═══[COMPILATION ERROR] No definition found in scope for member 'infer$tailrec'
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:259)
+//│ ═══[RUNTIME ERROR] ReferenceError: infer$tailrec is not defined
+//│     at REPL136:1:239
+//│     at ContextifyScript.runInThisContext (node:vm:138:12)
+//│     at defaultEval (node:repl:608:24)
+//│     at REPLEvalInContext (node:repl:691:9)
+//│     at AsyncLocalStorage.run (node:internal/async_local_storage/async_context_frame:66:14)
+//│     at REPLServer.REPLEval [as eval] (node:repl:690:19)
+//│     at REPLServer.onLine (node:repl:828:12)
+//│     at REPLServer.emit (node:events:514:20)
+//│     at [_onLine] [as _onLine] (node:internal/readline/interface:474:12)
+//│     at [_normalWrite] [as _normalWrite] (node:internal/readline/interface:669:18)
 
 :silent
 let t = App(App(App(Var("if"), BoolLit(true)), App(Var("id"), Var("id"))), Var("id"))
 print of t.show
 print of env3 |- t
+//│ FAILURE: Unexpected compilation error
+//│ FAILURE LOCATION: lookup_! (Scope.scala:136)
+//│ FAILURE INFO: Tuple2:
+//│   _1 = Tuple2:
+//│     _1 = member:infer$tailrec⁰
+//│     _2 = class hkmc2.semantics.BlockMemberSymbol
+//│   _2 = Scope:
+//│     parentOrCfg = Left of Cfg:
+//│       escapeChars = true
+//│       useSuperscripts = false
+//│       includeZero = false
+//│       defaultName = "tmp"
+//│     curThis = S of S of globalThis:globalThis⁰
+//│     bindings = HashMap(term -> term1, member:instance$Ident(Gen) -> instance$Ident$_Gen$_1, tmp:runtime -> runtime, tmp:block$res -> block$res12, tmp:tmp -> tmp46, tmp:definitionMetadata -> definitionMetadata, tmp:tmp -> tmp47, tmp:prettyPrint -> prettyPrint, tmp:inlinedVal -> inlinedVal5, tmp:Term -> Term, tmp:Block -> Block, tmp:tmp -> tmp1, tmp:block$res -> block$res29, tmp:option -> option, tmp:block$res -> block$res13, env -> env2, term -> term2, t1 -> t1, t2 -> t2, member:instance$Ident(Gen) -> instance$Ident$_Gen$_2, tmp:inlinedVal -> inlinedVal, tmp:tmp -> tmp48, tmp:tmp -> tmp49, tmp:tmp -> tmp2, tmp:inlinedVal -> inlinedVal6, tmp:scrut -> scrut, tmp:block$res -> block$res14, tmp:block$res -> block$res30, env -> env3, term -> term3, tmp:tmp -> tmp3, tmp:tmp -> tmp4, tmp:block$res -> block$res15, member:instance$Ident(Gen) -> instance$Ident$_Gen$_3, tmp:tmp -> tmp50, tmp:tmp -> tmp51, tmp:inlinedVal -> inlinedVal7, tmp:tmp -> tmp5, tmp:block$res -> block$res31, t2 -> t21, tmp:inlinedVal -> inlinedVal1, tmp:tmp -> tmp52, env -> env4, tmp:block$res -> block$res, tmp:tmp -> tmp6, tmp:scrut -> scrut1, tmp:block$res -> block$res1, tmp:block$res -> block$res16, member:instance$Ident(Gen) -> instance$Ident$_Gen$_4, tmp:block$res -> block$res2, tmp:tmp -> tmp53, tmp:tmp -> tmp54, tmp:inlinedVal -> inlinedVal8, member:Option -> Option, tmp:block$res -> block$res32, member:Type -> Type1, member:TVar -> TVar1, member:TFun -> TFun1, tmp:tmp -> tmp7, tmp:tmp -> tmp55, member:TPrim -> TPrim1, tmp:tmp -> tmp8, env -> env5, class:Type -> Type, tmp:tmp -> tmp9, tmp:tmp -> tmp10, tmp:tmp -> tmp11, tmp:tmp -> tmp12, member:instance$Ident(Gen) -> instance$Ident$_Gen$_5, class:TFun -> TFun, tmp:tmp -> tmp13, tmp:tmp -> tmp56, tmp:block$res -> block$res17, tmp:tmp -> tmp57, tmp:inlinedVal -> inlinedVal9, tmp:block$res -> block$res33, tmp:tmp -> tmp58, tmp:tmp -> tmp59, tmp:tmp -> tmp14, env -> env6, tmp:tmp -> tmp15, tmp:tmp -> tmp16, tmp:tmp -> tmp17, tmp:tmp -> tmp18, member:instance$Ident(Gen) -> instance$Ident$_Gen$_6, tmp:tmp -> tmp19, tmp:tmp -> tmp60, tmp:tmp -> tmp61, tmp:inlinedVal -> inlinedVal10, tmp:inlinedVal -> inlinedVal2, tmp:block$res -> block$res34, tmp:tmp -> tmp20, tmp:scrut -> scrut2, tmp:block$res -> block$res18, tmp:tmp -> tmp62, tmp:tmp -> tmp63, tmp:tmp -> tmp64, tmp:block$res -> block$res7, env -> env7, emptySub -> emptySub, tmp:tmp -> tmp21, tmp:tmp -> tmp22, tmp:tmp -> tmp23, member:instance$Ident(Gen) -> instance$Ident$_Gen$_7, tmp:tmp -> tmp, tmp:tmp -> tmp24, tmp:tmp -> tmp65, member:Predef -> Predef, tmp:block$res -> block$res8, tmp:block$res -> block$res19, tmp:tmp -> tmp66, tmp:inlinedVal -> inlinedVal11, member:applyPattern -> applyPattern, tmp:block$res -> block$res35, env1 -> env11, tmp:tmp -> tmp25, tmp:tmp -> tmp26, tmp:tmp -> tmp27, tmp:inlinedVal -> inlinedVal3, tmp:tmp -> tmp67, tmp:tmp -> tmp68, tmp:block$res -> block$res9, tmp:tmp -> tmp28, tmp:tmp -> tmp69, tmp:scrut -> scrut3, tmp:tmp -> tmp70, member:Unify -> Unify1, tmp:block$res -> block$res20, tmp:tmp -> tmp71, pattern:Unify -> Unify, tmp:tmp -> tmp72, tmp:block$res -> block$res36, member:Env -> Env1, class:Env -> Env, tmp:tmp -> tmp73, tmp:tmp -> tmp74, member:Iter -> Iter, tmp:tmp -> tmp75, class:TVar -> TVar, env -> env8, member:instance$Ident(Gen) -> instance$Ident$_Gen$_8, tmp:tmp -> tmp76, tmp:tmp -> tmp77, tmp:inlinedVal -> inlinedVal12, tmp:block$res -> block$res37, class:TPrim -> TPrim, tmp:tmp -> tmp78, member:Runtime -> Runtime, tmp:tmp -> tmp79, tmp:tmp -> tmp80, env -> env9, member:instance$Ident(Gen) -> instance$Ident$_Gen$_9, tmp:tmp -> tmp81, tmp:tmp -> tmp82, tmp:inlinedVal -> inlinedVal13, tmp:block$res -> block$res38, env2 -> env21, tmp:tmp -> tmp83, tmp:tmp -> tmp84, tmp:tmp -> tmp85, tmp:tmp -> tmp86, tmp:block$res -> block$res39, tmp:block$res -> block$res3, tmp:tmp -> tmp87, TInt -> TInt, tmp:tmp -> tmp88, tmp:tmp -> tmp89, TBool -> TBool, tmp:tmp -> tmp90, tmp:tmp -> tmp91, tmp:block$res -> block$res4, env -> env10, member:Term -> Term2, member:IntLit -> IntLit1, member:instance$Ident(Gen) -> instance$Ident$_Gen$_10, member:Var -> Var1, tmp:tmp -> tmp92, member:App -> App1, tmp:tmp -> tmp93, member:Abs -> Abs1, tmp:inlinedVal -> inlinedVal14, member:BoolLit -> BoolLit1, member:ShowTerm -> ShowTerm1, tmp:block$res -> block$res40, pattern:ShowTerm -> ShowTerm, class:Abs -> Abs, tmp:tmp -> tmp94, tmp:tmp -> tmp95, tmp:tmp -> tmp96, tmp:tmp -> tmp97, tmp:tmp -> tmp98, env -> env12, class:App -> App, tmp:block$res -> block$res21, emptyEnv -> emptyEnv, member:instance$Ident(Gen) -> instance$Ident$_Gen$_11, tmp:tmp -> tmp99, tmp:tmp -> tmp29, tmp:tmp -> tmp100, tmp:block$res -> block$res22, tmp:inlinedVal -> inlinedVal15, tmp:block$res -> block$res41, member:Gen -> Gen1, env3 -> env31, class:Gen -> Gen, tmp:tmp -> tmp101, tmp:tmp -> tmp102, tmp:tmp -> tmp103, tmp:tmp -> tmp104, tmp:tmp -> tmp105, tmp:tmp -> tmp106, tmp:tmp -> tmp107, class:Term -> Term1, tmp:tmp -> tmp108, tmp:tmp -> tmp109, tmp:block$res -> block$res42, class:Var -> Var, tmp:tmp -> tmp110, env -> env13, member:instance$Ident(Gen) -> instance$Ident$_Gen$_12, tmp:tmp -> tmp111, tmp:tmp -> tmp112, tmp:inlinedVal -> inlinedVal16, tmp:block$res -> block$res43, t -> t, tmp:block$res -> block$res23, class:IntLit -> IntLit, class:BoolLit -> BoolLit, tmp:tmp -> tmp113, tmp:tmp -> tmp114, tmp:tmp -> tmp115, tmp:tmp -> tmp116, tmp:tmp -> tmp117, tmp:tmp -> tmp118, tmp:tmp -> tmp119, tmp:tmp -> tmp120, env -> env14, term -> term4, tmp:inlinedVal -> inlinedVal17, member:instance$Ident(Gen) -> instance$Ident$_Gen$_13, tmp:tmp -> tmp121, tmp:tmp -> tmp122, tmp:inlinedVal -> inlinedVal18, tmp:block$res -> block$res44, member:lambda$ -> lambda$, member:inferTop -> inferTop, tmp:block$res -> block$res5, member:Scheme -> Scheme1, class:Scheme -> Scheme, tmp:block$res -> block$res24, tmp:block$res -> block$res10, member:unify' -> unify$_, member:inferType -> inferType, tmp:block$res -> block$res11, member:unify -> unify, tmp:block$res -> block$res25, id -> id, const -> const1, apply -> apply, tmp:block$res -> block$res6, compose -> compose, member:Subst -> Subst1, class:Subst -> Subst, tmp:tmp -> tmp30, tmp:tmp -> tmp31, tmp:tmp -> tmp32, tmp:tmp -> tmp33, tmp:tmp -> tmp34, tmp:tmp -> tmp35, tmp:tmp -> tmp36, tmp:tmp -> tmp37, tmp:tmp -> tmp38, tmp:tmp -> tmp39, tmp:tmp -> tmp40, tmp:tmp -> tmp41, tmp:tmp -> tmp42, tmp:tmp -> tmp43, tmp:block$res -> block$res26, tmp:block$res -> block$res27, env -> env, term -> term, member:instance$Ident(Gen) -> instance$Ident$_Gen$_, tmp:tmp -> tmp44, tmp:tmp -> tmp45, tmp:inlinedVal -> inlinedVal4, tmp:block$res -> block$res28, env -> env1)
+//│     defaultImportBindings = HashMap(/storage/mark/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs -> Iter, /storage/mark/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Option.mjs -> Option, /storage/mark/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Runtime.mjs -> Runtime, /storage/mark/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Predef.mjs -> Predef)
+//│ ═══[COMPILATION ERROR] No definition found in scope for member 'infer$tailrec'
 //│ > if true (id id) id
-//│ > ∀t₆. t₆ -> t₆
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:259)
+//│ ═══[RUNTIME ERROR] ReferenceError: infer$tailrec is not defined
+//│     at REPL139:1:762
+//│     at ContextifyScript.runInThisContext (node:vm:138:12)
+//│     at defaultEval (node:repl:608:24)
+//│     at REPLEvalInContext (node:repl:691:9)
+//│     at AsyncLocalStorage.run (node:internal/async_local_storage/async_context_frame:66:14)
+//│     at REPLServer.REPLEval [as eval] (node:repl:690:19)
+//│     at REPLServer.onLine (node:repl:828:12)
+//│     at REPLServer.emit (node:events:514:20)
+//│     at [_onLine] [as _onLine] (node:internal/readline/interface:474:12)
+//│     at [_normalWrite] [as _normalWrite] (node:internal/readline/interface:669:18)
 
 :silent
 :re
 let t = App(App(App(Var("if"), BoolLit(true)), App(Var("id"), Var("id"))), Var("add"))
 print of t.show
 print of env3 |- t
+//│ FAILURE: Unexpected compilation error
+//│ FAILURE LOCATION: lookup_! (Scope.scala:136)
+//│ FAILURE INFO: Tuple2:
+//│   _1 = Tuple2:
+//│     _1 = member:infer$tailrec⁰
+//│     _2 = class hkmc2.semantics.BlockMemberSymbol
+//│   _2 = Scope:
+//│     parentOrCfg = Left of Cfg:
+//│       escapeChars = true
+//│       useSuperscripts = false
+//│       includeZero = false
+//│       defaultName = "tmp"
+//│     curThis = S of S of globalThis:globalThis⁰
+//│     bindings = HashMap(term -> term1, member:instance$Ident(Gen) -> instance$Ident$_Gen$_1, tmp:runtime -> runtime, tmp:block$res -> block$res12, tmp:tmp -> tmp46, tmp:definitionMetadata -> definitionMetadata, tmp:tmp -> tmp47, tmp:prettyPrint -> prettyPrint, tmp:inlinedVal -> inlinedVal5, tmp:Term -> Term, tmp:Block -> Block, tmp:tmp -> tmp1, tmp:block$res -> block$res29, tmp:option -> option, tmp:block$res -> block$res13, env -> env2, term -> term2, t1 -> t1, t2 -> t2, member:instance$Ident(Gen) -> instance$Ident$_Gen$_2, tmp:inlinedVal -> inlinedVal, tmp:tmp -> tmp48, tmp:tmp -> tmp49, tmp:tmp -> tmp2, tmp:inlinedVal -> inlinedVal6, tmp:scrut -> scrut, tmp:block$res -> block$res14, tmp:block$res -> block$res30, env -> env3, term -> term3, tmp:tmp -> tmp3, tmp:tmp -> tmp4, tmp:block$res -> block$res15, member:instance$Ident(Gen) -> instance$Ident$_Gen$_3, tmp:tmp -> tmp50, tmp:tmp -> tmp51, tmp:inlinedVal -> inlinedVal7, tmp:tmp -> tmp5, tmp:block$res -> block$res31, t2 -> t21, tmp:inlinedVal -> inlinedVal1, tmp:tmp -> tmp52, env -> env4, tmp:block$res -> block$res, tmp:tmp -> tmp6, tmp:scrut -> scrut1, tmp:block$res -> block$res1, tmp:block$res -> block$res16, member:instance$Ident(Gen) -> instance$Ident$_Gen$_4, tmp:block$res -> block$res2, tmp:tmp -> tmp53, tmp:tmp -> tmp54, tmp:inlinedVal -> inlinedVal8, member:Option -> Option, tmp:block$res -> block$res32, member:Type -> Type1, member:TVar -> TVar1, member:TFun -> TFun1, tmp:tmp -> tmp7, tmp:tmp -> tmp55, member:TPrim -> TPrim1, tmp:tmp -> tmp8, env -> env5, class:Type -> Type, tmp:tmp -> tmp9, tmp:tmp -> tmp10, tmp:tmp -> tmp11, tmp:tmp -> tmp12, member:instance$Ident(Gen) -> instance$Ident$_Gen$_5, class:TFun -> TFun, tmp:tmp -> tmp13, tmp:tmp -> tmp56, tmp:block$res -> block$res17, tmp:tmp -> tmp57, tmp:inlinedVal -> inlinedVal9, tmp:block$res -> block$res33, tmp:tmp -> tmp58, tmp:tmp -> tmp59, tmp:tmp -> tmp14, env -> env6, tmp:tmp -> tmp15, tmp:tmp -> tmp16, tmp:tmp -> tmp17, tmp:tmp -> tmp18, member:instance$Ident(Gen) -> instance$Ident$_Gen$_6, tmp:tmp -> tmp19, tmp:tmp -> tmp60, tmp:tmp -> tmp61, tmp:inlinedVal -> inlinedVal10, tmp:inlinedVal -> inlinedVal2, tmp:block$res -> block$res34, tmp:tmp -> tmp20, tmp:scrut -> scrut2, tmp:block$res -> block$res18, tmp:tmp -> tmp62, tmp:tmp -> tmp63, tmp:tmp -> tmp64, tmp:block$res -> block$res7, env -> env7, emptySub -> emptySub, tmp:tmp -> tmp21, tmp:tmp -> tmp22, tmp:tmp -> tmp23, member:instance$Ident(Gen) -> instance$Ident$_Gen$_7, tmp:tmp -> tmp, tmp:tmp -> tmp24, tmp:tmp -> tmp65, member:Predef -> Predef, tmp:block$res -> block$res8, tmp:block$res -> block$res19, tmp:tmp -> tmp66, tmp:inlinedVal -> inlinedVal11, member:applyPattern -> applyPattern, tmp:block$res -> block$res35, env1 -> env11, tmp:tmp -> tmp25, tmp:tmp -> tmp26, tmp:tmp -> tmp27, tmp:inlinedVal -> inlinedVal3, tmp:tmp -> tmp67, tmp:tmp -> tmp68, tmp:block$res -> block$res9, tmp:tmp -> tmp28, tmp:tmp -> tmp69, tmp:scrut -> scrut3, tmp:tmp -> tmp70, member:Unify -> Unify1, tmp:block$res -> block$res20, tmp:tmp -> tmp71, pattern:Unify -> Unify, tmp:tmp -> tmp72, tmp:block$res -> block$res36, member:Env -> Env1, class:Env -> Env, tmp:tmp -> tmp73, tmp:tmp -> tmp74, member:Iter -> Iter, tmp:tmp -> tmp75, class:TVar -> TVar, env -> env8, member:instance$Ident(Gen) -> instance$Ident$_Gen$_8, tmp:tmp -> tmp76, tmp:tmp -> tmp77, tmp:inlinedVal -> inlinedVal12, tmp:block$res -> block$res37, class:TPrim -> TPrim, tmp:tmp -> tmp78, member:Runtime -> Runtime, tmp:tmp -> tmp79, tmp:tmp -> tmp80, env -> env9, member:instance$Ident(Gen) -> instance$Ident$_Gen$_9, tmp:tmp -> tmp81, tmp:tmp -> tmp82, tmp:inlinedVal -> inlinedVal13, tmp:block$res -> block$res38, env2 -> env21, tmp:tmp -> tmp83, tmp:tmp -> tmp84, tmp:tmp -> tmp85, tmp:tmp -> tmp86, tmp:block$res -> block$res39, tmp:block$res -> block$res3, tmp:tmp -> tmp87, TInt -> TInt, tmp:tmp -> tmp88, tmp:tmp -> tmp89, TBool -> TBool, tmp:tmp -> tmp90, tmp:tmp -> tmp91, tmp:block$res -> block$res4, env -> env10, member:Term -> Term2, member:IntLit -> IntLit1, member:instance$Ident(Gen) -> instance$Ident$_Gen$_10, member:Var -> Var1, tmp:tmp -> tmp92, member:App -> App1, tmp:tmp -> tmp93, member:Abs -> Abs1, tmp:inlinedVal -> inlinedVal14, member:BoolLit -> BoolLit1, member:ShowTerm -> ShowTerm1, tmp:block$res -> block$res40, pattern:ShowTerm -> ShowTerm, class:Abs -> Abs, tmp:tmp -> tmp94, tmp:tmp -> tmp95, tmp:tmp -> tmp96, tmp:tmp -> tmp97, tmp:tmp -> tmp98, env -> env12, class:App -> App, tmp:block$res -> block$res21, emptyEnv -> emptyEnv, member:instance$Ident(Gen) -> instance$Ident$_Gen$_11, tmp:tmp -> tmp99, tmp:tmp -> tmp29, tmp:tmp -> tmp100, tmp:block$res -> block$res22, tmp:inlinedVal -> inlinedVal15, tmp:block$res -> block$res41, member:Gen -> Gen1, env3 -> env31, class:Gen -> Gen, tmp:tmp -> tmp101, tmp:tmp -> tmp102, tmp:tmp -> tmp103, tmp:tmp -> tmp104, tmp:tmp -> tmp105, tmp:tmp -> tmp106, tmp:tmp -> tmp107, class:Term -> Term1, tmp:tmp -> tmp108, tmp:tmp -> tmp109, tmp:block$res -> block$res42, class:Var -> Var, tmp:tmp -> tmp110, env -> env13, member:instance$Ident(Gen) -> instance$Ident$_Gen$_12, tmp:tmp -> tmp111, tmp:tmp -> tmp112, tmp:inlinedVal -> inlinedVal16, tmp:block$res -> block$res43, t -> t, tmp:block$res -> block$res23, class:IntLit -> IntLit, class:BoolLit -> BoolLit, tmp:tmp -> tmp113, tmp:tmp -> tmp114, tmp:tmp -> tmp115, tmp:tmp -> tmp116, tmp:tmp -> tmp117, tmp:tmp -> tmp118, tmp:tmp -> tmp119, tmp:tmp -> tmp120, env -> env14, term -> term4, tmp:inlinedVal -> inlinedVal17, member:instance$Ident(Gen) -> instance$Ident$_Gen$_13, tmp:tmp -> tmp121, tmp:tmp -> tmp122, tmp:inlinedVal -> inlinedVal18, tmp:block$res -> block$res44, t -> t3, member:lambda$ -> lambda$, tmp:tmp -> tmp123, tmp:tmp -> tmp124, tmp:tmp -> tmp125, tmp:tmp -> tmp126, tmp:tmp -> tmp127, tmp:tmp -> tmp128, tmp:tmp -> tmp129, tmp:tmp -> tmp130, env -> env15, term -> term5, tmp:inlinedVal -> inlinedVal19, member:instance$Ident(Gen) -> instance$Ident$_Gen$_14, tmp:tmp -> tmp131, tmp:tmp -> tmp132, tmp:inlinedVal -> inlinedVal20, tmp:block$res -> block$res45, member:inferTop -> inferTop, tmp:block$res -> block$res5, member:Scheme -> Scheme1, class:Scheme -> Scheme, tmp:block$res -> block$res24, tmp:block$res -> block$res10, member:unify' -> unify$_, member:inferType -> inferType, tmp:block$res -> block$res11, member:unify -> unify, tmp:block$res -> block$res25, id -> id, const -> const1, apply -> apply, tmp:block$res -> block$res6, compose -> compose, member:Subst -> Subst1, class:Subst -> Subst, tmp:tmp -> tmp30, tmp:tmp -> tmp31, tmp:tmp -> tmp32, tmp:tmp -> tmp33, tmp:tmp -> tmp34, tmp:tmp -> tmp35, tmp:tmp -> tmp36, tmp:tmp -> tmp37, tmp:tmp -> tmp38, tmp:tmp -> tmp39, tmp:tmp -> tmp40, tmp:tmp -> tmp41, tmp:tmp -> tmp42, tmp:tmp -> tmp43, tmp:block$res -> block$res26, tmp:block$res -> block$res27, env -> env, term -> term, member:instance$Ident(Gen) -> instance$Ident$_Gen$_, tmp:tmp -> tmp44, tmp:tmp -> tmp45, tmp:inlinedVal -> inlinedVal4, tmp:block$res -> block$res28, env -> env1)
+//│     defaultImportBindings = HashMap(/storage/mark/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs -> Iter, /storage/mark/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Option.mjs -> Option, /storage/mark/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Runtime.mjs -> Runtime, /storage/mark/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Predef.mjs -> Predef)
+//│ ═══[COMPILATION ERROR] No definition found in scope for member 'infer$tailrec'
 //│ > if true (id id) add
-//│ ═══[RUNTIME ERROR] Error: Cannot unify Int with Int -> Int
+//│ ═══[RUNTIME ERROR] ReferenceError: infer$tailrec is not defined
