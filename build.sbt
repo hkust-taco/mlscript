@@ -65,6 +65,14 @@ lazy val hkmc2 = crossProject(JSPlatform, JVMPlatform).in(file("hkmc2"))
         .withOutputPatterns(OutputPatterns.fromJSFile("MLscript.mjs"))
     },
     libraryDependencies += "org.scala-js" %%% "scalajs-dom" % "2.2.0",
+    // * `Lowering` recurses with the nesting of the term it lowers, and Node's
+    // * default stack (under 1MB) is an order of magnitude smaller than the
+    // * JVM's, so large-but-ordinary `.mls` functions overflow it here while
+    // * compiling fine on the JVM. `Runtime.mls`'s `StrPat.parseRun` is the
+    // * first one big enough to hit this. Raising the limit is a stopgap: the
+    // * real fix is to make lowering stack-safe.
+    Test / jsEnv := new org.scalajs.jsenv.nodejs.NodeJSEnv(
+      org.scalajs.jsenv.nodejs.NodeJSEnv.Config().withArgs(List("--stack-size=4000"))),
   )
   .dependsOn(core)
 

@@ -137,13 +137,83 @@ and forced `simplify` to keep dead `Never` alternatives. Pinned in
 **Still open:** C2 (effectful transforms run inside the uninstrumented
 engine — the doc's options (a) hoist application out of the engine vs. (b)
 stopgap `curEffect` check are a design choice), C5 (transform closures
-duplicated across multi-matcher labels — needs an emission scheme: a shared
-hoisted action table, or the transforms-as-methods design from the `build`
-TODO), M4 (ε-cycle guard for `mergeIdentical` — rule choice affects table
+duplicated across multi-matcher labels — no longer a crash after the `hkmc2`
+merge, see the 2026-08-27 update; what remains is the emission scheme: a
+shared hoisted action table, or the transforms-as-methods design from the
+`build` TODO), M4 (ε-cycle guard for `mergeIdentical` — rule choice affects table
 sizes), M5/M6/M22 (determinization budget policy), M11 (polymorphic
 recursion hangs `Instantiator` — bound vs. structural check), M18
 (diagnostic deduplication across regions and use sites), and the
 performance/code-size items (M23-M25, minor M1/M3/M11/M13).
+
+## Status update (2026-08-27, after merging `hkust-taco/hkmc2`)
+
+The branch was merged with upstream `hkmc2` (merge base `4b854d7f6`, upstream
+tip `9e15cd63b`). `hkmc2AllTests/test` is green afterwards: 846 tests, no
+golden rewrites beyond the two the merge itself causes (below).
+
+**Closed by the merge:**
+
+- **C5** (transform closures duplicated across the labels of one
+  multi-matcher). Upstream taught duplicate-binder detection to look through
+  nested definitions (`6f318acf9`), so the two copies of a shared transform
+  no longer trip `SymbolRefresher`. `CompiledBugs.mls` now pins
+  `pattern P2 = Box(T ~ "c") | Box(T ~ "d")` as a working regression test
+  instead of a `:fixme`. Sharing one closure per definition — the
+  transforms-as-methods design in the `StringCompiler.build` TODO — remains
+  worth doing, but as an efficiency matter.
+
+**Introduced by the merge, fixed while resolving it:**
+
+- `ClassLike` now carries a `ClassLikeHead` rather than a symbol, and `is` is
+  untyped, so `head is ctx.builtins.Str` in `stringFragment` and in `build`
+  type-checked and was silently always false — `Str` in string position would
+  have become `Never`. Both now go through `head.symbol`.
+- `Lowering` recurses with the nesting of the term it lowers, and Node's
+  default stack is an order of magnitude smaller than the JVM's, so
+  `StrPat.parseRun` overflowed it in upstream's new whole-standard-library
+  `hkmc2.CompilerTest`. Raised the JS test env's stack in `build.sbt`; the
+  real fix is a stack-safe lowering, which is well outside this PR.
+- The whitespace churn in `DiffTestRunner.scala` (two indented blank lines
+  stripped to empty ones) went away with the conflict resolution.
+
+**New findings this round:**
+
+- **A conjunction's output changes shape across a `~` boundary.** At the top
+  level, `if "ab" is ((("a" ~ Str) & (Str ~ "b")) as r) then r` gives
+  `["ab", "ab"]` — the general translation pairs the conjuncts' outputs —
+  while the same conjunction nested in a region,
+  `if "<ab>" is ("<" ~ ((("a" ~ Str) & (Str ~ "b")) as r) ~ ">") then r`,
+  gives `"ab"`, the driver's value. `ups/regex/Conjunction.mls` states the
+  region rule ("the conjunction's value is the driver's value") but nothing
+  records that it disagrees with the same operator one level out, so wrapping
+  a sub-pattern in `"" ~ …` silently changes the type of its output. Worth
+  either aligning or pinning explicitly in `CompiledSemantics.mls`.
+- **`determinizeFragment` keeps the empty class-0 column that `computeBounds`
+  deliberately drops.** `computeBounds` guards `if lo > 0 then points += lo`
+  and documents why; `determinizeFragment` does not, so a fragment containing
+  `AnyChar` gets a `(0, -1)` class. It is harmless only by accident — class 0
+  and class 1 then share the representative `0`, so their transitions
+  coincide and `outEdges` merges them — but it costs a column in every
+  constraint and complement DFA. The same one-line guard applies.
+- **The `HKMC2_STRPAT_STATS` measurement hook is more machinery than a
+  finished feature warrants**: a global mutable sink on `StringCompiler`, a
+  `var statsSiteLoc` on `Compiler`, and a `PrintWriter` opened per
+  `DiffTestRunner.State` that is never closed — several `State` instances
+  append to one file behind independent locks. If the table-size experiments
+  are done, it should go; if not, the writer wants to be created once.
+- **A match-only region carrying bindings but no transforms still runs the
+  full parse.** `recognitionSuffices` requires `visibleSlots.isEmpty`, which
+  `makeStringRegionSplit` genuinely needs (it hands the bindings to the
+  consequent), but the multi-matcher's match-only mode discards them and
+  could scan instead. Deliberate — one shared predicate keeps the two call
+  sites from drifting — so this is a note, not a defect.
+- **Minor:** `Instantiator`'s `lower.nonEmpty && upper.nonEmpty` guard on
+  string ranges falls through to "Range patterns are not supported in pattern
+  compilation", a misleading message for a case elaboration has already
+  turned into `Wildcard`; an assertion would say what it means. And nothing
+  enforces that a `CharClass`'s bounds are UTF-16 code units, though
+  `codePointRange` is careful to keep them so and the whole engine assumes it.
 
 ## Confirmed regressions against `hkust-taco/hkmc2`
 
