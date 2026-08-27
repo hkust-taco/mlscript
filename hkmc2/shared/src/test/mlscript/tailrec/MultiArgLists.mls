@@ -406,7 +406,7 @@ fun f = loop(1000)(0)
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
-// Ensure the non-tail call is calls the loop definition and is correctly handled
+// Ensure the non-tail call is rewritten to call the loop definition and is correctly handled
 :soir
 fun loop(x)(y) =
   if y === 0 then 0

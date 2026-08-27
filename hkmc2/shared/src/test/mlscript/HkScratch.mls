@@ -8,4 +8,23 @@
 // :d
 // :todo
 
-
+:sjs
+module M with
+  fun f = g
+  fun g = f
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ let M1;
+//│ (class M {
+//│   static {
+//│     M1 = this
+//│   }
+//│   static get f() {
+//│     return M.g;
+//│   }
+//│   static get g() {
+//│     return M.f;
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "M"];
+//│ });
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————

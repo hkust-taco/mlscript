@@ -682,7 +682,7 @@ final case class FunDefn(
   lazy val affineInfo: Ls[Int] =
     annotations.collect:
       case Annot.Affine(whichParamList) => whichParamList
-  lazy val paramSyms: Ls[VarSymbol] = params.flatMap(_.paramSyms)
+  lazy val allParamSyms: Ls[VarSymbol] = params.flatMap(_.paramSyms)
 
   // * This deliberately is not a lazy val: its initialization would synchronize on the JVM.
   // * Computing the summary is pure, and a reference write is atomic, so concurrent traversals may

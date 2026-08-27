@@ -250,9 +250,9 @@ class TailRecOpt(checkAnnotations: Bool)(using State, TL, Raise):
     * @param plist The parameter list to apply.
     * @param args The argument list.
     * @return A tuple `(Block => Block, List[Path])`, where:
-    * - The first parameter contains the code that breaks up the arguments into the shape expected by the parameter list, and
+    * - The first return value contains the code that breaks up the arguments into the shape expected by the parameter list, and
     *   should be applied to the remaining code;
-    * - The second parameter is a list of paths containing the arguments in order. If there is a spread parameter, it will be
+    * - The second return value is a list of paths containing the arguments in order. If there is a spread parameter, it will be
     *   the last one.
     */
   def forceSpread(plist: ParamList, args: List[Arg]): (Block => Block, List[Path]) =
@@ -344,9 +344,9 @@ class TailRecOpt(checkAnnotations: Bool)(using State, TL, Raise):
     val paramSyms =
         if hasWrapper then 
           if funsLen === 1 then
-            funs.head.paramSyms.map(v => VarSymbol(Tree.Ident(v.id.name)))
+            funs.head.allParamSyms.map(v => VarSymbol(Tree.Ident(v.id.name)))
           else for i <- 0 until maxParamLen yield VarSymbol(Tree.Ident("param" + i))
-        else funs.head.paramSyms
+        else funs.head.allParamSyms
       .toList
     val paramSymsArr = ArrayBuffer.from(paramSyms)
     // Function -> param -> param symbol in the rewritten function
@@ -371,10 +371,10 @@ class TailRecOpt(checkAnnotations: Bool)(using State, TL, Raise):
     
     def rewriteKnownCall(callee: FunDefn, flattenedArgs: List[Path]) =
       if !hasWrapper then lastWords("Tried to rewrite a call to a non-existent loop definition.")
-      if callee.paramSyms.length =/= flattenedArgs.length then lastWords("Incorrect function call arity.")
+      if callee.allParamSyms.length =/= flattenedArgs.length then lastWords("Incorrect function call arity.")
       // Fill in the argument list with the arguments in the correct position by applying the paramSym -> arg map to
       // the loop definitions parameter list.
-      val argsMap = (callee.paramSyms.map(paramSymsMap(callee.dSym)) zip flattenedArgs).toMap
+      val argsMap = (callee.allParamSyms.map(paramSymsMap(callee.dSym)) zip flattenedArgs).toMap
       val args = paramSyms.map: s =>
         argsMap.get(s) match
           case Some(pth) => Arg(N, pth)
@@ -383,7 +383,7 @@ class TailRecOpt(checkAnnotations: Bool)(using State, TL, Raise):
       Call(loopDefnPath, argsWithId ne_:: Nil)(CallMetadata.defaultMlsFun)
     
     class FunRewriter(f: FunDefn) extends BlockTransformerShallow(SymbolSubst.Id):
-      val params = f.paramSyms
+      val params = f.allParamSyms
       val paramsSet = f.params.toSet
       val paramsIdxes = params.zipWithIndex.toMap
       
@@ -509,9 +509,6 @@ class TailRecOpt(checkAnnotations: Bool)(using State, TL, Raise):
                         case x => x
                       ret
                   case CallArgsResult.ForceSpread =>
-                    // Forcibly spread the args in an array.
-                    // Assume the lengths are correct
-                    
                     // We can safely remove all of the symbols from this parameter list from `assignedSyms` at this stage,
                     // because the RHS of every parameter will be computed when spreading them in the tuple, which happens
                     // before any of the param symbols are assigned to.
@@ -535,7 +532,8 @@ class TailRecOpt(checkAnnotations: Bool)(using State, TL, Raise):
       // We explicitly rewrite *all* fully applied calls to functions within the SCC. Tail calls are rewritten using a
       // `continue`, while other calls are rewritten as a call to the merged function. This is to make the tailrec
       // optimizer pass idempotent. Without this, the subsequent tailrec optimizer passes could see the merged and wrapper
-      // functions as an SCC and try to rewrite the wrapper's tail call.
+      // functions as an SCC and try to rewrite the wrapper's tail call. Note that selections (and thus calls to
+      // parameter-less module methods) are not yet supported.
       override def applyResult(r: Result)(k: Result => Block): Block = r match
         case c @ Call(Value.MemberRef(bms, calleeSym: TermSymbol), args) if hasWrapper => funsMap.get(calleeSym) match
           case Some(callee) if isExactlySaturatedCall(c, callee) =>
@@ -591,7 +589,7 @@ class TailRecOpt(checkAnnotations: Bool)(using State, TL, Raise):
       (N, defn :: Nil)
     else
       val wrappers = funs.map: f =>
-        val paramArgs = f.paramSyms.map(s => s.asSimpleRef)
+        val paramArgs = f.allParamSyms.map(s => s.asSimpleRef)
         val newBod = Return(
           rewriteKnownCall(f, paramArgs),
         )
