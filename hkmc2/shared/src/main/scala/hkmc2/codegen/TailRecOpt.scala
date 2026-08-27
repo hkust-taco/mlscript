@@ -595,17 +595,21 @@ class TailRecOpt(checkAnnotations: Bool)(using State, TL, Raise):
         val newBod = Return(
           rewriteKnownCall(f, paramArgs),
         )
-        FunDefn(f.owner, f.sym, f.dSym, f.params, newBod)(N, f.annotations)
+        val annots = if f.inline then f.annotations else Annot.Inline :: f.annotations 
+        FunDefn(f.owner, f.sym, f.dSym, f.params, newBod)(N, annots)
       val newParamLists =
         val initial = paramSyms.map(Param.simple(_))
         if funsLen > 1 then
           PlainParamList(Param.simple(curIdSym) :: initial) :: Nil
         else
           PlainParamList(initial) :: Nil
+      val annotations = 
+        if funsLen == 1 && funs.head.inline then Annot.Inline :: Annot.Private :: Nil
+        else Annot.Private :: Nil
       val loopDefn = FunDefn(
         owner, bms, dSym,
         newParamLists,
-        loop)(N, annotations = Annot.Private :: Nil)
+        loop)(N, annotations = annotations)
       (S(loopDefn), wrappers)
   
   def optFunctions(fs: List[FunDefn], owner: Opt[InnerSymbol])(using (ScopeData, AccessMap)) =

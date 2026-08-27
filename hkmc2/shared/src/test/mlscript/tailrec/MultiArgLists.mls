@@ -188,14 +188,18 @@ fun resume(x)(y) = handleEffects(x)
 //│     end
 //│   end
 //│ };
+//│ @inline
 //│ define handleEffects⁰ as fun handleEffects¹(x) {
 //│   return handleEffects_handleEffect⁰(0)
 //│ };
+//│ @inline
 //│ define handleEffect⁰ as fun handleEffect¹(x) {
 //│   return handleEffects_handleEffect⁰(1)
 //│ };
 //│ @inline
-//│ define resume¹ as fun resume⁰(x)(y) { return handleEffects¹(x) };
+//│ define resume¹ as fun resume⁰(x)(y) {
+//│   return handleEffects_handleEffect⁰(0)
+//│ };
 //│ set sink⁰ = mut [];
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
@@ -254,6 +258,7 @@ fun g(n)(m) =
 //│     end
 //│   end
 //│ };
+//│ @inline
 //│ define f⁰ as fun f¹(n)(a, b, c, d, ...e)(m) {
 //│   return f_g⁰(0, n, a, e, m)
 //│ };
@@ -271,32 +276,30 @@ fun f(a)(...z) = if z is
   [] then a
   [x, ...xs] then f(a + 1)(...xs)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ define f² as fun f³(a)(...z) {
-//│   let a1, z1, inlinedVal;
-//│   set a1 = a;
-//│   set z1 = z;
-//│   block inlinedLbl:
-//│     loop loopLabel:
-//│       let tmp;
-//│       match z1
-//│         Array(0) =>
-//│           set inlinedVal = a1;
-//│           break inlinedLbl
-//│         Array(1+) =>
-//│           let inlinedVal1, tmp1;
-//│           do runtime⁰.Tuple⁰.get⁰(z1, 0);
-//│           set tmp1 = -¹(z1.length﹖, 0);
-//│           set inlinedVal1 = z1.slice﹖(1, tmp1);
-//│           set tmp = +⁰(a1, 1);
-//│           set a1 = tmp;
-//│           set z1 = inlinedVal1;
-//│           continue loopLabel
-//│         else
-//│           throw new globalThis⁰.Error⁰("match error")
-//│       end
-//│     unreachable /* Rest of abortive labelled block */
-//│   return inlinedVal
+//│ let f$tailrec;
+//│ @private
+//│ define f$tailrec as fun f$tailrec⁰(a, z) {
+//│   loop loopLabel:
+//│     let tmp;
+//│     match z
+//│       Array(0) =>
+//│         return a
+//│       Array(1+) =>
+//│         let inlinedVal, tmp1;
+//│         do runtime⁰.Tuple⁰.get⁰(z, 0);
+//│         set tmp1 = -¹(z.length﹖, 0);
+//│         set inlinedVal = z.slice﹖(1, tmp1);
+//│         set tmp = +⁰(a, 1);
+//│         set a = tmp;
+//│         set z = inlinedVal;
+//│         continue loopLabel
+//│       else
+//│         throw new globalThis⁰.Error⁰("match error")
+//│     end
+//│   unreachable /* Rest of abortive labelled block */
 //│ };
+//│ @inline
+//│ define f² as fun f³(a)(...z) { return f$tailrec⁰(a, z) };
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
@@ -311,11 +314,11 @@ f(0)(1, 2, 3, 4)
 fun f(a)(b) = f(a)(b)
 //│ ————————————| Optimized IR Tree |———————————————————————————————————————————————————————————————————
 //│ Program:
-//│   main = Scoped(syms = {member:f$tailrec⁰}):
+//│   main = Scoped(syms = {member:f$tailrec¹}):
 //│     body = Define:
 //│       defn = FunDefn:
-//│         sym = member:f$tailrec⁰
-//│         dSym = term:f$tailrec¹
+//│         sym = member:f$tailrec¹
+//│         dSym = term:f$tailrec²
 //│         params = Ls of
 //│           ParamList: ‹empty›
 //│         body = Label:
@@ -339,9 +342,9 @@ fun f(a)(b) = f(a)(b)
 //│                 sym = b⁰
 //│                 modulefulness = Modulefulness of N
 //│         body = Return of Call:
-//│           fun = MemberRef{disamb=term:f$tailrec¹}:
-//│             bms = member:f$tailrec⁰
-//│             disamb = term:f$tailrec¹
+//│           fun = MemberRef{disamb=term:f$tailrec²}:
+//│             bms = member:f$tailrec¹
+//│             disamb = term:f$tailrec²
 //│           argss = Ls of
 //│             Nil
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
@@ -355,29 +358,51 @@ fun loop(x)(y) =
   else loop(x - 1)(y + x)
 fun f = loop(1000)(0)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let loop$tailrec;
-//│ @private
-//│ define loop$tailrec as fun loop$tailrec¹(x, y) {
-//│   loop loopLabel:
-//│     let scrut, tmp, tmp1;
-//│     set scrut = Predef⁰.equals⁰(x, 0);
-//│     match scrut
-//│       true =>
-//│         return y
-//│       else
-//│         set tmp = -⁰(x, 1);
-//│         set tmp1 = +⁰(y, x);
-//│         set x = tmp;
-//│         set y = tmp1;
-//│         continue loopLabel
-//│     end
-//│   unreachable /* Rest of abortive labelled block */
-//│ };
 //│ @tailrec @inline
 //│ define loop² as fun loop³(x)(y) {
-//│   return loop$tailrec¹(x, y)
+//│   let x1, y1, inlinedVal;
+//│   set x1 = x;
+//│   set y1 = y;
+//│   block inlinedLbl:
+//│     loop loopLabel:
+//│       let scrut, tmp, tmp1;
+//│       set scrut = Predef⁰.equals⁰(x1, 0);
+//│       match scrut
+//│         true =>
+//│           set inlinedVal = y1;
+//│           break inlinedLbl
+//│         else
+//│           set tmp = -⁰(x1, 1);
+//│           set tmp1 = +⁰(y1, x1);
+//│           set x1 = tmp;
+//│           set y1 = tmp1;
+//│           continue loopLabel
+//│       end
+//│     unreachable /* Rest of abortive labelled block */
+//│   return inlinedVal
 //│ };
-//│ define f⁶ as fun f⁷() { return loop$tailrec¹(1000, 0) };
+//│ define f⁶ as fun f⁷() {
+//│   let x, y, inlinedVal;
+//│   set x = 1000;
+//│   set y = 0;
+//│   block inlinedLbl:
+//│     loop loopLabel:
+//│       let scrut, tmp, tmp1;
+//│       set scrut = Predef⁰.equals⁰(x, 0);
+//│       match scrut
+//│         true =>
+//│           set inlinedVal = y;
+//│           break inlinedLbl
+//│         else
+//│           set tmp = -⁰(x, 1);
+//│           set tmp1 = +⁰(y, x);
+//│           set x = tmp;
+//│           set y = tmp1;
+//│           continue loopLabel
+//│       end
+//│     unreachable /* Rest of abortive labelled block */
+//│   return inlinedVal
+//│ };
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
@@ -391,7 +416,7 @@ loop(5)(5)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ let loop$tailrec;
 //│ @private
-//│ define loop$tailrec as fun loop$tailrec²(x, y) {
+//│ define loop$tailrec as fun loop$tailrec¹(x, y) {
 //│   loop loopLabel:
 //│     let scrut, scrut1, tmp, tmp1, tmp2;
 //│     set scrut = ===⁰(y, 0);
@@ -403,7 +428,7 @@ loop(5)(5)
 //│         match scrut1
 //│           true =>
 //│             set tmp = -⁰(y, 1);
-//│             set tmp1 = loop$tailrec²(5, tmp);
+//│             set tmp1 = loop$tailrec¹(5, tmp);
 //│             return +⁰(1, tmp1)
 //│           else
 //│             set tmp2 = -⁰(x, 1);
@@ -414,8 +439,8 @@ loop(5)(5)
 //│   unreachable /* Rest of abortive labelled block */
 //│ };
 //│ @inline
-//│ define loop⁴ as fun loop⁵(x)(y) { return loop$tailrec²(x, y) };
-//│ return loop$tailrec²(5, 5)
+//│ define loop⁴ as fun loop⁵(x)(y) { return loop$tailrec¹(x, y) };
+//│ return loop$tailrec¹(5, 5)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 5
 
@@ -452,7 +477,7 @@ fun f(n)(a)(...z) =
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ let f$tailrec;
 //│ @private
-//│ define f$tailrec as fun f$tailrec²(n, a, z) {
+//│ define f$tailrec as fun f$tailrec³(n, a, z) {
 //│   loop loopLabel:
 //│     let scrut, res, tmp, tmp1;
 //│     set scrut = >⁰(n, 0);
@@ -471,7 +496,7 @@ fun f(n)(a)(...z) =
 //│             set tmp2 = -¹(z.length﹖, 0);
 //│             set inlinedVal = z.slice﹖(1, tmp2);
 //│             set tmp1 = +⁰(a, 1);
-//│             set res = f$tailrec²(n, tmp1, inlinedVal);
+//│             set res = f$tailrec³(n, tmp1, inlinedVal);
 //│             do Predef⁰.print⁰("hi!");
 //│             return res
 //│           else
@@ -480,7 +505,8 @@ fun f(n)(a)(...z) =
 //│     end
 //│   unreachable /* Rest of abortive labelled block */
 //│ };
-//│ define f⁸ as fun f⁹(n)(a)(...z) { return f$tailrec²(n, a, z) };
+//│ @inline
+//│ define f⁸ as fun f⁹(n)(a)(...z) { return f$tailrec³(n, a, z) };
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
