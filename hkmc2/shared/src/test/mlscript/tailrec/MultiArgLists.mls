@@ -20,6 +20,7 @@ fun loop(x)(y) =
 loop(1000)(0)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ let loop$tailrec;
+//│ @private
 //│ define loop$tailrec as fun loop$tailrec⁰(x, y) {
 //│   loop loopLabel:
 //│     let scrut, tmp, tmp1;
@@ -51,6 +52,7 @@ fun count(start)(stop) =
 count(0)(100)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ let count$tailrec, start, stop, inlinedVal;
+//│ @private
 //│ define count$tailrec as fun count$tailrec⁰(start1, stop1) {
 //│   loop loopLabel:
 //│     let scrut, tmp;
@@ -95,6 +97,7 @@ fun even(n)(dummy) = if n == 0 then [true, dummy] else odd(n - 1)(dummy + 1)
 fun odd(n)(dummy) = if n == 0 then [false, dummy] else even(n - 1)(dummy + 1)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ let even_odd;
+//│ @private
 //│ define even_odd as fun even_odd⁰(id, param0, param1) {
 //│   loop loopLabel:
 //│     match id
@@ -167,7 +170,8 @@ fun handleEffect(x) =
 fun resume(x)(y) = handleEffects(x)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ let handleEffects_handleEffect;
-//│ define handleEffects_handleEffect as fun handleEffects_handleEffect⁰(id, param0) {
+//│ @private
+//│ define handleEffects_handleEffect as fun handleEffects_handleEffect⁰(id) {
 //│   loop loopLabel:
 //│     match id
 //│       0 =>
@@ -175,7 +179,7 @@ fun resume(x)(y) = handleEffects(x)
 //│         continue loopLabel
 //│       1 =>
 //│         let tmp;
-//│         set tmp = resume⁰(param0);
+//│         set tmp = resume⁰(undefined);
 //│         do sink⁰.push﹖(tmp);
 //│         set id = 0;
 //│         continue loopLabel
@@ -185,10 +189,10 @@ fun resume(x)(y) = handleEffects(x)
 //│   end
 //│ };
 //│ define handleEffects⁰ as fun handleEffects¹(x) {
-//│   return handleEffects_handleEffect⁰(0, x)
+//│   return handleEffects_handleEffect⁰(0)
 //│ };
 //│ define handleEffect⁰ as fun handleEffect¹(x) {
-//│   return handleEffects_handleEffect⁰(1, x)
+//│   return handleEffects_handleEffect⁰(1)
 //│ };
 //│ @inline
 //│ define resume¹ as fun resume⁰(x)(y) { return handleEffects¹(x) };
@@ -209,7 +213,8 @@ fun g(n)(m) =
   @tailcall f(n - 1)(...[1, 2], 3, ...[3, 4], ...[5, n], 7, n)(m)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ let f_g;
-//│ define f_g as fun f_g⁰(id, param0, param1, param2, param3, param4, param5, param6) {
+//│ @private
+//│ define f_g as fun f_g⁰(id, param0, param1, param5, param6) {
 //│   loop loopLabel:
 //│     match id
 //│       0 =>
@@ -250,12 +255,10 @@ fun g(n)(m) =
 //│   end
 //│ };
 //│ define f⁰ as fun f¹(n)(a, b, c, d, ...e)(m) {
-//│   return f_g⁰(0, n, a, b, c, d, e, m)
+//│   return f_g⁰(0, n, a, e, m)
 //│ };
 //│ @inline
-//│ define g⁰ as fun g¹(n)(m) {
-//│   return f_g⁰(1, n, m, undefined, undefined, undefined, undefined, undefined)
-//│ };
+//│ define g⁰ as fun g¹(n)(m) { return f_g⁰(1, n, m, undefined, undefined) };
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
@@ -314,14 +317,7 @@ fun f(a)(b) = f(a)(b)
 //│         sym = member:f$tailrec⁰
 //│         dSym = term:f$tailrec¹
 //│         params = Ls of
-//│           ParamList:
-//│             params = Ls of
-//│               Param:
-//│                 sym = a⁰
-//│                 modulefulness = Modulefulness of N
-//│               Param:
-//│                 sym = b⁰
-//│                 modulefulness = Modulefulness of N
+//│           ParamList: ‹empty›
 //│         body = Label:
 //│           label = label:loopLabel⁰
 //│           loop = true
@@ -335,23 +331,19 @@ fun f(a)(b) = f(a)(b)
 //│           ParamList:
 //│             params = Ls of
 //│               Param:
-//│                 sym = a¹
+//│                 sym = a⁰
 //│                 modulefulness = Modulefulness of N
 //│           ParamList:
 //│             params = Ls of
 //│               Param:
-//│                 sym = b¹
+//│                 sym = b⁰
 //│                 modulefulness = Modulefulness of N
 //│         body = Return of Call:
 //│           fun = MemberRef{disamb=term:f$tailrec¹}:
 //│             bms = member:f$tailrec⁰
 //│             disamb = term:f$tailrec¹
 //│           argss = Ls of
-//│             Ls of
-//│               Arg:
-//│                 value = SimpleRef of a¹
-//│               Arg:
-//│                 value = SimpleRef of b¹
+//│             Nil
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 
@@ -364,6 +356,7 @@ fun loop(x)(y) =
 fun f = loop(1000)(0)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ let loop$tailrec;
+//│ @private
 //│ define loop$tailrec as fun loop$tailrec¹(x, y) {
 //│   loop loopLabel:
 //│     let scrut, tmp, tmp1;
@@ -397,6 +390,7 @@ fun loop(x)(y) =
 loop(5)(5)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ let loop$tailrec;
+//│ @private
 //│ define loop$tailrec as fun loop$tailrec²(x, y) {
 //│   loop loopLabel:
 //│     let scrut, scrut1, tmp, tmp1, tmp2;
@@ -457,6 +451,7 @@ fun f(n)(a)(...z) =
       res
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ let f$tailrec;
+//│ @private
 //│ define f$tailrec as fun f$tailrec²(n, a, z) {
 //│   loop loopLabel:
 //│     let scrut, res, tmp, tmp1;

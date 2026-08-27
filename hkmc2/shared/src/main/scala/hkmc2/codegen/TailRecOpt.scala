@@ -605,7 +605,7 @@ class TailRecOpt(checkAnnotations: Bool)(using State, TL, Raise):
       val loopDefn = FunDefn(
         owner, bms, dSym,
         newParamLists,
-        loop)(N, annotations = Nil) // Q: maybe should be Private?
+        loop)(N, annotations = Annot.Private :: Nil)
       (S(loopDefn), wrappers)
   
   def optFunctions(fs: List[FunDefn], owner: Opt[InnerSymbol])(using (ScopeData, AccessMap)) =
