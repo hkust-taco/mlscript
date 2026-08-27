@@ -535,7 +535,7 @@ class TailRecOpt(checkAnnotations: Bool)(using State, TL, Raise):
       // functions as an SCC and try to rewrite the wrapper's tail call. Note that selections (and thus calls to
       // parameter-less module methods) are not yet supported.
       override def applyResult(r: Result)(k: Result => Block): Block = r match
-        case c @ Call(Value.MemberRef(bms, calleeSym: TermSymbol), args) if hasWrapper => funsMap.get(calleeSym) match
+        case c @ CallToFun(calleeSym) if hasWrapper => funsMap.get(calleeSym) match
           case Some(callee) if isExactlySaturatedCall(c, callee) =>
             val calleeParamsMap = paramSymsMap(callee.dSym)
             val argListResults = callee.params.zip(c.argss).map:
