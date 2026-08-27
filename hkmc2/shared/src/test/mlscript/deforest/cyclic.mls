@@ -44,9 +44,9 @@ fun f(a) = if a is
 //│ deforest > >>> fusing >>>
 //│ deforest > C⁰ ->
 //│ deforest > 	match: a⁰
-//│ deforest > D⁰ ->
-//│ deforest > 	match: a⁰
 //│ deforest > C⁰ ->
+//│ deforest > 	match: a⁰
+//│ deforest > D⁰ ->
 //│ deforest > 	match: a⁰
 //│ deforest > <<< fusing <<<
 //│ = 0

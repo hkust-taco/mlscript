@@ -130,12 +130,12 @@ fun c(x) = if x is
   BB(x) then x
 c(g(true))
 //│ deforest > >>> fusing >>>
-//│ deforest > BB⁰(22) ->
-//│ deforest > 	match: x⁵
-//│ deforest > 	fields: x⁵.bb⁰
 //│ deforest > AA⁰(11) ->
 //│ deforest > 	match: x⁵
 //│ deforest > 	fields: x⁵.aa⁰
+//│ deforest > BB⁰(22) ->
+//│ deforest > 	match: x⁵
+//│ deforest > 	fields: x⁵.bb⁰
 //│ deforest > <<< fusing <<<
 //│ = 11
 
@@ -599,9 +599,9 @@ fun g(x) = if x is
   BB then B
 f(g(AA(1)))
 //│ deforest > >>> fusing >>>
-//│ deforest > B⁰ ->
-//│ deforest > 	match: x²³
 //│ deforest > A⁰ ->
+//│ deforest > 	match: x²³
+//│ deforest > B⁰ ->
 //│ deforest > 	match: x²³
 //│ deforest > AA⁰(1) ->
 //│ deforest > 	match: x²⁴
@@ -664,20 +664,20 @@ c(B)
 //│ deforest > 	match: x²⁶
 //│ deforest > A⁰ ->
 //│ deforest > 	match: A⁰
-//│ deforest > BB⁰(3) ->
-//│ deforest > 	match: x²⁶
-//│ deforest > 	fields: x²⁶.bb⁰
 //│ deforest > new AA¹(2) ->
 //│ deforest > 	match: x²⁶
 //│ deforest > 	fields: x²⁶.aa⁰
+//│ deforest > BB⁰(3) ->
+//│ deforest > 	match: x²⁶
+//│ deforest > 	fields: x²⁶.bb⁰
 //│ deforest > A⁰ ->
 //│ deforest > 	match: A⁰
-//│ deforest > BB⁰(3) ->
-//│ deforest > 	match: x²⁶
-//│ deforest > 	fields: x²⁶.bb⁰
 //│ deforest > new AA¹(2) ->
 //│ deforest > 	match: x²⁶
 //│ deforest > 	fields: x²⁶.aa⁰
+//│ deforest > BB⁰(3) ->
+//│ deforest > 	match: x²⁶
+//│ deforest > 	fields: x²⁶.bb⁰
 //│ deforest > <<< fusing <<<
 //│ > 5
 //│ ═══[RUNTIME ERROR] Error: e1
@@ -855,25 +855,25 @@ fun g(b) =
     C
 [f(3), g(true)]
 //│ deforest > >>> fusing >>>
-//│ deforest > D⁰ ->
-//│ deforest > 	match: scrut⁰
 //│ deforest > BB⁰(0) ->
 //│ deforest > 	match: scrut⁰
-//│ deforest > C⁰ ->
+//│ deforest > D⁰ ->
+//│ deforest > 	match: scrut⁰
+//│ deforest > AA⁰(0) ->
 //│ deforest > 	match: scrut¹
 //│ deforest > AA⁰(1) ->
 //│ deforest > 	match: scrut¹
-//│ deforest > AA⁰(0) ->
+//│ deforest > C⁰ ->
 //│ deforest > 	match: scrut¹
-//│ deforest > D⁰ ->
-//│ deforest > 	match: scrut⁰
 //│ deforest > BB⁰(0) ->
 //│ deforest > 	match: scrut⁰
-//│ deforest > C⁰ ->
+//│ deforest > D⁰ ->
+//│ deforest > 	match: scrut⁰
+//│ deforest > AA⁰(0) ->
 //│ deforest > 	match: scrut¹
 //│ deforest > AA⁰(1) ->
 //│ deforest > 	match: scrut¹
-//│ deforest > AA⁰(0) ->
+//│ deforest > C⁰ ->
 //│ deforest > 	match: scrut¹
 //│ deforest > <<< fusing <<<
 //│ = [D, AA(1)]
@@ -986,30 +986,30 @@ fun f4(ls4) = if ls4 is
   Nil then 5
 f1(to(4)) + f2(to(5)) + f3(to(6)) + f4(to(7))
 //│ deforest > >>> fusing >>>
-//│ deforest > Nil⁰ ->
-//│ deforest > 	match: ls4⁰
 //│ deforest > Cons⁰(n⁰, tmp⁸) ->
 //│ deforest > 	match: ls4⁰
 //│ deforest > 	fields: ls4⁰.h⁰
 //│ deforest > 	fields: ls4⁰.t⁰
 //│ deforest > Nil⁰ ->
-//│ deforest > 	match: ls3⁰
+//│ deforest > 	match: ls4⁰
 //│ deforest > Cons⁰(n⁰, tmp⁸) ->
 //│ deforest > 	match: ls3⁰
 //│ deforest > 	fields: ls3⁰.h⁰
 //│ deforest > 	fields: ls3⁰.t⁰
 //│ deforest > Nil⁰ ->
-//│ deforest > 	match: ls2⁰
+//│ deforest > 	match: ls3⁰
 //│ deforest > Cons⁰(n⁰, tmp⁸) ->
 //│ deforest > 	match: ls2⁰
 //│ deforest > 	fields: ls2⁰.h⁰
 //│ deforest > 	fields: ls2⁰.t⁰
 //│ deforest > Nil⁰ ->
-//│ deforest > 	match: ls1⁰
+//│ deforest > 	match: ls2⁰
 //│ deforest > Cons⁰(n⁰, tmp⁸) ->
 //│ deforest > 	match: ls1⁰
 //│ deforest > 	fields: ls1⁰.h⁰
 //│ deforest > 	fields: ls1⁰.t⁰
+//│ deforest > Nil⁰ ->
+//│ deforest > 	match: ls1⁰
 //│ deforest > <<< fusing <<<
 //│ = 88
 

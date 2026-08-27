@@ -75,12 +75,12 @@ fun sum(ls) = if ls is
 fun enum(n) = if n > 0 then n :: enum(n - 1) else Nil
 sum(enum(3))
 //│ deforest > >>> fusing >>>
-//│ deforest > Nil⁰ ->
-//│ deforest > 	match: ls¹
 //│ deforest > Cons⁰(n⁰, tmp¹) ->
 //│ deforest > 	match: ls¹
 //│ deforest > 	fields: ls¹.h⁰
 //│ deforest > 	fields: ls¹.t⁰
+//│ deforest > Nil⁰ ->
+//│ deforest > 	match: ls¹
 //│ deforest > <<< fusing <<<
 //│ = 6
 
@@ -91,12 +91,12 @@ fun map(ls, f) = if ls is
   h :: t then f(h) :: map(t, f)
 map(map(id(1 :: 2 :: Nil), x => x + 1), x => x * 2)
 //│ deforest > >>> fusing >>>
+//│ deforest > Nil⁰ ->
+//│ deforest > 	match: ls²
 //│ deforest > Cons⁰(tmp², tmp³) ->
 //│ deforest > 	match: ls²
 //│ deforest > 	fields: ls².h⁰
 //│ deforest > 	fields: ls².t⁰
-//│ deforest > Nil⁰ ->
-//│ deforest > 	match: ls²
 //│ deforest > <<< fusing <<<
 //│ = Cons(4, Cons(6, Nil))
 
@@ -107,12 +107,12 @@ fun map(f, ls) = if ls is
 fun enum(a) = if a < 0 then Nil else a :: enum(a - 1)
 map(x => x + 1, map(x => x * 2, id(enum(3))))
 //│ deforest > >>> fusing >>>
+//│ deforest > Nil⁰ ->
+//│ deforest > 	match: ls³
 //│ deforest > Cons⁰(tmp⁴, tmp⁵) ->
 //│ deforest > 	match: ls³
 //│ deforest > 	fields: ls³.h⁰
 //│ deforest > 	fields: ls³.t⁰
-//│ deforest > Nil⁰ ->
-//│ deforest > 	match: ls³
 //│ deforest > <<< fusing <<<
 //│ = Cons(7, Cons(5, Cons(3, Cons(1, Nil))))
 
@@ -130,6 +130,8 @@ fun cons1(a1) = if a1 is
   h :: t then h + cons1(t)
 cons(f(0)) + cons1(f(1))
 //│ deforest > >>> fusing >>>
+//│ deforest > Nil⁰ ->
+//│ deforest > 	match: a1⁰
 //│ deforest > Cons⁰(x⁰, tmp⁶) ->
 //│ deforest > 	match: a1⁰
 //│ deforest > 	fields: a1⁰.h⁰
@@ -141,7 +143,7 @@ cons(f(0)) + cons1(f(1))
 //│ deforest > 	fields: a1⁰.h⁰
 //│ deforest > 	fields: a1⁰.t⁰
 //│ deforest > Nil⁰ ->
-//│ deforest > 	match: a1⁰
+//│ deforest > 	match: a¹
 //│ deforest > Cons⁰(x⁰, tmp⁶) ->
 //│ deforest > 	match: a¹
 //│ deforest > 	fields: a¹.h⁰
@@ -152,8 +154,6 @@ cons(f(0)) + cons1(f(1))
 //│ deforest > 	match: a¹
 //│ deforest > 	fields: a¹.h⁰
 //│ deforest > 	fields: a¹.t⁰
-//│ deforest > Nil⁰ ->
-//│ deforest > 	match: a¹
 //│ deforest > <<< fusing <<<
 //│ = 2
 
@@ -171,12 +171,12 @@ fun f1(ls1) = if ls1 is
   Nil then 2
 f1(to(4))
 //│ deforest > >>> fusing >>>
-//│ deforest > Nil⁰ ->
-//│ deforest > 	match: ls1⁰
 //│ deforest > Cons⁰(n¹, tmp⁸) ->
 //│ deforest > 	match: ls1⁰
 //│ deforest > 	fields: ls1⁰.h⁰
 //│ deforest > 	fields: ls1⁰.t⁰
+//│ deforest > Nil⁰ ->
+//│ deforest > 	match: ls1⁰
 //│ deforest > <<< fusing <<<
 //│ = 12
 
@@ -188,12 +188,12 @@ fun succ(x) = x + 1
 fun double(x) = x * 2
 map(map(1 :: 2 :: Nil, succ), double)
 //│ deforest > >>> fusing >>>
+//│ deforest > Nil⁰ ->
+//│ deforest > 	match: ls⁴
 //│ deforest > Cons⁰(tmp⁹, tmp¹⁰) ->
 //│ deforest > 	match: ls⁴
 //│ deforest > 	fields: ls⁴.h⁰
 //│ deforest > 	fields: ls⁴.t⁰
-//│ deforest > Nil⁰ ->
-//│ deforest > 	match: ls⁴
 //│ deforest > Cons⁰(1, tmp¹¹) ->
 //│ deforest > 	match: ls⁴
 //│ deforest > 	fields: ls⁴.h⁰
@@ -218,18 +218,18 @@ fun f2(ls) = if ls is
 fun wrap(n) = to(n)
 f1(wrap(4)) + f2(wrap(5))
 //│ deforest > >>> fusing >>>
+//│ deforest > Nil⁰ ->
+//│ deforest > 	match: ls⁵
 //│ deforest > Cons⁰(n², tmp¹²) ->
 //│ deforest > 	match: ls⁵
 //│ deforest > 	fields: ls⁵.h⁰
 //│ deforest > 	fields: ls⁵.t⁰
 //│ deforest > Nil⁰ ->
-//│ deforest > 	match: ls⁵
+//│ deforest > 	match: ls⁶
 //│ deforest > Cons⁰(n², tmp¹²) ->
 //│ deforest > 	match: ls⁶
 //│ deforest > 	fields: ls⁶.h⁰
 //│ deforest > 	fields: ls⁶.t⁰
-//│ deforest > Nil⁰ ->
-//│ deforest > 	match: ls⁶
 //│ deforest > <<< fusing <<<
 //│ = 10
 
@@ -273,10 +273,6 @@ fun double(x) = x * 2
 fun triple(x) = x * 3
 map(map(map(1 :: 2 :: Nil, succ), double), triple)
 //│ deforest > >>> fusing >>>
-//│ deforest > Cons⁰(tmp¹³, tmp¹⁴) ->
-//│ deforest > 	match: ls⁹
-//│ deforest > 	fields: ls⁹.h⁰
-//│ deforest > 	fields: ls⁹.t⁰
 //│ deforest > Nil⁰ ->
 //│ deforest > 	match: ls⁹
 //│ deforest > Cons⁰(tmp¹³, tmp¹⁴) ->
@@ -285,6 +281,10 @@ map(map(map(1 :: 2 :: Nil, succ), double), triple)
 //│ deforest > 	fields: ls⁹.t⁰
 //│ deforest > Nil⁰ ->
 //│ deforest > 	match: ls⁹
+//│ deforest > Cons⁰(tmp¹³, tmp¹⁴) ->
+//│ deforest > 	match: ls⁹
+//│ deforest > 	fields: ls⁹.h⁰
+//│ deforest > 	fields: ls⁹.t⁰
 //│ deforest > Cons⁰(1, tmp¹⁵) ->
 //│ deforest > 	match: ls⁹
 //│ deforest > 	fields: ls⁹.h⁰
@@ -313,12 +313,12 @@ fun incr(x) = x + 1
 fun double(x) = x * 2
 map1(incr, map(double, id(mk(5))))
 //│ deforest > >>> fusing >>>
-//│ deforest > Nil⁰ ->
-//│ deforest > 	match: ls_map1⁰
 //│ deforest > Cons⁰(tmp¹⁶, tmp¹⁷) ->
 //│ deforest > 	match: ls_map1⁰
 //│ deforest > 	fields: ls_map1⁰.h⁰
 //│ deforest > 	fields: ls_map1⁰.t⁰
+//│ deforest > Nil⁰ ->
+//│ deforest > 	match: ls_map1⁰
 //│ deforest > <<< fusing <<<
 //│ = Cons(11, Cons(9, Cons(7, Cons(5, Cons(3, Cons(1, Nil))))))
 
@@ -331,12 +331,12 @@ fun map(ls) = if ls is
   h :: t then (h + 4) :: map(t)
 map(enumFromTo(1, 4))
 //│ deforest > >>> fusing >>>
-//│ deforest > Nil⁰ ->
-//│ deforest > 	match: ls¹⁰
 //│ deforest > Cons⁰(a², tmp¹⁸) ->
 //│ deforest > 	match: ls¹⁰
 //│ deforest > 	fields: ls¹⁰.h⁰
 //│ deforest > 	fields: ls¹⁰.t⁰
+//│ deforest > Nil⁰ ->
+//│ deforest > 	match: ls¹⁰
 //│ deforest > <<< fusing <<<
 //│ = Cons(5, Cons(6, Cons(7, Nil)))
 
@@ -347,12 +347,12 @@ fun sum(ls) = if ls is
   h :: t then h + sum(t)
 sum(enumFromTo(1,10))
 //│ deforest > >>> fusing >>>
-//│ deforest > Nil⁰ ->
-//│ deforest > 	match: ls¹¹
 //│ deforest > Cons⁰(a³, tmp¹⁹) ->
 //│ deforest > 	match: ls¹¹
 //│ deforest > 	fields: ls¹¹.h⁰
 //│ deforest > 	fields: ls¹¹.t⁰
+//│ deforest > Nil⁰ ->
+//│ deforest > 	match: ls¹¹
 //│ deforest > <<< fusing <<<
 //│ = 45
 
@@ -364,12 +364,12 @@ fun map(f, ls) =
     h :: t then f(h) :: map(f, t)
 map(x => x + 4, enumFromTo(1, 4))
 //│ deforest > >>> fusing >>>
-//│ deforest > Nil⁰ ->
-//│ deforest > 	match: ls¹²
 //│ deforest > Cons⁰(a⁴, tmp²⁰) ->
 //│ deforest > 	match: ls¹²
 //│ deforest > 	fields: ls¹².h⁰
 //│ deforest > 	fields: ls¹².t⁰
+//│ deforest > Nil⁰ ->
+//│ deforest > 	match: ls¹²
 //│ deforest > <<< fusing <<<
 //│ = Cons(5, Cons(6, Cons(7, Nil)))
 
@@ -382,12 +382,12 @@ fun map(f, ls) =
   )(f)
 map(x => x + 4, enumFromTo(1, 4))
 //│ deforest > >>> fusing >>>
-//│ deforest > Nil⁰ ->
-//│ deforest > 	match: ls¹³
 //│ deforest > Cons⁰(a⁵, tmp²¹) ->
 //│ deforest > 	match: ls¹³
 //│ deforest > 	fields: ls¹³.h⁰
 //│ deforest > 	fields: ls¹³.t⁰
+//│ deforest > Nil⁰ ->
+//│ deforest > 	match: ls¹³
 //│ deforest > <<< fusing <<<
 //│ = Cons(5, Cons(6, Cons(7, Nil)))
 
@@ -400,12 +400,12 @@ fun sum(ls, a) = if ls is
   h :: t then sum(t, h + a)
 sum(enumFromTo(1, 10), 0)
 //│ deforest > >>> fusing >>>
-//│ deforest > Nil⁰ ->
-//│ deforest > 	match: ls¹⁴
 //│ deforest > Cons⁰(a⁶, tmp²²) ->
 //│ deforest > 	match: ls¹⁴
 //│ deforest > 	fields: ls¹⁴.h⁰
 //│ deforest > 	fields: ls¹⁴.t⁰
+//│ deforest > Nil⁰ ->
+//│ deforest > 	match: ls¹⁴
 //│ deforest > <<< fusing <<<
 //│ = 45
 
@@ -444,12 +444,12 @@ fun rev(xs_rev, acc) = if xs_rev is
   Nil then acc
 rev(map(incr, id(mk(3))), Nil)
 //│ deforest > >>> fusing >>>
+//│ deforest > Nil⁰ ->
+//│ deforest > 	match: xs_rev⁰
 //│ deforest > Cons⁰(tmp²³, tmp²⁴) ->
 //│ deforest > 	match: xs_rev⁰
 //│ deforest > 	fields: xs_rev⁰.h⁰
 //│ deforest > 	fields: xs_rev⁰.t⁰
-//│ deforest > Nil⁰ ->
-//│ deforest > 	match: xs_rev⁰
 //│ deforest > <<< fusing <<<
 //│ = Cons(1, Cons(2, Cons(3, Cons(4, Nil))))
 
@@ -498,12 +498,12 @@ fun flatten(ls_flatten) = if ls_flatten is
   x :: xs then append(x, flatten(xs))
 sum(flatten(id(mk2d(4))))
 //│ deforest > >>> fusing >>>
+//│ deforest > Nil⁰ ->
+//│ deforest > 	match: ls_sum⁰
 //│ deforest > Cons⁰(x², tmp²⁵) ->
 //│ deforest > 	match: ls_sum⁰
 //│ deforest > 	fields: ls_sum⁰.h⁰
 //│ deforest > 	fields: ls_sum⁰.t⁰
-//│ deforest > Nil⁰ ->
-//│ deforest > 	match: ls_sum⁰
 //│ deforest > <<< fusing <<<
 //│ = 20
 
@@ -568,10 +568,10 @@ map(x => if x is A then 1 else 0, A :: B :: Nil)
 //│ deforest > 	match: xs_map¹
 //│ deforest > 	fields: xs_map¹.h⁰
 //│ deforest > 	fields: xs_map¹.t⁰
-//│ deforest > Nil⁰ ->
-//│ deforest > 	match: xs_map¹
 //│ deforest > B⁰ ->
 //│ deforest > 	match: x³
+//│ deforest > Nil⁰ ->
+//│ deforest > 	match: xs_map¹
 //│ deforest > <<< fusing <<<
 //│ = Cons(1, Cons(0, Nil))
 
@@ -599,23 +599,23 @@ c(T(A, T(B, L, L), T(A, L, L)))
 //│ deforest > 	fields: x⁴.n⁴
 //│ deforest > 	fields: x⁴.l⁰
 //│ deforest > 	fields: x⁴.r⁰
-//│ deforest > L⁰ ->
-//│ deforest > 	match: x⁴
-//│ deforest > L⁰ ->
-//│ deforest > 	match: x⁴
 //│ deforest > A⁰ ->
 //│ deforest > 	match: n⁵
+//│ deforest > L⁰ ->
+//│ deforest > 	match: x⁴
+//│ deforest > L⁰ ->
+//│ deforest > 	match: x⁴
 //│ deforest > T⁰(B⁰, L⁰, L⁰) ->
 //│ deforest > 	match: x⁴
 //│ deforest > 	fields: x⁴.n⁴
 //│ deforest > 	fields: x⁴.l⁰
 //│ deforest > 	fields: x⁴.r⁰
-//│ deforest > L⁰ ->
-//│ deforest > 	match: x⁴
-//│ deforest > L⁰ ->
-//│ deforest > 	match: x⁴
 //│ deforest > B⁰ ->
 //│ deforest > 	match: n⁵
+//│ deforest > L⁰ ->
+//│ deforest > 	match: x⁴
+//│ deforest > L⁰ ->
+//│ deforest > 	match: x⁴
 //│ deforest > <<< fusing <<<
 //│ = T(0, T(1, L, L), T(0, L, L))
 

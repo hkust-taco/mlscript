@@ -20,10 +20,8 @@ class DeadParamElimSolver(val constraintSolver: FlowConstraintSolver):
   given eState: Elaborator.State = constraintSolver.eState
 
   val collector: FlowConstraintsCollector = constraintSolver.collector
-  val funDests: collection.Map[ProdFun, Set[ConsFun | MarkerConsStrat]] =
-    constraintSolver.funDests
-  val funSrcs: collection.Map[ConsFun, Set[ProdFun | MarkerProdStrat]] =
-    constraintSolver.funSrcs
+  val prodFuns: collection.Seq[ProdFun] = constraintSolver.prodFunsWithDests
+  val consFuns: collection.Seq[ConsFun] = constraintSolver.consFunsWithSrcs
   
   // handle clashes for dead param elim
   val (liveParams, liveCallSiteParams) =
@@ -40,16 +38,16 @@ class DeadParamElimSolver(val constraintSolver: FlowConstraintSolver):
     
     val prodRoots = Buffer.empty[(ProdFun, Int)]
     val consRoots = Buffer.empty[(ConsFun, Int)]
-    for (prodFun, dests) <- funDests do
-      if isSyntheticRoot(prodFun) || dests.contains(UnknownCons) then
+    for prodFun <- prodFuns do
+      if isSyntheticRoot(prodFun) || prodFun.dests.contains(UnknownCons) then
         prodFun.params.indices.foreach: i =>
           prodRoots += prodFun -> i
       else
         prodFun.params.zipWithIndex.foreach:
-          case (ConsVar(s), i) =>
-            val ubs = constraintSolver.AllUpperBounds(s.uid)
+          case (v: StratVar, i) =>
+            val ubs = constraintSolver.AllUpperBounds(v)
             if ubs.exists:
-              case _: ConsVar => false
+              case _: StratVar => false
               case _: IntoParam => false
               case NonAffine | Accumulator => false
               case _ => true
@@ -57,12 +55,12 @@ class DeadParamElimSolver(val constraintSolver: FlowConstraintSolver):
           case (_, i) =>
             prodRoots += prodFun -> i
 
-    for (consFun, srcs) <- funSrcs do
-      if srcs.contains(UnknownProd) then
+    for consFun <- consFuns do
+      if consFun.srcs.contains(UnknownProd) then
         consFun.params.indices.foreach: i =>
           consRoots += consFun -> i
       else
-        val minSize = srcs
+        val minSize = consFun.srcs
           .collect:
             case p: ProdFun if p.restParam.isDefined => p.params.size
           .minOption
@@ -74,9 +72,9 @@ class DeadParamElimSolver(val constraintSolver: FlowConstraintSolver):
         
 
     val result = FlowWebComputation[(ProdFun, Int), (ConsFun, Int)](
-      (prodFun, idx) => funDests(prodFun).collect:
+      (prodFun, idx) => prodFun.dests.collect:
         case c: ConsFun => (c, idx),
-      (consFun, idx) => funSrcs(consFun).collect:
+      (consFun, idx) => consFun.srcs.collect:
         case p: ProdFun => (p, idx),
       prodRoots,
       consRoots,
@@ -89,7 +87,7 @@ class DeadParamElimSolver(val constraintSolver: FlowConstraintSolver):
   val eliminableCallSiteArgsById =
     LinkedHashMap.empty[ConcreteCallSiteId, Set[Int]].withDefaultValue(Set.empty)
   
-  for (prodFun, _) <- funDests do
+  for prodFun <- prodFuns do
     val eliminable = prodFun.params.indices.filterNot: i =>
       liveParams.contains(prodFun -> i)
     if eliminable.nonEmpty then
@@ -97,7 +95,7 @@ class DeadParamElimSolver(val constraintSolver: FlowConstraintSolver):
       case None => eliminableParamsById(prodFun.concreteId) = eliminable.toSet
       case S(existing) => assert(existing.toList.sorted === eliminable)
   
-  for (consFun, _) <- funSrcs do
+  for consFun <- consFuns do
     val eliminable = consFun.params.indices.filterNot: i =>
       liveCallSiteParams.contains(consFun -> i)
     if eliminable.nonEmpty then
@@ -128,10 +126,10 @@ class DeadParamElimSolver(val constraintSolver: FlowConstraintSolver):
     
     assert(eliminableCallSiteArgsById.nonEmpty === eliminableParamsById.nonEmpty)
     tl.log(">>> dead-param-elim results >>>")
-    for (prodFun, _) <- funDests.toSeq.sortBy(pair => showProdFun(pair._1)) do
+    for (prodFun, prodFunStr) <- prodFuns.map(p => p -> showProdFun(p)).sortBy(_._2) do
       eliminableParamsById.get(prodFun.concreteId) match
         case Some(elim) =>
-          tl.log(s"${showProdFun(prodFun)} -> eliminable: {${elim.toSeq.sorted.mkString(", ")}}")
+          tl.log(s"$prodFunStr -> eliminable: {${elim.toSeq.sorted.mkString(", ")}}")
         case _ => ()
     tl.log("<<< dead-param-elim results <<<")
   end if

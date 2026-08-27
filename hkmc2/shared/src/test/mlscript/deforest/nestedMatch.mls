@@ -599,6 +599,8 @@ fun sum(ls) = if ls is
   h :: t then h + sum(t)
 sum(prodDouble(4))
 //│ deforest > >>> fusing >>>
+//│ deforest > Nil⁰ ->
+//│ deforest > 	match: ls⁰
 //│ deforest > Cons⁰(n⁰, tmp¹³) ->
 //│ deforest > 	match: ls⁰
 //│ deforest > 	fields: ls⁰.h⁰
@@ -607,8 +609,6 @@ sum(prodDouble(4))
 //│ deforest > 	match: ls⁰
 //│ deforest > 	fields: ls⁰.h⁰
 //│ deforest > 	fields: ls⁰.t⁰
-//│ deforest > Nil⁰ ->
-//│ deforest > 	match: ls⁰
 //│ deforest > <<< fusing <<<
 //│ = 20
 
