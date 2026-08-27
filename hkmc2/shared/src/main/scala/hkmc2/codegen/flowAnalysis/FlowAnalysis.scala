@@ -1084,10 +1084,8 @@ class FlowConstraintSolver(val collector: FlowConstraintsCollector):
       def showAccumulatorSym(stratVar: StratVar): Opt[Str] =
         AllUpperBounds(stratVar)
           .collectFirst:
-            case pAcc: PossibleAccumulator if pAcc.s.uid === stratVar.uid => pAcc.s.name
-            case iPrm: IntoParam if iPrm.s.uid === stratVar.uid => iPrm.s.name
-          .map: nme =>
-            s"$nme@${stratVar.uid}"
+            case pAcc: PossibleAccumulator if pAcc.s is stratVar => s"${stratVar.name}@${stratVar.uid}"
+            case iPrm: IntoParam if iPrm.s is stratVar => s"${stratVar.name}@${stratVar.uid}"
       val outputRes =
         for
           stratVar <- fState.stratVars
