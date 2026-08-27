@@ -269,11 +269,6 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
       // * Sometimes the JS block won't execute due to a syntax or runtime error so we always set this first
       host.execute(s"$resNme = undefined")
       
-      def forwardStdout(stdout: String) =
-        stdout.splitSane('\n').init // should always ends with "undefined" (TODO: check)
-          .foreach: line =>
-            output(s"> ${line}")
-      
       val awaitResult = (if await.isSet then s"; $resNme = await $resNme" else "")
       mkQuery(preStr, jsStr + awaitResult): stdout =>
         stdout.splitSane('\n').init // should always ends with "undefined" (TODO: check)
