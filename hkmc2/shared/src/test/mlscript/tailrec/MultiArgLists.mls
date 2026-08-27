@@ -399,3 +399,115 @@ fun f = loop(1000)(0)
 //│ };
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+// Ensure the function is inlined
+:soir
+fun loop(x)(y) =
+  if y === 0 then 0
+  else if x === 0 then 1 + loop(5)(y - 1)
+  else @tailcall loop(x - 1)(y)
+loop(5)(5)
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let loop$tailrec;
+//│ @private
+//│ define loop$tailrec as fun loop$tailrec¹(x, y) {
+//│   loop loopLabel:
+//│     let scrut, scrut1, tmp, tmp1, tmp2;
+//│     set scrut = ===⁰(y, 0);
+//│     match scrut
+//│       true =>
+//│         return 0
+//│       else
+//│         set scrut1 = ===⁰(x, 0);
+//│         match scrut1
+//│           true =>
+//│             set tmp = -⁰(y, 1);
+//│             set tmp1 = loop$tailrec¹(5, tmp);
+//│             return +⁰(1, tmp1)
+//│           else
+//│             set tmp2 = -⁰(x, 1);
+//│             set x = tmp2;
+//│             continue loopLabel
+//│         end
+//│     end
+//│   unreachable /* Rest of abortive labelled block */
+//│ };
+//│ @inline
+//│ define loop⁴ as fun loop⁵(x)(y) { return loop$tailrec¹(x, y) };
+//│ return loop$tailrec¹(5, 5)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 5
+
+fun f(n)(a, b, c, d, ...e)(m) =
+  if n > 0 then @tailcall g(n)(m + 1)
+  else [e, m]
+fun g(n)(m) =
+  let res = f(n - 1)(...[1, 2], 3, ...[3, 4], ...[5, n], 7, n)(m)
+  print("hi!")
+  res
+
+:expect [[4, 5, 1, 7, 1], 9]
+g(10)(0)
+//│ > hi!
+//│ > hi!
+//│ > hi!
+//│ > hi!
+//│ > hi!
+//│ > hi!
+//│ > hi!
+//│ > hi!
+//│ > hi!
+//│ > hi!
+//│ = [[4, 5, 1, 7, 1], 9]
+
+:soir
+fun f(n)(a)(...z) =
+  if n > 0 then f(n - 1)(a)(...z) else if z is
+    [] then a
+    [x, ...xs] then
+      let res = f(n)(a + 1)(...xs)
+      print("hi!")
+      res
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let f$tailrec;
+//│ @private
+//│ define f$tailrec as fun f$tailrec³(n, a, z) {
+//│   loop loopLabel:
+//│     let scrut, res, tmp, tmp1;
+//│     set scrut = >⁰(n, 0);
+//│     match scrut
+//│       true =>
+//│         set tmp = -⁰(n, 1);
+//│         set n = tmp;
+//│         continue loopLabel
+//│       else
+//│         match z
+//│           Array(0) =>
+//│             return a
+//│           Array(1+) =>
+//│             let inlinedVal, tmp2;
+//│             do runtime⁰.Tuple⁰.get⁰(z, 0);
+//│             set tmp2 = -¹(z.length﹖, 0);
+//│             set inlinedVal = z.slice﹖(1, tmp2);
+//│             set tmp1 = +⁰(a, 1);
+//│             set res = f$tailrec³(n, tmp1, inlinedVal);
+//│             do Predef⁰.print⁰("hi!");
+//│             return res
+//│           else
+//│             throw new globalThis⁰.Error⁰("match error")
+//│         end
+//│     end
+//│   unreachable /* Rest of abortive labelled block */
+//│ };
+//│ @inline
+//│ define f⁸ as fun f⁹(n)(a)(...z) { return f$tailrec³(n, a, z) };
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+:expect 4
+f(5)(0)(1, 2, 3, 4)
+//│ > hi!
+//│ > hi!
+//│ > hi!
+//│ > hi!
+//│ = 4

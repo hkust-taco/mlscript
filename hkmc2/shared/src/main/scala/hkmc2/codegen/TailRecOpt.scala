@@ -13,7 +13,6 @@ import hkmc2.syntax.{Tree, SpreadKind}
 import hkmc2.ScopeData.*
 import hkmc2.Lifter.AccessInfo
 import scala.collection.mutable.{ArrayBuffer, LinkedHashMap}
-import java.lang.instrument.ClassDefinition
 
 /*
 
@@ -207,11 +206,6 @@ class TailRecOpt(checkAnnotations: Bool)(using State, TL, Raise):
       val x = f(item)
       if x > l then x else l
   
-  def getParamSyms(f: FunDefn) = f.params.flatMap:
-    case ParamList(_, params, S(rest)) =>
-      params.map(_.sym).appended(rest.sym)
-    case p => p.params.map(_.sym)
-  
   def paramsLen(f: FunDefn): Int = f.params.foldLeft(0): (acc, head) =>
     acc + (if head.restParam.isDefined then 1 + head.params.length
       else head.params.length)
@@ -335,7 +329,7 @@ class TailRecOpt(checkAnnotations: Bool)(using State, TL, Raise):
     val maxParamLen = maxInt(funs, paramsLen)
     val paramSyms =
         if funs.length === 1 then
-          val syms = getParamSyms(funs.head)
+          val syms = funs.head.paramSyms
           if funs.head.params.length === 1 then syms
           else
             // Duplicate the params for the internal loop defn (see the doc at the
@@ -358,16 +352,24 @@ class TailRecOpt(checkAnnotations: Bool)(using State, TL, Raise):
     val dSymIds = funs.iterator.map(_.dSym).zipWithIndex.toMap
     val dSymToDefn = funs.iterator.map(f => f.dSym -> f).toMap
     val bms =
-      if funsLen === 1 then funs.head.sym
+      if funsLen === 1 then funs.head.params match
+        case _ :: Nil => funs.head.sym
+        case _ => BlockMemberSymbol(funs.head.sym.nme + "$tailrec", Nil, true)
       else BlockMemberSymbol(funs.iterator.map(_.sym.nme).mkString("_"), Nil, true)
     val dSym =
-      if funsLen === 1 then funs.head.dSym
+      if funsLen === 1 then funs.head.params match
+        case _ :: Nil => funs.head.dSym
+        case _ => TermSymbol(syntax.Fun, owner, Tree.Ident(bms.nme))
       else TermSymbol(syntax.Fun, owner, Tree.Ident(bms.nme))
     val loopSym = LabelSymbol(N, "loopLabel")
     val curIdSym = VarSymbol(Tree.Ident("id"))
     
+    val sel = owner match
+      case Some(value) => Select(value.asThis, Tree.Ident(bms.nme))(S(dSym))(false)
+      case None => bms.asMemberRef(dSym)
+    
     class FunRewriter(f: FunDefn) extends BlockTransformerShallow(SymbolSubst.Id):
-      val params = getParamSyms(f)
+      val params = f.paramSyms
       val paramsSet = f.params.toSet
       val paramsIdxes = params.zipWithIndex.toMap
       
@@ -414,10 +416,6 @@ class TailRecOpt(checkAnnotations: Bool)(using State, TL, Raise):
       
       override def applyBlock(b: Block): Block = b match
         // Note: the args in `c` have already been rewritten to point to the symbols in `paramSyms`.
-        // We explicitly rewrite *all* fully applied calls to functions within the SCC. Tail calls are rewritten using a
-        // `continue`, while other calls are rewritten as a call to the merged function. This is to make the tailrec
-        // optimizer pass idempotent. Without this, the subsequent tailrec optimizer passes could see the merged and wrapper
-        // functions as an SCC and try to rewrite the wrapper's tail call.
         case TailCallShape(calleeSym, c) => dSymIds.get(calleeSym) match
           case None => super.applyBlock(b)
           case Some(id) =>
@@ -520,6 +518,50 @@ class TailRecOpt(checkAnnotations: Bool)(using State, TL, Raise):
         // Not a tail call
         case _ => super.applyBlock(b)
       
+      // We explicitly rewrite *all* fully applied calls to functions within the SCC. Tail calls are rewritten using a
+      // `continue`, while other calls are rewritten as a call to the merged function. This is to make the tailrec
+      // optimizer pass idempotent. Without this, the subsequent tailrec optimizer passes could see the merged and wrapper
+      // functions as an SCC and try to rewrite the wrapper's tail call.
+      override def applyResult(r: Result)(k: Result => Block): Block = r match
+        case c @ Call(Value.MemberRef(bms, calleeSym: TermSymbol), args) => funsMap.get(calleeSym) match
+          case Some(callee) if isExactlySaturatedCall(c, callee) =>
+            val calleeParamsMap = paramSymsMap(callee.dSym)
+            val argListResults = callee.params.zip(c.argss).map:
+              case (params, args) => (params, params.paramSyms.map(calleeParamsMap), args, rewriteArgsList(callee, params, args))
+            // Note: even though the convention right now is to just have the first k_f arguments of the merged function be the arguments
+            // of each function f, where f has k_f total parameters, we still explicitly find the correct order of arguments without
+            // using this convention. This is because this assumption may not hold in the future, i.e. when arguments could be assigned
+            // types for the typed IR.
+            var pre = blockBuilder
+            val argsInOrder: List[Path] = argListResults.flatMap: (ogParams, thisParamSyms, args, argsRes) =>
+              argsRes match
+                case CallArgsResult.Success(res) => res.map:
+                  case r: Path => r
+                  case r: Result =>
+                    val newSym = TempSymbol(N)
+                    pre = pre.assignScoped(newSym, r)
+                    newSym.asPath
+                case CallArgsResult.ForceSpread =>
+                  val (initialBlk, paths) = forceSpread(ogParams, args)
+                  pre = pre.chain(initialBlk)
+                  paths
+            assert(callee.paramSyms.length === argsInOrder.length)
+            val argsMap = (callee.paramSyms.map(paramSymsMap(callee.dSym)) zip argsInOrder).toMap
+            val args = paramSyms.map: s =>
+              argsMap.get(s) match
+                case Some(pth) => Arg(N, pth)
+                case None => Arg(N, Value.Lit(Tree.UnitLit(false)))
+            val argsWithId = if funsLen > 1 then Value.Lit(Tree.IntLit(dSymIds(calleeSym))).asArg :: args else args
+            val call = Call(sel, argsWithId ne_:: Nil)(CallMetadata.defaultMlsFun)
+            pre.rest(k(call))
+            // f.paramSyms
+            // assert(assignmentsInOrder.length === )
+              
+            
+          case _ => super.applyResult(r)(k)
+        case _ => super.applyResult(r)(k)
+        
+      
       def rewrite(b: Block): Block =
         // Rewrite the result with symbols pointing to the merged function parameters and possibly the copied parameters (see `copiedParams`).
         val blk = applyBlock(symRewriter.applyBlock(b))
@@ -536,14 +578,10 @@ class TailRecOpt(checkAnnotations: Bool)(using State, TL, Raise):
     
     val loop = Label(loopSym, true, switch, End())
     
-    val sel = owner match
-      case Some(value) => Select(value.asThis, Tree.Ident(bms.nme))(S(dSym))(false)
-      case None => bms.asMemberRef(dSym)
-    
     val rewrittenFuns =
       if funsLen === 1 then Nil
       else funs.map: f =>
-        val paramArgs = getParamSyms(f).map(s => s.asSimpleRef.asArg)
+        val paramArgs = f.paramSyms.map(s => s.asSimpleRef.asArg)
         val args =
           Value.Lit(Tree.IntLit(dSymIds(f.dSym))).asArg
             :: paramArgs
@@ -566,21 +604,16 @@ class TailRecOpt(checkAnnotations: Bool)(using State, TL, Raise):
         // original multi-param-list interface and delegates to the flattened internal loop.
         val params = paramSyms.map(Param.simple(_))
         
-        val loopBms = BlockMemberSymbol(bms.nme + "$tailrec", Nil, true)
-        val loopDSym = TermSymbol(syntax.Fun, owner, Tree.Ident(loopBms.nme))
         val loopAnnots =
           if f.inline then Annot.Inline :: Annot.Private :: Nil
           else Annot.Private :: Nil
         val internalLoopDefn = FunDefn(
-          owner, loopBms, loopDSym,
+          owner, bms, dSym,
           PlainParamList(params) :: Nil,
           loop)(N, annotations = loopAnnots)
-        val paramArgs = getParamSyms(f).map(s => s.asSimpleRef.asArg)
-        val internalSel = owner match
-          case Some(value) => Select(value.asThis, Tree.Ident(loopBms.nme))(S(loopDSym))(false)
-          case None => loopBms.asMemberRef(loopDSym)
+        val paramArgs = f.paramSyms.map(s => s.asSimpleRef.asArg)
         val wrapperBod = Return(
-          Call(internalSel, paramArgs ne_:: Nil)(CallMetadata.defaultMlsFun),
+          Call(sel, paramArgs ne_:: Nil)(CallMetadata.defaultMlsFun),
         )
         val newAnnots = if f.inline then f.annotations else Annot.Inline :: f.annotations
         val wrapperDefn = FunDefn(f.owner, f.sym, f.dSym, f.params, wrapperBod)(
