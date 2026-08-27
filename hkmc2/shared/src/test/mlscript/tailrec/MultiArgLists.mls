@@ -406,7 +406,7 @@ fun f = loop(1000)(0)
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
-// Ensure the function is inlined
+// Ensure the non-tail call is calls the loop definition and is correctly handled
 :soir
 fun loop(x)(y) =
   if y === 0 then 0
@@ -444,6 +444,7 @@ loop(5)(5)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 5
 
+// Ensure the spread args are properly handled
 fun f(n)(a, b, c, d, ...e)(m) =
   if n > 0 then @tailcall g(n)(m + 1)
   else [e, m]
