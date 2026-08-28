@@ -490,7 +490,7 @@ fun toJsAsync(thunk) =
   let r = enterHandleBlock(AsyncEffectMarker, thunk)
   if curEffect !== null do
     illegalEffect("in exported async function")
-  r
+  Promise.resolve(r)
 
 // stack safety
 mut val stackLimit = 0 // How deep the stack can go before heapifying the stack

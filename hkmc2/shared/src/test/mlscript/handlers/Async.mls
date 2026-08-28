@@ -70,7 +70,7 @@ fun f() =
   let first = readme.slice(0, readme.indexOf("\n"))
   print(first)
   let r2 = await(fs.promises.readdir("."))
-  print(r2.indexOf("README.md") != 0)
+  print(r2.indexOf("README.md") >= 0)
 
 @async
 fun g() =
