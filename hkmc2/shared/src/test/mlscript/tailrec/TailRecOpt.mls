@@ -19,6 +19,7 @@ fun f(a, b, c) =
 f(10000, 20000, 0)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ let g_f;
+//│ @private
 //│ define g_f as fun g_f⁰(id, param0, param1, param2, param3) {
 //│   loop loopLabel:
 //│     match id
@@ -56,9 +57,11 @@ f(10000, 20000, 0)
 //│     end
 //│   end
 //│ };
+//│ @inline
 //│ define g⁰ as fun g¹(a, b, c, d) {
 //│   return g_f⁰(0, a, b, c, d)
 //│ };
+//│ @inline
 //│ define f⁰ as fun f¹(a, b, c) {
 //│   return g_f⁰(1, a, b, c, undefined)
 //│ };
@@ -152,7 +155,8 @@ fun g(n) =
   @tailcall f(n, ...[1, 2], 3, ...[3, 4], ...[5, n], 7, n)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ let f_g;
-//│ define f_g as fun f_g⁰(id, param0, param1, param2, param3, param4, param5) {
+//│ @private
+//│ define f_g as fun f_g⁰(id, param0, param5) {
 //│   loop loopLabel:
 //│     match id
 //│       0 =>
@@ -188,12 +192,12 @@ fun g(n) =
 //│     end
 //│   end
 //│ };
+//│ @inline
 //│ define f² as fun f³(n, a, b, c, d, ...e) {
-//│   return f_g⁰(0, n, a, b, c, d, e)
+//│   return f_g⁰(0, n, e)
 //│ };
-//│ define g² as fun g³(n) {
-//│   return f_g⁰(1, n, undefined, undefined, undefined, undefined, undefined)
-//│ };
+//│ @inline
+//│ define g² as fun g³(n) { return f_g⁰(1, n, undefined) };
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
@@ -209,7 +213,7 @@ fun f(x) =
     @tailcall f(x)
   @tailcall g()
 //│ ╔══[COMPILATION ERROR] This call is not in tail position.
-//│ ║  l.208: 	    @tailcall f(x)
+//│ ║  l.212: 	    @tailcall f(x)
 //│ ╙──       	              ^^^^
 
 :lift
@@ -295,6 +299,103 @@ a.x
 //│ = 2
 //│ a = A(2)
 
+// Make sure the tailrec pass is idempotent by ensuring non-tail calls to functions in the SCC are rewritten as calls to the loop definition.
+:soir
+fun f(x) = g(x)
+fun g(x) =
+  f(x)
+  print(x)
+  0
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let f_g;
+//│ @private
+//│ define f_g as fun f_g¹(id, param0) {
+//│   loop loopLabel:
+//│     match id
+//│       0 =>
+//│         set id = 1;
+//│         continue loopLabel
+//│       1 =>
+//│         do f_g¹(0, param0);
+//│         do Predef⁰.print⁰(param0);
+//│         return 0
+//│       else
+//│         end
+//│     end
+//│   end
+//│ };
+//│ @inline
+//│ define f⁶ as fun f⁷(x) {
+//│   return f_g¹(0, x)
+//│ };
+//│ @inline
+//│ define g⁴ as fun g⁵(x) { return f_g¹(1, x) };
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+:soir
+module M with
+  fun f(x) = g(x)
+  fun g(x) =
+    f(x)
+    print(x)
+    0
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ define M⁰ as class M¹
+//│ module M² {
+//│   method f_g² = fun f_g³(id, param0) {
+//│     loop loopLabel:
+//│       match id
+//│         0 =>
+//│           set id = 1;
+//│           continue loopLabel
+//│         1 =>
+//│           do M².this.f_g³(0, param0);
+//│           do Predef⁰.print⁰(param0);
+//│           return 0
+//│         else
+//│           end
+//│       end
+//│     end
+//│   }
+//│   method f⁸ = fun f⁹(x) {
+//│     return M².this.f_g³(0, x)
+//│   }
+//│   method g⁶ = fun g⁷(x) { return M².this.f_g³(1, x) }
+//│ };
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+// Nothing should be rewritten in the non tail calls
+:soir
+fun f(n, x, ...y) =
+  if n === 0 then [x, y]
+  else
+    f(0, 1, 2, 3)
+    f(0, ...[1, 2, 3])
+    f(0, 1, 2, 3)
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ define f¹⁰ as fun f¹¹(n, x, ...y) {
+//│   loop loopLabel:
+//│     let scrut, tmp;
+//│     set scrut = ===⁰(n, 0);
+//│     match scrut
+//│       true =>
+//│         return [x, y]
+//│       else
+//│         do f¹¹(0, 1, 2, 3);
+//│         set tmp = [1, 2, 3];
+//│         do f¹¹(0, ...tmp);
+//│         set n = 0;
+//│         set x = 1;
+//│         set y = mut [2, 3];
+//│         continue loopLabel
+//│     end
+//│   unreachable /* Rest of abortive labelled block */
+//│ };
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
 // Functions inside module definitions are lifted to the top level. This means they cannot yet be optimized.
 :lift
 :fixme
@@ -304,10 +405,10 @@ module A with
     @tailcall g(x - 1)
 A.f(10000)
 //│ ╔══[COMPILATION ERROR] This tail call exits the current scope and is not optimized.
-//│ ║  l.303: 	    fun g(x) = if x < 0 then 0 else @tailcall f(x)
+//│ ║  l.404: 	    fun g(x) = if x < 0 then 0 else @tailcall f(x)
 //│ ╙──       	                                              ^^^^
 //│ ╔══[COMPILATION ERROR] This tail call exits the current scope and is not optimized.
-//│ ║  l.304: 	    @tailcall g(x - 1)
+//│ ║  l.405: 	    @tailcall g(x - 1)
 //│ ╙──       	              ^^^^^^^^
 //│ = 0
 
@@ -334,12 +435,12 @@ class A with
   fun g(x) = if x == 0 then 1 else @tailcall f(x - 1)
 (new A).f(10)
 //│ ╔══[COMPILATION ERROR] Calls from class methods cannot yet be marked @tailcall.
-//│ ║  l.333: 	  @tailrec fun f(x) = if x == 0 then 0 else @tailcall g(x - 1)
+//│ ║  l.434: 	  @tailrec fun f(x) = if x == 0 then 0 else @tailcall g(x - 1)
 //│ ╙──       	                                                      ^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Class methods may not yet be marked @tailrec.
-//│ ║  l.333: 	  @tailrec fun f(x) = if x == 0 then 0 else @tailcall g(x - 1)
+//│ ║  l.434: 	  @tailrec fun f(x) = if x == 0 then 0 else @tailcall g(x - 1)
 //│ ╙──       	               ^
 //│ ╔══[COMPILATION ERROR] Calls from class methods cannot yet be marked @tailcall.
-//│ ║  l.334: 	  fun g(x) = if x == 0 then 1 else @tailcall f(x - 1)
+//│ ║  l.435: 	  fun g(x) = if x == 0 then 1 else @tailcall f(x - 1)
 //│ ╙──       	                                             ^^^^^^^^
 //│ = 0
