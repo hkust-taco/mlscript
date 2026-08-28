@@ -1,6 +1,5 @@
 :js
 :lift
-:effectHandlers
 
 import "fs"
 
@@ -62,6 +61,9 @@ f()
 //│ > 0
 //│ ═══[RUNTIME ERROR] Promise error
 //│ = Promise {}
+
+:global
+:effectHandlers
 
 fun f() =
   print(0)

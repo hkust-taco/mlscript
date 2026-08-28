@@ -46,14 +46,14 @@ object Elaborator:
   
   // TODO: rename to ScopeKind?
   enum OuterCtx:
-    case Function(returnHandlerSymbol: TempSymbol, isGenerator: Bool)
+    case Function(returnHandlerSymbol: TempSymbol)(val isGenerator: Bool, val isAsync: Bool)
     case InnerScope(innerSymbol: InnerSymbol)
     case LocalScope(nameHint: Str)
     case LambdaOrHandlerBlock
     case NonReturnContext
     
     def showDbg: Str = this match
-      case Function(sym, _) => s"fun:${sym.nme}"
+      case Function(sym) => s"fun:${sym.nme}"
       case InnerScope(inner) => inner.toString
       case LocalScope(hint) => hint
       case LambdaOrHandlerBlock => "LambdaOrHandlerBlock"
@@ -178,20 +178,26 @@ object Elaborator:
       go(S(this), false, false)
     def getOuter: Opt[InnerSymbol] = outer.inner.orElse(parent.flatMap(_.getOuter))
     def getNonLocalRetHandler: Opt[TempSymbol] = outer match
-      case OuterCtx.Function(sym, _) => S(sym)
+      case OuterCtx.Function(sym) => S(sym)
       case _ => parent.flatMap(_.getNonLocalRetHandler)
     def getRetHandler: ReturnHandler = outer match
-      case OuterCtx.Function(sym, _) => ReturnHandler.Direct
+      case OuterCtx.Function(sym) => ReturnHandler.Direct
       case _: (OuterCtx.LambdaOrHandlerBlock.type | OuterCtx.InnerScope) =>
         getNonLocalRetHandler.fold(ReturnHandler.NotInFunction)(ReturnHandler.Required(_))
       case OuterCtx.NonReturnContext => ReturnHandler.Forbidden
       case _: OuterCtx.LocalScope =>
         parent.fold(ReturnHandler.NotInFunction)(_.getRetHandler)
     def inGenerator: Bool = outer match
-      case OuterCtx.Function(_, isGenerator) => isGenerator
+      case f: OuterCtx.Function => f.isGenerator
       case _: OuterCtx.LocalScope =>
         parent.fold(false)(_.inGenerator)
       case _: (OuterCtx.LambdaOrHandlerBlock.type | OuterCtx.InnerScope | OuterCtx.NonReturnContext.type) => false
+    def inAsync: Bool = outer match
+      case f: OuterCtx.Function => f.isAsync
+      case _: OuterCtx.LocalScope =>
+        parent.fold(false)(_.inAsync)
+      case _: (OuterCtx.LambdaOrHandlerBlock.type | OuterCtx.InnerScope | OuterCtx.NonReturnContext.type) => false
+    def potentiallyInstrumented(using Config): Bool = config.effectHandlers.isDefined || inAsync
     
     // * Invariant: We expect that the top-level context only contain hard-coded symbols like `globalThis`
     // * and that built-in symbols like Int and Str be imported into another nested context on top of it.
@@ -1056,7 +1062,7 @@ extends Importer:
       error
     case LetLike(Keywrd(`set`), lhs, S(rhs), S(bod)) =>
       // * Backtracking assignment
-      if config.effectHandlers.isDefined then
+      if ctx.potentiallyInstrumented then
         raise(ErrorReport(
           msg"Backtracking assignment is not supported with effect handlers enabled" ->
             tree.toLoc :: Nil))
@@ -1242,7 +1248,7 @@ extends Importer:
       case LabelLookup.Found(binding) =>
         Term.Break(binding.labelSymbol, binding.resultSymbol, value)
       case LabelLookup.AcrossBoundary(binding) =>
-        if config.effectHandlers.isEmpty then
+        if !ctx.potentiallyInstrumented then
           mkNonLabelSelectionApp(tree, sel, args)
         else
           markEffectMethodUsed(binding.nonLocalBreakMethodMarker, nme)
@@ -1264,7 +1270,7 @@ extends Importer:
         Term.Continue(binding.labelSymbol)
       case LabelLookup.AcrossBoundary(binding) =>
         checkNoArgs
-        if config.effectHandlers.isEmpty then
+        if !ctx.potentiallyInstrumented then
           raise:
             ErrorReport(msg"Non-local 'continue' is only supported with effect handlers enabled."
               -> labelId.toLoc :: Nil)
@@ -1296,7 +1302,7 @@ extends Importer:
       case LabelLookup.Found(binding) =>
         Term.Break(binding.labelSymbol, binding.resultSymbol, N)
       case LabelLookup.AcrossBoundary(binding) =>
-        if config.effectHandlers.isEmpty then
+        if !ctx.potentiallyInstrumented then
           raise:
             ErrorReport(msg"Non-local 'break' is only supported with effect handlers enabled."
               -> labelId.toLoc :: Nil)
@@ -1311,7 +1317,7 @@ extends Importer:
       case LabelLookup.Found(binding) =>
         Term.Continue(binding.labelSymbol)
       case LabelLookup.AcrossBoundary(binding) =>
-        if config.effectHandlers.isEmpty then
+        if !ctx.potentiallyInstrumented then
           raise:
             ErrorReport(msg"Non-local 'continue' is only supported with effect handlers enabled."
               -> labelId.toLoc :: Nil)
@@ -1421,7 +1427,7 @@ extends Importer:
       ctx.getRetHandler match
       case ReturnHandler.Required(sym) =>
         log(s"Non-local return: $sym")
-        if config.effectHandlers.isEmpty then
+        if !ctx.potentiallyInstrumented then
           raise:
             ErrorReport(msg"Non-local return statements are only supported with effect handlers enabled." -> tree.toLoc :: Nil)
           error
@@ -1919,9 +1925,10 @@ extends Importer:
                 case S(rhs) => S:
                   val nonLocalRetHandler = TempSymbol(N, s"nonLocalRetHandler$$${id.name}")
                   val hasGeneratorAnnotation = annotations.contains(Annot.Generator)
+                  val hasAsyncAnnotation = annotations.contains(Annot.Async)
                   if pss.isEmpty && hasGeneratorAnnotation then
                     raise(ErrorReport(msg"Generators are not supported on functions without a parameter list" -> td.toLoc :: Nil))
-                  newCtx.nest(OuterCtx.Function(nonLocalRetHandler, pss.nonEmpty && hasGeneratorAnnotation)).givenIn: newCtx ?=>
+                  newCtx.nest(OuterCtx.Function(nonLocalRetHandler)(pss.nonEmpty && hasGeneratorAnnotation, hasAsyncAnnotation)).givenIn: newCtx ?=>
                     val b = term(rhs)(using newCtx)
                     if nonLocalRetHandler.directRefs.isEmpty then b else
                       mkEffectHandleAbortive(

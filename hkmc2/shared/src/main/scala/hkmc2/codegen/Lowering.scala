@@ -708,9 +708,25 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
     @tailrec
     def extractAnnots(t: st, acc: List[Annot]): (List[Annot], st) = t match
       case st.Annotated(Annot.Async, trm) =>
+        val ident = new Tree.Ident("asyncBody").withLocOf(trm)
+        val bms = BlockMemberSymbol(ident.name, Nil, false)
+        val dsym = TermSymbol(syntax.Fun, N, ident)
+        val td: TermDefinition = TermDefinition(
+          syntax.Fun,
+          bms,
+          dsym,
+          sem.ParamList(sem.ParamListFlags.empty, Nil, N) :: Nil,
+          N,
+          N,
+          S(trm),
+          TermDefFlags.empty,
+          Modulefulness.none,
+          Annot.RaiseEffects :: Nil,
+          N,
+        )
         val rewritten = st.App(
           st.SynthSel(State.runtimeSymbol.ref(), Tree.Ident("toJsAsync"))(N, FlowSymbol.sel("toJsAsync"), N, N),
-          st.Tup(PlainFld(st.Lam(sem.ParamList(sem.ParamListFlags.empty, Nil, N), trm)) :: Nil)(Tree.DummyTup)
+          st.Tup(PlainFld(st.Blk(td :: Nil, bms.ref(ident).resolved(dsym))) :: Nil)(Tree.DummyTup)
         )(Tree.DummyApp, N, FlowSymbol.app())
         extractAnnots(rewritten, acc)
       case st.Annotated(annot, trm) => extractAnnots(trm.instantiated, annot :: acc)
@@ -919,7 +935,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
           conclude(Select(p, definitionIdent(nme, sym))(S(sym))(false).withLocOf(sel))
       case _ => subTerm(baseF)(conclude)
     case h @ Handle(lhs, rhs, as, cls, defs, bod) =>
-      if !lowerHandlers then
+      if config.effectHandlers.isEmpty then
         return fail:
           ErrorReport(
             msg"Effect handlers are not enabled" ->
@@ -1422,13 +1438,14 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
         case N => WarningReport(msg"This annotation has no effect." -> annot.toLoc :: Nil)
     annotations.foreach:
       case Annot.Untyped => ()
-      case a @ (Annot.TailRec | Annot.Inline | Annot.NoInline | Annot.Generator | Annot.Async) =>
+      case a @ (Annot.TailRec | Annot.Inline | Annot.NoInline | Annot.Generator | Annot.Async | Annot.RaiseEffects) =>
         val annot = a match
           case Annot.TailRec => "@tailrec"
           case Annot.Inline => "@inline"
           case Annot.NoInline => "@noInline"
           case Annot.Generator => "@generator"
           case Annot.Async => "@async"
+          case Annot.RaiseEffects => "@raiseEffects"
         target match
           case TermDefinition(body = S(bod), k = syntax.Fun) => ()
           case TermDefinition(k = syntax.Fun) => warn(a, S(msg"Only functions with a body may be marked as $annot."))

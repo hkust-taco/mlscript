@@ -53,11 +53,14 @@ object HandlerLowering:
       case Ctor => true
       case ModCtor(trulyNested) => trulyNested
       case TopLevel => false
+    def inAsync = this match
+      case FunctionLike(ctx) => ctx.inAsync
+      case _ => false
     
   
   // currentFun: path to the current function for resumption
   // thisPath: path to `this` binding if the function is a method, `this` will be rebinded on resumption
-  private case class FunctionCtx(currentFun: Path, thisPath: Option[Path], resumeInfo: ResumeInfo, debugInfo: DebugInfo, inGetter: Bool):
+  private case class FunctionCtx(currentFun: Path, thisPath: Option[Path], resumeInfo: ResumeInfo, debugInfo: DebugInfo, inGetter: Bool, inAsync: Bool):
     def doUnwind(loc: Value, state: Path, restoreList: List[LocalVarSymbol])(using paths: HandlerPaths) =
       Return(Call(paths.unwindPath, (
         currentFun ::
@@ -117,7 +120,10 @@ class HandlerPaths(using Elaborator.State):
   val resumeValueIdent = new Tree.Ident("resumeValue")
   val resumeValue: Path = runtimePath.selN(resumeValueIdent)
 
-class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise, Elaborator.State, Elaborator.Ctx, Config):
+class HandlerLowering(paths: HandlerPaths, opt: Opt[EffectHandlers])(using TL, Raise, Elaborator.State, Elaborator.Ctx, Config):
+  
+  val debugEnabled = opt.exists(_.debug)
+  val stackSafety = opt.flatMap(_.stackSafety)
   
   private def freshTmp(dbgNme: Str = "tmp") = new TempSymbol(N, dbgNme)
   private def freshLabel(nme: Str) = new LabelSymbol(N, nme)
@@ -320,7 +326,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
 
     val initId = allocId()
     // Note: initial part will only be resumed if stack safety is on.
-    val initPart = BlockPartition(go(blk)(using N, false), opt.stackSafety.isDefined)
+    val initPart = BlockPartition(go(blk)(using N, false), stackSafety.isDefined)
     result(initId) = initPart
 
     val replaceStaleLabels = new BlockTransformerShallow(SymbolSubst.Id):
@@ -511,7 +517,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
     ret.sortBy(x => x.headOption.getOrElse(BigInt(-1))).toList
 
   private def lifterReport(using Line, FileName)(msgs: Ls[Message -> Opt[Loc]])(using Name) =
-    if opt.softLifterError then
+    if opt.fold(false)(_.softLifterError) then
       WarningReport(msgs, source = Diagnostic.Source.Compilation)
     else
       InternalError(msgs, source = Diagnostic.Source.Compilation)
@@ -543,7 +549,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
       val rtArgLists = intLit(fun.params.length) :: fun.params.flatMap: pl =>
         intLit(pl.params.length) :: pl.params.map(p => p.sym.asSimpleRef)
       val newCtx = HandlerCtx.FunctionLike(FunctionCtx(funcPath, thisPath, ResumeInfo(rtArgLists, sortedVars, L(fun.sym)),
-        DebugInfo(debugNme, if opt.debug then debugInfoSym.asSimpleRef else unit), thisPath.isDefined && fun.params.isEmpty))
+        DebugInfo(debugNme, if debugEnabled then debugInfoSym.asSimpleRef else unit), thisPath.isDefined && fun.params.isEmpty, fun.async))
       val bod2 = translateBlock(fun.body, newCtx, scopedVars)
       val fun2 = if fun.body is bod2 then fun else
         FunDefn(fun.owner, fun.sym, fun.dSym, fun.params, bod2)(fun.configOverride, fun.annotations)
@@ -559,21 +565,21 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
         case _ => super.applyResult(r)(k)
       override def applyDefn(defn: Defn)(k: Defn => Block): Block = defn match
         case fun: FunDefn =>
-          if h.currentBlockIsTrulyNested then
+          if h.currentBlockIsTrulyNested && opt.isDefined then
             raise(lifterReport(msg"Unexpected nested function: lambdas may not function correctly." -> fun.sym.toLoc :: Nil))
           val (debugInfoSym, debugInfo, fun2) = translateFunLike(fun, fun.sym.asMemberRef(fun.dSym), N, fun.sym.nme)
-          if opt.debug then Scoped(Set.single(debugInfoSym), Assign(debugInfoSym, Tuple(false, debugInfo), k(fun2))) else k(fun2)
+          if debugEnabled then Scoped(Set.single(debugInfoSym), Assign(debugInfoSym, Tuple(false, debugInfo), k(fun2))) else k(fun2)
         case defn @ ClsLikeDefn(owner, isym, sym, ctorSym, kind, paramsOpt, auxParams, parentPath, methods, privateFields, publicFields, preCtor, ctor, companion, bufferable) =>
-          if h.currentBlockIsTrulyNested then
+          if h.currentBlockIsTrulyNested && opt.isDefined then
             raise(lifterReport(msg"Unexpected nested class: lambdas may not function correctly." -> isym.toLoc :: Nil))
           val debugInfos = mutable.ArrayBuffer.empty[(TempSymbol, List[Arg])]
-          val newMtds = methods.map: f =>
+          val newMtds = methods.mapConserve: f =>
             val (debugInfoSym, debugInfo, fun2) = translateFunLike(f, isym.asThis.sel(new Tree.Ident(f.sym.nme), f.dSym),
               S(isym.asThis), s"${sym.nme}#${f.sym.nme}")
             debugInfos += debugInfoSym -> debugInfo
             fun2
-          val companion2 = companion.map: bod =>
-            val newMtds = bod.methods.map: f =>
+          val companion2 = companion.mapConserve: bod =>
+            val newMtds = bod.methods.mapConserve: f =>
               val (debugInfoSym, debugInfo, fun2) = translateFunLike(f, bod.isym.asThis.sel(new Tree.Ident(f.sym.nme), f.dSym),
                 S(bod.isym.asThis), s"${sym.nme}.${f.sym.nme}")
               debugInfos += debugInfoSym -> debugInfo
@@ -583,18 +589,28 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
             // TODO: Companion's ctor is more well behaved so it is possible to handle it
             // However, JSBuilder inserts extra statements between preCtor and ctor and it's not possible to replicate the exact behavior
             // without many special handling.
-            val newCtor = if opt.doNotInstrumentTopLevelModCtor && !h.currentBlockIsTrulyNested then bod.ctor else
+            val newCtor = if opt.fold(true)(_.doNotInstrumentTopLevelModCtor) && !h.currentBlockIsTrulyNested then bod.ctor else
               translateCtorLike(bod.ctor, bod.isym.asThis, true)
             tl.log(s"companion name: ${bod.isym.nme}")
-            ClsLikeBody(bod.isym, newMtds, bod.privateFields, bod.publicFields, newCtor, bod.annotations)
-          val c2 = ClsLikeDefn(owner, isym, sym, ctorSym, kind, paramsOpt, auxParams, parentPath, newMtds, privateFields, publicFields,
-            translateCtorLike(preCtor, isym.asThis, false), translateCtorLike(ctor, isym.asThis, false), companion2, bufferable)(defn.configOverride, defn.annotations)
-          if opt.debug then
+            if (bod.methods is newMtds) && (bod.ctor is newCtor) then
+              bod
+            else
+              ClsLikeBody(bod.isym, newMtds, bod.privateFields, bod.publicFields, newCtor, bod.annotations)
+          val newPreCtor = translateCtorLike(preCtor, isym.asThis, false)
+          val newCtor = translateCtorLike(ctor, isym.asThis, false)
+          val c2 =
+            if (methods is newMtds) && (preCtor is newPreCtor) && (ctor is newCtor) && (companion is companion2) then
+              defn
+            else
+              defn.copy(methods = newMtds, preCtor = newPreCtor, ctor = newCtor, companion = companion2)(defn.configOverride, defn.annotations)
+          if debugEnabled then
             Scoped(debugInfos.map(_._1).toSet, debugInfos.foldRight(k(c2)): (elem, blk) =>
               Assign(elem._1, Tuple(false, elem._2), blk))
           else k(c2)
         case _ => super.applyDefn(defn)(k)
     val b = preTransform.applyBlock(blk)
+    if !opt.isDefined && !h.inAsync then
+      return b
     if !h.currentBlockIsTrulyNested then
       return postTranslateTopLevelCtx(b)
     if h.inCtor then
@@ -604,11 +620,11 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
       return postTranslateIllegalEffectCtx(b, "in a getter")
     given FunctionCtx = ctx
     val parts = partitionBlock(b)
-    val needsStackSafety = parts.needsStackSafety && opt.stackSafety.isDefined
+    val needsStackSafety = parts.needsStackSafety && stackSafety.isDefined
     val oneState = parts.states.size <= 1
     if oneState && !parts.containsError && !needsStackSafety then
       return b
-    val vars = if opt.debug then ctx.resumeInfo.currentLocals else computeRestoreList(parts)
+    val vars = if debugEnabled then ctx.resumeInfo.currentLocals else computeRestoreList(parts)
 
     val pcVar = freshTmp("pc")
     val curDepth = freshTmp("curDepth")
@@ -734,7 +750,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
    */
 
   private def postTranslateTopLevelCtx(b: Block)(using HandlerCtx): Block =
-    postTranslateIllegalEffectCtx(b, Call.raw(paths.topLevelEffectPath, (Value.Lit(Tree.BoolLit(opt.debug)).asArg :: Nil) ne_:: Nil)(CallMetadata.defaultMlsFun), opt.stackSafety.map(_.stackLimit))
+    postTranslateIllegalEffectCtx(b, Call.raw(paths.topLevelEffectPath, (Value.Lit(Tree.BoolLit(debugEnabled)).asArg :: Nil) ne_:: Nil)(CallMetadata.defaultMlsFun), stackSafety.map(_.stackLimit))
 
   private def postTranslateIllegalEffectCtx(b: Block, reason: Str)(using HandlerCtx): Block =
     postTranslateIllegalEffectCtx(b, Call.raw(paths.illegalEffectPath, (Value.Lit(Tree.StrLit(reason)).asArg :: Nil) ne_:: Nil)(CallMetadata.defaultMlsFun), N)
@@ -781,7 +797,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
     val ctx = HandlerCtx.TopLevel
     val transformed = blockBuilder
         .staticif(
-          !opt.doNotInstrumentTopLevelModCtor,
+          opt.fold(false)(!_.doNotInstrumentTopLevelModCtor),
           _.assign(NoSymbol, Call(paths.resetEffects, Nil ne_:: Nil)(CallMetadata.defaultMlsFun))
         )
         .rest(translateBlock(prog.main, ctx, Set.empty))
