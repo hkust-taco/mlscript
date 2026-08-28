@@ -12,7 +12,7 @@ import hkmc2.semantics.Elaborator.State
 import hkmc2.syntax.{Tree, SpreadKind}
 import hkmc2.ScopeData.*
 import hkmc2.Lifter.AccessInfo
-import scala.collection.mutable.ArrayBuffer
+import scala.collection.mutable.{ArrayBuffer, LinkedHashMap}
 import java.lang.instrument.ClassDefinition
 
 /*
@@ -160,51 +160,47 @@ class TailRecOpt(checkAnnotations: Bool)(using State, TL, Raise):
           case _ =>
       case _ => super.applyResult(r)
   
-  def buildCallGraph(fs: List[FunDefn])(using (ScopeData, AccessMap)): List[CallEdge] =
-    fs.flatMap(f => CallFinder(f).find)
-  
   case class SccOfCalls(funs: List[FunDefn], calls: List[CallEdge])
   
   def partFns(fs: List[FunDefn])(using (ScopeData, AccessMap)): List[SccOfCalls] =
-    val defnSyms = fs.map(_.dSym)
-    val tsToDefn = fs.map(f => f.dSym -> f).toMap
+    val defnBySyms: collection.Map[TermSymbol, FunDefn] = LinkedHashMap.from(fs.iterator.map(f => f.dSym -> f))
     
     // Only care about calls to functions in the same scope
     // Note that the results may differ if the lifter has been run.
-    val cg = buildCallGraph(fs).filter: c =>
-      val cond = defnSyms.contains(c.f1) && defnSyms.contains(c.f2)
-      c.match
-        case c: CallEdge.TailCall if checkAnnotations && c.call.metadata.explicitTailCall && !cond =>
-          raise(ErrorReport(
-            msg"This tail call exits the current scope and is not optimized." -> c.call.toLoc :: Nil))
-        case _ =>
-      cond
+    val cg: Map[TermSymbol, Ls[CallEdge]] = fs.iterator
+      .map: f =>
+        f.dSym ->
+        CallFinder(f).find.filter: c =>
+          val inSameScope = defnBySyms.contains(c.f2)
+          c.match
+            case c: CallEdge.TailCall if checkAnnotations && c.call.metadata.explicitTailCall && !inSameScope =>
+              raise(ErrorReport(
+                msg"This tail call exits the current scope and is not optimized." -> c.call.toLoc :: Nil))
+            case _ =>
+          inSameScope
+      .toMap
     
-    val cgTup = cg.map(c => (c.f1, c.f2))
-    val sccs = algorithms.sccsWithInfo(cgTup, defnSyms)
+    val sccs = mutable.ListBuffer.empty[SccOfCalls]
+    trait BuildSccOfCalls extends SccAnalysis[TermSymbol]:
+      protected def successors(node: TermSymbol): IterableOnce[TermSymbol] = cg(node).iterator.map(_.f2)
+      
+      protected def handleScc(members: Ls[TermSymbol], sccId: Int): Unit =
+        val inScc = members.toSet
+        val calls = members
+          .flatMap: caller =>
+            cg(caller).filter: c =>
+              if inScc(c.f2) then true
+              else
+                if checkAnnotations && c.call.metadata.explicitTailCall then
+                  raise(ErrorReport(
+                    msg"This call is not optimized as it does not directly recurse through its parent function." -> c.call.toLoc :: Nil))
+                false
+        sccs += SccOfCalls(members.map(defnBySyms.apply), calls)
     
-    // partition the call graph
-    val sccMap = sccs.sccs.flatMap:
-      case (id, scc) => scc.map(f => f -> id)
+    object traversal extends BuildSccOfCalls with SccAnalysis.Caching[TermSymbol]
     
-    val cgLabelled = cg
-      .groupBy: c =>
-        val s1 = sccMap(c.f1)
-        val s2 = sccMap(c.f2)
-        if checkAnnotations && s1 =/= s2 && c.call.metadata.explicitTailCall then
-          raise(ErrorReport(
-            msg"This call is not optimized as it does not directly recurse through its parent function." -> c.call.toLoc :: Nil))
-          -1
-        else s1
-      .filter:
-        (id, _) => id =/= -1
-    
-    sccs.sccs.toList.map: v =>
-      val (id, tss) = v
-      val cgs = cgLabelled.get(id) match
-        case Some(value) => value
-        case None => Nil
-      SccOfCalls(tss.map(tsToDefn), cgs)
+    traversal.queryAll(defnBySyms.keysIterator)
+    sccs.toList
   
   def maxInt[T](items: List[T], f: T => Int): Int = items.foldLeft(0):
     case (l, item) =>
