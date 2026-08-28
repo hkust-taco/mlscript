@@ -1185,9 +1185,9 @@ lambda4 = (undefined, function (Runtime2, EffectHandle1, value) {
     scrut = Runtime.curEffect !== null;
     if (scrut === true) {
       Runtime.illegalEffect("in exported async function");
-      return r
+      return runtime.safeCall(globalThis.Promise.resolve(r))
     }
-    return r;
+    return runtime.safeCall(globalThis.Promise.resolve(r));
   }
   static checkDepth() {
     let tmp, tmp1;
