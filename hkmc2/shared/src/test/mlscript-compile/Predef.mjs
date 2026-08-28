@@ -339,9 +339,6 @@ lambda = (undefined, function (Predef2, a, b, field) {
   static raiseUnhandledEffect() {
     return runtime.safeCall(runtime.mkEffect(runtime.FatalEffect, null))
   }
-  static await(promise) {
-    return runtime.safeCall(runtime.await(promise))
-  }
   toString() { return runtime.render(this); }
   static [definitionMetadata] = ["class", "Predef"];
 });
