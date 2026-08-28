@@ -127,6 +127,359 @@ module Str with
   @mayNotRaiseEffects
   fun leave(string, n) = string.slice(n)
 
+// The engine for compiled string patterns. The compiler (`ups.StringCompiler`)
+// encodes a prioritized NFA together with its determinized reverse automaton
+// as a string of integers; this module decodes and runs such programs. Refer
+// to `StringCompiler.scala` for the table layouts and the algorithm. In short:
+// matching follows the two-pass scheme of Frisch and Cardelli. A backward scan
+// of the reverse automaton computes, for every position, the set of NFA states
+// that can still reach acceptance ("viability"). Recognition needs only that
+// scan. To produce outputs and bindings, a forward walk then follows, at every
+// choice point, the first viable alternative — reproducing the parse an
+// unlimited-backtracking matcher would commit to, in linear time — while
+// executing the value operations recorded on the taken ε-transitions.
+//
+// There are two table formats: full parsing tables (decoded to `Program`,
+// run by `parseWhole`/`parsePrefix`) and recognition-only tables that keep
+// just the reverse scan (decoded to `Matcher`, run by `matchWhole`).
+module StrPat with
+
+  data class Program(
+      stateCount, start, accept, slotCount, classCount, seedRev,
+      bounds, states, opsPool, revTrans, viability)
+
+  // A recognition-only program: the reverse scan needs neither the NFA, nor
+  // the operation pool, nor the viability matrix. `starts` records, for each
+  // reverse state, whether the subset it denotes contains the NFA start
+  // state — the whole-match acceptance test.
+  data class Matcher(classCount, seedRev, bounds, revTrans, starts)
+
+  // Decoded programs are cached keyed by the (interned) table string, so each
+  // table is decoded once per program, not once per call.
+  val programs = new Map()
+  val matchers = new Map()
+
+  // Unpack a variable-length integer section: five value bits per Base64
+  // character, least significant group first, sixth bit flagging
+  // continuation (the encoding of `StringCompiler.packInts`).
+  fun decodeInts(s) =
+    let values = mut []
+    let value = 0
+    let shift = 1
+    let i = 0
+    while i < s.length do
+      let d = sextet(s.charCodeAt(i))
+      if d >= 32 then
+        set value += (d - 32) * shift
+        set shift *= 32
+      else
+        set value += d * shift
+        values.push(value)
+        set value = 0
+        set shift = 1
+      set i += 1
+    values
+
+  // The value of a character of the Base64 alphabet used for bit-packed
+  // sections (six bits per character, highest bit first).
+  fun sextet(code) =
+    if code >= 97 then code - 71 // 'a'..'z' denote 26..51
+    else if code >= 65 then code - 65 // 'A'..'Z' denote 0..25
+    else if code >= 48 then code + 4 // '0'..'9' denote 52..61
+    else if code === 43 then 62 // '+'
+    else 63 // '/'
+
+  // Unpack a bit-packed section into an array of booleans (possibly with up
+  // to five padding entries at the end, which are never indexed).
+  fun decodeBits(packed) =
+    let thresholds = [32, 16, 8, 4, 2, 1]
+    let bits = mut []
+    let i = 0
+    while i < packed.length do
+      let v = sextet(packed.charCodeAt(i))
+      let j = 0
+      while j < 6 do
+        if v >= thresholds.[j] then
+          bits.push(true)
+          set v -= thresholds.[j]
+        else
+          bits.push(false)
+        set j += 1
+      set i += 1
+    bits
+
+  fun decodeProgram(table) =
+    let sections = table.split(";")
+    let header = decodeInts(sections.[0])
+    let stateCount = header.[0]
+    let nfaInts = decodeInts(sections.[2])
+    let states = mut []
+    let cursor = 0
+    while states.length < stateCount do
+      let edgeCount = nfaInts.[cursor]
+      let edges = mut []
+      set cursor += 1
+      while edges.length < edgeCount do
+        let kind = nfaInts.[cursor]
+        let target = nfaInts.[cursor + 1]
+        if kind === 0 then
+          let rangeCount = nfaInts.[cursor + 2]
+          edges.push([0, target, nfaInts.slice(cursor + 3, cursor + 3 + rangeCount * 2)])
+          set cursor += 3 + rangeCount * 2
+        else
+          // The table stores opsId + 1 so the encoding stays non-negative;
+          // 0 denotes an operation-free edge (-1 internally).
+          edges.push([1, target, nfaInts.[cursor + 2] - 1])
+          set cursor += 3
+      states.push(edges)
+    let opsInts = decodeInts(sections.[3])
+    let opsPool = mut []
+    let opsCount = opsInts.[0]
+    set cursor = 1
+    while opsPool.length < opsCount do
+      let len = opsInts.[cursor]
+      opsPool.push(opsInts.slice(cursor + 1, cursor + 1 + len))
+      set cursor += 1 + len
+    Program(
+      stateCount, header.[1], header.[2], header.[3], header.[4], header.[6],
+      decodeInts(sections.[1]), states, opsPool, decodeInts(sections.[4]),
+      decodeBits(sections.[5]))
+
+  fun getProgram(table) =
+    if programs.has(table) then programs.get(table)
+    else
+      let prog = decodeProgram(table)
+      programs.set(table, prog)
+      prog
+
+  fun decodeMatcher(table) =
+    let sections = table.split(";")
+    let header = decodeInts(sections.[0])
+    Matcher(header.[0], header.[1],
+      decodeInts(sections.[1]), decodeInts(sections.[2]), sections.[3])
+
+  fun getMatcher(table) =
+    if matchers.has(table) then matchers.get(table)
+    else
+      let matcher = decodeMatcher(table)
+      matchers.set(table, matcher)
+      matcher
+
+  // The index of the character class of the given code unit. Works on both
+  // programs and matchers (it only reads their `bounds`).
+  fun classOf(prog, unit) =
+    let bounds = prog.bounds
+    let i = 0
+    while i < bounds.length && bounds.[i] <= unit do
+      set i += 1
+    i
+
+  // Is `state` in the co-reachable set denoted by `revState`?
+  fun viable(prog, revState, state) =
+    prog.viability.[revState * prog.stateCount + state]
+
+  fun unitInRanges(ranges, unit) =
+    let i = 0
+    while i < ranges.length do
+      if ranges.[i] <= unit && unit <= ranges.[i + 1] do return true
+      set i += 2
+    false
+
+  // Whether the program matches the whole input: a single right-to-left scan
+  // of the determinized reverse automaton, with no allocation. Takes a
+  // recognition-only table, not a full parsing table.
+  @mayNotRaiseEffects
+  fun matchWhole(table, input) =
+    let matcher = getMatcher(table)
+    let rev = matcher.seedRev
+    let i = input.length - 1
+    while i >= 0 do
+      set rev = matcher.revTrans.[rev * matcher.classCount + classOf(matcher, input.charCodeAt(i))]
+      set i -= 1
+    matcher.starts.charCodeAt(rev) === 49
+
+  // The committed forward walk. Returns null when the input does not match;
+  // otherwise returns [output, slot values...] (or, in prefix mode,
+  // [output, remaining, slot values...]).
+  fun parseRun(table, actions, input, prefix) =
+    let prog = getProgram(table)
+    let n = input.length
+    // revArr.[k] is the reverse-automaton state after consuming the last k
+    // characters; it encodes the viable NFA states at position n - k.
+    let revArr = mut []
+    let rev = prog.seedRev
+    revArr.push(rev)
+    let i = n - 1
+    while i >= 0 do
+      set rev = prog.revTrans.[rev * prog.classCount + classOf(prog, input.charCodeAt(i))]
+      revArr.push(rev)
+      set i -= 1
+    if viable(prog, revArr.[n], prog.start) is false do return null
+    let cur = prog.start
+    let pos = 0
+    let gen = 0
+    // Per-round visit marks and the parent links of the current search, used
+    // to reconstruct the ε-path to the chosen transition.
+    let visited = new Map()
+    let parentState = new Map()
+    let parentOps = new Map()
+    let valStack = mut []
+    let markStack = mut []
+    let frames = mut []
+    let bindings = new Map()
+    let remStart = n
+    let readSlot = (slot, overlay) =>
+      if overlay !== null && overlay.has(slot) then overlay.get(slot) else bindings.get(slot)
+    // Execute the single value operation at offset `k` of `ops` and return
+    // the offset of the next one. When executing a deferred frame, `overlay`
+    // holds the slot values captured when the frame was created, so that each
+    // recursion level reads its own bindings. Writes always go to the global
+    // store: they are correctly sequenced by the execution order (frames
+    // unwind innermost-first, and each frame reads a slot it wrote before any
+    // other frame overwrites it), and bindings visible to the caller — such
+    // as one on a region root ending in a recursive pattern — must land in
+    // the global store.
+    let execValueOp = (ops, k, overlay) =>
+      let op = ops.[k]
+      if op is
+        0 then // Mark: remember the current position
+          markStack.push(pos)
+          k + 1
+        1 then // Slice: push the input since the latest mark
+          valStack.push(input.slice(markStack.pop(), pos))
+          k + 1
+        2 then // Add: concatenate the two topmost values
+          let b = valStack.pop()
+          let a = valStack.pop()
+          valStack.push(a + b)
+          k + 1
+        3 then // Drop
+          valStack.pop()
+          k + 1
+        4 then // Bind: store the topmost value into a slot
+          bindings.set(ops.[k + 1], valStack.[valStack.length - 1])
+          k + 2
+        5 then // Call: apply a transform to the values in its argument slots
+          let actionId = ops.[k + 1]
+          let argCount = ops.[k + 2]
+          let args = mut []
+          let j = 0
+          while j < argCount do
+            args.push(readSlot(ops.[k + 3 + j], overlay))
+            set j += 1
+          valStack.push(actions.[actionId].apply(null, args))
+          k + 3 + argCount
+        8 then // Rem: the remaining input starts here
+          set remStart = pos
+          k + 1
+        else
+          throw Error("StrPat: malformed operation " + op)
+    // Deferred frames only carry value operations: the compiler never defers
+    // Enter/Exit/Defer themselves.
+    let runFrameOps = (ops, overlay) =>
+      let k = 0
+      while k < ops.length do
+        set k = execValueOp(ops, k, overlay)
+    // Operations attached to ε-edges of the committed path.
+    let runOps = (opsId) =>
+      let ops = prog.opsPool.[opsId]
+      let k = 0
+      while k < ops.length do
+        let op = ops.[k]
+        if op is
+          6 then // Enter: delimit the deferred frames of a recursive component
+            frames.push(null)
+            set k += 1
+          7 then // Exit: unwind the deferred frames, innermost first
+            let frame = frames.pop()
+            while frame !== null do
+              runFrameOps(prog.opsPool.[frame.[0]], frame.[1])
+              set frame = frames.pop()
+            set k += 1
+          9 then // Defer: capture the listed slots and postpone the operations
+            let deferredOps = ops.[k + 1]
+            let capCount = ops.[k + 2]
+            let captures = new Map()
+            let j = 0
+            while j < capCount do
+              let slot = ops.[k + 3 + j]
+              captures.set(slot, bindings.get(slot))
+              set j += 1
+            frames.push([deferredOps, captures])
+            set k += 3 + capCount
+          else
+            set k = execValueOp(ops, k, null)
+    // Execute the operations of the ε-path from the search root to `state`.
+    let execChain = (state) =>
+      let chain = mut []
+      let w = state
+      while w !== cur do
+        let opsId = parentOps.get(w)
+        if opsId !== -1 do chain.push(opsId)
+        set w = parentState.get(w)
+      let idx = chain.length - 1
+      while idx >= 0 do
+        runOps(chain.[idx])
+        set idx -= 1
+    let pushEdges = (stack, state) =>
+      let edges = prog.states.[state]
+      let i = edges.length - 1
+      while i >= 0 do
+        stack.push([state, edges.[i]])
+        set i -= 1
+    while (cur === prog.accept && pos === n) is false do
+      set gen += 1
+      visited.set(cur, gen)
+      let stack = mut []
+      pushEdges(stack, cur)
+      let committed = false
+      while committed is false do
+        if stack.length === 0 do
+          // The upfront viability check guarantees a path to acceptance, and
+          // the search only moves to viable states, so this cannot happen.
+          throw Error("StrPat: no viable transition (this is a compiler bug)")
+        let item = stack.pop()
+        let source = item.[0]
+        let edge = item.[1]
+        if edge.[0] === 0 then
+          // A character edge: the first viable consumption in priority order
+          // is the committed one.
+          if pos < n && unitInRanges(edge.[2], input.charCodeAt(pos))
+              && viable(prog, revArr.[n - (pos + 1)], edge.[1]) do
+            execChain(source)
+            set cur = edge.[1]
+            set pos += 1
+            set committed = true
+        else
+          let target = edge.[1]
+          if target === prog.accept then
+            // Acceptance is only viable once the input is exhausted (in
+            // prefix mode, the trailing lazy star pads the difference).
+            if pos === n do
+              parentState.set(target, source)
+              parentOps.set(target, edge.[2])
+              execChain(target)
+              set cur = target
+              set committed = true
+          else if visited.get(target) !== gen && viable(prog, revArr.[n - pos], target) do
+            visited.set(target, gen)
+            parentState.set(target, source)
+            parentOps.set(target, edge.[2])
+            pushEdges(stack, target)
+    let output = if valStack.length > 0 then valStack.pop() else input
+    let result = mut []
+    result.push(output)
+    if prefix do result.push(input.slice(remStart))
+    let s = 0
+    while s < prog.slotCount do
+      result.push(bindings.get(s))
+      set s += 1
+    result
+
+  fun parseWhole(table, actions, input) = parseRun(table, actions, input, false)
+
+  fun parsePrefix(table, actions, input) = parseRun(table, actions, input, true)
+
 // Re-export rendering functions
 val render = Rendering.render
 

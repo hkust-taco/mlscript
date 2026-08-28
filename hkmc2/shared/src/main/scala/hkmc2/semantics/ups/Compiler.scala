@@ -22,6 +22,12 @@ class Compiler(using Context)(using tl: TL)(using Ctx, State, Raise) extends Ter
   import Compiler.*, tl.*
   import Pattern.*
 
+  /** The location of the match site this compiler serves, used only to label
+    * `StringCompiler.TableStats` measurement records. Expanded patterns
+    * aggregate sub-trees from several blocks, so their own locations are not
+    * usable for this purpose. */
+  var statsSiteLoc: Opt[Loc] = N
+
   /** A previously-computed matcher result for one field of the current
     * multi-matcher. In full mode the value also carries the original field
     * input, which is needed when a successful field pattern preserves its
@@ -150,7 +156,20 @@ class Compiler(using Context)(using tl: TL)(using Ctx, State, Raise) extends Ter
       .mkString("{", ", ", "}")}"
   ):
     val expandedPatterns = patterns.map(p => (p.label, p.expand(Set.empty)))
-    val heads = expandedPatterns.flatMap((_, p) => p.heads).toList
+    // String-shaped patterns (sequences and character classes) cannot take
+    // part in head-based specialization: how a string scrutinee is split is a
+    // decision global to the whole sequence. Whenever one is present, all
+    // string-shaped patterns — including plain string literals, whose heads
+    // would overlap the `Str` class — are absorbed into a single `Str` head
+    // whose branch runs one compiled automaton per label, like a lexer
+    // jointly matching several token rules (see `StringCompiler`).
+    val absorbStrings = expandedPatterns.exists((_, p) => StringCompiler.containsStringNode(p))
+    val strSymbol = ctx.builtins.Str
+    val heads = expandedPatterns.flatMap((_, p) => p.heads).toList.filter: head =>
+      !absorbStrings || (head match
+        case _: StrLit => false
+        case head: ClassLikeHead if head.symbol is strSymbol => false
+        case _ => true)
     // This is the parameter of the current multi-matcher.
     val scrutinee = VarSymbol(Ident("input"))
     // Assemble branches for constructors and literals.
@@ -172,12 +191,16 @@ class Compiler(using Context)(using tl: TL)(using Ctx, State, Raise) extends Ter
         case _: syntax.Literal => empty
       val consequent = Split.Else(multiMatcherBranch(specialized, scrutinee, classFields))
       Branch(scrutinee.safeRef, head.toFlatPattern(classFieldArguments), consequent)
+    val stringBranch = if !absorbStrings then N else
+      val pattern = FlatPattern.ClassLike(strSymbol.safeRef, strSymbol, N, false)(Tree.Dummy)
+      val consequent = Split.Else(multiMatcherStringBranch(expandedPatterns, scrutinee))
+      S(Branch(scrutinee.safeRef, pattern, consequent))
     // Assemble the default branch.
     val default =
       val specialized = expandedPatterns.specializeSet(N)
       Split.Else(multiMatcherBranch(specialized, scrutinee, Map.empty))
     // Make a split that tries all branches in order.
-    val topmostSplit = branches.foldRight(default)(_ ~: _)
+    val topmostSplit = (branches ::: stringBranch.toList).foldRight(default)(_ ~: _)
     val bodyTerm = SynthIf(topmostSplit)
     log(s"Multi-matcher body:\n${topmostSplit.prettyPrint}")
     (paramList(param(scrutinee)), bodyTerm)
@@ -246,6 +269,98 @@ class Compiler(using Context)(using tl: TL)(using Ctx, State, Raise) extends Ter
     // and as a record otherwise.
     Blk(bindings ::: tests.reverse, resultTerm)
   
+  /** The branch body for the absorbed `Str` head: each label's string-shaped
+    * fragment is compiled to its own whole-match automaton (see the note in
+    * `buildMultiMatcherBody`). The per-label result terms follow the same
+    * protocol as `multiMatcherBranch`: a Boolean in match-only mode, and a
+    * `MatchSuccess`/`MatchFailure` value in full mode.
+    */
+  def multiMatcherStringBranch(
+      patterns: Set[(Label, ExPat)],
+      scrutinee: VarSymbol,
+  )(using ResultMode): Blk =
+    val z = (Nil: Ls[Statement], Nil: Ls[(Label, Term)])
+    val (tests, resultTerms) = patterns.iterator.foldLeft(z):
+      case ((stmts, results), (label, pattern)) =>
+        val fragment = StringCompiler.stringFragment(pattern).simplify
+        val resultTerm = fragment match
+          case Or(Nil) =>
+            // This label has no string-shaped alternative: it cannot match.
+            emptyMatchResult("not a string pattern")
+          // Note that each label needs its own compiler: a compiler instance
+          // accumulates the automaton states (and failure flag) of a single
+          // region.
+          case fragment => StringCompiler().compile(fragment, StringCompiler.Mode.Whole) match
+            case N => emptyMatchResult("rejected string pattern")
+            case S(compiled) =>
+              // Mirrors the branch chosen below: a match-only region still
+              // needs the parse table when it carries transforms or bindings.
+              val embedsMatchTable =
+                if isMatchOnly then compiled.recognitionSuffices(false) else compiled.pure
+              StringCompiler.TableStats.record(statsSiteLoc,
+                if embedsMatchTable then "mm-match" else "mm-parse",
+                if embedsMatchTable then compiled.matchTable else compiled.table)
+              val matchTableTerm = str(compiled.matchTable)
+              if isMatchOnly && compiled.recognitionSuffices(false) then
+                app(strPatMatchWhole, tup(fld(matchTableTerm), fld(scrutinee.safeRef)), "string match")
+              else if isMatchOnly then
+                // The region carries transforms (or bindings): even a
+                // condition-position match must run them, exactly once, on
+                // the committed parse. Only the success of the parse is
+                // observed.
+                val call = app(strPatParseWhole,
+                  tup(fld(str(compiled.table)), fld(actionsTuple(compiled.actions, N)), fld(scrutinee.safeRef)),
+                  "string parse")
+                val resultSymbol = TempSymbol(N, "parseResult")
+                SynthIf(Split.Let(resultSymbol, call,
+                  Branch(
+                    resultSymbol.safeRef,
+                    // The engine returns null on failure and an array on success.
+                    FlatPattern.Tuple(1, true),
+                    Split.Else(bool(true))
+                  ) ~: Split.Else(bool(false))))
+              else if compiled.pure then
+                // An operation-free whole match preserves the scrutinee.
+                val matchedSymbol = TempSymbol(N, "stringMatched")
+                val call = app(strPatMatchWhole, tup(fld(matchTableTerm), fld(scrutinee.safeRef)), "string match")
+                SynthIf(Split.Let(matchedSymbol, call,
+                  Branch(matchedSymbol.safeRef,
+                    Split.Else(makeMatchSuccess(scrutinee.safeRef))
+                  ) ~: Split.Else(emptyMatchResult("string mismatch"))))
+              else
+                // Note: expanded patterns may aggregate sub-patterns from
+                // several source blocks, so their auto-computed location is
+                // not usable here; the helper pins the first action's own
+                // location instead (the surrounding terms are location-free).
+                val call = app(strPatParseWhole,
+                  tup(fld(str(compiled.table)), fld(actionsTuple(compiled.actions, N)), fld(scrutinee.safeRef)),
+                  "string parse")
+                val resultSymbol = TempSymbol(N, "parseResult")
+                val outputSymbol = TempSymbol(N, "stringOutput")
+                val slotSymbols = compiled.visibleSlots.map: (symbol, slot) =>
+                  (symbol, slot, TempSymbol(N, s"${symbol.name}$$"))
+                val bindingsTerm = makeBindings(slotSymbols.map:
+                  (symbol, _, local) => RcdField(str(symbol.name), local.safeRef))
+                val success = slotSymbols.foldRight(
+                  Split.Else(makeMatchSuccess(outputSymbol.safeRef, bindingsTerm)): Split
+                ):
+                  case ((_, slot, local), inner) =>
+                    Split.Let(local, callTupleGet(resultSymbol.safeRef, 1 + slot, "string binding"), inner)
+                SynthIf(Split.Let(resultSymbol, call,
+                  Branch(
+                    resultSymbol.safeRef,
+                    // The engine returns null on failure and an array on success.
+                    FlatPattern.Tuple(1, true),
+                    Split.Let(outputSymbol, callTupleGet(resultSymbol.safeRef, 0, "string output"), success)
+                  ) ~: Split.Else(emptyMatchResult("string mismatch"))))
+        val symbol = TempSymbol(N, label.asFieldName + "$")
+        (DefineVar(symbol, resultTerm) :: LetDecl(symbol, Nil) :: stmts, (label, symbol.safeRef) :: results)
+    val resultTerm = resultTerms.reverse match
+      case (_, term) :: Nil => term
+      case terms => Rcd(false, terms.map: (label, term) =>
+        RcdField(str(label.asFieldName), term))
+    Blk(tests.reverse, resultTerm)
+
   import Pattern.*
   
   /** Represent things that can be used as expressions in consequents. */
@@ -525,8 +640,10 @@ class Compiler(using Context)(using tl: TL)(using Ctx, State, Raise) extends Ter
         val params = paramList(param(bindingsSymbol))
         // Because we pass the extracted values using recoreds. We need to bind
         // each property to its corresponding variable which is accessible from
-        // then `term`.
-        val letBindings = pattern.symbols.flatMap: symbol =>
+        // then `term`. Only the symbols the definition itself binds are
+        // mapped by `correspondence` (and referenced by `term`); symbols
+        // bound inside substituted pattern arguments are not.
+        val letBindings = pattern.symbols.filter(correspondence.contains).flatMap: symbol =>
           val termSymbol = correspondence(symbol)
           LetDecl(termSymbol, Nil) ::
           DefineVar(termSymbol, sel(bindingsSymbol.safeRef, termSymbol.name)) :: Nil

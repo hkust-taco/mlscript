@@ -1,16 +1,55 @@
 :js
 
+open annotations
+
 pattern Oops = "" ~ (Oops | "")
 
-:re
-:todo
+// The nullable recursion used to diverge (a stack overflow) in the naive
+// backtracking translation; the automaton cuts the ε-cycle and terminates.
 "" is Oops
-//│ ═══[RUNTIME ERROR] RangeError: Maximum call stack size exceeded
+//│ = true
 
+:soir
+"" is @compile Oops
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let inlinedVal;
+//│ match ""
+//│   Str⁰ =>
+//│     set inlinedVal = runtime⁰.StrPat⁰.matchWhole⁰("BA;;BB;10", "");
+//│     match inlinedVal
+//│       true =>
+//│         return true
+//│       else
+//│         return false
+//│     end
+//│   else
+//│     return false
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = true
 
 pattern Funny = "" ~ "" ~ ""
 
 "" is Funny
+//│ = true
+
+:soir
+"" is @compile Funny
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let inlinedVal;
+//│ match ""
+//│   Str⁰ =>
+//│     set inlinedVal = runtime⁰.StrPat⁰.matchWhole⁰("BA;;BB;10", "");
+//│     match inlinedVal
+//│       true =>
+//│         return true
+//│       else
+//│         return false
+//│     end
+//│   else
+//│     return false
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = true
 
 pattern Funny = "" ~ "hello" ~ ""

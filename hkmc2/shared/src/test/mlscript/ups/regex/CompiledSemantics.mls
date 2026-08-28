@@ -1,0 +1,114 @@
+:js
+
+// This file pins down the semantics of compiled string patterns.
+//
+// Recognition is relational: a sequence matches when *some* split of the
+// scrutinee matches, regardless of how greedy sub-patterns are. Among all
+// successful parses, the committed one — which determines bindings, transform
+// applications, and outputs — is the parse that a recursive-descent matcher
+// with unlimited backtracking would find first, trying alternatives from left
+// to right. Transforms run exactly once, and only on the committed parse.
+
+
+// Alternation is ordered: the leftmost alternative that lets the rest of the
+// sequence succeed wins, even if another alternative would match more.
+
+pattern Split = ((("a" | "ab") as x) ~ (("c" | "bc") as y)) => [x, y]
+
+:expect ["a", "bc"]
+if "abc" is Split as parts then parts
+//│ = ["a", "bc"]
+
+// The first alternative is committed whenever it lets the parse complete —
+// even when it consumes everything.
+
+:expect ["abd", ""]
+if "abd" is (((("a" ~ "b" ~ "d") | "ab") as x) ~ (("" | "d") as y)) then [x, y]
+//│ = ["abd", ""]
+
+
+// The wildcard consumes greedily: it takes as much as the rest of the
+// sequence permits.
+
+pattern LastB = ((_ as x) ~ ("b" as y)) => [x, y]
+
+:expect ["aba", "b"]
+if "abab" is LastB as parts then parts
+//│ = ["aba", "b"]
+
+// `Str` in string position means "any string", just like the wildcard. (The
+// backtracking translation used to consume exactly one character here.)
+
+pattern Bracketed = ("[" ~ (Str as s) ~ "]") => s
+
+:expect "abc"
+if "[abc]" is Bracketed as s then s
+//│ = "abc"
+
+:expect ""
+if "[]" is Bracketed as s then s
+//│ = ""
+
+
+// Transforms run exactly once, and only on the committed parse: a transform
+// in an abandoned alternative or a failed parse never executes. (The
+// backtracking translation used to run transforms on parses it later
+// abandoned.)
+
+fun probe(x) = if x is ("a" => print("ran")) ~ "b" then "yes" else "no"
+
+probe("ab")
+//│ > ran
+//│ = "yes"
+
+// The prefix "a" matches, but the whole sequence fails: no transform runs.
+probe("ax")
+//│ = "no"
+
+
+// Bindings work across the automaton boundary, including at inline use sites.
+
+fun trimStart(str) = if str is (" " | "\t") ~ rest then trimStart(rest) else str
+
+:expect "hello  "
+trimStart("  \t hello  ")
+//│ = "hello  "
+
+
+// Literals may span several UTF-16 code units.
+
+pattern Exclaimed = "😀" ~ "!"
+
+:expect true
+"😀!" is Exclaimed
+//│ = true
+
+:expect false
+"😀?" is Exclaimed
+//│ = false
+
+
+// The wildcard's greediness combines with recursion: `c` takes as much as the
+// rest of the sequence permits, and `Input` accepts the empty remainder, so it
+// takes the whole input. (This used to overflow the stack in the backtracking
+// translation; moved here from `ups/UpsBugsBacklog.mls`, where it no longer
+// belongs now that it terminates.)
+
+import "../../../mlscript-compile/Char.mls"
+
+pattern Input =
+  ((Char.Whitespace ~ (Input as inp)) => inp) | ((c ~ (Input as inp)) => [c, ..inp]) | ("" => [])
+
+if "a b c" is Input as chars then chars
+//│ = [a b c]
+
+// The rendering above does not quote the element, so assert the shape too:
+// one element, holding the whole input.
+
+:expect 1
+if "a b c" is Input as chars then chars.length
+//│ = 1
+
+:expect "a b c"
+if "a b c" is Input as chars then chars.at(0)
+//│ = "a b c"

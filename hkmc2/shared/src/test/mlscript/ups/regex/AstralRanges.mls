@@ -1,0 +1,138 @@
+:js
+
+open annotations
+
+// Character ranges span code points, not UTF-16 code units. Ranges whose
+// endpoints lie beyond the Basic Multilingual Plane are decomposed into
+// surrogate-pair sequences, so they compile to the same automata as any
+// other string pattern.
+
+
+// A range within one high surrogate: U+1F600 (grinning face) to U+1F60F.
+
+pattern Grinning = ("<" ~ (("😀" ..= "😏") as e) ~ ">") => e
+
+:expect "😁"
+if "<😁>" is Grinning as e then e
+//│ = "😁"
+
+:expect "😀"
+if "<😀>" is Grinning as e then e
+//│ = "😀"
+
+:expect "😏"
+if "<😏>" is Grinning as e then e
+//│ = "😏"
+
+// U+1F610 shares the high surrogate but its low surrogate is out of range.
+"<😐>" is Grinning
+//│ = false
+
+"<a>" is Grinning
+//│ = false
+
+"<😀x>" is Grinning
+//│ = false
+
+"<>" is Grinning
+//│ = false
+
+
+// A range spanning several high surrogates: U+1F004 (D83C DC04) to
+// U+1F916 (D83E DD16). This exercises all three decomposition pieces: the
+// partial first high surrogate, the full middle one, and the partial last.
+
+pattern Wide = ("[" ~ (("🀄" ..= "🤖") as e) ~ "]") => e
+
+// The lower bound itself (first piece).
+:expect "🀄"
+if "[🀄]" is Wide as e then e
+//│ = "🀄"
+
+// A code point under a middle high surrogate.
+:expect "😀"
+if "[😀]" is Wide as e then e
+//│ = "😀"
+
+// The upper bound itself (last piece).
+:expect "🤖"
+if "[🤖]" is Wide as e then e
+//│ = "🤖"
+
+// U+1F003: one below the lower bound, same high surrogate.
+"[🀃]" is Wide
+//│ = false
+
+// U+1F917: one above the upper bound, same high surrogate.
+"[🤗]" is Wide
+//│ = false
+
+
+// A range spanning both planes is the disjunction of its two halves.
+
+pattern Late = ("z" ..= "😀") ~ "!"
+
+"z!" is Late
+//│ = true
+
+"~!" is Late
+//│ = true
+
+"😀!" is Late
+//│ = true
+
+"a!" is Late
+//│ = false
+
+"😁!" is Late
+//│ = false
+
+
+// The upper bound of an exclusive range is left out.
+
+pattern BelowTears = ("😀" ..< "😂") ~ "!"
+
+"😀!" is BelowTears
+//│ = true
+
+"😁!" is BelowTears
+//│ = true
+
+"😂!" is BelowTears
+//│ = false
+
+// An empty range matches nothing.
+
+pattern Empty = ("😂" ..< "😂") ~ "!"
+
+"😂!" is Empty
+//│ = false
+
+
+// Astral ranges also work in compiled multi-matchers, where they are
+// absorbed into the `Str` head.
+
+pattern Emoticon = "😀" ..= "🙏"
+
+fun isEmoticon(x) = x is @compile Emoticon
+
+isEmoticon("🙏")
+//│ = true
+
+isEmoticon("😀😀")
+//│ = false
+
+isEmoticon("a")
+//│ = false
+
+
+// Bounds must still be single characters — one code point, not one code unit.
+
+:e
+pattern Bad = "😀😀" ..= "😂"
+//│ ╔══[COMPILATION ERROR] The lower bound of character ranges must be a single character.
+//│ ║  l.132: 	pattern Bad = "😀😀" ..= "😂"
+//│ ╙──       	              ^^^^^^
+
+"😀" is Bad
+//│ = true

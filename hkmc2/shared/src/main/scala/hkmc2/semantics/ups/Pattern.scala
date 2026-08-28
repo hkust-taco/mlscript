@@ -56,6 +56,8 @@ sealed abstract class Pattern[+K <: Kind.Complete] extends AutoLocated:
     case Record(entries) => entries.values.toVector
     case Tuple(leading, spread) => leading.toVector ++ spread.fold(Vector.empty):
       case (_, middle, trailing) => middle +: trailing.toVector
+    case Concat(patterns) => patterns.toVector
+    case CharClass(_, _) => Vector.empty
     case And(patterns) => patterns.toVector
     case Or(patterns) => patterns.toVector
     case Not(pattern) => Vector.single(pattern)
@@ -63,6 +65,25 @@ sealed abstract class Pattern[+K <: Kind.Complete] extends AutoLocated:
     case Extract(pattern, _, term) => Vector.double(pattern, term)
     case Synonym(pattern) => pattern.symbol +: pattern.arguments.toVector
   
+  /** A best-effort location for diagnostics on instantiated patterns. Their
+    * nodes aggregate pieces of unrelated source blocks — a `Synonym`'s
+    * children locate the referenced *definition*, and the compilation
+    * pipeline's `map` rebuilds compositional nodes without their pinned
+    * locations — so the inherited `toLoc`, which asserts a single-origin
+    * span, cannot be used on arbitrary nodes. This merges the sub-locations
+    * when they share an origin and otherwise pins the first piece. */
+  def diagnosticLoc: Opt[Loc] =
+    val locs = children.iterator.flatMap:
+      case p: Pattern[?] => p.diagnosticLoc.iterator
+      case located => located.toLoc.iterator
+    .toList
+    locs match
+      case Nil => N
+      case first :: rest =>
+        if rest.forall(_.origin === first.origin)
+        then S(rest.foldLeft(first)(_ ++ _))
+        else S(first) // Mixed origins: pin the first piece.
+
   lazy val symbols: Ls[VarSymbol] = this match
     case Literal(lit) => Nil
     case ClassLike(_, arguments) =>
@@ -71,6 +92,8 @@ sealed abstract class Pattern[+K <: Kind.Complete] extends AutoLocated:
     case Record(entries) => entries.values.flatMap(_.symbols).toList
     case Tuple(leading, spread) => leading.flatMap(_.symbols) ::: spread.fold(Nil):
       case (_, middle, trailing) => middle.symbols ::: trailing.flatMap(_.symbols)
+    case Concat(patterns) => patterns.flatMap(_.symbols)
+    case CharClass(_, _) => Nil
     case Synonym(_) => Nil
     case And(patterns) => patterns.flatMap(_.symbols)
     case Or(patterns) =>
@@ -101,6 +124,11 @@ sealed abstract class Pattern[+K <: Kind.Complete] extends AutoLocated:
         leading.forall(loop(_, visiting)) &&
           spread.forall: (_, middle, trailing) =>
             loop(middle, visiting) && trailing.forall(loop(_, visiting))
+      // A whole-string match against a transform-free concatenation produces
+      // the concatenation of the consumed parts, which is the scrutinee itself.
+      case Concat(patterns) =>
+        patterns.forall(loop(_, visiting))
+      case CharClass(_, _) => true
       case And(patterns) =>
         patterns.forall(loop(_, visiting))
       case Or(patterns) =>
@@ -134,8 +162,9 @@ sealed abstract class Pattern[+K <: Kind.Complete] extends AutoLocated:
         // A pattern that is total only through a cycle matches nothing.
         !visiting.contains(instantiation) &&
           loop(instantiation.body, visiting + instantiation)
+      // String-shaped patterns match strings only, so they are never total.
       case Literal(_) | ClassLike(_, _) | MatchedClassLike(_, _) |
-        Record(_) | Tuple(_, _) | Not(_) => false
+        Record(_) | Tuple(_, _) | Not(_) | Concat(_) | CharClass(_, _) => false
     loop(this, Set.empty)
 
   /** An over-approximation of the heads of the values this pattern can match:
@@ -185,6 +214,12 @@ sealed abstract class Pattern[+K <: Kind.Complete] extends AutoLocated:
         // The smallest cover is the most precise of the sound choices.
         patterns.iterator.flatMap(loop(_, visiting)).minByOption(_.size)
       case Not(_) => N
+      // Only strings match a string-shaped pattern, so `Str` covers them —
+      // but a `Head` needs the source constructor term of that class, which
+      // this traversal has no way to conjure. `N` is the conservative answer
+      // (it only makes `mayOverlap` give up), so the precision is left for
+      // whenever a `Head` can name a class without a source reference.
+      case Concat(_) | CharClass(_, _) => N
       case Rename(pattern, _) => loop(pattern, visiting)
       // A transformation matches exactly what its input pattern matches.
       case Extract(pattern, _, _) => loop(pattern, visiting)
@@ -268,6 +303,16 @@ sealed abstract class Pattern[+K <: Kind.Complete] extends AutoLocated:
       if leading2.contains(Never) || middle2 === Never ||
         trailing2.contains(Never) then Never
       else Tuple(leading2, S((spreadKind, middle2, trailing2)))
+    case Concat(patterns) =>
+      // Note that empty string literals must NOT be dropped, even though
+      // they consume nothing: the output of a sequence is the left fold of
+      // its elements' outputs under JS `+`, so a leading `""` coerces a
+      // non-string element output to a string (`"" + 1` is `"1"`), and this
+      // simplification only runs on the `@compile` path — dropping the
+      // literal made `@compile` change the output's type.
+      val simplified = patterns.map(_.simplify)
+      if simplified contains Never then Never else Concat(simplified)
+    case CharClass(_, _) => this
     case And(patterns) =>
       // TODO: Complete the simplification logic here.
       // Note that `Wildcard` conjuncts cannot simply be dropped, even though
@@ -320,6 +365,11 @@ sealed abstract class Pattern[+K <: Kind.Complete] extends AutoLocated:
     case pattern: Record => pattern
     case pattern: Tuple => pattern
     case pattern: Literal => pattern
+    // Note that synonyms nested in `Concat` are deliberately kept: recursive
+    // references are handled by the string pattern compiler, which treats them
+    // as grammar nonterminals rather than expanding them (which would diverge).
+    case pattern: Concat => pattern
+    case pattern: CharClass => pattern
     case _: MatchedClassLike => lastWords("MatchedClassLike encountered during expansion")
   
   /** Unwrap `Rename` patterns until we reach a non-`Rename` pattern. Collect
@@ -351,6 +401,10 @@ sealed abstract class Pattern[+K <: Kind.Complete] extends AutoLocated:
       val spreadItem = Iterator.single(spreadKind.str + spread.showDbg)
       val trailingItems = trailing.iterator.map(_.showDbg)
       (leadingItems ++ spreadItem ++ trailingItems).mkString("[", ", ", "]")
+    case Concat(patterns) =>
+      patterns.iterator.map(_.showDbg).mkString("(", " ~ ", ")")
+    case CharClass(lo, hi) =>
+      s"[${StrLit(lo.toChar.toString).idStr}..${StrLit(hi.toChar.toString).idStr}]"
     case And(Nil) => "⊤"
     case And(pattern :: Nil) => pattern.showDbg
     case And(patterns) =>
@@ -436,6 +490,24 @@ object Pattern:
       leading: List[Pat],
       spread: Opt[(SpreadKind, Pat, List[Pat])],
   ) extends NonCompositional[Kind.Specialized]
+
+  /** A sequential composition of string patterns: the scrutinee is split into
+    * consecutive segments, one per element. Unlike the other composite nodes,
+    * how the scrutinee is split cannot be decided locally, so this node (and
+    * everything nested in it, including recursive `Synonym` references) is
+    * compiled as a whole to a finite automaton by `StringCompiler`. It is kept
+    * opaque (non-compositional) during expansion and specialization: expanding
+    * synonyms nested under it would diverge on recursive string patterns.
+    */
+  final case class Concat(patterns: Ls[Pat]) extends NonCompositional[Kind.Expanded]
+
+  /** Matches a single-character string whose sole UTF-16 code unit lies in the
+    * inclusive range `lo` to `hi`. This is the compiled form of string range
+    * patterns such as `"a" ..= "z"`; keeping the range symbolic (instead of
+    * expanding it to a disjunction of character literals) lets the string
+    * pattern compiler build compact character-class transitions.
+    */
+  final case class CharClass(lo: Int, hi: Int) extends NonCompositional[Kind.Expanded]
   
   /** Represents a pattern synonym.
     * @param sym the pattern symbol corresponding
@@ -501,15 +573,33 @@ import Pattern.*
 extension (pattern: ExPat)
   /** Modifies the pattern under the assumption that the scrutinee matches the
    *  given literal. We decide to not care about literals with fields. (For
-   *  example, wrapped primitives with properties in JavaScript.) */
-  def specialize(lit: syntax.Literal): SpPat = pattern.map:
+   *  example, wrapped primitives with properties in JavaScript.)
+   *
+   *  Note on string-shaped nodes (`Concat` and `CharClass`): whenever they are
+   *  present in a multi-matcher, all string-shaped patterns (including string
+   *  literals) are absorbed into a single `Str` class head and handled by the
+   *  string pattern compiler, so this function is never called with a `StrLit`
+   *  head in their presence. Under any other head, they cannot match. */
+  def specialize(lit: syntax.Literal)(using Raise): SpPat = pattern.map:
     case Literal(`lit`) => Wildcard
     case _: (Literal | ClassLike) => Never
+    case _: (Concat | CharClass) =>
+      // Live and correct for non-string heads (under an integer head a
+      // string-shaped pattern can indeed never match), but a `StrLit` head
+      // must never see one: `buildMultiMatcherBody` absorbs every
+      // string-shaped pattern into the `Str` head *and* filters out every
+      // head a string could take, precisely so that this arm cannot turn a
+      // matchable string pattern into a silent no-match.
+      softAssert(!lit.isInstanceOf[Tree.StrLit],
+        "string-shaped patterns must be absorbed into the `Str` head before literal specialization")
+      Never
     case pattern: (Record | Tuple) => pattern
     case _: (MatchedClassLike | Synonym) => lastWords("unexpected specialized/complete node in specialize(lit)")
   
   /** Modifies the pattern under the assumption that the scrutinee matches the
-   *  given class. */
+   *  given class. String-shaped patterns are `Never` here because the `Str`
+   *  head branch extracts them via `StringCompiler.stringFragment` instead of
+   *  relying on head specialization. */
   def specialize(head: ClassLikeHead): SpPat = pattern.map:
     case Literal(_) => Never
     /** Note that `ClassLike` corresponds the syntax sugar of class patterns
@@ -518,14 +608,15 @@ extension (pattern: ExPat)
     case ClassLike(`head`, arguments) =>
       arguments.fold(Wildcard)(MatchedClassLike(head, _))
     case ClassLike(_, _) => Never
+    case _: (Concat | CharClass) => Never
     case pattern: (MatchedClassLike | Record | Tuple) => pattern
   
   /** Modifies the pattern under the assumption that the scrutinee matches the
    *  given literal or class. */
-  def specialize(head: Option[Head]): SpPat = head match
+  def specialize(head: Option[Head])(using Raise): SpPat = head match
     case Some(h: syntax.Literal) => pattern.specialize(h)
     case Some(h: ClassLikeHead) => pattern.specialize(h)
     case None => pattern.map:
-      case _: (Literal | ClassLike) => Never
+      case _: (Literal | ClassLike | Concat | CharClass) => Never
       case pattern: (Record | Tuple) => pattern
       case _: (MatchedClassLike | Synonym) => lastWords("unexpected specialized/complete node in specialize(None)")

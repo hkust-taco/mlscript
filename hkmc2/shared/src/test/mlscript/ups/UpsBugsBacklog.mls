@@ -5,17 +5,6 @@ open annotations
 
 // ——— ——— ———
 
-import "../../mlscript-compile/Char.mls"
-
-pattern Input =
-  ((Char.Whitespace ~ (Input as inp)) => inp) | ((c ~ (Input as inp)) => [c, ..inp]) | ("" => [])
-
-:fixme
-if "a b c" is Input as chars then chars
-//│ ═══[RUNTIME ERROR] RangeError: Maximum call stack size exceeded
-
-// ——— ——— ———
-
 pattern Bin =
   [(1 => true) | (_ => false)]
 
@@ -47,7 +36,7 @@ if tokens is @compile Parse as stack do print(stack)
 if tokens is
   @compile Parse as stack do print(stack)
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'stack'
-//│ ║  l.48: 	  @compile Parse as stack do print(stack)
+//│ ║  l.37: 	  @compile Parse as stack do print(stack)
 //│ ╙──      	                                   ^^^^^
 
 // What's actually intended:

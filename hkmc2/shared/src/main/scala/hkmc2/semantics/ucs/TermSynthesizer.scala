@@ -63,6 +63,9 @@ trait TermSynthesizer(using State):
   protected lazy val stringGet = sel(sel(runtimeRef, "Str", State.strSymbol), "get", State.strGetSymbol)
   protected lazy val stringTake = sel(sel(runtimeRef, "Str", State.strSymbol), "take", State.strTakeSymbol)
   protected lazy val stringLeave = sel(sel(runtimeRef, "Str", State.strSymbol), "leave", State.strLeaveSymbol)
+  protected lazy val strPatMatchWhole = sel(sel(runtimeRef, "StrPat", State.strPatSymbol), "matchWhole", State.strPatMatchWholeSymbol)
+  protected lazy val strPatParseWhole = sel(sel(runtimeRef, "StrPat", State.strPatSymbol), "parseWhole", State.strPatParseWholeSymbol)
+  protected lazy val strPatParsePrefix = sel(sel(runtimeRef, "StrPat", State.strPatSymbol), "parsePrefix", State.strPatParsePrefixSymbol)
 
   /** Make a term that looks like `runtime.Tuple.get(t, i)`. */
   protected final def callTupleGet(t: Term, i: Int, label: Str): Term =
@@ -91,6 +94,17 @@ trait TermSynthesizer(using State):
   /** Make a term that looks like `runtime.Str.drop(t, n)`. */
   protected final def callStringDrop(t: Term.Ref, n: Int, label: Str) =
     app(stringLeave, tup(fld(t), fld(int(n))), label)
+
+  /** Aggregate the transform closures of a compiled string pattern into a
+    * tuple for the matching engine. The closures may originate from different
+    * source blocks, so the tuple's location must be pinned explicitly:
+    * deriving it from the children would mix origins and trip the location
+    * distinctness assertion in `AutoLocated`. */
+  protected final def actionsTuple(actions: Ls[Term], siteLoc: Opt[Loc]): Term =
+    val tuple = tup(actions)
+    siteLoc.orElse(actions.iterator.flatMap(_.toLoc.iterator).nextOption()) match
+      case loc @ S(_) => tuple.withLoc(loc)
+      case N => tuple // No sub-locations at all: nothing to mix.
 
   protected final def tempLet(dbgName: Str, term: Term)(inner: TempSymbol => Split): Split =
     val s = TempSymbol(N, dbgName)

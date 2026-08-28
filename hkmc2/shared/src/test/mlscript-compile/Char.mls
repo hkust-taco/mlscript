@@ -1,6 +1,10 @@
 
 module Char with
-  pattern AnyChar = (Str as s where s.length is 1) => s
+  // The full character range: matches any single UTF-16 code unit. (Guards
+  // are not supported within string patterns, so this must not be defined
+  // through a `where` clause; a range works because range patterns match
+  // exactly one character.)
+  pattern AnyChar = "\u0000" ..= "\uffff"
   pattern Lowercase = "a" ..= "z"
   pattern Uppercase = "A" ..= "Z"
   pattern Letter = Lowercase | Uppercase
