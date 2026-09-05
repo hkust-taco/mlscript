@@ -3,17 +3,13 @@
 :wasm
 
 
-// A class used only by a runtime cast must remain reachable after lifting.
-// Currently, Local disappears from optimized IR. The backend now reports the missing cast target
-// instead of silently treating it as an erased type, but the cast is still not performed,
-// so narrowLocal(42) returns 42 instead of trapping.
+// A class used only by a runtime cast must remain reachable after lifting. The cast records Local as a
+// dependency, so it survives optimization and narrowLocal(42) traps instead of returning 42.
 :noInline
 :lift
 :sir
 :soir
 :re
-:fixme // The dropped cast target is reported as a compiler bug, not yet prevented.
-:breakme // Preserve concrete cast-target dependencies through optimization.
 fun narrowLocal(x): Object =
   class Local()
   val y: Local = x
@@ -31,17 +27,44 @@ narrowLocal(42)
 //│ };
 //│ return narrowLocal¹(42)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let Local;
+//│ define Local as class Local¹ {
+//│   constructor Local⁰
+//│ };
 //│ define narrowLocal⁰ as fun narrowLocal¹(x) {
 //│   let y;
 //│   define y as val y⁰ = (x as! Local¹);
 //│   return y⁰
 //│ };
 //│ return narrowLocal¹(42)
-//│ ╔══[INTERNAL ERROR] Compiler reached an unexpected state at 'WatBuilder.scala:1990': no Wasm type is available for cast target `Local`
-//│ ╟── The compilation result may be incorrect.
-//│ ╙── This is a compiler bug; please report it to the maintainers.
 //│ Wasm result:
-//│ = 42
+//│ ═══[RUNTIME ERROR] RuntimeError: illegal cast
+
+
+// The same dependency must be recorded when the cast is *returned* rather than bound to a val: the two
+// arrive at different traversal entry points, and only one of them is a path. Lifting then floats Lifted
+// out alongside the function that casts to it.
+:noInline
+:lift
+:soir
+:re
+fun liftedNarrow(x): Object =
+  class Lifted()
+  fun narrow(y): Lifted = y
+  narrow(x)
+liftedNarrow(42)
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let Lifted, narrow;
+//│ define narrow as fun narrow⁰(y) {
+//│   return (y as! Lifted⁰)
+//│ };
+//│ define Lifted as class Lifted⁰ {
+//│   constructor Lifted¹
+//│ };
+//│ define liftedNarrow⁰ as fun liftedNarrow¹(x) { return narrow⁰(x) };
+//│ return liftedNarrow¹(42)
+//│ Wasm result:
+//│ ═══[RUNTIME ERROR] RuntimeError: illegal cast
 
 
 // Entering the broad member of this SCC must still enforce narrow's return contract.
@@ -83,7 +106,7 @@ broad(1)
 //│   unreachable /* Rest of abortive labelled block */
 //│ };
 //│ @inline
-//│ define narrow⁰ as fun narrow¹(n) {
+//│ define narrow¹ as fun narrow²(n) {
 //│   return (narrow_broad⁰(0, n) as! Narrow⁰)
 //│ };
 //│ @inline
@@ -171,7 +194,7 @@ fun chooseLocal(b: Bool): Int32 =
   x
 chooseLocal(true)
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Unknown' at an unrelated type 'Int32'
-//│ ║  l.170: 	  val x: Int32 = if b then wasm.i32.const(1) else wasm.i32.const(2)
+//│ ║  l.193: 	  val x: Int32 = if b then wasm.i32.const(1) else wasm.i32.const(2)
 //│ ╙──       	                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[COMPILATION ERROR] Cannot cast a Wasm value of type `i32` to `(ref null any)` in a different type hierarchy
 //│ ═══[COMPILATION ERROR] Cannot cast a Wasm value of type `i32` to `(ref null any)` in a different type hierarchy

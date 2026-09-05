@@ -184,8 +184,30 @@ class BlockSimplifier
               usedVars += loc
             case Value.MemberRef(loc, _) =>
               usedVars += loc
+            case Cast(_, target, _) => markCastTarget(target)
             case _ =>
           super.applyPath(p)
+
+        /** Marks the class a cast tests against at run time as used.
+          *
+          * A `Cast` stores its target as an `ErasedValueType` rather than a path, so no `Value.Ref` records the
+          * dependency and a class used only as a cast target is dropped as an unused pure definition, leaving the
+          * backend a cast it cannot emit. This cannot live in `Result.freeVars`: resolving a target to its
+          * `BlockMemberSymbol` needs a `Ctx` that the context-free `lazy val` does not have.
+          *
+          * Both traversal entry points must call this: `applyResult` matches `Cast` before its `Path` case, so
+          * `applyPath` never sees a returned or assigned cast, only the ones a `ValDefn` binds.
+          */
+        def markCastTarget(target: ErasedValueType): Unit =
+          target.canonicalize match
+            case ErasedType.AnyRef(_, tpeSym) => tpeSym.asBlkMember.foreach(usedVars += _)
+            case _ =>
+
+        override def applyResult(r: Result): Unit =
+          r match
+            case Cast(_, target, _) => markCastTarget(target)
+            case _ =>
+          super.applyResult(r)
         
         override def applyClsLikeDefn(defn: ClsLikeDefn): Unit =
           privateVars ++= defn.privateFields
