@@ -37,7 +37,7 @@ narrowLocal(42)
 //│   return y⁰
 //│ };
 //│ return narrowLocal¹(42)
-//│ ╔══[INTERNAL ERROR] Compiler reached an unexpected state at 'WatBuilder.scala:1970': no Wasm type is available for cast target `Local`
+//│ ╔══[INTERNAL ERROR] Compiler reached an unexpected state at 'WatBuilder.scala:1986': no Wasm type is available for cast target `Local`
 //│ ╟── The compilation result may be incorrect.
 //│ ╙── This is a compiler bug; please report it to the maintainers.
 //│ Wasm result:
@@ -117,30 +117,27 @@ broadControl(1)
 
 
 // Forward references must resolve consistently in class layouts and constructor signatures.
-// Currently, the predeclared initializer/constructor parameter is anyref, but its later
-// function definition uses (ref $Later), so Binaryen rejects the generated module.
+// Class identities are allocated before any layout is resolved, and class types are emitted in
+// dependency order, so the field and the signatures reading it agree on `(ref $Later)`.
 :noInline
-:fixme // Resolve class identities before freezing layouts and function signatures.
 class Forward(val b: Later) with
   fun get(): Later = b
 class Later(val n: Int)
 fun readForward(f: Forward): Later = f.get()
 readForward(new Forward(new Later(7)))
 //│ Wasm result:
-//│ ═══[RUNTIME ERROR] [object Object]
+//│ = {}
 
 
 // An inhabited self-reference exposes the same ordering problem in field storage.
-// Currently, next is stored as anyref and get returns it without restoring the SelfNode type.
+// A class resolves against its own identity, so next is stored as `(ref null $SelfNode)`.
 :noInline
-:fixme // Preserve the declared field type across self-referential class layouts and reads.
 class SelfNode() with
   val next: SelfNode = this
   fun get(): SelfNode = next
 if new SelfNode().get() is SelfNode then 1 else 0
-//│ ╔══[COMPILATION ERROR] Wasm function `get` expects result to have type `(ref $SelfNode)`, but got `(ref null any)`
-//│ ║  l.139: 	  fun get(): SelfNode = next
-//│ ╙──       	  ^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ Wasm result:
+//│ = 1
 
 
 // Typed IR knows the covariant override's return type, while the virtual slot uses Object.
@@ -154,7 +151,7 @@ class Child() extends Parent() with
 fun readChild(c: Child): Child = c.get()
 readChild(new Child())
 //│ ╔══[COMPILATION ERROR] Wasm function `readChild` expects result to have type `(ref $Child)`, but got `(ref null any)`
-//│ ║  l.154: 	fun readChild(c: Child): Child = c.get()
+//│ ║  l.151: 	fun readChild(c: Child): Child = c.get()
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
@@ -176,7 +173,7 @@ fun chooseLocal(b: Bool): Int32 =
   x
 chooseLocal(true)
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Unknown' at an unrelated type 'Int32'
-//│ ║  l.175: 	  val x: Int32 = if b then wasm.i32.const(1) else wasm.i32.const(2)
+//│ ║  l.172: 	  val x: Int32 = if b then wasm.i32.const(1) else wasm.i32.const(2)
 //│ ╙──       	                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[COMPILATION ERROR] Cannot cast a Wasm value of type `i32` to `(ref null any)` in a different type hierarchy
 //│ ═══[COMPILATION ERROR] Cannot cast a Wasm value of type `i32` to `(ref null any)` in a different type hierarchy

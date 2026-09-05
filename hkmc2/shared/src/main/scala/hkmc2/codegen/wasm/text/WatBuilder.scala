@@ -945,6 +945,22 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
       thisType = N,
     )
 
+  /** Registers a class's type identity into `Ctx`.
+    *
+    * This method is intended to be called before any layout or signature resolution for the class, since it is used to
+    * allocate a placeholder type identity so that forward- and self-references to the class are resolved correctly.
+    *
+    * The layout registered here is a placeholder: [[predeclareClassType]] overwrites it with the real one under the
+    * same name.
+    *
+    */
+  private def allocateClassTypeIdentity(defn: ClsLikeDefn)(using Raise): Unit =
+    ctx.addToRecursiveTypes(ctx.addType(TypeInfo(
+      sym = defn.sym,
+      compType = StructType(fields = Nil),
+      objectTag = N,
+    )))
+
   /** Registers all Wasm pre-declarations needed for one top-level class, in dependency order. */
   private def predeclareClass(defn: ClsLikeDefn)(using Raise, SessionExportCtx): Unit =
     predeclareClassVirtualTable(defn)
@@ -2776,7 +2792,11 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
             case _: ErrorReport => break(compiledModule("entry"))
             case _ => ()
         val (classes, funs) = collectTopLevelDefns(p.main)
-        sortTopLevelClasses(classes).foreach(predeclareClass)
+        val sortedClasses = sortTopLevelClasses(classes)
+        // Class identities come first, so that layouts and signatures resolve self- and forward references to
+        // the class's own type rather than to `anyref`.
+        sortedClasses.foreach(allocateClassTypeIdentity)
+        sortedClasses.foreach(predeclareClass)
         // Top-level functions are predeclared here too, so that a call can be compiled before the
         // definition it refers to. Functions do not need to be ordered.
         // Note that classes must come first, since the types of parameters and return values may

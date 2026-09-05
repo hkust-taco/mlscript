@@ -18,7 +18,7 @@ import Instructions.*
 import Message.MessageContext
 
 import scala.collection.immutable.ListMap
-import scala.collection.mutable.{ArrayBuffer as ArrayBuf, Map as MutMap}
+import scala.collection.mutable.{ArrayBuffer as ArrayBuf, LinkedHashSet, Map as MutMap}
 import scala.reflect.ClassTag
 
 /** Metadata for a REPL binding that can be imported by later Wasm modules. */
@@ -644,6 +644,9 @@ class Ctx(using Elaborator.Ctx, State) extends ToWat:
   /** [[ListMap]] containing all type definitions in the module mapped by their symbolic identifiers. */
   private var types = ListMap.empty[SymIdx, TypeInfo]
 
+  /** Types that must be emitted together as one recursive type group. */
+  private val recursiveTypes = LinkedHashSet.empty[SymIdx]
+
   /** [[MutMap]] containing type symbols mapped to their corresponding [[TypeInfo]] instance. */
   private val namedTypes = MutMap.empty[BlockMemberSymbol, TypeInfo]
   
@@ -728,6 +731,10 @@ class Ctx(using Elaborator.Ctx, State) extends ToWat:
     val tag = objectTagNum
     objectTagNum += 1
     tag
+
+  /** Marks the type at `idx` as a member of the module's recursive type group. */
+  def addToRecursiveTypes(idx: TypeIdx): Unit = idx.idx match
+    case sym: SymIdx => recursiveTypes += sym
 
   /** Adds a type into this context. */
   def addType(typeInfo: TypeInfo): TypeIdx =
@@ -1005,6 +1012,27 @@ class Ctx(using Elaborator.Ctx, State) extends ToWat:
   def getOrCreateWasmIntrinsicTag(name: Str, createTag: => TagIdx): TagIdx =
     wasmIntrinsicTags.getOrElseUpdate(name, createTag)
 
+  /** Groups the recursive types into the order they must be declared in.
+    *
+    * Wasm requires every type a definition references to be declared before it, so class layouts are ordered by
+    * the classes their parents and fields mention. A cycle cannot be ordered, so each strongly connected
+    * component holding more than one type is emitted as one `(rec ...)` group.
+    */
+  private def orderedRecursiveTypes: Ls[Ls[SymIdx]] =
+    def named(idx: TypeIdx): Opt[SymIdx] = idx.idx match
+      case sym: SymIdx => S(sym)
+    def dependencies(id: SymIdx): Ls[SymIdx] = types.get(id).map(_.compType) match
+      case S(structTy: StructType) =>
+        val parents = structTy.parents.flatMap(named)
+        val fields = structTy.fields.flatMap: (_, field) =>
+          field.ty match
+            case RefType(idx: TypeIdx, _) => named(idx)
+            case _ => N
+        (parents ++ fields).iterator.filter(recursiveTypes).distinct.toList
+      case _ => Nil
+    SccAnalysis.sccsFrom(dependencies, recursiveTypes)
+  end orderedRecursiveTypes
+
   def toWat: Document =
     val definedGlobals = globals.valuesIterator.collect:
       case globalInfo: GlobalInfo => globalInfo.toWat
@@ -1012,9 +1040,17 @@ class Ctx(using Elaborator.Ctx, State) extends ToWat:
       case memInfo: MemInfo => memInfo.toWat
     val funcDefns = funcs.valuesIterator.collect:
       case funcInfo: FuncInfo => funcInfo.toWat
+    val components = orderedRecursiveTypes.map:
+      case id :: Nil => types(id).toWat
+      case component => doc"(rec #{  # ${component.map(types(_).toWat).mkDocument(doc" # ")} #} )"
+    val firstMember = types.keysIterator.find(recursiveTypes)
+    val typeDefns = types.iterator.flatMap: (id, typeInfo) =>
+      if !recursiveTypes(id) then typeInfo.toWat :: Nil
+      else if firstMember.contains(id) then components
+      else Nil
     doc"(module #{  # ${
         (
-          types.valuesIterator.map(_.toWat)
+          typeDefns
             ++ imports.iterator.map(_.toWat)
             ++ tags.valuesIterator.map(_.toWat)
             ++ definedGlobals
