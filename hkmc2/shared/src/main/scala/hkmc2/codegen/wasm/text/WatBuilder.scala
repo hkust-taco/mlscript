@@ -1654,7 +1654,11 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
           typeIdx = virtualMethodTypeIdx,
           funcType = virtualMethodSignature(baseSym, paramTypes, resultType),
         )
-        Ls(receiverExpr, virtualCall)
+        // The slot carries the *base* declaration's result type, but the resolved method's declared result may be
+        // overridden to be narrower. Restore the slot's result value to the resolved method's declared type here -
+        // the checked cast ensures that a value that doesn't conform will trap at runtime.
+        val adaptedCall = castConserve(virtualCall, declaredResultType(methodSym))
+        Ls(receiverExpr, adaptedCall)
       case N =>
         val funcTypeInfo = ctx.getTypeInfo_!(ctx.getFuncTypeUse_!(methodSym).typeIdx)
         val operands = castArgsToParams(result(qual) +: args.map(argument), funcTypeInfo)
