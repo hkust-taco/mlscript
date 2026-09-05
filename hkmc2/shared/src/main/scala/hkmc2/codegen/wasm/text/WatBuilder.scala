@@ -44,7 +44,12 @@ extension (et: ErasedType)
           else if isBoxedAsI31(tpeSym, ctx) then
             S(RefType.i31ref)
           else
-            tpeSym.asBlkMember.flatMap(ctx.getType).map(RefType(_, nullable = false))
+            // The Unit singleton's struct is registered under the synthetic `unitBlockMemberSymbol`, not under the
+            // `unit` module's own block member that `asBlkMember` resolves to. Cf. `localType` below.
+            val structSym =
+              if tpeSym eq State.unitSymbol then S(State.unitBlockMemberSymbol)
+              else tpeSym.asBlkMember
+            structSym.flatMap(ctx.getType).map(RefType(_, nullable = false))
         case ErasedType.Primitive(PrimitiveType.Int32) => S(I32Type)
         case _ => N
 
@@ -1958,7 +1963,13 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
     case Cast(value, target, _) =>
       target.wasmType match
         case S(ty) => castToValType(value, ty)
-        case N => result(value)
+        case N =>
+          target.canonicalize match
+            case ErasedType.AnyRef(_, tpeSym) if tpeSym.asClsOrMod.exists(_.irClsLikeDefn.isDefined) =>
+              // A concrete class with no Wasm representation means the class definition is missing from the IR.
+              softAssert(false, s"no Wasm type is available for cast target `${target.describe}`")
+            case _ =>
+          result(value)
 
     case r =>
       errExpr(

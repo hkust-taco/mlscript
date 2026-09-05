@@ -4,13 +4,15 @@
 
 
 // A class used only by a runtime cast must remain reachable after lifting.
-// Currently, Local disappears from optimized IR and the backend silently drops the cast,
+// Currently, Local disappears from optimized IR. The backend now reports the missing cast target
+// instead of silently treating it as an erased type, but the cast is still not performed,
 // so narrowLocal(42) returns 42 instead of trapping.
 :noInline
 :lift
 :sir
 :soir
 :re
+:fixme // The dropped cast target is reported as a compiler bug, not yet prevented.
 :breakme // Preserve concrete cast-target dependencies through optimization.
 fun narrowLocal(x): Object =
   class Local()
@@ -35,6 +37,9 @@ narrowLocal(42)
 //│   return y⁰
 //│ };
 //│ return narrowLocal¹(42)
+//│ ╔══[INTERNAL ERROR] Compiler reached an unexpected state at 'WatBuilder.scala:1970': no Wasm type is available for cast target `Local`
+//│ ╟── The compilation result may be incorrect.
+//│ ╙── This is a compiler bug; please report it to the maintainers.
 //│ Wasm result:
 //│ = 42
 
@@ -134,7 +139,7 @@ class SelfNode() with
   fun get(): SelfNode = next
 if new SelfNode().get() is SelfNode then 1 else 0
 //│ ╔══[COMPILATION ERROR] Wasm function `get` expects result to have type `(ref $SelfNode)`, but got `(ref null any)`
-//│ ║  l.134: 	  fun get(): SelfNode = next
+//│ ║  l.139: 	  fun get(): SelfNode = next
 //│ ╙──       	  ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
@@ -149,7 +154,7 @@ class Child() extends Parent() with
 fun readChild(c: Child): Child = c.get()
 readChild(new Child())
 //│ ╔══[COMPILATION ERROR] Wasm function `readChild` expects result to have type `(ref $Child)`, but got `(ref null any)`
-//│ ║  l.149: 	fun readChild(c: Child): Child = c.get()
+//│ ║  l.154: 	fun readChild(c: Child): Child = c.get()
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
@@ -171,7 +176,7 @@ fun chooseLocal(b: Bool): Int32 =
   x
 chooseLocal(true)
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Unknown' at an unrelated type 'Int32'
-//│ ║  l.170: 	  val x: Int32 = if b then wasm.i32.const(1) else wasm.i32.const(2)
+//│ ║  l.175: 	  val x: Int32 = if b then wasm.i32.const(1) else wasm.i32.const(2)
 //│ ╙──       	                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[COMPILATION ERROR] Cannot cast a Wasm value of type `i32` to `(ref null any)` in a different type hierarchy
 //│ ═══[COMPILATION ERROR] Cannot cast a Wasm value of type `i32` to `(ref null any)` in a different type hierarchy

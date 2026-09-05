@@ -288,3 +288,44 @@ castToA(wasm.i32.const(123))
 //│ = 123
 
 
+// A cast targeting `()` must find the Wasm Unit singleton's struct type. That struct is registered under a
+// synthetic BMS, so resolving it the ordinary way will find nothing and will be reported as missing a Wasm
+// type. `:sir` shows the cast is really emitted.
+:sir
+fun narrowUnitFromObject(x: Object): () = x
+narrowUnitFromObject(())
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define narrowUnitFromObject⁰ as fun narrowUnitFromObject¹(x) {
+//│   return (x as! Unit⁰)
+//│ };
+//│ return narrowUnitFromObject¹(runtime⁰.Unit⁰)
+//│ Wasm result:
+//│ = {}
+
+:sir
+fun narrowUnitFromUntyped(x): () = x
+narrowUnitFromUntyped(())
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define narrowUnitFromUntyped⁰ as fun narrowUnitFromUntyped¹(x) {
+//│   return (x as! Unit⁰)
+//│ };
+//│ return narrowUnitFromUntyped¹(runtime⁰.Unit⁰)
+//│ Wasm result:
+//│ = {}
+
+:sir
+fun narrowUnitInVal(x: Object): () =
+  val y: () = x
+  y
+narrowUnitInVal(())
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define narrowUnitInVal⁰ as fun narrowUnitInVal¹(x) {
+//│   let y;
+//│   define y as val y⁰ = (x as! Unit⁰);
+//│   return y⁰
+//│ };
+//│ return narrowUnitInVal¹(runtime⁰.Unit⁰)
+//│ Wasm result:
+//│ = {}
+
+
