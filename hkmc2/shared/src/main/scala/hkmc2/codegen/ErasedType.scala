@@ -249,6 +249,9 @@ object ErasedType:
         l <- eraseSign(lhs)
         r <- eraseSign(rhs)
       yield ErasedType.union(l, r)
+    // * An intersection is never decomposed: narrowing to one member would call for a GLB, which this lattice
+    // * cannot express.
+    case CompType(_, _, false) => S(ErasedType.Unknown)
     case UnitVal() => S(ErasedType.Unit)
     // * A written arrow denotes a function value, and every function value is a `Function`.
     case FunTy(_, _, _) => S(ErasedType.Function(rsc = S(false)))
@@ -351,6 +354,8 @@ sealed abstract class ErasedType:
     *
     * Each overriding implementation performs the ones that apply to it; alias resolution and primitive
     * reclassification both happen in [[CanonicalErasedValueType.apply]].
+    *
+    * Intersections are never decomposed and is erased to [[Unknown]].
     *
     * Call [[canonicalize]] rather than this, so that the result is memoized.
     */
