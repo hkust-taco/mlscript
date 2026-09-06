@@ -33,7 +33,7 @@ object Lifter:
     /** Maps the symbol to its erased value type, if it has one. */
     private def mapErasedValueType(using Raise): Opt[ErasedValueType] = s match
       case v: VarSymbol => v.erasedType
-      case t: TempSymbol => t.erasedType
+      case t: TempSymbol => t.erasedValueType
       case c: (ClassSymbol | ModuleOrObjectSymbol) => c.erasedValueType
       case t: TermSymbol => t.erasedValueType
       // * A pattern is not a value and carries no erased type of its own, so a reference to one is

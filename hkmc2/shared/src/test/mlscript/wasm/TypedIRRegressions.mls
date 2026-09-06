@@ -185,17 +185,12 @@ chooseDirect(true)
 
 
 // Introducing an explicitly typed local must preserve the same primitive representation.
-// Currently, conditional normalization introduces an untyped temporary, forcing the i32
-// branches through anyref and rejecting the subsequent assignment to Int32.
+// The temporary holding the conditional's result takes the join of its branches' representations,
+// so both i32 branches keep it instead of being forced through anyref.
 :noInline
-:fixme // Carry the primitive result representation through non-tail conditional temporaries.
 fun chooseLocal(b: Bool): Int32 =
   val x: Int32 = if b then wasm.i32.const(1) else wasm.i32.const(2)
   x
 chooseLocal(true)
-//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Unknown' at an unrelated type 'Int32'
-//│ ║  l.193: 	  val x: Int32 = if b then wasm.i32.const(1) else wasm.i32.const(2)
-//│ ╙──       	                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ═══[COMPILATION ERROR] Cannot cast a Wasm value of type `i32` to `(ref null any)` in a different type hierarchy
-//│ ═══[COMPILATION ERROR] Cannot cast a Wasm value of type `i32` to `(ref null any)` in a different type hierarchy
-//│ ═══[COMPILATION ERROR] Cannot cast a Wasm value of type `(ref null any)` to `i32` in a different type hierarchy
+//│ Wasm result:
+//│ = 1
