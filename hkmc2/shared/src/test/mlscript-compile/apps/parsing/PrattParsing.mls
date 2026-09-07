@@ -49,17 +49,17 @@ fun parse(tokens) =
       Token.Literal(LiteralKind.Integer, literal) then
         consume
         Expr.Lit(parseInt(literal, 10)) exprCont(prec)
-      Token.Identifier(name, false) then
+      Token.Reference(name) then
         consume
         Expr.Var(name) exprCont(prec)
-      Token.Identifier("(", true) then
+      Token.Symbol("(") then
         consume
-        expr(0) require(Token.Identifier(")", true)) exprCont(prec)
+        expr(0) require(Token.Symbol(")")) exprCont(prec)
       token then Expr.justErr of "Unexpected token " + token Token.summary()
     None then Expr.justErr of "Unexpected end of input"
   
   fun exprCont(acc: Expr.Expr, prec: Int): Expr.Expr =
-    if peek is Some(Token.Identifier(op, true))
+    if peek is Some(Token.Symbol(op))
       and op !== ")" // * this is important
       and Expr.opPrec(op) is [leftPrec, rightPrec]
       and leftPrec > prec then

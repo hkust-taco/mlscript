@@ -22,7 +22,9 @@ module ParseRuleVisualizer with ...
 
 val tracer = new TreeTracer.TreeTracer()
 
-let defaultKinds = tuple of "type", "term", "typevar", "ident"
+let defaultKinds = tuple of
+  "type", "term", "binding", "typevar", "ident"
+  "literal", "string-literal", "integer-literal", "decimal-literal", "boolean-literal"
 
 let renderedKinds = new Set of defaultKinds
 
@@ -47,19 +49,17 @@ fun render[T](rr, title: Str, rule: ParseRule.ParseRule[T]) =
     Choice.Keyword(keyword, rest) then
       tracer.print of "found Choice.Keyword"
       Some of rr.Terminal(keyword.name) sequence(renderRule(rest))
-    Choice.Siding(rule, optional, rest, _) then
-      tracer.print of "found Choice.Siding"
-      Some of if renderRule(rule) is
-        let latterPart = renderRule(rest)
-        Some(optionalPart) and
-          optional then rr.Optional(optionalPart) sequence(latterPart)
-          else optionalPart sequence(latterPart)
-        None then latterPart
-    Choice.Ref(kind, _, outerPrec, innerPrec, rest) then
+    Choice.Ref(kind, _, bp, rest) then
       tracer.print of "found Choice.Ref to " + kind
       if renderedKinds.has(kind) is false do
         referencedKinds.add of kind
       Some of rr.NonTerminal(kind, href: "#" + kind)
+        sequence(renderRule(rest))
+    Choice.Infix(_, rhsKind, _, rest) then
+      tracer.print of "found Choice.Infix to " + rhsKind
+      if renderedKinds.has(rhsKind) is false do
+        referencedKinds.add of rhsKind
+      Some of rr.Sequence(rr.Terminal("operator"), rr.NonTerminal(rhsKind, href: "#" + rhsKind))
         sequence(renderRule(rest))
   fun renderRule(rule: ParseRule.ParseRule[T]) = tracer.trace of
     "renderRule <<< " + rule.name

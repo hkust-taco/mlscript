@@ -18,12 +18,21 @@ open ParseRule { Choice }
 module Extension with ...
 
 fun isDiagramDirective(tree: Tree) = tree is
-  Tree.Define(Tree.DefineKind.Directive, [Tree.Ident("diagram", _), _] :: Nil)
+  Tree.Define(Tree.DefineKind.Directive, [Tree.Reference("diagram", _), _] :: Nil)
+
+fun resetParserState() =
+  Keywords.resetExtensions()
+  Rules.resetExtensions()
 
 fun parsePrecedenceTree(tree: Tree) = if tree is
-  Tree.Ident("None", _) then None
-  Tree.App(Tree.Ident("Some", _), Tree.Literal(Token.LiteralKind.Integer, value)) then
+  Tree.Reference("None", _) then None
+  Tree.Literal(Token.LiteralKind.Integer, value) then
     Some(parseInt(value, 10))
+  Tree.Application(Tree.Reference("Some", _), Tree.Literal(Token.LiteralKind.Integer, value)) then
+    Some(parseInt(value, 10))
+  else
+    print of "expect None or an integer literal but found " + tree Tree.summary()
+    None
 
 fun extendKeyword(tree: Tree) =
   if tree is Tree.Tuple(keyword :: leftPrec :: rightPrec :: Nil) and
@@ -32,34 +41,157 @@ fun extendKeyword(tree: Tree) =
       let rightPrec' = parsePrecedenceTree(rightPrec)
       Keywords.keyword(name, leftPrec', rightPrec')
     else print of "expect a string literal but found " + keyword
+  else if tree is
+    Tree.Application(Tree.Application(Tree.Literal(Token.LiteralKind.String, name), leftPrec), rightPrec) then
+      let leftPrec' = parsePrecedenceTree(leftPrec)
+      let rightPrec' = parsePrecedenceTree(rightPrec)
+      Keywords.keyword(name, leftPrec', rightPrec')
   else print of "expect a tuple but found " + tree
 
-// * Add an empty parse rule to the map associated with the given name.
-fun newCategory(tree: Tree) =
-  if tree is Tree.Literal(Token.LiteralKind.String, name) and
-    Rules.syntaxKinds |> MutMap.get(name) is
-      Some(rule) then print of "Category already exists: " + rule.display
-      None then
-        Rules.syntaxKinds |> MutMap.insert(name, ParseRule.ParseRule(name, Nil))
-        Rules.extendedKinds.add(name)
-  else
-    print of "expect a string literal but found " + tree
-
 pattern OpenCategory = "term" | "type" | "decl"
-pattern ClosedCategory = "ident" | "typevar"
+pattern ClosedCategory =
+  "ident" | "typevar" | "literal" | "string-literal" |
+  "integer-literal" | "decimal-literal" | "boolean-literal"
+
+fun ensureCategory(kindName: Str) =
+  if kindName is
+    ClosedCategory then
+      print of "Cannot extend a closed category: " + kindName
+      None
+    else if Rules.syntaxKinds |> MutMap.get(kindName) is
+      Some(rule) then Some(rule)
+      None then
+        let rule = ParseRule.ParseRule(kindName, Nil)
+        Rules.syntaxKinds |> MutMap.insert(kindName, rule)
+        Rules.extendedKinds.add(kindName)
+        Some(rule)
+
+fun knownKind(kindName: Str) = if
+  kindName is ClosedCategory then true
+  Rules.syntaxKinds |> MutMap.get(kindName) is Some(_) then true
+  else false
+
+fun knownKindForTarget(targetKind: Str, kindName: Str) =
+  if kindName == targetKind then true else knownKind(kindName)
+
+fun lookupEnv(name: Str, env) = env
+  Iter.fromStack()
+  Iter.firstDefined of case
+    [label, value] and label == name then Some(value)
+    else None
+
+fun mapTreeStack(trees, env) = trees
+  Iter.fromStack()
+  Iter.mapping of tree => substitute(tree, env)
+  Iter.toStack()
+
+fun substitute(tree, env) = if tree is
+  Tree.Reference(name, false) and lookupEnv(name, env) is Some(value) then value
+  Tree.Bracketed(kind, inner) then Tree.Bracketed(kind, substitute(inner, env))
+  Tree.Modified(modifier, subject) then
+    Tree.Modified(substitute(modifier, env), substitute(subject, env))
+  Tree.Tuple(trees) then Tree.Tuple(mapTreeStack(trees, env))
+  Tree.Sequence(trees) then Tree.Sequence(mapTreeStack(trees, env))
+  Tree.Match(scrutinee, branches) then
+    Tree.Match(substitute(scrutinee, env), mapTreeStack(branches, env))
+  Tree.Try(body, branches) then
+    Tree.Try(substitute(body, env), mapTreeStack(branches, env))
+  Tree.Lambda(params, body) then
+    Tree.Lambda(mapTreeStack(params, env), substitute(body, env))
+  Tree.Application(callee, argument) then
+    Tree.Application(substitute(callee, env), substitute(argument, env))
+  Tree.Infix(op, lhs, rhs) then
+    Tree.Infix(op, substitute(lhs, env), substitute(rhs, env))
+  Tree.Define(kind, items) then
+    Tree.Define of kind, items
+      Iter.fromStack()
+      Iter.mapping of case [lhs, rhs] then [substitute(lhs, env), substitute(rhs, env)]
+      Iter.toStack()
+  Tree.LetIn(bindings, body) then
+    Tree.LetIn of mapTreeStack(bindings, env), if body is
+      Some(body) then Some(substitute(body, env))
+      else body
+  Tree.While(cond, body) then Tree.While(substitute(cond, env), substitute(body, env))
+  Tree.For(head, start, end, body) then
+    Tree.For(substitute(head, env), substitute(start, env), substitute(end, env), substitute(body, env))
+  Tree.Ternary(keyword, lhs, rhs, body) then
+    Tree.Ternary(keyword, substitute(lhs, env), substitute(rhs, env), if body is
+      Some(body) then Some(substitute(body, env))
+      else body)
+  else tree
+
+fun syntaxElements(tree: Tree) = if tree is
+  Tree.Bracketed(Token.Square, Tree.Tuple(elements)) then Some(elements)
+  Tree.Bracketed(Token.Square, Tree.Sequence(elements)) then Some(elements)
+  Tree.Bracketed(Token.Square, Tree.Empty) then Some(Nil)
+  Tree.Bracketed(Token.Square, element) then Some(element :: Nil)
+  else None
+
+fun parseSyntaxElement(targetKind: Str, element: Tree, rest: Choice[Stack[[Str, Tree]]]) = if element is
+  Tree.Application(Tree.Reference("keyword", _), Tree.Literal(LiteralKind.String, name)) and
+    Keywords.all |> MutMap.get(name) is Some(keyword) then
+      Some of Choice.keyword(keyword)(rest)
+  Tree.Bracketed(Token.Square, Tree.Tuple(Tree.Literal(LiteralKind.String, kindName) :: Tree.Literal(LiteralKind.String, label) :: Nil)) and
+    knownKindForTarget(targetKind, kindName) then
+      Some of Choice.reference(kindName) of
+        process: (tree, env) => [label, tree] :: env
+        name: label
+        choices: tuple of rest
+  Tree.Bracketed(Token.Square, Tree.Literal(LiteralKind.String, kindName)) and
+    knownKindForTarget(targetKind, kindName) then
+      Some of Choice.reference(kindName) of
+        process: (_, env) => env
+        name: kindName
+        choices: tuple of rest
+  else
+    print of "Invalid syntax element: " + element Tree.summary()
+    None
+
+fun parseSyntaxElements(targetKind: Str, elements, replacement) =
+  fun go(trees) = if trees is
+    element :: rest and go(rest) is Some(restChoice) then
+      parseSyntaxElement(targetKind, element, restChoice)
+    Nil then Some(Choice.end(Nil))
+    else None
+  if go(elements) is
+    Some(choice) then Some of choice Choice.map of env => substitute(replacement, env)
+    None then None
+
+fun parseExtendTree(tree: Tree) =
+  fun parseBody(target, syntax, replacement) =
+    if target is Tree.Literal(LiteralKind.String, kindName) then
+      if syntaxElements(syntax) is Some(elements) then
+        if replacement is Tree.Bracketed(Token.Square, replacementTree) then
+          if parseSyntaxElements(kindName, elements, replacementTree) is
+            Some(choice) then Some of tuple of kindName, choice
+            None then None
+        else
+          print of "Invalid replacement expression: " + replacement Tree.summary()
+          None
+      else
+        print of "Invalid syntax sequence: " + syntax Tree.summary()
+        None
+    else
+      print of "Invalid target syntax kind: " + target Tree.summary()
+      None
+  if tree is Tree.Bracketed(Token.Square, Tree.Tuple(target :: syntax :: replacement :: Nil)) then
+    parseBody(target, syntax, replacement)
+  else
+    print of "Expect #extend to receive [target, syntax, replacement] but found " + tree Tree.summary()
+    None
 
 fun extendCategory(choiceBodyTree: Tree) =
-  if parseChoiceTree(choiceBodyTree) is
-    Some([kindName, choice]) and Rules.syntaxKinds |> MutMap.get(kindName) is
+  if parseExtendTree(choiceBodyTree) is
+    Some([kindName, choice]) and ensureCategory(kindName) is
       Some(rule) and kindName is
         // If the `kindName` is built-in and extensible, we check if the choice
         // refers to another category in the beginning. If so, we inline the
         // referenced category's choices into the current choice.
         OpenCategory and choice is
-          Choice.Ref(refKindName, process, outerPrec, innerPrec, rest) and
+          Choice.Ref(refKindName, process, bp, rest) and
             Rules.syntaxKinds |> MutMap.get(refKindName) is Some(refRule) then
               // TODO: The `process` function should be applied to the referenced rule.
-              // TODO: How to handle `outerPrec` and `innerPrec`?
+              // TODO: How to handle `bp`?
               rule.extendChoices of refRule.andThen(rest, process).choices
             else
               // The referenced category is not found in the map. Stop.
@@ -67,45 +199,6 @@ fun extendCategory(choiceBodyTree: Tree) =
           else
             // Otherwise, we can directly extend the target parse rule.
             rule.extendChoices(choice :: Nil)
-        ClosedCategory then print of "Cannot extend a closed category: " + kindName
         else rule.extendChoices(choice :: Nil)
-      None then print of "Unknown syntax kind: " + kindName
     None then
       print of "Invalid syntax description: " + choiceBodyTree Tree.summary()
-
-fun parseChoiceTree(tree: Tree) = 
-  fun go(trees: Stack[Tree]): Choice[Tree] = 
-    let res = if trees is
-      Tree.App(Tree.Ident("keyword", _), Tree.Literal(LiteralKind.String, name)) :: rest and
-        Keywords.all |> MutMap.get(name) is Some(keyword) then
-          Choice.keyword(keyword)(go(rest))
-      Tree.Literal(LiteralKind.String, name) :: rest then
-        Choice.reference(name)(process: Cons, name: "unnamed", choices: tuple of go(rest))
-      Nil then Choice.end(Nil)
-    res
-  
-  if tree is
-    Tree.Tuple(categoryIdent :: choiceTree :: funcIdent :: Nil) and
-      categoryIdent is Tree.Literal(LiteralKind.String, categoryName) and
-        funcIdent is Tree.Ident and
-          let op = (trees) => trees
-            Iter.fromStack()
-            Iter.folded of funcIdent, (f, x) => Tree.App(f, x)
-          choiceTree is
-            Tree.Bracketed(Token.Square, Tree.Tuple(elements)) then
-              Some of tuple of
-                categoryName
-                go(elements) Choice.map(op)
-            Tree.Bracketed(Token.Square, other) then
-              Some of tuple of
-                categoryName
-                go(other :: Nil) Choice.map(op)
-        else
-          print of "Expect the choiceTree to be a bracketed term but found", choiceTree Tree.summary()
-          None
-      else
-        print of "Expect a the category to be an identifier but found " + categoryIdent Tree.summary()
-        None
-    else
-      print of "Expect the definition to be a tuple but found " + tree Tree.summary()
-      None

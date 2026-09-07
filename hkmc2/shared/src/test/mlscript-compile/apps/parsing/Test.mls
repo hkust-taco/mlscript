@@ -24,10 +24,10 @@ pattern Flag = "tree" | "trace" | "tokens"
 fun flags(tokens) =
   let result = new Set
   while tokens is
-    Token.Space :: Token.Identifier(":", _) :: Token.Identifier(Flag as flag, _) :: tail then
+    Token.Space :: Token.Symbol(":") :: Token.Reference(Flag as flag) :: tail then
       result.add(flag)
       set tokens = tail
-    Token.Identifier(":", _) :: Token.Identifier(Flag as flag, _) :: tail then
+    Token.Symbol(":") :: Token.Reference(Flag as flag) :: tail then
       result.add(flag)
       set tokens = tail
   [result, tokens]

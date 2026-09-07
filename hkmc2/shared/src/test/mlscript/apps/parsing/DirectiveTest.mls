@@ -21,8 +21,8 @@ let g x = x * 2;;
 //│ > «let g x = x * 2»
 
 example of """
-#newKeyword ("hello", None, None)
-#newKeyword ("world", Some 34, None)
+#keyword "hello" None None
+#keyword "world" 34 None
 """
 //│ > 
 
@@ -31,14 +31,9 @@ print of Keywords.extended |> MutMap.valuesIterator |. Iter.joined("\n")
 //│ > Keyword(`world`, 34, N/A)
 
 example of """
-#newCategory "lol"
-"""
-//│ > 
-
-example of """
-#extendCategory "lol", [ keyword("hello"), "lol" ], foo
-#extendCategory "lol", [ keyword("world") ], bar
-#extendCategory "term", [ "lol" ], baz
+#extend ["lol", [ keyword("hello"), ["lol", "tail"] ], [foo tail]]
+#extend ["lol", [ keyword("world") ], [bar]]
+#extend ["term", [ ["lol", "value"] ], [baz value]]
 """
 //│ > 
 
@@ -49,18 +44,19 @@ Rules.getRuleByKind("lol").display print()
 
 Rules.getRuleByKind("term").display print()
 //│ > <prefix rules for expressions> ::= 
-//│ >   | "let" ["rec"] <let-bindings> ["in" <term>]
+//│ >   | "let" ("rec" <let-bindings> ["in" <term>] | <let-bindings> ["in" <term>])
 //│ >   | "fun" <term> "->" <term>
-//│ >   | "match" <term> "with" ["|"] <term> "->" <term> ["|" <simple-matching>]
-//│ >   | "function" ["|"] <term> "->" <term> ["|" <simple-matching>]
+//│ >   | "match" <term> "with" ("|" <pattern> "->" <term> ["|" <simple-matching>] | <pattern> "->" <term> ["|" <simple-matching>])
+//│ >   | "function" ("|" <pattern> "->" <term> ["|" <simple-matching>] | <pattern> "->" <term> ["|" <simple-matching>])
+//│ >   | "try" <term> "with" ("|" <pattern> "->" <term> ["|" <simple-matching>] | <pattern> "->" <term> ["|" <simple-matching>])
 //│ >   | "if" <term> "then" <term> ["else" <term>]
 //│ >   | "while" <term> "do" <term> "done"
-//│ >   | "for" <term> "=" <term> ("to" | "downto") <term> "do" <term> "done"
+//│ >   | "for" <binding> "=" <term> ("to" <term> "do" <term> "done" | "downto" <term> "do" <term> "done")
 //│ >   | "(" <term> ")"
 //│ >   | "[" <term> "]"
 //│ >   | "{" <term> "}"
 //│ >   | "begin" <term> "end"
-//│ >   | <term> ("," <term> | ";" <term> | "<-" <term> | "==" <term> | "*" <term> | "." ("(" <term> ")" | <term>) | ":" <type> | <term>)
+//│ >   | <term> ("," <term> | ";" <term> | "<-" <term> | "==" <term> | "=" <term> | "*" <term> | "mod" <term> | "land" <term> | "lor" <term> | "lxor" <term> | "lsl" <term> | "lsr" <term> | "asr" <term> | "." ("(" <term> ")" | <term>) | ":" <type> | <operator> <term> | <term>)
 //│ >   | "hello" <lol>
 //│ >   | "world"
 
@@ -72,9 +68,8 @@ hello world
 //│ > «⚠»
 
 example of """
-#newKeyword ("assert", None, None)
-#newCategory "assert"
-#extendCategory "assert", [ keyword "assert", "term" ], do_assert
+#keyword "assert" None None
+#extend ["assert", [ keyword("assert"), ["term", "value"] ], [do_assert value]]
   
 assert 0
 """
@@ -82,15 +77,13 @@ assert 0
 //│ > «⚠»
 
 example of """
-#newKeyword ("hello", Some 3, Some 3)
-#newKeyword ("goodbye", None, None)
+#keyword "hello" 3 3
+#keyword "goodbye" None None
   
-#newCategory("greeting")
+#extend ["greeting", [ keyword("hello"), ["string-literal", "name"], ["greeting", "tail"] ], [foo name tail]]
+#extend ["greeting", [ keyword("goodbye") ], [bar]]
   
-#extendCategory("greeting", [ keyword("hello"), "term", "greeting" ], foo)
-#extendCategory("greeting", [ keyword("goodbye") ], bar)
-  
-#extendCategory("decl", [ "greeting" ], baz)
+#extend ["decl", [ ["greeting", "value"] ], [baz value]]
   
   
 hello "Rob" hello "Bob" goodbye
@@ -102,17 +95,41 @@ hello "Rob" hello "Bob" goodbye
 
 Rules.getRuleByKind("term").display print()
 //│ > <prefix rules for expressions> ::= 
-//│ >   | "let" ["rec"] <let-bindings> ["in" <term>]
+//│ >   | "let" ("rec" <let-bindings> ["in" <term>] | <let-bindings> ["in" <term>])
 //│ >   | "fun" <term> "->" <term>
-//│ >   | "match" <term> "with" ["|"] <term> "->" <term> ["|" <simple-matching>]
-//│ >   | "function" ["|"] <term> "->" <term> ["|" <simple-matching>]
+//│ >   | "match" <term> "with" ("|" <pattern> "->" <term> ["|" <simple-matching>] | <pattern> "->" <term> ["|" <simple-matching>])
+//│ >   | "function" ("|" <pattern> "->" <term> ["|" <simple-matching>] | <pattern> "->" <term> ["|" <simple-matching>])
+//│ >   | "try" <term> "with" ("|" <pattern> "->" <term> ["|" <simple-matching>] | <pattern> "->" <term> ["|" <simple-matching>])
 //│ >   | "if" <term> "then" <term> ["else" <term>]
 //│ >   | "while" <term> "do" <term> "done"
-//│ >   | "for" <term> "=" <term> ("to" | "downto") <term> "do" <term> "done"
+//│ >   | "for" <binding> "=" <term> ("to" <term> "do" <term> "done" | "downto" <term> "do" <term> "done")
 //│ >   | "(" <term> ")"
 //│ >   | "[" <term> "]"
 //│ >   | "{" <term> "}"
 //│ >   | "begin" <term> "end"
-//│ >   | <term> ("," <term> | ";" <term> | "<-" <term> | "==" <term> | "*" <term> | "." ("(" <term> ")" | <term>) | ":" <type> | <term>)
+//│ >   | <term> ("," <term> | ";" <term> | "<-" <term> | "==" <term> | "=" <term> | "*" <term> | "mod" <term> | "land" <term> | "lor" <term> | "lxor" <term> | "lsl" <term> | "lsr" <term> | "asr" <term> | "." ("(" <term> ")" | <term>) | ":" <type> | <operator> <term> | <term>)
 //│ >   | "hello" <lol>
 //│ >   | "world"
+
+example of """
+#keyword "anyLit" None None
+#keyword "stringLit" None None
+#keyword "integerLit" None None
+#keyword "decimalLit" None None
+#keyword "booleanLit" None None
+#extend ["decl", [ keyword("anyLit"), ["literal", "value"] ], [any value]]
+#extend ["decl", [ keyword("stringLit"), ["string-literal", "value"] ], [str value]]
+#extend ["decl", [ keyword("integerLit"), ["integer-literal", "value"] ], [int value]]
+#extend ["decl", [ keyword("decimalLit"), ["decimal-literal", "value"] ], [dec value]]
+#extend ["decl", [ keyword("booleanLit"), ["boolean-literal", "value"] ], [bool value]]
+anyLit "ok";;
+stringLit "ok";;
+integerLit 42;;
+decimalLit 3.25;;
+booleanLit true
+"""
+//│ > «any "ok"»
+//│ > «str "ok"»
+//│ > «int 42»
+//│ > «dec 3.25»
+//│ > «bool true»

@@ -1,0 +1,69 @@
+:js
+
+import "../../../mlscript-compile/apps/parsing/Test.mls"
+
+open Test { example }
+
+// Concise examples for the paper-style extensible parser mechanism. Each block
+// declares its own keywords and syntax categories, then records the syntax tree
+// produced by the extension replacement.
+
+// Route declarations
+// ==================
+
+example of """
+:tree
+#keyword "route" None None
+#keyword "GET" None None
+#keyword "POST" None None
+#extend ["http-method", [ keyword("GET") ], [Get]]
+#extend ["http-method", [ keyword("POST") ], [Post]]
+#extend ["decl", [ keyword("route"), ["http-method", "method"], ["string-literal", "path"], ["term", "handler"] ], [Route method path handler]]
+route GET "/users" list_users;;
+route POST "/users" create_user
+"""
+//│ > Application:
+//│ >   callee = Application:
+//│ >     callee = Application:
+//│ >       callee = Reference of "Route"
+//│ >       argument = Reference of "Get"
+//│ >     argument = Literal#String of "/users"
+//│ >   argument = Reference of "list_users"
+//│ > Application:
+//│ >   callee = Application:
+//│ >     callee = Application:
+//│ >       callee = Reference of "Route"
+//│ >       argument = Reference of "Post"
+//│ >     argument = Literal#String of "/users"
+//│ >   argument = Reference of "create_user"
+//│ > «Route Get "/user…" list_users»
+//│ > «Route Post "/user…" create_user»
+
+// Workflow steps
+// ==============
+
+example of """
+:tree
+#keyword "workflow" None None
+#keyword "step" None None
+#keyword "next" None None
+#keyword "done" None None
+#extend ["steps", [ keyword("step"), ["string-literal", "name"], keyword("next"), ["steps", "tail"] ], [Cons name tail]]
+#extend ["steps", [ keyword("done") ], [Nil]]
+#extend ["decl", [ keyword("workflow"), ["ident", "name"], ["steps", "steps"] ], [Workflow name steps]]
+workflow deploy step "build" next step "test" next done
+"""
+//│ > Application:
+//│ >   callee = Application:
+//│ >     callee = Reference of "Workflow"
+//│ >     argument = Reference of "deploy"
+//│ >   argument = Application:
+//│ >     callee = Application:
+//│ >       callee = Reference of "Cons"
+//│ >       argument = Literal#String of "build"
+//│ >     argument = Application:
+//│ >       callee = Application:
+//│ >         callee = Reference of "Cons"
+//│ >         argument = Literal#String of "test"
+//│ >       argument = Reference of "Nil"
+//│ > «Workflow deploy (Cons "build" (Cons "test" Nil))»

@@ -49,10 +49,10 @@ fun parse(tokens) =
       Token.Literal(LiteralKind.Integer, literal) then
         consume
         BasicExpr.Lit(parseInt(literal, 10))
-      Token.Identifier("(", true) then
+      Token.Symbol("(") then
         consume
-        expr require of Token.Identifier(")", true)
-      Token.Identifier(name, false) then
+        expr require of Token.Symbol(")")
+      Token.Reference(name) then
         consume
         BasicExpr.Var(name)
       token then BasicExpr.justErr of "Unexpected token " + token Token.summary()
@@ -65,7 +65,7 @@ fun parse(tokens) =
       Iter.folded of leftmost, BasicExpr.Add
   
   fun addSeq: StackT[Expr] = if peek is
-    Some(Token.Identifier("+", _)) then
+    Some(Token.Symbol("+")) then
       consume
       product :: addSeq
     else Nil
@@ -77,7 +77,7 @@ fun parse(tokens) =
       Iter.folded of leftmost, BasicExpr.Mul
   
   fun mulSeq: StackT[Expr] = if peek is
-    Some(Token.Identifier("*", _)) then
+    Some(Token.Symbol("*")) then
       consume
       atom :: mulSeq
     else Nil

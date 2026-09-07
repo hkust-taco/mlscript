@@ -25,21 +25,21 @@ type 'a foo == 'a * 'a list * 'a list
 //│ >   items = Stack of 
 //│ >     Infix:
 //│ >       op = Keyword(`==`, 16, 16)
-//│ >       lhs = App:
-//│ >         callee = Ident of "foo"
+//│ >       lhs = Application:
+//│ >         callee = Reference of "foo"
 //│ >         argument = Tuple of Stack of 
-//│ >           Ident of "'a"
+//│ >           Reference of "'a"
 //│ >       rhs = Infix:
 //│ >         op = Keyword(`*`, 22, 22)
 //│ >         lhs = Infix:
 //│ >           op = Keyword(`*`, 22, 22)
-//│ >           lhs = Ident of "'a"
-//│ >           rhs = App:
-//│ >             callee = Ident of "list"
-//│ >             argument = Ident of "'a"
-//│ >         rhs = App:
-//│ >           callee = Ident of "list"
-//│ >           argument = Ident of "'a"
+//│ >           lhs = Reference of "'a"
+//│ >           rhs = Application:
+//│ >             callee = Reference of "list"
+//│ >             argument = Reference of "'a"
+//│ >         rhs = Application:
+//│ >           callee = Reference of "list"
+//│ >           argument = Reference of "'a"
 //│ > «type foo ('a) == 'a * list 'a * list 'a»
 
 example of """
@@ -78,27 +78,27 @@ type g == (a -> b) -> c
 //│ >   items = Stack of 
 //│ >     Infix:
 //│ >       op = Keyword(`==`, 16, 16)
-//│ >       lhs = Ident of "f"
+//│ >       lhs = Reference of "f"
 //│ >       rhs = Infix:
 //│ >         op = Keyword(`->`, 5, 3)
-//│ >         lhs = Ident of "a"
+//│ >         lhs = Reference of "a"
 //│ >         rhs = Infix:
 //│ >           op = Keyword(`->`, 5, 3)
-//│ >           lhs = Ident of "b"
-//│ >           rhs = Ident of "c"
+//│ >           lhs = Reference of "b"
+//│ >           rhs = Reference of "c"
 //│ > Define:
 //│ >   kind = Type
 //│ >   items = Stack of 
 //│ >     Infix:
 //│ >       op = Keyword(`==`, 16, 16)
-//│ >       lhs = Ident of "g"
+//│ >       lhs = Reference of "g"
 //│ >       rhs = Infix:
 //│ >         op = Keyword(`->`, 5, 3)
 //│ >         lhs = Infix:
 //│ >           op = Keyword(`->`, 5, 3)
-//│ >           lhs = Ident of "a"
-//│ >           rhs = Ident of "b"
-//│ >         rhs = Ident of "c"
+//│ >           lhs = Reference of "a"
+//│ >           rhs = Reference of "b"
+//│ >         rhs = Reference of "c"
 //│ > «type f == a -> b -> c»
 //│ > «type g == a -> b -> c»
 
@@ -112,27 +112,27 @@ type g == int * (string -> float)
 //│ >   items = Stack of 
 //│ >     Infix:
 //│ >       op = Keyword(`==`, 16, 16)
-//│ >       lhs = Ident of "f"
+//│ >       lhs = Reference of "f"
 //│ >       rhs = Infix:
 //│ >         op = Keyword(`->`, 5, 3)
 //│ >         lhs = Infix:
 //│ >           op = Keyword(`*`, 22, 22)
-//│ >           lhs = Ident of "int"
-//│ >           rhs = Ident of "string"
-//│ >         rhs = Ident of "float"
+//│ >           lhs = Reference of "int"
+//│ >           rhs = Reference of "string"
+//│ >         rhs = Reference of "float"
 //│ > Define:
 //│ >   kind = Type
 //│ >   items = Stack of 
 //│ >     Infix:
 //│ >       op = Keyword(`==`, 16, 16)
-//│ >       lhs = Ident of "g"
+//│ >       lhs = Reference of "g"
 //│ >       rhs = Infix:
 //│ >         op = Keyword(`*`, 22, 22)
-//│ >         lhs = Ident of "int"
+//│ >         lhs = Reference of "int"
 //│ >         rhs = Infix:
 //│ >           op = Keyword(`->`, 5, 3)
-//│ >           lhs = Ident of "string"
-//│ >           rhs = Ident of "float"
+//│ >           lhs = Reference of "string"
+//│ >           rhs = Reference of "float"
 //│ > «type f == int * string -> float»
 //│ > «type g == int * string -> float»
 
@@ -161,18 +161,18 @@ type 'a option = Some of 'a | None
 //│ >   kind = Type
 //│ >   items = Stack of 
 //│ >     Infix:
-//│ >       op = Keyword(`=`, 3, 3)
-//│ >       lhs = App:
-//│ >         callee = Ident of "option"
+//│ >       op = Keyword(`=`, 16, 16)
+//│ >       lhs = Application:
+//│ >         callee = Reference of "option"
 //│ >         argument = Tuple of Stack of 
-//│ >           Ident of "'a"
+//│ >           Reference of "'a"
 //│ >       rhs = Infix:
-//│ >         op = Keyword(`|`, N/A, N/A)
+//│ >         op = Keyword(`|`, 4, 4)
 //│ >         lhs = Infix:
 //│ >           op = Keyword(`of`, N/A, N/A)
-//│ >           lhs = Ident of "Some"
-//│ >           rhs = Ident of "'a"
-//│ >         rhs = Ident of "None"
+//│ >           lhs = Reference of "Some"
+//│ >           rhs = Reference of "'a"
+//│ >         rhs = Reference of "None"
 //│ > «type option ('a) = Some of 'a | None»
 
 example of """
@@ -183,28 +183,28 @@ type 'a tree = Leaf | Node of 'a tree * 'a * 'a tree
 //│ >   kind = Type
 //│ >   items = Stack of 
 //│ >     Infix:
-//│ >       op = Keyword(`=`, 3, 3)
-//│ >       lhs = App:
-//│ >         callee = Ident of "tree"
+//│ >       op = Keyword(`=`, 16, 16)
+//│ >       lhs = Application:
+//│ >         callee = Reference of "tree"
 //│ >         argument = Tuple of Stack of 
-//│ >           Ident of "'a"
+//│ >           Reference of "'a"
 //│ >       rhs = Infix:
-//│ >         op = Keyword(`|`, N/A, N/A)
-//│ >         lhs = Ident of "Leaf"
+//│ >         op = Keyword(`|`, 4, 4)
+//│ >         lhs = Reference of "Leaf"
 //│ >         rhs = Infix:
 //│ >           op = Keyword(`of`, N/A, N/A)
-//│ >           lhs = Ident of "Node"
+//│ >           lhs = Reference of "Node"
 //│ >           rhs = Infix:
 //│ >             op = Keyword(`*`, 22, 22)
 //│ >             lhs = Infix:
 //│ >               op = Keyword(`*`, 22, 22)
-//│ >               lhs = App:
-//│ >                 callee = Ident of "tree"
-//│ >                 argument = Ident of "'a"
-//│ >               rhs = Ident of "'a"
-//│ >             rhs = App:
-//│ >               callee = Ident of "tree"
-//│ >               argument = Ident of "'a"
+//│ >               lhs = Application:
+//│ >                 callee = Reference of "tree"
+//│ >                 argument = Reference of "'a"
+//│ >               rhs = Reference of "'a"
+//│ >             rhs = Application:
+//│ >               callee = Reference of "tree"
+//│ >               argument = Reference of "'a"
 //│ > «type tree ('a) = Leaf | Node of tree 'a * 'a * tree 'a»
 
 example of """
@@ -233,32 +233,32 @@ and t' = Int of int | List of t list
 //│ >   kind = Type
 //│ >   items = Stack of 
 //│ >     Infix:
-//│ >       op = Keyword(`=`, 3, 3)
-//│ >       lhs = Ident of "t"
+//│ >       op = Keyword(`=`, 16, 16)
+//│ >       lhs = Reference of "t"
 //│ >       rhs = Bracketed#Curly of Sequence of Stack of 
 //│ >         Infix:
 //│ >           op = Keyword(`:`, 4, 3)
-//│ >           lhs = Ident of "decoration"
-//│ >           rhs = Ident of "string"
+//│ >           lhs = Reference of "decoration"
+//│ >           rhs = Reference of "string"
 //│ >         Infix:
 //│ >           op = Keyword(`:`, 4, 3)
-//│ >           lhs = Ident of "substance"
-//│ >           rhs = Ident of "t'"
+//│ >           lhs = Reference of "substance"
+//│ >           rhs = Reference of "t'"
 //│ >     Infix:
-//│ >       op = Keyword(`=`, 3, 3)
-//│ >       lhs = Ident of "t'"
+//│ >       op = Keyword(`=`, 16, 16)
+//│ >       lhs = Reference of "t'"
 //│ >       rhs = Infix:
-//│ >         op = Keyword(`|`, N/A, N/A)
+//│ >         op = Keyword(`|`, 4, 4)
 //│ >         lhs = Infix:
 //│ >           op = Keyword(`of`, N/A, N/A)
-//│ >           lhs = Ident of "Int"
-//│ >           rhs = Ident of "int"
+//│ >           lhs = Reference of "Int"
+//│ >           rhs = Reference of "int"
 //│ >         rhs = Infix:
 //│ >           op = Keyword(`of`, N/A, N/A)
-//│ >           lhs = Ident of "List"
-//│ >           rhs = App:
-//│ >             callee = Ident of "list"
-//│ >             argument = Ident of "t"
+//│ >           lhs = Reference of "List"
+//│ >           rhs = Application:
+//│ >             callee = Reference of "list"
+//│ >             argument = Reference of "t"
 //│ > «type t = {decoration : string; substance : t'} and t' = Int of int | List of list t»
 
 example of """
@@ -275,11 +275,11 @@ exception E of int * string
 //│ >   items = Stack of 
 //│ >     Infix:
 //│ >       op = Keyword(`of`, N/A, N/A)
-//│ >       lhs = Ident of "E"
+//│ >       lhs = Reference of "E"
 //│ >       rhs = Infix:
 //│ >         op = Keyword(`*`, 22, 22)
-//│ >         lhs = Ident of "int"
-//│ >         rhs = Ident of "string"
+//│ >         lhs = Reference of "int"
+//│ >         rhs = Reference of "string"
 //│ > «exception E of int * string»
 
 example of """
@@ -307,7 +307,7 @@ let rec remove x = function
             N (m, l, remove m r)
 """
 //│ > «type bst ('a) = E | N of 'a * bst 'a * bst 'a»
-//│ > «let insert x = function E -> N (x, E, E) | N (y, l, r) -> if x < y then N (y, insert x l, r) then N (y, l, insert x r)»
-//│ > «let min_elt = function E -> failwith "min_e…" | N (x, E, _) -> x | N (_, l, _) -> min_elt l»
-//│ > «let remove x = function E -> E | N (y, l, r) -> if x < y then N (y, remove x l, r) then if x > y then N (y, l, remove x r) then match (l, r) with (E, _) -> r | (_, E) -> l | _ -> let m = min_elt r in N (m, l, remove m r)»
+//│ > «let rec insert x = function E -> N (x, E, E) | N (y, l, r) -> if x < y then N (y, insert x l, r) then N (y, l, insert x r)»
+//│ > «let rec min_elt = function E -> failwith "min_e…" | N (x, E, _) -> x | N (_, l, _) -> min_elt l»
+//│ > «let rec remove x = function E -> E | N (y, l, r) -> if x < y then N (y, remove x l, r) then if x > y then N (y, l, remove x r) then match (l, r) with (E, _) -> r | (_, E) -> l | _ -> let m = min_elt r in N (m, l, remove m r)»
 

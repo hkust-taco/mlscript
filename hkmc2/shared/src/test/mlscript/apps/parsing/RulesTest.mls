@@ -32,12 +32,11 @@ opPrecOpt of "=="
 
 print of Keywords.all |> MutMap.valuesIterator |. Iter.joined("\n")
 //│ > Keyword(`;;`, 0, 0)
-//│ > Keyword(`class`, N/A, 0)
 //│ > Keyword(`;`, 1, 0)
 //│ > Keyword(`,`, 2, 1)
-//│ > Keyword(`=`, 3, 3)
 //│ > Keyword(`and`, N/A, 4)
-//│ > Keyword(`|`, N/A, N/A)
+//│ > Keyword(`|`, 4, 4)
+//│ > Keyword(`as`, 4, 4)
 //│ > Keyword(`->`, 5, 3)
 //│ > Keyword(`:`, 4, 3)
 //│ > Keyword(`match`, 6, 6)
@@ -49,25 +48,31 @@ print of Keywords.all |> MutMap.valuesIterator |. Iter.joined("\n")
 //│ > Keyword(`done`, N/A, N/A)
 //│ > Keyword(`of`, N/A, N/A)
 //│ > Keyword(`with`, N/A, 8)
-//│ > Keyword(`case`, N/A, 8)
+//│ > Keyword(`try`, 6, 0)
 //│ > Keyword(`if`, 10, 9)
 //│ > Keyword(`<-`, 9, 9)
 //│ > Keyword(`then`, 9, 9)
 //│ > Keyword(`else`, 9, 9)
 //│ > Keyword(`let`, 3, 1)
 //│ > Keyword(`in`, 9, 9)
-//│ > Keyword(`true`, N/A, N/A)
-//│ > Keyword(`false`, N/A, N/A)
-//│ > Keyword(`as`, 11, 11)
 //│ > Keyword(`fun`, 11, 5)
 //│ > Keyword(`function`, 11, 3)
 //│ > Keyword(`type`, 11, N/A)
 //│ > Keyword(`exception`, 11, N/A)
 //│ > Keyword(`rec`, 11, 3)
+//│ > Keyword(`mutable`, N/A, N/A)
 //│ > Keyword(`#`, N/A, N/A)
 //│ > Keyword(`.`, 26, 26)
+//│ > Keyword(`=`, 16, 16)
 //│ > Keyword(`*`, 22, 22)
 //│ > Keyword(`==`, 16, 16)
+//│ > Keyword(`mod`, 22, 22)
+//│ > Keyword(`land`, 15, 15)
+//│ > Keyword(`lor`, 14, 14)
+//│ > Keyword(`lxor`, 14, 14)
+//│ > Keyword(`lsl`, 22, 22)
+//│ > Keyword(`lsr`, 22, 22)
+//│ > Keyword(`asr`, 22, 22)
 //│ > Keyword(`(`, 27, 0)
 //│ > Keyword(`)`, 0, N/A)
 //│ > Keyword(`[`, 27, 0)
@@ -79,18 +84,19 @@ print of Keywords.all |> MutMap.valuesIterator |. Iter.joined("\n")
 
 print of Rules.termRule.display
 //│ > <prefix rules for expressions> ::= 
-//│ >   | "let" ["rec"] <let-bindings> ["in" <term>]
+//│ >   | "let" ("rec" <let-bindings> ["in" <term>] | <let-bindings> ["in" <term>])
 //│ >   | "fun" <term> "->" <term>
-//│ >   | "match" <term> "with" ["|"] <term> "->" <term> ["|" <simple-matching>]
-//│ >   | "function" ["|"] <term> "->" <term> ["|" <simple-matching>]
+//│ >   | "match" <term> "with" ("|" <pattern> "->" <term> ["|" <simple-matching>] | <pattern> "->" <term> ["|" <simple-matching>])
+//│ >   | "function" ("|" <pattern> "->" <term> ["|" <simple-matching>] | <pattern> "->" <term> ["|" <simple-matching>])
+//│ >   | "try" <term> "with" ("|" <pattern> "->" <term> ["|" <simple-matching>] | <pattern> "->" <term> ["|" <simple-matching>])
 //│ >   | "if" <term> "then" <term> ["else" <term>]
 //│ >   | "while" <term> "do" <term> "done"
-//│ >   | "for" <term> "=" <term> ("to" | "downto") <term> "do" <term> "done"
+//│ >   | "for" <binding> "=" <term> ("to" <term> "do" <term> "done" | "downto" <term> "do" <term> "done")
 //│ >   | "(" <term> ")"
 //│ >   | "[" <term> "]"
 //│ >   | "{" <term> "}"
 //│ >   | "begin" <term> "end"
-//│ >   | <term> ("," <term> | ";" <term> | "<-" <term> | "==" <term> | "*" <term> | "." ("(" <term> ")" | <term>) | ":" <type> | <term>)
+//│ >   | <term> ("," <term> | ";" <term> | "<-" <term> | "==" <term> | "=" <term> | "*" <term> | "mod" <term> | "land" <term> | "lor" <term> | "lxor" <term> | "lsl" <term> | "lsr" <term> | "asr" <term> | "." ("(" <term> ")" | <term>) | ":" <type> | <operator> <term> | <term>)
 
 print of Rules.typeRule.display
 //│ > <rules for types> ::= 
@@ -99,7 +105,7 @@ print of Rules.typeRule.display
 
 print of Rules.declRule.display
 //│ > <prefix rules for module items> ::= 
-//│ >   | "let" ["rec"] <let-bindings>
+//│ >   | "let" ("rec" <let-bindings> | <let-bindings>)
 //│ >   | "type" <typedefs>
 //│ >   | "exception" <constr-decls>
 //│ >   | "#" <ident> <term>
@@ -108,9 +114,9 @@ Rules.syntaxKinds
   Iter.mapping of case [name, rule] then rule.display
   Iter.joined("\n")
   print()
-//│ > <let-bindings> ::= <term> "=" <term> ["and" <let-bindings>]
-//│ > <simple-matching> ::= <term> "->" <term> ["|" <simple-matching>]
-//│ > <pattern-list> ::= <term> <pattern-list>
+//│ > <let-bindings> ::= <binding> "=" <term> ["and" <let-bindings>]
+//│ > <simple-matching> ::= <pattern> "->" <term> ["|" <simple-matching>]
+//│ > <pattern-list> ::= <pattern> [<pattern-list>]
 //│ > <multiple-matching> ::= <pattern-list> "->" <term> ["|" <multiple-matching>]
 //│ > <type-arguments-tail> ::= "," <type> [<type-arguments-tail>]
 //│ > <constr-decl> ::= <ident> ["of" <type>]
@@ -119,7 +125,10 @@ Rules.syntaxKinds
 //│ > <typedef-rhs> ::= 
 //│ >   | "=" (<variants> | "{" <label-decls> "}")
 //│ >   | "==" <type>
-//│ > <label-decl> ::= <type> ":" <type>
+//│ > <label-name> ::= 
+//│ >   | <ident>
+//│ >   | "mutable" <ident>
+//│ > <label-decl> ::= <label-name> ":" <type>
 //│ > <label-decls> ::= <label-decl> [";" <label-decls>]
 //│ > <constr-decls> ::= <constr-decl> ["|" <constr-decls>]
 //│ > <typedef-lhs> ::= <type-params> <ident>
@@ -128,23 +137,28 @@ Rules.syntaxKinds
 //│ >   | "(" <typevar> <type-params-tail> ")"
 //│ > <type-params-tail> ::= "," <typevar> <type-params-tail>
 //│ > <prefix rules for expressions> ::= 
-//│ >   | "let" ["rec"] <let-bindings> ["in" <term>]
+//│ >   | "let" ("rec" <let-bindings> ["in" <term>] | <let-bindings> ["in" <term>])
 //│ >   | "fun" <term> "->" <term>
-//│ >   | "match" <term> "with" ["|"] <term> "->" <term> ["|" <simple-matching>]
-//│ >   | "function" ["|"] <term> "->" <term> ["|" <simple-matching>]
+//│ >   | "match" <term> "with" ("|" <pattern> "->" <term> ["|" <simple-matching>] | <pattern> "->" <term> ["|" <simple-matching>])
+//│ >   | "function" ("|" <pattern> "->" <term> ["|" <simple-matching>] | <pattern> "->" <term> ["|" <simple-matching>])
+//│ >   | "try" <term> "with" ("|" <pattern> "->" <term> ["|" <simple-matching>] | <pattern> "->" <term> ["|" <simple-matching>])
 //│ >   | "if" <term> "then" <term> ["else" <term>]
 //│ >   | "while" <term> "do" <term> "done"
-//│ >   | "for" <term> "=" <term> ("to" | "downto") <term> "do" <term> "done"
+//│ >   | "for" <binding> "=" <term> ("to" <term> "do" <term> "done" | "downto" <term> "do" <term> "done")
 //│ >   | "(" <term> ")"
 //│ >   | "[" <term> "]"
 //│ >   | "{" <term> "}"
 //│ >   | "begin" <term> "end"
-//│ >   | <term> ("," <term> | ";" <term> | "<-" <term> | "==" <term> | "*" <term> | "." ("(" <term> ")" | <term>) | ":" <type> | <term>)
+//│ >   | <term> ("," <term> | ";" <term> | "<-" <term> | "==" <term> | "=" <term> | "*" <term> | "mod" <term> | "land" <term> | "lor" <term> | "lxor" <term> | "lsl" <term> | "lsr" <term> | "asr" <term> | "." ("(" <term> ")" | <term>) | ":" <type> | <operator> <term> | <term>)
 //│ > <rules for types> ::= 
 //│ >   | "(" <type> (<type-arguments-tail> ")" <ident> | ")" [<ident>])
 //│ >   | <type> ("->" <type> | "*" <type> | <type>)
+//│ > <rules for patterns> ::= 
+//│ >   | "(" <pattern> ")"
+//│ >   | "[" <pattern> "]"
+//│ >   | <pattern> ("|" <pattern> | "," <pattern> | "as" <ident> | <operator> <pattern> | <pattern>)
 //│ > <prefix rules for module items> ::= 
-//│ >   | "let" ["rec"] <let-bindings>
+//│ >   | "let" ("rec" <let-bindings> | <let-bindings>)
 //│ >   | "type" <typedefs>
 //│ >   | "exception" <constr-decls>
 //│ >   | "#" <ident> <term>

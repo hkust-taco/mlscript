@@ -4,37 +4,99 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Document</title>
+  <title>Generalized Pratt Parser Demo</title>
+  <link rel="icon" href="data:,">
   <link href="
 https://cdn.jsdelivr.net/npm/modern-normalize@3.0.1/modern-normalize.min.css
 " rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/typeface-inconsolata@1.1.13/index.min.css" rel="stylesheet">
+  <script type="importmap">
+    {
+      "imports": {
+        "fs": "/browser-shims/fs.mjs",
+        "path": "/browser-shims/path.mjs",
+        "process": "/browser-shims/process.mjs",
+        "url": "/browser-shims/url.mjs"
+      }
+    }
+  </script>
 </head>
 
 <body>
+  <header class="app-header">
+    <h1>Generalized Pratt Parser</h1>
+    <span id="parse-status" class="status">Ready</span>
+  </header>
   <div id="app">
     <div id="input">
       <header class="toolbar">
         <button class="button" id="parse">Parse</button>
         <select class="select" id="example"></select>
+        <span id="example-provenance" class="provenance" hidden>
+          <span></span>
+          <a target="_blank" rel="noreferrer">GitHub</a>
+        </span>
+        <label class="toggle"><input id="trace-toggle" type="checkbox"> Trace</label>
       </header>
       <textarea id="editor" spellcheck="false" autocapitalize="off"></textarea>
     </div>
-    <div id="output"></div>
+    <div id="results">
+      <nav class="tabs" aria-label="Parser results">
+        <button class="tab is-active" data-tab="tree" type="button">Tree</button>
+        <button class="tab" data-tab="tokens" type="button">Tokens</button>
+        <button class="tab" data-tab="trace" type="button">Trace</button>
+        <button class="tab" data-tab="diagrams" type="button">Diagrams</button>
+        <button class="button copy-button" id="copy-output" type="button">Copy</button>
+      </nav>
+      <section class="tab-panel is-active" data-tab-panel="tree">
+        <div id="output"></div>
+      </section>
+      <section class="tab-panel" data-tab-panel="tokens" hidden>
+        <pre id="tokens-output"></pre>
+      </section>
+      <section class="tab-panel" data-tab-panel="trace" hidden>
+        <pre id="trace-output"></pre>
+      </section>
+      <section class="tab-panel" data-tab-panel="diagrams" hidden>
+        <div id="syntax-diagrams">
+          <section id="precedence-table">
+            <h2>Precedence Table</h2>
+            <main></main>
+          </section>
+          <h2>Syntax Diagrams</h2>
+          <main></main>
+        </div>
+      </section>
+    </div>
   </div>
-  <div id="syntax-diagrams">
-    <h2>Syntax Diagrams</h2>
-    <main></main>
-  </div>
+  <dialog id="error-dialog" class="error-dialog" aria-labelledby="error-title">
+    <form method="dialog" class="error-dialog__panel">
+      <header class="error-dialog__header">
+        <h2 id="error-title">Parser Error</h2>
+        <button class="error-dialog__close" aria-label="Close error dialog">×</button>
+      </header>
+      <p id="error-message" class="error-dialog__message"></p>
+      <p id="error-location" class="error-dialog__location" hidden></p>
+      <pre id="error-stack" class="error-dialog__stack"></pre>
+    </form>
+  </dialog>
   <script type="module" src="./main.mjs"></script>
   <style>
     :root {
       --monospace: Inconsolata, Menlo, Consolas, 'Courier New', Courier, monospace;
+      --border: #c8d0d9;
+      --panel: #ffffff;
+      --panel-muted: #f3f6f9;
+      --text: #1f2937;
+      --accent: #2563eb;
+      --error: #dc2626;
     }
 
     body {
       font-size: 16px;
       font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+      color: var(--text);
+      background: #eef2f7;
     }
 
     h2 {
@@ -46,36 +108,88 @@ https://cdn.jsdelivr.net/npm/modern-normalize@3.0.1/modern-normalize.min.css
       margin: 0;
     }
 
+    .app-header {
+      height: 3.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      padding: 0 1rem;
+      border-bottom: 1px solid var(--border);
+      background: var(--panel);
+    }
+
+    .app-header h1 {
+      margin: 0;
+      font-size: 1.125rem;
+      font-weight: 700;
+    }
+
+    .status {
+      min-width: 6rem;
+      padding: 0.25rem 0.5rem;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      background: var(--panel-muted);
+      text-align: center;
+      font-size: 0.875rem;
+      font-weight: 600;
+    }
+
+    .status.is-running {
+      border-color: #f59e0b;
+      background: #fffbeb;
+      color: #92400e;
+    }
+
+    .status.is-ok {
+      border-color: #16a34a;
+      background: #f0fdf4;
+      color: #166534;
+    }
+
+    .status.is-error {
+      border-color: var(--error);
+      background: #fef2f2;
+      color: #991b1b;
+    }
+
     #app {
       width: 100vw;
-      height: calc(100vh - 4rem);
+      height: calc(100vh - 3.5rem);
       display: flex;
       flex-direction: row;
       padding: 1rem;
       gap: 1rem;
     }
 
-    #syntax-diagrams {
-      box-sizing: border-box;
-      padding: 1rem;
-      border-top: 1px solid #000;
-      display: flex;
-      flex-direction: column;
-      gap: 1rem;
+    .precedence-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-family: var(--monospace);
+      font-size: 0.95rem;
     }
 
-    #syntax-diagrams main {
-      padding: 1rem;
-      /* min-height: 0;
-      flex: 1; */
-      /* overflow: auto; */
+    .precedence-table th,
+    .precedence-table td {
+      padding: 0.35rem 0.5rem;
       border: 1px solid #000;
+      text-align: left;
+      vertical-align: top;
+    }
+
+    .precedence-table th {
+      background: #f0f0f0;
     }
 
     #input,
-    #output {
+    #results {
       flex: 1;
-      border: 1px solid #000;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: var(--panel);
+      min-width: 0;
+      overflow: hidden;
     }
 
     #input {
@@ -87,13 +201,83 @@ https://cdn.jsdelivr.net/npm/modern-normalize@3.0.1/modern-normalize.min.css
       display: flex;
       gap: 0.5rem;
       padding: 0.5rem;
-      background: #f0f0f0;
-      border-bottom: 1px solid #000;
+      background: var(--panel-muted);
+      border-bottom: 1px solid var(--border);
+    }
+
+    #results {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 0.25rem;
+      padding: 0.5rem 0.5rem 0;
+      background: var(--panel-muted);
+      border-bottom: 1px solid var(--border);
+      align-items: flex-end;
+    }
+
+    .tab {
+      line-height: 1.5;
+      border: 1px solid var(--border);
+      border-bottom: none;
+      background: var(--panel);
+      padding: 0.125rem 0.75rem;
+      cursor: pointer;
+    }
+
+    .tab.is-active {
+      background: var(--panel);
+      font-weight: 700;
+      transform: translateY(1px);
+    }
+
+    .copy-button {
+      margin-left: auto;
+      margin-bottom: 0.5rem;
+    }
+
+    .tab-panel {
+      min-height: 0;
+      flex: 1;
+      overflow: auto;
     }
 
     #output {
       overflow: auto;
       padding: 0.5rem;
+    }
+
+    #tokens-output,
+    #trace-output {
+      min-height: 100%;
+      margin: 0;
+      padding: 0.75rem;
+      font-family: var(--monospace);
+      font-size: 0.95rem;
+      white-space: pre-wrap;
+    }
+
+    #syntax-diagrams {
+      box-sizing: border-box;
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    #precedence-table {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    #syntax-diagrams main {
+      padding: 1rem;
+      border: 1px solid var(--border);
+      overflow: auto;
     }
 
     #editor {
@@ -108,11 +292,78 @@ https://cdn.jsdelivr.net/npm/modern-normalize@3.0.1/modern-normalize.min.css
     #editor:focus {
       outline: none;
     }
+
+    .error-dialog {
+      width: min(56rem, calc(100vw - 2rem));
+      border: 2px solid #991b1b;
+      padding: 0;
+      background: #fff7f7;
+      color: #450a0a;
+      box-shadow: 0 1rem 3rem rgba(0, 0, 0, .35);
+    }
+
+    .error-dialog::backdrop {
+      background: rgba(20, 0, 0, .45);
+    }
+
+    .error-dialog__panel {
+      margin: 0;
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: .75rem;
+    }
+
+    .error-dialog__header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      padding-bottom: .75rem;
+      border-bottom: 1px solid #fecaca;
+    }
+
+    .error-dialog__close {
+      width: 2rem;
+      height: 2rem;
+      border: 1px solid #991b1b;
+      background: #fee2e2;
+      color: #450a0a;
+      font-size: 1.25rem;
+      line-height: 1;
+      cursor: pointer;
+    }
+
+    .error-dialog__message {
+      margin: 0;
+      font-weight: 700;
+      overflow-wrap: anywhere;
+    }
+
+    .error-dialog__location {
+      margin: 0;
+      padding: .5rem .75rem;
+      border-left: 4px solid #dc2626;
+      background: #fee2e2;
+      font-family: var(--monospace);
+    }
+
+    .error-dialog__stack {
+      margin: 0;
+      max-height: 45vh;
+      overflow: auto;
+      padding: .75rem;
+      border: 1px solid #fecaca;
+      background: #fff;
+      font-family: var(--monospace);
+      font-size: .875rem;
+      white-space: pre-wrap;
+    }
     
     .select {
       line-height: 1.5;
       background: #ffffff;
-      border: 1px solid #000;
+      border: 1px solid var(--border);
       box-shadow: rgb(187, 187, 187) 2px 2px 0px 0px;
     }
     
@@ -121,10 +372,40 @@ https://cdn.jsdelivr.net/npm/modern-normalize@3.0.1/modern-normalize.min.css
       box-shadow: rgb(187, 187, 187) 2px 2px 0px 0px, 0 0 0 .1rem rgba(52, 130, 255, 0.84);
     }
 
+    .toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+      line-height: 1.5;
+      white-space: nowrap;
+    }
+
+    .provenance {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.375rem;
+      min-width: 12rem;
+      font-size: 0.875rem;
+      color: #4b5563;
+      overflow: hidden;
+      white-space: nowrap;
+    }
+
+    .provenance span {
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .provenance a {
+      color: var(--accent);
+      font-weight: 600;
+    }
+
     .button {
       line-height: 1.5;
       background: rgb(153, 197, 255);
-      border: 1px solid #000;
+      border: 1px solid #0f3d7a;
+      color: #0b1f3a;
       box-shadow: rgb(187, 187, 187) 2px 2px 0px 0px;
     }
 
@@ -252,6 +533,24 @@ https://cdn.jsdelivr.net/npm/modern-normalize@3.0.1/modern-normalize.min.css
 
     svg.railroad-diagram g.diagram-text:hover path.diagram-text {
       fill: #eee;
+    }
+
+    @media (max-width: 900px) {
+      #app {
+        height: auto;
+        min-height: calc(100vh - 3.5rem);
+        flex-direction: column;
+      }
+
+      #input,
+      #results {
+        min-height: 24rem;
+      }
+
+      #input .toolbar,
+      .tabs {
+        flex-wrap: wrap;
+      }
     }
   </style>
 </body>

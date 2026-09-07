@@ -12,13 +12,66 @@ val examples = (Examples.examples |> MutMap.values).sort of
 examples Iter.each of case entry then
   print of "Testing example: " + entry.name
   Test.example of entry.source
+//│ > Testing example: Caml Light: Bit Buffer
+//│ > «type buffer = {mutable val : int; mutable nbits : int}»
+//│ > «let buffer = val = 0; nbits = 0»
+//│ > «let initialize () = buffer.val <- 0; buffer.nbits <- 0»
+//│ > «let write_bit output bit = buffer.val <- buffer.val lor bit lsl buffer.nbits; buffer.nbits <- buffer.nbits + 1; if buffer.nbits >= 8 then output_char output (char_of_int buffer.val); buffer.val <- 0; buffer.nbits <- 0 then None»
+//│ > «let finish output = if buffer.nbits > 0 then output_char output (char_of_int buffer.val) then None»
+//│ > «let read_bit input = if buffer.nbits <= 0 then buffer.val <- int_of_char (input_char input); buffer.nbits <- 8; let result = buffer.val land 1 in buffer.val <- buffer.val lsr 1; buffer.nbits <- buffer.nbits - 1; result then None»
+//│ > Testing example: Caml Light: Bubble Sort
+//│ > «#open "anima…"»
+//│ > «let sort context = let ordered = ref true in let sweep i = if i + 1 >= vect_length context.array then if !ordered then Finished then ordered := false; sweep 0 then Pause (fun () -> if context.array . i + 1 < context.array.i then exchange context i (i + 1); ordered := false; sweep (i + 1) then None) in sweep 0»
+//│ > Testing example: Caml Light: Fibonacci
+//│ > «let rec fib n = if n < 2 then 1 then fib (n - 1) + fib (n - 2)»
+//│ > «if sys__interactive then () then if vect_length sys__command_line <> 2 then print_string "Usage…"; print_newline () then try print_int (fib (int_of_string sys__command_line . 1)); print_newline () with Failure "int_o…" -> print_string "Bad i…"; print_newline ()»
+//│ > Testing example: Caml Light: Insertion Sort
+//│ > «#open "anima…"»
+//│ > «let sort context = let loop_outer i = if i >= vect_length context.array then Finished then let value_i = context.array.i in let loop_inner j = if j < 1 then assign context j value_i; loop_outer (i + 1) then Pause (fun () -> if value_i >= context.array . j - 1 then assign context j value_i; loop_outer (i + 1) then assign context j context.array . j - 1; loop_inner (j - 1)) in loop_inner i in loop_outer 1»
+//│ > Testing example: Caml Light: Integer Sets
+//│ > «type t == list int»
+//│ > «let empty = []»
+//│ > «let rec belongs n = function [] -> false | m :: rest -> if m = n then true then if m > n then false then belongs n rest»
+//│ > «let rec add n = function [] -> [n] | m :: rest as set -> if m = n then set then if m > n then n :: set then m :: add n rest»
+//│ > Testing example: Caml Light: Pascal Values
+//│ > «#open "inter…"»
+//│ > «let int_val = function Int n -> n | _ -> raise (Runtime_error "integ…") and bool_val = function Bool b -> b | _ -> raise (Runtime_error "boole…") and array_val = function Array (lower, values) -> (lower, values) | _ -> raise (Runtime_error "array…")»
+//│ > «let print_value v = print_int (int_val v); print_newline ()»
+//│ > «let read_value () = let input = read_line () in try Int (int_of_string input) with Failure _ -> raise (Runtime_error "read …")»
+//│ > Testing example: Caml Light: Picomach Constants
+//│ > «let register_count = 32 and sp = 30 and ra = 31 and word_size = 4»
+//│ > Testing example: Caml Light: Priority Queue
+//│ > «type t ('a) = Empty | QueueNode of int * 'a * t 'a * t 'a»
+//│ > «exception Empty_queue»
+//│ > «let empty = Empty»
+//│ > «let rec remove_top = function Empty -> raise Empty_queue | QueueNode (priority, item, Empty, Empty) -> Empty | QueueNode (priority, item, left, Empty) -> left | QueueNode (priority, item, Empty, right) -> right | QueueNode (priority, item, QueueNode (left_priority, left_item, _, _) as left, QueueNode (right_priority, right_item, _, _) as right) -> if left_priority < right_priority then QueueNode (left_priority, left_item, remove_top left, right) then QueueNode (right_priority, right_item, left, remove_top right)»
+//│ > «let extract = function Empty -> raise Empty_queue | QueueNode (priority, item, _, _) as queue -> (priority, item, remove_top queue)»
+//│ > «let rec add queue priority item = match queue with Empty -> QueueNode (priority, item, Empty, Empty) | QueueNode (priority1, item1, left, right) -> if priority <= priority1 then QueueNode (priority, item, add right priority1 item1, left) then QueueNode (priority1, item1, add right priority item, left)»
+//│ > Testing example: Caml Light: Sieve
+//│ > «let rec interval min max = if min > max then [] then min :: interval (succ min) max»
+//│ > «let rec filter p = function [] -> [] | a :: r -> if p a then a :: filter p r then filter p r»
+//│ > «let remove_multiples_of n = filter (fun m -> (m mod n) <> 0)»
+//│ > «let sieve max = let filter_again = function [] -> [] | n :: r as l -> if n * n > max then l then n :: filter_again (remove_multiples_of n r) in filter_again (interval 2 max)»
+//│ > Testing example: Caml Light: Word Count
+//│ > «let chars = ref 0 and words = ref 0 and lines = ref 0»
+//│ > «type state = Inside_word | Outside_word»
+//│ > «let count_channel in_channel = let count status = let c = input_char in_channel in incr chars; match c with `\n` -> incr lines; count Outside_word | ` ` | `\t` -> count Outside_word | _ -> if status = Outside_word then incr words; (); count Inside_word then None in try count Outside_word with End_of_file -> ()»
+//│ > «let count_file name = let ic = open_in name in count_channel ic; close_in ic»
+//│ > «let print_result () = print_int (!chars); print_string " char…"; print_int (!words); print_string " word…"; print_int (!lines); print_string " line…"; print_newline ()»
+//│ > «let count name = count_file name; print_result ()»
+//│ > «if sys__interactive then () then try if vect_length sys__command_line <= 1 then count_channel std_in then for i = 1 to vect_length sys__command_line - 1 do count_file sys__command_line.i done; print_result () with sys__Sys_error s -> print_string "I/O e…"; print_string s; print_newline ()»
 //│ > Testing example: Extensible Syntax
 //│ > «baz (foo "Rob" (foo "Bob" bar))»
 //│ > «#diagram ""»
+//│ > Testing example: Extensible: Routes
+//│ > «Route Get "/user…" list_users»
+//│ > «Route Post "/user…" create_user»
+//│ > Testing example: Extensible: Workflow
+//│ > «Workflow deploy (Cons "build" (Cons "test" Nil))»
 //│ > Testing example: Hanoi from Caml Light
 //│ > «let spaces n = make_string n " "»
 //│ > «let disk size = let right_half = make_string size ">" and left_half = make_string size "<" in left_half ^ "|" ^ right_half»
 //│ > «let disk_number n largest_disk_size = let white_part = spaces (largest_disk_size + 1 - n) in white_part ^ disk n ^ white_part»
 //│ > «let peg_base largest_disk_size = let half = make_string largest_disk_size "_" in " " ^ half ^ "|" ^ half ^ " "»
-//│ > «let peg largest_disk_size = function (0, []) -> [] | (0, head :: rest) -> disk_number head largest_disk_size :: peg largest_disk_size (0, rest) | (offset, lst) -> disk_number 0 largest_disk_size :: peg largest_disk_size (offset - 1, lst)»
-//│ > «let join_lines l1 l2 l3 = match (l1, l2, l3) with ([], [], []) -> [] | (t1 :: r1, t2 :: r2, t3 :: r3) -> t1 ^ t2 ^ t3 :: join_lines r1 r2 r3 | _ -> failwith "join_…"»
+//│ > «let rec peg largest_disk_size = function (0, []) -> [] | (0, head :: rest) -> disk_number head largest_disk_size :: peg largest_disk_size (0, rest) | (offset, lst) -> disk_number 0 largest_disk_size :: peg largest_disk_size (offset - 1, lst)»
+//│ > «let rec join_lines l1 l2 l3 = match (l1, l2, l3) with ([], [], []) -> [] | (t1 :: r1, t2 :: r2, t3 :: r3) -> t1 ^ t2 ^ t3 :: join_lines r1 r2 r3 | _ -> failwith "join_…"»

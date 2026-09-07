@@ -1,0 +1,1808 @@
+:js
+
+import "../../../mlscript-compile/apps/parsing/Test.mls"
+
+open Test { example }
+
+// More examples ported from the official Caml Light example archive and source
+// mirror. Each example uses `:tree` so the DiffTest records parser regressions
+// in the full syntax tree, not only in the pretty summary.
+
+// sources/examples/basics/fib.ml
+// ==============================
+
+example of """
+:tree
+let rec fib n =
+  if n < 2 then 1 else fib(n-1) + fib(n-2)
+;;
+if sys__interactive then () else
+if vect_length sys__command_line <> 2 then begin
+  print_string "Usage: fib <number>";
+  print_newline()
+end else begin
+  try
+    print_int(fib(int_of_string sys__command_line.(1)));
+    print_newline()
+  with Failure "int_of_string" ->
+    print_string "Bad integer constant";
+    print_newline()
+end
+;;
+"""
+//│ > Define:
+//│ >   kind = Let(true)
+//│ >   items = Stack of 
+//│ >     Infix:
+//│ >       op = Keyword(`=`, 16, 16)
+//│ >       lhs = Application:
+//│ >         callee = Reference of "fib"
+//│ >         argument = Reference of "n"
+//│ >       rhs = Ternary:
+//│ >         name = Keyword(`if`, 10, 9)
+//│ >         lhs = Application:
+//│ >           callee = Reference of "<"
+//│ >           argument = Stack of 
+//│ >             Reference of "n"
+//│ >             Literal#Integer of "2"
+//│ >         rhs = Literal#Integer of "1"
+//│ >         body = Some of Application:
+//│ >           callee = Reference of "+"
+//│ >           argument = Stack of 
+//│ >             Application:
+//│ >               callee = Reference of "fib"
+//│ >               argument = Application:
+//│ >                 callee = Reference of "-"
+//│ >                 argument = Stack of 
+//│ >                   Reference of "n"
+//│ >                   Literal#Integer of "1"
+//│ >             Application:
+//│ >               callee = Reference of "fib"
+//│ >               argument = Application:
+//│ >                 callee = Reference of "-"
+//│ >                 argument = Stack of 
+//│ >                   Reference of "n"
+//│ >                   Literal#Integer of "2"
+//│ > Ternary:
+//│ >   name = Keyword(`if`, 10, 9)
+//│ >   lhs = Reference of "sys__interactive"
+//│ >   rhs = Tuple of Nil
+//│ >   body = Some of Ternary:
+//│ >     name = Keyword(`if`, 10, 9)
+//│ >     lhs = Application:
+//│ >       callee = Reference of "<>"
+//│ >       argument = Stack of 
+//│ >         Application:
+//│ >           callee = Reference of "vect_length"
+//│ >           argument = Reference of "sys__command_line"
+//│ >         Literal#Integer of "2"
+//│ >     rhs = Sequence of Stack of 
+//│ >       Application:
+//│ >         callee = Reference of "print_string"
+//│ >         argument = Literal#String of "Usage: fib <number>"
+//│ >       Application:
+//│ >         callee = Reference of "print_newline"
+//│ >         argument = Tuple of Nil
+//│ >     body = Some of Try:
+//│ >       body = Sequence of Stack of 
+//│ >         Application:
+//│ >           callee = Reference of "print_int"
+//│ >           argument = Application:
+//│ >             callee = Reference of "fib"
+//│ >             argument = Application:
+//│ >               callee = Reference of "int_of_string"
+//│ >               argument = Infix:
+//│ >                 op = Keyword(`.`, 26, 26)
+//│ >                 lhs = Reference of "sys__command_line"
+//│ >                 rhs = Literal#Integer of "1"
+//│ >         Application:
+//│ >           callee = Reference of "print_newline"
+//│ >           argument = Tuple of Nil
+//│ >       branches = Stack of 
+//│ >         Infix:
+//│ >           op = Keyword(`->`, 5, 3)
+//│ >           lhs = Application:
+//│ >             callee = Reference of "Failure"
+//│ >             argument = Literal#String of "int_of_string"
+//│ >           rhs = Sequence of Stack of 
+//│ >             Application:
+//│ >               callee = Reference of "print_string"
+//│ >               argument = Literal#String of "Bad integer constant"
+//│ >             Application:
+//│ >               callee = Reference of "print_newline"
+//│ >               argument = Tuple of Nil
+//│ > «let rec fib n = if n < 2 then 1 then fib (n - 1) + fib (n - 2)»
+//│ > «if sys__interactive then () then if vect_length sys__command_line <> 2 then print_string "Usage…"; print_newline () then try print_int (fib (int_of_string sys__command_line . 1)); print_newline () with Failure "int_o…" -> print_string "Bad i…"; print_newline ()»
+
+// sources/examples/basics/sieve.ml
+// ================================
+
+example of """
+:tree
+let rec interval min max =
+  if min > max then [] else min :: interval (succ min) max
+;;
+let rec filter p = function
+  | [] -> []
+  | a :: r -> if p a then a :: filter p r else filter p r
+;;
+let remove_multiples_of n =
+  filter (fun m -> m mod n <> 0)
+;;
+let sieve max =
+  let rec filter_again = function
+  | [] -> []
+  | n :: r as l ->
+      if n * n > max then l else n :: filter_again (remove_multiples_of n r)
+  in
+    filter_again (interval 2 max)
+;;
+"""
+//│ > Define:
+//│ >   kind = Let(true)
+//│ >   items = Stack of 
+//│ >     Infix:
+//│ >       op = Keyword(`=`, 16, 16)
+//│ >       lhs = Application:
+//│ >         callee = Application:
+//│ >           callee = Reference of "interval"
+//│ >           argument = Reference of "min"
+//│ >         argument = Reference of "max"
+//│ >       rhs = Ternary:
+//│ >         name = Keyword(`if`, 10, 9)
+//│ >         lhs = Application:
+//│ >           callee = Reference of ">"
+//│ >           argument = Stack of 
+//│ >             Reference of "min"
+//│ >             Reference of "max"
+//│ >         rhs = Bracketed#Square of Sequence of Nil
+//│ >         body = Some of Application:
+//│ >           callee = Reference of "::"
+//│ >           argument = Stack of 
+//│ >             Reference of "min"
+//│ >             Application:
+//│ >               callee = Application:
+//│ >                 callee = Reference of "interval"
+//│ >                 argument = Application:
+//│ >                   callee = Reference of "succ"
+//│ >                   argument = Reference of "min"
+//│ >               argument = Reference of "max"
+//│ > Define:
+//│ >   kind = Let(true)
+//│ >   items = Stack of 
+//│ >     Infix:
+//│ >       op = Keyword(`=`, 16, 16)
+//│ >       lhs = Application:
+//│ >         callee = Reference of "filter"
+//│ >         argument = Reference of "p"
+//│ >       rhs = Match:
+//│ >         scrutinee = Empty()
+//│ >         branches = Stack of 
+//│ >           Infix:
+//│ >             op = Keyword(`->`, 5, 3)
+//│ >             lhs = Bracketed#Square of Sequence of Nil
+//│ >             rhs = Bracketed#Square of Sequence of Nil
+//│ >           Infix:
+//│ >             op = Keyword(`->`, 5, 3)
+//│ >             lhs = Application:
+//│ >               callee = Reference of "::"
+//│ >               argument = Stack of 
+//│ >                 Reference of "a"
+//│ >                 Reference of "r"
+//│ >             rhs = Ternary:
+//│ >               name = Keyword(`if`, 10, 9)
+//│ >               lhs = Application:
+//│ >                 callee = Reference of "p"
+//│ >                 argument = Reference of "a"
+//│ >               rhs = Application:
+//│ >                 callee = Reference of "::"
+//│ >                 argument = Stack of 
+//│ >                   Reference of "a"
+//│ >                   Application:
+//│ >                     callee = Application:
+//│ >                       callee = Reference of "filter"
+//│ >                       argument = Reference of "p"
+//│ >                     argument = Reference of "r"
+//│ >               body = Some of Application:
+//│ >                 callee = Application:
+//│ >                   callee = Reference of "filter"
+//│ >                   argument = Reference of "p"
+//│ >                 argument = Reference of "r"
+//│ > Define:
+//│ >   kind = Let(false)
+//│ >   items = Stack of 
+//│ >     Infix:
+//│ >       op = Keyword(`=`, 16, 16)
+//│ >       lhs = Application:
+//│ >         callee = Reference of "remove_multiples_of"
+//│ >         argument = Reference of "n"
+//│ >       rhs = Application:
+//│ >         callee = Reference of "filter"
+//│ >         argument = Lambda:
+//│ >           params = Stack of 
+//│ >             Reference of "m"
+//│ >           body = Application:
+//│ >             callee = Reference of "<>"
+//│ >             argument = Stack of 
+//│ >               Application:
+//│ >                 callee = Reference of "mod"
+//│ >                 argument = Stack of 
+//│ >                   Reference of "m"
+//│ >                   Reference of "n"
+//│ >               Literal#Integer of "0"
+//│ > Define:
+//│ >   kind = Let(false)
+//│ >   items = Stack of 
+//│ >     Infix:
+//│ >       op = Keyword(`=`, 16, 16)
+//│ >       lhs = Application:
+//│ >         callee = Reference of "sieve"
+//│ >         argument = Reference of "max"
+//│ >       rhs = LetIn:
+//│ >         bindings = Stack of 
+//│ >           Infix:
+//│ >             op = Keyword(`=`, 16, 16)
+//│ >             lhs = Reference of "filter_again"
+//│ >             rhs = Match:
+//│ >               scrutinee = Empty()
+//│ >               branches = Stack of 
+//│ >                 Infix:
+//│ >                   op = Keyword(`->`, 5, 3)
+//│ >                   lhs = Bracketed#Square of Sequence of Nil
+//│ >                   rhs = Bracketed#Square of Sequence of Nil
+//│ >                 Infix:
+//│ >                   op = Keyword(`->`, 5, 3)
+//│ >                   lhs = Infix:
+//│ >                     op = Keyword(`as`, 4, 4)
+//│ >                     lhs = Application:
+//│ >                       callee = Reference of "::"
+//│ >                       argument = Stack of 
+//│ >                         Reference of "n"
+//│ >                         Reference of "r"
+//│ >                     rhs = Reference of "l"
+//│ >                   rhs = Ternary:
+//│ >                     name = Keyword(`if`, 10, 9)
+//│ >                     lhs = Application:
+//│ >                       callee = Reference of ">"
+//│ >                       argument = Stack of 
+//│ >                         Application:
+//│ >                           callee = Reference of "*"
+//│ >                           argument = Stack of 
+//│ >                             Reference of "n"
+//│ >                             Reference of "n"
+//│ >                         Reference of "max"
+//│ >                     rhs = Reference of "l"
+//│ >                     body = Some of Application:
+//│ >                       callee = Reference of "::"
+//│ >                       argument = Stack of 
+//│ >                         Reference of "n"
+//│ >                         Application:
+//│ >                           callee = Reference of "filter_again"
+//│ >                           argument = Application:
+//│ >                             callee = Application:
+//│ >                               callee = Reference of "remove_multiples_of"
+//│ >                               argument = Reference of "n"
+//│ >                             argument = Reference of "r"
+//│ >         body = Some of Application:
+//│ >           callee = Reference of "filter_again"
+//│ >           argument = Application:
+//│ >             callee = Application:
+//│ >               callee = Reference of "interval"
+//│ >               argument = Literal#Integer of "2"
+//│ >             argument = Reference of "max"
+//│ > «let rec interval min max = if min > max then [] then min :: interval (succ min) max»
+//│ > «let rec filter p = function [] -> [] | a :: r -> if p a then a :: filter p r then filter p r»
+//│ > «let remove_multiples_of n = filter (fun m -> (m mod n) <> 0)»
+//│ > «let sieve max = let filter_again = function [] -> [] | n :: r as l -> if n * n > max then l then n :: filter_again (remove_multiples_of n r) in filter_again (interval 2 max)»
+
+// sources/examples/grep/ensent.ml
+// ===============================
+
+example of """
+:tree
+type t == int list;;
+let empty = [];;
+let rec belongs n = function
+  | [] -> false
+  | m :: rest ->
+      if m = n then true else
+        if m > n then false else belongs n rest
+;;
+let rec add n = function
+  | [] -> [n]
+  | m :: rest as set ->
+      if m = n then set else
+        if m > n then n :: set else m :: add n rest
+;;
+"""
+//│ > Define:
+//│ >   kind = Type
+//│ >   items = Stack of 
+//│ >     Infix:
+//│ >       op = Keyword(`==`, 16, 16)
+//│ >       lhs = Reference of "t"
+//│ >       rhs = Application:
+//│ >         callee = Reference of "list"
+//│ >         argument = Reference of "int"
+//│ > Define:
+//│ >   kind = Let(false)
+//│ >   items = Stack of 
+//│ >     Infix:
+//│ >       op = Keyword(`=`, 16, 16)
+//│ >       lhs = Reference of "empty"
+//│ >       rhs = Bracketed#Square of Sequence of Nil
+//│ > Define:
+//│ >   kind = Let(true)
+//│ >   items = Stack of 
+//│ >     Infix:
+//│ >       op = Keyword(`=`, 16, 16)
+//│ >       lhs = Application:
+//│ >         callee = Reference of "belongs"
+//│ >         argument = Reference of "n"
+//│ >       rhs = Match:
+//│ >         scrutinee = Empty()
+//│ >         branches = Stack of 
+//│ >           Infix:
+//│ >             op = Keyword(`->`, 5, 3)
+//│ >             lhs = Bracketed#Square of Sequence of Nil
+//│ >             rhs = Literal#Boolean of "false"
+//│ >           Infix:
+//│ >             op = Keyword(`->`, 5, 3)
+//│ >             lhs = Application:
+//│ >               callee = Reference of "::"
+//│ >               argument = Stack of 
+//│ >                 Reference of "m"
+//│ >                 Reference of "rest"
+//│ >             rhs = Ternary:
+//│ >               name = Keyword(`if`, 10, 9)
+//│ >               lhs = Infix:
+//│ >                 op = Keyword(`=`, 16, 16)
+//│ >                 lhs = Reference of "m"
+//│ >                 rhs = Reference of "n"
+//│ >               rhs = Literal#Boolean of "true"
+//│ >               body = Some of Ternary:
+//│ >                 name = Keyword(`if`, 10, 9)
+//│ >                 lhs = Application:
+//│ >                   callee = Reference of ">"
+//│ >                   argument = Stack of 
+//│ >                     Reference of "m"
+//│ >                     Reference of "n"
+//│ >                 rhs = Literal#Boolean of "false"
+//│ >                 body = Some of Application:
+//│ >                   callee = Application:
+//│ >                     callee = Reference of "belongs"
+//│ >                     argument = Reference of "n"
+//│ >                   argument = Reference of "rest"
+//│ > Define:
+//│ >   kind = Let(true)
+//│ >   items = Stack of 
+//│ >     Infix:
+//│ >       op = Keyword(`=`, 16, 16)
+//│ >       lhs = Application:
+//│ >         callee = Reference of "add"
+//│ >         argument = Reference of "n"
+//│ >       rhs = Match:
+//│ >         scrutinee = Empty()
+//│ >         branches = Stack of 
+//│ >           Infix:
+//│ >             op = Keyword(`->`, 5, 3)
+//│ >             lhs = Bracketed#Square of Sequence of Nil
+//│ >             rhs = Bracketed#Square of Reference of "n"
+//│ >           Infix:
+//│ >             op = Keyword(`->`, 5, 3)
+//│ >             lhs = Infix:
+//│ >               op = Keyword(`as`, 4, 4)
+//│ >               lhs = Application:
+//│ >                 callee = Reference of "::"
+//│ >                 argument = Stack of 
+//│ >                   Reference of "m"
+//│ >                   Reference of "rest"
+//│ >               rhs = Reference of "set"
+//│ >             rhs = Ternary:
+//│ >               name = Keyword(`if`, 10, 9)
+//│ >               lhs = Infix:
+//│ >                 op = Keyword(`=`, 16, 16)
+//│ >                 lhs = Reference of "m"
+//│ >                 rhs = Reference of "n"
+//│ >               rhs = Reference of "set"
+//│ >               body = Some of Ternary:
+//│ >                 name = Keyword(`if`, 10, 9)
+//│ >                 lhs = Application:
+//│ >                   callee = Reference of ">"
+//│ >                   argument = Stack of 
+//│ >                     Reference of "m"
+//│ >                     Reference of "n"
+//│ >                 rhs = Application:
+//│ >                   callee = Reference of "::"
+//│ >                   argument = Stack of 
+//│ >                     Reference of "n"
+//│ >                     Reference of "set"
+//│ >                 body = Some of Application:
+//│ >                   callee = Reference of "::"
+//│ >                   argument = Stack of 
+//│ >                     Reference of "m"
+//│ >                     Application:
+//│ >                       callee = Application:
+//│ >                         callee = Reference of "add"
+//│ >                         argument = Reference of "n"
+//│ >                       argument = Reference of "rest"
+//│ > «type t == list int»
+//│ > «let empty = []»
+//│ > «let rec belongs n = function [] -> false | m :: rest -> if m = n then true then if m > n then false then belongs n rest»
+//│ > «let rec add n = function [] -> [n] | m :: rest as set -> if m = n then set then if m > n then n :: set then m :: add n rest»
+
+// sources/examples/pascal/valeur.ml
+// ==================================
+
+example of """
+:tree
+#open "interp";;
+let int_val = function
+  | Int n -> n
+  | _ -> raise(Runtime_error "integer expected")
+and bool_val = function
+  | Bool b -> b
+  | _ -> raise(Runtime_error "boolean expected")
+and array_val = function
+  | Array(lower, values) -> (lower, values)
+  | _ -> raise(Runtime_error "array expected")
+;;
+let print_value v =
+  print_int(int_val v); print_newline()
+;;
+let read_value () =
+  let input = read_line() in
+  try Int(int_of_string input)
+  with Failure _ -> raise(Runtime_error "read error")
+;;
+"""
+//│ > Define:
+//│ >   kind = Directive
+//│ >   items = Stack of 
+//│ >     Pair:
+//│ >       first = Reference of "open"
+//│ >       second = Literal#String of "interp"
+//│ > Define:
+//│ >   kind = Let(false)
+//│ >   items = Stack of 
+//│ >     Infix:
+//│ >       op = Keyword(`=`, 16, 16)
+//│ >       lhs = Reference of "int_val"
+//│ >       rhs = Match:
+//│ >         scrutinee = Empty()
+//│ >         branches = Stack of 
+//│ >           Infix:
+//│ >             op = Keyword(`->`, 5, 3)
+//│ >             lhs = Application:
+//│ >               callee = Reference of "Int"
+//│ >               argument = Reference of "n"
+//│ >             rhs = Reference of "n"
+//│ >           Infix:
+//│ >             op = Keyword(`->`, 5, 3)
+//│ >             lhs = Underscore
+//│ >             rhs = Application:
+//│ >               callee = Reference of "raise"
+//│ >               argument = Application:
+//│ >                 callee = Reference of "Runtime_error"
+//│ >                 argument = Literal#String of "integer expected"
+//│ >     Infix:
+//│ >       op = Keyword(`=`, 16, 16)
+//│ >       lhs = Reference of "bool_val"
+//│ >       rhs = Match:
+//│ >         scrutinee = Empty()
+//│ >         branches = Stack of 
+//│ >           Infix:
+//│ >             op = Keyword(`->`, 5, 3)
+//│ >             lhs = Application:
+//│ >               callee = Reference of "Bool"
+//│ >               argument = Reference of "b"
+//│ >             rhs = Reference of "b"
+//│ >           Infix:
+//│ >             op = Keyword(`->`, 5, 3)
+//│ >             lhs = Underscore
+//│ >             rhs = Application:
+//│ >               callee = Reference of "raise"
+//│ >               argument = Application:
+//│ >                 callee = Reference of "Runtime_error"
+//│ >                 argument = Literal#String of "boolean expected"
+//│ >     Infix:
+//│ >       op = Keyword(`=`, 16, 16)
+//│ >       lhs = Reference of "array_val"
+//│ >       rhs = Match:
+//│ >         scrutinee = Empty()
+//│ >         branches = Stack of 
+//│ >           Infix:
+//│ >             op = Keyword(`->`, 5, 3)
+//│ >             lhs = Application:
+//│ >               callee = Reference of "Array"
+//│ >               argument = Tuple of Stack of 
+//│ >                 Reference of "lower"
+//│ >                 Reference of "values"
+//│ >             rhs = Tuple of Stack of 
+//│ >               Reference of "lower"
+//│ >               Reference of "values"
+//│ >           Infix:
+//│ >             op = Keyword(`->`, 5, 3)
+//│ >             lhs = Underscore
+//│ >             rhs = Application:
+//│ >               callee = Reference of "raise"
+//│ >               argument = Application:
+//│ >                 callee = Reference of "Runtime_error"
+//│ >                 argument = Literal#String of "array expected"
+//│ > Define:
+//│ >   kind = Let(false)
+//│ >   items = Stack of 
+//│ >     Infix:
+//│ >       op = Keyword(`=`, 16, 16)
+//│ >       lhs = Application:
+//│ >         callee = Reference of "print_value"
+//│ >         argument = Reference of "v"
+//│ >       rhs = Sequence of Stack of 
+//│ >         Application:
+//│ >           callee = Reference of "print_int"
+//│ >           argument = Application:
+//│ >             callee = Reference of "int_val"
+//│ >             argument = Reference of "v"
+//│ >         Application:
+//│ >           callee = Reference of "print_newline"
+//│ >           argument = Tuple of Nil
+//│ > Define:
+//│ >   kind = Let(false)
+//│ >   items = Stack of 
+//│ >     Infix:
+//│ >       op = Keyword(`=`, 16, 16)
+//│ >       lhs = Application:
+//│ >         callee = Reference of "read_value"
+//│ >         argument = Tuple of Nil
+//│ >       rhs = LetIn:
+//│ >         bindings = Stack of 
+//│ >           Infix:
+//│ >             op = Keyword(`=`, 16, 16)
+//│ >             lhs = Reference of "input"
+//│ >             rhs = Application:
+//│ >               callee = Reference of "read_line"
+//│ >               argument = Tuple of Nil
+//│ >         body = Some of Try:
+//│ >           body = Application:
+//│ >             callee = Reference of "Int"
+//│ >             argument = Application:
+//│ >               callee = Reference of "int_of_string"
+//│ >               argument = Reference of "input"
+//│ >           branches = Stack of 
+//│ >             Infix:
+//│ >               op = Keyword(`->`, 5, 3)
+//│ >               lhs = Application:
+//│ >                 callee = Reference of "Failure"
+//│ >                 argument = Underscore
+//│ >               rhs = Application:
+//│ >                 callee = Reference of "raise"
+//│ >                 argument = Application:
+//│ >                   callee = Reference of "Runtime_error"
+//│ >                   argument = Literal#String of "read error"
+//│ > «#open "inter…"»
+//│ > «let int_val = function Int n -> n | _ -> raise (Runtime_error "integ…") and bool_val = function Bool b -> b | _ -> raise (Runtime_error "boole…") and array_val = function Array (lower, values) -> (lower, values) | _ -> raise (Runtime_error "array…")»
+//│ > «let print_value v = print_int (int_val v); print_newline ()»
+//│ > «let read_value () = let input = read_line () in try Int (int_of_string input) with Failure _ -> raise (Runtime_error "read …")»
+
+// sources/examples/picomach/code.ml
+// ==================================
+
+example of """
+:tree
+let register_count = 32
+and sp = 30
+and ra = 31
+and word_size = 4
+;;
+"""
+//│ > Define:
+//│ >   kind = Let(false)
+//│ >   items = Stack of 
+//│ >     Infix:
+//│ >       op = Keyword(`=`, 16, 16)
+//│ >       lhs = Reference of "register_count"
+//│ >       rhs = Literal#Integer of "32"
+//│ >     Infix:
+//│ >       op = Keyword(`=`, 16, 16)
+//│ >       lhs = Reference of "sp"
+//│ >       rhs = Literal#Integer of "30"
+//│ >     Infix:
+//│ >       op = Keyword(`=`, 16, 16)
+//│ >       lhs = Reference of "ra"
+//│ >       rhs = Literal#Integer of "31"
+//│ >     Infix:
+//│ >       op = Keyword(`=`, 16, 16)
+//│ >       lhs = Reference of "word_size"
+//│ >       rhs = Literal#Integer of "4"
+//│ > «let register_count = 32 and sp = 30 and ra = 31 and word_size = 4»
+
+// sources/examples/compress/esbit.ml
+// ===================================
+
+example of """
+:tree
+type buffer = { mutable val: int; mutable nbits: int };;
+let buffer = { val = 0; nbits = 0 };;
+let initialize () = buffer.val <- 0; buffer.nbits <- 0;;
+let write_bit output bit =
+  buffer.val <- buffer.val lor (bit lsl buffer.nbits);
+  buffer.nbits <- buffer.nbits + 1;
+  if buffer.nbits >= 8 then begin
+    output_char output (char_of_int buffer.val);
+    buffer.val <- 0;
+    buffer.nbits <- 0
+  end
+;;
+let finish output =
+  if buffer.nbits > 0 then
+    output_char output (char_of_int buffer.val)
+;;
+let read_bit input =
+  if buffer.nbits <= 0 then begin
+    buffer.val <- int_of_char(input_char input);
+    buffer.nbits <- 8
+  end;
+  let result = buffer.val land 1 in
+  buffer.val <- buffer.val lsr 1;
+  buffer.nbits <- buffer.nbits - 1;
+  result
+;;
+"""
+//│ > Define:
+//│ >   kind = Type
+//│ >   items = Stack of 
+//│ >     Infix:
+//│ >       op = Keyword(`=`, 16, 16)
+//│ >       lhs = Reference of "buffer"
+//│ >       rhs = Bracketed#Curly of Sequence of Stack of 
+//│ >         Infix:
+//│ >           op = Keyword(`:`, 4, 3)
+//│ >           lhs = Modified:
+//│ >             modifier = Reference of "mutable"
+//│ >             subject = Reference of "val"
+//│ >           rhs = Reference of "int"
+//│ >         Infix:
+//│ >           op = Keyword(`:`, 4, 3)
+//│ >           lhs = Modified:
+//│ >             modifier = Reference of "mutable"
+//│ >             subject = Reference of "nbits"
+//│ >           rhs = Reference of "int"
+//│ > Define:
+//│ >   kind = Let(false)
+//│ >   items = Stack of 
+//│ >     Infix:
+//│ >       op = Keyword(`=`, 16, 16)
+//│ >       lhs = Reference of "buffer"
+//│ >       rhs = Sequence of Stack of 
+//│ >         Infix:
+//│ >           op = Keyword(`=`, 16, 16)
+//│ >           lhs = Reference of "val"
+//│ >           rhs = Literal#Integer of "0"
+//│ >         Infix:
+//│ >           op = Keyword(`=`, 16, 16)
+//│ >           lhs = Reference of "nbits"
+//│ >           rhs = Literal#Integer of "0"
+//│ > Define:
+//│ >   kind = Let(false)
+//│ >   items = Stack of 
+//│ >     Infix:
+//│ >       op = Keyword(`=`, 16, 16)
+//│ >       lhs = Application:
+//│ >         callee = Reference of "initialize"
+//│ >         argument = Tuple of Nil
+//│ >       rhs = Sequence of Stack of 
+//│ >         Infix:
+//│ >           op = Keyword(`<-`, 9, 9)
+//│ >           lhs = Infix:
+//│ >             op = Keyword(`.`, 26, 26)
+//│ >             lhs = Reference of "buffer"
+//│ >             rhs = Reference of "val"
+//│ >           rhs = Literal#Integer of "0"
+//│ >         Infix:
+//│ >           op = Keyword(`<-`, 9, 9)
+//│ >           lhs = Infix:
+//│ >             op = Keyword(`.`, 26, 26)
+//│ >             lhs = Reference of "buffer"
+//│ >             rhs = Reference of "nbits"
+//│ >           rhs = Literal#Integer of "0"
+//│ > Define:
+//│ >   kind = Let(false)
+//│ >   items = Stack of 
+//│ >     Infix:
+//│ >       op = Keyword(`=`, 16, 16)
+//│ >       lhs = Application:
+//│ >         callee = Application:
+//│ >           callee = Reference of "write_bit"
+//│ >           argument = Reference of "output"
+//│ >         argument = Reference of "bit"
+//│ >       rhs = Sequence of Stack of 
+//│ >         Infix:
+//│ >           op = Keyword(`<-`, 9, 9)
+//│ >           lhs = Infix:
+//│ >             op = Keyword(`.`, 26, 26)
+//│ >             lhs = Reference of "buffer"
+//│ >             rhs = Reference of "val"
+//│ >           rhs = Application:
+//│ >             callee = Reference of "lor"
+//│ >             argument = Stack of 
+//│ >               Infix:
+//│ >                 op = Keyword(`.`, 26, 26)
+//│ >                 lhs = Reference of "buffer"
+//│ >                 rhs = Reference of "val"
+//│ >               Application:
+//│ >                 callee = Reference of "lsl"
+//│ >                 argument = Stack of 
+//│ >                   Reference of "bit"
+//│ >                   Infix:
+//│ >                     op = Keyword(`.`, 26, 26)
+//│ >                     lhs = Reference of "buffer"
+//│ >                     rhs = Reference of "nbits"
+//│ >         Infix:
+//│ >           op = Keyword(`<-`, 9, 9)
+//│ >           lhs = Infix:
+//│ >             op = Keyword(`.`, 26, 26)
+//│ >             lhs = Reference of "buffer"
+//│ >             rhs = Reference of "nbits"
+//│ >           rhs = Application:
+//│ >             callee = Reference of "+"
+//│ >             argument = Stack of 
+//│ >               Infix:
+//│ >                 op = Keyword(`.`, 26, 26)
+//│ >                 lhs = Reference of "buffer"
+//│ >                 rhs = Reference of "nbits"
+//│ >               Literal#Integer of "1"
+//│ >         Ternary:
+//│ >           name = Keyword(`if`, 10, 9)
+//│ >           lhs = Application:
+//│ >             callee = Reference of ">="
+//│ >             argument = Stack of 
+//│ >               Infix:
+//│ >                 op = Keyword(`.`, 26, 26)
+//│ >                 lhs = Reference of "buffer"
+//│ >                 rhs = Reference of "nbits"
+//│ >               Literal#Integer of "8"
+//│ >           rhs = Sequence of Stack of 
+//│ >             Application:
+//│ >               callee = Application:
+//│ >                 callee = Reference of "output_char"
+//│ >                 argument = Reference of "output"
+//│ >               argument = Application:
+//│ >                 callee = Reference of "char_of_int"
+//│ >                 argument = Infix:
+//│ >                   op = Keyword(`.`, 26, 26)
+//│ >                   lhs = Reference of "buffer"
+//│ >                   rhs = Reference of "val"
+//│ >             Infix:
+//│ >               op = Keyword(`<-`, 9, 9)
+//│ >               lhs = Infix:
+//│ >                 op = Keyword(`.`, 26, 26)
+//│ >                 lhs = Reference of "buffer"
+//│ >                 rhs = Reference of "val"
+//│ >               rhs = Literal#Integer of "0"
+//│ >             Infix:
+//│ >               op = Keyword(`<-`, 9, 9)
+//│ >               lhs = Infix:
+//│ >                 op = Keyword(`.`, 26, 26)
+//│ >                 lhs = Reference of "buffer"
+//│ >                 rhs = Reference of "nbits"
+//│ >               rhs = Literal#Integer of "0"
+//│ >           body = None
+//│ > Define:
+//│ >   kind = Let(false)
+//│ >   items = Stack of 
+//│ >     Infix:
+//│ >       op = Keyword(`=`, 16, 16)
+//│ >       lhs = Application:
+//│ >         callee = Reference of "finish"
+//│ >         argument = Reference of "output"
+//│ >       rhs = Ternary:
+//│ >         name = Keyword(`if`, 10, 9)
+//│ >         lhs = Application:
+//│ >           callee = Reference of ">"
+//│ >           argument = Stack of 
+//│ >             Infix:
+//│ >               op = Keyword(`.`, 26, 26)
+//│ >               lhs = Reference of "buffer"
+//│ >               rhs = Reference of "nbits"
+//│ >             Literal#Integer of "0"
+//│ >         rhs = Application:
+//│ >           callee = Application:
+//│ >             callee = Reference of "output_char"
+//│ >             argument = Reference of "output"
+//│ >           argument = Application:
+//│ >             callee = Reference of "char_of_int"
+//│ >             argument = Infix:
+//│ >               op = Keyword(`.`, 26, 26)
+//│ >               lhs = Reference of "buffer"
+//│ >               rhs = Reference of "val"
+//│ >         body = None
+//│ > Define:
+//│ >   kind = Let(false)
+//│ >   items = Stack of 
+//│ >     Infix:
+//│ >       op = Keyword(`=`, 16, 16)
+//│ >       lhs = Application:
+//│ >         callee = Reference of "read_bit"
+//│ >         argument = Reference of "input"
+//│ >       rhs = Ternary:
+//│ >         name = Keyword(`if`, 10, 9)
+//│ >         lhs = Application:
+//│ >           callee = Reference of "<="
+//│ >           argument = Stack of 
+//│ >             Infix:
+//│ >               op = Keyword(`.`, 26, 26)
+//│ >               lhs = Reference of "buffer"
+//│ >               rhs = Reference of "nbits"
+//│ >             Literal#Integer of "0"
+//│ >         rhs = Sequence of Stack of 
+//│ >           Sequence of Stack of 
+//│ >             Infix:
+//│ >               op = Keyword(`<-`, 9, 9)
+//│ >               lhs = Infix:
+//│ >                 op = Keyword(`.`, 26, 26)
+//│ >                 lhs = Reference of "buffer"
+//│ >                 rhs = Reference of "val"
+//│ >               rhs = Application:
+//│ >                 callee = Reference of "int_of_char"
+//│ >                 argument = Application:
+//│ >                   callee = Reference of "input_char"
+//│ >                   argument = Reference of "input"
+//│ >             Infix:
+//│ >               op = Keyword(`<-`, 9, 9)
+//│ >               lhs = Infix:
+//│ >                 op = Keyword(`.`, 26, 26)
+//│ >                 lhs = Reference of "buffer"
+//│ >                 rhs = Reference of "nbits"
+//│ >               rhs = Literal#Integer of "8"
+//│ >           LetIn:
+//│ >             bindings = Stack of 
+//│ >               Infix:
+//│ >                 op = Keyword(`=`, 16, 16)
+//│ >                 lhs = Reference of "result"
+//│ >                 rhs = Application:
+//│ >                   callee = Reference of "land"
+//│ >                   argument = Stack of 
+//│ >                     Infix:
+//│ >                       op = Keyword(`.`, 26, 26)
+//│ >                       lhs = Reference of "buffer"
+//│ >                       rhs = Reference of "val"
+//│ >                     Literal#Integer of "1"
+//│ >             body = Some of Sequence of Stack of 
+//│ >               Infix:
+//│ >                 op = Keyword(`<-`, 9, 9)
+//│ >                 lhs = Infix:
+//│ >                   op = Keyword(`.`, 26, 26)
+//│ >                   lhs = Reference of "buffer"
+//│ >                   rhs = Reference of "val"
+//│ >                 rhs = Application:
+//│ >                   callee = Reference of "lsr"
+//│ >                   argument = Stack of 
+//│ >                     Infix:
+//│ >                       op = Keyword(`.`, 26, 26)
+//│ >                       lhs = Reference of "buffer"
+//│ >                       rhs = Reference of "val"
+//│ >                     Literal#Integer of "1"
+//│ >               Infix:
+//│ >                 op = Keyword(`<-`, 9, 9)
+//│ >                 lhs = Infix:
+//│ >                   op = Keyword(`.`, 26, 26)
+//│ >                   lhs = Reference of "buffer"
+//│ >                   rhs = Reference of "nbits"
+//│ >                 rhs = Application:
+//│ >                   callee = Reference of "-"
+//│ >                   argument = Stack of 
+//│ >                     Infix:
+//│ >                       op = Keyword(`.`, 26, 26)
+//│ >                       lhs = Reference of "buffer"
+//│ >                       rhs = Reference of "nbits"
+//│ >                     Literal#Integer of "1"
+//│ >               Reference of "result"
+//│ >         body = None
+//│ > «type buffer = {mutable val : int; mutable nbits : int}»
+//│ > «let buffer = val = 0; nbits = 0»
+//│ > «let initialize () = buffer.val <- 0; buffer.nbits <- 0»
+//│ > «let write_bit output bit = buffer.val <- buffer.val lor bit lsl buffer.nbits; buffer.nbits <- buffer.nbits + 1; if buffer.nbits >= 8 then output_char output (char_of_int buffer.val); buffer.val <- 0; buffer.nbits <- 0 then None»
+//│ > «let finish output = if buffer.nbits > 0 then output_char output (char_of_int buffer.val) then None»
+//│ > «let read_bit input = if buffer.nbits <= 0 then buffer.val <- int_of_char (input_char input); buffer.nbits <- 8; let result = buffer.val land 1 in buffer.val <- buffer.val lsr 1; buffer.nbits <- buffer.nbits - 1; result then None»
+
+// sources/examples/compress/fileprio.ml
+// ======================================
+
+example of """
+:tree
+type 'a t = Empty | QueueNode of int * 'a * 'a t * 'a t;;
+exception Empty_queue;;
+let empty = Empty;;
+let rec remove_top = function
+  | Empty -> raise Empty_queue
+  | QueueNode(priority, item, Empty, Empty) -> Empty
+  | QueueNode(priority, item, left, Empty) -> left
+  | QueueNode(priority, item, Empty, right) -> right
+  | QueueNode(priority, item,
+              (QueueNode(left_priority, left_item, _, _) as left),
+              (QueueNode(right_priority, right_item, _, _) as right)) ->
+      if left_priority < right_priority
+      then QueueNode(left_priority, left_item,
+                     remove_top left,
+                     right)
+      else QueueNode(right_priority, right_item,
+                     left,
+                     remove_top right)
+;;
+let extract = function
+  | Empty -> raise Empty_queue
+  | QueueNode(priority, item, _, _) as queue ->
+      (priority, item, remove_top queue)
+;;
+let rec add queue priority item =
+  match queue with
+  | Empty -> QueueNode(priority, item, Empty, Empty)
+  | QueueNode(priority1, item1, left, right) ->
+      if priority <= priority1
+      then QueueNode(priority, item, add right priority1 item1, left)
+      else QueueNode(priority1, item1, add right priority item, left)
+;;
+"""
+//│ > Define:
+//│ >   kind = Type
+//│ >   items = Stack of 
+//│ >     Infix:
+//│ >       op = Keyword(`=`, 16, 16)
+//│ >       lhs = Application:
+//│ >         callee = Reference of "t"
+//│ >         argument = Tuple of Stack of 
+//│ >           Reference of "'a"
+//│ >       rhs = Infix:
+//│ >         op = Keyword(`|`, 4, 4)
+//│ >         lhs = Reference of "Empty"
+//│ >         rhs = Infix:
+//│ >           op = Keyword(`of`, N/A, N/A)
+//│ >           lhs = Reference of "QueueNode"
+//│ >           rhs = Infix:
+//│ >             op = Keyword(`*`, 22, 22)
+//│ >             lhs = Infix:
+//│ >               op = Keyword(`*`, 22, 22)
+//│ >               lhs = Infix:
+//│ >                 op = Keyword(`*`, 22, 22)
+//│ >                 lhs = Reference of "int"
+//│ >                 rhs = Reference of "'a"
+//│ >               rhs = Application:
+//│ >                 callee = Reference of "t"
+//│ >                 argument = Reference of "'a"
+//│ >             rhs = Application:
+//│ >               callee = Reference of "t"
+//│ >               argument = Reference of "'a"
+//│ > Define:
+//│ >   kind = Exception
+//│ >   items = Stack of 
+//│ >     Reference of "Empty_queue"
+//│ > Define:
+//│ >   kind = Let(false)
+//│ >   items = Stack of 
+//│ >     Infix:
+//│ >       op = Keyword(`=`, 16, 16)
+//│ >       lhs = Reference of "empty"
+//│ >       rhs = Reference of "Empty"
+//│ > Define:
+//│ >   kind = Let(true)
+//│ >   items = Stack of 
+//│ >     Infix:
+//│ >       op = Keyword(`=`, 16, 16)
+//│ >       lhs = Reference of "remove_top"
+//│ >       rhs = Match:
+//│ >         scrutinee = Empty()
+//│ >         branches = Stack of 
+//│ >           Infix:
+//│ >             op = Keyword(`->`, 5, 3)
+//│ >             lhs = Reference of "Empty"
+//│ >             rhs = Application:
+//│ >               callee = Reference of "raise"
+//│ >               argument = Reference of "Empty_queue"
+//│ >           Infix:
+//│ >             op = Keyword(`->`, 5, 3)
+//│ >             lhs = Application:
+//│ >               callee = Reference of "QueueNode"
+//│ >               argument = Tuple of Stack of 
+//│ >                 Reference of "priority"
+//│ >                 Reference of "item"
+//│ >                 Reference of "Empty"
+//│ >                 Reference of "Empty"
+//│ >             rhs = Reference of "Empty"
+//│ >           Infix:
+//│ >             op = Keyword(`->`, 5, 3)
+//│ >             lhs = Application:
+//│ >               callee = Reference of "QueueNode"
+//│ >               argument = Tuple of Stack of 
+//│ >                 Reference of "priority"
+//│ >                 Reference of "item"
+//│ >                 Reference of "left"
+//│ >                 Reference of "Empty"
+//│ >             rhs = Reference of "left"
+//│ >           Infix:
+//│ >             op = Keyword(`->`, 5, 3)
+//│ >             lhs = Application:
+//│ >               callee = Reference of "QueueNode"
+//│ >               argument = Tuple of Stack of 
+//│ >                 Reference of "priority"
+//│ >                 Reference of "item"
+//│ >                 Reference of "Empty"
+//│ >                 Reference of "right"
+//│ >             rhs = Reference of "right"
+//│ >           Infix:
+//│ >             op = Keyword(`->`, 5, 3)
+//│ >             lhs = Application:
+//│ >               callee = Reference of "QueueNode"
+//│ >               argument = Tuple of Stack of 
+//│ >                 Reference of "priority"
+//│ >                 Reference of "item"
+//│ >                 Infix:
+//│ >                   op = Keyword(`as`, 4, 4)
+//│ >                   lhs = Application:
+//│ >                     callee = Reference of "QueueNode"
+//│ >                     argument = Tuple of Stack of 
+//│ >                       Reference of "left_priority"
+//│ >                       Reference of "left_item"
+//│ >                       Underscore
+//│ >                       Underscore
+//│ >                   rhs = Reference of "left"
+//│ >                 Infix:
+//│ >                   op = Keyword(`as`, 4, 4)
+//│ >                   lhs = Application:
+//│ >                     callee = Reference of "QueueNode"
+//│ >                     argument = Tuple of Stack of 
+//│ >                       Reference of "right_priority"
+//│ >                       Reference of "right_item"
+//│ >                       Underscore
+//│ >                       Underscore
+//│ >                   rhs = Reference of "right"
+//│ >             rhs = Ternary:
+//│ >               name = Keyword(`if`, 10, 9)
+//│ >               lhs = Application:
+//│ >                 callee = Reference of "<"
+//│ >                 argument = Stack of 
+//│ >                   Reference of "left_priority"
+//│ >                   Reference of "right_priority"
+//│ >               rhs = Application:
+//│ >                 callee = Reference of "QueueNode"
+//│ >                 argument = Tuple of Stack of 
+//│ >                   Reference of "left_priority"
+//│ >                   Reference of "left_item"
+//│ >                   Application:
+//│ >                     callee = Reference of "remove_top"
+//│ >                     argument = Reference of "left"
+//│ >                   Reference of "right"
+//│ >               body = Some of Application:
+//│ >                 callee = Reference of "QueueNode"
+//│ >                 argument = Tuple of Stack of 
+//│ >                   Reference of "right_priority"
+//│ >                   Reference of "right_item"
+//│ >                   Reference of "left"
+//│ >                   Application:
+//│ >                     callee = Reference of "remove_top"
+//│ >                     argument = Reference of "right"
+//│ > Define:
+//│ >   kind = Let(false)
+//│ >   items = Stack of 
+//│ >     Infix:
+//│ >       op = Keyword(`=`, 16, 16)
+//│ >       lhs = Reference of "extract"
+//│ >       rhs = Match:
+//│ >         scrutinee = Empty()
+//│ >         branches = Stack of 
+//│ >           Infix:
+//│ >             op = Keyword(`->`, 5, 3)
+//│ >             lhs = Reference of "Empty"
+//│ >             rhs = Application:
+//│ >               callee = Reference of "raise"
+//│ >               argument = Reference of "Empty_queue"
+//│ >           Infix:
+//│ >             op = Keyword(`->`, 5, 3)
+//│ >             lhs = Infix:
+//│ >               op = Keyword(`as`, 4, 4)
+//│ >               lhs = Application:
+//│ >                 callee = Reference of "QueueNode"
+//│ >                 argument = Tuple of Stack of 
+//│ >                   Reference of "priority"
+//│ >                   Reference of "item"
+//│ >                   Underscore
+//│ >                   Underscore
+//│ >               rhs = Reference of "queue"
+//│ >             rhs = Tuple of Stack of 
+//│ >               Reference of "priority"
+//│ >               Reference of "item"
+//│ >               Application:
+//│ >                 callee = Reference of "remove_top"
+//│ >                 argument = Reference of "queue"
+//│ > Define:
+//│ >   kind = Let(true)
+//│ >   items = Stack of 
+//│ >     Infix:
+//│ >       op = Keyword(`=`, 16, 16)
+//│ >       lhs = Application:
+//│ >         callee = Application:
+//│ >           callee = Application:
+//│ >             callee = Reference of "add"
+//│ >             argument = Reference of "queue"
+//│ >           argument = Reference of "priority"
+//│ >         argument = Reference of "item"
+//│ >       rhs = Match:
+//│ >         scrutinee = Reference("queue", false)
+//│ >         branches = Stack of 
+//│ >           Infix:
+//│ >             op = Keyword(`->`, 5, 3)
+//│ >             lhs = Reference of "Empty"
+//│ >             rhs = Application:
+//│ >               callee = Reference of "QueueNode"
+//│ >               argument = Tuple of Stack of 
+//│ >                 Reference of "priority"
+//│ >                 Reference of "item"
+//│ >                 Reference of "Empty"
+//│ >                 Reference of "Empty"
+//│ >           Infix:
+//│ >             op = Keyword(`->`, 5, 3)
+//│ >             lhs = Application:
+//│ >               callee = Reference of "QueueNode"
+//│ >               argument = Tuple of Stack of 
+//│ >                 Reference of "priority1"
+//│ >                 Reference of "item1"
+//│ >                 Reference of "left"
+//│ >                 Reference of "right"
+//│ >             rhs = Ternary:
+//│ >               name = Keyword(`if`, 10, 9)
+//│ >               lhs = Application:
+//│ >                 callee = Reference of "<="
+//│ >                 argument = Stack of 
+//│ >                   Reference of "priority"
+//│ >                   Reference of "priority1"
+//│ >               rhs = Application:
+//│ >                 callee = Reference of "QueueNode"
+//│ >                 argument = Tuple of Stack of 
+//│ >                   Reference of "priority"
+//│ >                   Reference of "item"
+//│ >                   Application:
+//│ >                     callee = Application:
+//│ >                       callee = Application:
+//│ >                         callee = Reference of "add"
+//│ >                         argument = Reference of "right"
+//│ >                       argument = Reference of "priority1"
+//│ >                     argument = Reference of "item1"
+//│ >                   Reference of "left"
+//│ >               body = Some of Application:
+//│ >                 callee = Reference of "QueueNode"
+//│ >                 argument = Tuple of Stack of 
+//│ >                   Reference of "priority1"
+//│ >                   Reference of "item1"
+//│ >                   Application:
+//│ >                     callee = Application:
+//│ >                       callee = Application:
+//│ >                         callee = Reference of "add"
+//│ >                         argument = Reference of "right"
+//│ >                       argument = Reference of "priority"
+//│ >                     argument = Reference of "item"
+//│ >                   Reference of "left"
+//│ > «type t ('a) = Empty | QueueNode of int * 'a * t 'a * t 'a»
+//│ > «exception Empty_queue»
+//│ > «let empty = Empty»
+//│ > «let rec remove_top = function Empty -> raise Empty_queue | QueueNode (priority, item, Empty, Empty) -> Empty | QueueNode (priority, item, left, Empty) -> left | QueueNode (priority, item, Empty, right) -> right | QueueNode (priority, item, QueueNode (left_priority, left_item, _, _) as left, QueueNode (right_priority, right_item, _, _) as right) -> if left_priority < right_priority then QueueNode (left_priority, left_item, remove_top left, right) then QueueNode (right_priority, right_item, left, remove_top right)»
+//│ > «let extract = function Empty -> raise Empty_queue | QueueNode (priority, item, _, _) as queue -> (priority, item, remove_top queue)»
+//│ > «let rec add queue priority item = match queue with Empty -> QueueNode (priority, item, Empty, Empty) | QueueNode (priority1, item1, left, right) -> if priority <= priority1 then QueueNode (priority, item, add right priority1 item1, left) then QueueNode (priority1, item1, add right priority item, left)»
+
+// sources/examples/basics/wc.ml
+// =============================
+
+example of """
+:tree
+let chars = ref 0
+and words = ref 0
+and lines = ref 0
+;;
+type state = Inside_word | Outside_word;;
+let count_channel in_channel =
+  let rec count status =
+    let c = input_char in_channel in
+    incr chars;
+    match c with
+    | `\n` ->
+        incr lines; count Outside_word
+    | ` ` | `\t` ->
+        count Outside_word
+    | _ ->
+        if status = Outside_word then begin incr words; () end;
+        count Inside_word
+  in
+    try
+      count Outside_word
+    with End_of_file ->
+      ()
+;;
+let count_file name =
+  let ic = open_in name in
+  count_channel ic;
+  close_in ic
+;;
+let print_result () =
+  print_int !chars; print_string " characters, ";
+  print_int !words; print_string " words, ";
+  print_int !lines; print_string " lines";
+  print_newline()
+;;
+let count name =
+  count_file name;
+  print_result ()
+;;
+if sys__interactive then () else
+try
+  if vect_length sys__command_line <= 1 then
+    count_channel std_in
+  else
+    for i = 1 to vect_length sys__command_line - 1 do
+      count_file sys__command_line.(i)
+    done;
+  print_result ()
+with sys__Sys_error s ->
+  print_string "I/O error: ";
+  print_string s;
+  print_newline()
+;;
+"""
+//│ > Define:
+//│ >   kind = Let(false)
+//│ >   items = Stack of 
+//│ >     Infix:
+//│ >       op = Keyword(`=`, 16, 16)
+//│ >       lhs = Reference of "chars"
+//│ >       rhs = Application:
+//│ >         callee = Reference of "ref"
+//│ >         argument = Literal#Integer of "0"
+//│ >     Infix:
+//│ >       op = Keyword(`=`, 16, 16)
+//│ >       lhs = Reference of "words"
+//│ >       rhs = Application:
+//│ >         callee = Reference of "ref"
+//│ >         argument = Literal#Integer of "0"
+//│ >     Infix:
+//│ >       op = Keyword(`=`, 16, 16)
+//│ >       lhs = Reference of "lines"
+//│ >       rhs = Application:
+//│ >         callee = Reference of "ref"
+//│ >         argument = Literal#Integer of "0"
+//│ > Define:
+//│ >   kind = Type
+//│ >   items = Stack of 
+//│ >     Infix:
+//│ >       op = Keyword(`=`, 16, 16)
+//│ >       lhs = Reference of "state"
+//│ >       rhs = Infix:
+//│ >         op = Keyword(`|`, 4, 4)
+//│ >         lhs = Reference of "Inside_word"
+//│ >         rhs = Reference of "Outside_word"
+//│ > Define:
+//│ >   kind = Let(false)
+//│ >   items = Stack of 
+//│ >     Infix:
+//│ >       op = Keyword(`=`, 16, 16)
+//│ >       lhs = Application:
+//│ >         callee = Reference of "count_channel"
+//│ >         argument = Reference of "in_channel"
+//│ >       rhs = LetIn:
+//│ >         bindings = Stack of 
+//│ >           Infix:
+//│ >             op = Keyword(`=`, 16, 16)
+//│ >             lhs = Application:
+//│ >               callee = Reference of "count"
+//│ >               argument = Reference of "status"
+//│ >             rhs = LetIn:
+//│ >               bindings = Stack of 
+//│ >                 Infix:
+//│ >                   op = Keyword(`=`, 16, 16)
+//│ >                   lhs = Reference of "c"
+//│ >                   rhs = Application:
+//│ >                     callee = Reference of "input_char"
+//│ >                     argument = Reference of "in_channel"
+//│ >               body = Some of Sequence of Stack of 
+//│ >                 Application:
+//│ >                   callee = Reference of "incr"
+//│ >                   argument = Reference of "chars"
+//│ >                 Match:
+//│ >                   scrutinee = Reference("c", false)
+//│ >                   branches = Stack of 
+//│ >                     Infix:
+//│ >                       op = Keyword(`->`, 5, 3)
+//│ >                       lhs = Literal#Character of "\n"
+//│ >                       rhs = Sequence of Stack of 
+//│ >                         Application:
+//│ >                           callee = Reference of "incr"
+//│ >                           argument = Reference of "lines"
+//│ >                         Application:
+//│ >                           callee = Reference of "count"
+//│ >                           argument = Reference of "Outside_word"
+//│ >                     Infix:
+//│ >                       op = Keyword(`->`, 5, 3)
+//│ >                       lhs = Infix:
+//│ >                         op = Keyword(`|`, 4, 4)
+//│ >                         lhs = Literal#Character of " "
+//│ >                         rhs = Literal#Character of "\t"
+//│ >                       rhs = Application:
+//│ >                         callee = Reference of "count"
+//│ >                         argument = Reference of "Outside_word"
+//│ >                     Infix:
+//│ >                       op = Keyword(`->`, 5, 3)
+//│ >                       lhs = Underscore
+//│ >                       rhs = Ternary:
+//│ >                         name = Keyword(`if`, 10, 9)
+//│ >                         lhs = Infix:
+//│ >                           op = Keyword(`=`, 16, 16)
+//│ >                           lhs = Reference of "status"
+//│ >                           rhs = Reference of "Outside_word"
+//│ >                         rhs = Sequence of Stack of 
+//│ >                           Sequence of Stack of 
+//│ >                             Application:
+//│ >                               callee = Reference of "incr"
+//│ >                               argument = Reference of "words"
+//│ >                             Tuple of Nil
+//│ >                           Application:
+//│ >                             callee = Reference of "count"
+//│ >                             argument = Reference of "Inside_word"
+//│ >                         body = None
+//│ >         body = Some of Try:
+//│ >           body = Application:
+//│ >             callee = Reference of "count"
+//│ >             argument = Reference of "Outside_word"
+//│ >           branches = Stack of 
+//│ >             Infix:
+//│ >               op = Keyword(`->`, 5, 3)
+//│ >               lhs = Reference of "End_of_file"
+//│ >               rhs = Tuple of Nil
+//│ > Define:
+//│ >   kind = Let(false)
+//│ >   items = Stack of 
+//│ >     Infix:
+//│ >       op = Keyword(`=`, 16, 16)
+//│ >       lhs = Application:
+//│ >         callee = Reference of "count_file"
+//│ >         argument = Reference of "name"
+//│ >       rhs = LetIn:
+//│ >         bindings = Stack of 
+//│ >           Infix:
+//│ >             op = Keyword(`=`, 16, 16)
+//│ >             lhs = Reference of "ic"
+//│ >             rhs = Application:
+//│ >               callee = Reference of "open_in"
+//│ >               argument = Reference of "name"
+//│ >         body = Some of Sequence of Stack of 
+//│ >           Application:
+//│ >             callee = Reference of "count_channel"
+//│ >             argument = Reference of "ic"
+//│ >           Application:
+//│ >             callee = Reference of "close_in"
+//│ >             argument = Reference of "ic"
+//│ > Define:
+//│ >   kind = Let(false)
+//│ >   items = Stack of 
+//│ >     Infix:
+//│ >       op = Keyword(`=`, 16, 16)
+//│ >       lhs = Application:
+//│ >         callee = Reference of "print_result"
+//│ >         argument = Tuple of Nil
+//│ >       rhs = Sequence of Stack of 
+//│ >         Application:
+//│ >           callee = Reference of "print_int"
+//│ >           argument = Application:
+//│ >             callee = Reference of "!"
+//│ >             argument = Reference of "chars"
+//│ >         Application:
+//│ >           callee = Reference of "print_string"
+//│ >           argument = Literal#String of " characters, "
+//│ >         Application:
+//│ >           callee = Reference of "print_int"
+//│ >           argument = Application:
+//│ >             callee = Reference of "!"
+//│ >             argument = Reference of "words"
+//│ >         Application:
+//│ >           callee = Reference of "print_string"
+//│ >           argument = Literal#String of " words, "
+//│ >         Application:
+//│ >           callee = Reference of "print_int"
+//│ >           argument = Application:
+//│ >             callee = Reference of "!"
+//│ >             argument = Reference of "lines"
+//│ >         Application:
+//│ >           callee = Reference of "print_string"
+//│ >           argument = Literal#String of " lines"
+//│ >         Application:
+//│ >           callee = Reference of "print_newline"
+//│ >           argument = Tuple of Nil
+//│ > Define:
+//│ >   kind = Let(false)
+//│ >   items = Stack of 
+//│ >     Infix:
+//│ >       op = Keyword(`=`, 16, 16)
+//│ >       lhs = Application:
+//│ >         callee = Reference of "count"
+//│ >         argument = Reference of "name"
+//│ >       rhs = Sequence of Stack of 
+//│ >         Application:
+//│ >           callee = Reference of "count_file"
+//│ >           argument = Reference of "name"
+//│ >         Application:
+//│ >           callee = Reference of "print_result"
+//│ >           argument = Tuple of Nil
+//│ > Ternary:
+//│ >   name = Keyword(`if`, 10, 9)
+//│ >   lhs = Reference of "sys__interactive"
+//│ >   rhs = Tuple of Nil
+//│ >   body = Some of Try:
+//│ >     body = Ternary:
+//│ >       name = Keyword(`if`, 10, 9)
+//│ >       lhs = Application:
+//│ >         callee = Reference of "<="
+//│ >         argument = Stack of 
+//│ >           Application:
+//│ >             callee = Reference of "vect_length"
+//│ >             argument = Reference of "sys__command_line"
+//│ >           Literal#Integer of "1"
+//│ >       rhs = Application:
+//│ >         callee = Reference of "count_channel"
+//│ >         argument = Reference of "std_in"
+//│ >       body = Some of Sequence of Stack of 
+//│ >         For:
+//│ >           head = Reference of "i"
+//│ >           start = Literal#Integer of "1"
+//│ >           end = Application:
+//│ >             callee = Reference of "-"
+//│ >             argument = Stack of 
+//│ >               Application:
+//│ >                 callee = Reference of "vect_length"
+//│ >                 argument = Reference of "sys__command_line"
+//│ >               Literal#Integer of "1"
+//│ >           body = Application:
+//│ >             callee = Reference of "count_file"
+//│ >             argument = Infix:
+//│ >               op = Keyword(`.`, 26, 26)
+//│ >               lhs = Reference of "sys__command_line"
+//│ >               rhs = Reference of "i"
+//│ >         Application:
+//│ >           callee = Reference of "print_result"
+//│ >           argument = Tuple of Nil
+//│ >     branches = Stack of 
+//│ >       Infix:
+//│ >         op = Keyword(`->`, 5, 3)
+//│ >         lhs = Application:
+//│ >           callee = Reference of "sys__Sys_error"
+//│ >           argument = Reference of "s"
+//│ >         rhs = Sequence of Stack of 
+//│ >           Application:
+//│ >             callee = Reference of "print_string"
+//│ >             argument = Literal#String of "I/O error: "
+//│ >           Application:
+//│ >             callee = Reference of "print_string"
+//│ >             argument = Reference of "s"
+//│ >           Application:
+//│ >             callee = Reference of "print_newline"
+//│ >             argument = Tuple of Nil
+//│ > «let chars = ref 0 and words = ref 0 and lines = ref 0»
+//│ > «type state = Inside_word | Outside_word»
+//│ > «let count_channel in_channel = let count status = let c = input_char in_channel in incr chars; match c with `\n` -> incr lines; count Outside_word | ` ` | `\t` -> count Outside_word | _ -> if status = Outside_word then incr words; (); count Inside_word then None in try count Outside_word with End_of_file -> ()»
+//│ > «let count_file name = let ic = open_in name in count_channel ic; close_in ic»
+//│ > «let print_result () = print_int (!chars); print_string " char…"; print_int (!words); print_string " word…"; print_int (!lines); print_string " line…"; print_newline ()»
+//│ > «let count name = count_file name; print_result ()»
+//│ > «if sys__interactive then () then try if vect_length sys__command_line <= 1 then count_channel std_in then for i = 1 to vect_length sys__command_line - 1 do count_file sys__command_line.i done; print_result () with sys__Sys_error s -> print_string "I/O e…"; print_string s; print_newline ()»
+
+// sources/examples/showsort/bubble.ml
+// ====================================
+
+example of """
+:tree
+#open "animation";;
+let sort context =
+  let ordered = ref true in
+  let rec sweep i =
+    if i + 1 >= vect_length context.array then
+      if !ordered then
+        Finished
+      else begin
+        ordered := false;
+        sweep 0
+      end
+    else
+      Pause(fun () ->
+        if context.array.(i + 1) < context.array.(i) then begin
+          exchange context i (i + 1);
+          ordered := false
+        end;
+        sweep(i + 1))
+  in sweep 0
+;;
+"""
+//│ > Define:
+//│ >   kind = Directive
+//│ >   items = Stack of 
+//│ >     Pair:
+//│ >       first = Reference of "open"
+//│ >       second = Literal#String of "animation"
+//│ > Define:
+//│ >   kind = Let(false)
+//│ >   items = Stack of 
+//│ >     Infix:
+//│ >       op = Keyword(`=`, 16, 16)
+//│ >       lhs = Application:
+//│ >         callee = Reference of "sort"
+//│ >         argument = Reference of "context"
+//│ >       rhs = LetIn:
+//│ >         bindings = Stack of 
+//│ >           Infix:
+//│ >             op = Keyword(`=`, 16, 16)
+//│ >             lhs = Reference of "ordered"
+//│ >             rhs = Application:
+//│ >               callee = Reference of "ref"
+//│ >               argument = Literal#Boolean of "true"
+//│ >         body = Some of LetIn:
+//│ >           bindings = Stack of 
+//│ >             Infix:
+//│ >               op = Keyword(`=`, 16, 16)
+//│ >               lhs = Application:
+//│ >                 callee = Reference of "sweep"
+//│ >                 argument = Reference of "i"
+//│ >               rhs = Ternary:
+//│ >                 name = Keyword(`if`, 10, 9)
+//│ >                 lhs = Application:
+//│ >                   callee = Reference of ">="
+//│ >                   argument = Stack of 
+//│ >                     Application:
+//│ >                       callee = Reference of "+"
+//│ >                       argument = Stack of 
+//│ >                         Reference of "i"
+//│ >                         Literal#Integer of "1"
+//│ >                     Application:
+//│ >                       callee = Reference of "vect_length"
+//│ >                       argument = Infix:
+//│ >                         op = Keyword(`.`, 26, 26)
+//│ >                         lhs = Reference of "context"
+//│ >                         rhs = Reference of "array"
+//│ >                 rhs = Ternary:
+//│ >                   name = Keyword(`if`, 10, 9)
+//│ >                   lhs = Application:
+//│ >                     callee = Reference of "!"
+//│ >                     argument = Reference of "ordered"
+//│ >                   rhs = Reference of "Finished"
+//│ >                   body = Some of Sequence of Stack of 
+//│ >                     Application:
+//│ >                       callee = Reference of ":="
+//│ >                       argument = Stack of 
+//│ >                         Reference of "ordered"
+//│ >                         Literal#Boolean of "false"
+//│ >                     Application:
+//│ >                       callee = Reference of "sweep"
+//│ >                       argument = Literal#Integer of "0"
+//│ >                 body = Some of Application:
+//│ >                   callee = Reference of "Pause"
+//│ >                   argument = Lambda:
+//│ >                     params = Stack of 
+//│ >                       Tuple of Nil
+//│ >                     body = Ternary:
+//│ >                       name = Keyword(`if`, 10, 9)
+//│ >                       lhs = Application:
+//│ >                         callee = Reference of "<"
+//│ >                         argument = Stack of 
+//│ >                           Infix:
+//│ >                             op = Keyword(`.`, 26, 26)
+//│ >                             lhs = Infix:
+//│ >                               op = Keyword(`.`, 26, 26)
+//│ >                               lhs = Reference of "context"
+//│ >                               rhs = Reference of "array"
+//│ >                             rhs = Application:
+//│ >                               callee = Reference of "+"
+//│ >                               argument = Stack of 
+//│ >                                 Reference of "i"
+//│ >                                 Literal#Integer of "1"
+//│ >                           Infix:
+//│ >                             op = Keyword(`.`, 26, 26)
+//│ >                             lhs = Infix:
+//│ >                               op = Keyword(`.`, 26, 26)
+//│ >                               lhs = Reference of "context"
+//│ >                               rhs = Reference of "array"
+//│ >                             rhs = Reference of "i"
+//│ >                       rhs = Sequence of Stack of 
+//│ >                         Sequence of Stack of 
+//│ >                           Application:
+//│ >                             callee = Application:
+//│ >                               callee = Application:
+//│ >                                 callee = Reference of "exchange"
+//│ >                                 argument = Reference of "context"
+//│ >                               argument = Reference of "i"
+//│ >                             argument = Application:
+//│ >                               callee = Reference of "+"
+//│ >                               argument = Stack of 
+//│ >                                 Reference of "i"
+//│ >                                 Literal#Integer of "1"
+//│ >                           Application:
+//│ >                             callee = Reference of ":="
+//│ >                             argument = Stack of 
+//│ >                               Reference of "ordered"
+//│ >                               Literal#Boolean of "false"
+//│ >                         Application:
+//│ >                           callee = Reference of "sweep"
+//│ >                           argument = Application:
+//│ >                             callee = Reference of "+"
+//│ >                             argument = Stack of 
+//│ >                               Reference of "i"
+//│ >                               Literal#Integer of "1"
+//│ >                       body = None
+//│ >           body = Some of Application:
+//│ >             callee = Reference of "sweep"
+//│ >             argument = Literal#Integer of "0"
+//│ > «#open "anima…"»
+//│ > «let sort context = let ordered = ref true in let sweep i = if i + 1 >= vect_length context.array then if !ordered then Finished then ordered := false; sweep 0 then Pause (fun () -> if context.array . i + 1 < context.array.i then exchange context i (i + 1); ordered := false; sweep (i + 1) then None) in sweep 0»
+
+// sources/examples/showsort/insertion.ml
+// =======================================
+
+example of """
+:tree
+#open "animation";;
+let sort context =
+  let rec loop_outer i =
+    if i >= vect_length context.array then Finished else
+    let value_i = context.array.(i) in
+    let rec loop_inner j =
+      if j < 1 then begin
+        assign context j value_i;
+        loop_outer (i + 1)
+      end else
+        Pause(fun () ->
+          if value_i >= context.array.(j - 1) then begin
+            assign context j value_i;
+            loop_outer (i + 1)
+          end else begin
+            assign context j context.array.(j - 1);
+            loop_inner (j - 1)
+          end)
+    in loop_inner i
+  in loop_outer 1
+;;
+"""
+//│ > Define:
+//│ >   kind = Directive
+//│ >   items = Stack of 
+//│ >     Pair:
+//│ >       first = Reference of "open"
+//│ >       second = Literal#String of "animation"
+//│ > Define:
+//│ >   kind = Let(false)
+//│ >   items = Stack of 
+//│ >     Infix:
+//│ >       op = Keyword(`=`, 16, 16)
+//│ >       lhs = Application:
+//│ >         callee = Reference of "sort"
+//│ >         argument = Reference of "context"
+//│ >       rhs = LetIn:
+//│ >         bindings = Stack of 
+//│ >           Infix:
+//│ >             op = Keyword(`=`, 16, 16)
+//│ >             lhs = Application:
+//│ >               callee = Reference of "loop_outer"
+//│ >               argument = Reference of "i"
+//│ >             rhs = Ternary:
+//│ >               name = Keyword(`if`, 10, 9)
+//│ >               lhs = Application:
+//│ >                 callee = Reference of ">="
+//│ >                 argument = Stack of 
+//│ >                   Reference of "i"
+//│ >                   Application:
+//│ >                     callee = Reference of "vect_length"
+//│ >                     argument = Infix:
+//│ >                       op = Keyword(`.`, 26, 26)
+//│ >                       lhs = Reference of "context"
+//│ >                       rhs = Reference of "array"
+//│ >               rhs = Reference of "Finished"
+//│ >               body = Some of LetIn:
+//│ >                 bindings = Stack of 
+//│ >                   Infix:
+//│ >                     op = Keyword(`=`, 16, 16)
+//│ >                     lhs = Reference of "value_i"
+//│ >                     rhs = Infix:
+//│ >                       op = Keyword(`.`, 26, 26)
+//│ >                       lhs = Infix:
+//│ >                         op = Keyword(`.`, 26, 26)
+//│ >                         lhs = Reference of "context"
+//│ >                         rhs = Reference of "array"
+//│ >                       rhs = Reference of "i"
+//│ >                 body = Some of LetIn:
+//│ >                   bindings = Stack of 
+//│ >                     Infix:
+//│ >                       op = Keyword(`=`, 16, 16)
+//│ >                       lhs = Application:
+//│ >                         callee = Reference of "loop_inner"
+//│ >                         argument = Reference of "j"
+//│ >                       rhs = Ternary:
+//│ >                         name = Keyword(`if`, 10, 9)
+//│ >                         lhs = Application:
+//│ >                           callee = Reference of "<"
+//│ >                           argument = Stack of 
+//│ >                             Reference of "j"
+//│ >                             Literal#Integer of "1"
+//│ >                         rhs = Sequence of Stack of 
+//│ >                           Application:
+//│ >                             callee = Application:
+//│ >                               callee = Application:
+//│ >                                 callee = Reference of "assign"
+//│ >                                 argument = Reference of "context"
+//│ >                               argument = Reference of "j"
+//│ >                             argument = Reference of "value_i"
+//│ >                           Application:
+//│ >                             callee = Reference of "loop_outer"
+//│ >                             argument = Application:
+//│ >                               callee = Reference of "+"
+//│ >                               argument = Stack of 
+//│ >                                 Reference of "i"
+//│ >                                 Literal#Integer of "1"
+//│ >                         body = Some of Application:
+//│ >                           callee = Reference of "Pause"
+//│ >                           argument = Lambda:
+//│ >                             params = Stack of 
+//│ >                               Tuple of Nil
+//│ >                             body = Ternary:
+//│ >                               name = Keyword(`if`, 10, 9)
+//│ >                               lhs = Application:
+//│ >                                 callee = Reference of ">="
+//│ >                                 argument = Stack of 
+//│ >                                   Reference of "value_i"
+//│ >                                   Infix:
+//│ >                                     op = Keyword(`.`, 26, 26)
+//│ >                                     lhs = Infix:
+//│ >                                       op = Keyword(`.`, 26, 26)
+//│ >                                       lhs = Reference of "context"
+//│ >                                       rhs = Reference of "array"
+//│ >                                     rhs = Application:
+//│ >                                       callee = Reference of "-"
+//│ >                                       argument = Stack of 
+//│ >                                         Reference of "j"
+//│ >                                         Literal#Integer of "1"
+//│ >                               rhs = Sequence of Stack of 
+//│ >                                 Application:
+//│ >                                   callee = Application:
+//│ >                                     callee = Application:
+//│ >                                       callee = Reference of "assign"
+//│ >                                       argument = Reference of "context"
+//│ >                                     argument = Reference of "j"
+//│ >                                   argument = Reference of "value_i"
+//│ >                                 Application:
+//│ >                                   callee = Reference of "loop_outer"
+//│ >                                   argument = Application:
+//│ >                                     callee = Reference of "+"
+//│ >                                     argument = Stack of 
+//│ >                                       Reference of "i"
+//│ >                                       Literal#Integer of "1"
+//│ >                               body = Some of Sequence of Stack of 
+//│ >                                 Application:
+//│ >                                   callee = Application:
+//│ >                                     callee = Application:
+//│ >                                       callee = Reference of "assign"
+//│ >                                       argument = Reference of "context"
+//│ >                                     argument = Reference of "j"
+//│ >                                   argument = Infix:
+//│ >                                     op = Keyword(`.`, 26, 26)
+//│ >                                     lhs = Infix:
+//│ >                                       op = Keyword(`.`, 26, 26)
+//│ >                                       lhs = Reference of "context"
+//│ >                                       rhs = Reference of "array"
+//│ >                                     rhs = Application:
+//│ >                                       callee = Reference of "-"
+//│ >                                       argument = Stack of 
+//│ >                                         Reference of "j"
+//│ >                                         Literal#Integer of "1"
+//│ >                                 Application:
+//│ >                                   callee = Reference of "loop_inner"
+//│ >                                   argument = Application:
+//│ >                                     callee = Reference of "-"
+//│ >                                     argument = Stack of 
+//│ >                                       Reference of "j"
+//│ >                                       Literal#Integer of "1"
+//│ >                   body = Some of Application:
+//│ >                     callee = Reference of "loop_inner"
+//│ >                     argument = Reference of "i"
+//│ >         body = Some of Application:
+//│ >           callee = Reference of "loop_outer"
+//│ >           argument = Literal#Integer of "1"
+//│ > «#open "anima…"»
+//│ > «let sort context = let loop_outer i = if i >= vect_length context.array then Finished then let value_i = context.array.i in let loop_inner j = if j < 1 then assign context j value_i; loop_outer (i + 1) then Pause (fun () -> if value_i >= context.array . j - 1 then assign context j value_i; loop_outer (i + 1) then assign context j context.array . j - 1; loop_inner (j - 1)) in loop_inner i in loop_outer 1»

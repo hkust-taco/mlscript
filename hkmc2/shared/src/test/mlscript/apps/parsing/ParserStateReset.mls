@@ -1,0 +1,35 @@
+:js
+
+import "../../../mlscript-compile/MutMap.mls"
+import "../../../mlscript-compile/Iter.mls"
+import "../../../mlscript-compile/apps/parsing/Test.mls"
+import "../../../mlscript-compile/apps/parsing/Extension.mls"
+import "../../../mlscript-compile/apps/parsing/Keywords.mls"
+import "../../../mlscript-compile/apps/parsing/Rules.mls"
+
+open Test { example }
+
+example of """
+#keyword "demo" None None
+#extend ["demo-value", [ keyword("demo"), ["term", "value"] ], [Demo value]]
+#extend ["decl", [ ["demo-value", "value"] ], [value]]
+demo 1
+"""
+//│ > «Demo 1»
+
+print of Keywords.extended |> MutMap.valuesIterator |. Iter.joined("\n")
+//│ > Keyword(`demo`, N/A, N/A)
+
+print of Rules.extendedKinds Iter.joined("\n")
+//│ > demo-value
+
+Extension.resetParserState()
+
+print of Keywords.extended |> MutMap.valuesIterator |. Iter.joined("\n")
+//│ > 
+
+print of Rules.extendedKinds Iter.joined("\n")
+//│ > 
+
+example of "demo 1"
+//│ > «demo 1»

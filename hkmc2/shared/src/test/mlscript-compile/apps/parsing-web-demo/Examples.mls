@@ -5,10 +5,14 @@ open Predef
 module Examples with...
 
 val examples = MutMap.empty
+val camlLightRepo = "https://github.com/camllight/camllight"
+fun camlLightUrl(path: Str) = camlLightRepo + "/blob/master/" + path
 
 examples |> MutMap.insert of
   "hanoi"
   name: "Hanoi from Caml Light"
+  origin: "Adapted from Caml Light sources/examples/hanoi/hanoi.ml"
+  originUrl: camlLightUrl("sources/examples/hanoi/hanoi.ml")
   source: """let spaces n = make_string n " ";;
 let disk size =
     let right_half = make_string size ">"
@@ -38,18 +42,326 @@ let rec join_lines l1 l2 l3 =
 examples |> MutMap.insert of
   "extensible"
   name: "Extensible Syntax"
-  source: """#newKeyword ("hello", Some 3, Some 3)
-#newKeyword ("goodbye", None, None)
+  origin: "Local greeting syntax extension demo"
+  source: """#keyword "hello" 3 3
+#keyword "goodbye" None None
+
+#extend ["greeting", [ keyword("hello"), ["string-literal", "name"], ["greeting", "tail"] ], [foo name tail]]
+#extend ["greeting", [ keyword("goodbye") ], [bar]]
   
-#newCategory("greeting")
-  
-#extendCategory("greeting", [ keyword("hello"), "term", "greeting" ], foo)
-#extendCategory("greeting", [ keyword("goodbye") ], bar)
-  
-#extendCategory("decl", [ "greeting" ], baz)
+#extend ["decl", [ ["greeting", "value"] ], [baz value]]
   
   
 hello "Rob" hello "Bob" goodbye
   
 #diagram ""
 """
+
+examples |> MutMap.insert of
+  "caml-fibonacci"
+  name: "Caml Light: Fibonacci"
+  origin: "Adapted from Caml Light sources/examples/basics/fib.ml"
+  originUrl: camlLightUrl("sources/examples/basics/fib.ml")
+  source: """let rec fib n =
+  if n < 2 then 1 else fib(n-1) + fib(n-2)
+;;
+if sys__interactive then () else
+if vect_length sys__command_line <> 2 then begin
+  print_string "Usage: fib <number>";
+  print_newline()
+end else begin
+  try
+    print_int(fib(int_of_string sys__command_line.(1)));
+    print_newline()
+  with Failure "int_of_string" ->
+    print_string "Bad integer constant";
+    print_newline()
+end
+;;"""
+
+examples |> MutMap.insert of
+  "caml-sieve"
+  name: "Caml Light: Sieve"
+  origin: "Adapted from Caml Light sources/examples/basics/sieve.ml"
+  originUrl: camlLightUrl("sources/examples/basics/sieve.ml")
+  source: """let rec interval min max =
+  if min > max then [] else min :: interval (succ min) max
+;;
+let rec filter p = function
+  | [] -> []
+  | a :: r -> if p a then a :: filter p r else filter p r
+;;
+let remove_multiples_of n =
+  filter (fun m -> m mod n <> 0)
+;;
+let sieve max =
+  let rec filter_again = function
+  | [] -> []
+  | n :: r as l ->
+      if n * n > max then l else n :: filter_again (remove_multiples_of n r)
+  in
+    filter_again (interval 2 max)
+;;"""
+
+examples |> MutMap.insert of
+  "caml-integer-sets"
+  name: "Caml Light: Integer Sets"
+  origin: "Adapted from Caml Light sources/examples/grep/ensent.ml"
+  originUrl: camlLightUrl("sources/examples/grep/ensent.ml")
+  source: """type t == int list;;
+let empty = [];;
+let rec belongs n = function
+  | [] -> false
+  | m :: rest ->
+      if m = n then true else
+        if m > n then false else belongs n rest
+;;
+let rec add n = function
+  | [] -> [n]
+  | m :: rest as set ->
+      if m = n then set else
+        if m > n then n :: set else m :: add n rest
+;;"""
+
+examples |> MutMap.insert of
+  "caml-pascal-values"
+  name: "Caml Light: Pascal Values"
+  origin: "Adapted from Caml Light sources/examples/pascal/valeur.ml"
+  originUrl: camlLightUrl("sources/examples/pascal/valeur.ml")
+  source: """#open "interp";;
+let int_val = function
+  | Int n -> n
+  | _ -> raise(Runtime_error "integer expected")
+and bool_val = function
+  | Bool b -> b
+  | _ -> raise(Runtime_error "boolean expected")
+and array_val = function
+  | Array(lower, values) -> (lower, values)
+  | _ -> raise(Runtime_error "array expected")
+;;
+let print_value v =
+  print_int(int_val v); print_newline()
+;;
+let read_value () =
+  let input = read_line() in
+  try Int(int_of_string input)
+  with Failure _ -> raise(Runtime_error "read error")
+;;"""
+
+examples |> MutMap.insert of
+  "caml-picomach-constants"
+  name: "Caml Light: Picomach Constants"
+  origin: "Adapted from Caml Light sources/examples/picomach/code.ml"
+  originUrl: camlLightUrl("sources/examples/picomach/code.ml")
+  source: """let register_count = 32
+and sp = 30
+and ra = 31
+and word_size = 4
+;;"""
+
+examples |> MutMap.insert of
+  "caml-bit-buffer"
+  name: "Caml Light: Bit Buffer"
+  origin: "Adapted from Caml Light sources/examples/compress/esbit.ml"
+  originUrl: camlLightUrl("sources/examples/compress/esbit.ml")
+  source: """type buffer = { mutable val: int; mutable nbits: int };;
+let buffer = { val = 0; nbits = 0 };;
+let initialize () = buffer.val <- 0; buffer.nbits <- 0;;
+let write_bit output bit =
+  buffer.val <- buffer.val lor (bit lsl buffer.nbits);
+  buffer.nbits <- buffer.nbits + 1;
+  if buffer.nbits >= 8 then begin
+    output_char output (char_of_int buffer.val);
+    buffer.val <- 0;
+    buffer.nbits <- 0
+  end
+;;
+let finish output =
+  if buffer.nbits > 0 then
+    output_char output (char_of_int buffer.val)
+;;
+let read_bit input =
+  if buffer.nbits <= 0 then begin
+    buffer.val <- int_of_char(input_char input);
+    buffer.nbits <- 8
+  end;
+  let result = buffer.val land 1 in
+  buffer.val <- buffer.val lsr 1;
+  buffer.nbits <- buffer.nbits - 1;
+  result
+;;"""
+
+examples |> MutMap.insert of
+  "caml-priority-queue"
+  name: "Caml Light: Priority Queue"
+  origin: "Adapted from Caml Light sources/examples/compress/fileprio.ml"
+  originUrl: camlLightUrl("sources/examples/compress/fileprio.ml")
+  source: """type 'a t = Empty | QueueNode of int * 'a * 'a t * 'a t;;
+exception Empty_queue;;
+let empty = Empty;;
+let rec remove_top = function
+  | Empty -> raise Empty_queue
+  | QueueNode(priority, item, Empty, Empty) -> Empty
+  | QueueNode(priority, item, left, Empty) -> left
+  | QueueNode(priority, item, Empty, right) -> right
+  | QueueNode(priority, item,
+              (QueueNode(left_priority, left_item, _, _) as left),
+              (QueueNode(right_priority, right_item, _, _) as right)) ->
+      if left_priority < right_priority
+      then QueueNode(left_priority, left_item,
+                     remove_top left,
+                     right)
+      else QueueNode(right_priority, right_item,
+                     left,
+                     remove_top right)
+;;
+let extract = function
+  | Empty -> raise Empty_queue
+  | QueueNode(priority, item, _, _) as queue ->
+      (priority, item, remove_top queue)
+;;
+let rec add queue priority item =
+  match queue with
+  | Empty -> QueueNode(priority, item, Empty, Empty)
+  | QueueNode(priority1, item1, left, right) ->
+      if priority <= priority1
+      then QueueNode(priority, item, add right priority1 item1, left)
+      else QueueNode(priority1, item1, add right priority item, left)
+;;"""
+
+examples |> MutMap.insert of
+  "caml-word-count"
+  name: "Caml Light: Word Count"
+  origin: "Adapted from Caml Light sources/examples/basics/wc.ml"
+  originUrl: camlLightUrl("sources/examples/basics/wc.ml")
+  source: """let chars = ref 0
+and words = ref 0
+and lines = ref 0
+;;
+type state = Inside_word | Outside_word;;
+let count_channel in_channel =
+  let rec count status =
+    let c = input_char in_channel in
+    incr chars;
+    match c with
+    | `\n` ->
+        incr lines; count Outside_word
+    | ` ` | `\t` ->
+        count Outside_word
+    | _ ->
+        if status = Outside_word then begin incr words; () end;
+        count Inside_word
+  in
+    try
+      count Outside_word
+    with End_of_file ->
+      ()
+;;
+let count_file name =
+  let ic = open_in name in
+  count_channel ic;
+  close_in ic
+;;
+let print_result () =
+  print_int !chars; print_string " characters, ";
+  print_int !words; print_string " words, ";
+  print_int !lines; print_string " lines";
+  print_newline()
+;;
+let count name =
+  count_file name;
+  print_result ()
+;;
+if sys__interactive then () else
+try
+  if vect_length sys__command_line <= 1 then
+    count_channel std_in
+  else
+    for i = 1 to vect_length sys__command_line - 1 do
+      count_file sys__command_line.(i)
+    done;
+  print_result ()
+with sys__Sys_error s ->
+  print_string "I/O error: ";
+  print_string s;
+  print_newline()
+;;"""
+
+examples |> MutMap.insert of
+  "caml-bubble-sort"
+  name: "Caml Light: Bubble Sort"
+  origin: "Adapted from Caml Light sources/examples/showsort/bubble.ml"
+  originUrl: camlLightUrl("sources/examples/showsort/bubble.ml")
+  source: """#open "animation";;
+let sort context =
+  let ordered = ref true in
+  let rec sweep i =
+    if i + 1 >= vect_length context.array then
+      if !ordered then
+        Finished
+      else begin
+        ordered := false;
+        sweep 0
+      end
+    else
+      Pause(fun () ->
+        if context.array.(i + 1) < context.array.(i) then begin
+          exchange context i (i + 1);
+          ordered := false
+        end;
+        sweep(i + 1))
+  in sweep 0
+;;"""
+
+examples |> MutMap.insert of
+  "caml-insertion-sort"
+  name: "Caml Light: Insertion Sort"
+  origin: "Adapted from Caml Light sources/examples/showsort/insertion.ml"
+  originUrl: camlLightUrl("sources/examples/showsort/insertion.ml")
+  source: """#open "animation";;
+let sort context =
+  let rec loop_outer i =
+    if i >= vect_length context.array then Finished else
+    let value_i = context.array.(i) in
+    let rec loop_inner j =
+      if j < 1 then begin
+        assign context j value_i;
+        loop_outer (i + 1)
+      end else
+        Pause(fun () ->
+          if value_i >= context.array.(j - 1) then begin
+            assign context j value_i;
+            loop_outer (i + 1)
+          end else begin
+            assign context j context.array.(j - 1);
+            loop_inner (j - 1)
+          end)
+    in loop_inner i
+  in loop_outer 1
+;;"""
+
+examples |> MutMap.insert of
+  "extensible-routes"
+  name: "Extensible: Routes"
+  origin: "Local route declaration syntax extension demo"
+  source: """#keyword "route" None None
+#keyword "GET" None None
+#keyword "POST" None None
+#extend ["http-method", [ keyword("GET") ], [Get]]
+#extend ["http-method", [ keyword("POST") ], [Post]]
+#extend ["decl", [ keyword("route"), ["http-method", "method"], ["string-literal", "path"], ["term", "handler"] ], [Route method path handler]]
+route GET "/users" list_users;;
+route POST "/users" create_user"""
+
+examples |> MutMap.insert of
+  "extensible-workflow"
+  name: "Extensible: Workflow"
+  origin: "Local workflow syntax extension demo"
+  source: """#keyword "workflow" None None
+#keyword "step" None None
+#keyword "next" None None
+#keyword "done" None None
+#extend ["steps", [ keyword("step"), ["string-literal", "name"], keyword("next"), ["steps", "tail"] ], [Cons name tail]]
+#extend ["steps", [ keyword("done") ], [Nil]]
+#extend ["decl", [ keyword("workflow"), ["ident", "name"], ["steps", "steps"] ], [Workflow name steps]]
+workflow deploy step "build" next step "test" next done"""
