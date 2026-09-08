@@ -69,11 +69,10 @@ liftedNarrow(42)
 
 // Entering the broad member of this SCC must still enforce narrow's return contract.
 // The different class layouts ensure that Wasm's structural type identity cannot mask the cast.
-// Currently, TailRecOpt drops the intermediate cast and returns an Other.
+// TailRecOpt used to drop the intermediate cast and return an Other; the coercion is now carried to the exit.
 :noInline
 :soir
 :re
-:breakme // Entry-stub casts do not preserve intermediate return coercions.
 class Narrow(val n: Int)
 class Other()
 fun narrow(n: Int): Narrow = broad(n)
@@ -83,9 +82,12 @@ broad(1)
 //│ let narrow_broad;
 //│ @private
 //│ define narrow_broad as fun narrow_broad⁰(id, param0) {
+//│   let narrow$deferred;
+//│   set narrow$deferred = false;
 //│   loop loopLabel:
 //│     match id
 //│       0 =>
+//│         set narrow$deferred = true;
 //│         set id = 1;
 //│         continue loopLabel
 //│       1 =>
@@ -93,7 +95,14 @@ broad(1)
 //│         set scrut = wasm⁰.le_impl﹖(param0, 0);
 //│         match scrut
 //│           true =>
-//│             return new Other⁰()
+//│             let exitResult;
+//│             set exitResult = new Other⁰();
+//│             match narrow$deferred
+//│               true =>
+//│                 return (exitResult as! Narrow⁰)
+//│               else
+//│                 return exitResult
+//│             end
 //│           else
 //│             set tmp = wasm⁰.minus_impl﹖(param0, 1);
 //│             set param0 = (tmp as! Int⁰);
@@ -123,7 +132,7 @@ broad(1)
 //│ define Other¹ as class Other⁰ { constructor Other² };
 //│ return broad¹(1)
 //│ Wasm result:
-//│ = {}
+//│ ═══[RUNTIME ERROR] RuntimeError: illegal cast
 
 
 // Control: without tail-recursion optimization, the same call traps as required.
@@ -137,6 +146,160 @@ fun broadControl(n: Int): Object = if n <= 0 then new OtherControl() else narrow
 broadControl(1)
 //│ Wasm result:
 //│ ═══[RUNTIME ERROR] RuntimeError: illegal cast
+
+
+// Entering the same loop through the member that defers nothing leaves its flag unset, so the exit returns
+// its value unchanged rather than performing a cast the run never deferred.
+:noInline
+:soir
+class NarrowUnset(val n: Int)
+class OtherUnset()
+fun narrowUnset(n: Int): NarrowUnset = broadUnset(n)
+fun broadUnset(n: Int): Object = if n <= 0 then new OtherUnset() else narrowUnset(n - 1)
+broadUnset(0)
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let narrowUnset_broadUnset;
+//│ @private
+//│ define narrowUnset_broadUnset as fun narrowUnset_broadUnset⁰(id, param0) {
+//│   let narrowUnset$deferred;
+//│   set narrowUnset$deferred = false;
+//│   loop loopLabel:
+//│     match id
+//│       0 =>
+//│         set narrowUnset$deferred = true;
+//│         set id = 1;
+//│         continue loopLabel
+//│       1 =>
+//│         let scrut, tmp;
+//│         set scrut = wasm⁰.le_impl﹖(param0, 0);
+//│         match scrut
+//│           true =>
+//│             let exitResult;
+//│             set exitResult = new OtherUnset⁰();
+//│             match narrowUnset$deferred
+//│               true =>
+//│                 return (exitResult as! NarrowUnset⁰)
+//│               else
+//│                 return exitResult
+//│             end
+//│           else
+//│             set tmp = wasm⁰.minus_impl﹖(param0, 1);
+//│             set param0 = (tmp as! Int⁰);
+//│             set id = 0;
+//│             continue loopLabel
+//│         end
+//│       else
+//│         unreachable /* dispatch tag is always a merged member id */
+//│     end
+//│   unreachable /* Rest of abortive labelled block */
+//│ };
+//│ @inline
+//│ define narrowUnset⁰ as fun narrowUnset¹(n) {
+//│   return (narrowUnset_broadUnset⁰(0, n) as! NarrowUnset⁰)
+//│ };
+//│ @inline
+//│ define broadUnset⁰ as fun broadUnset¹(n) {
+//│   return narrowUnset_broadUnset⁰(1, n)
+//│ };
+//│ define NarrowUnset¹ as class NarrowUnset⁰ {
+//│   val n²;
+//│   constructor NarrowUnset²(n) {
+//│     define n² as val n³ = n;
+//│     end
+//│   }
+//│ };
+//│ define OtherUnset¹ as class OtherUnset⁰ { constructor OtherUnset² };
+//│ return broadUnset¹(0)
+//│ Wasm result:
+//│ = {}
+
+
+// Two members of one loop can defer casts at the same time, and the flags carry them independently.
+// Entering at `wideOf` traverses both deferring edges, so the exit performs each in turn; the returned `Tip`
+// satisfies both and passes through unharmed. `mkWide` declares the wider type so that the exits cannot show
+// either cast redundant statically, which is what keeps both flags alive.
+:noInline
+:soir
+class Wide()
+class Middle() extends Wide()
+class Tip() extends Middle()
+fun tipOf(n: Int): Tip = midOf(n)
+fun midOf(n: Int): Middle = wideOf(n)
+fun wideOf(n: Int): Wide =
+  if n <= 0 then
+    val w: Wide = new Tip()
+    w
+  else tipOf(n - 1)
+wideOf(2)
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let tipOf_midOf_wideOf;
+//│ @private
+//│ define tipOf_midOf_wideOf as fun tipOf_midOf_wideOf⁰(id, param0) {
+//│   let tipOf$deferred, midOf$deferred;
+//│   set tipOf$deferred = false;
+//│   set midOf$deferred = false;
+//│   loop loopLabel:
+//│     match id
+//│       0 =>
+//│         set tipOf$deferred = true;
+//│         set id = 1;
+//│         continue loopLabel
+//│       1 =>
+//│         set midOf$deferred = true;
+//│         set id = 2;
+//│         continue loopLabel
+//│       2 =>
+//│         let w, scrut, tmp, tmp1;
+//│         set scrut = wasm⁰.le_impl﹖(param0, 0);
+//│         match scrut
+//│           true =>
+//│             let exitResult;
+//│             set tmp = new Tip⁰();
+//│             define w as val w⁰ = tmp;
+//│             set exitResult = w⁰;
+//│             match tipOf$deferred
+//│               true =>
+//│                 set exitResult = (w⁰ as! Tip⁰);
+//│                 end
+//│             match midOf$deferred
+//│               true =>
+//│                 return (exitResult as! Middle⁰)
+//│               else
+//│                 return exitResult
+//│             end
+//│           else
+//│             set tmp1 = wasm⁰.minus_impl﹖(param0, 1);
+//│             set param0 = (tmp1 as! Int⁰);
+//│             set id = 0;
+//│             continue loopLabel
+//│         end
+//│       else
+//│         unreachable /* dispatch tag is always a merged member id */
+//│     end
+//│   unreachable /* Rest of abortive labelled block */
+//│ };
+//│ @inline
+//│ define tipOf⁰ as fun tipOf¹(n) {
+//│   return (tipOf_midOf_wideOf⁰(0, n) as! Tip⁰)
+//│ };
+//│ @inline
+//│ define midOf⁰ as fun midOf¹(n) {
+//│   return (tipOf_midOf_wideOf⁰(1, n) as! Middle⁰)
+//│ };
+//│ @inline
+//│ define wideOf⁰ as fun wideOf¹(n) {
+//│   return tipOf_midOf_wideOf⁰(2, n)
+//│ };
+//│ define Wide⁰ as class Wide² {
+//│   constructor Wide¹
+//│ };
+//│ define Middle¹ as class Middle⁰ extends Wide² {
+//│   constructor Middle²
+//│ };
+//│ define Tip¹ as class Tip⁰ extends Middle⁰ { constructor Tip² };
+//│ return wideOf¹(2)
+//│ Wasm result:
+//│ = {}
 
 
 // Forward references must resolve consistently in class layouts and constructor signatures.
@@ -194,3 +357,75 @@ fun chooseLocal(b: Bool): Int32 =
 chooseLocal(true)
 //│ Wasm result:
 //│ = 1
+
+
+// The same contract must be enforced when the loop leaves through a *call* rather than an instantiation.
+// `TailCallShape` matches such a `Return` too, so recognizing it as a jump is not enough: when the callee
+// lies outside the SCC the exit stays an exit, and it must still perform the casts the loop deferred.
+:noInline
+:soir
+:re
+class NarrowExit(val n: Int)
+class OtherExit()
+fun mkExit(): Object = new OtherExit()
+fun narrowExit(n: Int): NarrowExit = broadExit(n)
+fun broadExit(n: Int): Object = if n <= 0 then mkExit() else narrowExit(n - 1)
+broadExit(1)
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let narrowExit_broadExit;
+//│ @private
+//│ define narrowExit_broadExit as fun narrowExit_broadExit⁰(id, param0) {
+//│   let narrowExit$deferred;
+//│   set narrowExit$deferred = false;
+//│   loop loopLabel:
+//│     match id
+//│       0 =>
+//│         set narrowExit$deferred = true;
+//│         set id = 1;
+//│         continue loopLabel
+//│       1 =>
+//│         let scrut, tmp;
+//│         set scrut = wasm⁰.le_impl﹖(param0, 0);
+//│         match scrut
+//│           true =>
+//│             let exitResult;
+//│             set exitResult = mkExit⁰();
+//│             match narrowExit$deferred
+//│               true =>
+//│                 return (exitResult as! NarrowExit⁰)
+//│               else
+//│                 return exitResult
+//│             end
+//│           else
+//│             set tmp = wasm⁰.minus_impl﹖(param0, 1);
+//│             set param0 = (tmp as! Int⁰);
+//│             set id = 0;
+//│             continue loopLabel
+//│         end
+//│       else
+//│         unreachable /* dispatch tag is always a merged member id */
+//│     end
+//│   unreachable /* Rest of abortive labelled block */
+//│ };
+//│ define mkExit¹ as fun mkExit⁰() {
+//│   return new OtherExit⁰()
+//│ };
+//│ @inline
+//│ define narrowExit⁰ as fun narrowExit¹(n) {
+//│   return (narrowExit_broadExit⁰(0, n) as! NarrowExit⁰)
+//│ };
+//│ @inline
+//│ define broadExit⁰ as fun broadExit¹(n) {
+//│   return narrowExit_broadExit⁰(1, n)
+//│ };
+//│ define NarrowExit¹ as class NarrowExit⁰ {
+//│   val n⁴;
+//│   constructor NarrowExit²(n) {
+//│     define n⁴ as val n⁵ = n;
+//│     end
+//│   }
+//│ };
+//│ define OtherExit¹ as class OtherExit⁰ { constructor OtherExit² };
+//│ return broadExit¹(1)
+//│ Wasm result:
+//│ ═══[RUNTIME ERROR] RuntimeError: illegal cast

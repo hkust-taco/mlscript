@@ -581,8 +581,8 @@ fun mixedIntoObject(x: Int32 | Str): Object = x
 //│ end
 
 
-// `sccF`'s tail call is folded into the merged dispatcher, dropping its `as Int` coercion; entering at `sccF` can exit
-// through `sccG`'s arm, so the coercion is re-placed on `sccF`'s stub.
+// Folding `sccF`'s tail call into the merged dispatcher loses its `as Int` coercion, and the loop can exit
+// through `sccG`'s arm with a `Num`, so the cast is deferred to the exit.
 :soir
 fun sccF(): Int = sccG()
 fun sccG(): Num = sccF() + 1
@@ -600,15 +600,24 @@ fun sccG(): Num = sccF() + 1
 //│ let sccF_sccG;
 //│ @private
 //│ define sccF_sccG as fun sccF_sccG⁰(id: Int⁰): Num⁰ {
+//│   let sccF$deferred: Bool⁰;
+//│   set sccF$deferred = false;
 //│   loop loopLabel:
 //│     match id
 //│       0 =>
+//│         set sccF$deferred = true;
 //│         set id = 1;
 //│         continue loopLabel
 //│       1 =>
-//│         let tmp: Int⁰;
+//│         let tmp: Int⁰, exitResult: Num⁰;
 //│         set tmp = (sccF_sccG⁰(0) as! Int⁰);
-//│         return (+⁰(tmp, 1) as! Num⁰)
+//│         set exitResult = (+⁰(tmp, 1) as! Num⁰);
+//│         match sccF$deferred
+//│           true =>
+//│             return (exitResult as! Int⁰)
+//│           else
+//│             return exitResult
+//│         end
 //│       else
 //│         unreachable /* dispatch tag is always a merged member id */
 //│     end
@@ -798,7 +807,7 @@ val over: Int = thunk(2)
 :ge
 val bad: Str = thunk
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Function' at an unrelated type 'Str'
-//│ ║  l.799: 	val bad: Str = thunk
+//│ ║  l.808: 	val bad: Str = thunk
 //│ ╙──       	               ^^^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let tmp: Function⁰; set tmp = thunk¹(); define bad² as val bad³: Str⁰ = tmp; end
@@ -810,7 +819,7 @@ val bad: Str = thunk
 fun called() = 3
 val notCalled: Str = called
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Function' at an unrelated type 'Str'
-//│ ║  l.811: 	val notCalled: Str = called
+//│ ║  l.820: 	val notCalled: Str = called
 //│ ╙──       	                     ^^^^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define called⁰ as fun called¹(): ? {
@@ -854,7 +863,7 @@ fun callMember: Int = M.memberGetter()
 :ge
 fun badInst() = useInt(new Bar("x"))
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Bar' at an unrelated type 'Int'
-//│ ║  l.855: 	fun badInst() = useInt(new Bar("x"))
+//│ ║  l.864: 	fun badInst() = useInt(new Bar("x"))
 //│ ╙──       	                       ^^^^^^^^^^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define badInst⁰ as fun badInst¹(): ? {
@@ -911,7 +920,7 @@ val g: Int -> Int = (x: Int) => x
 :ge
 fun badFn() = applyF(42)
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int' at an unrelated type 'Function'
-//│ ║  l.912: 	fun badFn() = applyF(42)
+//│ ║  l.921: 	fun badFn() = applyF(42)
 //│ ╙──       	                     ^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define badFn⁰ as fun badFn¹(): ? { return applyF¹(42) }; end
@@ -940,7 +949,7 @@ fun useAdd() = useInt(addInts(1, 2))
 :ge
 fun badAdd() = useStr(addInts(1, 2))
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int' at an unrelated type 'Str'
-//│ ║  l.941: 	fun badAdd() = useStr(addInts(1, 2))
+//│ ║  l.950: 	fun badAdd() = useStr(addInts(1, 2))
 //│ ╙──       	                      ^^^^^^^^^^^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define badAdd⁰ as fun badAdd¹(): ? {
@@ -1247,7 +1256,7 @@ fun tagged(x: Int) =
   fun describe() = Tag.label()
   describe()
 //│ ╔══[WARNING] Objects are not yet lifted.
-//│ ║  l.1245: 	  object Tag with
+//│ ║  l.1254: 	  object Tag with
 //│ ╙──        	         ^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let describe;
@@ -1274,7 +1283,7 @@ fun mk() =
     fun get() = Tag.label()
   new Holder
 //│ ╔══[WARNING] Objects are not yet lifted.
-//│ ║  l.1271: 	  object Tag with
+//│ ║  l.1280: 	  object Tag with
 //│ ╙──        	         ^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let Holder;

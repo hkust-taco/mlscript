@@ -13,6 +13,7 @@ import hkmc2.syntax.{Tree, SpreadKind}
 import hkmc2.ScopeData.*
 import hkmc2.Lifter.AccessInfo
 import scala.collection.mutable.{ArrayBuffer, LinkedHashMap}
+import scala.collection.immutable.ListMap
 
 /*
 
@@ -103,8 +104,8 @@ class TailRecOpt(checkAnnotations: Bool)(using Config, State, TL, Raise, Ctx):
     *
     * A return coercion sits between the `Return` and the call, so it must be seen through here or the call is
     * not recognized as a tail call at all. When the call is let-bound, the coercion wraps the returned
-    * *reference* rather than the `Call` itself. Converting the call to a jump drops the coercion, so the caller
-    * re-places it on the entry point that carries the original function's contract.
+    * *reference* rather than the `Call` itself. Converting the call to a jump drops its coercion, so it is also
+    * yielded here for the caller to relocate - see [[DeferredCast]].
     */
   object TailCallShape:
     def unapply(b: Block): Opt[(TermSymbol, Call, Opt[ErasedValueType])] = b match
@@ -402,6 +403,73 @@ class TailRecOpt(checkAnnotations: Bool)(using Config, State, TL, Raise, Ctx):
     val dSymIds = funs.iterator.map(_.dSym).zipWithIndex.toMap
     val dSymToDefn = funs.iterator.map(f => f.dSym -> f).toMap
 
+    /** The erased type of every value the merged loop can actually return, or `N` if that is not known.
+      *
+      * Collected from the loop's exit paths rather than from the dispatcher's declared return: that return is the LUB
+      * over all members, hence wider than any coercion a member's own return introduced, so testing against
+      * it could never succeed.
+      *
+      * `N` stands for "no guarantee available" - either the loop has no exit at all (it only ever jumps) or one of
+      * its exits is untyped.
+      */
+    lazy val loopExitType: Opt[CanonicalErasedValueType] =
+      val exits = funs.flatMap: f =>
+        var funExits = Nil: Ls[Opt[ErasedValueType]]
+        val collector = new BlockTraverserShallow:
+          override def applyBlock(b: Block): Unit = b match
+            // * A call that becomes a jump continues the loop rather than leaving it, so it is not an exit.
+            case TailCallShape(calleeSym, c, _)
+              if dSymIds.contains(calleeSym) && isExactlySaturatedCall(c, dSymToDefn(calleeSym)) => ()
+            case Return(res) => funExits ::= res.erasedValueType
+            case _ => super.applyBlock(b)
+        // * Computed on the pre-merge function bodies, which is over-approximated but safe:
+        // * `rebuildTailCallResult` only narrows exit values, so values are never wider than the LUB computed here.
+        collector.applyBlock(f.body)
+        funExits
+      if exits.isEmpty || exits.exists(_.isEmpty) then N
+      else S(exits.flatten.map(_.canonicalize).reduce(ErasedType.lub))
+
+    /** Whether a cast to `t` would always succeed for every exit path the merged loop has. */
+    def alwaysSucceedsAtExits(t: ErasedValueType): Bool =
+      loopExitType.exists(ErasedType.needsCast(_, t.canonicalize).contains(false))
+
+    /** A coercion of a return value which the conversion to a jump would drop.
+      *
+      * The cast is associated to the pre-merge caller function containing the tail call, and coerces to that
+      * function's declared return type. As such, there is at most one deferred cast per function, and the cast is
+      * performed at the merged dispatcher's exits.
+      *
+      * @param flag A synthetic symbol recording whether the loop has traversed an edge requiring the cast: the cast is
+      *   performed at the exits only if the flag is set.
+      * @param tpe The type the deferred cast narrows to.
+      */
+    case class DeferredCast(flag: TempSymbol, tpe: ErasedValueType)
+
+    /** The casts the merged loop may defer to its exits, keyed by the function deferring each.
+      *
+      * Each function that requires a deferred cast is associated with a [[DeferredCast]] entry, which is emitted
+      * as a [[Match]] block at the merged dispatcher's exits to perform the cast depending on the exit path.
+      */
+    val deferredCasts: ListMap[TermSymbol, DeferredCast] = ListMap.from:
+      funs.flatMap: f =>
+        var deferred: Opt[ErasedValueType] = N
+        val collector = new BlockTraverserShallow:
+          override def applyBlock(b: Block): Unit = b match
+            case TailCallShape(calleeSym, c, S(t))
+              if dSymIds.contains(calleeSym) && isExactlySaturatedCall(c, dSymToDefn(calleeSym))
+                && !alwaysSucceedsAtExits(t) =>
+              // * `Lowering` coerces every `Return` to the enclosing function's declared return, so all tail calls of
+              // * the function should carry the same type.
+              // * This invariant is not enforced anywhere else, and breaking it causes the wrong cast to be inserted.
+              softAssert(deferred.forall(_.canonicalize == t.canonicalize),
+                s"Member '${f.dSym.nme}' defers two different return casts: ${
+                  deferred.map(_.describe)} then '${t.describe}'")
+              deferred = S(t)
+            case _ => super.applyBlock(b)
+        collector.applyBlock(f.body)
+        deferred.map: t =>
+          f.dSym -> DeferredCast(TempSymbol(N, S(ErasedType.Bool), s"${f.dSym.nme}$$deferred"), t)
+
     val loopSym = LabelSymbol(N, "loopLabel")
     val curIdSym = VarSymbol(Tree.Ident("id"), erasedType = S(ErasedType.Int))
     
@@ -468,21 +536,62 @@ class TailRecOpt(checkAnnotations: Bool)(using Config, State, TL, Raise, Ctx):
           )
       val symRewriter = new BlockTransformer(subst)
 
+      /** Rebuilds an exit [[Result]] that leaves the merged loop, coercing the result to the dispatcher's declared
+        * return and performing any deferred casts.
+        */
+      def rebuildTailCallResult(res: Result): Block =
+        applyResult(res): res2 =>
+          if deferredCasts.isEmpty then Return(coerceToDeclaredReturn(res2, dSym))
+          else
+            // We cannot emit a cast to the deferred cast's type directly: The type of the exit value may be unrelated
+            // to it and this will result in an invalid cast.
+            // Instead, we coerce the exit value to the dispatcher's declared return type (which is the LUB over all
+            // members' returns and thus a supertype of all deferred targets), and then emit a cast to the target type
+            // so that an invalid cast is trapped at runtime.
+            val slot = TempSymbol(N, erasedType = dSym.declaredResultType, "exitResult")
+            val ref = slot.asSimpleRef
+            Scoped(Set(slot),
+              Assign(slot, coerceToDeclaredReturn(res2, dSym),
+                deferredCasts.foldRight[Block](Return(ref)):
+                  case ((_, o), acc) =>
+                    Match(
+                      o.flag.asSimpleRef,
+                      Case.Lit(Tree.BoolLit(true)) ->
+                        Assign(slot, Cast(ref, o.tpe, config.checkCasts), End()) :: Nil,
+                      N,
+                      acc)))
+      
+      /** Rebuild a block that matches [[TailCallShape]] but will *not* become a jump, either because the callee lies
+        * outside this SCC, or the call is not exactly saturated.
+        */
+      def rebuildTailCall(blk: Block): Block = blk match
+        case Return(res) => rebuildTailCallResult(res)
+        case _ =>
+          // `super.applyBlock` traverses `blk` to find the inner `Return` and calls `rebuildTailCallResult` on it.
+          super.applyBlock(blk)
+      
       override def applyBlock(b: Block): Block = b match
         // Note: the args in `c` have already been rewritten to point to the symbols in `paramSyms`.
-        case TailCallShape(calleeSym, c, _) => dSymIds.get(calleeSym) match
-          case None => super.applyBlock(b)
+        case TailCallShape(calleeSym, c, retCoercion) => dSymIds.get(calleeSym) match
+          case None => rebuildTailCall(b)
           case Some(id) =>
             val callee = dSymToDefn(calleeSym)
             // We require the call to be fully applied.
             if !isExactlySaturatedCall(c, callee) then
-              super.applyBlock(b)
+              rebuildTailCall(b)
             else
               val calleeParamsMap = paramSymsMap(callee.dSym)
               // The code used to continute the loop.
               val cont =
-                if funsLen === 1 then Continue(loopSym)
-                else Assign(curIdSym, Value.Lit(Tree.IntLit(dSymIds(calleeSym))), Continue(loopSym))
+                val resume =
+                  if funsLen === 1 then Continue(loopSym)
+                  else Assign(curIdSym, Value.Lit(Tree.IntLit(dSymIds(calleeSym))), Continue(loopSym))
+                // Directly emitting the jump causes the return coercion to be dropped, so we record the cast and defer
+                // its emission to the loop's exit.
+                deferredCasts.get(f.dSym) match
+                  case S(o) if retCoercion.exists(t => !alwaysSucceedsAtExits(t)) =>
+                    Assign(o.flag, Value.Lit(Tree.BoolLit(true)), resume)
+                  case _ => resume
               // In some cases, we could have assignments like this:
               // param0 = whatever
               // param1 = <a result containing param0>
@@ -566,13 +675,7 @@ class TailRecOpt(checkAnnotations: Bool)(using Config, State, TL, Raise, Ctx):
                 requiredTmps.values.toSet,
                 requiredTmps.toList.foldRight(assignments):
                   case ((v, l), acc) => Assign(l, v.asSimpleRef, acc))
-        // Coerce the result of the return to the declared return type of the dispatcher - This is needed since
-        // parameters of merged dispatchers carry no erased type and so yield `Unknown`, and returning the value
-        // produces a result that is wider than the declared return type of the merged function.
-        // Tail calls are matched above and become `continue`, so they never reach here.
-        case Return(res) =>
-          applyResult(res): res2 =>
-            Return(coerceToDeclaredReturn(res2, dSym))
+        case Return(res) => rebuildTailCallResult(res)
         // Not a tail call
         case _ => super.applyBlock(b)
       
@@ -631,7 +734,14 @@ class TailRecOpt(checkAnnotations: Bool)(using Config, State, TL, Raise, Ctx):
       // * exit normally, making a value-returning dispatcher appear to yield nothing.
       else Match(curIdSym.asSimpleRef, arms, S(Unreachable("dispatch tag is always a merged member id")), End())
     
-    val loop = Label(loopSym, true, switch, End())
+    val loop =
+      val labelled = Label(loopSym, true, switch, End())
+      // Each call starts with no deferred casts; the flags are set only by the jumps actually taken.
+      if deferredCasts.isEmpty then labelled
+      else Scoped(
+        deferredCasts.iterator.map(_._2.flag).toSet,
+        deferredCasts.foldRight[Block](labelled):
+          case ((_, o), acc) => Assign(o.flag, Value.Lit(Tree.BoolLit(false)), acc))
     
     if !hasWrapper then
       val f = funs.head

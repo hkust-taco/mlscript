@@ -138,6 +138,7 @@ fun sccG(): Int32 = wasm.i31.get_s(sccF()) + wasm.i32.const(1)
 //│ ╔══[COMPILATION ERROR] Types 'Int31' and 'Int32' have no common representation
 //│ ║  l.136: 	fun sccG(): Int32 = wasm.i31.get_s(sccF()) + wasm.i32.const(1)
 //│ ╙──       	    ^^^^
+//│ ═══[COMPILATION ERROR] Types 'Int31' and 'Int32' have no common representation
 //│ ╔══[COMPILATION ERROR] Types 'Int31' and 'Int32' have no common representation
 //│ ║  l.135: 	fun sccF(): Int31 = wasm.ref.i31(sccG())
 //│ ╙──       	    ^^^^
@@ -148,6 +149,7 @@ fun sccG(): Int32 = wasm.i31.get_s(sccF()) + wasm.i32.const(1)
 //│ ╔══[COMPILATION ERROR] Types 'Int31' and 'Int32' have no common representation
 //│ ║  l.136: 	fun sccG(): Int32 = wasm.i31.get_s(sccF()) + wasm.i32.const(1)
 //│ ╙──       	    ^^^^
+//│ ═══[COMPILATION ERROR] Types 'Int31' and 'Int32' have no common representation
 //│ ═══[COMPILATION ERROR] Types 'Int31' and 'Int32' have no common representation
 //│ ═══[COMPILATION ERROR] Cannot cast a Wasm value of type `(ref null any)` to `i32` in a different type hierarchy
 //│ ╔══[COMPILATION ERROR] Wasm function `sccF` expects result to have type `(ref null i31)`, but got `(ref null any)`
@@ -172,7 +174,7 @@ fun bar(m: Int32) =
   foo(wasm.ref.i31(m))
 //│ ═══[COMPILATION ERROR] Cannot cast a Wasm value of type `i32` to `(ref null any)` in a different type hierarchy
 //│ ╔══[COMPILATION ERROR] Operand #1 of wasm intrinsic 'ref.i31' must be of type 'Int32'
-//│ ║  l.172: 	  foo(wasm.ref.i31(m))
+//│ ║  l.174: 	  foo(wasm.ref.i31(m))
 //│ ╙──       	                   ^
 //│ ═══[COMPILATION ERROR] Cannot cast a Wasm value of type `i32` to `(ref null any)` in a different type hierarchy
 
@@ -212,10 +214,10 @@ wasm.ref.i31(wasm.i32.const(7))
 :noInline
 wasm.ref.i31(id(wasm.i32.const(7)))
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int32' at an unrelated type 'Unknown'
-//│ ║  l.213: 	wasm.ref.i31(id(wasm.i32.const(7)))
+//│ ║  l.215: 	wasm.ref.i31(id(wasm.i32.const(7)))
 //│ ╙──       	                ^^^^^^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Unknown' at an unrelated type 'Int32'
-//│ ║  l.213: 	wasm.ref.i31(id(wasm.i32.const(7)))
+//│ ║  l.215: 	wasm.ref.i31(id(wasm.i32.const(7)))
 //│ ╙──       	             ^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[COMPILATION ERROR] Cannot cast a Wasm value of type `i32` to `(ref null any)` in a different type hierarchy
 //│ ═══[COMPILATION ERROR] Operand #1 of wasm intrinsic 'ref.i31' must be of type 'Int32'
@@ -240,7 +242,7 @@ unpack(toObj())
 :e
 fun test: Function = id
 //│ ╔══[COMPILATION ERROR] Returning function instances is not supported
-//│ ║  l.241: 	fun test: Function = id
+//│ ║  l.243: 	fun test: Function = id
 //│ ╙──       	                     ^^
 
 :fixme
@@ -282,7 +284,7 @@ fun test: Function = castToA(123)
 :e
 castToA(wasm.i32.const(123))
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int32' at an unrelated type 'Unknown'
-//│ ║  l.283: 	castToA(wasm.i32.const(123))
+//│ ║  l.285: 	castToA(wasm.i32.const(123))
 //│ ╙──       	        ^^^^^^^^^^^^^^^^^^^
 //│ Wasm result:
 //│ = 123
