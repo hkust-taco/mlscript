@@ -269,3 +269,28 @@ class B extends A
 //│ ╔══[COMPILATION ERROR] Inheritance cycles are not supported.
 //│ ║  l.267: 	class A extends B
 //│ ╙──       	^^^^^^^^^^^^^^^^^
+
+
+// Forward references resolve because class identities are allocated before any layout is built, and
+// class types are emitted in dependency order. Otherwise `b` is typed `anyref`, or `$Forward` is
+// declared before the `$Later` it references, and the emitted module is invalid wasm.
+:noInline
+class Forward(val b: Later) with
+  fun get(): Later = b
+class Later(val n: Int)
+fun readForward(f: Forward): Later = f.get()
+readForward(new Forward(new Later(7))).n
+//│ Wasm result:
+//│ = 7
+
+
+// A self-reference resolves through the same mechanism: the class's own identity already exists
+// when its layout is built. Otherwise `next` is stored as `anyref` and `get` is rejected at
+// compilation.
+:noInline
+class SelfNode() with
+  val next: SelfNode = this
+  fun get(): SelfNode = next
+if new SelfNode().get() is SelfNode then 1 else 0
+//│ Wasm result:
+//│ = 1

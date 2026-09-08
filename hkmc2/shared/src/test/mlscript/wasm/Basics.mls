@@ -301,6 +301,16 @@ getX(Foo(Bar(42)))
 //│ = 42
 
 
+// Two classes referencing each other form a cycle in the type graph. A cycle has no valid declaration
+// order, so the layouts are emitted as one `(rec ...)` group instead of being sorted.
+:noInline
+class Ping(val other: Pong)
+class Pong(val other: Ping)
+()
+//│ Wasm result:
+//│ = {}
+
+
 :wat
 class Foo(val x) with
   val y = this.x
@@ -427,7 +437,7 @@ fun bar() = 42
 fun foo() = bar
 foo()()
 //│ ╔══[COMPILATION ERROR] Returning function instances is not supported
-//│ ║  l.427: 	fun foo() = bar
+//│ ║  l.437: 	fun foo() = bar
 //│ ╙──       	            ^^^
 
 
@@ -439,8 +449,8 @@ fun takeTop(m: Int32) = m
 takeTop(1)
 //│ ═══[COMPILATION ERROR] Cannot use a value of type 'Int32' at an unrelated type 'Unknown'
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int' at an unrelated type 'Int32'
-//│ ║  l.439: 	takeTop(1)
+//│ ║  l.449: 	takeTop(1)
 //│ ╙──       	        ^
 //│ ╔══[COMPILATION ERROR] Wasm function `takeTop` expects result to have type `(ref null any)`, but got `i32`
-//│ ║  l.438: 	fun takeTop(m: Int32) = m
+//│ ║  l.448: 	fun takeTop(m: Int32) = m
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^

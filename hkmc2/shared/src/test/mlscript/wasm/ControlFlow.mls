@@ -252,6 +252,26 @@ nonTailStmtMatch(0)
 //│ = 1
 
 
+// Control: an Int32 conditional can be returned directly.
+:noInline
+fun chooseDirect(b: Bool): Int32 = if b then wasm.i32.const(1) else wasm.i32.const(2)
+chooseDirect(true)
+//│ Wasm result:
+//│ = 1
+
+
+// Introducing an explicitly typed local must preserve the same primitive representation.
+// The temporary holding the conditional's result takes the join of its branches' representations,
+// so both i32 branches keep it instead of being forced through anyref.
+:noInline
+fun chooseLocal(b: Bool): Int32 =
+  val x: Int32 = if b then wasm.i32.const(1) else wasm.i32.const(2)
+  x
+chooseLocal(true)
+//│ Wasm result:
+//│ = 1
+
+
 // Mutual tail recursion, which `TailRecOpt` merges into a single dispatcher.
 fun sccP(n: Int): Int = sccQ(n)
 fun sccQ(n: Int): Int = if n <= 0 then 99 else sccP(n - 1)

@@ -334,3 +334,112 @@ class R2() extends R1() with
 R2().h(3)
 //│ Wasm result:
 //│ = 3
+
+
+// The vtable slot carries the base declaration's result, which erases to `anyref`. Since `Child` declares
+// `get(): Child`, the call `c.get()` must return a `Child`, so the call result is narrowed back with a
+// checked cast that traps if it does not.
+:noInline
+:wat
+class Parent() with
+  virtual fun get(): Object = new Parent()
+class Child() extends Parent() with
+  fun get(): Child = new Child()
+fun readChild(c: Child): Child = c.get()
+readChild(new Child())
+//│ Wat:
+//│ (module
+//│   (type $TypeInfoBase (sub (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
+//│   (type $Object (sub (struct (field $$typeinfo (mut (ref $TypeInfoBase))))))
+//│   (type $Parent (sub $Object (struct (field $$typeinfo (mut (ref $TypeInfoBase))))))
+//│   (type $Child (sub $Parent (struct (field $$typeinfo (mut (ref $TypeInfoBase))))))
+//│   (type $virtual1 (func (param $this (ref $Parent)) (result (ref null any))))
+//│   (type $Parent_typeinfo (sub $TypeInfoBase (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)) (field $slot0 (mut (ref null $virtual1))))))
+//│   (type $Parent_init (func (param $this (ref $Parent)) (result (ref $Parent))))
+//│   (type $Parent_ctor (func (result (ref $Parent))))
+//│   (type $Child_typeinfo (sub $Parent_typeinfo (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)) (field $slot0 (mut (ref null $virtual1))))))
+//│   (type $Child_init (func (param $this (ref $Child)) (result (ref $Child))))
+//│   (type $Child_ctor (func (result (ref $Child))))
+//│   (type $readChild (func (param $c (ref $Child)) (result (ref $Child))))
+//│   (type $entry (func (result (ref $Child))))
+//│   (global $Parent_typeinfo (export "Parent_typeinfo") (ref $Parent_typeinfo) (struct.new $Parent_typeinfo
+//│     (i32.const 1)
+//│     (ref.null $TypeInfoBase)
+//│     (ref.func $Parent_get)))
+//│   (global $Child_typeinfo (export "Child_typeinfo") (ref $Child_typeinfo) (struct.new $Child_typeinfo
+//│     (i32.const 2)
+//│     (global.get $Parent_typeinfo)
+//│     (ref.func $Child_get)))
+//│   (func $Parent_init (type $Parent_init) (param $this (ref $Parent)) (result (ref $Parent))
+//│     (return
+//│       (ref.cast (ref $Parent)
+//│         (local.get $this))))
+//│   (func $Parent_ctor (export "Parent") (type $Parent_ctor) (result (ref $Parent))
+//│     (local $this (ref $Parent))
+//│     (block (result (ref $Parent))
+//│       (local.set $this
+//│         (struct.new $Parent
+//│           (global.get $Parent_typeinfo)))
+//│       (drop
+//│         (call $Parent_init
+//│           (local.get $this)))
+//│       (return
+//│         (local.get $this))))
+//│   (func $Parent_get (type $virtual1) (param $this (ref $Parent)) (result (ref null any))
+//│     (return
+//│       (call $Parent_ctor)))
+//│   (func $Child_init (type $Child_init) (param $this (ref $Child)) (result (ref $Child))
+//│     (block (result (ref $Child))
+//│       (drop
+//│         (call $Parent_init
+//│           (local.get $this)))
+//│       (return
+//│         (ref.cast (ref $Child)
+//│           (local.get $this)))))
+//│   (func $Child_ctor (export "Child") (type $Child_ctor) (result (ref $Child))
+//│     (local $this (ref $Child))
+//│     (block (result (ref $Child))
+//│       (local.set $this
+//│         (struct.new $Child
+//│           (global.get $Child_typeinfo)))
+//│       (drop
+//│         (call $Child_init
+//│           (local.get $this)))
+//│       (return
+//│         (local.get $this))))
+//│   (func $Child_get (type $virtual1) (param $this (ref $Parent)) (result (ref null any))
+//│     (return
+//│       (call $Child_ctor)))
+//│   (func $readChild (export "readChild") (type $readChild) (param $c (ref $Child)) (result (ref $Child))
+//│     (local $receiver (ref null any))
+//│     (return
+//│       (block (result (ref $Child))
+//│         (local.set $receiver
+//│           (local.get $c))
+//│         (ref.cast (ref $Child)
+//│           (call_ref $virtual1
+//│             (ref.cast (ref $Parent)
+//│               (local.get $receiver))
+//│             (struct.get $Child_typeinfo $slot0
+//│               (ref.cast (ref $Child_typeinfo)
+//│                 (struct.get $Object $$typeinfo
+//│                   (ref.cast (ref $Object)
+//│                     (local.get $receiver))))))))))
+//│   (func $entry (export "entry") (type $entry) (result (ref $Child))
+//│     (local $tmp (ref $Child))
+//│     (block (result (ref $Child))
+//│       (local.set $tmp
+//│         (call $Child_ctor))
+//│       (return
+//│         (call $readChild
+//│           (local.get $tmp)))))
+//│   (elem $Parent_init declare func $Parent_init)
+//│   (elem $Parent_ctor declare func $Parent_ctor)
+//│   (elem $Parent_get declare func $Parent_get)
+//│   (elem $Child_init declare func $Child_init)
+//│   (elem $Child_ctor declare func $Child_ctor)
+//│   (elem $Child_get declare func $Child_get)
+//│   (elem $readChild declare func $readChild)
+//│   (elem $entry declare func $entry))
+//│ Wasm result:
+//│ = {}

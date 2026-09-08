@@ -1,0 +1,316 @@
+
+:global
+:wasm
+
+
+// Fixtures shared by the coercion tests below.
+class Box(val v: Int)
+fun useBox(b: Box): Int = b.v
+//│ Wasm result:
+//│ = {}
+
+
+// Guards the re-placement of a return coercion across a merged dispatcher: only `sccF` narrows
+// (`sccG` widens, free), so entering at `sccF` can exit through `sccG`'s arm, and its coercion has to
+// be re-placed on its own stub - else `useBox` receives a value that was never narrowed to `Box`.
+// Unlike JS, Wasm does not erase casts, so a missing narrowing is observable here.
+fun sccF(n: Int): Box = sccG(n)
+fun sccG(n: Int): Object = if n <= 0 then new Box(42) else sccF(n - 1)
+useBox(sccF(3))
+//│ Wasm result:
+//│ = 42
+
+
+// If coercions exist at the tail-call position, TailRecOpt defers the return coercion to the exit path.
+:noInline
+:soir
+:re
+class Narrow(val n: Int)
+class Other()
+fun narrow(n: Int): Narrow = broad(n)
+fun broad(n: Int): Object = if n <= 0 then new Other() else narrow(n - 1)
+broad(1)
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let narrow_broad;
+//│ @private
+//│ define narrow_broad as fun narrow_broad⁰(id, param0) {
+//│   let narrow$deferred;
+//│   set narrow$deferred = false;
+//│   loop loopLabel:
+//│     match id
+//│       0 =>
+//│         set narrow$deferred = true;
+//│         set id = 1;
+//│         continue loopLabel
+//│       1 =>
+//│         let scrut, tmp;
+//│         set scrut = wasm⁰.le_impl﹖(param0, 0);
+//│         match scrut
+//│           true =>
+//│             let exitResult;
+//│             set exitResult = new Other⁰();
+//│             match narrow$deferred
+//│               true =>
+//│                 return (exitResult as! Narrow⁰)
+//│               else
+//│                 return exitResult
+//│             end
+//│           else
+//│             set tmp = wasm⁰.minus_impl﹖(param0, 1);
+//│             set param0 = (tmp as! Int⁰);
+//│             set id = 0;
+//│             continue loopLabel
+//│         end
+//│       else
+//│         unreachable /* dispatch tag is always a merged member id */
+//│     end
+//│   unreachable /* Rest of abortive labelled block */
+//│ };
+//│ @inline
+//│ define narrow⁰ as fun narrow¹(n) {
+//│   return (narrow_broad⁰(0, n) as! Narrow⁰)
+//│ };
+//│ @inline
+//│ define broad⁰ as fun broad¹(n) {
+//│   return narrow_broad⁰(1, n)
+//│ };
+//│ define Narrow¹ as class Narrow⁰ {
+//│   val n⁰;
+//│   constructor Narrow²(n) {
+//│     define n⁰ as val n¹ = n;
+//│     end
+//│   }
+//│ };
+//│ define Other¹ as class Other⁰ { constructor Other² };
+//│ return broad¹(1)
+//│ Wasm result:
+//│ ═══[RUNTIME ERROR] RuntimeError: illegal cast
+
+
+// Entering the same loop through the member that does not cast-on-return leaves its flag unset, so the exit
+// returns its value unchanged rather than performing a cast the run never deferred.
+// This matches the behavior as if with `:noTailRec`.
+:noInline
+class NarrowUnset(val n: Int)
+class OtherUnset()
+fun narrowUnset(n: Int): NarrowUnset = broadUnset(n)
+fun broadUnset(n: Int): Object = if n <= 0 then new OtherUnset() else narrowUnset(n - 1)
+broadUnset(0)
+//│ Wasm result:
+//│ = {}
+
+
+// Two members of the same dispatcher can defer casts at the same time, and the flags carry them
+// independently: calling `wideOf` traverses both edges containing deferred coercions, so the exit performs
+// each coercion in turn.
+//
+// Note that `wideOf`'s first branch returns a `Wide` rather than `Tip`: returning `new Tip()` directly there
+// would make both casts always succeed in the merged dispatcher, so neither cast would be emitted and the
+// block would test nothing.
+:noInline
+:soir
+:siret
+class Wide()
+class Middle() extends Wide()
+class Tip() extends Middle()
+fun tipOf(n: Int): Tip = midOf(n)
+fun midOf(n: Int): Middle = wideOf(n)
+fun wideOf(n: Int): Wide =
+  if n <= 0 then
+    val w: Wide = new Tip()
+    w
+  else tipOf(n - 1)
+wideOf(2)
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let tipOf_midOf_wideOf;
+//│ @private
+//│ define tipOf_midOf_wideOf as fun tipOf_midOf_wideOf⁰(id: Int⁰, param0: ?): Wide⁰ {
+//│   let tipOf$deferred: Bool⁰, midOf$deferred: Bool⁰;
+//│   set tipOf$deferred = false;
+//│   set midOf$deferred = false;
+//│   loop loopLabel:
+//│     match id
+//│       0 =>
+//│         set tipOf$deferred = true;
+//│         set id = 1;
+//│         continue loopLabel
+//│       1 =>
+//│         set midOf$deferred = true;
+//│         set id = 2;
+//│         continue loopLabel
+//│       2 =>
+//│         let w, scrut: ?, tmp: Tip⁰, tmp1: ?;
+//│         set scrut = wasm⁰.le_impl﹖(param0, 0);
+//│         match scrut
+//│           true =>
+//│             let exitResult: Wide⁰;
+//│             set tmp = new Tip⁰();
+//│             define w as val w⁰: Wide⁰ = tmp;
+//│             set exitResult = w⁰;
+//│             match tipOf$deferred
+//│               true =>
+//│                 set exitResult = (w⁰ as! Tip⁰);
+//│                 end
+//│             match midOf$deferred
+//│               true =>
+//│                 return (exitResult as! Middle⁰)
+//│               else
+//│                 return exitResult
+//│             end
+//│           else
+//│             set tmp1 = wasm⁰.minus_impl﹖(param0, 1);
+//│             set param0 = (tmp1 as! Int⁰);
+//│             set id = 0;
+//│             continue loopLabel
+//│         end
+//│       else
+//│         unreachable /* dispatch tag is always a merged member id */
+//│     end
+//│   unreachable /* Rest of abortive labelled block */
+//│ };
+//│ @inline
+//│ define tipOf⁰ as fun tipOf¹(n: Int⁰): Tip⁰ {
+//│   return (tipOf_midOf_wideOf⁰(0, n) as! Tip⁰)
+//│ };
+//│ @inline
+//│ define midOf⁰ as fun midOf¹(n: Int⁰): Middle⁰ {
+//│   return (tipOf_midOf_wideOf⁰(1, n) as! Middle⁰)
+//│ };
+//│ @inline
+//│ define wideOf⁰ as fun wideOf¹(n: Int⁰): Wide⁰ {
+//│   return tipOf_midOf_wideOf⁰(2, n)
+//│ };
+//│ define Wide¹ as class Wide⁰ {
+//│   constructor Wide²
+//│ };
+//│ define Middle¹ as class Middle⁰ extends Wide⁰ {
+//│   constructor Middle²
+//│ };
+//│ define Tip¹ as class Tip⁰ extends Middle⁰ { constructor Tip² };
+//│ return wideOf¹(2)
+//│ Wasm result:
+//│ = {}
+
+
+// The same contract must also be enforced when the loop leaves through a *call* rather than an instantiation.
+// `TailCallShape` matches such a `Return` too, so recognizing it as a jump is not enough: when the callee
+// lies outside the SCC the exit stays an exit, and it must still perform the casts the loop deferred.
+:noInline
+:soir
+:re
+class NarrowExit(val n: Int)
+class OtherExit()
+fun mkExit(): Object = new OtherExit()
+fun narrowExit(n: Int): NarrowExit = broadExit(n)
+fun broadExit(n: Int): Object = if n <= 0 then mkExit() else narrowExit(n - 1)
+broadExit(1)
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let narrowExit_broadExit;
+//│ @private
+//│ define narrowExit_broadExit as fun narrowExit_broadExit⁰(id, param0) {
+//│   let narrowExit$deferred;
+//│   set narrowExit$deferred = false;
+//│   loop loopLabel:
+//│     match id
+//│       0 =>
+//│         set narrowExit$deferred = true;
+//│         set id = 1;
+//│         continue loopLabel
+//│       1 =>
+//│         let scrut, tmp;
+//│         set scrut = wasm⁰.le_impl﹖(param0, 0);
+//│         match scrut
+//│           true =>
+//│             let exitResult;
+//│             set exitResult = mkExit⁰();
+//│             match narrowExit$deferred
+//│               true =>
+//│                 return (exitResult as! NarrowExit⁰)
+//│               else
+//│                 return exitResult
+//│             end
+//│           else
+//│             set tmp = wasm⁰.minus_impl﹖(param0, 1);
+//│             set param0 = (tmp as! Int⁰);
+//│             set id = 0;
+//│             continue loopLabel
+//│         end
+//│       else
+//│         unreachable /* dispatch tag is always a merged member id */
+//│     end
+//│   unreachable /* Rest of abortive labelled block */
+//│ };
+//│ define mkExit¹ as fun mkExit⁰() {
+//│   return new OtherExit⁰()
+//│ };
+//│ @inline
+//│ define narrowExit⁰ as fun narrowExit¹(n) {
+//│   return (narrowExit_broadExit⁰(0, n) as! NarrowExit⁰)
+//│ };
+//│ @inline
+//│ define broadExit⁰ as fun broadExit¹(n) {
+//│   return narrowExit_broadExit⁰(1, n)
+//│ };
+//│ define NarrowExit¹ as class NarrowExit⁰ {
+//│   val n²;
+//│   constructor NarrowExit²(n) {
+//│     define n² as val n³ = n;
+//│     end
+//│   }
+//│ };
+//│ define OtherExit¹ as class OtherExit⁰ { constructor OtherExit² };
+//│ return broadExit¹(1)
+//│ Wasm result:
+//│ ═══[RUNTIME ERROR] RuntimeError: illegal cast
+
+
+// An adapted example of the above, but with `Int31` and `Int32` instead.
+// This will result in a compilation error as the two `Int{31,32}` types have no common representation, causing
+// `TailRecOpt` to emit errors when inserting casts to reconcile the types, and `WatBuilder` to also emit errors since
+// the types are incompatible.
+:ge
+fun sccF(): Int31 = wasm.ref.i31(sccG())
+fun sccG(): Int32 = wasm.i31.get_s(sccF()) + wasm.i32.const(1)
+//│ ═══[COMPILATION ERROR] Cannot use a value of type 'Unknown' at an unrelated type 'Int32'
+//│ ╔══[COMPILATION ERROR] Types 'Int31' and 'Int32' have no common representation
+//│ ║  l.273: 	fun sccG(): Int32 = wasm.i31.get_s(sccF()) + wasm.i32.const(1)
+//│ ╙──       	    ^^^^
+//│ ═══[COMPILATION ERROR] Types 'Int31' and 'Int32' have no common representation
+//│ ╔══[COMPILATION ERROR] Types 'Int31' and 'Int32' have no common representation
+//│ ║  l.272: 	fun sccF(): Int31 = wasm.ref.i31(sccG())
+//│ ╙──       	    ^^^^
+//│ ═══[COMPILATION ERROR] Types 'Int31' and 'Int32' have no common representation
+//│ ╔══[COMPILATION ERROR] Types 'Int31' and 'Int32' have no common representation
+//│ ║  l.272: 	fun sccF(): Int31 = wasm.ref.i31(sccG())
+//│ ╙──       	    ^^^^
+//│ ╔══[COMPILATION ERROR] Types 'Int31' and 'Int32' have no common representation
+//│ ║  l.273: 	fun sccG(): Int32 = wasm.i31.get_s(sccF()) + wasm.i32.const(1)
+//│ ╙──       	    ^^^^
+//│ ═══[COMPILATION ERROR] Types 'Int31' and 'Int32' have no common representation
+//│ ═══[COMPILATION ERROR] Types 'Int31' and 'Int32' have no common representation
+//│ ═══[COMPILATION ERROR] Cannot cast a Wasm value of type `(ref null any)` to `i32` in a different type hierarchy
+//│ ╔══[COMPILATION ERROR] Wasm function `sccF` expects result to have type `(ref null i31)`, but got `(ref null any)`
+//│ ║  l.272: 	fun sccF(): Int31 = wasm.ref.i31(sccG())
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Wasm function `sccG` expects result to have type `i32`, but got `(ref null any)`
+//│ ║  l.273: 	fun sccG(): Int32 = wasm.i31.get_s(sccF()) + wasm.i32.const(1)
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+// `bar` on its own first, so the `:fixme` below is known to be about the mutual recursion rather than about
+// `bar` itself.
+fun bar(m: Int32) =
+  wasm.ref.i31(m)
+//│ Wasm result:
+//│ = {}
+
+:fixme // Currently, `TailRecOpt` forgets erased types and mixes parameter lists without checking compatibility
+fun foo(n: Int31) =
+  if n > 0 do bar(wasm.i31.get_s(n - 1))
+fun bar(m: Int32) =
+  foo(wasm.ref.i31(m))
+//│ ═══[COMPILATION ERROR] Cannot cast a Wasm value of type `i32` to `(ref null any)` in a different type hierarchy
+//│ ╔══[COMPILATION ERROR] Operand #1 of wasm intrinsic 'ref.i31' must be of type 'Int32'
+//│ ║  l.311: 	  foo(wasm.ref.i31(m))
+//│ ╙──       	                   ^
+//│ ═══[COMPILATION ERROR] Cannot cast a Wasm value of type `i32` to `(ref null any)` in a different type hierarchy

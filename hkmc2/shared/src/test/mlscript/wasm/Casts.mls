@@ -116,69 +116,6 @@ useBox(narrowBox(0))
 //│ = 7
 
 
-// Guards the re-placement of a return coercion across a merged dispatcher: only `sccF` narrows
-// (`sccG` widens, free), so entering at `sccF` can exit through `sccG`'s arm, and its coercion has to
-// be re-placed on its own stub - else `useBox` receives a value that was never narrowed to `Box`.
-// Unlike JS, Wasm does not erase casts, so a missing narrowing is observable here.
-fun sccF(n: Int): Box = sccG(n)
-fun sccG(n: Int): Object = if n <= 0 then new Box(42) else sccF(n - 1)
-useBox(sccF(3))
-//│ Wasm result:
-//│ = 42
-
-
-// An adapted example of the above, but with `Int31` and `Int32` instead.
-// This will result in a compilation error as the two `Int{31,32}` types have no common representation, causing
-// `TailRecOpt` to emit errors when inserting casts to reconcile the types, and `WatBuilder` to also emit errors since
-// the types are incompatible.
-:ge
-fun sccF(): Int31 = wasm.ref.i31(sccG())
-fun sccG(): Int32 = wasm.i31.get_s(sccF()) + wasm.i32.const(1)
-//│ ═══[COMPILATION ERROR] Cannot use a value of type 'Unknown' at an unrelated type 'Int32'
-//│ ╔══[COMPILATION ERROR] Types 'Int31' and 'Int32' have no common representation
-//│ ║  l.136: 	fun sccG(): Int32 = wasm.i31.get_s(sccF()) + wasm.i32.const(1)
-//│ ╙──       	    ^^^^
-//│ ═══[COMPILATION ERROR] Types 'Int31' and 'Int32' have no common representation
-//│ ╔══[COMPILATION ERROR] Types 'Int31' and 'Int32' have no common representation
-//│ ║  l.135: 	fun sccF(): Int31 = wasm.ref.i31(sccG())
-//│ ╙──       	    ^^^^
-//│ ═══[COMPILATION ERROR] Types 'Int31' and 'Int32' have no common representation
-//│ ╔══[COMPILATION ERROR] Types 'Int31' and 'Int32' have no common representation
-//│ ║  l.135: 	fun sccF(): Int31 = wasm.ref.i31(sccG())
-//│ ╙──       	    ^^^^
-//│ ╔══[COMPILATION ERROR] Types 'Int31' and 'Int32' have no common representation
-//│ ║  l.136: 	fun sccG(): Int32 = wasm.i31.get_s(sccF()) + wasm.i32.const(1)
-//│ ╙──       	    ^^^^
-//│ ═══[COMPILATION ERROR] Types 'Int31' and 'Int32' have no common representation
-//│ ═══[COMPILATION ERROR] Types 'Int31' and 'Int32' have no common representation
-//│ ═══[COMPILATION ERROR] Cannot cast a Wasm value of type `(ref null any)` to `i32` in a different type hierarchy
-//│ ╔══[COMPILATION ERROR] Wasm function `sccF` expects result to have type `(ref null i31)`, but got `(ref null any)`
-//│ ║  l.135: 	fun sccF(): Int31 = wasm.ref.i31(sccG())
-//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╔══[COMPILATION ERROR] Wasm function `sccG` expects result to have type `i32`, but got `(ref null any)`
-//│ ║  l.136: 	fun sccG(): Int32 = wasm.i31.get_s(sccF()) + wasm.i32.const(1)
-//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-
-// `bar` on its own first, so the `:fixme` below is known to be about the mutual recursion rather than about
-// `bar` itself.
-fun bar(m: Int32) =
-  wasm.ref.i31(m)
-//│ Wasm result:
-//│ = {}
-
-:fixme // Currently, `TailRecOpt` forgets erased types and mixes parameter lists without checking compatibility
-fun foo(n: Int31) =
-  if n > 0 do bar(wasm.i31.get_s(n - 1))
-fun bar(m: Int32) =
-  foo(wasm.ref.i31(m))
-//│ ═══[COMPILATION ERROR] Cannot cast a Wasm value of type `i32` to `(ref null any)` in a different type hierarchy
-//│ ╔══[COMPILATION ERROR] Operand #1 of wasm intrinsic 'ref.i31' must be of type 'Int32'
-//│ ║  l.174: 	  foo(wasm.ref.i31(m))
-//│ ╙──       	                   ^
-//│ ═══[COMPILATION ERROR] Cannot cast a Wasm value of type `i32` to `(ref null any)` in a different type hierarchy
-
-
 // `NotACrate` has a different field count, so it is a distinct struct and the `ref.cast` traps. The
 // constructor must be properly applied for that to be what fails: an under-applied one throws first, with an
 // opaque `[object Object]` that hides whether the cast was reached at all.
@@ -214,10 +151,10 @@ wasm.ref.i31(wasm.i32.const(7))
 :noInline
 wasm.ref.i31(id(wasm.i32.const(7)))
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int32' at an unrelated type 'Unknown'
-//│ ║  l.215: 	wasm.ref.i31(id(wasm.i32.const(7)))
+//│ ║  l.152: 	wasm.ref.i31(id(wasm.i32.const(7)))
 //│ ╙──       	                ^^^^^^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Unknown' at an unrelated type 'Int32'
-//│ ║  l.215: 	wasm.ref.i31(id(wasm.i32.const(7)))
+//│ ║  l.152: 	wasm.ref.i31(id(wasm.i32.const(7)))
 //│ ╙──       	             ^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[COMPILATION ERROR] Cannot cast a Wasm value of type `i32` to `(ref null any)` in a different type hierarchy
 //│ ═══[COMPILATION ERROR] Operand #1 of wasm intrinsic 'ref.i31' must be of type 'Int32'
@@ -242,7 +179,7 @@ unpack(toObj())
 :e
 fun test: Function = id
 //│ ╔══[COMPILATION ERROR] Returning function instances is not supported
-//│ ║  l.243: 	fun test: Function = id
+//│ ║  l.180: 	fun test: Function = id
 //│ ╙──       	                     ^^
 
 :fixme
@@ -284,7 +221,7 @@ fun test: Function = castToA(123)
 :e
 castToA(wasm.i32.const(123))
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int32' at an unrelated type 'Unknown'
-//│ ║  l.285: 	castToA(wasm.i32.const(123))
+//│ ║  l.222: 	castToA(wasm.i32.const(123))
 //│ ╙──       	        ^^^^^^^^^^^^^^^^^^^
 //│ Wasm result:
 //│ = 123
@@ -331,3 +268,64 @@ narrowUnitInVal(())
 //│ = {}
 
 
+// A class used only by a runtime cast must remain reachable after lifting. The cast records class Local as a
+// dependency, so it survives optimization and narrowLocal(42) traps instead of returning 42.
+:noInline
+:lift
+:sir
+:soir
+:re
+fun narrowLocal(x): Object =
+  class Local()
+  val y: Local = x
+  y
+narrowLocal(42)
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let Local;
+//│ define Local as class Local¹ {
+//│   constructor Local⁰
+//│ };
+//│ define narrowLocal⁰ as fun narrowLocal¹(x) {
+//│   let y;
+//│   define y as val y¹ = (x as! Local¹);
+//│   return y¹
+//│ };
+//│ return narrowLocal¹(42)
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let Local;
+//│ define Local as class Local¹ {
+//│   constructor Local⁰
+//│ };
+//│ define narrowLocal⁰ as fun narrowLocal¹(x) {
+//│   let y;
+//│   define y as val y¹ = (x as! Local¹);
+//│   return y¹
+//│ };
+//│ return narrowLocal¹(42)
+//│ Wasm result:
+//│ ═══[RUNTIME ERROR] RuntimeError: illegal cast
+
+
+// The same dependency must be recorded when the cast is *returned* rather than bound to a val: the two
+// reach the traverser through different entry points, and only one of them is a path.
+:noInline
+:lift
+:soir
+:re
+fun liftedNarrow(x): Object =
+  class Lifted()
+  fun narrow(y): Lifted = y
+  narrow(x)
+liftedNarrow(42)
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let Lifted, narrow;
+//│ define narrow as fun narrow⁰(y) {
+//│   return (y as! Lifted⁰)
+//│ };
+//│ define Lifted as class Lifted⁰ {
+//│   constructor Lifted¹
+//│ };
+//│ define liftedNarrow⁰ as fun liftedNarrow¹(x) { return narrow⁰(x) };
+//│ return liftedNarrow¹(42)
+//│ Wasm result:
+//│ ═══[RUNTIME ERROR] RuntimeError: illegal cast
