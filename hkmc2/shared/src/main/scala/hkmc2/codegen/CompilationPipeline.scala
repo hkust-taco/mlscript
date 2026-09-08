@@ -62,6 +62,7 @@ class CompilationPipeline(using Config, Raise, State, Ctx, SymbolPrinter):
       else prog
     runPass("ClassParamFlattener")(ClassParamFlattener.apply)
     runPass("ReflectionInstrumenter")(ReflectionInstrumenter(using summon).apply)
+    runPass("DataRepFlattener")(DataRepFlattener.apply)
     preOptimizeHook(result)
     
     // * We run this pass here first, before inlining so that the @tailrec/@tailcall annotations

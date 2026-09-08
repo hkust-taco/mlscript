@@ -1,0 +1,26 @@
+class C(val x)
+class D(val x)
+class E(val x)
+class F(val x)
+
+fun foo(x) = @matchShapes(C(D(_)), C(E(1)), F(_)) shape.match of x,
+  () => x.C#x.D#x + 1,
+  () => x.C#x.E#x - 1,
+  () => x.F#x
+
+
+:w
+@matchShapes(C(_)) 1
+//│ ╔══[WARNING] This annotation has no effect.
+//│ ║  l.13: 	@matchShapes(C(_)) 1
+//│ ║        	             ^^^
+//│ ╟── This annotation is not supported on integer literal terms.
+//│ ║  l.13: 	@matchShapes(C(_)) 1
+//│ ╙──      	                   ^
+
+
+:w
+@matchShapes(C(_)) fun foo(x) = x
+//│ ╔══[WARNING] This annotation has no effect.
+//│ ║  l.23: 	@matchShapes(C(_)) fun foo(x) = x
+//│ ╙──      	             ^^^

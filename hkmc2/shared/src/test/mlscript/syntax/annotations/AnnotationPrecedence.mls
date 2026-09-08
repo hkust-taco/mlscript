@@ -16,74 +16,63 @@ fun foo(x) = if x is (@annotations.compile A(0)) as y then y
 // if 1 is (@annotations.compile A(0)) as y then y
 
 :pe
-:w
 :e
 fun foo(x) = if x is @annotations.compile (A(0) as y) then y
-//│ ╔══[PARSE ERROR] Unexpected keyword 'then' in this position
-//│ ║  l.21: 	fun foo(x) = if x is @annotations.compile (A(0) as y) then y
+//│ ╔══[PARSE ERROR] Expected start of expression in this position; found 'then' keyword instead
+//│ ║  l.20: 	fun foo(x) = if x is @annotations.compile (A(0) as y) then y
 //│ ╙──      	                                                      ^^^^
-//│ ╔══[COMPILATION ERROR] Unrecognized pattern (‹erroneous syntax›).
-//│ ║  l.21: 	fun foo(x) = if x is @annotations.compile (A(0) as y) then y
-//│ ╙──      	                                                      ^^^^
-//│ ╔══[COMPILATION ERROR] Name not found: y
-//│ ║  l.21: 	fun foo(x) = if x is @annotations.compile (A(0) as y) then y
-//│ ╙──      	                                                   ^
-//│ ╔══[COMPILATION ERROR] Name not found: y
-//│ ║  l.21: 	fun foo(x) = if x is @annotations.compile (A(0) as y) then y
+//│ ╔══[COMPILATION ERROR] Unrecognized pattern split (juxtaposition).
+//│ ║  l.20: 	fun foo(x) = if x is @annotations.compile (A(0) as y) then y
 //│ ╙──      	                                                           ^
-//│ ╔══[WARNING] This annotation is not supported here.
-//│ ║  l.21: 	fun foo(x) = if x is @annotations.compile (A(0) as y) then y
-//│ ║        	                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╙── Note: Patterns only support the `@compile` annotation.
 
 :e
 fun foo(x) = if x is @annotations.compile {A(0) as y} then y
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'y'
-//│ ║  l.40: 	fun foo(x) = if x is @annotations.compile {A(0) as y} then y
+//│ ║  l.29: 	fun foo(x) = if x is @annotations.compile {A(0) as y} then y
 //│ ╙──      	                                                           ^
 
 :pe // parses as `@annotations.compile(A(0) as y) ‹missing annot body›`
 :e
 fun foo(x) = if x is (@annotations.compile (A(0) as y)) then y
 //│ ╔══[PARSE ERROR] Expected start of expression in this position
-//│ ║  l.47: 	fun foo(x) = if x is (@annotations.compile (A(0) as y)) then y
+//│ ║  l.36: 	fun foo(x) = if x is (@annotations.compile (A(0) as y)) then y
 //│ ║        	                                                      ^
 //│ ╟── found a lone annotation instead
-//│ ║  l.47: 	fun foo(x) = if x is (@annotations.compile (A(0) as y)) then y
+//│ ║  l.36: 	fun foo(x) = if x is (@annotations.compile (A(0) as y)) then y
 //│ ╙──      	                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Unrecognized pattern (‹erroneous syntax›).
-//│ ║  l.47: 	fun foo(x) = if x is (@annotations.compile (A(0) as y)) then y
+//│ ║  l.36: 	fun foo(x) = if x is (@annotations.compile (A(0) as y)) then y
 //│ ╙──      	                                                      ^
 //│ ╔══[COMPILATION ERROR] Name not found: y
-//│ ║  l.47: 	fun foo(x) = if x is (@annotations.compile (A(0) as y)) then y
+//│ ║  l.36: 	fun foo(x) = if x is (@annotations.compile (A(0) as y)) then y
 //│ ╙──      	                                                             ^
 
 :pe // parses as `@annotations.compile(A(0) as y) ‹missing annot body›`
 :e
 fun foo(x) = if x is (@annotations.compile(A(0) as y)) then y
 //│ ╔══[PARSE ERROR] Expected start of expression in this position
-//│ ║  l.63: 	fun foo(x) = if x is (@annotations.compile(A(0) as y)) then y
+//│ ║  l.52: 	fun foo(x) = if x is (@annotations.compile(A(0) as y)) then y
 //│ ║        	                                                     ^
 //│ ╟── found a lone annotation instead
-//│ ║  l.63: 	fun foo(x) = if x is (@annotations.compile(A(0) as y)) then y
+//│ ║  l.52: 	fun foo(x) = if x is (@annotations.compile(A(0) as y)) then y
 //│ ╙──      	                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Unrecognized pattern (‹erroneous syntax›).
-//│ ║  l.63: 	fun foo(x) = if x is (@annotations.compile(A(0) as y)) then y
+//│ ║  l.52: 	fun foo(x) = if x is (@annotations.compile(A(0) as y)) then y
 //│ ╙──      	                                                     ^
 //│ ╔══[COMPILATION ERROR] Name not found: y
-//│ ║  l.63: 	fun foo(x) = if x is (@annotations.compile(A(0) as y)) then y
+//│ ║  l.52: 	fun foo(x) = if x is (@annotations.compile(A(0) as y)) then y
 //│ ╙──      	                                                            ^
 
 :e
 fun foo(x) = if x is (@annotations.compile {A(0) as y}) then y
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'y'
-//│ ║  l.78: 	fun foo(x) = if x is (@annotations.compile {A(0) as y}) then y
+//│ ║  l.67: 	fun foo(x) = if x is (@annotations.compile {A(0) as y}) then y
 //│ ╙──      	                                                             ^
 
 :fixme
 fun foo(x) = if x is (@annotations.compile A(0) as y) then y
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'y'
-//│ ║  l.84: 	fun foo(x) = if x is (@annotations.compile A(0) as y) then y
+//│ ║  l.73: 	fun foo(x) = if x is (@annotations.compile A(0) as y) then y
 //│ ╙──      	                                                           ^
 
 
@@ -94,40 +83,40 @@ type Test
 :w
 @Test 1
 //│ ╔══[WARNING] This annotation has no effect.
-//│ ║  l.95: 	@Test 1
+//│ ║  l.84: 	@Test 1
 //│ ║        	^^^^^
 //│ ╟── This annotation is not supported on integer literal terms.
-//│ ║  l.95: 	@Test 1
+//│ ║  l.84: 	@Test 1
 //│ ╙──      	      ^
 //│ = 1
 
 :w
 @Test 2 + 1
 //│ ╔══[WARNING] This annotation has no effect.
-//│ ║  l.105: 	@Test 2 + 1
-//│ ║         	^^^^^
+//│ ║  l.94: 	@Test 2 + 1
+//│ ║        	^^^^^
 //│ ╟── This annotation is not supported on application terms.
-//│ ║  l.105: 	@Test 2 + 1
-//│ ╙──       	      ^^^^^
+//│ ║  l.94: 	@Test 2 + 1
+//│ ╙──      	      ^^^^^
 //│ = 3
 
 :w
 @Test 2 as Int
 //│ ╔══[WARNING] This annotation has no effect.
-//│ ║  l.115: 	@Test 2 as Int
+//│ ║  l.104: 	@Test 2 as Int
 //│ ║         	^^^^^
 //│ ╟── This annotation is not supported on type ascription terms.
-//│ ║  l.115: 	@Test 2 as Int
+//│ ║  l.104: 	@Test 2 as Int
 //│ ╙──       	      ^^^^^^^^
 //│ = 2
 
 :w
 @Test id(2) as Int
 //│ ╔══[WARNING] This annotation has no effect.
-//│ ║  l.125: 	@Test id(2) as Int
+//│ ║  l.114: 	@Test id(2) as Int
 //│ ║         	^^^^^
 //│ ╟── This annotation is not supported on type ascription terms.
-//│ ║  l.125: 	@Test id(2) as Int
+//│ ║  l.114: 	@Test id(2) as Int
 //│ ╙──       	      ^^^^^^^^^^^^
 //│ = 2
 
@@ -135,10 +124,10 @@ type Test
 :re
 (@Test)
 //│ ╔══[PARSE ERROR] Expected start of expression in this position
-//│ ║  l.136: 	(@Test)
+//│ ║  l.125: 	(@Test)
 //│ ║         	      ^
 //│ ╟── found a lone annotation instead
-//│ ║  l.136: 	(@Test)
+//│ ║  l.125: 	(@Test)
 //│ ╙──       	 ^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -146,10 +135,10 @@ type Test
 :re
 print(@Test)
 //│ ╔══[PARSE ERROR] Expected start of expression in this position
-//│ ║  l.147: 	print(@Test)
+//│ ║  l.136: 	print(@Test)
 //│ ║         	           ^
 //│ ╟── found a lone annotation instead
-//│ ║  l.147: 	print(@Test)
+//│ ║  l.136: 	print(@Test)
 //│ ╙──       	      ^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 

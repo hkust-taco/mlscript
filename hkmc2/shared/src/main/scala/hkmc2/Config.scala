@@ -28,6 +28,7 @@ case class Config(
   target: CompilationTarget,
   rewriteWhileLoops: Bool,
   etaExpansion: Opt[EtaExpansion],
+  dataRepFlatten: Opt[DataRepFlatten],
   qqEnabled: Bool,
   funcToCls: Bool,
   commentGeneratedCode: Bool,
@@ -80,6 +81,7 @@ object Config:
     rewriteWhileLoops = false,
     stageCode = false,
     etaExpansion = S(EtaExpansion.default),
+    dataRepFlatten = N,
     qqEnabled = false,
     funcToCls = false,
     commentGeneratedCode = false,
@@ -221,6 +223,13 @@ object Config:
         logAccumulator = false,
       ))
     val default: EtaExpansion = withDebug(debug = false)
+
+  case class DataRepFlatten(debug: Bool, mono: Bool)
+  object DataRepFlatten:
+    val default = DataRepFlatten(
+      debug = false,
+      mono = false,
+    )
   
   /** `altSmallThreshold` is the alternative threshold for inlining things into @inline functions.
     * Normally, we avoid inlining into @inline functions as that could lead to unexpected code bloat. */
@@ -606,6 +615,24 @@ object ConfigParser:
     case _ =>
       expect("EtaExpansion(...)")(tree)
       N
+
+  private def parseDataRepFlatten(tree: Tree, current: Opt[Config.DataRepFlatten])(using Raise): Opt[Config.DataRepFlatten] =
+    tree match
+    case Call("DataRepFlatten", args) =>
+      val base = current.getOrElse(Config.DataRepFlatten.default)
+      var debug = base.debug
+      var mono = base.mono
+      args.foreach:
+        case NamedArg("debug", value) =>
+          setFrom(value)(parseBool)(v => debug = v)
+        case NamedArg("mono", value) =>
+          setFrom(value)(parseBool)(v => mono = v)
+        case other =>
+          unsupported("DataRepFlatten", other)
+      S(Config.DataRepFlatten(debug, mono))
+    case _ =>
+      expect("DataRepFlatten(...)")(tree)
+      N
   
   /** Parse a single field override like `tailRecOpt: false`. */
   private def parseField(name: Str, value: Tree)(using Raise): Config => Config = name match
@@ -642,6 +669,10 @@ object ConfigParser:
       optionalFieldWithCurrent(value)(_.etaExpansion)(
         (tree, current) => parseEtaExpansion(tree, current)
       )(v => _.copy(etaExpansion = v))
+    case "dataRepFlatten" =>
+      optionalFieldWithCurrent(value)(_.dataRepFlatten)(
+        (tree, current) => parseDataRepFlatten(tree, current)
+      )(v => _.copy(dataRepFlatten = v))
     case "deadParamElim" =>
       optionalFieldWithCurrent(value)(_.deadParamElim)(
         (tree, current) => parseDeadParamElim(tree, current)

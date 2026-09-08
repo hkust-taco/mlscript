@@ -142,6 +142,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
     case RuntimeIntrinsic(runtimeName: Str)
     case DebugPrintStack
     case ScopeLocally
+    case ShapeMatch
   private lazy val specialBuiltinSymbols: Map[BlockMemberSymbol, SpecialBuiltin] =
     val blt = ctx.builtins
     Map(
@@ -152,6 +153,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
       blt.js.try_catch -> SpecialBuiltin.RuntimeIntrinsic("try_catch"),
       blt.debug.printStack -> SpecialBuiltin.DebugPrintStack,
       blt.scope.locally -> SpecialBuiltin.ScopeLocally,
+      blt.shape.`match` -> SpecialBuiltin.ShapeMatch,
     )
   
   lazy val unreachableFn =
@@ -1468,6 +1470,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
     
     annotations.foreach:
       case Annot.Untyped => ()
+      case Annot.MatchShapes(_) if receiver.isInstanceOf[st.App] => ()
       case annot: Annot.Trm => receiver match
         case st.App(Ref(_: BuiltinSymbol), _) => warn(annot)
         case st.App(_, _) | New(_, _, _) | DynNew(_, _) | Mut(_: New | _: DynNew) => ()

@@ -370,13 +370,12 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
             for (_, s) <- entries do LoweringCtx.loweringCtx.collectScopedSym(s)
             val objectSym = ctx.builtins.Object
             mkMatch( // checking that we have an object
-              Case.Cls(objectSym, Select(State.globalThisSymbol.asThis, Tree.Ident(objectSym.nme))(S(objectSym))(false)),
+              Case.Cls(objectSym, Select(State.globalThisSymbol.asThis, Tree.Ident(objectSym.nme))(S(objectSym))(false)) ->
               entries.foldRight(lowerSplit(tail, cont)):
                 case ((fieldName, fieldSymbol), blk) =>
                   mkMatch(
-                    Case.Field(fieldName, safe = true), // we know we have an object, no need to check again
-                    Assign(fieldSymbol, Select(sr, fieldName)(N)(false), blk)
-                  )
+                    Case.Field(fieldName, safe = true) -> // we know we have an object, no need to check again
+                    Assign(fieldSymbol, Select(sr, fieldName)(N)(false), blk)),
             )
     case Split.Else(els) =>
       term_nonTail(els, inStmtPos = form.isImperative)(cont)

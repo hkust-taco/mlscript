@@ -90,6 +90,7 @@ declare module annotations with
   object buffered
   object bufferable
   object mayNotRaiseEffects
+  object matchShapes
   object generator
   object async
 
@@ -98,6 +99,9 @@ declare module handlers with
 
 declare module scope with
   fun locally
+
+declare module shape with
+  fun match
 
 declare module runtime with
   fun

@@ -1,0 +1,356 @@
+:dataRepFlatten debug mono
+:js
+:noFreeze
+
+//│ >>> start data-rep-flatten collection-phase
+//│ <<< end data-rep-flatten collection-phase
+//│ >>> start data-rep-flatten transform-phase
+//│ <<< end data-rep-flatten transform-phase
+
+class Foo(val x, val y)
+class Bar(val x)
+//│ >>> start data-rep-flatten collection-phase
+//│ <<< end data-rep-flatten collection-phase
+//│ >>> start data-rep-flatten transform-phase
+//│ <<< end data-rep-flatten transform-phase
+
+
+fun foo(x, y) = new Foo(x, y)
+//│ >>> start data-rep-flatten collection-phase
+//│ <<< end data-rep-flatten collection-phase
+//│ >>> start data-rep-flatten transform-phase
+//│ <<< end data-rep-flatten transform-phase
+
+
+fun foo(x, y) =
+  let f = new Foo(x, y)
+  @matchShapes(f, Foo(_, _)) shape.match of () => new Bar(f.Foo#x + f.Foo#y)
+//│ >>> start data-rep-flatten collection-phase
+//│ data-rep-flatten collection-phase > track construction of Foo@2 in foo
+//│ <<< end data-rep-flatten collection-phase
+//│ >>> start data-rep-flatten web-computation-phase
+//│ data-rep-flatten web-computation-phase > web 0:
+//│ data-rep-flatten web-computation-phase >   producers: Foo@2
+//│ data-rep-flatten web-computation-phase >   field accesses: Foo.x@0, Foo.y@1
+//│ <<< end data-rep-flatten web-computation-phase
+//│ >>> start data-rep-flatten transform-phase
+//│ data-rep-flatten transform-phase > allocated tag 0 for Foo(x: _, y: _)
+//│ <<< end data-rep-flatten transform-phase
+
+
+private fun bar(x) = new Bar(x)
+//│ >>> start data-rep-flatten collection-phase
+//│ <<< end data-rep-flatten collection-phase
+//│ >>> start data-rep-flatten transform-phase
+//│ <<< end data-rep-flatten transform-phase
+
+
+module Baz with
+  fun bar(x) = new Bar(x)
+  private fun barr(x) =
+    let f = new Foo(x, x)
+    if f is
+      Foo(x, y) then new Bar(x + y)
+  fun baz(x) =
+    let f = new Foo(x, x)
+    @matchShapes(Foo(_, _)) shape.match of f, () => new Bar(f.Foo#x + f.Foo#y)
+//│ >>> start data-rep-flatten collection-phase
+//│ data-rep-flatten collection-phase > track construction of Foo@6 in Baz.barr
+//│ data-rep-flatten collection-phase > track consumption at Foo.x@0, Foo.y@1 in Baz.barr
+//│ data-rep-flatten collection-phase > track construction of Foo@9 in Baz.baz
+//│ <<< end data-rep-flatten collection-phase
+//│ >>> start data-rep-flatten web-computation-phase
+//│ data-rep-flatten web-computation-phase > web 0:
+//│ data-rep-flatten web-computation-phase >   producers: Foo@6
+//│ data-rep-flatten web-computation-phase >   field accesses: Foo.x@0, Foo.y@1
+//│ data-rep-flatten web-computation-phase >   pattern matches: match@2
+//│ data-rep-flatten web-computation-phase > web 1:
+//│ data-rep-flatten web-computation-phase >   producers: Foo@9
+//│ data-rep-flatten web-computation-phase >   field accesses: Foo.x@3, Foo.y@4
+//│ data-rep-flatten web-computation-phase >   pattern matches: match@12
+//│ <<< end data-rep-flatten web-computation-phase
+//│ >>> start data-rep-flatten transform-phase
+//│ data-rep-flatten transform-phase > allocated tag 0 for Foo(x: _, y: _)
+//│ data-rep-flatten transform-phase > allocated tag 0 for Foo(x: _, y: _)
+//│ <<< end data-rep-flatten transform-phase
+
+
+:ssjs
+fun foo(x, y) =
+  let f = new Foo(x, y)
+  bar(f) * baz(f)
+private fun bar(f) =
+  @matchShapes(Foo(_, _)) shape.match of f, () => f.Foo#x + f.Foo#y
+private fun baz(f) =
+  @matchShapes(Foo(_, _)) shape.match of f, () => f.Foo#x - f.Foo#y
+//│ >>> start data-rep-flatten collection-phase
+//│ data-rep-flatten collection-phase > track construction of Foo@4 in foo
+//│ <<< end data-rep-flatten collection-phase
+//│ >>> start data-rep-flatten web-computation-phase
+//│ data-rep-flatten web-computation-phase > web 0:
+//│ data-rep-flatten web-computation-phase >   producers: Foo@4
+//│ data-rep-flatten web-computation-phase >   field accesses: Foo.x@0, Foo.y@1, Foo.x@2, Foo.y@3
+//│ data-rep-flatten web-computation-phase >   pattern matches: match@9, match@12
+//│ <<< end data-rep-flatten web-computation-phase
+//│ >>> start data-rep-flatten transform-phase
+//│ data-rep-flatten transform-phase > allocated tag 0 for Foo(x: _, y: _)
+//│ <<< end data-rep-flatten transform-phase
+//│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
+//│ let bar1, foo2, baz;
+//│ foo2 = function foo(x, y) {
+//│   runtime.checkArgs("foo", 2, true, arguments.length);
+//│   let tmp, f, inlinedVal, f1, inlinedVal1, lambda, lambda1;
+//│   tmp = (new Foo1.class(x, y));
+//│   tmp.__tag = 0;
+//│   f = tmp;
+//│   lambda1 = (undefined, function () {
+//│     runtime.checkArgs("", 0, true, arguments.length);
+//│     return f.x + f.y
+//│   });
+//│   inlinedVal = runtime.safeCall(globalThis.shape.match(f, lambda1));
+//│   f1 = tmp;
+//│   lambda = (undefined, function () {
+//│     runtime.checkArgs("", 0, true, arguments.length);
+//│     return f1.x - f1.y
+//│   });
+//│   inlinedVal1 = runtime.safeCall(globalThis.shape.match(f1, lambda));
+//│   return inlinedVal * inlinedVal1
+//│ };
+//│ bar1 = function bar(f) {
+//│   runtime.checkArgs("bar", 1, true, arguments.length);
+//│   let lambda;
+//│   lambda = (undefined, function () {
+//│     runtime.checkArgs("", 0, true, arguments.length);
+//│     return f.x + f.y
+//│   });
+//│   return runtime.safeCall(globalThis.shape.match(f, lambda))
+//│ };
+//│ baz = function baz(f) {
+//│   runtime.checkArgs("baz", 1, true, arguments.length);
+//│   let lambda;
+//│   lambda = (undefined, function () {
+//│     runtime.checkArgs("", 0, true, arguments.length);
+//│     return f.x - f.y
+//│   });
+//│   return runtime.safeCall(globalThis.shape.match(f, lambda))
+//│ };
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+
+:ssjs
+fun foo(x, y) =
+  let f = new Foo(x, y)
+  baz(f)
+fun bar(x) =
+  let b = new Bar(x)
+  baz(b)
+private fun baz(t) =
+  @matchShapes(Foo(_, _), Bar(_)) shape.match of t,
+    () => t.Foo#x + t.Foo#y
+    () => t.Bar#x
+//│ >>> start data-rep-flatten collection-phase
+//│ data-rep-flatten collection-phase > track construction of Foo@3 in foo
+//│ data-rep-flatten collection-phase > track construction of Bar@5 in bar
+//│ <<< end data-rep-flatten collection-phase
+//│ >>> start data-rep-flatten web-computation-phase
+//│ data-rep-flatten web-computation-phase > web 0:
+//│ data-rep-flatten web-computation-phase >   producers: Foo@3, Bar@5
+//│ data-rep-flatten web-computation-phase >   field accesses: Foo.x@0, Foo.y@1, Bar.x@2
+//│ data-rep-flatten web-computation-phase >   pattern matches: match@8
+//│ <<< end data-rep-flatten web-computation-phase
+//│ >>> start data-rep-flatten transform-phase
+//│ data-rep-flatten transform-phase > allocated tag 0 for Foo(x: _, y: _)
+//│ data-rep-flatten transform-phase > allocated tag 1 for Bar(x: _)
+//│ <<< end data-rep-flatten transform-phase
+//│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
+//│ let bar2, foo3, baz1;
+//│ foo3 = function foo(x, y) {
+//│   runtime.checkArgs("foo", 2, true, arguments.length);
+//│   let tmp, t, lambda, lambda1;
+//│   tmp = (new Foo1.class(x, y));
+//│   tmp.__tag = 0;
+//│   t = tmp;
+//│   lambda = (undefined, function () {
+//│     runtime.checkArgs("", 0, true, arguments.length);
+//│     return t.x + t.y
+//│   });
+//│   lambda1 = (undefined, function () {
+//│     runtime.checkArgs("", 0, true, arguments.length);
+//│     return t.x
+//│   });
+//│   return runtime.safeCall(globalThis.shape.match(t, lambda, lambda1))
+//│ };
+//│ bar2 = function bar(x) {
+//│   runtime.checkArgs("bar", 1, true, arguments.length);
+//│   let tmp, t, lambda, lambda1;
+//│   tmp = (new Bar1.class(x));
+//│   tmp.__tag = 1;
+//│   t = tmp;
+//│   lambda = (undefined, function () {
+//│     runtime.checkArgs("", 0, true, arguments.length);
+//│     return t.x + t.y
+//│   });
+//│   lambda1 = (undefined, function () {
+//│     runtime.checkArgs("", 0, true, arguments.length);
+//│     return t.x
+//│   });
+//│   return runtime.safeCall(globalThis.shape.match(t, lambda, lambda1))
+//│ };
+//│ baz1 = function baz(t) {
+//│   runtime.checkArgs("baz", 1, true, arguments.length);
+//│   let lambda, lambda1;
+//│   lambda = (undefined, function () {
+//│     runtime.checkArgs("", 0, true, arguments.length);
+//│     return t.x + t.y
+//│   });
+//│   lambda1 = (undefined, function () {
+//│     runtime.checkArgs("", 0, true, arguments.length);
+//│     return t.x
+//│   });
+//│   return runtime.safeCall(globalThis.shape.match(t, lambda, lambda1))
+//│ };
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+
+class Some(val x)
+object None
+//│ >>> start data-rep-flatten collection-phase
+//│ <<< end data-rep-flatten collection-phase
+//│ >>> start data-rep-flatten transform-phase
+//│ <<< end data-rep-flatten transform-phase
+
+
+:ssjs
+private fun foo(x) =
+  if x > 0 then new Some(x) else None
+fun bar(x) =
+  let t = foo(x)
+  @matchShapes(Some(_), None) shape.match of t,
+    () => t.Some#x,
+    () => 0
+//│ >>> start data-rep-flatten collection-phase
+//│ data-rep-flatten collection-phase > track construction of None@4, Some@3 in foo
+//│ <<< end data-rep-flatten collection-phase
+//│ >>> start data-rep-flatten web-computation-phase
+//│ data-rep-flatten web-computation-phase > web 0:
+//│ data-rep-flatten web-computation-phase >   producers: Some@3, None@4
+//│ data-rep-flatten web-computation-phase >   field accesses: Some.x@1
+//│ data-rep-flatten web-computation-phase >   pattern matches: match@6
+//│ <<< end data-rep-flatten web-computation-phase
+//│ >>> start data-rep-flatten transform-phase
+//│ data-rep-flatten transform-phase > allocated tag 0 for Some(x: _)
+//│ data-rep-flatten transform-phase > allocated tag 1 for None
+//│ <<< end data-rep-flatten transform-phase
+//│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
+//│ let bar3, foo4;
+//│ foo4 = function foo(x) {
+//│   runtime.checkArgs("foo", 1, true, arguments.length);
+//│   let scrut;
+//│   scrut = x > 0;
+//│   if (scrut === true) {
+//│     let tmp;
+//│     tmp = (new Some1.class(x));
+//│     tmp.__tag = 0;
+//│     return tmp
+//│   }
+//│   None1.__tag = 1;
+//│   return None1;
+//│ };
+//│ bar3 = function bar(x) {
+//│   runtime.checkArgs("bar", 1, true, arguments.length);
+//│   let t, lambda, lambda1, inlinedVal, scrut;
+//│   scrut = x > 0;
+//│   if (scrut === true) {
+//│     let tmp;
+//│     tmp = (new Some1.class(x));
+//│     tmp.__tag = 0;
+//│     inlinedVal = tmp;
+//│   } else {
+//│     None1.__tag = 1;
+//│     inlinedVal = None1;
+//│   }
+//│   t = inlinedVal;
+//│   lambda = (undefined, function () {
+//│     runtime.checkArgs("", 0, true, arguments.length);
+//│     return t.x
+//│   });
+//│   lambda1 = (undefined, function () {
+//│     runtime.checkArgs("", 0, true, arguments.length);
+//│     return 0
+//│   });
+//│   return runtime.safeCall(globalThis.shape.match(t, lambda, lambda1))
+//│ };
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+
+:ssjs
+fun callCtor(x, y) =
+  let f = Foo(x, y)
+  @matchShapes(Foo(_, _)) shape.match of f, () => f.Foo#x + f.Foo#y
+//│ >>> start data-rep-flatten collection-phase
+//│ data-rep-flatten collection-phase > track construction of Foo@2 in callCtor
+//│ <<< end data-rep-flatten collection-phase
+//│ >>> start data-rep-flatten web-computation-phase
+//│ data-rep-flatten web-computation-phase > web 0:
+//│ data-rep-flatten web-computation-phase >   producers: Foo@2
+//│ data-rep-flatten web-computation-phase >   field accesses: Foo.x@0, Foo.y@1
+//│ data-rep-flatten web-computation-phase >   pattern matches: match@4
+//│ <<< end data-rep-flatten web-computation-phase
+//│ >>> start data-rep-flatten transform-phase
+//│ data-rep-flatten transform-phase > allocated tag 0 for Foo(x: _, y: _)
+//│ <<< end data-rep-flatten transform-phase
+//│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
+//│ let callCtor;
+//│ callCtor = function callCtor(x, y) {
+//│   runtime.checkArgs("callCtor", 2, true, arguments.length);
+//│   let f, lambda, tmp;
+//│   tmp = runtime.checkCall(Foo1(x, y));
+//│   tmp.__tag = 0;
+//│   f = tmp;
+//│   lambda = (undefined, function () {
+//│     runtime.checkArgs("", 0, true, arguments.length);
+//│     return f.x + f.y
+//│   });
+//│   return runtime.safeCall(globalThis.shape.match(f, lambda))
+//│ };
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+
+:ssjs
+fun foo(x, y) =
+  let f = [1, 2, 3]
+  if f is
+    [x, y, z] then new Bar(x + y + z)
+//│ >>> start data-rep-flatten collection-phase
+//│ data-rep-flatten collection-phase > track construction of tup(size 3)@4 in foo
+//│ data-rep-flatten collection-phase > track consumption at tup(size 3).2@2, tup(size 3).1@1, tup(size 3).0@0 in foo
+//│ <<< end data-rep-flatten collection-phase
+//│ >>> start data-rep-flatten web-computation-phase
+//│ data-rep-flatten web-computation-phase > web 0:
+//│ data-rep-flatten web-computation-phase >   producers: tup(size 3)@4
+//│ data-rep-flatten web-computation-phase >   field accesses: tup(size 3).0@0, tup(size 3).1@1, tup(size 3).2@2
+//│ data-rep-flatten web-computation-phase >   pattern matches: match@3
+//│ <<< end data-rep-flatten web-computation-phase
+//│ >>> start data-rep-flatten transform-phase
+//│ <<< end data-rep-flatten transform-phase
+//│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
+//│ let foo5;
+//│ foo5 = function foo(x, y) {
+//│   runtime.checkArgs("foo", 2, true, arguments.length);
+//│   let f, element2$, element1$, element0$, tmp, tmp1;
+//│   f = ([
+//│     1,
+//│     2,
+//│     3
+//│   ]);
+//│   if (runtime.Tuple.isArrayLike(f) && f.length === 3) {
+//│     element0$ = runtime.checkCall(runtime.Tuple.get(f, 0));
+//│     element1$ = runtime.checkCall(runtime.Tuple.get(f, 1));
+//│     element2$ = runtime.checkCall(runtime.Tuple.get(f, 2));
+//│     tmp = element0$ + element1$;
+//│     tmp1 = tmp + element2$;
+//│     return (new Bar1.class(tmp1))
+//│   }
+//│   throw (new globalThis.Error("match error"));
+//│ };
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————

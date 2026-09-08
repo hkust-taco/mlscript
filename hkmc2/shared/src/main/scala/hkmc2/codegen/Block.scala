@@ -462,6 +462,7 @@ object Define:
     case _ => new Define(defn, rest)
 
 object Match:
+
   def apply(scrut: Path, _arms: Ls[Case -> Block], _dflt: Opt[Block], rest: Block): Block =
     val emptyDflt = _dflt.forall(_.isEmpty)
     val dflt = if emptyDflt then N else _dflt
@@ -511,7 +512,8 @@ object Begin:
               "overlapping symbols when trying to merge Scoped blocks")
           Scoped(symsSub ++ symsRest, Begin(bodySub, bodyRest))
         case _ => Scoped(symsSub, Begin(bodySub, rest))
-      case Match(scrut, arms, dflt, rst) => Match(scrut, arms, dflt, Begin(rst, rest))
+      case Match(scrut, arms, dflt, rst) =>
+        Match(scrut, arms, dflt, Begin(rst, rest))
       case Label(lbl, loop, body, rst) => Label(lbl, loop, body, Begin(rst, rest))
       case TryBlock(sub, fin, rst) => TryBlock(sub, fin, Begin(rst, rest))
       case Assign(lhs, rhs, rst) => Assign(lhs, rhs, Begin(rst, rest))

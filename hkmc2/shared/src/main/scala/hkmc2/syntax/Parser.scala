@@ -631,7 +631,7 @@ abstract class Parser(
       consume
       val a = annot(new Ident(id).withLoc(S(l0 ++ l1)))
       exprCont(
-        Annotated(a, simpleExpr(AnnotBodyPrec, allowNewlines = allowNewlines)),
+        Annotated(a, expr(AnnotBodyPrec, allowNewlines = allowNewlines)),
         prec, allowNewlines = allowNewlines)
     case (ESC_IDENT(name), loc) :: _ =>
       consume

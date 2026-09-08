@@ -937,7 +937,7 @@ class BlockSimplifier
         makeImpossibleAfter:
           super.applyBlock(b)
         
-      case Match(scrut, arms, dflt, rest) =>
+      case m @ Match(scrut, arms, dflt, rest) =>
         
         applyPath(scrut): scrut2 =>
           

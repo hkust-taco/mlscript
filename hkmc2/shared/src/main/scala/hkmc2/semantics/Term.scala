@@ -33,6 +33,7 @@ enum Annot extends AutoLocated:
   case RaiseEffects
   // Whether the function is guaranteed to not raise effects.
   case MayNotRaiseEffects
+  case MatchShapes(patterns: Ls[Pattern])
   case Config(modify: hkmc2.Config => hkmc2.Config)
   // Marks if a function or lambda is one-shot, i.e. called at most once.
   // Functions with multiple parameter lists are considered here as a chain of
@@ -52,11 +53,13 @@ enum Annot extends AutoLocated:
   
   def subTerms: Vector[Term] = this match
     case Trm(trm) => Vector.single(trm)
+    case MatchShapes(patterns) => patterns.iterator.flatMap(_.subTerms).toVector
     case _: Modifier | Untyped | TailRec | TailCall | Inline | NoInline
       | Generator | Async | RaiseEffects | MayNotRaiseEffects | _: Config | _: Affine => Vector.empty
   
   def children: Vector[Located] = this match
     case Trm(trm) => Vector.single(trm)
+    case MatchShapes(patterns) => patterns.toVector
     // case Modifier(kw) => Vector.single(kw) // TODO: make `kw` a `Keywrd`
     case _: Modifier | Untyped | TailRec | TailCall | Inline | NoInline
       | Generator | Async | RaiseEffects | MayNotRaiseEffects | _: Config | _: Affine => Vector.empty
@@ -73,6 +76,7 @@ enum Annot extends AutoLocated:
     case Affine(n) => doc"@affine($n)"
     case Modifier(mod) => doc"@${mod.name}"
     case MayNotRaiseEffects => doc"@mayNotRaiseEffects"
+    case MatchShapes(_) => doc"@matchShapes"
     case Trm(trm) => doc"@${trm.show}"
     case Config(_) => doc"@config(...)"
   
@@ -88,6 +92,7 @@ enum Annot extends AutoLocated:
     case Async => Async
     case RaiseEffects => RaiseEffects
     case MayNotRaiseEffects => MayNotRaiseEffects
+    case a: MatchShapes => a
     case c: Config => c
     case a: Affine => a
 
