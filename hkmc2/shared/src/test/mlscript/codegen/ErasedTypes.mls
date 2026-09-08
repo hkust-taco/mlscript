@@ -1305,3 +1305,61 @@ fun mk() =
 //│   return new Holder⁰(Tag²)
 //│ };
 //│ end
+
+
+// A parameter captured by a nested definition is copied into the merged loop, so that the definition captures
+// the parameter's value at that iteration rather than the slot the next iteration overwrites. The copy stands
+// for the same slot as the parameter, so it takes the parameter's type.
+:noInline
+:soir
+fun capturingLoop(n: Int, acc: Str) =
+  if n <= 0 then acc
+  else
+    let g = () => acc
+    let h = g
+    capturingLoop(n - 1, h())
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define capturingLoop⁰ as fun capturingLoop¹(n: Int⁰, acc: Str⁰): ? {
+//│   let scrut: ?, g: ?, h: ?, tmp: ?, tmp1: ?;
+//│   set scrut = <=⁰(n, 0);
+//│   match scrut
+//│     true =>
+//│       return acc
+//│     else
+//│       let g1;
+//│       @private
+//│       define g1 as fun g⁴(): ? {
+//│         return acc
+//│       };
+//│       set g = g⁴;
+//│       set h = g;
+//│       set tmp = -⁰(n, 1);
+//│       set tmp1 = h();
+//│       return capturingLoop¹((tmp as! Int⁰), (tmp1 as! Str⁰))
+//│   end
+//│ };
+//│ end
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ define capturingLoop⁰ as fun capturingLoop¹(n: Int⁰, acc: Str⁰): ? {
+//│   loop loopLabel:
+//│     let scrut: ?, tmp: ?, tmp1: ?, acc1: Str⁰;
+//│     set acc1 = acc;
+//│     set scrut = <=⁰(n, 0);
+//│     match scrut
+//│       true =>
+//│         return acc1
+//│       else
+//│         let g;
+//│         @private
+//│         define g as fun g⁴(): ? {
+//│           return acc1
+//│         };
+//│         set tmp = -⁰(n, 1);
+//│         set tmp1 = g⁴();
+//│         set n = (tmp as! Int⁰);
+//│         set acc = (tmp1 as! Str⁰);
+//│         continue loopLabel
+//│     end
+//│   unreachable /* Rest of abortive labelled block */
+//│ };
+//│ end

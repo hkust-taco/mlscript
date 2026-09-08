@@ -511,3 +511,27 @@ trait HasOnceMutableErasedType extends HasErasedType:
   def populateErasedType(newType: ErasedType)(using Line, FileName, Raise): Unit =
     softAssert(erasedType.isEmpty, s"Cannot refine already-refined erased type $erasedType to $newType")
     if erasedType.isEmpty then erasedType = S(newType)
+
+extension (s: ValueSymbol | DefinitionSymbol[?])
+  /** Maps the symbol to its erased value type, if it has one.
+    *
+    * This is the type of the *value* a reference to the symbol denotes, so a symbol standing for a function
+    * collapses to the first-class `Function` type instead of keeping its [[ErasedFuncType]] shape - the same
+    * narrowing [[Result.coerceTo]] performs when it introduces a cast.
+    */
+  def mapErasedValueType(using Raise): Opt[ErasedValueType] = s match
+    case v: VarSymbol => v.erasedType
+    case t: TempSymbol => t.erasedValueType
+    case c: (ClassSymbol | ModuleOrObjectSymbol) => c.erasedValueType
+    case t: TermSymbol => t.erasedValueType
+    // * A pattern is not a value and carries no erased type of its own, so a reference to one is
+    // * left unknown rather than treated as an unexpected symbol.
+    case _: PatternSymbol => N
+    // * A builtin operator carries no erased type, as one symbol stands for its nullary, unary and binary forms.
+    case _: BuiltinSymbol => N
+    // * What a member reference denotes depends on the member: a function value has the `Function` type, but a
+    // * class object has none, so this is left unknown rather than guessed from the disambiguating term symbol.
+    case _: BlockMemberSymbol => N
+    case s =>
+      softAssert(false, s"Unexpected symbol type for symbol `$s`: ${s.getClass.getName}")
+      N

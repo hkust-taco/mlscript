@@ -29,20 +29,6 @@ object Lifter:
       case l: Lazy[?] if !l.isEmpty => l.force_!
       case d: Defn => d
 
-  extension (s: ValueSymbol | DefinitionSymbol[?])
-    /** Maps the symbol to its erased value type, if it has one. */
-    private def mapErasedValueType(using Raise): Opt[ErasedValueType] = s match
-      case v: VarSymbol => v.erasedType
-      case t: TempSymbol => t.erasedValueType
-      case c: (ClassSymbol | ModuleOrObjectSymbol) => c.erasedValueType
-      case t: TermSymbol => t.erasedValueType
-      // * A pattern is not a value and carries no erased type of its own, so a reference to one is
-      // * left unknown rather than treated as an unexpected symbol.
-      case _: PatternSymbol => N
-      case s =>
-        softAssert(false, s"Unexpected symbol type for symbol `$s`: ${s.getClass.getName}")
-        N
-
   extension (d: ClsLikeDefn)
     /** Maps the definition to the erased type of its instances. */
     private def instanceType(using Raise): Opt[ErasedValueType] = d.isym match

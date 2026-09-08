@@ -523,7 +523,7 @@ class TailRecOpt(checkAnnotations: Bool)(using Config, State, TL, Raise, Ctx):
           .toSet
       
       val copiedParamSyms = copiedParams.map: x =>
-          x -> VarSymbol(x.id, erasedType = N)
+          x -> VarSymbol(x.id, erasedType = x.erasedType)
         .toMap
       
       val subst = new SymbolSubst:
