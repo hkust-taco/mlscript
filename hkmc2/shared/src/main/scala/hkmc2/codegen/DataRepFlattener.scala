@@ -387,6 +387,7 @@ object DataRepFlattener:
     tl: TL,
     raise: Raise,
     eState: State,
+    ctx: Elaborator.Ctx,
     symbolPrinter: SymbolPrinter,
   ): Program =
     cfg.dataRepFlatten match

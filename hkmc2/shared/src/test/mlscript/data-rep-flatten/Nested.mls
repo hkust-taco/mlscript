@@ -22,29 +22,48 @@ private fun bar(ls) =
   @matchShapes(Cons(1, Cons(2, Cons(3, Cons(_, Cons(_, Cons(_, Nil)))))))
   shape.match of ls, () => ls.Cons#xs.Cons#xs.Cons#xs.Cons#x + ls.Cons#xs.Cons#xs.Cons#xs.Cons#xs.Cons#x + + ls.Cons#xs.Cons#xs.Cons#xs.Cons#xs.Cons#xs.Cons#x 
 //│ >>> start data-rep-flatten collection-phase
+//│ data-rep-flatten collection-phase > track construction of Cons@21, Cons@20, Cons@18, Cons@19, Cons@16, Cons@17 in foo
 //│ <<< end data-rep-flatten collection-phase
+//│ >>> start data-rep-flatten web-computation-phase
+//│ data-rep-flatten web-computation-phase > web 0:
+//│ data-rep-flatten web-computation-phase >   producers: Cons@16, Cons@17, Cons@18, Cons@19, Cons@20, Cons@21
+//│ data-rep-flatten web-computation-phase >   field accesses: Cons.x@0, Cons.xs@1, Cons.xs@2, Cons.xs@3, Cons.x@4, Cons.xs@5, Cons.xs@6, Cons.xs@7, Cons.xs@8, Cons.x@9, Cons.xs@10, Cons.xs@11, Cons.xs@12, Cons.xs@13, Cons.xs@14
+//│ data-rep-flatten web-computation-phase >   pattern matches: match@26
+//│ <<< end data-rep-flatten web-computation-phase
 //│ >>> start data-rep-flatten transform-phase
+//│ data-rep-flatten transform-phase > allocated tag 0 for Cons(x: _, xs: Nil)
+//│ data-rep-flatten transform-phase > allocated tag 1 for Cons(x: _, xs: Cons(x: _, xs: Nil))
+//│ data-rep-flatten transform-phase > allocated tag 2 for Cons(x: _, xs: Cons(x: _, xs: Cons(x: _, xs: Nil)))
+//│ data-rep-flatten transform-phase > allocated tag 3 for Cons(x: 3, xs: Cons(x: _, xs: Cons(x: _, xs: Cons(x: _, xs: Nil))))
+//│ data-rep-flatten transform-phase > allocated tag 4 for Cons(x: 2, xs: Cons(x: 3, xs: Cons(x: _, xs: Cons(x: _, xs: Cons(x: _, xs: Nil)))))
+//│ data-rep-flatten transform-phase > allocated tag 5 for Cons(x: 1, xs: Cons(x: 2, xs: Cons(x: 3, xs: Cons(x: _, xs: Cons(x: _, xs: Cons(x: _, xs: Nil))))))
 //│ <<< end data-rep-flatten transform-phase
 //│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
 //│ let bar, foo;
 //│ foo = function foo(x, y, z) {
 //│   runtime.checkArgs("foo", 3, true, arguments.length);
-//│   let ls, tmp, tmp1, tmp2, tmp3, tmp4, ls1, lambda;
+//│   let tmp, tmp1, tmp2, tmp3, tmp4, tmp5, ls, lambda;
 //│   tmp = (new Cons1.class(z, Nil1));
+//│   tmp.__tag = 0;
 //│   tmp1 = (new Cons1.class(y, tmp));
+//│   tmp1.__tag = 1;
 //│   tmp2 = (new Cons1.class(x, tmp1));
+//│   tmp2.__tag = 2;
 //│   tmp3 = (new Cons1.class(3, tmp2));
+//│   tmp3.__tag = 3;
 //│   tmp4 = (new Cons1.class(2, tmp3));
-//│   ls = (new Cons1.class(1, tmp4));
-//│   ls1 = ls;
+//│   tmp4.__tag = 4;
+//│   tmp5 = (new Cons1.class(1, tmp4));
+//│   tmp5.__tag = 5;
+//│   ls = tmp5;
 //│   lambda = (undefined, function () {
 //│     runtime.checkArgs("", 0, true, arguments.length);
-//│     let tmp5, tmp6;
-//│     tmp5 = ls1.xs.xs.xs.x + ls1.xs.xs.xs.xs.x;
-//│     tmp6 = + ls1.xs.xs.xs.xs.xs.x;
-//│     return tmp5 + tmp6
+//│     let tmp6, tmp7;
+//│     tmp6 = ls.xs.xs.xs.x + ls.xs.xs.xs.xs.x;
+//│     tmp7 = + ls.xs.xs.xs.xs.xs.x;
+//│     return tmp6 + tmp7
 //│   });
-//│   return runtime.safeCall(globalThis.shape.match(ls1, lambda))
+//│   return runtime.safeCall(globalThis.shape.match(ls, lambda))
 //│ };
 //│ bar = function bar(ls) {
 //│   runtime.checkArgs("bar", 1, true, arguments.length);
@@ -78,8 +97,16 @@ private fun foofoo(t) =
     () => t.C#x.D#x + 1
     () => 0
 //│ >>> start data-rep-flatten collection-phase
+//│ data-rep-flatten collection-phase > track construction of D@3, C@5 in foo
 //│ <<< end data-rep-flatten collection-phase
+//│ >>> start data-rep-flatten web-computation-phase
+//│ data-rep-flatten web-computation-phase > web 0:
+//│ data-rep-flatten web-computation-phase >   producers: D@3, C@5
+//│ data-rep-flatten web-computation-phase >   field accesses: D.x@1, C.x@2
+//│ data-rep-flatten web-computation-phase >   pattern matches: match@8
+//│ <<< end data-rep-flatten web-computation-phase
 //│ >>> start data-rep-flatten transform-phase
+//│ data-rep-flatten transform-phase > allocated tag 0 for D(x: _)
 //│ <<< end data-rep-flatten transform-phase
 //│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
 //│ let foo1, foofoo;
@@ -87,7 +114,10 @@ private fun foofoo(t) =
 //│   runtime.checkArgs("foo", 2, true, arguments.length);
 //│   let t, tmp, t1, lambda, lambda1;
 //│   if (y === true) {
-//│     tmp = (new D1.class(x));
+//│     let tmp1;
+//│     tmp1 = (new D1.class(x));
+//│     tmp1.__tag = 0;
+//│     tmp = tmp1;
 //│   } else {
 //│     tmp = (new E1.class(1));
 //│   }

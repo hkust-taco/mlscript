@@ -389,6 +389,7 @@ object DeadParamElim:
     tl: TL,
     raise: Raise,
     eState: Elaborator.State,
+    ctx: Elaborator.Ctx,
     symbolPrinter: SymbolPrinter,
   ): Program =
     cfg.deadParamElim match

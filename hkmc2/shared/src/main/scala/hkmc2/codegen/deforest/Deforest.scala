@@ -133,6 +133,7 @@ object Deforest:
     tl: TL,
     raise: Raise,
     eState: Elaborator.State,
+    ctx: Elaborator.Ctx,
     symbolPrinter: SymbolPrinter,
   ): Program =
     // TODO: handle see through imported modules
