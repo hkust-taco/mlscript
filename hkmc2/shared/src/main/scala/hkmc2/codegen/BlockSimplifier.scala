@@ -1079,7 +1079,7 @@ class BlockSimplifier
           val restRewritten = applySubBlock(rest)
           
           if (scrut2 is scrut) && (newArms is arms) && (newDflt is dflt) && (restRewritten is rest) then b
-          else Match(scrut2, newArms, newDflt, restRewritten)(m.annotations)
+          else Match(scrut2, newArms, newDflt, restRewritten)
           
       case _ =>
         super.applyBlock(b)

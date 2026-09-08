@@ -46,7 +46,7 @@ class BlockTransformer(subst: SymbolSubst):
     case Throw(exc) =>
       applyResult(exc): exc2 =>
         if exc2 is exc then b else Throw(exc2)
-    case m @ Match(scrut, arms, dflt, rst) =>
+    case Match(scrut, arms, dflt, rst) =>
       def applySub(b: Block) = if rst.isEmpty then applySubBlock(b) else applySubBlockNonTail(b)
       applyPath(scrut): scrut2 =>
         applyListOf(
@@ -62,7 +62,7 @@ class BlockTransformer(subst: SymbolSubst):
             if (scrut2 is scrut) &&
                 (arms2 is arms) &&
                 (dflt2 is dflt) && (rst2 is rst)
-              then b else Match(scrut2, arms2, dflt2, rst2)(m.annotations)
+              then b else Match(scrut2, arms2, dflt2, rst2)
     case Label(lbl, loop, bod, rst) =>
       val lbl2 = lbl.subst
       val bod2 = if loop then applyScopedBlock(bod) else applySubBlock(bod)

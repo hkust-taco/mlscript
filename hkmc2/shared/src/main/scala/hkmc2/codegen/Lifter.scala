@@ -482,7 +482,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
         // We store already-created closures in a set in the BlockRewriter class.
         // This set needs to be reset after processing an if-else branch or while loop,
         // since closures nested inside each branch may not be re-used elsewhere.
-        case m @ Match(scrut, arms, dflt, rst) =>
+        case Match(scrut, arms, dflt, rst) =>
           applyPath(scrut): scrut2 =>
             applyListOf(
               arms,
@@ -497,7 +497,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
                 if (scrut2 is scrut) &&
                     (arms2 is arms) &&
                     (dflt2 is dflt) && (rst2 is rst)
-                  then rewritten else Match(scrut2, arms2, dflt2, rst2)(m.annotations)
+                  then rewritten else Match(scrut2, arms2, dflt2, rst2)
             
         case Label(lbl, false, bod, rst) =>
           val lbl2 = lbl.subst

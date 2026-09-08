@@ -266,7 +266,7 @@ sealed abstract class Block extends Product:
   
   private def flatten(k: End => Block): Block = this match
     
-    case m @ Match(scrut, arms, dflt, rest) =>
+    case Match(scrut, arms, dflt, rest) =>
       val newRest = rest.flatten(k)
       val newArms = arms.mapConserve: arm =>
         val newBody = arm._2.flattened
@@ -274,7 +274,7 @@ sealed abstract class Block extends Product:
       val newDflt = dflt.mapConserve(_.flattened)
       if (newRest is rest) && (newArms is arms) && (newDflt is dflt)
       then this
-      else Match(scrut, newArms, newDflt, newRest)(m.annotations)
+      else Match(scrut, newArms, newDflt, newRest)
       
     case Label(label, loop, body, rest) =>
       val newBody = body.flattened
@@ -371,9 +371,7 @@ case class Match(
   arms: Ls[Case -> Block],
   dflt: Opt[Block],
   rest: Block,
-)(val annotations: Ls[Annot]) extends Block with ProductWithTail with NonBlockTail:
-  def matchShapes: Opt[Annot.MatchShapes] = annotations.collectFirst:
-    case annotation: Annot.MatchShapes => annotation
+) extends Block with ProductWithTail with NonBlockTail
 
 case class Return(res: Result) extends BlockTail
 
@@ -464,9 +462,6 @@ object Define:
     case _ => new Define(defn, rest)
 
 object Match:
-  def apply(scrut: Path, arms: Ls[Case -> Block], dflt: Opt[Block], rest: Block)(annotations: Ls[Annot]): Block =
-    if annotations.nonEmpty then new Match(scrut, arms, dflt, rest)(annotations)
-    else apply(scrut, arms, dflt, rest)
 
   def apply(scrut: Path, _arms: Ls[Case -> Block], _dflt: Opt[Block], rest: Block): Block =
     val emptyDflt = _dflt.forall(_.isEmpty)
@@ -476,7 +471,7 @@ object Match:
     else dflt match
     case S(Unreachable(_)) if scrut.isPure && arms.sizeCompare(1) === 0 =>
       Begin(arms.head._2, rest)
-    case S(m @ Match(`scrut`, arms2, dflt2, _: End)) if m.annotations.isEmpty => // TODO: also handle non-End rest (may require a join point)
+    case S(Match(`scrut`, arms2, dflt2, _: End)) => // TODO: also handle non-End rest (may require a join point)
       // * Currently, this branch does not seem used often (or at all?),
       // * because the UCS and (especially) MergeMatchArmTransformer already do a good job at merging matches
       Match(scrut, arms ::: arms2, dflt2, rest)
@@ -486,8 +481,8 @@ object Match:
         case S(d) => S(if d.isAbortive then d else Begin(d, rest))
         case N => S(rest)
       if numNonAbortive === 0 then
-        if rest.isEmpty then new Match(scrut, arms, mapDflt, rest)(Nil)
-        else new Match(scrut, arms, mapDflt, End("(Unreachable:) rest of abortive match"))(Nil)
+        if rest.isEmpty then new Match(scrut, arms, mapDflt, rest)
+        else new Match(scrut, arms, mapDflt, End("(Unreachable:) rest of abortive match"))
       else if numNonAbortive === 1 && dflt.exists(_.isAbortive) || rest.size <= 1 then
         new Match(scrut,
           arms.map: a =>
@@ -497,10 +492,10 @@ object Match:
           // * Indeed, `L: { match scrut { C => break L }; end }` can no longer be optimized
           // * if we replace `end` with `unreachable`, since the break is no longer jumping over nothing,
           // * ie no longer in tail position of the label (trying to treat it as such is unsound).
-          End("Rest moved to non-abortive branch(es)"))(Nil)
+          End("Rest moved to non-abortive branch(es)"))
       else rest match
         case Scoped(syms, body) => Scoped(syms, Match(scrut, arms, dflt, body))
-        case _ => new Match(scrut, arms, dflt, rest)(Nil)
+        case _ => new Match(scrut, arms, dflt, rest)
 
 object Begin:
   def apply(sub: Block, rest: Block): Block =
@@ -517,8 +512,8 @@ object Begin:
               "overlapping symbols when trying to merge Scoped blocks")
           Scoped(symsSub ++ symsRest, Begin(bodySub, bodyRest))
         case _ => Scoped(symsSub, Begin(bodySub, rest))
-      case m @ Match(scrut, arms, dflt, rst) =>
-        Match(scrut, arms, dflt, Begin(rst, rest))(m.annotations)
+      case Match(scrut, arms, dflt, rst) =>
+        Match(scrut, arms, dflt, Begin(rst, rest))
       case Label(lbl, loop, body, rst) => Label(lbl, loop, body, Begin(rst, rest))
       case TryBlock(sub, fin, rst) => TryBlock(sub, fin, Begin(rst, rest))
       case Assign(lhs, rhs, rst) => Assign(lhs, rhs, Begin(rst, rest))

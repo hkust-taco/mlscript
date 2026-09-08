@@ -62,38 +62,37 @@ class ProducersCollector(val flowRes: FlowConstraintSolver)(using val tl: TL) ex
   end AllocationCollector
 
   override def applyFunDefn(fun: FunDefn): Unit =
-    if fun.visibility is Visibility.Public then
-      val funName = fun.owner.fold(fun.dSym.nme)(owner => s"${owner.nme}.${fun.dSym.nme}")
-      val collector = new AllocationCollector()
-      collector.applyBlock(fun.body)
+    val funName = fun.owner.fold(fun.dSym.nme)(owner => s"${owner.nme}.${fun.dSym.nme}")
+    val collector = new AllocationCollector()
+    collector.applyBlock(fun.body)
 
-      val seenProducerEntryPoints = MutSet.empty[Ctor]
-      for
-        (allocationId, _) <- collector.allocations
-        ctor <- concreteCtorsByResultId.get(allocationId)
-        if !ctor.dests.contains(UnknownCons)
-      do seenProducerEntryPoints.add(ctor)
+    val seenProducerEntryPoints = MutSet.empty[Ctor]
+    for
+      (allocationId, _) <- collector.allocations
+      ctor <- concreteCtorsByResultId.get(allocationId)
+      if !ctor.dests.contains(UnknownCons)
+    do seenProducerEntryPoints.add(ctor)
 
-      if !seenProducerEntryPoints.isEmpty then
-        tl.log(s"track construction of ${seenProducerEntryPoints.map(DataRepFlattenDebug.showProducer).mkString(", ")} in $funName")
+    if !seenProducerEntryPoints.isEmpty then
+      tl.log(s"track construction of ${seenProducerEntryPoints.map(DataRepFlattenDebug.showProducer).mkString(", ")} in $funName")
 
-      val seenConsumerEntryPoints = MutSet.empty[ConcreteCtorConsumer]
-      for
-        resultId <- collector.resultIds
-        consumer <- concreteConsumersByResultId.getOrElse(resultId, Nil)
-        if !consumer.srcs.contains(UnknownProd)
-        if consumer.srcs.exists:
-          case _: Ctor => true
-          case _ => false
-      do seenConsumerEntryPoints.add(consumer)
+    val seenConsumerEntryPoints = MutSet.empty[ConcreteCtorConsumer]
+    for
+      resultId <- collector.resultIds
+      consumer <- concreteConsumersByResultId.getOrElse(resultId, Nil)
+      if !consumer.srcs.contains(UnknownProd)
+      if consumer.srcs.exists:
+        case _: Ctor => true
+        case _ => false
+    do seenConsumerEntryPoints.add(consumer)
 
-      if !seenConsumerEntryPoints.isEmpty then
-        tl.log(s"track consumption at ${seenConsumerEntryPoints.map(DataRepFlattenDebug.showConsumer).mkString(", ")} in $funName")
+    if !seenConsumerEntryPoints.isEmpty then
+      tl.log(s"track consumption at ${seenConsumerEntryPoints.map(DataRepFlattenDebug.showConsumer).mkString(", ")} in $funName")
 
-      entryPoints += ProducersCollector.EntryPoints(
-        seenProducerEntryPoints.toList,
-        seenConsumerEntryPoints.toList,
-      )
+    entryPoints += ProducersCollector.EntryPoints(
+      seenProducerEntryPoints.toList,
+      Nil,
+    )
 
   override def applyClsLikeDefn(defn: ClsLikeDefn): Unit =
     defn.companion.foreach(applyCompanionModule)
@@ -116,9 +115,13 @@ object ProducersCollector:
 private sealed abstract class Shape:
   def show: Str
 
+  def flattenShape: List[Shape]
+
 private case class LitShape(lit: Value.Lit) extends Shape:
   def show: Str = lit match
     case Value.Lit(lit) => lit.idStr
+
+  def flattenShape: List[Shape] = this :: Nil
 
 private case class ClassShape(ctor: ClassLikeSymbol, fields: Map[TermSymbol, Shape]) extends Shape:
   def show: Str =
@@ -128,17 +131,40 @@ private case class ClassShape(ctor: ClassLikeSymbol, fields: Map[TermSymbol, Sha
         .map((field, shape) => s"${DataRepFlattenDebug.showField(field)}: ${shape.show}")
       s"${DataRepFlattenDebug.showCtor(ctor)}${shownFields.mkString("(", ", ", ")")}"
 
-private case class TupleShape(length: Int, elements: Ls[Shape]) extends Shape:
+  def flattenShape: List[Shape] =
+    val alternatives = fields.iterator.foldLeft(List(Map.empty[TermSymbol, Shape])):
+      case (alternatives, (field, fieldShape)) =>
+        for
+          alternative <- alternatives
+          concreteFieldShape <- fieldShape.flattenShape
+        yield alternative.updated(field, concreteFieldShape)
+    alternatives.map(ClassShape(ctor, _)).distinct
+
+private case class TupleShape(length: Int, elements: List[Shape]) extends Shape:
   require(elements.length === length)
   def show: Str =
     if elements.isEmpty then DataRepFlattenDebug.showCtor(length)
     else s"${DataRepFlattenDebug.showCtor(length)}${elements.map(_.show).mkString("(", ", ", ")")}"
 
+  def flattenShape: List[Shape] =
+    val alternatives = elements.foldLeft(List(List.empty[Shape])):
+      case (alternatives, element) =>
+        for
+          alternative <- alternatives
+          concreteElement <- element.flattenShape
+        yield alternative :+ concreteElement
+    alternatives.map(TupleShape(length, _)).distinct
+
 private case class UnionShape(subshapes: List[Shape]) extends Shape:
   def show: Str = subshapes.map(_.show).mkString("(", " | ", ")")
 
+  def flattenShape: List[Shape] =
+    subshapes.flatMap(_.flattenShape).distinct
+
 private object DynamicShape extends Shape:
   def show: Str = "_"
+
+  def flattenShape: List[Shape] = this :: Nil
 
 class DataRepFlattener(
   val webs: List[Web],
@@ -153,6 +179,18 @@ class DataRepFlattener(
   private val shapeTags = MutMap.empty[Shape, Int]
 
   private val tagField = new syntax.Tree.Ident("__tag")
+
+  private def allocateShapeTags() =
+    val shapes = producersInWeb.iterator.map: producer =>
+      producer.exprId.uid -> shapeOfProducer(producer)
+    for (_, shape) <- shapes.toList.sortBy((id, shape) => id -> shape.show) do
+      shape match
+        case shape: ClassShape if !containsUnion(shape) =>
+          val tag = shapeTags.getOrElseUpdate(shape, shapeTags.size)
+          if debug then
+            summon[TL].emitDbg(
+              s"data-rep-flatten transform-phase > allocated tag $tag for ${shape.show}")
+        case _ => ()
 
   private def getCtorArgs(producer: Ctor) =
     producer.exprId.getResult match
@@ -212,14 +250,9 @@ class DataRepFlattener(
     val shape = shapeOfProducer(producer)
     shape match
       case shape: ClassShape if !containsUnion(shape) =>
-        val tag = shapeTags.getOrElseUpdate(shape, shapeTags.size)
-        if debug then
-          val owner = fun.owner.fold(fun.dSym.nme)(owner => s"${owner.nme}.${fun.dSym.nme}")
-          summon[TL].emitDbg(
-            s"data-rep-flatten transform-phase > allocated tag $tag for ${shape.show} "
-              + s"at ${DataRepFlattenDebug.showProducer(producer)} in $owner",
-          )
-        S(tag)
+        val tag = shapeTags.get(shape)
+        softAssert(tag.isDefined, s"Missing tag for shape ${shape.show}")
+        tag
       case _ => N
 
   private def insertTag(result: Result, tag: Int)(k: Path => Block): Block =
@@ -233,6 +266,7 @@ class DataRepFlattener(
   override def applyProgram(program: Program): Program =
     if debug then
       summon[TL].emitDbg(">>> start data-rep-flatten transform-phase")
+    allocateShapeTags()
     val result = super.applyProgram(program)
     if debug then
       summon[TL].emitDbg("<<< end data-rep-flatten transform-phase")

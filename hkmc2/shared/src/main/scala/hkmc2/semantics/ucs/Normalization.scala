@@ -317,7 +317,7 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
   import codegen.*, lowering.{term_nonTail, subTerm_nonTail, unreachableFn}
   
   private def lowerSplit
-      (split: Split, cont: Result => Block, topLevelAnnotations: Ls[Annot])
+      (split: Split, cont: Result => Block)
       (using form: IfLikeForm)
       (using LoweringCtx)
       : Block =
@@ -325,16 +325,16 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
     case Split.Let(sym, trm, tl) =>
       LoweringCtx.loweringCtx.collectScopedSym(sym)
       term_nonTail(trm): r =>
-        Assign(sym, r, lowerSplit(tl, cont, topLevelAnnotations))
+        Assign(sym, r, lowerSplit(tl, cont))
     case Split.Cons(Branch(scrut, pat, tail), restSplit) =>
       subTerm_nonTail(scrut): sr =>
         tl.log(s"Binding scrut $scrut to $sr (${summon[LoweringCtx].map})") 
-        def mkMatch(cse: Case -> Block, matchAnnotations: Ls[Annot]) = Match(sr, cse :: Nil,
-            S(lowerSplit(restSplit, cont, Nil)),
+        def mkMatch(cse: Case -> Block) = Match(sr, cse :: Nil,
+            S(lowerSplit(restSplit, cont)),
             End()
-          )(matchAnnotations)
+          )
         pat match
-          case FlatPattern.Lit(lit) => mkMatch(Case.Lit(lit) -> lowerSplit(tail, cont, Nil), topLevelAnnotations)
+          case FlatPattern.Lit(lit) => mkMatch(Case.Lit(lit) -> lowerSplit(tail, cont))
           case FlatPattern.ClassLike(ctor, symbol, argsOpt, _refined) =>
             for args <- argsOpt; (arg, _) <- args do LoweringCtx.loweringCtx.collectScopedSym(arg)
             /** Make a continuation that creates the match. */
@@ -345,11 +345,11 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
               assert(argsOpt.isEmpty || args.length <= clsParams.length, (argsOpt, clsParams))
               def mkArgs(args: Ls[TermSymbol -> LocalVarSymbol])(using LoweringCtx): Case -> Block = args match
                 case Nil =>
-                  Case.Cls(ctorSym, st) -> lowerSplit(tail, cont, Nil)
+                  Case.Cls(ctorSym, st) -> lowerSplit(tail, cont)
                 case (param, arg) :: args =>
                   val (cse, blk) = mkArgs(args)
                   (cse, Assign(arg, Select(sr, new Tree.Ident(param.id.name).withLocOf(arg))(S(param))(false), blk))
-              mkMatch(mkArgs(clsParams.iterator.zip(args).toList), topLevelAnnotations)
+              mkMatch(mkArgs(clsParams.iterator.zip(args).toList))
             symbol match
               case cls: ClassSymbol if ctx.builtins.virtualClasses contains cls =>
                 // [invariant:0] Some classes (e.g., `Int`) from `Prelude` do
@@ -365,19 +365,17 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
                   ))
               case mod: ModuleOrObjectSymbol =>
                 subTerm_nonTail(ctor)(k(mod, Nil))
-          case FlatPattern.Tuple(len, inf) => mkMatch(Case.Tup(len, inf) -> lowerSplit(tail, cont, Nil), topLevelAnnotations)
+          case FlatPattern.Tuple(len, inf) => mkMatch(Case.Tup(len, inf) -> lowerSplit(tail, cont))
           case FlatPattern.Record(entries) =>
             for (_, s) <- entries do LoweringCtx.loweringCtx.collectScopedSym(s)
             val objectSym = ctx.builtins.Object
             mkMatch( // checking that we have an object
               Case.Cls(objectSym, Select(State.globalThisSymbol.asThis, Tree.Ident(objectSym.nme))(S(objectSym))(false)) ->
-              entries.foldRight(lowerSplit(tail, cont, Nil)):
+              entries.foldRight(lowerSplit(tail, cont)):
                 case ((fieldName, fieldSymbol), blk) =>
                   mkMatch(
                     Case.Field(fieldName, safe = true) -> // we know we have an object, no need to check again
-                    Assign(fieldSymbol, Select(sr, fieldName)(N)(false), blk),
-                    Nil),
-              topLevelAnnotations
+                    Assign(fieldSymbol, Select(sr, fieldName)(N)(false), blk)),
             )
     case Split.Else(els) =>
       term_nonTail(els, inStmtPos = form.isImperative)(cont)
@@ -396,8 +394,8 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
       if transfersControl then
         // Ret/Thrw emit `return`/`throw`, which transfer control out of the block
         // unconditionally; passing them through preserves tail-call position.
-        val bodyBlock = lowerSplit(sym.body, cont, Nil)
-        Label(joinLabel, false, lowerSplit(tail, cont, topLevelAnnotations), bodyBlock)
+        val bodyBlock = lowerSplit(sym.body, cont)
+        Label(joinLabel, false, lowerSplit(tail, cont), bodyBlock)
       else
         // Other continuations (including ImplctRet, which generates `expr;` without `return`) can fall through
         // the Label body into the rest. Wrap with an exit label and temp variable so every path stores its
@@ -406,13 +404,13 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
         val tmp = new TempSymbol(N)
         LoweringCtx.loweringCtx.collectScopedSym(tmp)
         val exitCont: Result => Block = r => Assign(tmp, r, Break(exitLabel))
-        val bodyBlock = lowerSplit(sym.body, exitCont, Nil)
-        val tailBlock = lowerSplit(tail, exitCont, topLevelAnnotations)
+        val bodyBlock = lowerSplit(sym.body, exitCont)
+        val tailBlock = lowerSplit(tail, exitCont)
         Label(exitLabel, false, Label(joinLabel, false, tailBlock, bodyBlock), cont(tmp.asSimpleRef))
     case Split.UseSplit(sym) =>
       sym.label match
         case S(label) => Break(label)
-        case N => lowerSplit(sym.body, cont, topLevelAnnotations) // fallback: inline if no label
+        case N => lowerSplit(sym.body, cont) // fallback: inline if no label
   
   /**
     * Make a block that throws the match error. We might add the information of
@@ -424,18 +422,18 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
   
   import syntax.Keyword.{`if`, `while`}
   
-  def apply(t: Term.IfLike, annotations: Ls[Annot])(k: Result => Block)(using config: Config)(using LoweringCtx): Block =
+  def apply(t: Term.IfLike)(k: Result => Block)(using config: Config)(using LoweringCtx): Block =
     val newSplit = t.split.getExpandedSplit
     scoped("ucs:desugared"):
       log(s"Split with nested patterns:\n${t.split.prettyPrint(t.kw)}")
       log(s"Expanded split with flattened patterns:\n${newSplit.prettyPrint}")
-    this(newSplit, t.form, S(t), annotations, k)
+    this(newSplit, t.form, S(t), k)
   
   def apply(t: Term.SynthIf)(k: Result => Block)(using Config, LoweringCtx): Block =
-    this(t.split, IfLikeForm.ReturningIf, S(t), Nil, k)
+    this(t.split, IfLikeForm.ReturningIf, S(t), k)
   
   def apply(split: Split)(k: Result => Block)(using Config, LoweringCtx): Block =
-    this(split, IfLikeForm.ReturningIf, N, Nil, k)
+    this(split, IfLikeForm.ReturningIf, N, k)
 
   /** Lower a synthesized `while` loop: branch consequents are evaluated for
     * their effects and the loop is re-entered; the loop exits when no branch
@@ -443,9 +441,9 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
     * are created by `ups.FixedPointCompiler` to drive the generated matcher
     * machine. */
   def apply(t: Term.SynthWhile)(k: Result => Block)(using Config, LoweringCtx): Block =
-    this(t.split, IfLikeForm.While, N, Nil, k)
+    this(t.split, IfLikeForm.While, N, k)
   
-  private def apply(inputSplit: Split, form: IfLikeForm, t: Opt[Term], annotations: Ls[Annot], k: Result => Block)(using cfg: Config, outerCtx: LoweringCtx) =
+  private def apply(inputSplit: Split, form: IfLikeForm, t: Opt[Term], k: Result => Block)(using cfg: Config, outerCtx: LoweringCtx) =
     // if it's `while`, we always make sure that loop bodies are proper nested scoped
     // see https://github.com/hkust-taco/mlscript/pull/356#discussion_r2588412258
     val useNestedScoped = form is IfLikeForm.While
@@ -496,7 +494,7 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
           else assignResult
       val mainBlock =
         given IfLikeForm = form
-        lowerSplit(normalized, cont, annotations)
+        lowerSplit(normalized, cont)
       val body =
         Scoped(
           if useNestedScoped then LoweringCtx.loweringCtx.getCollectedSym else Set.empty,

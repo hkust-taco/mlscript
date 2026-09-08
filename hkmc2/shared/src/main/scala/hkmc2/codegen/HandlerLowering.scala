@@ -245,11 +245,11 @@ class HandlerLowering(paths: HandlerPaths, opt: Opt[EffectHandlers])(using TL, R
 
       blk match
 
-      case m @ Match(scrut, arms, dflt, rest) =>
+      case Match(scrut, arms, dflt, rest) =>
         val restId = RestLazyId(rest)
         val newArms = arms.map((cse, blkk) => (cse, go(blkk)(using afterEnd = S(restId))))
         val newDflt = dflt.map(blkk => go(blkk)(using afterEnd = S(restId)))
-        Match(scrut, newArms, newDflt, restId.transitionSoft)(m.annotations)
+        Match(scrut, newArms, newDflt, restId.transitionSoft)
 
       case Label(label, loop, body, rest) =>
         val restId = RestLazyId(rest)

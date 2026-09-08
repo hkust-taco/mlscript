@@ -100,6 +100,9 @@ declare module handlers with
 declare module scope with
   fun locally
 
+declare module shape with
+  fun match
+
 declare module runtime with
   fun
     suspend

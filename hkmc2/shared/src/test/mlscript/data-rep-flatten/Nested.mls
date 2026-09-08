@@ -20,91 +20,43 @@ fun foo(x, y, z) =
   bar(ls)
 private fun bar(ls) =
   @matchShapes(Cons(1, Cons(2, Cons(3, Cons(_, Cons(_, Cons(_, Nil)))))))
-  if ls is
-    Cons(1, Cons(2, Cons(3, Cons(x, Cons(y, Cons(z, Nil)))))) then x + y + z
+  shape.match of ls, () => ls.Cons#xs.Cons#xs.Cons#xs.Cons#x + ls.Cons#xs.Cons#xs.Cons#xs.Cons#xs.Cons#x + + ls.Cons#xs.Cons#xs.Cons#xs.Cons#xs.Cons#xs.Cons#x 
 //│ >>> start data-rep-flatten collection-phase
-//│ data-rep-flatten collection-phase > track construction of Cons@27, Cons@28, Cons@25, Cons@26, Cons@23, Cons@24 in foo
 //│ <<< end data-rep-flatten collection-phase
-//│ >>> start data-rep-flatten web-computation-phase
-//│ data-rep-flatten web-computation-phase > web 0:
-//│ data-rep-flatten web-computation-phase >   producers: Cons@23, Cons@24, Cons@25, Cons@26, Cons@27, Cons@28
-//│ data-rep-flatten web-computation-phase >   field accesses: Cons.x@0, Cons.xs@1, Cons.x@2, Cons.xs@3, Cons.x@4, Cons.xs@5, Cons.x@6, Cons.xs@7, Cons.x@8, Cons.xs@9, Cons.x@10, Cons.xs@11
-//│ data-rep-flatten web-computation-phase >   pattern matches: match@13, match@14, match@15, match@17, match@19, match@21
-//│ <<< end data-rep-flatten web-computation-phase
 //│ >>> start data-rep-flatten transform-phase
-//│ data-rep-flatten transform-phase > allocated tag 0 for Cons(x: _, xs: Nil) at Cons@23 in foo
-//│ data-rep-flatten transform-phase > allocated tag 1 for Cons(x: _, xs: Cons(x: _, xs: Nil)) at Cons@24 in foo
-//│ data-rep-flatten transform-phase > allocated tag 2 for Cons(x: _, xs: Cons(x: _, xs: Cons(x: _, xs: Nil))) at Cons@25 in foo
-//│ data-rep-flatten transform-phase > allocated tag 3 for Cons(x: 3, xs: Cons(x: _, xs: Cons(x: _, xs: Cons(x: _, xs: Nil)))) at Cons@26 in foo
-//│ data-rep-flatten transform-phase > allocated tag 4 for Cons(x: 2, xs: Cons(x: 3, xs: Cons(x: _, xs: Cons(x: _, xs: Cons(x: _, xs: Nil))))) at Cons@27 in foo
-//│ data-rep-flatten transform-phase > allocated tag 5 for Cons(x: 1, xs: Cons(x: 2, xs: Cons(x: 3, xs: Cons(x: _, xs: Cons(x: _, xs: Cons(x: _, xs: Nil)))))) at Cons@28 in foo
 //│ <<< end data-rep-flatten transform-phase
 //│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
 //│ let bar, foo;
 //│ foo = function foo(x, y, z) {
 //│   runtime.checkArgs("foo", 3, true, arguments.length);
-//│   let tmp, tmp1, tmp2, tmp3, tmp4, tmp5;
+//│   let ls, tmp, tmp1, tmp2, tmp3, tmp4, ls1, lambda;
 //│   tmp = (new Cons1.class(z, Nil1));
-//│   tmp.__tag = 0;
 //│   tmp1 = (new Cons1.class(y, tmp));
-//│   tmp1.__tag = 1;
 //│   tmp2 = (new Cons1.class(x, tmp1));
-//│   tmp2.__tag = 2;
 //│   tmp3 = (new Cons1.class(3, tmp2));
-//│   tmp3.__tag = 3;
 //│   tmp4 = (new Cons1.class(2, tmp3));
-//│   tmp4.__tag = 4;
-//│   tmp5 = (new Cons1.class(1, tmp4));
-//│   tmp5.__tag = 5;
-//│   return runtime.checkCall(bar(tmp5))
+//│   ls = (new Cons1.class(1, tmp4));
+//│   ls1 = ls;
+//│   lambda = (undefined, function () {
+//│     runtime.checkArgs("", 0, true, arguments.length);
+//│     let tmp5, tmp6;
+//│     tmp5 = ls1.xs.xs.xs.x + ls1.xs.xs.xs.xs.x;
+//│     tmp6 = + ls1.xs.xs.xs.xs.xs.x;
+//│     return tmp5 + tmp6
+//│   });
+//│   return runtime.safeCall(globalThis.shape.match(ls1, lambda))
 //│ };
 //│ bar = function bar(ls) {
 //│   runtime.checkArgs("bar", 1, true, arguments.length);
-//│   let arg$Cons$0$, arg$Cons$1$, arg$Cons$0$1, arg$Cons$1$1, arg$Cons$0$2, arg$Cons$1$2, arg$Cons$0$3, arg$Cons$1$3, arg$Cons$0$4, arg$Cons$1$4, arg$Cons$0$5, arg$Cons$1$5, tmp;
-//│   if (ls instanceof Cons1.class) {
-//│     arg$Cons$0$ = ls.x;
-//│     arg$Cons$1$ = ls.xs;
-//│     if (arg$Cons$0$ === 1) {
-//│       if (arg$Cons$1$ instanceof Cons1.class) {
-//│         arg$Cons$0$1 = arg$Cons$1$.x;
-//│         arg$Cons$1$1 = arg$Cons$1$.xs;
-//│         if (arg$Cons$0$1 === 2) {
-//│           if (arg$Cons$1$1 instanceof Cons1.class) {
-//│             arg$Cons$0$2 = arg$Cons$1$1.x;
-//│             arg$Cons$1$2 = arg$Cons$1$1.xs;
-//│             if (arg$Cons$0$2 === 3) {
-//│               if (arg$Cons$1$2 instanceof Cons1.class) {
-//│                 arg$Cons$0$3 = arg$Cons$1$2.x;
-//│                 arg$Cons$1$3 = arg$Cons$1$2.xs;
-//│                 if (arg$Cons$1$3 instanceof Cons1.class) {
-//│                   arg$Cons$0$4 = arg$Cons$1$3.x;
-//│                   arg$Cons$1$4 = arg$Cons$1$3.xs;
-//│                   if (arg$Cons$1$4 instanceof Cons1.class) {
-//│                     arg$Cons$0$5 = arg$Cons$1$4.x;
-//│                     arg$Cons$1$5 = arg$Cons$1$4.xs;
-//│                     if (arg$Cons$1$5 instanceof Nil1.class) {
-//│                       tmp = arg$Cons$0$3 + arg$Cons$0$4;
-//│                       return tmp + arg$Cons$0$5
-//│                     }
-//│                     throw (new globalThis.Error("match error"));
-//│                   }
-//│                   throw (new globalThis.Error("match error"));
-//│                 }
-//│                 throw (new globalThis.Error("match error"));
-//│               }
-//│               throw (new globalThis.Error("match error"));
-//│             }
-//│             throw (new globalThis.Error("match error"));
-//│           }
-//│           throw (new globalThis.Error("match error"));
-//│         }
-//│         throw (new globalThis.Error("match error"));
-//│       }
-//│       throw (new globalThis.Error("match error"));
-//│     }
-//│     throw (new globalThis.Error("match error"));
-//│   }
-//│   throw (new globalThis.Error("match error"));
+//│   let lambda;
+//│   lambda = (undefined, function () {
+//│     runtime.checkArgs("", 0, true, arguments.length);
+//│     let tmp, tmp1;
+//│     tmp = ls.xs.xs.xs.x + ls.xs.xs.xs.xs.x;
+//│     tmp1 = + ls.xs.xs.xs.xs.xs.x;
+//│     return tmp + tmp1
+//│   });
+//│   return runtime.safeCall(globalThis.shape.match(ls, lambda))
 //│ };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
@@ -122,59 +74,46 @@ fun foo(x, y) =
   let t = new C(if y then new D(x) else new E(1))
   foofoo(t)
 private fun foofoo(t) =
-  @matchShapes(C(D(_)), C(E(1)))
-  if t is
-    C(D(x)) then x + 1
-    C(E(1)) then 0
+  @matchShapes(C(D(_)), C(E(1))) shape.match of t,
+    () => t.C#x.D#x + 1
+    () => 0
 //│ >>> start data-rep-flatten collection-phase
-//│ data-rep-flatten collection-phase > track construction of D@7, E@8, C@9 in foo
 //│ <<< end data-rep-flatten collection-phase
-//│ >>> start data-rep-flatten web-computation-phase
-//│ data-rep-flatten web-computation-phase > web 0:
-//│ data-rep-flatten web-computation-phase >   producers: D@7, E@8, C@9
-//│ data-rep-flatten web-computation-phase >   field accesses: C.x@1, D.x@2, E.x@4
-//│ data-rep-flatten web-computation-phase >   pattern matches: match@3, match@6
-//│ <<< end data-rep-flatten web-computation-phase
 //│ >>> start data-rep-flatten transform-phase
-//│ data-rep-flatten transform-phase > allocated tag 0 for D(x: _) at D@7 in foo
-//│ data-rep-flatten transform-phase > allocated tag 1 for E(x: 1) at E@8 in foo
 //│ <<< end data-rep-flatten transform-phase
 //│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
 //│ let foo1, foofoo;
 //│ foo1 = function foo(x, y) {
 //│   runtime.checkArgs("foo", 2, true, arguments.length);
-//│   let t, tmp;
+//│   let t, tmp, t1, lambda, lambda1;
 //│   if (y === true) {
-//│     let tmp1;
-//│     tmp1 = (new D1.class(x));
-//│     tmp1.__tag = 0;
-//│     tmp = tmp1;
+//│     tmp = (new D1.class(x));
 //│   } else {
-//│     let tmp1;
-//│     tmp1 = (new E1.class(1));
-//│     tmp1.__tag = 1;
-//│     tmp = tmp1;
+//│     tmp = (new E1.class(1));
 //│   }
 //│   t = (new C1.class(tmp));
-//│   return runtime.checkCall(foofoo(t))
+//│   t1 = t;
+//│   lambda = (undefined, function () {
+//│     runtime.checkArgs("", 0, true, arguments.length);
+//│     return t1.x.x + 1
+//│   });
+//│   lambda1 = (undefined, function () {
+//│     runtime.checkArgs("", 0, true, arguments.length);
+//│     return 0
+//│   });
+//│   return runtime.safeCall(globalThis.shape.match(t1, lambda, lambda1))
 //│ };
 //│ foofoo = function foofoo(t) {
 //│   runtime.checkArgs("foofoo", 1, true, arguments.length);
-//│   let arg$C$0$, arg$E$0$, arg$D$0$;
-//│   if (t instanceof C1.class) {
-//│     arg$C$0$ = t.x;
-//│     if (arg$C$0$ instanceof D1.class) {
-//│       arg$D$0$ = arg$C$0$.x;
-//│       return arg$D$0$ + 1
-//│     } else if (arg$C$0$ instanceof E1.class) {
-//│       arg$E$0$ = arg$C$0$.x;
-//│       if (arg$E$0$ === 1) {
-//│         return 0
-//│       }
-//│       throw (new globalThis.Error("match error"));
-//│     }
-//│     throw (new globalThis.Error("match error"));
-//│   }
-//│   throw (new globalThis.Error("match error"));
+//│   let lambda, lambda1;
+//│   lambda = (undefined, function () {
+//│     runtime.checkArgs("", 0, true, arguments.length);
+//│     return t.x.x + 1
+//│   });
+//│   lambda1 = (undefined, function () {
+//│     runtime.checkArgs("", 0, true, arguments.length);
+//│     return 0
+//│   });
+//│   return runtime.safeCall(globalThis.shape.match(t, lambda, lambda1))
 //│ };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————

@@ -142,6 +142,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
     case RuntimeIntrinsic(runtimeName: Str)
     case DebugPrintStack
     case ScopeLocally
+    case ShapeMatch
   private lazy val specialBuiltinSymbols: Map[BlockMemberSymbol, SpecialBuiltin] =
     val blt = ctx.builtins
     Map(
@@ -152,6 +153,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
       blt.js.try_catch -> SpecialBuiltin.RuntimeIntrinsic("try_catch"),
       blt.debug.printStack -> SpecialBuiltin.DebugPrintStack,
       blt.scope.locally -> SpecialBuiltin.ScopeLocally,
+      blt.shape.`match` -> SpecialBuiltin.ShapeMatch,
     )
   
   lazy val unreachableFn =
@@ -1015,7 +1017,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
           k(lamDef.asPath))
     
     
-    case iftrm: st.IfLike => ucs.Normalization(this)(iftrm, annots)(k)
+    case iftrm: st.IfLike => ucs.Normalization(this)(iftrm)(k)
     
     case iftrm: st.SynthIf => ucs.Normalization(this)(iftrm)(k)
 
@@ -1468,7 +1470,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
     
     annotations.foreach:
       case Annot.Untyped => ()
-      case Annot.MatchShapes(_) if receiver.isInstanceOf[st.IfLike] => ()
+      case Annot.MatchShapes(_) if receiver.isInstanceOf[st.App] => ()
       case annot: Annot.Trm => receiver match
         case st.App(Ref(_: BuiltinSymbol), _) => warn(annot)
         case st.App(_, _) | New(_, _, _) | DynNew(_, _) | Mut(_: New | _: DynNew) => ()
@@ -1589,9 +1591,8 @@ object MergeMatchArmTransformer extends BlockTransformer(SymbolSubst.Id):
   override def applyBlock(b: Block): Block = super.applyBlock(b) match
     case m @ Match(scrut, arms, Some(dflt), rest) =>
       dflt match
-      case TrivialStatementsAndMatch(k, inner @ Match(scrutRewritten, armsRewritten, dfltRewritten, restRewritten))
-        if inner.annotations.isEmpty
-          && (scrutRewritten === scrut) && (restRewritten.size * armsRewritten.length) < 10 =>
+      case TrivialStatementsAndMatch(k, Match(scrutRewritten, armsRewritten, dfltRewritten, restRewritten))
+        if (scrutRewritten === scrut) && (restRewritten.size * armsRewritten.length) < 10 =>
           val newArms = restRewritten match
             case _: End => armsRewritten
             case _ => armsRewritten.map:
@@ -1599,6 +1600,6 @@ object MergeMatchArmTransformer extends BlockTransformer(SymbolSubst.Id):
                 cse -> Begin(body, restRewritten)
           k.getOrElse(identity[Block]):
             Match(scrut, arms ::: newArms,
-              dfltRewritten.fold(restRewritten)(Begin(_, restRewritten)) |> some, rest)(m.annotations)
+              dfltRewritten.fold(restRewritten)(Begin(_, restRewritten)) |> some, rest)
       case _ => m
     case b => b

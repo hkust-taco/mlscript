@@ -302,6 +302,8 @@ object Elaborator:
         val await = assumeObject("await").asTrm.get
       object scope extends VirtualModule(assumeBuiltinMod("scope")):
         val locally = assumeObject("locally")
+      object shape extends VirtualModule(assumeBuiltinMod("shape")):
+        val `match` = assumeObject("match")
       object runtime extends VirtualModule(assumeBuiltinMod("runtime")):
         val suspend = assumeObject("suspend")
         val handle_suspension = assumeObject("handle_suspension")
