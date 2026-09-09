@@ -200,7 +200,7 @@ class BlockSimplifier
           */
         def markCastTarget(target: ErasedValueType): Unit =
           target.canonicalize match
-            case ErasedType.AnyRef(_, tpeSym) => tpeSym.asBlkMember.foreach(usedVars += _)
+            case ErasedType.AnyRef(_, tpeSym) => usedVars += tpeSym.bms.get
             case _ =>
 
         override def applyResult(r: Result): Unit =

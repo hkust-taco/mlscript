@@ -79,7 +79,7 @@ abstract class WasmDiffMaker extends InvalMLDiffMaker:
           // Cast targets are type dependencies rather than value references, so freeVars omits them.
           r match
             case Cast(_, target, _) => target.canonicalize match
-              case ErasedType.AnyRef(_, tpeSym) => tpeSym.asBlkMember.foreach(sessionImportSymbols += _)
+              case ErasedType.AnyRef(_, tpeSym) => sessionImportSymbols += tpeSym.bms.get
               case _ => ()
             case _ => ()
           super.applyResult(r)
