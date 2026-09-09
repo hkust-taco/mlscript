@@ -413,6 +413,8 @@ class ParseRules(using State):
     modified(`private`),
     modified(`out`),
     modified(`staged`),
+    modified(`rsc`),
+    modified(`rsc?`),
     singleKw(`true`)(BoolLit(true)),
     singleKw(`false`)(BoolLit(false)),
     singleKw(`undefined`)(UnitLit(false)),

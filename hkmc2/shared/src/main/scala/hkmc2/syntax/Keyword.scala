@@ -104,6 +104,13 @@ object Keyword:
   val `|` = Keyword("|", pipePrec, pipePrec)
   val `&` = Keyword("&", ampPrec, ampPrec)
   
+  // * The resource modifiers bind tighter than `|`/`&`, so that `rsc A | B` is `(rsc A) | B`, but looser
+  // * than `->`'s LHS, so that `rsc (A, B) -> C` denotes a resource *function*. Marking a single parameter
+  // * as a resource is done by adding `rsc` to the parenthesized parameter: `(rsc A) -> B`.
+  val rscPrec = nextPrec
+  val `rsc` = Keyword("rsc", N, rscPrec)
+  val `rsc?` = Keyword("rsc?", N, rscPrec)
+  
   val lamRhsPrec = nextPrec
   // * ^ `x => x as T` should parsed as `x => (x as T)`
   // * ^ `(a, b) => a and b` should parsed as `(a, b) => (a and b)`
@@ -225,4 +232,4 @@ object Keyword:
   type LetLike = `let`.type | `set`.type
   
   type Modifier = `in`.type | `out`.type | `mut`.type | `abstract`.type | `declare`.type | `data`.type | `virtual`.type | `override`.type |
-    `public`.type | `private`.type | `staged`.type
+    `public`.type | `private`.type | `staged`.type | `rsc`.type | `rsc?`.type
