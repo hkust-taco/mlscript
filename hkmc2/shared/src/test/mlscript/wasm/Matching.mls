@@ -273,9 +273,30 @@ getXor(Foo(42))
 
 
 // `Int`, `Int31` and `Bool` have no `typeinfo` to walk: they box to `i31ref`, so both test as `i31ref`.
+// * Note: when implemented, the resolution pass will reject matches on `Unknown`, removing this runtime type confusion
+:sir
+:siret
 fun isInt(v) = if v is Int then 1 else 0
 fun isBool(v) = if v is Bool then 1 else 0
 isInt(1)
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define isInt⁰ as fun isInt¹(v: ?): ? {
+//│   match v
+//│     Int⁰ =>
+//│       return 1
+//│     else
+//│       return 0
+//│   end
+//│ };
+//│ define isBool⁰ as fun isBool¹(v: ?): ? {
+//│   match v
+//│     Bool⁰ =>
+//│       return 1
+//│     else
+//│       return 0
+//│   end
+//│ };
+//│ return isInt¹(1)
 //│ Wasm result:
 //│ = 1
 
