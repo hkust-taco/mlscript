@@ -131,7 +131,18 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
       
       val optimized = ltl.givenIn:
         val customPipeline = new CompilationPipeline:
+          private var lastShownIR: Str = null
+          private var lastShownTree: Str = null
+          private var passIdx = 0
           override def passHook(passName: Str, before: Program, after: Program) =
+            def showPipelineStage(title: Str, prog: Program): Unit =
+              def show(last: Str, str: Str): Str =
+                outputSeparator(title)
+                if last == str then output("(unchanged)") else output(str)
+                str
+              if showPipeline.isSet then lastShownIR = show(lastShownIR, print(prog))
+              if showPipelineTree.isSet then lastShownTree = show(lastShownTree, prog.showAsTree)
+            end showPipelineStage
             // TODO: Preserve object identity in Lifter
             if (passName =/= "Lifter") && (before isnt after) && (before === after) then
               output(s"/!\\ Warning: object identity between equal objects was not preserved by ${passName}")
@@ -150,6 +161,9 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
                   else false
                 }
               rec(before.main, after.main)
+            if passIdx === 0 then showPipelineStage("pipeline #0 (input)", before)
+            passIdx += 1
+            showPipelineStage(s"pipeline #${passIdx} ${passName}", after)
           override def preOptimizeHook(prog: Program) =
             if showLoweredTree.isSet then
               outputSeparator("Lowered IR Tree")
