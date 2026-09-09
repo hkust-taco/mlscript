@@ -337,7 +337,7 @@ fun f(o: Object, i: Int, x: Int32) =
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Object' at an unrelated type 'Int32'
 //│ ║  l.327: 	  useInt32(o)
 //│ ╙──       	           ^
-//│ ═══[COMPILATION ERROR] Cannot use a value of type 'Int32' at an unrelated type 'Unknown'
+//│ ═══[COMPILATION ERROR] Cannot use a value of type 'Int32' at an unrelated type 'rsc? Unknown'
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define useObj⁰ as fun useObj¹(o: Object⁰): ? {
 //│   return o
@@ -768,7 +768,7 @@ fun curried(a: Int)(b: Int): Int = a + b
 fun useFn(g: Function) = g(1)
 useFn(curried(1))
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let tmp: Function⁰;
+//│ let tmp: rsc? Function⁰;
 //│ define curried⁰ as fun curried¹(a: Int⁰)(b: Int⁰): Int⁰ {
 //│   return (+⁰(a, b) as! Int⁰)
 //│ };
@@ -776,7 +776,7 @@ useFn(curried(1))
 //│   return g(1)
 //│ };
 //│ set tmp = curried¹(1);
-//│ return useFn¹(tmp)
+//│ return useFn¹((tmp as! Function⁰))
 
 val done: Int = curried(1)(2)
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
@@ -818,7 +818,7 @@ val bad: Str = thunk
 :ge
 fun called() = 3
 val notCalled: Str = called
-//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Function' at an unrelated type 'Str'
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'rsc? Function' at an unrelated type 'Str'
 //│ ║  l.820: 	val notCalled: Str = called
 //│ ╙──       	                     ^^^^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
@@ -874,15 +874,11 @@ fun badInst() = useInt(new Bar("x"))
 //│ end
 
 
-// A reference to a `fun` is already a function value, so returning one at `Function` takes no coercion. An
-// instantiation is typed as its class instead, so the same annotation makes the coercion real.
+// A reference to a `fun` is a `Function` of unresolved resource-ness (`rsc?`), so returning one at `Function`
+// takes a checked cast.
 fun test: Function = id
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ define test² as fun test³(): Function⁰ { return id¹ }; end
-
-fun test: Function = new Object
-//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ define test⁴ as fun test⁵(): Function⁰ { return (new globalThis⁰.Object⁰() as! Function⁰) }; end
+//│ define test² as fun test³(): Function⁰ { return (id¹ as! Function⁰) }; end
 
 
 // A written arrow type erases to `Function` in every position it can be written - parameter, result and `val`
@@ -920,7 +916,7 @@ val g: Int -> Int = (x: Int) => x
 :ge
 fun badFn() = applyF(42)
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int' at an unrelated type 'Function'
-//│ ║  l.921: 	fun badFn() = applyF(42)
+//│ ║  l.917: 	fun badFn() = applyF(42)
 //│ ╙──       	                     ^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define badFn⁰ as fun badFn¹(): ? { return applyF¹(42) }; end
@@ -949,7 +945,7 @@ fun useAdd() = useInt(addInts(1, 2))
 :ge
 fun badAdd() = useStr(addInts(1, 2))
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int' at an unrelated type 'Str'
-//│ ║  l.950: 	fun badAdd() = useStr(addInts(1, 2))
+//│ ║  l.946: 	fun badAdd() = useStr(addInts(1, 2))
 //│ ╙──       	                      ^^^^^^^^^^^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define badAdd⁰ as fun badAdd¹(): ? {
@@ -979,7 +975,7 @@ declare fun curried: Int -> Int -> Int
 fun useCurried() = useInt(curried(1)(2))
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define useCurried⁰ as fun useCurried¹(): ? {
-//│   let callPrefix: Function⁰, tmp: ?;
+//│   let callPrefix: rsc? Function⁰, tmp: ?;
 //│   set callPrefix = globalThis⁰.curried²(1);
 //│   set tmp = callPrefix(2);
 //│   return useInt¹((tmp as! Int⁰))
@@ -989,9 +985,9 @@ fun useCurried() = useInt(curried(1)(2))
 fun usePartial() = useFn(curried(1))
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define usePartial⁰ as fun usePartial¹(): ? {
-//│   let tmp: Function⁰;
+//│   let tmp: rsc? Function⁰;
 //│   set tmp = globalThis⁰.curried²(1);
-//│   return useFn¹(tmp)
+//│   return useFn¹((tmp as! Function⁰))
 //│ };
 //│ end
 
@@ -1026,7 +1022,7 @@ fun useGetFn() = useFn(getFn)
 fun viaUntyped(x, y): Str = @untyped addInts(x, y)
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define viaUntyped⁰ as fun viaUntyped¹(x: ?, y: ?): Str⁰ {
-//│   let tmp: Unknown;
+//│   let tmp: rsc? Unknown;
 //│   set tmp = globalThis⁰.addInts⁰(x, y);
 //│   return (tmp as! Str⁰)
 //│ };
@@ -1103,7 +1099,7 @@ fun applyGetFn() = useInt(getFn(1))
 fun refUntyped(x: Int): Str = @untyped x
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define refUntyped⁰ as fun refUntyped¹(x: Int⁰): Str⁰ {
-//│   let tmp: Unknown;
+//│   let tmp: rsc? Unknown;
 //│   set tmp = x;
 //│   return (tmp as! Str⁰)
 //│ };
@@ -1121,7 +1117,7 @@ fun refTyped(x: Int): Str = x
 fun selUntyped(): Int = @untyped Plain.f
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define selUntyped⁰ as fun selUntyped¹(): Int⁰ {
-//│   let tmp: Unknown;
+//│   let tmp: rsc? Unknown;
 //│   set tmp = Plain².f⁶;
 //│   return (tmp as! Int⁰)
 //│ };
@@ -1139,7 +1135,7 @@ fun selTyped(): Int = Plain.f
 fun lamUntyped(): Int = @untyped ((x: Int) => x)
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define lamUntyped⁰ as fun lamUntyped¹(): Int⁰ {
-//│   let tmp: Unknown, lambda;
+//│   let tmp: rsc? Unknown, lambda;
 //│   @private
 //│   define lambda as fun lambda⁴(x: Int⁰): ? {
 //│     return x
@@ -1253,7 +1249,7 @@ fun tagged(x: Int) =
   fun describe() = Tag.label()
   describe()
 //│ ╔══[WARNING] Objects are not yet lifted.
-//│ ║  l.1251: 	  object Tag with
+//│ ║  l.1247: 	  object Tag with
 //│ ╙──        	         ^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let describe;
@@ -1280,7 +1276,7 @@ fun mk() =
     fun get() = Tag.label()
   new Holder
 //│ ╔══[WARNING] Objects are not yet lifted.
-//│ ║  l.1277: 	  object Tag with
+//│ ║  l.1273: 	  object Tag with
 //│ ╙──        	         ^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let Holder;

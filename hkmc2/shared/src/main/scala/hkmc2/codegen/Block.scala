@@ -1105,12 +1105,12 @@ sealed abstract class Result extends AutoLocated, HasErasedType:
     // * Note: `UnitLit` stays untyped: Neither `null` nor `undefined` can be reasonably typed as `Unit`
     case Call(fun, argss) => fun.targetSymbol match
       case S(ts: TermSymbol) => ts.erasedType match
-        case S(ErasedType.FuncRef(rsc, paramLists, ret)) =>
+        case S(ErasedType.FuncRef(paramLists, ret)) =>
           argss.sizeCompare(paramLists) match
             // * An exactly-applied call yields the function's result type.
             case 0 => ret
             // * An under-applied call yields a function type over the remaining parameter lists.
-            case c if c < 0 => S(ErasedType.FuncRef(rsc, paramLists.drop(argss.length), ret))
+            case c if c < 0 => S(ErasedType.FuncRef(paramLists.drop(argss.length), ret))
             // * An over-applied call applies arguments to whatever the function returns, which the function's
             // * signature is oblivious about.
             case _ => N
@@ -1143,15 +1143,12 @@ sealed abstract class Result extends AutoLocated, HasErasedType:
     * [[Config]] of their own.
     */
   def coerceTo(expected: ErasedType, loc: Opt[Loc])(using Ctx, State, Raise, Config): this.type | Cast =
+    val target = expected.valueType
     val actual = erasedValueType_!.canonicalize
-    val declared = expected.canonicalize
+    val declared = target.canonicalize
     ErasedType.needsCast(actual, declared) match
       case S(false) => this
-      case S(true) =>
-        val target = expected match
-          case ft: ErasedFuncType => ErasedType.Function(ft.rsc)
-          case v: ErasedValueType => v
-        Cast(this, target, config.checkCasts)
+      case S(true) => Cast(this, target, config.checkCasts)
       case N =>
         // * An `Incompatible` side is not an unrelated type but an unrepresentable one, so it gets its own message.
         def membersOf(et: CanonicalErasedType): Opt[(CanonicalErasedValueType, CanonicalErasedValueType)] = et match

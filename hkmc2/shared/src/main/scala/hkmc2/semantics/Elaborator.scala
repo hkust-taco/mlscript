@@ -2085,7 +2085,7 @@ extends Importer:
                   val physicalParamLists =
                     if paramLists.isEmpty && !isCompiledAsGetter then Nil :: Nil else paramLists
                   if physicalParamLists.isEmpty then retTpe
-                  else S(ErasedType.FuncRef(rsc = S(false), physicalParamLists, retTpe))
+                  else S(ErasedType.FuncRef(physicalParamLists, retTpe))
                 case _: syntax.Val => retTpe
                 case _ => N
               val tsym = TermSymbol(k, owner, id, erasedType = erasedTpe) // TODO?
