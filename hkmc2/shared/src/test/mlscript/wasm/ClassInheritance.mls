@@ -294,3 +294,14 @@ class SelfNode() with
 if new SelfNode().get() is SelfNode then 1 else 0
 //│ Wasm result:
 //│ = 1
+
+
+// Field dependencies put these classes in one recursive group. Traversing Ancestor's field discovers
+// Descendant before Middle, but Wasm still requires each superclass to precede its subclasses in the group.
+:noInline
+class Ancestor(val child: Descendant)
+class Middle(d: Descendant) extends Ancestor(d)
+class Descendant() extends Middle(this)
+if new Descendant() is Middle then 1 else 0
+//│ Wasm result:
+//│ = 1

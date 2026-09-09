@@ -1016,21 +1016,31 @@ class Ctx(using Elaborator.Ctx, State) extends ToWat:
     *
     * Wasm requires every type a definition references to be declared before it, so class layouts are ordered by
     * the classes their parents and fields mention. A cycle cannot be ordered, so each strongly connected
-    * component holding more than one type is emitted as one `(rec ...)` group.
+    * component holding more than one type is emitted as one `(rec ...)` group. Within a group, field references
+    * may point forward, but a superclass must still precede its subclasses.
     */
   private def orderedRecursiveTypes: Ls[Ls[SymIdx]] =
     def named(idx: TypeIdx): Opt[SymIdx] = idx.idx match
       case sym: SymIdx => S(sym)
+    def parents(id: SymIdx): Ls[SymIdx] = types(id).compType match
+      case structTy: StructType => structTy.parents.flatMap(named).toList
+      case _ => Nil
     def dependencies(id: SymIdx): Ls[SymIdx] = types.get(id).map(_.compType) match
       case S(structTy: StructType) =>
-        val parents = structTy.parents.flatMap(named)
         val fields = structTy.fields.flatMap: (_, field) =>
           field.ty match
             case RefType(idx: TypeIdx, _) => named(idx)
             case _ => N
-        (parents ++ fields).iterator.filter(recursiveTypes).distinct.toList
+        (parents(id) ++ fields).iterator.filter(recursiveTypes).distinct.toList
       case _ => Nil
-    SccAnalysis.sccsFrom(dependencies, recursiveTypes)
+    SccAnalysis.sccsFrom(dependencies, recursiveTypes).map: component =>
+      val members = component.toSet
+      // A field can lead the first traversal to a descendant before its immediate superclass. Order the
+      // component again using only inheritance edges; these must be acyclic even inside a recursive group.
+      SccAnalysis.sccsFrom((id: SymIdx) => parents(id).filter(members), component).flatMap: inheritanceComponent =>
+        assert(inheritanceComponent.size === 1 && !parents(inheritanceComponent.head).contains(inheritanceComponent.head),
+          s"Cyclic superclass dependencies in recursive type group: $inheritanceComponent")
+        inheritanceComponent
   end orderedRecursiveTypes
 
   def toWat: Document =

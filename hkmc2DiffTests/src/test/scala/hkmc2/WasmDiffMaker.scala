@@ -75,7 +75,17 @@ abstract class WasmDiffMaker extends InvalMLDiffMaker:
         case d => outerRaise(d)
       val sessionImportSymbols = mutable.LinkedHashSet.from[Symbol](pgrm.main.freeVars)
       new BlockTraverser:
+        override def applyResult(r: Result): Unit =
+          // Cast targets are type dependencies rather than value references, so freeVars omits them.
+          r match
+            case Cast(_, target, _) => target.canonicalize match
+              case ErasedType.AnyRef(_, tpeSym) => tpeSym.asBlkMember.foreach(sessionImportSymbols += _)
+              case _ => ()
+            case _ => ()
+          super.applyResult(r)
         override def applyPath(p: Path): Unit = p match
+          // ValDefn traverses its RHS as a Path, whereas Return and Assign traverse a Result.
+          case c: Cast => applyResult(c)
           case sel: Select =>
             sel.symbol.foreach:
               case sym: ModuleOrObjectSymbol => sessionImportSymbols += sym

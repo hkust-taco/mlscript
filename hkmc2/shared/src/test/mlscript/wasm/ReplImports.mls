@@ -133,3 +133,31 @@ idI32(typed)
 //│   (elem $entry declare func $entry))
 //│ Wasm result:
 //│ = 1
+
+
+// A cast can be the only reference to a class declared in an earlier block. Import its runtime type
+// whether the cast is returned from a function or bound directly to a val.
+class CastBox(val n: Int)
+val castBox = new CastBox(7)
+//│ Wasm result:
+//│ = {}
+
+:noInline
+fun castBoxResult(x): CastBox = x
+castBoxResult(castBox)
+//│ Wasm result:
+//│ = {}
+
+:noInline
+val narrowedBox: CastBox = castBox
+narrowedBox
+//│ Wasm result:
+//│ = {}
+
+// The imported type must also enforce the cast, rather than just avoiding a missing-type diagnostic.
+:noInline
+:re
+fun rejectNonBox(x): CastBox = x
+rejectNonBox(42)
+//│ Wasm result:
+//│ ═══[RUNTIME ERROR] RuntimeError: illegal cast
