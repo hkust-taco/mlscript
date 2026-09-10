@@ -1155,9 +1155,6 @@ fun lamUntyped(): Int = @untyped ((x: Int) => x)
 // through it.
 // The two sites below are where that is a correctness matter: without the look-through they emit `42.whoami`
 // and `42.length`, which are syntax errors - the `.` parses as a decimal point.
-// The two use sites set `:noCheckCasts` because only an *unchecked* cast literal is propagated to its use
-// sites in the first place; under the checked default the simplifier leaves it (since it is supposed to emit
-// a runtime check).
 :js
 class Wrapper with
   val whoami = "wrapper"
@@ -1256,7 +1253,7 @@ fun tagged(x: Int) =
   fun describe() = Tag.label()
   describe()
 //│ ╔══[WARNING] Objects are not yet lifted.
-//│ ║  l.1254: 	  object Tag with
+//│ ║  l.1251: 	  object Tag with
 //│ ╙──        	         ^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let describe;
@@ -1283,7 +1280,7 @@ fun mk() =
     fun get() = Tag.label()
   new Holder
 //│ ╔══[WARNING] Objects are not yet lifted.
-//│ ║  l.1280: 	  object Tag with
+//│ ║  l.1277: 	  object Tag with
 //│ ╙──        	         ^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let Holder;

@@ -277,7 +277,13 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
     case params :: rest =>
       Return(Lambda(params, curriedFunctionBody(rest, body, generator))(Nil))
 
-  def subexpression(r: Result)(using Raise, Scope): Document = r match
+  /** Looks through the casts that a JS program does not materialize. */
+  @tailrec
+  private def throughCasts(r: Result): Result = r match
+    case Cast(value, _, _) => throughCasts(value)
+    case _ => r
+  
+  def subexpression(r: Result)(using Raise, Scope): Document = throughCasts(r) match
     case _: Lambda => doc"(${result(r)})"
     case _ => result(r)
   
@@ -291,13 +297,11 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
   // For use as the qualifier of a field selection
   def resultQual(r: Result)(using Raise, Scope): Document =
     val res = result(r)
-    // * Look through unchecked casts as well since they are erased, and so a cast literal still emits as the literal
-    // * and still needs the parentheses.
-    if r.litThroughUncheckedCasts.isDefined then doc"(${res})" else res
+    if throughCasts(r).isInstanceOf[Value.Lit] then doc"(${res})" else res
   
   def resultInst(r: Result)(using Raise, Scope): Document = 
     val res = result(r)
-    r match
+    throughCasts(r) match
     case s: Select if s.sanitize => doc"(${res})"
     case _ => res
   
@@ -828,8 +832,8 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
       val sd = result(scrut)
       // * Parenthesize the scrutinee for property access when it's a numeric literal, since things like `12.length`
       // * are invalid JS (the `.` is parsed as a decimal point).
-      def sdProp = scrut.litThroughUncheckedCasts match
-        case S(Value.Lit(Tree.IntLit(_) | Tree.DecLit(_))) => doc"($sd)"
+      def sdProp = throughCasts(scrut) match
+        case Value.Lit(Tree.IntLit(_) | Tree.DecLit(_)) => doc"($sd)"
         case _ => sd
       def cond(cse: Case) = cse match
         case Case.Lit(lit) => doc"$sd === ${lit.idStr}"
