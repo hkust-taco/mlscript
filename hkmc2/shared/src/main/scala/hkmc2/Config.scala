@@ -21,6 +21,7 @@ case class Config(
   baseDir: io.Path,
   language: Language,
   sanityChecks: Opt[SanityChecks],
+  checkCasts: Bool,
   effectHandlers: Opt[EffectHandlers],
   liftDefns: Opt[LiftDefns],
   patMatConsequentSharingThreshold: Opt[Int],
@@ -73,6 +74,7 @@ object Config:
     baseDir = baseDir,
     sanityChecks = N, // TODO make the default S
     // sanityChecks = S(SanityChecks(light = true)),
+    checkCasts = true,
     effectHandlers = N,
     liftDefns = S(LiftDefns()),
     patMatConsequentSharingThreshold = default.patMatConsequentSharingThreshold, // minimum: 1
@@ -648,6 +650,8 @@ object ConfigParser:
       )(v => _.mapOptimizer(_.copy(deadParamElim = v)))
     case "sanityChecks" =>
       optionalField(value)(_ => S(Config.SanityChecks(light = true, checkUnreachable = true)))(v => _.copy(sanityChecks = v))
+    case "checkCasts" =>
+      parsedField(value)(parseBool)(v => _.copy(checkCasts = v))
     case "patMatConsequentSharingThreshold" =>
       parsedField(value)(parseInt)(v => _.copy(patMatConsequentSharingThreshold = S(v)))
     case "inlining" =>

@@ -54,7 +54,7 @@ class ReflectionInstrumenter(using State, Raise, Ctx) extends BlockTransformer(n
 
   def assign(res: Result, symName: Str = "tmp")(k: Path => Block): Block =
     // TODO: skip assignment if res: Path?
-    val sym = new TempSymbol(N, symName)
+    val sym = new TempSymbol(N, erasedType = res.erasedValueType, symName)
     Scoped(Set(sym), Assign(sym, res, k(sym.asSimpleRef)))
 
   def tuple(elems: Ls[ArgWrappable], symName: Str = "tmp")(k: Path => Block): Block =
@@ -187,6 +187,10 @@ class ReflectionInstrumenter(using State, Raise, Ctx) extends BlockTransformer(n
           transformPath(qual): x =>
             transformPath(fld): y =>
               blockCtor("DynSelect", Ls(x, y, toValue(arrayIdx)), "dynsel")(k)
+        case Cast(value, target, check) =>
+          transformResult(value): v =>
+            blockCtor("Symbol", Ls(toValue(target.describe)), "target"): t =>
+              blockCtor("Cast", Ls(v, t, toValue(check)), "cast")(k)
         case _: Value.This =>
           raise(ErrorReport(msg"Value.This not supported in staged module." -> p.toLoc :: Nil))
           End()
@@ -374,7 +378,7 @@ class ReflectionInstrumenter(using State, Raise, Ctx) extends BlockTransformer(n
     val sym = f.owner.get.asThis.selSN(genSymName)
 
     // turn into fundefn
-    val dSym = TermSymbol(f.dSym.k, f.dSym.owner, Tree.Ident(f.sym.nme + "_instr"))
+    val dSym = TermSymbol(f.dSym.k, f.dSym.owner, Tree.Ident(f.sym.nme + "_instr"), erasedType = N)
     val argSyms = f.params.flatMap(_.params).map(_.sym)
     val newBody = Scoped(Set(argSyms*), transformFunDefn(f)(using new HashMap)(Return(_)))
 

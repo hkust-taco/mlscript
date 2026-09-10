@@ -14,7 +14,7 @@ import hkmc2.semantics.{Term => st}
 import syntax.{Literal, Tree, SpreadKind, Keyword}
 import semantics.*
 import semantics.Term.*
-import sem.Elaborator.State
+import sem.Elaborator.{Ctx, State}
 
 
 /* Important design notes.
@@ -47,7 +47,7 @@ case class Program(
 type SimpleSymbol = LocalVarSymbol | BuiltinSymbol
 
 /** Symbol that can be used as the left-hand side of an `Assign`. */
-type Assignable = LocalVarSymbol | NoSymbol
+type Assignable = LocalVarSymbol | NoSymbol.type
 
 /** Symbols that `Scoped` introduces as block-local bindings.
   * This deliberately excludes things like `TermSymbol`s, which never need to be scoped.
@@ -377,6 +377,18 @@ case class Return(res: Result) extends BlockTail
 
 case class Throw(exc: Result) extends BlockTail
 
+object Throw:
+  /** Throws a runtime `Error` carrying `msg`.
+    *
+    * This is the shape compiler-inserted failures use, rather than throwing a bare string, so that they carry a
+    * stack trace and can be caught as an `Error` like any other.
+    */
+  def error(msg: Str)(using State): Throw = Throw(Instantiate(
+    mut = false,
+    State.globalThisSymbol.asThis.selN(Tree.Ident("Error")),
+    (Value.Lit(Tree.StrLit(msg)).asArg :: Nil) :: Nil,
+  )(InstantiateMetadata.empty))
+
 case class Label(label: LabelSymbol, loop: Bool, body: Block, rest: Block)
 extends Block with NonBlockTail with ProductWithTail
 
@@ -554,7 +566,7 @@ object HandleBlock:
         N, sym, PlainParamList(Param(FldFlags.empty, handler.resumeSym, N, Modulefulness.none) :: Nil) :: Nil,
         handler.body
         )(N, annotations = Nil)
-      val rSym = TempSymbol(N, "suspendRes")
+      val rSym = TempSymbol(N, erasedType = N, "suspendRes")
       FunDefn.withFreshSymbol(
         S(cls),
         handler.sym,
@@ -572,7 +584,7 @@ object HandleBlock:
       N, Nil,
       S(par), handlerMtds, Nil, Nil,
       // Apparently, the lifter is not happy with any assignment in the preCtor...
-      Assign(State.noSymbol, Call(State.builtinOpsMap("super").asSimpleRef, args.map(_.asArg) ne_:: Nil)(CallMetadata.mlsFunWithEffect), End()),
+      Assign(NoSymbol, Call(State.builtinOpsMap("super").asSimpleRef, args.map(_.asArg) ne_:: Nil)(CallMetadata.mlsFunWithEffect), End()),
       End(),
       N,
       N,
@@ -785,7 +797,7 @@ private[codegen] object InlinerBodySummary:
 
 object FunDefn:
   def withFreshSymbol(owner: Opt[InnerSymbol], sym: BlockMemberSymbol, params: Ls[ParamList], body: Block)(configOverride: Opt[Config], annotations: Ls[Annot])(using State) =
-    val tSym = TermSymbol(syntax.Fun, owner, Tree.Ident(sym.nme))
+    val tSym = TermSymbol(syntax.Fun, owner, Tree.Ident(sym.nme), erasedType = N)
     sym.tsym = S(tSym)
     FunDefn(owner, sym, tSym, params, body)(configOverride, annotations)
 
@@ -811,7 +823,7 @@ object ValDefn:
       annotations: Ls[Annot],
     )(using State)
     : ValDefn =
-      ValDefn(tsym = TermSymbol(k, owner, Tree.Ident(sym.nme)), sym = sym, rhs = rhs)(configOverride, annotations)
+      ValDefn(tsym = TermSymbol(k, owner, Tree.Ident(sym.nme), erasedType = rhs.erasedValueType), sym, rhs)(configOverride, annotations)
 
 
 /*
@@ -945,7 +957,7 @@ enum Case:
 
 sealed trait TrivialResult extends Result
 
-sealed abstract class Result extends AutoLocated:
+sealed abstract class Result extends AutoLocated, HasErasedType:
 // // * Used for debugging locations:
 // sealed abstract class Result extends AutoLocated with ProductWithExtraInfo:
 //   def extraInfo: Str = toLoc.toString
@@ -964,6 +976,21 @@ sealed abstract class Result extends AutoLocated:
     case Tuple(mut, elems) => s"Tuple($mut, [${elems.map(_.value.showDbg).mkString(", ")}])"
     case Instantiate(mut, cls, argss) => s"Instantiate($mut, ${cls.showDbg}, [${
       argss.map(_.map(a => a.value.showDbg).mkString("[", ", ", "]")).mkString(", ")}])"
+    case Cast(value, target, check) => s"Cast(${value.showDbg}, $target${if check then ", checked" else ""})"
+  
+  /** The literal underneath any number of *unchecked* casts, or `N` if this result is not one.
+    *
+    * An unchecked cast does not change what its operand denotes, so a consumer that wants to *read* a literal must
+    * look through one. Matching `Value.Lit` directly instead stops matching, silently, as soon as a cast is interposed,
+    * which is what the simplifier does when it propagates a cast literal to its use sites.
+    *
+    * A *checked* cast is deliberately opaque here: it can throw, so its operand does not stand in for it.
+    */
+  @annotation.tailrec
+  final def litThroughUncheckedCasts: Opt[Value.Lit] = this match
+    case lit: Value.Lit => S(lit)
+    case Cast(value, _, false) => value.litThroughUncheckedCasts
+    case _ => N
   
   lazy val isPure: Bool = this match
     case _: Value => true
@@ -975,6 +1002,8 @@ sealed abstract class Result extends AutoLocated:
       ass.forall(_.forall(_.value.isPure))
     case Record(mut, args) => args.forall(_.value.isPure)
     case Tuple(mut, elems) => elems.forall(_.value.isPure)
+    // * A *checked* cast throws on failure, which is observable under either reading below.
+    case Cast(value, _, check) => !check && value.isPure
     // case Instantiate(mut, cls, args) => // TODO?
     case _ => false
   
@@ -985,6 +1014,7 @@ sealed abstract class Result extends AutoLocated:
   protected def children: Vector[Located] = this match
     case Call(fun, argss) => fun +: argss.iterator.flatten.map(_.value).toVector
     case Instantiate(mut, cls, argss) => cls +: argss.iterator.flatten.map(_.value).toVector
+    case Cast(value, target, _) => Vector.single(value)
     case Select(qual, name) => Vector.double(qual, name)
     case DynSelect(qual, fld, arrayIdx) => Vector.double(qual, fld)
     case Lambda(params, body) => Vector.single(params)
@@ -1007,6 +1037,7 @@ sealed abstract class Result extends AutoLocated:
   lazy val freeVars: Set[FreeSymbol] = this match
     case Call(fun, argss) => fun.freeVars ++ argss.flatten.flatMap(_.value.freeVars).toSet
     case Instantiate(mut, cls, argss) => cls.freeVars ++ argss.flatten.flatMap(_.value.freeVars).toSet
+    case Cast(value, _, _) => value.freeVars
     case Select(qual, name) => qual.freeVars
     case Lambda(params, body) => body.freeVars -- params.paramSyms
     case Tuple(mut, elems) => elems.flatMap(_.value.freeVars).toSet
@@ -1021,6 +1052,7 @@ sealed abstract class Result extends AutoLocated:
   lazy val size: Int = this match
     case Call(fun, argss) => fun.size + argss.iterator.flatten.map(_.value.size).sum
     case Instantiate(mut, cls, argss) => cls.size + argss.iterator.flatten.map(_.value.size).sum
+    case Cast(value, _, _) => value.size
     case Select(qual, name) => qual.size
     case Lambda(params, body) => 1 + body.size
     case Tuple(mut, elems) => elems.iterator.map(_.value.size).sum
@@ -1029,6 +1061,89 @@ sealed abstract class Result extends AutoLocated:
     case Value.Lit(l: Tree.StrLit) => l.value.length / 4
     case Value.Lit(lit) => 0
     case DynSelect(qual, fld, arrayIdx) => qual.size + fld.size
+
+  lazy val erasedType: Opt[ErasedType] = this match
+    case Value.SimpleRef(sym) => sym match
+      case hasErasedType: HasErasedType => hasErasedType.erasedType
+      case _ => 
+        // * Some symbols may not have an erased type (e.g. `BuiltinSymbol`, where it may represent more than one
+        // * function).
+        N
+    // * A reference to a class is the class *object* (a `Class`).
+    case Value.MemberRef(_, _: ClassSymbol) => N
+    case Value.MemberRef(_, disamb: ModuleOrObjectSymbol) => disamb.erasedType
+    case Value.MemberRef(bms, disamb: TypeAliasSymbol) =>
+      // * This is not supposed to happen, but could still be reached in ill-formed programs
+      N
+    // * A `val` or `fun` is a block *member*, so its references are `MemberRef`s rather than `SimpleRef`s, and
+    // * its declared type lives on the associated `TermSymbol` - the same shape `Select` reads below.
+    case Value.MemberRef(_, disamb: TermSymbol) => disamb.erasedType
+    case Value.This(clsOrMod: (ClassSymbol | ModuleOrObjectSymbol)) => clsOrMod.erasedType
+    case Value.Lit(_: Tree.IntLit) => S(ErasedType.Int)
+    case Value.Lit(_: Tree.DecLit) => S(ErasedType.Num)
+    case Value.Lit(_: Tree.StrLit) => S(ErasedType.Str)
+    case Value.Lit(_: Tree.BoolLit) => S(ErasedType.Bool)
+    // * Note: `UnitLit` stays untyped: Neither `null` nor `undefined` can be reasonably typed as `Unit`
+    case Call(fun, argss) => fun.targetSymbol match
+      case S(ts: TermSymbol) => ts.erasedType match
+        case S(ErasedType.FuncRef(rsc, paramLists, ret)) =>
+          argss.sizeCompare(paramLists) match
+            // * An exactly-applied call yields the function's result type.
+            case 0 => ret
+            // * An under-applied call yields a function type over the remaining parameter lists.
+            case c if c < 0 => S(ErasedType.FuncRef(rsc, paramLists.drop(argss.length), ret))
+            // * An over-applied call applies arguments to whatever the function returns, which the function's
+            // * signature is oblivious about.
+            case _ => N
+        case _ => N
+      case _ => N
+    // * A resolved selection has the type of the member it refers to (e.g. `this.field`); an
+    // * unresolved selection (dynamic field access) stays unknown.
+    case sel @ Select(_, _) => sel.symbol match
+      case S(ts: TermSymbol) => ts.erasedType
+      // * A class reference is the class object, so it stays unknown.
+      case S(_: ClassSymbol) => N
+      case S(d: (ModuleOrObjectSymbol | TypeAliasSymbol)) => d.erasedType
+      case _ => N
+    case Cast(_, target, _) => S(target)
+    // * `Instantiate` always yields an instance of the class, since the constructor is guaranteed to be fully-applied
+    // * after lowering.
+    case Instantiate(_, cls, _) => cls.targetSymbol.flatMap:
+      case ctor: ClassCtorSymbol => ctor.associatedCls.erasedType
+      case sym => sym.asCls.flatMap(_.erasedType)
+    // * A tuple literal is typed as `Array` at runtime.
+    case Tuple(_, _) => S(ErasedType.Array)
+    case _ => N
+
+  /** Coerces this result to `expected`, yielding it unchanged when no coercion is required.
+    *
+    * Narrowing to an unrelated type is reported as an error, and this result is yielded unchanged.
+    *
+    * This is the only place where [[Config.checkCasts]] is consulted: it fixes each cast's `check` flag at the
+    * point the coercion is introduced, so that the transformers rebuilding casts downstream need not carry a
+    * [[Config]] of their own.
+    */
+  def coerceTo(expected: ErasedType, loc: Opt[Loc])(using Ctx, State, Raise, Config): this.type | Cast =
+    val actual = erasedValueType_!.canonicalize
+    val declared = expected.canonicalize
+    ErasedType.needsCast(actual, declared) match
+      case S(false) => this
+      case S(true) =>
+        val target = expected match
+          case ft: ErasedFuncType => ErasedType.Function(ft.rsc)
+          case v: ErasedValueType => v
+        Cast(this, target, config.checkCasts)
+      case N =>
+        // * An `Incompatible` side is not an unrelated type but an unrepresentable one, so it gets its own message.
+        def membersOf(et: CanonicalErasedType): Opt[(CanonicalErasedValueType, CanonicalErasedValueType)] = et match
+          case ErasedType.Incompatible(l, r) => S(l -> r)
+          case _ => N
+        val message = membersOf(actual).orElse(membersOf(declared)) match
+          case S((l, r)) => msg"Types '${l.describe}' and '${r.describe}' have no common representation"
+          case N => msg"Cannot use a value of type '${actual.describe}' at an unrelated type '${declared.describe}'"
+        raise:
+          ErrorReport(message -> loc :: Nil, source = Diagnostic.Source.Compilation)
+        this
 
 /* mayRaiseEffects indicates whether this call may raise effect (algebraic effect),
  * regardless of whether the check for effect is inserted or not.
@@ -1127,6 +1242,41 @@ object InstantiateMetadata:
 
 case class Instantiate(mut: Bool, cls: Path, argss: Ls[Ls[Arg]])(val metadata: InstantiateMetadata) extends Result
 
+/** A coercion of `value` to `target`.
+  *
+  * The coercion is a static assertion that backends may erase (as the JS backend does) or lower to a trapping
+  * instruction (as the Wasm backend does with `ref.cast`).
+  *
+  * `check` records whether the coercion is meant to be verified at runtime. No pass expands it into a type test
+  * yet, so a checked cast currently generates the same code as an unchecked one.
+  *
+  * `check` is decided once, at the sole semantic construction site [[Result.coerceTo]], which reads
+  * [[Config.checkCasts]]. Every other site that rebuilds a cast must *copy* the flag rather than re-derive it, so
+  * that the configuration does not have to be threaded through the IR transformers.
+  *
+  * Invariants:
+  * - `value` is not a `Cast`.
+  * - `target` must be a proper subtype of `value`'s erased type.
+  */
+case class Cast private(value: Result, target: ErasedValueType, check: Bool) extends Path
+
+object Cast:
+  /** Builds a cast while collapsing a nested cast.
+    *
+    * This node is malformed if the target type is not a proper subtype of the value's erased type.
+    *
+    * Collapsing `Cast(Cast(v, T), U)` to `Cast(v, U)` drops the inner test. The `T`-typed intermediate goes with it,
+    * so no value is left in a wrongly-typed slot. However, an unchecked failure *can be lost* - if a cast is
+    * undecidable a `Cast` will be inserted anyways, and determining this fact here would require threading `Ctx` and
+    * `State` wherever `Cast` nodes need to be built.
+    *
+    * Note that explicitly-checked casts are never lost to preserve the semantics of eagerly failing when casts fail.
+    */
+  def apply(value: Result, target: ErasedValueType, check: Bool): Cast =
+    value match
+      case Cast(inner, _, innerCheck) => new Cast(inner, target, check || innerCheck)
+      case _ => new Cast(value, target, check)
+
 case class Lambda(params: ParamList, body: Block)(val annot: Ls[Annot]) extends Result:
   lazy val affine: Bool = annot.exists(_.isInstanceOf[Annot.Affine])
 
@@ -1181,7 +1331,7 @@ object Value:
       case SimpleRef(l) => l
       case MemberRef(bms, disamb) => bms
       case This(sym) => sym
-
+  
   @deprecated("Use Value.SimpleRef, Value.MemberRef, or Value.This instead.")
   object Ref:
     def apply(l: ValueSymbol | NoSymbol.type, disamb: Opt[DefinitionSymbol[?]]): Value.RefLike =

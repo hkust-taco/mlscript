@@ -374,6 +374,9 @@ object Instructions:
 
     /** Creates an `i31.get_s` instruction. */
     def get_s(i31: Expr): FoldedInstr = get(i31, true)
+
+    /** Creates an `i31.get_u` instruction. */
+    def get_u(i31: Expr): FoldedInstr = get(i31, false)
   end i31
 
   object local:

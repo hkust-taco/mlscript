@@ -541,6 +541,8 @@ class FlowPreAnalyzer(val pgrm: Program)(using
     case Record(_, fields) =>
       fields.foreach:
         case RcdArg(idx, value) => idx.foreach(applyPath); applyPath(value)
+    case Cast(value, _, _) =>
+      applyResult(value)
     case p: Path => applyPath(p)
   
   private def applyValueSimpleRef(v: Value.SimpleRef, recordAffinity: Bool) =
@@ -573,6 +575,7 @@ class FlowPreAnalyzer(val pgrm: Program)(using
       case _ => applyPath(qual)
     case p: Select =>
       super.applyPath(p)
+    case c: Cast => applyResult(c.value)
     case v: Value => applyValue(v)
   
   override def applyValue(v: Value): Unit = v match
@@ -1008,6 +1011,7 @@ class FlowConstraintsCollector(
             cc.constrain(processResult(qual), UnknownCons)
             cc.constrain(processResult(fld), UnknownCons)
             UnknownProd
+          case Cast(value, _, _) => processResult(value)
           case Value.MemberRef(_, disamb) => generatedVars(disamb)
           case Value.SimpleRef(sym) => generatedVars(sym)
           case Value.This(_) => UnknownProd

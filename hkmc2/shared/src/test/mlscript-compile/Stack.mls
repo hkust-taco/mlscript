@@ -5,8 +5,9 @@ type Stack[A] = Stack.{ Cons[A] | Nil }
 module Stack with ...
 
 
-data class (::) Cons[A](head: A, tail: Stack[A])
-object Nil
+class Base
+data class (::) Cons[A](head: A, tail: Stack[A]) extends Base
+object Nil extends Base
 
 fun isEmpty(xs) = xs is Nil
 

@@ -130,9 +130,9 @@ fun odd(n)(dummy) = if n == 0 then [false, dummy] else even(n - 1)(dummy + 1)
 //│             continue loopLabel
 //│         end
 //│       else
-//│         end
+//│         unreachable /* dispatch tag is always a merged member id */
 //│     end
-//│   end
+//│   unreachable /* Rest of abortive labelled block */
 //│ };
 //│ @inline
 //│ define even⁰ as fun even¹(n)(dummy) {
@@ -184,9 +184,9 @@ fun resume(x)(y) = handleEffects(x)
 //│         set id = 0;
 //│         continue loopLabel
 //│       else
-//│         end
+//│         unreachable /* dispatch tag is always a merged member id */
 //│     end
-//│   end
+//│   unreachable /* Rest of abortive labelled block */
 //│ };
 //│ @inline
 //│ define handleEffects⁰ as fun handleEffects¹(x) {
@@ -254,9 +254,9 @@ fun g(n)(m) =
 //│         set id = 0;
 //│         continue loopLabel
 //│       else
-//│         end
+//│         unreachable /* dispatch tag is always a merged member id */
 //│     end
-//│   end
+//│   unreachable /* Rest of abortive labelled block */
 //│ };
 //│ @inline
 //│ define f⁰ as fun f¹(n)(a, b, c, d, ...e)(m) {

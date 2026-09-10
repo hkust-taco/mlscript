@@ -2,6 +2,227 @@
 :global
 :wasm
 
+// An `Int32`-annotated `val` binds the unboxed result; `ref.i31` boxes it back into a reference.
+val k: Int32 = wasm.i32.const(1)
+wasm.ref.i31(k)
+//│ Wasm result:
+//│ = 1
+
+
+// Nesting an intrinsic call spills it into a local.
+:wat
+wasm.ref.i31(wasm.i32.add(wasm.i32.const(1), wasm.i32.const(2)))
+//│ Wat:
+//│ (module
+//│   (type $TypeInfoBase (sub (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
+//│   (type $Object (sub (struct (field $$typeinfo (mut (ref $TypeInfoBase))))))
+//│   (type $entry (func (result (ref null i31))))
+//│   (func $entry (export "entry") (type $entry) (result (ref null i31))
+//│     (local $tmp i32)
+//│     (local $tmp1 i32)
+//│     (local $tmp2 i32)
+//│     (block (result (ref null i31))
+//│       (local.set $tmp
+//│         (i32.const 1))
+//│       (local.set $tmp1
+//│         (i32.const 2))
+//│       (local.set $tmp2
+//│         (i32.add
+//│           (local.get $tmp)
+//│           (local.get $tmp1)))
+//│       (return
+//│         (ref.i31
+//│           (local.get $tmp2)))))
+//│   (elem $entry declare func $entry))
+//│ Wasm result:
+//│ = 3
+
+
+// `Int` and `Int32` are disjoint, so a boxed literal is not an `i32` operand. `coerceTo` leaves the unnarrowed
+// value in place, so the backend reports it again rather than emitting an `i32.add` on a reference.
+:ge
+wasm.i32.add(1, 2)
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int' at an unrelated type 'Int32'
+//│ ║  l.44: 	wasm.i32.add(1, 2)
+//│ ╙──      	             ^
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int' at an unrelated type 'Int32'
+//│ ║  l.44: 	wasm.i32.add(1, 2)
+//│ ╙──      	                ^
+//│ ╔══[COMPILATION ERROR] Operand #1 of wasm intrinsic 'i32.add' must be of type 'Int32'
+//│ ║  l.44: 	wasm.i32.add(1, 2)
+//│ ╙──      	             ^
+//│ ╔══[COMPILATION ERROR] Operand #2 of wasm intrinsic 'i32.add' must be of type 'Int32'
+//│ ║  l.44: 	wasm.i32.add(1, 2)
+//│ ╙──      	                ^
+
+
+// Mismatching arity is reported by both the elaborator and the backend.
+:ge
+wasm.i32.const(1, 2)
+//│ ╔══[COMPILATION ERROR] Expected 1 arguments, got 2
+//│ ║  l.61: 	wasm.i32.const(1, 2)
+//│ ╙──      	              ^^^^^^
+//│ ╔══[COMPILATION ERROR] Wasm intrinsic 'i32.const' called with incorrect arity (2)
+//│ ║  l.61: 	wasm.i32.const(1, 2)
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^
+
+
+// Immediates must be literals. Note: a `let`-bound literal would be constant-propagated before reaching the
+// backend, so it would not test this.
+:ge
+fun constOf(x: Int) = wasm.ref.i31(wasm.i32.const(x))
+//│ ╔══[COMPILATION ERROR] Wasm intrinsic 'i32.const' expects an integer literal immediate
+//│ ║  l.73: 	fun constOf(x: Int) = wasm.ref.i31(wasm.i32.const(x))
+//│ ╙──      	                                                  ^
+
+
+// Negative literals are elaborated as a call to `Call(BuiltinSymbol("-"), 1)`.
+// TODO(Derppening): This probably should be lowered as an `IntLit(-1)`, then converted on-demand to the call iff it is
+// not used as an immediate (or just do it away entirely).
+:ge
+wasm.i32.const(-1)
+//│ ═══[COMPILATION ERROR] Wasm intrinsic 'i32.const' expects an integer literal immediate
+
+
+// The remaining arithmetic instructions. Each runs on operands whose result identifies it - `-1`, `42`, `3`
+// and `1` - so a registration wired to the wrong instruction cannot reproduce all four.
+wasm.i32.sub(wasm.i32.const(1), wasm.i32.const(2))
+//│ Wasm result:
+//│ = -1
+
+
+wasm.i32.mul(wasm.i32.const(6), wasm.i32.const(7))
+//│ Wasm result:
+//│ = 42
+
+
+wasm.i32.div_s(wasm.i32.const(7), wasm.i32.const(2))
+//│ Wasm result:
+//│ = 3
+
+
+wasm.i32.rem_s(wasm.i32.const(7), wasm.i32.const(2))
+//│ Wasm result:
+//│ = 1
+
+
+// Comparisons yield an `i32` of 0 or 1, not a `Bool`. Each is run on `(1, 2)`, `(2, 1)` and `(1, 1)`: that
+// is the smallest operand set giving all six distinct result triples, so a registration wired to the wrong
+// comparison cannot reproduce the expected output everywhere. A single pair cannot - on any one pair the
+// six collapse into two groups of three.
+wasm.i32.eq(wasm.i32.const(1), wasm.i32.const(2))
+//│ Wasm result:
+//│ = 0
+
+
+wasm.i32.eq(wasm.i32.const(2), wasm.i32.const(1))
+//│ Wasm result:
+//│ = 0
+
+
+wasm.i32.eq(wasm.i32.const(1), wasm.i32.const(1))
+//│ Wasm result:
+//│ = 1
+
+
+wasm.i32.ne(wasm.i32.const(1), wasm.i32.const(2))
+//│ Wasm result:
+//│ = 1
+
+
+wasm.i32.ne(wasm.i32.const(2), wasm.i32.const(1))
+//│ Wasm result:
+//│ = 1
+
+
+wasm.i32.ne(wasm.i32.const(1), wasm.i32.const(1))
+//│ Wasm result:
+//│ = 0
+
+
+wasm.i32.lt_s(wasm.i32.const(1), wasm.i32.const(2))
+//│ Wasm result:
+//│ = 1
+
+
+wasm.i32.lt_s(wasm.i32.const(2), wasm.i32.const(1))
+//│ Wasm result:
+//│ = 0
+
+
+wasm.i32.lt_s(wasm.i32.const(1), wasm.i32.const(1))
+//│ Wasm result:
+//│ = 0
+
+
+wasm.i32.le_s(wasm.i32.const(1), wasm.i32.const(2))
+//│ Wasm result:
+//│ = 1
+
+
+wasm.i32.le_s(wasm.i32.const(2), wasm.i32.const(1))
+//│ Wasm result:
+//│ = 0
+
+
+wasm.i32.le_s(wasm.i32.const(1), wasm.i32.const(1))
+//│ Wasm result:
+//│ = 1
+
+
+wasm.i32.gt_s(wasm.i32.const(1), wasm.i32.const(2))
+//│ Wasm result:
+//│ = 0
+
+
+wasm.i32.gt_s(wasm.i32.const(2), wasm.i32.const(1))
+//│ Wasm result:
+//│ = 1
+
+
+wasm.i32.gt_s(wasm.i32.const(1), wasm.i32.const(1))
+//│ Wasm result:
+//│ = 0
+
+
+wasm.i32.ge_s(wasm.i32.const(1), wasm.i32.const(2))
+//│ Wasm result:
+//│ = 0
+
+
+wasm.i32.ge_s(wasm.i32.const(2), wasm.i32.const(1))
+//│ Wasm result:
+//│ = 1
+
+
+wasm.i32.ge_s(wasm.i32.const(1), wasm.i32.const(1))
+//│ Wasm result:
+//│ = 1
+
+
+// `eqz` is unary, so both of its inputs are covered instead.
+wasm.i32.eqz(wasm.i32.const(0))
+//│ Wasm result:
+//│ = 1
+
+
+wasm.i32.eqz(wasm.i32.const(1))
+//│ Wasm result:
+//│ = 0
+
+
+// `2147483647` does not fit in an i31 and is truncated to all 31 bits set, which `get_s` reads as -1 and
+// `get_u` as 2147483647.
+wasm.i31.get_s(2147483647)
+//│ Wasm result:
+//│ = -1
+
+
+wasm.i31.get_u(2147483647)
+//│ Wasm result:
+//│ = 2147483647
+
+
 :wat
 1 + 2
 //│ Wat:

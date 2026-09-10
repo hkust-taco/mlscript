@@ -24,16 +24,16 @@ callF(B())
 //│ (module
 //│   (type $TypeInfoBase (sub (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
 //│   (type $Object (sub (struct (field $$typeinfo (mut (ref $TypeInfoBase))))))
-//│   (type $virtual2 (func (param $this (ref null any)) (param $arg1 (ref null any)) (result (ref null any))))
-//│   (type $A_typeinfo (sub $TypeInfoBase (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)) (field $slot0 (mut (ref null $virtual2))))))
 //│   (type $A (sub $Object (struct (field $$typeinfo (mut (ref $TypeInfoBase))))))
-//│   (type $A_init (func (param $this (ref null any)) (result (ref null any))))
-//│   (type $A_ctor (func (result (ref null any))))
-//│   (type $B_typeinfo (sub $A_typeinfo (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)) (field $slot0 (mut (ref null $virtual2))))))
 //│   (type $B (sub $A (struct (field $$typeinfo (mut (ref $TypeInfoBase))))))
-//│   (type $B_init (func (param $this (ref null any)) (result (ref null any))))
-//│   (type $B_ctor (func (result (ref null any))))
-//│   (type $callF (func (param $a (ref null any)) (result (ref null any))))
+//│   (type $virtual2 (func (param $this (ref $A)) (param $arg1 (ref null any)) (result (ref null any))))
+//│   (type $A_typeinfo (sub $TypeInfoBase (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)) (field $slot0 (mut (ref null $virtual2))))))
+//│   (type $A_init (func (param $this (ref $A)) (result (ref $A))))
+//│   (type $A_ctor (func (result (ref $A))))
+//│   (type $B_typeinfo (sub $A_typeinfo (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)) (field $slot0 (mut (ref null $virtual2))))))
+//│   (type $B_init (func (param $this (ref $B)) (result (ref $B))))
+//│   (type $B_ctor (func (result (ref $B))))
+//│   (type $callF (func (param $a (ref $A)) (result (ref null any))))
 //│   (type $plus_impl (func (param $lhs (ref null any)) (param $rhs (ref null any)) (result (ref null any))))
 //│   (type $times_impl (func (param $lhs (ref null any)) (param $rhs (ref null any)) (result (ref null any))))
 //│   (type $entry (func (result (ref null any))))
@@ -47,12 +47,13 @@ callF(B())
 //│     (i32.const 2)
 //│     (global.get $A_typeinfo)
 //│     (ref.func $B_f)))
-//│   (func $A_init (type $A_init) (param $this (ref null any)) (result (ref null any))
+//│   (func $A_init (type $A_init) (param $this (ref $A)) (result (ref $A))
 //│     (return
-//│       (local.get $this)))
-//│   (func $A_ctor (export "A") (type $A_ctor) (result (ref null any))
-//│     (local $this (ref null any))
-//│     (block (result (ref null any))
+//│       (ref.cast (ref $A)
+//│         (local.get $this))))
+//│   (func $A_ctor (export "A") (type $A_ctor) (result (ref $A))
+//│     (local $this (ref $A))
+//│     (block (result (ref $A))
 //│       (local.set $this
 //│         (struct.new $A
 //│           (global.get $A_typeinfo)))
@@ -61,22 +62,23 @@ callF(B())
 //│           (local.get $this)))
 //│       (return
 //│         (local.get $this))))
-//│   (func $A_f (type $virtual2) (param $this (ref null any)) (param $x (ref null any)) (result (ref null any))
+//│   (func $A_f (type $virtual2) (param $this (ref $A)) (param $x (ref null any)) (result (ref null any))
 //│     (return
 //│       (call $plus_impl
 //│         (local.get $x)
 //│         (ref.i31
 //│           (i32.const 1)))))
-//│   (func $B_init (type $B_init) (param $this (ref null any)) (result (ref null any))
-//│     (block (result (ref null any))
+//│   (func $B_init (type $B_init) (param $this (ref $B)) (result (ref $B))
+//│     (block (result (ref $B))
 //│       (drop
 //│         (call $A_init
 //│           (local.get $this)))
 //│       (return
-//│         (local.get $this))))
-//│   (func $B_ctor (export "B") (type $B_ctor) (result (ref null any))
-//│     (local $this (ref null any))
-//│     (block (result (ref null any))
+//│         (ref.cast (ref $B)
+//│           (local.get $this)))))
+//│   (func $B_ctor (export "B") (type $B_ctor) (result (ref $B))
+//│     (local $this (ref $B))
+//│     (block (result (ref $B))
 //│       (local.set $this
 //│         (struct.new $B
 //│           (global.get $B_typeinfo)))
@@ -85,20 +87,21 @@ callF(B())
 //│           (local.get $this)))
 //│       (return
 //│         (local.get $this))))
-//│   (func $B_f (type $virtual2) (param $this (ref null any)) (param $x (ref null any)) (result (ref null any))
+//│   (func $B_f (type $virtual2) (param $this (ref $A)) (param $x (ref null any)) (result (ref null any))
 //│     (return
 //│       (call $times_impl
 //│         (local.get $x)
 //│         (ref.i31
 //│           (i32.const 2)))))
-//│   (func $callF (export "callF") (type $callF) (param $a (ref null any)) (result (ref null any))
+//│   (func $callF (export "callF") (type $callF) (param $a (ref $A)) (result (ref null any))
 //│     (local $receiver (ref null any))
 //│     (return
 //│       (block (result (ref null any))
 //│         (local.set $receiver
 //│           (local.get $a))
 //│         (call_ref $virtual2
-//│           (local.get $receiver)
+//│           (ref.cast (ref $A)
+//│             (local.get $receiver))
 //│           (ref.i31
 //│             (i32.const 5))
 //│           (struct.get $A_typeinfo $slot0
@@ -108,16 +111,21 @@ callF(B())
 //│                   (local.get $receiver)))))))))
 //│   (func $entry (export "entry") (type $entry) (result (ref null any))
 //│     (local $tmp (ref null any))
+//│     (local $a (ref $A))
 //│     (local $receiver (ref null any))
 //│     (block (result (ref null any))
 //│       (local.set $tmp
 //│         (call $B_ctor))
+//│       (local.set $a
+//│         (ref.cast (ref $A)
+//│           (local.get $tmp)))
 //│       (return
 //│         (block (result (ref null any))
 //│           (local.set $receiver
-//│             (local.get $tmp))
+//│             (local.get $a))
 //│           (call_ref $virtual2
-//│             (local.get $receiver)
+//│             (ref.cast (ref $A)
+//│               (local.get $receiver))
 //│             (ref.i31
 //│               (i32.const 5))
 //│             (struct.get $A_typeinfo $slot0
@@ -160,3 +168,278 @@ fun callG(b: B) = b.g()
 callF(C()) + callG(C())
 //│ Wasm result:
 //│ = 21
+
+
+// A virtual slot's Wasm type carries the result type of the method that introduced it, so overrides share it
+:wat
+val n32: Int32 = wasm.i32.const(7)
+class V() with
+  virtual fun f(m: Int32): Int32 = m
+class W() extends V() with
+  fun f(m: Int32): Int32 = m
+fun callPrim(a: V): Int32 = a.f(n32)
+callPrim(W())
+//│ Wat:
+//│ (module
+//│   (type $TypeInfoBase (sub (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
+//│   (type $Object (sub (struct (field $$typeinfo (mut (ref $TypeInfoBase))))))
+//│   (type $V (sub $Object (struct (field $$typeinfo (mut (ref $TypeInfoBase))))))
+//│   (type $W (sub $V (struct (field $$typeinfo (mut (ref $TypeInfoBase))))))
+//│   (type $virtual2 (func (param $this (ref $V)) (param $arg1 i32) (result i32)))
+//│   (type $V_typeinfo (sub $TypeInfoBase (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)) (field $slot0 (mut (ref null $virtual2))))))
+//│   (type $V_init (func (param $this (ref $V)) (result (ref $V))))
+//│   (type $V_ctor (func (result (ref $V))))
+//│   (type $W_typeinfo (sub $V_typeinfo (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)) (field $slot0 (mut (ref null $virtual2))))))
+//│   (type $W_init (func (param $this (ref $W)) (result (ref $W))))
+//│   (type $W_ctor (func (result (ref $W))))
+//│   (type $callPrim (func (param $a (ref $V)) (result i32)))
+//│   (type $entry (func (result i32)))
+//│   (global $n32 (export "n32") (mut i32) (i32.const 0))
+//│   (global $V_typeinfo (export "V_typeinfo") (ref $V_typeinfo) (struct.new $V_typeinfo
+//│     (i32.const 1)
+//│     (ref.null $TypeInfoBase)
+//│     (ref.func $V_f)))
+//│   (global $W_typeinfo (export "W_typeinfo") (ref $W_typeinfo) (struct.new $W_typeinfo
+//│     (i32.const 2)
+//│     (global.get $V_typeinfo)
+//│     (ref.func $W_f)))
+//│   (func $V_init (type $V_init) (param $this (ref $V)) (result (ref $V))
+//│     (return
+//│       (ref.cast (ref $V)
+//│         (local.get $this))))
+//│   (func $V_ctor (export "V") (type $V_ctor) (result (ref $V))
+//│     (local $this (ref $V))
+//│     (block (result (ref $V))
+//│       (local.set $this
+//│         (struct.new $V
+//│           (global.get $V_typeinfo)))
+//│       (drop
+//│         (call $V_init
+//│           (local.get $this)))
+//│       (return
+//│         (local.get $this))))
+//│   (func $V_f (type $virtual2) (param $this (ref $V)) (param $m i32) (result i32)
+//│     (return
+//│       (local.get $m)))
+//│   (func $W_init (type $W_init) (param $this (ref $W)) (result (ref $W))
+//│     (block (result (ref $W))
+//│       (drop
+//│         (call $V_init
+//│           (local.get $this)))
+//│       (return
+//│         (ref.cast (ref $W)
+//│           (local.get $this)))))
+//│   (func $W_ctor (export "W") (type $W_ctor) (result (ref $W))
+//│     (local $this (ref $W))
+//│     (block (result (ref $W))
+//│       (local.set $this
+//│         (struct.new $W
+//│           (global.get $W_typeinfo)))
+//│       (drop
+//│         (call $W_init
+//│           (local.get $this)))
+//│       (return
+//│         (local.get $this))))
+//│   (func $W_f (type $virtual2) (param $this (ref $V)) (param $m i32) (result i32)
+//│     (return
+//│       (local.get $m)))
+//│   (func $callPrim (export "callPrim") (type $callPrim) (param $a (ref $V)) (result i32)
+//│     (local $receiver (ref null any))
+//│     (return
+//│       (block (result i32)
+//│         (local.set $receiver
+//│           (local.get $a))
+//│         (call_ref $virtual2
+//│           (ref.cast (ref $V)
+//│             (local.get $receiver))
+//│           (global.get $n32)
+//│           (struct.get $V_typeinfo $slot0
+//│             (ref.cast (ref $V_typeinfo)
+//│               (struct.get $Object $$typeinfo
+//│                 (ref.cast (ref $Object)
+//│                   (local.get $receiver)))))))))
+//│   (func $entry (export "entry") (type $entry) (result i32)
+//│     (local $tmp i32)
+//│     (local $tmp1 (ref null any))
+//│     (local $a (ref $V))
+//│     (local $receiver (ref null any))
+//│     (block (result i32)
+//│       (local.set $tmp
+//│         (i32.const 7))
+//│       (global.set $n32
+//│         (local.get $tmp))
+//│       (local.set $tmp1
+//│         (call $W_ctor))
+//│       (local.set $a
+//│         (ref.cast (ref $V)
+//│           (local.get $tmp1)))
+//│       (return
+//│         (block (result i32)
+//│           (local.set $receiver
+//│             (local.get $a))
+//│           (call_ref $virtual2
+//│             (ref.cast (ref $V)
+//│               (local.get $receiver))
+//│             (global.get $n32)
+//│             (struct.get $V_typeinfo $slot0
+//│               (ref.cast (ref $V_typeinfo)
+//│                 (struct.get $Object $$typeinfo
+//│                   (ref.cast (ref $Object)
+//│                     (local.get $receiver))))))))))
+//│   (elem $V_init declare func $V_init)
+//│   (elem $V_ctor declare func $V_ctor)
+//│   (elem $V_f declare func $V_f)
+//│   (elem $W_init declare func $W_init)
+//│   (elem $W_ctor declare func $W_ctor)
+//│   (elem $W_f declare func $W_f)
+//│   (elem $callPrim declare func $callPrim)
+//│   (elem $entry declare func $entry))
+//│ Wasm result:
+//│ = 7
+
+
+// Overrides share the slot's Wasm function type, so primitives must match exactly - here in the result.
+:ge
+class M1() with
+  virtual fun f(m: Int32): Int32 = m
+class M2() extends M1() with
+  fun f(m: Int32): Int = 0
+M2().f(1)
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int' at an unrelated type 'Int32'
+//│ ║  l.307: 	M2().f(1)
+//│ ╙──       	       ^
+//│ ╔══[COMPILATION ERROR] Overriding method `f` declares result as `(ref null i31)`, but the method it overrides declares `i32`
+//│ ║  l.306: 	  fun f(m: Int32): Int = 0
+//│ ╙──       	  ^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+// The same rule on a parameter: `g`'s `m` is unannotated, so it erases to `anyref` rather than `i32`.
+:ge
+class N1() with
+  virtual fun g(m: Int32): Int32 = m
+class N2() extends N1() with
+  fun g(m): Int32 = 0
+N2().g(1)
+//│ ═══[COMPILATION ERROR] Cannot use a value of type 'Int' at an unrelated type 'Int32'
+//│ ╔══[COMPILATION ERROR] Overriding method `g` declares parameter 1 as `(ref null any)`, but the method it overrides declares `i32`
+//│ ║  l.321: 	  fun g(m): Int32 = 0
+//│ ╙──       	  ^^^^^^^^^^^^^^^^^^^
+
+
+// Boxed types are bridged by casts, so they need not match
+class R1() with
+  virtual fun h(x: Int): Anything = x
+class R2() extends R1() with
+  fun h(x) = x
+R2().h(3)
+//│ Wasm result:
+//│ = 3
+
+
+// The vtable slot carries the base declaration's result, which erases to `anyref`. Since `Child` declares
+// `get(): Child`, the call `c.get()` must return a `Child`, so the call result is narrowed back with a
+// checked cast that traps if it does not.
+:noInline
+:wat
+class Parent() with
+  virtual fun get(): Object = new Parent()
+class Child() extends Parent() with
+  fun get(): Child = new Child()
+fun readChild(c: Child): Child = c.get()
+readChild(new Child())
+//│ Wat:
+//│ (module
+//│   (type $TypeInfoBase (sub (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
+//│   (type $Object (sub (struct (field $$typeinfo (mut (ref $TypeInfoBase))))))
+//│   (type $Parent (sub $Object (struct (field $$typeinfo (mut (ref $TypeInfoBase))))))
+//│   (type $Child (sub $Parent (struct (field $$typeinfo (mut (ref $TypeInfoBase))))))
+//│   (type $virtual1 (func (param $this (ref $Parent)) (result (ref null any))))
+//│   (type $Parent_typeinfo (sub $TypeInfoBase (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)) (field $slot0 (mut (ref null $virtual1))))))
+//│   (type $Parent_init (func (param $this (ref $Parent)) (result (ref $Parent))))
+//│   (type $Parent_ctor (func (result (ref $Parent))))
+//│   (type $Child_typeinfo (sub $Parent_typeinfo (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)) (field $slot0 (mut (ref null $virtual1))))))
+//│   (type $Child_init (func (param $this (ref $Child)) (result (ref $Child))))
+//│   (type $Child_ctor (func (result (ref $Child))))
+//│   (type $readChild (func (param $c (ref $Child)) (result (ref $Child))))
+//│   (type $entry (func (result (ref $Child))))
+//│   (global $Parent_typeinfo (export "Parent_typeinfo") (ref $Parent_typeinfo) (struct.new $Parent_typeinfo
+//│     (i32.const 1)
+//│     (ref.null $TypeInfoBase)
+//│     (ref.func $Parent_get)))
+//│   (global $Child_typeinfo (export "Child_typeinfo") (ref $Child_typeinfo) (struct.new $Child_typeinfo
+//│     (i32.const 2)
+//│     (global.get $Parent_typeinfo)
+//│     (ref.func $Child_get)))
+//│   (func $Parent_init (type $Parent_init) (param $this (ref $Parent)) (result (ref $Parent))
+//│     (return
+//│       (ref.cast (ref $Parent)
+//│         (local.get $this))))
+//│   (func $Parent_ctor (export "Parent") (type $Parent_ctor) (result (ref $Parent))
+//│     (local $this (ref $Parent))
+//│     (block (result (ref $Parent))
+//│       (local.set $this
+//│         (struct.new $Parent
+//│           (global.get $Parent_typeinfo)))
+//│       (drop
+//│         (call $Parent_init
+//│           (local.get $this)))
+//│       (return
+//│         (local.get $this))))
+//│   (func $Parent_get (type $virtual1) (param $this (ref $Parent)) (result (ref null any))
+//│     (return
+//│       (call $Parent_ctor)))
+//│   (func $Child_init (type $Child_init) (param $this (ref $Child)) (result (ref $Child))
+//│     (block (result (ref $Child))
+//│       (drop
+//│         (call $Parent_init
+//│           (local.get $this)))
+//│       (return
+//│         (ref.cast (ref $Child)
+//│           (local.get $this)))))
+//│   (func $Child_ctor (export "Child") (type $Child_ctor) (result (ref $Child))
+//│     (local $this (ref $Child))
+//│     (block (result (ref $Child))
+//│       (local.set $this
+//│         (struct.new $Child
+//│           (global.get $Child_typeinfo)))
+//│       (drop
+//│         (call $Child_init
+//│           (local.get $this)))
+//│       (return
+//│         (local.get $this))))
+//│   (func $Child_get (type $virtual1) (param $this (ref $Parent)) (result (ref null any))
+//│     (return
+//│       (call $Child_ctor)))
+//│   (func $readChild (export "readChild") (type $readChild) (param $c (ref $Child)) (result (ref $Child))
+//│     (local $receiver (ref null any))
+//│     (return
+//│       (block (result (ref $Child))
+//│         (local.set $receiver
+//│           (local.get $c))
+//│         (ref.cast (ref $Child)
+//│           (call_ref $virtual1
+//│             (ref.cast (ref $Parent)
+//│               (local.get $receiver))
+//│             (struct.get $Child_typeinfo $slot0
+//│               (ref.cast (ref $Child_typeinfo)
+//│                 (struct.get $Object $$typeinfo
+//│                   (ref.cast (ref $Object)
+//│                     (local.get $receiver))))))))))
+//│   (func $entry (export "entry") (type $entry) (result (ref $Child))
+//│     (local $tmp (ref $Child))
+//│     (block (result (ref $Child))
+//│       (local.set $tmp
+//│         (call $Child_ctor))
+//│       (return
+//│         (call $readChild
+//│           (local.get $tmp)))))
+//│   (elem $Parent_init declare func $Parent_init)
+//│   (elem $Parent_ctor declare func $Parent_ctor)
+//│   (elem $Parent_get declare func $Parent_get)
+//│   (elem $Child_init declare func $Child_init)
+//│   (elem $Child_ctor declare func $Child_ctor)
+//│   (elem $Child_get declare func $Child_get)
+//│   (elem $readChild declare func $readChild)
+//│   (elem $entry declare func $entry))
+//│ Wasm result:
+//│ = {}

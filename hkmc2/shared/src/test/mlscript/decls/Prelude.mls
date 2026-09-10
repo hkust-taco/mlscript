@@ -123,7 +123,11 @@ declare module Symbol with
   val iterator: Any
 
 // MLwasm-specific types
-declare class Int31
+declare class Int32
+declare class Int64
+declare class Float32
+declare class Float64
+declare class Int31 extends Int  // `i31ref`
 
 // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math
 declare module Math with
@@ -246,6 +250,28 @@ declare module js with
     try_catch
 
 declare module wasm with
+  module i32 with
+    fun
+      const(c: Int): Int32
+      add(i1: Int32, i2: Int32): Int32
+      sub(i1: Int32, i2: Int32): Int32
+      mul(i1: Int32, i2: Int32): Int32
+      div_s(i1: Int32, i2: Int32): Int32
+      rem_s(i1: Int32, i2: Int32): Int32
+      eq(i1: Int32, i2: Int32): Int32
+      ne(i1: Int32, i2: Int32): Int32
+      lt_s(i1: Int32, i2: Int32): Int32
+      le_s(i1: Int32, i2: Int32): Int32
+      gt_s(i1: Int32, i2: Int32): Int32
+      ge_s(i1: Int32, i2: Int32): Int32
+      eqz(i: Int32): Int32
+  module ref with
+    fun
+      i31(i: Int32): Int31
+  module i31 with
+    fun
+      get_s(i: Int31): Int32
+      get_u(i: Int31): Int32
   fun
     plus_impl
     minus_impl

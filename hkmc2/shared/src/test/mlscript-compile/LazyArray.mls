@@ -57,7 +57,8 @@ class LazyArr extends IterableBase with
   fun concat(...args) = concatHelper(mut [SpliceMarker, this], this.length, ...args)
 
 // Requires that the underlying iterable is constant-time indexable
-class View(val underlying: IterableBase, val start, val end) extends LazyArr with
+// Note: Ideally `underlying` should be typed as `IterableBase`, but `Array` currently does not extend it.
+class View(val underlying, val start, val end) extends LazyArr with
 
   fun iterator() =
     let idx = start

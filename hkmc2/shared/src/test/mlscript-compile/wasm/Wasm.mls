@@ -20,8 +20,10 @@ fun dumpWasmInstImpExp(wasmInst) =
   console.log of "Exports: %s", wasmInst.exports
 
 // Binaryen helpers
+//
+// The `Features.All` argument to `parseText` is necessary to enable GC-related features.
 fun binaryenFmtWat(wat, foldExprs): String =
-  let mod = binaryen.parseTextWithFeatures of wat, binaryen.Features.All
+  let mod = binaryen.parseText of wat, binaryen.Features.All
   
   // Note: it seems `mod.validate()` sometimes returns `1` instead of `true`; so we don't use `assert` here
   Predef.js_assert of mod.validate()
@@ -32,7 +34,7 @@ fun binaryenFmtWat(wat, foldExprs): String =
   fmtWat
 
 fun binaryenCompileToModule(wat, importObject): WebAssembly.Instance =
-  let mod = binaryen.parseTextWithFeatures of wat, binaryen.Features.All
+  let mod = binaryen.parseText of wat, binaryen.Features.All
 
   // Note: it seems `mod.validate()` sometimes returns `1` instead of `true`; so we don't use `assert` here
   Predef.js_assert of mod.validate()

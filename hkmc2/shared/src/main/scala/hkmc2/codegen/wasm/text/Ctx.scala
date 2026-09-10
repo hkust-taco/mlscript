@@ -10,14 +10,15 @@ import document.*
 import document.Document
 import semantics.{
   BlockMemberSymbol, Elaborator,
-  InnerSymbol, LabelSymbol, ModuleOrObjectSymbol, ParamList, TempSymbol,
+  InnerSymbol, LabelSymbol, LocalVarSymbol, ModuleOrObjectSymbol, ParamList, TempSymbol,
 },
   Elaborator.State
 import text.Param as WasmParam
 import Instructions.*
+import Message.MessageContext
 
 import scala.collection.immutable.ListMap
-import scala.collection.mutable.{ArrayBuffer as ArrayBuf, Map as MutMap}
+import scala.collection.mutable.{ArrayBuffer as ArrayBuf, LinkedHashSet, Map as MutMap}
 import scala.reflect.ClassTag
 
 /** Metadata for a REPL binding that can be imported by later Wasm modules. */
@@ -26,7 +27,7 @@ sealed trait SessionBinding:
   def bindingKey: Str
 
   /** Returns the symbols that should resolve to this binding. */
-  def bindingSyms: Seq[ValueSymbol]
+  def bindingSyms: Seq[SlotSymbol]
 
   /** Returns the export name if this binding is re-exported. */
   def exportNameOpt: Opt[Str] = N
@@ -53,7 +54,7 @@ final case class SessionFunc(
     funcType: FunctionType,
 ) extends SessionBinding:
   def bindingKey: Str = s"func:$moduleName:$exportName"
-  def bindingSyms: Seq[ValueSymbol] = sym :: Nil
+  def bindingSyms: Seq[SlotSymbol] = sym :: Nil
   override def exportNameOpt: Opt[Str] = S(exportName)
 
 /** Metadata for an exported global that later Wasm REPL modules can import.
@@ -68,14 +69,14 @@ final case class SessionFunc(
   *   The Wasm global type expected by the import.
   */
 final case class SessionGlobal(
-    sym: ValueSymbol,
+    sym: ScopedSymbol,
     wrapId: Opt[Str] -> Opt[Str],
     moduleName: Str,
     exportName: Str,
     globalType: GlobalType,
 ) extends SessionBinding:
   def bindingKey: Str = s"global:$moduleName:$exportName"
-  def bindingSyms: Seq[ValueSymbol] = sym :: Nil
+  def bindingSyms: Seq[SlotSymbol] = sym :: Nil
   override def exportNameOpt: Opt[Str] = S(exportName)
 
 /** Metadata for a class type made visible to later Wasm REPL modules.
@@ -102,10 +103,10 @@ final case class SessionClass(
     objectTag: Opt[Int],
     rttiTypeInfo: TypeInfo,
     rttiGlobalExportName: Str,
-    aliasSyms: Seq[ValueSymbol] = Nil,
+    aliasSyms: Seq[SlotSymbol] = Nil,
 ) extends SessionBinding:
   def bindingKey: Str = s"class:${sym.uid}"
-  def bindingSyms: Seq[ValueSymbol] = sym +: aliasSyms
+  def bindingSyms: Seq[SlotSymbol] = sym +: aliasSyms
   override def exportNameOpt: Opt[Str] = S(rttiGlobalExportName)
 
 /** Metadata for a singleton object's backing global made visible to later Wasm REPL modules.
@@ -130,7 +131,7 @@ final case class SessionSingleton(
     globalTy: RefType,
 ) extends SessionBinding:
   def bindingKey: Str = s"singleton:$moduleName:$exportName"
-  def bindingSyms: Ls[ValueSymbol] = blockSym +: objectSym.toList
+  def bindingSyms: Ls[SlotSymbol] = blockSym +: objectSym.toList
   override def exportNameOpt: Opt[Str] = S(exportName)
 
 /** The emitted Wasm module together with REPL/session export metadata.
@@ -162,8 +163,7 @@ final class SessionExportCtx(
     val symbolsToExport: Set[BoundSymbol],
     val collectedBindings: ArrayBuf[SessionBinding],
 ):
-  def shouldExport(sym: ValueSymbol): Bool = sym matches:
-    case sym: BoundSymbol => symbolsToExport(sym)
+  def shouldExport(sym: BoundSymbol): Bool = symbolsToExport(sym)
 
   def emit(binding: SessionBinding): Unit =
     collectedBindings += binding
@@ -173,16 +173,12 @@ final class SessionExportCtx(
 
 /** A Wasm function and its associated information.
   *
-  * Each instance of [[FuncInfo]] represents a single function definition in a WebAssembly module.
-  *
   * @param sym
-  *   The source [[ValueSymbol]] which this function is generated from.
-  * @param wrapId
-  *   An pair of optional strings for adding a prefix and suffix to the generated identifier of this function.
+  *   The source [[ExternSymbol]] which this function is generated from.
   * @param typeUse
   *   [[TypeUse]] of the function's type in the module's type section.
   * @param params
-  *   [[Seq]] of parameter local variables and their names.
+  *   [[Seq]] of parameter local variables with their identifiers and resolved Wasm parameter types.
   * @param resultTypes
   *   The result types of the function.
   * @param locals
@@ -191,24 +187,26 @@ final class SessionExportCtx(
   *   The expression of the function body.
   * @param exportName
   *   Optional export name.
+  * @param wrapId
+  *   A pair of optional strings for adding a prefix and suffix to the generated identifier of this function.
   */
 class FuncInfo(
-    val sym: BlockMemberSymbol | TempSymbol,
+    val sym: ExternSymbol,
     val typeUse: TypeUse,
-    val params: Seq[ValueSymbol -> SymIdx],
+    val params: Seq[SlotSymbol -> WasmParam],
     val resultTypes: Seq[Result],
-    val locals: Seq[ValueSymbol -> SymIdx],
+    val locals: Seq[SlotSymbol -> SymIdx],
     val body: Expr,
     val exportName: Opt[Str],
     val wrapId: Opt[Str] -> Opt[Str] = N -> N,
-)(using Ctx, Raise) extends ToWat:
+)(using Ctx, Raise, State) extends ToWat:
 
   /** Symbolic identifier for the function. */
   val id = SymIdx(summon[Ctx].funcScp.allocateOrGetNameWrapped(sym, wrapId))
 
   /** Returns the type of this function as a [[SignatureType]]. */
   def getSignatureType: SignatureType = SignatureType(
-    params = params.map((_, paramIdx) => WasmParam(paramIdx, RefType.anyref)),
+    params = params.map(_._2),
     results = resultTypes,
   )
 
@@ -220,7 +218,7 @@ class FuncInfo(
         getSignatureType.toWat.surroundUnlessEmpty(doc" ")
       } #{ ${
         locals.map: p =>
-          doc"(local ${p._2.toWat} ${RefType.anyref.toWat})"
+          doc"(local ${p._2.toWat} ${p._1.localType.toWat})"
         .mkDocument(doc" # ").surroundUnlessEmpty(doc" # ")
       } # ${body.toWat} #} )"""
 end FuncInfo
@@ -236,15 +234,15 @@ end FuncInfo
   * @param exportName
   *   Optional export name.
   * @param sym
-  *   The source [[ValueSymbol]] which this global is generated from.
+  *   The source [[ScopedSymbol]] which this global is generated from.
   * @param wrapId
-  *   An pair of optional strings for adding a prefix and suffix to the generated identifier of this global.
+  *   A pair of optional strings for adding a prefix and suffix to the generated identifier of this global.
   */
 class GlobalInfo(
     val globalType: GlobalType,
     val init: Expr,
     val exportName: Opt[Str],
-    val sym: ValueSymbol,
+    val sym: ScopedSymbol,
     val wrapId: Opt[Str] -> Opt[Str] = N -> N,
 )(using Ctx, Raise) extends ToWat:
 
@@ -263,16 +261,16 @@ end GlobalInfo
   * Each instance of [[MemInfo]] represents a single memory definition in a WebAssembly module.
   *
   * @param sym
-  *   The source [[TempSymbol]] which this memory is generated from.
+  *   The source [[ExternSymbol]] which this memory is generated from.
   * @param memType
   *   The type of the memory.
   * @param wrapId
-  *   An pair of optional strings for adding a prefix and suffix to the generated identifier of this memory.
+  *   A pair of optional strings for adding a prefix and suffix to the generated identifier of this memory.
   */
-class MemInfo(val sym: TempSymbol, val memType: MemType, val wrapId: Opt[Str] -> Opt[Str] = N -> N)(using Ctx, Raise)
+class MemInfo(val sym: ExternSymbol, val memType: MemType, val wrapId: Opt[Str] -> Opt[Str] = N -> N)(using Ctx, Raise)
     extends ToWat:
 
-  /** Symbolic identifier for the global. */
+  /** Symbolic identifier for the memory. */
   val id: SymIdx = SymIdx(summon[Ctx].memoryScp.allocateOrGetNameWrapped(sym, wrapId))
 
   def toWat: Document = doc"(memory ${id.toWat} ${memType.toWat})"
@@ -283,16 +281,16 @@ end MemInfo
   * Each instance of [[TypeInfo]] represents a single type definition in a WebAssembly module.
   *
   * @param sym
-  *   The source [[ValueSymbol]] which this type is generated from.
+  *   The source [[ExternSymbol]] which this type is generated from.
   * @param wrapId
-  *   An pair of optional strings for adding a prefix and suffix to the generated identifier of this type.
+  *   A pair of optional strings for adding a prefix and suffix to the generated identifier of this type.
   * @param compType
   *   The composite type this type definition represents.
   * @param objectTag
   *   An optional object tag number associated with this type.
   */
 final class TypeInfo(
-    val sym: BlockMemberSymbol | TempSymbol,
+    val sym: ExternSymbol,
     val compType: CompType,
     val objectTag: Opt[Int],
     val wrapId: Opt[Str] -> Opt[Str] = N -> N,
@@ -300,6 +298,11 @@ final class TypeInfo(
 
   /** Symbolic identifier for the type. */
   val id = SymIdx(summon[Ctx].typeScp.allocateOrGetNameWrapped(sym, wrapId))
+
+  /** Returns this composite type as a [[FunctionType]], throwing an exception if it is not. */
+  def asFunctionType_! : FunctionType = compType match
+    case funcType: FunctionType => funcType
+    case _ => lastWords(s"type `${id.id}` is not a function type")
 
   def toWat: Document = doc"(type ${id.toWat} ${compType.toWat})"
 
@@ -311,9 +314,9 @@ final class TypeInfo(
   * @param typeUse
   *   The function type referenced by this tag.
   * @param sym
-  *   The source [[ValueSymbol]] which this tag is generated from.
+  *   The source [[LocalVarSymbol]] which this tag is generated from.
   */
-class TagInfo(val typeUse: TypeUse, val sym: ValueSymbol, val wrapId: Opt[Str] -> Opt[Str] = N -> N)(using Ctx, Raise)
+class TagInfo(val typeUse: TypeUse, val sym: LocalVarSymbol, val wrapId: Opt[Str] -> Opt[Str] = N -> N)(using Ctx, Raise)
     extends ToWat:
 
   /** Symbolic identifier for the tag. */
@@ -325,8 +328,65 @@ end TagInfo
 
 enum WasmIntrinsicType:
   case TupleArray(mutable: Bool)
-  /** Shared erased Wasm function type for virtual methods with the given arity, including `this`. */
-  case VirtualMethod(arity: Int)
+  
+  /** Shared erased Wasm function type for a virtual method slot introduced by `baseSym` with the given non-`this` param
+    * types, including a concretely-typed `this`. Keyed on the full param-type vector (not just arity) and the result
+    * type so distinct virtual methods of the same arity on the same base class don't collide.
+    */
+  case VirtualMethod(baseSym: BlockMemberSymbol, paramTypes: List[ValType], resultType: ValType)
+
+/** An argument passed to a Wasm intrinsic function.
+  *
+  * This class also stores the parameter's kind (i.e. instruction argument vs stack argument), since some wasm
+  * intrinsics (e.g. `i32.const`) only accept a constant literal as part of the instruction.
+  *
+  * @param intrName
+  *   The name of the intrinsic this argument was passed to, for diagnostics.
+  * @param idx
+  *   The zero-based position of this argument, for diagnostics.
+  * @param operand
+  *   This argument compiled as an expression.
+  * @param operandXtype
+  *   The name of the type the intrinsic declares for this parameter, present only if the compiled operand does not
+  *   conform to it.
+  * @param litValue
+  *   The integer literal this argument was written as, if it was written as one.
+  * @param loc
+  *   The source location of this argument.
+  */
+case class IntrinsicArg(
+    intrName: Str,
+    idx: Int,
+    private val operand: Expr,
+    private val operandXtype: Opt[Str],
+    private val litValue: Opt[BigInt],
+    private val loc: Opt[Loc],
+):
+  /** Reports `errMsg` and recovers with `recovery`, mirroring how `errExpr` recovers with `unreachable`. */
+  private def fail[T](errMsg: Message, recovery: T)(using Raise): T =
+    raise(ErrorReport(Ls(errMsg -> loc), source = Diagnostic.Source.Compilation, extraInfo = S(operand)))
+    recovery
+
+  /** This argument as a value pushed on the stack. */
+  def asOp(using Raise): Expr = operandXtype.fold(operand): xtype =>
+    fail(
+      msg"Operand #${(idx + 1).toString} of wasm intrinsic '$intrName' must be of type '${xtype.toString}'",
+      unreachable,
+    )
+
+  /** This argument as an instruction immediate, which must be written as an integer literal at the call site. */
+  def asImm(using Raise): Int = litValue match
+    case S(value) if value.isValidInt => value.toInt
+    case S(value) =>
+      fail(msg"Immediate #${(idx + 1).toString} of wasm intrinsic '$intrName' is outside the signed 32-bit range", 0)
+    case N => fail(msg"Wasm intrinsic '$intrName' expects an integer literal immediate", 0)
+end IntrinsicArg
+
+/** The body of a Wasm intrinsic function: builds the instruction from its resolved arguments.
+  *
+  * The implementation body can assume that the argument count is correct.
+  */
+type IntrinsicBody = Seq[IntrinsicArg] => Raise ?=> Expr
 
 /** Class containing identifiers of labels to jump to when breaking or continuing from a control flow structure.
   *
@@ -360,8 +420,14 @@ object FunctionCtx:
   *   The parameters of this function.
   * @param thisSym
   *   The implicit `this` parameter symbol if this function is generated from a non-static method, or `N` otherwise.
+  * @param paramTypes
+  *   When set, overrides the loaded type of each param slot at its position (index 0 = `this`).
   */
-class FunctionCtx(_params: Ls[ParamList], thisSym: Opt[InnerSymbol])(using Raise, State):
+class FunctionCtx(
+    _params: Ls[ParamList],
+    thisSym: Opt[InnerSymbol],
+    paramTypes: Opt[Seq[ValType]] = N,
+)(using Ctx, Raise, State):
 
   /** [[Scope]] for generating WAT identifiers of locals. */
   private[text] val localScp = Scope.empty(Scope.Cfg.default)
@@ -369,13 +435,27 @@ class FunctionCtx(_params: Ls[ParamList], thisSym: Opt[InnerSymbol])(using Raise
   /** The parameter of this function, represented by a tuple of the symbol representing the parameter and its symbolic
     * identifier.
     */
-  val params: Seq[ValueSymbol -> SymIdx] =
+  val params: Seq[SlotSymbol -> SymIdx] =
     if _params.length > 1 then
       lastWords("Multiple parameter lists are not yet supported")
     val thisParam = thisSym.map: dis =>
       dis -> SymIdx(localScp.addToBindings(dis, "this", shadow = false))
     thisParam.toSeq ++ _params.flatMap(_.paramSyms).map(p => p -> SymIdx(localScp.allocateName(p)))
-  private val _locals = ArrayBuf.empty[ValueSymbol]
+
+  /** The declared Wasm value type of each parameter slot (including implicit `$this`), resolved eagerly at construction
+    * (index 0 = `this`).
+    */
+  private val resolvedParamTypes: Map[SlotSymbol, ValType] =
+    params.zipWithIndex.map:
+      case ((sym, _), idx) => sym -> resolveParamType(sym, idx, paramTypes)
+    .toMap
+
+  /** The parameters of this function with their identifiers and resolved Wasm types, ready to hand to a [[FuncInfo]].
+    */
+  val resolvedParams: Seq[SlotSymbol-> WasmParam] =
+    params.map:
+      case (sym, idx) => sym -> WasmParam(idx, resolvedParamTypes(sym))
+  private val _locals = ArrayBuf.empty[SlotSymbol]
   private var labels = ListMap.empty[LabelSymbol, FunctionCtx.ControlFlowCtx]
 
   /** Adds a Wasm local into this context.
@@ -384,7 +464,7 @@ class FunctionCtx(_params: Ls[ParamList], thisSym: Opt[InnerSymbol])(using Raise
     *   An optional name for the local variable. If provided, the local will be emitted with the given name instead of
     *   an auto-generated one.
     */
-  def addLocal(local: ValueSymbol, customName: Opt[Str] = N): LocalIdx =
+  def addLocal(local: SlotSymbol, customName: Opt[Str] = N): LocalIdx =
     customName match
       case S(name) => localScp.addToBindings(local, name, shadow = false)
       case N => localScp.allocateName(local)
@@ -392,17 +472,26 @@ class FunctionCtx(_params: Ls[ParamList], thisSym: Opt[InnerSymbol])(using Raise
     LocalIdx(SymIdx(localScp.lookup_!(local, N)))
 
   /** Looks up the given `sym` in this function context, returning its [[LocalIdx]] if it exists. */
-  def lookupLocal(sym: ValueSymbol): Opt[LocalIdx] =
+  def lookupLocal(sym: SlotSymbol): Opt[LocalIdx] =
     localScp.lookup(sym).map(idx => LocalIdx(SymIdx(idx)))
 
   /** Similar to [[lookupLocal]], but throws an exception if `sym` is not in this context. */
-  def lookupLocal_!(sym: ValueSymbol, loc: Opt[Loc]): LocalIdx =
+  def lookupLocal_!(sym: SlotSymbol, loc: Opt[Loc]): LocalIdx =
     LocalIdx(SymIdx(localScp.lookup_!(sym, loc)))
 
   /** The locals of this function, represented by a tuple of the symbol representing the parameter and its symbolic
     * identifier.
     */
-  def locals: Seq[ValueSymbol -> SymIdx] = _locals.map(l => l -> SymIdx(localScp.lookup_!(l, N))).toSeq
+  def locals: Seq[SlotSymbol -> SymIdx] = _locals.map(l => l -> SymIdx(localScp.lookup_!(l, N))).toSeq
+
+  /** The declared Wasm value type of the param/local slot for `sym`.
+    *
+    * Parameter slot types are resolved eagerly at construction (see [[resolvedParamTypes]]): each comes from the slot's
+    * `paramTypes` override if present, otherwise from the symbol's erased type via [[paramType]]. Local slots derive
+    * their type from the symbol's erased type via [[localType]].
+    */
+  def slotType(sym: SlotSymbol)(using Ctx): ValType =
+    resolvedParamTypes.getOrElse(sym, sym.localType)
 
   /** Pushes a label target for the dynamic extent of `body` and pops it afterwards.
     *
@@ -444,8 +533,9 @@ end FunctionCtx
 def genFuncBody[T](
     params: Ls[ParamList],
     thisSym: Opt[InnerSymbol],
-)(mkBody: FunctionCtx ?=> T)(using Raise, State): T -> FunctionCtx =
-  val funcCtx = FunctionCtx(params, thisSym)
+    paramTypes: Opt[Seq[ValType]] = N,
+)(mkBody: FunctionCtx ?=> T)(using Ctx, Raise, State): T -> FunctionCtx =
+  val funcCtx = FunctionCtx(params, thisSym, paramTypes)
   val result = mkBody(using funcCtx)
   result -> funcCtx
 
@@ -455,16 +545,35 @@ object Ctx:
       globalTy: RefType,
   )
 
+  /** Information about a virtual method slot in the virtual table.
+    *
+    * @param sym
+    *   The symbol of the method occupying this slot.
+    * @param owner
+    *   The symbol of the class that introduced this slot.
+    * @param paramTypes
+    *   The non-`this` parameter types of the method that introduced this slot.
+    * @param resultType
+    *   The result type of the method that introduced this slot. Overriding methods inherit it, since all overrides
+    *   share the slot's Wasm function type.
+    */
+  case class VirtualMethodInfo(
+      sym: BlockMemberSymbol,
+      owner: BlockMemberSymbol,
+      paramTypes: Seq[ValType],
+      resultType: ValType,
+  )
+
   /** Derived virtual-dispatch layout for one class.
     *
-    * @param virtualMethods
-    *   Slot-ordered method symbols, used when declaring and initializing RTTI slot fields.
-    * @param virtualMethodSlots
+    * @param slots
+    *   Slot-ordered information about virtual method symbols, used when declaring and initializing RTTI slot fields.
+    * @param slotOf
     *   Reverse lookup from a resolved method symbol to its virtual slot index.
     */
   case class VirtualTable(
-      virtualMethods: List[BlockMemberSymbol],
-      virtualMethodSlots: Map[BlockMemberSymbol, Int],
+      slots: List[VirtualMethodInfo],
+      slotOf: Map[BlockMemberSymbol, Int],
   )
 
   val binaryOps: Map[Str, (Expr, Expr) => Expr] = Map(
@@ -488,7 +597,30 @@ object Ctx:
   val wasmIntrinsicArities: Map[Str, Int] = (binaryOps.keys.map(_ -> 2) ++ unaryOps.keys.map(_ -> 1)).toMap
   val wasmIntrinsicNameSet: Set[Str] = wasmIntrinsicArities.keySet
 
-  def empty(using State): Ctx = Ctx()
+  /** The `wasm.`-prefixed intrinsics, keyed on the instruction they emit.
+    *
+    * Listed in the order the prelude declares them, so the two can be checked against each other by eye.
+    */
+  val wasmInstrIntrinsics: Map[Str, IntrinsicBody] = Map(
+    "i32.const" -> (args => i32.const(args(0).asImm)),
+    "i32.add" -> (args => i32.add(args(0).asOp, args(1).asOp)),
+    "i32.sub" -> (args => i32.sub(args(0).asOp, args(1).asOp)),
+    "i32.mul" -> (args => i32.mul(args(0).asOp, args(1).asOp)),
+    "i32.div_s" -> (args => i32.div_s(args(0).asOp, args(1).asOp)),
+    "i32.rem_s" -> (args => i32.rem_s(args(0).asOp, args(1).asOp)),
+    "i32.eq" -> (args => i32.eq(args(0).asOp, args(1).asOp)),
+    "i32.ne" -> (args => i32.ne(args(0).asOp, args(1).asOp)),
+    "i32.lt_s" -> (args => i32.lt_s(args(0).asOp, args(1).asOp)),
+    "i32.le_s" -> (args => i32.le_s(args(0).asOp, args(1).asOp)),
+    "i32.gt_s" -> (args => i32.gt_s(args(0).asOp, args(1).asOp)),
+    "i32.ge_s" -> (args => i32.ge_s(args(0).asOp, args(1).asOp)),
+    "i32.eqz" -> (args => i32.eqz(args(0).asOp)),
+    "ref.i31" -> (args => ref.i31(args(0).asOp)),
+    "i31.get_s" -> (args => i31.get_s(args(0).asOp)),
+    "i31.get_u" -> (args => i31.get_u(args(0).asOp)),
+  )
+
+  def empty(using Elaborator.Ctx, State): Ctx = Ctx()
 
   def ctx(using ctx: Ctx): Ctx = ctx
 
@@ -499,15 +631,21 @@ object Ctx:
 end Ctx
 
 /** Context for [[WatBuilder]]. */
-class Ctx(using State) extends ToWat:
+class Ctx(using Elaborator.Ctx, State) extends ToWat:
 
   import Ctx.prettyString
+
+  /** The [[Elaborator.Ctx]] associated with this instance. */
+  def elabCtx: Elaborator.Ctx = summon[Elaborator.Ctx]
 
   /** [[Scope]] for generating WAT identifiers of types. */
   private[text] val typeScp = Scope.empty(Scope.Cfg.default)
 
   /** [[ListMap]] containing all type definitions in the module mapped by their symbolic identifiers. */
   private var types = ListMap.empty[SymIdx, TypeInfo]
+
+  /** Types that must be emitted together as one recursive type group. */
+  private val recursiveTypes = LinkedHashSet.empty[SymIdx]
 
   /** [[MutMap]] containing type symbols mapped to their corresponding [[TypeInfo]] instance. */
   private val namedTypes = MutMap.empty[BlockMemberSymbol, TypeInfo]
@@ -531,7 +669,7 @@ class Ctx(using State) extends ToWat:
   private var funcs = ListMap.empty[SymIdx, FuncInfo | Import[ExternType.Func]]
 
   /** [[MutMap]] containing function symbols mapped to the corresponding [[FuncInfo]] or [[Import]] instance. */
-  private val namedFuncs = MutMap.empty[ValueSymbol, FuncInfo | Import[ExternType.Func]]
+  private val namedFuncs = MutMap.empty[ExternSymbol, FuncInfo | Import[ExternType.Func]]
 
   /** [[Scope]] for generating WAT identifiers of memories. */
   private[text] val memoryScp = Scope.empty(Scope.Cfg.default)
@@ -552,7 +690,7 @@ class Ctx(using State) extends ToWat:
   private var globals = ListMap.empty[SymIdx, GlobalInfo | Import[ExternType.Global]]
 
   /** [[MutMap]] containing global symbols mapped to their corresponding [[GlobalInfo]] or [[Import]] instance. */
-  private val namedGlobals = MutMap.empty[ValueSymbol, GlobalInfo | Import[ExternType.Global]]
+  private val namedGlobals = MutMap.empty[ScopedSymbol, GlobalInfo | Import[ExternType.Global]]
 
   private var startFunc = N: Opt[FuncIdx]
 
@@ -593,6 +731,10 @@ class Ctx(using State) extends ToWat:
     val tag = objectTagNum
     objectTagNum += 1
     tag
+
+  /** Marks the type at `idx` as a member of the module's recursive type group. */
+  def addToRecursiveTypes(idx: TypeIdx): Unit = idx.idx match
+    case sym: SymIdx => recursiveTypes += sym
 
   /** Adds a type into this context. */
   def addType(typeInfo: TypeInfo): TypeIdx =
@@ -696,7 +838,7 @@ class Ctx(using State) extends ToWat:
         val id = SymIdx(name)
         memories = memories +
           (id ->
-            Import(module, name, ExternType.Mem(MemType(Limits(minPages)), sym = TempSymbol(N, name))))
+            Import(module, name, ExternType.Mem(MemType(Limits(minPages)), sym = TempSymbol(N, erasedType = N, name))))
         cachedMemoryImport(key) = SymIdx(name)
     end match
   end ensureMemoryImport
@@ -731,77 +873,77 @@ class Ctx(using State) extends ToWat:
 
   /** Returns the [[FuncIdx]] of the given `funcref`.
     */
-  def getFunc(funcref: FuncIdx | ValueSymbol): Opt[FuncIdx] = funcref match
+  def getFunc(funcref: FuncIdx | ExternSymbol): Opt[FuncIdx] = funcref match
     case funcidx: FuncIdx => S(funcidx)
-    case sym: ValueSymbol =>
+    case sym: ExternSymbol =>
       namedFuncs.get(sym).map: funcInfo =>
         funcInfo match
           case fi: FuncInfo => FuncIdx(fi.id)
           case imp: Import[ExternType.Func] => FuncIdx(imp.externType.id)
 
   /** Same as [[getFunc]] but throws an exception when the `funcref` is not found. */
-  def getFunc_!(funcref: FuncIdx | ValueSymbol): FuncIdx =
+  def getFunc_!(funcref: FuncIdx | ExternSymbol): FuncIdx =
     getFunc(funcref).getOrElse:
       lastWords(s"Missing function definition for ${funcref.prettyString}")
 
-  private def getFuncEntry(funcref: FuncIdx | ValueSymbol): Opt[FuncInfo | Import[ExternType.Func]] = funcref match
+  private def getFuncEntry(funcref: FuncIdx | ExternSymbol): Opt[FuncInfo | Import[ExternType.Func]] = funcref match
     case FuncIdx(idx @ SymIdx(_)) => funcs.get(idx)
-    case funcref: ValueSymbol => namedFuncs.get(funcref)
+    case funcref: ExternSymbol => namedFuncs.get(funcref)
 
   /** Returns the [[FuncInfo]] instance associated with the given `funcref`. */
-  def getFuncInfo(funcref: FuncIdx | ValueSymbol): Opt[FuncInfo] =
+  def getFuncInfo(funcref: FuncIdx | ExternSymbol): Opt[FuncInfo] =
     getFuncEntry(funcref).collect:
       case funcInfo: FuncInfo => funcInfo
 
   /** Same as [[getFuncInfo]] but throws an exception when the `funcref` is not found. */
-  def getFuncInfo_!(funcref: FuncIdx | ValueSymbol): FuncInfo =
+  def getFuncInfo_!(funcref: FuncIdx | ExternSymbol): FuncInfo =
     getFuncInfo(funcref).getOrElse:
       lastWords(s"Missing function definition for ${funcref.prettyString}")
 
   /** Returns the type use associated with the given `funcref`, whether it is a definition or an import. */
-  def getFuncTypeUse(funcref: FuncIdx | ValueSymbol): Opt[TypeUse] =
+  def getFuncTypeUse(funcref: FuncIdx | ExternSymbol): Opt[TypeUse] =
     getFuncEntry(funcref).map:
       case funcInfo: FuncInfo => funcInfo.typeUse
       case funcImport: Import[ExternType.Func] => funcImport.externType.typeUse
 
   /** Same as [[getFuncTypeUse]] but throws an exception when the `funcref` is not found. */
-  def getFuncTypeUse_!(funcref: FuncIdx | ValueSymbol): TypeUse =
+  def getFuncTypeUse_!(funcref: FuncIdx | ExternSymbol): TypeUse =
     getFuncTypeUse(funcref).getOrElse:
       lastWords(s"Missing function definition for ${funcref.prettyString}")
 
   /** Returns the [[GlobalIdx]] of the given `globalref`. */
-  def getGlobal(globalref: GlobalIdx | ValueSymbol)(using Ctx, Raise): Opt[GlobalIdx] = globalref match
+  def getGlobal(globalref: GlobalIdx | ScopedSymbol)(using Ctx, Raise): Opt[GlobalIdx] = globalref match
     case globalidx: GlobalIdx => S(globalidx)
-    case sym: ValueSymbol =>
+    case sym: ScopedSymbol =>
       namedGlobals.get(sym).map: globalEntry =>
         GlobalIdx(globalExternType(globalEntry).id)
 
   /** Same as [[getGlobal]] but throws an exception when the `globalref` is not found. */
-  def getGlobal_!(globalref: GlobalIdx | ValueSymbol)(using Ctx, Raise): GlobalIdx =
+  def getGlobal_!(globalref: GlobalIdx | ScopedSymbol)(using Ctx, Raise): GlobalIdx =
     getGlobal(globalref).getOrElse:
       lastWords(s"Missing global definition for ${globalref.prettyString}")
 
-  private def getGlobalEntry(globalref: GlobalIdx | ValueSymbol): Opt[GlobalInfo | Import[ExternType.Global]] =
+  private def getGlobalEntry(globalref: GlobalIdx | ScopedSymbol): Opt[GlobalInfo | Import[ExternType.Global]] =
     globalref match
       case GlobalIdx(idx @ SymIdx(_)) => globals.get(idx)
-      case sym: ValueSymbol => namedGlobals.get(sym)
+      case sym: ScopedSymbol => namedGlobals.get(sym)
 
   /** Returns the global extern metadata associated with the given `globalref`. */
-  def getGlobalType(globalref: GlobalIdx | ValueSymbol)(using Ctx, Raise): Opt[ExternType.Global] =
+  def getGlobalType(globalref: GlobalIdx | ScopedSymbol)(using Ctx, Raise): Opt[ExternType.Global] =
     getGlobalEntry(globalref).map(globalExternType)
 
   /** Same as [[getGlobalType]] but throws an exception when the `globalref` is not found. */
-  def getGlobalType_!(globalref: GlobalIdx | ValueSymbol)(using Ctx, Raise): ExternType.Global =
+  def getGlobalType_!(globalref: GlobalIdx | ScopedSymbol)(using Ctx, Raise): ExternType.Global =
     getGlobalType(globalref).getOrElse:
       lastWords(s"Missing global definition for ${globalref.prettyString}")
 
   /** Returns the [[GlobalInfo]] instance associated with the given `globalref` when it is a definition. */
-  def getGlobalInfo(globalref: GlobalIdx | ValueSymbol): Opt[GlobalInfo] =
+  def getGlobalInfo(globalref: GlobalIdx | ScopedSymbol): Opt[GlobalInfo] =
     getGlobalEntry(globalref).collect:
       case globalInfo: GlobalInfo => globalInfo
 
   /** Same as [[getGlobalInfo]] but throws an exception when the `globalref` is not found. */
-  def getGlobalInfo_!(globalref: GlobalIdx | ValueSymbol): GlobalInfo =
+  def getGlobalInfo_!(globalref: GlobalIdx | ScopedSymbol): GlobalInfo =
     getGlobalInfo(globalref).getOrElse:
       lastWords(s"Missing global definition for ${globalref.prettyString}")
 
@@ -817,10 +959,10 @@ class Ctx(using State) extends ToWat:
     globalDefs.map(addGlobal)
 
   /** Checks whether the global variable scope contains the variable `sym`. */
-  def containsGlobal(sym: ValueSymbol): Bool = namedGlobals.contains(sym)
+  def containsGlobal(sym: ScopedSymbol): Bool = namedGlobals.contains(sym)
   
   /** Returns all globals in this context. */
-  def getGlobals: Seq[ValueSymbol] = namedGlobals.keys.toSeq
+  def getGlobals: Seq[ScopedSymbol] = namedGlobals.keys.toSeq
 
   /** Checks whether singleton metadata has been registered for class symbol `sym`. */
   def containsSingleton(sym: BlockMemberSymbol): Bool = singletonByBms.contains(sym)
@@ -828,10 +970,10 @@ class Ctx(using State) extends ToWat:
   /** Returns singleton metadata for `sym` when it resolves to either the block-member symbol or module/object symbol
     * used during singleton registration.
     */
-  def getSingletonInfo(sym: ValueSymbol): Opt[Ctx.SingletonInfo] = sym match
+  def getSingletonInfo(sym: BlockMemberSymbol | InnerSymbol): Opt[Ctx.SingletonInfo] = sym match
     case bms: BlockMemberSymbol => singletonByBms.get(bms)
     case isym: ModuleOrObjectSymbol => singletonByIsym.get(isym)
-    case _ => N
+    case _: InnerSymbol => N
 
   /** Registers singleton metadata under both its block-member symbol and optional module/object symbol alias.
     */
@@ -870,6 +1012,37 @@ class Ctx(using State) extends ToWat:
   def getOrCreateWasmIntrinsicTag(name: Str, createTag: => TagIdx): TagIdx =
     wasmIntrinsicTags.getOrElseUpdate(name, createTag)
 
+  /** Groups the recursive types into the order they must be declared in.
+    *
+    * Wasm requires every type a definition references to be declared before it, so class layouts are ordered by
+    * the classes their parents and fields mention. A cycle cannot be ordered, so each strongly connected
+    * component holding more than one type is emitted as one `(rec ...)` group. Within a group, field references
+    * may point forward, but a superclass must still precede its subclasses.
+    */
+  private def orderedRecursiveTypes: Ls[Ls[SymIdx]] =
+    def named(idx: TypeIdx): Opt[SymIdx] = idx.idx match
+      case sym: SymIdx => S(sym)
+    def parents(id: SymIdx): Ls[SymIdx] = types(id).compType match
+      case structTy: StructType => structTy.parents.flatMap(named).toList
+      case _ => Nil
+    def dependencies(id: SymIdx): Ls[SymIdx] = types.get(id).map(_.compType) match
+      case S(structTy: StructType) =>
+        val fields = structTy.fields.flatMap: (_, field) =>
+          field.ty match
+            case RefType(idx: TypeIdx, _) => named(idx)
+            case _ => N
+        (parents(id) ++ fields).iterator.filter(recursiveTypes).distinct.toList
+      case _ => Nil
+    SccAnalysis.sccsFrom(dependencies, recursiveTypes).map: component =>
+      val members = component.toSet
+      // A field can lead the first traversal to a descendant before its immediate superclass. Order the
+      // component again using only inheritance edges; these must be acyclic even inside a recursive group.
+      SccAnalysis.sccsFrom((id: SymIdx) => parents(id).filter(members), component).flatMap: inheritanceComponent =>
+        assert(inheritanceComponent.size === 1 && !parents(inheritanceComponent.head).contains(inheritanceComponent.head),
+          s"Cyclic superclass dependencies in recursive type group: $inheritanceComponent")
+        inheritanceComponent
+  end orderedRecursiveTypes
+
   def toWat: Document =
     val definedGlobals = globals.valuesIterator.collect:
       case globalInfo: GlobalInfo => globalInfo.toWat
@@ -877,9 +1050,17 @@ class Ctx(using State) extends ToWat:
       case memInfo: MemInfo => memInfo.toWat
     val funcDefns = funcs.valuesIterator.collect:
       case funcInfo: FuncInfo => funcInfo.toWat
+    val components = orderedRecursiveTypes.map:
+      case id :: Nil => types(id).toWat
+      case component => doc"(rec #{  # ${component.map(types(_).toWat).mkDocument(doc" # ")} #} )"
+    val firstMember = types.keysIterator.find(recursiveTypes)
+    val typeDefns = types.iterator.flatMap: (id, typeInfo) =>
+      if !recursiveTypes(id) then typeInfo.toWat :: Nil
+      else if firstMember.contains(id) then components
+      else Nil
     doc"(module #{  # ${
         (
-          types.valuesIterator.map(_.toWat)
+          typeDefns
             ++ imports.iterator.map(_.toWat)
             ++ tags.valuesIterator.map(_.toWat)
             ++ definedGlobals

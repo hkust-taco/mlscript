@@ -136,7 +136,7 @@ class Compiler(using Context)(using tl: TL)(using Ctx, State, Raise) extends Ter
     // by the set of labels (orders are not important).
     val labels = patterns.map(_.label)
     multiMatchers.get(labels).getOrElse:
-      val f = TempSymbol(N, makeMultiMatcherName(patterns))
+      val f = TempSymbol(N, erasedType = N, makeMultiMatcherName(patterns))
       multiMatchers += (labels -> f)
       buildQueue enqueue (f -> patterns)
       f // Return the symbol of the built function.
@@ -152,7 +152,7 @@ class Compiler(using Context)(using tl: TL)(using Ctx, State, Raise) extends Ter
     val expandedPatterns = patterns.map(p => (p.label, p.expand(Set.empty)))
     val heads = expandedPatterns.flatMap((_, p) => p.heads).toList
     // This is the parameter of the current multi-matcher.
-    val scrutinee = VarSymbol(Ident("input"))
+    val scrutinee = VarSymbol(Ident("input"), erasedType = N)
     // Assemble branches for constructors and literals.
     val branches = heads.map: head =>
       val specialized = expandedPatterns.specializeSet(S(head))
@@ -165,7 +165,7 @@ class Compiler(using Context)(using tl: TL)(using Ctx, State, Raise) extends Ter
               val empty: (Ls[(LocalVarSymbol, Opt[Loc])], Map[Ident | Int, LocalVarSymbol]) = (Nil, Map.empty)
               val (arguments, fields) = params.params.foldLeft(empty): (acc, param) =>
                 val (argAcc, fieldAcc) = acc
-                val fieldSymbol = TempSymbol(N, param.sym.nme)
+                val fieldSymbol = TempSymbol(N, erasedType = N, param.sym.nme)
                 (argAcc :+ (fieldSymbol, param.toLoc), fieldAcc + ((param.sym.id: Ident | Int) -> fieldSymbol))
               (S(arguments), fields)
           case _: ModuleOrObjectSymbol => empty
@@ -197,7 +197,7 @@ class Compiler(using Context)(using tl: TL)(using Ctx, State, Raise) extends Ter
     val subPatternsByField = Map.from(fields.map: field =>
       field -> patterns.flatMap((_, p) => p.collectSubPatterns(field)))
     val subScrutinees = Map.from(subPatternsByField.map: (field, subPatterns) =>
-      field -> MatcherResult(VarSymbol(field.asIdent), subPatterns.map(_.label)))
+      field -> MatcherResult(VarSymbol(field.asIdent, erasedType = N), subPatterns.map(_.label)))
     // Let bindings that bind the sub-scrutinee to the result of each matcher.
     val bindings = subPatternsByField.iterator.flatMap: (field, subPatterns) =>
       val subScrutinee = subScrutinees(field)
@@ -213,7 +213,7 @@ class Compiler(using Context)(using tl: TL)(using Ctx, State, Raise) extends Ter
         case N =>
           // Check the presence of the field, and call the matcher if it exists.
           val fieldIdent: Ident = field.asIdent
-          val fieldSymbol = TempSymbol(N, fieldIdent.name)
+          val fieldSymbol = TempSymbol(N, erasedType = N, fieldIdent.name)
           val fieldTest = FlatPattern.Record((fieldIdent -> fieldSymbol) :: Nil)
           val consequent = Split.Else(makeResult(fieldSymbol))
           val branch = Branch(scrutinee.safeRef, fieldTest, consequent)
@@ -225,7 +225,7 @@ class Compiler(using Context)(using tl: TL)(using Ctx, State, Raise) extends Ter
     val z = (Nil: Ls[Statement], Nil: Ls[(Label, Term)])
     val (tests, resultTerms) = patterns.iterator.foldLeft(z):
       case ((stmts, results), (label, pattern)) =>
-        val symbol = TempSymbol(N, label.asFieldName + "$")
+        val symbol = TempSymbol(N, erasedType = N, label.asFieldName + "$")
         val makeSplit = completePattern(pattern, scrutinee, subScrutinees, Nil)
         val split = makeSplit(
           // There is no topmost transform here, so we emit the direct success
@@ -280,7 +280,7 @@ class Compiler(using Context)(using tl: TL)(using Ctx, State, Raise) extends Ter
     case N => Split.Else:
       makeMatchSuccess(output, nullifyEmptyBindings(bindings))
     case S(transform) =>
-      val resultSymbol = TempSymbol(N, "transformResult")
+      val resultSymbol = TempSymbol(N, erasedType = N, "transformResult")
       val bindingsTerm = nullifyEmptyBindings(bindings)
       val transformTerm = app(transform.safeRef, tup(fld(bindingsTerm)), "the transform's result")
       Split.Let(resultSymbol, transformTerm, Split.Else(
@@ -299,7 +299,7 @@ class Compiler(using Context)(using tl: TL)(using Ctx, State, Raise) extends Ter
         case ((field, pattern), makeInnerSplit) =>
           val label = pattern.label
           val target = subScrutinees(field).select(label)
-          val resultSymbol = TempSymbol(N, s"result$label$$")
+          val resultSymbol = TempSymbol(N, erasedType = N, s"result$label$$")
           (makeConsequent, alternative) =>
             Split.Let(resultSymbol, target,
               Branch(resultSymbol.safeRef,
@@ -338,10 +338,10 @@ class Compiler(using Context)(using tl: TL)(using Ctx, State, Raise) extends Ter
         case ((field, pattern), makeInnerSplit) =>
           val label = pattern.label
           val target = subScrutinees(field).select(label)
-          val resultSymbol = TempSymbol(N, s"result$label$$")
-          val outputSymbol = TempSymbol(N, s"output$label$$")
+          val resultSymbol = TempSymbol(N, erasedType = N, s"result$label$$")
+          val outputSymbol = TempSymbol(N, erasedType = N, s"output$label$$")
           val fieldAliases = pattern.aliases
-          val fieldBindingsSymbol = TempSymbol(N, "fieldBindings")
+          val fieldBindingsSymbol = TempSymbol(N, erasedType = N, "fieldBindings")
           val fieldBindingsTerm = makeBindings(fieldAliases.map:
             alias => RcdField(str(alias.name), outputSymbol.safeRef))
           val fieldOutput =
@@ -349,7 +349,7 @@ class Compiler(using Context)(using tl: TL)(using Ctx, State, Raise) extends Ter
             else subScrutinees(field).input
           (outputFields: Ls[(Ident, Term)], bindingsSymbols: Ls[TempSymbol]) =>
             ((makeConsequent, alternative) =>
-              val bindingsSymbol = TempSymbol(N, "bindings")
+              val bindingsSymbol = TempSymbol(N, erasedType = N, "bindings")
               val accumulatedBindings =
                 val withFieldAliases =
                   if fieldAliases.isEmpty then bindingsSymbols
@@ -373,7 +373,7 @@ class Compiler(using Context)(using tl: TL)(using Ctx, State, Raise) extends Ter
         case ((field, pattern), makeInnerSplit) =>
           val label = pattern.label
           val target = subScrutinees(field).select(label)
-          val resultSymbol = TempSymbol(N, s"result$label$$")
+          val resultSymbol = TempSymbol(N, erasedType = N, s"result$label$$")
           (makeConsequent, alternative) =>
             Split.Let(resultSymbol, target,
               Branch(resultSymbol.safeRef,
@@ -412,18 +412,18 @@ class Compiler(using Context)(using tl: TL)(using Ctx, State, Raise) extends Ter
           val label = pattern.label
           val target = subScrutinees(field).select(label)
           // This is the symbol for `MatchSuccess`.
-          val resultSymbol = TempSymbol(N, s"result$label$$")
+          val resultSymbol = TempSymbol(N, erasedType = N, s"result$label$$")
           // This is the symbol for the output of the pattern.
-          val outputSymbol = TempSymbol(N, s"output$label$$")
+          val outputSymbol = TempSymbol(N, erasedType = N, s"output$label$$")
           val outputField = RcdField(str(field.name), outputSymbol.safeRef)
           // This is the bindings of the current field.
           val fieldAliases = pattern.aliases
-          val fieldBindingsSymbol = TempSymbol(N, "fieldBindings")
+          val fieldBindingsSymbol = TempSymbol(N, erasedType = N, "fieldBindings")
           val fieldBindingsTerm = makeBindings(fieldAliases.map:
             alias => RcdField(str(alias.name), outputSymbol.safeRef))
           (outputFields: Ls[RcdField], bindingsSymbols: Ls[TempSymbol]) =>
             ((makeConsequent, alternative) =>
-              val bindingsSymbol = TempSymbol(N, "bindings")
+              val bindingsSymbol = TempSymbol(N, erasedType = N, "bindings")
               val accumulatedBindings =
                 val withFieldAliases =
                   if fieldAliases.isEmpty then bindingsSymbols
@@ -480,9 +480,9 @@ class Compiler(using Context)(using tl: TL)(using Ctx, State, Raise) extends Ter
           (makeConsequent, alternative) =>
             // Here, we need to make a tuple of all output values of patterns.
             // Then we merge the bindings of all patterns.
-            val outputSymbol = TempSymbol(N, "combinedOutput")
+            val outputSymbol = TempSymbol(N, erasedType = N, "combinedOutput")
             val outputTerm = tup(allOutputs.reverseIterator.map(_.use |> fld).toSeq*)
-            val bindingsSymbol = TempSymbol(N, "combinedBindings")
+            val bindingsSymbol = TempSymbol(N, erasedType = N, "combinedBindings")
             // I think the bindings do not need to be reversed.
             val bindingsTerm = makeBindings(allBindings.map:
               binding => RcdSpread(binding.use))
@@ -519,9 +519,9 @@ class Compiler(using Context)(using tl: TL)(using Ctx, State, Raise) extends Ter
       else
       // The symbol representing the transform function, which should be
       // declared at the outermost level.
-        val transformSymbol = TempSymbol(N, "transform")
+        val transformSymbol = TempSymbol(N, erasedType = N, "transform")
         // The transform function takes a single record as the argument.
-        val bindingsSymbol = VarSymbol(Ident("args"))
+        val bindingsSymbol = VarSymbol(Ident("args"), erasedType = N)
         val params = paramList(param(bindingsSymbol))
         // Because we pass the extracted values using recoreds. We need to bind
         // each property to its corresponding variable which is accessible from
@@ -542,10 +542,10 @@ class Compiler(using Context)(using tl: TL)(using Ctx, State, Raise) extends Ter
               val transformTerm = app(transformSymbol.safeRef,
                 tup(fld(bindings.use)), "the transform's result")
               // Bind the transformation result to a new output symbol.
-              val resultSymbol = TempSymbol(N, "transformResult")
+              val resultSymbol = TempSymbol(N, erasedType = N, "transformResult")
               // Don't forget that current pattern may also have aliases which are
               // available in some outer transform patterns.
-              val currentBindingsSymbol = TempSymbol(N, "bindings")
+              val currentBindingsSymbol = TempSymbol(N, erasedType = N, "bindings")
               val currentBindings = makeBindings(aliases.map:
                 alias => RcdField(str(alias.name), resultSymbol.safeRef))
               Split.Let(resultSymbol, transformTerm,

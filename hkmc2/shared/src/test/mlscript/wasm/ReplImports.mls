@@ -53,12 +53,111 @@ unit
 //│   (type $Object (sub (struct (field $$typeinfo (mut (ref $TypeInfoBase))))))
 //│   (type $Unit (sub $Object (struct (field $$typeinfo (mut (ref $TypeInfoBase))))))
 //│   (type $Unit_typeinfo (sub $TypeInfoBase (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
-//│   (type $entry (func (result (ref null any))))
+//│   (type $entry (func (result (ref null $Unit))))
 //│   (import "repl" "Unit_typeinfo" (global $Unit_typeinfo (ref $Unit_typeinfo)))
 //│   (import "repl" "Unit$inst" (global $Unit (mut (ref null $Unit))))
-//│   (func $entry (export "entry") (type $entry) (result (ref null any))
+//│   (func $entry (export "entry") (type $entry) (result (ref null $Unit))
 //│     (return
 //│       (global.get $Unit)))
 //│   (elem $entry declare func $entry))
 //│ Wasm result:
 //│ = {}
+
+// Session globals of primitive type are stored unboxed
+val typed: Int32 = wasm.i32.const(1)
+fun idI32(n: Int32): Int32 = n
+//│ Wasm result:
+//│ = {}
+
+:wat
+val copied: Int32 = idI32(typed)
+//│ Wat:
+//│ (module
+//│   (type $TypeInfoBase (sub (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
+//│   (type $Object (sub (struct (field $$typeinfo (mut (ref $TypeInfoBase))))))
+//│   (type $Unit_typeinfo (sub $TypeInfoBase (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
+//│   (type $Unit (sub $Object (struct (field $$typeinfo (mut (ref $TypeInfoBase))))))
+//│   (type $Unit_init (func (param $this (ref $Unit)) (result (ref $Unit))))
+//│   (type $Unit_ctor (func (result (ref $Unit))))
+//│   (type $entry (func (result (ref null $Unit))))
+//│   (type $start (func))
+//│   (import "repl" "typed" (global $typed (mut i32)))
+//│   (global $copied (export "copied") (mut i32) (i32.const 0))
+//│   (global $Unit_typeinfo (export "Unit_typeinfo") (ref $Unit_typeinfo) (struct.new $Unit_typeinfo
+//│     (i32.const 1)
+//│     (ref.null $TypeInfoBase)))
+//│   (global $Unit$inst (export "Unit$inst") (mut (ref null $Unit)) (ref.null $Unit))
+//│   (func $Unit_init (type $Unit_init) (param $this (ref $Unit)) (result (ref $Unit))
+//│     (return
+//│       (ref.cast (ref $Unit)
+//│         (local.get $this))))
+//│   (func $Unit_Unit (type $Unit_ctor) (result (ref $Unit))
+//│     (local $this (ref $Unit))
+//│     (block (result (ref $Unit))
+//│       (local.set $this
+//│         (struct.new $Unit
+//│           (global.get $Unit_typeinfo)))
+//│       (drop
+//│         (call $Unit_init
+//│           (local.get $this)))
+//│       (return
+//│         (local.get $this))))
+//│   (func $start (type $start)
+//│     (global.set $Unit$inst
+//│       (call $Unit_Unit)))
+//│   (func $entry (export "entry") (type $entry) (result (ref null $Unit))
+//│     (block (result (ref null $Unit))
+//│       (global.set $copied
+//│         (global.get $typed))
+//│       (global.get $Unit$inst)))
+//│   (elem $Unit_init declare func $Unit_init)
+//│   (elem $Unit_Unit declare func $Unit_Unit)
+//│   (elem $start declare func $start)
+//│   (elem $entry declare func $entry)
+//│   (start $start))
+//│ Wasm result:
+//│ = {}
+
+// Entry result types are derived from the body, including primitive types
+:wat
+idI32(typed)
+//│ Wat:
+//│ (module
+//│   (type $TypeInfoBase (sub (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
+//│   (type $Object (sub (struct (field $$typeinfo (mut (ref $TypeInfoBase))))))
+//│   (type $entry (func (result i32)))
+//│   (import "repl" "typed" (global $typed (mut i32)))
+//│   (func $entry (export "entry") (type $entry) (result i32)
+//│     (return
+//│       (global.get $typed)))
+//│   (elem $entry declare func $entry))
+//│ Wasm result:
+//│ = 1
+
+
+// A cast can be the only reference to a class declared in an earlier block. Import its runtime type
+// whether the cast is returned from a function or bound directly to a val.
+class CastBox(val n: Int)
+val castBox = new CastBox(7)
+//│ Wasm result:
+//│ = {}
+
+:noInline
+fun castBoxResult(x): CastBox = x
+castBoxResult(castBox)
+//│ Wasm result:
+//│ = {}
+
+:noInline
+val narrowedBox: CastBox = castBox
+narrowedBox
+//│ Wasm result:
+//│ = {}
+
+// The imported type must also enforce the cast, rather than just avoiding a missing-type diagnostic.
+:noInline
+:re
+fun rejectNonBox(x): CastBox = x
+rejectNonBox(42)
+//│ Wasm result:
+//│ ═══[RUNTIME ERROR] RuntimeError: illegal cast

@@ -172,7 +172,7 @@ class EtaExpansionRewrite(val etaExpansionSolver: EtaExpansionSolver)(using Rais
           targetShape.drop(existingShape.size).zipWithIndex.map:
             case (count, idx) =>
               val params = (0 until count).toList.map: i =>
-                Param.simple(new VarSymbol(new Tree.Ident(s"eta$$$idx$$$i")))
+                Param.simple(new VarSymbol(new Tree.Ident(s"eta$$$idx$$$i"), erasedType = N))
               EtaParamList(
                 ParamList(ParamListFlags.empty, params, N),
                 params.map(p => Arg(N, p.sym.asSimpleRef)),
@@ -194,7 +194,7 @@ class EtaExpansionRewrite(val etaExpansionSolver: EtaExpansionSolver)(using Rais
             Return(
               Call(fun, (argss ++ activeEtaArgss).ne_!)(c.metadata))
           case _ =>
-            val tmp = TempSymbol(N, "eta$res")
+            val tmp = TempSymbol(N, erasedType = N, "eta$res")
             Scoped(
               Set.single(tmp),
               Assign(tmp, res2, Return(etaCall(tmp.asPath).withLocOf(res2))))

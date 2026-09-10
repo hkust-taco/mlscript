@@ -28,14 +28,14 @@ c.Parent#x + (c is Parent)
 //│ (module
 //│   (type $TypeInfoBase (sub (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
 //│   (type $Object (sub (struct (field $$typeinfo (mut (ref $TypeInfoBase))))))
-//│   (type $Parent_typeinfo (sub $TypeInfoBase (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
 //│   (type $Parent (sub $Object (struct (field $$typeinfo (mut (ref $TypeInfoBase))) (field $x (mut (ref null any))))))
-//│   (type $Parent_init (func (param $this (ref null any)) (param $x (ref null any)) (result (ref null any))))
-//│   (type $Parent_ctor (func (param $x (ref null any)) (result (ref null any))))
-//│   (type $Child_typeinfo (sub $Parent_typeinfo (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
 //│   (type $Child (sub $Parent (struct (field $$typeinfo (mut (ref $TypeInfoBase))) (field $x (mut (ref null any))) (field $y (mut (ref null any))))))
-//│   (type $Child_init (func (param $this (ref null any)) (param $y (ref null any)) (result (ref null any))))
-//│   (type $Child_ctor (func (param $y (ref null any)) (result (ref null any))))
+//│   (type $Parent_typeinfo (sub $TypeInfoBase (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
+//│   (type $Parent_init (func (param $this (ref $Parent)) (param $x (ref null any)) (result (ref $Parent))))
+//│   (type $Parent_ctor (func (param $x (ref null any)) (result (ref $Parent))))
+//│   (type $Child_typeinfo (sub $Parent_typeinfo (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
+//│   (type $Child_init (func (param $this (ref $Child)) (param $y (ref null any)) (result (ref $Child))))
+//│   (type $Child_ctor (func (param $y (ref null any)) (result (ref $Child))))
 //│   (type $plus_impl (func (param $lhs (ref null any)) (param $rhs (ref null any)) (result (ref null any))))
 //│   (type $entry (func (result (ref null any))))
 //│   (import "system" "plus_impl" (func $plus_impl (type $plus_impl)))
@@ -46,17 +46,17 @@ c.Parent#x + (c is Parent)
 //│   (global $Child_typeinfo (export "Child_typeinfo") (ref $Child_typeinfo) (struct.new $Child_typeinfo
 //│     (i32.const 2)
 //│     (global.get $Parent_typeinfo)))
-//│   (func $Parent_init (type $Parent_init) (param $this (ref null any)) (param $x (ref null any)) (result (ref null any))
-//│     (block (result (ref null any))
+//│   (func $Parent_init (type $Parent_init) (param $this (ref $Parent)) (param $x (ref null any)) (result (ref $Parent))
+//│     (block (result (ref $Parent))
 //│       (struct.set $Parent $x
-//│         (ref.cast (ref $Parent)
-//│           (local.get $this))
+//│         (local.get $this)
 //│         (local.get $x))
 //│       (return
-//│         (local.get $this))))
-//│   (func $Parent_ctor (export "Parent") (type $Parent_ctor) (param $x (ref null any)) (result (ref null any))
-//│     (local $this (ref null any))
-//│     (block (result (ref null any))
+//│         (ref.cast (ref $Parent)
+//│           (local.get $this)))))
+//│   (func $Parent_ctor (export "Parent") (type $Parent_ctor) (param $x (ref null any)) (result (ref $Parent))
+//│     (local $this (ref $Parent))
+//│     (block (result (ref $Parent))
 //│       (local.set $this
 //│         (struct.new $Parent
 //│           (global.get $Parent_typeinfo)
@@ -67,9 +67,9 @@ c.Parent#x + (c is Parent)
 //│           (local.get $x)))
 //│       (return
 //│         (local.get $this))))
-//│   (func $Child_init (type $Child_init) (param $this (ref null any)) (param $y (ref null any)) (result (ref null any))
+//│   (func $Child_init (type $Child_init) (param $this (ref $Child)) (param $y (ref null any)) (result (ref $Child))
 //│     (local $tmp (ref null any))
-//│     (block (result (ref null any))
+//│     (block (result (ref $Child))
 //│       (local.set $tmp
 //│         (call $plus_impl
 //│           (local.get $y)
@@ -80,14 +80,14 @@ c.Parent#x + (c is Parent)
 //│           (local.get $this)
 //│           (local.get $tmp)))
 //│       (struct.set $Child $y
-//│         (ref.cast (ref $Child)
-//│           (local.get $this))
+//│         (local.get $this)
 //│         (local.get $y))
 //│       (return
-//│         (local.get $this))))
-//│   (func $Child_ctor (export "Child") (type $Child_ctor) (param $y (ref null any)) (result (ref null any))
-//│     (local $this (ref null any))
-//│     (block (result (ref null any))
+//│         (ref.cast (ref $Child)
+//│           (local.get $this)))))
+//│   (func $Child_ctor (export "Child") (type $Child_ctor) (param $y (ref null any)) (result (ref $Child))
+//│     (local $this (ref $Child))
+//│     (block (result (ref $Child))
 //│       (local.set $this
 //│         (struct.new $Child
 //│           (global.get $Child_typeinfo)
@@ -103,8 +103,8 @@ c.Parent#x + (c is Parent)
 //│     (local $matchRes (ref null any))
 //│     (local $currentTypeInfo (ref null any))
 //│     (local $targetTypeInfo (ref null any))
-//│     (local $typeInfoMatch (ref null any))
-//│     (block (result (ref null any))
+//│     (local $typeInfoMatch (ref null i31))
+//│     (block
 //│       (global.set $c
 //│         (call $Child_ctor
 //│           (ref.i31
@@ -170,7 +170,7 @@ c.Parent#x + (c is Parent)
 //│                 (global.get $c)))
 //│             (ref.i31
 //│               (i32.const 0)))))
-//│       (local.get $matchRes)))
+//│       (unreachable)))
 //│   (elem $Parent_init declare func $Parent_init)
 //│   (elem $Parent_ctor declare func $Parent_ctor)
 //│   (elem $Child_init declare func $Child_init)
@@ -269,3 +269,39 @@ class B extends A
 //│ ╔══[COMPILATION ERROR] Inheritance cycles are not supported.
 //│ ║  l.267: 	class A extends B
 //│ ╙──       	^^^^^^^^^^^^^^^^^
+
+
+// Forward references resolve because class identities are allocated before any layout is built, and
+// class types are emitted in dependency order. Otherwise `b` is typed `anyref`, or `$Forward` is
+// declared before the `$Later` it references, and the emitted module is invalid wasm.
+:noInline
+class Forward(val b: Later) with
+  fun get(): Later = b
+class Later(val n: Int)
+fun readForward(f: Forward): Later = f.get()
+readForward(new Forward(new Later(7))).n
+//│ Wasm result:
+//│ = 7
+
+
+// A self-reference resolves through the same mechanism: the class's own identity already exists
+// when its layout is built. Otherwise `next` is stored as `anyref` and `get` is rejected at
+// compilation.
+:noInline
+class SelfNode() with
+  val next: SelfNode = this
+  fun get(): SelfNode = next
+if new SelfNode().get() is SelfNode then 1 else 0
+//│ Wasm result:
+//│ = 1
+
+
+// Field dependencies put these classes in one recursive group. Traversing Ancestor's field discovers
+// Descendant before Middle, but Wasm still requires each superclass to precede its subclasses in the group.
+:noInline
+class Ancestor(val child: Descendant)
+class Middle(d: Descendant) extends Ancestor(d)
+class Descendant() extends Middle(this)
+if new Descendant() is Middle then 1 else 0
+//│ Wasm result:
+//│ = 1

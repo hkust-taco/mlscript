@@ -47,6 +47,10 @@ abstract class MLsDiffMaker extends DiffMaker:
   val showOptimizedTree = NullaryCommand("olot")
   val debugOptimizations = NullaryCommand("dopt")
   val noOptimizations = NullaryCommand("noOpt")
+  val showIRErasedTypes = NullaryCommand("siret", () =>
+    if showIR.isUnset && showOptimizedIR.isUnset then
+      output("Option ':siret' only has an effect if ':sir' or ':soir' is also set")
+  )
   val showContext = NullaryCommand("ctx")
   val parseOnly = NullaryCommand("parseOnly")
   val funcToCls = NullaryCommand("ftc")
@@ -68,6 +72,7 @@ abstract class MLsDiffMaker extends DiffMaker:
   // * Compiler configuration
   
   val noSanityCheck = NullaryCommand("noSanityCheck")
+  val noCheckCasts = NullaryCommand("noCheckCasts")
   val noFreeze = NullaryCommand("noFreeze")
   val noModuleCheck = NullaryCommand("noModuleCheck")
   val effectHandlers = Command("effectHandlers")(_.trim)
@@ -128,6 +133,7 @@ abstract class MLsDiffMaker extends DiffMaker:
       language = Config.Language.default,
       baseDir = wd,
       sanityChecks = Opt.when(noSanityCheck.isUnset)(SanityChecks(light = true, checkUnreachable = true)),
+      checkCasts = !noCheckCasts.isSet,
       effectHandlers = Opt.when(effectHandlers.isSet)(EffectHandlers(
         debug = effectHandlers.get.contains("debug"),
         stackSafety = stackSafe.get.flatMap:
@@ -470,6 +476,7 @@ abstract class MLsDiffMaker extends DiffMaker:
       if showFlows.isSet then
         import semantics.ShowCfg
         given ShowCfg = ShowCfg(
+          showErasedTypes = showIRErasedTypes.isSet,
           showExpansionMappings = true,
           showFlowSymbols = true,
           debug = debug.isSet,

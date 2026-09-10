@@ -76,7 +76,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
     case _ => false
   
   private def getPrivateAccessorSymbol(ts: semantics.TermSymbol): semantics.TempSymbol =
-    privateAccessorSymbols.getOrElseUpdate(ts, semantics.TempSymbol(N, s"${ts.name}$$accessorSymbol"))
+    privateAccessorSymbols.getOrElseUpdate(ts, semantics.TempSymbol(N, erasedType = N, s"${ts.name}$$accessorSymbol"))
 
   private def selectPrivateField(ts: semantics.TermSymbol, loc: Opt[Loc])(using Raise, Scope): Opt[Document] =
     ts.owner.collect:
@@ -277,7 +277,13 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
     case params :: rest =>
       Return(Lambda(params, curriedFunctionBody(rest, body, generator))(Nil))
 
-  def subexpression(r: Result)(using Raise, Scope): Document = r match
+  /** Looks through the casts that a JS program does not materialize. */
+  @tailrec
+  private def throughCasts(r: Result): Result = r match
+    case Cast(value, _, _) => throughCasts(value)
+    case _ => r
+  
+  def subexpression(r: Result)(using Raise, Scope): Document = throughCasts(r) match
     case _: Lambda => doc"(${result(r)})"
     case _ => result(r)
   
@@ -291,11 +297,11 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
   // For use as the qualifier of a field selection
   def resultQual(r: Result)(using Raise, Scope): Document =
     val res = result(r)
-    if r.isInstanceOf[Value.Lit] then doc"(${res})" else res
+    if throughCasts(r).isInstanceOf[Value.Lit] then doc"(${res})" else res
   
   def resultInst(r: Result)(using Raise, Scope): Document = 
     val res = result(r)
-    r match
+    throughCasts(r) match
     case s: Select if s.sanitize => doc"(${res})"
     case _ => res
   
@@ -313,6 +319,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
       if l.nullary then l.nme
       else errExpr(msg"Illegal reference to builtin symbol '${l.nme}'")
     case Value.SimpleRef(l) => scope.lookup_!(l, r.toLoc)
+    case Cast(value, _, _) => result(value)
     case Call(Value.SimpleRef(l: BuiltinSymbol), (lhs :: rhs :: Nil) :: Nil) if !l.functionLike =>
       if l.binary then
         val res = doc"${operand(lhs)} ${l.nme} ${operand(rhs)}"
@@ -552,7 +559,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
               // * In JS, `let x = (0, function (args) {...})` makes the function anonymous;
               // * otherwise, using `let x = function (args) {...}` would name the function `x`,
               // * which is not meaningful, here.
-              doc"${scope.lookup_!(sym, dSym.toLoc)} = (undefined, function ($params) ${ braced(bodyDoc) });"
+              doc"${scope.lookup_!(sym, dSym.toLoc)} = (undefined, $functionKeyword ($params) ${ braced(bodyDoc) });"
             
           case ClsLikeDefn(ownr, isym, sym, ctorSym, kind, paramsOpt, auxParams, par, mtds,
               privFlds, pubFlds, preCtor, ctor, modo, bufferable)
@@ -598,7 +605,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
                 pubFlds.collect:
                   case (_, sym) if sym.k is MutVal =>
                     sym -> TermSymbol(
-                      syntax.LetBind, S(isym), Tree.Ident(sym.nme))
+                      syntax.LetBind, S(isym), Tree.Ident(sym.nme), erasedType = sym.erasedType)
               val allPrivFlds = privFlds ++ mutPubFields.map(_._2)
               val privDecls = allPrivFlds.map: fld =>
                 val nme = isym.privatesScope.allocateOrGetName(fld)
@@ -823,9 +830,9 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
       doc" # switch (${result(scrut)}) { #{ ${bodWithDflt} #}  # }" :: returningTerm(rest, endSemi)
     case Match(scrut, arms @ hd :: tl, els, rest) =>
       val sd = result(scrut)
-      // * Parenthesize the scrutinee for property access when it's a numeric literal,
-      // * since things like `12.length` are invalid JS (the `.` is parsed as a decimal point).
-      def sdProp = scrut match
+      // * Parenthesize the scrutinee for property access when it's a numeric literal, since things like `12.length`
+      // * are invalid JS (the `.` is parsed as a decimal point).
+      def sdProp = throughCasts(scrut) match
         case Value.Lit(Tree.IntLit(_) | Tree.DecLit(_)) => doc"($sd)"
         case _ => sd
       def cond(cse: Case) = cse match
@@ -842,9 +849,13 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
           case Elaborator.ctx.builtins.Symbol => doc"typeof $sd === 'symbol'"
           case Elaborator.ctx.builtins.TypedArray =>
             doc"globalThis.ArrayBuffer.isView($sd) && !($sd instanceof globalThis.DataView)"
-          case _: ModuleOrObjectSymbol => doc"$sd instanceof ${result(pth)}.class"
-            // * ^ Note that modules are currently not valid patterns;
-            // *    this case is just for objects, which have their class stored in a `.class` property.
+          case modOrObj: ModuleOrObjectSymbol =>
+            if modOrObj.tree.k is syntax.Mod then
+              // * A module value is the module's singleton binding, so the test is identity rather than `instanceof`
+              // * (`M.class` does not exist for modules).
+              doc"$sd === ${result(pth)}"
+            else
+              doc"$sd instanceof ${result(pth)}.class"
           case _ => doc"$sd instanceof ${result(pth)}"
         case Case.Tup(len, inf) => doc"$runtimeVar.Tuple.isArrayLike($sd) && $sdProp.length ${if inf then ">=" else "==="} ${len}"
         case Case.Field(name = n, safe = false) =>
@@ -1195,7 +1206,7 @@ trait JSBuilderArgNumSanityChecks(using TL, Config, Elaborator.State)
   override def checkSelections: Bool = instrument
   override def freezeDefinitions: Bool = instrument
   
-  val functionParamVarargSymbol = semantics.TempSymbol(N, "args")
+  val functionParamVarargSymbol = semantics.TempSymbol(N, erasedType = N, "args")
   
   override def setupFunction(name: Option[Str], params: ParamList, body: Block, isLambda: Bool)(using Raise, Scope): (Document, Document) =
     // * We used to instrument `fun f(x, y) = x + y` into something like

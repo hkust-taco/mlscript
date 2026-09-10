@@ -148,7 +148,7 @@ tailMatchAllValue(1)
 //│   (type $entry (func (result (ref null any))))
 //│   (func $tailMatchAllValue (export "tailMatchAllValue") (type $tailMatchAllValue) (param $x (ref null any)) (result (ref null any))
 //│     (local $matchRes (ref null any))
-//│     (block (result (ref null any))
+//│     (block
 //│       (block $match
 //│         (local.set $matchRes
 //│           (ref.null any))
@@ -177,10 +177,10 @@ tailMatchAllValue(1)
 //│         (return
 //│           (ref.i31
 //│             (i32.const 30))))
-//│       (local.get $matchRes)))
+//│       (unreachable)))
 //│   (func $entry (export "entry") (type $entry) (result (ref null any))
 //│     (local $matchRes (ref null any))
-//│     (block (result (ref null any))
+//│     (block
 //│       (block $match
 //│         (local.set $matchRes
 //│           (ref.null any))
@@ -211,7 +211,7 @@ tailMatchAllValue(1)
 //│         (return
 //│           (ref.i31
 //│             (i32.const 30))))
-//│       (local.get $matchRes)))
+//│       (unreachable)))
 //│   (elem $tailMatchAllValue declare func $tailMatchAllValue)
 //│   (elem $entry declare func $entry))
 //│ Wasm result:
@@ -250,3 +250,52 @@ fun nonTailStmtMatch(x) =
 nonTailStmtMatch(0)
 //│ Wasm result:
 //│ = 1
+
+
+// Control: an Int32 conditional can be returned directly.
+:noInline
+fun chooseDirect(b: Bool): Int32 = if b then wasm.i32.const(1) else wasm.i32.const(2)
+chooseDirect(true)
+//│ Wasm result:
+//│ = 1
+
+
+// Introducing an explicitly typed local must preserve the same primitive representation.
+// The temporary holding the conditional's result takes the join of its branches' representations,
+// so both i32 branches keep it instead of being forced through anyref.
+:noInline
+fun chooseLocal(b: Bool): Int32 =
+  val x: Int32 = if b then wasm.i32.const(1) else wasm.i32.const(2)
+  x
+chooseLocal(true)
+//│ Wasm result:
+//│ = 1
+
+
+// Mutual tail recursion, which `TailRecOpt` merges into a single dispatcher.
+fun sccP(n: Int): Int = sccQ(n)
+fun sccQ(n: Int): Int = if n <= 0 then 99 else sccP(n - 1)
+sccP(3)
+//│ Wasm result:
+//│ = 99
+
+
+// Members of differing arity, so the dispatcher pads the unused parameter slot with the unit filler.
+// `sccArityQ` also returns a parameter directly, which the merge leaves untyped - without the return
+// coercion the dispatcher would yield `anyref` against its declared `Int` and fail Wasm validation.
+fun sccArityP(n: Int): Int = sccArityQ(n, 1)
+fun sccArityQ(n: Int, k: Int): Int = if n <= 0 then k else sccArityP(n - 1)
+sccArityP(4)
+//│ Wasm result:
+//│ = 1
+
+
+// Mutual recursion where neither edge is a tail call, so no merge can remove the call to `m2` from `m1`'s
+// body - the one shape that leaves a genuine forward reference between top-level functions.
+// If the inliner or `TailRecOpt` ever removes this shape, this test keeps passing while no longer exercising
+// a forward reference - it would then need a new shape, not a new expected value.
+fun m1(n: Int): Int = if n <= 0 then 0 else m2(n - 1) + 1
+fun m2(n: Int): Int = m1(n) + 1
+m1(3)
+//│ Wasm result:
+//│ = 6

@@ -53,9 +53,9 @@ f(10000, 20000, 0)
 //│             end
 //│         end
 //│       else
-//│         end
+//│         unreachable /* dispatch tag is always a merged member id */
 //│     end
-//│   end
+//│   unreachable /* Rest of abortive labelled block */
 //│ };
 //│ @inline
 //│ define g⁰ as fun g¹(a, b, c, d) {
@@ -188,9 +188,9 @@ fun g(n) =
 //│         set id = 0;
 //│         continue loopLabel
 //│       else
-//│         end
+//│         unreachable /* dispatch tag is always a merged member id */
 //│     end
-//│   end
+//│   unreachable /* Rest of abortive labelled block */
 //│ };
 //│ @inline
 //│ define f² as fun f³(n, a, b, c, d, ...e) {
@@ -320,9 +320,9 @@ fun g(x) =
 //│         do Predef⁰.print⁰(param0);
 //│         return 0
 //│       else
-//│         end
+//│         unreachable /* dispatch tag is always a merged member id */
 //│     end
-//│   end
+//│   unreachable /* Rest of abortive labelled block */
 //│ };
 //│ @inline
 //│ define f⁶ as fun f⁷(x) {
@@ -354,9 +354,9 @@ module M with
 //│           do Predef⁰.print⁰(param0);
 //│           return 0
 //│         else
-//│           end
+//│           unreachable /* dispatch tag is always a merged member id */
 //│       end
-//│     end
+//│     unreachable /* Rest of abortive labelled block */
 //│   }
 //│   method f⁸ = fun f⁹(x) {
 //│     return M².this.f_g³(0, x)

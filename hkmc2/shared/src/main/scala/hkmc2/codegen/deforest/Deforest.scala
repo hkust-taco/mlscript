@@ -15,7 +15,7 @@ sealed abstract class FinalDest
 case class FinalDestMatch(dtor: CtorDtorId, sels: Set[CtorDtorId]) extends FinalDest
 case class FinalDestSel(dtors: Set[CtorDtorId], field: SelField) extends FinalDest
 
-class DeforestFusionSolver(val constraintSolver: FlowConstraintSolver)(using val cfg: Config):
+class DeforestFusionSolver(val constraintSolver: FlowConstraintSolver)(using Config, Elaborator.Ctx):
   given preAnalyzer: FlowPreAnalyzer = constraintSolver.preAnalyzer
   given fState: FlowAnalysis.State = constraintSolver.fState
   given eState: Elaborator.State = constraintSolver.eState
@@ -132,6 +132,7 @@ object Deforest:
     cfg: Config,
     tl: TL,
     raise: Raise,
+    eCtx: Elaborator.Ctx,
     eState: Elaborator.State,
     symbolPrinter: SymbolPrinter,
   ): Program =
