@@ -91,7 +91,7 @@ class ProducersCollector(val flowRes: FlowConstraintSolver)(using val tl: TL) ex
 
     entryPoints += ProducersCollector.EntryPoints(
       seenProducerEntryPoints.toList,
-      Nil,
+      seenConsumerEntryPoints.toList,
     )
 
   override def applyClsLikeDefn(defn: ClsLikeDefn): Unit =
@@ -296,15 +296,8 @@ class DataRepFlattener(
               shapeOf(lowerBound, N)
         case _ => DynamicShape
 
-  private def shapeOfScrutinee(scrutinee: Path): Shape =
-    DataRepFlattener.mkUnion:
-      for
-        patternMatch <- patternMatchesByResultId.getOrElse(scrutinee.uid, Nil)
-        source <- patternMatch.srcs
-      yield shapeOf(source, S(scrutinee))
-
-  private def taggedShapesOfScrutinee(scrutinee: Path): List[Shape -> Int] =
-    patternMatchesByResultId.getOrElse(scrutinee.uid, Nil).iterator
+  private def taggedShapesOfMatch(matchResultId: ResultId): List[Shape -> Int] =
+    patternMatchesByResultId.getOrElse(matchResultId, Nil).iterator
       .flatMap(_.srcs)
       .collect:
         case ctor: Ctor if taggedProducers.contains(ctor) => ctor
@@ -385,7 +378,7 @@ class DataRepFlattener(
               N
             else
               val patternShapes = patterns.map(DataRepFlattener.mkShapeByPattern)
-              val taggedShapes = taggedShapesOfScrutinee(scrutinee)
+              val taggedShapes = taggedShapesOfMatch(call.uid)
               if debug then
                 summon[TL].emitDbg(
                   s"data-rep-flatten transform-phase > match shapes ${patternShapes.map(_.show).mkString(", ")} against ${taggedShapes.map((shape, tag) => s"${shape.show}@$tag").mkString(", ")}")

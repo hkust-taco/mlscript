@@ -971,7 +971,7 @@ class FlowConstraintsCollector(
           UnknownProd
         case c@Call(fun, (Arg(N, scrutinee) :: branches) :: Nil)
             if isShapeMatch(fun) && branches.nonEmpty && branches.forall(_.spread.isEmpty) =>
-          cc.constrain(processResult(scrutinee), new Dtor(scrutinee.uid, instId))
+          cc.constrain(processResult(scrutinee), new Dtor(c.uid, instId))
           val matchResult = freshVar("shape_match_res", cc.forFunGroup)
           for Arg(_, branch) <- branches do
             cc.constrain(processResult(branch), new ConsFun(c.uid, instId)(Nil, matchResult))

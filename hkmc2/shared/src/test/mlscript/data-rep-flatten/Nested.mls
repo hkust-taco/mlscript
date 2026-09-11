@@ -23,6 +23,7 @@ private fun bar(ls) =
   shape.match of ls, () => ls.Cons#xs.Cons#xs.Cons#xs.Cons#x + ls.Cons#xs.Cons#xs.Cons#xs.Cons#xs.Cons#x + + ls.Cons#xs.Cons#xs.Cons#xs.Cons#xs.Cons#xs.Cons#x 
 //│ >>> start data-rep-flatten collection-phase
 //│ data-rep-flatten collection-phase > track construction of Cons@21, Cons@20, Cons@18, Cons@19, Cons@16, Cons@17 in foo
+//│ data-rep-flatten collection-phase > track consumption at match@26 in bar
 //│ <<< end data-rep-flatten collection-phase
 //│ >>> start data-rep-flatten web-computation-phase
 //│ data-rep-flatten web-computation-phase > web 0:
@@ -86,6 +87,7 @@ private fun foofoo(t) =
     () => 0
 //│ >>> start data-rep-flatten collection-phase
 //│ data-rep-flatten collection-phase > track construction of C@4, D@3, C@6 in foo
+//│ data-rep-flatten collection-phase > track consumption at match@9 in foofoo
 //│ <<< end data-rep-flatten collection-phase
 //│ >>> start data-rep-flatten web-computation-phase
 //│ data-rep-flatten web-computation-phase > web 0:
@@ -145,6 +147,7 @@ private fun foofoo(t) =
     () => 0
 //│ >>> start data-rep-flatten collection-phase
 //│ data-rep-flatten collection-phase > track construction of D@3, C@5 in foo
+//│ data-rep-flatten collection-phase > track consumption at match@8 in foofoo
 //│ <<< end data-rep-flatten collection-phase
 //│ >>> start data-rep-flatten web-computation-phase
 //│ data-rep-flatten web-computation-phase > web 0:
@@ -156,17 +159,17 @@ private fun foofoo(t) =
 //│ data-rep-flatten transform-phase > allocated tag 0 for C(x: (D(x: _) | E(x: 1)))
 //│ data-rep-flatten transform-phase > match shapes C(x: D(x: _)), C(x: E(x: 1)) against C(x: (D(x: _) | E(x: 1)))@0
 //│ ╔══[WARNING] Shape tag 0 for C(x: (D(x: _) | E(x: 1))) can fall into more than one shape.match branch.
-//│ ║  l.143: 	  @matchShapes(C(D(_)), C(E(1))) shape.match of t,
+//│ ║  l.145: 	  @matchShapes(C(D(_)), C(E(1))) shape.match of t,
 //│ ║         	               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.144: 	    () => t.C#x.D#x + 1
+//│ ║  l.146: 	    () => t.C#x.D#x + 1
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.145: 	    () => 0
+//│ ║  l.147: 	    () => 0
 //│ ║         	^^^^^^^^^^^
 //│ ╟── It can fall into branch 1, matched by C(x: D(x: _)).
-//│ ║  l.143: 	  @matchShapes(C(D(_)), C(E(1))) shape.match of t,
+//│ ║  l.145: 	  @matchShapes(C(D(_)), C(E(1))) shape.match of t,
 //│ ║         	               ^^^^^
 //│ ╟── It can fall into branch 2, matched by C(x: E(x: 1)).
-//│ ║  l.143: 	  @matchShapes(C(D(_)), C(E(1))) shape.match of t,
+//│ ║  l.145: 	  @matchShapes(C(D(_)), C(E(1))) shape.match of t,
 //│ ╙──       	                        ^^^^^
 //│ <<< end data-rep-flatten transform-phase
 //│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————

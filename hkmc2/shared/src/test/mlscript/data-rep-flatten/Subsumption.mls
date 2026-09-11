@@ -25,6 +25,7 @@ private fun inspect(t) =
     () => t.C#x
 //│ >>> start data-rep-flatten collection-phase
 //│ data-rep-flatten collection-phase > track construction of C@4 in foo
+//│ data-rep-flatten collection-phase > track consumption at match@6 in inspect
 //│ <<< end data-rep-flatten collection-phase
 //│ >>> start data-rep-flatten web-computation-phase
 //│ data-rep-flatten web-computation-phase > web 0:
