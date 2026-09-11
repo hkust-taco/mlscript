@@ -356,13 +356,32 @@ class DataRepFlattener(
           case Annot.MatchShapes(patterns) => patterns
         .flatMap: patterns =>
           val branches = branchArgs.map(arg => getBranch(arg.value))
-          if patterns.size =/= branchArgs.size || branches.exists(_.isEmpty) then
-            softAssert(false, s"Malformed annotated shape.match call: ${call.showDbg}")
+          val malformedReasons =
+            (if patterns.size =/= branchArgs.size then
+              msg"The number of @matchShapes patterns (${patterns.size}) does not match the number of shape.match branches (${branchArgs.size})." -> call.toLoc :: Nil
+            else Nil) ++
+            branchArgs.zip(branches).collect:
+              case (arg, N) =>
+                msg"This shape.match branch does not resolve to a function." -> arg.value.toLoc
+          if malformedReasons.nonEmpty then
+            summon[Raise].apply(ErrorReport(
+              msg"Malformed annotated shape.match call." -> call.toLoc :: malformedReasons,
+              source = Diagnostic.Source.Compilation,
+            ))
             N
           else
             val branchDefns = branches.flatten
-            if branchDefns.exists(_.params.exists(paramList => paramList.params.nonEmpty || paramList.restParam.nonEmpty)) then
-              softAssert(false, s"Expected zero-argument branches in annotated shape.match call: ${call.showDbg}")
+            val branchesWithParams = branchArgs.zip(branchDefns).collect:
+              case (arg, branch)
+                  if branch.params.exists(paramList => paramList.params.nonEmpty || paramList.restParam.nonEmpty) =>
+                arg.value
+            if branchesWithParams.nonEmpty then
+              summon[Raise].apply(ErrorReport(
+                msg"Annotated shape.match branches must take no arguments." -> call.toLoc ::
+                branchesWithParams.map: branch =>
+                  msg"This branch takes arguments." -> branch.toLoc,
+                source = Diagnostic.Source.Compilation,
+              ))
               N
             else
               val patternShapes = patterns.map(DataRepFlattener.mkShapeByPattern)
@@ -370,36 +389,46 @@ class DataRepFlattener(
               if debug then
                 summon[TL].emitDbg(
                   s"data-rep-flatten transform-phase > match shapes ${patternShapes.map(_.show).mkString(", ")} against ${taggedShapes.map((shape, tag) => s"${shape.show}@$tag").mkString(", ")}")
-              softAssert(patternShapes.forall(!containsUnion(_)), s"Unexpected union shape in @matchShapes on ${call.showDbg}")
-              val ambiguousTags = taggedShapes.flatMap: (taggedShape, tag) =>
-                val branchIndices = taggedShape.flattenShape.flatMap: concreteShape =>
-                  patternShapes.zipWithIndex.collect:
-                    case (patternShape, index) if concreteShape `<:` patternShape => index
-                .distinct
-                if branchIndices.size > 1 then S((taggedShape, tag, branchIndices)) else N
-              if ambiguousTags.nonEmpty then
-                for (taggedShape, tag, branchIndices) <- ambiguousTags do
-                  val messages =
-                    msg"Shape tag $tag for ${taggedShape.show} can fall into more than one shape.match branch." -> call.toLoc ::
-                    branchIndices.map: index =>
-                      msg"It can fall into branch ${index + 1}, matched by ${patternShapes(index).show}." -> patterns(index).toLoc
-                  summon[Raise].apply(WarningReport(messages))
+              val unionPatterns = patterns.zip(patternShapes).collect:
+                case (pattern, shape) if containsUnion(shape) => pattern
+              if unionPatterns.nonEmpty then
+                summon[Raise].apply(ErrorReport(
+                  msg"@matchShapes patterns must not contain union shapes." -> call.toLoc ::
+                  unionPatterns.map: pattern =>
+                    msg"This pattern contains a union shape." -> pattern.toLoc,
+                  source = Diagnostic.Source.Compilation,
+                ))
                 N
               else
-                val matchingBranches = taggedShapes.flatMap: (taggedShape, tag) =>
-                  patternShapes.zip(branchDefns).find:
-                    case (patternShape, _) => taggedShape `<:` patternShape
-                  .map:
-                    case (_, branch) => (taggedShape, tag, branch)
-                val matchedTags = matchingBranches.iterator.map(_._2).toSet
-                if taggedShapes.isEmpty || taggedShapes.exists((_, tag) => !matchedTags.contains(tag)) then N
+                val ambiguousTags = taggedShapes.flatMap: (taggedShape, tag) =>
+                  val branchIndices = taggedShape.flattenShape.flatMap: concreteShape =>
+                    patternShapes.zipWithIndex.collect:
+                      case (patternShape, index) if concreteShape `<:` patternShape => index
+                  .distinct
+                  if branchIndices.size > 1 then S((taggedShape, tag, branchIndices)) else N
+                if ambiguousTags.nonEmpty then
+                  for (taggedShape, tag, branchIndices) <- ambiguousTags do
+                    val messages =
+                      msg"Shape tag $tag for ${taggedShape.show} can fall into more than one shape.match branch." -> call.toLoc ::
+                      branchIndices.map: index =>
+                        msg"It can fall into branch ${index + 1}, matched by ${patternShapes(index).show}." -> patterns(index).toLoc
+                    summon[Raise].apply(WarningReport(messages))
+                  N
                 else
-                  val resultSymbol = new TempSymbol(N, "shapeMatchResult")
-                  val resultRef = resultSymbol.asSimpleRef.withLocOf(call)
-                  val tagAccess = Select(scrutinee, tagField)(N)(false).withLocOf(scrutinee)
-                  val arms = matchingBranches.map: (_, tag, branch) =>
-                    Case.Lit(syntax.Tree.IntLit(tag)) -> inlineBranch(branch, resultSymbol)
-                  S(Scoped(Set.single(resultSymbol), new Match(tagAccess, arms, N, k(resultRef))))
+                  val matchingBranches = taggedShapes.flatMap: (taggedShape, tag) =>
+                    patternShapes.zip(branchDefns).find:
+                      case (patternShape, _) => taggedShape `<:` patternShape
+                    .map:
+                      case (_, branch) => (taggedShape, tag, branch)
+                  val matchedTags = matchingBranches.iterator.map(_._2).toSet
+                  if taggedShapes.isEmpty || taggedShapes.exists((_, tag) => !matchedTags.contains(tag)) then N
+                  else
+                    val resultSymbol = new TempSymbol(N, "shapeMatchResult")
+                    val resultRef = resultSymbol.asSimpleRef.withLocOf(call)
+                    val tagAccess = Select(scrutinee, tagField)(N)(false).withLocOf(scrutinee)
+                    val arms = matchingBranches.map: (_, tag, branch) =>
+                      Case.Lit(syntax.Tree.IntLit(tag)) -> inlineBranch(branch, resultSymbol)
+                    S(Scoped(Set.single(resultSymbol), new Match(tagAccess, arms, N, k(resultRef))))
 
       override def applyResult(result: Result)(k: Result => Block): Block =
         result match
@@ -452,11 +481,13 @@ object DataRepFlattener:
                 val argumentShapes = arguments match
                   case S(patterns) => patterns.map(mkShapeByPattern)
                   case N => Nil
-                softAssert(
-                  argumentShapes.size === fields.size,
-                  s"Mismatched arity for class pattern $pattern.",
-                )
-                ClassShape(cls, fields.zip(argumentShapes).toMap)
+                if argumentShapes.size =/= fields.size then
+                  raise(ErrorReport(
+                    msg"Expected constructor arity ${fields.size} in @matchShapes pattern for ${cls.nme}, but found ${argumentShapes.size}." -> pattern.toLoc :: Nil,
+                    source = Diagnostic.Source.Compilation,
+                  ))
+                  DynamicShape
+                else ClassShape(cls, fields.zip(argumentShapes).toMap)
               case _ =>
                 raise(ErrorReport(
                   msg"This pattern is not supported by @matchShapes yet." -> pattern.toLoc :: Nil,

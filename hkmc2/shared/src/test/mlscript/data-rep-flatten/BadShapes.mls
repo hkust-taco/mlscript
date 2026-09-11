@@ -1,0 +1,64 @@
+:dataRepFlatten debug mono
+:js
+:noFreeze
+
+//│ >>> start data-rep-flatten collection-phase
+//│ <<< end data-rep-flatten collection-phase
+//│ >>> start data-rep-flatten transform-phase
+//│ <<< end data-rep-flatten transform-phase
+class C(val x)
+class D(val x)
+//│ >>> start data-rep-flatten collection-phase
+//│ <<< end data-rep-flatten collection-phase
+//│ >>> start data-rep-flatten transform-phase
+//│ <<< end data-rep-flatten transform-phase
+
+
+:ge
+fun mismatchedBranches(t) =
+  @matchShapes(C(_), D(_)) shape.match of t,
+    () => 0
+//│ >>> start data-rep-flatten collection-phase
+//│ <<< end data-rep-flatten collection-phase
+//│ >>> start data-rep-flatten transform-phase
+//│ ╔══[COMPILATION ERROR] Malformed annotated shape.match call.
+//│ ║  l.19: 	  @matchShapes(C(_), D(_)) shape.match of t,
+//│ ║        	               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.20: 	    () => 0
+//│ ║        	^^^^^^^^^^^
+//│ ╟── The number of @matchShapes patterns (2) does not match the number of shape.match branches (1).
+//│ ║  l.19: 	  @matchShapes(C(_), D(_)) shape.match of t,
+//│ ║        	               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.20: 	    () => 0
+//│ ╙──      	^^^^^^^^^^^
+//│ <<< end data-rep-flatten transform-phase
+
+
+:ge
+fun branchWithParameter(t) =
+  @matchShapes(C(_)) shape.match of t,
+    x => x
+//│ >>> start data-rep-flatten collection-phase
+//│ <<< end data-rep-flatten collection-phase
+//│ >>> start data-rep-flatten transform-phase
+//│ ╔══[COMPILATION ERROR] Annotated shape.match branches must take no arguments.
+//│ ║  l.39: 	  @matchShapes(C(_)) shape.match of t,
+//│ ║        	               ^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.40: 	    x => x
+//│ ║        	^^^^^^^^^^
+//│ ╙── This branch takes arguments.
+//│ <<< end data-rep-flatten transform-phase
+
+
+:ge
+fun missingPatternArgument(t) =
+  @matchShapes(C) shape.match of t,
+    () => 0
+//│ >>> start data-rep-flatten collection-phase
+//│ <<< end data-rep-flatten collection-phase
+//│ >>> start data-rep-flatten transform-phase
+//│ ╔══[COMPILATION ERROR] Expected constructor arity 1 in @matchShapes pattern for C, but found 0.
+//│ ║  l.55: 	  @matchShapes(C) shape.match of t,
+//│ ╙──      	               ^
+//│ data-rep-flatten transform-phase > match shapes _ against 
+//│ <<< end data-rep-flatten transform-phase
