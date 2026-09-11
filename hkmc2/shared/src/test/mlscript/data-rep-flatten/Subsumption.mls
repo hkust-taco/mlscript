@@ -1,0 +1,62 @@
+:dataRepFlatten debug mono
+:js
+:noFreeze
+
+//│ >>> start data-rep-flatten collection-phase
+//│ <<< end data-rep-flatten collection-phase
+//│ >>> start data-rep-flatten transform-phase
+//│ <<< end data-rep-flatten transform-phase
+
+
+class C(val x)
+class D(val x)
+class E(val x)
+//│ >>> start data-rep-flatten collection-phase
+//│ <<< end data-rep-flatten collection-phase
+//│ >>> start data-rep-flatten transform-phase
+//│ <<< end data-rep-flatten transform-phase
+
+:ssjs
+fun foo(x, y) =
+  let t = new C(if y then new D(x) else new E(1))
+  inspect(t)
+private fun inspect(t) =
+  @matchShapes(C(_)) shape.match of t,
+    () => t.C#x
+//│ >>> start data-rep-flatten collection-phase
+//│ data-rep-flatten collection-phase > track construction of C@4 in foo
+//│ <<< end data-rep-flatten collection-phase
+//│ >>> start data-rep-flatten web-computation-phase
+//│ data-rep-flatten web-computation-phase > web 0:
+//│ data-rep-flatten web-computation-phase >   producers: C@4
+//│ data-rep-flatten web-computation-phase >   field accesses: C.x@1
+//│ data-rep-flatten web-computation-phase >   pattern matches: match@6
+//│ <<< end data-rep-flatten web-computation-phase
+//│ >>> start data-rep-flatten transform-phase
+//│ data-rep-flatten transform-phase > allocated tag 0 for C(x: (D(x: _) | E(x: 1)))
+//│ data-rep-flatten transform-phase > match shapes C(x: _) against C(x: (D(x: _) | E(x: 1)))@0
+//│ <<< end data-rep-flatten transform-phase
+//│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
+//│ let foo, inspect;
+//│ foo = function foo(x, y) {
+//│   runtime.checkArgs("foo", 2, true, arguments.length);
+//│   let tmp, tmp1;
+//│   if (y === true) {
+//│     tmp = (new D1.class(x));
+//│   } else {
+//│     tmp = (new E1.class(1));
+//│   }
+//│   tmp1 = (new C1.class(tmp));
+//│   tmp1.__tag = 0;
+//│   if (tmp1.__tag === 0) {
+//│     return tmp1.x
+//│   }
+//│   return runtime.Unit;
+//│ };
+//│ inspect = function inspect(t) {
+//│   runtime.checkArgs("inspect", 1, true, arguments.length);
+//│   let shapeMatchResult;
+//│   if (t.__tag === 0) { shapeMatchResult = t.x; }
+//│   return shapeMatchResult
+//│ };
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————

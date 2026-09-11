@@ -71,7 +71,7 @@ module Baz with
 //│ <<< end data-rep-flatten web-computation-phase
 //│ >>> start data-rep-flatten transform-phase
 //│ data-rep-flatten transform-phase > allocated tag 0 for Foo(x: _, y: _)
-//│ data-rep-flatten transform-phase > allocated tag 0 for Foo(x: _, y: _)
+//│ data-rep-flatten transform-phase > match shapes Foo(x: _, y: _) against Foo(x: _, y: _)@0
 //│ <<< end data-rep-flatten transform-phase
 
 
@@ -94,47 +94,49 @@ private fun baz(f) =
 //│ <<< end data-rep-flatten web-computation-phase
 //│ >>> start data-rep-flatten transform-phase
 //│ data-rep-flatten transform-phase > allocated tag 0 for Foo(x: _, y: _)
+//│ data-rep-flatten transform-phase > match shapes Foo(x: _, y: _) against Foo(x: _, y: _)@0
+//│ data-rep-flatten transform-phase > match shapes Foo(x: _, y: _) against Foo(x: _, y: _)@0
 //│ <<< end data-rep-flatten transform-phase
 //│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
 //│ let bar1, foo2, baz;
 //│ foo2 = function foo(x, y) {
 //│   runtime.checkArgs("foo", 2, true, arguments.length);
-//│   let tmp, f, inlinedVal, f1, inlinedVal1, lambda, lambda1;
+//│   let tmp, shapeMatchResult, shapeMatchResult1;
 //│   tmp = (new Foo1.class(x, y));
 //│   tmp.__tag = 0;
-//│   f = tmp;
-//│   lambda1 = (undefined, function () {
-//│     runtime.checkArgs("", 0, true, arguments.length);
-//│     return f.x + f.y
-//│   });
-//│   inlinedVal = runtime.safeCall(globalThis.shape.match(f, lambda1));
-//│   f1 = tmp;
-//│   lambda = (undefined, function () {
-//│     runtime.checkArgs("", 0, true, arguments.length);
-//│     return f1.x - f1.y
-//│   });
-//│   inlinedVal1 = runtime.safeCall(globalThis.shape.match(f1, lambda));
-//│   return inlinedVal * inlinedVal1
+//│   if (tmp.__tag === 0) {
+//│     shapeMatchResult1 = tmp.x + tmp.y;
+//│   }
+//│   if (tmp.__tag === 0) {
+//│     shapeMatchResult = tmp.x - tmp.y;
+//│     return shapeMatchResult1 * shapeMatchResult
+//│   }
+//│   return shapeMatchResult1 * undefined;
 //│ };
 //│ bar1 = function bar(f) {
 //│   runtime.checkArgs("bar", 1, true, arguments.length);
-//│   let lambda;
-//│   lambda = (undefined, function () {
-//│     runtime.checkArgs("", 0, true, arguments.length);
-//│     return f.x + f.y
-//│   });
-//│   return runtime.safeCall(globalThis.shape.match(f, lambda))
+//│   let shapeMatchResult;
+//│   if (f.__tag === 0) {
+//│     shapeMatchResult = f.x + f.y;
+//│   }
+//│   return shapeMatchResult
 //│ };
 //│ baz = function baz(f) {
 //│   runtime.checkArgs("baz", 1, true, arguments.length);
-//│   let lambda;
-//│   lambda = (undefined, function () {
-//│     runtime.checkArgs("", 0, true, arguments.length);
-//│     return f.x - f.y
-//│   });
-//│   return runtime.safeCall(globalThis.shape.match(f, lambda))
+//│   let shapeMatchResult;
+//│   if (f.__tag === 0) { shapeMatchResult = f.x - f.y; }
+//│   return shapeMatchResult
 //│ };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+
+:expect 3
+foo(2, 1)
+//│ >>> start data-rep-flatten collection-phase
+//│ <<< end data-rep-flatten collection-phase
+//│ >>> start data-rep-flatten transform-phase
+//│ <<< end data-rep-flatten transform-phase
+//│ = 3
 
 
 :ssjs
@@ -161,53 +163,41 @@ private fun baz(t) =
 //│ >>> start data-rep-flatten transform-phase
 //│ data-rep-flatten transform-phase > allocated tag 0 for Foo(x: _, y: _)
 //│ data-rep-flatten transform-phase > allocated tag 1 for Bar(x: _)
+//│ data-rep-flatten transform-phase > match shapes Foo(x: _, y: _), Bar(x: _) against Bar(x: _)@1, Foo(x: _, y: _)@0
 //│ <<< end data-rep-flatten transform-phase
 //│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
 //│ let bar2, foo3, baz1;
 //│ foo3 = function foo(x, y) {
 //│   runtime.checkArgs("foo", 2, true, arguments.length);
-//│   let tmp, t, lambda, lambda1;
-//│   tmp = (new Foo1.class(x, y));
-//│   tmp.__tag = 0;
-//│   t = tmp;
-//│   lambda = (undefined, function () {
-//│     runtime.checkArgs("", 0, true, arguments.length);
-//│     return t.x + t.y
-//│   });
-//│   lambda1 = (undefined, function () {
-//│     runtime.checkArgs("", 0, true, arguments.length);
-//│     return t.x
-//│   });
-//│   return runtime.safeCall(globalThis.shape.match(t, lambda, lambda1))
+//│   let tmp1;
+//│   tmp1 = (new Foo1.class(x, y));
+//│   tmp1.__tag = 0;
+//│   if (tmp1.__tag === 1) {
+//│     return tmp1.x
+//│   } else if (tmp1.__tag === 0) {
+//│     return tmp1.x + tmp1.y
+//│   }
+//│   return runtime.Unit;
 //│ };
 //│ bar2 = function bar(x) {
 //│   runtime.checkArgs("bar", 1, true, arguments.length);
-//│   let tmp, t, lambda, lambda1;
-//│   tmp = (new Bar1.class(x));
-//│   tmp.__tag = 1;
-//│   t = tmp;
-//│   lambda = (undefined, function () {
-//│     runtime.checkArgs("", 0, true, arguments.length);
-//│     return t.x + t.y
-//│   });
-//│   lambda1 = (undefined, function () {
-//│     runtime.checkArgs("", 0, true, arguments.length);
-//│     return t.x
-//│   });
-//│   return runtime.safeCall(globalThis.shape.match(t, lambda, lambda1))
+//│   let tmp1;
+//│   tmp1 = (new Bar1.class(x));
+//│   tmp1.__tag = 1;
+//│   if (tmp1.__tag === 1) {
+//│     return tmp1.x
+//│   } else if (tmp1.__tag === 0) {
+//│     return tmp1.x + tmp1.y
+//│   }
+//│   return runtime.Unit;
 //│ };
 //│ baz1 = function baz(t) {
 //│   runtime.checkArgs("baz", 1, true, arguments.length);
-//│   let lambda, lambda1;
-//│   lambda = (undefined, function () {
-//│     runtime.checkArgs("", 0, true, arguments.length);
-//│     return t.x + t.y
-//│   });
-//│   lambda1 = (undefined, function () {
-//│     runtime.checkArgs("", 0, true, arguments.length);
-//│     return t.x
-//│   });
-//│   return runtime.safeCall(globalThis.shape.match(t, lambda, lambda1))
+//│   let shapeMatchResult2;
+//│   if (t.__tag === 1) {
+//│     shapeMatchResult2 = t.x;
+//│   } else if (t.__tag === 0) { shapeMatchResult2 = t.x + t.y; }
+//│   return shapeMatchResult2
 //│ };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
@@ -240,6 +230,7 @@ fun bar(x) =
 //│ >>> start data-rep-flatten transform-phase
 //│ data-rep-flatten transform-phase > allocated tag 0 for Some(x: _)
 //│ data-rep-flatten transform-phase > allocated tag 1 for None
+//│ data-rep-flatten transform-phase > match shapes Some(x: _), None against None@1, Some(x: _)@0
 //│ <<< end data-rep-flatten transform-phase
 //│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
 //│ let bar3, foo4;
@@ -248,37 +239,31 @@ fun bar(x) =
 //│   let scrut;
 //│   scrut = x > 0;
 //│   if (scrut === true) {
-//│     let tmp;
-//│     tmp = (new Some1.class(x));
-//│     tmp.__tag = 0;
-//│     return tmp
+//│     let tmp1;
+//│     tmp1 = (new Some1.class(x));
+//│     tmp1.__tag = 0;
+//│     return tmp1
 //│   }
 //│   None1.__tag = 1;
 //│   return None1;
 //│ };
 //│ bar3 = function bar(x) {
 //│   runtime.checkArgs("bar", 1, true, arguments.length);
-//│   let t, lambda, lambda1, inlinedVal, scrut;
+//│   let inlinedVal, scrut;
 //│   scrut = x > 0;
 //│   if (scrut === true) {
-//│     let tmp;
-//│     tmp = (new Some1.class(x));
-//│     tmp.__tag = 0;
-//│     inlinedVal = tmp;
+//│     let tmp1;
+//│     tmp1 = (new Some1.class(x));
+//│     tmp1.__tag = 0;
+//│     inlinedVal = tmp1;
 //│   } else {
 //│     None1.__tag = 1;
 //│     inlinedVal = None1;
 //│   }
-//│   t = inlinedVal;
-//│   lambda = (undefined, function () {
-//│     runtime.checkArgs("", 0, true, arguments.length);
-//│     return t.x
-//│   });
-//│   lambda1 = (undefined, function () {
-//│     runtime.checkArgs("", 0, true, arguments.length);
+//│   if (inlinedVal.__tag === 1) {
 //│     return 0
-//│   });
-//│   return runtime.safeCall(globalThis.shape.match(t, lambda, lambda1))
+//│   } else if (inlinedVal.__tag === 0) { return inlinedVal.x }
+//│   return runtime.Unit;
 //│ };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
@@ -298,20 +283,17 @@ fun callCtor(x, y) =
 //│ <<< end data-rep-flatten web-computation-phase
 //│ >>> start data-rep-flatten transform-phase
 //│ data-rep-flatten transform-phase > allocated tag 0 for Foo(x: _, y: _)
+//│ data-rep-flatten transform-phase > match shapes Foo(x: _, y: _) against Foo(x: _, y: _)@0
 //│ <<< end data-rep-flatten transform-phase
 //│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
 //│ let callCtor;
 //│ callCtor = function callCtor(x, y) {
 //│   runtime.checkArgs("callCtor", 2, true, arguments.length);
-//│   let f, lambda, tmp;
-//│   tmp = runtime.checkCall(Foo1(x, y));
-//│   tmp.__tag = 0;
-//│   f = tmp;
-//│   lambda = (undefined, function () {
-//│     runtime.checkArgs("", 0, true, arguments.length);
-//│     return f.x + f.y
-//│   });
-//│   return runtime.safeCall(globalThis.shape.match(f, lambda))
+//│   let tmp1;
+//│   tmp1 = runtime.checkCall(Foo1(x, y));
+//│   tmp1.__tag = 0;
+//│   if (tmp1.__tag === 0) { return tmp1.x + tmp1.y }
+//│   return runtime.Unit;
 //│ };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
@@ -337,7 +319,7 @@ fun foo(x, y) =
 //│ let foo5;
 //│ foo5 = function foo(x, y) {
 //│   runtime.checkArgs("foo", 2, true, arguments.length);
-//│   let f, element2$, element1$, element0$, tmp, tmp1;
+//│   let f, element2$, element1$, element0$, tmp1, tmp2;
 //│   f = ([
 //│     1,
 //│     2,
@@ -347,9 +329,9 @@ fun foo(x, y) =
 //│     element0$ = runtime.checkCall(runtime.Tuple.get(f, 0));
 //│     element1$ = runtime.checkCall(runtime.Tuple.get(f, 1));
 //│     element2$ = runtime.checkCall(runtime.Tuple.get(f, 2));
-//│     tmp = element0$ + element1$;
-//│     tmp1 = tmp + element2$;
-//│     return (new Bar1.class(tmp1))
+//│     tmp1 = element0$ + element1$;
+//│     tmp2 = tmp1 + element2$;
+//│     return (new Bar1.class(tmp2))
 //│   }
 //│   throw (new globalThis.Error("match error"));
 //│ };

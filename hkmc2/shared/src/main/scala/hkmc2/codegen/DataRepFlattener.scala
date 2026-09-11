@@ -117,6 +117,21 @@ private sealed abstract class Shape:
 
   def flattenShape: List[Shape]
 
+  final infix def `<:`(that: Shape): Bool = (this, that) match
+    case (_, DynamicShape) => true
+    case (UnionShape(subshapes), _) => subshapes.forall(_ `<:` that)
+    case (_, UnionShape(subshapes)) => subshapes.exists(this `<:` _)
+    case (LitShape(left), LitShape(right)) => left === right
+    case (ClassShape(leftCtor, leftFields), ClassShape(rightCtor, rightFields)) =>
+      leftCtor === rightCtor
+        && leftFields.keySet === rightFields.keySet
+        && leftFields.forall: (field, shape) =>
+          shape `<:` rightFields(field)
+    case (TupleShape(leftLength, leftElements), TupleShape(rightLength, rightElements)) =>
+      leftLength === rightLength
+        && leftElements.zip(rightElements).forall(_ `<:` _)
+    case _ => false
+
 private case class LitShape(lit: Value.Lit) extends Shape:
   def show: Str = lit match
     case Value.Lit(lit) => lit.idStr
@@ -171,25 +186,43 @@ class DataRepFlattener(
   val concreteCtorsByResultId: Map[ResultId, Ctor],
   val flowRes: FlowConstraintSolver,
   val debug: Bool,
-)(using State, TL, Raise) extends BlockTransformer(SymbolSubst.Id):
+)(using State, Elaborator.Ctx, TL, Raise) extends BlockTransformer(SymbolSubst.Id):
   private given fState: FlowAnalysis.State = flowRes.fState
 
   private val producersInWeb = webs.iterator.flatMap(_.markedProducers).toSet
 
+  private val patternMatchesByResultId =
+    flowRes.consumersWithSrcs.iterator.collect:
+      case patternMatch: Dtor => patternMatch
+    .toList.groupBy(_.exprId)
+
   private val shapeTags = MutMap.empty[Shape, Int]
+  private val taggedProducers = MutSet.empty[Ctor]
 
   private val tagField = new syntax.Tree.Ident("__tag")
 
-  private def allocateShapeTags() =
-    val shapes = producersInWeb.iterator.map: producer =>
-      producer.exprId.uid -> shapeOfProducer(producer)
-    for (_, shape) <- shapes.toList.sortBy((id, shape) => id -> shape.show) do
-      shape match
-        case shape: ClassShape if !containsUnion(shape) =>
-          val tag = shapeTags.getOrElseUpdate(shape, shapeTags.size)
-          if debug then
-            summon[TL].emitDbg(
-              s"data-rep-flatten transform-phase > allocated tag $tag for ${shape.show}")
+  private def allocateTag(shape: Shape): Int =
+    shapeTags.getOrElseUpdate(shape, {
+      val tag = shapeTags.size
+      if debug then
+        summon[TL].emitDbg(
+          s"data-rep-flatten transform-phase > allocated tag $tag for ${shape.show}")
+      tag
+    })
+
+  private def allocateShapeTags(): Unit =
+    val producers = producersInWeb.toList.sortBy(_.exprId.uid)
+    val nestedProducers = producers.iterator
+      .flatMap(producer => nestedCtorsOfProducer(producer, Set.single(producer)))
+      .toSet
+    for
+      producer <- producers
+      if !nestedProducers.contains(producer)
+    do
+      shapeOfProducer(producer) match
+        case shape: ClassShape =>
+          taggedProducers.add(producer)
+          allocateTag(shape)
         case _ => ()
 
   private def getCtorArgs(producer: Ctor) =
@@ -206,6 +239,29 @@ class DataRepFlattener(
           s"Missing constructor result for ${DataRepFlattenDebug.showProducer(producer)}: ${result.showDbg}",
         )
         Nil
+
+  private def nestedCtorsOf(
+    producer: ProdStrat,
+    original: Opt[Path],
+    seen: Set[Ctor],
+  ): Set[Ctor] =
+    original match
+      case S(_: Value.Lit) => Set.empty
+      case _ => producer match
+        case ctor: Ctor if !seen.contains(ctor) =>
+          Set.single(ctor) ++ nestedCtorsOfProducer(ctor, seen + ctor)
+        case variable: StratVar =>
+          variable.lowerBounds.iterator
+            .flatMap(nestedCtorsOf(_, N, seen))
+            .toSet
+        case _ => Set.empty
+
+  private def nestedCtorsOfProducer(producer: Ctor, seen: Set[Ctor]): Set[Ctor] =
+    val args = getCtorArgs(producer)
+    producer.args.iterator.zipWithIndex.flatMap:
+      case ((_, value), index) =>
+        nestedCtorsOf(value, args.lift(index).map(_.value), seen)
+    .toSet
 
   private def shapeOfProducer(producer: Ctor): Shape =
     val args = getCtorArgs(producer)
@@ -240,27 +296,36 @@ class DataRepFlattener(
               shapeOf(lowerBound, N)
         case _ => DynamicShape
 
+  private def shapeOfScrutinee(scrutinee: Path): Shape =
+    DataRepFlattener.mkUnion:
+      for
+        patternMatch <- patternMatchesByResultId.getOrElse(scrutinee.uid, Nil)
+        source <- patternMatch.srcs
+      yield shapeOf(source, S(scrutinee))
+
+  private def taggedShapesOfScrutinee(scrutinee: Path): List[Shape -> Int] =
+    patternMatchesByResultId.getOrElse(scrutinee.uid, Nil).iterator
+      .flatMap(_.srcs)
+      .collect:
+        case ctor: Ctor if taggedProducers.contains(ctor) => ctor
+      .toList.distinct.flatMap: ctor =>
+        val shape = shapeOfProducer(ctor)
+        val tag = shapeTags.get(shape)
+        softAssert(tag.isDefined, s"Missing tag for shape ${shape.show}")
+        tag.map(shape -> _)
+
   private def containsUnion(shape: Shape): Bool = shape match
     case ClassShape(_, fields) => fields.valuesIterator.exists(containsUnion)
     case TupleShape(_, elements) => elements.exists(containsUnion)
     case _: UnionShape => true
     case _ => false
 
-  private def allocateShape(fun: FunDefn, producer: Ctor) =
-    val shape = shapeOfProducer(producer)
-    shape match
-      case shape: ClassShape if !containsUnion(shape) =>
-        val tag = shapeTags.get(shape)
-        softAssert(tag.isDefined, s"Missing tag for shape ${shape.show}")
-        tag
-      case _ => N
-
-  private def insertTag(result: Result, tag: Int)(k: Path => Block): Block =
+  private def insertTag(result: Result, tag: Result)(k: Path => Block): Block =
     val instance = new TempSymbol(N, "tmp")
     val instanceRef = instance.asSimpleRef.withLocOf(result)
     Scoped(Set.single(instance), Assign(
       instance, result, AssignField(
-        instanceRef, tagField, Value.Lit(syntax.Tree.IntLit(tag)), k(instanceRef),
+        instanceRef, tagField, tag, k(instanceRef),
       )(N)))
 
   override def applyProgram(program: Program): Program =
@@ -274,14 +339,84 @@ class DataRepFlattener(
 
   override def applyFunDefn(fun: FunDefn): FunDefn =
     val transformer = new BlockTransformerShallow(SymbolSubst.Id):
+      private def isShapeMatch(path: Path): Bool =
+        path.targetSymbol.flatMap(_.asBlkMember).contains(Elaborator.ctx.builtins.shape.`match`)
+
+      private def getBranch(path: Path): Opt[FunDefn] =
+        path.targetSymbol.collect:
+          case symbol: TermSymbol => symbol
+        .flatMap(flowRes.preAnalyzer.res.funSymToFunDefn.get)
+
+      private def inlineBranch(branch: FunDefn, resultSymbol: TempSymbol): Block =
+        applyFunBodyLikeBlock(branch.body).mapReturn:
+          case Return(result) => Assign(resultSymbol, result, End())
+
+      private def rewriteShapeMatch(call: Call, scrutinee: Path, branchArgs: List[Arg])(k: Result => Block): Opt[Block] =
+        call.metadata.annotations.collectFirst:
+          case Annot.MatchShapes(patterns) => patterns
+        .flatMap: patterns =>
+          val branches = branchArgs.map(arg => getBranch(arg.value))
+          if patterns.size =/= branchArgs.size || branches.exists(_.isEmpty) then
+            softAssert(false, s"Malformed annotated shape.match call: ${call.showDbg}")
+            N
+          else
+            val branchDefns = branches.flatten
+            if branchDefns.exists(_.params.exists(paramList => paramList.params.nonEmpty || paramList.restParam.nonEmpty)) then
+              softAssert(false, s"Expected zero-argument branches in annotated shape.match call: ${call.showDbg}")
+              N
+            else
+              val patternShapes = patterns.map(DataRepFlattener.mkShapeByPattern)
+              val taggedShapes = taggedShapesOfScrutinee(scrutinee)
+              if debug then
+                summon[TL].emitDbg(
+                  s"data-rep-flatten transform-phase > match shapes ${patternShapes.map(_.show).mkString(", ")} against ${taggedShapes.map((shape, tag) => s"${shape.show}@$tag").mkString(", ")}")
+              softAssert(patternShapes.forall(!containsUnion(_)), s"Unexpected union shape in @matchShapes on ${call.showDbg}")
+              val ambiguousTags = taggedShapes.flatMap: (taggedShape, tag) =>
+                val branchIndices = taggedShape.flattenShape.flatMap: concreteShape =>
+                  patternShapes.zipWithIndex.collect:
+                    case (patternShape, index) if concreteShape `<:` patternShape => index
+                .distinct
+                if branchIndices.size > 1 then S((taggedShape, tag, branchIndices)) else N
+              if ambiguousTags.nonEmpty then
+                for (taggedShape, tag, branchIndices) <- ambiguousTags do
+                  val messages =
+                    msg"Shape tag $tag for ${taggedShape.show} can fall into more than one shape.match branch." -> call.toLoc ::
+                    branchIndices.map: index =>
+                      msg"It can fall into branch ${index + 1}, matched by ${patternShapes(index).show}." -> patterns(index).toLoc
+                  summon[Raise].apply(WarningReport(messages))
+                N
+              else
+                val matchingBranches = taggedShapes.flatMap: (taggedShape, tag) =>
+                  patternShapes.zip(branchDefns).find:
+                    case (patternShape, _) => taggedShape `<:` patternShape
+                  .map:
+                    case (_, branch) => (taggedShape, tag, branch)
+                val matchedTags = matchingBranches.iterator.map(_._2).toSet
+                if taggedShapes.isEmpty || taggedShapes.exists((_, tag) => !matchedTags.contains(tag)) then N
+                else
+                  val resultSymbol = new TempSymbol(N, "shapeMatchResult")
+                  val resultRef = resultSymbol.asSimpleRef.withLocOf(call)
+                  val tagAccess = Select(scrutinee, tagField)(N)(false).withLocOf(scrutinee)
+                  val arms = matchingBranches.map: (_, tag, branch) =>
+                    Case.Lit(syntax.Tree.IntLit(tag)) -> inlineBranch(branch, resultSymbol)
+                  S(Scoped(Set.single(resultSymbol), new Match(tagAccess, arms, N, k(resultRef))))
+
       override def applyResult(result: Result)(k: Result => Block): Block =
         result match
+          case call @ Call(fun, (Arg(N, scrutinee) :: branches) :: Nil)
+              if branches.nonEmpty && isShapeMatch(fun) =>
+            rewriteShapeMatch(call, scrutinee, branches)(k).getOrElse:
+              super.applyResult(result)(k)
           case CtorProducer(_, _, _) =>
-            concreteCtorsByResultId.get(result.uid).filter(producersInWeb) match
+            concreteCtorsByResultId.get(result.uid).filter(taggedProducers.contains) match
               case S(ctor) =>
+                val shape = shapeOfProducer(ctor)
+                val tag = shapeTags.get(shape)
+                softAssert(tag.isDefined, s"Missing tag for shape ${shape.show}")
                 super.applyResult(result): transformed =>
-                  allocateShape(fun, ctor) match
-                    case S(tag) => insertTag(transformed, tag)(k)
+                  tag match
+                    case S(tag) =>
+                      insertTag(transformed, Value.Lit(syntax.Tree.IntLit(tag)))(k)
                     case N => k(transformed)
               case N => super.applyResult(result)(k)
           case _ => super.applyResult(result)(k)
@@ -307,7 +442,10 @@ object DataRepFlattener:
   private def mkShapeByPattern(pattern: Pattern)(using raise: Raise): Shape =
     pattern match
       case ctorPattern @ Pattern.Constructor(_, arguments) =>
-        ctorPattern.symbol.flatMap(_.asClsLike) match
+        val ctor = ctorPattern.symbol.flatMap:
+          case ctor: ClassCtorSymbol => S(ctor.associatedCls)
+          case symbol => symbol.asClsLike
+        ctor match
           case S(cls: ClassSymbol) =>
             cls.tree.clsParams match
               case fields :: Nil =>
