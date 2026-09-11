@@ -50,7 +50,7 @@ class Printer(using Config, Ctx, Raise, ShowCfg, State, SymbolPrinter):
     case cet: CanonicalErasedType => print(cet)
     case _ => print(et.canonicalize)
 
-  /** Renders the type annotation for a symbol with an [[`ErasedType`]]. */
+  /** Renders the type annotation for a symbol with an [[ErasedType]]. */
   def erasedTypeAnnot(x: HasErasedType)(using Scope): Document =
     if !summon[ShowCfg].showErasedTypes then doc""
     else doc": ${x.erasedType.fold(doc"?")(print)}"
@@ -216,7 +216,7 @@ class Printer(using Config, Ctx, Raise, ShowCfg, State, SymbolPrinter):
       doc"${print(qual)}${if arrayIdx then "." else "!"}${print(fld)}"
     case x: Value => print(x)
     case Cast(value, target, check) =>
-      // * `as!` and `as!!` marks a cast asserted with and without a runtime check respectively.
+      // * `as!` and `as!!` mark a cast asserted with and without a runtime check respectively.
       doc"(${print(value)} as${if check then "!" else "!!"} ${print(target)})"
     // case _ => TODO(path)
   

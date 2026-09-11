@@ -46,10 +46,10 @@ if Bar(true) is
 //│   (type $TypeInfoBase (sub (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
 //│   (type $Object (sub (struct (field $$typeinfo (mut (ref $TypeInfoBase))))))
 //│   (type $Bar (sub $Object (struct (field $$typeinfo (mut (ref $TypeInfoBase))) (field $y (mut (ref null any))))))
+//│   (type $Baz (sub $Object (struct (field $$typeinfo (mut (ref $TypeInfoBase))) (field $z (mut (ref null any))))))
 //│   (type $Bar_typeinfo (sub $TypeInfoBase (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
 //│   (type $Bar_init (func (param $this (ref $Bar)) (param $y (ref null any)) (result (ref $Bar))))
 //│   (type $Bar_ctor (func (param $y (ref null any)) (result (ref $Bar))))
-//│   (type $Baz (sub $Object (struct (field $$typeinfo (mut (ref $TypeInfoBase))) (field $z (mut (ref null any))))))
 //│   (type $Baz_typeinfo (sub $TypeInfoBase (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
 //│   (type $Baz_init (func (param $this (ref $Baz)) (param $z (ref null any)) (result (ref $Baz))))
 //│   (type $Baz_ctor (func (param $z (ref null any)) (result (ref $Baz))))
@@ -273,9 +273,30 @@ getXor(Foo(42))
 
 
 // `Int`, `Int31` and `Bool` have no `typeinfo` to walk: they box to `i31ref`, so both test as `i31ref`.
+// * Note: when implemented, the resolution pass will reject matches on `Unknown`, removing this runtime type confusion
+:sir
+:siret
 fun isInt(v) = if v is Int then 1 else 0
 fun isBool(v) = if v is Bool then 1 else 0
 isInt(1)
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define isInt⁰ as fun isInt¹(v: ?): ? {
+//│   match v
+//│     Int⁰ =>
+//│       return 1
+//│     else
+//│       return 0
+//│   end
+//│ };
+//│ define isBool⁰ as fun isBool¹(v: ?): ? {
+//│   match v
+//│     Bool⁰ =>
+//│       return 1
+//│     else
+//│       return 0
+//│   end
+//│ };
+//│ return isInt¹(1)
 //│ Wasm result:
 //│ = 1
 
@@ -283,7 +304,7 @@ isBool(true)
 //│ Wasm result:
 //│ = 1
 
-// ⚠️ The two share one representation — `true` and `1` are both `(ref.i31 1)` — so neither test can exclude
+// ⚠️ The two share one representation - `true` and `1` are both `(ref.i31 1)` - so neither test can exclude
 // the other, and both of these answer 1 where JS answers 0. Telling them apart would need `Bool` to have a
 // representation of its own; testing by value is not an option, as `0` and `1` are perfectly good `Int`s.
 isInt(true)
@@ -295,7 +316,7 @@ isBool(1)
 //│ = 1
 
 // `Object` needs no `typeinfo`: as the root of the reference hierarchy it is decided by representation alone.
-// Both halves of the split count — a class instance is a `$Object` struct, a tuple is a Wasm array.
+// Both halves of the split count - a class instance is a `$Object` struct, a tuple is a Wasm array.
 class Foo(val x)
 fun isObj(v) = if v is Object then 1 else 0
 isObj(Foo(1))

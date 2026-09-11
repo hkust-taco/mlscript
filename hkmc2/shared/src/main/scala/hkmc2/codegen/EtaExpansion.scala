@@ -53,15 +53,14 @@ class EtaExpansionSolver(val constraintSolver: FlowConstraintSolver):
         if isDeclaredNextParamList(resPf) || prodFunIsAffine(resPf) then
           etaExpansionTargetShapes(resPf)
         else Nil
-      case ProdVar(s) =>
+      case v: StratVar =>
         // iterate through all the lower bounds of prodvar
+        val lbs = v.lowerBounds.iterator
         @tailrec
-        def go(lbs: Ls[ProdStrat], res: Opt[Ls[Int]]): Ls[Int] =
-          lbs match
-          case Nil => res.getOrElse(Nil)
-          case h :: t =>
-            h match
-            case ProdVar(s) => go(t, res)
+        def go(res: Opt[Ls[Int]]): Ls[Int] =
+          if !lbs.hasNext then res.getOrElse(Nil)
+          else lbs.next() match
+            case pv: StratVar => go(res)
             case pf: ProdFun =>
               if isDeclaredNextParamList(pf) then
                 etaExpansionTargetShapes(pf)
@@ -72,13 +71,13 @@ class EtaExpansionSolver(val constraintSolver: FlowConstraintSolver):
                   case S(prevRes) => prevRes.zip(curRes).map: (a, b) =>
                     assert(a === b)
                     a
-                go(t, S(mergedRes))
+                go(S(mergedRes))
               else Nil
             case UnknownProd => Nil
             case _: Ctor => Nil
         end go
         
-        go(constraintSolver.lowerBounds(s.uid), N)
+        go(N)
       case UnknownProd => Nil
       case _: Ctor => Nil
     end funResShape
@@ -98,7 +97,7 @@ class EtaExpansionSolver(val constraintSolver: FlowConstraintSolver):
 
   val funShape = LinkedHashMap.empty[TermSymbol | ResultId, Ls[Int]]
 
-  for pf <- constraintSolver.funDests.keysIterator do
+  for pf <- constraintSolver.prodFunsWithDests do
     pf.exprId match
     case lamId: ResultId => funShape.getOrElseUpdate(lamId, etaExpansionTargetShapes(pf)(using Set.empty))
     case (funSym: TermSymbol, 0) => funShape.getOrElseUpdate(funSym, etaExpansionTargetShapes(pf)(using Set.empty))

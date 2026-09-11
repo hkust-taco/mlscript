@@ -47,14 +47,14 @@ object Elaborator:
   
   // TODO: rename to ScopeKind?
   enum OuterCtx:
-    case Function(returnHandlerSymbol: TempSymbol, isGenerator: Bool)
+    case Function(returnHandlerSymbol: TempSymbol)(val isGenerator: Bool, val isAsync: Bool)
     case InnerScope(innerSymbol: InnerSymbol)
     case LocalScope(nameHint: Str)
     case LambdaOrHandlerBlock
     case NonReturnContext
     
     def showDbg: Str = this match
-      case Function(sym, _) => s"fun:${sym.nme}"
+      case Function(sym) => s"fun:${sym.nme}"
       case InnerScope(inner) => inner.toString
       case LocalScope(hint) => hint
       case LambdaOrHandlerBlock => "LambdaOrHandlerBlock"
@@ -179,20 +179,26 @@ object Elaborator:
       go(S(this), false, false)
     def getOuter: Opt[InnerSymbol] = outer.inner.orElse(parent.flatMap(_.getOuter))
     def getNonLocalRetHandler: Opt[TempSymbol] = outer match
-      case OuterCtx.Function(sym, _) => S(sym)
+      case OuterCtx.Function(sym) => S(sym)
       case _ => parent.flatMap(_.getNonLocalRetHandler)
     def getRetHandler: ReturnHandler = outer match
-      case OuterCtx.Function(sym, _) => ReturnHandler.Direct
+      case OuterCtx.Function(sym) => ReturnHandler.Direct
       case _: (OuterCtx.LambdaOrHandlerBlock.type | OuterCtx.InnerScope) =>
         getNonLocalRetHandler.fold(ReturnHandler.NotInFunction)(ReturnHandler.Required(_))
       case OuterCtx.NonReturnContext => ReturnHandler.Forbidden
       case _: OuterCtx.LocalScope =>
         parent.fold(ReturnHandler.NotInFunction)(_.getRetHandler)
     def inGenerator: Bool = outer match
-      case OuterCtx.Function(_, isGenerator) => isGenerator
+      case f: OuterCtx.Function => f.isGenerator
       case _: OuterCtx.LocalScope =>
         parent.fold(false)(_.inGenerator)
       case _: (OuterCtx.LambdaOrHandlerBlock.type | OuterCtx.InnerScope | OuterCtx.NonReturnContext.type) => false
+    def inAsync: Bool = outer match
+      case f: OuterCtx.Function => f.isAsync
+      case _: OuterCtx.LocalScope =>
+        parent.fold(false)(_.inAsync)
+      case _: (OuterCtx.LambdaOrHandlerBlock.type | OuterCtx.InnerScope | OuterCtx.NonReturnContext.type) => false
+    def potentiallyInstrumented(using Config): Bool = config.effectHandlers.isDefined || inAsync
     
     // * Invariant: We expect that the top-level context only contain hard-coded symbols like `globalThis`
     // * and that built-in symbols like Int and Str be imported into another nested context on top of it.
@@ -341,10 +347,13 @@ object Elaborator:
         val inline = assumeObject("inline")
         val noInline = assumeObject("noInline")
         val generator = assumeObject("generator")
+        val async = assumeObject("async")
         val compile = assumeObject("compile")
         val buffered = assumeObject("buffered")
         val bufferable = assumeObject("bufferable")
         val mayNotRaiseEffects = assumeObject("mayNotRaiseEffects")
+      object handlers extends VirtualModule(assumeBuiltinMod("handlers")):
+        val await = assumeObject("await").asTrm.get
       object scope extends VirtualModule(assumeBuiltinMod("scope")):
         val locally = assumeObject("locally")
       object runtime extends VirtualModule(assumeBuiltinMod("runtime")):
@@ -680,6 +689,8 @@ extends Importer:
             return S(Annot.NoInline)
           case ctx.builtins.annotations.generator =>
             return S(Annot.Generator)
+          case ctx.builtins.annotations.async =>
+            return S(Annot.Async)
           case ctx.builtins.annotations.mayNotRaiseEffects =>
             return S(Annot.MayNotRaiseEffects)
           case _ => ()
@@ -1120,7 +1131,7 @@ extends Importer:
       error
     case LetLike(Keywrd(`set`), lhs, S(rhs), S(bod)) =>
       // * Backtracking assignment
-      if config.effectHandlers.isDefined then
+      if ctx.potentiallyInstrumented then
         raise(ErrorReport(
           msg"Backtracking assignment is not supported with effect handlers enabled" ->
             tree.toLoc :: Nil))
@@ -1307,7 +1318,7 @@ extends Importer:
       case LabelLookup.Found(binding) =>
         Term.Break(binding.labelSymbol, binding.resultSymbol, value)
       case LabelLookup.AcrossBoundary(binding) =>
-        if config.effectHandlers.isEmpty then
+        if !ctx.potentiallyInstrumented then
           mkNonLabelSelectionApp(tree, sel, args)
         else
           markEffectMethodUsed(binding.nonLocalBreakMethodMarker, nme)
@@ -1329,7 +1340,7 @@ extends Importer:
         Term.Continue(binding.labelSymbol)
       case LabelLookup.AcrossBoundary(binding) =>
         checkNoArgs
-        if config.effectHandlers.isEmpty then
+        if !ctx.potentiallyInstrumented then
           raise:
             ErrorReport(msg"Non-local 'continue' is only supported with effect handlers enabled."
               -> labelId.toLoc :: Nil)
@@ -1361,7 +1372,7 @@ extends Importer:
       case LabelLookup.Found(binding) =>
         Term.Break(binding.labelSymbol, binding.resultSymbol, N)
       case LabelLookup.AcrossBoundary(binding) =>
-        if config.effectHandlers.isEmpty then
+        if !ctx.potentiallyInstrumented then
           raise:
             ErrorReport(msg"Non-local 'break' is only supported with effect handlers enabled."
               -> labelId.toLoc :: Nil)
@@ -1376,7 +1387,7 @@ extends Importer:
       case LabelLookup.Found(binding) =>
         Term.Continue(binding.labelSymbol)
       case LabelLookup.AcrossBoundary(binding) =>
-        if config.effectHandlers.isEmpty then
+        if !ctx.potentiallyInstrumented then
           raise:
             ErrorReport(msg"Non-local 'continue' is only supported with effect handlers enabled."
               -> labelId.toLoc :: Nil)
@@ -1486,7 +1497,7 @@ extends Importer:
       ctx.getRetHandler match
       case ReturnHandler.Required(sym) =>
         log(s"Non-local return: $sym")
-        if config.effectHandlers.isEmpty then
+        if !ctx.potentiallyInstrumented then
           raise:
             ErrorReport(msg"Non-local return statements are only supported with effect handlers enabled." -> tree.toLoc :: Nil)
           error
@@ -1984,9 +1995,10 @@ extends Importer:
                 case S(rhs) => S:
                   val nonLocalRetHandler = TempSymbol(N, erasedType = N, s"nonLocalRetHandler$$${id.name}")
                   val hasGeneratorAnnotation = annotations.contains(Annot.Generator)
+                  val hasAsyncAnnotation = annotations.contains(Annot.Async)
                   if pss.isEmpty && hasGeneratorAnnotation then
                     raise(ErrorReport(msg"Generators are not supported on functions without a parameter list" -> td.toLoc :: Nil))
-                  newCtx.nest(OuterCtx.Function(nonLocalRetHandler, pss.nonEmpty && hasGeneratorAnnotation)).givenIn: newCtx ?=>
+                  newCtx.nest(OuterCtx.Function(nonLocalRetHandler)(pss.nonEmpty && hasGeneratorAnnotation, hasAsyncAnnotation)).givenIn: newCtx ?=>
                     val b = term(rhs)(using newCtx)
                     if nonLocalRetHandler.directRefs.isEmpty then b else
                       mkEffectHandleAbortive(
@@ -2057,15 +2069,23 @@ extends Importer:
                   ErasedType.eraseSign(resultSign)
               val erasedTpe = k match
                 case syntax.Fun =>
-                  // * A `declare`d function's parameter lists is derived from its signature if it doesn't have one.
+                  // * A `declare`d function's parameter lists are derived from its signature when it writes none.
                   val paramLists = sigShape match
                     case S((ps, _)) => ps
                     case N => pss.map(_.params.map(_.sym.erasedType))
-                  // * A `fun` with no parameter lists is a getter, which is auto-invoked on every reference or
-                  // * compiled into a getter method when selected, so it never denotes a function value.
-                  // * Its erased type is therefore the type of the getter's result.
-                  if paramLists.isEmpty then retTpe
-                  else S(ErasedType.FuncRef(rsc = S(false), paramLists, retTpe))
+                  // * An erased type must describe what a definition is *compiled to*, and a paramless `fun` is
+                  // * compiled in two different ways:
+                  // *
+                  // * - As a class-like member, it becomes either a getter method or a `globalThis` selection depending
+                  // *   on if it is `declare`d or not - neither denotes a function value, so the erased type is its
+                  // *   result;
+                  // * - At block level, it is lowered to a function with an implicit empty parameter list which every
+                  // *   reference auto-invokes, so the erased type will carry that parameter list.
+                  val isCompiledAsGetter = owner.isDefined || Annot.declareModifierOf(annotations).isDefined
+                  val physicalParamLists =
+                    if paramLists.isEmpty && !isCompiledAsGetter then Nil :: Nil else paramLists
+                  if physicalParamLists.isEmpty then retTpe
+                  else S(ErasedType.FuncRef(rsc = S(false), physicalParamLists, retTpe))
                 case _: syntax.Val => retTpe
                 case _ => N
               val tsym = TermSymbol(k, owner, id, erasedType = erasedTpe) // TODO?

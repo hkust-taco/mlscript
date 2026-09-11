@@ -685,8 +685,9 @@ final case class FunDefn(
   val asPath = sym.asMemberRef(dSym)
   lazy val tailRec: Bool = annotations.contains(Annot.TailRec)
   lazy val inline: Bool = annotations.contains(Annot.Inline)
-  lazy val noInline: Bool = annotations.contains(Annot.NoInline) || generator
+  lazy val noInline: Bool = annotations.contains(Annot.NoInline) || generator || async
   lazy val generator: Bool = annotations.contains(Annot.Generator)
+  lazy val async: Bool = annotations.contains(Annot.Async)
   lazy val visibility: Visibility = annotations.collectFirst:
     case Annot.Modifier(Keyword.`private`) => Visibility.Private
     case Annot.Modifier(Keyword.`public`) => Visibility.Public
@@ -694,6 +695,7 @@ final case class FunDefn(
   lazy val affineInfo: Ls[Int] =
     annotations.collect:
       case Annot.Affine(whichParamList) => whichParamList
+  lazy val allParamSyms: Ls[VarSymbol] = params.flatMap(_.paramSyms)
 
   // * This deliberately is not a lazy val: its initialization would synchronize on the JVM.
   // * Computing the summary is pure, and a reference write is atomic, so concurrent traversals may
@@ -1093,10 +1095,6 @@ sealed abstract class Result extends AutoLocated, HasErasedType:
             // * An over-applied call applies arguments to whatever the function returns, which the function's
             // * signature is oblivious about.
             case _ => N
-        // * A `fun` with no parameter lists is a getter, so it has no `FuncRef` and `Lowering.ref` auto-invokes it
-        // * with one empty argument list - the getter's own type is the result type of the call.
-        // * Any further application is handled as an over-applied call.
-        case other if (ts.k is syntax.Fun) && argss.sizeIs == 1 && argss.head.isEmpty => other
         case _ => N
       case _ => N
     // * A resolved selection has the type of the member it refers to (e.g. `this.field`); an

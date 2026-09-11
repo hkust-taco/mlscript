@@ -412,6 +412,10 @@ fun handleEffect(cur) =
     cur.contTrace.lastHandler,
     false
   )
+  
+  if cur.contTrace.last === handlerFrame do set saved.last = saved
+  if cur.contTrace.lastHandler === handlerFrame do set saved.lastHandler = saved
+  
   set
     cur.contTrace.last = handlerFrame
     cur.contTrace.lastHandler = handlerFrame
@@ -425,9 +429,9 @@ fun handleEffect(cur) =
     set cur = curEffect
     // relink the saved frames
     if saved.next !== null do
-      set
-        cur.contTrace.last.next = saved.next
-        cur.contTrace.last = saved.last
+      set cur.contTrace.last.next = saved.next
+    if saved.last !== saved do
+      set cur.contTrace.last = saved.last
     if saved.nextHandler !== null do
       set
         cur.contTrace.lastHandler.nextHandler = saved.nextHandler
@@ -468,6 +472,25 @@ fun resumeContTrace(contTrace, value) =
       set handlerCont = handlerCont.nextHandler
     else
       return value
+
+// js async
+object AsyncEffectMarker
+
+fun await(promise) =
+  mkEffect(AsyncEffectMarker, resume =>
+    fun continuation(value) =
+      let r = resume(value)
+      if curEffect !== null do
+        illegalEffect("in exported async function")
+      r
+    promise.then(continuation)
+  )
+
+fun toJsAsync(thunk) =
+  let r = enterHandleBlock(AsyncEffectMarker, thunk)
+  if curEffect !== null do
+    illegalEffect("in exported async function")
+  Promise.resolve(r)
 
 // stack safety
 mut val stackLimit = 0 // How deep the stack can go before heapifying the stack

@@ -230,8 +230,15 @@ sealed abstract class LocalVarSymbol(name: Str)(using State) extends FlowSymbol(
   var decl: Opt[Declaration] = N
   def subst(using s: SymbolSubst): LocalVarSymbol
 
-class TempSymbol(val trm: Opt[Term], override val erasedType: Opt[ErasedValueType], dbgNme: Str = "tmp")(using State)
-    extends LocalVarSymbol(dbgNme):
+/** A temporary variable introduced by lowering.
+  *
+  * Its `erasedType` is once-mutable: a temp holding a branching term's result is named before those branches
+  * are lowered, so `Normalization` populates it with the join of their representations once they have all
+  * been seen. `Normalization.joinTempType` is its only write site.
+  */
+class TempSymbol(val trm: Opt[Term], override var erasedType: Opt[ErasedType], dbgNme: Str = "tmp")(using State)
+    extends LocalVarSymbol(dbgNme)
+    with HasOnceMutableErasedType:
   // val nameHints: MutSet[Str] = MutSet.empty // * May be useful later?
   override def toLoc: Option[Loc] = trm.flatMap(_.toLoc)
   override def prefix: Str = "tmp:"

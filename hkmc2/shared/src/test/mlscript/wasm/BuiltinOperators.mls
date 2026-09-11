@@ -56,7 +56,7 @@ wasm.i32.add(1, 2)
 //│ ╙──      	                ^
 
 
-// Mismatching arity is both reported by the elaborator and the backend.
+// Mismatching arity is reported by both the elaborator and the backend.
 :ge
 wasm.i32.const(1, 2)
 //│ ╔══[COMPILATION ERROR] Expected 1 arguments, got 2
@@ -84,6 +84,8 @@ wasm.i32.const(-1)
 //│ ═══[COMPILATION ERROR] Wasm intrinsic 'i32.const' expects an integer literal immediate
 
 
+// The remaining arithmetic instructions. Each runs on operands whose result identifies it - `-1`, `42`, `3`
+// and `1` - so a registration wired to the wrong instruction cannot reproduce all four.
 wasm.i32.sub(wasm.i32.const(1), wasm.i32.const(2))
 //│ Wasm result:
 //│ = -1

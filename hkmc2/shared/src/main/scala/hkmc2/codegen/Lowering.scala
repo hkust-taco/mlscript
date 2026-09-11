@@ -719,6 +719,33 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
     
     @tailrec
     def extractAnnots(t: st, acc: List[Annot]): (List[Annot], st) = t match
+      case st.Annotated(Annot.Async, trm) =>
+        val ident = new Tree.Ident("asyncBody").withLocOf(trm)
+        val bms = BlockMemberSymbol(ident.name, Nil, false)
+        val dsym = TermSymbol(
+          syntax.Fun,
+          N,
+          ident,
+          erasedType = S(ErasedType.FuncRef(rsc = S(false), paramLists = Nil :: Nil, ret = N)),
+        )
+        val td: TermDefinition = TermDefinition(
+          syntax.Fun,
+          bms,
+          dsym,
+          sem.ParamList(sem.ParamListFlags.empty, Nil, N) :: Nil,
+          N,
+          N,
+          S(trm),
+          TermDefFlags.empty,
+          Modulefulness.none,
+          Annot.RaiseEffects :: Nil,
+          N,
+        )
+        val rewritten = st.App(
+          st.SynthSel(State.runtimeSymbol.ref(), Tree.Ident("toJsAsync"))(N, FlowSymbol.sel("toJsAsync"), N, N),
+          st.Tup(PlainFld(st.Blk(td :: Nil, bms.ref(ident).resolved(dsym))) :: Nil)(Tree.DummyTup)
+        )(Tree.DummyApp, N, FlowSymbol.app())
+        extractAnnots(rewritten, acc)
       case st.Annotated(annot, trm) => extractAnnots(trm.instantiated, annot :: acc)
       case _ => (acc, t)
     
@@ -832,6 +859,9 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
               S(k(Value.Lit(negLit))),
               Unreachable("tail operation in branches"),
             ) else
+              // Well-typed short-circuit expressions have Boolean operands and results.
+              // The JS lowering may propagate a non-Boolean RHS in ill-typed input; such input is rejected
+              // by the type checker, so that runtime behavior does not determine the IR result type.
               val ts = loweringCtx.registerTempSymbol(N, erasedType = S(ErasedType.Bool))
               Match(
                 ar1,
@@ -955,7 +985,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
           conclude(Select(p, definitionIdent(nme, sym))(S(sym))(false).withLocOf(sel))
       case _ => subTerm(baseF)(conclude)
     case h @ Handle(lhs, rhs, as, cls, defs, bod) =>
-      if !lowerHandlers then
+      if config.effectHandlers.isEmpty then
         return fail:
           ErrorReport(
             msg"Effect handlers are not enabled" ->
@@ -1425,11 +1455,11 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
         val l = loweringCtx.registerTempSymbol(N, erasedType = r.erasedValueType)
         Assign(l, r, k(l.asSimpleRef))
 
-  /** Wraps the lowered result `r` with a [[`Cast`]] when it must be downcasted to fit the `expected` erased type of the
+  /** Wraps the lowered result `r` with a [[Cast]] when it must be downcasted to fit the `expected` erased type of the
     * slot it flows into.
     *
-    *  - If `expected` is a subtype of `r`'s type, a `r` is wrapped with a downcast.
-    *  - If `expected and `r` are unrelated, a compile-time error is raised and `r` returns uncast.
+    *  - If `expected` is a subtype of `r`'s type, `r` is wrapped with a downcast.
+    *  - If `expected` and `r` are unrelated, a compile-time error is raised and `r` returns uncast.
     *  - Otherwise, `r` is returned unchanged.
     *
     * An absent `expected` is an unannotated slot, which holds the top reference type rather than no type at all.
@@ -1498,12 +1528,14 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
         case N => WarningReport(msg"This annotation has no effect." -> annot.toLoc :: Nil)
     annotations.foreach:
       case Annot.Untyped => ()
-      case a @ (Annot.TailRec | Annot.Inline | Annot.NoInline | Annot.Generator) =>
+      case a @ (Annot.TailRec | Annot.Inline | Annot.NoInline | Annot.Generator | Annot.Async | Annot.RaiseEffects) =>
         val annot = a match
           case Annot.TailRec => "@tailrec"
           case Annot.Inline => "@inline"
           case Annot.NoInline => "@noInline"
           case Annot.Generator => "@generator"
+          case Annot.Async => "@async"
+          case Annot.RaiseEffects => "@raiseEffects"
         target match
           case TermDefinition(body = S(bod), k = syntax.Fun) => ()
           case TermDefinition(k = syntax.Fun) => warn(a, S(msg"Only functions with a body may be marked as $annot."))
@@ -1566,6 +1598,16 @@ trait LoweringTraceLog(instrument: Bool)(using TL, Raise, State)
   override def setupFunctionDef(paramLists: List[ParamList], bodyTerm: st, name: Option[Str], returnType: Opt[ErasedType])
       (using LoweringCtx): (List[ParamList], Block) =
     if instrument then
+      // * TODO: Instrumentation collapses the trailing parameter lists into lambdas, so `fun f(a)(b): Int` is
+      // * compiled to take `a` alone and return a function, while its erased type - which `returnType` is
+      // * read off - still promises two parameter lists and an `Int`.
+      // *
+      // * Callers are unaffected, since applying the wrapper is the same as applying a curried definition, so
+      // * this is reported rather than worked around: the fix is for instrumentation to stop reshaping
+      // * definitions, which belongs to this pass rather than to the erased types.
+      softTODO(paramLists.sizeIs <= 1,
+        s"instrumenting '${name.getOrElse("[arrow function]")}' collapses its parameter lists, " +
+        "so its erased type no longer describes what it is compiled to")
       val (ps, bod) = handleMultipleParamLists(paramLists, bodyTerm)
       val instrumentedBody = setupFunctionBody(ps, bod, name, returnType)
       (ps :: Nil, instrumentedBody)

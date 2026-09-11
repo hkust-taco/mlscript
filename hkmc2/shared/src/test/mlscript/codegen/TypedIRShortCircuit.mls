@@ -1,0 +1,27 @@
+
+:global
+:js
+
+
+// MLscript's && and || require Boolean operands and have Boolean results in well-typed code.
+// These examples are intentionally ill-typed. The current JS lowering can propagate the RHS
+// unchanged, producing 42 or "ok", but that behavior does not define the language's semantics.
+// Rejecting their Int/Str annotations is expected; the Bool IR result type is intentional.
+:e
+val n: Int = true && 42
+n
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Bool' at an unrelated type 'Int'
+//│ ║  l.11: 	val n: Int = true && 42
+//│ ╙──      	             ^^^^^^^^^^
+//│ = 42
+//│ n = 42
+
+
+:e
+val s: Str = false || "ok"
+s
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Bool' at an unrelated type 'Str'
+//│ ║  l.21: 	val s: Str = false || "ok"
+//│ ╙──      	             ^^^^^^^^^^^^^
+//│ = "ok"
+//│ s = "ok"

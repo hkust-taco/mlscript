@@ -143,7 +143,6 @@ fun enterHandleBlock(handler, body) =
 fun raiseUnhandledEffect() =
   Runtime.mkEffect(Runtime.FatalEffect, null)
 
-
 module meta with
   fun codegen(t, file) = Term.codegen(t, file)
   fun print(t) = Term.print(t)

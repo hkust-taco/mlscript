@@ -1,0 +1,137 @@
+:global
+:sir
+:siret
+:deforest
+
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ import "..." as Predef; end
+
+// Deforestation extracts a fusing match's branches and continuation into new functions, renaming the symbols
+// that cross into them. A rename stands for the same slot as the symbol it replaces, so it takes that
+// symbol's erased type.
+
+data class Box(v: Int)
+data class Pair(a: Int, b: Str)
+//│ deforest > >>> fusing >>>
+//│ deforest > <<< fusing <<<
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ @data
+//│ define Box⁰ as class Box² {
+//│   val v⁰: Int⁰;
+//│   constructor Box¹(v: Int⁰) {
+//│     define v⁰ as val v¹: Int⁰ = v;
+//│     end
+//│   }
+//│ };
+//│ @data
+//│ define Pair⁰ as class Pair² {
+//│   val a⁰: Int⁰;
+//│   val b⁰: Str⁰;
+//│   constructor Pair¹(a: Int⁰, b: Str⁰) {
+//│     define a⁰ as val a¹: Int⁰ = a;
+//│     define b⁰ as val b¹: Str⁰ = b;
+//│     end
+//│   }
+//│ };
+//│ end
+
+
+// A fused field selection is replaced by a symbol standing for the constructor argument (`Box_v`), which is both
+// the temporary the caller assigns and the branch function's parameter. The IR already typed the selection it
+// replaces as the field's type, so both take that type.
+// The branch function's free variables become its second parameter list (`fv_k`), typed from the locals they
+// stand for.
+fun selected(n: Int, k: Str) =
+  let b = Box(n)
+  if b is
+    Box(x) then [x, k]
+//│ deforest > >>> fusing >>>
+//│ deforest > Box¹(n⁰) ->
+//│ deforest > 	match: b²
+//│ deforest > 	fields: b².v¹
+//│ deforest > <<< fusing <<<
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let selected_4$b_Box, selected_4$b_rest;
+//│ @affine(1) @private
+//│ define selected_4$b_Box as fun selected_4$b_Box⁰(Box_v: Int⁰)(fv_k: Str⁰, fv_x: ?, fv_arg$Box$0$: ?): ? {
+//│   set fv_arg$Box$0$ = Box_v;
+//│   set fv_x = fv_arg$Box$0$;
+//│   return [fv_x, fv_k]
+//│ };
+//│ @private
+//│ define selected_4$b_rest as fun selected_4$b_rest⁰(): ? {
+//│   return null
+//│ };
+//│ define selected⁰ as fun selected¹(n: Int⁰, k: Str⁰): ? {
+//│   let b: ?, x: ?, arg$Box$0$: ?, Box_v: Int⁰;
+//│   set Box_v = n;
+//│   set b = selected_4$b_Box⁰(Box_v);
+//│   return b(k, x, arg$Box$0$)
+//│ };
+//│ end
+
+
+// The code following the match becomes a separate continuation function, whose free variables are typed the
+// same way - `fv_k` is a `Str` in both the branch function and the rest function.
+fun withRest(n: Int, k: Str) =
+  let b = Box(n)
+  let r = if b is
+    Box(x) then x
+    else 0
+  [r, k]
+//│ deforest > >>> fusing >>>
+//│ deforest > Box¹(n¹) ->
+//│ deforest > 	match: b³
+//│ deforest > 	fields: b³.v¹
+//│ deforest > <<< fusing <<<
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let withRest_4$b_Box, withRest_4$b_rest;
+//│ @affine(1) @private
+//│ define withRest_4$b_Box as fun withRest_4$b_Box⁰(Box_v: Int⁰)(fv_x: ?, fv_arg$Box$0$: ?, fv_tmp: ?, fv_k: Str⁰, fv_r: ?, fv_tmp1: ?): ? {
+//│   set fv_arg$Box$0$ = Box_v;
+//│   set fv_x = fv_arg$Box$0$;
+//│   set fv_tmp1 = fv_x;
+//│   return withRest_4$b_rest⁰(fv_k, fv_r, fv_tmp1)
+//│ };
+//│ @private
+//│ define withRest_4$b_rest as fun withRest_4$b_rest⁰(fv_k: Str⁰, fv_r: ?, fv_tmp: ?): ? {
+//│   set fv_r = fv_tmp;
+//│   return [fv_r, fv_k]
+//│ };
+//│ define withRest⁰ as fun withRest¹(n: Int⁰, k: Str⁰): ? {
+//│   let b: ?, r: ?, x: ?, arg$Box$0$: ?, tmp: ?, Box_v: Int⁰;
+//│   set Box_v = n;
+//│   set b = withRest_4$b_Box⁰(Box_v);
+//│   return b(x, arg$Box$0$, tmp, k, r, tmp)
+//│ };
+//│ end
+
+
+// A constructor field that no branch selects still becomes a parameter, so that the branch function takes the
+// complete constructor argument list. These placeholders are typed from the field they stand for.
+fun noFields(n: Int, s: Str) =
+  let p = Pair(n, s)
+  if p is
+    Pair then 1
+//│ deforest > >>> fusing >>>
+//│ deforest > Pair¹(n², s⁰) ->
+//│ deforest > 	match: p⁰
+//│ deforest > <<< fusing <<<
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let noFields_2$p_Pair, noFields_2$p_rest;
+//│ @affine(1) @private
+//│ define noFields_2$p_Pair as fun noFields_2$p_Pair⁰(_a: Int⁰, _b: Str⁰)(): ? {
+//│   return 1
+//│ };
+//│ @private
+//│ define noFields_2$p_rest as fun noFields_2$p_rest⁰(): ? {
+//│   return null
+//│ };
+//│ define noFields⁰ as fun noFields¹(n: Int⁰, s: Str⁰): ? {
+//│   let p: ?, Pair_a: Int⁰, Pair_b: Str⁰;
+//│   set Pair_a = n;
+//│   set Pair_b = s;
+//│   set p = noFields_2$p_Pair⁰(Pair_a, Pair_b);
+//│   return p()
+//│ };
+//│ end

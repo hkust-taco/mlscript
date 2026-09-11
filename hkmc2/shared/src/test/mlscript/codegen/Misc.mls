@@ -62,31 +62,34 @@ bar(1, 2)
 //│ = [1, 2, 3]
 
 
+// The `wasm` module is compiler fiction: it may only appear as the prefix of an intrinsic call. Naming it
+// alone, or selecting into it at any depth, is an error - and a complete intrinsic call is rejected too when
+// the target is JS rather than Wasm.
 :e
 wasm
 //│ ╔══[COMPILATION ERROR] Module 'wasm' is virtual (i.e., "compiler fiction"); cannot be used directly
-//│ ║  l.66: 	wasm
+//│ ║  l.69: 	wasm
 //│ ╙──      	^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :e
 wasm.i32
 //│ ╔══[COMPILATION ERROR] Module 'wasm' is virtual (i.e., "compiler fiction"); cannot be used directly
-//│ ║  l.73: 	wasm.i32
+//│ ║  l.76: 	wasm.i32
 //│ ╙──      	^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :e
 wasm.i32.const
 //│ ╔══[COMPILATION ERROR] Module 'wasm' is virtual (i.e., "compiler fiction"); cannot be used directly
-//│ ║  l.80: 	wasm.i32.const
+//│ ║  l.83: 	wasm.i32.const
 //│ ╙──      	^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :e
 wasm.i32.const(42)
 //│ ╔══[COMPILATION ERROR] WebAssembly intrinsics are not available when targeting JS
-//│ ║  l.87: 	wasm.i32.const(42)
+//│ ║  l.90: 	wasm.i32.const(42)
 //│ ╙──      	^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 

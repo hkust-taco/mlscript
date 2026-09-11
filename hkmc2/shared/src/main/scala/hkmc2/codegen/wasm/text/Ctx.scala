@@ -18,7 +18,7 @@ import Instructions.*
 import Message.MessageContext
 
 import scala.collection.immutable.ListMap
-import scala.collection.mutable.{ArrayBuffer as ArrayBuf, Map as MutMap}
+import scala.collection.mutable.{ArrayBuffer as ArrayBuf, LinkedHashSet, Map as MutMap}
 import scala.reflect.ClassTag
 
 /** Metadata for a REPL binding that can be imported by later Wasm modules. */
@@ -188,7 +188,7 @@ final class SessionExportCtx(
   * @param exportName
   *   Optional export name.
   * @param wrapId
-  *   An pair of optional strings for adding a prefix and suffix to the generated identifier of this function.
+  *   A pair of optional strings for adding a prefix and suffix to the generated identifier of this function.
   */
 class FuncInfo(
     val sym: ExternSymbol,
@@ -236,7 +236,7 @@ end FuncInfo
   * @param sym
   *   The source [[ScopedSymbol]] which this global is generated from.
   * @param wrapId
-  *   An pair of optional strings for adding a prefix and suffix to the generated identifier of this global.
+  *   A pair of optional strings for adding a prefix and suffix to the generated identifier of this global.
   */
 class GlobalInfo(
     val globalType: GlobalType,
@@ -265,12 +265,12 @@ end GlobalInfo
   * @param memType
   *   The type of the memory.
   * @param wrapId
-  *   An pair of optional strings for adding a prefix and suffix to the generated identifier of this memory.
+  *   A pair of optional strings for adding a prefix and suffix to the generated identifier of this memory.
   */
 class MemInfo(val sym: ExternSymbol, val memType: MemType, val wrapId: Opt[Str] -> Opt[Str] = N -> N)(using Ctx, Raise)
     extends ToWat:
 
-  /** Symbolic identifier for the global. */
+  /** Symbolic identifier for the memory. */
   val id: SymIdx = SymIdx(summon[Ctx].memoryScp.allocateOrGetNameWrapped(sym, wrapId))
 
   def toWat: Document = doc"(memory ${id.toWat} ${memType.toWat})"
@@ -283,7 +283,7 @@ end MemInfo
   * @param sym
   *   The source [[ExternSymbol]] which this type is generated from.
   * @param wrapId
-  *   An pair of optional strings for adding a prefix and suffix to the generated identifier of this type.
+  *   A pair of optional strings for adding a prefix and suffix to the generated identifier of this type.
   * @param compType
   *   The composite type this type definition represents.
   * @param objectTag
@@ -338,7 +338,7 @@ enum WasmIntrinsicType:
 /** An argument passed to a Wasm intrinsic function.
   *
   * This class also stores the parameter's kind (i.e. instruction argument vs stack argument), since some wasm
-  * intrinsics (e.g. `i32.const`) only accepts a constant literal as part of the instruction.
+  * intrinsics (e.g. `i32.const`) only accept a constant literal as part of the instruction.
   *
   * @param intrName
   *   The name of the intrinsic this argument was passed to, for diagnostics.
@@ -535,7 +535,7 @@ class FunctionCtx(
   /** The declared Wasm value type of the param/local slot for `sym`.
     *
     * Parameter slot types are resolved eagerly at construction (see [[resolvedParamTypes]]): each comes from the slot's
-    * `paramValTypes` override if present, otherwise from the symbol's erased type via [[paramType]]. Local slots derive
+    * `paramTypes` override if present, otherwise from the symbol's erased type via [[paramType]]. Local slots derive
     * their type from the symbol's erased type via [[localType]].
     */
   def slotType(sym: SlotSymbol)(using Ctx): ValType =
@@ -733,7 +733,7 @@ class Ctx(using Elaborator.Ctx, State) extends ToWat:
 
   import Ctx.prettyString
 
-  /** The [[`Elaborator.Ctx`]] associated with this instance. */
+  /** The [[Elaborator.Ctx]] associated with this instance. */
   def elabCtx: Elaborator.Ctx = summon[Elaborator.Ctx]
 
   /** [[Scope]] for generating WAT identifiers of types. */
@@ -741,6 +741,9 @@ class Ctx(using Elaborator.Ctx, State) extends ToWat:
 
   /** [[ListMap]] containing all type definitions in the module mapped by their symbolic identifiers. */
   private var types = ListMap.empty[SymIdx, TypeInfo]
+
+  /** Types that must be emitted together as one recursive type group. */
+  private val recursiveTypes = LinkedHashSet.empty[SymIdx]
 
   /** [[MutMap]] containing type symbols mapped to their corresponding [[TypeInfo]] instance. */
   private val namedTypes = MutMap.empty[BlockMemberSymbol, TypeInfo]
@@ -826,6 +829,10 @@ class Ctx(using Elaborator.Ctx, State) extends ToWat:
     val tag = objectTagNum
     objectTagNum += 1
     tag
+
+  /** Marks the type at `idx` as a member of the module's recursive type group. */
+  def addToRecursiveTypes(idx: TypeIdx): Unit = idx.idx match
+    case sym: SymIdx => recursiveTypes += sym
 
   /** Adds a type into this context. */
   def addType(typeInfo: TypeInfo): TypeIdx =
@@ -1103,6 +1110,37 @@ class Ctx(using Elaborator.Ctx, State) extends ToWat:
   def getOrCreateWasmIntrinsicTag(name: Str, createTag: => TagIdx): TagIdx =
     wasmIntrinsicTags.getOrElseUpdate(name, createTag)
 
+  /** Groups the recursive types into the order they must be declared in.
+    *
+    * Wasm requires every type a definition references to be declared before it, so class layouts are ordered by
+    * the classes their parents and fields mention. A cycle cannot be ordered, so each strongly connected
+    * component holding more than one type is emitted as one `(rec ...)` group. Within a group, field references
+    * may point forward, but a superclass must still precede its subclasses.
+    */
+  private def orderedRecursiveTypes: Ls[Ls[SymIdx]] =
+    def named(idx: TypeIdx): Opt[SymIdx] = idx.idx match
+      case sym: SymIdx => S(sym)
+    def parents(id: SymIdx): Ls[SymIdx] = types(id).compType match
+      case structTy: StructType => structTy.parents.flatMap(named).toList
+      case _ => Nil
+    def dependencies(id: SymIdx): Ls[SymIdx] = types.get(id).map(_.compType) match
+      case S(structTy: StructType) =>
+        val fields = structTy.fields.flatMap: (_, field) =>
+          field.ty match
+            case RefType(idx: TypeIdx, _) => named(idx)
+            case _ => N
+        (parents(id) ++ fields).iterator.filter(recursiveTypes).distinct.toList
+      case _ => Nil
+    SccAnalysis.sccsFrom(dependencies, recursiveTypes).map: component =>
+      val members = component.toSet
+      // A field can lead the first traversal to a descendant before its immediate superclass. Order the
+      // component again using only inheritance edges; these must be acyclic even inside a recursive group.
+      SccAnalysis.sccsFrom((id: SymIdx) => parents(id).filter(members), component).flatMap: inheritanceComponent =>
+        assert(inheritanceComponent.size === 1 && !parents(inheritanceComponent.head).contains(inheritanceComponent.head),
+          s"Cyclic superclass dependencies in recursive type group: $inheritanceComponent")
+        inheritanceComponent
+  end orderedRecursiveTypes
+
   def toWat: Document =
     val definedGlobals = globals.valuesIterator.collect:
       case globalInfo: GlobalInfo => globalInfo.toWat
@@ -1110,9 +1148,17 @@ class Ctx(using Elaborator.Ctx, State) extends ToWat:
       case memInfo: MemInfo => memInfo.toWat
     val funcDefns = funcs.valuesIterator.collect:
       case funcInfo: FuncInfo => funcInfo.toWat
+    val components = orderedRecursiveTypes.map:
+      case id :: Nil => types(id).toWat
+      case component => doc"(rec #{  # ${component.map(types(_).toWat).mkDocument(doc" # ")} #} )"
+    val firstMember = types.keysIterator.find(recursiveTypes)
+    val typeDefns = types.iterator.flatMap: (id, typeInfo) =>
+      if !recursiveTypes(id) then typeInfo.toWat :: Nil
+      else if firstMember.contains(id) then components
+      else Nil
     doc"(module #{  # ${
         (
-          types.valuesIterator.map(_.toWat)
+          typeDefns
             ++ imports.iterator.map(_.toWat)
             ++ tags.valuesIterator.map(_.toWat)
             ++ definedGlobals

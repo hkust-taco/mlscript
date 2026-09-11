@@ -53,7 +53,7 @@ extension (ty: ValType)
     case _ => PrimitiveType.values.find(_.wasmType == ty).map(_.zeroValue)
 
 extension (et: ErasedType)
-  /** Returns the corresponding Wasm type for this [[`ErasedType`]]. */
+  /** Returns the corresponding Wasm type for this [[ErasedType]]. */
   private[text] def wasmType(using Ctx, State): Opt[ValType] =
     import Ctx.ctx
     val elabCtx = ctx.elabCtx
@@ -65,14 +65,19 @@ extension (et: ErasedType)
           else if isBoxedAsI31(tpeSym, ctx) then
             S(RefType.i31ref)
           else
-            tpeSym.asBlkMember.flatMap(ctx.getType).map(RefType(_, nullable = false))
+            // The Unit singleton's struct is registered under the synthetic `unitBlockMemberSymbol`, not under the
+            // `unit` module's own block member that `asBlkMember` resolves to. Cf. `localType` below.
+            val structSym =
+              if tpeSym eq State.unitSymbol then S(State.unitBlockMemberSymbol)
+              else tpeSym.asBlkMember
+            structSym.flatMap(ctx.getType).map(RefType(_, nullable = false))
         case ErasedType.Primitive(prim) => S(prim.wasmType)
         case _ => N
 
 extension (sym: WasmSlotSymbol)
   /** The Wasm value type a *local* slot for `sym` should be declared with.
     *
-    * Use [[`FunctionCtx.slotType`]] for parameter slots, which handles `anyref` widening due to virtual dispatch
+    * Use [[FunctionCtx.slotType]] for parameter slots, which handles `anyref` widening due to virtual dispatch
     * calling conventions.
     */
   private[text] def localType(using Ctx, State): ValType =
@@ -90,7 +95,7 @@ extension (sym: WasmSlotSymbol)
         s.erasedType.flatMap(_.wasmType).getOrElse(RefType.anyref)
 
 extension (sym: WasmSlotSymbol)
-  /** The Wasm value type a parameter slot for `sym` should be declared with, if typed parameters are enabled. */
+  /** The Wasm value type a parameter slot for `sym` should be declared with. */
   private[text] def paramType(using Ctx, State): ValType =
     sym match
       case s: HasErasedType =>
@@ -960,11 +965,27 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
       thisType = N,
     )
 
+  /** Registers a class's type identity into `Ctx`.
+    *
+    * This method is intended to be called before any layout or signature resolution for the class, since it is used to
+    * allocate a placeholder type identity so that forward- and self-references to the class are resolved correctly.
+    *
+    * The layout registered here is a placeholder: [[predeclareClassType]] overwrites it with the real one under the
+    * same name.
+    *
+    */
+  private def allocateClassTypeIdentity(defn: ClsLikeDefn)(using Raise): Unit =
+    ctx.addToRecursiveTypes(ctx.addType(TypeInfo(
+      sym = defn.sym,
+      compType = StructType(fields = Nil),
+      objectTag = N,
+    )))
+
   /** Registers all Wasm pre-declarations needed for one top-level class, in dependency order. */
   private def predeclareClass(defn: ClsLikeDefn)(using Raise, SessionExportCtx): Unit =
     predeclareClassVirtualTable(defn)
     // Note: `predeclareClassType` must run before `predeclareClassTypeInfoType`, since virtual slots in `typeinfo`
-    // needs to type `this` as the class's own type.
+    // need to type `this` as the class's own type.
     predeclareClassType(defn)
     predeclareClassTypeInfoType(defn)
     predeclareClassInit(defn)
@@ -1522,7 +1543,10 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
     raise(ErrorReport(errMsgs, source = Diagnostic.Source.Compilation, extraInfo = extraInfo))
     unreachable
 
-  /** Returns the local or global index for a given symbol `l`. */
+  /** The local or global index for `l`, or `N` when it is neither.
+    *
+    * An [[InnerSymbol]] is a hard failure: it never denotes a variable slot.
+    */
   def varIndex(l: WasmSlotSymbol, loc: Opt[Loc])(using FunctionCtx, Raise): Opt[LocalIdx | GlobalIdx] = l match
     case ts: InnerSymbol =>
       lastWords(s"InnerSymbol `$ts` (${ts.getClass.getSimpleName}) cannot be resolved as a variable")
@@ -1649,7 +1673,11 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
           typeIdx = virtualMethodTypeIdx,
           funcType = virtualMethodSignature(baseSym, paramTypes, resultType),
         )
-        Ls(receiverExpr, virtualCall)
+        // The slot carries the *base* declaration's result type, but the resolved method's declared result may be
+        // overridden to be narrower. Restore the slot's result value to the resolved method's declared type here -
+        // the checked cast ensures that a value that doesn't conform will trap at runtime.
+        val adaptedCall = castConserve(virtualCall, declaredResultType(methodSym))
+        Ls(receiverExpr, adaptedCall)
       case N =>
         val funcTypeInfo = ctx.getTypeInfo_!(ctx.getFuncTypeUse_!(methodSym).typeIdx)
         val operands = castArgsToParams(result(qual) +: args.map(argument), funcTypeInfo)
@@ -1976,7 +2004,13 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
     case Cast(value, target, _) =>
       target.wasmType match
         case S(ty) => castToValType(value, ty)
-        case N => result(value)
+        case N =>
+          target.canonicalize match
+            case ErasedType.AnyRef(_, tpeSym) if tpeSym.asClsOrMod.exists(_.irClsLikeDefn.isDefined) =>
+              // A concrete class with no Wasm representation means the class definition is missing from the IR.
+              softAssert(false, s"no Wasm type is available for cast target `${target.describe}`")
+            case _ =>
+          result(value)
 
     case r =>
       errExpr(
@@ -1996,7 +2030,7 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
       case _ => N
     loop(path, Nil)
 
-  /** Resolves the argument at position `idx` as an [[`IntrinsicArg`]], recovering the numeric literal it was written
+  /** Resolves the argument at position `idx` as an [[IntrinsicArg]], recovering the numeric literal it was written
     * as, if it was written as one.
     *
     * `declared` is the type the prelude declares for the parameter. The argument is only compiled as an operand - and
@@ -2672,8 +2706,8 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
               local.get(matchResLocal.get, RefType.anyref),
             )
           else
-            // Every path of the match is a control transfer, so the tail (and any subsequent reads of `$matchRes` is
-            // dead. Emit `unreachable` to type the enclosing block as bottom.
+            // Every path of the match is a control transfer, so the tail (and any subsequent reads of `$matchRes`)
+            // is dead. Emit `unreachable` to type the enclosing block as bottom.
             Vector(matchBlock, unreachable)
         else
           val rstExpr = returningTerm(rst)
@@ -2785,7 +2819,11 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
             case _: ErrorReport => break(compiledModule("entry"))
             case _ => ()
         val (classes, funs) = collectTopLevelDefns(p.main)
-        sortTopLevelClasses(classes).foreach(predeclareClass)
+        val sortedClasses = sortTopLevelClasses(classes)
+        // Class identities come first, so that layouts and signatures resolve self- and forward references to
+        // the class's own type rather than to `anyref`.
+        sortedClasses.foreach(allocateClassTypeIdentity)
+        sortedClasses.foreach(predeclareClass)
         // Top-level functions are predeclared here too, so that a call can be compiled before the
         // definition it refers to. Functions do not need to be ordered.
         // Note that classes must come first, since the types of parameters and return values may

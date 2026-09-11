@@ -24,6 +24,7 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
   val showSanitizedJS = NullaryCommand("ssjs")
   val showJS = NullaryCommand("sjs")
   val showRepl = NullaryCommand("showRepl")
+  val await = NullaryCommand("await")
   val traceJS = NullaryCommand("traceJS")
   val expect = Command("expect"): ln =>
     ln.trim
@@ -272,7 +273,8 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
       // * Sometimes the JS block won't execute due to a syntax or runtime error so we always set this first
       host.execute(s"$resNme = undefined")
       
-      mkQuery(preStr, jsStr): stdout =>
+      val awaitResult = (if await.isSet then s"; $resNme = await $resNme" else "")
+      mkQuery(preStr, jsStr + awaitResult): stdout =>
         stdout.splitSane('\n').init // should always ends with "undefined" (TODO: check)
           .foreach: line =>
             output(s"> ${line}")

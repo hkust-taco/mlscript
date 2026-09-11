@@ -35,6 +35,8 @@ fun main =
 //│ end
 
 
+// An annotated slot does carry one, whatever binds it: each `val` below is typed from its annotation, and
+// so is the temporary the array literal spills into.
 val i: Int = 1
 val f: Num = 1.5
 val s: Str = "str"
@@ -116,6 +118,8 @@ takeInt(vi)
 //│ return takeInt¹(vi¹)
 
 
+// A written `()` erases to `Unit` in every position - parameter, result and argument alike. The unit value
+// lowers to `runtime.Unit`, which is itself typed, so passing it into a `()` slot takes no coercion.
 fun retUnit(): () = ()
 fun takesUnit(u: ()): () = u
 fun passUnit(): () = takesUnit(())
@@ -130,6 +134,8 @@ fun passUnit(): () = takesUnit(())
 //│ end
 
 
+// Class parameters and `val` fields keep their annotations - the private backing field, the public field and
+// the constructor parameter alike.
 class Foo(x: Int)
 class Bar(val y: Str)
 fun main =
@@ -156,6 +162,8 @@ fun main =
 //│ end
 
 
+// An unannotated parameter is `?`, so the call may pass anything; the narrowing lands where the value reaches
+// a typed slot instead - here on the constructor argument.
 fun mk(a) = new Bar(a)
 fun main =
   let made = mk(1)
@@ -168,6 +176,8 @@ fun main =
 //│ end
 
 
+// A result annotation is checked against the body, and `Str` is unrelated to `Int`, so this is an error rather
+// than a cast. The definition is still lowered - uncast - so the blocks after it keep compiling.
 :ge
 fun test(x: Int): Int = "oops"
 //│ ═══[COMPILATION ERROR] Cannot use a value of type 'Str' at an unrelated type 'Int'
@@ -175,6 +185,8 @@ fun test(x: Int): Int = "oops"
 //│ define test⁰ as fun test¹(x: Int⁰): Int⁰ { return "oops" }; end
 
 
+// The return coercion is what an annotated result buys. `(+)` is a builtin and carries no erased type, so
+// `add2` narrows its result to `Int` while `add1`, having nothing to narrow to, leaves it alone.
 fun add1(x: Int, y: Int) = x + y
 fun add2(x: Int, y: Int): Int = x + y
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
@@ -193,31 +205,33 @@ fun keep(x: Int) =
 //│ define keep⁰ as fun keep¹(x: Int⁰): ? { set x = 5; return x }; end
 
 
-class Ref(mut val v: Int) with
+// One class, four facets of the same rule:
+//
+// - `put` - a `mut val` field keeps its annotation, so a write through an unannotated parameter narrows at
+//   the assignment rather than at the call;
+// - `get` - reading the field back needs no cast, since the selection carries the member's type. The result
+//   annotation is what makes that observable: without it the golden is identical either way;
+// - `twice` - an annotated method result narrows the `(+)` call, exactly as the top-level `add2` does above;
+// - `whatever` - an unannotated one has nothing to narrow to.
+class Cell(mut val v: Int) with
   fun put(x) = set v = x
-//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ define Ref⁰ as class Ref² {
-//│   val v¹: Int⁰;
-//│   constructor Ref¹(v: Int⁰) {
-//│     define v¹ as val v²: Int⁰ = v;
-//│     end
-//│   }
-//│   method put⁰ = fun put¹(x: ?): ? { set Ref².this.v² = (x as! Int⁰); return runtime⁰.Unit⁰ }
-//│ };
-//│ end
-
-
-fun rest(a, ...xs) = xs
-//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ define rest⁰ as fun rest¹(a: ?, ...xs: ?): ? { return xs }; end
-
-
-class Calc() with
+  fun get(): Int = v
   fun twice(x: Int): Int = x + x
   fun whatever(a) = a
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ define Calc⁰ as class Calc² {
-//│   constructor Calc¹
+//│ define Cell⁰ as class Cell² {
+//│   val v¹: Int⁰;
+//│   constructor Cell¹(v: Int⁰) {
+//│     define v¹ as val v²: Int⁰ = v;
+//│     end
+//│   }
+//│   method put⁰ = fun put¹(x: ?): ? {
+//│     set Cell².this.v² = (x as! Int⁰);
+//│     return runtime⁰.Unit⁰
+//│   }
+//│   method get⁰ = fun get¹(): Int⁰ {
+//│     return Cell².this.v²
+//│   }
 //│   method twice⁰ = fun twice¹(x: Int⁰): Int⁰ {
 //│     return (+⁰(x, x) as! Int⁰)
 //│   }
@@ -226,23 +240,14 @@ class Calc() with
 //│ end
 
 
-// A selection resolved to a member (`this.v`) still carries that member's annotated type.
-class Box(val v: Int) with
-  fun get() = v
+// A rest parameter has no annotation to erase, so both it and the list it binds stay `?`.
+fun rest(a, ...xs) = xs
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ define Box⁰ as class Box² {
-//│   val v³: Int⁰;
-//│   constructor Box¹(v: Int⁰) {
-//│     define v³ as val v⁴: Int⁰ = v;
-//│     end
-//│   }
-//│   method get⁰ = fun get¹(): ? { return Box².this.v⁴ }
-//│ };
-//│ end
+//│ define rest⁰ as fun rest¹(a: ?, ...xs: ?): ? { return xs }; end
 
 
-// Closure capture (`:lift`): the generated capture class and its field are not
-// typed from the captured local, so they stay `: ?`.
+// Closure capture (`:lift`): the captured local `n` is unannotated, so the generated capture class and its
+// field have no type to inherit and stay `: ?`. The next block is the same shape with an annotated local.
 :lift
 fun counter(x: Int) =
   let n = 0
@@ -306,31 +311,49 @@ resetCounter(41)
 //│ return resetCounter¹(41)
 
 
-// `Int32` is a root of the erased hierarchy rather than a descendant of `Object`, so neither direction is a
-// widening or a narrowing - the same sibling relationship the `Int` block below describes. What separates
-// the two: an `Int` is boxed and still reaches the top type, while an `Int32` cannot, which is the third
-// error here, raised on the unannotated result of `f`.
+// `Int` and `Int32` are both represented as host primitives, so both are *siblings* of `Object` rather than
+// descendants of it: neither direction is a widening or a narrowing, and all four crossings below are
+// rejected. What separates the two is the fifth error: an `Int` is boxed and still reaches the top type,
+// while an `Int32` cannot - so returning `Int32` from `f`, whose result is unannotated and therefore
+// `Unknown`, is rejected where returning an `Int` would not be.
 :ge
 fun useObj(o: Object) = o
+fun useInt(n: Int) = n
 fun useInt32(n: Int32): Int32 = n
-fun f(x: Int32, o: Object) =
+fun f(o: Object, i: Int, x: Int32) =
+  useObj(i)
+  useInt(o)
   useObj(x)
   useInt32(o)
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int' at an unrelated type 'Object'
+//│ ║  l.324: 	  useObj(i)
+//│ ╙──       	         ^
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Object' at an unrelated type 'Int'
+//│ ║  l.325: 	  useInt(o)
+//│ ╙──       	         ^
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int32' at an unrelated type 'Object'
-//│ ║  l.317: 	  useObj(x)
+//│ ║  l.326: 	  useObj(x)
 //│ ╙──       	         ^
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Object' at an unrelated type 'Int32'
-//│ ║  l.318: 	  useInt32(o)
+//│ ║  l.327: 	  useInt32(o)
 //│ ╙──       	           ^
 //│ ═══[COMPILATION ERROR] Cannot use a value of type 'Int32' at an unrelated type 'Unknown'
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define useObj⁰ as fun useObj¹(o: Object⁰): ? {
 //│   return o
 //│ };
+//│ define useInt⁰ as fun useInt¹(n: Int⁰): ? {
+//│   return n
+//│ };
 //│ define useInt32⁰ as fun useInt32¹(n: Int32): Int32 {
 //│   return n
 //│ };
-//│ define f² as fun f³(x: Int32, o: Object⁰): ? { do useObj¹(x); return useInt32¹(o) };
+//│ define f² as fun f³(o: Object⁰, i: Int⁰, x: Int32): ? {
+//│   do useObj¹(i);
+//│   do useInt¹(o);
+//│   do useObj¹(x);
+//│   return useInt32¹(o)
+//│ };
 //│ end
 
 
@@ -339,7 +362,7 @@ fun f(x: Int32, o: Object) =
 fun id(x: Anything) = ()
 fun f(x: Int32) = id(x)
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int32' at an unrelated type 'Unknown'
-//│ ║  l.340: 	fun f(x: Int32) = id(x)
+//│ ║  l.363: 	fun f(x: Int32) = id(x)
 //│ ╙──       	                     ^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define id⁰ as fun id¹(x: Unknown): ? {
@@ -349,18 +372,26 @@ fun f(x: Int32) = id(x)
 //│ end
 
 
-// Passing `Int31` or `Int` to `id(Anything)` is legal, since `Anything` erased to `Unknown` (which is the top type for
-// all reference types).
+// Passing `Int31` or `Int` to `id(Anything)` is legal, since `Anything` erases to `Unknown` (which is the top type
+// for all reference types). `f3` shows the same erasure in result position: `Anything` becomes `Unknown`, not
+// `AnyRef(_, Anything)` - which would have printed as `Anything⁰`.
 fun f1(x: Int31) = id(x)
 fun f2(x: Int) = id(x)
+fun f3(x: Anything): Anything = x
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define f1⁰ as fun f1¹(x: Int31⁰): ? {
 //│   return id¹(x)
 //│ };
-//│ define f2⁰ as fun f2¹(x: Int⁰): ? { return id¹(x) };
+//│ define f2⁰ as fun f2¹(x: Int⁰): ? {
+//│   return id¹(x)
+//│ };
+//│ define f3⁰ as fun f3¹(x: Unknown): Unknown { return x };
 //│ end
 
 
+// Two classes that merely share a name are unrelated: the `Shape` nested in `Encl` shadows the outer one, so
+// `bad` passes an `Encl.Shape` where the outer `Shape` is declared. The diagnostic qualifies both by owner,
+// which is the only thing distinguishing them in the message.
 :ge
 class Shape
 fun useShape(x: Shape) = x
@@ -368,7 +399,7 @@ module Encl with
   class Shape
   fun bad(x: Shape) = useShape(x)
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Encl.Shape' at an unrelated type 'Shape'
-//│ ║  l.369: 	  fun bad(x: Shape) = useShape(x)
+//│ ║  l.400: 	  fun bad(x: Shape) = useShape(x)
 //│ ╙──       	                               ^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define useShape⁰ as fun useShape¹(x: Shape⁰): ? {
@@ -386,32 +417,7 @@ module Encl with
 //│ end
 
 
-// `Int` is represented as a host primitive, so it is a sibling of `Object` rather than one of its
-// descendants: neither direction is a widening or a narrowing, and both are rejected.
-:ge
-fun useObj(o: Object) = o
-fun useInt(n: Int) = n
-fun f(o: Object, i: Int) =
-  useObj(i)
-  useInt(o)
-//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int' at an unrelated type 'Object'
-//│ ║  l.395: 	  useObj(i)
-//│ ╙──       	         ^
-//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Object' at an unrelated type 'Int'
-//│ ║  l.396: 	  useInt(o)
-//│ ╙──       	         ^
-//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ define useObj² as fun useObj³(o: Object⁰): ? {
-//│   return o
-//│ };
-//│ define useInt⁰ as fun useInt¹(n: Int⁰): ? {
-//│   return n
-//│ };
-//│ define f⁶ as fun f⁷(o: Object⁰, i: Int⁰): ? { do useObj³(i); return useInt¹(o) };
-//│ end
-
-
-// `Int31 <: Int`.
+// `Int31 <: Int`, so widening is free while narrowing back to `Int31` takes a checked cast.
 fun useInt31(n: Int31) = n
 fun g(i: Int, i31: Int31) =
   useInt(i31)
@@ -485,22 +491,12 @@ fun useUnion(x: Union): Union = x
 //│ end
 
 
+// A union that already contains its own upper bound collapses to it, and casts are then decided against the
+// collapsed type: `A | B | Base` and `A | B` both erase to `Base`, so only `A | B -> A` is a downcast.
 class Base
 class A extends Base
 class B extends Base
 fun threeOf(x: A | B | Base): Int = 0
-//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ define threeOf⁰ as fun threeOf¹(x: Base⁰): Int⁰ {
-//│   return 0
-//│ };
-//│ define Base¹ as class Base⁰;
-//│ define A⁰ as class A¹ extends Base⁰ {};
-//│ define B⁰ as class B¹ extends Base⁰ {};
-//│ end
-
-
-// Casts are decided against the collapsed slot type: `A | B` erases to `Base`, so only `A | B -> A` is a
-// downcast.
 fun takesBase(b: Base): () = ()
 fun takesUnion(u: A | B): () = ()
 fun takesSubtype(a: A): () = ()
@@ -509,47 +505,52 @@ fun memberIntoUnion(a: A) = takesUnion(a)
 fun baseIntoUnion(b: Base) = takesUnion(b)
 fun unionIntoSubtype(x: A | B) = takesSubtype(x)
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define threeOf⁰ as fun threeOf¹(x: Base⁰): Int⁰ {
+//│   return 0
+//│ };
 //│ define takesBase⁰ as fun takesBase¹(b: Base⁰): Unit⁰ {
 //│   return runtime⁰.Unit⁰
 //│ };
 //│ define takesUnion⁰ as fun takesUnion¹(u: Base⁰): Unit⁰ {
 //│   return runtime⁰.Unit⁰
 //│ };
-//│ define takesSubtype⁰ as fun takesSubtype¹(a: A¹): Unit⁰ {
+//│ define takesSubtype⁰ as fun takesSubtype¹(a: A⁰): Unit⁰ {
 //│   return runtime⁰.Unit⁰
 //│ };
 //│ define unionIntoBase⁰ as fun unionIntoBase¹(x: Base⁰): ? {
 //│   return takesBase¹(x)
 //│ };
-//│ define memberIntoUnion⁰ as fun memberIntoUnion¹(a: A¹): ? {
+//│ define memberIntoUnion⁰ as fun memberIntoUnion¹(a: A⁰): ? {
 //│   return takesUnion¹(a)
 //│ };
 //│ define baseIntoUnion⁰ as fun baseIntoUnion¹(b: Base⁰): ? {
 //│   return takesUnion¹(b)
 //│ };
 //│ define unionIntoSubtype⁰ as fun unionIntoSubtype¹(x: Base⁰): ? {
-//│   return takesSubtype¹((x as! A¹))
+//│   return takesSubtype¹((x as! A⁰))
 //│ };
+//│ define Base¹ as class Base⁰;
+//│ define A¹ as class A⁰ extends Base⁰ {};
+//│ define B⁰ as class B¹ extends Base⁰ {};
 //│ end
 
 
 // The primitives are roots of the erased hierarchy, so a union mixing one with any distinct type - another
-// primitive included - has no upper bound to erase to. The bodies do not read `x`: declaring such a slot is
-// legal, only crossing it is not.
+// primitive included - has no upper bound to erase to. Note that declaring such a slot is legal, only
+// passing an argument into it is not. With a third member, the pair that *first* had no upper bound is the one
+// kept, not the last one folded in.
 fun mixed(x: Int32 | Str) = 0
 fun twoPrims(x: Int32 | Int64) = 0
+fun mixedThree(x: Int32 | Str | Bool) = 0
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define mixed⁰ as fun mixed¹(x: ‹incompatible(Int32, Str⁰)›): ? {
 //│   return 0
 //│ };
-//│ define twoPrims⁰ as fun twoPrims¹(x: ‹incompatible(Int32, Int64)›): ? { return 0 };
+//│ define twoPrims⁰ as fun twoPrims¹(x: ‹incompatible(Int32, Int64)›): ? {
+//│   return 0
+//│ };
+//│ define mixedThree⁰ as fun mixedThree¹(x: ‹incompatible(Int32, Str⁰)›): ? { return 0 };
 //│ end
-
-
-// A third member keeps the pair that first had no upper bound, not the last one folded in.
-fun mixedThree(x: Int32 | Str | Bool) = 0
-//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ define mixedThree⁰ as fun mixedThree¹(x: ‹incompatible(Int32, Str⁰)›): ? { return 0 }; end
 
 
 // The error lands where a value crosses the slot, not where the type is written: the LUB is computed inside
@@ -557,7 +558,7 @@ fun mixedThree(x: Int32 | Str | Bool) = 0
 :ge
 fun intoMixed(n: Int32) = mixed(n)
 //│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Str' have no common representation
-//│ ║  l.558: 	fun intoMixed(n: Int32) = mixed(n)
+//│ ║  l.559: 	fun intoMixed(n: Int32) = mixed(n)
 //│ ╙──       	                                ^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define intoMixed⁰ as fun intoMixed¹(n: Int32): ? { return mixed¹(n) }; end
@@ -580,8 +581,8 @@ fun mixedIntoObject(x: Int32 | Str): Object = x
 //│ end
 
 
-// `sccF`'s tail call is folded into the merged dispatcher, dropping its `as Int` coercion; entering at `sccF` can exit
-// through `sccG`'s arm, so the coercion is re-placed on `sccF`'s stub.
+// Folding `sccF`'s tail call into the merged dispatcher loses its `as Int` coercion, and the loop can exit
+// through `sccG`'s arm with a `Num`, so the cast is deferred to the exit.
 :soir
 fun sccF(): Int = sccG()
 fun sccG(): Num = sccF() + 1
@@ -596,50 +597,43 @@ fun sccG(): Num = sccF() + 1
 //│ };
 //│ end
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let sccF_sccG;
+//│ @private
+//│ define sccF_sccG as fun sccF_sccG⁰(id: Int⁰): Num⁰ {
+//│   let sccF$deferred: Bool⁰;
+//│   set sccF$deferred = false;
+//│   loop loopLabel:
+//│     match id
+//│       0 =>
+//│         set sccF$deferred = true;
+//│         set id = 1;
+//│         continue loopLabel
+//│       1 =>
+//│         let tmp: Int⁰, exitResult: Num⁰;
+//│         set tmp = (sccF_sccG⁰(0) as! Int⁰);
+//│         set exitResult = (+⁰(tmp, 1) as! Num⁰);
+//│         match sccF$deferred
+//│           true =>
+//│             return (exitResult as! Int⁰)
+//│           else
+//│             return exitResult
+//│         end
+//│       else
+//│         unreachable /* dispatch tag is always a merged member id */
+//│     end
+//│   unreachable /* Rest of abortive labelled block */
+//│ };
+//│ @inline
 //│ define sccF⁰ as fun sccF¹(): Int⁰ {
-//│   let id: Int⁰, inlinedVal: Num⁰;
-//│   set id = 0;
-//│   block inlinedLbl:
-//│     loop loopLabel:
-//│       match id
-//│         0 =>
-//│           set id = 1;
-//│           continue loopLabel
-//│         1 =>
-//│           let tmp: Int⁰;
-//│           set tmp = sccF¹();
-//│           set inlinedVal = (+⁰(tmp, 1) as! Num⁰);
-//│           break inlinedLbl
-//│         else
-//│           unreachable /* dispatch tag is always a merged member id */
-//│       end
-//│     unreachable /* Rest of abortive labelled block */
-//│   return (inlinedVal as! Int⁰)
+//│   return (sccF_sccG⁰(0) as! Int⁰)
 //│ };
-//│ define sccG¹ as fun sccG⁰(): Num⁰ {
-//│   let id: Int⁰, inlinedVal: Num⁰;
-//│   set id = 1;
-//│   block inlinedLbl:
-//│     loop loopLabel:
-//│       match id
-//│         0 =>
-//│           set id = 1;
-//│           continue loopLabel
-//│         1 =>
-//│           let tmp: Int⁰;
-//│           set tmp = sccF¹();
-//│           set inlinedVal = (+⁰(tmp, 1) as! Num⁰);
-//│           break inlinedLbl
-//│         else
-//│           unreachable /* dispatch tag is always a merged member id */
-//│       end
-//│     unreachable /* Rest of abortive labelled block */
-//│   return inlinedVal
-//│ };
+//│ @inline
+//│ define sccG¹ as fun sccG⁰(): Num⁰ { return sccF_sccG⁰(1) };
 //│ end
 
 
 // Checks whether `annotLoop(n - 1)` still produces a tail call even though it is wrapped in a `Cast` node.
+:soir
 :js
 @tailrec
 fun annotLoop(n: Int): () = annotHelper(n)
@@ -662,6 +656,41 @@ annotHelper(100000)
 //│   end
 //│ };
 //│ return annotHelper⁰(100000)
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let annotLoop_annotHelper;
+//│ @private
+//│ define annotLoop_annotHelper as fun annotLoop_annotHelper⁰(id: Int⁰, param0: ?): ? {
+//│   loop loopLabel:
+//│     match id
+//│       0 =>
+//│         set id = 1;
+//│         continue loopLabel
+//│       1 =>
+//│         let scrut: ?, tmp: ?;
+//│         set scrut = <=⁰(param0, 0);
+//│         match scrut
+//│           true =>
+//│             return runtime⁰.Unit⁰
+//│           else
+//│             set tmp = -⁰(param0, 1);
+//│             set param0 = (tmp as! Int⁰);
+//│             set id = 0;
+//│             continue loopLabel
+//│         end
+//│       else
+//│         unreachable /* dispatch tag is always a merged member id */
+//│     end
+//│   unreachable /* Rest of abortive labelled block */
+//│ };
+//│ @inline @tailrec
+//│ define annotLoop⁰ as fun annotLoop¹(n: Int⁰): Unit⁰ {
+//│   return (annotLoop_annotHelper⁰(0, n) as! Unit⁰)
+//│ };
+//│ @inline
+//│ define annotHelper¹ as fun annotHelper⁰(n: ?): ? {
+//│   return annotLoop_annotHelper⁰(1, n)
+//│ };
+//│ return annotLoop_annotHelper⁰(1, 100000)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 
@@ -696,6 +725,7 @@ sccHelper(100000)
 //│ return sccHelper⁰(100000)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ let sccLoop_sccHelper;
+//│ @private
 //│ define sccLoop_sccHelper as fun sccLoop_sccHelper⁰(id: Int⁰, param0: ?): Num⁰ {
 //│   loop loopLabel:
 //│     match id
@@ -719,23 +749,17 @@ sccHelper(100000)
 //│     end
 //│   unreachable /* Rest of abortive labelled block */
 //│ };
-//│ @tailrec
+//│ @inline @tailrec
 //│ define sccLoop⁰ as fun sccLoop¹(n: Int⁰): Int⁰ {
 //│   return (sccLoop_sccHelper⁰(0, n) as! Int⁰)
 //│ };
+//│ @inline
 //│ define sccHelper¹ as fun sccHelper⁰(n: Int⁰): Num⁰ {
 //│   return sccLoop_sccHelper⁰(1, n)
 //│ };
 //│ return sccLoop_sccHelper⁰(1, 100000)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 0
-
-
-// Ensure that the surface `Anything` erases to `ErasedType.Unknown` and not `ErasedType.AnyRef(_, Anything)`
-// (which is indicated by `Anything⁰`).
-fun f(x: Anything): Anything = x
-//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ define f⁸ as fun f⁹(x: Unknown): Unknown { return x }; end
 
 
 // A call is typed as the callee's result only when saturated: `curried(1)` supplies one of two declared
@@ -753,7 +777,6 @@ useFn(curried(1))
 //│ };
 //│ set tmp = curried¹(1);
 //│ return useFn¹(tmp)
-
 
 val done: Int = curried(1)(2)
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
@@ -780,14 +803,11 @@ val over: Int = thunk(2)
 //│ define over⁰ as val over¹: Int⁰ = (tmp1 as! Int⁰);
 //│ end
 
-
-// A saturated `thunk` keeps the type `Function`, so narrowing it to `Str` is an unrelated-types error. Read
-// as over-applied instead, the result would take the top type and nothing would be raised - which is what
-// makes the presence of this error, rather than its absence, the thing worth asserting.
+// A saturated `thunk` keeps the type `Function`, so narrowing it to `Str` is an unrelated-types error.
 :ge
 val bad: Str = thunk
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Function' at an unrelated type 'Str'
-//│ ║  l.788: 	val bad: Str = thunk
+//│ ║  l.808: 	val bad: Str = thunk
 //│ ╙──       	               ^^^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let tmp: Function⁰; set tmp = thunk¹(); define bad² as val bad³: Str⁰ = tmp; end
@@ -799,7 +819,7 @@ val bad: Str = thunk
 fun called() = 3
 val notCalled: Str = called
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Function' at an unrelated type 'Str'
-//│ ║  l.800: 	val notCalled: Str = called
+//│ ║  l.820: 	val notCalled: Str = called
 //│ ╙──       	                     ^^^^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define called⁰ as fun called¹(): ? {
@@ -809,12 +829,41 @@ val notCalled: Str = called
 //│ end
 
 
+// The two forms nonetheless agree on what they are *compiled to*: a source `fun` with no parameter list is
+// given an implicitly-added empty one at block level, so it is lowered exactly like `called` above and its
+// erased type says so. As a class-like member it instead becomes a getter, which has no parameter list at
+// all - and it is that difference, not the source form, that the erased type has to follow.
+fun localGetter: Int = 1
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define localGetter⁰ as fun localGetter¹(): Int⁰ { return 1 }; end
+
+module M with
+  fun memberGetter: Int = 1
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define M⁰ as class M¹ module M² { method memberGetter⁰ = fun memberGetter¹: Int⁰ { return 1 } }; end
+
+fun useLocal: Int = localGetter
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define useLocal⁰ as fun useLocal¹(): Int⁰ { return localGetter¹() }; end
+
+fun useMember: Int = M.memberGetter
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define useMember⁰ as fun useMember¹(): Int⁰ { return M².memberGetter¹ }; end
+
+// Applying the getter applies its *result*, which its signature says nothing about, so the call is untyped
+// and returning it from `: Int` needs a cast. Were the call read as the getter's own auto-invocation, this
+// would silently take the getter's result type and the cast would be dropped.
+fun callMember: Int = M.memberGetter()
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define callMember⁰ as fun callMember¹(): Int⁰ { return (M².memberGetter¹() as! Int⁰) }; end
+
+
 // An instantiation is typed as its class, so it cannot fill a primitive slot. Were the `Instantiate` type
 // lost, this would silently become an ordinary downcast instead of the error below.
 :ge
 fun badInst() = useInt(new Bar("x"))
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Bar' at an unrelated type 'Int'
-//│ ║  l.815: 	fun badInst() = useInt(new Bar("x"))
+//│ ║  l.864: 	fun badInst() = useInt(new Bar("x"))
 //│ ╙──       	                       ^^^^^^^^^^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define badInst⁰ as fun badInst¹(): ? {
@@ -825,6 +874,8 @@ fun badInst() = useInt(new Bar("x"))
 //│ end
 
 
+// A reference to a `fun` is already a function value, so returning one at `Function` takes no coercion. An
+// instantiation is typed as its class instead, so the same annotation makes the coercion real.
 fun test: Function = id
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define test² as fun test³(): Function⁰ { return id¹ }; end
@@ -834,28 +885,34 @@ fun test: Function = new Object
 //│ define test⁴ as fun test⁵(): Function⁰ { return (new globalThis⁰.Object⁰() as! Function⁰) }; end
 
 
-// A written arrow type erases to `Function`: a parameter so annotated holds a function value, and a lambda
-// flowing into it is cast into one. The parameter and result shapes erase away with it.
+// A written arrow type erases to `Function` in every position it can be written - parameter, result and `val`
+// alike - and the parameter and result shapes erase away with it. A lambda flowing into such a slot is cast
+// into a `Function` on the way.
 fun applyF(f: Int -> Int): Int = f(1)
 applyF((x: Int) => x)
+fun mk: Int -> Int = (x: Int) => x
+val g: Int -> Int = (x: Int) => x
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let lambda;
+//│ let lambda, lambda1;
 //│ define applyF⁰ as fun applyF¹(f: Function⁰): Int⁰ {
 //│   return (f(1) as! Int⁰)
 //│ };
-//│ define lambda as fun lambda¹(x: Int⁰): ? { return x };
-//│ return applyF¹((lambda¹ as! Function⁰))
-
-
-// A written arrow as the result annotation is likewise a function-typed result.
-fun mk: Int -> Int = (x: Int) => x
-//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define mk² as fun mk³(): Function⁰ {
-//│   let lambda;
+//│   let lambda2;
 //│   @private
-//│   define lambda as fun lambda²(x: Int⁰): ? { return x };
-//│   return (lambda² as! Function⁰)
+//│   define lambda2 as fun lambda¹(x: Int⁰): ? {
+//│     return x
+//│   };
+//│   return (lambda¹ as! Function⁰)
 //│ };
+//│ define lambda as fun lambda²(x: Int⁰): ? {
+//│   return x
+//│ };
+//│ do applyF¹((lambda² as! Function⁰));
+//│ define lambda1 as fun lambda³(x: Int⁰): ? {
+//│   return x
+//│ };
+//│ define g² as val g³: Function⁰ = (lambda³ as! Function⁰);
 //│ end
 
 
@@ -863,23 +920,13 @@ fun mk: Int -> Int = (x: Int) => x
 :ge
 fun badFn() = applyF(42)
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int' at an unrelated type 'Function'
-//│ ║  l.864: 	fun badFn() = applyF(42)
+//│ ║  l.921: 	fun badFn() = applyF(42)
 //│ ╙──       	                     ^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define badFn⁰ as fun badFn¹(): ? { return applyF¹(42) }; end
 
 
-// A `val` annotated with an arrow type has the function value as its type, just like a parameter.
-val g: Int -> Int = (x: Int) => x
-//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let lambda;
-//│ define lambda as fun lambda³(x: Int⁰): ? {
-//│   return x
-//│ };
-//│ define g² as val g³: Function⁰ = (lambda³ as! Function⁰);
-//│ end
-
-
+// A `Str`-typed helper for the `declare fun` blocks below.
 fun useStr(s: Str) = s
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define useStr⁰ as fun useStr¹(s: Str⁰): ? { return s }; end
@@ -902,7 +949,7 @@ fun useAdd() = useInt(addInts(1, 2))
 :ge
 fun badAdd() = useStr(addInts(1, 2))
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int' at an unrelated type 'Str'
-//│ ║  l.903: 	fun badAdd() = useStr(addInts(1, 2))
+//│ ║  l.950: 	fun badAdd() = useStr(addInts(1, 2))
 //│ ╙──       	                      ^^^^^^^^^^^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define badAdd⁰ as fun badAdd¹(): ? {
@@ -1014,7 +1061,7 @@ fun useExt() = useFn(Ext.member)
 
 fun usePlain() = useFn(Plain.f)
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ define usePlain⁰ as fun usePlain¹(): ? { return useFn¹(Plain².f¹⁰) }; end
+//│ define usePlain⁰ as fun usePlain¹(): ? { return useFn¹(Plain².f⁶) }; end
 
 
 // *Applying* the selected member is a call on that function value, and since `Function` does not store its
@@ -1032,7 +1079,7 @@ fun applyPlain() = useInt(Plain.f(1))
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define applyPlain⁰ as fun applyPlain¹(): ? {
 //│   let tmp: ?;
-//│   set tmp = Plain².f¹⁰(1);
+//│   set tmp = Plain².f⁶(1);
 //│   return useInt¹((tmp as! Int⁰))
 //│ };
 //│ end
@@ -1075,7 +1122,7 @@ fun selUntyped(): Int = @untyped Plain.f
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define selUntyped⁰ as fun selUntyped¹(): Int⁰ {
 //│   let tmp: Unknown;
-//│   set tmp = Plain².f¹⁰;
+//│   set tmp = Plain².f⁶;
 //│   return (tmp as! Int⁰)
 //│ };
 //│ end
@@ -1084,7 +1131,7 @@ fun selUntyped(): Int = @untyped Plain.f
 fun selTyped(): Int = Plain.f
 //│ ═══[COMPILATION ERROR] Cannot use a value of type 'Function' at an unrelated type 'Int'
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ define selTyped⁰ as fun selTyped¹(): Int⁰ { return Plain².f¹⁰ }; end
+//│ define selTyped⁰ as fun selTyped¹(): Int⁰ { return Plain².f⁶ }; end
 
 
 // A lambda is disclaimed too: it reaches `LambdaRewriter` as the binding's RHS and is floated into a
@@ -1103,14 +1150,11 @@ fun lamUntyped(): Int = @untyped ((x: Int) => x)
 //│ end
 
 
-// The simplifier propagates a cast literal to its use sites as the whole `Cast` node; The price is that a
+// The simplifier propagates a cast literal to its use sites as the whole `Cast` node; the price is that a
 // `Cast` now sits between a literal and its consumers, so a consumer that wants the literal has to look
 // through it.
 // The two sites below are where that is a correctness matter: without the look-through they emit `42.whoami`
 // and `42.length`, which are syntax errors - the `.` parses as a decimal point.
-// The two use sites set `:noCheckCasts` because only an *unchecked* cast literal is propagated to its use
-// sites in the first place; under the checked default the simplifier leaves it (since it is supposed to emit
-// a runtime check).
 :js
 class Wrapper with
   val whoami = "wrapper"
@@ -1185,16 +1229,16 @@ class Box(content: Int) with
     peek()
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let peek;
-//│ define peek as fun peek⁰(Box: Box³): ? {
+//│ define peek as fun peek⁰(Box: Box⁰): ? {
 //│   return Box
 //│ };
-//│ define Box⁴ as class Box³ {
+//│ define Box¹ as class Box⁰ {
 //│   private val content⁰: Int⁰;
-//│   constructor Box⁵(content: Int⁰) {
-//│     set Box³.this.content⁰ = content;
+//│   constructor Box²(content: Int⁰) {
+//│     set Box⁰.this.content⁰ = content;
 //│     end
 //│   }
-//│   method unwrap⁰ = fun unwrap¹(): ? { return peek⁰(Box³.this) }
+//│   method unwrap⁰ = fun unwrap¹(): ? { return peek⁰(Box⁰.this) }
 //│ };
 //│ end
 
@@ -1209,7 +1253,7 @@ fun tagged(x: Int) =
   fun describe() = Tag.label()
   describe()
 //│ ╔══[WARNING] Objects are not yet lifted.
-//│ ║  l.1207: 	  object Tag with
+//│ ║  l.1251: 	  object Tag with
 //│ ╙──        	         ^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let describe;
@@ -1236,7 +1280,7 @@ fun mk() =
     fun get() = Tag.label()
   new Holder
 //│ ╔══[WARNING] Objects are not yet lifted.
-//│ ║  l.1233: 	  object Tag with
+//│ ║  l.1277: 	  object Tag with
 //│ ╙──        	         ^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let Holder;
@@ -1256,5 +1300,63 @@ fun mk() =
 //│     method label³ = fun label²(): ? { return "tag" }
 //│   };
 //│   return new Holder⁰(Tag²)
+//│ };
+//│ end
+
+
+// A parameter captured by a nested definition is copied into the merged loop, so that the definition captures
+// the parameter's value at that iteration rather than the slot the next iteration overwrites. The copy stands
+// for the same slot as the parameter, so it takes the parameter's type.
+:noInline
+:soir
+fun capturingLoop(n: Int, acc: Str) =
+  if n <= 0 then acc
+  else
+    let g = () => acc
+    let h = g
+    capturingLoop(n - 1, h())
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define capturingLoop⁰ as fun capturingLoop¹(n: Int⁰, acc: Str⁰): ? {
+//│   let scrut: ?, g: ?, h: ?, tmp: ?, tmp1: ?;
+//│   set scrut = <=⁰(n, 0);
+//│   match scrut
+//│     true =>
+//│       return acc
+//│     else
+//│       let g1;
+//│       @private
+//│       define g1 as fun g⁴(): ? {
+//│         return acc
+//│       };
+//│       set g = g⁴;
+//│       set h = g;
+//│       set tmp = -⁰(n, 1);
+//│       set tmp1 = h();
+//│       return capturingLoop¹((tmp as! Int⁰), (tmp1 as! Str⁰))
+//│   end
+//│ };
+//│ end
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ define capturingLoop⁰ as fun capturingLoop¹(n: Int⁰, acc: Str⁰): ? {
+//│   loop loopLabel:
+//│     let scrut: ?, tmp: ?, tmp1: ?, acc1: Str⁰;
+//│     set acc1 = acc;
+//│     set scrut = <=⁰(n, 0);
+//│     match scrut
+//│       true =>
+//│         return acc1
+//│       else
+//│         let g;
+//│         @private
+//│         define g as fun g⁴(): ? {
+//│           return acc1
+//│         };
+//│         set tmp = -⁰(n, 1);
+//│         set tmp1 = g⁴();
+//│         set n = (tmp as! Int⁰);
+//│         set acc = (tmp1 as! Str⁰);
+//│         continue loopLabel
+//│     end
+//│   unreachable /* Rest of abortive labelled block */
 //│ };
 //│ end
