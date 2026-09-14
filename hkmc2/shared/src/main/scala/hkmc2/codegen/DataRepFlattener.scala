@@ -212,12 +212,12 @@ class DataRepFlattener(
 
   private def allocateShapeTags(): Unit =
     val producers = producersInWeb.toList.sortBy(_.exprId.uid)
-    val nestedProducers = producers.iterator
-      .flatMap(producer => nestedCtorsOfProducer(producer, Set.single(producer)))
-      .toSet
+    def isMatched(producer: Ctor): Bool = producer.dests.exists:
+      case _: Dtor => true
+      case _ => false
     for
       producer <- producers
-      if !nestedProducers.contains(producer)
+      if isMatched(producer)
     do
       shapeOfProducer(producer) match
         case shape: ClassShape =>
@@ -239,25 +239,6 @@ class DataRepFlattener(
           s"Missing constructor result for ${DataRepFlattenDebug.showProducer(producer)}: ${result.showDbg}",
         )
         Nil
-
-  private def nestedCtorsOf(producer: ProdStrat, original: Opt[Path], seen: Set[Ctor]): Set[Ctor] =
-    original match
-      case S(_: Value.Lit) => Set.empty
-      case _ => producer match
-        case ctor: Ctor if !seen.contains(ctor) =>
-          Set.single(ctor) ++ nestedCtorsOfProducer(ctor, seen + ctor)
-        case variable: StratVar =>
-          variable.lowerBounds.iterator
-            .flatMap(nestedCtorsOf(_, N, seen))
-            .toSet
-        case _ => Set.empty
-
-  private def nestedCtorsOfProducer(producer: Ctor, seen: Set[Ctor]): Set[Ctor] =
-    val args = getCtorArgs(producer)
-    producer.args.iterator.zipWithIndex.flatMap:
-      case ((_, value), index) =>
-        nestedCtorsOf(value, args.lift(index).map(_.value), seen)
-    .toSet
 
   private def shapeOfProducer(producer: Ctor): Shape =
     val args = getCtorArgs(producer)

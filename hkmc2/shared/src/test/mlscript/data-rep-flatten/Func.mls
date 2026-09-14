@@ -1,0 +1,546 @@
+:dataRepFlatten debug mono
+:js
+:noFreeze
+
+//│ >>> start data-rep-flatten collection-phase
+//│ <<< end data-rep-flatten collection-phase
+//│ >>> start data-rep-flatten transform-phase
+//│ <<< end data-rep-flatten transform-phase
+
+class Foo(val x, val y)
+class Bar(val x)
+//│ >>> start data-rep-flatten collection-phase
+//│ <<< end data-rep-flatten collection-phase
+//│ >>> start data-rep-flatten transform-phase
+//│ <<< end data-rep-flatten transform-phase
+
+:ssjs
+fun f(x) =
+  let t = if x then new Foo(x, 0) else new Bar(x)
+  @matchShapes(Foo(_, 0), Bar(_)) shape.match of t,
+    () => g(t)
+    () => h(t)
+private fun g(t) = t.Foo#x
+private fun h(t) = t.Bar#x
+//│ >>> start data-rep-flatten collection-phase
+//│ data-rep-flatten collection-phase > track construction of Foo@3, Bar@4 in f
+//│ data-rep-flatten collection-phase > track consumption at match@7 in f
+//│ data-rep-flatten collection-phase > track consumption at Foo.x@1 in g
+//│ data-rep-flatten collection-phase > track consumption at Bar.x@2 in h
+//│ <<< end data-rep-flatten collection-phase
+//│ >>> start data-rep-flatten web-computation-phase
+//│ data-rep-flatten web-computation-phase > web 0:
+//│ data-rep-flatten web-computation-phase >   producers: Foo@3, Bar@4
+//│ data-rep-flatten web-computation-phase >   field accesses: Foo.x@1, Bar.x@2
+//│ data-rep-flatten web-computation-phase >   pattern matches: match@7
+//│ <<< end data-rep-flatten web-computation-phase
+//│ >>> start data-rep-flatten transform-phase
+//│ data-rep-flatten transform-phase > allocated tag 0 for Foo(x: _, y: 0)
+//│ data-rep-flatten transform-phase > allocated tag 1 for Bar(x: _)
+//│ data-rep-flatten transform-phase > match shapes Foo(x: _, y: 0), Bar(x: _) against Foo(x: _, y: 0)@0, Bar(x: _)@1
+//│ <<< end data-rep-flatten transform-phase
+//│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
+//│ let f, g, h;
+//│ f = function f(x) {
+//│   runtime.checkArgs("f", 1, true, arguments.length);
+//│   let tmp;
+//│   if (x === true) {
+//│     let tmp1;
+//│     tmp1 = (new Foo1.class(x, 0));
+//│     tmp1.__tag = 0;
+//│     tmp = tmp1;
+//│   } else {
+//│     let tmp1;
+//│     tmp1 = (new Bar1.class(x));
+//│     tmp1.__tag = 1;
+//│     tmp = tmp1;
+//│   }
+//│   if (tmp.__tag === 0) {
+//│     return tmp.x
+//│   } else if (tmp.__tag === 1) {
+//│     return tmp.x
+//│   }
+//│   return runtime.Unit;
+//│ };
+//│ g = function g(t) {
+//│   runtime.checkArgs("g", 1, true, arguments.length);
+//│   return t.x
+//│ };
+//│ h = function h(t) {
+//│   runtime.checkArgs("h", 1, true, arguments.length);
+//│   return t.x
+//│ };
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+
+class C(val x)
+class D(val x)
+//│ >>> start data-rep-flatten collection-phase
+//│ <<< end data-rep-flatten collection-phase
+//│ >>> start data-rep-flatten transform-phase
+//│ <<< end data-rep-flatten transform-phase
+
+
+:ssjs
+fun f(x, y) =
+  let t = if x then new Foo(new C(y), 0) else new Bar(new D(y))
+  @matchShapes(Foo(_, 0), Bar(_)) shape.match of t,
+    () =>
+      let m = t.Foo#x
+      @matchShapes(C(_), D(_)) shape.match of m, () => m.C#x + 1, () => m.D#x + 2
+    () =>
+      let m = t.Bar#x
+      @matchShapes(C(_), D(_)) shape.match of m, () => m.C#x + 1, () => m.D#x + 2
+//│ >>> start data-rep-flatten collection-phase
+//│ data-rep-flatten collection-phase > track construction of Foo@8, Bar@10, C@7, D@9 in f
+//│ data-rep-flatten collection-phase > track consumption at match@17 in f
+//│ <<< end data-rep-flatten collection-phase
+//│ >>> start data-rep-flatten web-computation-phase
+//│ data-rep-flatten web-computation-phase > web 0:
+//│ data-rep-flatten web-computation-phase >   producers: C@7, Foo@8, D@9, Bar@10
+//│ data-rep-flatten web-computation-phase >   field accesses: Foo.x@1, C.x@2, Bar.x@4, D.x@6
+//│ data-rep-flatten web-computation-phase >   pattern matches: match@13, match@16, match@17
+//│ <<< end data-rep-flatten web-computation-phase
+//│ >>> start data-rep-flatten transform-phase
+//│ data-rep-flatten transform-phase > allocated tag 0 for C(x: _)
+//│ data-rep-flatten transform-phase > allocated tag 1 for Foo(x: C(x: _), y: 0)
+//│ data-rep-flatten transform-phase > allocated tag 2 for D(x: _)
+//│ data-rep-flatten transform-phase > allocated tag 3 for Bar(x: D(x: _))
+//│ data-rep-flatten transform-phase > match shapes Foo(x: _, y: 0), Bar(x: _) against Foo(x: C(x: _), y: 0)@1, Bar(x: D(x: _))@3
+//│ data-rep-flatten transform-phase > match shapes C(x: _), D(x: _) against C(x: _)@0
+//│ data-rep-flatten transform-phase > match shapes C(x: _), D(x: _) against D(x: _)@2
+//│ data-rep-flatten transform-phase > match shapes C(x: _), D(x: _) against C(x: _)@0
+//│ data-rep-flatten transform-phase > match shapes C(x: _), D(x: _) against D(x: _)@2
+//│ <<< end data-rep-flatten transform-phase
+//│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
+//│ let f1;
+//│ f1 = function f(x, y) {
+//│   runtime.checkArgs("f", 2, true, arguments.length);
+//│   let tmp;
+//│   if (x === true) {
+//│     let tmp1, tmp2;
+//│     tmp1 = (new C1.class(y));
+//│     tmp1.__tag = 0;
+//│     tmp2 = (new Foo1.class(tmp1, 0));
+//│     tmp2.__tag = 1;
+//│     tmp = tmp2;
+//│   } else {
+//│     let tmp1, tmp2;
+//│     tmp1 = (new D1.class(y));
+//│     tmp1.__tag = 2;
+//│     tmp2 = (new Bar1.class(tmp1));
+//│     tmp2.__tag = 3;
+//│     tmp = tmp2;
+//│   }
+//│   if (tmp.__tag === 1) {
+//│     let m;
+//│     m = tmp.x;
+//│     if (m.__tag === 0) {
+//│       return m.x + 1
+//│     }
+//│     return runtime.Unit;
+//│   } else if (tmp.__tag === 3) {
+//│     let m;
+//│     m = tmp.x;
+//│     if (m.__tag === 2) { return m.x + 2 }
+//│     return runtime.Unit;
+//│   }
+//│   return runtime.Unit;
+//│ };
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+
+:ssjs
+fun f(x, y) =
+  let t = if x then new Foo(new C(y), 0) else new Bar(new D(y))
+  @matchShapes(Foo(_, 0), Bar(_)) shape.match of t,
+    () =>
+      let m = g(t)
+      @matchShapes(C(_), D(_)) shape.match of m, () => m.C#x + 1, () => m.D#x + 2
+    () =>
+      let m = h(t)
+      @matchShapes(C(_), D(_)) shape.match of m, () => m.C#x + 1, () => m.D#x + 2
+private fun g(t) = t.Foo#x
+private fun h(t) = t.Bar#x
+//│ >>> start data-rep-flatten collection-phase
+//│ data-rep-flatten collection-phase > track construction of Foo@8, Bar@10, C@7, D@9 in f
+//│ data-rep-flatten collection-phase > track consumption at match@19 in f
+//│ data-rep-flatten collection-phase > track consumption at Foo.x@5 in g
+//│ data-rep-flatten collection-phase > track consumption at Bar.x@6 in h
+//│ <<< end data-rep-flatten collection-phase
+//│ >>> start data-rep-flatten web-computation-phase
+//│ data-rep-flatten web-computation-phase > web 0:
+//│ data-rep-flatten web-computation-phase >   producers: C@7, Foo@8, D@9, Bar@10
+//│ data-rep-flatten web-computation-phase >   field accesses: C.x@1, D.x@4, Foo.x@5, Bar.x@6
+//│ data-rep-flatten web-computation-phase >   pattern matches: match@14, match@18, match@19
+//│ <<< end data-rep-flatten web-computation-phase
+//│ >>> start data-rep-flatten transform-phase
+//│ data-rep-flatten transform-phase > allocated tag 0 for C(x: _)
+//│ data-rep-flatten transform-phase > allocated tag 1 for Foo(x: C(x: _), y: 0)
+//│ data-rep-flatten transform-phase > allocated tag 2 for D(x: _)
+//│ data-rep-flatten transform-phase > allocated tag 3 for Bar(x: D(x: _))
+//│ data-rep-flatten transform-phase > match shapes Foo(x: _, y: 0), Bar(x: _) against Foo(x: C(x: _), y: 0)@1, Bar(x: D(x: _))@3
+//│ data-rep-flatten transform-phase > match shapes C(x: _), D(x: _) against C(x: _)@0
+//│ data-rep-flatten transform-phase > match shapes C(x: _), D(x: _) against D(x: _)@2
+//│ data-rep-flatten transform-phase > match shapes C(x: _), D(x: _) against C(x: _)@0
+//│ data-rep-flatten transform-phase > match shapes C(x: _), D(x: _) against D(x: _)@2
+//│ <<< end data-rep-flatten transform-phase
+//│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
+//│ let f2, g1, h1;
+//│ f2 = function f(x, y) {
+//│   runtime.checkArgs("f", 2, true, arguments.length);
+//│   let tmp;
+//│   if (x === true) {
+//│     let tmp1, tmp2;
+//│     tmp1 = (new C1.class(y));
+//│     tmp1.__tag = 0;
+//│     tmp2 = (new Foo1.class(tmp1, 0));
+//│     tmp2.__tag = 1;
+//│     tmp = tmp2;
+//│   } else {
+//│     let tmp1, tmp2;
+//│     tmp1 = (new D1.class(y));
+//│     tmp1.__tag = 2;
+//│     tmp2 = (new Bar1.class(tmp1));
+//│     tmp2.__tag = 3;
+//│     tmp = tmp2;
+//│   }
+//│   if (tmp.__tag === 1) {
+//│     let inlinedVal;
+//│     inlinedVal = tmp.x;
+//│     if (inlinedVal.__tag === 0) {
+//│       return inlinedVal.x + 1
+//│     }
+//│     return runtime.Unit;
+//│   } else if (tmp.__tag === 3) {
+//│     let inlinedVal;
+//│     inlinedVal = tmp.x;
+//│     if (inlinedVal.__tag === 2) {
+//│       return inlinedVal.x + 2
+//│     }
+//│     return runtime.Unit;
+//│   }
+//│   return runtime.Unit;
+//│ };
+//│ g1 = function g(t) {
+//│   runtime.checkArgs("g", 1, true, arguments.length);
+//│   return t.x
+//│ };
+//│ h1 = function h(t) {
+//│   runtime.checkArgs("h", 1, true, arguments.length);
+//│   return t.x
+//│ };
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+
+:ssjs
+fun f(x, y) =
+  let t = if x then new Foo(new C(y), 0) else new Bar(new D(y))
+  @matchShapes(Foo(_, 0), Bar(_)) shape.match of t,
+    () => g(t)
+    () => h(t)
+private fun g(t) =
+  let m = t.Foo#x
+  @matchShapes(C(_), D(_)) shape.match of m, () => m.C#x + 1, () => m.D#x + 2
+private fun h(t) =
+  let m = t.Bar#x
+  @matchShapes(C(_), D(_)) shape.match of m, () => m.C#x + 1, () => m.D#x + 2
+//│ >>> start data-rep-flatten collection-phase
+//│ data-rep-flatten collection-phase > track construction of Foo@8, Bar@10, C@7, D@9 in f
+//│ data-rep-flatten collection-phase > track consumption at match@13 in f
+//│ data-rep-flatten collection-phase > track consumption at Foo.x@1, match@16 in g
+//│ data-rep-flatten collection-phase > track consumption at match@19, Bar.x@4 in h
+//│ <<< end data-rep-flatten collection-phase
+//│ >>> start data-rep-flatten web-computation-phase
+//│ data-rep-flatten web-computation-phase > web 0:
+//│ data-rep-flatten web-computation-phase >   producers: C@7, Foo@8, D@9, Bar@10
+//│ data-rep-flatten web-computation-phase >   field accesses: Foo.x@1, C.x@2, Bar.x@4, D.x@6
+//│ data-rep-flatten web-computation-phase >   pattern matches: match@13, match@16, match@19
+//│ <<< end data-rep-flatten web-computation-phase
+//│ >>> start data-rep-flatten transform-phase
+//│ data-rep-flatten transform-phase > allocated tag 0 for C(x: _)
+//│ data-rep-flatten transform-phase > allocated tag 1 for Foo(x: C(x: _), y: 0)
+//│ data-rep-flatten transform-phase > allocated tag 2 for D(x: _)
+//│ data-rep-flatten transform-phase > allocated tag 3 for Bar(x: D(x: _))
+//│ data-rep-flatten transform-phase > match shapes Foo(x: _, y: 0), Bar(x: _) against Foo(x: C(x: _), y: 0)@1, Bar(x: D(x: _))@3
+//│ data-rep-flatten transform-phase > match shapes C(x: _), D(x: _) against C(x: _)@0
+//│ data-rep-flatten transform-phase > match shapes C(x: _), D(x: _) against D(x: _)@2
+//│ <<< end data-rep-flatten transform-phase
+//│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
+//│ let f3, g2, h2;
+//│ f3 = function f(x, y) {
+//│   runtime.checkArgs("f", 2, true, arguments.length);
+//│   let tmp;
+//│   if (x === true) {
+//│     let tmp1, tmp2;
+//│     tmp1 = (new C1.class(y));
+//│     tmp1.__tag = 0;
+//│     tmp2 = (new Foo1.class(tmp1, 0));
+//│     tmp2.__tag = 1;
+//│     tmp = tmp2;
+//│   } else {
+//│     let tmp1, tmp2;
+//│     tmp1 = (new D1.class(y));
+//│     tmp1.__tag = 2;
+//│     tmp2 = (new Bar1.class(tmp1));
+//│     tmp2.__tag = 3;
+//│     tmp = tmp2;
+//│   }
+//│   if (tmp.__tag === 1) {
+//│     let m;
+//│     m = tmp.x;
+//│     if (m.__tag === 0) {
+//│       return m.x + 1
+//│     }
+//│     return runtime.Unit;
+//│   } else if (tmp.__tag === 3) {
+//│     let m;
+//│     m = tmp.x;
+//│     if (m.__tag === 2) {
+//│       return m.x + 2
+//│     }
+//│     return runtime.Unit;
+//│   }
+//│   return runtime.Unit;
+//│ };
+//│ g2 = function g(t) {
+//│   runtime.checkArgs("g", 1, true, arguments.length);
+//│   let m, shapeMatchResult;
+//│   m = t.x;
+//│   if (m.__tag === 0) {
+//│     shapeMatchResult = m.x + 1;
+//│   }
+//│   return shapeMatchResult
+//│ };
+//│ h2 = function h(t) {
+//│   runtime.checkArgs("h", 1, true, arguments.length);
+//│   let m, shapeMatchResult;
+//│   m = t.x;
+//│   if (m.__tag === 2) { shapeMatchResult = m.x + 2; }
+//│   return shapeMatchResult
+//│ };
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+
+:ssjs
+fun f(x, y) =
+  let t = if x then new Foo(new C(y), 0) else new Bar(new D(y))
+  let s1 = @matchShapes(Foo(_, 0), Bar(_)) shape.match of t,
+    () => g(t)
+    () => h(t)
+  let s2 = @matchShapes(Foo(_, _), Bar(_)) shape.match of t,
+    () => g(t)
+    () => h(t)
+  s1 + s2
+private fun g(t) =
+  let m = t.Foo#x
+  @matchShapes(C(_), D(_)) shape.match of m, () => m.C#x + 1, () => m.D#x + 2
+private fun h(t) =
+  let m = t.Bar#x
+  @matchShapes(C(_), D(_)) shape.match of m, () => m.C#x + 1, () => m.D#x + 2
+//│ >>> start data-rep-flatten collection-phase
+//│ data-rep-flatten collection-phase > track construction of Foo@8, Bar@10, C@7, D@9 in f
+//│ data-rep-flatten collection-phase > track consumption at match@16, match@13 in f
+//│ data-rep-flatten collection-phase > track consumption at Foo.x@1, match@20 in g
+//│ data-rep-flatten collection-phase > track consumption at match@23, Bar.x@4 in h
+//│ <<< end data-rep-flatten collection-phase
+//│ >>> start data-rep-flatten web-computation-phase
+//│ data-rep-flatten web-computation-phase > web 0:
+//│ data-rep-flatten web-computation-phase >   producers: C@7, Foo@8, D@9, Bar@10
+//│ data-rep-flatten web-computation-phase >   field accesses: Foo.x@1, C.x@2, Bar.x@4, D.x@6
+//│ data-rep-flatten web-computation-phase >   pattern matches: match@13, match@16, match@20, match@23
+//│ <<< end data-rep-flatten web-computation-phase
+//│ >>> start data-rep-flatten transform-phase
+//│ data-rep-flatten transform-phase > allocated tag 0 for C(x: _)
+//│ data-rep-flatten transform-phase > allocated tag 1 for Foo(x: C(x: _), y: 0)
+//│ data-rep-flatten transform-phase > allocated tag 2 for D(x: _)
+//│ data-rep-flatten transform-phase > allocated tag 3 for Bar(x: D(x: _))
+//│ data-rep-flatten transform-phase > match shapes Foo(x: _, y: 0), Bar(x: _) against Foo(x: C(x: _), y: 0)@1, Bar(x: D(x: _))@3
+//│ data-rep-flatten transform-phase > match shapes Foo(x: _, y: _), Bar(x: _) against Foo(x: C(x: _), y: 0)@1, Bar(x: D(x: _))@3
+//│ data-rep-flatten transform-phase > match shapes C(x: _), D(x: _) against C(x: _)@0
+//│ data-rep-flatten transform-phase > match shapes C(x: _), D(x: _) against D(x: _)@2
+//│ <<< end data-rep-flatten transform-phase
+//│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
+//│ let f4, g3, h3;
+//│ f4 = function f(x, y) {
+//│   runtime.checkArgs("f", 2, true, arguments.length);
+//│   let tmp, shapeMatchResult;
+//│   if (x === true) {
+//│     let tmp1, tmp2;
+//│     tmp1 = (new C1.class(y));
+//│     tmp1.__tag = 0;
+//│     tmp2 = (new Foo1.class(tmp1, 0));
+//│     tmp2.__tag = 1;
+//│     tmp = tmp2;
+//│   } else {
+//│     let tmp1, tmp2;
+//│     tmp1 = (new D1.class(y));
+//│     tmp1.__tag = 2;
+//│     tmp2 = (new Bar1.class(tmp1));
+//│     tmp2.__tag = 3;
+//│     tmp = tmp2;
+//│   }
+//│   if (tmp.__tag === 1) {
+//│     let m, shapeMatchResult1;
+//│     m = tmp.x;
+//│     if (m.__tag === 0) {
+//│       shapeMatchResult1 = m.x + 1;
+//│     }
+//│     shapeMatchResult = shapeMatchResult1;
+//│   } else if (tmp.__tag === 3) {
+//│     let m, shapeMatchResult1;
+//│     m = tmp.x;
+//│     if (m.__tag === 2) {
+//│       shapeMatchResult1 = m.x + 2;
+//│     }
+//│     shapeMatchResult = shapeMatchResult1;
+//│   }
+//│   if (tmp.__tag === 1) {
+//│     let m, shapeMatchResult1;
+//│     m = tmp.x;
+//│     if (m.__tag === 0) {
+//│       shapeMatchResult1 = m.x + 1;
+//│       return shapeMatchResult + shapeMatchResult1
+//│     }
+//│     return shapeMatchResult + undefined;
+//│   } else if (tmp.__tag === 3) {
+//│     let m, shapeMatchResult1;
+//│     m = tmp.x;
+//│     if (m.__tag === 2) {
+//│       shapeMatchResult1 = m.x + 2;
+//│       return shapeMatchResult + shapeMatchResult1
+//│     }
+//│     return shapeMatchResult + undefined;
+//│   }
+//│   return shapeMatchResult + undefined;
+//│ };
+//│ g3 = function g(t) {
+//│   runtime.checkArgs("g", 1, true, arguments.length);
+//│   let m, shapeMatchResult;
+//│   m = t.x;
+//│   if (m.__tag === 0) {
+//│     shapeMatchResult = m.x + 1;
+//│   }
+//│   return shapeMatchResult
+//│ };
+//│ h3 = function h(t) {
+//│   runtime.checkArgs("h", 1, true, arguments.length);
+//│   let m, shapeMatchResult;
+//│   m = t.x;
+//│   if (m.__tag === 2) { shapeMatchResult = m.x + 2; }
+//│   return shapeMatchResult
+//│ };
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+
+f(true, 0)
+//│ >>> start data-rep-flatten collection-phase
+//│ <<< end data-rep-flatten collection-phase
+//│ >>> start data-rep-flatten transform-phase
+//│ <<< end data-rep-flatten transform-phase
+//│ = 2
+
+
+f(false, 0)
+//│ >>> start data-rep-flatten collection-phase
+//│ <<< end data-rep-flatten collection-phase
+//│ >>> start data-rep-flatten transform-phase
+//│ <<< end data-rep-flatten transform-phase
+//│ = 4
+
+
+:ssjs
+fun f(x, y) =
+  let t = if x then new Foo(y, 0) else new Bar(y)
+  @matchShapes(Foo(_, 0), Bar(_)) shape.match of t,
+    () =>
+      let m = g(t.Foo#x)
+      @matchShapes(C(_), D(_)) shape.match of m, () => m.C#x + 1, () => m.D#x + 2
+    () =>
+      let m = h(t.Bar#x)
+      @matchShapes(C(_), D(_)) shape.match of m, () => m.C#x + 1, () => m.D#x + 2
+private fun g(x) = new C(x)
+private fun h(x) = new D(x)
+//│ >>> start data-rep-flatten collection-phase
+//│ data-rep-flatten collection-phase > track construction of Foo@7, Bar@8 in f
+//│ data-rep-flatten collection-phase > track consumption at match@17 in f
+//│ data-rep-flatten collection-phase > track construction of C@18 in g
+//│ data-rep-flatten collection-phase > track construction of D@19 in h
+//│ <<< end data-rep-flatten collection-phase
+//│ >>> start data-rep-flatten web-computation-phase
+//│ data-rep-flatten web-computation-phase > web 0:
+//│ data-rep-flatten web-computation-phase >   producers: Foo@7, Bar@8
+//│ data-rep-flatten web-computation-phase >   field accesses: Foo.x@1, Bar.x@4
+//│ data-rep-flatten web-computation-phase >   pattern matches: match@17
+//│ data-rep-flatten web-computation-phase > web 1:
+//│ data-rep-flatten web-computation-phase >   producers: C@18
+//│ data-rep-flatten web-computation-phase >   field accesses: C.x@2
+//│ data-rep-flatten web-computation-phase >   pattern matches: match@12
+//│ data-rep-flatten web-computation-phase > web 2:
+//│ data-rep-flatten web-computation-phase >   producers: D@19
+//│ data-rep-flatten web-computation-phase >   field accesses: D.x@6
+//│ data-rep-flatten web-computation-phase >   pattern matches: match@16
+//│ <<< end data-rep-flatten web-computation-phase
+//│ >>> start data-rep-flatten transform-phase
+//│ data-rep-flatten transform-phase > allocated tag 0 for Foo(x: _, y: 0)
+//│ data-rep-flatten transform-phase > allocated tag 1 for Bar(x: _)
+//│ data-rep-flatten transform-phase > allocated tag 2 for C(x: _)
+//│ data-rep-flatten transform-phase > allocated tag 3 for D(x: _)
+//│ data-rep-flatten transform-phase > match shapes Foo(x: _, y: 0), Bar(x: _) against Foo(x: _, y: 0)@0, Bar(x: _)@1
+//│ data-rep-flatten transform-phase > match shapes C(x: _), D(x: _) against C(x: _)@2
+//│ data-rep-flatten transform-phase > match shapes C(x: _), D(x: _) against D(x: _)@3
+//│ data-rep-flatten transform-phase > match shapes C(x: _), D(x: _) against C(x: _)@2
+//│ data-rep-flatten transform-phase > match shapes C(x: _), D(x: _) against D(x: _)@3
+//│ <<< end data-rep-flatten transform-phase
+//│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
+//│ let f5, g4, h4;
+//│ f5 = function f(x, y) {
+//│   runtime.checkArgs("f", 2, true, arguments.length);
+//│   let tmp;
+//│   if (x === true) {
+//│     let tmp1;
+//│     tmp1 = (new Foo1.class(y, 0));
+//│     tmp1.__tag = 0;
+//│     tmp = tmp1;
+//│   } else {
+//│     let tmp1;
+//│     tmp1 = (new Bar1.class(y));
+//│     tmp1.__tag = 1;
+//│     tmp = tmp1;
+//│   }
+//│   if (tmp.__tag === 0) {
+//│     let x1, tmp1;
+//│     x1 = tmp.x;
+//│     tmp1 = (new C1.class(x1));
+//│     tmp1.__tag = 2;
+//│     if (tmp1.__tag === 2) {
+//│       return tmp1.x + 1
+//│     }
+//│     return runtime.Unit;
+//│   } else if (tmp.__tag === 1) {
+//│     let x1, tmp1;
+//│     x1 = tmp.x;
+//│     tmp1 = (new D1.class(x1));
+//│     tmp1.__tag = 3;
+//│     if (tmp1.__tag === 3) {
+//│       return tmp1.x + 2
+//│     }
+//│     return runtime.Unit;
+//│   }
+//│   return runtime.Unit;
+//│ };
+//│ g4 = function g(x) {
+//│   runtime.checkArgs("g", 1, true, arguments.length);
+//│   let tmp;
+//│   tmp = (new C1.class(x));
+//│   tmp.__tag = 2;
+//│   return tmp
+//│ };
+//│ h4 = function h(x) {
+//│   runtime.checkArgs("h", 1, true, arguments.length);
+//│   let tmp;
+//│   tmp = (new D1.class(x));
+//│   tmp.__tag = 3;
+//│   return tmp
+//│ };
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
