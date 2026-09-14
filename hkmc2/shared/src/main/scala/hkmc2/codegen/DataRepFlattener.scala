@@ -117,19 +117,19 @@ private sealed abstract class Shape:
 
   def flattenShape: List[Shape]
 
-  final infix def `<:`(that: Shape): Bool = (this, that) match
+  final infix def <=(that: Shape): Bool = (this, that) match
     case (_, DynamicShape) => true
-    case (UnionShape(subshapes), _) => subshapes.forall(_ `<:` that)
-    case (_, UnionShape(subshapes)) => subshapes.exists(this `<:` _)
+    case (UnionShape(subshapes), _) => subshapes.forall(_ <= that)
+    case (_, UnionShape(subshapes)) => subshapes.exists(this <= _)
     case (LitShape(left), LitShape(right)) => left === right
     case (ClassShape(leftCtor, leftFields), ClassShape(rightCtor, rightFields)) =>
       leftCtor === rightCtor
         && leftFields.keySet === rightFields.keySet
         && leftFields.forall: (field, shape) =>
-          shape `<:` rightFields(field)
+          shape <= rightFields(field)
     case (TupleShape(leftLength, leftElements), TupleShape(rightLength, rightElements)) =>
       leftLength === rightLength
-        && leftElements.zip(rightElements).forall(_ `<:` _)
+        && leftElements.zip(rightElements).forall((left, right) => left <= right)
     case _ => false
 
 private case class LitShape(lit: Value.Lit) extends Shape:
@@ -240,11 +240,7 @@ class DataRepFlattener(
         )
         Nil
 
-  private def nestedCtorsOf(
-    producer: ProdStrat,
-    original: Opt[Path],
-    seen: Set[Ctor],
-  ): Set[Ctor] =
+  private def nestedCtorsOf(producer: ProdStrat, original: Opt[Path], seen: Set[Ctor]): Set[Ctor] =
     original match
       case S(_: Value.Lit) => Set.empty
       case _ => producer match
@@ -297,7 +293,7 @@ class DataRepFlattener(
         case _ => DynamicShape
 
   private def taggedShapesOfMatch(matchResultId: ResultId): List[Shape -> Int] =
-    patternMatchesByResultId.getOrElse(matchResultId, Nil).iterator
+    val taggedShapes = patternMatchesByResultId.getOrElse(matchResultId, Nil).iterator
       .flatMap(_.srcs)
       .collect:
         case ctor: Ctor if taggedProducers.contains(ctor) => ctor
@@ -306,6 +302,7 @@ class DataRepFlattener(
         val tag = shapeTags.get(shape)
         softAssert(tag.isDefined, s"Missing tag for shape ${shape.show}")
         tag.map(shape -> _)
+    taggedShapes.distinct.sortBy(_._2)
 
   private def containsUnion(shape: Shape): Bool = shape match
     case ClassShape(_, fields) => fields.valuesIterator.exists(containsUnion)
@@ -396,7 +393,7 @@ class DataRepFlattener(
                 val ambiguousTags = taggedShapes.flatMap: (taggedShape, tag) =>
                   val branchIndices = taggedShape.flattenShape.flatMap: concreteShape =>
                     patternShapes.zipWithIndex.collect:
-                      case (patternShape, index) if concreteShape `<:` patternShape => index
+                      case (patternShape, index) if concreteShape <= patternShape => index
                   .distinct
                   if branchIndices.size > 1 then S((taggedShape, tag, branchIndices)) else N
                 if ambiguousTags.nonEmpty then
@@ -410,7 +407,7 @@ class DataRepFlattener(
                 else
                   val matchingBranches = taggedShapes.flatMap: (taggedShape, tag) =>
                     patternShapes.zip(branchDefns).find:
-                      case (patternShape, _) => taggedShape `<:` patternShape
+                      case (patternShape, _) => taggedShape <= patternShape
                     .map:
                       case (_, branch) => (taggedShape, tag, branch)
                   val matchedTags = matchingBranches.iterator.map(_._2).toSet

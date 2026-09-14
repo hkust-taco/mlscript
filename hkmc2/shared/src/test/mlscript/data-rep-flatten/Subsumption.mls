@@ -61,3 +61,126 @@ private fun inspect(t) =
 //│   return shapeMatchResult
 //│ };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+:ssjs
+fun foo(x, y) =
+  let t = if y then new C(new D(x)) else new C(new E(1))
+  inspect(t)
+private fun inspect(t) =
+  @matchShapes(C(_)) shape.match of t,
+    () => t.C#x
+//│ >>> start data-rep-flatten collection-phase
+//│ data-rep-flatten collection-phase > track construction of C@3, C@5 in foo
+//│ data-rep-flatten collection-phase > track consumption at match@7 in inspect
+//│ <<< end data-rep-flatten collection-phase
+//│ >>> start data-rep-flatten web-computation-phase
+//│ data-rep-flatten web-computation-phase > web 0:
+//│ data-rep-flatten web-computation-phase >   producers: C@3, C@5
+//│ data-rep-flatten web-computation-phase >   field accesses: C.x@1
+//│ data-rep-flatten web-computation-phase >   pattern matches: match@7
+//│ <<< end data-rep-flatten web-computation-phase
+//│ >>> start data-rep-flatten transform-phase
+//│ data-rep-flatten transform-phase > allocated tag 0 for C(x: D(x: _))
+//│ data-rep-flatten transform-phase > allocated tag 1 for C(x: E(x: 1))
+//│ data-rep-flatten transform-phase > match shapes C(x: _) against C(x: D(x: _))@0, C(x: E(x: 1))@1
+//│ <<< end data-rep-flatten transform-phase
+//│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
+//│ let foo1, inspect1;
+//│ foo1 = function foo(x, y) {
+//│   runtime.checkArgs("foo", 2, true, arguments.length);
+//│   let tmp, tmp1, tmp2;
+//│   if (y === true) {
+//│     let tmp3;
+//│     tmp = (new D1.class(x));
+//│     tmp3 = (new C1.class(tmp));
+//│     tmp3.__tag = 0;
+//│     tmp1 = tmp3;
+//│   } else {
+//│     let tmp3;
+//│     tmp2 = (new E1.class(1));
+//│     tmp3 = (new C1.class(tmp2));
+//│     tmp3.__tag = 1;
+//│     tmp1 = tmp3;
+//│   }
+//│   if (tmp1.__tag === 0) {
+//│     return tmp1.x
+//│   } else if (tmp1.__tag === 1) {
+//│     return tmp1.x
+//│   }
+//│   return runtime.Unit;
+//│ };
+//│ inspect1 = function inspect(t) {
+//│   runtime.checkArgs("inspect", 1, true, arguments.length);
+//│   let shapeMatchResult;
+//│   if (t.__tag === 0) {
+//│     shapeMatchResult = t.x;
+//│   } else if (t.__tag === 1) { shapeMatchResult = t.x; }
+//│   return shapeMatchResult
+//│ };
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+
+class F(val y) extends E(0)
+//│ >>> start data-rep-flatten collection-phase
+//│ <<< end data-rep-flatten collection-phase
+//│ >>> start data-rep-flatten transform-phase
+//│ <<< end data-rep-flatten transform-phase
+
+
+:ssjs
+fun foo(x, y) =
+  let t = if y then new C(new E(x)) else new C(new F(1))
+  inspect(t)
+private fun inspect(t) =
+  @matchShapes(C(F(_)), C(E(_))) shape.match of t,
+    () => t.C#x.E#x
+    () => t.C#x.F#y
+//│ >>> start data-rep-flatten collection-phase
+//│ data-rep-flatten collection-phase > track construction of C@6, C@8, E@5, F@7 in foo
+//│ data-rep-flatten collection-phase > track consumption at match@10 in inspect
+//│ <<< end data-rep-flatten collection-phase
+//│ >>> start data-rep-flatten web-computation-phase
+//│ data-rep-flatten web-computation-phase > web 0:
+//│ data-rep-flatten web-computation-phase >   producers: E@5, C@6, F@7, C@8
+//│ data-rep-flatten web-computation-phase >   field accesses: E.x@1, C.x@2, F.y@3, C.x@4
+//│ data-rep-flatten web-computation-phase >   pattern matches: match@10
+//│ <<< end data-rep-flatten web-computation-phase
+//│ >>> start data-rep-flatten transform-phase
+//│ data-rep-flatten transform-phase > allocated tag 0 for C(x: E(x: _))
+//│ data-rep-flatten transform-phase > allocated tag 1 for C(x: F(y: 1))
+//│ data-rep-flatten transform-phase > match shapes C(x: F(y: _)), C(x: E(x: _)) against C(x: E(x: _))@0, C(x: F(y: 1))@1
+//│ <<< end data-rep-flatten transform-phase
+//│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
+//│ let foo2, inspect2;
+//│ foo2 = function foo(x, y) {
+//│   runtime.checkArgs("foo", 2, true, arguments.length);
+//│   let tmp, tmp1, tmp2;
+//│   if (y === true) {
+//│     let tmp3;
+//│     tmp = (new E1.class(x));
+//│     tmp3 = (new C1.class(tmp));
+//│     tmp3.__tag = 0;
+//│     tmp1 = tmp3;
+//│   } else {
+//│     let tmp3;
+//│     tmp2 = (new F1.class(1));
+//│     tmp3 = (new C1.class(tmp2));
+//│     tmp3.__tag = 1;
+//│     tmp1 = tmp3;
+//│   }
+//│   if (tmp1.__tag === 0) {
+//│     return tmp1.x.y
+//│   } else if (tmp1.__tag === 1) {
+//│     return tmp1.x.x
+//│   }
+//│   return runtime.Unit;
+//│ };
+//│ inspect2 = function inspect(t) {
+//│   runtime.checkArgs("inspect", 1, true, arguments.length);
+//│   let shapeMatchResult;
+//│   if (t.__tag === 0) {
+//│     shapeMatchResult = t.x.y;
+//│   } else if (t.__tag === 1) { shapeMatchResult = t.x.x; }
+//│   return shapeMatchResult
+//│ };
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————

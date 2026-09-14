@@ -167,7 +167,7 @@ private fun baz(t) =
 //│ >>> start data-rep-flatten transform-phase
 //│ data-rep-flatten transform-phase > allocated tag 0 for Foo(x: _, y: _)
 //│ data-rep-flatten transform-phase > allocated tag 1 for Bar(x: _)
-//│ data-rep-flatten transform-phase > match shapes Foo(x: _, y: _), Bar(x: _) against Bar(x: _)@1, Foo(x: _, y: _)@0
+//│ data-rep-flatten transform-phase > match shapes Foo(x: _, y: _), Bar(x: _) against Foo(x: _, y: _)@0, Bar(x: _)@1
 //│ <<< end data-rep-flatten transform-phase
 //│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
 //│ let bar2, foo3, baz1;
@@ -176,10 +176,10 @@ private fun baz(t) =
 //│   let tmp1;
 //│   tmp1 = (new Foo1.class(x, y));
 //│   tmp1.__tag = 0;
-//│   if (tmp1.__tag === 1) {
-//│     return tmp1.x
-//│   } else if (tmp1.__tag === 0) {
+//│   if (tmp1.__tag === 0) {
 //│     return tmp1.x + tmp1.y
+//│   } else if (tmp1.__tag === 1) {
+//│     return tmp1.x
 //│   }
 //│   return runtime.Unit;
 //│ };
@@ -188,19 +188,19 @@ private fun baz(t) =
 //│   let tmp1;
 //│   tmp1 = (new Bar1.class(x));
 //│   tmp1.__tag = 1;
-//│   if (tmp1.__tag === 1) {
-//│     return tmp1.x
-//│   } else if (tmp1.__tag === 0) {
+//│   if (tmp1.__tag === 0) {
 //│     return tmp1.x + tmp1.y
+//│   } else if (tmp1.__tag === 1) {
+//│     return tmp1.x
 //│   }
 //│   return runtime.Unit;
 //│ };
 //│ baz1 = function baz(t) {
 //│   runtime.checkArgs("baz", 1, true, arguments.length);
 //│   let shapeMatchResult2;
-//│   if (t.__tag === 1) {
-//│     shapeMatchResult2 = t.x;
-//│   } else if (t.__tag === 0) { shapeMatchResult2 = t.x + t.y; }
+//│   if (t.__tag === 0) {
+//│     shapeMatchResult2 = t.x + t.y;
+//│   } else if (t.__tag === 1) { shapeMatchResult2 = t.x; }
 //│   return shapeMatchResult2
 //│ };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
@@ -235,7 +235,7 @@ fun bar(x) =
 //│ >>> start data-rep-flatten transform-phase
 //│ data-rep-flatten transform-phase > allocated tag 0 for Some(x: _)
 //│ data-rep-flatten transform-phase > allocated tag 1 for None
-//│ data-rep-flatten transform-phase > match shapes Some(x: _), None against None@1, Some(x: _)@0
+//│ data-rep-flatten transform-phase > match shapes Some(x: _), None against Some(x: _)@0, None@1
 //│ <<< end data-rep-flatten transform-phase
 //│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
 //│ let bar3, foo4;
@@ -265,9 +265,9 @@ fun bar(x) =
 //│     None1.__tag = 1;
 //│     inlinedVal = None1;
 //│   }
-//│   if (inlinedVal.__tag === 1) {
-//│     return 0
-//│   } else if (inlinedVal.__tag === 0) { return inlinedVal.x }
+//│   if (inlinedVal.__tag === 0) {
+//│     return inlinedVal.x
+//│   } else if (inlinedVal.__tag === 1) { return 0 }
 //│   return runtime.Unit;
 //│ };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
@@ -364,7 +364,7 @@ fun foo(x, y) =
 //│ data-rep-flatten transform-phase > allocated tag 1 for Bar(x: _)
 //│ data-rep-flatten transform-phase > allocated tag 2 for Bar(x: 0)
 //│ data-rep-flatten transform-phase > match shapes Some(x: _), None against Some(x: _)@0
-//│ data-rep-flatten transform-phase > match shapes Bar(x: _) against Bar(x: 0)@2, Bar(x: _)@1
+//│ data-rep-flatten transform-phase > match shapes Bar(x: _) against Bar(x: _)@1, Bar(x: 0)@2
 //│ <<< end data-rep-flatten transform-phase
 //│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
 //│ let foo6;
@@ -379,9 +379,9 @@ fun foo(x, y) =
 //│     tmp2.__tag = 1;
 //│     shapeMatchResult2 = tmp2;
 //│   }
-//│   if (shapeMatchResult2.__tag === 2) {
+//│   if (shapeMatchResult2.__tag === 1) {
 //│     return shapeMatchResult2.x + 1
-//│   } else if (shapeMatchResult2.__tag === 1) {
+//│   } else if (shapeMatchResult2.__tag === 2) {
 //│     return shapeMatchResult2.x + 1
 //│   }
 //│   return runtime.Unit;
