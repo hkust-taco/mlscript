@@ -2022,6 +2022,13 @@ extends Importer:
                 case _ =>
                   Modulefulness.none
               
+              /** Whether a signature is a possibly-quantified arrow. */
+              def wrapsArrow(sign: Term): Bool = sign match
+                case Term.Forall(_, _, body) => wrapsArrow(body)
+                case Term.Annotated(Annot.Resource(_), target) => wrapsArrow(target)
+                case Term.FunTy(_, _, _) => true
+                case _ => false
+              
               /** Splits a signature's arrow chain into the parameter lists it describes and the type it returns.
                 * Yields `N` if the signature is not an arrow or if some parameter list's arity cannot be read.
                 */
@@ -2038,11 +2045,28 @@ extends Importer:
                   case single => S(ErasedType.eraseSign(single) :: Nil)
                 sign match
                   case Term.Forall(_, _, body) => splitSignature(body)
+                  // * The split reads only the arrows' shape, so it ignores the resource modifier and splits its
+                  // * target; the modifier is rejected on a consumed arrow in `stripSignatureParams`.
+                  case Term.Annotated(Annot.Resource(_), target) => splitSignature(target)
                   case Term.FunTy(lhs, rhs, _) => paramsOf(lhs).map: ps =>
                     splitSignature(rhs) match
                       case S((rest, ret)) => (ps :: rest, ret)
                       case N => (ps :: Nil, rhs)
                   case _ => N
+              
+              /** Strips `sign`'s first `n` arrows, which the definition consumes as its own parameter lists.
+                * Returns what remains of `sign`, and the resource modifiers written on the stripped arrows.
+                *
+                * A modifier on anything else wraps the result and stays, so `fun f: rsc C` keeps it however many
+                * parameter lists `f` writes, and `eraseSign` reads it off there.
+                */
+              def stripSignatureParams(sign: Term, n: Int): (Term, Ls[Term]) = (sign, n) match
+                case (Term.Forall(_, _, body), _) => stripSignatureParams(body, n)
+                case (mod @ Term.Annotated(Annot.Resource(_), target), n) if n > 0 && wrapsArrow(target) =>
+                  val (result, mods) = stripSignatureParams(target, n)
+                  (result, mod :: mods)
+                case (Term.FunTy(_, rhs, _), n) if n > 0 => stripSignatureParams(rhs, n - 1)
+                case _ => (sign, Nil)
               
               // * A signature's arrows are the definition's own parameter lists when a reference to it is not
               // * auto-invoked.
@@ -2055,20 +2079,28 @@ extends Importer:
                 then s.flatMap(splitSignature)
                 else N
               
+              // * A `fun` definition that has a separately written signature (rather than annotating its own defn)
+              // * consumes as many leading arrows as it writes parameter lists; a paramless `declare`d one consumes
+              // * all of them, and any other consumes none.
+              val inheritsSignature = (k is syntax.Fun) && td.annotatedResultType.isEmpty
+              val consumedArrows = if inheritsSignature then pss.length else sigShape.fold(0)(_._1.length)
+              val strippedSign = s.map(stripSignatureParams(_, consumedArrows))
+              // * A definition's own parameter lists have no resource-ness to state.
+              // TODO: Also point to the definition's parameter list that consumes the function type, as it is what
+              //       makes the modifier an error.
+              strippedSign.foreach: (_, mods) =>
+                mods.foreach: mod =>
+                  raise(ErrorReport(
+                    msg"Resource modifiers apply to function values, not to a function definition's parameter lists." ->
+                      mod.toLoc :: Nil))
+              
               // * A moduleful signature (`fun f: module M`) denotes the module itself.
               val retTpe = mfn.msym match
                 case S(msym) => S(ErasedType.ValueLike(rsc = S(false), msym))
-                case N => s.flatMap: s =>
-                  // * A function that inherits a signature with leading arrows consumes those arrows as its own
-                  // * parameter lists. The exception is a `declare`d function, whose arrows are always its own
-                  // * parameters (see `sigShape`).
-                  def stripSignatureParams(s: Term, n: Int): Term = (s, n) match
-                    case (Term.Forall(_, _, body), _) => stripSignatureParams(body, n)
-                    case (Term.FunTy(_, rhs, _), n) if n > 0 => stripSignatureParams(rhs, n - 1)
-                    case _ => s
+                case N => s.zip(strippedSign).flatMap: (s, stripped) =>
                   val resultSign: Term =
-                    if (k is syntax.Fun) && td.annotatedResultType.isEmpty
-                    then stripSignatureParams(s, pss.length)
+                    if inheritsSignature
+                    then stripped._1
                     else sigShape.map(_._2).getOrElse(s)
                   ErasedType.eraseSign(resultSign)
               val erasedTpe = k match

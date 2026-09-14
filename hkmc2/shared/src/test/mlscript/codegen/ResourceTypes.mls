@@ -35,6 +35,24 @@ fun l(x) = x
 //│ define l⁰ as fun l¹(x: ?): C² { return (x as! C²) }; end
 
 
+// A signature with no arrow has none to strip the modifier with, so the modifier stays
+// on the result type, even when the definition writes a parameter list of its own.
+
+declare fun mkRsc: rsc C
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ end
+
+fun getter: rsc C
+fun getter = mkRsc
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define getter⁰ as fun getter¹(): rsc C² { return globalThis⁰.mkRsc⁰ }; end
+
+fun noArrow: rsc C
+fun noArrow(x) = x
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define noArrow⁰ as fun noArrow¹(x: ?): rsc C² { return (x as! rsc C²) }; end
+
+
 // `Anything` follows the same rule as any other class.
 
 fun m(x: Anything) = x
@@ -67,7 +85,7 @@ fun p(x: rsc C | D) = x
 :ge
 fun intoAny(x: rsc C) = m(x)
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'rsc C' at an unrelated type 'Unknown'
-//│ ║  l.68: 	fun intoAny(x: rsc C) = m(x)
+//│ ║  l.86: 	fun intoAny(x: rsc C) = m(x)
 //│ ╙──      	                          ^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define intoAny⁰ as fun intoAny¹(x: rsc C²): ? { return m¹(x) }; end
@@ -128,7 +146,7 @@ fun t(b: Box[rsc C]) = b
 :ge
 fun q(x: C) = useRsc(x)
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'C' at an unrelated type 'rsc C'
-//│ ║  l.129: 	fun q(x: C) = useRsc(x)
+//│ ║  l.147: 	fun q(x: C) = useRsc(x)
 //│ ╙──       	                     ^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define q⁰ as fun q¹(x: C²): ? { return useRsc¹(x) }; end
@@ -141,7 +159,7 @@ fun q(x: C) = useRsc(x)
 fun u() = rsc 1
 //│ ╔══[WARNING] This annotation has no effect.
 //│ ╟── This annotation is not supported on integer literal terms.
-//│ ║  l.141: 	fun u() = rsc 1
+//│ ║  l.159: 	fun u() = rsc 1
 //│ ╙──       	              ^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define u⁰ as fun u¹(): ? { return 1 }; end
@@ -165,16 +183,174 @@ fun modOf = M
 fun rscModOf: rsc module M
 fun rscModOf = M
 //│ ╔══[COMPILATION ERROR] Illegal type declaration in term position.
-//│ ║  l.165: 	fun rscModOf: rsc module M
+//│ ║  l.183: 	fun rscModOf: rsc module M
 //│ ╙──       	                  ^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Illegal type declaration in term position.
-//│ ║  l.165: 	fun rscModOf: rsc module M
+//│ ║  l.183: 	fun rscModOf: rsc module M
 //│ ╙──       	                  ^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Expected a type, got ‹error›
-//│ ║  l.165: 	fun rscModOf: rsc module M
+//│ ║  l.183: 	fun rscModOf: rsc module M
 //│ ╙──       	                  ^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Expected a type, got ‹error›
-//│ ║  l.165: 	fun rscModOf: rsc module M
+//│ ║  l.183: 	fun rscModOf: rsc module M
 //│ ╙──       	                  ^^^^^^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define rscModOf⁰ as fun rscModOf¹(): ? { return M² }; end
+
+
+// A written arrow is consumed as the definition's parameter list, which has no
+// resource-ness to state, so a modifier on it is rejected. `kControl` is the same shape
+// without one; `kForall` puts a quantifier between the modifier and the arrow, `kMaybe`
+// uses `rsc?`, and the paramless `declare`d `kDeclared` consumes every arrow it has.
+
+:e
+fun k: rsc (C) -> C
+fun k(x) = x
+//│ ╔══[COMPILATION ERROR] Resource modifiers apply to function values, not to a function definition's parameter lists.
+//│ ║  l.207: 	fun k: rsc (C) -> C
+//│ ╙──       	           ^^^^^^^^
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define k⁰ as fun k¹(x: ?): C² { return (x as! C²) }; end
+
+fun kControl: (C) -> C
+fun kControl(x) = x
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define kControl⁰ as fun kControl¹(x: ?): C² { return (x as! C²) }; end
+
+:e
+fun kForall: rsc [A] -> (A) -> A
+fun kForall(x) = x
+//│ ╔══[COMPILATION ERROR] Resource modifiers apply to function values, not to a function definition's parameter lists.
+//│ ║  l.221: 	fun kForall: rsc [A] -> (A) -> A
+//│ ╙──       	                        ^^^^^^^^
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define kForall⁰ as fun kForall¹(x: ?): ? { return x }; end
+
+:e
+fun kMaybe: rsc? (C) -> C
+fun kMaybe(x) = x
+//│ ╔══[COMPILATION ERROR] Resource modifiers apply to function values, not to a function definition's parameter lists.
+//│ ║  l.230: 	fun kMaybe: rsc? (C) -> C
+//│ ╙──       	                 ^^^^^^^^
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define kMaybe⁰ as fun kMaybe¹(x: ?): C² { return (x as! C²) }; end
+
+:e
+declare fun kDeclared: rsc (C) -> C
+//│ ╔══[COMPILATION ERROR] Resource modifiers apply to function values, not to a function definition's parameter lists.
+//│ ║  l.239: 	declare fun kDeclared: rsc (C) -> C
+//│ ╙──       	                           ^^^^^^^^
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ end
+
+// A function has no resource-ness of its own yet, so a reference to one is `rsc?` whatever
+// its signature says. It will be inferred once the new resolver can tell which fields the
+// function captures.
+
+:ge
+val kNarrowed: Str = k
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'rsc? Function' at an unrelated type 'Str'
+//│ ║  l.251: 	val kNarrowed: Str = k
+//│ ╙──       	                     ^
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define kNarrowed⁰ as val kNarrowed¹: Str⁰ = k¹; end
+
+:ge
+val kControlNarrowed: Str = kControl
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'rsc? Function' at an unrelated type 'Str'
+//│ ║  l.259: 	val kControlNarrowed: Str = kControl
+//│ ╙──       	                            ^^^^^^^^
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define kControlNarrowed⁰ as val kControlNarrowed¹: Str⁰ = kControl¹; end
+
+:ge
+val kForallNarrowed: Str = kForall
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'rsc? Function' at an unrelated type 'Str'
+//│ ║  l.267: 	val kForallNarrowed: Str = kForall
+//│ ╙──       	                           ^^^^^^^
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define kForallNarrowed⁰ as val kForallNarrowed¹: Str⁰ = kForall¹; end
+
+:ge
+val kMaybeNarrowed: Str = kMaybe
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'rsc? Function' at an unrelated type 'Str'
+//│ ║  l.275: 	val kMaybeNarrowed: Str = kMaybe
+//│ ╙──       	                          ^^^^^^
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define kMaybeNarrowed⁰ as val kMaybeNarrowed¹: Str⁰ = kMaybe¹; end
+
+// An arrow the definition does not consume is its result, so a modifier on it describes
+// the function the definition returns rather than the definition itself. A paramless
+// `fun` consumes none, even though at block level it compiles to a nullary function.
+
+fun resultRsc(x): rsc (C) -> C = x
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define resultRsc⁰ as fun resultRsc¹(x: ?): rsc Function⁰ { return (x as! rsc Function⁰) }; end
+
+:ge
+val resultRscNarrowed: Str = resultRsc
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'rsc? Function' at an unrelated type 'Str'
+//│ ║  l.291: 	val resultRscNarrowed: Str = resultRsc
+//│ ╙──       	                             ^^^^^^^^^
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define resultRscNarrowed⁰ as val resultRscNarrowed¹: Str⁰ = resultRsc¹; end
+
+fun paramlessRsc: rsc (C) -> C
+fun paramlessRsc = resultRsc(0)
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define paramlessRsc⁰ as fun paramlessRsc¹(): rsc Function⁰ { return resultRsc¹(0) }; end
+
+
+// Every arrow a curried definition consumes is one of its own parameter lists, so a
+// modifier on an inner one is rejected too.
+
+:e
+fun curriedInner: (C) -> rsc (C) -> C
+fun curriedInner(x)(y) = y
+//│ ╔══[COMPILATION ERROR] Resource modifiers apply to function values, not to a function definition's parameter lists.
+//│ ║  l.308: 	fun curriedInner: (C) -> rsc (C) -> C
+//│ ╙──       	                             ^^^^^^^^
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define curriedInner⁰ as fun curriedInner¹(x: ?)(y: ?): C² { return (y as! C²) }; end
+
+:e
+fun curriedOuter: rsc (C) -> (C) -> C
+fun curriedOuter(x)(y) = y
+//│ ╔══[COMPILATION ERROR] Resource modifiers apply to function values, not to a function definition's parameter lists.
+//│ ║  l.317: 	fun curriedOuter: rsc (C) -> (C) -> C
+//│ ╙──       	                      ^^^^^^^^^^^^^^^
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define curriedOuter⁰ as fun curriedOuter¹(x: ?)(y: ?): C² { return (y as! C²) }; end
+
+// A partial application returns a closure, which is `rsc?` like any other function
+// value, so it takes a checked cast into either kind of function slot.
+
+fun curried(x)(y) = y
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define curried⁰ as fun curried¹(x: ?)(y: ?): ? { return y }; end
+
+fun useRscFn(g: rsc (C) -> C) = g
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define useRscFn⁰ as fun useRscFn¹(g: rsc Function⁰): ? { return g }; end
+
+fun usePlainFn(g: (C) -> C) = g
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define usePlainFn⁰ as fun usePlainFn¹(g: Function⁰): ? { return g }; end
+
+fun partialIntoRsc(a) = useRscFn(curried(a))
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define partialIntoRsc⁰ as fun partialIntoRsc¹(a: ?): ? {
+//│   let tmp: rsc? Function⁰;
+//│   set tmp = curried¹(a);
+//│   return useRscFn¹((tmp as! rsc Function⁰))
+//│ };
+//│ end
+
+fun partialIntoPlain(a) = usePlainFn(curried(a))
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define partialIntoPlain⁰ as fun partialIntoPlain¹(a: ?): ? {
+//│   let tmp: rsc? Function⁰;
+//│   set tmp = curried¹(a);
+//│   return usePlainFn¹((tmp as! Function⁰))
+//│ };
+//│ end
