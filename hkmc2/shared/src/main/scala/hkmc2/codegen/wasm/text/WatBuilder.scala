@@ -39,18 +39,17 @@ extension (prim: PrimitiveType)
     case PrimitiveType.Float32 => F32Type
     case PrimitiveType.Float64 => F64Type
 
-  /** The neutral value of this primitive, used to initialize a slot that has no explicit initializer. */
-  private[text] def zeroValue: Expr = prim match
-    case PrimitiveType.Int32 => Instructions.i32.const(0)
-    case PrimitiveType.Int64 => Instructions.i64.const(0)
-    case PrimitiveType.Float32 => Instructions.f32.const(0)
-    case PrimitiveType.Float64 => Instructions.f64.const(0)
-
 extension (ty: ValType)
-  /** The neutral value of this Wasm value type, or `N` if it has none, i.e. it is a non-nullable reference. */
+  /** The neutral value of this Wasm value type, used to initialize a slot that has no explicit initializer, or `N` if
+    * it has none (a non-nullable reference) or the backend cannot build one yet (`v128`).
+    */
   private[text] def zeroValue: Opt[Expr] = ty match
     case refTy: RefType => Option.when(refTy.nullable)(Instructions.ref.`null`(refTy.heapType))
-    case _ => PrimitiveType.values.find(_.wasmType == ty).map(_.zeroValue)
+    case I32Type => S(Instructions.i32.const(0))
+    case I64Type => S(Instructions.i64.const(0))
+    case F32Type => S(Instructions.f32.const(0))
+    case F64Type => S(Instructions.f64.const(0))
+    case V128Type => N
 
 extension (et: ErasedType)
   /** Returns the corresponding Wasm type for this [[ErasedType]]. */
