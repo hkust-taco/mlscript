@@ -1076,6 +1076,11 @@ extends Importer:
     
     def error = Term.Error().withLocOf(tree)
     
+    /** Splits the body of a `new` into its resource modifier (if any), its class, and its argument lists. */
+    def splitRscNew(c: Tree, args: Ls[Tup]): (Opt[Keywrd[?]], Tree, Ls[Tup]) = c match
+      case Modified(kw @ Keywrd(Keyword.`rsc` | Keyword.`rsc?`), Apps(c, args0)) => (S(kw), c, args0 ::: args)
+      case _ => (N, c, args)
+    
     /** Fallback to a normal selection + application when label-specific handling does not apply. */
     def mkNonLabelSelectionApp(tree: App, sel: Sel, args: Ls[Tree]): Term =
       val sym = FlowSymbol.app()
@@ -1441,7 +1446,10 @@ extends Importer:
       val (mut, c2) = c match
         case Modified(Keywrd(Keyword.`mut`), c) => (true, c)
         case c => (false, c)
-      val base = new Term.DynNew(subterm(c2), args.map(subterm(_))).withLocOf(tree)
+      val (rsc, c3, args2) = splitRscNew(c2, args)
+      rsc.foreach: kw =>
+        raise(ErrorReport(msg"Resource instantiation with 'new!' is not supported yet." -> kw.toLoc :: Nil))
+      val base = new Term.DynNew(subterm(c3), args2.map(subterm(_))).withLocOf(tree)
       if mut then Term.Mut(base) else base
     // case New(c, rfto) =>
     //   assert(rfto.isEmpty)
@@ -1459,12 +1467,25 @@ extends Importer:
         val (mut, c2) = c match
           case Modified(Keywrd(Keyword.`mut`), c) => (true, c)
           case c => (false, c)
+        val (rscKw, c3, args2) = splitRscNew(c2, args)
+        val rsc = rscKw match
+          // * An instance has one definite layout.
+          case S(kw @ Keywrd(Keyword.`rsc?`)) =>
+            raise(ErrorReport(msg"An instance cannot be 'rsc?': it either is a resource or is not." -> kw.toLoc :: Nil))
+            false
+          case S(kw) if rfto.isDefined =>
+            raise(ErrorReport(msg"Resource instantiation with a refinement is not supported yet." -> kw.toLoc :: Nil))
+            false
+          case S(_) => true
+          case N => false
         val inner = new Term.New(
-          subterm(c2), // * Note: we'll catch bad `new` targets during type checking
-          args.map(subterm(_)),
+          subterm(c3), // * Note: we'll catch bad `new` targets during type checking
+          args2.map(subterm(_)),
           bodo
         )(N).withLocOf(tree)
-        if mut then Term.Mut(inner) else inner
+        val withMut = if mut then Term.Mut(inner) else inner
+        // * The `rsc` modifier of a `new` expression wraps the instantiation in an annotation, just as it wraps a type.
+        if rsc then Term.Annotated(Annot.Modifier(Keyword.`rsc`), withMut) else withMut
       case N =>
         val objectRef = ctx.builtins.Object.bms.get.ref(Ident("Object"))
         Term.New(objectRef, Nil, bodo)(N).withLocOf(tree)

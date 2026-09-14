@@ -404,6 +404,7 @@ object Throw:
     */
   def error(msg: Str)(using State): Throw = Throw(Instantiate(
     mut = false,
+    rsc = false,
     State.globalThisSymbol.asThis.selN(Tree.Ident("Error")),
     (Value.Lit(Tree.StrLit(msg)).asArg :: Nil) :: Nil,
   )(InstantiateMetadata.empty))
@@ -612,7 +613,7 @@ object HandleBlock:
     blockBuilder
       .scopedVars(Set(clsDefn.sym, sym))
       .define(clsDefn)
-      .assign(lhs, Instantiate(mut = true, clsDefn.sym.asMemberRef(cls), Nil :: Nil)(InstantiateMetadata.empty))
+      .assign(lhs, Instantiate(mut = true, rsc = false, clsDefn.sym.asMemberRef(cls), Nil :: Nil)(InstantiateMetadata.empty))
       .define(bodyDefn)
       .assign(res, handleSuspension(lhs.asSimpleRef, bodyDefn.sym.asMemberRef(bodyDefn.dSym)))
       .rest(rest)
@@ -993,7 +994,7 @@ sealed abstract class Result extends AutoLocated, HasErasedType:
     case Lambda(params, body) => s"Lambda(${params.showDbg}, ${body.showDbg})"
     case Record(mut, args) => s"Record($mut, [${args.map(a => s"${a.showDbg} = ${a.value.showDbg}").mkString(", ")}])"
     case Tuple(mut, elems) => s"Tuple($mut, [${elems.map(_.value.showDbg).mkString(", ")}])"
-    case Instantiate(mut, cls, argss) => s"Instantiate($mut, ${cls.showDbg}, [${
+    case Instantiate(mut, rsc, cls, argss) => s"Instantiate($mut, $rsc, ${cls.showDbg}, [${
       argss.map(_.map(a => a.value.showDbg).mkString("[", ", ", "]")).mkString(", ")}])"
     case Cast(value, target, check) => s"Cast(${value.showDbg}, $target${if check then ", checked" else ""})"
   
@@ -1032,7 +1033,7 @@ sealed abstract class Result extends AutoLocated, HasErasedType:
   // * That's why for example, we're not adding the `l` of `Value.Ref` to the children list.
   protected def children: Vector[Located] = this match
     case Call(fun, argss) => fun +: argss.iterator.flatten.map(_.value).toVector
-    case Instantiate(mut, cls, argss) => cls +: argss.iterator.flatten.map(_.value).toVector
+    case Instantiate(mut, _, cls, argss) => cls +: argss.iterator.flatten.map(_.value).toVector
     case Cast(value, target, _) => Vector.single(value)
     case Select(qual, name) => Vector.double(qual, name)
     case DynSelect(qual, fld, arrayIdx) => Vector.double(qual, fld)
@@ -1047,7 +1048,7 @@ sealed abstract class Result extends AutoLocated, HasErasedType:
   // TODO rm Lam from values and thus the need for this method
   def subBlocks: Ls[Block] = this match
     case Call(fun, argss) => fun.subBlocks ::: argss.flatten.flatMap(_.value.subBlocks)
-    case Instantiate(mut, cls, argss) => argss.flatten.flatMap(_.value.subBlocks)
+    case Instantiate(mut, _, cls, argss) => argss.flatten.flatMap(_.value.subBlocks)
     case Select(qual, name) => qual.subBlocks
     case Lambda(params, body) => body :: Nil
     case Tuple(mut, elems) => elems.flatMap(_.value.subBlocks)
@@ -1055,7 +1056,7 @@ sealed abstract class Result extends AutoLocated, HasErasedType:
   
   lazy val freeVars: Set[FreeSymbol] = this match
     case Call(fun, argss) => fun.freeVars ++ argss.flatten.flatMap(_.value.freeVars).toSet
-    case Instantiate(mut, cls, argss) => cls.freeVars ++ argss.flatten.flatMap(_.value.freeVars).toSet
+    case Instantiate(mut, _, cls, argss) => cls.freeVars ++ argss.flatten.flatMap(_.value.freeVars).toSet
     case Cast(value, _, _) => value.freeVars
     case Select(qual, name) => qual.freeVars
     case Lambda(params, body) => body.freeVars -- params.paramSyms
@@ -1070,7 +1071,7 @@ sealed abstract class Result extends AutoLocated, HasErasedType:
   
   lazy val size: Int = this match
     case Call(fun, argss) => fun.size + argss.iterator.flatten.map(_.value.size).sum
-    case Instantiate(mut, cls, argss) => cls.size + argss.iterator.flatten.map(_.value.size).sum
+    case Instantiate(mut, _, cls, argss) => cls.size + argss.iterator.flatten.map(_.value.size).sum
     case Cast(value, _, _) => value.size
     case Select(qual, name) => qual.size
     case Lambda(params, body) => 1 + body.size
@@ -1097,7 +1098,9 @@ sealed abstract class Result extends AutoLocated, HasErasedType:
     // * A `val` or `fun` is a block *member*, so its references are `MemberRef`s rather than `SimpleRef`s, and
     // * its declared type lives on the associated `TermSymbol` - the same shape `Select` reads below.
     case Value.MemberRef(_, disamb: TermSymbol) => disamb.erasedType
-    case Value.This(clsOrMod: (ClassSymbol | ModuleOrObjectSymbol)) => clsOrMod.erasedType
+    // * Any class can be instantiated with `new rsc`, so its `this` is `rsc?`; a module or object is never a resource.
+    case Value.This(cls: ClassSymbol) => S(ErasedType.ValueLike(rsc = N, cls))
+    case Value.This(mod: ModuleOrObjectSymbol) => mod.erasedType
     case Value.Lit(_: Tree.IntLit) => S(ErasedType.Int)
     case Value.Lit(_: Tree.DecLit) => S(ErasedType.Num)
     case Value.Lit(_: Tree.StrLit) => S(ErasedType.Str)
@@ -1127,9 +1130,11 @@ sealed abstract class Result extends AutoLocated, HasErasedType:
     case Cast(_, target, _) => S(target)
     // * `Instantiate` always yields an instance of the class, since the constructor is guaranteed to be fully-applied
     // * after lowering.
-    case Instantiate(_, cls, _) => cls.targetSymbol.flatMap:
-      case ctor: ClassCtorSymbol => ctor.associatedCls.erasedType
-      case sym => sym.asCls.flatMap(_.erasedType)
+    case Instantiate(_, rsc, cls, _) =>
+      val clsSym = cls.targetSymbol.flatMap:
+        case ctor: ClassCtorSymbol => S(ctor.associatedCls)
+        case sym => sym.asCls
+      clsSym.map(sym => ErasedType.ValueLike(S(rsc), sym))
     // * A tuple literal is typed as `Array` at runtime.
     case Tuple(_, _) => S(ErasedType.Array)
     case _ => N
@@ -1256,7 +1261,8 @@ case class InstantiateMetadata(
 object InstantiateMetadata:
   def empty: InstantiateMetadata = InstantiateMetadata(Nil)
 
-case class Instantiate(mut: Bool, cls: Path, argss: Ls[Ls[Arg]])(val metadata: InstantiateMetadata) extends Result
+/** An instantiation of `cls`. `rsc` is true if it creates a resource, as written `new rsc C(...)`. */
+case class Instantiate(mut: Bool, rsc: Bool, cls: Path, argss: Ls[Ls[Arg]])(val metadata: InstantiateMetadata) extends Result
 
 /** A coercion of `value` to `target`.
   *

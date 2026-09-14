@@ -497,10 +497,10 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
     * when they correspond to constructor parameter lists of the same class.
     * If fewer argument lists are provided than constructor parameter lists, eta-expands
     * the missing ones with fresh lambdas (avoiding reliance on mutable JS class curry semantics). */
-  def lowerMultiInstantiate(mut: Bool, cls: Path, args: Ls[Term], annotations: Ls[Annot])(k: Result => Block)(using LoweringCtx): Block =
+  def lowerMultiInstantiate(mut: Bool, rsc: Bool, cls: Path, args: Ls[Term], annotations: Ls[Annot])(k: Result => Block)(using LoweringCtx): Block =
     // Nullary instantiations are represented with one empty argument list, matching existing `Instantiate` usage.
     def buildInstantiate(argss: Ls[Ls[Arg]]): Instantiate =
-      Instantiate(mut, cls, if argss.isEmpty then Nil :: Nil else argss)(InstantiateMetadata(annotations))
+      Instantiate(mut, rsc, cls, if argss.isEmpty then Nil :: Nil else argss)(InstantiateMetadata(annotations))
     // * Zip constructor param lists with argument lists, accumulating lowered args.
     // * Consumes one argument list per constructor param list; when all ctor params are
     // * consumed but extra args remain, falls back to `Call` nodes on the result.
@@ -1116,10 +1116,16 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
         case DynNew(c, a) => (false, c, a, N)
         case Mut(DynNew(c, a)) => (true, c, a, N)
         case _ => spuriousWarning
+      // * `Elaborator` records the modifier of `new rsc C(...)` as an annotation on the `new` term.
+      val (rscAnnots, instAnnots) = annots.partition:
+        case Annot.Resource(_) => true
+        case _ => false
+      val rsc = rscAnnots.nonEmpty
       subTerm(cls): sr =>
         rft match
-        case N => lowerMultiInstantiate(mut, sr, as, annots)(k)
+        case N => lowerMultiInstantiate(mut, rsc, sr, as, instAnnots)(k)
         case S((isym, rft)) =>
+          softAssert(!rsc, "a refined instantiation cannot be a resource")
           val sym = new BlockMemberSymbol(isym.name, Nil)
           loweringCtx.collectScopedSym(sym)
           val (mtds, publicFlds, privateFlds, ctor) = gatherMembers(rft)
@@ -1147,11 +1153,11 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
     case Resolved(inner, sym) => TODO(s"lowering for Resolved($inner)")
     case Region(reg, body) =>
       loweringCtx.collectScopedSym(reg)
-      Assign(reg, Instantiate(mut = true, Select(State.globalThisSymbol.asThis, Tree.Ident("Region"))(N)(false), Nil :: Nil)(InstantiateMetadata.empty),
+      Assign(reg, Instantiate(mut = true, rsc = false, Select(State.globalThisSymbol.asThis, Tree.Ident("Region"))(N)(false), Nil :: Nil)(InstantiateMetadata.empty),
         term_nonTail(body)(k))
     case RegRef(reg, value) =>
       plainArgs(reg :: value :: Nil): args =>
-        k(Instantiate(mut = true, Select(State.globalThisSymbol.asThis, Tree.Ident("Ref"))(N)(false), args :: Nil)(InstantiateMetadata.empty))
+        k(Instantiate(mut = true, rsc = false, Select(State.globalThisSymbol.asThis, Tree.Ident("Ref"))(N)(false), args :: Nil)(InstantiateMetadata.empty))
     case Drop(ref) =>
       subTerm(ref): _ =>
         k(unit)
@@ -1186,13 +1192,13 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
     //   subTerm(t)(k)
   
   def setupTerm(name: Str, args: Ls[Path])(k: Result => Block)(using LoweringCtx): Block =
-    k(Instantiate(mut = false, State.termSymbol.asSimpleRef.selSN(name), args.map(_.asArg) :: Nil)(InstantiateMetadata.empty))
+    k(Instantiate(mut = false, rsc = false, State.termSymbol.asSimpleRef.selSN(name), args.map(_.asArg) :: Nil)(InstantiateMetadata.empty))
 
   def setupQuotedKeyword(kw: Str): Path =
     State.termSymbol.asSimpleRef.selSN("Keyword").selSN(kw)
 
   def setupSymbol(symbol: ValueSymbol)(k: Result => Block)(using LoweringCtx): Block =
-    k(Instantiate(mut = false, State.termSymbol.asSimpleRef.selSN("Symbol"),
+    k(Instantiate(mut = false, rsc = false, State.termSymbol.asSimpleRef.selSN("Symbol"),
       (Value.Lit(Tree.StrLit(symbol.nme)).asArg :: Nil) :: Nil)(InstantiateMetadata.empty))
 
   def quotePattern(p: FlatPattern)(k: Result => Block)(using LoweringCtx): Block = p match
@@ -1562,6 +1568,9 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
         case st.App(Ref(_: BuiltinSymbol), _) => warn(annot)
         case st.App(_, _) | New(_, _, _) | DynNew(_, _) | Mut(_: New | _: DynNew) => ()
         case st.Resolved(_, defnSym) if isImplicitNullaryCall(defnSym) => ()
+        case _ => warn(annot)
+      case annot @ Annot.Resource(_) => receiver match
+        case New(_, _, N) | Mut(New(_, _, N)) => ()
         case _ => warn(annot)
       case a @ Annot.TailCall => receiver match
         case st.App(Ref(_: BuiltinSymbol), _) => warn(a, S(msg"The @tailcall annotation has no effect on calls to built-in symbols."))

@@ -90,3 +90,39 @@ class C[rsc A]
 abstract class List[rsc? A]
 //│ Parsed:
 //│ 	Modified(Keywrd(keyword 'abstract'),TypeDef(Cls,App(Ident(List),TyTup(List(Modified(Keywrd(keyword 'rsc?'),Ident(A))))),None))
+
+
+// Instantiation. Unlike `mut`, `rsc` parses looser than application, so its operand is the
+// class together with its argument lists.
+
+new rsc C()
+//│ Parsed:
+//│ 	LexicalNew(Some(Modified(Keywrd(keyword 'rsc'),App(Ident(C),Tup(List())))),None)
+
+new rsc C
+//│ Parsed:
+//│ 	LexicalNew(Some(Modified(Keywrd(keyword 'rsc'),Ident(C))),None)
+
+new rsc C(1)(2)
+//│ Parsed:
+//│ 	LexicalNew(Some(Modified(Keywrd(keyword 'rsc'),App(App(Ident(C),Tup(List(IntLit(1)))),Tup(List(IntLit(2)))))),None)
+
+new rsc? C()
+//│ Parsed:
+//│ 	LexicalNew(Some(Modified(Keywrd(keyword 'rsc?'),App(Ident(C),Tup(List())))),None)
+
+new mut rsc C()
+//│ Parsed:
+//│ 	LexicalNew(Some(Modified(Keywrd(keyword 'mut'),Modified(Keywrd(keyword 'rsc'),App(Ident(C),Tup(List()))))),None)
+
+new rsc mut C()
+//│ Parsed:
+//│ 	LexicalNew(Some(Modified(Keywrd(keyword 'rsc'),App(Modified(Keywrd(keyword 'mut'),Ident(C)),Tup(List())))),None)
+
+new! rsc C()
+//│ Parsed:
+//│ 	PrefixApp(Keywrd(keyword 'new!'),Modified(Keywrd(keyword 'rsc'),App(Ident(C),Tup(List()))))
+
+new rsc C with {}
+//│ Parsed:
+//│ 	LexicalNew(Some(Modified(Keywrd(keyword 'rsc'),Ident(C))),Some(Block(List())))

@@ -1006,7 +1006,7 @@ class BlockSimplifier
                     case S(sym: ClassSymbol) =>
                       Set.single(sym)
                     case _ => giveUp
-                  case Instantiate(_, cls, _) =>
+                  case Instantiate(_, _, cls, _) =>
                     // * Note: Instantiate nodes are globally assumed to be saturated
                     getInstCtorShape(cls) match
                     case S(sym) =>
@@ -1257,7 +1257,7 @@ class BlockSimplifier
       case Value.Lit(lit) => S(lit)
       case path: Path => path.targetSymbol.flatMap(_.asModOrObj)
       case Call(path, argss) => getCallCtorShape(path, argss)
-      case Instantiate(_, cls, _) => getInstCtorShape(cls)
+      case Instantiate(_, _, cls, _) => getInstCtorShape(cls)
       case _ => N
     
     /** Find the shape held by `target` after a straight-line producer arm.

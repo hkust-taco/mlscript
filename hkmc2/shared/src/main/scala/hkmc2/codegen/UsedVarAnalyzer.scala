@@ -459,7 +459,7 @@ class UsedVarAnalyzer(b: Block, scopeData: ScopeData)(using State):
             if numArgLists != argss.size then handleScopeRef(d)
              // Fully applied, we can treat it as a call
             else handleCalledScope(d)
-          case Instantiate(mut, RefOfDefn(SDSym(d), _), argss) =>
+          case Instantiate(mut, _, RefOfDefn(SDSym(d), _), argss) =>
             argss.foreach(_.foreach(super.applyArg(_)))
             handleCalledScope(d)
           case _ => super.applyResult(r)

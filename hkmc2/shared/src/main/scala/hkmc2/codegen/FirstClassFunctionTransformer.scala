@@ -64,7 +64,8 @@ class FirstClassFunctionTransformer
     // * The wrapper captures what `p` does, so it is a resource iff `p` is, which is not resolved yet
     val tmp = new TempSymbol(None, erasedType = S(ErasedType.ValueLike(rsc = N, clsDef.isym.asClsOrMod.get)))
     val cls = clsDef.sym.asMemberRef(clsDef.isym)
-    Scoped(Set(clsDef.sym, tmp), Define(clsDef, Assign(tmp, Instantiate(false, cls, Nil :: Nil)(InstantiateMetadata.empty), k(tmp.asSimpleRef))))
+    // TODO: Instantiate the wrapper as a resource iff `p` is one, once `p`'s resource-ness is resolved.
+    Scoped(Set(clsDef.sym, tmp), Define(clsDef, Assign(tmp, Instantiate(mut = false, rsc = false, cls, Nil :: Nil)(InstantiateMetadata.empty), k(tmp.asSimpleRef))))
   
   override def applyPath(p: Path)(k: Path => Block): Block = p match
     case ref @ Value.MemberRef(l, disamb) => disamb match

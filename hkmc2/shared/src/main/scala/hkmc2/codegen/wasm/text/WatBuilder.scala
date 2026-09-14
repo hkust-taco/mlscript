@@ -1938,7 +1938,13 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
           extraInfo = S(dyn),
         )
 
-    case Instantiate(_, cls, argss) =>
+    case inst: Instantiate if inst.rsc =>
+      errExpr(
+        Ls(msg"WatBuilder::result for a resource Instantiate(...) is not implemented yet" -> r.toLoc),
+        extraInfo = S(r.toString),
+      )
+
+    case Instantiate(_, _, cls, argss) =>
       if argss.length > 1 then
         return errExpr(
           Ls(msg"WatBuilder::result for Instantiate(...) with multiple argument lists is not supported yet" -> r.toLoc),
