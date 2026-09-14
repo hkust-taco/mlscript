@@ -1,44 +1,20 @@
 // PR #558 review: unboxed results returned from branches must determine the entry result type.
-// The Int32 case also reproduces on the PR base; this is an existing backend defect.
+// The original Int32 failure also reproduced on the PR base.
 
 :global
 :wasm
 
 
-// Expected: 1. The entry currently defaults to anyref although both branches return i32.
-:fixme
+// Both branches return i32, so the entry must return i32 too.
 if true then wasm.i32.const(1) else wasm.i32.const(2)
 //│ Wasm result:
-//│ ═══[RUNTIME ERROR] Error: Assertion failed (mlscript-compile/wasm/Wasm.mls:10)
-//│ // Standard Error:
-//│ [wasm-validator error in function entry] return value should be a subtype of the function result type, on 
-//│ (return
-//│  (i32.const 1)
-//│ )
-//│ [wasm-validator error in function entry] return value should be a subtype of the function result type, on 
-//│ (return
-//│  (i32.const 2)
-//│ )
-//│ Assertion failed
-//│ 
+//│ = 1
 
 
-// Expected: 1.5. The newly supported floating-point types hit the same existing defect.
-:fixme
+// Floating-point branch results also determine the entry signature.
 if true then wasm.f64.const(1.5) else wasm.f64.const(2.5)
 //│ Wasm result:
-//│ ═══[RUNTIME ERROR] Error: Assertion failed (mlscript-compile/wasm/Wasm.mls:10)
-//│ // Standard Error:
-//│ [wasm-validator error in function entry] return value should be a subtype of the function result type, on 
-//│ (return
-//│  (f64.const 1.5)
-//│ )
-//│ [wasm-validator error in function entry] return value should be a subtype of the function result type, on 
-//│ (return
-//│  (f64.const 2.5)
-//│ )
-//│ Assertion failed
-//│ 
+//│ = 1.5
 
 
 // A declared function result keeps the type available when its call is not inlined.
@@ -47,3 +23,255 @@ fun chooseFloat(b: Bool): Float64 = if b then wasm.f64.const(1.5) else wasm.f64.
 chooseFloat(true)
 //│ Wasm result:
 //│ = 1.5
+
+
+// The inlined function must retain the same entry result as the control above.
+chooseFloat(false)
+//│ Wasm result:
+//│ = 2.5
+
+
+// Cover both remaining primitive representations and nested branches.
+if true then
+  if false then wasm.i64.const(1) else wasm.i64.const(2)
+else wasm.i64.const(3)
+//│ Wasm result:
+//│ = 2n
+
+
+if false then wasm.f32.const(1.5) else wasm.f32.const(2.5)
+//│ Wasm result:
+//│ = 2.5
+
+
+// A return inside a loop and the final return both constrain the entry signature.
+fun loopResult(b: Bool): Int64 =
+  while b do return wasm.i64.const(7)
+  wasm.i64.const(9)
+loopResult(true)
+//│ Wasm result:
+//│ = 7n
+
+
+// Definitions returning a different representation must not pollute the entry result.
+:noInline
+fun unrelated(): Float64 = wasm.f64.const(1.5)
+if true then wasm.i32.const(4) else wasm.i32.const(5)
+//│ Wasm result:
+//│ = 4
+
+
+// Different primitive representations have no common Wasm result type.
+:ge
+if true then wasm.i32.const(1) else wasm.f64.const(2.5)
+//│ ═══[COMPILATION ERROR] Wasm entry function has incompatible result types `i32` and `f64`
+
+
+// A primitive and a boxed value have no common result type either.
+:ge
+if false then wasm.i32.const(1) else 2
+//│ ═══[COMPILATION ERROR] Wasm entry function has incompatible result types `i32` and `(ref null i31)`
+
+
+// Statement values are discarded; a fallthrough without a value returns unit.
+if false do wasm.i32.const(1)
+//│ Wasm result:
+//│ = {}
+
+
+// Reference results join at their common parent rather than whichever branch appears first.
+:wat
+class ResultBase
+class ResultLeft extends ResultBase
+class ResultRight extends ResultBase
+if true then ResultLeft() else ResultRight()
+//│ Wat:
+//│ (module
+//│   (type $TypeInfoBase (sub (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
+//│   (type $Object (sub (struct (field $$typeinfo (mut (ref $TypeInfoBase))))))
+//│   (type $ResultBase (sub $Object (struct (field $$typeinfo (mut (ref $TypeInfoBase))))))
+//│   (type $ResultLeft (sub $ResultBase (struct (field $$typeinfo (mut (ref $TypeInfoBase))))))
+//│   (type $ResultRight (sub $ResultBase (struct (field $$typeinfo (mut (ref $TypeInfoBase))))))
+//│   (type $ResultBase_typeinfo (sub $TypeInfoBase (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
+//│   (type $ResultBase_init (func (param $this (ref $ResultBase)) (result (ref $ResultBase))))
+//│   (type $ResultBase_ctor (func (result (ref $ResultBase))))
+//│   (type $ResultLeft_typeinfo (sub $ResultBase_typeinfo (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
+//│   (type $ResultLeft_init (func (param $this (ref $ResultLeft)) (result (ref $ResultLeft))))
+//│   (type $ResultLeft_ctor (func (result (ref $ResultLeft))))
+//│   (type $ResultRight_typeinfo (sub $ResultBase_typeinfo (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
+//│   (type $ResultRight_init (func (param $this (ref $ResultRight)) (result (ref $ResultRight))))
+//│   (type $ResultRight_ctor (func (result (ref $ResultRight))))
+//│   (type $entry (func (result (ref $ResultBase))))
+//│   (global $ResultBase_typeinfo (export "ResultBase_typeinfo") (ref $ResultBase_typeinfo) (struct.new $ResultBase_typeinfo
+//│     (i32.const 1)
+//│     (ref.null $TypeInfoBase)))
+//│   (global $ResultLeft_typeinfo (export "ResultLeft_typeinfo") (ref $ResultLeft_typeinfo) (struct.new $ResultLeft_typeinfo
+//│     (i32.const 2)
+//│     (global.get $ResultBase_typeinfo)))
+//│   (global $ResultRight_typeinfo (export "ResultRight_typeinfo") (ref $ResultRight_typeinfo) (struct.new $ResultRight_typeinfo
+//│     (i32.const 3)
+//│     (global.get $ResultBase_typeinfo)))
+//│   (func $ResultBase_init (type $ResultBase_init) (param $this (ref $ResultBase)) (result (ref $ResultBase))
+//│     (return
+//│       (ref.cast (ref $ResultBase)
+//│         (local.get $this))))
+//│   (func $ResultBase_ctor (export "ResultBase") (type $ResultBase_ctor) (result (ref $ResultBase))
+//│     (local $this (ref $ResultBase))
+//│     (block (result (ref $ResultBase))
+//│       (local.set $this
+//│         (struct.new $ResultBase
+//│           (global.get $ResultBase_typeinfo)))
+//│       (drop
+//│         (call $ResultBase_init
+//│           (local.get $this)))
+//│       (return
+//│         (local.get $this))))
+//│   (func $ResultLeft_init (type $ResultLeft_init) (param $this (ref $ResultLeft)) (result (ref $ResultLeft))
+//│     (block (result (ref $ResultLeft))
+//│       (drop
+//│         (call $ResultBase_init
+//│           (local.get $this)))
+//│       (return
+//│         (ref.cast (ref $ResultLeft)
+//│           (local.get $this)))))
+//│   (func $ResultLeft_ctor (export "ResultLeft") (type $ResultLeft_ctor) (result (ref $ResultLeft))
+//│     (local $this (ref $ResultLeft))
+//│     (block (result (ref $ResultLeft))
+//│       (local.set $this
+//│         (struct.new $ResultLeft
+//│           (global.get $ResultLeft_typeinfo)))
+//│       (drop
+//│         (call $ResultLeft_init
+//│           (local.get $this)))
+//│       (return
+//│         (local.get $this))))
+//│   (func $ResultRight_init (type $ResultRight_init) (param $this (ref $ResultRight)) (result (ref $ResultRight))
+//│     (block (result (ref $ResultRight))
+//│       (drop
+//│         (call $ResultBase_init
+//│           (local.get $this)))
+//│       (return
+//│         (ref.cast (ref $ResultRight)
+//│           (local.get $this)))))
+//│   (func $ResultRight_ctor (export "ResultRight") (type $ResultRight_ctor) (result (ref $ResultRight))
+//│     (local $this (ref $ResultRight))
+//│     (block (result (ref $ResultRight))
+//│       (local.set $this
+//│         (struct.new $ResultRight
+//│           (global.get $ResultRight_typeinfo)))
+//│       (drop
+//│         (call $ResultRight_init
+//│           (local.get $this)))
+//│       (return
+//│         (local.get $this))))
+//│   (func $entry (export "entry") (type $entry) (result (ref $ResultBase))
+//│     (local $matchRes (ref null any))
+//│     (block
+//│       (block $match
+//│         (local.set $matchRes
+//│           (ref.null any))
+//│         (if
+//│           (i32.eq
+//│             (i31.get_s
+//│               (ref.cast (ref null i31)
+//│                 (ref.i31
+//│                   (i32.const 1))))
+//│             (i32.const 1))
+//│           (then
+//│             (block $arm
+//│               (return
+//│                 (call $ResultLeft_ctor)))))
+//│         (return
+//│           (call $ResultRight_ctor)))
+//│       (unreachable)))
+//│   (elem $ResultBase_init declare func $ResultBase_init)
+//│   (elem $ResultBase_ctor declare func $ResultBase_ctor)
+//│   (elem $ResultLeft_init declare func $ResultLeft_init)
+//│   (elem $ResultLeft_ctor declare func $ResultLeft_ctor)
+//│   (elem $ResultRight_init declare func $ResultRight_init)
+//│   (elem $ResultRight_ctor declare func $ResultRight_ctor)
+//│   (elem $entry declare func $entry))
+//│ Wasm result:
+//│ = {}
+
+
+// A trapping branch contributes no result type.
+:re
+if true then throw 1 else wasm.i64.const(9)
+//│ Wasm result:
+//│ ═══[RUNTIME ERROR] 1
+
+
+// Joining a nullable unit reference with a class reference must keep nullability.
+:wat
+class NullableResult
+if false then () else NullableResult()
+//│ Wat:
+//│ (module
+//│   (type $TypeInfoBase (sub (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
+//│   (type $Object (sub (struct (field $$typeinfo (mut (ref $TypeInfoBase))))))
+//│   (type $Unit (sub $Object (struct (field $$typeinfo (mut (ref $TypeInfoBase))))))
+//│   (type $Unit_typeinfo (sub $TypeInfoBase (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
+//│   (type $NullableResult (sub $Object (struct (field $$typeinfo (mut (ref $TypeInfoBase))))))
+//│   (type $NullableResult_typeinfo (sub $TypeInfoBase (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
+//│   (type $NullableResult_init (func (param $this (ref $NullableResult)) (result (ref $NullableResult))))
+//│   (type $NullableResult_ctor (func (result (ref $NullableResult))))
+//│   (type $entry (func (result (ref null $Object))))
+//│   (import "repl" "Unit_typeinfo" (global $Unit_typeinfo (ref $Unit_typeinfo)))
+//│   (import "repl" "Unit$inst" (global $Unit (mut (ref null $Unit))))
+//│   (global $NullableResult_typeinfo (export "NullableResult_typeinfo") (ref $NullableResult_typeinfo) (struct.new $NullableResult_typeinfo
+//│     (i32.const 1)
+//│     (ref.null $TypeInfoBase)))
+//│   (func $NullableResult_init (type $NullableResult_init) (param $this (ref $NullableResult)) (result (ref $NullableResult))
+//│     (return
+//│       (ref.cast (ref $NullableResult)
+//│         (local.get $this))))
+//│   (func $NullableResult_ctor (export "NullableResult") (type $NullableResult_ctor) (result (ref $NullableResult))
+//│     (local $this (ref $NullableResult))
+//│     (block (result (ref $NullableResult))
+//│       (local.set $this
+//│         (struct.new $NullableResult
+//│           (global.get $NullableResult_typeinfo)))
+//│       (drop
+//│         (call $NullableResult_init
+//│           (local.get $this)))
+//│       (return
+//│         (local.get $this))))
+//│   (func $entry (export "entry") (type $entry) (result (ref null $Object))
+//│     (local $matchRes (ref null any))
+//│     (block
+//│       (block $match
+//│         (local.set $matchRes
+//│           (ref.null any))
+//│         (if
+//│           (i32.eq
+//│             (i31.get_s
+//│               (ref.cast (ref null i31)
+//│                 (ref.i31
+//│                   (i32.const 0))))
+//│             (i32.const 1))
+//│           (then
+//│             (block $arm
+//│               (return
+//│                 (global.get $Unit)))))
+//│         (return
+//│           (call $NullableResult_ctor)))
+//│       (unreachable)))
+//│   (elem $NullableResult_init declare func $NullableResult_init)
+//│   (elem $NullableResult_ctor declare func $NullableResult_ctor)
+//│   (elem $entry declare func $entry))
+//│ Wasm result:
+//│ = {}
+
+
+// Distinct reference kinds still have a common Wasm reference supertype.
+class MixedResult
+if true then 7 else MixedResult()
+//│ Wasm result:
+//│ = 7
+
+
+// Returning through a labelled loop must also work when its early exit is not taken.
+loopResult(false)
+//│ Wasm result:
+//│ = 9n

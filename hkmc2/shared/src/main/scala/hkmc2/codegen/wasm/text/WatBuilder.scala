@@ -817,6 +817,29 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
   private def declaredResultType(sym: BlockMemberSymbol)(using Raise): ValType =
     sym.asTrm.flatMap(_.declaredResultType).flatMap(_.wasmType).getOrElse(RefType.anyref)
 
+  /** Infers the entry signature from explicit returns as well as the body's fallthrough result.
+    *
+    * A block containing only returning branches has no stack result: looking only at `body.resultTypes` loses
+    * its return values. Inspect the emitted operands, whose types already reflect Wasm lowering and casts.
+    * Function and method bodies live in separate `FuncInfo`s, so traversing this expression cannot accidentally
+    * include their returns. All emitted returns constrain the signature, even in statically dead code, because
+    * Wasm validation still checks their concrete operand types.
+    */
+  private def inferEntryResultType(body: Expr)(using Raise): Either[Message, ValType] = boundary:
+    def returnTypes(expr: Expr): Iterator[Type] =
+      val own = if expr.mnemonic == "return" then
+        softAssert(expr.stackargs.sizeIs == 1, "entry returns must have exactly one operand")
+        expr.resultType.iterator
+      else Iterator.empty
+      own ++ expr.stackargs.iterator.flatMap(returnTypes)
+
+    val candidates = body.resultType.iterator ++ returnTypes(body)
+    val joined = candidates.foldLeft[Type](UnreachableType): (acc, ty) =>
+      acc.lub(ty).getOrElse:
+        break(Left(msg"Wasm entry function has incompatible result types `${acc.toWat.mkString()}` and `${ty.toWat.mkString()}`"))
+    // A body that never yields a value places no constraint on its signature. Keep the REPL's single-result ABI.
+    Right(joined.asValType.getOrElse(RefType.anyref))
+
   /** Checks that the generated body `bodyWat` for the function/method `sym` conforms to the expected result type as
     * declared by its placeholder, returning the body to emit.
     *
@@ -2832,16 +2855,15 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
 
       // Compile the entry function under a dedicated local scope so that any temp locals introduced
       // during codegen (e.g., via `local.tee`) are declared in the entry function.
-      val (entryFnExpr, entryFnCtx) = genFuncBody(Nil, thisSym = N):
+      val (entryBody, entryFnCtx) = genFuncBody(Nil, thisSym = N):
         normalizeValueExprs(block(p.main), p.main.isAbortive).mergeAsBlock.getOrElse(nop)
 
       val entrySym = BlockMemberSymbol("entry", Nil)
 
-      val entryResultTypes = Seq:
-        Result:
-          entryFnExpr.resultTypes match
-            case Seq(ty: ValType) => ty
-            case _ => RefType.anyref
+      val (entryFnExpr, entryResultType) = inferEntryResultType(entryBody) match
+        case Right(ty) => entryBody -> ty
+        case Left(message) => errExpr(Ls(message -> N), extraInfo = S(entryBody.toWat.mkString())) -> RefType.anyref
+      val entryResultTypes = Seq(Result(entryResultType))
 
       val entryFnTy = ctx.addType(TypeInfo(
         sym = TempSymbol(N, erasedType = N, entrySym.nme),
