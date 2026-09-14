@@ -9,12 +9,23 @@ if true then wasm.i32.const(1) else wasm.i32.const(2)
 //│ Wasm result:
 //│ = 1
 
+:ge
+if true then 1 else wasm.i32.const(2)
+//│ ═══[COMPILATION ERROR] Wasm entry function has incompatible result types `(ref null i31)` and `i32`
+
 
 // Floating-point branch results also determine the entry signature.
 if true then wasm.f64.const(1.5) else wasm.f64.const(2.5)
 //│ Wasm result:
 //│ = 1.5
 
+
+:ge
+fun chooseFloat(b: Bool): Float64 = if b then 1.5 else wasm.f64.const(2.5)
+//│ ═══[COMPILATION ERROR] Cannot use a value of type 'Num' at an unrelated type 'Float64'
+//│ ╔══[COMPILATION ERROR] WatBackend::result for Lit expression not implemented yet
+//│ ║  l.24: 	fun chooseFloat(b: Bool): Float64 = if b then 1.5 else wasm.f64.const(2.5)
+//│ ╙──      	                                              ^^^
 
 // A declared function result keeps the type available when its call is not inlined.
 :noInline
