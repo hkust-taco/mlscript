@@ -106,6 +106,22 @@ wasm.i32.rem_s(wasm.i32.const(7), wasm.i32.const(2))
 //│ = 1
 
 
+// The shifts, each on `-16` (written `0 - 16`, as there are no negative literals) by `2`: the three results differ.
+wasm.i32.shl(wasm.i32.sub(wasm.i32.const(0), wasm.i32.const(16)), wasm.i32.const(2))
+//│ Wasm result:
+//│ = -64
+
+
+wasm.i32.shr_s(wasm.i32.sub(wasm.i32.const(0), wasm.i32.const(16)), wasm.i32.const(2))
+//│ Wasm result:
+//│ = -4
+
+
+wasm.i32.shr_u(wasm.i32.sub(wasm.i32.const(0), wasm.i32.const(16)), wasm.i32.const(2))
+//│ Wasm result:
+//│ = 1073741820
+
+
 // Comparisons yield an `i32` of 0 or 1, not a `Bool`. Each is run on `(1, 2)`, `(2, 1)` and `(1, 1)`: that
 // is the smallest operand set giving all six distinct result triples, so a registration wired to the wrong
 // comparison cannot reproduce the expected output everywhere. A single pair cannot - on any one pair the

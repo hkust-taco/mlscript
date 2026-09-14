@@ -258,6 +258,9 @@ declare module wasm with
       mul(i1: Int32, i2: Int32): Int32
       div_s(i1: Int32, i2: Int32): Int32
       rem_s(i1: Int32, i2: Int32): Int32
+      shl(i1: Int32, i2: Int32): Int32
+      shr_s(i1: Int32, i2: Int32): Int32
+      shr_u(i1: Int32, i2: Int32): Int32
       eq(i1: Int32, i2: Int32): Int32
       ne(i1: Int32, i2: Int32): Int32
       lt_s(i1: Int32, i2: Int32): Int32
@@ -273,6 +276,9 @@ declare module wasm with
       mul(i1: Int64, i2: Int64): Int64
       div_s(i1: Int64, i2: Int64): Int64
       rem_s(i1: Int64, i2: Int64): Int64
+      shl(i1: Int64, i2: Int64): Int64
+      shr_s(i1: Int64, i2: Int64): Int64
+      shr_u(i1: Int64, i2: Int64): Int64
       eq(i1: Int64, i2: Int64): Int32
       ne(i1: Int64, i2: Int64): Int32
       lt_s(i1: Int64, i2: Int64): Int32

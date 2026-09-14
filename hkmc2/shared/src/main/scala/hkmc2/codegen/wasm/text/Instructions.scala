@@ -208,8 +208,8 @@ object Instructions:
 
   /** The instructions of an integer type family (`i32` and `i64`).
     *
-    * Integer division, remainder and ordering come in a signed and an unsigned flavor; only the ones the backend
-    * currently emits are exposed.
+    * Integer division, remainder, right shift and ordering come in a signed and an unsigned flavor; only the ones
+    * the backend currently emits are exposed.
     */
   sealed abstract class IntInstrs(valType: NumType) extends NumInstrs(valType):
 
@@ -218,6 +218,9 @@ object Instructions:
 
     def and(lhs: Expr, rhs: Expr): FoldedInstr = binaryArith("and")(lhs, rhs)
     def or(lhs: Expr, rhs: Expr): FoldedInstr = binaryArith("or")(lhs, rhs)
+    def shl(lhs: Expr, rhs: Expr): FoldedInstr = binaryArith("shl")(lhs, rhs)
+    def shr_s(lhs: Expr, rhs: Expr): FoldedInstr = binaryArith("shr_s")(lhs, rhs)
+    def shr_u(lhs: Expr, rhs: Expr): FoldedInstr = binaryArith("shr_u")(lhs, rhs)
 
     def lt_s(lhs: Expr, rhs: Expr): FoldedInstr = comparison("lt_s")(lhs, rhs)
     def le_s(lhs: Expr, rhs: Expr): FoldedInstr = comparison("le_s")(lhs, rhs)

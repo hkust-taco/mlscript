@@ -96,6 +96,28 @@ wasm.i64.rem_s(wasm.i64.const(7), wasm.i64.const(2))
 //│ = 1n
 
 
+// The shifts, on the same operands as their `Int32` counterparts in `BuiltinOperators.mls`.
+wasm.i64.shl(wasm.i64.sub(wasm.i64.const(0), wasm.i64.const(16)), wasm.i64.const(2))
+//│ Wasm result:
+//│ = -64n
+
+
+wasm.i64.shr_s(wasm.i64.sub(wasm.i64.const(0), wasm.i64.const(16)), wasm.i64.const(2))
+//│ Wasm result:
+//│ = -4n
+
+
+wasm.i64.shr_u(wasm.i64.sub(wasm.i64.const(0), wasm.i64.const(16)), wasm.i64.const(2))
+//│ Wasm result:
+//│ = 4611686018427387900n
+
+
+// A shift count past 31 moves a bit out of the range of an `i32`.
+wasm.i64.shl(wasm.i64.const(1), wasm.i64.const(40))
+//│ Wasm result:
+//│ = 1099511627776n
+
+
 // Comparing two `Int64`s yields an `Int32`, which `ref.i31` boxes back into a reference.
 wasm.ref.i31(wasm.i64.lt_s(wasm.i64.const(1), wasm.i64.const(2)))
 //│ Wasm result:
@@ -116,10 +138,10 @@ wasm.ref.i31(wasm.i64.eqz(wasm.i64.const(0)))
 :ge
 wasm.i64.add(wasm.i32.const(1), wasm.i32.const(2))
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int32' at an unrelated type 'Int64'
-//│ ║  l.117: 	wasm.i64.add(wasm.i32.const(1), wasm.i32.const(2))
+//│ ║  l.139: 	wasm.i64.add(wasm.i32.const(1), wasm.i32.const(2))
 //│ ╙──       	             ^^^^^^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int32' at an unrelated type 'Int64'
-//│ ║  l.117: 	wasm.i64.add(wasm.i32.const(1), wasm.i32.const(2))
+//│ ║  l.139: 	wasm.i64.add(wasm.i32.const(1), wasm.i32.const(2))
 //│ ╙──       	                                ^^^^^^^^^^^^^^^^^
 //│ ═══[COMPILATION ERROR] Operand #1 of wasm intrinsic 'i64.add' must be of type 'Int64'
 //│ ═══[COMPILATION ERROR] Operand #2 of wasm intrinsic 'i64.add' must be of type 'Int64'
@@ -315,7 +337,7 @@ val x: Float32 = wasm.f32.const(1.5)
 :ge
 wasm.f32.const(1.0e39)
 //│ ╔══[COMPILATION ERROR] Immediate #1 of wasm intrinsic 'f32.const' is outside the f32 range
-//│ ║  l.316: 	wasm.f32.const(1.0e39)
+//│ ║  l.338: 	wasm.f32.const(1.0e39)
 //│ ╙──       	               ^^^^^^
 
 
@@ -323,7 +345,7 @@ wasm.f32.const(1.0e39)
 :ge
 wasm.f64.const(1.0e400)
 //│ ╔══[COMPILATION ERROR] Immediate #1 of wasm intrinsic 'f64.const' is outside the f64 range
-//│ ║  l.324: 	wasm.f64.const(1.0e400)
+//│ ║  l.346: 	wasm.f64.const(1.0e400)
 //│ ╙──       	               ^^^^^^^
 
 
@@ -331,7 +353,7 @@ wasm.f64.const(1.0e400)
 :ge
 fun constOf(x: Num): Float64 = wasm.f64.const(x)
 //│ ╔══[COMPILATION ERROR] Wasm intrinsic 'f64.const' expects a numeric literal immediate
-//│ ║  l.332: 	fun constOf(x: Num): Float64 = wasm.f64.const(x)
+//│ ║  l.354: 	fun constOf(x: Num): Float64 = wasm.f64.const(x)
 //│ ╙──       	                                              ^
 
 
@@ -339,10 +361,10 @@ fun constOf(x: Num): Float64 = wasm.f64.const(x)
 :ge
 wasm.f64.add(wasm.f32.const(1.5), wasm.f32.const(2.25))
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Float32' at an unrelated type 'Float64'
-//│ ║  l.340: 	wasm.f64.add(wasm.f32.const(1.5), wasm.f32.const(2.25))
+//│ ║  l.362: 	wasm.f64.add(wasm.f32.const(1.5), wasm.f32.const(2.25))
 //│ ╙──       	             ^^^^^^^^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Float32' at an unrelated type 'Float64'
-//│ ║  l.340: 	wasm.f64.add(wasm.f32.const(1.5), wasm.f32.const(2.25))
+//│ ║  l.362: 	wasm.f64.add(wasm.f32.const(1.5), wasm.f32.const(2.25))
 //│ ╙──       	                                  ^^^^^^^^^^^^^^^^^^^^
 //│ ═══[COMPILATION ERROR] Operand #1 of wasm intrinsic 'f64.add' must be of type 'Float64'
 //│ ═══[COMPILATION ERROR] Operand #2 of wasm intrinsic 'f64.add' must be of type 'Float64'
