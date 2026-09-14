@@ -414,7 +414,8 @@ class IntrinsicArg(
     *
     * An integer literal is accepted alongside a decimal one, since `1` and `1.0` denote the same float. A literal of
     * a magnitude no `f32` can hold is reported rather than silently emitted as an infinity; one that merely needs
-    * more precision than an `f32` has is rounded, as Wasm itself specifies.
+    * more precision than an `f32` has is rounded, as Wasm itself specifies - including one too small to hold at all,
+    * which rounds to zero.
     */
   def asImmF32(using Raise): Float = numericLit match
     case S(value) =>
