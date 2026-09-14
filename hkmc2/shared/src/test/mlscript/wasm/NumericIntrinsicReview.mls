@@ -1,0 +1,49 @@
+// PR #558 review: unboxed results returned from branches must determine the entry result type.
+// The Int32 case also reproduces on the PR base; this is an existing backend defect.
+
+:global
+:wasm
+
+
+// Expected: 1. The entry currently defaults to anyref although both branches return i32.
+:fixme
+if true then wasm.i32.const(1) else wasm.i32.const(2)
+//│ Wasm result:
+//│ ═══[RUNTIME ERROR] Error: Assertion failed (mlscript-compile/wasm/Wasm.mls:10)
+//│ // Standard Error:
+//│ [wasm-validator error in function entry] return value should be a subtype of the function result type, on 
+//│ (return
+//│  (i32.const 1)
+//│ )
+//│ [wasm-validator error in function entry] return value should be a subtype of the function result type, on 
+//│ (return
+//│  (i32.const 2)
+//│ )
+//│ Assertion failed
+//│ 
+
+
+// Expected: 1.5. The newly supported floating-point types hit the same existing defect.
+:fixme
+if true then wasm.f64.const(1.5) else wasm.f64.const(2.5)
+//│ Wasm result:
+//│ ═══[RUNTIME ERROR] Error: Assertion failed (mlscript-compile/wasm/Wasm.mls:10)
+//│ // Standard Error:
+//│ [wasm-validator error in function entry] return value should be a subtype of the function result type, on 
+//│ (return
+//│  (f64.const 1.5)
+//│ )
+//│ [wasm-validator error in function entry] return value should be a subtype of the function result type, on 
+//│ (return
+//│  (f64.const 2.5)
+//│ )
+//│ Assertion failed
+//│ 
+
+
+// A declared function result keeps the type available when its call is not inlined.
+:noInline
+fun chooseFloat(b: Bool): Float64 = if b then wasm.f64.const(1.5) else wasm.f64.const(2.5)
+chooseFloat(true)
+//│ Wasm result:
+//│ = 1.5
