@@ -453,3 +453,35 @@ fun halve(x: Float64): Float64 = wasm.f64.div(x, wasm.f64.const(2))
 halve(wasm.f64.const(4.5))
 //│ Wasm result:
 //│ = 2.25
+
+
+// Real-word example: Quake III's inverse square root approximation.
+// https://en.wikipedia.org/wiki/Fast_inverse_square_root
+fun q_rsqrt(number: Float32): Float32 =
+  val threehalfs: Float32 = wasm.f32.const(1.5)
+  val x2: Float32 = wasm.f32.mul(number, wasm.f32.const(0.5))
+  val i: Int32 = wasm.i32.sub of
+    wasm.i32.const(0x5f3759df)
+    wasm.i32.shr_s of
+      wasm.i32.reinterpret_f32(number)
+      wasm.i32.const(1)
+  val y: Float32 = wasm.f32.reinterpret_i32(i)
+  wasm.f32.mul(y, wasm.f32.sub(threehalfs, wasm.f32.mul(wasm.f32.mul(x2, y), y)))
+q_rsqrt(wasm.f32.const(1))
+//│ Wasm result:
+//│ = 0.9983071684837341
+
+// Same but with `Float64`.
+fun q_rsqrt64(number: Float64): Float64 =
+  val threehalfs: Float64 = wasm.f64.const(1.5)
+  val x2: Float64 = wasm.f64.mul(number, wasm.f64.const(0.5))
+  val i: Int64 = wasm.i64.sub of
+    wasm.i64.const(0x5fe6eb50c7b537a9)
+    wasm.i64.shr_s of
+      wasm.i64.reinterpret_f64(number)
+      wasm.i64.const(1)
+  val y: Float64 = wasm.f64.reinterpret_i64(i)
+  wasm.f64.mul(y, wasm.f64.sub(threehalfs, wasm.f64.mul(wasm.f64.mul(x2, y), y)))
+q_rsqrt64(wasm.f64.const(1))
+//│ Wasm result:
+//│ = 0.9983081427118143
