@@ -233,11 +233,89 @@ wasm.f32.sqrt(wasm.f32.const(2))
 //│ = 1.4142135381698608
 
 
+// A literal written with an exponent is rendered with one, which WAT accepts with either sign.
+:wat
+wasm.f64.add(wasm.f64.const(1.0e10), wasm.f64.const(2.5e-4))
+//│ Wat:
+//│ (module
+//│   (type $TypeInfoBase (sub (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
+//│   (type $Object (sub (struct (field $$typeinfo (mut (ref $TypeInfoBase))))))
+//│   (type $entry (func (result f64)))
+//│   (func $entry (export "entry") (type $entry) (result f64)
+//│     (local $tmp f64)
+//│     (local $tmp1 f64)
+//│     (block (result f64)
+//│       (local.set $tmp
+//│         (f64.const 1.0E10))
+//│       (local.set $tmp1
+//│         (f64.const 2.5E-4))
+//│       (return
+//│         (f64.add
+//│           (local.get $tmp)
+//│           (local.get $tmp1)))))
+//│   (elem $entry declare func $entry))
+//│ Wasm result:
+//│ = 10000000000.00025
+
+
+// A `Float32` session global is zeroed with an `f32` constant before its initializer runs.
+:wat
+val x: Float32 = wasm.f32.const(1.5)
+//│ Wat:
+//│ (module
+//│   (type $TypeInfoBase (sub (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
+//│   (type $Object (sub (struct (field $$typeinfo (mut (ref $TypeInfoBase))))))
+//│   (type $Unit_typeinfo (sub $TypeInfoBase (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
+//│   (type $Unit (sub $Object (struct (field $$typeinfo (mut (ref $TypeInfoBase))))))
+//│   (type $Unit_init (func (param $this (ref $Unit)) (result (ref $Unit))))
+//│   (type $Unit_ctor (func (result (ref $Unit))))
+//│   (type $entry (func (result (ref null $Unit))))
+//│   (type $start (func))
+//│   (global $x (export "x") (mut f32) (f32.const 0.0))
+//│   (global $Unit_typeinfo (export "Unit_typeinfo") (ref $Unit_typeinfo) (struct.new $Unit_typeinfo
+//│     (i32.const 1)
+//│     (ref.null $TypeInfoBase)))
+//│   (global $Unit$inst (export "Unit$inst") (mut (ref null $Unit)) (ref.null $Unit))
+//│   (func $Unit_init (type $Unit_init) (param $this (ref $Unit)) (result (ref $Unit))
+//│     (return
+//│       (ref.cast (ref $Unit)
+//│         (local.get $this))))
+//│   (func $Unit_Unit (type $Unit_ctor) (result (ref $Unit))
+//│     (local $this (ref $Unit))
+//│     (block (result (ref $Unit))
+//│       (local.set $this
+//│         (struct.new $Unit
+//│           (global.get $Unit_typeinfo)))
+//│       (drop
+//│         (call $Unit_init
+//│           (local.get $this)))
+//│       (return
+//│         (local.get $this))))
+//│   (func $start (type $start)
+//│     (global.set $Unit$inst
+//│       (call $Unit_Unit)))
+//│   (func $entry (export "entry") (type $entry) (result (ref null $Unit))
+//│     (local $tmp f32)
+//│     (block (result (ref null $Unit))
+//│       (local.set $tmp
+//│         (f32.const 1.5))
+//│       (global.set $x
+//│         (local.get $tmp))
+//│       (global.get $Unit$inst)))
+//│   (elem $Unit_init declare func $Unit_init)
+//│   (elem $Unit_Unit declare func $Unit_Unit)
+//│   (elem $start declare func $start)
+//│   (elem $entry declare func $entry)
+//│   (start $start))
+//│ Wasm result:
+//│ = {}
+
+
 // A literal is narrowed to the immediate's own type, so one only an `f64` can hold is out of an `f32`'s range...
 :ge
 wasm.f32.const(1.0e39)
 //│ ╔══[COMPILATION ERROR] Immediate #1 of wasm intrinsic 'f32.const' is outside the f32 range
-//│ ║  l.238: 	wasm.f32.const(1.0e39)
+//│ ║  l.316: 	wasm.f32.const(1.0e39)
 //│ ╙──       	               ^^^^^^
 
 
@@ -245,7 +323,7 @@ wasm.f32.const(1.0e39)
 :ge
 wasm.f64.const(1.0e400)
 //│ ╔══[COMPILATION ERROR] Immediate #1 of wasm intrinsic 'f64.const' is outside the f64 range
-//│ ║  l.246: 	wasm.f64.const(1.0e400)
+//│ ║  l.324: 	wasm.f64.const(1.0e400)
 //│ ╙──       	               ^^^^^^^
 
 
@@ -253,7 +331,7 @@ wasm.f64.const(1.0e400)
 :ge
 fun constOf(x: Num): Float64 = wasm.f64.const(x)
 //│ ╔══[COMPILATION ERROR] Wasm intrinsic 'f64.const' expects a numeric literal immediate
-//│ ║  l.254: 	fun constOf(x: Num): Float64 = wasm.f64.const(x)
+//│ ║  l.332: 	fun constOf(x: Num): Float64 = wasm.f64.const(x)
 //│ ╙──       	                                              ^
 
 
@@ -261,10 +339,10 @@ fun constOf(x: Num): Float64 = wasm.f64.const(x)
 :ge
 wasm.f64.add(wasm.f32.const(1.5), wasm.f32.const(2.25))
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Float32' at an unrelated type 'Float64'
-//│ ║  l.262: 	wasm.f64.add(wasm.f32.const(1.5), wasm.f32.const(2.25))
+//│ ║  l.340: 	wasm.f64.add(wasm.f32.const(1.5), wasm.f32.const(2.25))
 //│ ╙──       	             ^^^^^^^^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Float32' at an unrelated type 'Float64'
-//│ ║  l.262: 	wasm.f64.add(wasm.f32.const(1.5), wasm.f32.const(2.25))
+//│ ║  l.340: 	wasm.f64.add(wasm.f32.const(1.5), wasm.f32.const(2.25))
 //│ ╙──       	                                  ^^^^^^^^^^^^^^^^^^^^
 //│ ═══[COMPILATION ERROR] Operand #1 of wasm intrinsic 'f64.add' must be of type 'Float64'
 //│ ═══[COMPILATION ERROR] Operand #2 of wasm intrinsic 'f64.add' must be of type 'Float64'
