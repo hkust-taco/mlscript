@@ -144,7 +144,8 @@ object Instructions:
     * operation name, the operands are the stack arguments, and the result is a value of either the family's own type
     * (arithmetic) or `i32` (comparisons and tests). Deriving the families from a common base keeps them from drifting
     * apart as instructions are added, and leaves only the genuinely per-family parts spelled out: the `const`
-    * immediate, and the operations one of the integer and floating-point types has and the other does not.
+    * immediate, the conversions from another family's type, and the operations one of the integer and floating-point
+    * types has and the other does not.
     *
     * Each instruction below is created by the method of the same name, on the object of the family it belongs to:
     * `i32.add(l, r)` creates an `i32.add`, `f64.add(l, r)` an `f64.add`, and so on.
@@ -197,6 +198,9 @@ object Instructions:
 
     /** Creates a comparison instruction, which yields the `i32` `0`/`1` the comparison evaluates to. */
     protected def comparison(op: Str): (Expr, Expr) => FoldedInstr = binary(op, I32Type)
+
+    /** Creates a conversion instruction, which yields a value of this family's own type from an operand of another. */
+    protected def conversion(op: Str): Expr => FoldedInstr = unary(op, valType)
 
     def add(lhs: Expr, rhs: Expr): FoldedInstr = binaryArith("add")(lhs, rhs)
     def sub(lhs: Expr, rhs: Expr): FoldedInstr = binaryArith("sub")(lhs, rhs)
@@ -277,21 +281,33 @@ object Instructions:
   object i32 extends IntInstrs(I32Type):
     /** Creates an `i32.const` instruction. */
     def const(value: Int): FoldedInstr = constInstr(value.toString)
+
+    /** Creates an `i32.reinterpret_f32` instruction, which reads the bits of an `f32` as an `i32`. */
+    def reinterpret_f32(value: Expr): FoldedInstr = conversion("reinterpret_f32")(value)
   end i32
 
   object i64 extends IntInstrs(I64Type):
     /** Creates an `i64.const` instruction. */
     def const(value: Long): FoldedInstr = constInstr(value.toString)
+
+    /** Creates an `i64.reinterpret_f64` instruction, which reads the bits of an `f64` as an `i64`. */
+    def reinterpret_f64(value: Expr): FoldedInstr = conversion("reinterpret_f64")(value)
   end i64
 
   object f32 extends FloatInstrs(F32Type):
     /** Creates an `f32.const` instruction. */
     def const(value: Float): FoldedInstr = constInstr(FloatInstrs.litWat(value))
+
+    /** Creates an `f32.reinterpret_i32` instruction, which reads the bits of an `i32` as an `f32`. */
+    def reinterpret_i32(value: Expr): FoldedInstr = conversion("reinterpret_i32")(value)
   end f32
 
   object f64 extends FloatInstrs(F64Type):
     /** Creates an `f64.const` instruction. */
     def const(value: Double): FoldedInstr = constInstr(FloatInstrs.litWat(value))
+
+    /** Creates an `f64.reinterpret_i64` instruction, which reads the bits of an `i64` as an `f64`. */
+    def reinterpret_i64(value: Expr): FoldedInstr = conversion("reinterpret_i64")(value)
   end f64
 
   object array:

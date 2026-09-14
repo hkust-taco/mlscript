@@ -667,6 +667,7 @@ object Ctx:
     "i32.gt_s" -> (args => i32.gt_s(args(0).asOp, args(1).asOp)),
     "i32.ge_s" -> (args => i32.ge_s(args(0).asOp, args(1).asOp)),
     "i32.eqz" -> (args => i32.eqz(args(0).asOp)),
+    "i32.reinterpret_f32" -> (args => i32.reinterpret_f32(args(0).asOp)),
 
     "i64.const" -> (args => i64.const(args(0).asImm64)),
     "i64.add" -> (args => i64.add(args(0).asOp, args(1).asOp)),
@@ -684,6 +685,7 @@ object Ctx:
     "i64.gt_s" -> (args => i64.gt_s(args(0).asOp, args(1).asOp)),
     "i64.ge_s" -> (args => i64.ge_s(args(0).asOp, args(1).asOp)),
     "i64.eqz" -> (args => i64.eqz(args(0).asOp)),
+    "i64.reinterpret_f64" -> (args => i64.reinterpret_f64(args(0).asOp)),
 
     "f32.const" -> (args => f32.const(args(0).asImmF32)),
     "f32.add" -> (args => f32.add(args(0).asOp, args(1).asOp)),
@@ -701,6 +703,7 @@ object Ctx:
     "f32.le" -> (args => f32.le(args(0).asOp, args(1).asOp)),
     "f32.gt" -> (args => f32.gt(args(0).asOp, args(1).asOp)),
     "f32.ge" -> (args => f32.ge(args(0).asOp, args(1).asOp)),
+    "f32.reinterpret_i32" -> (args => f32.reinterpret_i32(args(0).asOp)),
 
     "f64.const" -> (args => f64.const(args(0).asImmF64)),
     "f64.add" -> (args => f64.add(args(0).asOp, args(1).asOp)),
@@ -718,6 +721,7 @@ object Ctx:
     "f64.le" -> (args => f64.le(args(0).asOp, args(1).asOp)),
     "f64.gt" -> (args => f64.gt(args(0).asOp, args(1).asOp)),
     "f64.ge" -> (args => f64.ge(args(0).asOp, args(1).asOp)),
+    "f64.reinterpret_i64" -> (args => f64.reinterpret_i64(args(0).asOp)),
 
     "ref.i31" -> (args => ref.i31(args(0).asOp)),
 

@@ -268,6 +268,7 @@ declare module wasm with
       gt_s(i1: Int32, i2: Int32): Int32
       ge_s(i1: Int32, i2: Int32): Int32
       eqz(i: Int32): Int32
+      reinterpret_f32(f: Float32): Int32
   module i64 with
     fun
       const(c: Int): Int64
@@ -286,6 +287,7 @@ declare module wasm with
       gt_s(i1: Int64, i2: Int64): Int32
       ge_s(i1: Int64, i2: Int64): Int32
       eqz(i: Int64): Int32
+      reinterpret_f64(f: Float64): Int64
   module f32 with
     fun
       const(c: Num): Float32
@@ -304,6 +306,7 @@ declare module wasm with
       le(f1: Float32, f2: Float32): Int32
       gt(f1: Float32, f2: Float32): Int32
       ge(f1: Float32, f2: Float32): Int32
+      reinterpret_i32(i: Int32): Float32
   module f64 with
     fun
       const(c: Num): Float64
@@ -322,6 +325,7 @@ declare module wasm with
       le(f1: Float64, f2: Float64): Int32
       gt(f1: Float64, f2: Float64): Int32
       ge(f1: Float64, f2: Float64): Int32
+      reinterpret_i64(i: Int64): Float64
   module ref with
     fun
       i31(i: Int32): Int31
