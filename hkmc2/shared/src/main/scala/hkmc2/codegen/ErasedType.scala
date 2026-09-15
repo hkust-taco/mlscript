@@ -56,10 +56,15 @@ object ErasedType:
     override def sym(using Ctx, State): TypeSymbol = getTpeSym
     override protected def computeCanonicalize(using Ctx, State): CanonicalErasedValueType =
       val canon = CanonicalErasedValueType(rsc, sym)
-      // * Canonicalization keeps the resource-ness, unless the canonical type has none (a primitive or an
-      // * `Incompatible`).
+      // * A canonical type with resource-ness takes it from the modifiers written inside the alias referred to, if any,
+      // * and from this reference otherwise.
+      // * The resource-ness of the alias is considered first because a reference states resource-ness only when
+      // * annotated (otherwise it has `rsc = S(false)`), and `Resolver` rejects annotating one whose alias writes its
+      // * own.
       canon match
-        case h: HasRsc => assert(h.rsc === rsc, s"canonicalizing a type with resource-ness $rsc yielded $canon")
+        case h: HasRsc if h.rsc =/= rsc =>
+          assert(CanonicalErasedValueType.resolveTpeSymAlias(sym).exists(_.ownRsc.isDefined),
+            s"the resource-ness of '$canon' must come from this reference ($rsc) or from a modifier inside '$sym'")
         case _ => ()
       canon
     // Ensures `toString` returns a stable string
@@ -497,46 +502,61 @@ sealed trait HasRsc extends ErasedValueType:
   val rsc: Opt[Bool]
 
 object CanonicalErasedValueType:
+  /** A member of what a type alias denotes (see [[resolveTpeSymAlias]]).
+    *
+    * - `sym` is the member's type symbol, or `N` if the member cannot be resolved: a recursive occurrence of an
+    *   alias, a type parameter, or an alias without a definition.
+    * - `ownRsc` is the resource modifier written on the member inside the alias - the outer `Opt` representing whether
+    *   a resource modifier is present, and the inner `Opt` the resource-ness it denotes, encoded as in `HasRsc.rsc`.
+    */
+  case class AliasMember(sym: Opt[TypeSymbol], ownRsc: Opt[Opt[Bool]])
+
   /** Creates an instance with the given type symbol, canonicalizing it if needed.
     *
     * - `rsc` is true if this is a resource type.
     */
   def apply(rsc: Opt[Bool], tpeSym: TypeSymbol)(using Ctx, State): CanonicalErasedValueType =
-    // * A union alias denotes each of its members, and erases to their LUB; every other symbol resolves to itself
-    // * or to a single alias target.
-    resolveTpeSymAlias(tpeSym).map(resolved(rsc, _)).reduceLeft((lhs, rhs) => ErasedType.lub(lhs, rhs))
+    val members = resolveTpeSymAlias(tpeSym)
+    // * A member takes the resource-ness written on it inside the alias, if any, and that of the reference otherwise.
+    def rscOf(m: AliasMember): Opt[Bool] = m.ownRsc.getOrElse(rsc)
+    if members.forall(_.sym.isDefined) then
+      // * A union alias denotes each of its members, and erases to their LUB; every other symbol resolves to itself
+      // * or to a single alias target.
+      members.flatMap(m => m.sym.map(resolved(rscOf(m), _))).reduceLeft((lhs, rhs) => ErasedType.lub(lhs, rhs))
+    else
+      // * An alias with a member that cannot be resolved erases to the top type while preserving its resource-ness.
+      val rscs = members.filterNot(_.sym.exists(PrimitiveType.of(_).isDefined)).map(rscOf)
+      ErasedType.Unknown(rscs.reduceLeft(ErasedType.lubRsc))
 
-  /** Resolves through an arbitrary chain of type aliases to the type symbols the alias denotes.
+  /** Resolves through an arbitrary chain of type aliases to the members the alias denotes.
     *
-    * A union alias denotes each of its members, so the result is a list; every other resolvable alias denotes a
-    * single symbol. Type arguments are erased along the way, so `type Opt[A] = Some[A] | None` resolves to
-    * `Some :: None :: Nil`.
+    * A union alias denotes each of its members, so the result is a list; every other alias denotes a single member.
+    * Type arguments are erased along the way, so `type Opt[A] = Some[A] | None` resolves to `Some :: None :: Nil`.
     *
-    * If the chain is not defined (e.g. in `declare type ...`), is cyclic, or contains a member that is itself
-    * unresolvable, `tpeSym` is returned unchanged.
+    * A member that cannot be resolved has its resource modifier kept. As in `ErasedType.eraseSign`, the innermost
+    * modifier wins.
     */
-  def resolveTpeSymAlias(tpeSym: TypeSymbol): Ls[TypeSymbol] =
-    // * Resolves a single type symbol, or `N` if it is an alias that cannot be resolved.
-    def loop(cur: TypeSymbol, seen: Set[TypeSymbol]): Opt[Ls[TypeSymbol]] = cur match
-      case als: TypeAliasSymbol =>
-        if seen(als) then N
-        else als.defn.flatMap(_.rhs).flatMap(alternatives(_, seen + als))
-      case base => S(base :: Nil)
-    // * Resolves the alternatives denoted by the right-hand side of an alias, flattening nested unions.
+  def resolveTpeSymAlias(tpeSym: TypeSymbol): Ls[AliasMember] =
+    def resolveSym(cur: TypeSymbol, seen: Set[TypeAliasSymbol]): Ls[AliasMember] = cur match
+      case als: TypeAliasSymbol => als.defn.flatMap(_.rhs) match
+        case S(rhs) if !seen(als) => alternatives(rhs, seen + als, N)
+        case _ => AliasMember(N, N) :: Nil
+      case base => AliasMember(S(base), N) :: Nil
+    // * Resolves the alternatives denoted by the right-hand side of an alias under the resource modifier written
+    // * around it, flattening nested unions.
     // * Only unions are expanded: an intersection would call for a GLB, which the erased lattice cannot express.
-    def alternatives(tpe: Term, seen: Set[TypeSymbol]): Opt[Ls[TypeSymbol]] = tpe match
-      case Term.CompType(lhs, rhs, true) =>
-        for
-          ls <- alternatives(lhs, seen)
-          rs <- alternatives(rhs, seen)
-        yield ls ::: rs
-      case _ => tpe.symbol.flatMap(_.asTpe).flatMap(loop(_, seen))
-    loop(tpeSym, Set.empty).getOrElse(tpeSym :: Nil)
+    def alternatives(tpe: Term, seen: Set[TypeAliasSymbol], ownRsc: Opt[Opt[Bool]]): Ls[AliasMember] = tpe match
+      case Term.Annotated(Annot.Resource(rsc), target) => alternatives(target, seen, S(rsc))
+      case Term.CompType(lhs, rhs, true) => alternatives(lhs, seen, ownRsc) ::: alternatives(rhs, seen, ownRsc)
+      case _ =>
+        tpe.symbol.flatMap(_.asTpe).fold(AliasMember(N, N) :: Nil)(resolveSym(_, seen))
+          .map(m => m.copy(ownRsc = m.ownRsc.orElse(ownRsc)))
+    resolveSym(tpeSym, Set.empty)
 
   /** Creates an instance from an already-resolved symbol. */
   private def resolved(rsc: Opt[Bool], sym: TypeSymbol)(using Ctx, State): CanonicalErasedValueType = sym match
-    // * An unresolvable alias becomes the top type, carrying whatever resource-ness was written on it.
-    case _: TypeAliasSymbol => ErasedType.Unknown(rsc)
+    // * `resolveTpeSymAlias` resolves every alias, or yields a member without a symbol for it.
+    case als: TypeAliasSymbol => lastWords(s"the type alias '$als' was not resolved")
     case base =>
       // * Note that `base is ctx.builtins.Anything` is only necessary for `InvalMLPrelude.mls` - the `Anything` type
       // * is `declare class`-ed there (since `declare type` is not supported in `invalml`).
