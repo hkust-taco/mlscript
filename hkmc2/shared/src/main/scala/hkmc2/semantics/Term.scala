@@ -95,6 +95,13 @@ object Annot:
   
   val Private = Modifier(Keyword.`private`)
   
+  /** Matches a resource modifier, yielding the resource-ness it denotes. */
+  object Resource:
+    def unapply(annot: Annot): Opt[Opt[Bool]] = annot match
+      case Modifier(Keyword.`rsc`) => S(S(true))
+      case Modifier(Keyword.`rsc?`) => S(N)
+      case _ => N
+  
   /** The `declare` modifier in `annotations`, if present. */
   def declareModifierOf(annotations: Ls[Annot]): Opt[Annot.Modifier] = annotations.collectFirst:
     case mod @ Annot.Modifier(Keyword.`declare`) => mod

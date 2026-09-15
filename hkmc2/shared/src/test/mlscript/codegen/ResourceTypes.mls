@@ -1,0 +1,180 @@
+:sir
+:siret
+
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ import "..." as Predef; end
+
+class C()
+class D()
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define C⁰ as class C² { constructor C¹ }; define D⁰ as class D² { constructor D¹ }; end
+
+
+// The modifier reaches the IR as the `rsc` of the erased type.
+
+fun f(x: rsc C) = x
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define f⁰ as fun f¹(x: rsc C²): ? { return x }; end
+
+fun g(x: rsc? C) = x
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define g⁰ as fun g¹(x: rsc? C²): ? { return x }; end
+
+fun h(x: C) = x
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define h⁰ as fun h¹(x: C²): ? { return x }; end
+
+
+// Inside the parameter list the modifier marks the parameter, which is accepted. The
+// parameter's erased type is not visible here, as a separately written signature's
+// parameter types are not yet carried over to the definition's own parameters.
+
+fun l: (rsc C) -> C
+fun l(x) = x
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define l⁰ as fun l¹(x: ?): C² { return (x as! C²) }; end
+
+
+// `Anything` follows the same rule as any other class.
+
+fun m(x: Anything) = x
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define m⁰ as fun m¹(x: Unknown): ? { return x }; end
+
+fun n(x: rsc Anything) = x
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define n⁰ as fun n¹(x: rsc Unknown): ? { return x }; end
+
+fun n2(x: rsc? Anything) = x
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define n2⁰ as fun n2¹(x: rsc? Unknown): ? { return x }; end
+
+
+// A union carries its members' resource-ness through the join: kept when they agree,
+// and unresolved (`rsc?`) when they do not.
+
+fun o(x: rsc C | rsc D) = x
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define o⁰ as fun o¹(x: rsc Object⁰): ? { return x }; end
+
+fun p(x: rsc C | D) = x
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define p⁰ as fun p¹(x: rsc? Object⁰): ? { return x }; end
+
+
+// A resource does not fit a bare `Anything` slot, but it does fit `rsc? Anything`.
+
+:ge
+fun intoAny(x: rsc C) = m(x)
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'rsc C' at an unrelated type 'Unknown'
+//│ ║  l.68: 	fun intoAny(x: rsc C) = m(x)
+//│ ╙──      	                          ^
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define intoAny⁰ as fun intoAny¹(x: rsc C²): ? { return m¹(x) }; end
+
+fun intoMaybeAny(x: rsc C) = n2(x)
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define intoMaybeAny⁰ as fun intoMaybeAny¹(x: rsc C²): ? { return n2¹(x) }; end
+
+
+// A join across the primitive/Object divide widens to `Unknown`.
+
+fun v(x: Int | C) = x
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define v⁰ as fun v¹(x: Unknown): ? { return x }; end
+
+fun w(x: rsc C | rsc Int) = x
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define w⁰ as fun w¹(x: rsc Unknown): ? { return x }; end
+
+
+// Widening into `rsc?` is free; narrowing back out is checked.
+
+fun useMaybe(x: rsc? C) = x
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define useMaybe⁰ as fun useMaybe¹(x: rsc? C²): ? { return x }; end
+
+fun useRsc(x: rsc C) = x
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define useRsc⁰ as fun useRsc¹(x: rsc C²): ? { return x }; end
+
+fun r(x: rsc C) = useMaybe(x)
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define r⁰ as fun r¹(x: rsc C²): ? { return useMaybe¹(x) }; end
+
+fun s(x: rsc? C) = useRsc(x)
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define s⁰ as fun s¹(x: rsc? C²): ? { return useRsc¹((x as! rsc C²)) }; end
+
+
+// In type-argument position the modifier is accepted, but type arguments are
+// erased, so it does not reach the erased type. Generic resource-ness is future work.
+
+class Box[A](value: A)
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define Box⁰ as class Box² {
+//│   private val value⁰: ?;
+//│   constructor Box¹(value: ?) { set Box².this.value⁰ = value; end }
+//│ };
+//│ end
+
+fun t(b: Box[rsc C]) = b
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define t⁰ as fun t¹(b: Box²): ? { return b }; end
+
+
+// A non-`rsc` value does not fit an `rsc` slot.
+
+:ge
+fun q(x: C) = useRsc(x)
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'C' at an unrelated type 'rsc C'
+//│ ║  l.129: 	fun q(x: C) = useRsc(x)
+//│ ╙──       	                     ^
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define q⁰ as fun q¹(x: C²): ? { return useRsc¹(x) }; end
+
+
+// In expression position the modifier is not a type annotation at all, and is
+// reported like any other annotation that has no effect there.
+
+:w
+fun u() = rsc 1
+//│ ╔══[WARNING] This annotation has no effect.
+//│ ╟── This annotation is not supported on integer literal terms.
+//│ ║  l.141: 	fun u() = rsc 1
+//│ ╙──       	              ^
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define u⁰ as fun u¹(): ? { return 1 }; end
+
+
+// A module is a singleton, so it can never be refcounted and `rsc module M` is
+// nonsense. It is rejected, but only incidentally: `Elaborator` unwraps `module` only
+// when it is the outermost form of the signature, so the modifier hides it and the
+// declaration reaches term position - hence a message about the declaration.
+
+module M
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define M⁰ as class M¹ module M²; end
+
+fun modOf: module M
+fun modOf = M
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define modOf⁰ as fun modOf¹(): module M² { return M² }; end
+
+:ge
+fun rscModOf: rsc module M
+fun rscModOf = M
+//│ ╔══[COMPILATION ERROR] Illegal type declaration in term position.
+//│ ║  l.165: 	fun rscModOf: rsc module M
+//│ ╙──       	                  ^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Illegal type declaration in term position.
+//│ ║  l.165: 	fun rscModOf: rsc module M
+//│ ╙──       	                  ^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Expected a type, got ‹error›
+//│ ║  l.165: 	fun rscModOf: rsc module M
+//│ ╙──       	                  ^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Expected a type, got ‹error›
+//│ ║  l.165: 	fun rscModOf: rsc module M
+//│ ╙──       	                  ^^^^^^^^
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define rscModOf⁰ as fun rscModOf¹(): ? { return M² }; end

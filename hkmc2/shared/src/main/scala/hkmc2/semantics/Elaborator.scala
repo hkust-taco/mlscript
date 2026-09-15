@@ -1572,6 +1572,8 @@ extends Importer:
         raise(ErrorReport(msg"Expected a record after 'mut' keyword; found a block" -> blk.toLoc :: Nil))
         blk
       case (rcd: Rcd, ctx) => rcd.copy(mut = true).withLocOf(rcd)
+    case Modified(Keywrd(kw @ (Keyword.`rsc` | Keyword.`rsc?`)), body) =>
+      Term.Annotated(Annot.Modifier(kw), subterm(body))
     case Modified(kw, body) =>
       raise(ErrorReport(msg"Illegal position for '${kw.name}' modifier." -> kw.toLoc :: Nil))
       subterm(body)

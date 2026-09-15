@@ -8,8 +8,8 @@ import hkmc2.utils.*, shorthands.*
 
 /** Unit tests for the resource-ness dimension of [[ErasedType]].
   *
-  * These pure functions are tested directly rather than through diff-tests because no `.mls` source can produce
-  * a resource type yet: there is no syntax for one, so every `rsc` reaching the IR is still `S(false)` or `N`.
+  * These pure functions are tested directly, so that every combination of resource-ness is covered whether or not
+  * a diff-test reaches it.
   */
 class ErasedTypeRscTests extends AnyFunSuite:
 

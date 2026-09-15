@@ -261,23 +261,33 @@ object ErasedType:
     * Note that the resulting erased type is **not** canonicalized to avoid using `ctx.builtins` during elaboration
     * of `Prelude`.
     */
-  def eraseSign(sign: Term): Opt[ErasedValueType] = sign match
+  def eraseSign(sign: Term): Opt[ErasedValueType] = eraseSign(sign, rsc = S(false))
+
+  /** Erases `sign` under the resource-ness gathered from the modifiers wrapping it so far.
+    *
+    * `rsc` starts as the unannotated default and is replaced by each `rsc`/`rsc?` annotation peeled off on the
+    * way down, so that the modifier applies to whatever the signature ultimately denotes.
+    */
+  private def eraseSign(sign: Term, rsc: Opt[Bool]): Opt[ErasedValueType] = sign match
+    // * The resource modifiers reach here as annotations.
+    // * Note that this arm has to be part of the recursion: a union erases its members by recursive call, and each
+    // * carries its own modifier, so `rsc C | rsc D` would otherwise erase to nothing at all.
+    case Term.Annotated(Annot.Resource(rsc), target) => eraseSign(target, rsc)
     case CompType(lhs, rhs, true) =>
       // * A union is kept as a transient `Union` surface form; `canonicalize` collapses it to the members' LUB.
       for
-        l <- eraseSign(lhs)
-        r <- eraseSign(rhs)
+        l <- eraseSign(lhs, rsc)
+        r <- eraseSign(rhs, rsc)
       yield ErasedType.union(l, r)
     // * An intersection is never decomposed: narrowing to one member would call for a GLB, which this lattice
     // * cannot express.
-    case CompType(_, _, false) => S(ErasedType.Unknown(S(false)))
+    case CompType(_, _, false) => S(ErasedType.Unknown(rsc))
     case UnitVal() => S(ErasedType.Unit)
     // * A written arrow denotes a function value, and every function value is a `Function`.
-    case FunTy(_, _, _) => S(ErasedType.Function(rsc = S(false)))
+    case FunTy(_, _, _) => S(ErasedType.Function(rsc))
     // * Quantification erases away: what a `forall` denotes is what its body denotes.
-    case Forall(_, _, body) => eraseSign(body)
-    case _ =>
-      sign.symbol.flatMap(_.asTpe).map(sym => ErasedType.ValueLike(rsc = S(false), sym))
+    case Forall(_, _, body) => eraseSign(body, rsc)
+    case _ => sign.symbol.flatMap(_.asTpe).map(sym => ErasedType.ValueLike(rsc, sym))
 
   /** Whether `actual` is a subtype of `expected`, walking the class hierarchy.
     *

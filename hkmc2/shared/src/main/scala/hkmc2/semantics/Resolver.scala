@@ -1085,6 +1085,11 @@ class Resolver(tl: TraceLogger)
       case t: (Term.FunTy | Term.WildcardTy | Term.CompType | Term.Neg | Term.Forall | Term.Constrained | Term.Tup) =>
         t.subTerms.foreach(traverseSign(_, expect = Expect.NonModule(N)))
       
+      // A resource modifier does not affect resolution: traverse its target type.
+      case Term.Annotated(Annot.Resource(_), target) =>
+        traverseSign(target, expect = expect, inAppPrefix = inAppPrefix)
+        break()
+      
       // t is not a type.
       case _ => 
         raise(ErrorReport(msg"Expected a type, got ${t.describe}" -> t.toLoc :: Nil))
@@ -1172,6 +1177,8 @@ class Resolver(tl: TraceLogger)
         if expect.module
         then raiseError()
         else Type.NotImplemented // TODO: Support complex types
+      
+      case Term.Annotated(Annot.Resource(_), target) => resolveSign(target, expect = expect)
       
       // Otherwise, resolve the term directly.
       case _ => t.resolvedSym match
