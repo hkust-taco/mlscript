@@ -455,7 +455,7 @@ halve(wasm.f64.const(4.5))
 //│ = 2.25
 
 
-// Real-word example: Quake III's inverse square root approximation.
+// Real-world example: Quake III's inverse square root approximation.
 // https://en.wikipedia.org/wiki/Fast_inverse_square_root
 fun q_rsqrt(number: Float32): Float32 =
   val threehalfs: Float32 = wasm.f32.const(1.5)
