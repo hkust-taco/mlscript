@@ -11,7 +11,7 @@ if true then wasm.i32.const(1) else wasm.i32.const(2)
 
 :ge
 if true then 1 else wasm.i32.const(2)
-//│ ═══[COMPILATION ERROR] Wasm entry function has incompatible result types `(ref null i31)` and `i32`
+//│ ═══[COMPILATION ERROR] Wasm entry function has incompatible result types `Int` and `Int32`
 
 
 // Floating-point branch results also determine the entry signature.
@@ -74,13 +74,13 @@ if true then wasm.i32.const(4) else wasm.i32.const(5)
 // Different primitive representations have no common Wasm result type.
 :ge
 if true then wasm.i32.const(1) else wasm.f64.const(2.5)
-//│ ═══[COMPILATION ERROR] Wasm entry function has incompatible result types `i32` and `f64`
+//│ ═══[COMPILATION ERROR] Wasm entry function has incompatible result types `Int32` and `Float64`
 
 
 // A primitive and a boxed value have no common result type either.
 :ge
 if false then wasm.i32.const(1) else 2
-//│ ═══[COMPILATION ERROR] Wasm entry function has incompatible result types `i32` and `(ref null i31)`
+//│ ═══[COMPILATION ERROR] Wasm entry function has incompatible result types `Int32` and `Int`
 
 
 // Statement values are discarded; a fallthrough without a value returns unit.

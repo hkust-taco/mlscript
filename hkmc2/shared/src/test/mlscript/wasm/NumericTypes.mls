@@ -291,7 +291,7 @@ val x: Float32 = wasm.f32.const(1.5)
 //│   (type $Unit (sub $Object (struct (field $$typeinfo (mut (ref $TypeInfoBase))))))
 //│   (type $Unit_init (func (param $this (ref $Unit)) (result (ref $Unit))))
 //│   (type $Unit_ctor (func (result (ref $Unit))))
-//│   (type $entry (func (result (ref null $Unit))))
+//│   (type $entry (func (result (ref null any))))
 //│   (type $start (func))
 //│   (global $x (export "x") (mut f32) (f32.const 0.0))
 //│   (global $Unit_typeinfo (export "Unit_typeinfo") (ref $Unit_typeinfo) (struct.new $Unit_typeinfo
@@ -316,7 +316,7 @@ val x: Float32 = wasm.f32.const(1.5)
 //│   (func $start (type $start)
 //│     (global.set $Unit$inst
 //│       (call $Unit_Unit)))
-//│   (func $entry (export "entry") (type $entry) (result (ref null $Unit))
+//│   (func $entry (export "entry") (type $entry) (result (ref null any))
 //│     (local $tmp f32)
 //│     (block (result (ref null $Unit))
 //│       (local.set $tmp

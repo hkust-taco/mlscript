@@ -60,18 +60,6 @@ sealed abstract class Type extends ToWat:
       (sup.nullable || !sub.nullable) && sub.heapType.superTypes.contains(sup.heapType)
     case _ => this == parent
 
-  /** The least common supertype, when both types belong to the same Wasm type hierarchy.
-    * Numeric types have no implicit conversions; reference joins also preserve nullability.
-    */
-  def lub(that: Type)(using Ctx): Opt[Type] =
-    if this.isSubtypeOf(that) then S(that)
-    else if that.isSubtypeOf(this) then S(this)
-    else (this, that) match
-      case (lhs: RefType, rhs: RefType) =>
-        lhs.heapType.superTypes.find(rhs.heapType.superTypes.contains)
-          .map(RefType(_, nullable = lhs.nullable || rhs.nullable))
-      case _ => N
-
 private case object I32Type extends Type:
   def toWat: Document = doc"i32"
 private case object I64Type extends Type:
