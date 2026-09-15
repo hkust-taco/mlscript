@@ -378,7 +378,7 @@ object Block:
         case Return(res) => types += res.erasedValueType_!
         case _ => super.applyBlock(b)
     collector.applyBlock(block)
-    Option.when(types.nonEmpty)(ErasedType.Union.mk(types.toList))
+    Option.when(types.nonEmpty)(ErasedType.Union.mk(types))
 
 sealed abstract class BlockTail extends Block
 

@@ -90,12 +90,12 @@ object ErasedType:
     /** Creates a nonempty union, flattening nested unions and collapsing a singleton to its sole member.
       * The result is not canonicalized into the LUB of its members.
       */
-    def mk(members: Ls[ErasedValueType]): ErasedValueType =
-      def flatten(et: ErasedValueType): Ls[ErasedValueType] = et match
-        case Union(ms) => ms.flatMap(flatten)
-        case other => other :: Nil
+    def mk(members: Iterable[ErasedValueType]): ErasedValueType =
+      def flatten(et: ErasedValueType): Iterator[ErasedValueType] = et match
+        case Union(ms) => ms.iterator.flatMap(flatten)
+        case other => Iterator.single(other)
       // `ValueLike` types are identity-equal; canonicalization collapses any remaining equivalent members.
-      val flattened = members.flatMap(flatten).distinct
+      val flattened = members.iterator.flatMap(flatten).distinct.toList
       require(flattened.nonEmpty, "an erased union must have at least one member")
       flattened match
         case single :: Nil => single
