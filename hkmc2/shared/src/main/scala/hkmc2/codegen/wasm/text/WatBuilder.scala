@@ -2841,7 +2841,7 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
       val entrySym = BlockMemberSymbol("entry", Nil)
 
       val (entryFnExpr, entryResultType) = ctx.elabCtx.givenIn:
-        p.main.returnType.map(_.canonicalize) match
+        Block.returnType(p.main).map(_.canonicalize) match
           case S(ErasedType.Incompatible(lhs, rhs)) =>
             errExpr(Ls(msg"Wasm entry function has incompatible result types `${lhs.describe}` and `${rhs.describe}`" -> N),
               extraInfo = S(entryBody.toWat.mkString())) -> RefType.anyref

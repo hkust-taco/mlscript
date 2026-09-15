@@ -86,6 +86,21 @@ object ErasedType:
     override protected def computeCanonicalize(using Ctx, State): CanonicalErasedValueType =
       members.map(_.canonicalize).reduceLeft((a, b) => lub(a, b))
 
+  object Union:
+    /** Creates a nonempty union, flattening nested unions and collapsing a singleton to its sole member.
+      * The result is not canonicalized into the LUB of its members.
+      */
+    def mk(members: Ls[ErasedValueType]): ErasedValueType =
+      def flatten(et: ErasedValueType): Ls[ErasedValueType] = et match
+        case Union(ms) => ms.flatMap(flatten)
+        case other => other :: Nil
+      // `ValueLike` types are identity-equal; canonicalization collapses any remaining equivalent members.
+      val flattened = members.flatMap(flatten).distinct
+      require(flattened.nonEmpty, "an erased union must have at least one member")
+      flattened match
+        case single :: Nil => single
+        case ms => Union(ms)
+
   /** The top type of reference types, i.e. any value on JS and `anyref` on Wasm.
     *
     * Reached by an absent annotation (`erasedType_!` folds `N` here), by an alias the IR cannot resolve, and
@@ -208,14 +223,7 @@ object ErasedType:
     * Note that the resulting union type is **not** canonicalized into the LUB of its members.
     */
   def union(lhs: ErasedValueType, rhs: ErasedValueType): ErasedValueType =
-    def flatten(et: ErasedValueType): Ls[ErasedValueType] = et match
-      case Union(ms) => ms
-      case other => other :: Nil
-    // Note: `distinct` has no effect on `ValueLike` types, which are identity-equal, but that is fine since they will
-    // be collapsed during canonicalization.
-    (flatten(lhs) ::: flatten(rhs)).distinct match
-      case single :: Nil => single
-      case ms => Union(ms)
+    Union.mk(lhs :: rhs :: Nil)
 
   /** The least upper bound of two canonical erased types. */
   def lub(lhs: CanonicalErasedValueType, rhs: CanonicalErasedValueType)(using Ctx, State): CanonicalErasedValueType =
