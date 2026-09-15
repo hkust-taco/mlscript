@@ -304,25 +304,26 @@ object Elaborator:
         val shl = assumeObject("shl")
         val try_catch = assumeObject("try_catch")
       object wasm extends VirtualModule(assumeBuiltinMod("wasm")):
-        object i32 extends VirtualModule(wasm, "i32"):
-          val const = assumeObject("const")
-          val add = assumeObject("add")
-          val sub = assumeObject("sub")
-          val mul = assumeObject("mul")
-          val div_s = assumeObject("div_s")
-          val rem_s = assumeObject("rem_s")
-          val eq = assumeObject("eq")
-          val ne = assumeObject("ne")
-          val lt_s = assumeObject("lt_s")
-          val le_s = assumeObject("le_s")
-          val gt_s = assumeObject("gt_s")
-          val ge_s = assumeObject("ge_s")
-          val eqz = assumeObject("eqz")
-        object ref extends VirtualModule(wasm, "ref"):
-          val i31 = assumeObject("i31")
-        object i31 extends VirtualModule(wasm, "i31"):
-          val get_s = assumeObject("get_s")
-          val get_u = assumeObject("get_u")
+        /** The nested modules of `wasm`, which group the instruction intrinsics by the family they emit, e.g.
+          * `wasm.i32`.
+          */
+        private val instrModules: Ls[VirtualModule] =
+          module.tree.definedSymbols.valuesIterator
+            .filter(_.modOrObjTree.isDefined)
+            .map(sym => VirtualModule(wasm, sym.nme))
+            .toList
+
+        /** Every instruction intrinsic the prelude declares under [[instrModules]].
+          *
+          * Neither the modules above nor their members are named one by one, unlike the operator intrinsics below:
+          * every function such a module declares *is* an instruction intrinsic, and which instruction each one emits
+          * is decided by the backend. Naming them here would only add a list to keep in sync with the prelude, and
+          * one whose omissions would be silent - so an intrinsic the backend does not implement is reported at its
+          * use site instead.
+          */
+        val instrIntrinsics: Set[BlockMemberSymbol] =
+          instrModules.flatMap(_.module.tree.definedSymbols.values).toSet
+
         val plus_impl = assumeObject("plus_impl")
         val minus_impl = assumeObject("minus_impl")
         val times_impl = assumeObject("times_impl")

@@ -361,6 +361,25 @@ sealed abstract class Block extends Product:
   
 end Block
 
+object Block:
+  /** The union of the types returned from `block`, whose canonical form is their least upper bound.
+    *
+    * `N` means there are no returns; an untyped return contributes `Unknown` instead. Nested function, lambda,
+    * and class bodies have their own returns and are excluded. All other returns count, including unreachable
+    * ones, since backends such as Wasm still validate their types.
+    *
+    * Canonicalization is deferred to the consumer, which supplies the elaboration context and state needed to
+    * resolve type aliases and find common ancestors.
+    */
+  def returnType(block: Block): Opt[ErasedValueType] =
+    val types = Buffer.empty[ErasedValueType]
+    val collector = new BlockTraverserShallow:
+      override def applyBlock(b: Block): Unit = b match
+        case Return(res) => types += res.erasedValueType_!
+        case _ => super.applyBlock(b)
+    collector.applyBlock(block)
+    Option.when(types.nonEmpty)(ErasedType.Union.mk(types))
+
 sealed abstract class BlockTail extends Block
 
 sealed abstract trait NonBlockTail:

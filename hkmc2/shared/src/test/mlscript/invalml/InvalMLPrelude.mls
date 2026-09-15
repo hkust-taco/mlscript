@@ -74,6 +74,9 @@ declare module wasm with
       mul(i1: Int32, i2: Int32): Int32
       div_s(i1: Int32, i2: Int32): Int32
       rem_s(i1: Int32, i2: Int32): Int32
+      shl(i1: Int32, i2: Int32): Int32
+      shr_s(i1: Int32, i2: Int32): Int32
+      shr_u(i1: Int32, i2: Int32): Int32
       eq(i1: Int32, i2: Int32): Int32
       ne(i1: Int32, i2: Int32): Int32
       lt_s(i1: Int32, i2: Int32): Int32
@@ -81,6 +84,64 @@ declare module wasm with
       gt_s(i1: Int32, i2: Int32): Int32
       ge_s(i1: Int32, i2: Int32): Int32
       eqz(i: Int32): Int32
+      reinterpret_f32(f: Float32): Int32
+  module i64 with
+    fun
+      const(c: Int): Int64
+      add(i1: Int64, i2: Int64): Int64
+      sub(i1: Int64, i2: Int64): Int64
+      mul(i1: Int64, i2: Int64): Int64
+      div_s(i1: Int64, i2: Int64): Int64
+      rem_s(i1: Int64, i2: Int64): Int64
+      shl(i1: Int64, i2: Int64): Int64
+      shr_s(i1: Int64, i2: Int64): Int64
+      shr_u(i1: Int64, i2: Int64): Int64
+      eq(i1: Int64, i2: Int64): Int32
+      ne(i1: Int64, i2: Int64): Int32
+      lt_s(i1: Int64, i2: Int64): Int32
+      le_s(i1: Int64, i2: Int64): Int32
+      gt_s(i1: Int64, i2: Int64): Int32
+      ge_s(i1: Int64, i2: Int64): Int32
+      eqz(i: Int64): Int32
+      reinterpret_f64(f: Float64): Int64
+  module f32 with
+    fun
+      const(c: Num): Float32
+      add(f1: Float32, f2: Float32): Float32
+      sub(f1: Float32, f2: Float32): Float32
+      mul(f1: Float32, f2: Float32): Float32
+      div(f1: Float32, f2: Float32): Float32
+      min(f1: Float32, f2: Float32): Float32
+      max(f1: Float32, f2: Float32): Float32
+      abs(f: Float32): Float32
+      neg(f: Float32): Float32
+      sqrt(f: Float32): Float32
+      eq(f1: Float32, f2: Float32): Int32
+      ne(f1: Float32, f2: Float32): Int32
+      lt(f1: Float32, f2: Float32): Int32
+      le(f1: Float32, f2: Float32): Int32
+      gt(f1: Float32, f2: Float32): Int32
+      ge(f1: Float32, f2: Float32): Int32
+      reinterpret_i32(i: Int32): Float32
+  module f64 with
+    fun
+      const(c: Num): Float64
+      add(f1: Float64, f2: Float64): Float64
+      sub(f1: Float64, f2: Float64): Float64
+      mul(f1: Float64, f2: Float64): Float64
+      div(f1: Float64, f2: Float64): Float64
+      min(f1: Float64, f2: Float64): Float64
+      max(f1: Float64, f2: Float64): Float64
+      abs(f: Float64): Float64
+      neg(f: Float64): Float64
+      sqrt(f: Float64): Float64
+      eq(f1: Float64, f2: Float64): Int32
+      ne(f1: Float64, f2: Float64): Int32
+      lt(f1: Float64, f2: Float64): Int32
+      le(f1: Float64, f2: Float64): Int32
+      gt(f1: Float64, f2: Float64): Int32
+      ge(f1: Float64, f2: Float64): Int32
+      reinterpret_i64(i: Int64): Float64
   module ref with
     fun
       i31(i: Int32): Int31

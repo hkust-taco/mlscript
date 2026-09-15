@@ -1,0 +1,361 @@
+// This file covers the three unboxed numeric types other than `Int32`: `Int64`, `Float32` and `Float64`.
+// See `BuiltinOperators.mls` for the `Int32` intrinsics, whose shape these mirror.
+
+:global
+:wasm
+
+
+// `Int64` lowers to `i64`, and an `i64` result is handed back to JS as a `BigInt`.
+val n: Int64 = wasm.i64.const(1)
+wasm.i64.add(n, wasm.i64.const(2))
+//│ Wasm result:
+//│ = 3n
+
+
+// A session global of unboxed type is imported into the next module unboxed too.
+wasm.i64.mul(n, wasm.i64.const(2))
+//│ Wasm result:
+//│ = 2n
+
+
+// An `i64` immediate spans the full signed 64-bit range, unlike an `i32` one.
+wasm.i64.const(4294967296)
+//│ Wasm result:
+//│ = 4294967296n
+
+
+wasm.i64.const(9223372036854775807)
+//│ Wasm result:
+//│ = 9223372036854775807n
+
+
+:ge
+wasm.i64.const(9223372036854775808)
+//│ ╔══[COMPILATION ERROR] Immediate #1 of wasm intrinsic 'i64.const' is outside the signed 64-bit range
+//│ ║  l.33: 	wasm.i64.const(9223372036854775808)
+//│ ╙──      	               ^^^^^^^^^^^^^^^^^^^
+
+
+// The arithmetic instructions, on operands chosen so that each yields a distinct result.
+wasm.i64.sub(wasm.i64.const(1), wasm.i64.const(2))
+//│ Wasm result:
+//│ = -1n
+
+
+wasm.i64.mul(wasm.i64.const(6), wasm.i64.const(7))
+//│ Wasm result:
+//│ = 42n
+
+
+wasm.i64.div_s(wasm.i64.const(7), wasm.i64.const(2))
+//│ Wasm result:
+//│ = 3n
+
+
+wasm.i64.rem_s(wasm.i64.const(7), wasm.i64.const(2))
+//│ Wasm result:
+//│ = 1n
+
+
+// The shifts, on the same operands as their `Int32` counterparts in `BuiltinOperators.mls`.
+wasm.i64.shl(wasm.i64.sub(wasm.i64.const(0), wasm.i64.const(16)), wasm.i64.const(2))
+//│ Wasm result:
+//│ = -64n
+
+
+wasm.i64.shr_s(wasm.i64.sub(wasm.i64.const(0), wasm.i64.const(16)), wasm.i64.const(2))
+//│ Wasm result:
+//│ = -4n
+
+
+wasm.i64.shr_u(wasm.i64.sub(wasm.i64.const(0), wasm.i64.const(16)), wasm.i64.const(2))
+//│ Wasm result:
+//│ = 4611686018427387900n
+
+
+// A shift count past 31 moves a bit out of the range of an `i32`.
+wasm.i64.shl(wasm.i64.const(1), wasm.i64.const(40))
+//│ Wasm result:
+//│ = 1099511627776n
+
+
+wasm.i64.lt_s(wasm.i64.const(1), wasm.i64.const(2))
+//│ Wasm result:
+//│ = 1
+
+
+wasm.i64.ge_s(wasm.i64.const(1), wasm.i64.const(2))
+//│ Wasm result:
+//│ = 0
+
+
+wasm.i64.eqz(wasm.i64.const(0))
+//│ Wasm result:
+//│ = 1
+
+
+// `Int64` and `Int32` are distinct representations, so neither is an operand of the other's instructions.
+:ge
+wasm.i64.add(wasm.i32.const(1), wasm.i32.const(2))
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int32' at an unrelated type 'Int64'
+//│ ║  l.99: 	wasm.i64.add(wasm.i32.const(1), wasm.i32.const(2))
+//│ ╙──      	             ^^^^^^^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int32' at an unrelated type 'Int64'
+//│ ║  l.99: 	wasm.i64.add(wasm.i32.const(1), wasm.i32.const(2))
+//│ ╙──      	                                ^^^^^^^^^^^^^^^^^
+//│ ═══[COMPILATION ERROR] Operand #1 of wasm intrinsic 'i64.add' must be of type 'Int64'
+//│ ═══[COMPILATION ERROR] Operand #2 of wasm intrinsic 'i64.add' must be of type 'Int64'
+
+
+// `Float64` lowers to `f64`, whose immediate is written as a decimal literal.
+wasm.f64.add(wasm.f64.const(1.5), wasm.f64.const(2.25))
+//│ Wasm result:
+//│ = 3.75
+
+
+// An integer literal denotes a float just as well.
+wasm.f64.mul(wasm.f64.const(3), wasm.f64.const(0.5))
+//│ Wasm result:
+//│ = 1.5
+
+
+wasm.f64.div(wasm.f64.const(1), wasm.f64.const(4))
+//│ Wasm result:
+//│ = 0.25
+
+
+// The unary instructions, which the integer families do not have.
+wasm.f64.neg(wasm.f64.const(1.5))
+//│ Wasm result:
+//│ = -1.5
+
+
+wasm.f64.sqrt(wasm.f64.const(2.25))
+//│ Wasm result:
+//│ = 1.5
+
+
+wasm.f64.abs(wasm.f64.neg(wasm.f64.const(1.5)))
+//│ Wasm result:
+//│ = 1.5
+
+
+wasm.f64.min(wasm.f64.const(1.5), wasm.f64.const(2.25))
+//│ Wasm result:
+//│ = 1.5
+
+
+wasm.f64.max(wasm.f64.const(1.5), wasm.f64.const(2.25))
+//│ Wasm result:
+//│ = 2.25
+
+
+// Float comparisons also yield an `Int32`.
+wasm.f64.lt(wasm.f64.const(1.5), wasm.f64.const(2.25))
+//│ Wasm result:
+//│ = 1
+
+
+wasm.f64.eq(wasm.f64.const(1.5), wasm.f64.const(1.5))
+//│ Wasm result:
+//│ = 1
+
+
+// `Float32` lowers to `f32`: the same literal rounds to a different value at its lower precision.
+wasm.f32.add(wasm.f32.const(0.1), wasm.f32.const(0.2))
+//│ Wasm result:
+//│ = 0.30000001192092896
+
+
+wasm.f64.add(wasm.f64.const(0.1), wasm.f64.const(0.2))
+//│ Wasm result:
+//│ = 0.30000000000000004
+
+
+wasm.f32.sqrt(wasm.f32.const(2))
+//│ Wasm result:
+//│ = 1.4142135381698608
+
+
+// A literal written with an exponent is rendered with one, which WAT accepts with either sign.
+wasm.f64.add(wasm.f64.const(1.0e10), wasm.f64.const(2.5e-4))
+//│ Wasm result:
+//│ = 10000000000.00025
+
+
+// A `Float32` session global is zeroed with an `f32` constant before its initializer runs.
+:wat
+val x: Float32 = wasm.f32.const(1.5)
+x
+//│ Wat:
+//│ (module
+//│   (type $TypeInfoBase (sub (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
+//│   (type $Object (sub (struct (field $$typeinfo (mut (ref $TypeInfoBase))))))
+//│   (type $entry (func (result f32)))
+//│   (global $x (export "x") (mut f32) (f32.const 0.0))
+//│   (func $entry (export "entry") (type $entry) (result f32)
+//│     (local $tmp f32)
+//│     (block (result f32)
+//│       (local.set $tmp
+//│         (f32.const 1.5))
+//│       (global.set $x
+//│         (local.get $tmp))
+//│       (return
+//│         (global.get $x))))
+//│   (elem $entry declare func $entry))
+//│ Wasm result:
+//│ = 1.5
+
+
+// A literal is narrowed to the immediate's own type, so one only an `f64` can hold is out of an `f32`'s range...
+:ge
+wasm.f32.const(1.0e39)
+//│ ╔══[COMPILATION ERROR] Immediate #1 of wasm intrinsic 'f32.const' is outside the f32 range
+//│ ║  l.212: 	wasm.f32.const(1.0e39)
+//│ ╙──       	               ^^^^^^
+
+
+// ...and one no float can hold is out of both.
+:ge
+wasm.f64.const(1.0e400)
+//│ ╔══[COMPILATION ERROR] Immediate #1 of wasm intrinsic 'f64.const' is outside the f64 range
+//│ ║  l.220: 	wasm.f64.const(1.0e400)
+//│ ╙──       	               ^^^^^^^
+
+
+// Immediates must be written as literals for floats as much as for integers.
+:ge
+fun constOf(x: Num): Float64 = wasm.f64.const(x)
+//│ ╔══[COMPILATION ERROR] Wasm intrinsic 'f64.const' expects a numeric literal immediate
+//│ ║  l.228: 	fun constOf(x: Num): Float64 = wasm.f64.const(x)
+//│ ╙──       	                                              ^
+
+
+// `Float32` and `Float64` are as distinct as the two integer types are.
+:ge
+wasm.f64.add(wasm.f32.const(1.5), wasm.f32.const(2.25))
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Float32' at an unrelated type 'Float64'
+//│ ║  l.236: 	wasm.f64.add(wasm.f32.const(1.5), wasm.f32.const(2.25))
+//│ ╙──       	             ^^^^^^^^^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Float32' at an unrelated type 'Float64'
+//│ ║  l.236: 	wasm.f64.add(wasm.f32.const(1.5), wasm.f32.const(2.25))
+//│ ╙──       	                                  ^^^^^^^^^^^^^^^^^^^^
+//│ ═══[COMPILATION ERROR] Operand #1 of wasm intrinsic 'f64.add' must be of type 'Float64'
+//│ ═══[COMPILATION ERROR] Operand #2 of wasm intrinsic 'f64.add' must be of type 'Float64'
+
+
+// A class field of unboxed type is stored unboxed too, and its `struct.new_default` slot is zeroed with a
+// constant of that same type.
+:wat
+class Boxed(val i: Int64, val f: Float64)
+wasm.f64.add(Boxed(wasm.i64.const(1), wasm.f64.const(1.5)).f, wasm.f64.const(0.25))
+//│ Wat:
+//│ (module
+//│   (type $TypeInfoBase (sub (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
+//│   (type $Object (sub (struct (field $$typeinfo (mut (ref $TypeInfoBase))))))
+//│   (type $Boxed (sub $Object (struct (field $$typeinfo (mut (ref $TypeInfoBase))) (field $i (mut i64)) (field $f (mut f64)))))
+//│   (type $Boxed_typeinfo (sub $TypeInfoBase (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
+//│   (type $Boxed_init (func (param $this (ref $Boxed)) (param $i i64) (param $f f64) (result (ref $Boxed))))
+//│   (type $Boxed_ctor (func (param $i i64) (param $f f64) (result (ref $Boxed))))
+//│   (type $entry (func (result f64)))
+//│   (global $Boxed_typeinfo (export "Boxed_typeinfo") (ref $Boxed_typeinfo) (struct.new $Boxed_typeinfo
+//│     (i32.const 1)
+//│     (ref.null $TypeInfoBase)))
+//│   (func $Boxed_init (type $Boxed_init) (param $this (ref $Boxed)) (param $i i64) (param $f f64) (result (ref $Boxed))
+//│     (block (result (ref $Boxed))
+//│       (struct.set $Boxed $i
+//│         (local.get $this)
+//│         (local.get $i))
+//│       (struct.set $Boxed $f
+//│         (local.get $this)
+//│         (local.get $f))
+//│       (return
+//│         (ref.cast (ref $Boxed)
+//│           (local.get $this)))))
+//│   (func $Boxed_ctor (export "Boxed") (type $Boxed_ctor) (param $i i64) (param $f f64) (result (ref $Boxed))
+//│     (local $this (ref $Boxed))
+//│     (block (result (ref $Boxed))
+//│       (local.set $this
+//│         (struct.new $Boxed
+//│           (global.get $Boxed_typeinfo)
+//│           (i64.const 0)
+//│           (f64.const 0.0)))
+//│       (drop
+//│         (call $Boxed_init
+//│           (local.get $this)
+//│           (local.get $i)
+//│           (local.get $f)))
+//│       (return
+//│         (local.get $this))))
+//│   (func $entry (export "entry") (type $entry) (result f64)
+//│     (local $tmp i64)
+//│     (local $tmp1 f64)
+//│     (local $tmp2 (ref null any))
+//│     (local $tmp3 f64)
+//│     (block (result f64)
+//│       (local.set $tmp
+//│         (i64.const 1))
+//│       (local.set $tmp1
+//│         (f64.const 1.5))
+//│       (local.set $tmp2
+//│         (call $Boxed_ctor
+//│           (local.get $tmp)
+//│           (local.get $tmp1)))
+//│       (local.set $tmp3
+//│         (f64.const 0.25))
+//│       (return
+//│         (f64.add
+//│           (struct.get $Boxed $f
+//│             (ref.cast (ref $Boxed)
+//│               (local.get $tmp2)))
+//│           (local.get $tmp3)))))
+//│   (elem $Boxed_init declare func $Boxed_init)
+//│   (elem $Boxed_ctor declare func $Boxed_ctor)
+//│   (elem $entry declare func $entry))
+//│ Wasm result:
+//│ = 1.75
+
+
+// The types round-trip through function signatures and locals.
+fun twice(m: Int64): Int64 = wasm.i64.mul(m, wasm.i64.const(2))
+twice(wasm.i64.const(21))
+//│ Wasm result:
+//│ = 42n
+
+
+fun halve(x: Float64): Float64 = wasm.f64.div(x, wasm.f64.const(2))
+halve(wasm.f64.const(4.5))
+//│ Wasm result:
+//│ = 2.25
+
+
+// Real-world example: Quake III's inverse square root approximation.
+// https://en.wikipedia.org/wiki/Fast_inverse_square_root
+fun q_rsqrt(number: Float32): Float32 =
+  val threehalfs: Float32 = wasm.f32.const(1.5)
+  val x2: Float32 = wasm.f32.mul(number, wasm.f32.const(0.5))
+  val i: Int32 = wasm.i32.sub of
+    wasm.i32.const(0x5f3759df)
+    wasm.i32.shr_s of
+      wasm.i32.reinterpret_f32(number)
+      wasm.i32.const(1)
+  val y: Float32 = wasm.f32.reinterpret_i32(i)
+  wasm.f32.mul(y, wasm.f32.sub(threehalfs, wasm.f32.mul(wasm.f32.mul(x2, y), y)))
+q_rsqrt(wasm.f32.const(1))
+//│ Wasm result:
+//│ = 0.9983071684837341
+
+// Same but with `Float64`.
+fun q_rsqrt64(number: Float64): Float64 =
+  val threehalfs: Float64 = wasm.f64.const(1.5)
+  val x2: Float64 = wasm.f64.mul(number, wasm.f64.const(0.5))
+  val i: Int64 = wasm.i64.sub of
+    wasm.i64.const(0x5fe6eb50c7b537a9)
+    wasm.i64.shr_s of
+      wasm.i64.reinterpret_f64(number)
+      wasm.i64.const(1)
+  val y: Float64 = wasm.f64.reinterpret_i64(i)
+  wasm.f64.mul(y, wasm.f64.sub(threehalfs, wasm.f64.mul(wasm.f64.mul(x2, y), y)))
+q_rsqrt64(wasm.f64.const(1))
+//│ Wasm result:
+//│ = 0.9983081427118143

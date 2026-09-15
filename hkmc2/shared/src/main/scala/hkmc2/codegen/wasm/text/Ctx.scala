@@ -344,42 +344,91 @@ enum WasmIntrinsicType:
   *   The name of the intrinsic this argument was passed to, for diagnostics.
   * @param idx
   *   The zero-based position of this argument, for diagnostics.
-  * @param operand
-  *   This argument compiled as an expression.
-  * @param operandXtype
-  *   The name of the type the intrinsic declares for this parameter, present only if the compiled operand does not
-  *   conform to it.
+  * @param mkOperand
+  *   This argument compiled as an expression, paired with the name of the type the intrinsic declares for this
+  *   parameter, present only if the compiled operand does not conform to it.
+  *
+  *   Compiled on demand, since an argument the intrinsic reads as an immediate need not be representable as a value
+  *   at all: a decimal literal, for one, has no representation of its own in this backend, and compiling one would
+  *   report that instead of the intrinsic using it as an `f32`/`f64` immediate perfectly well.
   * @param litValue
-  *   The integer literal this argument was written as, if it was written as one.
+  *   The numeric literal this argument was written as, if it was written as one.
   * @param loc
   *   The source location of this argument.
+  * @param irStr
+  *   This argument's Block IR, reported as the extra info of a diagnostic that does not compile the operand.
   */
-case class IntrinsicArg(
-    intrName: Str,
-    idx: Int,
-    private val operand: Expr,
-    private val operandXtype: Opt[Str],
-    private val litValue: Opt[BigInt],
+class IntrinsicArg(
+    private val intrName: Str,
+    private val idx: Int,
+    mkOperand: => (Expr, Opt[Str]),
+    private val litValue: Opt[BigInt | BigDecimal],
     private val loc: Opt[Loc],
+    irStr: => Str,
 ):
+  private lazy val compiled: (Expr, Opt[Str]) = mkOperand
+
   /** Reports `errMsg` and recovers with `recovery`, mirroring how `errExpr` recovers with `unreachable`. */
-  private def fail[T](errMsg: Message, recovery: T)(using Raise): T =
-    raise(ErrorReport(Ls(errMsg -> loc), source = Diagnostic.Source.Compilation, extraInfo = S(operand)))
+  private def fail[T](errMsg: Message, extra: => Any, recovery: T)(using Raise): T =
+    raise(ErrorReport(Ls(errMsg -> loc), source = Diagnostic.Source.Compilation, extraInfo = S(extra)))
     recovery
 
   /** This argument as a value pushed on the stack. */
-  def asOp(using Raise): Expr = operandXtype.fold(operand): xtype =>
+  def asOp(using Raise): Expr =
+    val (operand, operandXtype) = compiled
+    operandXtype.fold(operand): xtype =>
+      fail(
+        msg"Operand #${(idx + 1).toString} of wasm intrinsic '$intrName' must be of type '${xtype.toString}'",
+        operand,
+        unreachable,
+      )
+
+  /** Reports that this argument is not written as a literal of the kind its immediate needs. */
+  private def notALiteral[T](expected: Str, recovery: T)(using Raise): T =
+    fail(msg"Wasm intrinsic '$intrName' expects $expected literal immediate", irStr, recovery)
+
+  /** Reports that this argument's literal does not denote a value its immediate's type can hold. */
+  private def outOfRange[T](tpe: Str, recovery: T)(using Raise): T =
     fail(
-      msg"Operand #${(idx + 1).toString} of wasm intrinsic '$intrName' must be of type '${xtype.toString}'",
-      unreachable,
+      msg"Immediate #${(idx + 1).toString} of wasm intrinsic '$intrName' is outside the $tpe range",
+      irStr,
+      recovery,
     )
 
-  /** This argument as an instruction immediate, which must be written as an integer literal at the call site. */
-  def asImm(using Raise): Int = litValue match
-    case S(value) if value.isValidInt => value.toInt
+  /** This argument's literal as an exact decimal, whichever kind of numeric literal it was written as. */
+  private def numericLit: Opt[BigDecimal] = litValue.map:
+    case value: BigInt => BigDecimal(value)
+    case value: BigDecimal => value
+
+  /** This argument as an `i32` immediate, which must be written as an integer literal at the call site. */
+  def asImm32(using Raise): Int = litValue match
+    case S(value: BigInt) => if value.isValidInt then value.toInt else outOfRange("signed 32-bit", 0)
+    case _ => notALiteral("an integer", 0)
+
+  /** This argument as an `i64` immediate, which must be written as an integer literal at the call site. */
+  def asImm64(using Raise): Long = litValue match
+    case S(value: BigInt) => if value.isValidLong then value.toLong else outOfRange("signed 64-bit", 0L)
+    case _ => notALiteral("an integer", 0L)
+
+  /** This argument as an `f32` immediate, which must be written as a numeric literal at the call site.
+    *
+    * An integer literal is accepted alongside a decimal one, since `1` and `1.0` denote the same float. A literal of
+    * a magnitude no `f32` can hold is reported rather than silently emitted as an infinity; one that merely needs
+    * more precision than an `f32` has is rounded, as Wasm itself specifies - including one too small to hold at all,
+    * which rounds to zero.
+    */
+  def asImmF32(using Raise): Float = numericLit match
     case S(value) =>
-      fail(msg"Immediate #${(idx + 1).toString} of wasm intrinsic '$intrName' is outside the signed 32-bit range", 0)
-    case N => fail(msg"Wasm intrinsic '$intrName' expects an integer literal immediate", 0)
+      val narrowed = value.toFloat
+      if narrowed.isFinite then narrowed else outOfRange("f32", 0f)
+    case N => notALiteral("a numeric", 0f)
+
+  /** This argument as an `f64` immediate. See [[asImmF32]]. */
+  def asImmF64(using Raise): Double = numericLit match
+    case S(value) =>
+      val narrowed = value.toDouble
+      if narrowed.isFinite then narrowed else outOfRange("f64", 0d)
+    case N => notALiteral("a numeric", 0d)
 end IntrinsicArg
 
 /** The body of a Wasm intrinsic function: builds the instruction from its resolved arguments.
@@ -602,12 +651,15 @@ object Ctx:
     * Listed in the order the prelude declares them, so the two can be checked against each other by eye.
     */
   val wasmInstrIntrinsics: Map[Str, IntrinsicBody] = Map(
-    "i32.const" -> (args => i32.const(args(0).asImm)),
+    "i32.const" -> (args => i32.const(args(0).asImm32)),
     "i32.add" -> (args => i32.add(args(0).asOp, args(1).asOp)),
     "i32.sub" -> (args => i32.sub(args(0).asOp, args(1).asOp)),
     "i32.mul" -> (args => i32.mul(args(0).asOp, args(1).asOp)),
     "i32.div_s" -> (args => i32.div_s(args(0).asOp, args(1).asOp)),
     "i32.rem_s" -> (args => i32.rem_s(args(0).asOp, args(1).asOp)),
+    "i32.shl" -> (args => i32.shl(args(0).asOp, args(1).asOp)),
+    "i32.shr_s" -> (args => i32.shr_s(args(0).asOp, args(1).asOp)),
+    "i32.shr_u" -> (args => i32.shr_u(args(0).asOp, args(1).asOp)),
     "i32.eq" -> (args => i32.eq(args(0).asOp, args(1).asOp)),
     "i32.ne" -> (args => i32.ne(args(0).asOp, args(1).asOp)),
     "i32.lt_s" -> (args => i32.lt_s(args(0).asOp, args(1).asOp)),
@@ -615,7 +667,64 @@ object Ctx:
     "i32.gt_s" -> (args => i32.gt_s(args(0).asOp, args(1).asOp)),
     "i32.ge_s" -> (args => i32.ge_s(args(0).asOp, args(1).asOp)),
     "i32.eqz" -> (args => i32.eqz(args(0).asOp)),
+    "i32.reinterpret_f32" -> (args => i32.reinterpret_f32(args(0).asOp)),
+
+    "i64.const" -> (args => i64.const(args(0).asImm64)),
+    "i64.add" -> (args => i64.add(args(0).asOp, args(1).asOp)),
+    "i64.sub" -> (args => i64.sub(args(0).asOp, args(1).asOp)),
+    "i64.mul" -> (args => i64.mul(args(0).asOp, args(1).asOp)),
+    "i64.div_s" -> (args => i64.div_s(args(0).asOp, args(1).asOp)),
+    "i64.rem_s" -> (args => i64.rem_s(args(0).asOp, args(1).asOp)),
+    "i64.shl" -> (args => i64.shl(args(0).asOp, args(1).asOp)),
+    "i64.shr_s" -> (args => i64.shr_s(args(0).asOp, args(1).asOp)),
+    "i64.shr_u" -> (args => i64.shr_u(args(0).asOp, args(1).asOp)),
+    "i64.eq" -> (args => i64.eq(args(0).asOp, args(1).asOp)),
+    "i64.ne" -> (args => i64.ne(args(0).asOp, args(1).asOp)),
+    "i64.lt_s" -> (args => i64.lt_s(args(0).asOp, args(1).asOp)),
+    "i64.le_s" -> (args => i64.le_s(args(0).asOp, args(1).asOp)),
+    "i64.gt_s" -> (args => i64.gt_s(args(0).asOp, args(1).asOp)),
+    "i64.ge_s" -> (args => i64.ge_s(args(0).asOp, args(1).asOp)),
+    "i64.eqz" -> (args => i64.eqz(args(0).asOp)),
+    "i64.reinterpret_f64" -> (args => i64.reinterpret_f64(args(0).asOp)),
+
+    "f32.const" -> (args => f32.const(args(0).asImmF32)),
+    "f32.add" -> (args => f32.add(args(0).asOp, args(1).asOp)),
+    "f32.sub" -> (args => f32.sub(args(0).asOp, args(1).asOp)),
+    "f32.mul" -> (args => f32.mul(args(0).asOp, args(1).asOp)),
+    "f32.div" -> (args => f32.div(args(0).asOp, args(1).asOp)),
+    "f32.min" -> (args => f32.min(args(0).asOp, args(1).asOp)),
+    "f32.max" -> (args => f32.max(args(0).asOp, args(1).asOp)),
+    "f32.abs" -> (args => f32.abs(args(0).asOp)),
+    "f32.neg" -> (args => f32.neg(args(0).asOp)),
+    "f32.sqrt" -> (args => f32.sqrt(args(0).asOp)),
+    "f32.eq" -> (args => f32.eq(args(0).asOp, args(1).asOp)),
+    "f32.ne" -> (args => f32.ne(args(0).asOp, args(1).asOp)),
+    "f32.lt" -> (args => f32.lt(args(0).asOp, args(1).asOp)),
+    "f32.le" -> (args => f32.le(args(0).asOp, args(1).asOp)),
+    "f32.gt" -> (args => f32.gt(args(0).asOp, args(1).asOp)),
+    "f32.ge" -> (args => f32.ge(args(0).asOp, args(1).asOp)),
+    "f32.reinterpret_i32" -> (args => f32.reinterpret_i32(args(0).asOp)),
+
+    "f64.const" -> (args => f64.const(args(0).asImmF64)),
+    "f64.add" -> (args => f64.add(args(0).asOp, args(1).asOp)),
+    "f64.sub" -> (args => f64.sub(args(0).asOp, args(1).asOp)),
+    "f64.mul" -> (args => f64.mul(args(0).asOp, args(1).asOp)),
+    "f64.div" -> (args => f64.div(args(0).asOp, args(1).asOp)),
+    "f64.min" -> (args => f64.min(args(0).asOp, args(1).asOp)),
+    "f64.max" -> (args => f64.max(args(0).asOp, args(1).asOp)),
+    "f64.abs" -> (args => f64.abs(args(0).asOp)),
+    "f64.neg" -> (args => f64.neg(args(0).asOp)),
+    "f64.sqrt" -> (args => f64.sqrt(args(0).asOp)),
+    "f64.eq" -> (args => f64.eq(args(0).asOp, args(1).asOp)),
+    "f64.ne" -> (args => f64.ne(args(0).asOp, args(1).asOp)),
+    "f64.lt" -> (args => f64.lt(args(0).asOp, args(1).asOp)),
+    "f64.le" -> (args => f64.le(args(0).asOp, args(1).asOp)),
+    "f64.gt" -> (args => f64.gt(args(0).asOp, args(1).asOp)),
+    "f64.ge" -> (args => f64.ge(args(0).asOp, args(1).asOp)),
+    "f64.reinterpret_i64" -> (args => f64.reinterpret_i64(args(0).asOp)),
+
     "ref.i31" -> (args => ref.i31(args(0).asOp)),
+
     "i31.get_s" -> (args => i31.get_s(args(0).asOp)),
     "i31.get_u" -> (args => i31.get_u(args(0).asOp)),
   )

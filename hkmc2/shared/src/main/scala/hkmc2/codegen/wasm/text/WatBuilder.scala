@@ -10,7 +10,7 @@ import document.*
 import document.Document
 import js.CodeBuilder
 import semantics.*, Elaborator.State
-import syntax.Tree.{BoolLit, IntLit, StrLit, UnitLit, Ident}
+import syntax.Tree.{BoolLit, DecLit, IntLit, StrLit, UnitLit, Ident}
 import text.{Import as WasmImport, SlotSymbol as WasmSlotSymbol, Param as WasmParam}
 import Message.MessageContext
 
@@ -31,6 +31,26 @@ private def isBoxedAsI31(sym: Symbol, ctx: Ctx): Bool =
   val builtins = ctx.elabCtx.builtins
   (sym eq builtins.Int) || (sym eq builtins.Int31) || (sym eq builtins.Bool)
 
+extension (prim: PrimitiveType)
+  /** The Wasm numeric type this unboxed primitive is represented as. */
+  private[text] def wasmType: NumType = prim match
+    case PrimitiveType.Int32 => I32Type
+    case PrimitiveType.Int64 => I64Type
+    case PrimitiveType.Float32 => F32Type
+    case PrimitiveType.Float64 => F64Type
+
+extension (ty: ValType)
+  /** The neutral value of this Wasm value type, used to initialize a slot that has no explicit initializer, or `N` if
+    * it has none (a non-nullable reference) or the backend cannot build one yet (`v128`).
+    */
+  private[text] def zeroValue: Opt[Expr] = ty match
+    case refTy: RefType => Option.when(refTy.nullable)(Instructions.ref.`null`(refTy.heapType))
+    case I32Type => S(Instructions.i32.const(0))
+    case I64Type => S(Instructions.i64.const(0))
+    case F32Type => S(Instructions.f32.const(0))
+    case F64Type => S(Instructions.f64.const(0))
+    case V128Type => N
+
 extension (et: ErasedType)
   /** Returns the corresponding Wasm type for this [[ErasedType]]. */
   private[text] def wasmType(using Ctx, State): Opt[ValType] =
@@ -50,7 +70,7 @@ extension (et: ErasedType)
               if tpeSym eq State.unitSymbol then S(State.unitBlockMemberSymbol)
               else tpeSym.asBlkMember
             structSym.flatMap(ctx.getType).map(RefType(_, nullable = false))
-        case ErasedType.Primitive(PrimitiveType.Int32) => S(I32Type)
+        case ErasedType.Primitive(prim) => S(prim.wasmType)
         case _ => N
 
 extension (sym: WasmSlotSymbol)
@@ -368,13 +388,12 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
         case _ => arg
 
   /** Returns the default Wasm value for one struct field when eagerly constructing an object instance. */
-  private def defaultStructFieldValue(field: Field)(using Raise): Expr = field.ty match
-    case refTy: RefType if refTy.nullable => ref.`null`(refTy.heapType)
-    case refTy: RefType =>
-      lastWords(s"non-null ref field `${field.id}` requires an explicit initializer")
-    case I32Type => i32.const(0)
-    case other =>
-      lastWords(s"unsupported default field type `${other.toWat.mkString()}` for eager object construction")
+  private def defaultStructFieldValue(field: Field)(using Raise): Expr = field.ty.zeroValue.getOrElse:
+    field.ty match
+      case _: RefType =>
+        lastWords(s"non-null ref field `${field.id}` requires an explicit initializer")
+      case other =>
+        lastWords(s"unsupported default field type `${other.toWat.mkString()}` for eager object construction")
 
   /** Returns `1` when `scrutTypeInfo` is equal to or descends from `targetTypeInfo`, else `0`. */
   private def isSubtypeByTypeInfo(
@@ -1050,12 +1069,11 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
     if ctx.containsGlobal(sym) then return
     val exportName = sym.nme
     // Reference globals need to be nullable so that they have a valid initializer
-    val (valType, init): (ValType, Expr) = sym.localType match
-      case ty: RefType =>
-        val nullableTy = ty.copy(nullable = true)
-        nullableTy -> ref.`null`(nullableTy.heapType)
-      case I32Type => I32Type -> i32.const(0)
-      case ty => lastWords(s"unsupported session global type `${ty.toWat.mkString()}` for `$exportName`")
+    val valType: ValType = sym.localType match
+      case ty: RefType => ty.copy(nullable = true)
+      case ty => ty
+    val init = valType.zeroValue.getOrElse:
+      lastWords(s"unsupported session global type `${valType.toWat.mkString()}` for `$exportName`")
     val globalType = GlobalType(valType, mutable = true)
     val globalInfo = GlobalInfo(
       globalType = globalType,
@@ -1775,24 +1793,26 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
                 )
               body(ps.zip(args).zipWithIndex.map:
                 case ((declared, arg), idx) => resolveIntrinsicArg(intrName, idx, declared, arg))
-            case N =>
-              // * `Lowering` builds a `wasm.` path only for the names in its `specialBuiltinSymbols`, each of which is
-              // * either implemented as an instruction above or generated as an operator function here.
-              val expectedArity = wasmIntrinsicArities.getOrElse(
-                intrName,
-                lastWords(s"wasm intrinsic '$intrName' is declared but not implemented"),
-              )
-              if expectedArity =/= args.length then
-                return errExpr(
+            // * `Lowering` marks every function the prelude declares under `wasm` as an intrinsic, so a name that is
+            // * neither implemented as an instruction above nor generated as an operator function here is one the
+            // * prelude declares and the backend does not implement.
+            case N => wasmIntrinsicArities.get(intrName) match
+              case N =>
+                errExpr(
+                  Ls(msg"Wasm intrinsic '$intrName' is declared but not implemented" -> c.toLoc),
+                  extraInfo = S(c.toString),
+                )
+              case S(expectedArity) if expectedArity =/= args.length =>
+                errExpr(
                   Ls(msg"Wasm intrinsic '$intrName' called with incorrect arity (${args.length})" -> c.toLoc),
                   extraInfo = S(c.toString),
                 )
-              val funcIdx = getIntrinsic(intrName)
-              call(
-                funcidx = funcIdx,
-                operands = args.map(argument),
-                returnTypes = Seq(Result(RefType.anyref)),
-              )
+              case S(_) =>
+                call(
+                  funcidx = getIntrinsic(intrName),
+                  operands = args.map(argument),
+                  returnTypes = Seq(Result(RefType.anyref)),
+                )
         case N =>
           fun match
             case Value.MemberRef(l, _) =>
@@ -2009,11 +2029,11 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
       case _ => N
     loop(path, Nil)
 
-  /** Resolves the argument at position `idx` as an [[IntrinsicArg]], compiling it as an operand and recovering the
-    * integer literal it was written as, if it was written as one.
+  /** Resolves the argument at position `idx` as an [[IntrinsicArg]], recovering the numeric literal it was written
+    * as, if it was written as one.
     *
-    * `declared` is the type the prelude declares for the parameter. Conformance is only reported if the body actually
-    * reads the argument as an operand.
+    * `declared` is the type the prelude declares for the parameter. The argument is only compiled as an operand - and
+    * its conformance to `declared` only reported - if the intrinsic's body actually reads it as one.
     */
   private def resolveIntrinsicArg(
       intrName: Str,
@@ -2021,19 +2041,21 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
       declared: Opt[ErasedValueType],
       arg: Arg,
   )(using Ctx, FunctionCtx, Raise, SessionExportCtx): IntrinsicArg =
-    val operand = argument(arg)
-    val operandXtype = declared
-      .filter(_.wasmType.exists(expected => !operand.resultType.exists(_.isSubtypeOf(expected))))
-      .map(_.describe)
+    def compileOperand: (Expr, Opt[Str]) =
+      val operand = argument(arg)
+      operand -> declared
+        .filter(_.wasmType.exists(expected => !operand.resultType.exists(_.isSubtypeOf(expected))))
+        .map(_.describe)
     IntrinsicArg(
       intrName,
       idx,
-      operand,
-      operandXtype,
+      compileOperand,
       arg.value.litThroughUncheckedCasts match
         case S(Value.Lit(IntLit(value))) if arg.spread.isEmpty => S(value)
+        case S(Value.Lit(DecLit(value))) if arg.spread.isEmpty => S(value)
         case _ => N,
       arg.value.toLoc,
+      arg.value.toString,
     )
   end resolveIntrinsicArg
 
@@ -2417,7 +2439,10 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
         end match
 
       case Return(res) =>
-        val resWat = result(res)
+        val operand = result(res)
+        // Storage and calling conventions may widen a reference (e.g. a singleton's nullable global).
+        // Restore the IR value's type at the return boundary so Block.returnType also describes the emitted value.
+        val resWat = res.erasedValueType.flatMap(_.wasmType).fold(operand)(castConserve(operand, _))
         val returned = resWat.resultType match
           case S(refTy: RefType) =>
             refTy.heapType match
@@ -2810,16 +2835,19 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
 
       // Compile the entry function under a dedicated local scope so that any temp locals introduced
       // during codegen (e.g., via `local.tee`) are declared in the entry function.
-      val (entryFnExpr, entryFnCtx) = genFuncBody(Nil, thisSym = N):
+      val (entryBody, entryFnCtx) = genFuncBody(Nil, thisSym = N):
         normalizeValueExprs(block(p.main), p.main.isAbortive).mergeAsBlock.getOrElse(nop)
 
       val entrySym = BlockMemberSymbol("entry", Nil)
 
-      val entryResultTypes = Seq:
-        Result:
-          entryFnExpr.resultTypes match
-            case Seq(ty: ValType) => ty
-            case _ => RefType.anyref
+      val (entryFnExpr, entryResultType) = ctx.elabCtx.givenIn:
+        Block.returnType(p.main).map(_.canonicalize) match
+          case S(ErasedType.Incompatible(lhs, rhs)) =>
+            errExpr(Ls(msg"Wasm entry function has incompatible result types `${lhs.describe}` and `${rhs.describe}`" -> N),
+              extraInfo = S(entryBody.toWat.mkString())) -> RefType.anyref
+          // A block with no returns places no constraint on the REPL's single-result signature.
+          case ty => entryBody -> ty.flatMap(_.wasmType).getOrElse(RefType.anyref)
+      val entryResultTypes = Seq(Result(entryResultType))
 
       val entryFnTy = ctx.addType(TypeInfo(
         sym = TempSymbol(N, erasedType = N, entrySym.nme),

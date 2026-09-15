@@ -138,139 +138,177 @@ object Instructions:
     resultType = S(UnreachableType),
   )
 
-  object i32:
-    /** Creates an `i32.const` instruction. */
-    def const(value: Int): FoldedInstr = FoldedInstr(
-      mnemonic = "i32.const",
-      instrargs = Seq(doc"$value"),
-      stackargs = Seq.empty,
-      resultType = S(I32Type),
-    )
+  /** The instructions shared by every Wasm numeric type family (`i32`, `i64`, `f32` and `f64`).
+    *
+    * All four families have the same instruction shape: the mnemonic is the type's own prefix followed by the
+    * operation name, the operands are the stack arguments, and the result is a value of either the family's own type
+    * (arithmetic) or `i32` (comparisons and tests). Deriving the families from a common base keeps them from drifting
+    * apart as instructions are added, and leaves only the genuinely per-family parts spelled out: the `const`
+    * immediate, the conversions from another family's type, and the operations one of the integer and floating-point
+    * types has and the other does not.
+    *
+    * Each instruction below is created by the method of the same name, on the object of the family it belongs to:
+    * `i32.add(l, r)` creates an `i32.add`, `f64.add(l, r)` an `f64.add`, and so on.
+    */
+  sealed abstract class NumInstrs(valType: NumType):
 
-    /** Creates an `i32.add` instruction. */
-    def add(lhs: Expr, rhs: Expr): FoldedInstr = FoldedInstr(
-      mnemonic = "i32.add",
-      instrargs = Seq.empty,
-      stackargs = Seq(lhs, rhs),
-      resultType = S(I32Type),
-    )
+    /** The mnemonic prefix shared by this family's instructions, e.g. `i32`. */
+    private val prefix: Str = valType.toWat.mkString()
 
-    /** Creates an `i32.add` instruction. */
-    def eq(lhs: Expr, rhs: Expr): FoldedInstr = FoldedInstr(
-      mnemonic = "i32.eq",
-      instrargs = Seq.empty,
-      stackargs = Seq(lhs, rhs),
-      resultType = S(
-        (lhs.resultType, rhs.resultType) match
-          case (UnreachableType, _) | (_, UnreachableType) => UnreachableType
-          case _ => I32Type,
-      ),
-    )
+    /** The result type of an instruction that nominally yields a `nominal`-typed value from `operands`.
+      *
+      * An operand that never yields a value makes the whole instruction unreachable, so `nominal` would misdescribe
+      * what this instruction leaves on the stack.
+      */
+    private def resultTypeOf(nominal: ValType, operands: Seq[Expr]): Type =
+      if operands.exists(_.resultTypes.exists(_ is UnreachableType)) then UnreachableType else nominal
 
-    /** Creates an `i32.ge_u` instruction (greater than or equal, unsigned). */
-    def ge_u(lhs: Expr, rhs: Expr): FoldedInstr = FoldedInstr(
-      mnemonic = "i32.ge_u",
-      instrargs = Seq.empty,
-      stackargs = Seq(lhs, rhs),
-      resultType = S(I32Type),
-    )
-
-    /** Creates an `i32.and` instruction. */
-    def and(lhs: Expr, rhs: Expr): FoldedInstr = FoldedInstr(
-      mnemonic = "i32.and",
-      instrargs = Seq.empty,
-      stackargs = Seq(lhs, rhs),
-      resultType = S(I32Type),
-    )
-
-    /** Creates an `i32.or` instruction. */
-    def or(lhs: Expr, rhs: Expr): FoldedInstr = FoldedInstr(
-      mnemonic = "i32.or",
-      instrargs = Seq.empty,
-      stackargs = Seq(lhs, rhs),
-      resultType = S(I32Type),
-    )
-
-    /** Creates an `i32.sub` instruction. */
-    def sub(lhs: Expr, rhs: Expr): FoldedInstr = FoldedInstr(
-      mnemonic = "i32.sub",
-      instrargs = Seq.empty,
-      stackargs = Seq(lhs, rhs),
-      resultType = S(I32Type),
-    )
-
-    /** Creates an `i32.mul` instruction. */
-    def mul(lhs: Expr, rhs: Expr): FoldedInstr = FoldedInstr(
-      mnemonic = "i32.mul",
-      instrargs = Seq.empty,
-      stackargs = Seq(lhs, rhs),
-      resultType = S(I32Type),
-    )
-
-    /** Creates an `i32.div_s` instruction. */
-    def div_s(lhs: Expr, rhs: Expr): FoldedInstr = FoldedInstr(
-      mnemonic = "i32.div_s",
-      instrargs = Seq.empty,
-      stackargs = Seq(lhs, rhs),
-      resultType = S(I32Type),
-    )
-
-    /** Creates an `i32.rem_s` instruction. */
-    def rem_s(lhs: Expr, rhs: Expr): FoldedInstr = FoldedInstr(
-      mnemonic = "i32.rem_s",
-      instrargs = Seq.empty,
-      stackargs = Seq(lhs, rhs),
-      resultType = S(I32Type),
-    )
-
-    /** Creates an `i32.ne` instruction. */
-    def ne(lhs: Expr, rhs: Expr): FoldedInstr = FoldedInstr(
-      mnemonic = "i32.ne",
-      instrargs = Seq.empty,
-      stackargs = Seq(lhs, rhs),
-      resultType = S(I32Type),
-    )
-
-    /** Creates an `i32.lt_s` instruction. */
-    def lt_s(lhs: Expr, rhs: Expr): FoldedInstr = FoldedInstr(
-      mnemonic = "i32.lt_s",
-      instrargs = Seq.empty,
-      stackargs = Seq(lhs, rhs),
-      resultType = S(I32Type),
-    )
-
-    /** Creates an `i32.le_s` instruction. */
-    def le_s(lhs: Expr, rhs: Expr): FoldedInstr = FoldedInstr(
-      mnemonic = "i32.le_s",
-      instrargs = Seq.empty,
-      stackargs = Seq(lhs, rhs),
-      resultType = S(I32Type),
-    )
-
-    /** Creates an `i32.gt_s` instruction. */
-    def gt_s(lhs: Expr, rhs: Expr): FoldedInstr = FoldedInstr(
-      mnemonic = "i32.gt_s",
-      instrargs = Seq.empty,
-      stackargs = Seq(lhs, rhs),
-      resultType = S(I32Type),
-    )
-
-    /** Creates an `i32.ge_s` instruction. */
-    def ge_s(lhs: Expr, rhs: Expr): FoldedInstr = FoldedInstr(
-      mnemonic = "i32.ge_s",
-      instrargs = Seq.empty,
-      stackargs = Seq(lhs, rhs),
-      resultType = S(I32Type),
-    )
-
-    /** Creates an `i32.eqz` instruction. */
-    def eqz(value: Expr): FoldedInstr = FoldedInstr(
-      mnemonic = "i32.eqz",
+    /** Creates a unary instruction of this family nominally yielding a `nominal`-typed value. */
+    private def unary(op: Str, nominal: ValType)(value: Expr): FoldedInstr = FoldedInstr(
+      mnemonic = s"$prefix.$op",
       instrargs = Seq.empty,
       stackargs = Seq(value),
-      resultType = S(I32Type),
+      resultType = S(resultTypeOf(nominal, Seq(value))),
     )
+
+    /** Creates a binary instruction of this family nominally yielding a `nominal`-typed value. */
+    private def binary(op: Str, nominal: ValType)(lhs: Expr, rhs: Expr): FoldedInstr = FoldedInstr(
+      mnemonic = s"$prefix.$op",
+      instrargs = Seq.empty,
+      stackargs = Seq(lhs, rhs),
+      resultType = S(resultTypeOf(nominal, Seq(lhs, rhs))),
+    )
+
+    /** Creates this family's `const` instruction, carrying the already-rendered immediate `imm`. */
+    protected def constInstr(imm: Str): FoldedInstr = FoldedInstr(
+      mnemonic = s"$prefix.const",
+      instrargs = Seq(doc"$imm"),
+      stackargs = Seq.empty,
+      resultType = S(valType),
+    )
+
+    /** Creates a unary arithmetic instruction, which yields a value of this family's own type. */
+    protected def unaryArith(op: Str): Expr => FoldedInstr = unary(op, valType)
+
+    /** Creates a binary arithmetic instruction, which yields a value of this family's own type. */
+    protected def binaryArith(op: Str): (Expr, Expr) => FoldedInstr = binary(op, valType)
+
+    /** Creates a test instruction, which yields the `i32` `0`/`1` the test evaluates to. */
+    protected def test(op: Str): Expr => FoldedInstr = unary(op, I32Type)
+
+    /** Creates a comparison instruction, which yields the `i32` `0`/`1` the comparison evaluates to. */
+    protected def comparison(op: Str): (Expr, Expr) => FoldedInstr = binary(op, I32Type)
+
+    /** Creates a conversion instruction, which yields a value of this family's own type from an operand of another. */
+    protected def conversion(op: Str): Expr => FoldedInstr = unary(op, valType)
+
+    def add(lhs: Expr, rhs: Expr): FoldedInstr = binaryArith("add")(lhs, rhs)
+    def sub(lhs: Expr, rhs: Expr): FoldedInstr = binaryArith("sub")(lhs, rhs)
+    def mul(lhs: Expr, rhs: Expr): FoldedInstr = binaryArith("mul")(lhs, rhs)
+
+    def eq(lhs: Expr, rhs: Expr): FoldedInstr = comparison("eq")(lhs, rhs)
+    def ne(lhs: Expr, rhs: Expr): FoldedInstr = comparison("ne")(lhs, rhs)
+  end NumInstrs
+
+  /** The instructions of an integer type family (`i32` and `i64`).
+    *
+    * Integer division, remainder, right shift and ordering come in a signed and an unsigned flavor; only the ones
+    * the backend currently emits are exposed.
+    */
+  sealed abstract class IntInstrs(valType: NumType) extends NumInstrs(valType):
+
+    def div_s(lhs: Expr, rhs: Expr): FoldedInstr = binaryArith("div_s")(lhs, rhs)
+    def rem_s(lhs: Expr, rhs: Expr): FoldedInstr = binaryArith("rem_s")(lhs, rhs)
+
+    def and(lhs: Expr, rhs: Expr): FoldedInstr = binaryArith("and")(lhs, rhs)
+    def or(lhs: Expr, rhs: Expr): FoldedInstr = binaryArith("or")(lhs, rhs)
+    def shl(lhs: Expr, rhs: Expr): FoldedInstr = binaryArith("shl")(lhs, rhs)
+    def shr_s(lhs: Expr, rhs: Expr): FoldedInstr = binaryArith("shr_s")(lhs, rhs)
+    def shr_u(lhs: Expr, rhs: Expr): FoldedInstr = binaryArith("shr_u")(lhs, rhs)
+
+    def lt_s(lhs: Expr, rhs: Expr): FoldedInstr = comparison("lt_s")(lhs, rhs)
+    def le_s(lhs: Expr, rhs: Expr): FoldedInstr = comparison("le_s")(lhs, rhs)
+    def gt_s(lhs: Expr, rhs: Expr): FoldedInstr = comparison("gt_s")(lhs, rhs)
+    def ge_s(lhs: Expr, rhs: Expr): FoldedInstr = comparison("ge_s")(lhs, rhs)
+
+    /** Creates this family's `ge_u` instruction (greater than or equal, unsigned). */
+    def ge_u(lhs: Expr, rhs: Expr): FoldedInstr = comparison("ge_u")(lhs, rhs)
+
+    /** Creates this family's `eqz` instruction, which tests its operand against zero. */
+    def eqz(value: Expr): FoldedInstr = test("eqz")(value)
+  end IntInstrs
+
+  /** The instructions of a floating-point type family (`f32` and `f64`).
+    *
+    * Floats have no remainder or `eqz` instruction, and their comparisons carry no signedness; in exchange they have
+    * the unary operations below, which have no integer counterpart - an integer negation is written as a subtraction
+    * from zero instead.
+    */
+  sealed abstract class FloatInstrs(valType: NumType) extends NumInstrs(valType):
+
+    def div(lhs: Expr, rhs: Expr): FoldedInstr = binaryArith("div")(lhs, rhs)
+    def min(lhs: Expr, rhs: Expr): FoldedInstr = binaryArith("min")(lhs, rhs)
+    def max(lhs: Expr, rhs: Expr): FoldedInstr = binaryArith("max")(lhs, rhs)
+
+    def abs(value: Expr): FoldedInstr = unaryArith("abs")(value)
+    def neg(value: Expr): FoldedInstr = unaryArith("neg")(value)
+    def sqrt(value: Expr): FoldedInstr = unaryArith("sqrt")(value)
+
+    def lt(lhs: Expr, rhs: Expr): FoldedInstr = comparison("lt")(lhs, rhs)
+    def le(lhs: Expr, rhs: Expr): FoldedInstr = comparison("le")(lhs, rhs)
+    def gt(lhs: Expr, rhs: Expr): FoldedInstr = comparison("gt")(lhs, rhs)
+    def ge(lhs: Expr, rhs: Expr): FoldedInstr = comparison("ge")(lhs, rhs)
+  end FloatInstrs
+
+  object FloatInstrs:
+    /** Renders `value` as a WAT floating-point literal.
+      *
+      * Scala's own rendering is WAT-compatible for every finite value - the two agree on decimal and exponent syntax
+      * - but not for the three values that have no decimal spelling at all, which WAT writes as `inf`, `-inf` and
+      * `nan`.
+      */
+    def litWat(value: Float | Double): Str =
+      val widened = value match
+        case f: Float => f.toDouble
+        case d: Double => d
+      if widened.isNaN then "nan"
+      else if widened.isPosInfinity then "inf"
+      else if widened.isNegInfinity then "-inf"
+      // * Rendered from the operand itself rather than from `widened`, so that an `f32` is spelled in the shortest
+      // * form that round-trips at *its* precision, e.g. `0.1` rather than the widened `0.10000000149011612`.
+      else value.toString
+
+  object i32 extends IntInstrs(I32Type):
+    /** Creates an `i32.const` instruction. */
+    def const(value: Int): FoldedInstr = constInstr(value.toString)
+
+    /** Creates an `i32.reinterpret_f32` instruction, which reads the bits of an `f32` as an `i32`. */
+    def reinterpret_f32(value: Expr): FoldedInstr = conversion("reinterpret_f32")(value)
   end i32
+
+  object i64 extends IntInstrs(I64Type):
+    /** Creates an `i64.const` instruction. */
+    def const(value: Long): FoldedInstr = constInstr(value.toString)
+
+    /** Creates an `i64.reinterpret_f64` instruction, which reads the bits of an `f64` as an `i64`. */
+    def reinterpret_f64(value: Expr): FoldedInstr = conversion("reinterpret_f64")(value)
+  end i64
+
+  object f32 extends FloatInstrs(F32Type):
+    /** Creates an `f32.const` instruction. */
+    def const(value: Float): FoldedInstr = constInstr(FloatInstrs.litWat(value))
+
+    /** Creates an `f32.reinterpret_i32` instruction, which reads the bits of an `i32` as an `f32`. */
+    def reinterpret_i32(value: Expr): FoldedInstr = conversion("reinterpret_i32")(value)
+  end f32
+
+  object f64 extends FloatInstrs(F64Type):
+    /** Creates an `f64.const` instruction. */
+    def const(value: Double): FoldedInstr = constInstr(FloatInstrs.litWat(value))
+
+    /** Creates an `f64.reinterpret_i64` instruction, which reads the bits of an `i64` as an `f64`. */
+    def reinterpret_i64(value: Expr): FoldedInstr = conversion("reinterpret_i64")(value)
+  end f64
 
   object array:
     /** Creates an `array.len` instruction. */
