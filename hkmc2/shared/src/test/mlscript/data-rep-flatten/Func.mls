@@ -544,3 +544,104 @@ private fun h(x) = new D(x)
 //│   return tmp
 //│ };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+
+:ssjs
+private fun foo(x) =
+  if x then new C(0) else new D(0)
+fun bar(x, y) =
+  let t = foo(x)
+  let m = if y then new Foo(t, 0) else new Bar(t)
+  @matchShapes(Foo(C(0), 0), Bar(C(0)), Foo(D(0), 0), Bar(D(0))) shape.match of m,
+    () => 1
+    () => 2
+    () => 3
+    () => 4
+//│ >>> start data-rep-flatten collection-phase
+//│ data-rep-flatten collection-phase > track construction of Foo@5, Bar@6 in bar
+//│ data-rep-flatten collection-phase > track consumption at match@7 in bar
+//│ <<< end data-rep-flatten collection-phase
+//│ >>> start data-rep-flatten web-computation-phase
+//│ data-rep-flatten web-computation-phase > web 0:
+//│ data-rep-flatten web-computation-phase >   producers: Foo@5, Bar@6
+//│ data-rep-flatten web-computation-phase >   pattern matches: match@7
+//│ <<< end data-rep-flatten web-computation-phase
+//│ >>> start data-rep-flatten transform-phase
+//│ data-rep-flatten transform-phase > allocated tag 0 for C(x: 0)
+//│ data-rep-flatten transform-phase > allocated tag 1 for D(x: 0)
+//│ data-rep-flatten transform-phase > allocated tag 2 for Foo(x: C(x: 0), y: 0)
+//│ data-rep-flatten transform-phase > allocated tag 3 for Foo(x: D(x: 0), y: 0)
+//│ data-rep-flatten transform-phase > allocated tag 4 for Bar(x: C(x: 0))
+//│ data-rep-flatten transform-phase > allocated tag 5 for Bar(x: D(x: 0))
+//│ data-rep-flatten transform-phase > match shapes Foo(x: C(x: 0), y: 0), Bar(x: C(x: 0)), Foo(x: D(x: 0), y: 0), Bar(x: D(x: 0)) against Foo(x: C(x: 0), y: 0)@2, Foo(x: D(x: 0), y: 0)@3, Bar(x: C(x: 0))@4, Bar(x: D(x: 0))@5
+//│ <<< end data-rep-flatten transform-phase
+//│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
+//│ let bar, foo;
+//│ foo = function foo(x) {
+//│   runtime.checkArgs("foo", 1, true, arguments.length);
+//│   if (x === true) {
+//│     let tmp;
+//│     tmp = (new C1.class(0));
+//│     tmp.__tag = 0;
+//│     return tmp
+//│   }
+//│   {
+//│     let tmp;
+//│     tmp = (new D1.class(0));
+//│     tmp.__tag = 1;
+//│     return tmp;
+//│   }
+//│ };
+//│ bar = function bar(x, y) {
+//│   runtime.checkArgs("bar", 2, true, arguments.length);
+//│   let tmp, inlinedVal;
+//│   if (x === true) {
+//│     let tmp1;
+//│     tmp1 = (new C1.class(0));
+//│     tmp1.__tag = 0;
+//│     inlinedVal = tmp1;
+//│   } else {
+//│     let tmp1;
+//│     tmp1 = (new D1.class(0));
+//│     tmp1.__tag = 1;
+//│     inlinedVal = tmp1;
+//│   }
+//│   if (y === true) {
+//│     let tmp1, tmp2;
+//│     tmp1 = (new Foo1.class(inlinedVal, 0));
+//│     tmp2 = inlinedVal.__tag === 0;
+//│     if (tmp2 === true) {
+//│       tmp1.__tag = 2;
+//│     } else {
+//│       let tmp3;
+//│       tmp3 = inlinedVal.__tag === 1;
+//│       if (tmp3 === true) {
+//│         tmp1.__tag = 3;
+//│       }
+//│     }
+//│     tmp = tmp1;
+//│   } else {
+//│     let tmp1, tmp2;
+//│     tmp1 = (new Bar1.class(inlinedVal));
+//│     tmp2 = inlinedVal.__tag === 0;
+//│     if (tmp2 === true) {
+//│       tmp1.__tag = 4;
+//│     } else {
+//│       let tmp3;
+//│       tmp3 = inlinedVal.__tag === 1;
+//│       if (tmp3 === true) {
+//│         tmp1.__tag = 5;
+//│       }
+//│     }
+//│     tmp = tmp1;
+//│   }
+//│   if (tmp.__tag === 2) {
+//│     return 1
+//│   } else if (tmp.__tag === 3) {
+//│     return 3
+//│   } else if (tmp.__tag === 4) {
+//│     return 2
+//│   } else if (tmp.__tag === 5) { return 4 }
+//│   return runtime.Unit;
+//│ };
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
