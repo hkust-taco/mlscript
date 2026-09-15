@@ -2478,8 +2478,10 @@ extends Importer:
   
   def param(t: Tree, inUsing: Bool, inDataClass: Bool): Ctxl[Diagnostic \/ (Param, Opt[SpreadKind], Ls[Str])] =
     t.desugared.asParam(inUsing).map:
-      case pt @ ParamTree(flags, id, sign, spd, modifiers) =>
+      case pt @ ParamTree(flags, id, sign, spd, modifiers, rscModifiers) =>
         log(s"Elaborating ParamTree: ${pt}")
+        rscModifiers.foreach: kw =>
+          raise(ErrorReport(msg"Resource modifiers apply to types, not to parameters." -> kw.toLoc :: Nil))
         val flg = flags.copy(isVal = flags.isVal || inDataClass)
         val (canonicalId, aliases) = symbolicSuffixBase(id.name) match
           case S(base) =>

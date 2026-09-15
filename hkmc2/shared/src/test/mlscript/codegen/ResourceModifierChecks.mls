@@ -139,3 +139,80 @@ fun sig = C()
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define sig⁰ as fun sig¹(): rsc? C² { return (C¹() as! rsc? C²) }; end
 
+
+// A resource modifier on a parameter (rather than on its type) is rejected, and the
+// parameter is kept.
+
+:ge
+class Box(rsc val x: C)
+//│ ╔══[COMPILATION ERROR] Resource modifiers apply to types, not to parameters.
+//│ ║  l.147: 	class Box(rsc val x: C)
+//│ ╙──       	          ^^^
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define Box⁰ as class Box² {
+//│   val x⁰: C²;
+//│   constructor Box¹(x: C²) { define x⁰ as val x¹: C² = x; end }
+//│ };
+//│ end
+
+:ge
+fun fp(rsc x: C) = x
+//│ ╔══[COMPILATION ERROR] Resource modifiers apply to types, not to parameters.
+//│ ║  l.159: 	fun fp(rsc x: C) = x
+//│ ╙──       	       ^^^
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define fp⁰ as fun fp¹(x: C²): ? { return x }; end
+
+
+// In a contextual parameter list a bare tree is the parameter's type, so a resource
+// modifier written there belongs to the type rather than to the parameter.
+
+fun fu1(using rsc C) = 0
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define fu1⁰ as fun fu1¹(tmp: rsc C²): ? { return 0 }; end
+
+fun fu2(using x: rsc C) = x
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define fu2⁰ as fun fu2¹(x: rsc C²): ? { return x }; end
+
+// Naming the parameter after the modifier makes the whole tree the parameter's type,
+// which is then rejected as a malformed type rather than as a misplaced modifier.
+
+:ge
+fun fu3(using rsc x: C) = 0
+//│ ╔══[COMPILATION ERROR] Resource modifiers apply to types, not to parameters.
+//│ ║  l.182: 	fun fu3(using rsc x: C) = 0
+//│ ╙──       	              ^^^
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define fu3⁰ as fun fu3¹(x: C²): ? { return 0 }; end
+
+// Every resource modifier written on a parameter is reported separately.
+
+:ge
+fun fm(rsc rsc? x: C) = x
+//│ ╔══[COMPILATION ERROR] Resource modifiers apply to types, not to parameters.
+//│ ║  l.192: 	fun fm(rsc rsc? x: C) = x
+//│ ╙──       	       ^^^
+//│ ╔══[COMPILATION ERROR] Resource modifiers apply to types, not to parameters.
+//│ ║  l.192: 	fun fm(rsc rsc? x: C) = x
+//│ ╙──       	           ^^^^
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define fm⁰ as fun fm¹(x: C²): ? { return x }; end
+
+
+// A resource modifier in a contextual parameter list applies to the type it is written
+// on, even when that type is not a bare identifier.
+
+fun fc1(using rsc (C)) = 0
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define fc1⁰ as fun fc1¹(tmp: rsc C²): ? { return 0 }; end
+
+// A spread parameter is named, so a modifier written on it is the parameter's.
+
+:ge
+fun fs1(using rsc ...a) = 0
+//│ ╔══[COMPILATION ERROR] Resource modifiers apply to types, not to parameters.
+//│ ║  l.213: 	fun fs1(using rsc ...a) = 0
+//│ ╙──       	              ^^^
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define fs1⁰ as fun fs1¹(...a: ?): ? { return 0 }; end

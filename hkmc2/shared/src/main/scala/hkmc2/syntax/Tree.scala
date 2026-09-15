@@ -356,38 +356,49 @@ enum Tree extends AutoLocated:
    * @param inUsing whether the parameter is in a `using` parameter list
    */
   def asParam(inUsing: Bool): Diagnostic \/ ParamTree =
+    // * Whether a modifier wrapping `t` modifies the parameter rather than its type. Outside a contextual
+    // * parameter list it always does; inside one, only a named parameter is unambiguous - anything else is
+    // * written as a bare type, so the modifier belongs to that type instead.
+    def modifiesParam(t: Tree): Bool = !inUsing || (t match
+      case InfixApp(_: Ident, Keywrd(Keyword.`:`), _) | SpreadParam(_, _) => true
+      case _ => false)
     @tailrec
-    def go(t: Tree, flags: FldFlags, modifiers: Set[DeclKind]): Diagnostic \/ ParamTree = t match
+    def go(t: Tree, flags: FldFlags, modifiers: Set[DeclKind], rscMods: Ls[Keywrd[?]]): Diagnostic \/ ParamTree = t match
       // * Base Cases.
       // fun f(_)
       case und: Under => 
-        R(ParamTree(flags, new Ident("_").withLocOf(und), N, N, modifiers))
+        R(ParamTree(flags, new Ident("_").withLocOf(und), N, N, modifiers, rscMods))
       // fun f(a)
       case id: Ident if !inUsing =>
-        R(ParamTree(flags, id, N, N, modifiers))
+        R(ParamTree(flags, id, N, N, modifiers, rscMods))
       // fun f(a: A)
       case InfixApp(id: Ident, Keywrd(Keyword.`:`), sign) =>
-        R(ParamTree(flags, id, S(sign), N, modifiers))
+        R(ParamTree(flags, id, S(sign), N, modifiers, rscMods))
       // fun f(..a) | fun f(...a)
       case SpreadParam(id, spd) =>
-        R(ParamTree(flags, id, N, S(spd), modifiers))
+        R(ParamTree(flags, id, N, S(spd), modifiers, rscMods))
       
       // * Unwrapping Cases
       // fun f(module <...>)
       case TypeDef(Mod, inner, N) =>
-        go(inner, flags, modifiers + Mod)
+        go(inner, flags, modifiers + Mod, rscMods)
       // fun f(pattern <...>)
       case TypeDef(Pat, inner, N) =>
-        go(inner, flags.copy(pat = true), modifiers + Pat)
+        go(inner, flags.copy(pat = true), modifiers + Pat, rscMods)
       // class C(val <...>)
       case TermDef(ImmutVal, inner, _) =>
-        go(inner, flags.copy(isVal = true), modifiers + ImmutVal)
+        go(inner, flags.copy(isVal = true), modifiers + ImmutVal, rscMods)
       // class C(mut val <...>)
       case TermDef(MutVal, inner, _) =>
-        go(inner, flags.copy(isVal = true, mut = true), modifiers + MutVal)
+        go(inner, flags.copy(isVal = true, mut = true), modifiers + MutVal, rscMods)
       // fun f(using <...>)
       case TermDef(Ins, inner, N) =>
-        go(inner, flags, modifiers + Ins)
+        go(inner, flags, modifiers + Ins, rscMods)
+      // fun f(rsc <...>) | class C(rsc val <...>)
+      // * This arm catches invalid usages of `rsc` in parameters - the `rsc` modifier is recorded in the `ParamTree`
+      // * (to preserve class/function parameters for later stages) and the elaborator will reject it as invalid.
+      case Modified(kw @ Keywrd(Keyword.`rsc` | Keyword.`rsc?`), inner) if modifiesParam(inner) =>
+        go(inner, flags, modifiers, rscMods :+ kw)
       
       // * Base Case (for `using` clause)
       // fun f(using A)
@@ -396,14 +407,14 @@ enum Tree extends AutoLocated:
         // understood as a type for unnamed contextual parameters, as
         // opposed to that an identifier is understood as the identifier
         // for a regular parameter list.
-        R(ParamTree(flags, Ident(""), S(ty), N, modifiers))
+        R(ParamTree(flags, Ident(""), S(ty), N, modifiers, rscMods))
       
       // * Default Case
       case _ => L:
         ErrorReport:
           msg"Expected a valid parameter, found ${this.describe}" -> this.toLoc :: Nil
     
-    go(this, flags = FldFlags.empty, modifiers = Set.empty)
+    go(this, flags = FldFlags.empty, modifiers = Set.empty, rscMods = Nil)
 
   def isModified(modifier: Keyword | DeclKind): Bool = this match
     case td @ Tree.TypeDef(m, head, N) =>
@@ -439,10 +450,13 @@ object Tree:
  * A parameter yet to be elaborated, which is different from
  * semantics.Param. It merely contains the information directly
  * extracted from the syntax tree.
+ *
+ * @param rscModifiers the resource modifiers written on the parameter itself rather than on its type. `asParam`
+ *                     strips them so that the parameter is kept, and the elaborator rejects them.
  */
 case class ParamTree(
   flags: FldFlags, ident: Ident, sign: Opt[Tree], 
-  spd: Opt[SpreadKind], modifiers: Set[DeclKind]
+  spd: Opt[SpreadKind], modifiers: Set[DeclKind], rscModifiers: Ls[Keywrd[?]]
 )
 
 object SpreadParam:
