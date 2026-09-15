@@ -22,6 +22,10 @@ enum PrimitiveType:
     case Float32 => ctx.builtins.Float32
     case Float64 => ctx.builtins.Float64
 
+object PrimitiveType:
+  /** The primitive type whose symbol is `sym`, if any. */
+  def of(sym: TypeSymbol)(using Ctx, State): Opt[PrimitiveType] = values.find(_.sym === sym)
+
 object ErasedType:
   /** A canonicalized reference type.
     *
@@ -498,36 +502,36 @@ object CanonicalErasedValueType:
     * - `rsc` is true if this is a resource type.
     */
   def apply(rsc: Opt[Bool], tpeSym: TypeSymbol)(using Ctx, State): CanonicalErasedValueType =
-    /** Resolves through an arbitrary chain of type aliases to the type symbols the alias denotes.
-      *
-      * A union alias denotes each of its members, so the result is a list; every other resolvable alias denotes a
-      * single symbol. Type arguments are erased along the way, so `type Opt[A] = Some[A] | None` resolves to
-      * `Some :: None :: Nil`.
-      *
-      * If the chain is not defined (e.g. in `declare type ...`), is cyclic, or contains a member that is itself
-      * unresolvable, `sym` is returned unchanged.
-      */
-    def resolveTpeSymAlias: Ls[TypeSymbol] =
-      // * Resolves a single type symbol, or `N` if it is an alias that cannot be resolved.
-      def loop(cur: TypeSymbol, seen: Set[TypeSymbol]): Opt[Ls[TypeSymbol]] = cur match
-        case als: TypeAliasSymbol =>
-          if seen(als) then N
-          else als.defn.flatMap(_.rhs).flatMap(alternatives(_, seen + als))
-        case base => S(base :: Nil)
-      // * Resolves the alternatives denoted by the right-hand side of an alias, flattening nested unions.
-      // * Only unions are expanded: an intersection would call for a GLB, which the erased lattice cannot express.
-      def alternatives(tpe: Term, seen: Set[TypeSymbol]): Opt[Ls[TypeSymbol]] = tpe match
-        case Term.CompType(lhs, rhs, true) =>
-          for
-            ls <- alternatives(lhs, seen)
-            rs <- alternatives(rhs, seen)
-          yield ls ::: rs
-        case _ => tpe.symbol.flatMap(_.asTpe).flatMap(loop(_, seen))
-      loop(tpeSym, Set.empty).getOrElse(tpeSym :: Nil)
-    
     // * A union alias denotes each of its members, and erases to their LUB; every other symbol resolves to itself
     // * or to a single alias target.
-    resolveTpeSymAlias.map(resolved(rsc, _)).reduceLeft((lhs, rhs) => ErasedType.lub(lhs, rhs))
+    resolveTpeSymAlias(tpeSym).map(resolved(rsc, _)).reduceLeft((lhs, rhs) => ErasedType.lub(lhs, rhs))
+
+  /** Resolves through an arbitrary chain of type aliases to the type symbols the alias denotes.
+    *
+    * A union alias denotes each of its members, so the result is a list; every other resolvable alias denotes a
+    * single symbol. Type arguments are erased along the way, so `type Opt[A] = Some[A] | None` resolves to
+    * `Some :: None :: Nil`.
+    *
+    * If the chain is not defined (e.g. in `declare type ...`), is cyclic, or contains a member that is itself
+    * unresolvable, `tpeSym` is returned unchanged.
+    */
+  def resolveTpeSymAlias(tpeSym: TypeSymbol): Ls[TypeSymbol] =
+    // * Resolves a single type symbol, or `N` if it is an alias that cannot be resolved.
+    def loop(cur: TypeSymbol, seen: Set[TypeSymbol]): Opt[Ls[TypeSymbol]] = cur match
+      case als: TypeAliasSymbol =>
+        if seen(als) then N
+        else als.defn.flatMap(_.rhs).flatMap(alternatives(_, seen + als))
+      case base => S(base :: Nil)
+    // * Resolves the alternatives denoted by the right-hand side of an alias, flattening nested unions.
+    // * Only unions are expanded: an intersection would call for a GLB, which the erased lattice cannot express.
+    def alternatives(tpe: Term, seen: Set[TypeSymbol]): Opt[Ls[TypeSymbol]] = tpe match
+      case Term.CompType(lhs, rhs, true) =>
+        for
+          ls <- alternatives(lhs, seen)
+          rs <- alternatives(rhs, seen)
+        yield ls ::: rs
+      case _ => tpe.symbol.flatMap(_.asTpe).flatMap(loop(_, seen))
+    loop(tpeSym, Set.empty).getOrElse(tpeSym :: Nil)
 
   /** Creates an instance from an already-resolved symbol. */
   private def resolved(rsc: Opt[Bool], sym: TypeSymbol)(using Ctx, State): CanonicalErasedValueType = sym match
@@ -537,7 +541,7 @@ object CanonicalErasedValueType:
       // * Note that `base is ctx.builtins.Anything` is only necessary for `InvalMLPrelude.mls` - the `Anything` type
       // * is `declare class`-ed there (since `declare type` is not supported in `invalml`).
       if base is ctx.builtins.Anything then ErasedType.Unknown(rsc)
-      else PrimitiveType.values.find(_.sym === base) match
+      else PrimitiveType.of(base) match
         // * A primitive has no resource-ness, so `rsc` is dropped.
         case S(prim) => ErasedType.Primitive(prim)
         case _ => ErasedType.AnyRef(rsc, base)

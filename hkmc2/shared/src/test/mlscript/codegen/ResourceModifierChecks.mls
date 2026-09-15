@@ -1,0 +1,141 @@
+:sir
+:siret
+
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ import "..." as Predef; end
+
+class C()
+class D()
+type I = Int32
+type U = Int32 | C
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define C⁰ as class C² { constructor C¹ }; define D⁰ as class D² { constructor D¹ }; end
+
+
+// A resource modifier applies to the types it reaches through unions. A
+// primitive is never a resource, whether it is written directly or through an alias.
+
+:ge
+fun p1(x: rsc Int32): Int32 = x
+//│ ╔══[COMPILATION ERROR] Primitive type 'Int32' cannot be a resource.
+//│ ║  l.19: 	fun p1(x: rsc Int32): Int32 = x
+//│ ╙──      	              ^^^^^
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define p1⁰ as fun p1¹(x: Int32): Int32 { return x }; end
+
+:w
+fun p2(x: rsc? Int32): Int32 = x
+//│ ╔══[WARNING] Primitive type 'Int32' is never a resource, so 'rsc?' has no effect.
+//│ ║  l.27: 	fun p2(x: rsc? Int32): Int32 = x
+//│ ╙──      	               ^^^^^
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define p2⁰ as fun p2¹(x: Int32): Int32 { return x }; end
+
+:ge
+fun p3(x: rsc I): Int32 = x
+//│ ╔══[COMPILATION ERROR] Primitive type 'Int32' cannot be a resource.
+//│ ║  l.35: 	fun p3(x: rsc I): Int32 = x
+//│ ╙──      	              ^
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define p3⁰ as fun p3¹(x: Int32): Int32 { return x }; end
+
+:ge
+fun p4(x: rsc U) = x
+//│ ╔══[COMPILATION ERROR] Primitive type 'Int32' cannot be a resource.
+//│ ║  l.43: 	fun p4(x: rsc U) = x
+//│ ╙──      	              ^
+//│ ═══[COMPILATION ERROR] Types 'Int32' and 'rsc C' have no common representation
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define p4⁰ as fun p4¹(x: ‹incompatible(Int32, rsc C²)›): ? { return x }; end
+
+:ge
+fun p5(x: rsc (C | Int32)) = x
+//│ ╔══[COMPILATION ERROR] Primitive type 'Int32' cannot be a resource.
+//│ ║  l.52: 	fun p5(x: rsc (C | Int32)) = x
+//│ ╙──      	                   ^^^^^
+//│ ═══[COMPILATION ERROR] Types 'rsc C' and 'Int32' have no common representation
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define p5⁰ as fun p5¹(x: ‹incompatible(rsc C², Int32)›): ? { return x }; end
+
+// `Int` is a class, not a primitive.
+
+fun p6(x: rsc Int) = x
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define p6⁰ as fun p6¹(x: rsc Int⁰): ? { return x }; end
+
+
+// A type takes at most one resource modifier: a modifier within an outer modifier's reach
+// is rejected. An arrow ends the reach, as the outer modifier marks the function value.
+
+:ge
+fun q1(x: rsc rsc? C) = x
+//│ ╔══[COMPILATION ERROR] A type takes at most one resource modifier.
+//│ ║  l.71: 	fun q1(x: rsc rsc? C) = x
+//│ ╙──      	                   ^
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define q1⁰ as fun q1¹(x: rsc? C²): ? { return x }; end
+
+:ge
+fun q2(x: rsc ((rsc C) | D)) = x
+//│ ╔══[COMPILATION ERROR] A type takes at most one resource modifier.
+//│ ║  l.79: 	fun q2(x: rsc ((rsc C) | D)) = x
+//│ ╙──      	                    ^
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define q2⁰ as fun q2¹(x: rsc Object⁰): ? { return x }; end
+
+fun q3(x: (rsc C) | D) = x
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define q3⁰ as fun q3¹(x: rsc? Object⁰): ? { return x }; end
+
+fun q4(x: rsc (C -> rsc D)) = x
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define q4⁰ as fun q4¹(x: rsc Function⁰): ? { return x }; end
+
+
+// Resource modifiers inside an intersection are not supported yet, as an intersection
+// erases to `Unknown`; a modifier on the whole intersection is supported.
+
+:ge
+fun r1(x: (rsc C) & D) = x
+//│ ╔══[COMPILATION ERROR] Resource modifiers inside an intersection type are not supported yet.
+//│ ║  l.99: 	fun r1(x: (rsc C) & D) = x
+//│ ╙──      	               ^
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define r1⁰ as fun r1¹(x: Unknown): ? { return x }; end
+
+:ge
+fun r2(x: ((rsc C) | D) & D) = x
+//│ ╔══[COMPILATION ERROR] Resource modifiers inside an intersection type are not supported yet.
+//│ ║  l.107: 	fun r2(x: ((rsc C) | D) & D) = x
+//│ ╙──       	                ^
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define r2⁰ as fun r2¹(x: Unknown): ? { return x }; end
+
+:ge
+fun r3(x: ((rsc C) & D) & D) = x
+//│ ╔══[COMPILATION ERROR] Resource modifiers inside an intersection type are not supported yet.
+//│ ║  l.115: 	fun r3(x: ((rsc C) & D) & D) = x
+//│ ╙──       	                ^
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define r3⁰ as fun r3¹(x: Unknown): ? { return x }; end
+
+fun r4(x: rsc (C & D)) = x
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define r4⁰ as fun r4¹(x: rsc Unknown): ? { return x }; end
+
+
+// A separately written signature is elaborated twice (see the FIXME in `Elaborator`),
+// so each error is reported twice.
+
+:ge
+fun sig: rsc rsc? C
+fun sig = C()
+//│ ╔══[COMPILATION ERROR] A type takes at most one resource modifier.
+//│ ║  l.131: 	fun sig: rsc rsc? C
+//│ ╙──       	                  ^
+//│ ╔══[COMPILATION ERROR] A type takes at most one resource modifier.
+//│ ║  l.131: 	fun sig: rsc rsc? C
+//│ ╙──       	                  ^
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define sig⁰ as fun sig¹(): rsc? C² { return (C¹() as! rsc? C²) }; end
+

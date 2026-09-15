@@ -64,7 +64,7 @@ fun f(x: rsc A, y: B) = 0
 //│ 	TermDef(Fun,App(Ident(f),Tup(List(InfixApp(Ident(x),Keywrd(keyword ':'),Modified(Keywrd(keyword 'rsc'),Ident(A))), InfixApp(Ident(y),Keywrd(keyword ':'),Ident(B))))),Some(IntLit(0)))
 
 
-// Nesting.
+// Nesting. The resolver rejects this, as a type takes at most one resource modifier.
 
 rsc rsc? A
 //│ Parsed:

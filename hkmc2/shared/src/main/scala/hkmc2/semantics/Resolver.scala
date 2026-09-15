@@ -1080,14 +1080,26 @@ class Resolver(tl: TraceLogger)
         traverseSign(con, expect = expect, inAppPrefix = true)
         targs.foreach(traverseSign(_, expect = Expect.NonModule(S("Type arguments should be non-moduleful types."))))
       
+      // Intersection type. A resource modifier inside one is not supported yet: `eraseSign` never decomposes an
+      // intersection, so the modifier would be silently lost.
+      case Term.CompType(lhs, rhs, false) =>
+        (rscReach(lhs) ::: rscReach(rhs)).foreach:
+          case mod @ Term.Annotated(Annot.Resource(_), _) =>
+            raise(ErrorReport(
+              msg"Resource modifiers inside an intersection type are not supported yet." -> mod.toLoc :: Nil))
+          case _ => ()
+        t.subTerms.foreach(traverseSign(_, expect = Expect.NonModule(N)))
+      
       // Complex type: Function type, Wildcard type, Composed type,
       // Negation type, Forall type, 
       case t: (Term.FunTy | Term.WildcardTy | Term.CompType | Term.Neg | Term.Forall | Term.Constrained | Term.Tup) =>
         t.subTerms.foreach(traverseSign(_, expect = Expect.NonModule(N)))
       
-      // A resource modifier does not affect resolution: traverse its target type.
-      case Term.Annotated(Annot.Resource(_), target) =>
+      // A resource modifier does not affect resolution: traverse its target type, then check the types that the
+      // modifier applies to.
+      case Term.Annotated(Annot.Resource(rsc), target) =>
         traverseSign(target, expect = expect, inAppPrefix = inAppPrefix)
+        rscReach(target).foreach(checkRscTarget(_, rsc))
         break()
       
       // t is not a type.
@@ -1199,6 +1211,39 @@ class Resolver(tl: TraceLogger)
         case N =>
           raise(ErrorReport(msg"Expected a type, got a non-type ${t.describe}" -> t.toLoc :: Nil))
           Type.Error
+  
+  /** The types that a resource modifier wrapping `t` applies to, as `ErasedType.eraseSign` reads them. */
+  private def rscReach(t: Term): Ls[Term] = t match
+    case Term.CompType(lhs, rhs, true) => rscReach(lhs) ::: rscReach(rhs)
+    case Term.Forall(_, _, body) => rscReach(body)
+    case _ => t :: Nil
+  
+  /**
+   * Checks a possibly-resource-annotated type is valid:
+   *
+   * - it must not carry a resource modifier of its own, as a type takes at most one;
+   * - it must not denote a primitive type (directly or through an alias). This is an error under `rsc`, and a warning 
+   *   under `rsc?`, which then has no effect.
+   */
+  private def checkRscTarget(t: Term, rsc: Opt[Bool]): Unit = t match
+    // A nested modifier's own `traverseSign` arm checks the types that it applies to.
+    case Term.Annotated(Annot.Resource(_), _) =>
+      raise(ErrorReport(msg"A type takes at most one resource modifier." -> t.toLoc :: Nil))
+    case _ =>
+      // Arrows and intersections have no symbol: a modifier on them is fine, whatever they contain.
+      val prims = t.symbol.flatMap(_.asTpe).toList
+        .flatMap(sym => codegen.CanonicalErasedValueType.resolveTpeSymAlias(sym).flatMap(codegen.PrimitiveType.of))
+        .distinct
+      prims.foreach: prim =>
+        val nme = prim.sym.nme
+        rsc match
+        case S(true) =>
+          raise(ErrorReport(msg"Primitive type '${nme}' cannot be a resource." -> t.toLoc :: Nil))
+        case N =>
+          raise(WarningReport(
+            msg"Primitive type '${nme}' is never a resource, so 'rsc?' has no effect." -> t.toLoc :: Nil))
+        // No syntax writes a non-resource modifier.
+        case S(false) => lastWords(s"a resource modifier denoting a non-resource on '$t'")
 
 end Resolver
 
