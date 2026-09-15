@@ -667,6 +667,8 @@ extends Importer:
       | Keyword.`virtual`
       | Keyword.`public`
       | Keyword.`private`
+      | Keyword.`rsc`
+      | Keyword.`rsc?`
     )) => S(Annot.Modifier(kw))
     case App(Ident("config"), Tup(args)) =>
       val modify = ConfigParser.parseOverrides(args)
@@ -2409,6 +2411,11 @@ extends Importer:
               cd
         case Trt | Mxn => lastWords(s"Unexpected type definition kind here: $k")
         go(sts, Nil, defn :: acc)
+      // * `Tree.desugared` lifts a resource modifier written on a definition to an annotation. It is rejected here,
+      // * where the definition is known, and dropped, keeping the definition.
+      case Annotated(kw @ Keywrd(Keyword.`rsc` | Keyword.`rsc?`), target @ PossiblyAnnotated(_, d: TypeOrTermDef)) :: sts =>
+        raise(ErrorReport(msg"Resource modifiers apply to types, not to ${d.k.desc} definitions." -> kw.toLoc :: Nil))
+        go(target :: sts, annotations, acc)
       case Annotated(annotation, target) :: sts =>
         go(target :: sts, annotations ++ annot(annotation), acc)
       // * With tight right precedence, `#config(args)` is parsed as `App(Directive(config, Tup()), Tup(args))`.

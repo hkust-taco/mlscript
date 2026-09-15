@@ -330,6 +330,10 @@ enum Tree extends AutoLocated:
           Annotated(kw, s.desugared)
         case Modified(kw @ Keywrd(Keyword.`private`), s) =>
           Annotated(kw, s.desugared)
+        // * A resource modifier applies to a type. One written on a definition is lifted here, so that the definition
+        // * is still found under it, allowing the modifier to be rejected there.
+        case Modified(kw @ Keywrd(Keyword.`rsc` | Keyword.`rsc?`), Desugared(d @ PossiblyAnnotated(_, _: TypeOrTermDef))) =>
+          Annotated(kw, d)
         case Modified(kw @ Keywrd(Keyword.`mut`), TermDef(ImmutVal, anme, rhs)) =>
           TermDef(MutVal, anme, rhs).withLocOf(this).desugared
         case _ => m
@@ -394,10 +398,14 @@ enum Tree extends AutoLocated:
       // fun f(using <...>)
       case TermDef(Ins, inner, N) =>
         go(inner, flags, modifiers + Ins, rscMods)
-      // fun f(rsc <...>) | class C(rsc val <...>)
+      // fun f(rsc <...>)
       // * This arm catches invalid usages of `rsc` in parameters - the `rsc` modifier is recorded in the `ParamTree`
       // * (to preserve class/function parameters for later stages) and the elaborator will reject it as invalid.
       case Modified(kw @ Keywrd(Keyword.`rsc` | Keyword.`rsc?`), inner) if modifiesParam(inner) =>
+        go(inner, flags, modifiers, rscMods :+ kw)
+      // class C(rsc val <...>)
+      // * As above, for a `val` parameter, off which `desugared` lifts the modifier to an annotation.
+      case Annotated(kw @ Keywrd(Keyword.`rsc` | Keyword.`rsc?`), inner) =>
         go(inner, flags, modifiers, rscMods :+ kw)
       
       // * Base Case (for `using` clause)

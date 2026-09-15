@@ -140,25 +140,106 @@ fun sig = C()
 //│ define sig⁰ as fun sig¹(): rsc? C² { return (C¹() as! rsc? C²) }; end
 
 
+// A resource modifier on a definition is rejected, and the definition compiles without it.
+
+:ge
+rsc class E()
+//│ ╔══[COMPILATION ERROR] Resource modifiers apply to types, not to class definitions.
+//│ ║  l.146: 	rsc class E()
+//│ ╙──       	^^^
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define E⁰ as class E² { constructor E¹ }; end
+
+:ge
+rsc? module M
+//│ ╔══[COMPILATION ERROR] Resource modifiers apply to types, not to module definitions.
+//│ ║  l.154: 	rsc? module M
+//│ ╙──       	^^^^
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define M⁰ as class M¹ module M²; end
+
+:ge
+rsc object O
+//│ ╔══[COMPILATION ERROR] Resource modifiers apply to types, not to object definitions.
+//│ ║  l.162: 	rsc object O
+//│ ╙──       	^^^
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define O⁰ as object O¹; end
+
+:ge
+rsc fun f() = 1
+//│ ╔══[COMPILATION ERROR] Resource modifiers apply to types, not to function definitions.
+//│ ║  l.170: 	rsc fun f() = 1
+//│ ╙──       	^^^
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define f⁰ as fun f¹(): ? { return 1 }; end
+
+:ge
+rsc val v = 1
+//│ ╔══[COMPILATION ERROR] Resource modifiers apply to types, not to value definitions.
+//│ ║  l.178: 	rsc val v = 1
+//│ ╙──       	^^^
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define v⁰ as val v¹: ? = 1; end
+
+:ge
+rsc type T = C
+//│ ╔══[COMPILATION ERROR] Resource modifiers apply to types, not to type alias definitions.
+//│ ║  l.186: 	rsc type T = C
+//│ ╙──       	^^^
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ end
+
+fun useT(x: T) = x
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define useT⁰ as fun useT¹(x: C²): ? { return x }; end
+
+:ge
+rsc data class F(x: Int)
+//│ ╔══[COMPILATION ERROR] Resource modifiers apply to types, not to class definitions.
+//│ ║  l.198: 	rsc data class F(x: Int)
+//│ ╙──       	^^^
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ @data
+//│ define F⁰ as class F² {
+//│   val x⁰: Int⁰;
+//│   constructor F¹(x: Int⁰) { define x⁰ as val x¹: Int⁰ = x; end }
+//│ };
+//│ end
+
+:ge
+data rsc class G(x: Int)
+//│ ╔══[COMPILATION ERROR] Resource modifiers apply to types, not to class definitions.
+//│ ║  l.211: 	data rsc class G(x: Int)
+//│ ╙──       	     ^^^
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ @data
+//│ define G⁰ as class G² {
+//│   val x²: Int⁰;
+//│   constructor G¹(x: Int⁰) { define x² as val x³: Int⁰ = x; end }
+//│ };
+//│ end
+
+
 // A resource modifier on a parameter (rather than on its type) is rejected, and the
 // parameter is kept.
 
 :ge
 class Box(rsc val x: C)
 //│ ╔══[COMPILATION ERROR] Resource modifiers apply to types, not to parameters.
-//│ ║  l.147: 	class Box(rsc val x: C)
+//│ ║  l.228: 	class Box(rsc val x: C)
 //│ ╙──       	          ^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define Box⁰ as class Box² {
-//│   val x⁰: C²;
-//│   constructor Box¹(x: C²) { define x⁰ as val x¹: C² = x; end }
+//│   val x⁴: C²;
+//│   constructor Box¹(x: C²) { define x⁴ as val x⁵: C² = x; end }
 //│ };
 //│ end
 
 :ge
 fun fp(rsc x: C) = x
 //│ ╔══[COMPILATION ERROR] Resource modifiers apply to types, not to parameters.
-//│ ║  l.159: 	fun fp(rsc x: C) = x
+//│ ║  l.240: 	fun fp(rsc x: C) = x
 //│ ╙──       	       ^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define fp⁰ as fun fp¹(x: C²): ? { return x }; end
@@ -181,7 +262,7 @@ fun fu2(using x: rsc C) = x
 :ge
 fun fu3(using rsc x: C) = 0
 //│ ╔══[COMPILATION ERROR] Resource modifiers apply to types, not to parameters.
-//│ ║  l.182: 	fun fu3(using rsc x: C) = 0
+//│ ║  l.263: 	fun fu3(using rsc x: C) = 0
 //│ ╙──       	              ^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define fu3⁰ as fun fu3¹(x: C²): ? { return 0 }; end
@@ -191,10 +272,10 @@ fun fu3(using rsc x: C) = 0
 :ge
 fun fm(rsc rsc? x: C) = x
 //│ ╔══[COMPILATION ERROR] Resource modifiers apply to types, not to parameters.
-//│ ║  l.192: 	fun fm(rsc rsc? x: C) = x
+//│ ║  l.273: 	fun fm(rsc rsc? x: C) = x
 //│ ╙──       	       ^^^
 //│ ╔══[COMPILATION ERROR] Resource modifiers apply to types, not to parameters.
-//│ ║  l.192: 	fun fm(rsc rsc? x: C) = x
+//│ ║  l.273: 	fun fm(rsc rsc? x: C) = x
 //│ ╙──       	           ^^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define fm⁰ as fun fm¹(x: C²): ? { return x }; end
@@ -212,7 +293,24 @@ fun fc1(using rsc (C)) = 0
 :ge
 fun fs1(using rsc ...a) = 0
 //│ ╔══[COMPILATION ERROR] Resource modifiers apply to types, not to parameters.
-//│ ║  l.213: 	fun fs1(using rsc ...a) = 0
+//│ ║  l.294: 	fun fs1(using rsc ...a) = 0
 //│ ╙──       	              ^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define fs1⁰ as fun fs1¹(...a: ?): ? { return 0 }; end
+
+
+// A `val` parameter carries its modifier as a lifted annotation rather than a modifier
+// tree, and names the parameter, so it is rejected in a contextual parameter list too.
+
+:ge
+class K(using c: C, rsc val x: C)
+//│ ╔══[COMPILATION ERROR] Resource modifiers apply to types, not to parameters.
+//│ ║  l.306: 	class K(using c: C, rsc val x: C)
+//│ ╙──       	                    ^^^
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define K⁰ as class K² {
+//│   private val c⁰: C²;
+//│   val x⁶: C²;
+//│   constructor K¹(c: C², x: C²) { set K².this.c⁰ = c; define x⁶ as val x⁷: C² = x; end }
+//│ };
+//│ end
