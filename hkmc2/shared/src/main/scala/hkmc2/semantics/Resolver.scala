@@ -1233,7 +1233,7 @@ class Resolver(tl: TraceLogger)
     case Term.Annotated(Annot.Resource(_), _) =>
       raise(ErrorReport(msg"A type takes at most one resource modifier." -> t.toLoc :: Nil))
     case _ =>
-      // Arrows and intersections have no symbol: a modifier on them is fine, whatever they contain.
+      // Function types and intersections have no symbol: a modifier on them is fine, whatever they contain.
       val members = t.symbol.flatMap(_.asTpe).toList
         .flatMap(codegen.CanonicalErasedValueType.resolveTpeSymAlias)
       if members.exists(_.ownRsc.isDefined) then

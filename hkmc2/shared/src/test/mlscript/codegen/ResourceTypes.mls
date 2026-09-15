@@ -35,8 +35,9 @@ fun l(x) = x
 //│ define l⁰ as fun l¹(x: ?): C² { return (x as! C²) }; end
 
 
-// A signature with no arrow has none to strip the modifier with, so the modifier stays
-// on the result type, even when the definition writes a parameter list of its own.
+// A signature that is not a function type has no parameter list to strip the modifier
+// with, so the modifier stays on the result type, even when the definition writes a
+// parameter list of its own.
 
 declare fun mkRsc: rsc C
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
@@ -47,10 +48,10 @@ fun getter = mkRsc
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define getter⁰ as fun getter¹(): rsc C² { return globalThis⁰.mkRsc⁰ }; end
 
-fun noArrow: rsc C
-fun noArrow(x) = x
+fun noFunTy: rsc C
+fun noFunTy(x) = x
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ define noArrow⁰ as fun noArrow¹(x: ?): rsc C² { return (x as! rsc C²) }; end
+//│ define noFunTy⁰ as fun noFunTy¹(x: ?): rsc C² { return (x as! rsc C²) }; end
 
 
 // `Anything` follows the same rule as any other class.
@@ -85,7 +86,7 @@ fun p(x: rsc C | D) = x
 :ge
 fun intoAny(x: rsc C) = m(x)
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'rsc C' at an unrelated type 'Unknown'
-//│ ║  l.86: 	fun intoAny(x: rsc C) = m(x)
+//│ ║  l.87: 	fun intoAny(x: rsc C) = m(x)
 //│ ╙──      	                          ^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define intoAny⁰ as fun intoAny¹(x: rsc C²): ? { return m¹(x) }; end
@@ -152,7 +153,7 @@ fun newIntoMaybe() = useMaybe(new rsc C())
 :ge
 fun newIntoPlain() = h(new rsc C())
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'rsc C' at an unrelated type 'C'
-//│ ║  l.153: 	fun newIntoPlain() = h(new rsc C())
+//│ ║  l.154: 	fun newIntoPlain() = h(new rsc C())
 //│ ╙──       	                       ^^^^^^^^^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define newIntoPlain⁰ as fun newIntoPlain¹(): ? {
@@ -169,7 +170,7 @@ fun mkMutNew() = new mut rsc C()
 :e
 fun newWrongOrder() = new rsc mut C()
 //│ ╔══[COMPILATION ERROR] Illegal position for 'mut' modifier.
-//│ ║  l.170: 	fun newWrongOrder() = new rsc mut C()
+//│ ║  l.171: 	fun newWrongOrder() = new rsc mut C()
 //│ ╙──       	                              ^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define newWrongOrder⁰ as fun newWrongOrder¹(): ? { return new rsc C²() }; end
@@ -177,7 +178,7 @@ fun newWrongOrder() = new rsc mut C()
 :e
 fun newMaybe() = new rsc? C()
 //│ ╔══[COMPILATION ERROR] An instance cannot be 'rsc?': it either is a resource or is not.
-//│ ║  l.178: 	fun newMaybe() = new rsc? C()
+//│ ║  l.179: 	fun newMaybe() = new rsc? C()
 //│ ╙──       	                     ^^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define newMaybe⁰ as fun newMaybe¹(): ? { return new C²() }; end
@@ -185,7 +186,7 @@ fun newMaybe() = new rsc? C()
 :e
 fun newDyn() = new! rsc C()
 //│ ╔══[COMPILATION ERROR] Resource instantiation with 'new!' is not supported yet.
-//│ ║  l.186: 	fun newDyn() = new! rsc C()
+//│ ║  l.187: 	fun newDyn() = new! rsc C()
 //│ ╙──       	                    ^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define newDyn⁰ as fun newDyn¹(): ? { return new C¹() }; end
@@ -194,7 +195,7 @@ fun newDyn() = new! rsc C()
 class Q
 fun newRefined() = new rsc Q with {}
 //│ ╔══[COMPILATION ERROR] Resource instantiation with a refinement is not supported yet.
-//│ ║  l.195: 	fun newRefined() = new rsc Q with {}
+//│ ║  l.196: 	fun newRefined() = new rsc Q with {}
 //│ ╙──       	                       ^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define newRefined⁰ as fun newRefined¹(): ? {
@@ -219,7 +220,7 @@ new rsc C()
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ return new rsc C²()
 //│ ╔══[COMPILATION ERROR] WatBuilder::result for a resource Instantiate(...) is not implemented yet
-//│ ║  l.218: 	new rsc C()
+//│ ║  l.219: 	new rsc C()
 //│ ╙──       	        ^
 
 
@@ -265,7 +266,7 @@ fun t(b: Box[rsc C]) = b
 :ge
 fun q(x: C) = useRsc(x)
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'C' at an unrelated type 'rsc C'
-//│ ║  l.266: 	fun q(x: C) = useRsc(x)
+//│ ║  l.267: 	fun q(x: C) = useRsc(x)
 //│ ╙──       	                     ^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define q⁰ as fun q¹(x: C²): ? { return useRsc¹(x) }; end
@@ -278,7 +279,7 @@ fun q(x: C) = useRsc(x)
 fun u() = rsc 1
 //│ ╔══[WARNING] This annotation has no effect.
 //│ ╟── This annotation is not supported on integer literal terms.
-//│ ║  l.278: 	fun u() = rsc 1
+//│ ║  l.279: 	fun u() = rsc 1
 //│ ╙──       	              ^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define u⁰ as fun u¹(): ? { return 1 }; end
@@ -302,31 +303,32 @@ fun modOf = M
 fun rscModOf: rsc module M
 fun rscModOf = M
 //│ ╔══[COMPILATION ERROR] Illegal type declaration in term position.
-//│ ║  l.302: 	fun rscModOf: rsc module M
+//│ ║  l.303: 	fun rscModOf: rsc module M
 //│ ╙──       	                  ^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Illegal type declaration in term position.
-//│ ║  l.302: 	fun rscModOf: rsc module M
+//│ ║  l.303: 	fun rscModOf: rsc module M
 //│ ╙──       	                  ^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Expected a type, got ‹error›
-//│ ║  l.302: 	fun rscModOf: rsc module M
+//│ ║  l.303: 	fun rscModOf: rsc module M
 //│ ╙──       	                  ^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Expected a type, got ‹error›
-//│ ║  l.302: 	fun rscModOf: rsc module M
+//│ ║  l.303: 	fun rscModOf: rsc module M
 //│ ╙──       	                  ^^^^^^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define rscModOf⁰ as fun rscModOf¹(): ? { return M² }; end
 
 
-// A written arrow is consumed as the definition's parameter list, which has no
-// resource-ness to state, so a modifier on it is rejected. `kControl` is the same shape
-// without one; `kForall` puts a quantifier between the modifier and the arrow, `kMaybe`
-// uses `rsc?`, and the paramless `declare`d `kDeclared` consumes every arrow it has.
+// A written function type's parameter list becomes the definition's own, which has no
+// resource-ness to state, so a modifier on that function type is rejected. `kControl` is
+// the same shape without one; `kForall` puts a quantifier between the modifier and the
+// function type, `kMaybe` uses `rsc?`, and the paramless `declare`d `kDeclared` consumes
+// every parameter list its signature has.
 
 :e
 fun k: rsc (C) -> C
 fun k(x) = x
 //│ ╔══[COMPILATION ERROR] Resource modifiers apply to function values, not to a function definition's parameter lists.
-//│ ║  l.326: 	fun k: rsc (C) -> C
+//│ ║  l.328: 	fun k: rsc (C) -> C
 //│ ╙──       	           ^^^^^^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define k⁰ as fun k¹(x: ?): C² { return (x as! C²) }; end
@@ -340,7 +342,7 @@ fun kControl(x) = x
 fun kForall: rsc [A] -> (A) -> A
 fun kForall(x) = x
 //│ ╔══[COMPILATION ERROR] Resource modifiers apply to function values, not to a function definition's parameter lists.
-//│ ║  l.340: 	fun kForall: rsc [A] -> (A) -> A
+//│ ║  l.342: 	fun kForall: rsc [A] -> (A) -> A
 //│ ╙──       	                        ^^^^^^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define kForall⁰ as fun kForall¹(x: ?): ? { return x }; end
@@ -349,7 +351,7 @@ fun kForall(x) = x
 fun kMaybe: rsc? (C) -> C
 fun kMaybe(x) = x
 //│ ╔══[COMPILATION ERROR] Resource modifiers apply to function values, not to a function definition's parameter lists.
-//│ ║  l.349: 	fun kMaybe: rsc? (C) -> C
+//│ ║  l.351: 	fun kMaybe: rsc? (C) -> C
 //│ ╙──       	                 ^^^^^^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define kMaybe⁰ as fun kMaybe¹(x: ?): C² { return (x as! C²) }; end
@@ -357,7 +359,7 @@ fun kMaybe(x) = x
 :e
 declare fun kDeclared: rsc (C) -> C
 //│ ╔══[COMPILATION ERROR] Resource modifiers apply to function values, not to a function definition's parameter lists.
-//│ ║  l.358: 	declare fun kDeclared: rsc (C) -> C
+//│ ║  l.360: 	declare fun kDeclared: rsc (C) -> C
 //│ ╙──       	                           ^^^^^^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ end
@@ -369,7 +371,7 @@ declare fun kDeclared: rsc (C) -> C
 :ge
 val kNarrowed: Str = k
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'rsc? Function' at an unrelated type 'Str'
-//│ ║  l.370: 	val kNarrowed: Str = k
+//│ ║  l.372: 	val kNarrowed: Str = k
 //│ ╙──       	                     ^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define kNarrowed⁰ as val kNarrowed¹: Str⁰ = k¹; end
@@ -377,7 +379,7 @@ val kNarrowed: Str = k
 :ge
 val kControlNarrowed: Str = kControl
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'rsc? Function' at an unrelated type 'Str'
-//│ ║  l.378: 	val kControlNarrowed: Str = kControl
+//│ ║  l.380: 	val kControlNarrowed: Str = kControl
 //│ ╙──       	                            ^^^^^^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define kControlNarrowed⁰ as val kControlNarrowed¹: Str⁰ = kControl¹; end
@@ -385,7 +387,7 @@ val kControlNarrowed: Str = kControl
 :ge
 val kForallNarrowed: Str = kForall
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'rsc? Function' at an unrelated type 'Str'
-//│ ║  l.386: 	val kForallNarrowed: Str = kForall
+//│ ║  l.388: 	val kForallNarrowed: Str = kForall
 //│ ╙──       	                           ^^^^^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define kForallNarrowed⁰ as val kForallNarrowed¹: Str⁰ = kForall¹; end
@@ -393,14 +395,15 @@ val kForallNarrowed: Str = kForall
 :ge
 val kMaybeNarrowed: Str = kMaybe
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'rsc? Function' at an unrelated type 'Str'
-//│ ║  l.394: 	val kMaybeNarrowed: Str = kMaybe
+//│ ║  l.396: 	val kMaybeNarrowed: Str = kMaybe
 //│ ╙──       	                          ^^^^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define kMaybeNarrowed⁰ as val kMaybeNarrowed¹: Str⁰ = kMaybe¹; end
 
-// An arrow the definition does not consume is its result, so a modifier on it describes
-// the function the definition returns rather than the definition itself. A paramless
-// `fun` consumes none, even though at block level it compiles to a nullary function.
+// A function type whose parameter list the definition does not consume is its result, so a
+// modifier on it describes the function the definition returns rather than the definition
+// itself. A paramless `fun` consumes none, even though at block level it compiles to a
+// nullary function.
 
 fun resultRsc(x): rsc (C) -> C = x
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
@@ -409,7 +412,7 @@ fun resultRsc(x): rsc (C) -> C = x
 :ge
 val resultRscNarrowed: Str = resultRsc
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'rsc? Function' at an unrelated type 'Str'
-//│ ║  l.410: 	val resultRscNarrowed: Str = resultRsc
+//│ ║  l.413: 	val resultRscNarrowed: Str = resultRsc
 //│ ╙──       	                             ^^^^^^^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define resultRscNarrowed⁰ as val resultRscNarrowed¹: Str⁰ = resultRsc¹; end
@@ -420,14 +423,14 @@ fun paramlessRsc = resultRsc(0)
 //│ define paramlessRsc⁰ as fun paramlessRsc¹(): rsc Function⁰ { return resultRsc¹(0) }; end
 
 
-// Every arrow a curried definition consumes is one of its own parameter lists, so a
-// modifier on an inner one is rejected too.
+// Every parameter list a curried definition consumes is one of its own, so a modifier on
+// an inner function type is rejected too.
 
 :e
 fun curriedInner: (C) -> rsc (C) -> C
 fun curriedInner(x)(y) = y
 //│ ╔══[COMPILATION ERROR] Resource modifiers apply to function values, not to a function definition's parameter lists.
-//│ ║  l.427: 	fun curriedInner: (C) -> rsc (C) -> C
+//│ ║  l.430: 	fun curriedInner: (C) -> rsc (C) -> C
 //│ ╙──       	                             ^^^^^^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define curriedInner⁰ as fun curriedInner¹(x: ?)(y: ?): C² { return (y as! C²) }; end
@@ -436,7 +439,7 @@ fun curriedInner(x)(y) = y
 fun curriedOuter: rsc (C) -> (C) -> C
 fun curriedOuter(x)(y) = y
 //│ ╔══[COMPILATION ERROR] Resource modifiers apply to function values, not to a function definition's parameter lists.
-//│ ║  l.436: 	fun curriedOuter: rsc (C) -> (C) -> C
+//│ ║  l.439: 	fun curriedOuter: rsc (C) -> (C) -> C
 //│ ╙──       	                      ^^^^^^^^^^^^^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define curriedOuter⁰ as fun curriedOuter¹(x: ?)(y: ?): C² { return (y as! C²) }; end

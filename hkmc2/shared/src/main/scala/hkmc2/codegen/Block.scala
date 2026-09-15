@@ -1261,7 +1261,6 @@ case class InstantiateMetadata(
 object InstantiateMetadata:
   def empty: InstantiateMetadata = InstantiateMetadata(Nil)
 
-/** An instantiation of `cls`. `rsc` is true if it creates a resource, as written `new rsc C(...)`. */
 case class Instantiate(mut: Bool, rsc: Bool, cls: Path, argss: Ls[Ls[Arg]])(val metadata: InstantiateMetadata) extends Result
 
 /** A coercion of `value` to `target`.

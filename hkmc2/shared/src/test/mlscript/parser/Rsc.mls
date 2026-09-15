@@ -23,7 +23,7 @@ rsc A & B
 //│ 	InfixApp(Modified(Keywrd(keyword 'rsc'),Ident(A)),Keywrd(keyword '&'),Ident(B))
 
 
-// ...but looser than `->`, so an arrow denotes a resource *function*.
+// ...but looser than `->`, so `rsc (A) -> B` denotes a resource *function*.
 
 rsc A -> B
 //│ Parsed:

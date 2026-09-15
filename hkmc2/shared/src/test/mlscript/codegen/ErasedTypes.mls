@@ -881,7 +881,7 @@ fun test: Function = id
 //│ define test² as fun test³(): Function⁰ { return (id¹ as! Function⁰) }; end
 
 
-// A written arrow type erases to `Function` in every position it can be written - parameter, result and `val`
+// A written function type erases to `Function` in every position it can be written - parameter, result and `val`
 // alike - and the parameter and result shapes erase away with it. A lambda flowing into such a slot is cast
 // into a `Function` on the way.
 fun applyF(f: Int -> Int): Int = f(1)
@@ -912,11 +912,12 @@ val g: Int -> Int = (x: Int) => x
 //│ end
 
 
-// The narrowing is what makes an arrow-annotated slot *typed*: without it this would pass as `Unknown`.
+// The narrowing is what makes a slot annotated with a function type *typed*: without it this would pass as
+// `Unknown`.
 :ge
 fun badFn() = applyF(42)
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int' at an unrelated type 'Function'
-//│ ║  l.917: 	fun badFn() = applyF(42)
+//│ ║  l.918: 	fun badFn() = applyF(42)
 //│ ╙──       	                     ^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define badFn⁰ as fun badFn¹(): ? { return applyF¹(42) }; end
@@ -929,7 +930,7 @@ fun useStr(s: Str) = s
 
 
 // A `declare`d function is never auto-invoked - `Lowering.ref` lowers the reference to a `globalThis`
-// selection - so its arrows are *its own parameter lists*, and the chain's last component is its result.
+// selection - so its signature's parameter lists are *its own*, and the chain's last component is its result.
 declare fun addInts: (Int, Int) -> Int
 fun useAdd() = useInt(addInts(1, 2))
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
@@ -945,7 +946,7 @@ fun useAdd() = useInt(addInts(1, 2))
 :ge
 fun badAdd() = useStr(addInts(1, 2))
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int' at an unrelated type 'Str'
-//│ ║  l.946: 	fun badAdd() = useStr(addInts(1, 2))
+//│ ║  l.947: 	fun badAdd() = useStr(addInts(1, 2))
 //│ ╙──       	                      ^^^^^^^^^^^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define badAdd⁰ as fun badAdd¹(): ? {
@@ -968,7 +969,7 @@ fun useShow() = useStr(showInt(1))
 //│ end
 
 
-// Each arrow is a separate parameter list, so an under-applied call yields a function over those remaining.
+// The signature's parameter lists are separate, so an under-applied call yields a function over those remaining.
 // A local's slot holds an erased *value* type, which cannot carry them, so `useCurried`'s intermediate is
 // only a `Function` and its final application still needs a cast.
 declare fun curried: Int -> Int -> Int
@@ -1004,8 +1005,9 @@ fun useParse() = useInt(parseIt("1", 10))
 //│ end
 
 
-// A *non*-`declare`d `fun` writing no parameter lists is a getter: referencing it calls it, so its arrows
-// are the *result*. Reading them as parameters would type `getFn` as `Int` when it yields a function.
+// A *non*-`declare`d `fun` writing no parameter lists is a getter: referencing it calls it, so its function
+// type is the *result*. Reading its parameter list as the getter's would type `getFn` as `Int` when it yields a
+// function.
 fun getFn: Int -> Int
 fun useGetFn() = useFn(getFn)
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
@@ -1249,7 +1251,7 @@ fun tagged(x: Int) =
   fun describe() = Tag.label()
   describe()
 //│ ╔══[WARNING] Objects are not yet lifted.
-//│ ║  l.1247: 	  object Tag with
+//│ ║  l.1249: 	  object Tag with
 //│ ╙──        	         ^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let describe;
@@ -1276,7 +1278,7 @@ fun mk() =
     fun get() = Tag.label()
   new Holder
 //│ ╔══[WARNING] Objects are not yet lifted.
-//│ ║  l.1273: 	  object Tag with
+//│ ║  l.1275: 	  object Tag with
 //│ ╙──        	         ^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let Holder;

@@ -2043,15 +2043,16 @@ extends Importer:
                 case _ =>
                   Modulefulness.none
               
-              /** Whether a signature is a possibly-quantified arrow. */
-              def wrapsArrow(sign: Term): Bool = sign match
-                case Term.Forall(_, _, body) => wrapsArrow(body)
-                case Term.Annotated(Annot.Resource(_), target) => wrapsArrow(target)
+              /** Whether a signature is a possibly-quantified function type. */
+              def wrapsFunTy(sign: Term): Bool = sign match
+                case Term.Forall(_, _, body) => wrapsFunTy(body)
+                case Term.Annotated(Annot.Resource(_), target) => wrapsFunTy(target)
                 case Term.FunTy(_, _, _) => true
                 case _ => false
               
-              /** Splits a signature's arrow chain into the parameter lists it describes and the type it returns.
-                * Yields `N` if the signature is not an arrow or if some parameter list's arity cannot be read.
+              /** Splits a signature's chain of function types into the parameter lists it describes and the type it
+                * returns. Yields `N` if the signature is not a function type or if some parameter list's arity cannot
+                * be read.
                 */
               def splitSignature(sign: Term): Opt[(Ls[Ls[Opt[ErasedValueType]]], Term)] =
                 def paramsOf(lhs: Term): Opt[Ls[Opt[ErasedValueType]]] = lhs match
@@ -2066,8 +2067,8 @@ extends Importer:
                   case single => S(ErasedType.eraseSign(single) :: Nil)
                 sign match
                   case Term.Forall(_, _, body) => splitSignature(body)
-                  // * The split reads only the arrows' shape, so it ignores the resource modifier and splits its
-                  // * target; the modifier is rejected on a consumed arrow in `stripSignatureParams`.
+                  // * The split only reads parameter lists, so it ignores the resource modifier and splits its target;
+                  // * the modifier is rejected in `stripSignatureParams` if the definition consumes those lists.
                   case Term.Annotated(Annot.Resource(_), target) => splitSignature(target)
                   case Term.FunTy(lhs, rhs, _) => paramsOf(lhs).map: ps =>
                     splitSignature(rhs) match
@@ -2075,37 +2076,37 @@ extends Importer:
                       case N => (ps :: Nil, rhs)
                   case _ => N
               
-              /** Strips `sign`'s first `n` arrows, which the definition consumes as its own parameter lists.
-                * Returns what remains of `sign`, and the resource modifiers written on the stripped arrows.
+              /** Strips `sign`'s first `n` parameter lists, which the definition consumes as its own.
+                * Returns what remains of `sign`, and the resource modifiers on the stripped lists' function types.
                 *
                 * A modifier on anything else wraps the result and stays, so `fun f: rsc C` keeps it however many
                 * parameter lists `f` writes, and `eraseSign` reads it off there.
                 */
               def stripSignatureParams(sign: Term, n: Int): (Term, Ls[Term]) = (sign, n) match
                 case (Term.Forall(_, _, body), _) => stripSignatureParams(body, n)
-                case (mod @ Term.Annotated(Annot.Resource(_), target), n) if n > 0 && wrapsArrow(target) =>
+                case (mod @ Term.Annotated(Annot.Resource(_), target), n) if n > 0 && wrapsFunTy(target) =>
                   val (result, mods) = stripSignatureParams(target, n)
                   (result, mod :: mods)
                 case (Term.FunTy(_, rhs, _), n) if n > 0 => stripSignatureParams(rhs, n - 1)
                 case _ => (sign, Nil)
               
-              // * A signature's arrows are the definition's own parameter lists when a reference to it is not
-              // * auto-invoked.
+              // * A signature's parameter lists are the definition's own when a reference to it is not auto-invoked.
               // *
               // * - A `fun` writing no parameter lists is a getter, so `fun bar: A -> Int` yields
-              // *   the arrow itself;
-              // * - A `declare`d `fun` becomes a `globalThis` selection, so its arrows are its parameters.
+              // *   the function type itself;
+              // * - A `declare`d `fun` becomes a `globalThis` selection, so its signature's parameter lists are
+              // *   its own.
               val sigShape: Opt[(Ls[Ls[Opt[ErasedValueType]]], Term)] =
                 if (k is syntax.Fun) && pss.isEmpty && Annot.declareModifierOf(annotations).isDefined
                 then s.flatMap(splitSignature)
                 else N
               
-              // * A `fun` definition that has a separately written signature (rather than annotating its own defn)
-              // * consumes as many leading arrows as it writes parameter lists; a paramless `declare`d one consumes
-              // * all of them, and any other consumes none.
+              // * A `fun` definition that has a separately written signature (rather than annotating its own result)
+              // * consumes as many of the signature's leading parameter lists as it writes; a paramless `declare`d one
+              // * consumes all of them, and any other consumes none.
               val inheritsSignature = (k is syntax.Fun) && td.annotatedResultType.isEmpty
-              val consumedArrows = if inheritsSignature then pss.length else sigShape.fold(0)(_._1.length)
-              val strippedSign = s.map(stripSignatureParams(_, consumedArrows))
+              val consumedParamLists = if inheritsSignature then pss.length else sigShape.fold(0)(_._1.length)
+              val strippedSign = s.map(stripSignatureParams(_, consumedParamLists))
               // * A definition's own parameter lists have no resource-ness to state.
               // TODO: Also point to the definition's parameter list that consumes the function type, as it is what
               //       makes the modifier an error.

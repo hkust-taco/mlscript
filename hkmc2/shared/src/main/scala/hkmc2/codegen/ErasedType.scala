@@ -32,8 +32,6 @@ object ErasedType:
     * Instances should be created using [[CanonicalErasedValueType.apply]] or [[ValueLike]] to ensure the correct
     * representation is used for a given type symbol.
     *
-    * - `rsc` is true if this reference is a resource class.
-    *
     * Implementation Note: This type should **not** be used to represent references of type aliases or the top type -
     * [[ValueLike]] and [[Unknown]] should be used instead.
     */
@@ -41,8 +39,6 @@ object ErasedType:
     override def sym(using Ctx, State): TypeSymbol = tpeSym
 
   /** A value type that is not yet canonicalized.
-    *
-    * - `rsc` is true if this reference is a resource type.
     *
     * Implementation Notes:
     *
@@ -156,10 +152,7 @@ object ErasedType:
   /** The builtin `Int31` reference type. */
   def Int31: ErasedValueType = ErasedType.ValueLike(rsc = S(false), ctx.builtins.Int31)
 
-  /** The builtin `Function` reference type, used as the value type of a first-class function.
-    *
-    * - `rsc` is true if this reference is a resource function.
-    */
+  /** The builtin `Function` reference type, used as the value type of a first-class function. */
   def Function(rsc: Opt[Bool]): ErasedValueType = ErasedType.ValueLike(rsc, ctx.builtins.Function)
 
   /** Determines the direct parent of a class-like symbol.
@@ -292,7 +285,7 @@ object ErasedType:
     // * cannot express.
     case CompType(_, _, false) => S(ErasedType.Unknown(rsc))
     case UnitVal() => S(ErasedType.Unit)
-    // * A written arrow denotes a function value, and every function value is a `Function`.
+    // * A written function type denotes a function value, and every function value is a `Function`.
     case FunTy(_, _, _) => S(ErasedType.Function(rsc))
     // * Quantification erases away: what a `forall` denotes is what its body denotes.
     case Forall(_, _, body) => eraseSign(body, rsc)
@@ -511,10 +504,7 @@ object CanonicalErasedValueType:
     */
   case class AliasMember(sym: Opt[TypeSymbol], ownRsc: Opt[Opt[Bool]])
 
-  /** Creates an instance with the given type symbol, canonicalizing it if needed.
-    *
-    * - `rsc` is true if this is a resource type.
-    */
+  /** Creates an instance with the given type symbol, canonicalizing it if needed. */
   def apply(rsc: Opt[Bool], tpeSym: TypeSymbol)(using Ctx, State): CanonicalErasedValueType =
     val members = resolveTpeSymAlias(tpeSym)
     // * A member takes the resource-ness written on it inside the alias, if any, and that of the reference otherwise.

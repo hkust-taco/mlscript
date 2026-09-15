@@ -65,12 +65,13 @@ fun p6(x: rsc Int) = x
 
 
 // A type takes at most one resource modifier: a modifier within an outer modifier's reach
-// is rejected. An arrow ends the reach, as the outer modifier marks the function value.
+// is rejected. A function type ends the reach, as the outer modifier marks the function
+// value.
 
 :ge
 fun q1(x: rsc rsc? C) = x
 //│ ╔══[COMPILATION ERROR] A type takes at most one resource modifier.
-//│ ║  l.71: 	fun q1(x: rsc rsc? C) = x
+//│ ║  l.72: 	fun q1(x: rsc rsc? C) = x
 //│ ╙──      	                   ^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define q1⁰ as fun q1¹(x: rsc? C²): ? { return x }; end
@@ -78,7 +79,7 @@ fun q1(x: rsc rsc? C) = x
 :ge
 fun q2(x: rsc ((rsc C) | D)) = x
 //│ ╔══[COMPILATION ERROR] A type takes at most one resource modifier.
-//│ ║  l.79: 	fun q2(x: rsc ((rsc C) | D)) = x
+//│ ║  l.80: 	fun q2(x: rsc ((rsc C) | D)) = x
 //│ ╙──      	                    ^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define q2⁰ as fun q2¹(x: rsc Object⁰): ? { return x }; end
@@ -98,15 +99,15 @@ fun q4(x: rsc (C -> rsc D)) = x
 :ge
 fun r1(x: (rsc C) & D) = x
 //│ ╔══[COMPILATION ERROR] Resource modifiers inside an intersection type are not supported yet.
-//│ ║  l.99: 	fun r1(x: (rsc C) & D) = x
-//│ ╙──      	               ^
+//│ ║  l.100: 	fun r1(x: (rsc C) & D) = x
+//│ ╙──       	               ^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define r1⁰ as fun r1¹(x: Unknown): ? { return x }; end
 
 :ge
 fun r2(x: ((rsc C) | D) & D) = x
 //│ ╔══[COMPILATION ERROR] Resource modifiers inside an intersection type are not supported yet.
-//│ ║  l.107: 	fun r2(x: ((rsc C) | D) & D) = x
+//│ ║  l.108: 	fun r2(x: ((rsc C) | D) & D) = x
 //│ ╙──       	                ^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define r2⁰ as fun r2¹(x: Unknown): ? { return x }; end
@@ -114,7 +115,7 @@ fun r2(x: ((rsc C) | D) & D) = x
 :ge
 fun r3(x: ((rsc C) & D) & D) = x
 //│ ╔══[COMPILATION ERROR] Resource modifiers inside an intersection type are not supported yet.
-//│ ║  l.115: 	fun r3(x: ((rsc C) & D) & D) = x
+//│ ║  l.116: 	fun r3(x: ((rsc C) & D) & D) = x
 //│ ╙──       	                ^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define r3⁰ as fun r3¹(x: Unknown): ? { return x }; end
@@ -131,10 +132,10 @@ fun r4(x: rsc (C & D)) = x
 fun sig: rsc rsc? C
 fun sig = C()
 //│ ╔══[COMPILATION ERROR] A type takes at most one resource modifier.
-//│ ║  l.131: 	fun sig: rsc rsc? C
+//│ ║  l.132: 	fun sig: rsc rsc? C
 //│ ╙──       	                  ^
 //│ ╔══[COMPILATION ERROR] A type takes at most one resource modifier.
-//│ ║  l.131: 	fun sig: rsc rsc? C
+//│ ║  l.132: 	fun sig: rsc rsc? C
 //│ ╙──       	                  ^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define sig⁰ as fun sig¹(): rsc? C² { return (C¹() as! rsc? C²) }; end
@@ -145,7 +146,7 @@ fun sig = C()
 :ge
 rsc class E()
 //│ ╔══[COMPILATION ERROR] Resource modifiers apply to types, not to class definitions.
-//│ ║  l.146: 	rsc class E()
+//│ ║  l.147: 	rsc class E()
 //│ ╙──       	^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define E⁰ as class E² { constructor E¹ }; end
@@ -153,7 +154,7 @@ rsc class E()
 :ge
 rsc? module M
 //│ ╔══[COMPILATION ERROR] Resource modifiers apply to types, not to module definitions.
-//│ ║  l.154: 	rsc? module M
+//│ ║  l.155: 	rsc? module M
 //│ ╙──       	^^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define M⁰ as class M¹ module M²; end
@@ -161,7 +162,7 @@ rsc? module M
 :ge
 rsc object O
 //│ ╔══[COMPILATION ERROR] Resource modifiers apply to types, not to object definitions.
-//│ ║  l.162: 	rsc object O
+//│ ║  l.163: 	rsc object O
 //│ ╙──       	^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define O⁰ as object O¹; end
@@ -169,7 +170,7 @@ rsc object O
 :ge
 rsc fun f() = 1
 //│ ╔══[COMPILATION ERROR] Resource modifiers apply to types, not to function definitions.
-//│ ║  l.170: 	rsc fun f() = 1
+//│ ║  l.171: 	rsc fun f() = 1
 //│ ╙──       	^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define f⁰ as fun f¹(): ? { return 1 }; end
@@ -177,7 +178,7 @@ rsc fun f() = 1
 :ge
 rsc val v = 1
 //│ ╔══[COMPILATION ERROR] Resource modifiers apply to types, not to value definitions.
-//│ ║  l.178: 	rsc val v = 1
+//│ ║  l.179: 	rsc val v = 1
 //│ ╙──       	^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define v⁰ as val v¹: ? = 1; end
@@ -185,7 +186,7 @@ rsc val v = 1
 :ge
 rsc type T = C
 //│ ╔══[COMPILATION ERROR] Resource modifiers apply to types, not to type alias definitions.
-//│ ║  l.186: 	rsc type T = C
+//│ ║  l.187: 	rsc type T = C
 //│ ╙──       	^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ end
@@ -197,7 +198,7 @@ fun useT(x: T) = x
 :ge
 rsc data class F(x: Int)
 //│ ╔══[COMPILATION ERROR] Resource modifiers apply to types, not to class definitions.
-//│ ║  l.198: 	rsc data class F(x: Int)
+//│ ║  l.199: 	rsc data class F(x: Int)
 //│ ╙──       	^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ @data
@@ -210,7 +211,7 @@ rsc data class F(x: Int)
 :ge
 data rsc class G(x: Int)
 //│ ╔══[COMPILATION ERROR] Resource modifiers apply to types, not to class definitions.
-//│ ║  l.211: 	data rsc class G(x: Int)
+//│ ║  l.212: 	data rsc class G(x: Int)
 //│ ╙──       	     ^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ @data
@@ -227,7 +228,7 @@ data rsc class G(x: Int)
 :ge
 class Box(rsc val x: C)
 //│ ╔══[COMPILATION ERROR] Resource modifiers apply to types, not to parameters.
-//│ ║  l.228: 	class Box(rsc val x: C)
+//│ ║  l.229: 	class Box(rsc val x: C)
 //│ ╙──       	          ^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define Box⁰ as class Box² {
@@ -239,7 +240,7 @@ class Box(rsc val x: C)
 :ge
 fun fp(rsc x: C) = x
 //│ ╔══[COMPILATION ERROR] Resource modifiers apply to types, not to parameters.
-//│ ║  l.240: 	fun fp(rsc x: C) = x
+//│ ║  l.241: 	fun fp(rsc x: C) = x
 //│ ╙──       	       ^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define fp⁰ as fun fp¹(x: C²): ? { return x }; end
@@ -262,7 +263,7 @@ fun fu2(using x: rsc C) = x
 :ge
 fun fu3(using rsc x: C) = 0
 //│ ╔══[COMPILATION ERROR] Resource modifiers apply to types, not to parameters.
-//│ ║  l.263: 	fun fu3(using rsc x: C) = 0
+//│ ║  l.264: 	fun fu3(using rsc x: C) = 0
 //│ ╙──       	              ^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define fu3⁰ as fun fu3¹(x: C²): ? { return 0 }; end
@@ -272,10 +273,10 @@ fun fu3(using rsc x: C) = 0
 :ge
 fun fm(rsc rsc? x: C) = x
 //│ ╔══[COMPILATION ERROR] Resource modifiers apply to types, not to parameters.
-//│ ║  l.273: 	fun fm(rsc rsc? x: C) = x
+//│ ║  l.274: 	fun fm(rsc rsc? x: C) = x
 //│ ╙──       	       ^^^
 //│ ╔══[COMPILATION ERROR] Resource modifiers apply to types, not to parameters.
-//│ ║  l.273: 	fun fm(rsc rsc? x: C) = x
+//│ ║  l.274: 	fun fm(rsc rsc? x: C) = x
 //│ ╙──       	           ^^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define fm⁰ as fun fm¹(x: C²): ? { return x }; end
@@ -293,7 +294,7 @@ fun fc1(using rsc (C)) = 0
 :ge
 fun fs1(using rsc ...a) = 0
 //│ ╔══[COMPILATION ERROR] Resource modifiers apply to types, not to parameters.
-//│ ║  l.294: 	fun fs1(using rsc ...a) = 0
+//│ ║  l.295: 	fun fs1(using rsc ...a) = 0
 //│ ╙──       	              ^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define fs1⁰ as fun fs1¹(...a: ?): ? { return 0 }; end
@@ -305,7 +306,7 @@ fun fs1(using rsc ...a) = 0
 :ge
 class K(using c: C, rsc val x: C)
 //│ ╔══[COMPILATION ERROR] Resource modifiers apply to types, not to parameters.
-//│ ║  l.306: 	class K(using c: C, rsc val x: C)
+//│ ║  l.307: 	class K(using c: C, rsc val x: C)
 //│ ╙──       	                    ^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define K⁰ as class K² {
