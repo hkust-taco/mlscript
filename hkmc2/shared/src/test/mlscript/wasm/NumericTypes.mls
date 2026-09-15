@@ -6,53 +6,14 @@
 
 
 // `Int64` lowers to `i64`, and an `i64` result is handed back to JS as a `BigInt`.
-:wat
 val n: Int64 = wasm.i64.const(1)
 wasm.i64.add(n, wasm.i64.const(2))
-//│ Wat:
-//│ (module
-//│   (type $TypeInfoBase (sub (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
-//│   (type $Object (sub (struct (field $$typeinfo (mut (ref $TypeInfoBase))))))
-//│   (type $entry (func (result i64)))
-//│   (global $n (export "n") (mut i64) (i64.const 0))
-//│   (func $entry (export "entry") (type $entry) (result i64)
-//│     (local $tmp i64)
-//│     (local $tmp1 i64)
-//│     (block (result i64)
-//│       (local.set $tmp
-//│         (i64.const 1))
-//│       (global.set $n
-//│         (local.get $tmp))
-//│       (local.set $tmp1
-//│         (i64.const 2))
-//│       (return
-//│         (i64.add
-//│           (global.get $n)
-//│           (local.get $tmp1)))))
-//│   (elem $entry declare func $entry))
 //│ Wasm result:
 //│ = 3n
 
 
 // A session global of unboxed type is imported into the next module unboxed too.
-:wat
 wasm.i64.mul(n, wasm.i64.const(2))
-//│ Wat:
-//│ (module
-//│   (type $TypeInfoBase (sub (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
-//│   (type $Object (sub (struct (field $$typeinfo (mut (ref $TypeInfoBase))))))
-//│   (type $entry (func (result i64)))
-//│   (import "repl" "n" (global $n (mut i64)))
-//│   (func $entry (export "entry") (type $entry) (result i64)
-//│     (local $tmp i64)
-//│     (block (result i64)
-//│       (local.set $tmp
-//│         (i64.const 2))
-//│       (return
-//│         (i64.mul
-//│           (global.get $n)
-//│           (local.get $tmp)))))
-//│   (elem $entry declare func $entry))
 //│ Wasm result:
 //│ = 2n
 
@@ -71,7 +32,7 @@ wasm.i64.const(9223372036854775807)
 :ge
 wasm.i64.const(9223372036854775808)
 //│ ╔══[COMPILATION ERROR] Immediate #1 of wasm intrinsic 'i64.const' is outside the signed 64-bit range
-//│ ║  l.72: 	wasm.i64.const(9223372036854775808)
+//│ ║  l.33: 	wasm.i64.const(9223372036854775808)
 //│ ╙──      	               ^^^^^^^^^^^^^^^^^^^
 
 
@@ -118,18 +79,17 @@ wasm.i64.shl(wasm.i64.const(1), wasm.i64.const(40))
 //│ = 1099511627776n
 
 
-// Comparing two `Int64`s yields an `Int32`, which `ref.i31` boxes back into a reference.
-wasm.ref.i31(wasm.i64.lt_s(wasm.i64.const(1), wasm.i64.const(2)))
+wasm.i64.lt_s(wasm.i64.const(1), wasm.i64.const(2))
 //│ Wasm result:
 //│ = 1
 
 
-wasm.ref.i31(wasm.i64.ge_s(wasm.i64.const(1), wasm.i64.const(2)))
+wasm.i64.ge_s(wasm.i64.const(1), wasm.i64.const(2))
 //│ Wasm result:
 //│ = 0
 
 
-wasm.ref.i31(wasm.i64.eqz(wasm.i64.const(0)))
+wasm.i64.eqz(wasm.i64.const(0))
 //│ Wasm result:
 //│ = 1
 
@@ -138,36 +98,17 @@ wasm.ref.i31(wasm.i64.eqz(wasm.i64.const(0)))
 :ge
 wasm.i64.add(wasm.i32.const(1), wasm.i32.const(2))
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int32' at an unrelated type 'Int64'
-//│ ║  l.139: 	wasm.i64.add(wasm.i32.const(1), wasm.i32.const(2))
-//│ ╙──       	             ^^^^^^^^^^^^^^^^^
+//│ ║  l.99: 	wasm.i64.add(wasm.i32.const(1), wasm.i32.const(2))
+//│ ╙──      	             ^^^^^^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int32' at an unrelated type 'Int64'
-//│ ║  l.139: 	wasm.i64.add(wasm.i32.const(1), wasm.i32.const(2))
-//│ ╙──       	                                ^^^^^^^^^^^^^^^^^
+//│ ║  l.99: 	wasm.i64.add(wasm.i32.const(1), wasm.i32.const(2))
+//│ ╙──      	                                ^^^^^^^^^^^^^^^^^
 //│ ═══[COMPILATION ERROR] Operand #1 of wasm intrinsic 'i64.add' must be of type 'Int64'
 //│ ═══[COMPILATION ERROR] Operand #2 of wasm intrinsic 'i64.add' must be of type 'Int64'
 
 
 // `Float64` lowers to `f64`, whose immediate is written as a decimal literal.
-:wat
 wasm.f64.add(wasm.f64.const(1.5), wasm.f64.const(2.25))
-//│ Wat:
-//│ (module
-//│   (type $TypeInfoBase (sub (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
-//│   (type $Object (sub (struct (field $$typeinfo (mut (ref $TypeInfoBase))))))
-//│   (type $entry (func (result f64)))
-//│   (func $entry (export "entry") (type $entry) (result f64)
-//│     (local $tmp f64)
-//│     (local $tmp1 f64)
-//│     (block (result f64)
-//│       (local.set $tmp
-//│         (f64.const 1.5))
-//│       (local.set $tmp1
-//│         (f64.const 2.25))
-//│       (return
-//│         (f64.add
-//│           (local.get $tmp)
-//│           (local.get $tmp1)))))
-//│   (elem $entry declare func $entry))
 //│ Wasm result:
 //│ = 3.75
 
@@ -210,37 +151,18 @@ wasm.f64.max(wasm.f64.const(1.5), wasm.f64.const(2.25))
 
 
 // Float comparisons also yield an `Int32`.
-wasm.ref.i31(wasm.f64.lt(wasm.f64.const(1.5), wasm.f64.const(2.25)))
+wasm.f64.lt(wasm.f64.const(1.5), wasm.f64.const(2.25))
 //│ Wasm result:
 //│ = 1
 
 
-wasm.ref.i31(wasm.f64.eq(wasm.f64.const(1.5), wasm.f64.const(1.5)))
+wasm.f64.eq(wasm.f64.const(1.5), wasm.f64.const(1.5))
 //│ Wasm result:
 //│ = 1
 
 
 // `Float32` lowers to `f32`: the same literal rounds to a different value at its lower precision.
-:wat
 wasm.f32.add(wasm.f32.const(0.1), wasm.f32.const(0.2))
-//│ Wat:
-//│ (module
-//│   (type $TypeInfoBase (sub (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
-//│   (type $Object (sub (struct (field $$typeinfo (mut (ref $TypeInfoBase))))))
-//│   (type $entry (func (result f32)))
-//│   (func $entry (export "entry") (type $entry) (result f32)
-//│     (local $tmp f32)
-//│     (local $tmp1 f32)
-//│     (block (result f32)
-//│       (local.set $tmp
-//│         (f32.const 0.1))
-//│       (local.set $tmp1
-//│         (f32.const 0.2))
-//│       (return
-//│         (f32.add
-//│           (local.get $tmp)
-//│           (local.get $tmp1)))))
-//│   (elem $entry declare func $entry))
 //│ Wasm result:
 //│ = 0.30000001192092896
 
@@ -256,26 +178,7 @@ wasm.f32.sqrt(wasm.f32.const(2))
 
 
 // A literal written with an exponent is rendered with one, which WAT accepts with either sign.
-:wat
 wasm.f64.add(wasm.f64.const(1.0e10), wasm.f64.const(2.5e-4))
-//│ Wat:
-//│ (module
-//│   (type $TypeInfoBase (sub (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
-//│   (type $Object (sub (struct (field $$typeinfo (mut (ref $TypeInfoBase))))))
-//│   (type $entry (func (result f64)))
-//│   (func $entry (export "entry") (type $entry) (result f64)
-//│     (local $tmp f64)
-//│     (local $tmp1 f64)
-//│     (block (result f64)
-//│       (local.set $tmp
-//│         (f64.const 1.0E10))
-//│       (local.set $tmp1
-//│         (f64.const 2.5E-4))
-//│       (return
-//│         (f64.add
-//│           (local.get $tmp)
-//│           (local.get $tmp1)))))
-//│   (elem $entry declare func $entry))
 //│ Wasm result:
 //│ = 10000000000.00025
 
@@ -337,7 +240,7 @@ val x: Float32 = wasm.f32.const(1.5)
 :ge
 wasm.f32.const(1.0e39)
 //│ ╔══[COMPILATION ERROR] Immediate #1 of wasm intrinsic 'f32.const' is outside the f32 range
-//│ ║  l.338: 	wasm.f32.const(1.0e39)
+//│ ║  l.241: 	wasm.f32.const(1.0e39)
 //│ ╙──       	               ^^^^^^
 
 
@@ -345,7 +248,7 @@ wasm.f32.const(1.0e39)
 :ge
 wasm.f64.const(1.0e400)
 //│ ╔══[COMPILATION ERROR] Immediate #1 of wasm intrinsic 'f64.const' is outside the f64 range
-//│ ║  l.346: 	wasm.f64.const(1.0e400)
+//│ ║  l.249: 	wasm.f64.const(1.0e400)
 //│ ╙──       	               ^^^^^^^
 
 
@@ -353,7 +256,7 @@ wasm.f64.const(1.0e400)
 :ge
 fun constOf(x: Num): Float64 = wasm.f64.const(x)
 //│ ╔══[COMPILATION ERROR] Wasm intrinsic 'f64.const' expects a numeric literal immediate
-//│ ║  l.354: 	fun constOf(x: Num): Float64 = wasm.f64.const(x)
+//│ ║  l.257: 	fun constOf(x: Num): Float64 = wasm.f64.const(x)
 //│ ╙──       	                                              ^
 
 
@@ -361,10 +264,10 @@ fun constOf(x: Num): Float64 = wasm.f64.const(x)
 :ge
 wasm.f64.add(wasm.f32.const(1.5), wasm.f32.const(2.25))
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Float32' at an unrelated type 'Float64'
-//│ ║  l.362: 	wasm.f64.add(wasm.f32.const(1.5), wasm.f32.const(2.25))
+//│ ║  l.265: 	wasm.f64.add(wasm.f32.const(1.5), wasm.f32.const(2.25))
 //│ ╙──       	             ^^^^^^^^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Float32' at an unrelated type 'Float64'
-//│ ║  l.362: 	wasm.f64.add(wasm.f32.const(1.5), wasm.f32.const(2.25))
+//│ ║  l.265: 	wasm.f64.add(wasm.f32.const(1.5), wasm.f32.const(2.25))
 //│ ╙──       	                                  ^^^^^^^^^^^^^^^^^^^^
 //│ ═══[COMPILATION ERROR] Operand #1 of wasm intrinsic 'f64.add' must be of type 'Float64'
 //│ ═══[COMPILATION ERROR] Operand #2 of wasm intrinsic 'f64.add' must be of type 'Float64'
