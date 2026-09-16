@@ -37,11 +37,13 @@ private object ClassTagsDebug:
     case access: FieldSel => showFieldAccess(access)
     case patternMatch: Dtor => showPatternMatch(patternMatch)
 
-class ProducersCollector(val flowRes: FlowConstraintSolver)(using val tl: TL) extends BlockTraverser:
+// * Collect all producers & consumers in the given function to build the web
+// * The map from ResultID to Ctor can be reused in the next pass
+class WebEntryCollector(val flowRes: FlowConstraintSolver)(using val tl: TL) extends BlockTraverser:
   private given fState: FlowAnalysis.State = flowRes.fState
   private given eState: State = flowRes.eState
 
-  private val entryPoints = ListBuffer.empty[ProducersCollector.EntryPoints]
+  private val entryPoints = ListBuffer.empty[WebEntryCollector.EntryPoints]
   private val concreteCtorsByResultId = MutMap.empty[ResultId, Ctor]
   for ctor <- flowRes.ctorsWithDests do
     concreteCtorsByResultId.addOne(ctor.exprId, ctor)
@@ -49,28 +51,24 @@ class ProducersCollector(val flowRes: FlowConstraintSolver)(using val tl: TL) ex
   for consumer <- flowRes.consumersWithSrcs do
     concreteConsumersByResultId.getOrElseUpdate(consumer.exprId, ListBuffer.empty) += consumer
 
-  private class AllocationCollector extends BlockTraverserShallow:
-    val allocations: ListBuffer[ResultId -> CtorCls] = ListBuffer.empty
+  private class ResultCollector extends BlockTraverserShallow:
     val resultIds: ListBuffer[ResultId] = ListBuffer.empty
 
     override def applyResult(r: Result): Unit =
       resultIds += r.uid
-      r match
-        case CtorProducer(ctor, _, _) => allocations += r.uid -> ctor
-        case _ => ()
       super.applyResult(r)
-  end AllocationCollector
+  end ResultCollector
 
   override def applyFunDefn(fun: FunDefn): Unit =
     val funName = fun.owner.fold(fun.dSym.nme)(owner => s"${owner.nme}.${fun.dSym.nme}")
-    val collector = new AllocationCollector()
+    val collector = new ResultCollector()
     collector.applyBlock(fun.body)
 
     val seenProducerEntryPoints = MutSet.empty[Ctor]
     for
-      (allocationId, _) <- collector.allocations
-      ctor <- concreteCtorsByResultId.get(allocationId)
-      if !ctor.dests.contains(UnknownCons)
+      resultId <- collector.resultIds
+      ctor <- concreteCtorsByResultId.get(resultId)
+      if !ctor.dests.contains(UnknownCons) // does not leak out of the web
     do seenProducerEntryPoints.add(ctor)
 
     if !seenProducerEntryPoints.isEmpty then
@@ -80,7 +78,7 @@ class ProducersCollector(val flowRes: FlowConstraintSolver)(using val tl: TL) ex
     for
       resultId <- collector.resultIds
       consumer <- concreteConsumersByResultId.getOrElse(resultId, Nil)
-      if !consumer.srcs.contains(UnknownProd)
+      if !consumer.srcs.contains(UnknownProd) // not allocated out of the web
       if consumer.srcs.exists:
         case _: Ctor => true
         case _ => false
@@ -89,25 +87,19 @@ class ProducersCollector(val flowRes: FlowConstraintSolver)(using val tl: TL) ex
     if !seenConsumerEntryPoints.isEmpty then
       tl.log(s"track consumption at ${seenConsumerEntryPoints.map(ClassTagsDebug.showConsumer).mkString(", ")} in $funName")
 
-    entryPoints += ProducersCollector.EntryPoints(
+    entryPoints += WebEntryCollector.EntryPoints(
       seenProducerEntryPoints.toList,
       seenConsumerEntryPoints.toList,
     )
 
-  override def applyClsLikeDefn(defn: ClsLikeDefn): Unit =
-    defn.companion.foreach(applyCompanionModule)
-
-  def result: (List[ProducersCollector.EntryPoints], Map[ResultId, Ctor]) =
+  def result: (List[WebEntryCollector.EntryPoints], Map[ResultId, Ctor]) =
     (entryPoints.toList, concreteCtorsByResultId.toMap)
 
-object ProducersCollector:
-  case class EntryPoints(
-    producers: List[Ctor],
-    consumers: List[ConcreteCtorConsumer],
-  )
+object WebEntryCollector:
+  case class EntryPoints(producers: List[Ctor], consumers: List[ConcreteCtorConsumer])
 
   def apply(p: Program, flowRes: FlowConstraintSolver)(using TL): (List[EntryPoints], Map[ResultId, Ctor]) =
-    val collector = new ProducersCollector(flowRes)
+    val collector = new WebEntryCollector(flowRes)
     collector.applyProgram(p)
     collector.result
 
@@ -117,10 +109,16 @@ private sealed abstract class Shape:
 
   def flattenShape: List[Shape]
 
+  def containsUnion: Bool
+
+  // * This shape subsumption is only used for wildcards (dynamic shapes) checking.
+  // * i.e., if the pattern is a wildcard, it can accept any scrutinee
+  // * We do not support a union shape for pattern
+  // * and we flattern unions in Ctor to insert different tags
+  // * We also track precise information so we do not need to check if a class is a subclass of another.
+  // * i.e., if a variable has shape C, then it is impossible that the variable is instantiated to a subclass D in runtime.
   final infix def <=(that: Shape): Bool = (this, that) match
     case (_, DynamicShape) => true
-    case (UnionShape(subshapes), _) => subshapes.forall(_ <= that)
-    case (_, UnionShape(subshapes)) => subshapes.exists(this <= _)
     case (LitShape(left), LitShape(right)) => left === right
     case (ClassShape(leftCtor, leftFields), ClassShape(rightCtor, rightFields)) =>
       leftCtor === rightCtor
@@ -137,6 +135,8 @@ private case class LitShape(lit: Value.Lit) extends Shape:
     case Value.Lit(lit) => lit.idStr
 
   def flattenShape: List[Shape] = this :: Nil
+
+  def containsUnion: Bool = false
 
 private case class ClassShape(ctor: ClassLikeSymbol, fields: Map[TermSymbol, Shape]) extends Shape:
   def show: Str =
@@ -155,6 +155,8 @@ private case class ClassShape(ctor: ClassLikeSymbol, fields: Map[TermSymbol, Sha
         yield alternative.updated(field, concreteFieldShape)
     alternatives.map(ClassShape(ctor, _)).distinct
 
+  def containsUnion: Bool = fields.valuesIterator.exists(_.containsUnion)
+
 private case class TupleShape(length: Int, elements: List[Shape]) extends Shape:
   require(elements.length === length)
   def show: Str =
@@ -170,16 +172,22 @@ private case class TupleShape(length: Int, elements: List[Shape]) extends Shape:
         yield alternative :+ concreteElement
     alternatives.map(TupleShape(length, _)).distinct
 
+  def containsUnion: Bool = elements.exists(_.containsUnion)
+
 private case class UnionShape(subshapes: List[Shape]) extends Shape:
   def show: Str = subshapes.map(_.show).mkString("(", " | ", ")")
 
   def flattenShape: List[Shape] =
     subshapes.flatMap(_.flattenShape).distinct
 
+  def containsUnion: Bool = true
+
 private object DynamicShape extends Shape:
   def show: Str = "_"
 
   def flattenShape: List[Shape] = this :: Nil
+
+  def containsUnion: Bool = false
 
 class ClassTagsTransformer(
   val webs: List[Web],
@@ -217,7 +225,7 @@ class ClassTagsTransformer(
   private val shapeTags = MutMap.empty[Shape, Int]
   private val taggedProducers = MutSet.empty[Ctor]
 
-  private val tagField = new syntax.Tree.Ident("__tag")
+  private val tagField = new syntax.Tree.Ident("__tag$")
 
   private def tagShapesOfProducer(producer: Ctor): List[ClassShape] =
     shapeOfProducer(producer) match
@@ -302,12 +310,6 @@ class ClassTagsTransformer(
           softAssert(tag.isDefined, s"Missing tag for shape ${shape.show}")
           tag.map(shape -> _)
     taggedShapes.distinct.sortBy(_._2)
-
-  private def containsUnion(shape: Shape): Bool = shape match
-    case ClassShape(_, fields) => fields.valuesIterator.exists(containsUnion)
-    case TupleShape(_, elements) => elements.exists(containsUnion)
-    case _: UnionShape => true
-    case _ => false
 
   private def insertTag(result: Result, tag: Result)(k: Path => Block): Block =
     val instance = new TempSymbol(N, "tmp")
@@ -464,7 +466,7 @@ class ClassTagsTransformer(
                 summon[TL].emitDbg(
                   s"class-tags transform-phase > match shapes ${patternShapes.map(_.show).mkString(", ")} against ${taggedShapes.map((shape, tag) => s"${shape.show}@$tag").mkString(", ")}")
               val unionPatterns = patterns.zip(patternShapes).collect:
-                case (pattern, shape) if containsUnion(shape) => pattern
+                case (pattern, shape) if shape.containsUnion => pattern
               if unionPatterns.nonEmpty then
                 summon[Raise].apply(ErrorReport(
                   msg"@matchShapes patterns must not contain union shapes." -> call.toLoc ::
@@ -589,7 +591,7 @@ object ClassTagsTransformer:
         ))
         DynamicShape
 
-  private def mkWeb(entries: ProducersCollector.EntryPoints): Web =
+  private def mkWeb(entries: WebEntryCollector.EntryPoints): Web =
     FlowWebComputation[Ctor, ConcreteCtorConsumer](
       producer => producer.dests.collect:
         case consumer: ConcreteCtorConsumer => consumer,
@@ -599,7 +601,7 @@ object ClassTagsTransformer:
       entries.consumers,
     )
 
-  private def mkWebs(entryPoints: List[ProducersCollector.EntryPoints]) =
+  private def mkWebs(entryPoints: List[WebEntryCollector.EntryPoints]) =
     val coveredProducers = MutSet.empty[Ctor]
     val coveredConsumers = MutSet.empty[ConcreteCtorConsumer]
     val webs = ListBuffer.empty[Web]
@@ -665,7 +667,7 @@ object ClassTagsTransformer:
             tl.emitDbg(s"class-tags collection-phase > $str")
         val (entryPoints, concreteCtorsByResultId) = collectorTl.givenIn:
           if dCfg.debug then tl.emitDbg(">>> start class-tags collection-phase")
-          val result = ProducersCollector(p, flowAnalysisRes)
+          val result = WebEntryCollector(p, flowAnalysisRes)
           if dCfg.debug then tl.emitDbg("<<< end class-tags collection-phase")
           result
         val webs = mkWebs(entryPoints)

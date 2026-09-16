@@ -48,28 +48,28 @@ private fun inspect(t) =
 //│   if (y === true) {
 //│     let tmp3;
 //│     tmp3 = (new D1.class(x));
-//│     tmp3.__tag = 0;
+//│     tmp3.__tag$ = 0;
 //│     tmp = tmp3;
 //│   } else {
 //│     let tmp3;
 //│     tmp3 = (new E1.class(1));
-//│     tmp3.__tag = 1;
+//│     tmp3.__tag$ = 1;
 //│     tmp = tmp3;
 //│   }
 //│   tmp1 = (new C1.class(tmp));
-//│   tmp2 = tmp.__tag === 0;
+//│   tmp2 = tmp.__tag$ === 0;
 //│   if (tmp2 === true) {
-//│     tmp1.__tag = 2;
+//│     tmp1.__tag$ = 2;
 //│   } else {
 //│     let tmp3;
-//│     tmp3 = tmp.__tag === 1;
+//│     tmp3 = tmp.__tag$ === 1;
 //│     if (tmp3 === true) {
-//│       tmp1.__tag = 3;
+//│       tmp1.__tag$ = 3;
 //│     }
 //│   }
-//│   if (tmp1.__tag === 2) {
+//│   if (tmp1.__tag$ === 2) {
 //│     return tmp1.x
-//│   } else if (tmp1.__tag === 3) {
+//│   } else if (tmp1.__tag$ === 3) {
 //│     return tmp1.x
 //│   }
 //│   return runtime.Unit;
@@ -77,9 +77,9 @@ private fun inspect(t) =
 //│ inspect = function inspect(t) {
 //│   runtime.checkArgs("inspect", 1, true, arguments.length);
 //│   let shapeMatchResult;
-//│   if (t.__tag === 2) {
+//│   if (t.__tag$ === 2) {
 //│     shapeMatchResult = t.x;
-//│   } else if (t.__tag === 3) { shapeMatchResult = t.x; }
+//│   } else if (t.__tag$ === 3) { shapeMatchResult = t.x; }
 //│   return shapeMatchResult
 //│ };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
@@ -116,21 +116,21 @@ private fun inspect(t) =
 //│   if (y === true) {
 //│     let tmp1, tmp2;
 //│     tmp1 = (new D1.class(x));
-//│     tmp1.__tag = 0;
+//│     tmp1.__tag$ = 0;
 //│     tmp2 = (new C1.class(tmp1));
-//│     tmp2.__tag = 1;
+//│     tmp2.__tag$ = 1;
 //│     tmp = tmp2;
 //│   } else {
 //│     let tmp1, tmp2;
 //│     tmp1 = (new E1.class(1));
-//│     tmp1.__tag = 2;
+//│     tmp1.__tag$ = 2;
 //│     tmp2 = (new C1.class(tmp1));
-//│     tmp2.__tag = 3;
+//│     tmp2.__tag$ = 3;
 //│     tmp = tmp2;
 //│   }
-//│   if (tmp.__tag === 1) {
+//│   if (tmp.__tag$ === 1) {
 //│     return tmp.x
-//│   } else if (tmp.__tag === 3) {
+//│   } else if (tmp.__tag$ === 3) {
 //│     return tmp.x
 //│   }
 //│   return runtime.Unit;
@@ -138,9 +138,9 @@ private fun inspect(t) =
 //│ inspect1 = function inspect(t) {
 //│   runtime.checkArgs("inspect", 1, true, arguments.length);
 //│   let shapeMatchResult;
-//│   if (t.__tag === 1) {
+//│   if (t.__tag$ === 1) {
 //│     shapeMatchResult = t.x;
-//│   } else if (t.__tag === 3) { shapeMatchResult = t.x; }
+//│   } else if (t.__tag$ === 3) { shapeMatchResult = t.x; }
 //│   return shapeMatchResult
 //│ };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
@@ -186,21 +186,21 @@ private fun inspect(t) =
 //│   if (y === true) {
 //│     let tmp1, tmp2;
 //│     tmp1 = (new E1.class(x));
-//│     tmp1.__tag = 0;
+//│     tmp1.__tag$ = 0;
 //│     tmp2 = (new C1.class(tmp1));
-//│     tmp2.__tag = 1;
+//│     tmp2.__tag$ = 1;
 //│     tmp = tmp2;
 //│   } else {
 //│     let tmp1, tmp2;
 //│     tmp1 = (new F1.class(1));
-//│     tmp1.__tag = 2;
+//│     tmp1.__tag$ = 2;
 //│     tmp2 = (new C1.class(tmp1));
-//│     tmp2.__tag = 3;
+//│     tmp2.__tag$ = 3;
 //│     tmp = tmp2;
 //│   }
-//│   if (tmp.__tag === 1) {
+//│   if (tmp.__tag$ === 1) {
 //│     return tmp.x.y
-//│   } else if (tmp.__tag === 3) {
+//│   } else if (tmp.__tag$ === 3) {
 //│     return tmp.x.x
 //│   }
 //│   return runtime.Unit;
@@ -208,9 +208,9 @@ private fun inspect(t) =
 //│ inspect2 = function inspect(t) {
 //│   runtime.checkArgs("inspect", 1, true, arguments.length);
 //│   let shapeMatchResult;
-//│   if (t.__tag === 1) {
+//│   if (t.__tag$ === 1) {
 //│     shapeMatchResult = t.x.y;
-//│   } else if (t.__tag === 3) { shapeMatchResult = t.x.x; }
+//│   } else if (t.__tag$ === 3) { shapeMatchResult = t.x.x; }
 //│   return shapeMatchResult
 //│ };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
