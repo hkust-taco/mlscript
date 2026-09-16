@@ -548,6 +548,7 @@ new Foo          // create (static class required)
 new Foo()        // with empty args
 new Foo(1, 2)    // with args
 new mut Foo      // mutable instance (not frozen)
+new rsc Foo      // resource instance (`mut` comes first if both)
 new! c           // dynamic instantiation (class value at runtime)
 new Foo(...xs)   // spread args
 ```
@@ -1292,6 +1293,22 @@ type Transformer[A, B] = A -> B
 type BinOp[A] = (A, A) -> A
 ```
 
+### Resource Types
+
+`rsc` marks a type as a resource; `rsc?` leaves it to a runtime check:
+```mlscript
+fun f(x: rsc Foo): Int = 0
+fun g(x: rsc? Foo): Int = 0
+type Handle = rsc Foo
+```
+
+`rsc` binds tighter than `|` and `&`, and covers a whole function type:
+```mlscript
+type A = rsc Foo | Bar     // only `Foo`; the union becomes `rsc?`
+type B = rsc (Foo | Bar)   // both
+type F = rsc Foo -> Bar    // the whole function type, not just `Foo`
+```
+
 ### `forall` (Universal Quantification)
 
 ```mlscript
@@ -1808,7 +1825,7 @@ decl      ::= 'declare' def
 
 expr      ::= literal | name | app | lambda | if | case | while
             | let | set | 'return' | 'throw' | 'drop' | 'do'
-            | 'new' [mut] class args | 'handle' | 'using'
+            | 'new' [mut] [rsc] class args | 'handle' | 'using'
             | annotation expr | infix | block
 
 if        ::= 'if' scrutinee? branches
