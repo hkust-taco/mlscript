@@ -1093,10 +1093,15 @@ class Resolver(tl: TraceLogger)
         checkRscInIntersection(lhs, rhs)
         t.subTerms.foreach(traverseSign(_, expect = Expect.NonModule(N)))
       
-      // Complex type: Function type, Wildcard type, Composed type,
-      // Negation type, Forall type, Tuple type (including a function
-      // type's parameter list, whose resource modifiers are checked here)
-      case t: (Term.FunTy | Term.WildcardTy | Term.CompType | Term.Neg | Term.Forall | Term.Constrained | Term.Tup) =>
+      // Function type, whose parameters may not contain resource modifiers yet.
+      case Term.FunTy(lhs, _, _) =>
+        checkRscInFunParams(lhs)
+        t.subTerms.foreach(traverseSign(_, expect = Expect.NonModule(N)))
+      
+      // Complex type: Wildcard type, Composed type, Negation type,
+      // Forall type, Tuple type (including a function type's parameter
+      // list, whose resource modifiers are checked here)
+      case t: (Term.WildcardTy | Term.CompType | Term.Neg | Term.Forall | Term.Constrained | Term.Tup) =>
         t.subTerms.foreach(traverseSign(_, expect = Expect.NonModule(N)))
       
       // A resource modifier does not affect resolution: traverse its target type, then check the types that the
@@ -1281,6 +1286,14 @@ class Resolver(tl: TraceLogger)
     rejectRscModifiersIn(targs, "a type argument")
   
   /**
+   * Checks the parameters of a function type: a resource modifier on one is not supported yet, as a function type
+   * erases to `Function` without its parameter types, so the modifier would be silently lost.
+   */
+  private def checkRscInFunParams(params: Term): Unit = params match
+    case params: Term.Tup => rejectRscModifiersIn(params.subTerms.toList, "the parameters of a function type")
+    case param => rejectRscModifiersIn(param :: Nil, "the parameters of a function type")
+  
+  /**
    * Reports each resource modifier on a term in `ts` or reached through it by `rscReach` (a union's members, a
    * `forall`'s body), as not supported inside the type that `ts` belongs to (e.g. "a type argument").
    */
@@ -1300,6 +1313,7 @@ class Resolver(tl: TraceLogger)
     t match
       case Term.Annotated(Annot.Resource(rsc), target) => checkRscModifier(rsc, target)
       case Term.CompType(lhs, rhs, false) => checkRscInIntersection(lhs, rhs)
+      case Term.FunTy(lhs, _, _) => checkRscInFunParams(lhs)
       case _ => ()
     t.subTerms.foreach(checkAllRscModifiers)
 
