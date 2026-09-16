@@ -329,25 +329,25 @@ class ClassTagsTransformer(
               shapeOf(lowerBound, N)
         case _ => DynamicShape
 
-  private def taggedShapesOfMatch(matchResultId: ResultId): List[Shape -> Int] =
+  // * Get all (shape, tag) pair of the given scrutinee
+  private def taggedShapesOfMatchScrutinee(matchResultId: ResultId): List[Shape -> Int] =
     val taggedShapes = patternMatchesByResultId.getOrElse(matchResultId, Nil).iterator
       .flatMap(_.srcs)
       .collect:
         case ctor: Ctor => ctor
       .toList.distinct.flatMap: ctor =>
         taggedShapesByProducer.getOrElse(ctor, Nil)
-    taggedShapes.distinct.sortBy(_._2)
+    taggedShapes.distinct.sortBy(_._2) // sort to avoid changing debug printing everytime
 
-  private def insertTag(result: Result, tag: Result)(k: Path => Block): Block =
-    val instance = new TempSymbol(N, "tmp")
-    val instanceRef = instance.asSimpleRef.withLocOf(result)
-    Scoped(Set.single(instance), Assign(
-      instance, result, AssignField(
-        instanceRef, tagField, tag, k(instanceRef),
-      )(N)))
+  private def bindResult(result: Result)(k: Path => Block): Block = result match
+    case path: Path => k(path)
+    case result =>
+      val symbol = new TempSymbol(N, "tmp")
+      val reference = symbol.asSimpleRef.withLocOf(result)
+      Scoped(Set.single(symbol), Assign(symbol, result, k(reference)))
 
-  private def assignTag(instance: Path, tag: Int) =
-    AssignField(instance, tagField, Value.Lit(syntax.Tree.IntLit(tag)), End())(N)
+  private def assignTag(instance: Path, tag: Int)(next: Block): Block =
+    AssignField(instance, tagField, Value.Lit(syntax.Tree.IntLit(tag)), next)(N)
 
   private def insertTagForMultiShapes(
     result: Result, args: List[Arg], producer: Ctor, taggedShapes: List[ClassShape -> Int]
@@ -356,15 +356,8 @@ class ClassTagsTransformer(
       case (field: TermSymbol, path) => field -> path
     .toList
 
-    def bind(result: Result)(k: Path => Block): Block = result match
-      case path: Path => k(path)
-      case result =>
-        val symbol = new TempSymbol(N, "tmp")
-        val reference = symbol.asSimpleRef.withLocOf(result)
-        Scoped(Set.single(symbol), Assign(symbol, result, k(reference)))
-
     def checkTagEq(left: Path, right: Path)(k: Path => Block) =
-      bind(Call(State.builtinOpsMap("===").asSimpleRef, (left.asArg :: right.asArg :: Nil) ne_:: Nil)(CallMetadata.defaultMlsFun))(k)
+      bindResult(Call(State.builtinOpsMap("===").asSimpleRef, (left.asArg :: right.asArg :: Nil) ne_:: Nil)(CallMetadata.defaultMlsFun))(k)
 
     def checkShape(argument: Path, shape: Shape)(k: Path => Block) =
       shapeTags.get(shape) match
@@ -384,6 +377,7 @@ class ClassTagsTransformer(
           case DynamicShape => k(Value.Lit(syntax.Tree.BoolLit(true)))
           case _ => lastWords(s"Shape ${shape.show} cannot be checked directly.")
 
+    // * Generate tag checks for each parameter and form a conjunction condition
     def mkConjunction(checks: List[Path -> Shape])(k: Path => Block): Block = checks match
       case Nil => k(Value.Lit(syntax.Tree.BoolLit(true)))
       case (argument, shape) :: Nil => checkShape(argument, shape)(k)
@@ -394,7 +388,7 @@ class ClassTagsTransformer(
               case (Value.Lit(syntax.Tree.BoolLit(true)), _) => k(remainingCondition)
               case (_, Value.Lit(syntax.Tree.BoolLit(true))) => k(condition)
               case _ =>
-                bind(Call(
+                bindResult(Call(
                   State.andSymbol.asSimpleRef, (condition.asArg :: remainingCondition.asArg :: Nil) ne_:: Nil
                 )(CallMetadata.defaultMlsFun))(k)
 
@@ -406,23 +400,22 @@ class ClassTagsTransformer(
           mkConjunction(checks): condition =>
             new Match(
               condition,
-              Case.Lit(syntax.Tree.BoolLit(true)) -> assignTag(instance, tag) :: Nil,
+              Case.Lit(syntax.Tree.BoolLit(true)) -> assignTag(instance, tag)(End()) :: Nil,
               if remainingShapes.isEmpty then N else S(assign(remainingShapes, instance)),
               End(),
             )
         case Nil => End()
 
-    val instance = new TempSymbol(N, "tmp")
-    val instanceRef = instance.asSimpleRef.withLocOf(result)
-    Scoped(Set.single(instance), Assign(instance, result,
-      Begin(assign(taggedShapes, instanceRef), k(instanceRef))))
+    bindResult(result): instance =>
+      Begin(assign(taggedShapes, instance), k(instance))
 
   private def insertShapeTag(
     result: Result, producer: Ctor, taggedShapes: List[ClassShape -> Int]
   )(k: Path => Block): Block =
     taggedShapes match
       case (_, tag) :: Nil =>
-        insertTag(result, Value.Lit(syntax.Tree.IntLit(tag)))(k)
+        bindResult(result): instance =>
+          assignTag(instance, tag)(k(instance))
       case _ :: _ => result match
         case CtorProducer(_, args, _) =>
           insertTagForMultiShapes(result, args, producer, taggedShapes)(k)
@@ -445,12 +438,14 @@ class ClassTagsTransformer(
       private def isShapeMatch(path: Path): Bool =
         path.targetSymbol.flatMap(_.asBlkMember).contains(Elaborator.ctx.builtins.shape.`match`)
 
+      // * get the branch body defined as a FunDefn
       private def getBranch(path: Path): Opt[FunDefn] =
         path.targetSymbol.collect:
           case symbol: TermSymbol => symbol
         .flatMap(flowRes.preAnalyzer.res.funSymToFunDefn.get)
 
-      private def inlineBranch(branch: FunDefn, resultSymbol: TempSymbol): Block =
+      // * Generate branch based on the branch function
+      private def mkBranch(branch: FunDefn, resultSymbol: TempSymbol): Block =
         applyFunBodyLikeBlock(branch.body).mapReturn:
           case Return(result) => Assign(resultSymbol, result, End())
 
@@ -488,19 +483,12 @@ class ClassTagsTransformer(
               N
             else
               val patternShapes = patterns.map(Shape.mkShapeByPattern)
-              val taggedShapes = taggedShapesOfMatch(call.uid)
+              val taggedShapes = taggedShapesOfMatchScrutinee(call.uid)
               if debug then
                 summon[TL].emitDbg(
                   s"class-tags transform-phase > match shapes ${patternShapes.map(_.show).mkString(", ")} against ${taggedShapes.map((shape, tag) => s"${shape.show}@$tag").mkString(", ")}")
-              val unionPatterns = patterns.zip(patternShapes).collect:
-                case (pattern, shape) if shape.containsUnion => pattern
-              if unionPatterns.nonEmpty then
-                summon[Raise].apply(ErrorReport(
-                  msg"@matchShapes patterns must not contain union shapes." -> call.toLoc ::
-                  unionPatterns.map: pattern =>
-                    msg"This pattern contains a union shape." -> pattern.toLoc,
-                  source = Diagnostic.Source.Compilation,
-                ))
+              if patternShapes.exists(_.containsUnion) then
+                softAssert(false, "@matchShapes patterns must not contain union shapes.")
                 N
               else
                 val ambiguousTags = taggedShapes.flatMap: (taggedShape, tag) =>
@@ -518,11 +506,10 @@ class ClassTagsTransformer(
                     summon[Raise].apply(WarningReport(messages))
                   N
                 else
-                  val matchingBranches = taggedShapes.flatMap: (taggedShape, tag) =>
-                    patternShapes.zip(branchDefns).find:
-                      case (patternShape, _) => taggedShape <= patternShape
-                    .map:
-                      case (_, branch) => (taggedShape, tag, branch)
+                  val matchingBranches = patternShapes.zip(branchDefns).flatMap: (patternShape, branch) =>
+                    taggedShapes.collect:
+                      case (taggedShape, tag) if taggedShape <= patternShape =>
+                        (taggedShape, tag, branch)
                   val matchedTags = matchingBranches.iterator.map(_._2).toSet
                   val unmatchedShapes = taggedShapes.filter((_, tag) => !matchedTags.contains(tag))
                   if taggedShapes.isEmpty then N
@@ -539,7 +526,7 @@ class ClassTagsTransformer(
                     val resultRef = resultSymbol.asSimpleRef.withLocOf(call)
                     val tagAccess = Select(scrutinee, tagField)(N)(false).withLocOf(scrutinee)
                     val arms = matchingBranches.map: (_, tag, branch) =>
-                      Case.Lit(syntax.Tree.IntLit(tag)) -> inlineBranch(branch, resultSymbol)
+                      Case.Lit(syntax.Tree.IntLit(tag)) -> mkBranch(branch, resultSymbol)
                     S(Scoped(Set.single(resultSymbol), new Match(tagAccess, arms, N, k(resultRef))))
 
       override def applyResult(result: Result)(k: Result => Block): Block =

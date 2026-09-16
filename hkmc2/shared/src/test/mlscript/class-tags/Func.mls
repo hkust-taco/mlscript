@@ -637,10 +637,10 @@ fun bar(x, y) =
 //│   }
 //│   if (tmp.__tag$ === 2) {
 //│     return 1
-//│   } else if (tmp.__tag$ === 3) {
-//│     return 3
 //│   } else if (tmp.__tag$ === 4) {
 //│     return 2
+//│   } else if (tmp.__tag$ === 3) {
+//│     return 3
 //│   } else if (tmp.__tag$ === 5) { return 4 }
 //│   return runtime.Unit;
 //│ };

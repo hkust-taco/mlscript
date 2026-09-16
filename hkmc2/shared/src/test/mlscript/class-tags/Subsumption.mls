@@ -198,19 +198,19 @@ private fun inspect(t) =
 //│     tmp2.__tag$ = 3;
 //│     tmp = tmp2;
 //│   }
-//│   if (tmp.__tag$ === 1) {
-//│     return tmp.x.y
-//│   } else if (tmp.__tag$ === 3) {
+//│   if (tmp.__tag$ === 3) {
 //│     return tmp.x.x
+//│   } else if (tmp.__tag$ === 1) {
+//│     return tmp.x.y
 //│   }
 //│   return runtime.Unit;
 //│ };
 //│ inspect2 = function inspect(t) {
 //│   runtime.checkArgs("inspect", 1, true, arguments.length);
 //│   let shapeMatchResult;
-//│   if (t.__tag$ === 1) {
-//│     shapeMatchResult = t.x.y;
-//│   } else if (t.__tag$ === 3) { shapeMatchResult = t.x.x; }
+//│   if (t.__tag$ === 3) {
+//│     shapeMatchResult = t.x.x;
+//│   } else if (t.__tag$ === 1) { shapeMatchResult = t.x.y; }
 //│   return shapeMatchResult
 //│ };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
