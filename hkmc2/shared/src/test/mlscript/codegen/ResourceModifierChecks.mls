@@ -315,3 +315,140 @@ class K(using c: C, rsc val x: C)
 //│   constructor K¹(c: C², x: C²) { set K².this.c⁰ = c; define x⁶ as val x⁷: C² = x; end }
 //│ };
 //│ end
+
+
+// Resource modifiers on type-parameter declarations are not supported yet.
+
+:ge
+class G1[rsc A]
+//│ ╔══[COMPILATION ERROR] Unsupported type parameter 'rsc'-modified identifier
+//│ ║  l.323: 	class G1[rsc A]
+//│ ╙──       	             ^
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define G1⁰ as class G1¹; end
+
+:ge
+class G2[rsc? A]
+//│ ╔══[COMPILATION ERROR] Unsupported type parameter 'rsc?'-modified identifier
+//│ ║  l.331: 	class G2[rsc? A]
+//│ ╙──       	              ^
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define G2⁰ as class G2¹; end
+
+:ge
+fun g3[rsc A](x: A) = x
+//│ ╔══[COMPILATION ERROR] Unsupported type parameter 'rsc'-modified identifier
+//│ ║  l.339: 	fun g3[rsc A](x: A) = x
+//│ ╙──       	           ^
+//│ ╔══[COMPILATION ERROR] Name not found: A
+//│ ║  l.339: 	fun g3[rsc A](x: A) = x
+//│ ╙──       	                 ^
+//│ ╔══[COMPILATION ERROR] Expected a type, got a non-type ‹error›
+//│ ║  l.339: 	fun g3[rsc A](x: A) = x
+//│ ╙──       	                 ^
+//│ ╔══[COMPILATION ERROR] Expected a type, got ‹error›
+//│ ║  l.339: 	fun g3[rsc A](x: A) = x
+//│ ╙──       	                 ^
+//│ ╔══[COMPILATION ERROR] Expected a type, got a non-type ‹error›
+//│ ║  l.339: 	fun g3[rsc A](x: A) = x
+//│ ╙──       	                 ^
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define g3⁰ as fun g3¹(x: ?): ? { return x }; end
+
+// A modified `forall` binder is rejected too, while a plain `[A] -> A -> A` is accepted here.
+
+:ge
+fun g4(f: [rsc A] -> A -> A) = f
+//│ ╔══[COMPILATION ERROR] Illegal forall annotation.
+//│ ║  l.361: 	fun g4(f: [rsc A] -> A -> A) = f
+//│ ╙──       	          ^^^^^^^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Expected a type, got a non-type ‹error›
+//│ ║  l.361: 	fun g4(f: [rsc A] -> A -> A) = f
+//│ ╙──       	          ^^^^^^^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Expected a type, got ‹error›
+//│ ║  l.361: 	fun g4(f: [rsc A] -> A -> A) = f
+//│ ╙──       	          ^^^^^^^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Expected a type, got a non-type ‹error›
+//│ ║  l.361: 	fun g4(f: [rsc A] -> A -> A) = f
+//│ ╙──       	          ^^^^^^^^^^^^^^^^^
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define g4⁰ as fun g4¹(f: ?): ? { return f }; end
+
+
+// A primitive is never a resource in a type argument either.
+
+class Wrap[A](value: A)
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define Wrap⁰ as class Wrap² {
+//│   private val value⁰: ?;
+//│   constructor Wrap¹(value: ?) { set Wrap².this.value⁰ = value; end }
+//│ };
+//│ end
+
+:ge
+fun pg1(x: Wrap[rsc Int32]) = x
+//│ ╔══[COMPILATION ERROR] Primitive type 'Int32' cannot be a resource.
+//│ ║  l.389: 	fun pg1(x: Wrap[rsc Int32]) = x
+//│ ╙──       	                    ^^^^^
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define pg1⁰ as fun pg1¹(x: Wrap²): ? { return x }; end
+
+:w
+fun pg2(x: Wrap[rsc? Int32]) = x
+//│ ╔══[WARNING] Primitive type 'Int32' is never a resource, so 'rsc?' has no effect.
+//│ ║  l.397: 	fun pg2(x: Wrap[rsc? Int32]) = x
+//│ ╙──       	                     ^^^^^
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define pg2⁰ as fun pg2¹(x: Wrap²): ? { return x }; end
+
+:ge
+fun pg3(x: Wrap[rsc I]) = x
+//│ ╔══[COMPILATION ERROR] Primitive type 'Int32' cannot be a resource.
+//│ ║  l.405: 	fun pg3(x: Wrap[rsc I]) = x
+//│ ╙──       	                    ^
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define pg3⁰ as fun pg3¹(x: Wrap²): ? { return x }; end
+
+:ge
+fun pg4(x: Wrap[rsc U]) = x
+//│ ╔══[COMPILATION ERROR] Primitive type 'Int32' cannot be a resource.
+//│ ║  l.413: 	fun pg4(x: Wrap[rsc U]) = x
+//│ ╙──       	                    ^
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define pg4⁰ as fun pg4¹(x: Wrap²): ? { return x }; end
+
+:ge
+fun pg5(x: Wrap[Wrap[rsc Int32]]) = x
+//│ ╔══[COMPILATION ERROR] Primitive type 'Int32' cannot be a resource.
+//│ ║  l.421: 	fun pg5(x: Wrap[Wrap[rsc Int32]]) = x
+//│ ╙──       	                         ^^^^^
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define pg5⁰ as fun pg5¹(x: Wrap²): ? { return x }; end
+
+fun pg6[A](x: A) = x
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define pg6⁰ as fun pg6¹(x: ?): ? { return x }; end
+
+:ge
+pg6[rsc Int32](1)
+//│ ╔══[COMPILATION ERROR] Primitive type 'Int32' cannot be a resource.
+//│ ║  l.433: 	pg6[rsc Int32](1)
+//│ ╙──       	        ^^^^^
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ return pg6¹(1)
+
+fun pg7(x: Wrap[rsc Int]) = x
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define pg7⁰ as fun pg7¹(x: Wrap²): ? { return x }; end
+
+// FIXME: The error is reported twice, whereas `type P1 = rsc Int32` in `ResourceTypeAliases.mls` reports it once.
+:ge
+type PG1 = Wrap[rsc Int32]
+//│ ╔══[COMPILATION ERROR] Primitive type 'Int32' cannot be a resource.
+//│ ║  l.447: 	type PG1 = Wrap[rsc Int32]
+//│ ╙──       	                    ^^^^^
+//│ ╔══[COMPILATION ERROR] Primitive type 'Int32' cannot be a resource.
+//│ ║  l.447: 	type PG1 = Wrap[rsc Int32]
+//│ ╙──       	                    ^^^^^
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ end
