@@ -21,7 +21,6 @@ import semantics.Elaborator.{State, Ctx, ctx}
 
 import syntax.{Literal, Tree, SpreadKind}
 import hkmc2.syntax.{Fun, Keyword, LetBind, MutVal}
-import hkmc2.syntax.Keyword.`then`
 
 
 abstract class TailOp(val transfersControl: Bool) extends (Result => Block)
