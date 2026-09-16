@@ -132,8 +132,8 @@ object Deforest:
     cfg: Config,
     tl: TL,
     raise: Raise,
-    eState: Elaborator.State,
     ctx: Elaborator.Ctx,
+    eState: Elaborator.State,
     symbolPrinter: SymbolPrinter,
   ): Program =
     // TODO: handle see through imported modules
