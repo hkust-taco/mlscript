@@ -53,7 +53,7 @@ object Pattern:
         // TODO: The above edge case would fail the following assertion.
         assert(symbols.size <= 1)
         // If no symbol had been created before, create a new symbol now.
-        val symbol = symbols.headOption.getOrElse(VarSymbol(Ident(name)))
+        val symbol = symbols.headOption.getOrElse(VarSymbol(Ident(name), erasedType = N))
         aliases.foreach: alias =>
           // For guarded patterns (`p where t`), the variables in `p` have to be
           // allocated before `t` is elaborated. In that case, we don't need to

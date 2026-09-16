@@ -35,15 +35,26 @@ class AsyncLowering(using TL, Raise, Elaborator.State, Elaborator.Ctx, Config):
     override def applyFunDefn(fun: FunDefn): FunDefn =
       if !fun.async then return wrapAwait(false)(super.applyFunDefn(fun))
       val outerBms = BlockMemberSymbol(fun.sym.nme, Nil, fun.sym.nameIsMeaningful)
-      val outerDsym = TermSymbol(syntax.Fun, N, fun.dSym.id)
       val outerParams = fun.params.flatMap: pl =>
         pl.allParams.map: p =>
           val v = p.sym
-          val nv = VarSymbol(v.id)
+          val nv = VarSymbol(v.id, erasedType = v.erasedType)
           (p, p.copy(sym = nv))
       val symMap = outerParams.iterator.map(p => p._1.sym -> p._2.sym).toMap[SimpleSymbol, SimpleSymbol]
-      val thisVar = VarSymbol(Tree.Ident("this"))
+      val thisVar = VarSymbol(Tree.Ident("this"), erasedType = fun.owner.flatMap(_.asThis.erasedValueType))
       val thisParam = fun.owner.map(_ => Param.simple(thisVar))
+      val outerDsym = TermSymbol(
+        syntax.Fun,
+        N,
+        fun.dSym.id,
+        erasedType = S:
+          ErasedType.FuncRef(
+            rsc = S(false),
+            paramLists = 
+              (thisParam.map(_.sym.erasedType).toList ++ outerParams.map(_._2.sym.erasedType)) :: Nil :: Nil,
+            ret = N,
+          )
+      )
       val vars = fun.params.flatMap(_.paramSyms)
       val noAsync = fun.annotations.filterNot(_ is Annot.Async)
       val transformer = new BlockTransformer(SymbolSubst.Id):
@@ -56,9 +67,10 @@ class AsyncLowering(using TL, Raise, Elaborator.State, Elaborator.Ctx, Config):
       val newBody = transformer.applyBlock(wrapAwait(true)(applyFunBodyLikeBlock(fun.body)))
       collectedFunDefn += FunDefn(N, outerBms, outerDsym, PlainParamList((thisParam.iterator ++ outerParams.iterator.map(_._2)).toList) :: PlainParamList(Nil) :: Nil, newBody)(fun.configOverride, noAsync)
       val callArgs = (fun.owner.iterator.map(s => Arg(N, Value.This(s))) ++ fun.params.iterator.flatMap(_.allParams.iterator.map(p => Arg(N, Value.SimpleRef(p.sym))))).toList
-      val tmp = TempSymbol(N, "tmp")
+      val outerCall = Call(Value.MemberRef(outerBms, outerDsym), callArgs ne_:: Nil)(CallMetadata.mlsFunWithEffect)
+      val tmp = TempSymbol(N, erasedType = outerCall.erasedValueType, "tmp")
       val wrapperBody = blockBuilder
-        .assignScoped(tmp, Call(Value.MemberRef(outerBms, outerDsym), callArgs ne_:: Nil)(CallMetadata.mlsFunWithEffect))
+        .assignScoped(tmp, outerCall)
         .ret(Call(Value.SimpleRef(State.runtimeSymbol).selSN("toJsAsync"), (tmp.asSimpleRef.asArg :: Nil) ne_:: Nil)(CallMetadata.defaultMlsFun))
       FunDefn(fun.owner, fun.sym, fun.dSym, fun.params, wrapperBody)(fun.configOverride, noAsync)
     

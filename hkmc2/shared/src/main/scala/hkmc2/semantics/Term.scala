@@ -100,6 +100,10 @@ object Annot:
   
   val Private = Modifier(Keyword.`private`)
   
+  /** The `declare` modifier in `annotations`, if present. */
+  def declareModifierOf(annotations: Ls[Annot]): Opt[Annot.Modifier] = annotations.collectFirst:
+    case mod @ Annot.Modifier(Keyword.`declare`) => mod
+  
 end Annot
 
 type AnySelTerm = AnySel & Resolvable
@@ -619,6 +623,7 @@ extension (self: Blk)
 
 
 case class ShowCfg(
+  showErasedTypes: Bool,
   showExpansionMappings: Bool,
   showFlowSymbols: Bool,
   debug: Bool,
@@ -630,6 +635,7 @@ end ShowCfg
 object ShowCfg:
   // * For use when displaying things for internal use (not for end users)
   val internal = ShowCfg(
+    showErasedTypes = true,
     showFlowSymbols = true,
     showExpansionMappings = false,
     debug = false,
@@ -1149,8 +1155,7 @@ sealed abstract class Declaration:
 sealed abstract class Definition extends Declaration, Statement:
   val annotations: Ls[Annot]
   def bsym: BlockMemberSymbol
-  def hasDeclareModifier: Opt[Annot.Modifier] = annotations.collectFirst:
-    case mod @ Annot.Modifier(Keyword.`declare`) => mod
+  def hasDeclareModifier: Opt[Annot.Modifier] = Annot.declareModifierOf(annotations)
   def hasStagedModifier: Opt[Annot.Modifier] = annotations.collectFirst:
     case mod @ Annot.Modifier(Keyword.`staged`) => mod
 

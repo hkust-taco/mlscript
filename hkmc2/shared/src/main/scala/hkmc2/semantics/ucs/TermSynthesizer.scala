@@ -93,11 +93,11 @@ trait TermSynthesizer(using State):
     app(stringLeave, tup(fld(t), fld(int(n))), label)
 
   protected final def tempLet(dbgName: Str, term: Term)(inner: TempSymbol => Split): Split =
-    val s = TempSymbol(N, dbgName)
+    val s = TempSymbol(N, erasedType = N, dbgName)
     Split.Let(s, term, inner(s))
 
   protected final def plainTest(cond: Term, dbgName: Str = "cond")(inner: => Split): Split =
-    val s = TempSymbol(N, dbgName)
+    val s = TempSymbol(N, erasedType = N, dbgName)
     Split.Let(s, cond, Branch(s.safeRef, inner) ~: Split.End)
 
   protected final def makeBindings(fields: Ls[RcdField | RcdSpread]): Term =

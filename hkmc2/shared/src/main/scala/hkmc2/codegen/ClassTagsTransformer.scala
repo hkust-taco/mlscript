@@ -342,7 +342,7 @@ class ClassTagsTransformer(
   private def bindResult(result: Result)(k: Path => Block): Block = result match
     case path: Path => k(path)
     case result =>
-      val symbol = new TempSymbol(N, "tmp")
+      val symbol = new TempSymbol(N, erasedType = result.erasedValueType, "tmp")
       val reference = symbol.asSimpleRef.withLocOf(result)
       Scoped(Set.single(symbol), Assign(symbol, result, k(reference)))
 
@@ -367,7 +367,7 @@ class ClassTagsTransformer(
         case N => shape match
           case LitShape(lit) => checkTagEq(argument, lit)(k)
           case TupleShape(length, _) =>
-            val condition = new TempSymbol(N, "tmp")
+            val condition = new TempSymbol(N, erasedType = S(ErasedType.Bool), "tmp")
             val conditionRef = condition.asSimpleRef.withLocOf(argument)
             Scoped(Set.single(condition),
               new Match(argument, Case.Tup(length, false) ->
@@ -522,7 +522,7 @@ class ClassTagsTransformer(
                     ))
                     N
                   else
-                    val resultSymbol = new TempSymbol(N, "shapeMatchResult")
+                    val resultSymbol = new TempSymbol(N, erasedType = call.erasedValueType, "shapeMatchResult")
                     val resultRef = resultSymbol.asSimpleRef.withLocOf(call)
                     val tagAccess = Select(scrutinee, tagField)(N)(false).withLocOf(scrutinee)
                     val arms = matchingBranches.map: (_, tag, branch) =>

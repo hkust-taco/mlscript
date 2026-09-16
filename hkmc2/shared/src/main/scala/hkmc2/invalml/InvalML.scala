@@ -142,7 +142,7 @@ class InvalTyper(using elState: Elaborator.State, tl: TL)(using Ctx):
         case _ => error(msg"Effect cannot be polymorphic." -> ty.toLoc :: Nil)
       }).getOrElse(Bot))
     case f @ Term.Forall(tvs, outer, body) =>
-      val outVar = freshOuter(outer.getOrElse(new TempSymbol(S(f), "outer")))(using ctx)
+      val outVar = freshOuter(outer.getOrElse(new TempSymbol(S(f), erasedType = N, "outer")))(using ctx)
       val nestCtx = ctx.nestWithOuter(outVar)
       outer.foreach(sym => nestCtx += sym -> outVar)
       given InvalCtx = nestCtx
@@ -204,7 +204,7 @@ class InvalTyper(using elState: Elaborator.State, tl: TL)(using Ctx):
     typeAndSubstType(ty, pol = true)(using Map.empty)
   
   private def instantiate(ty: PolyType)(using ctx: InvalCtx): GeneralType =
-    ty.instantiate(infVarState.nextUid, freshEnv(new TempSymbol(N, "env")), ctx.lvl)(tl)
+    ty.instantiate(infVarState.nextUid, freshEnv(new TempSymbol(N, erasedType = N, "env")), ctx.lvl)(tl)
 
   private def extrude(ty: GeneralType)(using ctx: InvalCtx, pol: Bool, cctx: CCtx): GeneralType = ty match
     case ty: Type => solver.extrude(ty)(using ctx.lvl, pol, HashMap.empty)
@@ -240,7 +240,7 @@ class InvalTyper(using elState: Elaborator.State, tl: TL)(using Ctx):
           nestCtx &= (sym, tv, sk)
           (tv, sk)
       val (bodyTy, ctxTy, eff) = typeCode(body)
-      val res = freshVar(new TempSymbol(S(f), "ctx"))(using ctx)
+      val res = freshVar(new TempSymbol(S(f), erasedType = N, "ctx"))(using ctx)
       constrain(ctxTy, bds.foldLeft[Type](res)((res, bd) => res | bd._2))
       (FunType(bds.map(_._1), bodyTy, Bot), res, eff)
     case app @ Term.App(lhs, Term.Tup(rhs)) =>
@@ -250,7 +250,7 @@ class InvalTyper(using elState: Elaborator.State, tl: TL)(using Ctx):
           val (ty, ctx, eff) = typeCode(p.term)
           (ty :: res._1, res._2 | ctx, res._3 | eff)
         case (_, spd: Spd) => TODO(s"spread arguments in quoted code: $spd")
-      val resTy = freshVar(new TempSymbol(S(app), "app"))
+      val resTy = freshVar(new TempSymbol(S(app), erasedType = N, "app"))
       constrain(lhsTy, FunType(rhsTy.reverse, resTy, Bot)) // TODO: right
       (resTy, lhsCtx | rhsCtx, lhsEff | rhsEff)
     case sel @ Term.SynthSel(Term.Ref(_: TopLevelSymbol), _) if sel.symbol.isDefined =>
@@ -258,8 +258,8 @@ class InvalTyper(using elState: Elaborator.State, tl: TL)(using Ctx):
       (tryMkMono(opTy, sel), Bot, eff)
     case unq @ Term.Unquoted(body) =>
       val (ty, eff) = typeCheck(body)
-      val tv = freshVar(new TempSymbol(S(unq), "cde"))
-      val cr = freshVar(new TempSymbol(S(unq), "ctx"))
+      val tv = freshVar(new TempSymbol(S(unq), erasedType = N, "cde"))
+      val cr = freshVar(new TempSymbol(S(unq), erasedType = N, "ctx"))
       constrain(tryMkMono(ty, body), InvalCtx.codeTy(tv, cr))
       (tv, cr, eff)
     case blk @ Term.Blk(LetDecl(sym, _) :: DefineVar(sym2, rhs) :: Nil, body)
@@ -270,7 +270,7 @@ class InvalTyper(using elState: Elaborator.State, tl: TL)(using Ctx):
       val sk = freshSkolem(sym)
       nestCtx &= (sym, rhsTy, sk)
       val (bodyTy, bodyCtx, bodyEff) = typeCode(body)
-      val res = freshVar(new TempSymbol(S(blk), "ctx"))(using ctx)
+      val res = freshVar(new TempSymbol(S(blk), erasedType = N, "ctx"))(using ctx)
       constrain(bodyCtx, sk | res)
       (bodyTy, rhsCtx | res, rhsEff | bodyEff)
     case Term.IfLike(_, IfLikeForm.ReturningIf, SimpleSplit.IfThenElse(cond, cons, alts)) =>
@@ -290,7 +290,7 @@ class InvalTyper(using elState: Elaborator.State, tl: TL)(using Ctx):
         ascribe(lam, sigTy)
         ()
       case N =>
-        val outer = freshOuter(new TempSymbol(S(lam), "outer"))(using ctx)
+        val outer = freshOuter(new TempSymbol(S(lam), erasedType = N, "outer"))(using ctx)
         given InvalCtx = ctx.nestWithOuter(outer)
         val funTyV = freshVar(sym)
         ctx += sym -> funTyV // for recursive functions
@@ -417,7 +417,7 @@ class InvalTyper(using elState: Elaborator.State, tl: TL)(using Ctx):
           case S(sym) =>
             val (clsTy, tv, emptyTy) = sym.defn.map(sym -> _) match
             case S((sym, cls)) =>
-              (ClassLikeType(sym, cls.tparams.map(_ => freshWildcard(sym))), (freshVar(new TempSymbol(S(scrutinee), "scrut"))), ClassLikeType(sym, cls.tparams.map(_ => Wildcard.empty)))
+              (ClassLikeType(sym, cls.tparams.map(_ => freshWildcard(sym))), (freshVar(new TempSymbol(S(scrutinee), erasedType = N, "scrut"))), ClassLikeType(sym, cls.tparams.map(_ => Wildcard.empty)))
             case _ =>
               error(msg"Cannot match ${scrutinee.toString} as ${sym.toString}" -> split.toLoc :: Nil)
               (Bot, Bot, Bot)
@@ -543,8 +543,8 @@ class InvalTyper(using elState: Elaborator.State, tl: TL)(using Ctx):
             Left(ty) :: Right(eff) :: Nil
           case spd: Spd => TODO(s"spread arguments: $spd")
         .partitionMap(x => x)
-      val effVar = freshVar(new TempSymbol(S(t), "eff"))
-      val retVar = freshVar(new TempSymbol(S(t), "app"))
+      val effVar = freshVar(new TempSymbol(S(t), erasedType = N, "eff"))
+      val retVar = freshVar(new TempSymbol(S(t), erasedType = N, "app"))
       constrain(tryMkMono(funTy, t), FunType(argTy.map((tryMkMono(_, t))), retVar, effVar))
       (retVar, argEff.foldLeft[Type](effVar | lhsEff)((res, e) => res | e))
 
@@ -748,25 +748,25 @@ class InvalTyper(using elState: Elaborator.State, tl: TL)(using Ctx):
         given InvalCtx = nestCtx
         nestCtx += sym -> InvalCtx.regionTy(sk)
         val (res, eff) = typeCheck(body)
-        val tv = freshVar(new TempSymbol(S(reg), "eff"))(using ctx)
+        val tv = freshVar(new TempSymbol(S(reg), erasedType = N, "eff"))(using ctx)
         constrain(eff, tv | sk)
         (extrude(res)(using ctx, true), tv)
       case Term.RegRef(reg, value) =>
         val (regTy, regEff) = typeCheck(reg)
         val (valTy, valEff) = typeCheck(value)
-        val sk = freshVar(new TempSymbol(S(reg), "reg"))
+        val sk = freshVar(new TempSymbol(S(reg), erasedType = N, "reg"))
         constrain(tryMkMono(regTy, reg), InvalCtx.regionTy(sk))
         (InvalCtx.refTy(tryMkMono(valTy, value), sk), sk | (regEff | valEff))
       case Term.SetRef(lhs, rhs) =>
         val (lhsTy, lhsEff) = typeCheck(lhs)
         val (rhsTy, rhsEff) = typeCheck(rhs)
-        val sk = freshVar(new TempSymbol(S(lhs), "reg"))
+        val sk = freshVar(new TempSymbol(S(lhs), erasedType = N, "reg"))
         constrain(tryMkMono(lhsTy, lhs), InvalCtx.refTy(tryMkMono(rhsTy, rhs), sk))
         (tryMkMono(rhsTy, rhs), sk | (lhsEff | rhsEff))
       case Term.Deref(ref) =>
         val (refTy, refEff) = typeCheck(ref)
-        val sk = freshVar(new TempSymbol(S(ref), "reg"))
-        val ctnt = freshVar(new TempSymbol(S(ref), "ref"))
+        val sk = freshVar(new TempSymbol(S(ref), erasedType = N, "reg"))
+        val ctnt = freshVar(new TempSymbol(S(ref), erasedType = N, "ref"))
         constrain(tryMkMono(refTy, ref), InvalCtx.refTy(ctnt, sk))
         (ctnt, sk | refEff)
       case Term.Quoted(body) =>
