@@ -1224,14 +1224,14 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
       val argsList = appliedMainAndAuxArgs(appliedClsAuxArgs)
       
       val ref = obj.cls.sym.asMemberRef(obj.cls.isym)
-      val inst = Instantiate(mut = false, rsc = false,ref, argsList)(InstantiateMetadata.empty)
+      val inst = Instantiate(mut = false, rsc = false, ref, argsList)(InstantiateMetadata.empty)
       val bod = Return(inst)
       
       FunDefn(N, flattenedSym, flattenedDSym, allParamLists, bod)(N, annotations = Nil)
     
     private val flat = Lazy[Defn](mkFlattenedDefn)
     
-    def instObject = Instantiate(mut = false, rsc = false,cls.sym.asMemberRef(cls.isym), formatArgs :: Nil)(InstantiateMetadata.empty)
+    def instObject = Instantiate(mut = false, rsc = false, cls.sym.asMemberRef(cls.isym), formatArgs :: Nil)(InstantiateMetadata.empty)
     
     // Rewrite a naked reference to a parameterized class constructor.
     // Returns a Call to the curried C$ wrapper partially applied with formatArgs.

@@ -336,7 +336,7 @@ object ErasedType:
 
   /** Whether the resource-ness dimension of a coercion needs a cast.
     *
-    * A resouce and a non-resource have different resource-tracking strategies, so neither can be coerced to the other. 
+    * A resource and a non-resource have different resource-tracking strategies, so neither can be coerced to the other.
     * Both widen freely into the undetermined layout, and narrowing back out of it is the runtime ref-count test.
     */
   private[codegen] def needsRscCast(actual: Opt[Bool], expected: Opt[Bool]): Opt[Bool] =
