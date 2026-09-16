@@ -343,12 +343,59 @@ fun g3[rsc A](x: A) = x
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define g3⁰ as fun g3¹(x: ?): ? { return x }; end
 
+// Combined with a variance modifier, in either order, the modifier is rejected the same way.
+
+:ge
+class G5[out rsc A](val value: A)
+//│ ╔══[COMPILATION ERROR] 'rsc' modifiers on type parameters are not supported yet.
+//│ ║  l.349: 	class G5[out rsc A](val value: A)
+//│ ╙──       	             ^^^
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define G5⁰ as class G5² {
+//│   val value⁰: ?;
+//│   constructor G5¹(value: ?) { define value⁰ as val value¹: ? = value; end }
+//│ };
+//│ end
+
+:ge
+class G6[rsc? in A](val value: A)
+//│ ╔══[COMPILATION ERROR] 'rsc?' modifiers on type parameters are not supported yet.
+//│ ║  l.361: 	class G6[rsc? in A](val value: A)
+//│ ╙──       	         ^^^^
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define G6⁰ as class G6² {
+//│   val value²: ?;
+//│   constructor G6¹(value: ?) { define value² as val value³: ? = value; end }
+//│ };
+//│ end
+
+// Other malformed combinations are still unsupported.
+
+:ge
+class G7[out in A]
+//│ ╔══[COMPILATION ERROR] Unsupported type parameter 'out'-modified 'in'-modified identifier
+//│ ║  l.375: 	class G7[out in A]
+//│ ╙──       	                ^
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define G7⁰ as class G7¹; end
+
+:ge
+class G8[rsc rsc? A]
+//│ ╔══[COMPILATION ERROR] 'rsc' modifiers on type parameters are not supported yet.
+//│ ║  l.383: 	class G8[rsc rsc? A]
+//│ ╙──       	         ^^^
+//│ ╔══[COMPILATION ERROR] Unsupported type parameter 'rsc'-modified 'rsc?'-modified identifier
+//│ ║  l.383: 	class G8[rsc rsc? A]
+//│ ╙──       	                  ^
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define G8⁰ as class G8¹; end
+
 // A modified `forall` binder is rejected too, while a plain `[A] -> A -> A` is accepted here.
 
 :ge
 fun g4(f: [rsc A] -> A -> A) = f
 //│ ╔══[COMPILATION ERROR] 'rsc' modifiers on type parameters are not supported yet.
-//│ ║  l.349: 	fun g4(f: [rsc A] -> A -> A) = f
+//│ ║  l.396: 	fun g4(f: [rsc A] -> A -> A) = f
 //│ ╙──       	           ^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define g4⁰ as fun g4¹(f: Function⁰): ? { return f }; end
@@ -360,7 +407,7 @@ fun g4(f: [rsc A] -> A -> A) = f
 :ge
 fun rscIdentity[A](x: rsc A) = x
 //│ ╔══[COMPILATION ERROR] 'rsc' modifiers on type parameters are not supported yet.
-//│ ║  l.361: 	fun rscIdentity[A](x: rsc A) = x
+//│ ║  l.408: 	fun rscIdentity[A](x: rsc A) = x
 //│ ╙──       	                          ^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define rscIdentity⁰ as fun rscIdentity¹(x: ?): ? { return x }; end
@@ -372,7 +419,7 @@ rscIdentity[Int32](1)
 :ge
 fun rscMaybeIdentity[A](x: rsc? A) = x
 //│ ╔══[COMPILATION ERROR] 'rsc?' modifiers on type parameters are not supported yet.
-//│ ║  l.373: 	fun rscMaybeIdentity[A](x: rsc? A) = x
+//│ ║  l.420: 	fun rscMaybeIdentity[A](x: rsc? A) = x
 //│ ╙──       	                                ^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define rscMaybeIdentity⁰ as fun rscMaybeIdentity¹(x: ?): ? { return x }; end
@@ -380,12 +427,12 @@ fun rscMaybeIdentity[A](x: rsc? A) = x
 :ge
 class RscHolder[A](val value: rsc A)
 //│ ╔══[COMPILATION ERROR] 'rsc' modifiers on type parameters are not supported yet.
-//│ ║  l.381: 	class RscHolder[A](val value: rsc A)
+//│ ║  l.428: 	class RscHolder[A](val value: rsc A)
 //│ ╙──       	                                  ^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define RscHolder⁰ as class RscHolder² {
-//│   val value⁰: ?;
-//│   constructor RscHolder¹(value: ?) { define value⁰ as val value¹: ? = value; end }
+//│   val value⁴: ?;
+//│   constructor RscHolder¹(value: ?) { define value⁴ as val value⁵: ? = value; end }
 //│ };
 //│ end
 
@@ -395,12 +442,12 @@ new RscHolder[Int32](1)
 
 fun holderValue(h: RscHolder[Int32]) = h.value
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ define holderValue⁰ as fun holderValue¹(h: RscHolder²): ? { return h.value¹ }; end
+//│ define holderValue⁰ as fun holderValue¹(h: RscHolder²): ? { return h.value⁵ }; end
 
 :ge
 fun rscUnion[A](x: rsc (A | C)) = x
 //│ ╔══[COMPILATION ERROR] 'rsc' modifiers on type parameters are not supported yet.
-//│ ║  l.401: 	fun rscUnion[A](x: rsc (A | C)) = x
+//│ ║  l.448: 	fun rscUnion[A](x: rsc (A | C)) = x
 //│ ╙──       	                        ^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define rscUnion⁰ as fun rscUnion¹(x: ?): ? { return x }; end
@@ -408,7 +455,7 @@ fun rscUnion[A](x: rsc (A | C)) = x
 :ge
 fun rscForall(f: [A] -> (rsc A) -> A) = f
 //│ ╔══[COMPILATION ERROR] 'rsc' modifiers on type parameters are not supported yet.
-//│ ║  l.409: 	fun rscForall(f: [A] -> (rsc A) -> A) = f
+//│ ║  l.456: 	fun rscForall(f: [A] -> (rsc A) -> A) = f
 //│ ╙──       	                             ^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define rscForall⁰ as fun rscForall¹(f: Function⁰): ? { return f }; end
@@ -419,15 +466,15 @@ fun rscForall(f: [A] -> (rsc A) -> A) = f
 class Wrap[A](value: A)
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define Wrap⁰ as class Wrap² {
-//│   private val value²: ?;
-//│   constructor Wrap¹(value: ?) { set Wrap².this.value² = value; end }
+//│   private val value⁶: ?;
+//│   constructor Wrap¹(value: ?) { set Wrap².this.value⁶ = value; end }
 //│ };
 //│ end
 
 :ge
 fun pg1(x: Wrap[rsc Int32]) = x
 //│ ╔══[COMPILATION ERROR] Primitive type 'Int32' cannot be a resource.
-//│ ║  l.428: 	fun pg1(x: Wrap[rsc Int32]) = x
+//│ ║  l.475: 	fun pg1(x: Wrap[rsc Int32]) = x
 //│ ╙──       	                    ^^^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define pg1⁰ as fun pg1¹(x: Wrap²): ? { return x }; end
@@ -435,7 +482,7 @@ fun pg1(x: Wrap[rsc Int32]) = x
 :w
 fun pg2(x: Wrap[rsc? Int32]) = x
 //│ ╔══[WARNING] Primitive type 'Int32' is never a resource, so 'rsc?' has no effect.
-//│ ║  l.436: 	fun pg2(x: Wrap[rsc? Int32]) = x
+//│ ║  l.483: 	fun pg2(x: Wrap[rsc? Int32]) = x
 //│ ╙──       	                     ^^^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define pg2⁰ as fun pg2¹(x: Wrap²): ? { return x }; end
@@ -443,7 +490,7 @@ fun pg2(x: Wrap[rsc? Int32]) = x
 :ge
 fun pg3(x: Wrap[rsc I]) = x
 //│ ╔══[COMPILATION ERROR] Primitive type 'Int32' cannot be a resource.
-//│ ║  l.444: 	fun pg3(x: Wrap[rsc I]) = x
+//│ ║  l.491: 	fun pg3(x: Wrap[rsc I]) = x
 //│ ╙──       	                    ^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define pg3⁰ as fun pg3¹(x: Wrap²): ? { return x }; end
@@ -451,7 +498,7 @@ fun pg3(x: Wrap[rsc I]) = x
 :ge
 fun pg4(x: Wrap[rsc U]) = x
 //│ ╔══[COMPILATION ERROR] Primitive type 'Int32' cannot be a resource.
-//│ ║  l.452: 	fun pg4(x: Wrap[rsc U]) = x
+//│ ║  l.499: 	fun pg4(x: Wrap[rsc U]) = x
 //│ ╙──       	                    ^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define pg4⁰ as fun pg4¹(x: Wrap²): ? { return x }; end
@@ -459,7 +506,7 @@ fun pg4(x: Wrap[rsc U]) = x
 :ge
 fun pg5(x: Wrap[Wrap[rsc Int32]]) = x
 //│ ╔══[COMPILATION ERROR] Primitive type 'Int32' cannot be a resource.
-//│ ║  l.460: 	fun pg5(x: Wrap[Wrap[rsc Int32]]) = x
+//│ ║  l.507: 	fun pg5(x: Wrap[Wrap[rsc Int32]]) = x
 //│ ╙──       	                         ^^^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define pg5⁰ as fun pg5¹(x: Wrap²): ? { return x }; end
@@ -471,7 +518,7 @@ fun pg6[A](x: A) = x
 :ge
 pg6[rsc Int32](1)
 //│ ╔══[COMPILATION ERROR] Primitive type 'Int32' cannot be a resource.
-//│ ║  l.472: 	pg6[rsc Int32](1)
+//│ ║  l.519: 	pg6[rsc Int32](1)
 //│ ╙──       	        ^^^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ return pg6¹(1)
@@ -484,10 +531,10 @@ fun pg7(x: Wrap[rsc Int]) = x
 :ge
 type PG1 = Wrap[rsc Int32]
 //│ ╔══[COMPILATION ERROR] Primitive type 'Int32' cannot be a resource.
-//│ ║  l.485: 	type PG1 = Wrap[rsc Int32]
+//│ ║  l.532: 	type PG1 = Wrap[rsc Int32]
 //│ ╙──       	                    ^^^^^
 //│ ╔══[COMPILATION ERROR] Primitive type 'Int32' cannot be a resource.
-//│ ║  l.485: 	type PG1 = Wrap[rsc Int32]
+//│ ║  l.532: 	type PG1 = Wrap[rsc Int32]
 //│ ╙──       	                    ^^^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ end
@@ -498,7 +545,7 @@ type PG1 = Wrap[rsc Int32]
 :ge
 fun pf1(g: (rsc Int32) -> Int32) = g
 //│ ╔══[COMPILATION ERROR] Primitive type 'Int32' cannot be a resource.
-//│ ║  l.499: 	fun pf1(g: (rsc Int32) -> Int32) = g
+//│ ║  l.546: 	fun pf1(g: (rsc Int32) -> Int32) = g
 //│ ╙──       	                ^^^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define pf1⁰ as fun pf1¹(g: Function⁰): ? { return g }; end
@@ -506,7 +553,7 @@ fun pf1(g: (rsc Int32) -> Int32) = g
 :ge
 fun pf2(g: (rsc rsc? C) -> C) = g
 //│ ╔══[COMPILATION ERROR] A type takes at most one resource modifier.
-//│ ║  l.507: 	fun pf2(g: (rsc rsc? C) -> C) = g
+//│ ║  l.554: 	fun pf2(g: (rsc rsc? C) -> C) = g
 //│ ╙──       	                     ^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define pf2⁰ as fun pf2¹(g: Function⁰): ? { return g }; end
@@ -514,7 +561,7 @@ fun pf2(g: (rsc rsc? C) -> C) = g
 :ge
 fun pf3[A](g: (rsc A) -> A) = g
 //│ ╔══[COMPILATION ERROR] 'rsc' modifiers on type parameters are not supported yet.
-//│ ║  l.515: 	fun pf3[A](g: (rsc A) -> A) = g
+//│ ║  l.562: 	fun pf3[A](g: (rsc A) -> A) = g
 //│ ╙──       	                   ^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define pf3⁰ as fun pf3¹(g: Function⁰): ? { return g }; end

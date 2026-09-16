@@ -2205,20 +2205,22 @@ extends Importer:
                 val res = TyParam(FldFlags.empty, vce, vs)
                 vs.decl = S(res)
                 res :: Nil
-              targ match
+              // * A variance and a resource modifier may each be written at most once, in either order.
+              def go(t: Tree, vce: Opt[Bool], rscd: Bool): Ls[TyParam] = t match
                 case id: Ident =>
-                  mk(id, N)
-                case Modified(Keywrd(Keyword.`in`), id: Ident) =>
-                  mk(id, S(false))
-                case Modified(Keywrd(Keyword.`out`), id: Ident) =>
-                  mk(id, S(true))
+                  mk(id, vce)
+                case Modified(Keywrd(Keyword.`in`), body) if vce.isEmpty =>
+                  go(body, S(false), rscd)
+                case Modified(Keywrd(Keyword.`out`), body) if vce.isEmpty =>
+                  go(body, S(true), rscd)
                 // * The parameter is still declared, so its uses resolve.
-                case Modified(kw @ Keywrd(Keyword.`rsc` | Keyword.`rsc?`), id: Ident) =>
+                case Modified(kw @ Keywrd(Keyword.`rsc` | Keyword.`rsc?`), body) if !rscd =>
                   raise(Annot.Resource.unsupportedOnTyParam(kw.kw, kw.toLoc))
-                  mk(id, N)
+                  go(body, vce, rscd = true)
                 case _ =>
                   raise(ErrorReport(msg"Unsupported type parameter ${targ.describe}" -> targ.toLoc :: Nil))
                   Nil
+              go(targ, N, rscd = false)
           case N => Nil
         
         newCtx ++= tps.map(tp => tp.sym.name -> tp.sym) // TODO: correct ++?
