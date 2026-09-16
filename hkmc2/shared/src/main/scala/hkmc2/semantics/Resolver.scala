@@ -556,6 +556,7 @@ class Resolver(tl: TraceLogger)
       
       case Term.TyApp(lhs: Resolvable, targs) =>
         resolve(lhs, prefer = prefer, inAppPrefix = inAppPrefix, inCtxPrefix = inCtxPrefix, inTyPrefix = true)
+        checkRscInTyArgs(targs)
         targs.foreach(traverseSign(_, expect = Any))
         resolveSymbol(t, prefer = prefer, sign = false)
         resolveType(t, prefer = prefer)
@@ -1084,6 +1085,7 @@ class Resolver(tl: TraceLogger)
       // respectively.
       case Term.TyApp(con, targs) => 
         traverseSign(con, expect = expect, inAppPrefix = true)
+        checkRscInTyArgs(targs)
         targs.foreach(traverseSign(_, expect = Expect.NonModule(S("Type arguments should be non-moduleful types."))))
       
       // Intersection type, which may not contain resource modifiers yet.
@@ -1269,10 +1271,23 @@ class Resolver(tl: TraceLogger)
    * `ErasedType.eraseSign` never decomposes an intersection, so the modifier would be silently lost.
    */
   private def checkRscInIntersection(lhs: Term, rhs: Term): Unit =
-    (rscReach(lhs) ::: rscReach(rhs)).foreach:
+    rejectRscModifiersIn(lhs :: rhs :: Nil, "an intersection type")
+  
+  /**
+   * Checks the arguments of a type application: a resource modifier on one is not supported yet, as type arguments
+   * are erased, so the modifier would be silently lost.
+   */
+  private def checkRscInTyArgs(targs: Ls[Term]): Unit =
+    rejectRscModifiersIn(targs, "a type argument")
+  
+  /**
+   * Reports each resource modifier on a term in `ts` or reached through it by `rscReach` (a union's members, a
+   * `forall`'s body), as not supported inside the type that `ts` belongs to (e.g. "a type argument").
+   */
+  private def rejectRscModifiersIn(ts: Ls[Term], what: Str): Unit =
+    ts.flatMap(rscReach).foreach:
       case mod @ Term.Annotated(Annot.Resource(_), _) =>
-        raise(ErrorReport(
-          msg"Resource modifiers inside an intersection type are not supported yet." -> mod.toLoc :: Nil))
+        raise(ErrorReport(msg"Resource modifiers inside ${what} are not supported yet." -> mod.toLoc :: Nil))
       case _ => ()
   
   /**
