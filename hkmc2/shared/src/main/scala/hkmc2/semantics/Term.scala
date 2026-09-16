@@ -101,6 +101,16 @@ object Annot:
       case Modifier(Keyword.`rsc`) => S(S(true))
       case Modifier(Keyword.`rsc?`) => S(N)
       case _ => N
+    
+    /** The keyword of a resource modifier denoting `rsc`, or `N` for a non-resource. */
+    def keyword(rsc: Opt[Bool]): Opt[Keyword] = rsc match
+      case S(true) => S(Keyword.`rsc`)
+      case N => S(Keyword.`rsc?`)
+      case S(false) => N
+    
+    /** Reports the resource modifier `kw` on a type parameter, whether on its declaration or on a use of it. */
+    def unsupportedOnTyParam(kw: Keyword, loc: Opt[Loc]): ErrorReport =
+      ErrorReport(msg"'${kw.name}' modifiers on type parameters are not supported yet." -> loc :: Nil)
   
   /** The `declare` modifier in `annotations`, if present. */
   def declareModifierOf(annotations: Ls[Annot]): Opt[Annot.Modifier] = annotations.collectFirst:

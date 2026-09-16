@@ -1232,6 +1232,10 @@ extends Importer:
         sym
       val syms = (tvs.collect:
         case id: Tree.Ident => (genSym(id, erasedType = N), N, N)
+        // * The binder is still declared, so its uses in the body resolve.
+        case Modified(kw @ Keywrd(Keyword.`rsc` | Keyword.`rsc?`), id: Tree.Ident) =>
+          raise(Annot.Resource.unsupportedOnTyParam(kw.kw, kw.toLoc))
+          (genSym(id, erasedType = N), N, N)
         case InfixApp(id: Tree.Ident, Keywrd(Keyword.`extends`), ub) => (genSym(id, erasedType = N), S(ub), N)
         case InfixApp(id: Tree.Ident, Keywrd(Keyword.`restricts`), lb) => (genSym(id, erasedType = N), N, S(lb))
         case InfixApp(InfixApp(id: Tree.Ident, Keywrd(Keyword.`extends`), ub), Keywrd(Keyword.`restricts`), lb) =>
@@ -2208,6 +2212,10 @@ extends Importer:
                   mk(id, S(false))
                 case Modified(Keywrd(Keyword.`out`), id: Ident) =>
                   mk(id, S(true))
+                // * The parameter is still declared, so its uses resolve.
+                case Modified(kw @ Keywrd(Keyword.`rsc` | Keyword.`rsc?`), id: Ident) =>
+                  raise(Annot.Resource.unsupportedOnTyParam(kw.kw, kw.toLoc))
+                  mk(id, N)
                 case _ =>
                   raise(ErrorReport(msg"Unsupported type parameter ${targ.describe}" -> targ.toLoc :: Nil))
                   Nil
@@ -2822,11 +2830,16 @@ extends Importer:
   
   def typeParams(t: Tree): Ctxl[(Ls[Param], Ctx)] = t match
     case TyTup(ps) =>
+      def mk(id: Ident): Ls[Param] =
+        val sym = VarSymbol(id, erasedType = N)
+        sym.decl = S(TyParam(FldFlags.empty, N, sym))
+        Param(FldFlags.empty, sym, N, Modulefulness.none) :: Nil
       val vs = ps.flatMap:
-        case id: Ident =>
-          val sym = VarSymbol(id, erasedType = N)
-          sym.decl = S(TyParam(FldFlags.empty, N, sym))
-          Param(FldFlags.empty, sym, N, Modulefulness.none) :: Nil
+        case id: Ident => mk(id)
+        // * The parameter is still declared, so its uses resolve.
+        case Modified(kw @ Keywrd(Keyword.`rsc` | Keyword.`rsc?`), id: Ident) =>
+          raise(Annot.Resource.unsupportedOnTyParam(kw.kw, kw.toLoc))
+          mk(id)
         case t =>
           raise(ErrorReport(msg"Unsupported type parameter ${t.describe}" -> t.toLoc :: Nil))
           Nil
