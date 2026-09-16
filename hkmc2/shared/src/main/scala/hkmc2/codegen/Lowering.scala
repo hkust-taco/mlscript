@@ -21,6 +21,7 @@ import semantics.Elaborator.{State, Ctx, ctx}
 
 import syntax.{Literal, Tree, SpreadKind}
 import hkmc2.syntax.{Fun, Keyword, LetBind, MutVal}
+import hkmc2.syntax.Keyword.`then`
 
 
 abstract class TailOp(val transfersControl: Bool) extends (Result => Block)
@@ -966,7 +967,14 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
                   msg"Unsupported form for scope.locally." ->
                     t.toLoc :: Nil,
                   source = Diagnostic.Source.Compilation)
-          case S(SpecialBuiltin.ShapeMatch) | N =>
+          case S(SpecialBuiltin.ShapeMatch) =>
+            if config.classTags.isEmpty then
+              return fail:
+                ErrorReport(
+                  msg"Class tag insertion is not enabled." ->
+                    t.toLoc :: Nil,
+                  source = Diagnostic.Source.Compilation)
+          case N =>
         case N =>
       case N =>
       
