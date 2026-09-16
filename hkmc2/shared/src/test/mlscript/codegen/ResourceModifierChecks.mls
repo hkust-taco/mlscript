@@ -452,3 +452,26 @@ type PG1 = Wrap[rsc Int32]
 //│ ╙──       	                    ^^^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ end
+
+
+// The parameters of a function type are checked like any other type.
+
+:ge
+fun pf1(g: (rsc Int32) -> Int32) = g
+//│ ╔══[COMPILATION ERROR] Primitive type 'Int32' cannot be a resource.
+//│ ║  l.461: 	fun pf1(g: (rsc Int32) -> Int32) = g
+//│ ╙──       	                ^^^^^
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define pf1⁰ as fun pf1¹(g: Function⁰): ? { return g }; end
+
+:ge
+fun pf2(g: (rsc rsc? C) -> C) = g
+//│ ╔══[COMPILATION ERROR] A type takes at most one resource modifier.
+//│ ║  l.469: 	fun pf2(g: (rsc rsc? C) -> C) = g
+//│ ╙──       	                     ^
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define pf2⁰ as fun pf2¹(g: Function⁰): ? { return g }; end
+
+fun pf4(g: (rsc C, rsc? D) -> C) = g
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define pf4⁰ as fun pf4¹(g: Function⁰): ? { return g }; end

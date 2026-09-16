@@ -1071,7 +1071,6 @@ class Resolver(tl: TraceLogger)
       t match
       case Term.Ref(_) =>
       case Term.Lit(_) =>
-      case Term.Tup(_) => t.subTerms.foreach(traverse(_, expect = NonModule(N)))
       case Term.UnitVal() =>
       // Literals with operators. e.g., -42
       case Term.App(Term.Ref(_: BuiltinSymbol), Term.Tup(Fld(term = Term.Lit(_)) :: Nil)) =>
@@ -1093,7 +1092,8 @@ class Resolver(tl: TraceLogger)
         t.subTerms.foreach(traverseSign(_, expect = Expect.NonModule(N)))
       
       // Complex type: Function type, Wildcard type, Composed type,
-      // Negation type, Forall type, 
+      // Negation type, Forall type, Tuple type (including a function
+      // type's parameter list, whose resource modifiers are checked here)
       case t: (Term.FunTy | Term.WildcardTy | Term.CompType | Term.Neg | Term.Forall | Term.Constrained | Term.Tup) =>
         t.subTerms.foreach(traverseSign(_, expect = Expect.NonModule(N)))
       
