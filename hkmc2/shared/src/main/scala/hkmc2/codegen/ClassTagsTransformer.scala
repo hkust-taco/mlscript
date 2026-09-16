@@ -38,7 +38,6 @@ private object ClassTagsDebug:
     case patternMatch: Dtor => showPatternMatch(patternMatch)
 
 // * Collect all producers & consumers in the given function to build the web
-// * The map from ResultID to Ctor can be reused in the next pass
 class WebEntryCollector(val flowRes: FlowConstraintSolver)(using val tl: TL) extends BlockTraverser:
   private given fState: FlowAnalysis.State = flowRes.fState
   private given eState: State = flowRes.eState
@@ -92,13 +91,12 @@ class WebEntryCollector(val flowRes: FlowConstraintSolver)(using val tl: TL) ext
       seenConsumerEntryPoints.toList,
     )
 
-  def result: (List[WebEntryCollector.EntryPoints], Map[ResultId, Ctor]) =
-    (entryPoints.toList, concreteCtorsByResultId.toMap)
+  def result: List[WebEntryCollector.EntryPoints] = entryPoints.toList
 
 object WebEntryCollector:
   case class EntryPoints(producers: List[Ctor], consumers: List[ConcreteCtorConsumer])
 
-  def apply(p: Program, flowRes: FlowConstraintSolver)(using TL): (List[EntryPoints], Map[ResultId, Ctor]) =
+  def apply(p: Program, flowRes: FlowConstraintSolver)(using TL): List[EntryPoints] =
     val collector = new WebEntryCollector(flowRes)
     collector.applyProgram(p)
     collector.result
@@ -129,6 +127,47 @@ private sealed abstract class Shape:
       leftLength === rightLength
         && leftElements.zip(rightElements).forall((left, right) => left <= right)
     case _ => false
+
+private object Shape:
+  def mkShapeByPattern(pattern: Pattern)(using raise: Raise): Shape =
+    pattern match
+      case ctorPattern @ Pattern.Constructor(_, arguments) =>
+        val ctor = ctorPattern.symbol.flatMap:
+          case ctor: ClassCtorSymbol => S(ctor.associatedCls)
+          case symbol => symbol.asClsLike
+        ctor match
+          case S(cls: ClassSymbol) =>
+            cls.tree.clsParams match
+              case fields :: Nil =>
+                val argumentShapes = arguments match
+                  case S(patterns) => patterns.map(mkShapeByPattern)
+                  case N => Nil
+                if argumentShapes.size =/= fields.size then
+                  raise(ErrorReport(
+                    msg"Expected constructor arity ${fields.size} in @matchShapes pattern for ${cls.nme}, but found ${argumentShapes.size}." -> pattern.toLoc :: Nil,
+                    source = Diagnostic.Source.Compilation,
+                  ))
+                  DynamicShape
+                else ClassShape(cls, fields.zip(argumentShapes).toMap)
+              case _ =>
+                raise(ErrorReport(
+                  msg"This pattern is not supported by @matchShapes yet." -> pattern.toLoc :: Nil,
+                  source = Diagnostic.Source.Compilation,
+                ))
+                DynamicShape
+          case S(obj: ModuleOrObjectSymbol) =>
+            ClassShape(obj, Map.empty)
+          case _ => DynamicShape
+      case Pattern.Tuple(leading, N) =>
+        TupleShape(leading.size, leading.map(mkShapeByPattern))
+      case Pattern.Literal(literal) => LitShape(Value.Lit(literal))
+      case Pattern.Wildcard() => DynamicShape
+      case _ =>
+        raise(ErrorReport(
+          msg"This pattern is not supported by @matchShapes yet." -> pattern.toLoc :: Nil,
+          source = Diagnostic.Source.Compilation,
+        ))
+        DynamicShape
 
 private case class LitShape(lit: Value.Lit) extends Shape:
   def show: Str = lit match
@@ -182,6 +221,17 @@ private case class UnionShape(subshapes: List[Shape]) extends Shape:
 
   def containsUnion: Bool = true
 
+private object UnionShape:
+  def mkUnion(shapes: Iterable[Shape]): Shape =
+    val flattened = shapes.iterator.flatMap:
+      case UnionShape(subshapes) if subshapes.nonEmpty => subshapes
+      case shape => shape :: Nil
+    val normalized = flattened.toList.distinct.sortBy(_.show)
+    normalized match
+      case Nil => DynamicShape
+      case shape :: Nil => shape
+      case shapes => UnionShape(shapes)
+
 private object DynamicShape extends Shape:
   def show: Str = "_"
 
@@ -191,31 +241,14 @@ private object DynamicShape extends Shape:
 
 class ClassTagsTransformer(
   val webs: List[Web],
-  val concreteCtorsByResultId: Map[ResultId, Ctor],
   val flowRes: FlowConstraintSolver,
   val debug: Bool,
 )(using State, Elaborator.Ctx, TL, Raise) extends BlockTransformer(SymbolSubst.Id):
   private given fState: FlowAnalysis.State = flowRes.fState
 
-  // * get all nested ctors inside
-  private def concreteCtorsIn(root: ProdStrat): Set[Ctor] =
-    def rec(producer: ProdStrat, seen: Set[ProdStrat]): Set[Ctor] =
-      if seen.contains(producer) then Set.empty
-      else
-        val nextSeen = seen + producer
-        producer match
-          case ctor: Ctor =>
-            Set.single(ctor) ++ ctor.args.iterator.flatMap: (_, argument) =>
-              rec(argument, nextSeen)
-          case variable: StratVar =>
-            variable.lowerBounds.iterator.flatMap(rec(_, nextSeen)).toSet
-          case _ => Set.empty
-    rec(root, Set.empty)
+  private val producersInWeb = webs.iterator.flatMap(_.markedProducers).toSet
 
-  private val producersInWeb = webs.iterator.flatMap(_.markedProducers).flatMap(concreteCtorsIn).toSet
-
-  private val ctorsByResultId =
-    concreteCtorsByResultId ++ producersInWeb.iterator.map(ctor => ctor.exprId -> ctor)
+  private val ctorsByResultId = producersInWeb.iterator.map(ctor => ctor.exprId -> ctor).toMap
 
   private val patternMatchesByResultId =
     flowRes.consumersWithSrcs.iterator.collect:
@@ -223,17 +256,10 @@ class ClassTagsTransformer(
     .toList.groupBy(_.exprId)
 
   private val shapeTags = MutMap.empty[Shape, Int]
-  private val taggedProducers = MutSet.empty[Ctor]
 
   private val tagField = new syntax.Tree.Ident("__tag$")
 
-  private def tagShapesOfProducer(producer: Ctor): List[ClassShape] =
-    shapeOfProducer(producer) match
-      case shape: ClassShape =>
-        shape.flattenShape.collect:
-          case shape: ClassShape => shape
-      case _ => Nil
-
+  // * Allocate a tag for a shape in the web
   private def allocateTag(shape: Shape): Int =
     shapeTags.getOrElseUpdate(shape, {
       val tag = shapeTags.size
@@ -243,13 +269,17 @@ class ClassTagsTransformer(
       tag
     })
 
-  private def allocateShapeTags(): Unit =
-    val producers = producersInWeb.toList.sortBy(_.exprId.uid)
-    for producer <- producers do
-      val shapes = tagShapesOfProducer(producer)
-      if shapes.nonEmpty then
-        taggedProducers.add(producer)
-        shapes.foreach(allocateTag)
+  private lazy val taggedShapesByProducer: Map[Ctor, List[ClassShape -> Int]] =
+    producersInWeb.toList.sortBy(_.exprId.uid).flatMap: producer =>
+      val shapes = shapeOfProducer(producer) match
+        case shape: ClassShape =>
+          shape.flattenShape.collect:
+            case shape: ClassShape => shape
+        case _ => Nil
+      val taggedShapes = shapes.map(shape => shape -> allocateTag(shape))
+      if taggedShapes.isEmpty then Nil
+      else (producer -> taggedShapes) :: Nil
+    .toMap
 
   private def getCtorArgs(producer: Ctor) =
     producer.exprId.getResult match
@@ -294,7 +324,7 @@ class ClassTagsTransformer(
       case _ => producer match
         case ctor: Ctor => shapeOfProducer(ctor)
         case variable: StratVar =>
-          ClassTagsTransformer.mkUnion:
+          UnionShape.mkUnion:
             variable.lowerBounds.map: lowerBound =>
               shapeOf(lowerBound, N)
         case _ => DynamicShape
@@ -303,12 +333,9 @@ class ClassTagsTransformer(
     val taggedShapes = patternMatchesByResultId.getOrElse(matchResultId, Nil).iterator
       .flatMap(_.srcs)
       .collect:
-        case ctor: Ctor if taggedProducers.contains(ctor) => ctor
+        case ctor: Ctor => ctor
       .toList.distinct.flatMap: ctor =>
-        tagShapesOfProducer(ctor).flatMap: shape =>
-          val tag = shapeTags.get(shape)
-          softAssert(tag.isDefined, s"Missing tag for shape ${shape.show}")
-          tag.map(shape -> _)
+        taggedShapesByProducer.getOrElse(ctor, Nil)
     taggedShapes.distinct.sortBy(_._2)
 
   private def insertTag(result: Result, tag: Result)(k: Path => Block): Block =
@@ -407,7 +434,7 @@ class ClassTagsTransformer(
   override def applyProgram(program: Program): Program =
     if debug then
       summon[TL].emitDbg(">>> start class-tags transform-phase")
-    allocateShapeTags()
+    val _ = taggedShapesByProducer
     val result = super.applyProgram(program)
     if debug then
       summon[TL].emitDbg("<<< end class-tags transform-phase")
@@ -460,7 +487,7 @@ class ClassTagsTransformer(
               ))
               N
             else
-              val patternShapes = patterns.map(ClassTagsTransformer.mkShapeByPattern)
+              val patternShapes = patterns.map(Shape.mkShapeByPattern)
               val taggedShapes = taggedShapesOfMatch(call.uid)
               if debug then
                 summon[TL].emitDbg(
@@ -517,17 +544,17 @@ class ClassTagsTransformer(
 
       override def applyResult(result: Result)(k: Result => Block): Block =
         result match
-          case call @ Call(fun, (Arg(N, scrutinee) :: branches) :: Nil)
-              if branches.nonEmpty && isShapeMatch(fun) =>
+          case call @ Call(fun, (Arg(N, scrutinee) :: branches) :: Nil) if branches.nonEmpty && isShapeMatch(fun) =>
+            // Rewrite annotated shape.match calls
             rewriteShapeMatch(call, scrutinee, branches)(k).getOrElse:
               super.applyResult(result)(k)
           case CtorProducer(_, _, _) =>
-            ctorsByResultId.get(result.uid).filter(taggedProducers.contains) match
-              case S(ctor) =>
-                val taggedShapes = tagShapesOfProducer(ctor).flatMap: shape =>
-                  val tag = shapeTags.get(shape)
-                  softAssert(tag.isDefined, s"Missing tag for shape ${shape.show}")
-                  tag.map(shape -> _)
+            // Insert tags for instantiations
+            // TODO: make the tag a real field? 
+            (ctorsByResultId.get(result.uid).flatMap: ctor =>
+              taggedShapesByProducer.get(ctor).map(ctor -> _)
+            ) match
+              case S((ctor, taggedShapes)) =>
                 super.applyResult(result): transformed =>
                   insertShapeTag(transformed, ctor, taggedShapes)(k)
               case N => super.applyResult(result)(k)
@@ -541,64 +568,28 @@ end ClassTagsTransformer
 
 
 object ClassTagsTransformer:
-  private def mkUnion(shapes: Iterable[Shape]): Shape =
-    val flattened = shapes.iterator.flatMap:
-      case UnionShape(subshapes) if subshapes.nonEmpty => subshapes
-      case shape => shape :: Nil
-    val normalized = flattened.toList.distinct.sortBy(_.show)
-    normalized match
-      case Nil => DynamicShape
-      case shape :: Nil => shape
-      case shapes => UnionShape(shapes)
-
-  private def mkShapeByPattern(pattern: Pattern)(using raise: Raise): Shape =
-    pattern match
-      case ctorPattern @ Pattern.Constructor(_, arguments) =>
-        val ctor = ctorPattern.symbol.flatMap:
-          case ctor: ClassCtorSymbol => S(ctor.associatedCls)
-          case symbol => symbol.asClsLike
-        ctor match
-          case S(cls: ClassSymbol) =>
-            cls.tree.clsParams match
-              case fields :: Nil =>
-                val argumentShapes = arguments match
-                  case S(patterns) => patterns.map(mkShapeByPattern)
-                  case N => Nil
-                if argumentShapes.size =/= fields.size then
-                  raise(ErrorReport(
-                    msg"Expected constructor arity ${fields.size} in @matchShapes pattern for ${cls.nme}, but found ${argumentShapes.size}." -> pattern.toLoc :: Nil,
-                    source = Diagnostic.Source.Compilation,
-                  ))
-                  DynamicShape
-                else ClassShape(cls, fields.zip(argumentShapes).toMap)
-              case _ =>
-                raise(ErrorReport(
-                  msg"This pattern is not supported by @matchShapes yet." -> pattern.toLoc :: Nil,
-                  source = Diagnostic.Source.Compilation,
-                ))
-                DynamicShape
-          case S(obj: ModuleOrObjectSymbol) =>
-            ClassShape(obj, Map.empty)
-          case _ => DynamicShape
-      case Pattern.Tuple(leading, N) =>
-        TupleShape(leading.size, leading.map(mkShapeByPattern))
-      case Pattern.Literal(literal) => LitShape(Value.Lit(literal))
-      case Pattern.Wildcard() => DynamicShape
-      case _ =>
-        raise(ErrorReport(
-          msg"This pattern is not supported by @matchShapes yet." -> pattern.toLoc :: Nil,
-          source = Diagnostic.Source.Compilation,
-        ))
-        DynamicShape
-
   private def mkWeb(entries: WebEntryCollector.EntryPoints): Web =
-    FlowWebComputation[Ctor, ConcreteCtorConsumer](
-      producer => producer.dests.collect:
-        case consumer: ConcreteCtorConsumer => consumer,
-      consumer => consumer.srcs.collect:
-        case producer: Ctor => producer,
+    val result = FlowWebComputation[ProdStrat, ConcreteCtorConsumer | ProdStrat](
+      producer => producer match
+        case ctor: Ctor =>
+          val consumers = ctor.dests.iterator.collect:
+            case consumer: ConcreteCtorConsumer =>
+              consumer: ConcreteCtorConsumer | ProdStrat
+          consumers ++ ctor.args.iterator.map(_._2)
+        case variable: StratVar => variable.lowerBounds
+        case _ => Nil,
+      consumer => consumer match
+        case consumer: ConcreteCtorConsumer => consumer.srcs
+        case variable: StratVar => variable.lowerBounds
+        case producer: ProdStrat => producer :: Nil,
       entries.producers,
       entries.consumers,
+    )
+    FlowWebComputation.Result[Ctor, ConcreteCtorConsumer](
+      result.markedProducers.collect:
+        case ctor: Ctor => ctor,
+      result.markedConsumers.collect:
+        case consumer: ConcreteCtorConsumer => consumer,
     )
 
   private def mkWebs(entryPoints: List[WebEntryCollector.EntryPoints]) =
@@ -665,11 +656,11 @@ object ClassTagsTransformer:
           override def doTrace: Bool = dCfg.debug
           override def emitDbg(str: Str): Unit =
             tl.emitDbg(s"class-tags collection-phase > $str")
-        val (entryPoints, concreteCtorsByResultId) = collectorTl.givenIn:
+        val entryPoints = collectorTl.givenIn:
           if dCfg.debug then tl.emitDbg(">>> start class-tags collection-phase")
           val result = WebEntryCollector(p, flowAnalysisRes)
           if dCfg.debug then tl.emitDbg("<<< end class-tags collection-phase")
           result
         val webs = mkWebs(entryPoints)
         if dCfg.debug then logWebs(webs)
-        new ClassTagsTransformer(webs, concreteCtorsByResultId, flowAnalysisRes, dCfg.debug).applyProgram(p)
+        new ClassTagsTransformer(webs, flowAnalysisRes, dCfg.debug).applyProgram(p)

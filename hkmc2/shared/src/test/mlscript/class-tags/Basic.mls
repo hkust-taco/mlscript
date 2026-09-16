@@ -409,7 +409,7 @@ fun foo(x) =
 //│ <<< end class-tags collection-phase
 //│ >>> start class-tags web-computation-phase
 //│ class-tags web-computation-phase > web 0:
-//│ class-tags web-computation-phase >   producers: Bar@3, Bar@5
+//│ class-tags web-computation-phase >   producers: C@2, Bar@3, D@4, Bar@5
 //│ class-tags web-computation-phase >   field accesses: Bar.x@1
 //│ class-tags web-computation-phase >   pattern matches: match@6
 //│ <<< end class-tags web-computation-phase

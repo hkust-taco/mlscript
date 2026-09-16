@@ -563,7 +563,7 @@ fun bar(x, y) =
 //│ <<< end class-tags collection-phase
 //│ >>> start class-tags web-computation-phase
 //│ class-tags web-computation-phase > web 0:
-//│ class-tags web-computation-phase >   producers: Foo@5, Bar@6
+//│ class-tags web-computation-phase >   producers: C@2, D@3, Foo@5, Bar@6
 //│ class-tags web-computation-phase >   pattern matches: match@7
 //│ <<< end class-tags web-computation-phase
 //│ >>> start class-tags transform-phase

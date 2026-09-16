@@ -27,7 +27,7 @@ private fun bar(ls) =
 //│ <<< end class-tags collection-phase
 //│ >>> start class-tags web-computation-phase
 //│ class-tags web-computation-phase > web 0:
-//│ class-tags web-computation-phase >   producers: Cons@16, Cons@17, Cons@18, Cons@19, Cons@20, Cons@21
+//│ class-tags web-computation-phase >   producers: Nil@15, Cons@16, Cons@17, Cons@18, Cons@19, Cons@20, Cons@21
 //│ class-tags web-computation-phase >   field accesses: Cons.x@0, Cons.xs@1, Cons.xs@2, Cons.xs@3, Cons.x@4, Cons.xs@5, Cons.xs@6, Cons.xs@7, Cons.xs@8, Cons.x@9, Cons.xs@10, Cons.xs@11, Cons.xs@12, Cons.xs@13, Cons.xs@14
 //│ class-tags web-computation-phase >   pattern matches: match@26
 //│ <<< end class-tags web-computation-phase
@@ -102,7 +102,7 @@ private fun foofoo(t) =
 //│ <<< end class-tags collection-phase
 //│ >>> start class-tags web-computation-phase
 //│ class-tags web-computation-phase > web 0:
-//│ class-tags web-computation-phase >   producers: D@3, C@4, C@6
+//│ class-tags web-computation-phase >   producers: D@3, C@4, E@5, C@6
 //│ class-tags web-computation-phase >   field accesses: D.x@1, C.x@2
 //│ class-tags web-computation-phase >   pattern matches: match@9
 //│ <<< end class-tags web-computation-phase
@@ -165,7 +165,7 @@ private fun foofoo(t) =
 //│ <<< end class-tags collection-phase
 //│ >>> start class-tags web-computation-phase
 //│ class-tags web-computation-phase > web 0:
-//│ class-tags web-computation-phase >   producers: D@3, C@5
+//│ class-tags web-computation-phase >   producers: D@3, E@4, C@5
 //│ class-tags web-computation-phase >   field accesses: D.x@1, C.x@2
 //│ class-tags web-computation-phase >   pattern matches: match@8
 //│ <<< end class-tags web-computation-phase
@@ -245,7 +245,7 @@ fun pair(x, y) =
 //│ <<< end class-tags collection-phase
 //│ >>> start class-tags web-computation-phase
 //│ class-tags web-computation-phase > web 0:
-//│ class-tags web-computation-phase >   producers: Pair@6
+//│ class-tags web-computation-phase >   producers: D@2, E@3, D@4, E@5, Pair@6
 //│ class-tags web-computation-phase >   pattern matches: match@7
 //│ <<< end class-tags web-computation-phase
 //│ >>> start class-tags transform-phase
