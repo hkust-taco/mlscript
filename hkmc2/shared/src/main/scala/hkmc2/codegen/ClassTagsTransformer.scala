@@ -15,7 +15,7 @@ import scala.collection.mutable.ListBuffer
 
 type Web = FlowWebComputation.Result[Ctor, ConcreteCtorConsumer]
 
-private object DataRepFlattenDebug:
+private object ClassTagsDebug:
   def showCtor(ctor: CtorCls): Str = ctor match
     case cls: ClassLikeSymbol => cls.nme
     case size: Int => s"tup(size $size)"
@@ -74,7 +74,7 @@ class ProducersCollector(val flowRes: FlowConstraintSolver)(using val tl: TL) ex
     do seenProducerEntryPoints.add(ctor)
 
     if !seenProducerEntryPoints.isEmpty then
-      tl.log(s"track construction of ${seenProducerEntryPoints.map(DataRepFlattenDebug.showProducer).mkString(", ")} in $funName")
+      tl.log(s"track construction of ${seenProducerEntryPoints.map(ClassTagsDebug.showProducer).mkString(", ")} in $funName")
 
     val seenConsumerEntryPoints = MutSet.empty[ConcreteCtorConsumer]
     for
@@ -87,7 +87,7 @@ class ProducersCollector(val flowRes: FlowConstraintSolver)(using val tl: TL) ex
     do seenConsumerEntryPoints.add(consumer)
 
     if !seenConsumerEntryPoints.isEmpty then
-      tl.log(s"track consumption at ${seenConsumerEntryPoints.map(DataRepFlattenDebug.showConsumer).mkString(", ")} in $funName")
+      tl.log(s"track consumption at ${seenConsumerEntryPoints.map(ClassTagsDebug.showConsumer).mkString(", ")} in $funName")
 
     entryPoints += ProducersCollector.EntryPoints(
       seenProducerEntryPoints.toList,
@@ -140,11 +140,11 @@ private case class LitShape(lit: Value.Lit) extends Shape:
 
 private case class ClassShape(ctor: ClassLikeSymbol, fields: Map[TermSymbol, Shape]) extends Shape:
   def show: Str =
-    if fields.isEmpty then DataRepFlattenDebug.showCtor(ctor)
+    if fields.isEmpty then ClassTagsDebug.showCtor(ctor)
     else
       val shownFields = fields.iterator
-        .map((field, shape) => s"${DataRepFlattenDebug.showField(field)}: ${shape.show}")
-      s"${DataRepFlattenDebug.showCtor(ctor)}${shownFields.mkString("(", ", ", ")")}"
+        .map((field, shape) => s"${ClassTagsDebug.showField(field)}: ${shape.show}")
+      s"${ClassTagsDebug.showCtor(ctor)}${shownFields.mkString("(", ", ", ")")}"
 
   def flattenShape: List[Shape] =
     val alternatives = fields.iterator.foldLeft(List(Map.empty[TermSymbol, Shape])):
@@ -158,8 +158,8 @@ private case class ClassShape(ctor: ClassLikeSymbol, fields: Map[TermSymbol, Sha
 private case class TupleShape(length: Int, elements: List[Shape]) extends Shape:
   require(elements.length === length)
   def show: Str =
-    if elements.isEmpty then DataRepFlattenDebug.showCtor(length)
-    else s"${DataRepFlattenDebug.showCtor(length)}${elements.map(_.show).mkString("(", ", ", ")")}"
+    if elements.isEmpty then ClassTagsDebug.showCtor(length)
+    else s"${ClassTagsDebug.showCtor(length)}${elements.map(_.show).mkString("(", ", ", ")")}"
 
   def flattenShape: List[Shape] =
     val alternatives = elements.foldLeft(List(List.empty[Shape])):
@@ -181,7 +181,7 @@ private object DynamicShape extends Shape:
 
   def flattenShape: List[Shape] = this :: Nil
 
-class DataRepFlattener(
+class ClassTagsTransformer(
   val webs: List[Web],
   val concreteCtorsByResultId: Map[ResultId, Ctor],
   val flowRes: FlowConstraintSolver,
@@ -231,7 +231,7 @@ class DataRepFlattener(
       val tag = shapeTags.size
       if debug then
         summon[TL].emitDbg(
-          s"data-rep-flatten transform-phase > allocated tag $tag for ${shape.show}")
+          s"class-tags transform-phase > allocated tag $tag for ${shape.show}")
       tag
     })
 
@@ -248,13 +248,13 @@ class DataRepFlattener(
       case CtorProducer(_, args, _) =>
         softAssert(
           args.size === producer.args.size,
-          s"Mismatched constructor arguments for ${DataRepFlattenDebug.showProducer(producer)}",
+          s"Mismatched constructor arguments for ${ClassTagsDebug.showProducer(producer)}",
         )
         args
       case result =>
         softAssert(
           false,
-          s"Missing constructor result for ${DataRepFlattenDebug.showProducer(producer)}: ${result.showDbg}",
+          s"Missing constructor result for ${ClassTagsDebug.showProducer(producer)}: ${result.showDbg}",
         )
         Nil
 
@@ -270,13 +270,13 @@ class DataRepFlattener(
           case (field: TermSymbol, shape) => field -> shape
         softAssert(
           fields.size === fieldsOrElements.size,
-          s"Unexpected class fields in ${DataRepFlattenDebug.showProducer(producer)}",
+          s"Unexpected class fields in ${ClassTagsDebug.showProducer(producer)}",
         )
         ClassShape(cls, fields.toMap)
       case length: Int =>
         softAssert(
           fieldsOrElements.size === length,
-          s"Mismatched tuple arity for ${DataRepFlattenDebug.showProducer(producer)}",
+          s"Mismatched tuple arity for ${ClassTagsDebug.showProducer(producer)}",
         )
         TupleShape(length, fieldsOrElements.map(_._2))
 
@@ -286,7 +286,7 @@ class DataRepFlattener(
       case _ => producer match
         case ctor: Ctor => shapeOfProducer(ctor)
         case variable: StratVar =>
-          DataRepFlattener.mkUnion:
+          ClassTagsTransformer.mkUnion:
             variable.lowerBounds.map: lowerBound =>
               shapeOf(lowerBound, N)
         case _ => DynamicShape
@@ -398,17 +398,17 @@ class DataRepFlattener(
         case CtorProducer(_, args, _) =>
           insertTagForMultiShapes(result, args, producer, taggedShapes)(k)
         case _ =>
-          lastWords(s"Missing constructor result for ${DataRepFlattenDebug.showProducer(producer)}")
+          lastWords(s"Missing constructor result for ${ClassTagsDebug.showProducer(producer)}")
       case Nil =>
-        lastWords(s"Missing concrete shape for ${DataRepFlattenDebug.showProducer(producer)}")
+        lastWords(s"Missing concrete shape for ${ClassTagsDebug.showProducer(producer)}")
 
   override def applyProgram(program: Program): Program =
     if debug then
-      summon[TL].emitDbg(">>> start data-rep-flatten transform-phase")
+      summon[TL].emitDbg(">>> start class-tags transform-phase")
     allocateShapeTags()
     val result = super.applyProgram(program)
     if debug then
-      summon[TL].emitDbg("<<< end data-rep-flatten transform-phase")
+      summon[TL].emitDbg("<<< end class-tags transform-phase")
     result
 
   override def applyFunDefn(fun: FunDefn): FunDefn =
@@ -458,11 +458,11 @@ class DataRepFlattener(
               ))
               N
             else
-              val patternShapes = patterns.map(DataRepFlattener.mkShapeByPattern)
+              val patternShapes = patterns.map(ClassTagsTransformer.mkShapeByPattern)
               val taggedShapes = taggedShapesOfMatch(call.uid)
               if debug then
                 summon[TL].emitDbg(
-                  s"data-rep-flatten transform-phase > match shapes ${patternShapes.map(_.show).mkString(", ")} against ${taggedShapes.map((shape, tag) => s"${shape.show}@$tag").mkString(", ")}")
+                  s"class-tags transform-phase > match shapes ${patternShapes.map(_.show).mkString(", ")} against ${taggedShapes.map((shape, tag) => s"${shape.show}@$tag").mkString(", ")}")
               val unionPatterns = patterns.zip(patternShapes).collect:
                 case (pattern, shape) if containsUnion(shape) => pattern
               if unionPatterns.nonEmpty then
@@ -526,10 +526,10 @@ class DataRepFlattener(
       if body is fun.body then fun
       else FunDefn(fun.owner, fun.sym, fun.dSym, fun.params, body)(fun.configOverride, fun.annotations)
     super.applyFunDefn(transformed)
-end DataRepFlattener
+end ClassTagsTransformer
 
 
-object DataRepFlattener:
+object ClassTagsTransformer:
   private def mkUnion(shapes: Iterable[Shape]): Shape =
     val flattened = shapes.iterator.flatMap:
       case UnionShape(subshapes) if subshapes.nonEmpty => subshapes
@@ -608,20 +608,20 @@ object DataRepFlattener:
 
   private def logWebs(webs: List[Web])(using tl: TL): Unit =
     if webs.nonEmpty then
-      tl.emitDbg(">>> start data-rep-flatten web-computation-phase")
+      tl.emitDbg(">>> start class-tags web-computation-phase")
       for (web, index) <- webs.zipWithIndex do
         val producers = web.markedProducers.toList.sortBy(_.exprId.uid)
         val fieldAccesses = web.markedConsumers.collect:
           case access: FieldSel => access
         val patternMatches = web.markedConsumers.collect:
           case patternMatch: Dtor => patternMatch
-        tl.emitDbg(s"data-rep-flatten web-computation-phase > web $index:")
-        tl.emitDbg(s"data-rep-flatten web-computation-phase >   producers: ${producers.map(DataRepFlattenDebug.showProducer).mkString(", ")}")
+        tl.emitDbg(s"class-tags web-computation-phase > web $index:")
+        tl.emitDbg(s"class-tags web-computation-phase >   producers: ${producers.map(ClassTagsDebug.showProducer).mkString(", ")}")
         if fieldAccesses.nonEmpty then
-          tl.emitDbg(s"data-rep-flatten web-computation-phase >   field accesses: ${fieldAccesses.toList.sortBy(_.exprId.uid).map(DataRepFlattenDebug.showFieldAccess).mkString(", ")}")
+          tl.emitDbg(s"class-tags web-computation-phase >   field accesses: ${fieldAccesses.toList.sortBy(_.exprId.uid).map(ClassTagsDebug.showFieldAccess).mkString(", ")}")
         if patternMatches.nonEmpty then
-          tl.emitDbg(s"data-rep-flatten web-computation-phase >   pattern matches: ${patternMatches.toList.sortBy(_.exprId.uid).map(DataRepFlattenDebug.showPatternMatch).mkString(", ")}")
-      tl.emitDbg("<<< end data-rep-flatten web-computation-phase")
+          tl.emitDbg(s"class-tags web-computation-phase >   pattern matches: ${patternMatches.toList.sortBy(_.exprId.uid).map(ClassTagsDebug.showPatternMatch).mkString(", ")}")
+      tl.emitDbg("<<< end class-tags web-computation-phase")
 
   def apply(p: Program)(using
     cfg: Config,
@@ -631,7 +631,7 @@ object DataRepFlattener:
     ctx: Elaborator.Ctx,
     symbolPrinter: SymbolPrinter,
   ): Program =
-    cfg.dataRepFlatten match
+    cfg.classTags match
       case N => p
       case S(dCfg) =>
         val flowCfg = Config.FlowAnalysisConfig(
@@ -643,7 +643,7 @@ object DataRepFlattener:
           logAccumulator = false,
         )
         val flowAnalysisRes =
-          FlowAnalysis.mkTraceLogger(flowCfg, "data-rep-flatten flow-analysis-phase > ", tl).givenIn:
+          FlowAnalysis.mkTraceLogger(flowCfg, "class-tags flow-analysis-phase > ", tl).givenIn:
             FlowAnalysis(
               p,
               mono = flowCfg.mono,
@@ -653,12 +653,12 @@ object DataRepFlattener:
         val collectorTl = new TraceLogger(using tl.debugPrinter):
           override def doTrace: Bool = dCfg.debug
           override def emitDbg(str: Str): Unit =
-            tl.emitDbg(s"data-rep-flatten collection-phase > $str")
+            tl.emitDbg(s"class-tags collection-phase > $str")
         val (entryPoints, concreteCtorsByResultId) = collectorTl.givenIn:
-          if dCfg.debug then tl.emitDbg(">>> start data-rep-flatten collection-phase")
+          if dCfg.debug then tl.emitDbg(">>> start class-tags collection-phase")
           val result = ProducersCollector(p, flowAnalysisRes)
-          if dCfg.debug then tl.emitDbg("<<< end data-rep-flatten collection-phase")
+          if dCfg.debug then tl.emitDbg("<<< end class-tags collection-phase")
           result
         val webs = mkWebs(entryPoints)
         if dCfg.debug then logWebs(webs)
-        new DataRepFlattener(webs, concreteCtorsByResultId, flowAnalysisRes, dCfg.debug).applyProgram(p)
+        new ClassTagsTransformer(webs, concreteCtorsByResultId, flowAnalysisRes, dCfg.debug).applyProgram(p)

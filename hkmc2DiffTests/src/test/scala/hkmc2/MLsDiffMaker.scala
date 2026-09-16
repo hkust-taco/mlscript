@@ -82,7 +82,7 @@ abstract class MLsDiffMaker extends DiffMaker:
   val noTailRecOpt = NullaryCommand("noTailRec")
   val deforest = Command("deforest")(_.trim)
   val etaExpansion = Command("etaExpansion")(_.trim)
-  val dataRepFlatten = Command("dataRepFlatten")(_.trim)
+  val classTags = Command("classTags")(_.trim)
   val patMatConsequentSharingThreshold = Command("patMatConsequentSharingThreshold")(_.trim.toInt)
   val deadParamElim = Command("deadParamElim")(_.trim)
 
@@ -98,7 +98,7 @@ abstract class MLsDiffMaker extends DiffMaker:
     "noLogAccumulator",
   )
   private val EtaExpansionKnownFlags = Set("debug", "on", "off")
-  private val DataRepFlattenKnownFlags = Set("debug", "mono")
+  private val ClassTagsKnownFlags = Set("debug", "mono")
   private val DeadParamElimKnownFlags = Set("debug", "mono", "poly", "off")
   
   def mkConfig: Config =
@@ -168,10 +168,10 @@ abstract class MLsDiffMaker extends DiffMaker:
             reportExclusiveFlagConflict(":etaExpansion", etaExpansionFlags, "on", "off")
             if etaExpansionFlags.contains("off") then N
             else S(EtaExpansion.withDebug(etaExpansionFlags.contains("debug"))),
-      dataRepFlatten = Opt.when(dataRepFlatten.isSet):
-        val flags = parseFlags(dataRepFlatten.get)
-        reportUnknownFlags(":dataRepFlatten", flags, DataRepFlattenKnownFlags)
-        DataRepFlatten(
+      classTags = Opt.when(classTags.isSet):
+        val flags = parseFlags(classTags.get)
+        reportUnknownFlags(":classTags", flags, ClassTagsKnownFlags)
+        ClassTags(
           debug = flags.contains("debug"),
           mono = flags.contains("mono"),
         ),

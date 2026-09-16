@@ -28,7 +28,7 @@ case class Config(
   target: CompilationTarget,
   rewriteWhileLoops: Bool,
   etaExpansion: Opt[EtaExpansion],
-  dataRepFlatten: Opt[DataRepFlatten],
+  classTags: Opt[ClassTags],
   qqEnabled: Bool,
   funcToCls: Bool,
   commentGeneratedCode: Bool,
@@ -81,7 +81,7 @@ object Config:
     rewriteWhileLoops = false,
     stageCode = false,
     etaExpansion = S(EtaExpansion.default),
-    dataRepFlatten = N,
+    classTags = N,
     qqEnabled = false,
     funcToCls = false,
     commentGeneratedCode = false,
@@ -224,9 +224,9 @@ object Config:
       ))
     val default: EtaExpansion = withDebug(debug = false)
 
-  case class DataRepFlatten(debug: Bool, mono: Bool)
-  object DataRepFlatten:
-    val default = DataRepFlatten(
+  case class ClassTags(debug: Bool, mono: Bool)
+  object ClassTags:
+    val default = ClassTags(
       debug = false,
       mono = false,
     )
@@ -616,10 +616,10 @@ object ConfigParser:
       expect("EtaExpansion(...)")(tree)
       N
 
-  private def parseDataRepFlatten(tree: Tree, current: Opt[Config.DataRepFlatten])(using Raise): Opt[Config.DataRepFlatten] =
+  private def parseClassTags(tree: Tree, current: Opt[Config.ClassTags])(using Raise): Opt[Config.ClassTags] =
     tree match
-    case Call("DataRepFlatten", args) =>
-      val base = current.getOrElse(Config.DataRepFlatten.default)
+    case Call("ClassTags", args) =>
+      val base = current.getOrElse(Config.ClassTags.default)
       var debug = base.debug
       var mono = base.mono
       args.foreach:
@@ -628,10 +628,10 @@ object ConfigParser:
         case NamedArg("mono", value) =>
           setFrom(value)(parseBool)(v => mono = v)
         case other =>
-          unsupported("DataRepFlatten", other)
-      S(Config.DataRepFlatten(debug, mono))
+          unsupported("ClassTags", other)
+      S(Config.ClassTags(debug, mono))
     case _ =>
-      expect("DataRepFlatten(...)")(tree)
+      expect("ClassTags(...)")(tree)
       N
   
   /** Parse a single field override like `tailRecOpt: false`. */
@@ -669,10 +669,10 @@ object ConfigParser:
       optionalFieldWithCurrent(value)(_.etaExpansion)(
         (tree, current) => parseEtaExpansion(tree, current)
       )(v => _.copy(etaExpansion = v))
-    case "dataRepFlatten" =>
-      optionalFieldWithCurrent(value)(_.dataRepFlatten)(
-        (tree, current) => parseDataRepFlatten(tree, current)
-      )(v => _.copy(dataRepFlatten = v))
+    case "classTags" =>
+      optionalFieldWithCurrent(value)(_.classTags)(
+        (tree, current) => parseClassTags(tree, current)
+      )(v => _.copy(classTags = v))
     case "deadParamElim" =>
       optionalFieldWithCurrent(value)(_.deadParamElim)(
         (tree, current) => parseDeadParamElim(tree, current)

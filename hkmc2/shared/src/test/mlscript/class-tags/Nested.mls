@@ -1,17 +1,17 @@
-:dataRepFlatten debug mono
+:classTags debug mono
 :js
 :noFreeze
 
-//│ >>> start data-rep-flatten collection-phase
-//│ <<< end data-rep-flatten collection-phase
-//│ >>> start data-rep-flatten transform-phase
-//│ <<< end data-rep-flatten transform-phase
+//│ >>> start class-tags collection-phase
+//│ <<< end class-tags collection-phase
+//│ >>> start class-tags transform-phase
+//│ <<< end class-tags transform-phase
 class Cons(val x, val xs)
 object Nil
-//│ >>> start data-rep-flatten collection-phase
-//│ <<< end data-rep-flatten collection-phase
-//│ >>> start data-rep-flatten transform-phase
-//│ <<< end data-rep-flatten transform-phase
+//│ >>> start class-tags collection-phase
+//│ <<< end class-tags collection-phase
+//│ >>> start class-tags transform-phase
+//│ <<< end class-tags transform-phase
 
 
 :ssjs
@@ -21,26 +21,26 @@ fun foo(x, y, z) =
 private fun bar(ls) =
   @matchShapes(Cons(1, Cons(2, Cons(3, Cons(_, Cons(_, Cons(_, Nil)))))))
   shape.match of ls, () => ls.Cons#xs.Cons#xs.Cons#xs.Cons#x + ls.Cons#xs.Cons#xs.Cons#xs.Cons#xs.Cons#x + + ls.Cons#xs.Cons#xs.Cons#xs.Cons#xs.Cons#xs.Cons#x 
-//│ >>> start data-rep-flatten collection-phase
-//│ data-rep-flatten collection-phase > track construction of Cons@21, Cons@20, Cons@18, Cons@19, Cons@16, Cons@17 in foo
-//│ data-rep-flatten collection-phase > track consumption at match@26 in bar
-//│ <<< end data-rep-flatten collection-phase
-//│ >>> start data-rep-flatten web-computation-phase
-//│ data-rep-flatten web-computation-phase > web 0:
-//│ data-rep-flatten web-computation-phase >   producers: Cons@16, Cons@17, Cons@18, Cons@19, Cons@20, Cons@21
-//│ data-rep-flatten web-computation-phase >   field accesses: Cons.x@0, Cons.xs@1, Cons.xs@2, Cons.xs@3, Cons.x@4, Cons.xs@5, Cons.xs@6, Cons.xs@7, Cons.xs@8, Cons.x@9, Cons.xs@10, Cons.xs@11, Cons.xs@12, Cons.xs@13, Cons.xs@14
-//│ data-rep-flatten web-computation-phase >   pattern matches: match@26
-//│ <<< end data-rep-flatten web-computation-phase
-//│ >>> start data-rep-flatten transform-phase
-//│ data-rep-flatten transform-phase > allocated tag 0 for Nil
-//│ data-rep-flatten transform-phase > allocated tag 1 for Cons(x: _, xs: Nil)
-//│ data-rep-flatten transform-phase > allocated tag 2 for Cons(x: _, xs: Cons(x: _, xs: Nil))
-//│ data-rep-flatten transform-phase > allocated tag 3 for Cons(x: _, xs: Cons(x: _, xs: Cons(x: _, xs: Nil)))
-//│ data-rep-flatten transform-phase > allocated tag 4 for Cons(x: 3, xs: Cons(x: _, xs: Cons(x: _, xs: Cons(x: _, xs: Nil))))
-//│ data-rep-flatten transform-phase > allocated tag 5 for Cons(x: 2, xs: Cons(x: 3, xs: Cons(x: _, xs: Cons(x: _, xs: Cons(x: _, xs: Nil)))))
-//│ data-rep-flatten transform-phase > allocated tag 6 for Cons(x: 1, xs: Cons(x: 2, xs: Cons(x: 3, xs: Cons(x: _, xs: Cons(x: _, xs: Cons(x: _, xs: Nil))))))
-//│ data-rep-flatten transform-phase > match shapes Cons(x: 1, xs: Cons(x: 2, xs: Cons(x: 3, xs: Cons(x: _, xs: Cons(x: _, xs: Cons(x: _, xs: Nil)))))) against Cons(x: 1, xs: Cons(x: 2, xs: Cons(x: 3, xs: Cons(x: _, xs: Cons(x: _, xs: Cons(x: _, xs: Nil))))))@6
-//│ <<< end data-rep-flatten transform-phase
+//│ >>> start class-tags collection-phase
+//│ class-tags collection-phase > track construction of Cons@21, Cons@20, Cons@18, Cons@19, Cons@16, Cons@17 in foo
+//│ class-tags collection-phase > track consumption at match@26 in bar
+//│ <<< end class-tags collection-phase
+//│ >>> start class-tags web-computation-phase
+//│ class-tags web-computation-phase > web 0:
+//│ class-tags web-computation-phase >   producers: Cons@16, Cons@17, Cons@18, Cons@19, Cons@20, Cons@21
+//│ class-tags web-computation-phase >   field accesses: Cons.x@0, Cons.xs@1, Cons.xs@2, Cons.xs@3, Cons.x@4, Cons.xs@5, Cons.xs@6, Cons.xs@7, Cons.xs@8, Cons.x@9, Cons.xs@10, Cons.xs@11, Cons.xs@12, Cons.xs@13, Cons.xs@14
+//│ class-tags web-computation-phase >   pattern matches: match@26
+//│ <<< end class-tags web-computation-phase
+//│ >>> start class-tags transform-phase
+//│ class-tags transform-phase > allocated tag 0 for Nil
+//│ class-tags transform-phase > allocated tag 1 for Cons(x: _, xs: Nil)
+//│ class-tags transform-phase > allocated tag 2 for Cons(x: _, xs: Cons(x: _, xs: Nil))
+//│ class-tags transform-phase > allocated tag 3 for Cons(x: _, xs: Cons(x: _, xs: Cons(x: _, xs: Nil)))
+//│ class-tags transform-phase > allocated tag 4 for Cons(x: 3, xs: Cons(x: _, xs: Cons(x: _, xs: Cons(x: _, xs: Nil))))
+//│ class-tags transform-phase > allocated tag 5 for Cons(x: 2, xs: Cons(x: 3, xs: Cons(x: _, xs: Cons(x: _, xs: Cons(x: _, xs: Nil)))))
+//│ class-tags transform-phase > allocated tag 6 for Cons(x: 1, xs: Cons(x: 2, xs: Cons(x: 3, xs: Cons(x: _, xs: Cons(x: _, xs: Cons(x: _, xs: Nil))))))
+//│ class-tags transform-phase > match shapes Cons(x: 1, xs: Cons(x: 2, xs: Cons(x: 3, xs: Cons(x: _, xs: Cons(x: _, xs: Cons(x: _, xs: Nil)))))) against Cons(x: 1, xs: Cons(x: 2, xs: Cons(x: 3, xs: Cons(x: _, xs: Cons(x: _, xs: Cons(x: _, xs: Nil))))))@6
+//│ <<< end class-tags transform-phase
 //│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
 //│ let bar, foo;
 //│ foo = function foo(x, y, z) {
@@ -83,10 +83,10 @@ private fun bar(ls) =
 class C(val x)
 class D(val x)
 class E(val x)
-//│ >>> start data-rep-flatten collection-phase
-//│ <<< end data-rep-flatten collection-phase
-//│ >>> start data-rep-flatten transform-phase
-//│ <<< end data-rep-flatten transform-phase
+//│ >>> start class-tags collection-phase
+//│ <<< end class-tags collection-phase
+//│ >>> start class-tags transform-phase
+//│ <<< end class-tags transform-phase
 
 :ssjs
 fun foo(x, y) =
@@ -96,23 +96,23 @@ private fun foofoo(t) =
   @matchShapes(C(D(_)), C(E(1))) shape.match of t,
     () => t.C#x.D#x + 1
     () => 0
-//│ >>> start data-rep-flatten collection-phase
-//│ data-rep-flatten collection-phase > track construction of C@4, D@3, C@6 in foo
-//│ data-rep-flatten collection-phase > track consumption at match@9 in foofoo
-//│ <<< end data-rep-flatten collection-phase
-//│ >>> start data-rep-flatten web-computation-phase
-//│ data-rep-flatten web-computation-phase > web 0:
-//│ data-rep-flatten web-computation-phase >   producers: D@3, C@4, C@6
-//│ data-rep-flatten web-computation-phase >   field accesses: D.x@1, C.x@2
-//│ data-rep-flatten web-computation-phase >   pattern matches: match@9
-//│ <<< end data-rep-flatten web-computation-phase
-//│ >>> start data-rep-flatten transform-phase
-//│ data-rep-flatten transform-phase > allocated tag 0 for D(x: _)
-//│ data-rep-flatten transform-phase > allocated tag 1 for C(x: D(x: _))
-//│ data-rep-flatten transform-phase > allocated tag 2 for E(x: 1)
-//│ data-rep-flatten transform-phase > allocated tag 3 for C(x: E(x: 1))
-//│ data-rep-flatten transform-phase > match shapes C(x: D(x: _)), C(x: E(x: 1)) against C(x: D(x: _))@1, C(x: E(x: 1))@3
-//│ <<< end data-rep-flatten transform-phase
+//│ >>> start class-tags collection-phase
+//│ class-tags collection-phase > track construction of C@4, D@3, C@6 in foo
+//│ class-tags collection-phase > track consumption at match@9 in foofoo
+//│ <<< end class-tags collection-phase
+//│ >>> start class-tags web-computation-phase
+//│ class-tags web-computation-phase > web 0:
+//│ class-tags web-computation-phase >   producers: D@3, C@4, C@6
+//│ class-tags web-computation-phase >   field accesses: D.x@1, C.x@2
+//│ class-tags web-computation-phase >   pattern matches: match@9
+//│ <<< end class-tags web-computation-phase
+//│ >>> start class-tags transform-phase
+//│ class-tags transform-phase > allocated tag 0 for D(x: _)
+//│ class-tags transform-phase > allocated tag 1 for C(x: D(x: _))
+//│ class-tags transform-phase > allocated tag 2 for E(x: 1)
+//│ class-tags transform-phase > allocated tag 3 for C(x: E(x: 1))
+//│ class-tags transform-phase > match shapes C(x: D(x: _)), C(x: E(x: 1)) against C(x: D(x: _))@1, C(x: E(x: 1))@3
+//│ <<< end class-tags transform-phase
 //│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
 //│ let foo1, foofoo;
 //│ foo1 = function foo(x, y) {
@@ -159,23 +159,23 @@ private fun foofoo(t) =
   @matchShapes(C(D(_)), C(E(1))) shape.match of t,
     () => t.C#x.D#x + 1
     () => 0
-//│ >>> start data-rep-flatten collection-phase
-//│ data-rep-flatten collection-phase > track construction of D@3, C@5 in foo
-//│ data-rep-flatten collection-phase > track consumption at match@8 in foofoo
-//│ <<< end data-rep-flatten collection-phase
-//│ >>> start data-rep-flatten web-computation-phase
-//│ data-rep-flatten web-computation-phase > web 0:
-//│ data-rep-flatten web-computation-phase >   producers: D@3, C@5
-//│ data-rep-flatten web-computation-phase >   field accesses: D.x@1, C.x@2
-//│ data-rep-flatten web-computation-phase >   pattern matches: match@8
-//│ <<< end data-rep-flatten web-computation-phase
-//│ >>> start data-rep-flatten transform-phase
-//│ data-rep-flatten transform-phase > allocated tag 0 for D(x: _)
-//│ data-rep-flatten transform-phase > allocated tag 1 for E(x: 1)
-//│ data-rep-flatten transform-phase > allocated tag 2 for C(x: D(x: _))
-//│ data-rep-flatten transform-phase > allocated tag 3 for C(x: E(x: 1))
-//│ data-rep-flatten transform-phase > match shapes C(x: D(x: _)), C(x: E(x: 1)) against C(x: D(x: _))@2, C(x: E(x: 1))@3
-//│ <<< end data-rep-flatten transform-phase
+//│ >>> start class-tags collection-phase
+//│ class-tags collection-phase > track construction of D@3, C@5 in foo
+//│ class-tags collection-phase > track consumption at match@8 in foofoo
+//│ <<< end class-tags collection-phase
+//│ >>> start class-tags web-computation-phase
+//│ class-tags web-computation-phase > web 0:
+//│ class-tags web-computation-phase >   producers: D@3, C@5
+//│ class-tags web-computation-phase >   field accesses: D.x@1, C.x@2
+//│ class-tags web-computation-phase >   pattern matches: match@8
+//│ <<< end class-tags web-computation-phase
+//│ >>> start class-tags transform-phase
+//│ class-tags transform-phase > allocated tag 0 for D(x: _)
+//│ class-tags transform-phase > allocated tag 1 for E(x: 1)
+//│ class-tags transform-phase > allocated tag 2 for C(x: D(x: _))
+//│ class-tags transform-phase > allocated tag 3 for C(x: E(x: 1))
+//│ class-tags transform-phase > match shapes C(x: D(x: _)), C(x: E(x: 1)) against C(x: D(x: _))@2, C(x: E(x: 1))@3
+//│ <<< end class-tags transform-phase
 //│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
 //│ let foo2, foofoo1;
 //│ foo2 = function foo(x, y) {
@@ -222,10 +222,10 @@ private fun foofoo(t) =
 
 
 class Pair(val x, val y)
-//│ >>> start data-rep-flatten collection-phase
-//│ <<< end data-rep-flatten collection-phase
-//│ >>> start data-rep-flatten transform-phase
-//│ <<< end data-rep-flatten transform-phase
+//│ >>> start class-tags collection-phase
+//│ <<< end class-tags collection-phase
+//│ >>> start class-tags transform-phase
+//│ <<< end class-tags transform-phase
 
 
 :ssjs
@@ -239,26 +239,26 @@ fun pair(x, y) =
     () => 1
     () => 2
     () => 3
-//│ >>> start data-rep-flatten collection-phase
-//│ data-rep-flatten collection-phase > track construction of Pair@6 in pair
-//│ data-rep-flatten collection-phase > track consumption at match@7 in pair
-//│ <<< end data-rep-flatten collection-phase
-//│ >>> start data-rep-flatten web-computation-phase
-//│ data-rep-flatten web-computation-phase > web 0:
-//│ data-rep-flatten web-computation-phase >   producers: Pair@6
-//│ data-rep-flatten web-computation-phase >   pattern matches: match@7
-//│ <<< end data-rep-flatten web-computation-phase
-//│ >>> start data-rep-flatten transform-phase
-//│ data-rep-flatten transform-phase > allocated tag 0 for D(x: 1)
-//│ data-rep-flatten transform-phase > allocated tag 1 for E(x: 2)
-//│ data-rep-flatten transform-phase > allocated tag 2 for D(x: 3)
-//│ data-rep-flatten transform-phase > allocated tag 3 for E(x: 4)
-//│ data-rep-flatten transform-phase > allocated tag 4 for Pair(x: D(x: 1), y: D(x: 3))
-//│ data-rep-flatten transform-phase > allocated tag 5 for Pair(x: D(x: 1), y: E(x: 4))
-//│ data-rep-flatten transform-phase > allocated tag 6 for Pair(x: E(x: 2), y: D(x: 3))
-//│ data-rep-flatten transform-phase > allocated tag 7 for Pair(x: E(x: 2), y: E(x: 4))
-//│ data-rep-flatten transform-phase > match shapes Pair(x: D(x: _), y: D(x: _)), Pair(x: D(x: _), y: E(x: _)), Pair(x: E(x: _), y: D(x: _)), Pair(x: E(x: _), y: E(x: _)) against Pair(x: D(x: 1), y: D(x: 3))@4, Pair(x: D(x: 1), y: E(x: 4))@5, Pair(x: E(x: 2), y: D(x: 3))@6, Pair(x: E(x: 2), y: E(x: 4))@7
-//│ <<< end data-rep-flatten transform-phase
+//│ >>> start class-tags collection-phase
+//│ class-tags collection-phase > track construction of Pair@6 in pair
+//│ class-tags collection-phase > track consumption at match@7 in pair
+//│ <<< end class-tags collection-phase
+//│ >>> start class-tags web-computation-phase
+//│ class-tags web-computation-phase > web 0:
+//│ class-tags web-computation-phase >   producers: Pair@6
+//│ class-tags web-computation-phase >   pattern matches: match@7
+//│ <<< end class-tags web-computation-phase
+//│ >>> start class-tags transform-phase
+//│ class-tags transform-phase > allocated tag 0 for D(x: 1)
+//│ class-tags transform-phase > allocated tag 1 for E(x: 2)
+//│ class-tags transform-phase > allocated tag 2 for D(x: 3)
+//│ class-tags transform-phase > allocated tag 3 for E(x: 4)
+//│ class-tags transform-phase > allocated tag 4 for Pair(x: D(x: 1), y: D(x: 3))
+//│ class-tags transform-phase > allocated tag 5 for Pair(x: D(x: 1), y: E(x: 4))
+//│ class-tags transform-phase > allocated tag 6 for Pair(x: E(x: 2), y: D(x: 3))
+//│ class-tags transform-phase > allocated tag 7 for Pair(x: E(x: 2), y: E(x: 4))
+//│ class-tags transform-phase > match shapes Pair(x: D(x: _), y: D(x: _)), Pair(x: D(x: _), y: E(x: _)), Pair(x: E(x: _), y: D(x: _)), Pair(x: E(x: _), y: E(x: _)) against Pair(x: D(x: 1), y: D(x: 3))@4, Pair(x: D(x: 1), y: E(x: 4))@5, Pair(x: E(x: 2), y: D(x: 3))@6, Pair(x: E(x: 2), y: E(x: 4))@7
+//│ <<< end class-tags transform-phase
 //│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
 //│ let pair;
 //│ pair = function pair(x, y) {
@@ -331,8 +331,8 @@ fun pair(x, y) =
 
 :expect 6
 pair(true, true) + pair(true, false) + pair(false, true) + pair(false, false)
-//│ >>> start data-rep-flatten collection-phase
-//│ <<< end data-rep-flatten collection-phase
-//│ >>> start data-rep-flatten transform-phase
-//│ <<< end data-rep-flatten transform-phase
+//│ >>> start class-tags collection-phase
+//│ <<< end class-tags collection-phase
+//│ >>> start class-tags transform-phase
+//│ <<< end class-tags transform-phase
 //│ = 6
