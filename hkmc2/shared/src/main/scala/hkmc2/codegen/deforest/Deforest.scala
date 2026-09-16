@@ -132,7 +132,7 @@ object Deforest:
     cfg: Config,
     tl: TL,
     raise: Raise,
-    ectx: Elaborator.Ctx,
+    eCtx: Elaborator.Ctx,
     eState: Elaborator.State,
     symbolPrinter: SymbolPrinter,
   ): Program =
