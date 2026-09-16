@@ -62,3 +62,32 @@ fun missingPatternArgument(t) =
 //│ ╙──      	               ^
 //│ class-tags transform-phase > match shapes _ against 
 //│ <<< end class-tags transform-phase
+
+
+:ge
+fun foo(x) =
+  let t = new C(x)
+  @matchShapes(D(_)) shape.match of t,
+    () => t.x
+//│ >>> start class-tags collection-phase
+//│ class-tags collection-phase > track consumption at match@1 in foo
+//│ <<< end class-tags collection-phase
+//│ >>> start class-tags web-computation-phase
+//│ class-tags web-computation-phase > web 0:
+//│ class-tags web-computation-phase >   producers: C@0
+//│ class-tags web-computation-phase >   pattern matches: match@1
+//│ <<< end class-tags web-computation-phase
+//│ >>> start class-tags transform-phase
+//│ class-tags transform-phase > allocated tag 0 for C(x: _)
+//│ class-tags transform-phase > match shapes D(x: _) against C(x: _)@0
+//│ ╔══[COMPILATION ERROR] Annotated shape.match does not cover every possible scrutinee shape.
+//│ ║  l.70: 	  @matchShapes(D(_)) shape.match of t,
+//│ ║        	               ^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.71: 	    () => t.x
+//│ ║        	^^^^^^^^^^^^^
+//│ ╟── Shape C(x: _) with tag 0 does not match any @matchShapes pattern.
+//│ ║  l.70: 	  @matchShapes(D(_)) shape.match of t,
+//│ ║        	               ^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.71: 	    () => t.x
+//│ ╙──      	^^^^^^^^^^^^^
+//│ <<< end class-tags transform-phase

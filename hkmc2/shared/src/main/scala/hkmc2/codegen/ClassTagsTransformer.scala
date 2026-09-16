@@ -495,7 +495,16 @@ class ClassTagsTransformer(
                     .map:
                       case (_, branch) => (taggedShape, tag, branch)
                   val matchedTags = matchingBranches.iterator.map(_._2).toSet
-                  if taggedShapes.isEmpty || taggedShapes.exists((_, tag) => !matchedTags.contains(tag)) then N
+                  val unmatchedShapes = taggedShapes.filter((_, tag) => !matchedTags.contains(tag))
+                  if taggedShapes.isEmpty then N
+                  else if unmatchedShapes.nonEmpty then
+                    summon[Raise].apply(ErrorReport(
+                      msg"Annotated shape.match does not cover every possible scrutinee shape." -> call.toLoc ::
+                      unmatchedShapes.map: (shape, tag) =>
+                        msg"Shape ${shape.show} with tag $tag does not match any @matchShapes pattern." -> call.toLoc,
+                      source = Diagnostic.Source.Compilation,
+                    ))
+                    N
                   else
                     val resultSymbol = new TempSymbol(N, "shapeMatchResult")
                     val resultRef = resultSymbol.asSimpleRef.withLocOf(call)
