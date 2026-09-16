@@ -1308,6 +1308,9 @@ class Resolver(tl: TraceLogger)
    *
    * This is intended for the right-hand side of a type alias: it is not traversed as a signature, so this runs the
    * resource modifier checks that `traverseSign` would.
+   *
+   * The arguments of a type application are skipped: `resolve` already traverses them as signatures, which checks
+   * them, so checking them here too would report every error twice.
    */
   private def checkAllRscModifiers(t: Term): Unit =
     t match
@@ -1315,7 +1318,9 @@ class Resolver(tl: TraceLogger)
       case Term.CompType(lhs, rhs, false) => checkRscInIntersection(lhs, rhs)
       case Term.FunTy(lhs, _, _) => checkRscInFunParams(lhs)
       case _ => ()
-    t.subTerms.foreach(checkAllRscModifiers)
+    t match
+      case Term.TyApp(con: Resolvable, _) => checkAllRscModifiers(con)
+      case _ => t.subTerms.foreach(checkAllRscModifiers)
 
 end Resolver
 

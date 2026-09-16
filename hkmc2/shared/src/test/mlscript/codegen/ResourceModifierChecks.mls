@@ -624,18 +624,14 @@ fun ta6[A](x: Wrap[rsc A]) = x
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define ta6⁰ as fun ta6¹(x: Wrap²): ? { return x }; end
 
-// FIXME: The primitive error is reported twice, whereas `type P1 = rsc Int32` in
-// `ResourceTypeAliases.mls` reports it once.
+// A type argument on an alias's right-hand side is checked like any other.
 :ge
 type PG1 = Wrap[rsc Int32]
-//│ ╔══[COMPILATION ERROR] Primitive type 'Int32' cannot be a resource.
-//│ ║  l.630: 	type PG1 = Wrap[rsc Int32]
-//│ ╙──       	                    ^^^^^
 //│ ╔══[COMPILATION ERROR] Resource modifiers inside a type argument are not supported yet.
-//│ ║  l.630: 	type PG1 = Wrap[rsc Int32]
+//│ ║  l.629: 	type PG1 = Wrap[rsc Int32]
 //│ ╙──       	                    ^^^^^
 //│ ╔══[COMPILATION ERROR] Primitive type 'Int32' cannot be a resource.
-//│ ║  l.630: 	type PG1 = Wrap[rsc Int32]
+//│ ║  l.629: 	type PG1 = Wrap[rsc Int32]
 //│ ╙──       	                    ^^^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ end
@@ -648,10 +644,10 @@ type PG1 = Wrap[rsc Int32]
 :ge
 fun pf1(g: (rsc Int32) -> Int32) = g
 //│ ╔══[COMPILATION ERROR] Resource modifiers inside the parameters of a function type are not supported yet.
-//│ ║  l.649: 	fun pf1(g: (rsc Int32) -> Int32) = g
+//│ ║  l.645: 	fun pf1(g: (rsc Int32) -> Int32) = g
 //│ ╙──       	                ^^^^^
 //│ ╔══[COMPILATION ERROR] Primitive type 'Int32' cannot be a resource.
-//│ ║  l.649: 	fun pf1(g: (rsc Int32) -> Int32) = g
+//│ ║  l.645: 	fun pf1(g: (rsc Int32) -> Int32) = g
 //│ ╙──       	                ^^^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define pf1⁰ as fun pf1¹(g: Function⁰): ? { return g }; end
@@ -659,10 +655,10 @@ fun pf1(g: (rsc Int32) -> Int32) = g
 :ge
 fun pf2(g: (rsc rsc? C) -> C) = g
 //│ ╔══[COMPILATION ERROR] Resource modifiers inside the parameters of a function type are not supported yet.
-//│ ║  l.660: 	fun pf2(g: (rsc rsc? C) -> C) = g
+//│ ║  l.656: 	fun pf2(g: (rsc rsc? C) -> C) = g
 //│ ╙──       	                     ^
 //│ ╔══[COMPILATION ERROR] A type takes at most one resource modifier.
-//│ ║  l.660: 	fun pf2(g: (rsc rsc? C) -> C) = g
+//│ ║  l.656: 	fun pf2(g: (rsc rsc? C) -> C) = g
 //│ ╙──       	                     ^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define pf2⁰ as fun pf2¹(g: Function⁰): ? { return g }; end
@@ -670,10 +666,10 @@ fun pf2(g: (rsc rsc? C) -> C) = g
 :ge
 fun pf3[A](g: (rsc A) -> A) = g
 //│ ╔══[COMPILATION ERROR] Resource modifiers inside the parameters of a function type are not supported yet.
-//│ ║  l.671: 	fun pf3[A](g: (rsc A) -> A) = g
+//│ ║  l.667: 	fun pf3[A](g: (rsc A) -> A) = g
 //│ ╙──       	                   ^
 //│ ╔══[COMPILATION ERROR] 'rsc' modifiers on type parameters are not supported yet.
-//│ ║  l.671: 	fun pf3[A](g: (rsc A) -> A) = g
+//│ ║  l.667: 	fun pf3[A](g: (rsc A) -> A) = g
 //│ ╙──       	                   ^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define pf3⁰ as fun pf3¹(g: Function⁰): ? { return g }; end
@@ -681,10 +677,10 @@ fun pf3[A](g: (rsc A) -> A) = g
 :ge
 fun pf4(g: (rsc C, rsc? D) -> C) = g
 //│ ╔══[COMPILATION ERROR] Resource modifiers inside the parameters of a function type are not supported yet.
-//│ ║  l.682: 	fun pf4(g: (rsc C, rsc? D) -> C) = g
+//│ ║  l.678: 	fun pf4(g: (rsc C, rsc? D) -> C) = g
 //│ ╙──       	                ^
 //│ ╔══[COMPILATION ERROR] Resource modifiers inside the parameters of a function type are not supported yet.
-//│ ║  l.682: 	fun pf4(g: (rsc C, rsc? D) -> C) = g
+//│ ║  l.678: 	fun pf4(g: (rsc C, rsc? D) -> C) = g
 //│ ╙──       	                        ^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define pf4⁰ as fun pf4¹(g: Function⁰): ? { return g }; end
@@ -692,7 +688,7 @@ fun pf4(g: (rsc C, rsc? D) -> C) = g
 :ge
 fun pf5(g: ((rsc C) | D) -> C) = g
 //│ ╔══[COMPILATION ERROR] Resource modifiers inside the parameters of a function type are not supported yet.
-//│ ║  l.693: 	fun pf5(g: ((rsc C) | D) -> C) = g
+//│ ║  l.689: 	fun pf5(g: ((rsc C) | D) -> C) = g
 //│ ╙──       	                 ^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define pf5⁰ as fun pf5¹(g: Function⁰): ? { return g }; end
@@ -700,7 +696,7 @@ fun pf5(g: ((rsc C) | D) -> C) = g
 :ge
 fun pf6(g: C -> (rsc C) -> C) = g
 //│ ╔══[COMPILATION ERROR] Resource modifiers inside the parameters of a function type are not supported yet.
-//│ ║  l.701: 	fun pf6(g: C -> (rsc C) -> C) = g
+//│ ║  l.697: 	fun pf6(g: C -> (rsc C) -> C) = g
 //│ ╙──       	                     ^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define pf6⁰ as fun pf6¹(g: Function⁰): ? { return g }; end
@@ -708,7 +704,7 @@ fun pf6(g: C -> (rsc C) -> C) = g
 :ge
 fun pf7(x: Wrap[(rsc C) -> D]) = x
 //│ ╔══[COMPILATION ERROR] Resource modifiers inside the parameters of a function type are not supported yet.
-//│ ║  l.709: 	fun pf7(x: Wrap[(rsc C) -> D]) = x
+//│ ║  l.705: 	fun pf7(x: Wrap[(rsc C) -> D]) = x
 //│ ╙──       	                     ^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define pf7⁰ as fun pf7¹(x: Wrap²): ? { return x }; end
@@ -716,7 +712,7 @@ fun pf7(x: Wrap[(rsc C) -> D]) = x
 :ge
 type PF8 = (rsc C) -> C
 //│ ╔══[COMPILATION ERROR] Resource modifiers inside the parameters of a function type are not supported yet.
-//│ ║  l.717: 	type PF8 = (rsc C) -> C
+//│ ║  l.713: 	type PF8 = (rsc C) -> C
 //│ ╙──       	                ^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ end
@@ -724,7 +720,7 @@ type PF8 = (rsc C) -> C
 :ge
 declare fun pf9: (rsc C) -> C
 //│ ╔══[COMPILATION ERROR] Resource modifiers inside the parameters of a function type are not supported yet.
-//│ ║  l.725: 	declare fun pf9: (rsc C) -> C
+//│ ║  l.721: 	declare fun pf9: (rsc C) -> C
 //│ ╙──       	                      ^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ end
@@ -735,10 +731,10 @@ declare fun pf9: (rsc C) -> C
 fun pf10: (rsc C) -> C
 fun pf10(x) = x
 //│ ╔══[COMPILATION ERROR] Resource modifiers inside the parameters of a function type are not supported yet.
-//│ ║  l.735: 	fun pf10: (rsc C) -> C
+//│ ║  l.731: 	fun pf10: (rsc C) -> C
 //│ ╙──       	               ^
 //│ ╔══[COMPILATION ERROR] Resource modifiers inside the parameters of a function type are not supported yet.
-//│ ║  l.735: 	fun pf10: (rsc C) -> C
+//│ ║  l.731: 	fun pf10: (rsc C) -> C
 //│ ╙──       	               ^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define pf10⁰ as fun pf10¹(x: ?): C² { return (x as! C²) }; end
@@ -747,3 +743,80 @@ fun pf10(x) = x
 fun pf11(g: rsc (C -> D)) = g
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define pf11⁰ as fun pf11¹(g: rsc Function⁰): ? { return g }; end
+
+// Every check applies inside a type argument on an alias's right-hand side, including a
+// right-hand side that is not a type.
+
+:ge
+type AD1 = Wrap[rsc rsc? C]
+//│ ╔══[COMPILATION ERROR] Resource modifiers inside a type argument are not supported yet.
+//│ ║  l.751: 	type AD1 = Wrap[rsc rsc? C]
+//│ ╙──       	                         ^
+//│ ╔══[COMPILATION ERROR] A type takes at most one resource modifier.
+//│ ║  l.751: 	type AD1 = Wrap[rsc rsc? C]
+//│ ╙──       	                         ^
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ end
+
+:ge
+type AD2 = Wrap[(rsc C) -> D]
+//│ ╔══[COMPILATION ERROR] Resource modifiers inside the parameters of a function type are not supported yet.
+//│ ║  l.762: 	type AD2 = Wrap[(rsc C) -> D]
+//│ ╙──       	                     ^
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ end
+
+:ge
+type AD3 = Wrap[(rsc C) & D]
+//│ ╔══[COMPILATION ERROR] Resource modifiers inside an intersection type are not supported yet.
+//│ ║  l.770: 	type AD3 = Wrap[(rsc C) & D]
+//│ ╙──       	                     ^
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ end
+
+:ge
+type AD4[A] = Wrap[rsc A]
+//│ ╔══[COMPILATION ERROR] Resource modifiers inside a type argument are not supported yet.
+//│ ║  l.778: 	type AD4[A] = Wrap[rsc A]
+//│ ╙──       	                       ^
+//│ ╔══[COMPILATION ERROR] 'rsc' modifiers on type parameters are not supported yet.
+//│ ║  l.778: 	type AD4[A] = Wrap[rsc A]
+//│ ╙──       	                       ^
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ end
+
+module Mo with
+  class Sm[A](x: A)
+  object Nn
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define Mo⁰ as class Mo¹
+//│ module Mo² {
+//│   constructor {
+//│     define Sm⁰ as class Sm² {
+//│       private val x⁸: ?;
+//│       constructor Sm¹(x: ?) { set Sm².this.x⁸ = x; end }
+//│     };
+//│     define Nn⁰ as object Nn¹;
+//│     end
+//│   }
+//│ };
+//│ end
+
+:ge
+type AD5 = Mo.{ Sm(Wrap[rsc Int32]) | Nn }
+//│ ╔══[COMPILATION ERROR] Resource modifiers inside a type argument are not supported yet.
+//│ ║  l.806: 	type AD5 = Mo.{ Sm(Wrap[rsc Int32]) | Nn }
+//│ ╙──       	                            ^^^^^
+//│ ╔══[COMPILATION ERROR] Primitive type 'Int32' cannot be a resource.
+//│ ║  l.806: 	type AD5 = Mo.{ Sm(Wrap[rsc Int32]) | Nn }
+//│ ╙──       	                            ^^^^^
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ end
+
+:ge
+type AD6 = Mo.{ Sm(Wrap[rsc C]) | Nn }
+//│ ╔══[COMPILATION ERROR] Resource modifiers inside a type argument are not supported yet.
+//│ ║  l.817: 	type AD6 = Mo.{ Sm(Wrap[rsc C]) | Nn }
+//│ ╙──       	                            ^
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ end
