@@ -47,14 +47,10 @@ type O = rsc Opaque
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ end
 
-// A resource modifier on a type parameter is rejected, as it is not supported yet (see
-// `ResourceModifierChecks.mls`); the alias still erases as described above.
+// A resource modifier on a use of a type parameter applies as written; the alias erases as
+// described above, as the type parameter cannot be resolved.
 
-:ge
 type Rsc[A] = rsc A
-//│ ╔══[COMPILATION ERROR] 'rsc' modifiers on type parameters are not supported yet.
-//│ ║  l.54: 	type Rsc[A] = rsc A
-//│ ╙──      	                  ^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ end
 
@@ -101,15 +97,15 @@ fun t2(x: T2) = x
 :ge
 fun e1(x: rsc R) = x
 //│ ╔══[COMPILATION ERROR] A type takes at most one resource modifier.
-//│ ║  l.102: 	fun e1(x: rsc R) = x
-//│ ╙──       	              ^
+//│ ║  l.98: 	fun e1(x: rsc R) = x
+//│ ╙──      	              ^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define e1⁰ as fun e1¹(x: rsc C²): ? { return x }; end
 
 :ge
 fun e2(x: rsc? X) = x
 //│ ╔══[COMPILATION ERROR] A type takes at most one resource modifier.
-//│ ║  l.110: 	fun e2(x: rsc? X) = x
+//│ ║  l.106: 	fun e2(x: rsc? X) = x
 //│ ╙──       	               ^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define e2⁰ as fun e2¹(x: rsc? Object⁰): ? { return x }; end
@@ -117,7 +113,7 @@ fun e2(x: rsc? X) = x
 :ge
 fun e3(x: rsc Rsc[C]) = x
 //│ ╔══[COMPILATION ERROR] A type takes at most one resource modifier.
-//│ ║  l.118: 	fun e3(x: rsc Rsc[C]) = x
+//│ ║  l.114: 	fun e3(x: rsc Rsc[C]) = x
 //│ ╙──       	              ^^^^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define e3⁰ as fun e3¹(x: rsc Unknown): ? { return x }; end
@@ -125,7 +121,7 @@ fun e3(x: rsc Rsc[C]) = x
 :ge
 fun e4(x: rsc T) = x
 //│ ╔══[COMPILATION ERROR] A type takes at most one resource modifier.
-//│ ║  l.126: 	fun e4(x: rsc T) = x
+//│ ║  l.122: 	fun e4(x: rsc T) = x
 //│ ╙──       	              ^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define e4⁰ as fun e4¹(x: rsc Unknown): ? { return x }; end
@@ -133,7 +129,7 @@ fun e4(x: rsc T) = x
 :ge
 fun e5(x: rsc? R) = x
 //│ ╔══[COMPILATION ERROR] A type takes at most one resource modifier.
-//│ ║  l.134: 	fun e5(x: rsc? R) = x
+//│ ║  l.130: 	fun e5(x: rsc? R) = x
 //│ ╙──       	               ^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define e5⁰ as fun e5¹(x: rsc C²): ? { return x }; end
@@ -141,7 +137,7 @@ fun e5(x: rsc? R) = x
 :ge
 fun e6(x: rsc Z) = x
 //│ ╔══[COMPILATION ERROR] A type takes at most one resource modifier.
-//│ ║  l.142: 	fun e6(x: rsc Z) = x
+//│ ║  l.138: 	fun e6(x: rsc Z) = x
 //│ ╙──       	              ^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define e6⁰ as fun e6¹(x: rsc C²): ? { return x }; end
@@ -160,7 +156,7 @@ fun e7(x: rsc P) = x
 :ge
 type P1 = rsc Int32
 //│ ╔══[COMPILATION ERROR] Primitive type 'Int32' cannot be a resource.
-//│ ║  l.161: 	type P1 = rsc Int32
+//│ ║  l.157: 	type P1 = rsc Int32
 //│ ╙──       	              ^^^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ end
@@ -168,7 +164,7 @@ type P1 = rsc Int32
 :w
 type P2 = rsc? Int32
 //│ ╔══[WARNING] Primitive type 'Int32' is never a resource, so 'rsc?' has no effect.
-//│ ║  l.169: 	type P2 = rsc? Int32
+//│ ║  l.165: 	type P2 = rsc? Int32
 //│ ╙──       	               ^^^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ end
@@ -176,7 +172,7 @@ type P2 = rsc? Int32
 :ge
 type P3 = rsc rsc? C
 //│ ╔══[COMPILATION ERROR] A type takes at most one resource modifier.
-//│ ║  l.177: 	type P3 = rsc rsc? C
+//│ ║  l.173: 	type P3 = rsc rsc? C
 //│ ╙──       	                   ^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ end
@@ -184,7 +180,7 @@ type P3 = rsc rsc? C
 :ge
 type P4 = (rsc C) & D
 //│ ╔══[COMPILATION ERROR] Resource modifiers inside an intersection type are not supported yet.
-//│ ║  l.185: 	type P4 = (rsc C) & D
+//│ ║  l.181: 	type P4 = (rsc C) & D
 //│ ╙──       	               ^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ end
@@ -192,7 +188,7 @@ type P4 = (rsc C) & D
 :ge
 type P5 = rsc R
 //│ ╔══[COMPILATION ERROR] A type takes at most one resource modifier.
-//│ ║  l.193: 	type P5 = rsc R
+//│ ║  l.189: 	type P5 = rsc R
 //│ ╙──       	              ^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ end
@@ -202,7 +198,7 @@ type P5 = rsc R
 :ge
 type P6 = rsc P6 | C
 //│ ╔══[COMPILATION ERROR] A type takes at most one resource modifier.
-//│ ║  l.203: 	type P6 = rsc P6 | C
+//│ ║  l.199: 	type P6 = rsc P6 | C
 //│ ╙──       	              ^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ end
@@ -211,10 +207,10 @@ type P6 = rsc P6 | C
 type P7 = rsc P8 | C
 type P8 = rsc P7 | D
 //│ ╔══[COMPILATION ERROR] A type takes at most one resource modifier.
-//│ ║  l.211: 	type P7 = rsc P8 | C
+//│ ║  l.207: 	type P7 = rsc P8 | C
 //│ ╙──       	              ^^
 //│ ╔══[COMPILATION ERROR] A type takes at most one resource modifier.
-//│ ║  l.212: 	type P8 = rsc P7 | D
+//│ ║  l.208: 	type P8 = rsc P7 | D
 //│ ╙──       	              ^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ end
@@ -226,7 +222,7 @@ type P8 = rsc P7 | D
 :ge
 fun e8(x: rsc P2): Int32 = x
 //│ ╔══[COMPILATION ERROR] A type takes at most one resource modifier.
-//│ ║  l.227: 	fun e8(x: rsc P2): Int32 = x
+//│ ║  l.223: 	fun e8(x: rsc P2): Int32 = x
 //│ ╙──       	              ^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define e8⁰ as fun e8¹(x: Int32): Int32 { return x }; end

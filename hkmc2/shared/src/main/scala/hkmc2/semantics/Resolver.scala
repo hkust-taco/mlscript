@@ -1227,16 +1227,10 @@ class Resolver(tl: TraceLogger)
     case Term.Forall(_, _, body) => rscReach(body)
     case _ => t :: Nil
   
-  /** Whether `t` refers to a type parameter. */
-  private def isTyParamRef(t: Term): Bool = t.resolvedSym match
-    case S(sym: VarSymbol) => ModuleChecker.isTypeParam(sym)
-    case _ => false
-  
   /**
    * Checks a possibly-resource-annotated type is valid:
    *
    * - it must not carry a resource modifier of its own (directly or transitively), as a type takes at most one;
-   * - it must not be a type parameter, as this is not supported yet;
    * - it must not denote a primitive type (directly or through an alias). This is an error under `rsc`, and a warning
    *   under `rsc?`, which then has no effect.
    */
@@ -1245,9 +1239,6 @@ class Resolver(tl: TraceLogger)
     // under its own modifier.
     case Term.Annotated(Annot.Resource(_), _) =>
       raise(ErrorReport(msg"A type takes at most one resource modifier." -> t.toLoc :: Nil))
-    case _ if isTyParamRef(t) =>
-      val kw = Annot.Resource.keyword(rsc).getOrElse(lastWords(s"a resource modifier denoting a non-resource on '$t'"))
-      raise(Annot.Resource.unsupportedOnTyParam(kw, t.toLoc))
     case _ =>
       // Function types and intersections have no symbol: a modifier on them is fine, whatever they contain.
       val members = t.symbol.flatMap(_.asTpe).toList

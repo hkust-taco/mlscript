@@ -111,8 +111,8 @@ object ErasedType:
 
   /** The top type of reference types, i.e. any value on JS and `anyref` on Wasm.
     *
-    * Reached by an absent annotation (`erasedType_!` folds `N` here), by an alias the IR cannot resolve, and
-    * by the surface top `Anything`, which has no erased counterpart of its own.
+    * Reached by an absent annotation, an alias the IR cannot resolve, a resource-modified type-parameter reference,
+    * and by the surface top `Anything`, which has no erased counterpart of its own.
     */
   case class Unknown(rsc: Opt[Bool]) extends ErasedValueType, CanonicalErasedType, HasRsc:
     // * No symbol denotes this type: `Anything` is the surface top, which is a different thing.
@@ -289,6 +289,10 @@ object ErasedType:
     case FunTy(_, _, _) => S(ErasedType.Function(rsc))
     // * Quantification erases away: what a `forall` denotes is what its body denotes.
     case Forall(_, _, body) => eraseSign(body, rsc)
+    // * A type parameter has no erased counterpart, so a reference to one erases to the top type under the modifier
+    // * written on it. `rsc` starts as `S(false)` and no syntax writes a non-resource modifier, so `S(false)` here
+    // * means that the reference is unannotated: it then erases to nothing, as it did before resource modifiers.
+    case Ref(sym: VarSymbol) if ModuleChecker.isTypeParam(sym) && rsc =/= S(false) => S(ErasedType.Unknown(rsc))
     case _ => sign.symbol.flatMap(_.asTpe).map(sym => ErasedType.ValueLike(rsc, sym))
 
   /** Whether `actual` is a subtype of `expected`, walking the class hierarchy.
