@@ -1078,7 +1078,7 @@ extends Importer:
     
     /** Splits the body of a `new` into its resource modifier (if any), its class, and its argument lists. */
     def splitRscNew(c: Tree, args: Ls[Tup]): (Opt[Keywrd[?]], Tree, Ls[Tup]) = c match
-      case Modified(kw @ Keywrd(Keyword.`rsc` | Keyword.`rsc?`), Apps(c, args0)) => (S(kw), c, args0 ::: args)
+      case Modified(kw @ Keywrd(_: Keyword.RscLike), Apps(c, args0)) => (S(kw), c, args0 ::: args)
       case _ => (N, c, args)
     
     /** Fallback to a normal selection + application when label-specific handling does not apply. */
@@ -1233,7 +1233,7 @@ extends Importer:
       val syms = (tvs.collect:
         case id: Tree.Ident => (genSym(id, erasedType = N), N, N)
         // * The binder is still declared, so its uses in the body resolve.
-        case Modified(kw @ Keywrd(Keyword.`rsc` | Keyword.`rsc?`), id: Tree.Ident) =>
+        case Modified(kw @ Keywrd(_: Keyword.RscLike), id: Tree.Ident) =>
           raise(Annot.Resource.unsupportedOnTyParam(kw.kw, kw.toLoc))
           (genSym(id, erasedType = N), N, N)
         case InfixApp(id: Tree.Ident, Keywrd(Keyword.`extends`), ub) => (genSym(id, erasedType = N), S(ub), N)
@@ -1599,7 +1599,7 @@ extends Importer:
         raise(ErrorReport(msg"Expected a record after 'mut' keyword; found a block" -> blk.toLoc :: Nil))
         blk
       case (rcd: Rcd, ctx) => rcd.copy(mut = true).withLocOf(rcd)
-    case Modified(Keywrd(kw @ (Keyword.`rsc` | Keyword.`rsc?`)), body) =>
+    case Modified(Keywrd(kw: Keyword.RscLike), body) =>
       Term.Annotated(Annot.Modifier(kw), subterm(body))
     case Modified(kw, body) =>
       raise(ErrorReport(msg"Illegal position for '${kw.name}' modifier." -> kw.toLoc :: Nil))
@@ -2214,7 +2214,7 @@ extends Importer:
                 case Modified(Keywrd(Keyword.`out`), body) if vce.isEmpty =>
                   go(body, S(true), rscd)
                 // * The parameter is still declared, so its uses resolve.
-                case Modified(kw @ Keywrd(Keyword.`rsc` | Keyword.`rsc?`), body) if !rscd =>
+                case Modified(kw @ Keywrd(_: Keyword.RscLike), body) if !rscd =>
                   raise(Annot.Resource.unsupportedOnTyParam(kw.kw, kw.toLoc))
                   go(body, vce, rscd = true)
                 case _ =>
@@ -2477,7 +2477,7 @@ extends Importer:
         go(sts, Nil, defn :: acc)
       // * `Tree.desugared` lifts a resource modifier written on a definition to an annotation. It is rejected here,
       // * where the definition is known, and dropped, keeping the definition.
-      case Annotated(kw @ Keywrd(Keyword.`rsc` | Keyword.`rsc?`), target @ PossiblyAnnotated(_, d: TypeOrTermDef)) :: sts =>
+      case Annotated(kw @ Keywrd(_: Keyword.RscLike), target @ PossiblyAnnotated(_, d: TypeOrTermDef)) :: sts =>
         raise(ErrorReport(msg"Resource modifiers apply to types, not to ${d.k.desc} definitions." -> kw.toLoc :: Nil))
         go(target :: sts, annotations, acc)
       case Annotated(annotation, target) :: sts =>
@@ -2839,7 +2839,7 @@ extends Importer:
       val vs = ps.flatMap:
         case id: Ident => mk(id)
         // * The parameter is still declared, so its uses resolve.
-        case Modified(kw @ Keywrd(Keyword.`rsc` | Keyword.`rsc?`), id: Ident) =>
+        case Modified(kw @ Keywrd(_: Keyword.RscLike), id: Ident) =>
           raise(Annot.Resource.unsupportedOnTyParam(kw.kw, kw.toLoc))
           mk(id)
         case t =>

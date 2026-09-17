@@ -231,5 +231,7 @@ object Keyword:
   
   type LetLike = `let`.type | `set`.type
   
+  type RscLike = `rsc`.type | `rsc?`.type
+  
   type Modifier = `in`.type | `out`.type | `mut`.type | `abstract`.type | `declare`.type | `data`.type | `virtual`.type | `override`.type |
-    `public`.type | `private`.type | `staged`.type | `rsc`.type | `rsc?`.type
+    `public`.type | `private`.type | `staged`.type | RscLike
