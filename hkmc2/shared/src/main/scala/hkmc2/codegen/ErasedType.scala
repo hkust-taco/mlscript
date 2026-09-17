@@ -66,14 +66,14 @@ object ErasedType:
     // Ensures `toString` returns a stable string
     override def toString: Str = "ValueLike(?)"
 
-  /** A reference to a function of a possibly-known shape. */
+  /** The signature of a definition, whose parameter and return types may be unknown. */
   case class Signature(override val paramLists: Ls[Ls[Opt[ErasedValueType]]], override val ret: Opt[ErasedValueType]) extends ErasedFuncSignature:
     ErasedFuncSignature.assertHasParamLists(paramLists)
     override type Canonical = CanonicalSignature
     override protected def computeCanonicalize(using Ctx, State): CanonicalSignature =
       CanonicalSignature(paramLists.map(_.map(_.map(_.canonicalize))), ret.map(_.canonicalize))
 
-  /** An analogue to `Signature` for function types with canonicalized parameter and return types. */
+  /** An analogue to `Signature` with canonicalized parameter and return types. */
   case class CanonicalSignature(override val paramLists: Ls[Ls[Opt[CanonicalErasedValueType]]], override val ret: Opt[CanonicalErasedValueType]) extends ErasedFuncSignature with CanonicalErasedType:
     ErasedFuncSignature.assertHasParamLists(paramLists)
 
@@ -441,10 +441,11 @@ sealed abstract class ErasedType:
             case _ => ""
           if tpeSym.asMod.isDefined then s"${rscPrefix}module $name" else s"$rscPrefix$name"
 
-  /** The type of the value this type denotes, i.e. a first-class `Function` for a function type.
+  /** The type of a value this type describes.
     *
-    * A function type has no resource-ness of its own: whether a function value is a resource depends on what it
-    * captures, which is left to be resolved per reference. Until then, it is `rsc?`.
+    * A value type describes itself. A signature types no value, so the result is the type of what a reference to a
+    * definition with this signature evaluates to: a closure the compiler builds, i.e. a first-class `Function`.
+    * Nothing states the resource-ness of such a closure, so it is `rsc?`.
     */
   final def valueType: ErasedValueType = this match
     case _: ErasedFuncSignature => ErasedType.Function(N)
@@ -460,12 +461,15 @@ object ErasedFuncSignature:
     * See the documentation of [[ErasedFuncSignature]] for the rationale.
     */
   def assertHasParamLists(paramLists: Ls[Ls[?]]): Unit =
-    assert(paramLists.nonEmpty, "a function type must describe at least one parameter list")
+    assert(paramLists.nonEmpty, "a signature must describe at least one parameter list")
 
-/** Base class indicating that the [[ErasedType]] is a function type.
+/** Base class indicating that the [[ErasedType]] is the signature of a definition.
+  *
+  * A signature is not a value type; Use [[ErasedType.valueType]] to obtain the value type when a function of this 
+  * signature is used as a value.
   *
   * `paramLists` mirrors the definition's parameter *lists*, so that curried functions can be represented - functions
-  * that are partially applied yield a function type with fewer parameter lists.
+  * that are partially applied yield a signature with fewer parameter lists.
   *
   * Note that `paramLists` should never be empty: a definition declaring no parameter list at all is either compiled
   * to a getter and erased to its result instead, or given an implicitly-added empty parameter list which the erased
@@ -578,7 +582,7 @@ trait HasErasedType:
 
   /** Returns the [[ErasedValueType]] of this element, or `N` if the erased type is not known.
     *
-    * If this type is a [[ErasedFuncSignature]], the result is the [[ErasedType]] of a first-class function.
+    * If this type is an [[ErasedFuncSignature]], the result is the [[ErasedType]] of a first-class function.
     */
   lazy val erasedValueType: Opt[ErasedValueType] = erasedType.map(_.valueType)
 

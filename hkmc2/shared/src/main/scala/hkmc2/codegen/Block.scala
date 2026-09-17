@@ -1112,7 +1112,7 @@ sealed abstract class Result extends AutoLocated, HasErasedType:
           argss.sizeCompare(paramLists) match
             // * An exactly-applied call yields the function's result type.
             case 0 => ret
-            // * An under-applied call yields a function type over the remaining parameter lists.
+            // * An under-applied call yields a function whose signature has the remaining parameter lists.
             case c if c < 0 => S(ErasedType.Signature(paramLists.drop(argss.length), ret))
             // * An over-applied call applies arguments to whatever the function returns, which the function's
             // * signature is oblivious about.
