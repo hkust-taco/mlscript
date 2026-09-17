@@ -342,7 +342,7 @@ object ErasedType:
     * A resource and a non-resource have different resource-tracking strategies, so neither can be coerced to the other.
     * Both widen freely into the undetermined layout, and narrowing back out of it is the runtime ref-count test.
     */
-  private[codegen] def needsRscCast(actual: Opt[Bool], expected: Opt[Bool]): Opt[Bool] =
+  private def needsRscCast(actual: Opt[Bool], expected: Opt[Bool]): Opt[Bool] =
     (actual, expected) match
     case _ if actual === expected => S(false)
     case (_, N) => S(false)
