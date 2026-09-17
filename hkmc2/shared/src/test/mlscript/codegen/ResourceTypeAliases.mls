@@ -90,57 +90,51 @@ fun t2(x: T2) = x
 //│ define t2⁰ as fun t2¹(x: Unknown): ? { return x }; end
 
 
-// A modifier on a reference to an alias that contains resource-ness in its members is
-// rejected, as a type can take at most one - even through a chain of aliases. A modifier on
-// an alias without any is fine.
+// A modifier on a reference to an alias combines with the ones written on its members, even
+// through a chain of aliases: `rsc` overrides them, as it asserts that the whole type is a
+// resource, while `rsc?` leaves a member's own modifier in place. The members are still
+// erased to their LUB.
 
-:ge
 fun e1(x: rsc R) = x
-//│ ╔══[COMPILATION ERROR] A type takes at most one resource modifier.
-//│ ║  l.98: 	fun e1(x: rsc R) = x
-//│ ╙──      	              ^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define e1⁰ as fun e1¹(x: rsc C²): ? { return x }; end
 
-:ge
 fun e2(x: rsc? X) = x
-//│ ╔══[COMPILATION ERROR] A type takes at most one resource modifier.
-//│ ║  l.106: 	fun e2(x: rsc? X) = x
-//│ ╙──       	               ^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define e2⁰ as fun e2¹(x: rsc? Object⁰): ? { return x }; end
 
-:ge
 fun e3(x: rsc Rsc[C]) = x
-//│ ╔══[COMPILATION ERROR] A type takes at most one resource modifier.
-//│ ║  l.114: 	fun e3(x: rsc Rsc[C]) = x
-//│ ╙──       	              ^^^^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define e3⁰ as fun e3¹(x: rsc Unknown): ? { return x }; end
 
-:ge
 fun e4(x: rsc T) = x
-//│ ╔══[COMPILATION ERROR] A type takes at most one resource modifier.
-//│ ║  l.122: 	fun e4(x: rsc T) = x
-//│ ╙──       	              ^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define e4⁰ as fun e4¹(x: rsc Unknown): ? { return x }; end
 
-:ge
 fun e5(x: rsc? R) = x
-//│ ╔══[COMPILATION ERROR] A type takes at most one resource modifier.
-//│ ║  l.130: 	fun e5(x: rsc? R) = x
-//│ ╙──       	               ^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define e5⁰ as fun e5¹(x: rsc C²): ? { return x }; end
 
-:ge
 fun e6(x: rsc Z) = x
-//│ ╔══[COMPILATION ERROR] A type takes at most one resource modifier.
-//│ ║  l.138: 	fun e6(x: rsc Z) = x
-//│ ╙──       	              ^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define e6⁰ as fun e6¹(x: rsc C²): ? { return x }; end
+
+fun e9(x: rsc M) = x
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define e9⁰ as fun e9¹(x: rsc C²): ? { return x }; end
+
+type RM = rsc M
+type MR = rsc? R
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ end
+
+fun e10(x: RM) = x
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define e10⁰ as fun e10¹(x: rsc C²): ? { return x }; end
+
+fun e11(x: MR) = x
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define e11⁰ as fun e11¹(x: rsc C²): ? { return x }; end
 
 type P = C | D
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
@@ -156,7 +150,7 @@ fun e7(x: rsc P) = x
 :ge
 type P1 = rsc Int32
 //│ ╔══[COMPILATION ERROR] Primitive type 'Int32' cannot be a resource.
-//│ ║  l.157: 	type P1 = rsc Int32
+//│ ║  l.151: 	type P1 = rsc Int32
 //│ ╙──       	              ^^^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ end
@@ -164,7 +158,7 @@ type P1 = rsc Int32
 :w
 type P2 = rsc? Int32
 //│ ╔══[WARNING] Primitive type 'Int32' is never a resource, so 'rsc?' has no effect.
-//│ ║  l.165: 	type P2 = rsc? Int32
+//│ ║  l.159: 	type P2 = rsc? Int32
 //│ ╙──       	               ^^^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ end
@@ -172,7 +166,7 @@ type P2 = rsc? Int32
 :ge
 type P3 = rsc rsc? C
 //│ ╔══[COMPILATION ERROR] A type takes at most one resource modifier.
-//│ ║  l.173: 	type P3 = rsc rsc? C
+//│ ║  l.167: 	type P3 = rsc rsc? C
 //│ ╙──       	                   ^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ end
@@ -180,49 +174,44 @@ type P3 = rsc rsc? C
 :ge
 type P4 = (rsc C) & D
 //│ ╔══[COMPILATION ERROR] Resource modifiers inside an intersection type are not supported yet.
-//│ ║  l.181: 	type P4 = (rsc C) & D
+//│ ║  l.175: 	type P4 = (rsc C) & D
 //│ ╙──       	               ^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ end
 
-:ge
+// A modifier on an alias reference on the right-hand side combines the same way, including
+// on a recursive occurrence of an alias that writes its own modifier.
+
 type P5 = rsc R
-//│ ╔══[COMPILATION ERROR] A type takes at most one resource modifier.
-//│ ║  l.189: 	type P5 = rsc R
-//│ ╙──       	              ^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ end
 
-// ... and that includes a recursive occurrence of an alias that writes its own modifier.
-
-:ge
 type P6 = rsc P6 | C
-//│ ╔══[COMPILATION ERROR] A type takes at most one resource modifier.
-//│ ║  l.199: 	type P6 = rsc P6 | C
-//│ ╙──       	              ^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ end
 
-:ge
 type P7 = rsc P8 | C
 type P8 = rsc P7 | D
-//│ ╔══[COMPILATION ERROR] A type takes at most one resource modifier.
-//│ ║  l.207: 	type P7 = rsc P8 | C
-//│ ╙──       	              ^^
-//│ ╔══[COMPILATION ERROR] A type takes at most one resource modifier.
-//│ ║  l.208: 	type P8 = rsc P7 | D
-//│ ╙──       	              ^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ end
 
 
-// A member with a modifier of its own is checked where its alias is defined, so here only
-// the extra modifier is reported, not the primitive.
+// A member with a modifier of its own is checked where its alias is defined. As `rsc`
+// overrides a member's `rsc?`, the primitive is reported as an error under it; a member
+// that is already `rsc` is not reported again.
 
 :ge
 fun e8(x: rsc P2): Int32 = x
-//│ ╔══[COMPILATION ERROR] A type takes at most one resource modifier.
-//│ ║  l.223: 	fun e8(x: rsc P2): Int32 = x
+//│ ╔══[COMPILATION ERROR] Primitive type 'Int32' cannot be a resource.
+//│ ║  l.204: 	fun e8(x: rsc P2): Int32 = x
 //│ ╙──       	              ^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define e8⁰ as fun e8¹(x: Int32): Int32 { return x }; end
+
+fun e12(x: rsc P1): Int32 = x
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define e12⁰ as fun e12¹(x: Int32): Int32 { return x }; end
+
+fun e13(x: rsc? P2): Int32 = x
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define e13⁰ as fun e13¹(x: Int32): Int32 { return x }; end

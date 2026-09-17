@@ -1309,6 +1309,16 @@ type B = rsc (Foo | Bar)   // both
 type F = rsc Foo -> Bar    // the whole function type, not just `Foo`
 ```
 
+A modifier on a reference to an alias combines with the modifiers written inside the alias: `rsc` overrides them,
+while `rsc?` keeps them:
+```mlscript
+type List = Cons | Nil
+type U = rsc Foo | Bar
+fun f(x: rsc List): Int = 0    // both members
+fun g(x: rsc? U): Int = 0      // `rsc Foo | rsc? Bar`, so the union becomes `rsc?`
+fun h(x: rsc U): Int = 0       // both members
+```
+
 ### `forall` (Universal Quantification)
 
 ```mlscript

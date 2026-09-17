@@ -1230,7 +1230,9 @@ class Resolver(tl: TraceLogger)
   /**
    * Checks a possibly-resource-annotated type is valid:
    *
-   * - it must not carry a resource modifier of its own (directly or transitively), as a type takes at most one;
+   * - it must not carry a resource modifier of its own, as a type takes at most one written directly on it. A modifier
+   *   on a reference to an alias instead combines with the ones written inside the alias (see
+   *   `CanonicalErasedValueType.combineRsc`);
    * - it must not denote a primitive type (directly or through an alias). This is an error under `rsc`, and a warning
    *   under `rsc?`, which then has no effect.
    */
@@ -1243,10 +1245,11 @@ class Resolver(tl: TraceLogger)
       // Function types and intersections have no symbol: a modifier on them is fine, whatever they contain.
       val members = t.symbol.flatMap(_.asTpe).toList
         .flatMap(codegen.CanonicalErasedValueType.resolveTpeSymAlias)
-      if members.exists(_.ownRsc.isDefined) then
-        raise(ErrorReport(msg"A type takes at most one resource modifier." -> t.toLoc :: Nil))
-      // A member with a modifier of its own is checked where its alias is defined.
-      val prims = members.filter(_.ownRsc.isEmpty).flatMap(_.sym).flatMap(codegen.PrimitiveType.of).distinct
+      // A member is checked here when this modifier decides its resource-ness: always under `rsc`, which overrides the
+      // member's own modifier, unless that is `rsc` too. Otherwise, the member's own modifier decides it, and is
+      // checked where its alias is defined.
+      val decided = members.filter(m => m.ownRsc.isEmpty || rsc === S(true) && m.ownRsc =/= S(S(true)))
+      val prims = decided.flatMap(_.sym).flatMap(codegen.PrimitiveType.of).distinct
       prims.foreach: prim =>
         val nme = prim.sym.nme
         rsc match

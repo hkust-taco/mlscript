@@ -52,15 +52,14 @@ object ErasedType:
     override def sym(using Ctx, State): TypeSymbol = getTpeSym
     override protected def computeCanonicalize(using Ctx, State): CanonicalErasedValueType =
       val canon = CanonicalErasedValueType(rsc, sym)
-      // * A canonical type with resource-ness takes it from the modifiers written inside the alias referred to, if any,
-      // * and from this reference otherwise.
-      // * The resource-ness of the alias is considered first because a reference states resource-ness only when
-      // * annotated (otherwise it has `rsc = S(false)`), and `Resolver` rejects annotating one whose alias writes its
-      // * own.
+      // * A canonical type with resource-ness takes it from this reference if it is `rsc`, which overrides the
+      // * modifiers written inside the alias referred to. Otherwise, it can only differ from this reference's
+      // * resource-ness because of such a modifier.
       canon match
       case h: HasRsc if h.rsc =/= rsc =>
-        assert(CanonicalErasedValueType.resolveTpeSymAlias(sym).exists(_.ownRsc.isDefined),
-          s"the resource-ness of '$canon' must come from this reference ($rsc) or from a modifier inside '$sym'")
+        assert(rsc =/= S(true) && CanonicalErasedValueType.resolveTpeSymAlias(sym).exists(_.ownRsc.isDefined),
+          s"the resource-ness of '$canon' must come from this reference ($rsc), or from a modifier inside '$sym' " +
+            "when this reference is not `rsc`")
       case _ => ()
       canon
     // Ensures `toString` returns a stable string
@@ -515,8 +514,8 @@ object CanonicalErasedValueType:
   /** Creates an instance with the given type symbol, canonicalizing it if needed. */
   def apply(rsc: Opt[Bool], tpeSym: TypeSymbol)(using Ctx, State): CanonicalErasedValueType =
     val members = resolveTpeSymAlias(tpeSym)
-    // * A member takes the resource-ness written on it inside the alias, if any, and that of the reference otherwise.
-    def rscOf(m: AliasMember): Opt[Bool] = m.ownRsc.getOrElse(rsc)
+    // * An unannotated reference has `rsc = S(false)`, which a member's own modifier takes precedence over.
+    def rscOf(m: AliasMember): Opt[Bool] = combineRsc(rsc, m.ownRsc)
     if members.forall(_.sym.isDefined) then
       // * A union alias denotes each of its members, and erases to their LUB; every other symbol resolves to itself
       // * or to a single alias target.
@@ -531,8 +530,8 @@ object CanonicalErasedValueType:
     * A union alias denotes each of its members, so the result is a list; every other alias denotes a single member.
     * Type arguments are erased along the way, so `type Opt[A] = Some[A] | None` resolves to `Some :: None :: Nil`.
     *
-    * A member that cannot be resolved has its resource modifier kept. As in `ErasedType.eraseSign`, the innermost
-    * modifier wins.
+    * A member that cannot be resolved has its resource modifier kept. A modifier on a reference to an alias combines
+    * with the ones written inside it as described in [[combineRsc]].
     */
   def resolveTpeSymAlias(tpeSym: TypeSymbol): Ls[AliasMember] =
     def resolveSym(cur: TypeSymbol, seen: Set[TypeAliasSymbol]): Ls[AliasMember] = cur match
@@ -548,8 +547,18 @@ object CanonicalErasedValueType:
       case Term.CompType(lhs, rhs, true) => alternatives(lhs, seen, ownRsc) ::: alternatives(rhs, seen, ownRsc)
       case _ =>
         tpe.symbol.flatMap(_.asTpe).fold(AliasMember(N, N) :: Nil)(resolveSym(_, seen))
-          .map(m => m.copy(ownRsc = m.ownRsc.orElse(ownRsc)))
+          .map(m => m.copy(ownRsc = ownRsc.map(combineRsc(_, m.ownRsc)).orElse(m.ownRsc)))
     resolveSym(tpeSym, Set.empty)
+
+  /** The resource-ness of an alias member, given the resource-ness `outer` stated on a reference to the alias and the
+    * resource modifier `own` written on the member inside it (encoded as in [[AliasMember.ownRsc]]).
+    *
+    * `rsc` asserts that the whole type is a resource, so it overrides the member's own modifier: `rsc List` is a
+    * resource where `type List = Cons | Nil`. Any other resource-ness leaves the member's own modifier in place:
+    * `rsc? U` where `type U = rsc A | B` is `rsc A | rsc? B`, which erases to `rsc? lub(A, B)`.
+    */
+  private def combineRsc(outer: Opt[Bool], own: Opt[Opt[Bool]]): Opt[Bool] =
+    if outer === S(true) then outer else own.getOrElse(outer)
 
   /** Creates an instance from an already-resolved symbol. */
   private def resolved(rsc: Opt[Bool], sym: TypeSymbol)(using Ctx, State): CanonicalErasedValueType = sym match
