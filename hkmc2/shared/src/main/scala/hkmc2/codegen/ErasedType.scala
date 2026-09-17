@@ -264,16 +264,13 @@ object ErasedType:
     */
   def eraseSign(sign: Term): Opt[ErasedValueType] = eraseSign(sign, rsc = S(false))
 
-  /** Erases `sign` under the resource-ness gathered from the modifiers wrapping it so far.
-    *
-    * `rsc` starts as the unannotated default and is replaced by each `rsc`/`rsc?` annotation peeled off on the
-    * way down, so that the modifier applies to whatever the signature ultimately denotes.
-    */
+  /** Erases `sign` under the resource-ness gathered from the modifiers wrapping it so far. */
   private def eraseSign(sign: Term, rsc: Opt[Bool]): Opt[ErasedValueType] = sign match
     // * The resource modifiers reach here as annotations.
     // * Note that this arm has to be part of the recursion: a union erases its members by recursive call, and each
     // * carries its own modifier, so `rsc C | rsc D` would otherwise erase to nothing at all.
-    case Term.Annotated(Annot.Resource(rsc), target) => eraseSign(target, rsc)
+    case Term.Annotated(Annot.Resource(own), target) =>
+      eraseSign(target, CanonicalErasedValueType.combineRsc(rsc, S(own)))
     case CompType(lhs, rhs, true) =>
       // * A union is kept as a transient `Union` surface form; `canonicalize` collapses it to the members' LUB.
       for
@@ -543,21 +540,23 @@ object CanonicalErasedValueType:
     // * around it, flattening nested unions.
     // * Only unions are expanded: an intersection would call for a GLB, which the erased lattice cannot express.
     def alternatives(tpe: Term, seen: Set[TypeAliasSymbol], ownRsc: Opt[Opt[Bool]]): Ls[AliasMember] = tpe match
-      case Term.Annotated(Annot.Resource(rsc), target) => alternatives(target, seen, S(rsc))
+      case Term.Annotated(Annot.Resource(own), target) =>
+        alternatives(target, seen, S(ownRsc.fold(own)(combineRsc(_, S(own)))))
       case Term.CompType(lhs, rhs, true) => alternatives(lhs, seen, ownRsc) ::: alternatives(rhs, seen, ownRsc)
       case _ =>
         tpe.symbol.flatMap(_.asTpe).fold(AliasMember(N, N) :: Nil)(resolveSym(_, seen))
           .map(m => m.copy(ownRsc = ownRsc.map(combineRsc(_, m.ownRsc)).orElse(m.ownRsc)))
     resolveSym(tpeSym, Set.empty)
 
-  /** The resource-ness of an alias member, given the resource-ness `outer` stated on a reference to the alias and the
-    * resource modifier `own` written on the member inside it (encoded as in [[AliasMember.ownRsc]]).
+  /** The resource-ness of a member of an alias or of a written union, given the resource-ness `outer` stated around it
+    * (on a reference to the alias, or on the union) and the resource modifier `own` written on the member itself
+    * (encoded as in [[AliasMember.ownRsc]]).
     *
     * `rsc` asserts that the whole type is a resource, so it overrides the member's own modifier: `rsc List` is a
     * resource where `type List = Cons | Nil`. Any other resource-ness leaves the member's own modifier in place:
     * `rsc? U` where `type U = rsc A | B` is `rsc A | rsc? B`, which erases to `rsc? lub(A, B)`.
     */
-  private def combineRsc(outer: Opt[Bool], own: Opt[Opt[Bool]]): Opt[Bool] =
+  private[codegen] def combineRsc(outer: Opt[Bool], own: Opt[Opt[Bool]]): Opt[Bool] =
     if outer === S(true) then outer else own.getOrElse(outer)
 
   /** Creates an instance from an already-resolved symbol. */

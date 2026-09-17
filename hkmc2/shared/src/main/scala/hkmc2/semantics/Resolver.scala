@@ -1229,23 +1229,25 @@ class Resolver(tl: TraceLogger)
     case _ => t :: Nil
   
   /**
-   * Checks a possibly-resource-annotated type is valid:
+   * The members that the type `t` denotes: those of the alias it refers to, the type itself, or none if the type does
+   * not have a symbol (such as a function type or an intersection).
+   */
+  private def aliasMembers(t: Term): Ls[codegen.CanonicalErasedValueType.AliasMember] =
+    t.symbol.flatMap(_.asTpe).toList.flatMap(codegen.CanonicalErasedValueType.resolveTpeSymAlias)
+  
+  /**
+   * Checks a type that a resource modifier denoting `rsc` applies to is valid: it must not denote a primitive type
+   * (directly or through an alias). This is an error under `rsc`, and a warning under `rsc?`, which then has no effect.
    *
-   * - it must not carry a resource modifier of its own, as a type takes at most one written directly on it. A modifier
-   *   on a reference to an alias instead combines with the ones written inside the alias (see
-   *   `CanonicalErasedValueType.combineRsc`);
-   * - it must not denote a primitive type (directly or through an alias). This is an error under `rsc`, and a warning
-   *   under `rsc?`, which then has no effect.
+   * A member of a union, written or through an alias, combines its own modifier with `rsc`.
    */
   private def checkRscTarget(t: Term, rsc: Opt[Bool]): Unit = t match
-    // For a term that is itself resource-annotated, only the nested modifier is reported here - its target is checked
-    // under its own modifier.
-    case Term.Annotated(Annot.Resource(_), _) =>
-      raise(ErrorReport(msg"A type takes at most one resource modifier." -> t.toLoc :: Nil))
+    // A union member with a modifier of its own is already checked under that modifier. It is checked again only when
+    // this modifier is `rsc` and the member's is not, as this one then overrides it.
+    case Term.Annotated(Annot.Resource(own), target) =>
+      if rsc === S(true) && own =/= S(true) then rscReach(target).foreach(checkRscTarget(_, rsc))
     case _ =>
-      // Function types and intersections have no symbol: a modifier on them is fine, whatever they contain.
-      val members = t.symbol.flatMap(_.asTpe).toList
-        .flatMap(codegen.CanonicalErasedValueType.resolveTpeSymAlias)
+      val members = aliasMembers(t)
       // A member is checked here when this modifier decides its resource-ness: always under `rsc`, which overrides the
       // member's own modifier, unless that is `rsc` too. Otherwise, the member's own modifier decides it, and is
       // checked where its alias is defined.
@@ -1262,9 +1264,34 @@ class Resolver(tl: TraceLogger)
         // No syntax writes a non-resource modifier.
         case S(false) => lastWords(s"a resource modifier denoting a non-resource on '$t'")
   
-  /** Checks a resource modifier denoting `rsc` on `target` (see `checkRscTarget`). */
+  /**
+   * Checks a resource modifier denoting `rsc` on `target`:
+   *
+   * - a type takes at most one modifier written directly on it (e.g. `rsc rsc? C`), while one on a union's member or
+   *   inside an alias combines with it instead;
+   * - `rsc?` has no effect on a type whose members are all resources of their own, so it is reported as a warning.
+   *
+   * Also see `checkRscTarget` for the checks on each type that the modifier applies to.
+   */
   private def checkRscModifier(rsc: Opt[Bool], target: Term): Unit =
-    rscReach(target).foreach(checkRscTarget(_, rsc))
+    def directlyModified(t: Term): Opt[Term] = t match
+      case Term.Forall(_, _, body) => directlyModified(body)
+      case mod @ Term.Annotated(Annot.Resource(_), _) => S(mod)
+      case _ => N
+    directlyModified(target) match
+    // Only the nested modifier is reported here - its target is checked under its own modifier.
+    case S(mod) => raise(ErrorReport(msg"A type takes at most one resource modifier." -> mod.toLoc :: Nil))
+    case N =>
+      val reached = rscReach(target)
+      reached.foreach(checkRscTarget(_, rsc))
+      def isOwnResource(t: Term): Bool = t match
+        case Term.Annotated(Annot.Resource(own), _) => own === S(true)
+        case _ =>
+          val members = aliasMembers(t)
+          members.nonEmpty && members.forall(_.ownRsc === S(S(true)))
+      if rsc.isEmpty && reached.forall(isOwnResource) then
+        raise(WarningReport(
+          msg"Every member of this type is a resource, so 'rsc?' has no effect." -> target.toLoc :: Nil))
   
   /**
    * Checks the operands of an intersection type: a resource modifier inside one is not supported yet, as
