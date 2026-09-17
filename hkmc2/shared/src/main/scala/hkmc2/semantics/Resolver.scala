@@ -1314,13 +1314,13 @@ class Resolver(tl: TraceLogger)
    */
   private def checkAllRscModifiers(t: Term): Unit =
     t match
-      case Term.Annotated(Annot.Resource(rsc), target) => checkRscModifier(rsc, target)
-      case Term.CompType(lhs, rhs, false) => checkRscInIntersection(lhs, rhs)
-      case Term.FunTy(lhs, _, _) => checkRscInFunParams(lhs)
-      case _ => ()
+    case Term.Annotated(Annot.Resource(rsc), target) => checkRscModifier(rsc, target)
+    case Term.CompType(lhs, rhs, false) => checkRscInIntersection(lhs, rhs)
+    case Term.FunTy(lhs, _, _) => checkRscInFunParams(lhs)
+    case _ => ()
     t match
-      case Term.TyApp(con: Resolvable, _) => checkAllRscModifiers(con)
-      case _ => t.subTerms.foreach(checkAllRscModifiers)
+    case Term.TyApp(con: Resolvable, _) => checkAllRscModifiers(con)
+    case _ => t.subTerms.foreach(checkAllRscModifiers)
 
 end Resolver
 

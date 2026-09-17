@@ -58,10 +58,10 @@ object ErasedType:
       // * annotated (otherwise it has `rsc = S(false)`), and `Resolver` rejects annotating one whose alias writes its
       // * own.
       canon match
-        case h: HasRsc if h.rsc =/= rsc =>
-          assert(CanonicalErasedValueType.resolveTpeSymAlias(sym).exists(_.ownRsc.isDefined),
-            s"the resource-ness of '$canon' must come from this reference ($rsc) or from a modifier inside '$sym'")
-        case _ => ()
+      case h: HasRsc if h.rsc =/= rsc =>
+        assert(CanonicalErasedValueType.resolveTpeSymAlias(sym).exists(_.ownRsc.isDefined),
+          s"the resource-ness of '$canon' must come from this reference ($rsc) or from a modifier inside '$sym'")
+      case _ => ()
       canon
     // Ensures `toString` returns a stable string
     override def toString: Str = "ValueLike(?)"
@@ -329,10 +329,10 @@ object ErasedType:
     // * dimension calls for one, and the coercion is impossible when either says it is.
     needsClassCast(actual, expected).flatMap: byClass =>
       (actual, expected) match
-        case (a: HasRsc, e: HasRsc) => needsRscCast(a.rsc, e.rsc).map(byClass || _)
-        // * The class dimension only admits a primitive into the same primitive, which has no resource-ness.
-        case (_: Primitive, _: Primitive) => S(byClass)
-        case _ => lastWords(s"a coercion from '$actual' to '$expected' passed the class dimension")
+      case (a: HasRsc, e: HasRsc) => needsRscCast(a.rsc, e.rsc).map(byClass || _)
+      // * The class dimension only admits a primitive into the same primitive, which has no resource-ness.
+      case (_: Primitive, _: Primitive) => S(byClass)
+      case _ => lastWords(s"a coercion from '$actual' to '$expected' passed the class dimension")
 
   /** Whether the resource-ness dimension of a coercion needs a cast.
     *
@@ -341,10 +341,10 @@ object ErasedType:
     */
   private[codegen] def needsRscCast(actual: Opt[Bool], expected: Opt[Bool]): Opt[Bool] =
     (actual, expected) match
-      case _ if actual === expected => S(false)
-      case (_, N) => S(false)
-      case (N, _) => S(true)
-      case (S(_), S(_)) => N
+    case _ if actual === expected => S(false)
+    case (_, N) => S(false)
+    case (N, _) => S(true)
+    case (S(_), S(_)) => N
 
   /** Whether the class dimension of a coercion needs a cast, ignoring resource-ness. */
   private def needsClassCast(actual: CanonicalErasedValueType, expected: CanonicalErasedValueType)(using Ctx, State): Opt[Bool] =
