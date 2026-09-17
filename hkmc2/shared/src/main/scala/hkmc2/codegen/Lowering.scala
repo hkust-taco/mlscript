@@ -498,6 +498,8 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
           val tmp = loweringCtx.registerTempSymbol(N, erasedType = call.erasedType, "baseCall")
           Assign(tmp, call, lowerRemainingCalls(tmp.asSimpleRef, args, remainingArgss, callAnnots, loc)(k))
       case (_ :: _, Nil) =>
+        // * `Result.erasedType` asserts this flag against the callee's erased signature rather than via `td.params`.
+        // * This relies on `td` having the same number of paramlists as its erased signature.
         val rsc = functionValueRsc(rscAnnots, loc)
         k(Call(fr, acc.reverse.ne_!)(CallMetadata(isMlsFun, mayRaiseEffects, callAnnots), rsc).withLoc(loc))
     fr.targetSymbol match

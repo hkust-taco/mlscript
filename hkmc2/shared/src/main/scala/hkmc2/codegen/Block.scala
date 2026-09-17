@@ -1112,8 +1112,9 @@ sealed abstract class Result extends AutoLocated:
       case S(ts: TermSymbol) => ts.erasedSignature match
         case S(sig) =>
           val sizeCmp = argss.sizeCompare(sig.paramLists)
-          // * Only a partial application is a function value, so only it can be a resource. `assert` rather than
-          // * `softAssert`, as no `Raise` is in scope here.
+          // * Only a partial application is a function value, so only it can be a resource.
+          // * A definition that writes paramlists must have the same number of paramlists as its erased signature.
+          // * This is required by `Lowering.lowerMultiCall` to check the resource-ness of the call result.
           assert(sizeCmp < 0 || !call.rsc, s"A call that is not under-applied cannot be 'rsc' (callee '${ts.nme}')")
           sizeCmp match
           // * An exactly-applied call yields the function's result type.
