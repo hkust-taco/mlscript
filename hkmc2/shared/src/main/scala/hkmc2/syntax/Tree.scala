@@ -374,7 +374,7 @@ enum Tree extends AutoLocated:
       case InfixApp(_: Ident, Keywrd(Keyword.`:`), _) | SpreadParam(_, _) => true
       case _ => false)
     @tailrec
-    def go(t: Tree, flags: FldFlags, modifiers: Set[DeclKind], rscMods: Ls[Keywrd[?]]): Diagnostic \/ ParamTree = t match
+    def go(t: Tree, flags: FldFlags, modifiers: Set[DeclKind], rscMods: Ls[Keywrd[Keyword.RscLike]]): Diagnostic \/ ParamTree = t match
       // * Base Cases.
       // fun f(_)
       case und: Under => 
@@ -408,11 +408,11 @@ enum Tree extends AutoLocated:
       // fun f(rsc <...>)
       // * This arm catches invalid usages of `rsc` in parameters - the `rsc` modifier is recorded in the `ParamTree`
       // * (to preserve class/function parameters for later stages) and the elaborator will reject it as invalid.
-      case Modified(kw @ Keywrd(_: Keyword.RscLike), inner) if modifiesParam(inner) =>
+      case Modified(RscModifier(kw), inner) if modifiesParam(inner) =>
         go(inner, flags, modifiers, rscMods :+ kw)
       // class C(rsc val <...>)
       // * As above, for a `val` parameter, off which `desugared` lifts the modifier to an annotation.
-      case Annotated(kw @ Keywrd(_: Keyword.RscLike), inner) =>
+      case Annotated(RscModifier(kw), inner) =>
         go(inner, flags, modifiers, rscMods :+ kw)
       
       // * Base Case (for `using` clause)
@@ -458,16 +458,21 @@ object Tree:
       case App(lhs, TyTup(targs)) => S(lhs, targs)
       case _ => N
   
+  /** Matches a resource modifier keyword, typed as one. */
+  object RscModifier:
+    def unapply(t: Tree): Opt[Keywrd[Keyword.RscLike]] = t match
+      case kw @ Keywrd(rsc: Keyword.RscLike) => S(new Keywrd[Keyword.RscLike](rsc).withLocOf(kw))
+      case _ => N
+  
   /** Splits the resource modifier off the body of a `new`.
     *
     * `rsc` parses looser than application, and `mut` tighter, so a `mut` written before `rsc` is moved back onto the
     * class, as in `new mut C()`.
     */
   def splitNewRsc(body: Tree): (Tree, Opt[Keywrd[Keyword.RscLike]]) = body match
-    case Modified(kw @ Keywrd(rsc: Keyword.RscLike), inner) =>
-      (inner, S(new Keywrd[Keyword.RscLike](rsc).withLocOf(kw)))
-    case Modified(mut @ Keywrd(Keyword.`mut`), Modified(kw @ Keywrd(rsc: Keyword.RscLike), Apps(base, argss))) =>
-      (Apps(Modified(mut, base), argss), S(new Keywrd[Keyword.RscLike](rsc).withLocOf(kw)))
+    case Modified(RscModifier(kw), inner) => (inner, S(kw))
+    case Modified(mut @ Keywrd(Keyword.`mut`), Modified(RscModifier(kw), Apps(base, argss))) =>
+      (Apps(Modified(mut, base), argss), S(kw))
     case _ => (body, N)
   
   extension [T <: Keyword & Singleton](kw: Tree.Keywrd[T])
@@ -483,7 +488,7 @@ object Tree:
  */
 case class ParamTree(
   flags: FldFlags, ident: Ident, sign: Opt[Tree], 
-  spd: Opt[SpreadKind], modifiers: Set[DeclKind], rscModifiers: Ls[Keywrd[?]]
+  spd: Opt[SpreadKind], modifiers: Set[DeclKind], rscModifiers: Ls[Keywrd[Keyword.RscLike]]
 )
 
 object SpreadParam:
