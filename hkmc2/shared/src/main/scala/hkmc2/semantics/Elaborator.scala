@@ -1076,11 +1076,6 @@ extends Importer:
     
     def error = Term.Error().withLocOf(tree)
     
-    /** Splits the body of a `new` into its resource modifier (if any), its class, and its argument lists. */
-    def splitRscNew(c: Tree, args: Ls[Tup]): (Opt[Keywrd[?]], Tree, Ls[Tup]) = c match
-      case Modified(kw @ Keywrd(_: Keyword.RscLike), Apps(c, args0)) => (S(kw), c, args0 ::: args)
-      case _ => (N, c, args)
-    
     /** Fallback to a normal selection + application when label-specific handling does not apply. */
     def mkNonLabelSelectionApp(tree: App, sel: Sel, args: Ls[Tree]): Term =
       val sym = FlowSymbol.app()
@@ -1446,19 +1441,18 @@ extends Importer:
     case tree @ Tup(fields) =>
       Term.Tup(fields.map(fld(_)))(tree)
       
-    case DynamicNew(Apps(c, args)) =>
+    case DynamicNew(Apps(c, args), rsc) =>
       val (mut, c2) = c match
         case Modified(Keywrd(Keyword.`mut`), c) => (true, c)
         case c => (false, c)
-      val (rsc, c3, args2) = splitRscNew(c2, args)
       rsc.foreach: kw =>
         raise(ErrorReport(msg"Resource instantiation with 'new!' is not supported yet." -> kw.toLoc :: Nil))
-      val base = new Term.DynNew(subterm(c3), args2.map(subterm(_))).withLocOf(tree)
+      val base = new Term.DynNew(subterm(c2), args.map(subterm(_))).withLocOf(tree)
       if mut then Term.Mut(base) else base
     // case New(c, rfto) =>
     //   assert(rfto.isEmpty)
     //   Term.New(cls(subterm(c), inAppPrefix = inAppPrefix), params.map(subterm(_)), bodo).withLocOf(tree)
-    case ProperNew(body, rfto) => // TODO handle Under
+    case ProperNew(body, rfto, rscKw) => // TODO handle Under
       lazy val bodo = rfto.map: rft =>
         val clsSym = new ClassSymbol(DummyTypeDef(syntax.Cls), Ident("$anon"))
         ctx.nestInner(clsSym).givenIn:
@@ -1471,7 +1465,6 @@ extends Importer:
         val (mut, c2) = c match
           case Modified(Keywrd(Keyword.`mut`), c) => (true, c)
           case c => (false, c)
-        val (rscKw, c3, args2) = splitRscNew(c2, args)
         val rsc = rscKw match
           // * An instance has one definite layout.
           case S(kw @ Keywrd(Keyword.`rsc?`)) =>
@@ -1483,8 +1476,8 @@ extends Importer:
           case S(_) => true
           case N => false
         val inner = new Term.New(
-          subterm(c3), // * Note: we'll catch bad `new` targets during type checking
-          args2.map(subterm(_)),
+          subterm(c2), // * Note: we'll catch bad `new` targets during type checking
+          args.map(subterm(_)),
           bodo
         )(N).withLocOf(tree)
         val withMut = if mut then Term.Mut(inner) else inner
@@ -2532,7 +2525,7 @@ extends Importer:
   def newOf(td: TypeDef): Ctxl[Opt[Term.New]] =
     td.extension
     match
-    case S(ext) => S(term(ProperNew(S(ext), N)))
+    case S(ext) => S(term(ProperNew(S(ext), N, N)))
     case N => N
     match
     case S(n: Term.New) => S(n)
