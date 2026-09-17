@@ -1736,6 +1736,14 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
             ),
           )
 
+    // * Only a partial application can be a resource. As functions with multiple parameter lists are not supported yet,
+    // * no program with one compiles anyway.
+    case call: Call if call.rsc =>
+      errExpr(
+        Ls(msg"WatBuilder::result for a resource Call(...) is not implemented yet" -> r.toLoc),
+        extraInfo = S(r.toString),
+      )
+
     case Call(Value.SimpleRef(l: BuiltinSymbol), lhs :: rhs :: Nil) if !l.functionLike =>
       if l.binary then
         errExpr(
