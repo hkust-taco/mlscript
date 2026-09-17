@@ -383,7 +383,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
       if ai
       then doc"${resultQual(qual)}.at(${result(fld)})"
       else doc"${result(qual)}[${result(fld)}]"
-    // * JS has no separate layout for resources.
+    // * TODO: handle `rsc`
     case Instantiate(mut, _, cls, argss) =>
       val calls = argss.foldLeft(resultInst(cls)): (acc, args) =>
         doc"${acc}(${args.map(argument).mkDocument(", ")})"
