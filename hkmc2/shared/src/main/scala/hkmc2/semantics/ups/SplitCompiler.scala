@@ -313,7 +313,7 @@ class SplitCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
   
     def makePatternBindings(using State): Ls[(TempSymbol, SP)] =
       patterns.iterator.zipWithIndex.map:
-        case (pattern, index) => new TempSymbol(N, erasedType = N, s"patternArgument${index}$$") -> pattern
+        case (pattern, index) => TempSymbol(N, erasedType = N, s"patternArgument${index}$$") -> pattern
       .toList
   
   /**
@@ -794,7 +794,7 @@ class SplitCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
           val params = parameters.map:
             case (_, parameterSymbol) =>
               Param(FldFlags.empty, parameterSymbol, N, Modulefulness.none)
-          val lambdaSymbol = new TempSymbol(N, erasedType = N, "transform")
+          val lambdaSymbol = TempSymbol(N, erasedType = N, "transform")
           // Next, we need to elaborate the pattern into a split. Note that
           // `makeMatchSplit` returns a function that takes a split as the
           // consequence. `makeMatchSplit` also takes a list of symbols so that
@@ -1072,7 +1072,7 @@ class SplitCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
         val params = parameters.map:
           case (_, parameterSymbol) =>
             Param(FldFlags.empty, parameterSymbol, N, Modulefulness.none)
-        val lambdaSymbol = new TempSymbol(N, erasedType = N, "transform")
+        val lambdaSymbol = TempSymbol(N, erasedType = N, "transform")
         (makeConsequent, alternative) => Split.Let(
           sym = lambdaSymbol,
           term = Term.Lam(PlainParamList(params), transform),

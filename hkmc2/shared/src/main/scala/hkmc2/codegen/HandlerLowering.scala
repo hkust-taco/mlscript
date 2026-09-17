@@ -125,7 +125,7 @@ class HandlerLowering(paths: HandlerPaths, opt: Opt[EffectHandlers])(using TL, R
   val debugEnabled = opt.exists(_.debug)
   val stackSafety = opt.flatMap(_.stackSafety)
   
-  private def freshTmp(erasedType: Opt[ErasedValueType], dbgNme: Str = "tmp") = new TempSymbol(N, erasedType, dbgNme)
+  private def freshTmp(erasedType: Opt[ErasedValueType], dbgNme: Str = "tmp") = TempSymbol(N, erasedType, dbgNme)
   private def freshLabel(nme: Str) = new LabelSymbol(N, nme)
   
   private def rtThrowMsg(msg: Str) = Throw.error(msg)

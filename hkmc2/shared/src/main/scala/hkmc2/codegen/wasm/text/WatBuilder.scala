@@ -90,16 +90,16 @@ extension (sym: WasmSlotSymbol)
       case bms: BlockMemberSymbol =>
         // A BMS's erased type lives in its associated TermSymbol
         bms.tsym.flatMap(_.erasedType).flatMap(_.wasmType).getOrElse(RefType.anyref)
-      case s: HasErasedType =>
-        s.erasedType.flatMap(_.wasmType).getOrElse(RefType.anyref)
+      case l: LocalVarSymbol =>
+        l.erasedType.flatMap(_.wasmType).getOrElse(RefType.anyref)
 
 extension (sym: WasmSlotSymbol)
   /** The Wasm value type a parameter slot for `sym` should be declared with. */
   private[text] def paramType(using Ctx, State): ValType =
     sym match
-      case s: HasErasedType =>
-        s.erasedType.flatMap(_.wasmType).getOrElse(RefType.anyref)
-      case _ => RefType.anyref
+      case l: LocalVarSymbol => l.erasedType.flatMap(_.wasmType).getOrElse(RefType.anyref)
+      case c: (ClassSymbol | ModuleOrObjectSymbol) => c.erasedType.flatMap(_.wasmType).getOrElse(RefType.anyref)
+      case _: (PatternSymbol | TopLevelSymbol | BlockMemberSymbol) => RefType.anyref
 
 /** The declared Wasm value type of the parameter slot for `sym` at position `idx`, honoring an optional per-position
   * override (index 0 = `this`). Falls back to `sym.paramType` if no override is given.

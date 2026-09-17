@@ -9,7 +9,6 @@ import utils.*
 import semantics.*
 import semantics.Elaborator.{Ctx, State, ctx}
 import semantics.Term.*
-import sourcecode.{FileName, Line}
 
 /** A primitive type of the block IR. */
 enum PrimitiveType:
@@ -561,24 +560,6 @@ object CanonicalErasedValueType:
         case S(prim) => ErasedType.Primitive(prim)
         case _ => ErasedType.AnyRef(rsc, base)
 
-/** Trait representing a Block IR element that has an [[ErasedValueType]]. */
-trait HasErasedType:
-  /** The [[ErasedValueType]] of this element, or `N` if the erased type is not known. */
-  def erasedType: Opt[ErasedValueType]
-
-  /** Similar to `erasedType`, but coerces to the top type if the specific erased type is not known. */
-  lazy val erasedType_! : ErasedValueType = erasedType.getOrElse(ErasedType.Unknown(N))
-
-/** A [[HasErasedType]] whose erased type can be populated exactly once post-construction. */
-trait HasLateInitErasedType extends HasErasedType:
-  // Implementation Note: Provided for overriding classes to implement `erasedType` directly as an `override var`
-  def erasedType_=(newType: Opt[ErasedValueType]): Unit
-
-  /** Populates the erased type, or raises a soft assertion if the type was already populated. */
-  def populateErasedType(newType: ErasedValueType)(using Line, FileName, Raise): Unit =
-    softAssert(erasedType.isEmpty, s"Cannot refine already-refined erased type $erasedType to $newType")
-    if erasedType.isEmpty then erasedType = S(newType)
-
 extension (s: ValueSymbol | DefinitionSymbol[?])
   /** Maps the symbol to its erased value type, if it has one.
     *
@@ -586,8 +567,7 @@ extension (s: ValueSymbol | DefinitionSymbol[?])
     * `Function` type rather than to its [[ErasedFuncSignature]].
     */
   def mapErasedValueType(using Raise): Opt[ErasedValueType] = s match
-    case v: VarSymbol => v.erasedType
-    case t: TempSymbol => t.erasedType
+    case l: LocalVarSymbol => l.erasedType
     case c: (ClassSymbol | ModuleOrObjectSymbol) => c.erasedType
     case t: TermSymbol => t.erasedType
     // * A pattern is not a value and carries no erased type of its own, so a reference to one is
@@ -598,6 +578,7 @@ extension (s: ValueSymbol | DefinitionSymbol[?])
     // * What a member reference denotes depends on the member: a function value has the `Function` type, but a
     // * class object has none, so this is left unknown rather than guessed from the disambiguating term symbol.
     case _: BlockMemberSymbol => N
-    case s =>
+    // * No reference to a value is expected to resolve to these symbols.
+    case s: (TypeAliasSymbol | TopLevelSymbol) =>
       softAssert(false, s"Unexpected symbol type for symbol `$s`: ${s.getClass.getName}")
       N

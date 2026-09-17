@@ -980,7 +980,7 @@ enum Case:
 
 sealed trait TrivialResult extends Result
 
-sealed abstract class Result extends AutoLocated, HasErasedType:
+sealed abstract class Result extends AutoLocated:
 // // * Used for debugging locations:
 // sealed abstract class Result extends AutoLocated with ProductWithExtraInfo:
 //   def extraInfo: Str = toLoc.toString
@@ -1085,13 +1085,12 @@ sealed abstract class Result extends AutoLocated, HasErasedType:
     case Value.Lit(lit) => 0
     case DynSelect(qual, fld, arrayIdx) => qual.size + fld.size
 
+  /** The [[ErasedValueType]] of this result, or `N` if the erased type is not known. */
   lazy val erasedType: Opt[ErasedValueType] = this match
     case Value.SimpleRef(sym) => sym match
-      case hasErasedType: HasErasedType => hasErasedType.erasedType
-      case _ => 
-        // * Some symbols may not have an erased type (e.g. `BuiltinSymbol`, where it may represent more than one
-        // * function).
-        N
+      case l: LocalVarSymbol => l.erasedType
+      // * A `BuiltinSymbol` has no erased type, as it may represent more than one function.
+      case _: BuiltinSymbol => N
     // * A reference to a class is the class *object* (a `Class`).
     case Value.MemberRef(_, _: ClassSymbol) => N
     case Value.MemberRef(_, disamb: ModuleOrObjectSymbol) => disamb.erasedType
@@ -1129,7 +1128,8 @@ sealed abstract class Result extends AutoLocated, HasErasedType:
       case S(ts: TermSymbol) => ts.erasedType
       // * A class reference is the class object, so it stays unknown.
       case S(_: ClassSymbol) => N
-      case S(d: (ModuleOrObjectSymbol | TypeAliasSymbol)) => d.erasedType
+      case S(d: ModuleOrObjectSymbol) => d.erasedType
+      case S(d: TypeAliasSymbol) => d.erasedType
       case _ => N
     case Cast(_, target, _) => S(target)
     // * `Instantiate` always yields an instance of the class, since the constructor is guaranteed to be fully-applied
@@ -1144,6 +1144,9 @@ sealed abstract class Result extends AutoLocated, HasErasedType:
     // * A lambda is a function value. Without a modifier, its resource-ness is undetermined.
     case Lambda(rsc, _, _) => S(ErasedType.Function(if rsc then S(true) else N))
     case _ => N
+
+  /** Similar to `erasedType`, but coerces to the top type if the specific erased type is not known. */
+  lazy val erasedType_! : ErasedValueType = erasedType.getOrElse(ErasedType.Unknown(N))
 
   /** Coerces this result to `expected`, yielding it unchanged when no coercion is required.
     *

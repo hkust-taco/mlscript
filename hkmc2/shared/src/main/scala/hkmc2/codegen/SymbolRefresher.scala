@@ -16,7 +16,7 @@ class SymbolRefresherWalker(mapping: MutMap[Symbol, Symbol])(using State) extend
     mapping(k) = v
   
   private def refreshTempSymbol(s: TempSymbol) =
-    assertUpdate(s, new TempSymbol(s.trm, s.erasedType, s.nme))
+    assertUpdate(s, TempSymbol(s.trm, s.erasedType, s.nme))
 
   private def refreshVarSymbol(s: VarSymbol) =
     val ns = new VarSymbol(s.id, s.erasedType)

@@ -1581,7 +1581,7 @@ extends Importer:
         subterm(body)
     case PrefixApp(kw @ Keywrd(Keyword.`do`), InfixApp(labelId: Ident, Keywrd(Keyword.`:`), body)) =>
       val labelSym = new LabelSymbol(N, labelId.name)
-      val resultSym = new TempSymbol(N, erasedType = N, s"${labelId.name}$$result")
+      val resultSym = TempSymbol(N, erasedType = N, s"${labelId.name}$$result")
       val nonLocalHandlerSym = TempSymbol(N, erasedType = N, s"nonLocalHandler$$${labelId.name}")
       val nonLocalBreakMethodMarker = TempSymbol(N, erasedType = N, s"nonLocalBreakMethod$$${labelId.name}")
       val nonLocalContinueMethodMarker = TempSymbol(N, erasedType = N, s"nonLocalContinueMethod$$${labelId.name}")
@@ -2307,7 +2307,7 @@ extends Importer:
                 p.fldSym = S(fsym)
                 fsym.tsym = S(tsym)
                 tsym.defn = S(fdef)
-                p.sym.erasedType.foreach(tsym.populateErasedType)
+                p.sym.erasedType.foreach(tpe => tsym.erasedType = S(tpe))
                 fdef :: Nil
               else
                 val psym = TermSymbol(LetBind, owner, p.sym.id, erasedType = p.sym.erasedType)

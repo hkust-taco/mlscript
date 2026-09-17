@@ -38,11 +38,11 @@ class BufferableTransform()(using State, Raise):
               (params.map(pl => ParamList(pl.flags, pl.params.map(mapParam), pl.restParam.map(mapParam))), varMap.toMap)
             def mkFieldReplacer(buf: VarSymbol, baseIdx: VarSymbol, symMap: Map[SimpleSymbol, SimpleSymbol]) =
               def getOffset(off: Int)(k: Path => Block): Block =
-                val idxSymbol = new TempSymbol(N, erasedType = S(ErasedType.Int), "idx")
+                val idxSymbol = TempSymbol(N, erasedType = S(ErasedType.Int), "idx")
                 Scoped(Set.single(idxSymbol), Assign(idxSymbol, Call(State.builtinOpsMap("+").asSimpleRef, (baseIdx.asSimpleRef.asArg :: Value.Lit(Tree.IntLit(off)).asArg :: Nil) ne_:: Nil)(CallMetadata.defaultMlsFun),
                   k(DynSelect(buf.asSimpleRef.selSN("buf"), idxSymbol.asSimpleRef, true))))
               def assignToOffset(off: Int, r: Result, rst: Block) =
-                val idxSymbol = new TempSymbol(N, erasedType = S(ErasedType.Int), "idx")
+                val idxSymbol = TempSymbol(N, erasedType = S(ErasedType.Int), "idx")
                 Scoped(Set.single(idxSymbol), Assign(idxSymbol, Call(State.builtinOpsMap("+").asSimpleRef, (baseIdx.asSimpleRef.asArg :: Value.Lit(Tree.IntLit(off)).asArg :: Nil) ne_:: Nil)(CallMetadata.defaultMlsFun),
                   AssignDynField(buf.asSimpleRef.selSN("buf"), idxSymbol.asSimpleRef, true, r, applyBlock(rst))))
               new BlockTransformer(SymbolSubst.Id):

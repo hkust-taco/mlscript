@@ -10,7 +10,7 @@ import hkmc2.utils.*
 
 import Elaborator.State
 import Tree.Ident
-import hkmc2.codegen.{ErasedType, ErasedFuncSignature, ErasedValueType, HasErasedType, HasLateInitErasedType}
+import hkmc2.codegen.{ErasedType, ErasedFuncSignature, ErasedValueType}
 import hkmc2.utils.SymbolSubst
 import sourcecode.{FileName, Line}
 
@@ -226,9 +226,11 @@ class SplitSymbol(val body: Split, name: Str = "split")(using State) extends Loc
   def toLoc = body.toLoc
   override def prefix: Str = "split:"
 
-sealed abstract class LocalVarSymbol(name: Str)(using State) extends FlowSymbol(name) with LocalSymbol with HasErasedType:
+sealed abstract class LocalVarSymbol(name: Str)(using State) extends FlowSymbol(name) with LocalSymbol:
   self: LocalSymbol => // * using `with LocalSymbol` in the `extends` clause makes Scala think there's a bad override
   var decl: Opt[Declaration] = N
+  /** The [[ErasedValueType]] of this variable, or `N` if the erased type is not known. */
+  def erasedType: Opt[ErasedValueType]
   def subst(using s: SymbolSubst): LocalVarSymbol
 
 /** A temporary variable introduced by lowering.
@@ -237,13 +239,30 @@ sealed abstract class LocalVarSymbol(name: Str)(using State) extends FlowSymbol(
   * those branches are lowered, so `Normalization` populates it with the join of their representations once they have
   * all been seen. `Normalization.joinTempType` is its only write site.
   */
-class TempSymbol(val trm: Opt[Term], override var erasedType: Opt[ErasedValueType], dbgNme: Str = "tmp")(using State)
-    extends LocalVarSymbol(dbgNme)
-    with HasLateInitErasedType:
+class TempSymbol private (val trm: Opt[Term], private var _erasedType: Opt[ErasedValueType], dbgNme: Str)(using State)
+    extends LocalVarSymbol(dbgNme):
   // val nameHints: MutSet[Str] = MutSet.empty // * May be useful later?
   override def toLoc: Option[Loc] = trm.flatMap(_.toLoc)
   override def prefix: Str = "tmp:"
   override def subst(using s: SymbolSubst): TempSymbol = s.mapTempSym(this)
+  
+  def erasedType: Opt[ErasedValueType] = _erasedType
+  
+  /** Sets the erased type, or raises a soft assertion if it is already set. */
+  def erasedType_=(newType: Opt[ErasedValueType])(using Line, FileName, Raise): Unit =
+    initErasure(this, _erasedType, newType)(_erasedType = _)
+
+object TempSymbol:
+  def apply(trm: Opt[Term], erasedType: Opt[ErasedValueType], dbgNme: Str = "tmp")(using State): TempSymbol =
+    new TempSymbol(trm, erasedType, dbgNme)
+
+/** Initializes an erased type or signature that is only known after its symbol is created, raising a soft assertion
+  * if `current` is already set.
+  */
+private def initErasure[T](sym: Symbol, current: Opt[?], newErasure: Opt[T])(set: Opt[T] => Unit)
+    (using Line, FileName, Raise): Unit =
+  softAssert(current.isEmpty, s"Cannot set the erasure of '$sym' to $newErasure, as it is already $current")
+  if current.isEmpty then set(newErasure)
 
 
 // * When instantiating forall-qualified TVs, we need to duplicate the information
@@ -354,7 +373,6 @@ class TermSymbol private[semantics] (
 )(using State)
     extends MemberSymbol
     with DefinitionSymbol[TermDefinition]
-    with HasLateInitErasedType
     with NamedSymbol:
   
   private lazy val functionType: ErasedValueType = ErasedType.Function(N)
@@ -381,12 +399,14 @@ class TermSymbol private[semantics] (
     * A definition with an [[erasedSignature]] evaluates to a closure the compiler builds, i.e. a first-class
     * `Function`. Nothing states the resource-ness of such a closure, so it is `rsc?`.
     */
-  override def erasedType: Opt[ErasedValueType] = _erasure match
+  def erasedType: Opt[ErasedValueType] = _erasure match
     case S(_: ErasedFuncSignature) => S(functionType)
     case S(tpe: ErasedValueType) => S(tpe)
     case N => N
   
-  override def erasedType_=(newType: Opt[ErasedValueType]): Unit = _erasure = newType
+  /** Sets the erased type, or raises a soft assertion if this term already has an erased type or signature. */
+  def erasedType_=(newType: Opt[ErasedValueType])(using Line, FileName, Raise): Unit =
+    initErasure(this, _erasure, newType)(_erasure = _)
   
   /** The erased signature of a `fun` definition with parameter lists, or `N` if this term has none. */
   def erasedSignature: Opt[ErasedFuncSignature] = _erasure match
@@ -395,8 +415,7 @@ class TermSymbol private[semantics] (
   
   /** Sets the erased signature, or raises a soft assertion if this term already has an erased type or signature. */
   def erasedSignature_=(newSignature: Opt[ErasedFuncSignature])(using Line, FileName, Raise): Unit =
-    softAssert(_erasure.isEmpty, s"Cannot give signature $newSignature to '$id', whose erasure is already ${_erasure}")
-    if _erasure.isEmpty then _erasure = newSignature
+    initErasure(this, _erasure, newSignature)(_erasure = _)
   
   /** Creates a symbol with the same erased type or signature as this one. */
   def withSameErasure(k: TermDefKind, owner: Opt[InnerSymbol], id: Tree.Ident)(using State): TermSymbol =
@@ -458,8 +477,7 @@ case class Extr(isTop: Bool)(using State) extends CtorSymbol:
   def toLoc: Option[Loc] = N
   override def toString: Str = nme
 
-sealed abstract case class LitSymbol(lit: Literal)(using State) extends CtorSymbol, HasErasedType:
-  override val erasedType: Opt[ErasedValueType] = N
+sealed abstract case class LitSymbol(lit: Literal)(using State) extends CtorSymbol:
   def nme: Str = lit.idStr
   def toLoc: Option[Loc] = lit.toLoc
   override def prefix: Str = "lit:"
@@ -484,9 +502,11 @@ case class ErrorSymbol(val nme: Str, tree: Tree)(using State) extends MemberSymb
   override def subst(using sub: SymbolSubst): ErrorSymbol = sub.mapErrorSym(this)
   override def prefix: Str = "error:"
 
-sealed trait ClassLikeSymbol extends IdentifiedSymbol, HasErasedType:
+sealed trait ClassLikeSymbol extends IdentifiedSymbol:
   self: MemberSymbol & DefinitionSymbol[? <: ClassDef | ModuleOrObjectDef] =>
   val tree: Tree.TypeDef
+  /** The [[ErasedValueType]] of an instance of this class, or of this module or object. */
+  def erasedType: Opt[ErasedValueType]
   def subst(using sub: SymbolSubst): ClassLikeSymbol
 
 
@@ -596,10 +616,9 @@ class ModuleOrObjectSymbol(val tree: Tree.TypeDef, val id: Tree.Ident)(using Sta
 
 class TypeAliasSymbol(val id: Tree.Ident)(using State)
     extends MemberSymbol
-    with DefinitionSymbol[TypeDef]
-    with HasErasedType:
+    with DefinitionSymbol[TypeDef]:
 
-  override val erasedType: Opt[ErasedValueType] = S(ErasedType.ValueLike(rsc = S(false), this))
+  val erasedType: Opt[ErasedValueType] = S(ErasedType.ValueLike(rsc = S(false), this))
   
   def nme = id.name
   def toLoc: Option[Loc] = id.toLoc // TODO track source tree of type alias here
