@@ -383,7 +383,10 @@ class Resolver(tl: TraceLogger)
       
       pss.foreach(_.allParams.foreach(traverseParam(_)))
       tps.getOrElse(Nil).flatMap(_.subTerms).foreach(traverse(_, expect = NonModule(N)))
-      sign.foreach(traverseSign(_,
+      // * A declaration shares its elaborated signature with the definition consuming it, which resolves it.
+      val signResolvedByDefinition =
+        body.isEmpty && pss.isEmpty && Elaborator.sharedSignatureDefinition(_sym).isDefined
+      if !signResolvedByDefinition then sign.foreach(traverseSign(_,
         expect = if modulefulness.modified
           then Module(S(msg"${tdf.k.desc.capitalize} marked as returning a 'module' must have a module return type."))
           else NonModule(S(msg"${tdf.k.desc.capitalize} must be marked as returning a 'module' in order to have a module return type."))

@@ -85,6 +85,20 @@ object Elaborator:
         case _ => Sig.Result(sign)
       go(sign, Nil)
   
+  /** The definition of `sym` that shares the elaborated signature of its separately written declaration, if any.
+    *
+    * A declaration such as `fun f: Int -> Int` followed by a definition `fun f(x) = x` would otherwise have that
+    * signature elaborated and resolved once for each, reporting every diagnostic in it twice. The signature is not
+    * shared with a definition that has type parameters of its own, as the signature may then refer to them.
+    */
+  def sharedSignatureDefinition(sym: BlockMemberSymbol): Opt[Tree.TermDef] =
+    val hasSeparateSignature = sym.trees.exists:
+      case td: Tree.TermDef => td.rhs.isEmpty && td.annotatedResultType.isDefined && td.paramLists.isEmpty
+      case _ => false
+    if !hasSeparateSignature then N
+    else sym.trees.collectFirst:
+      case td: Tree.TermDef if td.rhs.isDefined && td.annotatedResultType.isEmpty && td.typeParams.isEmpty => td
+  
   /** Label metadata threaded through elaboration. */
   final case class LabelBinding(
       labelSymbol: LabelSymbol,
@@ -1746,6 +1760,8 @@ extends Importer:
     
     val members = blk.definedSymbols.toMap
     val newSignatureTrees = mutable.Map.empty[Str, Tree] // * Store trees of signatures
+    // * Signatures elaborated once for both a declaration and its definition
+    val sharedSignatures = mutable.Map.empty[Str, Opt[Term]]
     
     // * Check for double/incompatible definitions and declarations
     blk.definedSymbols.foreach: (name, sym) =>
@@ -2025,13 +2041,20 @@ extends Importer:
                 newCtx = newCtx2
                 res
               // * Elaborate signature
-              val st = td.annotatedResultType.orElse(newSignatureTrees.get(id.name)) // FIXME: may elaborate external sig twice!!
-              val s = st.map:
+              val st = td.annotatedResultType.orElse(newSignatureTrees.get(id.name))
+              def elabSignature = st.map:
                 // unwrap possible module modifier
                 // e.g, `fun f: module M`
                 //              ^^^^^^
                 case TypeDef(Mod, st, N) => term(st)(using newCtx)
                 case st => term(st)(using newCtx)
+              // * A declaration and the definition that consumes its signature share its elaboration, whichever comes
+              // * first in the block.
+              val sharesSignature = Elaborator.sharedSignatureDefinition(sym).exists: defn =>
+                (defn is td) || td.rhs.isEmpty && td.paramLists.isEmpty && td.annotatedResultType.isDefined
+              val s =
+                if sharesSignature then sharedSignatures.getOrElseUpdate(id.name, elabSignature)
+                else elabSignature
               val body: Opt[Term] = rhs match
                 case N => N
                 case _ if ctx.mode is Mode.Light => S(Term.Missing)
