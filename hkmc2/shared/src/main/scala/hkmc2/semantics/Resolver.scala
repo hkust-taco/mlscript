@@ -1245,7 +1245,14 @@ class Resolver(tl: TraceLogger)
     // A union member with a modifier of its own is already checked under that modifier. It is checked again only when
     // this modifier is `rsc` and the member's is not, as this one then overrides it.
     case Term.Annotated(Annot.Resource(own), target) =>
-      if rsc === S(true) && own =/= S(true) then rscReach(target).foreach(checkRscTarget(_, rsc))
+      if rsc === S(true) && own =/= S(true) then
+        rscReach(target).filter(codegen.ErasedType.keepsRsc(_, own)).foreach(checkRscTarget(_, rsc))
+    // An erroneous type, or a reference to a non-type, is already reported. A type parameter has nothing to check.
+    case Term.Error() => ()
+    case _ if t.symbol.exists(_.asTpe.isEmpty) => ()
+    // A modifier that erasure would silently drop is rejected.
+    case _ if !codegen.ErasedType.keepsRsc(t, rsc) =>
+      raise(ErrorReport(msg"Resource modifiers on this type are not supported yet." -> t.toLoc :: Nil))
     case _ =>
       val members = aliasMembers(t)
       // A member is checked here when this modifier decides its resource-ness: always under `rsc`, which overrides the

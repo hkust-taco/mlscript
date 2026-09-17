@@ -252,6 +252,15 @@ object ErasedType:
     */
   def eraseSign(sign: Term): Opt[ErasedValueType] = eraseSign(sign, rsc = S(false))
 
+  /** Whether erasing the `target` term under a resource modifier denoting `rsc` keeps the modifier.
+    *
+    * The modifier is dropped when `target` has no erased counterpart (e.g. a negation type), or when `target` erases to
+    * a type that is never a resource (`()`).
+    */
+  def keepsRsc(target: Term, rsc: Opt[Bool]): Bool = eraseSign(target, rsc).exists:
+    case h: HasRsc => h.rsc === rsc
+    case _ => false
+
   /** Erases `sign` under the resource-ness gathered from the modifiers wrapping it so far. */
   private def eraseSign(sign: Term, rsc: Opt[Bool]): Opt[ErasedValueType] = sign match
     // * The resource modifiers reach here as annotations.
