@@ -1200,7 +1200,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
       
       // * The flattened definition takes every parameter list at once and returns an instance of the
       // * class, so its erased type is only known here, once the parameter lists are assembled.
-      flattenedDSym.populateErasedType(ErasedType.FuncRef(
+      flattenedDSym.populateErasedType(ErasedType.Signature(
         paramLists = allParamLists.map(_.params.map(_.sym.erasedType)),
         ret = cls.instanceType,
       ))

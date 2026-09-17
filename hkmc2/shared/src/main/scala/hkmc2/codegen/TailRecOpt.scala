@@ -378,10 +378,10 @@ class TailRecOpt(checkAnnotations: Bool)(using Config, State, TL, Raise, Ctx):
         val erasedType =
           if funsLen === 1 then
             // * The loop stands for the same function as its single member, with its parameter lists
-            // * flattened - construct a new `FuncRef` to reflect this.
+            // * flattened - construct a new `Signature` to reflect this.
             funs.head.dSym.erasedType match
-              case S(ft: ErasedFuncType) =>
-                S(ErasedType.FuncRef(paramSyms.map(_.erasedType) :: Nil, ft.ret))
+              case S(ft: ErasedFuncSignature) =>
+                S(ErasedType.Signature(paramSyms.map(_.erasedType) :: Nil, ft.ret))
               case other => other
           else
             // * The dispatcher can exit through any member's return, so its result type is the LUB of its members.
@@ -389,7 +389,7 @@ class TailRecOpt(checkAnnotations: Bool)(using Config, State, TL, Raise, Ctx):
             val ret =
               if memberRets.exists(_.isEmpty) then N
               else S(memberRets.flatten.map(_.canonicalize).reduce(ErasedType.lub))
-            S(ErasedType.FuncRef(
+            S(ErasedType.Signature(
               paramLists = (S(ErasedType.Int) :: paramSyms.map(_.erasedType)) :: Nil,
               ret = ret,
             ))

@@ -726,7 +726,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
           syntax.Fun,
           N,
           ident,
-          erasedType = S(ErasedType.FuncRef(paramLists = Nil :: Nil, ret = N)),
+          erasedType = S(ErasedType.Signature(paramLists = Nil :: Nil, ret = N)),
         )
         val td: TermDefinition = TermDefinition(
           syntax.Fun,

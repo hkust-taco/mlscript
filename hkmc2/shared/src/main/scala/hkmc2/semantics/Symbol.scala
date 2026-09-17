@@ -10,7 +10,7 @@ import hkmc2.utils.*
 
 import Elaborator.State
 import Tree.Ident
-import hkmc2.codegen.{ErasedType, ErasedFuncType, ErasedValueType, HasErasedType, HasOnceMutableErasedType}
+import hkmc2.codegen.{ErasedType, ErasedFuncSignature, ErasedValueType, HasErasedType, HasOnceMutableErasedType}
 import hkmc2.utils.SymbolSubst
 
 
@@ -373,7 +373,7 @@ class TermSymbol(val k: TermDefKind, val owner: Opt[InnerSymbol], val id: Tree.I
     * than its result type.
     */
   def declaredResultType: Opt[ErasedValueType] = erasedType match
-    case S(ft: ErasedFuncType) => ft.ret
+    case S(ft: ErasedFuncSignature) => ft.ret
     case S(vt: ErasedValueType) => S(vt)
     case N => N
 

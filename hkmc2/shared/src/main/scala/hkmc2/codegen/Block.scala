@@ -1108,12 +1108,12 @@ sealed abstract class Result extends AutoLocated, HasErasedType:
     // * Note: `UnitLit` stays untyped: Neither `null` nor `undefined` can be reasonably typed as `Unit`
     case Call(fun, argss) => fun.targetSymbol match
       case S(ts: TermSymbol) => ts.erasedType match
-        case S(ErasedType.FuncRef(paramLists, ret)) =>
+        case S(ErasedType.Signature(paramLists, ret)) =>
           argss.sizeCompare(paramLists) match
             // * An exactly-applied call yields the function's result type.
             case 0 => ret
             // * An under-applied call yields a function type over the remaining parameter lists.
-            case c if c < 0 => S(ErasedType.FuncRef(paramLists.drop(argss.length), ret))
+            case c if c < 0 => S(ErasedType.Signature(paramLists.drop(argss.length), ret))
             // * An over-applied call applies arguments to whatever the function returns, which the function's
             // * signature is oblivious about.
             case _ => N

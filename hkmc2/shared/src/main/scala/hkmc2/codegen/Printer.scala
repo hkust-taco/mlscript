@@ -38,7 +38,7 @@ class Printer(using Config, Ctx, Raise, ShowCfg, State, SymbolPrinter):
     case ErasedType.Unknown(rsc) => doc"${ErasedType.rscPrefix(rsc)}Unknown"
     case ErasedType.Incompatible(lhs, rhs) => doc"‹incompatible(${print(lhs)}, ${print(rhs)})›"
     case ErasedType.AnyRef(rsc, tpeSym: TypeSymbol) => doc"${ErasedType.rscPrefix(rsc)}${printTpe(tpeSym)}"
-    case ErasedType.CanonicalFuncRef(paramLists, ret) =>
+    case ErasedType.CanonicalSignature(paramLists, ret) =>
       // * Curried functions are rendered as `(A) => (B) => R`, so that an under-applied call reads as the residual
       // * function type it actually has.
       paramLists.foldRight(ret.fold(doc"?")(print)): (ps, acc) =>

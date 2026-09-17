@@ -1774,7 +1774,7 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
               val declaredParams = fun.targetSymbol match
                 case S(ts: TermSymbol) =>
                   ts.erasedType.collect:
-                    case ft: ErasedFuncType => ft.paramLists
+                    case ft: ErasedFuncSignature => ft.paramLists
                 case _ => N
               val ps = declaredParams match
                 case S(pl :: Nil) => pl
