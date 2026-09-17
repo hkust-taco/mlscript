@@ -228,13 +228,13 @@ class Printer(using Config, Ctx, Raise, ShowCfg, State, SymbolPrinter):
     case inst @ Instantiate(mut, rsc, cls, argss) =>
       val chainedArgs = argss.map(args => doc"(${args.map(print).mkDocument(", ")})").mkDocument("")
       doc"${printAnnotations(inst.metadata.annotations, doc" ")}new ${if mut then "mut " else ""}${if rsc then "rsc " else ""}${print(cls)}${chainedArgs}"
-    case Lambda(params, body) =>
+    case Lambda(rsc, params, body) =>
       scope.nest.givenIn:
         val allParams =
           params.params.map(x => doc"${scope.allocateName(x.sym)}${erasedTypeAnnot(x.sym)}") ++
           params.restParam.map(x => doc"...${scope.allocateName(x.sym)}${erasedTypeAnnot(x.sym)}")
         val docParams = allParams.mkDocument("(", ", ", ")")
-        doc"$docParams => ${bracedbk(print(body))}"
+        doc"${if rsc then "rsc " else ""}$docParams => ${bracedbk(print(body))}"
     case Tuple(mut, elems) =>
       val docElems = elems.map(x => print(x)).mkDocument(", ")
       doc"${if mut then "mut " else ""}[${docElems}]"

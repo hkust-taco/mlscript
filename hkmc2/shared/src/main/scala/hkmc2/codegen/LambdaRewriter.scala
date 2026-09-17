@@ -18,19 +18,20 @@ object LambdaRewriter:
         case lam: Lambda =>
           val sym = BlockMemberSymbol("lambda", Nil, nameIsMeaningful = false)
           val lam2 = super.applyLam(lam)
-          val Lambda(params, body) = lam2
-          val lamDefn = FunDefn.withFreshSymbol(N, sym, params :: Nil, body)(N, annotations = Annot.Private :: lam2.annot)
+          val Lambda(_, params, body) = lam2
+          val lamDefn =
+            FunDefn.withFreshSymbol(N, sym, params :: Nil, body)(N, annotations = Annot.Private :: lam2.liftedAnnotations)
           Scoped(Set.single(sym), Define(lamDefn, k(lamDefn.asPath)))
         case _ => super.applyResult(r)(k)
       
       // Special-case Assign to avoid creating a temporary symbol for the lambda
       override def applyBlock(b: Block): Block = b match
-        case Assign(lhs, lam @ Lambda(params, body), rest) if !lhs.isInstanceOf[TempSymbol] =>
+        case Assign(lhs, lam @ Lambda(_, params, body), rest) if !lhs.isInstanceOf[TempSymbol] =>
           val newSym = BlockMemberSymbol(lhs.nme, Nil,
             nameIsMeaningful = true // TODO: lhs.nme is not always meaningful
           )
           val defn = FunDefn.withFreshSymbol(N, newSym, params :: Nil, applyBlock(body))
-            (N, annotations = Annot.Private :: lam.annot)
+            (N, annotations = Annot.Private :: lam.liftedAnnotations)
           val blk = blockBuilder
             .define(defn)
             .assign(lhs, defn.asPath)

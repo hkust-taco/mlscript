@@ -273,9 +273,9 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
     paramLists match
     case Nil => body
     case params :: Nil =>
-      Return(Lambda(params, body)(if generator then Annot.Generator :: Nil else Nil))
+      Return(Lambda(false, params, body)(if generator then Annot.Generator :: Nil else Nil))
     case params :: rest =>
-      Return(Lambda(params, curriedFunctionBody(rest, body, generator))(Nil))
+      Return(Lambda(false, params, curriedFunctionBody(rest, body, generator))(Nil))
 
   /** Looks through the casts that a JS program does not materialize. */
   @tailrec
@@ -349,7 +349,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
         then doc"$runtimeVar.checkCall(${calls})"
         else doc"${calls}"
       else doc"$runtimeVar.safeCall(${calls})"
-    case lam @ Lambda(ps, bod) => scope.nest givenIn:
+    case lam @ Lambda(_, ps, bod) => scope.nest givenIn:
       val (params, bodyDoc) = setupFunction(none, ps, bod, isLambda = true)
       if lam.annot.contains(Annot.Generator)
       then

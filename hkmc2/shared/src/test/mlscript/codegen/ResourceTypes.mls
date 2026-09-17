@@ -475,3 +475,71 @@ fun partialIntoPlain(a) = usePlainFn(curried(a))
 //│   return usePlainFn¹((tmp as! Function⁰))
 //│ };
 //│ end
+
+// A lambda states its resource-ness with a modifier. Without one, it is `rsc?` like any other
+// function value, so `rsc?` has no effect on it.
+
+fun rscLam() = useRscFn(rsc (x => x))
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define rscLam⁰ as fun rscLam¹(): ? {
+//│   let tmp: rsc Function⁰, lambda;
+//│   @private @rsc
+//│   define lambda as fun lambda⁰(x: ?): ? {
+//│     return x
+//│   };
+//│   set tmp = lambda⁰;
+//│   return useRscFn¹(tmp)
+//│ };
+//│ end
+
+fun rscLamReturned() = rsc (x => x)
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define rscLamReturned⁰ as fun rscLamReturned¹(): ? {
+//│   let lambda;
+//│   @private @rsc
+//│   define lambda as fun lambda¹(x: ?): ? { return x };
+//│   return lambda¹
+//│ };
+//│ end
+
+fun plainLamIntoRsc() = useRscFn(x => x)
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define plainLamIntoRsc⁰ as fun plainLamIntoRsc¹(): ? {
+//│   let lambda;
+//│   define lambda as fun lambda²(x: ?): ? {
+//│     return x
+//│   };
+//│   return useRscFn¹((lambda² as! rsc Function⁰))
+//│ };
+//│ end
+
+:ge
+fun rscLamIntoPlain() = usePlainFn(rsc (x => x))
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'rsc Function' at an unrelated type 'Function'
+//│ ║  l.517: 	fun rscLamIntoPlain() = usePlainFn(rsc (x => x))
+//│ ╙──       	                                        ^^^^^^
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define rscLamIntoPlain⁰ as fun rscLamIntoPlain¹(): ? {
+//│   let tmp: rsc Function⁰, lambda;
+//│   @private @rsc
+//│   define lambda as fun lambda³(x: ?): ? {
+//│     return x
+//│   };
+//│   set tmp = lambda³;
+//│   return usePlainFn¹(tmp)
+//│ };
+//│ end
+
+:w
+fun maybeLam() = rsc? (x => x)
+//│ ╔══[WARNING] A function value is 'rsc?' unless stated otherwise, so 'rsc?' has no effect.
+//│ ║  l.534: 	fun maybeLam() = rsc? (x => x)
+//│ ╙──       	                       ^^^^^^
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define maybeLam⁰ as fun maybeLam¹(): ? {
+//│   let lambda;
+//│   @private
+//│   define lambda as fun lambda⁴(x: ?): ? { return x };
+//│   return lambda⁴
+//│ };
+//│ end

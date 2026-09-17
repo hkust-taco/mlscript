@@ -985,7 +985,7 @@ class FlowConstraintsCollector(
                 nextArgs.foreach(a => cc.constrain(processResult(a.value), UnknownCons))
               UnknownProd
         case i@Instantiate(_, _, cls, argss) => handleCallLike(i.uid, cls, argss.flatten)
-        case lam@Lambda(ps, body) =>
+        case lam@Lambda(_, ps, body) =>
           mkFunProdStrat("lam_res", ps :: Nil, body, lam.uid)
         case _: Tuple => lastWords("should be handled in CtorProducer")
         case Record(_, fields) =>

@@ -528,7 +528,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
             val freshParams = (ps.params zip freshSyms).map((p, s) => Param(p.flags, s, N, p.modulefulness))
             val freshParamList = ParamList(ps.flags, freshParams, N)
             val freshArgs = freshSyms.map(s => Arg(N, s.asSimpleRef))
-            Lambda(freshParamList, Return(etaExpand(rest, accArgss :+ freshArgs)))(Nil)
+            Lambda(false, freshParamList, Return(etaExpand(rest, accArgss :+ freshArgs)))(Nil)
         k(etaExpand(remainingParamss, acc.reverse))
     // * Resolve the class definition to get the constructor param lists.
     // * The class path typically resolves to a TermSymbol (the constructor function),
@@ -648,7 +648,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
         val (paramLists, bodyBlock) = setupFunctionDef(ps :: Nil, bod, S(sym.nme), N)
         tl.log(s"Ref builtin $sym")
         assert(paramLists.length === 1)
-        return k(Lambda(paramLists.head, bodyBlock)(Nil).withLocOf(ref))
+        return k(Lambda(false, paramLists.head, bodyBlock)(Nil).withLocOf(ref))
       if sym.unary then
         val t1 = new Tree.Ident("arg")
         val p1 = Param(FldFlags.empty, VarSymbol(t1, erasedType = N), N, Modulefulness.none)
@@ -663,7 +663,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
         val (paramLists, bodyBlock) = setupFunctionDef(ps :: Nil, bod, S(sym.nme), N)
         tl.log(s"Ref builtin $sym")
         assert(paramLists.length === 1)
-        return k(Lambda(paramLists.head, bodyBlock)(Nil).withLocOf(ref))
+        return k(Lambda(false, paramLists.head, bodyBlock)(Nil).withLocOf(ref))
     case bs: BlockMemberSymbol =>
       disamb.flatMap(_.defn) match
       case S(d) if d.hasDeclareModifier.isDefined =>
@@ -1063,9 +1063,21 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
       
     case st.Lam(params, body) =>
       warnStmt
+      // * `Elaborator` records the modifier of `rsc (x => ...)` as an annotation on the lambda, as for `new rsc C()`.
+      val rsc = annots.foldLeft(false):
+        // * The annotation does not record where its keyword is written, so the warning points at the lambda.
+        case (rsc, Annot.Resource(N)) =>
+          raise(WarningReport(
+            msg"A function value is 'rsc?' unless stated otherwise, so 'rsc?' has no effect." -> trm.toLoc :: Nil,
+            source = Diagnostic.Source.Compilation))
+          rsc
+        case (rsc, Annot.Resource(S(annotRsc))) => rsc || annotRsc
+        case (rsc, _) => rsc
       val (paramLists, bodyBlock) = setupFunctionDef(params :: Nil, body, N, N)
-      if k.isInstanceOf[TailOp] || bodyBlock.size <= 5
-      then k(Lambda(paramLists.head, bodyBlock)(Nil))
+      // * A resource lambda is not lifted into a function definition here: a reference to the lifted definition would
+      // * be `rsc?` (like any function value), hiding the lambda's resource-ness from the slots it flows into.
+      if rsc || k.isInstanceOf[TailOp] || bodyBlock.size <= 5
+      then k(Lambda(rsc, paramLists.head, bodyBlock)(Nil))
       else
         val lamSym = new BlockMemberSymbol("lambda", Nil, false)
         loweringCtx.collectScopedSym(lamSym)
@@ -1452,7 +1464,8 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
     term(t, inStmtPos = inStmtPos):
       case v: Value => k(v)
       case p: Path => k(p)
-      case lam @ Lambda(params, body) =>
+      // * A resource lambda is left as a lambda.
+      case lam @ Lambda(false, params, body) =>
         val lamSym = BlockMemberSymbol("lambda", Nil, false)
         loweringCtx.collectScopedSym(lamSym)
         val lamDef = FunDefn.withFreshSymbol(N, lamSym, params :: Nil, body)(configOverride = N, annotations = lam.annot)
@@ -1570,7 +1583,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
         case st.Resolved(_, defnSym) if isImplicitNullaryCall(defnSym) => ()
         case _ => warn(annot)
       case annot @ Annot.Resource(_) => receiver match
-        case New(_, _, N) | Mut(New(_, _, N)) => ()
+        case New(_, _, N) | Mut(New(_, _, N)) | st.Lam(_, _) => ()
         case _ => warn(annot)
       case a @ Annot.TailCall => receiver match
         case st.App(Ref(_: BuiltinSymbol), _) => warn(a, S(msg"The @tailcall annotation has no effect on calls to built-in symbols."))

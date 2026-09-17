@@ -59,19 +59,24 @@ class FirstClassFunctionTransformer
         case TermDefinition(k = syntax.Fun, params = Nil) => true
         case _ => false
   
-  private def etaExpandPath(p: Path, params: ParamList)(k: Path => Block): Block =
+  /** Wraps the function `p` refers to into a function object, which is a resource iff `rsc`. */
+  private def etaExpandPath(p: Path, params: ParamList, rsc: Bool)(k: Path => Block): Block =
     val clsDef = generateFCFunctionClass(p, params)
-    // * The wrapper captures what `p` does, so it is a resource iff `p` is, which is not resolved yet
-    val tmp = new TempSymbol(None, erasedType = S(ErasedType.ValueLike(rsc = N, clsDef.isym.asClsOrMod.get)))
+    // * The wrapper captures what `p` does, so it is a resource iff `p` is. Only a lifted resource lambda is known to
+    // * be one; the resource-ness of any other function value is undetermined.
+    val tmpRsc = if rsc then S(true) else N
+    val tmp = new TempSymbol(None, erasedType = S(ErasedType.ValueLike(rsc = tmpRsc, clsDef.isym.asClsOrMod.get)))
     val cls = clsDef.sym.asMemberRef(clsDef.isym)
-    // TODO: Instantiate the wrapper as a resource iff `p` is one, once `p`'s resource-ness is resolved.
-    Scoped(Set(clsDef.sym, tmp), Define(clsDef, Assign(tmp, Instantiate(mut = false, rsc = false, cls, Nil :: Nil)(InstantiateMetadata.empty), k(tmp.asSimpleRef))))
+    // TODO: Instantiate the wrapper as a resource iff `p` is one, once the resource-ness of other function values is
+    //       resolved.
+    Scoped(Set(clsDef.sym, tmp), Define(clsDef, Assign(tmp, Instantiate(mut = false, rsc = rsc, cls, Nil :: Nil)(InstantiateMetadata.empty), k(tmp.asSimpleRef))))
   
   override def applyPath(p: Path)(k: Path => Block): Block = p match
     case ref @ Value.MemberRef(l, disamb) => disamb match
       case s: TermSymbol if s.k is syntax.Fun =>
         if isGetter(l) then k(p)
-        else etaExpandPath(ref, getParamList(l).getOrElse(lastWords(s"Cannot get ${l.nme}'s parameter list.")))(k)
+        else etaExpandPath(ref, getParamList(l).getOrElse(lastWords(s"Cannot get ${l.nme}'s parameter list.")),
+          funDefns.get(l).exists(_.rsc))(k)
       case _ => k(p)
     case sel: Select => sel.symbol match
       case Some(s: TermSymbol) if (s.k is syntax.Fun) =>
@@ -83,7 +88,7 @@ class FirstClassFunctionTransformer
                 -> sel.toLoc :: Nil,
                 source = Diagnostic.Source.Compilation)
             PlainParamList(Nil)
-          etaExpandPath(sel, params)(k)
+          etaExpandPath(sel, params, s.irFunDefn.exists(_.rsc))(k)
       case Some(_) => k(p)
       case _ =>
         raise(ErrorReport(msg"Cannot determine if ${sel.name.name} is a function." -> sel.toLoc :: Nil,
