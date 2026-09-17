@@ -718,3 +718,189 @@ fun rscPartialApplied(a) =
 //│   return p(a)
 //│ };
 //│ end
+
+
+// `as` does not lower to a cast, so a resource modifier in its type has no effect, just as the
+// type itself has none.
+
+fun asRsc(x: C) = x as rsc C
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define asRsc⁰ as fun asRsc¹(x: C²): ? { return x }; end
+
+fun asMaybe(x: rsc C) = x as rsc? C
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define asMaybe⁰ as fun asMaybe¹(x: rsc C²): ? { return x }; end
+
+fun asPlain(x: D) = x as C
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define asPlain⁰ as fun asPlain¹(x: D²): ? { return x }; end
+
+
+// Resource modifiers are not supported in patterns.
+
+:e
+fun isRsc(x) = x is rsc C
+//│ ╔══[COMPILATION ERROR] Unrecognized pattern ('rsc'-modified identifier).
+//│ ║  l.742: 	fun isRsc(x) = x is rsc C
+//│ ╙──       	                        ^
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define isRsc⁰ as fun isRsc¹(x: ?): ? { return true }; end
+
+:e
+fun isMaybe(x) = if x is rsc? C then 1 else 0
+//│ ╔══[COMPILATION ERROR] Unrecognized pattern ('rsc?'-modified identifier).
+//│ ║  l.750: 	fun isMaybe(x) = if x is rsc? C then 1 else 0
+//│ ╙──       	                              ^
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define isMaybe⁰ as fun isMaybe¹(x: ?): ? { return 1 }; end
+
+
+// A handler's method keeps the resource modifiers on its parameters through handler lowering
+// and lifting; its result is the effect, not the declared `rsc C`. A modifier on the handled
+// class is rejected.
+
+abstract class RscEffect with
+  fun op(x: rsc C): rsc C
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ @abstract define RscEffect⁰ as class RscEffect¹; end
+
+:effectHandlers
+:lift
+fun handled() =
+  handle h = RscEffect with
+    fun op(x: rsc C)(k) = k(x)
+  h.op(new rsc C())
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let handleBlock$, Handler$h$op, Handler$h$, handleBlock$$, Handler$h$op$;
+//│ do runtime⁰.resetEffects﹖();
+//│ @inline
+//│ define Handler$h$op$ as fun Handler$h$op$⁰(x: rsc C²)(k: ?): ? {
+//│   return Handler$h$op⁰(x, k)
+//│ };
+//│ define Handler$h$op as fun Handler$h$op⁰(x: rsc C², k: ?): ? {
+//│   return k(x)
+//│ };
+//│ @inline
+//│ define handleBlock$$ as fun handleBlock$$⁰(h: ?)(): ? {
+//│   return handleBlock$⁰(h)
+//│ };
+//│ define Handler$h$ as class Handler$h$⁰ extends RscEffect¹ {
+//│   method op⁰ = fun op¹(x: rsc C²): ? {
+//│     let suspendRes: ?, Handler$h$op$here: ?;
+//│     set Handler$h$op$here = Handler$h$op$⁰(x);
+//│     return runtime⁰.mkEffect﹖(Handler$h$⁰.this, Handler$h$op$here)
+//│   }
+//│ };
+//│ define handleBlock$ as fun handleBlock$⁰(h: ?): ? {
+//│   let tmp: rsc C²;
+//│   set tmp = new rsc C²();
+//│   return h.op﹖(tmp)
+//│ };
+//│ define handled⁰ as fun handled¹(): ? {
+//│   let h: ?, tmp: ?, handleBlock$$here: ?, pc: Int⁰;
+//│   match runtime⁰.resumePc﹖
+//│     -1 =>
+//│       set pc = 0;
+//│       end
+//│     else
+//│       let saveOffset: Int⁰;
+//│       set pc = runtime⁰.resumePc﹖;
+//│       set runtime⁰.resumePc﹖ = -1;
+//│       end
+//│   loop main:
+//│     match pc
+//│       0 =>
+//│         block brk0:
+//│           set h = new mut Handler$h$⁰();
+//│           set handleBlock$$here = handleBlock$$⁰(h);
+//│           set runtime⁰.resumeValue﹖ = runtime⁰.enterHandleBlock﹖(h, handleBlock$$here);
+//│           match runtime⁰.curEffect﹖
+//│             null =>
+//│               break brk0
+//│             else
+//│               return runtime⁰.unwind﹖(handled¹, 1, null, null, null, 1, 0, 0)
+//│           end
+//│         set pc = 1;
+//│         end
+//│     match pc
+//│       1 =>
+//│         set tmp = runtime⁰.resumeValue﹖;
+//│         return tmp
+//│       else
+//│         end
+//│     end
+//│   end
+//│ };
+//│ end
+
+:effectHandlers
+:lift
+:e
+:w
+fun handledRsc() =
+  handle h = rsc RscEffect with
+    fun op(x)(k) = k(x)
+  0
+//│ ╔══[COMPILATION ERROR] Expected a statically known class; found annotation.
+//│ ║  l.841: 	  handle h = rsc RscEffect with
+//│ ║         	                 ^^^^^^^^^
+//│ ╙── The 'handle' keyword requires a statically known class.
+//│ ╔══[WARNING] This annotation has no effect.
+//│ ╟── This annotation is not supported on reference terms.
+//│ ║  l.841: 	  handle h = rsc RscEffect with
+//│ ╙──       	                 ^^^^^^^^^
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let handleBlock$, Handler$h$op, Handler$h$, Handler$h$op$;
+//│ do runtime⁰.resetEffects﹖();
+//│ @inline
+//│ define Handler$h$op$ as fun Handler$h$op$¹(x: ?)(k: ?): ? {
+//│   return Handler$h$op¹(x, k)
+//│ };
+//│ define Handler$h$op as fun Handler$h$op¹(x: ?, k: ?): ? {
+//│   return k(x)
+//│ };
+//│ define Handler$h$ as class Handler$h$¹ extends RscEffect¹ {
+//│   method op² = fun op³(x: ?): ? {
+//│     let suspendRes: ?, Handler$h$op$here: ?;
+//│     set Handler$h$op$here = Handler$h$op$¹(x);
+//│     return runtime⁰.mkEffect﹖(Handler$h$¹.this, Handler$h$op$here)
+//│   }
+//│ };
+//│ define handleBlock$ as fun handleBlock$¹(): ? {
+//│   return 0
+//│ };
+//│ define handledRsc⁰ as fun handledRsc¹(): ? {
+//│   let h: ?, tmp: ?, pc: Int⁰;
+//│   match runtime⁰.resumePc﹖
+//│     -1 =>
+//│       set pc = 0;
+//│       end
+//│     else
+//│       let saveOffset: Int⁰;
+//│       set pc = runtime⁰.resumePc﹖;
+//│       set runtime⁰.resumePc﹖ = -1;
+//│       end
+//│   loop main:
+//│     match pc
+//│       0 =>
+//│         block brk0:
+//│           set h = new mut Handler$h$¹();
+//│           set runtime⁰.resumeValue﹖ = runtime⁰.enterHandleBlock﹖(h, handleBlock$¹);
+//│           match runtime⁰.curEffect﹖
+//│             null =>
+//│               break brk0
+//│             else
+//│               return runtime⁰.unwind﹖(handledRsc¹, 1, null, null, null, 1, 0, 0)
+//│           end
+//│         set pc = 1;
+//│         end
+//│     match pc
+//│       1 =>
+//│         set tmp = runtime⁰.resumeValue﹖;
+//│         return tmp
+//│       else
+//│         end
+//│     end
+//│   end
+//│ };
+//│ end
