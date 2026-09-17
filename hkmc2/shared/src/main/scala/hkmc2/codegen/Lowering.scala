@@ -278,7 +278,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
                 // Assign(td.sym, r,
                 //   term(st.Blk(stats, res))(k)))
                 Define(
-                  ValDefn(td.tsym, td.sym, castTo(r, td.tsym.erasedValueType, bod.toLoc))(cfgOverride, td.annotations),
+                  ValDefn(td.tsym, td.sym, castTo(r, td.tsym.erasedType, bod.toLoc))(cfgOverride, td.annotations),
                   blockImpl(stats, res),
                 ),
               )(using LoweringCtx.nestFunc(N))
@@ -469,7 +469,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
         case Nil => lowerRemainingCalls(fr, args, remainingArgss, annotations, loc)(k)
         case acc: NELs[Ls[Arg]] =>
           val call = Call(fr, acc)(CallMetadata(isMlsFun, mayRaiseEffects, Nil)).withLoc(loc)
-          val tmp = loweringCtx.registerTempSymbol(N, erasedType = call.erasedValueType, "baseCall")
+          val tmp = loweringCtx.registerTempSymbol(N, erasedType = call.erasedType, "baseCall")
           Assign(tmp, call, lowerRemainingCalls(tmp.asSimpleRef, args, remainingArgss, annotations, loc)(k))
       case (_ :: _, Nil) =>
         k(Call(fr, acc.reverse.ne_!)(CallMetadata(isMlsFun, mayRaiseEffects, annotations)).withLoc(loc))
@@ -488,7 +488,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
       remainingArgss match
       case Nil => k(call)
       case args :: remainingArgss =>
-        val tmp = loweringCtx.registerTempSymbol(N, erasedType = call.erasedValueType, "callPrefix")
+        val tmp = loweringCtx.registerTempSymbol(N, erasedType = call.erasedType, "callPrefix")
         Assign(tmp, call,
           lowerRemainingCalls(tmp.asSimpleRef, args, remainingArgss, annotations, loc)(k))
   
@@ -513,7 +513,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
         k(buildInstantiate(acc.reverse))
       case (Nil, args :: remainingArgss) =>
         val inst = buildInstantiate(acc.reverse)
-        val tmp = loweringCtx.registerTempSymbol(N, erasedType = inst.erasedValueType, "baseInst")
+        val tmp = loweringCtx.registerTempSymbol(N, erasedType = inst.erasedType, "baseInst")
         Assign(tmp, inst,
           lowerRemainingCalls(tmp.asSimpleRef, args, remainingArgss, annotations, N)(k))
       case (remainingParamss, Nil) =>
@@ -548,7 +548,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
             k(buildInstantiate(as :: Nil))
           case remainingArgss =>
             val inst = buildInstantiate(as :: Nil)
-            val tmp = loweringCtx.registerTempSymbol(N, erasedType = inst.erasedValueType, "baseInst")
+            val tmp = loweringCtx.registerTempSymbol(N, erasedType = inst.erasedType, "baseInst")
             Assign(tmp, inst,
               lowerRemainingCalls(tmp.asSimpleRef, remainingArgss.head, remainingArgss.tail, annotations, N)(k))
     else zipArgs(ctorParamLists, args, Nil)
@@ -589,20 +589,20 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
     target match
     case sym: TermSymbol if (sym.k is MutVal) || (sym.k is LetBind) =>
       sym.owner match
-      case S(owner) => AssignField(owner.asThis, sym.id, castTo(rhs, sym.erasedValueType, loco), rest)(S(sym))
+      case S(owner) => AssignField(owner.asThis, sym.id, castTo(rhs, sym.erasedType, loco), rest)(S(sym))
       case N => nope
     case sym: LocalVarSymbol =>
-      Assign(sym, castTo(rhs, sym.erasedValueType, loco), rest)
+      Assign(sym, castTo(rhs, sym.erasedType, loco), rest)
     case sym => nope
 
   private def defineSymbol(sym: Symbol, rhs: Result, rest: Block)(using LoweringCtx): Block =
     sym match
     case sym: TermSymbol =>
       sym.owner match
-      case S(owner) => AssignField(owner.asThis, sym.id, castTo(rhs, sym.erasedValueType, sym.toLoc), rest)(S(sym))
+      case S(owner) => AssignField(owner.asThis, sym.id, castTo(rhs, sym.erasedType, sym.toLoc), rest)(S(sym))
       case N => lastWords(s"tried to define top-level symbol ${sym.showDbg} in a local scope")
     case sym: LocalVarSymbol =>
-      Assign(sym, castTo(rhs, sym.erasedValueType, sym.toLoc), rest)
+      Assign(sym, castTo(rhs, sym.erasedType, sym.toLoc), rest)
     case sym =>
       lastWords(s"tried to define non-variable symbol ${sym.showDbg}")
   
@@ -726,7 +726,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
           syntax.Fun,
           N,
           ident,
-          erasedType = S(ErasedType.Signature(paramLists = Nil :: Nil, ret = N)),
+          erasedType = S(ErasedFuncSignature.Signature(paramLists = Nil :: Nil, ret = N)),
         )
         val td: TermDefinition = TermDefinition(
           syntax.Fun,
@@ -1471,7 +1471,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
         val lamDef = FunDefn.withFreshSymbol(N, lamSym, params :: Nil, body)(configOverride = N, annotations = lam.annot)
         Define(lamDef, k(lamDef.asPath))
       case r =>
-        val l = loweringCtx.registerTempSymbol(N, erasedType = r.erasedValueType)
+        val l = loweringCtx.registerTempSymbol(N, erasedType = r.erasedType)
         Assign(l, r, k(l.asSimpleRef))
 
   /** Wraps the lowered result `r` with a [[Cast]] when it must be downcasted to fit the `expected` erased type of the
@@ -1488,7 +1488,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
 
   /** The declared erased type of the field a selection resolves to, if it is an annotated `TermSymbol`. */
   private def fieldErasedType(s: Opt[Symbol]): Opt[ErasedValueType] =
-    s.collect { case t: TermSymbol => t.erasedValueType }.flatten
+    s.collect { case t: TermSymbol => t.erasedType }.flatten
 
   /** The declared erased types of a parameter list's fixed parameters (excluding rest params). */
   private def expectedParamTypes(ps: ParamList): Ls[Opt[ErasedValueType]] =

@@ -54,7 +54,7 @@ class ReflectionInstrumenter(using State, Raise, Ctx) extends BlockTransformer(n
 
   def assign(res: Result, symName: Str = "tmp")(k: Path => Block): Block =
     // TODO: skip assignment if res: Path?
-    val sym = new TempSymbol(N, erasedType = res.erasedValueType, symName)
+    val sym = new TempSymbol(N, erasedType = res.erasedType, symName)
     Scoped(Set(sym), Assign(sym, res, k(sym.asSimpleRef)))
 
   def tuple(elems: Ls[ArgWrappable], symName: Str = "tmp")(k: Path => Block): Block =

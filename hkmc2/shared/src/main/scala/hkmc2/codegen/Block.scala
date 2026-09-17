@@ -375,7 +375,7 @@ object Block:
     val types = Buffer.empty[ErasedValueType]
     val collector = new BlockTraverserShallow:
       override def applyBlock(b: Block): Unit = b match
-        case Return(res) => types += res.erasedValueType_!
+        case Return(res) => types += res.erasedType_!
         case _ => super.applyBlock(b)
     collector.applyBlock(block)
     Option.when(types.nonEmpty)(ErasedType.Union.mk(types))
@@ -846,7 +846,7 @@ object ValDefn:
       annotations: Ls[Annot],
     )(using State)
     : ValDefn =
-      ValDefn(tsym = TermSymbol(k, owner, Tree.Ident(sym.nme), erasedType = rhs.erasedValueType), sym, rhs)(configOverride, annotations)
+      ValDefn(tsym = TermSymbol(k, owner, Tree.Ident(sym.nme), erasedType = rhs.erasedType), sym, rhs)(configOverride, annotations)
 
 
 /*
@@ -1085,7 +1085,7 @@ sealed abstract class Result extends AutoLocated, HasErasedType:
     case Value.Lit(lit) => 0
     case DynSelect(qual, fld, arrayIdx) => qual.size + fld.size
 
-  lazy val erasedType: Opt[ErasedType] = this match
+  lazy val erasedType: Opt[ErasedValueType] = this match
     case Value.SimpleRef(sym) => sym match
       case hasErasedType: HasErasedType => hasErasedType.erasedType
       case _ => 
@@ -1110,17 +1110,18 @@ sealed abstract class Result extends AutoLocated, HasErasedType:
     case Value.Lit(_: Tree.BoolLit) => S(ErasedType.Bool)
     // * Note: `UnitLit` stays untyped: Neither `null` nor `undefined` can be reasonably typed as `Unit`
     case Call(fun, argss) => fun.targetSymbol match
-      case S(ts: TermSymbol) => ts.erasedType match
-        case S(ErasedType.Signature(paramLists, ret)) =>
-          argss.sizeCompare(paramLists) match
+      case S(ts: TermSymbol) => ts.erasedSignature match
+        case S(sig) =>
+          argss.sizeCompare(sig.paramLists) match
             // * An exactly-applied call yields the function's result type.
-            case 0 => ret
-            // * An under-applied call yields a function whose signature has the remaining parameter lists.
-            case c if c < 0 => S(ErasedType.Signature(paramLists.drop(argss.length), ret))
+            case 0 => sig.ret
+            // * An under-applied call yields a closure over the remaining parameter lists, whose resource-ness nothing
+            // * states.
+            case c if c < 0 => S(ErasedType.Function(N))
             // * An over-applied call applies arguments to whatever the function returns, which the function's
             // * signature is oblivious about.
             case _ => N
-        case _ => N
+        case N => N
       case _ => N
     // * A resolved selection has the type of the member it refers to (e.g. `this.field`); an
     // * unresolved selection (dynamic field access) stays unknown.
@@ -1153,14 +1154,14 @@ sealed abstract class Result extends AutoLocated, HasErasedType:
     * [[Config]] of their own.
     */
   def coerceTo(expected: ErasedValueType, loc: Opt[Loc])(using Ctx, State, Raise, Config): this.type | Cast =
-    val actual = erasedValueType_!.canonicalize
+    val actual = erasedType_!.canonicalize
     val declared = expected.canonicalize
     ErasedType.needsCast(actual, declared) match
       case S(false) => this
       case S(true) => Cast(this, expected, config.checkCasts)
       case N =>
         // * An `Incompatible` side is not an unrelated type but an unrepresentable one, so it gets its own message.
-        def membersOf(et: CanonicalErasedType): Opt[(CanonicalErasedValueType, CanonicalErasedValueType)] = et match
+        def membersOf(et: CanonicalErasedValueType): Opt[(CanonicalErasedValueType, CanonicalErasedValueType)] = et match
           case ErasedType.Incompatible(l, r) => S(l -> r)
           case _ => N
         val message = membersOf(actual).orElse(membersOf(declared)) match

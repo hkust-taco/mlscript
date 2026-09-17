@@ -12,6 +12,7 @@ import Elaborator.State
 import Tree.Ident
 import hkmc2.codegen.{ErasedType, ErasedFuncSignature, ErasedValueType, HasErasedType, HasLateInitErasedType}
 import hkmc2.utils.SymbolSubst
+import sourcecode.{FileName, Line}
 
 
 sealed abstract class MaybeSymbol:
@@ -236,7 +237,7 @@ sealed abstract class LocalVarSymbol(name: Str)(using State) extends FlowSymbol(
   * those branches are lowered, so `Normalization` populates it with the join of their representations once they have
   * all been seen. `Normalization.joinTempType` is its only write site.
   */
-class TempSymbol(val trm: Opt[Term], override var erasedType: Opt[ErasedType], dbgNme: Str = "tmp")(using State)
+class TempSymbol(val trm: Opt[Term], override var erasedType: Opt[ErasedValueType], dbgNme: Str = "tmp")(using State)
     extends LocalVarSymbol(dbgNme)
     with HasLateInitErasedType:
   // val nameHints: MutSet[Str] = MutSet.empty // * May be useful later?
@@ -345,11 +346,19 @@ sealed abstract class MemberSymbol(using State) extends Symbol:
   def subst(using SymbolSubst): MemberSymbol
 
 
-class TermSymbol(val k: TermDefKind, val owner: Opt[InnerSymbol], val id: Tree.Ident, override var erasedType: Opt[ErasedType])(using State)
+class TermSymbol private[semantics] (
+    val k: TermDefKind,
+    val owner: Opt[InnerSymbol],
+    val id: Tree.Ident,
+    private var _erasure: Opt[ErasedValueType | ErasedFuncSignature],
+)(using State)
     extends MemberSymbol
     with DefinitionSymbol[TermDefinition]
     with HasLateInitErasedType
     with NamedSymbol:
+  
+  private lazy val functionType: ErasedValueType = ErasedType.Function(N)
+  
   var sourceAliases: Ls[Str] = Nil
   def nme: Str = id.name
   def name: Str = nme
@@ -367,14 +376,47 @@ class TermSymbol(val k: TermDefKind, val owner: Opt[InnerSymbol], val id: Tree.I
     owner.exists(!_.isInstanceOf[TopLevelSymbol]) &&
       ((k is LetBind) || isExplicitlyPrivate)
   
+  /** The erased type of what a reference to this term evaluates to.
+    *
+    * A definition with an [[erasedSignature]] evaluates to a closure the compiler builds, i.e. a first-class
+    * `Function`. Nothing states the resource-ness of such a closure, so it is `rsc?`.
+    */
+  override def erasedType: Opt[ErasedValueType] = _erasure match
+    case S(_: ErasedFuncSignature) => S(functionType)
+    case S(tpe: ErasedValueType) => S(tpe)
+    case N => N
+  
+  override def erasedType_=(newType: Opt[ErasedValueType]): Unit = _erasure = newType
+  
+  /** The erased signature of a `fun` definition with parameter lists, or `N` if this term has none. */
+  def erasedSignature: Opt[ErasedFuncSignature] = _erasure match
+    case S(sig: ErasedFuncSignature) => S(sig)
+    case S(_: ErasedValueType) | N => N
+  
+  /** Sets the erased signature, or raises a soft assertion if this term already has an erased type or signature. */
+  def erasedSignature_=(newSignature: Opt[ErasedFuncSignature])(using Line, FileName, Raise): Unit =
+    softAssert(_erasure.isEmpty, s"Cannot give signature $newSignature to '$id', whose erasure is already ${_erasure}")
+    if _erasure.isEmpty then _erasure = newSignature
+  
+  /** Creates a symbol with the same erased type or signature as this one. */
+  def withSameErasure(k: TermDefKind, owner: Opt[InnerSymbol], id: Tree.Ident)(using State): TermSymbol =
+    withMappedErasure(k, owner, id)(identity)
+  
+  /** Creates a symbol with the same erased type as this one, or its erased signature mapped by `f`. */
+  def withMappedErasure(k: TermDefKind, owner: Opt[InnerSymbol], id: Tree.Ident)
+      (f: ErasedFuncSignature => ErasedFuncSignature)(using State): TermSymbol =
+    val erasure = _erasure match
+      case S(sig: ErasedFuncSignature) => S(f(sig))
+      case other => other
+    new TermSymbol(k, owner, id, erasure)
+  
   /** The erased type of this term's return value.
     *
-    * This method differs for `fun` definitions with parameter lists, whose `erasedType` is their signature rather
-    * than its result type.
+    * This method differs for `fun` definitions with parameter lists, whose result type is that of their signature.
     */
-  def declaredResultType: Opt[ErasedValueType] = erasedType match
-    case S(ft: ErasedFuncSignature) => ft.ret
-    case S(vt: ErasedValueType) => S(vt)
+  def declaredResultType: Opt[ErasedValueType] = _erasure match
+    case S(sig: ErasedFuncSignature) => sig.ret
+    case S(tpe: ErasedValueType) => S(tpe)
     case N => N
 
   def subst(using sub: SymbolSubst): TermSymbol = sub.mapTermSym(this)
@@ -382,7 +424,15 @@ class TermSymbol(val k: TermDefKind, val owner: Opt[InnerSymbol], val id: Tree.I
     defn.forall(_.mayRaiseEffects)
 
 object TermSymbol:
-  def fromFunBms(b: BlockMemberSymbol, owner: Opt[InnerSymbol], erasedType: Opt[ErasedType])(using State) =
+  def apply(
+      k: TermDefKind,
+      owner: Opt[InnerSymbol],
+      id: Tree.Ident,
+      erasedType: Opt[ErasedValueType | ErasedFuncSignature],
+  )(using State): TermSymbol =
+    new TermSymbol(k, owner, id, erasedType)
+  
+  def fromFunBms(b: BlockMemberSymbol, owner: Opt[InnerSymbol], erasedType: Opt[ErasedFuncSignature])(using State) =
     TermSymbol(syntax.Fun, owner, Tree.Ident(b.nme), erasedType)
 
 

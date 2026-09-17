@@ -17,7 +17,7 @@ import hkmc2.Message.MessageContext
 
 import Keyword.{`and`, `case`, `do`, `else`, `if`, `is`, `let`, `or`, `set`, `then`, `while`}
 import hkmc2.utils.Scope
-import codegen.{ErasedType, ErasedValueType}
+import codegen.{ErasedFuncSignature, ErasedType, ErasedValueType}
 import SimpleSplit.*
 import ucs.{error, unapply}
 
@@ -2157,7 +2157,7 @@ extends Importer:
                     then stripped._1
                     else sigShape.map(_._2).getOrElse(s)
                   ErasedType.eraseSign(resultSign)
-              val erasedTpe = k match
+              val erasedTpe: Opt[ErasedValueType | ErasedFuncSignature] = k match
                 case syntax.Fun =>
                   // * A `declare`d function's parameter lists are derived from its signature when it writes none.
                   val paramLists = sigShape match
@@ -2170,12 +2170,12 @@ extends Importer:
                   // *   on if it is `declare`d or not - neither denotes a function value, so the erased type is its
                   // *   result;
                   // * - At block level, it is lowered to a function with an implicit empty parameter list which every
-                  // *   reference auto-invokes, so the erased type will carry that parameter list.
+                  // *   reference auto-invokes, so the erased signature will carry that parameter list.
                   val isCompiledAsGetter = owner.isDefined || Annot.declareModifierOf(annotations).isDefined
                   val physicalParamLists =
                     if paramLists.isEmpty && !isCompiledAsGetter then Nil :: Nil else paramLists
                   if physicalParamLists.isEmpty then retTpe
-                  else S(ErasedType.Signature(physicalParamLists, retTpe))
+                  else S(ErasedFuncSignature.Signature(physicalParamLists, retTpe))
                 case _: syntax.Val => retTpe
                 case _ => N
               val tsym = TermSymbol(k, owner, id, erasedType = erasedTpe) // TODO?

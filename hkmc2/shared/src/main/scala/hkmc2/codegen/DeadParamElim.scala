@@ -162,17 +162,15 @@ class Rewrite(val deadParamElimSolver: DeadParamElimSolver)(using Raise):
         groupFuns
           .map: f =>
             val name = instId.mkFunName + s"$$${f.nme}"
-            val specializedErasedType = f.erasedType match
-              case S(fr: ErasedType.Signature) =>
-                S(fr.copy(
-                  paramLists = fr.paramLists.zipWithIndex.map: (pl, i) =>
-                    val eliminable = deadParamElimSolver.eliminableParamsById(ConcreteId((f, i), instId))
-                    pl.zipWithIndex.collect:
-                      case (t, j) if !eliminable(j) => t))
-              case other => other
+            val specializedSym = f.withMappedErasure(Fun, N, Tree.Ident(name)): sig =>
+              val paramLists = sig.paramLists.zipWithIndex.map: (pl, i) =>
+                val eliminable = deadParamElimSolver.eliminableParamsById(ConcreteId((f, i), instId))
+                pl.zipWithIndex.collect:
+                  case (t, j) if !eliminable(j) => t
+              ErasedFuncSignature.Signature(paramLists, sig.ret)
             f -> (
               new BlockMemberSymbol(name, Nil, true),
-              new TermSymbol(Fun, N, Tree.Ident(name), erasedType = specializedErasedType))
+              specializedSym)
           .toMap)
     end mkNewPolyFnSyms
     

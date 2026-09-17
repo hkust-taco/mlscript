@@ -33,7 +33,7 @@ class SymbolRefresherWalker(mapping: MutMap[Symbol, Symbol])(using State) extend
 
   private def refreshTermSymbol(s: TermSymbol) =
     // Inner symbol (if present) must be traversed at this point.
-    val ns = new TermSymbol(s.k, s.owner.map(o => mapping.getOrElse(o, o).asInstanceOf[InnerSymbol]), s.id, s.erasedType)
+    val ns = s.withSameErasure(s.k, s.owner.map(o => mapping.getOrElse(o, o).asInstanceOf[InnerSymbol]), s.id)
     ns.sourceAliases = s.sourceAliases
     assertUpdate(s, ns)
 

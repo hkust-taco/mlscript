@@ -375,21 +375,20 @@ class TailRecOpt(checkAnnotations: Bool)(using Config, State, TL, Raise, Ctx):
     val dSym =
       if !hasWrapper then funs.head.dSym
       else
-        val erasedType =
+        val erasedType: Opt[ErasedValueType | ErasedFuncSignature] =
           if funsLen === 1 then
             // * The loop stands for the same function as its single member, with its parameter lists
             // * flattened - construct a new `Signature` to reflect this.
-            funs.head.dSym.erasedType match
-              case S(ft: ErasedFuncSignature) =>
-                S(ErasedType.Signature(paramSyms.map(_.erasedType) :: Nil, ft.ret))
-              case other => other
+            funs.head.dSym.erasedSignature match
+            case S(sig) => S(ErasedFuncSignature.Signature(paramSyms.map(_.erasedType) :: Nil, sig.ret))
+            case N => funs.head.dSym.erasedType
           else
             // * The dispatcher can exit through any member's return, so its result type is the LUB of its members.
             val memberRets = funs.map(_.dSym.declaredResultType)
             val ret =
               if memberRets.exists(_.isEmpty) then N
               else S(memberRets.flatten.map(_.canonicalize).reduce(ErasedType.lub))
-            S(ErasedType.Signature(
+            S(ErasedFuncSignature.Signature(
               paramLists = (S(ErasedType.Int) :: paramSyms.map(_.erasedType)) :: Nil,
               ret = ret,
             ))
@@ -419,7 +418,7 @@ class TailRecOpt(checkAnnotations: Bool)(using Config, State, TL, Raise, Ctx):
             // * A call that becomes a jump continues the loop rather than leaving it, so it is not an exit.
             case TailCallShape(calleeSym, c, _)
               if dSymIds.contains(calleeSym) && isExactlySaturatedCall(c, dSymToDefn(calleeSym)) => ()
-            case Return(res) => funExits ::= res.erasedValueType
+            case Return(res) => funExits ::= res.erasedType
             case _ => super.applyBlock(b)
         // * Computed on the pre-merge function bodies, which is over-approximated but safe:
         // * `rebuildTailCallResult` only narrows exit values, so values are never wider than the LUB computed here.
@@ -700,7 +699,7 @@ class TailRecOpt(checkAnnotations: Bool)(using Config, State, TL, Raise, Ctx):
                 case CallArgsResult.Success(res) => res.map:
                   case r: Path => r
                   case r: Result =>
-                    val newSym = TempSymbol(N, erasedType = r.erasedValueType)
+                    val newSym = TempSymbol(N, erasedType = r.erasedType)
                     pre = pre.assignScoped(newSym, r)
                     newSym.asPath
                 case CallArgsResult.ForceSpread =>

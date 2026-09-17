@@ -117,7 +117,7 @@ class DeforestRewriter(val solver: DeforestFusionSolver)(using Raise):
             val name = path.mkFunName + s"$$${f.nme}"
             f -> (
               new BlockMemberSymbol(name, Nil, true),
-              new TermSymbol(Fun, N, Tree.Ident(name), erasedType = f.erasedType))
+              f.withSameErasure(Fun, N, Tree.Ident(name)))
           .toMap)
     end mkNewPolyFnSyms
     
@@ -183,7 +183,7 @@ class DeforestRewriter(val solver: DeforestFusionSolver)(using Raise):
             val scrutName = dest._1.getReferredSym.nme
             val branchFnNme = s"${dest.instId.mkFunName}$$$scrutName$branchName"
             new BlockMemberSymbol(branchFnNme, Nil, true)
-            -> new TermSymbol(Fun, N, Tree.Ident(branchFnNme), erasedType = N)
+            -> TermSymbol(Fun, N, Tree.Ident(branchFnNme), erasedType = N)
         )
         // compute the function parameters corresponding to ctor fields of branch funs
         branchFunParamFieldSyms.getOrElseUpdate(
@@ -212,7 +212,7 @@ class DeforestRewriter(val solver: DeforestFusionSolver)(using Raise):
             locally:
               val restFunName = dest.instId.mkFunName + s"$$${nme}_rest"
               new BlockMemberSymbol(restFunName, Nil, true)
-              -> new TermSymbol(Fun, N, Tree.Ident(restFunName), erasedType = N)
+              -> TermSymbol(Fun, N, Tree.Ident(restFunName), erasedType = N)
           )
           val (ps, restBeforeParent) = getParentLabelOrMatchesAndRestBefore(matchOrLabelId)
           restOriginalBodiesAndParentRest.getOrElseUpdate(

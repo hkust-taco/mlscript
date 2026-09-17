@@ -51,8 +51,8 @@ extension (ty: ValType)
     case F64Type => S(Instructions.f64.const(0))
     case V128Type => N
 
-extension (et: ErasedType)
-  /** Returns the corresponding Wasm type for this [[ErasedType]]. */
+extension (et: ErasedValueType)
+  /** Returns the corresponding Wasm type for this [[ErasedValueType]]. */
   private[text] def wasmType(using Ctx, State): Opt[ValType] =
     import Ctx.ctx
     val elabCtx = ctx.elabCtx
@@ -1773,8 +1773,7 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
             case S(body) =>
               val declaredParams = fun.targetSymbol match
                 case S(ts: TermSymbol) =>
-                  ts.erasedType.collect:
-                    case ft: ErasedFuncSignature => ft.paramLists
+                  ts.erasedSignature.map(_.paramLists)
                 case _ => N
               val ps = declaredParams match
                 case S(pl :: Nil) => pl
@@ -2448,7 +2447,7 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
         val operand = result(res)
         // Storage and calling conventions may widen a reference (e.g. a singleton's nullable global).
         // Restore the IR value's type at the return boundary so Block.returnType also describes the emitted value.
-        val resWat = res.erasedValueType.flatMap(_.wasmType).fold(operand)(castConserve(operand, _))
+        val resWat = res.erasedType.flatMap(_.wasmType).fold(operand)(castConserve(operand, _))
         val returned = resWat.resultType match
           case S(refTy: RefType) =>
             refTy.heapType match

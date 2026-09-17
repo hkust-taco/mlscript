@@ -32,7 +32,7 @@ object Lifter:
   extension (d: ClsLikeDefn)
     /** Maps the definition to the erased type of its instances. */
     private def instanceType(using Raise): Opt[ErasedValueType] = d.isym match
-      case cls: ClassLikeSymbol => cls.erasedValueType
+      case cls: ClassLikeSymbol => cls.erasedType
       case sym =>
         softAssert(false, s"Class-like definition's inner symbol is not class-like: `$sym`")
         N
@@ -1055,7 +1055,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
     
     val (mainSym, mainDsym) = (fun.sym, fun.dSym)
     val auxSym = BlockMemberSymbol(fun.sym.nme + "$", Nil, fun.sym.nameIsMeaningful)
-    val auxDsym = TermSymbol.fromFunBms(auxSym, fun.owner, erasedType = fun.dSym.erasedType)
+    val auxDsym = fun.dSym.withSameErasure(syntax.Fun, fun.owner, Tree.Ident(auxSym.nme))
     
     // Definition with the auxiliary parameters merged into the first parameter list.
     private def mkFlattenedDefn: LifterResult[FunDefn] =  
@@ -1199,8 +1199,8 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
       val allParamLists = auxParamListLocal :: clsParamLists
       
       // * The flattened definition takes every parameter list at once and returns an instance of the
-      // * class, so its erased type is only known here, once the parameter lists are assembled.
-      flattenedDSym.populateErasedType(ErasedType.Signature(
+      // * class, so its erased signature is only known here, once the parameter lists are assembled.
+      flattenedDSym.erasedSignature = S(ErasedFuncSignature.Signature(
         paramLists = allParamLists.map(_.params.map(_.sym.erasedType)),
         ret = cls.instanceType,
       ))

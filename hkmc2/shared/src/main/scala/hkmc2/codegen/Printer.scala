@@ -34,22 +34,23 @@ class Printer(using Config, Ctx, Raise, ShowCfg, State, SymbolPrinter):
   def printTpe(tpeSym: TypeSymbol)(using Scope): Document =
     if tpeSym.asMod.isDefined then doc"module ${print(tpeSym)}" else print(tpeSym)
 
-  def print(cet: CanonicalErasedType)(using Scope): Document = cet match
+  def print(cet: CanonicalErasedValueType)(using Scope): Document = cet match
     case ErasedType.Unknown(rsc) => doc"${ErasedType.rscPrefix(rsc)}Unknown"
     case ErasedType.Incompatible(lhs, rhs) => doc"‹incompatible(${print(lhs)}, ${print(rhs)})›"
     case ErasedType.AnyRef(rsc, tpeSym: TypeSymbol) => doc"${ErasedType.rscPrefix(rsc)}${printTpe(tpeSym)}"
-    case ErasedType.CanonicalSignature(paramLists, ret) =>
-      // * Curried functions are rendered as `(A) => (B) => R`, so that an under-applied call reads as the residual
-      // * function type it actually has.
-      paramLists.foldRight(ret.fold(doc"?")(print)): (ps, acc) =>
-        doc"(${ps.map(_.fold(doc"?")(print)).mkDocument(sep = doc", ")}) => $acc"
     case ErasedType.Primitive(prim) => doc"${prim.toString}"
 
-  def print(et: ErasedType)(using Scope): Document = et match
-    case cet: CanonicalErasedType => print(cet)
+  def print(et: ErasedValueType)(using Scope): Document = et match
+    case cet: CanonicalErasedValueType => print(cet)
     case _ => print(et.canonicalize)
 
-  /** Renders the type annotation for a symbol with an [[ErasedType]]. */
+  def print(sig: ErasedFuncSignature)(using Scope): Document =
+    val canon = sig.canonicalize
+    // * Curried functions are rendered as `(A) => (B) => R`, one arrow per parameter list.
+    canon.paramLists.foldRight(canon.ret.fold(doc"?")(print)): (ps, acc) =>
+      doc"(${ps.map(_.fold(doc"?")(print)).mkDocument(sep = doc", ")}) => $acc"
+
+  /** Renders the type annotation for a symbol with an [[ErasedValueType]]. */
   def erasedTypeAnnot(x: HasErasedType)(using Scope): Document =
     if !summon[ShowCfg].showErasedTypes then doc""
     else doc": ${x.erasedType.fold(doc"?")(print)}"
