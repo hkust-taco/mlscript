@@ -287,6 +287,11 @@ _.f(0, _, 2)     // (x, y) => x.f(0, y, 2)
 {_ + 1}          // x => x + 1
 ```
 
+**Resource lambdas** — a lambda is `rsc?` like any function value, unless marked as a resource:
+```mlscript
+rsc (x => x)     // a resource function value
+```
+
 ### Function Declarations (without definition)
 
 ```mlscript
@@ -548,7 +553,7 @@ new Foo          // create (static class required)
 new Foo()        // with empty args
 new Foo(1, 2)    // with args
 new mut Foo      // mutable instance (not frozen)
-new rsc Foo      // resource instance (`mut` comes first if both)
+new rsc Foo      // resource instance (in either order with `mut`)
 new! c           // dynamic instantiation (class value at runtime)
 new Foo(...xs)   // spread args
 ```
@@ -1319,6 +1324,12 @@ fun g(x: rsc? U): Int = 0      // `rsc Foo | rsc? Bar`, so the union becomes `rs
 fun h(x: rsc U): Int = 0       // both members
 ```
 
+A modifier may be written on a use of a type parameter, but not on its declaration:
+```mlscript
+fun f[A](x: rsc A): Int = 0    // OK
+class Box[rsc A]               // error: not supported yet
+```
+
 ### `forall` (Universal Quantification)
 
 ```mlscript
@@ -1835,7 +1846,7 @@ decl      ::= 'declare' def
 
 expr      ::= literal | name | app | lambda | if | case | while
             | let | set | 'return' | 'throw' | 'drop' | 'do'
-            | 'new' [mut] [rsc] class args | 'handle' | 'using'
+            | 'new' (mut | rsc)* class args | 'handle' | 'using'
             | annotation expr | infix | block
 
 if        ::= 'if' scrutinee? branches
