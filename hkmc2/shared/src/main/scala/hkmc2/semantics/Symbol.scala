@@ -10,7 +10,7 @@ import hkmc2.utils.*
 
 import Elaborator.State
 import Tree.Ident
-import hkmc2.codegen.{ErasedType, ErasedFuncSignature, ErasedValueType, HasErasedType, HasOnceMutableErasedType}
+import hkmc2.codegen.{ErasedType, ErasedFuncSignature, ErasedValueType, HasErasedType, HasLateInitErasedType}
 import hkmc2.utils.SymbolSubst
 
 
@@ -232,13 +232,13 @@ sealed abstract class LocalVarSymbol(name: Str)(using State) extends FlowSymbol(
 
 /** A temporary variable introduced by lowering.
   *
-  * Its `erasedType` is once-mutable: a temp holding a branching term's result is named before those branches
-  * are lowered, so `Normalization` populates it with the join of their representations once they have all
-  * been seen. `Normalization.joinTempType` is its only write site.
+  * Its `erasedType` may be initialized late and only once: a temp holding a branching term's result is named before
+  * those branches are lowered, so `Normalization` populates it with the join of their representations once they have
+  * all been seen. `Normalization.joinTempType` is its only write site.
   */
 class TempSymbol(val trm: Opt[Term], override var erasedType: Opt[ErasedType], dbgNme: Str = "tmp")(using State)
     extends LocalVarSymbol(dbgNme)
-    with HasOnceMutableErasedType:
+    with HasLateInitErasedType:
   // val nameHints: MutSet[Str] = MutSet.empty // * May be useful later?
   override def toLoc: Option[Loc] = trm.flatMap(_.toLoc)
   override def prefix: Str = "tmp:"
@@ -348,7 +348,7 @@ sealed abstract class MemberSymbol(using State) extends Symbol:
 class TermSymbol(val k: TermDefKind, val owner: Opt[InnerSymbol], val id: Tree.Ident, override var erasedType: Opt[ErasedType])(using State)
     extends MemberSymbol
     with DefinitionSymbol[TermDefinition]
-    with HasOnceMutableErasedType
+    with HasLateInitErasedType
     with NamedSymbol:
   var sourceAliases: Ls[Str] = Nil
   def nme: Str = id.name
@@ -409,7 +409,7 @@ case class Extr(isTop: Bool)(using State) extends CtorSymbol:
   override def toString: Str = nme
 
 sealed abstract case class LitSymbol(lit: Literal)(using State) extends CtorSymbol, HasErasedType:
-  override val erasedType: Opt[ErasedType] = N
+  override val erasedType: Opt[ErasedValueType] = N
   def nme: Str = lit.idStr
   def toLoc: Option[Loc] = lit.toLoc
   override def prefix: Str = "lit:"
@@ -549,7 +549,7 @@ class TypeAliasSymbol(val id: Tree.Ident)(using State)
     with DefinitionSymbol[TypeDef]
     with HasErasedType:
 
-  override val erasedType: Opt[ErasedType] = S(ErasedType.ValueLike(rsc = S(false), this))
+  override val erasedType: Opt[ErasedValueType] = S(ErasedType.ValueLike(rsc = S(false), this))
   
   def nme = id.name
   def toLoc: Option[Loc] = id.toLoc // TODO track source tree of type alias here

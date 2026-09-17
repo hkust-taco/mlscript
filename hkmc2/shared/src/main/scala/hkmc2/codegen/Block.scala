@@ -1147,13 +1147,12 @@ sealed abstract class Result extends AutoLocated, HasErasedType:
     * point the coercion is introduced, so that the transformers rebuilding casts downstream need not carry a
     * [[Config]] of their own.
     */
-  def coerceTo(expected: ErasedType, loc: Opt[Loc])(using Ctx, State, Raise, Config): this.type | Cast =
-    val target = expected.valueType
+  def coerceTo(expected: ErasedValueType, loc: Opt[Loc])(using Ctx, State, Raise, Config): this.type | Cast =
     val actual = erasedValueType_!.canonicalize
-    val declared = target.canonicalize
+    val declared = expected.canonicalize
     ErasedType.needsCast(actual, declared) match
       case S(false) => this
-      case S(true) => Cast(this, target, config.checkCasts)
+      case S(true) => Cast(this, expected, config.checkCasts)
       case N =>
         // * An `Incompatible` side is not an unrelated type but an unrepresentable one, so it gets its own message.
         def membersOf(et: CanonicalErasedType): Opt[(CanonicalErasedValueType, CanonicalErasedValueType)] = et match

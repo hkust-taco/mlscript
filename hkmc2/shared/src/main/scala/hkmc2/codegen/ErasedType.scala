@@ -590,7 +590,7 @@ trait HasErasedType:
   lazy val erasedValueType_! : ErasedValueType = erasedValueType.getOrElse(ErasedType.Unknown(N))
 
 /** A [[HasErasedType]] whose erased type can be populated exactly once post-construction. */
-trait HasOnceMutableErasedType extends HasErasedType:
+trait HasLateInitErasedType extends HasErasedType:
   // Implementation Note: Provided for overriding classes to implement `erasedType` directly as an `override var`
   def erasedType_=(newType: Opt[ErasedType]): Unit
 
