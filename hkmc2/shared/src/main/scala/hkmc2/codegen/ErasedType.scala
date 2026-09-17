@@ -527,7 +527,7 @@ object CanonicalErasedValueType:
     * A member that cannot be resolved has its resource modifier kept. A modifier on a reference to an alias combines
     * with the ones written inside it as described in [[combineRsc]].
     */
-  def resolveTpeSymAlias(tpeSym: TypeSymbol): Ls[AliasMember] =
+  def resolveTpeSymAlias(tpeSym: TypeSymbol)(using Ctx): Ls[AliasMember] =
     def resolveSym(cur: TypeSymbol, seen: Set[TypeAliasSymbol]): Ls[AliasMember] = cur match
       case als: TypeAliasSymbol => als.defn.flatMap(_.rhs) match
         case S(rhs) if !seen(als) => alternatives(rhs, seen + als, N)
@@ -540,6 +540,10 @@ object CanonicalErasedValueType:
       case Term.Annotated(Annot.Resource(own), target) =>
         alternatives(target, seen, S(ownRsc.fold(own)(combineRsc(_, S(own)))))
       case Term.CompType(lhs, rhs, true) => alternatives(lhs, seen, ownRsc) ::: alternatives(rhs, seen, ownRsc)
+      // * As in `ErasedType.eraseSign`, quantification erases away, and a written function type denotes a function
+      // * value, which is a `Function`.
+      case Term.Forall(_, _, body) => alternatives(body, seen, ownRsc)
+      case Term.FunTy(_, _, _) => AliasMember(S(ctx.builtins.Function), ownRsc) :: Nil
       case _ =>
         tpe.symbol.flatMap(_.asTpe).fold(AliasMember(N, N) :: Nil)(resolveSym(_, seen))
           .map(m => m.copy(ownRsc = ownRsc.map(combineRsc(_, m.ownRsc)).orElse(m.ownRsc)))

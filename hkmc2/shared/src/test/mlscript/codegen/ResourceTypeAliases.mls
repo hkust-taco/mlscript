@@ -89,6 +89,40 @@ fun t2(x: T2) = x
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define t2⁰ as fun t2¹(x: Unknown): ? { return x }; end
 
+// A function type erases to `Function` on the right-hand side, as it does when written
+// directly, including under a `forall` and as a member of a union.
+
+type FnP = C -> C
+type FnR = rsc (C -> C)
+type FnG = [A] -> (A) -> A
+type FnU = (rsc (C -> C)) | (C -> C)
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ end
+
+fun fp(g: FnP) = g
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define fp⁰ as fun fp¹(g: Function⁰): ? { return g }; end
+
+fun fpInline(g: C -> C) = g
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define fpInline⁰ as fun fpInline¹(g: Function⁰): ? { return g }; end
+
+fun ff(g: FnR) = g
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define ff⁰ as fun ff¹(g: rsc Function⁰): ? { return g }; end
+
+fun ffInline(g: rsc (C -> C)) = g
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define ffInline⁰ as fun ffInline¹(g: rsc Function⁰): ? { return g }; end
+
+fun fg(g: rsc FnG) = g
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define fg⁰ as fun fg¹(g: rsc Function⁰): ? { return g }; end
+
+fun fh(g: FnU) = g
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define fh⁰ as fun fh¹(g: rsc? Function⁰): ? { return g }; end
+
 
 // A modifier on a reference to an alias combines with the ones written on its members, even
 // through a chain of aliases: `rsc` overrides them, as it asserts that the whole type is a
@@ -114,7 +148,7 @@ fun e4(x: rsc T) = x
 :w
 fun e5(x: rsc? R) = x
 //│ ╔══[WARNING] Every member of this type is a resource, so 'rsc?' has no effect.
-//│ ║  l.115: 	fun e5(x: rsc? R) = x
+//│ ║  l.149: 	fun e5(x: rsc? R) = x
 //│ ╙──       	               ^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define e5⁰ as fun e5¹(x: rsc C²): ? { return x }; end
@@ -131,7 +165,7 @@ fun e9(x: rsc M) = x
 type RM = rsc M
 type MR = rsc? R
 //│ ╔══[WARNING] Every member of this type is a resource, so 'rsc?' has no effect.
-//│ ║  l.132: 	type MR = rsc? R
+//│ ║  l.166: 	type MR = rsc? R
 //│ ╙──       	               ^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ end
@@ -158,7 +192,7 @@ fun e7(x: rsc P) = x
 :ge
 type P1 = rsc Int32
 //│ ╔══[COMPILATION ERROR] Primitive type 'Int32' cannot be a resource.
-//│ ║  l.159: 	type P1 = rsc Int32
+//│ ║  l.193: 	type P1 = rsc Int32
 //│ ╙──       	              ^^^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ end
@@ -166,7 +200,7 @@ type P1 = rsc Int32
 :w
 type P2 = rsc? Int32
 //│ ╔══[WARNING] Primitive type 'Int32' is never a resource, so 'rsc?' has no effect.
-//│ ║  l.167: 	type P2 = rsc? Int32
+//│ ║  l.201: 	type P2 = rsc? Int32
 //│ ╙──       	               ^^^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ end
@@ -174,7 +208,7 @@ type P2 = rsc? Int32
 :ge
 type P3 = rsc rsc? C
 //│ ╔══[COMPILATION ERROR] A type takes at most one resource modifier.
-//│ ║  l.175: 	type P3 = rsc rsc? C
+//│ ║  l.209: 	type P3 = rsc rsc? C
 //│ ╙──       	                   ^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ end
@@ -182,7 +216,7 @@ type P3 = rsc rsc? C
 :ge
 type P4 = (rsc C) & D
 //│ ╔══[COMPILATION ERROR] Resource modifiers inside an intersection type are not supported yet.
-//│ ║  l.183: 	type P4 = (rsc C) & D
+//│ ║  l.217: 	type P4 = (rsc C) & D
 //│ ╙──       	               ^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ end
@@ -211,7 +245,7 @@ type P8 = rsc P7 | D
 :ge
 fun e8(x: rsc P2): Int32 = x
 //│ ╔══[COMPILATION ERROR] Primitive type 'Int32' cannot be a resource.
-//│ ║  l.212: 	fun e8(x: rsc P2): Int32 = x
+//│ ║  l.246: 	fun e8(x: rsc P2): Int32 = x
 //│ ╙──       	              ^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define e8⁰ as fun e8¹(x: Int32): Int32 { return x }; end
