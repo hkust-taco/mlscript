@@ -64,6 +64,27 @@ object Elaborator:
       case InnerScope(inner) => S(inner)
       case _ => N
   
+  /** An elaborated signature, parsed into the chain of function types it describes. */
+  enum Sig:
+    /** A possibly-quantified function type `params -> ret`, together with the resource modifiers written around it
+      * (outermost first).
+      */
+    case Arrow(tpe: Term, mods: Ls[Term], params: Term, ret: Sig)
+    /** Anything else, including a resource-modified type that is not a function type. */
+    case Result(tpe: Term)
+    
+    /** The signature as written, including its quantifiers and resource modifiers. */
+    val tpe: Term
+  
+  object Sig:
+    def parse(sign: Term): Sig =
+      def go(t: Term, mods: Ls[Term]): Sig = t match
+        case Term.Forall(_, _, body) => go(body, mods)
+        case mod @ Term.Annotated(Annot.Resource(_), target) => go(target, mods :+ mod)
+        case Term.FunTy(params, ret, _) => Sig.Arrow(sign, mods, params, parse(ret))
+        case _ => Sig.Result(sign)
+      go(sign, Nil)
+  
   /** Label metadata threaded through elaboration. */
   final case class LabelBinding(
       labelSymbol: LabelSymbol,
@@ -2040,18 +2061,13 @@ extends Importer:
                 case _ =>
                   Modulefulness.none
               
-              /** Whether a signature is a possibly-quantified function type. */
-              def wrapsFunTy(sign: Term): Bool = sign match
-                case Term.Forall(_, _, body) => wrapsFunTy(body)
-                case Term.Annotated(Annot.Resource(_), target) => wrapsFunTy(target)
-                case Term.FunTy(_, _, _) => true
-                case _ => false
+              val sig = s.map(Sig.parse)
               
               /** Splits a signature's chain of function types into the parameter lists it describes and the type it
                 * returns. Yields `N` if the signature is not a function type or if some parameter list's arity cannot
                 * be read.
                 */
-              def splitSignature(sign: Term): Opt[(Ls[Ls[Opt[ErasedValueType]]], Term)] =
+              def splitSignature(sig: Sig): Opt[(Ls[Ls[Opt[ErasedValueType]]], Term)] =
                 def paramsOf(lhs: Term): Opt[Ls[Opt[ErasedValueType]]] = lhs match
                   // * A spread parameter leaves the list's arity unknown, so the signature is left unsplit.
                   case Term.Tup(fields) =>
@@ -2062,30 +2078,26 @@ extends Importer:
                         case _ => N
                   // * An unparenthesized type is a single parameter.
                   case single => S(ErasedType.eraseSign(single) :: Nil)
-                sign match
-                  case Term.Forall(_, _, body) => splitSignature(body)
-                  // * The split only reads parameter lists, so it ignores the resource modifier and splits its target;
-                  // * the modifier is rejected in `stripSignatureParams` if the definition consumes those lists.
-                  case Term.Annotated(Annot.Resource(_), target) => splitSignature(target)
-                  case Term.FunTy(lhs, rhs, _) => paramsOf(lhs).map: ps =>
-                    splitSignature(rhs) match
-                      case S((rest, ret)) => (ps :: rest, ret)
-                      case N => (ps :: Nil, rhs)
-                  case _ => N
+                sig match
+                // * The split only reads parameter lists, so it ignores the resource modifiers;
+                // * they are rejected in `stripSignatureParams` if the definition consumes those lists.
+                case Sig.Arrow(_, _, params, ret) => paramsOf(params).map: ps =>
+                  splitSignature(ret) match
+                  case S((rest, retTpe)) => (ps :: rest, retTpe)
+                  case N => (ps :: Nil, ret.tpe)
+                case Sig.Result(_) => N
               
-              /** Strips `sign`'s first `n` parameter lists, which the definition consumes as its own.
-                * Returns what remains of `sign`, and the resource modifiers on the stripped lists' function types.
+              /** Strips `sig`'s first `n` parameter lists, which the definition consumes as its own.
+                * Returns what remains of `sig`, and the resource modifiers on the stripped lists' function types.
                 *
                 * A modifier on anything else wraps the result and stays, so `fun f: rsc C` keeps it however many
                 * parameter lists `f` writes, and `eraseSign` reads it off there.
                 */
-              def stripSignatureParams(sign: Term, n: Int): (Term, Ls[Term]) = (sign, n) match
-                case (Term.Forall(_, _, body), _) => stripSignatureParams(body, n)
-                case (mod @ Term.Annotated(Annot.Resource(_), target), n) if n > 0 && wrapsFunTy(target) =>
-                  val (result, mods) = stripSignatureParams(target, n)
-                  (result, mod :: mods)
-                case (Term.FunTy(_, rhs, _), n) if n > 0 => stripSignatureParams(rhs, n - 1)
-                case _ => (sign, Nil)
+              def stripSignatureParams(sig: Sig, n: Int): (Term, Ls[Term]) = sig match
+                case Sig.Arrow(_, mods, _, ret) if n > 0 =>
+                  val (result, retMods) = stripSignatureParams(ret, n - 1)
+                  (result, mods ::: retMods)
+                case _ => (sig.tpe, Nil)
               
               // * A signature's parameter lists are the definition's own when a reference to it is not auto-invoked.
               // *
@@ -2095,7 +2107,7 @@ extends Importer:
               // *   its own.
               val sigShape: Opt[(Ls[Ls[Opt[ErasedValueType]]], Term)] =
                 if (k is syntax.Fun) && pss.isEmpty && Annot.declareModifierOf(annotations).isDefined
-                then s.flatMap(splitSignature)
+                then sig.flatMap(splitSignature)
                 else N
               
               // * A `fun` definition that has a separately written signature (rather than annotating its own result)
@@ -2103,7 +2115,7 @@ extends Importer:
               // * consumes all of them, and any other consumes none.
               val inheritsSignature = (k is syntax.Fun) && td.annotatedResultType.isEmpty
               val consumedParamLists = if inheritsSignature then pss.length else sigShape.fold(0)(_._1.length)
-              val strippedSign = s.map(stripSignatureParams(_, consumedParamLists))
+              val strippedSign = sig.map(stripSignatureParams(_, consumedParamLists))
               // * A definition's own parameter lists have no resource-ness to state.
               // TODO: Also point to the definition's parameter list that consumes the function type, as it is what
               //       makes the modifier an error.
