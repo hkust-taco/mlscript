@@ -287,10 +287,13 @@ _.f(0, _, 2)     // (x, y) => x.f(0, y, 2)
 {_ + 1}          // x => x + 1
 ```
 
-**Resource lambdas** — a lambda is `rsc?` like any function value, unless marked as a resource:
+**Resource lambdas and partial applications** — a function value is `rsc?` unless marked as a resource:
 ```mlscript
 rsc (x => x)     // a resource function value
+fun add(x)(y) = x + y
+rsc add(1)       // a resource partial application
 ```
+The modifier has no effect on a call that is not known to leave some of its callee's parameter lists unapplied.
 
 ### Function Declarations (without definition)
 
