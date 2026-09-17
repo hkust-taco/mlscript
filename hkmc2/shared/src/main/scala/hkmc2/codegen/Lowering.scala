@@ -1147,10 +1147,17 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
         case DynNew(c, a) => (false, c, a, N)
         case Mut(DynNew(c, a)) => (true, c, a, N)
         case _ => spuriousWarning
-      // * `Elaborator` records the modifier of `new rsc C(...)` as an annotation on the `new` term.
+      // * The elaborator records the modifier of `new rsc C(...)` as an annotation on the `new` term, and rejects it
+      // * on `new!` and on a refined instantiation, as well as `rsc?` on any instantiation.
       val (rscAnnots, instAnnots) = annots.partition:
         case Annot.Resource(_) => true
         case _ => false
+      val rscAnnotsWellFormed = rscAnnots.forall:
+        case Annot.Resource(S(true)) => nw match
+          case New(_, _, N) | Mut(New(_, _, N)) => true
+          case _ => false
+        case _ => false
+      softAssert(rscAnnotsWellFormed, "only an unrefined `new` can be a resource, and it cannot be `rsc?`")
       val rsc = rscAnnots.nonEmpty
       subTerm(cls): sr =>
         rft match
@@ -1586,13 +1593,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
   
   def reportAnnotations(receiver: Term, annotations: Ls[Annot]): Unit =
     def warn(annot: Annot, msg: Opt[Message] = N) =
-      val message = msg match
-        case N => msg"This annotation is not supported on ${receiver.describe} terms."
-        case S(value) => value
-      raise:
-        WarningReport(
-          msg"This annotation has no effect." -> annot.toLoc ::
-          message -> receiver.toLoc :: Nil)
+      raise(Annot.noEffect(annot.toLoc, receiver, msg))
     
     annotations.foreach:
       case Annot.Untyped => ()

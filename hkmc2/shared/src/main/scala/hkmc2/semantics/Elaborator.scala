@@ -693,6 +693,23 @@ extends Importer:
         N
     case _ => N
   
+  /** Applies the resource modifier `kw`, written at `kwLoc` inside an instantiation (`new rsc C()`),
+    * to the elaborated instantiation `inst`. A modifier has no effect if written outside one (`rsc (new C())`).
+    */
+  def rscInstantiation(kw: Keyword.RscLike, kwLoc: Opt[Loc], inst: Term): Term =
+    def reject(msg: Message): Term =
+      raise(ErrorReport(msg -> kwLoc :: Nil))
+      inst
+    inst match
+    case Term.DynNew(_, _) | Term.Mut(_: Term.DynNew) =>
+      reject(msg"Resource instantiation with 'new!' is not supported yet.")
+    case _ if kw == Keyword.`rsc?` =>
+      reject(msg"An instance cannot be 'rsc?': it either is a resource or is not.")
+    case Term.New(_, _, S(_)) | Term.Mut(Term.New(_, _, S(_))) =>
+      reject(msg"Resource instantiation with a refinement is not supported yet.")
+    // * The modifier wraps the instantiation in an annotation, just as it wraps a type.
+    case _ => Term.Annotated(Annot.Modifier(kw), inst)
+  
   def annot(tree: Tree): Ctxl[Opt[Annot]] = tree match
     case Keywrd(kw @ (
       Keyword.`abstract`
@@ -1480,10 +1497,9 @@ extends Importer:
       val (mut, c2) = c match
         case Modified(Keywrd(Keyword.`mut`), c) => (true, c)
         case c => (false, c)
-      rsc.foreach: kw =>
-        raise(ErrorReport(msg"Resource instantiation with 'new!' is not supported yet." -> kw.toLoc :: Nil))
       val base = new Term.DynNew(subterm(c2), args.map(subterm(_))).withLocOf(tree)
-      if mut then Term.Mut(base) else base
+      val withMut = if mut then Term.Mut(base) else base
+      rsc.fold(withMut)(kw => rscInstantiation(kw.kw, kw.toLoc, withMut))
     // case New(c, rfto) =>
     //   assert(rfto.isEmpty)
     //   Term.New(cls(subterm(c), inAppPrefix = inAppPrefix), params.map(subterm(_)), bodo).withLocOf(tree)
@@ -1500,24 +1516,13 @@ extends Importer:
         val (mut, c2) = c match
           case Modified(Keywrd(Keyword.`mut`), c) => (true, c)
           case c => (false, c)
-        val rsc = rscKw match
-          // * An instance has one definite layout.
-          case S(kw @ Keywrd(Keyword.`rsc?`)) =>
-            raise(ErrorReport(msg"An instance cannot be 'rsc?': it either is a resource or is not." -> kw.toLoc :: Nil))
-            false
-          case S(kw) if rfto.isDefined =>
-            raise(ErrorReport(msg"Resource instantiation with a refinement is not supported yet." -> kw.toLoc :: Nil))
-            false
-          case S(_) => true
-          case N => false
         val inner = new Term.New(
           subterm(c2), // * Note: we'll catch bad `new` targets during type checking
           args.map(subterm(_)),
           bodo
         )(N).withLocOf(tree)
         val withMut = if mut then Term.Mut(inner) else inner
-        // * The `rsc` modifier of a `new` expression wraps the instantiation in an annotation, just as it wraps a type.
-        if rsc then Term.Annotated(Annot.Modifier(Keyword.`rsc`), withMut) else withMut
+        rscKw.fold(withMut)(kw => rscInstantiation(kw.kw, kw.toLoc, withMut))
       case N =>
         val objectRef = ctx.builtins.Object.bms.get.ref(Ident("Object"))
         Term.New(objectRef, Nil, bodo)(N).withLocOf(tree)
@@ -1627,8 +1632,18 @@ extends Importer:
         raise(ErrorReport(msg"Expected a record after 'mut' keyword; found a block" -> blk.toLoc :: Nil))
         blk
       case (rcd: Rcd, ctx) => rcd.copy(mut = true).withLocOf(rcd)
-    case Modified(Keywrd(kw: Keyword.RscLike), body) =>
-      Term.Annotated(Annot.Modifier(kw), subterm(body))
+    case Modified(kwt @ Keywrd(kw: Keyword.RscLike), body) =>
+      val trm = subterm(body)
+      // * An instance's resource modifier is written inside the instantiation, so one written outside has no effect.
+      // * This is reported here, as `Lowering` sees both forms as the same term.
+      def unannotated(t: Term): Term = t match
+        case Term.Annotated(_, t) => unannotated(t)
+        case _ => t
+      unannotated(trm) match
+      case inst @ (Term.New(_, _, _) | Term.DynNew(_, _) | Term.Mut(_: Term.New | _: Term.DynNew)) =>
+        raise(Annot.noEffect(kwt.toLoc, inst, N))
+        trm
+      case _ => Term.Annotated(Annot.Modifier(kw), trm)
     case Modified(kw, body) =>
       raise(ErrorReport(msg"Illegal position for '${kw.name}' modifier." -> kw.toLoc :: Nil))
       subterm(body)
