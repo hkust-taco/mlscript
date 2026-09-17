@@ -77,7 +77,7 @@ class ClassParamFlattener(using State) extends BlockTransformer(SymbolSubst.Id):
           else argss2
         k:
           if flatArgss is argss then c
-          else Call(r, flatArgss)(c.metadata).withLocOf(c)
+          else Call(r, flatArgss)(c.metadata, c.rsc).withLocOf(c)
     case call @ Call(fun, argss) =>
       saturatedCurriedClassCall(fun, argss) match
       case S(cls) =>

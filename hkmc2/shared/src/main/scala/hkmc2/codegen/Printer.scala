@@ -225,7 +225,7 @@ class Printer(using Config, Ctx, Raise, ShowCfg, State, SymbolPrinter):
     result.match
     case call @ Call(fun, argss) =>
       val chainedArgs = argss.map(args => doc"(${args.map(print).mkDocument(", ")})").mkDocument("")
-      doc"${printAnnotations(call.metadata.annotations, doc" ")}${print(fun)}${chainedArgs}"
+      doc"${printAnnotations(call.metadata.annotations, doc" ")}${if call.rsc then "rsc " else ""}${print(fun)}${chainedArgs}"
     case inst @ Instantiate(mut, rsc, cls, argss) =>
       val chainedArgs = argss.map(args => doc"(${args.map(print).mkDocument(", ")})").mkDocument("")
       doc"${printAnnotations(inst.metadata.annotations, doc" ")}new ${if mut then "mut " else ""}${if rsc then "rsc " else ""}${print(cls)}${chainedArgs}"

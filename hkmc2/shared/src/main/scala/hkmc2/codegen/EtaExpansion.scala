@@ -181,7 +181,7 @@ class EtaExpansionRewrite(val etaExpansionSolver: EtaExpansionSolver)(using Rais
           lastWords("not the same shape?")
     
     private def etaCall(base: Path): Result =
-      Call(base, activeEtaArgss.ne_!)(CallMetadata.mlsFunWithEffect)
+      Call(base, activeEtaArgss.ne_!)(CallMetadata.mlsFunWithEffect, rsc = false)
     
     override def applyBlock(b: Block): Block = b match
       case Return(res) if activeEtaArgss.nonEmpty =>
@@ -191,8 +191,9 @@ class EtaExpansionRewrite(val etaExpansionSolver: EtaExpansionSolver)(using Rais
           case p: Path =>
             Return(etaCall(p).withLocOf(res2))
           case c @ Call(fun, argss) =>
+            // * Applying more arguments yields a different value from `c`'s, so `c`'s resource-ness does not carry over.
             Return(
-              Call(fun, (argss ++ activeEtaArgss).ne_!)(c.metadata))
+              Call(fun, (argss ++ activeEtaArgss).ne_!)(c.metadata, rsc = false))
           case _ =>
             val tmp = TempSymbol(N, erasedType = N, "eta$res")
             Scoped(

@@ -368,11 +368,11 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
                   def join2: Block =
                     // Resolve reference to unlifted object
                     resolveDefnRef(d, r) match
-                      case Some(value) => k(c.copy(fun = value, argss = newArgss.ne_!)(c.metadata).withLoc(c.toLoc))
+                      case Some(value) => k(c.copy(fun = value, argss = newArgss.ne_!)(c.metadata, c.rsc).withLoc(c.toLoc))
                       case None => super.applyPath(c.fun): fun2 =>
                         // Nothing to rewrite
                         if (fun2 is c.fun) && (argss is newArgss) then k(c)
-                        else k(c.copy(fun = fun2, argss = newArgss.ne_!)(c.metadata).withLoc(c.toLoc))
+                        else k(c.copy(fun = fun2, argss = newArgss.ne_!)(c.metadata, c.rsc).withLoc(c.toLoc))
                   r match
                     // Call to lifted function: Rewrite using the efficient version
                     case f: LiftedFunc => k(f.rewriteCall(c, newArgss))
@@ -1087,7 +1087,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
           syms.map(sym => Arg(N, sym.asSimpleRef)) ::: Arg(S(SpreadKind.Eager), value.asSimpleRef) :: Nil
         case None => syms.map(s => Arg(N, s.asSimpleRef))
       
-      val call = Call(fun.sym.asMemberRef(fun.dSym), args ne_:: Nil)(CallMetadata.mlsFunWithEffect)
+      val call = Call(fun.sym.asMemberRef(fun.dSym), args ne_:: Nil)(CallMetadata.mlsFunWithEffect, rsc = false)
       val bod = Return(call)
       
       FunDefn(
@@ -1103,12 +1103,12 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
     def rewriteCall(c: Call, argss: NELs[List[Arg]])(using ctx: LifterCtxNew): Call =
       if isTrivial then
         if argss is c.argss then c
-        else c.copy(argss = argss)(c.metadata).withLocOf(c)
+        else c.copy(argss = argss)(c.metadata, c.rsc).withLocOf(c)
       else
         Call.raw(
           mainSym.asMemberRef(mainDsym),
           (formatArgs ::: argss.head) ne_:: argss.tail
-        )(c.metadata.copy(isMlsFun = true)).withLoc(c.toLoc)
+        )(c.metadata.copy(isMlsFun = true), c.rsc).withLoc(c.toLoc)
     
     def rewriteRef(using ctx: LifterCtxNew): Call =
       if isTrivial then lastWords("tried to rewrite a ref to a trivial function")
@@ -1116,7 +1116,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
       Call.raw(
         auxSym.asMemberRef(auxDsym),
         formatArgs ne_:: Nil
-      )(CallMetadata.defaultMlsFun)
+      )(CallMetadata.defaultMlsFun, rsc = false)
     
     def rewriteImpl: LifterResult[FunDefn] =
       val LifterResult(lifted, extra) = mkFlattenedDefn
@@ -1241,7 +1241,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
       Call.raw(
         flattenedSym.asMemberRef(flattenedDSym),
         formatArgs ne_:: Nil
-      )(CallMetadata.defaultMlsFun)
+      )(CallMetadata.defaultMlsFun, rsc = false)
     
     def rewriteInstantiate(inst: Instantiate, argss: List[List[Arg]])(k: Result => Block): Block =
       if obj.isObj then lastWords("tried to rewrite instantiate for an object")
@@ -1261,10 +1261,10 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
       if isTrivial then k(superCall)
       else if cls.paramsOpt.isEmpty && cls.auxParams.isEmpty then
         // Paramless class: lifter args go directly into the Instantiate constructor
-        k(Call(superCall.fun, (formatArgs ::: argss.head) ne_:: argss.tail)(CallMetadata.defaultMlsFun).withLoc(superCall.toLoc))
+        k(Call(superCall.fun, (formatArgs ::: argss.head) ne_:: argss.tail)(CallMetadata.defaultMlsFun, rsc = false).withLoc(superCall.toLoc))
       else
         // Parameterized class: use Instantiate with original args + lifter args inserted after the first list
-        k(Call(superCall.fun, argss.head ne_:: formatArgs ne_:: argss.tail)(CallMetadata.mlsFunWithEffect).withLoc(superCall.toLoc))
+        k(Call(superCall.fun, argss.head ne_:: formatArgs ne_:: argss.tail)(CallMetadata.mlsFunWithEffect, rsc = false).withLoc(superCall.toLoc))
     
     def rewriteCall(c: Call, argss: NELs[List[Arg]])(k: Result => Block)(using ctx: LifterCtxNew): Block =
       if obj.isObj then lastWords("tried to rewrite instantiate for an object")
@@ -1275,10 +1275,10 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
         Call.raw(
           flattenedSym.asMemberRef(flattenedDSym),
           (formatArgs :: argss).ne_!
-        )(c.metadata.copy(isMlsFun = true, mayRaiseEffects = false)).withLoc(c.toLoc)
+        )(c.metadata.copy(isMlsFun = true, mayRaiseEffects = false), c.rsc).withLoc(c.toLoc)
       if isTrivial then
         if c.argss is argss then k(c)
-        else k(c.copy(argss = argss)(c.metadata).withLocOf(c))
+        else k(c.copy(argss = argss)(c.metadata, c.rsc).withLocOf(c))
       else if cls.paramsOpt.isEmpty && cls.auxParams.isEmpty then
         // Paramless class: unreachable
         lastWords("Call to paramless class")

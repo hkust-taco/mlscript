@@ -539,3 +539,68 @@ fun maybeLam() = rsc? (x => x)
 //│   return lambda⁴
 //│ };
 //│ end
+
+// A partial application states its resource-ness with a modifier, like a lambda. The modifier has no effect on a
+// call that is not known to leave some parameter lists unapplied.
+
+fun rscPartialIntoRsc(a) = useRscFn(rsc curried(a))
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define rscPartialIntoRsc⁰ as fun rscPartialIntoRsc¹(a: ?): ? {
+//│   let tmp: rsc Function⁰;
+//│   set tmp = rsc curried¹(a);
+//│   return useRscFn¹(tmp)
+//│ };
+//│ end
+
+:ge
+fun rscPartialIntoPlain(a) = usePlainFn(rsc curried(a))
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'rsc Function' at an unrelated type 'Function'
+//│ ║  l.556: 	fun rscPartialIntoPlain(a) = usePlainFn(rsc curried(a))
+//│ ╙──       	                                            ^^^^^^^^^^
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define rscPartialIntoPlain⁰ as fun rscPartialIntoPlain¹(a: ?): ? {
+//│   let tmp: rsc Function⁰;
+//│   set tmp = rsc curried¹(a);
+//│   return usePlainFn¹(tmp)
+//│ };
+//│ end
+
+:w
+fun maybePartial(a) = useRscFn(rsc? curried(a))
+//│ ╔══[WARNING] A function value is 'rsc?' unless stated otherwise, so 'rsc?' has no effect.
+//│ ║  l.569: 	fun maybePartial(a) = useRscFn(rsc? curried(a))
+//│ ╙──       	                                    ^^^^^^^^^^
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define maybePartial⁰ as fun maybePartial¹(a: ?): ? {
+//│   let tmp: rsc? Function⁰;
+//│   set tmp = curried¹(a);
+//│   return useRscFn¹((tmp as! rsc Function⁰))
+//│ };
+//│ end
+
+:w
+fun rscSaturated(a) = rsc curried(a)(a)
+//│ ╔══[WARNING] This call is not known to leave some parameter lists unapplied, so its resource modifier has no effect.
+//│ ║  l.582: 	fun rscSaturated(a) = rsc curried(a)(a)
+//│ ╙──       	                          ^^^^^^^^^^^^^
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define rscSaturated⁰ as fun rscSaturated¹(a: ?): ? { return curried¹(a)(a) }; end
+
+:w
+fun rscUnknownCallee(h, a) = rsc h(a)
+//│ ╔══[WARNING] This call is not known to leave some parameter lists unapplied, so its resource modifier has no effect.
+//│ ║  l.590: 	fun rscUnknownCallee(h, a) = rsc h(a)
+//│ ╙──       	                                 ^^^^
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define rscUnknownCallee⁰ as fun rscUnknownCallee¹(h: ?, a: ?): ? { return h(a) }; end
+
+fun rscPartialApplied(a) =
+  let p = rsc curried(a)
+  p(a)
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define rscPartialApplied⁰ as fun rscPartialApplied¹(a: ?): ? {
+//│   let p: ?;
+//│   set p = rsc curried¹(a);
+//│   return p(a)
+//│ };
+//│ end

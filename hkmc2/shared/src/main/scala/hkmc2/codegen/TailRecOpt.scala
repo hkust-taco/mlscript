@@ -298,7 +298,7 @@ class TailRecOpt(checkAnnotations: Bool)(using Config, State, TL, Raise, Ctx):
             :: Value.Lit(Tree.IntLit(paramList.length)).asArg
             :: Value.Lit(Tree.IntLit(0)).asArg
             :: Nil) ne_:: Nil
-        )(CallMetadata.defaultMlsFun)
+        )(CallMetadata.defaultMlsFun, rsc = false)
         val blk = blockBuilder
           .assignScoped(tupleSym, tupleRes)
           .assignScoped(sliceResSym, sliceRes)
@@ -486,7 +486,7 @@ class TailRecOpt(checkAnnotations: Bool)(using Config, State, TL, Raise, Ctx):
           case Some(pth) => Arg(N, pth)
           case None => Arg(N, Value.Lit(Tree.UnitLit(false)))
       val argsWithId = if funsLen > 1 then Value.Lit(Tree.IntLit(dSymIds(callee.dSym))).asArg :: args else args
-      Call(loopDefnPath, argsWithId ne_:: Nil)(CallMetadata.defaultMlsFun)
+      Call(loopDefnPath, argsWithId ne_:: Nil)(CallMetadata.defaultMlsFun, rsc = false)
     
     class FunRewriter(f: FunDefn) extends BlockTransformerShallow(SymbolSubst.Id):
       val params = f.allParamSyms

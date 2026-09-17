@@ -444,7 +444,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
             raise(ErrorReport(
               msg"Extending a partially applied class is not supported" -> loc :: Nil,
               source = Diagnostic.Source.Compilation))
-          k(Call(fr, acc.reverse.ne_!)(CallMetadata(isMlsFun, true, Nil)).withLoc(loc))
+          k(Call(fr, acc.reverse.ne_!)(CallMetadata(isMlsFun, true, Nil), rsc = false).withLoc(loc))
       zipArgs(ctorParamLists, args, Nil)
     case Nil =>
       if !ctorParamLists.isEmpty then
@@ -452,27 +452,54 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
           msg"Extending a partially applied class is not supported" -> loc :: Nil,
           source = Diagnostic.Source.Compilation))
       // * No arguments to a super ctor means a nullary call, e.g., `extends C` means `extends C()`
-      k(Call(fr, Nil ne_:: Nil)(CallMetadata(isMlsFun, true, Nil)).withLoc(loc))
+      k(Call(fr, Nil ne_:: Nil)(CallMetadata(isMlsFun, true, Nil), rsc = false).withLoc(loc))
   
+  /** Whether the resource modifiers in `annots` make a function value (a lambda or a partial application) a resource.
+    * A function value is `rsc?` unless stated otherwise, so `rsc?` is reported as having no effect.
+    */
+  def functionValueRsc(annots: Ls[Annot], loc: Opt[Loc]): Bool =
+    annots.foldLeft(false):
+      // * The annotation does not record where its keyword is written, so the warning points at `loc`.
+      case (rsc, Annot.Resource(N)) =>
+        raise(WarningReport(
+          msg"A function value is 'rsc?' unless stated otherwise, so 'rsc?' has no effect." -> loc :: Nil,
+          source = Diagnostic.Source.Compilation))
+        rsc
+      case (rsc, Annot.Resource(S(annotRsc))) => rsc || annotRsc
+      case (rsc, _) => rsc
+
   /** Lower a call with multiple argument lists into `Call` nodes,
     * trying to group as many as possible into a single one
     * when they correspond to parameter lists of the same callee. */
   def lowerMultiCall(fr: Path, isMlsFun: Bool, annotations: Ls[Annot], args: Ls[Term], loc: Opt[Loc])(k: Result => Block)(using LoweringCtx): Block =
+    // * `Elaborator` records the modifier of `rsc f(x)` as an annotation on the call, as for `rsc (x => ...)`.
+    val (rscAnnots, callAnnots) = annotations.partition:
+      case Annot.Resource(_) => true
+      case _ => false
+    // * Only a call known to leave some parameter lists unapplied is a function value that can be a resource.
+    def warnNotPartial(): Unit =
+      if rscAnnots.nonEmpty then raise(WarningReport(
+        msg"This call is not known to leave some parameter lists unapplied, so its resource modifier has no effect." ->
+          loc :: Nil,
+        source = Diagnostic.Source.Compilation))
     def zipArgs(remainingParamss: Ls[ParamList], remainingArgss: Ls[Term], acc: Ls[Ls[Arg]], mayRaiseEffects: Bool): Block =
       (remainingParamss, remainingArgss) match
       case (ps :: remainingParams, args :: remainingArgs) =>
         lowerArgs(args, expectedParamTypes(ps))(as => zipArgs(remainingParams, remainingArgs, as :: acc, mayRaiseEffects))
       case (Nil, Nil) =>
-        k(Call(fr, acc.reverse.ne_!)(CallMetadata(isMlsFun, mayRaiseEffects, annotations)).withLoc(loc))
+        warnNotPartial()
+        k(Call(fr, acc.reverse.ne_!)(CallMetadata(isMlsFun, mayRaiseEffects, callAnnots), rsc = false).withLoc(loc))
       case (Nil, args :: remainingArgss) =>
+        warnNotPartial()
         acc.reverse match
-        case Nil => lowerRemainingCalls(fr, args, remainingArgss, annotations, loc)(k)
+        case Nil => lowerRemainingCalls(fr, args, remainingArgss, callAnnots, loc)(k)
         case acc: NELs[Ls[Arg]] =>
-          val call = Call(fr, acc)(CallMetadata(isMlsFun, mayRaiseEffects, Nil)).withLoc(loc)
+          val call = Call(fr, acc)(CallMetadata(isMlsFun, mayRaiseEffects, Nil), rsc = false).withLoc(loc)
           val tmp = loweringCtx.registerTempSymbol(N, erasedType = call.erasedType, "baseCall")
-          Assign(tmp, call, lowerRemainingCalls(tmp.asSimpleRef, args, remainingArgss, annotations, loc)(k))
+          Assign(tmp, call, lowerRemainingCalls(tmp.asSimpleRef, args, remainingArgss, callAnnots, loc)(k))
       case (_ :: _, Nil) =>
-        k(Call(fr, acc.reverse.ne_!)(CallMetadata(isMlsFun, mayRaiseEffects, annotations)).withLoc(loc))
+        val rsc = functionValueRsc(rscAnnots, loc)
+        k(Call(fr, acc.reverse.ne_!)(CallMetadata(isMlsFun, mayRaiseEffects, callAnnots), rsc).withLoc(loc))
     fr.targetSymbol match
     case S(fs: TermSymbol) =>
       fs.defn match
@@ -484,7 +511,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
   def lowerRemainingCalls(base: Path, args: Term, remainingArgss: Ls[Term], annotations: Ls[Annot], loc: Opt[Loc])
         (k: Result => Block)(using LoweringCtx): Block =
     lowerArgs(args, Nil): as =>
-      val call = Call(base, as ne_:: Nil)(CallMetadata(false, true, annotations)).withLoc(loc)
+      val call = Call(base, as ne_:: Nil)(CallMetadata(false, true, annotations), rsc = false).withLoc(loc)
       remainingArgss match
       case Nil => k(call)
       case args :: remainingArgss =>
@@ -679,7 +706,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
         if isImplicitNullaryCall(td.tsym) then
           return k(Call(
               bs.asMemberRef(disamb.get).withLocOf(ref), Nil ne_:: Nil
-            )(CallMetadata(isMlsFun = true, mayRaiseEffects = true, annots)))
+            )(CallMetadata(isMlsFun = true, mayRaiseEffects = true, annots), rsc = false))
       case S(td: TermDefinition) =>
         td.tsym.owner match
         case S(owner) =>
@@ -793,7 +820,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
                 Call(
                   State.builtinOpsMap("===").asSimpleRef,
                   (bodyResult.asSimpleRef.asArg :: State.runtimeSymbol.asSimpleRef.selSN("Continue").asArg :: Nil) ne_:: Nil,
-                )(CallMetadata.defaultMlsFun),
+                )(CallMetadata.defaultMlsFun, rsc = false),
                 Match(
                   isContinue.asSimpleRef,
                   (Case.Lit(Tree.BoolLit(true)) -> Continue(label)) :: Nil,
@@ -843,7 +870,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
         subTerm(arg): ar =>
           val target = wasmIntrinsicPath(sym, unary = true)
             .getOrElse(sym.asSimpleRef.withLocOf(ref))
-          k(Call(target, (Arg(N, ar) :: Nil) ne_:: Nil)(CallMetadata.defaultMlsFun))
+          k(Call(target, (Arg(N, ar) :: Nil) ne_:: Nil)(CallMetadata.defaultMlsFun, rsc = false))
       case st.Tup(Fld(FldFlags.benign(), arg1, N) :: Fld(FldFlags.benign(), arg2, N) :: Nil) =>
         if !sym.binary then raise:
           ErrorReport(
@@ -876,7 +903,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
             subTerm_nonTail(arg2): ar2 =>
               val target = wasmIntrinsicPath(sym, unary = false)
                 .getOrElse(sym.asSimpleRef.withLocOf(ref))
-              k(Call(target, (Arg(N, ar1) :: Arg(N, ar2) :: Nil) ne_:: Nil)(CallMetadata.defaultMlsFun))
+              k(Call(target, (Arg(N, ar1) :: Arg(N, ar2) :: Nil) ne_:: Nil)(CallMetadata.defaultMlsFun, rsc = false))
       case _ => fail:
         ErrorReport(
           msg"Unexpected arguments for builtin symbol '${sym.nme}'" -> arg.toLoc :: Nil, S(arg),
@@ -1064,15 +1091,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
     case st.Lam(params, body) =>
       warnStmt
       // * `Elaborator` records the modifier of `rsc (x => ...)` as an annotation on the lambda, as for `new rsc C()`.
-      val rsc = annots.foldLeft(false):
-        // * The annotation does not record where its keyword is written, so the warning points at the lambda.
-        case (rsc, Annot.Resource(N)) =>
-          raise(WarningReport(
-            msg"A function value is 'rsc?' unless stated otherwise, so 'rsc?' has no effect." -> trm.toLoc :: Nil,
-            source = Diagnostic.Source.Compilation))
-          rsc
-        case (rsc, Annot.Resource(S(annotRsc))) => rsc || annotRsc
-        case (rsc, _) => rsc
+      val rsc = functionValueRsc(annots, trm.toLoc)
       val (paramLists, bodyBlock) = setupFunctionDef(params :: Nil, body, N, N)
       // * A resource lambda is not lifted into a function definition here: a reference to the lifted definition would
       // * be `rsc?` (like any function value), hiding the lambda's resource-ness from the slots it flows into.
@@ -1583,7 +1602,9 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
         case st.Resolved(_, defnSym) if isImplicitNullaryCall(defnSym) => ()
         case _ => warn(annot)
       case annot @ Annot.Resource(_) => receiver match
-        case New(_, _, N) | Mut(New(_, _, N)) | st.Lam(_, _) => ()
+        // * Whether a call is a partial application is only known once its callee is lowered (see `lowerMultiCall`).
+        case st.App(Ref(_: BuiltinSymbol), _) => warn(annot)
+        case New(_, _, N) | Mut(New(_, _, N)) | st.Lam(_, _) | st.App(_, _) => ()
         case _ => warn(annot)
       case a @ Annot.TailCall => receiver match
         case st.App(Ref(_: BuiltinSymbol), _) => warn(a, S(msg"The @tailcall annotation has no effect on calls to built-in symbols."))
@@ -1605,7 +1626,7 @@ trait LoweringTraceLog(instrument: Bool)(using TL, Raise, State)
       case ((sym, res), acc) => Assign(sym, res, acc)
   
   private def pureCall(fn: Path, args: Ls[Arg]): Result =
-    Call(fn, args ne_:: Nil)(CallMetadata.defaultMlsFun)
+    Call(fn, args ne_:: Nil)(CallMetadata.defaultMlsFun, rsc = false)
   
   extension (k: Block => Block)
     def |>: (b: Block): Block = k(b)

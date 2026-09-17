@@ -560,11 +560,11 @@ object HandleBlock:
 
   def suspend(tag: Path, handlerFun: Path)(using Elaborator.Ctx): Result =
     val bms = Elaborator.ctx.builtins.runtime.suspend
-    Call(bms.asMemberRef(bms.asPrincipal.get), (tag.asArg :: handlerFun.asArg :: Nil) ne_:: Nil)(CallMetadata.mlsFunWithEffect)
+    Call(bms.asMemberRef(bms.asPrincipal.get), (tag.asArg :: handlerFun.asArg :: Nil) ne_:: Nil)(CallMetadata.mlsFunWithEffect, rsc = false)
 
   def handleSuspension(tag: Path, bodyFun: Path)(using Elaborator.Ctx): Result =
     val bms = Elaborator.ctx.builtins.runtime.handle_suspension
-    Call(bms.asMemberRef(bms.asPrincipal.get), (tag.asArg :: bodyFun.asArg :: Nil) ne_:: Nil)(CallMetadata.mlsFunWithEffect)
+    Call(bms.asMemberRef(bms.asPrincipal.get), (tag.asArg :: bodyFun.asArg :: Nil) ne_:: Nil)(CallMetadata.mlsFunWithEffect, rsc = false)
   
   private def create(
       lhs: LocalVarSymbol,
@@ -604,7 +604,7 @@ object HandleBlock:
       N, Nil,
       S(par), handlerMtds, Nil, Nil,
       // Apparently, the lifter is not happy with any assignment in the preCtor...
-      Assign(NoSymbol, Call(State.builtinOpsMap("super").asSimpleRef, args.map(_.asArg) ne_:: Nil)(CallMetadata.mlsFunWithEffect), End()),
+      Assign(NoSymbol, Call(State.builtinOpsMap("super").asSimpleRef, args.map(_.asArg) ne_:: Nil)(CallMetadata.mlsFunWithEffect, rsc = false), End()),
       End(),
       N,
       N,
@@ -992,7 +992,7 @@ sealed abstract class Result extends AutoLocated:
     case Value.Lit(lit) => lit.idStr
     case Select(q, n) => s"Select(${q.showDbg}, ${n.showDbg})"
     case DynSelect(q, fld, arrayIdx) => s"DynSelect(${q.showDbg}, ${fld.showDbg}, $arrayIdx)"
-    case Call(fun, argss) => s"Call(${fun.showDbg}, [${
+    case call @ Call(fun, argss) => s"Call(${if call.rsc then "rsc, " else ""}${fun.showDbg}, [${
       argss.map(_.map(a => a.value.showDbg).mkString("[", ", ", "]")).mkString(", ")}])"
     case Lambda(rsc, params, body) => s"Lambda($rsc, ${params.showDbg}, ${body.showDbg})"
     case Record(mut, args) => s"Record($mut, [${args.map(a => s"${a.showDbg} = ${a.value.showDbg}").mkString(", ")}])"
@@ -1108,18 +1108,22 @@ sealed abstract class Result extends AutoLocated:
     case Value.Lit(_: Tree.StrLit) => S(ErasedType.Str)
     case Value.Lit(_: Tree.BoolLit) => S(ErasedType.Bool)
     // * Note: `UnitLit` stays untyped: Neither `null` nor `undefined` can be reasonably typed as `Unit`
-    case Call(fun, argss) => fun.targetSymbol match
+    case call @ Call(fun, argss) => fun.targetSymbol match
       case S(ts: TermSymbol) => ts.erasedSignature match
         case S(sig) =>
-          argss.sizeCompare(sig.paramLists) match
-            // * An exactly-applied call yields the function's result type.
-            case 0 => sig.ret
-            // * An under-applied call yields a closure over the remaining parameter lists, whose resource-ness nothing
-            // * states.
-            case c if c < 0 => S(ErasedType.Function(N))
-            // * An over-applied call applies arguments to whatever the function returns, which the function's
-            // * signature is oblivious about.
-            case _ => N
+          val sizeCmp = argss.sizeCompare(sig.paramLists)
+          // * Only a partial application is a function value, so only it can be a resource. `assert` rather than
+          // * `softAssert`, as no `Raise` is in scope here.
+          assert(sizeCmp < 0 || !call.rsc, s"A call that is not under-applied cannot be 'rsc' (callee '${ts.nme}')")
+          sizeCmp match
+          // * An exactly-applied call yields the function's result type.
+          case 0 => sig.ret
+          // * An under-applied call yields a closure over the remaining parameter lists. Without a modifier, its
+          // * resource-ness is undetermined.
+          case c if c < 0 => S(ErasedType.Function(if call.rsc then S(true) else N))
+          // * An over-applied call applies arguments to whatever the function returns, which the function's
+          // * signature is oblivious about.
+          case _ => N
         case N => N
       case _ => N
     // * A resolved selection has the type of the member it refers to (e.g. `this.field`); an
@@ -1191,7 +1195,7 @@ object CallMetadata:
   val mlsFunWithEffect = CallMetadata(true, true, Nil)
 
 
-case class Call(fun: Path, argss: NELs[Ls[Arg]])(val metadata: CallMetadata) extends Result:
+case class Call(fun: Path, argss: NELs[Ls[Arg]])(val metadata: CallMetadata, val rsc: Bool) extends Result:
   lazy val isKnownUnsaturatedCall: Bool =
     fun.targetSymbol match
     case S(ts: TermSymbol) =>
@@ -1199,23 +1203,24 @@ case class Call(fun: Path, argss: NELs[Ls[Arg]])(val metadata: CallMetadata) ext
         case fd: FunDefn => argss.lengthCompare(fd.params.length) < 0
         case _ => false
     case _ => false
-  // `metadata` lives in a secondary constructor list, so case-class equality
-  // would otherwise ignore annotations such as @tailcall.
+  // `metadata` and `rsc` live in a secondary constructor list, so case-class equality
+  // would otherwise ignore annotations such as @tailcall and the resource-ness.
   override def equals(obj: Any): Bool = obj match
     case that: Call =>
       fun == that.fun &&
         argss == that.argss &&
-        metadata == that.metadata
+        metadata == that.metadata &&
+        rsc == that.rsc
     case _ => false
   override def hashCode: Int =
-    (fun, argss, metadata).hashCode
+    (fun, argss, metadata, rsc).hashCode
 
 object Call:
   
-  def raw(fun: Path, argss: NELs[Ls[Arg]])(metadata: CallMetadata): Call =
-    new Call(fun, argss)(metadata)
+  def raw(fun: Path, argss: NELs[Ls[Arg]])(metadata: CallMetadata, rsc: Bool): Call =
+    new Call(fun, argss)(metadata, rsc)
   
-  def apply(fun: Path, argss: NELs[Ls[Arg]])(metadata: CallMetadata): Result =
+  def apply(fun: Path, argss: NELs[Ls[Arg]])(metadata: CallMetadata, rsc: Bool): Result =
     fun match
     case Value.SimpleRef(sym: BuiltinSymbol) =>
       argss match
@@ -1225,7 +1230,7 @@ object Call:
         evalBuiltin(sym, arg1)(return _)
       case _ =>
     case _ =>
-    raw(fun, argss)(metadata)
+    raw(fun, argss)(metadata, rsc)
   
   private def literalArgValues(args: Ls[Arg]): Opt[Ls[Value]] =
     args.foldRight[Opt[Ls[Value]]](S(Nil)):
