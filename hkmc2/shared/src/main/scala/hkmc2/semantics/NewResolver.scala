@@ -221,7 +221,7 @@ class NewResolver:
                     fs.foreach: (bms, pat) =>
                       // bms.onComplete: () =>
                       val nme = bms.nme
-                      sh.members.get(nme) match
+                      sh.getMember(nme) match
                       case S((sym, mss)) =>
                         val sh = symShapes.getOrElseUpdate((bms, resSym, mss), SymShape(bms, resSym, mss))
                         // if src.trmHost.shapes.add(sh) then
@@ -300,7 +300,7 @@ class NewResolver:
     log(s"newSel? sel = ${sel.showDbg}")
     listenTerm(sel.prefix): shape =>
       log(s"newSel: sel = ${sel.showDbg}, shape = ${shape.shwDbg}")
-      shape.members.get(sel.id.name) match
+      shape.getMember(sel.id.name) match
         case S((bms, mss)) =>
           log(s"newSel member: bms = ${bms.showDbg}, mss = ${mss.map(_.showDbg)}")
           sel.resolvedMembers ::= bms
@@ -347,23 +347,23 @@ class NewResolver:
                           zipArgs(mss, ps.params, ps.restParam, args.fields, src, dsh)
                         case _ => ???
                     // TODO: mv to NewShape def
-                    lazy val members: Map[Str, MemberInfo] =
+                    protected def getMemberImpl(name: Str): Opt[MemberInfo] =
                       receiver match
                       case ds: DefnShape =>
                         ds.defn match
                         case cd: ClassDef =>
-                          cd.body.members.mapValues(_ -> ss.markss).toMap
+                          cd.body.members.get(name).map(_ -> ss.markss)
                         case td: TermDefinition =>
                           td.tsym match
                           case ccs: ClassCtorSymbol =>
                             ccs.associatedCls.defn.getOrElse(die // TODO
-                              ).body.members.mapValues(_ -> ss.markss).toMap
+                              ).body.members.get(name).map(_ -> ss.markss)
                           case _ =>
-                            Map.empty
+                            N
                         case _ =>
-                          Map.empty
+                          N
                       case _ =>
-                        Map.empty
+                        N
                 )
                 if nw.shapes.add(sh) then
                   nw.shapeListeners.foreach(listener => listener(sh))

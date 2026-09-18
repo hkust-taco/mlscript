@@ -5,6 +5,7 @@ import hkmc2.utils.*, shorthands.*
 import syntax.*
 import hkmc2.document.*
 import hkmc2.document.Document.*
+import scala.collection.mutable
 
 
 sealed trait Shape extends ShapeLike:
@@ -61,11 +62,8 @@ object Marked:
 end Marked
 
 case class MarkedShape(sh: NonMarkedShape, mark: SomeMarks) extends TermShape:
-  lazy val members: Map[Str, MemberInfo] =
-    // sh.members.view.mapValues(m => MarkedShape.exit(m, mark)).toMap
-    // sh.members // FIXME: add marks to tuple result
-    sh.members.mapValues(_.mapSecond(_ ::: mark :: Nil)).toMap
-    // sh.members.mapValues(_.mapSecond(mark :: _)).toMap
+  protected def getMemberImpl(name: Str): Opt[MemberInfo] =
+    sh.getMember(name).map(_.mapSecond(_ ::: mark :: Nil))
   def describe: Str = sh.describe
   def toLoc: Opt[Loc] = sh.toLoc
 object MarkedShape:
@@ -124,7 +122,11 @@ object MarkedShape:
 end MarkedShape
 
 sealed trait TermShape extends Shape:
-  def members: Map[Str, MemberInfo]
+  // Cache both hits and misses per shape, without materializing all inherited members.
+  private val membersCache = mutable.Map.empty[Str, Opt[MemberInfo]]
+  final def getMember(name: Str): Opt[MemberInfo] =
+    membersCache.getOrElseUpdate(name, getMemberImpl(name))
+  protected def getMemberImpl(name: Str): Opt[MemberInfo]
   
   def extendsCls(cls: ClassLikeDef): Bool = false
   
@@ -222,13 +224,13 @@ type MemberInfo = (BlockMemberSymbol, Ls[Marks])
 
 class ErrShape(val err: ErrorReport) extends NonAppTermShape:
   def describe: Str = s"error: ${err.mainMsg}"
-  def members: Map[Str, MemberInfo] = Map.empty
+  protected def getMemberImpl(name: Str): Opt[MemberInfo] = N
   def toLoc: Opt[Loc] = N
 
 class AppShape(val receiver: TermShape, val args: Term, val src: Term.App)(using DebugPrinter) extends NonMarkedShape:
-  lazy val members: Map[Str, MemberInfo] =
+  protected def getMemberImpl(name: Str): Opt[MemberInfo] =
     // An unsaturated term definition is just a concrete function shape
-    if !isSaturated then Map.empty
+    if !isSaturated then N
     else
       applicationHead match
       case (ds: DefnShape, mss) =>
@@ -243,11 +245,11 @@ class AppShape(val receiver: TermShape, val args: Term, val src: Term.App)(using
         //   case _ => ??? // TODO: add softRequire on ction – should not be possible
         // case cd: ClassDef => cd.ext.fold(Map.empty)(_.members) ++ cd.body.members
         ds.defn match
-        case cd: ClassDef => ds.ext.fold(Map.empty)(_.members).mapValues(_.mapSecond(_ ::: mss)).toMap ++
-          cd.body.members.mapValues(_ -> mss).toMap
+        case cd: ClassDef => cd.body.members.get(name).map(_ -> mss).orElse:
+          ds.ext.flatMap(_.getMember(name)).map(_.mapSecond(_ ::: mss))
         case td: TermDefinition =>
-          ds.ext.fold(Map.empty)(_.members).mapValues(_.mapSecond(_ ::: mss)).toMap
-      case _ => Map.empty
+          ds.ext.flatMap(_.getMember(name)).map(_.mapSecond(_ ::: mss))
+      case _ => N
   def describe: Str =
     // s"application of ${receiver.describe}"
     s"instance of ${applicationHead._1.describe}"
@@ -280,8 +282,8 @@ class ThisShape(val defn: Definition) extends NonAppTermShape:
 // TODO: make it not a TermShape?
 class BaseShape(val defn: ClassLikeDef, val ext: Opt[TermShape]) extends NonAppTermShape:
   def describe: Str = s"${defn.describe}"
-  lazy val members: Map[Str, MemberInfo] =
-    ext.fold(Map.empty)(_.members) ++ defn.body.members.mapValues(_ -> Nil).toMap
+  protected def getMemberImpl(name: Str): Opt[MemberInfo] =
+    defn.body.members.get(name).map(_ -> Nil).orElse(ext.flatMap(_.getMember(name)))
   def toLoc: Opt[Loc] = defn.toLoc
 
 class DefnShape(val defn: Definition, val ext: Opt[TermShape]) extends NonAppTermShape:
@@ -309,15 +311,12 @@ class DefnShape(val defn: Definition, val ext: Opt[TermShape]) extends NonAppTer
     }'${defn.bsym.nme}'"
   // override def toString: String = s"DefnShape(${defn.describe} ${defn.bsym.nme})"
   override def toString: String = s"DefnShape(${defn.describe})"
-  lazy val members: Map[Str, MemberInfo] =
-    // println((ext, ext.map(_.members)))
-    // ext.fold(Map.empty)(_.members) ++ defn.match
+  protected def getMemberImpl(name: Str): Opt[MemberInfo] =
     defn match
     case defn: ModuleOrObjectDef =>
-      // println(defn.ext.map(_.cls.members))
-      ext.fold(Map.empty)(_.members) ++ defn.body.members.mapValues(_ -> Nil).toMap
+      defn.body.members.get(name).map(_ -> Nil).orElse(ext.flatMap(_.getMember(name)))
     case defn: TermDefinition => ???
-    case _ => Map.empty
+    case _ => N
   def toLoc: Opt[Loc] = defn.sym.toLoc
 
 /* 
@@ -331,11 +330,12 @@ class RefinedShape(val base: TermShape, val refinements: Ls[Str -> Term]) extend
 type IntroTerm = Term.Lit | Term.UnitVal | Term.Tup | Term.Lam | Term.Rcd //| Term.New
 class IntroShape(val trm: IntroTerm) extends NonAppTermShape:
   def describe: Str = trm.describe
-  lazy val members: Map[Str, MemberInfo] = trm match
+  protected def getMemberImpl(name: Str): Opt[MemberInfo] = trm match
+    case _: Term.Lit | _: Term.UnitVal => N // TODO: methods on literals
     case tup: Term.Tup =>
       // tup.fields.iterator.map:
       ???
-    case lam: Term.Lam => Map.empty // TODO: methods on lambdas
+    case lam: Term.Lam => N // TODO: methods on lambdas
     case rcd: Term.Rcd =>
       // rcd.stats.iterator.collect:
       // TODO: handler RcdField, RcdSpread
@@ -347,7 +347,7 @@ class IntroShape(val trm: IntroTerm) extends NonAppTermShape:
 
 sealed trait LitShape extends NonAppTermShape:
   self: Term.Lit =>
-  def members: Map[Str, MemberInfo] = Map.empty // TODO: methods on literals, e.g. string methods
+  protected def getMemberImpl(name: Str): Opt[MemberInfo] = N // TODO: methods on literals, e.g. string methods
 
 
 type ShapePublisher = Publisher[Shape]

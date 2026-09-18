@@ -154,3 +154,13 @@ print(1)
 //│ > 1
 
 
+
+:e
+().id
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.159: 	().id
+//│ ║         	^^^^^
+//│ ╟── Unit value does not contain member 'id'
+//│ ║  l.159: 	().id
+//│ ╙──       	^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
