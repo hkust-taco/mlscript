@@ -9,7 +9,7 @@ module constraints with ...
 // -- Figure 1. CSPs in Haskell.
 data class Assign(varr: Int, value: Int)
 
-data class CSP(vars: Int, vals: Int, rel: Int)
+data class CSP(vars: Int, vals: Int, rel: Function)
 
 //│ ————————————————————————————————————————————————————————————————————————————————
 fun qsort(le, ls, r) = if ls is

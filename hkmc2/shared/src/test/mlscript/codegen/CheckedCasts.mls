@@ -1,0 +1,15 @@
+// `:noCheckCasts` is the only input to a `Cast`'s `check` flag, via `Config.checkCasts`. Nothing
+// expands a check into a runtime type test since `CheckedCastExpansion` was removed, so the two
+// blocks below generate the same code and differ only in how the IR prints the cast: `as!` when
+// checked, `as!!` when not.
+
+:sir
+fun checked(x: Int, y: Int): Int = x + y
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define checked⁰ as fun checked¹(x, y) { return (+⁰(x, y) as! Int⁰) }; end
+
+:noCheckCasts
+:sir
+fun unchecked(x: Int, y: Int): Int = x + y
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define unchecked⁰ as fun unchecked¹(x, y) { return (+⁰(x, y) as!! Int⁰) }; end

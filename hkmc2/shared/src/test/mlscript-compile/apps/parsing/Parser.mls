@@ -22,10 +22,6 @@ open Choice { Ref }
 open Keywords { opPrecOpt }
 open Rules { termRule, typeRule, declRule, syntaxKinds }
 
-type Opt[A] = Some[A] | None
-type TreeT = Tree
-type StackT[A] = Stack.Cons[A] | Stack.Nil
-
 module Parser with ...
 
 val tracer = new TreeTracer.TreeTracer
@@ -48,7 +44,7 @@ fun parse(tokens) =
     else
       tracer.print of "consume: the end of input"
   
-  fun parseKind(kind: Str, prec: Int): TreeT = if
+  fun parseKind(kind: Str, prec: Int): Tree = if
     kind is "type" then expr(prec, typeOptions)
     kind is "term" then expr(prec, termOptions)
     // built-in kinds: plain identifiers
@@ -135,7 +131,7 @@ fun parse(tokens) =
         tracer.print of "no end choice but found the end of input", source.line
         Tree.error("unexpected end of input")
   
-  fun expr(prec: Int, options): TreeT = tracer.trace of
+  fun expr(prec: Int, options): Tree = tracer.trace of
     options.kind + " <<< " + prec + " " + TokenHelpers.preview(tokens)
     result => options.kind + " >>> " + result Tree.summary()
     () => if tokens is ...
@@ -167,7 +163,7 @@ fun parse(tokens) =
     token :: _ then Tree.error("unrecognized token: " + token)
     Nil then Tree.error("unexpected end of input")
   
-  fun exprCont(acc: TreeT, prec: Int, options) = if tokens is
+  fun exprCont(acc: Tree, prec: Int, options) = if tokens is
     let infix = options.rule.refChoice Option.flatMap of case
       Ref(kind, process, None, None, rest) and kind == options.kind then
         { process: process, rule: rest }
@@ -229,7 +225,7 @@ fun parse(tokens) =
         acc
     Nil then acc
   
-  fun handleDirective(tree: TreeT, acc: TreeT) = if tree is
+  fun handleDirective(tree: Tree, acc: Stack[Tree]) = if tree is
     // Call the corresponding handler for the directive.
     Tree.Define(Tree.DefineKind.Directive, [name, body] :: Nil) as tree and name is
       Tree.Ident("newKeyword", _) then
@@ -245,7 +241,7 @@ fun parse(tokens) =
         modCont(tree :: acc)
     tree then modCont(tree :: acc)
   
-  fun mod(acc: StackT[TreeT]) = if tokens is
+  fun mod(acc: Stack[Tree]) = if tokens is
     do tracer.print of ">>>>>> mod <<<<<<", source.line
     Token.Identifier(";;", _) :: _ then
       consume
@@ -267,7 +263,7 @@ fun parse(tokens) =
     _ :: _ then modCont of expr(0, termOptions) :: acc
     Nil then acc reverse()
   
-  fun modCont(acc: StackT[TreeT]) = if tokens is
+  fun modCont(acc: Stack[Tree]) = if tokens is
     do tracer.print of ">>>>>> modCont <<<<<< " + TokenHelpers.preview(tokens), source.line
     Token.Identifier(";;", _) :: _ then consume; acc mod()
     _ :: _ then parseRule(0, declRule) handleDirective(acc)

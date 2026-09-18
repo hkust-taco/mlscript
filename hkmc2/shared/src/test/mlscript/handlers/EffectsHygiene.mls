@@ -1,13 +1,14 @@
 :js
 :effectHandlers
 :lift
+:noModuleCheck
 
 module M
 
 // * Not compatible with non-liftable modules due to possible captures.
 :ssjs
 :fixme
-fun foo(h): module M =
+fun foo(h): Object =
   if false then
     module A
     A
@@ -15,16 +16,16 @@ fun foo(h): module M =
     module A
     A
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.15: 	    module A
+//│ ║  l.16: 	    module A
 //│ ╙──      	           ^
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.12: 	    module A
+//│ ║  l.13: 	    module A
 //│ ╙──      	           ^
 //│ ╔══[INTERNAL ERROR] Unexpected nested class: lambdas may not function correctly.
-//│ ║  l.12: 	    module A
+//│ ║  l.13: 	    module A
 //│ ╙──      	           ^
 //│ ╔══[INTERNAL ERROR] Unexpected nested class: lambdas may not function correctly.
-//│ ║  l.15: 	    module A
+//│ ║  l.16: 	    module A
 //│ ╙──      	           ^
 //│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
 //│ let foo;

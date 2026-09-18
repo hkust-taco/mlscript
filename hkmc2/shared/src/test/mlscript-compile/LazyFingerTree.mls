@@ -55,7 +55,7 @@ class LazyFT extends IterableBase with
   fun toString() = "[" + this joined(", ") + "]"
   fun concat(...args) = concatHelper(mut [SpliceMarker, this], this.length, ...args)
 
-class View(val underlying: IterableBase, val start, val end) extends LazyFT with
+class View(val underlying, val start, val end) extends LazyFT with
 
   fun iterator() =
     let idx = start

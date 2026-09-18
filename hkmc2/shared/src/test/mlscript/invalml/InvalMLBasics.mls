@@ -101,6 +101,9 @@ new Point(0.0, 0.0, 0.0)
 
 :e
 new Foo("1!5!")
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Str' at an unrelated type 'Int'
+//│ ║  l.103: 	new Foo("1!5!")
+//│ ╙──       	        ^^^^^^
 //│ ╔══[COMPILATION ERROR] Type error in string literal with expected type Int
 //│ ║  l.103: 	new Foo("1!5!")
 //│ ║         	        ^^^^^^
@@ -130,10 +133,10 @@ let t = new Some(true) in t.Some#value
 :pe
 42.Some#value
 //│ ╔══[LEXICAL ERROR] Expected at least one digit after the  decimal point
-//│ ║  l.131: 	42.Some#value
+//│ ║  l.134: 	42.Some#value
 //│ ╙──       	   ^
 //│ ╔══[COMPILATION ERROR] Illegal juxtaposition right-hand side (infix operator '#').
-//│ ║  l.131: 	42.Some#value
+//│ ║  l.134: 	42.Some#value
 //│ ╙──       	   ^^^^^^^^^^
 //│ Type: Num
 
@@ -154,7 +157,7 @@ let ip = new Printer(foofoo) in ip.Printer#f(42)
 :e
 let ip = new Printer(foofoo) in ip.Printer#f("42")
 //│ ╔══[COMPILATION ERROR] Type error in string literal with expected type 'T
-//│ ║  l.155: 	let ip = new Printer(foofoo) in ip.Printer#f("42")
+//│ ║  l.158: 	let ip = new Printer(foofoo) in ip.Printer#f("42")
 //│ ║         	                                             ^^^^
 //│ ╟── because: cannot constrain  Str  <:  'T
 //│ ╟── because: cannot constrain  Str  <:  'T
@@ -177,7 +180,7 @@ let tf = new TFun(inc) in tf.TFun#f(1)
 :e
 let tf = new TFun(inc) in tf.TFun#f("1")
 //│ ╔══[COMPILATION ERROR] Type error in string literal with expected type 'T
-//│ ║  l.178: 	let tf = new TFun(inc) in tf.TFun#f("1")
+//│ ║  l.181: 	let tf = new TFun(inc) in tf.TFun#f("1")
 //│ ║         	                                    ^^^
 //│ ╟── because: cannot constrain  Str  <:  'T
 //│ ╟── because: cannot constrain  Str  <:  'T
@@ -289,7 +292,7 @@ throw new Error("oops")
 :e
 throw 42
 //│ ╔══[COMPILATION ERROR] Type error in throw
-//│ ║  l.290: 	throw 42
+//│ ║  l.293: 	throw 42
 //│ ║         	^^^^^^^^
 //│ ╙── because: cannot constrain  Int  <:  Error
 //│ Type: ⊥

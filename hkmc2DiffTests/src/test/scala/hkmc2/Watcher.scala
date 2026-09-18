@@ -111,7 +111,7 @@ class Watcher(dirs: Ls[File]):
       if isModuleFile
       then
         MLsCompiler(
-          mkRaise = ReportFormatter(System.out.println, colorize = true).mkRaise
+          mkRaise = ReportFormatter(System.out.println, rootPath, colorize = true).mkRaise
         ).compileModule(path)
       else
         val dm = new MainDiffMaker(rootPath.toString, path, preludePath, predefPath, relativeName):

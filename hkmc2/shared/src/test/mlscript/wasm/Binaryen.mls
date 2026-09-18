@@ -4,8 +4,9 @@
 
 // Helper functions
 import "binaryen"
+// `Features.All` is load-bearing here - see the regression test at the end of this file.
 fun compileWatToWasm(wat) = 
-  let mod = binaryen.parseTextWithFeatures of wat, binaryen.Features.All
+  let mod = binaryen.parseText of wat, binaryen.Features.All
   Predef.js_assert of mod.validate()
   val modBuf = mod.emitBinary()
   mod.dispose()
@@ -95,8 +96,9 @@ inst.exports.main() |> print
 // Regression Test for Binaryen:
 // `error: invalid type: distinct rec groups would be identical after binary writing (to resolve this, use --enable-gc)`
 //
-// The error will occur if the module is parsed using `binaryen.parseText` - `parseText` only enables MVP features
-// (not GC)
+// The error occurs when the module is parsed without GC enabled, which is what `parseText` defaults to. Passing
+// `binaryen.Features.All` as its second argument is what avoids it - note that `index.d.ts` still declares
+// `parseText` as taking only the text, so the argument reads as removable even though it is not.
 compileWatToWasm of 
     """
     (module

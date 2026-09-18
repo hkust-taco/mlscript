@@ -106,10 +106,12 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
     
     lazy val blockPrinter =
       given ShowCfg = ShowCfg(
+        showErasedTypes = showIRErasedTypes.isSet,
         showExpansionMappings = false,
         showFlowSymbols = true,
         debug = debug.isSet,
       )
+      given Elaborator.Ctx = curCtx
       Printer()
     val print = (p: codegen.Program) =>
       blockPrinter.worksheet(p)(using irPrintingScp).mkString(output.ColWidth)
@@ -170,6 +172,7 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
               output(prog.showAsTree)
             if showIR.isSet || showIRLines.isSet then
               given ShowCfg = ShowCfg(
+                showErasedTypes = showIRErasedTypes.isSet,
                 showExpansionMappings = false,
                 showFlowSymbols = true,
                 debug = debug.isSet,
@@ -189,6 +192,7 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
       if showOptimizedIR.isSet then
         outputSeparator("Optimized IR")
         given ShowCfg = ShowCfg(
+          showErasedTypes = showIRErasedTypes.isSet,
           showExpansionMappings = false,
           showFlowSymbols = true,
           debug = debug.isSet,
@@ -220,7 +224,7 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
       val exportedScoped = symbolsToPreserve.collect:
         case sym: ScopedSymbol if !importedSymbols.contains(sym) => sym
       
-      val resSym = new TempSymbol(N, "block$res")
+      val resSym = new TempSymbol(N, erasedType = N, "block$res")
       
       val resNme = nestedScp.allocateName(resSym)
       
@@ -297,7 +301,7 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
           val le =
             import codegen.*
             Assign(
-              Elaborator.State.noSymbol,
+              NoSymbol,
               Call(
                 Elaborator.State.runtimeSymbol.asSimpleRef.selSN("printRaw"),
                 (Arg(N, sym.asPath) :: Nil) ne_:: Nil)(CallMetadata.defaultMlsFun),

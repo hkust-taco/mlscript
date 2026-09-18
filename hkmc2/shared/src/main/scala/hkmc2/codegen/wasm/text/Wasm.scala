@@ -6,10 +6,16 @@ package text
 import hkmc2.utils.*, shorthands.*
 
 import document.*
-import semantics.{DefinitionSymbol, Elaborator, TempSymbol}, Elaborator.State
+import semantics.{BlockMemberSymbol, DefinitionSymbol, Elaborator, InnerSymbol, LocalVarSymbol, TempSymbol}, Elaborator.State
 import utils.Scope
 
 import scala.collection.Map
+
+/** Symbols that can represent an importable or exportable Wasm construct. */
+private[text] type ExternSymbol = BlockMemberSymbol | TempSymbol
+
+/** Symbols that can be lowered into a global or local slot in a Wasm function (i.e. parameters and locals). */
+private[text] type SlotSymbol = InnerSymbol | ScopedSymbol
 
 extension (doc: Document)
   /** Surrounds a document by the given `prefix` and `suffix`, unless the document is empty. */
@@ -22,7 +28,7 @@ extension (doc: Document)
 
 extension (scp: Scope)
   /** Convenience function for [[Scope.allocateOrGetName]] with an optional prefix and suffix. */
-  private[text] def allocateOrGetNameWrapped(sym: ValueSymbol, wrapId: Opt[Str] -> Opt[Str])(using Raise): Str =
+  private[text] def allocateOrGetNameWrapped(sym: ScopedSymbol, wrapId: Opt[Str] -> Opt[Str])(using Raise): Str =
     val prefix = wrapId._1.fold("")(prefix => s"${prefix}_")
     wrapId._2 match
       case S(suffix) =>
@@ -46,6 +52,13 @@ sealed abstract class Type extends ToWat:
   /** Same as [[[asValType]]], except throws an exception if this type is not a `ValType`. */
   def asValType_! : ValType = asValType.getOrElse:
     lastWords(s"asValType_! called on non-ValType: `$toWat` (${getClass.getName})")
+
+  /** Returns whether this type is a subtype of `parent` under the Wasm type hierarchy. */
+  def isSubtypeOf(parent: Type)(using Ctx): Bool = (this, parent) match
+    case (UnreachableType, _) => true
+    case (sub: RefType, sup: RefType) =>
+      (sup.nullable || !sub.nullable) && sub.heapType.superTypes.contains(sup.heapType)
+    case _ => this == parent
 
 private case object I32Type extends Type:
   def toWat: Document = doc"i32"
@@ -171,6 +184,29 @@ type AbsHeapType =
     | HeapType.NoFunc.type
 type HeapType = AbsHeapType | TypeIdx
 
+extension (ht: HeapType)
+  /** The chain of heap types this heap type is a subtype of, from itself up to its top type. */
+  private def superTypes(using Ctx): Ls[HeapType] =
+    import Ctx.ctx
+    val superTypes = ht match
+      case idx: TypeIdx =>
+        ctx.getTypeInfo_!(idx).compType match
+          case st: StructType if st.parents.nonEmpty => st.parents.toList.flatMap(_.superTypes)
+          case _: StructType => HeapType.Struct.superTypes
+          case _: ArrayType => HeapType.Array.superTypes
+          case _: FunctionType => HeapType.Func.superTypes
+      case HeapType.Eq => HeapType.Any :: Nil
+      case HeapType.I31 | HeapType.Struct | HeapType.Array => HeapType.Eq.superTypes
+      case _ => Ls.empty
+    ht :: superTypes
+
+  /** The top heap type of the hierarchy this heap type belongs to.
+    *
+    * `ref.cast` is only valid between two types sharing the same top heap type.
+    */
+  private def topType(using Ctx): HeapType = ht.superTypes.last
+end extension
+
 case class TypeUse(typeIdx: TypeIdx) extends ToWat:
   def toWat: Document = doc"(type ${typeIdx.toWat})"
 
@@ -236,16 +272,22 @@ case class GlobalType(valType: ValType, mutable: Bool) extends ToWat:
 
 object ExternType:
   /** An linear memory entry that is externally addressable. */
-  case class Mem(memType: MemType, override val sym: ValueSymbol, wrapId: Opt[Str] -> Opt[Str] = N -> N)(using Ctx, Raise)
-      extends ExternType(sym):
+  case class Mem(
+      memType: MemType,
+      override val sym: ExternSymbol,
+      wrapId: Opt[Str] -> Opt[Str] = N -> N,
+  )(using Ctx, Raise) extends ExternType(sym):
 
     val id: SymIdx = SymIdx(summon[Ctx].memoryScp.allocateOrGetNameWrapped(sym, wrapId))
 
     def toWat: Document = doc"""(memory ${id.toWat} ${memType.toWat})"""
 
   /** An function entry that is externally addressable. */
-  case class Func(typeUse: TypeUse, override val sym: ValueSymbol, wrapId: Opt[Str] -> Opt[Str] = N -> N)(using Ctx, Raise)
-      extends ExternType(sym):
+  case class Func(
+      typeUse: TypeUse,
+      override val sym: ExternSymbol,
+      wrapId: Opt[Str] -> Opt[Str] = N -> N,
+  )(using Ctx, Raise) extends ExternType(sym):
 
     val id: SymIdx = SymIdx(summon[Ctx].funcScp.allocateOrGetNameWrapped(sym, wrapId))
 
@@ -254,7 +296,7 @@ object ExternType:
   /** A global entry that is externally addressable. */
   case class Global(
       globalType: GlobalType,
-      override val sym: ValueSymbol,
+      override val sym: ScopedSymbol,
       wrapId: Opt[Str] -> Opt[Str] = N -> N,
   )(using Ctx, Raise) extends ExternType(sym):
 
@@ -263,7 +305,7 @@ object ExternType:
     def toWat: Document = doc"""(global ${id.toWat} ${globalType.toWat})"""
 end ExternType
 
-sealed abstract class ExternType(val sym: ValueSymbol) extends ToWat:
+sealed abstract class ExternType(val sym: ScopedSymbol) extends ToWat:
 
   /** Symbolic identifier for the extern declaration. */
   val id: SymIdx
@@ -287,9 +329,12 @@ case class MemUse(memidx: MemIdx) extends ToWat:
 object DataSegment:
   /** A passive data segment, which is not associated with any memory and must be explicitly loaded with `memory.init`.
     */
-  case class Passive(bytes: Seq[Str], override val sym: ValueSymbol, wrapId: Opt[Str] -> Opt[Str] = N -> N)(using Ctx, Raise)
-      extends DataSegment(bytes, sym, wrapId):
-    
+  case class Passive(
+      bytes: Seq[Str],
+      override val sym: ExternSymbol,
+      wrapId: Opt[Str] -> Opt[Str] = N -> N,
+  )(using Ctx, Raise) extends DataSegment(bytes, sym, wrapId):
+
     def toWat: Document =
       doc"(data ${id.toWat}${bytes.map(s => s"\"$s\"").mkDocument(doc" ").surroundUnlessEmpty(doc" ")})"
 
@@ -299,7 +344,7 @@ object DataSegment:
       offset: Expr,
       bytes: Seq[Str],
       memuse: Opt[MemUse],
-      override val sym: ValueSymbol,
+      override val sym: ExternSymbol,
       wrapId: Opt[Str] -> Opt[Str] = N -> N,
   )(using Ctx, Raise) extends DataSegment(bytes, sym, wrapId):
 
@@ -312,8 +357,11 @@ object DataSegment:
 end DataSegment
 
 /** A data segment entry. */
-sealed abstract class DataSegment(bytes: Seq[Str], val sym: ValueSymbol, wrapId: Opt[Str] -> Opt[Str])(using Ctx, Raise)
-    extends ToWat:
+sealed abstract class DataSegment(
+    bytes: Seq[Str],
+    val sym: ExternSymbol,
+    wrapId: Opt[Str] -> Opt[Str],
+)(using Ctx, Raise) extends ToWat:
 
   /** Symbolic identifier for the data segment. */
   val id = SymIdx(summon[Ctx].dataSegmentScp.allocateOrGetNameWrapped(sym, wrapId))
@@ -324,10 +372,10 @@ object ElemSegment:
     */
   case class Passive(
       override val elemlist: RefType -> Seq[Expr],
-      override val sym: ValueSymbol,
+      override val sym: ExternSymbol,
       wrapId: Opt[Str] -> Opt[Str] = N -> N,
   )(using Ctx, Raise) extends ElemSegment(elemlist, sym, wrapId):
-  
+    
     def toWat: Document = doc"(elem ${id.toWat} ${abbrevElemList})"
 
   /** An active element segment, which is automatically copied into a table given by `offset. */
@@ -335,10 +383,10 @@ object ElemSegment:
       offset: Expr,
       override val elemlist: RefType -> Seq[Expr],
       // TODO(Derppening): Add `tableuse` here if/when we support multiple tables.
-      override val sym: ValueSymbol,
+      override val sym: ExternSymbol,
       wrapId: Opt[Str] -> Opt[Str] = N -> N,
   )(using Ctx, Raise) extends ElemSegment(elemlist, sym, wrapId):
-  
+    
     def toWat: Document = doc"(elem ${id.toWat} ${offset.toWat} ${abbrevElemList})"
 
   /** A declarative element segment, which is used to forward declare references present in the code (such as using
@@ -346,17 +394,17 @@ object ElemSegment:
     */
   case class Declare(
       override val elemlist: RefType -> Seq[Expr],
-      override val sym: ValueSymbol,
+      override val sym: ExternSymbol,
       wrapId: Opt[Str] -> Opt[Str] = N -> N,
   )(using Ctx, Raise) extends ElemSegment(elemlist, sym, wrapId):
-  
+    
     def toWat: Document = doc"(elem ${id.toWat} declare ${abbrevElemList})"
 end ElemSegment
 
 /** An element segment entry. */
 sealed abstract class ElemSegment(
     val elemlist: RefType -> Seq[Expr],
-    val sym: ValueSymbol,
+    val sym: ExternSymbol,
     wrapId: Opt[Str] -> Opt[Str],
 )(using Ctx, Raise) extends ToWat:
 
@@ -421,7 +469,7 @@ case class FoldedInstr(
     *
     * ```scala
     * i32.add(
-    *   call(returnTypes = Seq(Result(I32Type), Result(I32Type)), /* ... */),
+    *   call(returnTypes = Seq(Result(I32Type), Result(I32Type)) /* ... */ ),
     *   i32.const(1),
     * )
     * ```

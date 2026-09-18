@@ -1,5 +1,4 @@
-:lift
-:js
+:.
 :noInline
 // :flowBasedOpt off // used to be `off` because lifter changes the parameter lists and DPE used to look at the original ones
 
@@ -247,19 +246,19 @@ let res = f(0)
 res.a
 res.b
 //│ ╔══[COMPILATION ERROR] Spread parameters are not supported in class parameters.
-//│ ║  l.242: 	  class A(...r) with
+//│ ║  l.241: 	  class A(...r) with
 //│ ╙──       	             ^
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'r'
-//│ ║  l.243: 	    fun a = r.push_back(x)
+//│ ║  l.242: 	    fun a = r.push_back(x)
 //│ ║         	            ^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.242: 	  class A(...r) with
+//│ ║  l.241: 	  class A(...r) with
 //│ ╙──       	             ^
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'r'
-//│ ║  l.244: 	    fun b = r
+//│ ║  l.243: 	    fun b = r
 //│ ║         	            ^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.242: 	  class A(...r) with
+//│ ║  l.241: 	  class A(...r) with
 //│ ╙──       	             ^
 //│ ═══[RUNTIME ERROR] ReferenceError: r is not defined
 //│ res = A()

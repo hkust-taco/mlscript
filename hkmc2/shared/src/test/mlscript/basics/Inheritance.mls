@@ -94,7 +94,7 @@ data class Some[out T](x: T) extends Option[T]
 //│ = [true, true, false, false]
 
 
-data class Barr(x: Int)(y: Int) with
+data class Barr(x: Int)(y: Num) with
   fun f = x + y
 
 data class Bazz(z: Int) extends Barr(z % 10)(z / 10) with

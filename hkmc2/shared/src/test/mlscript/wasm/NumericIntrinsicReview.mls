@@ -1,0 +1,127 @@
+// [Codex] Unboxed results returned from branches must determine the entry result type.
+
+:global
+:wasm
+
+
+// Both branches return i32, so the entry must return i32 too.
+if true then wasm.i32.const(1) else wasm.i32.const(2)
+//│ Wasm result:
+//│ = 1
+
+:ge
+if true then 1 else wasm.i32.const(2)
+//│ ═══[COMPILATION ERROR] Wasm entry function has incompatible result types `Int` and `Int32`
+
+
+// Floating-point branch results also determine the entry signature.
+if true then wasm.f64.const(1.5) else wasm.f64.const(2.5)
+//│ Wasm result:
+//│ = 1.5
+
+
+:ge
+fun chooseFloat(b: Bool): Float64 = if b then 1.5 else wasm.f64.const(2.5)
+//│ ═══[COMPILATION ERROR] Cannot use a value of type 'Num' at an unrelated type 'Float64'
+//│ ╔══[COMPILATION ERROR] WatBackend::result for Lit expression not implemented yet
+//│ ║  l.24: 	fun chooseFloat(b: Bool): Float64 = if b then 1.5 else wasm.f64.const(2.5)
+//│ ╙──      	                                              ^^^
+
+// A declared function result keeps the type available when its call is not inlined.
+:noInline
+fun chooseFloat(b: Bool): Float64 = if b then wasm.f64.const(1.5) else wasm.f64.const(2.5)
+chooseFloat(true)
+//│ Wasm result:
+//│ = 1.5
+
+
+// The inlined function must retain the same entry result as the control above.
+chooseFloat(false)
+//│ Wasm result:
+//│ = 2.5
+
+
+// Cover both remaining primitive representations and nested branches.
+if true then
+  if false then wasm.i64.const(1) else wasm.i64.const(2)
+else wasm.i64.const(3)
+//│ Wasm result:
+//│ = 2n
+
+
+if false then wasm.f32.const(1.5) else wasm.f32.const(2.5)
+//│ Wasm result:
+//│ = 2.5
+
+
+// A return inside a loop and the final return both constrain the entry signature.
+fun loopResult(b: Bool): Int64 =
+  while b do return wasm.i64.const(7)
+  wasm.i64.const(9)
+loopResult(true)
+//│ Wasm result:
+//│ = 7n
+
+
+// Definitions returning a different representation must not pollute the entry result.
+:noInline
+fun unrelated(): Float64 = wasm.f64.const(1.5)
+if true then wasm.i32.const(4) else wasm.i32.const(5)
+//│ Wasm result:
+//│ = 4
+
+
+// Different primitive representations have no common Wasm result type.
+:ge
+if true then wasm.i32.const(1) else wasm.f64.const(2.5)
+//│ ═══[COMPILATION ERROR] Wasm entry function has incompatible result types `Int32` and `Float64`
+
+
+// A primitive and a boxed value have no common result type either.
+:ge
+if false then wasm.i32.const(1) else 2
+//│ ═══[COMPILATION ERROR] Wasm entry function has incompatible result types `Int32` and `Int`
+
+
+// Statement values are discarded; a fallthrough without a value returns unit.
+if false do wasm.i32.const(1)
+//│ Wasm result:
+//│ = {}
+
+
+// Reference results join at their common parent rather than whichever branch appears first.
+// :wat
+class ResultBase
+class ResultLeft extends ResultBase
+class ResultRight extends ResultBase
+if true then ResultLeft() else ResultRight()
+//│ Wasm result:
+//│ = {}
+
+
+// A trapping branch contributes no result type.
+:re
+if true then throw 1 else wasm.i64.const(9)
+//│ Wasm result:
+//│ ═══[RUNTIME ERROR] 1
+
+
+// Joining a nullable unit reference with a class reference must keep nullability.
+// :wat
+class NullableResult
+if false then () else NullableResult()
+//│ Wasm result:
+//│ = {}
+
+
+// Distinct reference kinds still have a common Wasm reference supertype.
+class MixedResult
+if true then 7 else MixedResult()
+//│ Wasm result:
+//│ = 7
+
+
+// Returning through a labelled loop must also work when its early exit is not taken.
+loopResult(false)
+//│ Wasm result:
+//│ = 9n

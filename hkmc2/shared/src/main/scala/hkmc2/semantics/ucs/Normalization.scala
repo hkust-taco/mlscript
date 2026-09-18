@@ -390,7 +390,7 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
       val joinLabel = new LabelSymbol(N, sym.nme)
       sym.label = S(joinLabel)
       val transfersControl = cont match
-        case Ret | Thrw => true
+        case tailOp: TailOp => tailOp.transfersControl
         case _ => false
       if transfersControl then
         // Ret/Thrw emit `return`/`throw`, which transfer control out of the block
@@ -402,11 +402,18 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
         // the Label body into the rest. Wrap with an exit label and temp variable so every path stores its
         // result, breaks to exitLabel, then the original cont runs once.
         val exitLabel = new LabelSymbol(N, sym.nme + "$x")
-        val tmp = new TempSymbol(N)
+        val tmp = new TempSymbol(N, erasedType = N)
         LoweringCtx.loweringCtx.collectScopedSym(tmp)
-        val exitCont: Result => Block = r => Assign(tmp, r, Break(exitLabel))
+        // The representations of the results stored into `tmp`, recorded as each path is lowered. As with the
+        // `if`-result temp below, `tmp` is named before those paths are lowered, so the join can only be
+        // applied once both have been seen - here, before `cont` reads it.
+        var pathTypes: Ls[Opt[codegen.ErasedValueType]] = Nil
+        val exitCont: Result => Block = r =>
+          pathTypes ::= r.erasedValueType
+          Assign(tmp, r, Break(exitLabel))
         val bodyBlock = lowerSplit(sym.body, exitCont)
         val tailBlock = lowerSplit(tail, exitCont)
+        joinTempType(tmp, pathTypes)
         Label(exitLabel, false, Label(joinLabel, false, tailBlock, bodyBlock), cont(tmp.asSimpleRef))
     case Split.UseSplit(sym) =>
       sym.label match
@@ -420,7 +427,22 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
   private def throwMatchErrorBlock =
     Throw(Instantiate(mut = false, Select(State.globalThisSymbol.asThis, Tree.Ident("Error"))(S(ctx.builtins.Error))(false),
         (Value.Lit(syntax.Tree.StrLit("match error")).asArg :: Nil) :: Nil)(InstantiateMetadata.empty)) // TODO add failed-match scrutinee info
-  
+
+  /** Gives a lowering temp the join of the representations of the results stored into it.
+    *
+    * A temp holding the result of a branching term is named before its branches are lowered, so its own
+    * representation is only known once every branch has been seen; this must therefore run after they are
+    * lowered and before the continuation reads the temp.
+    *
+    * A branch of unknown representation, or a join with no common representation, leaves the temp untyped,
+    * which is what it was before any join existed: the join can only add information.
+    */
+  private def joinTempType(sym: TempSymbol, branchTypes: Ls[Opt[codegen.ErasedValueType]]): Unit =
+    if branchTypes.nonEmpty && branchTypes.forall(_.isDefined) then
+      branchTypes.flatten.map(_.canonicalize).reduce(ErasedType.lub) match
+      case _: ErasedType.Incompatible => ()
+      case joined => sym.populateErasedType(joined)
+
   import syntax.Keyword.{`if`, `while`}
   
   def apply(t: Term.IfLike)(k: Result => Block)(using config: Config)(using LoweringCtx): Block =
@@ -450,6 +472,10 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
     val useNestedScoped = form is IfLikeForm.While
     (if useNestedScoped then LoweringCtx.nestScoped else outerCtx).givenIn:
       var usesResTmp = false
+      // The erased types of the branch results assigned to `l`, recorded as each branch is lowered.
+      // `l` is named at the first such assignment, so its own representation can only be known once
+      // every branch has been seen; the join happens after `mainBlock` is built.
+      var branchTypes: Ls[Opt[codegen.ErasedValueType]] = Nil
       // The symbol of the temporary variable for the result of the `if`-like term.
       // It will be created in one of the following situations.
       // 1. The continuation `k` is not a tail operation.
@@ -457,7 +483,7 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
       // 3. The term is a `while` and the result is used.
       lazy val l =
         usesResTmp = true
-        val res = new TempSymbol(t)
+        val res = new TempSymbol(t, erasedType = N)
         outerCtx.collectScopedSym(res)
         res
       // The symbol for the loop label if the term is a `while`.
@@ -466,16 +492,20 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
         val res = new BlockMemberSymbol("while", Nil, false)
         outerCtx.collectScopedSym(res)
         res
-      lazy val tSym = TermSymbol.fromFunBms(f, N)
+      lazy val tSym = TermSymbol.fromFunBms(f, N, erasedType = N)
       val normalized = tl.scoped("ucs:normalize"):
         normalize(inputSplit)(using VarSet())
       tl.scoped("ucs:normalized"):
         tl.log(s"Normalized:\n${normalized.prettyPrint}")
       lazy val assignResult = (r: Result) =>
         form match
-        case IfLikeForm.ReturningIf => if (k is Ret) || (k is Thrw) then k(r) else Assign(l, r, End())
+        case IfLikeForm.ReturningIf =>
+          if (k is Ret) || (k is Thrw) then k(r)
+          else
+            branchTypes ::= r.erasedValueType
+            Assign(l, r, End())
         case IfLikeForm.ImperativeIf => Assign.discard(r, End())
-        case IfLikeForm.While => Assign(State.noSymbol, r, loopCont)
+        case IfLikeForm.While => Assign(NoSymbol, r, loopCont)
       // NOTE: `shouldRewriteWhile` is not the same as `config.rewriteWhileLoops`
       // as shouldRewriteWhile is always true when effect handler lowering is on
       lazy val loopCont = if config.shouldRewriteWhile
@@ -500,6 +530,10 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
         Scoped(
           if useNestedScoped then LoweringCtx.loweringCtx.getCollectedSym else Set.empty,
           mainBlock)
+      // Give the result temp the join of its branches' representations, after `mainBlock` and before `rest`
+      // reads `l`. This is what lets a conditional whose branches agree on a primitive representation keep
+      // it, instead of forcing the branches through the top type and rejecting the read.
+      if usesResTmp then joinTempType(l, branchTypes)
       // Embed the `body` into `Label` if the term is a `while`.
       lazy val rest = if usesResTmp then k(l.asSimpleRef) else k(lowering.unit)
       val block =
@@ -507,8 +541,8 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
           // NOTE: `shouldRewriteWhile` is not the same as `config.rewriteWhileLoops`
           // as shouldRewriteWhile is always true when effect handler lowering is on
           if config.shouldRewriteWhile then
-            val loopResult = TempSymbol(N)
-            val isReturned = TempSymbol(N)
+            val loopResult = TempSymbol(N, erasedType = N)
+            val isReturned = TempSymbol(N, erasedType = S(ErasedType.Bool))
             outerCtx.collectScopedSym(loopResult)
             outerCtx.collectScopedSym(isReturned)
             val loopEnd: Path =
@@ -547,14 +581,10 @@ object Normalization:
   /**
     * Subtyping relations used in normalization and coverage checking.
     */
-  def compareCasePattern(lhs: FlatPattern, rhs: FlatPattern)(using ctx: Elaborator.Ctx): Bool =
-    import FlatPattern.*, ctx.builtins as blt
+  def compareCasePattern(lhs: FlatPattern, rhs: FlatPattern)(using ctx: Elaborator.Ctx)(using State): Bool =
+    import codegen.ErasedType, FlatPattern.*, ctx.builtins as blt
     (lhs, rhs) match
-    // `Object` is the supertype of all (non-virtual) classes and modules.
-    case (ClassLike(_, cs: ClassSymbol, _, _), ClassLike(symbol = blt.`Object`))
-        if !ctx.builtins.virtualClasses.contains(cs) => true
-    // Class and module are subtypes of `Object`.
-    case (ClassLike(_, cs: ModuleOrObjectSymbol, _, _), ClassLike(symbol = blt.`Object`)) => true
+    case (ClassLike(_, cs, _, _), ClassLike(symbol = blt.`Object`)) => ErasedType.isSubtypeOf(cs, blt.Object).contains(true)
     case (Tuple(n1, false), Tuple(n2, false)) if n1 === n2 => true
     case (Tuple(n1, _), Tuple(n2, true)) if n2 <= n1 => true
     // TODO(Derppening): Do we limit IntLit to (1 << 31) - 1 for `Int31`?
@@ -587,7 +617,7 @@ object Normalization:
     * Returns `true` for clear-cut cases (e.g., different literals,
     * incompatible tuple sizes, sibling classes under single inheritance).
     */
-  def areProvablyDisjoint(lhs: FlatPattern, rhs: FlatPattern)(using ctx: Elaborator.Ctx): Bool =
+  def areProvablyDisjoint(lhs: FlatPattern, rhs: FlatPattern)(using ctx: Elaborator.Ctx)(using State): Bool =
     import FlatPattern.*
     (lhs, rhs) match
     case (Lit(l1), Lit(l2)) => !(l1 === l2)

@@ -90,7 +90,7 @@ class FlowAnalysisBasedRewrite(
             case (targets, idx) =>
               val eliminable = eliminableParamsOf(targets)
               val params = (0 until targets.paramCount).iterator.filterNot(eliminable).map: i =>
-                Param.simple(new VarSymbol(new Tree.Ident(s"eta$$$idx$$$i")))
+                Param.simple(new VarSymbol(new Tree.Ident(s"eta$$$idx$$$i"), erasedType = N))
               .toList
               EtaParamList(
                 ParamList(ParamListFlags.empty, params, N),
@@ -138,7 +138,7 @@ class FlowAnalysisBasedRewrite(
             Return(
               Call(fun, (argss ++ activeEtaArgss).ne_!)(c.metadata))
           case _ =>
-            val tmp = TempSymbol(N, "eta$res")
+            val tmp = TempSymbol(N, erasedType = N, "eta$res")
             Scoped(
               Set.single(tmp),
               Assign(tmp, res2, Return(etaCall(tmp.asPath).withLocOf(res2))))
@@ -247,7 +247,7 @@ class FlowAnalysisBasedRewrite(
     val (rewrittenParams, rewrittenBody) = rewritten
     val refreshParamMap = MutMap.empty[Symbol, Symbol]
     def refreshParam(p: Param): Param =
-      val newSym = new VarSymbol(Tree.Ident(p.sym.name))
+      val newSym = new VarSymbol(Tree.Ident(p.sym.name), erasedType = p.sym.erasedType)
       refreshParamMap(p.sym) = newSym
       Param(p.flags, newSym, p.sign, p.modulefulness)
     val refreshedParams = rewrittenParams.map:

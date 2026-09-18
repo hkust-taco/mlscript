@@ -78,7 +78,7 @@ abstract class PolyInstantiationRewrite(val constraintSolver: FlowConstraintSolv
             val name = path.mkFunName + s"$$${f.nme}"
             f -> (
               new BlockMemberSymbol(name, Nil, true),
-              new TermSymbol(Fun, N, Tree.Ident(name)))
+              new TermSymbol(Fun, N, Tree.Ident(name), erasedType = f.erasedType))
           .toMap)
     res
   end newPolyFnSyms

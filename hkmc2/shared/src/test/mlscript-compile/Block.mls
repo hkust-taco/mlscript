@@ -66,6 +66,7 @@ class Path extends Result with
     ValueSimpleRef(val l: Symbol)
     ValueMemberRef(val l: Symbol)
     ValueLit(val lit: Literal)
+    Cast(val value: Result, val target: Symbol, val check: Bool)
 
 class Defn with 
   constructor 
@@ -113,6 +114,8 @@ fun showPath(p: Path): Str =
     ValueSimpleRef(l) then showSymbol(l)
     ValueMemberRef(l) then showSymbol(l)
     ValueLit(lit) then showLiteral(lit)
+    Cast(value, target, true) then "(" + showResult(value) + " as! " + showSymbol(target) + ")"
+    Cast(value, target, false) then "(" + showResult(value) + " as!! " + showSymbol(target) + ")"
 
 fun showArg(arg: Arg) =
   showPath(arg.value)
