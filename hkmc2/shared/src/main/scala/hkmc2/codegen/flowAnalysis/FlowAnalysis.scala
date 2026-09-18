@@ -19,6 +19,8 @@ object FlowAnalysis:
 
   class State(using val eState: Elaborator.State):
     val resultToResultId = new java.util.IdentityHashMap[Result, ResultId].asScala
+    
+    /** This buffer is currently only used internally for logging (`logNonAffineSyms` and `logAccumulatorSyms`) */
     val stratVars = mutable.Buffer.empty[StratVar]
 
     private def resultIdName(result: Result): Str = result match
