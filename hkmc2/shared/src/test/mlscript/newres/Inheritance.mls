@@ -1,0 +1,151 @@
+:.
+
+
+:sr
+class Foo(val x)
+//│ ————————————————| Resolved |————————————————————————————————————————————————————————————————————————
+//│   fun Foo⁰ class Foo¹::Foo²(val x⁰) { val x¹::x² ‹flow:x⁰› = x⁰^x² }
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+
+// :elt
+:sr
+:sjs
+class Bar(y) extends Foo(y + 1) {
+  val z = this.x + 1
+}
+//│ ————————————————| Resolved |————————————————————————————————————————————————————————————————————————
+//│   fun Bar⁰
+//│   class Bar¹::Bar²(y⁰) extends new Foo¹(+(y⁰, 1)‹app⁰›) {
+//│     @private val y¹::y² ‹flow:y⁰› = y⁰^y²,
+//│     val z⁰::z¹ ‹flow:z⁰› = +(Bar².x¹, 1)‹app¹›
+//│   }
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ let Bar1;
+//│ Bar1 = function Bar(y) {
+//│   return globalThis.Object.freeze(new Bar.class(y));
+//│ };
+//│ (class Bar extends Foo1.class {
+//│   static {
+//│     Bar1.class = this
+//│   }
+//│   constructor(y) {
+//│     let tmp;
+//│     tmp = y + 1;
+//│     super(tmp);
+//│     let tmp1;
+//│     tmp1 = this.x + 1;
+//│     this.z = tmp1;
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "Bar", [null]];
+//│ });
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+let b = Bar(123)
+//│ b = Bar(_)
+
+// :de
+:sr
+b.x
+//│ ————————————————| Resolved |————————————————————————————————————————————————————————————————————————
+//│   b⁰.x¹
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 124
+
+:breakme
+:e
+b.y
+
+b.z
+//│ = 125
+
+
+let b = new Bar(123)
+//│ b = Bar(_)
+
+:breakme
+:e
+b.y
+
+:fixme
+b.x
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.72: 	b.x
+//│ ║        	^^^
+//│ ╟── Instance of class 'Bar' does not contain member 'x'
+//│ ║  l.64: 	let b = new Bar(123)
+//│ ╙──      	        ^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+b.z
+//│ = 125
+
+
+:fixme
+class Baz extends Bar(42) {
+  val a = [this.z, this.x]
+}
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.87: 	  val a = [this.z, this.x]
+//│ ║        	                   ^^^^^^
+//│ ╟── Class definition 'Baz' does not contain member 'x'
+//│ ║  l.87: 	  val a = [this.z, this.x]
+//│ ╙──      	          ^^^^^^^^^^^^^^^^
+
+
+
+
+module Outer {
+  class Inner1 {
+    constructor(val x)
+  }
+  class Inner2(val x)
+}
+
+:e
+object Derived extends Outer.Inner1
+//│ ╔══[COMPILATION ERROR] Extending a partially applied class is not supported
+//│ ║  l.107: 	object Derived extends Outer.Inner1
+//│ ╙──       	                       ^^^^^^^^^^^^
+
+:sr
+:sir
+object Derived extends Outer.Inner1(11)
+//│ ————————————————| Resolved |————————————————————————————————————————————————————————————————————————
+//│   object Derived⁰::Derived¹ extends new Outer⁰.Inner1⁰(11) {  }
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define Derived⁰ as object Derived¹ extends Outer⁰.Inner1⁰ {}; end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+:fixme
+Derived.x
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.122: 	Derived.x
+//│ ║         	^^^^^^^^^
+//│ ╟── Object 'Derived' does not contain member 'x'
+//│ ║  l.114: 	object Derived extends Outer.Inner1(11)
+//│ ╙──       	       ^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+Derived."x"
+
+:e
+object Derived extends Outer.Inner2
+//│ ╔══[COMPILATION ERROR] Extending a partially applied class is not supported
+//│ ║  l.134: 	object Derived extends Outer.Inner2
+//│ ╙──       	                       ^^^^^^^^^^^^
+
+:sr
+:sir
+object Derived extends Outer.Inner2(12)
+//│ ————————————————| Resolved |————————————————————————————————————————————————————————————————————————
+//│   object Derived²::Derived³ extends new Outer⁰.Inner2⁰(12) {  }
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define Derived² as object Derived³ extends Outer⁰.Inner2⁰ {}; end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+Derived.x
+//│ = 12
+
+

@@ -1,0 +1,118 @@
+:.
+
+
+:sr
+:sir
+module Foo {
+  module Bar {
+    fun id(x) = x
+  }
+}
+//│ ————————————————| Resolved |————————————————————————————————————————————————————————————————————————
+//│   module Foo⁰::Foo¹ { module Bar⁰::Bar¹ { fun id⁰::id¹(x⁰) ‹flow:id⁰› = x⁰ } }
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define Foo⁰ as class Foo¹
+//│ module Foo² {
+//│   constructor {
+//│     define Bar⁰ as class Bar¹
+//│     module Bar² { method id⁰ = fun id¹(x) { return x } };
+//│     end
+//│   }
+//│ };
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+// :de
+:sr
+:sir
+:lot
+Foo.Bar
+//│ ————————————————| Resolved |————————————————————————————————————————————————————————————————————————
+//│   Foo⁰.Bar⁰
+//│ —————————————| Lowered IR Tree |————————————————————————————————————————————————————————————————————
+//│ Program:
+//│   main = Return of Select{sym=module:Bar²}:
+//│     qual = MemberRef{disamb=module:Foo²}:
+//│       bms = member:Foo⁰
+//│       disamb = module:Foo²
+//│     name = Ident of "Bar"
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ return Foo².Bar²
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = class Bar
+
+:sr
+Foo.Bar.id
+//│ ————————————————| Resolved |————————————————————————————————————————————————————————————————————————
+//│   Foo⁰.Bar⁰.id⁰
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = fun id
+
+
+let
+  f = Foo
+  b = f.Bar
+//│ b = class Bar
+//│ f = class Foo { Bar: class Bar }
+
+:elt
+b.id
+//│ —————————————| Elaborated tree |————————————————————————————————————————————————————————————————————
+//│ Blk:
+//│   res = NewSel:
+//│     prefix = SimpleRef of b⁰
+//│     id = Ident of "id"
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = fun id
+
+
+// :de
+:sr
+let m = if maybe then Foo.Bar else Predef
+//│ ————————————————| Resolved |————————————————————————————————————————————————————————————————————————
+//│   let m⁰, m⁰ = if { let scrut⁰ = ⟨Predef⁰.⟩maybe⁰; scrut⁰ is true then Foo⁰.Bar⁰; else Predef⁰ }
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ m = class Bar
+
+:sr
+:e
+m.id
+//│ ————————————————| Resolved |————————————————————————————————————————————————————————————————————————
+//│   m⁰.id‹id², id⁰›
+//│ ╔══[COMPILATION ERROR] This selection of member 'id' is ambiguous, as it has multiple resolved targets
+//│ ║  l.79: 	m.id
+//│ ║        	^^^^
+//│ ╟── target: function 'id' in module 'Predef'
+//│ ║  in ../../mlscript-compile/Predef.mls
+//│ ║  l.18: 	fun id(x) = x
+//│ ║        	^^^^^^^^^^^^^
+//│ ╟── target: function 'id' in module 'Bar'
+//│ ║  in NestedModules.mls:6
+//│ ║  l.8: 	    fun id(x) = x
+//│ ╙──     	    ^^^^^^^^^^^^^
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+
+let x = id(Foo.Bar)
+//│ x = class Bar
+
+// * We don't currently resolve *through* external definitions
+:todo
+x.id
+//│ ╔══[COMPILATION ERROR] This selection of member 'id' has no resolved target
+//│ ║  l.102: 	x.id
+//│ ╙──       	^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+
+fun localid(x) = x
+
+localid(Foo.Bar).id
+//│ = fun id
+
+// * We preserve context sensitivity
+localid(Predef).id
+//│ = fun id
+
+

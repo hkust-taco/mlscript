@@ -2,7 +2,7 @@ package hkmc2
 package semantics
 
 import scala.collection.mutable
-import scala.collection.mutable.{Set => MutSet}
+import scala.collection.mutable.{Buffer, LinkedHashSet}
 
 import hkmc2.utils.*, shorthands.*
 import syntax.*
@@ -186,14 +186,25 @@ object FlowSymbol:
     // FlowSymbol("‹app-res›")
     // FlowSymbol("@")
     FlowSymbol("app")
-
+  
+  def pat()(using State) =
+    FlowSymbol("pat")
+  
+  def neww()(using State) =
+    FlowSymbol("new")
+  
   def sel(nme: Str)(using State) =
     FlowSymbol(s"⋅$nme")
   def synthSel(nme: Str)(using State) =
     FlowSymbol(s"(⋅)$nme")
   def selProj(nme: Str)(using State) =
     FlowSymbol(s"#⋅$nme")
-
+  
+  // def memSym(sym: MemberSymbol, nme: Str)(using State) =
+  //   FlowSymbol(s"$nme(${sym.nme})")
+  def memSym(sym: MemberSymbol)(using State) =
+    FlowSymbol(sym.nme)
+  
   def lds(nme: Str)(using State) =
     FlowSymbol(s"Ɛ⋅$nme")
   
@@ -203,7 +214,13 @@ class ConcreteFlowSymbol(label: Str)(using State) extends FlowSymbol(label):
   def subst(using s: SymbolSubst): FlowSymbol = s.mapFlowSym(this)
 
 
-sealed trait LocalSymbol extends Symbol
+// sealed trait LocalSymbol extends Symbol, ShapePublisher:
+//   /** Shapes are published in discovery order. Resolution replays this collection to late
+//     * listeners, so an unordered set would make ambiguous-target diagnostics depend on hash and
+//     * parallel compilation timing. */
+//   private[semantics] val shapes: LinkedHashSet[Shape] = LinkedHashSet.empty
+sealed trait LocalSymbol extends Symbol, ShapeHost
+
 sealed trait NamedSymbol extends Symbol:
   def name: Str
   def id: Ident
@@ -300,6 +317,17 @@ class BlockMemberSymbol(val nme: Str, val trees: Ls[TypeOrTermDef], val nameIsMe
   // * This is a hack for that `TermDef` currently doesn't have a symbol. 
   var tsym: Opt[TermSymbol] = N
   var sourceAliases: Ls[Str] = Nil
+  
+  private var defnListeners: Buffer[() => Unit] = Buffer.empty
+  def complete(): Unit = if defnListeners isnt null then
+    defnListeners.foreach(_())
+    defnListeners = null // free memory and prevent further listening
+  /** Called when all the symbols covered by this BMS are present, with their definitions set. */
+  def onComplete(f: () => Unit): Unit =
+    if defnListeners is null then
+      f()
+    else
+      defnListeners += f
   
   def toLoc: Option[Loc] = Loc(trees)
   
@@ -458,8 +486,14 @@ sealed trait DefinitionSymbol[Defn <: Definition] extends MemberSymbol:
   def defn_=(d: S[Defn]): Unit =
     require(_defn.isEmpty, s"Cannot reassign defn of ${this} from ${_defn} to ${d}")
     _defn = d
+    defnListeners.foreach(_(d.value))
+    defnListeners = null // free memory and prevent further listening
+  
   var decl: Opt[Declaration] = N // NOTE: currently only assigned for class params and only used by deforestation; may want to just remove it once deforestation is improved
   def bms: Opt[BlockMemberSymbol] = defn.map(_.bsym) 
+  
+  // TODO: rm
+  private[semantics] var defnListeners: Buffer[Defn => Unit] = Buffer.empty
   
   // * Although the IR is immutable,
   // * we consider that a given symbol is *owned* by the IR Defn node that defines it.
@@ -498,7 +532,7 @@ end DefinitionSymbol
   * One overloaded `BlockMemberSymbol` may correspond to multiple `InnerSymbol`s
   * A `Ref(_: InnerSymbol)` represents a `this`-like reference to the current object. */
   // TODO prevent from appearing in Ref
-sealed trait InnerSymbol(using State) extends Symbol:
+sealed trait InnerSymbol(using State) extends Symbol, ShapePublisher:
   // Ideally, InnerSymbol should extend DefinitionSymbol, but that requires us to specify the type
   // parameter to all occurrences of InnerSymbol. So, we use a self-type annotation instead to
   // ensure that any implementation of InnerSymbol is also a DefinitionSymbol.

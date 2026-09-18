@@ -512,6 +512,13 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
         case N =>
           doc"${scope.lookup_!(sym, sym.toLoc)} = ${result(p)};${returningTerm(rst, endSemi)}"
         case S(owner) =>
+          
+          
+          
+          
+          
+          
+          
           val thisDoc = mkThis(owner)
           val nme = sym.nme
           owner match 

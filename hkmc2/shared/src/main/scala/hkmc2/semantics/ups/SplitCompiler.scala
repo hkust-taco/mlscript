@@ -119,8 +119,10 @@ object SplitCompiler:
 import SplitCompiler.*
 
 /** This class compiles a pattern to a split that matches the pattern. */
-class SplitCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesizer:
+class SplitCompiler(using tl: TL)(using State, Ctx, Raise, Config) extends TermSynthesizer:
   import tl.*, SP.*
+  
+  val newResolution: Bool = config.language.useNewResolution
   
   private lazy val lteq = State.builtinOpsMap("<=")
   private lazy val lt = State.builtinOpsMap("<")
@@ -649,6 +651,17 @@ class SplitCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
    */
   def makeMatchSplit(scrutinee: Scrut, pattern: SP, outputNeeded: Bool): MakeSplit =
     pattern match
+      case ctor @ Constructor(target, arguments) if newResolution =>
+        ctor.resolvedSym match
+        case S(classSymbol: ClassSymbol) =>
+          makeMatchClassSplit(scrutinee, target, classSymbol, arguments, outputNeeded)
+        case S(objectSymbol: ModuleOrObjectSymbol) =>
+          makeMatchObjectSplit(pattern.toLoc, scrutinee, target, objectSymbol, arguments)
+        case S(patternSymbol: PatternSymbol) =>
+          makeMatchPatternSplit(scrutinee, target, patternSymbol, arguments)
+        case _ =>
+          error(msg"Cannot use this ${target.describe} as a pattern." -> target.toLoc)
+          RejectSplit
       case Constructor(target, arguments) => target.resolvedSym match
         case S(symbol: VarSymbol) =>
           makeMatchPatternParameterSplit(scrutinee, target, symbol, arguments, pattern.toLoc)

@@ -21,6 +21,7 @@ import semantics.Elaborator.{State, Ctx, ctx}
 
 import syntax.{Literal, Tree, SpreadKind}
 import hkmc2.syntax.{Fun, Keyword, LetBind, MutVal}
+import sem.flow.SelectionTarget
 
 
 abstract class TailOp(val transfersControl: Bool) extends (Result => Block)
@@ -85,6 +86,9 @@ object Lowering:
 import Lowering.*
 
 class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
+  
+  val newResolution: Bool = config.language.useNewResolution
+  val strictResolution: Bool = config.language.strictResolution
   
   extension (t: Term)
     def instantiated = t match
@@ -184,13 +188,13 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
         new TailOp(transfersControl = true):
           override def apply(k: Result): Block = Ret(castTo(k, returnType, N))
   
-  def parentConstructor(parentClsPath: Path, cls: Term, args: Ls[Term])(using LoweringCtx) =
+  def parentConstructor(parentClsPath: Path, cls: Term, args: Ls[Term], loc: Opt[Loc])(using LoweringCtx) =
     lowerSuperCtorCall(
       parentClsPath,
       State.builtinOpsMap("super").asSimpleRef,
       isMlsFun = true,
       args,
-      N, // TODO: location?
+      loc,
     )(c => Assign(NoSymbol, c, End()))
   
   // * Used to work around Scala's @tailrec annotation for those few calls that are not in tail position.
@@ -404,8 +408,8 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
             assert(k isnt syntax.Mod) // modules can't extend things and can't have super calls
             val cfgOverride = defn.extraAnnotations.collectFirst:
               case Annot.Config(modify) => modify(config)
-            subTerm(ext.cls): clsp =>
-              val pctor = inScopedBlock(parentConstructor(clsp, ext.cls, ext.args))
+            classOf(ext.cls, ext): clsp =>
+              val pctor = inScopedBlock(parentConstructor(clsp, ext.cls, ext.args, ext.toLoc))
               Define(
                 ClsLikeDefn(
                   defn.owner, defn.sym, defn.bsym, defn.ctorSym, defn.kind, defn.paramsOpt, defn.auxParams, S(clsp),
@@ -417,6 +421,39 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
           blockImpl(stats, res)
     
     blockImpl(imps ::: funs ::: rest, res)
+  
+  def classOf(trm: Term, nw: Resolvable)(k: Path => Block)(using LoweringCtx): Block =
+    if newResolution then
+      trm.withoutCaptures match
+      case resl: NewResolvable =>
+        resl.resolvedTargets.distinct match
+        case cls :: Nil =>
+          cls.defn match
+          case S(clsDef: ClassLikeDef) =>
+            resl match
+            case MemberRef(bms: BlockMemberSymbol) =>
+              k(Value.MemberRef(bms, clsDef.sym))
+            case MemberRef(tr: TermSymbol) =>
+              ???
+            case MemberRef(_) => die // FIXME: should make this unreachable
+            case sel: NewSel =>
+              subTerm(sel.prefix): pre =>
+                k(Select(pre, memberIdent(sel.id, S(clsDef.bsym)))(S(clsDef.sym))(false))
+          case _ =>
+            softAssert(resl.isErroneous, s"Unexpected `new` target: ${cls.showDbg}")
+            compError
+        case Nil =>
+          if !resl.isErroneous then raise:
+            ErrorReport(
+              msg"Cannot resolve the class instantiated here" -> trm.toLoc :: Nil,
+              source = Diagnostic.Source.Compilation)
+          compError
+        case _ =>
+          ???
+      case _ =>
+        softAssert(nw.isErroneous, "Unexpected class term shape")
+        compError
+    else subTerm(trm)(k)
   
   def getClassParamLists(cls: Path): Ls[ParamList] =
     cls.targetSymbol match
@@ -611,7 +648,39 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
       case td: TermDefinition => (td.k is syntax.Fun) && td.params.isEmpty
       case _ => false
   
-  def ref(ref: st.Ref, annots: List[Annot], disamb: Opt[DefinitionSymbol[?]], inStmtPos: Bool)(k: Result => Block)(using LoweringCtx): Block =
+  def selSymbol(sel: AnySelTerm): Opt[DefinitionSymbol[?]] =
+    sel.validResolvedTargets match
+    // sel.resolvedTargets match
+    case Nil =>
+      if newResolution && !sel.isErroneous then raise:
+        ErrorReport(
+          msg"This selection of member '${sel.nme.name}' has no resolved target" -> sel.toLoc ::
+          Nil, S(sel), source = Diagnostic.Source.Compilation)
+      N
+    case SelectionTarget.ObjectMember(sym: DefinitionSymbol[?]) :: Nil =>
+      S(sym)
+    case SelectionTarget.ObjectMember(sym: BlockMemberSymbol) :: Nil =>
+      // TODO: instead, make SelectionTarget a listener that resolves to a more precise target
+      sym.asTrm orElse sym.asModOrObj match
+      case s @ S(mod) => s
+      case N =>
+        if newResolution && !sel.isErroneous then raise:
+          ErrorReport(
+            msg"Selection target ${sym.describe} '${sym.nme}' cannot be used as a term" -> sel.toLoc ::
+            Nil, S(sel), source = Diagnostic.Source.Compilation)
+        N
+    case ts =>
+      if newResolution && strictResolution && !sel.isErroneous then raise:
+        // println(ts)
+        // ???
+        ErrorReport(
+          msg"Selection of member '${sel.nme.name}' is ambiguous, as it has multiple resolved targets" -> sel.toLoc ::
+            ts.map: t =>
+              msg"target: ${t.describe}" -> t.loc
+            , S(sel), source = Diagnostic.Source.Compilation)
+      N
+  
+  def ref(ref: AnyRef_, annots: List[Annot], disamb: Opt[DefinitionSymbol[?]], inStmtPos: Bool)(k: Result => Block)(using LoweringCtx): Block =
     def warnStmt = if inStmtPos then warnPureExprInStmtPos(ref.toLoc, S(ref))
     
     val sym = ref.sym
@@ -823,6 +892,38 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
     case st.CtxTup(fs) =>
       // * This case is currently triggered for code such as `f(using 42)`
       args(fs, Nil)(args => k(Tuple(mut = false, args)))
+    case t @ st.SimpleRef(sym) =>
+      ref(t, annots, N, inStmtPos = inStmtPos)(k)
+    case t @ st.SelfRef(sym) =>
+      ref(t, annots, N, inStmtPos = inStmtPos)(k)
+    case t @ st.MemberRef(bms) =>
+      t.resolvedTargets.distinct match
+      case Nil =>
+        // fail:
+        //   ErrorReport(
+        //     msg"Member reference '${sym.nme}' has no resolved target" -> t.toLoc :: Nil, S(t),
+        //     source = Diagnostic.Source.Compilation)
+        bms.asTrm orElse bms.asModOrObj orElse bms.asCls match
+        case s @ S(_) =>
+          ref(t, annots, s, inStmtPos = inStmtPos)(k)
+        case N =>
+          if t.isErroneous then raise:
+            ErrorReport(
+              msg"Member reference '${bms.nme}' cannot be used as a term" -> t.toLoc :: Nil, S(t),
+              source = Diagnostic.Source.Compilation)
+          compError
+      case trgt :: Nil =>
+        ref(t, annots, S(trgt), inStmtPos = inStmtPos)(k)
+      case ts =>
+        if strictResolution && !t.isErroneous then raise:
+          ErrorReport(
+            msg"Member reference '${bms.nme}' is ambiguous, as it has multiple resolved targets" -> t.toLoc ::
+              ts.map: t =>
+                msg"target: ${t.describeKind}" -> t.toLoc
+              , S(t), source = Diagnostic.Source.Compilation)
+        compError
+    case Capture(base, thru) =>
+      term(base, inStmtPos = inStmtPos)(k)
     case t @ st.Ref(sym) =>
       ref(t, annots, N, inStmtPos = inStmtPos)(k)
     case st.Resolved(t @ st.Ref(bsym), sym) =>
@@ -973,7 +1074,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
       // * are preserved in the call and not moved to a temporary variable.
       case sel @ Sel(prefix, nme) =>
         subTerm(prefix): p =>
-          conclude(Select(p, nme)(N)(false).withLocOf(sel))
+          conclude(Select(p, nme)(selSymbol(sel))(false).withLocOf(sel))
       case Resolved(sel @ Sel(prefix, nme), sym) =>
         subTerm(prefix): p =>
           conclude(Select(p, definitionIdent(nme, sym))(S(sym))(false).withLocOf(sel))
@@ -1081,12 +1182,58 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
 
     case whltrm: st.SynthWhile => ucs.Normalization(this)(whltrm)(k)
       
+    case sel @ NewSel(prefix, id) =>
+      if sel.isErroneous then compError else
+        // /* 
+        // TODO dedup with MemberRef
+        sel.resolvedMembers.distinct match
+        case Nil =>
+          fail:
+            // ErrorReport(
+            //   msg"Member reference '${sym.nme}' has no resolved target" -> t.toLoc :: Nil, S(t),
+            //   source = Diagnostic.Source.Compilation)
+            ErrorReport(
+              msg"This selection of member '${sel.id.name}' has no resolved target" -> sel.toLoc ::
+              Nil, S(sel), source = Diagnostic.Source.Compilation)
+        case bms :: Nil =>
+          sel.resolvedTargets.distinct match
+          case Nil =>
+            bms.asTrm orElse bms.asModOrObj orElse bms.asCls match
+            case s @ S(_) =>
+              setupSelection(prefix, id, s)(k)
+            case N =>
+              if sel.isErroneous then raise:
+                ErrorReport(
+                  msg"Member reference '${bms.nme}' cannot be used as a term" -> sel.toLoc :: Nil, S(sel),
+                  source = Diagnostic.Source.Compilation)
+              compError
+          case trgt :: Nil => setupSelection(prefix, id, S(trgt))(k)
+          case ts => ???
+        case ts =>
+          // if t.isErroneous then 
+          if strictResolution then fail:
+            ErrorReport(
+              msg"This selection of member '${sel.id.name}' is ambiguous, as it has multiple resolved targets" -> t.toLoc ::
+                ts.map: t =>
+                  msg"target: ${t.describe} '${t.nme}'${
+                    t.asTrm.fold("")(_.owner.fold("")(o => s" in ${o.asBlkMember.get.describe} '${o.nme}'")) // TOOD other kinds of owned symbols
+                  }" -> t.toLoc
+                , S(ts.map(s => s.showDbg + " " + s.tsym.map(_.showDbg))), source = Diagnostic.Source.Compilation)
+          // compError
+          else setupSelection(prefix, id, N)(k)
+          // ???
+        // */
+        
+    
     case sel @ Sel(prefix, nme) =>
-      setupSelection(prefix, nme, N)(k)
+      if sel.isErroneous then compError else
+        setupSelection(prefix, nme, selSymbol(sel))(k)
     case Resolved(sel @ Sel(prefix, nme), sym) =>
       setupSelection(prefix, nme, S(sym))(k)
     
     case sel @ SynthSel(prefix, nme) =>
+      // System.out.println(sel)
+      // System.out.println(sel.sym)
       // * Not using `setupSelection` as these selections are not meant to be sanity-checked
       // * Unlike source `Sel`s, compiler-synthesized selections may carry a known
       // * member symbol directly in `sel.sym` without being wrapped in `Resolved`.
@@ -1095,8 +1242,10 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
       // * definition when one exists. Do not use this fallback for ordinary `Sel`
       // * lowering unless that convention is changed at the source.
       subTerm(prefix): p =>
-        k(Select(p, memberIdent(nme, sel.sym))(sel.sym.collect:
-          case s: DefinitionSymbol[?] => s
+        k(Select(p, memberIdent(nme, sel.sym))(sel.sym.flatMap:
+          case s: DefinitionSymbol[?] => S(s)
+          case bms: BlockMemberSymbol => bms.asTrm // TODO: clean up logic
+          case err: ErrorSymbol => N
         )(false))
     case Resolved(sel @ SynthSel(prefix, nme), sym) =>
       // * Not using `setupSelection` as these selections are not meant to be sanity-checked
@@ -1110,23 +1259,23 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
       
       
     case nw @ (_: New | _: DynNew | Mut(_: New | _: DynNew)) =>
-      val (mut, cls, as, rft) = nw match
-        case New(c, a, r) => (false, c, a, r)
-        case Mut(New(c, a, r)) => (true, c, a, r)
-        case DynNew(c, a) => (false, c, a, N)
-        case Mut(DynNew(c, a)) => (true, c, a, N)
+      val (mut, cls, as, rft, nwtrm) = nw match
+        case nwtrm @ New(c, a, r) => (false, c, a, r, nwtrm)
+        case Mut(nwtrm @ New(c, a, r)) => (true, c, a, r, nwtrm)
+        case nwtrm @ DynNew(c, a) => (false, c, a, N, nwtrm)
+        case Mut(nwtrm @ DynNew(c, a)) => (true, c, a, N, nwtrm)
         case _ => spuriousWarning
-      subTerm(cls): sr =>
+      classOf(cls, nwtrm): sr =>
         rft match
         case N => lowerMultiInstantiate(mut, sr, as, annots)(k)
         case S((isym, rft)) =>
           val sym = new BlockMemberSymbol(isym.name, Nil)
           loweringCtx.collectScopedSym(sym)
           val (mtds, publicFlds, privateFlds, ctor) = gatherMembers(rft)
-          val pctor = parentConstructor(sr, cls, as)
+          val pctor = parentConstructor(sr, cls, as, nw.toLoc)
           val clsDef = ClsLikeDefn(N, isym, sym, N, syntax.Cls, N, Nil, S(sr),
             mtds, privateFlds, publicFlds, pctor, ctor, N, N)(N, Nil)
-          val inner = new New(sym.ref().resolved(isym), Nil, N)(N)
+          val inner = new New(sym.ref().resolved(isym), Nil, N)(FlowSymbol.neww(), N)
           Define(clsDef, term_nonTail(if mut then Mut(inner) else inner)(k))
       
     case Try(sub, finallyDo) =>

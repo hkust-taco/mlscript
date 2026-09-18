@@ -1,0 +1,58 @@
+:js
+// :de
+// :sjs
+// :pt
+// :elt
+
+:global
+// :d
+// :todo
+
+
+
+:sr
+class Foo(val a)
+object Bar { val b = 123 }
+//│ ————————————————| Resolved |————————————————————————————————————————————————————————————————————————
+//│   fun Foo⁰
+//│   class Foo¹::Foo²(val a⁰) {
+//│     val a¹::a² ‹flow:a⁰› = a⁰
+//│   },
+//│   object Bar⁰::Bar¹ { val b⁰::b¹ ‹flow:b⁰› = 123 }
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+
+let x = Foo(Bar)
+//│ x = Foo(Bar { b: 123, class: object Bar })
+
+// :dl
+// :de
+:sr
+// :elt
+:sir
+:sjs
+if x is
+  Foo(y) then y.b
+//│ ————————————————| Resolved |————————————————————————————————————————————————————————————————————————
+//│   if { x⁰ is Foo¹(_ as y⁰) then y⁰.bˀˀˀ }
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let y, arg$Foo$0$;
+//│ match x⁰
+//│   Foo⁰ =>
+//│     set arg$Foo$0$ = x⁰.a⁰;
+//│     set y = arg$Foo$0$;
+//│     return y.b﹖
+//│   else
+//│     throw new globalThis⁰.Error⁰("match error")
+//│ end
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ let arg$Foo$0$;
+//│ if (x instanceof Foo1.class) {
+//│   arg$Foo$0$ = x.a;
+//│   return arg$Foo$0$.b
+//│ }
+//│ throw globalThis.Object.freeze(new globalThis.Error("match error"));
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 123
+
+

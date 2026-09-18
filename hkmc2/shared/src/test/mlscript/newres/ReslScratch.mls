@@ -1,0 +1,183 @@
+:.
+
+
+:sir
+:soir
+:sjs
+class Bar(a)
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define Bar⁰ as class Bar² {
+//│   private val a⁰;
+//│   constructor Bar¹(a) { @private define a¹ as val a⁰ = a; end }
+//│ };
+//│ end
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ define Bar⁰ as class Bar² { constructor Bar¹ }; end
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ let Bar1;
+//│ Bar1 = function Bar(a) {
+//│   return globalThis.Object.freeze(new Bar.class(a));
+//│ };
+//│ (class Bar {
+//│   static {
+//│     Bar1.class = this
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "Bar", [null]];
+//│ });
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+
+:sr
+:rt
+:sir
+:soir
+:sjs
+class Bar(a) with
+  let x = a
+  print(x)
+//│ ————————————————| Resolved |————————————————————————————————————————————————————————————————————————
+//│   fun Bar⁰
+//│   class Bar¹::Bar²(a⁰) {
+//│     @private val a¹::a² ‹flow:a⁰› = a⁰^a²,
+//│     let x⁰,
+//│     x⁰ = ⟨Bar².this.⟩a¹,
+//│     ⟨Predef⁰.⟩print⁰(x⁰)‹app⁰›
+//│   }
+//│ ——————————————| Resolved tree |—————————————————————————————————————————————————————————————————————
+//│ Blk:
+//│   stats = Ls of
+//│     Parameterized:
+//│       kind = Cls
+//│       sym = class:Bar³
+//│       bsym = member:Bar⁴
+//│       ctorSym = S of term:Bar⁵
+//│       params = ParamList:
+//│         params = Ls of
+//│           Param:
+//│             sym = a²
+//│             modulefulness = Modulefulness of N
+//│       body = ObjBody of Blk:
+//│         stats = Ls of
+//│           TermDefinition:
+//│             k = ImmutVal
+//│             sym = member:a³
+//│             tsym = term:Bar³/a⁴
+//│             body = S of Capture:
+//│               base = SimpleRef of a²
+//│               thru = term:Bar³/a⁴
+//│             modulefulness = Modulefulness of N
+//│             annotations = Ls of
+//│               Modifier of keyword 'private'
+//│           LetDecl:
+//│             sym = term:Bar³/x⁰
+//│           DefineVar:
+//│             sym = term:Bar³/x⁰
+//│             rhs = SynthSel{sym=member:a³}:
+//│               prefix = SelfRef of class:Bar³
+//│               nme = Ident of "a"
+//│         res = App:
+//│           lhs = SynthSel{sym=member:print⁰}:
+//│             prefix = MemberRef of member:Predef⁰
+//│             nme = Ident of "print"
+//│           rhs = Tup of Ls of
+//│             Fld:
+//│               term = MemberRef of term:Bar³/x⁰
+//│   res = Lit of UnitLit of false
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define Bar⁴ as class Bar³ {
+//│   private val a⁴;
+//│   private val x⁰;
+//│   constructor Bar⁵(a) {
+//│     @private
+//│     define a³ as val a⁴ = a;
+//│     set Bar³.this.x⁰ = Bar³.this.a⁴;
+//│     do Predef¹.print¹(Bar³.this.x⁰);
+//│     end
+//│   }
+//│ };
+//│ end
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ define Bar⁴ as class Bar³ {
+//│   private val a⁴;
+//│   private val x⁰;
+//│   constructor Bar⁵(a) {
+//│     @private
+//│     define a³ as val a⁴ = a;
+//│     set Bar³.this.x⁰ = Bar³.this.a⁴;
+//│     do Predef¹.print¹(Bar³.this.x⁰);
+//│     end
+//│   }
+//│ };
+//│ end
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ let Bar3;
+//│ Bar3 = function Bar(a) {
+//│   return globalThis.Object.freeze(new Bar.class(a));
+//│ };
+//│ (class Bar2 {
+//│   static {
+//│     Bar3.class = this
+//│   }
+//│   constructor(a) {
+//│     this.#a = a;
+//│     this.#x = this.#a;
+//│     Predef.print(this.#x);
+//│   }
+//│   #a;
+//│   #x;
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "Bar", [null]];
+//│ });
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+Bar(123)
+//│ > 123
+//│ = Bar(_)
+
+
+:sir
+:soir
+:sjs
+class Bar with
+  private val a = 1
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define Bar⁶ as class Bar⁷ {
+//│   private val a⁵;
+//│   constructor() { @private define a⁶ as val a⁵ = 1; end }
+//│ };
+//│ end
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ define Bar⁶ as class Bar⁷; end
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ let Bar5;
+//│ (class Bar4 {
+//│   static {
+//│     Bar5 = this
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "Bar"];
+//│ });
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+
+
+:sr
+fun foo(x) =
+  if x is
+    [y] and y > 0 then 1
+    0 then 2
+  else 3
+//│ ————————————————| Resolved |————————————————————————————————————————————————————————————————————————
+//│   fun foo⁰::foo¹(x¹) ‹flow:foo⁰› = if {
+//│     let scrut⁰ = x¹;
+//│     scrut⁰ is [_ as y⁰] and {
+//│       let scrut¹ = >(y⁰, 0)‹app¹›;
+//│       scrut¹ is true then 1
+//│     };
+//│     scrut⁰ is 0 then 2;
+//│     else 3
+//│   }
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+

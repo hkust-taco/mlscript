@@ -1,0 +1,183 @@
+:.
+
+
+:sr
+class Foo(val a)
+object Bar { val b = 123 }
+class Baz(c) { fun b = c }
+//│ ————————————————| Resolved |————————————————————————————————————————————————————————————————————————
+//│   fun Foo⁰
+//│   class Foo¹::Foo²(val a⁰) {
+//│     val a¹::a² ‹flow:a⁰› = a⁰^a²
+//│   },
+//│   object Bar⁰::Bar¹ {
+//│     val b⁰::b¹ ‹flow:b⁰› = 123
+//│   },
+//│   fun Baz⁰
+//│   class Baz¹::Baz²(c⁰) {
+//│     @private val c¹::c² ‹flow:c⁰› = c⁰^c²,
+//│     fun b²::b³ ‹flow:b¹› = ⟨Baz².this.⟩c¹^b³
+//│   }
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+
+let x = Foo(Bar)
+//│ x = Foo(Bar { b: 123, class: object Bar })
+
+// TODO: avoid the `let scrut⁰` like in old resl.
+
+// :dl
+// :de
+:sr
+// :elt
+// :sir
+// :sjs
+if x is
+  Foo(y) then y.b
+//│ ————————————————| Resolved |————————————————————————————————————————————————————————————————————————
+//│   if { let scrut⁰ = x⁰; scrut⁰ is Foo¹(_ as y⁰) then y⁰.b⁰ }
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 123
+
+:e
+if x is
+  Foo(y) then y.id
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.44: 	  Foo(y) then y.id
+//│ ║        	              ^^^^
+//│ ╟── Object 'Bar' does not contain member 'id'
+//│ ║  l.6: 	object Bar { val b = 123 }
+//│ ╙──     	       ^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+
+let bz = Baz(Bar)
+//│ bz = Baz(_)
+
+let x2 = Foo(bz)
+//│ x2 = Foo(Baz(_))
+
+:sr
+if x2 is
+  Foo(y) then y.b
+//│ ————————————————| Resolved |————————————————————————————————————————————————————————————————————————
+//│   if { let scrut¹ = x2⁰; scrut¹ is Foo¹(_ as y¹) then y¹.b² }
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = Bar { b: 123, class: object Bar }
+
+
+// :de
+:sr
+fun test =
+  case
+    Foo(y) then y
+//│ ————————————————| Resolved |————————————————————————————————————————————————————————————————————————
+//│   fun test⁰::test¹ ‹flow:test⁰› = (caseScrut⁰) => if { caseScrut⁰ is Foo¹^test¹(_ as y²) then y² }
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+:sr
+test(x).b
+//│ ————————————————| Resolved |————————————————————————————————————————————————————————————————————————
+//│   test⁰(x⁰)‹app⁰›.b⁰
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 123
+
+// :de
+:fixme
+:sr
+test(x2).b
+//│ ————————————————| Resolved |————————————————————————————————————————————————————————————————————————
+//│   test⁰(x2⁰)‹app¹›.b‹b², b⁰›
+//│ ╔══[COMPILATION ERROR] This selection of member 'b' is ambiguous, as it has multiple resolved targets
+//│ ║  l.88: 	test(x2).b
+//│ ║        	^^^^^^^^^^
+//│ ╟── target: function 'b' in overloaded function and class 'Baz'
+//│ ║  l.7: 	class Baz(c) { fun b = c }
+//│ ║       	               ^^^^^^^^^
+//│ ╟── target: value 'b' in object 'Bar'
+//│ ║  l.6: 	object Bar { val b = 123 }
+//│ ╙──     	             ^^^^^^^^^^^
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+
+let bz = Baz(Bar)
+//│ bz = Baz(_)
+
+:todo
+fun test(x) =
+  if x is
+    Foo(y) then y.b
+test(bz)
+//│ ╔══[COMPILATION ERROR] This selection of member 'b' has no resolved target
+//│ ║  l.110: 	    Foo(y) then y.b
+//│ ╙──       	                ^^^
+//│ ═══[RUNTIME ERROR] Error: match error
+
+
+:todo
+set x = bz
+//│ ═══[COMPILATION ERROR] Unexpected left-hand side in assignment (reference)
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+:breakme // Note: if compiled together with it, this would make the previous code ambiguous
+x = bz
+
+
+let x = if maybe then Bar else bz
+//│ x = Bar { b: 123, class: object Bar }
+
+:e
+x.b
+//│ ╔══[COMPILATION ERROR] This selection of member 'b' is ambiguous, as it has multiple resolved targets
+//│ ║  l.131: 	x.b
+//│ ║         	^^^
+//│ ╟── target: function 'b' in overloaded function and class 'Baz'
+//│ ║  l.7: 	class Baz(c) { fun b = c }
+//│ ║       	               ^^^^^^^^^
+//│ ╟── target: value 'b' in object 'Bar'
+//│ ║  l.6: 	object Bar { val b = 123 }
+//│ ╙──     	             ^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+:todo
+if x is
+  Baz as y then y.b
+//│ /!!!\ Uncaught error: scala.MatchError: Constructor(MemberRef(member:Baz),None) (of class hkmc2.semantics.Pattern$Constructor)
+
+:todo
+if x is
+  Baz as y then y.b
+  Bar as z then z.b
+//│ /!!!\ Uncaught error: scala.MatchError: Constructor(MemberRef(member:Baz),None) (of class hkmc2.semantics.Pattern$Constructor)
+
+
+
+
+:silent
+let x2 = Foo(Predef)
+
+if x2 is
+  Foo(y2) then y2.id
+//│ = fun id
+
+
+:todo
+if Foo(Predef) is
+  Foo(y) then y.id
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+
+
+:todo
+val f = case
+  Foo(y) then y.b
+//│ ╔══[COMPILATION ERROR] This selection of member 'b' has no resolved target
+//│ ║  l.173: 	  Foo(y) then y.b
+//│ ╙──       	              ^^^
+//│ f = fun
+
+
+
+
+
+

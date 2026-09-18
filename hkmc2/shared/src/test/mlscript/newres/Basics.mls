@@ -1,0 +1,156 @@
+:.
+
+
+:elt
+:rt
+:sir
+id
+//│ —————————————| Elaborated tree |————————————————————————————————————————————————————————————————————
+//│ Blk:
+//│   res = SynthSel{sym=member:id⁰}:
+//│     prefix = MemberRef of member:Predef⁰
+//│     nme = Ident of "id"
+//│ ——————————————| Resolved tree |—————————————————————————————————————————————————————————————————————
+//│ Blk:
+//│   res = SynthSel{sym=member:id⁰}:
+//│     prefix = MemberRef of member:Predef⁰
+//│     nme = Ident of "id"
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ return Predef¹.id¹
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = fun id
+
+
+:de
+:sr
+:sir
+Predef.id
+//│ Elab block List(Sel(Ident(Predef),Ident(id))) LocalScope(block:3)
+//│ | Elab term Sel(Ident(Predef),Ident(id))
+//│ | | Elab subterm Sel(Ident(Predef),Ident(id))
+//│ | | | Elab subterm Ident(Predef)
+//│ | | | ~> member:Predef
+//│ | | | newSel? sel = member:Predef.id
+//│ | | | listenTerm: trm = member:Predef
+//│ | | | listen: trm = member:Predef
+//│ | | | listenBMS: bms = module
+//│ | | | listenedBMS: bms = module
+//│ | | | fromBMS: bms = member:Predef⁰, sh = module:Predef¹, flow = Predef², markss = List()
+//│ | | | .exit MarkedShape (module:Predef¹, module:Predef¹, Predef²)
+//│ | | | | class hkmc2.semantics.ModuleOrObjectSymbol ?
+//│ | | | = MarkedShape(module:Predef¹, ↗⟨module:Predef¹⟩%⟨Predef²⟩ϵ)
+//│ | | | PUSH MarkedShape(module:Predef¹, ↗⟨module:Predef¹⟩%⟨Predef²⟩ϵ)
+//│ | | | newSel: sel = member:Predef.id, shape = MarkedShape(module:Predef¹, ↗⟨module:Predef¹⟩%⟨Predef²⟩ϵ)
+//│ | | | newSel member: bms = member:id⁰, mss = List(↗⟨module:Predef¹⟩%⟨Predef²⟩ϵ)
+//│ | | ~> member:Predef.id
+//│ | ~> member:Predef.id
+//│ ~> { member:Predef.id }
+//│ ————————————————| Resolved |————————————————————————————————————————————————————————————————————————
+//│   Predef⁰.id⁰
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ return Predef¹.id¹
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = fun id
+
+:elt
+Predef.id(1)
+//│ —————————————| Elaborated tree |————————————————————————————————————————————————————————————————————
+//│ Blk:
+//│   res = App:
+//│     lhs = NewSel:
+//│       prefix = MemberRef of member:Predef⁰
+//│       id = Ident of "id"
+//│     rhs = Tup of Ls of
+//│       Fld:
+//│         term = Lit of IntLit of 1
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 1
+
+:e
+Predef.idd(1)
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.70: 	Predef.idd(1)
+//│ ║        	^^^^^^^^^^
+//│ ╟── Module 'Predef' does not contain member 'idd'
+//│ ║  in ../../mlscript-compile/Predef.mls
+//│ ║  l.15: 	module Predef with ...
+//│ ╙──      	       ^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+
+// :de
+:silent
+let p = Predef
+
+// :de
+:rt
+:sir
+p.id
+//│ ——————————————| Resolved tree |—————————————————————————————————————————————————————————————————————
+//│ Blk:
+//│   res = NewSel:
+//│     prefix = SimpleRef of p⁰
+//│     id = Ident of "id"
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ return p⁰.id¹
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = fun id
+
+p.id
+//│ = fun id
+
+:sr
+p.id
+p.id
+//│ ————————————————| Resolved |————————————————————————————————————————————————————————————————————————
+//│   p⁰.id⁰, p⁰.id⁰
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = fun id
+
+
+:silent
+val p = Predef
+
+:sr
+p.id
+//│ ————————————————| Resolved |————————————————————————————————————————————————————————————————————————
+//│   p¹.id⁰
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = fun id
+
+
+:e
+(1).id
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.123: 	(1).id
+//│ ║         	^^^^^^
+//│ ╟── Integer literal does not contain member 'id'
+//│ ║  l.123: 	(1).id
+//│ ╙──       	 ^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+:fixme // parse
+1.id
+//│ ╔══[LEXICAL ERROR] Expected at least one digit after the  decimal point
+//│ ║  l.133: 	1.id
+//│ ╙──       	  ^
+//│ ╔══[COMPILATION ERROR] Illegal juxtaposition right-hand side (identifier).
+//│ ║  l.133: 	1.id
+//│ ╙──       	  ^^
+//│ = 1
+
+:fixme
+"ha ".repeat(2)
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.143: 	"ha ".repeat(2)
+//│ ║         	^^^^^^^^^^^^
+//│ ╟── String literal does not contain member 'repeat'
+//│ ║  l.143: 	"ha ".repeat(2)
+//│ ╙──       	^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+
+print(1)
+//│ > 1
+
+

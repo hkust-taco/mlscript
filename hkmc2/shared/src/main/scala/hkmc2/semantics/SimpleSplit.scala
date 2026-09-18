@@ -3,6 +3,8 @@ package semantics
 
 import hkmc2.utils.*, shorthands.*, syntax.*, Tree.{BoolLit, Keywrd}
 import Keyword.{`do`, `else`, `then`}, utils.TL, Elaborator.{Ctx, State}
+import hkmc2.document.*
+import hkmc2.document.Document.*
 
 /**
   * Similar to `Split` but contains nested patterns (i.e., class `Pattern`).
@@ -28,6 +30,20 @@ enum SimpleSplit extends AutoLocated with ProductWithTail:
       case Cons(head, tail) => Cons(head, tail ~~: this)
       case els: Else => els
       case End => this
+  
+  def showSub(using Scope, ShowCfg, Raise, IfLikeForm): Document = this match
+        // doc"${scrutinee.show} is ${pattern.show} and { #{  # ${consequent.show} #}  # }"
+    case Cons(head, End) => doc"${summon[IfLikeForm].midStr} ${head.show}"
+    case Cons(head, tail) => doc" and { #{  # ${head.show}; # ${tail.show} #}  # }"
+    // case Else(default) => doc" else ${default.show}"
+    case Else(default) => doc" ${summon[IfLikeForm].midStr} ${default.show}"
+    case End => "‹unhandled›"
+  def show(using Scope, ShowCfg, Raise, IfLikeForm): Document = this match
+    case Cons(head, End) => doc"${head.show}"
+    case Cons(head, tail) => doc"${head.show}; # ${tail.show}"
+    // case Else(default) => doc"${summon[IfLikeForm].midStr} ${default.show}"
+    case Else(default) => doc"else ${default.show}"
+    case End => ""
   
   protected def children: Vector[Located] = this match
     case Cons(branch, tail) => Vector.double(branch, tail)
@@ -75,7 +91,7 @@ enum SimpleSplit extends AutoLocated with ProductWithTail:
   private var _expandedSplit: Opt[Split] = N
   
   /**  */
-  def getExpandedSplit(using TL, Ctx, State, Raise): Split = _expandedSplit.getOrElse:
+  def getExpandedSplit(using TL, Ctx, State, Raise, Config): Split = _expandedSplit.getOrElse:
     val split = Split.from(this)
     _expandedSplit = S(split)
     split
@@ -109,6 +125,12 @@ object SimpleSplit:
   enum Head extends AutoLocated:
     case Match(scrutinee: Term.Ref, pattern: Pattern, consequent: SimpleSplit)
     case Let(binding: LocalVarSymbol, term: Term)
+    
+    def show(using Scope, ShowCfg, Raise, IfLikeForm): Document = this match
+      case Match(scrutinee, pattern, consequent) =>
+        // doc"${scrutinee.show} is ${pattern.show} and { #{  # ${consequent.show} #}  # }"
+        doc"${scrutinee.show} is ${pattern.show}${consequent.showSub}"
+      case Let(binding, term) => doc"let ${binding.showName} = ${term.show}"
     
     def subTerms: Vector[Term] = this match
       case Match(scrutinee, pattern, consequent) =>

@@ -1,0 +1,226 @@
+:.
+
+
+fun foo(x) = x + 1
+
+:e
+foo()
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.7: 	foo()
+//│ ║       	^^^^^
+//│ ╟── Function 'foo' expected 1 argument, but got 0
+//│ ║  l.4: 	fun foo(x) = x + 1
+//│ ╙──     	^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] Error: Function 'foo' expected 1 argument but got 0
+
+:e
+foo(1, 2)
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.17: 	foo(1, 2)
+//│ ║        	^^^^^^^^^
+//│ ╟── Function 'foo' expected 0 arguments, but got 1
+//│ ║  l.4: 	fun foo(x) = x + 1
+//│ ╙──     	^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] Error: Function 'foo' expected 1 argument but got 2
+
+
+:sr
+id
+//│ ————————————————| Resolved |————————————————————————————————————————————————————————————————————————
+//│   ⟨Predef⁰.⟩id⁰
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = fun id
+
+
+:e
+fun callid0(p) = p.id(1)
+//│ ╔══[COMPILATION ERROR] This selection of member 'id' has no resolved target
+//│ ║  l.36: 	fun callid0(p) = p.id(1)
+//│ ╙──      	                 ^^^^
+
+
+:de
+:sr
+fun callid1(p) = p.id(1)
+callid1(Predef)
+//│ Elab block List(TermDef(Fun,App(Ident(callid1),Tup(List(Ident(p)))),Some(App(Sel(Ident(p),Ident(id)),Tup(List(I[...] LocalScope(block:7)
+//│ | Processing term definition App(Ident(callid1),Tup(List(Ident(p))))
+//│ | Elaborating ParamTree: ParamTree(‹›,Ident(p),None,None,Set())
+//│ | Elab term App(Sel(Ident(p),Ident(id)),Tup(List(IntLit(1))))
+//│ | | Elab subterm App(Sel(Ident(p),Ident(id)),Tup(List(IntLit(1))))
+//│ | | | Elab subterm Sel(Ident(p),Ident(id))
+//│ | | | | Elab subterm Ident(p)
+//│ | | | | ~> p
+//│ | | | | newSel? sel = p.id
+//│ | | | | listenTerm: trm = p
+//│ | | | | listen: trm = p
+//│ | | | ~> p.id
+//│ | | | Elab subterm Tup(List(IntLit(1)))
+//│ | | | | Elab term IntLit(1)
+//│ | | | | | Elab subterm IntLit(1)
+//│ | | | | | ~> 1
+//│ | | | | ~> 1
+//│ | | | ~> [1]
+//│ | | | listenTerm: trm = p.id
+//│ | | | listen: trm = p.id
+//│ | | ~> p.id(1)
+//│ | ~> p.id(1)
+//│ | Elab term App(Ident(callid1),Tup(List(Ident(Predef))))
+//│ | | Elab subterm App(Ident(callid1),Tup(List(Ident(Predef))))
+//│ | | | Elab subterm Ident(callid1)
+//│ | | | ~> member:callid1
+//│ | | | Elab subterm Tup(List(Ident(Predef)))
+//│ | | | | Elab term Ident(Predef)
+//│ | | | | | Elab subterm Ident(Predef)
+//│ | | | | | ~> member:Predef
+//│ | | | | ~> member:Predef
+//│ | | | ~> [member:Predef]
+//│ | | | listenTerm: trm = member:callid1
+//│ | | | listen: trm = member:callid1
+//│ | | | listenBMS: bms = function
+//│ | | ~> member:callid1(member:Predef)
+//│ | ~> member:callid1(member:Predef)
+//│ | listenedBMS: bms = function
+//│ | fromBMS: bms = member:callid1⁰, sh = member:callid1⁰, flow = callid1¹, markss = List()
+//│ | .exit MarkedShape (member:callid1⁰, term:callid1², callid1¹)
+//│ | | class hkmc2.semantics.TermSymbol None
+//│ | = MarkedShape(member:callid1⁰, ↗⟨term:callid1²⟩%⟨callid1¹⟩ϵ)
+//│ | PUSH MarkedShape(member:callid1⁰, ↗⟨term:callid1²⟩%⟨callid1¹⟩ϵ)
+//│ | appShape: lhs = MarkedShape(member:callid1⁰, ↗⟨term:callid1²⟩%⟨callid1¹⟩ϵ), args = [member:Predef], res = member:callid1(member:Predef)
+//│ | Zipping ParamList(‹›,List(Param(‹›,p,None,Modulefulness(None))),None) (List(↗⟨term:callid1²⟩%⟨callid1¹⟩ϵ)) with List(Fld(‹›,MemberRef(member:Predef),None))
+//│ | listenTerm: trm = member:Predef
+//│ | listen: trm = member:Predef
+//│ | listenBMS: bms = module
+//│ | listenedBMS: bms = module
+//│ | fromBMS: bms = member:Predef⁰, sh = module:Predef¹, flow = Predef², markss = List()
+//│ | .exit MarkedShape (module:Predef¹, module:Predef¹, Predef²)
+//│ | | class hkmc2.semantics.ModuleOrObjectSymbol ?
+//│ | = MarkedShape(module:Predef¹, ↗⟨module:Predef¹⟩%⟨Predef²⟩ϵ)
+//│ | PUSH MarkedShape(module:Predef¹, ↗⟨module:Predef¹⟩%⟨Predef²⟩ϵ)
+//│ | .enter MarkedShape(module:Predef¹, ↗⟨module:Predef¹⟩%⟨Predef²⟩ϵ) (↗⟨term:callid1²⟩%⟨callid1¹⟩ϵ)
+//│ | | .enter MarkedShape(module:Predef¹, ↘⟨term:callid1²⟩%⟨callid1¹⟩↗⟨module:Predef¹⟩%⟨Predef²⟩ϵ) (ϵ)
+//│ | | = MarkedShape(module:Predef¹, ↘⟨term:callid1²⟩%⟨callid1¹⟩↗⟨module:Predef¹⟩%⟨Predef²⟩ϵ)
+//│ | = MarkedShape(module:Predef¹, ↘⟨term:callid1²⟩%⟨callid1¹⟩↗⟨module:Predef¹⟩%⟨Predef²⟩ϵ)
+//│ | zipArg: p = p⁰, trm = member:Predef, sh = MarkedShape(module:Predef¹, ↘⟨term:callid1²⟩%⟨callid1¹⟩↗⟨module:Predef¹⟩%⟨Predef²⟩ϵ) true, false
+//│ | newSel: sel = p.id, shape = MarkedShape(module:Predef¹, ↘⟨term:callid1²⟩%⟨callid1¹⟩↗⟨module:Predef¹⟩%⟨Predef²⟩ϵ)
+//│ | newSel member: bms = member:id⁰, mss = List(↘⟨term:callid1²⟩%⟨callid1¹⟩↗⟨module:Predef¹⟩%⟨Predef²⟩ϵ)
+//│ | listenBMS: bms = function
+//│ | listenedBMS: bms = function
+//│ | fromBMS: bms = member:id⁰, sh = member:id⁰, flow = ⋅id⁰, markss = List(↘⟨term:callid1²⟩%⟨callid1¹⟩↗⟨module:Predef¹⟩%⟨Predef²⟩ϵ)
+//│ | .exit MarkedShape (member:id⁰, term:Predef¹/id¹, ⋅id⁰)
+//│ | | class hkmc2.semantics.TermSymbol Some(module:Predef¹)
+//│ | = MarkedShape(member:id⁰, ↗⟨term:Predef¹/id¹⟩%⟨⋅id⁰⟩ϵ)
+//│ | .exit MarkedShape(member:id⁰, ↗⟨term:Predef¹/id¹⟩%⟨⋅id⁰⟩ϵ) (↘⟨term:callid1²⟩%⟨callid1¹⟩↗⟨module:Predef¹⟩%⟨Predef²⟩ϵ)
+//│ | | .exit MarkedShape(member:id⁰, ↗⟨term:Predef¹/id¹⟩%⟨⋅id⁰⟩ϵ) (↗⟨module:Predef¹⟩%⟨Predef²⟩ϵ)
+//│ | | | .exit MarkedShape(member:id⁰, ↗⟨term:Predef¹/id¹⟩%⟨⋅id⁰⟩ϵ) (ϵ)
+//│ | | | = MarkedShape(member:id⁰, ↗⟨term:Predef¹/id¹⟩%⟨⋅id⁰⟩ϵ)
+//│ | | | .exit MarkedShape (MarkedShape(member:id⁰, ↗⟨term:Predef¹/id¹⟩%⟨⋅id⁰⟩ϵ), module:Predef¹, Predef²)
+//│ | | | | class hkmc2.semantics.ModuleOrObjectSymbol ?
+//│ | | | = MarkedShape(member:id⁰, ↗⟨module:Predef¹⟩%⟨Predef²⟩↗⟨term:Predef¹/id¹⟩%⟨⋅id⁰⟩ϵ)
+//│ | | = MarkedShape(member:id⁰, ↗⟨module:Predef¹⟩%⟨Predef²⟩↗⟨term:Predef¹/id¹⟩%⟨⋅id⁰⟩ϵ)
+//│ | = MarkedShape(member:id⁰, ↘⟨term:callid1²⟩%⟨callid1¹⟩↗⟨module:Predef¹⟩%⟨Predef²⟩↗⟨term:Predef¹/id¹⟩%⟨⋅id⁰⟩ϵ)
+//│ | PUSH MarkedShape(member:id⁰, ↘⟨term:callid1²⟩%⟨callid1¹⟩↗⟨module:Predef¹⟩%⟨Predef²⟩↗⟨term:Predef¹/id¹⟩%⟨⋅id⁰⟩ϵ)
+//│ | appShape: lhs = MarkedShape(member:id⁰, ↘⟨term:callid1²⟩%⟨callid1¹⟩↗⟨module:Predef¹⟩%⟨Predef²⟩↗⟨term:Predef¹/id¹⟩%⟨⋅id⁰⟩ϵ), args = [1], res = p.id(1)
+//│ | Zipping ParamList(‹›,List(Param(‹›,x,None,Modulefulness(None))),None) (List(↘⟨term:callid1²⟩%⟨callid1¹⟩↗⟨module:Predef¹⟩%⟨Predef²⟩↗⟨term:Predef¹/id¹⟩%⟨⋅id⁰⟩ϵ)) with List(Fld(‹›,Lit(IntLit(1)),None))
+//│ | listenTerm: trm = 1
+//│ | listen: trm = 1
+//│ | .enter 1 (↘⟨term:callid1²⟩%⟨callid1¹⟩↗⟨module:Predef¹⟩%⟨Predef²⟩↗⟨term:Predef¹/id¹⟩%⟨⋅id⁰⟩ϵ)
+//│ | | .exit MarkedShape (1, term:callid1², callid1¹)
+//│ | | | class hkmc2.semantics.TermSymbol None
+//│ | | = MarkedShape(1, ↗⟨term:callid1²⟩%⟨callid1¹⟩ϵ)
+//│ | | .enter MarkedShape(1, ↗⟨term:callid1²⟩%⟨callid1¹⟩ϵ) (↗⟨module:Predef¹⟩%⟨Predef²⟩↗⟨term:Predef¹/id¹⟩%⟨⋅id⁰⟩ϵ)
+//│ | | | .enter MarkedShape(1, ↘⟨module:Predef¹⟩%⟨Predef²⟩↗⟨term:callid1²⟩%⟨callid1¹⟩ϵ) (↗⟨term:Predef¹/id¹⟩%⟨⋅id⁰⟩ϵ)
+//│ | | | | .enter MarkedShape(1, ↘⟨term:Predef¹/id¹⟩%⟨⋅id⁰⟩↘⟨module:Predef¹⟩%⟨Predef²⟩↗⟨term:callid1²⟩%⟨callid1¹⟩ϵ) (ϵ)
+//│ | | | | = MarkedShape(1, ↘⟨term:Predef¹/id¹⟩%⟨⋅id⁰⟩↘⟨module:Predef¹⟩%⟨Predef²⟩↗⟨term:callid1²⟩%⟨callid1¹⟩ϵ)
+//│ | | | = MarkedShape(1, ↘⟨term:Predef¹/id¹⟩%⟨⋅id⁰⟩↘⟨module:Predef¹⟩%⟨Predef²⟩↗⟨term:callid1²⟩%⟨callid1¹⟩ϵ)
+//│ | | = MarkedShape(1, ↘⟨term:Predef¹/id¹⟩%⟨⋅id⁰⟩↘⟨module:Predef¹⟩%⟨Predef²⟩↗⟨term:callid1²⟩%⟨callid1¹⟩ϵ)
+//│ | = MarkedShape(1, ↘⟨term:Predef¹/id¹⟩%⟨⋅id⁰⟩↘⟨module:Predef¹⟩%⟨Predef²⟩↗⟨term:callid1²⟩%⟨callid1¹⟩ϵ)
+//│ | zipArg: p = x⁰, trm = 1, sh = MarkedShape(1, ↘⟨term:Predef¹/id¹⟩%⟨⋅id⁰⟩↘⟨module:Predef¹⟩%⟨Predef²⟩↗⟨term:callid1²⟩%⟨callid1¹⟩ϵ) false, false
+//│ | appShape isSaturated? true; head? (DefnShape(term definition 'id'),List(EntryMark(term:callid1,Some(callid1),ExitMark(module:Predef,Some(Predef),ExitMark(term:Predef/id,Some(⋅id),NoMarks)))))
+//│ | lhs false List(((x⁰),List(↘⟨term:callid1²⟩%⟨callid1¹⟩↗⟨module:Predef¹⟩%⟨Predef²⟩↗⟨term:Predef¹/id¹⟩%⟨⋅id⁰⟩ϵ)))
+//│ | appShape: td.body = Some(Ref(x))
+//│ | listenTerm: trm = x⁰
+//│ | listen: trm = x⁰
+//│ | listenBMS: bms = function
+//│ | listenedBMS: bms = function
+//│ | fromBMS: bms = member:id⁰, sh = member:id⁰, flow = ⋅id⁰, markss = List(↘⟨term:callid1²⟩%⟨callid1¹⟩↗⟨module:Predef¹⟩%⟨Predef²⟩ϵ)
+//│ | .exit MarkedShape (member:id⁰, term:Predef¹/id¹, ⋅id⁰)
+//│ | | class hkmc2.semantics.TermSymbol Some(module:Predef¹)
+//│ | = MarkedShape(member:id⁰, ↗⟨term:Predef¹/id¹⟩%⟨⋅id⁰⟩ϵ)
+//│ | .exit MarkedShape(member:id⁰, ↗⟨term:Predef¹/id¹⟩%⟨⋅id⁰⟩ϵ) (↘⟨term:callid1²⟩%⟨callid1¹⟩↗⟨module:Predef¹⟩%⟨Predef²⟩ϵ)
+//│ | | .exit MarkedShape(member:id⁰, ↗⟨term:Predef¹/id¹⟩%⟨⋅id⁰⟩ϵ) (↗⟨module:Predef¹⟩%⟨Predef²⟩ϵ)
+//│ | | | .exit MarkedShape(member:id⁰, ↗⟨term:Predef¹/id¹⟩%⟨⋅id⁰⟩ϵ) (ϵ)
+//│ | | | = MarkedShape(member:id⁰, ↗⟨term:Predef¹/id¹⟩%⟨⋅id⁰⟩ϵ)
+//│ | | | .exit MarkedShape (MarkedShape(member:id⁰, ↗⟨term:Predef¹/id¹⟩%⟨⋅id⁰⟩ϵ), module:Predef¹, Predef²)
+//│ | | | | class hkmc2.semantics.ModuleOrObjectSymbol ?
+//│ | | | = MarkedShape(member:id⁰, ↗⟨module:Predef¹⟩%⟨Predef²⟩↗⟨term:Predef¹/id¹⟩%⟨⋅id⁰⟩ϵ)
+//│ | | = MarkedShape(member:id⁰, ↗⟨module:Predef¹⟩%⟨Predef²⟩↗⟨term:Predef¹/id¹⟩%⟨⋅id⁰⟩ϵ)
+//│ | = MarkedShape(member:id⁰, ↘⟨term:callid1²⟩%⟨callid1¹⟩↗⟨module:Predef¹⟩%⟨Predef²⟩↗⟨term:Predef¹/id¹⟩%⟨⋅id⁰⟩ϵ)
+//│ | PUSH MarkedShape(member:id⁰, ↘⟨term:callid1²⟩%⟨callid1¹⟩↗⟨module:Predef¹⟩%⟨Predef²⟩↗⟨term:Predef¹/id¹⟩%⟨⋅id⁰⟩ϵ)
+//│ | Zipping ParamList(‹›,List(Param(‹›,x,None,Modulefulness(None))),None) (List(↘⟨term:callid1²⟩%⟨callid1¹⟩↗⟨module:Predef¹⟩%⟨Predef²⟩↗⟨term:Predef¹/id¹⟩%⟨⋅id⁰⟩ϵ)) with List(Fld(‹›,Lit(IntLit(1)),None))
+//│ | listenTerm: trm = 1
+//│ | listen: trm = 1
+//│ | .enter 1 (↘⟨term:callid1²⟩%⟨callid1¹⟩↗⟨module:Predef¹⟩%⟨Predef²⟩↗⟨term:Predef¹/id¹⟩%⟨⋅id⁰⟩ϵ)
+//│ | | .exit MarkedShape (1, term:callid1², callid1¹)
+//│ | | | class hkmc2.semantics.TermSymbol None
+//│ | | = MarkedShape(1, ↗⟨term:callid1²⟩%⟨callid1¹⟩ϵ)
+//│ | | .enter MarkedShape(1, ↗⟨term:callid1²⟩%⟨callid1¹⟩ϵ) (↗⟨module:Predef¹⟩%⟨Predef²⟩↗⟨term:Predef¹/id¹⟩%⟨⋅id⁰⟩ϵ)
+//│ | | | .enter MarkedShape(1, ↘⟨module:Predef¹⟩%⟨Predef²⟩↗⟨term:callid1²⟩%⟨callid1¹⟩ϵ) (↗⟨term:Predef¹/id¹⟩%⟨⋅id⁰⟩ϵ)
+//│ | | | | .enter MarkedShape(1, ↘⟨term:Predef¹/id¹⟩%⟨⋅id⁰⟩↘⟨module:Predef¹⟩%⟨Predef²⟩↗⟨term:callid1²⟩%⟨callid1¹⟩ϵ) (ϵ)
+//│ | | | | = MarkedShape(1, ↘⟨term:Predef¹/id¹⟩%⟨⋅id⁰⟩↘⟨module:Predef¹⟩%⟨Predef²⟩↗⟨term:callid1²⟩%⟨callid1¹⟩ϵ)
+//│ | | | = MarkedShape(1, ↘⟨term:Predef¹/id¹⟩%⟨⋅id⁰⟩↘⟨module:Predef¹⟩%⟨Predef²⟩↗⟨term:callid1²⟩%⟨callid1¹⟩ϵ)
+//│ | | = MarkedShape(1, ↘⟨term:Predef¹/id¹⟩%⟨⋅id⁰⟩↘⟨module:Predef¹⟩%⟨Predef²⟩↗⟨term:callid1²⟩%⟨callid1¹⟩ϵ)
+//│ | = MarkedShape(1, ↘⟨term:Predef¹/id¹⟩%⟨⋅id⁰⟩↘⟨module:Predef¹⟩%⟨Predef²⟩↗⟨term:callid1²⟩%⟨callid1¹⟩ϵ)
+//│ | zipArg: p = x⁰, trm = 1, sh = MarkedShape(1, ↘⟨term:Predef¹/id¹⟩%⟨⋅id⁰⟩↘⟨module:Predef¹⟩%⟨Predef²⟩↗⟨term:callid1²⟩%⟨callid1¹⟩ϵ) false, false
+//│ | appShape isSaturated? true; head? (DefnShape(term definition 'id'),List(EntryMark(term:callid1,Some(callid1),ExitMark(module:Predef,Some(Predef),ExitMark(term:Predef/id,Some(⋅id),NoMarks)))))
+//│ | lhs false List(((x⁰),List(↘⟨term:callid1²⟩%⟨callid1¹⟩↗⟨module:Predef¹⟩%⟨Predef²⟩↗⟨term:Predef¹/id¹⟩%⟨⋅id⁰⟩ϵ)))
+//│ | appShape: td.body = Some(Ref(x))
+//│ | listenTerm: trm = x⁰
+//│ | listen: trm = x⁰
+//│ | appShape isSaturated? true; head? (DefnShape(term definition 'callid1'),List(ExitMark(term:callid1,Some(callid1),NoMarks)))
+//│ | lhs false List(((p⁰),List(↗⟨term:callid1²⟩%⟨callid1¹⟩ϵ)))
+//│ | appShape: td.body = Some(App(NewSel(SimpleRef(p),Ident(id)),Tup(List(Fld(‹›,Lit(IntLit(1)),None)))))
+//│ | listenTerm: trm = p.id(1)
+//│ | listen: trm = p.id(1)
+//│ ~> { fun member:callid1(p⁰) = p.id(1); member:callid1(member:Predef) }
+//│ ————————————————| Resolved |————————————————————————————————————————————————————————————————————————
+//│   fun callid1⁰::callid1¹(p⁰) ‹flow:callid1⁰› = p⁰.id⁰(1)‹app⁰›, callid1⁰(Predef⁰)‹app¹›
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 1
+
+
+:sr
+callid2(Predef)
+fun callid2(p) = p.id(1)
+//│ ————————————————| Resolved |————————————————————————————————————————————————————————————————————————
+//│   callid2⁰(Predef⁰)‹app²›, fun callid2⁰::callid2¹(p¹) ‹flow:callid2⁰› = p¹.id⁰(1)‹app³›
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+
+fun getPredef() = Predef
+
+:sr
+getPredef().id
+//│ ————————————————| Resolved |————————————————————————————————————————————————————————————————————————
+//│   getPredef⁰()‹app⁴›.id⁰
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = fun id
+
+
+// :de
+:sr
+fun foo(pred) =
+  let p = pred
+  val r = p.id(1)
+foo(Predef)
+//│ ————————————————| Resolved |————————————————————————————————————————————————————————————————————————
+//│   fun foo⁰::foo¹(pred⁰) ‹flow:foo⁰› = {
+//│     let p²,
+//│     p² = pred⁰,
+//│     val r⁰::r¹ ‹flow:r⁰› = p²^r¹.id⁰(1)‹app⁵›,
+//│     ()
+//│   },
+//│   foo⁰(Predef⁰)‹app⁶›
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+
