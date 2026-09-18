@@ -50,7 +50,7 @@ fun test(x) = x.m
 //│ ║  l.48: 	fun test(x) = x.m
 //│ ╙──      	              ^^^
 //│ —————————————————| Flowed |—————————————————————————————————————————————————————————————————————————
-//│   fun test⁰::test¹(x¹) ‹flow:test⁰› = x¹.m‹?›
+//│   fun test⁰::test¹(x¹) ‹flow:test⁰› = x¹.mˀˀˀ
 //│ where
 //│     x¹  ~>  {m: ⋅m⁰}
 //│     flow:test⁰  <~  ((x¹) -> ⋅m⁰)
@@ -60,7 +60,7 @@ fun test(x) = x.m
 // :df
 fun test(x: Foo) = x.m
 //│ —————————————————| Flowed |—————————————————————————————————————————————————————————————————————————
-//│   fun test²::test³(x²: Foo⁰{ ~> Foo⁰ }) ‹flow:test¹› = x².m‹?›{ ~> x².m⁰ }
+//│   fun test²::test³(x²: Foo⁰{ ~> Foo⁰ }) ‹flow:test¹› = x².mˀˀˀ{ ~> x².m⁰ }
 //│ where
 //│     x²  <~  type Foo
 //│     flow:test¹  <~  ((type Foo) -> flow:m⁰)
@@ -69,7 +69,7 @@ fun test(x: Foo) = x.m
 let f = (x: Foo) => x.m
 //│ —————————————————| Flowed |—————————————————————————————————————————————————————————————————————————
 //│   let f⁰,
-//│   f⁰ = (x³: Foo⁰{ ~> Foo⁰ }) => x³.m‹?›{ ~> x³.m⁰ }
+//│   f⁰ = (x³: Foo⁰{ ~> Foo⁰ }) => x³.mˀˀˀ{ ~> x³.m⁰ }
 //│ where
 //│     f⁰  <~  ((type Foo) -> flow:m⁰)
 //│     x³  <~  type Foo

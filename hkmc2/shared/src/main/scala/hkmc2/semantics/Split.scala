@@ -175,7 +175,7 @@ object Split:
   import Term.Ref
   
   /** Desugar a `SimpleSplit` into a `Split`. */
-  def from(rootSplit: SS)(using tl: TL)(using Ctx, Raise, State): Split =
+  def from(rootSplit: SS)(using tl: TL)(using Ctx, Raise, State, Config): Split =
     val compiler = new SplitCompiler()
     val scrutCache = MutMap.empty[Ref, Scrut]
     def go(split: SS): Split = split match

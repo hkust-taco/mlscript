@@ -19,31 +19,31 @@ class Pair[A, B](val fst: A, val snd: B)
 
 :ucs ups
 pattern PlainList(pattern T) = (null => Nil) | (Pair(T as hd, PlainList(T) as tl) => hd :: tl)
-//│ elaborated pattern body: null => (member:Stack⁰.)Nil‹member:Nil› ∨ Pair(T as hd, PlainList(T) as tl) => (member:Stack⁰.)Cons‹member:Cons›(hd⁰, tl⁰)
+//│ elaborated pattern body: null => (member:Stack⁰.)Nil‹member:Nil› ∨ Pair(T as hd‹hd⁰›, PlainList(T) as tl‹tl⁰›) => (member:Stack⁰.)Cons‹member:Cons›(hd¹, tl¹)
 
 :ucs ups
 // TODO: Decide on the relative operator precedence between `as` and `=>`.
 //  This is elaborated into `T as (x => x)`, which might not be what we want.
 pattern Identity(pattern T) = T as x => x
-//│ elaborated pattern body: T as (x => x⁰)
+//│ elaborated pattern body: T >> (x‹x⁰› => x¹)
 
 :ucs ups
 pattern Identity(pattern T) = (T as x) => x
-//│ elaborated pattern body: (T as x) => x¹
+//│ elaborated pattern body: (T as x‹x²›) => x³
 
 pattern Identity = x => x
 
 :ucs ups
 pattern Sick = (0 as a as b as c as d as e as f) => a + b + c + d + e + f
-//│ elaborated pattern body: ((((((0 as a) as b) as c) as d) as e) as f) => builtin:+⁰(builtin:+⁰(builtin:+⁰(builtin:+⁰(builtin:+⁰(a⁰, b⁰), c⁰), d⁰), e⁰), f⁰)
+//│ elaborated pattern body: ((((((0 as a‹a⁰›) as b‹b⁰›) as c‹c⁰›) as d‹d⁰›) as e‹e⁰›) as f‹f⁰›) => builtin:+⁰(builtin:+⁰(builtin:+⁰(builtin:+⁰(builtin:+⁰(a¹, b¹), c¹), d¹), e¹), f¹)
 
 :ucs ups
 pattern PairLike = [fst, snd] => Pair(fst, snd)
-//│ elaborated pattern body: [fst, snd] => member:Pair⁰(fst⁰, snd⁰)
+//│ elaborated pattern body: [fst‹fst⁰›, snd‹snd⁰›] => member:Pair⁰(fst¹, snd¹)
 
 :ucs ups
 pattern PairLike(fst, snd) = Pair(fst, snd) | [fst, snd]
-//│ elaborated pattern body: Pair(fst, snd) ∨ [fst, snd]
+//│ elaborated pattern body: Pair(fst‹fst²›, snd‹snd²›) ∨ [fst‹fst²›, snd‹snd²›]
 
 :w
 pattern UselessParameter = x
@@ -53,11 +53,11 @@ pattern UselessParameter = x
 
 :ucs ups
 pattern PlainList(pattern T) = (null => Nil) | ([T as hd, PlainList(T) as tl] => hd :: tl)
-//│ elaborated pattern body: null => (member:Stack⁰.)Nil‹member:Nil› ∨ [T as hd, PlainList(T) as tl] => (member:Stack⁰.)Cons‹member:Cons›(hd¹, tl¹)
+//│ elaborated pattern body: null => (member:Stack⁰.)Nil‹member:Nil› ∨ [T as hd‹hd²›, PlainList(T) as tl‹tl²›] => (member:Stack⁰.)Cons‹member:Cons›(hd³, tl³)
 
 :ucs ups
 pattern Consistent = ((Int as x) | (Str as x)) => x.toString()
-//│ elaborated pattern body: (Int as x ∨ Str as x) => x².toString()
+//│ elaborated pattern body: (Int as x‹x⁴› ∨ Str as x‹x⁴›) => x⁵.toString()
 
 :e
 pattern Inconsistent = ~(~(Int as x) | Str) => x.toString()
@@ -113,7 +113,7 @@ pattern BadNegated = (~(Int as x)) => x
 //│ ╔══[COMPILATION ERROR] Name not found: x
 //│ ║  l.106: 	pattern BadNegated = (~(Int as x)) => x
 //│ ╙──       	                                      ^
-//│ elaborated pattern body: ¬(Int as x) => <error>
+//│ elaborated pattern body: ¬(Int as x‹›) => <error>
 
 :ucs ups
 :e
@@ -127,7 +127,7 @@ pattern BadNegated = (~Pair(Int, x)) => x
 //│ ╔══[COMPILATION ERROR] Name not found: x
 //│ ║  l.120: 	pattern BadNegated = (~Pair(Int, x)) => x
 //│ ╙──       	                                        ^
-//│ elaborated pattern body: ¬Pair(Int, x) => <error>
+//│ elaborated pattern body: ¬Pair(Int, x‹?›) => <error>
 
 :ucs ups
 pattern DoubleNegated = ~(~Int)
@@ -147,11 +147,11 @@ pattern Origin = (x: 0, y: 0, z: 0)
 
 :ucs ups
 pattern PointLike = ((x: x, y: y)) => x + y
-//│ elaborated pattern body: {x: x, y: y} => builtin:+⁰(x³, y⁰)
+//│ elaborated pattern body: {x: x‹x⁶›, y: y‹y⁰›} => builtin:+⁰(x⁷, y¹)
 
 :ucs ups
 pattern PointLike = ((:x, :y, :z)) => x + y
-//│ elaborated pattern body: {x: x, y: y, z: z} => builtin:+⁰(x⁴, y¹)
+//│ elaborated pattern body: {x: x‹x⁸›, y: y‹y²›, z: z‹z⁰›} => builtin:+⁰(x⁹, y³)
 
 :ucs ups
 pattern NestedTuple = [[[]]]
@@ -166,7 +166,7 @@ class SecretPair(a: Int, val b: Int)
 
 :ucs ups
 pattern KeepSecret(b) = SecretPair(_, b)
-//│ elaborated pattern body: SecretPair(_, b)
+//│ elaborated pattern body: SecretPair(_, b‹b²›)
 
 :e
 pattern RebuildSecret = SecretPair(_, b => b + 1)

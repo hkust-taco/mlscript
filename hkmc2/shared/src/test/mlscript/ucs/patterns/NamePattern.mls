@@ -7,7 +7,7 @@ if id(0) is t then t
 //│ Split with nested patterns:
 //│ >  if
 //│ >    let tmp:scrut = member:id⁰(0)
-//│ >    tmp:scrut is t then t⁰
+//│ >    tmp:scrut is t‹t⁰› then t⁰
 //│ Expanded split with flattened patterns:
 //│ >  ‹if|while›
 //│ >    let tmp:scrut = member:id⁰(0)

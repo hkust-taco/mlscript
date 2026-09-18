@@ -151,7 +151,9 @@ class D extends id(C)
 //│ ║  l.149: 	class D extends id(C)
 //│ ║         	                ^^
 //│ ╙── The 'new' keyword requires a statically known class; use the 'new!' operator for dynamic instantiation.
-//│ ═══[COMPILATION ERROR] Too many parameter lists for parent class
+//│ ╔══[COMPILATION ERROR] Too many parameter lists for parent class
+//│ ║  l.149: 	class D extends id(C)
+//│ ╙──       	                ^^^^^
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let D1;
 //│ (class D extends Predef.id {
@@ -178,14 +180,14 @@ let x = 0
 :fixme
 set x += 1; ()
 //│ ╔══[COMPILATION ERROR] Expected a right-hand side for this assignment
-//│ ║  l.179: 	set x += 1; ()
+//│ ║  l.181: 	set x += 1; ()
 //│ ╙──       	    ^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :e
 set (x += 1; ())
 //│ ╔══[COMPILATION ERROR] Expected a right-hand side for this assignment
-//│ ║  l.186: 	set (x += 1; ())
+//│ ║  l.188: 	set (x += 1; ())
 //│ ╙──       	    ^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -194,7 +196,7 @@ set (x += 1; ())
 :fixme
 [x, set x += 1; x]
 //│ ╔══[COMPILATION ERROR] Expected a right-hand side for this assignment
-//│ ║  l.195: 	[x, set x += 1; x]
+//│ ║  l.197: 	[x, set x += 1; x]
 //│ ╙──       	        ^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -205,13 +207,13 @@ import "../../mlscript-compile/Stack.mls"
 // The parser rejects this, but it should be allowed.
 open Stack { ::, Nil }
 //│ ╔══[COMPILATION ERROR] Illegal 'open' statement shape.
-//│ ║  l.206: 	open Stack { ::, Nil }
+//│ ║  l.208: 	open Stack { ::, Nil }
 //│ ╙──       	     ^^^^^^^^^^^^^^^
 
 // Instead, if we parenthesize the operator, it is rejected by the elaborator.
 open Stack { (::), Nil }
 //│ ╔══[COMPILATION ERROR] Illegal 'open' statement element.
-//│ ║  l.212: 	open Stack { (::), Nil }
+//│ ║  l.214: 	open Stack { (::), Nil }
 //│ ╙──       	             ^^^^
 
 open Stack { Nil, :: }
@@ -237,46 +239,46 @@ id(Foo)(1)
 :e
 data class FooSpd(...args)
 //│ ╔══[COMPILATION ERROR] Spread parameters are not supported in class parameters.
-//│ ║  l.238: 	data class FooSpd(...args)
+//│ ║  l.240: 	data class FooSpd(...args)
 //│ ╙──       	                     ^^^^
 
 FooSpd(1, 2, 3).args
 //│ ╔══[COMPILATION ERROR] Expected 0 arguments, got 3
-//│ ║  l.243: 	FooSpd(1, 2, 3).args
+//│ ║  l.245: 	FooSpd(1, 2, 3).args
 //│ ╙──       	      ^^^^^^^^^
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'args' yielded 'undefined'
 
 :todo
 if FooSpd(1, 2, 3) is FooSpd(...args) then args
 //│ ╔══[COMPILATION ERROR] Unrecognized pattern (spread).
-//│ ║  l.250: 	if FooSpd(1, 2, 3) is FooSpd(...args) then args
+//│ ║  l.252: 	if FooSpd(1, 2, 3) is FooSpd(...args) then args
 //│ ╙──       	                             ^^^^^^^
 //│ ╔══[COMPILATION ERROR] Name not found: args
-//│ ║  l.250: 	if FooSpd(1, 2, 3) is FooSpd(...args) then args
+//│ ║  l.252: 	if FooSpd(1, 2, 3) is FooSpd(...args) then args
 //│ ╙──       	                                           ^^^^
 //│ ╔══[COMPILATION ERROR] Expected 0 arguments, got 3
-//│ ║  l.250: 	if FooSpd(1, 2, 3) is FooSpd(...args) then args
+//│ ║  l.252: 	if FooSpd(1, 2, 3) is FooSpd(...args) then args
 //│ ╙──       	         ^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] The constructor does not take any arguments but found one argument.
-//│ ║  l.250: 	if FooSpd(1, 2, 3) is FooSpd(...args) then args
+//│ ║  l.252: 	if FooSpd(1, 2, 3) is FooSpd(...args) then args
 //│ ╙──       	                      ^^^^^^
 //│ ═══[RUNTIME ERROR] Error: match error
 
 if FooSpd(1, 2, 3) is FooSpd(a, b, c) then [a, b, c]
 //│ ╔══[COMPILATION ERROR] Expected 0 arguments, got 3
-//│ ║  l.265: 	if FooSpd(1, 2, 3) is FooSpd(a, b, c) then [a, b, c]
+//│ ║  l.267: 	if FooSpd(1, 2, 3) is FooSpd(a, b, c) then [a, b, c]
 //│ ╙──       	         ^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] The constructor does not take any arguments but found three arguments.
-//│ ║  l.265: 	if FooSpd(1, 2, 3) is FooSpd(a, b, c) then [a, b, c]
+//│ ║  l.267: 	if FooSpd(1, 2, 3) is FooSpd(a, b, c) then [a, b, c]
 //│ ╙──       	                             ^^^^^^^
 //│ ═══[RUNTIME ERROR] Error: match error
 
 if FooSpd(1, 2, 3) is FooSpd(arg) then arg
 //│ ╔══[COMPILATION ERROR] Expected 0 arguments, got 3
-//│ ║  l.274: 	if FooSpd(1, 2, 3) is FooSpd(arg) then arg
+//│ ║  l.276: 	if FooSpd(1, 2, 3) is FooSpd(arg) then arg
 //│ ╙──       	         ^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] The constructor does not take any arguments but found one argument.
-//│ ║  l.274: 	if FooSpd(1, 2, 3) is FooSpd(arg) then arg
+//│ ║  l.276: 	if FooSpd(1, 2, 3) is FooSpd(arg) then arg
 //│ ╙──       	                             ^^^
 //│ ═══[RUNTIME ERROR] Error: match error
 
@@ -287,10 +289,10 @@ fun foo() =
   let bar(x: Str): Str = x + x
   bar("test")
 //│ ╔══[COMPILATION ERROR] Unsupported let binding shape
-//│ ║  l.287: 	  let bar(x: Str): Str = x + x
+//│ ║  l.289: 	  let bar(x: Str): Str = x + x
 //│ ╙──       	      ^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Name not found: bar
-//│ ║  l.288: 	  bar("test")
+//│ ║  l.290: 	  bar("test")
 //│ ╙──       	  ^^^
 
 // ——— ——— ———
@@ -304,7 +306,7 @@ module Foo(x) with
   print(x)
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'x'
 //│ ╟── which references the symbol introduced here
-//│ ║  l.303: 	module Foo(x) with
+//│ ║  l.305: 	module Foo(x) with
 //│ ╙──       	           ^
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let Foo5;
@@ -322,7 +324,7 @@ module Foo(x) with
 //│ });
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'x'
 //│ ╟── which references the symbol introduced here
-//│ ║  l.303: 	module Foo(x) with
+//│ ║  l.305: 	module Foo(x) with
 //│ ╙──       	           ^
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > 1
@@ -332,7 +334,7 @@ module Foo(x) with
 module Foo(val x)
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'x'
 //│ ╟── which references the symbol introduced here
-//│ ║  l.332: 	module Foo(val x)
+//│ ║  l.334: 	module Foo(val x)
 //│ ╙──       	               ^
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let Foo7;
@@ -348,7 +350,7 @@ module Foo(val x)
 //│ });
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'x'
 //│ ╟── which references the symbol introduced here
-//│ ║  l.332: 	module Foo(val x)
+//│ ║  l.334: 	module Foo(val x)
 //│ ╙──       	               ^
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
@@ -357,7 +359,7 @@ module Foo(val x)
 // TODO support syntax?
 data class Foo(mut x)
 //│ ╔══[COMPILATION ERROR] Expected a valid parameter, found 'mut'-modified identifier
-//│ ║  l.358: 	data class Foo(mut x)
+//│ ║  l.360: 	data class Foo(mut x)
 //│ ╙──       	                   ^
 
 // ——— ——— ———
@@ -377,16 +379,16 @@ class Foo
 :e
 class Id(name: UnboundName)
 //│ ╔══[COMPILATION ERROR] Name not found: UnboundName
-//│ ║  l.378: 	class Id(name: UnboundName)
+//│ ║  l.380: 	class Id(name: UnboundName)
 //│ ╙──       	               ^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Expected a type, got a non-type ‹error›
-//│ ║  l.378: 	class Id(name: UnboundName)
+//│ ║  l.380: 	class Id(name: UnboundName)
 //│ ╙──       	               ^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Expected a type, got ‹error›
-//│ ║  l.378: 	class Id(name: UnboundName)
+//│ ║  l.380: 	class Id(name: UnboundName)
 //│ ╙──       	               ^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Expected a type, got a non-type ‹error›
-//│ ║  l.378: 	class Id(name: UnboundName)
+//│ ║  l.380: 	class Id(name: UnboundName)
 //│ ╙──       	               ^^^^^^^^^^^
 
 // ——— ——— ———

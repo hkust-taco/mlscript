@@ -571,6 +571,11 @@ class Resolver(tl: TraceLogger)
         cls.foreach(traverse(_, expect = Class(N)))
         (t.callableDefn, ictx)
       
+      case Term.DynNew(cls, args) =>
+        traverse(cls, expect = NonModule(N))
+        args.foreach(traverse(_, expect = NonModule(N)))
+        resolveType(t, prefer = prefer)
+        (t.callableDefn, ictx)
       case Term.New(cls, args, rft) =>
         // Term.New has only a type, but does not have a symbol.
         traverse(cls, expect = Class(S("The 'new' keyword requires a statically known class; use the 'new!' operator for dynamic instantiation.")))

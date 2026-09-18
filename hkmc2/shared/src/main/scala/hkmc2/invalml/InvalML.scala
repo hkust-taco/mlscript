@@ -26,7 +26,7 @@ final case class InvalCtx(
   env: HashMap[Uid[Symbol], GeneralType],
   outRegAcc: Type,
   symbolCache: HashMap[Str, TypeSymbol],
-):
+)(using Config):
   def +=(p: Symbol -> GeneralType): Unit = env += p._1.uid -> p._2
   def get(sym: Symbol): Option[GeneralType] = env.get(sym.uid) orElse parent.dlof(_.get(sym))(None)
   def getCls(name: Str): TypeSymbol = symbolCache.getOrElseUpdate(name,
@@ -62,14 +62,14 @@ object InvalCtx:
     ClassLikeType(ctx.getCls("Region"), Wildcard.out(sk) :: Nil)
   def refTy(ct: Type, sk: Type)(using ctx: InvalCtx): Type =
     ClassLikeType(ctx.getCls("Ref"), Wildcard(ct, ct) :: Wildcard.out(sk) :: Nil)
-  def init(raise: Raise)(using Elaborator.State, Elaborator.Ctx): InvalCtx =
+  def init(raise: Raise)(using Elaborator.State, Elaborator.Ctx)(using Config): InvalCtx =
     new InvalCtx(raise, summon, None, 1, HashMap.empty, Bot, HashMap.empty)
 
   val builtinOps = Elaborator.binaryOps ++ Elaborator.unaryOps ++ Elaborator.aliasOps.keySet
 end InvalCtx
 
 
-class InvalTyper(using elState: Elaborator.State, tl: TL)(using Ctx):
+class InvalTyper(using elState: Elaborator.State, tl: TL)(using Ctx, Config):
   import tl.{trace, log}
   
   private val infVarState = new InfVarUid.State()
@@ -254,7 +254,7 @@ class InvalTyper(using elState: Elaborator.State, tl: TL)(using Ctx):
       constrain(lhsTy, FunType(rhsTy.reverse, resTy, Bot)) // TODO: right
       (resTy, lhsCtx | rhsCtx, lhsEff | rhsEff)
     case sel @ Term.SynthSel(Term.Ref(_: TopLevelSymbol), _) if sel.symbol.isDefined =>
-      val (opTy, eff) = typeCheck(Ref(sel.symbol.get)(sel.nme, N)) // FIXME 666
+      val (opTy, eff) = typeCheck(Ref(sel.symbol.get)(sel.nme, N))
       (tryMkMono(opTy, sel), Bot, eff)
     case unq @ Term.Unquoted(body) =>
       val (ty, eff) = typeCheck(body)
@@ -612,7 +612,7 @@ class InvalTyper(using elState: Elaborator.State, tl: TL)(using Ctx):
       case Term.Annotated(Annot.Untyped, _) => (Bot, Bot)
       case sel @ Term.SynthSel(Ref(_: TopLevelSymbol), nme)
         if sel.symbol.isDefined =>
-        typeCheck(Ref(sel.symbol.get)(sel.nme, N)) // FIXME 666
+        typeCheck(Ref(sel.symbol.get)(sel.nme, N))
       case Ref(sym) =>
         ctx.get(sym) match
           case Some(ty) => (ty, Bot)

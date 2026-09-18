@@ -39,12 +39,12 @@ e.next
 //│ ║  l.37: 	e.next
 //│ ╙──      	^^^^^^
 //│ —————————————————| Flowed |—————————————————————————————————————————————————————————————————————————
-//│   e⁰.next‹?›
+//│   e⁰.nextˀˀˀ
 //│ where
 //│     e⁰  <~  Test(123)
 //│     e⁰  ~>  {field: ⋅field⁰}  {next: ⋅next⁰}
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
-//│ ═══[RUNTIME ERROR] Error: Access to required field 'next' yielded 'undefined'
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
 open Example
@@ -71,12 +71,12 @@ e.next
 //│ ║  l.69: 	e.next
 //│ ╙──      	^^^^^^
 //│ —————————————————| Flowed |—————————————————————————————————————————————————————————————————————————
-//│   e¹.next‹?›
+//│   e¹.nextˀˀˀ
 //│ where
 //│     e¹  <~  Test(123)
 //│     e¹  ~>  {next: ⋅next¹}
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
-//│ ═══[RUNTIME ERROR] Error: Access to required field 'next' yielded 'undefined'
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
 
@@ -132,11 +132,11 @@ Example.t.field
 //│ ║         	^^^^^^^^^^^^^^^
 //│ ╙── Type `type ⊤` does not contain member 'field'
 //│ —————————————————| Flowed |—————————————————————————————————————————————————————————————————————————
-//│   Example⁰{ ~> Example⁰ }.t⁰{ ~> Example⁰.t⁰ }.field‹?›
+//│   Example⁰{ ~> Example⁰ }.t⁰{ ~> Example⁰.t⁰ }.fieldˀˀˀ
 //│ where
 //│     
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
-//│ = 123
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :fixme // Same
 Example.t.next
@@ -148,10 +148,10 @@ Example.t.next
 //│ ║         	^^^^^^^^^^^^^^
 //│ ╙── Type `type ⊤` does not contain member 'next'
 //│ —————————————————| Flowed |—————————————————————————————————————————————————————————————————————————
-//│   Example⁰{ ~> Example⁰ }.t⁰{ ~> Example⁰.t⁰ }.next‹?›
+//│   Example⁰{ ~> Example⁰ }.t⁰{ ~> Example⁰.t⁰ }.nextˀˀˀ
 //│ where
 //│     
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
-//│ ═══[RUNTIME ERROR] Error: Access to required field 'next' yielded 'undefined'
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 

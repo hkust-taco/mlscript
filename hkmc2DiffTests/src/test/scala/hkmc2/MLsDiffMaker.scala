@@ -47,6 +47,7 @@ abstract class MLsDiffMaker extends DiffMaker:
   val showResolve = NullaryCommand("r")
   val showResolvedTree = NullaryCommand("rt")
   val showFlows = FlagCommand(false, "sf")
+  val showResl = FlagCommand(false, "sr")
   val showLoweredTree = NullaryCommand("lot")
   val ppLoweredTreeOld = NullaryCommand("slot", () => output("Option ':slot' is deprecated, use ':sir' instead."))
   val showIR = NullaryCommand("sir")
@@ -242,7 +243,7 @@ abstract class MLsDiffMaker extends DiffMaker:
   given Elaborator.State = new Elaborator.State:
     override def dbg: Bool =
       dbgParsing.isSet
-      || dbgElab.isSet
+      // || dbgElab.isSet
       || dbgResolving.isSet
       || debug.isSet
   
@@ -476,8 +477,20 @@ abstract class MLsDiffMaker extends DiffMaker:
       outputSeparator(s"Elaborated tree")
       output(e.showAsTree)
     
+    if showResl.isSet then
+      import semantics.ShowCfg
+      given ShowCfg = ShowCfg(
+        showErasedTypes = showIRErasedTypes.isSet,
+        showExpansionMappings = true,
+        showFlowSymbols = true,
+        debug = debug.isSet,
+      )
+      outputSeparator(s"Resolved")
+      output:
+        import document.*
+        doc" #{ ${e.showTopLevel(using flowScp)} #} ".mkString(output.ColWidth)
+    
     processTerm(e, inImport = false)
-      
   
   
   def processTerm(trm: semantics.Term.Blk, inImport: Bool)(using Config, Raise): Unit =
@@ -486,8 +499,9 @@ abstract class MLsDiffMaker extends DiffMaker:
     if file.toString =/= runtimeSourceFile.toString && file.toString =/= preludeFile.toString then
       summon[Elaborator.State].initRuntimeSymbolsFromFile(runtimeSourceFile, prelude)(
         using summon[TL], summon[Raise], cctx)
-    val resolver = Resolver(rtl)
-    curICtx = resolver.traverseBlock(trm)(using curICtx)
+    if !config.language.useNewResolution then
+      val resolver = Resolver(rtl)
+      curICtx = resolver.traverseBlock(trm)(using curICtx)
     
     if showResolve.isSet then
       output(s"Resolved: ${trm.showDbg}")

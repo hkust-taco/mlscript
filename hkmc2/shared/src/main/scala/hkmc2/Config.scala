@@ -97,6 +97,7 @@ object Config:
   case class Language(
     allowUnresolvedAccesses: Bool,
     useNewResolution: Bool,
+    strictResolution: Bool, // Whether the new resolution is done pedantically
     typeCheck: Opt[TypeChecking],
   )(val versionName: Str)
   
@@ -105,6 +106,7 @@ object Config:
     val v0_2_x = Language(
       typeCheck = N,
       useNewResolution = false,
+      strictResolution = false,
       allowUnresolvedAccesses = true,
     )(
       versionName = "0.2.x",
@@ -113,6 +115,7 @@ object Config:
     val v0_3_x = Language(
       typeCheck = N,
       useNewResolution = true,
+      strictResolution = false,
       allowUnresolvedAccesses = false,
     )(
       versionName = "0.3.x",
@@ -390,20 +393,6 @@ object ConfigParser:
             source = Diagnostic.Source.Compilation))
           N
 
-  private def withLanguage(
-    base: Config.Language,
-    allowUnresolvedAccesses: Bool,
-    useNewResolution: Bool,
-    typeCheck: Opt[Config.TypeChecking],
-  ): Config.Language =
-    Config.Language(
-      allowUnresolvedAccesses,
-      useNewResolution,
-      typeCheck,
-    )(
-      base.versionName,
-    )
-
   private def parsedLanguageModifier[A](
     value: Tree,
   )(
@@ -416,13 +405,16 @@ object ConfigParser:
   private def parseLanguageFieldModifier(tree: Tree)(using Raise): Opt[Config.Language => Config.Language] = tree match
     case NamedArg("allowUnresolvedAccesses", value) =>
       parsedLanguageModifier(value)(parseBool): v =>
-        language => withLanguage(language, v, language.useNewResolution, language.typeCheck)
+        lang => lang.copy(allowUnresolvedAccesses = v)(lang.versionName)
     case NamedArg("useNewResolution", value) =>
       parsedLanguageModifier(value)(parseBool): v =>
-        language => withLanguage(language, language.allowUnresolvedAccesses, v, language.typeCheck)
+        lang => lang.copy(useNewResolution = v)(lang.versionName)
+    case NamedArg("strictResolution", value) =>
+      parsedLanguageModifier(value)(parseBool): v =>
+        lang => lang.copy(strictResolution = v)(lang.versionName)
     case NamedArg("typeCheck", value) =>
       parsedLanguageModifier(value)(tree => parseOpt(tree)(parseTypeChecking)): v =>
-        language => withLanguage(language, language.allowUnresolvedAccesses, language.useNewResolution, v)
+        lang => lang.copy(typeCheck = v)(lang.versionName)
     case other =>
       unsupported("Language", other)
       N
