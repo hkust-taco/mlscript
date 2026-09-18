@@ -1,0 +1,60 @@
+:js
+
+let f = case x then 0
+//│ f = fun f
+
+f(1)
+//│ = 0
+
+let g = case
+  0 then 1
+  1 then 0
+//│ g = fun
+
+g(0)
+//│ = 1
+
+g(1)
+//│ = 0
+
+let h = case 0 | 1 then 42
+//│ h = fun
+
+h(0)
+//│ = 42
+
+h(1)
+//│ = 42
+
+:re
+h(2)
+//│ ═══[RUNTIME ERROR] Error: match error
+
+let h' = case (0 | 1) then 42
+//│ h' = fun
+
+h'(0)
+//│ = 42
+
+h'(1)
+//│ = 42
+
+:re
+h'(2)
+//│ ═══[RUNTIME ERROR] Error: match error
+
+// * Missing branch consequents.
+
+:e
+case (0 | 1)
+//│ ╔══[COMPILATION ERROR] Unrecognized pattern split (parenthesis section).
+//│ ║  l.49: 	case (0 | 1)
+//│ ╙──      	     ^^^^^^^
+//│ = fun
+
+:e
+case 0 | 1
+//│ ╔══[COMPILATION ERROR] Unrecognized pattern split (infix operator '|').
+//│ ║  l.56: 	case 0 | 1
+//│ ╙──      	     ^^^^^
+//│ = fun

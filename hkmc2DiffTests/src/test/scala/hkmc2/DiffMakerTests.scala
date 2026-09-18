@@ -25,7 +25,11 @@ class DiffMakerTests extends AnyFunSuite:
     val dir = os.Path(Files.createTempDirectory("diff-maker-tests").toString)
     val testFile = dir / s"Test-${System.nanoTime}.mls"
     os.write.over(testFile, source)
-    val compilerCtx = CompilerCtx.fresh(FileSystem.default)
+    // * `StubDiffMaker` never reaches the compiler, so these are not read; they name the
+    // * project's real layout rather than something under `dir`, so that they stay correct
+    // * should a test here ever exercise a `DiffMaker` that does compile.
+    val compilerCtx = CompilerCtx.fresh(
+      FileSystem.default, TestFolders.compilerPaths(DiffMaker.projectRoot(os.pwd)), Config.default(dir))
     try
       val dm = new StubDiffMaker(compilerCtx, testFile, "Test")
       dm.run()

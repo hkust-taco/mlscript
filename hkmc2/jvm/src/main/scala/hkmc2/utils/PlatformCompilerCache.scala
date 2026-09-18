@@ -1,11 +1,11 @@
 package hkmc2
 package utils
 
-import CompilerCache.Artifact
-import collection.concurrent.{Map => ConcMap, TrieMap}
-import hkmc2.utils.*, shorthands.*
+import collection.concurrent.TrieMap
+
+import CompilerCache.*
+
 
 class PlatformCompilerCache extends CompilerCache:
-  
-  val elabCache: ConcMap[io.Path, Artifact] = TrieMap.empty
-  
+  protected val elabCache = new ArtifactCache[Artifact](TrieMap.empty, TrieMap.empty)
+  protected val preludeCache = new ArtifactCache[PreludeArtifact](TrieMap.empty, TrieMap.empty)

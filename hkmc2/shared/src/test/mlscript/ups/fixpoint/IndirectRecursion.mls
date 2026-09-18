@@ -70,7 +70,23 @@ makeStepsB of tagged
 pattern PeelA = UnBox as PeelB | 42
 pattern PeelB = UnTag as PeelA | _
 
+// This cycle mixes a link whose alternatives are partial (`42`) with one whose
+// alternatives are total (`_`): the machine can fail at `PeelA` on the final
+// term while `PeelB`'s wildcard would have accepted an earlier intermediate —
+// as it does just below, where the run ends on `7` but the result is `Tag(7)`.
+// The machine keeps no intermediates, so the definition is compiled naively.
+:w
 fun runPeelA(x) = if x is @compile PeelA(y) then y
+//│ ╔══[WARNING] This fixed-point pattern is not supported by pattern compilation.
+//│ ║  l.79: 	fun runPeelA(x) = if x is @compile PeelA(y) then y
+//│ ║        	                                   ^^^^^^^
+//│ ╟── One of its recursive parts accepts any term
+//│ ║  l.71: 	pattern PeelB = UnTag as PeelA | _
+//│ ║        	                ^^^^^^^^^^^^^^^^^^
+//│ ╟── while another can fail.
+//│ ║  l.70: 	pattern PeelA = UnBox as PeelB | 42
+//│ ║        	                ^^^^^^^^^^^^^^^^^^^
+//│ ╙── Falling back to the naive translation.
 
 :expect 42
 if Box(42) is PeelA(r) then r else "<no match>"
@@ -127,3 +143,41 @@ unwrapCycle1 of Box(Tag(0))
 unwrapCycle1 of Box(Bin(0)) // Stops at `Bin`.
 //│ = Bin(0)
 
+
+
+// ————— One-or-more links —————
+//
+// `step as (Next | _)` requires its step to fire — a run with zero steps is a
+// match failure — whereas the cycle machine tracks no progress and would let
+// the failing link's alternatives process the scrutinee anyway. Such cycles
+// are therefore compiled naively.
+
+pattern AtLeastOneA = UnBox as (AtLeastOneB | _)
+pattern AtLeastOneB = UnTag as (AtLeastOneA | _)
+
+fun atLeastOneSlow(x) = if x is AtLeastOneA(r) then r else "<no match>"
+
+:w
+fun atLeastOneFast(x) = if x is @compile AtLeastOneA(r) then r else "<no match>"
+//│ ╔══[WARNING] This fixed-point pattern is not supported by pattern compilation.
+//│ ║  l.161: 	fun atLeastOneFast(x) = if x is @compile AtLeastOneA(r) then r else "<no match>"
+//│ ║         	                                         ^^^^^^^^^^^^^
+//│ ╟── `AtLeastOneA` does not match unless its first pattern does, which is not supported for mutually recursive definitions.
+//│ ╙── Falling back to the naive translation.
+
+// The first step cannot fire, so the match fails — it must not yield `7`.
+:expect "<no match>"
+atLeastOneSlow of 7
+//│ = "<no match>"
+
+:expect "<no match>"
+atLeastOneFast of 7
+//│ = "<no match>"
+
+:expect 42
+atLeastOneSlow of Box(Tag(42))
+//│ = 42
+
+:expect 42
+atLeastOneFast of Box(Tag(42))
+//│ = 42

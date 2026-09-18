@@ -15,7 +15,7 @@ inc @ 1
 
 :re
 inc @ inc @ 1
-//│ ═══[RUNTIME ERROR] TypeError: f is not a function
+//│ ═══[RUNTIME ERROR] TypeError: inlinedVal is not a function
 
 inc @ (inc @ 1)
 //│ = 3
@@ -43,9 +43,9 @@ add@1@2
 :fixme
 @(id, 123)
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ return Predef.apply(123)
+//│ let args13; args13 = []; return runtime.safeCall(123(...args13))
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
-//│ ═══[RUNTIME ERROR] TypeError: f is not a function
+//│ ═══[RUNTIME ERROR] TypeError: 123 is not a function
 
 (@)(id, 123)
 //│ = 123
@@ -109,7 +109,7 @@ pipeInto(1, _) @ inc
 //│ ╔══[COMPILATION ERROR] Illegal juxtaposition right-hand side (identifier).
 //│ ║  l.108: 	1 pipeInto @ inc
 //│ ╙──       	  ^^^^^^^^
-//│ ═══[RUNTIME ERROR] TypeError: f is not a function
+//│ ═══[RUNTIME ERROR] TypeError: 1 is not a function
 
 (1 pipeInto(_)) @ inc
 //│ = 2
@@ -122,7 +122,7 @@ pipeInto(1, _) @ inc
 // * This is a bit surprising... parses as `(inc @ (1 . pipeInto)) @ inc`
 :re
 inc @ 1 \pipeInto @ inc
-//│ ═══[RUNTIME ERROR] TypeError: f is not a function
+//│ ═══[RUNTIME ERROR] TypeError: inlinedVal6 is not a function
 
 (inc @ 1) \pipeInto @ inc
 //│ = 3

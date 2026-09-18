@@ -1,7 +1,6 @@
 package hkmc2
 
 import hkmc2.utils.*, shorthands.*
-import io.PlatformPath.given
 
 
 class NofibCompileTestRunner extends CompileTestRunnerBase(
@@ -14,7 +13,6 @@ end NofibCompileTestRunner
 
 object NofibCompileTestRunner:
   
-  given cctx: CompilerCtx = CompilerCtx.fresh(io.FileSystem.default)
+  given cctx: CompilerCtx = TestFolders.compilerCtx(os.pwd)
 
 end NofibCompileTestRunner
-

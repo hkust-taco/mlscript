@@ -107,6 +107,12 @@ evalSloppyFast of Add(Add(Lit(1), Lit(2)), Tag(9))
 
 // ————— Without a catch-all —————
 
+// Without a trailing wildcard the alternatives are tried against every
+// intermediate result, not just the final one, so the machine — which keeps
+// no intermediates — is only used when no intermediate could have matched.
+// Here the steps only apply to boxes and tags, which `Lit(_)` rejects, so
+// nothing is lost and the machine is used.
+
 // Peel boxes and tags; the result must be a literal.
 pattern PeelToLit =
   | UnBox as PeelToLit
@@ -145,3 +151,171 @@ peelToLitSlow(input3)
 
 peelToLitFast(input3)
 //│ = 5
+
+
+// ————— Without a catch-all, with overlapping steps —————
+//
+// `UnBox` and `Rewrap` both apply to a box, so the naive search is a tree
+// rather than a chain: when the whole `UnBox` subtree fails, `Rewrap` is
+// retried on the *same* term, and the results it leads to are candidates too.
+// The machine only ever follows the first applicable step, so it would report
+// no match where the naive translation succeeds — hence the warning and the
+// fallback. This is what keeps `@compile` from changing the meaning of a
+// match; see also the overlap between step and alternatives in
+// `NonCatchAll.mls`.
+
+pattern Rewrap = Box(x) => Tag(x)
+
+pattern PeelOrRewrap =
+  | UnBox as PeelOrRewrap
+  | Rewrap as PeelOrRewrap
+  | Tag(_)
+
+fun peelOrRewrapSlow(x) = if x is PeelOrRewrap(r) then r else "<no match>"
+
+:w
+fun peelOrRewrapFast(x) = if x is @compile PeelOrRewrap(r) then r else "<no match>"
+//│ ╔══[WARNING] This fixed-point pattern is not supported by pattern compilation.
+//│ ║  l.177: 	fun peelOrRewrapFast(x) = if x is @compile PeelOrRewrap(r) then r else "<no match>"
+//│ ║         	                                           ^^^^^^^^^^^^^^
+//│ ╟── Some recursive alternatives can rewrite the same term in more than one way, including this one
+//│ ║  l.170: 	  | UnBox as PeelOrRewrap
+//│ ║         	    ^^^^^
+//│ ╟── and this one.
+//│ ║  l.171: 	  | Rewrap as PeelOrRewrap
+//│ ║         	    ^^^^^^
+//│ ╙── Falling back to the naive translation.
+
+// Unboxing leads to the bare `5`, which is not a tag; re-wrapping does match.
+:expect Tag(5)
+peelOrRewrapSlow of Box(5)
+//│ = Tag(5)
+
+:expect Tag(5)
+peelOrRewrapFast of Box(5)
+//│ = Tag(5)
+
+
+// ————— Overlapping steps *within* one recursive alternative —————
+//
+// Writing the same two steps as one disjunction, `(P | Q) as S`, is a
+// different pattern: the chain hands its continuation to the disjunction as a
+// whole, which commits to the first of its alternatives that applies and does
+// not reconsider when the rest of the chain fails. The naive search is then a
+// chain and not a tree, so the steps need not be mutually exclusive and the
+// machine — which likewise takes the first applicable step and never looks
+// back — implements it exactly. Only *distinct* recursive alternatives branch
+// the search, which is why `unmatchedIntermediates` compares the steps group
+// by group rather than alternative by alternative.
+
+pattern PeelOrRewrapJoined = (UnBox | Rewrap) as PeelOrRewrapJoined | Tag(_)
+
+fun joinedSlow(x) = if x is PeelOrRewrapJoined(r) then r else "<no match>"
+
+fun joinedFast(x) = if x is @compile PeelOrRewrapJoined(r) then r else "<no match>"
+
+// Unboxing wins and leads to the bare `5`, which is not a tag. Unlike
+// `peelOrRewrapSlow` above, re-wrapping is *not* retried, so there is no match
+// at all — and the compiled version agrees, without falling back.
+:expect "<no match>"
+joinedSlow of Box(5)
+//│ = "<no match>"
+
+:expect "<no match>"
+joinedFast of Box(5)
+//│ = "<no match>"
+
+// A later alternative is still reached when the earlier one does not apply,
+// and the choice is remade at every iteration.
+pattern PeelJoined = (UnBox | UnTag) as PeelJoined | 42
+
+fun peelJoinedSlow(x) = if x is PeelJoined(r) then r else "<no match>"
+
+fun peelJoinedFast(x) = if x is @compile PeelJoined(r) then r else "<no match>"
+
+:expect 42
+peelJoinedSlow of Box(Tag(42))
+//│ = 42
+
+:expect 42
+peelJoinedFast of Box(Tag(42))
+//│ = 42
+
+// The grouping is what is compared: these two steps do branch the search — the
+// joined one commits to `UnBox`, and when that leads nowhere `Rewrap` is
+// retried on the same term — so the definition is still rejected.
+
+pattern MixedSteps =
+  | (UnTag | UnBox) as MixedSteps
+  | Rewrap as MixedSteps
+  | Tag(_)
+
+fun mixedSlow(x) = if x is MixedSteps(r) then r else "<no match>"
+
+:w
+fun mixedFast(x) = if x is @compile MixedSteps(r) then r else "<no match>"
+//│ ╔══[WARNING] This fixed-point pattern is not supported by pattern compilation.
+//│ ║  l.256: 	fun mixedFast(x) = if x is @compile MixedSteps(r) then r else "<no match>"
+//│ ║         	                                    ^^^^^^^^^^^^
+//│ ╟── Some recursive alternatives can rewrite the same term in more than one way, including this one
+//│ ║  l.249: 	  | (UnTag | UnBox) as MixedSteps
+//│ ║         	             ^^^^^
+//│ ╟── and this one.
+//│ ║  l.250: 	  | Rewrap as MixedSteps
+//│ ║         	    ^^^^^^
+//│ ╙── Falling back to the naive translation.
+
+:expect Tag(5)
+mixedSlow of Box(5)
+//│ = Tag(5)
+
+:expect Tag(5)
+mixedFast of Box(5)
+//│ = Tag(5)
+
+
+// ————— Overlapping steps under a trailing wildcard —————
+//
+// Mutual exclusion is only required because the trailing alternatives are
+// tried against every intermediate. A trailing wildcard accepts the machine's
+// own normal form, so no intermediate is ever consulted and the steps may
+// overlap freely. Note the middle alternative: without one there is no post
+// pattern at all, and the wildcard's own totality never gets asked about.
+
+pattern PeelOrRewrapTotal =
+  | UnBox as PeelOrRewrapTotal
+  | Rewrap as PeelOrRewrapTotal
+  | Tag(_)
+  | _
+
+fun peelOrRewrapTotalSlow(x) = if x is PeelOrRewrapTotal(r) then r else "<no match>"
+
+fun peelOrRewrapTotalFast(x) = if x is @compile PeelOrRewrapTotal(r) then r else "<no match>"
+
+:expect 5
+peelOrRewrapTotalSlow of Box(5)
+//│ = 5
+
+:expect 5
+peelOrRewrapTotalFast of Box(5)
+//│ = 5
+
+
+// Dually, a step that matches every value overlaps every other one. This is
+// only visible if the wildcard is read as matching everything rather than
+// nothing, which is the other half of the same distinction.
+
+pattern WildStep = _ as WildStep | UnTag as WildStep | Tag(_)
+
+:w
+fun wildStep(x) = if x is @compile WildStep(r) then r else "<no match>"
+//│ ╔══[WARNING] This fixed-point pattern is not supported by pattern compilation.
+//│ ║  l.311: 	fun wildStep(x) = if x is @compile WildStep(r) then r else "<no match>"
+//│ ║         	                                   ^^^^^^^^^^
+//│ ╟── Some recursive alternatives can rewrite the same term in more than one way, including this one
+//│ ║  l.308: 	pattern WildStep = _ as WildStep | UnTag as WildStep | Tag(_)
+//│ ║         	                   ^
+//│ ╟── and this one.
+//│ ║  l.308: 	pattern WildStep = _ as WildStep | UnTag as WildStep | Tag(_)
+//│ ║         	                                   ^^^^^
+//│ ╙── Falling back to the naive translation.

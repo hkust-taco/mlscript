@@ -7,12 +7,11 @@ import scala.scalajs.js.annotation.JSExportTopLevel
 
 /**
  * In-memory file system for testing and web compiler. Stores files as a map
- * from path strings to content strings. Note that separators are not normalized.
+ * from normalized path strings to content strings.
  */
 class InMemoryFileSystem(initialFiles: Map[String, String]) extends FileSystem:
-  // We assume that all paths are normalized here.
   private val files: MutMap[String, (Int, String)] = MutMap.from:
-    initialFiles.map { case (k, v) => (k, (0, v)) }
+    initialFiles.map { case (k, v) => (Path(k).toString, (0, v)) }
   
   def read(path: Path): String = read(path.toString)
   
@@ -28,13 +27,15 @@ class InMemoryFileSystem(initialFiles: Map[String, String]) extends FileSystem:
   
   @JSExport("write")
   def write(path: Str, content: Str): Unit =
-    files.updateWith(path):
+    files.updateWith(Path(path).toString):
       case Some((ts, _)) => Some((ts + 1, content))
       case None => Some((0, content))
   
   @JSExport("read")
   def read(path: Str): Str =
-    files.getOrElse(path, throw new FileSystem.FileNotFoundException(Path(path)))._2
+    val normalizedPath = Path(path)
+    files.getOrElse(normalizedPath.toString,
+      throw new FileSystem.FileNotFoundException(normalizedPath))._2
   
   @JSExport("list")
   def list: js.Array[Str] = allFiles.keys.toJSArray

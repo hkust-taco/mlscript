@@ -7,7 +7,7 @@ import syntax.*, Elaborator.State, ucs.FlatPattern
 final case class Branch(scrutinee: Term.Ref, pattern: FlatPattern, continuation: Split) extends AutoLocated:
   def mkClone(using State): Branch =
     val scrutineeClone = new Term.Ref(scrutinee.sym)
-        (Tree.Ident(scrutinee.tree.name), scrutinee.refNum, scrutinee.typ)
+        (Tree.Ident(scrutinee.tree.name), scrutinee.typ)
     Branch(scrutineeClone, pattern.mkClone, continuation.mkClone)
   
   override def children: Vector[Located] = Vector.triple(scrutinee, pattern, continuation)

@@ -74,12 +74,13 @@ class Instantiator(using tl: TL)(using Ctx, State, Raise):
   
   /** Instantiate the given pattern with a substitution map. */
   def instantiate(pattern: SP)(using subst: Map[VarSymbol, Pat]): Pat = pattern match
-    case SP.Constructor(target, arguments) => target.symbol match
+    case SP.Constructor(target, arguments) => target.resolvedSym match
       // Look up the corresponding pattern from the substitution.
       case S(symbol: VarSymbol) => subst(symbol)
       // Recursively instantiate the arguments of constructor patterns.
       case S(symbol) => symbol.asClsLike match
         case S(symbol: ClassSymbol) =>
+          val head = ClassLikeHead(symbol, target)
           val keyedArguments = symbol.defn.get.paramsOpt match
             case S(ParamList(_, params, _)) => arguments match
               case S(arguments) =>
@@ -102,13 +103,14 @@ class Instantiator(using tl: TL)(using Ctx, State, Raise):
               case S(arguments) =>
                 error(msg"Class `${symbol.nme}` has no parameters." -> Loc(arguments))
                 N
-          ClassLike(symbol, keyedArguments)
+          ClassLike(head, keyedArguments)
         case S(symbol: ModuleOrObjectSymbol) =>
+          val head = ClassLikeHead(symbol, target)
           arguments match
-            case N => ClassLike(symbol, N)
+            case N => ClassLike(head, N)
             case S(arguments) => error(
               msg"`${symbol.nme}` is a module, thus it cannot have arguments." -> Loc(arguments))
-          ClassLike(symbol, N)
+          ClassLike(head, N)
         case S(symbol: PatternSymbol) =>
           // TODO(after we defined the semantics of pattern parameters): We need
           // to partition the arguments into pattern arguments and extraction

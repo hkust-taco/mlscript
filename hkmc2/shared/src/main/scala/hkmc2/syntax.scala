@@ -26,11 +26,11 @@ trait Located:
 trait AutoLocated extends Located:
   protected def children: Vector[Located]
   
-  private var loc: Opt[Loc] = N
+  @volatile private var loc: Opt[Loc] = N
   
   def withLoc(s: Int, e: Int, ori: Origin): this.type =
     withLoc(S(Loc(s, e, ori)))
-  def withLoc(loco: Opt[Loc]): this.type =
+  def withLoc(loco: Opt[Loc]): this.type = this.synchronized:
     require(loc.isEmpty, s"'$this' already has a location: $loc")
     loc = loco
     this
@@ -38,7 +38,7 @@ trait AutoLocated extends Located:
   def mkLocWith(otherChildren: Located*): this.type =
     mkLoc(otherChildren ++ children)
     this
-  private def mkLoc(allChildren: IterableOnce[Located]) = boundary:
+  private def mkLoc(allChildren: IterableOnce[Located]) = this.synchronized(boundary:
     if loc.isEmpty then
       def subLocs = allChildren.iterator.flatMap(_.toLoc.iterator)
       val spanStart =
@@ -46,13 +46,16 @@ trait AutoLocated extends Located:
       val spanEnd =
         subLocs.map(_.spanEnd).maxOption.getOrElse(boundary.break(N))
       val origins = subLocs.map(_.origin).toList.distinct
-      assert(origins.size === 1, (origins, this))
-      val res = S(Loc(spanStart, spanEnd, origins.head))
+      val origin = origins match
+        case origin :: Nil => origin
+        case _ => boundary.break(N)
+      val res = S(Loc(spanStart, spanEnd, origin))
       val _ = withLoc(res)
       res
     else loc
+  )
   def toLoc: Opt[Loc] = mkLoc(children)
-  def withoutLoc: this.type =
+  def withoutLoc: this.type = this.synchronized:
     loc = N
     this
   private[hkmc2] def getLoc: Opt[Loc] = ???
@@ -68,4 +71,3 @@ trait TypeVarImpl extends Ordered[TypeVar] { self: TypeVar =>
   def compare(that: TypeVar): Int =
     (this.identifier.fold((_, ""), (0, _))) compare (that.identifier.fold((_, ""), (0, _)))
 }
-

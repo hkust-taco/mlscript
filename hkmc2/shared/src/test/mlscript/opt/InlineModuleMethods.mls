@@ -1,0 +1,94 @@
+:js
+
+
+module M with
+  fun f(x) = x + 1
+
+// * Note: this should be inlined+folded into a constant
+:soir
+M.f(42)
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ return 43
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 43
+
+
+// * Notice how `h` refers to `f` through a partial path `Mid.this.Inner.f`
+// * that does not go all the way up to the top.
+// * So, while inlining it, if the inlining happens outside of Outer,
+// * we'll need to make sure to root that path appropriately.
+// TODO: why aren't the inner calls inlined?
+:sir
+module Outer with
+  fun g(x) = x * 2
+  module Mid with
+    fun h(x) = Inner.f(x) * 2
+    module Inner with
+      fun f(x) = g(x) + 1
+      print(f(1)) // TODO: should be inlined
+    print(h(2)) // TODO: should be inlined
+    print(Inner.f(3)) // TODO: should be inlined
+  print(Mid.Inner.f(4)) // TODO: should be inlined
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define Outer⁰ as class Outer¹
+//│ module Outer² {
+//│   constructor {
+//│     let tmp;
+//│     define Mid⁰ as class Mid¹
+//│     module Mid² {
+//│       constructor {
+//│         let tmp1, tmp2;
+//│         define Inner⁰ as class Inner¹
+//│         module Inner² {
+//│           constructor {
+//│             let tmp3;
+//│             set tmp3 = Inner².this.f⁰(1);
+//│             do Predef⁰.print⁰(tmp3);
+//│             end
+//│           }
+//│           method f¹ = fun f⁰(x) {
+//│             let tmp3;
+//│             set tmp3 = Outer².this.g⁰(x);
+//│             return +⁰(tmp3, 1)
+//│           }
+//│         };
+//│         set tmp1 = Mid².this.h⁰(2);
+//│         do Predef⁰.print⁰(tmp1);
+//│         set tmp2 = Mid².this.Inner².f⁰(3);
+//│         do Predef⁰.print⁰(tmp2);
+//│         end
+//│       }
+//│       method h¹ = fun h⁰(x) {
+//│         let tmp1;
+//│         set tmp1 = Mid².this.Inner².f⁰(x);
+//│         return *⁰(tmp1, 2)
+//│       }
+//│     };
+//│     set tmp = Outer².this.Mid².Inner².f⁰(4);
+//│     do Predef⁰.print⁰(tmp);
+//│     end
+//│   }
+//│   method g¹ = fun g⁰(x) { return *⁰(x, 2) }
+//│ };
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ > 3
+//│ > 10
+//│ > 7
+//│ > 9
+
+// * Note: this should be inlined+folded into a constant
+:soir
+Outer.Mid.Inner.f(42)
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ return 85
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 85
+
+// * Note: this should be inlined+folded into a constant
+:soir
+Outer.Mid.h(42)
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ return 170
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 170

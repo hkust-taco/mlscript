@@ -54,6 +54,8 @@ in
 //│ Captured variables: HashSet()
 //│ ⬤ Simplif. iter. 3
 //│ Captured variables: HashSet()
+//│ ⬤ Simplif. iter. 1
+//│ Captured variables: HashSet()
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ return Predef⁰.print⁰(6)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————

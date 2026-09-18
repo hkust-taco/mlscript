@@ -25,7 +25,8 @@ import hkmc2.codegen.js.JSBuilder
   * to an inner symbol (e.g., class or module).
   * Note: I made `Scope` a case class just so that it can benefit from `printAsTree`. */
 case class Scope
-    (val parentOrCfg: Cfg \/ Scope, val curThis: Opt[Opt[InnerSymbol]], private val bindings: MutMap[Symbol, Str])
+    (val parentOrCfg: Cfg \/ Scope, val curThis: Opt[Opt[InnerSymbol]], private val bindings: MutMap[Symbol, Str],
+      private val defaultImportBindings: MutMap[Str, Str])
     (using State):
   
   lazy val parent: Opt[Scope] = parentOrCfg.toOption
@@ -99,14 +100,14 @@ case class Scope
       case S(S(`thisSym`)) => thisProxy
       case _ => parent.fold(thisError(thisSym))(_.findThisProxy_!(thisSym))
   
-  def nest: Scope = Scope(R(this), N, MutMap.empty)
+  def nest: Scope = Scope(R(this), N, MutMap.empty, MutMap.empty)
   
   def getThisScope: Opt[Scope] = curThis.fold(parent.flatMap(_.getThisScope))(_ => S(this))
   
   def getOuterThisScope: Opt[Scope] = parent.flatMap(_.getThisScope)
   
   def nestRebindThis[R](thisSym: Opt[InnerSymbol])(k: Scope ?=> R): (Opt[Str], R) =
-    val nested = Scope(R(this), S(thisSym), MutMap.empty)
+    val nested = Scope(R(this), S(thisSym), MutMap.empty, MutMap.empty)
     val res = k(using nested)
     getOuterThisScope match
     case N => (N, res)
@@ -137,6 +138,26 @@ case class Scope
         extraInfo = Some(l -> l.getClass -> this),
         source = Diagnostic.Source.Compilation))
       l.nme
+
+  private def lookupDefaultImport(path: Str): Opt[Str] =
+    defaultImportBindings.get(path).orElse(parent.flatMap(_.lookupDefaultImport(path)))
+
+  /** Bind a default import, reusing the existing JS name when another symbol denotes
+    * the same module path. Cached imported IR may retain a symbol from an earlier
+    * compilation of that module, but both symbols still denote the same default export. */
+  def bindDefaultImport(l: Symbol, path: Str)(using Raise): Bool =
+    lookup(l) match
+    case S(name) =>
+      if lookupDefaultImport(path).isEmpty then defaultImportBindings(path) = name
+      false
+    case N =>
+      lookupDefaultImport(path) match
+      case S(name) =>
+        addToBindings(l, name, shadow = true)
+        false
+      case N =>
+        defaultImportBindings(path) = allocateName(l)
+        true
   
   // * Note: it is sound for an existing name to have been allocated with a different prefix (which is only cosmetic)
   def allocateOrGetName(l: Symbol, prefix: Str = "")(using Raise): Str =
@@ -200,7 +221,7 @@ object Scope:
   def scope(using scp: Scope): Scope = scp
   
   def empty(cfg: Cfg)(using State): Scope =
-    Scope(L(cfg), S(S(State.globalThisSymbol)), MutMap.empty)
+    Scope(L(cfg), S(S(State.globalThisSymbol)), MutMap.empty, MutMap.empty)
   
   def replaceInvalidCharacters(str: Str): Str =
     str.iterator.map:
@@ -212,4 +233,3 @@ object Scope:
       .mkString
   
 end Scope
-

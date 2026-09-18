@@ -11,7 +11,7 @@ Foo.default
 
 data class Cons[A](head: A, tail: List[A])
 object Nil
-type List[A] = Cons[A]
+type List[A] = Cons[A] | Nil
 module List with
   fun map[A, B](f: A -> B, xs: List[A]): List[B] = if xs is
       Nil then Nil

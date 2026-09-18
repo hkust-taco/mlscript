@@ -75,19 +75,19 @@ f`(`0)
 :sjs
 `if `true then `true else `false
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let scrut, tmp21, tmp22, tmp23, tmp24, tmp25, tmp26, tmp27, tmp28, tmp29, tmp30;
-//│ tmp21 = globalThis.Object.freeze(new Term.Symbol("scrut"));
-//│ scrut = globalThis.Object.freeze(new Term.Ref(tmp21));
-//│ tmp22 = globalThis.Object.freeze(new Term.Lit(true));
-//│ tmp25 = globalThis.Object.freeze(new Term.LitPattern(true));
-//│ tmp30 = globalThis.Object.freeze(new Term.Lit(true));
-//│ tmp26 = globalThis.Object.freeze(new Term.Else(tmp30));
-//│ tmp27 = globalThis.Object.freeze(new Term.Branch(scrut, tmp25, tmp26));
-//│ tmp29 = globalThis.Object.freeze(new Term.Lit(false));
-//│ tmp28 = globalThis.Object.freeze(new Term.Else(tmp29));
-//│ tmp23 = globalThis.Object.freeze(new Term.Cons(tmp27, tmp28));
-//│ tmp24 = globalThis.Object.freeze(new Term.Let(tmp21, tmp22, tmp23));
-//│ return globalThis.Object.freeze(new Term.IfLike(Term.Keyword.If, tmp24))
+//│ let scrut, tmp22, tmp23, tmp24, tmp25, tmp26, tmp27, tmp28, tmp29, tmp30, tmp31;
+//│ tmp22 = globalThis.Object.freeze(new Term.Symbol("scrut"));
+//│ scrut = globalThis.Object.freeze(new Term.Ref(tmp22));
+//│ tmp23 = globalThis.Object.freeze(new Term.Lit(true));
+//│ tmp26 = globalThis.Object.freeze(new Term.LitPattern(true));
+//│ tmp31 = globalThis.Object.freeze(new Term.Lit(true));
+//│ tmp27 = globalThis.Object.freeze(new Term.Else(tmp31));
+//│ tmp28 = globalThis.Object.freeze(new Term.Branch(scrut, tmp26, tmp27));
+//│ tmp30 = globalThis.Object.freeze(new Term.Lit(false));
+//│ tmp29 = globalThis.Object.freeze(new Term.Else(tmp30));
+//│ tmp24 = globalThis.Object.freeze(new Term.Cons(tmp28, tmp29));
+//│ tmp25 = globalThis.Object.freeze(new Term.Let(tmp22, tmp23, tmp24));
+//│ return globalThis.Object.freeze(new Term.IfLike(Term.Keyword.If, tmp25))
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = IfLike(
 //│   If,

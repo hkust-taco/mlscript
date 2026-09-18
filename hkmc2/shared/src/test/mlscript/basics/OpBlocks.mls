@@ -130,8 +130,12 @@
 //│ ╙──       	  ^
 //│ = 6
 
+:e // * Note: we used to parse such curly braces equivalently to an indented section, so this used to work
 1 + 2 {* 3 {+ 1}}
-//│ = 8
+//│ ╔══[COMPILATION ERROR] Unsupported refinement in this position.
+//│ ║  l.134: 	1 + 2 {* 3 {+ 1}}
+//│ ╙──       	         ^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 1 + 2
   * 3
@@ -143,10 +147,10 @@
   * 3 + 1
   * 3
 //│ ╔══[PARSE ERROR] Operator cannot be used inside this operator split
-//│ ║  l.143: 	  * 3 + 1
+//│ ║  l.147: 	  * 3 + 1
 //│ ║         	      ^
 //│ ╟── as it has lower precedence than the splitting operator here
-//│ ║  l.143: 	  * 3 + 1
+//│ ║  l.147: 	  * 3 + 1
 //│ ╙──       	  ^
 //│ = 28
 
@@ -167,7 +171,7 @@
   1
   0
 //│ ╔══[WARNING] Pure expression in statement position
-//│ ║  l.167: 	  1
+//│ ║  l.171: 	  1
 //│ ╙──       	  ^
 //│ = true
 
@@ -362,9 +366,9 @@ fun f(x) = if x
   foo(A) then a
   bar(B) then b
 //│ ╔══[COMPILATION ERROR] Unrecognized term split (juxtaposition)
-//│ ║  l.361: 	fun f(x) = if x
+//│ ║  l.365: 	fun f(x) = if x
 //│ ║         	              ^
-//│ ║  l.362: 	  foo(A) then a
+//│ ║  l.366: 	  foo(A) then a
 //│ ╙──       	^^
 
 

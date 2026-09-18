@@ -249,7 +249,7 @@ let {x,y}
 x = y
 y = x
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ set x⁶ = y⁰; set y⁰ = y⁰; end
+//│ set x⁶ = y⁰; set y⁰ = x⁶; end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ x = undefined
 //│ y = undefined
@@ -274,7 +274,7 @@ x = y
 y = x
 z = y
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ set x⁸ = y²; set y² = y²; set z¹ = y²; end
+//│ set x⁸ = y²; set y² = x⁸; set z¹ = y²; end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ x = undefined
 //│ y = undefined
@@ -304,7 +304,9 @@ print(res)
 //│ set scrut = Predef⁰.maybe⁰;
 //│ match scrut
 //│   true =>
-//│     set tmp = x⁹;
+//│     let y;
+//│     set y = x⁹;
+//│     set tmp = y;
 //│     end
 //│   else
 //│     set tmp = Predef⁰.notImplementedError⁰;

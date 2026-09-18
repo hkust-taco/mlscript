@@ -24,6 +24,7 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
   val showSanitizedJS = NullaryCommand("ssjs")
   val showJS = NullaryCommand("sjs")
   val showRepl = NullaryCommand("showRepl")
+  val await = NullaryCommand("await")
   val traceJS = NullaryCommand("traceJS")
   val expect = Command("expect"): ln =>
     ln.trim
@@ -105,70 +106,79 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
     
     lazy val blockPrinter =
       given ShowCfg = ShowCfg(
+        showErasedTypes = showIRErasedTypes.isSet,
         showExpansionMappings = false,
         showFlowSymbols = true,
         debug = debug.isSet,
       )
+      given Elaborator.Ctx = curCtx
       Printer()
     val print = (p: codegen.Program) =>
       blockPrinter.worksheet(p)(using irPrintingScp).mkString(output.ColWidth)
     
     Config.extractConfigFromStats(blk).givenIn {
+    val loweringState = summon[Elaborator.State]
+    if file.toString =/= runtimeSourceFile.toString && file.toString =/= preludeFile.toString then
+      loweringState.initRuntimeSymbolsFromFile(runtimeSourceFile, prelude)(
+        using summon[TL], summon[Raise], cctx)
     
     if noCodeGen.isUnset then
       given Elaborator.Ctx = curCtx
       val low = ltl.givenIn:
-        new codegen.Lowering()
+        new codegen.Lowering()(using summon[Config], ltl, summon[Raise], loweringState, curCtx, summon[SymbolPrinter])
           with codegen.LoweringTraceLog(traceJS.isSet)
       
-      var lowered = low.program(blk, symbolsToPreserve = symbolsToPreserve)
+      val lowered = ltl.givenIn:
+        low.program(blk, symbolsToPreserve = symbolsToPreserve)
       
-      var optimized = lowered
+      val optimized = ltl.givenIn:
+        val customPipeline = new CompilationPipeline:
+          override def passHook(passName: Str, before: Program, after: Program) =
+            // TODO: Preserve object identity in Lifter
+            if (passName =/= "Lifter") && (before isnt after) && (before === after) then
+              output(s"/!\\ Warning: object identity between equal objects was not preserved by ${passName}")
+              def rec(lhs: Product, rhs: Product): Bool =
+                (lhs is rhs) || {
+                  if
+                    lhs.productIterator.zip(rhs.productIterator).forall:
+                      case (s1: Product, s2: Product) => rec(s1, s2)
+                      case (s1, s2) => (s1 is s2) || {
+                        output(s"/!\\ Offending is part of: ${lhs.showAsTree}")
+                        false
+                      }
+                  then
+                    output(s"/!\\ Offending: ${lhs.showAsTree}") 
+                    false
+                  else false
+                }
+              rec(before.main, after.main)
+          override def preOptimizeHook(prog: Program) =
+            if showLoweredTree.isSet then
+              outputSeparator("Lowered IR Tree")
+              output(prog.showAsTree)
+            if showIR.isSet || showIRLines.isSet then
+              given ShowCfg = ShowCfg(
+                showErasedTypes = showIRErasedTypes.isSet,
+                showExpansionMappings = false,
+                showFlowSymbols = true,
+                debug = debug.isSet,
+              )
+              val irStr = Printer().worksheet(prog)(using irPrintingScp).mkString(output.ColWidth)
+              val sloc = irStr.count(_ == '\n') + 1
+              if showIRLines.isSet then output(s"Lines of IR: ${sloc}")
+              if showIR.isSet then
+                outputSeparator("Lowered IR")
+                output(irStr)
+            super.preOptimizeHook(prog)
+        customPipeline.run(lowered, print, symbolsToPreserve, dtl)
       
-      if showLoweredTree.isSet then
-        outputSeparator("Lowered IR Tree")
-        output(optimized.showAsTree)
-      
-      if showIR.isSet || showIRLines.isSet then
-        given ShowCfg = ShowCfg(
-          showExpansionMappings = false,
-          showFlowSymbols = true,
-          debug = debug.isSet,
-        )
-        val irStr = Printer().worksheet(optimized)(using irPrintingScp).mkString(output.ColWidth)
-        val sloc = irStr.count(_ == '\n') + 1
-        if showIRLines.isSet then output(s"Lines of IR: ${sloc}")
-        if showIR.isSet then
-          outputSeparator("Lowered IR")
-          output(irStr)
-      
-      if noOptimizations.isUnset then
-        optimized = WorkerWrapper(symbolsToPreserve, dtl, print)(optimized)
-        
-        optimized = BlockSimplifier(symbolsToPreserve, dtl, print)(optimized)
-        ltl.givenIn:
-          optimized = DeadParamElim(optimized)
-      
-      // TODO: Test that transformers retain object identity when there are no changes
-      if (optimized isnt lowered) && (optimized === lowered) then
-        output("/!\\ Warning: object identity between equal objects was not preserved by BlockSimplifier or DeadParamElim")
-        def rec(lhs: Block, rhs: Block): Bool =
-          (lhs is rhs) || {
-            if
-              lhs.subBlocks.iterator.zip(rhs.subBlocks.iterator).forall:
-                case (s1: Block, s2: Block) => rec(s1, s2)
-            then
-              output(s"/!\\ Offending subblock: ${lhs.showAsTree}") 
-              false
-            else false
-          }
-        rec(optimized.main, lowered.main)
       if checkIR.isSet then
         BlockChecker().applyProgram(optimized)
       
       if showOptimizedIR.isSet then
         outputSeparator("Optimized IR")
         given ShowCfg = ShowCfg(
+          showErasedTypes = showIRErasedTypes.isSet,
           showExpansionMappings = false,
           showFlowSymbols = true,
           debug = debug.isSet,
@@ -200,7 +210,7 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
       val exportedScoped = symbolsToPreserve.collect:
         case sym: ScopedSymbol if !importedSymbols.contains(sym) => sym
       
-      val resSym = new TempSymbol(N, "block$res")
+      val resSym = new TempSymbol(N, erasedType = N, "block$res")
       
       val resNme = nestedScp.allocateName(resSym)
       
@@ -263,7 +273,8 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
       // * Sometimes the JS block won't execute due to a syntax or runtime error so we always set this first
       host.execute(s"$resNme = undefined")
       
-      mkQuery(preStr, jsStr): stdout =>
+      val awaitResult = (if await.isSet then s"; $resNme = await $resNme" else "")
+      mkQuery(preStr, jsStr + awaitResult): stdout =>
         stdout.splitSane('\n').init // should always ends with "undefined" (TODO: check)
           .foreach: line =>
             output(s"> ${line}")
@@ -276,7 +287,7 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
           val le =
             import codegen.*
             Assign(
-              Elaborator.State.noSymbol,
+              NoSymbol,
               Call(
                 Elaborator.State.runtimeSymbol.asSimpleRef.selSN("printRaw"),
                 (Arg(N, sym.asPath) :: Nil) ne_:: Nil)(CallMetadata.defaultMlsFun),

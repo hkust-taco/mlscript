@@ -75,7 +75,17 @@ abstract class WasmDiffMaker extends InvalMLDiffMaker:
         case d => outerRaise(d)
       val sessionImportSymbols = mutable.LinkedHashSet.from[Symbol](pgrm.main.freeVars)
       new BlockTraverser:
+        override def applyResult(r: Result): Unit =
+          // Cast targets are type dependencies rather than value references, so freeVars omits them.
+          r match
+            case Cast(_, target, _) => target.canonicalize match
+              case ErasedType.AnyRef(_, tpeSym) => sessionImportSymbols += tpeSym.bms.get
+              case _ => ()
+            case _ => ()
+          super.applyResult(r)
         override def applyPath(p: Path): Unit = p match
+          // ValDefn traverses its RHS as a Path, whereas Return and Assign traverse a Result.
+          case c: Cast => applyResult(c)
           case sel: Select =>
             sel.symbol.foreach:
               case sym: ModuleOrObjectSymbol => sessionImportSymbols += sym
@@ -90,7 +100,7 @@ abstract class WasmDiffMaker extends InvalMLDiffMaker:
           bindings.foreach: (bindingKey, binding) =>
             sessionImports.update(bindingKey, binding)
       val CompiledWasmModule(modWat, mainFnNme, systemMemMinPages, sessionExports) = ltl.givenIn:
-        WatBuilder().program(pgrm, N, wd, sessionImports.values.toSeq, symbolsToPreserve)
+        WatBuilder.fresh.program(pgrm, N, wd, sessionImports.values.toSeq, symbolsToPreserve)
       val modWatJsLit = JSBuilder.makeStringLiteral(modWat.mkString(output.ColWidth))
 
       if wat.isSet then
@@ -160,10 +170,10 @@ abstract class WasmDiffMaker extends InvalMLDiffMaker:
         val intrinsicWatJsLit = JSBuilder.makeStringLiteral(
           ltl.givenIn:
             baseScp.nest.givenIn:
-              WatBuilder().intrinsicSupportModule().mkString(output.ColWidth),
+              WatBuilder.intrinsicSupportModuleWat.mkString(output.ColWidth),
         )
         host.execute(
-          doc"""await (async () => {
+          doc"""(() => {
             # const mem = new WebAssembly.Memory({ initial: ${systemMemMinPages} });
             # const decodeUtf16 = new TextDecoder("utf-16le");
             # const system = {
@@ -171,8 +181,8 @@ abstract class WasmDiffMaker extends InvalMLDiffMaker:
             #   mlx_str_from_utf16: (ptr, byteLen) =>
             #     decodeUtf16.decode(new Uint8Array(mem.buffer, ptr, byteLen)),
             # };
-            # const intrinsicModule = await $wasmSuppNme.binaryenCompileToModule($intrinsicWatJsLit, {});
-            # Object.assign(system, intrinsicModule.instance.exports);
+            # const intrinsicModule = $wasmSuppNme.binaryenCompileToModule($intrinsicWatJsLit, {});
+            # Object.assign(system, intrinsicModule.exports);
             # $wasmReplImportsRef = {
             #   repl: Object.create(null),
             #   system,
@@ -209,7 +219,7 @@ abstract class WasmDiffMaker extends InvalMLDiffMaker:
         else
           s"""return exports["$mainFnNme"]();"""
       val jsStr =
-        s"""await wasm.binaryenPrintFuncRes($modWatJsLit, $wasmReplImportsRef, exports => { $jsBody });"""
+        s"""wasm.binaryenPrintFuncRes($modWatJsLit, $wasmReplImportsRef, exports => { $jsBody });"""
       output("Wasm result:")
       mkQuery("", jsStr): out =>
         // Omit the last line which is always "undefined" or the unit.

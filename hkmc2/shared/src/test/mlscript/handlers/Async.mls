@@ -1,0 +1,111 @@
+:js
+:lift
+
+import "fs"
+
+open annotations
+open handlers
+
+@async
+fun f(print_result) =
+  print("Hello, world!")
+  let r = await(fs.promises.readFile("./README.md"))
+  let readme = r.toString()
+  let first = readme.slice(0, readme.indexOf("\n"))
+  if print_result do
+    print(first)
+  first
+
+// Should get a promise here, the promise is used for JavaScript interop
+f(false)
+//│ > Hello, world!
+//│ = Promise {}
+
+
+// :await will await the promise returned at the top level for the repl
+:await
+f(true)
+//│ > Hello, world!
+//│ > # MLscript
+//│ = "# MLscript"
+
+:re
+:await
+@async
+fun f() =
+  raiseUnhandledEffect()
+f()
+//│ ═══[RUNTIME ERROR] Error: Effect FatalEffect is raised in exported async function
+
+:ge
+fun f() =
+  await(Promise.resolve(1))
+//│ ╔══[COMPILATION ERROR] Only await inside of async bodies are allowed if effect handlers are not enabled.
+//│ ║  l.42: 	  await(Promise.resolve(1))
+//│ ╙──      	  ^^^^^
+
+:re
+:await
+@async
+fun f() =
+  print(0)
+  let x = await(Promise.resolve(1))
+  raiseUnhandledEffect()
+  print(1)
+f()
+//│ > 0
+//│ ═══[RUNTIME ERROR] Error: Effect FatalEffect is raised in exported async function
+//│ = Promise {}
+
+:re
+:await
+@async
+fun f() =
+  print(0)
+  let x = await(Promise.reject("Promise error"))
+  raiseUnhandledEffect()
+  print(1)
+f()
+//│ > 0
+//│ ═══[RUNTIME ERROR] Promise error
+//│ = Promise {}
+
+:global
+:effectHandlers
+
+fun f() =
+  print(0)
+  let r = await(fs.promises.readFile("./README.md"))
+  let readme = r.toString()
+  let first = readme.slice(0, readme.indexOf("\n"))
+  print(first)
+  let r2 = await(fs.promises.readdir("."))
+  print(r2.indexOf("README.md") >= 0)
+
+@async
+fun g() =
+  f()
+  f()
+
+:await
+g()
+//│ > 0
+//│ > # MLscript
+//│ > true
+//│ > 0
+//│ > # MLscript
+//│ > true
+
+@async
+fun g() =
+  await(Promise.all([@async f(), @async f()]))
+
+:await
+g()
+//│ > 0
+//│ > 0
+//│ > # MLscript
+//│ > # MLscript
+//│ > true
+//│ > true
+//│ = [(), ()]

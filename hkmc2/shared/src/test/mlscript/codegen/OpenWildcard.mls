@@ -16,7 +16,14 @@ open Option
 :sjs
 None isDefined()
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ return Option.isDefined(Option.None)
+//│ let x;
+//│ x = Option.None;
+//│ if (x instanceof Option.Some.class) {
+//│   return true
+//│ } else if (x instanceof Option.None.class) {
+//│   return false
+//│ }
+//│ throw globalThis.Object.freeze(new globalThis.Error("match error"));
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = false
 

@@ -3,38 +3,29 @@
 
 fun foo(x){f} =
   f(x)
-//│ ╔══[COMPILATION ERROR] Expected a valid function definition head; found block instead
-//│ ║  l.4: 	fun foo(x){f} =
-//│ ╙──     	          ^^^
+//│ ╔══[COMPILATION ERROR] Name not found: f
+//│ ║  l.5: 	  f(x)
+//│ ╙──     	  ^
 
 foo(1){x => x}
-//│ ╔══[COMPILATION ERROR] Name not found: foo
+//│ ╔══[COMPILATION ERROR] Unsupported refinement in this position.
 //│ ║  l.10: 	foo(1){x => x}
-//│ ╙──      	^^^
-//│ ╔══[COMPILATION ERROR] Illegal juxtaposition right-hand side (infix operator '=>').
-//│ ║  l.10: 	foo(1){x => x}
-//│ ╙──      	       ^^^^^^
+//│ ╙──      	^^^^^^^^^^^^^^
 
 foo(1)
   x => x
-//│ ╔══[COMPILATION ERROR] Name not found: foo
-//│ ║  l.18: 	foo(1)
-//│ ╙──      	^^^
 //│ ╔══[COMPILATION ERROR] Illegal juxtaposition right-hand side (infix operator '=>').
-//│ ║  l.19: 	  x => x
+//│ ║  l.16: 	  x => x
 //│ ╙──      	  ^^^^^^
 
 foo(1) { x => x }
-//│ ╔══[COMPILATION ERROR] Name not found: foo
-//│ ║  l.27: 	foo(1) { x => x }
-//│ ╙──      	^^^
-//│ ╔══[COMPILATION ERROR] Illegal juxtaposition right-hand side (infix operator '=>').
-//│ ║  l.27: 	foo(1) { x => x }
-//│ ╙──      	         ^^^^^^
+//│ ╔══[COMPILATION ERROR] Unsupported refinement in this position.
+//│ ║  l.21: 	foo(1) { x => x }
+//│ ╙──      	^^^^^^^^^^^^^^^^^
 
 foo(1) with x => x
 //│ ╔══[COMPILATION ERROR] Unexpected infix use of keyword 'with' here
-//│ ║  l.35: 	foo(1) with x => x
+//│ ║  l.26: 	foo(1) with x => x
 //│ ╙──      	^^^^^^^^^^^^^^^^^^
 
 

@@ -21,23 +21,20 @@ case class Config(
   baseDir: io.Path,
   language: Language,
   sanityChecks: Opt[SanityChecks],
+  checkCasts: Bool,
   effectHandlers: Opt[EffectHandlers],
   liftDefns: Opt[LiftDefns],
   patMatConsequentSharingThreshold: Opt[Int],
   stageCode: Bool,
   target: CompilationTarget,
   rewriteWhileLoops: Bool,
-  tailRecOpt: Bool,
-  deforest: Opt[Deforest],
   etaExpansion: Opt[EtaExpansion],
-  inlining: Opt[Inliner],
-  deadBranchRemoval: Bool,
   qqEnabled: Bool,
   funcToCls: Bool,
   commentGeneratedCode: Bool,
   noFreeze: Bool,
   noModuleCheck: Bool,
-  deadParamElim: Opt[DeadParamElim],
+  optimizer: Optimizer,
 ):
   
   def stackSafety: Opt[StackSafety] = effectHandlers.flatMap(_.stackSafety)
@@ -55,6 +52,18 @@ case class Config(
   def shouldRewriteWhile: Bool =
     rewriteWhileLoops
   
+  def tailRecOpt: Bool = optimizer.tailRecOpt
+  
+  def deforest: Opt[Deforest] = optimizer.deforest
+  
+  def inlining: Opt[Inliner] = optimizer.inlining
+  
+  def deadBranchRemoval: Bool = optimizer.deadBranchRemoval
+  
+  def deadParamElim: Opt[DeadParamElim] = optimizer.deadParamElim
+  
+  def mapOptimizer(f: Optimizer => Optimizer): Config = copy(optimizer = f(optimizer))
+  
 end Config
 
 
@@ -65,23 +74,20 @@ object Config:
     baseDir = baseDir,
     sanityChecks = N, // TODO make the default S
     // sanityChecks = S(SanityChecks(light = true)),
+    checkCasts = true,
     effectHandlers = N,
     liftDefns = S(LiftDefns()),
     patMatConsequentSharingThreshold = default.patMatConsequentSharingThreshold, // minimum: 1
     target = CompilationTarget.JS,
     rewriteWhileLoops = false,
     stageCode = false,
-    tailRecOpt = true,
-    deforest = N,
     etaExpansion = S(EtaExpansion.default),
-    inlining = S(Inliner(default.inlineThreshold)),
-    deadBranchRemoval = default.deadBranchRemoval,
     qqEnabled = false,
     funcToCls = false,
     commentGeneratedCode = false,
     noFreeze = false,
     noModuleCheck = false,
-    deadParamElim = S(DeadParamElim.default)
+    optimizer = Optimizer.FastOpt,
   )
   object default:
     val patMatConsequentSharingThreshold = S(15)
@@ -229,6 +235,37 @@ object Config:
     .foldLeft(identity[Config]): (acc, modify) =>
       cfg => modify(acc(cfg))
     configModify(config)
+  
+  case class Optimizer(
+    deforest: Opt[Deforest],
+    tailRecOpt: Bool,
+    inlining: Opt[Inliner],
+    deadBranchRemoval: Bool,
+    deadCodeElim: Bool,
+    dataFlowAnalysis: Bool,
+    deadParamElim: Opt[DeadParamElim],
+  )
+  
+  object Optimizer:
+    val NoOpt = Optimizer(
+      N,
+      false,
+      N,
+      false,
+      false,
+      false,
+      N
+    )
+    
+    val FastOpt = Optimizer(
+      deforest = N,
+      tailRecOpt = true,
+      inlining = S(Inliner(default.inlineThreshold)),
+      deadBranchRemoval = default.deadBranchRemoval,
+      deadCodeElim = true,
+      dataFlowAnalysis = true,
+      deadParamElim = S(DeadParamElim.default),
+    )
 
 end Config
 
@@ -575,8 +612,10 @@ object ConfigParser:
   /** Parse a single field override like `tailRecOpt: false`. */
   private def parseField(name: Str, value: Tree)(using Raise): Config => Config = name match
     case "language" => parseLanguageOverride(value)
+    case "noOpt" =>
+      parsedField(value)(parseBool)(v => _.mapOptimizer(_ => Optimizer.NoOpt))
     case "tailRecOpt" =>
-      parsedField(value)(parseBool)(v => _.copy(tailRecOpt = v))
+      parsedField(value)(parseBool)(v => _.mapOptimizer(_.copy(tailRecOpt = v)))
     case "noFreeze" =>
       parsedField(value)(parseBool)(v => _.copy(noFreeze = v))
     case "noModuleCheck" =>
@@ -600,7 +639,7 @@ object ConfigParser:
     case "deforest" =>
       optionalFieldWithCurrent(value)(_.deforest)(
         (tree, current) => parseDeforest(tree, current)
-      )(v => _.copy(deforest = v))
+      )(v => _.mapOptimizer(_.copy(deforest = v)))
     case "etaExpansion" =>
       optionalFieldWithCurrent(value)(_.etaExpansion)(
         (tree, current) => parseEtaExpansion(tree, current)
@@ -608,15 +647,17 @@ object ConfigParser:
     case "deadParamElim" =>
       optionalFieldWithCurrent(value)(_.deadParamElim)(
         (tree, current) => parseDeadParamElim(tree, current)
-      )(v => _.copy(deadParamElim = v))
+      )(v => _.mapOptimizer(_.copy(deadParamElim = v)))
     case "sanityChecks" =>
       optionalField(value)(_ => S(Config.SanityChecks(light = true, checkUnreachable = true)))(v => _.copy(sanityChecks = v))
+    case "checkCasts" =>
+      parsedField(value)(parseBool)(v => _.copy(checkCasts = v))
     case "patMatConsequentSharingThreshold" =>
       parsedField(value)(parseInt)(v => _.copy(patMatConsequentSharingThreshold = S(v)))
     case "inlining" =>
-      optionalField(value)(parseInt)(v => _.copy(inlining = v.map(Inliner(_))))
+      optionalField(value)(parseInt)(v => _.mapOptimizer(_.copy(inlining = v.map(Inliner(_)))))
     case "deadBranchRemoval" =>
-      parsedField(value)(parseBool)(v => _.copy(deadBranchRemoval = v))
+      parsedField(value)(parseBool)(v => _.mapOptimizer(_.copy(deadBranchRemoval = v)))
     case _ =>
       raise(ErrorReport(
         msg"Unknown config field '${name}'" -> value.toLoc :: Nil,

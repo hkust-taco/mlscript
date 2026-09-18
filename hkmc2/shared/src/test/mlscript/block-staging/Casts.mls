@@ -1,0 +1,23 @@
+// The staged-module compiler (`ReflectionInstrumenter`) has to keep a `Cast` as data rather than
+// dropping it: the staged mirror (`Block.mls`) has a `Cast` node, so the coercion survives into the
+// produced IR instead of being silently discarded on the way in.
+// The two blocks differ only in `:noCheckCasts`: the mirror carries the `check` flag through too,
+// printing `as!` for a checked cast and `as!!` for an unchecked one.
+
+:js
+:staging
+class Top(x: Int)
+fun anything(v) = v
+staged module M with
+  fun mk(): Top = anything(1)
+//│ > fun ctor_() = ()
+//│ > fun mk() = (anything(1) as! Top)
+
+
+:js
+:staging
+:noCheckCasts
+staged module N with
+  fun mk(): Top = anything(1)
+//│ > fun ctor_() = ()
+//│ > fun mk() = (anything(1) as!! Top)

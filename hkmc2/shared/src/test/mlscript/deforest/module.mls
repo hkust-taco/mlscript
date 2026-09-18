@@ -41,10 +41,6 @@ module DeforestList with
   val res = DeforestList.sum(DeforestList.enum(100))
 DeforestList.res + DeforestList.main()
 //│ deforest > >>> fusing >>>
-//│ deforest > DeforestList⁰.this.Cons⁰(n⁰, tmp¹) ->
-//│ deforest > 	match: ls⁰
-//│ deforest > 	fields: ls⁰.h⁰
-//│ deforest > 	fields: ls⁰.t⁰
 //│ deforest > DeforestList⁰.this.Nil⁰ ->
 //│ deforest > 	match: ls⁰
 //│ deforest > DeforestList⁰.this.Cons⁰(n⁰, tmp¹) ->
@@ -53,12 +49,16 @@ DeforestList.res + DeforestList.main()
 //│ deforest > 	fields: ls⁰.t⁰
 //│ deforest > DeforestList⁰.this.Nil⁰ ->
 //│ deforest > 	match: ls⁰
-//│ deforest > DeforestList⁰.this.Nil⁰ ->
-//│ deforest > 	match: ls⁰
 //│ deforest > DeforestList⁰.this.Cons⁰(n⁰, tmp¹) ->
 //│ deforest > 	match: ls⁰
 //│ deforest > 	fields: ls⁰.h⁰
 //│ deforest > 	fields: ls⁰.t⁰
+//│ deforest > DeforestList⁰.this.Cons⁰(n⁰, tmp¹) ->
+//│ deforest > 	match: ls⁰
+//│ deforest > 	fields: ls⁰.h⁰
+//│ deforest > 	fields: ls⁰.t⁰
+//│ deforest > DeforestList⁰.this.Nil⁰ ->
+//│ deforest > 	match: ls⁰
 //│ deforest > <<< fusing <<<
 //│ = 5056
 
@@ -81,10 +81,6 @@ module DeforestList with
   val res = DeforestList.sum(DeforestList.enum(100))
 DeforestList.res + DeforestList.main()
 //│ deforest > >>> fusing >>>
-//│ deforest > DeforestList¹.this.Cons¹(n¹, tmp²) ->
-//│ deforest > 	match: ls¹
-//│ deforest > 	fields: ls¹.h¹
-//│ deforest > 	fields: ls¹.t¹
 //│ deforest > DeforestList¹.this.Nil¹ ->
 //│ deforest > 	match: ls¹
 //│ deforest > DeforestList¹.this.Cons¹(n¹, tmp²) ->
@@ -93,12 +89,16 @@ DeforestList.res + DeforestList.main()
 //│ deforest > 	fields: ls¹.t¹
 //│ deforest > DeforestList¹.this.Nil¹ ->
 //│ deforest > 	match: ls¹
-//│ deforest > DeforestList¹.this.Nil¹ ->
-//│ deforest > 	match: ls¹
 //│ deforest > DeforestList¹.this.Cons¹(n¹, tmp²) ->
 //│ deforest > 	match: ls¹
 //│ deforest > 	fields: ls¹.h¹
 //│ deforest > 	fields: ls¹.t¹
+//│ deforest > DeforestList¹.this.Cons¹(n¹, tmp²) ->
+//│ deforest > 	match: ls¹
+//│ deforest > 	fields: ls¹.h¹
+//│ deforest > 	fields: ls¹.t¹
+//│ deforest > DeforestList¹.this.Nil¹ ->
+//│ deforest > 	match: ls¹
 //│ deforest > <<< fusing <<<
 //│ = 5056
 
@@ -165,25 +165,25 @@ module M with
       C
 [M.f(3), M.g(true)]
 //│ deforest > >>> fusing >>>
-//│ deforest > D⁰ ->
-//│ deforest > 	match: scrut¹
 //│ deforest > B⁰(0) ->
 //│ deforest > 	match: scrut¹
-//│ deforest > C⁰ ->
-//│ deforest > 	match: scrut²
-//│ deforest > A¹ ->
-//│ deforest > 	match: scrut²
-//│ deforest > A¹ ->
-//│ deforest > 	match: scrut²
 //│ deforest > D⁰ ->
 //│ deforest > 	match: scrut¹
-//│ deforest > B⁰(0) ->
-//│ deforest > 	match: scrut¹
+//│ deforest > A¹ ->
+//│ deforest > 	match: scrut²
+//│ deforest > A¹ ->
+//│ deforest > 	match: scrut²
 //│ deforest > C⁰ ->
 //│ deforest > 	match: scrut²
+//│ deforest > B⁰(0) ->
+//│ deforest > 	match: scrut¹
+//│ deforest > D⁰ ->
+//│ deforest > 	match: scrut¹
 //│ deforest > A¹ ->
 //│ deforest > 	match: scrut²
 //│ deforest > A¹ ->
+//│ deforest > 	match: scrut²
+//│ deforest > C⁰ ->
 //│ deforest > 	match: scrut²
 //│ deforest > <<< fusing <<<
 //│ = [D, A]

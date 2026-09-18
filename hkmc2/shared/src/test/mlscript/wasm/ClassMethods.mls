@@ -12,11 +12,11 @@ a.A#get() + A(2).get()
 //│ (module
 //│   (type $TypeInfoBase (sub (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
 //│   (type $Object (sub (struct (field $$typeinfo (mut (ref $TypeInfoBase))))))
-//│   (type $A_typeinfo (sub $TypeInfoBase (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
 //│   (type $A (sub $Object (struct (field $$typeinfo (mut (ref $TypeInfoBase))) (field $x (mut (ref null any))))))
-//│   (type $A_init (func (param $this (ref null any)) (param $x (ref null any)) (result (ref null any))))
-//│   (type $A_ctor (func (param $x (ref null any)) (result (ref null any))))
-//│   (type $A_get (func (param $this (ref null any)) (result (ref null any))))
+//│   (type $A_typeinfo (sub $TypeInfoBase (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
+//│   (type $A_init (func (param $this (ref $A)) (param $x (ref null any)) (result (ref $A))))
+//│   (type $A_ctor (func (param $x (ref null any)) (result (ref $A))))
+//│   (type $A_get (func (param $this (ref $A)) (result (ref null any))))
 //│   (type $plus_impl (func (param $lhs (ref null any)) (param $rhs (ref null any)) (result (ref null any))))
 //│   (type $entry (func (result (ref null any))))
 //│   (import "system" "plus_impl" (func $plus_impl (type $plus_impl)))
@@ -24,17 +24,17 @@ a.A#get() + A(2).get()
 //│   (global $A_typeinfo (export "A_typeinfo") (ref $A_typeinfo) (struct.new $A_typeinfo
 //│     (i32.const 1)
 //│     (ref.null $TypeInfoBase)))
-//│   (func $A_init (type $A_init) (param $this (ref null any)) (param $x (ref null any)) (result (ref null any))
-//│     (block (result (ref null any))
+//│   (func $A_init (type $A_init) (param $this (ref $A)) (param $x (ref null any)) (result (ref $A))
+//│     (block (result (ref $A))
 //│       (struct.set $A $x
-//│         (ref.cast (ref $A)
-//│           (local.get $this))
+//│         (local.get $this)
 //│         (local.get $x))
 //│       (return
-//│         (local.get $this))))
-//│   (func $A_ctor (export "A") (type $A_ctor) (param $x (ref null any)) (result (ref null any))
-//│     (local $this (ref null any))
-//│     (block (result (ref null any))
+//│         (ref.cast (ref $A)
+//│           (local.get $this)))))
+//│   (func $A_ctor (export "A") (type $A_ctor) (param $x (ref null any)) (result (ref $A))
+//│     (local $this (ref $A))
+//│     (block (result (ref $A))
 //│       (local.set $this
 //│         (struct.new $A
 //│           (global.get $A_typeinfo)
@@ -45,11 +45,10 @@ a.A#get() + A(2).get()
 //│           (local.get $x)))
 //│       (return
 //│         (local.get $this))))
-//│   (func $A_get (type $A_get) (param $this (ref null any)) (result (ref null any))
+//│   (func $A_get (type $A_get) (param $this (ref $A)) (result (ref null any))
 //│     (return
 //│       (struct.get $A $x
-//│         (ref.cast (ref $A)
-//│           (local.get $this)))))
+//│         (local.get $this))))
 //│   (func $entry (export "entry") (type $entry) (result (ref null any))
 //│     (local $tmp (ref null any))
 //│     (local $tmp1 (ref null any))
@@ -61,14 +60,16 @@ a.A#get() + A(2).get()
 //│             (i32.const 1))))
 //│       (local.set $tmp
 //│         (call $A_get
-//│           (global.get $a)))
+//│           (ref.cast (ref $A)
+//│             (global.get $a))))
 //│       (local.set $tmp1
 //│         (call $A_ctor
 //│           (ref.i31
 //│             (i32.const 2))))
 //│       (local.set $tmp2
 //│         (call $A_get
-//│           (local.get $tmp1)))
+//│           (ref.cast (ref $A)
+//│             (local.get $tmp1))))
 //│       (return
 //│         (call $plus_impl
 //│           (local.get $tmp)
@@ -180,7 +181,7 @@ let d = Counter(c.Counter#get())
 :todo
 d.Counter#inc().Counter#double().Counter#get()
 //│ ╔══[COMPILATION ERROR] Cannot find variable `d` (VarSymbol) in local or global scope.
-//│ ║  l.177: 	let d = Counter(c.Counter#get())
+//│ ║  l.178: 	let d = Counter(c.Counter#get())
 //│ ╙──       	    ^
 //│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Missing type definition for symbol `member:Counter`
 
@@ -201,5 +202,85 @@ class A(val x) with
   fun get() = x
 A(1).get
 //│ ╔══[COMPILATION ERROR] `member:get` is neither a field access nor a callable method
-//│ ║  l.202: 	A(1).get
+//│ ║  l.203: 	A(1).get
 //│ ╙──       	    ^^^^
+
+
+// Method result types are taken from the return annotation, so primitives stay unboxed
+:wat
+val n32: Int32 = wasm.i32.const(7)
+class Prim(val v) with
+  fun take(m: Int32): Int32 = m
+Prim(0).take(n32)
+//│ Wat:
+//│ (module
+//│   (type $TypeInfoBase (sub (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
+//│   (type $Object (sub (struct (field $$typeinfo (mut (ref $TypeInfoBase))))))
+//│   (type $Prim (sub $Object (struct (field $$typeinfo (mut (ref $TypeInfoBase))) (field $v (mut (ref null any))))))
+//│   (type $Prim_typeinfo (sub $TypeInfoBase (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
+//│   (type $Prim_init (func (param $this (ref $Prim)) (param $v (ref null any)) (result (ref $Prim))))
+//│   (type $Prim_ctor (func (param $v (ref null any)) (result (ref $Prim))))
+//│   (type $Prim_take (func (param $this (ref $Prim)) (param $m i32) (result i32)))
+//│   (type $entry (func (result i32)))
+//│   (global $n32 (export "n32") (mut i32) (i32.const 0))
+//│   (global $Prim_typeinfo (export "Prim_typeinfo") (ref $Prim_typeinfo) (struct.new $Prim_typeinfo
+//│     (i32.const 1)
+//│     (ref.null $TypeInfoBase)))
+//│   (func $Prim_init (type $Prim_init) (param $this (ref $Prim)) (param $v (ref null any)) (result (ref $Prim))
+//│     (block (result (ref $Prim))
+//│       (struct.set $Prim $v
+//│         (local.get $this)
+//│         (local.get $v))
+//│       (return
+//│         (ref.cast (ref $Prim)
+//│           (local.get $this)))))
+//│   (func $Prim_ctor (export "Prim") (type $Prim_ctor) (param $v (ref null any)) (result (ref $Prim))
+//│     (local $this (ref $Prim))
+//│     (block (result (ref $Prim))
+//│       (local.set $this
+//│         (struct.new $Prim
+//│           (global.get $Prim_typeinfo)
+//│           (ref.null any)))
+//│       (drop
+//│         (call $Prim_init
+//│           (local.get $this)
+//│           (local.get $v)))
+//│       (return
+//│         (local.get $this))))
+//│   (func $Prim_take (type $Prim_take) (param $this (ref $Prim)) (param $m i32) (result i32)
+//│     (return
+//│       (local.get $m)))
+//│   (func $entry (export "entry") (type $entry) (result i32)
+//│     (local $tmp i32)
+//│     (local $tmp1 (ref null any))
+//│     (block (result i32)
+//│       (local.set $tmp
+//│         (i32.const 7))
+//│       (global.set $n32
+//│         (local.get $tmp))
+//│       (local.set $tmp1
+//│         (call $Prim_ctor
+//│           (ref.i31
+//│             (i32.const 0))))
+//│       (return
+//│         (call $Prim_take
+//│           (ref.cast (ref $Prim)
+//│             (local.get $tmp1))
+//│           (global.get $n32)))))
+//│   (elem $Prim_init declare func $Prim_init)
+//│   (elem $Prim_ctor declare func $Prim_ctor)
+//│   (elem $Prim_take declare func $Prim_take)
+//│   (elem $entry declare func $entry))
+//│ Wasm result:
+//│ = 7
+
+
+// Mutually recursive methods, whose bodies are matches every arm of which returns. The match's result local is
+// then never read, and loading it anyway would type the body `anyref` against the declared `i31ref` - which only
+// methods notice, since they carry a precise declared result type.
+class Cx(val base: Int) with
+  fun p(n: Int): Int = this.q(n)
+  fun q(n: Int): Int = if n <= 0 then this.base else this.p(n - 1)
+(new Cx(9)).Cx#p(3)
+//│ Wasm result:
+//│ = 9

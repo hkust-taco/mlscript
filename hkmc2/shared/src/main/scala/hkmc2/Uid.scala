@@ -20,3 +20,4 @@ extension [T] (x: Uid[T])
 
 private val ord = Ordering.Int
 given [A]: Ordering[Uid[A]] = ord
+

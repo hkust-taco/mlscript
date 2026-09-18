@@ -154,7 +154,7 @@ id(0
 //│ ╔══[COMPILATION ERROR] Illegal juxtaposition right-hand side (identifier).
 //│ ║  l.150: 	  id)(1)
 //│ ╙──       	  ^^
-//│ ═══[RUNTIME ERROR] TypeError: baseCall3 is not a function
+//│ ═══[RUNTIME ERROR] TypeError: 0 is not a function
 
 
 :soir

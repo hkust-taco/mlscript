@@ -53,7 +53,7 @@ object Pattern:
         // TODO: The above edge case would fail the following assertion.
         assert(symbols.size <= 1)
         // If no symbol had been created before, create a new symbol now.
-        val symbol = symbols.headOption.getOrElse(VarSymbol(Ident(name)))
+        val symbol = symbols.headOption.getOrElse(VarSymbol(Ident(name), erasedType = N))
         aliases.foreach: alias =>
           // For guarded patterns (`p where t`), the variables in `p` have to be
           // allocated before `t` is elaborated. In that case, we don't need to
@@ -159,6 +159,7 @@ object Pattern:
    *  variable. Note that NOT every `Alias` pattern has a symbol. */
   trait AliasImpl:
     self: Pattern.Alias =>
+    // TODO: rm this ugly mutable hack:
     private var _symbol: Opt[VarSymbol] = N
     /** Directly set the symbol for the variable. This should be called in the
      *  elaborator when elaborating the non-`Transform` top-level pattern. */
@@ -253,7 +254,7 @@ enum Pattern extends AutoLocated:
   
   /** Annotate the pattern using the given term. If the term is `Error`, then
     * use the location of the original tree for error reporting. */
-  inline def annotate(annotation: Term, treeLoc: Opt[Loc]): Pattern.Annotated =
+  def annotate(annotation: Term, treeLoc: Opt[Loc]): Pattern.Annotated =
     val elem = if annotation.isInstanceOf[Term.Error] then L(treeLoc) else R(annotation)
     this match
       case Annotated(pattern, annotations) =>

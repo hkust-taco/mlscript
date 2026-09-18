@@ -10,6 +10,7 @@ import hkmc2.utils.*
 
 import Elaborator.State
 import Tree.Ident
+import hkmc2.codegen.{ErasedType, ErasedFuncType, ErasedValueType, HasErasedType, HasOnceMutableErasedType}
 import hkmc2.utils.SymbolSubst
 
 
@@ -23,9 +24,9 @@ sealed abstract class MaybeSymbol:
 end MaybeSymbol
 
 
-abstract class Symbol(using State) extends MaybeSymbol with Located:
+abstract class Symbol(using ownerState: State) extends MaybeSymbol with Located:
   
-  def getState: State = summon
+  def getState: State = ownerState
   
   val uid: Uid[Symbol] = State.suid.nextUid
   
@@ -51,12 +52,12 @@ abstract class Symbol(using State) extends MaybeSymbol with Located:
   override def toString: Str =
     prefix + nme + State.dbgUid(uid)
   
-  val directRefs: mutable.Buffer[Term.Ref] = mutable.Buffer.empty
+  private[semantics] val directRefs: mutable.Buffer[Term.Ref] = mutable.Buffer.empty
   def ref(id: Tree.Ident =
     Tree.Ident("") // FIXME hack
-  ): Term.Ref =
-    val res = new Term.Ref(this)(id, directRefs.size, N).withLocOf(id)
-    directRefs += res
+  )(using currentState: State): Term.Ref =
+    val res = new Term.Ref(this)(id, N).withLocOf(id)
+    if currentState is ownerState then directRefs += res
     res
   def refsNumber: Int = directRefs.size
   
@@ -224,12 +225,20 @@ class SplitSymbol(val body: Split, name: Str = "split")(using State) extends Loc
   def toLoc = body.toLoc
   override def prefix: Str = "split:"
 
-sealed abstract class LocalVarSymbol(name: Str)(using State) extends FlowSymbol(name) with LocalSymbol:
+sealed abstract class LocalVarSymbol(name: Str)(using State) extends FlowSymbol(name) with LocalSymbol with HasErasedType:
   self: LocalSymbol => // * using `with LocalSymbol` in the `extends` clause makes Scala think there's a bad override
   var decl: Opt[Declaration] = N
   def subst(using s: SymbolSubst): LocalVarSymbol
 
-class TempSymbol(val trm: Opt[Term], dbgNme: Str = "tmp")(using State) extends LocalVarSymbol(dbgNme):
+/** A temporary variable introduced by lowering.
+  *
+  * Its `erasedType` is once-mutable: a temp holding a branching term's result is named before those branches
+  * are lowered, so `Normalization` populates it with the join of their representations once they have all
+  * been seen. `Normalization.joinTempType` is its only write site.
+  */
+class TempSymbol(val trm: Opt[Term], override var erasedType: Opt[ErasedType], dbgNme: Str = "tmp")(using State)
+    extends LocalVarSymbol(dbgNme)
+    with HasOnceMutableErasedType:
   // val nameHints: MutSet[Str] = MutSet.empty // * May be useful later?
   override def toLoc: Option[Loc] = trm.flatMap(_.toLoc)
   override def prefix: Str = "tmp:"
@@ -245,7 +254,9 @@ class InstSymbol(val origin: Symbol)(using State) extends LocalSymbol:
   def subst(using sub: SymbolSubst): InstSymbol = sub.mapInstSym(this)
 
 
-class VarSymbol(val id: Ident)(using State) extends LocalVarSymbol(id.name) with NamedSymbol:
+class VarSymbol(val id: Ident, override val erasedType: Opt[ErasedValueType])(using State)
+    extends LocalVarSymbol(id.name)
+    with NamedSymbol:
   val name: Str = id.name
   var sourceAliases: Ls[Str] = Nil
   override def toLoc: Opt[Loc] = id.toLoc
@@ -253,14 +264,12 @@ class VarSymbol(val id: Ident)(using State) extends LocalVarSymbol(id.name) with
   override def subst(using s: SymbolSubst): VarSymbol = s.mapVarSym(this)
 
 class BuiltinSymbol
-    (val nme: Str, val binary: Bool, val unary: Bool, val nullary: Bool, val functionLike: Bool)(using State)
+    (val nme: Str, val binary: Bool, val unary: Bool, val nullary: Bool, val functionLike: Bool, val isPure: Bool)(using State)
     extends Symbol:
   def toLoc: Option[Loc] = N
   override def prefix: Str = "builtin:"
   
   def subst(using sub: SymbolSubst): BuiltinSymbol = sub.mapBuiltInSym(this)
-  
-  def isPure: Bool = nme =/= "super" // * For now, all other builtins are pure
   
   // * A basic approximation of builtin operator types
   lazy val signature : semantics.flow.Producer =
@@ -294,9 +303,9 @@ class BlockMemberSymbol(val nme: Str, val trees: Ls[TypeOrTermDef], val nameIsMe
   
   def toLoc: Option[Loc] = Loc(trees)
   
+  def symbols = tsym.toList ::: trees.collect:
+    case t: Tree.TypeDef => t.symbol
   def describe: Str =
-    val symbols = tsym.toList ::: trees.collect:
-      case t: Tree.TypeDef => t.symbol
     symbols match
     case Nil => s"symbol"
     case sym :: Nil => s"${sym.describeKind}"
@@ -336,9 +345,10 @@ sealed abstract class MemberSymbol(using State) extends Symbol:
   def subst(using SymbolSubst): MemberSymbol
 
 
-class TermSymbol(val k: TermDefKind, val owner: Opt[InnerSymbol], val id: Tree.Ident)(using State)
+class TermSymbol(val k: TermDefKind, val owner: Opt[InnerSymbol], val id: Tree.Ident, override var erasedType: Opt[ErasedType])(using State)
     extends MemberSymbol
     with DefinitionSymbol[TermDefinition]
+    with HasOnceMutableErasedType
     with NamedSymbol:
   var sourceAliases: Ls[Str] = Nil
   def nme: Str = id.name
@@ -357,13 +367,23 @@ class TermSymbol(val k: TermDefKind, val owner: Opt[InnerSymbol], val id: Tree.I
     owner.exists(!_.isInstanceOf[TopLevelSymbol]) &&
       ((k is LetBind) || isExplicitlyPrivate)
   
+  /** The erased type of this term's return value.
+    *
+    * This method differs for `fun` definitions with parameter lists, whose `erasedType` is the function type rather
+    * than its result type.
+    */
+  def declaredResultType: Opt[ErasedValueType] = erasedType match
+    case S(ft: ErasedFuncType) => ft.ret
+    case S(vt: ErasedValueType) => S(vt)
+    case N => N
+
   def subst(using sub: SymbolSubst): TermSymbol = sub.mapTermSym(this)
   def mayRaiseEffects(using Config) =
     defn.forall(_.mayRaiseEffects)
 
 object TermSymbol:
-  def fromFunBms(b: BlockMemberSymbol, owner: Opt[InnerSymbol])(using State) =
-    TermSymbol(syntax.Fun, owner, Tree.Ident(b.nme))
+  def fromFunBms(b: BlockMemberSymbol, owner: Opt[InnerSymbol], erasedType: Opt[ErasedType])(using State) =
+    TermSymbol(syntax.Fun, owner, Tree.Ident(b.nme), erasedType)
 
 
 /** Represents the companion constructor function of parameterized classes,
@@ -373,7 +393,7 @@ class ClassCtorSymbol(
   override val k: syntax.Fun.type,
   override val owner: Opt[InnerSymbol],
   val associatedCls: ClassSymbol,
-)(using State) extends TermSymbol(k, owner, associatedCls.id):
+)(using State) extends TermSymbol(k, owner, associatedCls.id, N):
   override def subst(using sub: SymbolSubst): ClassCtorSymbol = sub.mapClassCtorSym(this)
   override def mayRaiseEffects(using Config) =
     super.mayRaiseEffects || config.checkInstantiateEffect
@@ -388,12 +408,13 @@ case class Extr(isTop: Bool)(using State) extends CtorSymbol:
   def toLoc: Option[Loc] = N
   override def toString: Str = nme
 
-sealed abstract case class LitSymbol(lit: Literal)(using State) extends CtorSymbol:
+sealed abstract case class LitSymbol(lit: Literal)(using State) extends CtorSymbol, HasErasedType:
+  override val erasedType: Opt[ErasedType] = N
   def nme: Str = lit.idStr
   def toLoc: Option[Loc] = lit.toLoc
   override def prefix: Str = "lit:"
 object LitSymbol:
-  val cache: mutable.Map[Literal, LitSymbol] = mutable.Map.empty
+  val cache: scala.collection.concurrent.Map[Literal, LitSymbol] = scala.collection.concurrent.TrieMap.empty
   def apply(lit: Literal)(using State): LitSymbol =
     cache.getOrElseUpdate(lit, new LitSymbol(lit){})
 
@@ -413,11 +434,14 @@ case class ErrorSymbol(val nme: Str, tree: Tree)(using State) extends MemberSymb
   override def subst(using sub: SymbolSubst): ErrorSymbol = sub.mapErrorSym(this)
   override def prefix: Str = "error:"
 
-sealed trait ClassLikeSymbol extends IdentifiedSymbol:
+sealed trait ClassLikeSymbol extends IdentifiedSymbol, HasErasedType:
   self: MemberSymbol & DefinitionSymbol[? <: ClassDef | ModuleOrObjectDef] =>
+  def defn: Opt[ClassLikeDef]
   val tree: Tree.TypeDef
   def subst(using sub: SymbolSubst): ClassLikeSymbol
 
+
+type AnyDefinitionSymbol = DefinitionSymbol[?]
 
 /**
  * A symbol for entities with a definition.
@@ -429,7 +453,11 @@ sealed trait ClassLikeSymbol extends IdentifiedSymbol:
  */
 sealed trait DefinitionSymbol[Defn <: Definition] extends MemberSymbol:
   
-  var defn: Opt[Defn] = N
+  private var _defn: Opt[Defn] = N
+  def defn: Opt[Defn] = _defn
+  def defn_=(d: S[Defn]): Unit =
+    require(_defn.isEmpty, s"Cannot reassign defn of ${this} from ${_defn} to ${d}")
+    _defn = d
   var decl: Opt[Declaration] = N // NOTE: currently only assigned for class params and only used by deforestation; may want to just remove it once deforestation is improved
   def bms: Opt[BlockMemberSymbol] = defn.map(_.bsym) 
   
@@ -476,7 +504,8 @@ sealed trait InnerSymbol(using State) extends Symbol:
   // ensure that any implementation of InnerSymbol is also a DefinitionSymbol.
   self: DefinitionSymbol[? <: ClassLikeDef] =>
   val privatesScope: Scope = Scope.empty(Scope.Cfg.default) // * Scope for private members of this symbol
-  val thisProxy: TempSymbol = TempSymbol(N, s"this$$$nme")
+  // TODO(Derppening): Can we meaningfully infer the erased type of `this` from the definition?
+  val thisProxy: TempSymbol = TempSymbol(N, erasedType = N, s"this$$$nme")
   def subst(using SymbolSubst): InnerSymbol
   def asDefnSym: DefinitionSymbol[? <: ClassLikeDef] & InnerSymbol = this match
     case d: DefinitionSymbol[? <: ClassLikeDef] => d
@@ -491,6 +520,8 @@ class ClassSymbol(val tree: Tree.TypeDef, val id: Tree.Ident)(using State)
     with DefinitionSymbol[ClassDef]
     with InnerSymbol
     with NamedSymbol:
+
+  override val erasedType: Opt[ErasedValueType] = S(ErasedType.ValueLike(rsc = S(false), this))
 
   def name: Str = nme
   def nme = id.name
@@ -508,6 +539,9 @@ class ModuleOrObjectSymbol(val tree: Tree.TypeDef, val id: Tree.Ident)(using Sta
     with DefinitionSymbol[ModuleOrObjectDef]
     with InnerSymbol
     with NamedSymbol:
+
+  override val erasedType: Opt[ErasedValueType] = S(ErasedType.ValueLike(rsc = S(false), this))
+  
   def name: Str = nme
   def nme = id.name
   def toLoc: Option[Loc] = id.toLoc // TODO track source tree of module here
@@ -519,7 +553,11 @@ class ModuleOrObjectSymbol(val tree: Tree.TypeDef, val id: Tree.Ident)(using Sta
 
 class TypeAliasSymbol(val id: Tree.Ident)(using State)
     extends MemberSymbol
-    with DefinitionSymbol[TypeDef]:
+    with DefinitionSymbol[TypeDef]
+    with HasErasedType:
+
+  override val erasedType: Opt[ErasedType] = S(ErasedType.ValueLike(rsc = S(false), this))
+  
   def nme = id.name
   def toLoc: Option[Loc] = id.toLoc // TODO track source tree of type alias here
   override def prefix: Str = "type:"
@@ -535,10 +573,9 @@ class PatternSymbol(val id: Tree.Ident, val params: Opt[Tree.Tup], val body: Tre
   def toLoc: Option[Loc] = id.toLoc // TODO track source tree of pattern here
   override def prefix: Str = "pattern:"
 
-  /** The fixed-point machine compiled from this definition, paired with
-    * whether a failed run must be retried with the naive translation;
-    * memoized across `@compile` match sites (see `ups.FixedPointCompiler`). */
-  var fixedPointMachine: Opt[(ups.FixedPointCompiler.Machine, Bool)] = N
+  /** The fixed-point machine compiled from this definition, memoized across
+    * `@compile` match sites (see `ups.FixedPointCompiler`). */
+  var fixedPointMachine: Opt[ups.FixedPointCompiler.Machine] = N
 
   override def subst(using sub: SymbolSubst): PatternSymbol = sub.mapPatSym(this)
 

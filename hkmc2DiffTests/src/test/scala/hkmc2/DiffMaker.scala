@@ -6,36 +6,14 @@ import hkmc2.utils.*
 
 
 
-class Outputter(val out: java.io.PrintWriter):
+object DiffMaker:
   
-  val outputMarker = "//│ "
-  // val oldOutputMarker = "/// "
-
-  val diffBegMarker = "<<<<<<<"
-  val diffMidMarker = "======="
-  val diff3MidMarker = "|||||||" // * Appears under `git config merge.conflictstyle diff3` (https://stackoverflow.com/a/18131595/1518588)
-  val diffEndMarker = ">>>>>>>"
-
-  val ColWidth = 100
-  val exitMarker = "=" * ColWidth
-  val blockSeparator = "—" * 80
+  /** The project root, resolved from the directory SBT runs a subproject's tests in.
+    * For some reason, when run from ~hkmc2JVM/Test/run in sbt, the pwd is ".../hkmc2/jvm". */
+  def projectRoot(pwd: os.Path): os.Path =
+    if pwd.last == "hkmc2DiffTests" then pwd/os.up else pwd
   
-  val fullBlockSeparator = outputMarker + blockSeparator
-  
-  /** Tracks the net difference between lines written to the output and lines
-    * consumed from the original file so far. Adding a new output line (via
-    * [[apply]]) increments it; consuming an original output line (starting
-    * with [[outputMarker]]) decrements it. This is used to adjust block
-    * line numbers so they refer to positions in the output file rather than
-    * the original, avoiding the need for a second run to stabilize them. */
-  var linesDelta: Int = 0
-  
-  def apply(str: String) =
-    // out.println(outputMarker + str)
-    val ls = str.splitSane('\n')
-    linesDelta += ls.size
-    ls.foreach(l => out.println(outputMarker + l))
-
+end DiffMaker
 
 
 abstract class DiffMaker:
@@ -164,7 +142,7 @@ abstract class DiffMaker:
   val strw = new java.io.StringWriter
   val out = new java.io.PrintWriter(strw)
   val output = Outputter(out)
-  val report = ReportFormatter(output(_), colorize = false)
+  val report = ReportFormatter(output(_), file.up, colorize = false)
   
   private def emitOutputSeparator(): Unit =
     output.linesDelta += 1
@@ -285,126 +263,131 @@ abstract class DiffMaker:
   
   
   
-  // When a block emits no fresh output, `mayNeedOutputSeparator` becomes true.
-  // If the next consumed original lines are old `//│ ` lines, `pendingOutputSeparator`
-  // latches true so the next real block gets one synthetic `//│ ` line before it.
-  @annotation.tailrec
-  final def rec(lines: List[String], pendingOutputSeparator: Bool, mayNeedOutputSeparator: Bool): Unit = lines match
-    case "" :: Nil => // To prevent adding an extra newline at the end
-    case (line @ "") :: ls if consumeEmptyLines.isUnset =>
-      out.println(line)
-      if initCmd.isSet then
-        init()
-      resetCommands
-      rec(ls, pendingOutputSeparator = false, mayNeedOutputSeparator = false)
-    case ":exit" :: ls =>
-      out.println(":exit")
-      out.println(output.exitMarker)
-      ls.dropWhile(_ =:= output.exitMarker).tails.foreach {
-        case Nil =>
-        case lastLine :: Nil => out.print(lastLine)
-        case l :: _ => out.println(l)
-      }
-    case line :: ls if line.startsWith(":") =>
-      out.println(line)
-      
-      val cmd = line.tail.takeWhile(!_.isWhitespace)
-      val rest = line.drop(cmd.length + 1)
-      
-      commands.get(cmd) match
-        case S(cmd) =>
-          if global.isSet then cmd.isGlobal = true
-          cmd.setCurrentValue(cmd.process(rest))
-        case N =>
-          failures += allLines.size - lines.size + 1
-          output("/!\\ Unrecognized command: " + cmd)
-      
-      rec(ls, pendingOutputSeparator = false, mayNeedOutputSeparator = false)
-    case line :: ls if line.startsWith(output.outputMarker) //|| line.startsWith(oldOutputMarker)
-      =>
-      output.linesDelta -= 1
-      // Consuming old output after a no-output block latches the pending separator
-      // until we either emit it before the next block or hit a structural separator.
-      rec(
-        ls,
-        pendingOutputSeparator = pendingOutputSeparator || mayNeedOutputSeparator,
-        mayNeedOutputSeparator = mayNeedOutputSeparator,
-      )
-    case line :: ls if line.startsWith("//") =>
-      out.println(line)
-      rec(ls, pendingOutputSeparator = false, mayNeedOutputSeparator = false)
-    case begLine :: ls if begLine.startsWith(output.diffBegMarker) => // Check if there are unmerged git conflicts
-      val diff = ls.takeWhile(l => !l.startsWith(output.diffEndMarker))
-      assert(diff.exists(_.startsWith(output.diffMidMarker)), diff)
-      val rest = ls.drop(diff.length)
-      val hdo = rest.head
-      assert(hdo.startsWith(output.diffEndMarker), hdo)
-      val blankLines = diff.count(_.isEmpty)
-      val hasBlankLines = diff.exists(_.isEmpty)
-      if diff.forall(l => l.startsWith(output.outputMarker) || l.startsWith(output.diffMidMarker) || l.startsWith(output.diff3MidMarker) || l.isEmpty) then {
-        for _ <- 1 to blankLines do out.println()
-      } else {
-        val blockLineNum = allLines.size - lines.size + 1
-        failures += blockLineNum
-        doFail(blockLineNum,
-          s"Unmerged non-output changes at $relativeName.${file.ext}:" + blockLineNum)
-        unmergedChanges += allLines.size - lines.size + 1
-        out.println(begLine)
-        diff.foreach(out.println)
-        out.println(hdo)
-      }
-      if hasBlankLines then resetCommands
-      rec(rest.tail, pendingOutputSeparator = false, mayNeedOutputSeparator = false)
-    case l :: ls =>
-      if pendingOutputSeparator then emitOutputSeparator()
-      val blockLineNum = allLines.size - lines.size + 1
-      
-      val block = (l :: ls.takeWhile(l => (l.nonEmpty || consumeEmptyLines.isSet) && !(
-        l.startsWith(output.outputMarker)
-        || l.startsWith(output.diffBegMarker)
-        // || l.startsWith(oldOutputMarker)
-      ))).toIndexedSeq
-      block.foreach(out.println)
-      val processedBlock = block
-      val processedBlockStr = processedBlock.mkString
-      val fph = new FastParseHelpers(block)
-      
-      val origin = Origin(file, blockLineNum + output.linesDelta, fph)
-      val beforeOutputLines = output.linesDelta
-      
-      try
+  final def processLines(lines: List[String], reprintCommands: Bool): Unit =
+    
+    // When a block emits no fresh output, `mayNeedOutputSeparator` becomes true.
+    // If the next consumed original lines are old `//│ ` lines, `pendingOutputSeparator`
+    // latches true so the next real block gets one synthetic `//│ ` line before it.
+    @annotation.tailrec
+    def rec(lines: List[String], pendingOutputSeparator: Bool, mayNeedOutputSeparator: Bool): Unit = lines match
+      case "" :: Nil => // To prevent adding an extra newline at the end
+      case (line @ "") :: ls if consumeEmptyLines.isUnset =>
+        out.println(line)
+        if initCmd.isSet then
+          init()
+        resetCommands
+        rec(ls, pendingOutputSeparator = false, mayNeedOutputSeparator = false)
+      case ":exit" :: ls =>
+        if reprintCommands then out.println(":exit")
+        out.println(output.exitMarker)
+        ls.dropWhile(_ =:= output.exitMarker).tails.foreach {
+          case Nil =>
+          case lastLine :: Nil => out.print(lastLine)
+          case l :: _ => out.println(l)
+        }
+      case line :: ls if line.startsWith(":") =>
+        if reprintCommands then out.println(line)
         
-        processBlock(origin)
+        val cmd = line.tail.takeWhile(!_.isWhitespace)
+        val rest = line.drop(cmd.length + 1)
         
-      catch
-        case oh_noes: ThreadDeath @annotation.nowarn // ThreadDeath is deprecated
-          => throw oh_noes
-        case err: Throwable =>
-          if !tolerateErrors then
+        commands.get(cmd) match
+          case S(cmd) =>
+            if global.isSet then cmd.isGlobal = true
+            cmd.setCurrentValue(cmd.process(rest))
+          case N =>
             failures += allLines.size - lines.size + 1
-            unhandled(blockLineNum, err)
-          // err.printStackTrace(out)
-          // println(err.getCause())
-          uncaught(err)
-      
-      val blockProducedOutput = output.linesDelta > beforeOutputLines
-      if consumeEmptyLines.isSet then
-        output(output.blockSeparator)
-        consumeEmptyLines.unset
-      
-      rec(
-        lines.drop(block.size),
-        pendingOutputSeparator = false,
-        mayNeedOutputSeparator = !blockProducedOutput,
-      )
-      
-    case Nil =>
-  
+            output("/!\\ Unrecognized command: " + cmd)
+        
+        rec(ls, pendingOutputSeparator = false, mayNeedOutputSeparator = false)
+      case line :: ls if line.startsWith(output.outputMarker) //|| line.startsWith(oldOutputMarker)
+        =>
+        output.linesDelta -= 1
+        // Consuming old output after a no-output block latches the pending separator
+        // until we either emit it before the next block or hit a structural separator.
+        rec(
+          ls,
+          pendingOutputSeparator = pendingOutputSeparator || mayNeedOutputSeparator,
+          mayNeedOutputSeparator = mayNeedOutputSeparator,
+        )
+      case line :: ls if line.startsWith("//") =>
+        out.println(line)
+        rec(ls, pendingOutputSeparator = false, mayNeedOutputSeparator = false)
+      case begLine :: ls if begLine.startsWith(output.diffBegMarker) => // Check if there are unmerged git conflicts
+        val diff = ls.takeWhile(l => !l.startsWith(output.diffEndMarker))
+        assert(diff.exists(_.startsWith(output.diffMidMarker)), diff)
+        val rest = ls.drop(diff.length)
+        val hdo = rest.head
+        assert(hdo.startsWith(output.diffEndMarker), hdo)
+        val blankLines = diff.count(_.isEmpty)
+        val hasBlankLines = diff.exists(_.isEmpty)
+        if diff.forall(l => l.startsWith(output.outputMarker) || l.startsWith(output.diffMidMarker) || l.startsWith(output.diff3MidMarker) || l.isEmpty) then {
+          for _ <- 1 to blankLines do out.println()
+        } else {
+          val blockLineNum = allLines.size - lines.size + 1
+          failures += blockLineNum
+          doFail(blockLineNum,
+            s"Unmerged non-output changes at $relativeName.${file.ext}:" + blockLineNum)
+          unmergedChanges += allLines.size - lines.size + 1
+          out.println(begLine)
+          diff.foreach(out.println)
+          out.println(hdo)
+        }
+        if hasBlankLines then resetCommands
+        rec(rest.tail, pendingOutputSeparator = false, mayNeedOutputSeparator = false)
+      case l :: ls =>
+        if pendingOutputSeparator then emitOutputSeparator()
+        val blockLineNum = allLines.size - lines.size + 1
+        
+        val block = (l :: ls.takeWhile(l => (l.nonEmpty || consumeEmptyLines.isSet) && !(
+          l.startsWith(output.outputMarker)
+          || l.startsWith(output.diffBegMarker)
+          // || l.startsWith(oldOutputMarker)
+        ))).toIndexedSeq
+        block.foreach(out.println)
+        val processedBlock = block
+        val processedBlockStr = processedBlock.mkString
+        val fph = new FastParseHelpers(block)
+        
+        val origin = Origin(file, blockLineNum + output.linesDelta, fph)
+        val beforeOutputLines = output.linesDelta
+        
+        try
+          
+          processBlock(origin)
+          
+        catch
+          case oh_noes: ThreadDeath @annotation.nowarn // ThreadDeath is deprecated
+            => throw oh_noes
+          case err: Throwable =>
+            if !tolerateErrors then
+              failures += allLines.size - lines.size + 1
+              unhandled(blockLineNum, err)
+            // err.printStackTrace(out)
+            // println(err.getCause())
+            uncaught(err)
+        
+        val blockProducedOutput = output.linesDelta > beforeOutputLines
+        if consumeEmptyLines.isSet then
+          output(output.blockSeparator)
+          consumeEmptyLines.unset
+        
+        rec(
+          lines.drop(block.size),
+          pendingOutputSeparator = false,
+          mayNeedOutputSeparator = !blockProducedOutput,
+        )
+        
+      case Nil =>
+    
+    rec(lines, pendingOutputSeparator = false, mayNeedOutputSeparator = false)
+    
+  end processLines
   
   
   def run(): Unit =
     val starttime = System.currentTimeMillis()
-    try rec(allLines, pendingOutputSeparator = false, mayNeedOutputSeparator = false) finally
+    try processLines(allLines, reprintCommands = true) finally
       val endtime = System.currentTimeMillis()
       val duration = (endtime - starttime).toString
       println(s"${fansi.Color.Cyan.escape}Processed in ${Console.BOLD}${

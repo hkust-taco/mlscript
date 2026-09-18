@@ -10,10 +10,10 @@
 
 :e
 \{ Int }
-//│ ╔══[COMPILATION ERROR] Illegal juxtaposition right-hand side (identifier).
+//│ ╔══[COMPILATION ERROR] Unsupported refinement in this position.
 //│ ║  l.12: 	\{ Int }
-//│ ╙──      	   ^^^
-//│ = fun passTo
+//│ ╙──      	^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :e
 \(0)
@@ -47,7 +47,7 @@ fun f(x) = if x is ( Int then 1, Bool then 2 )
 
 :e
 fun f(x) = if x is \{ Int then 1, Bool then 2 }
-//│ ╔══[COMPILATION ERROR] Unrecognized pattern split (juxtaposition).
+//│ ╔══[COMPILATION ERROR] Unrecognized pattern split (refinement).
 //│ ║  l.49: 	fun f(x) = if x is \{ Int then 1, Bool then 2 }
 //│ ╙──      	                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 

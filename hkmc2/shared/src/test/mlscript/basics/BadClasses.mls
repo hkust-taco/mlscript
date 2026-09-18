@@ -1,18 +1,46 @@
 
 
-// TODO should make better error messages!
+class C { print("hi") }
+
+:w
+class C { 1 }
+//│ ╔══[WARNING] Pure expression in statement position
+//│ ║  l.6: 	class C { 1 }
+//│ ╙──     	          ^
+
+class C { }
+
+class C { val a = 1 }
+
+class C {
+  val a = 1
+}
 
 :e
-class Foo { log("hi") }
-//│ ╔══[COMPILATION ERROR] Invalid class definition head: unexpected block in this position
-//│ ║  l.6: 	class Foo { log("hi") }
-//│ ╙──     	          ^^^^^^^^^^^^^
+class C { val a = 1 } with
+  val b = 2
+//│ ╔══[COMPILATION ERROR] Multiple type definition bodies are not supported.
+//│ ║  l.21: 	  val b = 2
+//│ ╙──      	  ^^^^^^^^^
 
 :e
-class Foo { 1 }
-//│ ╔══[COMPILATION ERROR] Invalid class definition head: unexpected block in this position
-//│ ║  l.12: 	class Foo { 1 }
-//│ ╙──      	          ^^^^^
+class C { val a = 1 } { val b = 2 }
+//│ ╔══[COMPILATION ERROR] Multiple type definition bodies are not supported.
+//│ ║  l.27: 	class C { val a = 1 } { val b = 2 }
+//│ ╙──      	                      ^^^^^^^^^^^^^
+
+:e
+class C { val a = 1 } { val b = 2 } { val c = 2 }
+//│ ╔══[COMPILATION ERROR] Multiple type definition bodies are not supported.
+//│ ║  l.33: 	class C { val a = 1 } { val b = 2 } { val c = 2 }
+//│ ╙──      	                      ^^^^^^^^^^^^^
+
+:e
+class C { val a = 1 } { val b = 2 } with
+  val c = 2
+//│ ╔══[COMPILATION ERROR] Multiple type definition bodies are not supported.
+//│ ║  l.39: 	class C { val a = 1 } { val b = 2 } with
+//│ ╙──      	                      ^^^^^^^^^^^^^
 
 
 // * Note that these work:
@@ -20,14 +48,21 @@ class Foo { 1 }
 :w
 class Foo with { 1 }
 //│ ╔══[WARNING] Pure expression in statement position
-//│ ║  l.21: 	class Foo with { 1 }
+//│ ║  l.49: 	class Foo with { 1 }
 //│ ╙──      	                 ^
 
 :w
 class Foo with
   1
 //│ ╔══[WARNING] Pure expression in statement position
-//│ ║  l.28: 	  1
+//│ ║  l.56: 	  1
 //│ ╙──      	  ^
+
+
+:e
+class Foo(42)
+//│ ╔══[COMPILATION ERROR] Expected a valid parameter, found integer literal
+//│ ║  l.63: 	class Foo(42)
+//│ ╙──      	          ^^
 
 

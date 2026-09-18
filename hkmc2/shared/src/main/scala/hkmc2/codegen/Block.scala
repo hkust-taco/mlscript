@@ -1,6 +1,8 @@
 package hkmc2
 package codegen
 
+import scala.collection.mutable.Buffer
+
 import hkmc2.utils.*, shorthands.*
 import utils.*
 
@@ -12,7 +14,7 @@ import hkmc2.semantics.{Term => st}
 import syntax.{Literal, Tree, SpreadKind, Keyword}
 import semantics.*
 import semantics.Term.*
-import sem.Elaborator.State
+import sem.Elaborator.{Ctx, State}
 
 
 /* Important design notes.
@@ -45,7 +47,7 @@ case class Program(
 type SimpleSymbol = LocalVarSymbol | BuiltinSymbol
 
 /** Symbol that can be used as the left-hand side of an `Assign`. */
-type Assignable = LocalVarSymbol | NoSymbol
+type Assignable = LocalVarSymbol | NoSymbol.type
 
 /** Symbols that `Scoped` introduces as block-local bindings.
   * This deliberately excludes things like `TermSymbol`s, which never need to be scoped.
@@ -359,6 +361,25 @@ sealed abstract class Block extends Product:
   
 end Block
 
+object Block:
+  /** The union of the types returned from `block`, whose canonical form is their least upper bound.
+    *
+    * `N` means there are no returns; an untyped return contributes `Unknown` instead. Nested function, lambda,
+    * and class bodies have their own returns and are excluded. All other returns count, including unreachable
+    * ones, since backends such as Wasm still validate their types.
+    *
+    * Canonicalization is deferred to the consumer, which supplies the elaboration context and state needed to
+    * resolve type aliases and find common ancestors.
+    */
+  def returnType(block: Block): Opt[ErasedValueType] =
+    val types = Buffer.empty[ErasedValueType]
+    val collector = new BlockTraverserShallow:
+      override def applyBlock(b: Block): Unit = b match
+        case Return(res) => types += res.erasedValueType_!
+        case _ => super.applyBlock(b)
+    collector.applyBlock(block)
+    Option.when(types.nonEmpty)(ErasedType.Union.mk(types))
+
 sealed abstract class BlockTail extends Block
 
 sealed abstract trait NonBlockTail:
@@ -374,6 +395,18 @@ case class Match(
 case class Return(res: Result) extends BlockTail
 
 case class Throw(exc: Result) extends BlockTail
+
+object Throw:
+  /** Throws a runtime `Error` carrying `msg`.
+    *
+    * This is the shape compiler-inserted failures use, rather than throwing a bare string, so that they carry a
+    * stack trace and can be caught as an `Error` like any other.
+    */
+  def error(msg: Str)(using State): Throw = Throw(Instantiate(
+    mut = false,
+    State.globalThisSymbol.asThis.selN(Tree.Ident("Error")),
+    (Value.Lit(Tree.StrLit(msg)).asArg :: Nil) :: Nil,
+  )(InstantiateMetadata.empty))
 
 case class Label(label: LabelSymbol, loop: Bool, body: Block, rest: Block)
 extends Block with NonBlockTail with ProductWithTail
@@ -552,7 +585,7 @@ object HandleBlock:
         N, sym, PlainParamList(Param(FldFlags.empty, handler.resumeSym, N, Modulefulness.none) :: Nil) :: Nil,
         handler.body
         )(N, annotations = Nil)
-      val rSym = TempSymbol(N, "suspendRes")
+      val rSym = TempSymbol(N, erasedType = N, "suspendRes")
       FunDefn.withFreshSymbol(
         S(cls),
         handler.sym,
@@ -570,7 +603,7 @@ object HandleBlock:
       N, Nil,
       S(par), handlerMtds, Nil, Nil,
       // Apparently, the lifter is not happy with any assignment in the preCtor...
-      Assign(State.noSymbol, Call(State.builtinOpsMap("super").asSimpleRef, args.map(_.asArg) ne_:: Nil)(CallMetadata.mlsFunWithEffect), End()),
+      Assign(NoSymbol, Call(State.builtinOpsMap("super").asSimpleRef, args.map(_.asArg) ne_:: Nil)(CallMetadata.mlsFunWithEffect), End()),
       End(),
       N,
       N,
@@ -671,7 +704,9 @@ final case class FunDefn(
   val asPath = sym.asMemberRef(dSym)
   lazy val tailRec: Bool = annotations.contains(Annot.TailRec)
   lazy val inline: Bool = annotations.contains(Annot.Inline)
-  lazy val noInline: Bool = annotations.contains(Annot.NoInline)
+  lazy val noInline: Bool = annotations.contains(Annot.NoInline) || generator || async
+  lazy val generator: Bool = annotations.contains(Annot.Generator)
+  lazy val async: Bool = annotations.contains(Annot.Async)
   lazy val visibility: Visibility = annotations.collectFirst:
     case Annot.Modifier(Keyword.`private`) => Visibility.Private
     case Annot.Modifier(Keyword.`public`) => Visibility.Public
@@ -679,6 +714,19 @@ final case class FunDefn(
   lazy val affineInfo: Ls[Int] =
     annotations.collect:
       case Annot.Affine(whichParamList) => whichParamList
+  lazy val allParamSyms: Ls[VarSymbol] = params.flatMap(_.paramSyms)
+
+  // * This deliberately is not a lazy val: its initialization would synchronize on the JVM.
+  // * Computing the summary is pure, and a reference write is atomic, so concurrent traversals may
+  // * harmlessly compute equal immutable summaries and overwrite this slot in either order.
+  private var _inlinerBodySummary: InlinerBodySummary = null
+  private[hkmc2] def inlinerBodySummary: InlinerBodySummary = _inlinerBodySummary
+  private[codegen] def getOrComputeInlinerBodySummary: InlinerBodySummary =
+    if _inlinerBodySummary != null then _inlinerBodySummary
+    else
+      val summary = InlinerBodySummary.compute(this)
+      _inlinerBodySummary = summary
+      summary
   
   // `configOverride` and `annotations` live in a secondary constructor list,
   // so case-class equality would otherwise ignore them.
@@ -697,9 +745,78 @@ final case class FunDefn(
   override def hashCode: Int =
     (owner, sym, dSym, params, body, configOverride, annotations).hashCode
 
+
+/** Configuration-independent facts collected by one structural traversal of a function body.
+  * Importing units replay these entries to rebuild their candidate graph without walking the body.
+  * `transitiveCallTargets` also includes calls under lexically nested function definitions because
+  * those bodies are copied when the enclosing function is inlined.
+  */
+private[codegen] final case class InlinerBodySummary(
+  entries: Ls[InlinerBodySummary.Entry],
+  transitiveCallTargets: Set[TermSymbol],
+)
+
+private[codegen] object InlinerBodySummary:
+  enum Entry:
+    /** A direct call found in the summarized body.
+      *
+      * `hasCallGraphSource` is false for calls in nested constructor bodies: those calls can expose
+      * more inline candidates, but constructors are not function vertices and add no graph edge.
+      */
+    case DirectCall(callee: TermSymbol, call: Call, hasCallGraphSource: Bool)
+    /** A nested function definition, replayed through the importing unit's eligibility checks. */
+    case NestedFunction(defn: FunDefn, isMethod: Bool)
+
+  /** Computes the summary independently from the inliner analysis that will consume it.
+    * Nested function bodies get their own summaries when they are analyzed, so this traversal only
+    * records their definitions and does not enter them.
+    */
+  def compute(fun: FunDefn): InlinerBodySummary =
+    val entries = Buffer.empty[Entry]
+    var transitiveCallTargets = Set.empty[TermSymbol]
+
+    (new BlockTraverser:
+      var hasCallGraphSource = true
+
+      def withoutCallGraphSource(thunk: => Unit): Unit =
+        val previous = hasCallGraphSource
+        hasCallGraphSource = false
+        try thunk
+        finally hasCallGraphSource = previous
+
+      def recordFunction(fun: FunDefn, isMethod: Bool): Unit =
+        entries += Entry.NestedFunction(fun, isMethod)
+        transitiveCallTargets ++= fun.getOrComputeInlinerBodySummary.transitiveCallTargets
+
+      override def applyDefn(defn: Defn): Unit = defn match
+        case fun: FunDefn =>
+          recordFunction(fun, false)
+        case cls: ClsLikeDefn =>
+          cls.parentPath.foreach(applyPath)
+          cls.methods.foreach(recordFunction(_, true))
+          withoutCallGraphSource:
+            applySubBlock(cls.preCtor)
+            applySubBlock(cls.ctor)
+          cls.companion.foreach: module =>
+            module.methods.foreach(recordFunction(_, true))
+            // The module constructor is run with the enclosing constructor and therefore inherits
+            // whether its surrounding block has a call-graph source.
+            applySubBlock(module.ctor)
+        case _ => super.applyDefn(defn)
+
+      override def applyResult(result: Result): Unit = result match
+        case call @ Call(TermSymbolPath(callee), argss) =>
+          entries += Entry.DirectCall(callee, call, hasCallGraphSource)
+          if hasCallGraphSource then transitiveCallTargets += callee
+          argss.foreach(_.foreach(applyArg))
+        case _ => super.applyResult(result)
+    ).applyBlock(fun.body)
+
+    InlinerBodySummary(entries.toList, transitiveCallTargets)
+
 object FunDefn:
   def withFreshSymbol(owner: Opt[InnerSymbol], sym: BlockMemberSymbol, params: Ls[ParamList], body: Block)(configOverride: Opt[Config], annotations: Ls[Annot])(using State) =
-    val tSym = TermSymbol(syntax.Fun, owner, Tree.Ident(sym.nme))
+    val tSym = TermSymbol(syntax.Fun, owner, Tree.Ident(sym.nme), erasedType = N)
     sym.tsym = S(tSym)
     FunDefn(owner, sym, tSym, params, body)(configOverride, annotations)
 
@@ -725,7 +842,7 @@ object ValDefn:
       annotations: Ls[Annot],
     )(using State)
     : ValDefn =
-      ValDefn(tsym = TermSymbol(k, owner, Tree.Ident(sym.nme)), sym = sym, rhs = rhs)(configOverride, annotations)
+      ValDefn(tsym = TermSymbol(k, owner, Tree.Ident(sym.nme), erasedType = rhs.erasedValueType), sym, rhs)(configOverride, annotations)
 
 
 /*
@@ -859,7 +976,7 @@ enum Case:
 
 sealed trait TrivialResult extends Result
 
-sealed abstract class Result extends AutoLocated:
+sealed abstract class Result extends AutoLocated, HasErasedType:
 // // * Used for debugging locations:
 // sealed abstract class Result extends AutoLocated with ProductWithExtraInfo:
 //   def extraInfo: Str = toLoc.toString
@@ -878,6 +995,21 @@ sealed abstract class Result extends AutoLocated:
     case Tuple(mut, elems) => s"Tuple($mut, [${elems.map(_.value.showDbg).mkString(", ")}])"
     case Instantiate(mut, cls, argss) => s"Instantiate($mut, ${cls.showDbg}, [${
       argss.map(_.map(a => a.value.showDbg).mkString("[", ", ", "]")).mkString(", ")}])"
+    case Cast(value, target, check) => s"Cast(${value.showDbg}, $target${if check then ", checked" else ""})"
+  
+  /** The literal underneath any number of *unchecked* casts, or `N` if this result is not one.
+    *
+    * An unchecked cast does not change what its operand denotes, so a consumer that wants to *read* a literal must
+    * look through one. Matching `Value.Lit` directly instead stops matching, silently, as soon as a cast is interposed,
+    * which is what the simplifier does when it propagates a cast literal to its use sites.
+    *
+    * A *checked* cast is deliberately opaque here: it can throw, so its operand does not stand in for it.
+    */
+  @annotation.tailrec
+  final def litThroughUncheckedCasts: Opt[Value.Lit] = this match
+    case lit: Value.Lit => S(lit)
+    case Cast(value, _, false) => value.litThroughUncheckedCasts
+    case _ => N
   
   lazy val isPure: Bool = this match
     case _: Value => true
@@ -889,6 +1021,8 @@ sealed abstract class Result extends AutoLocated:
       ass.forall(_.forall(_.value.isPure))
     case Record(mut, args) => args.forall(_.value.isPure)
     case Tuple(mut, elems) => elems.forall(_.value.isPure)
+    // * A *checked* cast throws on failure, which is observable under either reading below.
+    case Cast(value, _, check) => !check && value.isPure
     // case Instantiate(mut, cls, args) => // TODO?
     case _ => false
   
@@ -899,6 +1033,7 @@ sealed abstract class Result extends AutoLocated:
   protected def children: Vector[Located] = this match
     case Call(fun, argss) => fun +: argss.iterator.flatten.map(_.value).toVector
     case Instantiate(mut, cls, argss) => cls +: argss.iterator.flatten.map(_.value).toVector
+    case Cast(value, target, _) => Vector.single(value)
     case Select(qual, name) => Vector.double(qual, name)
     case DynSelect(qual, fld, arrayIdx) => Vector.double(qual, fld)
     case Lambda(params, body) => Vector.single(params)
@@ -921,6 +1056,7 @@ sealed abstract class Result extends AutoLocated:
   lazy val freeVars: Set[FreeSymbol] = this match
     case Call(fun, argss) => fun.freeVars ++ argss.flatten.flatMap(_.value.freeVars).toSet
     case Instantiate(mut, cls, argss) => cls.freeVars ++ argss.flatten.flatMap(_.value.freeVars).toSet
+    case Cast(value, _, _) => value.freeVars
     case Select(qual, name) => qual.freeVars
     case Lambda(params, body) => body.freeVars -- params.paramSyms
     case Tuple(mut, elems) => elems.flatMap(_.value.freeVars).toSet
@@ -935,6 +1071,7 @@ sealed abstract class Result extends AutoLocated:
   lazy val size: Int = this match
     case Call(fun, argss) => fun.size + argss.iterator.flatten.map(_.value.size).sum
     case Instantiate(mut, cls, argss) => cls.size + argss.iterator.flatten.map(_.value.size).sum
+    case Cast(value, _, _) => value.size
     case Select(qual, name) => qual.size
     case Lambda(params, body) => 1 + body.size
     case Tuple(mut, elems) => elems.iterator.map(_.value.size).sum
@@ -943,6 +1080,89 @@ sealed abstract class Result extends AutoLocated:
     case Value.Lit(l: Tree.StrLit) => l.value.length / 4
     case Value.Lit(lit) => 0
     case DynSelect(qual, fld, arrayIdx) => qual.size + fld.size
+
+  lazy val erasedType: Opt[ErasedType] = this match
+    case Value.SimpleRef(sym) => sym match
+      case hasErasedType: HasErasedType => hasErasedType.erasedType
+      case _ => 
+        // * Some symbols may not have an erased type (e.g. `BuiltinSymbol`, where it may represent more than one
+        // * function).
+        N
+    // * A reference to a class is the class *object* (a `Class`).
+    case Value.MemberRef(_, _: ClassSymbol) => N
+    case Value.MemberRef(_, disamb: ModuleOrObjectSymbol) => disamb.erasedType
+    case Value.MemberRef(bms, disamb: TypeAliasSymbol) =>
+      // * This is not supposed to happen, but could still be reached in ill-formed programs
+      N
+    // * A `val` or `fun` is a block *member*, so its references are `MemberRef`s rather than `SimpleRef`s, and
+    // * its declared type lives on the associated `TermSymbol` - the same shape `Select` reads below.
+    case Value.MemberRef(_, disamb: TermSymbol) => disamb.erasedType
+    case Value.This(clsOrMod: (ClassSymbol | ModuleOrObjectSymbol)) => clsOrMod.erasedType
+    case Value.Lit(_: Tree.IntLit) => S(ErasedType.Int)
+    case Value.Lit(_: Tree.DecLit) => S(ErasedType.Num)
+    case Value.Lit(_: Tree.StrLit) => S(ErasedType.Str)
+    case Value.Lit(_: Tree.BoolLit) => S(ErasedType.Bool)
+    // * Note: `UnitLit` stays untyped: Neither `null` nor `undefined` can be reasonably typed as `Unit`
+    case Call(fun, argss) => fun.targetSymbol match
+      case S(ts: TermSymbol) => ts.erasedType match
+        case S(ErasedType.FuncRef(rsc, paramLists, ret)) =>
+          argss.sizeCompare(paramLists) match
+            // * An exactly-applied call yields the function's result type.
+            case 0 => ret
+            // * An under-applied call yields a function type over the remaining parameter lists.
+            case c if c < 0 => S(ErasedType.FuncRef(rsc, paramLists.drop(argss.length), ret))
+            // * An over-applied call applies arguments to whatever the function returns, which the function's
+            // * signature is oblivious about.
+            case _ => N
+        case _ => N
+      case _ => N
+    // * A resolved selection has the type of the member it refers to (e.g. `this.field`); an
+    // * unresolved selection (dynamic field access) stays unknown.
+    case sel @ Select(_, _) => sel.symbol match
+      case S(ts: TermSymbol) => ts.erasedType
+      // * A class reference is the class object, so it stays unknown.
+      case S(_: ClassSymbol) => N
+      case S(d: (ModuleOrObjectSymbol | TypeAliasSymbol)) => d.erasedType
+      case _ => N
+    case Cast(_, target, _) => S(target)
+    // * `Instantiate` always yields an instance of the class, since the constructor is guaranteed to be fully-applied
+    // * after lowering.
+    case Instantiate(_, cls, _) => cls.targetSymbol.flatMap:
+      case ctor: ClassCtorSymbol => ctor.associatedCls.erasedType
+      case sym => sym.asCls.flatMap(_.erasedType)
+    // * A tuple literal is typed as `Array` at runtime.
+    case Tuple(_, _) => S(ErasedType.Array)
+    case _ => N
+
+  /** Coerces this result to `expected`, yielding it unchanged when no coercion is required.
+    *
+    * Narrowing to an unrelated type is reported as an error, and this result is yielded unchanged.
+    *
+    * This is the only place where [[Config.checkCasts]] is consulted: it fixes each cast's `check` flag at the
+    * point the coercion is introduced, so that the transformers rebuilding casts downstream need not carry a
+    * [[Config]] of their own.
+    */
+  def coerceTo(expected: ErasedType, loc: Opt[Loc])(using Ctx, State, Raise, Config): this.type | Cast =
+    val actual = erasedValueType_!.canonicalize
+    val declared = expected.canonicalize
+    ErasedType.needsCast(actual, declared) match
+      case S(false) => this
+      case S(true) =>
+        val target = expected match
+          case ft: ErasedFuncType => ErasedType.Function(ft.rsc)
+          case v: ErasedValueType => v
+        Cast(this, target, config.checkCasts)
+      case N =>
+        // * An `Incompatible` side is not an unrelated type but an unrepresentable one, so it gets its own message.
+        def membersOf(et: CanonicalErasedType): Opt[(CanonicalErasedValueType, CanonicalErasedValueType)] = et match
+          case ErasedType.Incompatible(l, r) => S(l -> r)
+          case _ => N
+        val message = membersOf(actual).orElse(membersOf(declared)) match
+          case S((l, r)) => msg"Types '${l.describe}' and '${r.describe}' have no common representation"
+          case N => msg"Cannot use a value of type '${actual.describe}' at an unrelated type '${declared.describe}'"
+        raise:
+          ErrorReport(message -> loc :: Nil, source = Diagnostic.Source.Compilation)
+        this
 
 /* mayRaiseEffects indicates whether this call may raise effect (algebraic effect),
  * regardless of whether the check for effect is inserted or not.
@@ -969,6 +1189,16 @@ case class Call(fun: Path, argss: NELs[Ls[Arg]])(val metadata: CallMetadata) ext
         case fd: FunDefn => argss.lengthCompare(fd.params.length) < 0
         case _ => false
     case _ => false
+  // `metadata` lives in a secondary constructor list, so case-class equality
+  // would otherwise ignore annotations such as @tailcall.
+  override def equals(obj: Any): Bool = obj match
+    case that: Call =>
+      fun == that.fun &&
+        argss == that.argss &&
+        metadata == that.metadata
+    case _ => false
+  override def hashCode: Int =
+    (fun, argss, metadata).hashCode
 
 object Call:
   
@@ -1031,6 +1261,41 @@ object InstantiateMetadata:
 
 case class Instantiate(mut: Bool, cls: Path, argss: Ls[Ls[Arg]])(val metadata: InstantiateMetadata) extends Result
 
+/** A coercion of `value` to `target`.
+  *
+  * The coercion is a static assertion that backends may erase (as the JS backend does) or lower to a trapping
+  * instruction (as the Wasm backend does with `ref.cast`).
+  *
+  * `check` records whether the coercion is meant to be verified at runtime. No pass expands it into a type test
+  * yet, so a checked cast currently generates the same code as an unchecked one.
+  *
+  * `check` is decided once, at the sole semantic construction site [[Result.coerceTo]], which reads
+  * [[Config.checkCasts]]. Every other site that rebuilds a cast must *copy* the flag rather than re-derive it, so
+  * that the configuration does not have to be threaded through the IR transformers.
+  *
+  * Invariants:
+  * - `value` is not a `Cast`.
+  * - `target` must be a proper subtype of `value`'s erased type.
+  */
+case class Cast private(value: Result, target: ErasedValueType, check: Bool) extends Path
+
+object Cast:
+  /** Builds a cast while collapsing a nested cast.
+    *
+    * This node is malformed if the target type is not a proper subtype of the value's erased type.
+    *
+    * Collapsing `Cast(Cast(v, T), U)` to `Cast(v, U)` drops the inner test. The `T`-typed intermediate goes with it,
+    * so no value is left in a wrongly-typed slot. However, an unchecked failure *can be lost* - if a cast is
+    * undecidable a `Cast` will be inserted anyways, and determining this fact here would require threading `Ctx` and
+    * `State` wherever `Cast` nodes need to be built.
+    *
+    * Note that explicitly-checked casts are never lost to preserve the semantics of eagerly failing when casts fail.
+    */
+  def apply(value: Result, target: ErasedValueType, check: Bool): Cast =
+    value match
+      case Cast(inner, _, innerCheck) => new Cast(inner, target, check || innerCheck)
+      case _ => new Cast(value, target, check)
+
 case class Lambda(params: ParamList, body: Block)(val annot: Ls[Annot]) extends Result:
   lazy val affine: Bool = annot.exists(_.isInstanceOf[Annot.Affine])
 
@@ -1085,7 +1350,7 @@ object Value:
       case SimpleRef(l) => l
       case MemberRef(bms, disamb) => bms
       case This(sym) => sym
-
+  
   @deprecated("Use Value.SimpleRef, Value.MemberRef, or Value.This instead.")
   object Ref:
     def apply(l: ValueSymbol | NoSymbol.type, disamb: Opt[DefinitionSymbol[?]]): Value.RefLike =
@@ -1111,6 +1376,15 @@ object Value:
       case MemberRef(bms, disamb) => S(bms -> S(disamb))
       case This(sym) => S(sym -> N)
       case _ => N
+
+/** Extracts the function symbol from either form of a direct function reference: `f` or `a.f`. */
+object TermSymbolPath:
+  def unapply(path: Path): Opt[TermSymbol] = path match
+    case Value.MemberRef(_, sym: TermSymbol) => S(sym)
+    case selection: Select => selection.symbol match
+      case S(sym: TermSymbol) => S(sym)
+      case _ => N
+    case _ => N
 
 case class Arg(spread: Opt[SpreadKind], value: Path)
 

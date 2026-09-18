@@ -20,7 +20,14 @@ open Option
 :sjs
 None isDefined()
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ return Option.isDefined(Option.None)
+//│ let x1;
+//│ x1 = Option.None;
+//│ if (x1 instanceof Option.Some.class) {
+//│   return true
+//│ } else if (x1 instanceof Option.None.class) {
+//│   return false
+//│ }
+//│ throw globalThis.Object.freeze(new globalThis.Error("match error"));
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = false
 
@@ -40,7 +47,14 @@ Some(1)
 :sjs
 (new Some(1)) isDefined()
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let tmp3; tmp3 = globalThis.Object.freeze(new Option.Some.class(1)); return Option.isDefined(tmp3)
+//│ let tmp3;
+//│ tmp3 = globalThis.Object.freeze(new Option.Some.class(1));
+//│ if (tmp3 instanceof Option.Some.class) {
+//│   return true
+//│ } else if (tmp3 instanceof Option.None.class) {
+//│   return false
+//│ }
+//│ throw globalThis.Object.freeze(new globalThis.Error("match error"));
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = true
 
@@ -68,14 +82,14 @@ None == Option.None
 :re
 Option.oops
 //│ ╔══[COMPILATION ERROR] Module 'Option' does not contain member 'oops'
-//│ ║  l.69: 	Option.oops
+//│ ║  l.83: 	Option.oops
 //│ ╙──      	      ^^^^^
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'oops' yielded 'undefined'
 
 :e
 open Option { oops }
 //│ ╔══[COMPILATION ERROR] Module 'Option' does not contain member 'oops'
-//│ ║  l.76: 	open Option { oops }
+//│ ║  l.90: 	open Option { oops }
 //│ ╙──      	              ^^^^
 
 oops
@@ -84,7 +98,7 @@ oops
 :re
 Option.None.oops
 //│ ╔══[COMPILATION ERROR] Object 'None' does not contain member 'oops'
-//│ ║  l.85: 	Option.None.oops
+//│ ║  l.99: 	Option.None.oops
 //│ ╙──      	           ^^^^^
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'oops' yielded 'undefined'
 

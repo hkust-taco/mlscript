@@ -74,4 +74,3 @@ class CurriedBox(first: Int)(second: Int)
 @special new CurriedBox(1)(2)
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ return @special new CurriedBox²(1, 2)
-

@@ -111,8 +111,8 @@ private fun main(f1, f2) =
 private fun main1() = main((a) => 0, (a) => a + 1)
 main1()
 //│ dead-param-elim > >>> dead-param-elim results >>>
-//│ dead-param-elim > prodfun apply¹#0 @ main1².main⁰.apply⁰ -> eliminable: {1}
-//│ dead-param-elim > prodfun apply¹#0 @ main1⁰.main⁰.apply⁰ -> eliminable: {1}
+//│ dead-param-elim > prodfun apply¹#0 @ main1².main⁰.apply² -> eliminable: {1}
+//│ dead-param-elim > prodfun apply¹#0 @ main1⁰.main⁰.apply² -> eliminable: {1}
 //│ dead-param-elim > prodfun lambda⁰#0 @ main1² -> eliminable: {0}
 //│ dead-param-elim > prodfun lambda⁰#0 @ main1⁰ -> eliminable: {0}
 //│ dead-param-elim > <<< dead-param-elim results <<<

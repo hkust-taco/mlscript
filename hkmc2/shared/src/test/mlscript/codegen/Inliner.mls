@@ -2,6 +2,8 @@
 
 #config(deadBranchRemoval: true)
 
+open annotations { noInline }
+
 
 :soir
 fun f() = 0
@@ -16,6 +18,15 @@ fun f(x) = x
 f(100)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ define f² as fun f³(x) { return x }; return 100
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 100
+
+
+:soir
+@noInline private fun keepCall(x) = x
+keepCall(100)
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ @noInline @private define keepCall⁰ as fun keepCall¹(x) { return x }; return keepCall¹(100)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 100
 
@@ -288,7 +299,7 @@ module A with
   fun g() = A.f()
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ define A⁰ as class A¹
-//│ module A² { method f²⁰ = fun f²¹() { return 1 } method g² = fun g³() { return A².f²¹() } };
+//│ module A² { method f²⁰ = fun f²¹() { return 1 } method g² = fun g³() { return 1 } };
 //│ end
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let A1;
@@ -300,7 +311,7 @@ module A with
 //│     return 1
 //│   }
 //│   static g() {
-//│     return A1.f()
+//│     return 1
 //│   }
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "A"];
@@ -308,24 +319,32 @@ module A with
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 
+:soir
+:inlineThreshold 10
+fun f() = if id(false) do f() + 1
+f()
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ define f²² as fun f²³() { return runtime⁰.Unit⁰ }; return runtime⁰.Unit⁰
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
 // Inlining limits
 :soir
 :inlineThreshold 10
 fun f() = if hide(false) do f() + 1
 f()
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ define f²² as fun f²³() {
+//│ define f²⁴ as fun f²⁵() {
 //│   let scrut;
 //│   set scrut = Predef⁰.hide⁰(false);
 //│   match scrut
 //│     true =>
-//│       do f²³();
+//│       do f²⁵();
 //│       return runtime⁰.Unit⁰
 //│     else
 //│       return runtime⁰.Unit⁰
 //│   end
 //│ };
-//│ return f²³()
+//│ return f²⁵()
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 
@@ -335,7 +354,7 @@ fun g() =
   fun f() = f()
   f()
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ define g⁴ as fun g⁵() { let f; define f as fun f²⁴() { return f²⁴() }; return f²⁴() }; end
+//│ define g⁴ as fun g⁵() { let f; define f as fun f²⁶() { return f²⁶() }; return f²⁶() }; end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 
@@ -377,12 +396,12 @@ scope.locally of (
 //│ define A as class A³
 //│ module A⁴ {
 //│   method foo² = fun foo³ {
-//│     return B⁰.bar⁰()
+//│     return A⁴.foo³
 //│   }
 //│ };
-//│ define B as class B¹
-//│ module B⁰ {
-//│   method bar¹ = fun bar⁰() {
+//│ define B as class B⁰
+//│ module B¹ {
+//│   method bar⁰ = fun bar¹() {
 //│     return A⁴.foo³
 //│   }
 //│ };

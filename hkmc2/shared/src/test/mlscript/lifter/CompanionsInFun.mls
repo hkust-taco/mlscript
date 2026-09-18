@@ -1,5 +1,4 @@
-:lift
-:js
+:.
 
 
 :w
@@ -10,8 +9,8 @@ fun f(x) =
   module A
   fun g = new A
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.10: 	  module A
-//│ ╙──      	         ^
+//│ ║  l.9: 	  module A
+//│ ╙──     	         ^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let g;
 //│ define g as fun g⁰(A$) {

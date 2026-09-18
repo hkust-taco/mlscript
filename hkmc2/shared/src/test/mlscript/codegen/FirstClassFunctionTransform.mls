@@ -528,15 +528,12 @@ fun foo(f) = f("abc")
 print("abc")
 //│ > abc
 
-// TODO: should print "abc"; imported vararg functions are eta-expanded but
-// their rest parameters are not forwarded yet.
 foo(print)
-//│ > 
+//│ > abc
 
 foo(print(_))
 //│ > abc
 
-:fixme
 :sir
 :expect ["abc"]
 foo(tuple)
@@ -544,14 +541,13 @@ foo(tuple)
 //│ let Function$, tmp;
 //│ define Function$ as class Function$⁷ extends globalThis⁰.Function⁰ {
 //│   method call¹⁴ = fun call¹⁵(...xs) {
-//│     return Predef⁰.tuple⁰()
+//│     return Predef⁰.tuple⁰(...xs)
 //│   }
 //│ };
 //│ set tmp = new Function$⁷();
 //│ return foo⁷(tmp)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
-//│ ═══[RUNTIME ERROR] Expected: '["abc"]', got: '[]'
-//│ = []
+//│ = ["abc"]
 
 
 if true is true then print("true")
@@ -590,5 +586,4 @@ let foo = Foo(1) in foo.Foo#x
 
 let foo = new Foo(1) in foo.Foo#x
 //│ = 1
-
 

@@ -284,7 +284,6 @@ str
 //│ handleBlock$10 = (undefined, function () {
 //│   let h22, handleBlock$$here, pc;
 //│   if (runtime.resumePc === -1) {
-//│     pc = 0;
 //│     h22 = new Handler$h2$3();
 //│     handleBlock$$here = handleBlock$$2(h22);
 //│     runtime.resumeValue = runtime.enterHandleBlock(h22, handleBlock$$here);

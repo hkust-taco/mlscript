@@ -12,8 +12,7 @@ import Elaborator.{Ctx, State, ctx}, utils.TL
 import ucs.{TermSynthesizer, FlatPattern, safeRef}
 import Message.MessageContext, ucs.error
 
-import collection.mutable.{Queue, Map as MutMap}, collection.immutable.{Set, Map}
-import scala.annotation.tailrec
+import collection.mutable.{Queue, Map as MutMap, LinkedHashMap}, collection.immutable.{Set, Map}
 
 /** The compiler for pattern definitions. It compiles instantiated patterns into
   * a few matcher functions. Each matcher function matches a set of patterns
@@ -24,40 +23,45 @@ class Compiler(using Context)(using tl: TL)(using Ctx, State, Raise) extends Ter
   import Pattern.*
 
   /** A previously-computed matcher result for one field of the current
-    * multi-matcher. The runtime representation is shape-dependent:
-    * singleton-label matchers return the label's value directly, while
-    * multi-label matchers return a record keyed by label field names.
+    * multi-matcher. In full mode the value also carries the original field
+    * input, which is needed when a successful field pattern preserves its
+    * scrutinee. Match-only mode never consumes that input, so it stores the
+    * submatcher result directly.
     */
   private final case class MatcherResult(symbol: VarSymbol, labels: Set[Label]):
-    private def result: Term = sel(symbol.safeRef, "result")
-    def input: Term = sel(symbol.safeRef, "input")
+    private def result(using ResultMode): Term =
+      if isMatchOnly then symbol.safeRef else sel(symbol.safeRef, "result")
+    def input(using ResultMode): Term =
+      softAssert(!isMatchOnly,
+        "Match-only field matcher results should not expose their input.")
+      sel(symbol.safeRef, "input")
     /** Read the result for one label from this matcher result, abstracting over
       * the singleton direct-return optimization.
       */
-    def select(label: Label): Term =
+    def select(label: Label)(using ResultMode): Term =
       if labels.size is 1 then result
       else sel(result, label.asFieldName)
     /** Produce the default failure value for this matcher result with the same
       * shape that a successful submatcher call would have produced.
       */
-    def default(using ResultMode): Term =
-      val result = labels.toList match
-        case label :: Nil => emptyMatchResult("empty")
-        case labels =>
-          Rcd(false, labels.map: label =>
-            RcdField(str(label.asFieldName), emptyMatchResult("empty")))
-      rcd(
-        RcdField(str("input"), `null`),
-        RcdField(str("result"), result)
-      )
-
+    def default(using ResultMode): Term = matcherResult(`null`, labels.toList match
+      case label :: Nil => emptyMatchResult("empty")
+      case labels =>
+        Rcd(false, labels.map: label =>
+          RcdField(str(label.asFieldName), emptyMatchResult("empty"))))
+  
+  /** Make a match result record containing `input` and `result` fields. */
+  private def matcherResult(input: => Term, result: => Term)(using ResultMode): Term =
+    if isMatchOnly then result
+    else rcd(RcdField(str("input"), input), RcdField(str("result"), result))
+  
   private def bool(value: Bool): Term = Term.Lit(BoolLit(value))
-
+  
   private def isMatchOnly(using mode: ResultMode): Bool = mode is ResultMode.MatchOnly
-
+  
   private def emptyMatchResult(reason: Str)(using mode: ResultMode): Term =
     if isMatchOnly then bool(false) else makeMatchFailure(str(reason))
-
+  
   private def nullifyEmptyBindings(bindings: Term): Term = bindings match
     case Rcd(false, Nil) => `null`
     case bindings => bindings
@@ -81,14 +85,13 @@ class Compiler(using Context)(using tl: TL)(using Ctx, State, Raise) extends Ter
   
   extension (head: Head)
     /** Create a flat pattern that can be used in the UCS expressions. */
-    def toFlatPattern: FlatPattern = head match
+    def toFlatPattern(arguments: Opt[Ls[(LocalVarSymbol, Opt[Loc])]]): FlatPattern = head match
       case lit: syntax.Literal => FlatPattern.Lit(lit)
-      case sym: (ClassSymbol | ModuleOrObjectSymbol) =>
-        val constructor = reference(sym, head.toLoc).getOrElse(Term.Error().withLocOf(head))
-        FlatPattern.ClassLike(constructor, sym, N, false)(Tree.Dummy)
+      case head: ClassLikeHead =>
+        FlatPattern.ClassLike(Compiler.preservedReference(head.constructor), head.symbol, arguments, false)(Tree.Dummy)
     def showDbg: Str = head match
       case lit: syntax.Literal => lit.idStr
-      case sym: ClassLikeSymbol => sym.nme
+      case head: ClassLikeHead => head.symbol.nme
   
   extension (patterns: Set[(Label, ExPat)])
     /** Specialize a set of patterns. Also display them in the debug log. */
@@ -106,8 +109,10 @@ class Compiler(using Context)(using tl: TL)(using Ctx, State, Raise) extends Ter
   
   val multiMatchers: MutMap[Set[Label], LocalVarSymbol] = MutMap.empty
   
-  /** The built multi-matcher functions. */
-  val implementations: MutMap[LocalVarSymbol, (ParamList, Term)] = MutMap.empty
+  /** The built multi-matcher functions, in their deterministic build-queue
+    * order. This order is observable in generated code, so a hash map would
+    * make golden output depend on identity hash codes. */
+  val implementations: LinkedHashMap[LocalVarSymbol, (ParamList, Term)] = LinkedHashMap.empty
   
   val buildQueue: Queue[(LocalVarSymbol, Set[Pat])] = Queue.empty
   
@@ -131,7 +136,7 @@ class Compiler(using Context)(using tl: TL)(using Ctx, State, Raise) extends Ter
     // by the set of labels (orders are not important).
     val labels = patterns.map(_.label)
     multiMatchers.get(labels).getOrElse:
-      val f = TempSymbol(N, makeMultiMatcherName(patterns))
+      val f = TempSymbol(N, erasedType = N, makeMultiMatcherName(patterns))
       multiMatchers += (labels -> f)
       buildQueue enqueue (f -> patterns)
       f // Return the symbol of the built function.
@@ -147,18 +152,30 @@ class Compiler(using Context)(using tl: TL)(using Ctx, State, Raise) extends Ter
     val expandedPatterns = patterns.map(p => (p.label, p.expand(Set.empty)))
     val heads = expandedPatterns.flatMap((_, p) => p.heads).toList
     // This is the parameter of the current multi-matcher.
-    val scrutinee = VarSymbol(Ident("input"))
+    val scrutinee = VarSymbol(Ident("input"), erasedType = N)
     // Assemble branches for constructors and literals.
     val branches = heads.map: head =>
-      // Weird. Removing type annotations caused type errors.
       val specialized = expandedPatterns.specializeSet(S(head))
-      val consequent = Split.Else(multiMatcherBranch(specialized, scrutinee))
-      Branch(scrutinee.safeRef, head.toFlatPattern, consequent)
+      lazy val empty = (N: Opt[Ls[(LocalVarSymbol, Option[Loc])]], Map.empty[Ident | Int, LocalVarSymbol])
+      val (classFieldArguments, classFields) = head match
+        case head: ClassLikeHead => head.symbol match
+          case symbol: ClassSymbol => symbol.defn.getOrElse(lastWords(s"Missing definition for symbol `${symbol.nme}`.")).paramsOpt match
+            case N => empty
+            case S(params) =>
+              val empty: (Ls[(LocalVarSymbol, Opt[Loc])], Map[Ident | Int, LocalVarSymbol]) = (Nil, Map.empty)
+              val (arguments, fields) = params.params.foldLeft(empty): (acc, param) =>
+                val (argAcc, fieldAcc) = acc
+                val fieldSymbol = TempSymbol(N, erasedType = N, param.sym.nme)
+                (argAcc :+ (fieldSymbol, param.toLoc), fieldAcc + ((param.sym.id: Ident | Int) -> fieldSymbol))
+              (S(arguments), fields)
+          case _: ModuleOrObjectSymbol => empty
+        case _: syntax.Literal => empty
+      val consequent = Split.Else(multiMatcherBranch(specialized, scrutinee, classFields))
+      Branch(scrutinee.safeRef, head.toFlatPattern(classFieldArguments), consequent)
     // Assemble the default branch.
     val default =
-      // Weird. Removing type annotations caused type errors.
       val specialized = expandedPatterns.specializeSet(N)
-      Split.Else(multiMatcherBranch(specialized, scrutinee))
+      Split.Else(multiMatcherBranch(specialized, scrutinee, Map.empty))
     // Make a split that tries all branches in order.
     val topmostSplit = branches.foldRight(default)(_ ~: _)
     val bodyTerm = SynthIf(topmostSplit)
@@ -167,7 +184,8 @@ class Compiler(using Context)(using tl: TL)(using Ctx, State, Raise) extends Ter
   
   def multiMatcherBranch(
       patterns: Set[(Label, SpPat)],
-      scrutinee: LocalVarSymbol
+      scrutinee: LocalVarSymbol,
+      knownFields: Map[Ident | Int, LocalVarSymbol]
   )(using ResultMode): Blk = trace(
     pre = s"multiMatcherBranch: scrutinee = ${scrutinee} | patterns = ${
       patterns.iterator.map: (label, pattern) =>
@@ -179,34 +197,35 @@ class Compiler(using Context)(using tl: TL)(using Ctx, State, Raise) extends Ter
     val subPatternsByField = Map.from(fields.map: field =>
       field -> patterns.flatMap((_, p) => p.collectSubPatterns(field)))
     val subScrutinees = Map.from(subPatternsByField.map: (field, subPatterns) =>
-      field -> MatcherResult(VarSymbol(field.asIdent), subPatterns.map(_.label)))
+      field -> MatcherResult(VarSymbol(field.asIdent, erasedType = N), subPatterns.map(_.label)))
     // Let bindings that bind the sub-scrutinee to the result of each matcher.
     val bindings = subPatternsByField.iterator.flatMap: (field, subPatterns) =>
       val subScrutinee = subScrutinees(field)
       log(s"subPattern for field ${field.showDbg}: ${
         subPatterns.iterator.map(_.showDbg).mkString("{", ", ", "}")}")
       val subMatcherSymbol = buildMultiMatcher(subPatterns)
-      val conditional =
-        // Check the presence of the field, and call the matcher if it exists.
-        val fieldIdent: Ident = field.asIdent
-        val fieldSymbol = TempSymbol(N, fieldIdent.name)
-        val fieldTest = FlatPattern.Record((fieldIdent -> fieldSymbol) :: Nil)
-        val consequent = Split.Else:
-          val resultTerm = app(subMatcherSymbol.safeRef, tup(fld(fieldSymbol.safeRef)), "result")
-          rcd(
-            RcdField(str("input"), fieldSymbol.safeRef),
-            RcdField(str("result"), resultTerm)
-          )
-        val branch = Branch(scrutinee.safeRef, fieldTest, consequent)
-        SynthIf(branch ~: Split.Else(subScrutinee.default))
-      LetDecl(subScrutinee.symbol, Nil) :: DefineVar(subScrutinee.symbol, conditional) :: Nil
+      /** Shorthands for the result of the matcher branch. */
+      def makeResult(fieldSymbol: LocalVarSymbol) = matcherResult(
+          fieldSymbol.safeRef,
+          app(subMatcherSymbol.safeRef, tup(fld(fieldSymbol.safeRef)), "result"))
+      val result = knownFields.get(field) match
+        case S(fieldSymbol) => makeResult(fieldSymbol)
+        case N =>
+          // Check the presence of the field, and call the matcher if it exists.
+          val fieldIdent: Ident = field.asIdent
+          val fieldSymbol = TempSymbol(N, erasedType = N, fieldIdent.name)
+          val fieldTest = FlatPattern.Record((fieldIdent -> fieldSymbol) :: Nil)
+          val consequent = Split.Else(makeResult(fieldSymbol))
+          val branch = Branch(scrutinee.safeRef, fieldTest, consequent)
+          SynthIf(branch ~: Split.Else(subScrutinee.default))
+      LetDecl(subScrutinee.symbol, Nil) :: DefineVar(subScrutinee.symbol, result) :: Nil
     .toList
     // For each pattern, we compile a split and bind the result to a variable.
     // The variable will be a field of the output record.
     val z = (Nil: Ls[Statement], Nil: Ls[(Label, Term)])
     val (tests, resultTerms) = patterns.iterator.foldLeft(z):
       case ((stmts, results), (label, pattern)) =>
-        val symbol = TempSymbol(N, label.asFieldName + "$")
+        val symbol = TempSymbol(N, erasedType = N, label.asFieldName + "$")
         val makeSplit = completePattern(pattern, scrutinee, subScrutinees, Nil)
         val split = makeSplit(
           // There is no topmost transform here, so we emit the direct success
@@ -261,7 +280,7 @@ class Compiler(using Context)(using tl: TL)(using Ctx, State, Raise) extends Ter
     case N => Split.Else:
       makeMatchSuccess(output, nullifyEmptyBindings(bindings))
     case S(transform) =>
-      val resultSymbol = TempSymbol(N, "transformResult")
+      val resultSymbol = TempSymbol(N, erasedType = N, "transformResult")
       val bindingsTerm = nullifyEmptyBindings(bindings)
       val transformTerm = app(transform.safeRef, tup(fld(bindingsTerm)), "the transform's result")
       Split.Let(resultSymbol, transformTerm, Split.Else(
@@ -274,22 +293,20 @@ class Compiler(using Context)(using tl: TL)(using Ctx, State, Raise) extends Ter
       aliases: Ls[VarSymbol]
   )(using ResultMode): MakeSplit = trace(pre = s"completePattern: ${pattern.showDbg}"):
     pattern match
-    case MatchedClassLike(sym, fields) if isMatchOnly =>
+    case MatchedClassLike(head, fields) if isMatchOnly =>
       val acceptAll: MakeSplit = (makeConsequent, _) => makeConsequent(scrutinee, rcd())
       fields.iterator.foldRight(acceptAll):
         case ((field, pattern), makeInnerSplit) =>
           val label = pattern.label
           val target = subScrutinees(field).select(label)
-          val resultSymbol = TempSymbol(N, s"result$label$$")
+          val resultSymbol = TempSymbol(N, erasedType = N, s"result$label$$")
           (makeConsequent, alternative) =>
             Split.Let(resultSymbol, target,
               Branch(resultSymbol.safeRef,
                 makeInnerSplit(makeConsequent, Split.End)) ~: alternative)
-    case MatchedClassLike(sym, fields) =>
+    case MatchedClassLike(head, fields) =>
       val rebuildNeeded = fields.iterator.exists((_, pattern) => !pattern.preservesOriginalScrutinee)
-      val constructor = sym match
-        case symbol: (ClassSymbol | ModuleOrObjectSymbol) =>
-          reference(symbol, symbol.toLoc).getOrElse(Term.Error().withLocOf(pattern))
+      val constructor = Compiler.preservedReference(head.constructor)
       val makeMakeSplit = fields.iterator.foldRight(
         (fields: Ls[(Ident, Term)], bindingsSymbols: Ls[TempSymbol]) =>
           ((makeConsequent, alternative) =>
@@ -311,7 +328,7 @@ class Compiler(using Context)(using tl: TL)(using Ctx, State, Raise) extends Ter
                 `new`(
                   constructor,
                   tup(fields.reverseIterator.map(_._2 |> fld).toSeq*) :: Nil,
-                  s"rebuilt ${sym.nme}"
+                  s"rebuilt ${head.symbol.nme}"
                 )
               else
                 scrutinee.safeRef
@@ -321,10 +338,10 @@ class Compiler(using Context)(using tl: TL)(using Ctx, State, Raise) extends Ter
         case ((field, pattern), makeInnerSplit) =>
           val label = pattern.label
           val target = subScrutinees(field).select(label)
-          val resultSymbol = TempSymbol(N, s"result$label$$")
-          val outputSymbol = TempSymbol(N, s"output$label$$")
+          val resultSymbol = TempSymbol(N, erasedType = N, s"result$label$$")
+          val outputSymbol = TempSymbol(N, erasedType = N, s"output$label$$")
           val fieldAliases = pattern.aliases
-          val fieldBindingsSymbol = TempSymbol(N, "fieldBindings")
+          val fieldBindingsSymbol = TempSymbol(N, erasedType = N, "fieldBindings")
           val fieldBindingsTerm = makeBindings(fieldAliases.map:
             alias => RcdField(str(alias.name), outputSymbol.safeRef))
           val fieldOutput =
@@ -332,7 +349,7 @@ class Compiler(using Context)(using tl: TL)(using Ctx, State, Raise) extends Ter
             else subScrutinees(field).input
           (outputFields: Ls[(Ident, Term)], bindingsSymbols: Ls[TempSymbol]) =>
             ((makeConsequent, alternative) =>
-              val bindingsSymbol = TempSymbol(N, "bindings")
+              val bindingsSymbol = TempSymbol(N, erasedType = N, "bindings")
               val accumulatedBindings =
                 val withFieldAliases =
                   if fieldAliases.isEmpty then bindingsSymbols
@@ -356,7 +373,7 @@ class Compiler(using Context)(using tl: TL)(using Ctx, State, Raise) extends Ter
         case ((field, pattern), makeInnerSplit) =>
           val label = pattern.label
           val target = subScrutinees(field).select(label)
-          val resultSymbol = TempSymbol(N, s"result$label$$")
+          val resultSymbol = TempSymbol(N, erasedType = N, s"result$label$$")
           (makeConsequent, alternative) =>
             Split.Let(resultSymbol, target,
               Branch(resultSymbol.safeRef,
@@ -395,18 +412,18 @@ class Compiler(using Context)(using tl: TL)(using Ctx, State, Raise) extends Ter
           val label = pattern.label
           val target = subScrutinees(field).select(label)
           // This is the symbol for `MatchSuccess`.
-          val resultSymbol = TempSymbol(N, s"result$label$$")
+          val resultSymbol = TempSymbol(N, erasedType = N, s"result$label$$")
           // This is the symbol for the output of the pattern.
-          val outputSymbol = TempSymbol(N, s"output$label$$")
+          val outputSymbol = TempSymbol(N, erasedType = N, s"output$label$$")
           val outputField = RcdField(str(field.name), outputSymbol.safeRef)
           // This is the bindings of the current field.
           val fieldAliases = pattern.aliases
-          val fieldBindingsSymbol = TempSymbol(N, "fieldBindings")
+          val fieldBindingsSymbol = TempSymbol(N, erasedType = N, "fieldBindings")
           val fieldBindingsTerm = makeBindings(fieldAliases.map:
             alias => RcdField(str(alias.name), outputSymbol.safeRef))
           (outputFields: Ls[RcdField], bindingsSymbols: Ls[TempSymbol]) =>
             ((makeConsequent, alternative) =>
-              val bindingsSymbol = TempSymbol(N, "bindings")
+              val bindingsSymbol = TempSymbol(N, erasedType = N, "bindings")
               val accumulatedBindings =
                 val withFieldAliases =
                   if fieldAliases.isEmpty then bindingsSymbols
@@ -429,13 +446,13 @@ class Compiler(using Context)(using tl: TL)(using Ctx, State, Raise) extends Ter
       error(msg"Tuple patterns are not supported yet." -> pattern.toLoc)
       Split.Else(emptyMatchResult("unsupported tuple pattern"))
     // The wildcard case always succeeds. Thus, the `alternative` is not used.
-    case Or(Nil) => (makeConsequent, _) =>
+    case And(Nil) => (makeConsequent, _) =>
       if isMatchOnly then makeConsequent(scrutinee, rcd()) else
         val bindings = aliases.map:
           alias => RcdField(str(alias.name), scrutinee.safeRef)
         makeConsequent(scrutinee, makeBindings(bindings))
     // The never case should always fail.
-    case And(Nil) => (_, _) => Split.Else(emptyMatchResult("never"))
+    case Or(Nil) => (_, _) => Split.Else(emptyMatchResult("never"))
     // The disjunction case should check the result from each pattern in order.
     case Or(patterns) =>
       // Make those functions first so that symbols are allocated top-down.
@@ -463,9 +480,9 @@ class Compiler(using Context)(using tl: TL)(using Ctx, State, Raise) extends Ter
           (makeConsequent, alternative) =>
             // Here, we need to make a tuple of all output values of patterns.
             // Then we merge the bindings of all patterns.
-            val outputSymbol = TempSymbol(N, "combinedOutput")
+            val outputSymbol = TempSymbol(N, erasedType = N, "combinedOutput")
             val outputTerm = tup(allOutputs.reverseIterator.map(_.use |> fld).toSeq*)
-            val bindingsSymbol = TempSymbol(N, "combinedBindings")
+            val bindingsSymbol = TempSymbol(N, erasedType = N, "combinedBindings")
             // I think the bindings do not need to be reversed.
             val bindingsTerm = makeBindings(allBindings.map:
               binding => RcdSpread(binding.use))
@@ -502,9 +519,9 @@ class Compiler(using Context)(using tl: TL)(using Ctx, State, Raise) extends Ter
       else
       // The symbol representing the transform function, which should be
       // declared at the outermost level.
-        val transformSymbol = TempSymbol(N, "transform")
+        val transformSymbol = TempSymbol(N, erasedType = N, "transform")
         // The transform function takes a single record as the argument.
-        val bindingsSymbol = VarSymbol(Ident("args"))
+        val bindingsSymbol = VarSymbol(Ident("args"), erasedType = N)
         val params = paramList(param(bindingsSymbol))
         // Because we pass the extracted values using recoreds. We need to bind
         // each property to its corresponding variable which is accessible from
@@ -525,10 +542,10 @@ class Compiler(using Context)(using tl: TL)(using Ctx, State, Raise) extends Ter
               val transformTerm = app(transformSymbol.safeRef,
                 tup(fld(bindings.use)), "the transform's result")
               // Bind the transformation result to a new output symbol.
-              val resultSymbol = TempSymbol(N, "transformResult")
+              val resultSymbol = TempSymbol(N, erasedType = N, "transformResult")
               // Don't forget that current pattern may also have aliases which are
               // available in some outer transform patterns.
-              val currentBindingsSymbol = TempSymbol(N, "bindings")
+              val currentBindingsSymbol = TempSymbol(N, erasedType = N, "bindings")
               val currentBindings = makeBindings(aliases.map:
                 alias => RcdField(str(alias.name), resultSymbol.safeRef))
               Split.Let(resultSymbol, transformTerm,
@@ -553,76 +570,19 @@ object Compiler:
   /** A multi-matcher implementation. */
   type Implementation = (LocalVarSymbol, ParamList, Term)
   
-  /** Perform a reverse lookup for a term that references a symbol in the
-    *  current context. */
-  def reference(symbol: ClassSymbol | ModuleOrObjectSymbol | PatternSymbol, loc: Opt[Loc])(using tl: TL)(using Ctx, State): Opt[Term] =
+  /** Clone a source-level constructor reference for insertion into synthesized
+    * matcher code, preserving the path chosen by source resolution.
+    */
+  def preservedReference(term: Term)(using State): Term =
     /** To make `Lowering` happy about the terms. */
     def fillImplicitArgs(term: Term): Term = term match
-      case ref: Ref => ref.resolve
+      case ref: Ref =>
+        if ref.expansion.isDefined then ref else ref.resolve
       case sel: SynthSel =>
         fillImplicitArgs(sel.prefix)
-        sel.resolve
+        if sel.expansion.isDefined then sel else sel.resolve
       case _: Term => term
-    type ClassLikeDefnSymbol = ClassSymbol | ModuleOrObjectSymbol | PatternSymbol
-    def classLikeCandidates(symbol: Symbol): Iterator[ClassLikeDefnSymbol] = symbol match
-      case symbol: ClassLikeDefnSymbol =>
-        Iterator.single(symbol)
-      case member: BlockMemberSymbol =>
-        (member.clsTree.iterator.map(_.symbol.asClsLike) ++
-          member.modOrObjTree.iterator.map(_.symbol.asClsLike) ++
-          member.patTree.iterator.map(_.symbol.asClsLike))
-        .flatten
-      case _ => Iterator.empty
-    def memberReference(
-        ownerRef: Term,
-        key: Str,
-        member: Symbol
-    ): Opt[Term] =
-      classLikeCandidates(member).collectFirst:
-        case candidate if candidate is symbol =>
-          val memberSymbol = candidate.defn.get.bsym
-          SynthSel(ownerRef, new Ident(key).withLoc(loc))(S(memberSymbol), FlowSymbol.synthSel(key), N, S(summon))
-            .resolved(candidate)
-    def ownerMemberReference(owner: ClassSymbol | ModuleOrObjectSymbol): Opt[Term] =
-      val ownerRef = owner.defn.get.bsym.ref()
-      owner.tree.definedSymbols.iterator.map:
-        case (key, member) => memberReference(ownerRef, key, member)
-      .firstSome
-    def findSymbol(elem: Ctx.Elem): Opt[Term] =
-      val direct = elem.symbol.iterator.flatMap(classLikeCandidates).collectFirst:
-        case candidate if candidate is symbol =>
-          elem.ref(new Ident(candidate.nme)).withLoc(loc).resolved(candidate)
-      direct.orElse:
-        elem.symbol.iterator.collectFirst:
-          case owner: (ClassSymbol | ModuleOrObjectSymbol) =>
-            ownerMemberReference(owner)
-        .flatten
-    def ownerChainReference(symbol: ClassLikeDefnSymbol): Opt[Term] =
-      def mkSelect(prefix: Term, member: BlockMemberSymbol, target: ClassLikeDefnSymbol): Term =
-        SynthSel(prefix, new Ident(member.nme).withLoc(loc))(S(member), FlowSymbol.synthSel(member.nme), N, S(summon))
-          .resolved(target)
-      def go(symbol: ClassLikeDefnSymbol): Term =
-        val defn = symbol.defn.getOrElse(lastWords(s"Missing definition for symbol `${symbol.nme}`."))
-        defn.owner match
-          case S(owner: ClassLikeDefnSymbol) =>
-            mkSelect(go(owner), defn.bsym, symbol)
-          case S(owner) =>
-            mkSelect(owner.ref().resolve, defn.bsym, symbol)
-          case N =>
-            defn.bsym.ref(new Ident(defn.bsym.nme).withLoc(loc)).resolved(symbol)
-      symbol.defn.map(_ => go(symbol))
-    @tailrec def go(ctx: Ctx): Opt[Term] =
-      val fromEnv = ctx.env.values.iterator.map(findSymbol).firstSome
-      val fromOuter = ctx.outer.inner.collectFirst:
-          case owner: (ClassSymbol | ModuleOrObjectSymbol) =>
-            ownerMemberReference(owner)
-        .flatten
-      (fromEnv orElse fromOuter) match
-        case S(term) => S(fillImplicitArgs(term))
-        case N => ctx.parent match
-          case N => N
-          case S(parent) => go(parent)
-    go(ctx).orElse(ownerChainReference(symbol))
+    fillImplicitArgs(term.mkClone)
   
   import Pattern.*
   
@@ -668,14 +628,14 @@ object Compiler:
       case Literal(StrLit(s)) => S(s"str${s.length}")
       case Literal(UnitLit(true)) => S("null")
       case Literal(UnitLit(false)) => S("undefined")
-      case ClassLike(sym, arguments) => arguments.fold(S(sym.nme)): arguments =>
+      case ClassLike(head, arguments) => arguments.fold(S(head.symbol.nme)): arguments =>
         arguments.iterator.mapOption:
           case (_, pat) => pat.shortName(0)
-        .map(_.reverse.mkString(sym.nme + FAKE_LEFT_PAREN, FAKE_COMMA, FAKE_RIGHT_PAREN))
-      case MatchedClassLike(sym, entries) =>
+        .map(_.reverse.mkString(head.symbol.nme + FAKE_LEFT_PAREN, FAKE_COMMA, FAKE_RIGHT_PAREN))
+      case MatchedClassLike(head, entries) =>
         entries.iterator.mapOption:
           case (_, pat) => pat.shortName(0)
-        .map(_.reverse.mkString(sym.nme + FAKE_LEFT_PAREN, FAKE_COMMA, FAKE_RIGHT_PAREN))
+        .map(_.reverse.mkString(head.symbol.nme + FAKE_LEFT_PAREN, FAKE_COMMA, FAKE_RIGHT_PAREN))
       case Synonym(Instantiation(symbol, patterns)) =>
         if patterns.isEmpty then S(symbol.nme) else
           patterns.iterator.mapOption(_.shortName(0)).map:

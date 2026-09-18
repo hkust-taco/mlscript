@@ -41,5 +41,3 @@ if 5 is ~a then a
 
 if 5 is ~Bool as c then c
 //│ = 5
-
-

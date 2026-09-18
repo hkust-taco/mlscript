@@ -5,29 +5,25 @@ import hkmc2.utils.*, shorthands.*
 import VirtualPath.sep
 
 /**
- * Pure JavaScript implementation of Path without using Node.js path module
+ * Pure JavaScript implementation of Path without using Node.js path module.
+ *
+ * Paths are normalized on construction, and compared by their normalized form.
+ * This is not merely cosmetic: paths are used as keys, both of the compilation-unit cache in
+ * `CompilerCtx` and of the file system (`InMemoryFileSystem`, which documents that it assumes
+ * normalized paths). Two spellings of the same file must therefore be the same value, or the
+ * same source file gets two cached elaborations — and so two distinct sets of symbols — while
+ * reads through the non-canonical spelling fail to find the file at all.
+ * The JVM implementation gets this from `os.Path`, which is normalized by construction.
  */
-private[io] case class VirtualPath(val pathString: String) extends Path:
-  private def normalizePath(path: String): String =
-    if path.isEmpty then path
-    else
-      // Split by separator and filter out empty segments
-      val segments = path.split(sep).filter(_.nonEmpty)
-      val isAbs = path.startsWith(sep)
-
-      // Resolve . and .. segments
-      val normalized = segments.foldLeft(List.empty[String]): (acc, seg) =>
-        seg match
-          case "." => acc  // Current directory, skip it
-          case ".." =>
-            // Parent directory, pop the last segment if possible
-            if acc.isEmpty || acc.last == ".." then acc :+ seg
-            else acc.dropRight(1)
-          case _ => acc :+ seg
-      
-      if isAbs then sep + normalized.mkString(sep)
-      else if normalized.isEmpty then "."
-      else normalized.mkString(sep)
+private[io] final class VirtualPath(rawPathString: String) extends Path:
+  
+  val pathString: String = VirtualPath.normalize(rawPathString)
+  
+  override def equals(that: Any): Bool = that match
+    case that: VirtualPath => pathString == that.pathString
+    case _ => false
+  
+  override def hashCode: Int = pathString.hashCode
   
   override def toString: String = pathString
   
@@ -55,18 +51,11 @@ private[io] case class VirtualPath(val pathString: String) extends Path:
     else new VirtualPath(pathString.substring(0, idx))
   
   def /(relPath: RelPath): Path =
-    val combined = if pathString.endsWith(sep) then
-      pathString + relPath.toString
-    else
-      pathString + sep + relPath.toString
-    new VirtualPath(normalizePath(combined))
+    // * The constructor normalizes, so the naive concatenation is enough here.
+    new VirtualPath(pathString + sep + relPath.toString)
   
   def /(fragment: String): Path =
-    val combined = if pathString.endsWith(sep) then
-      pathString + fragment
-    else
-      pathString + sep + fragment
-    new VirtualPath(normalizePath(combined))
+    new VirtualPath(pathString + sep + fragment)
   
   def relativeTo(base: Path): Opt[RelPath] =
     try
@@ -95,6 +84,38 @@ private[io] case class VirtualPath(val pathString: String) extends Path:
 
 private[io] object VirtualPath:
   val sep = "/"
+  
+  /** Remove `.` segments and redundant separators, and resolve `..` where a segment precedes it.
+    * Leading `..` in a relative path cannot be resolved without knowing the current directory,
+    * so they are kept as-is. Idempotent. */
+  def normalize(path: String): String =
+    if path.isEmpty then path
+    else
+      // Split by separator and filter out empty segments
+      val segments = path.split(sep).filter(_.nonEmpty)
+      val isAbs = path.startsWith(sep)
+      
+      // Resolve . and .. segments
+      val normalizedRev = segments.foldLeft(List.empty[String]): (acc, seg) =>
+        seg match
+          case "." => acc  // Current directory, skip it
+          case ".." =>
+            // Parent directory, pop the last segment if possible
+            // (`acc` is in reverse order, so the last segment added is its head)
+            acc match
+              case Nil =>
+                // Absolute paths cannot escape above their root. Keeping the `..` would make
+                // `/../a` a different cache key from the same POSIX location spelled `/a`.
+                if isAbs then acc else seg :: Nil
+              case ".." :: _ => seg :: acc
+              case _ :: tl => tl
+          case _ => seg :: acc
+      
+      val normalized = normalizedRev.reverse
+      
+      if isAbs then sep + normalized.mkString(sep)
+      else if normalized.isEmpty then "."
+      else normalized.mkString(sep)
 
 /**
  * Pure JavaScript implementation of RelPath without using Node.js path module

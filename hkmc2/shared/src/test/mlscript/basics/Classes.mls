@@ -13,38 +13,63 @@ class Foo(x: Int) with
   val y = x
 
 
-:fixme
 class Foo(x: Int) { val y = x }
-//│ ╔══[PARSE ERROR] Expected end of input; found curly brace section instead
-//│ ║  l.17: 	class Foo(x: Int) { val y = x }
-//│ ╙──      	                  ^^^^^^^^^^^^^
 
-:fixme
+class Foo {
+  // Class bodies without `with` are refinements and should remain newline-aware
+  // even when the first line is a comment.
+  fun f = 1
+}
+
+class Foo(pred) {
+  val r = pred.id(42)
+  fun callId(x) = pred.id(x)
+}
+
+:pe
 class Foo(x: Int)
   val y = x
 //│ ╔══[PARSE ERROR] Expected end of input; found indented block instead
-//│ ║  l.24: 	  val y = x
+//│ ║  l.31: 	  val y = x
 //│ ╙──      	^^
 
-:sjs
-:fixme
+class Foo(x: Int) { print("Hello!", x) }
+
+Foo(42)
+//│ > Hello! 42
+//│ = Foo(_)
+
+
+class Bar { val x: Int }
+
+class Foo() extends Bar {
+  val x = 1
+}
+
+Foo().x
+//│ = 1
+
+:todo
+class Foo() extends Bar { x = 1 }
+//│ ╔══[COMPILATION ERROR] Name not found: x
+//│ ║  l.53: 	class Foo() extends Bar { x = 1 }
+//│ ╙──      	                          ^
+
+
 :e
-class Foo(x: Int) { log("Hello!") }
-//│ ╔══[COMPILATION ERROR] Expected a valid class definition head; found block instead
-//│ ║  l.32: 	class Foo(x: Int) { log("Hello!") }
-//│ ╙──      	                  ^^^^^^^^^^^^^^^^^
-//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ 
-//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
-
-
-
-// *** *** ***
+class Foo() extends Bar { val x = 1 } with
+  val y = this.x
+//│ ╔══[COMPILATION ERROR] Multiple type definition bodies are not supported.
+//│ ║  l.61: 	  val y = this.x
+//│ ╙──      	  ^^^^^^^^^^^^^^
 
 :e
-class Foo(42)
-//│ ╔══[COMPILATION ERROR] Expected a valid parameter, found integer literal
-//│ ║  l.45: 	class Foo(42)
-//│ ╙──      	          ^^
-
+class Foo() extends Bar { x = 1 } with
+  val y = this.x
+//│ ╔══[COMPILATION ERROR] Multiple type definition bodies are not supported.
+//│ ║  l.68: 	  val y = this.x
+//│ ╙──      	  ^^^^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Name not found: x
+//│ ║  l.67: 	class Foo() extends Bar { x = 1 } with
+//│ ╙──      	                          ^
 

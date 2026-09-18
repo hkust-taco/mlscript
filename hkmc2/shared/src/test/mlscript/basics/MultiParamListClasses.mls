@@ -86,19 +86,13 @@ Foo(1, 2)
 let f = Foo // should compile to `(x, y) => Foo(x, y)(use[Int])`
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let f, f1;
-//│ f1 = function f(x1, y1) {
-//│   let x2, y2, z2, tmp2, lambda4;
-//│   x2 = x1;
-//│   y2 = y1;
-//│   z2 = instance$Ident$_Int$_;
+//│ f1 = function f(x, y) {
+//│   let tmp2;
 //│   tmp2 = new Foo03();
-//│   lambda4 = (undefined, function (res) {
-//│     res.x = x2;
-//│     res.y = y2;
-//│     res.z = z2;
-//│     return runtime.Unit
-//│   });
-//│   return Predef.tap(tmp2, lambda4)
+//│   tmp2.x = x;
+//│   tmp2.y = y;
+//│   tmp2.z = instance$Ident$_Int$_;
+//│   return tmp2
 //│ };
 //│ f = f1;
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————

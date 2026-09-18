@@ -93,6 +93,7 @@ end SimpleSplit
 
 object SimpleSplit:
   
+  /** Only used by InvalML as a hack. */
   object IfThenElse:
     def unapply(split: SimpleSplit): Opt[(Term, Term, Term)] = split match
       case Cons(

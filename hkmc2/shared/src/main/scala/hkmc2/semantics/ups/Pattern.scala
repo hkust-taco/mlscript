@@ -50,9 +50,9 @@ sealed abstract class Pattern[+K <: Kind.Complete] extends AutoLocated:
   // TODO: Associate with locations.
   protected def children: Vector[Located] = this match
     case Literal(lit) => Vector.single(lit)
-    case ClassLike(sym, arguments) => arguments.fold(Vector.empty):
+    case ClassLike(head, arguments) => head +: arguments.fold(Vector.empty):
       _.map((id, p) => p).toVector
-    case MatchedClassLike(sym, entries) => entries.values.toVector
+    case MatchedClassLike(head, entries) => head +: entries.values.toVector
     case Record(entries) => entries.values.toVector
     case Tuple(leading, spread) => leading.toVector ++ spread.fold(Vector.empty):
       case (_, middle, trailing) => middle +: trailing.toVector
@@ -65,9 +65,9 @@ sealed abstract class Pattern[+K <: Kind.Complete] extends AutoLocated:
   
   lazy val symbols: Ls[VarSymbol] = this match
     case Literal(lit) => Nil
-    case ClassLike(sym, arguments) =>
+    case ClassLike(_, arguments) =>
       arguments.fold(Nil)(_.values.flatMap(_.symbols).toList)
-    case MatchedClassLike(sym, entries) => entries.values.flatMap(_.symbols).toList
+    case MatchedClassLike(_, entries) => entries.values.flatMap(_.symbols).toList
     case Record(entries) => entries.values.flatMap(_.symbols).toList
     case Tuple(leading, spread) => leading.flatMap(_.symbols) ::: spread.fold(Nil):
       case (_, middle, trailing) => middle.symbols ::: trailing.flatMap(_.symbols)
@@ -113,6 +113,83 @@ sealed abstract class Pattern[+K <: Kind.Complete] extends AutoLocated:
         else loop(instantiation.body, visiting + instantiation)
     loop(this, Set.empty)
   
+  /** Whether this pattern matches every value. Only the plainly total shapes
+    * are recognized — a wildcard, possibly reached through synonyms, renamings
+    * or a transformation's input — since answering `false` is always safe.
+    * The dual of `matchableHeads`: total patterns are exactly those it can say
+    * the least about.
+    */
+  def isTotal(using Context, Raise): Bool =
+    def loop(pattern: Pat, visiting: Set[Instantiation]): Bool = pattern match
+      // The units need no case of their own: `Wildcard` is `And(Nil)`, which
+      // requires nothing of a value, and `Never` is `Or(Nil)`, which offers it
+      // no alternative. Spelling them out separately is how they came to be
+      // read the wrong way round when the encoding was corrected.
+      case Or(patterns) => patterns.exists(loop(_, visiting))
+      case And(patterns) => patterns.forall(loop(_, visiting))
+      case Rename(pattern, _) => loop(pattern, visiting)
+      // A transformation matches whatever its input pattern matches.
+      case Extract(pattern, _, _) => loop(pattern, visiting)
+      case Synonym(instantiation) =>
+        // A pattern that is total only through a cycle matches nothing.
+        !visiting.contains(instantiation) &&
+          loop(instantiation.body, visiting + instantiation)
+      case Literal(_) | ClassLike(_, _) | MatchedClassLike(_, _) |
+        Record(_) | Tuple(_, _) | Not(_) => false
+    loop(this, Set.empty)
+
+  /** An over-approximation of the heads of the values this pattern can match:
+    * `S(heads)` means the heads *cover* the pattern — every value matching it
+    * is an instance of one of these classes, or is one of these literals —
+    * whereas `N` means we know nothing and a value of any shape may match.
+    *
+    * Note that covering is deliberately weaker than "the head is one of
+    * these": a value matching `ClassLike(Parent)` may well have a subclass of
+    * `Parent` as its head. Covering is what deciding overlap needs, because a
+    * value matching two patterns is covered by a head of each, so two
+    * pointwise-disjoint covers witness that no value matches both.
+    *
+    * Unlike `heads`, which collects the heads that are *tested* somewhere in
+    * the pattern, this must account for every way a value can match, so it is
+    * careful to answer `N` for the wildcard and for structural (record and
+    * tuple) patterns, which values of unrelated classes match.
+    *
+    * Like `preservesOriginalScrutinee`, this is context-sensitive because
+    * `Synonym` nodes must look through instantiated pattern definitions.
+    * A cycle contributes no head: matching through it would take an infinite
+    * derivation, so a value matching the pattern matches it some other way.
+    */
+  def matchableHeads(using Context, Raise): Opt[Set[Head]] =
+    def loop(pattern: Pat, visiting: Set[Instantiation]): Opt[Set[Head]] = pattern match
+      case Literal(lit) => S(Set(lit))
+      case ClassLike(sym, _) => S(Set(sym))
+      case MatchedClassLike(sym, _) => S(Set(sym))
+      case Record(_) => N
+      case Tuple(_, _) => N
+      case Synonym(instantiation) =>
+        if visiting contains instantiation then S(Set.empty)
+        else loop(instantiation.body, visiting + instantiation)
+      // As in `isTotal`, the units fall out of the general cases: the empty
+      // disjunction is `Never`, covered by no head at all, and the empty
+      // conjunction is `Wildcard`, which no set of heads covers.
+      // A disjunction needs every disjunct's cover, since a value may match
+      // through any of them.
+      case Or(patterns) => patterns.foldLeft(S(Set.empty): Opt[Set[Head]]):
+        (accumulated, pattern) => accumulated.flatMap: heads =>
+          loop(pattern, visiting).map(heads ++ _)
+      case And(patterns) =>
+        // A conjunction, on the other hand, is covered by *any one* conjunct's
+        // cover. Intersecting them would be unsound: `Parent & Sub` is covered
+        // by `{Parent}` and by `{Sub}`, but by neither's intersection — covers
+        // are closed downwards, and that does not commute with intersection.
+        // The smallest cover is the most precise of the sound choices.
+        patterns.iterator.flatMap(loop(_, visiting)).minByOption(_.size)
+      case Not(_) => N
+      case Rename(pattern, _) => loop(pattern, visiting)
+      // A transformation matches exactly what its input pattern matches.
+      case Extract(pattern, _, _) => loop(pattern, visiting)
+    loop(this, Set.empty)
+
   /** Apply a partial function to every node in the pattern tree. Replace each
    *  node with the result of the partial function. If the partial function is
    *  not defined at a node, the node is left unchanged.
@@ -145,7 +222,7 @@ sealed abstract class Pattern[+K <: Kind.Complete] extends AutoLocated:
 
   def heads: Set[Head] = reduce[Set[Head]](_.toSet.flatten):
     case Literal(lit) => Set(lit)
-    case ClassLike(sym, _) => Set(sym)
+    case ClassLike(head, _) => Set(head)
 
   def fields: Set[Ident | Int] = reduce[Set[Ident | Int]](_.toSet.flatten):
     case MatchedClassLike(_, entries) => entries.keys.toSet
@@ -159,7 +236,7 @@ sealed abstract class Pattern[+K <: Kind.Complete] extends AutoLocated:
   def collectSubPatterns(field: Ident | Int): Set[Pat] = field match
     case id: Ident => this.reduce[Set[Pat]](_.toSet.flatten):
         // TODO: raise a warning
-      case ClassLike(sym, arguments) => /* TODO:raise a warning */ arguments match
+      case ClassLike(_, arguments) => /* TODO:raise a warning */ arguments match
         case None => Set()
         case Some(arguments) =>
           arguments.find((id1, _) => id1 === id).map((_, p) => p).toSet
@@ -172,12 +249,12 @@ sealed abstract class Pattern[+K <: Kind.Complete] extends AutoLocated:
   /** Simplify the pattern by removing `Never` patterns. */
   def simplify: Pattern[K] = this match
     case _: Literal => this
-    case ClassLike(sym, arguments) =>
-      ClassLike(sym, arguments.map(_.map((id, p) => (id, p.simplify))))
-    case MatchedClassLike(sym, entries) =>
+    case ClassLike(head, arguments) =>
+      ClassLike(head, arguments.map(_.map((id, p) => (id, p.simplify))))
+    case MatchedClassLike(head, entries) =>
       val simplified = entries.map((id, p) => (id, p.simplify))
       if simplified.exists((_, p) => p === Never) then Never
-      else MatchedClassLike(sym, simplified)
+      else MatchedClassLike(head, simplified)
     case Record(entries) =>
       val simplify = entries.map((id, p) => (id, p.simplify))
       if simplify.exists((_, p) => p === Never) then Never else Record(simplify)
@@ -193,6 +270,11 @@ sealed abstract class Pattern[+K <: Kind.Complete] extends AutoLocated:
       else Tuple(leading2, S((spreadKind, middle2, trailing2)))
     case And(patterns) =>
       // TODO: Complete the simplification logic here.
+      // Note that `Wildcard` conjuncts cannot simply be dropped, even though
+      // they impose no requirement: the output of a conjunction is the tuple
+      // of its conjuncts' outputs, and an untransformed conjunct — including
+      // one specialization reduced to `Wildcard` — contributes the scrutinee
+      // to it (see `ups/SimpleConjunction.mls`).
       val simplified = patterns.foldRight(Nil: Ls[Pattern[K]]):
         case (p, acc) => p.simplify match
           case `Wildcard` => acc match
@@ -201,22 +283,18 @@ sealed abstract class Pattern[+K <: Kind.Complete] extends AutoLocated:
           case simplified => simplified :: acc
       if simplified contains Never then Never else simplified.foldSingleton(And.apply)(identity)
     case Or(patterns) =>
+      // A `Never` alternative can never be chosen, so all of them are
+      // dropped; when every alternative was dead, the resulting empty
+      // disjunction *is* `Never`.
       patterns.foldRight(Nil: Ls[Pattern[K]]):
         case (p, acc) => p.simplify match
-          case Never => acc match
-            // The list should be a list of non-`Never` patterns or a singleton
-            // list of `Never` pattern.
-            case Nil => Never :: Nil
-            case Never :: Nil | _ => acc
+          case Never => acc
           // Should we discard the accumulated patterns?
           // case `Wildcard` => Wildcard :: Nil // Discard the following patterns.
           case `Wildcard` => acc match
-            case `Never` :: Nil => Wildcard :: Nil
             case `Wildcard` :: _ => acc // One consecutive wildcard is enough.
             case acc => Wildcard :: acc
-          case pat => acc match
-            case Nil | Never :: Nil => pat :: Nil
-            case _ => pat :: acc
+          case pat => pat :: acc
       .foldSingleton(Or.apply)(identity)
     case Not(pattern) => Not(pattern.simplify)
     case Rename(pattern, name) => Rename(pattern.simplify, name)
@@ -253,15 +331,15 @@ sealed abstract class Pattern[+K <: Kind.Complete] extends AutoLocated:
   
   def showDbg(using DebugPrinter): Str = this match
     case Literal(lit) => lit.idStr
-    case ClassLike(sym, arguments) =>
+    case ClassLike(head, arguments) =>
       val argumentsText = arguments.fold(""):
         _.iterator.map((id, p) => s"${id.name}: ${p.showDbg}").mkString(" { ", ", ", " }")
-      s"${sym.nme}$argumentsText"
-    case MatchedClassLike(sym, entries) =>
+      s"${head.symbol.nme}$argumentsText"
+    case MatchedClassLike(head, entries) =>
       val argumentsText = entries.iterator.map:
         case (id, p) => s"${id.name}: ${p.showDbg}"
       .mkString(" { ", ", ", " }")
-      s"${sym.nme}$argumentsText"
+      s"${head.symbol.nme}$argumentsText"
     case Record(entries) =>
       if entries.isEmpty then "{}" else entries.iterator.map:
         case (id, p) => s"${id.name}: ${p.showDbg}"
@@ -282,7 +360,7 @@ sealed abstract class Pattern[+K <: Kind.Complete] extends AutoLocated:
     case Or(patterns) =>
       patterns.map(_.showDbg).mkString("(", " ∨ ", ")")
     case Not(pattern) => s"!${pattern.showDbg}"
-    case Rename(Or(Nil), name) => name.name
+    case Rename(And(Nil), name) => name.name
     case Rename(pattern, name) => s"${pattern.showDbg} as $name"
     case Extract(pattern, _, term) => s"${pattern.showDbg} => ${term.showDbg}"
     case Synonym(sym) => sym.showDbg
@@ -292,8 +370,22 @@ object Pattern:
   
   final case class Literal(lit: syntax.Literal) extends NonCompositional[Kind.Expanded]
 
+  /** A source-preserving constructor head. Equality is intentionally based on
+    * the resolved symbol alone so specialization still groups different source
+    * references to the same constructor into one matcher branch.
+    */
+  final class ClassLikeHead(
+      val symbol: ClassSymbol | ModuleOrObjectSymbol,
+      val constructor: Term
+  ) extends Located:
+    def toLoc: Opt[Loc] = constructor.toLoc
+    override def equals(that: Any): Bool = that match
+      case that: ClassLikeHead => that.symbol is symbol
+      case _ => false
+    override def hashCode: Int = symbol.hashCode
+
   /** Represents a constructor or a class, possibly with arguments.
-    * @param sym the class symbol corresponding to the class or the constructor
+    * @param head the source-level constructor term and its resolved symbol
     * @param arguments is None if no arguments were provided (as
     * in ``Foo``, and is Some if there were arguments provided, even if
     *  it is an empty argument list, e.g. ``Bar()``)
@@ -302,10 +394,10 @@ object Pattern:
     * along with the corresponding identifier, even if it was not present before.
     * e.g. if we have a class defintion ``class L = Nil | Cons(hd: Int, tl: L)``
     * then the pattern ``Cons(foo, bar)`` is expected to be
-    * ``ClassLike(sym=Cons, arguments=Some(List((hd, foo), tl, bar)))``
+    * ``ClassLike(head=Cons, arguments=Some(List((hd, foo), tl, bar)))``
     */
   final case class ClassLike(
-      sym: ClassLikeSymbol,
+      head: ClassLikeHead,
       arguments: Opt[SeqMap[Ident, Pat]]
   ) extends NonCompositional[Kind.Expanded]
 
@@ -325,7 +417,7 @@ object Pattern:
     * scrutinee or rebuilds a fresh instance of the same class.
     */
   final case class MatchedClassLike(
-      sym: ClassLikeSymbol,
+      head: ClassLikeHead,
       entries: SeqMap[Ident, Pat]
   ) extends NonCompositional[Kind.Specialized]
 
@@ -369,11 +461,24 @@ object Pattern:
       term: Term
   ) extends Pattern[K]
   
-  val Wildcard = Or(Nil)
+  /** The pattern that matches anything (⊤): the conjunction of no
+    * requirements, i.e. the unit of `And`. Dually, `Never` is the pattern
+    * that matches nothing (⊥): the disjunction of no alternatives, i.e. the
+    * unit of `Or`.
+    *
+    * These identifications matter beyond taste: generic code builds and
+    * shrinks junction lists without special-casing emptiness, so an empty
+    * `Or` *must* mean "no alternative can match" and an empty `And` "no
+    * requirement can fail" for that code to be correct. (They were originally
+    * defined the other way around, which made `Or(range.map(...))` over an
+    * empty range match everything, made `Wildcard or p` collapse to `p` in
+    * the flattening combinators above, and forced `simplify` to keep dead
+    * `Never` alternatives lest dropping the last one produce a wildcard.) */
+  val Wildcard = And(Nil)
   
-  val Never = And(Nil)
+  val Never = Or(Nil)
   
-  type Head = syntax.Literal | ClassLikeSymbol
+  type Head = syntax.Literal | ClassLikeHead
   
   /** A representation of fully instantiated first-order patterns. */
   final case class Instantiation(
@@ -405,13 +510,13 @@ extension (pattern: ExPat)
   
   /** Modifies the pattern under the assumption that the scrutinee matches the
    *  given class. */
-  def specialize(symbol: ClassLikeSymbol): SpPat = pattern.map:
+  def specialize(head: ClassLikeHead): SpPat = pattern.map:
     case Literal(_) => Never
     /** Note that `ClassLike` corresponds the syntax sugar of class patterns
      *  intersected with record patterns. So, we need to leave the arguments
      *  part unchanged. If there's no arguments, we return `Wildcard`. */
-    case ClassLike(`symbol`, arguments) =>
-      arguments.fold(Wildcard)(MatchedClassLike(symbol, _))
+    case ClassLike(`head`, arguments) =>
+      arguments.fold(Wildcard)(MatchedClassLike(head, _))
     case ClassLike(_, _) => Never
     case pattern: (MatchedClassLike | Record | Tuple) => pattern
   
@@ -419,7 +524,7 @@ extension (pattern: ExPat)
    *  given literal or class. */
   def specialize(head: Option[Head]): SpPat = head match
     case Some(h: syntax.Literal) => pattern.specialize(h)
-    case Some(h: ClassLikeSymbol) => pattern.specialize(h)
+    case Some(h: ClassLikeHead) => pattern.specialize(h)
     case None => pattern.map:
       case _: (Literal | ClassLike) => Never
       case pattern: (Record | Tuple) => pattern

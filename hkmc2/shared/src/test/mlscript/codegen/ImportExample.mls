@@ -46,7 +46,7 @@ open Example
 :sjs
 inc / 2
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ return Example.funnySlash(Example.inc, 2)
+//│ return 3
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 3
 
@@ -54,9 +54,9 @@ inc / 2
 :re
 n / 2
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ return Example.funnySlash(n, 2)
+//│ return runtime.safeCall(n(2))
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
-//│ ═══[RUNTIME ERROR] TypeError: f is not a function
+//│ ═══[RUNTIME ERROR] TypeError: n is not a function
 
 funnySlash(inc, 123)
 //│ = 124
@@ -74,11 +74,11 @@ test / (inc / 123)
 // which errors because `funnySlash(test, inc)` does not return a valid function.
 :re
 test / inc / 123
-//│ ═══[RUNTIME ERROR] TypeError: f is not a function
+//│ ═══[RUNTIME ERROR] TypeError: inlinedVal is not a function
 
 :re
 test / inc / 123 * 0.5
-//│ ═══[RUNTIME ERROR] TypeError: f is not a function
+//│ ═══[RUNTIME ERROR] TypeError: inlinedVal1 is not a function
 
 
 let c = Curried(1)

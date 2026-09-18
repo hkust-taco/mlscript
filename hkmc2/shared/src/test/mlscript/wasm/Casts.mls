@@ -1,0 +1,331 @@
+
+:global
+:wasm
+
+
+// In this example, the function call is equivalent to `useBox((id(new Box(42) as!! Box)))`.
+// The `:wat` output below shows this as a `ref.cast` to `(ref $Box)` applied to the result of `id`,
+// which is what the round-trip through an unannotated `id` makes necessary.
+// Note that `:noInline` is needed here (and below) to prevent `id` from being inlined and the coercion elided.
+:noInline
+:wat
+class Box(val v: Int)
+fun id(a) = a
+fun useBox(b: Box): Int = b.v
+useBox(id(new Box(42)))
+//│ Wat:
+//│ (module
+//│   (type $TypeInfoBase (sub (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
+//│   (type $Object (sub (struct (field $$typeinfo (mut (ref $TypeInfoBase))))))
+//│   (type $Box (sub $Object (struct (field $$typeinfo (mut (ref $TypeInfoBase))) (field $v (mut (ref null i31))))))
+//│   (type $Box_typeinfo (sub $TypeInfoBase (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
+//│   (type $Box_init (func (param $this (ref $Box)) (param $v (ref null i31)) (result (ref $Box))))
+//│   (type $Box_ctor (func (param $v (ref null i31)) (result (ref $Box))))
+//│   (type $id (func (param $a (ref null any)) (result (ref null any))))
+//│   (type $useBox (func (param $b (ref $Box)) (result (ref null i31))))
+//│   (type $entry (func (result (ref null i31))))
+//│   (global $Box_typeinfo (export "Box_typeinfo") (ref $Box_typeinfo) (struct.new $Box_typeinfo
+//│     (i32.const 1)
+//│     (ref.null $TypeInfoBase)))
+//│   (func $Box_init (type $Box_init) (param $this (ref $Box)) (param $v (ref null i31)) (result (ref $Box))
+//│     (block (result (ref $Box))
+//│       (struct.set $Box $v
+//│         (local.get $this)
+//│         (local.get $v))
+//│       (return
+//│         (ref.cast (ref $Box)
+//│           (local.get $this)))))
+//│   (func $Box_ctor (export "Box") (type $Box_ctor) (param $v (ref null i31)) (result (ref $Box))
+//│     (local $this (ref $Box))
+//│     (block (result (ref $Box))
+//│       (local.set $this
+//│         (struct.new $Box
+//│           (global.get $Box_typeinfo)
+//│           (ref.null i31)))
+//│       (drop
+//│         (call $Box_init
+//│           (local.get $this)
+//│           (local.get $v)))
+//│       (return
+//│         (local.get $this))))
+//│   (func $id (export "id") (type $id) (param $a (ref null any)) (result (ref null any))
+//│     (return
+//│       (local.get $a)))
+//│   (func $useBox (export "useBox") (type $useBox) (param $b (ref $Box)) (result (ref null i31))
+//│     (return
+//│       (ref.cast (ref i31)
+//│         (struct.get $Box $v
+//│           (local.get $b)))))
+//│   (func $entry (export "entry") (type $entry) (result (ref null i31))
+//│     (local $tmp (ref $Box))
+//│     (local $tmp1 (ref null any))
+//│     (block (result (ref null i31))
+//│       (local.set $tmp
+//│         (call $Box_ctor
+//│           (ref.i31
+//│             (i32.const 42))))
+//│       (local.set $tmp1
+//│         (call $id
+//│           (local.get $tmp)))
+//│       (return
+//│         (call $useBox
+//│           (ref.cast (ref $Box)
+//│             (local.get $tmp1))))))
+//│   (elem $Box_init declare func $Box_init)
+//│   (elem $Box_ctor declare func $Box_ctor)
+//│   (elem $id declare func $id)
+//│   (elem $useBox declare func $useBox)
+//│   (elem $entry declare func $entry))
+//│ Wasm result:
+//│ = 42
+
+
+// Similarly, the constructor call is `new Wrap((id(new Box(7)) as!! Box))`.
+:noInline
+class Wrap(val b: Box)
+fun readV(b: Box) = b.v
+let w = new Wrap(id(new Box(7)))
+readV(w.Wrap#b)
+//│ Wasm result:
+//│ = 7
+
+
+// `inc((id(41) as!! Int))`
+:noInline
+fun inc(n: Int) = n + 1
+inc(id(41))
+//│ Wasm result:
+//│ = 42
+
+
+// `set x = (id(7) as!! Int)`
+:noInline
+fun setter(x: Int) =
+  set x = id(7)
+  x
+setter(1)
+//│ Wasm result:
+//│ = 7
+
+
+// A return coercion also wraps a call, whose result is then narrowed for `useBox`'s `Box` parameter.
+fun anyBox(n: Int): Object = new Box(7)
+fun narrowBox(n: Int): Box = anyBox(n)
+useBox(narrowBox(0))
+//│ Wasm result:
+//│ = 7
+
+
+// `NotACrate` has a different field count, so it is a distinct struct and the `ref.cast` traps. The
+// constructor must be properly applied for that to be what fails: an under-applied one throws first, with an
+// opaque `[object Object]` that hides whether the cast was reached at all.
+:re
+class Crate2(val v: Int)
+class NotACrate(val w: Int, val x: Int)
+fun useCrate2(c: Crate2): Int = c.v
+useCrate2(id(new NotACrate(1, 2)))
+//│ Wasm result:
+//│ ═══[RUNTIME ERROR] RuntimeError: illegal cast
+
+
+// With the same field count the two are structurally identical structs, so `ref.cast` cannot tell them
+// apart and the narrowing silently succeeds.
+class Crate2(val v: Int)
+class NotACrate(val w: Int)
+fun useCrate2(c: Crate2): Int = c.v
+useCrate2(id(new NotACrate(1)))
+//│ Wasm result:
+//│ = 1
+
+
+// Boxing is an intrinsic and takes no runtime test on the way in: an `Int32` has nothing to test against.
+wasm.ref.i31(wasm.i32.const(7))
+//│ Wasm result:
+//│ = 7
+
+
+// The same value cannot round-trip through an untyped slot: `id` leaves its parameter and result unannotated.
+// Unlike the unannotated-result case in `wasm/Basics.mls`, the value crosses in both directions, so it is
+// rejected going in and coming out. `:noInline` keeps `id` in place; inlining elides the crossing.
+:ge
+:noInline
+wasm.ref.i31(id(wasm.i32.const(7)))
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int32' at an unrelated type 'Unknown'
+//│ ║  l.152: 	wasm.ref.i31(id(wasm.i32.const(7)))
+//│ ╙──       	                ^^^^^^^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Unknown' at an unrelated type 'Int32'
+//│ ║  l.152: 	wasm.ref.i31(id(wasm.i32.const(7)))
+//│ ╙──       	             ^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[COMPILATION ERROR] Cannot cast a Wasm value of type `i32` to `(ref null any)` in a different type hierarchy
+//│ ═══[COMPILATION ERROR] Operand #1 of wasm intrinsic 'ref.i31' must be of type 'Int32'
+
+
+// A narrowing *to* `Object`, which `anyBox` above does not exercise: widening into an `Object` slot is
+// free, so only an erased source makes the coercion real. `id` erases its argument, so the value has to be
+// narrowed back to `Pack` on the way out, and that narrowing has to be one the backend can emit.
+:noInline
+class Pack(val v: Int)
+fun unpack(p: Pack): Int = p.v
+fun toObj(): Object = id(new Pack(7))
+unpack(toObj())
+//│ Wasm result:
+//│ = 7
+
+
+// Coercions *into* `Function`. Returning a function instance is unsupported outright, and a class instance is
+// unrelated to `Function`. However, routing the same instance through a slot that erases it upcasts it to the
+// top type, after which the narrowing is accepted with no diagnostic at all. The exception is the last block,
+// where `Unknown` cannot be cast to a primitive and is rejected.
+:e
+fun test: Function = id
+//│ ╔══[COMPILATION ERROR] Returning function instances is not supported
+//│ ║  l.180: 	fun test: Function = id
+//│ ╙──       	                     ^^
+
+:fixme
+fun test: Function = new Object
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Missing constructor definition for class member:Object
+
+class C
+//│ Wasm result:
+//│ = {}
+
+:e
+fun test: Function = new C
+//│ ═══[COMPILATION ERROR] Cannot use a value of type 'C' at an unrelated type 'Function'
+//│ Wasm result:
+//│ = {}
+
+:e
+fun test: Function = (new C) as Object
+//│ ═══[COMPILATION ERROR] Cannot use a value of type 'C' at an unrelated type 'Function'
+//│ Wasm result:
+//│ = {}
+
+fun castToObj(x): Object = x
+//│ Wasm result:
+//│ = {}
+
+fun test: Function = castToObj(new C)
+//│ Wasm result:
+//│ = {}
+
+fun castToA[A](x: A): A = x
+//│ Wasm result:
+//│ = {}
+
+fun test: Function = castToA(123)
+//│ Wasm result:
+//│ = {}
+
+:e
+castToA(wasm.i32.const(123))
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int32' at an unrelated type 'Unknown'
+//│ ║  l.222: 	castToA(wasm.i32.const(123))
+//│ ╙──       	        ^^^^^^^^^^^^^^^^^^^
+//│ Wasm result:
+//│ = 123
+
+
+// A cast targeting `()` must find the Wasm Unit singleton's struct type. That struct is registered under a
+// synthetic BMS, so resolving it the ordinary way will find nothing and will be reported as missing a Wasm
+// type. `:sir` shows the cast is really emitted.
+:sir
+fun narrowUnitFromObject(x: Object): () = x
+narrowUnitFromObject(())
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define narrowUnitFromObject⁰ as fun narrowUnitFromObject¹(x) {
+//│   return (x as! Unit⁰)
+//│ };
+//│ return narrowUnitFromObject¹(runtime⁰.Unit⁰)
+//│ Wasm result:
+//│ = {}
+
+:sir
+fun narrowUnitFromUntyped(x): () = x
+narrowUnitFromUntyped(())
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define narrowUnitFromUntyped⁰ as fun narrowUnitFromUntyped¹(x) {
+//│   return (x as! Unit⁰)
+//│ };
+//│ return narrowUnitFromUntyped¹(runtime⁰.Unit⁰)
+//│ Wasm result:
+//│ = {}
+
+:sir
+fun narrowUnitInVal(x: Object): () =
+  val y: () = x
+  y
+narrowUnitInVal(())
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define narrowUnitInVal⁰ as fun narrowUnitInVal¹(x) {
+//│   let y;
+//│   define y as val y⁰ = (x as! Unit⁰);
+//│   return y⁰
+//│ };
+//│ return narrowUnitInVal¹(runtime⁰.Unit⁰)
+//│ Wasm result:
+//│ = {}
+
+
+// A class used only by a runtime cast must remain reachable after lifting. The cast records class Local as a
+// dependency, so it survives optimization and narrowLocal(42) traps instead of returning 42.
+:noInline
+:lift
+:sir
+:soir
+:re
+fun narrowLocal(x): Object =
+  class Local()
+  val y: Local = x
+  y
+narrowLocal(42)
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let Local;
+//│ define Local as class Local¹ {
+//│   constructor Local⁰
+//│ };
+//│ define narrowLocal⁰ as fun narrowLocal¹(x) {
+//│   let y;
+//│   define y as val y¹ = (x as! Local¹);
+//│   return y¹
+//│ };
+//│ return narrowLocal¹(42)
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let Local;
+//│ define Local as class Local¹ {
+//│   constructor Local⁰
+//│ };
+//│ define narrowLocal⁰ as fun narrowLocal¹(x) {
+//│   let y;
+//│   define y as val y¹ = (x as! Local¹);
+//│   return y¹
+//│ };
+//│ return narrowLocal¹(42)
+//│ Wasm result:
+//│ ═══[RUNTIME ERROR] RuntimeError: illegal cast
+
+
+// The same dependency must be recorded when the cast is *returned* rather than bound to a val: the two
+// reach the traverser through different entry points, and only one of them is a path.
+:noInline
+:lift
+:soir
+:re
+fun liftedNarrow(x): Object =
+  class Lifted()
+  fun narrow(y): Lifted = y
+  narrow(x)
+liftedNarrow(42)
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let Lifted, narrow;
+//│ define narrow as fun narrow⁰(y) {
+//│   return (y as! Lifted⁰)
+//│ };
+//│ define Lifted as class Lifted⁰ {
+//│   constructor Lifted¹
+//│ };
+//│ define liftedNarrow⁰ as fun liftedNarrow¹(x) { return narrow⁰(x) };
+//│ return liftedNarrow¹(42)
+//│ Wasm result:
+//│ ═══[RUNTIME ERROR] RuntimeError: illegal cast

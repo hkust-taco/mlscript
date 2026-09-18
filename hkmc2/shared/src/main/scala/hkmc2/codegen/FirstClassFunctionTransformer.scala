@@ -4,7 +4,7 @@ package codegen
 import hkmc2.utils.*, shorthands.*
 import utils.*
 import semantics.*
-import syntax.Tree
+import syntax.{Tree, SpreadKind}
 import semantics.Elaborator.{ctx, State}
 import hkmc2.Message.MessageContext
 
@@ -27,8 +27,10 @@ class FirstClassFunctionTransformer
       syntax.Tree.Ident("Function$")
     )
     val defSym = new BlockMemberSymbol("Function$", Nil, false)
+    val args = params.params.map(_.sym.asSimpleRef.asArg) :::
+      params.restParam.toList.map(p => Arg(S(SpreadKind.Eager), p.sym.asSimpleRef))
     val callDef = FunDefn.withFreshSymbol(Some(clsSym), new BlockMemberSymbol("call", Nil, true), params :: Nil,
-      Return(Call(p, params.params.map(_.sym.asSimpleRef.asArg) ne_:: Nil)(CallMetadata.defaultMlsFun)))(N, annotations = Nil)
+      Return(Call(p, args ne_:: Nil)(CallMetadata.defaultMlsFun)))(N, annotations = Nil)
     ClsLikeDefn(None, clsSym, defSym, None, syntax.Cls, None, Nil,
       Some(Select(State.globalThisSymbol.asThis, Tree.Ident("Function"))(Some(ctx.builtins.Function))(false)),
       callDef :: Nil, Nil, Nil, Assign.discard(
@@ -59,7 +61,7 @@ class FirstClassFunctionTransformer
   
   private def etaExpandPath(p: Path, params: ParamList)(k: Path => Block): Block =
     val clsDef = generateFCFunctionClass(p, params)
-    val tmp = new TempSymbol(None)
+    val tmp = new TempSymbol(None, erasedType = S(ErasedType.ValueLike(rsc = S(false), clsDef.isym.asClsOrMod.get)))
     val cls = clsDef.sym.asMemberRef(clsDef.isym)
     Scoped(Set(clsDef.sym, tmp), Define(clsDef, Assign(tmp, Instantiate(false, cls, Nil :: Nil)(InstantiateMetadata.empty), k(tmp.asSimpleRef))))
   
@@ -89,7 +91,10 @@ class FirstClassFunctionTransformer
 
   override def applyResult(r: Result)(k: Result => Block): Block = r match
     case c @ Call(fun, argss) => applyListOf(argss, (args, k2) => applyArgs(args)(k2)): argss2 =>
-      def call(f: Path) = Call(f, argss2.ne_!)(c.metadata)
+      def call(f: Path) =
+        if (f is fun) && (argss is argss2)
+        then c
+        else Call(f, argss2.ne_!)(c.metadata)
       fun match
         case ref @ Value.SimpleRef(sym) => sym match
           case _: VarSymbol |  _: TempSymbol => k(call(ref.selSN("call")))

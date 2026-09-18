@@ -1,5 +1,6 @@
 :js
 :deadParamElim debug poly
+:noInline
 
 
 :checkIR
@@ -10,6 +11,7 @@ fun f(used, unused) =
   new C
 f(1, 2).get()
 //│ dead-param-elim > >>> dead-param-elim results >>>
+//│ dead-param-elim > prodfun f¹#0 @ f² -> eliminable: {1}
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ = 1
 
@@ -22,6 +24,7 @@ fun foo(y) =
   (new M).bar()
 foo(10)
 //│ dead-param-elim > >>> dead-param-elim results >>>
+//│ dead-param-elim > prodfun foo¹#0 @ foo² -> eliminable: {0}
 //│ dead-param-elim > <<< dead-param-elim results <<<
 
 
@@ -36,6 +39,7 @@ fun g(x, dead) =
   p.first()
 g(10, 99)
 //│ dead-param-elim > >>> dead-param-elim results >>>
+//│ dead-param-elim > prodfun g¹#0 @ g² -> eliminable: {1}
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ = 10
 
@@ -49,6 +53,7 @@ fun h(base, unused) =
   new Adder
 h(10, 0).add(3)
 //│ dead-param-elim > >>> dead-param-elim results >>>
+//│ dead-param-elim > prodfun h¹#0 @ h² -> eliminable: {1}
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ = 13
 
@@ -66,7 +71,7 @@ fun wrapper(val1, dead) =
   (new A).makeB().getVal()
 wrapper(42, 0)
 //│ dead-param-elim > >>> dead-param-elim results >>>
-//│ dead-param-elim > prodfun wrapper¹#0 @ wrapper⁰ -> eliminable: {1}
+//│ dead-param-elim > prodfun wrapper¹#0 @ wrapper² -> eliminable: {1}
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ let wrapper_wrapper$wrapper;
@@ -118,5 +123,6 @@ fun multi(a, b, dead) =
   (new Calc).prod()
 multi(5, 6, 999)
 //│ dead-param-elim > >>> dead-param-elim results >>>
+//│ dead-param-elim > prodfun multi¹#0 @ multi² -> eliminable: {2}
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ = 30

@@ -43,9 +43,9 @@ fun c(x) = if x is
   B then 2
 c(p(true))
 //│ deforest > >>> fusing >>>
-//│ deforest > B⁰ ->
-//│ deforest > 	match: x²
 //│ deforest > A⁰ ->
+//│ deforest > 	match: x²
+//│ deforest > B⁰ ->
 //│ deforest > 	match: x²
 //│ deforest > <<< fusing <<<
 //│ eta-expansion > >>> eta-expansion targets shapes >>>
@@ -88,13 +88,13 @@ c(p(true))
 //│ deforest > X⁰(tmp¹) ->
 //│ deforest > 	match: x⁴
 //│ deforest > 	fields: x⁴.a⁰
-//│ deforest > Y⁰(33) ->
+//│ deforest > Y⁰(22) ->
 //│ deforest > 	match: arg$X$0$⁰
 //│ deforest > 	fields: arg$X$0$⁰.b⁰
 //│ deforest > X⁰(tmp²) ->
 //│ deforest > 	match: x⁴
 //│ deforest > 	fields: x⁴.a⁰
-//│ deforest > Y⁰(22) ->
+//│ deforest > Y⁰(33) ->
 //│ deforest > 	match: arg$X$0$⁰
 //│ deforest > 	fields: arg$X$0$⁰.b⁰
 //│ deforest > <<< fusing <<<

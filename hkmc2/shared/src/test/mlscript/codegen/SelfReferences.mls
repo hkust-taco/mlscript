@@ -65,9 +65,7 @@ object Foo with
 //│   }
 //│   constructor() {
 //│     Foo11 = this;
-//│     let tmp;
-//│     tmp = Predef.id(Foo11);
-//│     this.self = tmp;
+//│     this.self = Foo11;
 //│     Object.defineProperty(this, "class", {
 //│       value: Foo10
 //│     });

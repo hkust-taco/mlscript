@@ -65,14 +65,16 @@ true || loudTrue
 :sjs
 fold(||)(0, false, 42, 123)
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let lambda, callPrefix;
+//│ import Rendering from "./../../mlscript-compile/Rendering.mjs";
+//│ let lambda, callPrefix, inlinedVal;
 //│ lambda = (undefined, function (arg1, arg2) {
 //│   if (arg1 === false) {
 //│     return arg2
 //│   }
 //│   return true;
 //│ });
-//│ callPrefix = runtime.safeCall(Predef.fold(lambda));
+//│ inlinedVal = Rendering.fold;
+//│ callPrefix = runtime.safeCall(inlinedVal(lambda));
 //│ return runtime.safeCall(callPrefix(0, false, 42, 123))
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = true

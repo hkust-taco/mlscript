@@ -161,6 +161,8 @@ abstract class Parser(
   private def preprocessTokens(tokens: Ls[TokLoc]): Ls[TokLoc] = tokens match
     case (IDENT("new", false), l1) :: (IDENT("!", true), l2) :: rest =>
       (IDENT("new!", false), l1 ++ l2) :: preprocessTokens(rest)
+    case (IDENT("yield", false), l1) :: (IDENT("*", true), l2) :: rest =>
+      (IDENT("yield*", false), l1 ++ l2) :: preprocessTokens(rest)
     // * Remove empty indented sections
     case (BRACKETS(Indent, toks), _) :: rest
     if toks.forall:
@@ -1158,7 +1160,13 @@ abstract class Parser(
     if prec < AppPrec && !Keyword.all.contains(id) =>
       val res = exprCont(Jux(acc, expr(AppPrec, allowNewlines = allowNewlines)), prec, allowNewlines = allowNewlines)
       exprJux(res, prec, allowNewlines = allowNewlines)
-    case (br @ BRACKETS(_: Indent_Curly, toks), l0) :: _
+    // case (br @ BRACKETS(_: Indent_Curly, toks), l0) :: _
+    case (br @ BRACKETS(Curly, toks), l0) :: _
+    if prec <= AppPrec =>
+      consume
+      val res = rec(toks, S(br.innerLoc), br.describe).concludeWith(_.block(allowNewlines = true))
+      exprCont(Reft(acc, Block(res).withLoc(S(l0))), prec, allowNewlines = allowNewlines)
+    case (br @ BRACKETS(Indent, toks), l0) :: _
     if prec < AppPrec && (toks.headOption match
       case S((IDENT(nme, sym), _)) => !sym && !Keyword.all.contains(nme)
       case _ => true

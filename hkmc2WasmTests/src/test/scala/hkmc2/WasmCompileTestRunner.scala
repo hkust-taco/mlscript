@@ -1,7 +1,6 @@
 package hkmc2
 
 import hkmc2.utils.*, shorthands.*
-import io.PlatformPath.given
 
 
 class WasmCompileTestRunner extends CompileTestRunnerBase(
@@ -14,6 +13,6 @@ end WasmCompileTestRunner
 
 object WasmCompileTestRunner:
   
-  given cctx: CompilerCtx = CompilerCtx.fresh(io.FileSystem.default)
+  given cctx: CompilerCtx = TestFolders.compilerCtx(os.pwd)
 
 end WasmCompileTestRunner

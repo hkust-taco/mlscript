@@ -47,12 +47,8 @@ f(2, 3, 4)
 fun f2(x, y) = x + y
 id(f2)(2)
 //│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
-//│ let f21, baseCall;
-//│ f21 = function f2(x, y) {
-//│   return x + y
-//│ };
-//│ baseCall = Predef.id(f21);
-//│ block$res5 = runtime.safeCall(baseCall(2));
+//│ let f21;
+//│ f21 = function f2(x, y) { return x + y }; block$res5 = runtime.safeCall(f21(2));
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = NaN
 
@@ -60,8 +56,7 @@ id(f2)(2)
 :re
 id(f)(2)
 //│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
-//│ let baseCall1;
-//│ baseCall1 = runtime.checkCall(Predef.id(f1)); block$res6 = runtime.safeCall(baseCall1(2));
+//│ block$res6 = runtime.safeCall(f1(2));
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ ═══[RUNTIME ERROR] Error: Function 'f' expected 2 arguments but got 1
 
@@ -71,7 +66,7 @@ id(f)(2)
 fun f(x)(y, z) = x + y + z
 id(f)(3)(4)
 //│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
-//│ let f3, baseCall2, callPrefix;
+//│ let f3;
 //│ f3 = function f(x) {
 //│   runtime.checkArgs("f", 1, true, arguments.length);
 //│   return (y, z) => {
@@ -80,9 +75,7 @@ id(f)(3)(4)
 //│     return tmp + z
 //│   }
 //│ };
-//│ baseCall2 = runtime.checkCall(Predef.id(f3));
-//│ callPrefix = runtime.safeCall(baseCall2(3));
-//│ block$res7 = runtime.safeCall(callPrefix(4));
+//│ block$res7 = runtime.safeCall(f3(3)(4));
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = NaN
 
@@ -124,7 +117,7 @@ data class Cls(x, y) with
   fun f(z, p)(q, s) = x + y + z + p + q + s
 id(Cls(1, 2)).f(3, 4)(5)
 //│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
-//│ let Cls5, tmp4, tmp5, callPrefix1;
+//│ let Cls5, tmp2, callPrefix;
 //│ Cls5 = function Cls(x, y) {
 //│   return globalThis.Object.freeze(new Cls.class(x, y));
 //│ };
@@ -140,21 +133,20 @@ id(Cls(1, 2)).f(3, 4)(5)
 //│   f(z, p) {
 //│     runtime.checkArgs("f", 2, true, arguments.length);
 //│     return (q, s) => {
-//│       let tmp6, tmp7, tmp8, tmp9;
-//│       tmp6 = this.x + this.y;
-//│       tmp7 = tmp6 + z;
-//│       tmp8 = tmp7 + p;
-//│       tmp9 = tmp8 + q;
-//│       return tmp9 + s
+//│       let tmp3, tmp4, tmp5, tmp6;
+//│       tmp3 = this.x + this.y;
+//│       tmp4 = tmp3 + z;
+//│       tmp5 = tmp4 + p;
+//│       tmp6 = tmp5 + q;
+//│       return tmp6 + s
 //│     }
 //│   }
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "Cls", ["x", "y"]];
 //│ });
-//│ tmp4 = runtime.checkCall(Cls5(1, 2));
-//│ tmp5 = runtime.checkCall(Predef.id(tmp4));
-//│ callPrefix1 = runtime.safeCall(tmp5.f(3, 4));
-//│ block$res12 = runtime.safeCall(callPrefix1(5));
+//│ tmp2 = runtime.checkCall(Cls5(1, 2));
+//│ callPrefix = runtime.safeCall(tmp2.f(3, 4));
+//│ block$res12 = runtime.safeCall(callPrefix(5));
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = NaN
 
@@ -188,9 +180,9 @@ if M.A(1).y is
   x and x == 1 then x
   else 0
 //│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
-//│ let scrut, scrut1, tmp6;
-//│ tmp6 = runtime.checkCall(M1.A(1));
-//│ scrut = runtime.checkSelect(tmp6.y, "y", tmp6);
+//│ let scrut, scrut1, tmp3;
+//│ tmp3 = runtime.checkCall(M1.A(1));
+//│ scrut = runtime.checkSelect(tmp3.y, "y", tmp3);
 //│ scrut1 = runtime.checkCall(Predef.equals(scrut, 1));
 //│ if (scrut1 === true) { block$res17 = scrut; } else { block$res17 = 0; }
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
@@ -224,7 +216,7 @@ M.A(2).y > 1
 // :ssjs
 :re
 M.A(1).g(0)
-//│ ═══[RUNTIME ERROR] TypeError: tmp11.g is not a function
+//│ ═══[RUNTIME ERROR] TypeError: tmp8.g is not a function
 
 
 
@@ -237,7 +229,7 @@ M.A(1).f(0)
 :ssjs
 M.g(1, 2)
 //│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
-//│ block$res24 = runtime.checkCall(M1.g(1, 2));
+//│ block$res24 = 3;
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 3
 

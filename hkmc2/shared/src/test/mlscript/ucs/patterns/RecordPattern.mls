@@ -147,7 +147,11 @@ foo(999)
 foo(1 :: Nil)
 //│ = "only one left"
 
+:ge
 foo(1 :: "this is invalid")
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Str' at an unrelated type 'Stack.Base'
+//│ ║  l.151: 	foo(1 :: "this is invalid")
+//│ ╙──       	         ^^^^^^^^^^^^^^^^^
 //│ = "yeah we're done"
 
 foo(1 :: 2 :: Nil)

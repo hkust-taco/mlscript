@@ -1,0 +1,16 @@
+:js
+
+open annotations
+
+module QualifiedOuter with
+  module Inner with
+    data class Wrapped(val value)
+
+fun compiledQualified(module Inner: QualifiedOuter.Inner, x) =
+  if x is @compile Inner.Wrapped(3) then true else false
+
+[
+  compiledQualified(QualifiedOuter.Inner, QualifiedOuter.Inner.Wrapped(3)),
+  compiledQualified(QualifiedOuter.Inner, QualifiedOuter.Inner.Wrapped(4)),
+]
+//│ = [true, false]

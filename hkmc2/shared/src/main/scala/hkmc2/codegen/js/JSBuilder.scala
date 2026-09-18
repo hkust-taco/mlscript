@@ -10,7 +10,7 @@ import document.Document.{braced, bracketed}
 import hkmc2.Message.MessageContext
 import hkmc2.syntax.{Tree, MutVal, ImmutVal, SpreadKind}
 import hkmc2.semantics.*
-import Elaborator.{State, Ctx}
+import Elaborator.{State, Ctx, ExternalModuleImport}
 import hkmc2.codegen.Lambda
 
 import Scope.scope
@@ -76,7 +76,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
     case _ => false
   
   private def getPrivateAccessorSymbol(ts: semantics.TermSymbol): semantics.TempSymbol =
-    privateAccessorSymbols.getOrElseUpdate(ts, semantics.TempSymbol(N, s"${ts.name}$$accessorSymbol"))
+    privateAccessorSymbols.getOrElseUpdate(ts, semantics.TempSymbol(N, erasedType = N, s"${ts.name}$$accessorSymbol"))
 
   private def selectPrivateField(ts: semantics.TermSymbol, loc: Opt[Loc])(using Raise, Scope): Opt[Document] =
     ts.owner.collect:
@@ -93,6 +93,10 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
         doc"""const $name = globalThis.Symbol(${makeStringLiteral(ts.nme)});"""
     ).mkDocument(doc" # ")
     if accessors.isEmpty then doc else doc :/: accessors
+
+  private def allocatePrivateAccessorNames()(using Raise, Scope): Unit =
+    privateAccessorSymbols.iterator.toList.sortBy(_._1.uid).foreach: (_, sym) =>
+      scope.allocateOrGetName(sym)
 
   private def collectExternalPrivateAccessors(p: Program)(using State): Unit =
     privateAccessorSymbols.clear()
@@ -141,6 +145,117 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
           applyBlock(body.ctor)
           body.methods.foreach(applyDefn)
     collector.applyBlock(p.main)
+
+  private def modulePrivateExportName(sym: BlockMemberSymbol)(using Raise): Str =
+    sym.getState.compilationUnitPrivateName(sym).getOrElse:
+      raise:
+        InternalError(
+          msg"No private export name was allocated for '${sym.nme}'" -> sym.toLoc :: Nil,
+          extraInfo = Some(sym),
+          source = Diagnostic.Source.Compilation,
+        )
+      "‹MISSING_PRIVATE_EXPORT_NAME›"
+
+  private def relativeImportPath(path: Str, wd: io.Path): Str =
+    if path.startsWith("/")
+    then "./" + io.Path(path).relativeTo(wd).map(_.toString).getOrElse(path)
+    else path
+
+  private case class Imports(
+    defaults: Ls[ImportSymbol -> Str],
+    privates: Ls[BlockMemberSymbol -> Str],
+  ):
+    def symbols: Ls[ImportSymbol] = defaults.map(_._1) ::: privates.map(_._1)
+  
+  
+  /** Recovers imports that are not necessarily recorded in `p.imports`.
+    *
+    * Optimization may copy IR from one compilation unit into another. The copied references keep
+    * their original symbols, whose elaboration states retain the module provenance that is absent
+    * from the receiving program's direct import table. This pass follows that provenance after all
+    * such transformations have run and adds the imports needed by the emitted JavaScript.
+    */
+  private def externalImports(p: Program): Imports =
+    
+    // Top-level scoped symbols are defined by this program, even when their states carry module
+    // metadata. In particular, its own default export must not be recovered as an import.
+    val localSymbols: collection.Set[ScopedSymbol] =
+      p.main match
+      case Scoped(syms, _) => syms
+      case _ => Set.empty
+    
+    /** UIDs are unique only within one elaboration state. Module provenance must therefore come
+      * first whenever symbols from independently elaborated compilation units are ordered. */
+    def externalImportSortKey(sym: ImportSymbol, modulePath: Str): (Str, Int, Str) =
+      val normalizedPath =
+        if modulePath.startsWith("/") then io.Path(modulePath).toString
+        else if modulePath.startsWith(".") then io.RelPath(modulePath).toString
+        else modulePath // Bare JavaScript module specifiers such as "fs" or "binaryen" are not paths.
+      (normalizedPath, sym.uid.asInt, sym.nme)
+    
+    def orderedExternalImports[S <: ImportSymbol](symbols: collection.Map[S, Str]): Ls[S -> Str] =
+      symbols.iterator.toList
+        .sortBy:
+          case (sym, path) => externalImportSortKey(sym, path)
+    
+    val defaultImports = collection.mutable.Map.empty[ImportSymbol, Str]
+    val privateImports = collection.mutable.Map.empty[BlockMemberSymbol, Str]
+    
+    /** State identity, rather than equal path strings, is the compilation-unit ownership
+      * invariant: all symbols belonging to the current artifact were created by this builder's
+      * `State`. The symbol's owner encapsulates whether it denotes an imported default, the
+      * defining unit's default export, or one of that unit's private exports. */
+    def note(sym: ImportSymbol): Unit =
+      if !localSymbols(sym) then
+        val originState = sym.getState
+        originState.externalModuleImport(sym, State) match
+        case S(ExternalModuleImport.Default(sym, path)) => defaultImports(sym) = path
+        case S(ExternalModuleImport.Private(sym, path)) => privateImports(sym) = path
+        case N =>
+    
+    /** Only value references require JavaScript bindings. In particular, symbols occurring solely
+      * in definitions, assignments, or metadata must not become imports. `VarSymbol` and
+      * `TempSymbol` references can be transitive default imports left in copied IR, while member
+      * references can denote either the default export or a private member of a foreign unit. */
+    (new BlockTraverser:
+      override def applyValue(value: Value): Unit = value match
+        case Value.SimpleRef(sym: TempSymbol) => note(sym)
+        case Value.SimpleRef(sym: VarSymbol) => note(sym)
+        case Value.MemberRef(sym, _) => note(sym)
+        case _ =>
+    ).applyBlock(p.main)
+    
+    // Maps deduplicate repeated references; sorting makes output deterministic across independently
+    // elaborated states, where symbol UIDs alone are not globally unique.
+    Imports(
+      orderedExternalImports(defaultImports),
+      orderedExternalImports(privateImports),
+    )
+  end externalImports
+  
+  
+  private def bindImports(p: Program)(using Raise, Scope): Imports =
+    val defaults = p.imports.filter: (sym, path) =>
+      scope.bindDefaultImport(sym, path)
+    val external = externalImports(p)
+    val externalDefaults = external.defaults.filter: (sym, path) =>
+      scope.bindDefaultImport(sym, path)
+    val privates = external.privates.filter: (sym, _) =>
+      scope.lookup(sym).isEmpty
+    privates.foreach: (sym, _) =>
+      scope.allocateName(sym)
+    Imports(defaults ::: externalDefaults, privates)
+
+  private def ownCompilationUnitSymbols(p: Program): Ls[BlockMemberSymbol] =
+    p.main match
+    case Scoped(syms, body) =>
+      val freeVars = body.freeVars
+      syms.iterator.collect:
+        case sym: BlockMemberSymbol if freeVars(sym) && (sym.getState is State) =>
+          sym
+      .toList
+      .sortBy(_.uid)
+    case _ => Nil
   
   def runtimeVar(using Raise, Scope): Document = scope.lookup_!(State.runtimeSymbol, N)
   
@@ -154,7 +269,21 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
   def operand(a: Arg)(using Raise, Scope): Document =
     if a.spread.nonEmpty then die else subexpression(a.value)
   
-  def subexpression(r: Result)(using Raise, Scope): Document = r match
+  private def curriedFunctionBody(paramLists: Ls[ParamList], body: Block, generator: Bool): Block =
+    paramLists match
+    case Nil => body
+    case params :: Nil =>
+      Return(Lambda(params, body)(if generator then Annot.Generator :: Nil else Nil))
+    case params :: rest =>
+      Return(Lambda(params, curriedFunctionBody(rest, body, generator))(Nil))
+
+  /** Looks through the casts that a JS program does not materialize. */
+  @tailrec
+  private def throughCasts(r: Result): Result = r match
+    case Cast(value, _, _) => throughCasts(value)
+    case _ => r
+  
+  def subexpression(r: Result)(using Raise, Scope): Document = throughCasts(r) match
     case _: Lambda => doc"(${result(r)})"
     case _ => result(r)
   
@@ -168,11 +297,11 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
   // For use as the qualifier of a field selection
   def resultQual(r: Result)(using Raise, Scope): Document =
     val res = result(r)
-    if r.isInstanceOf[Value.Lit] then doc"(${res})" else res
+    if throughCasts(r).isInstanceOf[Value.Lit] then doc"(${res})" else res
   
   def resultInst(r: Result)(using Raise, Scope): Document = 
     val res = result(r)
-    r match
+    throughCasts(r) match
     case s: Select if s.sanitize => doc"(${res})"
     case _ => res
   
@@ -190,6 +319,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
       if l.nullary then l.nme
       else errExpr(msg"Illegal reference to builtin symbol '${l.nme}'")
     case Value.SimpleRef(l) => scope.lookup_!(l, r.toLoc)
+    case Cast(value, _, _) => result(value)
     case Call(Value.SimpleRef(l: BuiltinSymbol), (lhs :: rhs :: Nil) :: Nil) if !l.functionLike =>
       if l.binary then
         val res = doc"${operand(lhs)} ${l.nme} ${operand(rhs)}"
@@ -219,9 +349,14 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
         then doc"$runtimeVar.checkCall(${calls})"
         else doc"${calls}"
       else doc"$runtimeVar.safeCall(${calls})"
-    case Lambda(ps, bod) => scope.nest givenIn:
+    case lam @ Lambda(ps, bod) => scope.nest givenIn:
       val (params, bodyDoc) = setupFunction(none, ps, bod, isLambda = true)
-      doc"($params) => ${ braced(bodyDoc) }"
+      if lam.annot.contains(Annot.Generator)
+      then
+        // JavaScript has no generator arrows, so bind `this` to preserve the
+        // lexical-`this` behavior of the Lambda IR.
+        doc"(function* ($params) ${ braced(bodyDoc) }).bind(this)"
+      else doc"($params) => ${ braced(bodyDoc) }"
     case s @ Select(qual, id) => 
       val checkCurrentSelection = checkSelections && s.sanitize
       val dotClass = s.symbol match
@@ -398,11 +533,10 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
             
           case FunDefn(params = Nil) =>
             lastWords("cannot generate function with no parameter list")
-          case FunDefn(own, sym, dSym, ps :: pss, bod) =>
-            val result = pss.foldRight(bod):
-              case (ps, block) =>
-                Return(Lambda(ps, block)(Nil))
+          case defn @ FunDefn(own, sym, dSym, ps :: pss, bod) =>
+            val result = curriedFunctionBody(pss, bod, defn.generator)
             val displayName = if sym.nameIsMeaningful then S(dSym.name) else N
+            val functionKeyword = if defn.generator && pss.isEmpty then doc"function*" else doc"function"
             
             // * We may need to set up the function in a nested scope in one case below, so this is marked as lazy.
             lazy val (params, bodyDoc) = setupFunction(displayName, ps, result, isLambda = false)
@@ -418,14 +552,14 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
               // * Maybe the function's internal name was already bound in scope;
               // * in that case, we can't really use it as an inner name, as this would result in unintended capture.
               case S(otherSym: FreeSymbol) if (otherSym isnt sym) && bod.freeVars.contains(otherSym) =>
-                doc"${varName} = function ($params) ${ braced(bodyDoc) };"
+                doc"${varName} = $functionKeyword ($params) ${ braced(bodyDoc) };"
               case _ =>
-                doc"${varName} = function ${sym.nme}($params) ${ braced(bodyDoc) };"
+                doc"${varName} = $functionKeyword ${sym.nme}($params) ${ braced(bodyDoc) };"
             else
               // * In JS, `let x = (0, function (args) {...})` makes the function anonymous;
               // * otherwise, using `let x = function (args) {...}` would name the function `x`,
               // * which is not meaningful, here.
-              doc"${scope.lookup_!(sym, dSym.toLoc)} = (undefined, function ($params) ${ braced(bodyDoc) });"
+              doc"${scope.lookup_!(sym, dSym.toLoc)} = (undefined, $functionKeyword ($params) ${ braced(bodyDoc) });"
             
           case ClsLikeDefn(ownr, isym, sym, ctorSym, kind, paramsOpt, auxParams, par, mtds,
               privFlds, pubFlds, preCtor, ctor, modo, bufferable)
@@ -454,12 +588,11 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
             def mkMethods(mtds: Ls[FunDefn], mtdPrefix: Str, owner: InnerSymbol)(using Scope): Document =
               mtds.map:
                 case td @ FunDefn(params = ps :: pss, body = bod) =>
-                  val result = pss.foldRight(bod):
-                    case (ps, block) =>
-                      Return(Lambda(ps, block)(Nil))
+                  val result = curriedFunctionBody(pss, bod, td.generator)
                   val (params, bodyDoc) = scope.nest.givenIn:
                     setupFunction(S(td.sym.nme), ps, result, isLambda = false)
-                  doc" # $mtdPrefix${mkMethodName(td, owner)}($params) ${ braced(bodyDoc) }"
+                  val generatorPrefix = if td.generator && pss.isEmpty then "*" else ""
+                  doc" # $mtdPrefix$generatorPrefix${mkMethodName(td, owner)}($params) ${ braced(bodyDoc) }"
                 case td @ FunDefn(params = Nil, body = bod) =>
                   doc" # ${mtdPrefix}get ${mkMethodName(td, owner)}() ${ braced(body(bod, endSemi = true)) }"
               .mkDocument(doc"")
@@ -472,7 +605,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
                 pubFlds.collect:
                   case (_, sym) if sym.k is MutVal =>
                     sym -> TermSymbol(
-                      syntax.LetBind, S(isym), Tree.Ident(sym.nme))
+                      syntax.LetBind, S(isym), Tree.Ident(sym.nme), erasedType = sym.erasedType)
               val allPrivFlds = privFlds ++ mutPubFields.map(_._2)
               val privDecls = allPrivFlds.map: fld =>
                 val nme = isym.privatesScope.allocateOrGetName(fld)
@@ -697,9 +830,9 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
       doc" # switch (${result(scrut)}) { #{ ${bodWithDflt} #}  # }" :: returningTerm(rest, endSemi)
     case Match(scrut, arms @ hd :: tl, els, rest) =>
       val sd = result(scrut)
-      // * Parenthesize the scrutinee for property access when it's a numeric literal,
-      // * since things like `12.length` are invalid JS (the `.` is parsed as a decimal point).
-      def sdProp = scrut match
+      // * Parenthesize the scrutinee for property access when it's a numeric literal, since things like `12.length`
+      // * are invalid JS (the `.` is parsed as a decimal point).
+      def sdProp = throughCasts(scrut) match
         case Value.Lit(Tree.IntLit(_) | Tree.DecLit(_)) => doc"($sd)"
         case _ => sd
       def cond(cse: Case) = cse match
@@ -716,9 +849,13 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
           case Elaborator.ctx.builtins.Symbol => doc"typeof $sd === 'symbol'"
           case Elaborator.ctx.builtins.TypedArray =>
             doc"globalThis.ArrayBuffer.isView($sd) && !($sd instanceof globalThis.DataView)"
-          case _: ModuleOrObjectSymbol => doc"$sd instanceof ${result(pth)}.class"
-            // * ^ Note that modules are currently not valid patterns;
-            // *    this case is just for objects, which have their class stored in a `.class` property.
+          case modOrObj: ModuleOrObjectSymbol =>
+            if modOrObj.tree.k is syntax.Mod then
+              // * A module value is the module's singleton binding, so the test is identity rather than `instanceof`
+              // * (`M.class` does not exist for modules).
+              doc"$sd === ${result(pth)}"
+            else
+              doc"$sd instanceof ${result(pth)}.class"
           case _ => doc"$sd instanceof ${result(pth)}"
         case Case.Tup(len, inf) => doc"$runtimeVar.Tuple.isArrayLike($sd) && $sdProp.length ${if inf then ">=" else "==="} ${len}"
         case Case.Field(name = n, safe = false) =>
@@ -831,28 +968,35 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
   // * TODO: make JSBuilder never raise;
   // *    Currently, it may raise if the IR is invalid (symbol not defined).
   // *    Instead, run an IR well-formedness checking pass before the backend codegen.
-  def program(p: Program, exprt: Opt[BlockMemberSymbol], wd: io.Path)(using Raise, Scope): Document =
+  def program(p: Program, exprt: Opt[BlockMemberSymbol], modulePath: io.Path)(using Raise, Scope): Document =
     scope.allocateName(State.definitionMetadataSymbol)
     scope.allocateName(State.prettyPrintSymbol)
     doc"""const ${scope.lookup_!(State.definitionMetadataSymbol, N)} = globalThis.Symbol.for("mlscript.definitionMetadata");"""
       :/: doc"""const ${scope.lookup_!(State.prettyPrintSymbol, N)} = globalThis.Symbol.for("mlscript.prettyPrint");"""
-      :/: programBody(p, exprt, wd)
+      :/: programBodyImpl(p, exprt, modulePath.up, exportPrivates = true)
   
   def programBody(p: Program, exprt: Opt[BlockMemberSymbol], wd: io.Path)(using Raise, Scope): Document =
+    programBodyImpl(p, exprt, wd, exportPrivates = false)
+
+  private def programBodyImpl(p: Program, exprt: Opt[BlockMemberSymbol], wd: io.Path, exportPrivates: Bool)
+      (using Raise, Scope): Document =
     collectExternalPrivateAccessors(p)
+    allocatePrivateAccessorNames()
     reserveNames(p)
-    // Allocate names for imported modules.
-    p.imports.foreach: i =>
-      i._1 -> scope.allocateName(i._1)
+    val imports = bindImports(p)
     // Generate import statements.
-    val imps = p.imports.map: i =>
-      val path = i._2
-      val relPath = if path.startsWith("/")
-        then "./" + io.Path(path).relativeTo(wd).map(_.toString).getOrElse(path)
-        else path
-      doc"""import ${scope.lookup_!(i._1, N)} from "${relPath}";"""
-    withPrivateAccessorDecls(imps.mkDocument(doc" # "))
-    :/: nonNestedScoped(p.main)(block(_, endSemi = false)).stripBreaks
+    val imps = imports.defaults.map: (sym, path) =>
+      val relPath = relativeImportPath(path, wd)
+      doc"""import ${scope.lookup_!(sym, N)} from "${relPath}";"""
+    val privateImps = imports.privates.map: (sym, path) =>
+      val relPath = relativeImportPath(path, wd)
+      doc"""import { ${modulePrivateExportName(sym)} as ${scope.lookup_!(sym, N)} } from "${relPath}";"""
+    val bodyDoc = nonNestedScoped(p.main)(block(_, endSemi = false)).stripBreaks
+    val privateExports = (if exportPrivates then ownCompilationUnitSymbols(p) else Nil).map: sym =>
+      doc"""export { ${scope.lookup_!(sym, sym.toLoc)} as ${modulePrivateExportName(sym)} };"""
+    withPrivateAccessorDecls((imps ::: privateImps).mkDocument(doc" # "))
+    :/: bodyDoc
+    :: (if privateExports.isEmpty then doc"" else doc" # " :: privateExports.mkDocument(doc" # "))
     :: locally:
       exprt match
       case S(sym) =>
@@ -861,19 +1005,29 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
   
   def worksheet(p: Program)(using Raise, Scope): (Document, Document) =
     collectExternalPrivateAccessors(p)
+    allocatePrivateAccessorNames()
     reserveNames(p)
-    lazy val imps = p.imports.map: i =>
-      doc"""${scope.lookup_!(i._1, N)} = await import("${i._2.toString}").then(m => m.default ?? m);"""
+    val imports = bindImports(p)
+    val importedScopedSymbols: Set[ScopedSymbol] =
+      p.imports.iterator.map(_._1).toSet
+    val importBindings: Ls[ImportSymbol -> Str] =
+      imports.symbols.map(sym => sym -> scope.lookup_!(sym, N))
+    val imps =
+      imports.defaults.map: (sym, path) =>
+        doc"""${scope.lookup_!(sym, N)} = await import("${path}").then(m => m.default ?? m);"""
+      ::: imports.privates.map: (sym, path) =>
+        doc"""${scope.lookup_!(sym, N)} = await import("${path}").then(m => m.${modulePrivateExportName(sym)});"""
     p.main match
     case Scoped(syms, body) =>
       val fvs = body.freeVars
-      blockPreamble(p.imports.map(_._1) ++ syms.view.filter(s =>
+      val localSymbols = syms.view.filter(s => !importedScopedSymbols(s) && (
           !s.isInstanceOf[TempSymbol]
           // ^ VarSymbols and TermSymbols should be kept as their value will be acessed and printed by the worksheet
-          || fvs(s))) ->
+          || fvs(s)))
+      genLetDecls(importBindings.iterator ++ allocateScopedBindings(localSymbols)) ->
         (withPrivateAccessorDecls(imps.mkDocument(doc" # ")) :/: block(body, endSemi = false).stripBreaks)
     case body =>
-      blockPreamble(p.imports.map(_._1)) ->
+      genLetDecls(importBindings.iterator) ->
         (withPrivateAccessorDecls(imps.mkDocument(doc" # ")) :/: returningTerm(body, endSemi = false).stripBreaks)
   
   def genLetDecls(vars: Iterator[(Symbol, Str)]): Document =
@@ -883,14 +1037,16 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
       .toList.mkDocument(", ")
       :: doc";"
   
-  def blockPreamble(ss: Iterable[Symbol])(using Raise, Scope): Document =
-    val vars = ss.toArray.sortBy(_.uid).iterator.map: l =>
+  private def allocateScopedBindings(ss: Iterable[ScopedSymbol])(using Raise, Scope): Iterator[ScopedSymbol -> Str] =
+    ss.toArray.sortBy(_.uid).iterator.map: l =>
       whenValidatingIR:
         if scope.lookup(l).isDefined then // * It is invalid to shadow symbols in the IR
           raise:
             WarningReport(msg"var ${l.toString()} in scoped is already allocated" -> N :: Nil)
       l -> scope.allocateName(l)
-    genLetDecls(vars)
+
+  def blockPreamble(ss: Iterable[ScopedSymbol])(using Raise, Scope): Document =
+    genLetDecls(allocateScopedBindings(ss))
 
   /** Specially handle top-level Scoped node: output the bindings, but do not add another pair of braces */
   def nonBracedScoped(blk: Block)(k: Scope ?=> Block => Document)(using Raise, Scope): Document = blk match
@@ -1050,7 +1206,7 @@ trait JSBuilderArgNumSanityChecks(using TL, Config, Elaborator.State)
   override def checkSelections: Bool = instrument
   override def freezeDefinitions: Bool = instrument
   
-  val functionParamVarargSymbol = semantics.TempSymbol(N, "args")
+  val functionParamVarargSymbol = semantics.TempSymbol(N, erasedType = N, "args")
   
   override def setupFunction(name: Option[Str], params: ParamList, body: Block, isLambda: Bool)(using Raise, Scope): (Document, Document) =
     // * We used to instrument `fun f(x, y) = x + y` into something like

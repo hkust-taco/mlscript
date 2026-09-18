@@ -58,7 +58,7 @@ module Foo with
 //│ ╔══[PARSE ERROR] Expected end of input; found 'class' keyword instead
 //│ ║  l.57: 	@42 class Qux
 //│ ╙──      	    ^^^^^
-//│ ═══[RUNTIME ERROR] TypeError: f is not a function
+//│ ═══[RUNTIME ERROR] TypeError: 42 is not a function
 
 :pe
 :re
@@ -66,7 +66,7 @@ module Foo with
 //│ ╔══[PARSE ERROR] Expected end of input; found 'class' keyword instead
 //│ ║  l.65: 	@(1 + 2) class Qux
 //│ ╙──      	         ^^^^^
-//│ ═══[RUNTIME ERROR] TypeError: f is not a function
+//│ ═══[RUNTIME ERROR] TypeError: 3 is not a function
 
 :pe
 :re
@@ -74,7 +74,7 @@ module Foo with
 //│ ╔══[PARSE ERROR] Expected end of input; found 'module' keyword instead
 //│ ║  l.73: 	@1 module Qux
 //│ ╙──      	   ^^^^^^
-//│ ═══[RUNTIME ERROR] TypeError: f is not a function
+//│ ═══[RUNTIME ERROR] TypeError: 1 is not a function
 
 object inline
 

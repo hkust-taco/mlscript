@@ -1,0 +1,65 @@
+:js
+
+open annotations
+
+// The units of the pattern lattice: `Wildcard` is the empty conjunction
+// `And(Nil)` and `Never` the empty disjunction `Or(Nil)`. These cases pin the
+// collapses that went wrong when the two were defined the other way around:
+// the flattening `or` combinator swallowed a wildcard alternative into the
+// surrounding disjunction, and an empty range expanded to an empty
+// disjunction that matched everything.
+
+
+// A wildcard alternative keeps the whole disjunction total.
+
+pattern WildcardOr = _ | "a"
+
+fun anything(x) = x is @compile WildcardOr
+
+:expect true
+anything("a")
+//│ = true
+
+:expect true
+anything("b")
+//│ = true
+
+:expect true
+anything(42)
+//│ = true
+
+:expect true
+42 is WildcardOr
+//│ = true
+
+
+// An empty range — here from reversed bounds — matches nothing, on the
+// compiled path and the plain one alike.
+
+fun emptyIntRange(x) = x is @compile (5 ..= 3)
+
+:expect false
+emptyIntRange(4)
+//│ = false
+
+:expect false
+emptyIntRange("q")
+//│ = false
+
+:expect false
+4 is (5 ..= 3)
+//│ = false
+
+fun emptyStrRange(x) = x is @compile ("z" ..= "a")
+
+:expect false
+emptyStrRange("q")
+//│ = false
+
+:expect false
+emptyStrRange("z")
+//│ = false
+
+:expect false
+"q" is ("z" ..= "a")
+//│ = false
