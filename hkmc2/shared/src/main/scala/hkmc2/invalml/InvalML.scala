@@ -254,7 +254,7 @@ class InvalTyper(using elState: Elaborator.State, tl: TL)(using Ctx):
       constrain(lhsTy, FunType(rhsTy.reverse, resTy, Bot)) // TODO: right
       (resTy, lhsCtx | rhsCtx, lhsEff | rhsEff)
     case sel @ Term.SynthSel(Term.Ref(_: TopLevelSymbol), _) if sel.symbol.isDefined =>
-      val (opTy, eff) = typeCheck(Ref(sel.symbol.get)(sel.nme, 666, N)) // FIXME 666
+      val (opTy, eff) = typeCheck(Ref(sel.symbol.get)(sel.nme, N)) // FIXME 666
       (tryMkMono(opTy, sel), Bot, eff)
     case unq @ Term.Unquoted(body) =>
       val (ty, eff) = typeCheck(body)
@@ -612,7 +612,7 @@ class InvalTyper(using elState: Elaborator.State, tl: TL)(using Ctx):
       case Term.Annotated(Annot.Untyped, _) => (Bot, Bot)
       case sel @ Term.SynthSel(Ref(_: TopLevelSymbol), nme)
         if sel.symbol.isDefined =>
-        typeCheck(Ref(sel.symbol.get)(sel.nme, 666, N)) // FIXME 666
+        typeCheck(Ref(sel.symbol.get)(sel.nme, N)) // FIXME 666
       case Ref(sym) =>
         ctx.get(sym) match
           case Some(ty) => (ty, Bot)

@@ -1,9 +1,8 @@
-:js
+:.
 
 
 :inlineThreshold 0
 :soir
-:lift
 fun main() =
   let x =
     if

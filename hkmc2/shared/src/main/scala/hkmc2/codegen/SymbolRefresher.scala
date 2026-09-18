@@ -41,7 +41,9 @@ class SymbolRefresherWalker(mapping: MutMap[Symbol, Symbol])(using State) extend
     val ns = new ClassSymbol(s.tree, s.id)
     assertUpdate(s, ns)
     // defn is relied by JSBuilder to identify whether a class should be lifted
-    ns.defn = s.defn
+    s.defn match
+    case s @ S(_) => ns.defn = s
+    case N =>
 
   private def refreshModuleOrObjectSymbol(s: ModuleOrObjectSymbol) =
     assertUpdate(s, new ModuleOrObjectSymbol(s.tree, s.id))

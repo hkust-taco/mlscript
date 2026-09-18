@@ -20,13 +20,14 @@ package object ucs:
      *  function because we generate a lot of `Ref`s after implicit resolution.
      *  Writing `.resolve` is too verbose.
      */
-    def safeRef: Term.Ref = symbol.ref().resolve
+    def safeRef(using Elaborator.State): Term.Ref = symbol.ref().resolve
   
   extension (op: Keyword.Infix)
     infix def unapply(tree: Tree): Opt[(Tree, Tree)] = tree match
       case InfixApp(lhs, Keywrd(`op`), rhs) => S((lhs, rhs))
       case _ => N
   
+  // TOOD: rm
   type Ctor = SynthSel | Sel | Ident
   
   /** A helper extractor for matching the tree of `x | y`. */  

@@ -19,6 +19,7 @@ use[Num]
 //│ ║  l.17: 	use[Num]
 //│ ║        	^^^^^^^^
 //│ ╟── Required by contextual parameter declaration: 
+//│ ║  in ../../mlscript-compile/Predef.mls
 //│ ║  l.133: 	fun use[T](using instance: T) = instance
 //│ ║         	                 ^^^^^^^^^^^
 //│ ╙── Missing instance: Expected: Num (type parameter T); Available: Int, Str
@@ -52,9 +53,10 @@ f
 :e
 fun f(using Int) = use[Num]
 //│ ╔══[COMPILATION ERROR] Cannot query instance of type Num (type parameter T) for call: 
-//│ ║  l.53: 	fun f(using Int) = use[Num]
+//│ ║  l.54: 	fun f(using Int) = use[Num]
 //│ ║        	                   ^^^^^^^^
 //│ ╟── Required by contextual parameter declaration: 
+//│ ║  in ../../mlscript-compile/Predef.mls
 //│ ║  l.133: 	fun use[T](using instance: T) = instance
 //│ ║         	                 ^^^^^^^^^^^
 //│ ╙── Missing instance: Expected: Num (type parameter T); Available: Int, Str
@@ -73,7 +75,7 @@ f
 :re
 use{[Some[Int]].value}
 //│ ╔══[COMPILATION ERROR] Unsupported refinement in this position.
-//│ ║  l.74: 	use{[Some[Int]].value}
+//│ ║  l.76: 	use{[Some[Int]].value}
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -81,9 +83,10 @@ use{[Some[Int]].value}
 :re
 use([Some[Int]].value)
 //│ ╔══[COMPILATION ERROR] Cannot query instance of type ‹unspecified› (type parameter T) for call: 
-//│ ║  l.82: 	use([Some[Int]].value)
+//│ ║  l.84: 	use([Some[Int]].value)
 //│ ║        	^^^
 //│ ╟── Required by contextual parameter declaration: 
+//│ ║  in ../../mlscript-compile/Predef.mls
 //│ ║  l.133: 	fun use[T](using instance: T) = instance
 //│ ║         	                 ^^^^^^^^^^^
 //│ ╙── Illegal query for an unspecified type variable T.
@@ -100,10 +103,10 @@ f[Int]
 :re
 f
 //│ ╔══[COMPILATION ERROR] Cannot query instance of type ‹unspecified› (type parameter T) for call: 
-//│ ║  l.101: 	f
+//│ ║  l.104: 	f
 //│ ║         	^
 //│ ╟── Required by contextual parameter declaration: 
-//│ ║  l.94: 	fun f[T](using T) = use[T]
+//│ ║  l.97: 	fun f[T](using T) = use[T]
 //│ ║        	               ^
 //│ ╙── Illegal query for an unspecified type variable T.
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.

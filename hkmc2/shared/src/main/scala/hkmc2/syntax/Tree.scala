@@ -509,7 +509,8 @@ case object HandlerBind extends TermDefKind("handler", "handler binding")
 case object Fun extends TermDefKind("fun", "function")
 case object Ins extends Val("using", "implicit instance")
 sealed abstract class TypeDefKind(str: Str, desc: Str)(using Line) extends DeclKind(str, desc)
-sealed trait ObjDefKind
+sealed trait ObjDefKind:
+  val desc: Str
 sealed trait ClsLikeKind extends ObjDefKind:
   val str: Str
   val desc: Str

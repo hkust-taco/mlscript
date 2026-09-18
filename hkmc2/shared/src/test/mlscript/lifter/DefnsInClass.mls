@@ -1,5 +1,4 @@
-:js
-:lift
+:.
 // NOTE: due to conflict between flow analysis and lifter
 :deadParamElim off
 
