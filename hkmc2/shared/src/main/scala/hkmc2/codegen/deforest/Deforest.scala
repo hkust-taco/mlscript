@@ -15,7 +15,8 @@ sealed abstract class FinalDest
 case class FinalDestMatch(dtor: CtorDtorId, sels: Set[CtorDtorId]) extends FinalDest
 case class FinalDestSel(dtors: Set[CtorDtorId], field: SelField) extends FinalDest
 
-class DeforestFusionSolver(val constraintSolver: FlowConstraintSolver)(using val cfg: Config):
+class DeforestFusionSolver(val constraintSolver: FlowConstraintSolver)(using val cfg: Config)
+  extends FlowAnalysisSolverResult:
   given preAnalyzer: FlowPreAnalyzer = constraintSolver.preAnalyzer
   given fState: FlowAnalysis.State = constraintSolver.fState
   given eState: Elaborator.State = constraintSolver.eState
@@ -45,7 +46,15 @@ class DeforestFusionSolver(val constraintSolver: FlowConstraintSolver)(using val
   val finalDtorSrcs = LinkedHashMap.empty[CtorDtorId, Set[CtorDtorId]]
   val fusingCtorInfo = MutMap.empty[CtorDtorId, Ctor]
   val fusingDtorInfo = MutMap.empty[CtorDtorId, ConcreteCtorConsumer]
-  
+
+  def hasWorkToDo: Bool = finalCtorDests.nonEmpty || finalDtorSrcs.nonEmpty
+
+  def polyInstIds: Iterator[InstantiationId] = finalCtorDests.iterator.flatMap:
+    case (ctor, FinalDestSel(dtors, _)) =>
+      (dtors + ctor).toList.sortBy(_.exprId.uid).map(_.instId)
+    case (ctor, FinalDestMatch(dtor, _)) =>
+      ctor.instId :: dtor.instId :: Nil
+
   locally {
     def mergeDests(dests: Set[ConcreteCtorConsumer | MarkerConsStrat]): Opt[FinalDest] =
       def selsSelectingTheSameSymbol(sels: Set[FieldSel]) =
@@ -144,7 +153,7 @@ object Deforest:
       accumulatorTracking = dCfg.effectiveTrackAccumulator,
     )
     val solver = new DeforestFusionSolver(flowAnalysisRes)
-    if solver.finalCtorDests.isEmpty && solver.finalDtorSrcs.isEmpty then p
+    if !solver.hasWorkToDo then p
     else
       val rewrite = new DeforestRewriter(solver)
       rewrite()

@@ -27,7 +27,6 @@ case class Config(
   stageCode: Bool,
   target: CompilationTarget,
   rewriteWhileLoops: Bool,
-  etaExpansion: Opt[EtaExpansion],
   qqEnabled: Bool,
   funcToCls: Bool,
   commentGeneratedCode: Bool,
@@ -59,7 +58,7 @@ case class Config(
   
   def deadBranchRemoval: Bool = optimizer.deadBranchRemoval
   
-  def deadParamElim: Opt[DeadParamElim] = optimizer.deadParamElim
+  def flowBasedOpt: Opt[FlowBasedOpt] = optimizer.flowBasedOpt
   
   def mapOptimizer(f: Optimizer => Optimizer): Config = copy(optimizer = f(optimizer))
   
@@ -79,7 +78,6 @@ object Config:
     target = CompilationTarget.JS,
     rewriteWhileLoops = false,
     stageCode = false,
-    etaExpansion = S(EtaExpansion.default),
     qqEnabled = false,
     funcToCls = false,
     commentGeneratedCode = false,
@@ -159,12 +157,30 @@ object Config:
     trackAccumulator: Bool,
     logNonAffine: Bool,
     logAccumulator: Bool,
+    // `debug` turns on all three at once
+    debugEta: Bool = false,
+    debugDpe: Bool = false,
+    debugDce: Bool = false,
   ):
+    def effectiveDebugEta: Bool = debug || debugEta
+    def effectiveDebugDpe: Bool = debug || debugDpe
+    def effectiveDebugDce: Bool = debug || debugDce
+
     def effectiveTrackNonAffine: Bool =
       trackNonAffine || logNonAffine
 
     def effectiveTrackAccumulator: Bool =
       trackAccumulator || logAccumulator
+  
+  object FlowAnalysisConfig:
+    val defaultMono = FlowAnalysisConfig(
+      debug = false,
+      mono = true,
+      trackNonAffine = false,
+      trackAccumulator = false,
+      logNonAffine = false,
+      logAccumulator = false,
+    )
   
   case class Deforest(config: FlowAnalysisConfig):
     export config.{
@@ -187,41 +203,13 @@ object Config:
       logAccumulator = false,
     ))
 
-  case class DeadParamElim(config: FlowAnalysisConfig):
-    export config.{
-      debug,
-      mono,
-      trackNonAffine,
-      trackAccumulator,
-      logNonAffine,
-      logAccumulator,
-      effectiveTrackNonAffine,
-      effectiveTrackAccumulator,
-    }
-  object DeadParamElim:
-    val default = DeadParamElim(FlowAnalysisConfig(
-      debug = false,
-      mono = true,
-      trackNonAffine = false,
-      trackAccumulator = false,
-      logNonAffine = false,
-      logAccumulator = false,
-    ))
+  case class FlowBasedOpt(config: FlowAnalysisConfig):
+    export config.{debug, mono, effectiveDebugEta, effectiveDebugDpe, effectiveDebugDce}
+  object FlowBasedOpt:
+    val default = FlowBasedOpt(FlowAnalysisConfig.defaultMono)
+    def withDebug(debug: Bool) =
+      FlowBasedOpt(default.config.copy(debug = debug))
 
-  case class EtaExpansion(config: FlowAnalysisConfig):
-    export config.debug
-  object EtaExpansion:
-    def withDebug(debug: Bool): EtaExpansion =
-      EtaExpansion(FlowAnalysisConfig(
-        debug = debug,
-        mono = true,
-        trackNonAffine = false,
-        trackAccumulator = false,
-        logNonAffine = false,
-        logAccumulator = false,
-      ))
-    val default: EtaExpansion = withDebug(debug = false)
-  
   /** `altSmallThreshold` is the alternative threshold for inlining things into @inline functions.
     * Normally, we avoid inlining into @inline functions as that could lead to unexpected code bloat. */
   case class Inliner(inlineThreshold: Int, altSmallThreshold: Int = 2)
@@ -241,9 +229,8 @@ object Config:
     deadBranchRemoval: Bool,
     deadCodeElim: Bool,
     dataFlowAnalysis: Bool,
-    deadParamElim: Opt[DeadParamElim],
+    flowBasedOpt: Opt[FlowBasedOpt],
   )
-  
   object Optimizer:
     val NoOpt = Optimizer(
       N,
@@ -262,7 +249,7 @@ object Config:
       deadBranchRemoval = default.deadBranchRemoval,
       deadCodeElim = true,
       dataFlowAnalysis = true,
-      deadParamElim = S(DeadParamElim.default),
+      flowBasedOpt = S(FlowBasedOpt.default),
     )
 
 end Config
@@ -548,6 +535,9 @@ object ConfigParser:
       var trackAccumulator = base.trackAccumulator
       var logNonAffine = base.logNonAffine
       var logAccumulator = base.logAccumulator
+      var debugEta = base.debugEta
+      var debugDpe = base.debugDpe
+      var debugDce = base.debugDce
       args.foreach:
         case NamedArg("debug", value) =>
           setFrom(value)(parseBool)(v => debug = v)
@@ -561,6 +551,12 @@ object ConfigParser:
           setFrom(value)(parseBool)(v => logNonAffine = v)
         case NamedArg("logAccumulator", value) =>
           setFrom(value)(parseBool)(v => logAccumulator = v)
+        case NamedArg("debugEta", value) =>
+          setFrom(value)(parseBool)(v => debugEta = v)
+        case NamedArg("debugDpe", value) =>
+          setFrom(value)(parseBool)(v => debugDpe = v)
+        case NamedArg("debugDce", value) =>
+          setFrom(value)(parseBool)(v => debugDce = v)
         case other =>
           unsupported(passName, other)
       S(Config.FlowAnalysisConfig(
@@ -570,6 +566,9 @@ object ConfigParser:
         trackAccumulator,
         logNonAffine,
         logAccumulator,
+        debugEta,
+        debugDpe,
+        debugDce,
       ))
     case _ =>
       expect(s"${passName}(...)")(tree)
@@ -584,29 +583,15 @@ object ConfigParser:
     ).map:
       Config.Deforest.apply
 
-  private def parseDeadParamElim(tree: Tree, current: Opt[Config.DeadParamElim])(using Raise): Opt[Config.DeadParamElim] =
+  private def parseFlowBasedOpt(tree: Tree, current: Opt[Config.FlowBasedOpt])(using Raise): Opt[Config.FlowBasedOpt] =
     parseFlowAnalysisConfig(
       tree,
-      "DeadParamElim",
+      "FlowBasedOpt",
       current.map(_.config),
-      Config.DeadParamElim.default.config
+      Config.FlowBasedOpt.default.config
     ).map:
-      Config.DeadParamElim.apply
+      Config.FlowBasedOpt.apply
 
-  private def parseEtaExpansion(tree: Tree, current: Opt[Config.EtaExpansion])(using Raise): Opt[Config.EtaExpansion] =
-    tree match
-    case Call("EtaExpansion", args) =>
-      var debug = current.getOrElse(Config.EtaExpansion.default).debug
-      args.foreach:
-        case NamedArg("debug", value) =>
-          setFrom(value)(parseBool)(v => debug = v)
-        case other =>
-          unsupported("EtaExpansion", other)
-      S(Config.EtaExpansion.withDebug(debug))
-    case _ =>
-      expect("EtaExpansion(...)")(tree)
-      N
-  
   /** Parse a single field override like `tailRecOpt: false`. */
   private def parseField(name: Str, value: Tree)(using Raise): Config => Config = name match
     case "language" => parseLanguageOverride(value)
@@ -638,14 +623,10 @@ object ConfigParser:
       optionalFieldWithCurrent(value)(_.deforest)(
         (tree, current) => parseDeforest(tree, current)
       )(v => _.mapOptimizer(_.copy(deforest = v)))
-    case "etaExpansion" =>
-      optionalFieldWithCurrent(value)(_.etaExpansion)(
-        (tree, current) => parseEtaExpansion(tree, current)
-      )(v => _.copy(etaExpansion = v))
-    case "deadParamElim" =>
-      optionalFieldWithCurrent(value)(_.deadParamElim)(
-        (tree, current) => parseDeadParamElim(tree, current)
-      )(v => _.mapOptimizer(_.copy(deadParamElim = v)))
+    case "flowBasedOpt" =>
+      optionalFieldWithCurrent(value)(_.flowBasedOpt)(
+        (tree, current) => parseFlowBasedOpt(tree, current)
+      )(v => _.mapOptimizer(_.copy(flowBasedOpt = v)))
     case "sanityChecks" =>
       optionalField(value)(_ => S(Config.SanityChecks(light = true, checkUnreachable = true)))(v => _.copy(sanityChecks = v))
     case "patMatConsequentSharingThreshold" =>

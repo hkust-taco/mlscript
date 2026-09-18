@@ -1,6 +1,6 @@
 :js
 :noInline
-:deadParamElim debug
+:flowBasedOpt debugDpe
 
 
 

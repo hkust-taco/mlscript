@@ -1,0 +1,286 @@
+:js
+:flowBasedOpt debugDce
+
+
+data class A(x)
+data class B(y)
+data class C(z)
+class P(x) with
+  print(x)
+//│ dead-constructor-elim > >>> dead-constructor-elim results >>>
+//│ dead-constructor-elim > <<< dead-constructor-elim results <<<
+
+
+:soir
+:noInline
+fun f() =
+  let b = A([1, 2])
+  if b is A then 1 else 0
+f()
+//│ dead-constructor-elim > >>> dead-constructor-elim results >>>
+//│ dead-constructor-elim > eliminable: Tuple(false, [1, 2])
+//│ dead-constructor-elim > <<< dead-constructor-elim results <<<
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ define f⁰ as fun f¹() {
+//│   let b;
+//│   set b = A⁰(undefined);
+//│   match b
+//│     A¹ =>
+//│       return 1
+//│     else
+//│       return 0
+//│   end
+//│ };
+//│ return f¹()
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 1
+
+:soir
+:noInline
+fun g() =
+  let unused = A(1)
+  2
+g()
+//│ dead-constructor-elim > >>> dead-constructor-elim results >>>
+//│ dead-constructor-elim > eliminable: Call(member:A²‹term:A⁰›, [[1]])
+//│ dead-constructor-elim > <<< dead-constructor-elim results <<<
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ define g⁰ as fun g¹() { return 2 }; return g¹()
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 2
+
+
+:soir
+:noInline
+fun h() =
+  let a = A(1)
+  if a is B then 1 else 2
+h()
+//│ dead-constructor-elim > >>> dead-constructor-elim results >>>
+//│ dead-constructor-elim > <<< dead-constructor-elim results <<<
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ define h⁰ as fun h¹() {
+//│   let a;
+//│   set a = A⁰(1);
+//│   match a
+//│     B⁰ =>
+//│       return 1
+//│     else
+//│       return 2
+//│   end
+//│ };
+//│ return h¹()
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 2
+
+
+:soir
+:noInline
+fun k() =
+  let b = A([1, 2])
+  if b is A(t) then t else 0
+k()
+//│ dead-constructor-elim > >>> dead-constructor-elim results >>>
+//│ dead-constructor-elim > <<< dead-constructor-elim results <<<
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ define k⁰ as fun k¹() {
+//│   let b, tmp;
+//│   set tmp = [1, 2];
+//│   set b = A⁰(tmp);
+//│   match b
+//│     A¹ =>
+//│       return b.x⁰
+//│     else
+//│       return 0
+//│   end
+//│ };
+//│ return k¹()
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = [1, 2]
+
+
+// constructing `P(1)` prints, so do not eliminate
+:soir
+:noInline
+fun n() =
+  let unused = P(1)
+  2
+n()
+//│ dead-constructor-elim > >>> dead-constructor-elim results >>>
+//│ dead-constructor-elim > <<< dead-constructor-elim results <<<
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ define n⁰ as fun n¹() { do P⁰(1); return 2 }; return n¹()
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ > 1
+//│ = 2
+
+:soir
+:noInline
+:expect 4
+fun f() =
+  let unused = A(1)
+  2
+f() + f()
+//│ dead-constructor-elim > >>> dead-constructor-elim results >>>
+//│ dead-constructor-elim > eliminable: Call(member:A²‹term:A⁰›, [[1]])
+//│ dead-constructor-elim > <<< dead-constructor-elim results <<<
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let tmp, tmp1;
+//│ define f² as fun f³() { return 2 };
+//│ set tmp = f³();
+//│ set tmp1 = f³();
+//│ return +⁰(tmp, tmp1)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 4
+
+
+:flowBasedOpt debugDce poly
+:soir
+:noInline
+:expect 4
+fun g() =
+  let unused = B(1)
+  2
+g() + g()
+//│ dead-constructor-elim > >>> dead-constructor-elim results >>>
+//│ dead-constructor-elim > eliminable: Call(member:B¹‹term:B²›, [[1]])
+//│ dead-constructor-elim > eliminable: Call(member:B¹‹term:B²›, [[1]])
+//│ dead-constructor-elim > eliminable: Call(member:B¹‹term:B²›, [[1]])
+//│ dead-constructor-elim > <<< dead-constructor-elim results <<<
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let tmp, tmp1, g_2$g, g_4$g;
+//│ define g_2$g as fun g_2$g⁰() {
+//│   return 2
+//│ };
+//│ define g_4$g as fun g_4$g⁰() {
+//│   return 2
+//│ };
+//│ define g² as fun g³() { return 2 };
+//│ set tmp = g_2$g⁰();
+//│ set tmp1 = g_4$g⁰();
+//│ return +⁰(tmp, tmp1)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 4
+
+
+// under mono mode, no dead ctor elim
+:flowBasedOpt debugDce
+:soir
+:noInline
+:expect 3
+fun app(k) = k(C(1))
+app(c => 2) + app(c => if c is C then 1 else 0)
+//│ dead-constructor-elim > >>> dead-constructor-elim results >>>
+//│ dead-constructor-elim > <<< dead-constructor-elim results <<<
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let lambda, tmp, lambda1, tmp1;
+//│ define app⁰ as fun app¹(k) {
+//│   let tmp2;
+//│   set tmp2 = C⁰(1);
+//│   return k(tmp2)
+//│ };
+//│ define lambda as fun lambda⁰(c) {
+//│   return 2
+//│ };
+//│ set tmp = app¹(lambda⁰);
+//│ define lambda1 as fun lambda¹(c) {
+//│   match c
+//│     C¹ =>
+//│       return 1
+//│     else
+//│       return 0
+//│   end
+//│ };
+//│ set tmp1 = app¹(lambda¹);
+//│ return +⁰(tmp, tmp1)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 3
+
+
+// under poly mode, one instance of `ctor` gets its ctor eliminated
+:flowBasedOpt debugDce poly
+:soir
+:noInline
+:expect 3
+fun ctor() = C(1)
+fun app(k) = k(ctor())
+app(c => 2) + app(c => if c is C then 1 else 0)
+//│ dead-constructor-elim > >>> dead-constructor-elim results >>>
+//│ dead-constructor-elim > eliminable: Call(member:C²‹term:C⁰›, [[1]])
+//│ dead-constructor-elim > <<< dead-constructor-elim results <<<
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let tmp, lambda, tmp1, lambda_7$lambda, app_6$app, app_6_ctor_3$ctor;
+//│ define lambda_7$lambda as fun lambda_7$lambda⁰() {
+//│   return 2
+//│ };
+//│ define app_6$app as fun app_6$app⁰(k) {
+//│   do app_6_ctor_3$ctor⁰();
+//│   return k()
+//│ };
+//│ define app_6_ctor_3$ctor as fun app_6_ctor_3$ctor⁰() {
+//│   return undefined
+//│ };
+//│ define ctor⁰ as fun ctor¹() {
+//│   return C⁰(1)
+//│ };
+//│ define app² as fun app³(k) {
+//│   let tmp2;
+//│   set tmp2 = ctor¹();
+//│   return k(tmp2)
+//│ };
+//│ set tmp = app_6$app⁰(lambda_7$lambda⁰);
+//│ define lambda as fun lambda²(c) {
+//│   match c
+//│     C¹ =>
+//│       return 1
+//│     else
+//│       return 0
+//│   end
+//│ };
+//│ set tmp1 = app³(lambda²);
+//│ return +⁰(tmp, tmp1)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 3
+
+
+:soir
+:noInline
+class O with
+  fun app(cb) = cb(A(1))
+fun q() = (new O).app(b => print(b))
+q()
+//│ dead-constructor-elim > >>> dead-constructor-elim results >>>
+//│ dead-constructor-elim > <<< dead-constructor-elim results <<<
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ define q⁰ as fun q¹() {
+//│   let tmp, lambda;
+//│   set tmp = new O⁰();
+//│   define lambda as fun lambda³(b) {
+//│     return Predef⁰.print⁰(b)
+//│   };
+//│   return tmp.app⁴(lambda³)
+//│ };
+//│ define O¹ as class O⁰ {
+//│   method app⁵ = fun app⁴(cb) { let tmp; set tmp = A⁰(1); return cb(tmp) }
+//│ };
+//│ return q¹()
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ > A(1)
+
+// TODO: should print A(1); should properly handle ctor flow
+:flowBasedOpt debugDce mono
+:soir
+:noInline
+fun m() =
+  let unused = P(A(1))
+  2
+m()
+//│ dead-constructor-elim > >>> dead-constructor-elim results >>>
+//│ dead-constructor-elim > eliminable: Call(member:A²‹term:A⁰›, [[1]])
+//│ dead-constructor-elim > <<< dead-constructor-elim results <<<
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ define m⁰ as fun m¹() { do P⁰(undefined); return 2 }; return m¹()
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ > undefined
+//│ = 2
+
