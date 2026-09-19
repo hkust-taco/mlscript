@@ -27,24 +27,60 @@ foo(A).u
 foo(A).u
 //│ = 1
 
-:fixme // preserve context sensitivity
 // * We now preserve context sensitivity
 :sr
+:expect 2
 foo(B).u
 //│ ————————————————| Resolved |————————————————————————————————————————————————————————————————————————
-//│   foo⁰(B⁰)‹app¹›.u‹u², u⁰, u⁰›
+//│   foo⁰(B⁰)‹app¹›.u²
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 2
+
+:expect 1
+foo(A).u
+//│ = 1
+
+:expect 2
+foo(B).u
+//│ = 2
+
+
+// Capturing the function in a value alias still loses context sensitivity, as in CtxSens.mls.
+val alias = foo
+//│ alias = fun
+
+:expect 2
+alias(B).u
+//│ = 2
+
+:todo // The captured reference to foo is shared by both calls of alias.
+:sr
+alias(A).u
+//│ ————————————————| Resolved |————————————————————————————————————————————————————————————————————————
+//│   alias⁰(A⁰)‹app²›.u‹u⁰, u²›
 //│ ╔══[COMPILATION ERROR] This selection of member 'u' is ambiguous, as it has multiple resolved targets
-//│ ║  l.33: 	foo(B).u
-//│ ║        	^^^^^^^^
-//│ ╟── target: value 'u' in module 'B'
-//│ ║  l.9: 	  val u = 2
-//│ ║       	  ^^^^^^^^^
+//│ ║  l.58: 	alias(A).u
+//│ ║        	^^^^^^^^^^
 //│ ╟── target: value 'u' in module 'A'
 //│ ║  l.6: 	  val u = 1
+//│ ║       	  ^^^^^^^^^
+//│ ╟── target: value 'u' in module 'B'
+//│ ║  l.9: 	  val u = 2
 //│ ╙──     	  ^^^^^^^^^
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
+// Returning a captured value
+val captured = case x then A
+//│ captured = fun
+
+:expect 1
+captured(B).u
+//│ = 1
+
+:expect 1
+captured(A).u
+//│ = 1
 
 
