@@ -257,7 +257,24 @@ class AppShape(val receiver: TermShape, val args: Term, val src: Term.App)(using
   override def toString: String = s"AppShape($receiver, ${args.showDbg})"
   // def target: Opt[AppTarget]
 
-abstract class NewShape(val receiver: TermShape, val cls: ClassLikeSymbol, val argss: Ls[Term], val src: Term.New)(using DebugPrinter) extends NonMarkedShape:
+class NewShape(val receiver: TermShape, val cls: ClassLikeSymbol, clsMarks: Ls[Marks], val argss: Ls[Term], val src: Term.New)(using DebugPrinter) extends NonMarkedShape:
+  protected def getMemberImpl(name: Str): Opt[MemberInfo] =
+    receiver match
+    case ds: DefnShape =>
+      ds.defn match
+      case cd: ClassDef =>
+        cd.body.members.get(name).map(_ -> clsMarks)
+      case td: TermDefinition =>
+        td.tsym match
+        case ccs: ClassCtorSymbol =>
+          ccs.associatedCls.defn.getOrElse(die // TODO
+            ).body.members.get(name).map(_ -> clsMarks)
+        case _ =>
+          N
+      case _ =>
+        N
+    case _ =>
+      N
   def describe: Str =
     // s"instantiation of ${receiver.describe}"
     s"instance of ${cls.defn.get.describeRef}"

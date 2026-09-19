@@ -43,7 +43,7 @@ class NewResolver:
   
   // * The `FlowSymbol`s are currently used to uniquely identify terms
   val appShapes: mutable.Map[(TermShape, FlowSymbol), AppShape] = mutable.Map.empty
-  val newShapes: mutable.Map[(ClassLikeSymbol, FlowSymbol), NewShape] = mutable.Map.empty
+  val newShapes: mutable.Map[(ClassLikeSymbol, Ls[Marks], FlowSymbol), NewShape] = mutable.Map.empty
   val introShapes: mutable.Map[IntroTerm, IntroShape] = mutable.Map.empty // TODO use symbols for faster lookup?
   val symShapes: mutable.Map[(BlockMemberSymbol, FlowSymbol, Ls[Marks]), SymShape] = mutable.Map.empty
   val defnShapes: mutable.Map[DefinitionSymbol[?], DefnShape] = mutable.Map.empty
@@ -88,16 +88,7 @@ class NewResolver:
       resolError(src,
         msg"${funSh.describe.capitalize} expected ${ps.length} ${
           "argument".pluralized(ps.length)}, but got ${args.length}" -> funSh.toLoc :: Nil)
-          
-  // def patAppShape(lhs: Shape, args: Ls[Pattern], res: Pattern.Constructor): Unit =
-  //   // listen(lhs, sh =>
-  //   //   sh match
-  //   //   case sh: TermShape =>
-  //   //     zipArgs(sh.unappliedParams.map(_._2), args, N, res.args, res, lhs)
-  //   //   case _ =>
-  //   //     softAssert(res.isErroneous)
-  //   // )
-  //   ???
+  
   def patApp(lhs: Term, args: Ls[Pattern], res: Pattern.Constructor): Unit = if newResolution then
     listen(lhs, discardMarks = true): sh =>
       log(s"patApp: lhs = ${lhs.showDbg}, args = ${args.map(_.showDbg)}, res = ${res.showDbg}, sh = ${sh.shwDbg}")
@@ -338,33 +329,15 @@ class NewResolver:
               val cd = cls.defn.get
               listenExt(cd.ext, extsh => {
                 val dsh = DefnShape(cd, extsh)
-                val sh = newShapes.getOrElseUpdate((cls, nw.resSym),
-                  new NewShape(dsh, cls, nw.args, nw):
-                    receiver.unappliedParams.lazyZip(argss).foreach:
-                      case ((ps, mss), args) =>
-                        args match
-                        case args: Tup =>
-                          zipArgs(mss, ps.params, ps.restParam, args.fields, src, dsh)
-                        case _ => ???
-                    // TODO: mv to NewShape def
-                    protected def getMemberImpl(name: Str): Opt[MemberInfo] =
-                      receiver match
-                      case ds: DefnShape =>
-                        ds.defn match
-                        case cd: ClassDef =>
-                          cd.body.members.get(name).map(_ -> ss.markss)
-                        case td: TermDefinition =>
-                          td.tsym match
-                          case ccs: ClassCtorSymbol =>
-                            ccs.associatedCls.defn.getOrElse(die // TODO
-                              ).body.members.get(name).map(_ -> ss.markss)
-                          case _ =>
-                            N
-                        case _ =>
-                          N
-                      case _ =>
-                        N
-                )
+                val sh = newShapes.getOrElseUpdate((cls, ss.markss, nw.resSym), {
+                  dsh.unappliedParams.lazyZip(nw.args).foreach:
+                    case ((ps, mss), args) =>
+                      args match
+                      case args: Tup =>
+                        zipArgs(mss, ps.params, ps.restParam, args.fields, nw, dsh)
+                      case _ => ???
+                  NewShape(dsh, cls, ss.markss, nw.args, nw)
+                })
                 if nw.shapes.add(sh) then
                   nw.shapeListeners.foreach(listener => listener(sh))
               })
@@ -376,14 +349,6 @@ class NewResolver:
       nw.isErroneous = true
       resolError(nw,
         msg"Invalid class expression: ${nw.cls.describe}" -> nw.cls.toLoc :: Nil)
-  
-  // def symShape(sym: BlockMemberSymbol, res: Ref): Unit =
-  //   val sh = symShapes.getOrElseUpdate(sym, {
-  //     log(s"symShape: sym = $sym, res = $res")
-  //     SymShape(sym)
-  //   })
-  //   if res.shapes.add(sh) then
-  //     res.shapeListeners.foreach(listener => listener(sh))
   
   def defineVar(sym: LocalSymbol | TermSymbol, rhs: Term): DefineVar =
     if newResolution then sym match
@@ -484,30 +449,11 @@ class NewResolver:
   
   def listenTerm(trm: Term)(listener: TermShape => Unit): Unit =
     log(s"listenTerm: trm = ${trm.showDbg}")
-    trm match
-    /* 
-    // * Synthetic selections are not really selections from the POV of the resolver.
-    // * Eg: a plain member reference or plain reference to imported symbol
-    // * Later, we should make Terms more closely aligned wiht the source and remove SynthSel
-    case ss: SynthSel =>
-      ss.sym match
-      case S(ts: TermSymbol) =>
-        ???
-        ts.defn.get.body match
-        case S(body) =>
-          listenTerm(body, listener)
-        case N =>
-          ??? // TODO error? use sig
-      case S(bms: BlockMemberSymbol) =>
-        fromBMS(bms, listener, trm)
-      case N => ???
-    */
-    case _ =>
-      listen(trm):
-        case sh: TermShape =>
-          listener(sh)
-        case ss: SymShape =>
-          fromBMS(ss.sym, ss.resSym, ss.markss, listener, trm)
+    listen(trm):
+      case sh: TermShape =>
+        listener(sh)
+      case ss: SymShape =>
+        fromBMS(ss.sym, ss.resSym, ss.markss, listener, trm)
   
   def listen(trm: Term, discardMarks: Bool = false)(listener: Shape => Unit): Unit =
     log(s"listen: trm = ${trm.showDbg}")
