@@ -881,6 +881,13 @@ fun test: Function = id
 //│ define test² as fun test³(): Function⁰ { return (id¹ as! Function⁰) }; end
 
 
+// `new Object` creates a non-resource instance of `Object`, so a cast is inserted to coerce it to `Function`.
+// Note that this cast has nothing to do with resource-ness - both `Object` and `Function` are non-resource types.
+fun test: Function = new Object
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define test⁴ as fun test⁵(): Function⁰ { return (new globalThis⁰.Object⁰() as! Function⁰) }; end
+
+
 // A written function type erases to `Function` in every position it can be written - parameter, result and `val`
 // alike - and the parameter and result shapes erase away with it. A lambda flowing into such a slot is cast
 // into a `Function` on the way.
@@ -917,7 +924,7 @@ val g: Int -> Int = (x: Int) => x
 :ge
 fun badFn() = applyF(42)
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int' at an unrelated type 'Function'
-//│ ║  l.918: 	fun badFn() = applyF(42)
+//│ ║  l.925: 	fun badFn() = applyF(42)
 //│ ╙──       	                     ^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define badFn⁰ as fun badFn¹(): ? { return applyF¹(42) }; end
@@ -946,7 +953,7 @@ fun useAdd() = useInt(addInts(1, 2))
 :ge
 fun badAdd() = useStr(addInts(1, 2))
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int' at an unrelated type 'Str'
-//│ ║  l.947: 	fun badAdd() = useStr(addInts(1, 2))
+//│ ║  l.954: 	fun badAdd() = useStr(addInts(1, 2))
 //│ ╙──       	                      ^^^^^^^^^^^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define badAdd⁰ as fun badAdd¹(): ? {
@@ -1251,7 +1258,7 @@ fun tagged(x: Int) =
   fun describe() = Tag.label()
   describe()
 //│ ╔══[WARNING] Objects are not yet lifted.
-//│ ║  l.1249: 	  object Tag with
+//│ ║  l.1256: 	  object Tag with
 //│ ╙──        	         ^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let describe;
@@ -1278,7 +1285,7 @@ fun mk() =
     fun get() = Tag.label()
   new Holder
 //│ ╔══[WARNING] Objects are not yet lifted.
-//│ ║  l.1275: 	  object Tag with
+//│ ║  l.1282: 	  object Tag with
 //│ ╙──        	         ^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let Holder;
