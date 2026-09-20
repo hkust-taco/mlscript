@@ -352,6 +352,8 @@ object Elaborator:
         val buffered = assumeObject("buffered")
         val bufferable = assumeObject("bufferable")
         val mayNotRaiseEffects = assumeObject("mayNotRaiseEffects")
+        val pure = assumeObject("pure")
+        val effectful = assumeObject("effectful")
       object handlers extends VirtualModule(assumeBuiltinMod("handlers")):
         val await = assumeObject("await").asTrm.get
       object scope extends VirtualModule(assumeBuiltinMod("scope")):
@@ -691,6 +693,10 @@ extends Importer:
             return S(Annot.Async)
           case ctx.builtins.annotations.mayNotRaiseEffects =>
             return S(Annot.MayNotRaiseEffects)
+          case ctx.builtins.annotations.pure =>
+            return S(Annot.Pure)
+          case ctx.builtins.annotations.effectful =>
+            return S(Annot.Effectful)
           case _ => ()
         case _ => ()
         S(Annot.Trm(trm))
@@ -2407,7 +2413,17 @@ extends Importer:
         case Trt | Mxn => lastWords(s"Unexpected type definition kind here: $k")
         go(sts, Nil, defn :: acc)
       case Annotated(annotation, target) :: sts =>
-        go(target :: sts, annotations ++ annot(annotation), acc)
+        val added = annot(annotation)
+        // Reject contradictory contracts during elaboration, even when effect analysis is disabled.
+        val conflicts = added.exists:
+          case Annot.Effectful => annotations.exists:
+            case Annot.Pure | Annot.MayNotRaiseEffects => true
+            case _ => false
+          case Annot.Pure | Annot.MayNotRaiseEffects => annotations.contains(Annot.Effectful)
+          case _ => false
+        if conflicts then raise:
+          ErrorReport(msg"@effectful cannot be combined with @pure or @mayNotRaiseEffects." -> annotation.toLoc :: Nil)
+        go(target :: sts, annotations ++ added, acc)
       // * With tight right precedence, `#config(args)` is parsed as `App(Directive(config, Tup()), Tup(args))`.
       // * Reconstruct as `Directive(config, Tup(args))` and re-process.
       case App(Directive(prefix, _), args) :: sts =>

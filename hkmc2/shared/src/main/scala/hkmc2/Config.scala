@@ -23,6 +23,7 @@ case class Config(
   sanityChecks: Opt[SanityChecks],
   checkCasts: Bool,
   effectHandlers: Opt[EffectHandlers],
+  effectAnalysis: Opt[EffectAnalysis],
   liftDefns: Opt[LiftDefns],
   patMatConsequentSharingThreshold: Opt[Int],
   stageCode: Bool,
@@ -76,6 +77,7 @@ object Config:
     // sanityChecks = S(SanityChecks(light = true)),
     checkCasts = true,
     effectHandlers = N,
+    effectAnalysis = N,
     liftDefns = S(LiftDefns()),
     patMatConsequentSharingThreshold = default.patMatConsequentSharingThreshold, // minimum: 1
     target = CompilationTarget.JS,
@@ -145,6 +147,10 @@ object Config:
     // reference Runtime.mls during construction of the Rendering module, causing a cyclic dependency error.
     doNotInstrumentTopLevelModCtor: Bool = false,
   )
+
+  case class EffectAnalysis(debug: Bool, mono: Bool)
+  object EffectAnalysis:
+    val default = EffectAnalysis(debug = false, mono = true)
   
   case class StackSafety(stackLimit: Int)
   object StackSafety:
@@ -535,6 +541,23 @@ object ConfigParser:
       expect("EffectHandlers(...)")(tree)
       N
 
+  private def parseEffectAnalysis(tree: Tree, current: Opt[Config.EffectAnalysis])(using Raise): Opt[Config.EffectAnalysis] = tree match
+    case Call("EffectAnalysis", args) =>
+      val base = current.getOrElse(Config.EffectAnalysis.default)
+      var debug = base.debug
+      var mono = base.mono
+      args.foreach:
+        case NamedArg("debug", value) =>
+          setFrom(value)(parseBool)(v => debug = v)
+        case NamedArg("mono", value) =>
+          setFrom(value)(parseBool)(v => mono = v)
+        case other =>
+          unsupported("EffectAnalysis", other)
+      S(Config.EffectAnalysis(debug, mono))
+    case _ =>
+      expect("EffectAnalysis(...)")(tree)
+      N
+
   private def parseFlowAnalysisConfig(
     tree: Tree,
     passName: Str,
@@ -634,6 +657,10 @@ object ConfigParser:
       optionalFieldWithCurrent(value)(_.effectHandlers)(
         (tree, current) => parseEffectHandlers(tree, current)
       )(v => _.copy(effectHandlers = v))
+    case "effectAnalysis" =>
+      optionalFieldWithCurrent(value)(_.effectAnalysis)(
+        (tree, current) => parseEffectAnalysis(tree, current)
+      )(v => _.copy(effectAnalysis = v))
     case "liftDefns" =>
       optionalField(value)(_ => S(Config.LiftDefns()))(v => _.copy(liftDefns = v))
     case "deforest" =>

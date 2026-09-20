@@ -178,6 +178,8 @@ declare module annotations with
   object buffered
   object bufferable
   object mayNotRaiseEffects
+  object pure
+  object effectful
   object generator
   object async
 

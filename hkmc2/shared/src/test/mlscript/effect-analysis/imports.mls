@@ -1,0 +1,72 @@
+// The test harness imports and opens Predef.mls; print's body is outside this program.
+#config(effectAnalysis: Some(EffectAnalysis(debug: true, mono: true)), inlining: None, deadParamElim: None)
+//│ effect-analysis > >>> effect-analysis results >>>
+//│ effect-analysis > <<< effect-analysis results <<<
+
+
+// Isolate print so another effectful call cannot mask a missing imported-call effect.
+fun leaf(x) = print(x)
+fun node(x) = leaf(x)
+fun qualified(x) = Predef.print(x)
+//│ effect-analysis > >>> effect-analysis results >>>
+//│ effect-analysis > function leaf#0 @ <root> -> MayRaise
+//│ effect-analysis > function node#0 @ <root> -> MayRaise
+//│ effect-analysis > function qualified#0 @ <root> -> MayRaise
+//│ effect-analysis > call leaf@2 @ <root> -> MayRaise
+//│ effect-analysis > call print@0 @ <root> -> MayRaise
+//│ effect-analysis > call print@3 @ <root> -> MayRaise
+//│ effect-analysis > <<< effect-analysis results <<<
+
+
+// Passing an imported function as a value must also propagate its unknown effect.
+private fun invoke(f, x) = f(x)
+fun indirect(x) = invoke(print, x)
+fun pure_callback(x) = invoke(y => y, x)
+//│ effect-analysis > >>> effect-analysis results >>>
+//│ effect-analysis > function indirect#0 @ <root> -> MayRaise
+//│ effect-analysis > function invoke#0 @ <root> -> MayRaise
+//│ effect-analysis > function lambda#0 @ <root> -> Pure
+//│ effect-analysis > function pure_callback#0 @ <root> -> MayRaise
+//│ effect-analysis > call f@0 @ <root> -> MayRaise
+//│ effect-analysis > call invoke@1 @ <root> -> MayRaise
+//│ effect-analysis > call invoke@3 @ <root> -> MayRaise
+//│ effect-analysis > <<< effect-analysis results <<<
+
+
+#config(effectAnalysis: Some(EffectAnalysis(debug: true, mono: false)))
+//│ effect-analysis > >>> effect-analysis results >>>
+//│ effect-analysis > <<< effect-analysis results <<<
+
+
+fun leaf(x) = print(x)
+fun node(x) = leaf(x)
+fun qualified(x) = Predef.print(x)
+//│ effect-analysis > >>> effect-analysis results >>>
+//│ effect-analysis > function leaf#0 @ leaf@6 -> MayRaise
+//│ effect-analysis > function leaf#0 @ node@7.leaf@3 -> MayRaise
+//│ effect-analysis > function node#0 @ node@7 -> MayRaise
+//│ effect-analysis > function qualified#0 @ qualified@8 -> MayRaise
+//│ effect-analysis > call leaf@2 @ node@7 -> MayRaise
+//│ effect-analysis > call print@0 @ leaf@6 -> MayRaise
+//│ effect-analysis > call print@0 @ node@7.leaf@3 -> MayRaise
+//│ effect-analysis > call print@4 @ qualified@8 -> MayRaise
+//│ effect-analysis > <<< effect-analysis results <<<
+
+
+// Poly mode keeps the pure callback separate from the imported print callback.
+private fun invoke(f, x) = f(x)
+fun indirect(x) = invoke(print, x)
+fun pure_callback(x) = invoke(y => y, x)
+//│ effect-analysis > >>> effect-analysis results >>>
+//│ effect-analysis > function indirect#0 @ indirect@7 -> MayRaise
+//│ effect-analysis > function invoke#0 @ indirect@7.invoke@2 -> MayRaise
+//│ effect-analysis > function invoke#0 @ invoke@6 -> MayRaise
+//│ effect-analysis > function invoke#0 @ pure_callback@8.invoke@5 -> Pure
+//│ effect-analysis > function lambda#0 @ pure_callback@8 -> Pure
+//│ effect-analysis > function pure_callback#0 @ pure_callback@8 -> Pure
+//│ effect-analysis > call f@0 @ indirect@7.invoke@2 -> MayRaise
+//│ effect-analysis > call f@0 @ invoke@6 -> MayRaise
+//│ effect-analysis > call f@0 @ pure_callback@8.invoke@5 -> Pure
+//│ effect-analysis > call invoke@1 @ indirect@7 -> MayRaise
+//│ effect-analysis > call invoke@4 @ pure_callback@8 -> Pure
+//│ effect-analysis > <<< effect-analysis results <<<

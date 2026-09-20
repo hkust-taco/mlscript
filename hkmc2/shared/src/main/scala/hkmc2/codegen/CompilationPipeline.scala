@@ -46,6 +46,11 @@ class CompilationPipeline(using Config, Raise, State, Ctx, SymbolPrinter):
       if config.liftDefns.isDefined then
         blockPass(Lifter(_).transform)(prog)
       else prog
+    runPass("EffectAnalysis"): prog =>
+      config.effectAnalysis.foreach: cfg =>
+        flowAnalysis.EffectAnalysis.mkTraceLogger(cfg, tl).givenIn:
+          flowAnalysis.EffectAnalysis(prog, cfg)
+      prog
     runPass("HandlerLowering"): prog =>
       HandlerLowering(new HandlerPaths, config.effectHandlers).translateProgram(prog)
     runPass("AsyncLowering")(AsyncLowering().transform)
