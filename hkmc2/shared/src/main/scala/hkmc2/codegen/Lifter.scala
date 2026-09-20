@@ -1275,7 +1275,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
         Call.raw(
           flattenedSym.asMemberRef(flattenedDSym),
           (formatArgs :: argss).ne_!
-        )(c.metadata.copy(isMlsFun = true, mayRaiseEffects = false), c.toLoc)
+        )(c.metadata.copy(isMlsFun = true, mayHaveEffects = false), c.toLoc)
       if isTrivial then
         if c.argss is argss then k(c)
         else k(c.copy(argss = argss)(c.metadata, c.toLoc))

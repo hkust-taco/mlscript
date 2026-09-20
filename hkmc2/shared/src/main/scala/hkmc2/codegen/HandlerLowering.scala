@@ -89,7 +89,7 @@ object HandlerLowering:
 
   object EffectfulResult:
     def unapply(r: Result)(using Config): Bool = r match
-      case c: Call if c.metadata.mayRaiseEffects => true
+      case c: Call if c.metadata.mayHaveEffects => true
       case _: Instantiate if config.checkInstantiateEffect => true
       case _ => false
   

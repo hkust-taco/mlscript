@@ -7,16 +7,22 @@ object C
 data class AA(x)
 data class BB(x)
 data class CC(x)
+//│ deforest > >>> effect-analysis results >>>
+//│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > <<< fusing <<<
 
 object Nil
 data class Cons(h, t)
+//│ deforest > >>> effect-analysis results >>>
+//│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > <<< fusing <<<
 
 object None
 data class Some(x)
+//│ deforest > >>> effect-analysis results >>>
+//│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > <<< fusing <<<
 
@@ -38,6 +44,37 @@ fun f(a) = if a is
   AA(AA) then 0
 let p = AA(AA(AA(10)))
 test(p) + f(p) + test(AA(AA(AA(10)))) + test(B)
+//│ deforest > >>> effect-analysis results >>>
+//│ deforest > function f#0 @ f@f -> UnsafeEta
+//│ deforest > function f#0 @ f@f -> UnsafeEta
+//│ deforest > function test#0 @ test@test -> Pure
+//│ deforest > function test#0 @ test@test -> Pure
+//│ deforest > function test#0 @ test@test -> Pure
+//│ deforest > function test#0 @ test@test -> Pure
+//│ deforest > call +@result @ <root> -> Pure
+//│ deforest > call +@result @ <root> -> Pure
+//│ deforest > call +@result @ <root> -> Pure
+//│ deforest > call +@result @ test@test -> Pure
+//│ deforest > call +@result @ test@test -> Pure
+//│ deforest > call +@result @ test@test -> Pure
+//│ deforest > call +@result @ test@test -> Pure
+//│ deforest > call +@result @ test@test -> Pure
+//│ deforest > call +@result @ test@test -> Pure
+//│ deforest > call +@result @ test@test -> Pure
+//│ deforest > call +@result @ test@test -> Pure
+//│ deforest > call -@result @ test@test -> Pure
+//│ deforest > call -@result @ test@test -> Pure
+//│ deforest > call -@result @ test@test -> Pure
+//│ deforest > call -@result @ test@test -> Pure
+//│ deforest > call -@result @ test@test -> Pure
+//│ deforest > call -@result @ test@test -> Pure
+//│ deforest > call -@result @ test@test -> Pure
+//│ deforest > call -@result @ test@test -> Pure
+//│ deforest > call f@result @ <root> -> UnsafeEta
+//│ deforest > call test@result @ <root> -> Pure
+//│ deforest > call test@result @ <root> -> Pure
+//│ deforest > call test@result @ <root> -> Pure
+//│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > B⁰ ->
 //│ deforest > 	match: x⁰
@@ -186,6 +223,13 @@ fun test() =
   if Global(1) is
     Global(x) then Local(x + 1)
 test()
+//│ deforest > >>> effect-analysis results >>>
+//│ deforest > function test#0 @ test@test -> UnsafeEta
+//│ deforest > function test#0 @ test@test -> UnsafeEta
+//│ deforest > call +@result @ test@test -> Pure
+//│ deforest > call +@result @ test@test -> Pure
+//│ deforest > call test@result @ <root> -> UnsafeEta
+//│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > Global⁰(1) ->
 //│ deforest > 	match: scrut⁰
@@ -195,10 +239,10 @@ test()
 //│ deforest > 	fields: scrut⁰.x²
 //│ deforest > <<< fusing <<<
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'Local'
-//│ ║  l.187: 	    Global(x) then Local(x + 1)
+//│ ║  l.224: 	    Global(x) then Local(x + 1)
 //│ ║         	                   ^^^^^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.185: 	  data class Local(x)
+//│ ║  l.222: 	  data class Local(x)
 //│ ╙──       	             ^^^^^^^^
 //│ ═══[RUNTIME ERROR] ReferenceError: Local is not defined
 //│ ═══[RUNTIME ERROR] Expected: 'Local(2)', got: 'undefined'
@@ -212,6 +256,22 @@ fun test() =
   let x = A
   inner(x) + inner(x)
 test()
+//│ deforest > >>> effect-analysis results >>>
+//│ deforest > function inner#0 @ inner@inner -> Pure
+//│ deforest > function inner#0 @ test@test.inner@inner -> Pure
+//│ deforest > function inner#0 @ test@test.inner@inner -> Pure
+//│ deforest > function inner#0 @ test@test.inner@inner -> Pure
+//│ deforest > function inner#0 @ test@test.inner@inner -> Pure
+//│ deforest > function test#0 @ test@test -> Pure
+//│ deforest > function test#0 @ test@test -> Pure
+//│ deforest > call +@result @ test@test -> Pure
+//│ deforest > call +@result @ test@test -> Pure
+//│ deforest > call inner@result @ test@test -> Pure
+//│ deforest > call inner@result @ test@test -> Pure
+//│ deforest > call inner@result @ test@test -> Pure
+//│ deforest > call inner@result @ test@test -> Pure
+//│ deforest > call test@result @ <root> -> Pure
+//│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > <<< fusing <<<
 //│ = 0
@@ -221,6 +281,14 @@ test()
 :expect 2
 fun f(x) = if x is A then 1
 f(A) + f(A)
+//│ deforest > >>> effect-analysis results >>>
+//│ deforest > function f#0 @ f@f -> UnsafeEta
+//│ deforest > function f#0 @ f@f -> UnsafeEta
+//│ deforest > function f#0 @ f@f -> UnsafeEta
+//│ deforest > call +@result @ <root> -> Pure
+//│ deforest > call f@result @ <root> -> UnsafeEta
+//│ deforest > call f@result @ <root> -> UnsafeEta
+//│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > A⁰ ->
 //│ deforest > 	match: x³
@@ -237,6 +305,13 @@ module Test with
     fun foo(a) = if a is
       AA(y) then x + y
 Test.Test2.foo(AA(2))
+//│ deforest > >>> effect-analysis results >>>
+//│ deforest > function foo#0 @ foo@foo -> UnsafeEta
+//│ deforest > function foo#0 @ foo@foo -> UnsafeEta
+//│ deforest > call +@result @ foo@foo -> Pure
+//│ deforest > call +@result @ foo@foo -> Pure
+//│ deforest > call foo@result @ <root> -> UnsafeEta
+//│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > AA⁰(2) ->
 //│ deforest > 	match: a⁰

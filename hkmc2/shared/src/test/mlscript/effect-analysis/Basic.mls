@@ -1,0 +1,315 @@
+:lift
+#config(flowBasedOpt: Some(FlowBasedOpt(logEffects: true, mono: true)), inlining: None)
+//│ flow-analysis > >>> effect-analysis results >>>
+//│ flow-analysis > <<< effect-analysis results <<<
+
+
+declare fun effect(): Anything
+//│ flow-analysis > >>> effect-analysis results >>>
+//│ flow-analysis > <<< effect-analysis results <<<
+
+fun leaf_pure(x) = x + 1
+fun node_pure(x) = leaf_pure(x)
+//│ flow-analysis > >>> effect-analysis results >>>
+//│ flow-analysis > function leaf_pure#0 @ <root> -> Pure
+//│ flow-analysis > function node_pure#0 @ <root> -> Pure
+//│ flow-analysis > call +@result @ <root> -> Pure
+//│ flow-analysis > call leaf_pure@result @ <root> -> Pure
+//│ flow-analysis > <<< effect-analysis results <<<
+
+fun leaf_effectful() = effect() + print()
+fun node_effectful() = leaf_effectful()
+//│ flow-analysis > >>> effect-analysis results >>>
+//│ flow-analysis > function leaf_effectful#0 @ <root> -> UnsafeEta
+//│ flow-analysis > function node_effectful#0 @ <root> -> UnsafeEta
+//│ flow-analysis > call +@result @ <root> -> Pure
+//│ flow-analysis > call effect@result @ <root> -> UnsafeEta
+//│ flow-analysis > call leaf_effectful@result @ <root> -> UnsafeEta
+//│ flow-analysis > call print@result @ <root> -> UnsafeEta
+//│ flow-analysis > <<< effect-analysis results <<<
+
+fun node_recursive_pure(x) = node_recursive_pure(x)
+fun node_recursive_effectful(x) = node_recursive_effectful(leaf_effectful())
+//│ flow-analysis > >>> effect-analysis results >>>
+//│ flow-analysis > function node_recursive_effectful#0 @ <root> -> UnsafeEta
+//│ flow-analysis > function node_recursive_pure#0 @ <root> -> Pure
+//│ flow-analysis > call leaf_effectful@result @ <root> -> UnsafeEta
+//│ flow-analysis > <<< effect-analysis results <<<
+
+open annotations { pure }
+@pure
+fun leaf() = effect()
+fun node() = leaf()
+//│ flow-analysis > >>> effect-analysis results >>>
+//│ flow-analysis > function leaf#0 @ <root> -> Pure
+//│ flow-analysis > function node#0 @ <root> -> Pure
+//│ flow-analysis > call effect@result @ <root> -> UnsafeEta
+//│ flow-analysis > call leaf@result @ <root> -> Pure
+//│ flow-analysis > <<< effect-analysis results <<<
+
+
+open annotations { pure }
+@pure
+declare fun leaf_pure(): Anything
+fun node() = leaf_pure()
+node()
+//│ flow-analysis > >>> effect-analysis results >>>
+//│ flow-analysis > function node#0 @ <root> -> Pure
+//│ flow-analysis > call leaf_pure@result @ <root> -> Pure
+//│ flow-analysis > call node@result @ <root> -> Pure
+//│ flow-analysis > <<< effect-analysis results <<<
+
+
+class Box(val value) with
+  fun raise() = effect()
+fun node_constructor() = Box(0)
+fun node_instantiation() = new Box(0)
+fun node_method(box: Box) = box.raise()
+//│ flow-analysis > >>> effect-analysis results >>>
+//│ flow-analysis > function node_constructor#0 @ <root> -> UnsafeEta
+//│ flow-analysis > function node_instantiation#0 @ <root> -> UnsafeEta
+//│ flow-analysis > function node_method#0 @ <root> -> UnsafeEta
+//│ flow-analysis > call effect@result @ <root> -> UnsafeEta
+//│ flow-analysis > call raise@result @ <root> -> UnsafeEta
+//│ flow-analysis > <<< effect-analysis results <<<
+
+
+fun node(f, x) = f(x)
+fun leaf_pure(x) = x
+fun leaf_effectful(x) = effect()
+fun caller_pure() = node(leaf_pure, 0)
+fun caller_effectful() = node(leaf_effectful, 0)
+//│ flow-analysis > >>> effect-analysis results >>>
+//│ flow-analysis > function caller_effectful#0 @ <root> -> UnsafeEta
+//│ flow-analysis > function caller_pure#0 @ <root> -> UnsafeEta
+//│ flow-analysis > function leaf_effectful#0 @ <root> -> UnsafeEta
+//│ flow-analysis > function leaf_pure#0 @ <root> -> Pure
+//│ flow-analysis > function node#0 @ <root> -> UnsafeEta
+//│ flow-analysis > call effect@result @ <root> -> UnsafeEta
+//│ flow-analysis > call f@result @ <root> -> UnsafeEta
+//│ flow-analysis > call node@result @ <root> -> UnsafeEta
+//│ flow-analysis > call node@result @ <root> -> UnsafeEta
+//│ flow-analysis > <<< effect-analysis results <<<
+
+
+fun leaf(...xs) = 0
+fun node(xs) = leaf(...xs)
+//│ flow-analysis > >>> effect-analysis results >>>
+//│ flow-analysis > function leaf#0 @ <root> -> Pure
+//│ flow-analysis > function node#0 @ <root> -> UnsafeEta
+//│ flow-analysis > <<< effect-analysis results <<<
+
+
+#config(flowBasedOpt: Some(FlowBasedOpt(logEffects: true, mono: false)))
+//│ flow-analysis > >>> effect-analysis results >>>
+//│ flow-analysis > <<< effect-analysis results <<<
+
+
+fun node(f, x) = f(x)
+fun caller_pure() = node((x) => x, 0)
+fun caller_effectful() = node((x) => effect(), 0)
+//│ flow-analysis > >>> effect-analysis results >>>
+//│ flow-analysis > function caller_effectful#0 @ caller_effectful@caller_effectful -> UnsafeEta
+//│ flow-analysis > function caller_pure#0 @ caller_pure@caller_pure -> Pure
+//│ flow-analysis > function lambda#0 @ caller_effectful@caller_effectful.lambda@lambda -> UnsafeEta
+//│ flow-analysis > function lambda#0 @ caller_pure@caller_pure.lambda@lambda -> Pure
+//│ flow-analysis > function lambda#0 @ lambda@lambda -> Pure
+//│ flow-analysis > function lambda#0 @ lambda@lambda -> UnsafeEta
+//│ flow-analysis > function node#0 @ caller_effectful@caller_effectful.node@node -> UnsafeEta
+//│ flow-analysis > function node#0 @ caller_pure@caller_pure.node@node -> Pure
+//│ flow-analysis > function node#0 @ node@node -> UnsafeEta
+//│ flow-analysis > call effect@result @ caller_effectful@caller_effectful.lambda@lambda -> UnsafeEta
+//│ flow-analysis > call effect@result @ lambda@lambda -> UnsafeEta
+//│ flow-analysis > call f@result @ caller_effectful@caller_effectful.node@node -> UnsafeEta
+//│ flow-analysis > call f@result @ caller_pure@caller_pure.node@node -> Pure
+//│ flow-analysis > call f@result @ node@node -> UnsafeEta
+//│ flow-analysis > call node@result @ caller_effectful@caller_effectful -> UnsafeEta
+//│ flow-analysis > call node@result @ caller_pure@caller_pure -> Pure
+//│ flow-analysis > <<< effect-analysis results <<<
+
+
+@pure
+fun leaf_pure(x) = x
+leaf_pure(0)
+//│ flow-analysis > >>> effect-analysis results >>>
+//│ flow-analysis > function leaf_pure#0 @ leaf_pure@leaf_pure -> Pure
+//│ flow-analysis > function leaf_pure#0 @ leaf_pure@leaf_pure -> Pure
+//│ flow-analysis > call leaf_pure@result @ <root> -> Pure
+//│ flow-analysis > <<< effect-analysis results <<<
+
+
+declare fun leaf_effectful(): Anything
+fun node() = leaf_effectful()
+node()
+//│ flow-analysis > >>> effect-analysis results >>>
+//│ flow-analysis > function node#0 @ node@node -> UnsafeEta
+//│ flow-analysis > function node#0 @ node@node -> UnsafeEta
+//│ flow-analysis > call leaf_effectful@result @ node@node -> UnsafeEta
+//│ flow-analysis > call leaf_effectful@result @ node@node -> UnsafeEta
+//│ flow-analysis > call node@result @ <root> -> UnsafeEta
+//│ flow-analysis > <<< effect-analysis results <<<
+
+
+// Trusted @pure suppresses spread fallback, including through SCC instantiation.
+@pure
+fun leaf_pure(...xs) = 0
+fun node(xs) = leaf_pure(...xs)
+fun caller(xs) = node(xs)
+//│ flow-analysis > >>> effect-analysis results >>>
+//│ flow-analysis > function caller#0 @ caller@caller -> Pure
+//│ flow-analysis > function leaf_pure#0 @ caller@caller.node@node.leaf_pure@leaf_pure -> Pure
+//│ flow-analysis > function leaf_pure#0 @ leaf_pure@leaf_pure -> Pure
+//│ flow-analysis > function leaf_pure#0 @ node@node.leaf_pure@leaf_pure -> Pure
+//│ flow-analysis > function node#0 @ caller@caller.node@node -> Pure
+//│ flow-analysis > function node#0 @ node@node -> Pure
+//│ flow-analysis > call node@result @ caller@caller -> Pure
+//│ flow-analysis > <<< effect-analysis results <<<
+
+
+#config(flowBasedOpt: Some(FlowBasedOpt(logEffects: true, mono: true)))
+//│ flow-analysis > >>> effect-analysis results >>>
+//│ flow-analysis > <<< effect-analysis results <<<
+
+
+// Explicit latent overrides node to direct and higher-order calls; body calls retain their summaries.
+@pure
+private fun leaf_pure(x) = effect()
+private fun leaf_effectful(x) = effect(); x
+private fun node_direct_pure() = leaf_pure(0)
+private fun node_direct_effectful() = leaf_effectful(0)
+private fun node_pure(f, x) = f(x)
+private fun node_effectful(f, x) = f(x)
+private fun caller_pure() = node_pure(leaf_pure, 0)
+private fun caller_effectful() = node_effectful(leaf_effectful, 0)
+node_direct_pure()
+node_direct_effectful()
+caller_pure()
+caller_effectful()
+//│ flow-analysis > >>> effect-analysis results >>>
+//│ flow-analysis > function caller_effectful#0 @ <root> -> UnsafeEta
+//│ flow-analysis > function caller_pure#0 @ <root> -> Pure
+//│ flow-analysis > function leaf_effectful#0 @ <root> -> UnsafeEta
+//│ flow-analysis > function leaf_pure#0 @ <root> -> Pure
+//│ flow-analysis > function node_direct_effectful#0 @ <root> -> UnsafeEta
+//│ flow-analysis > function node_direct_pure#0 @ <root> -> Pure
+//│ flow-analysis > function node_effectful#0 @ <root> -> UnsafeEta
+//│ flow-analysis > function node_pure#0 @ <root> -> Pure
+//│ flow-analysis > call ,@result @ <root> -> Pure
+//│ flow-analysis > call caller_effectful@result @ <root> -> UnsafeEta
+//│ flow-analysis > call caller_pure@result @ <root> -> Pure
+//│ flow-analysis > call effect@result @ <root> -> UnsafeEta
+//│ flow-analysis > call effect@result @ <root> -> UnsafeEta
+//│ flow-analysis > call f@result @ <root> -> Pure
+//│ flow-analysis > call f@result @ <root> -> UnsafeEta
+//│ flow-analysis > call leaf_effectful@result @ <root> -> UnsafeEta
+//│ flow-analysis > call leaf_pure@result @ <root> -> Pure
+//│ flow-analysis > call node_direct_effectful@result @ <root> -> UnsafeEta
+//│ flow-analysis > call node_direct_pure@result @ <root> -> Pure
+//│ flow-analysis > call node_effectful@result @ <root> -> UnsafeEta
+//│ flow-analysis > call node_pure@result @ <root> -> Pure
+//│ flow-analysis > <<< effect-analysis results <<<
+
+
+#config(flowBasedOpt: Some(FlowBasedOpt(logEffects: true, mono: false)))
+//│ flow-analysis > >>> effect-analysis results >>>
+//│ flow-analysis > <<< effect-analysis results <<<
+
+
+// Explicit latent overrides node to direct and higher-order calls; body calls retain their summaries.
+@pure
+private fun leaf_pure(x) = effect()
+private fun leaf_effectful(x) = effect(); x
+private fun node_direct_pure() = leaf_pure(0)
+private fun node_direct_effectful() = leaf_effectful(0)
+private fun node_pure(f, x) = f(x)
+private fun node_effectful(f, x) = f(x)
+private fun caller_pure() = node_pure(leaf_pure, 0)
+private fun caller_effectful() = node_effectful(leaf_effectful, 0)
+node_direct_pure()
+node_direct_effectful()
+caller_pure()
+caller_effectful()
+//│ flow-analysis > >>> effect-analysis results >>>
+//│ flow-analysis > function caller_effectful#0 @ caller_effectful@caller_effectful -> UnsafeEta
+//│ flow-analysis > function caller_effectful#0 @ caller_effectful@caller_effectful -> UnsafeEta
+//│ flow-analysis > function caller_pure#0 @ caller_pure@caller_pure -> Pure
+//│ flow-analysis > function caller_pure#0 @ caller_pure@caller_pure -> Pure
+//│ flow-analysis > function leaf_effectful#0 @ caller_effectful@caller_effectful.leaf_effectful@leaf_effectful -> UnsafeEta
+//│ flow-analysis > function leaf_effectful#0 @ caller_effectful@caller_effectful.leaf_effectful@leaf_effectful -> UnsafeEta
+//│ flow-analysis > function leaf_effectful#0 @ leaf_effectful@leaf_effectful -> UnsafeEta
+//│ flow-analysis > function leaf_effectful#0 @ node_direct_effectful@node_direct_effectful.leaf_effectful@leaf_effectful -> UnsafeEta
+//│ flow-analysis > function leaf_effectful#0 @ node_direct_effectful@node_direct_effectful.leaf_effectful@leaf_effectful -> UnsafeEta
+//│ flow-analysis > function leaf_pure#0 @ caller_pure@caller_pure.leaf_pure@leaf_pure -> Pure
+//│ flow-analysis > function leaf_pure#0 @ caller_pure@caller_pure.leaf_pure@leaf_pure -> Pure
+//│ flow-analysis > function leaf_pure#0 @ leaf_pure@leaf_pure -> Pure
+//│ flow-analysis > function leaf_pure#0 @ node_direct_pure@node_direct_pure.leaf_pure@leaf_pure -> Pure
+//│ flow-analysis > function leaf_pure#0 @ node_direct_pure@node_direct_pure.leaf_pure@leaf_pure -> Pure
+//│ flow-analysis > function node_direct_effectful#0 @ node_direct_effectful@node_direct_effectful -> UnsafeEta
+//│ flow-analysis > function node_direct_effectful#0 @ node_direct_effectful@node_direct_effectful -> UnsafeEta
+//│ flow-analysis > function node_direct_pure#0 @ node_direct_pure@node_direct_pure -> Pure
+//│ flow-analysis > function node_direct_pure#0 @ node_direct_pure@node_direct_pure -> Pure
+//│ flow-analysis > function node_effectful#0 @ caller_effectful@caller_effectful.node_effectful@node_effectful -> UnsafeEta
+//│ flow-analysis > function node_effectful#0 @ caller_effectful@caller_effectful.node_effectful@node_effectful -> UnsafeEta
+//│ flow-analysis > function node_effectful#0 @ node_effectful@node_effectful -> UnsafeEta
+//│ flow-analysis > function node_pure#0 @ caller_pure@caller_pure.node_pure@node_pure -> Pure
+//│ flow-analysis > function node_pure#0 @ caller_pure@caller_pure.node_pure@node_pure -> Pure
+//│ flow-analysis > function node_pure#0 @ node_pure@node_pure -> UnsafeEta
+//│ flow-analysis > call ,@result @ caller_effectful@caller_effectful.leaf_effectful@leaf_effectful -> Pure
+//│ flow-analysis > call ,@result @ caller_effectful@caller_effectful.leaf_effectful@leaf_effectful -> Pure
+//│ flow-analysis > call ,@result @ leaf_effectful@leaf_effectful -> Pure
+//│ flow-analysis > call ,@result @ node_direct_effectful@node_direct_effectful.leaf_effectful@leaf_effectful -> Pure
+//│ flow-analysis > call ,@result @ node_direct_effectful@node_direct_effectful.leaf_effectful@leaf_effectful -> Pure
+//│ flow-analysis > call caller_effectful@result @ <root> -> UnsafeEta
+//│ flow-analysis > call caller_pure@result @ <root> -> Pure
+//│ flow-analysis > call effect@result @ caller_effectful@caller_effectful.leaf_effectful@leaf_effectful -> UnsafeEta
+//│ flow-analysis > call effect@result @ caller_effectful@caller_effectful.leaf_effectful@leaf_effectful -> UnsafeEta
+//│ flow-analysis > call effect@result @ caller_pure@caller_pure.leaf_pure@leaf_pure -> UnsafeEta
+//│ flow-analysis > call effect@result @ caller_pure@caller_pure.leaf_pure@leaf_pure -> UnsafeEta
+//│ flow-analysis > call effect@result @ leaf_effectful@leaf_effectful -> UnsafeEta
+//│ flow-analysis > call effect@result @ leaf_pure@leaf_pure -> UnsafeEta
+//│ flow-analysis > call effect@result @ node_direct_effectful@node_direct_effectful.leaf_effectful@leaf_effectful -> UnsafeEta
+//│ flow-analysis > call effect@result @ node_direct_effectful@node_direct_effectful.leaf_effectful@leaf_effectful -> UnsafeEta
+//│ flow-analysis > call effect@result @ node_direct_pure@node_direct_pure.leaf_pure@leaf_pure -> UnsafeEta
+//│ flow-analysis > call effect@result @ node_direct_pure@node_direct_pure.leaf_pure@leaf_pure -> UnsafeEta
+//│ flow-analysis > call f@result @ caller_effectful@caller_effectful.node_effectful@node_effectful -> UnsafeEta
+//│ flow-analysis > call f@result @ caller_effectful@caller_effectful.node_effectful@node_effectful -> UnsafeEta
+//│ flow-analysis > call f@result @ caller_pure@caller_pure.node_pure@node_pure -> Pure
+//│ flow-analysis > call f@result @ caller_pure@caller_pure.node_pure@node_pure -> Pure
+//│ flow-analysis > call f@result @ node_effectful@node_effectful -> UnsafeEta
+//│ flow-analysis > call f@result @ node_pure@node_pure -> UnsafeEta
+//│ flow-analysis > call leaf_effectful@result @ node_direct_effectful@node_direct_effectful -> UnsafeEta
+//│ flow-analysis > call leaf_effectful@result @ node_direct_effectful@node_direct_effectful -> UnsafeEta
+//│ flow-analysis > call leaf_pure@result @ node_direct_pure@node_direct_pure -> Pure
+//│ flow-analysis > call leaf_pure@result @ node_direct_pure@node_direct_pure -> Pure
+//│ flow-analysis > call node_direct_effectful@result @ <root> -> UnsafeEta
+//│ flow-analysis > call node_direct_pure@result @ <root> -> Pure
+//│ flow-analysis > call node_effectful@result @ caller_effectful@caller_effectful -> UnsafeEta
+//│ flow-analysis > call node_effectful@result @ caller_effectful@caller_effectful -> UnsafeEta
+//│ flow-analysis > call node_pure@result @ caller_pure@caller_pure -> Pure
+//│ flow-analysis > call node_pure@result @ caller_pure@caller_pure -> Pure
+//│ flow-analysis > <<< effect-analysis results <<<
+
+
+#config(flowBasedOpt: Some(FlowBasedOpt(logEffects: true, mono: true)))
+//│ flow-analysis > >>> effect-analysis results >>>
+//│ flow-analysis > <<< effect-analysis results <<<
+
+
+@pure
+private fun leaf_pure(...xs) = effect()
+private fun leaf_effectful(...xs) = effect(); 0
+private fun leaf_inferred_pure(...xs) = 0
+private fun node_pure(xs) = leaf_pure(...xs)
+private fun node_effectful(xs) = leaf_effectful(...xs)
+private fun node_inferred_pure(xs) = leaf_inferred_pure(...xs)
+//│ flow-analysis > >>> effect-analysis results >>>
+//│ flow-analysis > function leaf_effectful#0 @ <root> -> UnsafeEta
+//│ flow-analysis > function leaf_inferred_pure#0 @ <root> -> Pure
+//│ flow-analysis > function leaf_pure#0 @ <root> -> Pure
+//│ flow-analysis > function node_effectful#0 @ <root> -> UnsafeEta
+//│ flow-analysis > function node_inferred_pure#0 @ <root> -> UnsafeEta
+//│ flow-analysis > function node_pure#0 @ <root> -> Pure
+//│ flow-analysis > call ,@result @ <root> -> Pure
+//│ flow-analysis > call effect@result @ <root> -> UnsafeEta
+//│ flow-analysis > call effect@result @ <root> -> UnsafeEta
+//│ flow-analysis > <<< effect-analysis results <<<

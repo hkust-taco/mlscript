@@ -16,6 +16,7 @@ object FlowAnalysis:
   object TraceScope:
     val NonAffineSyms = "flow-analysis/non-affine"
     val AccumulatorSym = "flow-analysis/accumulator"
+    val Effects = "flow-analysis/effects"
 
   class State(using val eState: Elaborator.State):
     val resultToResultId = new java.util.IdentityHashMap[Result, ResultId].asScala
@@ -78,11 +79,22 @@ object FlowAnalysis:
     mono: Bool,
     nonAffineTracking: Bool,
     accumulatorTracking: Bool,
+    logEffects: Bool = true,
   )(using TraceLogger, Elaborator.State, Raise, SymbolPrinter) =
     given State = new State
     val pre = new FlowPreAnalyzer(pgrm)
-    val constrCol = new FlowConstraintsCollector(pre, mono, nonAffineTracking, accumulatorTracking)
-    new FlowConstraintSolver(constrCol)
+    val constrCol = new FlowConstraintsCollector(
+      pre,
+      mono,
+      nonAffineTracking,
+      accumulatorTracking,
+    )
+    val solver = new FlowConstraintSolver(constrCol)
+    val tl = summon[TraceLogger]
+    // Inference is unconditional; logging must not affect optimization decisions.
+    if logEffects then tl.scoped(TraceScope.Effects):
+      if tl.doTrace then EffectAnalysis(solver)
+    solver
 
   def mkTraceLogger(
     cfg: Config.FlowAnalysisConfig,
@@ -93,6 +105,7 @@ object FlowAnalysis:
       override def doTrace: Bool = scope match
         case S(TraceScope.NonAffineSyms) => cfg.logNonAffine
         case S(TraceScope.AccumulatorSym) => cfg.logAccumulator
+        case S(TraceScope.Effects) => cfg.debug || cfg.logEffects
         case _ => cfg.debug
 
       override def emitDbg(str: Str): Unit =
@@ -232,13 +245,17 @@ class ProdFun(
   val params: Ls[ConsStrat],
   val restParam: Opt[ConsStrat],
   val res: ProdStrat,
-  val capturedVarUpperbound: StratVar
+  val capturedVarUpperbound: StratVar,
+  val effect: Opt[StratVar],
 ) extends ProdStrat with StratWithOrigin[FunId]:
   val dests = MutSet.empty[ConsFun | MarkerConsStrat]
   override def toString(): String =
     s"(${params.map(_.toString()).mkString(", ")}) -> ${res.toString()}"
 
 case object UnknownProd extends MarkerProdStrat
+
+/** The lower bound marker marking an effect variable as effect-raising. */
+case object UnsafeEta extends MarkerProdStrat
 
 class Ctor(
   val exprId: ResultId,
@@ -254,10 +271,11 @@ class Ctor(
 
 class ConsFun(
   val exprId: ResultId,
-  val instantiationId: Opt[InstantiationId]
+  val instantiationId: Opt[InstantiationId],
 )(
   val params: Ls[ProdStrat],
-  val res: ConsStrat
+  val res: ConsStrat,
+  val effect: Opt[StratVar],
 ) extends ConsStrat with StratWithOrigin[ResultId]:
   val srcs = MutSet.empty[ProdFun | MarkerProdStrat]
   override def toString(): String =
@@ -742,7 +760,8 @@ class FlowConstraintsCollector(
                 s"${funSym.nme}_res",
                 fun.params,
                 fun.body,
-                (fun.dSym, -1))
+                (fun.dSym, -1),
+                fun.annotations)
               cc.constrain(funProdStrat, thisFunVar)
             if nonAffineTracking then
               for
@@ -761,7 +780,7 @@ class FlowConstraintsCollector(
     globalCollector.givenIn: cc ?=>
       cc.constrain(preAnalyzer.res.primitiveStratVar, UnknownCons)
       cc.constrain(UnknownProd, preAnalyzer.res.primitiveStratVar)
-      processBlock(preAnalyzer.pgrm.main)(using cc, UnknownCons)
+      processBlock(preAnalyzer.pgrm.main)(using cc, UnknownCons, N)
 
       // this places non-affine constraints correctly:
       // - in mono mode there are no per-scc collectors,
@@ -819,8 +838,10 @@ class FlowConstraintsCollector(
             p.params.map(duplicateConsStrat),
             p.restParam.map(duplicateConsStrat),
             duplicateProdStrat(p.res),
-            duplicateVarState(p.capturedVarUpperbound))
+            duplicateVarState(p.capturedVarUpperbound),
+            p.effect.map(duplicateVarState))
         case UnknownProd => UnknownProd
+        case UnsafeEta => UnsafeEta
         case c: Ctor => registerCtor(
           new Ctor(c.exprId, updateInstantiationId(c.instantiationId))(
             c.ctor,
@@ -830,7 +851,8 @@ class FlowConstraintsCollector(
         case c: ConsFun =>
           new ConsFun(c.exprId, updateInstantiationId(c.instantiationId))(
             c.params.map(duplicateProdStrat),
-            duplicateConsStrat(c.res))
+            duplicateConsStrat(c.res),
+            c.effect.map(duplicateVarState))
         case UnknownCons => UnknownCons
         case NonAffine => NonAffine
         case Accumulator => Accumulator
@@ -856,7 +878,8 @@ class FlowConstraintsCollector(
       resName: String,
       params: Ls[ParamList],
       body: Block,
-      funLamId: FunId
+      funLamId: FunId,
+      annotations: Ls[Annot]
     )(using cc: ConstraintsCollector): ProdStrat =
       def paramListFunId(whichParamList: Int): FunId =
         funLamId match
@@ -870,12 +893,21 @@ class FlowConstraintsCollector(
         case lamExprId: ResultId => preAnalyzer.res.capturedVars(lamExprId)
         case other => lastWords(s"unexpected funLamId shape: $other")
       val res = freshVar(resName, cc.forFun)
+      val effect =
+        if params.nonEmpty then
+          S(freshVar(s"effect_$funLamId", cc.forFun))
+        else N
       params.foreach:
         _.restParam.foreach: p =>
           generatedVars(p.sym).constrainOpaque
       val funValueStrat = params.zipWithIndex.foldRight[ProdStrat](res):
         case ((ps, whichParamList), acc) =>
           val plFunId = paramListFunId(whichParamList)
+          // A declared curried function runs its body only at the final list.
+          // Earlier stages capture arguments; each needs its own, initially pure summary.
+          val stageEffect =
+            if whichParamList == params.size - 1 then effect
+            else effect.map(_ => freshVar(s"effect_$plFunId", cc.forFun))
           val capUB = freshVar(s"cap_ub_$plFunId", cc.forFun)
           for
             v <- capturedSyms
@@ -886,8 +918,11 @@ class FlowConstraintsCollector(
             ps.params.map(p => generatedVars(p.sym)),
             ps.restParam.map(p => generatedVars(p.sym)),
             acc,
-            capUB)
-      processBlock(body)(using cc, res)
+            capUB,
+            stageEffect)
+      // An explicit @pure annotation overrides the latent effect. Keep analyzing body
+      // calls, but do not let their effects flow into this trusted override.
+      processBlock(body)(using cc, res, if annotations.exists(_.isInstanceOf[Annot.Pure]) then N else effect)
       funValueStrat
 
     def processFunctionDefn(fun: FunDefn)(using cc: ConstraintsCollector): Unit =
@@ -898,7 +933,8 @@ class FlowConstraintsCollector(
           s"${fun.dSym.nme}_res",
           fun.params,
           fun.body,
-          (fun.dSym, -1))
+          (fun.dSym, -1),
+          fun.annotations)
         cc.constrain(funProdStrat, generatedVars(fun.dSym))
     
     def processClsLikeDefn(cls: ClsLikeDefn)(using cc: ConstraintsCollector): Unit =
@@ -908,21 +944,21 @@ class FlowConstraintsCollector(
       cls.methods.foreach: fun =>
         generatedVars(fun.dSym).constrainOpaque
         fun.params.foreach(_.allParams.foreach(p => generatedVars(p.sym).constrainOpaque))
-        processBlock(fun.body)(using cc, UnknownCons)
-      processBlock(cls.preCtor)(using cc, UnknownCons)
-      processBlock(cls.ctor)(using cc, UnknownCons)
+        processBlock(fun.body)(using cc, UnknownCons, N)
+      processBlock(cls.preCtor)(using cc, UnknownCons, N)
+      processBlock(cls.ctor)(using cc, UnknownCons, N)
       cls.companion.foreach: mod =>
         mod.privateFields.foreach(sym => generatedVars(sym).constrainOpaque)
         mod.publicFields.foreach: (_, tsym) =>
           generatedVars(tsym).constrainOpaque
         mod.methods.foreach: fun =>
           processFunctionDefn(fun)
-        processBlock(mod.ctor)(using cc, UnknownCons)
+        processBlock(mod.ctor)(using cc, UnknownCons, N)
     
-    def constrainOpaqueResult(r: Result)(using cc: ConstraintsCollector): Unit =
+    def constrainOpaqueResult(r: Result)(using cc: ConstraintsCollector, currentEffect: Opt[StratVar]): Unit =
       cc.constrain(processResult(r), UnknownCons)
 
-    def processBlock(b: Block)(using cc: ConstraintsCollector, blkRes: ConsStrat): Unit =
+    def processBlock(b: Block)(using cc: ConstraintsCollector, blkRes: ConsStrat, currentEffect: Opt[StratVar]): Unit =
       val instId = cc.instId
       b match
       case Return(res) => cc.constrain(processResult(res), blkRes)
@@ -975,18 +1011,46 @@ class FlowConstraintsCollector(
       case End(msg) => ()
       case Unreachable(_) => ()
     
-    def processResult(r: Result)(using cc: ConstraintsCollector): ProdStrat =
+    def processResult(r: Result)(using cc: ConstraintsCollector, currentEffect: Opt[StratVar]): ProdStrat =
       val instId = cc.instId
-      def handleCallLike(callExprId: ResultId, f: Path, args: List[Arg]): ProdStrat =
-        val fStrat = processResult(f)
+      def freshCallEffect(): StratVar =
+        val effect = freshVar("call_effect", cc.forFun)
+        // A call's effect contributes to the enclosing function's latent effect.
+        currentEffect.foreach: enclosingEffect =>
+          cc.constrain(effect, enclosingEffect)
+        effect
+      def constrainConstructorEffect(result: Result): Unit =
+        val mayHaveEffects = result match
+          case call: Call => call.metadata.mayHaveEffects
+          case _: Instantiate => true
+          case _ => false
+        // Constructor bodies are not modeled here; instantiation may have effects.
+        if mayHaveEffects then currentEffect.foreach(e => cc.constrain(UnsafeEta, e))
+      def handleCallLike(
+        call: Call,
+        args: List[Arg],
+        opaqueTail: Bool,
+      ): ProdStrat =
+        val callExprId = call.uid
+        val fStrat = processResult(call.fun)
         val argsStrat = args.map(a => processResult(a.value))
         if args.exists(_.spread.isDefined) then
+          // TODO: preserve callee-effect precision for spread calls without modeling their argument flow.
+          // Honor trusted call metadata; otherwise mark the caller without a separate call summary.
+          if call.metadata.mayHaveEffects then
+            currentEffect.foreach(e => cc.constrain(UnsafeEta, e))
           cc.constrain(fStrat, UnknownCons)
           argsStrat.foreach(arg => cc.constrain(arg, UnknownCons))
           UnknownProd
         else
           val callRes = freshVar("call_res", cc.forFun)
-          cc.constrain(fStrat, new ConsFun(callExprId, instId)(argsStrat, callRes))
+          val effect = freshCallEffect()
+          if opaqueTail then cc.constrain(UnsafeEta, effect)
+          cc.constrain(fStrat, new ConsFun(callExprId, instId)(
+            argsStrat,
+            callRes,
+            S(effect),
+          ))
           callRes
       r match
         case sel@TrackableSelect(from, field, owner) =>
@@ -997,6 +1061,7 @@ class FlowConstraintsCollector(
             new FieldSel(sel.uid, instId)(field, owner, selRes))
           selRes
         case c@CtorProducer(ctor, args, selectedFrom) if args.forall(_.spread.isEmpty) =>
+          constrainConstructorEffect(c)
           for qual <- selectedFrom do
             cc.constrain(processResult(qual), UnknownCons)
           val argsStrat = args.map:
@@ -1020,30 +1085,32 @@ class FlowConstraintsCollector(
           case tupSize: Int =>
             registerCtor(new Ctor(c.uid, instId)(tupSize, (0 until tupSize).zip(argsStrat).toList))
         case c@CtorProducer(_, args, selectedFrom) =>
+          constrainConstructorEffect(c)
           for qual <- selectedFrom do
             cc.constrain(processResult(qual), UnknownCons)
           args.foreach(arg => cc.constrain(processResult(arg.value), UnknownCons))
           UnknownProd
         case c@Call(fun, argss) =>
           argss match
-            case args :: Nil => handleCallLike(c.uid, fun, args)
+            case args :: Nil => handleCallLike(c, args, opaqueTail = false)
             case args :: rest =>
               // For multi-arg-list calls, handle the first arg list normally for
               // dead-param-elim, then constrain subsequent arg lists opaquely.
               // We cannot reuse c.uid for subsequent ConsFuns because the
               // DeadParamElim rewriter only rewrites the first arg list,
               // and sharing the same exprId would cause conflicting eliminable sets.
-              val firstResult = handleCallLike(c.uid, fun, args)
+              val firstResult = handleCallLike(c, args, opaqueTail = true)
               cc.constrain(firstResult, UnknownCons)
               rest.foreach: nextArgs =>
                 nextArgs.foreach(a => cc.constrain(processResult(a.value), UnknownCons))
               UnknownProd
         case i@Instantiate(_, cls, argss) =>
+          constrainConstructorEffect(i)
           constrainOpaqueResult(cls)
           argss.flatten.foreach(a => constrainOpaqueResult(a.value))
           UnknownProd
         case lam@Lambda(ps, body) =>
-          mkFunProdStrat("lam_res", ps :: Nil, body, lam.uid)
+          mkFunProdStrat("lam_res", ps :: Nil, body, lam.uid, Nil)
         case _: Tuple => lastWords("should be handled in CtorProducer")
         case Record(_, fields) =>
           fields.foreach:
@@ -1092,6 +1159,8 @@ class FlowConstraintSolver(val collector: FlowConstraintsCollector):
   val consumersWithSrcs = mutable.Buffer.empty[ConcreteCtorConsumer]
   val prodFunsWithDests = mutable.Buffer.empty[ProdFun]
   val consFunsWithSrcs = mutable.Buffer.empty[ConsFun]
+  val functionEffectVars = LinkedHashMap.empty[ConcreteId[FunId], StratVar]
+  val callEffectVars = LinkedHashMap.empty[ConcreteId[ResultId], StratVar]
   
   private def addCtorDest(c: Ctor, d: ConcreteCtorConsumer | MarkerConsStrat): Unit =
     if c.dests.isEmpty then ctorsWithDests += c
@@ -1168,11 +1237,26 @@ class FlowConstraintSolver(val collector: FlowConstraintsCollector):
     def hasConcreteInstantiationId(prodOrCons: ProdStrat | ConsStrat): Boolean = prodOrCons match
       case s: StratWithOrigin[?] => s.instantiationId.isDefined
       case _ => true
+    def registerFunctionEffects(prod: ProdStrat): Unit = prod match
+      case p: ProdFun =>
+        p.effect.foreach(effect => functionEffectVars(p.concreteId) = effect)
+        registerFunctionEffects(p.res)
+      case _ => ()
+    // Trusted call metadata overrides all inferred contributions, not just unknown callees.
+    // Keep c.effect registered so a trusted-pure call still has a Pure summary.
+    def inferredCallEffect(c: ConsFun): Opt[StratVar] =
+      c.exprId.getResult match
+        case call: Call if !call.metadata.mayHaveEffects => N
+        case _ => c.effect
     def handle(constraint: ProdStrat -> ConsStrat): Unit =
       assert:
         val (prod, cons) = constraint
         hasConcreteInstantiationId(prod) &&
         hasConcreteInstantiationId(cons)
+      registerFunctionEffects(constraint._1)
+      constraint._2 match
+        case c: ConsFun => c.effect.foreach(effect => callEffectVars(c.concreteId) = effect)
+        case _ => ()
       constraint match
       case (c: Ctor, d: Dtor) =>
         addCtorDest(c, d)
@@ -1213,6 +1297,11 @@ class FlowConstraintSolver(val collector: FlowConstraintsCollector):
             case v: StratVar => handle(arg, v.asIntoParam)
             case _ => ()
         handle(p.res, c.res)
+        // The callee's latent effect becomes the effect observed at this call.
+        for
+          pEffect <- p.effect
+          cEffect <- inferredCallEffect(c)
+        do handle(pEffect, cEffect)
       case (p: ProdFun, UnknownCons) =>
         addFunDest(p, UnknownCons)
         for a <- p.params do handle(UnknownProd, a)
@@ -1234,6 +1323,8 @@ class FlowConstraintSolver(val collector: FlowConstraintsCollector):
         addFunSrc(c, UnknownProd)
         for a <- c.params do handle(a, UnknownCons)
         handle(UnknownProd, c.res)
+        // The conservative fallback.
+        inferredCallEffect(c).foreach(e => handle(UnsafeEta, e))
       case (p: StratVar, c: StratVar) =>
         if p.upperBounds.add(c) then
           for l <- p.lowerBounds do handle(l, c)

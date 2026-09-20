@@ -6,6 +6,8 @@ data class (::) Cons(h, t)
 data class Pair(a, b)
 object A
 object B
+//│ deforest > >>> effect-analysis results >>>
+//│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > <<< fusing <<<
 
@@ -26,6 +28,81 @@ fun lscomp1(ls) = if ls is
     lscomp2(zip(enumFromTo(x, x + 2), enumFromTo(y1, y1 + 1)))
   else Nil
 lscomp1(zip(enumFromTo(1, 3), enumFromTo(2, 4)))
+//│ deforest > >>> effect-analysis results >>>
+//│ deforest > function enumFromTo#0 @ enumFromTo@enumFromTo -> UnsafeEta
+//│ deforest > function enumFromTo#0 @ enumFromTo@enumFromTo -> UnsafeEta
+//│ deforest > function enumFromTo#0 @ enumFromTo@enumFromTo -> UnsafeEta
+//│ deforest > function enumFromTo#0 @ lscomp1@lscomp1.enumFromTo@enumFromTo -> UnsafeEta
+//│ deforest > function enumFromTo#0 @ lscomp1@lscomp1.enumFromTo@enumFromTo -> UnsafeEta
+//│ deforest > function enumFromTo#0 @ lscomp1@lscomp1.enumFromTo@enumFromTo -> UnsafeEta
+//│ deforest > function enumFromTo#0 @ lscomp1@lscomp1.enumFromTo@enumFromTo -> UnsafeEta
+//│ deforest > function lscomp1#0 @ lscomp1@lscomp1 -> UnsafeEta
+//│ deforest > function lscomp1#0 @ lscomp1@lscomp1 -> UnsafeEta
+//│ deforest > function lscomp2#0 @ lscomp1@lscomp1 -> UnsafeEta
+//│ deforest > function lscomp2#0 @ lscomp1@lscomp1 -> UnsafeEta
+//│ deforest > function zip#0 @ lscomp1@lscomp1.zip@zip -> UnsafeEta
+//│ deforest > function zip#0 @ lscomp1@lscomp1.zip@zip -> UnsafeEta
+//│ deforest > function zip#0 @ zip@zip -> UnsafeEta
+//│ deforest > function zip#0 @ zip@zip -> UnsafeEta
+//│ deforest > call +@result @ enumFromTo@enumFromTo -> Pure
+//│ deforest > call +@result @ enumFromTo@enumFromTo -> Pure
+//│ deforest > call +@result @ enumFromTo@enumFromTo -> Pure
+//│ deforest > call +@result @ enumFromTo@enumFromTo -> Pure
+//│ deforest > call +@result @ enumFromTo@enumFromTo -> Pure
+//│ deforest > call +@result @ enumFromTo@enumFromTo -> Pure
+//│ deforest > call +@result @ lscomp1@lscomp1 -> Pure
+//│ deforest > call +@result @ lscomp1@lscomp1 -> Pure
+//│ deforest > call +@result @ lscomp1@lscomp1 -> Pure
+//│ deforest > call +@result @ lscomp1@lscomp1 -> Pure
+//│ deforest > call +@result @ lscomp1@lscomp1.enumFromTo@enumFromTo -> Pure
+//│ deforest > call +@result @ lscomp1@lscomp1.enumFromTo@enumFromTo -> Pure
+//│ deforest > call +@result @ lscomp1@lscomp1.enumFromTo@enumFromTo -> Pure
+//│ deforest > call +@result @ lscomp1@lscomp1.enumFromTo@enumFromTo -> Pure
+//│ deforest > call +@result @ lscomp1@lscomp1.enumFromTo@enumFromTo -> Pure
+//│ deforest > call +@result @ lscomp1@lscomp1.enumFromTo@enumFromTo -> Pure
+//│ deforest > call +@result @ lscomp1@lscomp1.enumFromTo@enumFromTo -> Pure
+//│ deforest > call +@result @ lscomp1@lscomp1.enumFromTo@enumFromTo -> Pure
+//│ deforest > call <@result @ enumFromTo@enumFromTo -> Pure
+//│ deforest > call <@result @ enumFromTo@enumFromTo -> Pure
+//│ deforest > call <@result @ enumFromTo@enumFromTo -> Pure
+//│ deforest > call <@result @ lscomp1@lscomp1.enumFromTo@enumFromTo -> Pure
+//│ deforest > call <@result @ lscomp1@lscomp1.enumFromTo@enumFromTo -> Pure
+//│ deforest > call <@result @ lscomp1@lscomp1.enumFromTo@enumFromTo -> Pure
+//│ deforest > call <@result @ lscomp1@lscomp1.enumFromTo@enumFromTo -> Pure
+//│ deforest > call enumFromTo@result @ <root> -> UnsafeEta
+//│ deforest > call enumFromTo@result @ <root> -> UnsafeEta
+//│ deforest > call enumFromTo@result @ enumFromTo@enumFromTo -> UnsafeEta
+//│ deforest > call enumFromTo@result @ enumFromTo@enumFromTo -> UnsafeEta
+//│ deforest > call enumFromTo@result @ enumFromTo@enumFromTo -> UnsafeEta
+//│ deforest > call enumFromTo@result @ lscomp1@lscomp1 -> UnsafeEta
+//│ deforest > call enumFromTo@result @ lscomp1@lscomp1 -> UnsafeEta
+//│ deforest > call enumFromTo@result @ lscomp1@lscomp1 -> UnsafeEta
+//│ deforest > call enumFromTo@result @ lscomp1@lscomp1 -> UnsafeEta
+//│ deforest > call enumFromTo@result @ lscomp1@lscomp1.enumFromTo@enumFromTo -> UnsafeEta
+//│ deforest > call enumFromTo@result @ lscomp1@lscomp1.enumFromTo@enumFromTo -> UnsafeEta
+//│ deforest > call enumFromTo@result @ lscomp1@lscomp1.enumFromTo@enumFromTo -> UnsafeEta
+//│ deforest > call enumFromTo@result @ lscomp1@lscomp1.enumFromTo@enumFromTo -> UnsafeEta
+//│ deforest > call equals@result @ lscomp1@lscomp1 -> UnsafeEta
+//│ deforest > call equals@result @ lscomp1@lscomp1 -> UnsafeEta
+//│ deforest > call lscomp1@result @ <root> -> UnsafeEta
+//│ deforest > call lscomp1@result @ lscomp1@lscomp1 -> UnsafeEta
+//│ deforest > call lscomp1@result @ lscomp1@lscomp1 -> UnsafeEta
+//│ deforest > call lscomp1@result @ lscomp1@lscomp1 -> UnsafeEta
+//│ deforest > call lscomp1@result @ lscomp1@lscomp1 -> UnsafeEta
+//│ deforest > call lscomp2@result @ lscomp1@lscomp1 -> UnsafeEta
+//│ deforest > call lscomp2@result @ lscomp1@lscomp1 -> UnsafeEta
+//│ deforest > call lscomp2@result @ lscomp1@lscomp1 -> UnsafeEta
+//│ deforest > call lscomp2@result @ lscomp1@lscomp1 -> UnsafeEta
+//│ deforest > call lscomp2@result @ lscomp1@lscomp1 -> UnsafeEta
+//│ deforest > call lscomp2@result @ lscomp1@lscomp1 -> UnsafeEta
+//│ deforest > call zip@result @ <root> -> UnsafeEta
+//│ deforest > call zip@result @ lscomp1@lscomp1 -> UnsafeEta
+//│ deforest > call zip@result @ lscomp1@lscomp1 -> UnsafeEta
+//│ deforest > call zip@result @ lscomp1@lscomp1.zip@zip -> UnsafeEta
+//│ deforest > call zip@result @ lscomp1@lscomp1.zip@zip -> UnsafeEta
+//│ deforest > call zip@result @ zip@zip -> UnsafeEta
+//│ deforest > call zip@result @ zip@zip -> UnsafeEta
+//│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > Nil⁰ ->
 //│ deforest > 	match: xs_zip⁰
@@ -104,6 +181,41 @@ fun f1(a1) = if a1 is
     concatMap(f2, Pair(1, 3) :: Pair(2, 3) :: Pair(a, b) :: Nil)
   else Nil
 concatMap(f1, Pair(5, 10) :: Nil)
+//│ deforest > >>> effect-analysis results >>>
+//│ deforest > function append#0 @ append@append -> UnsafeEta
+//│ deforest > function append#0 @ concatMap@concatMap.append@append -> UnsafeEta
+//│ deforest > function append#0 @ concatMap@concatMap.append@append -> UnsafeEta
+//│ deforest > function append#0 @ f1@f1.concatMap@concatMap.append@append -> UnsafeEta
+//│ deforest > function append#0 @ f1@f1.concatMap@concatMap.append@append -> UnsafeEta
+//│ deforest > function concatMap#0 @ concatMap@concatMap -> UnsafeEta
+//│ deforest > function concatMap#0 @ concatMap@concatMap -> UnsafeEta
+//│ deforest > function concatMap#0 @ f1@f1.concatMap@concatMap -> UnsafeEta
+//│ deforest > function concatMap#0 @ f1@f1.concatMap@concatMap -> UnsafeEta
+//│ deforest > function f1#0 @ f1@f1 -> UnsafeEta
+//│ deforest > function f1#0 @ f1@f1 -> UnsafeEta
+//│ deforest > function f2#0 @ f1@f1 -> UnsafeEta
+//│ deforest > function f2#0 @ f1@f1 -> UnsafeEta
+//│ deforest > call append@result @ append@append -> UnsafeEta
+//│ deforest > call append@result @ concatMap@concatMap -> UnsafeEta
+//│ deforest > call append@result @ concatMap@concatMap -> UnsafeEta
+//│ deforest > call append@result @ concatMap@concatMap.append@append -> UnsafeEta
+//│ deforest > call append@result @ concatMap@concatMap.append@append -> UnsafeEta
+//│ deforest > call append@result @ f1@f1.concatMap@concatMap -> UnsafeEta
+//│ deforest > call append@result @ f1@f1.concatMap@concatMap -> UnsafeEta
+//│ deforest > call append@result @ f1@f1.concatMap@concatMap.append@append -> UnsafeEta
+//│ deforest > call append@result @ f1@f1.concatMap@concatMap.append@append -> UnsafeEta
+//│ deforest > call concatMap@result @ <root> -> UnsafeEta
+//│ deforest > call concatMap@result @ concatMap@concatMap -> UnsafeEta
+//│ deforest > call concatMap@result @ concatMap@concatMap -> UnsafeEta
+//│ deforest > call concatMap@result @ f1@f1 -> UnsafeEta
+//│ deforest > call concatMap@result @ f1@f1 -> UnsafeEta
+//│ deforest > call concatMap@result @ f1@f1.concatMap@concatMap -> UnsafeEta
+//│ deforest > call concatMap@result @ f1@f1.concatMap@concatMap -> UnsafeEta
+//│ deforest > call f@result @ concatMap@concatMap -> UnsafeEta
+//│ deforest > call f@result @ concatMap@concatMap -> UnsafeEta
+//│ deforest > call f@result @ f1@f1.concatMap@concatMap -> UnsafeEta
+//│ deforest > call f@result @ f1@f1.concatMap@concatMap -> UnsafeEta
+//│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > Cons⁰(tmp³, Nil⁰) ->
 //│ deforest > 	match: xs⁰
@@ -204,6 +316,24 @@ fun lscomp2(ls2, h1, t1) = if ls2 is
   h2 :: t2 then Pair(h1, h2) :: lscomp2(t2, h1, t1)
   Nil then lscomp1(t1, ls2)
 lscomp1(1 :: 2 :: Nil, 3 :: 4 :: Nil)
+//│ deforest > >>> effect-analysis results >>>
+//│ deforest > function lscomp1#0 @ lscomp1@lscomp1 -> UnsafeEta
+//│ deforest > function lscomp1#0 @ lscomp1@lscomp1 -> UnsafeEta
+//│ deforest > function lscomp1#0 @ lscomp2@lscomp2 -> UnsafeEta
+//│ deforest > function lscomp2#0 @ lscomp1@lscomp1 -> UnsafeEta
+//│ deforest > function lscomp2#0 @ lscomp1@lscomp1 -> UnsafeEta
+//│ deforest > function lscomp2#0 @ lscomp2@lscomp2 -> UnsafeEta
+//│ deforest > call lscomp1@result @ <root> -> UnsafeEta
+//│ deforest > call lscomp1@result @ lscomp1@lscomp1 -> UnsafeEta
+//│ deforest > call lscomp1@result @ lscomp1@lscomp1 -> UnsafeEta
+//│ deforest > call lscomp1@result @ lscomp2@lscomp2 -> UnsafeEta
+//│ deforest > call lscomp2@result @ lscomp1@lscomp1 -> UnsafeEta
+//│ deforest > call lscomp2@result @ lscomp1@lscomp1 -> UnsafeEta
+//│ deforest > call lscomp2@result @ lscomp1@lscomp1 -> UnsafeEta
+//│ deforest > call lscomp2@result @ lscomp1@lscomp1 -> UnsafeEta
+//│ deforest > call lscomp2@result @ lscomp2@lscomp2 -> UnsafeEta
+//│ deforest > call lscomp2@result @ lscomp2@lscomp2 -> UnsafeEta
+//│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > Cons⁰(1, tmp¹¹) ->
 //│ deforest > 	match: ls1⁰
@@ -226,6 +356,15 @@ fun lscomp(ls) = if ls is
 if A is
   A then lscomp(1 :: 2 :: 3 :: Nil)
   B then Nil
+//│ deforest > >>> effect-analysis results >>>
+//│ deforest > function lscomp#0 @ lscomp@lscomp -> UnsafeEta
+//│ deforest > function lscomp#0 @ lscomp@lscomp -> UnsafeEta
+//│ deforest > call +@result @ lscomp@lscomp -> Pure
+//│ deforest > call +@result @ lscomp@lscomp -> Pure
+//│ deforest > call lscomp@result @ <root> -> UnsafeEta
+//│ deforest > call lscomp@result @ lscomp@lscomp -> UnsafeEta
+//│ deforest > call lscomp@result @ lscomp@lscomp -> UnsafeEta
+//│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > Cons⁰(1, tmp¹²) ->
 //│ deforest > 	match: ls¹
@@ -258,6 +397,23 @@ fun h() =
       lscomp2(1 :: 2 :: 3 :: Nil)
   lscomp1(1 :: 2 :: 3 :: Nil)
 h()
+//│ deforest > >>> effect-analysis results >>>
+//│ deforest > function h#0 @ h@h -> UnsafeEta
+//│ deforest > function h#0 @ h@h -> UnsafeEta
+//│ deforest > function lscomp1#0 @ h@h -> UnsafeEta
+//│ deforest > function lscomp1#0 @ h@h -> UnsafeEta
+//│ deforest > function lscomp2#0 @ h@h -> UnsafeEta
+//│ deforest > function lscomp2#0 @ h@h -> UnsafeEta
+//│ deforest > call h@result @ <root> -> UnsafeEta
+//│ deforest > call lscomp1@result @ h@h -> UnsafeEta
+//│ deforest > call lscomp1@result @ h@h -> UnsafeEta
+//│ deforest > call lscomp1@result @ h@h -> UnsafeEta
+//│ deforest > call lscomp1@result @ h@h -> UnsafeEta
+//│ deforest > call lscomp2@result @ h@h -> UnsafeEta
+//│ deforest > call lscomp2@result @ h@h -> UnsafeEta
+//│ deforest > call lscomp2@result @ h@h -> UnsafeEta
+//│ deforest > call lscomp2@result @ h@h -> UnsafeEta
+//│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > Cons⁰(1, tmp¹⁴) ->
 //│ deforest > 	match: ls²

@@ -14,6 +14,11 @@ class Store(n) with
       AA(x) then x + nn
 val store = Store(1)
 store.foo(AA(4))
+//│ deforest > >>> effect-analysis results >>>
+//│ deforest > call +@result @ <root> -> Pure
+//│ deforest > call +@result @ <root> -> Pure
+//│ deforest > call foo@result @ <root> -> UnsafeEta
+//│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > AA⁰(Store⁰.this.n⁰) ->
 //│ deforest > 	match: scrut⁰
@@ -38,6 +43,11 @@ class Store(n) with
       AA(x) then x + n
 val store = Store(1)
 store.foo(AA(4))
+//│ deforest > >>> effect-analysis results >>>
+//│ deforest > call +@result @ <root> -> Pure
+//│ deforest > call +@result @ <root> -> Pure
+//│ deforest > call foo@result @ <root> -> UnsafeEta
+//│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > AA¹(Store¹.this.n¹) ->
 //│ deforest > 	match: scrut¹
@@ -62,6 +72,15 @@ fun classMethodSibling() =
   if AA(1) is
     AA(x) then x + store.get()
 classMethodSibling()
+//│ deforest > >>> effect-analysis results >>>
+//│ deforest > function classMethodSibling#0 @ classMethodSibling@classMethodSibling -> UnsafeEta
+//│ deforest > function classMethodSibling#0 @ classMethodSibling@classMethodSibling -> UnsafeEta
+//│ deforest > call +@result @ classMethodSibling@classMethodSibling -> Pure
+//│ deforest > call +@result @ classMethodSibling@classMethodSibling -> Pure
+//│ deforest > call classMethodSibling@result @ <root> -> UnsafeEta
+//│ deforest > call get@result @ classMethodSibling@classMethodSibling -> UnsafeEta
+//│ deforest > call get@result @ classMethodSibling@classMethodSibling -> UnsafeEta
+//│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > AA¹(1) ->
 //│ deforest > 	match: scrut²
@@ -81,6 +100,9 @@ let r =
 if AA(1) is
   AA(x) then
     x + r!a
+//│ deforest > >>> effect-analysis results >>>
+//│ deforest > call +@result @ <root> -> Pure
+//│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > AA¹(1) ->
 //│ deforest > 	match: scrut³
@@ -96,6 +118,9 @@ if AA(1) is
   AA(x) then
     let xs = [0, 1]
     x + xs!1
+//│ deforest > >>> effect-analysis results >>>
+//│ deforest > call +@result @ <root> -> Pure
+//│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > AA¹(1) ->
 //│ deforest > 	match: scrut⁴
@@ -113,6 +138,13 @@ fun nestedClass() =
   if AA(1) is
     AA(x) then x
 nestedClass()
+//│ deforest > >>> effect-analysis results >>>
+//│ deforest > function nestedClass#0 @ nestedClass@nestedClass -> UnsafeEta
+//│ deforest > function nestedClass#0 @ nestedClass@nestedClass -> UnsafeEta
+//│ deforest > call get@result @ nestedClass@nestedClass -> UnsafeEta
+//│ deforest > call get@result @ nestedClass@nestedClass -> UnsafeEta
+//│ deforest > call nestedClass@result @ <root> -> UnsafeEta
+//│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > AA¹(1) ->
 //│ deforest > 	match: scrut⁵
@@ -132,6 +164,10 @@ fun loopSibling() =
   while false do
     if AA(1) is
       AA(x) then print(x)
+//│ deforest > >>> effect-analysis results >>>
+//│ deforest > function loopSibling#0 @ loopSibling@loopSibling -> UnsafeEta
+//│ deforest > call print@result @ loopSibling@loopSibling -> UnsafeEta
+//│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > AA¹(1) ->
 //│ deforest > 	match: scrut⁶
@@ -152,6 +188,13 @@ class C(n) with
       res
 let c = C(1)
 c.get() + c.get()
+//│ deforest > >>> effect-analysis results >>>
+//│ deforest > call +@result @ <root> -> Pure
+//│ deforest > call +@result @ <root> -> Pure
+//│ deforest > call +@result @ <root> -> Pure
+//│ deforest > call get@result @ <root> -> UnsafeEta
+//│ deforest > call get@result @ <root> -> UnsafeEta
+//│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > AA¹(1) ->
 //│ deforest > 	match: scrut⁷
@@ -169,6 +212,13 @@ module M with
     if AA(1) is
       AA(a) then a + _private
 M.f()
+//│ deforest > >>> effect-analysis results >>>
+//│ deforest > function f#0 @ f@f -> UnsafeEta
+//│ deforest > function f#0 @ f@f -> UnsafeEta
+//│ deforest > call +@result @ f@f -> Pure
+//│ deforest > call +@result @ f@f -> Pure
+//│ deforest > call f@result @ <root> -> UnsafeEta
+//│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > AA¹(1) ->
 //│ deforest > 	match: scrut⁸
@@ -191,6 +241,18 @@ module M with
       if AA(1) is
         AA(a) then a + g()
 M.MM.f()
+//│ deforest > >>> effect-analysis results >>>
+//│ deforest > function f#0 @ f@f -> UnsafeEta
+//│ deforest > function f#0 @ f@f -> UnsafeEta
+//│ deforest > function g#0 @ f@f.g@g -> Pure
+//│ deforest > function g#0 @ f@f.g@g -> Pure
+//│ deforest > function g#0 @ g@g -> Pure
+//│ deforest > call +@result @ f@f -> Pure
+//│ deforest > call +@result @ f@f -> Pure
+//│ deforest > call f@result @ <root> -> UnsafeEta
+//│ deforest > call g@result @ f@f -> Pure
+//│ deforest > call g@result @ f@f -> Pure
+//│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > AA¹(1) ->
 //│ deforest > 	match: scrut⁹

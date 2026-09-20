@@ -9,6 +9,8 @@ object B
 // class BB(bb)
 // object None
 // class Some(value)
+//│ deforest > >>> effect-analysis results >>>
+//│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > <<< fusing <<<
 
@@ -19,6 +21,10 @@ fun foo(x) =
   if x is
     A then 1
     B then 2
+//│ deforest > >>> effect-analysis results >>>
+//│ deforest > function foo#0 @ foo@foo -> UnsafeEta
+//│ deforest > call print@result @ foo@foo -> UnsafeEta
+//│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > <<< fusing <<<
 //│ x = A
@@ -28,6 +34,11 @@ let x = if true then A else B
 fun foo(x) =
   if x is A do print(123)
   if x is B do print(456)
+//│ deforest > >>> effect-analysis results >>>
+//│ deforest > function foo#0 @ foo@foo -> UnsafeEta
+//│ deforest > call print@result @ foo@foo -> UnsafeEta
+//│ deforest > call print@result @ foo@foo -> UnsafeEta
+//│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > <<< fusing <<<
 //│ x = A
@@ -43,6 +54,21 @@ fun bar(v) = if v is
   A then 1
   B then 2
 foo(bar, 123)
+//│ deforest > >>> effect-analysis results >>>
+//│ deforest > function bar#0 @ bar@bar -> UnsafeEta
+//│ deforest > function bar#0 @ bar@bar -> UnsafeEta
+//│ deforest > function foo#0 @ foo@foo -> UnsafeEta
+//│ deforest > function foo#0 @ foo@foo -> UnsafeEta
+//│ deforest > call ===@result @ foo@foo -> Pure
+//│ deforest > call ===@result @ foo@foo -> Pure
+//│ deforest > call >@result @ foo@foo -> Pure
+//│ deforest > call >@result @ foo@foo -> Pure
+//│ deforest > call foo@result @ <root> -> UnsafeEta
+//│ deforest > call k@result @ foo@foo -> UnsafeEta
+//│ deforest > call k@result @ foo@foo -> UnsafeEta
+//│ deforest > call k@result @ foo@foo -> UnsafeEta
+//│ deforest > call k@result @ foo@foo -> UnsafeEta
+//│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > A⁰ ->
 //│ deforest > 	match: v⁰

@@ -37,6 +37,8 @@ enum Annot extends Located:
   case Async()(val toLoc: Opt[Loc])
   case RaiseEffects()(val toLoc: Opt[Loc])
   // Whether the function is guaranteed to not raise effects.
+  // * EffectAnalysis Annotations
+  // @pure: overriding annotation that the function is pure, i.e. it does not raise effects.
   case Pure()(val toLoc: Opt[Loc])
   case Config(modify: hkmc2.Config => hkmc2.Config)(val toLoc: Opt[Loc])
   // Marks if a function or lambda is one-shot, i.e. called at most once.
@@ -1055,7 +1057,7 @@ final case class TermDefinition(
       case Annot.Modifier(Keyword.`private`) => Visibility.Private
       case Annot.Modifier(Keyword.`public`) => Visibility.Public
     .getOrElse(Visibility.Public)
-  lazy val mayRaiseEffects: Bool =
+  lazy val mayHaveEffects: Bool =
     annotations.forall:
       case Annot.Pure() => false
       case _ => true
