@@ -91,7 +91,12 @@ class EtaExpansionSolver(val constraintSolver: FlowConstraintSolver, tl: TraceLo
             case _: Ctor => Nil
         end go
         
-        go(N)
+        val ubs = constraintSolver.AllUpperBounds(v)
+        if ubs.exists:
+          case _: ConsFun | UnknownCons => true
+          case _ => false
+        then go(N)
+        else Nil
       case UnknownProd => Nil
       case _: Ctor => Nil
     end funResShape

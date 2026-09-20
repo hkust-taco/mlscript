@@ -152,3 +152,69 @@ fun h(x) = @affine(0) x
 //│ ╙──       	                      ^
 //│ eta-expansion > >>> eta-expansion targets shapes >>>
 //│ eta-expansion > <<< eta-expansion targets shapes <<<
+
+
+// `f(b)`'s result discarded so `g1` and `h1` keep the liveness of their own call sites and
+// would disagree on eliminable parameters if we keep the eta-expandability of `f1`
+:noInline
+:flowBasedOpt debugEta debugDpe
+:soir
+@affine(0) private fun g1(x) = 0
+@affine(0) private fun h1(x) = x
+private fun f1(b) = if b then g1 else h1
+private fun main1(b) =
+  f1(b)
+  g1(1) + h1(2)
+main1(true)
+//│ eta-expansion > >>> eta-expansion targets shapes >>>
+//│ eta-expansion > <<< eta-expansion targets shapes <<<
+//│ dead-param-elim > >>> dead-param-elim results >>>
+//│ dead-param-elim > prodfun g1#0 @ <root> -> eliminable: {0}
+//│ dead-param-elim > <<< dead-param-elim results <<<
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ @affine(0) @private
+//│ define g1⁰ as fun g1¹() {
+//│   return 0
+//│ };
+//│ @affine(0) @private
+//│ define h1⁰ as fun h1¹(x) {
+//│   return x
+//│ };
+//│ @private
+//│ define f1⁰ as fun f1¹(b) {
+//│   match b
+//│     true =>
+//│       return g1¹
+//│     else
+//│       return h1¹
+//│   end
+//│ };
+//│ @private
+//│ define main1⁰ as fun main1¹(b) {
+//│   let tmp, tmp1;
+//│   do f1¹(b);
+//│   set tmp = g1¹();
+//│   set tmp1 = h1¹(2);
+//│   return +⁰(tmp, tmp1)
+//│ };
+//│ return main1¹(true)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 2
+
+// similar as above, but `f2(b)` is not discarded but pattern matched
+:noInline
+:flowBasedOpt debugEta debugDpe
+:expect 0
+@affine(0) private fun g2(x) = 0
+@affine(0) private fun h2(x) = x
+private fun f2(b) = if b then g2 else h2
+private fun main2(b) =
+  if f2(b) is 0 then 0 else 1
+  g2(1)
+main2(true)
+//│ eta-expansion > >>> eta-expansion targets shapes >>>
+//│ eta-expansion > <<< eta-expansion targets shapes <<<
+//│ dead-param-elim > >>> dead-param-elim results >>>
+//│ dead-param-elim > prodfun g2#0 @ <root> -> eliminable: {0}
+//│ dead-param-elim > <<< dead-param-elim results <<<
+//│ = 0
