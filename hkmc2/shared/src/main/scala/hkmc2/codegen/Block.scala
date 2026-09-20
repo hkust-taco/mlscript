@@ -1134,7 +1134,8 @@ sealed abstract class Result extends AutoLocated:
       // * A class reference is the class object, so it stays unknown.
       case S(_: ClassSymbol) => N
       case S(d: ModuleOrObjectSymbol) => d.erasedType
-      case S(d: TypeAliasSymbol) => d.erasedType
+      // * A type alias is not a value, so this is only reachable in ill-formed programs
+      case S(_: TypeAliasSymbol) => N
       case _ => N
     case Cast(_, target, _) => S(target)
     // * `Instantiate` always yields an instance of the class, since the constructor is guaranteed to be fully-applied

@@ -268,3 +268,24 @@ fun e12(x: rsc P1): Int32 = x
 fun e13(x: rsc? P2): Int32 = x
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define e13⁰ as fun e13¹(x: Int32): Int32 { return x }; end
+
+
+// A type alias in value position never represents a legal value, so it does not have an erased type and is
+// defaulted to `rsc? Unknown`, and both tests below insert a checked cast to coerce it to the parameter's
+// expected type.
+class C()
+module M with
+  type Num2 = Int
+  type R = rsc C
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define C³ as class C⁵ { constructor C⁴ }; define M⁰ as class M¹ module M²; end
+
+fun takeInt(x: Int): Int = x
+takeInt(M.Num2)
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define takeInt⁰ as fun takeInt¹(x: Int⁰): Int⁰ { return x }; return takeInt¹((M².Num2⁰ as! Int⁰))
+
+fun takeC(x: C): C = x
+takeC(M.R)
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define takeC⁰ as fun takeC¹(x: C⁵): C⁵ { return x }; return takeC¹((M².R⁰ as! C⁵))

@@ -617,8 +617,6 @@ class ModuleOrObjectSymbol(val tree: Tree.TypeDef, val id: Tree.Ident)(using Sta
 class TypeAliasSymbol(val id: Tree.Ident)(using State)
     extends MemberSymbol
     with DefinitionSymbol[TypeDef]:
-
-  val erasedType: Opt[ErasedValueType] = S(ErasedType.ValueLike(rsc = S(false), this))
   
   def nme = id.name
   def toLoc: Option[Loc] = id.toLoc // TODO track source tree of type alias here
