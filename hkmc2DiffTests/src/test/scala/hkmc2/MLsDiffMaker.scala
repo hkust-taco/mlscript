@@ -155,6 +155,7 @@ abstract class MLsDiffMaker extends DiffMaker:
                 S(StackSafety(stackLimit = value))
         ,
       )),
+      effectAnalysis = N,
       liftDefns = Opt.when(liftDefns.isSet)(LiftDefns()),
       patMatConsequentSharingThreshold = patMatConsequentSharingThreshold.get
         .orElse(Config.default.patMatConsequentSharingThreshold),

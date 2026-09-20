@@ -1,0 +1,38 @@
+open annotations { pure, effectful, mayNotRaiseEffects }
+
+:e
+@pure
+@effectful
+fun conflictingPure() = 0
+//│ ╔══[COMPILATION ERROR] @effectful cannot be combined with @pure or @mayNotRaiseEffects.
+//│ ║  l.5: 	@effectful
+//│ ╙──     	^^^^^^^^^^
+
+:e
+@effectful
+@pure
+fun conflictingEffectful() = 0
+//│ ╔══[COMPILATION ERROR] @effectful cannot be combined with @pure or @mayNotRaiseEffects.
+//│ ║  l.13: 	@pure
+//│ ╙──      	^^^^^
+
+:e
+@mayNotRaiseEffects
+@effectful
+declare fun conflictingLegacy(): Anything
+//│ ╔══[COMPILATION ERROR] @effectful cannot be combined with @pure or @mayNotRaiseEffects.
+//│ ║  l.21: 	@effectful
+//│ ╙──      	^^^^^^^^^^
+
+:e
+@effectful
+@mayNotRaiseEffects
+declare fun conflictingLegacyReverse(): Anything
+//│ ╔══[COMPILATION ERROR] @effectful cannot be combined with @pure or @mayNotRaiseEffects.
+//│ ║  l.29: 	@mayNotRaiseEffects
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^
+
+// Compatible purity annotations are allowed.
+@pure
+@mayNotRaiseEffects
+fun compatiblePure() = 0

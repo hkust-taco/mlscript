@@ -73,12 +73,12 @@ class EtaExpansionSolver(val constraintSolver: FlowConstraintSolver):
                     a
                 go(S(mergedRes))
               else Nil
-            case UnknownProd => Nil
+            case UnknownProd | MayRaise => Nil
             case _: Ctor => Nil
         end go
         
         go(N)
-      case UnknownProd => Nil
+      case UnknownProd | MayRaise => Nil
       case _: Ctor => Nil
     end funResShape
 

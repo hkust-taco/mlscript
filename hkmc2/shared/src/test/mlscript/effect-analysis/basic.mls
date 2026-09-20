@@ -1,0 +1,303 @@
+#config(effectAnalysis: Some(EffectAnalysis(debug: true, mono: true)), inlining: None, deadParamElim: None)
+//│ effect-analysis > >>> effect-analysis results >>>
+//│ effect-analysis > <<< effect-analysis results <<<
+
+
+open annotations { effectful }
+@effectful
+declare fun effect(): Anything
+//│ effect-analysis > >>> effect-analysis results >>>
+//│ effect-analysis > <<< effect-analysis results <<<
+
+fun leaf_pure(x) = x + 1
+fun node_pure(x) = leaf_pure(x)
+//│ effect-analysis > >>> effect-analysis results >>>
+//│ effect-analysis > function leaf_pure#0 @ <root> -> Pure
+//│ effect-analysis > function node_pure#0 @ <root> -> Pure
+//│ effect-analysis > call +@0 @ <root> -> Pure
+//│ effect-analysis > call leaf_pure@1 @ <root> -> Pure
+//│ effect-analysis > <<< effect-analysis results <<<
+
+fun leaf_effectful() = effect() + print()
+fun node_effectful() = leaf_effectful()
+//│ effect-analysis > >>> effect-analysis results >>>
+//│ effect-analysis > function leaf_effectful#0 @ <root> -> MayRaise
+//│ effect-analysis > function node_effectful#0 @ <root> -> MayRaise
+//│ effect-analysis > call +@3 @ <root> -> Pure
+//│ effect-analysis > call effect@0 @ <root> -> MayRaise
+//│ effect-analysis > call leaf_effectful@4 @ <root> -> MayRaise
+//│ effect-analysis > call print@1 @ <root> -> MayRaise
+//│ effect-analysis > <<< effect-analysis results <<<
+
+fun node_recursive_pure(x) = node_recursive_pure(x)
+fun node_recursive_effectful(x) = node_recursive_effectful(leaf_effectful())
+//│ effect-analysis > >>> effect-analysis results >>>
+//│ effect-analysis > function node_recursive_effectful#0 @ <root> -> MayRaise
+//│ effect-analysis > function node_recursive_pure#0 @ <root> -> Pure
+//│ effect-analysis > call leaf_effectful@1 @ <root> -> MayRaise
+//│ effect-analysis > call node_recursive_effectful@2 @ <root> -> MayRaise
+//│ effect-analysis > call node_recursive_pure@0 @ <root> -> Pure
+//│ effect-analysis > <<< effect-analysis results <<<
+
+open annotations { mayNotRaiseEffects }
+@mayNotRaiseEffects
+fun leaf() = effect()
+fun node() = leaf()
+//│ effect-analysis > >>> effect-analysis results >>>
+//│ effect-analysis > function leaf#0 @ <root> -> MayRaise
+//│ effect-analysis > function node#0 @ <root> -> Pure
+//│ effect-analysis > call effect@0 @ <root> -> MayRaise
+//│ effect-analysis > call leaf@1 @ <root> -> Pure
+//│ effect-analysis > <<< effect-analysis results <<<
+
+
+open annotations { pure }
+@pure
+declare fun leaf_pure(): Anything
+fun node() = leaf_pure()
+node()
+//│ effect-analysis > >>> effect-analysis results >>>
+//│ effect-analysis > function node#0 @ <root> -> Pure
+//│ effect-analysis > call leaf_pure@0 @ <root> -> Pure
+//│ effect-analysis > call node@1 @ <root> -> Pure
+//│ effect-analysis > <<< effect-analysis results <<<
+
+
+class Box(val value) with
+  fun raise() = effect()
+fun node_constructor() = Box(0)
+fun node_method(box: Box) = box.raise()
+//│ effect-analysis > >>> effect-analysis results >>>
+//│ effect-analysis > function node_constructor#0 @ <root> -> MayRaise
+//│ effect-analysis > function node_method#0 @ <root> -> MayRaise
+//│ effect-analysis > call effect@2 @ <root> -> MayRaise
+//│ effect-analysis > call raise@1 @ <root> -> MayRaise
+//│ effect-analysis > <<< effect-analysis results <<<
+
+
+fun node(f, x) = f(x)
+fun leaf_pure(x) = x
+fun leaf_effectful(x) = effect()
+fun caller_pure() = node(leaf_pure, 0)
+fun caller_effectful() = node(leaf_effectful, 0)
+//│ effect-analysis > >>> effect-analysis results >>>
+//│ effect-analysis > function caller_effectful#0 @ <root> -> MayRaise
+//│ effect-analysis > function caller_pure#0 @ <root> -> MayRaise
+//│ effect-analysis > function leaf_effectful#0 @ <root> -> MayRaise
+//│ effect-analysis > function leaf_pure#0 @ <root> -> Pure
+//│ effect-analysis > function node#0 @ <root> -> MayRaise
+//│ effect-analysis > call effect@1 @ <root> -> MayRaise
+//│ effect-analysis > call f@0 @ <root> -> MayRaise
+//│ effect-analysis > call node@2 @ <root> -> MayRaise
+//│ effect-analysis > call node@3 @ <root> -> MayRaise
+//│ effect-analysis > <<< effect-analysis results <<<
+
+
+fun leaf(...xs) = 0
+fun node(xs) = leaf(...xs)
+//│ effect-analysis > >>> effect-analysis results >>>
+//│ effect-analysis > function leaf#0 @ <root> -> Pure
+//│ effect-analysis > function node#0 @ <root> -> MayRaise
+//│ effect-analysis > <<< effect-analysis results <<<
+
+
+#config(effectAnalysis: Some(EffectAnalysis(debug: true, mono: false)))
+//│ effect-analysis > >>> effect-analysis results >>>
+//│ effect-analysis > <<< effect-analysis results <<<
+
+
+fun node(f, x) = f(x)
+fun caller_pure() = node((x) => x, 0)
+fun caller_effectful() = node((x) => effect(), 0)
+//│ effect-analysis > >>> effect-analysis results >>>
+//│ effect-analysis > function caller_effectful#0 @ caller_effectful@8 -> MayRaise
+//│ effect-analysis > function caller_pure#0 @ caller_pure@7 -> Pure
+//│ effect-analysis > function lambda#0 @ caller_effectful@8 -> MayRaise
+//│ effect-analysis > function lambda#0 @ caller_pure@7 -> Pure
+//│ effect-analysis > function node#0 @ caller_effectful@8.node@5 -> MayRaise
+//│ effect-analysis > function node#0 @ caller_pure@7.node@2 -> Pure
+//│ effect-analysis > function node#0 @ node@6 -> MayRaise
+//│ effect-analysis > call effect@3 @ caller_effectful@8 -> MayRaise
+//│ effect-analysis > call f@0 @ caller_effectful@8.node@5 -> MayRaise
+//│ effect-analysis > call f@0 @ caller_pure@7.node@2 -> Pure
+//│ effect-analysis > call f@0 @ node@6 -> MayRaise
+//│ effect-analysis > call node@1 @ caller_pure@7 -> Pure
+//│ effect-analysis > call node@4 @ caller_effectful@8 -> MayRaise
+//│ effect-analysis > <<< effect-analysis results <<<
+
+
+@pure
+fun leaf_pure(x) = x
+leaf_pure(0)
+//│ effect-analysis > >>> effect-analysis results >>>
+//│ effect-analysis > function leaf_pure#0 @ leaf_pure@1 -> Pure
+//│ effect-analysis > function leaf_pure#0 @ leaf_pure@2 -> Pure
+//│ effect-analysis > call leaf_pure@0 @ <root> -> Pure
+//│ effect-analysis > <<< effect-analysis results <<<
+
+
+@effectful
+declare fun leaf_effectful(): Anything
+fun node() = leaf_effectful()
+node()
+//│ effect-analysis > >>> effect-analysis results >>>
+//│ effect-analysis > function node#0 @ node@2 -> MayRaise
+//│ effect-analysis > function node#0 @ node@3 -> MayRaise
+//│ effect-analysis > call leaf_effectful@0 @ node@2 -> MayRaise
+//│ effect-analysis > call leaf_effectful@0 @ node@3 -> MayRaise
+//│ effect-analysis > call node@1 @ <root> -> MayRaise
+//│ effect-analysis > <<< effect-analysis results <<<
+
+
+// Trusted @pure suppresses spread fallback, including through SCC instantiation.
+@pure
+fun leaf_pure(...xs) = 0
+fun node(xs) = leaf_pure(...xs)
+fun caller(xs) = node(xs)
+//│ effect-analysis > >>> effect-analysis results >>>
+//│ effect-analysis > function caller#0 @ caller@6 -> Pure
+//│ effect-analysis > function leaf_pure#0 @ caller@6.node@3.leaf_pure@1 -> Pure
+//│ effect-analysis > function leaf_pure#0 @ leaf_pure@4 -> Pure
+//│ effect-analysis > function leaf_pure#0 @ node@5.leaf_pure@1 -> Pure
+//│ effect-analysis > function node#0 @ caller@6.node@3 -> Pure
+//│ effect-analysis > function node#0 @ node@5 -> Pure
+//│ effect-analysis > call node@2 @ caller@6 -> Pure
+//│ effect-analysis > <<< effect-analysis results <<<
+
+
+#config(effectAnalysis: Some(EffectAnalysis(debug: true, mono: true)))
+//│ effect-analysis > >>> effect-analysis results >>>
+//│ effect-analysis > <<< effect-analysis results <<<
+
+
+// Explicit latent overrides node to direct and higher-order calls; body calls retain their summaries.
+@pure
+private fun leaf_pure(x) = effect()
+@effectful
+private fun leaf_effectful(x) = x
+private fun node_direct_pure() = leaf_pure(0)
+private fun node_direct_effectful() = leaf_effectful(0)
+private fun node_pure(f, x) = f(x)
+private fun node_effectful(f, x) = f(x)
+private fun caller_pure() = node_pure(leaf_pure, 0)
+private fun caller_effectful() = node_effectful(leaf_effectful, 0)
+node_direct_pure()
+node_direct_effectful()
+caller_pure()
+caller_effectful()
+//│ effect-analysis > >>> effect-analysis results >>>
+//│ effect-analysis > function caller_effectful#0 @ <root> -> MayRaise
+//│ effect-analysis > function caller_pure#0 @ <root> -> Pure
+//│ effect-analysis > function leaf_effectful#0 @ <root> -> MayRaise
+//│ effect-analysis > function leaf_pure#0 @ <root> -> Pure
+//│ effect-analysis > function node_direct_effectful#0 @ <root> -> MayRaise
+//│ effect-analysis > function node_direct_pure#0 @ <root> -> Pure
+//│ effect-analysis > function node_effectful#0 @ <root> -> MayRaise
+//│ effect-analysis > function node_pure#0 @ <root> -> Pure
+//│ effect-analysis > call caller_effectful@10 @ <root> -> MayRaise
+//│ effect-analysis > call caller_pure@9 @ <root> -> Pure
+//│ effect-analysis > call effect@0 @ <root> -> MayRaise
+//│ effect-analysis > call f@3 @ <root> -> Pure
+//│ effect-analysis > call f@4 @ <root> -> MayRaise
+//│ effect-analysis > call leaf_effectful@2 @ <root> -> MayRaise
+//│ effect-analysis > call leaf_pure@1 @ <root> -> Pure
+//│ effect-analysis > call node_direct_effectful@8 @ <root> -> MayRaise
+//│ effect-analysis > call node_direct_pure@7 @ <root> -> Pure
+//│ effect-analysis > call node_effectful@6 @ <root> -> MayRaise
+//│ effect-analysis > call node_pure@5 @ <root> -> Pure
+//│ effect-analysis > <<< effect-analysis results <<<
+
+
+#config(effectAnalysis: Some(EffectAnalysis(debug: true, mono: false)))
+//│ effect-analysis > >>> effect-analysis results >>>
+//│ effect-analysis > <<< effect-analysis results <<<
+
+
+// Explicit latent overrides node to direct and higher-order calls; body calls retain their summaries.
+@pure
+private fun leaf_pure(x) = effect()
+@effectful
+private fun leaf_effectful(x) = x
+private fun node_direct_pure() = leaf_pure(0)
+private fun node_direct_effectful() = leaf_effectful(0)
+private fun node_pure(f, x) = f(x)
+private fun node_effectful(f, x) = f(x)
+private fun caller_pure() = node_pure(leaf_pure, 0)
+private fun caller_effectful() = node_effectful(leaf_effectful, 0)
+node_direct_pure()
+node_direct_effectful()
+caller_pure()
+caller_effectful()
+//│ effect-analysis > >>> effect-analysis results >>>
+//│ effect-analysis > function caller_effectful#0 @ caller_effectful@20 -> MayRaise
+//│ effect-analysis > function caller_effectful#0 @ caller_effectful@28 -> MayRaise
+//│ effect-analysis > function caller_pure#0 @ caller_pure@18 -> Pure
+//│ effect-analysis > function caller_pure#0 @ caller_pure@27 -> Pure
+//│ effect-analysis > function leaf_effectful#0 @ caller_effectful@20.leaf_effectful@12 -> MayRaise
+//│ effect-analysis > function leaf_effectful#0 @ caller_effectful@28.leaf_effectful@12 -> MayRaise
+//│ effect-analysis > function leaf_effectful#0 @ leaf_effectful@22 -> MayRaise
+//│ effect-analysis > function leaf_effectful#0 @ node_direct_effectful@16.leaf_effectful@4 -> MayRaise
+//│ effect-analysis > function leaf_effectful#0 @ node_direct_effectful@24.leaf_effectful@4 -> MayRaise
+//│ effect-analysis > function leaf_pure#0 @ caller_pure@18.leaf_pure@9 -> Pure
+//│ effect-analysis > function leaf_pure#0 @ caller_pure@27.leaf_pure@9 -> Pure
+//│ effect-analysis > function leaf_pure#0 @ leaf_pure@21 -> Pure
+//│ effect-analysis > function leaf_pure#0 @ node_direct_pure@14.leaf_pure@2 -> Pure
+//│ effect-analysis > function leaf_pure#0 @ node_direct_pure@23.leaf_pure@2 -> Pure
+//│ effect-analysis > function node_direct_effectful#0 @ node_direct_effectful@16 -> MayRaise
+//│ effect-analysis > function node_direct_effectful#0 @ node_direct_effectful@24 -> MayRaise
+//│ effect-analysis > function node_direct_pure#0 @ node_direct_pure@14 -> Pure
+//│ effect-analysis > function node_direct_pure#0 @ node_direct_pure@23 -> Pure
+//│ effect-analysis > function node_effectful#0 @ caller_effectful@20.node_effectful@11 -> MayRaise
+//│ effect-analysis > function node_effectful#0 @ caller_effectful@28.node_effectful@11 -> MayRaise
+//│ effect-analysis > function node_effectful#0 @ node_effectful@26 -> MayRaise
+//│ effect-analysis > function node_pure#0 @ caller_pure@18.node_pure@8 -> Pure
+//│ effect-analysis > function node_pure#0 @ caller_pure@27.node_pure@8 -> Pure
+//│ effect-analysis > function node_pure#0 @ node_pure@25 -> MayRaise
+//│ effect-analysis > call caller_effectful@19 @ <root> -> MayRaise
+//│ effect-analysis > call caller_pure@17 @ <root> -> Pure
+//│ effect-analysis > call effect@0 @ caller_pure@18.leaf_pure@9 -> MayRaise
+//│ effect-analysis > call effect@0 @ caller_pure@27.leaf_pure@9 -> MayRaise
+//│ effect-analysis > call effect@0 @ leaf_pure@21 -> MayRaise
+//│ effect-analysis > call effect@0 @ node_direct_pure@14.leaf_pure@2 -> MayRaise
+//│ effect-analysis > call effect@0 @ node_direct_pure@23.leaf_pure@2 -> MayRaise
+//│ effect-analysis > call f@5 @ caller_pure@18.node_pure@8 -> Pure
+//│ effect-analysis > call f@5 @ caller_pure@27.node_pure@8 -> Pure
+//│ effect-analysis > call f@5 @ node_pure@25 -> MayRaise
+//│ effect-analysis > call f@6 @ caller_effectful@20.node_effectful@11 -> MayRaise
+//│ effect-analysis > call f@6 @ caller_effectful@28.node_effectful@11 -> MayRaise
+//│ effect-analysis > call f@6 @ node_effectful@26 -> MayRaise
+//│ effect-analysis > call leaf_effectful@3 @ node_direct_effectful@16 -> MayRaise
+//│ effect-analysis > call leaf_effectful@3 @ node_direct_effectful@24 -> MayRaise
+//│ effect-analysis > call leaf_pure@1 @ node_direct_pure@14 -> Pure
+//│ effect-analysis > call leaf_pure@1 @ node_direct_pure@23 -> Pure
+//│ effect-analysis > call node_direct_effectful@15 @ <root> -> MayRaise
+//│ effect-analysis > call node_direct_pure@13 @ <root> -> Pure
+//│ effect-analysis > call node_effectful@10 @ caller_effectful@20 -> MayRaise
+//│ effect-analysis > call node_effectful@10 @ caller_effectful@28 -> MayRaise
+//│ effect-analysis > call node_pure@7 @ caller_pure@18 -> Pure
+//│ effect-analysis > call node_pure@7 @ caller_pure@27 -> Pure
+//│ effect-analysis > <<< effect-analysis results <<<
+
+
+#config(effectAnalysis: Some(EffectAnalysis(debug: true, mono: true)))
+//│ effect-analysis > >>> effect-analysis results >>>
+//│ effect-analysis > <<< effect-analysis results <<<
+
+
+@pure
+private fun leaf_pure(...xs) = effect()
+@effectful
+private fun leaf_effectful(...xs) = 0
+private fun leaf_inferred_pure(...xs) = 0
+private fun node_pure(xs) = leaf_pure(...xs)
+private fun node_effectful(xs) = leaf_effectful(...xs)
+private fun node_inferred_pure(xs) = leaf_inferred_pure(...xs)
+//│ effect-analysis > >>> effect-analysis results >>>
+//│ effect-analysis > function leaf_effectful#0 @ <root> -> MayRaise
+//│ effect-analysis > function leaf_inferred_pure#0 @ <root> -> Pure
+//│ effect-analysis > function leaf_pure#0 @ <root> -> Pure
+//│ effect-analysis > function node_effectful#0 @ <root> -> MayRaise
+//│ effect-analysis > function node_inferred_pure#0 @ <root> -> MayRaise
+//│ effect-analysis > function node_pure#0 @ <root> -> Pure
+//│ effect-analysis > call effect@0 @ <root> -> MayRaise
+//│ effect-analysis > <<< effect-analysis results <<<
