@@ -7,6 +7,11 @@ data class B(y)
 data class C(z)
 class P(x) with
   print(x)
+class D with
+  fun app(cb) = cb(A(1))
+class O with
+  fun x = print("get x")
+  fun z = print("get z")
 //│ dead-constructor-elim > >>> dead-constructor-elim results >>>
 //│ dead-constructor-elim > <<< dead-constructor-elim results <<<
 
@@ -245,23 +250,18 @@ app(c => 2) + app(c => if c is C then 1 else 0)
 
 :soir
 :noInline
-class O with
-  fun app(cb) = cb(A(1))
-fun q() = (new O).app(b => print(b))
+fun q() = (new D).app(b => print(b))
 q()
 //│ dead-constructor-elim > >>> dead-constructor-elim results >>>
 //│ dead-constructor-elim > <<< dead-constructor-elim results <<<
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ define q⁰ as fun q¹() {
 //│   let tmp, lambda;
-//│   set tmp = new O⁰();
+//│   set tmp = new D⁰();
 //│   define lambda as fun lambda³(b) {
 //│     return Predef⁰.print⁰(b)
 //│   };
 //│   return tmp.app⁴(lambda³)
-//│ };
-//│ define O¹ as class O⁰ {
-//│   method app⁵ = fun app⁴(cb) { let tmp; set tmp = A⁰(1); return cb(tmp) }
 //│ };
 //│ return q¹()
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
@@ -284,3 +284,135 @@ m()
 //│ > undefined
 //│ = 2
 
+
+
+// the ctor is dead, but its argument `print(1)` must still run
+:soir
+:noInline
+fun r() =
+  let unused = A(print(1))
+  2
+r()
+//│ dead-constructor-elim > >>> dead-constructor-elim results >>>
+//│ dead-constructor-elim > eliminable: Call(member:A²‹term:A⁰›, [[tmp:tmp⁰]])
+//│ dead-constructor-elim > <<< dead-constructor-elim results <<<
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ define r⁰ as fun r¹() { do Predef⁰.print⁰(1); return 2 }; return r¹()
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ > 1
+//│ = 2
+
+
+// the ctor is dead, but `y.x` is kept
+:soir
+:noInline
+fun s(y) =
+  let unused = A(y.x)
+  2
+s(new O)
+//│ dead-constructor-elim > >>> dead-constructor-elim results >>>
+//│ dead-constructor-elim > eliminable: Call(member:A²‹term:A⁰›, [[Select(y⁰, Ident(x))]])
+//│ dead-constructor-elim > <<< dead-constructor-elim results <<<
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let tmp; define s⁰ as fun s¹(y) { do y.x﹖; return 2 }; set tmp = new O⁰(); return s¹(tmp)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ > get x
+//│ = 2
+
+
+
+:soir
+:noInline
+fun t(y) =
+  let unused = [y.z, 1, y.x, y!z]
+  2
+t(new O)
+//│ dead-constructor-elim > >>> dead-constructor-elim results >>>
+//│ dead-constructor-elim > eliminable: Tuple(false, [Select(y¹, Ident(z)), 1, Select(y¹, Ident(x)), DynSelect(y¹, "z", false)])
+//│ dead-constructor-elim > <<< dead-constructor-elim results <<<
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let tmp;
+//│ define t⁰ as fun t¹(y) { do y.z﹖; do y.x﹖; do y!"z"; return 2 };
+//│ set tmp = new O⁰();
+//│ return t¹(tmp)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ > get z
+//│ > get x
+//│ > get z
+//│ = 2
+
+
+
+:soir
+:noInline
+fun u(y) =
+  let b = A([y.z, y.x])
+  if b is A then 1 else 0
+u(new O)
+//│ dead-constructor-elim > >>> dead-constructor-elim results >>>
+//│ dead-constructor-elim > eliminable: Tuple(false, [Select(y², Ident(z)), Select(y², Ident(x))])
+//│ dead-constructor-elim > <<< dead-constructor-elim results <<<
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let tmp;
+//│ define u⁰ as fun u¹(y) {
+//│   let b;
+//│   do y.z﹖;
+//│   do y.x﹖;
+//│   set b = A⁰(undefined);
+//│   match b
+//│     A¹ =>
+//│       return 1
+//│     else
+//│       return 0
+//│   end
+//│ };
+//│ set tmp = new O⁰();
+//│ return u¹(tmp)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ > get z
+//│ > get x
+//│ = 1
+
+
+
+:soir
+:noInline
+fun v(y) = [y.z, y.x]
+v(new O)
+//│ dead-constructor-elim > >>> dead-constructor-elim results >>>
+//│ dead-constructor-elim > <<< dead-constructor-elim results <<<
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let tmp; define v⁰ as fun v¹(y) { return [y.z﹖, y.x﹖] }; set tmp = new O⁰(); return v¹(tmp)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ > get z
+//│ > get x
+//│ = [(), ()]
+
+
+
+:soir
+:noInline
+fun w(y) =
+  let b = [y.z, 1]
+  if b is [_, n] then n else 0
+w(new O)
+//│ dead-constructor-elim > >>> dead-constructor-elim results >>>
+//│ dead-constructor-elim > <<< dead-constructor-elim results <<<
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let tmp;
+//│ define w⁰ as fun w¹(y) {
+//│   let b;
+//│   set b = [y.z﹖, 1];
+//│   match b
+//│     Array(2) =>
+//│       do runtime⁰.Tuple⁰.get⁰(b, 0);
+//│       return runtime⁰.Tuple⁰.get⁰(b, 1)
+//│     else
+//│       return 0
+//│   end
+//│ };
+//│ set tmp = new O⁰();
+//│ return w¹(tmp)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ > get z
+//│ = 1

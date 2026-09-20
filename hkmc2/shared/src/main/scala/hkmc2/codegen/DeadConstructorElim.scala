@@ -37,7 +37,7 @@ class DeadConstructorElimSolver(val constraintSolver: FlowConstraintSolver, trac
   val deadCtors =
       
     def isRemovable(ctorSite: Result): Bool = ctorSite match
-      case t: Tuple => t.isPure
+      case _: Tuple => true
       case CtorProducer(cls: ClassSymbol, args, selectedFrom) =>
         // TODO: should be able to remove this later when we can reason about
         // ctor flow and side effect properly

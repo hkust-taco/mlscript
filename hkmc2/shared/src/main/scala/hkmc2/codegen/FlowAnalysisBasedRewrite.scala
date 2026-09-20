@@ -160,9 +160,12 @@ class FlowAnalysisBasedRewrite(
       end rewriteArgs
       
       r match
-      case ctorSite@CtorProducer(_, _, _)
+      case ctorSite@CtorProducer(_, args, selectedFrom)
         if deadConstructorElimSolver.deadCtors.contains(ConcreteId(ctorSite.uid, instId)) =>
-        k(Value.Lit(Tree.UnitLit(false)).withLocOf(ctorSite))
+        (selectedFrom.toList ::: args.map(_.value))
+          .filterNot(_.isPure)
+          .foldRight(k(Value.Lit(Tree.UnitLit(false)).withLocOf(ctorSite))): (p, rest) =>
+            applyPath(p)(Assign.discard(_, rest))
       case c@Call(fun, args :: restArgss) if args.forall(_.spread.isEmpty) =>
         val eliminable = deadParamElimSolver.eliminableCallSiteArgs(ConcreteId(c.uid, instId))
         applyPath(fun): fun2 =>
