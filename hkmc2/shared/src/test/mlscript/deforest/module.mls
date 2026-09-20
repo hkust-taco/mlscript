@@ -13,6 +13,19 @@ module M with
   fun f(x) = if x is
     XX(YY(y)) then h()
 M.f(M.p())
+//│ deforest > >>> effect-analysis results >>>
+//│ deforest > function f#0 @ f@f -> UnsafeEta
+//│ deforest > function f#0 @ f@f -> UnsafeEta
+//│ deforest > function h#0 @ f@f.h@h -> Pure
+//│ deforest > function h#0 @ f@f.h@h -> Pure
+//│ deforest > function h#0 @ h@h -> Pure
+//│ deforest > function p#0 @ p@p -> UnsafeEta
+//│ deforest > function p#0 @ p@p -> UnsafeEta
+//│ deforest > call f@result @ <root> -> UnsafeEta
+//│ deforest > call h@result @ f@f -> Pure
+//│ deforest > call h@result @ f@f -> Pure
+//│ deforest > call p@result @ <root> -> UnsafeEta
+//│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > M⁰.this.XX⁰(tmp⁰) ->
 //│ deforest > 	match: x⁰
@@ -40,6 +53,46 @@ module DeforestList with
   fun main() = DeforestList.sum(DeforestList.enum(3))
   val res = DeforestList.sum(DeforestList.enum(100))
 DeforestList.res + DeforestList.main()
+//│ deforest > >>> effect-analysis results >>>
+//│ deforest > function enum#0 @ enum@enum -> UnsafeEta
+//│ deforest > function enum#0 @ enum@enum -> UnsafeEta
+//│ deforest > function enum#0 @ main@main.enum@enum -> UnsafeEta
+//│ deforest > function enum#0 @ main@main.enum@enum -> UnsafeEta
+//│ deforest > function main#0 @ main@main -> UnsafeEta
+//│ deforest > function main#0 @ main@main -> UnsafeEta
+//│ deforest > function sum#0 @ main@main.sum@sum -> UnsafeEta
+//│ deforest > function sum#0 @ main@main.sum@sum -> UnsafeEta
+//│ deforest > function sum#0 @ sum@sum -> UnsafeEta
+//│ deforest > function sum#0 @ sum@sum -> UnsafeEta
+//│ deforest > call +@result @ <root> -> Pure
+//│ deforest > call +@result @ main@main.sum@sum -> Pure
+//│ deforest > call +@result @ main@main.sum@sum -> Pure
+//│ deforest > call +@result @ sum@sum -> Pure
+//│ deforest > call +@result @ sum@sum -> Pure
+//│ deforest > call -@result @ enum@enum -> Pure
+//│ deforest > call -@result @ enum@enum -> Pure
+//│ deforest > call -@result @ main@main.enum@enum -> Pure
+//│ deforest > call -@result @ main@main.enum@enum -> Pure
+//│ deforest > call >@result @ enum@enum -> Pure
+//│ deforest > call >@result @ enum@enum -> Pure
+//│ deforest > call >@result @ main@main.enum@enum -> Pure
+//│ deforest > call >@result @ main@main.enum@enum -> Pure
+//│ deforest > call enum@result @ <root> -> UnsafeEta
+//│ deforest > call enum@result @ enum@enum -> UnsafeEta
+//│ deforest > call enum@result @ enum@enum -> UnsafeEta
+//│ deforest > call enum@result @ main@main -> UnsafeEta
+//│ deforest > call enum@result @ main@main -> UnsafeEta
+//│ deforest > call enum@result @ main@main.enum@enum -> UnsafeEta
+//│ deforest > call enum@result @ main@main.enum@enum -> UnsafeEta
+//│ deforest > call main@result @ <root> -> UnsafeEta
+//│ deforest > call sum@result @ <root> -> UnsafeEta
+//│ deforest > call sum@result @ main@main -> UnsafeEta
+//│ deforest > call sum@result @ main@main -> UnsafeEta
+//│ deforest > call sum@result @ main@main.sum@sum -> UnsafeEta
+//│ deforest > call sum@result @ main@main.sum@sum -> UnsafeEta
+//│ deforest > call sum@result @ sum@sum -> UnsafeEta
+//│ deforest > call sum@result @ sum@sum -> UnsafeEta
+//│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > DeforestList⁰.this.Nil⁰ ->
 //│ deforest > 	match: ls⁰
@@ -80,6 +133,54 @@ module DeforestList with
   fun main() = DeforestList.sum(DeforestList.enum(3))
   val res = DeforestList.sum(DeforestList.enum(100))
 DeforestList.res + DeforestList.main()
+//│ deforest > >>> effect-analysis results >>>
+//│ deforest > function enum#0 @ enum@enum -> UnsafeEta
+//│ deforest > function enum#0 @ enum@enum -> UnsafeEta
+//│ deforest > function enum#0 @ main@main.enum@enum -> UnsafeEta
+//│ deforest > function enum#0 @ main@main.enum@enum -> UnsafeEta
+//│ deforest > function helper#0 @ main@main.sum@sum -> UnsafeEta
+//│ deforest > function helper#0 @ main@main.sum@sum -> UnsafeEta
+//│ deforest > function helper#0 @ sum@sum -> UnsafeEta
+//│ deforest > function helper#0 @ sum@sum -> UnsafeEta
+//│ deforest > function main#0 @ main@main -> UnsafeEta
+//│ deforest > function main#0 @ main@main -> UnsafeEta
+//│ deforest > function sum#0 @ main@main.sum@sum -> UnsafeEta
+//│ deforest > function sum#0 @ main@main.sum@sum -> UnsafeEta
+//│ deforest > function sum#0 @ sum@sum -> UnsafeEta
+//│ deforest > function sum#0 @ sum@sum -> UnsafeEta
+//│ deforest > call +@result @ <root> -> Pure
+//│ deforest > call +@result @ main@main.sum@sum -> Pure
+//│ deforest > call +@result @ main@main.sum@sum -> Pure
+//│ deforest > call +@result @ sum@sum -> Pure
+//│ deforest > call +@result @ sum@sum -> Pure
+//│ deforest > call -@result @ enum@enum -> Pure
+//│ deforest > call -@result @ enum@enum -> Pure
+//│ deforest > call -@result @ main@main.enum@enum -> Pure
+//│ deforest > call -@result @ main@main.enum@enum -> Pure
+//│ deforest > call >@result @ enum@enum -> Pure
+//│ deforest > call >@result @ enum@enum -> Pure
+//│ deforest > call >@result @ main@main.enum@enum -> Pure
+//│ deforest > call >@result @ main@main.enum@enum -> Pure
+//│ deforest > call enum@result @ <root> -> UnsafeEta
+//│ deforest > call enum@result @ enum@enum -> UnsafeEta
+//│ deforest > call enum@result @ enum@enum -> UnsafeEta
+//│ deforest > call enum@result @ main@main -> UnsafeEta
+//│ deforest > call enum@result @ main@main -> UnsafeEta
+//│ deforest > call enum@result @ main@main.enum@enum -> UnsafeEta
+//│ deforest > call enum@result @ main@main.enum@enum -> UnsafeEta
+//│ deforest > call helper@result @ main@main.sum@sum -> UnsafeEta
+//│ deforest > call helper@result @ main@main.sum@sum -> UnsafeEta
+//│ deforest > call helper@result @ main@main.sum@sum -> UnsafeEta
+//│ deforest > call helper@result @ main@main.sum@sum -> UnsafeEta
+//│ deforest > call helper@result @ sum@sum -> UnsafeEta
+//│ deforest > call helper@result @ sum@sum -> UnsafeEta
+//│ deforest > call helper@result @ sum@sum -> UnsafeEta
+//│ deforest > call helper@result @ sum@sum -> UnsafeEta
+//│ deforest > call main@result @ <root> -> UnsafeEta
+//│ deforest > call sum@result @ <root> -> UnsafeEta
+//│ deforest > call sum@result @ main@main -> UnsafeEta
+//│ deforest > call sum@result @ main@main -> UnsafeEta
+//│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > DeforestList¹.this.Nil¹ ->
 //│ deforest > 	match: ls¹
@@ -113,6 +214,13 @@ module MMM with
   fun f() =
     if A is A then y
 MMM.f()
+//│ deforest > >>> effect-analysis results >>>
+//│ deforest > function f#0 @ f@f -> UnsafeEta
+//│ deforest > function f#0 @ f@f -> UnsafeEta
+//│ deforest > function f#0 @ f@f -> UnsafeEta
+//│ deforest > call f@result @ <root> -> UnsafeEta
+//│ deforest > call f@result @ <root> -> UnsafeEta
+//│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > MMM⁰.this.A⁰ ->
 //│ deforest > 	match: scrut⁰
@@ -137,6 +245,11 @@ module M with
       if y is
         Y then x
 M.f(M.X)
+//│ deforest > >>> effect-analysis results >>>
+//│ deforest > function f#0 @ f@f -> UnsafeEta
+//│ deforest > function f#0 @ f@f -> UnsafeEta
+//│ deforest > call f@result @ <root> -> UnsafeEta
+//│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > M¹.X⁰ ->
 //│ deforest > 	match: k⁰
@@ -164,6 +277,38 @@ module M with
     else
       C
 [M.f(3), M.g(true)]
+//│ deforest > >>> effect-analysis results >>>
+//│ deforest > function f#0 @ f@f -> UnsafeEta
+//│ deforest > function f#0 @ f@f -> UnsafeEta
+//│ deforest > function f#0 @ g@g -> UnsafeEta
+//│ deforest > function f#0 @ g@g -> UnsafeEta
+//│ deforest > function g#0 @ f@f -> UnsafeEta
+//│ deforest > function g#0 @ f@f -> UnsafeEta
+//│ deforest > function g#0 @ g@g -> UnsafeEta
+//│ deforest > function g#0 @ g@g -> UnsafeEta
+//│ deforest > call -@result @ f@f -> Pure
+//│ deforest > call -@result @ f@f -> Pure
+//│ deforest > call -@result @ g@g -> Pure
+//│ deforest > call -@result @ g@g -> Pure
+//│ deforest > call <@result @ f@f -> Pure
+//│ deforest > call <@result @ f@f -> Pure
+//│ deforest > call <@result @ g@g -> Pure
+//│ deforest > call <@result @ g@g -> Pure
+//│ deforest > call f@result @ <root> -> UnsafeEta
+//│ deforest > call f@result @ f@f -> UnsafeEta
+//│ deforest > call f@result @ f@f -> UnsafeEta
+//│ deforest > call f@result @ f@f -> UnsafeEta
+//│ deforest > call f@result @ f@f -> UnsafeEta
+//│ deforest > call f@result @ g@g -> UnsafeEta
+//│ deforest > call f@result @ g@g -> UnsafeEta
+//│ deforest > call f@result @ g@g -> UnsafeEta
+//│ deforest > call f@result @ g@g -> UnsafeEta
+//│ deforest > call g@result @ <root> -> UnsafeEta
+//│ deforest > call g@result @ f@f -> UnsafeEta
+//│ deforest > call g@result @ f@f -> UnsafeEta
+//│ deforest > call g@result @ g@g -> UnsafeEta
+//│ deforest > call g@result @ g@g -> UnsafeEta
+//│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > B⁰(0) ->
 //│ deforest > 	match: scrut¹
@@ -203,6 +348,16 @@ private fun f(module I: O.I) = I.C(3)
 private fun g(x, module I: O.I) = if x is
   I.C(y) then y + 2
 g(f(O.I), O.I)
+//│ deforest > >>> effect-analysis results >>>
+//│ deforest > function f#0 @ f@f -> UnsafeEta
+//│ deforest > function f#0 @ f@f -> UnsafeEta
+//│ deforest > function g#0 @ g@g -> UnsafeEta
+//│ deforest > function g#0 @ g@g -> UnsafeEta
+//│ deforest > call +@result @ g@g -> Pure
+//│ deforest > call +@result @ g@g -> Pure
+//│ deforest > call f@result @ <root> -> UnsafeEta
+//│ deforest > call g@result @ <root> -> UnsafeEta
+//│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > I⁰.C¹(3) ->
 //│ deforest > 	match: x¹
@@ -217,6 +372,16 @@ private fun f(module O: O) = O.I.C(3)
 private fun g(x, module O: O) = if x is
   O.I.C(y) then y + 2
 g(f(O), O)
+//│ deforest > >>> effect-analysis results >>>
+//│ deforest > function f#0 @ f@f -> UnsafeEta
+//│ deforest > function f#0 @ f@f -> UnsafeEta
+//│ deforest > function g#0 @ g@g -> UnsafeEta
+//│ deforest > function g#0 @ g@g -> UnsafeEta
+//│ deforest > call +@result @ g@g -> Pure
+//│ deforest > call +@result @ g@g -> Pure
+//│ deforest > call f@result @ <root> -> UnsafeEta
+//│ deforest > call g@result @ <root> -> UnsafeEta
+//│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > O⁰.I¹.C¹(3) ->
 //│ deforest > 	match: x³

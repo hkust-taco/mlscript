@@ -37,6 +37,27 @@ f(3)
 //│ deforest > tmp_for_f¹
 //│ deforest > tmp_for_f⁰
 //│ deforest > <<< non-affine syms <<<
+//│ deforest > >>> effect-analysis results >>>
+//│ deforest > function f#0 @ f@f -> UnsafeEta
+//│ deforest > function f#0 @ f@f -> UnsafeEta
+//│ deforest > function f#0 @ g@g -> UnsafeEta
+//│ deforest > function g#0 @ f@f -> UnsafeEta
+//│ deforest > function g#0 @ f@f -> UnsafeEta
+//│ deforest > function g#0 @ g@g -> UnsafeEta
+//│ deforest > call -@result @ f@f -> Pure
+//│ deforest > call -@result @ f@f -> Pure
+//│ deforest > call -@result @ g@g -> Pure
+//│ deforest > call equals@result @ f@f -> UnsafeEta
+//│ deforest > call equals@result @ f@f -> UnsafeEta
+//│ deforest > call equals@result @ g@g -> UnsafeEta
+//│ deforest > call f@result @ <root> -> UnsafeEta
+//│ deforest > call f@result @ f@f -> UnsafeEta
+//│ deforest > call f@result @ f@f -> UnsafeEta
+//│ deforest > call f@result @ g@g -> UnsafeEta
+//│ deforest > call g@result @ f@f -> UnsafeEta
+//│ deforest > call g@result @ f@f -> UnsafeEta
+//│ deforest > call g@result @ g@g -> UnsafeEta
+//│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > <<< fusing <<<
 //│ = [

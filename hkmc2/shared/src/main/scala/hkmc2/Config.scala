@@ -163,6 +163,7 @@ object Config:
     debugEta: Bool = false,
     debugDpe: Bool = false,
     debugDce: Bool = false,
+    logEffects: Bool = false,
   ):
     def effectiveDebugEta: Bool = debug || debugEta
     def effectiveDebugDpe: Bool = debug || debugDpe
@@ -541,6 +542,7 @@ object ConfigParser:
       var debugEta = base.debugEta
       var debugDpe = base.debugDpe
       var debugDce = base.debugDce
+      var logEffects = base.logEffects
       args.foreach:
         case NamedArg("debug", value) =>
           setFrom(value)(parseBool)(v => debug = v)
@@ -560,6 +562,8 @@ object ConfigParser:
           setFrom(value)(parseBool)(v => debugDpe = v)
         case NamedArg("debugDce", value) =>
           setFrom(value)(parseBool)(v => debugDce = v)
+        case NamedArg("logEffects", value) =>
+          setFrom(value)(parseBool)(v => logEffects = v)
         case other =>
           unsupported(passName, other)
       S(Config.FlowAnalysisConfig(
@@ -572,6 +576,7 @@ object ConfigParser:
         debugEta,
         debugDpe,
         debugDce,
+        logEffects,
       ))
     case _ =>
       expect(s"${passName}(...)")(tree)

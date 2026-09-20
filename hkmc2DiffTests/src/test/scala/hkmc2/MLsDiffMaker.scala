@@ -329,6 +329,7 @@ abstract class MLsDiffMaker extends DiffMaker:
             debugEta = false,
             debugDpe = false,
             debugDce = false,
+            logEffects = false,
           ))
       ))
       processTrees(
