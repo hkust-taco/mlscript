@@ -1,5 +1,4 @@
-:lift
-:js
+:.
 
 
 let xs = mut []

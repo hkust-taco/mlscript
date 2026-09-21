@@ -24,9 +24,9 @@ sealed abstract class MaybeSymbol:
 end MaybeSymbol
 
 
-abstract class Symbol(using State) extends MaybeSymbol with Located:
+abstract class Symbol(using ownerState: State) extends MaybeSymbol with Located:
   
-  def getState: State = summon
+  def getState: State = ownerState
   
   val uid: Uid[Symbol] = State.suid.nextUid
   
@@ -52,12 +52,12 @@ abstract class Symbol(using State) extends MaybeSymbol with Located:
   override def toString: Str =
     prefix + nme + State.dbgUid(uid)
   
-  val directRefs: mutable.Buffer[Term.Ref] = mutable.Buffer.empty
+  private[semantics] val directRefs: mutable.Buffer[Term.Ref] = mutable.Buffer.empty
   def ref(id: Tree.Ident =
     Tree.Ident("") // FIXME hack
-  ): Term.Ref =
-    val res = new Term.Ref(this)(id, directRefs.size, N).withLocOf(id)
-    directRefs += res
+  )(using currentState: State): Term.Ref =
+    val res = new Term.Ref(this)(id, N).withLocOf(id)
+    if currentState is ownerState then directRefs += res
     res
   def refsNumber: Int = directRefs.size
   
@@ -303,9 +303,9 @@ class BlockMemberSymbol(val nme: Str, val trees: Ls[TypeOrTermDef], val nameIsMe
   
   def toLoc: Option[Loc] = Loc(trees)
   
+  def symbols = tsym.toList ::: trees.collect:
+    case t: Tree.TypeDef => t.symbol
   def describe: Str =
-    val symbols = tsym.toList ::: trees.collect:
-      case t: Tree.TypeDef => t.symbol
     symbols match
     case Nil => s"symbol"
     case sym :: Nil => s"${sym.describeKind}"
@@ -436,9 +436,12 @@ case class ErrorSymbol(val nme: Str, tree: Tree)(using State) extends MemberSymb
 
 sealed trait ClassLikeSymbol extends IdentifiedSymbol, HasErasedType:
   self: MemberSymbol & DefinitionSymbol[? <: ClassDef | ModuleOrObjectDef] =>
+  def defn: Opt[ClassLikeDef]
   val tree: Tree.TypeDef
   def subst(using sub: SymbolSubst): ClassLikeSymbol
 
+
+type AnyDefinitionSymbol = DefinitionSymbol[?]
 
 /**
  * A symbol for entities with a definition.
@@ -450,7 +453,11 @@ sealed trait ClassLikeSymbol extends IdentifiedSymbol, HasErasedType:
  */
 sealed trait DefinitionSymbol[Defn <: Definition] extends MemberSymbol:
   
-  var defn: Opt[Defn] = N
+  private var _defn: Opt[Defn] = N
+  def defn: Opt[Defn] = _defn
+  def defn_=(d: S[Defn]): Unit =
+    require(_defn.isEmpty, s"Cannot reassign defn of ${this} from ${_defn} to ${d}")
+    _defn = d
   var decl: Opt[Declaration] = N // NOTE: currently only assigned for class params and only used by deforestation; may want to just remove it once deforestation is improved
   def bms: Opt[BlockMemberSymbol] = defn.map(_.bsym) 
   

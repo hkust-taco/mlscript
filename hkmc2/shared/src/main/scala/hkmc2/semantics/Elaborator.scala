@@ -392,7 +392,7 @@ object Elaborator:
       def ref(id: Ident)(using Elaborator.State, Ctx): Resolvable =
         // * Note: due to symbolic ops, we may have `id.name =/= nme`;
         // * e.g., we can have `id.name = "|>"` and `nme = "pipe"`.
-        Term.Ref(sym)(id, 666, N) // FIXME: 666 is a temporary placeholder
+        Term.Ref(sym)(id, N) // FIXME: 666 is a temporary placeholder
       def symbol = S(sym)
       def isImport: Bool = false
     final case class SelElem(base: Elem, nme: Str, symOpt: Opt[MemberSymbol], isImport: Bool) extends Elem:
@@ -599,8 +599,6 @@ object Elaborator:
     ))
     val superSymbol = builtinOpsMap("super")
     def dbg: Bool = false
-    def dbgRefNum(num: Int): Str =
-      if dbg then s"#$num" else ""
     def dbgUid(uid: Uid[Symbol]): Str =
       if dbg then s"‹$uid›" else ""
       // ^ we do not display the uid by default to avoid polluting diff-test outputs
@@ -2304,7 +2302,8 @@ extends Importer:
                 // All flags are `false`.
                 case p @ Param(flags = FldFlags(false, false, false, false)) => S(p)
                 case Param(flags, sym, _, _) =>
-                  raise(ErrorReport(msg"Unexpected pattern parameter ${sym.name} with modifiers: ${flags.show}" -> sym.toLoc :: Nil))
+                  raise(ErrorReport(msg"Unexpected pattern parameter ${sym.name} with modifiers: ${
+                    flags.show(false)}" -> sym.toLoc :: Nil))
                   N
             // The following iteration filters out:
             // 1. pattern parameters, e.g., `T` in `pattern Nullable(pattern T) = ...`;
@@ -2400,8 +2399,8 @@ extends Importer:
                     ,
                     S(clsSym),
                   )
-                ctsym.defn = S(ctdef)
                 if pss.nonEmpty then sym.tsym = S(ctsym)
+                ctsym.defn = S(ctdef)
                 // Note: do NOT set sym.tsym for constructor(...) classes; they are not callable as functions.
                 S(ctsym)
               else N
@@ -2506,7 +2505,8 @@ extends Importer:
     val ps_ctx = params(t, inDataClass = false, inPattern = false)
     def checkFlags(p: Param): Unit =
       if p.flags.isVal || p.flags.mut then
-        raise(ErrorReport(msg"Illegal function parameter modifiers: ${p.flags.show}" -> p.sym.toLoc :: Nil))
+        raise(ErrorReport(msg"Illegal function parameter modifiers: ${
+          p.flags.show(false)}" -> p.sym.toLoc :: Nil))
     ps_ctx._1.params.foreach(checkFlags)
     ps_ctx._1.restParam.foreach(checkFlags)
     ps_ctx
@@ -2673,7 +2673,7 @@ extends Importer:
     def arg(t: Tree): Ctxl[Pattern \/ Pattern] = t match
       case TypeDef(syntax.Pat, body, N) => L(go(body))
       case _ => R(go(t))
-    def go(t: Tree): Ctxl[Pattern] = trace[Pattern](s"Elab pattern ${t.showDbg}", r => s"~> $r"):
+    def go(t: Tree): Ctxl[Pattern] = trace[Pattern](s"Elab pattern ${t.showDbg}", r => s"~> ${r.showDbg}"):
       t match
       // Annotated patterns like `@compile P`.
       case Tree.Annotated(annotation, target) =>
@@ -2776,13 +2776,13 @@ extends Importer:
         ErrorReport:
           msg"Expected a type parameter list (a tuple of identifiers), but found ${t.describe}" -> t.toLoc :: Nil
       (Nil, ctx)
-
+  
   def importFrom(sts: Block): Ctxl[(Blk, Ctx)] =
     given UnderCtx = new UnderCtx(N)
     val (res, newCtx) = block(sts, hasResult = false)
     // TODO handle name clashes
     (res, newCtx)
-
+  
   def topLevel(sts: Block): Ctxl[(Blk, Ctx)] =
     given UnderCtx = new UnderCtx(N)
     val (res, ctx) = block(sts, hasResult = false)

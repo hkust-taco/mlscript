@@ -159,6 +159,7 @@ object Pattern:
    *  variable. Note that NOT every `Alias` pattern has a symbol. */
   trait AliasImpl:
     self: Pattern.Alias =>
+    // TODO: rm this ugly mutable hack:
     private var _symbol: Opt[VarSymbol] = N
     /** Directly set the symbol for the variable. This should be called in the
      *  elaborator when elaborating the non-`Transform` top-level pattern. */
