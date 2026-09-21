@@ -12,11 +12,10 @@ module B {
 //│   module A⁰::A¹ { val u⁰::u¹ ‹flow:u⁰› = 1 }, module B⁰::B¹ { val u²::u³ ‹flow:u¹› = 2 }
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
-// :de
-val foo = case x then x
+
+val foo = x => x
 //│ foo = fun
 
-// :de
 :sr
 foo(A).u
 //│ ————————————————| Resolved |————————————————————————————————————————————————————————————————————————
@@ -34,7 +33,7 @@ foo(B).u
 //│ ————————————————| Resolved |————————————————————————————————————————————————————————————————————————
 //│   foo⁰(B⁰)‹app¹›.u‹u², u⁰, u⁰›
 //│ ╔══[COMPILATION ERROR] This selection of member 'u' is ambiguous, as it has multiple resolved targets
-//│ ║  l.33: 	foo(B).u
+//│ ║  l.32: 	foo(B).u
 //│ ║        	^^^^^^^^
 //│ ╟── target: value 'u' in module 'B'
 //│ ║  l.9: 	  val u = 2
@@ -46,5 +45,37 @@ foo(B).u
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
+// :de
+val foo = case x then x
+//│ foo = fun
+
+// :de
+:sr
+foo(A).u
+//│ ————————————————| Resolved |————————————————————————————————————————————————————————————————————————
+//│   foo¹(A⁰)‹app²›.u⁰
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 1
+
+foo(A).u
+//│ = 1
+
+:fixme // preserve context sensitivity
+// * We now preserve context sensitivity
+:sr
+foo(B).u
+//│ ————————————————| Resolved |————————————————————————————————————————————————————————————————————————
+//│   foo¹(B⁰)‹app³›.u‹u², u⁰, u⁰›
+//│ ╔══[COMPILATION ERROR] This selection of member 'u' is ambiguous, as it has multiple resolved targets
+//│ ║  l.66: 	foo(B).u
+//│ ║        	^^^^^^^^
+//│ ╟── target: value 'u' in module 'B'
+//│ ║  l.9: 	  val u = 2
+//│ ║       	  ^^^^^^^^^
+//│ ╟── target: value 'u' in module 'A'
+//│ ║  l.6: 	  val u = 1
+//│ ╙──     	  ^^^^^^^^^
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
