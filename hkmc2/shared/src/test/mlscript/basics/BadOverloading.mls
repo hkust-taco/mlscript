@@ -42,7 +42,7 @@ object Foo
 //│ ╟── with object of the same name
 //│ ║  l.38: 	object Foo
 //│ ╙──      	^^^^^^^^^^
-//│ ╔══[INTERNAL ERROR] Compiler reached an unsupported state: None.isDefined =/= true
+//│ ╔══[INTERNAL ERROR] Compiler reached an unsupported state: Unexpected class storage for Foo: parameters=None, independent=None
 //│ ╟── The compilation result may be incorrect.
 //│ ╙── This is a known compiler limitation; if it is a blocker for you, please report it to the maintainers.
 
@@ -50,7 +50,7 @@ object Foo
 // * Note that this does not report an error at the moment:
 fun Foo: Int
 object Foo
-//│ ╔══[INTERNAL ERROR] Compiler reached an unsupported state: None.isDefined =/= true
+//│ ╔══[INTERNAL ERROR] Compiler reached an unsupported state: Unexpected class storage for Foo: parameters=None, independent=None
 //│ ╟── The compilation result may be incorrect.
 //│ ╙── This is a known compiler limitation; if it is a blocker for you, please report it to the maintainers.
 
@@ -77,13 +77,6 @@ class Foo
 //│ ╟── with object of the same name
 //│ ║  l.60: 	object Foo
 //│ ╙──      	^^^^^^^^^^
-//│ ╔══[INTERNAL ERROR] Compiler reached an unsupported state: None.isDefined =/= true
-//│ ╟── The compilation result may be incorrect.
-//│ ╙── This is a known compiler limitation; if it is a blocker for you, please report it to the maintainers.
-//│ ╔══[INTERNAL ERROR] Compiler reached an unsupported state: None.isDefined =/= true
-//│ ╟── The compilation result may be incorrect.
-//│ ╙── This is a known compiler limitation; if it is a blocker for you, please report it to the maintainers.
-//│ ═══[RUNTIME ERROR] TypeError: Cannot assign to read only property 'class' of object '[object Object]'
 
 
 :todo // TODO: support
@@ -91,35 +84,32 @@ class Foo
 class Foo
 fun Foo = 1
 //│ ╔══[COMPILATION ERROR] Not yet supported: overloading of function 'Foo'
-//│ ║  l.92: 	fun Foo = 1
+//│ ║  l.85: 	fun Foo = 1
 //│ ║        	^^^^^^^^^^^
 //│ ╟── with class of the same name
-//│ ║  l.91: 	class Foo
+//│ ║  l.84: 	class Foo
 //│ ╙──      	^^^^^^^^^
-//│ ╔══[INTERNAL ERROR] Compiler reached an unsupported state: None.isDefined =/= true
-//│ ╟── The compilation result may be incorrect.
-//│ ╙── This is a known compiler limitation; if it is a blocker for you, please report it to the maintainers.
 
 // TODO: support
 :e
 fun Foo = 1
 module Foo
 //│ ╔══[COMPILATION ERROR] Not yet supported: overloading of function 'Foo'
-//│ ║  l.105: 	fun Foo = 1
-//│ ║         	^^^^^^^^^^^
+//│ ║  l.95: 	fun Foo = 1
+//│ ║        	^^^^^^^^^^^
 //│ ╟── with module of the same name
-//│ ║  l.106: 	module Foo
-//│ ╙──       	^^^^^^^^^^
+//│ ║  l.96: 	module Foo
+//│ ╙──      	^^^^^^^^^^
 
 // TODO: support
 :e
 val Foo = 1
 module Foo
 //│ ╔══[COMPILATION ERROR] Not yet supported: overloading of value 'Foo'
-//│ ║  l.116: 	val Foo = 1
+//│ ║  l.106: 	val Foo = 1
 //│ ║         	^^^^^^^^^^^
 //│ ╟── with module of the same name
-//│ ║  l.117: 	module Foo
+//│ ║  l.107: 	module Foo
 //│ ╙──       	^^^^^^^^^^
 //│ Foo = class Foo
 
@@ -128,10 +118,10 @@ module Foo
 fun (**) f1(a, b) = "[" + a + " * " + b + "]"
 fun (**) f2(a, b) = "(" + a + " + " + b + ")"
 //│ ╔══[COMPILATION ERROR] Symbolic name '**' of definition 'f1' is already used
-//│ ║  l.128: 	fun (**) f1(a, b) = "[" + a + " * " + b + "]"
+//│ ║  l.118: 	fun (**) f1(a, b) = "[" + a + " * " + b + "]"
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── by sibling member 'f2'
-//│ ║  l.129: 	fun (**) f2(a, b) = "(" + a + " + " + b + ")"
+//│ ║  l.119: 	fun (**) f2(a, b) = "(" + a + " + " + b + ")"
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 1 ** 2
@@ -142,10 +132,10 @@ fun (**) t() = 0
 fun (++) t() = 1
 //│ ╔══[COMPILATION ERROR] Multiple definitions of symbol 't'
 //│ ╟── defined here
-//│ ║  l.141: 	fun (**) t() = 0
+//│ ║  l.131: 	fun (**) t() = 0
 //│ ║         	^^^^^^^^^^^^^^^^
 //│ ╟── defined here
-//│ ║  l.142: 	fun (++) t() = 1
+//│ ║  l.132: 	fun (++) t() = 1
 //│ ╙──       	^^^^^^^^^^^^^^^^
 
 

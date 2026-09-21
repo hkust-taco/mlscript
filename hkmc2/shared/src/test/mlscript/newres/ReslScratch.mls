@@ -41,8 +41,8 @@ class Bar(a) with
 //│   class Bar¹::Bar²(a⁰) {
 //│     @private val a¹::a² ‹flow:a⁰› = a⁰^a²,
 //│     let x⁰,
-//│     x⁰ = ⟨Bar².this.⟩a¹,
-//│     ⟨Predef⁰.⟩print⁰(x⁰)‹app⁰›
+//│     x⁰ = Bar².this.a¹,
+//│     Predef⁰.print⁰(x⁰)‹app⁰›
 //│   }
 //│ ——————————————| Resolved tree |—————————————————————————————————————————————————————————————————————
 //│ Blk:
@@ -73,13 +73,13 @@ class Bar(a) with
 //│             sym = term:Bar³/x⁰
 //│           DefineVar:
 //│             sym = term:Bar³/x⁰
-//│             rhs = SynthSel{sym=member:a³}:
+//│             rhs = NewSel:
 //│               prefix = SelfRef of class:Bar³
-//│               nme = Ident of "a"
+//│               id = Ident of "a"
 //│         res = App:
-//│           lhs = SynthSel{sym=member:print⁰}:
+//│           lhs = NewSel:
 //│             prefix = MemberRef of member:Predef⁰
-//│             nme = Ident of "print"
+//│             id = Ident of "print"
 //│           rhs = Tup of Ls of
 //│             Fld:
 //│               term = MemberRef of term:Bar³/x⁰
@@ -92,7 +92,7 @@ class Bar(a) with
 //│     @private
 //│     define a³ as val a⁴ = a;
 //│     set Bar³.this.x⁰ = Bar³.this.a⁴;
-//│     do Predef¹.print¹(Bar³.this.x⁰);
+//│     do Predef¹.print⁰(Bar³.this.x⁰);
 //│     end
 //│   }
 //│ };
@@ -105,7 +105,7 @@ class Bar(a) with
 //│     @private
 //│     define a³ as val a⁴ = a;
 //│     set Bar³.this.x⁰ = Bar³.this.a⁴;
-//│     do Predef¹.print¹(Bar³.this.x⁰);
+//│     do Predef¹.print⁰(Bar³.this.x⁰);
 //│     end
 //│   }
 //│ };
@@ -122,7 +122,7 @@ class Bar(a) with
 //│   constructor(a) {
 //│     this.#a = a;
 //│     this.#x = this.#a;
-//│     Predef.print(this.#x);
+//│     runtime.safeCall(Predef.print(this.#x));
 //│   }
 //│   #a;
 //│   #x;

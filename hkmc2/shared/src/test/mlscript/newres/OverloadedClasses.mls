@@ -5,37 +5,7 @@ class Bar {
   fun id(x) = x
 }
 val Bar = new Bar
-//│ FAILURE: Unexpected compilation error
-//│ FAILURE LOCATION: blockOrRcd (Elaborator.scala:1860)
-//│ ╔══[COMPILATION ERROR] Illegal overloading of value 'Bar'
-//│ ║  l.7: 	val Bar = new Bar
-//│ ║       	^^^^^^^^^^^^^^^^^
-//│ ╟── with class of the same name
-//│ ║  l.4: 	class Bar {
-//│ ║       	^^^^^^^^^^^
-//│ ║  l.5: 	  fun id(x) = x
-//│ ║       	^^^^^^^^^^^^^^^
-//│ ║  l.6: 	}
-//│ ╙──     	^
-//│ FAILURE: Unexpected internal error
-//│ FAILURE LOCATION: softTODO (JSBuilder.scala:588)
-//│ ╔══[INTERNAL ERROR] Compiler reached an unsupported state: None.isDefined =/= true
-//│ ╟── The compilation result may be incorrect.
-//│ ╙── This is a known compiler limitation; if it is a blocker for you, please report it to the maintainers.
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:264)
-//│ ═══[RUNTIME ERROR] TypeError: Cannot set properties of undefined (setting 'class')
-//│     at <static_initializer> (REPL16:1:84)
-//│     at REPL16:1:302
-//│     at ContextifyScript.runInThisContext (node:vm:137:12)
-//│     at REPLServer.defaultEval (node:repl:598:22)
-//│     at bound (node:domain:433:15)
-//│     at REPLServer.runBound [as eval] (node:domain:444:12)
-//│     at REPLServer.onLine (node:repl:927:10)
-//│     at REPLServer.emit (node:events:518:28)
-//│     at REPLServer.emit (node:domain:489:12)
-//│     at [_onLine] [as _onLine] (node:internal/readline/interface:415:12)
-//│ Bar = undefined
+//│ Bar = Bar
 
 :sr
 :sir
@@ -67,44 +37,14 @@ let y = new Bar()
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ set x⁰ = new Bar⁰(); set y⁰ = new Bar⁰(); end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:264)
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'class')
-//│     at REPL20:1:54
-//│     at ContextifyScript.runInThisContext (node:vm:137:12)
-//│     at REPLServer.defaultEval (node:repl:598:22)
-//│     at bound (node:domain:433:15)
-//│     at REPLServer.runBound [as eval] (node:domain:444:12)
-//│     at REPLServer.onLine (node:repl:927:10)
-//│     at REPLServer.emit (node:events:518:28)
-//│     at REPLServer.emit (node:domain:489:12)
-//│     at [_onLine] [as _onLine] (node:internal/readline/interface:415:12)
-//│     at [_normalWrite] [as _normalWrite] (node:internal/readline/interface:609:22)
-//│ x = undefined
-//│ y = undefined
+//│ x = Bar
+//│ y = Bar
 
 
 class Bar {
   fun id(x) = x
 }
 fun Bar() = new Bar
-//│ FAILURE: Unexpected compilation error
-//│ FAILURE LOCATION: blockOrRcd (Elaborator.scala:1860)
-//│ ╔══[COMPILATION ERROR] Not yet supported: overloading of function 'Bar'
-//│ ║  l.90: 	fun Bar() = new Bar
-//│ ║        	^^^^^^^^^^^^^^^^^^^
-//│ ╟── with class of the same name
-//│ ║  l.87: 	class Bar {
-//│ ║        	^^^^^^^^^^^
-//│ ║  l.88: 	  fun id(x) = x
-//│ ║        	^^^^^^^^^^^^^^^
-//│ ║  l.89: 	}
-//│ ╙──      	^
-//│ FAILURE: Unexpected internal error
-//│ FAILURE LOCATION: softTODO (JSBuilder.scala:588)
-//│ ╔══[INTERNAL ERROR] Compiler reached an unsupported state: None.isDefined =/= true
-//│ ╟── The compilation result may be incorrect.
-//│ ╙── This is a known compiler limitation; if it is a blocker for you, please report it to the maintainers.
 
 :sr
 :sir
@@ -148,64 +88,31 @@ module Foo {
   }
   val Bar = new Bar
 }//│ ————————————————| Resolved |————————————————————————————————————————————————————————————————————————
-//│ FAILURE: Unexpected compilation error
-//│ FAILURE LOCATION: blockOrRcd (Elaborator.scala:1860)
-//│ ╔══[COMPILATION ERROR] Illegal overloading of value 'Bar'
-//│ ║  l.149: 	  val Bar = new Bar
-//│ ║         	  ^^^^^^^^^^^^^^^^^
-//│ ╟── with class of the same name
-//│ ║  l.146: 	  class Bar {
-//│ ║         	  ^^^^^^^^^^^
-//│ ║  l.147: 	    fun id(x) = x
-//│ ║         	^^^^^^^^^^^^^^^^^
-//│ ║  l.148: 	  }
-//│ ╙──       	^^^
-//│ FAILURE: Unexpected compilation error
-//│ FAILURE LOCATION: resolError (NewResolver.scala:55)
-//│ ╔══[COMPILATION ERROR] Resolution error in object instantiation
-//│ ║  l.149: 	  val Bar = new Bar
-//│ ║         	            ^^^^^^^
-//│ ╙── Invalid class expression: selection
 //│ ————————————————| Resolved |————————————————————————————————————————————————————————————————————————
 //│   module Foo⁰::Foo¹ {
 //│     class Bar²::Bar³ {
 //│       fun id⁰::id¹(x²) ‹flow:id⁰› = x²
 //│     },
-//│     val Bar²::Bar⁴ ‹flow:Bar⁰› = new ⟨Foo¹.this.⟩Bar²^Bar⁴
+//│     val Bar²::Bar⁴ ‹flow:Bar⁰› = new Foo¹.this.Bar²^Bar⁴
 //│   }
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define Foo⁰ as class Foo¹
 //│ module Foo² {
 //│   val Bar⁴;
 //│   constructor {
+//│     let tmp;
 //│     define Bar⁴ as class Bar⁵ {
 //│       method id⁰ = fun id¹(x) {
 //│         return x
 //│       }
 //│     };
-//│     throw "This code cannot be run as its compilation yielded an error."
+//│     set tmp = new Foo².this.Bar⁵();
+//│     define Bar⁴ as val Bar⁶ = tmp;
+//│     end
 //│   }
 //│ };
 //│ end
-//│ FAILURE: Unexpected internal error
-//│ FAILURE LOCATION: softTODO (JSBuilder.scala:588)
-//│ ╔══[INTERNAL ERROR] Compiler reached an unsupported state: None.isDefined =/= true
-//│ ╟── The compilation result may be incorrect.
-//│ ╙── This is a known compiler limitation; if it is a blocker for you, please report it to the maintainers.
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:264)
-//│ ═══[RUNTIME ERROR] TypeError: Cannot set properties of undefined (setting 'class')
-//│     at <static_initializer> (REPL33:1:174)
-//│     at <static_initializer> (REPL33:1:426)
-//│     at REPL33:1:608
-//│     at ContextifyScript.runInThisContext (node:vm:137:12)
-//│     at REPLServer.defaultEval (node:repl:598:22)
-//│     at bound (node:domain:433:15)
-//│     at REPLServer.runBound [as eval] (node:domain:444:12)
-//│     at REPLServer.onLine (node:repl:927:10)
-//│     at REPLServer.emit (node:events:518:28)
-//│     at REPLServer.emit (node:domain:489:12)
 
 :sr
 :sir
@@ -242,20 +149,7 @@ let x = new Foo.Bar()
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let x; set x = new Foo².Bar⁵(); set x³ = new Foo².Bar⁵(); end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:264)
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'class')
-//│     at REPL36:1:52
-//│     at ContextifyScript.runInThisContext (node:vm:137:12)
-//│     at REPLServer.defaultEval (node:repl:598:22)
-//│     at bound (node:domain:433:15)
-//│     at REPLServer.runBound [as eval] (node:domain:444:12)
-//│     at REPLServer.onLine (node:repl:927:10)
-//│     at REPLServer.emit (node:events:518:28)
-//│     at REPLServer.emit (node:domain:489:12)
-//│     at [_onLine] [as _onLine] (node:internal/readline/interface:415:12)
-//│     at [_normalWrite] [as _normalWrite] (node:internal/readline/interface:609:22)
-//│ x = undefined
+//│ x = Bar
 
 
 

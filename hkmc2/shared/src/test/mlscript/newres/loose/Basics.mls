@@ -27,7 +27,7 @@ m.u
 //│ ————————————————| Resolved |————————————————————————————————————————————————————————————————————————
 //│   let m¹,
 //│   m¹ = if {
-//│     let scrut⁰ = ⟨Predef⁰.⟩hide⁰(true)‹app⁰›;
+//│     let scrut⁰ = Predef⁰.hide⁰(true)‹app⁰›;
 //│     scrut⁰ is true then A⁰;
 //│     else B⁰
 //│   },

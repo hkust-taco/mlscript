@@ -70,7 +70,7 @@ b.id
 :sr
 let m = if maybe then Foo.Bar else Predef
 //│ ————————————————| Resolved |————————————————————————————————————————————————————————————————————————
-//│   let m⁰, m⁰ = if { let scrut⁰ = ⟨Predef⁰.⟩maybe⁰; scrut⁰ is true then Foo⁰.Bar⁰; else Predef⁰ }
+//│   let m⁰, m⁰ = if { let scrut⁰ = Predef⁰.maybe⁰; scrut⁰ is true then Foo⁰.Bar⁰; else Predef⁰ }
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ m = class Bar
 

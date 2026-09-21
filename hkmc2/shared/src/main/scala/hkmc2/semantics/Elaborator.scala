@@ -449,8 +449,18 @@ object Elaborator:
     final case class SelElem(base: Elem, nme: Str, symOpt: Opt[MemberSymbol], isImport: Bool) extends Elem:
       def ref(id: Ident)(using Elaborator.State, Ctx, Config): Term =
         // * Same remark as in RefElem#ref
-        Term.SynthSel(base.ref(Ident(base.nme)),
-          new Ident(nme).withLocOf(id))(symOpt, FlowSymbol.synthSel(nme), N, S(summon))
+        val prefix = base.ref(Ident(base.nme))
+        val name = new Ident(nme).withLocOf(id)
+        symOpt match
+        case S(bms: BlockMemberSymbol) if config.language.useNewResolution =>
+          // Lexical lookup already identifies the member, but must preserve its
+          // overload set until its use chooses a class, term, or module.
+          val res = new Term.NewSel(prefix, name)(FlowSymbol.synthSel(nme))
+          res.resolvedMembers = bms :: Nil
+          res.shapes += SymShape(bms, res.resSym, Nil)
+          res
+        case _ =>
+          Term.SynthSel(prefix, name)(symOpt, FlowSymbol.synthSel(nme), N, S(summon))
       def symbol = symOpt
     final case class CaptElem(base: Elem, thru: DefinitionSymbol[?]) extends Elem:
       def ref(id: Ident)(using Elaborator.State, Ctx, Config): Term =
@@ -699,6 +709,12 @@ extends Importer:
   lazy val illegalMemberNameTail =
     msg"Member names must start with a letter or underscore, followed by letters, digits, or underscores." -> N
     :: Nil
+
+  private def moduleMembers(sym: BlockMemberSymbol): Opt[Map[Str, BlockMemberSymbol]] =
+    // Elaborated bodies cover both braced and `with` bodies. Forward references
+    // still need the syntax table before the module definition is available.
+    (if newResolution then sym.asModOrObj.flatMap(_.defn).map(_.body.members) else N)
+      .orElse(sym.modOrObjTree.map(_.definedSymbols))
   
   def mkLetBinding(kw: Tree.Keywrd[?], sym: LocalVarSymbol | TermSymbol, rhs: Term, annotations: Ls[Annot]): Ls[Statement] =
     LetDecl(sym, annotations).mkLocWith(kw, sym) :: defineVar(sym, rhs) :: Nil
@@ -709,7 +725,7 @@ extends Importer:
     case S(psym: BlockMemberSymbol) =>
       psym.modOrObjTree match
       case S(cls) =>
-        cls.definedSymbols.get(nme.name) match
+        moduleMembers(psym).flatMap(_.get(nme.name)) match
         case s @ S(clsSym) => s
         case N =>
           raise(ErrorReport(msg"${cls.k.desc.capitalize} '${cls.symbol.nme
@@ -1856,7 +1872,10 @@ extends Importer:
             log(s"Processing overloadings for '$name'")
             defns.iterator.foreach: defn =>
               if defn.k > k then
-                if !supportedOverloadings(k -> defn.k) then raise:
+                val bareClassOverload = newResolution && ((k is Fun) || k.isInstanceOf[Val]) && (defn match
+                  case td: TypeDef => (td.k is Cls) && td.paramLists.isEmpty
+                  case _ => false)
+                if !supportedOverloadings(k -> defn.k) && !bareClassOverload then raise:
                   ErrorReport:
                     if notYetSupportedOverloadings(k -> defn.k)
                     then msg"Not yet supported: overloading of ${k.desc} '$name'" -> mainDefn.toLoc
@@ -1936,7 +1955,7 @@ extends Importer:
                 case N => // "wilcard" open
                   baseElem.symbol match
                   case S(sym: BlockMemberSymbol) if sym.modOrObjTree.isDefined =>
-                    sym.modOrObjTree.get.definedSymbols.map:
+                    moduleMembers(sym).getOrElse(Map.empty).map:
                       case (nme, sym) => nme -> Ctx.SelElem(baseElem, sym.nme, S(sym), isImport = true)
                   case _ =>
                     raise(ErrorReport(msg"Wildcard 'open' not supported for this kind of symbol." -> baseId.toLoc :: Nil))

@@ -89,11 +89,13 @@ class CompilerCtx(
         ParserSetup(file)
       given Elaborator.Ctx = prelude
       val artifactCtx = derive(parse.origin.fileName, dependencies)
+      val parsed = parse.resultBlk
+      val elaborationConfig = Config.elaborationConfig(parsed)
       val elab =
         given CompilerCtx = artifactCtx
+        given Config = elaborationConfig
         Elaborator(tl, file.up, prelude)
 
-      val parsed = parse.resultBlk
       val nme = file.baseName
       val exportedSymbol = parsed.definedSymbols.find(_._1 === nme).map(_._2)
       def collectCompilationUnitSymbols(program: codegen.Program): Set[codegen.BoundSymbol] =
@@ -103,7 +105,7 @@ class CompilerCtx(
             case sym: BlockMemberSymbol => sym
           .toSet
         case _ => Set.empty
-      val (blk0, _) = elab.importFrom(parsed)
+      val (blk0, _) = elaborationConfig.givenIn(elab.importFrom(parsed))
       if file.toString === paths.runtimeSourceFile.toString then
         state.initRuntimeSymbolsFromBlock(blk0)
       else
@@ -111,7 +113,7 @@ class CompilerCtx(
           using tl, summon[Raise], artifactCtx)
 
       val artifactConfig = Config.extractConfigFromStats(blk0)
-      artifactConfig.givenIn:
+      if !artifactConfig.language.useNewResolution then artifactConfig.givenIn:
         given Elaborator.State = state
         val resolver = Resolver(backendTL)
         resolver.traverseBlock(blk0)(using Resolver.ICtx.empty)

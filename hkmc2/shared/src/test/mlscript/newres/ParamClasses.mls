@@ -88,7 +88,7 @@ class Foo(val a) {
 //│   fun Foo³
 //│   class Foo⁴::Foo⁵(val a³) {
 //│     val a⁴::a⁵ ‹flow:a¹› = a³^a⁵,
-//│     val b⁰::b¹ ‹flow:b⁰› = +(⟨Foo⁵.this.⟩a⁴^b¹, 1)‹app³›
+//│     val b⁰::b¹ ‹flow:b⁰› = +(Foo⁵.this.a⁴^b¹, 1)‹app³›
 //│   }
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
@@ -176,7 +176,7 @@ class Bar(b) with
 //│   fun Bar⁰
 //│   class Bar¹::Bar²(b²) {
 //│     @private val b³::b⁴ ‹flow:b¹› = b²^b⁴,
-//│     val foo²::foo³ ‹flow:foo¹› = Foo⁴^foo³(⟨Bar².this.⟩b³^foo³)‹app⁸›
+//│     val foo²::foo³ ‹flow:foo¹› = Foo⁴^foo³(Bar².this.b³^foo³)‹app⁸›
 //│   }
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
@@ -278,7 +278,7 @@ let f = new Foo(Predef)
 //│   fun Foo⁶
 //│   class Foo⁷::Foo⁸(pred⁰) {
 //│     @private val pred¹::pred² ‹flow:pred⁰› = pred⁰^pred²,
-//│     ⟨Foo⁸.this.⟩pred¹.id⁰(42)‹app⁹›
+//│     Foo⁸.this.pred¹.id⁰(42)‹app⁹›
 //│   },
 //│   let f⁴,
 //│   f⁴ = new Foo⁷(Predef⁰)
@@ -309,8 +309,8 @@ let f = Foo(Predef)
 //│   fun Foo⁹
 //│   class Foo¹⁰::Foo¹¹(pred³) {
 //│     @private val pred⁴::pred⁵ ‹flow:pred¹› = pred³^pred⁵,
-//│     ⟨Foo¹¹.this.⟩pred⁴.id⁰(1)‹app¹⁰›,
-//│     ⟨Foo¹¹.this.⟩pred⁴.id⁰(2)‹app¹¹›
+//│     Foo¹¹.this.pred⁴.id⁰(1)‹app¹⁰›,
+//│     Foo¹¹.this.pred⁴.id⁰(2)‹app¹¹›
 //│   },
 //│   let f⁵,
 //│   f⁵ = Foo¹⁰(Predef⁰)‹app¹²›
@@ -327,8 +327,8 @@ let f = new Foo(Predef)
 //│   fun Foo¹²
 //│   class Foo¹³::Foo¹⁴(pred⁶) {
 //│     @private val pred⁷::pred⁸ ‹flow:pred²› = pred⁶^pred⁸,
-//│     val r⁰::r¹ ‹flow:r⁰› = ⟨Foo¹⁴.this.⟩pred⁷^r¹.id⁰(42)‹app¹³›,
-//│     fun callId⁰::callId¹(x¹) ‹flow:callId⁰› = ⟨Foo¹⁴.this.⟩pred⁷^callId¹.id⁰(x¹)‹app¹⁴›
+//│     val r⁰::r¹ ‹flow:r⁰› = Foo¹⁴.this.pred⁷^r¹.id⁰(42)‹app¹³›,
+//│     fun callId⁰::callId¹(x¹) ‹flow:callId⁰› = Foo¹⁴.this.pred⁷^callId¹.id⁰(x¹)‹app¹⁴›
 //│   },
 //│   let f⁶,
 //│   f⁶ = new Foo¹³(Predef⁰)

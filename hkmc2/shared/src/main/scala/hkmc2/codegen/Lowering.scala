@@ -1121,6 +1121,22 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
       case Ref(sym) =>
         subTerm(rhs): r =>
           assignSymbol(resolvedSelectionSymbol.getOrElse(sym), sym, r, k(unit), trm.toLoc)
+      case sel @ NewSel(prefix, nme) =>
+        // Assignments select the term facet, even when the same member also names a class.
+        val sym = sel.resolvedTargets.distinct match
+          case sym :: Nil => sym.asTrm
+          case Nil => sel.resolvedMembers.distinct match
+            case bms :: Nil => bms.asTrm
+            case _ => N
+          case _ => N
+        sym match
+        case S(sym) =>
+          subTerm(prefix): p =>
+            subTerm_nonTail(rhs): r =>
+              AssignField(p, definitionIdent(nme, sym), castTo(r, sym.erasedType, sel.toLoc), k(unit))(S(sym))
+        case N => fail:
+          ErrorReport(msg"Assignment requires an unambiguous term member" -> sel.toLoc :: Nil,
+            source = Diagnostic.Source.Compilation)
       case sel @ Sel(prefix, nme) =>
         subTerm(prefix): p =>
           subTerm_nonTail(rhs): r =>

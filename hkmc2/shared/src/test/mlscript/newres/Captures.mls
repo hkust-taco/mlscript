@@ -6,7 +6,7 @@ fun foo(x) =
   print(x)
   x
 //│ ————————————————| Resolved |————————————————————————————————————————————————————————————————————————
-//│   fun foo⁰::foo¹(x⁰) ‹flow:foo⁰› = { ⟨Predef⁰.⟩print⁰^foo¹(x⁰)‹app⁰›, x⁰ }
+//│   fun foo⁰::foo¹(x⁰) ‹flow:foo⁰› = { Predef⁰.print⁰^foo¹(x⁰)‹app⁰›, x⁰ }
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 
@@ -48,10 +48,7 @@ fun foo(x) =
 //│ ————————————————| Resolved |————————————————————————————————————————————————————————————————————————
 //│   fun foo²::foo³(x¹) ‹flow:foo¹› = if {
 //│     let scrut⁰ = >(x¹, 0)‹app⁴›;
-//│     scrut⁰ is true do {
-//│       ⟨Predef⁰.⟩print⁰^foo³(x¹)‹app⁵›,
-//│       foo²^foo³(-(x¹, 1)‹app⁶›)‹app⁷›
-//│     };
+//│     scrut⁰ is true do { Predef⁰.print⁰^foo³(x¹)‹app⁵›, foo²^foo³(-(x¹, 1)‹app⁶›)‹app⁷› };
 //│     else ()
 //│   }
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
@@ -69,7 +66,7 @@ fun foo(x) =
   bar
 //│ ————————————————| Resolved |————————————————————————————————————————————————————————————————————————
 //│   fun foo⁴::foo⁵(x²) ‹flow:foo²› = {
-//│     ⟨Predef⁰.⟩print⁰^foo⁵(x²)‹app⁸›,
+//│     Predef⁰.print⁰^foo⁵(x²)‹app⁸›,
 //│     fun bar⁰::bar¹(y⁰) ‹flow:bar⁰› = +(x²^bar¹, y⁰)‹app⁹›,
 //│     bar⁰
 //│   }
@@ -89,8 +86,8 @@ class foo(x) {
 //│   fun foo⁶
 //│   class foo⁷::foo⁸(x³) {
 //│     @private val x⁴::x⁵ ‹flow:x⁰› = x³^x⁵,
-//│     ⟨Predef⁰.⟩print⁰(⟨foo⁸.this.⟩x⁴)‹app¹⁰›,
-//│     fun bar²::bar³(y¹) ‹flow:bar¹› = +(⟨foo⁸.this.⟩x⁴^bar³, y¹)‹app¹¹›
+//│     Predef⁰.print⁰(foo⁸.this.x⁴)‹app¹⁰›,
+//│     fun bar²::bar³(y¹) ‹flow:bar¹› = +(foo⁸.this.x⁴^bar³, y¹)‹app¹¹›
 //│   }
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 

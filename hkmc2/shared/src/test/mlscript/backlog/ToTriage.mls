@@ -82,7 +82,7 @@ fun main() =
 :ssjs
 object Cls(val x) with
   fun huh = x
-//│ ╔══[INTERNAL ERROR] Compiler reached an unsupported state: Some(ParamList(‹›,List(Param(‹val›,x,None,Modulefulness(None))),None)).isDefined =/= false
+//│ ╔══[INTERNAL ERROR] Compiler reached an unsupported state: Unexpected class storage for Cls: parameters=Some(ParamList(‹›,List(Param(‹val›,x,None,Modulefulness(None))),None)), independent=None
 //│ ╟── The compilation result may be incorrect.
 //│ ╙── This is a known compiler limitation; if it is a blocker for you, please report it to the maintainers.
 //│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
@@ -368,10 +368,6 @@ data class Foo(mut x)
 :e
 fun Foo
 class Foo
-//│ ╔══[INTERNAL ERROR] Compiler reached an unsupported state: None.isDefined =/= true
-//│ ╟── The compilation result may be incorrect.
-//│ ╙── This is a known compiler limitation; if it is a blocker for you, please report it to the maintainers.
-//│ ═══[RUNTIME ERROR] TypeError: Cannot set properties of undefined (setting 'class')
 
 // ——— ——— ———
 
@@ -379,16 +375,16 @@ class Foo
 :e
 class Id(name: UnboundName)
 //│ ╔══[COMPILATION ERROR] Name not found: UnboundName
-//│ ║  l.380: 	class Id(name: UnboundName)
+//│ ║  l.376: 	class Id(name: UnboundName)
 //│ ╙──       	               ^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Expected a type, got a non-type ‹error›
-//│ ║  l.380: 	class Id(name: UnboundName)
+//│ ║  l.376: 	class Id(name: UnboundName)
 //│ ╙──       	               ^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Expected a type, got ‹error›
-//│ ║  l.380: 	class Id(name: UnboundName)
+//│ ║  l.376: 	class Id(name: UnboundName)
 //│ ╙──       	               ^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Expected a type, got a non-type ‹error›
-//│ ║  l.380: 	class Id(name: UnboundName)
+//│ ║  l.376: 	class Id(name: UnboundName)
 //│ ╙──       	               ^^^^^^^^^^^
 
 // ——— ——— ———

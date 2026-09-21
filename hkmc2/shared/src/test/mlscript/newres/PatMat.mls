@@ -16,7 +16,7 @@ class Baz(c) { fun b = c }
 //│   fun Baz⁰
 //│   class Baz¹::Baz²(c⁰) {
 //│     @private val c¹::c² ‹flow:c⁰› = c⁰^c²,
-//│     fun b²::b³ ‹flow:b¹› = ⟨Baz².this.⟩c¹^b³
+//│     fun b²::b³ ‹flow:b¹› = Baz².this.c¹^b³
 //│   }
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 

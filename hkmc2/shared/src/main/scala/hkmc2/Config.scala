@@ -231,6 +231,19 @@ object Config:
     * Normally, we avoid inlining into @inline functions as that could lead to unexpected code bloat. */
   case class Inliner(inlineThreshold: Int, altSmallThreshold: Int = 2)
   
+  /** File directives apply to the whole compilation unit, including elaboration.
+    * Read them before constructing the elaborator so its resolver agrees with lowering.
+    * Elaboration still records SetConfig statements and reports directive errors once. */
+  def elaborationConfig(prgm: syntax.Tree.Block)(using Config): Config =
+    import syntax.Tree.*
+    given Raise = _ => ()
+    def modifier(tree: syntax.Tree): Config => Config = tree match
+      case App(Directive(prefix, _), args) => modifier(Directive(prefix, args))
+      case Directive(Ident("config"), Tup(args)) => ConfigParser.parseOverrides(args)
+      case Directive(Ident("lang"), Tup(args)) => ConfigParser.parseLanguageDirective(args)
+      case _ => identity
+    prgm.desugStmts.foldLeft(config)((cfg, tree) => modifier(tree)(cfg))
+
   def extractConfigFromStats(prgm: semantics.Term.Blk)(using Config) =
     // Extract cumulative config modifications from SetConfig statements
     val configModify = prgm.stats.collect:

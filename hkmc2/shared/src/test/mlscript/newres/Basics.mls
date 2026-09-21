@@ -7,16 +7,16 @@
 id
 //│ —————————————| Elaborated tree |————————————————————————————————————————————————————————————————————
 //│ Blk:
-//│   res = SynthSel{sym=member:id⁰}:
+//│   res = NewSel:
 //│     prefix = MemberRef of member:Predef⁰
-//│     nme = Ident of "id"
+//│     id = Ident of "id"
 //│ ——————————————| Resolved tree |—————————————————————————————————————————————————————————————————————
 //│ Blk:
-//│   res = SynthSel{sym=member:id⁰}:
+//│   res = NewSel:
 //│     prefix = MemberRef of member:Predef⁰
-//│     nme = Ident of "id"
+//│     id = Ident of "id"
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ return Predef¹.id¹
+//│ return Predef¹.id⁰
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = fun id
 
@@ -41,14 +41,14 @@ Predef.id
 //│ | | | = MarkedShape(module:Predef¹, ↗⟨module:Predef¹⟩%⟨Predef²⟩ϵ)
 //│ | | | PUSH MarkedShape(module:Predef¹, ↗⟨module:Predef¹⟩%⟨Predef²⟩ϵ)
 //│ | | | newSel: sel = member:Predef⁰.id, shape = MarkedShape(module:Predef¹, ↗⟨module:Predef¹⟩%⟨Predef²⟩ϵ)
-//│ | | | newSel member: bms = member:id⁰, mss = List(↗⟨module:Predef¹⟩%⟨Predef²⟩ϵ)
+//│ | | | newSel member: bms = member:id¹, mss = List(↗⟨module:Predef¹⟩%⟨Predef²⟩ϵ)
 //│ | | ~> member:Predef⁰.id
 //│ | ~> member:Predef⁰.id
 //│ ~> { member:Predef⁰.id }
 //│ ————————————————| Resolved |————————————————————————————————————————————————————————————————————————
 //│   Predef⁰.id⁰
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ return Predef¹.id¹
+//│ return Predef¹.id⁰
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = fun id
 
@@ -92,7 +92,7 @@ p.id
 //│     prefix = SimpleRef of p⁰
 //│     id = Ident of "id"
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ return p⁰.id¹
+//│ return p⁰.id⁰
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = fun id
 

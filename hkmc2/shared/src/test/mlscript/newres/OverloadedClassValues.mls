@@ -1,0 +1,235 @@
+:.
+
+
+// The term need not be an object that can carry a `.class` property.
+class Primitive {
+  fun answer() = 42
+}
+val Primitive = 7
+//│ Primitive = 7
+
+:expect 7
+Primitive
+//│ = 7
+
+:expect 42
+(new Primitive).answer()
+//│ = 42
+
+
+// Declaration order and nullary functions must not change class selection.
+val Reverse = 13
+class Reverse {
+  fun answer() = 43
+}
+//│ Reverse = 13
+
+:expect 43
+(new Reverse()).answer()
+//│ = 43
+
+class Getter {
+  fun answer() = 44
+}
+fun Getter = 14
+
+:expect 14
+Getter
+//│ = 14
+
+:expect 44
+(new Getter).answer()
+//│ = 44
+
+
+// Both meanings remain available inside closures and local scopes.
+fun local(n) = {
+  class Item {
+    fun answer() = n
+  }
+  fun Item(x) = (new Item).answer() + x
+  Item(2)
+}
+
+:expect 42
+local(40)
+//│ = 42
+
+
+module Members {
+  class Item {
+    fun answer() = 45
+  }
+  val Item = new Item
+  fun fresh() = new Item
+  class Factory {
+    fun answer() = 46
+  }
+  fun Factory(x) = (new Factory).answer() + x
+}
+
+:expect 45
+Members.Item.answer()
+//│ = 45
+
+:expect 45
+Members.fresh().answer()
+//│ = 45
+
+:expect 45
+(new Members.Item).answer()
+//│ = 45
+
+:expect 48
+Members.Factory(2)
+//│ = 48
+
+:expect 46
+(new Members.Factory()).answer()
+//│ = 46
+
+
+// An explicit constructor list does not make a bare class a callable class.
+class Aux {
+  constructor(val x)
+  fun answer() = x
+}
+fun Aux(x) = new Aux(x + 1)
+
+// FIXME: constructor-field references are not yet supported by the new resolver.
+:fixme
+:expect 42
+Aux(41).answer()
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+
+:fixme
+:expect 41
+(new Aux(41)).answer()
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+
+
+class Parent {
+  fun answer() = 47
+}
+val Parent = false
+class Child extends Parent
+//│ Parent = false
+
+// FIXME: NewShape does not yet look up inherited members.
+:fixme
+:expect 47
+(new Child).answer()
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.121: 	(new Child).answer()
+//│ ║         	^^^^^^^^^^^^^^^^^^
+//│ ╟── Instance of class 'Child' does not contain member 'answer'
+//│ ║  l.121: 	(new Child).answer()
+//│ ╙──       	 ^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ ═══[RUNTIME ERROR] Expected: '47', got: 'undefined'
+
+
+class Factory {
+  fun answer() = 49
+}
+fun Factory() = new Factory
+
+:noInline
+:expect 49
+Factory().answer()
+//│ = 49
+
+
+// Bare classes still coexist with independent values inside class instances.
+class Container {
+  class Inner {
+    fun answer() = 50
+  }
+  val Inner = 5
+  fun fresh() = new Inner
+}
+let container = new Container
+//│ container = Container { Inner: 5 }
+
+:expect 5
+container.Inner
+//│ = 5
+
+:expect 50
+(new container.Inner).answer()
+//│ = 50
+
+:expect 50
+container.fresh().answer()
+//│ = 50
+
+
+module MutableMembers {
+  class Item {
+    fun answer() = 53
+  }
+  mut val Item = 17
+}
+set MutableMembers.Item = 18
+
+:expect 18
+MutableMembers.Item
+//│ = 18
+
+:expect 53
+(new MutableMembers.Item).answer()
+//│ = 53
+
+
+// Direct parameter lists already define a constructor function with this name.
+:e
+class Parameterized()
+fun Parameterized() = 0
+//│ ╔══[COMPILATION ERROR] Not yet supported: overloading of function 'Parameterized'
+//│ ║  l.187: 	fun Parameterized() = 0
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── with class of the same name
+//│ ║  l.186: 	class Parameterized()
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^
+
+:e
+class ParameterizedValue(x)
+val ParameterizedValue = 0
+//│ ╔══[COMPILATION ERROR] Illegal overloading of value 'ParameterizedValue'
+//│ ║  l.197: 	val ParameterizedValue = 0
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── with class of the same name
+//│ ║  l.196: 	class ParameterizedValue(x)
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ParameterizedValue = 0
+
+// Distinct term definitions are still duplicate definitions, even beside a class.
+:e
+class Duplicate
+fun Duplicate() = 0
+val Duplicate = 1
+//│ ╔══[COMPILATION ERROR] Illegal overloading of value 'Duplicate'
+//│ ║  l.210: 	val Duplicate = 1
+//│ ║         	^^^^^^^^^^^^^^^^^
+//│ ╟── with function of the same name
+//│ ║  l.209: 	fun Duplicate() = 0
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^
+
+
+// Inlining the same local definitions twice must keep their class identities separate.
+:inlineThreshold 10000
+:expect [42, 43]
+[local(40), local(41)]
+//│ = [42, 43]
+
+
+fun unusedClass() = {
+  class Unused
+  val Unused = 55
+  Unused
+}
+
+:inlineThreshold 10000
+:expect 55
+unusedClass()
+//│ = 55
