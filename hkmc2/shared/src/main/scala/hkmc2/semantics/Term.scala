@@ -1022,10 +1022,10 @@ sealed trait Statement extends AutoLocated, ProductWithExtraInfo, Describable:
     case Term.UnitVal() => "()"
     case Lit(lit) => lit.idStr
     case Resolved(t, sym) => t.showPlain
-    case r @ Ref(symbol) => symbol.toString
-    case r @ SimpleRef(symbol) => symbol.toString
-    case r @ MemberRef(symbol) => symbol.toString
-    case r @ SelfRef(sym) => sym.toString
+    case r @ Ref(symbol) => symbol.showAsPlain
+    case r @ SimpleRef(symbol) => symbol.showAsPlain
+    case r @ MemberRef(symbol) => symbol.showAsPlain
+    case r @ SelfRef(sym) => sym.showAsPlain
     case Capture(base, thru) => s"${base.showDbg}^${thru.showDbg}"
     case App(lhs, rhs) => s"${lhs.showDbg}${rhs.showDbgAsParams}"
     case RcdField(lhs, rhs) => s"${lhs.showDbg}: ${rhs.showDbg}"

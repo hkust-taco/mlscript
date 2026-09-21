@@ -29,10 +29,10 @@ Predef.id
 //│ | Elab term Sel(Ident(Predef),Ident(id))
 //│ | | Elab subterm Sel(Ident(Predef),Ident(id))
 //│ | | | Elab subterm Ident(Predef)
-//│ | | | ~> member:Predef
-//│ | | | newSel? sel = member:Predef.id
-//│ | | | listenTerm: trm = member:Predef
-//│ | | | listen: trm = member:Predef
+//│ | | | ~> member:Predef⁰
+//│ | | | newSel? sel = member:Predef⁰.id
+//│ | | | listenTerm: trm = member:Predef⁰
+//│ | | | listen: trm = member:Predef⁰
 //│ | | | listenBMS: bms = module
 //│ | | | listenedBMS: bms = module
 //│ | | | fromBMS: bms = member:Predef⁰, sh = module:Predef¹, flow = Predef², markss = List()
@@ -40,11 +40,11 @@ Predef.id
 //│ | | | | class hkmc2.semantics.ModuleOrObjectSymbol ?
 //│ | | | = MarkedShape(module:Predef¹, ↗⟨module:Predef¹⟩%⟨Predef²⟩ϵ)
 //│ | | | PUSH MarkedShape(module:Predef¹, ↗⟨module:Predef¹⟩%⟨Predef²⟩ϵ)
-//│ | | | newSel: sel = member:Predef.id, shape = MarkedShape(module:Predef¹, ↗⟨module:Predef¹⟩%⟨Predef²⟩ϵ)
+//│ | | | newSel: sel = member:Predef⁰.id, shape = MarkedShape(module:Predef¹, ↗⟨module:Predef¹⟩%⟨Predef²⟩ϵ)
 //│ | | | newSel member: bms = member:id⁰, mss = List(↗⟨module:Predef¹⟩%⟨Predef²⟩ϵ)
-//│ | | ~> member:Predef.id
-//│ | ~> member:Predef.id
-//│ ~> { member:Predef.id }
+//│ | | ~> member:Predef⁰.id
+//│ | ~> member:Predef⁰.id
+//│ ~> { member:Predef⁰.id }
 //│ ————————————————| Resolved |————————————————————————————————————————————————————————————————————————
 //│   Predef⁰.id⁰
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————

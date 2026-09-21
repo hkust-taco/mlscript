@@ -431,11 +431,8 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
           cls.defn match
           case S(clsDef: ClassLikeDef) =>
             resl match
-            case MemberRef(bms: BlockMemberSymbol) =>
-              k(Value.MemberRef(bms, clsDef.sym))
-            case MemberRef(tr: TermSymbol) =>
-              ???
-            case MemberRef(_) => die // FIXME: should make this unreachable
+            case ref: MemberRef =>
+              subTerm(ref)(k)
             case sel: NewSel =>
               subTerm(sel.prefix): pre =>
                 k(Select(pre, memberIdent(sel.id, S(clsDef.bsym)))(S(clsDef.sym))(false))

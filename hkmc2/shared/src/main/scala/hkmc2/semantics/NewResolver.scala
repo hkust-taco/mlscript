@@ -315,6 +315,7 @@ class NewResolver:
     nw.cls.withoutCaptures match
     case trm: NewResolvable =>
       listen(trm): shape =>
+        log(s"resolveNew: res = ${nw.showDbg}, cls = ${trm.showDbg}, shape = ${shape.shwDbg}")
         def reject =
           nw.isErroneous = true
           resolError(nw,
