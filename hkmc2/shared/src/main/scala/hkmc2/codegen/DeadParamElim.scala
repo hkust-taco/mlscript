@@ -18,6 +18,8 @@ class DeadParamElimSolver(val constraintSolver: FlowConstraintSolver):
   given tl: TraceLogger = constraintSolver.tl
   given fState: FlowAnalysis.State = constraintSolver.fState
   given eState: Elaborator.State = constraintSolver.eState
+  given raise: Raise = constraintSolver.preAnalyzer.raise
+  given symbolPrinter: SymbolPrinter = constraintSolver.preAnalyzer.traceSymbolPrinter
 
   val collector: FlowConstraintsCollector = constraintSolver.collector
   val prodFuns: collection.Seq[ProdFun] = constraintSolver.prodFunsWithDests
@@ -104,10 +106,13 @@ class DeadParamElimSolver(val constraintSolver: FlowConstraintSolver):
       case S(existing) => assert(existing.toList.sorted === eliminable)
   
   if tl.doTrace then
+    given ShowCfg = ShowCfg.internal
+
+    def showTermSymbol(sym: TermSymbol): Str =
+      symbolPrinter.printSymbol(sym)
+
     def showRefSite(resultId: ResultId): Str =
-      resultId.getReferredFun match
-        case Some(fun) => s"${fun.nme}@$resultId"
-        case None => s"${resultId.getResult}@$resultId"
+      symbolPrinter.printSymbol(resultId)
     end showRefSite
 
     def showInstId(instId: InstantiationId): Str =
@@ -116,10 +121,8 @@ class DeadParamElimSolver(val constraintSolver: FlowConstraintSolver):
 
     def showProdFun(prodFun: ProdFun): Str =
       def showFunId(funId: FunId): Str = funId match
-        case (funSym: Symbol, whichParamList) => s"${funSym.nme}#$whichParamList"
-        case exprId: ResultId => exprId.getResult match
-          case Lambda(_, _) => s"lambda@$exprId"
-          case _ => showRefSite(exprId)
+        case (funSym: TermSymbol, whichParamList) => s"${showTermSymbol(funSym)}#$whichParamList"
+        case exprId: ResultId => showRefSite(exprId)
       val inst = prodFun.instantiationId.fold("")(instId => s" @ ${showInstId(instId)}")
       s"prodfun ${showFunId(prodFun.exprId)}$inst"
     end showProdFun

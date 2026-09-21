@@ -11,7 +11,7 @@ private fun countdown(n, unused) =
   else countdown(n - 1, unused)
 countdown(5, 42)
 //│ dead-param-elim > >>> dead-param-elim results >>>
-//│ dead-param-elim > prodfun countdown#0 @ <root> -> eliminable: {1}
+//│ dead-param-elim > prodfun countdown⁰#0 @ <root> -> eliminable: {1}
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ @private
@@ -76,8 +76,8 @@ private fun ping(n, unused) = if n == 0 then 0 else pong(n - 1, unused)
 private fun pong(n, unused) = if n == 0 then 0 else ping(n - 1, unused)
 ping(5, 99)
 //│ dead-param-elim > >>> dead-param-elim results >>>
-//│ dead-param-elim > prodfun ping#0 @ <root> -> eliminable: {1}
-//│ dead-param-elim > prodfun pong#0 @ <root> -> eliminable: {1}
+//│ dead-param-elim > prodfun ping⁰#0 @ <root> -> eliminable: {1}
+//│ dead-param-elim > prodfun pong⁰#0 @ <root> -> eliminable: {1}
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ @private
@@ -215,7 +215,7 @@ private fun pong(n, unused) = if n == 0 then 0 else M.ping(n - 1, unused)
 class Test(a) with
   fun f() = pong(3, 123)
 //│ dead-param-elim > >>> dead-param-elim results >>>
-//│ dead-param-elim > prodfun pong#0 @ <root> -> eliminable: {1}
+//│ dead-param-elim > prodfun pong⁶#0 @ <root> -> eliminable: {1}
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ @private

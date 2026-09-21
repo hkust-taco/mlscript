@@ -17,11 +17,19 @@ object FlowAnalysis:
     val NonAffineSyms = "flow-analysis/non-affine"
     val AccumulatorSym = "flow-analysis/accumulator"
 
-  class State:
+  class State(using val eState: Elaborator.State):
     val resultToResultId = new java.util.IdentityHashMap[Result, ResultId].asScala
-    val resultIdToResult = mutable.Map.empty[ResultId, Result]
+    
+    /** This buffer is currently only used internally for logging (`logNonAffineSyms` and `logAccumulatorSyms`) */
     val stratVars = mutable.Buffer.empty[StratVar]
-    object ResultUidState extends Uid.Result.State
+
+    private def resultIdName(result: Result): Str = result match
+      case FunRef(fun, _) => fun.nme
+      case Lambda(_, _) => "lambda"
+      case Value.SimpleRef(sym) => sym.nme
+      case Value.MemberRef(sym, _) => sym.nme
+      case Value.This(sym) => sym.nme
+      case _ => "result"
   
     extension (instId: InstantiationId)
       def mkFunName(using Elaborator.State): String =
@@ -31,7 +39,7 @@ object FlowAnalysis:
           .mkString("_")
     
     extension (resultId: ResultId)
-      def getResult = resultIdToResult(resultId)
+      def getResult = resultId.result
       def getReferredSym: Symbol =
         resultId.getReferredSymOpt.getOrElse(lastWords(s"assumption failed: ${resultId.getResult} is not a SimpleRef, MemberRef, or ThisRef"))
       def getReferredSymOpt: Opt[Symbol] =
@@ -48,8 +56,7 @@ object FlowAnalysis:
     extension (r: Result)
       def uid = resultToResultId.get(r) match
         case None =>
-          val id = ResultId(ResultUidState.nextUid)
-          resultIdToResult(id) = r
+          val id = ResultId(r, resultIdName(r))
           resultToResultId(r) = id
           id
         case Some(id) => id
@@ -83,8 +90,10 @@ object FlowAnalysis:
 end FlowAnalysis
 
 
-class ResultId(val uid: Uid[Result]):
-  override def toString: String = uid.toString
+class ResultId(val result: Result, name: Str)(using eState: Elaborator.State) extends Symbol(using eState):
+  def nme: Str = name
+  def subst(using SymbolSubst): ResultId = this
+  def toLoc: Opt[Loc] = result.toLoc
 
 type InstantiationId = Ls[ResultId]
 type CtorCls = ClassLikeSymbol | Int
@@ -151,18 +160,20 @@ object FunRef:
       if (tSym.k is syntax.Fun) && tSym.owner.forall(_.asMod.isDefined) => S(tSym -> qual)
     case _ => N
 
-type StratVarId = Uid[StratVar]
 
 sealed trait ProdStrat
 sealed trait ConsStrat
 
-class StratVar(val uid: StratVarId, val name: Str, val generatedForFun: Opt[TermSymbol])
-  extends ProdStrat with ConsStrat:
+class StratVar(val name: Str, val sourceSymbol: Opt[Symbol], val generatedForFun: Opt[TermSymbol])(using eState: Elaborator.State)
+  extends Symbol(using eState) with ProdStrat with ConsStrat:
+  def nme: Str = name
+  def subst(using SymbolSubst): StratVar = this
+  def toLoc: Opt[Loc] = sourceSymbol.flatMap(_.toLoc)
+  // Bounds belong to this analysis-local variable and are populated by FlowConstraintSolver.
   val upperBounds = LinkedHashSet.empty[ConsStrat]
   val lowerBounds = LinkedHashSet.empty[ProdStrat]
   lazy val asIntoParam = new StratVar.IntoParamImpl(this)
   lazy val asPossibleAccumulator = new StratVar.PossibleAccumulatorImpl(this)
-  override def toString(): String = s"${if name.isEmpty() then "$stratvar" else name}@${uid}@$generatedForFun"
 
 object StratVar:
   final class IntoParamImpl private[StratVar] (val s: StratVar) extends ConsStrat:
@@ -170,17 +181,19 @@ object StratVar:
   final class PossibleAccumulatorImpl private[StratVar] (val s: StratVar) extends ConsStrat:
     override def toString(): String = s"PossibleAccumulator($s)"
   
-  def freshVar(nme: String)(using vuid: Uid.StratVar.State, fState: FlowAnalysis.State): StratVar =
-    val newId = vuid.nextUid
-    val stratVar = StratVar(newId, nme, N)
+  private def displayName(nme: String, sourceSymbol: Opt[Symbol], generatedForFun: Opt[TermSymbol]): Str =
+    val ownName = sourceSymbol.fold(if nme.isEmpty then "$stratvar" else nme)(_.nme)
+    generatedForFun.fold(ownName)(fun => s"${ownName}_for_${fun.nme}")
+
+  def freshVar(nme: String)(using fState: FlowAnalysis.State): StratVar =
+    freshVar(nme, N, N)
+  def freshVar(nme: String, generatedForFun: TermSymbol)(using fState: FlowAnalysis.State): StratVar =
+    freshVar(nme, N, S(generatedForFun))
+  def freshVar(nme: String, sourceSymbol: Opt[Symbol], generatedForFun: Opt[TermSymbol])(using fState: FlowAnalysis.State): StratVar =
+    val stratVar = StratVar(displayName(nme, sourceSymbol, generatedForFun), sourceSymbol, generatedForFun)(using fState.eState)
     fState.stratVars += stratVar
     stratVar
-  def freshVar(nme: String, generatedForFun: TermSymbol)(using vuid: Uid.StratVar.State, fState: FlowAnalysis.State): StratVar =
-    val newId = vuid.nextUid
-    val stratVar = StratVar(newId, s"${nme}_for_${generatedForFun.nme}", S(generatedForFun))
-    fState.stratVars += stratVar
-    stratVar
-  def freshVar(nme: String, forFunOpt: Opt[TermSymbol])(using vuid: Uid.StratVar.State, fState: FlowAnalysis.State): StratVar =
+  def freshVar(nme: String, forFunOpt: Opt[TermSymbol])(using fState: FlowAnalysis.State): StratVar =
     forFunOpt match
     case None => freshVar(nme)
     case Some(forFun) => freshVar(nme, forFun)
@@ -275,8 +288,8 @@ class FlowPreAnalyzer(val pgrm: Program)(using
   val raise: Raise,
   val symbolPrinter: SymbolPrinter
 ) extends BlockTraverser:
-  given stratVarUidState: Uid.StratVar.State = new Uid.StratVar.State
   import StratVar.freshVar
+  val traceSymbolPrinter = SymbolPrinter(symbolPrinter.dbgScp.nest)
   
   // Records the local definitions and captured variables of the current
   // nested function/lambda.
@@ -357,7 +370,7 @@ class FlowPreAnalyzer(val pgrm: Program)(using
     def registerStratVar(sym: Symbol, nme: String): Unit =
       val currentRootFun = ctx.tails.collectFirst:
         case InCtx.Fn(fun) :: tl if isTopLvlLikeFunCtx(tl) => fun.dSym
-      res.generatedVars.getOrElseUpdate(sym, freshVar(nme, currentRootFun))
+      res.generatedVars.getOrElseUpdate(sym, freshVar(nme, S(sym), currentRootFun))
     
     private inline def withCtx(newCtx: InCtx)(inline body: => Any)(after: => Unit = ()): Unit =
       ctx = newCtx :: ctx
@@ -648,7 +661,6 @@ class FlowConstraintsCollector(
   val accumulatorTracking: Bool,
 ):
   given FlowPreAnalyzer = preAnalyzer
-  given Uid.StratVar.State = preAnalyzer.stratVarUidState
   given Raise = preAnalyzer.raise
   given fState: FlowAnalysis.State = preAnalyzer.fState
   given eState: Elaborator.State = preAnalyzer.eState
@@ -762,7 +774,7 @@ class FlowConstraintsCollector(
       def duplicateVarState(s: StratVar) =
         if s.generatedForFun.fold(false):
           forFun => funToSccRep(forFun).fold(false)(_ is groupRep)
-        then stratVarMap.getOrElseUpdate(s, freshVar(s.name, cc.forFunGroup))
+        then stratVarMap.getOrElseUpdate(s, freshVar(s.name, s.sourceSymbol, cc.forFunGroup.orElse(s.generatedForFun)))
         else s
       def duplicateProdStrat(s: ProdStrat): ProdStrat = s match
         case v: StratVar => duplicateVarState(v)
@@ -1025,6 +1037,7 @@ class FlowConstraintSolver(val collector: FlowConstraintsCollector):
   given eState: Elaborator.State = collector.eState
   given preAnalyzer: FlowPreAnalyzer = collector.preAnalyzer
   given Raise = preAnalyzer.raise
+  given SymbolPrinter = preAnalyzer.traceSymbolPrinter
   
   
   val ctorsWithDests = mutable.Buffer.empty[Ctor]
@@ -1072,24 +1085,27 @@ class FlowConstraintSolver(val collector: FlowConstraintsCollector):
   
   private def logNonAffineSyms: Unit =
     tl.scoped(FlowAnalysis.TraceScope.NonAffineSyms):
+      given ShowCfg = ShowCfg.internal
       tl.log(">>> non-affine syms >>>")
       val outputRes =
         for
           stratVar <- fState.stratVars
           if AllUpperBounds(stratVar).contains(NonAffine)
-        yield s"${stratVar.name}@${stratVar.uid}"
+        yield summon[SymbolPrinter].printSymbol(stratVar)
       for nonAffine <- outputRes.toSortedSet do
         tl.log(nonAffine)
       tl.log("<<< non-affine syms <<<")
   
   private def logAccumulatorSyms: Unit =
     tl.scoped(FlowAnalysis.TraceScope.AccumulatorSym):
+      given ShowCfg = ShowCfg.internal
       tl.log(">>> accumulator syms >>>")
       def showAccumulatorSym(stratVar: StratVar): Opt[Str] =
         AllUpperBounds(stratVar)
           .collectFirst:
-            case pAcc: PossibleAccumulator if pAcc.s is stratVar => s"${stratVar.name}@${stratVar.uid}"
-            case iPrm: IntoParam if iPrm.s is stratVar => s"${stratVar.name}@${stratVar.uid}"
+            case pAcc: PossibleAccumulator if pAcc.s is stratVar => stratVar
+            case iPrm: IntoParam if iPrm.s is stratVar => stratVar
+          .map(summon[SymbolPrinter].printSymbol)
       val outputRes =
         for
           stratVar <- fState.stratVars

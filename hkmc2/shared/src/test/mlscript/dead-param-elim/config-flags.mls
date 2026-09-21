@@ -26,7 +26,7 @@ bareFlag(42)
 private fun monoDebug(a) = 0
 monoDebug(42)
 //│ dead-param-elim > >>> dead-param-elim results >>>
-//│ dead-param-elim > prodfun monoDebug#0 @ <root> -> eliminable: {0}
+//│ dead-param-elim > prodfun monoDebug⁰#0 @ <root> -> eliminable: {0}
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ = 0
 
@@ -36,7 +36,7 @@ monoDebug(42)
 private fun debugMono(a) = 0
 debugMono(42)
 //│ dead-param-elim > >>> dead-param-elim results >>>
-//│ dead-param-elim > prodfun debugMono#0 @ <root> -> eliminable: {0}
+//│ dead-param-elim > prodfun debugMono⁰#0 @ <root> -> eliminable: {0}
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ @private define debugMono⁰ as fun debugMono¹() { return 0 }; return debugMono¹()

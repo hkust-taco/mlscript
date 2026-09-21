@@ -30,7 +30,7 @@ sum(enum(5), 0)
 //│ deforest > 	fields: ls⁰.t⁰
 //│ deforest > <<< fusing <<<
 //│ eta-expansion > >>> eta-expansion targets shapes >>>
-//│ eta-expansion > enum_13$enum: [1, 7]
+//│ eta-expansion > enum_enum$enum: [1, 7]
 //│ eta-expansion > <<< eta-expansion targets shapes <<<
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ let x, eta$0$1, inlinedVal;
@@ -109,17 +109,17 @@ len(flatten(id((1 :: 2 :: Nil) :: (3 :: Nil) :: Nil)))
 //│ deforest > 	fields: ls¹.t⁰
 //│ deforest > <<< fusing <<<
 //│ eta-expansion > >>> eta-expansion targets shapes >>>
-//│ eta-expansion > flatten_31_append_16$append: [2, 6]
-//│ eta-expansion > flatten_31$flatten: [1, 6]
+//│ eta-expansion > flatten_flatten_append_append$append: [2, 6]
+//│ eta-expansion > flatten_flatten$flatten: [1, 6]
 //│ eta-expansion > <<< eta-expansion targets shapes <<<
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let tmp, tmp1, tmp2, tmp3, tmp4, flatten_31$flatten, flatten_31_append_16$append$worker, flatten_31$flatten$worker;
+//│ let tmp, tmp1, tmp2, tmp3, tmp4, flatten_flatten$flatten, flatten_flatten_append_append$append$worker, flatten_flatten$flatten$worker;
 //│ @inline @private
-//│ define flatten_31$flatten as fun flatten_31$flatten⁰(xss)() {
-//│   return flatten_31$flatten$worker⁰(xss)
+//│ define flatten_flatten$flatten as fun flatten_flatten$flatten⁰(xss)() {
+//│   return flatten_flatten$flatten$worker⁰(xss)
 //│ };
 //│ @private
-//│ define flatten_31$flatten$worker as fun flatten_31$flatten$worker⁰(xss) {
+//│ define flatten_flatten$flatten$worker as fun flatten_flatten$flatten$worker⁰(xss) {
 //│   let arg$Cons$0$, arg$Cons$1$;
 //│   match xss
 //│     Nil⁰ =>
@@ -128,14 +128,14 @@ len(flatten(id((1 :: 2 :: Nil) :: (3 :: Nil) :: Nil)))
 //│       let ys;
 //│       set arg$Cons$0$ = xss.h⁰;
 //│       set arg$Cons$1$ = xss.t⁰;
-//│       set ys = flatten_31$flatten⁰(arg$Cons$1$);
-//│       return flatten_31_append_16$append$worker⁰(arg$Cons$0$, ys)
+//│       set ys = flatten_flatten$flatten⁰(arg$Cons$1$);
+//│       return flatten_flatten_append_append$append$worker⁰(arg$Cons$0$, ys)
 //│     else
 //│       throw new globalThis⁰.Error⁰("match error")
 //│   end
 //│ };
 //│ @private
-//│ define flatten_31_append_16$append$worker as fun flatten_31_append_16$append$worker⁰(xs, ys) {
+//│ define flatten_flatten_append_append$append$worker as fun flatten_flatten_append_append$append$worker⁰(xs, ys) {
 //│   let arg$Cons$1$;
 //│   match xs
 //│     Nil⁰ =>
@@ -143,7 +143,7 @@ len(flatten(id((1 :: 2 :: Nil) :: (3 :: Nil) :: Nil)))
 //│     Cons¹ =>
 //│       let inlinedVal;
 //│       set arg$Cons$1$ = xs.t⁰;
-//│       set inlinedVal = flatten_31_append_16$append$worker⁰(arg$Cons$1$, ys);
+//│       set inlinedVal = flatten_flatten_append_append$append$worker⁰(arg$Cons$1$, ys);
 //│       return +⁰(1, inlinedVal)
 //│     else
 //│       throw new globalThis⁰.Error⁰("match error")
@@ -195,7 +195,7 @@ len(flatten(id((1 :: 2 :: Nil) :: (3 :: Nil) :: Nil)))
 //│ set tmp2 = Cons⁰(3, Nil⁰);
 //│ set tmp3 = Cons⁰(tmp2, Nil⁰);
 //│ set tmp4 = Cons⁰(tmp1, tmp3);
-//│ return flatten_31$flatten$worker⁰(tmp4)
+//│ return flatten_flatten$flatten$worker⁰(tmp4)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 3
 

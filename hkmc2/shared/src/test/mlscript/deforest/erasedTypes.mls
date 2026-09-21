@@ -51,21 +51,21 @@ fun selected(n: Int, k: Str) =
 //│ deforest > 	fields: b².v¹
 //│ deforest > <<< fusing <<<
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let selected_4$b_Box, selected_4$b_rest;
+//│ let selected_selected$b_Box, selected_selected$b_rest;
 //│ @affine(1) @private
-//│ define selected_4$b_Box as fun selected_4$b_Box⁰(Box_v: Int⁰)(fv_k: Str⁰, fv_x: ?, fv_arg$Box$0$: ?): ? {
+//│ define selected_selected$b_Box as fun selected_selected$b_Box⁰(Box_v: Int⁰)(fv_k: Str⁰, fv_x: ?, fv_arg$Box$0$: ?): ? {
 //│   set fv_arg$Box$0$ = Box_v;
 //│   set fv_x = fv_arg$Box$0$;
 //│   return [fv_x, fv_k]
 //│ };
 //│ @private
-//│ define selected_4$b_rest as fun selected_4$b_rest⁰(): ? {
+//│ define selected_selected$b_rest as fun selected_selected$b_rest⁰(): ? {
 //│   return null
 //│ };
 //│ define selected⁰ as fun selected¹(n: Int⁰, k: Str⁰): ? {
 //│   let b: ?, x: ?, arg$Box$0$: ?, Box_v: Int⁰;
 //│   set Box_v = n;
-//│   set b = selected_4$b_Box⁰(Box_v);
+//│   set b = selected_selected$b_Box⁰(Box_v);
 //│   return b(k, x, arg$Box$0$)
 //│ };
 //│ end
@@ -85,23 +85,23 @@ fun withRest(n: Int, k: Str) =
 //│ deforest > 	fields: b³.v¹
 //│ deforest > <<< fusing <<<
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let withRest_4$b_Box, withRest_4$b_rest;
+//│ let withRest_withRest$b_Box, withRest_withRest$b_rest;
 //│ @affine(1) @private
-//│ define withRest_4$b_Box as fun withRest_4$b_Box⁰(Box_v: Int⁰)(fv_x: ?, fv_arg$Box$0$: ?, fv_tmp: ?, fv_k: Str⁰, fv_r: ?, fv_tmp1: ?): ? {
+//│ define withRest_withRest$b_Box as fun withRest_withRest$b_Box⁰(Box_v: Int⁰)(fv_x: ?, fv_arg$Box$0$: ?, fv_tmp: ?, fv_k: Str⁰, fv_r: ?, fv_tmp1: ?): ? {
 //│   set fv_arg$Box$0$ = Box_v;
 //│   set fv_x = fv_arg$Box$0$;
 //│   set fv_tmp1 = fv_x;
-//│   return withRest_4$b_rest⁰(fv_k, fv_r, fv_tmp1)
+//│   return withRest_withRest$b_rest⁰(fv_k, fv_r, fv_tmp1)
 //│ };
 //│ @private
-//│ define withRest_4$b_rest as fun withRest_4$b_rest⁰(fv_k: Str⁰, fv_r: ?, fv_tmp: ?): ? {
+//│ define withRest_withRest$b_rest as fun withRest_withRest$b_rest⁰(fv_k: Str⁰, fv_r: ?, fv_tmp: ?): ? {
 //│   set fv_r = fv_tmp;
 //│   return [fv_r, fv_k]
 //│ };
 //│ define withRest⁰ as fun withRest¹(n: Int⁰, k: Str⁰): ? {
 //│   let b: ?, r: ?, x: ?, arg$Box$0$: ?, tmp: ?, Box_v: Int⁰;
 //│   set Box_v = n;
-//│   set b = withRest_4$b_Box⁰(Box_v);
+//│   set b = withRest_withRest$b_Box⁰(Box_v);
 //│   return b(x, arg$Box$0$, tmp, k, r, tmp)
 //│ };
 //│ end
@@ -118,20 +118,20 @@ fun noFields(n: Int, s: Str) =
 //│ deforest > 	match: p⁰
 //│ deforest > <<< fusing <<<
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let noFields_2$p_Pair, noFields_2$p_rest;
+//│ let noFields_noFields$p_Pair, noFields_noFields$p_rest;
 //│ @affine(1) @private
-//│ define noFields_2$p_Pair as fun noFields_2$p_Pair⁰(_a: Int⁰, _b: Str⁰)(): ? {
+//│ define noFields_noFields$p_Pair as fun noFields_noFields$p_Pair⁰(_a: Int⁰, _b: Str⁰)(): ? {
 //│   return 1
 //│ };
 //│ @private
-//│ define noFields_2$p_rest as fun noFields_2$p_rest⁰(): ? {
+//│ define noFields_noFields$p_rest as fun noFields_noFields$p_rest⁰(): ? {
 //│   return null
 //│ };
 //│ define noFields⁰ as fun noFields¹(n: Int⁰, s: Str⁰): ? {
 //│   let p: ?, Pair_a: Int⁰, Pair_b: Str⁰;
 //│   set Pair_a = n;
 //│   set Pair_b = s;
-//│   set p = noFields_2$p_Pair⁰(Pair_a, Pair_b);
+//│   set p = noFields_noFields$p_Pair⁰(Pair_a, Pair_b);
 //│   return p()
 //│ };
 //│ end
