@@ -277,10 +277,11 @@ class NewResolver:
               go(body, mss)
         case _ =>
           softAssert(res.isErroneous)
-      case (sh: IntroShape, _) =>
+      case (sh: IntroShape, mss) =>
         sh.trm match
         case Lam(params, body) =>
-          go(body, Nil)
+          // Exit the same context that zipArgs enters, filtering results from other uses.
+          go(body, mss)
         case _ =>
           softAssert(res.isErroneous)
       case _ =>

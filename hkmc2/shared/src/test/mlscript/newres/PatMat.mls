@@ -83,22 +83,12 @@ test(x).b
 //│ = 123
 
 // :de
-:fixme
 :sr
 test(x2).b
 //│ ————————————————| Resolved |————————————————————————————————————————————————————————————————————————
-//│   test⁰(x2⁰)‹app¹›.b‹b², b⁰›
-//│ ╔══[COMPILATION ERROR] This selection of member 'b' is ambiguous, as it has multiple resolved targets
-//│ ║  l.88: 	test(x2).b
-//│ ║        	^^^^^^^^^^
-//│ ╟── target: function 'b' in overloaded function and class 'Baz'
-//│ ║  l.7: 	class Baz(c) { fun b = c }
-//│ ║       	               ^^^^^^^^^
-//│ ╟── target: value 'b' in object 'Bar'
-//│ ║  l.6: 	object Bar { val b = 123 }
-//│ ╙──     	             ^^^^^^^^^^^
+//│   test⁰(x2⁰)‹app¹›.b²
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
-//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ = Bar { b: 123, class: object Bar }
 
 
 let bz = Baz(Bar)
@@ -110,7 +100,7 @@ fun test(x) =
     Foo(y) then y.b
 test(bz)
 //│ ╔══[COMPILATION ERROR] This selection of member 'b' has no resolved target
-//│ ║  l.110: 	    Foo(y) then y.b
+//│ ║  l.100: 	    Foo(y) then y.b
 //│ ╙──       	                ^^^
 //│ ═══[RUNTIME ERROR] Error: match error
 
@@ -130,7 +120,7 @@ let x = if maybe then Bar else bz
 :e
 x.b
 //│ ╔══[COMPILATION ERROR] This selection of member 'b' is ambiguous, as it has multiple resolved targets
-//│ ║  l.131: 	x.b
+//│ ║  l.121: 	x.b
 //│ ║         	^^^
 //│ ╟── target: function 'b' in overloaded function and class 'Baz'
 //│ ║  l.7: 	class Baz(c) { fun b = c }
@@ -172,7 +162,7 @@ if Foo(Predef) is
 val f = case
   Foo(y) then y.b
 //│ ╔══[COMPILATION ERROR] This selection of member 'b' has no resolved target
-//│ ║  l.173: 	  Foo(y) then y.b
+//│ ║  l.163: 	  Foo(y) then y.b
 //│ ╙──       	              ^^^
 //│ f = fun
 
