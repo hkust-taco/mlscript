@@ -233,6 +233,7 @@ object Config:
     dataFlowAnalysis: Bool,
     flowBasedOpt: Opt[FlowBasedOpt],
   )
+  
   object Optimizer:
     val NoOpt = Optimizer(
       N,

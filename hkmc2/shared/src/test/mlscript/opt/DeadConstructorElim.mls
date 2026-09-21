@@ -416,3 +416,92 @@ w(new O)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > get z
 //│ = 1
+
+
+
+// FIXME: a constructor can observe its arguments even when its own result is discarded.
+// Flow analysis must account for those uses before removing the nested allocation.
+:fixme
+:flowBasedOpt mono debugDce
+:soir
+:noInline
+:expect 42
+data class Observed(x)
+class Consumer(x) with
+  if x is Observed then () else throw "expected Observed"
+fun consume() =
+  let unused = Consumer(Observed(1))
+  42
+consume()
+//│ dead-constructor-elim > >>> dead-constructor-elim results >>>
+//│ dead-constructor-elim > eliminable: Call(member:Observed⁰‹term:Observed¹›, [[1]])
+//│ dead-constructor-elim > <<< dead-constructor-elim results <<<
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ define consume⁰ as fun consume¹() {
+//│   do Consumer⁰(undefined);
+//│   return 42
+//│ };
+//│ @data
+//│ define Observed⁰ as class Observed² {
+//│   val x¹;
+//│   constructor Observed¹(x) {
+//│     define x¹ as val x² = x;
+//│     end
+//│   }
+//│ };
+//│ define Consumer¹ as class Consumer² {
+//│   private val x³;
+//│   constructor Consumer⁰(x) {
+//│     set Consumer².this.x³ = x;
+//│     match Consumer².this.x³
+//│       Observed² =>
+//│         end
+//│       else
+//│         throw "expected Observed"
+//│     end
+//│   }
+//│ };
+//│ return consume¹()
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ ═══[RUNTIME ERROR] expected Observed
+//│ ═══[RUNTIME ERROR] Expected: '42', got: 'undefined'
+
+
+// FIXME: lifting appends a capture argument that is absent from the source class parameter list.
+// That argument remains live through the instance's method, even though it is not a source field.
+:fixme
+:flowBasedOpt mono debugDce
+:lift
+:soir
+:noInline
+:expect [1, 2]
+fun capture() =
+  let captured = [1, 2]
+  class Capturing(x) with
+    fun get() = captured
+  let instance = Capturing(0)
+  instance.get()
+capture()
+//│ dead-constructor-elim > >>> dead-constructor-elim results >>>
+//│ dead-constructor-elim > eliminable: Tuple(false, [1, 2])
+//│ dead-constructor-elim > <<< dead-constructor-elim results <<<
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let Capturing;
+//│ define Capturing as class Capturing¹ {
+//│   private val captured⁰;
+//│   constructor Capturing⁰(x, captured) {
+//│     set Capturing¹.this.captured⁰ = captured;
+//│     end
+//│   }
+//│   method get¹ = fun get²() {
+//│     return Capturing¹.this.captured⁰
+//│   }
+//│ };
+//│ define capture⁰ as fun capture¹() {
+//│   let instance;
+//│   set instance = new Capturing¹(0, undefined);
+//│   return instance.get﹖()
+//│ };
+//│ return capture¹()
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ ═══[RUNTIME ERROR] Expected: '[1, 2]', got: '()'

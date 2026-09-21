@@ -1,0 +1,59 @@
+:noInline
+
+:global
+:wasm
+
+
+// FIXME: a checked cast observes its operand even when the cast's result is unused.
+// The allocation must remain live; replacing it with undefined makes this valid cast trap.
+:fixme
+:flowBasedOpt mono
+:soir
+data class Box(x)
+fun cast() =
+  let x = Box(1)
+  val unused: Box = x as Object
+  42
+cast()
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ define cast⁰ as fun cast¹() {
+//│   let unused;
+//│   define unused as val unused⁰ = (undefined as! Box⁰);
+//│   return 42
+//│ };
+//│ @data
+//│ define Box¹ as class Box⁰ {
+//│   val x⁰;
+//│   constructor Box²(x) { define x⁰ as val x¹ = x; end }
+//│ };
+//│ return cast¹()
+//│ Wasm result:
+//│ ═══[RUNTIME ERROR] RuntimeError: illegal cast
+
+:fixme
+:flowBasedOpt mono
+:soir
+data class Box(x)
+fun cast() =
+  let x = Box(1)
+  val unused = x as Object
+  val tmp: Box = unused
+  42
+cast()
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ define cast² as fun cast³() {
+//│   let tmp, unused;
+//│   define unused as val unused¹ = undefined;
+//│   define tmp as val tmp⁰ = (unused¹ as! Box³);
+//│   return 42
+//│ };
+//│ @data
+//│ define Box⁴ as class Box³ {
+//│   val x²;
+//│   constructor Box⁵(x) { define x² as val x³ = x; end }
+//│ };
+//│ return cast³()
+//│ Wasm result:
+//│ ═══[RUNTIME ERROR] RuntimeError: illegal cast
+
+

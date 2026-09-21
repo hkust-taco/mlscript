@@ -218,3 +218,31 @@ main2(true)
 //│ dead-param-elim > prodfun g2#0 @ <root> -> eliminable: {0}
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ = 0
+
+
+
+// FIXME: eta expansion must preserve a rest parameter and spread it at the forwarding call.
+// The returned function is called exactly once, with more than one variadic argument.
+:fixme
+:flowBasedOpt mono debugEta
+:soir
+:noInline
+:expect [1, 2, 3]
+@affine(1) fun rest(a)(...xs) = xs
+fun returnRest(a) = rest(a)
+returnRest(0)(1, 2, 3)
+//│ eta-expansion > >>> eta-expansion targets shapes >>>
+//│ eta-expansion > returnRest: [1, 1]
+//│ eta-expansion > <<< eta-expansion targets shapes <<<
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ @affine(1)
+//│ define rest⁰ as fun rest¹(a)(...xs) {
+//│   return xs
+//│ };
+//│ define returnRest⁰ as fun returnRest¹(a)(eta$0$0) {
+//│   return rest¹(a)(eta$0$0)
+//│ };
+//│ return returnRest¹(0)(1, 2, 3)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ ═══[RUNTIME ERROR] Expected: '[1, 2, 3]', got: '[1]'
+//│ = [1]
