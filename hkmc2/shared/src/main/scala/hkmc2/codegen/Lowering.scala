@@ -430,12 +430,13 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
         case cls :: Nil =>
           cls.defn match
           case S(clsDef: ClassLikeDef) =>
-            resl match
-            case ref: MemberRef =>
-              subTerm(ref)(k)
-            case sel: NewSel =>
-              subTerm(sel.prefix): pre =>
-                k(Select(pre, memberIdent(sel.id, S(clsDef.bsym)))(S(clsDef.sym))(false))
+            // resl match
+            // case ref: MemberRef =>
+            //   subTerm(ref)(k)
+            // case sel: NewSel =>
+            //   subTerm(sel.prefix): pre =>
+            //     k(Select(pre, memberIdent(sel.id, S(clsDef.bsym)))(S(clsDef.sym))(false))
+            subTerm(resl)(k)
           case _ =>
             softAssert(resl.isErroneous, s"Unexpected `new` target: ${cls.showDbg}")
             compError
