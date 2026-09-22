@@ -351,7 +351,7 @@ object Elaborator:
         val compile = assumeObject("compile")
         val buffered = assumeObject("buffered")
         val bufferable = assumeObject("bufferable")
-        val mayNotRaiseEffects = assumeObject("mayNotRaiseEffects")
+        val pure = assumeObject("pure")
         val matchShapes = assumeObject("matchShapes")
       object handlers extends VirtualModule(assumeBuiltinMod("handlers")):
         val await = assumeObject("await").asTrm.get
@@ -424,7 +424,7 @@ object Elaborator:
       strStartsWith: TermSymbol,
       strGet: TermSymbol,
       strTake: TermSymbol,
-      strLeave: TermSymbol,
+      strLeaveOut: TermSymbol,
       matchSuccessCls: ClassSymbol,
       matchSuccessTrm: TermSymbol,
       matchFailureCls: ClassSymbol,
@@ -472,7 +472,7 @@ object Elaborator:
         strStartsWith = moduleMember(str, "startsWith"),
         strGet = moduleMember(str, "get"),
         strTake = moduleMember(str, "take"),
-        strLeave = moduleMember(str, "leave"),
+        strLeaveOut = moduleMember(str, "leaveOut"),
         matchSuccessCls = cls("MatchSuccess"),
         matchSuccessTrm = term("MatchSuccess"),
         matchFailureCls = cls("MatchFailure"),
@@ -576,7 +576,7 @@ object Elaborator:
     def strStartsWithSymbol: TermSymbol = runtimeSymbols.strStartsWith
     def strGetSymbol: TermSymbol = runtimeSymbols.strGet
     def strTakeSymbol: TermSymbol = runtimeSymbols.strTake
-    def strLeaveSymbol: TermSymbol = runtimeSymbols.strLeave
+    def strLeaveOutSymbol: TermSymbol = runtimeSymbols.strLeaveOut
     def matchSuccessClsSymbol: ClassSymbol = runtimeSymbols.matchSuccessCls
     def matchSuccessTrmSymbol: TermSymbol = runtimeSymbols.matchSuccessTrm
     def matchFailureClsSymbol: ClassSymbol = runtimeSymbols.matchFailureCls
@@ -694,8 +694,8 @@ extends Importer:
             return S(Annot.Generator)
           case ctx.builtins.annotations.async =>
             return S(Annot.Async)
-          case ctx.builtins.annotations.mayNotRaiseEffects =>
-            return S(Annot.MayNotRaiseEffects)
+          case ctx.builtins.annotations.pure =>
+            return S(Annot.Pure)
           case _ => ()
         case _ => ()
         S(Annot.Trm(trm))

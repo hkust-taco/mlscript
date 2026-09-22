@@ -32,7 +32,7 @@ enum Annot extends AutoLocated:
   case Async
   case RaiseEffects
   // Whether the function is guaranteed to not raise effects.
-  case MayNotRaiseEffects
+  case Pure
   case MatchShapes(patterns: Ls[Pattern])
   case Config(modify: hkmc2.Config => hkmc2.Config)
   // Marks if a function or lambda is one-shot, i.e. called at most once.
@@ -55,14 +55,14 @@ enum Annot extends AutoLocated:
     case Trm(trm) => Vector.single(trm)
     case MatchShapes(patterns) => patterns.iterator.flatMap(_.subTerms).toVector
     case _: Modifier | Untyped | TailRec | TailCall | Inline | NoInline
-      | Generator | Async | RaiseEffects | MayNotRaiseEffects | _: Config | _: Affine => Vector.empty
+      | Generator | Async | RaiseEffects | Pure | _: Config | _: Affine => Vector.empty
   
   def children: Vector[Located] = this match
     case Trm(trm) => Vector.single(trm)
     case MatchShapes(patterns) => patterns.toVector
     // case Modifier(kw) => Vector.single(kw) // TODO: make `kw` a `Keywrd`
     case _: Modifier | Untyped | TailRec | TailCall | Inline | NoInline
-      | Generator | Async | RaiseEffects | MayNotRaiseEffects | _: Config | _: Affine => Vector.empty
+      | Generator | Async | RaiseEffects | Pure | _: Config | _: Affine => Vector.empty
   
   def show(using Scope, ShowCfg, Raise): Document = this match
     case Untyped => doc"@untyped"
@@ -75,7 +75,7 @@ enum Annot extends AutoLocated:
     case TailCall => doc"@tailcall"
     case Affine(n) => doc"@affine($n)"
     case Modifier(mod) => doc"@${mod.name}"
-    case MayNotRaiseEffects => doc"@mayNotRaiseEffects"
+    case Pure => doc"@pure"
     case MatchShapes(_) => doc"@matchShapes"
     case Trm(trm) => doc"@${trm.show}"
     case Config(_) => doc"@config(...)"
@@ -91,7 +91,7 @@ enum Annot extends AutoLocated:
     case Generator => Generator
     case Async => Async
     case RaiseEffects => RaiseEffects
-    case MayNotRaiseEffects => MayNotRaiseEffects
+    case Pure => Pure
     case a: MatchShapes => a
     case c: Config => c
     case a: Affine => a
@@ -1074,7 +1074,7 @@ final case class TermDefinition(
     .getOrElse(Visibility.Public)
   lazy val mayRaiseEffects: Bool =
     annotations.forall:
-      case Annot.MayNotRaiseEffects => false
+      case Annot.Pure => false
       case _ => true
   def extraAnnotations: Ls[Annot] = annotations.filter:
     case Annot.Modifier(Keyword.`declare` | Keyword.`abstract`) => false
