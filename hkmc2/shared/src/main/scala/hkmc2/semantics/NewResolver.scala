@@ -615,6 +615,8 @@ class NewResolver:
       case loc: LocalSymbol =>
         loc.shapes.foreach(listener)
         loc.shapeListeners += listener
+      case _: BuiltinSymbol =>
+        lastWords("Builtin symbols must not enter new resolution as SimpleRef")
     case SelfRef(sym) =>
       // A receiver can be referenced before its body is complete or after its
       // definition has already been published. The definition listener handles both.
