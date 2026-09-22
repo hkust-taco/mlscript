@@ -1,6 +1,5 @@
+:.
 
-:global
-:wasm
 
 
 let x = 0

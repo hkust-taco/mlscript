@@ -1,6 +1,5 @@
+:.
 
-:global
-:wasm
 
 if true then 0 else 2
 //│ Wasm result:
@@ -281,7 +280,9 @@ fun isBool(v) = if v is Bool then 1 else 0
 isInt(1)
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define isInt⁰ as fun isInt¹(v: ?): ? {
-//│   match v
+//│   let scrut: ?;
+//│   set scrut = v;
+//│   match scrut
 //│     Int⁰ =>
 //│       return 1
 //│     else
@@ -289,7 +290,9 @@ isInt(1)
 //│   end
 //│ };
 //│ define isBool⁰ as fun isBool¹(v: ?): ? {
-//│   match v
+//│   let scrut: ?;
+//│   set scrut = v;
+//│   match scrut
 //│     Bool⁰ =>
 //│       return 1
 //│     else

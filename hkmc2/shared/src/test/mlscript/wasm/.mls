@@ -1,0 +1,6 @@
+:..
+:!js
+:wasm
+#lang(strictResolution: true)
+//│ Wasm result:
+//│ = {}

@@ -323,7 +323,9 @@ abstract class MLsDiffMaker extends DiffMaker:
       ()
     if file != preludeFile then
       val cfg = mkConfig
-      given Config = cfg.copy(optimizer = cfg.optimizer.copy(
+      // The synthetic Predef import bootstraps the host environment; it is not
+      // a WASM test block, even when :wasm is enabled at the top of the file.
+      given Config = cfg.copy(target = CompilationTarget.JS, optimizer = cfg.optimizer.copy(
         deforest = cfg.deforest.map: d =>
           d.copy(config = d.config.copy(
             debug = false,

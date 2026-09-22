@@ -1,6 +1,5 @@
+:.
 
-:global
-:wasm
 
 
 :wat
@@ -35,4 +34,6 @@ throw false
 :ge
 let x = 1
 set x += 1 in x
+//│ ═══[COMPILATION ERROR] Unexpected left-hand side in assignment (reference)
+//│ ═══[COMPILATION ERROR] Unexpected left-hand side in assignment (reference)
 //│ ═══[COMPILATION ERROR] WatBuilder::returningTerm for TryBlock(...) not implemented yet
