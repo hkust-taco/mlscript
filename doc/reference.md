@@ -1336,6 +1336,32 @@ open Iter                          // open all members
 do open M; ...                     // locally open
 ```
 
+With `newResolution` enabled, wildcard opens are consulted only when a name has
+no explicit binding in the current scope or any enclosing scope. Explicit
+bindings include local variables, parameters, member definitions, imports, and
+selective opens such as `open Stack { Cons, Nil }`. An inner wildcard open does
+not shadow an explicit binding in an outer scope. Moving a wildcard open before
+or after an explicit binding does not give it priority over that binding.
+
+For example, inside the function below, `x` refers to the explicitly bound `x`,
+even though `M` also provides a member named `x`:
+
+```mlscript
+val x = 1
+module M { val x = 2; val y = 3 }
+fun example() =
+  open M
+  x + y                            // explicit x; y from M
+```
+
+When no explicit binding exists, lookup considers the wildcard opens visible at
+that occurrence. These rules apply to the name itself, before choosing its term or class
+interpretation, so an explicit binding also takes precedence over an overloaded
+class or function supplied by a wildcard open.
+
+If wildcard lookup finds several distinct members with the requested name, the
+reference is ambiguous; the order of the opens does not choose a winner.
+
 ### `open M in` Scope
 
 ```mlscript

@@ -1185,6 +1185,13 @@ extends Importer:
     if newResolution then listenTerm(lt)(shape => appShape(shape, rt, res))
     res
   
+  private def assignment(lhs: Term, rhs: Term): Term.Assgn =
+    // Resolve the term interpretation of the l-value before lowering. The
+    // selected definition is recorded even when its value publishes no shape.
+    // Use this for synthesized assignments as well as source-level `set`.
+    if newResolution then listenTerm(lhs)(_ => ())
+    Term.Assgn(lhs, rhs)
+
   def ifLike(kw: Keyword.SplitLike, form: IfLikeForm, split: SimpleSplit, loc: Opt[Loc]): Term.IfLike =
     val res = new Term.IfLike(kw, form, split).withLoc(loc)
     if newResolution then
@@ -1260,7 +1267,7 @@ extends Importer:
           tree.toLoc :: Nil))
       block(LetLike(kw, lhs, rhso, N) :: Nil, hasResult = true)._1
     case LetLike(Keywrd(`set`), lhs, S(rhs), N) =>
-      Term.Assgn(subterm(lhs), subterm(rhs))
+      assignment(subterm(lhs), subterm(rhs))
     case LetLike(Keywrd(`set`), lhs, N, N) =>
       raise(ErrorReport(
         msg"Expected a right-hand side for this assignment" ->
@@ -1278,9 +1285,9 @@ extends Importer:
         val sym = TempSymbol(S(lt), erasedType = N, "old")
         Blk(
           LetDecl(sym, Nil) :: defineVar(sym, lt) :: Nil, Term.Try(Blk(
-            Term.Assgn(lt, subterm(rhs)) :: Nil,
+            assignment(lt, subterm(rhs)) :: Nil,
             subterm(bod),
-        ), Term.Assgn(lt, sym.ref())))
+        ), assignment(lt, sym.ref())))
     case LetLike(Keywrd(Keyword.`set`), _, N, S(_)) =>
       raise:
         ErrorReport(msg"Expected a right-hand side for this assignment" -> tree.toLoc :: Nil)

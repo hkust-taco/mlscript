@@ -152,7 +152,7 @@ class NewResolver:
                   res.isErroneous = true
                   resolError(res,
                     msg"${sh.describe.capitalize} cannot used like an applied pattern." -> sh.toLoc :: Nil)
-            , lhs)
+            , lhs, _ => ())
   
   def listenPattern(pat: Pattern)(listener: PatternShape => Unit): Unit =
     // ???
@@ -393,12 +393,17 @@ class NewResolver:
     case N =>
       listener(N)
   
-  def fromBMS(bms: BlockMemberSymbol, resSym: FlowSymbol, markss: Ls[Marks], listener: TermShape => Unit, trm: Term) =
+  def fromBMS(bms: BlockMemberSymbol, resSym: FlowSymbol, markss: Ls[Marks], listener: TermShape => Unit,
+      trm: Term, selected: DefinitionSymbol[?] => Unit) =
     log(s"listenBMS: bms = ${bms.describe}")
     bms.onComplete: () =>
       log(s"listenedBMS: bms = ${bms.describe}")
       bms.asModOrObj orElse bms.asTrm orElse bms.asCls match
       case S(sym: (ModuleOrObjectSymbol | TermSymbol | ClassSymbol)) =>
+        // Selection is independent of the selected value's shape. In particular,
+        // an assignment needs its target even if the value has no inferred shape.
+        // Pattern resolution supplies its own interpretation of the selected head.
+        selected(sym)
         val wrappedListener: TermShape => Unit = sh =>
           log(s"fromBMS: bms = ${bms.showDbg}, sh = ${sh.shwDbg}, flow = ${resSym.showDbg}, markss = ${markss.map(_.showDbg)}")
           val sh0 = sh
@@ -422,7 +427,9 @@ class NewResolver:
           case S(body) =>
             listenTerm(body)(wrappedListener)
           case N =>
-            ??? // TODO error
+            // A declared value has a selected definition but no implementation
+            // from which to infer a value shape (e.g. an external mutable field).
+            ()
         case S(d: TermDefinition) =>
           d.tsym match
           case ccs: ClassCtorSymbol =>
@@ -455,7 +462,12 @@ class NewResolver:
       case sh: TermShape =>
         listener(sh)
       case ss: SymShape =>
-        fromBMS(ss.sym, ss.resSym, ss.markss, listener, trm)
+        fromBMS(ss.sym, ss.resSym, ss.markss, listener, trm, sym =>
+          trm.withoutCaptures match
+          case ref: NewResolvable =>
+            if !ref.resolvedTargets.contains(sym) then ref.resolvedTargets ::= sym
+          case _ => ()
+        )
   
   def listen(trm: Term, discardMarks: Bool = false)(listener: Shape => Unit): Unit =
     log(s"listen: trm = ${trm.showDbg}")
@@ -476,7 +488,7 @@ class NewResolver:
       case S(bms: BlockMemberSymbol) =>
         // TODO: add mark
         fromBMS(bms, ss.resSym, Nil//TODO?
-          , listener, trm)
+          , listener, trm, _ => ())
       case N => ???
     case intro: IntroTerm =>
       val sh = introShapes.getOrElseUpdate(intro, {

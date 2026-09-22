@@ -1,0 +1,90 @@
+:.
+
+
+// The target must resolve even when the module has not been elaborated yet.
+fun writeLater(value) = {
+  set Later.Item = value
+}
+module Later {
+  class Item {
+    fun answer() = 42
+  }
+  mut val Item = 0
+}
+writeLater(7)
+
+:expect 7
+Later.Item
+//│ = 7
+
+:expect 42
+(new Later.Item).answer()
+//│ = 42
+
+
+// A declared field has no initializer shape, but still has a definite target.
+declare module External with
+  mut val value
+fun writeExternal(value) = {
+  set External.value = value
+}
+
+
+// Both the temporary write and the synthesized restoration use term resolution.
+:expect 8
+set Later.Item = 8 in Later.Item
+//│ = 8
+
+:expect 7
+Later.Item
+//│ = 7
+
+
+// FIXME: Capturing a function parameter through a nested module currently
+// mismatches module/function marks, including without assignment resolution.
+fun replace(initial) = {
+  module Local {
+    class Item
+    mut val Item = initial
+  }
+  set Local.Item = 9
+  Local.Item
+}
+
+:fixme
+:noInline
+:expect 9
+replace(0)
+//│ /!!!\ Uncaught error: java.lang.IllegalArgumentException: requirement failed: Expected symbol module:Local⁰ but got term:replace⁰
+
+
+// Resolving an l-value must preserve receiver-before-RHS evaluation, once each.
+module Order {
+  mut val trace = ""
+  mut val value = 0
+}
+fun receiver() = {
+  set Order.trace = Order.trace + "receiver;"
+  Order
+}
+fun rhs() = {
+  set Order.trace = Order.trace + "rhs;"
+  10
+}
+set receiver().value = rhs()
+
+:expect ["receiver;rhs;", 10]
+[Order.trace, Order.value]
+//│ = ["receiver;rhs;", 10]
+
+
+// A class without a term definition is not a term-member assignment target.
+:e
+module Classes {
+  class Only
+}
+set Classes.Only = 0
+//│ ╔══[COMPILATION ERROR] Assignment requires an unambiguous term member
+//│ ║  l.86: 	set Classes.Only = 0
+//│ ╙──      	    ^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.

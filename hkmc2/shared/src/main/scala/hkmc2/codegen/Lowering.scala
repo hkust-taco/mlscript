@@ -1122,12 +1122,10 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
         subTerm(rhs): r =>
           assignSymbol(resolvedSelectionSymbol.getOrElse(sym), sym, r, k(unit), trm.toLoc)
       case sel @ NewSel(prefix, nme) =>
-        // Assignments select the term facet, even when the same member also names a class.
+        // Term resolution selects the definition; lowering only checks that
+        // the result is an unambiguous term member and emits the field write.
         val sym = sel.resolvedTargets.distinct match
           case sym :: Nil => sym.asTrm
-          case Nil => sel.resolvedMembers.distinct match
-            case bms :: Nil => bms.asTrm
-            case _ => N
           case _ => N
         sym match
         case S(sym) =>
