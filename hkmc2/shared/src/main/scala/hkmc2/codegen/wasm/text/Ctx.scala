@@ -947,7 +947,7 @@ class Ctx(using Elaborator.Ctx, State) extends ToWat:
         val id = SymIdx(name)
         memories = memories +
           (id ->
-            Import(module, name, ExternType.Mem(MemType(Limits(minPages)), sym = TempSymbol(N, erasedType = N, name))))
+            Import(module, name, ExternType.Mem(MemType(Limits(minPages)), sym = TempSymbol(N, initErasedType = N, name))))
         cachedMemoryImport(key) = SymIdx(name)
     end match
   end ensureMemoryImport

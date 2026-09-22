@@ -67,7 +67,7 @@ class AsyncLowering(using TL, Raise, Elaborator.State, Elaborator.Ctx, Config):
       collectedFunDefn += FunDefn(N, outerBms, outerDsym, PlainParamList((thisParam.iterator ++ outerParams.iterator.map(_._2)).toList) :: PlainParamList(Nil) :: Nil, newBody)(fun.configOverride, noAsync)
       val callArgs = (fun.owner.iterator.map(s => Arg(N, Value.This(s))) ++ fun.params.iterator.flatMap(_.allParams.iterator.map(p => Arg(N, Value.SimpleRef(p.sym))))).toList
       val outerCall = Call(Value.MemberRef(outerBms, outerDsym), callArgs ne_:: Nil)(CallMetadata.mlsFunWithEffect, rsc = false)
-      val tmp = TempSymbol(N, erasedType = outerCall.erasedType, "tmp")
+      val tmp = TempSymbol(N, initErasedType = outerCall.erasedType, "tmp")
       val wrapperBody = blockBuilder
         .assignScoped(tmp, outerCall)
         .ret(Call(Value.SimpleRef(State.runtimeSymbol).selSN("toJsAsync"), (tmp.asSimpleRef.asArg :: Nil) ne_:: Nil)(CallMetadata.defaultMlsFun, rsc = false))

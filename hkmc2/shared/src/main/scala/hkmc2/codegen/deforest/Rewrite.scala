@@ -395,7 +395,7 @@ class DeforestRewriter(val solver: DeforestFusionSolver)(using Raise):
                 val ctorInfo = solver.fusingCtorInfo(ctorDtorId)
                 val clsNme = ctorInfo.ctor.ctorClsName
                 ctorInfo.args.unzip._1.map: f =>
-                  TempSymbol(N, erasedType = f.erasedFieldType, s"${clsNme}_${f.fieldName}")
+                  TempSymbol(N, initErasedType = f.erasedFieldType, s"${clsNme}_${f.fieldName}")
               end mkCtorFieldSyms
               
               solver.finalCtorDests.get(ctor.uid.concreteId) match
@@ -427,7 +427,7 @@ class DeforestRewriter(val solver: DeforestFusionSolver)(using Raise):
             case ctor@CtorProducer(_, args, _) if solver.finalCtorDests.isDefinedAt(ctor.uid.concreteId) =>
               assert(args.isEmpty)
               val callBranchFun = mkCall(branchFunSyms(ctorWhichBranch(ctor.uid.concreteId)), Nil)
-              val lambdaSym = TempSymbol(N, erasedType = N, "deforest$lam")
+              val lambdaSym = TempSymbol(N, initErasedType = N, "deforest$lam")
               Scoped(
                 Set.single(lambdaSym),
                 Assign(

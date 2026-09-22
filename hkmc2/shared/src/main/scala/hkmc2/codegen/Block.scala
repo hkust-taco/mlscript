@@ -586,7 +586,7 @@ object HandleBlock:
         N, sym, PlainParamList(Param(FldFlags.empty, handler.resumeSym, N, Modulefulness.none) :: Nil) :: Nil,
         handler.body
         )(N, annotations = Nil)
-      val rSym = TempSymbol(N, erasedType = N, "suspendRes")
+      val rSym = TempSymbol(N, initErasedType = N, "suspendRes")
       FunDefn.withFreshSymbol(
         S(cls),
         handler.sym,

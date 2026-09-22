@@ -411,7 +411,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
               else
                 val newSym = closureMap.get(d) match
                   case None =>
-                    val newSym = TempSymbol(N, erasedType = N, d.nme + "$here")
+                    val newSym = TempSymbol(N, initErasedType = N, d.nme + "$here")
                     extraLocals.add(newSym)
                     syms.addOne(d -> newSym) // add to `syms`: this closure will be initialized in `applyBlock`
                     closureMap.addOne(d -> newSym) // add to `closureMap`: `newSym` refers to the closure and can be used later
@@ -431,7 +431,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
               case cls: LiftedClass if !cls.isTrivial =>
                 val newSym = closureMap.get(d) match
                   case None =>
-                    val newSym = TempSymbol(N, erasedType = N, d.nme + "$here")
+                    val newSym = TempSymbol(N, initErasedType = N, d.nme + "$here")
                     extraLocals.add(newSym)
                     syms.addOne(d -> newSym)
                     closureMap.addOne(d -> newSym)

@@ -76,7 +76,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
     case _ => false
   
   private def getPrivateAccessorSymbol(ts: semantics.TermSymbol): semantics.TempSymbol =
-    privateAccessorSymbols.getOrElseUpdate(ts, semantics.TempSymbol(N, erasedType = N, s"${ts.name}$$accessorSymbol"))
+    privateAccessorSymbols.getOrElseUpdate(ts, semantics.TempSymbol(N, initErasedType = N, s"${ts.name}$$accessorSymbol"))
 
   private def selectPrivateField(ts: semantics.TermSymbol, loc: Opt[Loc])(using Raise, Scope): Opt[Document] =
     ts.owner.collect:
@@ -1207,7 +1207,7 @@ trait JSBuilderArgNumSanityChecks(using TL, Config, Elaborator.State)
   override def checkSelections: Bool = instrument
   override def freezeDefinitions: Bool = instrument
   
-  val functionParamVarargSymbol = semantics.TempSymbol(N, erasedType = N, "args")
+  val functionParamVarargSymbol = semantics.TempSymbol(N, initErasedType = N, "args")
   
   override def setupFunction(name: Option[Str], params: ParamList, body: Block, isLambda: Bool)(using Raise, Scope): (Document, Document) =
     // * We used to instrument `fun f(x, y) = x + y` into something like

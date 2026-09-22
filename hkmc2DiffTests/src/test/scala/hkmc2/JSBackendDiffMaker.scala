@@ -210,7 +210,7 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
       val exportedScoped = symbolsToPreserve.collect:
         case sym: ScopedSymbol if !importedSymbols.contains(sym) => sym
       
-      val resSym = TempSymbol(N, erasedType = N, "block$res")
+      val resSym = TempSymbol(N, initErasedType = N, "block$res")
       
       val resNme = nestedScp.allocateName(resSym)
       

@@ -65,7 +65,7 @@ class FirstClassFunctionTransformer
     // * The wrapper captures what `p` does, so it is a resource iff `p` is. Only a lifted resource lambda is known to
     // * be one; the resource-ness of any other function value is undetermined.
     val tmpRsc = if rsc then S(true) else N
-    val tmp = TempSymbol(None, erasedType = S(ErasedType.ValueLike(rsc = tmpRsc, clsDef.isym.asClsOrMod.get)))
+    val tmp = TempSymbol(None, initErasedType = S(ErasedType.ValueLike(rsc = tmpRsc, clsDef.isym.asClsOrMod.get)))
     val cls = clsDef.sym.asMemberRef(clsDef.isym)
     // TODO: Instantiate the wrapper as a resource iff `p` is one, once the resource-ness of other function values is
     //       resolved.

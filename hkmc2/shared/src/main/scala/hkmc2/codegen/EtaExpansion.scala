@@ -195,7 +195,7 @@ class EtaExpansionRewrite(val etaExpansionSolver: EtaExpansionSolver)(using Rais
             Return(
               Call(fun, (argss ++ activeEtaArgss).ne_!)(c.metadata, rsc = false))
           case _ =>
-            val tmp = TempSymbol(N, erasedType = N, "eta$res")
+            val tmp = TempSymbol(N, initErasedType = N, "eta$res")
             Scoped(
               Set.single(tmp),
               Assign(tmp, res2, Return(etaCall(tmp.asPath).withLocOf(res2))))

@@ -402,7 +402,7 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
         // the Label body into the rest. Wrap with an exit label and temp variable so every path stores its
         // result, breaks to exitLabel, then the original cont runs once.
         val exitLabel = new LabelSymbol(N, sym.nme + "$x")
-        val tmp = TempSymbol(N, erasedType = N)
+        val tmp = TempSymbol(N, initErasedType = N)
         LoweringCtx.loweringCtx.collectScopedSym(tmp)
         // The representations of the results stored into `tmp`, recorded as each path is lowered. As with the
         // `if`-result temp below, `tmp` is named before those paths are lowered, so the join can only be
@@ -483,7 +483,7 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
       // 3. The term is a `while` and the result is used.
       lazy val l =
         usesResTmp = true
-        val res = TempSymbol(t, erasedType = N)
+        val res = TempSymbol(t, initErasedType = N)
         outerCtx.collectScopedSym(res)
         res
       // The symbol for the loop label if the term is a `while`.
@@ -544,8 +544,8 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
           // NOTE: `shouldRewriteWhile` is not the same as `config.rewriteWhileLoops`
           // as shouldRewriteWhile is always true when effect handler lowering is on
           if config.shouldRewriteWhile then
-            val loopResult = TempSymbol(N, erasedType = N)
-            val isReturned = TempSymbol(N, erasedType = S(ErasedType.Bool))
+            val loopResult = TempSymbol(N, initErasedType = N)
+            val isReturned = TempSymbol(N, initErasedType = S(ErasedType.Bool))
             outerCtx.collectScopedSym(loopResult)
             outerCtx.collectScopedSym(isReturned)
             val loopEnd: Path =

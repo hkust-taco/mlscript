@@ -239,9 +239,11 @@ sealed abstract class LocalVarSymbol(name: Str)(using State) extends FlowSymbol(
   * those branches are lowered, so `Normalization` populates it with the join of their representations once they have
   * all been seen. `Normalization.joinTempType` is its only write site.
   */
-class TempSymbol private (val trm: Opt[Term], private var _erasedType: Opt[ErasedValueType], dbgNme: Str)(using State)
+class TempSymbol(val trm: Opt[Term], initErasedType: Opt[ErasedValueType], dbgNme: Str = "tmp")(using State)
     extends LocalVarSymbol(dbgNme):
   // val nameHints: MutSet[Str] = MutSet.empty // * May be useful later?
+  private var _erasedType: Opt[ErasedValueType] = initErasedType
+  
   override def toLoc: Option[Loc] = trm.flatMap(_.toLoc)
   override def prefix: Str = "tmp:"
   override def subst(using s: SymbolSubst): TempSymbol = s.mapTempSym(this)
@@ -251,10 +253,6 @@ class TempSymbol private (val trm: Opt[Term], private var _erasedType: Opt[Erase
   /** Sets the erased type, or raises a soft assertion if it is already set. */
   def erasedType_=(newType: Opt[ErasedValueType])(using Line, FileName, Raise): Unit =
     initErasure(this, _erasedType, newType)(_erasedType = _)
-
-object TempSymbol:
-  def apply(trm: Opt[Term], erasedType: Opt[ErasedValueType], dbgNme: Str = "tmp")(using State): TempSymbol =
-    new TempSymbol(trm, erasedType, dbgNme)
 
 /** Initializes an erased type or signature that is only known after its symbol is created, raising a soft assertion
   * if `current` is already set.
@@ -556,7 +554,7 @@ sealed trait InnerSymbol(using State) extends Symbol:
   self: DefinitionSymbol[? <: ClassLikeDef] =>
   val privatesScope: Scope = Scope.empty(Scope.Cfg.default) // * Scope for private members of this symbol
   // TODO(Derppening): Can we meaningfully infer the erased type of `this` from the definition?
-  val thisProxy: TempSymbol = TempSymbol(N, erasedType = N, s"this$$$nme")
+  val thisProxy: TempSymbol = TempSymbol(N, initErasedType = N, s"this$$$nme")
   def subst(using SymbolSubst): InnerSymbol
   def asDefnSym: DefinitionSymbol[? <: ClassLikeDef] & InnerSymbol = this match
     case d: DefinitionSymbol[? <: ClassLikeDef] => d

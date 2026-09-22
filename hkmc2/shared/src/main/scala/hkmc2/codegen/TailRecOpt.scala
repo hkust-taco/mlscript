@@ -277,7 +277,7 @@ class TailRecOpt(checkAnnotations: Bool)(using Config, State, TL, Raise, Ctx):
     val paramList = plist.params
     val restParam = plist.restParam
     
-    val tupleSym = TempSymbol(N, erasedType = S(ErasedType.Array), "argList")
+    val tupleSym = TempSymbol(N, initErasedType = S(ErasedType.Array), "argList")
   
     val tupleRes = Tuple(false, args)
     
@@ -288,7 +288,7 @@ class TailRecOpt(checkAnnotations: Bool)(using Config, State, TL, Raise, Ctx):
     // If the rest param exists, append a slice
     val (initialBlk: (Block => Block), pathList: List[Path]) =
       if restParam.isDefined then
-        val sliceResSym = TempSymbol(N, erasedType = S(ErasedType.Array), "sliceRes")
+        val sliceResSym = TempSymbol(N, initErasedType = S(ErasedType.Array), "sliceRes")
         // runtime.Tuple.slice(tupleSym, paramList.length, 0)
         val sliceRes = Call(
           State.runtimeSymbol.asSimpleRef
@@ -546,7 +546,7 @@ class TailRecOpt(checkAnnotations: Bool)(using Config, State, TL, Raise, Ctx):
             // Instead, we coerce the exit value to the dispatcher's declared return type (which is the LUB over all
             // members' returns and thus a supertype of all deferred targets), and then emit a cast to the target type
             // so that an invalid cast is trapped at runtime.
-            val slot = TempSymbol(N, erasedType = dSym.declaredResultType, "exitResult")
+            val slot = TempSymbol(N, initErasedType = dSym.declaredResultType, "exitResult")
             val ref = slot.asSimpleRef
             Scoped(Set(slot),
               Assign(slot, coerceToDeclaredReturn(res2, dSym),
@@ -597,7 +597,7 @@ class TailRecOpt(checkAnnotations: Bool)(using Config, State, TL, Raise, Ctx):
               // We should thus assign the params to temporary symbols
               // if they are needed for a subsequent assignment.
               var assignedSyms: Map[VarSymbol, Lazy[TempSymbol]] = paramSyms.map: sym =>
-                  sym -> Lazy(TempSymbol(N, erasedType = sym.erasedType, sym.nme + "_tmp")) // Use `Lazy` to avoid generating useless symbols
+                  sym -> Lazy(TempSymbol(N, initErasedType = sym.erasedType, sym.nme + "_tmp")) // Use `Lazy` to avoid generating useless symbols
                 .toMap
               var requiredTmps: Set[(VarSymbol, TempSymbol)] = Set.empty
               
@@ -699,7 +699,7 @@ class TailRecOpt(checkAnnotations: Bool)(using Config, State, TL, Raise, Ctx):
                 case CallArgsResult.Success(res) => res.map:
                   case r: Path => r
                   case r: Result =>
-                    val newSym = TempSymbol(N, erasedType = r.erasedType)
+                    val newSym = TempSymbol(N, initErasedType = r.erasedType)
                     pre = pre.assignScoped(newSym, r)
                     newSym.asPath
                 case CallArgsResult.ForceSpread =>
