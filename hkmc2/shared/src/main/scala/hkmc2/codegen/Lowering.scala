@@ -433,12 +433,6 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
         case cls :: Nil =>
           cls.defn match
           case S(clsDef: ClassLikeDef) =>
-            // resl match
-            // case ref: MemberRef =>
-            //   subTerm(ref)(k)
-            // case sel: NewSel =>
-            //   subTerm(sel.prefix): pre =>
-            //     k(Select(pre, memberIdent(sel.id, S(clsDef.bsym)))(S(clsDef.sym))(false))
             subTerm(resl)(k)
           case _ =>
             softAssert(resl.isErroneous, s"Unexpected `new` target: ${cls.showDbg}")
@@ -1264,8 +1258,6 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
       setupSelection(prefix, nme, S(sym))(k)
     
     case sel @ SynthSel(prefix, nme) =>
-      // System.out.println(sel)
-      // System.out.println(sel.sym)
       // * Not using `setupSelection` as these selections are not meant to be sanity-checked
       // * Unlike source `Sel`s, compiler-synthesized selections may carry a known
       // * member symbol directly in `sel.sym` without being wrapped in `Resolved`.
