@@ -375,8 +375,6 @@ class TermSymbol private[semantics] (
     with DefinitionSymbol[TermDefinition]
     with NamedSymbol:
   
-  private lazy val functionType: ErasedValueType = ErasedType.Function(N)
-  
   var sourceAliases: Ls[Str] = Nil
   def nme: Str = id.name
   def name: Str = nme
@@ -400,7 +398,7 @@ class TermSymbol private[semantics] (
     * `Function`. Nothing states the resource-ness of such a closure, so it is `rsc?`.
     */
   def erasedType: Opt[ErasedValueType] = _erasure match
-    case S(_: ErasedFuncSignature) => S(functionType)
+    case S(_: ErasedFuncSignature) => S(ErasedType.Function(rsc = N))
     case S(tpe: ErasedValueType) => S(tpe)
     case N => N
   
