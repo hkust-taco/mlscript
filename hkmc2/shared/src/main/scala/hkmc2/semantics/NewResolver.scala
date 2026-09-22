@@ -470,13 +470,14 @@ class NewResolver:
           // sym.defnListeners += (d => listener(defnShapes.getOrElseUpdate(sym, DefnShape(d))))
           softAssert(false, s"Symbol definition of ${sym} is not set upon completion of ${bms}")
       case _ =>
-        val ref = trm.withoutCaptures match
-          case ref: NewResolvable => S(ref)
-          case _ => N
-        if !ref.exists(_.isErroneous) then
-          ref.foreach(_.isErroneous = true)
-          resolError(trm,
-            msg"Expected a term; got ${bms.describe} '${bms.nme}'" -> N :: Nil)
+        def reportError = resolError(trm,
+          msg"Expected a term; got ${bms.describe} '${bms.nme}'" -> N :: Nil)
+        trm.withoutCaptures match
+          case ref: NewResolvable =>
+            if !ref.isErroneous then
+              ref.isErroneous = true
+              reportError
+          case _ => reportError
   
   /** Request the term interpretation of a reference without requiring a consumer
     * of its value shape. Direct definition references already identify the target;

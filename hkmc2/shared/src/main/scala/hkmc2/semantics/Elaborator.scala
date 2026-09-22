@@ -1233,8 +1233,8 @@ extends Importer:
     res
   
   
-  /** Register the use when its reference is constructed, rather than revisiting
-    * the elaborated tree. Listeners can wait for forward definitions to complete.
+  /** Request the reference's term interpretation in expression positions.
+    * Listeners can wait for forward definitions to complete.
     */
   private def interpretRef(ref: Term, interpretation: Interpretation): Term =
     if newResolution && (interpretation is Interpretation.Term) then requireTerm(ref)
