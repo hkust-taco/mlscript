@@ -30,11 +30,19 @@ object Lifter:
       case d: Defn => d
 
   extension (d: ClsLikeDefn)
-    /** Maps the definition to the erased type of its instances. */
+    /** Maps the definition to the erased type of its instances.
+      *
+      * Note that the resource-ness of the returned type is marked as `rsc?` since we currently do not have information
+      * about the resource-ness of lifted classes (although we mark its `Instantiate` as `rsc = false` as a
+      * placeholder).
+      */
     private def instanceType(using Raise): Opt[ErasedValueType] = d.isym match
-      case cls: ClassLikeSymbol => cls.erasedType
+      case cls: ClassSymbol =>
+        // * We can construct the `AnyRef` directly since lifted classes are neither `Anything` nor a primitive, which
+        // * makes them already canonical.
+        S(ErasedType.AnyRef(rsc = N, cls))
       case sym =>
-        softAssert(false, s"Class-like definition's inner symbol is not class-like: `$sym`")
+        softAssert(false, s"Class-like definition's inner symbol is not a class: `$sym`")
         N
 
   /**
@@ -686,6 +694,8 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
       if hasCapture then
         Instantiate(
           mut = true,
+          // TODO(Derppening): This needs to be determined from everything that the capture class *captures*, which is
+          //                   the responsibility of the new resolver(?)
           rsc = false,
           captureClass.sym.asMemberRef(captureClass.isym),
           captureInfo._2.map(

@@ -96,10 +96,12 @@ extension (sym: WasmSlotSymbol)
 extension (sym: WasmSlotSymbol)
   /** The Wasm value type a parameter slot for `sym` should be declared with. */
   private[text] def paramType(using Ctx, State): ValType =
-    sym match
-      case l: LocalVarSymbol => l.erasedType.flatMap(_.wasmType).getOrElse(RefType.anyref)
-      case c: (ClassSymbol | ModuleOrObjectSymbol) => c.erasedType.flatMap(_.wasmType).getOrElse(RefType.anyref)
-      case _: (PatternSymbol | TopLevelSymbol | BlockMemberSymbol) => RefType.anyref
+    summon[Ctx].elabCtx.givenIn:
+      sym match
+        case l: LocalVarSymbol => l.erasedType.flatMap(_.wasmType).getOrElse(RefType.anyref)
+        case cls: ClassSymbol => CanonicalErasedValueType(rsc = N, cls).wasmType.getOrElse(RefType.anyref)
+        case modOrObj: ModuleOrObjectSymbol => modOrObj.erasedType.flatMap(_.wasmType).getOrElse(RefType.anyref)
+        case _: (PatternSymbol | TopLevelSymbol | BlockMemberSymbol) => RefType.anyref
 
 /** The declared Wasm value type of the parameter slot for `sym` at position `idx`, honoring an optional per-position
   * override (index 0 = `this`). Falls back to `sym.paramType` if no override is given.

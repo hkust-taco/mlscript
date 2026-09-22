@@ -505,8 +505,6 @@ case class ErrorSymbol(val nme: Str, tree: Tree)(using State) extends MemberSymb
 sealed trait ClassLikeSymbol extends IdentifiedSymbol:
   self: MemberSymbol & DefinitionSymbol[? <: ClassDef | ModuleOrObjectDef] =>
   val tree: Tree.TypeDef
-  /** The [[ErasedValueType]] of an instance of this class, or of this module or object. */
-  def erasedType: Opt[ErasedValueType]
   def subst(using sub: SymbolSubst): ClassLikeSymbol
 
 
@@ -584,8 +582,6 @@ class ClassSymbol(val tree: Tree.TypeDef, val id: Tree.Ident)(using State)
     with InnerSymbol
     with NamedSymbol:
 
-  override val erasedType: Opt[ErasedValueType] = S(ErasedType.ValueLike(rsc = S(false), this))
-
   def name: Str = nme
   def nme = id.name
   def toLoc: Option[Loc] = id.toLoc // TODO track source tree of classe here
@@ -603,7 +599,8 @@ class ModuleOrObjectSymbol(val tree: Tree.TypeDef, val id: Tree.Ident)(using Sta
     with InnerSymbol
     with NamedSymbol:
 
-  override val erasedType: Opt[ErasedValueType] = S(ErasedType.ValueLike(rsc = S(false), this))
+  /** The [[ErasedValueType]] of this module or object. */
+  val erasedType: Opt[ErasedValueType] = S(ErasedType.ValueLike(rsc = S(false), this))
   
   def name: Str = nme
   def nme = id.name

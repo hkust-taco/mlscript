@@ -581,7 +581,10 @@ extension (s: ValueSymbol | DefinitionSymbol[?])
     */
   def mapErasedValueType(using Raise): Opt[ErasedValueType] = s match
     case l: LocalVarSymbol => l.erasedType
-    case c: (ClassSymbol | ModuleOrObjectSymbol) => c.erasedType
+    // * A class symbol may appear as a value as a reference to `this` in a class, and so carries the erased type of its
+    // * own class, but we don't have enough information to determine its resource-ness.
+    case c: ClassSymbol => S(ErasedType.ValueLike(rsc = N, c))
+    case modOrObj: ModuleOrObjectSymbol => modOrObj.erasedType
     case t: TermSymbol => t.erasedType
     // * A pattern is not a value and carries no erased type of its own, so a reference to one is
     // * left unknown rather than treated as an unexpected symbol.
