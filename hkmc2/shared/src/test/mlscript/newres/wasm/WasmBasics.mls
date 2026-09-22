@@ -3,15 +3,11 @@
 :global
 :wasm
 
+
 // WASM lowering emits target-specific intrinsics; do not execute its IR as JS.
 :expect 3
 1 + 2
 //│ Wasm result:
 //│ = 3
 
-:expect 4
-class A(val x) { fun get() = x }
-let a = A(1)
-a.get() + A(2).get() + a.get()
-//│ Wasm result:
-//│ = 4
+

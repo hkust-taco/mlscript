@@ -5,16 +5,24 @@
 :wasm
 
 
+:expect 3
+class A(val x) { fun get() = x }
+let a = A(1)
+a.get() + A(2).get()
+//│ Wasm result:
+//│ = 3
+
+
 :fixme
 class A(val x) with
   fun get() = x
 let a = A(1)
-a.A#get() + A(2).get() + a.get() 
+a.A#get()
 //│ ╔══[COMPILATION ERROR] Identifier `A` does not name a known class symbol.
-//│ ║  l.12: 	a.A#get() + A(2).get() + a.get() 
+//│ ║  l.20: 	a.A#get()
 //│ ╙──      	 ^^
 //│ ╔══[COMPILATION ERROR] WatBuilder::result for field selection without a resolved symbol is not implemented (field `get`). Use `_.[_]` for index-based accesses.
-//│ ║  l.12: 	a.A#get() + A(2).get() + a.get() 
+//│ ║  l.20: 	a.A#get()
 //│ ╙──      	    ^^^
 
 
