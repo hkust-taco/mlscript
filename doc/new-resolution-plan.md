@@ -105,10 +105,11 @@ receiver and capture context; module completion must not change lexical priority
   ordinary term uses request resolution during elaboration; class and pattern
   targets retain their specialized interpretation, and type positions do not
   request runtime values. `resolveOpenUses` and its second tree walk are removed.
-- Only `term` and `subterm` default to term interpretation. This is a deliberate
-  exception to the usual rule against defaults: ordinary expression calls stay
-  concise, while symbolic positions and transparent wrappers explicitly specify
-  or forward the interpretation. Smaller forwarding helpers require it explicitly.
+- `term` requires an explicit interpretation; only `subterm` defaults to `Trm`.
+  This is a deliberate exception to the usual rule against defaults: ordinary
+  recursive operands stay concise, while symbolic positions and transparent
+  wrappers explicitly specify or forward the interpretation. The enum cases are
+  imported as `Trm`, `Clss`, `Ptrn`, and `Tpe`. Other helpers require it explicitly.
   An implicit context was avoided because a target's interpretation must not leak
   into its value arguments or selection prefixes.
 - The resolver records direct definition references without demanding their value
