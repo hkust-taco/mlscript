@@ -270,6 +270,7 @@ class ClassTagsTransformer(
     })
 
   private lazy val taggedShapesByProducer: Map[Ctor, List[ClassShape -> Int]] =
+    given visit: Set[ProdStrat] = Set.empty
     producersInWeb.toList.sortBy(_.exprId.uid).flatMap: producer =>
       val shapes = shapeOfProducer(producer) match
         case shape: ClassShape =>
@@ -296,37 +297,43 @@ class ClassTagsTransformer(
         )
         Nil
 
-  private def shapeOfProducer(producer: Ctor): Shape =
-    val args = getCtorArgs(producer)
-    val fieldsOrElements = producer.args.zipWithIndex.map:
-      case ((field, value), index) =>
-        val original = args.lift(index).map(_.value)
-        field -> shapeOf(value, original)
-    producer.ctor match
-      case cls: ClassLikeSymbol =>
-        val fields = fieldsOrElements.collect:
-          case (field: TermSymbol, shape) => field -> shape
-        softAssert(
-          fields.size === fieldsOrElements.size,
-          s"Unexpected class fields in ${ClassTagsDebug.showProducer(producer)}",
-        )
-        ClassShape(cls, fields.toMap)
-      case length: Int =>
-        softAssert(
-          fieldsOrElements.size === length,
-          s"Mismatched tuple arity for ${ClassTagsDebug.showProducer(producer)}",
-        )
-        TupleShape(length, fieldsOrElements.map(_._2))
+  private def shapeOfProducer(producer: Ctor)(using visit: Set[ProdStrat]): Shape =
+    if visit.contains(producer) then DynamicShape
+    else
+      given next: Set[ProdStrat] = visit + producer
+      val args = getCtorArgs(producer)
+      val fieldsOrElements = producer.args.zipWithIndex.map:
+        case ((field, value), index) =>
+          val original = args.lift(index).map(_.value)
+          field -> shapeOf(value, original)
+      producer.ctor match
+        case cls: ClassLikeSymbol =>
+          val fields = fieldsOrElements.collect:
+            case (field: TermSymbol, shape) => field -> shape
+          softAssert(
+            fields.size === fieldsOrElements.size,
+            s"Unexpected class fields in ${ClassTagsDebug.showProducer(producer)}",
+          )
+          ClassShape(cls, fields.toMap)
+        case length: Int =>
+          softAssert(
+            fieldsOrElements.size === length,
+            s"Mismatched tuple arity for ${ClassTagsDebug.showProducer(producer)}",
+          )
+          TupleShape(length, fieldsOrElements.map(_._2))
 
-  private def shapeOf(producer: ProdStrat, original: Opt[Path]): Shape =
+  private def shapeOf(producer: ProdStrat, original: Opt[Path])(using visit: Set[ProdStrat]): Shape =
     original match
       case S(lit: Value.Lit) => LitShape(lit)
       case _ => producer match
         case ctor: Ctor => shapeOfProducer(ctor)
         case variable: StratVar =>
-          UnionShape.mkUnion:
-            variable.lowerBounds.map: lowerBound =>
-              shapeOf(lowerBound, N)
+          if visit.contains(variable) then DynamicShape
+          else
+            given next: Set[ProdStrat] = visit + variable
+            UnionShape.mkUnion:
+              variable.lowerBounds.map: lowerBound =>
+                shapeOf(lowerBound, N)
         case _ => DynamicShape
 
   // * Get all (shape, tag) pair of the given scrutinee
