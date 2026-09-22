@@ -495,8 +495,11 @@ class ClassTagsTransformer(
               val patternShapes = patterns.map(Shape.mkShapeByPattern)
               val taggedShapes = taggedShapesOfMatchScrutinee(call.uid)
               if debug then
+                val shownTaggedShapes =
+                  if taggedShapes.isEmpty then "<none>"
+                  else taggedShapes.map((shape, tag) => s"${shape.show}@$tag").mkString(", ")
                 summon[TL].emitDbg(
-                  s"class-tags transform-phase > match shapes ${patternShapes.map(_.show).mkString(", ")} against ${taggedShapes.map((shape, tag) => s"${shape.show}@$tag").mkString(", ")}")
+                  s"class-tags transform-phase > match shapes ${patternShapes.map(_.show).mkString(", ")} against $shownTaggedShapes")
               if patternShapes.exists(_.containsUnion) then
                 softAssert(false, "@matchShapes patterns must not contain union shapes.")
                 N
@@ -522,7 +525,12 @@ class ClassTagsTransformer(
                         (taggedShape, tag, branch)
                   val matchedTags = matchingBranches.iterator.map(_._2).toSet
                   val unmatchedShapes = taggedShapes.filter((_, tag) => !matchedTags.contains(tag))
-                  if taggedShapes.isEmpty then N
+                  if taggedShapes.isEmpty then
+                    summon[Raise].apply(ErrorReport(
+                      msg"Annotated shape.match has no tagged class shapes for its scrutinee." -> call.toLoc :: Nil,
+                      source = Diagnostic.Source.Compilation,
+                    ))
+                    N
                   else if unmatchedShapes.nonEmpty then
                     summon[Raise].apply(ErrorReport(
                       msg"Annotated shape.match does not cover every possible scrutinee shape." -> call.toLoc ::
