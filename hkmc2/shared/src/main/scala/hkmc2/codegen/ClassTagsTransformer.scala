@@ -456,7 +456,7 @@ class ClassTagsTransformer(
 
       // * Generate branch based on the branch function
       private def mkBranch(branch: FunDefn, resultSymbol: TempSymbol): Block =
-        applyFunBodyLikeBlock(branch.body).mapReturn:
+        SymbolRefresher(Map.empty).apply(applyFunBodyLikeBlock(branch.body)).mapReturn:
           case Return(result) => Assign(resultSymbol, result, End())
 
       private def rewriteShapeMatch(call: Call, scrutinee: Path, branchArgs: List[Arg])(k: Result => Block): Opt[Block] =
