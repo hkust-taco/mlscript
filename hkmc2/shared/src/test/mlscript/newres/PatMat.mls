@@ -152,10 +152,10 @@ if x2 is
 //│ = fun id
 
 
-:todo
+:expect fun id
 if Foo(Predef) is
   Foo(y) then y.id
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ = fun id
 
 
 :todo

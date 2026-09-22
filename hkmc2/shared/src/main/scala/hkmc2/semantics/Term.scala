@@ -362,6 +362,12 @@ sealed trait NewSelImpl extends NewResolvableImpl:
   self: Term.NewSel =>
   var resolvedMembers: Ls[BlockMemberSymbol] = Nil // * filled during resolution
 
+sealed trait UnresolvedRefImpl extends NewResolvableImpl:
+  self: Term.UnresolvedRef =>
+  // Retain the receiver as well as the definition: two instances can expose
+  // the same member symbol without denoting the same storage location.
+  var resolvedMembers: Ls[(Term, BlockMemberSymbol)] = Nil
+
 
 enum Term extends Statement, ShapePublisher:
   case Error()
@@ -374,6 +380,7 @@ enum Term extends Statement, ShapePublisher:
   case SelfRef(sym: InnerSymbol)(val tree: Tree.Ident) extends Term, NewRefImpl
   case MemberRef(sym: MemberSymbol)(val tree: Tree.Ident, val resSym: FlowSymbol) extends Term, NewResolvableImpl, NewRefImpl
   case NewSel(prefix: Term, id: Tree.Ident)(val resSym: FlowSymbol) extends Term, NewSelImpl, ShapeHost
+  case UnresolvedRef(prefixes: Ls[Term], id: Tree.Ident)(val resSym: FlowSymbol) extends Term, UnresolvedRefImpl, ShapeHost
   case Capture(base: Term, thru: AnyDefinitionSymbol) extends Term
   // --- LEGACY ---
   /** A term that wraps another term, indicating that the symbol of the inner term is resolved.
@@ -729,6 +736,7 @@ sealed trait Statement extends AutoLocated, ProductWithExtraInfo, Describable:
       case Capture(base, thru) => base.describe
       case SimpleRef(sym) => "reference"
       case MemberRef(sym) => "member reference"
+      case UnresolvedRef(_, _) => "wildcard-open reference"
       case App(lhs, rhs) => "application"
       case TyApp(lhs, targs) => "type application"
       case NewSel(pre, nme) => "selection"
@@ -807,6 +815,7 @@ sealed trait Statement extends AutoLocated, ProductWithExtraInfo, Describable:
     case Sel(pre, _) => Vector.single(pre)
     case SynthSel(pre, _) => Vector.single(pre)
     case NewSel(pre, _) => Vector.single(pre)
+    case UnresolvedRef(prefixes, _) => prefixes.toVector
     case DynSel(o, f, _) => Vector.double(o, f)
     case Tup(fields) => fields.flatMap(_.subTerms).toVector
     case Mut(und) => Vector.single(und)
@@ -898,6 +907,7 @@ sealed trait Statement extends AutoLocated, ProductWithExtraInfo, Describable:
         case _: BuiltinSymbol => r.sym.nme
         case _ => r.sym.showName
       case r: MemberRef => r.sym.showName
+      case r: UnresolvedRef => doc"${r.id.name}"
       case sr: SelfRef => s"${sr.sym.showName}.this"
       case Capture(base, thru) =>
         // doc"${base.show}⟨${thru.showName}⟩"
@@ -1042,6 +1052,7 @@ sealed trait Statement extends AutoLocated, ProductWithExtraInfo, Describable:
     case Sel(pre, nme) => s"${pre.showDbg}.${nme.name}"
     case SynthSel(pre, nme) => s"(${pre.showDbg}.)${nme.name}"
     case NewSel(pre, nme) => s"${pre.showDbg}.${nme.name}"
+    case UnresolvedRef(_, id) => s"${id.name}‹open›"
     case DynSel(pre, fld, _) => s"${pre.showDbg}[${fld.showDbg}]"
     case IfLike(kw, _, split) => s"${kw.name} { ${split.showDbg} }"
     case SynthIf(split) => s"if { ${split.showDbg} }"

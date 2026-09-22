@@ -64,6 +64,13 @@ class Importer extends NewResolver:
             val sym: VarSymbol | BlockMemberSymbol = alias.fold(importedSym): alias =>
               VarSymbol(alias, erasedType = N)
 
+            // An import alias denotes the imported value, just like a local
+            // binding. Publish its shapes so selection and opens can follow it.
+            if newResolution then sym match
+              case local: VarSymbol =>
+                pipeTerm(Term.MemberRef(importedSym)(local.id, FlowSymbol.memSym(importedSym)), local)
+              case _: BlockMemberSymbol => ()
+
             val jsFile = file.up / io.RelPath(file.baseName + ".mjs")
             Import(sym, jsFile.toString, jsFile)
         

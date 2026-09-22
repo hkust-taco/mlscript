@@ -99,6 +99,7 @@ object Elaborator:
       env: Map[Str, Ctx.Elem],
       mode: Mode,
       labels: Map[LabelSymbol, LabelBinding],
+      wildcardOpens: Ls[Ctx.Elem],
   ):
     
     override def toString: Str = s"${parent.fold("")(_.toString+"/")}${outer.showDbg}"
@@ -137,7 +138,7 @@ object Elaborator:
           labelSym, resultSym, nonLocalHandlerSym, nonLocalBreakMethodMarker, nonLocalContinueMethodMarker))
       )
     
-    def nest(outerCtx: OuterCtx): Ctx = Ctx(outerCtx, Some(this), Map.empty, mode, Map.empty)
+    def nest(outerCtx: OuterCtx): Ctx = Ctx(outerCtx, Some(this), Map.empty, mode, Map.empty, Nil)
     def nestLocal(nameHint: Str): Ctx = nest(OuterCtx.LocalScope(nameHint))
     def nestInner(inner: InnerSymbol): Ctx = nest(OuterCtx.InnerScope(inner))
     
@@ -175,14 +176,27 @@ object Elaborator:
           case _ => parent.flatMap(_.get(name))
         else parent.flatMap(_.get(name))
     */
+    /** Explicit bindings in any enclosing scope take precedence over every wildcard open. */
     def get(name: Str)(using config: Config): Opt[Ctx.Elem] =
+      getExplicit(name).orElse:
+        if config.language.useNewResolution then
+          val sources = visibleWildcardOpens.distinct
+          if sources.isEmpty then N else S(Ctx.WildcardElem(name, sources))
+        else N
+
+    private def getExplicit(name: Str)(using config: Config): Opt[Ctx.Elem] =
       env.get(name).orElse:
-        val nr = config.language.useNewResolution
-        if nr then outer match
-          case OuterCtx.NonReturnContext(S(sym)) =>
-            parent.flatMap(_.get(name)).map(Ctx.CaptElem(_, sym))
-          case _ => parent.flatMap(_.get(name))
-        else parent.flatMap(_.get(name))
+        val inherited = parent.flatMap(_.getExplicit(name))
+        if config.language.useNewResolution then outer match
+          case OuterCtx.NonReturnContext(S(sym)) => inherited.map(Ctx.CaptElem(_, sym))
+          case _ => inherited
+        else inherited
+
+    private lazy val visibleWildcardOpens: Ls[Ctx.Elem] =
+      val inherited = parent.toList.flatMap(_.visibleWildcardOpens)
+      wildcardOpens ::: (outer match
+        case OuterCtx.NonReturnContext(S(sym)) => inherited.map(Ctx.CaptElem(_, sym))
+        case _ => inherited)
     
     def lookupLabel(name: Str): LabelLookup =
       @tailrec
@@ -423,12 +437,12 @@ object Elaborator:
   object Ctx:
     abstract class Elem:
       def nme: Str
-      def ref(id: Ident)(using Elaborator.State, Ctx, Config): Term
+      def ref(id: Ident)(using Elaborator.State, Ctx, Config, NewResolver): Term
       def symbol: Opt[Symbol]
       def isImport: Bool
     final case class RefElem(sym: Symbol) extends Elem:
       val nme = sym.nme
-      def ref(id: Ident)(using Elaborator.State, Ctx, Config): Term =
+      def ref(id: Ident)(using Elaborator.State, Ctx, Config, NewResolver): Term =
         if config.language.useNewResolution then
           sym match
           case sym: codegen.SimpleSymbol =>
@@ -447,29 +461,41 @@ object Elaborator:
       def symbol = S(sym)
       def isImport: Bool = false
     final case class SelElem(base: Elem, nme: Str, symOpt: Opt[MemberSymbol], isImport: Bool) extends Elem:
-      def ref(id: Ident)(using Elaborator.State, Ctx, Config): Term =
+      def ref(id: Ident)(using Elaborator.State, Ctx, Config, NewResolver): Term =
         // * Same remark as in RefElem#ref
         val prefix = base.ref(Ident(base.nme))
         val name = new Ident(nme).withLocOf(id)
         symOpt match
+        case _ if config.language.useNewResolution && isImport =>
+          val res = new Term.NewSel(prefix, name)(FlowSymbol.synthSel(nme)).withLocOf(id)
+          summon[NewResolver].newSel(res)
+          res
         case S(bms: BlockMemberSymbol) if config.language.useNewResolution =>
           // Lexical lookup already identifies the member, but must preserve its
           // overload set until its use chooses a class, term, or module.
-          val res = new Term.NewSel(prefix, name)(FlowSymbol.synthSel(nme))
+          val res = new Term.NewSel(prefix, name)(FlowSymbol.synthSel(nme)).withLocOf(id)
           res.resolvedMembers = bms :: Nil
           res.shapes += SymShape(bms, res.resSym, Nil)
           res
         case _ =>
           Term.SynthSel(prefix, name)(symOpt, FlowSymbol.synthSel(nme), N, S(summon))
       def symbol = symOpt
+    final case class WildcardElem(nme: Str, sources: Ls[Elem]) extends Elem:
+      def ref(id: Ident)(using Elaborator.State, Ctx, Config, NewResolver): Term =
+        val prefixes = sources.map(source => source.ref(Ident(source.nme)))
+        val res = new Term.UnresolvedRef(prefixes, id)(FlowSymbol.synthSel(nme)).withLocOf(id)
+        summon[NewResolver].unresolvedRef(res)
+        res
+      def symbol: Opt[Symbol] = N
+      def isImport: Bool = true
     final case class CaptElem(base: Elem, thru: DefinitionSymbol[?]) extends Elem:
-      def ref(id: Ident)(using Elaborator.State, Ctx, Config): Term =
+      def ref(id: Ident)(using Elaborator.State, Ctx, Config, NewResolver): Term =
         Term.Capture(base.ref(Ident(base.nme)), thru)
       def symbol = base.symbol
       def isImport: Bool = false
       def nme: Str = base.nme
     given Conversion[Symbol, Elem] = RefElem(_)
-    val empty: Ctx = Ctx(OuterCtx.LocalScope("top-level"), N, Map.empty, Mode.Full, Map.empty)
+    val empty: Ctx = Ctx(OuterCtx.LocalScope("top-level"), N, Map.empty, Mode.Full, Map.empty, Nil)
     
   enum Mode:
     case Full
@@ -703,6 +729,7 @@ class Elaborator(val tl: TraceLogger, val wd: io.Path, val prelude: Ctx)
 extends Importer:
   import tl.*
   given TraceLogger = tl
+  private given NewResolver = this
   
   val newResolution: Bool = config.language.useNewResolution
   
@@ -710,12 +737,6 @@ extends Importer:
     msg"Member names must start with a letter or underscore, followed by letters, digits, or underscores." -> N
     :: Nil
 
-  private def moduleMembers(sym: BlockMemberSymbol): Opt[Map[Str, BlockMemberSymbol]] =
-    // Elaborated bodies cover both braced and `with` bodies. Forward references
-    // still need the syntax table before the module definition is available.
-    (if newResolution then sym.asModOrObj.flatMap(_.defn).map(_.body.members) else N)
-      .orElse(sym.modOrObjTree.map(_.definedSymbols))
-  
   def mkLetBinding(kw: Tree.Keywrd[?], sym: LocalVarSymbol | TermSymbol, rhs: Term, annotations: Ls[Annot]): Ls[Statement] =
     LetDecl(sym, annotations).mkLocWith(kw, sym) :: defineVar(sym, rhs) :: Nil
   
@@ -725,7 +746,7 @@ extends Importer:
     case S(psym: BlockMemberSymbol) =>
       psym.modOrObjTree match
       case S(cls) =>
-        moduleMembers(psym).flatMap(_.get(nme.name)) match
+        cls.definedSymbols.get(nme.name) match
         case s @ S(clsSym) => s
         case N =>
           raise(ErrorReport(msg"${cls.k.desc.capitalize} '${cls.symbol.nme
@@ -1957,12 +1978,15 @@ extends Importer:
           base match
           case baseId: Ident =>
             ctx.get(baseId.name) match
+            case S(baseElem) if newResolution && importedTrees.isEmpty =>
+              ctx.copy(wildcardOpens = baseElem :: ctx.wildcardOpens).givenIn:
+                go(sts, Nil, acc)
             case S(baseElem) =>
               val importedNames = importedTrees match
                 case N => // "wilcard" open
                   baseElem.symbol match
                   case S(sym: BlockMemberSymbol) if sym.modOrObjTree.isDefined =>
-                    moduleMembers(sym).getOrElse(Map.empty).map:
+                    sym.modOrObjTree.get.definedSymbols.map:
                       case (nme, sym) => nme -> Ctx.SelElem(baseElem, sym.nme, S(sym), isImport = true)
                   case _ =>
                     raise(ErrorReport(msg"Wildcard 'open' not supported for this kind of symbol." -> baseId.toLoc :: Nil))
@@ -1971,8 +1995,10 @@ extends Importer:
                   case id: Ident =>
                     if ctx.env.contains(id.name) then
                       raise(WarningReport(msg"Imported name '${id.name}' is shadowed by a name already defined in the same scope" -> id.toLoc :: Nil))
-                    val sym = resolveField(id, baseElem.symbol, id)
+                    val sym = if newResolution then N else resolveField(id, baseElem.symbol, id)
                     val e = Ctx.SelElem(baseElem, id.name, sym, isImport = true)
+                    // Validate the named selection even when its binding is unused.
+                    if newResolution then e.ref(id)
                     id.name -> e :: Nil
                   case t =>
                     raise(ErrorReport(msg"Illegal 'open' statement element." -> t.toLoc :: Nil))
@@ -2747,11 +2773,13 @@ extends Importer:
       (ParamList(ParamListFlags.empty, Nil, N).withLocOf(t), ctx)
   
   def ident(id: Ident)(using Ctx): Ctxl[Opt[Term]] = ctx.get(id.name) match
-    case S(elem) => S(elem.ref(id))
-    case N =>
+    case candidate @ (S(_: Ctx.WildcardElem) | N) =>
+      // Primitive operators are implicit bindings outside the Ctx environments;
+      // like explicit bindings, they take precedence over wildcard sources.
       state.builtinOpsMap.get(id.name) match
-      case S(bi) => S(bi.ref(id))
-      case N => N
+        case S(bi) => S(bi.ref(id))
+        case N => candidate.map(_.ref(id))
+    case S(elem) => S(elem.ref(id))
   
   def pattern(t: Tree): Ctxl[Pattern] =
     import ucs.{Ctor, unapply, error}, ucs.extractors.*, Keyword.*, Pattern.*, InvalidReason.*
@@ -2963,12 +2991,14 @@ extends Importer:
   def importFrom(sts: Block): Ctxl[(Blk, Ctx)] =
     given UnderCtx = new UnderCtx(N)
     val (res, newCtx) = block(sts, hasResult = false)
+    if newResolution then resolveOpenUses(res)
     // TODO handle name clashes
     (res, newCtx)
   
   def topLevel(sts: Block): Ctxl[(Blk, Ctx)] =
     given UnderCtx = new UnderCtx(N)
     val (res, ctx) = block(sts, hasResult = false)
+    if newResolution then resolveOpenUses(res)
     computeVariances(res)
     (res, ctx)
   

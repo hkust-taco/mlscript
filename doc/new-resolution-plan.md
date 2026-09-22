@@ -39,7 +39,9 @@ receiver and capture context; module completion must not change lexical priority
    reporting ambiguity does not entail performing name resolution in lowering.
 4. **Enforce the phase boundary for all uses.**
    Ensure ordinary value uses request term resolution, while class and pattern
-   uses request their appropriate interpretation. Remove definition-selection
+   uses request their appropriate interpretation. Replace eager bare-pattern name
+   classification so opened constructors are recognized without syntax lookup.
+   Remove definition-selection
    fallbacks from `MemberRef`/`NewSel` lowering and audit `SelElem` shape seeding.
    Distinguish unresolved work from diagnosed errors and successful selections;
    assert internal invariants instead of silently guessing. Audit backend class
@@ -72,5 +74,30 @@ receiver and capture context; module completion must not change lexical priority
   `newres/ModuleCaptures.mls` covers nested and escaping modules, objects, getters,
   methods, and separation of captures from distinct calls. Validation passed:
   `ctest` (45 tests), `dtest newres/` (25 files), and `hkmc2AllTests/test`.
-- Stages 3 and 4 remain pending. In particular, `moduleMembers`, the lexical
-  `SelElem` shape shortcut, and the read-side lowering fallbacks are still present.
+- Stage 3 implemented: contexts retain wildcard sources and search the full
+  explicit environment chain first. `UnresolvedRef` listens to the sources and
+  retains each candidate's receiver; lowering reports missing or ambiguous
+  candidates without doing resolution. Selective opens now use selection
+  listeners, and `moduleMembers` is removed. Import aliases propagate shapes.
+- Ordinary wildcard references request term interpretation after elaboration;
+  constructor targets retain their symbolic interpretation. This traversal will
+  be generalized in stage 4. Primitive operators retain their existing implicit
+  binding priority, ahead of wildcard sources.
+- Stage 3 regressions cover forward and indented modules, both open forms,
+  declaration and open orders, outer explicit bindings, parameters, repeated and
+  competing sources, distinct receivers sharing one member symbol, chained opens,
+  imports, nested captures, class/value and class/function overloads, applied
+  constructor patterns, and temporary assignment restoration.
+- Deferred uses exposed duplicate shape-listener registration and an unfinished
+  constructor-shape cache branch. Listeners are now registered once; cached
+  constructors are reused with assertions checking their definition and base.
+  An existing applied-pattern test now passes without its `:todo` marker.
+- Stage 4 remains pending: the lexical `SelElem` shape shortcut and read-side
+  lowering fallbacks still exist. Bare constructor names in patterns still use
+  eager classification; `Opens.mls` records this limitation with a `:fixme`
+  regression for both open forms. Applied constructor patterns already pass.
+
+- Stage 3 validation: `ctest` passed (45 tests), `dtest newres/` passed
+  (26 files), and `hkmc2AllTests/test` passed with the final regression outputs.
+  Golden changes remove duplicate debug callbacks and replace the fixed
+  applied-pattern exception with its expected result.

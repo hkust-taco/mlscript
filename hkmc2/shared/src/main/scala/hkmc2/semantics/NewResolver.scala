@@ -288,6 +288,77 @@ class NewResolver:
         softAssert(res.isErroneous)
     else register
   
+  private def publishMember(host: ShapeHost, member: BlockMemberSymbol,
+      flow: FlowSymbol, marks: Ls[Marks]): Unit =
+    val shape = symShapes.getOrElseUpdate((member, flow, marks), SymShape(member, flow, marks))
+    if host.shapes.add(shape) then host.shapeListeners.foreach(_(shape))
+
+  def unresolvedRef(ref: UnresolvedRef): Unit =
+    ref.prefixes.foreach: prefix =>
+      listenTerm(prefix): shape =>
+        // A miss in one wildcard source is not an error: another may provide
+        // the name. A reference with no candidates is diagnosed by lowering.
+        shape.getMember(ref.id.name).foreach: (member, marks) =>
+          val candidate = prefix -> member
+          if !ref.resolvedMembers.contains(candidate) then ref.resolvedMembers ::= candidate
+          publishMember(ref, member, ref.resSym, marks)
+
+  /** Bare wildcard references need a term interpretation even when nobody asks
+    * for their value shape. Walk runtime uses after elaboration so constructor
+    * targets retain their symbolic interpretation. No member lookup happens here.
+    */
+  def resolveOpenUses(root: Statement): Unit =
+    def symbolic(term: Term): Unit = term.withoutCaptures match
+      case UnresolvedRef(prefixes, _) => prefixes.foreach(value)
+      case NewSel(prefix, _) => value(prefix)
+      case _: MemberRef => ()
+      case other => other.subTerms.foreach(value)
+    def pattern(pat: Pattern): Unit = pat match
+      case Pattern.Constructor(target, arguments) =>
+        symbolic(target)
+        arguments.foreach(_.foreach(pattern))
+      // These children flatten their subpatterns, so visit the patterns explicitly.
+      case Pattern.Record(fields) => fields.foreach((_, pat) => pattern(pat))
+      case Pattern.Guarded(pat, guard) => pattern(pat); value(guard)
+      case other => other.children.foreach:
+        case pat: Pattern => pattern(pat)
+        case term: Term => value(term)
+        case _ => ()
+    def split(s: SimpleSplit): Unit = s match
+      case SimpleSplit.Cons(head, tail) =>
+        head match
+          case SimpleSplit.Head.Match(scrutinee, pat, consequent) =>
+            value(scrutinee)
+            pattern(pat)
+            split(consequent)
+          case SimpleSplit.Head.Let(_, rhs) => value(rhs)
+        split(tail)
+      case SimpleSplit.Else(term) => value(term)
+      case SimpleSplit.End => ()
+    def value(stmt: Statement): Unit = stmt match
+      case ref: UnresolvedRef =>
+        listenTerm(ref)(_ => ())
+        ref.prefixes.foreach(value)
+      case New(cls, args, refinement) =>
+        symbolic(cls)
+        args.foreach(value)
+        refinement.foreach((_, body) => value(body.blk))
+      case IfLike(_, _, branches) => split(branches)
+      case Asc(term, _) => value(term)
+      case TyApp(term, _) => value(term)
+      case Lam(_, body) => value(body)
+      case td: TermDefinition =>
+        td.body.foreach(value)
+        td.annotations.flatMap(_.subTerms).foreach(value)
+      case pd: PatternDef => pattern(pd.pattern)
+      case cd: ClassLikeDef =>
+        value(cd.body.blk)
+        cd.ext.foreach(value)
+        cd.annotations.flatMap(_.subTerms).foreach(value)
+      case _: TypeDef => ()
+      case other => other.subStatements.foreach(value)
+    value(root)
+
   def newSel(sel: NewSel): Unit =
     log(s"newSel? sel = ${sel.showDbg}")
     listenTerm(sel.prefix): shape =>
@@ -296,9 +367,7 @@ class NewResolver:
         case S((bms, mss)) =>
           log(s"newSel member: bms = ${bms.showDbg}, mss = ${mss.map(_.showDbg)}")
           sel.resolvedMembers ::= bms
-          val sh = symShapes.getOrElseUpdate((bms, sel.resSym, mss), SymShape(bms, sel.resSym, mss))
-          if sel.shapes.add(sh) then
-            sel.shapeListeners.foreach(listener => listener(sh))
+          publishMember(sel, bms, sel.resSym, mss)
           // symShapes.getOrElseUpdate((bms, sel.resSym), SymShape(bms, sel.resSym))
           //   .exit(mss) match
           //     case NoShape =>
@@ -436,9 +505,14 @@ class NewResolver:
           case ccs: ClassCtorSymbol =>
             val cls = ccs.associatedCls.defn.get
             listenExt(cls.ext, extsh =>
-              defnShapes.get(sym).foreach: existing =>
-                ??? // TODO error?
-              wrappedListener(defnShapes.getOrElseUpdate(sym, DefnShape(d,  S(BaseShape(cls, extsh)))))
+              // Several uses (including deferred opens) can request the same
+              // constructor shape. Reuse it while checking the cache invariant.
+              val shape = defnShapes.getOrElseUpdate(sym, DefnShape(d, S(BaseShape(cls, extsh))))
+              softAssert(shape.defn is d)
+              shape.ext match
+                case S(base: BaseShape) => softAssert((base.defn is cls) && base.ext == extsh)
+                case _ => softAssert(false, "Constructor shape is missing its class base")
+              wrappedListener(shape)
             )
           case _ =>
             wrappedListener(defnShapes.getOrElseUpdate(sym, DefnShape(d, N)))
@@ -527,7 +601,6 @@ class NewResolver:
       // ???
     case sh: ShapeHost =>
       sh.shapes.foreach(listener)
-      sh.shapeListeners += listener
     case Blk(sts, rs) =>
       listen(rs)(listener)
     // case u: UnitVal =>

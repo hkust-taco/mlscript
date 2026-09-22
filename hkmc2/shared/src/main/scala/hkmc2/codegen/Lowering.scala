@@ -646,6 +646,23 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
       case td: TermDefinition => (td.k is syntax.Fun) && td.params.isEmpty
       case _ => false
   
+  /** Consume wildcard lookup results, retaining the receiver selected by resolution. */
+  private def openSelection(ref: UnresolvedRef)(k: (Term, DefinitionSymbol[?]) => Block)(using LoweringCtx): Block =
+    if ref.isErroneous then compError else ref.resolvedMembers.distinct match
+      case (prefix, _) :: Nil => ref.resolvedTargets.distinct match
+        case target :: Nil => k(prefix, target)
+        case targets => fail:
+          ErrorReport(msg"Wildcard-open reference '${ref.id.name}' requires one resolved definition" -> ref.toLoc ::
+            targets.map(target => msg"target: ${target.describeKind}" -> target.toLoc),
+            source = Diagnostic.Source.Compilation)
+      case Nil => fail:
+        ErrorReport(msg"Name not found in wildcard opens: ${ref.id.name}" -> ref.toLoc :: Nil,
+          source = Diagnostic.Source.Compilation)
+      case candidates => fail:
+        ErrorReport(msg"Wildcard-open reference '${ref.id.name}' is ambiguous" -> ref.toLoc ::
+          candidates.map((prefix, member) => msg"candidate from ${prefix.showDbg}: ${member.describe}" -> member.toLoc),
+          source = Diagnostic.Source.Compilation)
+
   def selSymbol(sel: AnySelTerm): Opt[DefinitionSymbol[?]] =
     sel.validResolvedTargets match
     // sel.resolvedTargets match
@@ -920,6 +937,8 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
                 msg"target: ${t.describeKind}" -> t.toLoc
               , S(t), source = Diagnostic.Source.Compilation)
         compError
+    case ref: UnresolvedRef =>
+      openSelection(ref)((prefix, target) => setupSelection(prefix, ref.id, S(target))(k))
     case Capture(base, thru) =>
       term(base, inStmtPos = inStmtPos)(k)
     case t @ st.Ref(sym) =>
@@ -1121,6 +1140,16 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
       case Ref(sym) =>
         subTerm(rhs): r =>
           assignSymbol(resolvedSelectionSymbol.getOrElse(sym), sym, r, k(unit), trm.toLoc)
+      case ref: UnresolvedRef =>
+        openSelection(ref): (prefix, target) =>
+          target match
+            case sym: TermSymbol =>
+              subTerm_nonTail(prefix): p =>
+                subTerm_nonTail(rhs): r =>
+                  AssignField(p, definitionIdent(ref.id, sym), castTo(r, sym.erasedType, ref.toLoc), k(unit))(S(sym))
+            case _ => fail:
+              ErrorReport(msg"Assignment requires a term member" -> ref.toLoc :: Nil,
+                source = Diagnostic.Source.Compilation)
       case sel @ NewSel(prefix, nme) =>
         // Term resolution selects the definition; lowering only checks that
         // the result is an unambiguous term member and emits the field write.
