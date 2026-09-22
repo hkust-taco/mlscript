@@ -1567,7 +1567,10 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
     
     annotations.foreach:
       case Annot.Untyped => ()
-      case Annot.MatchShapes(_) if receiver.isInstanceOf[st.App] => ()
+      case annot: Annot.MatchShapes => receiver match
+        case st.App(fun, _) if fun.resolvedSym.flatMap(_.asBlkMember).contains(ctx.builtins.shape.`match`) => ()
+        case _: st.App => warn(annot, S(msg"The @matchShapes annotation only applies to shape.match calls."))
+        case _ => warn(annot)
       case annot: Annot.Trm => receiver match
         case st.App(Ref(_: BuiltinSymbol), _) => warn(annot)
         case st.App(_, _) | New(_, _, _) | DynNew(_, _) | Mut(_: New | _: DynNew) => ()

@@ -58,3 +58,18 @@ fun foo(x) = @matchShapes(C(D(_)), C(E(1)), F(_)) shape.match of x,
 //│ <<< end class-tags collection-phase
 //│ >>> start class-tags transform-phase
 //│ <<< end class-tags transform-phase
+
+
+:w
+fun foo(x) = x
+@matchShapes(C(_)) foo(42)
+//│ ╔══[WARNING] This annotation has no effect.
+//│ ║  l.65: 	@matchShapes(C(_)) foo(42)
+//│ ║        	             ^^^
+//│ ╟── The @matchShapes annotation only applies to shape.match calls.
+//│ ║  l.65: 	@matchShapes(C(_)) foo(42)
+//│ ╙──      	                   ^^^^^^^
+//│ >>> start class-tags collection-phase
+//│ <<< end class-tags collection-phase
+//│ >>> start class-tags transform-phase
+//│ <<< end class-tags transform-phase
