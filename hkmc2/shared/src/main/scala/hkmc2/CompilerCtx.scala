@@ -218,6 +218,11 @@ class CompilerCtx(
         val elab = Elaborator(tl, file.up, Ctx.empty)
         val initCtx = State.init.nestLocal("prelude")
         val (blk, ctx) = elab.importFrom(parse.resultBlk)(using initCtx)
+        // Prelude declarations have no executable program, but their nominal hierarchy
+        // is needed by erased-type operations in every compilation unit.
+        given Ctx = ctx
+        given SymbolPrinter = new SymbolPrinter(Scope.empty(Scope.Cfg.default))
+        new codegen.Lowering().classHeaders(blk)
         PreludeArtifact(parse.resultBlk, blk, ctx, state, rootConfig, lastMod),
     )
   

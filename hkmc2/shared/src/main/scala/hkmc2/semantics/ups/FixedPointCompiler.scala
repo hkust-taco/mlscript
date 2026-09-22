@@ -154,7 +154,7 @@ object FixedPointCompiler:
   * machine compilation does not support get a warning and fall back to the
   * naive backtracking translation.
   */
-class FixedPointCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesizer:
+class FixedPointCompiler(using codegen.Lowering)(using tl: TL)(using State, Ctx, Raise) extends TermSynthesizer:
   import FixedPointCompiler.*, tl.*
 
   /** Try to compile the given `@compile`-annotated pattern into a fixed-point

@@ -90,8 +90,8 @@ enum SimpleSplit extends AutoLocated with ProductWithTail:
   /** This field is designed to be compatible with bbML. */
   private var _expandedSplit: Opt[Split] = N
   
-  /**  */
-  def getExpandedSplit(using TL, Ctx, State, Raise, Config): Split = _expandedSplit.getOrElse:
+  /** Expand patterns after resolution, with symbol queries authorized by lowering. */
+  def getExpandedSplit(using codegen.Lowering, TL, Ctx, State, Raise, Config): Split = _expandedSplit.getOrElse:
     val split = Split.from(this)
     _expandedSplit = S(split)
     split

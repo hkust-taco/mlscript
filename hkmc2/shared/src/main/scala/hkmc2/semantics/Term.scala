@@ -238,7 +238,7 @@ sealed trait ResolvableImpl extends ShapeHost:
   
   def hasExpansion = expansion.isDefined
   
-  def defn: Opt[Definition] = resolvedSym match
+  def defn: Opt[Definition] = legacyResolvedSym match
     case S(sym: BlockMemberSymbol) => N
     case S(sym: AnyDefinitionSymbol) => sym.defn
     case _ => N
@@ -508,9 +508,10 @@ enum Term extends Statement, ShapePublisher:
   
   /**
    * The symbol representing the evaluation result of the term. This
-   * symbol is resolved during the resolution stage.
+   * symbol is resolved during the resolution stage. Reading its final value requires
+   * lowering; elaboration must listen for shapes instead.
    */
-  def resolvedSym: Opt[Symbol] = expanded match
+  def resolvedSym(using codegen.Lowering): Opt[Symbol] = expanded match
     case res: Resolved => S(res.sym)
     case SimpleRef(sym) => S(sym)
     case Capture(base, _) => base.resolvedSym
@@ -527,6 +528,15 @@ enum Term extends Statement, ShapePublisher:
     case app: TyApp => app.lhs.resolvedSym
     case _ => N
   
+  /** The old resolver may inspect its own expansions while resolving legacy terms.
+    * This deliberately rejects new references: their candidate sets are not final yet.
+    */
+  private[semantics] def legacyResolvedSym: Opt[Symbol] = expanded match
+    case _: NewResolvable | _: NewRefImpl | _: Capture =>
+      lastWords("Legacy symbol query on a new-resolution term")
+    case app: TyApp => app.lhs.legacyResolvedSym
+    case term => term.symbol
+
   def resolvedTyp: Opt[Type] = expanded match
     case res: Resolved => res.typ
     case ref: Ref => ref.typ
@@ -808,8 +818,8 @@ sealed trait Statement extends AutoLocated, ProductWithExtraInfo, Describable:
   def extraInfo(using DebugPrinter): Str = this match
     case s: AnySel if s.resolvedTargets.nonEmpty =>
       s"targets=${s.resolvedTargets.map(_.showAsPlain).mkString("[", ",", "]")}"
-    case r: Resolvable if r.resolvedSym.isDefined || r.resolvedTyp.isDefined => (
-        r.resolvedSym.map(s => s"sym=${s.showAsPlain}") ::
+    case r: Resolvable if r.legacyResolvedSym.isDefined || r.resolvedTyp.isDefined => (
+        r.legacyResolvedSym.map(s => s"sym=${s.showAsPlain}") ::
         r.resolvedTyp.map(s => s"typ=${s.showDbg}") :: Nil
       ).flatten.mkString(",")
     case r: SelProj => r.symbol.mkString

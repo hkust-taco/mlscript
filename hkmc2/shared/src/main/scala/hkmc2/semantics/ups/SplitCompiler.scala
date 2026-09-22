@@ -119,7 +119,7 @@ object SplitCompiler:
 import SplitCompiler.*
 
 /** This class compiles a pattern to a split that matches the pattern. */
-class SplitCompiler(using tl: TL)(using State, Ctx, Raise, Config) extends TermSynthesizer:
+class SplitCompiler(using codegen.Lowering)(using tl: TL)(using State, Ctx, Raise, Config) extends TermSynthesizer:
   import tl.*, SP.*
   
   val newResolution: Bool = config.language.useNewResolution

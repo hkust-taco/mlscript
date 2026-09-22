@@ -157,18 +157,8 @@ object ErasedType:
     * - `S(N)` for a root class with no parent.
     * - `N` for a class whose parent chain is not available in the IR (e.g. an unlinked import).
     */
-  private def parentOf(sym: BaseTypeSymbol)(using Ctx, State): Opt[Opt[TypeSymbol]] =
-    sym.asClsOrMod.flatMap: sym =>
-      sym.irClsLikeDefn.flatMap: defn =>
-        defn.parentPath match
-        case S(parent) => parent.targetSymbol.collect { case s: TypeSymbol => s }.map(S(_))
-        case N => S(N)
-      .orElse:
-        // FIXME: remove this fallback once imported classes have their `irClsLikeDefn` properly linked
-        sym.defn.flatMap: defn =>
-          defn.ext match
-            case S(parent) => parent.cls.resolvedSym.flatMap(_.asClsOrMod).map(S(_))
-            case N => S(N)
+  private def parentOf(sym: BaseTypeSymbol): Opt[Opt[TypeSymbol]] =
+    sym.asClsOrMod.flatMap(_.irClassHeader.map(_.parent))
 
   /** A symbol's ancestors, nearest first, starting with the symbol itself and following its single parent chain.
     *

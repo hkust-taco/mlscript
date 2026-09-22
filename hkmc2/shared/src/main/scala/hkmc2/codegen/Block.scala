@@ -29,6 +29,10 @@ This means that if a program fragment containing definitions is rewritten at all
 then the rewritten version must be kept as the "currently valid" version, and the old one must no longer be reused,
 as a given symbol can never correspond to more than one IR definition.
 
+Class-like symbols also retain a nominal `ClassHeader`: lowering publishes these before executable bodies,
+including for external declarations, and rewritten IR class definitions refresh them. This lets inheritance
+queries operate solely on IR even when a parent has no executable definition or has not been lowered yet.
+
 Moreover, we generally assume that in a given program, no symbol is every bound more than once
 by any binding form, such as Scoped, Label, Define. (This is currently not completely enforced, though.)
 This means that processes that duplicate binding forms within a program (eg, inlining)
@@ -845,6 +849,11 @@ object ValDefn:
       ValDefn(tsym = TermSymbol(k, owner, Tree.Ident(sym.nme), erasedType = rhs.erasedValueType), sym, rhs)(configOverride, annotations)
 
 
+/** The nominal hierarchy of a class, available independently of its executable body.
+  * An absent header means an unknown parent; a header with no parent denotes a root.
+  */
+final case class ClassHeader(parent: Opt[TypeSymbol])
+
 /*
   The following explains the difference between paramsOpt, auxParams, privateFields and publicFields.
   
@@ -900,6 +909,12 @@ final case class ClsLikeDefn(
     val annotations: Ls[Annot],
 ) extends Defn:
   require(k isnt syntax.Mod)
+  isym match
+    case sym: ClassLikeSymbol =>
+      sym.irClassHeader = parentPath match
+        case N => S(ClassHeader(N))
+        case S(parent) => parent.targetSymbol.flatMap(_.asTpe).map(p => ClassHeader(S(p)))
+    case _ => ()
   methods.foreach: m =>
     m.dSym.irDefn = S(m)
   companion.foreach: c =>
@@ -917,6 +932,9 @@ final case class ClsLikeBody(
     ctor: Block,
     annotations: Ls[Annot],
 ):
+  isym match
+    case sym: ModuleOrObjectSymbol => sym.irClassHeader = S(ClassHeader(N))
+    case _ => ()
   def isStaged: Bool = annotations.exists:
     case Annot.Modifier(Keyword.`staged`) => true
     case _ => false

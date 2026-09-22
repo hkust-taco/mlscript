@@ -10,6 +10,8 @@ import codegen.Lowering
 
 
 class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, Config) extends TermSynthesizer:
+  private given Lowering = lowering
+
   import Normalization.*, Mode.*
   import tl.*
 
@@ -639,14 +641,6 @@ object Normalization:
       !compareCasePattern(lhs, rhs) && !compareCasePattern(rhs, lhs)
     case _ => false
   
-  /** Get the parent class-like symbol from the extends clause of a class or module. */
-  private def getParentClassLikeSymbol(sym: ClassSymbol | ModuleOrObjectSymbol)
-      : Opt[ClassSymbol | ModuleOrObjectSymbol] =
-    val ext: Opt[Term.New] = sym match
-      case cls: ClassSymbol => cls.defn.flatMap(_.ext)
-      case mod: ModuleOrObjectSymbol => mod.defn.flatMap(_.ext)
-    ext.flatMap(nw => nw.cls.resolvedSym.flatMap(_.asClsOrMod))
-  
   /** Check if `child` is a subclass of `parent` by traversing the class hierarchy.
     * Uses a visited set to avoid infinite loops in case of cyclic inheritance.
     * TODO: Cache the subclasses set!! */
@@ -656,7 +650,7 @@ object Normalization:
   ): Bool =
     def go(sym: ClassSymbol | ModuleOrObjectSymbol,
         visited: Set[ClassSymbol | ModuleOrObjectSymbol]): Bool =
-      !visited.contains(sym) && (getParentClassLikeSymbol(sym) match
+      !visited.contains(sym) && (sym.irClassHeader.flatMap(_.parent).flatMap(_.asClsOrMod) match
         case S(parentSym) =>
           (parentSym is parent) || go(parentSym, visited + sym)
         case N => false)

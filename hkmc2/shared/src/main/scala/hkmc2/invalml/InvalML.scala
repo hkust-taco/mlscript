@@ -69,8 +69,12 @@ object InvalCtx:
 end InvalCtx
 
 
-class InvalTyper(using elState: Elaborator.State, tl: TL)(using Ctx, Config):
+class InvalTyper(using codegen.Lowering)(using elState: Elaborator.State, tl: TL)(using Ctx, Config):
   import tl.{trace, log}
+
+  // InvalML expands patterns while typing. Its early use of lowering is valid only
+  // for legacy resolution, whose terms do not carry deferred candidate sets.
+  require(!config.language.useNewResolution, "InvalML requires legacy resolution")
   
   private val infVarState = new InfVarUid.State()
   private val solver = new ConstraintSolver(infVarState, elState, tl)

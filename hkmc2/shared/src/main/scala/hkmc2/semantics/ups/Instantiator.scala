@@ -14,7 +14,7 @@ import scala.collection.immutable.SeqMap
 object Instantiator:
   type Subst = Map[VarSymbol, Pat]
 
-class Instantiator(using tl: TL)(using Ctx, State, Raise):
+class Instantiator(using codegen.Lowering)(using tl: TL)(using Ctx, State, Raise):
   import tl.*
   
   /** The map contains all instantiated patterns. The key is a pattern symbol

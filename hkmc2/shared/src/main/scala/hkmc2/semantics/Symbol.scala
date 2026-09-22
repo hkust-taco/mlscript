@@ -471,6 +471,13 @@ sealed trait ClassLikeSymbol extends IdentifiedSymbol, HasErasedType:
   val tree: Tree.TypeDef
   def subst(using sub: SymbolSubst): ClassLikeSymbol
 
+  /** Published by lowering before class bodies are lowered, including for external declarations.
+    * Full IR class definitions refresh this header when rewritten, just as they own `irDefn`.
+    * Keeping the header separately is necessary for forward parents and declarations without
+    * executable bodies; consumers must not reconstruct it from semantic terms.
+    */
+  var irClassHeader: Opt[codegen.ClassHeader] = N
+
 
 type AnyDefinitionSymbol = DefinitionSymbol[?]
 

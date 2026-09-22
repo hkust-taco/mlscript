@@ -182,7 +182,7 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
     case sel @ AnySel(pre, nme, cls) =>
       log(s"Selection ${sel.showDbg} ${sel.typ}")
       checkLDS(pre): pre_t =>
-        sel.resolvedSym match
+        sel.legacyResolvedSym match
         case S(sym: BlockMemberSymbol) =>
           log(s"RES ${sym.nme} in ${sel.showDbg}")
           getFlowSymOrType(sym)
@@ -199,7 +199,7 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
     case nw @ New(cls, args, rft) =>
       rft match
       case N =>
-        cls.resolvedSym.flatMap(_.asCls) match
+        cls.legacyResolvedSym.flatMap(_.asCls) match
         case N =>
           log(s"Unresolved or invalid class symbol in ${cls.showDbg}")
           P.Unknown(nw)
