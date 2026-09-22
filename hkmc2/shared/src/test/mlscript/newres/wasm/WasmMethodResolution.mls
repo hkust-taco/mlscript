@@ -1,9 +1,8 @@
-:..
+:.
 
 
 :global
 :wasm
-:!js
 
 
 :fixme
@@ -12,10 +11,10 @@ class A(val x) with
 let a = A(1)
 a.A#get() + A(2).get() + a.get() 
 //│ ╔══[COMPILATION ERROR] Identifier `A` does not name a known class symbol.
-//│ ║  l.13: 	a.A#get() + A(2).get() + a.get() 
+//│ ║  l.12: 	a.A#get() + A(2).get() + a.get() 
 //│ ╙──      	 ^^
 //│ ╔══[COMPILATION ERROR] WatBuilder::result for field selection without a resolved symbol is not implemented (field `get`). Use `_.[_]` for index-based accesses.
-//│ ║  l.13: 	a.A#get() + A(2).get() + a.get() 
+//│ ║  l.12: 	a.A#get() + A(2).get() + a.get() 
 //│ ╙──      	    ^^^
 
 

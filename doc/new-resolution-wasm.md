@@ -11,7 +11,9 @@ The new-resolution tests inherit `:js` from the root test configuration. With
 tries to execute that same IR as JavaScript. This causes the missing `wasm`
 binding and subsequent JavaScript ReferenceError; the WASM arithmetic itself
 still succeeds. Make `:js` a flag supporting `:!js`, and use that override in
-these WASM tests while retaining the inherited language configuration.
+the WASM directory's `.mls` while retaining the inherited language configuration.
+Imported directives recognize the lexer's `:!` token as well as `:`, so disabled
+flags work in directory configuration files too.
 
 The remaining failure in `WasmMethodResolution.mls` is explicit projection
 `a.A#get()`. Its elaboration still uses `c.symbol.flatMap(_.asCls)` and syntax
@@ -69,5 +71,5 @@ not JavaScript implementations of all WASM intrinsics.
 ## Validation
 
 - `ctest`: passed.
-- `dtest newres/wasm/`: both tests passed; explicit projection remains `:fixme`.
-- `hkmc2AllTests/test`: passed, including all 662 diff tests.
+- `dtest newres/wasm/`: all three tests passed; explicit projection remains `:fixme`.
+- `hkmc2AllTests/test`: passed, including all 663 diff tests.

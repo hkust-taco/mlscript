@@ -1,8 +1,7 @@
-:..
+:.
 
 :global
 :wasm
-:!js
 
 // WASM lowering emits target-specific intrinsics; do not execute its IR as JS.
 :expect 3

@@ -362,7 +362,7 @@ abstract class MLsDiffMaker extends DiffMaker:
       case (syntax.IDENT(":..", true), _) :: rest =>
         doImportUp(file.up)
         dropCrap(rest.dropWhile(_._1 isnt syntax.NEWLINE).drop(1))
-      case (syntax.IDENT(":", true), _) :: (syntax.IDENT(nme, false), _) :: rest =>
+      case (syntax.IDENT(prefix @ (":" | ":!"), true), _) :: (syntax.IDENT(nme, false), _) :: rest =>
         if includeDirectives then
           val ln = rest.takeWhile(_._1 isnt syntax.NEWLINE)
           def render(ts: Ls[syntax.Stroken -> Loc]): Str = ts match
@@ -373,7 +373,7 @@ abstract class MLsDiffMaker extends DiffMaker:
                 case _ => TODO(st)
               str + render(rest)
             case Nil => ""
-          processLines(s":$nme ${render(ln)}" :: Nil, reprintCommands = false)
+          processLines(s"$prefix$nme ${render(ln)}" :: Nil, reprintCommands = false)
         dropCrap(rest.dropWhile(_._1 isnt syntax.NEWLINE).drop(1))
       case _ => ts
     
