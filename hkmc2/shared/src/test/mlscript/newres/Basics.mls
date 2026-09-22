@@ -29,6 +29,12 @@ Predef.id
 //│ | Elab term Sel(Ident(Predef),Ident(id))
 //│ | | Elab subterm Sel(Ident(Predef),Ident(id))
 //│ | | | Elab subterm Ident(Predef)
+//│ | | | | listenTerm: trm = member:Predef⁰
+//│ | | | | listen: trm = member:Predef⁰
+//│ | | | | listenBMS: bms = module
+//│ | | | | listenedBMS: bms = module
+//│ | | | | fromBMS: bms = member:Predef⁰, sh = module:Predef¹, flow = Predef², markss = List()
+//│ | | | | PUSH module:Predef¹
 //│ | | | ~> member:Predef⁰
 //│ | | | newSel? sel = member:Predef⁰.id
 //│ | | | listenTerm: trm = member:Predef⁰
@@ -39,6 +45,15 @@ Predef.id
 //│ | | | PUSH module:Predef¹
 //│ | | | newSel: sel = member:Predef⁰.id, shape = module:Predef¹
 //│ | | | newSel member: bms = member:id¹, mss = List()
+//│ | | | listenTerm: trm = member:Predef⁰.id
+//│ | | | listen: trm = member:Predef⁰.id
+//│ | | | listenBMS: bms = function
+//│ | | | listenedBMS: bms = function
+//│ | | | fromBMS: bms = member:id¹, sh = member:id¹, flow = ⋅id⁰, markss = List()
+//│ | | | .exit MarkedShape (member:id¹, term:Predef¹/id⁰, ⋅id⁰)
+//│ | | | | class hkmc2.semantics.TermSymbol Some(module:Predef¹)
+//│ | | | = MarkedShape(member:id¹, ↗⟨term:Predef¹/id⁰⟩%⟨⋅id⁰⟩ϵ)
+//│ | | | PUSH MarkedShape(member:id¹, ↗⟨term:Predef¹/id⁰⟩%⟨⋅id⁰⟩ϵ)
 //│ | | ~> member:Predef⁰.id
 //│ | ~> member:Predef⁰.id
 //│ ~> { member:Predef⁰.id }
@@ -66,7 +81,7 @@ Predef.id(1)
 :e
 Predef.idd(1)
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.67: 	Predef.idd(1)
+//│ ║  l.82: 	Predef.idd(1)
 //│ ║        	^^^^^^^^^^
 //│ ╟── Module 'Predef' does not contain member 'idd'
 //│ ║  in ../../mlscript-compile/Predef.mls
@@ -119,30 +134,30 @@ p.id
 :e
 (1).id
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.120: 	(1).id
+//│ ║  l.135: 	(1).id
 //│ ║         	^^^^^^
 //│ ╟── Integer literal does not contain member 'id'
-//│ ║  l.120: 	(1).id
+//│ ║  l.135: 	(1).id
 //│ ╙──       	 ^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :fixme // parse
 1.id
 //│ ╔══[LEXICAL ERROR] Expected at least one digit after the  decimal point
-//│ ║  l.130: 	1.id
+//│ ║  l.145: 	1.id
 //│ ╙──       	  ^
 //│ ╔══[COMPILATION ERROR] Illegal juxtaposition right-hand side (identifier).
-//│ ║  l.130: 	1.id
+//│ ║  l.145: 	1.id
 //│ ╙──       	  ^^
 //│ = 1
 
 :fixme
 "ha ".repeat(2)
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.140: 	"ha ".repeat(2)
+//│ ║  l.155: 	"ha ".repeat(2)
 //│ ║         	^^^^^^^^^^^^
 //│ ╟── String literal does not contain member 'repeat'
-//│ ║  l.140: 	"ha ".repeat(2)
+//│ ║  l.155: 	"ha ".repeat(2)
 //│ ╙──       	^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -155,9 +170,9 @@ print(1)
 :e
 ().id
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.156: 	().id
+//│ ║  l.171: 	().id
 //│ ║         	^^^^^
 //│ ╟── Unit value does not contain member 'id'
-//│ ║  l.156: 	().id
+//│ ║  l.171: 	().id
 //│ ╙──       	^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.

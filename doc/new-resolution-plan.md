@@ -79,10 +79,9 @@ receiver and capture context; module completion must not change lexical priority
   retains each candidate's receiver; lowering reports missing or ambiguous
   candidates without doing resolution. Selective opens now use selection
   listeners, and `moduleMembers` is removed. Import aliases propagate shapes.
-- Ordinary wildcard references request term interpretation after elaboration;
-  constructor targets retain their symbolic interpretation. This traversal will
-  be generalized in stage 4. Primitive operators retain their existing implicit
-  binding priority, ahead of wildcard sources.
+- Primitive operators retain their existing implicit binding priority, ahead of
+  wildcard sources. The initial stage-3 post-elaboration traversal has been
+  replaced by the contextual elaboration described below.
 - Stage 3 regressions cover forward and indented modules, both open forms,
   declaration and open orders, outer explicit bindings, parameters, repeated and
   competing sources, distinct receivers sharing one member symbol, chained opens,
@@ -92,7 +91,7 @@ receiver and capture context; module completion must not change lexical priority
   constructor-shape cache branch. Listeners are now registered once; cached
   constructors are reused with assertions checking their definition and base.
   An existing applied-pattern test now passes without its `:todo` marker.
-- Stage 4 remains pending: the lexical `SelElem` shape shortcut and read-side
+- Remaining stage-4 work: the lexical `SelElem` shape shortcut and read-side
   lowering fallbacks still exist. Bare constructor names in patterns still use
   eager classification; `Opens.mls` records this limitation with a `:fixme`
   regression for both open forms. Applied constructor patterns already pass.
@@ -101,3 +100,25 @@ receiver and capture context; module completion must not change lexical priority
   (26 files), and `hkmc2AllTests/test` passed with the final regression outputs.
   Golden changes remove duplicate debug callbacks and replace the fixed
   applied-pattern exception with its expected result.
+
+- Contextual interpretation is now threaded through `term` and `subterm`:
+  ordinary term uses request resolution during elaboration; class and pattern
+  targets retain their specialized interpretation, and type positions do not
+  request runtime values. `resolveOpenUses` and its second tree walk are removed.
+- Only `term` and `subterm` default to term interpretation. This is a deliberate
+  exception to the usual rule against defaults: ordinary expression calls stay
+  concise, while symbolic positions and transparent wrappers explicitly specify
+  or forward the interpretation. Smaller forwarding helpers require it explicitly.
+  An implicit context was avoided because a target's interpretation must not leak
+  into its value arguments or selection prefixes.
+- The resolver records direct definition references without demanding their value
+  shapes; overload sets still resolve through listeners. Failed term selection
+  marks the reference erroneous, avoiding repeated and secondary diagnostics.
+- `Interpretations.mls` covers forward value uses, parenthesized and locally opened
+  class targets, constructor arguments, pattern guards, and type-only references
+  in signatures, aliases, type arguments, and ascriptions. Bare-pattern lookup and
+  the remaining lowering/lexical shortcuts are still separate follow-up work.
+- Contextual-interpretation validation: `ctest` passed (45 tests),
+  `dtest newres/` passed (27 files), and the final `hkmc2AllTests/test` passed.
+  Existing runtime outputs are unchanged; reviewed golden updates record the
+  additional resolution requests made during elaboration.

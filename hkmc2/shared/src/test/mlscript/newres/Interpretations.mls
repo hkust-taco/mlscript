@@ -1,0 +1,99 @@
+:.
+
+
+// Ordinary references must resolve even when no caller asks for their shapes.
+fun forwardValue() = {
+  open Later
+  value
+}
+module Later { val value = 23 }
+
+:expect 23
+forwardValue()
+//│ = 23
+
+
+// Parentheses and locally opened blocks preserve a class target's interpretation.
+module Choices {
+  class Item { fun answer() = 24 }
+  val Item = 25
+}
+fun choices() = {
+  open Choices
+  [Item, (new (Item)).answer(), (new (Choices.{Item})).answer()]
+}
+
+:expect [25, 24, 24]
+choices()
+//│ = [25, 24, 24]
+
+
+// Constructor arguments are terms even though the constructor target is a class.
+module Arguments {
+  class Box(val value)
+  class Item
+  val Item = 26
+}
+fun construct() = {
+  open Arguments
+  (new Box(Item)).value
+}
+
+:expect 26
+construct()
+//│ = 26
+
+
+// Pattern targets retain the class interpretation; guards and results are terms.
+fun matchBox(box) = {
+  open Arguments
+  if box is Box(value) and value > 0 then Item else 0
+}
+
+:expect [26, 0]
+[matchBox(Arguments.Box(1)), matchBox(Arguments.Box(0))]
+//│ = [26, 0]
+
+
+// Type-only members must not be interpreted as runtime values in signatures,
+// aliases, type arguments, or ascriptions.
+module Types { type Alias = Int }
+fun annotated() = {
+  open Types
+  type Local = (Alias)
+  type Pair = [Alias, Alias]
+  type Fn = Alias -> Alias
+  type Record = { field: Alias }
+  type Excluded = ~Alias
+  type Combined = Alias | (Alias & Alias)
+  fun echo[A](x: Alias): Alias = x
+  (echo[Alias](27) as Alias)
+}
+
+:expect 27
+annotated()
+//│ = 27
+
+
+// The same type-only name in an expression must still be rejected.
+:e
+fun invalidValue() = {
+  open Types
+  Alias
+}
+invalidValue()
+//│ ╔══[COMPILATION ERROR] Resolution error in wildcard-open reference
+//│ ║  l.82: 	  Alias
+//│ ║        	  ^^^^^
+//│ ╙── Expected a term; got type alias 'Alias'
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+
+// The prefix of a class selection is a term, even if that name also has a class.
+class Carrier
+val Carrier = Arguments
+//│ Carrier = class Arguments { Box: fun Box { class: class Box }, Item: 26 }
+
+:expect 26
+(new Carrier.Box(Carrier.Item)).value
+//│ = 26

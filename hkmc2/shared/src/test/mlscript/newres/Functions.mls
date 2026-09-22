@@ -54,6 +54,8 @@ callid1(Predef)
 //│ | | | | newSel? sel = p⁰.id
 //│ | | | | listenTerm: trm = p⁰
 //│ | | | | listen: trm = p⁰
+//│ | | | | listenTerm: trm = p⁰.id
+//│ | | | | listen: trm = p⁰.id
 //│ | | | ~> p⁰.id
 //│ | | | Elab subterm Tup(List(IntLit(1)))
 //│ | | | | Elab term IntLit(1)
@@ -68,10 +70,19 @@ callid1(Predef)
 //│ | Elab term App(Ident(callid1),Tup(List(Ident(Predef))))
 //│ | | Elab subterm App(Ident(callid1),Tup(List(Ident(Predef))))
 //│ | | | Elab subterm Ident(callid1)
+//│ | | | | listenTerm: trm = member:callid1⁰
+//│ | | | | listen: trm = member:callid1⁰
+//│ | | | | listenBMS: bms = function
 //│ | | | ~> member:callid1⁰
 //│ | | | Elab subterm Tup(List(Ident(Predef)))
 //│ | | | | Elab term Ident(Predef)
 //│ | | | | | Elab subterm Ident(Predef)
+//│ | | | | | | listenTerm: trm = member:Predef⁰
+//│ | | | | | | listen: trm = member:Predef⁰
+//│ | | | | | | listenBMS: bms = module
+//│ | | | | | | listenedBMS: bms = module
+//│ | | | | | | fromBMS: bms = member:Predef⁰, sh = module:Predef¹, flow = Predef², markss = List()
+//│ | | | | | | PUSH module:Predef¹
 //│ | | | | | ~> member:Predef⁰
 //│ | | | | ~> member:Predef⁰
 //│ | | | ~> [member:Predef⁰]
@@ -80,6 +91,12 @@ callid1(Predef)
 //│ | | | listenBMS: bms = function
 //│ | | ~> member:callid1⁰(member:Predef⁰)
 //│ | ~> member:callid1⁰(member:Predef⁰)
+//│ | listenedBMS: bms = function
+//│ | fromBMS: bms = member:callid1⁰, sh = member:callid1⁰, flow = callid1¹, markss = List()
+//│ | .exit MarkedShape (member:callid1⁰, term:callid1², callid1¹)
+//│ | | class hkmc2.semantics.TermSymbol None
+//│ | = MarkedShape(member:callid1⁰, ↗⟨term:callid1²⟩%⟨callid1¹⟩ϵ)
+//│ | PUSH MarkedShape(member:callid1⁰, ↗⟨term:callid1²⟩%⟨callid1¹⟩ϵ)
 //│ | listenedBMS: bms = function
 //│ | fromBMS: bms = member:callid1⁰, sh = member:callid1⁰, flow = callid1¹, markss = List()
 //│ | .exit MarkedShape (member:callid1⁰, term:callid1², callid1¹)
@@ -101,6 +118,17 @@ callid1(Predef)
 //│ | zipArg: p = p⁰, trm = member:Predef⁰, sh = MarkedShape(module:Predef¹, ↘⟨term:callid1²⟩%⟨callid1¹⟩ϵ) true, false
 //│ | newSel: sel = p⁰.id, shape = MarkedShape(module:Predef¹, ↘⟨term:callid1²⟩%⟨callid1¹⟩ϵ)
 //│ | newSel member: bms = member:id⁰, mss = List(↘⟨term:callid1²⟩%⟨callid1¹⟩ϵ)
+//│ | listenBMS: bms = function
+//│ | listenedBMS: bms = function
+//│ | fromBMS: bms = member:id⁰, sh = member:id⁰, flow = ⋅id⁰, markss = List(↘⟨term:callid1²⟩%⟨callid1¹⟩ϵ)
+//│ | .exit MarkedShape (member:id⁰, term:Predef¹/id¹, ⋅id⁰)
+//│ | | class hkmc2.semantics.TermSymbol Some(module:Predef¹)
+//│ | = MarkedShape(member:id⁰, ↗⟨term:Predef¹/id¹⟩%⟨⋅id⁰⟩ϵ)
+//│ | .exit MarkedShape(member:id⁰, ↗⟨term:Predef¹/id¹⟩%⟨⋅id⁰⟩ϵ) (↘⟨term:callid1²⟩%⟨callid1¹⟩ϵ)
+//│ | | .exit MarkedShape(member:id⁰, ↗⟨term:Predef¹/id¹⟩%⟨⋅id⁰⟩ϵ) (ϵ)
+//│ | | = MarkedShape(member:id⁰, ↗⟨term:Predef¹/id¹⟩%⟨⋅id⁰⟩ϵ)
+//│ | = MarkedShape(member:id⁰, ↘⟨term:callid1²⟩%⟨callid1¹⟩↗⟨term:Predef¹/id¹⟩%⟨⋅id⁰⟩ϵ)
+//│ | PUSH MarkedShape(member:id⁰, ↘⟨term:callid1²⟩%⟨callid1¹⟩↗⟨term:Predef¹/id¹⟩%⟨⋅id⁰⟩ϵ)
 //│ | listenBMS: bms = function
 //│ | listenedBMS: bms = function
 //│ | fromBMS: bms = member:id⁰, sh = member:id⁰, flow = ⋅id⁰, markss = List(↘⟨term:callid1²⟩%⟨callid1¹⟩ϵ)

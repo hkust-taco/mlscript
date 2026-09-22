@@ -78,6 +78,14 @@ module M with
 //│ | | | Processing term definition Ident(p)
 //│ | | | Elab term Ident(Predef)
 //│ | | | | Elab subterm Ident(Predef)
+//│ | | | | | listenTerm: trm = member:Predef⁰^term:M⁰/p⁰
+//│ | | | | | listen: trm = member:Predef⁰^term:M⁰/p⁰
+//│ | | | | | listenTerm: trm = member:Predef⁰
+//│ | | | | | listen: trm = member:Predef⁰
+//│ | | | | | listenBMS: bms = module
+//│ | | | | | listenedBMS: bms = module
+//│ | | | | | fromBMS: bms = member:Predef⁰, sh = module:Predef¹, flow = Predef², markss = List()
+//│ | | | | | PUSH module:Predef¹
 //│ | | | | ~> member:Predef⁰^term:M⁰/p⁰
 //│ | | | ~> member:Predef⁰^term:M⁰/p⁰
 //│ | | ~> { val member:p = member:Predef⁰^term:M⁰/p⁰; }
@@ -94,6 +102,12 @@ M.p.id
 //│ | | Elab subterm Sel(Sel(Ident(M),Ident(p)),Ident(id))
 //│ | | | Elab subterm Sel(Ident(M),Ident(p))
 //│ | | | | Elab subterm Ident(M)
+//│ | | | | | listenTerm: trm = member:M¹
+//│ | | | | | listen: trm = member:M¹
+//│ | | | | | listenBMS: bms = module
+//│ | | | | | listenedBMS: bms = module
+//│ | | | | | fromBMS: bms = member:M¹, sh = module:M⁰, flow = M², markss = List()
+//│ | | | | | PUSH module:M⁰
 //│ | | | | ~> member:M¹
 //│ | | | | newSel? sel = member:M¹.p
 //│ | | | | listenTerm: trm = member:M¹
@@ -104,6 +118,24 @@ M.p.id
 //│ | | | | PUSH module:M⁰
 //│ | | | | newSel: sel = member:M¹.p, shape = module:M⁰
 //│ | | | | newSel member: bms = member:p¹, mss = List()
+//│ | | | | listenTerm: trm = member:M¹.p
+//│ | | | | listen: trm = member:M¹.p
+//│ | | | | listenBMS: bms = value
+//│ | | | | listenedBMS: bms = value
+//│ | | | | listenTerm: td.body = member:Predef⁰^term:M⁰/p⁰
+//│ | | | | listenTerm: trm = member:Predef⁰^term:M⁰/p⁰
+//│ | | | | listen: trm = member:Predef⁰^term:M⁰/p⁰
+//│ | | | | listenTerm: trm = member:Predef⁰
+//│ | | | | listen: trm = member:Predef⁰
+//│ | | | | listenBMS: bms = module
+//│ | | | | listenedBMS: bms = module
+//│ | | | | fromBMS: bms = member:Predef⁰, sh = module:Predef¹, flow = Predef², markss = List()
+//│ | | | | PUSH module:Predef¹
+//│ | | | | fromBMS: bms = member:p¹, sh = MarkedShape(module:Predef¹, ↘⟨term:M⁰/p⁰⟩ϵ), flow = ⋅p⁰, markss = List()
+//│ | | | | .exit MarkedShape (MarkedShape(module:Predef¹, ↘⟨term:M⁰/p⁰⟩ϵ), term:M⁰/p⁰, ⋅p⁰)
+//│ | | | | | class hkmc2.semantics.TermSymbol Some(module:M⁰)
+//│ | | | | = module:Predef¹
+//│ | | | | MATCH module:Predef¹ for term:M⁰/p⁰ % ⋅p⁰
 //│ | | | ~> member:M¹.p
 //│ | | | newSel? sel = member:M¹.p.id
 //│ | | | listenTerm: trm = member:M¹.p
@@ -126,6 +158,15 @@ M.p.id
 //│ | | | MATCH module:Predef¹ for term:M⁰/p⁰ % ⋅p⁰
 //│ | | | newSel: sel = member:M¹.p.id, shape = module:Predef¹
 //│ | | | newSel member: bms = member:id⁰, mss = List()
+//│ | | | listenTerm: trm = member:M¹.p.id
+//│ | | | listen: trm = member:M¹.p.id
+//│ | | | listenBMS: bms = function
+//│ | | | listenedBMS: bms = function
+//│ | | | fromBMS: bms = member:id⁰, sh = member:id⁰, flow = ⋅id⁰, markss = List()
+//│ | | | .exit MarkedShape (member:id⁰, term:Predef¹/id¹, ⋅id⁰)
+//│ | | | | class hkmc2.semantics.TermSymbol Some(module:Predef¹)
+//│ | | | = MarkedShape(member:id⁰, ↗⟨term:Predef¹/id¹⟩%⟨⋅id⁰⟩ϵ)
+//│ | | | PUSH MarkedShape(member:id⁰, ↗⟨term:Predef¹/id¹⟩%⟨⋅id⁰⟩ϵ)
 //│ | | ~> member:M¹.p.id
 //│ | ~> member:M¹.p.id
 //│ ~> { member:M¹.p.id }

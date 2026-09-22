@@ -303,62 +303,6 @@ class NewResolver:
           if !ref.resolvedMembers.contains(candidate) then ref.resolvedMembers ::= candidate
           publishMember(ref, member, ref.resSym, marks)
 
-  /** Bare wildcard references need a term interpretation even when nobody asks
-    * for their value shape. Walk runtime uses after elaboration so constructor
-    * targets retain their symbolic interpretation. No member lookup happens here.
-    */
-  def resolveOpenUses(root: Statement): Unit =
-    def symbolic(term: Term): Unit = term.withoutCaptures match
-      case UnresolvedRef(prefixes, _) => prefixes.foreach(value)
-      case NewSel(prefix, _) => value(prefix)
-      case _: MemberRef => ()
-      case other => other.subTerms.foreach(value)
-    def pattern(pat: Pattern): Unit = pat match
-      case Pattern.Constructor(target, arguments) =>
-        symbolic(target)
-        arguments.foreach(_.foreach(pattern))
-      // These children flatten their subpatterns, so visit the patterns explicitly.
-      case Pattern.Record(fields) => fields.foreach((_, pat) => pattern(pat))
-      case Pattern.Guarded(pat, guard) => pattern(pat); value(guard)
-      case other => other.children.foreach:
-        case pat: Pattern => pattern(pat)
-        case term: Term => value(term)
-        case _ => ()
-    def split(s: SimpleSplit): Unit = s match
-      case SimpleSplit.Cons(head, tail) =>
-        head match
-          case SimpleSplit.Head.Match(scrutinee, pat, consequent) =>
-            value(scrutinee)
-            pattern(pat)
-            split(consequent)
-          case SimpleSplit.Head.Let(_, rhs) => value(rhs)
-        split(tail)
-      case SimpleSplit.Else(term) => value(term)
-      case SimpleSplit.End => ()
-    def value(stmt: Statement): Unit = stmt match
-      case ref: UnresolvedRef =>
-        listenTerm(ref)(_ => ())
-        ref.prefixes.foreach(value)
-      case New(cls, args, refinement) =>
-        symbolic(cls)
-        args.foreach(value)
-        refinement.foreach((_, body) => value(body.blk))
-      case IfLike(_, _, branches) => split(branches)
-      case Asc(term, _) => value(term)
-      case TyApp(term, _) => value(term)
-      case Lam(_, body) => value(body)
-      case td: TermDefinition =>
-        td.body.foreach(value)
-        td.annotations.flatMap(_.subTerms).foreach(value)
-      case pd: PatternDef => pattern(pd.pattern)
-      case cd: ClassLikeDef =>
-        value(cd.body.blk)
-        cd.ext.foreach(value)
-        cd.annotations.flatMap(_.subTerms).foreach(value)
-      case _: TypeDef => ()
-      case other => other.subStatements.foreach(value)
-    value(root)
-
   def newSel(sel: NewSel): Unit =
     log(s"newSel? sel = ${sel.showDbg}")
     listenTerm(sel.prefix): shape =>
@@ -526,11 +470,26 @@ class NewResolver:
           // sym.defnListeners += (d => listener(defnShapes.getOrElseUpdate(sym, DefnShape(d))))
           softAssert(false, s"Symbol definition of ${sym} is not set upon completion of ${bms}")
       case _ =>
-        resolError(trm,
-          msg"Expected a term; got ${bms.describe} '${bms.nme}'" -> N :: Nil,
-          // msg"expected a term shape, but got ${bms.describe} (${bms.toString})" -> trm.toLoc :: Nil,
-        )
+        val ref = trm.withoutCaptures match
+          case ref: NewResolvable => S(ref)
+          case _ => N
+        if !ref.exists(_.isErroneous) then
+          ref.foreach(_.isErroneous = true)
+          resolError(trm,
+            msg"Expected a term; got ${bms.describe} '${bms.nme}'" -> N :: Nil)
   
+  /** Request the term interpretation of a reference without requiring a consumer
+    * of its value shape. Direct definition references already identify the target;
+    * overload sets need listeners, including when their definitions arrive later.
+    */
+  def requireTerm(trm: Term): Unit = trm.withoutCaptures match
+    case direct @ MemberRef(sym: TermSymbol) =>
+      // Selecting a known field does not require resolving the field's value.
+      softAssert(direct.resolvedTargets.forall(_ is sym))
+      direct.resolvedTargets = sym :: Nil
+    case _: NewResolvable => listenTerm(trm)(_ => ())
+    case _ => ()
+
   def listenTerm(trm: Term)(listener: TermShape => Unit): Unit =
     log(s"listenTerm: trm = ${trm.showDbg}")
     listen(trm):
