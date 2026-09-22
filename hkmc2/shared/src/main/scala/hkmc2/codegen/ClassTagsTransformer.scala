@@ -373,12 +373,15 @@ class ClassTagsTransformer(
         )(k)
         case N => shape match
           case LitShape(lit) => checkTagEq(argument, lit)(k)
-          case TupleShape(length, _) =>
+          case TupleShape(length, elements) =>
             val condition = new TempSymbol(N, erasedType = S(ErasedType.Bool), "tmp")
             val conditionRef = condition.asSimpleRef.withLocOf(argument)
+            val elementChecks = elements.zipWithIndex.map: (element, index) =>
+              DynSelect(argument, Value.Lit(syntax.Tree.IntLit(index)), true).withLocOf(argument) -> element
+            val matched = mkConjunction(elementChecks): elementsMatch =>
+              Assign(condition, elementsMatch, End())
             Scoped(Set.single(condition),
-              new Match(argument, Case.Tup(length, false) ->
-                Assign(condition, Value.Lit(syntax.Tree.BoolLit(true)), End()) :: Nil,
+              new Match(argument, Case.Tup(length, false) -> matched :: Nil,
                 S(Assign(condition, Value.Lit(syntax.Tree.BoolLit(false)), End())),
                 k(conditionRef)))
           case DynamicShape => k(Value.Lit(syntax.Tree.BoolLit(true)))
