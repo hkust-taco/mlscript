@@ -466,7 +466,7 @@ object Elaborator:
         val prefix = base.ref(Ident(base.nme))
         val name = new Ident(nme).withLocOf(id)
         if config.language.useNewResolution then
-          val res = new Term.NewSel(prefix, name)(FlowSymbol.synthSel(nme)).withLocOf(id)
+          val res = new Term.NewSel(prefix, name, N)(FlowSymbol.synthSel(nme)).withLocOf(id)
           summon[NewResolver].newSel(res)
           res
         else
@@ -1244,6 +1244,11 @@ extends Importer:
       if newResolution then resolveNew(res)
       res
     
+    def elaborateProjection(prefix: Term, cls: Term, name: Ident): Term =
+      val res = new Term.NewSel(prefix, name, S(cls))(FlowSymbol.selProj(name.name)).withLocOf(tree)
+      newSel(res)
+      interpretRef(res, interpretation)
+
     /** Fallback to a normal selection + application when label-specific handling does not apply. */
     def mkNonLabelSelectionApp(tree: App, sel: Sel, args: Ls[Tree]): Term =
       val sym = FlowSymbol.app()
@@ -1254,7 +1259,7 @@ extends Importer:
     def elaborateSelection(tree: Sel): Term =
       val preTrm = subterm(tree.prefix)
       if newResolution then
-        val res = new Term.NewSel(preTrm, tree.name)(FlowSymbol.sel(tree.name.name)).withLocOf(tree)
+        val res = new Term.NewSel(preTrm, tree.name, N)(FlowSymbol.sel(tree.name.name)).withLocOf(tree)
         // listenTerm(preTrm, shape => selShape2(shape, tree.name, res))
         newSel(res)
         interpretRef(res, interpretation)
@@ -1452,17 +1457,20 @@ extends Importer:
       ifLike(Keyword.`if`, IfLikeForm.ReturningIf, shorthandSplit(tree), tree.toLoc)
     case InfixApp(Sel(pre, idn: Ident), Keywrd(Keyword.`#`), idp: Ident) =>
       val c = subterm(idn, Clss)
-      val f = c.symbol.flatMap(_.asCls) match
-        case S(cls: ClassSymbol) =>
-          cls.tree.allSymbols.get(idp.name) match
-          case S(fld: MemberSymbol) => S(fld)
+      if newResolution then
+        elaborateProjection(subterm(pre), c, idp)
+      else
+        val f = c.symbol.flatMap(_.asCls) match
+          case S(cls: ClassSymbol) =>
+            cls.tree.allSymbols.get(idp.name) match
+            case S(fld: MemberSymbol) => S(fld)
+            case _ =>
+              raise(ErrorReport(msg"Class '${cls.nme}' does not contain member '${idp.name}'." -> idp.toLoc :: Nil))
+              N
           case _ =>
-            raise(ErrorReport(msg"Class '${cls.nme}' does not contain member '${idp.name}'." -> idp.toLoc :: Nil))
+            raise(ErrorReport(msg"Identifier `${idn.name}` does not name a known class symbol." -> idn.toLoc :: Nil))
             N
-        case _ =>
-          raise(ErrorReport(msg"Identifier `${idn.name}` does not name a known class symbol." -> idn.toLoc :: Nil))
-          N
-      Term.SelProj(subterm(pre), c, idp)(f, FlowSymbol.selProj(idp.name), N, S(summon))
+        Term.SelProj(subterm(pre), c, idp)(f, FlowSymbol.selProj(idp.name), N, S(summon))
     case InfixApp(lhs, op @ Keywrd(Keyword.`|`), rhs) =>
       Term.CompType(subterm(lhs, Tpe), subterm(rhs, Tpe), true)//.withLocOf(tree)
     case InfixApp(lhs, op @ Keywrd(Keyword.`&`), rhs) =>
@@ -1577,7 +1585,7 @@ extends Importer:
       elaborateSelection(sel)
     case MemberProj(ct, nme) =>
       val c = subterm(ct, Clss)
-      val f = c.symbol.flatMap(_.asCls) match
+      val f = if newResolution then N else c.symbol.flatMap(_.asCls) match
         case S(cls: ClassSymbol) =>
           cls.tree.allSymbols.get(nme.name) match
           case S(fld: MemberSymbol) => S(fld)
@@ -1601,7 +1609,10 @@ extends Importer:
       )
       val rs = FlowSymbol.app()
       Term.Lam(ps,
-        app(Term.SelProj(self.ref(), c, nme)(f, FlowSymbol.selProj(nme.name), N, S(summon)), args.ref())(
+        app(
+          if newResolution then elaborateProjection(self.ref(), c, nme)
+          else Term.SelProj(self.ref(), c, nme)(f, FlowSymbol.selProj(nme.name), N, S(summon)),
+          args.ref())(
           App(nme, Tup(Nil)) // FIXME
           , N, rs)
       )

@@ -162,7 +162,7 @@ callid1(Predef)
 //│ | listen: trm = x⁰
 //│ | appShape isSaturated? true; head? (DefnShape(term definition 'callid1'),List(ExitMark(term:callid1,Some(callid1),NoMarks)))
 //│ | lhs false List(((p⁰),List(↗⟨term:callid1²⟩%⟨callid1¹⟩ϵ)))
-//│ | appShape: td.body = Some(App(NewSel(SimpleRef(p),Ident(id)),Tup(List(Fld(‹›,Lit(IntLit(1)),None)))))
+//│ | appShape: td.body = Some(App(NewSel(SimpleRef(p),Ident(id),None),Tup(List(Fld(‹›,Lit(IntLit(1)),None)))))
 //│ | listenTerm: trm = p⁰.id(1)
 //│ | listen: trm = p⁰.id(1)
 //│ ~> { fun member:callid1(p⁰) = p⁰.id(1); member:callid1⁰(member:Predef⁰) }

@@ -13,16 +13,27 @@ a.get() + A(2).get()
 //│ = 3
 
 
-:fixme
+:expect 1
 class A(val x) with
   fun get() = x
 let a = A(1)
 a.A#get()
-//│ ╔══[COMPILATION ERROR] Identifier `A` does not name a known class symbol.
-//│ ║  l.20: 	a.A#get()
-//│ ╙──      	 ^^
-//│ ╔══[COMPILATION ERROR] WatBuilder::result for field selection without a resolved symbol is not implemented (field `get`). Use `_.[_]` for index-based accesses.
-//│ ║  l.20: 	a.A#get()
-//│ ╙──      	    ^^^
+//│ Wasm result:
+//│ = 1
 
 
+:expect 4
+class B(val x) { fun get() = x }
+let b = B(1)
+b.B#get() + B(2).B#get() + b.get()
+//│ Wasm result:
+//│ = 4
+
+// Resolution succeeds; WASM does not yet support the generated anonymous function.
+:fixme
+:expect 6
+class Add(val x) { fun add(y) = x + y }
+val add = Add::add
+add(Add(2), 4)
+//│ ═══[COMPILATION ERROR] WatBuilder::returningTerm for FunDefn(...) where `!sym.nameIsMeaningful` not implemented yet
+//│ ═══[COMPILATION ERROR] Expected static function reference in Call(...) expression

@@ -1,0 +1,42 @@
+:.
+
+// Call-site shape correlation is incomplete even without member projections.
+:fixme
+:expect 40
+class A { fun get() = 17 }
+class B { fun get() = 23 }
+fun identity(value) = value
+fun forwarded(value) = identity(value)
+forwarded(new A).get() + forwarded(new B).get()
+//│ ╔══[COMPILATION ERROR] This selection of member 'get' is ambiguous, as it has multiple resolved targets
+//│ ║  l.10: 	forwarded(new A).get() + forwarded(new B).get()
+//│ ║        	^^^^^^^^^^^^^^^^^^^^
+//│ ╟── target: function 'get' in class 'B'
+//│ ║  l.7: 	class B { fun get() = 23 }
+//│ ║       	              ^^^
+//│ ╟── target: function 'get' in class 'A'
+//│ ║  l.6: 	class A { fun get() = 17 }
+//│ ╙──     	              ^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ ═══[RUNTIME ERROR] Expected: '40', got: 'undefined'
+
+// Projected functions expose the same limitation after argument forwarding.
+:fixme
+:expect 40
+class Id { fun apply(value) = value }
+let id = new Id
+val apply = Id::apply
+apply(id, new A).get() + apply(id, new B).get()
+//│ ╔══[COMPILATION ERROR] This selection of member 'get' is ambiguous, as it has multiple resolved targets
+//│ ║  l.29: 	apply(id, new A).get() + apply(id, new B).get()
+//│ ║        	^^^^^^^^^^^^^^^^^^^^
+//│ ╟── target: function 'get' in class 'B'
+//│ ║  l.7: 	class B { fun get() = 23 }
+//│ ║       	              ^^^
+//│ ╟── target: function 'get' in class 'A'
+//│ ║  l.6: 	class A { fun get() = 17 }
+//│ ╙──     	              ^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ ═══[RUNTIME ERROR] Expected: '40', got: 'undefined'
+//│ apply = fun
+//│ id = Id

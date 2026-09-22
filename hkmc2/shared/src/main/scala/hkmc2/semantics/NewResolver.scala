@@ -55,9 +55,9 @@ class NewResolver:
   def resolError(src: Term | Pattern, msgs: Ls[(Message, Opt[Loc])]): Unit = raise:
     ErrorReport(msg"Resolution error in ${src.describe}" -> src.toLoc ::msgs, source = Diagnostic.Source.Compilation)
   
-  def zipArgs(mss: Ls[Marks], ps: Ls[Param], r: Opt[Param], args: Ls[Elem], src: Term, funSh: TermShape): Unit =
+  def zipArgs(mss: Ls[Marks], ps: Ls[Param], r: Opt[Param], args: Ls[Elem], src: Term, funSh: TermShape, argumentMarks: Ls[Marks]): Unit =
     (ps, args) match
-    case (Nil, Nil) => ()
+    case (Nil, Nil) if r.isEmpty => ()
     // case (Nil, Spd(k, t) :: args) =>
     //   zip(Nil, r, args)
     case (Nil, args) =>
@@ -68,8 +68,10 @@ class NewResolver:
             "argument".pluralized(ps.length)}, but got ${args.length}" -> funSh.toLoc :: Nil)
       case S(p) =>
         val packaged = new Tup(args)(Tree.DummyTup).withLoc(Loc.mk(args.iterator.flatMap(_.toLoc)))
-        val sh = IntroShape(packaged)
-        p.sym.shapeListeners.foreach(_(sh))
+        IntroShape(packaged).exit(argumentMarks).enter(mss) match
+          case NoShape => ()
+          case sh: TermShape =>
+            if isOwnedSym(p.sym) && p.sym.shapes.add(sh) then p.sym.shapeListeners.foreach(_(sh))
     case (p :: ps, Fld(fls, trm, asc) :: args) =>
     // case ((p, mss) :: ps, Fld(fls, trm, asc) :: args) =>
       listenTerm(trm): sh0 =>
@@ -77,14 +79,14 @@ class NewResolver:
         // log(s"zipArg: p = ${p.showDbg}, trm = ${trm.showDbg}, sh = ${sh.shwDbg}")
         // if isOwnedSym(p.sym) && p.sym.shapes.add(sh) then
         //   p.sym.shapeListeners.foreach(listener => listener(sh))
-        sh0.enter(mss) match
+        sh0.exit(argumentMarks).enter(mss) match
         case NoShape =>
         case sh: TermShape =>
           log(s"zipArg: p = ${p.showDbg}, trm = ${trm.showDbg}, sh = ${sh.shwDbg} ${isOwnedSym(p.sym)}, ${p.sym.shapes.contains(sh)}")
           if isOwnedSym(p.sym) && p.sym.shapes.add(sh) then
             // log(s"!!!! ${p.sym.shapeListeners}")
             p.sym.shapeListeners.foreach(listener => listener(sh))
-      zipArgs(mss, ps, r, args, src, funSh)
+      zipArgs(mss, ps, r, args, src, funSh, argumentMarks)
     case _ =>
       resolError(src,
         msg"${funSh.describe.capitalize} expected ${ps.length} ${
@@ -215,8 +217,15 @@ class NewResolver:
       args match
       case args: Tup =>
         log(s"Zipping ${ps} (${mss.map(_.showDbg)}) with ${args.fields}")
-        zipArgs(mss, ps.params, ps.restParam, args.fields, res, lhs)
-      case _ => ???
+        zipArgs(mss, ps.params, ps.restParam, args.fields, res, lhs, Nil)
+      case _ =>
+        // Member projections forward their rest-argument tuple. Its shape can
+        // arrive after the method, and carries the caller's capture marks.
+        listenTerm(args):
+          case Marked(sh: IntroShape, marks) => sh.trm match
+            case tuple: Tup => zipArgs(mss, ps.params, ps.restParam, tuple.fields, res, lhs, marks :: Nil)
+            case _ => resolError(res, msg"Expected an argument tuple." -> args.toLoc :: Nil)
+          case _ => resolError(res, msg"Expected an argument tuple." -> args.toLoc :: Nil)
     log(s"appShape isSaturated? ${sh.isSaturated}; head? ${sh.applicationHead}")
     def register = if res.shapes.add(sh) then
       res.shapeListeners.foreach(listener => listener(sh))
@@ -283,67 +292,93 @@ class NewResolver:
           if !ref.resolvedMembers.contains(candidate) then ref.resolvedMembers ::= candidate
           publishMember(ref, member, ref.resSym, marks)
 
+  /** Inspect an overload set only once its definitions have all been published. */
+  private def completedClass(shape: SymShape)(selected: ClassDef => Unit, absent: () => Unit): Unit =
+    shape.sym.onComplete: () =>
+      shape.sym.asCls match
+        case S(cls) => selected(cls.defn.get)
+        case N => absent()
+
+  /** Class interpretations wait for completed overload sets, independently of term
+    * companions. Aliases can supply constructor shapes; applied instances cannot.
+    * Capture marks are retained for subsequent instance-member lookup. */
+  private def listenClass(trm: Term)(selected: (ClassDef, Ls[Marks]) => Unit, reject: Shape => Unit): Unit =
+    def select(cls: ClassDef, marks: Ls[Marks]): Unit =
+      trm.withoutCaptures match
+        case ref: NewResolvable =>
+          if !ref.resolvedTargets.contains(cls.sym) then ref.resolvedTargets ::= cls.sym
+        case _ => ()
+      selected(cls, marks)
+    def value(sh: TermShape): Unit = sh match
+      case Marked(ds: DefnShape, marks) => ds.defn match
+        case cls: ClassDef => select(cls, marks :: Nil)
+        case td: TermDefinition => td.tsym match
+          case ctor: ClassCtorSymbol => select(ctor.associatedCls.defn.get, marks :: Nil)
+          case _ => reject(sh)
+        case _ => reject(sh)
+      case _ => reject(sh)
+    trm match
+      case Capture(base, thru) =>
+        listenClass(base)((cls, marks) => select(cls, marks ::: EntryMark(thru, N, NoMarks) :: Nil), reject)
+      case _ => listen(trm):
+        case sh: SymShape =>
+          completedClass(sh)(cls => select(cls, sh.markss),
+            () => fromBMS(sh.sym, sh.resSym, sh.markss, value, trm, _ => ()))
+        case sh: TermShape => value(sh)
+
   def newSel(sel: NewSel): Unit =
     log(s"newSel? sel = ${sel.showDbg}")
-    listenTerm(sel.prefix): shape =>
-      log(s"newSel: sel = ${sel.showDbg}, shape = ${shape.shwDbg}")
-      shape.getMember(sel.id.name) match
-        case S((bms, mss)) =>
-          log(s"newSel member: bms = ${bms.showDbg}, mss = ${mss.map(_.showDbg)}")
-          sel.resolvedMembers ::= bms
-          publishMember(sel, bms, sel.resSym, mss)
-          // symShapes.getOrElseUpdate((bms, sel.resSym), SymShape(bms, sel.resSym))
-          //   .exit(mss) match
-          //     case NoShape =>
-          //     case sh: TermShape =>
-          //       if sel.shapes.add(sh) then
-          //         sel.shapeListeners.foreach(listener => listener(sh))
-        case N =>
+    def member(info: Opt[MemberInfo], description: Message, loc: Opt[Loc]): Unit = info match
+      case S((bms, marks)) =>
+        log(s"newSel member: bms = ${bms.showDbg}, mss = ${marks.map(_.showDbg)}")
+        if !sel.resolvedMembers.contains(bms) then sel.resolvedMembers ::= bms
+        publishMember(sel, bms, sel.resSym, marks)
+      case N =>
+        sel.isErroneous = true
+        resolError(sel, msg"$description does not contain member '${sel.id.name}'" -> loc :: Nil)
+    sel.cls match
+      case N => listenTerm(sel.prefix): shape =>
+        log(s"newSel: sel = ${sel.showDbg}, shape = ${shape.shwDbg}")
+        member(shape.getMember(sel.id.name), msg"${shape.describe.capitalize}", shape.toLoc)
+      case S(cls) =>
+        listenClass(cls)((cd, marks) =>
+          val candidate = cd.sym -> marks
+          if !sel.resolvedClasses.contains(candidate) then sel.resolvedClasses ::= candidate
+          listenExt(cd.ext, ext =>
+            member(DefnShape(cd, ext).getInstanceMember(sel.id.name).map(_.mapSecond(_ ::: marks)),
+              msg"Class '${cd.sym.nme}'", cd.toLoc))
+        , sh =>
           sel.isErroneous = true
-          resolError(sel, msg"${shape.describe.capitalize} does not contain member '${sel.id.name}'" -> shape.toLoc :: Nil)
+          resolError(sel, msg"${sh.describe.capitalize} cannot be used as a projection class." -> cls.toLoc :: Nil)
+        )
   
   def resolveNew(nw: Term.New): Unit =
     log(s"resolveNew? res = ${nw.showDbg}")
-    // listenTerm(nw.cls, shape => newShape(shape, nw.args, nw))
     nw.cls.withoutCaptures match
-    case trm: NewResolvable =>
-      listen(trm): shape =>
-        log(s"resolveNew: res = ${nw.showDbg}, cls = ${trm.showDbg}, shape = ${shape.shwDbg}")
-        def reject =
+      case trm: NewResolvable => listen(trm): shape =>
+        def reject(): Unit =
           nw.isErroneous = true
-          resolError(nw,
-            msg"${shape.describe.capitalize} cannot be instantiated with keyword 'new'." -> trm.toLoc :: Nil)
+          resolError(nw, msg"${shape.describe.capitalize} cannot be instantiated with keyword 'new'." -> trm.toLoc :: Nil)
         shape match
-        case ss: SymShape =>
-          // TODO handle ss.resSym
-          val bms = ss.sym
-          bms.onComplete: () =>
-            bms.asCls match
-            case S(cls) =>
-              trm.resolvedTargets ::= cls
-              val cd = cls.defn.get
-              listenExt(cd.ext, extsh => {
-                val dsh = DefnShape(cd, extsh)
-                val sh = newShapes.getOrElseUpdate((cls, ss.markss, nw.resSym), {
-                  dsh.unappliedParams.lazyZip(nw.args).foreach:
-                    case ((ps, mss), args) =>
-                      args match
-                      case args: Tup =>
-                        zipArgs(mss, ps.params, ps.restParam, args.fields, nw, dsh)
+          case ss: SymShape => completedClass(ss)(cd =>
+            if !trm.resolvedTargets.contains(cd.sym) then trm.resolvedTargets ::= cd.sym
+            listenExt(cd.ext, extsh =>
+              val dsh = DefnShape(cd, extsh)
+              val sh = newShapes.getOrElseUpdate((cd.sym, ss.markss, nw.resSym), {
+                dsh.unappliedParams.lazyZip(nw.args).foreach:
+                  case ((ps, mss), args) =>
+                    args match
+                      case args: Tup => zipArgs(mss, ps.params, ps.restParam, args.fields, nw, dsh, Nil)
                       case _ => ???
-                  NewShape(dsh, cls, ss.markss, nw.args, nw)
-                })
-                if nw.shapes.add(sh) then
-                  nw.shapeListeners.foreach(listener => listener(sh))
+                NewShape(dsh, cd.sym, ss.markss, nw.args, nw)
               })
-            case N =>
-              reject
-        case _ =>
-          reject
-    case _ =>
-      nw.isErroneous = true
-      resolError(nw,
-        msg"Invalid class expression: ${nw.cls.describe}" -> nw.cls.toLoc :: Nil)
+              if nw.shapes.add(sh) then nw.shapeListeners.foreach(_(sh))
+            )
+          , reject)
+          case _ => reject()
+      case _ =>
+        nw.isErroneous = true
+        resolError(nw, msg"Invalid class expression: ${nw.cls.describe}" -> nw.cls.toLoc :: Nil)
   
   def defineVar(sym: LocalSymbol | TermSymbol, rhs: Term): DefineVar =
     if newResolution then sym match

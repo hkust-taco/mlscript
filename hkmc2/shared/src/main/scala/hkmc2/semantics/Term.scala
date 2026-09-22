@@ -361,6 +361,12 @@ sealed trait NewRefImpl extends AnyRefImpl:
 sealed trait NewSelImpl extends NewResolvableImpl:
   self: Term.NewSel =>
   var resolvedMembers: Ls[BlockMemberSymbol] = Nil // * filled during resolution
+  // Class identity and captures must survive even when candidates share an inherited member.
+  var resolvedClasses: Ls[(ClassSymbol, Ls[Marks])] = Nil
+  def hasAmbiguousClass: Bool = resolvedClasses.sizeCompare(1) > 0 || self.cls.exists:
+    _.withoutCaptures match
+      case ref: Term.UnresolvedRef => ref.resolvedMembers.distinct.sizeCompare(1) > 0
+      case _ => false
 
 sealed trait UnresolvedRefImpl extends NewResolvableImpl:
   self: Term.UnresolvedRef =>
@@ -379,7 +385,8 @@ enum Term extends Statement, ShapePublisher:
   case SimpleRef(sym: codegen.SimpleSymbol)(val tree: Tree.Ident) extends Term, NewRefImpl
   case SelfRef(sym: InnerSymbol)(val tree: Tree.Ident) extends Term, NewRefImpl
   case MemberRef(sym: MemberSymbol)(val tree: Tree.Ident, val resSym: FlowSymbol) extends Term, NewResolvableImpl, NewRefImpl
-  case NewSel(prefix: Term, id: Tree.Ident)(val resSym: FlowSymbol) extends Term, NewSelImpl, ShapeHost
+  /** An optional class fixes the lookup scope for an explicit member projection. */
+  case NewSel(prefix: Term, id: Tree.Ident, cls: Opt[Term])(val resSym: FlowSymbol) extends Term, NewSelImpl, ShapeHost
   case UnresolvedRef(prefixes: Ls[Term], id: Tree.Ident)(val resSym: FlowSymbol) extends Term, UnresolvedRefImpl, ShapeHost
   case Capture(base: Term, thru: AnyDefinitionSymbol) extends Term
   // --- LEGACY ---
@@ -508,6 +515,7 @@ enum Term extends Statement, ShapePublisher:
     case SimpleRef(sym) => S(sym)
     case Capture(base, _) => base.resolvedSym
     case ref: UnresolvedRef if ref.resolvedMembers.distinct.sizeCompare(1) =/= 0 => N
+    case sel: NewSel if sel.hasAmbiguousClass => N
     case ref: NewResolvable =>
       if ref.isErroneous then N else ref.resolvedTargets.distinct match
         case sym :: Nil => S(sym)
@@ -746,7 +754,7 @@ sealed trait Statement extends AutoLocated, ProductWithExtraInfo, Describable:
       case UnresolvedRef(_, _) => "wildcard-open reference"
       case App(lhs, rhs) => "application"
       case TyApp(lhs, targs) => "type application"
-      case NewSel(pre, nme) => "selection"
+      case NewSel(pre, nme, _) => "selection"
       case Sel(pre, nme) => "selection"
       case SynthSel(pre, nme) => "selection"
       case DynSel(o, f, _) => "dynamic selection"
@@ -821,7 +829,7 @@ sealed trait Statement extends AutoLocated, ProductWithExtraInfo, Describable:
     case TyApp(pre, tarsg) => pre +: tarsg.toVector
     case Sel(pre, _) => Vector.single(pre)
     case SynthSel(pre, _) => Vector.single(pre)
-    case NewSel(pre, _) => Vector.single(pre)
+    case NewSel(pre, _, cls) => Vector.single(pre) ++ cls.toVector
     case UnresolvedRef(prefixes, _) => prefixes.toVector
     case DynSel(o, f, _) => Vector.double(o, f)
     case Tup(fields) => fields.flatMap(_.subTerms).toVector
@@ -925,14 +933,15 @@ sealed trait Statement extends AutoLocated, ProductWithExtraInfo, Describable:
         case _ => r.sym.showName
       case sel: NewSel =>
         val str = sel.id.name
+        val pre = sel.cls.fold(doc"${sel.prefix.show}.")(cls => doc"${sel.prefix.show}.${cls.show}#")
         if summon[ShowCfg].showFlowSymbols
-        then doc"${sel.prefix.show}.${
+        then doc"$pre${
             sel.resolvedMembers match
             case Nil => doc"${str}ˀˀˀ"
             case t :: Nil => t.showName
             case ts => doc"$str‹" :: ts.map(_.showName).mkDocument(", ") :: doc"›"
           }"
-        else doc"${sel.prefix.show}.$str"
+        else doc"$pre$str"
       case sel: Sel =>
         if summon[ShowCfg].showFlowSymbols
         then doc"${sel.prefix.show}.${sel.sym.fold(doc"${
@@ -1058,7 +1067,7 @@ sealed trait Statement extends AutoLocated, ProductWithExtraInfo, Describable:
     case WildcardTy(in, out) => s"in ${in.map(_.toString).getOrElse("⊥")} out ${out.map(_.toString).getOrElse("⊤")}"
     case Sel(pre, nme) => s"${pre.showDbg}.${nme.name}"
     case SynthSel(pre, nme) => s"(${pre.showDbg}.)${nme.name}"
-    case NewSel(pre, nme) => s"${pre.showDbg}.${nme.name}"
+    case NewSel(pre, nme, cls) => s"${pre.showDbg}.${cls.fold("")(c => s"${c.showDbg}#")}${nme.name}"
     case UnresolvedRef(_, id) => s"${id.name}‹open›"
     case DynSel(pre, fld, _) => s"${pre.showDbg}[${fld.showDbg}]"
     case IfLike(kw, _, split) => s"${kw.name} { ${split.showDbg} }"

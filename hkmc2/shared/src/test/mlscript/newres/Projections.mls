@@ -1,0 +1,172 @@
+:.
+
+// Both projection forms wait for forward class definitions.
+:expect 6
+fun read(a) = a.Later#get()
+val project = Later::get
+class Later(val x) { fun get() = x }
+let a = Later(3)
+read(a) + project(a)
+//│ = 6
+//│ a = Later(3)
+//│ project = fun
+
+// The class interpretation is independent of its term overload.
+:expect 7
+class Overloaded { fun get() = 7 }
+val Overloaded = 99
+(new Overloaded).Overloaded#get()
+//│ = 7
+//│ Overloaded = 99
+
+// Class aliases retain constructor shapes.
+:expect 8
+class Original(val x) { fun get() = x }
+val Alias = Original
+let a = Original(8)
+a.Alias#get()
+//│ = 8
+//│ Alias = fun Original { class: class Original }
+//│ a = Original(8)
+
+// Inherited lookup retains the defining member.
+:expect 9
+class Parent { fun get() = 9 }
+class Child extends Parent {}
+(new Child).Child#get()
+//│ = 9
+
+// Fields and assignments share the same resolution path.
+:expect 12
+class Cell { mut val value = 10 }
+let cell = new Cell
+set cell.Cell#value = 12
+cell.Cell#value
+//│ = 12
+//│ cell = Cell
+
+// Missing members and non-class interpretations are resolution errors.
+:e
+fun missing(a) = a.Later#missing()
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.50: 	fun missing(a) = a.Later#missing()
+//│ ║        	                 ^^^^^^^^^^^^^^^
+//│ ╙── Class 'Later' does not contain member 'missing'
+
+:e
+val NotClass = 1
+fun invalid(a) = a.NotClass#get()
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.58: 	fun invalid(a) = a.NotClass#get()
+//│ ║        	                 ^^^^^^^^^^^^^^
+//│ ╙── Integer literal cannot be used as a projection class.
+//│ NotClass = 1
+
+// Different classes can expose the very same inherited member.
+:e
+module Left { class Item extends Parent {} }
+module Right { class Item extends Parent {} }
+open Left
+open Right
+fun ambiguous(a) = a.Item#get()
+//│ ╔══[COMPILATION ERROR] The projection class is ambiguous
+//│ ║  l.71: 	fun ambiguous(a) = a.Item#get()
+//│ ║        	                    ^^^^^
+//│ ╟── class: 'Item'
+//│ ║  l.68: 	module Right { class Item extends Parent {} }
+//│ ║        	                     ^^^^
+//│ ╟── class: 'Item'
+//│ ║  l.67: 	module Left { class Item extends Parent {} }
+//│ ╙──      	                    ^^^^
+
+// Forwarded arguments carry shapes through the projected method's result.
+:expect 17
+class Identity { fun apply(x) = x }
+class Answer { fun get() = 17 }
+let identity = new Identity
+val apply = Identity::apply
+apply(identity, new Answer).get()
+//│ = 17
+//│ apply = fun
+//│ identity = Identity
+
+// The receiver of a projection is evaluated once, including writes.
+:expect 1
+module Counter { mut val count = 0 }
+fun receiver() = {
+  set Counter.count = Counter.count + 1
+  cell
+}
+set receiver().Cell#value = 13
+Counter.count
+//│ = 1
+
+// Captured class overloads keep the class interpretation.
+:expect 21
+fun captured() = {
+  class Local { fun get() = 21 }
+  val Local = 0
+  fun read(value) = value.Local#get()
+  read(new Local)
+}
+captured()
+//│ = 21
+
+// Two instances exposing the same class symbol are still ambiguous.
+:e
+class Library { class Entry { fun get() = 1 } }
+let first = new Library
+let second = new Library
+open first
+open second
+fun sameClass(value) = value.Entry#get()
+//│ ╔══[COMPILATION ERROR] The projection class is ambiguous
+//│ ║  l.122: 	fun sameClass(value) = value.Entry#get()
+//│ ║         	                            ^^^^^^
+//│ ╟── class: 'Entry'
+//│ ║  l.117: 	class Library { class Entry { fun get() = 1 } }
+//│ ╙──       	                      ^^^^^
+//│ first = Library { Entry: class Entry }
+//│ second = Library { Entry: class Entry }
+
+:e
+fun missingClass(value) = value.Unknown#get()
+//│ ╔══[COMPILATION ERROR] Cannot resolve the projection class
+//│ ║  l.133: 	fun missingClass(value) = value.Unknown#get()
+//│ ╙──       	                               ^^^^^^^^
+
+:e
+val instance = new Parent
+fun instanceAsClass(value) = value.instance#get()
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.140: 	fun instanceAsClass(value) = value.instance#get()
+//│ ║         	                             ^^^^^^^^^^^^^^^^^^
+//│ ╙── Instance of class 'Parent' cannot be used as a projection class.
+//│ instance = Parent
+
+// A forward wildcard source resolves through its eventual module shape.
+:expect 31
+fun forward(value) = {
+  open Delayed
+  value.Target#get()
+}
+module Delayed { class Target { fun get() = 31 } }
+forward(new Delayed.Target)
+//│ = 31
+
+// Repeating the same wildcard source does not introduce ambiguity.
+:expect 31
+fun repeated(value) = {
+  open Delayed
+  open Delayed
+  value.Target#get()
+}
+repeated(new Delayed.Target)
+//│ = 31
+
+// Member projections also accept qualified class names.
+:expect 31
+val qualified = Delayed.Target::get
+qualified(new Delayed.Target)
+//│ = 31
+//│ qualified = fun

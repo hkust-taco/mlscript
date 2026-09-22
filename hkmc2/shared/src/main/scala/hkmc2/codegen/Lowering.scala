@@ -669,6 +669,25 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
           candidates.map((prefix, member) => msg"candidate from ${prefix.showDbg}: ${member.describe}" -> member.toLoc),
           source = Diagnostic.Source.Compilation)
 
+  /** A projection must identify its class as well as its member: different
+    * classes can inherit the same definition, and wildcard receivers can differ. */
+  private def checkProjection(sel: NewSel): Bool = sel.cls match
+    case N => true
+    case S(cls) =>
+      if sel.isErroneous then false
+      else if sel.hasAmbiguousClass then
+        raise:
+          ErrorReport(msg"The projection class is ambiguous" -> cls.toLoc ::
+            sel.resolvedClasses.map((sym, _) => msg"class: '${sym.nme}'" -> sym.toLoc),
+            source = Diagnostic.Source.Compilation)
+        false
+      else if sel.resolvedClasses.isEmpty then
+        raise:
+          ErrorReport(msg"Cannot resolve the projection class" -> cls.toLoc :: Nil,
+            source = Diagnostic.Source.Compilation)
+        false
+      else true
+
   def selSymbol(sel: AnySelTerm): Opt[DefinitionSymbol[?]] =
     sel.validResolvedTargets match
     // sel.resolvedTargets match
@@ -1146,20 +1165,21 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
             case _ => fail:
               ErrorReport(msg"Assignment requires a term member" -> ref.toLoc :: Nil,
                 source = Diagnostic.Source.Compilation)
-      case sel @ NewSel(prefix, nme) =>
-        // Term resolution selects the definition; lowering only checks that
-        // the result is an unambiguous term member and emits the field write.
-        val sym = sel.resolvedTargets.distinct match
-          case sym :: Nil => sym.asTrm
-          case _ => N
-        sym match
-        case S(sym) =>
-          subTerm(prefix): p =>
-            subTerm_nonTail(rhs): r =>
-              AssignField(p, definitionIdent(nme, sym), castTo(r, sym.erasedType, sel.toLoc), k(unit))(S(sym))
-        case N => fail:
-          ErrorReport(msg"Assignment requires an unambiguous term member" -> sel.toLoc :: Nil,
-            source = Diagnostic.Source.Compilation)
+      case sel @ NewSel(prefix, nme, _) =>
+        if !checkProjection(sel) then compError else
+          // Term resolution selects the definition; lowering only checks that
+          // the result is an unambiguous term member and emits the field write.
+          val sym = sel.resolvedTargets.distinct match
+            case sym :: Nil => sym.asTrm
+            case _ => N
+          sym match
+          case S(sym) =>
+            subTerm(prefix): p =>
+              subTerm_nonTail(rhs): r =>
+                AssignField(p, definitionIdent(nme, sym), castTo(r, sym.erasedType, sel.toLoc), k(unit))(S(sym))
+          case N => fail:
+            ErrorReport(msg"Assignment requires an unambiguous term member" -> sel.toLoc :: Nil,
+              source = Diagnostic.Source.Compilation)
       case sel @ Sel(prefix, nme) =>
         subTerm(prefix): p =>
           subTerm_nonTail(rhs): r =>
@@ -1219,8 +1239,8 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
 
     case whltrm: st.SynthWhile => ucs.Normalization(this)(whltrm)(k)
       
-    case sel @ NewSel(prefix, id) =>
-      if sel.isErroneous then compError else sel.resolvedTargets.distinct match
+    case sel @ NewSel(prefix, id, _) =>
+      if !checkProjection(sel) || sel.isErroneous then compError else sel.resolvedTargets.distinct match
         case Nil => fail:
           ErrorReport(msg"This selection of member '${id.name}' has no resolved target" -> sel.toLoc :: Nil,
             source = Diagnostic.Source.Compilation)
