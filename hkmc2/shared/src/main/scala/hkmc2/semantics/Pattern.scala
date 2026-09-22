@@ -153,13 +153,6 @@ object Pattern:
     var isErroneous: Bool = false
     // val resSym: FlowSymbol = FlowSymbol.app
     var resolvedTargets: Ls[DefinitionSymbol[?] | VarSymbol] = Nil
-    
-    /** Get the resolved symbol of the target term. */
-    def symbol: Opt[Symbol] = self.target.resolvedSym
-    
-    /** Expect the `symbol` to be set. */
-    def symbol_! : Symbol = symbol.getOrElse:
-      lastWords(s"target term `${self.target}` does not resolve to a symbol")
   
   /** Add a mutable field to the `Alias` pattern to store the symbol for the
    *  variable. Note that NOT every `Alias` pattern has a symbol. */
