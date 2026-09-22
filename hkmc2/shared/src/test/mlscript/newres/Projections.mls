@@ -59,7 +59,9 @@ fun invalid(a) = a.NotClass#get()
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
 //│ ║  l.58: 	fun invalid(a) = a.NotClass#get()
 //│ ║        	                 ^^^^^^^^^^^^^^
-//│ ╙── Integer literal cannot be used as a projection class.
+//│ ╟── Integer literal cannot be used as a projection class.
+//│ ║  l.57: 	val NotClass = 1
+//│ ╙──      	               ^
 //│ NotClass = 1
 
 // Different classes can expose the very same inherited member.
@@ -70,13 +72,13 @@ open Left
 open Right
 fun ambiguous(a) = a.Item#get()
 //│ ╔══[COMPILATION ERROR] The projection class is ambiguous
-//│ ║  l.71: 	fun ambiguous(a) = a.Item#get()
+//│ ║  l.73: 	fun ambiguous(a) = a.Item#get()
 //│ ║        	                    ^^^^^
 //│ ╟── class: 'Item'
-//│ ║  l.68: 	module Right { class Item extends Parent {} }
+//│ ║  l.70: 	module Right { class Item extends Parent {} }
 //│ ║        	                     ^^^^
 //│ ╟── class: 'Item'
-//│ ║  l.67: 	module Left { class Item extends Parent {} }
+//│ ║  l.69: 	module Left { class Item extends Parent {} }
 //│ ╙──      	                    ^^^^
 
 // Forwarded arguments carry shapes through the projected method's result.
@@ -121,10 +123,10 @@ open first
 open second
 fun sameClass(value) = value.Entry#get()
 //│ ╔══[COMPILATION ERROR] The projection class is ambiguous
-//│ ║  l.122: 	fun sameClass(value) = value.Entry#get()
+//│ ║  l.124: 	fun sameClass(value) = value.Entry#get()
 //│ ║         	                            ^^^^^^
 //│ ╟── class: 'Entry'
-//│ ║  l.117: 	class Library { class Entry { fun get() = 1 } }
+//│ ║  l.119: 	class Library { class Entry { fun get() = 1 } }
 //│ ╙──       	                      ^^^^^
 //│ first = Library { Entry: class Entry }
 //│ second = Library { Entry: class Entry }
@@ -132,16 +134,18 @@ fun sameClass(value) = value.Entry#get()
 :e
 fun missingClass(value) = value.Unknown#get()
 //│ ╔══[COMPILATION ERROR] Cannot resolve the projection class
-//│ ║  l.133: 	fun missingClass(value) = value.Unknown#get()
+//│ ║  l.135: 	fun missingClass(value) = value.Unknown#get()
 //│ ╙──       	                               ^^^^^^^^
 
 :e
 val instance = new Parent
 fun instanceAsClass(value) = value.instance#get()
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.140: 	fun instanceAsClass(value) = value.instance#get()
+//│ ║  l.142: 	fun instanceAsClass(value) = value.instance#get()
 //│ ║         	                             ^^^^^^^^^^^^^^^^^^
-//│ ╙── Instance of class 'Parent' cannot be used as a projection class.
+//│ ╟── Instance of class 'Parent' cannot be used as a projection class.
+//│ ║  l.141: 	val instance = new Parent
+//│ ╙──       	               ^^^^^^^^^^
 //│ instance = Parent
 
 // A forward wildcard source resolves through its eventual module shape.
@@ -170,3 +174,17 @@ val qualified = Delayed.Target::get
 qualified(new Delayed.Target)
 //│ = 31
 //│ qualified = fun
+
+// Deferred aliases must retain the rejected value's origin, not just its use site.
+:e
+fun invalidAlias(value) = value.AliasToNumber#get()
+val SourceNumber = 123
+val AliasToNumber = SourceNumber
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.180: 	fun invalidAlias(value) = value.AliasToNumber#get()
+//│ ║         	                          ^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Integer literal cannot be used as a projection class.
+//│ ║  l.181: 	val SourceNumber = 123
+//│ ╙──       	                   ^^^
+//│ AliasToNumber = 123
+//│ SourceNumber = 123

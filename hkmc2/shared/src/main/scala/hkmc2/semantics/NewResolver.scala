@@ -109,7 +109,7 @@ class NewResolver:
         true
     def reject(sh: TermShape): Unit =
       res.isErroneous = true
-      resolError(res, msg"${sh.describe.capitalize} cannot be used as a constructor pattern." -> N :: Nil)
+      resolError(res, msg"${sh.describe.capitalize} cannot be used as a constructor pattern." -> sh.toLoc :: Nil)
     def classPattern(cls: ClassLikeDef): Unit = if select(cls.sym) then
       val assoc = res.arguments match
         case N => Nil
@@ -349,7 +349,7 @@ class NewResolver:
               msg"Class '${cd.sym.nme}'", cd.toLoc))
         , sh =>
           sel.isErroneous = true
-          resolError(sel, msg"${sh.describe.capitalize} cannot be used as a projection class." -> cls.toLoc :: Nil)
+          resolError(sel, msg"${sh.describe.capitalize} cannot be used as a projection class." -> sh.toLoc :: Nil)
         )
   
   def resolveNew(nw: Term.New): Unit =
@@ -358,7 +358,7 @@ class NewResolver:
       case trm: NewResolvable => listen(trm): shape =>
         def reject(): Unit =
           nw.isErroneous = true
-          resolError(nw, msg"${shape.describe.capitalize} cannot be instantiated with keyword 'new'." -> trm.toLoc :: Nil)
+          resolError(nw, msg"${shape.describe.capitalize} cannot be instantiated with keyword 'new'." -> shape.toLoc :: Nil)
         shape match
           case ss: SymShape => completedClass(ss)(cd =>
             if !trm.resolvedTargets.contains(cd.sym) then trm.resolvedTargets ::= cd.sym

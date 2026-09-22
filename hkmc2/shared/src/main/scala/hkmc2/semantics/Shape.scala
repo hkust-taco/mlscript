@@ -10,6 +10,8 @@ import scala.collection.mutable
 
 sealed trait Shape extends ShapeLike:
   def describe: Str
+  /** Origin of the value or symbol described by this shape, independently of its use site. */
+  def toLoc: Opt[Loc]
   def shwDbg(using DebugPrinter): Str = this match
     // case ds: DefnShape => s"DefnShape(${ds.defn.describe} ${ds.defn.sym.showDbg})"
     case ds: DefnShape => ds.defn.sym.showDbg
@@ -210,7 +212,6 @@ sealed trait TermShape extends Shape:
       enter(mark).enter(rest)
   
   def isSaturated: Bool = unappliedParams.isEmpty
-  def toLoc: Opt[Loc]
   
 end TermShape
 
@@ -256,6 +257,7 @@ class NewShape(val receiver: TermShape, val cls: ClassLikeSymbol, clsMarks: Ls[M
 
 class SymShape(val sym: BlockMemberSymbol, val resSym: FlowSymbol, val markss: Ls[Marks]) extends Shape:
   def describe: Str = s"${sym.describe} symbol '${sym.nme}'"
+  def toLoc: Opt[Loc] = sym.toLoc
   override def toString: String = s"SymShape($sym)"
   def exit(revMarkss: Ls[Marks])(using TL): TermShape | NoShape = ???
   def exit(marks: Marks)(using TL): TermShape | NoShape = ???

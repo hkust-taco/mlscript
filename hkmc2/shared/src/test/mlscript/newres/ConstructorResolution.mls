@@ -167,7 +167,9 @@ invalid(0)
 //│ ╔══[COMPILATION ERROR] Resolution error in constructor
 //│ ║  l.165: 	fun invalid(x) = if x is NotAPattern then 1 else 0
 //│ ║         	                         ^^^^^^^^^^^
-//│ ╙── Integer literal cannot be used as a constructor pattern.
+//│ ╟── Integer literal cannot be used as a constructor pattern.
+//│ ║  l.165: 	fun invalid(x) = if x is NotAPattern then 1 else 0
+//│ ╙──       	                                          ^
 //│ = 0
 //│ NotAPattern = 1
 
@@ -203,7 +205,7 @@ fun ambiguousNew() = {
 }
 ambiguousNew()
 //│ ╔══[COMPILATION ERROR] The class instantiated here is ambiguous
-//│ ║  l.202: 	  new Token
+//│ ║  l.204: 	  new Token
 //│ ║         	      ^^^^^
 //│ ╟── target: class 'Token'
 //│ ║  l.10: 	  class Token
