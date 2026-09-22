@@ -912,21 +912,11 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
     case t @ st.SelfRef(sym) =>
       ref(t, annots, N, inStmtPos = inStmtPos)(k)
     case t @ st.MemberRef(bms) =>
-      t.resolvedTargets.distinct match
+      if t.isErroneous then compError else t.resolvedTargets.distinct match
       case Nil =>
-        // fail:
-        //   ErrorReport(
-        //     msg"Member reference '${sym.nme}' has no resolved target" -> t.toLoc :: Nil, S(t),
-        //     source = Diagnostic.Source.Compilation)
-        bms.asTrm orElse bms.asModOrObj orElse bms.asCls match
-        case s @ S(_) =>
-          ref(t, annots, s, inStmtPos = inStmtPos)(k)
-        case N =>
-          if t.isErroneous then raise:
-            ErrorReport(
-              msg"Member reference '${bms.nme}' cannot be used as a term" -> t.toLoc :: Nil, S(t),
-              source = Diagnostic.Source.Compilation)
-          compError
+        fail:
+          ErrorReport(msg"Member reference '${bms.nme}' has no resolved target" -> t.toLoc :: Nil,
+            source = Diagnostic.Source.Compilation)
       case trgt :: Nil =>
         ref(t, annots, S(trgt), inStmtPos = inStmtPos)(k)
       case ts =>
@@ -1224,46 +1214,21 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
     case whltrm: st.SynthWhile => ucs.Normalization(this)(whltrm)(k)
       
     case sel @ NewSel(prefix, id) =>
-      if sel.isErroneous then compError else
-        // /* 
-        // TODO dedup with MemberRef
-        sel.resolvedMembers.distinct match
-        case Nil =>
-          fail:
-            // ErrorReport(
-            //   msg"Member reference '${sym.nme}' has no resolved target" -> t.toLoc :: Nil, S(t),
-            //   source = Diagnostic.Source.Compilation)
-            ErrorReport(
-              msg"This selection of member '${sel.id.name}' has no resolved target" -> sel.toLoc ::
-              Nil, S(sel), source = Diagnostic.Source.Compilation)
-        case bms :: Nil =>
-          sel.resolvedTargets.distinct match
-          case Nil =>
-            bms.asTrm orElse bms.asModOrObj orElse bms.asCls match
-            case s @ S(_) =>
-              setupSelection(prefix, id, s)(k)
-            case N =>
-              if sel.isErroneous then raise:
-                ErrorReport(
-                  msg"Member reference '${bms.nme}' cannot be used as a term" -> sel.toLoc :: Nil, S(sel),
-                  source = Diagnostic.Source.Compilation)
-              compError
-          case trgt :: Nil => setupSelection(prefix, id, S(trgt))(k)
-          case ts => ???
-        case ts =>
-          // if t.isErroneous then 
+      if sel.isErroneous then compError else sel.resolvedTargets.distinct match
+        case Nil => fail:
+          ErrorReport(msg"This selection of member '${id.name}' has no resolved target" -> sel.toLoc :: Nil,
+            source = Diagnostic.Source.Compilation)
+        case target :: Nil => setupSelection(prefix, id, S(target))(k)
+        case targets =>
           if strictResolution then fail:
             ErrorReport(
-              msg"This selection of member '${sel.id.name}' is ambiguous, as it has multiple resolved targets" -> t.toLoc ::
-                ts.map: t =>
-                  msg"target: ${t.describe} '${t.nme}'${
-                    t.asTrm.fold("")(_.owner.fold("")(o => s" in ${o.asBlkMember.get.describe} '${o.nme}'")) // TOOD other kinds of owned symbols
-                  }" -> t.toLoc
-                , S(ts.map(s => s.showDbg + " " + s.tsym.map(_.showDbg))), source = Diagnostic.Source.Compilation)
-          // compError
+              msg"This selection of member '${id.name}' is ambiguous, as it has multiple resolved targets" -> sel.toLoc ::
+              targets.map: target =>
+                val owner = target.asTrm.flatMap(_.owner).fold("")(o => s" in ${o.asBlkMember.get.describe} '${o.nme}'")
+                msg"target: ${target.describeKind} '${target.nme}'${owner}" -> target.toLoc
+              ,
+              source = Diagnostic.Source.Compilation)
           else setupSelection(prefix, id, N)(k)
-          // ???
-        // */
         
     
     case sel @ Sel(prefix, nme) =>

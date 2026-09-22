@@ -124,10 +124,10 @@ x.b
 //│ ║         	^^^
 //│ ╟── target: function 'b' in overloaded function and class 'Baz'
 //│ ║  l.7: 	class Baz(c) { fun b = c }
-//│ ║       	               ^^^^^^^^^
+//│ ║       	                   ^
 //│ ╟── target: value 'b' in object 'Bar'
 //│ ║  l.6: 	object Bar { val b = 123 }
-//│ ╙──     	             ^^^^^^^^^^^
+//│ ╙──     	                 ^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :todo

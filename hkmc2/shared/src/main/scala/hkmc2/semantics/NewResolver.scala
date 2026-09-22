@@ -46,6 +46,7 @@ class NewResolver:
   val newShapes: mutable.Map[(ClassLikeSymbol, Ls[Marks], FlowSymbol), NewShape] = mutable.Map.empty
   val introShapes: mutable.Map[IntroTerm, IntroShape] = mutable.Map.empty // TODO use symbols for faster lookup?
   val symShapes: mutable.Map[(BlockMemberSymbol, FlowSymbol, Ls[Marks]), SymShape] = mutable.Map.empty
+  private val selfShapes: mutable.Map[(InnerSymbol, Opt[TermShape]), BaseShape] = mutable.Map.empty
   val defnShapes: mutable.Map[DefinitionSymbol[?], DefnShape] = mutable.Map.empty
   
   def isOwnedSym(sym: Symbol): Bool =
@@ -539,6 +540,16 @@ class NewResolver:
       case loc: LocalSymbol =>
         loc.shapes.foreach(listener)
         loc.shapeListeners += listener
+    case SelfRef(sym) =>
+      // A receiver can be referenced before its body is complete or after its
+      // definition has already been published. The definition listener handles both.
+      def completed(defn: ClassLikeDef): Unit =
+        listenExt(defn.ext, ext =>
+          listener(selfShapes.getOrElseUpdate((sym, ext), BaseShape(defn, ext))))
+      val symbol = sym.asDefnSym
+      symbol.defn match
+        case S(defn) => completed(defn)
+        case N => symbol.defnListeners += completed
     case ref @ MemberRef(sym: TermSymbol) =>
       ???
       // listenDefn(sym, sh =>

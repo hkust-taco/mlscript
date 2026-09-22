@@ -85,11 +85,11 @@ m.id
 //│ ╟── target: function 'id' in module 'Predef'
 //│ ║  in ../../mlscript-compile/Predef.mls
 //│ ║  l.18: 	fun id(x) = x
-//│ ║        	^^^^^^^^^^^^^
+//│ ║        	    ^^
 //│ ╟── target: function 'id' in module 'Bar'
 //│ ║  in NestedModules.mls:6
 //│ ║  l.8: 	    fun id(x) = x
-//│ ╙──     	    ^^^^^^^^^^^^^
+//│ ╙──     	        ^^
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 

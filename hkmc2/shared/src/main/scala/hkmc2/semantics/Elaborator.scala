@@ -465,19 +465,11 @@ object Elaborator:
         // * Same remark as in RefElem#ref
         val prefix = base.ref(Ident(base.nme))
         val name = new Ident(nme).withLocOf(id)
-        symOpt match
-        case _ if config.language.useNewResolution && isImport =>
+        if config.language.useNewResolution then
           val res = new Term.NewSel(prefix, name)(FlowSymbol.synthSel(nme)).withLocOf(id)
           summon[NewResolver].newSel(res)
           res
-        case S(bms: BlockMemberSymbol) if config.language.useNewResolution =>
-          // Lexical lookup already identifies the member, but must preserve its
-          // overload set until its use chooses a class, term, or module.
-          val res = new Term.NewSel(prefix, name)(FlowSymbol.synthSel(nme)).withLocOf(id)
-          res.resolvedMembers = bms :: Nil
-          res.shapes += SymShape(bms, res.resSym, Nil)
-          res
-        case _ =>
+        else
           Term.SynthSel(prefix, name)(symOpt, FlowSymbol.synthSel(nme), N, S(summon))
       def symbol = symOpt
     final case class WildcardElem(nme: Str, sources: Ls[Elem]) extends Elem:

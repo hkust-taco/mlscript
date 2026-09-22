@@ -91,10 +91,10 @@ receiver and capture context; module completion must not change lexical priority
   constructor-shape cache branch. Listeners are now registered once; cached
   constructors are reused with assertions checking their definition and base.
   An existing applied-pattern test now passes without its `:todo` marker.
-- Remaining stage-4 work: the lexical `SelElem` shape shortcut and read-side
-  lowering fallbacks still exist. Bare constructor names in patterns still use
-  eager classification; `Opens.mls` records this limitation with a `:fixme`
-  regression for both open forms. Applied constructor patterns already pass.
+- Bare constructor names in patterns still use eager classification; `Opens.mls`
+  records this limitation with a `:fixme` regression for both open forms. Applied
+  constructor patterns already pass. The stage-4 checkpoint below removes the
+  lexical shortcut and read-side lowering fallbacks.
 
 - Stage 3 validation: `ctest` passed (45 tests), `dtest newres/` passed
   (26 files), and `hkmc2AllTests/test` passed with the final regression outputs.
@@ -123,3 +123,29 @@ receiver and capture context; module completion must not change lexical priority
   `dtest newres/` passed (27 files), and the final `hkmc2AllTests/test` passed.
   Existing runtime outputs are unchanged; reviewed golden updates record the
   additional resolution requests made during elaboration.
+
+- Stage 4, receiver and lowering checkpoint: lexical `SelElem` references now
+  register ordinary selection listeners, just like selective opens. `SelfRef`
+  obtains its base shape through definition-completion listeners, handling both
+  pending and already available definitions and retaining inherited shapes.
+  The resolver caches these base shapes; no new mutable symbol state is needed.
+- `MemberRef` and `NewSel` lowering now consume `resolvedTargets` exclusively.
+  Diagnosed references produce the error result; missing targets produce an
+  unresolved-target diagnostic; strict ambiguous selections report all selected
+  definitions. Existing non-strict dynamic selection behavior is preserved.
+- `ReceiverResolution.mls` covers forward lexical members, overloaded class/value
+  names, nested receiver capture, later selective opens, and inherited selection.
+  Ambiguity diagnostics retain owner context and now point at selected definition
+  names rather than the entire overload declaration.
+- Reviewed the existing independent class storage: name reservation records live
+  IR class symbols, and class and term slots remain separate. No storage change
+  is needed for this checkpoint.
+- Remaining stage 4: replace eager bare-pattern classification and the pattern
+  resolver's single-result field with accumulated candidates, including receiver
+  ambiguity. Integrate bare, applied, selected, and infix constructors without
+  changing alias-binding semantics. Keep this separate from the receiver/lowering
+  checkpoint so those semantic changes have their own regression review.
+- Receiver/lowering validation: `ctest` passed (45 tests), the focused receiver
+  regression passed, and final `hkmc2AllTests/test` passed (including 659 diff
+  tests). Reviewed the four changed ambiguity snapshots and the new regression's
+  runtime outputs.

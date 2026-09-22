@@ -63,10 +63,10 @@ bar(B).u
 //│ ║        	^^^^^^^^
 //│ ╟── target: value 'u' in module 'B'
 //│ ║  l.9: 	  val u = 2
-//│ ║       	  ^^^^^^^^^
+//│ ║       	      ^
 //│ ╟── target: value 'u' in module 'A'
 //│ ║  l.6: 	  val u = 1
-//│ ╙──     	  ^^^^^^^^^
+//│ ╙──     	      ^
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 

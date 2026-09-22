@@ -1,0 +1,38 @@
+:.
+
+
+// Lexical member references resolve through their receiver, including members
+// declared after the method and overloaded class/term names.
+module Receiver {
+  fun values() = [value, Item, (new Item).answer()]
+  val value = 31
+  class Item { fun answer() = value }
+  val Item = 32
+}
+
+:expect [31, 32, 31]
+Receiver.values()
+//│ = [31, 32, 31]
+
+
+// A later lookup must also obtain the already completed receiver's shape.
+fun later() = {
+  open Receiver {values}
+  values()
+}
+
+:expect [31, 32, 31]
+later()
+//│ = [31, 32, 31]
+
+
+// Inherited selections and lexical selections share the same receiver path.
+class Parent { fun inherited() = 33 }
+class Child extends Parent {
+  fun values() = [local(), this.inherited()]
+  fun local() = 34
+}
+
+:expect [34, 33]
+(new Child).values()
+//│ = [34, 33]
