@@ -68,30 +68,20 @@ let b = new Bar(123)
 :e
 b.y
 
-:fixme
+:expect 124
 b.x
-//│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.72: 	b.x
-//│ ║        	^^^
-//│ ╟── Instance of class 'Bar' does not contain member 'x'
-//│ ║  l.64: 	let b = new Bar(123)
-//│ ╙──      	        ^^^^^^^^^^^^
-//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ = 124
 
 b.z
 //│ = 125
 
 
-:fixme
+:expect [44, 43]
 class Baz extends Bar(42) {
   val a = [this.z, this.x]
 }
-//│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.87: 	  val a = [this.z, this.x]
-//│ ║        	                   ^^^^^^
-//│ ╟── Class definition 'Baz' does not contain member 'x'
-//│ ║  l.87: 	  val a = [this.z, this.x]
-//│ ╙──      	          ^^^^^^^^^^^^^^^^
+(new Baz).a
+//│ = [44, 43]
 
 
 
@@ -106,8 +96,8 @@ module Outer {
 :e
 object Derived extends Outer.Inner1
 //│ ╔══[COMPILATION ERROR] Extending a partially applied class is not supported
-//│ ║  l.107: 	object Derived extends Outer.Inner1
-//│ ╙──       	                       ^^^^^^^^^^^^
+//│ ║  l.97: 	object Derived extends Outer.Inner1
+//│ ╙──      	                       ^^^^^^^^^^^^
 
 :sr
 :sir
@@ -121,10 +111,10 @@ object Derived extends Outer.Inner1(11)
 :fixme
 Derived.x
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.122: 	Derived.x
+//│ ║  l.112: 	Derived.x
 //│ ║         	^^^^^^^^^
 //│ ╟── Object 'Derived' does not contain member 'x'
-//│ ║  l.114: 	object Derived extends Outer.Inner1(11)
+//│ ║  l.104: 	object Derived extends Outer.Inner1(11)
 //│ ╙──       	       ^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -133,7 +123,7 @@ Derived."x"
 :e
 object Derived extends Outer.Inner2
 //│ ╔══[COMPILATION ERROR] Extending a partially applied class is not supported
-//│ ║  l.134: 	object Derived extends Outer.Inner2
+//│ ║  l.124: 	object Derived extends Outer.Inner2
 //│ ╙──       	                       ^^^^^^^^^^^^
 
 :sr

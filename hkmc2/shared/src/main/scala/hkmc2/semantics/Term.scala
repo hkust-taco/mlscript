@@ -505,6 +505,13 @@ enum Term extends Statement, ShapePublisher:
    */
   def resolvedSym: Opt[Symbol] = expanded match
     case res: Resolved => S(res.sym)
+    case SimpleRef(sym) => S(sym)
+    case Capture(base, _) => base.resolvedSym
+    case ref: UnresolvedRef if ref.resolvedMembers.distinct.sizeCompare(1) =/= 0 => N
+    case ref: NewResolvable =>
+      if ref.isErroneous then N else ref.resolvedTargets.distinct match
+        case sym :: Nil => S(sym)
+        case _ => N
     case ref: Ref => ref.symbol
     case sel: Sel => sel.sym
     case sel: SynthSel => sel.sym

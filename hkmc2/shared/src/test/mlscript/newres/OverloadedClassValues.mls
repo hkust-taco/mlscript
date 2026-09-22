@@ -115,18 +115,10 @@ val Parent = false
 class Child extends Parent
 //│ Parent = false
 
-// FIXME: NewShape does not yet look up inherited members.
-:fixme
+// Inherited members retain their class interpretation despite the term overload.
 :expect 47
 (new Child).answer()
-//│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.121: 	(new Child).answer()
-//│ ║         	^^^^^^^^^^^^^^^^^^
-//│ ╟── Instance of class 'Child' does not contain member 'answer'
-//│ ║  l.121: 	(new Child).answer()
-//│ ╙──       	 ^^^^^^^^^
-//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
-//│ ═══[RUNTIME ERROR] Expected: '47', got: 'undefined'
+//│ = 47
 
 
 class Factory {
@@ -186,20 +178,20 @@ MutableMembers.Item
 class Parameterized()
 fun Parameterized() = 0
 //│ ╔══[COMPILATION ERROR] Not yet supported: overloading of function 'Parameterized'
-//│ ║  l.187: 	fun Parameterized() = 0
+//│ ║  l.179: 	fun Parameterized() = 0
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── with class of the same name
-//│ ║  l.186: 	class Parameterized()
+//│ ║  l.178: 	class Parameterized()
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^
 
 :e
 class ParameterizedValue(x)
 val ParameterizedValue = 0
 //│ ╔══[COMPILATION ERROR] Illegal overloading of value 'ParameterizedValue'
-//│ ║  l.197: 	val ParameterizedValue = 0
+//│ ║  l.189: 	val ParameterizedValue = 0
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── with class of the same name
-//│ ║  l.196: 	class ParameterizedValue(x)
+//│ ║  l.188: 	class ParameterizedValue(x)
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ParameterizedValue = 0
 
@@ -209,10 +201,10 @@ class Duplicate
 fun Duplicate() = 0
 val Duplicate = 1
 //│ ╔══[COMPILATION ERROR] Illegal overloading of value 'Duplicate'
-//│ ║  l.210: 	val Duplicate = 1
+//│ ║  l.202: 	val Duplicate = 1
 //│ ║         	^^^^^^^^^^^^^^^^^
 //│ ╟── with function of the same name
-//│ ║  l.209: 	fun Duplicate() = 0
+//│ ║  l.201: 	fun Duplicate() = 0
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^
 
 

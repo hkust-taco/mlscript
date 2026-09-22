@@ -2808,7 +2808,7 @@ extends Importer:
         ds += msg"The upper bound of character ranges must be a single character." -> hi.toLoc
       if ds.nonEmpty then error(ds.toSeq*)
       ds.nonEmpty
-    /** Resolve an identifier. We need to perform a very preliminary check to
+    /** Legacy pattern lookup. We need to perform a very preliminary check to
      *  determine whether this identifier refers to a pattern, a class, an
      *  object, or creates a new binding.
      *
@@ -2830,6 +2830,11 @@ extends Importer:
         state.builtinOpsMap.get(id.name) match
         case S(bi) => S(bi.ref(id))
         case N => N
+    def constructor(target: Term, arguments: Opt[Ls[Pattern]], source: Tree): Pattern.Constructor =
+      val res = new Constructor(target, arguments)
+      if newResolution then res.withLocOf(source)
+      constructorPattern(res)
+      res
     /** Elaborate arrow patterns like `p => t`. Meanwhile, report all invalid
      *  variables we found in `p`. */
     def arrow(lhs: Tree, rhs: Tree): Ctxl[Pattern] =
@@ -2920,12 +2925,7 @@ extends Importer:
         Composition(op is Keyword.`|`, go(lhs), go(rhs))
       // Constructor patterns with pattern arguments and arguments.
       case App(ctor: Ctor, Tup(argTrees)) => // TODO: rm this weird `: Ctor` guard
-        val lt = term(ctor, Ptrn)
-        val rt = argTrees.map(go(_))
-        val res = new Constructor(lt, S(rt))
-        // if newResolution then listenTerm(lt, shape => patAppShape(shape, rt, res))
-        patApp(lt, rt, res)
-        res
+        constructor(term(ctor, Ptrn), S(argTrees.map(go(_))), t)
       // `[p1, p2, ...ps, pn] => term`: All patterns are in the `TyTup`.
       case (lhs: TyTup) `=>` rhs => arrow(lhs, rhs)
       // `pattern => term`: Note that `pattern` is wrapped in a `Tup`.
@@ -2935,13 +2935,17 @@ extends Importer:
         case lhs :: Nil => arrow(lhs, rhs)
         case _ :: _ | Nil => ??? // TODO: this case reached by, eg, `pattern p = () => Unit`
       case p as q => q match
-        // `p as id` is elaborated into alias if `id` is not a constructor.
+        // New resolution distinguishes bindings from constructors by capitalization.
+        case id: Ident if newResolution =>
+          if id.name.isUncapitalized then go(p) binds id
+          else Chain(go(p), constructor(term(id, Ptrn), N, id))
+        // Legacy resolution classifies the name by eager lookup.
         case id: Ident => ident(id) match
           case S(target) if target.symbol.exists(_.isInstanceOf[VarSymbol]) =>
             // If the target is a variable, we should shadow it. This check is
             // probably insufficient as there are more cases.
             go(p) binds id
-          case S(target) => Chain(go(p), Constructor(target, N))
+          case S(target) => Chain(go(p), constructor(target, N, id))
           case N => go(p) binds id // Fallback to alias.
         // `p as q` where `q` is not an identifier is elaborated into chain.
         case _: Tree => Chain(go(p), go(q))
@@ -2972,16 +2976,17 @@ extends Importer:
       // pattern translation.
       case OpApp(lhs, Ident("~"), rhs :: Nil) => Pattern.Concatenation(go(lhs), go(rhs))
       // Constructor patterns can be written in the infix form.
-      case OpApp(lhs, op, rhs :: Nil) => Pattern.Constructor(term(op, Ptrn), S(Ls(go(lhs), go(rhs))))
+      case OpApp(lhs, op, rhs :: Nil) => constructor(term(op, Ptrn), S(Ls(go(lhs), go(rhs))), t)
       // Constructor patterns without arguments
       case id @ Ident(name) if name.isUncapitalized => Variable(id)
+      case id: Ident if newResolution => constructor(term(id, Ptrn), N, id)
       case id @ Ident(name) => ident(id) match
-        case S(target) => Constructor(target, N)
+        case S(target) => constructor(target, N, id)
         case N =>
           raise:
             ErrorReport(msg"Pattern name not found: ${id.name}." -> id.toLoc :: Nil)
           Pattern.Wildcard()
-      case sel: (SynthSel | Sel) => Constructor(term(sel, Ptrn), N)
+      case sel: (SynthSel | Sel) => constructor(term(sel, Ptrn), N, sel)
       case _: Tree =>
         raise(ErrorReport(msg"Unrecognized pattern (${t.describe})." -> t.toLoc :: Nil))
         Pattern.Wildcard()

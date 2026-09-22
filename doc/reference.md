@@ -946,6 +946,13 @@ if r is { 'x: x } then x
 
 ### `as` Pattern Alias
 
+With `newResolution` enabled, capitalization distinguishes binding from matching:
+`p as name` binds the result of `p` to the lowercase name, even if that name is
+already in scope. `p as Name` matches the result of `p` against the uppercase
+constructor name; it does not introduce a binding. Constructor names follow the
+usual lookup rules, including selective and wildcard opens. An unknown uppercase
+name is an error.
+
 ```mlscript
 fun map(f) = case
   Some(x as n) then Some(f(n))
@@ -1355,9 +1362,9 @@ fun example() =
 ```
 
 When no explicit binding exists, lookup considers the wildcard opens visible at
-that occurrence. These rules apply to the name itself, before choosing its term or class
-interpretation, so an explicit binding also takes precedence over an overloaded
-class or function supplied by a wildcard open.
+that occurrence. These rules apply to the name itself, before choosing its term,
+class, or pattern interpretation, so an explicit binding also takes precedence
+over an overloaded class or function supplied by a wildcard open.
 
 If wildcard lookup finds several distinct members with the requested name, the
 reference is ambiguous; the order of the opens does not choose a winner.

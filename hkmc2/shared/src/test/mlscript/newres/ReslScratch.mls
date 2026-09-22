@@ -122,7 +122,7 @@ class Bar(a) with
 //│   constructor(a) {
 //│     this.#a = a;
 //│     this.#x = this.#a;
-//│     runtime.safeCall(Predef.print(this.#x));
+//│     Predef.print(this.#x);
 //│   }
 //│   #a;
 //│   #x;

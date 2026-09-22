@@ -152,7 +152,7 @@ object Pattern:
     
     var isErroneous: Bool = false
     // val resSym: FlowSymbol = FlowSymbol.app
-    var resolvedSym: Opt[DefinitionSymbol[?]] = N
+    var resolvedTargets: Ls[DefinitionSymbol[?] | VarSymbol] = Nil
     
     /** Get the resolved symbol of the target term. */
     def symbol: Opt[Symbol] = self.target.resolvedSym

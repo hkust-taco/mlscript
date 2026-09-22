@@ -334,8 +334,7 @@ callable()
 //│ = [22, 22]
 
 
-// Stage 4: bare pattern names still require deferred constructor-vs-binding classification.
-:fixme
+// Bare pattern names resolve through both forms of open.
 :expect [1, 0, 1, 0]
 module BarePatterns { class Token }
 fun bareWildcard(x) = {
@@ -348,11 +347,4 @@ fun bareNamed(x) = {
 }
 [bareWildcard(new BarePatterns.Token), bareWildcard(0),
  bareNamed(new BarePatterns.Token), bareNamed(0)]
-//│ ╔══[COMPILATION ERROR] Pattern name not found: Token.
-//│ ║  l.343: 	  if x is Token then 1 else 0
-//│ ╙──       	          ^^^^^
-//│ ╔══[COMPILATION ERROR] Pattern name not found: Token.
-//│ ║  l.347: 	  if x is Token then 1 else 0
-//│ ╙──       	          ^^^^^
-//│ ═══[RUNTIME ERROR] Expected: '[1, 0, 1, 0]', got: '[1, 1, 1, 1]'
-//│ = [1, 1, 1, 1]
+//│ = [1, 0, 1, 0]

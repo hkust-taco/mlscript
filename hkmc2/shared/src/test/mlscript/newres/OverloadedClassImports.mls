@@ -12,7 +12,7 @@ OverloadedClassLibrary.fresh().answer()
 //│ import { "mlscript.class:_$_modulePrivate_$_Hidden" as Hidden1 } from "./../../mlscript-compile/OverloadedClassLibrary.mjs";
 //│ let inlinedVal;
 //│ inlinedVal = globalThis.Object.freeze(new Hidden1());
-//│ return runtime.safeCall(inlinedVal.answer())
+//│ return inlinedVal.answer()
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 51
 
@@ -55,3 +55,15 @@ OverloadedDefault
 :expect 54
 (new OverloadedDefault).answer()
 //│ = 54
+
+
+// Imported overloads retain their class interpretation in bare patterns.
+:expect [1, 0, 1, 0]
+fun importedPattern(x) = {
+  open OverloadedClassLibrary
+  if x is Item then 1 else 0
+}
+fun namedPattern(x) = if x is Item then 1 else 0
+[importedPattern(new OverloadedClassLibrary.Item), importedPattern(0),
+ namedPattern(new Item), namedPattern(0)]
+//│ = [1, 0, 1, 0]

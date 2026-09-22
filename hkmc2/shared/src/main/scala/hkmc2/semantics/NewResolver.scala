@@ -90,139 +90,118 @@ class NewResolver:
         msg"${funSh.describe.capitalize} expected ${ps.length} ${
           "argument".pluralized(ps.length)}, but got ${args.length}" -> funSh.toLoc :: Nil)
   
-  def patApp(lhs: Term, args: Ls[Pattern], res: Pattern.Constructor): Unit = if newResolution then
-    listen(lhs, discardMarks = true): sh =>
-      log(s"patApp: lhs = ${lhs.showDbg}, args = ${args.map(_.showDbg)}, res = ${res.showDbg}, sh = ${sh.shwDbg}")
-      def checkEmpty = () // TODO
-      sh match
-      case sh: TermShape =>
-        // zipArgs(sh.unappliedParams.map(_._2), args, N, res.args, res, lhs)
-        ???
-      case sh: SymShape =>
-        // softAssert(res.isErroneous)
-        val bms = sh.sym
-        bms.onComplete: () =>
-          bms.asPat match
-          case S(pat) =>
-            checkEmpty
-            res.resolvedSym = S(pat)
+  /** Resolve every constructor pattern through the same symbolic interpretation.
+    * A class overload takes precedence over its term companion in this context.
+    * Keep every candidate so lowering can diagnose ambiguity independently of
+    * the order in which definitions and receiver shapes become available. */
+  def constructorPattern(res: Pattern.Constructor): Unit = if newResolution then
+    val lhs = res.target
+    def select(sym: DefinitionSymbol[?]): Bool =
+      lhs.withoutCaptures match
+        case trm: NewResolvable =>
+          if !trm.resolvedTargets.contains(sym) then trm.resolvedTargets ::= sym
+        case _ => ()
+      if res.resolvedTargets.contains(sym) then false
+      else
+        res.resolvedTargets ::= sym
+        true
+    def reject(sh: TermShape): Unit =
+      res.isErroneous = true
+      resolError(res, msg"${sh.describe.capitalize} cannot be used as a constructor pattern." -> N :: Nil)
+    def classPattern(cls: ClassLikeDef): Unit = if select(cls.sym) then
+      val assoc = res.arguments match
+        case N => Nil
+        case S(args) => cls.paramsOpt match
           case N =>
-            val flow = FlowSymbol.app()
-            fromBMS(bms, flow, sh.markss, sh =>
-              sh match
-              case sh: TermShape =>
-                // zipArgs(sh.unappliedParams.map(_._2), args, N, res.args, res, lhs)
-                // sh.unappliedParams
-                // ???FlowSymbol.app
-                sh.applicationHead match
-                case (ds: DefnShape, mss) =>
-                  val cls = ds.defn match
-                    case cd: ClassDef => cd
-                    case td: TermDefinition =>
-                      td.tsym match
-                      case ccs: ClassCtorSymbol => ccs.associatedCls.defn.get
-                      case _ => ???
-                  log(s"Pattern's class: $cls")
-                  lhs.withoutCaptures match
-                  case trm: NewResolvable =>
-                    trm.resolvedTargets ::= cls.sym
-                  res.resolvedSym = S(cls.sym)
-                  cls.paramsOpt match
-                  case N =>
-                    res.isErroneous = true
-                    resolError(res,
-                      msg"${sh.describe.capitalize} does not take pattern arguments." -> sh.toLoc :: Nil)
-                  case S(ps) =>
-                    if ps.restParam.nonEmpty then TODO(ps.restParam)
-                    if args.sizeCompare(ps.params) =/= 0 then
-                      res.isErroneous = true
-                      resolError(res,
-                        msg"${sh.describe.capitalize} expected ${ps.params.length} ${
-                          "pattern argument".pluralized(ps.params.length)}, but got ${args.length}" -> sh.toLoc :: Nil)
-                    val assoc = ps.params.lazyZip(args).map: (p, a) =>
-                      log(s"Pattern's param: ${p.showDbg} (${p.fldSym}), arg: ${a.showDbg}")
-                      p.fldSym match
-                      case S(fldSym: BlockMemberSymbol) =>
-                        (fldSym, a)
-                      case S(fldSym) => die
-                      case N => ???
-                    val psh = CtorPatternShape(cls, assoc, res, FlowSymbol.pat())
-                    if res.shapes.add(psh) then
-                      res.shapeListeners.foreach(listener => listener(psh))
+            if args.nonEmpty || cls.isInstanceOf[ClassDef] then
+              res.isErroneous = true
+              resolError(res, msg"${cls.describe.capitalize} does not take pattern arguments." -> cls.toLoc :: Nil)
+            Nil
+          case S(ps) =>
+            if ps.restParam.nonEmpty then TODO(ps.restParam)
+            if args.sizeCompare(ps.params) =/= 0 then
+              res.isErroneous = true
+              resolError(res,
+                msg"${cls.describe.capitalize} expected ${ps.params.length} ${
+                  "pattern argument".pluralized(ps.params.length)}, but got ${args.length}" -> cls.toLoc :: Nil)
+            ps.params.lazyZip(args).flatMap: (p, a) =>
+              p.fldSym match
+                case S(fldSym: BlockMemberSymbol) => (fldSym -> a) :: Nil
                 case _ =>
                   res.isErroneous = true
-                  resolError(res,
-                    msg"${sh.describe.capitalize} cannot used like an applied pattern." -> sh.toLoc :: Nil)
-            , lhs, _ => ())
+                  resolError(res, msg"Pattern argument requires an accessible constructor field." -> p.toLoc :: Nil)
+                  Nil
+      if !res.isErroneous then
+        val psh = CtorPatternShape(cls, assoc, res, FlowSymbol.pat())
+        if res.shapes.add(psh) then res.shapeListeners.foreach(_(psh))
+    def valuePattern(sh: TermShape): Unit = sh.applicationHead match
+      case (ds: DefnShape, _) => ds.defn match
+        case cls: ClassDef => classPattern(cls)
+        case obj: ModuleOrObjectDef if obj.sym.asObj.isDefined => classPattern(obj)
+        case td: TermDefinition => td.tsym match
+          case ctor: ClassCtorSymbol => classPattern(ctor.associatedCls.defn.get)
+          case _ => reject(sh)
+        case _ => reject(sh)
+      case _ => reject(sh)
+    lhs.withoutCaptures match
+      case Term.Error() => res.isErroneous = true
+      case Term.Ref(sym: VarSymbol) if sym.decl.exists(_.isPatternConstructor) =>
+        res.resolvedTargets ::= sym
+      case Term.SimpleRef(sym: VarSymbol) if sym.decl.exists(_.isPatternConstructor) =>
+        res.resolvedTargets ::= sym
+      case _ => listen(lhs, discardMarks = true): sh =>
+        sh match
+          case sh: SymShape =>
+            val bms = sh.sym
+            bms.onComplete: () =>
+              bms.asPat.orElse(bms.asCls).orElse(bms.asObj) match
+                case S(sym: PatternSymbol) => select(sym)
+                case S(sym: (ClassSymbol | ModuleOrObjectSymbol)) =>
+                  sym.defn match
+                    case S(cls) => classPattern(cls)
+                    case N => softAssert(false, "Completed pattern member has no definition")
+                case N =>
+                  fromBMS(bms, FlowSymbol.pat(), sh.markss, valuePattern, lhs, _ => ())
+          case sh: TermShape => valuePattern(sh)
   
-  def listenPattern(pat: Pattern)(listener: PatternShape => Unit): Unit =
-    // ???
-    log(s"listenPattern: pat = ${pat.showDbg} ${pat.getClass.getSimpleName}")
-    pat.shapeListeners += listener // FIXME: sus
-    pat match
-    case pat: PatternShapeHost =>
-      pat.shapes.foreach(listener)
-      // pat.shapeListeners += listener
-    case pat: Pattern.Alias =>
-      // TODO: also handle the alias symbol's shape listeners?
-      // listenTerm(pat.)
-      /* 
-      def listen(sh: Shape): Unit =
-        matchShapePat(sh, pat.pattern)
-      pat.symbol.shapes.foreach(listen)
-      pat.symbol.shapeListeners += listen
-      listenPattern(pat.pattern)(listener)
-       */
-      listener(AliasPatternShape(pat.symbol, pat))
-    case Pattern.Literal(_) | Pattern.Tuple(_, _) => // TODO
-    case Pattern.Wildcard() =>
-      ()
-    // case _ => ???
-  
-  def matchShapePat(shape: Shape, pattern: Pattern): Unit =
+  /** Propagate possible values to pattern bindings. Constructor tests filter by
+    * nominal class; guards and literal tests may conservatively retain shapes.
+    * Both scrutinee and constructor shapes can arrive after this registration. */
+  def matchShapePat(shape: Shape, pattern: Pattern)(matched: Shape => Unit): Unit =
     pattern match
-    case al @ Pattern.Alias(pat, id) =>
-      matchShapePat(shape, pat)
-      log(s"TODO: $id ${al.symbol}")
-      if al.symbol.shapes.add(shape) then
-        al.symbol.shapeListeners.foreach(listener => listener(shape))
-      // pipeTerm(id, shape)
-    case Pattern.Wildcard() =>
-    // case _ => ???
+      case al @ Pattern.Alias(pat, _) =>
+        matchShapePat(shape, pat): sh =>
+          if al.symbol.shapes.add(sh) then al.symbol.shapeListeners.foreach(_(sh))
+          matched(sh)
+      case Pattern.Wildcard() | Pattern.Literal(_) => matched(shape)
+      case Pattern.Chain(left, right) =>
+        matchShapePat(shape, left)(sh => matchShapePat(sh, right)(matched))
+      case Pattern.Composition(true, left, right) =>
+        matchShapePat(shape, left)(matched)
+        matchShapePat(shape, right)(matched)
+      case Pattern.Guarded(pat, _) => matchShapePat(shape, pat)(matched)
+      case ctor: Pattern.Constructor =>
+        def listenConstructor(psh: PatternShape): Unit = psh match
+          case CtorPatternShape(cls, fs, _, resSym) =>
+            def check(sh: TermShape): Unit =
+              if sh.isSaturated && sh.applicationHead._1.extendsCls(cls) then
+                fs.foreach: (bms, pat) =>
+                  sh.getMember(bms.nme) match
+                    case S((sym, marks)) =>
+                      val field = symShapes.getOrElseUpdate((sym, resSym, marks), SymShape(sym, resSym, marks))
+                      matchShapePat(field, pat)(_ => ())
+                    case N => softAssert(false, "Matched constructor is missing its field")
+                matched(sh)
+            shape match
+              case sh: TermShape => check(sh)
+              case sh: SymShape => fromBMS(sh.sym, sh.resSym, sh.markss, check, ctor.target, _ => ())
+        ctor.shapeListeners += listenConstructor
+        ctor.shapes.foreach(listenConstructor)
+      case Pattern.Tuple(_, _) => () // Tuple binding shapes are not inferred yet.
+      case _ => TODO(pattern)
   
-  def matchScrutPat(scrutinee: Term.Ref, pattern: Pattern): Unit =
-    log(s"matchScrutPat? scrutinee = ${scrutinee.showDbg}, pattern = ${pattern.showDbg}")
-    if newResolution then
-      listenPattern(pattern): psh =>
-        trace(s"matchScrutPat: scrutinee = ${scrutinee.showDbg}, pattern = ${pattern.showDbg}, psh = ${psh.showDbg}"):
-          listenTerm(scrutinee): sh =>
-            trace(s"matchScrutPat scrutinee = ${scrutinee.showDbg}, pattern = ${pattern.showDbg}, sh = ${sh.shwDbg}"):
-              if !sh.isSaturated then
-                ???
-              psh match
-              case AliasPatternShape(sym, pat) =>
-                log(s"matchScrutPat: scrutinee = ${scrutinee.showDbg}, pattern = ${pattern.showDbg}, psh = ${psh.showDbg}")
-                matchShapePat(sh, pat)
-                if sym.shapes.add(sh) then
-                  sym.shapeListeners.foreach(listener => listener(sh))
-              case CtorPatternShape(cls, fs, src, resSym) =>
-                sh.applicationHead match
-                case (ds: DefnShape, mss) =>
-                  if ds.extendsCls(cls) then
-                    log(s"Subclass: ${ds.defn.sym.showDbg} of ${cls.sym.showDbg}")
-                    fs.foreach: (bms, pat) =>
-                      // bms.onComplete: () =>
-                      val nme = bms.nme
-                      sh.getMember(nme) match
-                      case S((sym, mss)) =>
-                        val sh = symShapes.getOrElseUpdate((bms, resSym, mss), SymShape(bms, resSym, mss))
-                        // if src.trmHost.shapes.add(sh) then
-                        //   src.trmHost.shapeListeners.foreach(listener => listener(sh))
-                        matchShapePat(sh, pat)
-                      case N =>
-                        ???
-                  else
-                    log(s"Not a subclass: ${ds.defn.sym.showDbg} of ${cls.sym.showDbg}")
+  def matchScrutPat(scrutinee: Term.Ref, pattern: Pattern): Unit = if newResolution then
+    listenTerm(scrutinee)(sh => matchShapePat(sh, pattern)(_ => ()))
   
   def appShape(lhs: TermShape, args: Term, res: App): Unit =
     // log(s"appShape? lhs = $lhs, args = $args, res = $res")

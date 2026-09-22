@@ -130,16 +130,16 @@ x.b
 //│ ╙──     	                 ^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
-:todo
+:re
 if x is
   Baz as y then y.b
-//│ /!!!\ Uncaught error: scala.MatchError: Constructor(MemberRef(member:Baz),None) (of class hkmc2.semantics.Pattern$Constructor)
+//│ ═══[RUNTIME ERROR] Error: match error
 
-:todo
+:expect 123
 if x is
   Baz as y then y.b
   Bar as z then z.b
-//│ /!!!\ Uncaught error: scala.MatchError: Constructor(MemberRef(member:Baz),None) (of class hkmc2.semantics.Pattern$Constructor)
+//│ = 123
 
 
 

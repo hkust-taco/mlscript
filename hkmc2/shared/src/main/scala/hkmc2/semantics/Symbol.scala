@@ -320,8 +320,11 @@ class BlockMemberSymbol(val nme: Str, val trees: Ls[TypeOrTermDef], val nameIsMe
   
   private var defnListeners: Buffer[() => Unit] = Buffer.empty
   def complete(): Unit = if defnListeners isnt null then
-    defnListeners.foreach(_())
+    val listeners = defnListeners
+    // Completion callbacks may request this member again. Publish completion
+    // first so reentrant listeners run immediately instead of mutating the queue.
     defnListeners = null // free memory and prevent further listening
+    listeners.foreach(_())
   /** Called when all the symbols covered by this BMS are present, with their definitions set. */
   def onComplete(f: () => Unit): Unit =
     if defnListeners is null then

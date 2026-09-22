@@ -234,21 +234,7 @@ class AppShape(val receiver: TermShape, val args: Term, val src: Term.App)(using
     else
       applicationHead match
       case (ds: DefnShape, mss) =>
-        // TODO: handle `mss`
-        
-        // ds.members
-        // ds.defn match
-        // case td: TermDefinition => td.sym match
-        //   case cs: ClassCtorSymbol =>
-        //     val cd = cs.associatedCls.defn.get
-        //     cd.ext.fold(Map.empty)(_.members) ++ cd.body.members
-        //   case _ => ??? // TODO: add softRequire on ction – should not be possible
-        // case cd: ClassDef => cd.ext.fold(Map.empty)(_.members) ++ cd.body.members
-        ds.defn match
-        case cd: ClassDef => cd.body.members.get(name).map(_ -> mss).orElse:
-          ds.ext.flatMap(_.getMember(name)).map(_.mapSecond(_ ::: mss))
-        case td: TermDefinition =>
-          ds.ext.flatMap(_.getMember(name)).map(_.mapSecond(_ ::: mss))
+        ds.getInstanceMember(name).map(_.mapSecond(_ ::: mss))
       case _ => N
   def describe: Str =
     // s"application of ${receiver.describe}"
@@ -260,21 +246,8 @@ class AppShape(val receiver: TermShape, val args: Term, val src: Term.App)(using
 class NewShape(val receiver: TermShape, val cls: ClassLikeSymbol, clsMarks: Ls[Marks], val argss: Ls[Term], val src: Term.New)(using DebugPrinter) extends NonMarkedShape:
   protected def getMemberImpl(name: Str): Opt[MemberInfo] =
     receiver match
-    case ds: DefnShape =>
-      ds.defn match
-      case cd: ClassDef =>
-        cd.body.members.get(name).map(_ -> clsMarks)
-      case td: TermDefinition =>
-        td.tsym match
-        case ccs: ClassCtorSymbol =>
-          ccs.associatedCls.defn.getOrElse(die // TODO
-            ).body.members.get(name).map(_ -> clsMarks)
-        case _ =>
-          N
-      case _ =>
-        N
-    case _ =>
-      N
+      case ds: DefnShape => ds.getInstanceMember(name).map(_.mapSecond(_ ::: clsMarks))
+      case _ => N
   def describe: Str =
     // s"instantiation of ${receiver.describe}"
     s"instance of ${cls.defn.get.describeRef}"
@@ -298,14 +271,23 @@ class ThisShape(val defn: Definition) extends NonAppTermShape:
 
 // TODO: make it not a TermShape?
 class BaseShape(val defn: ClassLikeDef, val ext: Opt[TermShape]) extends NonAppTermShape:
+  override def extendsCls(cls: ClassLikeDef): Bool =
+    (defn is cls) || ext.exists(_.applicationHead._1.extendsCls(cls))
   def describe: Str = s"${defn.describe}"
   protected def getMemberImpl(name: Str): Opt[MemberInfo] =
     defn.body.members.get(name).map(_ -> Nil).orElse(ext.flatMap(_.getMember(name)))
   def toLoc: Opt[Loc] = defn.toLoc
 
 class DefnShape(val defn: Definition, val ext: Opt[TermShape]) extends NonAppTermShape:
+  /** Instance lookup is shared by constructor calls and explicit `new`.
+    * Inherited members retain their marks before the caller adds its captures. */
+  def getInstanceMember(name: Str): Opt[MemberInfo] = defn match
+    case cd: ClassDef =>
+      cd.body.members.get(name).map(_ -> Nil).orElse(ext.flatMap(_.getMember(name)))
+    case _: TermDefinition => ext.flatMap(_.getMember(name))
+    case _ => N
   override def extendsCls(cls: ClassLikeDef): Bool =
-    clsDef.contains(cls) || ext.exists(_.extendsCls(cls))
+    clsDef.contains(cls) || ext.exists(_.applicationHead._1.extendsCls(cls))
   lazy val clsDef = defn match
     case defn: ClassLikeDef => S(defn)
     case defn: TermDefinition =>

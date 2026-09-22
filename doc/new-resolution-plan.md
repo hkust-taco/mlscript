@@ -1,5 +1,8 @@
 # New resolution: overloads and deferred opens
 
+**Status: all five planned stages complete.** The final review and regression
+coverage are recorded below.
+
 Resolution owns member discovery and definition selection. Lowering consumes those
 decisions; it must not recover missing decisions by inspecting overload sets or
 partially elaborated definitions. A member overload set, its selected definition,
@@ -91,10 +94,9 @@ receiver and capture context; module completion must not change lexical priority
   constructor-shape cache branch. Listeners are now registered once; cached
   constructors are reused with assertions checking their definition and base.
   An existing applied-pattern test now passes without its `:todo` marker.
-- Bare constructor names in patterns still use eager classification; `Opens.mls`
-  records this limitation with a `:fixme` regression for both open forms. Applied
-  constructor patterns already pass. The stage-4 checkpoint below removes the
-  lexical shortcut and read-side lowering fallbacks.
+- At the stage-3 checkpoint, bare constructor names still used eager classification;
+  `Opens.mls` recorded this with a `:fixme` regression for both open forms. The
+  final stage-4 work below removes that limitation and the marker.
 
 - Stage 3 validation: `ctest` passed (45 tests), `dtest newres/` passed
   (26 files), and `hkmc2AllTests/test` passed with the final regression outputs.
@@ -118,7 +120,7 @@ receiver and capture context; module completion must not change lexical priority
 - `Interpretations.mls` covers forward value uses, parenthesized and locally opened
   class targets, constructor arguments, pattern guards, and type-only references
   in signatures, aliases, type arguments, and ascriptions. Bare-pattern lookup and
-  the remaining lowering/lexical shortcuts are still separate follow-up work.
+  lowering/lexical shortcuts were handled in the subsequent stage-4 checkpoints.
 - Contextual-interpretation validation: `ctest` passed (45 tests),
   `dtest newres/` passed (27 files), and the final `hkmc2AllTests/test` passed.
   Existing runtime outputs are unchanged; reviewed golden updates record the
@@ -140,12 +142,65 @@ receiver and capture context; module completion must not change lexical priority
 - Reviewed the existing independent class storage: name reservation records live
   IR class symbols, and class and term slots remain separate. No storage change
   is needed for this checkpoint.
-- Remaining stage 4: replace eager bare-pattern classification and the pattern
-  resolver's single-result field with accumulated candidates, including receiver
-  ambiguity. Integrate bare, applied, selected, and infix constructors without
-  changing alias-binding semantics. Keep this separate from the receiver/lowering
-  checkpoint so those semantic changes have their own regression review.
+- The receiver/lowering checkpoint left constructor-pattern resolution for a
+  separate regression review. That work is discharged below. The agreed alias
+  rule for new resolution uses capitalization, replacing lookup-dependent binding.
 - Receiver/lowering validation: `ctest` passed (45 tests), the focused receiver
   regression passed, and final `hkmc2AllTests/test` passed (including 659 diff
   tests). Reviewed the four changed ambiguity snapshots and the new regression's
   runtime outputs.
+
+## Final stage-4 review
+
+- Bare, applied, selected, and infix constructor patterns now use one resolver
+  entry point. It waits for member completion, selects the pattern/class/object
+  interpretation independently of term overloads, and accumulates candidates.
+  Full and string-prefix pattern lowering share candidate validation. Lowering
+  diagnoses multiple targets and distinct wildcard receivers, including
+  receivers exposing the same member symbol. Missing targets and already reported
+  errors are handled separately; no candidate is chosen by callback order.
+- Bare uppercase names use ordinary contextual lookup. As agreed, `p as name`
+  binds a lowercase name and `p as Name` matches an uppercase constructor; an
+  unknown uppercase name is an error. The language reference documents this rule
+  and applies wildcard precedence to pattern interpretations too.
+- Constructor shape propagation handles aliases, chains, and nominal inheritance,
+  so bindings receive matching scrutinee shapes. Guards and literal tests may
+  conservatively retain shapes. This does not attempt to implement all unfinished
+  shape inference for other pattern forms, such as tuple bindings or conjunction
+  outputs. Constructor calls and explicit `new` now share inherited member lookup,
+  preserving inherited capture marks; this also discharges three existing
+  inheritance `:fixme` cases.
+- Reentrant member-completion callbacks now see the completed state immediately,
+  rather than appending to the listener buffer currently being traversed.
+- Symbol queries consume recorded new-resolution targets, including captures.
+  Synthesized runtime constructors carry explicit resolved class symbols, which
+  lowering now accepts directly. Ambiguous `new` targets produce diagnostics.
+- The `selfShapes` cache is keyed only by inner symbol, with assertions that
+  repeated notifications agree on the definition and extension.
+- Backend review: class storage continues to use live IR identities and separate
+  slots for class/term overloads. The new pattern path retains the selected class
+  identity through lowering; imported overload patterns exercise the exported
+  class slots. No backend storage workaround was added.
+
+| Planned contract | Regression coverage |
+| --- | --- |
+| Explicit bindings beat wildcard opens across scopes and declaration orders | `Opens.mls` |
+| Deferred forward definitions, both module-body forms, captures and imports | `Opens.mls`, `ModuleCaptures.mls`, `ReceiverResolution.mls`, `OverloadedClassImports.mls` |
+| Class/function and class/value overloads, storage and live class identities | `OverloadedClasses.mls`, `OverloadedClassValues.mls`, `OverloadedClassImports.mls` |
+| Ordinary and synthesized assignments, evaluation order and restoration | `Assignments.mls`, `Opens.mls` |
+| Contextual term/class/pattern/type interpretation | `Interpretations.mls`, `ConstructorResolution.mls` |
+| Bare/applied/selected/infix patterns, objects, aliases, named patterns and pattern parameters | `ConstructorResolution.mls`, `Opens.mls`, `PatMat.mls` |
+| Ambiguity independent of open order, repeated sources and distinct receivers | `ConstructorResolution.mls`, `Opens.mls` |
+
+## Final validation
+
+- `ctest`: 45 tests passed.
+- `dtest newres/`: 29 tests passed; the final added pattern-parameter regression
+  also passed its focused run.
+- Final `hkmc2AllTests/test`: all suites passed, including 660 diff tests.
+- Reviewed the golden changes: bare opens and constructor aliases now succeed;
+  inherited member regressions now return their expected values; ambiguity and
+  invalid-pattern cases produce diagnostics. Two JS snapshots omit `safeCall`
+  now that symbol queries expose the already recorded function targets.
+- Legacy-resolution diagnostic spans are unchanged. Implementation, language
+  reference, regression inputs, and final golden outputs are committed together.

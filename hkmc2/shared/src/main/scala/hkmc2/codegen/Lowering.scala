@@ -425,6 +425,9 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
   def classOf(trm: Term, nw: Resolvable)(k: Path => Block)(using LoweringCtx): Block =
     if newResolution then
       trm.withoutCaptures match
+      case resolved @ Resolved(_, _: ClassSymbol) =>
+        // Synthesized runtime constructors already carry an explicit class target.
+        subTerm(resolved)(k)
       case resl: NewResolvable =>
         resl.resolvedTargets.distinct match
         case cls :: Nil =>
@@ -446,8 +449,11 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
               msg"Cannot resolve the class instantiated here" -> trm.toLoc :: Nil,
               source = Diagnostic.Source.Compilation)
           compError
-        case _ =>
-          ???
+        case targets =>
+          fail:
+            ErrorReport(msg"The class instantiated here is ambiguous" -> trm.toLoc ::
+              targets.map(target => msg"target: ${target.describeKind} '${target.nme}'" -> target.toLoc),
+              source = Diagnostic.Source.Compilation)
       case _ =>
         softAssert(nw.isErroneous, "Unexpected class term shape")
         compError
