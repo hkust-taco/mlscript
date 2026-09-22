@@ -2250,7 +2250,7 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
 
                   val result = pss.foldRight(bod):
                     case (ps, block) =>
-                      Return(Lambda(false, ps, block)(Nil))
+                      Return(Lambda(ps, block)(Nil, rsc = false))
                   // Nested functions are not predeclared in `program` - declare them now.
                   // Note that predeclaring functions twice causes an orphaned type to be duplicated in the module.
                   if ctx.getFunc(sym).isEmpty then predeclareTopLevelFun(sym, ps)

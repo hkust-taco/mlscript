@@ -108,7 +108,7 @@ class EtaExpansionSolver(val constraintSolver: FlowConstraintSolver):
     case funSym: TermSymbol => funSym.nme
     case lamId: ResultId =>
       lamId.getResult match
-      case Lambda(_, _, _) => s"lambda@$lamId"
+      case Lambda(_, _) => s"lambda@$lamId"
       case r => lastWords(s"not lambda $r")
 
   private def checkIsEtaExpanded(
@@ -225,9 +225,9 @@ class EtaExpansionRewrite(val etaExpansionSolver: EtaExpansionSolver)(using Rais
       val body2 = withEtaArgss(etaParams.map(_.args)):
         applyFunBodyLikeBlock(lam.body)
       val wrappedBody = etaParams.map(_.params).foldRight(body2): (params, body) =>
-        Return(Lambda(false, params, body)(Nil))
+        Return(Lambda(params, body)(Nil, rsc = false))
       if (wrappedBody is lam.body) then lam
-      else Lambda(lam.rsc, lam.params, wrappedBody)(lam.annot).withLocOf(lam)
+      else Lambda(lam.params, wrappedBody)(lam.annot, lam.rsc).withLocOf(lam)
   end Rewriter
   
 end EtaExpansionRewrite

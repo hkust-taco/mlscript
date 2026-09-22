@@ -557,7 +557,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
             val freshParams = (ps.params zip freshSyms).map((p, s) => Param(p.flags, s, N, p.modulefulness))
             val freshParamList = ParamList(ps.flags, freshParams, N)
             val freshArgs = freshSyms.map(s => Arg(N, s.asSimpleRef))
-            Lambda(false, freshParamList, Return(etaExpand(rest, accArgss :+ freshArgs)))(Nil)
+            Lambda(freshParamList, Return(etaExpand(rest, accArgss :+ freshArgs)))(Nil, rsc = false)
         k(etaExpand(remainingParamss, acc.reverse))
     // * Resolve the class definition to get the constructor param lists.
     // * The class path typically resolves to a TermSymbol (the constructor function),
@@ -677,7 +677,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
         val (paramLists, bodyBlock) = setupFunctionDef(ps :: Nil, bod, S(sym.nme), N)
         tl.log(s"Ref builtin $sym")
         assert(paramLists.length === 1)
-        return k(Lambda(false, paramLists.head, bodyBlock)(Nil).withLocOf(ref))
+        return k(Lambda(paramLists.head, bodyBlock)(Nil, rsc = false).withLocOf(ref))
       if sym.unary then
         val t1 = new Tree.Ident("arg")
         val p1 = Param(FldFlags.empty, VarSymbol(t1, erasedType = N), N, Modulefulness.none)
@@ -692,7 +692,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
         val (paramLists, bodyBlock) = setupFunctionDef(ps :: Nil, bod, S(sym.nme), N)
         tl.log(s"Ref builtin $sym")
         assert(paramLists.length === 1)
-        return k(Lambda(false, paramLists.head, bodyBlock)(Nil).withLocOf(ref))
+        return k(Lambda(paramLists.head, bodyBlock)(Nil, rsc = false).withLocOf(ref))
     case bs: BlockMemberSymbol =>
       disamb.flatMap(_.defn) match
       case S(d) if d.hasDeclareModifier.isDefined =>
@@ -1098,7 +1098,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
       // * A resource lambda is not lifted into a function definition here: a reference to the lifted definition would
       // * be `rsc?` (like any function value), hiding the lambda's resource-ness from the slots it flows into.
       if rsc || k.isInstanceOf[TailOp] || bodyBlock.size <= 5
-      then k(Lambda(rsc, paramLists.head, bodyBlock)(Nil))
+      then k(Lambda(paramLists.head, bodyBlock)(Nil, rsc))
       else
         val lamSym = new BlockMemberSymbol("lambda", Nil, false)
         loweringCtx.collectScopedSym(lamSym)
@@ -1493,7 +1493,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
       case v: Value => k(v)
       case p: Path => k(p)
       // * A resource lambda is left as a lambda.
-      case lam @ Lambda(false, params, body) =>
+      case lam @ Lambda(params, body) if !lam.rsc =>
         val lamSym = BlockMemberSymbol("lambda", Nil, false)
         loweringCtx.collectScopedSym(lamSym)
         val lamDef = FunDefn.withFreshSymbol(N, lamSym, params :: Nil, body)(configOverride = N, annotations = lam.annot)

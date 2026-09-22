@@ -272,7 +272,7 @@ class DeforestRewriter(val solver: DeforestFusionSolver)(using Raise):
         r match
         case s@TrackableSelect(_, _, _) if branchSelSyms.isDefinedAt(s.uid.concreteId) =>
           handleTrackableSel(s)
-        case Lambda(_, params, body) =>
+        case Lambda(params, body) =>
           for p <- params.allParams do inCtx.add(p.sym)
           applyBlock(body)
           for p <- params.allParams do inCtx.remove(p.sym)

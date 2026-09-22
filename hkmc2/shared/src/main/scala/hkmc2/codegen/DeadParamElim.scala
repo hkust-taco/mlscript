@@ -118,7 +118,7 @@ class DeadParamElimSolver(val constraintSolver: FlowConstraintSolver):
       def showFunId(funId: FunId): Str = funId match
         case (funSym: Symbol, whichParamList) => s"${funSym.nme}#$whichParamList"
         case exprId: ResultId => exprId.getResult match
-          case Lambda(_, _, _) => s"lambda@$exprId"
+          case Lambda(_, _) => s"lambda@$exprId"
           case _ => showRefSite(exprId)
       val inst = prodFun.instantiationId.fold("")(instId => s" @ ${showInstId(instId)}")
       s"prodfun ${showFunId(prodFun.exprId)}$inst"
@@ -290,7 +290,7 @@ class Rewrite(val deadParamElimSolver: DeadParamElimSolver)(using Raise):
       val (params2, removed) = filterParamList(lam.params, deadParamElimSolver.eliminableParamsById(ConcreteId(lam.uid, instId)))
       val body2 = withEliminatedParams(removed):
         applyFunBodyLikeBlock(lam.body)
-      if (params2 is lam.params) && (body2 is lam.body) then lam else Lambda(lam.rsc, params2, body2)(lam.annot)
+      if (params2 is lam.params) && (body2 is lam.body) then lam else Lambda(params2, body2)(lam.annot, lam.rsc)
     
     override def applyFunDefn(fun: FunDefn): FunDefn =
       val own2 = fun.owner.mapConserve(_.subst)

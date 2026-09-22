@@ -994,7 +994,7 @@ sealed abstract class Result extends AutoLocated:
     case DynSelect(q, fld, arrayIdx) => s"DynSelect(${q.showDbg}, ${fld.showDbg}, $arrayIdx)"
     case call @ Call(fun, argss) => s"Call(${if call.rsc then "rsc, " else ""}${fun.showDbg}, [${
       argss.map(_.map(a => a.value.showDbg).mkString("[", ", ", "]")).mkString(", ")}])"
-    case Lambda(rsc, params, body) => s"Lambda($rsc, ${params.showDbg}, ${body.showDbg})"
+    case lam @ Lambda(params, body) => s"Lambda(${params.showDbg}, ${body.showDbg})(rsc = ${lam.rsc})"
     case Record(mut, args) => s"Record($mut, [${args.map(a => s"${a.showDbg} = ${a.value.showDbg}").mkString(", ")}])"
     case Tuple(mut, elems) => s"Tuple($mut, [${elems.map(_.value.showDbg).mkString(", ")}])"
     case Instantiate(mut, rsc, cls, argss) => s"Instantiate($mut, $rsc, ${cls.showDbg}, [${
@@ -1040,7 +1040,7 @@ sealed abstract class Result extends AutoLocated:
     case Cast(value, target, _) => Vector.single(value)
     case Select(qual, name) => Vector.double(qual, name)
     case DynSelect(qual, fld, arrayIdx) => Vector.double(qual, fld)
-    case Lambda(_, params, body) => Vector.single(params)
+    case Lambda(params, body) => Vector.single(params)
     case Tuple(mut, elems) => elems.iterator.map(_.value).toVector
     case Record(mut, elems) => elems.iterator.map(_.value).toVector
     case Value.SimpleRef(l) => Vector.empty
@@ -1053,7 +1053,7 @@ sealed abstract class Result extends AutoLocated:
     case Call(fun, argss) => fun.subBlocks ::: argss.flatten.flatMap(_.value.subBlocks)
     case Instantiate(mut, _, cls, argss) => argss.flatten.flatMap(_.value.subBlocks)
     case Select(qual, name) => qual.subBlocks
-    case Lambda(_, params, body) => body :: Nil
+    case Lambda(params, body) => body :: Nil
     case Tuple(mut, elems) => elems.flatMap(_.value.subBlocks)
     case _ => Nil
   
@@ -1062,7 +1062,7 @@ sealed abstract class Result extends AutoLocated:
     case Instantiate(mut, _, cls, argss) => cls.freeVars ++ argss.flatten.flatMap(_.value.freeVars).toSet
     case Cast(value, _, _) => value.freeVars
     case Select(qual, name) => qual.freeVars
-    case Lambda(_, params, body) => body.freeVars -- params.paramSyms
+    case Lambda(params, body) => body.freeVars -- params.paramSyms
     case Tuple(mut, elems) => elems.flatMap(_.value.freeVars).toSet
     case Record(mut, args) =>
       args.flatMap(arg => arg.idx.fold(Set.empty[FreeSymbol])(_.freeVars) ++ arg.value.freeVars).toSet
@@ -1077,7 +1077,7 @@ sealed abstract class Result extends AutoLocated:
     case Instantiate(mut, _, cls, argss) => cls.size + argss.iterator.flatten.map(_.value.size).sum
     case Cast(value, _, _) => value.size
     case Select(qual, name) => qual.size
-    case Lambda(_, params, body) => 1 + body.size
+    case Lambda(params, body) => 1 + body.size
     case Tuple(mut, elems) => elems.iterator.map(_.value.size).sum
     case Record(mut, args) => args.iterator.map(arg => arg.idx.fold(0)(_.size) + arg.value.size).sum
     case _: Value.RefLike => 0
@@ -1148,7 +1148,7 @@ sealed abstract class Result extends AutoLocated:
     // * A tuple literal is typed as `Array` at runtime.
     case Tuple(_, _) => S(ErasedType.Array)
     // * A lambda is a function value. Without a modifier, its resource-ness is undetermined.
-    case Lambda(rsc, _, _) => S(ErasedType.Function(if rsc then S(true) else N))
+    case lam: Lambda => S(ErasedType.Function(if lam.rsc then S(true) else N))
     case _ => N
 
   /** Similar to `erasedType`, but coerces to the top type if the specific erased type is not known. */
@@ -1313,7 +1313,7 @@ object Cast:
       case Cast(inner, _, innerCheck) => new Cast(inner, target, check || innerCheck)
       case _ => new Cast(value, target, check)
 
-case class Lambda(rsc: Bool, params: ParamList, body: Block)(val annot: Ls[Annot]) extends Result:
+case class Lambda(params: ParamList, body: Block)(val annot: Ls[Annot], val rsc: Bool) extends Result:
   lazy val affine: Bool = annot.exists(_.isInstanceOf[Annot.Affine])
   def liftedAnnotations: Ls[Annot] = if rsc then Annot.Modifier(Keyword.`rsc`) :: annot else annot
 
