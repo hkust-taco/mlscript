@@ -308,6 +308,7 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
             :: targets.map:
               case ObjectMember(sym) => msg"object member ${sym.nme}" -> sym.toLoc
               case CompanionMember(_, sym) => msg"companion member ${sym.nme}" -> sym.toLoc
+              case target: SelectionTarget.Err => msg"${target.describe}" -> target.loc
     leadingDotSelsToExpand.foreach: sel =>
       log(s"Resolved targets for ${sel.showDbg}: ${sel.resolvedTargets.mkString(", ")}")
       assert(sel.expansion.isEmpty)

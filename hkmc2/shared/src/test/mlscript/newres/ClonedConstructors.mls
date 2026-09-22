@@ -1,0 +1,31 @@
+:js
+
+open annotations
+
+// Compiled patterns clone both direct and qualified constructor references.
+data class Direct(val value)
+module Nested with
+  data class Wrapped(val value)
+
+fun direct(x) = if x is @compile Direct(3) then true else false
+fun qualified(x) = if x is @compile Nested.Wrapped(3) then true else false
+
+:expect [true, false, true, false]
+[direct(Direct(3)), direct(Direct(4)), qualified(Nested.Wrapped(3)), qualified(Nested.Wrapped(4))]
+//│ = [true, false, true, false]
+
+// Wildcard candidates must keep the receiver selected by resolution.
+open Nested
+fun opened(x) = if x is @compile Wrapped(3) then true else false
+
+:expect [true, false]
+[opened(Nested.Wrapped(3)), opened(Nested.Wrapped(4))]
+//│ = [true, false]
+
+// Preserve a captured module parameter in a cloned constructor path.
+fun captured(module Inner: Nested, x) =
+  if x is @compile Inner.Wrapped(3) then true else false
+
+:expect [true, false]
+[captured(Nested, Nested.Wrapped(3)), captured(Nested, Nested.Wrapped(4))]
+//│ = [true, false]

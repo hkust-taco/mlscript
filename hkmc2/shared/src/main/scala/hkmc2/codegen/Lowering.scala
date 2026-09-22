@@ -1286,12 +1286,14 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
           k(DynSelect(p, f, ai))
       
       
-    case nw @ (_: New | _: DynNew | Mut(_: New | _: DynNew)) =>
+    case DynNew(cls, args) =>
+      subTerm(cls)(sr => lowerMultiInstantiate(false, sr, args, annots)(k))
+    case Mut(DynNew(cls, args)) =>
+      subTerm(cls)(sr => lowerMultiInstantiate(true, sr, args, annots)(k))
+    case nw @ (_: New | Mut(_: New)) =>
       val (mut, cls, as, rft, nwtrm) = nw match
         case nwtrm @ New(c, a, r) => (false, c, a, r, nwtrm)
         case Mut(nwtrm @ New(c, a, r)) => (true, c, a, r, nwtrm)
-        case nwtrm @ DynNew(c, a) => (false, c, a, N, nwtrm)
-        case Mut(nwtrm @ DynNew(c, a)) => (true, c, a, N, nwtrm)
         case _ => spuriousWarning
       classOf(cls, nwtrm): sr =>
         rft match

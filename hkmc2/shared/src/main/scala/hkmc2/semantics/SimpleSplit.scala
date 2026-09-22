@@ -96,7 +96,7 @@ enum SimpleSplit extends AutoLocated with ProductWithTail:
     _expandedSplit = S(split)
     split
   
-  def mkClone(using State): SimpleSplit = this match
+  def mkClone(using State, codegen.Lowering): SimpleSplit = this match
     case Cons(head, tail) => Cons(head match
       case Head.Match(scrutinee, pattern, consequent) =>
         Head.Match(scrutinee.mkClone.asInstanceOf, pattern, consequent.mkClone) // TODO: clone `pattern`?

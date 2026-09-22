@@ -1,0 +1,11 @@
+:js
+
+class First
+class Second
+
+fun construct(c) = new! c
+fun constructMutable(c) = new! mut c
+
+:expect [First, Second, First, Second]
+[construct(First), construct(Second), constructMutable(First), constructMutable(Second)]
+//│ = [First, Second, First, Second]

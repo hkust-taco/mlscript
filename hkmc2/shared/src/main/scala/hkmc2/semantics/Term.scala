@@ -77,7 +77,7 @@ enum Annot extends AutoLocated:
     case Trm(trm) => doc"@${trm.show}"
     case Config(_) => doc"@config(...)"
   
-  def mkClone(using State): Annot = this match
+  def mkClone(using State, codegen.Lowering): Annot = this match
     case Untyped => Untyped
     case Modifier(mod) => Modifier(mod)
     case Trm(trm) => Trm(trm.mkClone)
@@ -335,7 +335,7 @@ case class SrcScope(outer: Elaborator.OuterCtx, parent: Opt[SrcScope]):
         case S(par) =>
           val (base, path) = par.outermostAcessibleBase
           (base, inner :: path)
-      case _: (Function | LocalScope) | LambdaOrHandlerBlock | NonReturnContext =>
+      case _: (Function | LocalScope | NonReturnContext) | LambdaOrHandlerBlock =>
         (this, Nil)
 
 object SrcScope:
@@ -441,7 +441,7 @@ enum Term extends Statement, ShapePublisher:
   case Unquoted(body: Term)
   case New(cls: Term, args: Ls[Term], rft: Opt[ClassSymbol -> ObjBody])
     (val resSym: FlowSymbol, val typ: Opt[Type]) extends Term, ResolvableImpl
-  case DynNew(cls: Term, args: Ls[Term]) extends Term, ResolvableImpl
+  case DynNew(cls: Term, args: Ls[Term])
   case Asc(term: Term, ty: Term)
   case CompType(lhs: Term, rhs: Term, pol: Bool)
   case Neg(rhs: Term)
@@ -603,7 +603,24 @@ enum Term extends Statement, ShapePublisher:
     App(this, Tup(args.toList.map(PlainFld(_)))(Tree.DummyTup))
       (Tree.App(Tree.Dummy, Tree.Dummy), N, FlowSymbol(""))
   
-  override def mkClone(using State): Term = 
+  /** Duplicate an elaborated expression after resolution, retaining its semantic
+    * identity and completed results. Listeners belong to elaboration and are not copied.
+    */
+  override def mkClone(using State, codegen.Lowering): Term =
+    def copyShapes[T <: ShapeHost](source: ShapeHost, copy: T): T =
+      copy.shapes ++= source.shapes
+      copy
+    def copyResolution[T <: Resolvable](source: Resolvable, copy: T): T =
+      copy.isErroneous = source.isErroneous
+      source.expansion.foreach(expansion => copy.expand(expansion.map(_.mkClone)))
+      copyShapes(source, copy)
+    def copySelection[T <: Term & AnySel](source: Term & AnySel, copy: T): T =
+      copy.resolvedTargets = source.resolvedTargets
+      copyResolution(source, copy)
+    def copyNewResolution[T <: NewResolvable](source: NewResolvable, copy: T): T =
+      copy.resolvedTargets = source.resolvedTargets
+      copy.isErroneous = source.isErroneous
+      copy
     val that = this match
       case Error() => Error()
       case UnitVal() => UnitVal()
@@ -613,13 +630,36 @@ enum Term extends Statement, ShapePublisher:
       case Lit(Tree.DecLit(value)) => Lit(Tree.DecLit(value))
       case Lit(Tree.BoolLit(value)) => Lit(Tree.BoolLit(value))
       case Lit(Tree.UnitLit(value)) => Lit(Tree.UnitLit(value))
-      case term @ Resolved(t, sym) => Resolved(t.mkClone, sym)(term.typ)
-      case term @ Ref(sym) => Ref(sym)(Tree.Ident(term.tree.name), term.typ)
-      case term @ App(lhs, rhs) => App(lhs.mkClone, rhs.mkClone)(term.tree, term.typ, term.resSym)
-      case term @ TyApp(lhs, targs) => TyApp(lhs.mkClone, targs.map(_.mkClone))(term.typ)
-      case term @ Sel(prefix, nme) => Sel(prefix.mkClone, Tree.Ident(nme.name))(term.sym, term.resSym, term.typ, term.originalCtx)
-      case term @ SynthSel(prefix, nme) => SynthSel(prefix.mkClone, Tree.Ident(nme.name))(term.sym, term.resSym, term.typ, term.originalCtx)
-      case term @ LeadingDotSel(nme) => LeadingDotSel(Tree.Ident(nme.name))(term.originalCtx)
+      case term @ SimpleRef(sym) => SimpleRef(sym)(term.tree)
+      case term @ SelfRef(sym) => SelfRef(sym)(term.tree)
+      case term @ MemberRef(sym) => copyNewResolution(term, MemberRef(sym)(term.tree, term.resSym))
+      case term @ NewSel(prefix, id, cls) =>
+        val copy = NewSel(prefix.mkClone, id, cls.map(_.mkClone))(term.resSym)
+        copy.resolvedMembers = term.resolvedMembers
+        copy.resolvedClasses = term.resolvedClasses
+        copyNewResolution(term, copyShapes(term, copy))
+      case term @ UnresolvedRef(prefixes, id) =>
+        val clonedPrefixes = prefixes.map(_.mkClone)
+        val copy = UnresolvedRef(clonedPrefixes, id)(term.resSym)
+        copy.resolvedMembers = term.resolvedMembers.map: (receiver, member) =>
+          val index = prefixes.indexWhere(_ is receiver)
+          assert(index >= 0, "A wildcard candidate must belong to an opened prefix")
+          clonedPrefixes(index) -> member
+        copyNewResolution(term, copyShapes(term, copy))
+      case Capture(base, thru) => Capture(base.mkClone, thru)
+      case term @ Resolved(t, sym) => copyResolution(term, Resolved(t.mkClone, sym)(term.typ))
+      case term @ Ref(sym) => copyResolution(term, Ref(sym)(Tree.Ident(term.tree.name), term.typ))
+      case term @ App(lhs, rhs) =>
+        val copy = App(lhs.mkClone, rhs.mkClone)(term.tree, term.typ, term.resSym)
+        copy.resolvedTargets = term.resolvedTargets
+        copyResolution(term, copy)
+      case term @ TyApp(lhs, targs) => copyResolution(term, TyApp(lhs.mkClone, targs.map(_.mkClone))(term.typ))
+      case term @ Sel(prefix, nme) => copySelection(term, Sel(prefix.mkClone, Tree.Ident(nme.name))(term.sym, term.resSym, term.typ, term.originalCtx))
+      case term @ SynthSel(prefix, nme) => copySelection(term, SynthSel(prefix.mkClone, Tree.Ident(nme.name))(term.sym, term.resSym, term.typ, term.originalCtx))
+      case term @ LeadingDotSel(nme) =>
+        val copy = LeadingDotSel(Tree.Ident(nme.name))(term.originalCtx)
+        copy.resolvedTargets = term.resolvedTargets
+        copyResolution(term, copy)
       case DynSel(prefix, fld, arrayIdx) => DynSel(prefix.mkClone, fld.mkClone, arrayIdx)
       case term @ Tup(fields) => Tup(fields.map {
         case f: Fld => f.copy(term = f.term.mkClone, asc = f.asc.map(_.mkClone))
@@ -630,7 +670,7 @@ enum Term extends Statement, ShapePublisher:
         case f: Fld => f.copy(term = f.term.mkClone, asc = f.asc.map(_.mkClone))
         case s: Spd => s.copy(term = s.term.mkClone)
       })(term.tree)
-      case IfLike(kw, form, split) => IfLike(kw, form, split.mkClone)
+      case term @ IfLike(kw, form, split) => copyShapes(term, IfLike(kw, form, split.mkClone))
       case SynthIf(split) => SynthIf(split.mkClone)
       case SynthWhile(split) => SynthWhile(split.mkClone)
       case Lam(params, body) => Lam(params, body.mkClone)
@@ -643,10 +683,10 @@ enum Term extends Statement, ShapePublisher:
       case Quoted(body) => Quoted(body.mkClone)
       case Unquoted(body) => Unquoted(body.mkClone)
       case term @ New(cls, args, rft) =>
-        New(cls.mkClone, args.map(_.mkClone), rft.map { case (cs, ob) => cs -> ObjBody(ob.blk.mkBlkClone) })(term.resSym, term.typ)
+        copyResolution(term, New(cls.mkClone, args.map(_.mkClone), rft.map { case (cs, ob) => cs -> ObjBody(ob.blk.mkBlkClone) })(term.resSym, term.typ))
       case DynNew(cls, args) => DynNew(cls.mkClone, args.map(_.mkClone))
       case term @ SelProj(prefix, cls, proj) =>
-        SelProj(prefix.mkClone, cls.mkClone, Tree.Ident(proj.name))(term.sym, term.resSym, term.typ, term.originalCtx)
+        copySelection(term, SelProj(prefix.mkClone, cls.mkClone, Tree.Ident(proj.name))(term.sym, term.resSym, term.typ, term.originalCtx))
       case Asc(term, ty) => Asc(term.mkClone, ty.mkClone)
       case CompType(lhs, rhs, pol) => CompType(lhs.mkClone, rhs.mkClone, pol)
       case Neg(rhs) => Neg(rhs.mkClone)
@@ -665,11 +705,9 @@ enum Term extends Statement, ShapePublisher:
       case Annotated(annot, target) => Annotated(annot, target.mkClone)
       case Handle(lhs, rhs, args, derivedClsSym, defs, body) =>
         Handle(lhs, rhs.mkClone, args.map(_.mkClone), derivedClsSym, defs, body.mkClone)
-    (this, that) match
-      case (self: Resolvable, that: Resolvable) if self.expansion.isDefined =>
-        that.expand(self.expansion.get.map(_.mkClone))
-      case _ =>
-        that
+    that.withLocOf(this)
+    that.typeInterpretation = typeInterpretation
+    that
   
   // // private[semantics] val reslListeners: Buffer[Resolution] = MutSet.empty
   // private[semantics] val shapeListeners: Buffer[Shape => Unit] = Buffer.empty
@@ -756,7 +794,7 @@ trait Describable:
 
 sealed trait Statement extends AutoLocated, ProductWithExtraInfo, Describable:
   
-  def mkClone(using State): Statement = this match
+  def mkClone(using State, codegen.Lowering): Statement = this match
     case t: Term => lastWords(s"overridden implementation")
     case d: Definition => ???
     case imp: Import => Import(imp.sym, imp.str, imp.file)
@@ -1681,7 +1719,7 @@ object Apps:
 
 trait BlkImpl:
   this: Blk =>
-  def mkBlkClone(using State): Blk = Blk(stats.map(_.mkClone), res.mkClone)
+  def mkBlkClone(using State, codegen.Lowering): Blk = Blk(stats.map(_.mkClone), res.mkClone)
   def showTopLevel(using Scope, ShowCfg, Raise): Document =
     (stats ::: (res match
       case Lit(Tree.UnitLit(false)) => Nil

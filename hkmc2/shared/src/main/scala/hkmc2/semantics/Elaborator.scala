@@ -214,12 +214,12 @@ object Elaborator:
       case f: OuterCtx.Function => f.isGenerator
       case _: OuterCtx.LocalScope =>
         parent.fold(false)(_.inGenerator)
-      case _: (OuterCtx.LambdaOrHandlerBlock.type | OuterCtx.InnerScope | OuterCtx.NonReturnContext.type) => false
+      case _: (OuterCtx.LambdaOrHandlerBlock.type | OuterCtx.InnerScope | OuterCtx.NonReturnContext) => false
     def inAsync: Bool = outer match
       case f: OuterCtx.Function => f.isAsync
       case _: OuterCtx.LocalScope =>
         parent.fold(false)(_.inAsync)
-      case _: (OuterCtx.LambdaOrHandlerBlock.type | OuterCtx.InnerScope | OuterCtx.NonReturnContext.type) => false
+      case _: (OuterCtx.LambdaOrHandlerBlock.type | OuterCtx.InnerScope | OuterCtx.NonReturnContext) => false
     def potentiallyInstrumented(using Config): Bool = config.effectHandlers.isDefined || inAsync
     
     // * Invariant: We expect that the top-level context only contain hard-coded symbols like `globalThis`

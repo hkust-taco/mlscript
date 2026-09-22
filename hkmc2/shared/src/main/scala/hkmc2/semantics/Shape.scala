@@ -20,6 +20,8 @@ sealed trait Shape extends ShapeLike:
     case ns: SymShape => s"SymShape(${ns.sym.showDbg})"
     case ns: NewShape => s"NewShape(${ns.cls.showDbg}, ${ns.argss.map(_.showDbg).mkString(", ")})"
     case is: IntroShape => s"IntroShape(${is.trm.showDbg})"
+    case bs: BaseShape => s"BaseShape(${bs.defn.sym.showDbg})"
+    case es: ErrShape => es.describe
 
 sealed trait NonMarkedShape extends TermShape
 sealed trait NonAppTermShape extends NonMarkedShape
@@ -308,7 +310,6 @@ class DefnShape(val defn: Definition, val ext: Opt[TermShape]) extends NonAppTer
         defn.tsym match
         case _: ClassCtorSymbol => "class constructor "
         case s => s.k.desc + " "
-      case _ => ""
     }'${defn.bsym.nme}'"
   // override def toString: String = s"DefnShape(${defn.describe} ${defn.bsym.nme})"
   override def toString: String = s"DefnShape(${defn.describe})"
