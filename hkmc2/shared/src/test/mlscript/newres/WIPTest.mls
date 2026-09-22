@@ -101,12 +101,9 @@ M.p.id
 //│ | | | | listenBMS: bms = module
 //│ | | | | listenedBMS: bms = module
 //│ | | | | fromBMS: bms = member:M¹, sh = module:M⁰, flow = M², markss = List()
-//│ | | | | .exit MarkedShape (module:M⁰, module:M⁰, M²)
-//│ | | | | | class hkmc2.semantics.ModuleOrObjectSymbol ?
-//│ | | | | = MarkedShape(module:M⁰, ↗⟨module:M⁰⟩%⟨M²⟩ϵ)
-//│ | | | | PUSH MarkedShape(module:M⁰, ↗⟨module:M⁰⟩%⟨M²⟩ϵ)
-//│ | | | | newSel: sel = member:M¹.p, shape = MarkedShape(module:M⁰, ↗⟨module:M⁰⟩%⟨M²⟩ϵ)
-//│ | | | | newSel member: bms = member:p¹, mss = List(↗⟨module:M⁰⟩%⟨M²⟩ϵ)
+//│ | | | | PUSH module:M⁰
+//│ | | | | newSel: sel = member:M¹.p, shape = module:M⁰
+//│ | | | | newSel member: bms = member:p¹, mss = List()
 //│ | | | ~> member:M¹.p
 //│ | | | newSel? sel = member:M¹.p.id
 //│ | | | listenTerm: trm = member:M¹.p
@@ -121,24 +118,14 @@ M.p.id
 //│ | | | listenBMS: bms = module
 //│ | | | listenedBMS: bms = module
 //│ | | | fromBMS: bms = member:Predef⁰, sh = module:Predef¹, flow = Predef², markss = List()
-//│ | | | .exit MarkedShape (module:Predef¹, module:Predef¹, Predef²)
-//│ | | | | class hkmc2.semantics.ModuleOrObjectSymbol ?
-//│ | | | = MarkedShape(module:Predef¹, ↗⟨module:Predef¹⟩%⟨Predef²⟩ϵ)
-//│ | | | PUSH MarkedShape(module:Predef¹, ↗⟨module:Predef¹⟩%⟨Predef²⟩ϵ)
-//│ | | | fromBMS: bms = member:p¹, sh = MarkedShape(module:Predef¹, ↘⟨term:M⁰/p⁰⟩↗⟨module:Predef¹⟩%⟨Predef²⟩ϵ), flow = ⋅p⁰, markss = List(↗⟨module:M⁰⟩%⟨M²⟩ϵ)
-//│ | | | .exit MarkedShape (MarkedShape(module:Predef¹, ↘⟨term:M⁰/p⁰⟩↗⟨module:Predef¹⟩%⟨Predef²⟩ϵ), term:M⁰/p⁰, ⋅p⁰)
+//│ | | | PUSH module:Predef¹
+//│ | | | fromBMS: bms = member:p¹, sh = MarkedShape(module:Predef¹, ↘⟨term:M⁰/p⁰⟩ϵ), flow = ⋅p⁰, markss = List()
+//│ | | | .exit MarkedShape (MarkedShape(module:Predef¹, ↘⟨term:M⁰/p⁰⟩ϵ), term:M⁰/p⁰, ⋅p⁰)
 //│ | | | | class hkmc2.semantics.TermSymbol Some(module:M⁰)
-//│ | | | = MarkedShape(module:Predef¹, ↗⟨module:Predef¹⟩%⟨Predef²⟩ϵ)
-//│ | | | .exit MarkedShape(module:Predef¹, ↗⟨module:Predef¹⟩%⟨Predef²⟩ϵ) (↗⟨module:M⁰⟩%⟨M²⟩ϵ)
-//│ | | | | .exit MarkedShape(module:Predef¹, ↗⟨module:Predef¹⟩%⟨Predef²⟩ϵ) (ϵ)
-//│ | | | | = MarkedShape(module:Predef¹, ↗⟨module:Predef¹⟩%⟨Predef²⟩ϵ)
-//│ | | | | .exit MarkedShape (MarkedShape(module:Predef¹, ↗⟨module:Predef¹⟩%⟨Predef²⟩ϵ), module:M⁰, M²)
-//│ | | | | | class hkmc2.semantics.ModuleOrObjectSymbol ?
-//│ | | | | = MarkedShape(module:Predef¹, ↗⟨module:M⁰⟩%⟨M²⟩↗⟨module:Predef¹⟩%⟨Predef²⟩ϵ)
-//│ | | | = MarkedShape(module:Predef¹, ↗⟨module:M⁰⟩%⟨M²⟩↗⟨module:Predef¹⟩%⟨Predef²⟩ϵ)
-//│ | | | MATCH MarkedShape(module:Predef¹, ↗⟨module:M⁰⟩%⟨M²⟩↗⟨module:Predef¹⟩%⟨Predef²⟩ϵ) for term:M⁰/p⁰ % ⋅p⁰
-//│ | | | newSel: sel = member:M¹.p.id, shape = MarkedShape(module:Predef¹, ↗⟨module:M⁰⟩%⟨M²⟩↗⟨module:Predef¹⟩%⟨Predef²⟩ϵ)
-//│ | | | newSel member: bms = member:id⁰, mss = List(↗⟨module:M⁰⟩%⟨M²⟩↗⟨module:Predef¹⟩%⟨Predef²⟩ϵ)
+//│ | | | = module:Predef¹
+//│ | | | MATCH module:Predef¹ for term:M⁰/p⁰ % ⋅p⁰
+//│ | | | newSel: sel = member:M¹.p.id, shape = module:Predef¹
+//│ | | | newSel member: bms = member:id⁰, mss = List()
 //│ | | ~> member:M¹.p.id
 //│ | ~> member:M¹.p.id
 //│ ~> { member:M¹.p.id }

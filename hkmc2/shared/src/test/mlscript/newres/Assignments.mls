@@ -40,8 +40,7 @@ Later.Item
 //│ = 7
 
 
-// FIXME: Capturing a function parameter through a nested module currently
-// mismatches module/function marks, including without assignment resolution.
+// Resolving the assignment must preserve captures through the nested module.
 fun replace(initial) = {
   module Local {
     class Item
@@ -51,11 +50,10 @@ fun replace(initial) = {
   Local.Item
 }
 
-:fixme
 :noInline
 :expect 9
 replace(0)
-//│ /!!!\ Uncaught error: java.lang.IllegalArgumentException: requirement failed: Expected symbol module:Local⁰ but got term:replace⁰
+//│ = 9
 
 
 // Resolving an l-value must preserve receiver-before-RHS evaluation, once each.
@@ -85,6 +83,6 @@ module Classes {
 }
 set Classes.Only = 0
 //│ ╔══[COMPILATION ERROR] Assignment requires an unambiguous term member
-//│ ║  l.86: 	set Classes.Only = 0
+//│ ║  l.84: 	set Classes.Only = 0
 //│ ╙──      	    ^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.

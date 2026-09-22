@@ -407,11 +407,15 @@ class NewResolver:
         val wrappedListener: TermShape => Unit = sh =>
           log(s"fromBMS: bms = ${bms.showDbg}, sh = ${sh.shwDbg}, flow = ${resSym.showDbg}, markss = ${markss.map(_.showDbg)}")
           val sh0 = sh
-          MarkedShape.exit(sh, sym, S(resSym)).exit(markss) match
-          // sh.exit(markss) match
-          // case NoShape =>
-          // case sh: TermShape =>
-          //   MarkedShape.exit(sh, sym, S(resSym)) match
+          // Modules and objects introduce no enter/exit boundary of their own.
+          // Adding an exit here would try to consume an enclosing function's
+          // entry mark when a member captures one of that function's parameters.
+          // Receiver-context marks still apply, including when a function returns
+          // a module: they keep captures from different calls separate.
+          val exited = sym match
+            case _: ModuleOrObjectSymbol => sh
+            case _ => MarkedShape.exit(sh, sym, S(resSym))
+          exited.exit(markss) match
             case NoShape =>
               log(s"FILTER OUT ${sh.shwDbg} for ${sym.showDbg} % ${resSym.showDbg}")
             case sh: TermShape =>

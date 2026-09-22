@@ -63,10 +63,14 @@ receiver and capture context; module completion must not change lexical priority
   still supply a selected definition.
 - Stage 2 regressions cover a forward module definition, overloaded field writes,
   backtracking restoration, declared fields, receiver/RHS evaluation order, and
-  rejection of a class-only assignment target. A nested-module parameter capture
-  assertion also occurs without the new assignment listener; it is recorded as
-  a `:fixme` in `newres/Assignments.mls` for the capture work in stage 3.
+  rejection of a class-only assignment target.
 - Stage 2 validation: `ctest` passed (45 tests); `dtest newres/` passed (24 files);
   `hkmc2AllTests/test` passed. Regression outputs reviewed for the stage checkpoint.
+- Capture follow-up: module/object references no longer introduce their own exit
+  marks. Enclosing function and receiver-context marks remain intact. This fixes
+  the nested-module assertion in `newres/Assignments.mls`; its `:fixme` is removed.
+  `newres/ModuleCaptures.mls` covers nested and escaping modules, objects, getters,
+  methods, and separation of captures from distinct calls. Validation passed:
+  `ctest` (45 tests), `dtest newres/` (25 files), and `hkmc2AllTests/test`.
 - Stages 3 and 4 remain pending. In particular, `moduleMembers`, the lexical
   `SelElem` shape shortcut, and the read-side lowering fallbacks are still present.
