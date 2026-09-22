@@ -597,23 +597,8 @@ class NewResolver:
     log(s"listen: trm = ${trm.showDbg}")
     trm.shapeListeners += listener
     trm match
-    // * Synthetic selections are not really selections from the POV of the resolver.
-    // * Eg: a plain member reference or plain reference to imported symbol
-    // * Later, we should make Terms more closely aligned wiht the source and remove SynthSel
-    case ss: SynthSel =>
-      ss.sym match
-      case S(ts: TermSymbol) =>
-        ???
-        ts.defn.get.body match
-        case S(body) =>
-          listenTerm(body)(listener)
-        case N =>
-          ??? // TODO error? use sig
-      case S(bms: BlockMemberSymbol) =>
-        // TODO: add mark
-        fromBMS(bms, ss.resSym, Nil//TODO?
-          , listener, trm, _ => ())
-      case N => ???
+    case _: SynthSel =>
+      lastWords("Synthetic selections must not enter new resolution")
     case TyApp(underlying, _) => listen(underlying, discardMarks)(listener)
     case Mut(underlying) => listenTerm(underlying)(listener)
     case intro: IntroTerm =>
