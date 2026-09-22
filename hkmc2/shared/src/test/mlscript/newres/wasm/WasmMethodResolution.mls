@@ -1,0 +1,24 @@
+:..
+
+
+:global
+:wasm
+
+
+:fixme
+class A(val x) with
+  fun get() = x
+let a = A(1)
+a.A#get() + A(2).get() + a.get() 
+//│ ╔══[COMPILATION ERROR] Identifier `A` does not name a known class symbol.
+//│ ║  l.12: 	a.A#get() + A(2).get() + a.get() 
+//│ ╙──      	 ^^
+//│ ═══[COMPILATION ERROR] No definition found in scope for member 'wasm'
+//│ ═══[COMPILATION ERROR] No definition found in scope for member 'wasm'
+//│ ═══[RUNTIME ERROR] ReferenceError: wasm is not defined
+//│ a = A(1)
+//│ ╔══[COMPILATION ERROR] WatBuilder::result for field selection without a resolved symbol is not implemented (field `get`). Use `_.[_]` for index-based accesses.
+//│ ║  l.12: 	a.A#get() + A(2).get() + a.get() 
+//│ ╙──      	    ^^^
+
+
