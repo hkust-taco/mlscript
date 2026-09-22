@@ -95,7 +95,7 @@ if
 //│     tmp = 1 + element0$;
 //│   } else { throw globalThis.Object.freeze(new globalThis.Error("match error")) }
 //│ }
-//│ block$res5 = tmp;
+//│ block$res4 = tmp;
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 1
 

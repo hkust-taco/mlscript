@@ -42,7 +42,7 @@
 //│   runtime.checkArgs("", 1, false, arguments.length);
 //│   throw "This code cannot be run as its compilation yielded an error."
 //│ });
-//│ block$res3 = runtime.safeCall(lambda1());
+//│ block$res2 = runtime.safeCall(lambda1());
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ ═══[RUNTIME ERROR] Error: Function expected at least 1 argument but got 0
 
