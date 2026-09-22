@@ -629,6 +629,12 @@ object ClassTagsTransformer:
   ): Program =
     cfg.classTags match
       case N => p
+      case S(_) if !cfg.noFreeze => // TODO: make the tag a real field and remove this restriction.
+        raise(ErrorReport(
+          msg"Class tag insertion requires :noFreeze." -> N :: Nil,
+          source = Diagnostic.Source.Compilation,
+        ))
+        p
       case S(dCfg) =>
         val flowCfg = Config.FlowAnalysisConfig(
           debug = false,

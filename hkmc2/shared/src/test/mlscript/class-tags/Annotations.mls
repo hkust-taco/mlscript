@@ -1,4 +1,5 @@
 :classTags debug mono
+:noFreeze
 
 //│ >>> start class-tags collection-phase
 //│ <<< end class-tags collection-phase
@@ -27,10 +28,10 @@ fun foo(x) = @matchShapes(C(D(_)), C(E(1)), F(_)) shape.match of x,
 :w
 @matchShapes(C(_)) 1
 //│ ╔══[WARNING] This annotation has no effect.
-//│ ║  l.28: 	@matchShapes(C(_)) 1
+//│ ║  l.29: 	@matchShapes(C(_)) 1
 //│ ║        	             ^^^
 //│ ╟── This annotation is not supported on integer literal terms.
-//│ ║  l.28: 	@matchShapes(C(_)) 1
+//│ ║  l.29: 	@matchShapes(C(_)) 1
 //│ ╙──      	                   ^
 //│ >>> start class-tags collection-phase
 //│ <<< end class-tags collection-phase
@@ -41,7 +42,7 @@ fun foo(x) = @matchShapes(C(D(_)), C(E(1)), F(_)) shape.match of x,
 :w
 @matchShapes(C(_)) fun foo(x) = x
 //│ ╔══[WARNING] This annotation has no effect.
-//│ ║  l.42: 	@matchShapes(C(_)) fun foo(x) = x
+//│ ║  l.43: 	@matchShapes(C(_)) fun foo(x) = x
 //│ ╙──      	             ^^^
 //│ >>> start class-tags collection-phase
 //│ <<< end class-tags collection-phase
