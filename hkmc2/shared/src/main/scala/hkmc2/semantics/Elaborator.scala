@@ -783,7 +783,7 @@ extends Importer:
       val valueSym = spec.valueParamName.map(nme => VarSymbol(Ident(nme), erasedType = N))
       val resumeSym = VarSymbol(Ident("resume"), erasedType = N)
       val mtdSym = BlockMemberSymbol(spec.methodName, Nil, true)
-      val tsym = TermSymbol(Fun, N, Ident(spec.methodName), erasedType = N)
+      val tsym = TermSymbol(Fun, N, Ident(spec.methodName), erasure = N)
       val td = TermDefinition(
         Fun,
         mtdSym,
@@ -2193,7 +2193,7 @@ extends Importer:
                   else S(ErasedFuncSignature.Signature(physicalParamLists, retTpe))
                 case _: syntax.Val => retTpe
                 case _ => N
-              val tsym = TermSymbol(k, owner, id, erasedType = erasedTpe) // TODO?
+              val tsym = TermSymbol(k, owner, id, erasure = erasedTpe) // TODO?
               val tdf = TermDefinition(k, sym, tsym, pss, tps, s, body, 
                 TermDefFlags.empty.copy(isMethod = isMethod), mfn, annotations, N).withLocOf(td)
               tsym.defn = S(tdf)
@@ -2325,7 +2325,7 @@ extends Importer:
                 p.sym.erasedType.foreach(tpe => tsym.erasedType = S(tpe))
                 fdef :: Nil
               else
-                val psym = TermSymbol(LetBind, owner, p.sym.id, erasedType = p.sym.erasedType)
+                val psym = TermSymbol(LetBind, owner, p.sym.id, erasure = p.sym.erasedType)
                 psym.sourceAliases = p.sym.sourceAliases
                 val decl = LetDecl(psym, Nil)
                 val defn = DefineVar(psym, p.sym.ref())
@@ -2338,7 +2338,7 @@ extends Importer:
               val owner = td.symbol match
                 case s: InnerSymbol => S(s)
                 case _: TypeAliasSymbol => die
-              val psym = TermSymbol(LetBind, owner, p.sym.id, erasedType = p.sym.erasedType)
+              val psym = TermSymbol(LetBind, owner, p.sym.id, erasure = p.sym.erasedType)
               psym.sourceAliases = p.sym.sourceAliases
               val decl = LetDecl(psym, Nil)
               val defn = DefineVar(psym, p.sym.ref())
@@ -2587,7 +2587,7 @@ extends Importer:
     case N => N
   
   def fieldOrVarSym(k: TermDefKind, id: Ident)(using Ctx): TermSymbol | VarSymbol =
-    if ctx.outer.inner.isDefined then TermSymbol(k, ctx.outer.inner, id, erasedType = N)
+    if ctx.outer.inner.isDefined then TermSymbol(k, ctx.outer.inner, id, erasure = N)
     else VarSymbol(id, erasedType = N)
   
   def param(t: Tree, inUsing: Bool, inDataClass: Bool): Ctxl[Diagnostic \/ (Param, Opt[SpreadKind], Ls[Str])] =

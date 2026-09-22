@@ -588,7 +588,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
         val capturedType = sym.mapErasedValueType
         val varSym = VarSymbol(ident, erasedType = capturedType)
         val fldSym = BlockMemberSymbol(nme, Nil)
-        val tSym = TermSymbol(syntax.MutVal, S(clsSym), ident, erasedType = capturedType)
+        val tSym = TermSymbol(syntax.MutVal, S(clsSym), ident, erasure = capturedType)
         
         val p = Param(FldFlags.empty.copy(isVal = true), varSym, N, Modulefulness.none)
         varSym.decl = S(p) // * Currently this is only accessed to create the class' toString method
@@ -895,11 +895,11 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
     * A rewritten scope with a TermSymbol capture symbol.
     */
   sealed trait ClsLikeRewrittenScope[T](sym: InnerSymbol) extends RewrittenScope[T]:
-    lazy val captureSym = TermSymbol(syntax.ImmutVal, S(sym), Tree.Ident(obj.nme + "$cap"), erasedType = captureType)
+    lazy val captureSym = TermSymbol(syntax.ImmutVal, S(sym), Tree.Ident(obj.nme + "$cap"), erasure = captureType)
     override lazy val capturePath = Select(sym.asThis, captureSym.id)(S(captureSym))(false)
     protected val liftedObjsOrdered: List[InnerSymbol] = node.liftedObjSyms.toList.sortBy(_.uid)
     protected val liftedObjsSyms: Map[InnerSymbol, TermSymbol] = liftedObjsOrdered.map: s =>
-        s -> TermSymbol(syntax.ImmutVal, S(sym), Tree.Ident(s.nme + "$"), erasedType = N)
+        s -> TermSymbol(syntax.ImmutVal, S(sym), Tree.Ident(s.nme + "$"), erasure = N)
       .toMap
     override lazy val liftedObjsMap: Map[InnerSymbol, LocalPath] = liftedObjsSyms.map:
       case k -> v => k -> LocalPath.privateSelfField(v)
@@ -978,7 +978,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
       extends RewrittenScope[ClsLikeDefn](obj)
       with ClsLikeRewrittenScope[ClsLikeDefn](obj.cls.isym):
     
-    private val captureSym = TermSymbol(syntax.ImmutVal, S(obj.cls.isym), Tree.Ident(obj.nme + "$cap"), erasedType = N)
+    private val captureSym = TermSymbol(syntax.ImmutVal, S(obj.cls.isym), Tree.Ident(obj.nme + "$cap"), erasure = N)
     override lazy val capturePath: Path = Select(obj.cls.isym.asThis, captureSym.id)(S(captureSym))(false)
     
     override def rewriteImpl: LifterResult[ClsLikeDefn] =
@@ -1012,7 +1012,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
       extends RewrittenScope[ClsLikeBody](obj)
       with ClsLikeRewrittenScope[ClsLikeBody](obj.clsBody.isym):
     
-    private val captureSym = TermSymbol(syntax.ImmutVal, S(obj.clsBody.isym), Tree.Ident(obj.nme + "$cap"), erasedType = N)
+    private val captureSym = TermSymbol(syntax.ImmutVal, S(obj.clsBody.isym), Tree.Ident(obj.nme + "$cap"), erasure = N)
     override lazy val capturePath: Path = Select(obj.clsBody.isym.asThis, captureSym.id)(S(captureSym))(false)
       
     override def rewriteImpl: LifterResult[ClsLikeBody] =
@@ -1136,7 +1136,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
       extends LiftedScope[ClsLikeDefn](obj)
       with ClsLikeRewrittenScope[ClsLikeDefn](obj.cls.isym):
     
-    private val captureSym = TermSymbol(syntax.ImmutVal, S(obj.cls.isym), Tree.Ident(obj.nme + "$cap"), erasedType = N)
+    private val captureSym = TermSymbol(syntax.ImmutVal, S(obj.cls.isym), Tree.Ident(obj.nme + "$cap"), erasure = N)
     override lazy val capturePath: Path = Select(obj.cls.isym.asThis, captureSym.id)(S(captureSym))(false)
     
     private val passedSymsMap_ : Map[ValueSymbol, (vs: VarSymbol, ts: TermSymbol)] = passedSymsOrdered.map: s =>

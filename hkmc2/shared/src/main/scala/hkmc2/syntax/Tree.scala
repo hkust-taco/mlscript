@@ -717,7 +717,7 @@ trait TypeDefImpl(using State) extends TypeOrTermDef:
       pts.flatMap(_.desugared.asParam(inUsing = inUsing).toOption).collect:
         case pt @ ParamTree(ident = id, spd = N) =>
           val k = if pt.flags.mut then MutVal else ImmutVal
-          TermSymbol(k, symbol.asClsLike, id, erasedType = N)
+          TermSymbol(k, symbol.asClsLike, id, erasure = N)
       .toList
     
   lazy val allSymbols = definedSymbols ++

@@ -381,7 +381,7 @@ class ReflectionInstrumenter(using State, Raise, Ctx) extends BlockTransformer(n
     val sym = f.owner.get.asThis.selSN(genSymName)
 
     // turn into fundefn
-    val dSym = TermSymbol(f.dSym.k, f.dSym.owner, Tree.Ident(f.sym.nme + "_instr"), erasedType = N)
+    val dSym = TermSymbol(f.dSym.k, f.dSym.owner, Tree.Ident(f.sym.nme + "_instr"), erasure = N)
     val argSyms = f.params.flatMap(_.params).map(_.sym)
     val newBody = Scoped(Set(argSyms*), transformFunDefn(f)(using new HashMap)(Return(_)))
 

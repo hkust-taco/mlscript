@@ -298,14 +298,14 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
   private val baseObjectSym: BlockMemberSymbol = BlockMemberSymbol("Object", Nil)
 
   /** Synthetic field symbol for the object-header pointer to a class's shared RTTI object. */
-  private val typeInfoFieldSym: TermSymbol = TermSymbol(syntax.MutVal, owner = N, Ident("$typeinfo"), erasedType = N)
+  private val typeInfoFieldSym: TermSymbol = TermSymbol(syntax.MutVal, owner = N, Ident("$typeinfo"), erasure = N)
 
   /** Synthetic field symbol for the runtime class tag stored in RTTI. */
   private val tagFieldSym: TermSymbol =
-    TermSymbol(syntax.MutVal, owner = N, Ident("$tag"), erasedType = S(ErasedType.Int))
+    TermSymbol(syntax.MutVal, owner = N, Ident("$tag"), erasure = S(ErasedType.Int))
 
   /** Synthetic field symbol for the direct-parent RTTI reference used by runtime subtype checks. */
-  private val parentFieldSym: TermSymbol = TermSymbol(syntax.MutVal, owner = N, Ident("$parent"), erasedType = N)
+  private val parentFieldSym: TermSymbol = TermSymbol(syntax.MutVal, owner = N, Ident("$parent"), erasure = N)
 
   private case class StringLitInfo(offset: Int, byteLen: Int, watBytes: Str)
   private val stringLits: LinkedHashMap[Str, StringLitInfo] = LinkedHashMap.empty
@@ -1176,7 +1176,7 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
     val vt = ctx.getVirtualTable(defn.sym)
     val vtSlots = vt.fold(Nil)(_.slots)
     val newSlotFields = vtSlots.zipWithIndex.drop(parentVirtualMethodCount).map: (slotInfo, slot) =>
-      val fieldSym = TermSymbol(syntax.MutVal, owner = N, Ident(s"slot$slot"), erasedType = N)
+      val fieldSym = TermSymbol(syntax.MutVal, owner = N, Ident(s"slot$slot"), erasure = N)
       fieldSym -> Field(
         RefType(virtualMethodFuncType(defn.sym, slotInfo.paramTypes, slotInfo.resultType), nullable = true),
         mutable = true,

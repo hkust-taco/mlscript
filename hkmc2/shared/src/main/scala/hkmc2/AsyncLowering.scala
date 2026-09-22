@@ -47,7 +47,7 @@ class AsyncLowering(using TL, Raise, Elaborator.State, Elaborator.Ctx, Config):
         syntax.Fun,
         N,
         fun.dSym.id,
-        erasedType = S:
+        erasure = S:
           ErasedFuncSignature.Signature(
             paramLists = 
               (thisParam.map(_.sym.erasedType).toList ++ outerParams.map(_._2.sym.erasedType)) :: Nil :: Nil,
