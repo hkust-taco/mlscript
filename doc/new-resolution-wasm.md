@@ -1,5 +1,5 @@
 
-## Existing WASM suite migration (partial)
+## Initial WASM migration milestone (`8e66dbefd`)
 
 The shared `mlscript/wasm/.mls` enables new resolution, strict resolution, and
 WASM execution while disabling JS execution. Migrated tests start with `:.`,
@@ -39,3 +39,30 @@ Blocked files: `Basics`, `BuiltinOperators`, `Casts`, `ClassMethods`, `ControlFl
 `NumericIntrinsicReview`, `NumericTypes`, `ReplImports`, `TailRecOptCasts`, `Tuples`,
 and `VirtualMethods`. Cross-block method handling remains owned by the other
 branch.
+
+## Type interpretation migration in progress
+
+Ten of the eleven remaining files now use the shared configuration. `Basics`
+retains its previous configuration pending the capture fix below. Deferred type
+interpretations preserve forward aliases and unboxed signatures, and annotations
+publish nominal instance shapes before a function is called. Assignment lowering
+accepts the new reference forms; mutable tuples forward their value shapes.
+The old empty-call syntax for bare classes and paramless getters has been updated.
+
+The retained WASM suite passes all 22 files, including the new forward-alias
+regression. Trying `Basics` with new resolution exposes a capture-context assertion for:
+
+```mlscript
+class Foo(val x)
+fun getX(f: Foo) = f.x
+getX(Foo(42))
+```
+
+The nominal shape supplied by the annotation knows the field symbol but lacks the
+construction context carried by its inferred value. Returning that value tries
+to exit `getX` while its pending entry mark belongs to the constructor `Foo`.
+This must be addressed in the relationship between declared interfaces and
+call-derived value shapes, without bypassing capture invariants. The outstanding
+semantic question is whether annotations fix the available member interface or
+permit refinement from concrete arguments. This is an intermediate checkpoint; the migration is not complete until that
+question and the assertion are resolved.

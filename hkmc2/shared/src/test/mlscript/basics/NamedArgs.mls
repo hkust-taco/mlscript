@@ -1,3 +1,4 @@
+:.
 :js
 
 
@@ -34,9 +35,9 @@ id(a: 0)
 //│ —————————————| Elaborated tree |————————————————————————————————————————————————————————————————————
 //│ Blk:
 //│   res = App:
-//│     lhs = SynthSel{sym=member:id⁰}:
-//│       prefix = Ref{sym=member:Predef⁰} of member:Predef⁰
-//│       nme = Ident of "id"
+//│     lhs = NewSel:
+//│       prefix = MemberRef of member:Predef⁰
+//│       id = Ident of "id"
 //│     rhs = Tup of Ls of
 //│       Fld:
 //│         term = Lit of StrLit of "a"

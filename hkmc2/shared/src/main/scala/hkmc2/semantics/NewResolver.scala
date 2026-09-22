@@ -49,6 +49,70 @@ class NewResolver:
   private val selfShapes: mutable.Map[InnerSymbol, BaseShape] = mutable.Map.empty
   val defnShapes: mutable.Map[DefinitionSymbol[?], DefnShape] = mutable.Map.empty
   
+  /** Interpret types through completed symbolic candidates, independently of term overloads. */
+  def typeResolution(term: Term): TypeResolution = term.typeInterpretation match
+    case S(result) => result
+    case N =>
+      val result = new TypeResolution(term, messages => resolError(term, messages))
+      term.typeInterpretation = S(result) // Register before following a potentially recursive alias.
+      def select(symbol: TypeSymbol): Unit =
+        term.withoutCaptures match
+          case ref: NewResolvable =>
+            if !ref.resolvedTargets.contains(symbol) then ref.resolvedTargets ::= symbol
+          case _ => ()
+        def definition(defn: Definition): Unit = defn match
+          case cls: ClassLikeDef => result.publish(TypeShape.Nominal(cls))
+          case alias: TypeDef => result.publish(TypeShape.Alias(alias.sym, alias.rhs.map(typeResolution)))
+          case _ => result.publish(TypeShape.Abstract)
+        symbol.defn match
+          case S(defn) => definition(defn)
+          case N => symbol.defnListeners += definition
+      def reject(shape: Shape): Unit =
+        result.fail(msg"${shape.describe.capitalize} cannot be used as a type" -> shape.toLoc :: Nil)
+        result.publish(TypeShape.Abstract)
+      term match
+        case Capture(base, _) => typeResolution(base).listen(result.publish)
+        case TyApp(base, _) => typeResolution(base).listen(result.publish)
+        case Forall(_, _, body) => typeResolution(body).listen(result.publish)
+        case CompType(left, right, union) =>
+          val l = typeResolution(left)
+          val r = typeResolution(right)
+          result.publish(if union then TypeShape.Union(l, r) else TypeShape.Intersection(l, r))
+        case _: FunTy => result.publish(TypeShape.Function)
+        case UnitVal() => result.publish(TypeShape.Unit)
+        case SimpleRef(sym: VarSymbol) if sym.decl.exists(_.isInstanceOf[TyParam]) =>
+          result.publish(TypeShape.Abstract)
+        case _: WildcardTy | _: Neg | _: Rcd | _: Tup | _: Lit | Missing | Error() =>
+          result.publish(TypeShape.Abstract)
+        case _ => listen(term, discardMarks = true):
+          case shape: SymShape => shape.sym.onComplete: () =>
+            shape.sym.asTpe.orElse(shape.sym.asModOrObj) match
+              case S(symbol) => select(symbol)
+              case N => reject(shape)
+          case shape: TermShape => reject(shape)
+      result
+
+  def eraseSignature(sign: Term): Opt[codegen.ErasedValueType] =
+    if newResolution then
+      val resolution = typeResolution(sign)
+      S(new codegen.ErasedType.Deferred(resolution.erase(Set.empty)))
+    else codegen.ErasedType.eraseSign(sign)
+
+  /** Declared types provide instance members before there are any calls or assignments.
+    * Recursive aliases are followed once per subscription; their operands may resolve later.
+    */
+  def listenTypeValues(sign: Term)(listener: TermShape => Unit): Unit =
+    val visited = mutable.Set.empty[TypeResolution]
+    def follow(resolution: TypeResolution): Unit = if visited.add(resolution) then
+      resolution.listen:
+        case TypeShape.Nominal(defn) =>
+          listenExt(defn.ext, ext => listener(selfShapes.getOrElseUpdate(defn.sym, BaseShape(defn, ext))))
+        case TypeShape.Alias(_, rhs) => rhs.foreach(follow)
+        case TypeShape.Union(left, right) => follow(left); follow(right)
+        case TypeShape.Intersection(left, right) => follow(left); follow(right)
+        case _ => ()
+    follow(typeResolution(sign))
+
   def isOwnedSym(sym: Symbol): Bool =
     sym.getState is state
   
@@ -56,41 +120,48 @@ class NewResolver:
     ErrorReport(msg"Resolution error in ${src.describe}" -> src.toLoc ::msgs, source = Diagnostic.Source.Compilation)
   
   def zipArgs(mss: Ls[Marks], ps: Ls[Param], r: Opt[Param], args: Ls[Elem], src: Term, funSh: TermShape, argumentMarks: Ls[Marks]): Unit =
-    (ps, args) match
-    case (Nil, Nil) if r.isEmpty => ()
-    // case (Nil, Spd(k, t) :: args) =>
-    //   zip(Nil, r, args)
-    case (Nil, args) =>
-      r match
-      case N =>
-        resolError(src,
-          msg"${funSh.describe.capitalize} expected ${ps.length} ${
-            "argument".pluralized(ps.length)}, but got ${args.length}" -> funSh.toLoc :: Nil)
-      case S(p) =>
-        val packaged = new Tup(args)(Tree.DummyTup).withLoc(Loc.mk(args.iterator.flatMap(_.toLoc)))
-        IntroShape(packaged).exit(argumentMarks).enter(mss) match
-          case NoShape => ()
+    val expectedCount = ps.length
+    val providedCount = args.length
+    // Keep the original arity for diagnostics while consuming matched arguments.
+    def loop(ps: Ls[Param], args: Ls[Elem]): Unit =
+      (ps, args) match
+      case (Nil, Nil) if r.isEmpty => ()
+      // case (Nil, Spd(k, t) :: args) =>
+      //   zip(Nil, r, args)
+      case (Nil, args) =>
+        r match
+        case N =>
+          resolError(src,
+            msg"${funSh.describe.capitalize} expected ${expectedCount} ${
+              "argument".pluralized(expectedCount)}, but got ${providedCount}" -> funSh.toLoc :: Nil)
+        case S(p) =>
+          val packaged = new Tup(args)(Tree.DummyTup).withLoc(Loc.mk(args.iterator.flatMap(_.toLoc)))
+          IntroShape(packaged).exit(argumentMarks).enter(mss) match
+            case NoShape => ()
+            case sh: TermShape =>
+              if isOwnedSym(p.sym) && p.sym.shapes.add(sh) then p.sym.shapeListeners.foreach(_(sh))
+      case (p :: ps, Fld(fls, trm, asc) :: args) if p.sign.nonEmpty =>
+        loop(ps, args)
+      case (p :: ps, Fld(fls, trm, asc) :: args) =>
+      // case ((p, mss) :: ps, Fld(fls, trm, asc) :: args) =>
+        listenTerm(trm): sh0 =>
+          // val sh = sh0.enter(mss)
+          // log(s"zipArg: p = ${p.showDbg}, trm = ${trm.showDbg}, sh = ${sh.shwDbg}")
+          // if isOwnedSym(p.sym) && p.sym.shapes.add(sh) then
+          //   p.sym.shapeListeners.foreach(listener => listener(sh))
+          sh0.exit(argumentMarks).enter(mss) match
+          case NoShape =>
           case sh: TermShape =>
-            if isOwnedSym(p.sym) && p.sym.shapes.add(sh) then p.sym.shapeListeners.foreach(_(sh))
-    case (p :: ps, Fld(fls, trm, asc) :: args) =>
-    // case ((p, mss) :: ps, Fld(fls, trm, asc) :: args) =>
-      listenTerm(trm): sh0 =>
-        // val sh = sh0.enter(mss)
-        // log(s"zipArg: p = ${p.showDbg}, trm = ${trm.showDbg}, sh = ${sh.shwDbg}")
-        // if isOwnedSym(p.sym) && p.sym.shapes.add(sh) then
-        //   p.sym.shapeListeners.foreach(listener => listener(sh))
-        sh0.exit(argumentMarks).enter(mss) match
-        case NoShape =>
-        case sh: TermShape =>
-          log(s"zipArg: p = ${p.showDbg}, trm = ${trm.showDbg}, sh = ${sh.shwDbg} ${isOwnedSym(p.sym)}, ${p.sym.shapes.contains(sh)}")
-          if isOwnedSym(p.sym) && p.sym.shapes.add(sh) then
-            // log(s"!!!! ${p.sym.shapeListeners}")
-            p.sym.shapeListeners.foreach(listener => listener(sh))
-      zipArgs(mss, ps, r, args, src, funSh, argumentMarks)
-    case _ =>
-      resolError(src,
-        msg"${funSh.describe.capitalize} expected ${ps.length} ${
-          "argument".pluralized(ps.length)}, but got ${args.length}" -> funSh.toLoc :: Nil)
+            log(s"zipArg: p = ${p.showDbg}, trm = ${trm.showDbg}, sh = ${sh.shwDbg} ${isOwnedSym(p.sym)}, ${p.sym.shapes.contains(sh)}")
+            if isOwnedSym(p.sym) && p.sym.shapes.add(sh) then
+              // log(s"!!!! ${p.sym.shapeListeners}")
+              p.sym.shapeListeners.foreach(listener => listener(sh))
+        loop(ps, args)
+      case _ =>
+        resolError(src,
+          msg"${funSh.describe.capitalize} expected ${expectedCount} ${
+            "argument".pluralized(expectedCount)}, but got ${providedCount}" -> funSh.toLoc :: Nil)
+    loop(ps, args)
   
   /** Resolve every constructor pattern through the same symbolic interpretation.
     * A class overload takes precedence over its term companion in this context.
@@ -182,6 +253,8 @@ class NewResolver:
         matchShapePat(shape, left)(matched)
         matchShapePat(shape, right)(matched)
       case Pattern.Guarded(pat, _) => matchShapePat(shape, pat)(matched)
+      // Compilation-strategy annotations do not change the pattern's bindings.
+      case Pattern.Annotated(pat, _) => matchShapePat(shape, pat)(matched)
       case ctor: Pattern.Constructor =>
         def listenConstructor(psh: PatternShape): Unit = psh match
           case CtorPatternShape(cls, fs, _, resSym) =>
@@ -304,7 +377,7 @@ class NewResolver:
     * Capture marks are retained for subsequent instance-member lookup. */
   private def listenClass(trm: Term)(selected: (ClassDef, Ls[Marks]) => Unit, reject: Shape => Unit): Unit =
     def select(cls: ClassDef, marks: Ls[Marks]): Unit =
-      trm.withoutCaptures match
+      trm.classHead match
         case ref: NewResolvable =>
           if !ref.resolvedTargets.contains(cls.sym) then ref.resolvedTargets ::= cls.sym
         case _ => ()
@@ -318,6 +391,7 @@ class NewResolver:
         case _ => reject(sh)
       case _ => reject(sh)
     trm match
+      case TyApp(base, _) => listenClass(base)(select, reject)
       case Capture(base, thru) =>
         listenClass(base)((cls, marks) => select(cls, marks ::: EntryMark(thru, N, NoMarks) :: Nil), reject)
       case _ => listen(trm):
@@ -354,7 +428,7 @@ class NewResolver:
   
   def resolveNew(nw: Term.New): Unit =
     log(s"resolveNew? res = ${nw.showDbg}")
-    nw.cls.withoutCaptures match
+    nw.cls.classHead match
       case trm: NewResolvable => listen(trm): shape =>
         def reject(): Unit =
           nw.isErroneous = true
@@ -540,6 +614,8 @@ class NewResolver:
         fromBMS(bms, ss.resSym, Nil//TODO?
           , listener, trm, _ => ())
       case N => ???
+    case TyApp(underlying, _) => listen(underlying, discardMarks)(listener)
+    case Mut(underlying) => listenTerm(underlying)(listener)
     case intro: IntroTerm =>
       val sh = introShapes.getOrElseUpdate(intro, {
         log(s"introShape: intro = $intro")
@@ -600,5 +676,3 @@ class NewResolver:
       ()
   
 end NewResolver
-
-

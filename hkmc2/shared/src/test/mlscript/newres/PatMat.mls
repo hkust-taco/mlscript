@@ -105,10 +105,7 @@ test(bz)
 //│ ═══[RUNTIME ERROR] Error: match error
 
 
-:todo
 set x = bz
-//│ ═══[COMPILATION ERROR] Unexpected left-hand side in assignment (reference)
-//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :breakme // Note: if compiled together with it, this would make the previous code ambiguous
 x = bz
@@ -120,7 +117,7 @@ let x = if maybe then Bar else bz
 :e
 x.b
 //│ ╔══[COMPILATION ERROR] This selection of member 'b' is ambiguous, as it has multiple resolved targets
-//│ ║  l.121: 	x.b
+//│ ║  l.118: 	x.b
 //│ ║         	^^^
 //│ ╟── target: function 'b' in overloaded function and class 'Baz'
 //│ ║  l.7: 	class Baz(c) { fun b = c }
@@ -162,10 +159,9 @@ if Foo(Predef) is
 val f = case
   Foo(y) then y.b
 //│ ╔══[COMPILATION ERROR] This selection of member 'b' has no resolved target
-//│ ║  l.163: 	  Foo(y) then y.b
+//│ ║  l.160: 	  Foo(y) then y.b
 //│ ╙──       	              ^^^
 //│ f = fun
-
 
 
 

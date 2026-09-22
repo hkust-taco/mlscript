@@ -1,3 +1,4 @@
+:.
 :js
 
 
@@ -24,9 +25,7 @@ module A with
     print(x, y)
     A
   val y = 2
-//│ ╔══[WARNING] Pure expression in statement position
-//│ ║  l.25: 	    A
-//│ ╙──      	    ^
+//│ ═══[WARNING] Pure expression in statement position
 //│ > 1 undefined
 
 

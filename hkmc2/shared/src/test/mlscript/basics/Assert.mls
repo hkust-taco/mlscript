@@ -1,3 +1,4 @@
+:.
 :js
 
 
@@ -10,12 +11,12 @@ assert true
 //│ if (true === true) {
 //│   return runtime.Unit
 //│ }
-//│ return runtime.safeCall(runtime.assertFail("Assert.mls", "9"));
+//│ return runtime.safeCall(runtime.assertFail("Assert.mls", "10"));
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 :re
 assert false
-//│ ═══[RUNTIME ERROR] Error: Assertion failed (Assert.mls:18)
+//│ ═══[RUNTIME ERROR] Error: Assertion failed (Assert.mls:19)
 
 assert xs is Array
 
@@ -28,9 +29,9 @@ assert(true); 123
 //│ if (123 === true) {
 //│   return runtime.Unit
 //│ }
-//│ return runtime.safeCall(runtime.assertFail("Assert.mls", "27"));
+//│ return runtime.safeCall(runtime.assertFail("Assert.mls", "28"));
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
-//│ ═══[RUNTIME ERROR] Error: Assertion failed (Assert.mls:27)
+//│ ═══[RUNTIME ERROR] Error: Assertion failed (Assert.mls:28)
 
 // * FIXME: the `else` is parsed as part of the `assert`!
 :sjs
@@ -78,7 +79,7 @@ ys
 //│ = 5
 
 :re
-(assert false else throw Error("whoops")) + 3
+(assert false else throw new Error("whoops")) + 3
 //│ ═══[RUNTIME ERROR] Error: whoops
 
 

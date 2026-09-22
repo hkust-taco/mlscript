@@ -1,15 +1,18 @@
+:.
 :js
 
 data class Pair[A, B](val first: A, val second: B)
 
 :e
 pattern LessArity = Pair("meow")
-//│ ╔══[COMPILATION ERROR] Expected two arguments, but found only one argument.
-//│ ║  l.6: 	pattern LessArity = Pair("meow")
-//│ ╙──     	                         ^^^^^^
+//│ ╔══[COMPILATION ERROR] Resolution error in constructor
+//│ ║  l.7: 	pattern LessArity = Pair("meow")
+//│ ║       	                    ^^^^^^^^^^^^
+//│ ╙── Class definition 'Pair' expected 2 pattern arguments, but got 1
 
 :e
 pattern MoreArity = Pair("meow", "woof", "moo")
-//│ ╔══[COMPILATION ERROR] Expected two arguments, but found three arguments.
-//│ ║  l.12: 	pattern MoreArity = Pair("meow", "woof", "moo")
-//│ ╙──      	                         ^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Resolution error in constructor
+//│ ║  l.14: 	pattern MoreArity = Pair("meow", "woof", "moo")
+//│ ║        	                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙── Class definition 'Pair' expected 2 pattern arguments, but got 3

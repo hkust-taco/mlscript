@@ -1,3 +1,4 @@
+:.
 :js
 
 data class Some[T](value: T)
@@ -11,9 +12,9 @@ fun f(a, b) = if a is
     or  b is Some(v)  then v
   else 0
 //│ ╔══[COMPILATION ERROR] Unexpected infix use of keyword 'then' here
-//│ ║  l.10: 	    and b is Some(v') then v + v'
+//│ ║  l.11: 	    and b is Some(v') then v + v'
 //│ ║        	                           ^^^^^^
-//│ ║  l.11: 	    or  b is Some(v)  then v
+//│ ║  l.12: 	    or  b is Some(v)  then v
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 

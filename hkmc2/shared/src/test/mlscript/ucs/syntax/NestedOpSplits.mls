@@ -1,3 +1,4 @@
+:.
 :js
 
 :ucs desugared
@@ -9,14 +10,16 @@ fun f(x) =
       _ then 1
 //│ Split with nested patterns:
 //│ >  if
+//│ >    let tmp:scrut = x⁰
 //│ >    let tmp:scrut = 1
-//│ >    let tmp:scrut = (member:Predef⁰.)equals‹member:equals›(x⁰, builtin:+⁰(tmp:scrut⁰, 2))
+//│ >    let tmp:scrut = member:Predef⁰.equals^term:f⁰(tmp:scrut⁰, builtin:+⁰(tmp:scrut¹, 2))
 //│ >    tmp:scrut is true then 0
 //│ >    else 1
 //│ Expanded split with flattened patterns:
 //│ >  ‹if|while›
+//│ >    let tmp:scrut = x⁰
 //│ >    let tmp:scrut = 1
-//│ >    let tmp:scrut = (member:Predef⁰.)equals‹member:equals›(x⁰, builtin:+⁰(tmp:scrut⁰, 2))
+//│ >    let tmp:scrut = member:Predef⁰.equals^term:f⁰(tmp:scrut⁰, builtin:+⁰(tmp:scrut¹, 2))
 //│ >    tmp:scrut is true then 0
 //│ >    else 1
 

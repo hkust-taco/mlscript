@@ -425,7 +425,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
   
   def classOf(trm: Term, nw: Resolvable)(k: Path => Block)(using LoweringCtx): Block =
     if newResolution then
-      trm.withoutCaptures match
+      trm.classHead match
       case resolved @ Resolved(_, _: ClassSymbol) =>
         // Synthesized runtime constructors already carry an explicit class target.
         subTerm(resolved)(k)
@@ -1143,10 +1143,13 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
       // * need the selected prefix/name/symbol in order to emit `AssignField`.
       // * Still, resolver expansions matter: `Resolved(lhs, sym)` carries the
       // * disambiguated member symbol needed for private fields and overloads.
-      val (target, resolvedSelectionSymbol) = lhs.instantiated match
+      val (target, resolvedSelectionSymbol) = lhs.withoutCaptures.instantiated match
         case Resolved(inner, sym) => inner -> S(sym)
         case target => target -> N
       target match
+      case SimpleRef(sym) =>
+        subTerm(rhs): r =>
+          assignSymbol(sym, sym, r, k(unit), trm.toLoc)
       case Ref(sym) =>
         subTerm(rhs): r =>
           assignSymbol(resolvedSelectionSymbol.getOrElse(sym), sym, r, k(unit), trm.toLoc)
@@ -1650,11 +1653,15 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
     ps.params.map(_.sym.erasedType)
 
 
-  /** Publish nominal parent links before lowering bodies can ask erased-type questions.
+  /** Validate elaborated type interpretations and publish nominal parent links before
+    * lowering bodies can ask erased-type questions.
     * This also handles declarations, whose executable definitions are deliberately omitted.
     * An unresolved or ambiguous parent leaves the header absent, rather than inventing a root.
     */
-  def classHeaders(statement: Statement): Unit =
+  def prepareTypes(statement: Statement): Unit =
+    statement match
+      case term: Term => term.typeInterpretation.foreach(_.validate(Set.empty))
+      case _ => ()
     statement match
       case cls: ClassLikeDef => cls.sym match
         case sym: ClassLikeSymbol if sym.irClassHeader.isEmpty =>
@@ -1663,10 +1670,10 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
             case S(parent) => parent.cls.resolvedSym.flatMap(_.asClsOrMod).map(p => ClassHeader(S(p)))
         case _ => ()
       case _ => ()
-    statement.subStatements.foreach(classHeaders)
+    statement.subStatements.foreach(prepareTypes)
 
   def program(main: st.Blk, symbolsToPreserve: Set[BoundSymbol]): Program =
-    classHeaders(main)
+    prepareTypes(main)
     
     val (imps, funs, rest) = splitBlock(main.stats, Nil, Nil, Nil)
     

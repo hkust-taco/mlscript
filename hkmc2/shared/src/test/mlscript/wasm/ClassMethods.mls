@@ -1,6 +1,5 @@
+:.
 
-:global
-:wasm
 
 
 :wat
@@ -176,14 +175,15 @@ c.Counter#inc().Counter#double().Counter#get()
 
 :todo
 let d = Counter(c.Counter#get())
-//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Missing field `term:Counter/get` in struct `member:Counter` with type `(type $Counter (sub $Object (struct (field $$typeinfo (mut (ref $TypeInfoBase))) (field $x (mut (ref null any))))))`
+//│ /!!!\ Uncaught error: java.lang.StackOverflowError
 
 :todo
 d.Counter#inc().Counter#double().Counter#get()
-//│ ╔══[COMPILATION ERROR] Cannot find variable `d` (VarSymbol) in local or global scope.
-//│ ║  l.178: 	let d = Counter(c.Counter#get())
-//│ ╙──       	    ^
-//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Missing type definition for symbol `member:Counter`
+//│ ╔══[COMPILATION ERROR] Name not found: d
+//│ ║  l.181: 	d.Counter#inc().Counter#double().Counter#get()
+//│ ╙──       	^
+//│ Wasm result:
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :todo
 c.Counter#get()
@@ -192,7 +192,7 @@ c.Counter#get()
 
 class GetterOnly() with
   fun f = 1
-GetterOnly().f()
+GetterOnly().f
 //│ Wasm result:
 //│ = 1
 

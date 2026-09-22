@@ -376,6 +376,9 @@ sealed trait UnresolvedRefImpl extends NewResolvableImpl:
 
 
 enum Term extends Statement, ShapePublisher:
+  /** Filled by the type interpreter during elaboration; lowering only validates the result. */
+  private[hkmc2] var typeInterpretation: Opt[TypeResolution] = N
+
   case Error()
   case UnitVal()
   case Missing // Placeholder terms that were not elaborated due to the "lightweight" elaboration mode `Mode.Light`
@@ -472,6 +475,14 @@ enum Term extends Statement, ShapePublisher:
   def withoutCaptures: Term = this match
     case Capture(base, _) => base.withoutCaptures
     case _ => this
+
+  /** Class target validation looks through wrappers with no runtime representation.
+    * Shape propagation still processes captures to retain their provenance.
+    */
+  def classHead: Term = this match
+    case Capture(base, _) => base.classHead
+    case TyApp(base, _) => base.classHead
+    case _ => this
   
   def expanded: Term = this match
     case t: Resolvable => t.expansion match
@@ -553,6 +564,9 @@ enum Term extends Statement, ShapePublisher:
     * (These definitions were generated as part of a slop PR.) */
   lazy val freeVars: Set[Str] = this match
     case Ref(sym) => Set.single(sym.nme)
+    case SimpleRef(sym) => Set.single(sym.nme)
+    case MemberRef(sym) => Set.single(sym.nme)
+    case SelfRef(sym) => Set.single(sym.nme)
     case Lam(params, body) =>
       val paramNames = params.allParams.iterator.map(_.sym.nme).toSet
       body.freeVars -- paramNames
@@ -1672,4 +1686,3 @@ trait BlkImpl:
     (stats ::: (res match
       case Lit(Tree.UnitLit(false)) => Nil
       case res => res :: Nil)).map(_.show).mkDocument(doc", # ")
-

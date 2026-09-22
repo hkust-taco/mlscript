@@ -18,7 +18,7 @@ foo(1, 2)
 //│ ╔══[COMPILATION ERROR] Resolution error in application
 //│ ║  l.17: 	foo(1, 2)
 //│ ║        	^^^^^^^^^
-//│ ╟── Function 'foo' expected 0 arguments, but got 1
+//│ ╟── Function 'foo' expected 1 argument, but got 2
 //│ ║  l.4: 	fun foo(x) = x + 1
 //│ ╙──     	^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] Error: Function 'foo' expected 1 argument but got 2

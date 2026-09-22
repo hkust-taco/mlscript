@@ -1,3 +1,4 @@
+:.
 :js
 
 
@@ -58,29 +59,35 @@ fun isMD(x) = x is M.D
 C
 //│ ——————————————| Resolved tree |—————————————————————————————————————————————————————————————————————
 //│ Blk:
-//│   res = Resolved{sym=class:C⁰}:
-//│     t = Ref{sym=member:C¹} of member:C¹
-//│     sym = class:C⁰
+//│   res = MemberRef of member:C⁰
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 // * Also resolved
 M.D
 //│ ——————————————| Resolved tree |—————————————————————————————————————————————————————————————————————
 //│ Blk:
-//│   res = Resolved{sym=class:D⁰}:
-//│     t = Sel{sym=member:D¹}:
-//│       prefix = Resolved{sym=module:M⁰,typ=module:M⁰}:
-//│         t = Ref{sym=member:M¹} of member:M¹
-//│         sym = module:M⁰
-//│       nme = Ident of "D"
-//│     sym = class:D⁰
+//│   res = NewSel:
+//│     prefix = MemberRef of member:M⁰
+//│     id = Ident of "D"
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 :fixme // FIXME: Should report a proper error about lack of declared C companion module
 C.oops
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'oops')
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.74: 	C.oops
+//│ ║        	^^^^^^
+//│ ╟── Class 'C' does not contain member 'oops'
+//│ ║  l.38: 	declare class C
+//│ ╙──      	              ^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
-:re
+:ge
 M.D.oops
-//│ ═══[RUNTIME ERROR] Error: Access to required field 'D' yielded 'undefined'
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.84: 	M.D.oops
+//│ ║        	^^^^^^^^
+//│ ╟── Class 'D' does not contain member 'oops'
+//│ ║  l.48: 	  declare class D
+//│ ╙──      	                ^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 

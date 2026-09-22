@@ -1,3 +1,4 @@
+:.
 :js
 
 
@@ -6,10 +7,10 @@
 :e
 if x else z
 //│ ╔══[COMPILATION ERROR] Unrecognized term split (identifier)
-//│ ║  l.7: 	if x else z
+//│ ║  l.8: 	if x else z
 //│ ╙──     	   ^
 //│ ╔══[COMPILATION ERROR] Name not found: z
-//│ ║  l.7: 	if x else z
+//│ ║  l.8: 	if x else z
 //│ ╙──     	          ^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -18,7 +19,7 @@ fun f(x, z) =
   if x
     else z
 //│ ╔══[COMPILATION ERROR] Unrecognized term split (identifier)
-//│ ║  l.18: 	  if x
+//│ ║  l.19: 	  if x
 //│ ╙──      	     ^
 
 // ——— ——— ———
@@ -47,14 +48,14 @@ if
   and true do
     print("ok")
 //│ ╔══[COMPILATION ERROR] Unrecognized term split (true literal)
-//│ ║  l.45: 	  and true
+//│ ║  l.46: 	  and true
 //│ ╙──      	      ^^^^
 //│ ╔══[COMPILATION ERROR] Unexpected infix use of keyword 'do' here
-//│ ║  l.46: 	  let x = 1
+//│ ║  l.47: 	  let x = 1
 //│ ║        	          ^
-//│ ║  l.47: 	  and true do
+//│ ║  l.48: 	  and true do
 //│ ║        	^^^^^^^^^^^^^
-//│ ║  l.48: 	    print("ok")
+//│ ║  l.49: 	    print("ok")
 //│ ╙──      	^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 

@@ -1,3 +1,4 @@
+:.
 :js
 
 
@@ -25,7 +26,7 @@ fun Some3 = "333"
 open Option3 { Some3 }
 Some3
 //│ ╔══[WARNING] Imported name 'Some3' is shadowed by a name already defined in the same scope
-//│ ║  l.25: 	open Option3 { Some3 }
+//│ ║  l.26: 	open Option3 { Some3 }
 //│ ╙──      	               ^^^^^
 //│ = "333"
 
@@ -47,6 +48,6 @@ fun bar =
   open Option5
   Some5
 bar
-//│ = 5
+//│ = "555"
 
 

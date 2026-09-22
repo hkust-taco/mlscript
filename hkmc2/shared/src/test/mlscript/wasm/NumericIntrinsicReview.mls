@@ -1,7 +1,6 @@
+:.
 // [Codex] Unboxed results returned from branches must determine the entry result type.
 
-:global
-:wasm
 
 
 // Both branches return i32, so the entry must return i32 too.
@@ -24,7 +23,7 @@ if true then wasm.f64.const(1.5) else wasm.f64.const(2.5)
 fun chooseFloat(b: Bool): Float64 = if b then 1.5 else wasm.f64.const(2.5)
 //│ ═══[COMPILATION ERROR] Cannot use a value of type 'Num' at an unrelated type 'Float64'
 //│ ╔══[COMPILATION ERROR] WatBackend::result for Lit expression not implemented yet
-//│ ║  l.24: 	fun chooseFloat(b: Bool): Float64 = if b then 1.5 else wasm.f64.const(2.5)
+//│ ║  l.23: 	fun chooseFloat(b: Bool): Float64 = if b then 1.5 else wasm.f64.const(2.5)
 //│ ╙──      	                                              ^^^
 
 // A declared function result keeps the type available when its call is not inlined.
@@ -94,7 +93,7 @@ if false do wasm.i32.const(1)
 class ResultBase
 class ResultLeft extends ResultBase
 class ResultRight extends ResultBase
-if true then ResultLeft() else ResultRight()
+if true then new ResultLeft else new ResultRight
 //│ Wasm result:
 //│ = {}
 
@@ -109,14 +108,14 @@ if true then throw 1 else wasm.i64.const(9)
 // Joining a nullable unit reference with a class reference must keep nullability.
 // :wat
 class NullableResult
-if false then () else NullableResult()
+if false then () else new NullableResult
 //│ Wasm result:
 //│ = {}
 
 
 // Distinct reference kinds still have a common Wasm reference supertype.
 class MixedResult
-if true then 7 else MixedResult()
+if true then 7 else new MixedResult
 //│ Wasm result:
 //│ = 7
 

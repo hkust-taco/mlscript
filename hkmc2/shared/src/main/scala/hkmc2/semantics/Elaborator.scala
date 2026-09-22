@@ -1173,7 +1173,10 @@ extends Importer:
     * Listeners can wait for forward definitions to complete.
     */
   private def interpretRef(ref: Term, interp: Interpretation): Term =
-    if newResolution && (interp is Trm) then requireTerm(ref)
+    if newResolution then interp match
+      case Trm => requireTerm(ref)
+      case Tpe => typeResolution(ref)
+      case _ => ()
     ref
 
   // Most recursive operands are terms. Transparent wrappers must explicitly
@@ -1611,7 +1614,7 @@ extends Importer:
             (org.startLineNum + org.fph.getLineColAt(loc.spanStart)._1).toString)
         case N => ("‹unknown›", "‹unknown›")
       val elsPart = els.fold(PrefixApp(Keywrd(Keyword.`else`), Tree.Trm(
-        State.runtimeSymbol.ref().selNoSym("assertFail")
+        State.runtimeSymbol.ref().selNoSym("assertFail", synth = true)
           .app(Term.Lit(StrLit(fl)), Term.Lit(StrLit(ln)))
       )))(PrefixApp.apply.tupled)
       subterm:
@@ -1785,9 +1788,9 @@ extends Importer:
     case _ => term(tree, interp)
   def fld(tree: Tree, interp: Interpretation)(using UnderCtx): Ctxl[Elem] = tree match
     case InfixApp(id: Ident, Keywrd(Keyword.`:`), rhs) =>
-      Fld(FldFlags.empty, Term.Lit(StrLit(id.name).withLocOf(id)), S(arg(rhs, Tpe)))
+      Fld(FldFlags.empty, Term.Lit(StrLit(id.name).withLocOf(id)), S(arg(rhs, interp)))
     case InfixApp(lhs, Keywrd(Keyword.`:`), rhs) =>
-      Fld(FldFlags.empty, term(lhs, interp), S(arg(rhs, Tpe)))
+      Fld(FldFlags.empty, term(lhs, interp), S(arg(rhs, interp)))
     case Spread(Keywrd(Keyword.`..`), S(trm)) =>
       Spd(SpreadKind.Lazy, arg(trm, interp))
     case Spread(Keywrd(Keyword.`...`), S(trm)) =>
@@ -2176,10 +2179,10 @@ extends Importer:
                     val noParams: Opt[Ls[Opt[ErasedValueType]]] = S(Nil)
                     fields.foldRight(noParams): (fld, acc) =>
                       (fld, acc) match
-                        case (Fld(_, t, _), S(rest)) => S(ErasedType.eraseSign(t) :: rest)
+                        case (Fld(_, t, _), S(rest)) => S(eraseSignature(t) :: rest)
                         case _ => N
                   // * An unparenthesized type is a single parameter.
-                  case single => S(ErasedType.eraseSign(single) :: Nil)
+                  case single => S(eraseSignature(single) :: Nil)
                 sign match
                   case Term.Forall(_, _, body) => splitSignature(body)
                   case Term.FunTy(lhs, rhs, _) => paramsOf(lhs).map: ps =>
@@ -2214,7 +2217,7 @@ extends Importer:
                     if (k is syntax.Fun) && td.annotatedResultType.isEmpty
                     then stripSignatureParams(s, pss.length)
                     else sigShape.map(_._2).getOrElse(s)
-                  ErasedType.eraseSign(resultSign)
+                  eraseSignature(resultSign)
               val erasedTpe = k match
                 case syntax.Fun =>
                   // * A `declare`d function's parameter lists are derived from its signature when it writes none.
@@ -2669,11 +2672,14 @@ extends Importer:
         // * `eraseSign` would miss by resolving the name through `asTpe`.
         val erasedTpe = mfn.msym match
           case S(msym) => S(ErasedType.ValueLike(rsc = S(false), msym))
-          case N => sig.flatMap(ErasedType.eraseSign)
+          case N => sig.flatMap(eraseSignature)
         val sym = VarSymbol(canonicalId, erasedType = erasedTpe)
         sym.sourceAliases = aliases
         val p = Param(flg, sym, sig, mfn)
         sym.decl = S(p)
+        if newResolution then sig.foreach: sign =>
+          listenTypeValues(sign): shape =>
+            if sym.shapes.add(shape) then sym.shapeListeners.foreach(_(shape))
         (p, spd, aliases)
   
   def funParams(t: Tree): Ctxl[(ParamList, Ctx)] =

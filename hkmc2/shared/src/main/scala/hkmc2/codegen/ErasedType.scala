@@ -55,6 +55,15 @@ object ErasedType:
     // Ensures `toString` returns a stable string
     override def toString: Str = "ValueLike(?)"
 
+  /** Erasure of a type whose interpretation is still being published during elaboration.
+    * The thunk reads an already-resolved type graph when the backend needs its representation.
+    */
+  final class Deferred(compute: (Ctx, State) ?=> ErasedValueType) extends ErasedValueType:
+    override type Canonical = CanonicalErasedValueType
+    override def sym(using Ctx, State): TypeSymbol | NoSymbol = canonicalize.sym
+    override protected def computeCanonicalize(using Ctx, State): CanonicalErasedValueType = compute.canonicalize
+    override def toString: Str = "Deferred(?)"
+
   /** A reference to a function of a possibly-known shape.
     *
     * - `rsc` is true if this reference is a resource function.

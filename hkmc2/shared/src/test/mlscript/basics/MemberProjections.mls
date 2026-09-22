@@ -1,3 +1,4 @@
+:.
 :js
 
 
@@ -36,10 +37,10 @@ M.Foo ::n (foo, 2)
 :e
 M.Foo:: n(foo, 2)
 //│ ╔══[COMPILATION ERROR] Name not found: ::
-//│ ║  l.37: 	M.Foo:: n(foo, 2)
+//│ ║  l.38: 	M.Foo:: n(foo, 2)
 //│ ╙──      	     ^^
 //│ ╔══[COMPILATION ERROR] Name not found: n
-//│ ║  l.37: 	M.Foo:: n(foo, 2)
+//│ ║  l.38: 	M.Foo:: n(foo, 2)
 //│ ╙──      	        ^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -78,52 +79,57 @@ do
 :e
 foo.Foo#m()
 //│ ╔══[COMPILATION ERROR] Name not found: Foo
-//│ ║  l.79: 	foo.Foo#m()
+//│ ║  l.80: 	foo.Foo#m()
 //│ ╙──      	   ^^^^
-//│ ╔══[COMPILATION ERROR] Identifier `Foo` does not name a known class symbol.
-//│ ║  l.79: 	foo.Foo#m()
+//│ ╔══[COMPILATION ERROR] Cannot resolve the projection class
+//│ ║  l.80: 	foo.Foo#m()
 //│ ╙──      	   ^^^^
-//│ ╔══[COMPILATION ERROR] Expected a statically known class; found ‹error›.
-//│ ║  l.79: 	foo.Foo#m()
-//│ ╙──      	   ^^^^
-//│ = 124
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :e
 :re
 foo.M.Foo::m()
-//│ ╔══[COMPILATION ERROR] Selection is not a known class.
-//│ ║  l.93: 	foo.M.Foo::m()
-//│ ║        	^^^^^^^^^
-//│ ╟── Note: any expression of the form `‹expression›::‹identifier›` is a member projection;
-//│ ╙──   add a space before ‹identifier› to make it an operator application.
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.91: 	foo.M.Foo::m()
+//│ ║        	^^^^^
+//│ ╟── Instance of class constructor 'Foo' does not contain member 'M'
+//│ ║  l.11: 	let foo = M.Foo(123)
+//│ ╙──      	          ^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.91: 	foo.M.Foo::m()
+//│ ║        	         ^^^^^
+//│ ╟── Function literal expected 1 argument, but got 0
+//│ ║  l.91: 	foo.M.Foo::m()
+//│ ╙──      	           ^
+//│ ╔══[COMPILATION ERROR] Cannot resolve the projection class
+//│ ║  l.91: 	foo.M.Foo::m()
+//│ ╙──      	^^^^^^^^^
 //│ ═══[RUNTIME ERROR] Error: Function expected at least 1 argument but got 0
 
 :e
 :re
 foo.M.Foo#m()
 //│ ╔══[COMPILATION ERROR] Name not found: Foo
-//│ ║  l.103: 	foo.M.Foo#m()
+//│ ║  l.111: 	foo.M.Foo#m()
 //│ ╙──       	     ^^^^
-//│ ╔══[COMPILATION ERROR] Identifier `Foo` does not name a known class symbol.
-//│ ║  l.103: 	foo.M.Foo#m()
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.111: 	foo.M.Foo#m()
+//│ ║         	^^^^^
+//│ ╟── Instance of class constructor 'Foo' does not contain member 'M'
+//│ ║  l.11: 	let foo = M.Foo(123)
+//│ ╙──      	          ^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Cannot resolve the projection class
+//│ ║  l.111: 	foo.M.Foo#m()
 //│ ╙──       	     ^^^^
-//│ ╔══[COMPILATION ERROR] Expected a statically known class; found ‹error›.
-//│ ║  l.103: 	foo.M.Foo#m()
-//│ ╙──       	     ^^^^
-//│ ═══[RUNTIME ERROR] Error: Access to required field 'M' yielded 'undefined'
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :e
 Foo::m
 //│ ╔══[COMPILATION ERROR] Name not found: Foo
-//│ ║  l.116: 	Foo::m
+//│ ║  l.127: 	Foo::m
 //│ ╙──       	^^^
-//│ ╔══[COMPILATION ERROR] Identifier is not a known class.
-//│ ║  l.116: 	Foo::m
-//│ ║         	^^^
-//│ ╟── Note: any expression of the form `‹expression›::‹identifier›` is a member projection;
-//│ ╙──   add a space before ‹identifier› to make it an operator application.
-//│ ╔══[COMPILATION ERROR] Expected a statically known class; found ‹error›.
-//│ ║  l.116: 	Foo::m
+//│ ╔══[COMPILATION ERROR] Cannot resolve the projection class
+//│ ║  l.127: 	Foo::m
 //│ ╙──       	^^^
 //│ = fun
 
@@ -132,23 +138,18 @@ Foo::m
 :noInline
 Foo::n(foo, 2)
 //│ ╔══[COMPILATION ERROR] Name not found: Foo
-//│ ║  l.133: 	Foo::n(foo, 2)
+//│ ║  l.139: 	Foo::n(foo, 2)
 //│ ╙──       	^^^
-//│ ╔══[COMPILATION ERROR] Identifier is not a known class.
-//│ ║  l.133: 	Foo::n(foo, 2)
-//│ ║         	^^^
-//│ ╟── Note: any expression of the form `‹expression›::‹identifier›` is a member projection;
-//│ ╙──   add a space before ‹identifier› to make it an operator application.
-//│ ╔══[COMPILATION ERROR] Expected a statically known class; found ‹error›.
-//│ ║  l.133: 	Foo::n(foo, 2)
+//│ ╔══[COMPILATION ERROR] Cannot resolve the projection class
+//│ ║  l.139: 	Foo::n(foo, 2)
 //│ ╙──       	^^^
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let lambda2;
 //│ lambda2 = (undefined, function (self7, ...args7) {
-//│   return runtime.safeCall(self7.n(...args7))
+//│   throw "This code cannot be run as its compilation yielded an error."
 //│ });
 //│ return runtime.safeCall(lambda2(foo, 2))
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
-//│ = 125
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 

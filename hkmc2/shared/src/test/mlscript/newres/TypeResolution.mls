@@ -1,0 +1,59 @@
+:.
+
+// Wildcard lookup waits for the module's type members.
+open Types
+fun double(n: Scalar): Scalar = n + n
+module Types with
+  type Scalar = Int
+double(21)
+//│ = 42
+
+// Explicit bindings take precedence over wildcard type names.
+open OtherTypes
+type Scalar = Int
+module OtherTypes with
+  type Scalar = Str
+fun explicit(n: Scalar): Scalar = n
+explicit(42)
+//│ = 42
+
+// An unused signature still diagnoses ambiguous wildcard type names.
+:ge
+open LeftTypes
+open RightTypes
+module LeftTypes with
+  type Ambiguous = Int
+module RightTypes with
+  type Ambiguous = Str
+fun ambiguous(n: Ambiguous) = n
+//│ ╔══[COMPILATION ERROR] Resolution error in wildcard-open reference
+//│ ║  l.28: 	fun ambiguous(n: Ambiguous) = n
+//│ ║        	                 ^^^^^^^^^
+//│ ╟── This type is ambiguous, as it has multiple resolved targets
+//│ ║  l.28: 	fun ambiguous(n: Ambiguous) = n
+//│ ║        	                 ^^^^^^^^^
+//│ ╟── candidate: type alias
+//│ ║  l.27: 	  type Ambiguous = Str
+//│ ║        	  ^^^^^^^^^^^^^^^^^^^^
+//│ ╟── candidate: type alias
+//│ ║  l.25: 	  type Ambiguous = Int
+//│ ╙──      	  ^^^^^^^^^^^^^^^^^^^^
+
+// A type annotation selects the class even when its name also has a value.
+class Box
+val Box = 7
+fun identity(box: Box): Box = box
+identity(new Box) is Box
+//│ = true
+//│ Box = 7
+
+// Forward aliases are checked even when the annotated function is unused.
+:ge
+fun unused(value: Invalid) = value
+type Invalid = notAType
+val notAType = 1
+//│ ╔══[COMPILATION ERROR] Resolution error in member reference
+//│ ╟── Value symbol 'notAType' cannot be used as a type
+//│ ║  l.54: 	val notAType = 1
+//│ ╙──      	^^^^^^^^^^^^^^^^
+//│ notAType = 1

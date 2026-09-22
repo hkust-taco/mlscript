@@ -222,7 +222,7 @@ class CompilerCtx(
         // is needed by erased-type operations in every compilation unit.
         given Ctx = ctx
         given SymbolPrinter = new SymbolPrinter(Scope.empty(Scope.Cfg.default))
-        new codegen.Lowering().classHeaders(blk)
+        new codegen.Lowering().prepareTypes(blk)
         PreludeArtifact(parse.resultBlk, blk, ctx, state, rootConfig, lastMod),
     )
   

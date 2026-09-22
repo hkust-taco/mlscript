@@ -1,3 +1,4 @@
+:.
 :js
 
 import "../../../mlscript-compile/Option.mls"
@@ -77,7 +78,7 @@ fun dual_patterns(x, y) =
 :fixme // TODO
 () is ()
 //│ ╔══[COMPILATION ERROR] Unrecognized pattern (unit).
-//│ ║  l.78: 	() is ()
+//│ ║  l.79: 	() is ()
 //│ ╙──      	      ^^
 //│ = true
 

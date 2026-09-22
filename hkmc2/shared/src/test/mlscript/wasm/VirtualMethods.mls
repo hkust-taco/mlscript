@@ -1,6 +1,5 @@
+:.
 
-:global
-:wasm
 
 
 class A() with
@@ -306,10 +305,10 @@ class M2() extends M1() with
   fun f(m: Int32): Int = 0
 M2().f(1)
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int' at an unrelated type 'Int32'
-//│ ║  l.307: 	M2().f(1)
+//│ ║  l.306: 	M2().f(1)
 //│ ╙──       	       ^
 //│ ╔══[COMPILATION ERROR] Overriding method `f` declares result as `(ref null i31)`, but the method it overrides declares `i32`
-//│ ║  l.306: 	  fun f(m: Int32): Int = 0
+//│ ║  l.305: 	  fun f(m: Int32): Int = 0
 //│ ╙──       	  ^^^^^^^^^^^^^^^^^^^^^^^^
 
 
@@ -322,7 +321,7 @@ class N2() extends N1() with
 N2().g(1)
 //│ ═══[COMPILATION ERROR] Cannot use a value of type 'Int' at an unrelated type 'Int32'
 //│ ╔══[COMPILATION ERROR] Overriding method `g` declares parameter 1 as `(ref null any)`, but the method it overrides declares `i32`
-//│ ║  l.321: 	  fun g(m): Int32 = 0
+//│ ║  l.320: 	  fun g(m): Int32 = 0
 //│ ╙──       	  ^^^^^^^^^^^^^^^^^^^
 
 
