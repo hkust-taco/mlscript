@@ -1,3 +1,4 @@
+:.
 :js
 
 pattern Nullable(pattern T) = T | null
@@ -23,8 +24,9 @@ import "../../../mlscript-compile/Char.mls"
 fun foo(x) = x is Nullable(Char.Letter)
 //│ Normalized:
 //│ >  ‹if|while›
-//│ >    let tmp:patternArgument0$ = member:Char⁰.Letter‹member:Letter›
-//│ >    let tmp:unapplyResult = (member:Nullable⁰.)unapply(tmp:patternArgument0$¹, x⁰)
+//│ >    let tmp:scrut = x⁰
+//│ >    let tmp:patternArgument0$ = member:Char⁰^term:foo⁰.Letter
+//│ >    let tmp:unapplyResult = (member:Nullable⁰^term:foo⁰.)unapply(tmp:patternArgument0$¹, tmp:scrut¹)
 //│ >    tmp:unapplyResult is (tmp:runtime⁰.)MatchSuccess‹class:MatchSuccess›(output, bindings) then true
 //│ >    else false
 

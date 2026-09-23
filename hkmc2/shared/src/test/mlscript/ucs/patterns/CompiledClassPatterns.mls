@@ -1,3 +1,4 @@
+:.
 :js
 
 open annotations
@@ -153,10 +154,10 @@ class Add2(val x, val y, z)
 :e
 case @compile (Add2(0, _, _) | Add2(_, 1, _)) then 0
 //│ ╔══[COMPILATION ERROR] Parameter `z` is not accessible.
-//│ ║  l.151: 	class Add2(val x, val y, z)
+//│ ║  l.152: 	class Add2(val x, val y, z)
 //│ ╙──       	                         ^
 //│ ╔══[COMPILATION ERROR] Parameter `z` is not accessible.
-//│ ║  l.151: 	class Add2(val x, val y, z)
+//│ ║  l.152: 	class Add2(val x, val y, z)
 //│ ╙──       	                         ^
 //│ = fun
 
@@ -169,7 +170,8 @@ fun compiledInner(module Inner: Outer.Inner, x) =
   if x is @compile Inner.Wrapped(3) then true else false
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define compiledInner⁰ as fun compiledInner¹(Inner, x) {
-//│   let matcher__Wrappedʿ3ʾ$, matcher__3$, matchSuccess, lambda, lambda1;
+//│   let scrut, matcher__Wrappedʿ3ʾ$, matcher__3$, matchSuccess, lambda, lambda1;
+//│   set scrut = x;
 //│   define lambda as fun lambda⁵(input) {
 //│     let value, value1, p_0$, result1$, p_0$1, tmp, tmp1;
 //│     match input
@@ -207,7 +209,7 @@ fun compiledInner(module Inner: Outer.Inner, x) =
 //│     end
 //│   };
 //│   set matcher__3$ = lambda⁶;
-//│   set matchSuccess = matcher__Wrappedʿ3ʾ$(x);
+//│   set matchSuccess = matcher__Wrappedʿ3ʾ$(scrut);
 //│   match matchSuccess
 //│     true =>
 //│       return true

@@ -1,28 +1,50 @@
 # New-resolution suite migration
 
-## Scope and retained milestone
+## Scope and current progress
 
 The first pass tried all 372 active `.mls` files in `basics`, `codegen`, `ucs`,
-`ups`, and `apps` with new resolution and strict resolution. The 51 files under
-`ucs/staging` are excluded by the test runner and remain unchanged. Counts below
-exclude the new shared `.mls` configuration files and new regression tests.
+`ups`, and `apps` with new resolution and strict resolution, retaining 185 ports.
+After dynamic shapes and non-strict suite defaults became available, all 187
+deferred worksheets were retried. This pass migrates another 54, bringing the
+count to 239 of 372 (64%). The 51 files under `ucs/staging` are excluded by the
+test runner and remain unchanged. Counts below exclude shared `.mls`
+configuration files and new-resolution regression tests.
 
 | Suite | Migrated | Retained on existing configuration | Active files |
 | --- | ---: | ---: | ---: |
-| basics | 55 | 35 | 90 |
-| codegen | 62 | 63 | 125 |
-| ucs | 50 | 20 | 70 |
-| ups | 13 | 58 | 71 |
+| basics | 56 | 34 | 90 |
+| codegen | 78 | 47 | 125 |
+| ucs | 52 | 18 | 70 |
+| ups | 48 | 23 | 71 |
 | apps | 5 | 11 | 16 |
-| Total | 185 | 187 | 372 |
+| Total | 239 | 133 | 372 |
 
 Migrated files start with `:.`. Each suite's `.mls` loads the common language
-configuration and uses non-strict resolution; nested directories inherit through
-`:..`. `newres` retains strict resolution, with explicit non-strict coverage in
-`newres/loose`. Non-strict resolution permits multiple selection/call targets,
-but still rejects missing targets and known invalid operations. The suite defaults
-disable JS execution so each file retains its original execution flags. A parser-only test must not acquire runtime execution merely
-because its resolution configuration changes.
+configuration and uses its non-strict default; nested directories inherit through
+`:..`. The redundant `#lang(strictResolution: false)` settings have been removed
+from the six general suites, including WASM. `newres` retains strict resolution;
+`newres/loose` still needs an explicit override of that strict parent. Non-strict
+resolution permits multiple selection/call targets, but still rejects missing
+targets and known invalid operations. The common language configuration disables
+JS execution, so each file retains its original execution flags. A parser-only test must not acquire runtime execution
+merely because its resolution configuration changes.
+
+The additional ports comprise one basics test (`ObjectExtensions`), 16 codegen
+tests, two UCS compiled-pattern tests, and 35 UPS tests. They include JavaScript
+imports, spread calls, qualified constructors, and recursive, parametric, and
+fixed-point patterns. Five new UPS directory configurations connect these tests
+to the common language configuration.
+
+Forty-nine files needed only the configuration header and refreshed goldens.
+`BadThis`, `BasicTerms`, `Spreads`, and `ImportMLs` additionally expect static
+errors for invalid operations already present in their negative cases; no existing
+error expectations were removed. `Throw` uses `new Error(...)`, preserving its
+throw/catch results. Tests of foreign callable classes remain deferred rather
+than being rewritten to avoid the capability under test.
+
+The two remaining WASM worksheets were also retried; both remain deferred.
+WASM therefore remains at 19 migrated worksheets out of 21, outside the table
+above.
 
 Blocked files retain their complete original sources and golden outputs. No new
 per-file `:todo`, `:fixme`, `:ignore`, or resolution-mode exception hides a migration
@@ -34,10 +56,9 @@ their existing mode. This is caller-side migration, not a claim that all importe
 application implementations use new resolution. The 20 application compilation
 fixtures and four `mlscript-compile/ups` fixtures need a subsequent dependency-ordered
 migration. Their shared consumers make a blanket flag change inappropriate for
-this first milestone.
+this worksheet migration.
 
-The unfinished WASM/type-erasure changes predate this migration and are retained.
-In particular, the typed-constructor-field capture assertion is still outstanding.
+The typed-constructor-field capture assertion in WASM `Basics` remains outstanding.
 Method calls across REPL blocks remain assigned to the other branch.
 Constructor-pattern field propagation also has a serious context-mixing blocker,
 documented below; its `:fixme` regression is not evidence that migration is complete.
@@ -117,9 +138,11 @@ Evidence: new shape propagation lacks record, conjunction, negation, string
 concatenation, and transformation cases. Examples include
 `ucs/general/BooleanPatterns.mls`, `patterns/String.mls`, and
 `normalization/RecordImpliedByClass.mls`. Tuple bindings currently publish no
-shapes. `CompiledQualifiedConstructors.mls` reaches `Term.mkClone` with a
-`NewSel`; `CompiledClassPatterns.mls` reaches it with a `MemberRef`. Many UPS
-failures combine these gaps with synthesized matcher selections.
+shapes. `CompiledQualifiedConstructors.mls` and `CompiledClassPatterns.mls` now
+pass and are migrated, as are most UPS fixed-point, recursive, and parametric
+cases. Remaining failures include unsupported pattern forms, patterns used as
+terms (for example `.unapply`), and synthesized selections entering new resolution
+in `ucs/examples/EitherOrBoth.mls`.
 
 **Question:** what resolution state should synthesized matcher references share
 with source references, and what precision should recursive/transformed pattern
@@ -202,8 +225,10 @@ generic aliases. Coordinate REPL method cases with the other branch.
 
 ### 4. Dynamic construction and foreign callable classes
 
-Evidence: `basics/DynamicInstantiation.mls` and `codegen/ImportJSClass.mls` reach
-static class-lowering assumptions for explicitly dynamic constructions.
+`codegen/ImportJSClass.mls` now passes with dynamic construction and is migrated.
+`basics/DynamicInstantiation.mls` remains blocked by unimplemented member lookup
+in `DefnShape.getMemberImpl` for `new! C.class(1, 2)`; its previous class-lowering
+failure is no longer the first observed blocker.
 `PredefUsage.mls` calls JavaScript's `String` as a function, while its current
 declaration supplies only a module interpretation. Bare MLscript classes also
 reject old empty-call syntax, as intended by the earlier migration.
@@ -212,9 +237,9 @@ reject old empty-call syntax, as intended by the earlier migration.
 capabilities, without making every module or bare class implicitly callable?
 
 **Proposal:** give foreign declarations explicit callable/constructible
-capabilities using the existing overload interpretation mechanism. Lower
-explicitly dynamic construction directly as dynamic IR, distinct from static
-class construction. Keep static `new` on the listener-resolved class path.
+capabilities using the existing overload interpretation mechanism. Explicitly
+dynamic construction already lowers to dynamic IR; keep static `new` on the
+listener-resolved class path.
 Change test syntax only where that preserves the test's intent; tests explicitly
 about callable JS constructors must not be rewritten to avoid that feature.
 
@@ -235,7 +260,10 @@ errors when a selected interpretation lacks the required capability.
   a small existing reproducer.
 - Preserve source origins in synthesized references and diagnostics. Some
   migrated error cases now report a definition rather than a use site, or lose
-  a location. These need attention without changing the chosen symbol.
+  a location. In particular, `ups/UpsBugsBacklog.mls` and
+  `ups/syntax/MixedParameters.mls` retain their expected undefined-binding errors
+  but lose the use-site location. These need attention without changing the
+  chosen symbol.
 
 ## Execution order and completion gates
 
@@ -243,15 +271,18 @@ errors when a selected interpretation lacks the required capability.
    application difftests, and the aggregate suite. Review output changes; keep
    nonmigrated files intact. WASM `Basics` retains its previous configuration
    pending the capture fix, keeping this partial migration green.
-2. **Investigate retained timeouts.** Minimize `codegen/Generators.mls` and
-   `ups/examples/HindleyMilner.mls`; check emitted IR/JS when migrating those worksheets.
-3. **Implement structural targets and external signatures.** Agree on opaque
-   selection policy, then migrate records, tuples, mutation, and JS interop in
-   small batches. Re-run affected negative tests as well as successful programs.
+2. **Investigate the retained timeout.** Minimize `ups/examples/HindleyMilner.mls`,
+   which still times out and terminates SBT on the current JVM. The
+   `codegen/Generators.mls` trial now finishes but rejects unresolved `next`
+   selections; its earlier timeout was not reproduced.
+3. **Complete structural targets and external signatures.** Dynamic JS values and
+   record fields are supported; finish tuple members, mutation, primitive members,
+   and foreign declarations in small batches. Re-run affected negative tests as
+   well as successful programs.
 4. **Complete pattern transfers and reference preservation.** Start with UCS
-   conjunction/record/tuple cases, then compiled class patterns, then recursive
-   and transforming UPS cases. Keep fixed-point behavior tested independently
-   from matcher code generation. Resolve the constructor-pattern context-mixing
+   conjunction/record/tuple cases, then the remaining recursive and transforming
+   UPS cases. Keep fixed-point behavior tested independently from matcher code
+   generation. Resolve the constructor-pattern context-mixing
    blocker above before treating nominal field extraction as complete.
 5. **Complete type/interface and call validation.** Resolve the pending interface
    question, finish declared result/field shapes, port module/generic checks, and
@@ -267,17 +298,14 @@ errors when a selected interpretation lacks the required capability.
 
 ## Validation
 
-- `ctest`: 45 compilation tests pass.
-- `catest`: 20 application compilation tests pass in their existing mode.
-- Main `dtest` after retaining the migrated batch: 681 tests pass.
-- `adtest` after restoring deferred files: all 18 tests pass (16 worksheets and
-  two shared configuration files).
-- The added `newres/TypeApplications.mls` regression passes separately.
-- `hkmc2AllTests/test` passes after restoring WASM `Basics.mls` to its previous
-  configuration. All 22 WASM tests pass; the final main test run passes 685 tests.
-  The capture assertion remains a migration blocker, not an accepted test failure.
-- This checkpoint includes the latest golden outputs and records the outstanding
-  migration blocker. No trial-generated application report changes remain.
+- `ctest`: all 46 selected compilation tests pass.
+- `catest`: all 20 application compilation fixtures pass in their existing mode.
+- `cwtest`: the WASM compilation fixture passes.
+- `hkmc2AllTests/test`: all tests pass, including 700 main tests, 18 application
+  tests, and 22 WASM tests. The main count includes the five new UPS directory
+  configurations; it does not mean that 700 worksheets have been migrated.
+- All retained ports have reviewed goldens. Deferred worksheets retain their
+  original source and output; no trial-generated application report changes remain.
 
 ## Deferred-file inventory
 
@@ -287,202 +315,153 @@ The files themselves retain the pre-trial configuration and output.
 
 ### basics
 
-- `basics/BadAssignments.mls`: Unexpected exception; /!!!\ Uncaught error: scala.NotImplementedError: SelfRef(globalThis:globalThis) (of class SelfRef)
-- `basics/BadModuleUses.mls`: Unexpected lack of compilation or type error; [COMPILATION ERROR] This selection of member 'mtd' has no resolved target
-- `basics/BadOverloading.mls`: Unexpected lack of compilation or type error; [COMPILATION ERROR] Not yet supported: overloading of function 'Foo'
-- `basics/BadTypeClasses.mls`: Unexpected lack of compilation or type error; [COMPILATION ERROR] Resolution error in member reference; Value symbol 'someInt' cannot be used as a type
+- `basics/BadAssignments.mls`: Unexpected exception; scala.NotImplementedError: SelfRef(globalThis:globalThis) (of class SelfRef)
+- `basics/BadModuleUses.mls`: Unexpected lack of compilation or type error after `fun foo(): module null = M`
+- `basics/BadOverloading.mls`: Unexpected lack of compilation or type error after `fun Foo = 1`
+- `basics/BadTypeClasses.mls`: Unexpected lack of compilation or type error after `M.f`
 - `basics/Classes.mls`: Unexpected compilation error; [COMPILATION ERROR] This selection of member 'id' has no resolved target
 - `basics/CompanionModules_Classes.mls`: Unexpected compilation error; [COMPILATION ERROR] Resolution error in application; Module 'C' cannot be called like a function.
 - `basics/CompanionModules_Functions.mls`: Unexpected compilation error; [COMPILATION ERROR] Resolution error in application; Module 'foo' cannot be called like a function.
-- `basics/CyclicModuleForwarders.mls`: Unexpected exception; /!!!\ Uncaught error: java.lang.StackOverflowError
+- `basics/CyclicModuleForwarders.mls`: Unexpected exception; java.lang.StackOverflowError
 - `basics/DynamicFields.mls`: Unexpected compilation error; [COMPILATION ERROR] Resolution error in selection; Instance of class constructor 'DynCtor' does not contain member 'dynField'
-- `basics/DynamicInstantiation.mls`: Unexpected internal error; [INTERNAL ERROR] Compiler reached an unexpected state at 'Lowering.scala:453': Unexpected class term shape
-- `basics/DynamicSelection.mls`: Unexpected exception; /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+- `basics/DynamicInstantiation.mls`: Unexpected exception; scala.NotImplementedError: an implementation is missing (`semantics.DefnShape.getMemberImpl`)
+- `basics/DynamicSelection.mls`: Unexpected exception; scala.NotImplementedError: an implementation is missing (`semantics.TupleShape.getMemberImpl`)
 - `basics/ExplicitLabels.mls`: Unexpected compilation error; [COMPILATION ERROR] Resolution error in selection; Integer literal does not contain member 'break'
-- `basics/FunDefs.mls`: Unexpected exception; /!!!\ Uncaught error: java.lang.StackOverflowError
-- `basics/GenericClasses.mls`: Unexpected lack of compilation or type error; 
-- `basics/Inheritance.mls`: Unexpected lack of error to fix; [COMPILATION ERROR] This selection of member 'x' has no resolved target
-- `basics/LiteralSelection.mls`: Unexpected exception; /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-- `basics/MiscArrayTests.mls`: Unexpected exception; /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-- `basics/ModuleMethods.mls`: Unexpected lack of compilation or type error; [COMPILATION ERROR] Cannot use a value of type 'Int' at an unrelated type 'module M'
+- `basics/FunDefs.mls`: Unexpected exception; java.lang.StackOverflowError
+- `basics/GenericClasses.mls`: Unexpected lack of compilation or type error after `class Foo[A](x: Foo[A, A])`
+- `basics/Inheritance.mls`: Unexpected lack of error to fix after `[Bar.x, Bar.foo]`
+- `basics/LiteralSelection.mls`: Unexpected exception; scala.NotImplementedError: an implementation is missing (`semantics.TupleShape.getMemberImpl`)
+- `basics/MiscArrayTests.mls`: Unexpected exception; scala.NotImplementedError: an implementation is missing (`semantics.TupleShape.getMemberImpl`)
+- `basics/ModuleMethods.mls`: Unexpected lack of compilation or type error after `fun f(m: M)`
 - `basics/MultiParamListClasses.mls`: Unexpected compilation error; [COMPILATION ERROR] Resolution error in application; Instance of class constructor 'Foo' cannot receive more argument lists.
-- `basics/MutArr.mls`: Unexpected exception; /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-- `basics/MutRcd.mls`: Unexpected exception; /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-- `basics/MutVal.mls`: Unexpected exception; /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-- `basics/New.mls`: Unexpected lack of warnings; [COMPILATION ERROR] Resolution error in application; Class 'Foo' cannot receive more argument lists.
+- `basics/MutArr.mls`: Unexpected exception; scala.NotImplementedError: an implementation is missing (`semantics.TupleShape.getMemberImpl`)
+- `basics/MutRcd.mls`: Unexpected compilation error; [COMPILATION ERROR] Resolution error in selection; Record literal does not contain member 'foo'
+- `basics/MutVal.mls`: Unexpected exception; scala.NotImplementedError: an implementation is missing (`semantics.NewResolver.listen`)
+- `basics/New.mls`: Unexpected lack of warnings after `Foo`
 - `basics/NewMut.mls`: Unexpected compilation error; [COMPILATION ERROR] Resolution error in selection; Instance of class 'Foo' does not contain member 'y'
 - `basics/NewlineOps.mls`: Unexpected compilation error; [COMPILATION ERROR] This selection of member 'length' has no resolved target
-- `basics/NewlineSels.mls`: Unexpected exception; /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-- `basics/ObjectExtensions.mls`: Unexpected internal error; [INTERNAL ERROR] Compiler reached an unexpected state at 'Lowering.scala:453': Unexpected class term shape
+- `basics/NewlineSels.mls`: Unexpected compilation error; [COMPILATION ERROR] This selection of member 'c' has no resolved target
 - `basics/OpenIn.mls`: Unexpected compilation error; [COMPILATION ERROR] Builtin '~' is not a binary operator
 - `basics/Overloading.mls`: Unexpected compilation error; [COMPILATION ERROR] Resolution error in application; Module 'Foo' cannot be called like a function.
-- `basics/PrefixOps.mls`: Unexpected compilation error; [COMPILATION ERROR] Resolution error in member reference; 
-- `basics/Puns.mls`: Unexpected exception; /!!!\ Uncaught error: scala.NotImplementedError: Record(List((Ident(a),Alias(Wildcard(),Ident(x))))) (of class Record)
-- `basics/Records.mls`: Unexpected exception; /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-- `basics/StrTest.mls`: Unexpected lack of compilation or type error; [COMPILATION ERROR] Unexpected term form in expression position (negation type)
+- `basics/PrefixOps.mls`: Unexpected compilation error; [COMPILATION ERROR] Resolution error in member reference; Expected a term; got pattern 'Bin'
+- `basics/Puns.mls`: Unexpected exception; scala.NotImplementedError: Record(List((Ident(a),Alias(Wildcard(),Ident(x))))) (of class Record)
+- `basics/Records.mls`: Unexpected compilation error; [COMPILATION ERROR] Resolution error in selection; String literal does not contain member 'repeat'
+- `basics/StrTest.mls`: Unexpected lack of compilation or type error after `(~)("a")`
 - `basics/Underscores.mls`: Unexpected compilation error; [COMPILATION ERROR] This selection of member 'f' has no resolved target
 - `basics/ValMemberSymbols.mls`: Unexpected compilation error; [COMPILATION ERROR] Resolution error in application; Integer literal cannot receive more argument lists.
 
 ### codegen
 
-- `codegen/Arrays.mls`: Unexpected exception; /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-- `codegen/AuxiliaryConstructors.mls`: Unexpected exception; /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-- `codegen/BadGenerators.mls`: Unexpected warning; [WARNING] This annotation has no effect.
-- `codegen/BadNew.mls`: Unexpected internal error; [INTERNAL ERROR] Compiler reached an unexpected state at 'Lowering.scala:453': Unexpected class term shape
+- `codegen/Arrays.mls`: Unexpected exception; scala.NotImplementedError: an implementation is missing (`semantics.TupleShape.getMemberImpl`)
+- `codegen/AuxiliaryConstructors.mls`: Unexpected exception; scala.NotImplementedError: an implementation is missing (`semantics.NewResolver.listen`)
 - `codegen/BadOpen.mls`: Unexpected compilation error; [COMPILATION ERROR] Resolution error in selection; Module 'Foo' does not contain member 'y'
-- `codegen/BadThis.mls`: Unexpected compilation error; [COMPILATION ERROR] This selection of member 'clearInterval' has no resolved target
-- `codegen/BasicTerms.mls`: Unexpected compilation error; [COMPILATION ERROR] Resolution error in application; Integer literal cannot be called like a function.
-- `codegen/BlockPrinter.mls`: Unexpected exception; /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-- `codegen/ClassMatching.mls`: Unexpected exception; /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+- `codegen/BlockPrinter.mls`: Unexpected exception; scala.NotImplementedError: an implementation is missing (`semantics.TupleShape.getMemberImpl`)
+- `codegen/ClassMatching.mls`: Unexpected exception; scala.NotImplementedError: an implementation is missing (`semantics.DefnShape.getMemberImpl`)
 - `codegen/ConfigDirective.mls`: Unexpected compilation error; [COMPILATION ERROR] This selection of member 'call' has no resolved target
 - `codegen/ConsoleLog.mls`: Unexpected compilation error; [COMPILATION ERROR] This selection of member 'log' has no resolved target
 - `codegen/CurriedClassInheritance.mls`: Unexpected compilation error; [COMPILATION ERROR] Resolution error in application; Instance of class constructor 'Bar' cannot receive more argument lists.
-- `codegen/CurriedClasses.mls`: Unexpected compilation error; [COMPILATION ERROR] Resolution error in object instantiation; Class 'A' expected 1 argument, but got 1
-- `codegen/Do.mls`: Unexpected compilation error; [COMPILATION ERROR] This selection of member 'hello' has no resolved target
-- `codegen/ErasedTypes.mls`: Unexpected warning; [WARNING] This annotation has no effect.
-- `codegen/FirstClassFunctionTransform.mls`: Unexpected exception; /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-- `codegen/Generators.mls`: New-resolution trial exceeded the 25-second runner timeout.
-- `codegen/Getters.mls`: Unexpected compilation error; [COMPILATION ERROR] This selection of member 'whoops' has no resolved target
+- `codegen/CurriedClasses.mls`: Unexpected exception; scala.NotImplementedError: an implementation is missing (`semantics.DefnShape.getMemberImpl`)
+- `codegen/ErasedTypes.mls`: Unexpected compilation error; [COMPILATION ERROR] Resolution error in application; Class definition 'Function' cannot be called like a function.
+- `codegen/FirstClassFunctionTransform.mls`: Unexpected exception; scala.NotImplementedError: an implementation is missing (`semantics.TupleShape.getMemberImpl`)
+- `codegen/Generators.mls`: Unexpected compilation error; [COMPILATION ERROR] This selection of member 'next' has no resolved target
+- `codegen/Getters.mls`: Unexpected compilation error; [COMPILATION ERROR] This selection of member 'oops' has no resolved target
 - `codegen/Hygiene.mls`: Unexpected compilation error; [COMPILATION ERROR] Resolution error in selection; String literal does not contain member 'foo'
-- `codegen/ImportAlias.mls`: Unexpected compilation error; [COMPILATION ERROR] This selection of member 'inc' has no resolved target
-- `codegen/ImportExample.mls`: Unexpected exception; /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-- `codegen/ImportJSClass.mls`: Unexpected internal error; [INTERNAL ERROR] Compiler reached an unexpected state at 'Lowering.scala:453': Unexpected class term shape
-- `codegen/ImportJSModule.mls`: Unexpected compilation error; [COMPILATION ERROR] This selection of member 'greet' has no resolved target
-- `codegen/ImportMLs.mls`: Unexpected compilation error; [COMPILATION ERROR] Resolution error in selection; Module 'Option' does not contain member 'oops'
-- `codegen/ImportMLsJS.mls`: Unexpected compilation error; [COMPILATION ERROR] This selection of member 'isDefined' has no resolved target
+- `codegen/ImportExample.mls`: Unexpected exception; scala.NotImplementedError: an implementation is missing (`semantics.NewResolver.listen`)
 - `codegen/ImportedOps.mls`: Unexpected compilation error; [COMPILATION ERROR] Builtin '~' is not a binary operator
-- `codegen/Inliner.mls`: Unexpected warning; [WARNING] This annotation has no effect.
-- `codegen/InterleavedRecords.mls`: Unexpected exception; /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-- `codegen/Misc.mls`: Unexpected exception; /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-- `codegen/ModuleMethods.mls`: Unexpected lack of compilation or type error; 
+- `codegen/Inliner.mls`: Unexpected exception; scala.NotImplementedError: an implementation is missing (`semantics.TupleShape.getMemberImpl`)
+- `codegen/Misc.mls`: Unexpected exception; scala.NotImplementedError: an implementation is missing (`semantics.TupleShape.getMemberImpl`)
+- `codegen/ModuleMethods.mls`: Unexpected lack of compilation or type error after `Example |>. s(123)`
 - `codegen/Modules.mls`: Unexpected compilation error; [COMPILATION ERROR] Resolution error in application; Module 'None' cannot be called like a function.
-- `codegen/NestedClasses.mls`: Unexpected internal error; [INTERNAL ERROR] Compiler reached an unexpected state at 'Lowering.scala:453': Unexpected class term shape
-- `codegen/NestedScoped.mls`: Unexpected exception; /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-- `codegen/NoFreeze.mls`: Unexpected compilation error; [COMPILATION ERROR] Assignment requires an unambiguous term member
-- `codegen/NoModuleCheck.mls`: Unexpected lack of compilation or type error; [COMPILATION ERROR] Resolution error in object instantiation; 
+- `codegen/NestedClasses.mls`: Unexpected compilation error; [COMPILATION ERROR] This selection of member 'x' has no resolved target
+- `codegen/NestedScoped.mls`: Unexpected exception; scala.NotImplementedError: an implementation is missing (`semantics.TupleShape.getMemberImpl`)
+- `codegen/NoFreeze.mls`: Unexpected compilation error; [COMPILATION ERROR] This selection of member 'x' has no resolved target
+- `codegen/NoModuleCheck.mls`: Unexpected lack of compilation or type error after `M."foo"(1)`
 - `codegen/ObjectMethodDebinding.mls`: Unexpected compilation error; [COMPILATION ERROR] This selection of member 'foo' has no resolved target
 - `codegen/Open.mls`: Unexpected compilation error; [COMPILATION ERROR] Resolution error in selection; String literal does not contain member 'length'
 - `codegen/OpenWildcard.mls`: Unexpected compilation error; [COMPILATION ERROR] Wildcard-open reference 'None' is ambiguous
-- `codegen/ParamClasses.mls`: Unexpected exception; /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+- `codegen/ParamClasses.mls`: Unexpected exception; scala.NotImplementedError: an implementation is missing (`semantics.DefnShape.getMemberImpl`)
 - `codegen/PartialApps.mls`: Unexpected compilation error; [COMPILATION ERROR] Resolution error in application; Tuple literal cannot receive more argument lists.
-- `codegen/PlainClasses.mls`: Unexpected compilation error; [COMPILATION ERROR] Resolution error in application; Class 'Foo' cannot receive more argument lists.
+- `codegen/PlainClasses.mls`: Unexpected compilation error; [COMPILATION ERROR] Resolution error in application; Class value cannot receive more argument lists.
 - `codegen/PredefUsage.mls`: Unexpected compilation error; [COMPILATION ERROR] Resolution error in application; Module 'String' cannot be called like a function.
 - `codegen/PrivateMembers.mls`: Unexpected compilation error; [COMPILATION ERROR] This selection of member 'y' has no resolved target
 - `codegen/Pwd.mls`: Unexpected compilation error; [COMPILATION ERROR] This selection of member 'pop' has no resolved target
-- `codegen/QQImport.mls`: Unexpected runtime error; [RUNTIME ERROR] ReferenceError: Term is not defined
-- `codegen/Quasiquotes.mls`: Unexpected runtime error; [RUNTIME ERROR] ReferenceError: Term is not defined
-- `codegen/RandomStuff.mls`: Unexpected exception; /!!!\ Uncaught error: java.lang.StackOverflowError
-- `codegen/ReboundLet.mls`: Unexpected exception; /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-- `codegen/RuntimeUsage.mls`: Unexpected compilation error; [COMPILATION ERROR] Resolution error in selection; Class 'Str' does not contain member 'leave'
-- `codegen/SanityChecks.mls`: Unexpected compilation error; [COMPILATION ERROR] Resolution error in application; Function literal expected 1 argument, but got 0
+- `codegen/Quasiquotes.mls`: Unexpected compilation error; [COMPILATION ERROR] Unsupported quasiquote type member reference
+- `codegen/RandomStuff.mls`: Unexpected exception; java.lang.StackOverflowError
+- `codegen/ReboundLet.mls`: Unexpected exception; scala.NotImplementedError: an implementation is missing (`semantics.NewResolver.listen`)
+- `codegen/RuntimeUsage.mls`: Unexpected compilation error; [COMPILATION ERROR] Resolution error in selection; Class value does not contain member 'leaveOut'
+- `codegen/SanityChecks.mls`: Unexpected compilation error; [COMPILATION ERROR] Resolution error in application; Function literal expected 2 arguments, but got 1
 - `codegen/ScopedBlocks.mls`: Unexpected compilation error; [COMPILATION ERROR] Resolution error in application; Module 'Foo' cannot receive more argument lists.
-- `codegen/ScopedBlocksAndHandlers.mls`: Unexpected exception; /!!!\ Uncaught error: scala.NotImplementedError: Handle(h,Capture(MemberRef(member:Effect),term:f),List(),class:Handler$h$,List(HandlerTermDefinition(k,TermDefinition(Fun,member:perform,term:Handler$h$/perform,List(...
-- `codegen/Scoping.mls`: Unexpected exception; /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-- `codegen/SelfReferences.mls`: Unexpected lack of compilation or type error; 
-- `codegen/SetStmt.mls`: Unexpected exception; /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-- `codegen/Spreads.mls`: Unexpected compilation error; [COMPILATION ERROR] Resolution error in application; Function 'foo' expected 4 arguments, but got 1
-- `codegen/This.mls`: Unexpected compilation error; [COMPILATION ERROR] This selection of member 'a' has no resolved target
+- `codegen/ScopedBlocksAndHandlers.mls`: Unexpected exception; shape propagation for `Handle` is unimplemented.
+- `codegen/Scoping.mls`: Unexpected exception; scala.NotImplementedError: an implementation is missing (`semantics.NewResolver.listen`)
+- `codegen/SelfReferences.mls`: Unexpected lack of compilation or type error after `val self = this`
+- `codegen/SetStmt.mls`: Unexpected exception; scala.NotImplementedError: an implementation is missing (`semantics.TupleShape.getMemberImpl`)
 - `codegen/ThisCallVariations.mls`: Unexpected compilation error; [COMPILATION ERROR] This selection of member 'call' has no resolved target
-- `codegen/ThisCalls.mls`: Unexpected lack of compilation or type error; 
-- `codegen/Throw.mls`: Unexpected compilation error; [COMPILATION ERROR] Resolution error in application; Class 'Error' cannot receive more argument lists.
-- `codegen/TraceLog.mls`: Unexpected exception; /!!!\ Uncaught error: java.lang.StackOverflowError
-- `codegen/UnitValue.mls`: Unexpected compilation error; [COMPILATION ERROR] This selection of member 'log' has no resolved target
+- `codegen/ThisCalls.mls`: Unexpected lack of compilation or type error after `Example |>. g(123)`
+- `codegen/TraceLog.mls`: Unexpected exception; java.lang.StackOverflowError
 - `codegen/While.mls`: Unexpected compilation error; [COMPILATION ERROR] Resolution error in application; Integer literal cannot be called like a function.
 
 ### ucs
 
 - `ucs/examples/BinarySearchTree.mls`: Unexpected compilation error; [COMPILATION ERROR] Resolution error in application; Module 'String' cannot receive more argument lists.
-- `ucs/examples/EitherOrBoth.mls`: Unexpected compilation error; [COMPILATION ERROR] Resolution error in selection of type None; Object 'None' cannot be used as a type
+- `ucs/examples/EitherOrBoth.mls`: Unexpected exception; java.lang.Exception: Internal Error: Synthetic selections must not enter new resolution
 - `ucs/examples/LeftistTree.mls`: Unexpected compilation error; [COMPILATION ERROR] Resolution error in application; Module 'String' cannot receive more argument lists.
 - `ucs/examples/ListFold.mls`: Unexpected compilation error; [COMPILATION ERROR] Builtin '~' is not a binary operator
 - `ucs/examples/ULC.mls`: Unexpected compilation error; [COMPILATION ERROR] Resolution error in application; Module 'String' cannot receive more argument lists.
-- `ucs/general/BooleanPatterns.mls`: Unexpected exception; /!!!\ Uncaught error: scala.NotImplementedError: Composition(false,Negation(Literal(IntLit(2))),Negation(Literal(IntLit(3)))) (of class Composition)
-- `ucs/hygiene/HygienicBindings.mls`: Unexpected compilation error; [COMPILATION ERROR] Resolution error in application; Class 'Error' cannot receive more argument lists.
+- `ucs/general/BooleanPatterns.mls`: Unexpected exception; scala.NotImplementedError: Composition(false,Negation(Literal(IntLit(2))),Negation(Literal(IntLit(3)))) (of class Composition)
+- `ucs/hygiene/HygienicBindings.mls`: Unexpected compilation error; [COMPILATION ERROR] Resolution error in application; Class value cannot receive more argument lists.
 - `ucs/normalization/Deduplication.mls`: Unexpected compilation error; [COMPILATION ERROR] This selection of member 'length' has no resolved target
-- `ucs/normalization/InheritanceNormalization.mls`: Unexpected exception; /!!!\ Uncaught error: scala.NotImplementedError: Composition(false,Constructor(MemberRef(member:A),None),Constructor(MemberRef(member:B),None)) (of class Composition)
+- `ucs/normalization/InheritanceNormalization.mls`: Unexpected exception; scala.NotImplementedError: Composition(false,Constructor(MemberRef(member:A),None),Constructor(MemberRef(member:B),None)) (of class Composition)
 - `ucs/normalization/OverlapOfPrimitives.mls`: Unexpected compilation error; [COMPILATION ERROR] Resolution error in application; Module 'String' cannot receive more argument lists.
-- `ucs/normalization/RecordImpliedByClass.mls`: Unexpected exception; /!!!\ Uncaught error: scala.NotImplementedError: Record(List((Ident(a),Alias(Wildcard(),Ident(av))), (Ident(b),Alias(Wildcard(),Ident(bv))))) (of class Record)
-- `ucs/patterns/BooleansOps.mls`: Unexpected exception; /!!!\ Uncaught error: scala.NotImplementedError: Composition(false,Alias(Wildcard(),Ident(a)),Alias(Wildcard(),Ident(b))) (of class Composition)
-- `ucs/patterns/CompiledClassPatterns.mls`: Unexpected exception; /!!!\ Uncaught error: scala.MatchError: MemberRef(member:Add) (of class hkmc2.semantics.Term$MemberRef)
-- `ucs/patterns/CompiledQualifiedConstructors.mls`: Unexpected exception; /!!!\ Uncaught error: scala.MatchError: NewSel(SimpleRef(Inner),Ident(Wrapped),None) (of class hkmc2.semantics.Term$NewSel)
-- `ucs/patterns/ConjunctionPattern.mls`: Unexpected exception; /!!!\ Uncaught error: scala.NotImplementedError: Composition(false,Composition(false,Constructor(MemberRef(member:A),None),Constructor(MemberRef(member:A),None)),Constructor(MemberRef(member:B),None)) (of class Comp...
-- `ucs/patterns/RecordPattern.mls`: Unexpected exception; /!!!\ Uncaught error: scala.NotImplementedError: Record(List((Ident(x),Alias(Wildcard(),Ident(a))), (Ident(y),Alias(Wildcard(),Ident(b))))) (of class Record)
-- `ucs/patterns/String.mls`: Unexpected exception; /!!!\ Uncaught error: scala.NotImplementedError: Concatenation(Literal(StrLit(0x)),Alias(Wildcard(),Ident(body))) (of class Concatenation)
-- `ucs/patterns/where.mls`: Unexpected exception; /!!!\ Uncaught error: scala.MatchError: SimpleRef(x) (of class hkmc2.semantics.Term$SimpleRef)
+- `ucs/normalization/RecordImpliedByClass.mls`: Unexpected exception; scala.NotImplementedError: Record(List((Ident(a),Alias(Wildcard(),Ident(av))), (Ident(b),Alias(Wildcard(),Ident(bv))))) (of class Record)
+- `ucs/patterns/BooleansOps.mls`: Unexpected exception; scala.NotImplementedError: Composition(false,Alias(Wildcard(),Ident(a)),Alias(Wildcard(),Ident(b))) (of class Composition)
+- `ucs/patterns/ConjunctionPattern.mls`: Unexpected exception; scala.NotImplementedError: Composition(false,Composition(false,Constructor(MemberRef(member:A),None),Constructor(MemberRef(member:A),None)),Constructor(MemberRef(member:B),None)) (of class Composition)
+- `ucs/patterns/RecordPattern.mls`: Unexpected exception; scala.NotImplementedError: Record(List((Ident(x),Alias(Wildcard(),Ident(a))), (Ident(y),Alias(Wildcard(),Ident(b))))) (of class Record)
+- `ucs/patterns/String.mls`: Unexpected exception; scala.NotImplementedError: Concatenation(Literal(StrLit(0x)),Alias(Wildcard(),Ident(body))) (of class Concatenation)
+- `ucs/patterns/where.mls`: Unexpected compilation error; [COMPILATION ERROR] This selection of member 'get' has no resolved target
 - `ucs/syntax/Else.mls`: Unexpected compilation error; [COMPILATION ERROR] Resolution error in selection; Instance of class 'Set' does not contain member 'has'
 - `ucs/syntax/SimpleUCS.mls`: Unexpected compilation error; [COMPILATION ERROR] This selection of member 'get' has no resolved target
 
 ### ups
 
-- `ups/BasicStackPatterns.mls`: Unexpected exception; /!!!\ Uncaught error: scala.MatchError: UnresolvedRef(List(MemberRef(member:Stack)),Ident(x)) (of class hkmc2.semantics.Term$UnresolvedRef)
-- `ups/EmptyJunctions.mls`: Unexpected exception; /!!!\ Uncaught error: scala.NotImplementedError: Range(IntLit(5),IntLit(3),true) (of class Range)
-- `ups/Future.mls`: Unexpected compilation error; [COMPILATION ERROR] Resolution error in member reference; Pattern symbol 'Test' cannot be used as a type
-- `ups/LocalPatterns.mls`: Unexpected compilation error; [COMPILATION ERROR] Resolution error in selection; 
-- `ups/MatchResult.mls`: Unexpected compilation error; [COMPILATION ERROR] Resolution error in member reference; 
-- `ups/RecursiveTransformations.mls`: Unexpected exception; /!!!\ Uncaught error: scala.MatchError: SimpleRef(b) (of class hkmc2.semantics.Term$SimpleRef)
-- `ups/SimpleConjunction.mls`: Unexpected exception; /!!!\ Uncaught error: scala.MatchError: MemberRef(member:observeLeft) (of class hkmc2.semantics.Term$MemberRef)
-- `ups/SimpleTransform.mls`: Unexpected exception; /!!!\ Uncaught error: scala.MatchError: SimpleRef(a) (of class hkmc2.semantics.Term$SimpleRef)
-- `ups/TransformFree.mls`: Unexpected exception; /!!!\ Uncaught error: scala.MatchError: SimpleRef(x) (of class hkmc2.semantics.Term$SimpleRef)
-- `ups/UpsBugsBacklog.mls`: Unexpected exception; /!!!\ Uncaught error: scala.MatchError: SimpleRef(c) (of class hkmc2.semantics.Term$SimpleRef)
-- `ups/examples/BasicSeqStackParse.mls`: Unexpected exception; /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-- `ups/examples/BasicStackParse.mls`: Unexpected exception; /!!!\ Uncaught error: scala.MatchError: UnresolvedRef(List(MemberRef(member:Stack)),Ident(::)) (of class hkmc2.semantics.Term$UnresolvedRef)
-- `ups/examples/Computation.mls`: Unexpected exception; /!!!\ Uncaught error: scala.MatchError: SimpleRef(f) (of class hkmc2.semantics.Term$SimpleRef)
-- `ups/examples/DnfCnf.mls`: Unexpected exception; /!!!\ Uncaught error: scala.MatchError: MemberRef(member:Or) (of class hkmc2.semantics.Term$MemberRef)
-- `ups/examples/DoubleOrSum.mls`: Unexpected exception; /!!!\ Uncaught error: scala.MatchError: MemberRef(member:addWithPrint) (of class hkmc2.semantics.Term$MemberRef)
-- `ups/examples/DoubleTripleList.mls`: Unexpected exception; /!!!\ Uncaught error: scala.MatchError: UnresolvedRef(List(MemberRef(member:Stack), MemberRef(member:annotations)),Ident(Nil)) (of class hkmc2.semantics.Term$UnresolvedRef)
-- `ups/examples/EvaluationContext.mls`: Unexpected exception; /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-- `ups/examples/EvaluationContext2.mls`: Unexpected exception; /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-- `ups/examples/Extraction.mls`: Unexpected exception; /!!!\ Uncaught error: scala.MatchError: NewSel(MemberRef(member:Option),Ident(Some),None) (of class hkmc2.semantics.Term$NewSel)
-- `ups/examples/Flatten.mls`: Unexpected exception; /!!!\ Uncaught error: scala.MatchError: UnresolvedRef(List(MemberRef(member:Stack), MemberRef(member:annotations)),Ident(::)) (of class hkmc2.semantics.Term$UnresolvedRef)
-- `ups/examples/HindleyMilner.mls`: New-resolution trial exceeded the 25-second runner timeout.
-- `ups/examples/ListPredicates.mls`: Unexpected exception; /!!!\ Uncaught error: scala.MatchError: SimpleRef(list) (of class hkmc2.semantics.Term$SimpleRef)
-- `ups/examples/Negation.mls`: Unexpected exception; /!!!\ Uncaught error: scala.MatchError: SimpleRef(x) (of class hkmc2.semantics.Term$SimpleRef)
-- `ups/examples/PrecedenceClimbStackParse.mls`: Unexpected exception; /!!!\ Uncaught error: scala.MatchError: UnresolvedRef(List(MemberRef(member:Stack)),Ident(::)) (of class hkmc2.semantics.Term$UnresolvedRef)
-- `ups/examples/Record.mls`: Unexpected exception; /!!!\ Uncaught error: scala.MatchError: SimpleRef(weight) (of class hkmc2.semantics.Term$SimpleRef)
-- `ups/examples/TupleSpread.mls`: Unexpected exception; /!!!\ Uncaught error: scala.MatchError: SimpleRef(x) (of class hkmc2.semantics.Term$SimpleRef)
-- `ups/fixpoint/Diagnostics.mls`: Unexpected exception; /!!!\ Uncaught error: scala.MatchError: SimpleRef(x) (of class hkmc2.semantics.Term$SimpleRef)
-- `ups/fixpoint/FixedPointPatterns.mls`: Unexpected exception; /!!!\ Uncaught error: scala.MatchError: SimpleRef(x) (of class hkmc2.semantics.Term$SimpleRef)
-- `ups/fixpoint/IndirectRecursion.mls`: Unexpected exception; /!!!\ Uncaught error: scala.MatchError: SimpleRef(x) (of class hkmc2.semantics.Term$SimpleRef)
+- `ups/EmptyJunctions.mls`: Unexpected exception; scala.NotImplementedError: Range(IntLit(5),IntLit(3),true) (of class Range)
+- `ups/Future.mls`: Unexpected compilation error; [COMPILATION ERROR] Resolution error in member reference; Expected a term; got pattern 'Test'
+- `ups/LocalPatterns.mls`: Unexpected compilation error; [COMPILATION ERROR] Resolution error in selection; Expected a term; got pattern 'Zero'
+- `ups/MatchResult.mls`: Unexpected compilation error; [COMPILATION ERROR] Resolution error in member reference; Expected a term; got pattern 'Cross'
+- `ups/RecursiveTransformations.mls`: Unexpected exception; scala.NotImplementedError: Negation(Constructor(Capture(MemberRef(member:Bin),term:f),None)) (of class Negation)
+- `ups/SimpleTransform.mls`: Unexpected compilation error; [COMPILATION ERROR] Resolution error in application; Function 'area' expected 1 argument, but got 2
+- `ups/examples/BasicSeqStackParse.mls`: Unexpected compilation error; [COMPILATION ERROR] This selection of member 'at' has no resolved target
+- `ups/examples/Computation.mls`: Unexpected compilation error; [COMPILATION ERROR] This selection of member 'padStart' has no resolved target
+- `ups/examples/DoubleTripleList.mls`: Unexpected compilation error; [COMPILATION ERROR] This selection of member 'head' has no resolved target
+- `ups/examples/EvaluationContext.mls`: Unexpected exception; scala.NotImplementedError: an implementation is missing (`semantics.NewResolver.listen`)
+- `ups/examples/EvaluationContext2.mls`: Unexpected exception; scala.NotImplementedError: an implementation is missing (`semantics.NewResolver.listen`)
+- `ups/examples/HindleyMilner.mls`: Timeout under new resolution; the test runner terminated SBT.
+- `ups/examples/ListPredicates.mls`: Unexpected compilation error; [COMPILATION ERROR] This selection of member 'length' has no resolved target
+- `ups/examples/Negation.mls`: Unexpected compilation error; [COMPILATION ERROR] Resolution error in application; Function 'flatten' expected 1 argument, but got 3
+- `ups/examples/PrecedenceClimbStackParse.mls`: Unexpected compilation error; [COMPILATION ERROR] Resolution error in member reference; Expected a term; got pattern 'ParseStep'
+- `ups/examples/Record.mls`: Unexpected compilation error; [COMPILATION ERROR] Resolution error in application; Function 'bmi' expected 1 argument, but got 2
 - `ups/fixpoint/ListFusion.mls`: Unexpected compilation error; [COMPILATION ERROR] This selection of member 'toString' has no resolved target
-- `ups/fixpoint/MoreAlternatives.mls`: Unexpected exception; /!!!\ Uncaught error: scala.MatchError: SimpleRef(x) (of class hkmc2.semantics.Term$SimpleRef)
-- `ups/fixpoint/NonCatchAll.mls`: Unexpected exception; /!!!\ Uncaught error: scala.MatchError: SimpleRef(x) (of class hkmc2.semantics.Term$SimpleRef)
-- `ups/fixpoint/RecursionAlternatives.mls`: Unexpected exception; /!!!\ Uncaught error: scala.MatchError: SimpleRef(x) (of class hkmc2.semantics.Term$SimpleRef)
-- `ups/fixpoint/SimpleExample.mls`: Unexpected exception; /!!!\ Uncaught error: scala.MatchError: SimpleRef(a) (of class hkmc2.semantics.Term$SimpleRef)
-- `ups/fixpoint/UnsupportedShapes.mls`: Unexpected exception; /!!!\ Uncaught error: scala.MatchError: SimpleRef(x) (of class hkmc2.semantics.Term$SimpleRef)
-- `ups/nondeterminism/BitArithmetic.mls`: Unexpected exception; /!!!\ Uncaught error: scala.MatchError: MemberRef(member:And) (of class hkmc2.semantics.Term$MemberRef)
-- `ups/nondeterminism/EvenOddTree.mls`: Unexpected exception; /!!!\ Uncaught error: scala.MatchError: MemberRef(member:B) (of class hkmc2.semantics.Term$MemberRef)
-- `ups/nondeterminism/LaRbTree.mls`: Unexpected exception; /!!!\ Uncaught error: scala.MatchError: MemberRef(member:A) (of class hkmc2.semantics.Term$MemberRef)
-- `ups/parametric/EtaConversion.mls`: Unexpected exception; /!!!\ Uncaught error: scala.MatchError: MemberRef(member:Zero) (of class hkmc2.semantics.Term$MemberRef)
-- `ups/parametric/HigherOrderPattern.mls`: Unexpected exception; /!!!\ Uncaught error: scala.MatchError: MemberRef(member:Int) (of class hkmc2.semantics.Term$MemberRef)
-- `ups/parametric/ListLike.mls`: Unexpected exception; /!!!\ Uncaught error: scala.MatchError: SimpleRef(x) (of class hkmc2.semantics.Term$SimpleRef)
-- `ups/parametric/Nullable.mls`: Unexpected exception; /!!!\ Uncaught error: scala.MatchError: SimpleRef(x) (of class hkmc2.semantics.Term$SimpleRef)
-- `ups/recursion/BitSeq.mls`: Unexpected exception; /!!!\ Uncaught error: scala.MatchError: MemberRef(member:Pair) (of class hkmc2.semantics.Term$MemberRef)
-- `ups/recursion/BitTree.mls`: Unexpected exception; /!!!\ Uncaught error: scala.MatchError: MemberRef(member:Pair) (of class hkmc2.semantics.Term$MemberRef)
-- `ups/recursion/LeafEvenOddTree.mls`: Unexpected exception; /!!!\ Uncaught error: scala.MatchError: MemberRef(member:B) (of class hkmc2.semantics.Term$MemberRef)
-- `ups/recursion/NatBox.mls`: Unexpected exception; /!!!\ Uncaught error: scala.MatchError: MemberRef(member:Box) (of class hkmc2.semantics.Term$MemberRef)
-- `ups/recursion/NullTree.mls`: Unexpected exception; /!!!\ Uncaught error: scala.MatchError: MemberRef(member:Pair) (of class hkmc2.semantics.Term$MemberRef)
-- `ups/recursion/SignBox.mls`: Unexpected exception; /!!!\ Uncaught error: scala.MatchError: MemberRef(member:Box) (of class hkmc2.semantics.Term$MemberRef)
-- `ups/regex/EmailAddress.mls`: Unexpected exception; /!!!\ Uncaught error: scala.MatchError: MemberRef(member:UserNameLetter) (of class hkmc2.semantics.Term$MemberRef)
+- `ups/regex/EmailAddress.mls`: Unexpected exception; scala.NotImplementedError: an implementation is missing (`semantics.TupleShape.getMemberImpl`)
 - `ups/regex/Identifier.mls`: Unexpected compilation error; [COMPILATION ERROR] This selection of member 'forEach' has no resolved target
-- `ups/regex/Separation.mls`: Unexpected exception; /!!!\ Uncaught error: scala.MatchError: SimpleRef(t) (of class hkmc2.semantics.Term$SimpleRef)
-- `ups/regex/TailRepetition.mls`: Unexpected compilation error; [COMPILATION ERROR] Resolution error in member reference; 
-- `ups/specialization/SimpleList.mls`: Unexpected exception; /!!!\ Uncaught error: scala.MatchError: MemberRef(member:Box) (of class hkmc2.semantics.Term$MemberRef)
-- `ups/specialization/SimpleLiterals.mls`: Unexpected exception; /!!!\ Uncaught error: scala.MatchError: MemberRef(member:observeZero) (of class hkmc2.semantics.Term$MemberRef)
-- `ups/syntax/InterestingPatterns.mls`: Unexpected exception; /!!!\ Uncaught error: scala.MatchError: SimpleRef(x) (of class hkmc2.semantics.Term$SimpleRef)
-- `ups/syntax/MixedParameters.mls`: Unexpected exception; /!!!\ Uncaught error: scala.MatchError: MemberRef(member:Bit) (of class hkmc2.semantics.Term$MemberRef)
-- `ups/syntax/PatternBody.mls`: Unexpected exception; /!!!\ Uncaught error: scala.MatchError: UnresolvedRef(List(MemberRef(member:Stack)),Ident(::)) (of class hkmc2.semantics.Term$UnresolvedRef)
-- `ups/transformation/BindingLess.mls`: Unexpected exception; /!!!\ Uncaught error: scala.MatchError: SimpleRef(x) (of class hkmc2.semantics.Term$SimpleRef)
+- `ups/regex/Separation.mls`: Unexpected compilation error; [COMPILATION ERROR] Resolution error in member reference; Expected a term; got pattern 'Integer'
+- `ups/regex/TailRepetition.mls`: Unexpected compilation error; [COMPILATION ERROR] Resolution error in member reference; Expected a term; got pattern 'Zero'
+- `ups/syntax/InterestingPatterns.mls`: Unexpected compilation error; [COMPILATION ERROR] Resolution error in member reference; Expected a term; got pattern 'TreeDepth'
+- `ups/syntax/PatternBody.mls`: Unexpected compilation error; [COMPILATION ERROR] This selection of member 'toString' has no resolved target
 
 ### apps
 
-- `apps/AccountingTest.mls`: Unexpected exception; /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+- `apps/AccountingTest.mls`: Unexpected exception; scala.NotImplementedError: an implementation is missing (`semantics.NewResolver.listen`)
 - `apps/CSVTest.mls`: Unexpected compilation error; [COMPILATION ERROR] This selection of member '1' has no resolved target
 - `apps/IterTest.mls`: Unexpected compilation error; [COMPILATION ERROR] This selection of member 'reverse' has no resolved target
 - `apps/parsing-web-demo/ExamplesTest.mls`: Unexpected compilation error; [COMPILATION ERROR] This selection of member 'sort' has no resolved target
 - `apps/parsing/DirectiveTest.mls`: Unexpected compilation error; [COMPILATION ERROR] This selection of member 'display' has no resolved target
 - `apps/parsing/LeftRecursion.mls`: Unexpected compilation error; [COMPILATION ERROR] This selection of member 'display' has no resolved target
 - `apps/parsing/LexerTest.mls`: Unexpected compilation error; [COMPILATION ERROR] This selection of member 'join' has no resolved target
-- `apps/parsing/ParseRuleVisualizerTest.mls`: Unexpected compilation error; [COMPILATION ERROR] Resolution error in application; Class 'Error' cannot receive more argument lists.
+- `apps/parsing/ParseRuleVisualizerTest.mls`: Unexpected compilation error; [COMPILATION ERROR] Resolution error in application; Class value cannot receive more argument lists.
 - `apps/parsing/PrattParsingTest.mls`: Unexpected compilation error; [COMPILATION ERROR] This selection of member 'toString' has no resolved target
 - `apps/parsing/RecursiveDescentTest.mls`: Unexpected compilation error; [COMPILATION ERROR] This selection of member 'toString' has no resolved target
-- `apps/parsing/RulesTest.mls`: Unexpected compilation error; [COMPILATION ERROR] This selection of member 'display' has no resolved target
+- `apps/parsing/RulesTest.mls`: Unexpected exception; java.lang.Exception: Internal Error: Synthetic selections must not enter new resolution
+
+### wasm
+
+- `wasm/Basics.mls`: Unexpected exception; java.lang.IllegalArgumentException: requirement failed: Expected symbol term:getX⁰ but got term:Foo⁰
+- `wasm/Binaryen.mls`: Unexpected compilation error; [COMPILATION ERROR] Resolution error in selection; Instance of class 'Instance' does not contain member 'exports'

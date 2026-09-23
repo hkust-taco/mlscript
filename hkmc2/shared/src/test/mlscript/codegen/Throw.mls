@@ -1,13 +1,14 @@
+:.
 :js
 
 
 :re
-throw Error("e")
+throw new Error("e")
 //│ ═══[RUNTIME ERROR] Error: e
 
 
 :re
-fun f(x, y) = throw Error("e")
+fun f(x, y) = throw new Error("e")
 f(2, 2)
 //│ ═══[RUNTIME ERROR] Error: e
 
@@ -15,7 +16,7 @@ f(2, 2)
 :re
 fun f(x, y) = if
   x == y then x + y
-  x == (y + 1) then throw Error("not equal")
+  x == (y + 1) then throw new Error("not equal")
 f(3, 2)
 //│ ═══[RUNTIME ERROR] Error: not equal
 
@@ -27,15 +28,15 @@ f(2, 3)
 :re
 :sjs
 fun f(x) =
-  let y = throw Error("e")
+  let y = throw new Error("e")
   return y
 f(1)
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let f2;
 //│ f2 = function f(x) {
-//│   throw runtime.safeCall(globalThis.Error("e"))
+//│   throw globalThis.Object.freeze(new globalThis.Error("e"))
 //│ };
-//│ throw runtime.safeCall(globalThis.Error("e"))
+//│ throw globalThis.Object.freeze(new globalThis.Error("e"))
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ ═══[RUNTIME ERROR] Error: e
 
@@ -43,20 +44,20 @@ f(1)
 :re
 :sjs
 fun f(x) =
-  throw (if x then Error("x") else Error("y"))
+  throw (if x then new Error("x") else new Error("y"))
 f(false)
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let f3;
 //│ f3 = function f(x) {
 //│   if (x === true) {
-//│     throw runtime.safeCall(globalThis.Error("x"))
+//│     throw globalThis.Object.freeze(new globalThis.Error("x"))
 //│   }
-//│   throw runtime.safeCall(globalThis.Error("y"));
+//│   throw globalThis.Object.freeze(new globalThis.Error("y"));
 //│ };
 //│ if (false === true) {
-//│   throw runtime.safeCall(globalThis.Error("x"))
+//│   throw globalThis.Object.freeze(new globalThis.Error("x"))
 //│ }
-//│ throw runtime.safeCall(globalThis.Error("y"));
+//│ throw globalThis.Object.freeze(new globalThis.Error("y"));
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ ═══[RUNTIME ERROR] Error: y
 
@@ -92,7 +93,7 @@ foo(42)
 //│ ═══[RUNTIME ERROR] 42
 
 :re
-foo(Error("hi"))
+foo(new Error("hi"))
 //│ > caught something else
 //│ ═══[RUNTIME ERROR] Error: hi
 

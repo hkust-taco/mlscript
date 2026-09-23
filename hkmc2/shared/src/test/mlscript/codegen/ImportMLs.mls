@@ -1,3 +1,4 @@
+:.
 :js
 
 
@@ -81,25 +82,47 @@ None == Option.None
 :e
 :re
 Option.oops
-//│ ╔══[COMPILATION ERROR] Module 'Option' does not contain member 'oops'
-//│ ║  l.83: 	Option.oops
-//│ ╙──      	      ^^^^^
-//│ ═══[RUNTIME ERROR] Error: Access to required field 'oops' yielded 'undefined'
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.84: 	Option.oops
+//│ ║        	^^^^^^^^^^^
+//│ ╟── Module 'Option' does not contain member 'oops'
+//│ ║  in ../../mlscript-compile/Option.mls
+//│ ║  l.4: 	module Option with ...
+//│ ╙──     	       ^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :e
 open Option { oops }
-//│ ╔══[COMPILATION ERROR] Module 'Option' does not contain member 'oops'
-//│ ║  l.90: 	open Option { oops }
-//│ ╙──      	              ^^^^
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.95: 	open Option { oops }
+//│ ║        	              ^^^^
+//│ ╟── Module 'Option' does not contain member 'oops'
+//│ ║  in ../../mlscript-compile/Option.mls
+//│ ║  l.4: 	module Option with ...
+//│ ╙──     	       ^^^^^^
 
+:e
+:re
 oops
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.106: 	oops
+//│ ║         	^^^^
+//│ ╟── Module 'Option' does not contain member 'oops'
+//│ ║  in ../../mlscript-compile/Option.mls
+//│ ║  l.4: 	module Option with ...
+//│ ╙──     	       ^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :e
 :re
 Option.None.oops
-//│ ╔══[COMPILATION ERROR] Object 'None' does not contain member 'oops'
-//│ ║  l.99: 	Option.None.oops
-//│ ╙──      	           ^^^^^
-//│ ═══[RUNTIME ERROR] Error: Access to required field 'oops' yielded 'undefined'
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.118: 	Option.None.oops
+//│ ║         	^^^^^^^^^^^^^^^^
+//│ ╟── Object 'None' does not contain member 'oops'
+//│ ║  in ../../mlscript-compile/Option.mls
+//│ ║  l.8: 	object None
+//│ ╙──     	       ^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
