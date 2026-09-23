@@ -572,29 +572,3 @@ object CanonicalErasedValueType:
         // * A primitive has no resource-ness, so `rsc` is dropped.
         case S(prim) => ErasedType.Primitive(prim)
         case _ => ErasedType.AnyRef(rsc, base)
-
-extension (s: ValueSymbol | DefinitionSymbol[?])
-  /** Maps the symbol to its erased value type, if it has one.
-    *
-    * This is the type of the *value* a reference to the symbol denotes, so a function's symbol maps to the first-class
-    * `Function` type rather than to its [[ErasedFuncSignature]].
-    */
-  def mapErasedValueType(using Raise): Opt[ErasedValueType] = s match
-    case l: LocalVarSymbol => l.erasedType
-    // * A class symbol may appear as a value as a reference to `this` in a class, and so carries the erased type of its
-    // * own class, but we don't have enough information to determine its resource-ness.
-    case c: ClassSymbol => S(ErasedType.ValueLike(rsc = N, c))
-    case modOrObj: ModuleOrObjectSymbol => modOrObj.erasedType
-    case t: TermSymbol => t.erasedType
-    // * A pattern is not a value and carries no erased type of its own, so a reference to one is
-    // * left unknown rather than treated as an unexpected symbol.
-    case _: PatternSymbol => N
-    // * A builtin operator carries no erased type, as one symbol stands for its nullary, unary and binary forms.
-    case _: BuiltinSymbol => N
-    // * What a member reference denotes depends on the member: a function value has the `Function` type, but a
-    // * class object has none, so this is left unknown rather than guessed from the disambiguating term symbol.
-    case _: BlockMemberSymbol => N
-    // * No reference to a value is expected to resolve to these symbols.
-    case s: (TypeAliasSymbol | TopLevelSymbol) =>
-      softAssert(false, s"Unexpected symbol type for symbol `$s`: ${s.getClass.getName}")
-      N

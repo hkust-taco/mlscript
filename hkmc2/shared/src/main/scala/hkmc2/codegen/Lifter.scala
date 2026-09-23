@@ -585,7 +585,11 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
         
         val ident = new Tree.Ident(nme)
         // * The capture field stands for the same slot as the captured local, so it takes the local's type.
-        val capturedType = sym.mapErasedValueType
+        val capturedType = sym match
+          case l: LocalVarSymbol => l.erasedType
+          case s: (BlockMemberSymbol | InnerSymbol) =>
+            softAssert(false, s"Expected reqdCaptures to contain only LocalVarSymbols, got $s")
+            N
         val varSym = VarSymbol(ident, erasedType = capturedType)
         val fldSym = BlockMemberSymbol(nme, Nil)
         val tSym = TermSymbol(syntax.MutVal, S(clsSym), ident, erasure = capturedType)
@@ -875,6 +879,26 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
       node.allAncestors.exists:
         case ScopeNode(ScopedObject.Companion(comp, _), _, _) => comp.isStaged
         case _ => false
+
+    /** Returns the erased type for the given symbol captured in `reqPassedSyms`. */
+    protected def reqPassedSymErasedType(s: ValueSymbol): Opt[ErasedValueType] = s match
+      case l: LocalVarSymbol => l.erasedType
+      case clsLike: (ClassSymbol | ModuleOrObjectSymbol) => clsLike.asThis.erasedType
+      case sym =>
+        softAssert(false, s"Expected reqPassedSyms to contain only LocalVarSymbols or ClassLikeSymbols, got $sym")
+        N
+
+    /** Returns the erased type for the given symbol captured in `reqDefns`. */
+    protected def reqDefnErasedType(i: DefinitionSymbol[?]): Opt[ErasedValueType] = i match
+      // * The erased type of a class definition is the class object.
+      case _: ClassSymbol => N
+      case trm: TermSymbol => trm.erasedType
+      case modOrCls: ModuleOrObjectSymbol => modOrCls.erasedType
+      // * A pattern object has no erased type.
+      case _: PatternSymbol => N
+      case sym =>
+        softAssert(false, s"Expected reqDefns to contain only ClassLikeSymbols, TermSymbols or PatternSymbols, got $sym")
+        N
   
   /* MIXINS */
   
@@ -1038,7 +1062,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
     private val passedSymsMap_ : Map[ValueSymbol, VarSymbol] = passedSymsOrdered.map: s =>
         // * The auxiliary parameter stands for the same slot as the passed local, so it takes the local's
         // * type.
-        s -> VarSymbol(Tree.Ident(s.nme), erasedType = s.mapErasedValueType)
+        s -> VarSymbol(Tree.Ident(s.nme), reqPassedSymErasedType(s))
       .toMap
     private lazy val capSymsMap_ : Map[ScopedInfo, VarSymbol] = capturesOrdered.map: i =>
         val nme = data.getNode(i).obj.nme
@@ -1046,7 +1070,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
       .toMap
     private val defnSymsMap_ : Map[DefinitionSymbol[?], VarSymbol] = reqDefnsOrdered.sortBy(_.uid).map: i =>
         val nme = data.getNode(i).obj.nme
-        i -> VarSymbol(Tree.Ident(nme + "$"), erasedType = i.mapErasedValueType)
+        i -> VarSymbol(Tree.Ident(nme + "$"), reqDefnErasedType(i))
       .toMap
     
     override protected val passedSymsMap = passedSymsMap_.view.mapValues(_.asLocalPath).toMap
@@ -1142,7 +1166,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
     override lazy val capturePath: Path = Select(obj.cls.isym.asThis, captureSym.id)(S(captureSym))(false)
     
     private val passedSymsMap_ : Map[ValueSymbol, (vs: VarSymbol, ts: TermSymbol)] = passedSymsOrdered.map: s =>
-        val erasedType = s.mapErasedValueType
+        val erasedType = reqPassedSymErasedType(s)
         s ->
           (
             VarSymbol(Tree.Ident(s.nme), erasedType),
@@ -1159,7 +1183,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
           )
       .toMap
     private val defnSymsMap_ : Map[DefinitionSymbol[?], (vs: VarSymbol, ts: TermSymbol)] = reqDefnsOrdered.map: i =>
-        val erasedType = i.mapErasedValueType
+        val erasedType = reqDefnErasedType(i)
         i -> 
           (
             VarSymbol(Tree.Ident(i.nme + "$"), erasedType),
