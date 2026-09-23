@@ -661,7 +661,10 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
           source = Diagnostic.Source.Compilation)
       case candidates => fail:
         ErrorReport(msg"Wildcard-open reference '${ref.id.name}' is ambiguous" -> ref.toLoc ::
-          candidates.map((_, member) => msg"candidate: ${member.describeMember} '${member.nme}'" -> member.toLoc),
+          candidates.flatMap: (prefix, member) =>
+            (msg"candidate: ${member.describeMember} '${member.nme}' defined here" -> member.toLoc) ::
+            (msg"Opened here" -> prefix.toLoc) :: Nil
+          ,
           source = Diagnostic.Source.Compilation)
 
   /** A projection must identify its class as well as its member: different
