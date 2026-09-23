@@ -37,6 +37,8 @@ this first milestone.
 The unfinished WASM/type-erasure changes predate this migration and are retained.
 In particular, the typed-constructor-field capture assertion is still outstanding.
 Method calls across REPL blocks remain assigned to the other branch.
+Constructor-pattern field propagation also has a serious context-mixing blocker,
+documented below; its `:fixme` regression is not evidence that migration is complete.
 
 ## Straightforward fixes applied
 
@@ -127,6 +129,44 @@ constructors, and recursive UPS matchers. Compare results and generated matcher
 structure with the existing tests. `ups/examples/HindleyMilner.mls` also timed
 out during the trial and needs an isolated reproducer before assigning its cause.
 
+#### Blocker: constructor-pattern bindings mix unrelated instance contexts
+
+The final block of
+[`newres/ConstructorFieldRecovery.mls`](../hkmc2/shared/src/test/mlscript/newres/ConstructorFieldRecovery.mls)
+reproduces this with ordinary, valid constructor patterns:
+
+```mlscript
+class SharedBase(val field)
+class LeftChild extends SharedBase({left: 1})
+class RightChild extends SharedBase({right: 2})
+if (new LeftChild) is SharedBase(x) then x.left else 0
+if (new RightChild) is SharedBase(x) then x.right else 0
+```
+
+These expressions should resolve independently and return `1` and `2`.
+Instead, each pattern binding receives field shapes from both subclasses.
+Strict resolution rejects `x.left` because the right-hand record lacks `left`,
+and rejects `x.right` because the left-hand record lacks `right`. Thus another
+subclass's constructor arguments can make an otherwise valid selection fail.
+This affects the precision of nominal constructor-field extraction even when
+the scrutinee's concrete subclass is known; it is not confined to unsupported
+pattern forms or malformed-class recovery.
+
+The regression remains under `:fixme` to keep this failure visible. It is a
+serious migration blocker, not an accepted loss of resolution precision. The
+observed failure is rejection of valid programs; silent miscompilation has not
+been established by this reproducer. The exact point where receiver/constructor
+context is lost still needs tracing through inherited member lookup and pattern
+binding publication.
+
+The fix must preserve the matched receiver's constructor provenance through field
+extraction. Do not suppress missing-member diagnostics, drop capture marks, or
+pick one of the merged candidates to make this test pass. Completion requires
+removing this `:fixme`, verifying both independent results, and covering multiple
+instances of one class, sibling subclasses, objects extending a shared base,
+and nested constructor patterns. Genuinely ambiguous receiver alternatives must
+retain their diagnostics.
+
 ### 3. Declared interfaces versus inferred values
 
 Evidence: the prior WASM `Basics` failure mixes a nominal annotated receiver with
@@ -199,7 +239,8 @@ errors when a selected interpretation lacks the required capability.
 4. **Complete pattern transfers and reference preservation.** Start with UCS
    conjunction/record/tuple cases, then compiled class patterns, then recursive
    and transforming UPS cases. Keep fixed-point behavior tested independently
-   from matcher code generation.
+   from matcher code generation. Resolve the constructor-pattern context-mixing
+   blocker above before treating nominal field extraction as complete.
 5. **Complete type/interface and call validation.** Resolve the pending interface
    question, finish declared result/field shapes, port module/generic checks, and
    finish the WASM migration. Keep cross-block method work coordinated externally.
