@@ -1953,7 +1953,7 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
         extraInfo = S(r.toString),
       )
 
-    case Instantiate(_, _, cls, argss) =>
+    case Instantiate(cls, argss) =>
       if argss.length > 1 then
         return errExpr(
           Ls(msg"WatBuilder::result for Instantiate(...) with multiple argument lists is not supported yet" -> r.toLoc),

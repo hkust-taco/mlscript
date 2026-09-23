@@ -69,7 +69,7 @@ class FirstClassFunctionTransformer
     val cls = clsDef.sym.asMemberRef(clsDef.isym)
     // TODO: Instantiate the wrapper as a resource iff `p` is one, once the resource-ness of other function values is
     //       resolved.
-    Scoped(Set(clsDef.sym, tmp), Define(clsDef, Assign(tmp, Instantiate(mut = false, rsc = rsc, cls, Nil :: Nil)(InstantiateMetadata.empty), k(tmp.asSimpleRef))))
+    Scoped(Set(clsDef.sym, tmp), Define(clsDef, Assign(tmp, Instantiate(cls, Nil :: Nil)(InstantiateMetadata.empty, mut = false, rsc), k(tmp.asSimpleRef))))
   
   override def applyPath(p: Path)(k: Path => Block): Block = p match
     case ref @ Value.MemberRef(l, disamb) => disamb match

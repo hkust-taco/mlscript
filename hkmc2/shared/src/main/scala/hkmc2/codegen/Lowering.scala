@@ -529,7 +529,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
   def lowerMultiInstantiate(mut: Bool, rsc: Bool, cls: Path, args: Ls[Term], annotations: Ls[Annot])(k: Result => Block)(using LoweringCtx): Block =
     // Nullary instantiations are represented with one empty argument list, matching existing `Instantiate` usage.
     def buildInstantiate(argss: Ls[Ls[Arg]]): Instantiate =
-      Instantiate(mut, rsc, cls, if argss.isEmpty then Nil :: Nil else argss)(InstantiateMetadata(annotations))
+      Instantiate(cls, if argss.isEmpty then Nil :: Nil else argss)(InstantiateMetadata(annotations), mut, rsc)
     // * Zip constructor param lists with argument lists, accumulating lowered args.
     // * Consumes one argument list per constructor param list; when all ctor params are
     // * consumed but extra args remain, falls back to `Call` nodes on the result.
@@ -1193,11 +1193,11 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
     case Resolved(inner, sym) => TODO(s"lowering for Resolved($inner)")
     case Region(reg, body) =>
       loweringCtx.collectScopedSym(reg)
-      Assign(reg, Instantiate(mut = true, rsc = false, Select(State.globalThisSymbol.asThis, Tree.Ident("Region"))(N)(false), Nil :: Nil)(InstantiateMetadata.empty),
+      Assign(reg, Instantiate(Select(State.globalThisSymbol.asThis, Tree.Ident("Region"))(N)(false), Nil :: Nil)(InstantiateMetadata.empty, mut = true, rsc = false),
         term_nonTail(body)(k))
     case RegRef(reg, value) =>
       plainArgs(reg :: value :: Nil): args =>
-        k(Instantiate(mut = true, rsc = false, Select(State.globalThisSymbol.asThis, Tree.Ident("Ref"))(N)(false), args :: Nil)(InstantiateMetadata.empty))
+        k(Instantiate(Select(State.globalThisSymbol.asThis, Tree.Ident("Ref"))(N)(false), args :: Nil)(InstantiateMetadata.empty, mut = true, rsc = false))
     case Drop(ref) =>
       subTerm(ref): _ =>
         k(unit)
@@ -1232,14 +1232,14 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
     //   subTerm(t)(k)
   
   def setupTerm(name: Str, args: Ls[Path])(k: Result => Block)(using LoweringCtx): Block =
-    k(Instantiate(mut = false, rsc = false, State.termSymbol.asSimpleRef.selSN(name), args.map(_.asArg) :: Nil)(InstantiateMetadata.empty))
+    k(Instantiate(State.termSymbol.asSimpleRef.selSN(name), args.map(_.asArg) :: Nil)(InstantiateMetadata.empty, mut = false, rsc = false))
 
   def setupQuotedKeyword(kw: Str): Path =
     State.termSymbol.asSimpleRef.selSN("Keyword").selSN(kw)
 
   def setupSymbol(symbol: ValueSymbol)(k: Result => Block)(using LoweringCtx): Block =
-    k(Instantiate(mut = false, rsc = false, State.termSymbol.asSimpleRef.selSN("Symbol"),
-      (Value.Lit(Tree.StrLit(symbol.nme)).asArg :: Nil) :: Nil)(InstantiateMetadata.empty))
+    k(Instantiate(State.termSymbol.asSimpleRef.selSN("Symbol"),
+      (Value.Lit(Tree.StrLit(symbol.nme)).asArg :: Nil) :: Nil)(InstantiateMetadata.empty, mut = false, rsc = false))
 
   def quotePattern(p: FlatPattern)(k: Result => Block)(using LoweringCtx): Block = p match
     case FlatPattern.Lit(lit) => setupTerm("LitPattern", Value.Lit(lit) :: Nil)(k)

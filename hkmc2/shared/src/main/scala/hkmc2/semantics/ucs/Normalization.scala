@@ -425,8 +425,8 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
     * match failure in the future.
     */
   private def throwMatchErrorBlock =
-    Throw(Instantiate(mut = false, rsc = false, Select(State.globalThisSymbol.asThis, Tree.Ident("Error"))(S(ctx.builtins.Error))(false),
-        (Value.Lit(syntax.Tree.StrLit("match error")).asArg :: Nil) :: Nil)(InstantiateMetadata.empty)) // TODO add failed-match scrutinee info
+    Throw(Instantiate(Select(State.globalThisSymbol.asThis, Tree.Ident("Error"))(S(ctx.builtins.Error))(false),
+        (Value.Lit(syntax.Tree.StrLit("match error")).asArg :: Nil) :: Nil)(InstantiateMetadata.empty, mut = false, rsc = false)) // TODO add failed-match scrutinee info
 
   /** Gives a lowering temp the join of the representations of the results stored into it.
     *

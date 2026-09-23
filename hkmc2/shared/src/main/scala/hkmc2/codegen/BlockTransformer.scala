@@ -165,11 +165,11 @@ class BlockTransformer(subst: SymbolSubst):
         applyListOf(argss, (args, k2) => applyArgs(args)(k2)): argss2 =>
           k(if (fun2 is fun) && (argss2 is argss) then r
             else Call(fun2, argss2.ne_!)(r.metadata, r.rsc).withLocOf(r))
-    case r @ Instantiate(mut, rsc, cls, argss) =>
+    case r @ Instantiate(cls, argss) =>
       applyPath(cls): cls2 =>
         applyListOf(argss, (args, k2) => applyArgs(args)(k2)): argss2 =>
           k(if (cls2 is cls) && (argss2 is argss) then r
-            else Instantiate(mut, rsc, cls2, argss2)(r.metadata).withLocOf(r))
+            else Instantiate(cls2, argss2)(r.metadata, r.mut, r.rsc).withLocOf(r))
     case l: Lambda => k(applyLam(l))
     case Tuple(mut, elems) =>
       applyArgs(elems): elems2 =>

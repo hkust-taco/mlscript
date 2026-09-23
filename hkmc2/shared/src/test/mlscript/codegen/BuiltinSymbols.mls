@@ -59,8 +59,6 @@ case Int then 0
 //│                   name = Ident of "unreachable"
 //│               _2 = Return of Lit of IntLit of 0
 //│           dflt = S of Throw of Instantiate:
-//│             mut = false
-//│             rsc = false
 //│             cls = Select{sym=class:Error⁰}:
 //│               qual = This of globalThis:globalThis⁰
 //│               name = Ident of "Error"

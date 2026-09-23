@@ -384,11 +384,11 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
       then doc"${resultQual(qual)}.at(${result(fld)})"
       else doc"${result(qual)}[${result(fld)}]"
     // * TODO: handle `rsc`
-    case Instantiate(mut, _, cls, argss) =>
+    case inst @ Instantiate(cls, argss) =>
       val calls = argss.foldLeft(resultInst(cls)): (acc, args) =>
         doc"${acc}(${args.map(argument).mkDocument(", ")})"
       val inner = doc"new $calls"
-      if mut then inner else doc"$freeze(${inner})"
+      if inst.mut then inner else doc"$freeze(${inner})"
     case Tuple(mut, es) if es.isEmpty => if mut then "[]" else doc"$freeze([])"
     case Tuple(mut, es) =>
       val inner =

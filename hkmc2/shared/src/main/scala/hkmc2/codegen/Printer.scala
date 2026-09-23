@@ -226,9 +226,9 @@ class Printer(using Config, Ctx, Raise, ShowCfg, State, SymbolPrinter):
     case call @ Call(fun, argss) =>
       val chainedArgs = argss.map(args => doc"(${args.map(print).mkDocument(", ")})").mkDocument("")
       doc"${printAnnotations(call.metadata.annotations, doc" ")}${if call.rsc then "rsc " else ""}${print(fun)}${chainedArgs}"
-    case inst @ Instantiate(mut, rsc, cls, argss) =>
+    case inst @ Instantiate(cls, argss) =>
       val chainedArgs = argss.map(args => doc"(${args.map(print).mkDocument(", ")})").mkDocument("")
-      doc"${printAnnotations(inst.metadata.annotations, doc" ")}new ${if mut then "mut " else ""}${if rsc then "rsc " else ""}${print(cls)}${chainedArgs}"
+      doc"${printAnnotations(inst.metadata.annotations, doc" ")}new ${if inst.mut then "mut " else ""}${if inst.rsc then "rsc " else ""}${print(cls)}${chainedArgs}"
     case lam @ Lambda(params, body) =>
       scope.nest.givenIn:
         val allParams =

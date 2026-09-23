@@ -202,11 +202,11 @@ class ReflectionInstrumenter(using State, Raise, Ctx) extends BlockTransformer(n
       transformArgs(elems): xs =>
         tuple(xs.map(_._1)): codes =>
           blockCtor("Tuple", Ls(codes), "tup")(k)
-    case Instantiate(rsc = true) =>
+    case inst: Instantiate if inst.rsc =>
       raise(ErrorReport(msg"Resource instantiation not supported in staged module." -> r.toLoc :: Nil))
       End()
-    case Instantiate(mut, _, cls, argss) =>
-      assert(!mut, "mutable instantiation not supported")
+    case inst @ Instantiate(cls, argss) =>
+      assert(!inst.mut, "mutable instantiation not supported")
       argss match
         case Nil =>
           raise(ErrorReport(msg"Instantiate with no argument lists not supported in staged module." -> r.toLoc :: Nil))
