@@ -128,15 +128,9 @@ class BlockSimplifier
     
     def analyzeUncached(block: Block): Set[LocalVar] =
       val locals: MutSet[LocalVar] = MutSet.empty[LocalVar]
-      // * java.util.IdentityHashMap compares keys by **object identiy (eq)**,
-      // * which is faster than doing by structure equality (equals)
-      // * Values in the map must be nullable so we use java.lang.Boolean here.
-      val visited = java.util.Collections.newSetFromMap(
-        new java.util.IdentityHashMap[Block, java.lang.Boolean]())
       def paramsOf(paramLists: IterableOnce[ParamList]): Unit =
         locals ++= paramLists.iterator.flatMap(_.paramSyms)
       def rec(current: Block): Unit =
-        if visited.add(current) then
           current match
           case Define(fd: FunDefn, _) =>
             paramsOf(fd.params)
