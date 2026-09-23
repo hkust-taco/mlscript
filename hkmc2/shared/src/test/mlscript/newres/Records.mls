@@ -87,18 +87,17 @@ answer2
 //│ ╙──      	    ^
 //│ ═══[RUNTIME ERROR] TypeError: tmp10.a is not a function
 
-// TODO: Resolve computed keys. Until then, do not look through an unknown overwrite.
-:fixme
+:todo // TODO: Resolve computed keys. Until then, do not look through an unknown overwrite.
 let key = "a"
 {a: {answer: 0}, (key): {other: 1}}.a.answer
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.93: 	{a: {answer: 0}, (key): {other: 1}}.a.answer
+//│ ║  l.92: 	{a: {answer: 0}, (key): {other: 1}}.a.answer
 //│ ║        	 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Cannot resolve member 'a' across a computed key or unknown record spread.
-//│ ║  l.93: 	{a: {answer: 0}, (key): {other: 1}}.a.answer
+//│ ║  l.92: 	{a: {answer: 0}, (key): {other: 1}}.a.answer
 //│ ╙──      	 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] This selection of member 'answer' has no resolved target
-//│ ║  l.93: 	{a: {answer: 0}, (key): {other: 1}}.a.answer
+//│ ║  l.92: 	{a: {answer: 0}, (key): {other: 1}}.a.answer
 //│ ╙──      	 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ key = "a"
@@ -151,10 +150,10 @@ let changing = mut {value: {before: 0}}
 set changing.value = {after: 21}
 changing.value.after
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.152: 	changing.value.after
+//│ ║  l.151: 	changing.value.after
 //│ ║         	^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Cannot resolve member 'after' of a value with unknown shape.
-//│ ║  l.150: 	let changing = mut {value: {before: 0}}
+//│ ║  l.149: 	let changing = mut {value: {before: 0}}
 //│ ╙──       	                    ^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ changing = {value: {after: 21}}
@@ -167,16 +166,16 @@ fun nestedWrap(x) = {...wrap(x)}
 nestedWrap({first: 22}).value.first
 nestedWrap({second: 23}).value.second
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.167: 	nestedWrap({first: 22}).value.first
+//│ ║  l.166: 	nestedWrap({first: 22}).value.first
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Record literal does not contain member 'first'
-//│ ║  l.168: 	nestedWrap({second: 23}).value.second
+//│ ║  l.167: 	nestedWrap({second: 23}).value.second
 //│ ╙──       	            ^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.168: 	nestedWrap({second: 23}).value.second
+//│ ║  l.167: 	nestedWrap({second: 23}).value.second
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Record literal does not contain member 'second'
-//│ ║  l.167: 	nestedWrap({first: 22}).value.first
+//│ ║  l.166: 	nestedWrap({first: 22}).value.first
 //│ ╙──       	            ^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -192,10 +191,10 @@ fun unknownOpen() =
   a
 unknownOpen()
 //│ ╔══[COMPILATION ERROR] Resolution error in wildcard-open reference
-//│ ║  l.192: 	  a
+//│ ║  l.191: 	  a
 //│ ║         	  ^
 //│ ╟── Cannot resolve member 'a' across a computed key or unknown record spread.
-//│ ║  l.187: 	let unknownKeys = {(key): 0}
+//│ ║  l.186: 	let unknownKeys = {(key): 0}
 //│ ╙──       	                          ^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ unknownKeys = {a: 0}
@@ -218,13 +217,13 @@ forwardRecord.answer
 fun choose(flag) = if flag then {answer: 1} else {answer: 2}
 choose(true).answer
 //│ ╔══[COMPILATION ERROR] This selection of member 'answer' is ambiguous, as it has multiple resolved targets
-//│ ║  l.219: 	choose(true).answer
+//│ ║  l.218: 	choose(true).answer
 //│ ║         	^^^^^^^^^^^^^^^^^^^
 //│ ╟── target: record field 'answer'
-//│ ║  l.218: 	fun choose(flag) = if flag then {answer: 1} else {answer: 2}
+//│ ║  l.217: 	fun choose(flag) = if flag then {answer: 1} else {answer: 2}
 //│ ║         	                                                  ^^^^^^
 //│ ╟── target: record field 'answer'
-//│ ║  l.218: 	fun choose(flag) = if flag then {answer: 1} else {answer: 2}
+//│ ║  l.217: 	fun choose(flag) = if flag then {answer: 1} else {answer: 2}
 //│ ╙──       	                                 ^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -236,10 +235,10 @@ fun recursiveRecord(n) =
   else {...recursiveRecord(n - 1)}
 recursiveRecord(2).answer
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.237: 	recursiveRecord(2).answer
+//│ ║  l.236: 	recursiveRecord(2).answer
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Cannot resolve member 'answer' across a computed key or unknown record spread.
-//│ ║  l.236: 	  else {...recursiveRecord(n - 1)}
+//│ ║  l.235: 	  else {...recursiveRecord(n - 1)}
 //│ ╙──       	           ^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -255,9 +254,9 @@ fun unknownValueOpen() =
   answer3
 unknownValueOpen()
 //│ ╔══[COMPILATION ERROR] Resolution error in wildcard-open reference
-//│ ║  l.255: 	  answer3
+//│ ║  l.254: 	  answer3
 //│ ║         	  ^^^^^^^
 //│ ╟── Cannot resolve member 'answer3' of a value with unknown shape.
-//│ ║  l.250: 	  let unknownValue = mut {value: {answer3: 0}}
+//│ ║  l.249: 	  let unknownValue = mut {value: {answer3: 0}}
 //│ ╙──       	                          ^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.

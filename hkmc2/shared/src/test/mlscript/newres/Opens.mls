@@ -102,10 +102,10 @@ ambiguous()
 //│ ╔══[COMPILATION ERROR] Wildcard-open reference 'extra' is ambiguous
 //│ ║  l.99: 	  extra
 //│ ║        	  ^^^^^
-//│ ╟── candidate from member:Values⁰^term:ambiguous⁰: value
+//│ ╟── candidate: value 'extra'
 //│ ║  l.8: 	  val extra = 3
 //│ ║       	  ^^^^^^^^^^^^^
-//│ ╟── candidate from member:Selected⁰^term:ambiguous⁰: value
+//│ ╟── candidate: value 'extra'
 //│ ║  l.38: 	module Selected { val extra = 6 }
 //│ ╙──      	                  ^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
@@ -224,10 +224,10 @@ twoInstances()
 //│ ╔══[COMPILATION ERROR] Wildcard-open reference 'value' is ambiguous
 //│ ║  l.221: 	  value
 //│ ║         	  ^^^^^
-//│ ╟── candidate from first⁰^term:twoInstances⁰: value
+//│ ╟── candidate: value 'value'
 //│ ║  l.211: 	  module M { val value = n }
 //│ ║         	             ^^^^^^^^^^^^^
-//│ ╟── candidate from second⁰^term:twoInstances⁰: value
+//│ ╟── candidate: value 'value'
 //│ ║  l.211: 	  module M { val value = n }
 //│ ╙──       	             ^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
@@ -301,10 +301,10 @@ ambiguousReversed()
 //│ ╔══[COMPILATION ERROR] Wildcard-open reference 'extra' is ambiguous
 //│ ║  l.298: 	  extra
 //│ ║         	  ^^^^^
-//│ ╟── candidate from member:Selected⁰^term:ambiguousReversed⁰: value
+//│ ╟── candidate: value 'extra'
 //│ ║  l.38: 	module Selected { val extra = 6 }
 //│ ║        	                  ^^^^^^^^^^^^^
-//│ ╟── candidate from member:Values⁰^term:ambiguousReversed⁰: value
+//│ ╟── candidate: value 'extra'
 //│ ║  l.8: 	  val extra = 3
 //│ ╙──     	  ^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.

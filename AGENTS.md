@@ -74,6 +74,17 @@ especially if it involves non-obvious decisions/trade-offs
 or if alternative approaches were considered and rejected.
 
 
+## User-Facing Diagnostics
+
+Never use `showDbg`, `shwDbg`, raw AST/IR `toString` output, or other debug-only
+representations in user-facing error messages, warnings, or diagnostic notes.
+Use source-level names and user-facing descriptions, with source locations to
+identify the relevant definitions or expressions. Do not expose internal symbol
+IDs, resolution marks, or compiler representation details to users.
+Debug representations belong only in internal logs and explicitly requested
+debug output, not in ordinary diagnostics.
+
+
 ## Editing Style
 
 Do not remove existing `end` markers.
