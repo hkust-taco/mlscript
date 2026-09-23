@@ -332,7 +332,9 @@ class BlockMemberSymbol(val nme: Str, val trees: Ls[TypeOrTermDef], val nameIsMe
     else
       defnListeners += f
   
-  def toLoc: Option[Loc] = Loc(trees)
+  // Synthesized members (including constructor and record fields) have no
+  // definition tree, but their term interpretation still has a source name.
+  def toLoc: Option[Loc] = Loc(trees).orElse(tsym.flatMap(_.toLoc))
   
   def symbols = tsym.toList ::: trees.collect:
     case t: Tree.TypeDef => t.symbol

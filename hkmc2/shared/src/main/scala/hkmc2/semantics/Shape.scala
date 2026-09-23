@@ -250,13 +250,8 @@ object MemberLookup:
       case S(member) => Found(member, Nil)
       case N => ext.fold[MemberLookup](Missing)(_.getMember(name))
 
-extension (symbol: BlockMemberSymbol | TermSymbol)
-  def describeMember: Str = symbol match
-    case symbol: BlockMemberSymbol => symbol.describe
-    case symbol: TermSymbol => symbol.describeKind
-
 extension (member: BlockMemberSymbol | RecordMember)
-  def memberSymbol: BlockMemberSymbol | TermSymbol = member match
+  def memberSymbol: BlockMemberSymbol = member match
     case symbol: BlockMemberSymbol => symbol
     case member: RecordMember => member.field.sym
 
@@ -433,9 +428,10 @@ object TupleShape:
   final case class Rest(shape: TupleShape, segments: Ls[Segment]) extends Element
 
 
-/** A property selected from one record candidate. Carry its value term alongside
-  * its symbol rather than adding mutable definition state to TermSymbol.
-  * Mutable records expose a stable identity, but their initializer is not a sound value shape.
+/** Per-candidate read information, separate from the field's ordinary member symbol.
+  * A spread retains the original property identity, but copying it into a mutable
+  * record makes its initializer an unsound value shape. Thus mutability belongs to
+  * this lookup result, not to mutable state on the shared member/definition symbols.
   */
 final case class RecordMember(field: RcdField, mutable: Bool)
 

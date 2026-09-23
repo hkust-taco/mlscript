@@ -43,7 +43,7 @@ final class TypeResolution(val source: Term, report: Ls[(Message, Opt[Loc])] => 
     else if ambiguousReceiver || shapes.sizeCompare(1) > 0 then
       val candidates = source.withoutCaptures match
         case ref: Term.UnresolvedRef => ref.resolvedMembers.distinct.map: (prefix, member) =>
-          msg"candidate: ${member.describeMember}" -> member.toLoc
+          msg"candidate: ${member.describe}" -> member.toLoc
         case _ => shapes.toList.flatMap:
           case Nominal(defn) => msg"candidate: ${defn.sym.describeKind}" -> defn.toLoc :: Nil
           case Alias(symbol, _) => msg"candidate: ${symbol.describeKind}" -> symbol.toLoc :: Nil

@@ -284,3 +284,74 @@ allMissingOpen()
 //│ ║  l.281: 	  nonexistent
 //│ ╙──       	  ^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+
+// Structurally equal record nodes need independent producers while their spread is pending.
+:expect [29, 29]
+fun repeatedRecords(xs) =
+  let a = {...xs}
+  let b = {...xs}
+  [a.value, b.value]
+repeatedRecords({value: 29})
+//│ = [29, 29]
+
+// Multiple subscribers can arrive before a forward spread has any candidates.
+:expect [30, 30]
+let pendingRecord = {...laterRecord()}
+fun readPendingRecord() = [pendingRecord.value, pendingRecord.value]
+fun laterRecord() = {value: 30}
+readPendingRecord()
+//│ = [30, 30]
+//│ pendingRecord = {value: 30}
+
+// A mutable copy keeps property identity without mutating the source's value information.
+:expect [31, 32]
+let stableRecord = {value: 31}
+let mutableCopy = mut {...stableRecord}
+set mutableCopy.value = 32
+[stableRecord.value, mutableCopy.value]
+//│ = [31, 32]
+//│ mutableCopy = {value: 32}
+//│ stableRecord = {value: 31}
+
+// TODO: Track mutable field writes; sharing a member symbol must not reuse its initializer.
+:fixme
+let stableNested = {value: {before: 33}}
+let mutableNested = mut {...stableNested}
+set mutableNested.value = {after: 34}
+[stableNested.value.before, mutableNested.value.after]
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.322: 	[stableNested.value.before, mutableNested.value.after]
+//│ ║         	                            ^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Cannot resolve member 'after' of a value with unknown shape.
+//│ ║  l.319: 	let stableNested = {value: {before: 33}}
+//│ ╙──       	                    ^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ mutableNested = {value: {after: 34}}
+//│ stableNested = {value: {before: 33}}
+
+// Record fields participate in ordinary member ambiguity diagnostics, including both origins.
+:e
+fun ambiguousRecordOpen() =
+  let firstRecord = {shared: 1}
+  let secondRecord = {shared: 2}
+  open firstRecord
+  open secondRecord
+  shared
+ambiguousRecordOpen()
+//│ ╔══[COMPILATION ERROR] Wildcard-open reference 'shared' is ambiguous
+//│ ║  l.340: 	  shared
+//│ ║         	  ^^^^^^
+//│ ╟── candidate: record field 'shared' defined here
+//│ ║  l.336: 	  let firstRecord = {shared: 1}
+//│ ║         	                     ^^^^^^
+//│ ╟── Opened here
+//│ ║  l.338: 	  open firstRecord
+//│ ║         	       ^^^^^^^^^^^
+//│ ╟── candidate: record field 'shared' defined here
+//│ ║  l.337: 	  let secondRecord = {shared: 2}
+//│ ║         	                      ^^^^^^
+//│ ╟── Opened here
+//│ ║  l.339: 	  open secondRecord
+//│ ╙──       	       ^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.

@@ -47,6 +47,10 @@ class NewResolver:
   val introShapes: mutable.Map[IntroTerm, IntroShape] = mutable.Map.empty // TODO use symbols for faster lookup?
   val symShapes: mutable.Map[(BlockMemberSymbol, FlowSymbol, Ls[Marks]), SymShape] = mutable.Map.empty
   private val selfShapes: mutable.Map[InnerSymbol, BaseShape] = mutable.Map.empty
+  // Aggregate nodes whose spread subscriptions have already been installed in this
+  // elaboration. Term equality is structural, so key by identity: equal expressions
+  // can receive their pending spread candidates through different listener lists.
+  private val aggregateProducers = mutable.Set.empty[Identity[Tup | Rcd]]
   val defnShapes: mutable.Map[DefinitionSymbol[?], DefnShape] = mutable.Map.empty
   
   /** Interpret types through completed symbolic candidates, independently of term overloads. */
@@ -395,18 +399,16 @@ class NewResolver:
       flow: FlowSymbol, marks: Ls[Marks]): Unit =
     def publish(shape: Shape): Unit =
       if host.shapes.add(shape) then host.shapeListeners.foreach(_(shape))
+    def definition(sym: BlockMemberSymbol): Unit =
+      publish(symShapes.getOrElseUpdate((sym, flow, marks), SymShape(sym, flow, marks)))
     member match
-      case member: BlockMemberSymbol =>
-        publish(symShapes.getOrElseUpdate((member, flow, marks), SymShape(member, flow, marks)))
-      case RecordMember(field, mutable) =>
-        // Selecting the property does not depend on knowing its value yet.
-        // Unlike a definition, a field introduces no capture boundary of its own.
-        if !host.resolvedTargets.contains(field.sym) then host.resolvedTargets ::= field.sym
-        if mutable then publish(UnknownValueShape(field.rhs))
-        else listenTerm(field.rhs): shape =>
-          shape.exit(marks) match
-            case NoShape => ()
-            case shape: TermShape => publish(shape)
+      case member: BlockMemberSymbol => definition(member)
+      case RecordMember(field, false) => definition(field.sym)
+      case RecordMember(field, true) =>
+        // Mutability affects the read, not member identity. Select the ordinary
+        // term interpretation even though writes make its value shape unknown.
+        if !host.resolvedTargets.contains(field.tsym) then host.resolvedTargets ::= field.tsym
+        publish(UnknownValueShape(field.rhs))
 
   private def unknownMember(host: NewResolvable, name: Str, reason: MemberLookup.Uncertainty, loc: Opt[Loc]): Unit =
     host.isErroneous = true
@@ -690,6 +692,22 @@ class NewResolver:
           case _ => ()
         )
   
+  /** Install one spread subscription graph per aggregate node in this elaboration.
+    * Register before following spreads, whose callbacks can synchronously request
+    * this node again. An empty candidate set may be waiting for a forward definition,
+    * so it cannot indicate whether subscriptions have been installed. Every new
+    * consumer receives existing candidates and then subsequent publications.
+    */
+  private def listenAggregate(aggregate: Tup | Rcd, listener: Shape => Unit)
+      (start: (TermShape => Unit) => Unit): Unit =
+    val first = aggregateProducers.add(new Identity(aggregate))
+    // A definition imported from another elaborator can already carry candidates.
+    // Replay them even on this resolver's first subscription, before producing deltas.
+    aggregate.shapes.foreach(listener)
+    if first then
+      start: shape =>
+        if aggregate.shapes.add(shape) then aggregate.shapeListeners.foreach(_(shape))
+
   def listen(trm: Term, discardMarks: Bool = false)(listener: Shape => Unit): Unit =
     log(s"listen: trm = ${trm.showDbg}")
     trm.shapeListeners += listener
@@ -698,13 +716,7 @@ class NewResolver:
       lastWords("Synthetic selections must not enter new resolution")
     case TyApp(underlying, _) => listen(underlying, discardMarks)(listener)
     case Mut(underlying) => listenTerm(underlying)(listener)
-    case tuple: Tup =>
-      if tuple.shapeProducerStarted then tuple.shapes.foreach(listener)
-      else
-        // Start before subscribing: recursive listeners must reuse this host.
-        tuple.shapeProducerStarted = true
-        def publish(shape: TermShape): Unit =
-          if tuple.shapes.add(shape) then tuple.shapeListeners.foreach(_(shape))
+    case tuple: Tup => listenAggregate(tuple, listener): publish =>
         def expand(elems: Ls[Elem], reversed: Ls[TupleShape.Element]): Unit = elems match
           case Nil =>
             // A sole spread preserves its operand's shape and context exactly.
@@ -738,14 +750,11 @@ class NewResolver:
                   // element layout. Their runtime spread is still permitted.
                   expand(rest, TupleShape.Spread(TupleShape.unknown(term), marks) :: reversed)
         expand(tuple.fields, Nil)
-    case record: Rcd =>
-      if record.shapeProducerStarted then record.shapes.foreach(listener)
-      else
-        record.shapeProducerStarted = true
+    case record: Rcd => listenAggregate(record, listener): publish =>
         def expand(stats: Ls[Statement], reversed: Ls[RecordShape.Element]): Unit = stats match
           case Nil =>
             val shape = RecordShape(record, reversed.reverse)
-            if record.shapes.add(shape) then record.shapeListeners.foreach(_(shape))
+            publish(shape)
           case (field: RcdField) :: rest => expand(rest, RecordShape.Field(field) :: reversed)
           case RcdSpread(term) :: rest =>
             val seen = mutable.Set.empty[TermShape]

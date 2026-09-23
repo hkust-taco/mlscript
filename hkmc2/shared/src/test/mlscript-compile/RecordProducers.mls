@@ -1,0 +1,7 @@
+#lang(0.3.x, strictResolution: true)
+
+module RecordProducers {
+  val fields = {...{value: 36}}
+  // This selection starts the record producer in the imported file's elaborator.
+  val observed = fields.value
+}

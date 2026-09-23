@@ -29,3 +29,42 @@ fun captured(module Inner: Nested, x) =
 :expect [true, false]
 [captured(Nested, Nested.Wrapped(3)), captured(Nested, Nested.Wrapped(4))]
 //│ = [true, false]
+
+
+// A record property has an ordinary member/term interpretation, preserved in cloned patterns.
+let constructors = {make: Direct}
+fun throughRecord(x) = if x is @compile constructors.make(3) then true else false
+//│ constructors = {make: fun Direct { class: class Direct }}
+
+:expect [true, false]
+[throughRecord(Direct(3)), throughRecord(Direct(4))]
+//│ = [true, false]
+
+
+// Wildcard constructor lookup retains the record property's name as well.
+fun openedRecord(x) =
+  open constructors
+  if x is @compile make(3) then true else false
+
+:expect [true, false]
+[openedRecord(Direct(3)), openedRecord(Direct(4))]
+//│ = [true, false]
+
+// Calling the stored constructor is a term interpretation.
+:expect 35
+constructors.make(35).value
+//│ = 35
+
+// Static `new` requires a class interpretation; record properties supply terms.
+:e
+new constructors.make(35)
+//│ ╔══[COMPILATION ERROR] Resolution error in object instantiation
+//│ ║  l.60: 	new constructors.make(35)
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Record field symbol 'make' cannot be instantiated with keyword 'new'.
+//│ ║  l.35: 	let constructors = {make: Direct}
+//│ ╙──      	                    ^^^^
+//│ ╔══[COMPILATION ERROR] Cannot resolve the class instantiated here
+//│ ║  l.60: 	new constructors.make(35)
+//│ ╙──      	    ^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.

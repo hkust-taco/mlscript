@@ -1,0 +1,15 @@
+:.
+
+import "../../mlscript-compile/RecordProducers.mls"
+
+// The imported record already has candidates before this elaborator subscribes.
+:expect [36, 36]
+[RecordProducers.fields.value, RecordProducers.observed]
+//│ = [36, 36]
+
+// Later subscribers also replay the same property identity and value shape.
+:expect 36
+let importedFields = {...RecordProducers.fields}
+importedFields.value
+//│ = 36
+//│ importedFields = {value: 36}

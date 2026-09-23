@@ -73,6 +73,13 @@ When appropriate, explain the history of what led to the current implementation,
 especially if it involves non-obvious decisions/trade-offs
 or if alternative approaches were considered and rejected.
 
+Comments must be understandable from the current code alone, without the conversation,
+commit history, or an earlier version of the implementation. Explain the concrete
+invariant, behavior, or failure being prevented. Name the relevant data and operations;
+avoid vague claims about where a "lifecycle" or "responsibility" belongs. If history
+or a rejected alternative matters, include enough context to explain the tradeoff
+after commits are squashed.
+
 
 ## User-Facing Diagnostics
 

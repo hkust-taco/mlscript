@@ -129,13 +129,6 @@ object AnySel:
 end AnySel
 
 
-sealed trait AggregateImpl extends ShapeHost:
-  self: Term.Tup | Term.Rcd =>
-  /** Set by NewResolver before subscribing to spreads. An empty host can be
-    * pending, so its candidate set cannot indicate whether production started.
-    */
-  private[semantics] var shapeProducerStarted: Bool = false
-
 sealed trait AppImpl extends ResolvableImpl:
   self: Term.App =>
   var resolvedTargets: Ls[flow.AppTarget] = Nil // * filled during flow analysis
@@ -367,7 +360,7 @@ sealed trait NewRefImpl extends AnyRefImpl:
 
 sealed trait NewSelImpl extends NewResolvableImpl:
   self: Term.NewSel =>
-  var resolvedMembers: Ls[BlockMemberSymbol | TermSymbol] = Nil // * filled during resolution
+  var resolvedMembers: Ls[BlockMemberSymbol] = Nil // * filled during resolution
   // Class identity and captures must survive even when candidates share an inherited member.
   var resolvedClasses: Ls[(ClassSymbol, Ls[Marks])] = Nil
   def hasAmbiguousClass: Bool = resolvedClasses.sizeCompare(1) > 0 || self.cls.exists:
@@ -379,7 +372,7 @@ sealed trait UnresolvedRefImpl extends NewResolvableImpl:
   self: Term.UnresolvedRef =>
   // Retain the receiver as well as the definition: two instances can expose
   // the same member symbol without denoting the same storage location.
-  var resolvedMembers: Ls[(Term, BlockMemberSymbol | TermSymbol)] = Nil
+  var resolvedMembers: Ls[(Term, BlockMemberSymbol)] = Nil
 
 
 enum Term extends Statement, ShapePublisher:
@@ -422,7 +415,7 @@ enum Term extends Statement, ShapePublisher:
   case TyApp(lhs: Term, targs: Ls[Term])
     (val typ: Opt[Type]) extends Term, ResolvableImpl
   case DynSel(prefix: Term, fld: Term, arrayIdx: Bool)
-  case Tup(fields: Ls[Elem])(val tree: Tree.Tup) extends Term, AggregateImpl
+  case Tup(fields: Ls[Elem])(val tree: Tree.Tup) extends Term, ShapeHost
   case Mut(underlying: Tup | Rcd | New | DynNew)
   case CtxTup(fields: Ls[Elem])(val tree: Tree.Tup)
   case IfLike(kw: Keyword.SplitLike, form: IfLikeForm, split: SimpleSplit) extends Term, ShapeHost
@@ -443,7 +436,7 @@ enum Term extends Statement, ShapePublisher:
   case Constrained(constraints: Ls[SubConstraint], body: Term)
   case WildcardTy(in: Opt[Term], out: Opt[Term])
   case Blk(stats: Ls[Statement], res: Term) extends Term, BlkImpl
-  case Rcd(mut: Bool, stats: Ls[Statement]) extends Term, AggregateImpl
+  case Rcd(mut: Bool, stats: Ls[Statement]) extends Term, ShapeHost
   case Quoted(body: Term)
   case Unquoted(body: Term)
   case New(cls: Term, args: Ls[Term], rft: Opt[ClassSymbol -> ObjBody])
@@ -677,7 +670,6 @@ enum Term extends Statement, ShapePublisher:
           case f: Fld => f.copy(term = f.term.mkClone, asc = f.asc.map(_.mkClone))
           case s: Spd => s.copy(term = s.term.mkClone)
         })(term.tree)
-        copy.shapeProducerStarted = term.shapeProducerStarted
         copyShapes(term, copy)
       case Mut(underlying) => Mut(underlying.mkClone.asInstanceOf[Tup | Rcd | New | DynNew])
       case term @ CtxTup(fields) => CtxTup(fields.map {
@@ -695,7 +687,6 @@ enum Term extends Statement, ShapePublisher:
       case blk: Blk => blk.mkBlkClone
       case term @ Rcd(mut, stats) =>
         val copy = Rcd(mut, stats.map(_.mkClone))
-        copy.shapeProducerStarted = term.shapeProducerStarted
         copyShapes(term, copy)
       case Quoted(body) => Quoted(body.mkClone)
       case Unquoted(body) => Unquoted(body.mkClone)
@@ -1273,8 +1264,10 @@ final case class LetDecl(sym: LocalVarSymbol | TermSymbol, annotations: Ls[Annot
   * to evaluate its value. Computed keys also have an identity, but cannot be
   * selected statically until their key is known. Cloning preserves this identity.
   */
-final case class RcdField(field: Term, rhs: Term, sym: TermSymbol) extends Statement:
-  require((sym.k is RecordField) && sym.owner.isEmpty)
+final case class RcdField(field: Term, rhs: Term, sym: BlockMemberSymbol) extends Statement:
+  // RcdField.apply completes the member's sole term interpretation before exposing it.
+  val tsym: TermSymbol = sym.tsym.get
+  require((tsym.k is RecordField) && tsym.owner.isEmpty && tsym.defn.exists(_.sym is sym))
   field match
     case Term.Lit(Tree.StrLit(name)) => require(sym.nme == name)
     case _ => ()
@@ -1286,7 +1279,16 @@ object RcdField:
       case _ => "computed field"
     val id = new Tree.Ident(name)
     id.withLocOf(field)
-    RcdField(field, rhs, TermSymbol(RecordField, N, id, erasedType = N))
+    val sym = new BlockMemberSymbol(name, Nil)
+    val tsym = TermSymbol(RecordField, N, id, erasedType = N)
+    sym.tsym = S(tsym)
+    // fromBMS exits the selected TermSymbol's capture when reading a definition.
+    // Supply its matching entry so that the record's enclosing marks are preserved.
+    // Record lowering evaluates rhs directly; this capture only describes value flow.
+    tsym.defn = S(TermDefinition(RecordField, sym, tsym, Nil, N, N,
+      S(Term.Capture(rhs, tsym)), TermDefFlags.empty, Modulefulness.none, Nil, N))
+    sym.complete()
+    RcdField(field, rhs, sym)
 final case class RcdSpread(rcd: Term) extends Statement
 
 final case class DefineVar(sym: LocalSymbol | TermSymbol, rhs: Term) extends Statement

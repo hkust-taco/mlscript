@@ -648,10 +648,10 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
       case _ => false
   
   /** Consume wildcard lookup results, retaining the receiver selected by resolution. */
-  private def openSelection(ref: UnresolvedRef)(k: (Term, DefinitionSymbol[?]) => Block)(using LoweringCtx): Block =
+  private def openSelection(ref: UnresolvedRef)(k: (Term, BlockMemberSymbol, DefinitionSymbol[?]) => Block)(using LoweringCtx): Block =
     if ref.isErroneous then compError else ref.resolvedMembers.distinct match
-      case (prefix, _) :: Nil => ref.resolvedTargets.distinct match
-        case target :: Nil => k(prefix, target)
+      case (prefix, member) :: Nil => ref.resolvedTargets.distinct match
+        case target :: Nil => k(prefix, member, target)
         case targets => fail:
           ErrorReport(msg"Wildcard-open reference '${ref.id.name}' requires one resolved definition" -> ref.toLoc ::
             targets.map(target => msg"target: ${target.describeKind}" -> target.toLoc),
@@ -662,7 +662,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
       case candidates => fail:
         ErrorReport(msg"Wildcard-open reference '${ref.id.name}' is ambiguous" -> ref.toLoc ::
           candidates.flatMap: (prefix, member) =>
-            (msg"candidate: ${member.describeMember} '${member.nme}' defined here" -> member.toLoc) ::
+            (msg"candidate: ${member.describe} '${member.nme}' defined here" -> member.toLoc) ::
             (msg"Opened here" -> prefix.toLoc) :: Nil
           ,
           source = Diagnostic.Source.Compilation)
@@ -951,7 +951,8 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
               , S(t), source = Diagnostic.Source.Compilation)
         compError
     case ref: UnresolvedRef =>
-      openSelection(ref)((prefix, target) => setupSelection(prefix, ref.id, S(target))(k))
+      openSelection(ref)((prefix, member, target) =>
+        setupNamedSelection(prefix, memberIdent(ref.id, S(member)), S(target))(k))
     case Capture(base, thru) =>
       term(base, inStmtPos = inStmtPos)(k)
     case t @ st.Ref(sym) =>
@@ -1157,12 +1158,12 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
         subTerm(rhs): r =>
           assignSymbol(resolvedSelectionSymbol.getOrElse(sym), sym, r, k(unit), trm.toLoc)
       case ref: UnresolvedRef =>
-        openSelection(ref): (prefix, target) =>
+        openSelection(ref): (prefix, member, target) =>
           target match
             case sym: TermSymbol =>
               subTerm_nonTail(prefix): p =>
                 subTerm_nonTail(rhs): r =>
-                  AssignField(p, definitionIdent(ref.id, sym), castTo(r, sym.erasedType, ref.toLoc), k(unit))(S(sym))
+                  AssignField(p, memberIdent(ref.id, S(member)), castTo(r, sym.erasedType, ref.toLoc), k(unit))(S(sym))
             case _ => fail:
               ErrorReport(msg"Assignment requires a term member" -> ref.toLoc :: Nil,
                 source = Diagnostic.Source.Compilation)
@@ -1245,7 +1246,17 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
         case Nil => fail:
           ErrorReport(msg"This selection of member '${id.name}' has no resolved target" -> sel.toLoc :: Nil,
             source = Diagnostic.Source.Compilation)
-        case target :: Nil => setupSelection(prefix, id, S(target))(k)
+        case target :: Nil =>
+          // The property and the class stored in it may have different names.
+          // Resolution retains the selected member separately from its interpretation.
+          sel.resolvedMembers.map(_.nme).distinct match
+            case name :: Nil =>
+              setupNamedSelection(prefix, new Tree.Ident(name).withLocOf(id), S(target))(k)
+            case Nil => setupSelection(prefix, id, S(target))(k)
+            case _ => fail:
+              ErrorReport(msg"This selection of member '${id.name}' has multiple resolved member names" -> sel.toLoc ::
+                sel.resolvedMembers.map(member => msg"candidate: ${member.describe} '${member.nme}'" -> member.toLoc),
+                source = Diagnostic.Source.Compilation)
         case targets =>
           if strictResolution then fail:
             ErrorReport(
@@ -1693,8 +1704,12 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
   
   
   def setupSelection(prefix: Term, nme: Tree.Ident, disamb: Opt[DefinitionSymbol[?]])(k: Result => Block)(using LoweringCtx): Block =
+    setupNamedSelection(prefix, disamb.fold(memberIdent(nme, N))(definitionIdent(nme, _)), disamb)(k)
+
+  private def setupNamedSelection(prefix: Term, nme: Tree.Ident, disamb: Opt[DefinitionSymbol[?]])
+      (k: Result => Block)(using LoweringCtx): Block =
     subTerm(prefix): p =>
-      k(Select(p, disamb.fold(memberIdent(nme, N))(definitionIdent(nme, _)))(disamb)(
+      k(Select(p, nme)(disamb)(
         !disamb.isDefined
         // * ^ We assume that resolved selections are well-behaved (will not yield undefined or debind a method)
         // || disamb.exists(_.defn.exists(_.hasDeclareModifier.isEmpty)) // * This checks `declare` members, which is normally unwanted
