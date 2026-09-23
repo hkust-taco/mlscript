@@ -190,9 +190,9 @@ fun foo(x) =
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = {a: 1}
 
-:fixme
+:expect 1
 {a: 1}.a
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ = 1
 
 
 

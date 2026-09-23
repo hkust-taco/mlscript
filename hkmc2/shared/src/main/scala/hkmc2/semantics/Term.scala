@@ -129,8 +129,8 @@ object AnySel:
 end AnySel
 
 
-sealed trait TupImpl extends ShapeHost:
-  self: Term.Tup =>
+sealed trait AggregateImpl extends ShapeHost:
+  self: Term.Tup | Term.Rcd =>
   /** Set by NewResolver before subscribing to spreads. An empty host can be
     * pending, so its candidate set cannot indicate whether production started.
     */
@@ -367,7 +367,7 @@ sealed trait NewRefImpl extends AnyRefImpl:
 
 sealed trait NewSelImpl extends NewResolvableImpl:
   self: Term.NewSel =>
-  var resolvedMembers: Ls[BlockMemberSymbol] = Nil // * filled during resolution
+  var resolvedMembers: Ls[BlockMemberSymbol | TermSymbol] = Nil // * filled during resolution
   // Class identity and captures must survive even when candidates share an inherited member.
   var resolvedClasses: Ls[(ClassSymbol, Ls[Marks])] = Nil
   def hasAmbiguousClass: Bool = resolvedClasses.sizeCompare(1) > 0 || self.cls.exists:
@@ -379,7 +379,7 @@ sealed trait UnresolvedRefImpl extends NewResolvableImpl:
   self: Term.UnresolvedRef =>
   // Retain the receiver as well as the definition: two instances can expose
   // the same member symbol without denoting the same storage location.
-  var resolvedMembers: Ls[(Term, BlockMemberSymbol)] = Nil
+  var resolvedMembers: Ls[(Term, BlockMemberSymbol | TermSymbol)] = Nil
 
 
 enum Term extends Statement, ShapePublisher:
@@ -422,7 +422,7 @@ enum Term extends Statement, ShapePublisher:
   case TyApp(lhs: Term, targs: Ls[Term])
     (val typ: Opt[Type]) extends Term, ResolvableImpl
   case DynSel(prefix: Term, fld: Term, arrayIdx: Bool)
-  case Tup(fields: Ls[Elem])(val tree: Tree.Tup) extends Term, TupImpl
+  case Tup(fields: Ls[Elem])(val tree: Tree.Tup) extends Term, AggregateImpl
   case Mut(underlying: Tup | Rcd | New | DynNew)
   case CtxTup(fields: Ls[Elem])(val tree: Tree.Tup)
   case IfLike(kw: Keyword.SplitLike, form: IfLikeForm, split: SimpleSplit) extends Term, ShapeHost
@@ -443,7 +443,7 @@ enum Term extends Statement, ShapePublisher:
   case Constrained(constraints: Ls[SubConstraint], body: Term)
   case WildcardTy(in: Opt[Term], out: Opt[Term])
   case Blk(stats: Ls[Statement], res: Term) extends Term, BlkImpl
-  case Rcd(mut: Bool, stats: Ls[Statement])
+  case Rcd(mut: Bool, stats: Ls[Statement]) extends Term, AggregateImpl
   case Quoted(body: Term)
   case Unquoted(body: Term)
   case New(cls: Term, args: Ls[Term], rft: Opt[ClassSymbol -> ObjBody])
@@ -693,7 +693,10 @@ enum Term extends Statement, ShapePublisher:
       case Constrained(constraints, body) => Constrained(constraints, body.mkClone)
       case WildcardTy(in, out) => WildcardTy(in.map(_.mkClone), out.map(_.mkClone))
       case blk: Blk => blk.mkBlkClone
-      case Rcd(mut, stats) => Rcd(mut, stats.map(_.mkClone))
+      case term @ Rcd(mut, stats) =>
+        val copy = Rcd(mut, stats.map(_.mkClone))
+        copy.shapeProducerStarted = term.shapeProducerStarted
+        copyShapes(term, copy)
       case Quoted(body) => Quoted(body.mkClone)
       case Unquoted(body) => Unquoted(body.mkClone)
       case term @ New(cls, args, rft) =>
@@ -813,7 +816,7 @@ sealed trait Statement extends AutoLocated, ProductWithExtraInfo, Describable:
     case d: Definition => ???
     case imp: Import => Import(imp.sym, imp.str, imp.file)
     case LetDecl(sym, annotations) => LetDecl(sym, annotations.map(_.mkClone))
-    case RcdField(field, rhs) => RcdField(field.mkClone, rhs.mkClone)
+    case RcdField(field, rhs, sym) => RcdField(field.mkClone, rhs.mkClone, sym)
     case RcdSpread(rcd) => RcdSpread(rcd.mkClone)
     case DefineVar(sym, rhs) => DefineVar(sym, rhs.mkClone)
     case sc: SetConfig => sc
@@ -822,6 +825,7 @@ sealed trait Statement extends AutoLocated, ProductWithExtraInfo, Describable:
     val desc = this match
       case Error() => "‹error›"
       case UnitVal() => "unit value"
+      case _: Rcd => "record literal"
       case Lit(lit) => lit.describeLit
       case Ref(sym) => "reference"
       case Capture(base, thru) => base.describe
@@ -900,7 +904,7 @@ sealed trait Statement extends AutoLocated, ProductWithExtraInfo, Describable:
     case Capture(base, thru) => Vector.single(base)
     case Resolved(t, sym) => Vector.single(t)
     case App(lhs, rhs) => Vector.double(lhs, rhs)
-    case RcdField(lhs, rhs) => Vector.double(lhs, rhs)
+    case RcdField(lhs, rhs, _) => Vector.double(lhs, rhs)
     case RcdSpread(bod) => Vector.single(bod)
     case FunTy(lhs, rhs, eff) => Vector.double(lhs, rhs) ++ eff.toVector
     case TyApp(pre, tarsg) => pre +: tarsg.toVector
@@ -1107,7 +1111,7 @@ sealed trait Statement extends AutoLocated, ProductWithExtraInfo, Describable:
       case Rcd(mut, stats) =>
         (if mut then doc"mut " else doc"") :: braced:
           doc" # " :: stats.map(_.show).mkDocument(doc", # ")
-      case RcdField(field, rhs) => doc"${field.show}: ${rhs.show}"
+      case RcdField(field, rhs, _) => doc"${field.show}: ${rhs.show}"
       case RcdSpread(record) => doc"...${record.show}"
       case Quoted(body) => doc"""code"${body.show}""""
       case Unquoted(body) => doc"$${${body.show}}"
@@ -1186,7 +1190,7 @@ sealed trait Statement extends AutoLocated, ProductWithExtraInfo, Describable:
     case r @ SelfRef(sym) => sym.showAsPlain
     case Capture(base, thru) => s"${base.showDbg}^${thru.showDbg}"
     case App(lhs, rhs) => s"${lhs.showDbg}${rhs.showDbgAsParams}"
-    case RcdField(lhs, rhs) => s"${lhs.showDbg}: ${rhs.showDbg}"
+    case RcdField(lhs, rhs, _) => s"${lhs.showDbg}: ${rhs.showDbg}"
     case RcdSpread(bod) => s"...${bod.showDbg}"
     case FunTy(lhs: Tup, rhs, eff) =>
       s"${lhs.fields.map(_.showDbg).mkString(", ")} ->${
@@ -1265,7 +1269,24 @@ sealed trait Statement extends AutoLocated, ProductWithExtraInfo, Describable:
 
 final case class LetDecl(sym: LocalVarSymbol | TermSymbol, annotations: Ls[Annot]) extends Statement
 
-final case class RcdField(field: Term, rhs: Term) extends Statement
+/** The symbol identifies the property, independently of any local binding used
+  * to evaluate its value. Computed keys also have an identity, but cannot be
+  * selected statically until their key is known. Cloning preserves this identity.
+  */
+final case class RcdField(field: Term, rhs: Term, sym: TermSymbol) extends Statement:
+  require((sym.k is RecordField) && sym.owner.isEmpty)
+  field match
+    case Term.Lit(Tree.StrLit(name)) => require(sym.nme == name)
+    case _ => ()
+
+object RcdField:
+  def apply(field: Term, rhs: Term)(using State): RcdField =
+    val name = field match
+      case Term.Lit(Tree.StrLit(name)) => name
+      case _ => "computed field"
+    val id = new Tree.Ident(name)
+    id.withLocOf(field)
+    RcdField(field, rhs, TermSymbol(RecordField, N, id, erasedType = N))
 final case class RcdSpread(rcd: Term) extends Statement
 
 final case class DefineVar(sym: LocalSymbol | TermSymbol, rhs: Term) extends Statement

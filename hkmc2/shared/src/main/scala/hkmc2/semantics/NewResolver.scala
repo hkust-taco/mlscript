@@ -289,10 +289,10 @@ class NewResolver:
               if sh.isSaturated && sh.applicationHead._1.extendsCls(cls) then
                 fs.foreach: (bms, pat) =>
                   sh.getMember(bms.nme) match
-                    case S((sym, marks)) =>
+                    case S((sym: BlockMemberSymbol, marks)) =>
                       val field = symShapes.getOrElseUpdate((sym, resSym, marks), SymShape(sym, resSym, marks))
                       matchShapePat(field, pat)(_ => ())
-                    case N => softAssert(false, "Matched constructor is missing its field")
+                    case _ => softAssert(false, "Matched constructor is missing its field")
                 matched(sh)
             shape match
               case sh: TermShape => check(sh)
@@ -373,20 +373,39 @@ class NewResolver:
         softAssert(res.isErroneous)
     else register
   
-  private def publishMember(host: ShapeHost, member: BlockMemberSymbol,
+  private def publishMember(host: NewResolvable & ShapeHost, member: BlockMemberSymbol | RecordMember,
       flow: FlowSymbol, marks: Ls[Marks]): Unit =
-    val shape = symShapes.getOrElseUpdate((member, flow, marks), SymShape(member, flow, marks))
-    if host.shapes.add(shape) then host.shapeListeners.foreach(_(shape))
+    def publish(shape: Shape): Unit =
+      if host.shapes.add(shape) then host.shapeListeners.foreach(_(shape))
+    member match
+      case member: BlockMemberSymbol =>
+        publish(symShapes.getOrElseUpdate((member, flow, marks), SymShape(member, flow, marks)))
+      case RecordMember(field, mutable) =>
+        // Selecting the property does not depend on knowing its value yet.
+        // Unlike a definition, a field introduces no capture boundary of its own.
+        if !host.resolvedTargets.contains(field.sym) then host.resolvedTargets ::= field.sym
+        if mutable then publish(UnknownValueShape(field.rhs))
+        else listenTerm(field.rhs): shape =>
+          shape.exit(marks) match
+            case NoShape => ()
+            case shape: TermShape => publish(shape)
 
   def unresolvedRef(ref: UnresolvedRef): Unit =
     ref.prefixes.foreach: prefix =>
       listenTerm(prefix): shape =>
         // A miss in one wildcard source is not an error: another may provide
         // the name. A reference with no candidates is diagnosed by lowering.
-        shape.getMember(ref.id.name).foreach: (member, marks) =>
-          val candidate = prefix -> member
-          if !ref.resolvedMembers.contains(candidate) then ref.resolvedMembers ::= candidate
-          publishMember(ref, member, ref.resSym, marks)
+        shape match
+          case Marked(_: UnknownValueShape, _) =>
+            ref.isErroneous = true
+            resolError(ref, msg"Cannot resolve member '${ref.id.name}' of a value with unknown shape." -> shape.toLoc :: Nil)
+          case Marked(record: RecordShape, _) if record.hasUnknownMember(ref.id.name) =>
+            ref.isErroneous = true
+            resolError(ref, msg"Cannot resolve member '${ref.id.name}' across a computed key or unknown record spread." -> record.toLoc :: Nil)
+          case _ => shape.getMember(ref.id.name).foreach: (member, marks) =>
+            val candidate = prefix -> member.memberSymbol
+            if !ref.resolvedMembers.contains(candidate) then ref.resolvedMembers ::= candidate
+            publishMember(ref, member, ref.resSym, marks)
 
   /** Inspect an overload set only once its definitions have all been published. */
   private def completedClass(shape: SymShape)(selected: ClassDef => Unit, absent: () => Unit): Unit =
@@ -427,8 +446,8 @@ class NewResolver:
     log(s"newSel? sel = ${sel.showDbg}")
     def member(info: Opt[MemberInfo], description: Message, loc: Opt[Loc]): Unit = info match
       case S((bms, marks)) =>
-        log(s"newSel member: bms = ${bms.showDbg}, mss = ${marks.map(_.showDbg)}")
-        if !sel.resolvedMembers.contains(bms) then sel.resolvedMembers ::= bms
+        log(s"newSel member: bms = ${bms.memberSymbol.showDbg}, mss = ${marks.map(_.showDbg)}")
+        if !sel.resolvedMembers.contains(bms.memberSymbol) then sel.resolvedMembers ::= bms.memberSymbol
         publishMember(sel, bms, sel.resSym, marks)
       case N =>
         sel.isErroneous = true
@@ -440,6 +459,9 @@ class NewResolver:
           case Marked(_: UnknownValueShape, _) =>
             sel.isErroneous = true
             resolError(sel, msg"Cannot resolve member '${sel.id.name}' of a value with unknown shape." -> shape.toLoc :: Nil)
+          case Marked(record: RecordShape, _) if record.hasUnknownMember(sel.id.name) =>
+            sel.isErroneous = true
+            resolError(sel, msg"Cannot resolve member '${sel.id.name}' across a computed key or unknown record spread." -> record.toLoc :: Nil)
           case _ => member(shape.getMember(sel.id.name), msg"${shape.describe.capitalize}", shape.toLoc)
       case S(cls) =>
         listenClass(cls)((cd, marks) =>
@@ -698,6 +720,29 @@ class NewResolver:
                   // element layout. Their runtime spread is still permitted.
                   expand(rest, TupleShape.Spread(TupleShape.unknown(term), marks) :: reversed)
         expand(tuple.fields, Nil)
+    case record: Rcd =>
+      if record.shapeProducerStarted then record.shapes.foreach(listener)
+      else
+        record.shapeProducerStarted = true
+        def expand(stats: Ls[Statement], reversed: Ls[RecordShape.Element]): Unit = stats match
+          case Nil =>
+            val shape = RecordShape(record, reversed.reverse)
+            if record.shapes.add(shape) then record.shapeListeners.foreach(_(shape))
+          case (field: RcdField) :: rest => expand(rest, RecordShape.Field(field) :: reversed)
+          case RcdSpread(term) :: rest =>
+            val seen = mutable.Set.empty[TermShape]
+            listenTerm(term): shape =>
+              if seen.add(shape) then shape match
+                case Marked(shape: RecordShape, marks) =>
+                  // Bound recursive record producers just as for tuple spreads.
+                  // Keep surrounding explicit fields even when the spread widens.
+                  val spread = if shape.containsSpread(shape.source, marks)
+                    then RecordShape(shape.source, RecordShape.Unknown :: Nil)
+                    else shape
+                  expand(rest, RecordShape.Spread(spread, marks) :: reversed)
+                case _ => expand(rest, RecordShape.Unknown :: reversed)
+          case _ :: rest => expand(rest, reversed)
+        expand(record.stats, Nil)
     case intro: IntroTerm =>
       val sh = introShapes.getOrElseUpdate(intro, {
         log(s"introShape: intro = $intro")

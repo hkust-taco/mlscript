@@ -22,6 +22,7 @@ sealed trait Shape extends ShapeLike:
     case is: IntroShape => s"IntroShape(${is.trm.showDbg})"
     case us: UnknownValueShape => s"UnknownValueShape(${us.source.showDbg})"
     case ts: TupleShape => s"TupleShape(${ts.source.showDbg})"
+    case rs: RecordShape => s"RecordShape(${rs.source.showDbg})"
     case bs: BaseShape => s"BaseShape(${bs.defn.sym.showDbg})"
     case es: ErrShape => es.describe
 
@@ -225,7 +226,19 @@ end TermShape
 //     case sel: SelShape => s"selection of ${sel.nme.name} from ${sel.receiver.describe}"
 //     case sym: SymShape => s"symbol ${sym.sym.describe}"
 
-type MemberInfo = (BlockMemberSymbol, Ls[Marks])
+// Record properties carry their value term as well as their symbol, avoiding
+// mutable definition state on TermSymbol for these non-overloaded members.
+type MemberInfo = (BlockMemberSymbol | RecordMember, Ls[Marks])
+
+extension (symbol: BlockMemberSymbol | TermSymbol)
+  def describeMember: Str = symbol match
+    case symbol: BlockMemberSymbol => symbol.describe
+    case symbol: TermSymbol => symbol.describeKind
+
+extension (member: BlockMemberSymbol | RecordMember)
+  def memberSymbol: BlockMemberSymbol | TermSymbol = member match
+    case symbol: BlockMemberSymbol => symbol
+    case member: RecordMember => member.field.sym
 
 class ErrShape(val err: ErrorReport) extends NonAppTermShape:
   def describe: Str = s"error: ${err.mainMsg}"
@@ -388,16 +401,53 @@ object TupleShape:
   final case class Rest(shape: TupleShape, segments: Ls[Segment]) extends Element
 
 
-type IntroTerm = Term.Lit | Term.UnitVal | Term.Lam | Term.Rcd //| Term.New
+/** A property selected from one record candidate. Mutable records expose a
+  * stable property identity, but their initializer is not a sound value shape.
+  */
+final case class RecordMember(field: RcdField, mutable: Bool)
+
+/** Keep spread candidates and their contexts rather than flattening away their
+  * provenance. Lookup follows runtime's last-write-wins order. Unknown entries
+  * are barriers: an opaque spread or computed key can overwrite earlier fields.
+  */
+final case class RecordShape(source: Term.Rcd, elements: Ls[RecordShape.Element]) extends NonAppTermShape:
+  def describe: Str = "record literal"
+  def toLoc: Opt[Loc] = source.toLoc
+  private def lookup(name: Str): Either[Unit, Opt[(RecordMember, Ls[Marks])]] =
+    def loop(rest: Ls[RecordShape.Element]): Either[Unit, Opt[(RecordMember, Ls[Marks])]] = rest match
+      case Nil => Right(N)
+      case RecordShape.Field(field) :: rest => field.field match
+        case Term.Lit(Tree.StrLit(key)) =>
+          if key == name then Right(S(RecordMember(field, source.mut) -> Nil)) else loop(rest)
+        case _ => Left(())
+      case RecordShape.Unknown :: _ => Left(())
+      case RecordShape.Spread(shape, marks) :: rest => shape.lookup(name) match
+        case Left(_) => Left(())
+        case Right(N) => loop(rest)
+        case Right(S((member, inner))) =>
+          Right(S(member.copy(mutable = member.mutable || source.mut) -> (inner ::: marks :: Nil)))
+    loop(elements.reverse)
+  def hasUnknownMember(name: Str): Bool = lookup(name).isLeft
+  protected def getMemberImpl(name: Str): Opt[MemberInfo] = lookup(name).toOption.flatten
+  def containsSpread(record: Term.Rcd, marks: Marks): Bool = elements.exists:
+    case RecordShape.Spread(shape, inner) =>
+      ((shape.source is record) && inner == marks) || shape.containsSpread(record, marks)
+    case _ => false
+
+object RecordShape:
+  enum Element:
+    case Field(field: RcdField)
+    case Spread(shape: RecordShape, marks: Marks)
+    case Unknown
+  export Element.*
+
+
+type IntroTerm = Term.Lit | Term.UnitVal | Term.Lam //| Term.New
 class IntroShape(val trm: IntroTerm) extends NonAppTermShape:
   def describe: Str = trm.describe
   protected def getMemberImpl(name: Str): Opt[MemberInfo] = trm match
     case _: Term.Lit | _: Term.UnitVal => N // TODO: methods on literals
     case lam: Term.Lam => N // TODO: methods on lambdas
-    case rcd: Term.Rcd =>
-      // rcd.stats.iterator.collect:
-      // TODO: handler RcdField, RcdSpread
-      ???
     // case newTerm: Term.New =>
     //   Map.empty // TODO
   def toLoc: Opt[Loc] = trm.toLoc

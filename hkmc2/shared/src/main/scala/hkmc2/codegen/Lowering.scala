@@ -238,7 +238,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
         case L((mut, flds)) =>
           subTerm(bod): l =>
             blockImpl(stats, L((mut, RcdArg(N, l) :: flds)))
-      case RcdField(lhs, rhs) :: stats =>
+      case RcdField(lhs, rhs, _) :: stats =>
         res match
         case R(_) => wat("RcdField in non-Rcd context", res)
         case L((mut, flds)) =>
@@ -293,7 +293,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
                 case Annot.Config(modify) => modify(config)
               Define(FunDefn(td.owner, td.sym, td.tsym, paramLists, bodyBlock)(cfgOverride, td.annotations),
                 blockImpl(stats, res))
-            case syntax.LetBind | syntax.HandlerBind => fail:
+            case syntax.LetBind | syntax.HandlerBind | syntax.RecordField => fail:
               ErrorReport(
                 msg"Unexpected declaration kind '${td.k.str}' in lowering" -> td.toLoc :: Nil,
                 source = Diagnostic.Source.Compilation)
@@ -661,7 +661,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
           source = Diagnostic.Source.Compilation)
       case candidates => fail:
         ErrorReport(msg"Wildcard-open reference '${ref.id.name}' is ambiguous" -> ref.toLoc ::
-          candidates.map((prefix, member) => msg"candidate from ${prefix.showDbg}: ${member.describe}" -> member.toLoc),
+          candidates.map((prefix, member) => msg"candidate from ${prefix.showDbg}: ${member.describeMember}" -> member.toLoc),
           source = Diagnostic.Source.Compilation)
 
   /** A projection must identify its class as well as its member: different

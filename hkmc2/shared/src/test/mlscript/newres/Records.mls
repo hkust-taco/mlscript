@@ -1,0 +1,263 @@
+:.
+
+
+:sr
+:expect 1
+{a: 1}.a
+//│ ————————————————| Resolved |————————————————————————————————————————————————————————————————————————
+//│   { let a⁰, a⁰ = 1, "a": a⁰ }.a¹
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 1
+
+:expect 2
+{"a": 2}.a
+//│ = 2
+
+:expect 3
+{a: 1, b: a + 2}.b
+//│ = 3
+
+:expect 4
+{inner: {answer: 4}}.inner.answer
+//│ = 4
+
+// Duplicate keys use the last property, including its value shape.
+:expect 5
+{a: {wrong: 0}, a: {answer: 5}}.a.answer
+//│ = 5
+
+// Fields are values; stored lambdas receive ordinary arguments.
+:expect 6
+{f: x => x + 1}.f(5)
+//│ = 6
+
+// The record's context must filter values from other calls to the same producer.
+fun wrap(x) = {value: x}
+
+:expect 7
+wrap({left: 7}).value.left
+//│ = 7
+
+:expect 8
+wrap({right: 8}).value.right
+//│ = 8
+
+// Reading the same field through a helper retains the receiver context too.
+:expect 9
+fun read(r) = r.value
+read(wrap({answer: 9})).answer
+//│ = 9
+
+:expect 10
+read(wrap({different: 10})).different
+//│ = 10
+
+// Both selective and wildcard opens can expose record properties.
+:expect 11
+let record = {answer: 11}
+open record {answer}
+answer
+//│ = 11
+//│ record = {answer: 11}
+
+:expect 12
+let record2 = {answer2: 12}
+open record2
+answer2
+//│ = 12
+//│ record2 = {answer2: 12}
+
+:e
+{a: 1}.missing
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.71: 	{a: 1}.missing
+//│ ║        	 ^^^^^^^^^^^^^
+//│ ╟── Record literal does not contain member 'missing'
+//│ ║  l.71: 	{a: 1}.missing
+//│ ╙──      	 ^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+:e
+{a: 1}.a()
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.81: 	{a: 1}.a()
+//│ ║        	 ^^^^^^^^^
+//│ ╟── Integer literal cannot be called like a function.
+//│ ║  l.81: 	{a: 1}.a()
+//│ ╙──      	    ^
+//│ ═══[RUNTIME ERROR] TypeError: tmp10.a is not a function
+
+// TODO: Resolve computed keys. Until then, do not look through an unknown overwrite.
+:fixme
+let key = "a"
+{a: {answer: 0}, (key): {other: 1}}.a.answer
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.93: 	{a: {answer: 0}, (key): {other: 1}}.a.answer
+//│ ║        	 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Cannot resolve member 'a' across a computed key or unknown record spread.
+//│ ║  l.93: 	{a: {answer: 0}, (key): {other: 1}}.a.answer
+//│ ╙──      	 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] This selection of member 'answer' has no resolved target
+//│ ║  l.93: 	{a: {answer: 0}, (key): {other: 1}}.a.answer
+//│ ╙──      	 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ key = "a"
+
+// An explicit field after an unknown key still wins.
+:expect 13
+{(key): 0, a: 13}.a
+//│ = 13
+
+
+// Known spreads preserve both field identity and captured values.
+:expect 14
+{...{answer: 14}}.answer
+//│ = 14
+
+:expect 15
+{answer: 0, ...{answer: 15}}.answer
+//│ = 15
+
+:expect 16
+{...{answer: 0}, answer: 16}.answer
+//│ = 16
+
+:expect 17
+{answer: 17, ...{other: 0}}.answer
+//│ = 17
+
+fun spreadWrap(x) = {...{value: x}}
+
+:expect 18
+spreadWrap({first: 18}).value.first
+//│ = 18
+
+:expect 19
+spreadWrap({second: 19}).value.second
+//│ = 19
+
+// Mutable fields retain their identity after writes.
+:expect 20
+let mutableRecord = mut {answer: 0}
+set mutableRecord.answer = 20
+mutableRecord.answer
+//│ = 20
+//│ mutableRecord = {answer: 20}
+
+// TODO: Track writes to mutable fields. Their initializer must not determine
+// static targets after an assignment (even if another receiver has that member).
+:fixme
+let changing = mut {value: {before: 0}}
+set changing.value = {after: 21}
+changing.value.after
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.152: 	changing.value.after
+//│ ║         	^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Cannot resolve member 'after' of a value with unknown shape.
+//│ ║  l.150: 	let changing = mut {value: {before: 0}}
+//│ ╙──       	                    ^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ changing = {value: {after: 21}}
+
+
+// TODO: Nested helper calls currently lose the outer call-site mark when
+// entering the helper through a capture, merging these two value shapes.
+:fixme
+fun nestedWrap(x) = {...wrap(x)}
+nestedWrap({first: 22}).value.first
+nestedWrap({second: 23}).value.second
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.167: 	nestedWrap({first: 22}).value.first
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Record literal does not contain member 'first'
+//│ ║  l.168: 	nestedWrap({second: 23}).value.second
+//│ ╙──       	            ^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.168: 	nestedWrap({second: 23}).value.second
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Record literal does not contain member 'second'
+//│ ║  l.167: 	nestedWrap({first: 22}).value.first
+//│ ╙──       	            ^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+
+// A missing member in a spread must fall through to earlier fields; an unknown
+// member must not. This also holds when wildcard opens offer another candidate.
+:fixme
+let unknownKeys = {(key): 0}
+fun unknownOpen() =
+  open unknownKeys
+  let knownKeys = {a: 24}
+  open knownKeys
+  a
+unknownOpen()
+//│ ╔══[COMPILATION ERROR] Resolution error in wildcard-open reference
+//│ ║  l.192: 	  a
+//│ ║         	  ^
+//│ ╟── Cannot resolve member 'a' across a computed key or unknown record spread.
+//│ ║  l.187: 	let unknownKeys = {(key): 0}
+//│ ╙──       	                          ^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ unknownKeys = {a: 0}
+
+// A later explicit field makes an earlier unknown spread irrelevant to lookup.
+:expect 25
+{...unknownKeys, a: 25}.a
+//│ = 25
+
+// Forward producers remain pending until their body is available.
+:expect 26
+let forwardRecord = {...makeRecord()}
+fun makeRecord() = {answer: 26}
+forwardRecord.answer
+//│ = 26
+//│ forwardRecord = {answer: 26}
+
+// Strict resolution still diagnoses distinct field identities from alternatives.
+:e
+fun choose(flag) = if flag then {answer: 1} else {answer: 2}
+choose(true).answer
+//│ ╔══[COMPILATION ERROR] This selection of member 'answer' is ambiguous, as it has multiple resolved targets
+//│ ║  l.219: 	choose(true).answer
+//│ ║         	^^^^^^^^^^^^^^^^^^^
+//│ ╟── target: record field 'answer'
+//│ ║  l.218: 	fun choose(flag) = if flag then {answer: 1} else {answer: 2}
+//│ ║         	                                                  ^^^^^^
+//│ ╟── target: record field 'answer'
+//│ ║  l.218: 	fun choose(flag) = if flag then {answer: 1} else {answer: 2}
+//│ ╙──       	                                 ^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// Recursive spreads must converge even as their candidate graph grows.
+// TODO: Resolve fields through widened recursive spreads.
+:fixme
+fun recursiveRecord(n) =
+  if n == 0 then {answer: 27}
+  else {...recursiveRecord(n - 1)}
+recursiveRecord(2).answer
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.237: 	recursiveRecord(2).answer
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Cannot resolve member 'answer' across a computed key or unknown record spread.
+//│ ║  l.236: 	  else {...recursiveRecord(n - 1)}
+//│ ╙──       	           ^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+
+// Unknown mutable values in an open must not disappear in favor of another source.
+:fixme
+fun unknownValueOpen() =
+  let unknownValue = mut {value: {answer3: 0}}
+  let fallbackValue = {answer3: 1}
+  let openedValue = unknownValue.value
+  open openedValue
+  open fallbackValue
+  answer3
+unknownValueOpen()
+//│ ╔══[COMPILATION ERROR] Resolution error in wildcard-open reference
+//│ ║  l.255: 	  answer3
+//│ ║         	  ^^^^^^^
+//│ ╟── Cannot resolve member 'answer3' of a value with unknown shape.
+//│ ║  l.250: 	  let unknownValue = mut {value: {answer3: 0}}
+//│ ╙──       	                          ^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
