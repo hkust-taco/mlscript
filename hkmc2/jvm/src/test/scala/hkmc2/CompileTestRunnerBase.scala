@@ -54,7 +54,7 @@ abstract class CompileTestRunnerBase(
         
         // Synchronize diagnostic output to avoid interleaving since the compiler tests run in parallel.
         val wrap: (=> Unit) => Unit = body => this.synchronized(body)
-        val report = ReportFormatter(System.out.println, colorize = true, wrap = Some(wrap))
+        val report = ReportFormatter(System.out.println, mainTestDir, colorize = true, wrap = Some(wrap))
         val compiler = MLsCompiler(mkRaise = report.mkRaise)
         compiler.compileModule(file)
         

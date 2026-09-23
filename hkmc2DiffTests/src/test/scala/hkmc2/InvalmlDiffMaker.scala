@@ -19,7 +19,7 @@ abstract class InvalMLDiffMaker extends JSBackendDiffMaker:
       if file =/= invalPreludeFile then
         curCtx = Elaborator.State.init
         given Config = mkConfig
-        importFile(invalPreludeFile, verbose = false)
+        importFile(invalPreludeFile, verbose = false, includeDirectives = false)
   
   
   override def init(): Unit =
@@ -27,6 +27,7 @@ abstract class InvalMLDiffMaker extends JSBackendDiffMaker:
 
   lazy val invalCtx =
     given Elaborator.Ctx = curCtx
+    given Config = mkConfig
     invalml.InvalCtx.init(_ => die)
   
   var invalmlTyper: Opt[InvalTyper] = None

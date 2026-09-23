@@ -667,7 +667,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
         val p1 = Param(FldFlags.empty, VarSymbol(t1, erasedType = N), N, Modulefulness.none)
         val p2 = Param(FldFlags.empty, VarSymbol(t2, erasedType = N), N, Modulefulness.none)
         val ps = PlainParamList(p1 :: p2 :: Nil)
-        val bod = st.App(ref, st.Tup(List(st.Ref(p1.sym)(t1, 666, N).resolve, st.Ref(p2.sym)(t2, 666, N).resolve))
+        val bod = st.App(ref, st.Tup(List(st.Ref(p1.sym)(t1, N).resolve, st.Ref(p2.sym)(t2, N).resolve))
           (Tree.Tup(Nil // FIXME should not be required (using dummy value)
             )))(
             Tree.App(Tree.Empty(), Tree.Empty()), // FIXME should not be required (using dummy value)
@@ -682,7 +682,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
         val t1 = new Tree.Ident("arg")
         val p1 = Param(FldFlags.empty, VarSymbol(t1, erasedType = N), N, Modulefulness.none)
         val ps = PlainParamList(p1 :: Nil)
-        val bod = st.App(ref, st.Tup(List(st.Ref(p1.sym)(t1, 666, N).resolve))
+        val bod = st.App(ref, st.Tup(List(st.Ref(p1.sym)(t1, N).resolve))
           (Tree.Tup(Nil // FIXME should not be required (using dummy value)
             )))(
             Tree.App(Tree.Empty(), Tree.Empty()), // FIXME should not be required (using dummy value)
@@ -1589,7 +1589,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
           case _ => warn(a)
       case Annot.Modifier(syntax.Keyword.`public` | syntax.Keyword.`private` | syntax.Keyword.`virtual`) => ()
       case Annot.Modifier(syntax.Keyword("staged")) => ()
-      case Annot.MayNotRaiseEffects => ()
+      case Annot.Pure => ()
       case _: Annot.Config => () // Config annotations are handled during FunDefn creation
       case annot => warn(annot)
   

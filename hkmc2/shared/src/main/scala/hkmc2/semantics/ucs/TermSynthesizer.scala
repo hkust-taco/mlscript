@@ -62,7 +62,7 @@ trait TermSynthesizer(using State):
   protected lazy val stringStartsWith = sel(sel(runtimeRef, "Str", State.strSymbol), "startsWith", State.strStartsWithSymbol)
   protected lazy val stringGet = sel(sel(runtimeRef, "Str", State.strSymbol), "get", State.strGetSymbol)
   protected lazy val stringTake = sel(sel(runtimeRef, "Str", State.strSymbol), "take", State.strTakeSymbol)
-  protected lazy val stringLeave = sel(sel(runtimeRef, "Str", State.strSymbol), "leave", State.strLeaveSymbol)
+  protected lazy val stringLeaveOut = sel(sel(runtimeRef, "Str", State.strSymbol), "leave", State.strLeaveOutSymbol)
 
   /** Make a term that looks like `runtime.Tuple.get(t, i)`. */
   protected final def callTupleGet(t: Term, i: Int, label: Str): Term =
@@ -90,7 +90,7 @@ trait TermSynthesizer(using State):
   
   /** Make a term that looks like `runtime.Str.drop(t, n)`. */
   protected final def callStringDrop(t: Term.Ref, n: Int, label: Str) =
-    app(stringLeave, tup(fld(t), fld(int(n))), label)
+    app(stringLeaveOut, tup(fld(t), fld(int(n))), label)
 
   protected final def tempLet(dbgName: Str, term: Term)(inner: TempSymbol => Split): Split =
     val s = TempSymbol(N, initErasedType = N, dbgName)

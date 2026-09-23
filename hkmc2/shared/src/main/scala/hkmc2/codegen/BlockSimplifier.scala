@@ -300,7 +300,7 @@ class BlockSimplifier
       case Assign(lhs: LocalVarSymbol, rhs, rst) if localVars(lhs) && !usedVars(lhs) && !symbolsToPreserve(lhs) =>
         registerChange(s"rm ${lhs.showDbg} = ${rhs.showDbg}")
         applyResult(rhs)(r => Assign.discard(r, applyBlock(rst)))
-
+      
       // * Discard writes to private fields that are never read
       case assign @ AssignField(lhs, _, rhs, rst) =>
         assign.symbol match
@@ -310,7 +310,9 @@ class BlockSimplifier
             applyResult(rhs): rhs2 =>
               Assign.discard(lhs2, Assign.discard(rhs2, applyBlock(rst)))
         case _ => super.applyBlock(b)
-
+      case Define(defn: ValDefn, rest) if privateFieldsToRemove(defn.tsym) =>
+        Assign.discard(defn.rhs, applyBlock(rest))
+      
       // * Remove local pure definitions that are never read (and are not preserved)
       case Define(defn, rest) =>
         val defnSym = defn.sym

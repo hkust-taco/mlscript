@@ -36,8 +36,8 @@ x => x
 class Foo with
   val m = 1
 //│ —————————————————| Flowed |—————————————————————————————————————————————————————————————————————————
-//│   class Foo {
-//│     val m⁰ ‹flow:m⁰› = 1
+//│   class Foo⁰::Foo¹ {
+//│     val m⁰::m¹ ‹flow:m⁰› = 1
 //│   }
 //│ where
 //│     flow:m⁰  <~  1
@@ -50,7 +50,7 @@ fun test(x) = x.m
 //│ ║  l.48: 	fun test(x) = x.m
 //│ ╙──      	              ^^^
 //│ —————————————————| Flowed |—————————————————————————————————————————————————————————————————————————
-//│   fun test⁰(x¹) ‹flow:test⁰› = x¹.m‹?›
+//│   fun test⁰::test¹(x¹) ‹flow:test⁰› = x¹.m‹?›
 //│ where
 //│     x¹  ~>  {m: ⋅m⁰}
 //│     flow:test⁰  <~  ((x¹) -> ⋅m⁰)
@@ -60,7 +60,7 @@ fun test(x) = x.m
 // :df
 fun test(x: Foo) = x.m
 //│ —————————————————| Flowed |—————————————————————————————————————————————————————————————————————————
-//│   fun test¹(x²: Foo⁰{ ~> Foo⁰ }) ‹flow:test¹› = x².m‹?›{ ~> x².m⁰ }
+//│   fun test²::test³(x²: Foo⁰{ ~> Foo⁰ }) ‹flow:test¹› = x².m‹?›{ ~> x².m⁰ }
 //│ where
 //│     x²  <~  type Foo
 //│     flow:test¹  <~  ((type Foo) -> flow:m⁰)
@@ -115,7 +115,7 @@ f(...a)
 
 fun przd[A, B](x: A) = x
 //│ —————————————————| Flowed |—————————————————————————————————————————————————————————————————————————
-//│   fun przd⁰[A⁰, B⁰](x⁵: A⁰) ‹flow:przd⁰› = x⁵
+//│   fun przd⁰::przd¹[A⁰, B⁰](x⁵: A⁰) ‹flow:przd⁰› = x⁵
 //│ where
 //│     x⁵  <~  type A
 //│     flow:przd⁰  <~  ((type A) -> x⁵)
