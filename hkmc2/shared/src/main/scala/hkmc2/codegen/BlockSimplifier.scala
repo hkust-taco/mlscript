@@ -124,9 +124,9 @@ class BlockSimplifier
   // * Only such variables can be assigned directly in the IR
   type LocalVar = LocalVarSymbol
   
-  object LocalVars extends CachedAnalysis[Block, Set[LocalVar]]:
+  object LocalVars:
     
-    def analyzeUncached(block: Block): Set[LocalVar] =
+    def analyze(block: Block): Set[LocalVar] =
       val locals: MutSet[LocalVar] = MutSet.empty[LocalVar]
       def paramsOf(paramLists: IterableOnce[ParamList]): Unit =
         locals ++= paramLists.iterator.flatMap(_.paramSyms)
