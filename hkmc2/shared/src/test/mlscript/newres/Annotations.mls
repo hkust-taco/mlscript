@@ -1,0 +1,155 @@
+:.
+
+// Qualified annotations must affect function kind before the body is elaborated.
+:sjs
+@annotations.generator
+fun generated() = yield 1
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ let generated; generated = function* generated() { return yield 1 };
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+:sjs
+@annotations.async
+fun asynchronous() = 2
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ let asynchronous, asynchronous1;
+//│ asynchronous1 = function asynchronous() {
+//│   return () => {
+//│     return 2
+//│   }
+//│ };
+//│ asynchronous = function asynchronous() {
+//│   let tmp;
+//│   tmp = asynchronous1();
+//│   return runtime.toJsAsync(tmp)
+//│ };
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+// Explicit and wildcard opens identify the same built-in annotation symbol.
+:soir
+fun explicitAnnotation(x) =
+  open annotations { noInline }
+  @noInline
+  fun inner(y) = y + 1
+  inner(x)
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ define explicitAnnotation⁰ as fun explicitAnnotation¹(x) {
+//│   let inner;
+//│   @noInline
+//│   define inner as fun inner⁰(y) { return +⁰(y, 1) };
+//│   return inner⁰(x)
+//│ };
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+:soir
+fun wildcardAnnotation(x) =
+  open annotations
+  @noInline
+  fun inner(y) = y + 1
+  inner(x)
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ define wildcardAnnotation⁰ as fun wildcardAnnotation¹(x) {
+//│   let inner;
+//│   @noInline
+//│   define inner as fun inner¹(y) { return +⁰(y, 1) };
+//│   return inner¹(x)
+//│ };
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+// Spelling alone must not recognize a shadowing object as a built-in annotation.
+:w
+fun shadowed() =
+  object noInline
+  @noInline
+  fun inner(x) = x
+  inner(3)
+//│ ═══[WARNING] This annotation has no effect.
+
+// A known application head is enough; its argument need not have a value shape.
+:w
+class Custom(value: Int)
+fun customAnnotation(arg) =
+  @Custom(arg)
+  fun inner() = 4
+  inner()
+//│ ╔══[WARNING] This annotation has no effect.
+//│ ║  l.74: 	  @Custom(arg)
+//│ ╙──      	  ^^^^^^^^^^^^
+
+// A qualified annotation cannot wait for its receiver's forward definition.
+:e
+fun forwardQualified() =
+  @Later.noInline
+  fun inner(x) = x
+  inner(5)
+module Later { object noInline }
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.84: 	  @Later.noInline
+//│ ║        	  ^^^^^^^^^^^^^^^
+//│ ╟── An annotation's main symbol must be uniquely known when the annotation is elaborated.
+//│ ║  l.84: 	  @Later.noInline
+//│ ╙──      	  ^^^^^^^^^^^^^^^
+
+// Nor can an annotation wait for a forward wildcard source or an alias's value.
+:e
+fun forwardWildcard() =
+  open Future
+  @noInline
+  fun inner(x) = x
+  inner(6)
+module Future { object noInline }
+//│ ╔══[COMPILATION ERROR] Resolution error in wildcard-open reference
+//│ ║  l.99: 	  @noInline
+//│ ║        	  ^^^^^^^^^
+//│ ╟── An annotation's main symbol must be uniquely known when the annotation is elaborated.
+//│ ║  l.99: 	  @noInline
+//│ ╙──      	  ^^^^^^^^^
+
+:e
+fun forwardAlias() =
+  @alias.noInline
+  fun inner(x) = x
+  inner(7)
+val alias = Later
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.112: 	  @alias.noInline
+//│ ║         	  ^^^^^^^^^^^^^^^
+//│ ╟── An annotation's main symbol must be uniquely known when the annotation is elaborated.
+//│ ║  l.112: 	  @alias.noInline
+//│ ╙──       	  ^^^^^^^^^^^^^^^
+//│ alias = class Later { noInline: noInline }
+
+// Two immediately available heads are ambiguous.
+:e
+module First { object marker }
+module Second { object marker }
+fun ambiguousAnnotation() =
+  open First
+  open Second
+  @marker
+  fun inner(x) = x
+  inner(8)
+//│ ╔══[COMPILATION ERROR] Resolution error in wildcard-open reference
+//│ ║  l.131: 	  @marker
+//│ ║         	  ^^^^^^^
+//│ ╟── An annotation's main symbol must be uniquely known when the annotation is elaborated.
+//│ ║  l.131: 	  @marker
+//│ ╙──       	  ^^^^^^^
+
+// A late candidate must not silently invalidate an already recognized annotation.
+:e
+fun lateAmbiguity() =
+  open annotations
+  open Last
+  @noInline
+  fun inner(x) = x
+  inner(9)
+module Last { object noInline }
+//│ ╔══[COMPILATION ERROR] Resolution error in wildcard-open reference
+//│ ║  l.146: 	  @noInline
+//│ ║         	  ^^^^^^^^^
+//│ ╟── An annotation's main symbol must be uniquely known when the annotation is elaborated.
+//│ ║  l.146: 	  @noInline
+//│ ╙──       	  ^^^^^^^^^

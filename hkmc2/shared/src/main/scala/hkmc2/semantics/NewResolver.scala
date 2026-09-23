@@ -605,6 +605,37 @@ class NewResolver:
     case _: NewResolvable => listenTerm(trm)(_ => ())
     case _ => ()
 
+  /** Annotation identity is needed before elaborating the annotated body. Read
+    * the main symbol now, without waiting for a value or inspecting unfinished
+    * definitions. Keep validating selections/opens: a later distinct candidate
+    * must be an error, since it cannot change an already interpreted annotation.
+    */
+  def annotationSymbol(trm: Term): Opt[Symbol] = trm match
+    case Capture(base, _) => annotationSymbol(base)
+    case TyApp(base, _) => annotationSymbol(base)
+    case App(base, _) => annotationSymbol(base)
+    case ref: NewRefImpl => S(ref.sym)
+    case _: NewSel | _: UnresolvedRef =>
+      val symbols = mutable.LinkedHashSet.empty[BlockMemberSymbol]
+      var collecting = true
+      var failed = false
+      def fail(): Unit = if !failed then
+        failed = true
+        resolError(trm, msg"An annotation's main symbol must be uniquely known when the annotation is elaborated." -> trm.toLoc :: Nil)
+      listen(trm):
+        case sh: SymShape =>
+          if symbols.add(sh.sym) && !collecting then fail()
+        case _ => fail()
+      collecting = false
+      symbols.toList match
+        case symbol :: Nil if !failed => S(symbol)
+        case _ => fail(); N
+    case _ => trm.symbol match
+      case s @ S(_) => s
+      case N =>
+        resolError(trm, msg"An annotation must have a known main symbol." -> trm.toLoc :: Nil)
+        N
+
   def listenTerm(trm: Term)(listener: TermShape => Unit): Unit =
     log(s"listenTerm: trm = ${trm.showDbg}")
     listen(trm):

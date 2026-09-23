@@ -746,7 +746,9 @@ extends Importer:
     case _ => term(tree, Trm) match
       case Term.Error() => N
       case trm =>
-        trm.symbol match
+        val symbol = if newResolution then annotationSymbol(trm) else trm.symbol
+        if newResolution && symbol.isEmpty then return N
+        symbol match
         case S(sym) =>
           sym match
           case ctx.builtins.annotations.untyped =>

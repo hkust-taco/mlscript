@@ -10,11 +10,11 @@ exclude the new shared `.mls` configuration files and new regression tests.
 | Suite | Migrated | Retained on existing configuration | Active files |
 | --- | ---: | ---: | ---: |
 | basics | 55 | 35 | 90 |
-| codegen | 61 | 64 | 125 |
+| codegen | 62 | 63 | 125 |
 | ucs | 50 | 20 | 70 |
 | ups | 13 | 58 | 71 |
 | apps | 5 | 11 | 16 |
-| Total | 184 | 188 | 372 |
+| Total | 185 | 187 | 372 |
 
 Migrated files start with `:.`. Each suite's `.mls` loads the common language
 configuration and enables strict resolution; nested directories inherit through
@@ -97,27 +97,28 @@ field values used as receivers, field assignment, missing fields, and JS imports
 Decide whether wildcard opens accept structural records as part of this work;
 do not silently treat an unsupported structural open as an empty module.
 
-### 2. Annotations that affect elaboration
+### 2. Annotation identity at elaboration (implemented)
 
-Evidence: `codegen/NoInline.mls` warns that `@noInline` has no effect and then
-inlines `bar`. `Elaborator.annot` still uses eager `trm.symbol`. The trial of
-`codegen/Generators.mls` exceeded the 25-second test limit; lost generator
-recognition is a concrete suspect, not yet a proven explanation of that timeout.
+**Decision:** an annotation's main symbol must already be uniquely known when
+the annotation is elaborated. Do not defer the annotated body to accommodate
+forward annotation lookup. A directly bound symbol is already known, even if
+its definition is unfinished; applications require the head's identity, not
+the values of their arguments. Qualified and wildcard-open references must
+publish one symbol immediately. A distinct symbol arriving later is an error,
+since it cannot change an annotation that has already affected elaboration.
 
-**Question:** may elaboration-affecting annotations be obtained through forward
-aliases and wildcard opens, just like other symbolic references?
+`NewResolver.annotationSymbol` enforces this using symbolic reference candidates.
+Built-in annotations are recognized by symbol identity, without inspecting
+incomplete definitions or calling `resolvedSym` during elaboration. The same
+rule applies to body-affecting annotations and later-consumed metadata.
 
-**Proposal:** yes. Resolve annotation identity through completed symbolic
-candidates and schedule dependent elaboration after that prerequisite is known.
-Separate annotations needed to elaborate a body (`generator`, `async`) from
-metadata only consumed later (`noInline`, `tailrec`). Diagnose ambiguity or a
-dependency cycle explicitly. Do not recognize annotations by spelling, inspect
-incomplete definitions, or call `resolvedSym` during elaboration.
-
-Acceptance cases: direct, qualified, explicit-open, wildcard-open, shadowed,
-forward, ambiguous, and cyclic annotation references. Check emitted function
-kind and optimization behavior, not only final values. This should be addressed
-first because it can change valid program behavior without an ordinary error.
+`newres/Annotations.mls` covers qualified, direct, explicit-open, wildcard-open,
+shadowed, applied, unresolved, and ambiguous heads, including late ambiguity.
+Its emitted-code snapshots verify generator/async function kinds and retained
+`noInline` calls. `codegen/NoInline.mls` now runs under new resolution and verifies
+optimization behavior. The previous `codegen/Generators.mls` timeout remains a
+trial observation in the retained inventory; that entire worksheet has not yet
+been migrated.
 
 ### 3. Pattern transfer and synthesized references
 
@@ -328,7 +329,6 @@ The files themselves retain the pre-trial configuration and output.
 - `codegen/NestedClasses.mls`: Unexpected internal error; [INTERNAL ERROR] Compiler reached an unexpected state at 'Lowering.scala:453': Unexpected class term shape
 - `codegen/NestedScoped.mls`: Unexpected exception; /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
 - `codegen/NoFreeze.mls`: Unexpected compilation error; [COMPILATION ERROR] Assignment requires an unambiguous term member
-- `codegen/NoInline.mls`: Unexpected warning; [WARNING] This annotation has no effect.
 - `codegen/NoModuleCheck.mls`: Unexpected lack of compilation or type error; [COMPILATION ERROR] Resolution error in object instantiation; 
 - `codegen/ObjectMethodDebinding.mls`: Unexpected compilation error; [COMPILATION ERROR] This selection of member 'foo' has no resolved target
 - `codegen/Open.mls`: Unexpected compilation error; [COMPILATION ERROR] Resolution error in selection; String literal does not contain member 'length'
