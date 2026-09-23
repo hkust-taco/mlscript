@@ -194,22 +194,6 @@ errors when a selected interpretation lacks the required capability.
 
 ## Remaining implementation work, not new semantic decisions
 
-- Argument-spread distribution now uses `TupleShape` candidates with selected
-  subshapes for each spread. Tuple producers listen for all combinations; `zipArgs`
-  checks their expanded counts and preserves capture marks for fixed arguments and
-  residual rest tuples. Marks accumulate on each segment and are applied when a
-  consumer accesses its fields, as with member selection.
-  `newres/SpreadCalls.mls` covers nested and delayed spreads, multiple alternatives,
-  fixed arguments after spreads, rest forwarding, captures, curried calls and
-  constructors, and recursive forwarding. Repeated producers in the same spread
-  context widen that spread to an explicit unknown-length tuple shape, preserving
-  known surrounding fields; `basics/LazySpreads.mls` covers recursive lazy tuples.
-  Unknown lengths get a distinct diagnostic instead of a fabricated arity mismatch.
-  Functions can consume a known prefix and forward an unknown-length remainder to
-  a rest parameter. The broader call-site correlation limitation remains tracked
-  in `newres/CallSiteShapes.mls`, including a rest-forwarding case. Further
-  constructor/returned-function fixes should be driven by specific failures,
-  rather than replacing existing deferral.
 - Audit assignments to member symbols and definition initializers. The trial
   reaches unimplemented direct member-reference shape cases and missing
   assignment lowering in several mutation tests.

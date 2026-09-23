@@ -20,7 +20,7 @@ sealed trait Shape extends ShapeLike:
     case ns: SymShape => s"SymShape(${ns.sym.showDbg})"
     case ns: NewShape => s"NewShape(${ns.cls.showDbg}, ${ns.argss.map(_.showDbg).mkString(", ")})"
     case is: IntroShape => s"IntroShape(${is.trm.showDbg})"
-    case ts: UnknownTupleShape => s"UnknownTupleShape(${ts.source.showDbg})"
+    case us: UnknownValueShape => s"UnknownValueShape(${us.source.showDbg})"
     case ts: TupleShape => s"TupleShape(${ts.source.showDbg})"
     case bs: BaseShape => s"BaseShape(${bs.defn.sym.showDbg})"
     case es: ErrShape => es.describe
@@ -338,43 +338,44 @@ class RefinedShape(val base: TermShape, val refinements: Ls[Str -> Term]) extend
   */
 final case class TupleShape(source: Term, elements: Ls[TupleShape.Element]) extends NonAppTermShape:
   lazy val segments: Ls[TupleShape.Segment] = elements.flatMap:
-    case field: TupleShape.Field => field :: Nil
-    case TupleShape.Rest(shape, count) => shape.segments.drop(count)
-    case TupleShape.Spread(shape: UnknownTupleShape, marks) => TupleShape.Unknown(shape, marks :: Nil) :: Nil
-    case TupleShape.Spread(shape: TupleShape, marks) => shape.segments.map:
+    case segment: TupleShape.Segment => segment :: Nil
+    case TupleShape.Rest(_, segments) => segments
+    case TupleShape.Spread(shape, marks) => shape.segments.map:
       case TupleShape.Field(field, inner) => TupleShape.Field(field, inner ::: marks :: Nil)
       case TupleShape.Unknown(shape, inner) => TupleShape.Unknown(shape, inner ::: marks :: Nil)
   /** Re-entering the same producer through the same spread context can generate
     * arbitrarily many tuple lengths. Widen that spread, retaining surrounding fields.
     */
   def containsSpread(source: Term, marks: Marks): Bool = elements.exists:
-    case _: TupleShape.Field => false
+    case _: TupleShape.Segment => false
     case TupleShape.Rest(shape, _) => shape.containsSpread(source, marks)
-    case TupleShape.Spread(shape: TupleShape, inner) =>
+    case TupleShape.Spread(shape, inner) =>
       ((shape.source is source) && inner == marks) || shape.containsSpread(source, marks)
-    case TupleShape.Spread(_: UnknownTupleShape, _) => false
   def describe: Str = "tuple literal"
   def toLoc: Opt[Loc] = source.toLoc
   protected def getMemberImpl(name: Str): Opt[MemberInfo] = ??? // Structural tuple members are not implemented yet.
 
-/** A recursive producer can denote unbounded tuple lengths. This shape represents
-  * all remaining lengths and element values, rather than dropping their candidates.
+/** The element of an opaque or widened spread can be any value. Keep this
+  * alternative in the flow graph so other, known arguments cannot silently make
+  * an unresolved member selection appear to have a unique static target.
   */
-final case class UnknownTupleShape(source: Term) extends NonAppTermShape:
-  def describe: Str = "tuple of unknown length"
+final case class UnknownValueShape(source: Term) extends NonAppTermShape:
+  def describe: Str = "value of unknown shape"
   def toLoc: Opt[Loc] = source.toLoc
-  protected def getMemberImpl(name: Str): Opt[MemberInfo] = ??? // Structural tuple members are not implemented yet.
+  protected def getMemberImpl(name: Str): Opt[MemberInfo] = N
 
 object TupleShape:
   sealed trait Element
-  sealed trait Segment
-  final case class Field(field: Fld, marks: Ls[Marks]) extends Element, Segment
-  final case class Unknown(shape: UnknownTupleShape, marks: Ls[Marks]) extends Segment
-  final case class Spread(shape: TupleShape | UnknownTupleShape, marks: Marks) extends Element
-  // Keep a view of the original candidate so slicing preserves spread provenance.
-  final case class Rest(shape: TupleShape, count: Int) extends Element:
-    require(count >= 0 && shape.segments.take(count).size == count)
-    require(shape.segments.take(count).forall(_.isInstanceOf[Field]))
+  sealed trait Segment extends Element
+  final case class Field(field: Fld, marks: Ls[Marks]) extends Segment
+  // An arbitrary number of arbitrary values. Use this for opaque layouts and
+  // recursive widening, never for a spread whose shape has not arrived yet.
+  final case class Unknown(source: Term, marks: Ls[Marks]) extends Segment
+  final case class Spread(shape: TupleShape, marks: Marks) extends Element
+  def unknown(source: Term): TupleShape = TupleShape(source, Unknown(source, Nil) :: Nil)
+  // Retain the original candidate as well as the selected residual segments:
+  // flattening away the parent would hide recursive producer dependencies.
+  final case class Rest(shape: TupleShape, segments: Ls[Segment]) extends Element
 
 
 type IntroTerm = Term.Lit | Term.UnitVal | Term.Lam | Term.Rcd //| Term.New

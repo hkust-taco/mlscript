@@ -127,45 +127,69 @@ class NewResolver:
   def zipArgs(mss: Ls[Marks], ps: Ls[Param], r: Opt[Param], args: Term, src: Term, funSh: TermShape): Unit =
     val expectedCount = ps.length
     val reportedCounts = mutable.Set.empty[Int]
-    var reportedUnknownLength = false
-    def reportUnknownLength(): Unit = if !reportedUnknownLength then
-      reportedUnknownLength = true
-      resolError(src, msg"Cannot determine the length of the argument tuple." -> args.toLoc :: Nil)
     def publish(p: Param, shape: TermShape | NoShape): Unit = shape match
       case NoShape => ()
       case sh: TermShape =>
         if isOwnedSym(p.sym) && p.sym.shapes.add(sh) then p.sym.shapeListeners.foreach(_(sh))
-    listenTerm(args):
-      case Marked(tuple: TupleShape, marks) =>
-        val segments = tuple.segments
-        val fields = segments.collect { case field: TupleShape.Field => field }
-        val unknownLength = fields.length != segments.length
-        val providedCount = fields.length
-        val arityMismatch = (!unknownLength && providedCount < expectedCount) || (r.isEmpty && providedCount > expectedCount)
-        if arityMismatch then
-          if reportedCounts.add(providedCount) then
-            val count = if unknownLength then msg"at least ${providedCount}" else msg"${providedCount}"
-            resolError(src,
-              msg"${funSh.describe.capitalize} expected ${expectedCount} ${
-                "argument".pluralized(expectedCount)}, but got ${count}" -> funSh.toLoc :: Nil)
-        // Positions before the first unknown segment are definite. A rest parameter
-        // can receive the remaining structure without knowing its total length.
-        val prefix = segments.takeWhile(_.isInstanceOf[TupleShape.Field]).collect:
-          case field: TupleShape.Field => field
-        ps.lazyZip(prefix).foreach: (p, arg) =>
-          if p.sign.isEmpty then listenTerm(arg.field.term): sh =>
-            publish(p, sh.exit(arg.marks).exit(marks).enter(mss))
-        if unknownLength && !arityMismatch && (prefix.length < expectedCount || r.isEmpty) then
-          reportUnknownLength()
-        r.filter(_ => prefix.length >= expectedCount).foreach: p =>
-          // A residual tuple can mix fields from several captured spreads and the
-          // caller. Keep their individual marks when forwarding it to another call.
-          val rest = if ps.isEmpty then tuple
-            else TupleShape(tuple.source, TupleShape.Rest(tuple, expectedCount) :: Nil)
+    def matchSegments(tuple: TupleShape, marks: Marks): Unit =
+      val segments = tuple.segments
+      val knownCount = segments.count(_.isInstanceOf[TupleShape.Field])
+      val unknownLength = knownCount != segments.length
+      val arityMismatch = (!unknownLength && knownCount < expectedCount) || (r.isEmpty && knownCount > expectedCount)
+      if arityMismatch && reportedCounts.add(knownCount) then
+        val count = if unknownLength then msg"at least ${knownCount}" else msg"${knownCount}"
+        resolError(src,
+          msg"${funSh.describe.capitalize} expected ${expectedCount} ${
+            "argument".pluralized(expectedCount)}, but got ${count}" -> funSh.toLoc :: Nil)
+      // Distribute only over successful argument counts. With no rest parameter,
+      // the total arity anchors known suffix fields even after an unknown spread.
+      // With a rest parameter, positions after an unknown spread have no upper
+      // bound; consider every remaining fixed position and retain every rest tail.
+      if !arityMismatch then
+        val extra = (expectedCount - knownCount).max(0)
+        def assign(segment: TupleShape.Segment, positions: Range): Unit =
+          positions.foreach: index =>
+            val p = ps(index)
+            if p.sign.isEmpty then segment match
+              case TupleShape.Field(field, inner) => listenTerm(field.term): sh =>
+                publish(p, sh.exit(inner).exit(marks).enter(mss))
+              case TupleShape.Unknown(source, inner) =>
+                publish(p, UnknownValueShape(source).exit(inner).exit(marks).enter(mss))
+        def loop(rest: Ls[TupleShape.Segment], before: Int, unknownBefore: Bool): Unit = rest match
+          case Nil => ()
+          case (field: TupleShape.Field) :: tail =>
+            val unknownAfter = tail.exists(_.isInstanceOf[TupleShape.Unknown])
+            // With no later unknown segment, preceding spreads must supply all
+            // missing fixed arguments, even when the function has a rest parameter.
+            val first = if unknownBefore && !unknownAfter then before + extra else before
+            val last = if !unknownBefore then before
+              else if r.nonEmpty then expectedCount - 1 else before + extra
+            assign(field, first.max(0) until (last + 1).min(expectedCount))
+            loop(tail, before + 1, unknownBefore)
+          case (unknown: TupleShape.Unknown) :: tail =>
+            val end = if r.nonEmpty then expectedCount else before + extra
+            assign(unknown, before until end)
+            loop(tail, before, true)
+        loop(segments, 0, false)
+        r.foreach: p =>
+          // If consumption reaches an unknown segment, some subsequent fields
+          // may have been consumed too. Approximate that optional prefix with an
+          // unknown segment, retaining the suffix that must remain. Publishing
+          // separate concrete tails here would turn uncertainty into false arity
+          // failures when the rest tuple is spread into another call.
+          def drop(xs: Ls[TupleShape.Segment], count: Int, approximate: Bool): Ls[TupleShape.Segment] =
+            if count == 0 then xs
+            else xs match
+              case Nil => Nil
+              case (_: TupleShape.Field) :: rest => drop(rest, count - 1, approximate)
+              case (_: TupleShape.Unknown) :: rest =>
+                val suffix = drop(rest, count, false)
+                if approximate then TupleShape.Unknown(tuple.source, Nil) :: suffix else suffix
+          val remaining = drop(segments, expectedCount, true)
+          val rest = if ps.isEmpty then tuple else TupleShape(tuple.source, TupleShape.Rest(tuple, remaining) :: Nil)
           publish(p, rest.exit(marks).enter(mss))
-      case sh @ Marked(_: UnknownTupleShape, _) =>
-        if ps.isEmpty && r.nonEmpty then r.foreach(p => publish(p, sh.enter(mss)))
-        else reportUnknownLength()
+    listenTerm(args):
+      case Marked(tuple: TupleShape, marks) => matchSegments(tuple, marks)
       case _ => resolError(src, msg"Expected an argument tuple." -> args.toLoc :: Nil)
   
   /** Resolve every constructor pattern through the same symbolic interpretation.
@@ -284,6 +308,13 @@ class NewResolver:
     listenTerm(scrutinee)(sh => matchShapePat(sh, pattern)(_ => ()))
   
   def appShape(lhs: TermShape, args: Term, res: App): Unit =
+    // An unknown element used as a callee stays a dynamic call. Propagate its
+    // unknown result rather than inferring callability from a different candidate.
+    lhs match
+      case Marked(_: UnknownValueShape, _) =>
+        if res.shapes.add(lhs) then res.shapeListeners.foreach(_(lhs))
+        return
+      case _ => ()
     // log(s"appShape? lhs = $lhs, args = $args, res = $res")
     val sh = appShapes.getOrElseUpdate((lhs, res.resSym), {
       log(s"appShape: lhs = ${lhs.shwDbg}, args = ${args.showDbg}, res = ${res.showDbg}")
@@ -407,7 +438,11 @@ class NewResolver:
     sel.cls match
       case N => listenTerm(sel.prefix): shape =>
         log(s"newSel: sel = ${sel.showDbg}, shape = ${shape.shwDbg}")
-        member(shape.getMember(sel.id.name), msg"${shape.describe.capitalize}", shape.toLoc)
+        shape match
+          case Marked(_: UnknownValueShape, _) =>
+            sel.isErroneous = true
+            resolError(sel, msg"Cannot resolve member '${sel.id.name}' of a value with unknown shape." -> shape.toLoc :: Nil)
+          case _ => member(shape.getMember(sel.id.name), msg"${shape.describe.capitalize}", shape.toLoc)
       case S(cls) =>
         listenClass(cls)((cd, marks) =>
           val candidate = cd.sym -> marks
@@ -618,13 +653,12 @@ class NewResolver:
               listenTerm(term): sh =>
                 if seen.add(sh) then sh match
                   case Marked(shape: TupleShape, marks) =>
-                    val spread: TupleShape | UnknownTupleShape =
-                      if shape.containsSpread(shape.source, marks) then UnknownTupleShape(shape.source) else shape
+                    val spread = if shape.containsSpread(shape.source, marks) then TupleShape.unknown(shape.source) else shape
                     expand(rest, TupleShape.Spread(spread, marks) :: reversed)
-                  case Marked(shape: UnknownTupleShape, marks) =>
-                    expand(rest, TupleShape.Spread(shape, marks) :: reversed)
-                  case _ =>
-                    resolError(tuple, msg"Cannot determine the length of this spread." -> term.toLoc :: Nil)
+                  case Marked(_, marks) =>
+                    // Opaque iterables (e.g. external Arrays) have no resolved
+                    // element layout. Their runtime spread is still permitted.
+                    expand(rest, TupleShape.Spread(TupleShape.unknown(term), marks) :: reversed)
           expand(tuple.fields, Nil)
     case intro: IntroTerm =>
       val sh = introShapes.getOrElseUpdate(intro, {

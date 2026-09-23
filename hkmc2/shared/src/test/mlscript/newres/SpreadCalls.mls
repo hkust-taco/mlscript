@@ -79,15 +79,9 @@ four(...[1, 2], ...[3, 4], 5)
 //│ ╙──     	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] Error: Function 'four' expected 4 arguments but got 5
 
-// An unknown-length value is not reported as a proven argument count.
-:e
+// Opaque values are left to the runtime spread operation to validate.
+:re
 four(...Box(1))
-//│ ╔══[COMPILATION ERROR] Resolution error in tuple literal
-//│ ║  l.84: 	four(...Box(1))
-//│ ║        	    ^^^^^^^^^^^
-//│ ╟── Cannot determine the length of this spread.
-//│ ║  l.84: 	four(...Box(1))
-//│ ╙──      	        ^^^^^^
 //│ ═══[RUNTIME ERROR] TypeError: Spread syntax requires ...iterable[Symbol.iterator] to be a function
 
 // Multiple alternatives for each spread are retained as their shapes arrive.
@@ -131,7 +125,7 @@ fun varying(xs, ys) = four(...xs, ...ys)
 fun knownGood() = varying([1], [2, 3, 4])
 fun laterBad() = varying([5], [6, 7])
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.130: 	fun varying(xs, ys) = four(...xs, ...ys)
+//│ ║  l.124: 	fun varying(xs, ys) = four(...xs, ...ys)
 //│ ║         	                      ^^^^^^^^^^^^^^^^^^
 //│ ╟── Function 'four' expected 4 arguments, but got 3
 //│ ║  l.5: 	fun four(a, b, c, d) = [a, b, c, d]
@@ -150,3 +144,96 @@ packed(...growing(3))
 fun keep(head, ...tail) = [head, ...tail]
 keep(9, ...growing(3), 8)
 //│ = [9, 3, 2, 1, 8]
+
+
+let arr = new Array(1,2,3,4)
+//│ arr = [1, 2, 3, 4]
+
+:sr
+[...arr]
+//│ ————————————————| Resolved |————————————————————————————————————————————————————————————————————————
+//│   [ ...arr⁰ ]
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = [1, 2, 3, 4]
+
+four(...arr)
+//│ = [1, 2, 3, 4]
+
+
+let arr = if maybe then [1, 2] else [1, 2, 3, 4]
+//│ arr = [1, 2]
+
+:e
+four(...arr)
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.167: 	four(...arr)
+//│ ║         	^^^^^^^^^^^^
+//│ ╟── Function 'four' expected 4 arguments, but got 2
+//│ ║  l.5: 	fun four(a, b, c, d) = [a, b, c, d]
+//│ ╙──     	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] Error: Function 'four' expected 4 arguments but got 2
+
+
+// Exact call arity anchors known suffixes and prefixes around opaque spreads.
+:expect [91, 92, 93]
+fun lastOfTwo(a, b) = b
+fun firstOfTwo(a, b) = a
+fun onlyOne(a) = a
+[lastOfTwo(...new Array("ignored"), Box(91)).value,
+  firstOfTwo(Box(92), ...new Array("ignored")).value,
+  onlyOne(...new Array(), Box(93)).value]
+//│ = [91, 92, 93]
+
+// Every unknown segment can supply the remaining argument slots.
+:expect [1, 2, 3, 4]
+four(...new Array(1, 2), ...new Array(3, 4))
+//│ = [1, 2, 3, 4]
+
+// Rest consumption across an unknown segment stays unknown on subsequent calls.
+:expect [1, 2, 3, 4]
+fun dropTwo(a, b, ...tail) = tail
+four(...dropTwo(...new Array(0, 0, 1, 2, 3), 4))
+//│ = [1, 2, 3, 4]
+
+// Known fields that must remain in the rest tail retain their value shapes.
+:expect 94
+fun afterOne(a, ...tail) = tail
+fun tailLast(a, b, c) = c
+tailLast(...afterOne(...new Array("ignored"), 1, 2, Box(94))).value
+//│ = 94
+
+// Unknown elements used as callees remain dynamic calls.
+:expect 95
+fun invokeUnknown(f) = f()
+invokeUnknown(...new Array(() => 95))
+//│ = 95
+
+// Unknown elements must not silently resolve against another known candidate.
+:e
+fun inspectUnknown(x) = x.value
+inspectUnknown(Box(96))
+inspectUnknown(...new Array(Box(96)))
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.213: 	fun inspectUnknown(x) = x.value
+//│ ║         	                        ^^^^^^^
+//│ ╟── Cannot resolve member 'value' of a value with unknown shape.
+//│ ║  l.215: 	inspectUnknown(...new Array(Box(96)))
+//│ ╙──       	                  ^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// Too many known fields remain a proven mismatch even with an unknown spread.
+:e
+four(...new Array(), 1, 2, 3, 4, 5)
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.226: 	four(...new Array(), 1, 2, 3, 4, 5)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Function 'four' expected 4 arguments, but got at least 5
+//│ ║  l.5: 	fun four(a, b, c, d) = [a, b, c, d]
+//│ ╙──     	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] Error: Function 'four' expected 4 arguments but got 5
+
+// Successful rest calls still require enough arguments before a known suffix.
+:expect 97
+fun invokeRest(f, x, ...tail) = f()
+invokeRest(...new Array(() => 97), Box(0))
+//│ = 97

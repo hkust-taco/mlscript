@@ -34,13 +34,8 @@ fun foo(a, ...b, c) = [a, ...b]
 //│ ║  l.32: 	fun foo(a, ...b, c) = [a, ...b]
 //│ ╙──      	           ^^^^
 
-:e
 :re
 foo(1, 2, 3)
-//│ ╔══[COMPILATION ERROR] Resolution error in tuple literal
-//│ ║  l.32: 	fun foo(a, ...b, c) = [a, ...b]
-//│ ║        	                      ^^^^^^^^^
-//│ ╙── Cannot determine the length of this spread.
 //│ ═══[RUNTIME ERROR] TypeError: 2 is not iterable
 
 
@@ -50,10 +45,10 @@ fun foo(a, ...b) = [a, ...b]
 :re
 foo()
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.51: 	foo()
+//│ ║  l.46: 	foo()
 //│ ║        	^^^^^
 //│ ╟── Function 'foo' expected 1 argument, but got 0
-//│ ║  l.47: 	fun foo(a, ...b) = [a, ...b]
+//│ ║  l.42: 	fun foo(a, ...b) = [a, ...b]
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] Error: Function 'foo' expected at least 1 argument but got 0
 
@@ -61,13 +56,13 @@ foo()
 :e
 fun foo(1) = 2
 //│ ╔══[COMPILATION ERROR] Expected a valid parameter, found integer literal
-//│ ║  l.62: 	fun foo(1) = 2
+//│ ║  l.57: 	fun foo(1) = 2
 //│ ╙──      	        ^
 
 :e
 fun foo(...1) = 2
 //│ ╔══[COMPILATION ERROR] Expected a valid parameter, found spread
-//│ ║  l.68: 	fun foo(...1) = 2
+//│ ║  l.63: 	fun foo(...1) = 2
 //│ ╙──      	        ^^^^
 
 
