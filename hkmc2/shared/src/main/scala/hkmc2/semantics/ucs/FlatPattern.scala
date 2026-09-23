@@ -57,6 +57,17 @@ enum FlatPattern extends AutoLocated:
         case (nme, als) => Vector(nme, als)
       .toVector
   
+  def show(using utils.Scope, ShowCfg, Raise): document.Document =
+    import document.*, Document.*
+    this match
+      case Lit(literal) => doc"${literal.idStr}"
+      case ClassLike(ctor, _, args, refined) =>
+        (if refined then doc"refined " else doc"") :: ctor.show ::
+          args.fold(doc"")(as => doc"(${as.map(_._1.showName).mkDocument(", ")})")
+      case Tuple(size, inf) => doc"[]${if inf then ">=" else "="}$size"
+      case Record(entries) =>
+        doc"{${entries.map((id, sym) => doc"${id.name}: ${sym.showName}").mkDocument(", ")}}"
+
   def showDbg(using DebugPrinter): Str =
     (this match
     case Lit(literal) => literal.idStr

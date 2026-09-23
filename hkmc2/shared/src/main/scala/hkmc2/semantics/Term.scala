@@ -1070,8 +1070,63 @@ sealed trait Statement extends AutoLocated, ProductWithExtraInfo, Describable:
         given IfLikeForm = form
         doc"${form.headStr} { #{  # ${split.show} #}  # }"
         // val fs = fomr match
-      case _ =>
-        doc"TODO[show:${getClass.getSimpleName}](${toString})"
+      case Missing => doc"‹missing›"
+      case TyApp(lhs, targs) => doc"${lhs.show}[${targs.map(_.show).mkDocument(", ")}]"
+      case DynSel(prefix, field, arrayIdx) =>
+        if arrayIdx then doc"${prefix.show}.[${field.show}]"
+        else doc"${prefix.show}.(${field.show})"
+      case SelProj(prefix, cls, field) => doc"${prefix.show}.${cls.show}#${field.name}"
+      case Mut(underlying) => doc"mut ${underlying.show}"
+      case CtxTup(fields) => doc"using (${fields.map(_.show).mkDocument(", ")})"
+      case SynthIf(split) => doc"if { #{  # ${split.show} #}  # }"
+      case SynthWhile(split) => doc"while { #{  # ${split.show} #}  # }"
+      case FunTy(lhs, rhs, eff) =>
+        doc"(${lhs.showAsParams} ->${eff.fold(doc"")(e => doc"{${e.show}}")} ${rhs.show})"
+      case Forall(tvs, outer, body) =>
+        val variables = tvs.map: tv =>
+          tv.sym.showName
+            :: tv.lb.fold(doc"")(b => doc" :> ${b.show}")
+            :: tv.ub.fold(doc"")(b => doc" <: ${b.show}")
+        doc"forall ${variables.mkDocument(", ")}${outer.fold(doc"")(v => doc", outer ${v.showName}")}: ${body.show}"
+      case Constrained(constraints, body) =>
+        val bounds = constraints.map(c => doc"${c.lhs.show} ${c.dir.showDbg} ${c.rhs.show}")
+        doc"[${bounds.mkDocument(", ")}] => ${body.show}"
+      case WildcardTy(in, out) =>
+        doc"in ${in.fold(doc"⊥")(_.show)} out ${out.fold(doc"⊤")(_.show)}"
+      case Rcd(mut, stats) =>
+        (if mut then doc"mut " else doc"") :: braced:
+          doc" # " :: stats.map(_.show).mkDocument(doc", # ")
+      case RcdField(field, rhs) => doc"${field.show}: ${rhs.show}"
+      case RcdSpread(record) => doc"...${record.show}"
+      case Quoted(body) => doc"""code"${body.show}""""
+      case Unquoted(body) => doc"$${${body.show}}"
+      case DynNew(cls, args) => doc"new! ${cls.show}${args.map(_.showAsParams).mkDocument()}"
+      case Asc(term, ty) => doc"(${term.show}: ${ty.show})"
+      case CompType(lhs, rhs, pol) => doc"(${lhs.show} ${if pol then "|" else "&"} ${rhs.show})"
+      case Neg(rhs) => doc"~(${rhs.show})"
+      case Region(name, body) => doc"region ${name.showName} in ${body.show}"
+      case RegRef(reg, value) => doc"(${reg.show}).ref ${value.show}"
+      case Assgn(lhs, rhs) => doc"${lhs.show} := ${rhs.show}"
+      case SetRef(ref, value) => doc"${ref.show} := ${value.show}"
+      case Drop(term) => doc"drop ${term.show}"
+      case Deref(ref) => doc"!(${ref.show})"
+      case Ret(result) => doc"return ${result.show}"
+      case Throw(result) => doc"throw ${result.show}"
+      case Label(label, _, body, _) => doc"do ${label.showName}: ${body.show}"
+      case Break(label, _, value) => doc"${label.showName}.break${value.fold(doc"")(v => doc" ${v.show}")}"
+      case Continue(label) => doc"${label.showName}.continue"
+      case Try(body, finallyDo) => doc"try ${body.show} finally ${finallyDo.show}"
+      case Annotated(annot, target) => doc"${annot.show} ${target.show}"
+      case Handle(lhs, rhs, args, _, defs, body) =>
+        doc"handle ${lhs.showName} = ${rhs.show}${args.map(_.showAsParams).mkDocument()} with { #{  # ${
+          defs.map(_.td.show).mkDocument(doc" # ")} #}  # } in ${body.show}"
+      case td: TypeDef =>
+        td.annotations.map(_.show :: " ").mkDocument()
+          :: doc"type ${td.bsym.showName}::${td.sym.showName}"
+          :: (if td.tparams.isEmpty then doc""
+            else doc"[${td.tparams.map(_.sym.showName).mkDocument(", ")}]")
+          :: td.rhs.fold(doc"")(rhs => doc" = ${rhs.show}")
+      case SetConfig(_) => doc"#config(...)"
     
     this match
     case t: Resolvable => t.expansion match

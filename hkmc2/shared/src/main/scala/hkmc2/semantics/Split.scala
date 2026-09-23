@@ -126,6 +126,17 @@ enum Split extends AutoLocated with ProductWithTail:
       (sym.body.freeSplitSyms ++ tail.freeSplitSyms) - sym
     case Split.UseSplit(sym) => sym.body.freeSplitSyms + sym
   
+  def show(using utils.Scope, ShowCfg, Raise): document.Document =
+    import document.*, Document.*
+    this match
+      case Cons(Branch(scrutinee, pattern, continuation), tail) =>
+        doc"${scrutinee.show} is ${pattern.show} then { #{  # ${continuation.show} #}  # } # ${tail.show}"
+      case Let(sym, term, tail) => doc"let ${sym.showName} = ${term.show}; # ${tail.show}"
+      case Else(default) => doc"else ${default.show}"
+      case End => doc""
+      case LetSplit(sym, tail) => doc"let-split ${sym.showName} = { #{  # ${sym.body.show} #}  # }; # ${tail.show}"
+      case UseSplit(sym) => doc"$${${sym.showName}}"
+
   final def showDbg(using DebugPrinter): String = this match
     case Split.Cons(head, tail) => s"${head.showDbg}; ${tail.showDbg}"
     case Split.Let(name, term, tail) => s"let ${name} = ${term.showDbg}; ${tail.showDbg}"
