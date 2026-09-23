@@ -1,5 +1,5 @@
 :..
 :wasm
-#lang(strictResolution: true)
+#lang(strictResolution: false)
 //│ Wasm result:
 //│ = {}

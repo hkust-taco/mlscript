@@ -97,7 +97,7 @@ object Config:
   case class Language(
     allowUnresolvedAccesses: Bool,
     useNewResolution: Bool,
-    strictResolution: Bool, // Whether the new resolution is done pedantically
+    strictResolution: Bool, // Reject multiple resolved selection targets as well as missing targets
     typeCheck: Opt[TypeChecking],
   )(val versionName: Str)
   

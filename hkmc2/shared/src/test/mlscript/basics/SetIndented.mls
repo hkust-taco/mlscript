@@ -12,7 +12,7 @@ set
 //│ ╔══[COMPILATION ERROR] Cannot use 'this' outside of an object scope
 //│ ║  l.8: 	  (this).pc = 0
 //│ ╙──     	   ^^^^
-//│ ╔══[COMPILATION ERROR] Assignment requires an unambiguous term member
+//│ ╔══[COMPILATION ERROR] This selection of member 'pc' has no resolved target
 //│ ║  l.6: 	set this.pc = 0
 //│ ╙──     	    ^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
@@ -24,7 +24,7 @@ set
 //│ ╔══[COMPILATION ERROR] Cannot use 'this' outside of an object scope
 //│ ║  l.23: 	  this.pc = 0
 //│ ╙──      	  ^^^^
-//│ ╔══[COMPILATION ERROR] Assignment requires an unambiguous term member
+//│ ╔══[COMPILATION ERROR] This selection of member 'pc' has no resolved target
 //│ ║  l.23: 	  this.pc = 0
 //│ ╙──      	  ^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.

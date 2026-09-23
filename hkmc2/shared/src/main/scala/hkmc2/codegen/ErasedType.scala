@@ -259,6 +259,7 @@ object ErasedType:
     // * An intersection is never decomposed: narrowing to one member would call for a GLB, which this lattice
     // * cannot express.
     case CompType(_, _, false) => S(ErasedType.Unknown)
+    case DynTy() => S(ErasedType.Unknown)
     case UnitVal() => S(ErasedType.Unit)
     // * A written arrow denotes a function value, and every function value is a `Function`.
     case FunTy(_, _, _) => S(ErasedType.Function(rsc = S(false)))

@@ -83,6 +83,7 @@ class NewResolver:
           val l = typeResolution(left)
           val r = typeResolution(right)
           result.publish(if union then TypeShape.Union(l, r) else TypeShape.Intersection(l, r))
+        case DynTy() => result.publish(TypeShape.Dynamic)
         case _: FunTy => result.publish(TypeShape.Function)
         case UnitVal() => result.publish(TypeShape.Unit)
         case SimpleRef(sym: VarSymbol) if sym.decl.exists(_.isInstanceOf[TyParam]) =>
@@ -110,6 +111,7 @@ class NewResolver:
     val visited = mutable.Set.empty[TypeResolution]
     def follow(resolution: TypeResolution): Unit = if visited.add(resolution) then
       resolution.listen:
+        case TypeShape.Dynamic => listener(DynShape())
         case TypeShape.Nominal(defn) =>
           listenExt(defn.ext, ext => listener(selfShapes.getOrElseUpdate(defn.sym, BaseShape(defn, ext))))
         case TypeShape.Alias(_, rhs) => rhs.foreach(follow)
@@ -156,8 +158,8 @@ class NewResolver:
             if p.sign.isEmpty then segment match
               case TupleShape.Field(field, inner) => listenTerm(field.term): sh =>
                 publish(p, sh.exit(inner).exit(marks).enter(mss))
-              case TupleShape.Unknown(source, inner) =>
-                publish(p, UnknownValueShape(source).exit(inner).exit(marks).enter(mss))
+              case TupleShape.Unknown(_, inner, value) =>
+                publish(p, value.exit(inner).exit(marks).enter(mss))
         def loop(rest: Ls[TupleShape.Segment], before: Int, unknownBefore: Bool): Unit = rest match
           case Nil => ()
           case (field: TupleShape.Field) :: tail =>
@@ -185,9 +187,13 @@ class NewResolver:
             else xs match
               case Nil => Nil
               case (_: TupleShape.Field) :: rest => drop(rest, count - 1, approximate)
+              case (unknown: TupleShape.Unknown) :: Nil =>
+                // Consuming a prefix changes the length, but not the element
+                // shape, when there are no following fields to merge into it.
+                if approximate then unknown :: Nil else Nil
               case (_: TupleShape.Unknown) :: rest =>
                 val suffix = drop(rest, count, false)
-                if approximate then TupleShape.Unknown(tuple.source, Nil) :: suffix else suffix
+                if approximate then TupleShape.Unknown(tuple.source, Nil, UnknownValueShape(tuple.source)) :: suffix else suffix
           val remaining = drop(segments, expectedCount, true)
           val rest = if ps.isEmpty then tuple else TupleShape(tuple.source, TupleShape.Rest(tuple, remaining) :: Nil)
           publish(p, rest.exit(marks).enter(mss))
@@ -332,7 +338,7 @@ class NewResolver:
     // An unknown element used as a callee stays a dynamic call. Propagate its
     // unknown result rather than inferring callability from a different candidate.
     lhs match
-      case Marked(_: UnknownValueShape, _) =>
+      case Marked(_: (DynShape | UnknownValueShape), _) =>
         if res.shapes.add(lhs) then res.shapeListeners.foreach(_(lhs))
         return
       case _ => ()
@@ -412,6 +418,12 @@ class NewResolver:
         if !host.resolvedTargets.contains(field.tsym) then host.resolvedTargets ::= field.tsym
         publish(UnknownValueShape(field.rhs))
 
+  private def publishDynamic(host: NewResolvable & ShapeHost, marks: Ls[Marks]): Unit =
+    DynShape().exit(marks) match
+      case shape: TermShape =>
+        if host.shapes.add(shape) then host.shapeListeners.foreach(_(shape))
+      case NoShape => ()
+
   private def unknownMember(host: NewResolvable, name: Str, reason: MemberLookup.Uncertainty, loc: Opt[Loc]): Unit =
     host.isErroneous = true
     val message = reason match
@@ -429,6 +441,9 @@ class NewResolver:
             val candidate = prefix -> member.memberSymbol
             if !ref.resolvedMembers.contains(candidate) then ref.resolvedMembers ::= candidate
             publishMember(ref, member, ref.resSym, marks)
+          case MemberLookup.Dynamic(marks) =>
+            if !ref.dynamicPrefixes.contains(prefix) then ref.dynamicPrefixes ::= prefix
+            publishDynamic(ref, marks)
           case MemberLookup.Missing =>
             // A known miss in one wildcard source is not an error: another may
             // provide the name. Lowering diagnoses references with no candidates.
@@ -477,6 +492,9 @@ class NewResolver:
         log(s"newSel member: bms = ${bms.memberSymbol.showDbg}, mss = ${marks.map(_.showDbg)}")
         if !sel.resolvedMembers.contains(bms.memberSymbol) then sel.resolvedMembers ::= bms.memberSymbol
         publishMember(sel, bms, sel.resSym, marks)
+      case MemberLookup.Dynamic(marks) =>
+        sel.hasDynamicTarget = true
+        publishDynamic(sel, marks)
       case MemberLookup.Missing =>
         sel.isErroneous = true
         resolError(sel, msg"$description does not contain member '${sel.id.name}'" -> loc :: Nil)
@@ -717,6 +735,8 @@ class NewResolver:
     trm match
     case _: SynthSel =>
       lastWords("Synthetic selections must not enter new resolution")
+    case Asc(_, sign) => listenTypeValues(sign)(listener)
+    case _: DynSel | _: DynNew => listener(DynShape())
     case TyApp(underlying, _) => listen(underlying, discardMarks)(listener)
     case Mut(underlying) => listenTerm(underlying)(listener)
     case tuple: Tup => listenAggregate(tuple, listener): publish =>
@@ -748,6 +768,9 @@ class NewResolver:
                     then TupleShape.unknown(shape.source)
                     else shape
                   expand(rest, TupleShape.Spread(spread, marks) :: reversed)
+                case Marked(_: DynShape, marks) =>
+                  val spread = TupleShape(term, TupleShape.Unknown(term, Nil, DynShape()) :: Nil)
+                  expand(rest, TupleShape.Spread(spread, marks) :: reversed)
                 case Marked(_, marks) =>
                   // Opaque iterables (e.g. external Arrays) have no resolved
                   // element layout. Their runtime spread is still permitted.
@@ -770,6 +793,7 @@ class NewResolver:
                     then RecordShape(shape.source, RecordShape.Unknown :: Nil)
                     else shape
                   expand(rest, RecordShape.Spread(spread, marks) :: reversed)
+                case Marked(_: DynShape, marks) => expand(rest, RecordShape.Dynamic(marks :: Nil) :: reversed)
                 case _ => expand(rest, RecordShape.Unknown :: reversed)
           case _ :: rest => expand(rest, reversed)
         expand(record.stats, Nil)
@@ -779,6 +803,8 @@ class NewResolver:
         IntroShape(intro)
       })
       listener(sh)
+    case Ref(sym) if sym is sym.getState.globalThisSymbol => listener(DynShape())
+    case SelfRef(sym) if sym is sym.getState.globalThisSymbol => listener(DynShape())
     case ref @ Ref(loc: LocalSymbol) =>
       loc.shapes.foreach(listener)
       loc.shapeListeners += listener

@@ -360,6 +360,8 @@ sealed trait NewRefImpl extends AnyRefImpl:
 
 sealed trait NewSelImpl extends NewResolvableImpl:
   self: Term.NewSel =>
+  // At least one receiver permits runtime lookup without a static member symbol.
+  var hasDynamicTarget: Bool = false
   var resolvedMembers: Ls[BlockMemberSymbol] = Nil // * filled during resolution
   // Class identity and captures must survive even when candidates share an inherited member.
   var resolvedClasses: Ls[(ClassSymbol, Ls[Marks])] = Nil
@@ -373,6 +375,7 @@ sealed trait UnresolvedRefImpl extends NewResolvableImpl:
   // Retain the receiver as well as the definition: two instances can expose
   // the same member symbol without denoting the same storage location.
   var resolvedMembers: Ls[(Term, BlockMemberSymbol)] = Nil
+  var dynamicPrefixes: Ls[Term] = Nil
 
 
 enum Term extends Statement, ShapePublisher:
@@ -381,6 +384,7 @@ enum Term extends Statement, ShapePublisher:
 
   case Error()
   case UnitVal()
+  case DynTy()
   case Missing // Placeholder terms that were not elaborated due to the "lightweight" elaboration mode `Mode.Light`
   case Lit(lit: Literal) extends Term
   
@@ -587,7 +591,7 @@ enum Term extends Statement, ShapePublisher:
       val bodyFree = body.freeVars
       if bodyFree(result.nme) then bodyFree - result.nme else bodyFree
     case Forall(_, _, body) => body.freeVars
-    case Error | Missing | _: Lit | _: UnitVal | _: LeadingDotSel | _: Continue => Set.empty
+    case Error | Missing | _: Lit | _: DynTy | _: UnitVal | _: LeadingDotSel | _: Continue => Set.empty
     case Break(_, result, value) => value.iterator.flatMap(_.freeVars).toSet + result.nme
     case _ => subTerms.iterator.flatMap(_.freeVars).toSet
 
@@ -628,6 +632,7 @@ enum Term extends Statement, ShapePublisher:
     val that = this match
       case Error() => Error()
       case UnitVal() => UnitVal()
+      case DynTy() => DynTy()
       case Missing => Missing
       case Lit(Tree.StrLit(value)) => Lit(Tree.StrLit(value))
       case Lit(Tree.IntLit(value)) => Lit(Tree.IntLit(value))
@@ -641,14 +646,17 @@ enum Term extends Statement, ShapePublisher:
         val copy = NewSel(prefix.mkClone, id, cls.map(_.mkClone))(term.resSym)
         copy.resolvedMembers = term.resolvedMembers
         copy.resolvedClasses = term.resolvedClasses
+        copy.hasDynamicTarget = term.hasDynamicTarget
         copyNewResolution(term, copyShapes(term, copy))
       case term @ UnresolvedRef(prefixes, id) =>
         val clonedPrefixes = prefixes.map(_.mkClone)
         val copy = UnresolvedRef(clonedPrefixes, id)(term.resSym)
-        copy.resolvedMembers = term.resolvedMembers.map: (receiver, member) =>
+        def cloneReceiver(receiver: Term): Term =
           val index = prefixes.indexWhere(_ is receiver)
           assert(index >= 0, "A wildcard candidate must belong to an opened prefix")
-          clonedPrefixes(index) -> member
+          clonedPrefixes(index)
+        copy.resolvedMembers = term.resolvedMembers.map((receiver, member) => cloneReceiver(receiver) -> member)
+        copy.dynamicPrefixes = term.dynamicPrefixes.map(cloneReceiver)
         copyNewResolution(term, copyShapes(term, copy))
       case Capture(base, thru) => Capture(base.mkClone, thru)
       case term @ Resolved(t, sym) => copyResolution(term, Resolved(t.mkClone, sym)(term.typ))
@@ -816,6 +824,7 @@ sealed trait Statement extends AutoLocated, ProductWithExtraInfo, Describable:
     val desc = this match
       case Error() => "‹error›"
       case UnitVal() => "unit value"
+      case DynTy() => "dynamic type"
       case _: Rcd => "record literal"
       case Lit(lit) => lit.describeLit
       case Ref(sym) => "reference"
@@ -891,7 +900,7 @@ sealed trait Statement extends AutoLocated, ProductWithExtraInfo, Describable:
     case Blk(stats, res) => stats.toVector :+ res
     case _ => subTerms
   def subTerms: Vector[Term] = this match
-    case Error() | Missing | _: Lit | _: AnyRef_ | _: UnitVal => Vector.empty
+    case Error() | Missing | _: Lit | _: AnyRef_ | _: DynTy | _: UnitVal => Vector.empty
     case Capture(base, thru) => Vector.single(base)
     case Resolved(t, sym) => Vector.single(t)
     case App(lhs, rhs) => Vector.double(lhs, rhs)
@@ -989,6 +998,7 @@ sealed trait Statement extends AutoLocated, ProductWithExtraInfo, Describable:
     def res: Document = this match
       case lit: Lit => lit.lit.idStr
       case UnitVal() => doc"()"
+      case DynTy() => doc"dyn"
       case r: SimpleRef =>
         r.sym match
         case _: BuiltinSymbol => r.sym.nme
@@ -1173,6 +1183,7 @@ sealed trait Statement extends AutoLocated, ProductWithExtraInfo, Describable:
   
   def showPlain(using DebugPrinter): Str = this match
     case Term.UnitVal() => "()"
+    case Term.DynTy() => "dyn"
     case Lit(lit) => lit.idStr
     case Resolved(t, sym) => t.showPlain
     case r @ Ref(symbol) => symbol.showAsPlain

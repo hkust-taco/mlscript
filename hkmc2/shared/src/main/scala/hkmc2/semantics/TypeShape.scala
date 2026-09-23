@@ -15,6 +15,7 @@ enum TypeShape:
   case Intersection(left: TypeResolution, right: TypeResolution)
   case Function
   case Unit
+  case Dynamic
   case Abstract
 
 /** Candidates are published during elaboration. Erasure reads the resulting graph; it
@@ -68,7 +69,7 @@ final class TypeResolution(val source: Term, report: Ls[(Message, Opt[Loc])] => 
           case _ => ErasedType.Unknown
         case Alias(_, rhs) :: Nil => rhs.fold(ErasedType.Unknown)(_.erase(next))
         case Union(left, right) :: Nil => ErasedType.union(left.erase(next), right.erase(next))
-        case Intersection(_, _) :: Nil | Abstract :: Nil => ErasedType.Unknown
+        case Intersection(_, _) :: Nil | Dynamic :: Nil | Abstract :: Nil => ErasedType.Unknown
         case Function :: Nil => ErasedType.Function(S(false))
         case Unit :: Nil => ErasedType.Unit
         case Nil =>

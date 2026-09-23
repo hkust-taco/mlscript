@@ -1413,6 +1413,7 @@ extends Importer:
         val body = term(rhs, interp)
         Term.Constrained(constraints, body)
       case _ => lastWords(s"Unexpected lambda parameter shape: $lhs")
+    case Keywrd(Keyword.`dyn`) => Term.DynTy().withLocOf(tree)
     case InfixApp(lhs, Keywrd(Keyword.`as`), rhs) =>
       Term.Asc(subterm(lhs, interp), subterm(rhs, Tpe))
     case InfixApp(lhs, Keywrd(Keyword.`:`), rhs) =>

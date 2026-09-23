@@ -648,10 +648,17 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
       case _ => false
   
   /** Consume wildcard lookup results, retaining the receiver selected by resolution. */
-  private def openSelection(ref: UnresolvedRef)(k: (Term, BlockMemberSymbol, DefinitionSymbol[?]) => Block)(using LoweringCtx): Block =
-    if ref.isErroneous then compError else ref.resolvedMembers.distinct match
-      case (prefix, member) :: Nil => ref.resolvedTargets.distinct match
-        case target :: Nil => k(prefix, member, target)
+  private def openSelection(ref: UnresolvedRef)(k: (Term, Opt[BlockMemberSymbol], Opt[DefinitionSymbol[?]]) => Block)(using LoweringCtx): Block =
+    // A dynamic candidate also covers known fields on the same receiver. Keep
+    // other receivers distinct: a wildcard name must identify which object to read.
+    val dynamic = ref.dynamicPrefixes.distinct
+    val candidates = ref.resolvedMembers.distinct.filterNot((prefix, _) => dynamic.contains(prefix))
+      .map((prefix, member) => prefix -> S(member)) ::: dynamic.map(_ -> N)
+    if ref.isErroneous then compError else candidates match
+      case (prefix, N) :: Nil => k(prefix, N, N)
+      case (prefix, member @ S(_)) :: Nil => ref.resolvedTargets.distinct match
+        case target :: Nil => k(prefix, member, S(target))
+        case targets if targets.nonEmpty && !strictResolution => k(prefix, member, N)
         case targets => fail:
           ErrorReport(msg"Wildcard-open reference '${ref.id.name}' requires one resolved definition" -> ref.toLoc ::
             targets.map(target => msg"target: ${target.describeKind}" -> target.toLoc),
@@ -662,10 +669,43 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
       case candidates => fail:
         ErrorReport(msg"Wildcard-open reference '${ref.id.name}' is ambiguous" -> ref.toLoc ::
           candidates.flatMap: (prefix, member) =>
-            (msg"candidate: ${member.describe} '${member.nme}' defined here" -> member.toLoc) ::
-            (msg"Opened here" -> prefix.toLoc) :: Nil
+            member.toList.map(member => msg"candidate: ${member.describe} '${member.nme}' defined here" -> member.toLoc) :::
+              (msg"Opened here" -> prefix.toLoc) :: Nil
           ,
           source = Diagnostic.Source.Compilation)
+
+  /** Validate source selection once, then let reads, calls, and writes consume
+    * its runtime receiver, property name, and optional static definition. */
+  private def newSelection(sel: NewSel)(k: (Term, Tree.Ident, Opt[DefinitionSymbol[?]]) => Block)(using LoweringCtx): Block =
+    val NewSel(prefix, id, _) = sel
+    if !checkProjection(sel) || sel.isErroneous then compError
+    else if sel.hasDynamicTarget then k(prefix, memberIdent(id, N), N)
+    else sel.resolvedTargets.distinct match
+      case Nil => fail:
+        ErrorReport(msg"This selection of member '${id.name}' has no resolved target" -> sel.toLoc :: Nil,
+          source = Diagnostic.Source.Compilation)
+      case target :: Nil =>
+        // For `r = {make: C}`, the pattern head `r.make` resolves to class C,
+        // but the generated property read must use `make`. resolvedMembers holds
+        // the property names; target identifies the definition used by the pattern.
+        sel.resolvedMembers.map(_.nme).distinct match
+          case name :: Nil =>
+            k(prefix, new Tree.Ident(name).withLocOf(id), S(target))
+          case Nil => k(prefix, definitionIdent(id, target), S(target))
+          case _ => fail:
+            ErrorReport(msg"This selection of member '${id.name}' has multiple resolved member names" -> sel.toLoc ::
+              sel.resolvedMembers.map(member => msg"candidate: ${member.describe} '${member.nme}'" -> member.toLoc),
+              source = Diagnostic.Source.Compilation)
+      case targets =>
+        if strictResolution then fail:
+          ErrorReport(
+            msg"This selection of member '${id.name}' is ambiguous, as it has multiple resolved targets" -> sel.toLoc ::
+            targets.map: target =>
+              val owner = target.asTrm.flatMap(_.owner).fold("")(o => s" in ${o.asBlkMember.get.describe} '${o.nme}'")
+              msg"target: ${target.describeKind} '${target.nme}'${owner}" -> target.toLoc
+            ,
+            source = Diagnostic.Source.Compilation)
+        else k(prefix, memberIdent(id, N), N)
 
   /** A projection must identify its class as well as its member: different
     * classes can inherit the same definition, and wildcard receivers can differ. */
@@ -943,16 +983,16 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
       case trgt :: Nil =>
         ref(t, annots, S(trgt), inStmtPos = inStmtPos)(k)
       case ts =>
-        if strictResolution && !t.isErroneous then raise:
+        if strictResolution then fail:
           ErrorReport(
             msg"Member reference '${bms.nme}' is ambiguous, as it has multiple resolved targets" -> t.toLoc ::
               ts.map: t =>
                 msg"target: ${t.describeKind}" -> t.toLoc
               , S(t), source = Diagnostic.Source.Compilation)
-        compError
+        else ref(t, annots, N, inStmtPos = inStmtPos)(k)
     case ref: UnresolvedRef =>
       openSelection(ref)((prefix, member, target) =>
-        setupNamedSelection(prefix, memberIdent(ref.id, S(member)), S(target))(k))
+        setupNamedSelection(prefix, memberIdent(ref.id, member), target)(k))
     case Capture(base, thru) =>
       term(base, inStmtPos = inStmtPos)(k)
     case t @ st.Ref(sym) =>
@@ -1103,6 +1143,12 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
       instantiated match
       // * Due to whacky JS semantics, we need to make sure that selections leading to a call
       // * are preserved in the call and not moved to a temporary variable.
+      case sel: NewSel => newSelection(sel): (prefix, name, target) =>
+        subTerm_nonTail(prefix): p =>
+          conclude(Select(p, name)(target)(false).withLocOf(sel))
+      case ref: UnresolvedRef => openSelection(ref): (prefix, member, target) =>
+        subTerm_nonTail(prefix): p =>
+          conclude(Select(p, memberIdent(ref.id, member))(target)(false).withLocOf(ref))
       case sel @ Sel(prefix, nme) =>
         subTerm(prefix): p =>
           conclude(Select(p, nme)(selSymbol(sel))(false).withLocOf(sel))
@@ -1160,27 +1206,29 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
       case ref: UnresolvedRef =>
         openSelection(ref): (prefix, member, target) =>
           target match
-            case sym: TermSymbol =>
+            case S(sym: TermSymbol) =>
               subTerm_nonTail(prefix): p =>
                 subTerm_nonTail(rhs): r =>
-                  AssignField(p, memberIdent(ref.id, S(member)), castTo(r, sym.erasedType, ref.toLoc), k(unit))(S(sym))
+                  AssignField(p, memberIdent(ref.id, member), castTo(r, sym.erasedType, ref.toLoc), k(unit))(S(sym))
+            case N if ref.resolvedTargets.forall(_.isInstanceOf[TermSymbol]) =>
+              subTerm_nonTail(prefix): p =>
+                subTerm_nonTail(rhs): r =>
+                  AssignField(p, memberIdent(ref.id, member), r, k(unit))(N)
             case _ => fail:
               ErrorReport(msg"Assignment requires a term member" -> ref.toLoc :: Nil,
                 source = Diagnostic.Source.Compilation)
-      case sel @ NewSel(prefix, nme, _) =>
-        if !checkProjection(sel) then compError else
-          // Term resolution selects the definition; lowering only checks that
-          // the result is an unambiguous term member and emits the field write.
-          val sym = sel.resolvedTargets.distinct match
-            case sym :: Nil => sym.asTrm
-            case _ => N
-          sym match
-          case S(sym) =>
-            subTerm(prefix): p =>
+      case sel: NewSel => newSelection(sel): (prefix, name, target) =>
+        target match
+          case S(sym: TermSymbol) =>
+            subTerm_nonTail(prefix): p =>
               subTerm_nonTail(rhs): r =>
-                AssignField(p, definitionIdent(nme, sym), castTo(r, sym.erasedType, sel.toLoc), k(unit))(S(sym))
-          case N => fail:
-            ErrorReport(msg"Assignment requires an unambiguous term member" -> sel.toLoc :: Nil,
+                AssignField(p, name, castTo(r, sym.erasedType, sel.toLoc), k(unit))(S(sym))
+          case N if sel.resolvedTargets.forall(_.isInstanceOf[TermSymbol]) =>
+            subTerm_nonTail(prefix): p =>
+              subTerm_nonTail(rhs): r =>
+                AssignField(p, name, r, k(unit))(N)
+          case _ => fail:
+            ErrorReport(msg"Assignment requires a term member" -> sel.toLoc :: Nil,
               source = Diagnostic.Source.Compilation)
       case sel @ Sel(prefix, nme) =>
         subTerm(prefix): p =>
@@ -1241,33 +1289,8 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
 
     case whltrm: st.SynthWhile => ucs.Normalization(this)(whltrm)(k)
       
-    case sel @ NewSel(prefix, id, _) =>
-      if !checkProjection(sel) || sel.isErroneous then compError else sel.resolvedTargets.distinct match
-        case Nil => fail:
-          ErrorReport(msg"This selection of member '${id.name}' has no resolved target" -> sel.toLoc :: Nil,
-            source = Diagnostic.Source.Compilation)
-        case target :: Nil =>
-          // For `r = {make: C}`, the pattern head `r.make` resolves to class C,
-          // but the generated property read must use `make`. resolvedMembers holds
-          // the property names; target identifies the definition used by the pattern.
-          sel.resolvedMembers.map(_.nme).distinct match
-            case name :: Nil =>
-              setupNamedSelection(prefix, new Tree.Ident(name).withLocOf(id), S(target))(k)
-            case Nil => setupSelection(prefix, id, S(target))(k)
-            case _ => fail:
-              ErrorReport(msg"This selection of member '${id.name}' has multiple resolved member names" -> sel.toLoc ::
-                sel.resolvedMembers.map(member => msg"candidate: ${member.describe} '${member.nme}'" -> member.toLoc),
-                source = Diagnostic.Source.Compilation)
-        case targets =>
-          if strictResolution then fail:
-            ErrorReport(
-              msg"This selection of member '${id.name}' is ambiguous, as it has multiple resolved targets" -> sel.toLoc ::
-              targets.map: target =>
-                val owner = target.asTrm.flatMap(_.owner).fold("")(o => s" in ${o.asBlkMember.get.describe} '${o.nme}'")
-                msg"target: ${target.describeKind} '${target.nme}'${owner}" -> target.toLoc
-              ,
-              source = Diagnostic.Source.Compilation)
-          else setupSelection(prefix, id, N)(k)
+    case sel: NewSel => newSelection(sel)((prefix, name, target) =>
+      setupNamedSelection(prefix, name, target)(k))
         
     
     case sel @ Sel(prefix, nme) =>
@@ -1368,7 +1391,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
         msg"Cannot compile ${t.describe} term that was not elaborated (maybe elaboration was one in 'lightweight' mode?)" ->
           t.toLoc :: Nil,
         source = Diagnostic.Source.Compilation)
-    case _: CompType | _: Neg | _: Term.FunTy | _: Term.Forall | _: Term.WildcardTy | _: Term.Unquoted | _: LeadingDotSel | _: Term.Constrained | _: Term.Annotated
+    case _: Term.DynTy | _: CompType | _: Neg | _: Term.FunTy | _: Term.Forall | _: Term.WildcardTy | _: Term.Unquoted | _: LeadingDotSel | _: Term.Constrained | _: Term.Annotated
     => fail:
       ErrorReport(
         msg"Unexpected term form in expression position (${t.describe})" ->

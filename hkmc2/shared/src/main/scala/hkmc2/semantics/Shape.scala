@@ -20,6 +20,7 @@ sealed trait Shape extends ShapeLike:
     case ns: SymShape => s"SymShape(${ns.sym.showDbg})"
     case ns: NewShape => s"NewShape(${ns.cls.showDbg}, ${ns.argss.map(_.showDbg).mkString(", ")})"
     case is: IntroShape => s"IntroShape(${is.trm.showDbg})"
+    case _: DynShape => "DynShape"
     case us: UnknownValueShape => s"UnknownValueShape(${us.source.showDbg})"
     case ts: TupleShape => s"TupleShape(${ts.source.showDbg})"
     case rs: RecordShape => s"RecordShape(${rs.source.showDbg})"
@@ -233,11 +234,13 @@ end TermShape
   * searching wildcard opens, since it can introduce an additional candidate. */
 enum MemberLookup:
   case Found(member: BlockMemberSymbol | RecordMember, marks: Ls[Marks])
+  case Dynamic(marks: Ls[Marks])
   case Missing
   case Unknown(reason: MemberLookup.Uncertainty, loc: Opt[Loc])
   
   def withMarks(marks: Ls[Marks]): MemberLookup = this match
     case Found(member, inner) => Found(member, inner ::: marks)
+    case Dynamic(inner) => Dynamic(inner ::: marks)
     case _ => this
 
 object MemberLookup:
@@ -381,7 +384,7 @@ final case class TupleShape(source: Term, elements: Ls[TupleShape.Element]) exte
     case TupleShape.Rest(_, segments) => segments
     case TupleShape.Spread(shape, marks) => shape.segments.map:
       case TupleShape.Field(field, inner) => TupleShape.Field(field, inner ::: marks :: Nil)
-      case TupleShape.Unknown(shape, inner) => TupleShape.Unknown(shape, inner ::: marks :: Nil)
+      case TupleShape.Unknown(source, inner, value) => TupleShape.Unknown(source, inner ::: marks :: Nil, value)
   /** Does this candidate already depend on the given producer in the given context?
     * `source` identifies the producer by syntax-node identity; `marks` distinguish
     * its spread contexts. Inspect the selected dependency tree, not flattened
@@ -402,6 +405,15 @@ final case class TupleShape(source: Term, elements: Ls[TupleShape.Element]) exte
   def toLoc: Opt[Loc] = source.toLoc
   protected def getMemberImpl(name: Str): MemberLookup = ??? // Structural tuple members are not implemented yet.
 
+/** Values whose members and call results are deliberately checked only at runtime.
+  * Unlike UnknownValueShape, this authorizes dynamic operations; it is introduced
+  * by JavaScript interop and explicit `dyn` types, not by failed inference.
+  */
+final case class DynShape() extends NonAppTermShape:
+  def describe: Str = "dynamic value"
+  def toLoc: Opt[Loc] = N
+  protected def getMemberImpl(name: Str): MemberLookup = MemberLookup.Dynamic(Nil)
+
 /** The element of an opaque or widened spread can be any value. Keep this
   * alternative in the flow graph so other, known arguments cannot silently make
   * an unresolved member selection appear to have a unique static target.
@@ -418,10 +430,11 @@ object TupleShape:
   final case class Field(field: Fld, marks: Ls[Marks]) extends Segment
   /** An arbitrary number of arbitrary values. Use this for opaque layouts and
     * recursive widening, never for a spread whose shape has not arrived yet.
-    * The `source` field is used for user-facing diagnostic purposes. */  
-  final case class Unknown(source: Term, marks: Ls[Marks]) extends Segment
+    * `value` distinguishes dynamically typed JS elements from values whose
+    * shape was lost through widening; `source` supplies diagnostic locations. */
+  final case class Unknown(source: Term, marks: Ls[Marks], value: NonMarkedShape) extends Segment
   final case class Spread(shape: TupleShape, marks: Marks) extends Element
-  def unknown(source: Term): TupleShape = TupleShape(source, Unknown(source, Nil) :: Nil)
+  def unknown(source: Term): TupleShape = TupleShape(source, Unknown(source, Nil, UnknownValueShape(source)) :: Nil)
   /** Retain the original candidate as well as the selected residual segments:
     * flattening away the parent would hide recursive producer dependencies from
     * containsSpread, allowing recursion through rest slicing to evade widening. */
@@ -452,7 +465,9 @@ final case class RecordShape(source: Term.Rcd, elements: Ls[RecordShape.Element]
           if key == name then Found(RecordMember(field, source.mut), Nil) else loop(rest)
         case _ => unknown
       case RecordShape.Unknown :: _ => unknown
+      case RecordShape.Dynamic(marks) :: _ => Dynamic(marks)
       case RecordShape.Spread(shape, marks) :: rest => shape.getMember(name) match
+        case Dynamic(inner) => Dynamic(inner ::: marks :: Nil)
         case Unknown(_, _) => unknown
         case Missing => loop(rest)
         case Found(member: RecordMember, inner) =>
@@ -471,6 +486,7 @@ object RecordShape:
     case Field(field: RcdField)
     case Spread(shape: RecordShape, marks: Marks)
     case Unknown
+    case Dynamic(marks: Ls[Marks])
   export Element.*
 
 

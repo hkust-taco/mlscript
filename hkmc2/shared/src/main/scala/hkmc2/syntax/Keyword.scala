@@ -152,6 +152,7 @@ object Keyword:
   val `forall` = Keyword("forall", N, N)
   val `exists` = Keyword("exists", N, N)
   val `null` = Keyword("null", N, N)
+  val `dyn` = Keyword("dyn", N, N)
   val `undefined` = Keyword("undefined", N, N)
   val `abstract` = Keyword("abstract", N, N)
   val `constructor` = Keyword("constructor", N, N)

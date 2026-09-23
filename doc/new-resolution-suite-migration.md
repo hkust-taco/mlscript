@@ -17,13 +17,15 @@ exclude the new shared `.mls` configuration files and new regression tests.
 | Total | 185 | 187 | 372 |
 
 Migrated files start with `:.`. Each suite's `.mls` loads the common language
-configuration and enables strict resolution; nested directories inherit through
-`:..`. The suite defaults disable JS execution so each file retains its original
-execution flags. A parser-only test must not acquire runtime execution merely
+configuration and uses non-strict resolution; nested directories inherit through
+`:..`. `newres` retains strict resolution, with explicit non-strict coverage in
+`newres/loose`. Non-strict resolution permits multiple selection/call targets,
+but still rejects missing targets and known invalid operations. The suite defaults
+disable JS execution so each file retains its original execution flags. A parser-only test must not acquire runtime execution merely
 because its resolution configuration changes.
 
 Blocked files retain their complete original sources and golden outputs. No new
-`:todo`, `:fixme`, `:ignore`, or loose-resolution exception hides a migration
+per-file `:todo`, `:fixme`, `:ignore`, or resolution-mode exception hides a migration
 failure. Existing expected failures remain visible. The inventory below records
 trial observations, not newly accepted failures.
 
@@ -74,30 +76,40 @@ explicitly bound `Some5` wins over a wildcard open, yielding `"555"` rather than
 
 ### 1. Structural members and opaque values
 
-Evidence: `basics/LiteralSelection.mls` fails on `arr.1` and `obj.a` because
-tuple and record member lookup remains unimplemented in `TupleShape` and
-`IntroShape`. The current `MemberInfo` requires a `BlockMemberSymbol`, which a
-structural field need not have. `codegen/ImportJSModule.mls`, `Pwd.mls`, and many
-app worksheets instead have opaque external results with no member shapes at all.
+Record fields now have their own `BlockMemberSymbol`s. Member lookup follows
+record overwrites and spreads in source order and retains the selected value's
+shape and captures. Structural tuple member lookup remains unimplemented.
 
-**Question:** should ordinary member selection on an opaque external value be
-accepted dynamically, or require a declaration/explicit dynamic selection?
-This is different from a known record's structural member.
+**Accepted policy:** JavaScript imports (including package imports), `globalThis`,
+and explicit dynamic selection/instantiation introduce `DynShape`. Ordinary
+selections and calls on these values are checked at runtime and yield dynamic
+values. `foo() as dyn` explicitly gives a result this behavior; `fun bar(x: dyn)`
+provides it to a parameter independently of call-site inference. Type aliases may
+also denote `dyn`. These rules apply in both strict and non-strict resolution.
+Dynamic instantiation uses the existing `new!` syntax.
 
-**Proposal:** preserve strict resolution for ordinary source selections. Add a
-member-target representation distinguishing nominal definitions from structural
-fields, and an explicit opaque/dynamic category where the language authorizes
-it. Structural targets carry their field/index path and value-shape publisher;
-they must not invent nominal symbols or discard the selected value's provenance.
-Resolve record overwrites and spreads in source order, independently of listener
-arrival order. Lowering consumes those targets without doing lookup. Publish
-external signatures through the same shape infrastructure; keep explicitly
-dynamic operations on a dedicated path.
+Call validation still depends on the shapes available during elaboration. An
+unused callback, a callback used in a later REPL block, or an unsupported function
+signature may have no inferred callee shapes yet. Such an empty set does not prove
+that the callee is non-callable. Diagnosing all targetless applications requires
+separating pending or incomplete inference from a completed lookup with no target;
+`dyn` does not fill arbitrary empty shape sets.
 
-Acceptance cases: duplicate record fields, spreads arriving late, tuple indices,
-field values used as receivers, field assignment, missing fields, and JS imports.
-Decide whether wildcard opens accept structural records as part of this work;
-do not silently treat an unsupported structural open as an empty module.
+Dynamic selections have no fabricated nominal definition. Lowering retains their
+runtime receiver and property name. Dynamic values propagate through record and
+tuple spreads and unique wildcard opens. Competing wildcard-open receivers still
+require disambiguation: choosing one would change which runtime object is read.
+Class projections, constructor patterns, and type references also retain their
+requirements for a known, unambiguous identity.
+
+`DynShape` is distinct from `UnknownValueShape`: recursive widening, mutable
+record reads, and other losses of inference precision do not automatically
+license dynamic member lookup. A known missing member in another receiver
+candidate still reports an error even if a dynamic candidate is also present.
+The constructor-pattern context-mixing blocker below therefore remains visible.
+
+Regression coverage is in `newres/Dynamic.mls`, `newres/Records.mls`,
+`newres/SpreadCalls.mls`, and `newres/loose/Targets.mls`.
 
 ### 2. Pattern transfer and synthesized references
 

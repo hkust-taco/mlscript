@@ -42,6 +42,7 @@ class Importer extends NewResolver:
       file.ext match
       
       case "mjs" | "js" =>
+        if newResolution then sym.shapes.add(DynShape())
         Import(sym, file.toString, file)
         
       case "mls" =>
@@ -80,5 +81,6 @@ class Importer extends NewResolver:
         Import(sym, path, file)
       
     else
+      if newResolution then sym.shapes.add(DynShape())
       Import(sym, path, file)
     

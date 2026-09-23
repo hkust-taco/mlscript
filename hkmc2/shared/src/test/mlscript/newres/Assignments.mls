@@ -82,7 +82,7 @@ module Classes {
   class Only
 }
 set Classes.Only = 0
-//│ ╔══[COMPILATION ERROR] Assignment requires an unambiguous term member
+//│ ╔══[COMPILATION ERROR] Assignment requires a term member
 //│ ║  l.84: 	set Classes.Only = 0
 //│ ╙──      	    ^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
