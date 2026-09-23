@@ -46,6 +46,8 @@ class NewResolver:
   val newShapes: mutable.Map[(ClassLikeSymbol, Ls[Marks], FlowSymbol), NewShape] = mutable.Map.empty
   val introShapes: mutable.Map[IntroTerm, IntroShape] = mutable.Map.empty // TODO use symbols for faster lookup?
   val symShapes: mutable.Map[(BlockMemberSymbol, FlowSymbol, Ls[Marks]), SymShape] = mutable.Map.empty
+  // One producer per tuple syntax node, installed before following its spreads.
+  private val tupleShapes: mutable.Map[Tup, mutable.LinkedHashSet[TermShape]] = mutable.Map.empty
   private val selfShapes: mutable.Map[InnerSymbol, BaseShape] = mutable.Map.empty
   val defnShapes: mutable.Map[DefinitionSymbol[?], DefnShape] = mutable.Map.empty
   
@@ -119,49 +121,52 @@ class NewResolver:
   def resolError(src: Term | Pattern, msgs: Ls[(Message, Opt[Loc])]): Unit = raise:
     ErrorReport(msg"Resolution error in ${src.describe}" -> src.toLoc ::msgs, source = Diagnostic.Source.Compilation)
   
-  def zipArgs(mss: Ls[Marks], ps: Ls[Param], r: Opt[Param], args: Ls[Elem], src: Term, funSh: TermShape, argumentMarks: Ls[Marks]): Unit =
+  /** Subscribe once to complete argument-tuple candidates. A pending spread is not
+    * an argument, nor evidence of an arity mismatch; each resolved combination is.
+    */
+  def zipArgs(mss: Ls[Marks], ps: Ls[Param], r: Opt[Param], args: Term, src: Term, funSh: TermShape): Unit =
     val expectedCount = ps.length
-    val providedCount = args.length
-    // Keep the original arity for diagnostics while consuming matched arguments.
-    def loop(ps: Ls[Param], args: Ls[Elem]): Unit =
-      (ps, args) match
-      case (Nil, Nil) if r.isEmpty => ()
-      // case (Nil, Spd(k, t) :: args) =>
-      //   zip(Nil, r, args)
-      case (Nil, args) =>
-        r match
-        case N =>
-          resolError(src,
-            msg"${funSh.describe.capitalize} expected ${expectedCount} ${
-              "argument".pluralized(expectedCount)}, but got ${providedCount}" -> funSh.toLoc :: Nil)
-        case S(p) =>
-          val packaged = new Tup(args)(Tree.DummyTup).withLoc(Loc.mk(args.iterator.flatMap(_.toLoc)))
-          IntroShape(packaged).exit(argumentMarks).enter(mss) match
-            case NoShape => ()
-            case sh: TermShape =>
-              if isOwnedSym(p.sym) && p.sym.shapes.add(sh) then p.sym.shapeListeners.foreach(_(sh))
-      case (p :: ps, Fld(fls, trm, asc) :: args) if p.sign.nonEmpty =>
-        loop(ps, args)
-      case (p :: ps, Fld(fls, trm, asc) :: args) =>
-      // case ((p, mss) :: ps, Fld(fls, trm, asc) :: args) =>
-        listenTerm(trm): sh0 =>
-          // val sh = sh0.enter(mss)
-          // log(s"zipArg: p = ${p.showDbg}, trm = ${trm.showDbg}, sh = ${sh.shwDbg}")
-          // if isOwnedSym(p.sym) && p.sym.shapes.add(sh) then
-          //   p.sym.shapeListeners.foreach(listener => listener(sh))
-          sh0.exit(argumentMarks).enter(mss) match
-          case NoShape =>
-          case sh: TermShape =>
-            log(s"zipArg: p = ${p.showDbg}, trm = ${trm.showDbg}, sh = ${sh.shwDbg} ${isOwnedSym(p.sym)}, ${p.sym.shapes.contains(sh)}")
-            if isOwnedSym(p.sym) && p.sym.shapes.add(sh) then
-              // log(s"!!!! ${p.sym.shapeListeners}")
-              p.sym.shapeListeners.foreach(listener => listener(sh))
-        loop(ps, args)
-      case _ =>
-        resolError(src,
-          msg"${funSh.describe.capitalize} expected ${expectedCount} ${
-            "argument".pluralized(expectedCount)}, but got ${providedCount}" -> funSh.toLoc :: Nil)
-    loop(ps, args)
+    val reportedCounts = mutable.Set.empty[Int]
+    var reportedUnknownLength = false
+    def reportUnknownLength(): Unit = if !reportedUnknownLength then
+      reportedUnknownLength = true
+      resolError(src, msg"Cannot determine the length of the argument tuple." -> args.toLoc :: Nil)
+    def publish(p: Param, shape: TermShape | NoShape): Unit = shape match
+      case NoShape => ()
+      case sh: TermShape =>
+        if isOwnedSym(p.sym) && p.sym.shapes.add(sh) then p.sym.shapeListeners.foreach(_(sh))
+    listenTerm(args):
+      case Marked(tuple: TupleShape, marks) =>
+        val segments = tuple.segments
+        val fields = segments.collect { case field: TupleShape.Field => field }
+        val unknownLength = fields.length != segments.length
+        val providedCount = fields.length
+        val arityMismatch = (!unknownLength && providedCount < expectedCount) || (r.isEmpty && providedCount > expectedCount)
+        if arityMismatch then
+          if reportedCounts.add(providedCount) then
+            val count = if unknownLength then msg"at least ${providedCount}" else msg"${providedCount}"
+            resolError(src,
+              msg"${funSh.describe.capitalize} expected ${expectedCount} ${
+                "argument".pluralized(expectedCount)}, but got ${count}" -> funSh.toLoc :: Nil)
+        // Positions before the first unknown segment are definite. A rest parameter
+        // can receive the remaining structure without knowing its total length.
+        val prefix = segments.takeWhile(_.isInstanceOf[TupleShape.Field]).collect:
+          case field: TupleShape.Field => field
+        ps.lazyZip(prefix).foreach: (p, arg) =>
+          if p.sign.isEmpty then listenTerm(arg.field.term): sh =>
+            publish(p, sh.exit(arg.marks).exit(marks).enter(mss))
+        if unknownLength && !arityMismatch && (prefix.length < expectedCount || r.isEmpty) then
+          reportUnknownLength()
+        r.filter(_ => prefix.length >= expectedCount).foreach: p =>
+          // A residual tuple can mix fields from several captured spreads and the
+          // caller. Keep their individual marks when forwarding it to another call.
+          val rest = if ps.isEmpty then tuple
+            else TupleShape(tuple.source, TupleShape.Rest(tuple, expectedCount) :: Nil)
+          publish(p, rest.exit(marks).enter(mss))
+      case sh @ Marked(_: UnknownTupleShape, _) =>
+        if ps.isEmpty && r.nonEmpty then r.foreach(p => publish(p, sh.enter(mss)))
+        else reportUnknownLength()
+      case _ => resolError(src, msg"Expected an argument tuple." -> args.toLoc :: Nil)
   
   /** Resolve every constructor pattern through the same symbolic interpretation.
     * A class overload takes precedence over its term companion in this context.
@@ -287,18 +292,7 @@ class NewResolver:
     lhs.unappliedParams match
     case Nil => ()
     case (ps, mss) :: pss =>
-      args match
-      case args: Tup =>
-        log(s"Zipping ${ps} (${mss.map(_.showDbg)}) with ${args.fields}")
-        zipArgs(mss, ps.params, ps.restParam, args.fields, res, lhs, Nil)
-      case _ =>
-        // Member projections forward their rest-argument tuple. Its shape can
-        // arrive after the method, and carries the caller's capture marks.
-        listenTerm(args):
-          case Marked(sh: IntroShape, marks) => sh.trm match
-            case tuple: Tup => zipArgs(mss, ps.params, ps.restParam, tuple.fields, res, lhs, marks :: Nil)
-            case _ => resolError(res, msg"Expected an argument tuple." -> args.toLoc :: Nil)
-          case _ => resolError(res, msg"Expected an argument tuple." -> args.toLoc :: Nil)
+      zipArgs(mss, ps.params, ps.restParam, args, res, lhs)
     log(s"appShape isSaturated? ${sh.isSaturated}; head? ${sh.applicationHead}")
     def register = if res.shapes.add(sh) then
       res.shapeListeners.foreach(listener => listener(sh))
@@ -441,9 +435,7 @@ class NewResolver:
               val sh = newShapes.getOrElseUpdate((cd.sym, ss.markss, nw.resSym), {
                 dsh.unappliedParams.lazyZip(nw.args).foreach:
                   case ((ps, mss), args) =>
-                    args match
-                      case args: Tup => zipArgs(mss, ps.params, ps.restParam, args.fields, nw, dsh, Nil)
-                      case _ => ???
+                    zipArgs(mss, ps.params, ps.restParam, args, nw, dsh)
                 NewShape(dsh, cd.sym, ss.markss, nw.args, nw)
               })
               if nw.shapes.add(sh) then nw.shapeListeners.foreach(_(sh))
@@ -601,6 +593,39 @@ class NewResolver:
       lastWords("Synthetic selections must not enter new resolution")
     case TyApp(underlying, _) => listen(underlying, discardMarks)(listener)
     case Mut(underlying) => listenTerm(underlying)(listener)
+    case tuple: Tup =>
+      tupleShapes.get(tuple) match
+        case S(shapes) => shapes.toList.foreach(listener)
+        case N =>
+          val shapes = mutable.LinkedHashSet.empty[TermShape]
+          // Install before subscribing: recursive references must reuse this producer.
+          tupleShapes(tuple) = shapes
+          def publish(shape: TermShape): Unit =
+            if shapes.add(shape) then tuple.shapeListeners.foreach(_(shape))
+          def expand(elems: Ls[Elem], reversed: Ls[TupleShape.Element]): Unit = elems match
+            case Nil =>
+              // A sole spread preserves its operand's shape and context exactly.
+              // Besides avoiding wrappers, this lets recursive rest forwarding
+              // reach the same fixed point as forwarding an ordinary parameter.
+              val shape = reversed match
+                case TupleShape.Spread(shape, NoMarks) :: Nil => shape
+                case TupleShape.Spread(shape, marks: SomeMarks) :: Nil => MarkedShape(shape, marks)
+                case _ => TupleShape(tuple, reversed.reverse)
+              publish(shape)
+            case (field: Fld) :: rest => expand(rest, TupleShape.Field(field, Nil) :: reversed)
+            case Spd(_, term) :: rest =>
+              val seen = mutable.Set.empty[TermShape]
+              listenTerm(term): sh =>
+                if seen.add(sh) then sh match
+                  case Marked(shape: TupleShape, marks) =>
+                    val spread: TupleShape | UnknownTupleShape =
+                      if shape.containsSpread(shape.source, marks) then UnknownTupleShape(shape.source) else shape
+                    expand(rest, TupleShape.Spread(spread, marks) :: reversed)
+                  case Marked(shape: UnknownTupleShape, marks) =>
+                    expand(rest, TupleShape.Spread(shape, marks) :: reversed)
+                  case _ =>
+                    resolError(tuple, msg"Cannot determine the length of this spread." -> term.toLoc :: Nil)
+          expand(tuple.fields, Nil)
     case intro: IntroTerm =>
       val sh = introShapes.getOrElseUpdate(intro, {
         log(s"introShape: intro = $intro")

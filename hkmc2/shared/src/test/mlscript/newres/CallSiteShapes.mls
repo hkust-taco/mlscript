@@ -40,3 +40,20 @@ apply(id, new A).get() + apply(id, new B).get()
 //│ ═══[RUNTIME ERROR] Expected: '40', got: 'undefined'
 //│ apply = fun
 //│ id = Id
+
+// Rest-argument forwarding has the same call-site correlation limitation.
+:fixme
+:expect 40
+fun restIdentity(ignored, ...args) = identity(...args)
+restIdentity(0, new A).get() + restIdentity(0, new B).get()
+//│ ╔══[COMPILATION ERROR] This selection of member 'get' is ambiguous, as it has multiple resolved targets
+//│ ║  l.48: 	restIdentity(0, new A).get() + restIdentity(0, new B).get()
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── target: function 'get' in class 'B'
+//│ ║  l.7: 	class B { fun get() = 23 }
+//│ ║       	              ^^^
+//│ ╟── target: function 'get' in class 'A'
+//│ ║  l.6: 	class A { fun get() = 17 }
+//│ ╙──     	              ^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ ═══[RUNTIME ERROR] Expected: '40', got: 'undefined'

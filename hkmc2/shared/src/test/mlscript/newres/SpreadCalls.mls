@@ -1,0 +1,152 @@
+:.
+
+// Multiple spreads, nested spreads, empty spreads, and fixed arguments after them.
+:expect [1, 2, 3, 4]
+fun four(a, b, c, d) = [a, b, c, d]
+four(...[], ...[1, ...[2]], 3, ...[4], ...[])
+//│ = [1, 2, 3, 4]
+
+// Both spread producers become available after the caller is elaborated.
+:expect [5, 6, 7, 8]
+fun delayed() = four(...left(), ...right())
+fun left() = [5, 6]
+fun right() = [7, 8]
+delayed()
+//│ = [5, 6, 7, 8]
+
+// Returned tuples preserve captured values through nested spreads and rest forwarding.
+:expect [11, 12, 21, 22]
+class Box(val value)
+fun pair(x, y) = [x, ...[y]]
+fun second(a, b) = b
+fun forward(head, ...tail) = second(...tail)
+fun captured(x, y) = () => forward(0, ...pair(x, y))
+let first = captured(Box(10), Box(11))
+let next = captured(Box(20), Box(21))
+[first().value, captured(Box(0), Box(12))().value, next().value, captured(Box(0), Box(22))().value]
+//│ = [11, 12, 21, 22]
+//│ first = fun
+//│ next = fun
+
+// Residual fields from distinct spreads and direct arguments keep separate marks.
+:expect 32
+fun mixed(x, y) = forward(...[0, x], y)
+mixed(Box(31), Box(32)).value
+//│ = 32
+
+// An empty rest tuple can itself be spread into a zero-argument function.
+:expect 40
+fun zero() = 40
+fun empty(head, ...tail) = zero(...tail)
+empty(0)
+//│ = 40
+
+// Each list of a curried function or constructor is checked independently.
+:expect [51, 52, 53, 54]
+class Pair(val left)(val right)
+fun curried(x)(y) = Pair(x)(y)
+let built = curried(...[Box(51)])(...[Box(52)])
+let direct = new Pair(...[Box(53)])(...[Box(54)])
+[built.left.value, built.right.value, direct.left.value, direct.right.value]
+//│ = [51, 52, 53, 54]
+//│ built = Pair(Box(51))
+//│ direct = Pair(Box(53))
+
+// Plain tuple fields need no shapes for the tuple's arity to be known.
+:expect 60
+fun typed(x: Int) = second(...[x, 60])
+typed(0)
+//│ = 60
+
+// A delayed concrete spread establishes a real mismatch, including nested fields.
+:e
+fun tooShort() = four(...short())
+fun short() = [1, ...[2]]
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.63: 	fun tooShort() = four(...short())
+//│ ║        	                 ^^^^^^^^^^^^^^^^
+//│ ╟── Function 'four' expected 4 arguments, but got 2
+//│ ║  l.5: 	fun four(a, b, c, d) = [a, b, c, d]
+//│ ╙──     	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+:e
+four(...[1, 2], ...[3, 4], 5)
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.73: 	four(...[1, 2], ...[3, 4], 5)
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Function 'four' expected 4 arguments, but got 5
+//│ ║  l.5: 	fun four(a, b, c, d) = [a, b, c, d]
+//│ ╙──     	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] Error: Function 'four' expected 4 arguments but got 5
+
+// An unknown-length value is not reported as a proven argument count.
+:e
+four(...Box(1))
+//│ ╔══[COMPILATION ERROR] Resolution error in tuple literal
+//│ ║  l.84: 	four(...Box(1))
+//│ ║        	    ^^^^^^^^^^^
+//│ ╟── Cannot determine the length of this spread.
+//│ ║  l.84: 	four(...Box(1))
+//│ ╙──      	        ^^^^^^
+//│ ═══[RUNTIME ERROR] TypeError: Spread syntax requires ...iterable[Symbol.iterator] to be a function
+
+// Multiple alternatives for each spread are retained as their shapes arrive.
+:expect [[1, 2, 3, 4], [5, 6, 7, 8]]
+fun combine(xs, ys) = four(...xs, ...ys)
+[combine([1, 2], [3, 4]), combine([5, 6], [7, 8])]
+//│ = [[1, 2, 3, 4], [5, 6, 7, 8]]
+
+// Direct tuple returns preserve the field shapes of distinct call sites.
+:expect [71, 72]
+class Left(val l)
+class Right(val r)
+[second(...pair(0, Left(71))).l, second(...pair(0, Right(72))).r]
+//│ = [71, 72]
+
+// Returning a rest tuple preserves its caller's capture marks.
+:expect [81, 82]
+fun packed(...xs) = xs
+[second(...packed(0, Left(81))).l, second(...packed(0, Right(82))).r]
+//│ = [81, 82]
+
+// Nested applications of the same tuple producer remain distinct.
+:expect [0, 0, 1]
+fun nested(xs) = [0, ...xs]
+nested(nested([1]))
+//│ = [0, 0, 1]
+
+// Recursive rest forwarding should reach a fixed point.
+fun cycle(...xs) = cycle(...xs)
+fun seed() = cycle(1)
+
+// Slicing a rest tuple retains both known fields and approximated spread segments.
+:expect [0, 0, 1]
+fun nestedRest(ignored, ...xs) = [0, ...xs]
+nestedRest(9, ...nestedRest(9, 1))
+//│ = [0, 0, 1]
+
+// A later alternative must be checked even after a valid combination was seen.
+:e
+fun varying(xs, ys) = four(...xs, ...ys)
+fun knownGood() = varying([1], [2, 3, 4])
+fun laterBad() = varying([5], [6, 7])
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.130: 	fun varying(xs, ys) = four(...xs, ...ys)
+//│ ║         	                      ^^^^^^^^^^^^^^^^^^
+//│ ╟── Function 'four' expected 4 arguments, but got 3
+//│ ║  l.5: 	fun four(a, b, c, d) = [a, b, c, d]
+//│ ╙──     	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+// Recursive tuple growth has unknown length, but a rest-only function can forward it.
+:expect [3, 2, 1]
+fun growing = case
+  0 then []
+  n then [n, ...growing(n - 1)]
+packed(...growing(3))
+//│ = [3, 2, 1]
+
+// Known fields surrounding an unknown-length spread survive rest forwarding.
+:expect [9, 3, 2, 1, 8]
+fun keep(head, ...tail) = [head, ...tail]
+keep(9, ...growing(3), 8)
+//│ = [9, 3, 2, 1, 8]

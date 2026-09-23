@@ -73,10 +73,10 @@ explicitly bound `Some5` wins over a wildcard open, yielding `"555"` rather than
 ### 1. Structural members and opaque values
 
 Evidence: `basics/LiteralSelection.mls` fails on `arr.1` and `obj.a` because
-`IntroShape.getMemberImpl` has unimplemented tuple and record cases. The current
-`MemberInfo` requires a `BlockMemberSymbol`, which a structural field need not
-have. `codegen/ImportJSModule.mls`, `Pwd.mls`, and many app worksheets instead
-have opaque external results with no member shapes at all.
+tuple and record member lookup remains unimplemented in `TupleShape` and
+`IntroShape`. The current `MemberInfo` requires a `BlockMemberSymbol`, which a
+structural field need not have. `codegen/ImportJSModule.mls`, `Pwd.mls`, and many
+app worksheets instead have opaque external results with no member shapes at all.
 
 **Question:** should ordinary member selection on an opaque external value be
 accepted dynamically, or require a declaration/explicit dynamic selection?
@@ -194,19 +194,22 @@ errors when a selected interpretation lacks the required capability.
 
 ## Remaining implementation work, not new semantic decisions
 
-- Complete argument-spread distribution in the existing deferred call resolver.
-  Callee validation already runs from shape listeners; saturated calls subscribe
-  to their bodies for returned shapes, and curried constructors retain their
-  remaining parameter lists. `newres/DeferredCalls.mls` covers forward calls,
-  delayed arity errors, returned lambdas, and curried constructor field access.
-  The concrete gap is `zipArgs`: it counts syntactic spread nodes as single
-  arguments and reports an arity mismatch when a spread meets a fixed parameter.
-  Expand known tuple spreads through listeners, preserve capture marks on each
-  argument segment (including residual rest arguments), and distinguish an
-  unknown-length spread from a proven arity mismatch. Test nested and delayed
-  spreads, fixed arguments following spreads, rest parameters, and spreads in
-  each list of a curried call. Further constructor/returned-function fixes should
-  be driven by specific failures, rather than replacing the existing deferral.
+- Argument-spread distribution now uses `TupleShape` candidates with selected
+  subshapes for each spread. Tuple producers listen for all combinations; `zipArgs`
+  checks their expanded counts and preserves capture marks for fixed arguments and
+  residual rest tuples. Marks accumulate on each segment and are applied when a
+  consumer accesses its fields, as with member selection.
+  `newres/SpreadCalls.mls` covers nested and delayed spreads, multiple alternatives,
+  fixed arguments after spreads, rest forwarding, captures, curried calls and
+  constructors, and recursive forwarding. Repeated producers in the same spread
+  context widen that spread to an explicit unknown-length tuple shape, preserving
+  known surrounding fields; `basics/LazySpreads.mls` covers recursive lazy tuples.
+  Unknown lengths get a distinct diagnostic instead of a fabricated arity mismatch.
+  Functions can consume a known prefix and forward an unknown-length remainder to
+  a rest parameter. The broader call-site correlation limitation remains tracked
+  in `newres/CallSiteShapes.mls`, including a rest-forwarding case. Further
+  constructor/returned-function fixes should be driven by specific failures,
+  rather than replacing existing deferral.
 - Audit assignments to member symbols and definition initializers. The trial
   reaches unimplemented direct member-reference shape cases and missing
   assignment lowering in several mutation tests.

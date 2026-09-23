@@ -87,7 +87,27 @@ sum2(..arr)
 //│ ╔══[COMPILATION ERROR] Resolution error in application
 //│ ║  l.86: 	sum2(..arr)
 //│ ║        	^^^^^^^^^^^
-//│ ╟── Function literal expected 1 argument, but got 1
+//│ ╟── Function literal expected 1 argument, but got 0
+//│ ║  l.47: 	fun sum2 = case
+//│ ║        	           ^^^^
+//│ ║  l.48: 	  [] then 0
+//│ ║        	^^^^^^^^^^^^
+//│ ║  l.49: 	  [x, ..xs, y] then x + y + sum2(xs)
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.86: 	sum2(..arr)
+//│ ║        	^^^^^^^^^^^
+//│ ╟── Function literal expected 1 argument, but got 2
+//│ ║  l.47: 	fun sum2 = case
+//│ ║        	           ^^^^
+//│ ║  l.48: 	  [] then 0
+//│ ║        	^^^^^^^^^^^^
+//│ ║  l.49: 	  [x, ..xs, y] then x + y + sum2(xs)
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.86: 	sum2(..arr)
+//│ ║        	^^^^^^^^^^^
+//│ ╟── Function literal expected 1 argument, but got 4
 //│ ║  l.47: 	fun sum2 = case
 //│ ║        	           ^^^^
 //│ ║  l.48: 	  [] then 0
