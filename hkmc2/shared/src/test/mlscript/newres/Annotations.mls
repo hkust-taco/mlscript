@@ -88,9 +88,7 @@ module Later { object noInline }
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
 //│ ║  l.84: 	  @Later.noInline
 //│ ║        	  ^^^^^^^^^^^^^^^
-//│ ╟── An annotation's main symbol must be uniquely known when the annotation is elaborated.
-//│ ║  l.84: 	  @Later.noInline
-//│ ╙──      	  ^^^^^^^^^^^^^^^
+//│ ╙── An annotation's main symbol must be uniquely known when the annotation is elaborated.
 
 // Nor can an annotation wait for a forward wildcard source or an alias's value.
 :e
@@ -101,11 +99,9 @@ fun forwardWildcard() =
   inner(6)
 module Future { object noInline }
 //│ ╔══[COMPILATION ERROR] Resolution error in wildcard-open reference
-//│ ║  l.99: 	  @noInline
+//│ ║  l.97: 	  @noInline
 //│ ║        	  ^^^^^^^^^
-//│ ╟── An annotation's main symbol must be uniquely known when the annotation is elaborated.
-//│ ║  l.99: 	  @noInline
-//│ ╙──      	  ^^^^^^^^^
+//│ ╙── An annotation's main symbol must be uniquely known when the annotation is elaborated.
 
 :e
 fun forwardAlias() =
@@ -114,11 +110,9 @@ fun forwardAlias() =
   inner(7)
 val alias = Later
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.112: 	  @alias.noInline
+//│ ║  l.108: 	  @alias.noInline
 //│ ║         	  ^^^^^^^^^^^^^^^
-//│ ╟── An annotation's main symbol must be uniquely known when the annotation is elaborated.
-//│ ║  l.112: 	  @alias.noInline
-//│ ╙──       	  ^^^^^^^^^^^^^^^
+//│ ╙── An annotation's main symbol must be uniquely known when the annotation is elaborated.
 //│ alias = class Later { noInline: noInline }
 
 // Two immediately available heads are ambiguous.
@@ -132,11 +126,9 @@ fun ambiguousAnnotation() =
   fun inner(x) = x
   inner(8)
 //│ ╔══[COMPILATION ERROR] Resolution error in wildcard-open reference
-//│ ║  l.131: 	  @marker
+//│ ║  l.125: 	  @marker
 //│ ║         	  ^^^^^^^
-//│ ╟── An annotation's main symbol must be uniquely known when the annotation is elaborated.
-//│ ║  l.131: 	  @marker
-//│ ╙──       	  ^^^^^^^
+//│ ╙── An annotation's main symbol must be uniquely known when the annotation is elaborated.
 
 // A late candidate must not silently invalidate an already recognized annotation.
 :e
@@ -148,8 +140,6 @@ fun lateAmbiguity() =
   inner(9)
 module Last { object noInline }
 //│ ╔══[COMPILATION ERROR] Resolution error in wildcard-open reference
-//│ ║  l.146: 	  @noInline
+//│ ║  l.138: 	  @noInline
 //│ ║         	  ^^^^^^^^^
-//│ ╟── An annotation's main symbol must be uniquely known when the annotation is elaborated.
-//│ ║  l.146: 	  @noInline
-//│ ╙──       	  ^^^^^^^^^
+//│ ╙── An annotation's main symbol must be uniquely known when the annotation is elaborated.

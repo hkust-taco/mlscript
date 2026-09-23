@@ -97,30 +97,7 @@ field values used as receivers, field assignment, missing fields, and JS imports
 Decide whether wildcard opens accept structural records as part of this work;
 do not silently treat an unsupported structural open as an empty module.
 
-### 2. Annotation identity at elaboration (implemented)
-
-**Decision:** an annotation's main symbol must already be uniquely known when
-the annotation is elaborated. Do not defer the annotated body to accommodate
-forward annotation lookup. A directly bound symbol is already known, even if
-its definition is unfinished; applications require the head's identity, not
-the values of their arguments. Qualified and wildcard-open references must
-publish one symbol immediately. A distinct symbol arriving later is an error,
-since it cannot change an annotation that has already affected elaboration.
-
-`NewResolver.annotationSymbol` enforces this using symbolic reference candidates.
-Built-in annotations are recognized by symbol identity, without inspecting
-incomplete definitions or calling `resolvedSym` during elaboration. The same
-rule applies to body-affecting annotations and later-consumed metadata.
-
-`newres/Annotations.mls` covers qualified, direct, explicit-open, wildcard-open,
-shadowed, applied, unresolved, and ambiguous heads, including late ambiguity.
-Its emitted-code snapshots verify generator/async function kinds and retained
-`noInline` calls. `codegen/NoInline.mls` now runs under new resolution and verifies
-optimization behavior. The previous `codegen/Generators.mls` timeout remains a
-trial observation in the retained inventory; that entire worksheet has not yet
-been migrated.
-
-### 3. Pattern transfer and synthesized references
+### 2. Pattern transfer and synthesized references
 
 Evidence: new shape propagation lacks record, conjunction, negation, string
 concatenation, and transformation cases. Examples include
@@ -150,7 +127,7 @@ constructors, and recursive UPS matchers. Compare results and generated matcher
 structure with the existing tests. `ups/examples/HindleyMilner.mls` also timed
 out during the trial and needs an isolated reproducer before assigning its cause.
 
-### 4. Declared interfaces versus inferred values
+### 3. Declared interfaces versus inferred values
 
 Evidence: the prior WASM `Basics` failure mixes a nominal annotated receiver with
 an untyped constructor field carrying a different capture context.
@@ -171,7 +148,7 @@ Acceptance cases: an unused annotated function, an unannotated constructor field
 subclass overrides, inherited fields, curried constructors, nested captures, and
 generic aliases. Coordinate REPL method cases with the other branch.
 
-### 5. Dynamic construction and foreign callable classes
+### 4. Dynamic construction and foreign callable classes
 
 Evidence: `basics/DynamicInstantiation.mls` and `codegen/ImportJSClass.mls` reach
 static class-lowering assumptions for explicitly dynamic constructions.
@@ -214,8 +191,8 @@ errors when a selected interpretation lacks the required capability.
    application difftests, and the aggregate suite. Review output changes; keep
    nonmigrated files intact. WASM `Basics` retains its previous configuration
    pending the capture fix, keeping this partial migration green.
-2. **Fix annotation prerequisites and cycle handling.** Minimize both timeout
-   cases. Re-enable generator/annotation tests only after checking emitted IR/JS.
+2. **Investigate retained timeouts.** Minimize `codegen/Generators.mls` and
+   `ups/examples/HindleyMilner.mls`; check emitted IR/JS when migrating those worksheets.
 3. **Implement structural targets and external signatures.** Agree on opaque
    selection policy, then migrate records, tuples, mutation, and JS interop in
    small batches. Re-run affected negative tests as well as successful programs.

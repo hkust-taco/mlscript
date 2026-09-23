@@ -621,7 +621,7 @@ class NewResolver:
       var failed = false
       def fail(): Unit = if !failed then
         failed = true
-        resolError(trm, msg"An annotation's main symbol must be uniquely known when the annotation is elaborated." -> trm.toLoc :: Nil)
+        resolError(trm, msg"An annotation's main symbol must be uniquely known when the annotation is elaborated." -> N :: Nil)
       listen(trm):
         case sh: SymShape =>
           if symbols.add(sh.sym) && !collecting then fail()
@@ -630,11 +630,12 @@ class NewResolver:
       symbols.toList match
         case symbol :: Nil if !failed => S(symbol)
         case _ => fail(); N
-    case _ => trm.symbol match
-      case s @ S(_) => s
-      case N =>
-        resolError(trm, msg"An annotation must have a known main symbol." -> trm.toLoc :: Nil)
-        N
+    // TODO: Ref(sym: BuiltinSymbol) is a legacy representation that still needs
+    // updating to the new reference forms, even when using new resolution.
+    case Ref(sym: BuiltinSymbol) => S(sym)
+    case _ =>
+      resolError(trm, msg"An annotation must have a known main symbol." -> N :: Nil)
+      N
 
   def listenTerm(trm: Term)(listener: TermShape => Unit): Unit =
     log(s"listenTerm: trm = ${trm.showDbg}")
