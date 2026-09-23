@@ -353,7 +353,7 @@ class ClassTagsTransformer(
       val reference = symbol.asSimpleRef.withLocOf(result)
       Scoped(Set.single(symbol), Assign(symbol, result, k(reference)))
 
-  private def assignTag(instance: Path, tag: Int)(next: Block): Block =
+  private def assignTag(instance: Path, tag: Int)(next: Block): Block = // TODO: make __tag$ a real field and fill the symbol for selections
     AssignField(instance, tagField, Value.Lit(syntax.Tree.IntLit(tag)), next)(N)
 
   private def insertTagForMultiShapes(
@@ -388,19 +388,32 @@ class ClassTagsTransformer(
           case _ => lastWords(s"Shape ${shape.show} cannot be checked directly.")
 
     // * Generate tag checks for each parameter and form a conjunction condition
-    def mkConjunction(checks: List[Path -> Shape])(k: Path => Block): Block = checks match
-      case Nil => k(Value.Lit(syntax.Tree.BoolLit(true)))
-      case (argument, shape) :: Nil => checkShape(argument, shape)(k)
-      case (argument, shape) :: checks =>
-        checkShape(argument, shape): condition =>
-          mkConjunction(checks): remainingCondition =>
-            (condition, remainingCondition) match
-              case (Value.Lit(syntax.Tree.BoolLit(true)), _) => k(remainingCondition)
-              case (_, Value.Lit(syntax.Tree.BoolLit(true))) => k(condition)
+    def mkConjunction(checks: List[Path -> Shape])(k: Path => Block): Block =
+      def rec(checks: List[Path -> Shape])(k: Path => Block): Block = checks match
+        case Nil => k(Value.Lit(syntax.Tree.BoolLit(true)))
+        case (argument, shape) :: Nil => checkShape(argument, shape)(k)
+        case (argument, shape) :: checks =>
+          checkShape(argument, shape): condition =>
+            condition match
+              case Value.Lit(syntax.Tree.BoolLit(true)) => rec(checks)(k)
+              case Value.Lit(syntax.Tree.BoolLit(false)) => k(condition)
               case _ =>
-                bindResult(Call(
-                  State.andSymbol.asSimpleRef, (condition.asArg :: remainingCondition.asArg :: Nil) ne_:: Nil
-                )(CallMetadata.defaultMlsFun))(k)
+                val result = new TempSymbol(N, erasedType = S(ErasedType.Bool), "tmp")
+                val reference = result.asSimpleRef.withLocOf(condition)
+                val matched = rec(checks): remainingCondition =>
+                  Assign(result, remainingCondition, End())
+                Scoped(Set.single(result),
+                  new Match(
+                    condition,
+                    Case.Lit(syntax.Tree.BoolLit(true)) -> matched :: Nil,
+                    S(Assign(result, Value.Lit(syntax.Tree.BoolLit(false)), End())),
+                    k(reference),
+                  ))
+      // remove conditions that are already true
+      rec(checks.filterNot:
+        case (_, DynamicShape) => true
+        case (argument, LitShape(lit)) => argument === lit
+        case _ => false)(k)
 
     def assign(remainingShapes: List[ClassShape -> Int], instance: Path): Block =
       remainingShapes match

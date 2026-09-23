@@ -263,55 +263,75 @@ fun pair(x, y) =
 //│ let pair;
 //│ pair = function pair(x, y) {
 //│   runtime.checkArgs("pair", 2, true, arguments.length);
-//│   let tmp, tmp1, tmp2, tmp3, tmp4, tmp5;
+//│   let tmp, tmp1, tmp2, tmp3, tmp4;
 //│   if (x === true) {
-//│     let tmp6;
-//│     tmp6 = (new D1.class(1));
-//│     tmp6.__tag$ = 0;
-//│     tmp = tmp6;
+//│     let tmp5;
+//│     tmp5 = (new D1.class(1));
+//│     tmp5.__tag$ = 0;
+//│     tmp = tmp5;
 //│   } else {
-//│     let tmp6;
-//│     tmp6 = (new E1.class(2));
-//│     tmp6.__tag$ = 1;
-//│     tmp = tmp6;
+//│     let tmp5;
+//│     tmp5 = (new E1.class(2));
+//│     tmp5.__tag$ = 1;
+//│     tmp = tmp5;
 //│   }
 //│   if (y === true) {
-//│     let tmp6;
-//│     tmp6 = (new D1.class(3));
-//│     tmp6.__tag$ = 2;
-//│     tmp1 = tmp6;
+//│     let tmp5;
+//│     tmp5 = (new D1.class(3));
+//│     tmp5.__tag$ = 2;
+//│     tmp1 = tmp5;
 //│   } else {
-//│     let tmp6;
-//│     tmp6 = (new E1.class(4));
-//│     tmp6.__tag$ = 3;
-//│     tmp1 = tmp6;
+//│     let tmp5;
+//│     tmp5 = (new E1.class(4));
+//│     tmp5.__tag$ = 3;
+//│     tmp1 = tmp5;
 //│   }
 //│   tmp2 = (new Pair1.class(tmp, tmp1));
 //│   tmp3 = tmp.__tag$ === 0;
-//│   tmp4 = tmp1.__tag$ === 2;
-//│   tmp5 = tmp3 && tmp4;
-//│   if (tmp5 === true) {
+//│   if (tmp3 === true) {
+//│     let tmp5;
+//│     tmp5 = tmp1.__tag$ === 2;
+//│     tmp4 = tmp5;
+//│   } else {
+//│     tmp4 = false;
+//│   }
+//│   if (tmp4 === true) {
 //│     tmp2.__tag$ = 4;
 //│   } else {
-//│     let tmp6, tmp7, tmp8;
-//│     tmp6 = tmp.__tag$ === 0;
-//│     tmp7 = tmp1.__tag$ === 3;
-//│     tmp8 = tmp6 && tmp7;
-//│     if (tmp8 === true) {
+//│     let tmp5, tmp6;
+//│     tmp5 = tmp.__tag$ === 0;
+//│     if (tmp5 === true) {
+//│       let tmp7;
+//│       tmp7 = tmp1.__tag$ === 3;
+//│       tmp6 = tmp7;
+//│     } else {
+//│       tmp6 = false;
+//│     }
+//│     if (tmp6 === true) {
 //│       tmp2.__tag$ = 5;
 //│     } else {
-//│       let tmp9, tmp10, tmp11;
-//│       tmp9 = tmp.__tag$ === 1;
-//│       tmp10 = tmp1.__tag$ === 2;
-//│       tmp11 = tmp9 && tmp10;
-//│       if (tmp11 === true) {
+//│       let tmp7, tmp8;
+//│       tmp7 = tmp.__tag$ === 1;
+//│       if (tmp7 === true) {
+//│         let tmp9;
+//│         tmp9 = tmp1.__tag$ === 2;
+//│         tmp8 = tmp9;
+//│       } else {
+//│         tmp8 = false;
+//│       }
+//│       if (tmp8 === true) {
 //│         tmp2.__tag$ = 6;
 //│       } else {
-//│         let tmp12, tmp13, tmp14;
-//│         tmp12 = tmp.__tag$ === 1;
-//│         tmp13 = tmp1.__tag$ === 3;
-//│         tmp14 = tmp12 && tmp13;
-//│         if (tmp14 === true) {
+//│         let tmp9, tmp10;
+//│         tmp9 = tmp.__tag$ === 1;
+//│         if (tmp9 === true) {
+//│           let tmp11;
+//│           tmp11 = tmp1.__tag$ === 3;
+//│           tmp10 = tmp11;
+//│         } else {
+//│           tmp10 = false;
+//│         }
+//│         if (tmp10 === true) {
 //│           tmp2.__tag$ = 7;
 //│         }
 //│       }
