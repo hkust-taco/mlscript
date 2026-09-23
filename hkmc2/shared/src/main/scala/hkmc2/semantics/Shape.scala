@@ -428,10 +428,10 @@ object TupleShape:
   final case class Rest(shape: TupleShape, segments: Ls[Segment]) extends Element
 
 
-/** Per-candidate read information, separate from the field's ordinary member symbol.
-  * A spread retains the original property identity, but copying it into a mutable
-  * record makes its initializer an unsound value shape. Thus mutability belongs to
-  * this lookup result, not to mutable state on the shared member/definition symbols.
+/** A field found by record member lookup. Spreading r into `mut {...r}` reuses
+  * its field symbols, but writes can change the copied values even if r is immutable.
+  * Store mutability on this lookup result: the mutable copy's initializer no longer
+  * determines its value shape, while reads from an immutable r can still use it.
   */
 final case class RecordMember(field: RcdField, mutable: Bool)
 

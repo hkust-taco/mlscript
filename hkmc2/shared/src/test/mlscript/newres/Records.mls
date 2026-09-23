@@ -204,7 +204,7 @@ unknownOpen()
 {...unknownKeys, a: 25}.a
 //│ = 25
 
-// Forward producers remain pending until their body is available.
+// Resolving forwardRecord.answer must wait for the body of makeRecord below.
 :expect 26
 let forwardRecord = {...makeRecord()}
 fun makeRecord() = {answer: 26}
@@ -286,7 +286,10 @@ allMissingOpen()
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
-// Structurally equal record nodes need independent producers while their spread is pending.
+// Both a.value and b.value must resolve to the field supplied by {value: 29}.
+// The two {...xs} expressions have equal syntax but separate AST nodes and listeners.
+// Treating the second expression as already processed would skip its subscription
+// to xs, leaving b.value unresolved.
 :expect [29, 29]
 fun repeatedRecords(xs) =
   let a = {...xs}
@@ -295,7 +298,8 @@ fun repeatedRecords(xs) =
 repeatedRecords({value: 29})
 //│ = [29, 29]
 
-// Multiple subscribers can arrive before a forward spread has any candidates.
+// Both reads of pendingRecord.value are elaborated before laterRecord's body.
+// Once its body is available, the resolver must supply the field to both reads.
 :expect [30, 30]
 let pendingRecord = {...laterRecord()}
 fun readPendingRecord() = [pendingRecord.value, pendingRecord.value]
@@ -304,7 +308,7 @@ readPendingRecord()
 //│ = [30, 30]
 //│ pendingRecord = {value: 30}
 
-// A mutable copy keeps property identity without mutating the source's value information.
+// Updating mutableCopy.value must leave stableRecord.value equal to 31.
 :expect [31, 32]
 let stableRecord = {value: 31}
 let mutableCopy = mut {...stableRecord}
@@ -314,23 +318,26 @@ set mutableCopy.value = 32
 //│ mutableCopy = {value: 32}
 //│ stableRecord = {value: 31}
 
-// TODO: Track mutable field writes; sharing a member symbol must not reuse its initializer.
+// TODO: Infer the new value of mutableNested.value after the assignment. Until then,
+// report its unknown value shape rather than assuming it still contains `before`.
+// The unchanged stableNested.value.before must remain resolvable.
 :fixme
 let stableNested = {value: {before: 33}}
 let mutableNested = mut {...stableNested}
 set mutableNested.value = {after: 34}
 [stableNested.value.before, mutableNested.value.after]
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.322: 	[stableNested.value.before, mutableNested.value.after]
+//│ ║  l.328: 	[stableNested.value.before, mutableNested.value.after]
 //│ ║         	                            ^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Cannot resolve member 'after' of a value with unknown shape.
-//│ ║  l.319: 	let stableNested = {value: {before: 33}}
+//│ ║  l.325: 	let stableNested = {value: {before: 33}}
 //│ ╙──       	                    ^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ mutableNested = {value: {after: 34}}
 //│ stableNested = {value: {before: 33}}
 
-// Record fields participate in ordinary member ambiguity diagnostics, including both origins.
+// Both opened records define `shared`, so the reference is ambiguous. The error
+// must point to each field definition and the corresponding open statement.
 :e
 fun ambiguousRecordOpen() =
   let firstRecord = {shared: 1}
@@ -340,18 +347,18 @@ fun ambiguousRecordOpen() =
   shared
 ambiguousRecordOpen()
 //│ ╔══[COMPILATION ERROR] Wildcard-open reference 'shared' is ambiguous
-//│ ║  l.340: 	  shared
+//│ ║  l.347: 	  shared
 //│ ║         	  ^^^^^^
 //│ ╟── candidate: record field 'shared' defined here
-//│ ║  l.336: 	  let firstRecord = {shared: 1}
+//│ ║  l.343: 	  let firstRecord = {shared: 1}
 //│ ║         	                     ^^^^^^
 //│ ╟── Opened here
-//│ ║  l.338: 	  open firstRecord
+//│ ║  l.345: 	  open firstRecord
 //│ ║         	       ^^^^^^^^^^^
 //│ ╟── candidate: record field 'shared' defined here
-//│ ║  l.337: 	  let secondRecord = {shared: 2}
+//│ ║  l.344: 	  let secondRecord = {shared: 2}
 //│ ║         	                      ^^^^^^
 //│ ╟── Opened here
-//│ ║  l.339: 	  open secondRecord
+//│ ║  l.346: 	  open secondRecord
 //│ ╙──       	       ^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.

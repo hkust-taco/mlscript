@@ -2,6 +2,7 @@
 
 module RecordProducers {
   val fields = {...{value: 36}}
-  // This selection starts the record producer in the imported file's elaborator.
+  // Resolving this selection records the `value` field in the shape of `fields`,
+  // before another file imports this module.
   val observed = fields.value
 }

@@ -1265,7 +1265,8 @@ final case class LetDecl(sym: LocalVarSymbol | TermSymbol, annotations: Ls[Annot
   * selected statically until their key is known. Cloning preserves this identity.
   */
 final case class RcdField(field: Term, rhs: Term, sym: BlockMemberSymbol) extends Statement:
-  // RcdField.apply completes the member's sole term interpretation before exposing it.
+  // The two-argument RcdField.apply sets sym.tsym and its definition before
+  // constructing this node. Lowering clones reuse the same initialized symbols.
   val tsym: TermSymbol = sym.tsym.get
   require((tsym.k is RecordField) && tsym.owner.isEmpty && tsym.defn.exists(_.sym is sym))
   field match
@@ -1282,9 +1283,10 @@ object RcdField:
     val sym = new BlockMemberSymbol(name, Nil)
     val tsym = TermSymbol(RecordField, N, id, erasedType = N)
     sym.tsym = S(tsym)
-    // fromBMS exits the selected TermSymbol's capture when reading a definition.
-    // Supply its matching entry so that the record's enclosing marks are preserved.
-    // Record lowering evaluates rhs directly; this capture only describes value flow.
+    // fromBMS removes a capture mark for tsym when it reads this definition.
+    // Wrap rhs in Capture to supply that mark, so the entry and exit cancel and
+    // leave the enclosing call-site marks intact. Lowering evaluates RcdField.rhs;
+    // it does not evaluate this synthetic definition separately.
     tsym.defn = S(TermDefinition(RecordField, sym, tsym, Nil, N, N,
       S(Term.Capture(rhs, tsym)), TermDefFlags.empty, Modulefulness.none, Nil, N))
     sym.complete()

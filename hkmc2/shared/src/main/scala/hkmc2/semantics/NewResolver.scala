@@ -47,9 +47,10 @@ class NewResolver:
   val introShapes: mutable.Map[IntroTerm, IntroShape] = mutable.Map.empty // TODO use symbols for faster lookup?
   val symShapes: mutable.Map[(BlockMemberSymbol, FlowSymbol, Ls[Marks]), SymShape] = mutable.Map.empty
   private val selfShapes: mutable.Map[InnerSymbol, BaseShape] = mutable.Map.empty
-  // Aggregate nodes whose spread subscriptions have already been installed in this
-  // elaboration. Term equality is structural, so key by identity: equal expressions
-  // can receive their pending spread candidates through different listener lists.
+  // Tuple and record AST nodes for which we have subscribed to spread operands.
+  // Each node owns its shapes and listeners. Comparing nodes by structural equality
+  // would skip subscriptions for a second equal expression, leaving its listeners
+  // without results; compare their identities instead.
   private val aggregateProducers = mutable.Set.empty[Identity[Tup | Rcd]]
   val defnShapes: mutable.Map[DefinitionSymbol[?], DefnShape] = mutable.Map.empty
   
@@ -405,8 +406,9 @@ class NewResolver:
       case member: BlockMemberSymbol => definition(member)
       case RecordMember(field, false) => definition(field.sym)
       case RecordMember(field, true) =>
-        // Mutability affects the read, not member identity. Select the ordinary
-        // term interpretation even though writes make its value shape unknown.
+        // Assignments can replace the stored value, so its initializer no longer
+        // determines what a read returns. Publish the known property symbol for
+        // selection/assignment, but an unknown shape for the value being read.
         if !host.resolvedTargets.contains(field.tsym) then host.resolvedTargets ::= field.tsym
         publish(UnknownValueShape(field.rhs))
 
@@ -692,17 +694,18 @@ class NewResolver:
           case _ => ()
         )
   
-  /** Install one spread subscription graph per aggregate node in this elaboration.
-    * Register before following spreads, whose callbacks can synchronously request
-    * this node again. An empty candidate set may be waiting for a forward definition,
-    * so it cannot indicate whether subscriptions have been installed. Every new
-    * consumer receives existing candidates and then subsequent publications.
+  /** Subscribe to spread operands once for each tuple or record AST node. Record
+    * the node before calling start: a recursive spread can call listen on the same
+    * node before start returns. Testing shapes.isEmpty would not prevent duplicate
+    * subscriptions while the node is waiting for a forward definition. Deliver
+    * cached shapes to each listener, which is already registered for future shapes.
     */
   private def listenAggregate(aggregate: Tup | Rcd, listener: Shape => Unit)
       (start: (TermShape => Unit) => Unit): Unit =
     val first = aggregateProducers.add(new Identity(aggregate))
-    // A definition imported from another elaborator can already carry candidates.
-    // Replay them even on this resolver's first subscription, before producing deltas.
+    // An imported definition can already have shapes computed by its own elaborator.
+    // Send those shapes to this listener even if first is true; recomputing the same
+    // shapes below will not notify it, because shapes.add rejects duplicates.
     aggregate.shapes.foreach(listener)
     if first then
       start: shape =>

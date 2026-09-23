@@ -1247,8 +1247,9 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
           ErrorReport(msg"This selection of member '${id.name}' has no resolved target" -> sel.toLoc :: Nil,
             source = Diagnostic.Source.Compilation)
         case target :: Nil =>
-          // The property and the class stored in it may have different names.
-          // Resolution retains the selected member separately from its interpretation.
+          // For `r = {make: C}`, the pattern head `r.make` resolves to class C,
+          // but the generated property read must use `make`. resolvedMembers holds
+          // the property names; target identifies the definition used by the pattern.
           sel.resolvedMembers.map(_.nme).distinct match
             case name :: Nil =>
               setupNamedSelection(prefix, new Tree.Ident(name).withLocOf(id), S(target))(k)
