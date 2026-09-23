@@ -343,8 +343,16 @@ final case class TupleShape(source: Term, elements: Ls[TupleShape.Element]) exte
     case TupleShape.Spread(shape, marks) => shape.segments.map:
       case TupleShape.Field(field, inner) => TupleShape.Field(field, inner ::: marks :: Nil)
       case TupleShape.Unknown(shape, inner) => TupleShape.Unknown(shape, inner ::: marks :: Nil)
-  /** Re-entering the same producer through the same spread context can generate
-    * arbitrarily many tuple lengths. Widen that spread, retaining surrounding fields.
+  /** Does this candidate already depend on the given producer in the given context?
+    * `source` identifies the producer by syntax-node identity; `marks` distinguish
+    * its spread contexts. Inspect the selected dependency tree, not flattened
+    * segments, since flattening would erase the evidence of recursive production.
+    * Rest views retain that evidence even when they consume the relevant fields.
+    *
+    * The tuple listener uses this to widen repeated dependencies: for a producer
+    * like `[n, ...growing(n - 1)]`, repeatedly prefixing its own candidates would
+    * otherwise create unboundedly many shapes. This is an approximation, not a
+    * proof of runtime recursion: contexts have only the precision of their marks.
     */
   def containsSpread(source: Term, marks: Marks): Bool = elements.exists:
     case _: TupleShape.Segment => false
@@ -368,13 +376,15 @@ object TupleShape:
   sealed trait Element
   sealed trait Segment extends Element
   final case class Field(field: Fld, marks: Ls[Marks]) extends Segment
-  // An arbitrary number of arbitrary values. Use this for opaque layouts and
-  // recursive widening, never for a spread whose shape has not arrived yet.
+  /** An arbitrary number of arbitrary values. Use this for opaque layouts and
+    * recursive widening, never for a spread whose shape has not arrived yet.
+    * The `source` field is used for user-facing diagnostic purposes. */  
   final case class Unknown(source: Term, marks: Ls[Marks]) extends Segment
   final case class Spread(shape: TupleShape, marks: Marks) extends Element
   def unknown(source: Term): TupleShape = TupleShape(source, Unknown(source, Nil) :: Nil)
-  // Retain the original candidate as well as the selected residual segments:
-  // flattening away the parent would hide recursive producer dependencies.
+  /** Retain the original candidate as well as the selected residual segments:
+    * flattening away the parent would hide recursive producer dependencies from
+    * containsSpread, allowing recursion through rest slicing to evade widening. */
   final case class Rest(shape: TupleShape, segments: Ls[Segment]) extends Element
 
 

@@ -649,7 +649,17 @@ class NewResolver:
             listenTerm(term): sh =>
               if seen.add(sh) then sh match
                 case Marked(shape: TupleShape, marks) =>
-                  val spread = if shape.containsSpread(shape.source, marks) then TupleShape.unknown(shape.source) else shape
+                  // Widen an incoming candidate that already contains its own
+                  // producer in this context. For `fun growing(n) = ‹...› [n, ...growing(n - 1)] ‹...›`,
+                  // this replaces the recursive operand with an arbitrary sequence,
+                  // retaining the surrounding `n` field and the spread's marks.
+                  // Further feedback in the same context produces the same widened
+                  // candidate, so the host's deduplication stops that expansion.
+                  // Earlier candidates remain valid alternatives. A pending spread
+                  // never reaches this branch: it waits for a shape notification.
+                  val spread = if shape.containsSpread(shape.source, marks)
+                    then TupleShape.unknown(shape.source)
+                    else shape
                   expand(rest, TupleShape.Spread(spread, marks) :: reversed)
                 case Marked(_, marks) =>
                   // Opaque iterables (e.g. external Arrays) have no resolved
