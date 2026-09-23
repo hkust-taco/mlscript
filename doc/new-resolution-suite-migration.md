@@ -194,10 +194,19 @@ errors when a selected interpretation lacks the required capability.
 
 ## Remaining implementation work, not new semantic decisions
 
-- Implement deferred validation for calls, spread distribution, curried
-  constructors, and returned function shapes. Distinguish an unknown-length
-  spread from a proven arity mismatch; the remaining spread diagnostics still
-  expose this gap.
+- Complete argument-spread distribution in the existing deferred call resolver.
+  Callee validation already runs from shape listeners; saturated calls subscribe
+  to their bodies for returned shapes, and curried constructors retain their
+  remaining parameter lists. `newres/DeferredCalls.mls` covers forward calls,
+  delayed arity errors, returned lambdas, and curried constructor field access.
+  The concrete gap is `zipArgs`: it counts syntactic spread nodes as single
+  arguments and reports an arity mismatch when a spread meets a fixed parameter.
+  Expand known tuple spreads through listeners, preserve capture marks on each
+  argument segment (including residual rest arguments), and distinguish an
+  unknown-length spread from a proven arity mismatch. Test nested and delayed
+  spreads, fixed arguments following spreads, rest parameters, and spreads in
+  each list of a curried call. Further constructor/returned-function fixes should
+  be driven by specific failures, rather than replacing the existing deferral.
 - Audit assignments to member symbols and definition initializers. The trial
   reaches unimplemented direct member-reference shape cases and missing
   assignment lowering in several mutation tests.

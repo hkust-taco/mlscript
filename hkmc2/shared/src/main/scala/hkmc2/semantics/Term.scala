@@ -840,6 +840,7 @@ sealed trait Statement extends AutoLocated, ProductWithExtraInfo, Describable:
       case Quoted(term) => "quoted term"
       case Unquoted(term) => "unquoted term"
       case New(cls, args, rft) => "object instantiation"
+      case DynNew(cls, args) => "dynamic object instantiation"
       case SelProj(pre, cls, proj) => "field selection"
       case Asc(term, ty) => "type ascription"
       case CompType(lhs, rhs, pol) => if pol then "alternation" else "composition"
