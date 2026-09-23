@@ -194,11 +194,6 @@ errors when a selected interpretation lacks the required capability.
 
 ## Remaining implementation work, not new semantic decisions
 
-- Port the old modulefulness, generic-arity, and implicit-argument checks to
-  completed shape/signature subscriptions. `basics/BadModuleUses.mls`,
-  `GenericClasses.mls`, `BadTypeClasses.mls`, and `codegen/NoModuleCheck.mls`
-  currently lose expected errors. Do not remove their expectations to turn the
-  migration green.
 - Implement deferred validation for calls, spread distribution, curried
   constructors, and returned function shapes. Distinguish an unknown-length
   spread from a proven arity mismatch; the remaining spread diagnostics still

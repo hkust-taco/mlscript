@@ -75,7 +75,7 @@ C.oops
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
 //│ ║  l.74: 	C.oops
 //│ ║        	^^^^^^
-//│ ╟── Class 'C' does not contain member 'oops'
+//│ ╟── Class value does not contain member 'oops'
 //│ ║  l.38: 	declare class C
 //│ ╙──      	              ^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
@@ -85,7 +85,7 @@ M.D.oops
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
 //│ ║  l.84: 	M.D.oops
 //│ ║        	^^^^^^^^
-//│ ╟── Class 'D' does not contain member 'oops'
+//│ ╟── Class value does not contain member 'oops'
 //│ ║  l.48: 	  declare class D
 //│ ╙──      	                ^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.

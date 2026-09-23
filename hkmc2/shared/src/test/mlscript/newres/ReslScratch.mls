@@ -181,3 +181,18 @@ fun foo(x) =
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 
+
+// :de
+:sr
+{a: 1}
+//│ ————————————————| Resolved |————————————————————————————————————————————————————————————————————————
+//│   TODO[show:Rcd](Rcd(false,List(LetDecl(a,List()), DefineVar(a,Lit(IntLit(1))), RcdField(Lit(StrLit(a)),Ref(a)))))
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = {a: 1}
+
+:fixme
+{a: 1}.a
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+
+
+

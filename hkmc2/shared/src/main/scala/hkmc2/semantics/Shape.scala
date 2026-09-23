@@ -305,6 +305,7 @@ class DefnShape(val defn: Definition, val ext: Opt[TermShape]) extends NonAppTer
     // s"${defn.describe}"
     // s"${defn.bsym.asCls.fold("")(_.defn.get.kind.desc+" ")}'${defn.bsym.nme}'"
     s"${defn match
+      case defn: ClassDef => return defn.kind.desc + " value"
       case defn: TypeLikeDef => defn.kind.desc + " "
       case defn: TermDefinition =>
         defn.tsym match
