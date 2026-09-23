@@ -131,17 +131,17 @@ class BlockSimplifier
       def paramsOf(paramLists: IterableOnce[ParamList]): Unit =
         locals ++= paramLists.iterator.flatMap(_.paramSyms)
       def rec(current: Block): Unit =
-          current match
-          case Define(fd: FunDefn, _) =>
-            paramsOf(fd.params)
-          case Define(cd: ClsLikeDefn, _) =>
-            paramsOf(cd.paramsOpt.iterator ++ cd.auxParams.iterator)
-            paramsOf(cd.methods.iterator.flatMap(_.params))
-            paramsOf(cd.companion.iterator.flatMap(_.methods).flatMap(_.params))
-          case Scoped(syms, _) =>
-            locals ++= syms.iterator.collect { case v: LocalVar => v }
-          case _ => ()
-          current.subBlocks.foreach(child => rec(child))
+        current match
+        case Define(fd: FunDefn, _) =>
+          paramsOf(fd.params)
+        case Define(cd: ClsLikeDefn, _) =>
+          paramsOf(cd.paramsOpt.iterator ++ cd.auxParams.iterator)
+          paramsOf(cd.methods.iterator.flatMap(_.params))
+          paramsOf(cd.companion.iterator.flatMap(_.methods).flatMap(_.params))
+        case Scoped(syms, _) =>
+          locals ++= syms.iterator.collect { case v: LocalVar => v }
+        case _ => ()
+        current.subBlocks.foreach(child => rec(child))
       rec(block)
       locals.toSet
     
