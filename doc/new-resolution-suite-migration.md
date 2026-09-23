@@ -124,8 +124,9 @@ before trying to fix recursive cases by adding recursion limits.
 Acceptance cases: bound members after tuple/record extraction, nested constructors,
 aliases, guards, transformed results, repeated references, qualified imported
 constructors, and recursive UPS matchers. Compare results and generated matcher
-structure with the existing tests. `ups/examples/HindleyMilner.mls` also timed
-out during the trial and needs an isolated reproducer before assigning its cause.
+structure with the existing tests. `ups/examples/HindleyMilner.mls` still exceeds
+the 25-second limit on recheck and needs an isolated reproducer before assigning
+its cause.
 
 ### 3. Declared interfaces versus inferred values
 
@@ -191,8 +192,9 @@ errors when a selected interpretation lacks the required capability.
    application difftests, and the aggregate suite. Review output changes; keep
    nonmigrated files intact. WASM `Basics` retains its previous configuration
    pending the capture fix, keeping this partial migration green.
-2. **Investigate retained timeouts.** Minimize `codegen/Generators.mls` and
-   `ups/examples/HindleyMilner.mls`; check emitted IR/JS when migrating those worksheets.
+2. **Investigate the remaining timeout.** Minimize `ups/examples/HindleyMilner.mls`.
+   `codegen/Generators.mls` now finishes in about 1.3 seconds under new resolution;
+   its remaining failures include unresolved `next` selections and runtime errors.
 3. **Implement structural targets and external signatures.** Agree on opaque
    selection policy, then migrate records, tuples, mutation, and JS interop in
    small batches. Re-run affected negative tests as well as successful programs.
@@ -288,7 +290,7 @@ The files themselves retain the pre-trial configuration and output.
 - `codegen/Do.mls`: Unexpected compilation error; [COMPILATION ERROR] This selection of member 'hello' has no resolved target
 - `codegen/ErasedTypes.mls`: Unexpected warning; [WARNING] This annotation has no effect.
 - `codegen/FirstClassFunctionTransform.mls`: Unexpected exception; /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-- `codegen/Generators.mls`: New-resolution trial exceeded the 25-second runner timeout.
+- `codegen/Generators.mls`: Recheck completes in about 1.3 seconds; unresolved `next` selections and runtime errors remain.
 - `codegen/Getters.mls`: Unexpected compilation error; [COMPILATION ERROR] This selection of member 'whoops' has no resolved target
 - `codegen/Hygiene.mls`: Unexpected compilation error; [COMPILATION ERROR] Resolution error in selection; String literal does not contain member 'foo'
 - `codegen/ImportAlias.mls`: Unexpected compilation error; [COMPILATION ERROR] This selection of member 'inc' has no resolved target
@@ -381,7 +383,7 @@ The files themselves retain the pre-trial configuration and output.
 - `ups/examples/EvaluationContext2.mls`: Unexpected exception; /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
 - `ups/examples/Extraction.mls`: Unexpected exception; /!!!\ Uncaught error: scala.MatchError: NewSel(MemberRef(member:Option),Ident(Some),None) (of class hkmc2.semantics.Term$NewSel)
 - `ups/examples/Flatten.mls`: Unexpected exception; /!!!\ Uncaught error: scala.MatchError: UnresolvedRef(List(MemberRef(member:Stack), MemberRef(member:annotations)),Ident(::)) (of class hkmc2.semantics.Term$UnresolvedRef)
-- `ups/examples/HindleyMilner.mls`: New-resolution trial exceeded the 25-second runner timeout.
+- `ups/examples/HindleyMilner.mls`: New-resolution recheck still exceeds the 25-second runner timeout.
 - `ups/examples/ListPredicates.mls`: Unexpected exception; /!!!\ Uncaught error: scala.MatchError: SimpleRef(list) (of class hkmc2.semantics.Term$SimpleRef)
 - `ups/examples/Negation.mls`: Unexpected exception; /!!!\ Uncaught error: scala.MatchError: SimpleRef(x) (of class hkmc2.semantics.Term$SimpleRef)
 - `ups/examples/PrecedenceClimbStackParse.mls`: Unexpected exception; /!!!\ Uncaught error: scala.MatchError: UnresolvedRef(List(MemberRef(member:Stack)),Ident(::)) (of class hkmc2.semantics.Term$UnresolvedRef)
