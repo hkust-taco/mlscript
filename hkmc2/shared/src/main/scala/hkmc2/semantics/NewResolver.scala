@@ -226,7 +226,16 @@ class NewResolver:
                   "pattern argument".pluralized(ps.params.length)}, but got ${args.length}" -> cls.toLoc :: Nil)
             ps.params.lazyZip(args).flatMap: (p, a) =>
               p.fldSym match
-                case S(fldSym: BlockMemberSymbol) => (fldSym -> a) :: Nil
+                case S(fldSym: BlockMemberSymbol) =>
+                  // withFields reports member/alias conflicts before dropping all
+                  // generated fields for recovery. Parameters retain their fldSym,
+                  // so verify its identity in the recovered body: a body member may
+                  // occupy the same name. Do not publish dangling pattern fields or
+                  // report another error for this already-diagnosed class.
+                  if cls.body.members.get(fldSym.nme).contains(fldSym) then (fldSym -> a) :: Nil
+                  else
+                    res.isErroneous = true
+                    Nil
                 case _ =>
                   res.isErroneous = true
                   resolError(res, msg"Pattern argument requires an accessible constructor field." -> p.toLoc :: Nil)
@@ -286,13 +295,22 @@ class NewResolver:
         def listenConstructor(psh: PatternShape): Unit = psh match
           case CtorPatternShape(cls, fs, _, resSym) =>
             def check(sh: TermShape): Unit =
-              if sh.isSaturated && sh.applicationHead._1.extendsCls(cls) then
+              if sh.isInstanceOfClass(cls) then
                 fs.foreach: (bms, pat) =>
                   sh.getMember(bms.nme) match
-                    case S((sym: BlockMemberSymbol, marks)) =>
+                    case MemberLookup.Found(sym: BlockMemberSymbol, marks) =>
                       val field = symShapes.getOrElseUpdate((sym, resSym, marks), SymShape(sym, resSym, marks))
                       matchShapePat(field, pat)(_ => ())
-                    case _ => softAssert(false, "Matched constructor is missing its field")
+                    case _ =>
+                      // classPattern only publishes fields present in cls.body.
+                      // The nominal test above admits only that class's instances,
+                      // this-values, and subclasses. Their member lookup follows
+                      // the same class bodies and inheritance chain; overrides are
+                      // also BlockMemberSymbols. Record members cannot replace a
+                      // class's own field. Thus this branch is an internal mismatch
+                      // between nominal matching and member lookup, not recovery
+                      // from a malformed class (filtered by classPattern above).
+                      softAssert(false, "Matched constructor is missing its field")
                 matched(sh)
             shape match
               case sh: TermShape => check(sh)
@@ -390,22 +408,28 @@ class NewResolver:
             case NoShape => ()
             case shape: TermShape => publish(shape)
 
+  private def unknownMember(host: NewResolvable, name: Str, reason: MemberLookup.Uncertainty, loc: Opt[Loc]): Unit =
+    host.isErroneous = true
+    val message = reason match
+      case MemberLookup.Uncertainty.ValueShape =>
+        msg"Cannot resolve member '$name' of a value with unknown shape."
+      case MemberLookup.Uncertainty.RecordOverwrite =>
+        msg"Cannot resolve member '$name' across a computed key or unknown record spread."
+    resolError(host, message -> loc :: Nil)
+
   def unresolvedRef(ref: UnresolvedRef): Unit =
     ref.prefixes.foreach: prefix =>
       listenTerm(prefix): shape =>
-        // A miss in one wildcard source is not an error: another may provide
-        // the name. A reference with no candidates is diagnosed by lowering.
-        shape match
-          case Marked(_: UnknownValueShape, _) =>
-            ref.isErroneous = true
-            resolError(ref, msg"Cannot resolve member '${ref.id.name}' of a value with unknown shape." -> shape.toLoc :: Nil)
-          case Marked(record: RecordShape, _) if record.hasUnknownMember(ref.id.name) =>
-            ref.isErroneous = true
-            resolError(ref, msg"Cannot resolve member '${ref.id.name}' across a computed key or unknown record spread." -> record.toLoc :: Nil)
-          case _ => shape.getMember(ref.id.name).foreach: (member, marks) =>
+        shape.getMember(ref.id.name) match
+          case MemberLookup.Found(member, marks) =>
             val candidate = prefix -> member.memberSymbol
             if !ref.resolvedMembers.contains(candidate) then ref.resolvedMembers ::= candidate
             publishMember(ref, member, ref.resSym, marks)
+          case MemberLookup.Missing =>
+            // A known miss in one wildcard source is not an error: another may
+            // provide the name. Lowering diagnoses references with no candidates.
+            ()
+          case MemberLookup.Unknown(reason, loc) => unknownMember(ref, ref.id.name, reason, loc)
 
   /** Inspect an overload set only once its definitions have all been published. */
   private def completedClass(shape: SymShape)(selected: ClassDef => Unit, absent: () => Unit): Unit =
@@ -444,31 +468,25 @@ class NewResolver:
 
   def newSel(sel: NewSel): Unit =
     log(s"newSel? sel = ${sel.showDbg}")
-    def member(info: Opt[MemberInfo], description: Message, loc: Opt[Loc]): Unit = info match
-      case S((bms, marks)) =>
+    def member(info: MemberLookup, description: Message, loc: Opt[Loc]): Unit = info match
+      case MemberLookup.Found(bms, marks) =>
         log(s"newSel member: bms = ${bms.memberSymbol.showDbg}, mss = ${marks.map(_.showDbg)}")
         if !sel.resolvedMembers.contains(bms.memberSymbol) then sel.resolvedMembers ::= bms.memberSymbol
         publishMember(sel, bms, sel.resSym, marks)
-      case N =>
+      case MemberLookup.Missing =>
         sel.isErroneous = true
         resolError(sel, msg"$description does not contain member '${sel.id.name}'" -> loc :: Nil)
+      case MemberLookup.Unknown(reason, loc) => unknownMember(sel, sel.id.name, reason, loc)
     sel.cls match
       case N => listenTerm(sel.prefix): shape =>
         log(s"newSel: sel = ${sel.showDbg}, shape = ${shape.shwDbg}")
-        shape match
-          case Marked(_: UnknownValueShape, _) =>
-            sel.isErroneous = true
-            resolError(sel, msg"Cannot resolve member '${sel.id.name}' of a value with unknown shape." -> shape.toLoc :: Nil)
-          case Marked(record: RecordShape, _) if record.hasUnknownMember(sel.id.name) =>
-            sel.isErroneous = true
-            resolError(sel, msg"Cannot resolve member '${sel.id.name}' across a computed key or unknown record spread." -> record.toLoc :: Nil)
-          case _ => member(shape.getMember(sel.id.name), msg"${shape.describe.capitalize}", shape.toLoc)
+        member(shape.getMember(sel.id.name), msg"${shape.describe.capitalize}", shape.toLoc)
       case S(cls) =>
         listenClass(cls)((cd, marks) =>
           val candidate = cd.sym -> marks
           if !sel.resolvedClasses.contains(candidate) then sel.resolvedClasses ::= candidate
           listenExt(cd.ext, ext =>
-            member(DefnShape(cd, ext).getInstanceMember(sel.id.name).map(_.mapSecond(_ ::: marks)),
+            member(DefnShape(cd, ext).getInstanceMember(sel.id.name).withMarks(marks),
               msg"Class '${cd.sym.nme}'", cd.toLoc))
         , sh =>
           sel.isErroneous = true

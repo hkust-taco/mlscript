@@ -260,3 +260,27 @@ unknownValueOpen()
 //│ ║  l.249: 	  let unknownValue = mut {value: {answer3: 0}}
 //│ ╙──       	                          ^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+
+// A known-absent name in one open does not mask a later source that supplies it.
+:expect 28
+fun knownMissingOpen() =
+  let unrelated = {...{other: 0}}
+  let fallback = {wanted: 28}
+  open unrelated
+  open fallback
+  wanted
+knownMissingOpen()
+//│ = 28
+
+// With no supplying source, a known-absent name still produces an error.
+:e
+fun allMissingOpen() =
+  let unrelated = {other: 0}
+  open unrelated
+  nonexistent
+allMissingOpen()
+//│ ╔══[COMPILATION ERROR] Name not found in wildcard opens: nonexistent
+//│ ║  l.281: 	  nonexistent
+//│ ╙──       	  ^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
