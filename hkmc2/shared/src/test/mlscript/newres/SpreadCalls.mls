@@ -237,3 +237,12 @@ four(...new Array(), 1, 2, 3, 4, 5)
 fun invokeRest(f, x, ...tail) = f()
 invokeRest(...new Array(() => 97), Box(0))
 //│ = 97
+
+// Structurally equal tuple nodes must each publish delayed spread candidates.
+:expect [98, 98]
+fun repeatedTuples(xs) =
+  let a = [0, ...xs]
+  let b = [0, ...xs]
+  [second(...a).value, second(...b).value]
+repeatedTuples([Box(98)])
+//│ = [98, 98]

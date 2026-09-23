@@ -129,6 +129,13 @@ object AnySel:
 end AnySel
 
 
+sealed trait TupImpl extends ShapeHost:
+  self: Term.Tup =>
+  /** Set by NewResolver before subscribing to spreads. An empty host can be
+    * pending, so its candidate set cannot indicate whether production started.
+    */
+  private[semantics] var shapeProducerStarted: Bool = false
+
 sealed trait AppImpl extends ResolvableImpl:
   self: Term.App =>
   var resolvedTargets: Ls[flow.AppTarget] = Nil // * filled during flow analysis
@@ -415,7 +422,7 @@ enum Term extends Statement, ShapePublisher:
   case TyApp(lhs: Term, targs: Ls[Term])
     (val typ: Opt[Type]) extends Term, ResolvableImpl
   case DynSel(prefix: Term, fld: Term, arrayIdx: Bool)
-  case Tup(fields: Ls[Elem])(val tree: Tree.Tup)
+  case Tup(fields: Ls[Elem])(val tree: Tree.Tup) extends Term, TupImpl
   case Mut(underlying: Tup | Rcd | New | DynNew)
   case CtxTup(fields: Ls[Elem])(val tree: Tree.Tup)
   case IfLike(kw: Keyword.SplitLike, form: IfLikeForm, split: SimpleSplit) extends Term, ShapeHost
@@ -665,10 +672,13 @@ enum Term extends Statement, ShapePublisher:
         copy.resolvedTargets = term.resolvedTargets
         copyResolution(term, copy)
       case DynSel(prefix, fld, arrayIdx) => DynSel(prefix.mkClone, fld.mkClone, arrayIdx)
-      case term @ Tup(fields) => Tup(fields.map {
-        case f: Fld => f.copy(term = f.term.mkClone, asc = f.asc.map(_.mkClone))
-        case s: Spd => s.copy(term = s.term.mkClone)
-      })(term.tree)
+      case term @ Tup(fields) =>
+        val copy = Tup(fields.map {
+          case f: Fld => f.copy(term = f.term.mkClone, asc = f.asc.map(_.mkClone))
+          case s: Spd => s.copy(term = s.term.mkClone)
+        })(term.tree)
+        copy.shapeProducerStarted = term.shapeProducerStarted
+        copyShapes(term, copy)
       case Mut(underlying) => Mut(underlying.mkClone.asInstanceOf[Tup | Rcd | New | DynNew])
       case term @ CtxTup(fields) => CtxTup(fields.map {
         case f: Fld => f.copy(term = f.term.mkClone, asc = f.asc.map(_.mkClone))

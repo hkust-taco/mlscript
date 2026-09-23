@@ -46,8 +46,6 @@ class NewResolver:
   val newShapes: mutable.Map[(ClassLikeSymbol, Ls[Marks], FlowSymbol), NewShape] = mutable.Map.empty
   val introShapes: mutable.Map[IntroTerm, IntroShape] = mutable.Map.empty // TODO use symbols for faster lookup?
   val symShapes: mutable.Map[(BlockMemberSymbol, FlowSymbol, Ls[Marks]), SymShape] = mutable.Map.empty
-  // One producer per tuple syntax node, installed before following its spreads.
-  private val tupleShapes: mutable.Map[Tup, mutable.LinkedHashSet[TermShape]] = mutable.Map.empty
   private val selfShapes: mutable.Map[InnerSymbol, BaseShape] = mutable.Map.empty
   val defnShapes: mutable.Map[DefinitionSymbol[?], DefnShape] = mutable.Map.empty
   
@@ -629,37 +627,35 @@ class NewResolver:
     case TyApp(underlying, _) => listen(underlying, discardMarks)(listener)
     case Mut(underlying) => listenTerm(underlying)(listener)
     case tuple: Tup =>
-      tupleShapes.get(tuple) match
-        case S(shapes) => shapes.toList.foreach(listener)
-        case N =>
-          val shapes = mutable.LinkedHashSet.empty[TermShape]
-          // Install before subscribing: recursive references must reuse this producer.
-          tupleShapes(tuple) = shapes
-          def publish(shape: TermShape): Unit =
-            if shapes.add(shape) then tuple.shapeListeners.foreach(_(shape))
-          def expand(elems: Ls[Elem], reversed: Ls[TupleShape.Element]): Unit = elems match
-            case Nil =>
-              // A sole spread preserves its operand's shape and context exactly.
-              // Besides avoiding wrappers, this lets recursive rest forwarding
-              // reach the same fixed point as forwarding an ordinary parameter.
-              val shape = reversed match
-                case TupleShape.Spread(shape, NoMarks) :: Nil => shape
-                case TupleShape.Spread(shape, marks: SomeMarks) :: Nil => MarkedShape(shape, marks)
-                case _ => TupleShape(tuple, reversed.reverse)
-              publish(shape)
-            case (field: Fld) :: rest => expand(rest, TupleShape.Field(field, Nil) :: reversed)
-            case Spd(_, term) :: rest =>
-              val seen = mutable.Set.empty[TermShape]
-              listenTerm(term): sh =>
-                if seen.add(sh) then sh match
-                  case Marked(shape: TupleShape, marks) =>
-                    val spread = if shape.containsSpread(shape.source, marks) then TupleShape.unknown(shape.source) else shape
-                    expand(rest, TupleShape.Spread(spread, marks) :: reversed)
-                  case Marked(_, marks) =>
-                    // Opaque iterables (e.g. external Arrays) have no resolved
-                    // element layout. Their runtime spread is still permitted.
-                    expand(rest, TupleShape.Spread(TupleShape.unknown(term), marks) :: reversed)
-          expand(tuple.fields, Nil)
+      if tuple.shapeProducerStarted then tuple.shapes.foreach(listener)
+      else
+        // Start before subscribing: recursive listeners must reuse this host.
+        tuple.shapeProducerStarted = true
+        def publish(shape: TermShape): Unit =
+          if tuple.shapes.add(shape) then tuple.shapeListeners.foreach(_(shape))
+        def expand(elems: Ls[Elem], reversed: Ls[TupleShape.Element]): Unit = elems match
+          case Nil =>
+            // A sole spread preserves its operand's shape and context exactly.
+            // Besides avoiding wrappers, this lets recursive rest forwarding
+            // reach the same fixed point as forwarding an ordinary parameter.
+            val shape = reversed match
+              case TupleShape.Spread(shape, NoMarks) :: Nil => shape
+              case TupleShape.Spread(shape, marks: SomeMarks) :: Nil => MarkedShape(shape, marks)
+              case _ => TupleShape(tuple, reversed.reverse)
+            publish(shape)
+          case (field: Fld) :: rest => expand(rest, TupleShape.Field(field, Nil) :: reversed)
+          case Spd(_, term) :: rest =>
+            val seen = mutable.Set.empty[TermShape]
+            listenTerm(term): sh =>
+              if seen.add(sh) then sh match
+                case Marked(shape: TupleShape, marks) =>
+                  val spread = if shape.containsSpread(shape.source, marks) then TupleShape.unknown(shape.source) else shape
+                  expand(rest, TupleShape.Spread(spread, marks) :: reversed)
+                case Marked(_, marks) =>
+                  // Opaque iterables (e.g. external Arrays) have no resolved
+                  // element layout. Their runtime spread is still permitted.
+                  expand(rest, TupleShape.Spread(TupleShape.unknown(term), marks) :: reversed)
+        expand(tuple.fields, Nil)
     case intro: IntroTerm =>
       val sh = introShapes.getOrElseUpdate(intro, {
         log(s"introShape: intro = $intro")
