@@ -5,18 +5,28 @@
 let xs = [1, 2, 3]
 //│ xs = [1, 2, 3]
 
+:sir
 :sjs
 assert true
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let scrut;
+//│ set scrut = true;
+//│ match scrut
+//│   true =>
+//│     return runtime⁰.Unit⁰
+//│   else
+//│     return runtime⁰.assertFail⁰("Assert.mls", "11")
+//│ end
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ if (true === true) {
 //│   return runtime.Unit
 //│ }
-//│ return runtime.safeCall(runtime.assertFail("Assert.mls", "10"));
+//│ throw runtime.safeCall(globalThis.Error("Assertion failed (Assert.mls:11)"));
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 :re
 assert false
-//│ ═══[RUNTIME ERROR] Error: Assertion failed (Assert.mls:19)
+//│ ═══[RUNTIME ERROR] Error: Assertion failed (Assert.mls:29)
 
 assert xs is Array
 
@@ -29,9 +39,9 @@ assert(true); 123
 //│ if (123 === true) {
 //│   return runtime.Unit
 //│ }
-//│ return runtime.safeCall(runtime.assertFail("Assert.mls", "28"));
+//│ throw runtime.safeCall(globalThis.Error("Assertion failed (Assert.mls:38)"));
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
-//│ ═══[RUNTIME ERROR] Error: Assertion failed (Assert.mls:28)
+//│ ═══[RUNTIME ERROR] Error: Assertion failed (Assert.mls:38)
 
 // * FIXME: the `else` is parsed as part of the `assert`!
 :sjs

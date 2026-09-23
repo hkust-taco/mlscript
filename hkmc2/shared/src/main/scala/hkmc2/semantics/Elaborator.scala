@@ -475,6 +475,9 @@ object Elaborator:
       tuple: ModuleOrObjectSymbol,
       str: ModuleOrObjectSymbol,
       unreachable: TermSymbol,
+      assertFail: TermSymbol,
+      continue: ModuleOrObjectSymbol,
+      toJsAsync: TermSymbol,
       tupleGet: TermSymbol,
       tupleSlice: TermSymbol,
       tupleLazySlice: TermSymbol,
@@ -523,6 +526,9 @@ object Elaborator:
         tuple = tuple,
         str = str,
         unreachable = term("unreachable"),
+        assertFail = term("assertFail"),
+        continue = modOrObj("Continue"),
+        toJsAsync = term("toJsAsync"),
         tupleGet = moduleMember(tuple, "get"),
         tupleSlice = moduleMember(tuple, "slice"),
         tupleLazySlice = moduleMember(tuple, "lazySlice"),
@@ -627,6 +633,9 @@ object Elaborator:
       val id = new Ident("ret")
       BlockMemberSymbol(id.name, Nil, true)
     def unreachableSymbol: TermSymbol = runtimeSymbols.unreachable
+    def assertFailSymbol: TermSymbol = runtimeSymbols.assertFail
+    def continueSymbol: ModuleOrObjectSymbol = runtimeSymbols.continue
+    def toJsAsyncSymbol: TermSymbol = runtimeSymbols.toJsAsync
     def tupleGetSymbol: TermSymbol = runtimeSymbols.tupleGet
     def tupleSliceSymbol: TermSymbol = runtimeSymbols.tupleSlice
     def tupleLazySliceSymbol: TermSymbol = runtimeSymbols.tupleLazySlice
@@ -778,7 +787,7 @@ extends Importer:
   
   /** Use a synthesized selection so the sentinel object can be referenced without field-access sanity checks. */
   private def nonLocalContinueSentinel(using Ctx): Term =
-    State.runtimeSymbol.ref().selNoSym("Continue", synth = true)
+    State.runtimeSymbol.ref().synthSel(State.continueSymbol)
   
   /** Build an effect handler around `body` for non-local control flow. */
   private def mkEffectHandleAbortive(
@@ -1614,7 +1623,7 @@ extends Importer:
             (org.startLineNum + org.fph.getLineColAt(loc.spanStart)._1).toString)
         case N => ("‹unknown›", "‹unknown›")
       val elsPart = els.fold(PrefixApp(Keywrd(Keyword.`else`), Tree.Trm(
-        State.runtimeSymbol.ref().selNoSym("assertFail", synth = true)
+        State.runtimeSymbol.ref().synthSel(State.assertFailSymbol)
           .app(Term.Lit(StrLit(fl)), Term.Lit(StrLit(ln)))
       )))(PrefixApp.apply.tupled)
       subterm:

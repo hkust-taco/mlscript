@@ -593,6 +593,10 @@ enum Term extends Statement, ShapePublisher:
 
   def sel(id: Tree.Ident, sym: Opt[MemberSymbol])(using State, Elaborator.Ctx): Sel =
     Sel(this, id)(sym, FlowSymbol.sel(id.name), N, S(summon))
+  /** Select a known synthetic member without performing source-level lookup. */
+  def synthSel(sym: MemberSymbol)(using State): SynthSel =
+    SynthSel(this, Tree.Ident(sym.nme))(S(sym), FlowSymbol.synthSel(sym.nme), N, N)
+
   def selNoSym(nme: Str, synth: Bool = false)(using State, Elaborator.Ctx): Sel | SynthSel =
     val id = new Tree.Ident(nme)
     if synth

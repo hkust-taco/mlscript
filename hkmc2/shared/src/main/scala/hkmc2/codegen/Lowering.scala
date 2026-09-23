@@ -846,7 +846,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
           N,
         )
         val rewritten = st.App(
-          st.SynthSel(State.runtimeSymbol.ref(), Tree.Ident("toJsAsync"))(N, FlowSymbol.sel("toJsAsync"), N, N),
+          State.runtimeSymbol.ref().synthSel(State.toJsAsyncSymbol),
           st.Tup(PlainFld(st.Blk(td :: Nil, bms.ref(ident).resolved(dsym))) :: Nil)(Tree.DummyTup)
         )(Tree.DummyApp, N, FlowSymbol.app())
         extractAnnots(rewritten, acc)

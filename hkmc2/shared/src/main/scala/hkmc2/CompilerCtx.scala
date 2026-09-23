@@ -105,12 +105,15 @@ class CompilerCtx(
             case sym: BlockMemberSymbol => sym
           .toSet
         case _ => Set.empty
-      val (blk0, _) = elaborationConfig.givenIn(elab.importFrom(parsed))
-      if file.toString === paths.runtimeSourceFile.toString then
-        state.initRuntimeSymbolsFromBlock(blk0)
-      else
+      val isRuntime = file.toString === paths.runtimeSourceFile.toString
+      // Elaboration synthesizes references to runtime definitions (e.g. assertFail).
+      // The runtime itself supplies these symbols once its own body is elaborated.
+      if !isRuntime then
         state.initRuntimeSymbolsFromFile(paths.runtimeSourceFile, prelude)(
           using tl, summon[Raise], artifactCtx)
+      val (blk0, _) = elaborationConfig.givenIn(elab.importFrom(parsed))
+      if isRuntime then
+        state.initRuntimeSymbolsFromBlock(blk0)
 
       val artifactConfig = Config.extractConfigFromStats(blk0)
       if !artifactConfig.language.useNewResolution then artifactConfig.givenIn:
