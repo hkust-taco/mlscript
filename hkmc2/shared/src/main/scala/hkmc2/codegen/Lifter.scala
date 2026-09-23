@@ -28,23 +28,7 @@ object Lifter:
     def gatherUsed: List[Defn] = l.collect:
       case l: Lazy[?] if !l.isEmpty => l.force_!
       case d: Defn => d
-
-  extension (d: ClsLikeDefn)
-    /** Maps the definition to the erased type of its instances.
-      *
-      * Note that the resource-ness of the returned type is marked as `rsc?` since we currently do not have information
-      * about the resource-ness of lifted classes (although we mark its `Instantiate` as `rsc = false` as a
-      * placeholder).
-      */
-    private def instanceType(using Raise): Opt[ErasedValueType] = d.isym match
-      case cls: ClassSymbol =>
-        // * We can construct the `AnyRef` directly since lifted classes are neither `Anything` nor a primitive, which
-        // * makes them already canonical.
-        S(ErasedType.AnyRef(rsc = N, cls))
-      case sym =>
-        softAssert(false, s"Class-like definition's inner symbol is not a class: `$sym`")
-        N
-
+  
   /**
     * Describes previously defined locals and definitions which could possibly be accessed or mutated by particular definition.
     * Here, a "previously defined" local or definition means it is accessible to the particular definition (which we call `d`), 
@@ -682,10 +666,9 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
     private final lazy val captureInfo: (ClsLikeDefn, List[(ValueSymbol, TermSymbol)]) = createCaptureCls(obj)
     
     lazy val captureClass = captureInfo._1
-    
-    /** The erased type of the capture class, which types the symbols that hold a reference to it.
-      * Like [[captureClass]], this is lazy: forcing it would create a capture for a scope that may not need one. */
-    protected final lazy val captureType: Opt[ErasedValueType] = captureClass.instanceType
+
+    /** The erased type of the capture instance built by [[instantiateCapture]]. */
+    private[Lifter] final lazy val captureType: Opt[ErasedValueType] = instantiateCapture.erasedType
     
     lazy val captureMap = captureInfo._2.toMap
     lazy val liftedObjsMap: Map[InnerSymbol, LocalPath]
@@ -700,13 +683,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
           captureClass.sym.asMemberRef(captureClass.isym),
           captureInfo._2.map(
             (sym, _) => sym.asPath.asArg) :: Nil
-        )(
-          InstantiateMetadata.empty,
-          mut = true,
-          // TODO(Derppening): This needs to be determined from everything that the capture class *captures*, which is
-          //                   the responsibility of the new resolver(?)
-          rsc = false,
-        )
+        )(InstantiateMetadata.empty, mut = true, rsc = false)
       else lastWords("tried to instantiate an empty capture")
     
     protected final def addExtraSyms(b: Block, captureSym: => LocalVarSymbol, objSyms: Iterable[ScopedSymbol]): Block =
@@ -1066,7 +1043,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
       .toMap
     private lazy val capSymsMap_ : Map[ScopedInfo, VarSymbol] = capturesOrdered.map: i =>
         val nme = data.getNode(i).obj.nme
-        i -> VarSymbol(Tree.Ident(nme + "$cap"), erasedType = ctx.rewrittenScopes(i).captureClass.instanceType)
+        i -> VarSymbol(Tree.Ident(nme + "$cap"), erasedType = ctx.rewrittenScopes(i).captureType)
       .toMap
     private val defnSymsMap_ : Map[DefinitionSymbol[?], VarSymbol] = reqDefnsOrdered.sortBy(_.uid).map: i =>
         val nme = data.getNode(i).obj.nme
@@ -1175,7 +1152,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
       .toMap
     private lazy val capSymsMap_ : Map[ScopedInfo, (vs: VarSymbol, ts: TermSymbol)] = capturesOrdered.map: i =>
         val nme = data.getNode(i).obj.nme + "$cap"
-        val capturedType = ctx.rewrittenScopes(i).captureClass.instanceType
+        val capturedType = ctx.rewrittenScopes(i).captureType
         i ->
           (
             VarSymbol(Tree.Ident(nme), capturedType),
@@ -1234,13 +1211,6 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
       // Contains aux param list
       val allParamLists = auxParamListLocal :: clsParamLists
       
-      // * The flattened definition takes every parameter list at once and returns an instance of the
-      // * class, so its erased signature is only known here, once the parameter lists are assembled.
-      flattenedDSym.erasedSignature = S(ErasedFuncSignature.Signature(
-        paramLists = allParamLists.map(_.params.map(_.sym.erasedType)),
-        ret = cls.instanceType,
-      ))
-      
       // Uses the symbols from pl1.
       def applyPlToPl(pl1: ParamList, pl2: ParamList): List[Arg] = (pl1.restParam, pl2.restParam) match
         case (S(rp), S(_)) => pl1.params.foldRight(Arg(S(SpreadKind.Eager), rp.sym.asSimpleRef) :: Nil)((p, ls) => p.sym.asSimpleRef.asArg :: ls)
@@ -1262,6 +1232,13 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
       val ref = obj.cls.sym.asMemberRef(obj.cls.isym)
       val inst = Instantiate(ref, argsList)(InstantiateMetadata.empty, mut = false, rsc = false)
       val bod = Return(inst)
+      
+      // * The flattened definition takes every parameter list at once and returns an instance of the
+      // * class, so its erased signature is only known here, once the parameter lists are assembled.
+      flattenedDSym.erasedSignature = S(ErasedFuncSignature.Signature(
+        paramLists = allParamLists.map(_.params.map(_.sym.erasedType)),
+        ret = inst.erasedType,
+      ))
       
       FunDefn(N, flattenedSym, flattenedDSym, allParamLists, bod)(N, annotations = Nil)
     

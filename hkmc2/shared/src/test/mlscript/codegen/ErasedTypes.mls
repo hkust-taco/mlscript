@@ -262,14 +262,14 @@ fun counter(x: Int) =
 //│     end
 //│   }
 //│ };
-//│ define bump as fun bump⁰(scope0$cap: rsc? Capture$scope0¹, x: Int⁰): ? {
+//│ define bump as fun bump⁰(scope0$cap: Capture$scope0¹, x: Int⁰): ? {
 //│   let tmp: ?;
 //│   set tmp = +⁰(scope0$cap.n$0¹, x);
 //│   set scope0$cap.n$0¹ = tmp;
 //│   return runtime⁰.Unit⁰
 //│ };
 //│ define counter⁰ as fun counter¹(x: Int⁰): ? {
-//│   let n: ?, scope0$cap: rsc? Capture$scope0¹;
+//│   let n: ?, scope0$cap: Capture$scope0¹;
 //│   set scope0$cap = new mut Capture$scope0¹(n);
 //│   set scope0$cap.n$0¹ = 0;
 //│   do bump⁰(scope0$cap, x);
@@ -290,7 +290,7 @@ fun resetCounter(x: Int): Int =
 resetCounter(41)
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let reset, Capture$resetCounter;
-//│ define reset as fun reset⁰(resetCounter$cap: rsc? Capture$resetCounter⁰): ? {
+//│ define reset as fun reset⁰(resetCounter$cap: Capture$resetCounter⁰): ? {
 //│   let tmp: ?;
 //│   set tmp = +⁰(resetCounter$cap.x$0⁰, 1);
 //│   set resetCounter$cap.x$0⁰ = (tmp as! Int⁰);
@@ -303,7 +303,7 @@ resetCounter(41)
 //│   }
 //│ };
 //│ define resetCounter⁰ as fun resetCounter¹(x: Int⁰): Int⁰ {
-//│   let resetCounter$cap: rsc? Capture$resetCounter⁰;
+//│   let resetCounter$cap: Capture$resetCounter⁰;
 //│   set resetCounter$cap = new mut Capture$resetCounter⁰(x);
 //│   do reset⁰(resetCounter$cap);
 //│   return resetCounter$cap.x$0⁰
@@ -1305,6 +1305,33 @@ fun mk() =
 //│   };
 //│   return new Holder⁰(Tag²)
 //│ };
+//│ end
+
+
+// The flattened constructor `C$` of a lifted class returns the instance of `C` it builds.
+:lift
+fun mkCtor(x) =
+  class C(y) with
+    fun get = x + y
+  C
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let C, C$;
+//│ define C$ as fun C$⁰(x: ?)(y: ?): C⁰ {
+//│   return new C⁰(y, x)
+//│ };
+//│ define C as class C⁰ {
+//│   private val x²: ?;
+//│   private val y²: ?;
+//│   constructor C¹(y: ?, x: ?) {
+//│     set C⁰.this.x² = x;
+//│     set C⁰.this.y² = y;
+//│     end
+//│   }
+//│   method get⁵ = fun get⁶: ? {
+//│     return +⁰(C⁰.this.x², C⁰.this.y²)
+//│   }
+//│ };
+//│ define mkCtor⁰ as fun mkCtor¹(x: ?): ? { let C$here: ?; set C$here = C$⁰(x); return C$here };
 //│ end
 
 
