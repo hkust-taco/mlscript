@@ -303,7 +303,15 @@ class NewResolver:
               td.params.map(ps => DeclaredParams(ps.params.map(_.sign.map(signature)), ps.restParam.nonEmpty)), result, Nil))
           else result match
             case S(tpe) => listenTypeValues(tpe)(publish)
-            case N => publish(UnknownValueShape.at(source))
+            case N =>
+              // Keep the missing constructor annotation on the unknown value so
+              // later selections and calls can explain why argument flow is hidden.
+              val unknown = td.tsym.decl match
+                case S(param: Param) => UnknownValueShape(source)(ShapeProvenance(
+                  (msg"Field '${member.nme}' is accessed through an annotated class type, so constructor arguments do not determine its shape." -> source.toLoc) ::
+                  (msg"Constructor parameter '${param.sym.nme}' has no type annotation." -> param.toLoc) :: Nil))
+                case _ => UnknownValueShape.at(source)
+              publish(unknown)
         case _ =>
           // A nested nominal declaration denotes its statically selected symbol;
           // selecting it does not inspect an instance field or method body.
