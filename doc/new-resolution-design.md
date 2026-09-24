@@ -33,10 +33,13 @@ exported mapped arrays and imported generic functions and methods.
 
 ## Captures and generic flow
 
-The planned distinction between passing type values and constraining ordinary
-values is documented in [Type values, instances, and bounds](new-resolution-type-value-flow.md).
-The description below records the current implementation, which does not yet
-preserve that distinction.
+`InstanceShape` retains a type reference at annotation boundaries; member lookup,
+application, and destructuring obtain specialized interfaces through
+`listenInstanceViews`. The distinction between supplying a type argument and
+adding an ordinary bound, the agreed variance rules, and the pending constraint
+representation are documented in [Instance types and parameter constraints](new-resolution-type-value-flow.md).
+The description below records current generic inference, which still needs that
+constraint extension.
 
 Class bodies introduce lexical captures, and a class and its constructor share
 one resolution boundary. A method's reference to an outer constructor must include

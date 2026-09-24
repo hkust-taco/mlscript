@@ -32,7 +32,7 @@ final class InterfaceExposure(resolver: NewResolver)(using NewResolverState, TL)
     */
   private def watch(key: Any)(connect: Listener => Unit)(receive: Listener)(using state: NewResolverState): Unit =
     if watched.add((key, state)) then
-      val host = new TypeValues
+      val host = new TermShapeHost
       connect(host.publish)
       detach += host.inferenceHost.observe: shape =>
         val current = rstate
@@ -104,12 +104,14 @@ final class InterfaceExposure(resolver: NewResolver)(using NewResolverState, TL)
       val declared = resolver.declaredType(resolver.typeResolution(sign), Map.empty)
       watch((new Identity(body), declared, marks))(resolver.listenTerm(body)): shape =>
         resolver.constrainFunction(declared, shape, marks)
-      watch((declared, marks))(resolver.listenTypeValues(declared)): shape =>
+      watch((declared, marks))(resolver.listenTypeInstances(declared)): shape =>
         emit(shape.exit(marks), path)
 
   private def value(shape: TermShape, path: Path)(using NewResolverState): Unit =
     val (head, marks) = shape.applicationHead
     head match
+      case _: InstanceShape =>
+        watch((shape, "instance view"))(resolver.listenInstanceViews(shape))(emit(_, path))
       case ds: DefnShape if ds.defn.sym.getState is rstate.owner =>
         parameters(shape.unappliedParams, path)
         ds.clsDef match
@@ -142,9 +144,9 @@ final class InterfaceExposure(resolver: NewResolver)(using NewResolverState, TL)
       case base: BaseShape => members(base.defn, marks, path)
       case callable: CallableTypeShape =>
         callable.result.foreach: result =>
-          watch((result, marks))(resolver.listenTypeValues(result)): shape =>
+          watch((result, marks))(resolver.listenTypeInstances(result)): shape =>
             emit(shape.exit(marks), path)
-      case nominal: NominalTypeShape =>
+      case nominal: NominalInstanceView =>
         // Array element bindings may contain escaping closures. Follow only the
         // declared binding; concrete annotations still hide implementation shapes.
         resolver.arrayElementType(nominal).foreach: binding =>

@@ -185,8 +185,8 @@ final class NewResolverState private (
     new Cache(source.map(_.defnShapes), identity)
   val typeInterpretations: Cache[Identity[Term], TypeResolution] =
     new Cache(source.map(_.typeInterpretations), identity)
-  val typeValues: Cache[DeclaredType, TypeValues] =
-    new Cache(source.map(_.typeValues), identity)
+  val typeViews: Cache[DeclaredType, TermShapeHost] =
+    new Cache(source.map(_.typeViews), identity)
   val patternTypes: Cache[(Identity[Pattern.Constructor], InnerSymbol), DeclaredType] =
     new Cache(source.map(_.patternTypes), identity)
   val primitiveTypes: Cache[ClassSymbol, DeclaredType] =
@@ -197,7 +197,7 @@ final class NewResolverState private (
     new Cache(source.map(_.signatureParameters), identity)
   val capturedTypes: Cache[(DeclaredType, TermSymbol), DeclaredType] =
     new Cache(source.map(_.capturedTypes), identity)
-  val tupleArrayParents: Cache[Identity[TupleShape], NominalTypeShape] =
+  val tupleArrayParents: Cache[Identity[TupleShape], NominalInstanceView] =
     new Cache(source.map(_.tupleArrayParents), identity)
   val instanceParameterTypes: Cache[(VarSymbol, Bool), DeclaredType] =
     new Cache(source.map(_.instanceParameterTypes), identity)
@@ -219,8 +219,8 @@ final class NewResolverState private (
   val typeConstraints: Seen[(DeclaredType, TermShape, Ls[Marks])] =
     new Seen(source.map(_.typeConstraints))
 
-private[semantics] final class TypeValues extends Host[TermShape]:
-  def showDbg(using DebugPrinter): Str = "declared type values"
+private[semantics] final class TermShapeHost extends Host[TermShape]:
+  def showDbg(using DebugPrinter): Str = "instance views"
   def publish(shape: TermShape)(using NewResolverState): Unit =
     if currentShapes.add(shape) then notifyShapeListeners(shape)
   def listen(listener: NewResolverState.Listener)(using NewResolverState): Unit =

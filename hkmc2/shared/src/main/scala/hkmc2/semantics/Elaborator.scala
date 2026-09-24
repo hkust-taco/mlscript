@@ -2658,7 +2658,7 @@ extends Importer:
         val p = Param(flg, sym, sig, mfn)
         sym.decl = S(p)
         if newResolution then sig.foreach: sign =>
-          listenTypeValues(sign): shape =>
+          listenTypeInstances(sign): shape =>
             if sym.currentShapes.add(shape) then sym.notifyShapeListeners(shape)
         (p, spd, aliases)
   

@@ -26,7 +26,8 @@ sealed trait Shape extends ShapeLike:
     case ts: TupleShape => s"TupleShape(${ts.source.showDbg})"
     case rs: RecordShape => s"RecordShape(${rs.source.showDbg})"
     case rs: RecordTypeShape => s"RecordTypeShape(${rs.source.showDbg})"
-    case ts: NominalTypeShape => s"NominalTypeShape(${ts.defn.sym.showDbg})"
+    case ts: InstanceShape => s"InstanceShape(${ts.tpe.resolution.source.showDbg})"
+    case ts: NominalInstanceView => s"NominalInstanceView(${ts.defn.sym.showDbg})"
     case ts: OpaqueTypeShape => s"OpaqueTypeShape(${ts.source.showDbg})"
     case ts: CallableTypeShape => s"CallableTypeShape(${ts.source.showDbg})"
     case bs: BaseShape => s"BaseShape(${bs.defn.sym.showDbg})"
@@ -375,21 +376,32 @@ final case class RecordTypeShape(source: Term.Rcd, fields: Ls[(RcdField, TypeRes
       case (field, _) if field.sym.nme == name => MemberLookup.Declared(field.sym, bindings, Nil, S(source))
     }.getOrElse(MemberLookup.Missing)
 
+/** An instance described by a type, in either position of a constraint. Keep the
+  * type reference intact during transport: expanding it to its current positive
+  * candidates would lose negative uses of generic arguments and compound types.
+  * Operations obtain concrete member/call views through listenInstanceViews.
+  */
+final case class InstanceShape(tpe: DeclaredType) extends NonAppTermShape:
+  def describe: Str = "value with a declared type"
+  def toLoc: Opt[Loc] = tpe.resolution.source.toLoc
+  protected def getMemberImpl(name: Str)(using NewResolverState): MemberLookup =
+    lastWords("Instance member lookup requires interpreting its type first")
+
 /** A nominal annotation exposes only declarations, including inherited declarations.
   * In particular, selecting an unannotated field does not inspect its initializer.
   * The annotation is a diagnostic witness, excluded from shape equality; synthesized
   * interfaces such as a tuple's Array parent have no written annotation.
   */
-final case class NominalTypeShape(defn: ClassLikeDef, bindings: Map[VarSymbol, DeclaredType],
+final case class NominalInstanceView(defn: ClassLikeDef, bindings: Map[VarSymbol, DeclaredType],
     parent: Opt[TermShape])(val annotation: Opt[Term])(resolver: NewResolver) extends NonAppTermShape:
   def describe: Str = s"value of type '${defn.sym.nme}'"
   def toLoc: Opt[Loc] = defn.toLoc
   override def isInstanceOfClass(cls: ClassLikeDef)(using NewResolverState): Bool =
     (defn is cls) || parent.exists(_.isInstanceOfClass(cls))
-  def ancestor(cls: ClassLikeDef): Opt[NominalTypeShape] =
+  def ancestor(cls: ClassLikeDef): Opt[NominalInstanceView] =
     if defn is cls then S(this)
     else parent.flatMap:
-      case Marked(parent: NominalTypeShape, _) => parent.ancestor(cls)
+      case Marked(parent: NominalInstanceView, _) => parent.ancestor(cls)
       case _ => N
   protected def getMemberImpl(name: Str)(using NewResolverState): MemberLookup =
     defn.body.members.get(name) match
@@ -481,7 +493,7 @@ class RefinedShape(val base: TermShape, val refinements: Ls[Str -> Term]) extend
   * them instead of discarding either those fields or the unresolved possibilities.
   */
 final case class TupleShape(source: Term, elements: Ls[TupleShape.Element])(resolver: NewResolver) extends NonAppTermShape:
-  def arrayParent(using NewResolverState): NominalTypeShape = resolver.tupleArrayParent(this)
+  def arrayParent(using NewResolverState): NominalInstanceView = resolver.tupleArrayParent(this)
   override def isInstanceOfClass(cls: ClassLikeDef)(using NewResolverState): Bool = arrayParent.isInstanceOfClass(cls)
   lazy val segments: Ls[TupleShape.Segment] = elements.flatMap:
     case segment: TupleShape.Segment => segment :: Nil
@@ -645,7 +657,7 @@ object RecordShape:
 
 
 type IntroTerm = Term.Lit | Term.UnitVal | Term.Lam //| Term.New
-class IntroShape(val trm: IntroTerm, val primitive: Opt[NominalTypeShape]) extends NonAppTermShape:
+class IntroShape(val trm: IntroTerm, val primitive: Opt[NominalInstanceView]) extends NonAppTermShape:
   def describe: Str = trm.describe
   protected def getMemberImpl(name: Str)(using NewResolverState): MemberLookup = trm match
     case _: Term.Lit | _: Term.UnitVal => primitive.fold[MemberLookup](MemberLookup.Missing)(_.getMember(name))

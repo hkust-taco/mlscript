@@ -1,232 +1,226 @@
-# Type values, instances, and bounds in new resolution
+# Instance types and parameter constraints
 
-This note records the semantic requirements and compares possible representations.
-The wrapper placement is undecided; the earlier plan to add `TypeValueShape` was
-premature. No compiler implementation has been selected. The
-[current resolver notes](new-resolution-design.md) describe existing behavior;
-the [migration worklist](new-resolution-suite-migration.md) lists remaining ports.
+`InstanceShape(T)` describes an instance of the type `T`. Types remain in the
+`TypeShape`/`DeclaredType` graph. The instance wrapper replaces the earlier
+nominal-only representation at annotation boundaries: parameter and result
+annotations, ascriptions, generic arguments, and annotated tuple fields retain
+a type reference until an operation requests its interface.
 
-## The distinction to preserve
+The wrapper refactor is implemented. Bidirectional type-argument constraints and
+variance are the next step. The constraint representation proposed below still
+needs agreement before implementation. See the [resolver notes](new-resolution-design.md)
+for current behavior and the [migration worklist](new-resolution-suite-migration.md)
+for remaining ports.
 
-Supplying a type argument and adding a bound are different operations. If `Int`
-is supplied as the type argument for a contextual parameter `A`, it affects both
+## Type arguments are different from instance bounds
+
+Supplying `Int` as the type argument for a contextual parameter `A` affects both
 positive and negative uses of `A`:
 
 ```text
 A has the supplied type Int:
 
-L <: A    produces    L <: Int
-A <: U    produces    Int <: U
+L <: A    requires    L <: Int
+A <: U    requires    Int <: U
 ```
 
-In contrast, inferring `Int <: A` from an ordinary integer argument only adds a
-lower bound. It does not supply `Int` as the meaning of `A` in all positions.
-The distinction applies to input and output positions generally. Function
-parameters reverse polarity; function results preserve it. Array operations are
-one example, not the organizing principle of the design.
+An ordinary integer argument to a parameter `x: A` contributes only a lower
+bound. It does not supply `Int` as the meaning of every occurrence of `A`.
+For `pair[A](x: A, y: A)`, an integer and a string therefore contribute two lower
+bounds; neither argument must satisfy the other's type.
 
 If two distinct type values, `Int` and `Str`, reach the same activation of `A`,
-each bound is applied to both. A lower bound `L <: A` produces both `L <: Int`
-and `L <: Str`; an upper bound `A <: U` produces both `Int <: U` and `Str <: U`.
-This differs from supplying the single type value `Int | Str`, against which
-constraints must retain the meaning of that union type.
+each bound must apply to both. `L <: A` requires both `L <: Int` and `L <: Str`;
+`A <: U` requires both `Int <: U` and `Str <: U`. Supplying the single type value
+`Int | Str` is different: its complete type expression remains the constraint
+target. Decomposing a union in positive position does not justify decomposing it
+conjunctively in negative position.
 
-Concrete mismatches such as `Str <: Int` may remain quiet for now. Constraints
-must still reach the appropriate types, even when no loud diagnostic is emitted.
+Concrete mismatches such as `Str <: Int` may remain quiet during this migration.
+The absence of a loud diagnostic does not authorize dropping constraints before
+they reach the relevant type or parameter.
 
-## What can be inferred at a generic call
+These rules concern inputs/outputs, or equivalently lower/upper bounds. Function
+parameters reverse polarity and function results preserve it. Array operations
+are one application of the rules.
 
-“Preserve wrappers through inferred generic arguments” conflates two cases.
+## Existing symbols and marks identify inference
 
-**Inferring bounds from ordinary arguments.** For a function with parameters
-`x: A` and `y: A`, supplying an integer and a string contributes lower bounds
-`Int <: A` and `Str <: A`. It must not manufacture two supplied type values,
-`Int` and `Str`: under the rule above, that would require each argument to satisfy
-both types. An ordinary argument's inferred bound is not an exact type argument.
+**Do not allocate fresh type variables for calls, arrays, or constraint matches.**
+Fresh variables would prevent recursive inference from returning to existing
+graph nodes and reaching a fixed point. A contextual reference uses the existing
+parameter symbol, its originating inference host, and marks. In particular, a
+mutable array uses the builtin `Array` element parameter with its allocation and
+call contexts. Actual element shapes contribute bounds to that parameter.
 
-One possible representation introduces a type inference variable `alpha` for
-this call. The formal parameter `A` denotes `alpha`, and ordinary arguments add
-bounds to `alpha`. A wrapper, if used, would refer to `alpha`, not to each shape
-that becomes a lower bound of it. This is a conceptual inference cell, not a
-requirement for a fresh global `Symbol`; the existing symbol plus call context
-might identify it. Such a cell can retain ordinary shape bounds; this does not
-require reconstructing a complete type expression for every closure or value.
-Choosing this representation requires an explicit design.
+Keeping a reference to an unresolved parameter is essential. Copying its current
+positive candidates loses its negative uses and its identity as a type argument.
+Subscriptions must also account for constraints or candidates arriving later.
+Graph caches and listeners belong to the consuming `NewResolverState`; extending
+a consumer must not mutate a prelude or an exporter's inference graph.
 
-**Matching an existing type argument.** In the motivating `Array[Int]` against
-`Array[A]` example, the actual array already carries an element type. Matching
-must preserve that type's meaning in both input and output uses of `A`, rather
-than extract integer instance shapes and forward only those lower bounds.
-Likewise, an array with an inferred element parameter `E` must retain a live
-reference to `E`, including its future constraints. Merely copying `E`'s current
-positive candidates loses this information.
+## Instance wrappers and interface observations
 
-This does not establish a rule that every nominal type-argument match binds an
-exact type. The treatment of a parameter used only covariantly or contravariantly
-must follow the chosen matching/variance rules. Neither wrapper placement by
-itself determines those rules.
+`InstanceShape` holds a `DeclaredType`, including its lexical bindings.
+`listenTypeInstances` supplies this wrapper; `listenInstanceViews` interprets it
+for an operation such as selection, application, or destructuring. The cached
+`listenTypeViews` observations reuse the specialized nominal, callable, record,
+and tuple interfaces. `NominalInstanceView` is the nominal member-lookup view
+previously called `NominalTypeShape`.
 
-## Option 1: wrap type values
+For example, an instance viewed as `Base` exposes `Base`'s declarations even if
+the implementation is a `Child`. Interpreting a function type exposes its declared
+domain and result. Interpreting a union for member lookup can observe each
+alternative, while transporting its wrapper preserves the original union node.
 
-Use `TypeValueShape(T)` for a type carried by the flow graph. Both ends of a
-type-value constraint should be represented explicitly:
+This refactor alone does not implement the planned distinction between supplying
+a type argument and adding an ordinary bound. In particular, the current
+`inferTypeArguments` still expands wrappers when inferring from an instance, and
+explicit arguments still suppress ordinary refinement. The proposed constraint
+work must replace these behaviors together.
 
-```text
-TypeValueShape(Int) <: TypeValueShape(A)
-```
+## Variance rules to implement
 
-Here the outer `<:` is the graph's relation between type-valued shapes. Its
-processing rule must preserve both uses of the supplied type. It must not simply
-strip the wrappers and install the ordinary lower bound `Int <: A`.
-The earlier notation `TypeValueShape(Int) -> A` described publication into a
-parameter host while leaving the host's meaning implicit. It was not an adequate
-specification of a constraint between shapes.
+Follow InvalML's argument interpretation in
+[`typeAndSubstType`](../hkmc2/shared/src/main/scala/hkmc2/invalml/InvalML.scala)
+and argument comparison in
+[`constrainArgs`](../hkmc2/shared/src/main/scala/hkmc2/invalml/ConstraintSolver.scala).
+Its [`TypeArg`](../hkmc2/shared/src/main/scala/hkmc2/invalml/types.scala) exposes an
+input part (`negPart`) and an output part (`posPart`):
 
-The wrapper must refer to a type description or a contextual type parameter,
-including its originating host. It needs an explicit interpretation on both
-sides of a constraint. Ordinary values described by that type remain represented
-separately, through the existing instance shapes or another explicit operation.
-For example, a parameter annotated `x: A` expects an instance of `A`, not a type
-value; wrapping the type argument alone does not represent that expectation.
-
-Advantages:
-
-- Type arguments have an explicit tag when sharing transport with ordinary value
-  shapes. This makes accidental publication of an instance as a type argument
-  detectable.
-- Explicit type application and forwarding of existing type arguments have a
-  direct representation, including nested type expressions and captured type
-  parameters.
-- The current graph uses `Publisher.Data[Shape]`, so a new type-valued alternative
-  can fit that transport, provided the context operations are extended as well.
-
-Costs:
-
-- A symmetric source/target interpretation is needed; a wrapper around published
-  candidates alone is insufficient.
-- Ordinary annotated values still need a separate representation or conversion.
-  Function constraints, member selection, and mixed type/value constraints must
-  consistently distinguish the two levels.
-- `ShapeLike.enter` and `exit` currently return `TermShape | NoShape`. Transporting
-  type-valued wrappers requires changing that contract or representing their
-  contexts separately.
-- Ordinary inference still needs a model for bounds. Wrapping every observed
-  instance shape would incorrectly turn inferred lower bounds into supplied types.
-
-## Option 2: wrap instances described by types
-
-Keep type descriptions as types and use `InstanceShape(T)` for an ordinary value
-view described by `T`. The wrapper can occur in positive or negative position;
-its name does not restrict it to a producer.
-
-```text
-shape of an integer <: InstanceShape(A)
-    contributes an integer lower bound to A
-
-InstanceShape(A) <: an expected value interface
-    constrains A in the corresponding output use
-```
-
-With `Int` supplied for `A`, these operations use `Int` in the appropriate
-polarity. A value viewed through `InstanceShape(Base)` exposes `Base`'s interface;
-a supplied `Child` produces a constraint against `Base` without replacing that
-view with `Child`'s more specific interface.
-
-In this representation, matching
-`InstanceShape(Array[Int])` against `InstanceShape(Array[A])` reaches a relation
-between the element types. It must implement the agreed `Array` behavior above.
-The instance wrapper alone does not decide whether a nested relation is a type
-binding, a lower/upper bound, or both bounds for an invariant parameter.
-
-Advantages:
-
-- The conversion from a type description to an ordinary value use is explicit.
-  Parameter annotations, result annotations, and member interfaces all use the
-  same distinction, in either polarity.
-- This is close to the existing split between `TypeShape`/`DeclaredType` and
-  `TermShape`. Despite its name, `NominalTypeShape` is already a `TermShape`
-  describing an instance; its description is “value of type ...”.
-- A live `InstanceShape(A)` can retain the type reference while `A` is unresolved,
-  instead of immediately expanding it into whichever instance candidates happen
-  to be known. This may make delayed constraints easier to handle, though it
-  still requires an order-independent propagation rule.
-- It provides a natural place to distinguish an annotated value's permitted
-  interface from a more specific implementation shape.
-
-Costs:
-
-- Type-argument flow still needs an explicit representation or API. Removing
-  `TypeValueShape` does not make ordinary `T <: A` lower-bound propagation stand
-  for type instantiation.
-- `NominalTypeShape`, `CallableTypeShape`, `RecordTypeShape`, and annotated tuples
-  already provide specialized instance views. A general wrapper must organize or
-  reuse these views, rather than add a second path with different behavior.
-- Contexts for the type reference and for the ordinary value must remain correct
-  when the type contains captured parameters or an instance is passed through a
-  function. Moving the wrapper does not remove this requirement.
-- Positive and negative interpretation cannot use the same eager expansion for
-  every type constructor. Function parameters reverse direction; union and
-  intersection constraints need their own rules.
-
-## Comparison and current recommendation
-
-| Concern | Type-value wrapper | Instance wrapper |
+| Argument | Input part | Output part |
 | --- | --- | --- |
-| Boundary made explicit | A type enters the shared shape graph. | A type describes an ordinary value use. |
-| Existing type-argument matching | Directly carries type-valued shapes. | Uses type references and a separate matching operation. |
-| Annotated term values | Retains existing instance views or adds a conversion. | Directly represented by the wrapper. |
-| Ordinary generic inference | Needs bounds distinct from supplied type values. | Needs bounds distinct from supplied type values. |
-| Fit with current representations | Extends the shared shape transport. | Builds on the current type-description/instance-view split. |
+| `S` | `S` | `S` |
+| `in T` | `T` | `Any` |
+| `out U` | `Nothing` | `U` |
 
-The current recommendation is to explore the instance wrapper first, because it
-makes the meaning of annotated term shapes explicit and fits the existing type
-interpretation graph. This is a preference, not an implementation decision.
-A type-value wrapper remains useful if representing types inside the same shape
-constraint language is a deliberate goal. The representations can also coexist,
-but adding both needs a demonstrated use for each boundary.
+Thus `S` means `in S out S`. The internal pair can also represent a written
+`in T out U`. For an unqualified argument, a declaration's `in` or `out` annotation
+selects the corresponding form. An explicitly written use-site wildcard supplies
+its own parts, as it does in InvalML; it is not combined by guessing a variance.
 
-The more fundamental unresolved choice is how a formal type parameter denotes an
-inferred type. Two approaches merit a small comparison:
+For actual argument `a` and expected argument `b`, require:
 
-- Keep supplied type values and ordinary lower/upper bounds as distinct kinds of
-  information on the contextual parameter. Constraints must be replayed as type
-  values arrive; positive observations must not become dependent on arrival order.
-- Let an omitted argument denote an inference cell whose bounds are accumulated.
-  The formal parameter refers to that cell, while explicit arguments refer to
-  their supplied types. Matching an existing type argument then constrains or
-  binds that cell according to the matching rule.
+```text
+a.output <: b.output
+b.input  <: a.input
+```
 
-The second approach gives a clear meaning to a wrapper around an inferred type:
-it wraps a reference to the cell. It does not establish that this is the smallest
-or best change to this resolver. Neither approach should be selected merely to
-make the current array regression pass.
+A plain invariant `Array[Int]` against `Array[A]` therefore retains both uses of
+the element type. `Array[out A]` admits only the output connection; `Array[in A]`
+admits only the input connection. Substitution into member types must select the
+appropriate part at each polarity, including nested arrows. Copy InvalML's
+variance semantics, not its fresh inference-variable implementation.
 
-## Next design and implementation steps
+## Why two independent candidate-copying edges are insufficient
 
-1. Specify the rules for supplying a type argument, adding lower/upper bounds,
-   and using a type to describe a value. Use separate operation names while
-   comparing the designs; choose any overloaded `<:` notation only after the
-   kinds of its operands determine the rule unambiguously.
-2. Work through explicit `identity[Int](...)`, inference from two ordinary
-   arguments, `Array[Int]` against `Array[A]`, an initially empty mutable array,
-   and a callback using the same parameter in both polarities. Include constraints
-   arriving before and after the type argument and its observers.
-3. Choose the inference-variable representation and wrapper placement from those
-   derivations before changing compiler code. Retain existing context identities
-   and consumer-owned hosts; a new symbol per mutable array is unnecessary.
-4. Update `applyTypeArguments`, nominal argument matching in `inferTypeArguments`,
-   and annotation interpretation together. Split the ambiguously named
-   `listenTypeValues`, which currently returns positive instance shapes. Replace
-   constraint suppression for explicit arguments with delivery to the supplied
-   type. Audit the snapshot conversion in `instanceBindings` as well.
-5. Verify constraints in both polarities, multiple supplied type values versus one
-   union type, ordinary inferred bounds, aliases, recursive propagation, separate
-   calls, and separate importers. Check constraint delivery directly when a loud
-   mismatch diagnostic is intentionally absent. Preserve generic-body checks,
-   exposed-function checking, and completed-reference targets.
-6. Make `appendTyped` in `newres/MutableArrays.mls` pass using the common mechanism.
-   Run `ctest` before focused worksheets and `hkmc2AllTests/test` before completion;
-   review and commit the golden outputs.
+An experimental implementation made `appendTyped` propagate elements into an
+initially empty mutable array and passed the existing declaration worksheets.
+However, this recursive example exposed an activation-correlation failure:
+
+```mlscript
+class Item(val value: Int)
+fun append[A](xs: Array[A], value: A, n: Int) =
+  if n > 0 then append(xs, value, n - 1) else xs.push(value)
+let xs = mut []
+append(xs, Item(5), 2)
+xs.0.value
+```
+
+The experiment reported an unknown element type originating from the generic
+body's abstract activation of `A`. That candidate must remain confined to that
+abstract activation. The experimental bound-copying implementation is not part
+of the retained compiler changes.
+
+The failure comes from independently applying an existing capture path and its
+reverse to already expanded candidates. Write `enter(f, s)` and `exit(f, s)` for
+marks at function `f` and site `s`, and `*` for a capture that matches any site.
+A candidate starting at `enter(f, abstract)` can travel as follows:
+
+```text
+forward:
+  enter(f, abstract) -- exit(f, *) --> no mark
+                    -- enter(f, recursiveCall) --> enter(f, recursiveCall)
+
+independent reverse:
+  enter(f, recursiveCall) -- exit(f, recursiveCall) --> no mark
+                         -- enter(f, *) --> enter(f, *)
+```
+
+The reverse traversal has forgotten `abstract`. Its wildcard can then match a
+real caller's exit. This demonstrates loss in the candidate-copying approach;
+it does not establish that the existing mark representation itself is inadequate.
+Discarding the abstract candidate, suppressing reverse propagation for recursion,
+or truncating paths would conceal the loss rather than preserve the constraint.
+
+## Proposed extension: retain both contextual type references
+
+Represent an argument relation as a persistent constraint between two type
+references, each retaining its original host, bindings, and marks. Keep the
+argument's input/output parts on this relation. Do not immediately replace it
+with two unrelated subscriptions that copy positive candidates.
+
+A capture match must belong to the relation traversal. When a wildcard matches
+`enter(f, abstract)`, retain that matched activation while transporting the bound
+through the opposite endpoint. A reverse obligation uses the same match; it
+must not recreate `enter(f, *)`. For a concrete caller, both endpoints instead
+use that caller's match. Deferred propagation must retain this association too.
+
+Conceptually, the recursive relation is a family:
+
+```text
+A at recursiveCall(caller)  relates to  A at caller
+```
+
+`caller` here names a shared capture match, not a fresh type variable or a new
+runtime symbol. The current independent edges effectively erase it on the
+recursive side. Retaining type references allows a constraint to postpone that
+match until it has an activation to use, instead of forwarding every currently
+observed lower bound through an unconditional reverse edge.
+
+Proposed implementation steps:
+
+1. Introduce immutable contextual type-reference endpoints and memoized argument
+   relations in `NewResolverState`. Reuse existing `TypeResolution` nodes and
+   parameter hosts. Keep supplied type references distinct from ordinary bounds.
+2. Implement capture matching that records the normalized path matched by a
+   capture and reuses it across the relation's two endpoints. Keep this data in
+   constraint facts or their subscriptions, never mutable global symbol fields.
+3. Deliver lower and upper obligations to each supplied type reference. A plain
+   inferred value adds a lower bound; explicit instantiation and invariant
+   argument matching must preserve the supplied type's uses in both positions.
+4. Interpret declaration/use-site variance using the input/output parts above.
+   Use the same constraint mechanism for arrays, generic classes, and functions.
+5. Only then replace `applyTypeArguments`, nominal inference, explicit-argument
+   suppression, and the positive-only conversion in `instanceBindings` together.
+
+The unresolved implementation question is the finite representation of capture
+matches under recursive relation composition. Merely storing an ever-growing
+history of matches would repeat the fresh-variable termination problem. Before
+landing this extension, demonstrate that recursive processing revisits memoized
+relations over existing nodes and normalized contexts, including nested type
+applications and mutually recursive calls. If that requires changing mark
+normalization or the domain of contexts, report that design separately.
+
+## Acceptance checks
+
+- An initially empty mutable array receives an element through `Array[A]`.
+- Two calls using different arrays and incompatible element interfaces remain
+  independent, including two callers of the recursive example above.
+- Recursive input/output relations terminate without fresh type variables,
+  repeated-boundary paths, or unbounded binding-environment construction.
+- Declaration-site `in`/`out`, use-site `in`/`out`, their overrides, and nested
+  function polarity agree with InvalML.
+- Explicit function type arguments constrain callback inputs even when the
+  function never calls the callback locally.
+- Two supplied types at one activation each receive every relevant bound; one
+  supplied union remains a single negative constraint target. Inspect delivery
+  directly where concrete mismatch diagnostics are intentionally quiet.
+- Candidates arriving before or after relations produce the same result.
+  Separate importers leave the exporter and prelude hosts unchanged.
+- Generic-body checking, interface exposure, and completed member targets remain
+  intact. Run `ctest` before focused worksheets and `hkmc2AllTests/test` before
+  completion; review and commit the generated golden outputs.
 
 Precise array positions/lengths, loud concrete-mismatch diagnostics, optional
 `splice` arguments, general storage reassignment, and handler inference remain

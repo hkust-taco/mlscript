@@ -345,6 +345,35 @@ class CompilerTest extends AnyFunSuite:
       assert(parameters.map(p => (p.shapes.toVector, p.shapeListeners.toVector)) == before,
         "A consumer must not change the cached definition's inference graph")
 
+  test("a supplied compound type stays inside one instance wrapper"):
+    import semantics.{InstanceShape, Marked, TermShape, TypeShape}
+    val fs = new InMemoryFileSystem(loadStandardLibrary())
+    given cctx: CompilerCtx = CompilerCtx.fresh(fs, paths, Config.default(io.Path("/")))
+    given DebugPrinter = new DebugPrinter
+    given TL = new TraceLogger:
+      override def doTrace = false
+    given Raise = diagnostic => fail(diagnostic.toString)
+    fs.write("/Types.mls", """#lang(0.3.x, strictResolution: true)
+                               |module Types with
+                               |  fun identity[A](x: A) = x
+                               |Types.identity[Int | Str](1)
+                               |""".stripMargin)
+    val compiler = new MLsCompiler(_ => summon[Raise])
+    compiler.compileModule(Path("/Types.mls"))
+    val prelude = cctx.getPrelude(paths.preludeFile).ctx
+    val unit = cctx.getElaboratedBlock(io.Path("/Types.mls"), prelude)
+    val module = unit.compilationUnit.defaultExport.get.asModOrObj.get.defn.get
+    val parameter = module.body.members("identity").asTrm.get.defn.get.tparams.get.head.sym
+    val supplied = parameter.shapes.toList.flatMap:
+      case value: TermShape => value match
+        case Marked(instance: InstanceShape, _) => instance.tpe.resolution :: Nil
+        case _ => Nil
+      case _ => Nil
+    assert(supplied.length == 1, "A union argument must not become two supplied type arguments")
+    assert(supplied.head.shapes.toList match
+      case (_: TypeShape.Union) :: Nil => true
+      case _ => false)
+
   test("mutable array parameter flow stays private to each importer"):
     val fs = new InMemoryFileSystem(loadStandardLibrary())
     given cctx: CompilerCtx = CompilerCtx.fresh(fs, paths, Config.default(io.Path("/")))

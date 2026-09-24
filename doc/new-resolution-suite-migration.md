@@ -91,9 +91,10 @@ The inventory below separates these from compiler and prelude gaps.
   `newres/MutationFlow.mls` records a reassigned array still checked
   against its initializer's tuple length; accumulating both shapes would still
   reject valid later indexing. `codegen/SetStmt` also lacks argument flow through
-  its update callback. Settle the representation in the
-  [type-value/instance design comparison](new-resolution-type-value-flow.md), then
-  implement it so `Array[A]` retains the actual element type's input and output uses;
+  its update callback. Instance wrappers are in place; the
+  [type-argument constraint proposal](new-resolution-type-value-flow.md) records
+  the agreed variance rules and the recursive capture-correlation issue that must
+  be resolved before `Array[A]` retains both input and output uses of its element type;
   the `appendTyped` case in `newres/MutableArrays.mls` records the missing write
   propagation. Member-variable definitions still need work. Handler inference
   needs separate flows for the receiver, values
