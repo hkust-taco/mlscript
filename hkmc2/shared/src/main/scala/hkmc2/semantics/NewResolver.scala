@@ -1202,19 +1202,23 @@ class NewResolver:
     case App(base, _) => annotationSymbol(base)
     case ref: NewRefImpl => S(ref.sym)
     case _: NewSel | _: UnresolvedRef =>
-      val key = new Object
-      def selection(using rs: NewResolverState): NewResolverState.AnnotationSelection =
-        rs.annotations.getOrElseUpdate(key, new NewResolverState.AnnotationSelection)
-      def fail()(using NewResolverState): Unit = if !selection.failed then
-        selection.failed = true
+      val symbols = mutable.LinkedHashSet.empty[BlockMemberSymbol]
+      var collecting = true
+      var failed = false
+      def fail()(using NewResolverState): Unit = if !failed then
+        failed = true
         resolError(trm, msg"An annotation's main symbol must be uniquely known when the annotation is elaborated." -> N :: Nil)
-      listen(trm):
-        case sh: SymShape =>
-          if selection.symbols.add(sh.sym) && !selection.collecting then fail()
-        case _ => fail()
-      selection.collecting = false
-      selection.symbols.toList match
-        case symbol :: Nil if !selection.failed => S(symbol)
+      // This listener validates an elaboration decision; it transports no values.
+      // Keep checking late candidates in the defining block, but never mutate its
+      // local bookkeeping when a completed block's listeners run in a consumer.
+      listen(trm): shape =>
+        if rstate.canResolve(trm) then shape match
+          case sh: SymShape =>
+            if symbols.add(sh.sym) && !collecting then fail()
+          case _ => fail()
+      collecting = false
+      symbols.toList match
+        case symbol :: Nil if !failed => S(symbol)
         case _ => fail(); N
     // TODO: Ref(sym: BuiltinSymbol) is a legacy representation that still needs
     // updating to the new reference forms, even when using new resolution.

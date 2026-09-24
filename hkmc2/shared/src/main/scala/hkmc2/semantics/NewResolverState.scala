@@ -10,17 +10,6 @@ inline def rstate(using state: NewResolverState): NewResolverState = state
 object NewResolverState:
   type Listener = TermShape => NewResolverState ?=> Unit
 
-  final class AnnotationSelection:
-    val symbols = mutable.LinkedHashSet.empty[BlockMemberSymbol]
-    var collecting = true
-    var failed = false
-    def copy(): AnnotationSelection =
-      val result = new AnnotationSelection
-      result.symbols ++= symbols
-      result.collecting = collecting
-      result.failed = failed
-      result
-
   /** Lazy source lookup preserves existing graph-node identities without copying
     * a unit's memo tables. Mutable bookkeeping values supply an explicit copier.
     */
@@ -49,7 +38,7 @@ object NewResolverState:
   */
 final class NewResolverState private (
     val owner: Elaborator.State, private val consumer: Opt[NewResolverState], private val source: Opt[NewResolverState]):
-  import NewResolverState.{Cache, Seen, AnnotationSelection}
+  import NewResolverState.{Cache, Seen}
 
   def this(owner: Elaborator.State) = this(owner, N, N)
   private def root: NewResolverState = consumer.getOrElse(this)
@@ -176,8 +165,6 @@ final class NewResolverState private (
 
   val membersCache: Cache[(Identity[TermShape], Str), MemberLookup] =
     new Cache(source.map(_.membersCache), identity)
-  val annotations: Cache[Object, AnnotationSelection] =
-    new Cache(source.map(_.annotations), _.copy())
   val spreadInputs: Cache[Object, mutable.Set[TermShape]] =
     new Cache(source.map(_.spreadInputs), _.clone())
   val reportedArities: Cache[Object, mutable.Set[Int]] =
