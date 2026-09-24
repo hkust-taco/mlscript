@@ -395,9 +395,7 @@ class UsedVarAnalyzer(b: Block, scopeData: ScopeData)(using State):
             for l <- reads do
               l match
                 case l: LocalVarSymbol =>
-                  if hasMutator.contains(l) then
-                    reqCapture += l
-                  if mutated.contains(l) && !linearValueVars.contains(l) then
+                  if hasMutator.contains(l) || (mutated.contains(l) && !linearValueVars.contains(l)) then
                     reqCapture += l
                 case _: ScopedOrInnerSymbol =>
               hasReader += l
@@ -430,9 +428,7 @@ class UsedVarAnalyzer(b: Block, scopeData: ScopeData)(using State):
               for l <- reads do
                 l match
                   case l: LocalVarSymbol =>
-                    if hasMutator.contains(l) then
-                      reqCapture += l
-                    if mutated.contains(l) && !linearValueVars.contains(l) then
+                    if hasMutator.contains(l) || (mutated.contains(l) && !linearValueVars.contains(l)) then
                       reqCapture += l
                   case _: ScopedOrInnerSymbol =>
                 hasReader += l
