@@ -1,0 +1,20 @@
+:.
+
+import "../../mlscript-compile/Option.mls"
+open Option { Some, None }
+
+:expect [true, false, 42, 7, 42, 43, 7]
+[Option.isDefined(Some(42)), Option.isDefined(None),
+ Option.getOrElse(Some(42), 7), Option.getOrElse(None, 7),
+ Option.unsafe.get(Some(42)),
+ Option.getOrElse(Option.flatMap(Some(42), x => Some(x + 1)), 7),
+ Option.getOrElse(Option.flatMap(None, x => Some(x + 1)), 7)]
+//│ = [true, false, 42, 7, 42, 43, 7]
+
+:expect "AB"
+Option.getOrElse[Str](Some("ab"), "missing").toUpperCase()
+//│ = "AB"
+
+:re
+Option.unsafe.get(None)
+//│ ═══[RUNTIME ERROR] Error: None.get

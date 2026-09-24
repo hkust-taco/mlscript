@@ -6,13 +6,13 @@ import "./TokenHelpers.mls"
 import "./TreeHelpers.mls"
 import "./Parser.mls"
 import "../../Iter.mls"
-import "../../Option.mls"
+import "../../LegacyOption.mls"
 import "../../Predef.mls"
 import "../../Stack.mls"
 
 open Token { LiteralKind }
 open Parser { parse, tracer }
-open Option { Some, None }
+open LegacyOption { Some, None }
 open Predef { print }
 open Stack
 open TreeHelpers { showAsTree }

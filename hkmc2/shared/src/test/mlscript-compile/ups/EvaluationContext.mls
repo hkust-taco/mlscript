@@ -1,6 +1,6 @@
-import "../Option.mls"
+import "../LegacyOption.mls"
 
-open Option { Some, None }
+open LegacyOption { Some, None }
 open annotations
 
 module EvaluationContext with ...

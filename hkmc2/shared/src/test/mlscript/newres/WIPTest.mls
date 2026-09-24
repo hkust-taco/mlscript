@@ -79,8 +79,6 @@ module M with
 //│ | | | Elab term Ident(Predef)
 //│ | | | | Elab subterm Ident(Predef)
 //│ | | | | | listenTerm: trm = member:Predef⁰^term:M⁰/p⁰
-//│ | | | | | listen: trm = member:Predef⁰^term:M⁰/p⁰
-//│ | | | | | listenTerm: trm = member:Predef⁰
 //│ | | | | | listen: trm = member:Predef⁰
 //│ | | | | | listenBMS: bms = module
 //│ | | | | | listenedBMS: bms = module
@@ -101,8 +99,6 @@ module M with
 //│ listenedBMS: bms = value
 //│ listenTerm: td.body = member:Predef⁰^term:M⁰/p⁰
 //│ listenTerm: trm = member:Predef⁰^term:M⁰/p⁰
-//│ listen: trm = member:Predef⁰^term:M⁰/p⁰
-//│ listenTerm: trm = member:Predef⁰
 //│ listen: trm = member:Predef⁰
 //│ listenBMS: bms = module
 //│ listenedBMS: bms = module
@@ -124,7 +120,6 @@ M.p.id
 //│ | | Elab subterm Sel(Sel(Ident(M),Ident(p)),Ident(id))
 //│ | | | Elab subterm Sel(Ident(M),Ident(p))
 //│ | | | | Elab subterm Ident(M)
-//│ | | | | | listenTerm: trm = member:M¹
 //│ | | | | | listen: trm = member:M¹
 //│ | | | | | listenBMS: bms = module
 //│ | | | | | listenedBMS: bms = module
@@ -132,7 +127,6 @@ M.p.id
 //│ | | | | | PUSH module:M⁰
 //│ | | | | ~> member:M¹
 //│ | | | | newSel? sel = member:M¹.p
-//│ | | | | listenTerm: trm = member:M¹
 //│ | | | | listen: trm = member:M¹
 //│ | | | | listenBMS: bms = module
 //│ | | | | listenedBMS: bms = module
@@ -140,14 +134,11 @@ M.p.id
 //│ | | | | PUSH module:M⁰
 //│ | | | | newSel: sel = member:M¹.p, shape = module:M⁰
 //│ | | | | newSel member: bms = member:p¹, mss = List()
-//│ | | | | listenTerm: trm = member:M¹.p
 //│ | | | | listen: trm = member:M¹.p
 //│ | | | | listenBMS: bms = value
 //│ | | | | listenedBMS: bms = value
 //│ | | | | listenTerm: td.body = member:Predef⁰^term:M⁰/p⁰
 //│ | | | | listenTerm: trm = member:Predef⁰^term:M⁰/p⁰
-//│ | | | | listen: trm = member:Predef⁰^term:M⁰/p⁰
-//│ | | | | listenTerm: trm = member:Predef⁰
 //│ | | | | listen: trm = member:Predef⁰
 //│ | | | | listenBMS: bms = module
 //│ | | | | listenedBMS: bms = module
@@ -159,14 +150,11 @@ M.p.id
 //│ | | | | MATCH module:Predef¹ for term:M⁰/p⁰ % ⋅p⁰
 //│ | | | ~> member:M¹.p
 //│ | | | newSel? sel = member:M¹.p.id
-//│ | | | listenTerm: trm = member:M¹.p
 //│ | | | listen: trm = member:M¹.p
 //│ | | | listenBMS: bms = value
 //│ | | | listenedBMS: bms = value
 //│ | | | listenTerm: td.body = member:Predef⁰^term:M⁰/p⁰
 //│ | | | listenTerm: trm = member:Predef⁰^term:M⁰/p⁰
-//│ | | | listen: trm = member:Predef⁰^term:M⁰/p⁰
-//│ | | | listenTerm: trm = member:Predef⁰
 //│ | | | listen: trm = member:Predef⁰
 //│ | | | listenBMS: bms = module
 //│ | | | listenedBMS: bms = module

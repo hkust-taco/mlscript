@@ -1,15 +1,15 @@
 import "./Predef.mls"
-import "./Option.mls"
+import "./LegacyOption.mls"
 import "./StrOps.mls"
 import "./Runtime.mls"
 
 open Predef
 open StrOps
-open Option
+open LegacyOption
 
 module Block with...
 
-type Opt[A] = Option[A]
+type Opt[A] = LegacyOption[A]
 
 // dependancies referenced in Block classes, referencing implementation in Term.mls
 

@@ -2,10 +2,10 @@
 :js
 
 import "../../mlscript-compile/Block.mls"
-import "../../mlscript-compile/Option.mls"
+import "../../mlscript-compile/LegacyOption.mls"
 
 open Block
-open Option
+open LegacyOption
 
 printCode(FunDefn(Symbol("f"), [[Symbol("x")]], Return(ValueLit(1))))
 //│ > fun f(x) = 1

@@ -8,7 +8,8 @@ After dynamic shapes and non-strict suite defaults became available, all 187
 deferred worksheets were retried, bringing the count to 239. After declared
 interfaces, generic flow, tuple projections, and Array inheritance were implemented,
 all 133 remaining worksheets (plus the two deferred WASM worksheets) were retried.
-This pass migrates another 13, bringing the count to 252 of 372 (68%). The 51 files under
+That pass migrated another 13; the parser follow-up migrates seven more worksheets,
+bringing the count to 259 of 372 (70%). The 51 files under
 `ucs/staging` are excluded by the test runner and remain unchanged. Counts below exclude shared `.mls`
 configuration files and new-resolution regression tests.
 
@@ -18,8 +19,8 @@ configuration files and new-resolution regression tests.
 | codegen | 86 | 39 | 125 |
 | ucs | 52 | 18 | 70 |
 | ups | 49 | 22 | 71 |
-| apps | 5 | 11 | 16 |
-| Total | 252 | 120 | 372 |
+| apps | 12 | 4 | 16 |
+| Total | 259 | 113 | 372 |
 
 Migrated files start with `:.`. Each suite's `.mls` loads the common language
 configuration and uses its non-strict default; nested directories inherit through
@@ -67,12 +68,10 @@ per-file `:todo`, `:fixme`, `:ignore`, or resolution-mode exception hides a migr
 failure. Existing expected failures remain visible. The inventory below records
 trial observations, not newly accepted failures.
 
-The five migrated application worksheets still import compilation fixtures in
-their existing mode. This is caller-side migration, not a claim that all imported
-application implementations use new resolution. The 20 application compilation
-fixtures and four `mlscript-compile/ups` fixtures need a subsequent dependency-ordered
-migration. Their shared consumers make a blanket flag change inappropriate for
-this worksheet migration.
+Compilation fixtures are now being migrated as well; the worksheet counts above
+are independent of that work. Mixed-mode imports remain necessary. A fixture
+must pass both standalone compilation and its existing consumers before its
+language header is retained. See the compilation-fixture audit below.
 
 The annotated-receiver capture assertion in WASM `Basics` is fixed; a later
 unannotated `this.x` initializer still blocks that worksheet (see task 3).
@@ -80,11 +79,228 @@ Method calls across REPL blocks remain assigned to the other branch.
 The constructor-pattern context-mixing regression now passes; the remaining
 pattern-transfer gaps are listed below.
 
+## Compilation-fixture migration
+
+All 107 original fixtures under `hkmc2/shared/src/test/mlscript-compile/` were inventoried.
+Four already used new resolution. Each of the other 103 was tried independently
+with `#lang(0.3.x)`, retaining its dependencies' configuration; the remaining
+candidates were retried after the fixes below. Combined compilation and runtime
+consumer tests decide which ports are retained. Real files check their exposed
+interfaces even in non-strict mode.
+
+| Compilation suite | Newly migrated | Total migrated | Deferred | Total |
+| --- | ---: | ---: | ---: | ---: |
+| Main (including quotes, UPS, and regression/compatibility fixtures) | 21 | 26 | 23 | 49 |
+| Applications | 6 | 6 | 14 | 20 |
+| Nofib | 12 | 12 | 27 | 39 |
+| WASM | 0 | 0 | 1 | 1 |
+| Total | 39 | 44 | 65 | 109 |
+
+The added `LegacyOption.mls` is counted among the deferred fixtures: 64 original
+fixtures remain unported, plus this temporary compatibility copy. The additional
+`NamedFieldLibrary.mls` regression fixture uses new resolution and is counted in
+the migrated total, but is not a port of one of the 107 original fixtures.
+
+The retained ports are:
+
+- Main: `Example`, `FilePrivateFunctions`, `NestedFunctionsNoLift`, `NoFreeze`,
+  `Option`, `QuoteExample2`, `Record`, and `StrOps`.
+- All ten `quotes/` fixtures: `CSPBar`, `CSPBaz`, `CSPFoo`, `CSPNest`, `Cubic`,
+  `Gib12`, `Opened`, `QuoteFoo`, `QuoteInc`, and `SafeDiv`.
+- UPS: `DnfCnf`, `EvenOddTree`, and `TruthyFalsy`.
+- Applications: `parsing/PrattParsing`, `parsing/RecursiveDescent`, and
+  `parsing/TokenHelpers`, plus `parsing-web-demo/Examples` after the named-field fix.
+  `parsing/BasicExpr` and `parsing/Expr` are now migrated with their worksheets.
+- Nofib: `banner`, `boyer`, `boyer2`, `calendar`, `clausify`, `cryptarithm1`,
+  `gcd`, `mandel`, `mandel2`, `puzzle`, `rsa`, and `sphere`.
+
+Most ports need only the language header. `Example.funnySlash` now
+declares its generic callable parameter interface, and `rsa.int_if_char` declares
+its string parameter. `Example.Test(...)` remains a direct constructor call:
+needing `new` there was an overload-resolution bug, not a language rule. The
+prelude now declares callable `Error` overloads, so existing `Error(...)` calls
+also remain unchanged. `Term.codegen` emits the new language header when it
+regenerates quotation fixtures, preserving their migration during runtime tests.
+`Option` now declares its generic parameter, callback, and return interfaces.
+No visibility changes or failure suppressions were added to make fixtures pass.
+DOM and filesystem entry points are explicitly `dyn` in the prelude for now;
+fixture parameters were not made dynamic to bypass missing interfaces.
+
+All twelve `apps/parsing` worksheets now use new resolution, including the seven
+previously deferred lexer, parser, rule, and visualizer tests. Their successful
+runtime output is unchanged. Lexer callers now pass the actual `noWhitespace`
+options record. The heterogeneous rule-table rendering callback declares the
+structural `display` interface it needs. Implementation modules that still use
+legacy resolution are explicitly listed below; migrating their callers does not
+claim that these dependencies have been migrated.
+
+### Fixes found while porting
+
+- Ordinary values select function/constructor overloads; selection receivers
+  select companion modules. This distinction survives nested captures and opens.
+  Function/module overloads are accepted under new resolution, and interface
+  exposure checks both overloads. `newres/OverloadedCalls.mls` exercises direct,
+  generic, stored-function, module-member, and captured uses.
+- Discarding captures for constructor-pattern resolution now traverses every
+  nested capture. Previously, parser fixtures compiled but tested the generated
+  constructor function instead of its class, producing runtime match errors.
+- The prelude declares `Array.at`, `fill`, and `splice`, common `Str` and `Num`
+  methods, and the basic Set, Map, and RegExp interfaces. Primitive literals use
+  those declared interfaces, including inheritance (`Int` extends `Num`).
+  `newres/Arrays.mls` and `PrimitiveMembers.mls` cover execution and missing-member
+  diagnostics. The previously expected failure for string `repeat` now succeeds.
+- Calls to bodyless foreign method declarations use foreign-call normalization,
+  even when `declare` appears on their enclosing class rather than the method.
+  In particular, an out-of-range `Array.at` returns unit through the existing
+  JavaScript `undefined` normalization instead of failing an MLscript-call check.
+- Foreign callable constructor declarations cover `Error`, `TypeError`,
+  `RangeError`, `Array`, and `String`. The JS backend uses their existing host
+  class values for `new` and patterns, without an MLscript `.class` wrapper.
+- The prelude's own diff test now parses it as one compilation unit, matching
+  normal compiler loading so mutually referring declarations can cross blank
+  lines. `newres/HostInterfaces.mls` checks dynamic DOM and filesystem access
+  without requiring a DOM in the test VM.
+- Assignment lowering accepts resolved member references and uses the existing
+  symbol assignment checks. `newres/MemberAssignments.mls` covers a mutable field
+  accessed by name inside a method.
+
+- Root classes, objects, and modules inherit `Object`'s member interface. Explicit
+  parents and own-member overrides take precedence. `newres/ObjectMethods.mls`
+  covers inferred/annotated receivers, overrides, and subclass-pattern narrowing.
+- Tuple patterns propagate leading, trailing, and rest shapes, preserving unknown
+  alternatives and generic opacity. Rest parameter annotations now describe the
+  whole rest array. `newres/TuplePatternBindings.mls` covers these paths.
+- `Str.at` and `process.cwd` now have declared interfaces.
+
+### Remaining work and design boundaries
+
+Some deferred fixtures need source interfaces rather than compiler changes:
+public callback parameters need function types, and public receivers need a
+nominal or structural interface. For example, `QuoteExample.bind` calls its
+unannotated `k`, and many Nofib helpers expose unannotated comparators or printers.
+Choosing which helpers should instead be private changes the exported API and
+was not done automatically. Annotation boundaries must remain opaque.
+
+Other failures require compiler or prelude work:
+
+1. **Legacy consumers inspecting new-resolution return annotations.** `Option`
+   compiles after adding generic callback/parameter interfaces. In the attempted
+   port, `getOrElse` has result annotation `A` and `flatMap` has `Option[B]`.
+   The legacy consumer `apps/parsing/Parser.mls` calls these functions (for
+   example, `getOrElse` at line 101 and `flatMap` at line 167). Its
+   `Resolver.resolveType` calls `resolveSign` on the imported return annotation;
+   that reads `legacyResolvedSym` from new-resolution syntax and fails with
+   `Legacy symbol query on a new-resolution term`. The application run reports
+   this failure for `Parser`, `Test`, `ParseRuleVisualizer`, and
+   `parsing-web-demo/main`; the latter three also depend on `Parser`.
+   `Option.mls` is now ported; the affected dependency graph imports the temporary
+   `LegacyOption.mls`, preserving shared constructor identities.
+   Its comment requires deletion when those consumers are ported.
+   `BasicExpr` and `Expr` are now ported together with their worksheet consumers.
+   The same boundary still prevents independently retaining the `Token` and
+   `Keywords` ports: legacy `Lexer`/`Parser` consumers inspect their new signatures.
+   A general interoperability bridge would need to consume completed type information
+   without re-resolving imported nodes or querying erased types before erasure.
+2. **Flow through patterns and mutation.** Tuple bindings now transport field shapes,
+   including typed arrays and middle spreads. Guarded/transforming patterns, assignment
+   results, and mutable container element types still leave
+   some selections without shapes. `Char.AnyChar` loses the string shape before
+   its `length` guard; CSV's mutable nested array loses its element interface.
+   Assuming initializer shapes survive mutation would be unsound.
+3. **Remaining host interfaces.** `Array.reduce` needs its accumulator/callback
+   contracts; `Map.set` and `Reflect.set` need keyword-named declarations;
+   WebAssembly exports still need interfaces. DOM and filesystem entry points
+   now use `dyn`; `HTMLElement` retains its nominal superclass identity with
+   dynamic host members. `Object.toString(): Str` is now declared, and classes
+   without an explicit parent inherit the `Object` interface.
+4. **Imported lowering forms.** `Parser` encounters a synthesized selection
+   during new resolution, requiring import-boundary work. Named-field argument
+   grouping is fixed: tuple shapes now match lowering's positional values followed
+   by one record. `Extension`, `Rules`, `Token`, and web-demo `Examples` were
+   retried; their named-field arity errors are gone, and `Examples` is now ported.
+   `Rules.listLike` declares its structural field interface; `makeBracketRule`
+   now has one too. Some imported receivers still have no resolved target.
+5. **Contextual argument insertion.** `Lexer` calls `Token.integer`, `symbol`, etc.
+   with a trailing `(using llt: LineLookupTable)` list. New resolution leaves these
+   calls partially applied instead of inserting the available contextual value.
+   `Lexer` also hits the opened binary `~`/builtin-operator conflict. These are
+   compiler implementation gaps, not reasons to remove the contextual API.
+6. **Quotation coverage.** Quasiquote lowering still lacks some new type-selection
+   and wildcard-reference forms (`CSP`, `QuoteExample1`).
+
+### Deferred compilation inventory
+
+Paths below are relative to `mlscript-compile/`. Each row gives a concrete
+remaining obstruction, not a claim that it is the only one. Deferred files keep
+legacy resolution; imports that exchange options use `LegacyOption` consistently.
+
+| Main fixture | Observed obstruction |
+| --- | --- |
+| `Benchmark.mls` | Exposed `suite.run` and callback interfaces. Filesystem access is now dynamic. |
+| `Block.mls` | `Str.replaceAll`, `Any.toString`, and pattern-value interfaces. |
+| `CSP.mls` | Quasiquote type selections and wildcard opens. |
+| `CachedHash.mls` | Original `this.toString` blocker is fixed by implicit Object inheritance; the fixture has not yet been retried. |
+| `Char.mls` | `AnyChar` loses the string shape before its `length` guard. |
+| `FingerTreeList.mls` | `Array.reduce` and numeric projection on an array rather than a fixed tuple. |
+| `Iter.mls` | Exposed callbacks and iterator `next` interfaces. |
+| `LazyArray.mls` | `null.next` and missing pattern-field shapes through mutation. |
+| `LazyFingerTree.mls` | Exposed `xs.length` and pattern-field interfaces. |
+| `MutMap.mls` | Exposed `m.underlying` and keyword-named `Map.set`. |
+| `ObjectBuffer.mls` | Exposed `cls.size` and constructor interfaces. |
+| `LegacyOption.mls` | Temporary copy for legacy consumers; delete when those consumers are ported. |
+| `Predef.mls` | Exposed generic callbacks and rest-argument `.call`. |
+| `QuoteExample.mls` | Exposed callback `k` in `bind`. |
+| `QuoteExample1.mls` | Quasiquote wildcard-open references. |
+| `Rendering.mls` | Nullable string flow, callbacks, and pattern-field interfaces. |
+| `Runtime.mls` | `Map.set` and nullable `contTrace` flow. |
+| `Shape.mls` | Pattern-derived receivers for `join`, `every`, `length`, and `name`. |
+| `Stack.mls` | Exposed `arr.length` and predicate callbacks. |
+| `Term.mls` | `Map.set` and generic pattern/value interfaces. |
+| `TreeTracer.mls` | Exposed `message.split` and pattern-reference forms. |
+| `XML.mls` | Exposed `value.toValue`. |
+| `ups/EvaluationContext.mls` | Exposed `target.freeVars` and context interfaces. |
+
+| Application fixture | Observed obstruction |
+| --- | --- |
+| `apps/parsing/Accounting.mls` | Array callback arity, `reduce`, and receiver interfaces. |
+| `apps/parsing/CSV.mls` | Mutable nested-array elements lack the shape required for `push`. |
+| `apps/parsing/Extension.mls` | Receivers for `display`, `add`, and `extendChoices` have no resolved target. |
+| `apps/parsing/Keywords.mls` | Compiles after interface additions; legacy `Parser` consumers inspect its new signatures. |
+| `apps/parsing/Lexer.mls` | Missing automatic contextual argument insertion and opened binary `~` resolution. The options record is now annotated. |
+| `apps/parsing/ParseRule.mls` | Flow through private module/class `let` bindings and imported mutable maps; `keyword` now has an interface. |
+| `apps/parsing/ParseRuleVisualizer.mls` | Imported JS railroad API lacks member interfaces. |
+| `apps/parsing/Parser.mls` | Synthetic selections from imported legacy forms reach new resolution. |
+| `apps/parsing/Rules.mls` | An `extendChoices` receiver has no resolved target through mutable map lookup. Both record-parameter helpers and exported rule results are annotated. |
+| `apps/parsing/Test.mls` | `flags.has` and `tracer.reset` lose shapes through tuple/import flow. |
+| `apps/parsing/Token.mls` | Compiles with its added interfaces and subclass-pattern narrowing; legacy contextual-argument consumers cannot read the new signatures. |
+| `apps/parsing/Tree.mls` | Chained `JSON.stringify(...).slice(...)` lacks a result interface; also coupled to legacy consumers. |
+| `apps/parsing/TreeHelpers.mls` | Coupled to `Tree` and its consumers; string input and `Object.toString` interfaces are now present. |
+| `apps/parsing-web-demo/main.mls` | String callback interfaces, dynamic receiver flow through aliases/mutation, and tuple-bound `example.name`. DOM declarations themselves are now dynamic. |
+
+| Nofib fixture (under `nofib/`) | Observed obstruction |
+| --- | --- |
+| `NofibPrelude.mls`, `ansi.mls`, `atom.mls`, `awards.mls`, `constraints.mls`, `cse.mls`, `fish.mls`, `integer.mls`, `lambda.mls`, `lastpiece.mls`, `life.mls`, `mate.mls`, `minimax.mls`, `para.mls`, `power.mls`, `pretty.mls`, `primetest.mls`, `scc.mls`, `secretary.mls` | Exposed callback parameters need callable interfaces. |
+| `eliza.mls`, `knights.mls`, `sorting.mls` | Unannotated string receivers and callbacks. |
+| `circsim.mls` | Exposed record receivers such as `p.pid` and `p.compType`. |
+| `cryptarithm2.mls` | Callable interface for an unannotated constructor field. |
+| `cichelli.mls` | Callback interfaces; its original `toString` blocker is fixed. |
+| `treejoin.mls` | Pattern flow; its original `toString` blocker is fixed. |
+| `lcss.mls` | Function result has no interface for `toString`. |
+
+The remaining WASM fixture, `wasm/Wasm.mls`, needs interfaces for
+`WebAssembly.Instance.exports` and its exposed `wasmInst.imports` receiver.
+
 ## Straightforward fixes applied
 
 1. Named record/tuple fields elaborate their values with the enclosing
    interpretation. `value: expression` inside a term tuple is not a type
-   annotation. Existing `basics/NamedArgs.mls` exercises this distinction.
+   annotation. Tuple shapes collect these values into one trailing record, matching
+   lowering while retaining source evaluation order, last-write-wins lookup,
+   computed-key uncertainty, and property identities across imports. Structural
+   record annotations expose only their declared fields and support generic
+   substitution and callback interfaces. `newres/NamedFields.mls`,
+   `ImportedNamedFields.mls`, and `RecordInterfaces.mls` cover these behaviors;
+   `basics/NamedArgs.mls` also exercises the existing runtime convention.
 2. Compiler-generated `runtime.assertFail` calls use a synthetic selection, like
    other runtime helpers. This is not a fallback for unresolved source selections.
    `basics/Assert.mls` and `DisruptiveComments.mls` retain runtime assertion tests.
@@ -245,8 +461,8 @@ Regression coverage is in `newres/Dynamic.mls`, `newres/Records.mls`,
 Evidence: new shape propagation lacks record, negation, string
 concatenation, and transformation cases. Examples include
 `ucs/general/BooleanPatterns.mls`, `patterns/String.mls`, and
-`normalization/RecordImpliedByClass.mls`. Tuple bindings currently publish no
-shapes. `CompiledQualifiedConstructors.mls` and `CompiledClassPatterns.mls` now
+`normalization/RecordImpliedByClass.mls`. Tuple bindings now propagate shapes,
+including middle spreads and declared Array element types. `CompiledQualifiedConstructors.mls` and `CompiledClassPatterns.mls` now
 pass and are migrated, as are most UPS fixed-point, recursive, and parametric
 cases. Remaining failures include unsupported pattern forms, patterns used as
 terms (for example `.unapply`), and synthesized selections entering new resolution
@@ -392,8 +608,8 @@ These changes also fix the sibling-subclass field-extraction regression in
 - `codegen/ObjectMethodDebinding`: `id(Test).foo` still has no resolved target.
   Adding an expected error would not establish the intended debinding diagnostic.
 - Imported application results still lack the required interfaces: CSV's nested
-  tuple selection, Iter's `reverse`, and parser collections' `sort`/`join` remain
-  unresolved. Adding Array members cannot manufacture missing receiver shapes.
+  tuple selection and Iter's `reverse` remain unresolved; the parser worksheets
+  now pass after adding their required interfaces. Adding Array members cannot manufacture missing receiver shapes.
 
 ### Other implementation work
 
@@ -429,16 +645,17 @@ These changes also fix the sibling-subclass field-extraction regression in
    finish mutation flow, primitive members, and foreign declarations in small batches. Re-run affected negative tests as
    well as successful programs.
 4. **Complete pattern transfers and reference preservation.** Start with UCS
-   conjunction/record/tuple cases, then the remaining recursive and transforming
+   conjunction/record cases, then the remaining recursive and transforming
    UPS cases. Keep fixed-point behavior tested independently from matcher code
    generation. Preserve the now-passing constructor-field context regressions.
 5. **Complete type/interface and call validation.** Preserve opaque annotations
-   and marked generic flow; finish generic validation, rest-parameter signatures,
+   and marked generic flow; finish generic validation and contextual argument insertion,
    module checks, and the WASM migration. Keep cross-block method work coordinated externally.
-6. **Migrate shared compilation fixtures from leaves upward.** Begin with the
-   four UPS fixtures; then application parsing data types, lexer, parser helpers,
-   and entry points. Rebuild `.mjs` dependencies before each worksheet batch.
-   Verify cache/import behavior across old and new consumers during transition.
+6. **Continue the audited compilation-fixture migration.** Port `LegacyOption`
+   consumers and remove the temporary copy. Resolve the legacy-consumer signature
+   boundary for `Token` and `Keywords`; `BasicExpr` and `Expr` are ported. Add
+   exposed interfaces and complete the pattern/host-interface gaps listed above.
+   Rebuild `.mjs` dependencies and run existing consumers for each batch.
 7. **Remove the remaining legacy suite configurations.** Require no new failure
    suppressions, no lost negative diagnostics, reviewed goldens, and a successful
    `hkmc2AllTests/test`. Commit code and golden outputs together under the agent's
@@ -446,19 +663,24 @@ These changes also fix the sibling-subclass field-extraction regression in
 
 ## Validation
 
-- `ctest`: all 47 selected compilation tests pass.
-- `catest`: all 20 application compilation fixtures pass in their existing mode.
+- `ctest`: all 49 selected compilation tests pass.
+- `catest`: all 20 application compilation fixtures pass with the retained mixed-mode ports.
+- `adtest parsing`: all 14 selected tests pass, including all twelve parser worksheets.
+- `cntest`: all 39 Nofib compilation fixtures pass.
 - `cwtest`: the WASM compilation fixture passes.
-- `hkmc2AllTests/test`: all 951 tests pass, including 708 main tests, 18 application
+- `hkmc2AllTests/test`: all 969 tests pass, including 720 main tests, 18 application
   tests, and 22 WASM tests. The main count includes directory configurations and
   new-resolution regressions; it is not a count of migrated worksheets.
-- All retained ports have reviewed goldens. Deferred worksheets retain their
-  original source and output; no trial-generated application report changes remain.
+- All retained ports have reviewed goldens. Legacy consumers that require the
+  compatibility option constructors import `LegacyOption`; reflection uses that
+  same copy as `Block.mls`. No trial-generated failures remain in golden outputs.
 
 ## Deferred-file inventory
 
-The following are the first observed trial failures, which may be symptoms rather
-than root causes. Each path is relative to `hkmc2/shared/src/test/mlscript/`.
+The following are the first observed worksheet-trial failures, which may be
+symptoms rather than root causes. This inventory predates the compilation-fixture
+batch above; its overload and primitive-member fixes may unblock additional
+worksheets, which have not been re-audited in this batch. Each path is relative to `hkmc2/shared/src/test/mlscript/`.
 The files themselves retain the pre-trial configuration and output.
 
 ### basics
@@ -588,13 +810,6 @@ The files themselves retain the pre-trial configuration and output.
 - `apps/CSVTest.mls`: Unexpected compilation error; This selection of member '1' has no resolved target
 - `apps/IterTest.mls`: Unexpected compilation error; This selection of member 'reverse' has no resolved target
 - `apps/parsing-web-demo/ExamplesTest.mls`: Unexpected compilation error; This selection of member 'sort' has no resolved target
-- `apps/parsing/DirectiveTest.mls`: Unexpected compilation error; This selection of member 'display' has no resolved target
-- `apps/parsing/LeftRecursion.mls`: Unexpected compilation error; This selection of member 'display' has no resolved target
-- `apps/parsing/LexerTest.mls`: Unexpected compilation error; This selection of member 'join' has no resolved target
-- `apps/parsing/ParseRuleVisualizerTest.mls`: Unexpected compilation error; Resolution error in application; Class value cannot receive more argument lists.
-- `apps/parsing/PrattParsingTest.mls`: Unexpected compilation error; This selection of member 'toString' has no resolved target
-- `apps/parsing/RecursiveDescentTest.mls`: Unexpected compilation error; This selection of member 'toString' has no resolved target
-- `apps/parsing/RulesTest.mls`: Unexpected exception; java.lang.Exception: Internal Error: Synthetic selections must not enter new resolution
 
 ### wasm
 

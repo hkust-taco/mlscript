@@ -57,9 +57,9 @@ callid1(Predef)
 //│ | | Elab subterm App(Sel(Ident(p),Ident(id)),Tup(List(IntLit(1))))
 //│ | | | Elab subterm Sel(Ident(p),Ident(id))
 //│ | | | | Elab subterm Ident(p)
+//│ | | | | | listen: trm = p⁰
 //│ | | | | ~> p⁰
 //│ | | | | newSel? sel = p⁰.id
-//│ | | | | listenTerm: trm = p⁰
 //│ | | | | listen: trm = p⁰
 //│ | | | | listenTerm: trm = p⁰.id
 //│ | | | | listen: trm = p⁰.id

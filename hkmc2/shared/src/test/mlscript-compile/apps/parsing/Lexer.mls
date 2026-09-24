@@ -7,14 +7,14 @@ open Predef
 import "../../Char.mls"
 import "../../Stack.mls"
 import "../../StrOps.mls"
-import "../../Option.mls"
+import "../../LegacyOption.mls"
 import "../../Iter.mls"
 
 import "./Token.mls"
 
 open Stack
 open StrOps
-open Option { Some, None}
+open LegacyOption { Some, None}
 open Token { LiteralKind, LineLookupTable }
 
 type TokenType = Token.Token
@@ -56,7 +56,7 @@ fun makeLineLookupTable(text: Str): LineLookupTable =
       ns.push(i')
   LineLookupTable(ns)
 
-fun lex(str: Str, options) =
+fun lex(str: Str, options: {noWhitespace: Bool}) =
   using LineLookupTable = makeLineLookupTable(str)
   
   fun char(idx: Int) = if idx < str.length

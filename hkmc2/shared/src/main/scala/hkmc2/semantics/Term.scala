@@ -1287,7 +1287,9 @@ final case class RcdField(field: Term, rhs: Term, sym: BlockMemberSymbol) extend
     case _ => ()
 
 object RcdField:
-  def apply(field: Term, rhs: Term)(using State): RcdField =
+  def apply(field: Term, rhs: Term)(using State): RcdField = make(field, rhs, false)
+  def signature(field: Term, sign: Term)(using State): RcdField = make(field, sign, true)
+  private def make(field: Term, rhs: Term, signature: Bool)(using State): RcdField =
     val name = field match
       case Term.Lit(Tree.StrLit(name)) => name
       case _ => "computed field"
@@ -1300,8 +1302,10 @@ object RcdField:
     // Wrap rhs in Capture to supply that mark, so the entry and exit cancel and
     // leave the enclosing call-site marks intact. Lowering evaluates RcdField.rhs;
     // it does not evaluate this synthetic definition separately.
-    tsym.defn = S(TermDefinition(RecordField, sym, tsym, Nil, N, N,
-      S(Term.Capture(rhs, tsym)), TermDefFlags.empty, Modulefulness.none, Nil, N))
+    val captured = Term.Capture(rhs, tsym)
+    tsym.defn = S(TermDefinition(RecordField, sym, tsym, Nil, N,
+      if signature then S(captured) else N,
+      if signature then N else S(captured), TermDefFlags.empty, Modulefulness.none, Nil, N))
     sym.complete()
     RcdField(field, rhs, sym)
 final case class RcdSpread(rcd: Term) extends Statement

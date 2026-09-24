@@ -57,13 +57,17 @@ final class InterfaceExposure(resolver: NewResolver)(using NewResolverState, TL)
   private def member(symbol: BlockMemberSymbol, marks: Ls[Marks], path: Path)(using NewResolverState): Unit =
     if (symbol.getState is rstate.owner) && (symbol.asModOrObj.isDefined || symbol.asTrm.isDefined || symbol.asCls.isDefined) then
       val ref = source(symbol)
-      watch((symbol, marks))(resolver.fromBMS(symbol, ref.resSym, marks, _, ref, _ => ()))(emit(_, path))
+      watch((symbol, marks))(resolver.fromBMS(symbol, ref.resSym, marks, _, ref, _ => (), false))(emit(_, path))
+      // Both overloads are public: selecting a module member must not hide the
+      // function's inputs, and exposing a function must not hide module members.
+      if symbol.asModOrObj.isDefined && symbol.asTrm.isDefined then
+        watch((symbol, marks, true))(resolver.fromBMS(symbol, ref.resSym, marks, _, ref, _ => (), true))(emit(_, path))
       // A term companion can hide the constructor in term position, but clients
       // still have access to the class through `new` and class projections.
       if symbol.asModOrObj.isDefined || symbol.asTrm.exists(!_.isInstanceOf[ClassCtorSymbol]) then
         symbol.asCls.flatMap(_.defn).foreach: cls =>
           val resolver = this.resolver
-          watch((cls.sym, marks))(listener => resolver.listenExt(cls.ext, ext =>
+          watch((cls.sym, marks))(listener => resolver.listenExt(cls, ext =>
             DefnShape(cls, ext).exit(ExitMark(ResolutionBoundary(cls.sym), S(ref.resSym), NoMarks)).exit(marks) match
               case shape: TermShape => listener(shape)
               case NoShape => ()))(emit(_, path))
@@ -142,7 +146,7 @@ final class InterfaceExposure(resolver: NewResolver)(using NewResolverState, TL)
             emit(shape.exit(marks), path)
       // Nominal annotations expose their declared interface, not an initializer's
       // inferred implementation. Unknown and dynamic values have no static graph.
-      case _: (NominalTypeShape | OpaqueTypeShape | UnknownValueShape | DynShape | ErrShape) => ()
+      case _: (NominalTypeShape | RecordTypeShape | OpaqueTypeShape | UnknownValueShape | DynShape | ErrShape) => ()
 
   def check(exports: Ls[BlockMemberSymbol], values: Ls[Term]): Unit =
     try

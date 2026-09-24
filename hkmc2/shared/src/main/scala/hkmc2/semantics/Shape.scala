@@ -25,6 +25,7 @@ sealed trait Shape extends ShapeLike:
     case us: UnknownValueShape => s"UnknownValueShape(${us.source.showDbg})"
     case ts: TupleShape => s"TupleShape(${ts.source.showDbg})"
     case rs: RecordShape => s"RecordShape(${rs.source.showDbg})"
+    case rs: RecordTypeShape => s"RecordTypeShape(${rs.source.showDbg})"
     case ts: NominalTypeShape => s"NominalTypeShape(${ts.defn.sym.showDbg})"
     case ts: OpaqueTypeShape => s"OpaqueTypeShape(${ts.source.showDbg})"
     case ts: CallableTypeShape => s"CallableTypeShape(${ts.source.showDbg})"
@@ -362,6 +363,18 @@ class BaseShape(val defn: ClassLikeDef, val ext: Opt[TermShape]) extends NonAppT
     MemberLookup.inClass(defn, ext, name)
   def toLoc: Opt[Loc] = defn.toLoc
 
+/** A structural annotation exposes only its declared fields. Their symbols belong
+  * to the annotation, not to whichever record happens to be passed by a caller.
+  */
+final case class RecordTypeShape(source: Term.Rcd, fields: Ls[(RcdField, TypeResolution)],
+    bindings: Map[VarSymbol, DeclaredType]) extends NonAppTermShape:
+  def describe: Str = "record type"
+  def toLoc: Opt[Loc] = source.toLoc
+  protected def getMemberImpl(name: Str)(using NewResolverState): MemberLookup =
+    fields.reverseIterator.collectFirst {
+      case (field, _) if field.sym.nme == name => MemberLookup.Declared(field.sym, bindings, Nil, S(source))
+    }.getOrElse(MemberLookup.Missing)
+
 /** A nominal annotation exposes only declarations, including inherited declarations.
   * In particular, selecting an unannotated field does not inspect its initializer.
   * The annotation is a diagnostic witness, excluded from shape equality; synthesized
@@ -445,7 +458,7 @@ class DefnShape(val defn: Definition, val ext: Opt[TermShape]) extends NonAppTer
     defn match
     case defn: ModuleOrObjectDef =>
       MemberLookup.inClass(defn, ext, name)
-    case defn: TermDefinition => ???
+    case _: TermDefinition => MemberLookup.Missing
     case _ => MemberLookup.Missing
   def toLoc: Opt[Loc] = defn.sym.toLoc
 
@@ -626,13 +639,15 @@ object RecordShape:
 
 
 type IntroTerm = Term.Lit | Term.UnitVal | Term.Lam //| Term.New
-class IntroShape(val trm: IntroTerm) extends NonAppTermShape:
+class IntroShape(val trm: IntroTerm, val primitive: Opt[NominalTypeShape]) extends NonAppTermShape:
   def describe: Str = trm.describe
   protected def getMemberImpl(name: Str)(using NewResolverState): MemberLookup = trm match
-    case _: Term.Lit | _: Term.UnitVal => MemberLookup.Missing // TODO: methods on literals
+    case _: Term.Lit | _: Term.UnitVal => primitive.fold[MemberLookup](MemberLookup.Missing)(_.getMember(name))
     case lam: Term.Lam => MemberLookup.Missing // TODO: methods on lambdas
     // case newTerm: Term.New =>
     //   Map.empty // TODO
+  override def isInstanceOfClass(cls: ClassLikeDef)(using NewResolverState): Bool =
+    primitive.exists(_.isInstanceOfClass(cls))
   def toLoc: Opt[Loc] = trm.toLoc
   override def toString: Str = s"IntroShape(${trm})"
 
@@ -643,5 +658,4 @@ sealed trait LitShape extends NonAppTermShape:
 
 type ShapePublisher = Publisher[Shape]
 type ShapeHost = Host[Shape]
-
 

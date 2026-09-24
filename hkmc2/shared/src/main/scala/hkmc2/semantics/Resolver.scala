@@ -1065,6 +1065,9 @@ class Resolver(tl: TraceLogger)
       case Term.Ref(_) =>
       case Term.Lit(_) =>
       case Term.Tup(_) => t.subTerms.foreach(traverse(_, expect = NonModule(N)))
+      case Term.Rcd(_, stats) => stats.foreach:
+        case field: RcdField => traverseSign(field.rhs, expect = NonModule(N))
+        case stat => raise(ErrorReport(msg"Expected a field declaration in record type." -> stat.toLoc :: Nil))
       case Term.UnitVal() =>
       // Literals with operators. e.g., -42
       case Term.App(Term.Ref(_: BuiltinSymbol), Term.Tup(Fld(term = Term.Lit(_)) :: Nil)) =>
@@ -1168,7 +1171,7 @@ class Resolver(tl: TraceLogger)
       case Term.App(Term.Ref(_: BuiltinSymbol), Term.Tup(Fld(term = Term.Lit(_)) :: Nil)) => if expect.module
         then raiseError()
         else Type.NotImplemented // TODO: Support Lit with operator
-      case _: (Term.DynTy | Term.FunTy | Term.WildcardTy | Term.CompType | Term.Neg | Term.Forall | Term.Constrained | Term.Tup | Term.Lit) =>
+      case _: (Term.DynTy | Term.FunTy | Term.WildcardTy | Term.CompType | Term.Neg | Term.Forall | Term.Constrained | Term.Tup | Term.Rcd | Term.Lit) =>
         if expect.module
         then raiseError()
         else Type.NotImplemented // TODO: Support complex types

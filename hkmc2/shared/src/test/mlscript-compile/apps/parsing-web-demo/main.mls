@@ -16,7 +16,7 @@ import "../parsing/Lexer.mls"
 import "../../StrOps.mls"
 import "../../Iter.mls"
 import "../../XML.mls"
-import "../../Option.mls"
+import "../../LegacyOption.mls"
 import "../../Runtime.mls"
 import "../../Predef.mls"
 import "../parsing/TreeHelpers.mls"
@@ -28,7 +28,7 @@ import "./Examples.mls"
 
 open XML { elem }
 open Predef
-open Option { Some, None }
+open LegacyOption { Some, None }
 open Examples
 
 module Main with ...

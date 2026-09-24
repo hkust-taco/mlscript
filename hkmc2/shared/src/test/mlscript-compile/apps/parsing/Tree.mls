@@ -1,14 +1,14 @@
 import "../../Iter.mls"
 import "../../Predef.mls"
 import "../../Stack.mls"
-import "../../Option.mls"
+import "../../LegacyOption.mls"
 import "../../StrOps.mls"
 import "./Keywords.mls"
 import "./Token.mls"
 
 open Predef { fold, mkStr }
 open Stack
-open Option { Some, None }
+open LegacyOption { Some, None }
 open Token { LiteralKind, BracketKind }
 open Keywords { opPrec, INT_MAX }
 
@@ -43,7 +43,7 @@ module Tree with
       Modified(modifier, subject) extends Tree
       Tuple(trees: Stack[Tree]) extends Tree
       Sequence(trees: Stack[Tree]) extends Tree
-      Literal(kind, value) extends Tree
+      Literal(kind: Token.LiteralKind, value: Str) extends Tree
       Match(scrutinee: Tree, branches: Stack[Tree]) extends Tree
       Lambda(params: Stack[Tree], body: Tree) extends Tree
       App(callee: Tree, argument: Tree) extends Tree

@@ -21,11 +21,11 @@ open Option
 :sjs
 None isDefined()
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let x1;
-//│ x1 = Option.None;
-//│ if (x1 instanceof Option.Some.class) {
+//│ let x2;
+//│ x2 = Option.None;
+//│ if (x2 instanceof Option.Some.class) {
 //│   return true
-//│ } else if (x1 instanceof Option.None.class) {
+//│ } else if (x2 instanceof Option.None.class) {
 //│   return false
 //│ }
 //│ throw globalThis.Object.freeze(new globalThis.Error("match error"));
@@ -87,7 +87,7 @@ Option.oops
 //│ ║        	^^^^^^^^^^^
 //│ ╟── Module 'Option' does not contain member 'oops'
 //│ ║  in ../../mlscript-compile/Option.mls
-//│ ║  l.4: 	module Option with ...
+//│ ║  l.6: 	module Option with ...
 //│ ╙──     	       ^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -98,7 +98,7 @@ open Option { oops }
 //│ ║        	              ^^^^
 //│ ╟── Module 'Option' does not contain member 'oops'
 //│ ║  in ../../mlscript-compile/Option.mls
-//│ ║  l.4: 	module Option with ...
+//│ ║  l.6: 	module Option with ...
 //│ ╙──     	       ^^^^^^
 
 :e
@@ -109,7 +109,7 @@ oops
 //│ ║         	^^^^
 //│ ╟── Module 'Option' does not contain member 'oops'
 //│ ║  in ../../mlscript-compile/Option.mls
-//│ ║  l.4: 	module Option with ...
+//│ ║  l.6: 	module Option with ...
 //│ ╙──     	       ^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -121,8 +121,8 @@ Option.None.oops
 //│ ║         	^^^^^^^^^^^^^^^^
 //│ ╟── Object 'None' does not contain member 'oops'
 //│ ║  in ../../mlscript-compile/Option.mls
-//│ ║  l.8: 	object None
-//│ ╙──     	       ^^^^
+//│ ║  l.10: 	object None
+//│ ╙──      	       ^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 

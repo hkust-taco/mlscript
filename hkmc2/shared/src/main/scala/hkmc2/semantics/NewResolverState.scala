@@ -187,6 +187,10 @@ final class NewResolverState private (
     new Cache(source.map(_.typeInterpretations), identity)
   val typeValues: Cache[DeclaredType, TypeValues] =
     new Cache(source.map(_.typeValues), identity)
+  val patternTypes: Cache[(Identity[Pattern.Constructor], InnerSymbol), DeclaredType] =
+    new Cache(source.map(_.patternTypes), identity)
+  val primitiveTypes: Cache[ClassSymbol, DeclaredType] =
+    new Cache(source.map(_.primitiveTypes), identity)
   val abstractTypes: Cache[(TypeResolution, Opt[VarSymbol]), DeclaredType] =
     new Cache(source.map(_.abstractTypes), identity)
   val signatureParameters: Cache[VarSymbol, DeclaredType] =
@@ -195,6 +199,10 @@ final class NewResolverState private (
     new Cache(source.map(_.capturedTypes), identity)
   val tupleArrayParents: Cache[Identity[TupleShape], NominalTypeShape] =
     new Cache(source.map(_.tupleArrayParents), identity)
+  // Named tuple fields have stable property identities, shared with consumers
+  // through the tuple's original graph rather than allocated per spread candidate.
+  val namedTupleRecords: Cache[Identity[Tup], Rcd] =
+    new Cache(source.map(_.namedTupleRecords), identity)
   val aggregateProducers: Seen[Identity[Tup | Rcd]] =
     new Seen(source.map(_.aggregateProducers))
   // Explicit instantiations are visible to every graph view in this consumer;

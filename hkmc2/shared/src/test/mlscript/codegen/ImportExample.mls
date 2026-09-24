@@ -25,7 +25,7 @@ Example.privFun
 
 :re
 Example.assertFail()
-//│ ═══[RUNTIME ERROR] Error: Assertion failed (mlscript-compile/Example.mls:27)
+//│ ═══[RUNTIME ERROR] Error: Assertion failed (mlscript-compile/Example.mls:28)
 
 
 let n = 42
@@ -78,7 +78,7 @@ test / inc / 123
 
 :re
 test / inc / 123 * 0.5
-//│ ═══[RUNTIME ERROR] TypeError: inlinedVal1 is not a function
+//│ ═══[RUNTIME ERROR] TypeError: f2 is not a function
 
 
 let c = Curried(1)
