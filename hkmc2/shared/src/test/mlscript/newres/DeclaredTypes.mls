@@ -80,7 +80,7 @@ read(Box(new Item))
 //│ ╟── Constructor parameter 'item' has no type annotation.
 //│ ║  l.73: 	class Box(val item)
 //│ ║        	              ^^^^
-//│ ╟── This type annotation restricts access to the field's declared type; constructor arguments do not determine its shape.
+//│ ╟── This type annotation does not provide a type for field 'item'.
 //│ ║  l.74: 	fun read(box: Box) = box.item.extra
 //│ ╙──      	              ^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
@@ -250,7 +250,7 @@ read(Box(new Item))
 //│ ╟── Constructor parameter 'item' has no type annotation.
 //│ ║  l.243: 	class Box(val item)
 //│ ║         	              ^^^^
-//│ ╟── This type annotation restricts access to the field's declared type; constructor arguments do not determine its shape.
+//│ ╟── This type annotation does not provide a type for field 'item'.
 //│ ║  l.244: 	fun read(box: Box) = box.Box#item.extra
 //│ ╙──       	              ^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
@@ -513,7 +513,7 @@ read(Child(new Item))
 //│ ╟── Constructor parameter 'item' has no type annotation.
 //│ ║  l.503: 	class Parent(val item)
 //│ ║         	                 ^^^^
-//│ ╟── This type annotation restricts access to the field's declared type; constructor arguments do not determine its shape.
+//│ ╟── This type annotation does not provide a type for field 'item'.
 //│ ║  l.507: 	fun read(box: Annotated) = identity(box.item).extra
 //│ ╙──       	              ^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
@@ -532,7 +532,7 @@ invoke(Box(() => 42))
 //│ ╟── Constructor parameter 'callback' has no type annotation.
 //│ ║  l.523: 	class Box(val callback)
 //│ ║         	              ^^^^^^^^
-//│ ╟── This type annotation restricts access to the field's declared type; constructor arguments do not determine its shape.
+//│ ╟── This type annotation does not provide a type for field 'callback'.
 //│ ║  l.524: 	fun invoke(box: Box) = box.callback()
 //│ ╙──       	                ^^^
 //│ = 42
@@ -613,7 +613,7 @@ fun foo(factory: () -> Wrapped) = factory().value.oops
 //│ ╟── Constructor parameter 'value' has no type annotation.
 //│ ║  l.606: 	class Box(val value)
 //│ ║         	              ^^^^^
-//│ ╟── This type annotation restricts access to the field's declared type; constructor arguments do not determine its shape.
+//│ ╟── This type annotation does not provide a type for field 'value'.
 //│ ║  l.608: 	fun foo(factory: () -> Wrapped) = factory().value.oops
 //│ ╙──       	                       ^^^^^^^
 
@@ -630,7 +630,7 @@ class Box(val value)
 //│ ╟── Constructor parameter 'value' has no type annotation.
 //│ ║  l.624: 	class Box(val value)
 //│ ║         	              ^^^^^
-//│ ╟── This type annotation restricts access to the field's declared type; constructor arguments do not determine its shape.
+//│ ╟── This type annotation does not provide a type for field 'value'.
 //│ ║  l.625: 	(Box(new Item) as Box).value.oops
 //│ ╙──       	                  ^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.

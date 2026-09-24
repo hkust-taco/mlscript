@@ -321,7 +321,7 @@ class NewResolver:
                 case S(param: Param) => UnknownValueShape(source)(ShapeProvenance(
                   (msg"Constructor parameter '${param.sym.nme}' has no type annotation." -> param.toLoc) ::
                   annotation.toList.map(sign =>
-                    msg"This type annotation restricts access to the field's declared type; constructor arguments do not determine its shape." -> sign.toLoc)))
+                    msg"This type annotation does not provide a type for field '${member.nme}'." -> sign.toLoc)))
                 case _ => UnknownValueShape.at(source)
               publish(unknown)
         case _ =>
