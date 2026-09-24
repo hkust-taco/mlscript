@@ -2,7 +2,6 @@
 
 // A type parameter inside a callback input is in the member's output polarity.
 // Substitute the output type before using it as an invariant nominal argument.
-:fixme
 :expect 1
 class Base
 class Child(val value: Int) extends Base
@@ -15,16 +14,11 @@ producer.use(sink =>
   sink.put(x => x.value)
   1
 )
-//│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.15: 	  sink.put(x => x.value)
-//│ ║        	                ^^^^^^^
-//│ ╙── Value of type 'Base' does not contain member 'value'
 //│ = 1
 //│ producer = Producer
 
 // An invariant argument in a member input uses the outer parameter's input type
 // in both directions, so it must not contribute the unrelated output supertype.
-:fixme
 :expect 2
 class Base
 class Child(val value: Int) extends Base
@@ -35,12 +29,7 @@ let receiver = (new Receiver as Receiver[in Child out Base])
 let box = Box(Child(2))
 receiver.accept(box)
 box.item.value
-//│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.37: 	box.item.value
-//│ ║        	^^^^^^^^^^^^^^
-//│ ╙── Value of type 'Base' does not contain member 'value'
-//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
-//│ ═══[RUNTIME ERROR] Expected: '2', got: 'undefined'
+//│ = 2
 //│ box = Box(Child(2))
 //│ receiver = Receiver
 
@@ -73,4 +62,70 @@ receiver.accept(box)
 box.item.value
 //│ = 4
 //│ box = Box(Child(4))
+//│ receiver = Receiver
+
+// Tuple fields retain the enclosing input polarity for nested nominal arguments.
+:expect 5
+class Base
+class Child(val value: Int) extends Base
+class Box[T](val item: T)
+class Receiver[T] with
+  fun accept(boxes: [Box[T]]): () = ()
+let receiver = (new Receiver as Receiver[in Child out Base])
+let box = Box(Child(5))
+receiver.accept([box])
+box.item.value
+//│ = 5
+//│ box = Box(Child(5))
+//│ receiver = Receiver
+
+// Structural fields retain the same substitution polarity as their record.
+:expect 6
+class Base
+class Child(val value: Int) extends Base
+class Box[T](val item: T)
+class Receiver[T] with
+  fun accept(record: {item: Box[T]}): () = ()
+let receiver = (new Receiver as Receiver[in Child out Base])
+let box = Box(Child(6))
+receiver.accept({item: box})
+box.item.value
+//│ = 6
+//│ box = Box(Child(6))
+//│ receiver = Receiver
+
+// Declaration-site contravariance applies after the occurrence selects Child -> Int.
+:expect 7
+class Base
+class Child(val value: Int) extends Base
+class Sink[in T] with
+  fun put(value: T): () = ()
+class Producer[T] with
+  fun use(f: Sink[T] -> Int): Int = f(new Sink[T])
+let producer = (new Producer as Producer[in (Base -> Int) out (Child -> Int)])
+producer.use(sink =>
+  sink.put(x => x.value)
+  7
+)
+//│ = 7
+//│ producer = Producer
+
+// A written wildcard input reverses the member input polarity: T selects Base.
+// Its input constraint contributes Base to the argument, invalidating .value.
+:ge
+class Base
+class Child(val value: Int) extends Base
+class Box[T](val item: T)
+class Receiver[T] with
+  fun accept(box: Box[in T]): () = ()
+let receiver = (new Receiver as Receiver[in Child out Base])
+let box = Box(Child(8))
+receiver.accept(box)
+box.item.value
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.124: 	box.item.value
+//│ ║         	^^^^^^^^^^^^^^
+//│ ╙── Value of type 'Base' does not contain member 'value'
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ box = Box(Child(8))
 //│ receiver = Receiver

@@ -22,7 +22,7 @@ class TypeRelationTest extends AnyFunSuite:
     def tpe(shape: TypeShape): DeclaredType =
       val resolution = new TypeResolution(Term.UnitVal(), _ => fail("Unexpected type error"))
       resolution.publish(shape)
-      DeclaredType(resolution, Map.empty, Map.empty)
+      DeclaredType(resolution, Map.empty, Map.empty, true)
     def parameter(name: String): (VarSymbol, DeclaredType) =
       val symbol = VarSymbol(Tree.Ident(name))
       (symbol, tpe(TypeShape.Parameter(symbol, symbol.inferenceHost)))
@@ -55,6 +55,67 @@ class TypeRelationTest extends AnyFunSuite:
       h.resolver.publishParameter(a, first)
     assert((a.inferenceHost.listeners.size, b.inferenceHost.listeners.size) == counts)
     assert(seen.toList == List(first, second))
+
+  test("delayed argument selection fixes one endpoint for both constraint directions"):
+    val h = new Harness
+    import h.given
+    val (input, inputType) = h.parameter("Input")
+    val (output, outputType) = h.parameter("Output")
+    val resolution = new TypeResolution(Term.UnitVal(), _ => fail("Unexpected type error"))
+    val argument = DeclaredType(resolution, Map.empty, Map.empty, true)
+    val negative = h.resolver.selectArgument(argument, false)
+    val positive = h.resolver.selectArgument(argument, true)
+    val neg = ContextualType(negative, Nil)
+    val pos = ContextualType(positive, Nil)
+    val negativeValues = h.observe(neg)
+    val positiveValues = h.observe(pos)
+    val first = IntroShape(Term.UnitVal(), N)
+    val second = DynShape()
+    val lower = ContextualType(h.tpe(TypeShape.Inferred(first)), Nil)
+    h.resolver.constrainTypes(lower, neg)
+    assert(negativeValues.isEmpty && positiveValues.isEmpty)
+    resolution.publish(TypeShape.Argument(TypeArgument(inputType, outputType)))
+    assert(negativeValues.toList == List(first))
+    assert(positiveValues.isEmpty)
+    h.resolver.publishParameter(output, second)
+    assert(positiveValues.toList == List(second))
+    val counts = (resolution.inferenceHost.listeners.size, input.inferenceHost.listeners.size, output.inferenceHost.listeners.size)
+    (1 to 1000).foreach: _ =>
+      // Re-selecting an interpreted reference must not change its meaning or
+      // allocate another node, even when the later use has opposite polarity.
+      assert(h.resolver.selectArgument(argument, false) eq negative)
+      assert(h.resolver.selectArgument(argument, true) eq positive)
+      assert(h.resolver.selectArgument(negative, true) eq negative)
+      assert(h.resolver.selectArgument(positive, false) eq positive)
+      h.resolver.constrainTypes(lower, neg)
+    assert((resolution.inferenceHost.listeners.size, input.inferenceHost.listeners.size, output.inferenceHost.listeners.size) == counts)
+    assert(negativeValues.toList == List(first))
+    assert(positiveValues.toList == List(second))
+    assert(h.state.allocatedTypeInstanceCount == 0)
+
+  test("cyclic argument selections wait for productive bounds without expanding the cycle"):
+    val h = new Harness
+    import h.given
+    val resolution = new TypeResolution(Term.UnitVal(), _ => fail("Unexpected type error"))
+    val argument = DeclaredType(resolution, Map.empty, Map.empty, true)
+    val selected = h.resolver.selectArgument(argument, true)
+    val reference = ContextualType(selected, Nil)
+    val seen = h.observe(reference)
+    resolution.publish(TypeShape.Argument(TypeArgument(selected, selected)))
+    assert(seen.isEmpty)
+    val (parameter, bound) = h.parameter("Later")
+    resolution.publish(TypeShape.Argument(TypeArgument(bound, bound)))
+    val value = IntroShape(Term.UnitVal(), N)
+    h.resolver.publishParameter(parameter, value)
+    assert(seen.toList == List(value))
+    h.resolver.constrainTypes(reference, reference)
+    val counts = (resolution.inferenceHost.listeners.size, parameter.inferenceHost.listeners.size)
+    (1 to 1000).foreach: _ =>
+      h.resolver.constrainTypes(reference, reference)
+      assert(h.resolver.selectArgument(argument, true) eq selected)
+    assert((resolution.inferenceHost.listeners.size, parameter.inferenceHost.listeners.size) == counts)
+    assert(seen.toList == List(value))
+    assert(h.state.allocatedTypeInstanceCount == 0)
 
   test("omitted arguments reuse source-owned holes and wait for evidence"):
     val h = new Harness

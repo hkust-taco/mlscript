@@ -33,8 +33,9 @@ proposals still require review: [supplied type references in deferred
 views](#partial-application-and-explicit-specialization), and [the distinction
 between type-reference operations and value-scope crossings](#type-reference-scope-audit-proposal-requiring-review).
 They must preserve caller and receiver contexts without recursively growing
-binding environments. The variance substitution rules below are settled
-semantics; their integration into those views remains implementation work.
+binding environments. The variance substitution rules below are implemented for
+declared type views; integrating supplied references into deferred value views
+remains separate work.
 
 The finite call-site symbol bound alone is not a termination proof for the whole
 resolver. Recursive alias regressions currently overflow, and the [fixed-point
@@ -52,8 +53,8 @@ inferred functions retain supplied arguments until application. Inline binders o
 functions also instantiate at application sites. Their shared bodies retain flat
 substitutions through deferred tuples, records, callbacks, and closures. Nominal
 argument comparisons retain both endpoint references and apply declaration/use-site
-variance, with the nested substitution gap described below. The explicit-binder
-recursive array acceptance cases pass. Supplied function arguments
+variance, including substitution inside nested function and nominal types.
+The explicit-binder recursive array acceptance cases pass. Supplied function arguments
 receive input obligations while retaining their declared output interface.
 Constructors now select their binder groups at the first term application too,
 including stored aliases and explicit `new`. Observing specialized inferred
@@ -257,19 +258,32 @@ input and callback input reverse it twice. For a receiver argument
 be the single type `Child -> Int`, in both parts.
 
 [`newres/VarianceSubstitution.mls`](../hkmc2/shared/src/test/mlscript/newres/VarianceSubstitution.mls)
-contains both examples and passing controls with the projected types written
-directly. The substituted versions currently fail and are marked `:fixme`.
-The current interpreter delays choosing the pair's part until a later constraint
-or interface observation, after the nominal argument has been formed; these
-operations can then choose different parts of what should be one substituted
-type. Changing only the direction of nominal argument comparison cannot fix this.
+contains both passing examples and controls with the projected types written
+directly. It also checks tuples, structural fields, declaration contravariance,
+and the polarity reversal inside a written wildcard input.
 
-The contextual-view implementation must retain the occurrence polarity while
-interpreting source type expressions and preserve the resulting reference for
-later input and output uses. A polarity has only two possible values, so including
-it in an otherwise finite view key does not threaten termination. This does not
-solve the separate problem of unbounded argument-binding environments, and is not
-permission to expand or copy a supplied type graph during substitution.
+`DeclaredType.positive` records the polarity for interpreting substitutions in
+its source expression. It is independent of the direction of a later constraint.
+Function domains and written wildcard input parts reverse this flag. Structural
+field views retain it; nominal member lookup starts from the nominal arguments
+already interpreted in the enclosing occurrence. Substituting a bound parameter
+selects its part without replacing that part's original lexical environment.
+
+When the pair is not yet available, `TypeShape.SelectedArgument` retains the
+argument reference and the requested part. Both interface observations and
+constraints follow that same part, including when it arrives later. The consumer
+caches selections by argument reference and polarity; selecting an existing
+selection returns it unchanged. Resolved parts are reused directly, except when
+a missing wildcard part needs its original source for diagnostics. A forwarding
+cycle which exposes no interface stops at the repeated selection, while retaining
+subscriptions for later evidence.
+
+For a fixed finite set of argument references, there are at most two cached
+selection nodes per reference. Polarity likewise only doubles an otherwise finite
+view domain; no parameter symbol or expanded type tree is allocated by selection.
+`TypeRelationTest` checks delayed parts, cyclic selections, identity reuse, and
+stable listener counts on relation replay. These are local bounds: they do not
+establish the separate whole-graph bound for recursive binding environments.
 
 ## Recursive acceptance example
 

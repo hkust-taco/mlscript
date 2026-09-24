@@ -198,7 +198,7 @@ final class NewResolverState private (
     new Cache(inherited.map(_.introShapes), identity)
   val symShapes: Cache[(BlockMemberSymbol, FlowSymbol, Ls[Marks]), SymShape] =
     new Cache(inherited.map(_.symShapes), identity)
-  val declaredSymShapes: Cache[(BlockMemberSymbol, FlowSymbol, Ls[Marks], Map[VarSymbol, DeclaredType]), DeclaredSymShape] =
+  val declaredSymShapes: Cache[(BlockMemberSymbol, FlowSymbol, Ls[Marks], Map[VarSymbol, DeclaredType], Bool), DeclaredSymShape] =
     new Cache(inherited.map(_.declaredSymShapes), identity)
   val selfShapes: Cache[InnerSymbol, BaseShape] =
     new Cache(inherited.map(_.selfShapes), identity)
@@ -254,6 +254,8 @@ final class NewResolverState private (
     new Cache(inherited.map(_.extremeTypes), identity)
   val variantTypes: Cache[(DeclaredType, Bool), DeclaredType] =
     new Cache(inherited.map(_.variantTypes), identity)
+  val selectedArguments: Cache[(DeclaredType, Bool), DeclaredType] =
+    new Cache(inherited.map(_.selectedArguments), identity)
   val abstractTypes: Cache[TypeResolution, DeclaredType] =
     new Cache(inherited.map(_.abstractTypes), identity)
   val omittedTypes: Cache[(TypeResolution, VarSymbol), DeclaredType] =
@@ -262,7 +264,7 @@ final class NewResolverState private (
     new Seen(inherited.map(_.exposedTypeHoles))
   val signatureParameters: Cache[VarSymbol, DeclaredType] =
     new Cache(inherited.map(_.signatureParameters), identity)
-  val capturedTypes: Cache[(DeclaredType, TermSymbol), DeclaredType] =
+  val capturedTypes: Cache[(DeclaredType, AnyDefinitionSymbol), DeclaredType] =
     new Cache(inherited.map(_.capturedTypes), identity)
   val tupleArrayParents: Cache[Identity[TupleShape], NominalInstanceView] =
     new Cache(inherited.map(_.tupleArrayParents), identity)

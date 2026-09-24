@@ -77,7 +77,12 @@ references until that application; subsequent curried lists retain its instance 
 Nominal argument comparisons retain directed `ContextualType` endpoint pairs.
 Invariant arguments install both directions, rather than copying expanded
 candidates. `in`/`out` arguments use InvalML's input/output comparison rules;
-written wildcards override declaration variance. A parameter receives a symbolic
+written wildcards override declaration variance. Substitution selects a bound
+argument's part at the occurrence's polarity before applying the enclosing
+nominal declaration's variance. Deferred selections retain that choice for both
+directions of later constraints; see the
+[substitution rules](new-resolution-type-value-flow.md#substitute-at-the-occurrence-before-applying-argument-variance).
+A parameter receives a symbolic
 instance wrapper, and structured/concrete targets retain listeners for later
 bounds. `newres/MutableArrays.mls` includes passing direct and recursive append
 cases, including distinct callers through one stored function reference.

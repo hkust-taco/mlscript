@@ -20,6 +20,9 @@ enum TypeShape:
   case Wildcard(input: Opt[TypeResolution], output: Opt[TypeResolution])
   // Synthesized declaration variance retains the argument's lexical environment.
   case Argument(parts: TypeArgument)
+  // Substitution selects one part before the type is used in further constraints.
+  // The argument stays in its own lexical environment, including delayed parts.
+  case SelectedArgument(argument: DeclaredType, positive: Bool)
   // The same third-party symbol can have different inference in two exporters.
   // Retain its originating host so importing a result needs no whole-state copy.
   case Parameter(symbol: VarSymbol, host: Publisher.Data[Shape])
@@ -87,6 +90,7 @@ final class TypeResolution(val source: Term, report: Ls[(Message, Opt[Loc])] => 
         checkArity(base, Set.empty)
       case Wildcard(input, output) => input.foreach(_.validate(next)); output.foreach(_.validate(next))
       case Argument(parts) => parts.input.resolution.validate(next); parts.output.resolution.validate(next)
+      case SelectedArgument(argument, _) => argument.resolution.validate(next)
       case Function(_, result) => result.validate(next)
       case Polymorphic(params, _, body) =>
         params.foreach: param =>
@@ -103,7 +107,9 @@ final class TypeResolution(val source: Term, report: Ls[(Message, Opt[Loc])] => 
   * interfaces, not constructor arguments or value-flow capture paths.
   */
 final case class DeclaredType(resolution: TypeResolution, bindings: Map[VarSymbol, DeclaredType],
-    instances: Map[VarSymbol, TypeParameterInstance]):
+    instances: Map[VarSymbol, TypeParameterInstance], positive: Bool):
+  // This polarity interprets substitutions in the source expression; it is not
+  // the direction of a constraint subsequently applied to the interpreted type.
   require(instances.forall((source, instance) => instance.origin eq source),
     "A substitution must map original binders to their call-site instances")
   /** Instantiation changes references to source binders, never expands their bounds.

@@ -90,11 +90,9 @@ The inventory below separates these from compiler and prelude gaps.
   [type-argument constraint design](new-resolution-type-value-flow.md), including
   specialized inferred results observed before application, supplied member-input
   constraints, reconstructed receiver contexts, inferred missing member types,
-  occurrence-sensitive variance substitution, and the whole graph's termination
-  bound. Concrete outstanding cases are in
+  and the whole graph's termination bound. Concrete outstanding cases are in
   `newres/StoredSpecializations.mls`, `ConstructorInstances.mls`,
-  `InferenceHoles.mls`, `PartialSignatures.mls`, `VarianceSubstitution.mls`, and
-  `TypeGraphTermination.mls`.
+  `InferenceHoles.mls`, `PartialSignatures.mls`, and `TypeGraphTermination.mls`.
   Decide how reassignment affects mutable storage's inferred interface, including
   across compiled worksheet blocks. `newres/MutationFlow.mls` records a reassigned
   array still checked against its initializer's tuple length; accumulating both

@@ -269,7 +269,7 @@ enum MemberLookup:
   case Found(member: BlockMemberSymbol | RecordMember, marks: Ls[Marks])
   // Declared members expose signatures only. Their marks transport dependent
   // type arguments; they never authorize reading an implementation's value flow.
-  case Declared(member: BlockMemberSymbol, bindings: Map[VarSymbol, DeclaredType], marks: Ls[Marks], annotation: Opt[Term])
+  case Declared(member: BlockMemberSymbol, bindings: Map[VarSymbol, DeclaredType], marks: Ls[Marks], annotation: Opt[Term], positive: Bool)
   case Indexed(field: TupleShape.Fixed, marks: Ls[Marks])
   case Dynamic(marks: Ls[Marks])
   case Missing
@@ -278,7 +278,7 @@ enum MemberLookup:
   def withMarks(marks: Ls[Marks]): MemberLookup = this match
     case Contextual(source, instances) => Contextual(source.withMarks(marks), instances)
     case Found(member, inner) => Found(member, inner ::: marks)
-    case Declared(member, bindings, inner, annotation) => Declared(member, bindings, inner ::: marks, annotation)
+    case Declared(member, bindings, inner, annotation, positive) => Declared(member, bindings, inner ::: marks, annotation, positive)
     case Indexed(field, inner) => Indexed(field, inner ::: marks)
     case Dynamic(inner) => Dynamic(inner ::: marks)
     case _ => this
@@ -286,7 +286,7 @@ enum MemberLookup:
   /** The receiver's annotation remains the diagnostic origin when lookup visits a parent. */
   def withAnnotation(annotation: Opt[Term]): MemberLookup = this match
     case Contextual(source, instances) => Contextual(source.withAnnotation(annotation), instances)
-    case Declared(member, bindings, marks, _) => Declared(member, bindings, marks, annotation)
+    case Declared(member, bindings, marks, _, positive) => Declared(member, bindings, marks, annotation, positive)
     case _ => this
 
   def instantiate(instances: Map[VarSymbol, TypeParameterInstance]): MemberLookup =
@@ -369,7 +369,7 @@ extends SymShape(source.sym, source.resSym, source.markss)
   * type, and constructor interpretations of the same overload set.
   */
 final class DeclaredSymShape(symbol: BlockMemberSymbol, site: FlowSymbol, marks: Ls[Marks],
-    val bindings: Map[VarSymbol, DeclaredType], val annotation: Opt[Term]) extends SymShape(symbol, site, marks)
+    val bindings: Map[VarSymbol, DeclaredType], val annotation: Opt[Term], val positive: Bool) extends SymShape(symbol, site, marks)
 
 /* 
 class ThisShape(val defn: Definition) extends NonAppTermShape:
@@ -391,12 +391,12 @@ class BaseShape(val defn: ClassLikeDef, val ext: Opt[TermShape]) extends NonAppT
   * to the annotation, not to whichever record happens to be passed by a caller.
   */
 final case class RecordTypeShape(source: Term.Rcd, fields: Ls[(RcdField, TypeResolution)],
-    bindings: Map[VarSymbol, DeclaredType]) extends NonAppTermShape:
+    bindings: Map[VarSymbol, DeclaredType], positive: Bool) extends NonAppTermShape:
   def describe: Str = "record type"
   def toLoc: Opt[Loc] = source.toLoc
   protected def getMemberImpl(name: Str)(using NewResolverState): MemberLookup =
     fields.reverseIterator.collectFirst {
-      case (field, _) if field.sym.nme == name => MemberLookup.Declared(field.sym, bindings, Nil, S(source))
+      case (field, _) if field.sym.nme == name => MemberLookup.Declared(field.sym, bindings, Nil, S(source), positive)
     }.getOrElse(MemberLookup.Missing)
 
 /** An instance described by a type, in either position of a constraint. Keep the
@@ -457,7 +457,7 @@ final case class NominalInstanceView(defn: ClassLikeDef, bindings: Map[VarSymbol
       case _ => N
   protected def getMemberImpl(name: Str)(using NewResolverState): MemberLookup =
     defn.body.members.get(name) match
-      case S(member) => MemberLookup.Declared(member, bindings, Nil, annotation)
+      case S(member) => MemberLookup.Declared(member, bindings, Nil, annotation, true)
       case N =>
         (name.toIntOption, resolver.arrayElementType(this)) match
           case (S(index), S(element)) if index >= 0 => MemberLookup.Indexed(TupleShape.TypedField(element, Nil), Nil)
@@ -718,7 +718,7 @@ final case class RecordShape(source: Term.Rcd, elements: Ls[RecordShape.Element]
           case Missing => N
           case Found(member: RecordMember, inner) =>
             S(Found(member.copy(mutable = member.mutable || source.mut), inner ::: marks :: Nil))
-          case Found(_: BlockMemberSymbol, _) | Declared(_, _, _, _) | Indexed(_, _) =>
+          case Found(_: BlockMemberSymbol, _) | Declared(_, _, _, _, _) | Indexed(_, _) =>
             // Record spreads recursively look up RecordShapes, which only create RecordMembers.
             lastWords("Record lookup returned a nominal member")
         spread(shape.getMember(name)).getOrElse(loop(rest))
