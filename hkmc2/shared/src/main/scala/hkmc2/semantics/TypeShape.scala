@@ -28,10 +28,9 @@ final class TypeResolution(val source: Term, report: Ls[(Message, Opt[Loc])] => 
   def hasErrors: Bool = reported
   def showDbg(using DebugPrinter): Str = s"type of ${source.showDbg}"
   def publish(shape: TypeShape): Unit =
-    if shapes.add(shape) then shapeListeners.toList.foreach(_(shape))
+    if shapes.add(shape) then notifyShapeListeners(shape)
   def listen(listener: TypeShape => Unit): Unit =
-    shapeListeners += listener
-    shapes.toList.foreach(listener)
+    subscribeToShapes(listener)
   def fail(messages: Ls[(Message, Opt[Loc])]): Unit = if !reported then
     reported = true
     report(messages)

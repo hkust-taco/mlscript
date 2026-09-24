@@ -2576,10 +2576,10 @@ extends Importer:
             case S(ext) =>
               listenTerm(ext): esh =>
                 val sh = BaseShape(d, S(esh)) // TODO actually use applied shape providing generics?
-                sym.shapeListeners.toList.foreach(_(sh))
+                sym.notifyShapeListeners(sh)
             case N =>
               val sh = BaseShape(d, N) // TODO actually use applied shape providing generics?
-              sym.shapeListeners.toList.foreach(_(sh))
+              sym.notifyShapeListeners(sh)
         case sym: InnerSymbol =>
           // println(">>> "+sym)
           // TODO: patterns
@@ -2637,7 +2637,7 @@ extends Importer:
         sym.decl = S(p)
         if newResolution then sig.foreach: sign =>
           listenTypeValues(sign): shape =>
-            if sym.shapes.add(shape) then sym.shapeListeners.foreach(_(shape))
+            if sym.shapes.add(shape) then sym.notifyShapeListeners(shape)
         (p, spd, aliases)
   
   def funParams(t: Tree): Ctxl[(ParamList, Ctx)] =

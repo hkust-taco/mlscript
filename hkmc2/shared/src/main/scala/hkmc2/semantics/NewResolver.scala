@@ -137,12 +137,9 @@ class NewResolver:
   private class TypeValues extends Host[TermShape]:
     def showDbg(using DebugPrinter): Str = "declared type values"
     def publish(shape: TermShape): Unit =
-      // A callback can subscribe to this same host; listen replays the new shape.
-      // Snapshot the old listeners so that reentrant subscription is delivered once.
-      if shapes.add(shape) then shapeListeners.toList.foreach(_(shape))
+      if shapes.add(shape) then notifyShapeListeners(shape)
     def listen(listener: TermShape => Unit): Unit =
-      shapeListeners += listener
-      shapes.toList.foreach(listener)
+      subscribeToShapes(listener)
   private val typeValues = mutable.Map.empty[DeclaredType, TypeValues]
   private val abstractTypes = mutable.Map.empty[TypeResolution, DeclaredType]
   // An omitted argument in a nominal annotation must not subscribe to the
@@ -237,7 +234,7 @@ class NewResolver:
             if param.sign.isEmpty then sign.foreach: tpe =>
               signatureParameters(param.sym) = tpe
               listenTypeValues(tpe): shape =>
-                if param.sym.shapes.add(shape) then param.sym.shapeListeners.foreach(_(shape))
+                if param.sym.shapes.add(shape) then param.sym.notifyShapeListeners(shape)
           callable.result.foreach(bind(tail, _))
         case _ => ()
     bind(paramLists, declaredType(typeResolution(sign), Map.empty))
@@ -291,7 +288,7 @@ class NewResolver:
   private val explicitTypeArguments = mutable.Set.empty[(VarSymbol, Ls[Marks])]
   private def publishTypeArgument(symbol: VarSymbol, shape: TermShape | NoShape): Unit = shape match
     case value: TermShape if isOwnedSym(symbol) =>
-      if symbol.shapes.add(value) then symbol.shapeListeners.toList.foreach(_(value))
+      if symbol.shapes.add(value) then symbol.notifyShapeListeners(value)
     case _ => ()
 
   private def applyTypeArguments(defn: DefnShape, marks: Ls[Marks], args: Ls[Term], source: Term): Unit =
@@ -490,7 +487,7 @@ class NewResolver:
                   Nil
       if !res.isErroneous then
         val psh = CtorPatternShape(cls, assoc, res, FlowSymbol.pat())
-        if res.shapes.add(psh) then res.shapeListeners.foreach(_(psh))
+        if res.shapes.add(psh) then res.notifyShapeListeners(psh)
     def valuePattern(sh: TermShape): Unit = sh.applicationHead match
       case (ds: DefnShape, _) => ds.defn match
         case cls: ClassDef => classPattern(cls)
@@ -531,7 +528,7 @@ class NewResolver:
           // Rejected duplicate/negated bindings have no allocated symbol. Pattern
           // validation already reports them; only valid bindings receive flow.
           al.symbolOption.foreach: symbol =>
-            if symbol.shapes.add(sh) then symbol.shapeListeners.toList.foreach(_(sh))
+            if symbol.shapes.add(sh) then symbol.notifyShapeListeners(sh)
           matched(sh)
       case Pattern.Wildcard() | Pattern.Literal(_) => matched(shape)
       case Pattern.Chain(left, right) =>
@@ -584,7 +581,7 @@ class NewResolver:
     // unknown result rather than inferring callability from a different candidate.
     lhs match
       case Marked(_: (DynShape | UnknownValueShape), _) =>
-        if res.shapes.add(lhs) then res.shapeListeners.foreach(_(lhs))
+        if res.shapes.add(lhs) then res.notifyShapeListeners(lhs)
         return
       case _ => ()
     lhs match
@@ -593,7 +590,7 @@ class NewResolver:
         checkArgumentArity(args, ps.params.length, ps.hasRest, res, lhs)(_ => ())
         def publish(shape: TermShape): Unit = shape.exit(context) match
           case value: TermShape =>
-            if res.shapes.add(value) then res.shapeListeners.foreach(_(value))
+            if res.shapes.add(value) then res.notifyShapeListeners(value)
           case NoShape => ()
         callable.paramLists.tail match
           case Nil => callable.result match
@@ -613,7 +610,7 @@ class NewResolver:
       zipArgs(mss, ps.params, ps.restParam, args, res, lhs)
     log(s"appShape isSaturated? ${sh.isSaturated}; head? ${sh.applicationHead}")
     def register = if res.shapes.add(sh) then
-      res.shapeListeners.foreach(listener => listener(sh))
+      res.notifyShapeListeners(sh)
     log(s"lhs ${lhs.isSaturated} ${lhs.unappliedParams.map(_.mapFirst(_.showDbg).mapSecond(_.map(_.showDbg)))}")
     if lhs.isSaturated && !res.isErroneous then
       res.isErroneous = true
@@ -629,7 +626,7 @@ class NewResolver:
           case NoShape =>
           case sh: TermShape =>
             if res.shapes.add(sh) then
-              res.shapeListeners.foreach(listener => listener(sh))
+              res.notifyShapeListeners(sh)
       sh.applicationHead match
       case (ds: DefnShape, mss) =>
         ds.defn match
@@ -653,7 +650,7 @@ class NewResolver:
                 listenSignatureResult(declaredType(typeResolution(sign), Map.empty), count): result =>
                   result.exit(mss) match
                     case value: TermShape =>
-                      if res.shapes.add(value) then res.shapeListeners.foreach(_(value))
+                      if res.shapes.add(value) then res.notifyShapeListeners(value)
                     case NoShape => ()
               case N => td.body.foreach(go(_, mss))
         case _ =>
@@ -672,7 +669,7 @@ class NewResolver:
   private def publishMember(host: NewResolvable & ShapeHost, member: BlockMemberSymbol | RecordMember,
       flow: FlowSymbol, marks: Ls[Marks]): Unit =
     def publish(shape: Shape): Unit =
-      if host.shapes.add(shape) then host.shapeListeners.foreach(_(shape))
+      if host.shapes.add(shape) then host.notifyShapeListeners(shape)
     def definition(sym: BlockMemberSymbol): Unit =
       publish(symShapes.getOrElseUpdate((sym, flow, marks), SymShape(sym, flow, marks)))
     member match
@@ -689,12 +686,12 @@ class NewResolver:
       bindings: Map[VarSymbol, DeclaredType], marks: Ls[Marks]): Unit =
     val shape = declaredSymShapes.getOrElseUpdate((member, flow, marks, bindings),
       DeclaredSymShape(member, flow, marks, bindings))
-    if host.shapes.add(shape) then host.shapeListeners.toList.foreach(_(shape))
+    if host.shapes.add(shape) then host.notifyShapeListeners(shape)
 
   private def publishDynamic(host: NewResolvable & ShapeHost, marks: Ls[Marks]): Unit =
     DynShape().exit(marks) match
       case shape: TermShape =>
-        if host.shapes.add(shape) then host.shapeListeners.foreach(_(shape))
+        if host.shapes.add(shape) then host.notifyShapeListeners(shape)
       case NoShape => ()
 
   private def unknownMember(host: NewResolvable, name: Str, reason: MemberLookup.Uncertainty, loc: Opt[Loc]): Unit =
@@ -864,7 +861,7 @@ class NewResolver:
             case ((ps, _), args) => zipArgs(marks, ps.params, ps.restParam, args, nw, dsh)
           NewShape(dsh, cd.sym, marks, nw.args, nw)
         })
-        if nw.shapes.add(sh) then nw.shapeListeners.foreach(_(sh))
+        if nw.shapes.add(sh) then nw.notifyShapeListeners(sh)
       )
     , shape =>
       if !nw.isErroneous then
@@ -883,7 +880,7 @@ class NewResolver:
         listen(rhs): sh =>
           assert(isOwnedSym(sym), s"defineVar: sym = ${sym.showDbg}, rhs = ${rhs.showDbg}")
           if sym.shapes.add(sh) then
-            sym.shapeListeners.foreach(listener => listener(sh))
+            sym.notifyShapeListeners(sh)
     DefineVar(sym, rhs)
   
   def listenDefn(sym: TermSymbol, listener: TermShape => Unit): Unit =
@@ -903,7 +900,7 @@ class NewResolver:
     log(s"pipeTerm: from = ${from.showDbg}, to = ${to.showDbg}; ${to.shapes}")
     listenTerm(from): sh =>
       if to.shapes.add(sh) then
-        to.shapeListeners.foreach(listener => listener(sh))
+        to.notifyShapeListeners(sh)
   
   def listenExt(ext: Opt[Term], listener: Opt[TermShape] => Unit): Unit =
     ext match
@@ -1057,7 +1054,7 @@ class NewResolver:
     aggregate.shapes.foreach(listener)
     if first then
       start: shape =>
-        if aggregate.shapes.add(shape) then aggregate.shapeListeners.foreach(_(shape))
+        if aggregate.shapes.add(shape) then aggregate.notifyShapeListeners(shape)
 
   def listen(trm: Term, discardMarks: Bool = false)(listener: Shape => Unit): Unit =
     log(s"listen: trm = ${trm.showDbg}")
