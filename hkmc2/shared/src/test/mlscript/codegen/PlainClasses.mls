@@ -56,7 +56,7 @@ Foo()
 //│ ╔══[COMPILATION ERROR] Resolution error in application
 //│ ║  l.55: 	Foo()
 //│ ║        	^^^^^
-//│ ╟── Class value cannot receive more argument lists.
+//│ ╟── Class 'Foo' must be instantiated with 'new'.
 //│ ║  l.8: 	class Foo
 //│ ╙──     	      ^^^
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————

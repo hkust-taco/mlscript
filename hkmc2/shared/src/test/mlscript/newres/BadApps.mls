@@ -28,3 +28,67 @@ x(456)
 //│ ═══[RUNTIME ERROR] TypeError: x is not a function
 
 
+// Returning a non-callable value adds capture marks, not an argument list.
+:e
+fun result() = 1
+result()()
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.34: 	result()()
+//│ ║        	^^^^^^^^^^
+//│ ╟── Integer literal cannot be called like a function.
+//│ ║  l.33: 	fun result() = 1
+//│ ╙──      	               ^
+//│ ═══[RUNTIME ERROR] TypeError: 1 is not a function
+
+// A captured module is still a non-callable value.
+:e
+module M
+fun call(x) = x()
+call(M)
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.46: 	fun call(x) = x()
+//│ ║        	              ^^^
+//│ ╟── Module 'M' cannot be called like a function.
+//│ ║  l.45: 	module M
+//│ ╙──      	       ^
+//│ ═══[RUNTIME ERROR] TypeError: Class constructor M cannot be invoked without 'new'
+
+// Plain class values require new, including when passed through a parameter.
+:e
+class Plain
+fun instantiate(cls) = cls()
+instantiate(Plain)
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.59: 	fun instantiate(cls) = cls()
+//│ ║        	                       ^^^^^
+//│ ╟── Class 'Plain' must be instantiated with 'new'.
+//│ ║  l.58: 	class Plain
+//│ ╙──      	      ^^^^^
+//│ ═══[RUNTIME ERROR] TypeError: Class constructor Plain cannot be invoked without 'new'
+
+// A fully applied constructor really has received all its argument lists.
+:e
+class Curried(x)(y)
+fun overapply(instance) = instance()
+overapply(Curried(1)(2))
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.72: 	fun overapply(instance) = instance()
+//│ ║        	                          ^^^^^^^^^^
+//│ ╟── Instance of class 'Curried' cannot receive more argument lists.
+//│ ║  l.73: 	overapply(Curried(1)(2))
+//│ ╙──      	          ^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] TypeError: tmp is not a function
+
+// Explicitly constructed instances must not be told to add another new.
+:e
+class Plain
+fun overapply(instance) = instance()
+overapply(new Plain)
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.85: 	fun overapply(instance) = instance()
+//│ ║        	                          ^^^^^^^^^^
+//│ ╟── Instance of class 'Plain' cannot receive more argument lists.
+//│ ║  l.86: 	overapply(new Plain)
+//│ ╙──      	          ^^^^^^^^^
+//│ ═══[RUNTIME ERROR] TypeError: tmp1 is not a function
+

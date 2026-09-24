@@ -779,11 +779,17 @@ class NewResolver:
     log(s"lhs ${lhs.isSaturated} ${lhs.unappliedParams.map(_.mapFirst(_.showDbg).mapSecond(_.map(_.showDbg)))}")
     if lhs.isSaturated && !res.isErroneous then
       res.isErroneous = true
-      if lhs.applicationHead._1 is lhs
-      then resolError(res,
-        msg"${lhs.describe.capitalize} cannot be called like a function." -> lhs.toLoc :: Nil)
-      else resolError(res,
-        msg"${lhs.describe.capitalize} cannot receive more argument lists." -> lhs.toLoc :: Nil)
+      // Marks transport a value across scopes; they do not apply arguments.
+      // Inspect the value beneath them, retaining actual calls/instantiations
+      // so an already constructed instance never gets the suggestion to use new.
+      val message = lhs match
+        case Marked(ds: DefnShape, _) if ds.defn.isInstanceOf[ClassDef] =>
+          msg"Class '${ds.defn.bsym.nme}' must be instantiated with 'new'."
+        case Marked(_: (AppShape | NewShape), _) =>
+          msg"${lhs.describe.capitalize} cannot receive more argument lists."
+        case _ =>
+          msg"${lhs.describe.capitalize} cannot be called like a function."
+      resolError(res, message -> lhs.toLoc :: Nil)
     if sh.isSaturated then
       def go(body: Term, mss: Ls[Marks]) =
         listenTerm(body): sh =>

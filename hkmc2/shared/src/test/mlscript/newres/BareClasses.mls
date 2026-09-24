@@ -125,7 +125,7 @@ let f = Foo(1)
 //│ ╔══[COMPILATION ERROR] Resolution error in application
 //│ ║  l.124: 	let f = Foo(1)
 //│ ║         	        ^^^^^^
-//│ ╟── Class value cannot receive more argument lists.
+//│ ╟── Class 'Foo' must be instantiated with 'new'.
 //│ ║  l.114: 	class Foo {
 //│ ╙──       	      ^^^
 //│ ═══[RUNTIME ERROR] TypeError: Class constructor Foo6 cannot be invoked without 'new'
