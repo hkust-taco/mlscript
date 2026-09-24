@@ -113,7 +113,7 @@ extension (r: PostCondRes)
 // it does not break to a label that wraps the block or returns, then the 
 // postconditions hold. Otherwise, the results are invalid, which does not matter,
 // because they will be irrelevant in that case anyway.
-private object PostCondAnalysisImpl extends CachedAnalysis[Block, PostCondRes]:
+private final class PostCondAnalysisImpl extends CachedAnalysis[Block, PostCondRes]:
   
   private def res(lhs: Opt[ValueSymbol], rhs: Result, rest: Block) =
     if rhs.isPure then lhs match
@@ -160,8 +160,13 @@ private object PostCondAnalysisImpl extends CachedAnalysis[Block, PostCondRes]:
       case f: FunDefn => analyze(rest)
     case b: BlockTail => PostCondRes.empty.copy(isAbortive = b.isAbortive)
 
-private object PostCondAnalysis extends CachedAnalysis[Block, Map[ValueSymbol, Literal]]:
-  override def analyzeUncached(b: Block): Map[ValueSymbol, Literal] = PostCondAnalysisImpl.analyze(b).varsMap
+end PostCondAnalysisImpl
+
+private[codegen] final class PostCondAnalysis extends CachedAnalysis[Block, Map[ValueSymbol, Literal]]:
+  private val impl = new PostCondAnalysisImpl
+  override def analyzeUncached(b: Block): Map[ValueSymbol, Literal] = impl.analyze(b).varsMap
+
+end PostCondAnalysis
 
 // Matches List[Case.Lit -> Block]
 private object LitCases:
@@ -183,11 +188,11 @@ private def findMatchChainRec(
   b: Block,
   scrutRef: Value.SimpleRef,
   acc: List[MatchType]
-): MatchChain =
+)(using postCondAnalysis: PostCondAnalysis): MatchChain =
   object TailAssign:
     def unapply(b: Block) =
       if b.isAbortive then N
-      else PostCondAnalysis.analyze(b).get(scrutRef.sym) match
+      else postCondAnalysis.analyze(b).get(scrutRef.sym) match
         case S(value) => S(value)
         case N => N
   
@@ -279,7 +284,7 @@ private def matchChainToSwitch(m: MatchChain): SwitchLike =
   SwitchLike(m.scrut, cases, m.dflt, m.rest)
 
 object SpecializedSwitch:
-  def unapply(b: Block) = b match
+  def unapply(b: Block)(using PostCondAnalysis) = b match
     case m @ Match(scrut = r @ Value.SimpleRef(l)) =>
       val chain = findMatchChainRec(m, r, Nil)
       val SwitchLike(scrut, cases, dflt, rest) = matchChainToSwitch(chain)

@@ -82,7 +82,7 @@ class BlockSimplifier
         do ()
       
       if summon[Config].optimizer.dataFlowAnalysis then
-        val vp = new DataFlowAnalysis(LocalVars.analyze(res.main))
+        val vp = new DataFlowAnalysis(LocalVars().analyze(res.main))
         res = vp.apply(res)
         changed ||= vp.changed
         if vp.changed then log("▶ VP:\n" + printRes)
@@ -124,7 +124,7 @@ class BlockSimplifier
   // * Only such variables can be assigned directly in the IR
   type LocalVar = LocalVarSymbol
   
-  object LocalVars:
+  class LocalVars:
     
     def analyze(block: Block): Set[LocalVar] =
       val locals: MutSet[LocalVar] = MutSet.empty[LocalVar]
