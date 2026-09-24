@@ -56,6 +56,14 @@ Predef.id
 //│ | | ~> member:Predef⁰.id
 //│ | ~> member:Predef⁰.id
 //│ ~> { member:Predef⁰.id }
+//│ listenTerm: trm = member:Predef⁰.id
+//│ listen: trm = member:Predef⁰.id
+//│ listenBMS: bms = function
+//│ listenedBMS: bms = function
+//│ fromBMS: bms = member:id¹, sh = member:id¹, flow = ⋅id⁰, markss = List()
+//│ .exit MarkedShape (member:id¹, term:Predef¹/id⁰, ⋅id⁰)
+//│ = MarkedShape(member:id¹, ↗⟨term:Predef¹/id⁰⟩%⟨⋅id⁰⟩ϵ)
+//│ PUSH MarkedShape(member:id¹, ↗⟨term:Predef¹/id⁰⟩%⟨⋅id⁰⟩ϵ)
 //│ ————————————————| Resolved |————————————————————————————————————————————————————————————————————————
 //│   Predef⁰.id⁰
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
@@ -80,7 +88,7 @@ Predef.id(1)
 :e
 Predef.idd(1)
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.81: 	Predef.idd(1)
+//│ ║  l.89: 	Predef.idd(1)
 //│ ║        	^^^^^^^^^^
 //│ ╟── Module 'Predef' does not contain member 'idd'
 //│ ║  in ../../mlscript-compile/Predef.mls
@@ -133,30 +141,30 @@ p.id
 :e
 (1).id
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.134: 	(1).id
+//│ ║  l.142: 	(1).id
 //│ ║         	^^^^^^
 //│ ╟── Integer literal does not contain member 'id'
-//│ ║  l.134: 	(1).id
+//│ ║  l.142: 	(1).id
 //│ ╙──       	 ^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :fixme // parse
 1.id
 //│ ╔══[LEXICAL ERROR] Expected at least one digit after the  decimal point
-//│ ║  l.144: 	1.id
+//│ ║  l.152: 	1.id
 //│ ╙──       	  ^
 //│ ╔══[COMPILATION ERROR] Illegal juxtaposition right-hand side (identifier).
-//│ ║  l.144: 	1.id
+//│ ║  l.152: 	1.id
 //│ ╙──       	  ^^
 //│ = 1
 
 :fixme
 "ha ".repeat(2)
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.154: 	"ha ".repeat(2)
+//│ ║  l.162: 	"ha ".repeat(2)
 //│ ║         	^^^^^^^^^^^^
 //│ ╟── String literal does not contain member 'repeat'
-//│ ║  l.154: 	"ha ".repeat(2)
+//│ ║  l.162: 	"ha ".repeat(2)
 //│ ╙──       	^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -169,9 +177,9 @@ print(1)
 :e
 ().id
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.170: 	().id
+//│ ║  l.178: 	().id
 //│ ║         	^^^^^
 //│ ╟── Unit value does not contain member 'id'
-//│ ║  l.170: 	().id
+//│ ║  l.178: 	().id
 //│ ╙──       	^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.

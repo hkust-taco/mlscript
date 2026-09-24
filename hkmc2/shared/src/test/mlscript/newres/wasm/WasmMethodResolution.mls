@@ -34,4 +34,6 @@ class Add(val x) { fun add(y) = x + y }
 val add = Add::add
 add(Add(2), 4)
 //│ ═══[COMPILATION ERROR] WatBuilder::returningTerm for FunDefn(...) where `!sym.nameIsMeaningful` not implemented yet
-//│ ═══[COMPILATION ERROR] Expected static function reference in Call(...) expression
+//│ ╔══[COMPILATION ERROR] Expected static function reference in Call(...) expression
+//│ ║  l.35: 	add(Add(2), 4)
+//│ ╙──      	^^^

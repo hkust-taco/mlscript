@@ -135,4 +135,4 @@ module Local with
   class Known(val known: Int)
   val mapped = [Known(4)].map((item, ...) => Known(item.known + 1))
 Local.mapped.map((item, ...) => item.known)
-//│ /!!!\ Uncaught error: java.lang.AssertionError: assertion failed: Entry and exit cross different lexical resolution scopes
+//│ /!!!\ Uncaught error: java.lang.AssertionError: assertion failed: Entry and exit cross different lexical resolution scopes: term:Local⁰/mapped⁰ vs term:Array⁰/map⁰ for NominalTypeShape(class:Int⁰)

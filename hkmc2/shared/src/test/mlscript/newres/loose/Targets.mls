@@ -66,9 +66,16 @@ call()
 
 :e
 fun unknownReceiver(x) = x.missing
-//│ ╔══[COMPILATION ERROR] This selection of member 'missing' has no resolved target
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
 //│ ║  l.68: 	fun unknownReceiver(x) = x.missing
-//│ ╙──      	                         ^^^^^^^^^
+//│ ║        	                         ^^^^^^^^^
+//│ ╟── Cannot resolve member 'missing' of a value with unknown shape.
+//│ ╟── Parameter 'x' admits values of unknown shape.
+//│ ║  l.68: 	fun unknownReceiver(x) = x.missing
+//│ ║        	                    ^
+//│ ╟── 'unknownReceiver' is exposed by this compilation unit.
+//│ ║  l.68: 	fun unknownReceiver(x) = x.missing
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 // Allowing multiple targets does not make class definitions assignable.
 :e
@@ -77,7 +84,7 @@ module ClassRight { class Item }
 let classes = if hide(true) then ClassLeft else ClassRight
 set classes.Item = 0
 //│ ╔══[COMPILATION ERROR] Assignment requires a term member
-//│ ║  l.78: 	set classes.Item = 0
+//│ ║  l.85: 	set classes.Item = 0
 //│ ╙──      	    ^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ classes = class ClassLeft { Item: class Item }

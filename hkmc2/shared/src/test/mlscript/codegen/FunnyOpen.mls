@@ -4,7 +4,7 @@
 
 module Mod with
   fun printt(x) = console.log(x)
-  fun (|>>) pipee(x, f) = f(x)
+  fun (|>>) pipee[A, B](x: A, f: A -> B): B = f(x)
 
 :ctx
 open Mod

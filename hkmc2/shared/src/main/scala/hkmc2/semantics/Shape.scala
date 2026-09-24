@@ -3,6 +3,7 @@ package semantics
 
 import hkmc2.utils.*, shorthands.*
 import syntax.*
+import hkmc2.Message.MessageContext
 import hkmc2.document.*
 import hkmc2.document.Document.*
 import scala.collection.mutable
@@ -127,7 +128,7 @@ object MarkedShape:
       marks match
       case marks: ExitMark => MarkedShape(sh, ExitMark(boundary, id, marks))
       case EntryMark(entered, id2, rest) =>
-        assert(entered == boundary, "Entry and exit cross different lexical resolution scopes")
+        assert(entered == boundary, s"Entry and exit cross different lexical resolution scopes: ${entered.showDbg} vs ${boundary.showDbg} for ${sh.shwDbg}")
         if id.forall(i1 => id2.forall(i2 => i1 is i2)) then
           rest match
           case NoMarks => sh
@@ -264,7 +265,7 @@ enum MemberLookup:
   case Indexed(field: TupleShape.Fixed, marks: Ls[Marks])
   case Dynamic(marks: Ls[Marks])
   case Missing
-  case Unknown(reason: MemberLookup.Uncertainty, loc: Opt[Loc])
+  case Unknown(reason: MemberLookup.Uncertainty, provenance: ShapeProvenance)
   
   def withMarks(marks: Ls[Marks]): MemberLookup = this match
     case Found(member, inner) => Found(member, inner ::: marks)
@@ -395,7 +396,8 @@ final case class OpaqueTypeShape(source: Term) extends NonAppTermShape:
   def describe: Str = "value of abstract type"
   def toLoc: Opt[Loc] = source.toLoc
   protected def getMemberImpl(name: Str)(using NewResolverState): MemberLookup =
-    MemberLookup.Unknown(MemberLookup.Uncertainty.ValueShape, toLoc)
+    MemberLookup.Unknown(MemberLookup.Uncertainty.ValueShape,
+      ShapeProvenance(msg"This abstract type does not specify a member interface." -> toLoc :: Nil))
 
 class DefnShape(val defn: Definition, val ext: Opt[TermShape]) extends NonAppTermShape:
   /** Instance lookup is shared by constructor calls and explicit `new`.
@@ -484,10 +486,10 @@ final case class TupleShape(source: Term, elements: Ls[TupleShape.Element])(reso
       def loop(rest: Ls[TupleShape.Segment], index: Int): MemberLookup = rest match
         case (field: TupleShape.Fixed) :: tail =>
           if index == 0 then MemberLookup.Indexed(field, Nil) else loop(tail, index - 1)
-        case (_: TupleShape.Unknown) :: _ =>
+        case (segment: TupleShape.Unknown) :: _ =>
           // The position is a valid array operation even when a spread or
           // mutation has erased the element layout. Its value remains unknown.
-          MemberLookup.Indexed(TupleShape.UnknownField(source, Nil), Nil)
+          MemberLookup.Indexed(TupleShape.ValueField(segment.value, segment.marks), Nil)
         case Nil => MemberLookup.Missing
       loop(segments, index)
     case _ => arrayParent.getMember(name)
@@ -501,15 +503,40 @@ final case class DynShape() extends NonAppTermShape:
   def toLoc: Opt[Loc] = N
   protected def getMemberImpl(name: Str)(using NewResolverState): MemberLookup = MemberLookup.Dynamic(Nil)
 
-/** The element of an opaque or widened spread can be any value. Keep this
-  * alternative in the flow graph so other, known arguments cannot silently make
-  * an unresolved member selection appear to have a unique static target.
+/** A shared diagnostic witness, independent of resolution marks. Messages,
+  * locations, and the flattened chain are evaluated only when reporting an error.
+  * Discovery retains one witness per reached shape to bound recursive paths.
   */
-final case class UnknownValueShape(source: Term) extends NonAppTermShape:
+final class ShapeProvenance(notes: => Ls[(Message, Opt[Loc])]):
+  lazy val diagnosticNotes: Ls[(Message, Opt[Loc])] = notes
+  def via(note: => (Message, Opt[Loc])): ShapeProvenance =
+    ShapeProvenance(note :: diagnosticNotes)
+
+object ShapeProvenance:
+  val empty = ShapeProvenance(Nil)
+
+/** An unknown input or the element of an opaque or widened spread can be any
+  * value. Keep this alternative in the flow graph so known candidates cannot
+  * silently make an unresolved operation appear to have a static target.
+  * Provenance is outside case-class equality: another diagnostic witness must
+  * not turn the same unknown into a new inference candidate.
+  */
+final case class UnknownValueShape(source: Term)(val provenance: ShapeProvenance) extends NonAppTermShape:
   def describe: Str = "value of unknown shape"
   def toLoc: Opt[Loc] = source.toLoc
   protected def getMemberImpl(name: Str)(using NewResolverState): MemberLookup =
-    MemberLookup.Unknown(MemberLookup.Uncertainty.ValueShape, toLoc)
+    MemberLookup.Unknown(MemberLookup.Uncertainty.ValueShape, provenance)
+
+object UnknownValueShape:
+  def at(source: Term): UnknownValueShape =
+    UnknownValueShape(source)(ShapeProvenance(msg"The shape of this value is unknown." -> source.toLoc :: Nil))
+  def spread(source: Term, value: TermShape): UnknownValueShape =
+    UnknownValueShape(source)(ShapeProvenance {
+      val notes = value.applicationHead._1 match
+        case unknown: UnknownValueShape => unknown.provenance.diagnosticNotes
+        case _ => Nil
+      (msg"This spread has no known element shape." -> source.toLoc) :: notes
+    })
 
 object TupleShape:
   sealed trait Element
@@ -520,7 +547,9 @@ object TupleShape:
       case Field(field, inner) => Field(field, inner ::: outer)
       case TypedField(tpe, inner) => TypedField(tpe, inner ::: outer)
       case UnknownField(source, inner) => UnknownField(source, inner ::: outer)
+      case ValueField(value, inner) => ValueField(value, inner ::: outer)
   final case class Field(field: Fld, marks: Ls[Marks]) extends Fixed
+  final case class ValueField(value: TermShape, marks: Ls[Marks]) extends Fixed
   final case class TypedField(tpe: DeclaredType, marks: Ls[Marks]) extends Fixed
   // Mutable tuple slots retain their positions, but their initializer cannot
   // supply the shape of later reads (including reads through a spread copy).
@@ -532,7 +561,7 @@ object TupleShape:
   final case class Unknown(source: Term, marks: Ls[Marks], value: NonMarkedShape) extends Segment
   final case class Spread(shape: TupleShape, marks: Marks) extends Element
   def unknown(source: Term)(resolver: NewResolver): TupleShape =
-    TupleShape(source, Unknown(source, Nil, UnknownValueShape(source)) :: Nil)(resolver)
+    TupleShape(source, Unknown(source, Nil, UnknownValueShape.at(source)) :: Nil)(resolver)
   /** Retain the original candidate as well as the selected residual segments:
     * flattening away the parent would hide recursive producer dependencies from
     * containsSpread, allowing recursion through rest slicing to evade widening. */
@@ -555,18 +584,19 @@ final case class RecordShape(source: Term.Rcd, elements: Ls[RecordShape.Element]
   def toLoc: Opt[Loc] = source.toLoc
   protected def getMemberImpl(name: Str)(using NewResolverState): MemberLookup =
     import MemberLookup.*
-    def unknown = Unknown(Uncertainty.RecordOverwrite, toLoc)
+    def unknown(source: Located) = Unknown(Uncertainty.RecordOverwrite,
+      ShapeProvenance(msg"This computed key can overwrite the selected member." -> source.toLoc :: Nil))
     def loop(rest: Ls[RecordShape.Element]): MemberLookup = rest match
       case Nil => Missing
       case RecordShape.Field(field) :: rest => field.field match
         case Term.Lit(Tree.StrLit(key)) =>
           if key == name then Found(RecordMember(field, source.mut), Nil) else loop(rest)
-        case _ => unknown
-      case RecordShape.Unknown :: _ => unknown
+        case _ => unknown(field.field)
+      case (unknown: RecordShape.Unknown) :: _ => Unknown(Uncertainty.RecordOverwrite, unknown.provenance)
       case RecordShape.Dynamic(marks) :: _ => Dynamic(marks)
       case RecordShape.Spread(shape, marks) :: rest => shape.getMember(name) match
         case Dynamic(inner) => Dynamic(inner ::: marks :: Nil)
-        case Unknown(_, _) => unknown
+        case Unknown(_, provenance) => Unknown(Uncertainty.RecordOverwrite, provenance)
         case Missing => loop(rest)
         case Found(member: RecordMember, inner) =>
           Found(member.copy(mutable = member.mutable || source.mut), inner ::: marks :: Nil)
@@ -583,7 +613,7 @@ object RecordShape:
   enum Element:
     case Field(field: RcdField)
     case Spread(shape: RecordShape, marks: Marks)
-    case Unknown
+    case Unknown(source: Term)(val provenance: ShapeProvenance)
     case Dynamic(marks: Ls[Marks])
   export Element.*
 

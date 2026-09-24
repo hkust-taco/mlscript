@@ -12,7 +12,9 @@ new Foo
 //│ ╟── Object 'Foo' cannot be instantiated with keyword 'new'.
 //│ ║  l.5: 	object Foo
 //│ ╙──     	       ^^^
-//│ ═══[COMPILATION ERROR] Cannot resolve the class instantiated here
+//│ ╔══[COMPILATION ERROR] Cannot resolve the class instantiated here
+//│ ║  l.8: 	new Foo
+//│ ╙──     	    ^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :re
@@ -22,7 +24,7 @@ new! Foo
 :fixme // Support?
 new! Foo.class
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.23: 	new! Foo.class
+//│ ║  l.25: 	new! Foo.class
 //│ ║        	     ^^^^^^^^^
 //│ ╟── Object 'Foo' does not contain member 'class'
 //│ ║  l.5: 	object Foo
@@ -35,32 +37,34 @@ new! Foo!class
 :fixme // Support?
 object Bar extends Foo
 //│ ╔══[COMPILATION ERROR] Resolution error in object instantiation
-//│ ║  l.36: 	object Bar extends Foo
+//│ ║  l.38: 	object Bar extends Foo
 //│ ║        	                   ^^^
 //│ ╟── Object 'Foo' cannot be instantiated with keyword 'new'.
 //│ ║  l.5: 	object Foo
 //│ ╙──     	       ^^^
-//│ ═══[COMPILATION ERROR] Cannot resolve the class instantiated here
+//│ ╔══[COMPILATION ERROR] Cannot resolve the class instantiated here
+//│ ║  l.38: 	object Bar extends Foo
+//│ ╙──      	                   ^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :e
 :re
 object Bar extends Foo!class
 //│ ╔══[COMPILATION ERROR] Resolution error in object instantiation
-//│ ║  l.48: 	object Bar extends Foo!class
+//│ ║  l.52: 	object Bar extends Foo!class
 //│ ║        	                   ^^^^^^^^^
 //│ ╟── Invalid class expression: dynamic selection
-//│ ║  l.48: 	object Bar extends Foo!class
-//│ ╙──      	                      ^^^^^^
+//│ ║  l.52: 	object Bar extends Foo!class
+//│ ╙──      	                   ^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :fixme // Support?
 object Bar extends! Foo!class
 //│ ╔══[COMPILATION ERROR] Resolution error in object instantiation
-//│ ║  l.58: 	object Bar extends! Foo!class
+//│ ║  l.62: 	object Bar extends! Foo!class
 //│ ║        	                  ^^^^^^^^^^^
 //│ ╟── Invalid class expression: reference
-//│ ║  l.58: 	object Bar extends! Foo!class
+//│ ║  l.62: 	object Bar extends! Foo!class
 //│ ╙──      	                  ^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 

@@ -6,17 +6,23 @@
 
 :ge
 Int
-//│ ═══[COMPILATION ERROR] Symbol 'Int' is virtual (i.e., "compiler fiction"); cannot be used as a term
+//│ ╔══[COMPILATION ERROR] Symbol 'Int' is virtual (i.e., "compiler fiction"); cannot be used as a term
+//│ ║  l.8: 	Int
+//│ ╙──     	^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :ge
 Str
-//│ ═══[COMPILATION ERROR] Symbol 'Str' is virtual (i.e., "compiler fiction"); cannot be used as a term
+//│ ╔══[COMPILATION ERROR] Symbol 'Str' is virtual (i.e., "compiler fiction"); cannot be used as a term
+//│ ║  l.15: 	Str
+//│ ╙──      	^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :ge
 Bool
-//│ ═══[COMPILATION ERROR] Symbol 'Bool' is virtual (i.e., "compiler fiction"); cannot be used as a term
+//│ ╔══[COMPILATION ERROR] Symbol 'Bool' is virtual (i.e., "compiler fiction"); cannot be used as a term
+//│ ║  l.22: 	Bool
+//│ ╙──      	^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :soir

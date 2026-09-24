@@ -59,7 +59,7 @@ x => if x is (0 | 1) then 1
 //│ = 1
 
 
-fun foo(f) = f(0) > 0
+private fun foo(f) = f(0) > 0
 
 if (foo of x => x + 1) then 1
 //│ = 1

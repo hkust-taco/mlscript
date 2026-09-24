@@ -394,7 +394,7 @@ abstract class MLsDiffMaker extends DiffMaker:
     val elab = Elaborator(etl, wd, Ctx.empty)
     try
       val resBlk = new syntax.Tree.Block(res)
-      val (e, newCtx) = elab.importFrom(resBlk)
+      val (e, newCtx) = elab.importFrom(resBlk, resBlk.definedSymbols.iterator.map(_._2).toList)
       if file.toString === runtimeSourceFile.toString then
         summon[Elaborator.State].initRuntimeSymbolsFromBlock(e)
       val ctxWithImports = newCtx.withMembers(resBlk.definedSymbols)

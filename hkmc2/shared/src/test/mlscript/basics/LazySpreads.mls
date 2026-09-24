@@ -120,7 +120,7 @@ sum2(..arr)
 //│ ═══[RUNTIME ERROR] Error: Function expected 1 argument but got 2
 
 
-fun map2(f) = case
+private fun map2(f) = case
   [] then []
   [x, ..xs, y] then [f(x), ..map2(f)(xs), f(y)]
 

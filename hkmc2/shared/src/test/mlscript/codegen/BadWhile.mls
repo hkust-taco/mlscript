@@ -21,4 +21,6 @@ fun f() =
   while i > 0 do
     set i -= 1
     i
-//│ ═══[WARNING] Pure expression in statement position
+//│ ╔══[WARNING] Pure expression in statement position
+//│ ║  l.23: 	    i
+//│ ╙──      	    ^

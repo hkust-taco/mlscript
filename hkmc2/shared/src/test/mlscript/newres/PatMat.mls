@@ -99,9 +99,23 @@ fun test(x) =
   if x is
     Foo(y) then y.b
 test(bz)
-//│ ╔══[COMPILATION ERROR] This selection of member 'b' has no resolved target
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
 //│ ║  l.100: 	    Foo(y) then y.b
-//│ ╙──       	                ^^^
+//│ ║         	                ^^^
+//│ ╟── Cannot resolve member 'b' of a value with unknown shape.
+//│ ╟── This constructor field may contain a value of unknown shape.
+//│ ║  l.5: 	class Foo(val a)
+//│ ║       	              ^
+//│ ╟── Parameter 'x' admits values of unknown shape.
+//│ ║  l.98: 	fun test(x) =
+//│ ║        	         ^
+//│ ╟── 'test' is exposed by this compilation unit.
+//│ ║  l.98: 	fun test(x) =
+//│ ║        	^^^^^^^^^^^^^
+//│ ║  l.99: 	  if x is
+//│ ║        	^^^^^^^^^
+//│ ║  l.100: 	    Foo(y) then y.b
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] Error: match error
 
 
@@ -117,7 +131,7 @@ let x = if maybe then Bar else bz
 :e
 x.b
 //│ ╔══[COMPILATION ERROR] This selection of member 'b' is ambiguous, as it has multiple resolved targets
-//│ ║  l.118: 	x.b
+//│ ║  l.132: 	x.b
 //│ ║         	^^^
 //│ ╟── target: function 'b' in overloaded function and class 'Baz'
 //│ ║  l.7: 	class Baz(c) { fun b = c }
@@ -158,9 +172,19 @@ if Foo(Predef) is
 :todo
 val f = case
   Foo(y) then y.b
-//│ ╔══[COMPILATION ERROR] This selection of member 'b' has no resolved target
-//│ ║  l.160: 	  Foo(y) then y.b
-//│ ╙──       	              ^^^
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.174: 	  Foo(y) then y.b
+//│ ║         	              ^^^
+//│ ╟── Cannot resolve member 'b' of a value with unknown shape.
+//│ ╟── This constructor field may contain a value of unknown shape.
+//│ ║  l.5: 	class Foo(val a)
+//│ ║       	              ^
+//│ ╟── Parameter 'caseScrut' admits values of unknown shape.
+//│ ╟── 'f' is exposed by this compilation unit.
+//│ ║  l.173: 	val f = case
+//│ ║         	^^^^^^^^^^^^
+//│ ║  l.174: 	  Foo(y) then y.b
+//│ ╙──       	^^^^^^^^^^^^^^^^^
 //│ f = fun
 
 

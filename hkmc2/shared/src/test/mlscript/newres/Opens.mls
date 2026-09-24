@@ -282,7 +282,9 @@ new Shadowed
 //│ ╟── Integer literal cannot be instantiated with keyword 'new'.
 //│ ║  l.276: 	val Shadowed = 20
 //│ ╙──       	               ^^
-//│ ═══[COMPILATION ERROR] Cannot resolve the class instantiated here
+//│ ╔══[COMPILATION ERROR] Cannot resolve the class instantiated here
+//│ ║  l.278: 	new Shadowed
+//│ ╙──       	    ^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ Shadowed = 20
 
@@ -311,19 +313,19 @@ fun ambiguousReversed() = {
 }
 ambiguousReversed()
 //│ ╔══[COMPILATION ERROR] Wildcard-open reference 'extra' is ambiguous
-//│ ║  l.310: 	  extra
+//│ ║  l.312: 	  extra
 //│ ║         	  ^^^^^
 //│ ╟── candidate: value 'extra' defined here
 //│ ║  l.38: 	module Selected { val extra = 6 }
 //│ ║        	                  ^^^^^^^^^^^^^
 //│ ╟── Opened here
-//│ ║  l.308: 	  open Selected
+//│ ║  l.310: 	  open Selected
 //│ ║         	       ^^^^^^^^
 //│ ╟── candidate: value 'extra' defined here
 //│ ║  l.8: 	  val extra = 3
 //│ ║       	  ^^^^^^^^^^^^^
 //│ ╟── Opened here
-//│ ║  l.309: 	  open Values
+//│ ║  l.311: 	  open Values
 //│ ╙──       	       ^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -380,18 +382,18 @@ fun inheritedAmbiguity() = {
 }
 inheritedAmbiguity()
 //│ ╔══[COMPILATION ERROR] Wildcard-open reference 'extra' is ambiguous
-//│ ║  l.378: 	  fun nested() = extra
+//│ ║  l.380: 	  fun nested() = extra
 //│ ║         	                 ^^^^^
 //│ ╟── candidate: value 'extra' defined here
 //│ ║  l.8: 	  val extra = 3
 //│ ║       	  ^^^^^^^^^^^^^
 //│ ╟── Opened here
-//│ ║  l.376: 	  open Values
+//│ ║  l.378: 	  open Values
 //│ ║         	       ^^^^^^
 //│ ╟── candidate: value 'extra' defined here
 //│ ║  l.38: 	module Selected { val extra = 6 }
 //│ ║        	                  ^^^^^^^^^^^^^
 //│ ╟── Opened here
-//│ ║  l.377: 	  open Selected
+//│ ║  l.379: 	  open Selected
 //│ ╙──       	       ^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.

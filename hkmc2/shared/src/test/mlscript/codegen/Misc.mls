@@ -13,7 +13,9 @@
 
 :ge // Shouldn't allow using `Int` in term position
 1 : Int
-//│ ═══[COMPILATION ERROR] Symbol 'Int' is virtual (i.e., "compiler fiction"); cannot be used as a term
+//│ ╔══[COMPILATION ERROR] Symbol 'Int' is virtual (i.e., "compiler fiction"); cannot be used as a term
+//│ ║  l.15: 	1 : Int
+//│ ╙──      	    ^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
@@ -66,23 +68,29 @@ bar(1, 2)
 // the target is JS rather than Wasm.
 :e
 wasm
-//│ ═══[COMPILATION ERROR] Module 'wasm' is virtual (i.e., "compiler fiction"); cannot be used directly
+//│ ╔══[COMPILATION ERROR] Module 'wasm' is virtual (i.e., "compiler fiction"); cannot be used directly
+//│ ║  l.70: 	wasm
+//│ ╙──      	^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :e
 wasm.i32
-//│ ═══[COMPILATION ERROR] Module 'wasm' is virtual (i.e., "compiler fiction"); cannot be used directly
+//│ ╔══[COMPILATION ERROR] Module 'wasm' is virtual (i.e., "compiler fiction"); cannot be used directly
+//│ ║  l.77: 	wasm.i32
+//│ ╙──      	^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :e
 wasm.i32.const
-//│ ═══[COMPILATION ERROR] Module 'wasm' is virtual (i.e., "compiler fiction"); cannot be used directly
+//│ ╔══[COMPILATION ERROR] Module 'wasm' is virtual (i.e., "compiler fiction"); cannot be used directly
+//│ ║  l.84: 	wasm.i32.const
+//│ ╙──      	^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :e
 wasm.i32.const(42)
 //│ ╔══[COMPILATION ERROR] WebAssembly intrinsics are not available when targeting JS
-//│ ║  l.83: 	wasm.i32.const(42)
+//│ ║  l.91: 	wasm.i32.const(42)
 //│ ╙──      	^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 

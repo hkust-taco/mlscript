@@ -1,7 +1,7 @@
 :.
 
 
-fun foo(x) = x + 1
+private fun foo(x) = x + 1
 
 :e
 foo()
@@ -9,8 +9,8 @@ foo()
 //│ ║  l.7: 	foo()
 //│ ║       	^^^^^
 //│ ╟── Function 'foo' expected 1 argument, but got 0
-//│ ║  l.4: 	fun foo(x) = x + 1
-//│ ╙──     	^^^^^^^^^^^^^^^^^^
+//│ ║  l.4: 	private fun foo(x) = x + 1
+//│ ╙──     	        ^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] Error: Function 'foo' expected 1 argument but got 0
 
 :e
@@ -19,8 +19,8 @@ foo(1, 2)
 //│ ║  l.17: 	foo(1, 2)
 //│ ║        	^^^^^^^^^
 //│ ╟── Function 'foo' expected 1 argument, but got 2
-//│ ║  l.4: 	fun foo(x) = x + 1
-//│ ╙──     	^^^^^^^^^^^^^^^^^^
+//│ ║  l.4: 	private fun foo(x) = x + 1
+//│ ╙──     	        ^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] Error: Function 'foo' expected 1 argument but got 2
 
 
@@ -34,16 +34,23 @@ id
 
 :e
 fun callid0(p) = p.id(1)
-//│ ╔══[COMPILATION ERROR] This selection of member 'id' has no resolved target
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
 //│ ║  l.36: 	fun callid0(p) = p.id(1)
-//│ ╙──      	                 ^^^^
+//│ ║        	                 ^^^^
+//│ ╟── Cannot resolve member 'id' of a value with unknown shape.
+//│ ╟── Parameter 'p' admits values of unknown shape.
+//│ ║  l.36: 	fun callid0(p) = p.id(1)
+//│ ║        	            ^
+//│ ╟── 'callid0' is exposed by this compilation unit.
+//│ ║  l.36: 	fun callid0(p) = p.id(1)
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^
 
 
 :de
 :sr
-fun callid1(p) = p.id(1)
+private fun callid1(p) = p.id(1)
 callid1(Predef)
-//│ Elab block List(TermDef(Fun,App(Ident(callid1),Tup(List(Ident(p)))),Some(App(Sel(Ident(p),Ident(id)),Tup(List(I[...] LocalScope(block:7)
+//│ Elab block List(Annotated(Keywrd(keyword 'private'),TermDef(Fun,App(Ident(callid1),Tup(List(Ident(p)))),Some(Ap[...] LocalScope(block:7)
 //│ | Processing term definition App(Ident(callid1),Tup(List(Ident(p))))
 //│ | Elaborating ParamTree: ParamTree(‹›,Ident(p),None,None,Set())
 //│ | Elab term App(Sel(Ident(p),Ident(id)),Tup(List(IntLit(1))))
@@ -179,17 +186,19 @@ callid1(Predef)
 //│ | | = MarkedShape(IntroShape(1), ↗⟨term:callid1²⟩%⟨callid1¹⟩ϵ)
 //│ | = MarkedShape(IntroShape(1), ↗⟨term:callid1²⟩%⟨callid1¹⟩ϵ)
 //│ ~> { fun member:callid1(p⁰) = p⁰.id(1); member:callid1⁰(member:Predef⁰) }
+//│ listenTerm: trm = member:callid1⁰(member:Predef⁰)
+//│ listen: trm = member:callid1⁰(member:Predef⁰)
 //│ ————————————————| Resolved |————————————————————————————————————————————————————————————————————————
-//│   fun callid1⁰::callid1¹(p⁰) ‹flow:callid1⁰› = p⁰.id⁰(1)‹app⁰›, callid1⁰(Predef⁰)‹app¹›
+//│   @private fun callid1⁰::callid1¹(p⁰) ‹flow:callid1⁰› = p⁰.id⁰(1)‹app⁰›, callid1⁰(Predef⁰)‹app¹›
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 1
 
 
 :sr
 callid2(Predef)
-fun callid2(p) = p.id(1)
+private fun callid2(p) = p.id(1)
 //│ ————————————————| Resolved |————————————————————————————————————————————————————————————————————————
-//│   callid2⁰(Predef⁰)‹app²›, fun callid2⁰::callid2¹(p¹) ‹flow:callid2⁰› = p¹.id⁰(1)‹app³›
+//│   callid2⁰(Predef⁰)‹app²›, @private fun callid2⁰::callid2¹(p¹) ‹flow:callid2⁰› = p¹.id⁰(1)‹app³›
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 
@@ -205,12 +214,12 @@ getPredef().id
 
 // :de
 :sr
-fun foo(pred) =
+private fun foo(pred) =
   let p = pred
   val r = p.id(1)
 foo(Predef)
 //│ ————————————————| Resolved |————————————————————————————————————————————————————————————————————————
-//│   fun foo⁰::foo¹(pred⁰) ‹flow:foo⁰› = {
+//│   @private fun foo⁰::foo¹(pred⁰) ‹flow:foo⁰› = {
 //│     let p²,
 //│     p² = pred⁰,
 //│     val r⁰::r¹ ‹flow:r⁰› = p²^r¹.id⁰(1)‹app⁵›,

@@ -309,5 +309,7 @@ fun foo(n: Int31) =
 fun bar(m: Int32) =
   foo(wasm.ref.i31(m))
 //│ ═══[COMPILATION ERROR] Cannot cast a Wasm value of type `i32` to `(ref null any)` in a different type hierarchy
-//│ ═══[COMPILATION ERROR] Operand #1 of wasm intrinsic 'ref.i31' must be of type 'Int32'
+//│ ╔══[COMPILATION ERROR] Operand #1 of wasm intrinsic 'ref.i31' must be of type 'Int32'
+//│ ║  l.310: 	  foo(wasm.ref.i31(m))
+//│ ╙──       	                   ^
 //│ ═══[COMPILATION ERROR] Cannot cast a Wasm value of type `i32` to `(ref null any)` in a different type hierarchy

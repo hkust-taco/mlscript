@@ -159,11 +159,11 @@ get
 
 
 :sr
-fun foo(x) =
+private fun foo(x) =
   x.a + x.b
 foo(f)
 //│ ————————————————| Resolved |————————————————————————————————————————————————————————————————————————
-//│   fun foo⁰::foo¹(x⁰) ‹flow:foo⁰› = +(x⁰.a⁴, x⁰.b⁰)‹app⁶›, foo⁰(f²)‹app⁷›
+//│   @private fun foo⁰::foo¹(x⁰) ‹flow:foo⁰› = +(x⁰.a⁴, x⁰.b⁰)‹app⁶›, foo⁰(f²)‹app⁷›
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 3
 
@@ -272,14 +272,14 @@ new 42
 // :de
 :sr
 :sjs
-// class Foo(pred) { // TODO
-class Foo(pred) with {
+// private class Foo(pred) { // TODO
+private class Foo(pred) with {
   // val r = pred.id(42)
   pred.id(42)
 }
 let f = new Foo(Predef)
 //│ ————————————————| Resolved |————————————————————————————————————————————————————————————————————————
-//│   fun Foo⁶
+//│   @private fun Foo⁶
 //│   class Foo⁷::Foo⁸(pred⁰) {
 //│     @private val pred¹::pred² ‹flow:pred⁰› = pred⁰^pred²,
 //│     Foo⁸.this.pred¹.id⁰(42)‹app⁹›
@@ -304,13 +304,13 @@ let f = new Foo(Predef)
 
 
 :sr
-class Foo(pred) {
+private class Foo(pred) {
   pred.id(1)
   pred.id(2)
 }
 let f = Foo(Predef)
 //│ ————————————————| Resolved |————————————————————————————————————————————————————————————————————————
-//│   fun Foo⁹
+//│   @private fun Foo⁹
 //│   class Foo¹⁰::Foo¹¹(pred³) {
 //│     @private val pred⁴::pred⁵ ‹flow:pred¹› = pred³^pred⁵,
 //│     Foo¹¹.this.pred⁴.id⁰(1)‹app¹⁰›,
@@ -322,13 +322,13 @@ let f = Foo(Predef)
 //│ f = Foo(_)
 
 :sr
-class Foo(pred) {
+private class Foo(pred) {
   val r = pred.id(42)
   fun callId(x) = pred.id(x)
 }
 let f = new Foo(Predef)
 //│ ————————————————| Resolved |————————————————————————————————————————————————————————————————————————
-//│   fun Foo¹²
+//│   @private fun Foo¹²
 //│   class Foo¹³::Foo¹⁴(pred⁶) {
 //│     @private val pred⁷::pred⁸ ‹flow:pred²› = pred⁶^pred⁸,
 //│     val r⁰::r¹ ‹flow:r⁰› = Foo¹⁴.this.pred⁷^r¹.id⁰(42)‹app¹³›,

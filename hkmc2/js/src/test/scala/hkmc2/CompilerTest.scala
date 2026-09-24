@@ -345,6 +345,24 @@ class CompilerTest extends AnyFunSuite:
       assert(parameters.map(p => (p.shapes.toVector, p.shapeListeners.toVector)) == before,
         "A consumer must not change the cached definition's inference graph")
 
+  test("an exported generic selection is rejected before a consumer can specialize it"):
+    val fs = new InMemoryFileSystem(loadStandardLibrary())
+    given cctx: CompilerCtx = CompilerCtx.fresh(fs, paths, Config.default(io.Path("/")))
+    given DebugPrinter = new DebugPrinter
+    given TL = new TraceLogger:
+      override def doTrace = false
+    val errors = scala.collection.mutable.ArrayBuffer.empty[Diagnostic]
+    given Raise = errors += _
+    fs.write("/Unsafe.mls", """#lang(0.3.x, strictResolution: true)
+                                |module Unsafe with
+                                |  fun foo[A](x: A) = x.a
+                                |Unsafe.foo({a: 1})
+                                |""".stripMargin)
+    val compiler = new MLsCompiler(_ => summon[Raise])
+    compiler.compileModule(Path("/Unsafe.mls"))
+    assert(errors.exists(_.theMsg.contains("Resolution error")))
+    assert(errors.exists(_.allMsgs.exists(_._1.show.contains("Type parameter 'A'"))))
+
   test("compiler can report errors"):
     val (fs, compiler) = createCompiler()
     

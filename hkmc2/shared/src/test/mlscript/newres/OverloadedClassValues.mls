@@ -96,16 +96,14 @@ class Aux {
 }
 fun Aux(x) = new Aux(x + 1)
 
-// FIXME: constructor-field references are not yet supported by the new resolver.
-:fixme
+// Constructor fields retain the selected constructor and its capture path.
 :expect 42
 Aux(41).answer()
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ = 42
 
-:fixme
 :expect 41
 (new Aux(41)).answer()
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ = 41
 
 
 class Parent {
@@ -178,20 +176,20 @@ MutableMembers.Item
 class Parameterized()
 fun Parameterized() = 0
 //│ ╔══[COMPILATION ERROR] Not yet supported: overloading of function 'Parameterized'
-//│ ║  l.179: 	fun Parameterized() = 0
+//│ ║  l.177: 	fun Parameterized() = 0
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── with class of the same name
-//│ ║  l.178: 	class Parameterized()
+//│ ║  l.176: 	class Parameterized()
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^
 
 :e
 class ParameterizedValue(x)
 val ParameterizedValue = 0
 //│ ╔══[COMPILATION ERROR] Illegal overloading of value 'ParameterizedValue'
-//│ ║  l.189: 	val ParameterizedValue = 0
+//│ ║  l.187: 	val ParameterizedValue = 0
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── with class of the same name
-//│ ║  l.188: 	class ParameterizedValue(x)
+//│ ║  l.186: 	class ParameterizedValue(x)
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ParameterizedValue = 0
 
@@ -201,10 +199,10 @@ class Duplicate
 fun Duplicate() = 0
 val Duplicate = 1
 //│ ╔══[COMPILATION ERROR] Illegal overloading of value 'Duplicate'
-//│ ║  l.202: 	val Duplicate = 1
+//│ ║  l.200: 	val Duplicate = 1
 //│ ║         	^^^^^^^^^^^^^^^^^
 //│ ╟── with function of the same name
-//│ ║  l.201: 	fun Duplicate() = 0
+//│ ║  l.199: 	fun Duplicate() = 0
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^
 
 

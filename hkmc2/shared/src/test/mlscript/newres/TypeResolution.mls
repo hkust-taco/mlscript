@@ -53,6 +53,8 @@ fun unused(value: Invalid) = value
 type Invalid = notAType
 val notAType = 1
 //│ ╔══[COMPILATION ERROR] Resolution error in member reference
+//│ ║  l.53: 	type Invalid = notAType
+//│ ║        	               ^^^^^^^^
 //│ ╟── Value symbol 'notAType' cannot be used as a type
 //│ ║  l.54: 	val notAType = 1
 //│ ╙──      	^^^^^^^^^^^^^^^^

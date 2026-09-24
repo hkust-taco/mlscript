@@ -9,7 +9,7 @@ open Stack
 
 fun showList(xs) = "[" + xs Iter.fromStack() Iter.joined(", ") + "]"
 
-fun foldLeft(f)(z) =
+private fun foldLeft(f)(z) =
   fun aux(acc, xs) =
     if xs is
       Nil then acc

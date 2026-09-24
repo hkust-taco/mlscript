@@ -177,7 +177,9 @@ unpack(toObj())
 // where `Unknown` cannot be cast to a primitive and is rejected.
 :e
 fun test: Function = id
-//│ ═══[COMPILATION ERROR] Returning function instances is not supported
+//│ ╔══[COMPILATION ERROR] Returning function instances is not supported
+//│ ║  l.179: 	fun test: Function = id
+//│ ╙──       	                     ^^
 
 :fixme
 fun test: Function = new Object
@@ -218,7 +220,7 @@ fun test: Function = castToA(123)
 :e
 castToA(wasm.i32.const(123))
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int32' at an unrelated type 'Unknown'
-//│ ║  l.219: 	castToA(wasm.i32.const(123))
+//│ ║  l.221: 	castToA(wasm.i32.const(123))
 //│ ╙──       	        ^^^^^^^^^^^^^^^^^^^
 //│ Wasm result:
 //│ = 123

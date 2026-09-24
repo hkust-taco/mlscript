@@ -15,6 +15,13 @@ object Publisher:
     private[hkmc2] var completed = false
     val listeners: ArrayBuffer[ShapeListener[A]] = ArrayBuffer.empty
     val shapes: LinkedHashSet[A] = LinkedHashSet.empty
+    // Pass-local observers never become part of a copied inference graph.
+    private val observers: ArrayBuffer[ShapeListener[A]] = ArrayBuffer.empty
+    def observe(listener: ShapeListener[A])(using state: NewResolverState): () => Unit =
+      val data = state.local(this)
+      data.observers += listener
+      data.replay(listener)
+      () => { data.observers -= listener; () }
     def copy(state: NewResolverState): Data[A] =
       val result = new Data[A]
       result.owner = state
@@ -33,9 +40,14 @@ object Publisher:
     def notify(shape: A)(using NewResolverState): Unit =
       // Appended listeners receive this candidate through replay.
       val count = listeners.size
+      val observerCount = observers.size
       var i = 0
       while i < count do
         listeners(i)(shape)
+        i += 1
+      i = 0
+      while i < observerCount do
+        observers(i)(shape)
         i += 1
     def addListener(listener: ShapeListener[A])(using origin: NewResolverState): Unit =
       origin.local(this).listeners +=

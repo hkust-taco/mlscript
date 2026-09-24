@@ -18,7 +18,7 @@ class Bar(y) extends Foo(y + 1) {
 //│   fun Bar⁰
 //│   class Bar¹::Bar²(y⁰) extends new Foo¹^Bar²(+(y⁰, 1)‹app⁰›) {
 //│     @private val y¹::y² ‹flow:y⁰› = y⁰^y²,
-//│     val z⁰::z¹ ‹flow:z⁰› = +(Bar².x¹, 1)‹app¹›
+//│     val z⁰::z¹ ‹flow:z⁰› = +(Bar².this^z¹.x¹, 1)‹app¹›
 //│   }
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let Bar1;

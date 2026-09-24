@@ -86,7 +86,7 @@ fun foo(x) = x is
 fun foo(x) = x is Pair(a, b) | Int
 //│ ╔══[COMPILATION ERROR] Unexpected term form in expression position (alternation)
 //│ ║  l.86: 	fun foo(x) = x is Pair(a, b) | Int
-//│ ╙──      	             ^^^^^^^^^^^^^^^
+//│ ╙──      	             ^^^^^^^^^^^^^^^^^^^^^
 
 // Test how shorthand conditionals work together with lambda functions.
 // ====================================================================

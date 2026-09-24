@@ -90,6 +90,28 @@ module M with
 //│ | | | ~> member:Predef⁰^term:M⁰/p⁰
 //│ | | ~> { val member:p = member:Predef⁰^term:M⁰/p⁰; }
 //│ ~> { Mod M ObjBody(Blk(List(TermDefinition(ImmutVal,member:p,term:M/p,List(),None,None,Some(Capture(MemberRef(member:Predef),term:M/p)),‹›,Modulefulness(None),List(),None)),Lit(UnitLit(false)))); }
+//│ listenBMS: bms = module
+//│ listenedBMS: bms = module
+//│ fromBMS: bms = member:M¹, sh = module:M⁰, flow = exposed⁰, markss = List()
+//│ PUSH module:M⁰
+//│ listenTerm: trm = undefined
+//│ listen: trm = undefined
+//│ introShape: intro = Lit(UnitLit(false))
+//│ listenBMS: bms = value
+//│ listenedBMS: bms = value
+//│ listenTerm: td.body = member:Predef⁰^term:M⁰/p⁰
+//│ listenTerm: trm = member:Predef⁰^term:M⁰/p⁰
+//│ listen: trm = member:Predef⁰^term:M⁰/p⁰
+//│ listenTerm: trm = member:Predef⁰
+//│ listen: trm = member:Predef⁰
+//│ listenBMS: bms = module
+//│ listenedBMS: bms = module
+//│ fromBMS: bms = member:Predef⁰, sh = module:Predef¹, flow = Predef², markss = List()
+//│ PUSH module:Predef¹
+//│ fromBMS: bms = member:p¹, sh = MarkedShape(module:Predef¹, ↘⟨term:M⁰/p⁰⟩ϵ), flow = exposed¹, markss = List()
+//│ .exit MarkedShape (MarkedShape(module:Predef¹, ↘⟨term:M⁰/p⁰⟩ϵ), term:M⁰/p⁰, exposed¹)
+//│ = module:Predef¹
+//│ MATCH module:Predef¹ for term:M⁰/p⁰ % exposed¹
 //│ ————————————————| Resolved |————————————————————————————————————————————————————————————————————————
 //│   module M⁰::M¹ { val p²::p³ ‹flow:p¹› = Predef⁰^p³ }
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
@@ -167,6 +189,14 @@ M.p.id
 //│ | | ~> member:M¹.p.id
 //│ | ~> member:M¹.p.id
 //│ ~> { member:M¹.p.id }
+//│ listenTerm: trm = member:M¹.p.id
+//│ listen: trm = member:M¹.p.id
+//│ listenBMS: bms = function
+//│ listenedBMS: bms = function
+//│ fromBMS: bms = member:id⁰, sh = member:id⁰, flow = ⋅id⁰, markss = List()
+//│ .exit MarkedShape (member:id⁰, term:Predef¹/id¹, ⋅id⁰)
+//│ = MarkedShape(member:id⁰, ↗⟨term:Predef¹/id¹⟩%⟨⋅id⁰⟩ϵ)
+//│ PUSH MarkedShape(member:id⁰, ↗⟨term:Predef¹/id¹⟩%⟨⋅id⁰⟩ϵ)
 //│ ————————————————| Resolved |————————————————————————————————————————————————————————————————————————
 //│   M⁰.p².id⁰
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————

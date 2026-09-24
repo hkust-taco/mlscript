@@ -25,7 +25,9 @@ module A with
     print(x, y)
     A
   val y = 2
-//│ ═══[WARNING] Pure expression in statement position
+//│ ╔══[WARNING] Pure expression in statement position
+//│ ║  l.26: 	    A
+//│ ╙──      	    ^
 //│ > 1 undefined
 
 

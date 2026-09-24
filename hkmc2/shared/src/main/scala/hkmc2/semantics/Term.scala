@@ -972,7 +972,7 @@ sealed trait Statement extends AutoLocated, ProductWithExtraInfo, Describable:
   
   protected def children: Vector[Located] = this match
     case t: Lit => Vector.single(t.lit.asTree)
-    case t: Ref => treeOrSubterms(t.tree)
+    case t: AnyRef_ => treeOrSubterms(t.tree)
     case t: Tup => treeOrSubterms(t.tree)
     case l: Lam => Vector.double(l.params, l.body)
     case t: App => treeOrSubterms(t.tree)

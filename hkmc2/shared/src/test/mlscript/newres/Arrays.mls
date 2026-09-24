@@ -71,7 +71,7 @@ fun singleton(x) = [x]
 // Nominal argument inference sees the tuple's Array supertype.
 :expect [4]
 class Item(val value: Int)
-fun values[A](xs: Array[A]) = xs.map((item, ...) => item.value)
+private fun values[A](xs: Array[A]) = xs.map((item, ...) => item.value)
 values([Item(4)])
 //│ = [4]
 
@@ -89,7 +89,7 @@ values([Item(4)])
 //│ ╟── Callback parameter list does not match its declared function type.
 //│ ║  in Arrays.mls:85
 //│ ║  l.85: 	[1].map(x => x)
-//│ ╙──      	        ^
+//│ ╙──      	        ^^^^^^
 //│ ═══[RUNTIME ERROR] Error: Function expected 1 argument but got 3
 
 // Mutable arrays do not propagate stale initializer element shapes to callbacks.
@@ -103,6 +103,7 @@ xs.map((x, ...) => x.original)
 //│ ║  l.101: 	xs.map((x, ...) => x.original)
 //│ ║         	                   ^^^^^^^^^^
 //│ ╟── Cannot resolve member 'original' of a value with unknown shape.
+//│ ╟── The shape of this value is unknown.
 //│ ║  l.99: 	let xs = mut [Original(1)]
 //│ ╙──      	         ^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.

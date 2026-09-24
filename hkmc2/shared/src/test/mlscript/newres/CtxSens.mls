@@ -44,29 +44,45 @@ fun bar(y) =
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 // :de
-// :fixme
+// FIXME: Forwarding through a captured function loses the caller activation.
+:fixme
 :sr
 bar(A).u
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.50: 	bar(A).u
+//│ ║        	^^^^^^^^
+//│ ╟── Cannot resolve member 'u' of a value with unknown shape.
+//│ ╟── Parameter 'y' admits values of unknown shape.
+//│ ║  l.40: 	fun bar(y) =
+//│ ║        	        ^
+//│ ╟── 'bar' is exposed by this compilation unit.
+//│ ║  l.40: 	fun bar(y) =
+//│ ║        	^^^^^^^^^^^^
+//│ ║  l.41: 	  foo(y)
+//│ ╙──      	^^^^^^^^
 //│ ————————————————| Resolved |————————————————————————————————————————————————————————————————————————
 //│   bar⁰(A⁰)‹app³›.u⁰
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
-//│ = 1
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 // * As expected, we currently lose context sensitivity when going through the call of a captured function (foo)
 :todo
 :sr
 bar(B).u
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.71: 	bar(B).u
+//│ ║        	^^^^^^^^
+//│ ╟── Cannot resolve member 'u' of a value with unknown shape.
+//│ ╟── Parameter 'y' admits values of unknown shape.
+//│ ║  l.40: 	fun bar(y) =
+//│ ║        	        ^
+//│ ╟── 'bar' is exposed by this compilation unit.
+//│ ║  l.40: 	fun bar(y) =
+//│ ║        	^^^^^^^^^^^^
+//│ ║  l.41: 	  foo(y)
+//│ ╙──      	^^^^^^^^
 //│ ————————————————| Resolved |————————————————————————————————————————————————————————————————————————
 //│   bar⁰(B⁰)‹app⁴›.u‹u², u⁰›
-//│ ╔══[COMPILATION ERROR] This selection of member 'u' is ambiguous, as it has multiple resolved targets
-//│ ║  l.58: 	bar(B).u
-//│ ║        	^^^^^^^^
-//│ ╟── target: value 'u' in module 'B'
-//│ ║  l.9: 	  val u = 2
-//│ ║       	      ^
-//│ ╟── target: value 'u' in module 'A'
-//│ ║  l.6: 	  val u = 1
-//│ ╙──     	      ^
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 

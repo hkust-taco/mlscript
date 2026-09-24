@@ -8,26 +8,41 @@ open annotations
 :fixme
 fun trimStart(str) =
   if str is @compile { (" " | "\t") ~ rest } then trimStart(rest) else str
+//│ ╔══[COMPILATION ERROR] This pattern is not supported during shape resolution.
+//│ ║  l.10: 	  if str is @compile { (" " | "\t") ~ rest } then trimStart(rest) else str
+//│ ╙──      	                        ^^^^^^^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] String concatenation is not supported in pattern compilation.
 //│ ║  l.10: 	  if str is @compile { (" " | "\t") ~ rest } then trimStart(rest) else str
 //│ ╙──      	                        ^^^^^^^^^^^^^^^^^^
-//│ ═══[COMPILATION ERROR] No definition found in scope for member 'rest'
+//│ ╔══[COMPILATION ERROR] No definition found in scope for member 'rest'
+//│ ║  l.10: 	  if str is @compile { (" " | "\t") ~ rest } then trimStart(rest) else str
+//│ ╙──      	                                                            ^^^^
 
 :fixme
 fun trimStart(str) =
   if str is (@compile ((" " | "\t") ~ rest)) then trimStart(rest) else str
-//│ ╔══[COMPILATION ERROR] String concatenation is not supported in pattern compilation.
-//│ ║  l.18: 	  if str is (@compile ((" " | "\t") ~ rest)) then trimStart(rest) else str
+//│ ╔══[COMPILATION ERROR] This pattern is not supported during shape resolution.
+//│ ║  l.23: 	  if str is (@compile ((" " | "\t") ~ rest)) then trimStart(rest) else str
 //│ ╙──      	                        ^^^^^^^^^^^^^^^^^^
-//│ ═══[COMPILATION ERROR] No definition found in scope for member 'rest'
+//│ ╔══[COMPILATION ERROR] String concatenation is not supported in pattern compilation.
+//│ ║  l.23: 	  if str is (@compile ((" " | "\t") ~ rest)) then trimStart(rest) else str
+//│ ╙──      	                        ^^^^^^^^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] No definition found in scope for member 'rest'
+//│ ║  l.23: 	  if str is (@compile ((" " | "\t") ~ rest)) then trimStart(rest) else str
+//│ ╙──      	                                                            ^^^^
 
 :fixme
 fun trimStart(str) =
   if str is @compile ((" " | "\t") ~ rest) then trimStart(rest) else str
-//│ ╔══[COMPILATION ERROR] String concatenation is not supported in pattern compilation.
-//│ ║  l.26: 	  if str is @compile ((" " | "\t") ~ rest) then trimStart(rest) else str
+//│ ╔══[COMPILATION ERROR] This pattern is not supported during shape resolution.
+//│ ║  l.36: 	  if str is @compile ((" " | "\t") ~ rest) then trimStart(rest) else str
 //│ ╙──      	                       ^^^^^^^^^^^^^^^^^^
-//│ ═══[COMPILATION ERROR] No definition found in scope for member 'rest'
+//│ ╔══[COMPILATION ERROR] String concatenation is not supported in pattern compilation.
+//│ ║  l.36: 	  if str is @compile ((" " | "\t") ~ rest) then trimStart(rest) else str
+//│ ╙──      	                       ^^^^^^^^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] No definition found in scope for member 'rest'
+//│ ║  l.36: 	  if str is @compile ((" " | "\t") ~ rest) then trimStart(rest) else str
+//│ ╙──      	                                                          ^^^^
 
 
 // * Note: `@compile(...)` is parsed as a whole annotation
@@ -36,16 +51,16 @@ fun trimStart(str) =
 fun trimStart(str) =
   if str is (@compile((" " | "\t") ~ rest)) then trimStart(rest) else str
 //│ ╔══[PARSE ERROR] Expected start of expression in this position
-//│ ║  l.37: 	  if str is (@compile((" " | "\t") ~ rest)) then trimStart(rest) else str
+//│ ║  l.52: 	  if str is (@compile((" " | "\t") ~ rest)) then trimStart(rest) else str
 //│ ║        	                                          ^
 //│ ╟── found a lone annotation instead
-//│ ║  l.37: 	  if str is (@compile((" " | "\t") ~ rest)) then trimStart(rest) else str
+//│ ║  l.52: 	  if str is (@compile((" " | "\t") ~ rest)) then trimStart(rest) else str
 //│ ╙──      	             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Unrecognized pattern (‹erroneous syntax›).
-//│ ║  l.37: 	  if str is (@compile((" " | "\t") ~ rest)) then trimStart(rest) else str
+//│ ║  l.52: 	  if str is (@compile((" " | "\t") ~ rest)) then trimStart(rest) else str
 //│ ╙──      	                                          ^
 //│ ╔══[COMPILATION ERROR] Name not found in wildcard opens: rest
-//│ ║  l.37: 	  if str is (@compile((" " | "\t") ~ rest)) then trimStart(rest) else str
+//│ ║  l.52: 	  if str is (@compile((" " | "\t") ~ rest)) then trimStart(rest) else str
 //│ ╙──      	                                                           ^^^^
 
 

@@ -102,6 +102,8 @@ new A(1, 2, 3).getR
 //│ ║  l.91: 	  fun getR = r
 //│ ╙──      	^^^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'r'
+//│ ║  l.91: 	  fun getR = r
+//│ ║        	             ^
 //│ ╟── which references the symbol introduced here
 //│ ║  l.90: 	data class A(...r) with
 //│ ╙──      	                ^

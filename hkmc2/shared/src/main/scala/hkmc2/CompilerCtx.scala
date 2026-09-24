@@ -111,7 +111,7 @@ class CompilerCtx(
       if !isRuntime then
         state.initRuntimeSymbolsFromFile(paths.runtimeSourceFile, prelude)(
           using tl, summon[Raise], artifactCtx)
-      val (blk0, _) = elaborationConfig.givenIn(elab.importFrom(parsed))
+      val (blk0, _) = elaborationConfig.givenIn(elab.importFrom(parsed, exportedSymbol.toList))
       if isRuntime then
         state.initRuntimeSymbolsFromBlock(blk0)
 
@@ -221,7 +221,7 @@ class CompilerCtx(
         val parse = ParserSetup(file)
         val elab = Elaborator(tl, file.up, Ctx.empty)
         val initCtx = State.init.nestLocal("prelude")
-        val (blk, ctx) = elab.importFrom(parse.resultBlk)(using initCtx)
+        val (blk, ctx) = elab.importFrom(parse.resultBlk, Nil)(using initCtx)
         // Prelude declarations have no executable program, but their signatures and nominal hierarchy
         // must be erased before any compilation unit can use them.
         given Ctx = ctx

@@ -167,12 +167,52 @@ provides it to a parameter independently of call-site inference. Type aliases ma
 also denote `dyn`. These rules apply in both strict and non-strict resolution.
 Dynamic instantiation uses the existing `new!` syntax.
 
-Call validation still depends on the shapes available during elaboration. An
-unused callback, a callback used in a later REPL block, or an unsupported function
-signature may have no inferred callee shapes yet. Such an empty set does not prove
-that the callee is non-callable. Diagnosing all targetless applications requires
-separating pending or incomplete inference from a completed lookup with no target;
-`dyn` does not fill arbitrary empty shape sets.
+Before sealing a file or diff-test block, `InterfaceExposure` checks the values
+reachable through its exposed interface. It seeds unannotated parameters and
+unconstrained generic parameters with `UnknownValueShape`, then follows returned
+functions, record/tuple contents, and public instance members. Local examples do
+not close an exposed interface: both `fun foo(x) = x.a` and
+`fun foo[A](x: A) = x.a` are rejected even if this unit calls `foo({a: 1})`.
+Private helpers can retain local inference unless their function values escape.
+Parameter annotations provide their declared shapes; callable result annotations
+constrain returned implementations through their declared domains.
+
+Discovery uses a queue and temporary observers of shape publishers. Each reached
+shape is processed once, with listeners discovering subsequent candidates; there
+is no repeated whole-graph scan. Observers are detached before the unit is sealed
+and are never copied into consumer states. New-resolution imports have already had
+their interfaces checked; the importer does not recursively recheck definitions
+from other compilation units.
+An unknown reaching a previously sealed elimination can still report an error,
+without changing its recorded target.
+
+Unknown values and unresolved spreads carry shared, lazy provenance. Messages,
+locations, and diagnostic chains are materialized only on an error; provenance is
+excluded from shape equality. Diagnostics can identify a generic parameter or
+ordinary parameter and then show the record/tuple storage and return steps that
+expose it. `newres/InterfaceExposure.mls` covers these paths, recursive discovery,
+private helpers, returned typed closures, overloaded class exports, and later
+exposure of a private definition from an earlier block. Constructor patterns
+narrow unknown inputs to declared class interfaces, retaining unknown type
+arguments and provenance for unannotated fields. They cannot discard the external
+alternative and specialize those fields from local calls alone.
+
+Flooding also reveals existing limits of capture precision. Forwarding through
+captured functions or constructor aliases, rebuilding an instance of the same
+class, and exposing partially applied constructors can lose the originating
+activation. These cases conservatively report unknown-value errors and remain
+explicit `:fixme` regressions in `CtxSens`, `ValCtxSens`, `Projections`,
+`RecursiveEnvironment`, and `SpreadCalls`; they need a more precise representation
+of captured activations. Unknowns are not converted to dynamic values to bypass
+these failures. Unsupported inference forms can still have no candidates at all;
+completion of such empty flows remains separate from rejecting an unknown target.
+
+An additional gap is recorded in `InterfaceExposure.mls`: a private class returned
+through a nominal result annotation can expose callable methods without those
+implementations being flooded. Fixing this requires following the declared member
+interface back to its implementations, while still keeping unannotated fields and
+results opaque; traversing every initializer would incorrectly expose values the
+annotation hides.
 
 Dynamic selections have no fabricated nominal definition. Lowering retains their
 runtime receiver and property name. Dynamic values propagate through record and
@@ -183,7 +223,7 @@ requirements for a known, unambiguous identity.
 
 `DynShape` is distinct from `UnknownValueShape`: recursive widening, mutable
 record reads, and other losses of inference precision do not automatically
-license dynamic member lookup. A known missing member in another receiver
+license dynamic member lookup or calls. A known missing member in another receiver
 candidate still reports an error even if a dynamic candidate is also present.
 The same rule applies to values recovered from constructor patterns.
 
@@ -192,7 +232,7 @@ Regression coverage is in `newres/Dynamic.mls`, `newres/Records.mls`,
 
 ### 2. Pattern transfer and synthesized references
 
-Evidence: new shape propagation lacks record, conjunction, negation, string
+Evidence: new shape propagation lacks record, negation, string
 concatenation, and transformation cases. Examples include
 `ucs/general/BooleanPatterns.mls`, `patterns/String.mls`, and
 `normalization/RecordImpliedByClass.mls`. Tuple bindings currently publish no

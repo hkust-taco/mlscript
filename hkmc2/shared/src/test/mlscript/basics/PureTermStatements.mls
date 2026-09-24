@@ -27,7 +27,7 @@ if true then () else 1
 x => x, 0
 //│ ╔══[WARNING] Pure expression in statement position
 //│ ║  l.27: 	x => x, 0
-//│ ╙──      	^
+//│ ╙──      	^^^^^^
 //│ = 0
 
 :w
@@ -58,21 +58,27 @@ case x then x
 fun foo(x) =
   x
   x
-//│ ═══[WARNING] Pure expression in statement position
+//│ ╔══[WARNING] Pure expression in statement position
+//│ ║  l.59: 	  x
+//│ ╙──      	  ^
 
 :w
 fun foo() =
   val x = 1
   x
   x
-//│ ═══[WARNING] Pure expression in statement position
+//│ ╔══[WARNING] Pure expression in statement position
+//│ ║  l.68: 	  x
+//│ ╙──      	  ^
 
 :w
 fun foo() =
   let x = 1
   x
   x
-//│ ═══[WARNING] Pure expression in statement position
+//│ ╔══[WARNING] Pure expression in statement position
+//│ ║  l.77: 	  x
+//│ ╙──      	  ^
 
 
 // * Note that uses of `;` currently do not warn...

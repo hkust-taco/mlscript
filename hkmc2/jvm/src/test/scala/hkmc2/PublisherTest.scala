@@ -147,3 +147,49 @@ class PublisherTest extends AnyFunSuite:
     next.inferenceHost
     assert(state.canResolve(next))
     state.recordResolution(use, true)(fail("An unchanged decision must not be written again"))
+
+  test("temporary observers replay once, detach, and are not inherited by consumers"):
+    given original: NewResolverState = new Elaborator.State().newResolverState
+    val host = new IntHost
+    val observed = ArrayBuffer.empty[Int]
+    val routed = ArrayBuffer.empty[Int]
+    host.publish(1)
+    host.subscribeToShapes(routed += _)
+    val detach = host.inferenceHost.observe(observed += _)
+    host.publish(2)
+    val consumer = new Elaborator.State().newResolverState
+    host.publish(3)(using consumer)
+    assert(observed.toList == List(1, 2))
+    assert(routed.toList == List(1, 2, 3))
+    detach()
+    host.publish(4)
+    assert(observed.toList == List(1, 2))
+    assert(routed.toList == List(1, 2, 3, 4))
+
+  test("unknown provenance is lazy and does not affect shape identity"):
+    import semantics.{ShapeProvenance, UnknownValueShape, RecordShape}
+    import Message.MessageContext
+    var evaluated = 0
+    def provenance = ShapeProvenance {
+      evaluated += 1
+      Nil
+    }
+    val source = Term.UnitVal()
+    val first = UnknownValueShape(source)(provenance)
+    val second = UnknownValueShape(source)(provenance)
+    assert(Set(first, second).size == 1)
+    assert(RecordShape.Unknown(source)(provenance) == RecordShape.Unknown(source)(provenance))
+    assert(evaluated == 0)
+    assert(first.provenance.diagnosticNotes.isEmpty)
+    assert(first.provenance.diagnosticNotes.isEmpty)
+    assert(evaluated == 1)
+    var noteEvaluated = 0
+    val extended = first.provenance.via {
+      noteEvaluated += 1
+      msg"A deferred provenance step" -> None
+    }
+    assert(noteEvaluated == 0)
+    assert(extended.diagnosticNotes.size == 1)
+    assert(extended.diagnosticNotes.size == 1)
+    assert(noteEvaluated == 1)
+    assert(evaluated == 1)

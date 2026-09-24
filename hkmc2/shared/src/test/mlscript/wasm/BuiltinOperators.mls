@@ -76,7 +76,9 @@ wasm.i32.const(1, 2)
 // backend, so it would not test this.
 :ge
 fun constOf(x: Int) = wasm.ref.i31(wasm.i32.const(x))
-//│ ═══[COMPILATION ERROR] Wasm intrinsic 'i32.const' expects an integer literal immediate
+//│ ╔══[COMPILATION ERROR] Wasm intrinsic 'i32.const' expects an integer literal immediate
+//│ ║  l.78: 	fun constOf(x: Int) = wasm.ref.i31(wasm.i32.const(x))
+//│ ╙──      	                                                  ^
 
 
 // Negative literals are elaborated as a call to `Call(BuiltinSymbol("-"), 1)`.

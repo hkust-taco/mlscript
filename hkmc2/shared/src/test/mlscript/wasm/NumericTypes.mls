@@ -225,17 +225,19 @@ wasm.f64.const(1.0e400)
 // Immediates must be written as literals for floats as much as for integers.
 :ge
 fun constOf(x: Num): Float64 = wasm.f64.const(x)
-//│ ═══[COMPILATION ERROR] Wasm intrinsic 'f64.const' expects a numeric literal immediate
+//│ ╔══[COMPILATION ERROR] Wasm intrinsic 'f64.const' expects a numeric literal immediate
+//│ ║  l.227: 	fun constOf(x: Num): Float64 = wasm.f64.const(x)
+//│ ╙──       	                                              ^
 
 
 // `Float32` and `Float64` are as distinct as the two integer types are.
 :ge
 wasm.f64.add(wasm.f32.const(1.5), wasm.f32.const(2.25))
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Float32' at an unrelated type 'Float64'
-//│ ║  l.233: 	wasm.f64.add(wasm.f32.const(1.5), wasm.f32.const(2.25))
+//│ ║  l.235: 	wasm.f64.add(wasm.f32.const(1.5), wasm.f32.const(2.25))
 //│ ╙──       	             ^^^^^^^^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Float32' at an unrelated type 'Float64'
-//│ ║  l.233: 	wasm.f64.add(wasm.f32.const(1.5), wasm.f32.const(2.25))
+//│ ║  l.235: 	wasm.f64.add(wasm.f32.const(1.5), wasm.f32.const(2.25))
 //│ ╙──       	                                  ^^^^^^^^^^^^^^^^^^^^
 //│ ═══[COMPILATION ERROR] Operand #1 of wasm intrinsic 'f64.add' must be of type 'Float64'
 //│ ═══[COMPILATION ERROR] Operand #2 of wasm intrinsic 'f64.add' must be of type 'Float64'

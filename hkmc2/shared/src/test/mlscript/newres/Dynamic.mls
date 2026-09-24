@@ -49,7 +49,7 @@ identity({value: 7} as dyn).value
 
 // Dynamic spreads retain dynamic element values through parameter propagation.
 :expect 8
-fun readSpread(x) = x.value
+fun readSpread(x: dyn) = x.value
 readSpread(...([{value: 8}] as dyn))
 //│ = 8
 

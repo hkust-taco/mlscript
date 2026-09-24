@@ -209,6 +209,11 @@ object Elaborator:
               go(ctx.parent, nextCrossedFunction, nextCrossedLambdaOrHandler)
       go(S(this), false, false)
     
+    // Explicit `this` must carry the same intervening captures as a lexical
+    // member reference; inherited member results can retain the receiver's scope.
+    def getReceiver: Opt[Ctx.Elem] =
+      outer.inner.map(Ctx.RefElem(_)).orElse(parent.flatMap(_.getReceiver).map(capture))
+
     def getOuter: Opt[InnerSymbol] = outer.inner.orElse(parent.flatMap(_.getOuter))
     def getNonLocalRetHandler: Opt[TempSymbol] = outer match
       case OuterCtx.Function(rsym, _) => S(rsym)
@@ -465,7 +470,7 @@ object Elaborator:
       def isImport: Bool = true
     final case class CaptElem(base: Elem, thru: DefinitionSymbol[?]) extends Elem:
       def ref(id: Ident)(using Elaborator.State, Ctx, Config, NewResolver, NewResolverState): Term =
-        Term.Capture(base.ref(Ident(base.nme)), thru)
+        Term.Capture(base.ref(new Ident(base.nme).withLocOf(id)), thru).withLocOf(id)
       def symbol = base.symbol
       def isImport: Bool = false
       def nme: Str = base.nme
@@ -1359,8 +1364,8 @@ extends Importer:
           h.toLoc :: Nil))
       error
     case id @ Ident("this") =>
-      ctx.getOuter match
-      case S(sym) => sym.ref(id)
+      (if newResolution then ctx.getReceiver else ctx.getOuter.map(Ctx.RefElem(_))) match
+      case S(elem) => elem.ref(id)
       case N =>
         raise:
           ErrorReport(msg"Cannot use 'this' outside of an object scope" -> tree.toLoc :: Nil)
@@ -2930,18 +2935,26 @@ extends Importer:
           msg"Expected a type parameter list (a tuple of identifiers), but found ${t.describe}" -> t.toLoc :: Nil
       (Nil, ctx)
   
-  def importFrom(sts: Block): Ctxl[(Blk, Ctx)] =
+  def importFrom(sts: Block, exports: Ls[BlockMemberSymbol]): Ctxl[(Blk, Ctx)] =
     given UnderCtx = new UnderCtx(N)
     val (res, newCtx) = block(sts, hasResult = false, resultInterp = Trm)
     // TODO handle name clashes
-    if newResolution then rstate.completeBlock(res)
+    if newResolution then
+      InterfaceExposure(this).check(exports, Nil)
+      rstate.completeBlock(res)
     (res, newCtx)
   
   def topLevel(sts: Block): Ctxl[(Blk, Ctx)] =
     given UnderCtx = new UnderCtx(N)
     val (res, ctx) = block(sts, hasResult = false, resultInterp = Trm)
     computeVariances(res)
-    if newResolution then rstate.completeBlock(res)
+    if newResolution then
+      val exports = res.stats.collect:
+        case d: Definition if InterfaceExposure.isPublic(d) => d.bsym
+      val values = res.stats.collect:
+        case DefineVar(sym: LocalVarSymbol, rhs) => Term.SimpleRef(sym)(new Ident(sym.nme).withLocOf(rhs))
+      InterfaceExposure(this).check(exports, res.res :: values)
+      rstate.completeBlock(res)
     (res, ctx)
   
   def computeVariances(s: Statement): Unit =

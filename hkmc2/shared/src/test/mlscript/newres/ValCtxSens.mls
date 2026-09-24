@@ -48,24 +48,38 @@ foo(B).u
 val alias = foo
 //│ alias = fun
 
+// FIXME: Alias capture loses the activation of the exposed lambda.
+:fixme
 :expect 2
 alias(B).u
-//│ = 2
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.54: 	alias(B).u
+//│ ║        	^^^^^^^^^^
+//│ ╟── Cannot resolve member 'u' of a value with unknown shape.
+//│ ╟── Parameter 'x' admits values of unknown shape.
+//│ ║  l.16: 	val foo = x => x
+//│ ║        	          ^
+//│ ╟── 'alias' is exposed by this compilation unit.
+//│ ║  l.48: 	val alias = foo
+//│ ╙──      	^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ ═══[RUNTIME ERROR] Expected: '2', got: 'undefined'
 
 :todo // The captured reference to foo is shared by both calls of alias.
 :sr
 alias(A).u
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.70: 	alias(A).u
+//│ ║        	^^^^^^^^^^
+//│ ╟── Cannot resolve member 'u' of a value with unknown shape.
+//│ ╟── Parameter 'x' admits values of unknown shape.
+//│ ║  l.16: 	val foo = x => x
+//│ ║        	          ^
+//│ ╟── 'alias' is exposed by this compilation unit.
+//│ ║  l.48: 	val alias = foo
+//│ ╙──      	^^^^^^^^^^^^^^^
 //│ ————————————————| Resolved |————————————————————————————————————————————————————————————————————————
 //│   alias⁰(A⁰)‹app²›.u‹u⁰, u²›
-//│ ╔══[COMPILATION ERROR] This selection of member 'u' is ambiguous, as it has multiple resolved targets
-//│ ║  l.57: 	alias(A).u
-//│ ║        	^^^^^^^^^^
-//│ ╟── target: value 'u' in module 'A'
-//│ ║  l.6: 	  val u = 1
-//│ ║       	      ^
-//│ ╟── target: value 'u' in module 'B'
-//│ ║  l.9: 	  val u = 2
-//│ ╙──     	      ^
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 

@@ -39,6 +39,9 @@ keepSecret(SecretPair(2, 3))
 
 :e
 fun rebuildSecret(x) = if x is (SecretPair(_, (q => q + 1))) as result then result
+//│ ╔══[COMPILATION ERROR] This pattern is not supported during shape resolution.
+//│ ║  l.41: 	fun rebuildSecret(x) = if x is (SecretPair(_, (q => q + 1))) as result then result
+//│ ╙──      	                                               ^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] This pattern cannot be matched
 //│ ║  l.41: 	fun rebuildSecret(x) = if x is (SecretPair(_, (q => q + 1))) as result then result
 //│ ║        	                                           ^
@@ -46,6 +49,8 @@ fun rebuildSecret(x) = if x is (SecretPair(_, (q => q + 1))) as result then resu
 //│ ║  l.30: 	class SecretPair(a: Int, val b: Int)
 //│ ║        	                 ^
 //│ ╟── because rebuilding the matched `SecretPair` value requires reading every constructor argument
+//│ ║  l.41: 	fun rebuildSecret(x) = if x is (SecretPair(_, (q => q + 1))) as result then result
+//│ ║        	                                ^^^^^^^^^^
 //│ ╙── Suggestion: mark this parameter with `val` so it becomes accessible
 
 class Test(a, b, c, d, e, f)
@@ -55,50 +60,50 @@ fun test(x) = if x is Test then "ok"
 :e
 fun test(x) = if x is Test(p, q, r, s, t, u) then "ok"
 //│ ╔══[COMPILATION ERROR] This pattern cannot be matched
-//│ ║  l.56: 	fun test(x) = if x is Test(p, q, r, s, t, u) then "ok"
+//│ ║  l.61: 	fun test(x) = if x is Test(p, q, r, s, t, u) then "ok"
 //│ ║        	                           ^
 //│ ╟── because the corresponding parameter `a` is not publicly accessible
-//│ ║  l.51: 	class Test(a, b, c, d, e, f)
+//│ ║  l.56: 	class Test(a, b, c, d, e, f)
 //│ ║        	           ^
 //│ ╟── Suggestion: use a wildcard pattern `_` in this position
 //│ ╙── Suggestion: mark this parameter with `val` so it becomes accessible
 //│ ╔══[COMPILATION ERROR] This pattern cannot be matched
-//│ ║  l.56: 	fun test(x) = if x is Test(p, q, r, s, t, u) then "ok"
+//│ ║  l.61: 	fun test(x) = if x is Test(p, q, r, s, t, u) then "ok"
 //│ ║        	                              ^
 //│ ╟── because the corresponding parameter `b` is not publicly accessible
-//│ ║  l.51: 	class Test(a, b, c, d, e, f)
+//│ ║  l.56: 	class Test(a, b, c, d, e, f)
 //│ ║        	              ^
 //│ ╟── Suggestion: use a wildcard pattern `_` in this position
 //│ ╙── Suggestion: mark this parameter with `val` so it becomes accessible
 //│ ╔══[COMPILATION ERROR] This pattern cannot be matched
-//│ ║  l.56: 	fun test(x) = if x is Test(p, q, r, s, t, u) then "ok"
+//│ ║  l.61: 	fun test(x) = if x is Test(p, q, r, s, t, u) then "ok"
 //│ ║        	                                 ^
 //│ ╟── because the corresponding parameter `c` is not publicly accessible
-//│ ║  l.51: 	class Test(a, b, c, d, e, f)
+//│ ║  l.56: 	class Test(a, b, c, d, e, f)
 //│ ║        	                 ^
 //│ ╟── Suggestion: use a wildcard pattern `_` in this position
 //│ ╙── Suggestion: mark this parameter with `val` so it becomes accessible
 //│ ╔══[COMPILATION ERROR] This pattern cannot be matched
-//│ ║  l.56: 	fun test(x) = if x is Test(p, q, r, s, t, u) then "ok"
+//│ ║  l.61: 	fun test(x) = if x is Test(p, q, r, s, t, u) then "ok"
 //│ ║        	                                    ^
 //│ ╟── because the corresponding parameter `d` is not publicly accessible
-//│ ║  l.51: 	class Test(a, b, c, d, e, f)
+//│ ║  l.56: 	class Test(a, b, c, d, e, f)
 //│ ║        	                    ^
 //│ ╟── Suggestion: use a wildcard pattern `_` in this position
 //│ ╙── Suggestion: mark this parameter with `val` so it becomes accessible
 //│ ╔══[COMPILATION ERROR] This pattern cannot be matched
-//│ ║  l.56: 	fun test(x) = if x is Test(p, q, r, s, t, u) then "ok"
+//│ ║  l.61: 	fun test(x) = if x is Test(p, q, r, s, t, u) then "ok"
 //│ ║        	                                       ^
 //│ ╟── because the corresponding parameter `e` is not publicly accessible
-//│ ║  l.51: 	class Test(a, b, c, d, e, f)
+//│ ║  l.56: 	class Test(a, b, c, d, e, f)
 //│ ║        	                       ^
 //│ ╟── Suggestion: use a wildcard pattern `_` in this position
 //│ ╙── Suggestion: mark this parameter with `val` so it becomes accessible
 //│ ╔══[COMPILATION ERROR] This pattern cannot be matched
-//│ ║  l.56: 	fun test(x) = if x is Test(p, q, r, s, t, u) then "ok"
+//│ ║  l.61: 	fun test(x) = if x is Test(p, q, r, s, t, u) then "ok"
 //│ ║        	                                          ^
 //│ ╟── because the corresponding parameter `f` is not publicly accessible
-//│ ║  l.51: 	class Test(a, b, c, d, e, f)
+//│ ║  l.56: 	class Test(a, b, c, d, e, f)
 //│ ║        	                          ^
 //│ ╟── Suggestion: use a wildcard pattern `_` in this position
 //│ ╙── Suggestion: mark this parameter with `val` so it becomes accessible
@@ -106,7 +111,7 @@ fun test(x) = if x is Test(p, q, r, s, t, u) then "ok"
 :e
 fun test(x) = if x is Test(_, _, _) then "ok"
 //│ ╔══[COMPILATION ERROR] Resolution error in constructor
-//│ ║  l.107: 	fun test(x) = if x is Test(_, _, _) then "ok"
+//│ ║  l.112: 	fun test(x) = if x is Test(_, _, _) then "ok"
 //│ ║         	                      ^^^^^^^^^^^^^
 //│ ╙── Class definition 'Test' expected 6 pattern arguments, but got 3
 
@@ -115,10 +120,10 @@ fun test(x) = if x is Test(_, _, _, _, _, _) then "ok"
 :e
 fun test(x) = if x is Test(_, _, _, a, _, _) then "ok"
 //│ ╔══[COMPILATION ERROR] This pattern cannot be matched
-//│ ║  l.116: 	fun test(x) = if x is Test(_, _, _, a, _, _) then "ok"
+//│ ║  l.121: 	fun test(x) = if x is Test(_, _, _, a, _, _) then "ok"
 //│ ║         	                                    ^
 //│ ╟── because the corresponding parameter `d` is not publicly accessible
-//│ ║  l.51: 	class Test(a, b, c, d, e, f)
+//│ ║  l.56: 	class Test(a, b, c, d, e, f)
 //│ ║        	                    ^
 //│ ╟── Suggestion: use a wildcard pattern `_` in this position
 //│ ╙── Suggestion: mark this parameter with `val` so it becomes accessible
@@ -141,16 +146,16 @@ object A
 :e
 fun foo(x) = if x is A() then 0
 //│ ╔══[COMPILATION ERROR] `A` is an object.
-//│ ║  l.139: 	object A
+//│ ║  l.144: 	object A
 //│ ║         	       ^
 //│ ╟── Its pattern cannot have an argument list.
-//│ ║  l.142: 	fun foo(x) = if x is A() then 0
+//│ ║  l.147: 	fun foo(x) = if x is A() then 0
 //│ ╙──       	                     ^^^
 
 :e
 fun foo(x) = if x is A(y) then y
 //│ ╔══[COMPILATION ERROR] Resolution error in constructor
-//│ ║  l.151: 	fun foo(x) = if x is A(y) then y
+//│ ║  l.156: 	fun foo(x) = if x is A(y) then y
 //│ ║         	                     ^^^^
 //│ ╙── Module/object definition 'A' does not take pattern arguments.
 
@@ -206,7 +211,7 @@ if p is Crazy(a, b, c, d, e, f, g) then
 :re
 if p is Crazy(a, b, c, d, e, f) then 42
 //│ ╔══[COMPILATION ERROR] Expected seven extraction arguments, but found only six arguments.
-//│ ║  l.207: 	if p is Crazy(a, b, c, d, e, f) then 42
+//│ ║  l.212: 	if p is Crazy(a, b, c, d, e, f) then 42
 //│ ╙──       	              ^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] Error: match error
 
@@ -214,7 +219,7 @@ if p is Crazy(a, b, c, d, e, f) then 42
 :re
 if p is Crazy(all) then 42
 //│ ╔══[COMPILATION ERROR] Expected seven extraction arguments, but found only one argument.
-//│ ║  l.215: 	if p is Crazy(all) then 42
+//│ ║  l.220: 	if p is Crazy(all) then 42
 //│ ╙──       	              ^^^
 //│ ═══[RUNTIME ERROR] Error: match error
 

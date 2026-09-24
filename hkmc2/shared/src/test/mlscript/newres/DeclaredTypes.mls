@@ -77,6 +77,7 @@ read(Box(new Item))
 //│ ║  l.74: 	fun read(box: Box) = box.item.extra
 //│ ║        	                     ^^^^^^^^^^^^^^
 //│ ╟── Cannot resolve member 'extra' of a value with unknown shape.
+//│ ╟── The shape of this value is unknown.
 //│ ║  l.74: 	fun read(box: Box) = box.item.extra
 //│ ╙──      	                     ^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
@@ -90,10 +91,11 @@ class Box with
 fun read(box: Box) = box.item().extra
 read(new Box)
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.90: 	fun read(box: Box) = box.item().extra
+//│ ║  l.91: 	fun read(box: Box) = box.item().extra
 //│ ║        	                     ^^^^^^^^^^^^^^^^
 //│ ╟── Cannot resolve member 'extra' of a value with unknown shape.
-//│ ║  l.90: 	fun read(box: Box) = box.item().extra
+//│ ╟── The shape of this value is unknown.
+//│ ║  l.91: 	fun read(box: Box) = box.item().extra
 //│ ╙──      	                     ^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -139,11 +141,11 @@ read(() => Item(42))
 :ge
 fun unused(factory: () -> Int) = factory(1)
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.140: 	fun unused(factory: () -> Int) = factory(1)
+//│ ║  l.142: 	fun unused(factory: () -> Int) = factory(1)
 //│ ║         	                                 ^^^^^^^^^^
 //│ ╟── Function with a declared signature expected 0 arguments, but got 1
-//│ ║  l.140: 	fun unused(factory: () -> Int) = factory(1)
-//│ ╙──       	                    ^^
+//│ ║  l.142: 	fun unused(factory: () -> Int) = factory(1)
+//│ ╙──       	                    ^^^^^^^^^
 
 // A callable annotation also hides extra members of the concrete result.
 :ge
@@ -153,7 +155,7 @@ class Child extends Base with
 fun read(factory: () -> Base) = factory().extra
 read(() => new Child)
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.153: 	fun read(factory: () -> Base) = factory().extra
+//│ ║  l.155: 	fun read(factory: () -> Base) = factory().extra
 //│ ║         	                                ^^^^^^^^^^^^^^^
 //│ ╙── Value of type 'Base' does not contain member 'extra'
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
@@ -167,7 +169,7 @@ fun hidden: (Base) -> Int
 fun hidden(base) = base.extra
 hidden(new Child)
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.167: 	fun hidden(base) = base.extra
+//│ ║  l.169: 	fun hidden(base) = base.extra
 //│ ║         	                   ^^^^^^^^^^
 //│ ╙── Value of type 'Base' does not contain member 'extra'
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
@@ -181,7 +183,7 @@ fun make: () -> Base
 fun make() = new Child
 make().extra
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.182: 	make().extra
+//│ ║  l.184: 	make().extra
 //│ ║         	^^^^^^^^^^^^
 //│ ╙── Value of type 'Base' does not contain member 'extra'
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
@@ -206,15 +208,16 @@ class Box[T]
 type Loop[T] = Loop[Box[T]]
 fun unused(value: Loop[Int]) = value.field
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.207: 	fun unused(value: Loop[Int]) = value.field
+//│ ║  l.209: 	fun unused(value: Loop[Int]) = value.field
 //│ ║         	                               ^^^^^^^^^^^
 //│ ╟── Cannot resolve member 'field' of a value with unknown shape.
-//│ ║  l.207: 	fun unused(value: Loop[Int]) = value.field
+//│ ╟── This abstract type does not specify a member interface.
+//│ ║  l.209: 	fun unused(value: Loop[Int]) = value.field
 //│ ╙──       	                  ^^^^^^^^^
 
 // Type arguments provide callable shapes through the generic parameter.
 :expect 42
-fun invoke[T](value: T) = value()
+private fun invoke[T](value: T) = value()
 invoke[() -> Int](() => 42)
 //│ = 42
 
@@ -226,10 +229,11 @@ class Box(val item)
 fun read(box: Box) = box.Box#item.extra
 read(Box(new Item))
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.226: 	fun read(box: Box) = box.Box#item.extra
+//│ ║  l.229: 	fun read(box: Box) = box.Box#item.extra
 //│ ║         	                     ^^^^^^^^^^^^^^^^^^
 //│ ╟── Cannot resolve member 'extra' of a value with unknown shape.
-//│ ║  l.226: 	fun read(box: Box) = box.Box#item.extra
+//│ ╟── The shape of this value is unknown.
+//│ ║  l.229: 	fun read(box: Box) = box.Box#item.extra
 //│ ╙──       	                     ^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -259,7 +263,7 @@ class Child extends Base with
 fun identity[T](x: T): T = x
 identity[Base](new Child).extra
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.260: 	identity[Base](new Child).extra
+//│ ║  l.264: 	identity[Base](new Child).extra
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╙── Value of type 'Base' does not contain member 'extra'
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
@@ -301,11 +305,11 @@ class Box[T](val value: T)
 (new Box[Base](new Child)).value.extra
 Box[Base](new Child).value.extra
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.301: 	(new Box[Base](new Child)).value.extra
+//│ ║  l.305: 	(new Box[Base](new Child)).value.extra
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╙── Value of type 'Base' does not contain member 'extra'
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.302: 	Box[Base](new Child).value.extra
+//│ ║  l.306: 	Box[Base](new Child).value.extra
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╙── Value of type 'Base' does not contain member 'extra'
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
@@ -348,10 +352,11 @@ class Box with
   val item = new Item
 (new Box as Box).Box#item.extra
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.349: 	(new Box as Box).Box#item.extra
+//│ ║  l.353: 	(new Box as Box).Box#item.extra
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Cannot resolve member 'extra' of a value with unknown shape.
-//│ ║  l.349: 	(new Box as Box).Box#item.extra
+//│ ╟── The shape of this value is unknown.
+//│ ║  l.353: 	(new Box as Box).Box#item.extra
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -365,10 +370,11 @@ module Types with
 fun hidden(module types: Types) = types.Item.extra
 hidden(Types)
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.365: 	fun hidden(module types: Types) = types.Item.extra
+//│ ║  l.370: 	fun hidden(module types: Types) = types.Item.extra
 //│ ║         	                                  ^^^^^^^^^^^^^^^^
 //│ ╟── Cannot resolve member 'extra' of a value with unknown shape.
-//│ ║  l.365: 	fun hidden(module types: Types) = types.Item.extra
+//│ ╟── The shape of this value is unknown.
+//│ ║  l.370: 	fun hidden(module types: Types) = types.Item.extra
 //│ ╙──       	                                  ^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -387,7 +393,7 @@ class Child extends Base with
 fun apply[A](f: A -> A, x: A): A = f(x)
 apply[Base](arg => (arg.extra; arg), new Child)
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.388: 	apply[Base](arg => (arg.extra; arg), new Child)
+//│ ║  l.394: 	apply[Base](arg => (arg.extra; arg), new Child)
 //│ ║         	                    ^^^^^^^^^
 //│ ╙── Value of type 'Base' does not contain member 'extra'
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
@@ -410,7 +416,7 @@ class Child extends Base with
 fun read(xs: [Base, Int]) = xs.0.extra
 read([new Child, 0])
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.410: 	fun read(xs: [Base, Int]) = xs.0.extra
+//│ ║  l.416: 	fun read(xs: [Base, Int]) = xs.0.extra
 //│ ║         	                            ^^^^^^^^^^
 //│ ╙── Value of type 'Base' does not contain member 'extra'
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
@@ -431,10 +437,11 @@ let xs = mut [First(1)]
 set xs.0 = Second(2)
 [...xs].0.first
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.432: 	[...xs].0.first
+//│ ║  l.438: 	[...xs].0.first
 //│ ║         	^^^^^^^^^^^^^^^
 //│ ╟── Cannot resolve member 'first' of a value with unknown shape.
-//│ ║  l.430: 	let xs = mut [First(1)]
+//│ ╟── The shape of this value is unknown.
+//│ ║  l.436: 	let xs = mut [First(1)]
 //│ ╙──       	         ^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ xs = [Second(2)]
@@ -443,10 +450,10 @@ set xs.0 = Second(2)
 :ge
 [1, 2].2
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.444: 	[1, 2].2
+//│ ║  l.451: 	[1, 2].2
 //│ ║         	^^^^^^^^
 //│ ╟── Tuple literal does not contain member '2'
-//│ ║  l.444: 	[1, 2].2
+//│ ║  l.451: 	[1, 2].2
 //│ ╙──       	^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 

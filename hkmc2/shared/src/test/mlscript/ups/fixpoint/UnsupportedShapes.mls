@@ -221,7 +221,7 @@ fun sideGo(x) = if x is @compile SideGo(r) then r else "<no match>"
 //│ ║  l.214: 	pattern SideSum = Pair(Lit(a), Lit(b)) => Lit(a + b)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.215: 	pattern SideCtx(pattern H) = H | Pair(SideCtx(H), SideUnBox)
-//│ ╙──       	^^^^^^^^^^^^^^^
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
 // An alternative that is not a class pattern, so there is no constructor to
@@ -260,7 +260,7 @@ fun arityGo(x) = if x is @compile ArityGo(r) then r else "<no match>"
 //│ ║  l.245: 	pattern AritySum = Pair(Lit(a), Lit(b)) => Lit(a + b)
 //│ ║         	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.246: 	pattern ArityCtx(pattern H) = H | Pair(ArityCtx(H))
-//│ ╙──       	^^^^^^^^^^^^^^^^
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
 // A rewriting alternative placed after one that descends.
