@@ -30,6 +30,9 @@ sealed trait Shape extends ShapeLike:
     case ts: NominalInstanceView => s"NominalInstanceView(${ts.defn.sym.showDbg})"
     case ts: OpaqueTypeShape => s"OpaqueTypeShape(${ts.source.showDbg})"
     case ts: CallableTypeShape => s"CallableTypeShape(${ts.source.showDbg})"
+    case view: ContextualShape => s"ContextualShape(${view.source.shwDbg})"
+    case rigid: RigidTypeShape => s"RigidTypeShape(${rigid.parameter.showDbg})"
+    case flow: ActivatedShape => s"ActivatedShape(${flow.value.shwDbg})"
     case bs: BaseShape => s"BaseShape(${bs.defn.sym.showDbg})"
     case es: ErrShape => es.describe
 
@@ -260,6 +263,7 @@ end TermShape
 /** Missing means definitely absent; Unknown must not be treated as a miss when
   * searching wildcard opens, since it can introduce an additional candidate. */
 enum MemberLookup:
+  case Contextual(source: MemberLookup, instances: Map[VarSymbol, TypeParameterInstance])
   case Found(member: BlockMemberSymbol | RecordMember, marks: Ls[Marks])
   // Declared members expose signatures only. Their marks transport dependent
   // type arguments; they never authorize reading an implementation's value flow.
@@ -270,6 +274,7 @@ enum MemberLookup:
   case Unknown(reason: MemberLookup.Uncertainty, provenance: ShapeProvenance)
   
   def withMarks(marks: Ls[Marks]): MemberLookup = this match
+    case Contextual(source, instances) => Contextual(source.withMarks(marks), instances)
     case Found(member, inner) => Found(member, inner ::: marks)
     case Declared(member, bindings, inner, annotation) => Declared(member, bindings, inner ::: marks, annotation)
     case Indexed(field, inner) => Indexed(field, inner ::: marks)
@@ -278,8 +283,15 @@ enum MemberLookup:
 
   /** The receiver's annotation remains the diagnostic origin when lookup visits a parent. */
   def withAnnotation(annotation: Opt[Term]): MemberLookup = this match
+    case Contextual(source, instances) => Contextual(source.withAnnotation(annotation), instances)
     case Declared(member, bindings, marks, _) => Declared(member, bindings, marks, annotation)
     case _ => this
+
+  def instantiate(instances: Map[VarSymbol, TypeParameterInstance]): MemberLookup =
+    if instances.isEmpty then this else this match
+      case Contextual(source, previous) => Contextual(source, instances ++ previous)
+      case Missing | Unknown(_, _) | Dynamic(_) => this
+      case _ => Contextual(this, instances)
 
 object MemberLookup:
   enum Uncertainty:
@@ -342,6 +354,14 @@ class SymShape(val sym: BlockMemberSymbol, val resSym: FlowSymbol, val markss: L
   def enter(revMarkss: Ls[Marks])(using TL): TermShape | NoShape = ???
   def enter(marks: Marks)(using TL): TermShape | NoShape = ???
 
+/** Deferred overload selection retains the value's binder substitution. */
+final class ContextualSymShape(val source: SymShape, val instances: Map[VarSymbol, TypeParameterInstance])
+extends SymShape(source.sym, source.resSym, source.markss)
+
+/** Symbolic source-flow events carry the same body activation as value events. */
+final class ActivatedSymShape(val source: SymShape, val instances: Map[VarSymbol, TypeParameterInstance])
+extends SymShape(source.sym, source.resSym, source.markss)
+
 /** Keep a declared receiver's boundary while consumers choose between the term,
   * type, and constructor interpretations of the same overload set.
   */
@@ -386,6 +406,26 @@ final case class InstanceShape(tpe: DeclaredType) extends NonAppTermShape:
   def toLoc: Opt[Loc] = tpe.resolution.source.toLoc
   protected def getMemberImpl(name: Str)(using NewResolverState): MemberLookup =
     lastWords("Instance member lookup requires interpreting its type first")
+
+/** A deferred value observation shares its source shape and keeps a flat binder
+  * substitution. Members and function bodies are observed in that same view.
+  */
+final case class ContextualShape(source: NonMarkedShape, instances: Map[VarSymbol, TypeParameterInstance]) extends NonAppTermShape:
+  require(!source.isInstanceOf[ContextualShape], "Compose shape views rather than nesting them")
+  def describe: Str = source.describe
+  def toLoc: Opt[Loc] = source.toLoc
+  override def isInstanceOfClass(cls: ClassLikeDef)(using NewResolverState): Bool = source.isInstanceOfClass(cls)
+  protected def getMemberImpl(name: Str)(using NewResolverState): MemberLookup = source.getMember(name).instantiate(instances)
+
+/** A source-flow event identifies the activation in which its consumer executes.
+  * The value separately retains the caller's type references; these maps cannot
+  * be merged when a recursive callee rebinds the same source parameter.
+  */
+final case class ActivatedShape(value: TermShape, instances: Map[VarSymbol, TypeParameterInstance]) extends NonAppTermShape:
+  def describe: Str = value.describe
+  def toLoc: Opt[Loc] = value.toLoc
+  protected def getMemberImpl(name: Str)(using NewResolverState): MemberLookup =
+    lastWords("Activation events must be unpacked before observing their values")
 
 /** A nominal annotation exposes only declarations, including inherited declarations.
   * In particular, selecting an unannotated field does not inspect its initializer.
@@ -494,15 +534,19 @@ class RefinedShape(val base: TermShape, val refinements: Ls[Str -> Term]) extend
   * lazy. Recursive spreads can have unknown length; retain the known fields around
   * them instead of discarding either those fields or the unresolved possibilities.
   */
-final case class TupleShape(source: Term, elements: Ls[TupleShape.Element])(resolver: NewResolver) extends NonAppTermShape:
+final case class TupleShape(source: Term, elements: Ls[TupleShape.Element],
+    instances: Map[VarSymbol, TypeParameterInstance])(resolver: NewResolver) extends NonAppTermShape:
   def arrayParent(using NewResolverState): NominalInstanceView = resolver.tupleArrayParent(this)
   override def isInstanceOfClass(cls: ClassLikeDef)(using NewResolverState): Bool = arrayParent.isInstanceOfClass(cls)
-  lazy val segments: Ls[TupleShape.Segment] = elements.flatMap:
+  private lazy val sourceSegments: Ls[TupleShape.Segment] = elements.flatMap:
     case segment: TupleShape.Segment => segment :: Nil
     case TupleShape.Rest(_, segments) => segments
     case TupleShape.Spread(shape, marks) => shape.segments.map:
       case field: TupleShape.Fixed => field.withMarks(marks :: Nil)
       case TupleShape.Unknown(source, inner, value) => TupleShape.Unknown(source, inner ::: marks :: Nil, value)
+  lazy val segments: Ls[TupleShape.Segment] = sourceSegments.map:
+    case field: TupleShape.Fixed => field.instantiate(instances)
+    case other => other
   /** Does this candidate already depend on the given producer in the given context?
     * `source` identifies the producer by syntax-node identity; `marks` distinguish
     * its spread contexts. Inspect the selected dependency tree, not flattened
@@ -567,6 +611,17 @@ final case class UnknownValueShape(source: Term)(val provenance: ShapeProvenance
   protected def getMemberImpl(name: Str)(using NewResolverState): MemberLookup =
     MemberLookup.Unknown(MemberLookup.Uncertainty.ValueShape, provenance)
 
+/** A generic definition must be valid without choosing a caller's type. This
+  * checking witness is not an inferred bound on any call-site parameter.
+  */
+final case class RigidTypeShape(parameter: VarSymbol, source: Term) extends NonAppTermShape:
+  def describe: Str = "value of a type parameter"
+  def toLoc: Opt[Loc] = source.toLoc
+  def provenance: ShapeProvenance = ShapeProvenance(
+    msg"Type parameter '${parameter.nme}' does not specify a member interface." -> parameter.toLoc :: Nil)
+  protected def getMemberImpl(name: Str)(using NewResolverState): MemberLookup =
+    MemberLookup.Unknown(MemberLookup.Uncertainty.ValueShape, provenance)
+
 object UnknownValueShape:
   def at(source: Term): UnknownValueShape =
     UnknownValueShape(source)(ShapeProvenance(msg"The shape of this value is unknown." -> source.toLoc :: Nil))
@@ -579,6 +634,8 @@ object UnknownValueShape:
     })
 
 object TupleShape:
+  def apply(source: Term, elements: Ls[Element])(resolver: NewResolver): TupleShape =
+    new TupleShape(source, elements, Map.empty)(resolver)
   sealed trait Element
   sealed trait Segment extends Element
   sealed trait Fixed extends Segment:
@@ -588,6 +645,12 @@ object TupleShape:
       case TypedField(tpe, inner) => TypedField(tpe, inner ::: outer)
       case UnknownField(source, inner) => UnknownField(source, inner ::: outer)
       case ValueField(value, inner) => ValueField(value, inner ::: outer)
+      case ViewedField(source, instances, inner) => ViewedField(source, instances, inner ::: outer)
+    def instantiate(instances: Map[VarSymbol, TypeParameterInstance]): Fixed =
+      if instances.isEmpty then this else this match
+        case ViewedField(source, previous, marks) => ViewedField(source, instances ++ previous, marks)
+        case _ => ViewedField(this, instances, Nil)
+  final case class ViewedField(source: Fixed, instances: Map[VarSymbol, TypeParameterInstance], marks: Ls[Marks]) extends Fixed
   final case class Field(field: Fld, marks: Ls[Marks]) extends Fixed
   final case class ValueField(value: TermShape, marks: Ls[Marks]) extends Fixed
   final case class TypedField(tpe: DeclaredType, marks: Ls[Marks]) extends Fixed
@@ -619,7 +682,8 @@ final case class RecordMember(field: RcdField, mutable: Bool)
   * provenance. Lookup follows runtime's last-write-wins order. Unknown entries
   * are barriers: an opaque spread or computed key can overwrite earlier fields.
   */
-final case class RecordShape(source: Term.Rcd, elements: Ls[RecordShape.Element]) extends NonAppTermShape:
+final case class RecordShape(source: Term.Rcd, elements: Ls[RecordShape.Element],
+    instances: Map[VarSymbol, TypeParameterInstance]) extends NonAppTermShape:
   def describe: Str = "record literal"
   def toLoc: Opt[Loc] = source.toLoc
   protected def getMemberImpl(name: Str)(using NewResolverState): MemberLookup =
@@ -634,22 +698,26 @@ final case class RecordShape(source: Term.Rcd, elements: Ls[RecordShape.Element]
         case _ => unknown(field.field)
       case (unknown: RecordShape.Unknown) :: _ => Unknown(Uncertainty.RecordOverwrite, unknown.provenance)
       case RecordShape.Dynamic(marks) :: _ => Dynamic(marks)
-      case RecordShape.Spread(shape, marks) :: rest => shape.getMember(name) match
-        case Dynamic(inner) => Dynamic(inner ::: marks :: Nil)
-        case Unknown(_, provenance) => Unknown(Uncertainty.RecordOverwrite, provenance)
-        case Missing => loop(rest)
-        case Found(member: RecordMember, inner) =>
-          Found(member.copy(mutable = member.mutable || source.mut), inner ::: marks :: Nil)
-        case Found(_: BlockMemberSymbol, _) | Declared(_, _, _, _) | Indexed(_, _) =>
-          // Record spreads recursively look up RecordShapes, which only create RecordMembers.
-          lastWords("Record lookup returned a nominal member")
-    loop(elements.reverse)
+      case RecordShape.Spread(shape, marks) :: rest =>
+        def spread(info: MemberLookup): Opt[MemberLookup] = info match
+          case Contextual(source, instances) => spread(source).map(_.instantiate(instances))
+          case Dynamic(inner) => S(Dynamic(inner ::: marks :: Nil))
+          case Unknown(_, provenance) => S(Unknown(Uncertainty.RecordOverwrite, provenance))
+          case Missing => N
+          case Found(member: RecordMember, inner) =>
+            S(Found(member.copy(mutable = member.mutable || source.mut), inner ::: marks :: Nil))
+          case Found(_: BlockMemberSymbol, _) | Declared(_, _, _, _) | Indexed(_, _) =>
+            // Record spreads recursively look up RecordShapes, which only create RecordMembers.
+            lastWords("Record lookup returned a nominal member")
+        spread(shape.getMember(name)).getOrElse(loop(rest))
+    loop(elements.reverse).instantiate(instances)
   def containsSpread(record: Term.Rcd, marks: Marks): Bool = elements.exists:
     case RecordShape.Spread(shape, inner) =>
       ((shape.source is record) && inner == marks) || shape.containsSpread(record, marks)
     case _ => false
 
 object RecordShape:
+  def apply(source: Term.Rcd, elements: Ls[Element]): RecordShape = new RecordShape(source, elements, Map.empty)
   enum Element:
     case Field(field: RcdField)
     case Spread(shape: RecordShape, marks: Marks)

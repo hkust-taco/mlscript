@@ -12,10 +12,11 @@ values. Calls through complete callable signatures use the bounded binder-instan
 cache. `DeclaredType.instances` carries a flat substitution through their declared
 components; curried tails retain it, and independently quantified returned callables
 instantiate their own binders. Stored specializations of these callable signatures
-retain supplied arguments until application. Partial and inferred bodies still use
-the earlier inference path. Contextual views of those bodies, bidirectional
-constraints, variance, hole inference, and inferred member interfaces remain to be
-connected to call-site instantiation.
+retain supplied arguments until application. Inline binders on partial and inferred
+functions also instantiate at application sites. Their shared bodies retain flat
+substitutions through deferred tuples, records, callbacks, and closures. This does
+not yet connect constructors, bidirectional constraints, variance, hole inference,
+or inferred nominal member interfaces to call-site instantiation.
 The representation and implementation order below are the outcome of the design
 review, not evidence that the recursive acceptance cases already work.
 See the [resolver notes](new-resolution-design.md)
@@ -113,10 +114,10 @@ domain and result. Interpreting a union for member lookup can observe each
 alternative, while transporting its wrapper preserves the original union node.
 
 This refactor alone does not implement the planned distinction between supplying
-a type argument and adding an ordinary bound. In particular, the current
-`inferTypeArguments` still expands wrappers when inferring from an instance, and
-explicit arguments still suppress ordinary refinement. The proposed constraint
-work must replace these behaviors together.
+a type argument and adding an ordinary bound. `inferTypeArguments` retains wrappers
+when contributing a parameter bound and observes them for structural comparison.
+Explicit arguments still suppress ordinary refinement; the constraint work must
+replace that suppression together with bidirectional flow.
 
 ## Variance rules to implement
 
@@ -278,6 +279,22 @@ For `pair[A](x: A, y) = [x, y]`, the result's first field observes the annotatio
 node under `A -> A_s`; the second subscribes to `y` under the call's marks. A
 closure returning `x` keeps the first reference after the enclosing call returns.
 The body, field nodes, and `y` symbol are shared; only their views differ.
+
+The implemented body transport keeps two substitutions separate. A value such as
+`InstanceShape(A_outer)` retains the caller's type reference. Its flow into a body
+also carries that body's activation, for example `A -> A_inner` at a recursive
+call. `ActivatedShape` records this second map on source-flow events;
+`ContextualShape` and the tuple/record views retain deferred observations of values.
+Dispatch unpacks the activation before performing an operation. Source listeners
+accept all activations; an observation with a chosen substitution accepts only
+compatible activations of its source node. It must not rewrite an already bound
+caller reference to the callee's parameter. `NewResolverState.withInstances`
+memoizes flat activation views that share the consumer's hosts, and `inGraph`
+preserves the incoming activation when selecting an imported listener's graph.
+
+`newres/ContextualInference.mls` exercises separate calls through one stored
+function reference, mixed annotated/inferred tuple and record fields, callbacks,
+and returned closures. These cases use the existing reference marks unchanged.
 
 Generic-body checking observes the source graph with its original abstract
 binders. Call inference observes it with the site's substitution. The abstract
@@ -510,8 +527,11 @@ For the implemented signature views, the substitution map contains only original
 binder keys and canonical instance-symbol values. Composition cannot add a nested
 environment or a compound type to that map. Instantiated callable views are cached
 before installing supplied-argument listeners. This bounds this part of the graph;
-the remaining inferred-body views and recursive alias bindings still need the
-corresponding convergence checks before the full design is complete.
+the activation views similarly use finite binder maps and a fixed base state,
+never chains of activation states. Unit tests check repeated composition and
+imported-view identity, shared consumer hosts, and exporter isolation. Whole-graph
+listener convergence and recursive alias bindings still need the corresponding
+checks before the full design is complete.
 
 During implementation, assert that a call instance's origin is an original binder,
 all of one scheme's binders are allocated before its constraints are activated,

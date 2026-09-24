@@ -88,3 +88,45 @@ class TypeInstantiationTest extends AnyFunSuite:
     assert(right.currentShapes(using second).isEmpty)
     assert(parameter.currentShapes(using source).isEmpty)
     assert(source.allocatedTypeInstanceCount == 0)
+
+  test("activation views compose flatly and share their consumer's hosts"):
+    given owner: Elaborator.State = new Elaborator.State
+    val source = owner.newResolverState
+    val scheme = new TypeResolution(Term.UnitVal(), _ => fail("Unexpected type error"))
+    val parameter = new VarSymbol(new syntax.Tree.Ident("A"))
+    val local = new VarSymbol(new syntax.Tree.Ident("value"))
+    val first = source.instantiateTypeParameters(scheme, FlowSymbol.app(), List(parameter))
+    val second = source.instantiateTypeParameters(scheme, FlowSymbol.app(), List(parameter))
+    val left = source.withInstances(first)
+    val right = source.withInstances(second)
+    (1 to 1000).foreach: _ =>
+      assert(left.withInstances(second) eq right)
+      assert(right.withInstances(first) eq left)
+      assert(left.withInstances(Map.empty) eq source)
+      assert(left.inGraph(right) eq left)
+    assert(local.inferenceHost(using left) eq local.inferenceHost(using right))
+    assert(source.allocatedTypeInstanceCount == 2)
+
+  test("imported activation views retain consumer substitutions without mutating exporter hosts"):
+    given owner: Elaborator.State = new Elaborator.State
+    val source = owner.newResolverState
+    val consumer = new Elaborator.State().newResolverState
+    val other = new Elaborator.State().newResolverState
+    val scheme = new TypeResolution(Term.UnitVal(), _ => fail("Unexpected type error"))
+    val parameter = new VarSymbol(new syntax.Tree.Ident("A"))
+    val local = new VarSymbol(new syntax.Tree.Ident("value"))
+    val sourceSubstitution = source.instantiateTypeParameters(scheme, FlowSymbol.app(), List(parameter))
+    val substitution = consumer.instantiateTypeParameters(scheme, FlowSymbol.app(), List(parameter))
+    local.inferenceHost(using source).publish(UnknownValueShape.at(Term.UnitVal()))(using source)
+    val contextual = consumer.withInstances(substitution)
+    val imported = contextual.inGraph(source.withInstances(sourceSubstitution))
+    assert(imported.instances == substitution)
+    assert(imported.withInstances(Map.empty) eq consumer.inGraph(source))
+    (1 to 1000).foreach: _ =>
+      assert(contextual.inGraph(source) eq imported)
+      assert(imported.inGraph(source) eq imported)
+    local.inferenceHost(using imported).publish(DynShape())(using imported)
+    assert(local.currentShapes(using imported).size == 2)
+    assert(local.currentShapes(using source).size == 1)
+    assert(local.currentShapes(using other.inGraph(source)).size == 1)
+    assert(consumer.allocatedTypeInstanceCount == 1)

@@ -67,11 +67,20 @@ nominal parameters, such as `Foo[A]` containing a `Box[A]`. Generic methods use
 the same flow as free functions, including callback-result inference and curried
 signatures. Declared callable shapes retain their type parameters.
 
-Generic definitions receive a fresh abstract activation when their type parameters
-are declared. This enforces generic opacity independently of visibility, exposure,
-or strict mode. The abstract activation cannot match a concrete caller's exit,
-so concrete calls still substitute into generic results without specializing the
-definition's allowed operations.
+Generic definitions receive a distinct checking activation when their type
+parameters are declared. Its `RigidTypeShape` witnesses enforce generic opacity
+independently of visibility, exposure, or strict mode. Interface observation turns
+a witness into an unknown interface, but call-site inference does not copy that
+witness as a bound. Symbolic references remain available for substitution instead.
+
+Inline explicit binders in partially annotated functions use the same finite
+definition/application-site allocation as complete callable signatures. The
+shared body carries a flat substitution through deferred tuples, records,
+callbacks, and closures. A source-flow event's body activation and its value's
+caller-side type references remain distinct, including when recursion rebinds the
+same original parameter. Contextual observations select compatible activations;
+marks continue to distinguish enclosing callers of a shared inner site. See
+`newres/ContextualInference.mls` for stored-function and deferred-field cases.
 
 ## Declared interfaces and exposure checking
 

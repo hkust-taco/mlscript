@@ -1,0 +1,57 @@
+:.
+
+:expect [1, 2]
+class First(val first: Int)
+class Second(val second: Int)
+class Box[T](val value: T)
+class Foo[X](val f: Box[X])
+private fun test[A](x: Foo[A]) = x.f
+[test(new Foo(new Box(First(1)))).value.first,
+ test(new Foo(new Box(Second(2)))).value.second]
+//│ = [1, 2]
+
+// Both the explicit binder and the unannotated parameter belong to each activation.
+:expect [3, 4, 5, 6]
+class First(val first: Int)
+class Second(val second: Int)
+private fun pair[A](x: A, y) = [x, y]
+private val shared = pair
+let left = shared(First(3), Second(4))
+let right = shared(Second(5), First(6))
+[left.0.first, left.1.second, right.0.second, right.1.first]
+//│ = [3, 4, 5, 6]
+//│ left = [First(3), Second(4)]
+//│ right = [Second(5), First(6)]
+//│ shared = fun pair
+
+// Deferred record fields retain the same view as deferred tuple fields.
+:expect [7, 8]
+class First(val first: Int)
+class Second(val second: Int)
+private fun delayed[A](x: A) = {get: () => x}
+[delayed(First(7)).get().first, delayed(Second(8)).get().second]
+//│ = [7, 8]
+
+// Both deferred record fields must retain their activation after the call returns.
+:expect [9, 10, 11, 12]
+class First(val first: Int)
+class Second(val second: Int)
+private fun pair[A](x: A, y) = {annotated: () => x, inferred: () => y}
+private val shared = pair
+let left = shared(First(9), Second(10))
+let right = shared(Second(11), First(12))
+[left.annotated().first, left.inferred().second, right.annotated().second, right.inferred().first]
+//│ = [9, 10, 11, 12]
+//│ left = {annotated: fun annotated, inferred: fun inferred}
+//│ right = {annotated: fun annotated, inferred: fun inferred}
+//│ shared = fun pair
+
+// A callback call inside the shared body uses the enclosing call's binder view.
+:expect [13, 14]
+class First(val first: Int)
+class Second(val second: Int)
+private fun apply[A](x: A, f) = f(x)
+private val shared = apply
+[shared(First(13), x => x.first), shared(Second(14), x => x.second)]
+//│ = [13, 14]
+//│ shared = fun apply
