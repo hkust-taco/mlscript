@@ -106,13 +106,34 @@ declare class Class
 //    declare class Array[T](val length: Int): Array[T]
 // but this made instance checks wrongly use `Array.class`;
 // TODO: handle Array and other JS classes that can be instantiated without `new` specially in codegen.
-declare class Array[T]
+declare class Array[T] with
+  val length: Int
+  fun join(...separators): Str
+  fun reverse(): Array[T]
+  fun sort(...compare): Array[T]
+  fun slice(...bounds): Array[T]
+  fun push(...items): Int
+  fun unshift(...items): Int
+  fun pop(): T | undefined
+  fun shift(): T | undefined
+  fun concat(...arrays): Array[Any]
+  // These declarations retain the input element interface. Until method-level
+  // generic instantiation is supported, mapped results expose only Any.
+  fun map(f: (T, Int, Array[T]) -> Any): Array[Any]
+  fun forEach(f: (T, Int, Array[T]) -> Any): undefined
+  fun filter(f: (T, Int, Array[T]) -> Bool): Array[T]
+  fun every(f: (T, Int, Array[T]) -> Bool): Bool
+  fun some(f: (T, Int, Array[T]) -> Bool): Bool
+  fun indexOf(value: T, ...from): Int
+  fun lastIndexOf(value: T, ...from): Int
+  fun includes(value: T, ...from): Bool
+  fun toString(): Str
 declare module Array with
   fun
     from
     concat
     isArray
-    prototype
+  val prototype: Array[Any]
 
 declare class Symbol
 declare module Symbol with

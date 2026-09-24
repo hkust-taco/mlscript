@@ -99,6 +99,8 @@ class NewResolver:
         case UnitVal() => result.publish(TypeShape.Unit)
         case SimpleRef(sym: VarSymbol) if sym.decl.exists(_.isInstanceOf[TyParam]) =>
           result.publish(TypeShape.Parameter(sym))
+        case Ref(sym: VarSymbol) if sym.decl.exists(_.isInstanceOf[TyParam]) =>
+          result.publish(TypeShape.Parameter(sym))
         case Tup(fields) if fields.forall(_.isInstanceOf[Fld]) =>
           result.publish(TypeShape.Tuple(fields.collect { case Fld(_, sign, _) => typeResolution(sign) }))
         case _: WildcardTy | _: Neg | _: Rcd | _: Tup | _: Lit | Missing | Error() =>
@@ -173,6 +175,7 @@ class NewResolver:
             def next(res: TypeResolution): Unit = follow(declaredType(res, current.bindings), Nil, aliases, publish)
             shape match
               case TypeShape.Dynamic => publish(DynShape())
+              case TypeShape.Inferred(value) => publish(value)
               case TypeShape.Nominal(defn) =>
                 val bindings = bind(defn.tparams)
                 defn.ext match
@@ -219,7 +222,7 @@ class NewResolver:
                   S(declaredType(ret, current.bindings))))
               case TypeShape.Tuple(fields) =>
                 publish(TupleShape(current.resolution.source,
-                  fields.map(field => TupleShape.TypedField(declaredType(field, current.bindings), Nil))))
+                  fields.map(field => TupleShape.TypedField(declaredType(field, current.bindings), Nil)))(this))
               case TypeShape.Union(left, right) => next(left); next(right)
               case TypeShape.Intersection(left, right) => next(left); next(right)
               case TypeShape.Unit | TypeShape.Abstract => publish(OpaqueTypeShape(tpe.resolution.source))
@@ -249,6 +252,14 @@ class NewResolver:
     case S(p: Param) => p.sign
     case _ => td.resultSignature
 
+  private val capturedTypes = mutable.Map.empty[(DeclaredType, TermSymbol), DeclaredType]
+  private def captureType(bound: DeclaredType, scope: TermSymbol): DeclaredType =
+    capturedTypes.getOrElseUpdate((bound, scope), {
+      val captured = new TypeResolution(bound.resolution.source, bound.resolution.fail)
+      captured.publish(TypeShape.Captured(bound.resolution, scope))
+      declaredType(captured, bound.bindings)
+    })
+
   private def listenDeclaredMember(member: BlockMemberSymbol, bindings: Map[VarSymbol, DeclaredType], flow: FlowSymbol,
       source: Term, selected: DefinitionSymbol[?] => Unit)(listener: TermShape => Unit): Unit =
     member.onComplete: () =>
@@ -265,13 +276,24 @@ class NewResolver:
             exited match
               case value: TermShape => listener(value)
               case NoShape => ()
-          val result = resultSignature(td).map(sign => declaredType(typeResolution(sign), bindings))
+          def signature(sign: Term): DeclaredType =
+            // Legacy annotations have plain references instead of Capture nodes.
+            // Rebase substituted class parameters into this member's scope, just
+            // as a new-resolution Capture does, before the member exits it.
+            val legacyParameters = mutable.Set.empty[VarSymbol]
+            def visit(term: Term): Unit = term match
+              case Ref(symbol: VarSymbol) if bindings.contains(symbol) => legacyParameters += symbol
+              case _ => term.subTerms.foreach(visit)
+            if !td.tsym.decl.exists(_.isInstanceOf[Param]) then visit(sign)
+            val scopedBindings = bindings.map: (symbol, bound) =>
+              symbol -> (if legacyParameters(symbol) then captureType(bound, td.tsym) else bound)
+            declaredType(typeResolution(sign), scopedBindings)
+          val result = resultSignature(td).map(signature)
           if td.sign.nonEmpty && (td.k is syntax.Fun) && !td.flags.hasResultAnnotation then
-            listenTypeValues(declaredType(typeResolution(td.sign.get), bindings))(publish)
+            listenTypeValues(signature(td.sign.get))(publish)
           else if td.params.nonEmpty then
             publish(CallableTypeShape(source,
-              td.params.map(ps => DeclaredParams(ps.params.map(_.sign.map(sign =>
-                declaredType(typeResolution(sign), bindings))), ps.restParam.nonEmpty)), result))
+              td.params.map(ps => DeclaredParams(ps.params.map(_.sign.map(signature)), ps.restParam.nonEmpty)), result))
           else result match
             case S(tpe) => listenTypeValues(tpe)(publish)
             case N => publish(UnknownValueShape(source))
@@ -356,15 +378,17 @@ class NewResolver:
               case _ => softAssert(false, "A type parameter received a symbolic overload set")
             param.sym.shapeListeners += receive
             param.sym.shapes.foreach(receive)
+          def constrainNominal(nominal: NominalTypeShape): Unit =
+            if nominal.defn is cls then cls.tparams.zip(args).foreach: (param, pattern) =>
+              nominal.bindings.get(param.sym).foreach: bound =>
+                listenTypeValues(bound): shape =>
+                  shape.exit(context) match
+                    case actual: TermShape => inferTypeArguments(pattern, actual, marks)
+                    case NoShape => ()
           head match
             case ds: DefnShape if ds.clsDef.contains(cls) => cls.tparams.zip(args).foreach(constrain)
-            case nominal: NominalTypeShape if nominal.defn is cls =>
-              cls.tparams.zip(args).foreach: (param, pattern) =>
-                nominal.bindings.get(param.sym).foreach: bound =>
-                  listenTypeValues(bound): shape =>
-                    shape.exit(context) match
-                      case actual: TermShape => inferTypeArguments(pattern, actual, marks)
-                      case NoShape => ()
+            case nominal: NominalTypeShape => constrainNominal(nominal)
+            case tuple: TupleShape => constrainNominal(tuple.arrayParent)
             case _ => ()
         case _ => () // Concrete annotations are opaque, irrespective of the argument value.
     // Alias expansion guards only unproductive cycles. Descending into a tuple,
@@ -393,13 +417,24 @@ class NewResolver:
         case Marked(callable: CallableTypeShape, expectedContext) => remaining match
           case (params, _) :: tail =>
             val declared = callable.paramLists.head
-            if declared.params.length != params.params.length || declared.hasRest != params.restParam.nonEmpty then
+            if declared.params.length < params.params.length
+                || (declared.params.length > params.params.length && params.restParam.isEmpty)
+                || (declared.hasRest && params.restParam.isEmpty) then
               resolError(expected.resolution.source, msg"Callback parameter list does not match its declared function type." -> actual.toLoc :: Nil)
             else
               params.params.zip(declared.params).foreach: (param, sign) =>
                 sign.foreach: tpe =>
                   listenTypeValues(tpe): shape =>
                     constrainParameter(param, shape.exit(expectedContext).enter(context), context)
+              params.restParam.foreach: rest =>
+                val fields = declared.params.drop(params.params.length).map:
+                  case S(tpe) => TupleShape.TypedField(tpe, Nil)
+                  case N => TupleShape.UnknownField(callable.source, Nil)
+                val suffix = if declared.hasRest
+                  then TupleShape.Unknown(callable.source, Nil, UnknownValueShape(callable.source)) :: Nil
+                  else Nil
+                val tuple = TupleShape(callable.source, fields ::: suffix)(this)
+                constrainParameter(rest, tuple.exit(expectedContext).enter(context), context)
               callable.result.foreach: ret =>
                 tail match
                   case Nil => results: shape =>
@@ -441,6 +476,28 @@ class NewResolver:
       case Marked(callable: CallableTypeShape, _) =>
         callable.result.foreach(listenSignatureResult(_, count - 1)(listener))
       case _ => ()
+
+  private val tupleArrayParents = mutable.Map.empty[TupleShape, NominalTypeShape]
+  /** A tuple is an Array whose element argument is the union of its field shapes.
+    * Cache the parent before following fields: a recursive tuple can require its
+    * own Array interface while one of those fields is still being resolved.
+    */
+  private[semantics] def tupleArrayParent(tuple: TupleShape): NominalTypeShape =
+    tupleArrayParents.get(tuple) match
+      case S(parent) => parent
+      case N =>
+        val cls = prelude.builtins.Array.defn.get
+        softAssert(cls.tparams.length == 1, "The builtin Array must have one element type parameter")
+        val elements = new TypeResolution(tuple.source, messages => resolError(tuple.source, messages))
+        val parent = NominalTypeShape(cls, Map(cls.tparams.head.sym -> declaredType(elements, Map.empty)), N)
+        tupleArrayParents(tuple) = parent
+        tuple.segments.foreach:
+          case field: TupleShape.Fixed => listenTupleField(field): value =>
+            elements.publish(TypeShape.Inferred(value))
+          case TupleShape.Unknown(_, marks, value) => value.exit(marks) match
+            case value: TermShape => elements.publish(TypeShape.Inferred(value))
+            case NoShape => ()
+        parent
 
   private def listenTupleField(field: TupleShape.Fixed)(listener: TermShape => Unit): Unit =
     def receive(shape: TermShape): Unit = shape.exit(field.marks) match
@@ -518,7 +575,7 @@ class NewResolver:
               val suffix = drop(rest, count, false)
               if approximate then TupleShape.Unknown(tuple.source, Nil, UnknownValueShape(tuple.source)) :: suffix else suffix
         val remaining = drop(segments, expectedCount, true)
-        val rest = if expectedCount == 0 then tuple else TupleShape(tuple.source, TupleShape.Rest(tuple, remaining) :: Nil)
+        val rest = if expectedCount == 0 then tuple else TupleShape(tuple.source, TupleShape.Rest(tuple, remaining) :: Nil)(this)
         publish(expectedCount, rest.exit(marks).enter(mss))
     checkArgumentArity(args, expectedCount, hasRest, src, funSh):
       case (tuple, marks) => matchSegments(tuple, marks)
@@ -1194,10 +1251,10 @@ class NewResolver:
         listener(shape)
     case Mut(underlying: Tup) => listenTerm(underlying):
       case Marked(tuple: TupleShape, marks) =>
-        val fields = tuple.segments.map:
-          case _: TupleShape.Fixed => TupleShape.UnknownField(trm, Nil)
-          case unknown: TupleShape.Unknown => unknown
-        TupleShape(trm, TupleShape.Rest(tuple, fields) :: Nil).exit(marks) match
+        // Array methods can change both the elements and the length. Retain the
+        // producer dependency, but none of the initializer's fixed layout.
+        val fields = TupleShape.Unknown(trm, Nil, UnknownValueShape(trm)) :: Nil
+        TupleShape(trm, TupleShape.Rest(tuple, fields) :: Nil)(this).exit(marks) match
           case shape: TermShape => listener(shape)
           case NoShape => ()
       case shape => listener(shape)
@@ -1211,7 +1268,7 @@ class NewResolver:
             val shape = reversed match
               case TupleShape.Spread(shape, NoMarks) :: Nil => shape
               case TupleShape.Spread(shape, marks: SomeMarks) :: Nil => MarkedShape(shape, marks)
-              case _ => TupleShape(tuple, reversed.reverse)
+              case _ => TupleShape(tuple, reversed.reverse)(this)
             publish(shape)
           case (field: Fld) :: rest => expand(rest, TupleShape.Field(field, Nil) :: reversed)
           case Spd(_, term) :: rest =>
@@ -1228,16 +1285,16 @@ class NewResolver:
                   // Earlier candidates remain valid alternatives. A pending spread
                   // never reaches this branch: it waits for a shape notification.
                   val spread = if shape.containsSpread(shape.source, marks)
-                    then TupleShape.unknown(shape.source)
+                    then TupleShape.unknown(shape.source)(this)
                     else shape
                   expand(rest, TupleShape.Spread(spread, marks) :: reversed)
                 case Marked(_: DynShape, marks) =>
-                  val spread = TupleShape(term, TupleShape.Unknown(term, Nil, DynShape()) :: Nil)
+                  val spread = TupleShape(term, TupleShape.Unknown(term, Nil, DynShape()) :: Nil)(this)
                   expand(rest, TupleShape.Spread(spread, marks) :: reversed)
                 case Marked(_, marks) =>
                   // Opaque iterables (e.g. external Arrays) have no resolved
                   // element layout. Their runtime spread is still permitted.
-                  expand(rest, TupleShape.Spread(TupleShape.unknown(term), marks) :: reversed)
+                  expand(rest, TupleShape.Spread(TupleShape.unknown(term)(this), marks) :: reversed)
         expand(tuple.fields, Nil)
     case record: Rcd => listenAggregate(record, listener): publish =>
         def expand(stats: Ls[Statement], reversed: Ls[RecordShape.Element]): Unit = stats match

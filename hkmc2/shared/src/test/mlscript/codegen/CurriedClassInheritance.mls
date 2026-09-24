@@ -1,3 +1,4 @@
+:.
 :js
 
 
@@ -7,7 +8,7 @@ class Foo(val x)(val y)
 :sjs
 class Bar(val a)(val d) extends Foo(a)
 //│ ╔══[COMPILATION ERROR] Extending a partially applied class is not supported
-//│ ║  l.8: 	class Bar(val a)(val d) extends Foo(a)
+//│ ║  l.9: 	class Bar(val a)(val d) extends Foo(a)
 //│ ╙──     	                                ^^^^^^
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let Bar1;
@@ -36,8 +37,15 @@ let b = Bar(123)(1234)
 b.a
 //│ = 123
 
+:ge
 :re
 let c = b(100)
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.42: 	let c = b(100)
+//│ ║        	        ^^^^^^
+//│ ╟── Instance of class constructor 'Bar' cannot receive more argument lists.
+//│ ║  l.34: 	let b = Bar(123)(1234)
+//│ ╙──      	        ^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] TypeError: b is not a function
 //│ c = undefined
 
@@ -47,11 +55,30 @@ c.a
 
 :fixme
 Bar(123)(1234)(100).a
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.57: 	Bar(123)(1234)(100).a
+//│ ║        	^^^^^^^^^^^^^^^^^^^
+//│ ╟── Instance of class constructor 'Bar' cannot receive more argument lists.
+//│ ║  l.57: 	Bar(123)(1234)(100).a
+//│ ╙──      	^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] TypeError: baseCall is not a function
 
+:ge
 :re
 [c.x, c.y]
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'x')
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.68: 	[c.x, c.y]
+//│ ║        	 ^^^
+//│ ╟── Instance of class constructor 'Bar' does not contain member 'x'
+//│ ║  l.42: 	let c = b(100)
+//│ ╙──      	        ^^^^^^
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.68: 	[c.x, c.y]
+//│ ║        	      ^^^
+//│ ╟── Instance of class constructor 'Bar' does not contain member 'y'
+//│ ║  l.42: 	let c = b(100)
+//│ ╙──      	        ^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 let b0 = Bar
 //│ b0 = fun Bar { class: class Bar }
@@ -59,9 +86,16 @@ let b0 = Bar
 let b1 = b0(123)
 //│ b1 = fun
 
+:ge
 :re
 b1.a
-//│ ═══[RUNTIME ERROR] Error: Access to required field 'a' yielded 'undefined'
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.91: 	b1.a
+//│ ║        	^^^^
+//│ ╟── Instance of class constructor 'Bar' does not contain member 'a'
+//│ ║  l.86: 	let b1 = b0(123)
+//│ ╙──      	         ^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 let b = b1(1234)
 //│ b = Bar(123)
@@ -69,8 +103,15 @@ let b = b1(1234)
 b.a
 //│ = 123
 
+:ge
 :re
 let c = b(100)
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.108: 	let c = b(100)
+//│ ║         	        ^^^^^^
+//│ ╟── Instance of class constructor 'Bar' cannot receive more argument lists.
+//│ ║  l.100: 	let b = b1(1234)
+//│ ╙──       	        ^^^^^^^^
 //│ ═══[RUNTIME ERROR] TypeError: b2 is not a function
 //│ c = undefined
 
@@ -78,9 +119,22 @@ let c = b(100)
 c.a
 //│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'a')
 
+:ge
 :re
 [c.x, c.y]
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'x')
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.124: 	[c.x, c.y]
+//│ ║         	 ^^^
+//│ ╟── Instance of class constructor 'Bar' does not contain member 'x'
+//│ ║  l.108: 	let c = b(100)
+//│ ╙──       	        ^^^^^^
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.124: 	[c.x, c.y]
+//│ ║         	      ^^^
+//│ ╟── Instance of class constructor 'Bar' does not contain member 'y'
+//│ ║  l.108: 	let c = b(100)
+//│ ╙──       	        ^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
 class Baz(a)(val d) extends Foo(a)(a + 1)
@@ -88,8 +142,15 @@ class Baz(a)(val d) extends Foo(a)(a + 1)
 let b = Baz(123)(1234)
 //│ b = Baz(_)
 
+:ge
 :re
 let c = b(100)
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.147: 	let c = b(100)
+//│ ║         	        ^^^^^^
+//│ ╟── Instance of class constructor 'Baz' cannot receive more argument lists.
+//│ ║  l.142: 	let b = Baz(123)(1234)
+//│ ╙──       	        ^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] TypeError: b3 is not a function
 //│ c = undefined
 

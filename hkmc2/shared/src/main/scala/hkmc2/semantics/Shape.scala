@@ -451,7 +451,9 @@ class RefinedShape(val base: TermShape, val refinements: Ls[Str -> Term]) extend
   * lazy. Recursive spreads can have unknown length; retain the known fields around
   * them instead of discarding either those fields or the unresolved possibilities.
   */
-final case class TupleShape(source: Term, elements: Ls[TupleShape.Element]) extends NonAppTermShape:
+final case class TupleShape(source: Term, elements: Ls[TupleShape.Element])(resolver: NewResolver) extends NonAppTermShape:
+  def arrayParent: NominalTypeShape = resolver.tupleArrayParent(this)
+  override def isInstanceOfClass(cls: ClassLikeDef): Bool = arrayParent.isInstanceOfClass(cls)
   lazy val segments: Ls[TupleShape.Segment] = elements.flatMap:
     case segment: TupleShape.Segment => segment :: Nil
     case TupleShape.Rest(_, segments) => segments
@@ -482,10 +484,12 @@ final case class TupleShape(source: Term, elements: Ls[TupleShape.Element]) exte
         case (field: TupleShape.Fixed) :: tail =>
           if index == 0 then MemberLookup.Indexed(field, Nil) else loop(tail, index - 1)
         case (_: TupleShape.Unknown) :: _ =>
-          MemberLookup.Unknown(MemberLookup.Uncertainty.ValueShape, toLoc)
+          // The position is a valid array operation even when a spread or
+          // mutation has erased the element layout. Its value remains unknown.
+          MemberLookup.Indexed(TupleShape.UnknownField(source, Nil), Nil)
         case Nil => MemberLookup.Missing
       loop(segments, index)
-    case _ => MemberLookup.Missing
+    case _ => arrayParent.getMember(name)
 
 /** Values whose members and call results are deliberately checked only at runtime.
   * Unlike UnknownValueShape, this authorizes dynamic operations; it is introduced
@@ -526,7 +530,8 @@ object TupleShape:
     * shape was lost through widening; `source` supplies diagnostic locations. */
   final case class Unknown(source: Term, marks: Ls[Marks], value: NonMarkedShape) extends Segment
   final case class Spread(shape: TupleShape, marks: Marks) extends Element
-  def unknown(source: Term): TupleShape = TupleShape(source, Unknown(source, Nil, UnknownValueShape(source)) :: Nil)
+  def unknown(source: Term)(resolver: NewResolver): TupleShape =
+    TupleShape(source, Unknown(source, Nil, UnknownValueShape(source)) :: Nil)(resolver)
   /** Retain the original candidate as well as the selected residual segments:
     * flattening away the parent would hide recursive producer dependencies from
     * containsSpread, allowing recursion through rest slicing to evade widening. */

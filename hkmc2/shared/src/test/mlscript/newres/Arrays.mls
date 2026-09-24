@@ -1,0 +1,109 @@
+:.
+
+// Tuples retain indexed fields while inheriting the declared Array interface.
+:expect [3, "1-2-3", 2]
+let xs = [1, 2, 3]
+[xs.length, xs.join("-"), xs.1]
+//│ = [3, "1-2-3", 2]
+//│ xs = [1, 2, 3]
+
+// A tuple is also an instance of the Array class for pattern transfer.
+:expect 3
+let xs = [1, 2, 3]
+if xs is Array then xs.length else 0
+//│ = 3
+//│ xs = [1, 2, 3]
+
+// Inherited callbacks receive the union of the tuple's element shapes.
+:expect [2, 3]
+class Item(val value: Int)
+[Item(1), Item(2)].map((item, ...) => item.value + 1)
+//│ = [2, 3]
+
+// Declared tuple element types remain opaque through the Array interface.
+:ge
+class Base
+class Child extends Base with
+  val extra = 1
+fun read(xs: [Base]) = xs.map((item, ...) => item.extra)
+read([new Child])
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.28: 	fun read(xs: [Base]) = xs.map((item, ...) => item.extra)
+//│ ║        	                                             ^^^^^^^^^^
+//│ ╙── Value of type 'Base' does not contain member 'extra'
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// Mutable arrays expose methods without claiming their initial elements persist.
+:expect [3, "2,1,3", 3]
+let xs = mut [1, 2]
+xs.reverse()
+let size = xs.push(3)
+[size, xs.join(), xs.2]
+//│ = [3, "2,1,3", 3]
+//│ size = 3
+//│ xs = [2, 1, 3]
+
+// Array results retain their declared instance interface.
+:expect "2,3"
+[1, 2].map((x, ...) => x + 1).join()
+//│ = "2,3"
+
+// Tuple element inference must remain separate across function activations.
+:expect [[1], [2]]
+class First(val first: Int)
+class Second(val second: Int)
+fun singleton(x) = [x]
+[singleton(First(1)).map((x, ...) => x.first),
+ singleton(Second(2)).map((x, ...) => x.second)]
+//│ = [[1], [2]]
+
+// Inheriting Array does not authorize arbitrary properties.
+:ge
+[1].nonexistent
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.62: 	[1].nonexistent
+//│ ║        	^^^^^^^^^^^^^^^
+//│ ╟── Tuple literal does not contain member 'nonexistent'
+//│ ║  l.62: 	[1].nonexistent
+//│ ╙──      	^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// Nominal argument inference sees the tuple's Array supertype.
+:expect [4]
+class Item(val value: Int)
+fun values[A](xs: Array[A]) = xs.map((item, ...) => item.value)
+values([Item(4)])
+//│ = [4]
+
+// Rest callback parameters retain the remaining argument tuple.
+:expect [3, 4]
+[10, 20].map((item, ...rest) => rest.0 + rest.1.length + 1)
+//│ = [3, 4]
+
+// Fixed callbacks must accept all three arguments supplied by Array.map.
+:ge
+[1].map(x => x)
+//│ ╔══[COMPILATION ERROR] Resolution error in function type
+//│ ║  l.121: 	  fun map(f: (T, Int, Array[T]) -> Any): Array[Any]
+//│ ║         	             ^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Callback parameter list does not match its declared function type.
+//│ ║  in Arrays.mls:85
+//│ ║  l.85: 	[1].map(x => x)
+//│ ╙──      	        ^
+//│ ═══[RUNTIME ERROR] Error: Function expected 1 argument but got 3
+
+// Mutable arrays do not propagate stale initializer element shapes to callbacks.
+:ge
+class Original(val original: Int)
+class Replacement(val replacement: Int)
+let xs = mut [Original(1)]
+set xs.0 = Replacement(2)
+xs.map((x, ...) => x.original)
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.101: 	xs.map((x, ...) => x.original)
+//│ ║         	                   ^^^^^^^^^^
+//│ ╟── Cannot resolve member 'original' of a value with unknown shape.
+//│ ║  l.99: 	let xs = mut [Original(1)]
+//│ ╙──      	         ^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ xs = [Replacement(2)]

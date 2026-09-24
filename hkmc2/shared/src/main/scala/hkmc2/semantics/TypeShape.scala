@@ -16,6 +16,10 @@ enum TypeShape:
   case Function(params: Term, result: TypeResolution)
   case Applied(base: TypeResolution, args: Ls[TypeResolution])
   case Parameter(symbol: VarSymbol)
+  // Synthesized generic arguments can retain inferred value shapes, for example
+  // the element union of the Array supertype of a tuple. Written annotations
+  // never introduce this case by inspecting their implementation.
+  case Inferred(value: TermShape)
   case Captured(base: TypeResolution, thru: AnyDefinitionSymbol)
   case Unit
   case Dynamic
