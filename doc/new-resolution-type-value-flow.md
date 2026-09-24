@@ -116,7 +116,10 @@ variance semantics, not its fresh inference-variable implementation.
 
 An experimental implementation made `appendTyped` propagate elements into an
 initially empty mutable array and passed the existing declaration worksheets.
-However, this recursive example exposed an activation-correlation failure:
+However, this recursive example exposed an activation-correlation failure.
+It is retained as a `:fixme` regression in
+[`newres/MutableArrays.mls`](../hkmc2/shared/src/test/mlscript/newres/MutableArrays.mls)
+(the recursive `append` block, immediately after `appendTyped`):
 
 ```mlscript
 class Item(val value: Int)
@@ -130,7 +133,11 @@ xs.0.value
 The experiment reported an unknown element type originating from the generic
 body's abstract activation of `A`. That candidate must remain confined to that
 abstract activation. The experimental bound-copying implementation is not part
-of the retained compiler changes.
+of the retained compiler changes. On the committed resolver, the regression
+currently fails earlier: `xs.0.value` has no resolved target because generic
+array input propagation is still missing. Its expected result is `5`; the
+current golden output does not reproduce the discarded prototype's unknown-type
+diagnostic.
 
 The failure comes from independently applying an existing capture path and its
 reverse to already expanded candidates. Write `enter(f, s)` and `exit(f, s)` for

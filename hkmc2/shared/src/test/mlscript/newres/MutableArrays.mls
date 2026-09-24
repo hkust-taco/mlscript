@@ -240,3 +240,20 @@ xs.0.value
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ ═══[RUNTIME ERROR] Expected: '3', got: 'undefined'
 //│ xs = [Item(3)]
+
+// TODO: recursive generic input/output constraints must preserve caller activations.
+// This also needs the element propagation exercised by appendTyped above.
+:fixme
+:expect 5
+class Item(val value: Int)
+fun append[A](xs: Array[A], value: A, n: Int) =
+  if n > 0 then append(xs, value, n - 1) else xs.push(value)
+let xs = mut []
+append(xs, Item(5), 2)
+xs.0.value
+//│ ╔══[COMPILATION ERROR] This selection of member 'value' has no resolved target
+//│ ║  l.253: 	xs.0.value
+//│ ╙──       	^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ ═══[RUNTIME ERROR] Expected: '5', got: 'undefined'
+//│ xs = [Item(5)]
