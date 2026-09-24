@@ -5,6 +5,7 @@ module GenericLibrary with
   fun identity[A](x: A): A = x
   class Methods with
     fun identity[A](x: A): A = x
+    fun inferred[A](x: A) = x
   val known = identity(Known(3))
   val mapped = [Known(4)].map((item, ...) => Known(5))
   fun inferred[A](x: A) = x

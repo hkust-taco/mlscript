@@ -133,20 +133,27 @@ permit indexed access with an unknown result, without authorizing arbitrary memb
 Generic methods use the same marked parameter flow as generic free functions,
 including explicit arguments, callback-result inference, and curried signatures.
 `Array.map[U]` returns `Array[U]`. Declared callable shapes retain their type
-parameters; consumer inference for imported parameters uses resolver-local hosts
-instead of mutating shared declarations. Existing candidates on imported parameter
-symbols remain readable. `newres/GenericMethods.mls` covers both local and imported
-methods, and a compiler-cache regression checks that consumers leave the prelude
-parameter's candidates and listeners unchanged.
+parameters. `NewResolverState` owns the inference graph and caches. Listeners have
+type `TermShape => NewResolverState ?=> Unit`, so imported callbacks resolve hosts
+through the consuming state. Importing touches only the accessed hosts: their
+candidates and listeners are copied lazily, and caches consult individual source
+entries on demand. Type-parameter references retain their originating host, so
+exporter-private inference on third-party parameters survives re-exporting without
+copying or enumerating whole resolver maps. Legacy annotation interpretations
+also stay local instead of attaching consumer callbacks to shared prelude syntax.
+Completion seals each file or diff-test block's recorded decisions and the original
+host data read by erasure/lowering. Symbol flow and elimination listeners remain
+active against private host data; they cannot change completed reference targets,
+even between blocks sharing the same elaborator state.
 
-This is not yet general import of an inferred flow graph. The same worksheet keeps
-explicit `:fixme` regressions for an exported mapped array whose argument lives in
-the defining resolver's local host, and an imported generic function with an
-inferred result dependent on its parameter. Both currently lose the result shape.
-Transporting those dependencies requires the pending listener/flow-graph design;
-copying only candidates is insufficient, and copied closures would still reference
-the defining resolver. A third regression records a capture assertion when a map
-callback reads a constructor field in a module initializer.
+`newres/GenericMethods.mls` now covers exported mapped arrays and imported generic
+functions and methods with inferred results. Compiler-cache tests check independent
+consumers and unchanged source candidates, listeners, and legacy annotations.
+Publisher tests cover cycles, reentrant replay, transitive private inference, and
+bounded copying in the presence of unrelated exporter hosts.
+The external-identity case in `newres/NestedModules.mls` also passes. A remaining
+`:fixme` records a capture assertion when a map callback reads a constructor field
+in a module initializer, before importing comes into play.
 
 Array declarations remain incomplete: `concat` returns `Array[Any]` because its
 rest arguments currently have no declared element constraint. This does not infer
@@ -392,7 +399,7 @@ These changes also fix the sibling-subclass field-extraction regression in
 - `ctest`: all 47 selected compilation tests pass.
 - `catest`: all 20 application compilation fixtures pass in their existing mode.
 - `cwtest`: the WASM compilation fixture passes.
-- `hkmc2AllTests/test`: all 946 tests pass, including 708 main tests, 18 application
+- `hkmc2AllTests/test`: all 951 tests pass, including 708 main tests, 18 application
   tests, and 22 WASM tests. The main count includes directory configurations and
   new-resolution regressions; it is not a count of migrated worksheets.
 - All retained ports have reviewed goldens. Deferred worksheets retain their

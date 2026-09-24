@@ -159,11 +159,25 @@ callid1(Predef)
 //│ | appShape: td.body = Some(Ref(x))
 //│ | listenTerm: trm = x⁰
 //│ | listen: trm = x⁰
+//│ | .exit MarkedShape(IntroShape(1), ↘⟨term:Predef¹/id¹⟩%⟨⋅id⁰⟩↗⟨term:callid1²⟩%⟨callid1¹⟩ϵ) (↘⟨term:callid1²⟩%⟨callid1¹⟩↗⟨term:Predef¹/id¹⟩%⟨⋅id⁰⟩ϵ)
+//│ | | .exit MarkedShape(IntroShape(1), ↘⟨term:Predef¹/id¹⟩%⟨⋅id⁰⟩↗⟨term:callid1²⟩%⟨callid1¹⟩ϵ) (↗⟨term:Predef¹/id¹⟩%⟨⋅id⁰⟩ϵ)
+//│ | | | .exit MarkedShape(IntroShape(1), ↘⟨term:Predef¹/id¹⟩%⟨⋅id⁰⟩↗⟨term:callid1²⟩%⟨callid1¹⟩ϵ) (ϵ)
+//│ | | | = MarkedShape(IntroShape(1), ↘⟨term:Predef¹/id¹⟩%⟨⋅id⁰⟩↗⟨term:callid1²⟩%⟨callid1¹⟩ϵ)
+//│ | | | .exit MarkedShape (MarkedShape(IntroShape(1), ↘⟨term:Predef¹/id¹⟩%⟨⋅id⁰⟩↗⟨term:callid1²⟩%⟨callid1¹⟩ϵ), term:Predef¹/id¹, ⋅id⁰)
+//│ | | | = MarkedShape(IntroShape(1), ↗⟨term:callid1²⟩%⟨callid1¹⟩ϵ)
+//│ | | = MarkedShape(IntroShape(1), ↗⟨term:callid1²⟩%⟨callid1¹⟩ϵ)
+//│ | = MarkedShape(IntroShape(1), ↘⟨term:callid1²⟩%⟨callid1¹⟩↗⟨term:callid1²⟩%⟨callid1¹⟩ϵ)
 //│ | appShape isSaturated? true; head? (DefnShape(term definition 'callid1'),List(ExitMark(term:callid1,Some(callid1),NoMarks)))
 //│ | lhs false List(((p⁰),List(↗⟨term:callid1²⟩%⟨callid1¹⟩ϵ)))
 //│ | appShape: td.body = Some(App(NewSel(SimpleRef(p),Ident(id),None),Tup(List(Fld(‹›,Lit(IntLit(1)),None)))))
 //│ | listenTerm: trm = p⁰.id(1)
 //│ | listen: trm = p⁰.id(1)
+//│ | .exit MarkedShape(IntroShape(1), ↘⟨term:callid1²⟩%⟨callid1¹⟩↗⟨term:callid1²⟩%⟨callid1¹⟩ϵ) (↗⟨term:callid1²⟩%⟨callid1¹⟩ϵ)
+//│ | | .exit MarkedShape(IntroShape(1), ↘⟨term:callid1²⟩%⟨callid1¹⟩↗⟨term:callid1²⟩%⟨callid1¹⟩ϵ) (ϵ)
+//│ | | = MarkedShape(IntroShape(1), ↘⟨term:callid1²⟩%⟨callid1¹⟩↗⟨term:callid1²⟩%⟨callid1¹⟩ϵ)
+//│ | | .exit MarkedShape (MarkedShape(IntroShape(1), ↘⟨term:callid1²⟩%⟨callid1¹⟩↗⟨term:callid1²⟩%⟨callid1¹⟩ϵ), term:callid1², callid1¹)
+//│ | | = MarkedShape(IntroShape(1), ↗⟨term:callid1²⟩%⟨callid1¹⟩ϵ)
+//│ | = MarkedShape(IntroShape(1), ↗⟨term:callid1²⟩%⟨callid1¹⟩ϵ)
 //│ ~> { fun member:callid1(p⁰) = p⁰.id(1); member:callid1⁰(member:Predef⁰) }
 //│ ————————————————| Resolved |————————————————————————————————————————————————————————————————————————
 //│   fun callid1⁰::callid1¹(p⁰) ‹flow:callid1⁰› = p⁰.id⁰(1)‹app⁰›, callid1⁰(Predef⁰)‹app¹›

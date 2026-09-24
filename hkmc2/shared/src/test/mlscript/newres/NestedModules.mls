@@ -97,13 +97,10 @@ m.id
 let x = id(Foo.Bar)
 //│ x = class Bar
 
-// * We don't currently resolve *through* external definitions
-:todo
+// External identity functions preserve their argument's inferred interface.
+:expect fun id
 x.id
-//│ ╔══[COMPILATION ERROR] This selection of member 'id' has no resolved target
-//│ ║  l.102: 	x.id
-//│ ╙──       	^^^^
-//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ = fun id
 
 
 fun localid(x) = x

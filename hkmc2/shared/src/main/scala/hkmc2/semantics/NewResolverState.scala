@@ -1,0 +1,228 @@
+package hkmc2
+package semantics
+
+import scala.collection.mutable
+import hkmc2.utils.*, shorthands.*
+import Term.*
+
+inline def rstate(using state: NewResolverState): NewResolverState = state
+
+object NewResolverState:
+  type Listener = TermShape => NewResolverState ?=> Unit
+
+  final class AnnotationSelection:
+    val symbols = mutable.LinkedHashSet.empty[BlockMemberSymbol]
+    var collecting = true
+    var failed = false
+    def copy(): AnnotationSelection =
+      val result = new AnnotationSelection
+      result.symbols ++= symbols
+      result.collecting = collecting
+      result.failed = failed
+      result
+
+  /** Lazy source lookup preserves existing graph-node identities without copying
+    * a unit's memo tables. Mutable bookkeeping values supply an explicit copier.
+    */
+  final class Cache[K, V](source: Opt[Cache[K, V]], copy: V => V):
+    private val entries = mutable.Map.empty[K, V]
+    private def peek(key: K): Opt[V] = entries.get(key).orElse(source.flatMap(_.peek(key)))
+    def get(key: K): Opt[V] = entries.get(key).orElse:
+      source.flatMap(_.peek(key)).map: value =>
+        val local = copy(value)
+        entries(key) = local
+        local
+    def getOrElseUpdate(key: K, value: => V): V = get(key).getOrElse:
+      val result = value
+      entries(key) = result
+      result
+    def update(key: K, value: V): Unit = entries(key) = value
+
+  final class Seen[A](source: Opt[Seen[A]]):
+    private val entries = mutable.Set.empty[A]
+    def apply(value: A): Bool = entries(value) || source.exists(_(value))
+    def add(value: A): Bool = if apply(value) then false else entries.add(value)
+
+/** Inference belongs to the consuming compilation unit. Imported hosts retain their
+  * completed candidates and contextual listeners; this state supplies private copies
+  * before a consumer can extend either collection.
+  */
+final class NewResolverState private (
+    val owner: Elaborator.State, private val consumer: Opt[NewResolverState], private val source: Opt[NewResolverState]):
+  import NewResolverState.{Cache, Seen, AnnotationSelection}
+
+  def this(owner: Elaborator.State) = this(owner, N, N)
+  private def root: NewResolverState = consumer.getOrElse(this)
+  private var reporter: Raise | Null = null
+  def withReporter(raise: Raise): this.type =
+    root.reporter = raise
+    this
+  def report(diagnostic: Diagnostic): Unit =
+    assert(root.reporter != null, "Resolution requires a diagnostic collector")
+    root.reporter.nn(diagnostic)
+
+  def isOwnedSym(symbol: Symbol): Bool = symbol.getState is owner
+
+  // A listener carries its defining graph, not its defining mutable resolver.
+  // Views share the consumer's host copies, but consult the source's bindings and
+  // memoized nodes individually. Creating a view never traverses a source map.
+  private val views = mutable.Map.empty[NewResolverState, NewResolverState]
+  private val inheritedViews = mutable.Map.empty[(NewResolverState, NewResolverState), NewResolverState]
+  private[hkmc2] def inGraph(graph: NewResolverState): NewResolverState = rebase(graph, root)
+  private def rebase(graph: NewResolverState, destination: NewResolverState): NewResolverState =
+    val origin = source.fold(graph)(_.rebase(graph, destination))
+    if origin.root eq root then origin
+    else if root eq destination then
+      root.views.getOrElseUpdate(origin, new NewResolverState(owner, S(root), S(origin)))
+    else root.views.get(origin).getOrElse:
+      // A previously unused path can require a view of an intermediate exporter.
+      // Memoize that read-only view in the consumer, never in the exporter.
+      destination.inheritedViews.getOrElseUpdate((root, origin),
+        new NewResolverState(owner, S(root), S(origin)))
+
+  private val copies = mutable.Map.empty[Publisher.Data[?], Publisher.Data[?]]
+  private val pending = mutable.Map.empty[Identity[Publisher[?]], Publisher.Data[?]]
+  private[hkmc2] def local[A](ref: Publisher.Data[A]): Publisher.Data[A] =
+    // Explicit references (notably type parameters) need the same intermediate
+    // exporter lookup as references through their syntax or symbol host.
+    val origin = source.fold(ref)(_.peekReference(ref))
+    if (origin.owner eq root) && !origin.completed then origin
+    else
+      // Each key and its copy share A; recover that type when looking up the
+      // heterogeneous graph-node map.
+      root.copies.getOrElseUpdate(origin, origin.copy(root)).asInstanceOf[Publisher.Data[A]]
+
+  private def peekReference[A](ref: Publisher.Data[A]): Publisher.Data[A] =
+    val origin = source.fold(ref)(_.peekReference(ref))
+    root.copies.get(origin).fold(origin)(_.asInstanceOf[Publisher.Data[A]])
+
+  private def peek[A](publisher: Publisher[A]): Publisher.Data[A] =
+    peekReference(publisher.originalData)
+
+  private[hkmc2] def data[A](publisher: Publisher[A]): Publisher.Data[A] =
+    val ref = source.fold(publisher.initialData(root))(_.peek(publisher))
+    if ref.owner == null then publisher.initialData(root)
+    if publisher.isOwnedBy(root) && !root.completedNodes(new Identity(publisher)) then
+      root.pending.getOrElseUpdate(new Identity(publisher), ref)
+    local(ref)
+
+  /** Number of lazily copied graph nodes, for isolation/scale regressions. */
+  private[hkmc2] def copiedHostCount: Int = root.copies.size
+
+  private val completedNodes = mutable.Set.empty[Identity[Publisher[?]]]
+
+  /** Seal the decisions and original host data read by erasure/lowering. The
+    * inference graph keeps private, live host data and all its listeners, so
+    * later calls can still transport arguments and results through these nodes.
+    * This boundary is per block, even when a worksheet reuses its symbol state.
+    */
+  def completeBlock(block: Statement): Unit =
+    val visited = mutable.Set.empty[Identity[Statement]]
+    def pattern(pat: Pattern): Unit =
+      pat match
+        case ctor: Pattern.Constructor => data(ctor)
+        case _ => ()
+      pat.children.foreach:
+        case child: Pattern => pattern(child)
+        case term: Term => visit(term)
+        case _ => ()
+    def split(branches: SimpleSplit): Unit = branches match
+      case SimpleSplit.Cons(SimpleSplit.Head.Match(_, pat, consequent), tail) =>
+        pattern(pat)
+        split(consequent)
+        split(tail)
+      case SimpleSplit.Cons(_, tail) => split(tail)
+      case _ => ()
+    def visit(statement: Statement): Unit = if visited.add(new Identity(statement)) then
+      statement match
+        // Bind even unused syntax to this unit. Otherwise its first consumer
+        // could become the owner of an imported node's original listener buffer.
+        case term: Term => data(term)
+        case _ => ()
+      statement match
+        case cls: ClassLikeDef =>
+          cls.ext.foreach(visit)
+          cls.auxParams.foreach(_.subTerms.foreach(visit))
+          cls match
+            case pat: PatternDef => pattern(pat.pattern)
+            case _ => ()
+        case IfLike(_, _, branches) => split(branches)
+        case Rcd(_, stats) => stats.foreach(visit)
+        case New(_, _, refinement) => refinement.foreach(r => visit(r._2.blk))
+        case _ => ()
+      statement.subStatements.foreach(visit)
+    visit(block)
+    root.pending.foreach: (key, value) =>
+      if !key.value.isInstanceOf[Symbol] && root.completedNodes.add(key) then value.completed = true
+    root.pending.clear()
+
+  def canResolve(host: Publisher[?]): Bool =
+    data(host)
+    host.isOwnedBy(root) && !root.completedNodes(new Identity(host))
+
+  private val errors = mutable.Set.empty[Identity[Publisher[?]]]
+  def hasError(host: Publisher[?], original: Bool): Bool = original || root.errors(new Identity(host))
+  def markError(host: Publisher[?])(update: => Unit): Unit =
+    root.errors += new Identity(host)
+    if canResolve(host) then update
+
+  /** Inference may refine an imported result, but the imported code has already
+    * been compiled. Its member/constructor targets must remain unchanged.
+    */
+  def recordResolution(host: Publisher[?], unchanged: Bool)(update: => Unit): Unit =
+    if !unchanged then
+      assert(canResolve(host), "Inference changed a completed reference target")
+      update
+
+  val membersCache: Cache[(Identity[TermShape], Str), MemberLookup] =
+    new Cache(source.map(_.membersCache), identity)
+  val annotations: Cache[Object, AnnotationSelection] =
+    new Cache(source.map(_.annotations), _.copy())
+  val spreadInputs: Cache[Object, mutable.Set[TermShape]] =
+    new Cache(source.map(_.spreadInputs), _.clone())
+  val reportedArities: Cache[Object, mutable.Set[Int]] =
+    new Cache(source.map(_.reportedArities), _.clone())
+  val appShapes: Cache[(TermShape, FlowSymbol), AppShape] =
+    new Cache(source.map(_.appShapes), identity)
+  val newShapes: Cache[(ClassLikeSymbol, Ls[Marks], FlowSymbol), NewShape] =
+    new Cache(source.map(_.newShapes), identity)
+  val introShapes: Cache[Identity[IntroTerm], IntroShape] =
+    new Cache(source.map(_.introShapes), identity)
+  val symShapes: Cache[(BlockMemberSymbol, FlowSymbol, Ls[Marks]), SymShape] =
+    new Cache(source.map(_.symShapes), identity)
+  val declaredSymShapes: Cache[(BlockMemberSymbol, FlowSymbol, Ls[Marks], Map[VarSymbol, DeclaredType]), DeclaredSymShape] =
+    new Cache(source.map(_.declaredSymShapes), identity)
+  val selfShapes: Cache[InnerSymbol, BaseShape] =
+    new Cache(source.map(_.selfShapes), identity)
+  val defnShapes: Cache[DefinitionSymbol[?], DefnShape] =
+    new Cache(source.map(_.defnShapes), identity)
+  val typeInterpretations: Cache[Identity[Term], TypeResolution] =
+    new Cache(source.map(_.typeInterpretations), identity)
+  val typeValues: Cache[DeclaredType, TypeValues] =
+    new Cache(source.map(_.typeValues), identity)
+  val abstractTypes: Cache[TypeResolution, DeclaredType] =
+    new Cache(source.map(_.abstractTypes), identity)
+  val signatureParameters: Cache[VarSymbol, DeclaredType] =
+    new Cache(source.map(_.signatureParameters), identity)
+  val capturedTypes: Cache[(DeclaredType, TermSymbol), DeclaredType] =
+    new Cache(source.map(_.capturedTypes), identity)
+  val tupleArrayParents: Cache[Identity[TupleShape], NominalTypeShape] =
+    new Cache(source.map(_.tupleArrayParents), identity)
+  val aggregateProducers: Seen[Identity[Tup | Rcd]] =
+    new Seen(source.map(_.aggregateProducers))
+  // Explicit instantiations are visible to every graph view in this consumer;
+  // inherited flags are queried without enumerating an exporter's instantiations.
+  private val explicitTypeArguments = mutable.Set.empty[(VarSymbol, Ls[Marks])]
+  def markExplicitTypeArgument(symbol: VarSymbol, marks: Ls[Marks]): Unit =
+    root.explicitTypeArguments += ((symbol, marks))
+  def hasExplicitTypeArgument(symbol: VarSymbol, marks: Ls[Marks]): Bool =
+    root.explicitTypeArguments((symbol, marks)) || source.exists(_.hasExplicitTypeArgument(symbol, marks))
+  val typeConstraints: Seen[(DeclaredType, TermShape, Ls[Marks])] =
+    new Seen(source.map(_.typeConstraints))
+
+private[semantics] final class TypeValues extends Host[TermShape]:
+  def showDbg(using DebugPrinter): Str = "declared type values"
+  def publish(shape: TermShape)(using NewResolverState): Unit =
+    if currentShapes.add(shape) then notifyShapeListeners(shape)
+  def listen(listener: NewResolverState.Listener)(using NewResolverState): Unit =
+    subscribeToShapes(listener)

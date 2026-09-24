@@ -15,7 +15,9 @@ enum TypeShape:
   case Tuple(fields: Ls[TypeResolution])
   case Function(params: Term, result: TypeResolution)
   case Applied(base: TypeResolution, args: Ls[TypeResolution])
-  case Parameter(symbol: VarSymbol)
+  // The same third-party symbol can have different inference in two exporters.
+  // Retain its originating host so importing a result needs no whole-state copy.
+  case Parameter(symbol: VarSymbol, host: Publisher.Data[Shape])
   // Synthesized generic arguments can retain inferred value shapes, for example
   // the element union of the Array supertype of a tuple. Written annotations
   // never introduce this case by inspecting their implementation.
@@ -32,9 +34,9 @@ final class TypeResolution(val source: Term, report: Ls[(Message, Opt[Loc])] => 
   private var reported = false
   def hasErrors: Bool = reported
   def showDbg(using DebugPrinter): Str = s"type of ${source.showDbg}"
-  def publish(shape: TypeShape): Unit =
-    if shapes.add(shape) then notifyShapeListeners(shape)
-  def listen(listener: TypeShape => Unit): Unit =
+  def publish(shape: TypeShape)(using NewResolverState): Unit =
+    if currentShapes.add(shape) then notifyShapeListeners(shape)
+  def listen(listener: ShapeListener[TypeShape])(using NewResolverState): Unit =
     subscribeToShapes(listener)
   def fail(messages: Ls[(Message, Opt[Loc])]): Unit = if !reported then
     reported = true

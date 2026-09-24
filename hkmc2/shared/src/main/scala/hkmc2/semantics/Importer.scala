@@ -19,7 +19,7 @@ class Importer extends NewResolver:
   import tl.*
 
 
-  def importPath(path: Str, alias: Opt[syntax.Tree.Ident])(using cfg: Config): Import =
+  def importPath(path: Str, alias: Opt[syntax.Tree.Ident])(using cfg: Config, rs: NewResolverState): Import =
     // log(s"pwd: ${os.pwd}")
     // log(s"wd: ${wd}")
     
@@ -42,7 +42,7 @@ class Importer extends NewResolver:
       file.ext match
       
       case "mjs" | "js" =>
-        if newResolution then sym.shapes.add(DynShape())
+        if newResolution then sym.currentShapes.add(DynShape())
         Import(sym, file.toString, file)
         
       case "mls" =>
@@ -81,6 +81,6 @@ class Importer extends NewResolver:
         Import(sym, path, file)
       
     else
-      if newResolution then sym.shapes.add(DynShape())
+      if newResolution then sym.currentShapes.add(DynShape())
       Import(sym, path, file)
     

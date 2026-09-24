@@ -108,28 +108,24 @@ fun test(m: Methods) = m.identity[Item](Item(4)).value
 test(new Methods)
 //│ = 4
 
-// FIXME: The defining unit's inferred Array argument lives in its local host.
-// Importing the value must also transport that dependency, not only its shape.
-:fixme
+// Imported values retain the dependencies of their inferred Array arguments.
 :expect [5]
 GenericLibrary.mapped.map((item, ...) => item.known)
-//│ ╔══[COMPILATION ERROR] This selection of member 'known' has no resolved target
-//│ ║  l.115: 	GenericLibrary.mapped.map((item, ...) => item.known)
-//│ ╙──       	                                         ^^^^^^^^^^
-//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
-//│ ═══[RUNTIME ERROR] Expected: '[5]', got: 'undefined'
+//│ = [5]
 
-// FIXME: The imported parameter-to-result listener still belongs to the defining
-// resolver. Rebuilding a declared result works; importing this inferred flow does not.
-:fixme
+// Imported parameter-to-result listeners run in the consuming resolver state.
 :expect 6
 class Item(val value: Int)
 GenericLibrary.inferred(Item(6)).value
-//│ ╔══[COMPILATION ERROR] This selection of member 'value' has no resolved target
-//│ ║  l.127: 	GenericLibrary.inferred(Item(6)).value
-//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
-//│ ═══[RUNTIME ERROR] Expected: '6', got: 'undefined'
+//│ = 6
+
+// Inferred generic method results use the same imported listener graph.
+:expect [7, 8]
+class Item(val value: Int)
+let methods = new GenericLibrary.Methods
+[methods.inferred(Item(7)).value, methods.inferred[Item](Item(8)).value]
+//│ = [7, 8]
+//│ methods = Methods
 
 // FIXME: A callback reading a constructor field in a module initializer still
 // crosses incompatible lexical capture paths, before any consumer imports it.

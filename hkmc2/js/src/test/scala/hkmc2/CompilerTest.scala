@@ -283,6 +283,8 @@ class CompilerTest extends AnyFunSuite:
     val parameter = map.tparams.get.head.sym
     val originalShapes = parameter.shapes.toVector
     val originalListeners = parameter.shapeListeners.length
+    val callbackSignature = map.params.head.params.head.sign.get
+    val originalInterpretation = callbackSignature.typeInterpretation
 
     fs.write("/Generic.mls", """module Generic with
                                  |  fun identity[A](x: A): A = x
@@ -307,6 +309,41 @@ class CompilerTest extends AnyFunSuite:
       "Consumer inference must not publish into the shared prelude parameter")
     assert(parameter.shapeListeners.length == originalListeners,
       "Consumer inference must not attach listeners to the shared prelude parameter")
+    assert(callbackSignature.typeInterpretation == originalInterpretation,
+      "Interpreting a legacy signature must not cache consumer listeners on shared syntax")
+
+  test("imported inferred results leave the cached definition's listeners and candidates unchanged"):
+    val fs = new InMemoryFileSystem(loadStandardLibrary())
+    given cctx: CompilerCtx = CompilerCtx.fresh(fs, paths, Config.default(io.Path("/")))
+    given DebugPrinter = new DebugPrinter
+    given TL = new TraceLogger:
+      override def doTrace = false
+    given Raise = diagnostic => fail(diagnostic.toString)
+    fs.write("/Generic.mls", """#lang(0.3.x, strictResolution: true)
+                                 |module Generic with
+                                 |  class Known(val known: Int)
+                                 |  val mapped = [Known(4)].map((item, ...) => Known(5))
+                                 |  fun identity[A](x: A) = x
+                                 |""".stripMargin)
+    val compiler = new MLsCompiler(_ => summon[Raise])
+    compiler.compileModule(Path("/Generic.mls"))
+    val prelude = cctx.getPrelude(paths.preludeFile).ctx
+    val library = cctx.getElaboratedBlock(io.Path("/Generic.mls"), prelude)
+    val module = library.compilationUnit.defaultExport.get.asModOrObj.get.defn.get
+    val identity = module.body.members("identity").asTrm.get.defn.get
+    val parameters = identity.params.flatMap(_.params.map(_.sym)) ::: identity.tparams.get.map(_.sym)
+    val before = parameters.map(p => (p.shapes.toVector, p.shapeListeners.toVector))
+    List("first", "second").foreach: field =>
+      val path = s"/$field.mls"
+      fs.write(path, s"""#lang(0.3.x, strictResolution: true)
+                       |import "./Generic.mls"
+                       |class Item(val $field: Int)
+                       |Generic.identity(Item(1)).$field
+                       |Generic.mapped.map((item, ...) => item.known)
+                       |""".stripMargin)
+      compiler.compileModule(Path(path))
+      assert(parameters.map(p => (p.shapes.toVector, p.shapeListeners.toVector)) == before,
+        "A consumer must not change the cached definition's inference graph")
 
   test("compiler can report errors"):
     val (fs, compiler) = createCompiler()

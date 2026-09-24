@@ -168,8 +168,8 @@ invalid(0)
 //│ ║  l.165: 	fun invalid(x) = if x is NotAPattern then 1 else 0
 //│ ║         	                         ^^^^^^^^^^^
 //│ ╟── Integer literal cannot be used as a constructor pattern.
-//│ ║  l.165: 	fun invalid(x) = if x is NotAPattern then 1 else 0
-//│ ╙──       	                                          ^
+//│ ║  l.164: 	val NotAPattern = 1
+//│ ╙──       	                  ^
 //│ = 0
 //│ NotAPattern = 1
 

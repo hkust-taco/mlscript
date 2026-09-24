@@ -419,12 +419,12 @@ object Elaborator:
 
     abstract class Elem:
       def nme: Str
-      def ref(id: Ident)(using Elaborator.State, Ctx, Config, NewResolver): Term
+      def ref(id: Ident)(using Elaborator.State, Ctx, Config, NewResolver, NewResolverState): Term
       def symbol: Opt[Symbol]
       def isImport: Bool
     final case class RefElem(sym: Symbol) extends Elem:
       val nme = sym.nme
-      def ref(id: Ident)(using Elaborator.State, Ctx, Config, NewResolver): Term =
+      def ref(id: Ident)(using Elaborator.State, Ctx, Config, NewResolver, NewResolverState): Term =
         if config.language.useNewResolution then
           sym match
           case sym: codegen.SimpleSymbol =>
@@ -442,7 +442,7 @@ object Elaborator:
       def symbol = S(sym)
       def isImport: Bool = false
     final case class SelElem(base: Elem, nme: Str, symOpt: Opt[MemberSymbol], isImport: Bool) extends Elem:
-      def ref(id: Ident)(using Elaborator.State, Ctx, Config, NewResolver): Term =
+      def ref(id: Ident)(using Elaborator.State, Ctx, Config, NewResolver, NewResolverState): Term =
         // * Same remark as in RefElem#ref
         val prefix = base.ref(Ident(base.nme))
         val name = new Ident(nme).withLocOf(id)
@@ -454,7 +454,7 @@ object Elaborator:
           Term.SynthSel(prefix, name)(symOpt, FlowSymbol.synthSel(nme), N, S(summon))
       def symbol = symOpt
     final case class WildcardElem(nme: Str, sources: Ls[OpenSource]) extends Elem:
-      def ref(id: Ident)(using Elaborator.State, Ctx, Config, NewResolver): Term =
+      def ref(id: Ident)(using Elaborator.State, Ctx, Config, NewResolver, NewResolverState): Term =
         // Each ref is fresh. Locate its outer capture at the opening site too;
         // a chained wildcard reference may already have attached this location.
         val prefixes = sources.map(source => source.elem.ref(source.id).withoutLoc.withLocOf(source.id))
@@ -464,7 +464,7 @@ object Elaborator:
       def symbol: Opt[Symbol] = N
       def isImport: Bool = true
     final case class CaptElem(base: Elem, thru: DefinitionSymbol[?]) extends Elem:
-      def ref(id: Ident)(using Elaborator.State, Ctx, Config, NewResolver): Term =
+      def ref(id: Ident)(using Elaborator.State, Ctx, Config, NewResolver, NewResolverState): Term =
         Term.Capture(base.ref(Ident(base.nme)), thru)
       def symbol = base.symbol
       def isImport: Bool = false
@@ -589,6 +589,7 @@ object Elaborator:
     case Private(sym: BlockMemberSymbol, modulePath: Str)
 
   class State:
+    lazy val newResolverState: NewResolverState = new NewResolverState(this)
     val suid = new Uid.Symbol.State
     given State = this
     private var _compilationUnit: Opt[CompilationUnit] = N
@@ -722,6 +723,7 @@ extends Importer:
   import tl.*
   given TraceLogger = tl
   private given NewResolver = this
+  private given NewResolverState = state.newResolverState.withReporter(raise)
   
   val newResolution: Bool = config.language.useNewResolution
   
@@ -1204,7 +1206,7 @@ extends Importer:
   private def interpretRef(ref: Term, interp: Interpretation): Term =
     if newResolution then interp match
       case Trm => requireTerm(ref)
-      case Tpe => typeResolution(ref)
+      case Tpe => ref.typeInterpretation = S(typeResolution(ref))
       case _ => ()
     ref
 
@@ -2637,7 +2639,7 @@ extends Importer:
         sym.decl = S(p)
         if newResolution then sig.foreach: sign =>
           listenTypeValues(sign): shape =>
-            if sym.shapes.add(shape) then sym.notifyShapeListeners(shape)
+            if sym.currentShapes.add(shape) then sym.notifyShapeListeners(shape)
         (p, spd, aliases)
   
   def funParams(t: Tree): Ctxl[(ParamList, Ctx)] =
@@ -2932,12 +2934,14 @@ extends Importer:
     given UnderCtx = new UnderCtx(N)
     val (res, newCtx) = block(sts, hasResult = false, resultInterp = Trm)
     // TODO handle name clashes
+    if newResolution then rstate.completeBlock(res)
     (res, newCtx)
   
   def topLevel(sts: Block): Ctxl[(Blk, Ctx)] =
     given UnderCtx = new UnderCtx(N)
     val (res, ctx) = block(sts, hasResult = false, resultInterp = Trm)
     computeVariances(res)
+    if newResolution then rstate.completeBlock(res)
     (res, ctx)
   
   def computeVariances(s: Statement): Unit =
