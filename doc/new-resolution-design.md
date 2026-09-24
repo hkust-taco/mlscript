@@ -33,6 +33,11 @@ exported mapped arrays and imported generic functions and methods.
 
 ## Captures and generic flow
 
+The planned distinction between passing type values and constraining ordinary
+values is documented in [Type values and value constraints](new-resolution-type-value-flow.md).
+The description below records the current implementation, which does not yet
+preserve that distinction.
+
 Class bodies introduce lexical captures, and a class and its constructor share
 one resolution boundary. A method's reference to an outer constructor must include
 the enclosing instance boundary as well as the method boundary. Consuming a

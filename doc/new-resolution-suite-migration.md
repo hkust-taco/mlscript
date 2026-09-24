@@ -87,13 +87,15 @@ The inventory below separates these from compiler and prelude gaps.
   collected from the initializer and subsequent writes, as described in the
   [resolver notes](new-resolution-design.md). Tracking individual positions and
   lengths is out of scope. Decide how reassignment affects the inferred interface
-  of mutable storage, including across already compiled worksheet blocks. `newres/MutationFlow.mls` records a reassigned array still checked
+  of mutable storage, including across already compiled worksheet blocks.
+  `newres/MutationFlow.mls` records a reassigned array still checked
   against its initializer's tuple length; accumulating both shapes would still
   reject valid later indexing. `codegen/SetStmt` also lacks argument flow through
-  its update callback. Generic `Array[A]` parameters currently receive element
-  flow one way; writes through them need a decision on two-way mutable element
-  constraints (`newres/MutableArrays.mls`). Member-variable definitions still need
-  work. Handler inference needs separate flows for the receiver, values
+  its update callback. Implement the [type-value flow design](new-resolution-type-value-flow.md)
+  so `Array[A]` parameters retain the actual element type's input and output uses;
+  the `appendTyped` case in `newres/MutableArrays.mls` records the missing write
+  propagation. Member-variable definitions still need work. Handler inference
+  needs separate flows for the receiver, values
   passed to resumptions, and abortive results (`newres/HandlerResults.mls` and
   `codegen/ScopedBlocksAndHandlers`). Agree these designs before implementation.
   Ordinary result-shape contracts are covered by `newres/ControlFlowResults.mls`;
