@@ -155,8 +155,8 @@ declare class Array[T](val length: Int): Array[T] with
   fun at(index: Int): T | undefined
   fun fill(value: T, ...bounds): Array[T]
   fun splice(start: Int, ...items): Array[T]
-  fun push(...items): Int
-  fun unshift(...items): Int
+  fun push(...items: Array[T]): Int
+  fun unshift(...items: Array[T]): Int
   fun pop(): T | undefined
   fun shift(): T | undefined
   fun concat(...arrays): Array[Any]

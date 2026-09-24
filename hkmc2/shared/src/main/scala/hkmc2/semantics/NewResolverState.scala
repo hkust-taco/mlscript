@@ -199,6 +199,10 @@ final class NewResolverState private (
     new Cache(source.map(_.capturedTypes), identity)
   val tupleArrayParents: Cache[Identity[TupleShape], NominalTypeShape] =
     new Cache(source.map(_.tupleArrayParents), identity)
+  val instanceParameterTypes: Cache[(VarSymbol, Bool), DeclaredType] =
+    new Cache(source.map(_.instanceParameterTypes), identity)
+  val mutableArrays: Cache[Identity[Term.Mut], TermShape] =
+    new Cache(source.map(_.mutableArrays), identity)
   // Named tuple fields have stable property identities, shared with consumers
   // through the tuple's original graph rather than allocated per spread candidate.
   val namedTupleRecords: Cache[Identity[Tup], Rcd] =

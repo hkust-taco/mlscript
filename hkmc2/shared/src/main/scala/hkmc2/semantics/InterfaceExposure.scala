@@ -144,9 +144,15 @@ final class InterfaceExposure(resolver: NewResolver)(using NewResolverState, TL)
         callable.result.foreach: result =>
           watch((result, marks))(resolver.listenTypeValues(result)): shape =>
             emit(shape.exit(marks), path)
-      // Nominal annotations expose their declared interface, not an initializer's
-      // inferred implementation. Unknown and dynamic values have no static graph.
-      case _: (NominalTypeShape | RecordTypeShape | OpaqueTypeShape | UnknownValueShape | DynShape | ErrShape) => ()
+      case nominal: NominalTypeShape =>
+        // Array element bindings may contain escaping closures. Follow only the
+        // declared binding; concrete annotations still hide implementation shapes.
+        resolver.arrayElementType(nominal).foreach: binding =>
+          watch((shape, "array elements"))(listener => { resolver.listenArrayElements(shape)(listener); () }): element =>
+            emit(element, path.via(msg"This value is stored in this array." -> binding.resolution.source.toLoc))
+      // Structural annotations hide initializer implementations. Unknown and
+      // dynamic values have no static graph.
+      case _: (RecordTypeShape | OpaqueTypeShape | UnknownValueShape | DynShape | ErrShape) => ()
 
   def check(exports: Ls[BlockMemberSymbol], values: Ls[Term]): Unit =
     try

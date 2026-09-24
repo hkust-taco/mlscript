@@ -381,7 +381,7 @@ final case class RecordTypeShape(source: Term.Rcd, fields: Ls[(RcdField, TypeRes
   * interfaces such as a tuple's Array parent have no written annotation.
   */
 final case class NominalTypeShape(defn: ClassLikeDef, bindings: Map[VarSymbol, DeclaredType],
-    parent: Opt[TermShape])(val annotation: Opt[Term]) extends NonAppTermShape:
+    parent: Opt[TermShape])(val annotation: Opt[Term])(resolver: NewResolver) extends NonAppTermShape:
   def describe: Str = s"value of type '${defn.sym.nme}'"
   def toLoc: Opt[Loc] = defn.toLoc
   override def isInstanceOfClass(cls: ClassLikeDef)(using NewResolverState): Bool =
@@ -394,10 +394,16 @@ final case class NominalTypeShape(defn: ClassLikeDef, bindings: Map[VarSymbol, D
   protected def getMemberImpl(name: Str)(using NewResolverState): MemberLookup =
     defn.body.members.get(name) match
       case S(member) => MemberLookup.Declared(member, bindings, Nil, annotation)
-      case N => parent.fold[MemberLookup](MemberLookup.Missing)(_.getMember(name)).withAnnotation(annotation)
+      case N =>
+        (name.toIntOption, resolver.arrayElementType(this)) match
+          case (S(index), S(element)) if index >= 0 => MemberLookup.Indexed(TupleShape.TypedField(element, Nil), Nil)
+          case _ => parent.fold[MemberLookup](MemberLookup.Missing)(_.getMember(name)).withAnnotation(annotation)
 
-/** Parameter types and arity exposed by one list in a declared calling interface. */
-final case class DeclaredParams(params: Ls[Opt[DeclaredType]], hasRest: Bool)
+/** Parameter types and arity exposed by one list in a declared calling interface.
+  * A rest annotation describes the whole trailing array; hasRest also distinguishes
+  * an unannotated rest parameter from a fixed-arity list.
+  */
+final case class DeclaredParams(params: Ls[Opt[DeclaredType]], hasRest: Bool, rest: Opt[DeclaredType])
 
 /** Calls through annotations expose only the declared result. Argument shapes
   * constrain type parameters in the interface; they do not recover its implementation.

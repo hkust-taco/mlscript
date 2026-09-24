@@ -1,0 +1,255 @@
+:.
+
+// Mutable arrays expose their element union without retaining positions or length.
+:expect [1, [1, 2]]
+class Item(val value: Int)
+let xs = mut [Item(1)]
+xs.push(Item(2))
+[xs.0.value, xs.map((x, ...) => x.value)]
+//│ = [1, [1, 2]]
+//│ xs = [Item(1), Item(2)]
+
+// Empty literals acquire their element interface from writes through aliases.
+:expect [3, 4]
+class Item(val value: Int)
+let xs = mut []
+let alias = xs
+alias.push(Item(4))
+xs.unshift(Item(3))
+[xs.0.value, xs.1.value]
+//│ = [3, 4]
+//│ alias = [Item(3), Item(4)]
+//│ xs = [Item(3), Item(4)]
+
+// Indexed writes contribute elements, including computed indices.
+:expect [2, 3]
+class Item(val value: Int)
+let xs = mut [Item(1)]
+set xs.0 = Item(2)
+let index = 1
+set xs.[index] = Item(3)
+[xs.0.value, xs.1.value]
+//│ = [2, 3]
+//│ index = 1
+//│ xs = [Item(2), Item(3)]
+
+// Separate allocations do not share inferred element interfaces.
+:expect [1, 2]
+class First(val first: Int)
+class Second(val second: Int)
+let xs = mut [First(1)]
+let ys = mut []
+ys.push(Second(2))
+[xs.0.first, ys.0.second]
+//│ = [1, 2]
+//│ xs = [First(1)]
+//│ ys = [Second(2)]
+
+// The same literal retains distinct element flow in different function calls.
+:expect [1, 2]
+class First(val first: Int)
+class Second(val second: Int)
+fun singleton(x) = mut [x]
+let xs = singleton(First(1))
+let ys = singleton(Second(2))
+[xs.0.first, ys.0.second]
+//│ = [1, 2]
+//│ xs = [First(1)]
+//│ ys = [Second(2)]
+
+// Every possible element is checked, including values inserted by methods.
+:ge
+class First(val first: Int)
+class Second(val second: Int)
+let xs = mut [First(1)]
+xs.push(Second(2))
+xs.0.first
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.66: 	xs.0.first
+//│ ║        	^^^^^^^^^^
+//│ ╟── Instance of class 'Second' does not contain member 'first'
+//│ ║  l.65: 	xs.push(Second(2))
+//│ ╙──      	        ^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ xs = [First(1), Second(2)]
+
+// Nested arrays listen to later inner and outer writes.
+:expect [[1], [2]]
+class Item(val value: Int)
+let rows = mut [mut []]
+rows.0.push(Item(1))
+rows.push(mut [Item(2)])
+rows.map((row, ...) => row.map((item, ...) => item.value))
+//│ = [[1], [2]]
+//│ rows = [[Item(1)], [Item(2)]]
+
+// Writes through a function parameter return to the same array context.
+:expect 3
+class Item(val value: Int)
+private fun append(xs, value) = xs.push(value)
+let xs = mut []
+append(xs, Item(3))
+xs.0.value
+//│ = 3
+//│ xs = [Item(3)]
+
+// Calls producing an empty literal stay independent after later writes.
+:expect [1, 2]
+class First(val first: Int)
+class Second(val second: Int)
+fun empty() = mut []
+let xs = empty()
+let ys = empty()
+xs.push(First(1))
+ys.push(Second(2))
+[xs.0.first, ys.0.second]
+//│ = [1, 2]
+//│ xs = [First(1)]
+//│ ys = [Second(2)]
+
+// Already compiled blocks retain the live element flow for later reads.
+let retained = mut []
+//│ retained = []
+
+:expect 5
+class Item(val value: Int)
+retained.push(Item(5))
+retained.0.value
+//│ = 5
+
+// Concrete annotations do not acquire the extra members of inserted values.
+:ge
+class Base
+class Child extends Base with
+  val extra = 1
+let xs = (mut []: Array[Base])
+xs.push(new Child)
+xs.0.extra
+//│ ╔══[COMPILATION ERROR] Unexpected record key shape.
+//│ ║  l.125: 	let xs = (mut []: Array[Base])
+//│ ╙──       	              ^^
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.126: 	xs.push(new Child)
+//│ ║         	^^^^^^^
+//│ ╟── Cannot resolve member 'push' across a computed key or unknown record spread.
+//│ ╟── This computed key can overwrite the selected member.
+//│ ║  l.125: 	let xs = (mut []: Array[Base])
+//│ ╙──       	              ^^
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.127: 	xs.0.extra
+//│ ║         	^^^^
+//│ ╟── Cannot resolve member '0' across a computed key or unknown record spread.
+//│ ╟── This computed key can overwrite the selected member.
+//│ ║  l.125: 	let xs = (mut []: Array[Base])
+//│ ╙──       	              ^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ xs = undefined
+
+// Indexed and fill writes must invalidate initializer-only member assumptions.
+:ge
+class First(val first: Int)
+class Second(val second: Int)
+let xs = mut [First(1)]
+set xs.[0] = Second(2)
+xs.0.first
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.154: 	xs.0.first
+//│ ║         	^^^^^^^^^^
+//│ ╟── Instance of class 'Second' does not contain member 'first'
+//│ ║  l.153: 	set xs.[0] = Second(2)
+//│ ╙──       	             ^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ xs = [Second(2)]
+
+:ge
+class First(val first: Int)
+class Second(val second: Int)
+let xs = mut [First(1)]
+xs.fill(Second(2))
+xs.0.first
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.169: 	xs.0.first
+//│ ║         	^^^^^^^^^^
+//│ ╟── Instance of class 'Second' does not contain member 'first'
+//│ ║  l.168: 	xs.fill(Second(2))
+//│ ╙──       	        ^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ xs = [Second(2)]
+
+// A mutable array does not hide a closure exposed by a public result.
+:ge
+module Exposed with
+  fun make() = mut [x => x.missing]
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.182: 	  fun make() = mut [x => x.missing]
+//│ ║         	                         ^^^^^^^^^
+//│ ╟── Cannot resolve member 'missing' of a value with unknown shape.
+//│ ╟── Parameter 'x' admits values of unknown shape.
+//│ ║  l.182: 	  fun make() = mut [x => x.missing]
+//│ ║         	                    ^
+//│ ╟── This value is stored in this array.
+//│ ║  l.182: 	  fun make() = mut [x => x.missing]
+//│ ║         	               ^^^^^^^^^^^^^^^^^^^^
+//│ ╟── This value is returned here.
+//│ ║  l.182: 	  fun make() = mut [x => x.missing]
+//│ ║         	               ^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Member 'make' is accessible here.
+//│ ║  l.182: 	  fun make() = mut [x => x.missing]
+//│ ║         	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── 'Exposed' is exposed by this compilation unit.
+//│ ║  l.181: 	module Exposed with
+//│ ║         	^^^^^^^^^^^^^^^^^^^
+//│ ║  l.182: 	  fun make() = mut [x => x.missing]
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+// Explicit constructor type arguments remain opaque when methods receive subtypes.
+:ge
+class Base
+class Child extends Base with
+  val extra = 1
+let xs = new mut Array[Base](0)
+xs.push(new Child)
+xs.map((x, ...) => x.extra)
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.212: 	xs.map((x, ...) => x.extra)
+//│ ║         	                   ^^^^^^^
+//│ ╙── Value of type 'Base' does not contain member 'extra'
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ xs = [Child { extra: 1 }]
+
+// Recursive element flow terminates without expanding a positional layout.
+:expect true
+let recursive = mut []
+recursive.push(recursive)
+recursive.0.0 === recursive
+//│ = true
+//│ recursive = [ref'1] as ref'1
+
+// TODO: splice's optional deletion count needs a separate interface from inserted elements.
+:fixme
+:expect 2
+class Item(val value: Int)
+let xs = mut []
+xs.splice(0, 0, Item(2))
+xs.0.value
+//│ ╔══[COMPILATION ERROR] This selection of member 'value' has no resolved target
+//│ ║  l.234: 	xs.0.value
+//│ ╙──       	^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ ═══[RUNTIME ERROR] Expected: '2', got: 'undefined'
+//│ xs = [Item(2)]
+
+// TODO: generic Array[A] parameter bindings must carry writes back to the argument array.
+:fixme
+:expect 3
+class Item(val value: Int)
+fun appendTyped[A](xs: Array[A], value: A) = xs.push(value)
+let xs = mut []
+appendTyped(xs, Item(3))
+xs.0.value
+//│ ╔══[COMPILATION ERROR] This selection of member 'value' has no resolved target
+//│ ║  l.249: 	xs.0.value
+//│ ╙──       	^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ ═══[RUNTIME ERROR] Expected: '3', got: 'undefined'
+//│ xs = [Item(3)]

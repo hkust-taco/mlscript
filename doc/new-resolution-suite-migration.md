@@ -83,14 +83,17 @@ The inventory below separates these from compiler and prelude gaps.
   treated as the generator body's return value, leaving `.next` unresolved.
   Model the iterator result produced by lowering; use `codegen/Generators` as
   the worksheet acceptance case.
-- **Mutation and control flow:** decide how reassignment affects the inferred
-  interface of mutable storage, including across already compiled worksheet
+- **Mutation and control flow:** mutable arrays use the coarse `Array[T]` element
+  union described in the [resolver notes](new-resolution-design.md); precise
+  positions and lengths are out of scope. Decide how reassignment affects the
+  inferred interface of mutable storage, including across already compiled worksheet
   blocks. `newres/MutationFlow.mls` records a reassigned array still checked
   against its initializer's tuple length; accumulating both shapes would still
   reject valid later indexing. `codegen/SetStmt` also lacks argument flow through
-  its update callback. Member-variable definitions and CSV's nested mutable-array
-  element interfaces need work; initializer shapes cannot be assumed to survive
-  mutation. Handler inference needs separate flows for the receiver, values
+  its update callback. Generic `Array[A]` parameters currently receive element
+  flow one way; writes through them need a decision on two-way mutable element
+  constraints (`newres/MutableArrays.mls`). Member-variable definitions still need
+  work. Handler inference needs separate flows for the receiver, values
   passed to resumptions, and abortive results (`newres/HandlerResults.mls` and
   `codegen/ScopedBlocksAndHandlers`). Agree these designs before implementation.
   Ordinary result-shape contracts are covered by `newres/ControlFlowResults.mls`;
@@ -143,7 +146,9 @@ recursive UPS matchers. Preserve both runtime results and matcher structure.
 - Extend host interfaces where needed: `Array.reduce` accumulator/callback
   contracts, keyword-named `Map.set` and `Reflect.set`, and WebAssembly exports.
   `Array.concat` currently returns `Array[Any]`; improving precision needs a
-  declared element constraint on its rest arguments.
+  declared element constraint on its rest arguments. `Array.splice` must separate
+  its optional deletion count from inserted elements before those elements can
+  constrain `T`; `newres/MutableArrays.mls` records the gap.
 - Complete quasiquote type-selection and wildcard-reference lowering (`CSP`,
   `QuoteExample1`).
 - Preserve source origins in synthesized references and diagnostics. In particular,
@@ -190,7 +195,7 @@ resolution; imports that exchange options must use `LegacyOption` consistently.
 | Application fixture | Observed obstruction |
 | --- | --- |
 | `apps/Accounting.mls` | Array callback arity, `reduce`, and receiver interfaces. |
-| `apps/CSV.mls` | Mutable nested-array elements lack the shape required for `push`. |
+| `apps/CSV.mls` | Retry with the mutable-array element flow; regexp/nullish result interfaces and `at` results still need checking. |
 | `apps/parsing/Extension.mls` | Receivers for `display`, `add`, and `extendChoices` have no resolved target. |
 | `apps/parsing/Keywords.mls` | Legacy `Parser` consumers cannot inspect its new-resolution signatures. |
 | `apps/parsing/Lexer.mls` | Missing automatic contextual argument insertion and opened binary `~` resolution. |

@@ -102,10 +102,9 @@ xs.map((x, ...) => x.original)
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
 //│ ║  l.101: 	xs.map((x, ...) => x.original)
 //│ ║         	                   ^^^^^^^^^^
-//│ ╟── Cannot resolve member 'original' of a value with unknown shape.
-//│ ╟── The shape of this value is unknown.
-//│ ║  l.99: 	let xs = mut [Original(1)]
-//│ ╙──      	         ^^^^^^^^^^^^^^^^^
+//│ ╟── Instance of class 'Replacement' does not contain member 'original'
+//│ ║  l.100: 	set xs.0 = Replacement(2)
+//│ ╙──       	           ^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ xs = [Replacement(2)]
 
@@ -136,7 +135,7 @@ new String("hello") is String
 :ge
 new Array[Int](1, 2)
 //│ ╔══[COMPILATION ERROR] Resolution error in object instantiation
-//│ ║  l.137: 	new Array[Int](1, 2)
+//│ ║  l.136: 	new Array[Int](1, 2)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Class 'Array' expected 1 argument, but got 2
 //│ ║  in ../decls/Prelude.mls
@@ -155,7 +154,7 @@ new Array[Int](1, 2)
 :ge
 new Array[Int]()
 //│ ╔══[COMPILATION ERROR] Resolution error in object instantiation
-//│ ║  l.156: 	new Array[Int]()
+//│ ║  l.155: 	new Array[Int]()
 //│ ║         	^^^^^^^^^^^^^^^^
 //│ ╟── Class 'Array' expected 1 argument, but got 0
 //│ ║  in ../decls/Prelude.mls

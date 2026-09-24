@@ -1193,7 +1193,9 @@ extends Importer:
     // Resolve the term interpretation of the l-value before lowering. The
     // selected definition is recorded even when its value publishes no shape.
     // Use this for synthesized assignments as well as source-level `set`.
-    if newResolution then listenTerm(lhs)(_ => ())
+    if newResolution then
+      listenTerm(lhs)(_ => ())
+      assignArrayElement(lhs, rhs)
     Term.Assgn(lhs, rhs)
 
   def ifLike(kw: Keyword.SplitLike, form: IfLikeForm, split: SimpleSplit, loc: Opt[Loc]): Term.IfLike =

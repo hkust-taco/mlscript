@@ -205,12 +205,12 @@ class NewResolver:
               case TypeShape.Nominal(defn) =>
                 val bindings = bind(defn.tparams)
                 defn.ext match
-                  case N => publish(NominalTypeShape(defn, bindings, implicitParent(defn))(S(tpe.resolution.source)))
+                  case N => publish(NominalTypeShape(defn, bindings, implicitParent(defn))(S(tpe.resolution.source))(this))
                   case S(parent) =>
                     // Only the parent's declared type is relevant here. Evaluating
                     // its constructor arguments would reintroduce implementation flow.
                     listenTypeValues(declaredType(typeResolution(parent.cls), bindings)): ext =>
-                      publish(NominalTypeShape(defn, bindings, S(ext))(S(tpe.resolution.source)))
+                      publish(NominalTypeShape(defn, bindings, S(ext))(S(tpe.resolution.source))(this))
               case TypeShape.Alias(symbol, rhs) =>
                 // Revisiting the same alias reference without reaching an outer
                 // nominal/function shape supplies no additional interface. Track
@@ -249,8 +249,8 @@ class NewResolver:
                 val ps = params match
                   case Tup(fields) => DeclaredParams(fields.collect:
                     case Fld(_, sign, _) => S(declaredType(typeResolution(sign), current.bindings))
-                  , fields.exists(!_.isInstanceOf[Fld]))
-                  case single => DeclaredParams(S(declaredType(typeResolution(single), current.bindings)) :: Nil, false)
+                  , fields.exists(!_.isInstanceOf[Fld]), N)
+                  case single => DeclaredParams(S(declaredType(typeResolution(single), current.bindings)) :: Nil, false, N)
                 publish(CallableTypeShape(tpe.resolution.source, ps :: Nil,
                   S(declaredType(ret, current.bindings)), Nil))
               case TypeShape.Tuple(fields) =>
@@ -330,7 +330,8 @@ class NewResolver:
             listenTypeValues(signature(td.sign.get))(publish)
           else if td.params.nonEmpty then
             publish(CallableTypeShape(source,
-              td.params.map(ps => DeclaredParams(ps.params.map(_.sign.map(signature)), ps.restParam.nonEmpty)), result, Nil))
+              td.params.map(ps => DeclaredParams(ps.params.map(_.sign.map(signature)),
+                ps.restParam.nonEmpty, ps.restParam.flatMap(_.sign).map(signature))), result, Nil))
           else result match
             case S(tpe) => listenTypeValues(tpe)(publish)
             case N =>
@@ -582,7 +583,7 @@ class NewResolver:
         val cls = prelude.builtins.Array.defn.get
         softAssert(cls.tparams.length == 1, "The builtin Array must have one element type parameter")
         val elements = new TypeResolution(tuple.source, messages => resolError(tuple.source, messages))
-        val parent = NominalTypeShape(cls, Map(cls.tparams.head.sym -> declaredType(elements, Map.empty)), implicitParent(cls))(N)
+        val parent = NominalTypeShape(cls, Map(cls.tparams.head.sym -> declaredType(elements, Map.empty)), implicitParent(cls))(N)(this)
         tupleArrayParents(new Identity(tuple)) = parent
         tuple.segments.foreach:
           case field: TupleShape.Fixed => listenTupleField(field): value =>
@@ -591,6 +592,53 @@ class NewResolver:
             case value: TermShape => elements.publish(TypeShape.Inferred(value))
             case NoShape => ()
         parent
+
+  /** Mutable literals share Array's existing element parameter, with an allocation
+    * mark to keep distinct arrays and enclosing call activations independent.
+    * Seed the interface before following elements so empty and recursive arrays
+    * can receive writes. No positions or lengths survive this conversion.
+    */
+  private def mutableArray(source: Term.Mut, underlying: Tup)(using NewResolverState): TermShape =
+    rstate.mutableArrays.get(new Identity(source)) match
+      case S(array) => array
+      case N =>
+        val cls = prelude.builtins.Array.defn.get
+        softAssert(cls.tparams.length == 1, "The builtin Array must have one element type parameter")
+        val param = cls.tparams.head.sym
+        val site = FlowSymbol("mutable array")(using rstate.owner)
+        val context = ExitMark(ResolutionBoundary(cls.sym), S(site), NoMarks)
+        val elements = new TypeResolution(source, messages => resolError(source, messages))
+        elements.publish(TypeShape.Parameter(param, param.inferenceHost))
+        val array = NominalTypeShape(cls, Map(param -> declaredType(elements, Map.empty)), implicitParent(cls))(N)(this)
+        val shape = MarkedShape(array, context)
+        rstate.mutableArrays(new Identity(source)) = shape
+        listenTerm(underlying): tuple =>
+          listenArrayElements(tuple): element =>
+            publishParameter(param, element.enter(context :: Nil))
+        shape
+
+  private[semantics] def arrayElementType(array: NominalTypeShape): Opt[DeclaredType] =
+    val cls = prelude.builtins.Array.defn.get
+    array.ancestor(cls).flatMap(_.bindings.get(cls.tparams.head.sym))
+
+  /** Element writes constrain the same declared parameter as Array's methods.
+    * Written concrete annotations remain opaque under inferTypeArguments.
+    */
+  private[semantics] def assignArrayElement(lhs: Term, rhs: Term)(using NewResolverState): Unit =
+    val receiver = lhs match
+      case NewSel(prefix, id, N) if id.name.toIntOption.exists(_ >= 0) => S(prefix)
+      case DynSel(prefix, _, true) => S(prefix)
+      case _ => N
+    receiver.foreach: prefix =>
+      listenTerm(prefix): array =>
+        val (head, context) = array.applicationHead
+        head match
+          case nominal: NominalTypeShape => arrayElementType(nominal).foreach: element =>
+            listenTerm(rhs): value =>
+              value.enter(context) match
+                case value: TermShape => inferTypeArguments(element, value, context)
+                case NoShape => ()
+          case _ => ()
 
   private[semantics] def listenTupleField(field: TupleShape.Fixed)(listener: Listener)(using NewResolverState): Unit =
     def receive(shape: TermShape)(using NewResolverState): Unit = shape.exit(field.marks) match
@@ -606,7 +654,7 @@ class NewResolver:
     * constrains every element. Never recover elements from constructor values:
     * Arrays are mutable, and the one-number constructor creates empty slots.
     */
-  private def listenArrayElements(shape: TermShape)(listener: Listener)(using NewResolverState): Bool =
+  private[semantics] def listenArrayElements(shape: TermShape)(listener: Listener)(using NewResolverState): Bool =
     val cls = prelude.builtins.Array.defn.get
     softAssert(cls.tparams.length == 1, "The builtin Array must have one element type parameter")
     val param = cls.tparams.head.sym
@@ -620,6 +668,8 @@ class NewResolver:
       case value: TermShape => listener(value)
       case NoShape => ()
     head match
+      case tuple: TupleShape =>
+        listenArrayElements(tuple.arrayParent)(receive)
       case nominal: NominalTypeShape => nominal.ancestor(cls) match
         case S(array) =>
           array.bindings.get(param) match
@@ -986,7 +1036,7 @@ class NewResolver:
       case Marked(callable: CallableTypeShape, context) =>
         val ps = callable.paramLists.head
         zipArgumentShapes(context :: Nil, ps.params.length, ps.hasRest, args, res, lhs): (index, value) =>
-          if index < ps.params.length then ps.params(index).foreach: tpe =>
+          (if index < ps.params.length then ps.params(index) else ps.rest).foreach: tpe =>
             value match
               case value: TermShape => inferTypeArguments(tpe, value, context :: Nil)
               case NoShape => ()
@@ -1333,7 +1383,7 @@ class NewResolver:
   // Classes without an explicit parent expose Object's declarations. Share this
   // root interface between inferred instances, nominal annotations, and this-values;
   // Object itself must terminate the chain. This does not add a runtime constructor call.
-  private lazy val objectShape = NominalTypeShape(prelude.builtins.Object.defn.get, Map.empty, N)(N)
+  private lazy val objectShape = NominalTypeShape(prelude.builtins.Object.defn.get, Map.empty, N)(N)(this)
   private def implicitParent(defn: ClassLikeDef): Opt[TermShape] =
     if defn.sym is prelude.builtins.Object then N else S(objectShape)
 
@@ -1345,6 +1395,25 @@ class NewResolver:
     case N =>
       listener(implicitParent(defn))
   
+  /** Bodyless members reached through constructed instances need the same
+    * signature bindings as members reached through nominal annotations. Explicit
+    * constructor arguments are read-only interfaces; inferred arguments remain
+    * writable parameter flow. Keep the class context on each delivered value.
+    */
+  private def instanceBindings(td: TermDefinition, marks: Ls[Marks])(using NewResolverState): Map[VarSymbol, DeclaredType] =
+    td.tsym.owner.toList.flatMap(_.asDefnSym.defn.toList).flatMap(_.tparams).map: param =>
+      val explicit = rstate.hasExplicitTypeArgument(param.sym, marks)
+      val bound = rstate.instanceParameterTypes.getOrElseUpdate((param.sym, explicit), {
+        val source = SimpleRef(param.sym)(param.sym.id)
+        val resolution = new TypeResolution(source, messages => resolError(source, messages))
+        if explicit then listenTypeArgument(param.sym): value =>
+          resolution.publish(TypeShape.Inferred(value))
+        else resolution.publish(TypeShape.Parameter(param.sym, param.sym.inferenceHost))
+        declaredType(resolution, Map.empty)
+      })
+      param.sym -> bound
+    .toMap
+
   private def fromSymbol(shape: SymShape, listener: Listener, source: Term,
       selected: ShapeListener[DefinitionSymbol[?]], receiver: Bool)(using NewResolverState): Unit = shape match
     case declared: DeclaredSymShape =>
@@ -1400,6 +1469,12 @@ class NewResolver:
                     MarkedShape.enter(shape, ResolutionBoundary(td.tsym), N)
                   case _ => shape
                 wrappedListener(captured)
+        case S(d: TermDefinition) if d.body.isEmpty && !d.tsym.isInstanceOf[ClassCtorSymbol]
+            && d.tsym.owner.exists(_.asDefnSym.defn.exists(_.tparams.nonEmpty)) =>
+          listenDeclaredMember(bms, instanceBindings(d, markss), resSym, trm, N, selected, receiver): value =>
+            value.exit(markss) match
+              case value: TermShape => listener(value)
+              case NoShape => ()
         case S(d: TermDefinition) =>
           d.tsym match
           case ccs: ClassCtorSymbol =>
@@ -1537,15 +1612,7 @@ class NewResolver:
           case sym: SymShape => fromSymbol(sym, instantiate, underlying, _ => (), false)
           case value: TermShape => instantiate(value)
         listener(shape)
-    case Mut(underlying: Tup) => listenTerm(underlying):
-      case Marked(tuple: TupleShape, marks) =>
-        // Array methods can change both the elements and the length. Retain the
-        // producer dependency, but none of the initializer's fixed layout.
-        val fields = TupleShape.Unknown(trm, Nil, UnknownValueShape.at(trm)) :: Nil
-        TupleShape(trm, TupleShape.Rest(tuple, fields) :: Nil)(this).exit(marks) match
-          case shape: TermShape => listener(shape)
-          case NoShape => ()
-      case shape => listener(shape)
+    case mut @ Mut(underlying: Tup) => listener(mutableArray(mut, underlying))
     case Mut(underlying) => listenTerm(underlying)(listener)
     case tuple: Tup => listenAggregate(tuple, listener): publish =>
         val fields = tuple.fields.collect { case Fld(_, key, S(value)) => (key, value) }

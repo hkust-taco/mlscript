@@ -345,6 +345,39 @@ class CompilerTest extends AnyFunSuite:
       assert(parameters.map(p => (p.shapes.toVector, p.shapeListeners.toVector)) == before,
         "A consumer must not change the cached definition's inference graph")
 
+  test("mutable array parameter flow stays private to each importer"):
+    val fs = new InMemoryFileSystem(loadStandardLibrary())
+    given cctx: CompilerCtx = CompilerCtx.fresh(fs, paths, Config.default(io.Path("/")))
+    given DebugPrinter = new DebugPrinter
+    given TL = new TraceLogger:
+      override def doTrace = false
+    given Raise = diagnostic => fail(diagnostic.toString)
+    val prelude = cctx.getPrelude(paths.preludeFile).ctx
+    val parameter = prelude.builtins.Array.defn.get.tparams.head.sym
+    val originalShapes = parameter.shapes.toVector
+    val originalListeners = parameter.shapeListeners.toVector
+    fs.write("/Arrays.mls", """#lang(0.3.x, strictResolution: true)
+                                |module Arrays with
+                                |  fun empty() = mut []
+                                |  fun singleton[A](x: A) = mut [x]
+                                |""".stripMargin)
+    val compiler = new MLsCompiler(_ => summon[Raise])
+    List("first", "second").foreach: field =>
+      val path = s"/$field.mls"
+      fs.write(path, s"""#lang(0.3.x, strictResolution: true)
+                       |import "./Arrays.mls"
+                       |class Item(val $field: Int)
+                       |let xs = Arrays.empty()
+                       |xs.push(Item(1))
+                       |xs.0.$field
+                       |Arrays.singleton(Item(2)).0.$field
+                       |""".stripMargin)
+      compiler.compileModule(Path(path))
+      assert(parameter.shapes.toVector == originalShapes,
+        "Mutable element inference must not publish into the shared Array parameter")
+      assert(parameter.shapeListeners.toVector == originalListeners,
+        "Mutable element inference must not attach listeners to the shared Array parameter")
+
   test("an exported generic selection is rejected before a consumer can specialize it"):
     val fs = new InMemoryFileSystem(loadStandardLibrary())
     given cctx: CompilerCtx = CompilerCtx.fresh(fs, paths, Config.default(io.Path("/")))

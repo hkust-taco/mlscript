@@ -723,8 +723,10 @@ f(1, 2, 3)               // xs = [1, 2, 3]
 
 Under new resolution, an annotation on a rest parameter describes the whole rest
 array. Tuple values support precise zero-based projections such as `xs.0` and
-inherit the declared Array interface. Mutable arrays do not retain their initial
-length or precise element shapes after mutation. Array callbacks such as `map`
+inherit the declared Array interface. Mutable array literals use one `Array[T]`
+element interface: initializer elements and subsequent writes contribute to `T`. Reads
+see the accumulated element shapes, without tracking positions, length, or which
+elements have been overwritten or removed. Array callbacks such as `map`
 receive the element, index, and array; their declared function interfaces must
 account for these arguments, for example with unused or rest parameters.
 
