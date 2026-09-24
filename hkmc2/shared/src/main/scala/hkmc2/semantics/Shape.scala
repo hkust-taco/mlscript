@@ -143,36 +143,51 @@ sealed trait TermShape extends Shape:
     * value (e.g. a class without parameters) is still not an instance. */
   def isInstanceOfClass(cls: ClassLikeDef): Bool = false
   
-  // Context fragments run from the callable definition to its consumer, just as
-  // MemberLookup.withMarks does. Wrapping an applied shape appends its context.
+  // Cache the head independently: following receivers does not need to construct
+  // or unpack a (head, marks) pair at every intermediate shape.
+  private lazy val applicationHeadShape: NonAppTermShape = this match
+    case as: AppShape => as.receiver.applicationHeadShape
+    case ns: NewShape => ns.receiver
+    case na: NonAppTermShape => na
+    case MarkedShape(sh, _) => (sh: TermShape).applicationHeadShape
+  // Public contexts run from the callable definition to its consumer, as in
+  // MemberLookup.withMarks. Build the reverse privately so each wrapper prepends
+  // in constant time; materialize the forward view only when a consumer needs it.
+  private lazy val reversedApplicationMarks: Ls[Marks] = this match
+    case as: AppShape => as.receiver.reversedApplicationMarks
+    case ns: NewShape => ns.clsMarks.reverse
+    case _: NonAppTermShape => Nil
+    case MarkedShape(sh, mark) => mark :: (sh: TermShape).reversedApplicationMarks
+  private lazy val applicationMarks: Ls[Marks] = this match
+    case as: AppShape => as.receiver.applicationMarks
+    case ns: NewShape => ns.clsMarks
+    case _ => reversedApplicationMarks.reverse
   lazy val applicationHead: (NonAppTermShape, Ls[Marks]) = this match
-    // case ds: DefnShape => ds
-    // case as: AppShape => as.receiver.applicationHead
     case as: AppShape => as.receiver.applicationHead
-    case ns: NewShape => (ns.receiver, ns.clsMarks)
-    case na: NonAppTermShape => (na, Nil)
-    case MarkedShape(sh, mark) => sh.applicationHead.mapSecond(_ ::: mark :: Nil)
-  lazy val unappliedParams: Ls[(ParamList, Ls[Marks])] = this match
+    case _ => (applicationHeadShape, applicationMarks)
+  // All remaining parameter lists belong to the same callable and carry its
+  // context. Keep the lists separate until the public view needs their pairs.
+  private lazy val unappliedParamLists: Ls[ParamList] = this match
     case ds: DefnShape => ds.defn match
-      case defn: TermDefinition => defn.params.map(_ -> Nil)
+      case defn: TermDefinition => defn.params
       case defn: ClassDef =>
-        // println(defn.ctorSym)
-        // if defn.ctorSym.isDefined then
         if defn.paramsOpt.isDefined then // whether the class can receive direct applications
-          (defn.paramsOpt.toList ::: defn.auxParams).map(_ -> Nil)
+          defn.paramsOpt.toList ::: defn.auxParams
         else Nil
       case _ => Nil
-    case as: AppShape => as.receiver.unappliedParams.drop(1)
-    case ns: NewShape => ns.receiver.unappliedParams.drop(ns.argss.length).map:
-      case (ps, marks) => ps -> (marks ::: ns.clsMarks)
-    case MarkedShape(sh, mark) => sh.unappliedParams.map(p => p._1 -> (p._2 ::: mark :: Nil))
+    case as: AppShape => as.receiver.unappliedParamLists.drop(1)
+    case ns: NewShape => (ns.receiver: TermShape).unappliedParamLists.drop(ns.argss.length)
+    case MarkedShape(sh, _) => (sh: TermShape).unappliedParamLists
     case is: IntroShape =>
       is.trm match
-      case Term.Lam(params, body) => (params -> Nil) :: 
-        // body.unappliedParams
-        Nil
+      case Term.Lam(params, _) => params :: Nil
       case _ => Nil
     case _ => Nil
+  lazy val unappliedParams: Ls[(ParamList, Ls[Marks])] = this match
+    // Applying arguments removes a list without changing the context; retain
+    // sharing of the already paired tail when this public view is requested.
+    case as: AppShape => as.receiver.unappliedParams.drop(1)
+    case _ => unappliedParamLists.map(_ -> applicationMarks)
   
   def exit(marks: Marks)(using TL): TermShape | NoShape =
   tl.trace[TermShape | NoShape](s".exit $shwDbg (${marks.showDbg})", res => s"= ${res.shwDbg}"):
@@ -227,7 +242,7 @@ sealed trait TermShape extends Shape:
       // Passing an argument back in must undo that composition in reverse order.
       enter(rest).enter(mark)
   
-  def isSaturated: Bool = unappliedParams.isEmpty
+  def isSaturated: Bool = unappliedParamLists.isEmpty
   
 end TermShape
 
