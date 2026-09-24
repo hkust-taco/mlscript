@@ -1274,7 +1274,19 @@ case class InstantiateMetadata(
 object InstantiateMetadata:
   def empty: InstantiateMetadata = InstantiateMetadata(Nil)
 
-case class Instantiate(cls: Path, argss: Ls[Ls[Arg]])(val metadata: InstantiateMetadata, val mut: Bool, val rsc: Bool) extends Result
+case class Instantiate(cls: Path, argss: Ls[Ls[Arg]])(val metadata: InstantiateMetadata, val mut: Bool, val rsc: Bool) extends Result:
+  // `metadata`, `mut` and `rsc` live in a secondary constructor list, so case-class equality would otherwise ignore
+  // them.
+  override def equals(obj: Any): Bool = obj match
+    case that: Instantiate =>
+      cls == that.cls &&
+        argss == that.argss &&
+        metadata == that.metadata &&
+        mut == that.mut &&
+        rsc == that.rsc
+    case _ => false
+  override def hashCode: Int =
+    (cls, argss, metadata, mut, rsc).hashCode
 
 /** A coercion of `value` to `target`.
   *
@@ -1314,6 +1326,17 @@ object Cast:
 case class Lambda(params: ParamList, body: Block)(val annot: Ls[Annot], val rsc: Bool) extends Result:
   lazy val affine: Bool = annot.exists(_.isInstanceOf[Annot.Affine])
   def liftedAnnotations: Ls[Annot] = if rsc then Annot.Modifier(Keyword.`rsc`) :: annot else annot
+
+  // `annot` and `rsc` live in a secondary constructor list, so case-class equality would otherwise ignore them
+  override def equals(obj: Any): Bool = obj match
+    case that: Lambda =>
+      params == that.params &&
+        body == that.body &&
+        annot == that.annot &&
+        rsc == that.rsc
+    case _ => false
+  override def hashCode: Int =
+    (params, body, annot, rsc).hashCode
 
 
 case class Tuple(mut: Bool, elems: Ls[Arg]) extends Result
