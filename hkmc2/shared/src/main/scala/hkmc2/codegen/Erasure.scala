@@ -33,6 +33,7 @@ final class Erasure private (using Config, Ctx, State):
         case Captured(base, _) :: Nil => erase(base, next)
         case Applied(base, _) :: Nil => erase(base, next)
         case Function(_, _) :: Nil => ErasedType.Function(S(false))
+        case Polymorphic(_, _, body) :: Nil => erase(body, next)
         case Unit :: Nil => ErasedType.Unit
         case _ => ErasedType.Unknown
 
@@ -80,6 +81,7 @@ final class Erasure private (using Config, Ctx, State):
         case TypeShape.Alias(_, S(rhs)) :: Nil => fullResult(rhs, count, seen + res)
         case TypeShape.Captured(base, _) :: Nil => fullResult(base, count, seen + res)
         case TypeShape.Applied(base, _) :: Nil => fullResult(base, count, seen + res)
+        case TypeShape.Polymorphic(_, _, body) :: Nil => fullResult(body, count, seen + res)
         case TypeShape.Function(_, ret) :: Nil => fullResult(ret, count - 1, seen + res)
         case _ => ErasedType.Unknown
     val resultType =

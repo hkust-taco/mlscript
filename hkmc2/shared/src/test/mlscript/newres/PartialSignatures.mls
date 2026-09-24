@@ -124,3 +124,47 @@ read(new Child)
 //│ ║  l.117: 	private fun read(x: Base) = x.item().value
 //│ ╙──       	                            ^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// A separate polymorphic signature retains binders for explicit type application.
+:expect [11, 12]
+class First(val first: Int)
+class Second(val second: Int)
+private fun identity: [A] -> A -> A
+private fun identity(x) = x
+[identity[First](First(11)).first, identity[Second](Second(12)).second]
+//│ = [11, 12]
+
+// A polymorphic value annotation also retains its own binders.
+:expect 13
+class Item(val value: Int)
+let identity = (x => x) as [A] -> A -> A
+identity[Item](Item(13)).value
+//│ = 13
+//│ identity = fun identity
+
+// Explicit arguments of an annotated polymorphic value restrict its result interface.
+:ge
+class Base
+class Child extends Base with
+  val extra = 1
+let identity = (x => x) as [A] -> A -> A
+identity[Base](new Child).extra
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.151: 	identity[Base](new Child).extra
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙── Value of type 'Base' does not contain member 'extra'
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ identity = fun identity
+
+// Type application checks the retained quantified binder count.
+:ge
+let identity = (x => x) as [A] -> A -> A
+identity[Int, Int](1)
+//│ ╔══[COMPILATION ERROR] Resolution error in type application
+//│ ║  l.162: 	identity[Int, Int](1)
+//│ ║         	^^^^^^^^^^^^^^^^^^
+//│ ╟── Function with a declared signature expected 1 type argument, but got 2
+//│ ║  l.161: 	let identity = (x => x) as [A] -> A -> A
+//│ ╙──       	                                  ^^^^^^
+//│ = 1
+//│ identity = fun identity

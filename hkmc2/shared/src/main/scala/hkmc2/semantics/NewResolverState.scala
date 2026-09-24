@@ -104,6 +104,8 @@ final class NewResolverState private (
     * inference graph keeps private, live host data and all its listeners, so
     * later calls can still transport arguments and results through these nodes.
     * This boundary is per block, even when a worksheet reuses its symbol state.
+    * Legacy blocks also need sealing: new-resolution consumers may import their
+    * syntax concurrently, so no consumer may claim an unowned original host.
     */
   def completeBlock(block: Statement): Unit =
     val visited = mutable.Set.empty[Identity[Statement]]
@@ -137,6 +139,10 @@ final class NewResolverState private (
             case _ => ()
         case IfLike(_, _, branches) => split(branches)
         case Rcd(_, stats) => stats.foreach(visit)
+        case Forall(params, _, _) =>
+          params.foreach: param =>
+            param.lb.foreach(visit)
+            param.ub.foreach(visit)
         case New(_, _, refinement) => refinement.foreach(r => visit(r._2.blk))
         case _ => ()
       statement.subStatements.foreach(visit)
@@ -185,6 +191,34 @@ final class NewResolverState private (
     new Cache(source.map(_.defnShapes), identity)
   val typeInterpretations: Cache[Identity[Term], TypeResolution] =
     new Cache(source.map(_.typeInterpretations), identity)
+  val quantifiedTypes: Cache[(TypeResolution, Ls[VarSymbol]), TypeResolution] =
+    new Cache(source.map(_.quantifiedTypes), identity)
+  // A scheme is owned by its source definition, or by the original interpretation
+  // of an anonymous quantified annotation. Neither a view nor an instance is an owner.
+  private val typeInstances: Cache[(AnyDefinitionSymbol | TypeResolution, FlowSymbol), Map[VarSymbol, TypeParameterInstance]] =
+    new Cache(source.map(_.typeInstances), identity)
+  private var allocatedTypeInstances: Int = 0
+  private[hkmc2] def allocatedTypeInstanceCount: Int = root.allocatedTypeInstances
+  private[hkmc2] def instantiateTypeParameters(scheme: AnyDefinitionSymbol | TypeResolution,
+      site: FlowSymbol, parameters: Ls[VarSymbol]): Map[VarSymbol, TypeParameterInstance] =
+    require(parameters.distinct.length == parameters.length, "A scheme cannot bind a parameter twice")
+    val origin = scheme match
+      case constructor: ClassCtorSymbol => constructor.associatedCls
+      case original => original
+    val key = (origin, site)
+    // Graph views in one consumer must agree even when they reach the same
+    // source definition through different imports. Adopt an inherited group
+    // before allocating, and put either result in the consumer's canonical cache.
+    val instances = root.typeInstances.getOrElseUpdate(key, typeInstances.get(key).getOrElse {
+      // Construct the complete group without activating constraints. Recursive
+      // subscribers may use it only after the cache contains every binder.
+      val result = parameters.map: parameter =>
+        parameter -> new TypeParameterInstance(parameter)(using owner)
+      root.allocatedTypeInstances += result.length
+      result.toMap
+    })
+    assert(instances.keySet == parameters.toSet, "A source scheme's binders must remain stable")
+    instances
   val typeViews: Cache[DeclaredType, TermShapeHost] =
     new Cache(source.map(_.typeViews), identity)
   val patternTypes: Cache[(Identity[Pattern.Constructor], InnerSymbol), DeclaredType] =

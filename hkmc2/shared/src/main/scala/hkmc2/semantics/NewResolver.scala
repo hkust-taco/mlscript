@@ -106,7 +106,11 @@ class NewResolver:
               result.publish(TypeShape.Abstract)
           case Capture(base, thru) => result.publish(TypeShape.Captured(typeResolution(base), thru))
           case TyApp(base, args) => result.publish(TypeShape.Applied(typeResolution(base), args.map(typeResolution)))
-          case Forall(_, _, body) => typeResolution(body).listen(result.publish)
+          case Forall(params, outer, body) =>
+            result.publish(TypeShape.Polymorphic(params.map: param =>
+              TypeQuantifier(TypeShape.Parameter(param.sym, param.sym.inferenceHost),
+                param.lb.map(typeResolution), param.ub.map(typeResolution))
+            , outer, typeResolution(body)))
           case CompType(left, right, union) =>
             val l = typeResolution(left)
             val r = typeResolution(right)
@@ -146,7 +150,11 @@ class NewResolver:
   def registerSignature(sign: Term)(using NewResolverState): Unit =
     sign.typeInterpretation = S(typeResolution(sign))
     sign match
-      case Forall(_, _, body) => registerSignature(body)
+      case Forall(params, _, body) =>
+        params.foreach: param =>
+          param.lb.foreach(registerSignature)
+          param.ub.foreach(registerSignature)
+        registerSignature(body)
       case FunTy(lhs, rhs, _) =>
         lhs match
           case Tup(fields) => fields.foreach:
@@ -164,6 +172,20 @@ class NewResolver:
     resolution.currentShapes.toList match
       case TypeShape.Parameter(symbol, _) :: Nil if bindings.contains(symbol) => bindings(symbol)
       case _ => DeclaredType(resolution, bindings)
+
+  /** A parameterless generic declaration returns a polymorphic value. Keep its
+    * binders around the annotation until the value's interface is observed.
+    */
+  private def quantifiedType(tpe: DeclaredType, parameters: Ls[VarSymbol])(using NewResolverState): DeclaredType =
+    if parameters.isEmpty then tpe else
+      val resolution = rstate.quantifiedTypes.getOrElseUpdate((tpe.resolution, parameters), {
+        val result = new TypeResolution(tpe.resolution.source, tpe.resolution.fail)
+        result.publish(TypeShape.Polymorphic(parameters.map: parameter =>
+          TypeQuantifier(TypeShape.Parameter(parameter, parameter.inferenceHost), N, N)
+        , N, tpe.resolution))
+        result
+      })
+      declaredType(resolution, tpe.bindings)
 
   private def typeViews(using rs: NewResolverState) = rs.typeViews
   private def abstractTypes(using rs: NewResolverState) = rs.abstractTypes
@@ -271,6 +293,17 @@ class NewResolver:
                   case single => DeclaredParams(S(declaredType(typeResolution(single), current.bindings)) :: Nil, false, N)
                 publish(CallableTypeShape(tpe.resolution.source, ps :: Nil,
                   S(declaredType(ret, current.bindings)), Nil))
+              case TypeShape.Polymorphic(params, _, body) =>
+                val binders = params.map: param =>
+                  DeclaredTypeParameter(param.parameter,
+                    param.lower.map(declaredType(_, current.bindings)),
+                    param.upper.map(declaredType(_, current.bindings)))
+                follow(declaredType(body, current.bindings), args, aliases, shape => shape match
+                  case Marked(callable: CallableTypeShape, marks) =>
+                    callable.copy(tparams = binders ::: callable.tparams).exit(marks) match
+                      case value: TermShape => publish(value)
+                      case NoShape => ()
+                  case _ => publish(shape))
               case TypeShape.Tuple(fields) =>
                 publish(TupleShape(current.resolution.source,
                   fields.map(field => TupleShape.TypedField(declaredType(field, current.bindings), Nil)))(this))
@@ -321,7 +354,10 @@ class NewResolver:
           val td = symbol.defn.get
           def publish(shape: TermShape)(using NewResolverState): Unit =
             val generic = shape match
-              case callable: CallableTypeShape => callable.copy(tparams = td.tparams.toList.flatten.map(p => new TypeShape.Parameter(p.sym, p.sym.inferenceHost)))
+              case callable: CallableTypeShape =>
+                callable.copy(tparams = td.tparams.toList.flatten.map(p => declaredParameter(p.sym)) ::: callable.tparams)
+              case instance: InstanceShape =>
+                InstanceShape(quantifiedType(instance.tpe, td.tparams.toList.flatten.map(_.sym)))
               case _ => shape
             // A synthesized field's signature is in the constructor parameter's
             // scope. Written member signatures are in their own definition scope.
@@ -403,20 +439,28 @@ class NewResolver:
     case _ => ()
 
   private def applyTypeArguments(callee: DefnShape | CallableTypeShape, marks: Ls[Marks], args: Ls[Term], source: Term)(using NewResolverState): Unit =
-    val params = callee match
-      case callable: CallableTypeShape => callable.tparams
+    def apply(params: Ls[DeclaredTypeParameter])(using NewResolverState): Unit =
+      if params.length != args.length then
+        resolError(source, msg"${callee.describe.capitalize} expected ${params.length} type ${
+          "argument".pluralized(params.length)}, but got ${args.length}" -> callee.toLoc :: Nil)
+      params.zip(args).foreach: (param, arg) =>
+        rstate.markExplicitTypeArgument(param.parameter.symbol, marks)
+        listenTypeInstances(arg): tpe =>
+          publishParameter(param.parameter.host, tpe.enter(marks))
+    callee match
+      case callable: CallableTypeShape => apply(callable.tparams)
       case defn: DefnShape => defn.clsDef match
-        case S(cls) => cls.tparams.map(p => new TypeShape.Parameter(p.sym, p.sym.inferenceHost))
+        case S(cls) => apply(cls.tparams.map(p => declaredParameter(p.sym)))
         case N => defn.defn match
-          case td: TermDefinition => td.tparams.toList.flatten.map(p => new TypeShape.Parameter(p.sym, p.sym.inferenceHost))
-          case _ => Nil
-    if params.length != args.length then
-      resolError(source, msg"${callee.describe.capitalize} expected ${params.length} type ${
-        "argument".pluralized(params.length)}, but got ${args.length}" -> callee.toLoc :: Nil)
-    params.zip(args).foreach: (param, arg) =>
-      rstate.markExplicitTypeArgument(param.symbol, marks)
-      listenTypeInstances(arg): tpe =>
-        publishParameter(param.host, tpe.enter(marks))
+          case td: TermDefinition if td.tparams.isEmpty && !td.flags.hasResultAnnotation && td.sign.nonEmpty =>
+            listenTypeViews(declaredType(typeResolution(td.sign.get), Map.empty)):
+              case Marked(callable: CallableTypeShape, _) => apply(callable.tparams)
+              case _ => apply(Nil)
+          case td: TermDefinition => apply(td.tparams.toList.flatten.map(p => declaredParameter(p.sym)))
+          case _ => apply(Nil)
+
+  private def declaredParameter(symbol: VarSymbol)(using NewResolverState): DeclaredTypeParameter =
+    DeclaredTypeParameter(TypeShape.Parameter(symbol, symbol.inferenceHost), N, N)
 
   // Install each constraint edge before subscribing: callback parameter/result
   // flow can revisit it immediately. Distinct instantiations retain their marks.
@@ -462,6 +506,8 @@ class NewResolver:
           case actual: TermShape =>
             constrainFunction(declaredType(tpe.resolution, tpe.bindings), actual, marks)
           case NoShape => ()
+        case TypeShape.Polymorphic(_, _, body) =>
+          follow(declaredType(body, tpe.bindings), args, captures, next)
         case TypeShape.Nominal(cls) if args.nonEmpty =>
           val (head, context) = value.applicationHead
           def constrain(param: TyParam, pattern: DeclaredType)(using NewResolverState): Unit =
@@ -1494,7 +1540,8 @@ class NewResolver:
         case S(td: TermDefinition) if td.params.isEmpty =>
           log(s"listenTerm: td.body = ${td.body.fold("N")(_.showDbg)}")
           resultSignature(td) match
-            case S(sign) => listenTypeInstances(sign): shape =>
+            case S(sign) => listenTypeInstances(quantifiedType(
+                declaredType(typeResolution(sign), Map.empty), td.tparams.toList.flatten.map(_.sym))): shape =>
               td.tsym.decl match
                 case S(_: Param) => wrappedListener(MarkedShape.enter(shape, ResolutionBoundary(td.tsym), N))
                 case _ => wrappedListener(shape)
@@ -1644,9 +1691,10 @@ class NewResolver:
     case _: DynSel | _: DynNew => listener(DynShape())
     case TyApp(underlying, args) =>
       listen(underlying, discardMarks): shape =>
-        def instantiate(value: TermShape)(using NewResolverState): Unit = value.applicationHead match
-          case (callee: (DefnShape | CallableTypeShape), marks) => applyTypeArguments(callee, marks, args, trm)
-          case _ => ()
+        def instantiate(value: TermShape)(using NewResolverState): Unit = listenInstanceViews(value): viewed =>
+          viewed.applicationHead match
+            case (callee: (DefnShape | CallableTypeShape), marks) => applyTypeArguments(callee, marks, args, trm)
+            case _ => ()
         shape match
           case sym: SymShape => fromSymbol(sym, instantiate, underlying, _ => (), false)
           case value: TermShape => instantiate(value)

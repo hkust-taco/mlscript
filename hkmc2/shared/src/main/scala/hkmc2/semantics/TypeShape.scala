@@ -15,6 +15,7 @@ enum TypeShape:
   case Tuple(fields: Ls[TypeResolution])
   case Record(source: Term.Rcd, fields: Ls[(RcdField, TypeResolution)])
   case Function(params: Term, result: TypeResolution)
+  case Polymorphic(params: Ls[TypeQuantifier], outer: Opt[VarSymbol], body: TypeResolution)
   case Applied(base: TypeResolution, args: Ls[TypeResolution])
   // The same third-party symbol can have different inference in two exporters.
   // Retain its originating host so importing a result needs no whole-state copy.
@@ -65,6 +66,11 @@ final class TypeResolution(val source: Term, report: Ls[(Message, Opt[Loc])] => 
       case Captured(base, _) => base.validate(next)
       case Applied(base, args) => base.validate(next); args.foreach(_.validate(next))
       case Function(_, result) => result.validate(next)
+      case Polymorphic(params, _, body) =>
+        params.foreach: param =>
+          param.lower.foreach(_.validate(next))
+          param.upper.foreach(_.validate(next))
+        body.validate(next)
       case Tuple(fields) => fields.foreach(_.validate(next))
       case Record(_, fields) => fields.foreach(_._2.validate(next))
       case Union(left, right) => left.validate(next); right.validate(next)
@@ -75,3 +81,13 @@ final class TypeResolution(val source: Term, report: Ls[(Message, Opt[Loc])] => 
   * interfaces, not constructor arguments or value-flow capture paths.
   */
 final case class DeclaredType(resolution: TypeResolution, bindings: Map[VarSymbol, DeclaredType])
+
+/** A quantified binder belongs to the source scheme; its bounds retain graph links
+  * so mutually dependent bounds do not require expanding or copying their types.
+  */
+final case class TypeQuantifier(parameter: TypeShape.Parameter,
+    lower: Opt[TypeResolution], upper: Opt[TypeResolution])
+
+/** A callable's binder and bounds interpreted in the surrounding lexical bindings. */
+final case class DeclaredTypeParameter(parameter: TypeShape.Parameter,
+    lower: Opt[DeclaredType], upper: Opt[DeclaredType])

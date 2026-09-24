@@ -423,7 +423,7 @@ final case class DeclaredParams(params: Ls[Opt[DeclaredType]], hasRest: Bool, re
   * applications constrain the same parameters as inferred arguments.
   */
 final case class CallableTypeShape(source: Term, paramLists: Ls[DeclaredParams],
-    result: Opt[DeclaredType], tparams: Ls[TypeShape.Parameter]) extends NonAppTermShape:
+    result: Opt[DeclaredType], tparams: Ls[DeclaredTypeParameter]) extends NonAppTermShape:
   require(paramLists.nonEmpty)
   def describe: Str = "function with a declared signature"
   def toLoc: Opt[Loc] = source.toLoc

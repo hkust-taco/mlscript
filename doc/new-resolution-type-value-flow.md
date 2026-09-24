@@ -6,12 +6,13 @@ nominal-only representation at annotation boundaries: parameter and result
 annotations, ascriptions, generic arguments, and annotated tuple fields retain
 a type reference until an operation requests its interface.
 
-The wrapper refactor is implemented. The design below specifies the next
-implementation: finite instantiation of explicit binders, contextual views of
-partial signatures, inference for explicit and omitted holes, and bidirectional
-constraints with variance. These changes are not implemented yet. The representation
-and implementation order below are the outcome of the design review, not evidence
-that the recursive acceptance cases already work.
+Instance wrappers and preservation of quantified signature binders and bounds
+are implemented. Explicit type application also observes annotated polymorphic
+values. The bounded binder-instance cache is implemented and tested independently;
+calls do not yet use it. Contextual views, bidirectional constraints, variance,
+hole inference, and inferred member interfaces remain to be connected to it.
+The representation and implementation order below are the outcome of the design
+review, not evidence that the recursive acceptance cases already work.
 See the [resolver notes](new-resolution-design.md)
 for current behavior and the [migration worklist](new-resolution-suite-migration.md)
 for remaining ports.
@@ -219,9 +220,10 @@ views nor instantiated callable views should manufacture a new original owner.
 
 Normalize binders from inline declarations and separate signatures into a
 reusable scheme with its parameter bounds, declared type fragments, and links to
-inference for unannotated parts. Do not require a complete signature. Currently,
-`typeResolution` strips `Forall` to its body; that loses the information needed
-to instantiate separate polymorphic signatures. Preserve the quantifiers first.
+inference for unannotated parts. Do not require a complete signature.
+`TypeShape.Polymorphic` retains `Forall` binders and bound references;
+`DeclaredTypeParameter` carries their interpreted bounds on callable views.
+These original identities must be used when instantiating separate signatures.
 
 An instantiated callable must retain one immutable substitution from that
 scheme's own binders to the site's parameter symbols. Use it for parameter

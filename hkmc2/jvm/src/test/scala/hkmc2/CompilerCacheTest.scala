@@ -78,6 +78,44 @@ class CompilerCacheTest extends AnyFunSuite:
         graph.withDependency(fileC, fileA)(cycle => assert(cycle == List(fileC, fileA, fileB, fileC))):
           fail("The dependency closing the cycle should not be requested")
 
+  test("legacy artifacts bind unused syntax hosts before consumers observe them"):
+    import io.PlatformPath.given
+    import semantics.*
+    import utils.*
+
+    val tempDir = os.temp.dir(prefix = "compiler-cache-ownership-")
+    val file: io.Path = tempDir / "Library.mls"
+    os.write(tempDir / "Library.mls",
+      """|module Library with...
+         |fun identity(x) = x
+         |""".stripMargin)
+    try
+      val paths = TestFolders.compilerPaths(os.pwd)
+      val cfg = Config.default(TestFolders.mainTestDir(os.pwd))
+      assert(!cfg.language.useNewResolution)
+      val compiler = CompilerCtx.fresh(io.FileSystem.default, paths, cfg)
+      given DebugPrinter = new DebugPrinter
+      given TL = new TraceLogger:
+        override def doTrace: Boolean = false
+      given Raise = diagnostic => fail(diagnostic.theMsg)
+      val prelude = compiler.getPrelude(paths.preludeFile)
+      val artifact = compiler.getElaboratedBlock(file, prelude.ctx)
+      val consumers = List.fill(2)(new Elaborator.State().newResolverState)
+      def check(statement: Statement, source: NewResolverState): Unit =
+        statement match
+          case term: Term =>
+            assert(term.originalData.owner eq source)
+            assert(term.originalData.completed)
+            val before = term.shapeListeners.size
+            consumers.foreach: consumer =>
+              term.inferenceHost(using consumer).subscribe(_ => ())(using consumer)
+            assert(term.shapeListeners.size == before)
+          case _ => ()
+        statement.subStatements.foreach(check(_, source))
+      check(prelude.term, prelude.state.newResolverState)
+      check(artifact.term, artifact.state.newResolverState)
+    finally os.remove.all(tempDir)
+
   test("active dependency graph permits shared acyclic dependencies"):
     val graph = new ActiveDependencyGraph
     val fileA = io.Path("/A.mls")

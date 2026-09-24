@@ -2956,7 +2956,7 @@ extends Importer:
     // TODO handle name clashes
     if newResolution then
       InterfaceExposure(this).check(exports, Nil)
-      rstate.completeBlock(res)
+    rstate.completeBlock(res)
     (res, newCtx)
   
   def topLevel(sts: Block): Ctxl[(Blk, Ctx)] =
@@ -2970,7 +2970,7 @@ extends Importer:
         val values = res.stats.collect:
           case DefineVar(sym: LocalVarSymbol, rhs) => Term.SimpleRef(sym)(new Ident(sym.nme).withLocOf(rhs))
         InterfaceExposure(this).check(exports, res.res :: values)
-      rstate.completeBlock(res)
+    rstate.completeBlock(res)
     (res, ctx)
   
   def computeVariances(s: Statement): Unit =
