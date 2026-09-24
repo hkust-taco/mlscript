@@ -10,8 +10,10 @@ import utils.*
 import hkmc2.codegen.flowAnalysis.*
 import semantics.*
 
-case class EtaTargets(paramCount: Int, prodFuns: Set[ProdFun]):
-  def pp: Str = s"$paramCount${prodFuns.map(_.exprId).mkString("<", ", ", ">")}"
+case class EtaTargets(paramCount: Int, hasRestParam: Bool, prodFuns: Set[ProdFun]):
+  def paramInfo: (Int, Bool) = paramCount -> hasRestParam
+  def ppParamInfo: Str = if hasRestParam then s"$paramCount+rest" else s"$paramCount"
+  def pp: Str = s"$ppParamInfo${prodFuns.map(_.exprId).mkString("<", ", ", ">")}"
 
 abstract class EtaExpansionResult extends FlowAnalysisSolverResult:
   def etaExpandedFunShape: collection.Map[ConcreteFunId, Ls[EtaTargets]]
@@ -82,9 +84,9 @@ class EtaExpansionSolver(val constraintSolver: FlowConstraintSolver, tl: TraceLo
                 val mergedRes = res match
                   case N => curRes
                   case S(prevRes) => prevRes.zip(curRes).map: (a, b) =>
-                    assert(a.paramCount === b.paramCount,
+                    assert(a.paramInfo === b.paramInfo,
                       s"eta expansion targets disagree on arity: ${a.pp} vs ${b.pp}")
-                    EtaTargets(a.paramCount, a.prodFuns ++ b.prodFuns)
+                    EtaTargets(a.paramCount, a.hasRestParam, a.prodFuns ++ b.prodFuns)
                 go(S(mergedRes))
               else Nil
             case UnknownProd => Nil
@@ -104,7 +106,7 @@ class EtaExpansionSolver(val constraintSolver: FlowConstraintSolver, tl: TraceLo
     cache.get(pf) match
     case S(res) => res
     case N =>
-      val targets = EtaTargets(pf.params.size + pf.restParam.fold(0)(_ => 1), Set.single(pf))
+      val targets = EtaTargets(pf.params.size, pf.restParam.isDefined, Set.single(pf))
       if !processing.contains(pf) then
         val res = targets :: funResShape(pf.res)
         cache(pf) = res
@@ -149,7 +151,7 @@ class EtaExpansionSolver(val constraintSolver: FlowConstraintSolver, tl: TraceLo
     
     tl.log(">>> eta-expansion targets shapes >>>")
     for (id, shape) <- etaExpandedFunShape do
-      tl.log(s"${showFunShapeId(id)}: ${shape.map(_.paramCount).mkString("[", ", ", "]")}")
+      tl.log(s"${showFunShapeId(id)}: ${shape.map(_.ppParamInfo).mkString("[", ", ", "]")}")
     tl.log("<<< eta-expansion targets shapes <<<")
   end if
 end EtaExpansionSolver

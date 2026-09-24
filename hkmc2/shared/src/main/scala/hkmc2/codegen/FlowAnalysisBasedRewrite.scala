@@ -8,7 +8,7 @@ import utils.*
 
 import hkmc2.codegen.flowAnalysis.*
 import semantics.*
-import syntax.Tree
+import syntax.{Tree, SpreadKind}
 
 
 class FlowAnalysisBasedRewrite(
@@ -67,14 +67,11 @@ class FlowAnalysisBasedRewrite(
     
     private def etaParamLists(id: ConcreteFunId, existingParams: Ls[ParamList]): Ls[EtaParamList] =
       
-      def paramCount(pl: ParamList): Int =
-        pl.params.size + pl.restParam.fold(0)(_ => 1)
-      end paramCount
       
       def eliminableParamsOf(targets: EtaTargets): Set[Int] =
-        val arities = targets.prodFuns.map(pf => pf.params.size + pf.restParam.fold(0)(_ => 1))
-        assert(arities.forall(_ === targets.paramCount),
-          s"eta expansion level disagrees with its targets on arity: ${targets.pp} -> $arities")
+        val paramInfos = targets.prodFuns.map(pf => pf.params.size -> pf.restParam.isDefined)
+        assert(paramInfos.forall(_ === targets.paramInfo),
+          s"eta expansion level disagrees with its targets on arity: ${targets.pp} -> $paramInfos")
         val eliminable = targets.prodFuns.map: target =>
           deadParamElimSolver.eliminableParams(target.concreteId)
         assert(eliminable.size <= 1,
@@ -84,17 +81,22 @@ class FlowAnalysisBasedRewrite(
       end eliminableParamsOf
       
       etaExpansionSolver.etaExpandedFunShape.get(id).toList.flatMap: targetShape =>
-        val existingShape = existingParams.map(paramCount)
-        if targetShape.map(_.paramCount).startsWith(existingShape) then
+        val existingShape = existingParams.map: pl =>
+          pl.params.size -> pl.restParam.isDefined
+        if targetShape.map(_.paramInfo).startsWith(existingShape) then
           targetShape.drop(existingShape.size).zipWithIndex.map:
             case (targets, idx) =>
               val eliminable = eliminableParamsOf(targets)
+              def etaParam(name: Str): Param =
+                Param.simple(new VarSymbol(new Tree.Ident(s"eta$$$idx$$$name"), erasedType = N))
               val params = (0 until targets.paramCount).iterator.filterNot(eliminable).map: i =>
-                Param.simple(new VarSymbol(new Tree.Ident(s"eta$$$idx$$$i"), erasedType = N))
+                etaParam(i.toString)
               .toList
+              val restParam = Option.when(targets.hasRestParam)(etaParam("rest"))
               EtaParamList(
-                ParamList(ParamListFlags.empty, params, N),
-                params.map(p => Arg(N, p.sym.asSimpleRef)),
+                ParamList(ParamListFlags.empty, params, restParam),
+                params.map(p => Arg(N, p.sym.asSimpleRef)) :::
+                  restParam.toList.map(p => Arg(S(SpreadKind.Eager), p.sym.asSimpleRef)),
               )
         else
           lastWords("not the same shape?")

@@ -221,9 +221,7 @@ main2(true)
 
 
 
-// FIXME: eta expansion must preserve a rest parameter and spread it at the forwarding call.
-// The returned function is called exactly once, with more than one variadic argument.
-:fixme
+// eta expansion keeps the target's rest parameter and spreads it at the call site
 :flowBasedOpt mono debugEta
 :soir
 :noInline
@@ -232,17 +230,50 @@ main2(true)
 fun returnRest(a) = rest(a)
 returnRest(0)(1, 2, 3)
 //│ eta-expansion > >>> eta-expansion targets shapes >>>
-//│ eta-expansion > returnRest: [1, 1]
+//│ eta-expansion > returnRest: [1, 0+rest]
 //│ eta-expansion > <<< eta-expansion targets shapes <<<
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ @affine(1)
 //│ define rest⁰ as fun rest¹(a)(...xs) {
 //│   return xs
 //│ };
-//│ define returnRest⁰ as fun returnRest¹(a)(eta$0$0) {
-//│   return rest¹(a)(eta$0$0)
+//│ define returnRest⁰ as fun returnRest¹(a)(...eta$0$rest) {
+//│   return rest¹(a)(...eta$0$rest)
 //│ };
 //│ return returnRest¹(0)(1, 2, 3)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
-//│ ═══[RUNTIME ERROR] Expected: '[1, 2, 3]', got: '[1]'
-//│ = [1]
+//│ = [1, 2, 3]
+
+// eta expansion and dead param elim working at the same time
+:flowBasedOpt mono debugEta debugDpe
+:soir
+:noInline
+:expect [2, 3]
+@affine(1) private fun rest2(a)(b, ...xs) = xs
+private fun returnRest2(a) = rest2(a)
+private fun app(f) = f(1, 2, 3)
+app(returnRest2(0))
+//│ eta-expansion > >>> eta-expansion targets shapes >>>
+//│ eta-expansion > returnRest2: [1, 1+rest]
+//│ eta-expansion > <<< eta-expansion targets shapes <<<
+//│ dead-param-elim > >>> dead-param-elim results >>>
+//│ dead-param-elim > prodfun rest2#0 @ <root> -> eliminable: {0}
+//│ dead-param-elim > prodfun rest2#1 @ <root> -> eliminable: {0}
+//│ dead-param-elim > prodfun returnRest2#0 @ <root> -> eliminable: {0}
+//│ dead-param-elim > <<< dead-param-elim results <<<
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let tmp;
+//│ @affine(1) @private
+//│ define rest2⁰ as fun rest2¹()(...xs) {
+//│   return xs
+//│ };
+//│ @private
+//│ define returnRest2⁰ as fun returnRest2¹()(...eta$0$rest) {
+//│   return rest2¹()(...eta$0$rest)
+//│ };
+//│ @private
+//│ define app⁰ as fun app¹(f) { return f(2, 3) };
+//│ set tmp = returnRest2¹();
+//│ return app¹(tmp)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = [2, 3]

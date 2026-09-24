@@ -982,9 +982,9 @@ class FlowConstraintsCollector(
               registerCtor(new Ctor(c.uid, instId)(ctor, clsParams.zip(argsStrat)))
             case _ =>
               // - the size of 0 means we don't know the cls param symbols,
-              // so we constrain args with NoCons and this CtorProducer gives NoProd
+              // so we constrain args with UnknownCons and this CtorProducer gives UnknownProd
               // - if size > 1, we cannot handle multiple parameter class flow now,
-              //   constrain args with NoCons and this CtorProducer gives NoProd
+              //   constrain args with UnknownCons and this CtorProducer gives UnknownProd
               for a <- argsStrat do cc.constrain(a, UnknownCons)
               UnknownProd
           case _: ModuleOrObjectSymbol => registerCtor(new Ctor(c.uid, instId)(ctor, Nil))
