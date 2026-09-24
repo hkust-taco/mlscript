@@ -521,15 +521,19 @@ class NewResolver:
     * therefore retains the same callable head and contexts as a partial C(...).
     */
   private def constructorShape(cls: ClassDef, ext: Opt[TermShape]): DefnShape =
-    val (symbol, definition, base) = cls.ctorSym match
-      case S(ctor) => (ctor, ctor.defn.get, S(BaseShape(cls, ext)))
-      case N => (cls.sym, cls, ext)
-    val shape = defnShapes.getOrElseUpdate(symbol, DefnShape(definition, base))
+    // The shared cache distinguishes the constructor's TermDefinition from its
+    // ClassDef, even though both definitions cross the same resolution boundary.
+    val symbol: ClassCtorSymbol | ClassSymbol = cls.ctorSym.getOrElse(cls.sym)
+    val definition = symbol.defn.get
+    val shape = defnShapes.getOrElseUpdate(symbol, {
+      val base = if cls.ctorSym.isDefined then S(BaseShape(cls, ext)) else ext
+      DefnShape(definition, base)
+    })
     softAssert(shape.defn is definition)
-    (shape.ext, base) match
-      case (S(left: BaseShape), S(right: BaseShape)) =>
-        softAssert((left.defn is right.defn) && left.ext == right.ext)
-      case (left, right) => softAssert(left == right)
+    if cls.ctorSym.isDefined then shape.ext match
+      case S(base: BaseShape) => softAssert((base.defn is cls) && base.ext == ext)
+      case _ => softAssert(false, "Constructor shape is missing its class base")
+    else softAssert(shape.ext == ext)
     shape
   
   def resolveNew(nw: Term.New): Unit = nw.cls.classHead match
