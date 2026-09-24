@@ -18,7 +18,7 @@ Foo(123)
 //│ ╔══[COMPILATION ERROR] Resolution error in application
 //│ ║  l.17: 	Foo(123)
 //│ ║        	^^^^^^^^
-//│ ╟── Class constructor 'Foo' expected 2 arguments, but got 1
+//│ ╟── Class 'Foo' expected 2 arguments, but got 1
 //│ ║  l.7: 	fun Foo(x) = new Foo(x, 0)
 //│ ║       	^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.8: 	data class Foo(x, y)

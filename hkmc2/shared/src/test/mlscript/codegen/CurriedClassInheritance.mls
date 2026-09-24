@@ -43,7 +43,7 @@ let c = b(100)
 //│ ╔══[COMPILATION ERROR] Resolution error in application
 //│ ║  l.42: 	let c = b(100)
 //│ ║        	        ^^^^^^
-//│ ╟── Instance of class constructor 'Bar' cannot receive more argument lists.
+//│ ╟── Instance of class 'Bar' cannot receive more argument lists.
 //│ ║  l.34: 	let b = Bar(123)(1234)
 //│ ╙──      	        ^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] TypeError: b is not a function
@@ -58,7 +58,7 @@ Bar(123)(1234)(100).a
 //│ ╔══[COMPILATION ERROR] Resolution error in application
 //│ ║  l.57: 	Bar(123)(1234)(100).a
 //│ ║        	^^^^^^^^^^^^^^^^^^^
-//│ ╟── Instance of class constructor 'Bar' cannot receive more argument lists.
+//│ ╟── Instance of class 'Bar' cannot receive more argument lists.
 //│ ║  l.57: 	Bar(123)(1234)(100).a
 //│ ╙──      	^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] TypeError: baseCall is not a function
@@ -69,13 +69,13 @@ Bar(123)(1234)(100).a
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
 //│ ║  l.68: 	[c.x, c.y]
 //│ ║        	 ^^^
-//│ ╟── Instance of class constructor 'Bar' does not contain member 'x'
+//│ ╟── Instance of class 'Bar' does not contain member 'x'
 //│ ║  l.42: 	let c = b(100)
 //│ ╙──      	        ^^^^^^
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
 //│ ║  l.68: 	[c.x, c.y]
 //│ ║        	      ^^^
-//│ ╟── Instance of class constructor 'Bar' does not contain member 'y'
+//│ ╟── Instance of class 'Bar' does not contain member 'y'
 //│ ║  l.42: 	let c = b(100)
 //│ ╙──      	        ^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
@@ -92,7 +92,7 @@ b1.a
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
 //│ ║  l.91: 	b1.a
 //│ ║        	^^^^
-//│ ╟── Instance of class constructor 'Bar' does not contain member 'a'
+//│ ╟── Instance of class 'Bar' does not contain member 'a'
 //│ ║  l.86: 	let b1 = b0(123)
 //│ ╙──      	         ^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
@@ -109,7 +109,7 @@ let c = b(100)
 //│ ╔══[COMPILATION ERROR] Resolution error in application
 //│ ║  l.108: 	let c = b(100)
 //│ ║         	        ^^^^^^
-//│ ╟── Instance of class constructor 'Bar' cannot receive more argument lists.
+//│ ╟── Instance of class 'Bar' cannot receive more argument lists.
 //│ ║  l.100: 	let b = b1(1234)
 //│ ╙──       	        ^^^^^^^^
 //│ ═══[RUNTIME ERROR] TypeError: b2 is not a function
@@ -125,13 +125,13 @@ c.a
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
 //│ ║  l.124: 	[c.x, c.y]
 //│ ║         	 ^^^
-//│ ╟── Instance of class constructor 'Bar' does not contain member 'x'
+//│ ╟── Instance of class 'Bar' does not contain member 'x'
 //│ ║  l.108: 	let c = b(100)
 //│ ╙──       	        ^^^^^^
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
 //│ ║  l.124: 	[c.x, c.y]
 //│ ║         	      ^^^
-//│ ╟── Instance of class constructor 'Bar' does not contain member 'y'
+//│ ╟── Instance of class 'Bar' does not contain member 'y'
 //│ ║  l.108: 	let c = b(100)
 //│ ╙──       	        ^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
@@ -148,7 +148,7 @@ let c = b(100)
 //│ ╔══[COMPILATION ERROR] Resolution error in application
 //│ ║  l.147: 	let c = b(100)
 //│ ║         	        ^^^^^^
-//│ ╟── Instance of class constructor 'Baz' cannot receive more argument lists.
+//│ ╟── Instance of class 'Baz' cannot receive more argument lists.
 //│ ║  l.142: 	let b = Baz(123)(1234)
 //│ ╙──       	        ^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] TypeError: b3 is not a function

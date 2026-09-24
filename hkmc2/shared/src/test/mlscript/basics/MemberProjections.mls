@@ -92,7 +92,7 @@ foo.M.Foo::m()
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
 //│ ║  l.91: 	foo.M.Foo::m()
 //│ ║        	^^^^^
-//│ ╟── Instance of class constructor 'Foo' does not contain member 'M'
+//│ ╟── Instance of class 'Foo' does not contain member 'M'
 //│ ║  l.11: 	let foo = M.Foo(123)
 //│ ╙──      	          ^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Resolution error in application
@@ -115,7 +115,7 @@ foo.M.Foo#m()
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
 //│ ║  l.111: 	foo.M.Foo#m()
 //│ ║         	^^^^^
-//│ ╟── Instance of class constructor 'Foo' does not contain member 'M'
+//│ ╟── Instance of class 'Foo' does not contain member 'M'
 //│ ║  l.11: 	let foo = M.Foo(123)
 //│ ╙──      	          ^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Cannot resolve the projection class

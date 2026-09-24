@@ -426,7 +426,7 @@ class DefnShape(val defn: Definition, val ext: Opt[TermShape]) extends NonAppTer
       case defn: TypeLikeDef => defn.kind.desc + " "
       case defn: TermDefinition =>
         defn.tsym match
-        case _: ClassCtorSymbol => "class constructor "
+        case _: ClassCtorSymbol => "class "
         case s => s.k.desc + " "
     }'${defn.bsym.nme}'"
   // override def toString: String = s"DefnShape(${defn.describe} ${defn.bsym.nme})"

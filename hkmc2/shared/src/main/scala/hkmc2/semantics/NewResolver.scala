@@ -781,9 +781,9 @@ class NewResolver:
       res.isErroneous = true
       if lhs.applicationHead._1 is lhs
       then resolError(res,
-          msg"${lhs.describe.capitalize} cannot be called like a function." -> lhs.toLoc :: Nil)
+        msg"${lhs.describe.capitalize} cannot be called like a function." -> lhs.toLoc :: Nil)
       else resolError(res,
-          msg"${lhs.describe.capitalize} cannot receive more argument lists." -> lhs.toLoc :: Nil)
+        msg"${lhs.describe.capitalize} cannot receive more argument lists." -> lhs.toLoc :: Nil)
     if sh.isSaturated then
       def go(body: Term, mss: Ls[Marks]) =
         listenTerm(body): sh =>

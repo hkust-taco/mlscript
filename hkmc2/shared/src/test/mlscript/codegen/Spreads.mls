@@ -72,7 +72,7 @@ x.r
 //│ ╔══[COMPILATION ERROR] Resolution error in object instantiation
 //│ ║  l.67: 	let x = new A(1, 2, 3)
 //│ ║        	        ^^^^^^^^^^^^^^
-//│ ╟── Class constructor 'A' expected 0 arguments, but got 3
+//│ ╟── Class 'A' expected 0 arguments, but got 3
 //│ ║  l.66: 	data class A(...r)
 //│ ╙──      	     ^^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
@@ -96,7 +96,7 @@ new A(1, 2, 3).getR
 //│ ╔══[COMPILATION ERROR] Resolution error in object instantiation
 //│ ║  l.92: 	new A(1, 2, 3).getR
 //│ ║        	^^^^^^^^^^^^^^
-//│ ╟── Class constructor 'A' expected 0 arguments, but got 3
+//│ ╟── Class 'A' expected 0 arguments, but got 3
 //│ ║  l.90: 	data class A(...r) with
 //│ ║        	     ^^^^^^^^^^^^^^^^^^
 //│ ║  l.91: 	  fun getR = r

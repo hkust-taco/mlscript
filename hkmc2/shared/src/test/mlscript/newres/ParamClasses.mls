@@ -238,7 +238,7 @@ g(2)
 //│ ╔══[COMPILATION ERROR] Resolution error in application
 //│ ║  l.237: 	g(2)
 //│ ║         	^^^^
-//│ ╟── Instance of class constructor 'Foo' cannot receive more argument lists.
+//│ ╟── Instance of class 'Foo' cannot receive more argument lists.
 //│ ║  l.233: 	let g = f(1)
 //│ ╙──       	        ^^^^
 //│ ═══[RUNTIME ERROR] TypeError: g is not a function
@@ -248,7 +248,7 @@ let f = new Foo()
 //│ ╔══[COMPILATION ERROR] Resolution error in object instantiation
 //│ ║  l.247: 	let f = new Foo()
 //│ ║         	        ^^^^^^^^^
-//│ ╟── Class constructor 'Foo' expected 1 argument, but got 0
+//│ ╟── Class 'Foo' expected 1 argument, but got 0
 //│ ║  l.84: 	class Foo(val a) {
 //│ ║        	^^^^^^^^^^^^^^^^^^
 //│ ║  l.85: 	  val b = a + 1
