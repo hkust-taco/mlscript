@@ -1080,7 +1080,11 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
         case sym: sem.BlockMemberSymbol =>
           sym.trmImplTree.fold(sym.clsTree.isDefined)(_.k is syntax.Fun)
         case sym: sem.TermSymbol =>
-          (sym.k is syntax.Fun) && sym.defn.forall(!_.hasDeclareModifier.isDefined)
+          // Methods inside a declared class can have no local `declare` modifier.
+          // Only implementations (and generated constructors) promise the MLscript
+          // calling convention; foreign declarations need undefined normalization.
+          (sym.k is syntax.Fun) && sym.defn.exists(d => !d.hasDeclareModifier.isDefined &&
+            (d.body.isDefined || sym.isInstanceOf[ClassCtorSymbol]))
         // Do not perform safety check on `MatchSuccess` and `MatchFailure`.
         case sym => (sym is State.matchSuccessClsSymbol) ||
           (sym is State.matchFailureClsSymbol)
@@ -1212,6 +1216,14 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
       case Ref(sym) =>
         subTerm(rhs): r =>
           assignSymbol(resolvedSelectionSymbol.getOrElse(sym), sym, r, k(unit), trm.toLoc)
+      case ref: MemberRef =>
+        if ref.isErroneous then compError else ref.resolvedTargets.distinct match
+          case target :: Nil =>
+            subTerm(rhs): r =>
+              assignSymbol(target, ref.sym, r, k(unit), trm.toLoc)
+          case _ => fail:
+            ErrorReport(msg"Assignment requires one resolved member" -> ref.toLoc :: Nil,
+              source = Diagnostic.Source.Compilation)
       case ref: UnresolvedRef =>
         openSelection(ref): (prefix, member, target) =>
           target match

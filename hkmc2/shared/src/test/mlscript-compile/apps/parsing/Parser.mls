@@ -1,5 +1,5 @@
 import "../../Predef.mls"
-import "../../Option.mls"
+import "../../LegacyOption.mls"
 import "../../Stack.mls"
 import "../../TreeTracer.mls"
 import "../../Iter.mls"
@@ -15,7 +15,7 @@ import "./Rules.mls"
 import "./ParseRule.mls"
 
 open Predef
-open Option
+open LegacyOption
 open Stack
 open ParseRule { Choice }
 open Choice { Ref }
@@ -98,8 +98,8 @@ fun parse(tokens) =
       do tracer.print of "the current rule is " + rule.display
       rule.refChoice is Some(Ref(kind, process, outerPrec, innerPrec, rest)) and
         do tracer.print of "try to parse kind \"" + kind + "\" at " + TokenHelpers.preview(tokens), source.line
-        let outerPrec' = outerPrec Option.getOrElse(Keywords.maxKeywordPrec)
-        let innerPrec' = innerPrec Option.getOrElse(prec)
+        let outerPrec' = outerPrec LegacyOption.getOrElse(Keywords.maxKeywordPrec)
+        let innerPrec' = innerPrec LegacyOption.getOrElse(prec)
         outerPrec' > prec and
           let acc = parseKind(kind, prec)
           acc Tree.nonEmptyError() and parseRule(prec, rest) is
@@ -164,7 +164,7 @@ fun parse(tokens) =
     Nil then Tree.error("unexpected end of input")
   
   fun exprCont(acc: Tree, prec: Int, options) = if tokens is
-    let infix = options.rule.refChoice Option.flatMap of case
+    let infix = options.rule.refChoice LegacyOption.flatMap of case
       Ref(kind, process, None, None, rest) and kind == options.kind then
         { process: process, rule: rest }
       else throw Error("Kind " + options.kind + " does not have infix rules")
@@ -178,8 +178,8 @@ fun parse(tokens) =
         keyword.leftPrecOrMin > prec and rule.refChoice is
           Some(Ref(kind, process, outerPrec, innerPrec, rest)) and
             do tracer.print of "try to parse kind \"" + kind + "\" at " + TokenHelpers.preview(tokens), source.line
-            let outerPrec' = outerPrec Option.getOrElse(Keywords.maxOperatorPrec)
-            let innerPrec' = innerPrec Option.getOrElse(outerPrec')
+            let outerPrec' = outerPrec LegacyOption.getOrElse(Keywords.maxOperatorPrec)
+            let innerPrec' = innerPrec LegacyOption.getOrElse(outerPrec')
             outerPrec' > prec then
               consume
               let rhs = parseKind(kind, keyword.rightPrecOrMin)
@@ -204,10 +204,10 @@ fun parse(tokens) =
     token :: _ and infix.rule.refChoice is
       Some(Ref(kind, process, outerPrec, innerPrec, rest)) and
         do tracer.print of "found reference to " + kind + " with outerPrec = " + outerPrec, source.line
-        let outerPrec' = outerPrec Option.getOrElse(Keywords.maxOperatorPrec)
-        let innerPrec' = innerPrec Option.getOrElse(outerPrec')
+        let outerPrec' = outerPrec LegacyOption.getOrElse(Keywords.maxOperatorPrec)
+        let innerPrec' = innerPrec LegacyOption.getOrElse(outerPrec')
         outerPrec' > prec and
-          parseKind(kind, innerPrec Option.getOrElse(outerPrec')) is
+          parseKind(kind, innerPrec LegacyOption.getOrElse(outerPrec')) is
             Tree.Empty then
               do tracer.print of "nothing was parsed", source.line
               acc

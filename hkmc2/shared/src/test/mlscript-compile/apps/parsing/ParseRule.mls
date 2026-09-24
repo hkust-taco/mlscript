@@ -1,13 +1,13 @@
 import "../../MutMap.mls"
 import "../../Iter.mls"
-import "../../Option.mls"
+import "../../LegacyOption.mls"
 import "../../Stack.mls"
 import "../../Predef.mls"
 import "./Keywords.mls"
 import "./Token.mls"
 import "./Tree.mls"
 
-open Option { Some, None }
+open LegacyOption { Some, None }
 open Predef { check, tuple }
 open Stack
 
@@ -21,8 +21,8 @@ module Choice with
   data class Ref[A, B](
       kind: Str,
       process: (Tree, B) -> A,
-      outerPrec: Option[Int],
-      innerPrec: Option[Int],
+      outerPrec: LegacyOption[Int],
+      innerPrec: LegacyOption[Int],
       rest: ParseRule[B]
   ) extends Choice[A]
   
@@ -42,7 +42,7 @@ module Choice with
       init: ParseRule[B],
       optional: Bool,
       rest: ParseRule[C],
-      process: (Option[B], C) -> A
+      process: (LegacyOption[B], C) -> A
   ) extends Choice[A]
   
   let ensureChoices(xs, name) = xs
@@ -130,7 +130,7 @@ module Choice with
     End(value) then End(op(value))
 
 data class Lazy[out A](init: () -> A) with
-  mut val cached: Option[A] = None
+  mut val cached: LegacyOption[A] = None
   fun reset() = set cached = None
   fun get() = if cached is
     Some(v) then v

@@ -173,7 +173,7 @@ fun codegen(t, file) =
   if not fs.existsSync(file) do
     fs.writeFileSync(file, "", "utf8")
   let originData = fs.readFileSync(file, "utf8")
-  let newData = StrOps.concat of dependencies.join("\n"), "\n", code
+  let newData = StrOps.concat of "#lang(0.3.x)\n\n", dependencies.join("\n"), "\n", code
   if newData != originData do
     fs.writeFileSync(file, newData, "utf8")
 

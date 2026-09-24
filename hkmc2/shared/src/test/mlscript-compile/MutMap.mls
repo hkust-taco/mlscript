@@ -1,8 +1,8 @@
-import "./Option.mls"
+import "./LegacyOption.mls"
 import "./Predef.mls"
 
 open Predef
-open Option { Some, None }
+open LegacyOption { Some, None }
 
 
 module MutMap with ...

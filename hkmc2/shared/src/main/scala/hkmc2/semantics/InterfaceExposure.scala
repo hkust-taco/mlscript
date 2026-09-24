@@ -57,7 +57,11 @@ final class InterfaceExposure(resolver: NewResolver)(using NewResolverState, TL)
   private def member(symbol: BlockMemberSymbol, marks: Ls[Marks], path: Path)(using NewResolverState): Unit =
     if (symbol.getState is rstate.owner) && (symbol.asModOrObj.isDefined || symbol.asTrm.isDefined || symbol.asCls.isDefined) then
       val ref = source(symbol)
-      watch((symbol, marks))(resolver.fromBMS(symbol, ref.resSym, marks, _, ref, _ => ()))(emit(_, path))
+      watch((symbol, marks))(resolver.fromBMS(symbol, ref.resSym, marks, _, ref, _ => (), false))(emit(_, path))
+      // Both overloads are public: selecting a module member must not hide the
+      // function's inputs, and exposing a function must not hide module members.
+      if symbol.asModOrObj.isDefined && symbol.asTrm.isDefined then
+        watch((symbol, marks, true))(resolver.fromBMS(symbol, ref.resSym, marks, _, ref, _ => (), true))(emit(_, path))
       // A term companion can hide the constructor in term position, but clients
       // still have access to the class through `new` and class projections.
       if symbol.asModOrObj.isDefined || symbol.asTrm.exists(!_.isInstanceOf[ClassCtorSymbol]) then

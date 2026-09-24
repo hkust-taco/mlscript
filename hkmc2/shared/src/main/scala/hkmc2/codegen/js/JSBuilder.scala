@@ -1257,7 +1257,9 @@ object JSBuilder:
       * symbol are not affected. */
     def shouldBeLifted: Bool =
       val bsym = dsym.asBlkMember
-      (
+      // Foreign callable constructors are already class values. Their declared
+      // function overload does not create an MLscript wrapper or `.class` slot.
+      !dsym.defn.exists(_.hasDeclareModifier.isDefined) && (
         (dsym.asTrm orElse bsym.flatMap(_.asTrm)).isDefined ||
         (dsym.asCls orElse bsym.flatMap(_.asCls)).flatMap(_.defn).exists(_.paramsOpt.isDefined)
       ) && 

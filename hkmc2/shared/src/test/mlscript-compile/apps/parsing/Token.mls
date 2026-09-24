@@ -1,7 +1,7 @@
-import "../../Option.mls"
+import "../../LegacyOption.mls"
 import "../../Predef.mls"
 
-open Option { Some, None }
+open LegacyOption { Some, None }
 open Predef { mkStr }
 
 module Token with ...

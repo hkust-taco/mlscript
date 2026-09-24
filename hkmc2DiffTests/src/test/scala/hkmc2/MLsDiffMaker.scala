@@ -20,7 +20,9 @@ abstract class MLsDiffMaker extends DiffMaker:
   val runtimeSourceFile: io.Path = predefFile.up / "Runtime.mls" // * Contains MLscript runtime sources
   val termFile: io.Path = predefFile.up / "Term.mjs" // * Contains MLscript runtime term definitions
   val blockFile: io.Path = predefFile.up / "Block.mjs" // * Contains MLscript runtime block definitions
-  val optionFile: io.Path = predefFile.up / "Option.mjs" // * Contains MLscipt runtime option definition
+  // Reflection must use the same option constructors as Block.mls. Switch both
+  // back to Option when Block and its consumers no longer need LegacyOption.
+  val optionFile: io.Path = predefFile.up / "LegacyOption.mjs"
   
   val wd = file.up
   
@@ -311,6 +313,11 @@ abstract class MLsDiffMaker extends DiffMaker:
       val preludeArtifact = cctx.getPrelude(preludeFile)
       curCtx = preludeArtifact.ctx
       prelude = preludeArtifact.ctx
+    else
+      // The compiler loads the prelude as one compilation unit. Its mutually
+      // referring host signatures must see declarations across blank lines here
+      // too; worksheet block boundaries are not part of the prelude's semantics.
+      consumeEmptyLines.setCurrentValue(())
     super.run()
   
   

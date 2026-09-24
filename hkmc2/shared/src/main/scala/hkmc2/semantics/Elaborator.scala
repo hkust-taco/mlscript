@@ -482,7 +482,7 @@ object Elaborator:
     * a runtime value merely because they use the same reference syntax.
     */
   enum Interpretation:
-    case Trm, Clss, Ptrn, Tpe
+    case Trm, Receiver, Clss, Ptrn, Tpe
 
   enum Mode:
     case Full
@@ -719,7 +719,7 @@ end Elaborator
 
 
 import Elaborator.*
-import Elaborator.Interpretation.{Trm, Clss, Ptrn, Tpe}
+import Elaborator.Interpretation.{Trm, Receiver, Clss, Ptrn, Tpe}
 
 
 class Elaborator(val tl: TraceLogger, val wd: io.Path, val prelude: Ctx)
@@ -1211,6 +1211,7 @@ extends Importer:
   private def interpretRef(ref: Term, interp: Interpretation): Term =
     if newResolution then interp match
       case Trm => requireTerm(ref)
+      case Receiver => listenReceiver(ref)(_ => ())
       case Tpe => ref.typeInterpretation = S(typeResolution(ref))
       case _ => ()
     ref
@@ -1240,7 +1241,7 @@ extends Importer:
       app(lt, rt)(tree, N, sym)
     
     def elaborateSelection(tree: Sel): Term =
-      val preTrm = subterm(tree.prefix)
+      val preTrm = subterm(tree.prefix, Receiver)
       if newResolution then
         val res = new Term.NewSel(preTrm, tree.name, N)(FlowSymbol.sel(tree.name.name)).withLocOf(tree)
         // listenTerm(preTrm, shape => selShape2(shape, tree.name, res))
@@ -1913,7 +1914,8 @@ extends Importer:
                 val bareClassOverload = newResolution && ((k is Fun) || k.isInstanceOf[Val]) && (defn match
                   case td: TypeDef => (td.k is Cls) && td.paramLists.isEmpty
                   case _ => false)
-                if !supportedOverloadings(k -> defn.k) && !bareClassOverload then raise:
+                val functionModuleOverload = newResolution && (k is Fun) && (defn.k is Mod)
+                if !supportedOverloadings(k -> defn.k) && !bareClassOverload && !functionModuleOverload then raise:
                   ErrorReport:
                     if notYetSupportedOverloadings(k -> defn.k)
                     then msg"Not yet supported: overloading of ${k.desc} '$name'" -> mainDefn.toLoc

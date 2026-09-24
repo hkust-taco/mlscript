@@ -438,7 +438,7 @@ class DefnShape(val defn: Definition, val ext: Opt[TermShape]) extends NonAppTer
     defn match
     case defn: ModuleOrObjectDef =>
       MemberLookup.inClass(defn, ext, name)
-    case defn: TermDefinition => ???
+    case _: TermDefinition => MemberLookup.Missing
     case _ => MemberLookup.Missing
   def toLoc: Opt[Loc] = defn.sym.toLoc
 
@@ -619,13 +619,15 @@ object RecordShape:
 
 
 type IntroTerm = Term.Lit | Term.UnitVal | Term.Lam //| Term.New
-class IntroShape(val trm: IntroTerm) extends NonAppTermShape:
+class IntroShape(val trm: IntroTerm, val primitive: Opt[NominalTypeShape]) extends NonAppTermShape:
   def describe: Str = trm.describe
   protected def getMemberImpl(name: Str)(using NewResolverState): MemberLookup = trm match
-    case _: Term.Lit | _: Term.UnitVal => MemberLookup.Missing // TODO: methods on literals
+    case _: Term.Lit | _: Term.UnitVal => primitive.fold[MemberLookup](MemberLookup.Missing)(_.getMember(name))
     case lam: Term.Lam => MemberLookup.Missing // TODO: methods on lambdas
     // case newTerm: Term.New =>
     //   Map.empty // TODO
+  override def isInstanceOfClass(cls: ClassLikeDef)(using NewResolverState): Bool =
+    primitive.exists(_.isInstanceOfClass(cls))
   def toLoc: Opt[Loc] = trm.toLoc
   override def toString: Str = s"IntroShape(${trm})"
 

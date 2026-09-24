@@ -4,11 +4,11 @@
 // Author: Luyu Cheng
 
 
-import "../../../mlscript-compile/Option.mls"
+import "../../../mlscript-compile/LegacyOption.mls"
 import "../../../mlscript-compile/MutMap.mls"
 
 open annotations
-open Option { Some, None }
+open LegacyOption { Some, None }
 
 
 data class Term with
@@ -71,7 +71,7 @@ Var("a").freshVar("b")
 
 fun (<~>) alphaEquivalent(lhs, rhs) =
   let varMap = MutMap.empty
-  pattern Var' = Var(n) => varMap |> MutMap.get(n) |. Option.getOrElse(n)
+  pattern Var' = Var(n) => varMap |> MutMap.get(n) |. LegacyOption.getOrElse(n)
   fun go(lhs, rhs) = if lhs is
     Var(n) and rhs is Var' as n' then n === n'
     App(l, r) and r is App(l', r') then go(l, l') and go(r, r')

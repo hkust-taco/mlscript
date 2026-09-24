@@ -1,0 +1,67 @@
+:.
+
+// Calls and stored function values select the function overload. Selections
+// retain the companion module, including inside nested function captures.
+fun Compute[A](x: A) = x
+module Compute with
+  fun next(x: Int) = Compute(x + 1)
+
+:expect [2, 3, 4]
+let f = Compute
+[Compute(2), f(3), Compute.next(3)]
+//│ = [2, 3, 4]
+//│ f = class Compute
+
+class Item(val value: Int)
+module Item with
+  fun next(x: Item) = Item(x.value + 1)
+
+:expect [2, 3]
+[Item(2).value, Item.next(Item(2)).value]
+//│ = [2, 3]
+
+module Library with
+  fun Convert[A](x: A) = x
+  module Convert with
+    fun twice(x: Int) = Convert(x + x)
+
+:expect [4, 6]
+open Library
+[Convert(4), Convert.twice(3)]
+//│ = [4, 6]
+
+:expect 5
+fun nested() = {
+  fun inner() = Item.next(Item(4)).value
+  inner()
+}
+nested()
+//│ = 5
+
+:expect [7, 8]
+[Compute[Int](7), Library.Convert[Int](8)]
+//│ = [7, 8]
+
+// Taking a function value does not also take its companion module.
+:e
+fun plain(x: Int) = x
+plain.missing
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.48: 	plain.missing
+//│ ║        	^^^^^^^^^^^^^
+//│ ╟── Function 'plain' does not contain member 'missing'
+//│ ║  l.47: 	fun plain(x: Int) = x
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// Captured constructor patterns retain the class target through every scope.
+:expect 9
+fun inspect(x) = {
+  fun nested() = {
+    fun deeper() = if x is Item(v) then v else 0
+    deeper()
+  }
+  nested()
+}
+inspect(Item(9))
+//│ = 9

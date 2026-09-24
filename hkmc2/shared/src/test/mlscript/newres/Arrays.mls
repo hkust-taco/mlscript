@@ -84,7 +84,7 @@ values([Item(4)]).map((item, ...) => item.value)
 :ge
 [1].map(x => x)
 //│ ╔══[COMPILATION ERROR] Resolution error in function type
-//│ ║  l.119: 	  fun map[U](f: (T, Int, Array[T]) -> U): Array[U]
+//│ ║  l.153: 	  fun map[U](f: (T, Int, Array[T]) -> U): Array[U]
 //│ ║         	                ^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Callback parameter list does not match its declared function type.
 //│ ║  in Arrays.mls:85
@@ -108,3 +108,20 @@ xs.map((x, ...) => x.original)
 //│ ╙──      	         ^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ xs = [Replacement(2)]
+
+// at supports negative indices; foreign undefined results normalize to unit.
+:expect [3, 1, ()]
+let xs = [1, 2, 3]
+[xs.at(-1), xs.at(0), xs.at(3)]
+//│ = [3, 1, ()]
+//│ xs = [1, 2, 3]
+
+:expect ["7,7,3", "7", "7,9,3"]
+let xs = mut [1, 2, 3]
+let filled = xs.fill(7, 0, 2).join()
+let removed = xs.splice(1, 1, 9).join()
+[filled, removed, xs.join()]
+//│ = ["7,7,3", "7", "7,9,3"]
+//│ filled = "7,7,3"
+//│ removed = "7"
+//│ xs = [7, 9, 3]
