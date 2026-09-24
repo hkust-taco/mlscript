@@ -1,0 +1,76 @@
+:.
+
+// A type parameter inside a callback input is in the member's output polarity.
+// Substitute the output type before using it as an invariant nominal argument.
+:fixme
+:expect 1
+class Base
+class Child(val value: Int) extends Base
+class Sink[T] with
+  fun put(value: T): () = ()
+class Producer[T] with
+  fun use(f: Sink[T] -> Int): Int = f(new Sink[T])
+let producer = (new Producer as Producer[in (Base -> Int) out (Child -> Int)])
+producer.use(sink =>
+  sink.put(x => x.value)
+  1
+)
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.15: 	  sink.put(x => x.value)
+//│ ║        	                ^^^^^^^
+//│ ╙── Value of type 'Base' does not contain member 'value'
+//│ = 1
+//│ producer = Producer
+
+// An invariant argument in a member input uses the outer parameter's input type
+// in both directions, so it must not contribute the unrelated output supertype.
+:fixme
+:expect 2
+class Base
+class Child(val value: Int) extends Base
+class Box[T](val item: T)
+class Receiver[T] with
+  fun accept(box: Box[T]): () = ()
+let receiver = (new Receiver as Receiver[in Child out Base])
+let box = Box(Child(2))
+receiver.accept(box)
+box.item.value
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.37: 	box.item.value
+//│ ║        	^^^^^^^^^^^^^^
+//│ ╙── Value of type 'Base' does not contain member 'value'
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ ═══[RUNTIME ERROR] Expected: '2', got: 'undefined'
+//│ box = Box(Child(2))
+//│ receiver = Receiver
+
+// Control: writing the positive substitution directly gives the callback Child.
+:expect 3
+class Base
+class Child(val value: Int) extends Base
+class Sink[T] with
+  fun put(value: T): () = ()
+class Producer with
+  fun use(f: Sink[Child -> Int] -> Int): Int = f(new Sink[Child -> Int])
+let producer = new Producer
+producer.use(sink =>
+  sink.put(x => x.value)
+  3
+)
+//│ = 3
+//│ producer = Producer
+
+// Control: writing the negative substitution directly preserves Box[Child].
+:expect 4
+class Base
+class Child(val value: Int) extends Base
+class Box[T](val item: T)
+class Receiver with
+  fun accept(box: Box[Child]): () = ()
+let receiver = new Receiver
+let box = Box(Child(4))
+receiver.accept(box)
+box.item.value
+//│ = 4
+//│ box = Box(Child(4))
+//│ receiver = Receiver

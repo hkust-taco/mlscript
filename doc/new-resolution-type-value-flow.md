@@ -6,6 +6,42 @@ nominal-only representation at annotation boundaries: parameter and result
 annotations, ascriptions, generic arguments, and annotated tuple fields retain
 a type reference until an operation requests its interface.
 
+## Review outcome
+
+The following semantic decisions are settled:
+
+- Wrap instance values, retaining references to their annotated types. Supplying
+  a type argument affects both its input and output uses; an ordinary value
+  argument contributes a lower bound.
+- Instantiate explicit binders once per original definition and syntactic term
+  application. Reuse those symbols during recursion and retain marks to separate
+  enclosing activations of the same site.
+- Infer every missing signature part through ordinary marked flow, including
+  holes within annotations and omitted generic arguments. These positions do not
+  introduce quantified binders or receive fresh symbols at calls.
+- Apply the same rule to selected members' missing parameter, result, and field
+  types through nominal annotations. Retain the receiver context and the selected
+  declaration's member set; check overrides against that interface.
+- Follow InvalML's declaration/use-site variance and occurrence-sensitive
+  substitution, including nested function types.
+- Mutable arrays collect element shapes in their element type parameter under
+  marks. Tracking positions and lengths is outside this design.
+
+The implementation plan is in [constraint propagation and implementation
+order](#constraint-propagation-and-implementation-order). Two representation
+proposals still require review: [supplied type references in deferred
+views](#partial-application-and-explicit-specialization), and [the distinction
+between type-reference operations and value-scope crossings](#type-reference-scope-audit-proposal-requiring-review).
+They must preserve caller and receiver contexts without recursively growing
+binding environments. The variance substitution rules below are settled
+semantics; their integration into those views remains implementation work.
+
+The finite call-site symbol bound alone is not a termination proof for the whole
+resolver. Recursive alias regressions currently overflow, and the [fixed-point
+conditions](#fixed-points-and-implementation-checks) remain completion gates.
+
+## Implementation status
+
 Instance wrappers and preservation of quantified signature binders and bounds
 are implemented. Explicit type application also observes annotated polymorphic
 values. Calls through complete callable signatures use the bounded binder-instance
@@ -16,7 +52,8 @@ inferred functions retain supplied arguments until application. Inline binders o
 functions also instantiate at application sites. Their shared bodies retain flat
 substitutions through deferred tuples, records, callbacks, and closures. Nominal
 argument comparisons retain both endpoint references and apply declaration/use-site
-variance. The explicit-binder recursive array acceptance cases pass. Supplied function arguments
+variance, with the nested substitution gap described below. The explicit-binder
+recursive array acceptance cases pass. Supplied function arguments
 receive input obligations while retaining their declared output interface.
 Constructors now select their binder groups at the first term application too,
 including stored aliases and explicit `new`. Observing specialized inferred
@@ -180,6 +217,59 @@ node into the alias or class's new binding environment: an outer argument with
 the same source binder can then resolve back to its own wrapper. Reusing the
 argument reference and normalizing repeated synthesized wrappers bounds this
 construction. The recursive covariant `Tree` regression exercises this invariant.
+
+### Substitute at the occurrence before applying argument variance
+
+There are two distinct steps in InvalML's `typeAndSubstType`:
+
+1. Interpret an argument expression at the occurrence's polarity. A reference to
+   a parameter bound to `in L out U` selects `U` at positive polarity and `L` at
+   negative polarity. Function domains and written wildcard input parts reverse
+   this polarity; function results and wildcard output parts preserve it.
+2. For an unqualified nominal argument, apply the formal parameter's declared
+   variance to that interpreted type. An invariant formal uses the same result
+   for both parts. A written wildcard instead interprets its two explicit parts
+   at their respective polarities and supplies its own variance.
+
+In particular, the formal's `in` annotation does not itself choose the input
+part of a substituted parameter. InvalML first evaluates `mono(t, pol)`, then
+constructs the argument according to `tp.vce`. Nor should selecting a supplied
+function type re-substitute it in the enclosing member's environment: it already
+denotes a type in the supplier's context.
+
+For example, with `Child <: Base`:
+
+```mlscript
+class Box[T](val item: T)
+class Receiver[T] with
+  fun accept(box: Box[T]): () = ()
+// On Receiver[in Child out Base], accept expects Box[Child].
+```
+
+The `T` in the method input has negative polarity, so substitute `Child` first.
+The invariant `Box` argument then has `Child` in both parts. Retaining the outer
+`in Child out Base` pair inside `Box` would incorrectly introduce `Base` as an
+output bound of an argument that originally contained only `Child`.
+
+Conversely, in `use(f: Sink[T] -> Int)`, `T` has positive polarity: the method
+input and callback input reverse it twice. For a receiver argument
+`in (Base -> Int) out (Child -> Int)`, the invariant `Sink` argument must therefore
+be the single type `Child -> Int`, in both parts.
+
+[`newres/VarianceSubstitution.mls`](../hkmc2/shared/src/test/mlscript/newres/VarianceSubstitution.mls)
+contains both examples and passing controls with the projected types written
+directly. The substituted versions currently fail and are marked `:fixme`.
+The current interpreter delays choosing the pair's part until a later constraint
+or interface observation, after the nominal argument has been formed; these
+operations can then choose different parts of what should be one substituted
+type. Changing only the direction of nominal argument comparison cannot fix this.
+
+The contextual-view implementation must retain the occurrence polarity while
+interpreting source type expressions and preserve the resulting reference for
+later input and output uses. A polarity has only two possible values, so including
+it in an otherwise finite view key does not threaten termination. This does not
+solve the separate problem of unbounded argument-binding environments, and is not
+permission to expand or copy a supplied type graph during substitution.
 
 ## Recursive acceptance example
 
