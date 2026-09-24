@@ -89,14 +89,16 @@ interfaces even in non-strict mode.
 
 | Compilation suite | Newly migrated | Total migrated | Deferred | Total |
 | --- | ---: | ---: | ---: | ---: |
-| Main (including quotes, UPS, and temporary legacy copy) | 21 | 25 | 23 | 48 |
-| Applications | 3 | 3 | 17 | 20 |
+| Main (including quotes, UPS, and regression/compatibility fixtures) | 21 | 26 | 23 | 49 |
+| Applications | 4 | 4 | 16 | 20 |
 | Nofib | 12 | 12 | 27 | 39 |
 | WASM | 0 | 0 | 1 | 1 |
-| Total | 36 | 40 | 68 | 108 |
+| Total | 37 | 42 | 67 | 109 |
 
-The added `LegacyOption.mls` is counted among the deferred fixtures: 67 original
-fixtures remain unported, plus this temporary compatibility copy.
+The added `LegacyOption.mls` is counted among the deferred fixtures: 66 original
+fixtures remain unported, plus this temporary compatibility copy. The additional
+`NamedFieldLibrary.mls` regression fixture uses new resolution and is counted in
+the migrated total, but is not a port of one of the 107 original fixtures.
 
 The retained ports are:
 
@@ -106,7 +108,7 @@ The retained ports are:
   `Gib12`, `Opened`, `QuoteFoo`, `QuoteInc`, and `SafeDiv`.
 - UPS: `DnfCnf`, `EvenOddTree`, and `TruthyFalsy`.
 - Applications: `parsing/PrattParsing`, `parsing/RecursiveDescent`, and
-  `parsing/TokenHelpers`.
+  `parsing/TokenHelpers`, plus `parsing-web-demo/Examples` after the named-field fix.
 - Nofib: `banner`, `boyer`, `boyer2`, `calendar`, `clausify`, `cryptarithm1`,
   `gcd`, `mandel`, `mandel2`, `puzzle`, `rsa`, and `sphere`.
 
@@ -192,11 +194,13 @@ Other failures require compiler or prelude work:
    now use `dyn`; `HTMLElement` retains its nominal superclass identity with
    dynamic host members. Implicit generated
    `toString` methods on user classes also need a declared resolution interface.
-4. **Argument grouping and imported lowering forms.** Several parser APIs take
-   one record argument but currently see its named fields as multiple positional
-   arguments. `Parser` also encounters a synthesized selection during new
-   resolution. These require changes to argument interpretation and the import
-   boundary, respectively.
+4. **Imported lowering forms.** `Parser` encounters a synthesized selection
+   during new resolution, requiring import-boundary work. Named-field argument
+   grouping is fixed: tuple shapes now match lowering's positional values followed
+   by one record. `Extension`, `Rules`, `Token`, and web-demo `Examples` were
+   retried; their named-field arity errors are gone, and `Examples` is now ported.
+   `Rules.listLike` declares its structural field interface; `makeBracketRule`
+   still needs one, and some imported receivers still have no resolved target.
 5. **Quotation coverage.** Quasiquote lowering still lacks some new type-selection
    and wildcard-reference forms (`CSP`, `QuoteExample1`).
 
@@ -237,18 +241,17 @@ legacy resolution; imports that exchange options use `LegacyOption` consistently
 | `apps/parsing/BasicExpr.mls`, `Expr.mls` | Compile independently; legacy worksheet consumers inspect new-resolution signatures. |
 | `apps/parsing/Accounting.mls` | Array callback arity, `reduce`, and receiver interfaces. |
 | `apps/parsing/CSV.mls` | Mutable nested-array elements lack the shape required for `push`. |
-| `apps/parsing/Extension.mls` | Named record fields counted as three arguments instead of one. |
+| `apps/parsing/Extension.mls` | Receivers for `display`, `add`, and `extendChoices` have no resolved target. |
 | `apps/parsing/Keywords.mls` | Generic/abstract string interfaces and patterns. |
 | `apps/parsing/Lexer.mls` | Exposed `options.noWhitespace` and pattern interpretations. |
 | `apps/parsing/ParseRule.mls` | Exposed `keyword.name` and subsequent patterns. |
 | `apps/parsing/ParseRuleVisualizer.mls` | Imported JS railroad API lacks member interfaces. |
 | `apps/parsing/Parser.mls` | Synthetic selections from imported legacy forms reach new resolution. |
-| `apps/parsing/Rules.mls` | Named-record argument grouping. |
+| `apps/parsing/Rules.mls` | `makeBracketRule` needs a structural parameter annotation; an `extendChoices` receiver has no resolved target. `listLike` and named-field grouping are fixed. |
 | `apps/parsing/Test.mls` | `flags.has` and `tracer.reset` lose shapes through tuple/import flow. |
-| `apps/parsing/Token.mls` | Named-record grouping and exposed `literal.length`. |
+| `apps/parsing/Token.mls` | Exposed string receivers need annotations; constructor-field shapes are missing in `display`. |
 | `apps/parsing/Tree.mls` | Constructor-field shapes for `length` and `slice`. |
 | `apps/parsing/TreeHelpers.mls` | Exposed `text.split` and generated `Tree.toString` interface. |
-| `apps/parsing-web-demo/Examples.mls` | Named-record argument grouping in `MutMap.insert`. |
 | `apps/parsing-web-demo/main.mls` | String callback interfaces, dynamic receiver flow through aliases/mutation, and tuple-bound `example.name`. DOM declarations themselves are now dynamic. |
 
 | Nofib fixture (under `nofib/`) | Observed obstruction |
@@ -268,7 +271,13 @@ The remaining WASM fixture, `wasm/Wasm.mls`, needs interfaces for
 
 1. Named record/tuple fields elaborate their values with the enclosing
    interpretation. `value: expression` inside a term tuple is not a type
-   annotation. Existing `basics/NamedArgs.mls` exercises this distinction.
+   annotation. Tuple shapes collect these values into one trailing record, matching
+   lowering while retaining source evaluation order, last-write-wins lookup,
+   computed-key uncertainty, and property identities across imports. Structural
+   record annotations expose only their declared fields and support generic
+   substitution and callback interfaces. `newres/NamedFields.mls`,
+   `ImportedNamedFields.mls`, and `RecordInterfaces.mls` cover these behaviors;
+   `basics/NamedArgs.mls` also exercises the existing runtime convention.
 2. Compiler-generated `runtime.assertFail` calls use a synthetic selection, like
    other runtime helpers. This is not a fallback for unresolved source selections.
    `basics/Assert.mls` and `DisruptiveComments.mls` retain runtime assertion tests.
@@ -631,11 +640,11 @@ These changes also fix the sibling-subclass field-extraction regression in
 
 ## Validation
 
-- `ctest`: all 48 selected compilation tests pass.
+- `ctest`: all 49 selected compilation tests pass.
 - `catest`: all 20 application compilation fixtures pass with the retained mixed-mode ports.
 - `cntest`: all 39 Nofib compilation fixtures pass.
 - `cwtest`: the WASM compilation fixture passes.
-- `hkmc2AllTests/test`: all 963 tests pass, including 715 main tests, 18 application
+- `hkmc2AllTests/test`: all 967 tests pass, including 718 main tests, 18 application
   tests, and 22 WASM tests. The main count includes directory configurations and
   new-resolution regressions; it is not a count of migrated worksheets.
 - All retained ports have reviewed goldens. Legacy consumers that require the

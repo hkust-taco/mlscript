@@ -146,7 +146,7 @@ final class InterfaceExposure(resolver: NewResolver)(using NewResolverState, TL)
             emit(shape.exit(marks), path)
       // Nominal annotations expose their declared interface, not an initializer's
       // inferred implementation. Unknown and dynamic values have no static graph.
-      case _: (NominalTypeShape | OpaqueTypeShape | UnknownValueShape | DynShape | ErrShape) => ()
+      case _: (NominalTypeShape | RecordTypeShape | OpaqueTypeShape | UnknownValueShape | DynShape | ErrShape) => ()
 
   def check(exports: Ls[BlockMemberSymbol], values: Ls[Term]): Unit =
     try

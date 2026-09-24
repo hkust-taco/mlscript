@@ -13,6 +13,7 @@ enum TypeShape:
   case Union(left: TypeResolution, right: TypeResolution)
   case Intersection(left: TypeResolution, right: TypeResolution)
   case Tuple(fields: Ls[TypeResolution])
+  case Record(source: Term.Rcd, fields: Ls[(RcdField, TypeResolution)])
   case Function(params: Term, result: TypeResolution)
   case Applied(base: TypeResolution, args: Ls[TypeResolution])
   // The same third-party symbol can have different inference in two exporters.
@@ -65,6 +66,7 @@ final class TypeResolution(val source: Term, report: Ls[(Message, Opt[Loc])] => 
       case Applied(base, args) => base.validate(next); args.foreach(_.validate(next))
       case Function(_, result) => result.validate(next)
       case Tuple(fields) => fields.foreach(_.validate(next))
+      case Record(_, fields) => fields.foreach(_._2.validate(next))
       case Union(left, right) => left.validate(next); right.validate(next)
       case Intersection(left, right) => left.validate(next); right.validate(next)
       case _ => ()

@@ -117,7 +117,17 @@ class NewResolver:
             result.publish(TypeShape.Parameter(sym, sym.inferenceHost))
           case Tup(fields) if fields.forall(_.isInstanceOf[Fld]) =>
             result.publish(TypeShape.Tuple(fields.collect { case Fld(_, sign, _) => typeResolution(sign) }))
-          case _: WildcardTy | _: Neg | _: Rcd | _: Tup | _: Lit | Missing | Error() =>
+          case record: Rcd =>
+            val fields = record.stats.collect { case field: RcdField => field }
+            if fields.length != record.stats.length || fields.exists(field => field.field match
+              case Lit(_: Tree.StrLit) => false
+              case _ => true)
+            then
+              result.fail(msg"A record type requires statically named fields." -> record.toLoc :: Nil)
+              result.publish(TypeShape.Abstract)
+            else result.publish(TypeShape.Record(record,
+              fields.reverse.distinctBy(_.sym.nme).reverse.map(field => field -> typeResolution(field.rhs))))
+          case _: WildcardTy | _: Neg | _: Tup | _: Lit | Missing | Error() =>
             result.publish(TypeShape.Abstract)
           case _ => listen(term, discardMarks = true):
             case shape: SymShape => shape.sym.onComplete: () =>
@@ -227,6 +237,7 @@ class NewResolver:
               case TypeShape.Tuple(fields) =>
                 publish(TupleShape(current.resolution.source,
                   fields.map(field => TupleShape.TypedField(declaredType(field, current.bindings), Nil)))(this))
+              case TypeShape.Record(source, fields) => publish(RecordTypeShape(source, fields, current.bindings))
               case TypeShape.Union(left, right) => next(left); next(right)
               case TypeShape.Intersection(left, right) => next(left); next(right)
               case TypeShape.Unit | TypeShape.Abstract => publish(OpaqueTypeShape(tpe.resolution.source))
@@ -392,6 +403,9 @@ class NewResolver:
                     case NoShape => ()
                 case _ => ()
           case _ => ()
+        case TypeShape.Record(_, fields) => value.enter(captures) match
+          case actual: TermShape => constrainRecord(fields, tpe.bindings, actual, marks)
+          case NoShape => ()
         case TypeShape.Function(_, _) => value.enter(captures) match
           case actual: TermShape =>
             constrainFunction(declaredType(tpe.resolution, tpe.bindings), actual, marks)
@@ -419,6 +433,30 @@ class NewResolver:
     // Alias expansion guards only unproductive cycles. Descending into a tuple,
     // nominal argument, or arrow installs another edge with its own cycle guard.
     follow(tpe, Nil, Nil, Set.empty)
+
+  /** Structural constraints follow declared fields only. This supplies generic
+    * argument inference and callback checking without refining the annotation
+    * with additional properties from an actual record.
+    */
+  private def constrainRecord(fields: Ls[(RcdField, TypeResolution)], bindings: Map[VarSymbol, DeclaredType],
+      actual: TermShape, marks: Ls[Marks])(using NewResolverState): Unit =
+    fields.foreach: (field, sign) =>
+      val expected = declaredType(sign, bindings)
+      val flow = FlowSymbol.memSym(field.sym)(using rstate.owner)
+      def receive(value: TermShape)(using NewResolverState): Unit = inferTypeArguments(expected, value, marks)
+      actual.getMember(field.sym.nme) match
+        case MemberLookup.Found(RecordMember(member, true), _) => receive(UnknownValueShape.at(member.rhs))
+        case MemberLookup.Found(member, inner) =>
+          fromBMS(member.memberSymbol, flow, inner, receive, field.rhs, _ => (), false)
+        case MemberLookup.Declared(member, bound, inner) =>
+          listenDeclaredMember(member, bound, flow, field.rhs, _ => (), false): value =>
+            value.exit(inner) match
+              case value: TermShape => receive(value)
+              case NoShape => ()
+        case MemberLookup.Dynamic(inner) => DynShape().exit(inner) match
+          case value: TermShape => receive(value)
+          case NoShape => ()
+        case _ => ()
 
   /** Function constraints reverse the parameter flow and preserve result flow.
     * Read an implementation only while checking it against its declared interface;
@@ -468,6 +506,8 @@ class NewResolver:
                       case NoShape => ()
                   case _ => matchLists(ret, tail)
           case Nil => ()
+        case Marked(record: RecordTypeShape, _) =>
+          constrainRecord(record.fields, record.bindings, actual, marks)
         case _ => ()
     actual match
       case Marked(givenType: CallableTypeShape, actualContext) =>
@@ -1359,16 +1399,33 @@ class NewResolver:
       case shape => listener(shape)
     case Mut(underlying) => listenTerm(underlying)(listener)
     case tuple: Tup => listenAggregate(tuple, listener): publish =>
+        val fields = tuple.fields.collect { case Fld(_, key, S(value)) => (key, value) }
+        val named = if fields.isEmpty then Nil else
+          // Reuse the defining graph's property symbols when an imported tuple
+          // is observed directly, as well as when its copied listeners fire.
+          val graph = tuple.originalData.owner
+          assert(graph != null, "A tuple producer must have an inference owner")
+          val record = rstate.inGraph(graph.nn).namedTupleRecords.getOrElseUpdate(new Identity(tuple), {
+            val record: Rcd = Rcd(false, fields.map((key, value) => RcdField(key, value)(using rstate.owner)))
+            record.withLocOf(tuple)
+            record
+          })
+          TupleShape.ValueField(RecordShape(record, record.stats.collect {
+            case field: RcdField => RecordShape.Field(field)
+          }), Nil) :: Nil
         def expand(elems: Ls[Elem], reversed: Ls[TupleShape.Element])(using NewResolverState): Unit = elems match
           case Nil =>
             // A sole spread preserves its operand's shape and context exactly.
             // Besides avoiding wrappers, this lets recursive rest forwarding
             // reach the same fixed point as forwarding an ordinary parameter.
-            val shape = reversed match
-              case TupleShape.Spread(shape, NoMarks) :: Nil => shape
-              case TupleShape.Spread(shape, marks: SomeMarks) :: Nil => MarkedShape(shape, marks)
-              case _ => TupleShape(tuple, reversed.reverse)(this)
+            val shape = (reversed, named) match
+              case (TupleShape.Spread(shape, NoMarks) :: Nil, Nil) => shape
+              case (TupleShape.Spread(shape, marks: SomeMarks) :: Nil, Nil) => MarkedShape(shape, marks)
+              case _ => TupleShape(tuple, reversed.reverse ::: named)(this)
             publish(shape)
+          // Lowering evaluates fields in source order, but packs all named
+          // fields into one trailing record. Shape positions must match that layout.
+          case Fld(_, _, S(_)) :: rest => expand(rest, reversed)
           case (field: Fld) :: rest => expand(rest, TupleShape.Field(field, Nil) :: reversed)
           case Spd(_, term) :: rest =>
             val spreadKey = new Object

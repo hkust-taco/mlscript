@@ -25,6 +25,7 @@ sealed trait Shape extends ShapeLike:
     case us: UnknownValueShape => s"UnknownValueShape(${us.source.showDbg})"
     case ts: TupleShape => s"TupleShape(${ts.source.showDbg})"
     case rs: RecordShape => s"RecordShape(${rs.source.showDbg})"
+    case rs: RecordTypeShape => s"RecordTypeShape(${rs.source.showDbg})"
     case ts: NominalTypeShape => s"NominalTypeShape(${ts.defn.sym.showDbg})"
     case ts: OpaqueTypeShape => s"OpaqueTypeShape(${ts.source.showDbg})"
     case ts: CallableTypeShape => s"CallableTypeShape(${ts.source.showDbg})"
@@ -356,6 +357,18 @@ class BaseShape(val defn: ClassLikeDef, val ext: Opt[TermShape]) extends NonAppT
   protected def getMemberImpl(name: Str)(using NewResolverState): MemberLookup =
     MemberLookup.inClass(defn, ext, name)
   def toLoc: Opt[Loc] = defn.toLoc
+
+/** A structural annotation exposes only its declared fields. Their symbols belong
+  * to the annotation, not to whichever record happens to be passed by a caller.
+  */
+final case class RecordTypeShape(source: Term.Rcd, fields: Ls[(RcdField, TypeResolution)],
+    bindings: Map[VarSymbol, DeclaredType]) extends NonAppTermShape:
+  def describe: Str = "record type"
+  def toLoc: Opt[Loc] = source.toLoc
+  protected def getMemberImpl(name: Str)(using NewResolverState): MemberLookup =
+    fields.reverseIterator.collectFirst {
+      case (field, _) if field.sym.nme == name => MemberLookup.Declared(field.sym, bindings, Nil)
+    }.getOrElse(MemberLookup.Missing)
 
 /** A nominal annotation exposes only declarations, including inherited declarations.
   * In particular, selecting an unannotated field does not inspect its initializer.

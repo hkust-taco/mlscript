@@ -34,7 +34,7 @@ fun idFirst(value, _) = value
 fun idSecond(_, value) = value
 fun someFirst(value, _) = Some(value)
 fun listFirst(value, _) = value :: Nil
-fun listLike(fields) =
+fun listLike(fields: {head: Str, tail: Str, name: Str, sep: Keywords.Keyword | undefined}) =
   let mkTail = if fields.("sep") is undefined then id else keyword(fields.("sep"))
   reference(fields.head) of
     process: Cons, name: "the first " + fields.name

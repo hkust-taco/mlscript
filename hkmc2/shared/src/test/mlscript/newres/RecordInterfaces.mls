@@ -1,0 +1,65 @@
+:.
+
+:expect ["HELLO", 3]
+fun describe(fields: {name: Str, count: Int}) = [fields.name.toUpperCase(), fields.count]
+describe(name: "hello", count: 3)
+//│ = ["HELLO", 3]
+
+:expect 5
+fun apply(fields: {operation: Int -> Int, value: Int}) = fields.operation(fields.value)
+apply(operation: x => x + 1, value: 4)
+//│ = 5
+
+:e
+fun hidden(fields: {name: Str}) = fields.extra
+hidden(name: "visible", extra: 1)
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.14: 	fun hidden(fields: {name: Str}) = fields.extra
+//│ ║        	                                  ^^^^^^^^^^^^
+//│ ╟── Record type does not contain member 'extra'
+//│ ║  l.14: 	fun hidden(fields: {name: Str}) = fields.extra
+//│ ╙──      	                    ^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+:e
+private fun opaque[A](fields: {value: A}) = fields.value.answer
+opaque(value: {answer: 42})
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.25: 	private fun opaque[A](fields: {value: A}) = fields.value.answer
+//│ ║        	                                            ^^^^^^^^^^^^^^^^^^^
+//│ ╟── Cannot resolve member 'answer' of a value with unknown shape.
+//│ ╟── Type parameter 'A' does not specify a member interface.
+//│ ║  l.25: 	private fun opaque[A](fields: {value: A}) = fields.value.answer
+//│ ╙──      	                   ^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+:expect ["ABC", 3]
+fun get[A](fields: {value: A}): A = fields.value
+[get(value: "abc").toUpperCase(), get[Array[Int]](value: [1, 2, 3]).length]
+//│ = ["ABC", 3]
+
+:expect "quoted"
+fun quoted(fields: {"name": Str}) = fields.name
+quoted(name: "quoted")
+//│ = "quoted"
+
+:expect "OK"
+fun callback(fields: {f: Str -> Str}): Str = fields.f("ok")
+callback(f: x => x.toUpperCase())
+//│ = "OK"
+
+// A typed return must also check callbacks stored in its record implementation.
+:e
+fun expose(): {f: Object -> Int} = {f: x => x.answer}
+expose().f({answer: 1})
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.53: 	fun expose(): {f: Object -> Int} = {f: x => x.answer}
+//│ ║        	                                            ^^^^^^^^
+//│ ╙── Value of type 'Object' does not contain member 'answer'
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+:expect "ALIAS"
+type Wrapped[A] = {value: A}
+fun unwrap[A](fields: Wrapped[A]): A = fields.value
+unwrap(value: "alias").toUpperCase()
+//│ = "ALIAS"

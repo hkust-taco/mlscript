@@ -2063,6 +2063,10 @@ extends Importer:
                 InfixApp(_, Keywrd(Keyword.`=>`), _)
               (base, term(rrhs, fieldInterpretation))
         val newAcc = rlhs match
+          case id: Ident if fieldInterpretation == Tpe =>
+            // Record type fields declare interfaces, not local value bindings.
+            // Keep their types directly so lookup never follows initializer flow.
+            RcdField.signature(Term.Lit(StrLit(id.name)).withLocOf(id), rhs_t) :: acc
           case id: Ident =>
             val sym = new VarSymbol(id, erasedType = N)
             newCtx += id.name -> sym
@@ -2072,7 +2076,9 @@ extends Importer:
               :: acc
           case lit: Literal =>
             reportUnusedAnnotations
-            RcdField(Term.Lit(lit).withLocOf(lit), rhs_t) :: acc
+            val field = Term.Lit(lit).withLocOf(lit)
+            (if fieldInterpretation == Tpe then RcdField.signature(field, rhs_t)
+             else RcdField(field, rhs_t)) :: acc
           case Bra(Round, inner) =>
             reportUnusedAnnotations
             RcdField(term(inner, Trm), rhs_t) :: acc
