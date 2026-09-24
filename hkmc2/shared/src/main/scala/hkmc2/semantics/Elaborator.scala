@@ -2170,6 +2170,9 @@ extends Importer:
                 case TypeDef(Mod, st, N) => term(st, Tpe)(using newCtx)
                 case st => term(st, Tpe)(using newCtx)
               
+              if newResolution && td.annotatedResultType.isEmpty then
+                s.foreach(registerParameterSignature(pss, _))
+              
               val body: Opt[Term] = rhs match
                 case N => N
                 case _ if ctx.mode is Mode.Light => S(Term.Missing)
@@ -2573,10 +2576,10 @@ extends Importer:
             case S(ext) =>
               listenTerm(ext): esh =>
                 val sh = BaseShape(d, S(esh)) // TODO actually use applied shape providing generics?
-                sym.shapeListeners.foreach(_(sh))
+                sym.shapeListeners.toList.foreach(_(sh))
             case N =>
               val sh = BaseShape(d, N) // TODO actually use applied shape providing generics?
-              sym.shapeListeners.foreach(_(sh))
+              sym.shapeListeners.toList.foreach(_(sh))
         case sym: InnerSymbol =>
           // println(">>> "+sym)
           // TODO: patterns

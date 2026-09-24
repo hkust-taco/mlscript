@@ -30,7 +30,9 @@ final class Erasure private (using Config, Ctx, State):
           case _ => ErasedType.Unknown
         case Alias(_, rhs) :: Nil => rhs.fold(ErasedType.Unknown)(erase(_, next))
         case Union(left, right) :: Nil => ErasedType.union(erase(left, next), erase(right, next))
-        case Function :: Nil => ErasedType.Function(S(false))
+        case Captured(base, _) :: Nil => erase(base, next)
+        case Applied(base, _) :: Nil => erase(base, next)
+        case Function(_, _) :: Nil => ErasedType.Function(S(false))
         case Unit :: Nil => ErasedType.Unit
         case _ => ErasedType.Unknown
 
@@ -70,15 +72,21 @@ final class Erasure private (using Config, Ctx, State):
     val sigShape =
       if (td.k is syntax.Fun) && td.params.isEmpty && declared then td.sign.flatMap(splitSignature)
       else N
-    def stripSignatureParams(sign: Term, count: Int): Term = (sign, count) match
-      case (Forall(_, _, body), _) => stripSignatureParams(body, count)
-      case (FunTy(_, rhs, _), n) if n > 0 => stripSignatureParams(rhs, n - 1)
-      case _ => sign
-    val resultSign = td.sign.map: sign =>
-      if (td.k is syntax.Fun) && !td.flags.hasResultAnnotation
-      then stripSignatureParams(sign, td.params.length)
-      else sigShape.map(_._2).getOrElse(sign)
-    val resultType = declaredType(resultSign, td.modulefulness)
+    val resultSign = sigShape.map(_._2).orElse(td.resultSignature)
+    def fullResult(res: TypeResolution, count: Int, seen: Set[TypeResolution]): ErasedValueType =
+      if seen(res) then ErasedType.Unknown
+      else if count == 0 then erase(res, Set.empty)
+      else res.shapes.toList match
+        case TypeShape.Alias(_, S(rhs)) :: Nil => fullResult(rhs, count, seen + res)
+        case TypeShape.Captured(base, _) :: Nil => fullResult(base, count, seen + res)
+        case TypeShape.Applied(base, _) :: Nil => fullResult(base, count, seen + res)
+        case TypeShape.Function(_, ret) :: Nil => fullResult(ret, count - 1, seen + res)
+        case _ => ErasedType.Unknown
+    val resultType =
+      if config.language.useNewResolution && td.sign.nonEmpty && (td.k is syntax.Fun)
+          && !td.flags.hasResultAnnotation && td.params.nonEmpty && !td.modulefulness.isModuleful
+      then S(fullResult(td.sign.get.typeInterpretation.get, td.params.length, Set.empty))
+      else declaredType(resultSign, td.modulefulness)
     td.k match
       case syntax.Fun =>
         val paramLists = sigShape match

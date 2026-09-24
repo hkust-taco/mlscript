@@ -1379,6 +1379,17 @@ final case class TermDefinition(
   require(k is tsym.k)
   def bsym: BlockMemberSymbol = sym
   val owner = tsym.owner
+  /** A result annotation denotes the whole result; a separate function signature
+    * includes the arrows corresponding to the definition's written parameter lists.
+    */
+  def resultSignature: Opt[Term] =
+    def strip(sign: Term, count: Int): Term = (sign, count) match
+      case (Term.Forall(_, _, body), _) => strip(body, count)
+      case (Term.FunTy(_, rhs, _), n) if n > 0 => strip(rhs, n - 1)
+      case _ => sign
+    sign.map: sign =>
+      if (k is syntax.Fun) && !flags.hasResultAnnotation then strip(sign, params.length)
+      else sign
   def visibility: Visibility = annotations
     .collectFirst:
       case Annot.Modifier(Keyword.`private`) => Visibility.Private

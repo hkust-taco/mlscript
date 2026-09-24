@@ -58,7 +58,8 @@ fixtures and four `mlscript-compile/ups` fixtures need a subsequent dependency-o
 migration. Their shared consumers make a blanket flag change inappropriate for
 this worksheet migration.
 
-The typed-constructor-field capture assertion in WASM `Basics` remains outstanding.
+The annotated-receiver capture assertion in WASM `Basics` is fixed; a later
+unannotated `this.x` initializer still blocks that worksheet (see task 3).
 Method calls across REPL blocks remain assigned to the other branch.
 Constructor-pattern field propagation also has a serious context-mixing blocker,
 documented below; its `:fixme` regression is not evidence that migration is complete.
@@ -172,19 +173,35 @@ an untyped constructor field carrying a different capture context.
 `codegen/CurriedClassInheritance.mls` and `ParamClasses.mls` also expose capture
 or receiver-shape problems; they are not all necessarily the same bug.
 
-**Question:** does `b: Base` restrict member lookup to Base's declared interface,
-or may concrete call arguments expose subclass-only members? This remains the
-unanswered question from the preceding phase.
+**Implemented:** annotations are opaque shapes. `b: Base` exposes Base's declared
+members and preserves virtual dispatch; an implementation or observed argument
+cannot add subclass members. Parameters, result annotations, separate signatures,
+and constructor fields use the same declared interfaces, even without observed
+calls. Reading an unannotated member through such an interface yields an unknown
+shape instead of following its initializer or method body.
 
-**Proposal:** use the declared interface for member availability, preserving
-virtual dispatch. Keep value-flow provenance separate from that interface so
-reading a field cannot feed constructor entry marks into an unrelated function
-exit. Publish declared parameter, result, and field types consistently, including
-functions with no observed calls. Never fix the assertion by dropping marks.
+Type interpretations retain arrows, type arguments, and lexical captures. Generic
+aliases and inherited declared interfaces substitute their type arguments. Explicit
+and inferred function/constructor type arguments flow through the corresponding
+type-parameter symbols with entry/exit marks; explicit arguments prevent further
+refinement from value arguments. Inference also connects parameters through nested
+nominal arguments, as in `Foo[A]` containing a `Box[A]`. Declared member selections
+carry those type-argument contexts without reading implementation value flow.
 
-Acceptance cases: an unused annotated function, an unannotated constructor field,
-subclass overrides, inherited fields, curried constructors, nested captures, and
-generic aliases. Coordinate REPL method cases with the other branch.
+`newres/DeclaredTypes.mls` covers unused annotated functions, unannotated fields,
+subclass overrides, inherited fields, curried constructors, nested captures,
+generic aliases, separate signatures, and distinct generic instantiations. Its
+function/tuple-constraint example remains an explicit `:fixme`: inferring through
+`Foo[[A, Int]]` with a callback requires function-parameter constraints and tuple
+projection shapes. REPL method cases remain assigned to the other branch.
+
+The original annotated-receiver cases from WASM `Basics` now pass and are covered
+by `newres/wasm/DeclaredTypes.mls`. A fresh trial reaches a later capture assertion
+in the unannotated initializer `class Foo(val x) with val y = this.x`.
+`CurriedClassInheritance` still expects runtime failures for operations now rejected
+statically; `ParamClasses` still reaches unimplemented constructor-value member
+lookup (`Foo.class`). All three worksheets retain their existing configurations
+and goldens until these separate migration blockers are addressed.
 
 ### 4. Dynamic construction and foreign callable classes
 
@@ -269,7 +286,7 @@ These changes also fix the sibling-subclass field-extraction regression in
 1. **Retain this measured batch.** Run compilation fixtures, main difftests,
    application difftests, and the aggregate suite. Review output changes; keep
    nonmigrated files intact. WASM `Basics` retains its previous configuration
-   pending the capture fix, keeping this partial migration green.
+   pending its remaining unannotated-initializer capture fix.
 2. **Model generator results.** Recursive constructor contexts now normalize
    through lexical captures. Use `GeneratorResults` to specify iterator results rather
    than propagating the generator body's return shape. The earlier generator
@@ -462,5 +479,5 @@ The files themselves retain the pre-trial configuration and output.
 
 ### wasm
 
-- `wasm/Basics.mls`: Unexpected exception; java.lang.IllegalArgumentException: requirement failed: Expected symbol term:getX⁰ but got term:Foo⁰
+- `wasm/Basics.mls`: The annotated-receiver failure is fixed. A new trial fails in `val y = this.x` of `class Foo(val x)` with `Entry and exit cross different lexical resolution scopes`.
 - `wasm/Binaryen.mls`: Unexpected compilation error; [COMPILATION ERROR] Resolution error in selection; Instance of class 'Instance' does not contain member 'exports'

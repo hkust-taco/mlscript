@@ -12,7 +12,10 @@ enum TypeShape:
   case Alias(symbol: TypeAliasSymbol, rhs: Opt[TypeResolution])
   case Union(left: TypeResolution, right: TypeResolution)
   case Intersection(left: TypeResolution, right: TypeResolution)
-  case Function
+  case Function(params: Term, result: TypeResolution)
+  case Applied(base: TypeResolution, args: Ls[TypeResolution])
+  case Parameter(symbol: VarSymbol)
+  case Captured(base: TypeResolution, thru: AnyDefinitionSymbol)
   case Unit
   case Dynamic
   case Abstract
@@ -25,10 +28,10 @@ final class TypeResolution(val source: Term, report: Ls[(Message, Opt[Loc])] => 
   def hasErrors: Bool = reported
   def showDbg(using DebugPrinter): Str = s"type of ${source.showDbg}"
   def publish(shape: TypeShape): Unit =
-    if shapes.add(shape) then shapeListeners.foreach(_(shape))
+    if shapes.add(shape) then shapeListeners.toList.foreach(_(shape))
   def listen(listener: TypeShape => Unit): Unit =
     shapeListeners += listener
-    shapes.foreach(listener)
+    shapes.toList.foreach(listener)
   def fail(messages: Ls[(Message, Opt[Loc])]): Unit = if !reported then
     reported = true
     report(messages)
@@ -52,6 +55,14 @@ final class TypeResolution(val source: Term, report: Ls[(Message, Opt[Loc])] => 
       fail(msg"This type is ambiguous, as it has multiple resolved targets" -> source.toLoc :: candidates)
     shapes.foreach:
       case Alias(_, rhs) => rhs.foreach(_.validate(next))
+      case Captured(base, _) => base.validate(next)
+      case Applied(base, args) => base.validate(next); args.foreach(_.validate(next))
+      case Function(_, result) => result.validate(next)
       case Union(left, right) => left.validate(next); right.validate(next)
       case Intersection(left, right) => left.validate(next); right.validate(next)
       case _ => ()
+
+/** A type with its lexical type-parameter bindings. These bindings describe declared
+  * interfaces, not constructor arguments or value-flow capture paths.
+  */
+final case class DeclaredType(resolution: TypeResolution, bindings: Map[VarSymbol, DeclaredType])

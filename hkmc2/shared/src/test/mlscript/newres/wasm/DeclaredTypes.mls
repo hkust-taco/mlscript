@@ -1,0 +1,18 @@
+:.
+:global
+:wasm
+
+// An annotated receiver cannot import its constructor parameter's capture context.
+class Box(val value)
+fun read(box: Box) = box.value
+read(Box(42))
+//│ Wasm result:
+//│ = 42
+
+// A declared field type supplies the next receiver independently of observed calls.
+class Item(val value)
+class Box(val item: Item)
+fun read(box: Box) = box.item.value
+read(Box(Item(42)))
+//│ Wasm result:
+//│ = 42

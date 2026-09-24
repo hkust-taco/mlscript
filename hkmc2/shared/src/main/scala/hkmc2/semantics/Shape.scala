@@ -24,6 +24,9 @@ sealed trait Shape extends ShapeLike:
     case us: UnknownValueShape => s"UnknownValueShape(${us.source.showDbg})"
     case ts: TupleShape => s"TupleShape(${ts.source.showDbg})"
     case rs: RecordShape => s"RecordShape(${rs.source.showDbg})"
+    case ts: NominalTypeShape => s"NominalTypeShape(${ts.defn.sym.showDbg})"
+    case ts: OpaqueTypeShape => s"OpaqueTypeShape(${ts.source.showDbg})"
+    case ts: CallableTypeShape => s"CallableTypeShape(${ts.source.showDbg})"
     case bs: BaseShape => s"BaseShape(${bs.defn.sym.showDbg})"
     case es: ErrShape => es.describe
 
@@ -256,12 +259,16 @@ end TermShape
   * searching wildcard opens, since it can introduce an additional candidate. */
 enum MemberLookup:
   case Found(member: BlockMemberSymbol | RecordMember, marks: Ls[Marks])
+  // Declared members expose signatures only. Their marks transport dependent
+  // type arguments; they never authorize reading an implementation's value flow.
+  case Declared(member: BlockMemberSymbol, bindings: Map[VarSymbol, DeclaredType], marks: Ls[Marks])
   case Dynamic(marks: Ls[Marks])
   case Missing
   case Unknown(reason: MemberLookup.Uncertainty, loc: Opt[Loc])
   
   def withMarks(marks: Ls[Marks]): MemberLookup = this match
     case Found(member, inner) => Found(member, inner ::: marks)
+    case Declared(member, bindings, inner) => Declared(member, bindings, inner ::: marks)
     case Dynamic(inner) => Dynamic(inner ::: marks)
     case _ => this
 
@@ -326,6 +333,12 @@ class SymShape(val sym: BlockMemberSymbol, val resSym: FlowSymbol, val markss: L
   def enter(revMarkss: Ls[Marks])(using TL): TermShape | NoShape = ???
   def enter(marks: Marks)(using TL): TermShape | NoShape = ???
 
+/** Keep a declared receiver's boundary while consumers choose between the term,
+  * type, and constructor interpretations of the same overload set.
+  */
+final class DeclaredSymShape(symbol: BlockMemberSymbol, site: FlowSymbol, marks: Ls[Marks],
+    val bindings: Map[VarSymbol, DeclaredType]) extends SymShape(symbol, site, marks)
+
 /* 
 class ThisShape(val defn: Definition) extends NonAppTermShape:
   def describe: Str = s"Self-reference to ${defn.bsym.describe} '${defn.bsym.nme}'"
@@ -341,6 +354,45 @@ class BaseShape(val defn: ClassLikeDef, val ext: Opt[TermShape]) extends NonAppT
   protected def getMemberImpl(name: Str): MemberLookup =
     MemberLookup.inClass(defn, ext, name)
   def toLoc: Opt[Loc] = defn.toLoc
+
+/** A nominal annotation exposes only declarations, including inherited declarations.
+  * In particular, selecting an unannotated field does not inspect its initializer.
+  */
+final case class NominalTypeShape(defn: ClassLikeDef, bindings: Map[VarSymbol, DeclaredType],
+    parent: Opt[TermShape]) extends NonAppTermShape:
+  def describe: Str = s"value of type '${defn.sym.nme}'"
+  def toLoc: Opt[Loc] = defn.toLoc
+  override def isInstanceOfClass(cls: ClassLikeDef): Bool =
+    (defn is cls) || parent.exists(_.isInstanceOfClass(cls))
+  def ancestor(cls: ClassLikeDef): Opt[NominalTypeShape] =
+    if defn is cls then S(this)
+    else parent.flatMap:
+      case Marked(parent: NominalTypeShape, _) => parent.ancestor(cls)
+      case _ => N
+  protected def getMemberImpl(name: Str): MemberLookup =
+    defn.body.members.get(name) match
+      case S(member) => MemberLookup.Declared(member, bindings, Nil)
+      case N => parent.fold[MemberLookup](MemberLookup.Missing)(_.getMember(name))
+
+/** Parameter types and arity exposed by one list in a declared calling interface. */
+final case class DeclaredParams(params: Ls[Opt[DeclaredType]], hasRest: Bool)
+
+/** Only the calling interface is visible through an annotation. No arguments are
+  * propagated into implementation parameters, and the result comes from its type.
+  */
+final case class CallableTypeShape(source: Term, paramLists: Ls[DeclaredParams],
+    result: Opt[DeclaredType]) extends NonAppTermShape:
+  require(paramLists.nonEmpty)
+  def describe: Str = "function with a declared signature"
+  def toLoc: Opt[Loc] = source.toLoc
+  protected def getMemberImpl(name: Str): MemberLookup = MemberLookup.Missing
+
+/** An abstract annotation authorizes no operations based on the implementation. */
+final case class OpaqueTypeShape(source: Term) extends NonAppTermShape:
+  def describe: Str = "value of abstract type"
+  def toLoc: Opt[Loc] = source.toLoc
+  protected def getMemberImpl(name: Str): MemberLookup =
+    MemberLookup.Unknown(MemberLookup.Uncertainty.ValueShape, toLoc)
 
 class DefnShape(val defn: Definition, val ext: Opt[TermShape]) extends NonAppTermShape:
   /** Instance lookup is shared by constructor calls and explicit `new`.
@@ -491,7 +543,7 @@ final case class RecordShape(source: Term.Rcd, elements: Ls[RecordShape.Element]
         case Missing => loop(rest)
         case Found(member: RecordMember, inner) =>
           Found(member.copy(mutable = member.mutable || source.mut), inner ::: marks :: Nil)
-        case Found(_: BlockMemberSymbol, _) =>
+        case Found(_: BlockMemberSymbol, _) | Declared(_, _, _) =>
           // Record spreads recursively look up RecordShapes, which only create RecordMembers.
           lastWords("Record lookup returned a nominal member")
     loop(elements.reverse)
