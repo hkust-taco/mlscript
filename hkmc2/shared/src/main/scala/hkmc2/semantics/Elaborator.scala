@@ -1200,8 +1200,11 @@ extends Importer:
     val res = new Term.IfLike(kw, form, split).withLoc(loc)
     if newResolution then
       // log(s"Listening to if-like split ${res.showDbg}")
-      split.results.foreach: trm =>
-        pipeTerm(trm, res)
+      // Imperative branches are evaluated for effects; lowering discards their
+      // values and returns unit, including when a loop executes zero iterations.
+      if form.isImperative then pipeTerm(unit, res)
+      else split.results.foreach: trm =>
+          pipeTerm(trm, res)
     res
   
   

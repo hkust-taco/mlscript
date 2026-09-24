@@ -874,6 +874,7 @@ sealed trait Statement extends AutoLocated, ProductWithExtraInfo, Describable:
       case Annotated(annotation, target) => "annotation"
       case Ret(res) => "return"
       case Try(body, finallyDo) => "try expression"
+      case _: Handle => "handler expression"
       case Missing => "missing"
       case LeadingDotSel(name) => "leading dot selection"
       case Resolved(t, sym) => t.describe

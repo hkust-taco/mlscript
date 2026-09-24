@@ -1,0 +1,18 @@
+:.
+
+// FIXME: Assignment leaves the variable's initializer shape in place, so the
+// later read is checked against a one-element tuple instead of the stored array.
+:fixme
+:expect 1
+let values = [0]
+set values = values.concat([1])
+values.1
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.9: 	values.1
+//│ ║       	^^^^^^^^
+//│ ╟── Tuple literal does not contain member '1'
+//│ ║  l.7: 	let values = [0]
+//│ ╙──     	             ^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ ═══[RUNTIME ERROR] Expected: '1', got: 'undefined'
+//│ values = [0, 1]

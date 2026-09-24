@@ -1,0 +1,83 @@
+:.
+
+// Backtracking assignment returns its body value and restores the previous value.
+:expect [42, 0]
+let saved = 0
+let result = set saved = 1 in {answer: 42}
+[result.answer, saved]
+//│ = [42, 0]
+//│ result = {answer: 42}
+//│ saved = 0
+
+// The finally clause restores storage even when the body calls another function.
+:expect [43, 0]
+fun answer() = {answer: 43}
+let saved = 0
+let result = set saved = 1 in answer()
+[result.answer, saved]
+//│ = [43, 0]
+//│ result = {answer: 43}
+//│ saved = 0
+
+// Imperative conditionals discard their branch results.
+:e
+fun answer() = {answer: 42}
+let result = if true do answer()
+result.answer
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.26: 	result.answer
+//│ ║        	^^^^^^^^^^^^^
+//│ ╙── Unit value does not contain member 'answer'
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ result = ()
+
+// Loops also return unit, including when their bodies never execute.
+:e
+fun answer() = {answer: 42}
+let result = while false do answer()
+result.answer
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.38: 	result.answer
+//│ ║        	^^^^^^^^^^^^^
+//│ ╙── Unit value does not contain member 'answer'
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ result = ()
+
+// Assignment returns unit, independently of the assigned value.
+:e
+let saved = 0
+let result = set saved = 1
+result.answer
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.50: 	result.answer
+//│ ║        	^^^^^^^^^^^^^
+//│ ╙── Unit value does not contain member 'answer'
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ result = ()
+//│ saved = 1
+
+// Discarding a value does not expose its members through the result.
+:e
+let result = drop {answer: 42}
+result.answer
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.62: 	result.answer
+//│ ║        	^^^^^^^^^^^^^
+//│ ╙── Unit value does not contain member 'answer'
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ result = ()
+
+// Cleanup preserves call-context marks for independently inferred results.
+:expect [42, 43, 0]
+let saved = 0
+private fun protectedValue(value) = set saved = 1 in value
+[protectedValue({first: 42}).first, protectedValue({second: 43}).second, saved]
+//│ = [42, 43, 0]
+//│ saved = 0
+
+// A throwing branch contributes no normal result shape.
+:expect 42
+private fun maybeAnswer(fail) =
+  if fail then throw new Error("no answer") else {answer: 42}
+maybeAnswer(false).answer
+//│ = 42

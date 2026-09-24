@@ -125,6 +125,16 @@ disambiguation. Class projections, constructor patterns, and type references req
 known, unambiguous identities. See `newres/Dynamic.mls`, `Records.mls`,
 `SpreadCalls.mls`, and `loose/Targets.mls`.
 
+## Normal results of control flow
+
+Resolution must agree with lowering about which expressions produce values.
+Assignments, `drop`, imperative conditionals, and loops return unit; their
+operands or branch results must not supply the result's member interface.
+A normally completed `try` returns its body's value, preserving its capture
+marks, while the `finally` clause runs for effects. `throw` and `continue` supply
+no normal result. `newres/ControlFlowResults.mls` checks these contracts, including
+backtracking assignment and independent calls through cleanup blocks.
+
 ## Overloads, foreign declarations, and lowering
 
 Ordinary values select function/constructor overloads; selection receivers select

@@ -14,12 +14,12 @@ The checked-in worksheet headers give the following status. Counts exclude share
 
 | Suite | Migrated | Legacy configuration | Active files |
 | --- | ---: | ---: | ---: |
-| basics | 60 | 30 | 90 |
+| basics | 61 | 29 | 90 |
 | codegen | 86 | 39 | 125 |
 | ucs | 52 | 18 | 70 |
 | ups | 49 | 22 | 71 |
-| apps | 12 | 4 | 16 |
-| Total | 259 | 113 | 372 |
+| apps | 13 | 3 | 16 |
+| Total | 261 | 111 | 372 |
 | wasm (separate backend) | 19 | 2 | 21 |
 
 All twelve `apps/parsing` worksheets use new resolution, but some implementation
@@ -83,11 +83,18 @@ The inventory below separates these from compiler and prelude gaps.
   treated as the generator body's return value, leaving `.next` unresolved.
   Model the iterator result produced by lowering; use `codegen/Generators` as
   the worksheet acceptance case.
-- **Mutation and control flow:** complete assignment/result flow, mutable
-  aggregate element interfaces, direct member-reference shapes, handlers, and
-  other result-bearing forms. Check `basics/MutVal`, `codegen/SetStmt`,
-  `codegen/ScopedBlocksAndHandlers`, and the CSV/Iter application consumers.
-  Initializer shapes cannot be assumed to survive mutation.
+- **Mutation and control flow:** decide how reassignment affects the inferred
+  interface of mutable storage, including across already compiled worksheet
+  blocks. `newres/MutationFlow.mls` records a reassigned array still checked
+  against its initializer's tuple length; accumulating both shapes would still
+  reject valid later indexing. `codegen/SetStmt` also lacks argument flow through
+  its update callback. Member-variable definitions and CSV's nested mutable-array
+  element interfaces need work; initializer shapes cannot be assumed to survive
+  mutation. Handler inference needs separate flows for the receiver, values
+  passed to resumptions, and abortive results (`newres/HandlerResults.mls` and
+  `codegen/ScopedBlocksAndHandlers`). Agree these designs before implementation.
+  Ordinary result-shape contracts are covered by `newres/ControlFlowResults.mls`;
+  `basics/MutVal` and `apps/IterTest` use new resolution.
 - **Captured activations:** preserve activation identity through captured
   functions, constructor aliases, reconstruction of the same class, and partial
   construction. Existing regressions include `CtxSens`, `ValCtxSens`,

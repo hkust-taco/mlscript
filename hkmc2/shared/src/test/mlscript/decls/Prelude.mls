@@ -170,8 +170,8 @@ declare class Array[T](val length: Int): Array[T] with
   fun includes(value: T, ...from): Bool
   fun toString(): Str
 declare module Array with
+  fun from(...args): Array[Any]
   fun
-    from
     concat
     isArray
   val prototype: Array[Any]

@@ -55,6 +55,9 @@ class NewResolver:
   // without results; compare their identities instead.
   private def aggregateProducers(using rs: NewResolverState) = rs.aggregateProducers
   private def defnShapes(using rs: NewResolverState) = rs.defnShapes
+  // These results carry no value flow or lexical context. Reuse one immutable
+  // shape so repeated subscriptions do not manufacture distinct unit candidates.
+  private lazy val unitResultShape = IntroShape(unit, N)
   
   /** Interpret types through completed symbolic candidates, independently of term overloads. */
   def typeResolution(term: Term)(using rs: NewResolverState): TypeResolution =
@@ -1699,6 +1702,12 @@ class NewResolver:
       sh.replayShapes(listener)
     case Blk(sts, rs) =>
       listen(rs)(listener)
+    case Try(body, _) =>
+      // Finally is evaluated for effects; normal completion returns the body's
+      // value. Its cleanup value must not contribute candidates to this result.
+      listen(body)(listener)
+    case _: Assgn | _: Drop => listener(unitResultShape)
+    case _: Throw | _: Continue => () // These expressions do not complete normally.
     // case u: UnitVal =>
     case Missing =>
       () // FIXME: Currently get this from light-elaborated Predef import
