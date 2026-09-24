@@ -257,3 +257,26 @@ xs.0.value
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ ═══[RUNTIME ERROR] Expected: '5', got: 'undefined'
 //│ xs = [Item(5)]
+
+// TODO: instantiate declared A separately at each application through the alias.
+// The recursive site is shared; enclosing marks must still separate its callers.
+:fixme
+:expect [1, 2]
+class First(val first: Int)
+class Second(val second: Int)
+fun append[A](xs: Array[A], value: A, n: Int) =
+  if n > 0 then append(xs, value, n - 1) else xs.push(value)
+let g = append
+let xs = mut []
+let ys = mut []
+g(xs, First(1), 2)
+g(ys, Second(2), 2)
+[xs.0.first, ys.0.second]
+//│ ╔══[COMPILATION ERROR] This selection of member 'first' has no resolved target
+//│ ║  l.274: 	[xs.0.first, ys.0.second]
+//│ ╙──       	 ^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ ═══[RUNTIME ERROR] Expected: '[1, 2]', got: 'undefined'
+//│ g = fun append
+//│ xs = [First(1)]
+//│ ys = [Second(2)]

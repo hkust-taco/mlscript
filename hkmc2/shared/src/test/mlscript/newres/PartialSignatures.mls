@@ -1,0 +1,22 @@
+:.
+
+// An inferred result combines a declared type parameter and ordinary value flow.
+// Both calls must preserve their own annotations and unannotated argument shapes.
+:expect [1, 2, 3, 4]
+class First(val first: Int)
+class Second(val second: Int)
+private fun pair[A](x: A, y) = [x, y]
+let left = pair(First(1), Second(2))
+let right = pair(Second(3), First(4))
+[left.0.first, left.1.second, right.0.second, right.1.first]
+//│ = [1, 2, 3, 4]
+//│ left = [First(1), Second(2)]
+//│ right = [Second(3), First(4)]
+
+// An unannotated callback and inferred result retain their dependence on A.
+:expect [5, 6]
+class First(val first: Int)
+class Second(val second: Int)
+private fun apply[A](x: A, f) = f(x)
+[apply(First(5), x => x.first), apply(Second(6), x => x.second)]
+//│ = [5, 6]

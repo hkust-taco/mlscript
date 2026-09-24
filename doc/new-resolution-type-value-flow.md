@@ -6,9 +6,11 @@ nominal-only representation at annotation boundaries: parameter and result
 annotations, ascriptions, generic arguments, and annotated tuple fields retain
 a type reference until an operation requests its interface.
 
-The wrapper refactor is implemented. Bidirectional type-argument constraints and
-variance are the next step. The constraint representation proposed below still
-needs agreement before implementation. See the [resolver notes](new-resolution-design.md)
+The wrapper refactor is implemented. Instantiation of declared type parameters
+once per definition and call site is the agreed direction. The integration with
+marks and type constraints proposed below needs review before implementation;
+bidirectional constraints and variance are also still pending.
+See the [resolver notes](new-resolution-design.md)
 for current behavior and the [migration worklist](new-resolution-suite-migration.md)
 for remaining ports.
 
@@ -44,20 +46,49 @@ These rules concern inputs/outputs, or equivalently lower/upper bounds. Function
 parameters reverse polarity and function results preserve it. Array operations
 are one application of the rules.
 
-## Existing symbols and marks identify inference
+## Finite call-site instantiation and marks
 
-**Do not allocate fresh type variables for calls, arrays, or constraint matches.**
-Fresh variables would prevent recursive inference from returning to existing
-graph nodes and reaching a fixed point. A contextual reference uses the existing
-parameter symbol, its originating inference host, and marks. In particular, a
-mutable array uses the builtin `Array` element parameter with its allocation and
-call contexts. Actual element shapes contribute bounds to that parameter.
+**Instantiate each definition's explicitly declared type parameters once per
+syntactic call site.** This includes binders in inline annotations and separate
+type signatures, whether the call supplies type arguments or infers them. A call
+`f(x)` therefore instantiates a declared `f[A]` just as `f[Int](x)` does.
+
+Memoize a complete group of parameter symbols using this key:
+
+```text
+(original definition, syntactic application site)
+    -> {original parameter -> instantiated parameter}
+```
+
+Different sites receive different symbols. Revisiting the same definition at the
+same site reuses its group, including during recursion. The key must not contain
+the supplied types, incoming bounds, marks, or an already instantiated definition.
+Install the group before subscribing to constraints so reentrant propagation
+finds it. The only permitted allocation resembling fresh inference variables is
+this bounded instantiation; do not allocate another variable per flow, constraint
+match, or recursive visit.
+
+Symbols identify these instances; marks still identify the contexts in which
+their bounds flow. A single call inside a helper shares its parameter instances
+across the helper's callers, while enclosing marks distinguish those callers.
+Keep the original lexical resolution boundaries and existing normalization;
+instantiated symbols must not introduce additional scope boundaries. Mutable
+array literals retain the builtin `Array` element parameter with allocation marks;
+actual element shapes contribute bounds there. They need no fresh element variable.
 
 Keeping a reference to an unresolved parameter is essential. Copying its current
 positive candidates loses its negative uses and its identity as a type argument.
 Subscriptions must also account for constraints or candidates arriving later.
 Graph caches and listeners belong to the consuming `NewResolverState`; extending
 a consumer must not mutate a prelude or an exporter's inference graph.
+
+This follows the finite-allocation idea in §3 of
+[Tate's type-outference paper](https://rosstate.org/publications/outference/outference-tate-oopsla25.pdf):
+label listeners introduce signature unknowns once per invocation site and nominal
+label, reusing them as bounds arrive rather than expanding every concrete type.
+Here the proposed key uses the original definition and application site. The
+paper's formal calculus has monomorphic methods; its termination result does not
+directly establish termination for our generic functions and marks.
 
 ## Instance wrappers and interface observations
 
@@ -160,62 +191,187 @@ it does not establish that the existing mark representation itself is inadequate
 Discarding the abstract candidate, suppressing reverse propagation for recursion,
 or truncating paths would conceal the loss rather than preserve the constraint.
 
-## Proposed extension: retain both contextual type references
+## Proposed integration with the resolver
 
-Represent an argument relation as a persistent constraint between two type
-references, each retaining its original host, bindings, and marks. Keep the
-argument's input/output parts on this relation. Do not immediately replace it
-with two unrelated subscriptions that copy positive candidates.
-
-A capture match must belong to the relation traversal. When a wildcard matches
-`enter(f, abstract)`, retain that matched activation while transporting the bound
-through the opposite endpoint. A reverse obligation uses the same match; it
-must not recreate `enter(f, *)`. For a concrete caller, both endpoints instead
-use that caller's match. Deferred propagation must retain this association too.
-
-Conceptually, the recursive relation is a family:
+For the recursive example above there are three relevant versions of `A`:
 
 ```text
-A at recursiveCall(caller)  relates to  A at caller
+A_body       original binder used to check the generic definition
+A_outer      instance for append(xs, Item(5), 2)
+A_recursive  instance for append(xs, value, n - 1)
 ```
 
-`caller` here names a shared capture match, not a fresh type variable or a new
-runtime symbol. The current independent edges effectively erase it on the
-recursive side. Retaining type references allows a constraint to postpone that
-match until it has an activation to use, instead of forwarding every currently
-observed lower bound through an unconditional reverse edge.
+Further recursive visits reuse `A_recursive`; they do not create
+`A_recursive_recursive`. A second external application gets its own instance of
+`A`, but still reaches the same recursive application site. Its enclosing marks
+must keep the two external contexts distinct. The original abstract candidate of
+`A_body` must not be copied into the call instances: instantiate the declared
+constraints, not the generic body's accumulated unknown-value candidates.
 
-Proposed implementation steps:
+This replaces the earlier proposal to retain wildcard matches across paired
+candidate-copying edges. It does not yet demonstrate that the recursive example
+works: the compiler still needs consistent substitution of the call instances
+through deferred type observations and body-result flow.
 
-1. Introduce immutable contextual type-reference endpoints and memoized argument
-   relations in `NewResolverState`. Reuse existing `TypeResolution` nodes and
-   parameter hosts. Keep supplied type references distinct from ordinary bounds.
-2. Implement capture matching that records the normalized path matched by a
-   capture and reuses it across the relation's two endpoints. Keep this data in
-   constraint facts or their subscriptions, never mutable global symbol fields.
-3. Deliver lower and upper obligations to each supplied type reference. A plain
-   inferred value adds a lower bound; explicit instantiation and invariant
-   argument matching must preserve the supplied type's uses in both positions.
-4. Interpret declaration/use-site variance using the input/output parts above.
-   Use the same constraint mechanism for arrays, generic classes, and functions.
-5. Only then replace `applyTypeArguments`, nominal inference, explicit-argument
-   suppression, and the positive-only conversion in `instanceBindings` together.
+### Definition and application identities
 
-The unresolved implementation question is the finite representation of capture
-matches under recursive relation composition. Merely storing an ever-growing
-history of matches would repeat the fresh-variable termination problem. Before
-landing this extension, demonstrate that recursive processing revisits memoized
-relations over existing nodes and normalized contexts, including nested type
-applications and mutually recursive calls. If that requires changing mark
-normalization or the domain of contexts, report that design separately.
+Use the stable `Term.App.resSym` as application identity, rather than taking a
+site from the callee's marks. Marks can identify a function reference shared by
+several applications:
+
+```mlscript
+let g = append
+g(xs, First(1), 2)
+g(ys, Second(2), 2)
+```
+
+These applications need distinct parameter instances. The two-array regression
+following the recursive `append` block in `newres/MutableArrays.mls` checks this
+case with different element interfaces.
+
+For construction, use `Term.New.resSym` and canonicalize the constructor and
+class to the same original owner. For an anonymous polymorphic annotation, the
+proposed owner is its original quantified declaration node. Neither imported
+views nor instantiated callable views should manufacture a new original owner.
+
+### Binder substitution before observation
+
+Normalize binders from inline declarations and separate signatures into a
+reusable scheme with its parameter bounds, declared type fragments, and links to
+inference for unannotated parts. Do not require a complete signature. Currently,
+`typeResolution` strips `Forall` to its body; that loses the information needed
+to instantiate separate polymorphic signatures. Preserve the quantifiers first.
+
+An instantiated callable must retain one immutable substitution from that
+scheme's own binders to the site's parameter symbols. Use it for parameter
+annotations, results, nested callback types, bounds, and type arguments before
+`listenInstanceViews` expands a parameter. Enclosing class or function parameters
+remain captures; they are not binders of the nested definition being instantiated.
+
+Argument matching alone is insufficient. The generic body was elaborated using
+the original binders, and a returned tuple or closure can defer observing an
+annotated value until after the call. Carry the same substitution through those
+deferred observations. Keep generic-body checking on the original abstract
+activation; do not mutate the body or unconditionally connect its inference host
+to each call instance. The representation of these substituted body-result views
+is the main integration question to resolve before implementation.
+
+### Partial signatures and inference holes
+
+Instantiation applies to explicit type binders even when the rest of a definition
+is only partially annotated. The recursive `append[A]` example already has an
+inferred result. A more direct example mixes annotated and unannotated inputs:
+
+```mlscript
+private fun pair[A](x: A, y) = [x, y]
+```
+
+At an application site `s`, instantiate `A` as `A_s`. The annotation of `x`
+becomes `InstanceShape(A_s)`. The unannotated `y` retains its existing value-flow
+symbol and obtains argument shapes under the call's marks. Infer the result from
+the body: its first field retains the reference to `A_s`, and its second field
+retains the marked flow from `y`. Neither `y` nor the result needs an invented
+quantified parameter or a fresh type variable at the call.
+
+The substitution must survive delayed tuple-field observations. Likewise, in
+`private fun apply[A](x: A, f) = f(x)`, the unannotated callback and its result
+must remain connected to the contextual `A`. Both examples, called with distinct
+element interfaces, currently pass in
+[`newres/PartialSignatures.mls`](../hkmc2/shared/src/test/mlscript/newres/PartialSignatures.mls).
+The instantiation refactor must preserve that behavior.
+
+Represent a partial signature position by position:
+
+| Part of the definition | Source of its interface at a call |
+| --- | --- |
+| Explicit type binder `A` | The memoized call-site instance `A_s` |
+| Written type fragment | Its instance wrapper, using the call's substitution |
+| Unannotated value parameter | Its existing inference host and marks |
+| Unannotated result | The body's flow graph, retaining substitution and marks |
+| Inferable hole within a type | A stable inference node for that source hole, under marks |
+
+**Inferable holes use ordinary marked inference, not anonymous quantified
+parameters.** This is the agreed semantics; hole syntax is not selected here.
+For schematic `Array[?]`, retain the declared `Array` structure and connect its
+element position to the hole's inferred flow. Reuse the source hole's node across
+visits and distinguish contexts with marks. No call-site symbol copy is allocated
+for the hole. Constraints follow the position's input/output polarity as usual.
+If no useful shape reaches a hole, it supplies no member interface; it does not
+grant dynamic access.
+
+An inference hole must be distinguishable from an intentionally abstract type,
+an `in`/`out` wildcard, and an unresolved or invalid annotation. These must not
+all collapse to `TypeShape.Abstract`, which the current interpreter uses for
+several unsupported forms. Inferring one missing piece must not add members to
+an explicitly written concrete interface elsewhere in the annotation.
+
+Whether omitted generic arguments also denote inferable holes is still a design
+question. Current `DeclaredTypes.mls` tests treat missing arguments in annotations
+such as `Pair[Int]` for `Pair[A, B]` as unknown interfaces. Similarly, an unknown
+member type exposed through a nominal annotation is not automatically an
+inference hole. Preserve those distinctions until their intended behavior is
+decided; the agreement about explicit holes alone does not resolve them.
+
+The scheme therefore cannot be a closed type synthesized from whatever shapes
+happen to be available first. It must retain live links to inferred portions of
+the definition, including bounds arriving later or through recursion. Existing
+exposure checks for unannotated parameters and generic-body checking still apply;
+partial annotations must not silently disable either.
+
+### Partial application and explicit specialization
+
+For curried calls, the proposed rule is to instantiate when the first parameter
+list is consumed and retain that substitution in the partially applied callable.
+Later lists reuse it. A separately quantified returned callable has its own
+binders to instantiate at its later application. A standalone specialization such
+as `let g = f[Int]` can retain its supplied type arguments until application;
+each application of `g` then binds its own site instances to `Int`. This avoids
+introducing a second allocation policy at type-application nodes.
+
+### Constraint propagation and implementation order
+
+1. Preserve partial declaration/signature schemes and their original identities,
+   including links to inferred portions. Distinguish inference holes from
+   intentionally abstract types and variance wildcards. Add a
+   consumer-owned cache of complete call-site instances, with origin links back
+   to the declared binders. Do not add mutable caches to symbols.
+2. Transport the memoized substitution through callable and result views before
+   expanding instance wrappers. Keep the existing marks for value flow and
+   lexical captures. Verify the abstract generic-body candidate stays isolated.
+3. Relate the resulting type references in both input and output positions,
+   retaining their hosts, substitutions, and marks. Ordinary arguments contribute
+   bounds; supplied types receive all obligations at their applicable polarity.
+   Apply the InvalML variance rules above.
+4. Replace `applyTypeArguments`, nominal inference, explicit-argument suppression,
+   and the positive-only conversion in `instanceBindings` together. Reuse the
+   same mechanism for functions, constructors, and declared array interfaces.
+
+There are at most as many allocated parameter instances as the sum of each
+reachable definition's binder count over its syntactic call sites. This bounds
+symbol allocation, not every possible implementation of the solver. Recursive
+constraints must return to shared nodes and deduplicated relations; expanding
+substitution environments or nested types afresh could still fail to terminate.
+Demonstrate fixed points with recursive and mutually recursive calls before
+landing the propagation changes. Any needed change to mark normalization or to
+the context domain must be proposed separately.
 
 ## Acceptance checks
 
 - An initially empty mutable array receives an element through `Array[A]`.
 - Two calls using different arrays and incompatible element interfaces remain
   independent, including two callers of the recursive example above.
-- Recursive input/output relations terminate without fresh type variables,
-  repeated-boundary paths, or unbounded binding-environment construction.
+- A repeated visit to the same definition/site reuses its parameter symbols;
+  two application sites through one alias obtain distinct instances. An inner
+  site shared by different enclosing activations remains distinguished by marks.
+- Inline and separate polymorphic signatures instantiate consistently, with or
+  without explicit call-site type arguments. Partial applications retain their
+  substitutions and captured outer binders retain their original contexts.
+- Mixed annotated/unannotated inputs and inferred results preserve the passing
+  tuple and callback cases in `newres/PartialSignatures.mls`. Nested inference
+  holes retain written structure and use marked inference without extra
+  call-site symbols; known annotation fragments still restrict the interface.
+- Recursive input/output relations terminate with bounded call-site instances,
+  no repeated-boundary paths, and no unbounded binding-environment construction.
 - Declaration-site `in`/`out`, use-site `in`/`out`, their overrides, and nested
   function polarity agree with InvalML.
 - Explicit function type arguments constrain callback inputs even when the

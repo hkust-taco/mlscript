@@ -93,11 +93,12 @@ The inventory below separates these from compiler and prelude gaps.
   reject valid later indexing. `codegen/SetStmt` also lacks argument flow through
   its update callback. Instance wrappers are in place; the
   [type-argument constraint proposal](new-resolution-type-value-flow.md) records
-  the agreed variance rules and the recursive capture-correlation issue that must
-  be resolved before `Array[A]` retains both input and output uses of its element type;
-  the `appendTyped` case in `newres/MutableArrays.mls` records the missing write
-  propagation. Member-variable definitions still need work. Handler inference
-  needs separate flows for the receiver, values
+  the agreed variance rules and once-per-definition/call-site instantiation of
+  declared type parameters. Review its integration with marks and partial
+  signatures before implementing both input and output constraints for `Array[A]`;
+  `appendTyped` and the recursive cases in `newres/MutableArrays.mls` record the
+  missing propagation and required isolation between callers. Member-variable
+  definitions still need work. Handler inference needs separate flows for the receiver, values
   passed to resumptions, and abortive results (`newres/HandlerResults.mls` and
   `codegen/ScopedBlocksAndHandlers`). Agree these designs before implementation.
   Ordinary result-shape contracts are covered by `newres/ControlFlowResults.mls`;

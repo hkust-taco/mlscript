@@ -36,8 +36,9 @@ exported mapped arrays and imported generic functions and methods.
 `InstanceShape` retains a type reference at annotation boundaries; member lookup,
 application, and destructuring obtain specialized interfaces through
 `listenInstanceViews`. The distinction between supplying a type argument and
-adding an ordinary bound, the agreed variance rules, and the pending constraint
-representation are documented in [Instance types and parameter constraints](new-resolution-type-value-flow.md).
+adding an ordinary bound, the agreed variance rules, and the proposal to instantiate
+declared type parameters once per definition and syntactic call site are documented
+in [Instance types and parameter constraints](new-resolution-type-value-flow.md).
 The description below records current generic inference, which still needs that
 constraint extension.
 
