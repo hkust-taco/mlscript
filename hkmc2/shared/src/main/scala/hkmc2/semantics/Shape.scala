@@ -43,12 +43,17 @@ object ResolutionBoundary:
       case ctor: ClassCtorSymbol => ctor.associatedCls
       case symbol => symbol)
 
+// Scanning every new mark's tail makes chain construction quadratic in its depth.
+// Enable these invariant checks only when debugging mark propagation.
+private val checkMarkPaths = false
+
 /** A reduced lexical path: entries followed by exits, stored outermost first.
   * Exiting cancels the leading entry when their sites agree (an absent site is
   * a capture, compatible with any activation). Entering never cancels an exit:
   * that pair records an inner value's provenance until a consumer accesses it.
   * Each direction traverses distinct lexical scopes, so recursive calls cannot
-  * lengthen a normalized path indefinitely. Violations are asserted, not widened.
+  * lengthen a normalized path indefinitely. Debug assertions check this invariant
+  * without widening paths.
   */
 sealed abstract class Marks:
   def showDbg(using DebugPrinter): Str = this match
@@ -65,14 +70,16 @@ case class EntryMark(boundary: ResolutionBoundary, id: Opt[FlowSymbol], rest: Ma
   // Consecutive entries descend lexical scopes; consecutive exits ascend them.
   // Repeating a scope in either direction indicates a missing capture/exit, not
   // another recursive activation to retain or silently truncate.
-  assert(!rest.hasEntry(boundary), "Repeated entry into the same lexical resolution scope")
+  if checkMarkPaths then
+    assert(!rest.hasEntry(boundary), "Repeated entry into the same lexical resolution scope")
 sealed abstract class ExitMarks extends Marks:
   @scala.annotation.tailrec
   final def hasExit(boundary: ResolutionBoundary): Bool = this match
     case ExitMark(b, _, rest) => b == boundary || rest.hasExit(boundary)
     case NoMarks => false
 case class ExitMark(boundary: ResolutionBoundary, id: Opt[FlowSymbol], rest: ExitMarks) extends ExitMarks:
-  assert(!rest.hasExit(boundary), "Repeated exit from the same lexical resolution scope")
+  if checkMarkPaths then
+    assert(!rest.hasExit(boundary), "Repeated exit from the same lexical resolution scope")
 case object NoMarks extends ExitMarks
 
 sealed trait ShapeLike:

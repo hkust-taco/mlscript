@@ -239,8 +239,10 @@ resolution boundary. Consuming a reconstructed instance cancels the old instance
 exit against its capture, retaining the fresh constructor exit. Explicit `new`
 uses the same constructor context, including for arguments and later parameter
 lists. Context fragments compose from the definition to its consumer; argument
-flow traverses that composition in reverse. Repeated boundaries in either
-direction assert an invariant violation; there is no truncation or depth limit.
+flow traverses that composition in reverse. Optional debugging assertions detect
+repeated boundaries in either direction; the private `checkMarkPaths` flag disables
+them by default because scanning each new mark's tail makes chain construction
+quadratic in its depth. There is no truncation or depth limit.
 These changes also fix the sibling-subclass field-extraction regression in
 `newres/ConstructorFieldRecovery.mls`, whose independent results are now checked.
 
