@@ -102,12 +102,11 @@ declare class Class
 //    [ <1 empty item> ]
 //    > Array(1, 2)
 //    [ 1, 2 ]
-// We used to declare it as a class taking exactly one argument here to avoid that footgun:
-//    declare class Array[T](val length: Int): Array[T]
-// but this made instance checks wrongly use `Array.class`;
-// TODO: handle Array and other JS classes that can be instantiated without `new` specially in codegen.
-declare class Array[T] with
-  val length: Int
+// Expose only the length-taking constructor; use tuple literals for initial elements.
+// Foreign constructor signatures describe the native binding and do not introduce
+// the `.class` storage used by generated MLscript constructor functions.
+// The `val length` parameter also supports matching with `Array(length)`.
+declare class Array[T](val length: Int): Array[T] with
   fun join(...separators): Str
   fun reverse(): Array[T]
   fun sort(...compare): Array[T]

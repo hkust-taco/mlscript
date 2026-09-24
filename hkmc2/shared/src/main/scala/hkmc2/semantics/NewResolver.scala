@@ -154,11 +154,15 @@ class NewResolver:
 
   private def typeValues(using rs: NewResolverState) = rs.typeValues
   private def abstractTypes(using rs: NewResolverState) = rs.abstractTypes
-  // An omitted argument in a nominal annotation must not subscribe to the
-  // class parameter's constructor inference and silently refine that annotation.
-  private def abstractType(source: TypeResolution)(using NewResolverState): DeclaredType = abstractTypes.getOrElseUpdate(source, {
+  // An omitted argument in an annotation must not subscribe to constructor
+  // inference. Keep its parameter and annotation as a diagnostic witness: the
+  // enclosing nominal type is concrete even though this argument is unknown.
+  private def abstractType(source: TypeResolution, omitted: Opt[VarSymbol])(using NewResolverState): DeclaredType = abstractTypes.getOrElseUpdate((source, omitted), {
     val resolution = new TypeResolution(source.source, source.fail)
-    resolution.publish(TypeShape.Abstract)
+    resolution.publish(omitted match
+      case S(param) => TypeShape.Inferred(UnknownValueShape(source.source)(ShapeProvenance(
+        msg"Type argument '${param.nme}' is omitted in this annotation, so its shape is unknown." -> source.source.toLoc :: Nil)))
+      case N => TypeShape.Abstract)
     declaredType(resolution, Map.empty)
   })
 
@@ -179,7 +183,8 @@ class NewResolver:
         def follow(current: DeclaredType, args: Ls[DeclaredType], aliases: Set[TypeResolution], publish: Listener)(using NewResolverState): Unit =
           current.resolution.listen: shape =>
             def bind(params: Ls[TyParam])(using NewResolverState): Map[VarSymbol, DeclaredType] =
-              current.bindings ++ params.map(_.sym).zip(args.padTo(params.length, abstractType(current.resolution)))
+              current.bindings ++ params.zipWithIndex.map: (param, index) =>
+                param.sym -> args.lift(index).getOrElse(abstractType(current.resolution, S(param.sym)))
             def next(res: TypeResolution)(using NewResolverState): Unit = follow(declaredType(res, current.bindings), Nil, aliases, publish)
             shape match
               case TypeShape.Dynamic => publish(DynShape())
@@ -553,6 +558,38 @@ class NewResolver:
       case TupleShape.TypedField(tpe, _) => listenTypeValues(tpe)(receive)
       case TupleShape.UnknownField(source, _) => receive(UnknownValueShape.at(source))
       case TupleShape.ValueField(value, _) => receive(value)
+
+  /** Array spreads have unknown length, but their declared element type still
+    * constrains every element. Never recover elements from constructor values:
+    * Arrays are mutable, and the one-number constructor creates empty slots.
+    */
+  private def listenArrayElements(shape: TermShape)(listener: Listener)(using NewResolverState): Bool =
+    val cls = prelude.builtins.Array.defn.get
+    softAssert(cls.tparams.length == 1, "The builtin Array must have one element type parameter")
+    val param = cls.tparams.head.sym
+    val Marked(value, _) = shape
+    // Explicit arguments belong to the allocation/application itself. Outer
+    // marks transport that instance through parameters; they must affect
+    // delivered element shapes, but not the lookup of its explicit arguments.
+    val (head, instanceContext) = value.applicationHead
+    val context = shape.applicationHead._2
+    def receive(element: TermShape)(using NewResolverState): Unit = element.exit(context) match
+      case value: TermShape => listener(value)
+      case NoShape => ()
+    head match
+      case nominal: NominalTypeShape => nominal.ancestor(cls) match
+        case S(array) =>
+          array.bindings.get(param) match
+            case S(bound) =>
+              listenTypeValues(bound)(receive)
+              true
+            case N => false
+        case N => false
+      case defn: DefnShape if defn.clsDef.contains(cls) && shape.isInstanceOfClass(cls)
+          && rstate.hasExplicitTypeArgument(param, instanceContext) =>
+        listenTypeArgument(param)(receive)
+        true
+      case _ => false
 
   /** Subscribe once to complete argument-tuple candidates. A pending spread is not
     * an argument, nor evidence of an arity mismatch; each resolved combination is.
@@ -1073,7 +1110,7 @@ class NewResolver:
                         case N =>
                           // An explicit projection can name a narrower class, but
                           // it cannot recover that class's implementation arguments.
-                          val opaque = abstractType(new TypeResolution(sel, msgs => resolError(sel, msgs)))
+                          val opaque = abstractType(new TypeResolution(sel, msgs => resolError(sel, msgs)), N)
                           MemberLookup.Declared(bms, cd.tparams.map(_.sym -> opaque).toMap, context :: Nil, nominal.annotation)
                     case _ => info
                   member(selected, msg"Class '${cd.sym.nme}'", cd.toLoc)
@@ -1397,10 +1434,15 @@ class NewResolver:
                   val spread = TupleShape(term, TupleShape.Unknown(term, Nil, DynShape()) :: Nil)(this)
                   expand(rest, TupleShape.Spread(spread, marks) :: reversed)
                 case shape @ Marked(_, marks) =>
-                  // Opaque iterables (e.g. external Arrays) have no resolved
-                  // element layout. Their runtime spread is still permitted.
-                  val unknown = TupleShape(term, TupleShape.Unknown(term, Nil, UnknownValueShape.spread(term, shape)) :: Nil)(this)
-                  expand(rest, TupleShape.Spread(unknown, marks) :: reversed)
+                  val typed = listenArrayElements(shape):
+                    case Marked(element, context) =>
+                      val spread = TupleShape(term, TupleShape.Unknown(term, context :: Nil, element) :: Nil)(this)
+                      expand(rest, TupleShape.Spread(spread, NoMarks) :: reversed)
+                  if !typed then
+                    // Other opaque iterables have no known element type. Their
+                    // runtime spread remains permitted without authorizing calls.
+                    val unknown = TupleShape(term, TupleShape.Unknown(term, Nil, UnknownValueShape.spread(term, shape)) :: Nil)(this)
+                    expand(rest, TupleShape.Spread(unknown, marks) :: reversed)
         expand(tuple.fields, Nil)
     case record: Rcd => listenAggregate(record, listener): publish =>
         def expand(stats: Ls[Statement], reversed: Ls[RecordShape.Element])(using NewResolverState): Unit = stats match

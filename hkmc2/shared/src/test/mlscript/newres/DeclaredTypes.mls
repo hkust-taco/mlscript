@@ -657,3 +657,27 @@ class Box[X](val value: [X, X])
 fun foo(x: Box[Item]) = x.value.0.oops
 foo(Box[Item]([new Item, new Item]))
 //│ = 42
+
+// Omitted type arguments are unknown; the enclosing class still has its interface.
+:ge
+class Pair[A, B](val value: [A, B])
+fun omittedSecond(x: Pair[Int]) = x.value.1.oops
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.664: 	fun omittedSecond(x: Pair[Int]) = x.value.1.oops
+//│ ║         	                                  ^^^^^^^^^^^^^^
+//│ ╟── Cannot resolve member 'oops' of a value with unknown shape.
+//│ ╟── Type argument 'B' is omitted in this annotation, so its shape is unknown.
+//│ ║  l.664: 	fun omittedSecond(x: Pair[Int]) = x.value.1.oops
+//│ ╙──       	                     ^^^^
+
+// An omitted alias parameter retains the annotation that left it unspecified.
+:ge
+type HalfPair[T] = Pair[Int, T]
+fun omittedAlias(x: HalfPair) = x.value.1.oops
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.676: 	fun omittedAlias(x: HalfPair) = x.value.1.oops
+//│ ║         	                                ^^^^^^^^^^^^^^
+//│ ╟── Cannot resolve member 'oops' of a value with unknown shape.
+//│ ╟── Type argument 'T' is omitted in this annotation, so its shape is unknown.
+//│ ║  l.676: 	fun omittedAlias(x: HalfPair) = x.value.1.oops
+//│ ╙──       	                    ^^^^^^^^

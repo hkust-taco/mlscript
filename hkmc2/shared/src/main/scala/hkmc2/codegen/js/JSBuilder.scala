@@ -1254,14 +1254,16 @@ object JSBuilder:
       * After checking for independent storage, reference sites use this to append `.class`
       * when accessing a class value. It returns true only for class/module/object symbols,
       * not for term symbols — so constructor calls like `Foo(args)` which resolve to the term
-      * symbol are not affected. */
+      * symbol are not affected. Foreign declarations do not generate companion storage:
+      * their class value is the native binding even when constructor parameters are declared. */
     def shouldBeLifted: Bool =
       val bsym = dsym.asBlkMember
       (
         (dsym.asTrm orElse bsym.flatMap(_.asTrm)).isDefined ||
         (dsym.asCls orElse bsym.flatMap(_.asCls)).flatMap(_.defn).exists(_.paramsOpt.isDefined)
       ) && 
-        (dsym.asModOrObj orElse dsym.asCls).isDefined
+        (dsym.asModOrObj orElse dsym.asCls).isDefined &&
+        dsym.defn.forall(_.hasDeclareModifier.isEmpty)
   
 end JSBuilder
 

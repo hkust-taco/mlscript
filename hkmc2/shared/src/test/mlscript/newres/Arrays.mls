@@ -84,7 +84,7 @@ values([Item(4)]).map((item, ...) => item.value)
 :ge
 [1].map(x => x)
 //│ ╔══[COMPILATION ERROR] Resolution error in function type
-//│ ║  l.119: 	  fun map[U](f: (T, Int, Array[T]) -> U): Array[U]
+//│ ║  l.118: 	  fun map[U](f: (T, Int, Array[T]) -> U): Array[U]
 //│ ║         	                ^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Callback parameter list does not match its declared function type.
 //│ ║  in Arrays.mls:85
@@ -108,3 +108,89 @@ xs.map((x, ...) => x.original)
 //│ ╙──      	         ^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ xs = [Replacement(2)]
+
+// Declared constructor parameters do not introduce a generated `.class` binding.
+:sjs
+:expect 3
+let allocated = new Array[Int](3)
+allocated.length
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ let allocated;
+//│ allocated = globalThis.Object.freeze(new globalThis.Array(3));
+//│ return allocated.length
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 3
+//│ allocated = [<3 empty items>]
+
+// Both bare instance checks and constructor-field patterns use the native Array.
+:expect [true, 3]
+[allocated is Array, if allocated is Array(length) then length else 0]
+//│ = [true, 3]
+
+// Foreign classes with companion modules continue to use their native bindings.
+:expect true
+new String("hello") is String
+//│ = true
+
+// The length-only Array interface rejects element-list construction.
+:ge
+new Array[Int](1, 2)
+//│ ╔══[COMPILATION ERROR] Resolution error in object instantiation
+//│ ║  l.137: 	new Array[Int](1, 2)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Class 'Array' expected 1 argument, but got 2
+//│ ║  in ../decls/Prelude.mls
+//│ ║  l.108: 	declare class Array[T](val length: Int): Array[T] with
+//│ ║         	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.109: 	  fun join(...separators): Str
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.110: 	  fun reverse(): Array[T]
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.111: 	  fun sort(...compare): Array[T]
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.112: 	... (more lines omitted) ...
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ = [1, 2]
+
+:ge
+new Array[Int]()
+//│ ╔══[COMPILATION ERROR] Resolution error in object instantiation
+//│ ║  l.156: 	new Array[Int]()
+//│ ║         	^^^^^^^^^^^^^^^^
+//│ ╟── Class 'Array' expected 1 argument, but got 0
+//│ ║  in ../decls/Prelude.mls
+//│ ║  l.108: 	declare class Array[T](val length: Int): Array[T] with
+//│ ║         	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.109: 	  fun join(...separators): Str
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.110: 	  fun reverse(): Array[T]
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.111: 	  fun sort(...compare): Array[T]
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.112: 	... (more lines omitted) ...
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ = []
+
+// TODO: select the callable overload when a class also has a companion module.
+:fixme
+:expect 3
+Array[Int](3).length
+//│ ╔══[COMPILATION ERROR] Resolution error in type application
+//│ ║  l.177: 	Array[Int](3).length
+//│ ║         	^^^^^^^^^^
+//│ ╟── Module 'Array' expected 0 type arguments, but got 1
+//│ ║  in ../decls/Prelude.mls
+//│ ║  l.127: 	declare module Array with
+//│ ╙──       	               ^^^^^
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.177: 	Array[Int](3).length
+//│ ║         	^^^^^^^^^^^^^
+//│ ╟── Module 'Array' cannot be called like a function.
+//│ ║  in ../decls/Prelude.mls
+//│ ║  l.127: 	declare module Array with
+//│ ╙──       	               ^^^^^
+//│ ╔══[COMPILATION ERROR] This selection of member 'length' has no resolved target
+//│ ║  l.177: 	Array[Int](3).length
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ ═══[RUNTIME ERROR] Expected: '3', got: 'undefined'

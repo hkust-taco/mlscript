@@ -187,7 +187,7 @@ final class NewResolverState private (
     new Cache(source.map(_.typeInterpretations), identity)
   val typeValues: Cache[DeclaredType, TypeValues] =
     new Cache(source.map(_.typeValues), identity)
-  val abstractTypes: Cache[TypeResolution, DeclaredType] =
+  val abstractTypes: Cache[(TypeResolution, Opt[VarSymbol]), DeclaredType] =
     new Cache(source.map(_.abstractTypes), identity)
   val signatureParameters: Cache[VarSymbol, DeclaredType] =
     new Cache(source.map(_.signatureParameters), identity)
