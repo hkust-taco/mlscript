@@ -39,10 +39,10 @@ application, and destructuring obtain specialized interfaces through
 adding an ordinary bound, the agreed variance rules, and the proposal to instantiate
 declared type parameters once per definition and syntactic call site are documented
 in [Instance types and parameter constraints](new-resolution-type-value-flow.md).
-The description below records current generic inference, which still needs that
-constraint extension. In particular, the implementation still treats omitted
-generic arguments as unknown interfaces; the reviewed design makes them inference
-holes and retains live inference for the missing parts of a partial signature.
+The description below records current generic inference. Omitted generic arguments
+use source-owned inference holes and retain live inference through partial
+signatures. Recursive hole contexts, alias-body omissions, and missing nominal
+member types still need the contextual reference work described in that document.
 
 Class bodies introduce lexical captures, and a class and its constructor share
 one resolution boundary. A method's reference to an outer constructor must include
@@ -63,10 +63,16 @@ recursive calls, nested captures, partial construction, and independent field re
 Explicit and inferred function/constructor type arguments flow through the
 corresponding type-parameter symbols with entry/exit marks. Explicit arguments
 receive input constraints without adding value-argument shapes to their output
-interface. Inference also connects nested
+interface at ordinary call boundaries. Bodyless members of constructed instances
+still use a positive-only conversion for supplied class arguments; the callback
+input regression in `newres/ConstructorInstances.mls` records this limitation.
+Inference also connects nested
 nominal parameters, such as `Foo[A]` containing a `Box[A]`. Generic methods use
 the same flow as free functions, including callback-result inference and curried
-signatures. Declared callable shapes retain their type parameters.
+signatures. Declared callable shapes retain their type parameters. Functions and
+constructors allocate explicit binders once per original definition and syntactic
+term application. Stored specializations and unapplied `new` retain supplied type
+references until that application; subsequent curried lists retain its instance map.
 
 Nominal argument comparisons retain directed `ContextualType` endpoint pairs.
 Invariant arguments install both directions, rather than copying expanded

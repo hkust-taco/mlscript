@@ -335,7 +335,8 @@ class AppShape(val receiver: TermShape, val args: Term, val src: Term.App)(using
   override def toString: String = s"AppShape($receiver, ${args.showDbg})"
   // def target: Opt[AppTarget]
 
-class NewShape(val receiver: DefnShape, val cls: ClassLikeSymbol, val clsMarks: Ls[Marks], val argss: Ls[Term], val src: Term.New)(using DebugPrinter) extends NonMarkedShape:
+class NewShape(val receiver: DefnShape, val cls: ClassLikeSymbol, val clsMarks: Ls[Marks], val argss: Ls[Term], val src: Term.New,
+    val supplied: Opt[Ls[DeclaredType]])(using DebugPrinter) extends NonMarkedShape:
   protected def getMemberImpl(name: Str)(using NewResolverState): MemberLookup =
     if isSaturated then receiver.getInstanceMember(name).withMarks(clsMarks)
     else MemberLookup.Missing

@@ -391,21 +391,12 @@ rights.push(Right(44))
 //│ lefts = [Left(43)]
 //│ rights = [Right(44)]
 
-// An unannotated allocation cannot borrow another array's element type or its pushed values.
-:e
+// An unannotated allocation infers its own element type from pushed values.
+:expect 99
 let unknownCallbacks = new mut Array(0)
 unknownCallbacks.push(() => 99)
 private fun invokeUnannotatedArray(f, ...tail) = f()
 invokeUnannotatedArray(...unknownCallbacks)
-//│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.398: 	private fun invokeUnannotatedArray(f, ...tail) = f()
-//│ ║         	                                                 ^^^
-//│ ╟── Value of unknown shape cannot be called like a function.
-//│ ║  l.399: 	invokeUnannotatedArray(...unknownCallbacks)
-//│ ║         	                          ^^^^^^^^^^^^^^^^
-//│ ╟── This spread has no known element shape.
-//│ ║  l.399: 	invokeUnannotatedArray(...unknownCallbacks)
-//│ ╙──       	                          ^^^^^^^^^^^^^^^^
 //│ = 99
 //│ unknownCallbacks = [fun]
 
@@ -415,13 +406,13 @@ invokeUnannotatedArray(...unknownCallbacks)
 private fun firstInArray(xs) = first(...xs)
 [firstInArray(lefts).left, firstInArray(rights).right]
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.416: 	[firstInArray(lefts).left, firstInArray(rights).right]
+//│ ║  l.407: 	[firstInArray(lefts).left, firstInArray(rights).right]
 //│ ║         	 ^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Value of type 'Right' does not contain member 'left'
 //│ ║  l.378: 	class Right(val right: Int)
 //│ ╙──       	                       ^^^
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.416: 	[firstInArray(lefts).left, firstInArray(rights).right]
+//│ ║  l.407: 	[firstInArray(lefts).left, firstInArray(rights).right]
 //│ ║         	                           ^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Value of type 'Left' does not contain member 'right'
 //│ ║  l.377: 	class Left(val left: Int)

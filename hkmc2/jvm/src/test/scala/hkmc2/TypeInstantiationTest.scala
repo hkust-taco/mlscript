@@ -7,18 +7,11 @@ import hkmc2.semantics.*
 
 
 class TypeInstantiationTest extends AnyFunSuite:
-  test("polymorphic declaration calls allocate by application rather than shared reference"):
+  private def allocatedInstances(source: String): Int =
     import io.PlatformPath.given
     val directory = os.temp.dir(prefix = "call-site-instances-")
     val file: io.Path = directory / "Library.mls"
-    os.write(directory / "Library.mls",
-      """|#lang(0.3.x, strictResolution: true)
-         |module Library with
-         |  fun identity[A](x: A): A = x
-         |  val shared = identity
-         |  val first = shared(1)
-         |  val second = shared("two")
-         |""".stripMargin)
+    os.write(directory / "Library.mls", "#lang(0.3.x, strictResolution: true)\n" + source)
     try
       val paths = TestFolders.compilerPaths(os.pwd)
       val compiler = CompilerCtx.fresh(io.FileSystem.default, paths,
@@ -29,9 +22,49 @@ class TypeInstantiationTest extends AnyFunSuite:
       given Raise = diagnostic => fail(diagnostic.theMsg)
       val prelude = compiler.getPrelude(paths.preludeFile)
       val artifact = compiler.getElaboratedBlock(file, prelude.ctx)
-      assert(artifact.state.newResolverState.allocatedTypeInstanceCount == 2)
       assert(prelude.state.newResolverState.allocatedTypeInstanceCount == 0)
+      artifact.state.newResolverState.allocatedTypeInstanceCount
     finally os.remove.all(directory)
+
+  test("polymorphic declaration calls allocate by application rather than shared reference"):
+    assert(allocatedInstances(
+      """|module Library with
+         |  fun identity[A](x: A): A = x
+         |  val shared = identity
+         |  val first = shared(1)
+         |  val second = shared("two")
+         |""".stripMargin) == 2)
+
+  test("constructor instances belong to the first term application, including stored new recipes"):
+    val cases = List(
+      """|class Box[T](val item: T)
+         |private val specialized = Box[Int]
+         |private val deferred = new Box[Int]
+         |""".stripMargin -> 0,
+      """|class Box[T](val item: T)
+         |private val shared = Box
+         |private val specialized = shared[Int]
+         |private val direct = specialized(1)
+         |private val explicit = new specialized(2)
+         |""".stripMargin -> 2,
+      """|class Box[T](val item: T)
+         |private val deferred = new Box[Int]
+         |private val first = deferred(1)
+         |private val second = deferred(2)
+         |""".stripMargin -> 2,
+      """|class Box[T](val item: T)(val other: Int)
+         |private val partial = new Box[Int](1)
+         |private val first = partial(2)
+         |private val second = partial(3)
+         |""".stripMargin -> 1,
+      """|class Box[T] with
+         |  fun identity(x: T): T = x
+         |private val first = new Box[Int]
+         |private val second = new Box[Str]
+         |""".stripMargin -> 2)
+    cases.foreach: (source, count) =>
+      withClue(source):
+        assert(allocatedInstances(source) == count)
 
   test("a definition and static site allocate their binder group once"):
     given owner: Elaborator.State = new Elaborator.State

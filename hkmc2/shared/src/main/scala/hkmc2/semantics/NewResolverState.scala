@@ -190,8 +190,10 @@ final class NewResolverState private (
     new Cache(inherited.map(_.reportedArities), _.clone())
   val appShapes: Cache[(TermShape, FlowSymbol), AppShape] =
     new Cache(inherited.map(_.appShapes), identity)
-  val newShapes: Cache[(ClassLikeSymbol, Ls[Marks], FlowSymbol), NewShape] =
+  val newShapes: Cache[(ClassLikeSymbol, Ls[Marks], FlowSymbol, Opt[Ls[DeclaredType]]), NewShape] =
     new Cache(inherited.map(_.newShapes), identity)
+  val constructorApplications: Seen[(NewShape, Map[VarSymbol, TypeParameterInstance])] =
+    new Seen(inherited.map(_.constructorApplications))
   val introShapes: Cache[Identity[IntroTerm], IntroShape] =
     new Cache(inherited.map(_.introShapes), identity)
   val symShapes: Cache[(BlockMemberSymbol, FlowSymbol, Ls[Marks]), SymShape] =
@@ -214,7 +216,7 @@ final class NewResolverState private (
     new Cache(inherited.map(_.shapeViews), identity)
   val activatedSymbols: Cache[(SymShape, Map[VarSymbol, TypeParameterInstance]), ActivatedSymShape] =
     new Cache(inherited.map(_.activatedSymbols), identity)
-  val inferredInstantiations: Seen[(TermSymbol, FlowSymbol, Map[VarSymbol, TypeParameterInstance], Ls[Marks])] =
+  val inferredInstantiations: Seen[(AnyDefinitionSymbol, FlowSymbol, Map[VarSymbol, TypeParameterInstance], Ls[Marks])] =
     new Seen(inherited.map(_.inferredInstantiations))
   // A scheme is owned by its source definition, or by the original interpretation
   // of an anonymous quantified annotation. Neither a view nor an instance is an owner.

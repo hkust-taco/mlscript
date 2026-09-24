@@ -86,32 +86,21 @@ The inventory below separates these from compiler and prelude gaps.
 - **Mutation and control flow:** mutable-array reads use the element shapes
   collected from the initializer and subsequent writes, as described in the
   [resolver notes](new-resolution-design.md). Tracking individual positions and
-  lengths is out of scope. Decide how reassignment affects the inferred interface
-  of mutable storage, including across already compiled worksheet blocks.
-  `newres/MutationFlow.mls` records a reassigned array still checked
-  against its initializer's tuple length; accumulating both shapes would still
-  reject valid later indexing. `codegen/SetStmt` also lacks argument flow through
-  its update callback. Instance wrappers are in place; the
-  [type-argument constraint proposal](new-resolution-type-value-flow.md) records
-  the agreed variance rules and once-per-definition/call-site instantiation of
-  declared type parameters. Its design review specifies contextual views with
-  marks, partial signatures, and inference holes for omitted generic arguments.
-  The review also requires inferred missing member types through nominal
-  annotations, with receiver contexts and override constraints preserved.
-  Bidirectional nominal argument constraints now pass `appendTyped` and the
-  recursive cases in `newres/MutableArrays.mls`, including isolation between
-  callers. Stored specializations of inferred functions also preserve independent
-  call-site binders, including deferred records and curried calls. Complete
-  pre-application observations of specialized inferred results (the callback
-  regression in `newres/StoredSpecializations.mls`) and constructors. Omitted
-  arguments now infer through partial annotations, results, and ascriptions;
-  complete their recursive and alias-use contexts (`newres/InferenceHoles.mls`).
-  Verify the whole graph's termination bound. Member-variable
-  definitions still need work. Handler inference needs separate flows for the receiver, values
+  lengths is out of scope. Complete the
+  [type-argument constraint design](new-resolution-type-value-flow.md), including
+  specialized inferred results observed before application, supplied member-input
+  constraints, reconstructed receiver contexts, inferred missing member types,
+  and the whole graph's termination bound. Concrete outstanding cases are in
+  `newres/StoredSpecializations.mls`, `ConstructorInstances.mls`,
+  `InferenceHoles.mls`, and `PartialSignatures.mls`.
+  Decide how reassignment affects mutable storage's inferred interface, including
+  across compiled worksheet blocks. `newres/MutationFlow.mls` records a reassigned
+  array still checked against its initializer's tuple length; accumulating both
+  shapes would still reject valid later indexing. `codegen/SetStmt` also lacks
+  argument flow through its update callback. Member-variable definitions still
+  need work. Handler inference needs separate flows for the receiver, values
   passed to resumptions, and abortive results (`newres/HandlerResults.mls` and
   `codegen/ScopedBlocksAndHandlers`). Agree these designs before implementation.
-  Ordinary result-shape contracts are covered by `newres/ControlFlowResults.mls`;
-  `basics/MutVal` and `apps/IterTest` use new resolution.
 - **Captured activations:** preserve activation identity through captured
   functions, constructor aliases, reconstruction of the same class, and partial
   construction. Existing regressions include `CtxSens`, `ValCtxSens`,

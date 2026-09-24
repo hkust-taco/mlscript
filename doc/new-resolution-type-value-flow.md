@@ -18,10 +18,13 @@ substitutions through deferred tuples, records, callbacks, and closures. Nominal
 argument comparisons retain both endpoint references and apply declaration/use-site
 variance. The explicit-binder recursive array acceptance cases pass. Supplied function arguments
 receive input obligations while retaining their declared output interface.
-Observing specialized inferred functions before application, replacing the remaining
-explicit-argument flags and constructor path, inferred nominal member interfaces,
-and general recursive alias environments still need integration. Omitted arguments
-now use source-owned inference holes; recursive hole contexts and omissions inside
+Constructors now select their binder groups at the first term application too,
+including stored aliases and explicit `new`. Observing specialized inferred
+functions before application, replacing the remaining explicit-argument flags
+and positive-only member conversion, reconstructed receiver contexts, inferred
+nominal member interfaces, and general recursive alias environments still need
+integration. Omitted arguments use source-owned inference holes; recursive hole
+contexts and omissions inside
 alias bodies still need the contextual reference work described below. The
 implementation order below remains the full design, not a claim that all its parts
 are complete.
@@ -532,8 +535,44 @@ the original definition's type parameters. `newres/StoredSpecializations.mls`
 checks independent specializations through one stored alias, deferred record
 results, curried calls, and arity errors even when a specialization is unused.
 
-Pre-application observation of an inferred result is still missing. The same
-worksheet retains this concrete regression:
+Constructors use the same `instantiateDefinition` operation as inferred functions.
+`ClassReference` retains the selected class, marks, captured binder map, and supplied
+type references through aliases and captures. `new C[T]` with parameter lists still
+to consume retains a `NewShape` recipe; its first later term application owns the
+binder group. A saturated zero-list `new C[T]` owns its group at the `new` site.
+Later argument lists reuse the first group's map. Array spreads observe this
+instantiated element parameter, including bounds inferred from inserted values.
+`newres/ConstructorInstances.mls` checks independent aliases, explicit `new`, curried
+and unapplied constructors, class/method binder separation, and a shared allocation
+inside a generic function. Type application after the first consumed list cannot
+rebind that scheme or turn a constructed object back into its constructor.
+
+Two constructor-related cases remain failing regressions in that worksheet.
+Reconstruction with `class Box[T](val item: T) with { fun copy() = new Box[T](item) }`
+must retain the receiver's view of `T` separately from the new constructor's view;
+the first of two distinct receiver calls currently loses its resulting element
+interface. Separately, this callback must receive the supplied input type:
+
+```mlscript
+class Item(val value: Int)
+let callbacks = new mut Array[Item -> Int](0)
+callbacks.push((x) => x.value)
+```
+
+The expected input of `x` is `Item`, but its member target remains unresolved.
+`instanceBindings` still expands explicitly supplied class arguments into
+positive interfaces. Simply replacing this conversion with `TypeShape.Parameter`
+is insufficient: nested nominal comparisons can reach that parameter with no
+outer constraint marks, even though the incoming value retains class and member
+entries. The explicit-argument flag then fails to identify the supplied slot and
+incorrectly treats the input as another output candidate. The shared reference
+graph must retain the supplied endpoint and its context through those comparisons;
+it must replace this conversion and the flag-based routing together. Both failures
+also occur before constructor call-site instantiation; they are not accepted
+behavior or reasons to change marks or allocate additional variables.
+
+Pre-application observation of an inferred result is still missing.
+`newres/StoredSpecializations.mls` retains this concrete regression:
 
 ```mlscript
 class Item(val value: Int)
@@ -572,9 +611,11 @@ fields and closures as well as this scalar result. This regression remains a
    retaining their hosts, substitutions, and marks. Ordinary arguments contribute
    bounds; supplied types receive all obligations at their applicable polarity.
    Apply the InvalML variance rules above.
-4. Replace `applyTypeArguments`, nominal inference, explicit-argument suppression,
-   and the positive-only conversion in `instanceBindings` together. Reuse the
-   same mechanism for functions, constructors, and declared array interfaces.
+4. Complete supplied-argument references and replace explicit-argument suppression
+   and the positive-only conversion in `instanceBindings` together. Functions
+   and constructors now share call-site binder allocation and retain specialization
+   recipes; their remaining input/output obligations must use the same reference
+   mechanism as nominal arguments and declared array interfaces.
 5. Route declared member lookup to partial member schemes, retaining receiver
    contexts for inferred fields and results. Check override compatibility before
    completing member targets. Convert the member-inference `:fixme`s together;
@@ -633,6 +674,17 @@ invariant checks enabled. For a fixed finite set of source type references, ther
 are finitely many endpoint/map/mark combinations, and replay adds no listeners.
 That local bound does not establish the remaining whole-graph alias-environment
 bound, which must also prove that source references cannot proliferate.
+
+Constructor recipes contain source type-argument nodes and flat binder maps,
+not expanded argument candidates. There are finitely many such recipes per source
+`new` expression. Their shape cache may distinguish recipes, but binder allocation
+continues to use only the original class and term application site. Constructor
+argument subscriptions are memoized by recipe and flat instance map before their
+arguments are observed. `TypeInstantiationTest` checks zero allocation for bare
+specialization and unapplied `new`, distinct groups for separate applications,
+reuse across curried tails, and allocation for saturated zero-list construction.
+These checks bound this constructor machinery; they do not establish the remaining
+whole-graph alias bound or repair the contextual failures above.
 
 For omitted arguments, each source type-use/formal-position pair allocates one
 `TypeShape.Hole` host. No recursive traversal or call allocates a parameter symbol
