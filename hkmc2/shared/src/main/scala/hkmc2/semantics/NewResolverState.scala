@@ -187,6 +187,8 @@ final class NewResolverState private (
     new Cache(source.map(_.typeInterpretations), identity)
   val typeValues: Cache[DeclaredType, TypeValues] =
     new Cache(source.map(_.typeValues), identity)
+  val patternTypes: Cache[(Identity[Pattern.Constructor], InnerSymbol), DeclaredType] =
+    new Cache(source.map(_.patternTypes), identity)
   val primitiveTypes: Cache[ClassSymbol, DeclaredType] =
     new Cache(source.map(_.primitiveTypes), identity)
   val abstractTypes: Cache[TypeResolution, DeclaredType] =

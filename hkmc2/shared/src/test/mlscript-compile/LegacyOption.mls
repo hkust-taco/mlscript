@@ -4,12 +4,12 @@
 // must use the same copy so constructor identities agree.
 
 
-type LegacyOption[A] = LegacyOption.{ Some(A) | None }
+type LegacyOption[A] = LegacyOption.{ Some[A] | None }
 
 module LegacyOption with ...
 
 
-data class Some[T](value)
+data class Some[T](value: T)
 object None
 
 fun isDefined(x) = if x is

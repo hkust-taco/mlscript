@@ -51,7 +51,7 @@ module Choice with
       check(item is Choice, name + ": element [" + index + "] is not Choice")
   
   // Shorthands for constructing rule choices.
-  fun keyword(keyword)(...choices) =
+  fun keyword(keyword: Keywords.Keyword)(...choices) =
     ensureChoices(choices, "Choice.keyword")
     Keyword(keyword, rule("`" + keyword.name + "` keyword", ...choices))
   

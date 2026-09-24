@@ -56,7 +56,7 @@ fun makeLineLookupTable(text: Str): LineLookupTable =
       ns.push(i')
   LineLookupTable(ns)
 
-fun lex(str: Str, options) =
+fun lex(str: Str, options: {noWhitespace: Bool}) =
   using LineLookupTable = makeLineLookupTable(str)
   
   fun char(idx: Int) = if idx < str.length

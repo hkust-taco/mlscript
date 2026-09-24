@@ -55,7 +55,10 @@ expose().f({answer: 1})
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
 //│ ║  l.53: 	fun expose(): {f: Object -> Int} = {f: x => x.answer}
 //│ ║        	                                            ^^^^^^^^
-//│ ╙── Value of type 'Object' does not contain member 'answer'
+//│ ╟── Value of type 'Object' does not contain member 'answer'
+//│ ║  in ../decls/Prelude.mls
+//│ ║  l.7: 	  fun toString(): Str
+//│ ╙──     	                  ^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :expect "ALIAS"

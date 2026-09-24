@@ -4,7 +4,8 @@ declare type Any
 declare type Anything
 declare type Nothing
 
-declare class Object
+declare class Object with
+  fun toString(): Str
 declare module Object with
   fun
     create
@@ -117,6 +118,7 @@ declare class Int extends Num
 declare class Str with
   val length: Int
   fun toString(): Str
+  fun at(index: Int): Str | undefined
   fun charAt(index: Int): Str
   fun charCodeAt(index: Int): Num
   fun codePointAt(index: Int): Int | undefined
@@ -263,7 +265,9 @@ declare module console with
       timeEnd
       trace
 
-declare val process // TODO make `module`
+declare module process with
+  fun cwd(): Str
+  val env
 // Host APIs remain explicitly dynamic until their interfaces are modeled.
 declare val fs: dyn
 

@@ -197,7 +197,7 @@ class NewResolver:
               case TypeShape.Nominal(defn) =>
                 val bindings = bind(defn.tparams)
                 defn.ext match
-                  case N => publish(NominalTypeShape(defn, bindings, N))
+                  case N => publish(NominalTypeShape(defn, bindings, implicitParent(defn)))
                   case S(parent) =>
                     // Only the parent's declared type is relevant here. Evaluating
                     // its constructor arguments would reintroduce implementation flow.
@@ -554,7 +554,7 @@ class NewResolver:
         val cls = prelude.builtins.Array.defn.get
         softAssert(cls.tparams.length == 1, "The builtin Array must have one element type parameter")
         val elements = new TypeResolution(tuple.source, messages => resolError(tuple.source, messages))
-        val parent = NominalTypeShape(cls, Map(cls.tparams.head.sym -> declaredType(elements, Map.empty)), N)
+        val parent = NominalTypeShape(cls, Map(cls.tparams.head.sym -> declaredType(elements, Map.empty)), implicitParent(cls))
         tupleArrayParents(new Identity(tuple)) = parent
         tuple.segments.foreach:
           case field: TupleShape.Fixed => listenTupleField(field): value =>
@@ -821,12 +821,92 @@ class NewResolver:
                 UnknownValueShape.at(opaque.source).exit(marks) match
                   case value: TermShape => narrow(value)
                   case NoShape => ()
+              case Marked(nominal: NominalTypeShape, _) if !nominal.isInstanceOfClass(cls) =>
+                // A base-class annotation can contain a subclass instance. Its
+                // constructor test exposes that subclass's declarations; omitted
+                // subclass type arguments remain abstract, never inferred from
+                // unrelated constructor calls elsewhere in the unit.
+                // Reuse the abstract instantiation when recursive flow reaches
+                // this test again, so its omitted arguments have stable identities.
+                val tested = rstate.patternTypes.getOrElseUpdate((new Identity(ctor), cls.sym), {
+                  val resolution = new TypeResolution(ctor.target, messages => resolError(ctor.target, messages))
+                  resolution.publish(TypeShape.Nominal(cls))
+                  declaredType(resolution, Map.empty)
+                })
+                listenTypeValues(tested): candidate =>
+                  if candidate.isInstanceOfClass(nominal.defn) then check(candidate, N)
               case _ => check(sh, N)
             shape match
               case sh: TermShape => narrow(sh)
               case sh: SymShape => fromSymbol(sh, narrow, ctor.target, _ => (), false)
         ctor.subscribeToShapes(listenConstructor)
-      case Pattern.Tuple(_, _) => () // Tuple binding shapes are not inferred yet.
+      case Pattern.Tuple(leading, spread) =>
+        val trailing = spread.fold(Nil)(_._3)
+        val required = leading.length + trailing.length
+        def tupleBindings(tuple: TupleShape, marks: Marks)(using NewResolverState): Unit =
+          val segments = tuple.segments
+          val known = segments.count(_.isInstanceOf[TupleShape.Fixed])
+          val uncertain = known != segments.length
+          if (uncertain || known >= required) && (spread.nonEmpty || known <= required) then
+            def bind(segment: TupleShape.Segment, p: Pattern)(using NewResolverState): Unit =
+              def receive(value: TermShape)(using NewResolverState): Unit = value.exit(marks) match
+                case value: TermShape => matchShapePat(value, p)(_ => ())
+                case NoShape => ()
+              segment match
+                case field: TupleShape.Fixed => listenTupleField(field)(receive)
+                case TupleShape.Unknown(_, inner, value) => value.exit(inner) match
+                  case value: TermShape => receive(value)
+                  case NoShape => ()
+            // A spread can move subsequent fields. Retain every possible position
+            // rather than treating the first unknown segment as the only candidate.
+            def positions(xs: Ls[TupleShape.Segment], ps: Ls[Pattern])(using NewResolverState): Unit =
+              var before = 0
+              var unknownBefore = false
+              xs.foreach:
+                case field: TupleShape.Fixed =>
+                  ps.iterator.zipWithIndex.foreach: (p, index) =>
+                    if index >= before && (if !unknownBefore then index == before
+                        else spread.nonEmpty || index <= before + required - known) then bind(field, p)
+                  before += 1
+                case unknown: TupleShape.Unknown =>
+                  ps.drop(before).foreach(bind(unknown, _))
+                  unknownBefore = true
+            positions(segments, leading)
+            positions(segments.reverse, trailing.reverse)
+            spread.foreach: (_, p, _) =>
+              // Stop trimming at an unknown segment: its possible lengths include
+              // consuming the remaining prefix/suffix, so all later values may remain.
+              def trim(xs: Ls[TupleShape.Segment], count: Int): Ls[TupleShape.Segment] =
+                if count == 0 then xs else xs match
+                  case (_: TupleShape.Fixed) :: tail => trim(tail, count - 1)
+                  case _ => xs
+              val middle = trim(trim(segments, leading.length).reverse, trailing.length).reverse
+              // Reusing an unchanged view also bounds recursive tail matching on
+              // arrays with unknown length; wrapping it again would grow forever.
+              val rest = if middle == segments then tuple
+                else TupleShape(tuple.source, TupleShape.Rest(tuple, middle) :: Nil)(this)
+              rest.exit(marks) match
+                case value: TermShape => matchShapePat(value, p)(_ => ())
+                case NoShape => ()
+            tuple.exit(marks) match
+              case value: TermShape => matched(value)
+              case NoShape => ()
+        def narrow(value: TermShape)(using NewResolverState): Unit = value match
+          case Marked(tuple: TupleShape, marks) => tupleBindings(tuple, marks)
+          case Marked(unknown: UnknownValueShape, marks) =>
+            tupleBindings(TupleShape(unknown.source,
+              TupleShape.Unknown(unknown.source, Nil, unknown) :: Nil)(this), marks)
+          case Marked(nominal: NominalTypeShape, marks) =>
+            nominal.ancestor(prelude.builtins.Array.defn.get).foreach: array =>
+              array.bindings.get(prelude.builtins.Array.defn.get.tparams.head.sym).foreach: element =>
+                listenTypeValues(element):
+                  case Marked(shape, inner) =>
+                    tupleBindings(TupleShape(element.resolution.source,
+                      TupleShape.Unknown(element.resolution.source, inner :: Nil, shape) :: Nil)(this), marks)
+          case _ => ()
+        shape match
+          case value: TermShape => narrow(value)
+          case sym: SymShape => fromSymbol(sym, narrow, Term.Missing, _ => (), false)
       case _ =>
         raise(ErrorReport(msg"This pattern is not supported during shape resolution." -> pattern.toLoc :: Nil))
   
@@ -1072,7 +1152,7 @@ class NewResolver:
         listenClass(cls)((cd, marks) =>
           val candidate = cd.sym -> marks
           rstate.recordResolution(sel, sel.resolvedClasses.contains(candidate))(sel.resolvedClasses ::= candidate)
-          listenExt(cd.ext, ext =>
+          listenExt(cd, ext =>
             val info = DefnShape(cd, ext).getInstanceMember(sel.id.name).withMarks(marks)
             info match
               case MemberLookup.Found(bms: BlockMemberSymbol, _) =>
@@ -1136,7 +1216,7 @@ class NewResolver:
     // constructor value. In particular, a captured constructor already carries
     // that exit; adding a second one here would duplicate its instance boundary.
     listenClass(nw.cls)((cd, marks) =>
-      listenExt(cd.ext, extsh =>
+      listenExt(cd, extsh =>
         val dsh = constructorShape(cd, extsh)
         val sh = newShapes.getOrElseUpdate((cd.sym, marks, nw.resSym), {
           def typeArgs(term: Term)(using NewResolverState): Opt[Ls[Term]] = term match
@@ -1188,13 +1268,20 @@ class NewResolver:
       if to.currentShapes.add(sh) then
         to.notifyShapeListeners(sh)
   
-  def listenExt(ext: Opt[Term], listener: ShapeListener[Opt[TermShape]])(using NewResolverState): Unit =
-    ext match
+  // Classes without an explicit parent expose Object's declarations. Share this
+  // root interface between inferred instances, nominal annotations, and this-values;
+  // Object itself must terminate the chain. This does not add a runtime constructor call.
+  private lazy val objectShape = NominalTypeShape(prelude.builtins.Object.defn.get, Map.empty, N)
+  private def implicitParent(defn: ClassLikeDef): Opt[TermShape] =
+    if defn.sym is prelude.builtins.Object then N else S(objectShape)
+
+  def listenExt(defn: ClassLikeDef, listener: ShapeListener[Opt[TermShape]])(using NewResolverState): Unit =
+    defn.ext match
     case S(trm) =>
       listenTerm(trm): sh =>
         listener(S(sh))
     case N =>
-      listener(N)
+      listener(implicitParent(defn))
   
   private def fromSymbol(shape: SymShape, listener: Listener, source: Term,
       selected: ShapeListener[DefinitionSymbol[?]], receiver: Bool)(using NewResolverState): Unit = shape match
@@ -1255,11 +1342,11 @@ class NewResolver:
           d.tsym match
           case ccs: ClassCtorSymbol =>
             val cls = ccs.associatedCls.defn.get
-            listenExt(cls.ext, extsh => wrappedListener(constructorShape(cls, extsh)))
+            listenExt(cls, extsh => wrappedListener(constructorShape(cls, extsh)))
           case _ =>
             wrappedListener(defnShapes.getOrElseUpdate(sym, DefnShape(d, N)))
         case S(d: ClassLikeDef) =>
-          listenExt(d.ext, extsh =>
+          listenExt(d, extsh =>
             // defnShapes.get(sym).foreach: existing =>
             //   ??? // TODO error?
             wrappedListener(defnShapes.getOrElseUpdate(sym, DefnShape(d, extsh)))
@@ -1513,7 +1600,7 @@ class NewResolver:
       // A receiver can be referenced before its body is complete or after its
       // definition has already been published. The definition listener handles both.
       def completed(defn: ClassLikeDef)(using NewResolverState): Unit =
-        listenExt(defn.ext, ext =>
+        listenExt(defn, ext =>
           // Each inner symbol has one self shape; repeated notifications must agree.
           val shape = selfShapes.getOrElseUpdate(sym, BaseShape(defn, ext))
           softAssert(shape.defn is defn)

@@ -22,9 +22,13 @@ module LiteralKind with
     String
     Boolean
 
+type LiteralKind = LiteralKind.{Integer | Decimal | String | Boolean}
+
+type Location = {start: Int, end: Int, lookupTable: LineLookupTable}
+
 abstract class Token with
-  let _location = None
-  fun withLocation(start, end, lookupTable) =
+  private mut val _location: Some[Location] | None = None
+  fun withLocation(start: Int, end: Int, lookupTable: LineLookupTable) =
     set _location = Some of start: start, end: end, lookupTable: lookupTable
     this
   fun location = _location
@@ -63,7 +67,7 @@ data
     Error() extends Token
     Comment(content: Str) extends Token
     Identifier(name: Str, symbolic: Bool) extends Token
-    Literal(kind, literal: Str) extends Token
+    Literal(kind: LiteralKind, literal: Str) extends Token
 
 fun same(a, b) = if
   a is Space and b is Space then true
@@ -72,28 +76,28 @@ fun same(a, b) = if
   a is Literal(k, l) and b is Literal(k', l') then k == k' and l == l'
   else false
 
-fun integer(literal, endIndex)(using llt: LineLookupTable) =
+fun integer(literal: Str, endIndex: Int)(using llt: LineLookupTable) =
   Literal(LiteralKind.Integer, literal).withLocation of
     endIndex - literal.length, endIndex, llt
-fun decimal(literal, endIndex)(using llt: LineLookupTable) =
+fun decimal(literal: Str, endIndex: Int)(using llt: LineLookupTable) =
   Literal(LiteralKind.Decimal, literal).withLocation of
     endIndex - literal.length, endIndex, llt
-fun string(literal, startIndex, endIndex)(using llt: LineLookupTable) =
+fun string(literal: Str, startIndex: Int, endIndex: Int)(using llt: LineLookupTable) =
   Literal(LiteralKind.String, literal).withLocation(startIndex, endIndex, llt)
-fun boolean(literal, endIndex)(using llt: LineLookupTable) =
+fun boolean(literal: Str, endIndex: Int)(using llt: LineLookupTable) =
   Literal(LiteralKind.Boolean, literal).withLocation of
     endIndex - literal.length, endIndex, llt
-fun identifier(name, endIndex)(using llt: LineLookupTable) =
+fun identifier(name: Str, endIndex: Int)(using llt: LineLookupTable) =
   Identifier(name, false).withLocation of
     endIndex - name.length, endIndex, llt
-fun symbol(name, endIndex)(using llt: LineLookupTable) =
+fun symbol(name: Str, endIndex: Int)(using llt: LineLookupTable) =
   Identifier(name, true).withLocation of
     endIndex - name.length, endIndex, llt
-fun comment(content, startIndex, endIndex)(using llt: LineLookupTable) =
+fun comment(content: Str, startIndex: Int, endIndex: Int)(using llt: LineLookupTable) =
   Comment(content).withLocation(startIndex, endIndex, llt)
-fun error(startIndex, endIndex)(using llt: LineLookupTable) =
+fun error(startIndex: Int, endIndex: Int)(using llt: LineLookupTable) =
   Error().withLocation(startIndex, endIndex, llt)
-fun space(startIndex, endIndex)(using llt: LineLookupTable) =
+fun space(startIndex: Int, endIndex: Int)(using llt: LineLookupTable) =
   Space().withLocation(startIndex, endIndex, llt)
   
 fun summary(token) = if token is
@@ -103,7 +107,7 @@ fun summary(token) = if token is
   Identifier(name, _) then name
   Literal(_, literal) then literal
 
-fun display(token) = (if token is
+fun display(token: Token) = (if token is
   Space then "space"
   Error then "error"
   Comment then "comment"

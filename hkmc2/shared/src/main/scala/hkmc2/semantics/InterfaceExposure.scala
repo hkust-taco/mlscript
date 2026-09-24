@@ -67,7 +67,7 @@ final class InterfaceExposure(resolver: NewResolver)(using NewResolverState, TL)
       if symbol.asModOrObj.isDefined || symbol.asTrm.exists(!_.isInstanceOf[ClassCtorSymbol]) then
         symbol.asCls.flatMap(_.defn).foreach: cls =>
           val resolver = this.resolver
-          watch((cls.sym, marks))(listener => resolver.listenExt(cls.ext, ext =>
+          watch((cls.sym, marks))(listener => resolver.listenExt(cls, ext =>
             DefnShape(cls, ext).exit(ExitMark(ResolutionBoundary(cls.sym), S(ref.resSym), NoMarks)).exit(marks) match
               case shape: TermShape => listener(shape)
               case NoShape => ()))(emit(_, path))

@@ -1,0 +1,87 @@
+:.
+
+:expect "Empty"
+object Empty
+Empty.toString()
+//│ = "Empty"
+
+:expect "Box(1)"
+data class Box(value: Int)
+Box(1).toString()
+//│ = "Box(1)"
+
+:expect "BOX(2)"
+fun show(box: Box): Str = box.toString().toUpperCase()
+show(Box(2))
+//│ = "BOX(2)"
+
+:expect "custom"
+class Parent with
+  fun toString(): Str = "custom"
+new Parent().toString()
+//│ = "custom"
+
+:e
+Empty.toString(1)
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.25: 	Empty.toString(1)
+//│ ║        	^^^^^^^^^^^^^^^^^
+//│ ╟── Function with a declared signature expected 0 arguments, but got 1
+//│ ║  l.25: 	Empty.toString(1)
+//│ ╙──      	^^^^^^^^^^^^^^
+//│ = "Empty"
+
+:expect "empty"
+fun lower(value: Empty): Str = value.toString().toLowerCase()
+lower(Empty)
+//│ = "empty"
+
+:expect "empty"
+data class Wrapped(kind: Empty)
+fun lowerWrapped(value: Wrapped): Str = if value is Wrapped(kind) then kind.toString().toLowerCase()
+lowerWrapped(Wrapped(Empty))
+//│ = "empty"
+
+module Kind with
+  object Red
+  object Blue
+type Kind = Kind.{Red | Blue}
+data class Colored(kind: Kind)
+
+:expect "red"
+fun lowerColored(value: Colored): Str = if value is Colored(kind) then kind.toString().toLowerCase()
+lowerColored(Colored(Kind.Red))
+//│ = "red"
+
+abstract class Base
+data class Derived(value: Str) extends Base
+
+:expect "VALUE"
+fun derivedValue(value: Base): Str = if value is Derived(text) then text.toUpperCase()
+derivedValue(new Derived("value"))
+//│ = "VALUE"
+
+:expect "Box(3)"
+fun renderObject(value: Object): Str = value.toString()
+renderObject(Box(3))
+//│ = "Box(3)"
+
+:expect "child"
+class HasMethod with
+  fun label(): Str = "parent"
+class Child extends HasMethod with
+  fun label(): Str = "child"
+new Child().label()
+//│ = "child"
+
+// Recursive narrowing must reuse its abstract subclass instantiation.
+abstract class Link[A]
+data class Cell[A](value: A, next: Link[A]) extends Link[A]
+object End extends Link[Int]
+fun depth(xs: Link[Int]): Int = if xs is
+  Cell(_, next) then 1 + depth(next)
+  else 0
+
+:expect 2
+depth(Cell(1, Cell(2, End)))
+//│ = 2

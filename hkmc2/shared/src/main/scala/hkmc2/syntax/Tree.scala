@@ -368,6 +368,11 @@ enum Tree extends AutoLocated:
       // fun f(a: A)
       case InfixApp(id: Ident, Keywrd(Keyword.`:`), sign) =>
         R(ParamTree(flags, id, S(sign), N, modifiers))
+      // The annotation describes the rest tuple, just as for an ordinary parameter.
+      case InfixApp(SpreadParam(id, spd), Keywrd(Keyword.`:`), sign) =>
+        R(ParamTree(flags, id, S(sign), S(spd), modifiers))
+      case Spread(kw, S(InfixApp(id: Ident, Keywrd(Keyword.`:`), sign))) =>
+        R(ParamTree(flags, id, S(sign), S(SpreadKind.fromKw(kw)), modifiers))
       // fun f(..a) | fun f(...a)
       case SpreadParam(id, spd) =>
         R(ParamTree(flags, id, N, S(spd), modifiers))

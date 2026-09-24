@@ -24,7 +24,7 @@ val syntaxKinds = MutMap.empty
 
 val extendedKinds = new Set()
 
-fun getRuleByKind(kind: Str) = syntaxKinds |> MutMap.get(kind) |> LegacyOption.unsafe.get
+fun getRuleByKind(kind: Str): ParseRule.ParseRule[out Anything] = syntaxKinds |> MutMap.get(kind) |> LegacyOption.unsafe.get
 
 fun define(name: Str)(...choices) = syntaxKinds |> MutMap.updateWith(name) of case
   None       then Some(rule(name, ...choices))
@@ -103,7 +103,9 @@ fun makeInfixChoice(kw: Keywords.Keyword, rhsKind: Str, compose: (Tree, Tree) ->
     process: (rhs, _) => lhs => compose(lhs, rhs)
     name: "operator `" + kw.name + "` right-hand side"
 
-fun makeBracketRule(fields) = // opening, closing, kind, wrapContent
+fun makeBracketRule(fields: {
+  opening: Keywords.Keyword, closing: Keywords.Keyword, kind: Str, wrapContent: Tree -> Tree
+}) =
   // Pass the error message of closing bracket to the content.
   keyword(fields.opening) of reference(fields.kind) of
     process: (tree: Tree, next: Tree) => if next is
@@ -113,7 +115,7 @@ fun makeBracketRule(fields) = // opening, closing, kind, wrapContent
     choices: tuple of keyword(fields.closing) of end of Tree.empty
 
 // Prefix rules and infix rules for expressions.
-val termRule = rule of
+val termRule: ParseRule.ParseRule[Tree] = rule of
   "prefix rules for expressions"
   letExpression
   // `fun` term
@@ -228,7 +230,7 @@ val termRule = rule of
         outerPrec: Keywords.appPrec
 
 // Prefix rules and infix rules for types.
-val typeRule = rule of
+val typeRule: ParseRule.ParseRule[Tree] = rule of
   "rules for types"
   // "(" <type> { "," <type> } ")" [ <ident> ]
   keyword(Keywords._leftRound) of typeExpr of
@@ -347,7 +349,7 @@ define("type-params-tail") of keyword(Keywords._comma) of typeVar of
   choices: tuple of reference("type-params-tail") of
     process: idFirst, name: "more type parameters"
 
-val declRule = rule of
+val declRule: ParseRule.ParseRule[Tree] = rule of
   "prefix rules for module items"
   makeLetBindings(false) // let definition
   keyword(Keywords._type) of

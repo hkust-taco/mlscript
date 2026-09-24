@@ -1,0 +1,38 @@
+:.
+
+:expect "ABC"
+fun second(pair: [Int, Str]) = if pair is [_, text] then text.toUpperCase()
+second([1, "abc"])
+//│ = "ABC"
+
+:expect "a-b"
+fun joined(...parts: Array[Str]): Str = parts.join("-")
+joined("a", "b")
+//│ = "a-b"
+
+:expect ["a", "b", "c"]
+private fun split(values) = if values is [first, ...middle, last] then [first.name, middle.0.name, last.name]
+split([{name: "a"}, {name: "b"}, {name: "c"}])
+//│ = ["a", "b", "c"]
+
+:expect "ABC"
+fun head(values: Array[Str]) = if values is [first, ...] then first.toUpperCase()
+head(["abc", "def"])
+//│ = "ABC"
+
+:expect "FIRST"
+private fun select(value) = if value is [[first, _], _] then first.toUpperCase()
+select([["first", 2], 3])
+//│ = "FIRST"
+
+:e
+fun opaque[A](pair: [A, Int]) = if pair is [item, _] then item.name
+opaque([{name: "hidden"}, 1])
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.29: 	fun opaque[A](pair: [A, Int]) = if pair is [item, _] then item.name
+//│ ║        	                                                          ^^^^^^^^^
+//│ ╟── Cannot resolve member 'name' of a value with unknown shape.
+//│ ╟── Type parameter 'A' does not specify a member interface.
+//│ ║  l.29: 	fun opaque[A](pair: [A, Int]) = if pair is [item, _] then item.name
+//│ ╙──      	           ^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
