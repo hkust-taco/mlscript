@@ -96,11 +96,12 @@ The inventory below separates these from compiler and prelude gaps.
   the agreed variance rules and once-per-definition/call-site instantiation of
   declared type parameters. Its design review specifies contextual views with
   marks, partial signatures, and inference holes for omitted generic arguments.
-  Selected members also infer missing types through nominal annotations, with
-  receiver contexts and override constraints preserved.
-  Implement both input and output constraints for `Array[A]` together;
-  `appendTyped` and the recursive cases in `newres/MutableArrays.mls` record the
-  missing propagation and required isolation between callers. Member-variable
+  The review also requires inferred missing member types through nominal
+  annotations, with receiver contexts and override constraints preserved.
+  Bidirectional nominal argument constraints now pass `appendTyped` and the
+  recursive cases in `newres/MutableArrays.mls`, including isolation between
+  callers. Complete their integration with explicit specialization, constructors,
+  and holes; verify the whole graph's termination bound. Member-variable
   definitions still need work. Handler inference needs separate flows for the receiver, values
   passed to resumptions, and abortive results (`newres/HandlerResults.mls` and
   `codegen/ScopedBlocksAndHandlers`). Agree these designs before implementation.

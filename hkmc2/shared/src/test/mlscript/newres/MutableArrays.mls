@@ -226,24 +226,17 @@ xs.0.value
 //│ ═══[RUNTIME ERROR] Expected: '2', got: 'undefined'
 //│ xs = [Item(2)]
 
-// TODO: generic Array[A] parameter bindings must carry writes back to the argument array.
-:fixme
+// Invariant Array[A] arguments retain the element reference in both directions.
 :expect 3
 class Item(val value: Int)
 fun appendTyped[A](xs: Array[A], value: A) = xs.push(value)
 let xs = mut []
 appendTyped(xs, Item(3))
 xs.0.value
-//│ ╔══[COMPILATION ERROR] This selection of member 'value' has no resolved target
-//│ ║  l.236: 	xs.0.value
-//│ ╙──       	^^^^^^^^^^
-//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
-//│ ═══[RUNTIME ERROR] Expected: '3', got: 'undefined'
+//│ = 3
 //│ xs = [Item(3)]
 
-// TODO: recursive generic input/output constraints must preserve caller activations.
-// This also needs the element propagation exercised by appendTyped above.
-:fixme
+// Recursive input/output constraints preserve caller activations.
 :expect 5
 class Item(val value: Int)
 fun append[A](xs: Array[A], value: A, n: Int) =
@@ -251,16 +244,11 @@ fun append[A](xs: Array[A], value: A, n: Int) =
 let xs = mut []
 append(xs, Item(5), 2)
 xs.0.value
-//│ ╔══[COMPILATION ERROR] This selection of member 'value' has no resolved target
-//│ ║  l.253: 	xs.0.value
-//│ ╙──       	^^^^^^^^^^
-//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
-//│ ═══[RUNTIME ERROR] Expected: '5', got: 'undefined'
+//│ = 5
 //│ xs = [Item(5)]
 
-// TODO: instantiate declared A separately at each application through the alias.
-// The recursive site is shared; enclosing marks must still separate its callers.
-:fixme
+// Distinct applications through an alias instantiate A separately.
+// The recursive site is shared; enclosing marks still separate its callers.
 :expect [1, 2]
 class First(val first: Int)
 class Second(val second: Int)
@@ -272,11 +260,7 @@ let ys = mut []
 g(xs, First(1), 2)
 g(ys, Second(2), 2)
 [xs.0.first, ys.0.second]
-//│ ╔══[COMPILATION ERROR] This selection of member 'first' has no resolved target
-//│ ║  l.274: 	[xs.0.first, ys.0.second]
-//│ ╙──       	 ^^^^^^^^^^
-//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
-//│ ═══[RUNTIME ERROR] Expected: '[1, 2]', got: 'undefined'
+//│ = [1, 2]
 //│ g = fun append
 //│ xs = [First(1)]
 //│ ys = [Second(2)]

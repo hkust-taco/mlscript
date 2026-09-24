@@ -14,11 +14,12 @@ components; curried tails retain it, and independently quantified returned calla
 instantiate their own binders. Stored specializations of these callable signatures
 retain supplied arguments until application. Inline binders on partial and inferred
 functions also instantiate at application sites. Their shared bodies retain flat
-substitutions through deferred tuples, records, callbacks, and closures. This does
-not yet connect constructors, bidirectional constraints, variance, hole inference,
-or inferred nominal member interfaces to call-site instantiation.
-The representation and implementation order below are the outcome of the design
-review, not evidence that the recursive acceptance cases already work.
+substitutions through deferred tuples, records, callbacks, and closures. Nominal
+argument comparisons retain both endpoint references and apply declaration/use-site
+variance. The recursive array acceptance cases pass. Explicit argument suppression,
+constructor instantiation, holes, inferred nominal member interfaces, and general
+recursive alias environments still need integration. The implementation order below
+remains the full design, not a claim that all its parts are complete.
 See the [resolver notes](new-resolution-design.md)
 for current behavior and the [migration worklist](new-resolution-suite-migration.md)
 for remaining ports.
@@ -119,7 +120,7 @@ when contributing a parameter bound and observes them for structural comparison.
 Explicit arguments still suppress ordinary refinement; the constraint work must
 replace that suppression together with bidirectional flow.
 
-## Variance rules to implement
+## Variance rules
 
 Follow InvalML's argument interpretation in
 [`typeAndSubstType`](../hkmc2/shared/src/main/scala/hkmc2/invalml/InvalML.scala)
@@ -152,9 +153,26 @@ admits only the input connection. Substitution into member types must select the
 appropriate part at each polarity, including nested arrows. Copy InvalML's
 variance semantics, not its fresh inference-variable implementation.
 
+`TypeShape.Wildcard` retains the written input/output nodes. Nominal bindings apply
+declaration variance only to unqualified arguments. Interface observation follows
+the output part; an instance bound constrains the input part. Function constraints
+already reverse domains, including callbacks nested in member inputs. Argument
+comparison installs the two directed `ContextualType` relations above. Missing
+parts use shared `Top`/`Bottom` nodes, independently of inference holes.
+`newres/TypeArgumentVariance.mls` covers these paths; applying the same machinery
+to standalone function/constructor specialization remains part of the explicit
+type-argument integration work.
+
+Synthesized declaration variance uses `TypeShape.Argument`, whose parts retain
+complete contextual type references. It must not transplant an argument's syntax
+node into the alias or class's new binding environment: an outer argument with
+the same source binder can then resolve back to its own wrapper. Reusing the
+argument reference and normalizing repeated synthesized wrappers bounds this
+construction. The recursive covariant `Tree` regression exercises this invariant.
+
 ## Recursive acceptance example
 
-This example is retained as a `:fixme` regression in
+This passing regression is retained in
 [`newres/MutableArrays.mls`](../hkmc2/shared/src/test/mlscript/newres/MutableArrays.mls)
 (the recursive `append` block, immediately after `appendTyped`):
 
@@ -167,14 +185,11 @@ append(xs, Item(5), 2)
 xs.0.value
 ```
 
-The committed resolver cannot resolve `xs.0.value` because generic array input
-propagation is missing. Its expected result is `5`. A discarded implementation
-using two independent candidate-copying edges reached a different failure:
-transporting an expanded abstract candidate through a wildcard capture and back
-lost its original activation, letting it contaminate a real caller. The retained
-golden output does not reproduce that prototype's diagnostic. Both failures
-motivate the acceptance case: preserve type references and their contexts before
-observation, rather than trying to recover them from expanded candidates.
+The result is `5`. The relation connects the array's element parameter to the
+call-site instance of `A` in both directions, retaining each endpoint's marks.
+Recursive calls reuse their parameter instance and propagate the inserted element
+back through that graph. The adjacent two-array case checks isolation between
+external callers of the shared recursive site.
 
 ## Resolver integration
 
@@ -324,6 +339,15 @@ the retained endpoints; do not obtain the second by reversing a path already
 applied to expanded candidates. Preserve a supplied union as a whole in negative
 position. Deduplicate relations and delivered obligations by semantic references,
 not by diagnostic witnesses.
+
+The implemented `constrainTypes` memoizes pairs of `ContextualType` endpoints
+before following them. A parameter receives an instance wrapper retaining the
+source reference; a structured or concrete target subscribes to that reference's
+later bounds. Quiet concrete mismatch diagnostics do not discard these obligations.
+`TypeRelationTest` checks cyclic propagation, early/late bounds, every distinct
+upper target, preservation of a whole negative union, reverse endpoint contexts,
+and independent importers. These relation tests do not yet replace the separate
+explicit-argument path described above.
 
 Existing marks still transport instance flow through lexical scopes and distinguish
 enclosing activations sharing a static inner call. Apply their current entry/exit
@@ -532,6 +556,17 @@ never chains of activation states. Unit tests check repeated composition and
 imported-view identity, shared consumer hosts, and exporter isolation. Whole-graph
 listener convergence and recursive alias bindings still need the corresponding
 checks before the full design is complete.
+
+Shape substitution is memoized too: repeated observations reuse the same deferred
+tuple/record identity, so synthesizing its nominal array interface cannot create
+a fresh type node on each traversal. Relation keys contain endpoint references,
+flat binder maps, and existing normalized marks; they contain no candidate history.
+Replaying a relation adds no listener or candidate. The recursive changing-array
+and mutual-recursion cases in `newres/ContextualInference.mls` terminate with mark
+invariant checks enabled. For a fixed finite set of source type references, there
+are finitely many endpoint/map/mark combinations, and replay adds no listeners.
+That local bound does not establish the remaining whole-graph alias-environment
+bound, which must also prove that source references cannot proliferate.
 
 During implementation, assert that a call instance's origin is an original binder,
 all of one scheme's binders are allocated before its constraints are activated,

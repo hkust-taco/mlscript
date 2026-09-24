@@ -118,6 +118,7 @@ class NewResolver:
           case DynTy() => result.publish(TypeShape.Dynamic)
           case FunTy(params, ret, _) => result.publish(TypeShape.Function(params, typeResolution(ret)))
           case UnitVal() => result.publish(TypeShape.Unit)
+          case WildcardTy(input, output) => result.publish(TypeShape.Wildcard(input.map(typeResolution), output.map(typeResolution)))
           case SimpleRef(sym: VarSymbol) if sym.decl.exists(_.isInstanceOf[TyParam]) =>
             result.publish(TypeShape.Parameter(sym, sym.inferenceHost))
           case Ref(sym: VarSymbol) if sym.decl.exists(_.isInstanceOf[TyParam]) =>
@@ -134,7 +135,7 @@ class NewResolver:
               result.publish(TypeShape.Abstract)
             else result.publish(TypeShape.Record(record,
               fields.reverse.distinctBy(_.sym.nme).reverse.map(field => field -> typeResolution(field.rhs))))
-          case _: WildcardTy | _: Neg | _: Tup | _: Lit | Missing | Error() =>
+          case _: Neg | _: Tup | _: Lit | Missing | Error() =>
             result.publish(TypeShape.Abstract)
           case _ => listen(term, discardMarks = true):
             case shape: SymShape => shape.sym.onComplete: () =>
@@ -178,6 +179,48 @@ class NewResolver:
 
   private def instanceType(instance: TypeParameterInstance)(using NewResolverState): DeclaredType =
     declaredType(typeResolution(instance.reference), Map.empty)
+
+  private def parameterType(parameter: TypeShape.Parameter)(using NewResolverState): DeclaredType =
+    rstate.parameterTypes.getOrElseUpdate(parameter, {
+      val source = SimpleRef(parameter.symbol)(parameter.symbol.id)
+      val resolution = new TypeResolution(source, messages => resolError(source, messages))
+      resolution.publish(parameter)
+      declaredType(resolution, Map.empty)
+    })
+
+  private def extremeType(top: Bool)(using NewResolverState): DeclaredType =
+    rstate.extremeTypes.getOrElseUpdate(top, {
+      val resolution = new TypeResolution(Term.Missing, _ => lastWords("A synthesized extreme type cannot be invalid"))
+      resolution.publish(if top then TypeShape.Top else TypeShape.Bottom)
+      declaredType(resolution, Map.empty)
+    })
+
+  /** Written wildcards override declaration variance. Unqualified arguments use
+    * the declared variance; an invariant argument supplies both identical parts.
+    */
+  private def argumentType(tpe: DeclaredType, variance: Opt[Bool])(using NewResolverState): DeclaredType =
+    if variance.isEmpty || tpe.resolution.source.withoutCaptures.isInstanceOf[WildcardTy] then tpe else
+      // A substituted argument is used as a type at this occurrence. Select its
+      // output before applying the new declaration's variance; do not rebind a
+      // reference to its own formal or stack repeated variance wrappers.
+      tpe.resolution.currentShapes.toList match
+        case TypeShape.Argument(parts) :: Nil => argumentType(parts.output.instantiate(tpe.instances), variance)
+        case _ => rstate.variantTypes.getOrElseUpdate((tpe, variance.get), {
+          val resolution = new TypeResolution(tpe.resolution.source, tpe.resolution.fail)
+          val parts = if variance.get then TypeArgument(extremeType(false), tpe)
+            else TypeArgument(tpe, extremeType(true))
+          resolution.publish(TypeShape.Argument(parts))
+          declaredType(resolution, Map.empty)
+        })
+
+  private def listenArgumentParts(tpe: DeclaredType)(listener: ShapeListener[TypeArgument])(using NewResolverState): Unit =
+    tpe.resolution.listen:
+      case TypeShape.Wildcard(input, output) =>
+        listener(TypeArgument(input.fold(extremeType(false))(declaredType(_, tpe)),
+          output.fold(extremeType(true))(declaredType(_, tpe))))
+      case TypeShape.Argument(parts) =>
+        listener(TypeArgument(parts.input.instantiate(tpe.instances), parts.output.instantiate(tpe.instances)))
+      case _ => listener(TypeArgument(tpe, tpe))
 
   private def effectiveBindings(tpe: DeclaredType)(using NewResolverState): Map[VarSymbol, DeclaredType] =
     tpe.instances.map((parameter, instance) => parameter -> instanceType(instance)) ++
@@ -240,7 +283,7 @@ class NewResolver:
     * children inherit the same flat map when they are subsequently observed.
     */
   private[semantics] def instantiateShape(value: TermShape, instances: Map[VarSymbol, TypeParameterInstance])(using NewResolverState): TermShape =
-    if instances.isEmpty then value else
+    if instances.isEmpty then value else rstate.shapeViews.getOrElseUpdate((value, instances), {
       val Marked(source, marks) = value
       val instantiated: NonMarkedShape = source match
         case instance: InstanceShape => InstanceShape(instance.tpe.instantiate(instances))
@@ -267,6 +310,7 @@ class NewResolver:
       marks match
         case NoMarks => instantiated
         case marks: SomeMarks => MarkedShape(instantiated, marks)
+    })
 
   private def contextualParts(value: TermShape): (TermShape, Map[VarSymbol, TypeParameterInstance]) = value match
     case Marked(ContextualShape(source, instances), marks) =>
@@ -287,10 +331,15 @@ class NewResolver:
           current.resolution.listen: shape =>
             def bind(params: Ls[TyParam])(using NewResolverState): Map[VarSymbol, DeclaredType] =
               effectiveBindings(current) ++ params.zipWithIndex.map: (param, index) =>
-                param.sym -> args.lift(index).getOrElse(abstractType(current.resolution, S(param.sym)))
+                param.sym -> argumentType(args.lift(index).getOrElse(abstractType(current.resolution, S(param.sym))), param.vce)
             def next(res: TypeResolution)(using NewResolverState): Unit = follow(declaredType(res, current), Nil, aliases, publish)
             shape match
               case TypeShape.Dynamic => publish(DynShape())
+              case TypeShape.Top => publish(OpaqueTypeShape(tpe.resolution.source))
+              case TypeShape.Bottom => ()
+              case TypeShape.Wildcard(_, output) =>
+                output.fold(publish(OpaqueTypeShape(tpe.resolution.source)))(next)
+              case TypeShape.Argument(parts) => follow(parts.output.instantiate(current.instances), Nil, aliases, publish)
               case TypeShape.Inferred(value) => listenInstanceViews(instantiateShape(value, current.instances))(publish)
               case TypeShape.Nominal(defn) =>
                 val bindings = bind(defn.tparams)
@@ -566,6 +615,15 @@ class NewResolver:
   // Install each constraint edge before subscribing: callback parameter/result
   // flow can revisit it immediately. Distinct instantiations retain their marks.
   private def typeConstraints(using rs: NewResolverState) = rs.typeConstraints
+  /** Keep both endpoints symbolic. Register before following either endpoint,
+    * so recursive references reuse the relation even before any bound exists.
+    */
+  private[semantics] def constrainTypes(lower: ContextualType, upper: ContextualType)(using NewResolverState): Unit =
+    if rstate.typeRelations.add((lower, upper)) then
+      InstanceShape(lower.tpe).exit(lower.marks).enter(upper.marks) match
+        case value: TermShape => inferTypeArguments(upper.tpe, value, upper.marks)
+        case NoShape => ()
+
   private def inferTypeArguments(tpe: DeclaredType, value: TermShape, marks: Ls[Marks])(using NewResolverState): Unit =
     if !typeConstraints.add((tpe, value, marks)) then return
     def follow(tpe: DeclaredType, args: Ls[DeclaredType], captures: Ls[Marks],
@@ -606,27 +664,33 @@ class NewResolver:
         case TypeShape.Function(_, _) => observe(constrainFunction(tpe, _, marks))
         case TypeShape.Polymorphic(_, _, body) =>
           follow(declaredType(body, tpe), args, captures, next)
+        case TypeShape.Wildcard(input, _) => input.foreach(res => follow(declaredType(res, tpe), args, captures, next))
+        case TypeShape.Argument(parts) => follow(parts.input.instantiate(tpe.instances), args, captures, next)
         case TypeShape.Nominal(cls) if args.nonEmpty => listenInstanceViews(value): value =>
           val (actual, instances) = contextualParts(value)
           val (head, context) = actual.applicationHead
-          def constrain(param: TyParam, pattern: DeclaredType)(using NewResolverState): Unit =
-            listenTypeArgument(param.sym): shape =>
-              instantiateShape(shape, instances).exit(context) match
-                case actual: TermShape => inferTypeArguments(pattern, actual, marks)
-                case NoShape => ()
+          def constrain(param: TyParam, bound: DeclaredType, pattern: DeclaredType)(using NewResolverState): Unit =
+            listenArgumentParts(bound.instantiate(instances)): actual =>
+              listenArgumentParts(argumentType(pattern, param.vce)): expected =>
+                constrainTypes(ContextualType(actual.output, context), ContextualType(expected.output, Nil))
+                constrainTypes(ContextualType(expected.input, Nil), ContextualType(actual.input, context))
           def constrainNominal(nominal: NominalInstanceView)(using NewResolverState): Unit =
             if nominal.defn is cls then cls.tparams.zip(args).foreach: (param, pattern) =>
-              nominal.bindings.get(param.sym).foreach: bound =>
-                listenTypeInstances(bound.instantiate(instances)): shape =>
-                  shape.exit(context) match
-                    case actual: TermShape => inferTypeArguments(pattern, actual, marks)
-                    case NoShape => ()
+              nominal.bindings.get(param.sym).foreach(constrain(param, _, pattern))
           head match
-            case ds: DefnShape if ds.clsDef.contains(cls) => cls.tparams.zip(args).foreach(constrain)
+            case ds: DefnShape if ds.clsDef.contains(cls) => cls.tparams.zip(args).foreach: (param, pattern) =>
+              val bound = parameterType(TypeShape.Parameter(param.sym, param.sym.inferenceHost))
+              constrain(param, argumentType(bound, param.vce), pattern)
             case nominal: NominalInstanceView => constrainNominal(nominal)
             case tuple: TupleShape => constrainNominal(tuple.arrayParent)
             case _ => ()
-        case _ => () // Concrete annotations are opaque, irrespective of the argument value.
+        case TypeShape.Top => ()
+        case _ => value match
+          // A concrete target stays fixed, but must receive bounds that arrive
+          // through a symbolic source later. Concrete mismatch reporting is
+          // separate from retaining this obligation in the graph.
+          case Marked(_: InstanceShape, _) => listenInstanceViews(value)(inferTypeArguments(tpe, _, marks))
+          case _ => ()
     // Alias expansion guards only unproductive cycles. Descending into a tuple,
     // nominal argument, or arrow installs another edge with its own cycle guard.
     follow(tpe, Nil, Nil, Set.empty)

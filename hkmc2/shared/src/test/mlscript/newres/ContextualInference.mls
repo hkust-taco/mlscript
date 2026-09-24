@@ -55,3 +55,19 @@ private val shared = apply
 [shared(First(13), x => x.first), shared(Second(14), x => x.second)]
 //│ = [13, 14]
 //│ shared = fun apply
+
+// Recursive visits change the compound argument without expanding its type graph.
+:expect [[[1]]]
+private fun grow[A](value: A, n: Int) =
+  if n > 0 then grow(mut [value], n - 1) else value
+grow(1, 3)
+//│ = [[[1]]]
+
+// Mutual recursion also reuses each definition/site's binder group.
+:expect [[2]]
+private fun left[A](value: A, n: Int) =
+  if n > 0 then right(mut [value], n - 1) else value
+private fun right[B](value: B, n: Int) =
+  if n > 0 then left(value, n - 1) else value
+left(2, 3)
+//│ = [[2]]

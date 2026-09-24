@@ -17,6 +17,9 @@ enum TypeShape:
   case Function(params: Term, result: TypeResolution)
   case Polymorphic(params: Ls[TypeQuantifier], outer: Opt[VarSymbol], body: TypeResolution)
   case Applied(base: TypeResolution, args: Ls[TypeResolution])
+  case Wildcard(input: Opt[TypeResolution], output: Opt[TypeResolution])
+  // Synthesized declaration variance retains the argument's lexical environment.
+  case Argument(parts: TypeArgument)
   // The same third-party symbol can have different inference in two exporters.
   // Retain its originating host so importing a result needs no whole-state copy.
   case Parameter(symbol: VarSymbol, host: Publisher.Data[Shape])
@@ -28,6 +31,8 @@ enum TypeShape:
   case Unit
   case Dynamic
   case Abstract
+  case Top
+  case Bottom
 
 /** Candidates are published during elaboration. Erasure reads the resulting graph; it
   * never performs lookup or resolves an alias by inspecting an elaborated definition.
@@ -65,6 +70,8 @@ final class TypeResolution(val source: Term, report: Ls[(Message, Opt[Loc])] => 
       case Alias(_, rhs) => rhs.foreach(_.validate(next))
       case Captured(base, _) => base.validate(next)
       case Applied(base, args) => base.validate(next); args.foreach(_.validate(next))
+      case Wildcard(input, output) => input.foreach(_.validate(next)); output.foreach(_.validate(next))
+      case Argument(parts) => parts.input.resolution.validate(next); parts.output.resolution.validate(next)
       case Function(_, result) => result.validate(next)
       case Polymorphic(params, _, body) =>
         params.foreach: param =>
@@ -90,6 +97,17 @@ final case class DeclaredType(resolution: TypeResolution, bindings: Map[VarSymbo
     */
   def instantiate(substitution: Map[VarSymbol, TypeParameterInstance]): DeclaredType =
     copy(instances = substitution ++ instances)
+
+/** A type reference observed from a common comparison scope. The marks belong
+  * to this endpoint: reversing a constraint swaps endpoints, not an expanded
+  * candidate's already-normalized path.
+  */
+final case class ContextualType(tpe: DeclaredType, marks: Ls[Marks])
+
+/** Invariant S has S in both positions. Missing wildcard parts are represented
+  * by Nothing on input and Any on output, never by inference holes.
+  */
+final case class TypeArgument(input: DeclaredType, output: DeclaredType)
 
 /** A quantified binder belongs to the source scheme; its bounds retain graph links
   * so mutually dependent bounds do not require expanding or copying their types.

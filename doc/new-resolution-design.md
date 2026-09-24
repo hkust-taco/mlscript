@@ -67,6 +67,15 @@ nominal parameters, such as `Foo[A]` containing a `Box[A]`. Generic methods use
 the same flow as free functions, including callback-result inference and curried
 signatures. Declared callable shapes retain their type parameters.
 
+Nominal argument comparisons retain directed `ContextualType` endpoint pairs.
+Invariant arguments install both directions, rather than copying expanded
+candidates. `in`/`out` arguments use InvalML's input/output comparison rules;
+written wildcards override declaration variance. A parameter receives a symbolic
+instance wrapper, and structured/concrete targets retain listeners for later
+bounds. `newres/MutableArrays.mls` includes passing direct and recursive append
+cases, including distinct callers through one stored function reference.
+`TypeRelationTest` checks graph replay and consumer isolation directly.
+
 Generic definitions receive a distinct checking activation when their type
 parameters are declared. Its `RigidTypeShape` witnesses enforce generic opacity
 independently of visibility, exposure, or strict mode. Interface observation turns

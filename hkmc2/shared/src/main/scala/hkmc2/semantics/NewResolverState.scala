@@ -210,6 +210,8 @@ final class NewResolverState private (
     new Cache(inherited.map(_.instantiatedCallables), identity)
   val contextualSymbols: Cache[(SymShape, Map[VarSymbol, TypeParameterInstance]), ContextualSymShape] =
     new Cache(inherited.map(_.contextualSymbols), identity)
+  val shapeViews: Cache[(TermShape, Map[VarSymbol, TypeParameterInstance]), TermShape] =
+    new Cache(inherited.map(_.shapeViews), identity)
   val activatedSymbols: Cache[(SymShape, Map[VarSymbol, TypeParameterInstance]), ActivatedSymShape] =
     new Cache(inherited.map(_.activatedSymbols), identity)
   val inferredInstantiations: Seen[(TermSymbol, FlowSymbol, Map[VarSymbol, TypeParameterInstance], Ls[Marks])] =
@@ -246,6 +248,10 @@ final class NewResolverState private (
     new Cache(inherited.map(_.patternTypes), identity)
   val primitiveTypes: Cache[ClassSymbol, DeclaredType] =
     new Cache(inherited.map(_.primitiveTypes), identity)
+  val extremeTypes: Cache[Bool, DeclaredType] =
+    new Cache(inherited.map(_.extremeTypes), identity)
+  val variantTypes: Cache[(DeclaredType, Bool), DeclaredType] =
+    new Cache(inherited.map(_.variantTypes), identity)
   val abstractTypes: Cache[(TypeResolution, Opt[VarSymbol]), DeclaredType] =
     new Cache(inherited.map(_.abstractTypes), identity)
   val signatureParameters: Cache[VarSymbol, DeclaredType] =
@@ -256,6 +262,8 @@ final class NewResolverState private (
     new Cache(inherited.map(_.tupleArrayParents), identity)
   val instanceParameterTypes: Cache[(VarSymbol, Bool), DeclaredType] =
     new Cache(inherited.map(_.instanceParameterTypes), identity)
+  val parameterTypes: Cache[TypeShape.Parameter, DeclaredType] =
+    new Cache(inherited.map(_.parameterTypes), identity)
   val mutableArrays: Cache[Identity[Term.Mut], TermShape] =
     new Cache(inherited.map(_.mutableArrays), identity)
   // Named tuple fields have stable property identities, shared with consumers
@@ -273,6 +281,8 @@ final class NewResolverState private (
     root.explicitTypeArguments((symbol, marks)) || source.exists(_.hasExplicitTypeArgument(symbol, marks))
   val typeConstraints: Seen[(DeclaredType, TermShape, Ls[Marks])] =
     new Seen(inherited.map(_.typeConstraints))
+  val typeRelations: Seen[(ContextualType, ContextualType)] =
+    new Seen(inherited.map(_.typeRelations))
 
 private[semantics] final class TermShapeHost extends Host[TermShape]:
   def showDbg(using DebugPrinter): Str = "instance views"
