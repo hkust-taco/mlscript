@@ -1,3 +1,4 @@
+:.
 :js
 
 
@@ -23,8 +24,15 @@ foo(1, ...[2, 3], 4)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = [1, 2, 3, 4]
 
+:e
 :re
 foo(...a)
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.29: 	foo(...a)
+//│ ║        	^^^^^^^^^
+//│ ╟── Function 'foo' expected 4 arguments, but got 3
+//│ ║  l.12: 	fun foo(w, x, y, z) = [w, x, y, z]
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] Error: Function 'foo' expected 4 arguments but got 3
 
 
@@ -59,9 +67,21 @@ data class A(...r)
 let x = new A(1, 2, 3)
 x.r
 //│ ╔══[COMPILATION ERROR] Spread parameters are not supported in class parameters.
-//│ ║  l.58: 	data class A(...r)
+//│ ║  l.66: 	data class A(...r)
 //│ ╙──      	                ^
-//│ ═══[RUNTIME ERROR] Error: Access to required field 'r' yielded 'undefined'
+//│ ╔══[COMPILATION ERROR] Resolution error in object instantiation
+//│ ║  l.67: 	let x = new A(1, 2, 3)
+//│ ║        	        ^^^^^^^^^^^^^^
+//│ ╟── Class value expected 0 arguments, but got 3
+//│ ║  l.66: 	data class A(...r)
+//│ ╙──      	           ^
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.68: 	x.r
+//│ ║        	^^^
+//│ ╟── Instance of class 'A' does not contain member 'r'
+//│ ║  l.67: 	let x = new A(1, 2, 3)
+//│ ╙──      	        ^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ ═══[RUNTIME ERROR] Expected: '[1, 2, 3]', got: 'undefined'
 //│ x = A()
 
@@ -71,13 +91,17 @@ data class A(...r) with
   fun getR = r
 new A(1, 2, 3).getR
 //│ ╔══[COMPILATION ERROR] Spread parameters are not supported in class parameters.
-//│ ║  l.70: 	data class A(...r) with
+//│ ║  l.90: 	data class A(...r) with
 //│ ╙──      	                ^
+//│ ╔══[COMPILATION ERROR] Resolution error in object instantiation
+//│ ║  l.92: 	new A(1, 2, 3).getR
+//│ ║        	^^^^^^^^^^^^^^
+//│ ╟── Class value expected 0 arguments, but got 3
+//│ ║  l.90: 	data class A(...r) with
+//│ ╙──      	           ^
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'r'
-//│ ║  l.71: 	  fun getR = r
-//│ ║        	             ^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.70: 	data class A(...r) with
+//│ ║  l.90: 	data class A(...r) with
 //│ ╙──      	                ^
 //│ ═══[RUNTIME ERROR] ReferenceError: r is not defined
 //│ ═══[RUNTIME ERROR] Expected: '[1, 2, 3]', got: 'undefined'

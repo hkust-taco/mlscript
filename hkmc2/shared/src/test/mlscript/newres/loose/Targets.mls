@@ -1,0 +1,84 @@
+:.
+
+// Both receivers expose the same runtime property. Non-strict resolution keeps
+// the property read and call even though their definitions are different.
+:expect 1
+module Left { fun get() = 1 }
+module Right { fun get() = 2 }
+let receiver = if hide(true) then Left else Right
+receiver.get()
+//│ = 1
+//│ receiver = class Left
+
+:e
+receiver.missing
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.14: 	receiver.missing
+//│ ║        	^^^^^^^^^^^^^^^^
+//│ ╟── Module 'Left' does not contain member 'missing'
+//│ ║  l.6: 	module Left { fun get() = 1 }
+//│ ╙──     	       ^^^^
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.14: 	receiver.missing
+//│ ║        	^^^^^^^^^^^^^^^^
+//│ ╟── Module 'Right' does not contain member 'missing'
+//│ ║  l.7: 	module Right { fun get() = 2 }
+//│ ╙──     	       ^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+:e
+1()
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.30: 	1()
+//│ ║        	^^^
+//│ ╟── Integer literal cannot be called like a function.
+//│ ║  l.30: 	1()
+//│ ╙──      	^
+//│ ═══[RUNTIME ERROR] TypeError: 1 is not a function
+
+// Missing names are still errors when used as callees.
+:e
+missingCallee()
+//│ ╔══[COMPILATION ERROR] Name not found: missingCallee
+//│ ║  l.41: 	missingCallee()
+//│ ╙──      	^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+:expect 2
+let writableLeft = mut {value: 0}
+let writableRight = mut {value: 1}
+let writable = if hide(true) then writableLeft else writableRight
+set writable.value = 2
+writable.value
+//│ = 2
+//│ writable = {value: 2}
+//│ writableLeft = {value: 2}
+//│ writableRight = {value: 1}
+
+// A direct conditional callee retains both possible functions.
+:expect 3
+fun first() = 3
+fun second() = 4
+let call = if hide(true) then first else second
+call()
+//│ = 3
+//│ call = fun first
+
+:e
+fun unknownReceiver(x) = x.missing
+//│ ╔══[COMPILATION ERROR] This selection of member 'missing' has no resolved target
+//│ ║  l.68: 	fun unknownReceiver(x) = x.missing
+//│ ╙──      	                         ^^^^^^^^^
+
+// Allowing multiple targets does not make class definitions assignable.
+:e
+module ClassLeft { class Item }
+module ClassRight { class Item }
+let classes = if hide(true) then ClassLeft else ClassRight
+set classes.Item = 0
+//│ ╔══[COMPILATION ERROR] Assignment requires a term member
+//│ ║  l.78: 	set classes.Item = 0
+//│ ╙──      	    ^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ classes = class ClassLeft { Item: class Item }
+

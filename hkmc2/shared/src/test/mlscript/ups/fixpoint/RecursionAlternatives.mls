@@ -1,3 +1,4 @@
+:.
 :js
 
 // A fixed-point pattern may have several recursive alternatives:
@@ -176,13 +177,13 @@ fun peelOrRewrapSlow(x) = if x is PeelOrRewrap(r) then r else "<no match>"
 :w
 fun peelOrRewrapFast(x) = if x is @compile PeelOrRewrap(r) then r else "<no match>"
 //│ ╔══[WARNING] This fixed-point pattern is not supported by pattern compilation.
-//│ ║  l.177: 	fun peelOrRewrapFast(x) = if x is @compile PeelOrRewrap(r) then r else "<no match>"
-//│ ║         	                                           ^^^^^^^^^^^^^^
+//│ ║  l.178: 	fun peelOrRewrapFast(x) = if x is @compile PeelOrRewrap(r) then r else "<no match>"
+//│ ║         	                                           ^^^^^^^^^^^^^^^
 //│ ╟── Some recursive alternatives can rewrite the same term in more than one way, including this one
-//│ ║  l.170: 	  | UnBox as PeelOrRewrap
+//│ ║  l.171: 	  | UnBox as PeelOrRewrap
 //│ ║         	    ^^^^^
 //│ ╟── and this one.
-//│ ║  l.171: 	  | Rewrap as PeelOrRewrap
+//│ ║  l.172: 	  | Rewrap as PeelOrRewrap
 //│ ║         	    ^^^^^^
 //│ ╙── Falling back to the naive translation.
 
@@ -255,13 +256,13 @@ fun mixedSlow(x) = if x is MixedSteps(r) then r else "<no match>"
 :w
 fun mixedFast(x) = if x is @compile MixedSteps(r) then r else "<no match>"
 //│ ╔══[WARNING] This fixed-point pattern is not supported by pattern compilation.
-//│ ║  l.256: 	fun mixedFast(x) = if x is @compile MixedSteps(r) then r else "<no match>"
-//│ ║         	                                    ^^^^^^^^^^^^
+//│ ║  l.257: 	fun mixedFast(x) = if x is @compile MixedSteps(r) then r else "<no match>"
+//│ ║         	                                    ^^^^^^^^^^^^^
 //│ ╟── Some recursive alternatives can rewrite the same term in more than one way, including this one
-//│ ║  l.249: 	  | (UnTag | UnBox) as MixedSteps
+//│ ║  l.250: 	  | (UnTag | UnBox) as MixedSteps
 //│ ║         	             ^^^^^
 //│ ╟── and this one.
-//│ ║  l.250: 	  | Rewrap as MixedSteps
+//│ ║  l.251: 	  | Rewrap as MixedSteps
 //│ ║         	    ^^^^^^
 //│ ╙── Falling back to the naive translation.
 
@@ -310,12 +311,12 @@ pattern WildStep = _ as WildStep | UnTag as WildStep | Tag(_)
 :w
 fun wildStep(x) = if x is @compile WildStep(r) then r else "<no match>"
 //│ ╔══[WARNING] This fixed-point pattern is not supported by pattern compilation.
-//│ ║  l.311: 	fun wildStep(x) = if x is @compile WildStep(r) then r else "<no match>"
-//│ ║         	                                   ^^^^^^^^^^
+//│ ║  l.312: 	fun wildStep(x) = if x is @compile WildStep(r) then r else "<no match>"
+//│ ║         	                                   ^^^^^^^^^^^
 //│ ╟── Some recursive alternatives can rewrite the same term in more than one way, including this one
-//│ ║  l.308: 	pattern WildStep = _ as WildStep | UnTag as WildStep | Tag(_)
+//│ ║  l.309: 	pattern WildStep = _ as WildStep | UnTag as WildStep | Tag(_)
 //│ ║         	                   ^
 //│ ╟── and this one.
-//│ ║  l.308: 	pattern WildStep = _ as WildStep | UnTag as WildStep | Tag(_)
+//│ ║  l.309: 	pattern WildStep = _ as WildStep | UnTag as WildStep | Tag(_)
 //│ ║         	                                   ^^^^^
 //│ ╙── Falling back to the naive translation.

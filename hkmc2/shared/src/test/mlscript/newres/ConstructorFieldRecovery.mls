@@ -1,0 +1,95 @@
+:.
+
+
+// A duplicate body member makes elaboration discard all generated parameter fields.
+:e
+class Broken(val missing, val clash) {
+  val clash = 0
+}
+if Broken(1, 2) is Broken(x, _) then x else 0
+//│ ╔══[COMPILATION ERROR] Duplicate definition of member named 'clash'.
+//│ ╟── Defined at: 
+//│ ║  l.6: 	class Broken(val missing, val clash) {
+//│ ║       	                              ^^^^^
+//│ ╟── Defined at: 
+//│ ║  l.7: 	  val clash = 0
+//│ ╙──     	  ^^^^^^^^^^^^^
+//│ = 0
+
+
+// A same-named body member is not the discarded constructor field either.
+:e
+class Replaced(val field) {
+  val field = {other: 0}
+}
+if Replaced({answer: 1}) is Replaced(x) then x.answer else 0
+//│ ╔══[COMPILATION ERROR] Duplicate definition of member named 'field'.
+//│ ╟── Defined at: 
+//│ ║  l.22: 	class Replaced(val field) {
+//│ ║        	                   ^^^^^
+//│ ╟── Defined at: 
+//│ ║  l.23: 	  val field = {other: 0}
+//│ ╙──      	  ^^^^^^^^^^^^^^^^^^^^^
+//│ = 0
+
+
+// The same recovery applies to inherited matches and forward pattern resolution.
+:e
+fun recover(value) = if value is BadBase(x, _) then x else 0
+class BadBase(val missing, val clash) {
+  val clash = 0
+}
+class Child extends BadBase(1, 2)
+recover(new Child)
+//│ ╔══[COMPILATION ERROR] Duplicate definition of member named 'clash'.
+//│ ╟── Defined at: 
+//│ ║  l.39: 	class BadBase(val missing, val clash) {
+//│ ║        	                               ^^^^^
+//│ ╟── Defined at: 
+//│ ║  l.40: 	  val clash = 0
+//│ ╙──      	  ^^^^^^^^^^^^^
+//│ = 0
+
+
+// Valid inherited fields still propagate their value shapes to pattern bindings.
+:expect 42
+class GoodBase(val field)
+class GoodChild extends GoodBase({answer: 42})
+if (new GoodChild) is GoodBase(x) then x.answer else 0
+//│ = 42
+
+
+// A bare subclass's class value is not an instance of its base class.
+:expect 0
+if GoodChild is GoodBase(x) then 1 else 0
+//│ = 0
+
+// An object is an instance and exposes its inherited constructor field.
+:expect 43
+class ObjectBase(val field)
+object GoodObject extends ObjectBase(43)
+if GoodObject is ObjectBase(x) then x else 0
+//│ = 43
+
+
+// TODO: Constructor-pattern bindings currently merge arguments from different
+// subclass instantiations. Retain this limitation separately from recovery tests.
+:fixme
+class SharedBase(val field)
+class LeftChild extends SharedBase({left: 1})
+class RightChild extends SharedBase({right: 2})
+if (new LeftChild) is SharedBase(x) then x.left else 0
+if (new RightChild) is SharedBase(x) then x.right else 0
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.81: 	if (new LeftChild) is SharedBase(x) then x.left else 0
+//│ ║        	                                         ^^^^^^
+//│ ╟── Record literal does not contain member 'left'
+//│ ║  l.80: 	class RightChild extends SharedBase({right: 2})
+//│ ╙──      	                                     ^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.82: 	if (new RightChild) is SharedBase(x) then x.right else 0
+//│ ║        	                                          ^^^^^^^
+//│ ╟── Record literal does not contain member 'right'
+//│ ║  l.79: 	class LeftChild extends SharedBase({left: 1})
+//│ ╙──      	                                    ^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.

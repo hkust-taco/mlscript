@@ -504,6 +504,7 @@ sealed abstract class ValLike(str: Str, desc: Str)(using Line) extends TermDefKi
 sealed abstract class Val(str: Str, desc: Str)(using Line) extends ValLike(str, desc)
 case object ImmutVal extends Val("val", "value")
 case object MutVal extends Val("mut val", "mutable value")
+case object RecordField extends ValLike("field", "record field")
 case object LetBind extends ValLike("let", "let binding")
 case object HandlerBind extends TermDefKind("handler", "handler binding")
 case object Fun extends TermDefKind("fun", "function")

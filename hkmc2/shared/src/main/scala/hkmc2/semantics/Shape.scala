@@ -20,8 +20,10 @@ sealed trait Shape extends ShapeLike:
     case ns: SymShape => s"SymShape(${ns.sym.showDbg})"
     case ns: NewShape => s"NewShape(${ns.cls.showDbg}, ${ns.argss.map(_.showDbg).mkString(", ")})"
     case is: IntroShape => s"IntroShape(${is.trm.showDbg})"
+    case _: DynShape => "DynShape"
     case us: UnknownValueShape => s"UnknownValueShape(${us.source.showDbg})"
     case ts: TupleShape => s"TupleShape(${ts.source.showDbg})"
+    case rs: RecordShape => s"RecordShape(${rs.source.showDbg})"
     case bs: BaseShape => s"BaseShape(${bs.defn.sym.showDbg})"
     case es: ErrShape => es.describe
 
@@ -68,8 +70,9 @@ object Marked:
 end Marked
 
 case class MarkedShape(sh: NonMarkedShape, mark: SomeMarks) extends TermShape:
-  protected def getMemberImpl(name: Str): Opt[MemberInfo] =
-    sh.getMember(name).map(_.mapSecond(_ ::: mark :: Nil))
+  protected def getMemberImpl(name: Str): MemberLookup =
+    sh.getMember(name).withMarks(mark :: Nil)
+  override def isInstanceOfClass(cls: ClassLikeDef): Bool = sh.isInstanceOfClass(cls)
   def describe: Str = sh.describe
   def toLoc: Opt[Loc] = sh.toLoc
 object MarkedShape:
@@ -128,13 +131,15 @@ object MarkedShape:
 end MarkedShape
 
 sealed trait TermShape extends Shape:
-  // Cache both hits and misses per shape, without materializing all inherited members.
-  private val membersCache = mutable.Map.empty[Str, Opt[MemberInfo]]
-  final def getMember(name: Str): Opt[MemberInfo] =
+  // Cache all lookup outcomes per shape, without materializing all inherited members.
+  private val membersCache = mutable.Map.empty[Str, MemberLookup]
+  final def getMember(name: Str): MemberLookup =
     membersCache.getOrElseUpdate(name, getMemberImpl(name))
-  protected def getMemberImpl(name: Str): Opt[MemberInfo]
+  protected def getMemberImpl(name: Str): MemberLookup
   
-  def extendsCls(cls: ClassLikeDef): Bool = false
+  /** Whether this value is an instance of the nominal class. A saturated class
+    * value (e.g. a class without parameters) is still not an instance. */
+  def isInstanceOfClass(cls: ClassLikeDef): Bool = false
   
   lazy val applicationHead: (NonAppTermShape, Ls[Marks]) = this match
     // case ds: DefnShape => ds
@@ -225,22 +230,52 @@ end TermShape
 //     case sel: SelShape => s"selection of ${sel.nme.name} from ${sel.receiver.describe}"
 //     case sym: SymShape => s"symbol ${sym.sym.describe}"
 
-type MemberInfo = (BlockMemberSymbol, Ls[Marks])
+/** Missing means definitely absent; Unknown must not be treated as a miss when
+  * searching wildcard opens, since it can introduce an additional candidate. */
+enum MemberLookup:
+  case Found(member: BlockMemberSymbol | RecordMember, marks: Ls[Marks])
+  case Dynamic(marks: Ls[Marks])
+  case Missing
+  case Unknown(reason: MemberLookup.Uncertainty, loc: Opt[Loc])
+  
+  def withMarks(marks: Ls[Marks]): MemberLookup = this match
+    case Found(member, inner) => Found(member, inner ::: marks)
+    case Dynamic(inner) => Dynamic(inner ::: marks)
+    case _ => this
+
+object MemberLookup:
+  enum Uncertainty:
+    case ValueShape, RecordOverwrite
+  
+  /** Own members take precedence over inherited ones, including unknown spreads. */
+  def inClass(defn: ClassLikeDef, ext: Opt[TermShape], name: Str): MemberLookup =
+    defn.body.members.get(name) match
+      case S(member) => Found(member, Nil)
+      case N => ext.fold[MemberLookup](Missing)(_.getMember(name))
+
+extension (member: BlockMemberSymbol | RecordMember)
+  def memberSymbol: BlockMemberSymbol = member match
+    case symbol: BlockMemberSymbol => symbol
+    case member: RecordMember => member.field.sym
 
 class ErrShape(val err: ErrorReport) extends NonAppTermShape:
   def describe: Str = s"error: ${err.mainMsg}"
-  protected def getMemberImpl(name: Str): Opt[MemberInfo] = N
+  protected def getMemberImpl(name: Str): MemberLookup = MemberLookup.Missing
   def toLoc: Opt[Loc] = N
 
 class AppShape(val receiver: TermShape, val args: Term, val src: Term.App)(using DebugPrinter) extends NonMarkedShape:
-  protected def getMemberImpl(name: Str): Opt[MemberInfo] =
+  protected def getMemberImpl(name: Str): MemberLookup =
     // An unsaturated term definition is just a concrete function shape
-    if !isSaturated then N
+    if !isSaturated then MemberLookup.Missing
     else
       applicationHead match
       case (ds: DefnShape, mss) =>
-        ds.getInstanceMember(name).map(_.mapSecond(_ ::: mss))
-      case _ => N
+        ds.getInstanceMember(name).withMarks(mss)
+      case _ => MemberLookup.Missing
+  override def isInstanceOfClass(cls: ClassLikeDef): Bool =
+    isSaturated && (applicationHead._1 match
+      case ds: DefnShape => ds.classExtends(cls)
+      case _ => false)
   def describe: Str =
     // s"application of ${receiver.describe}"
     s"instance of ${applicationHead._1.describe}"
@@ -249,10 +284,14 @@ class AppShape(val receiver: TermShape, val args: Term, val src: Term.App)(using
   // def target: Opt[AppTarget]
 
 class NewShape(val receiver: TermShape, val cls: ClassLikeSymbol, clsMarks: Ls[Marks], val argss: Ls[Term], val src: Term.New)(using DebugPrinter) extends NonMarkedShape:
-  protected def getMemberImpl(name: Str): Opt[MemberInfo] =
+  protected def getMemberImpl(name: Str): MemberLookup =
     receiver match
-      case ds: DefnShape => ds.getInstanceMember(name).map(_.mapSecond(_ ::: clsMarks))
-      case _ => N
+      case ds: DefnShape => ds.getInstanceMember(name).withMarks(clsMarks)
+      case _ => MemberLookup.Missing
+  override def isInstanceOfClass(cls: ClassLikeDef): Bool =
+    isSaturated && (receiver match
+      case ds: DefnShape => ds.classExtends(cls)
+      case _ => false)
   def describe: Str =
     // s"instantiation of ${receiver.describe}"
     s"instance of ${cls.defn.get.describeRef}"
@@ -277,23 +316,26 @@ class ThisShape(val defn: Definition) extends NonAppTermShape:
 
 // TODO: make it not a TermShape?
 class BaseShape(val defn: ClassLikeDef, val ext: Opt[TermShape]) extends NonAppTermShape:
-  override def extendsCls(cls: ClassLikeDef): Bool =
-    (defn is cls) || ext.exists(_.applicationHead._1.extendsCls(cls))
+  override def isInstanceOfClass(cls: ClassLikeDef): Bool =
+    (defn is cls) || ext.exists(_.isInstanceOfClass(cls))
   def describe: Str = s"${defn.describe}"
-  protected def getMemberImpl(name: Str): Opt[MemberInfo] =
-    defn.body.members.get(name).map(_ -> Nil).orElse(ext.flatMap(_.getMember(name)))
+  protected def getMemberImpl(name: Str): MemberLookup =
+    MemberLookup.inClass(defn, ext, name)
   def toLoc: Opt[Loc] = defn.toLoc
 
 class DefnShape(val defn: Definition, val ext: Opt[TermShape]) extends NonAppTermShape:
   /** Instance lookup is shared by constructor calls and explicit `new`.
     * Inherited members retain their marks before the caller adds its captures. */
-  def getInstanceMember(name: Str): Opt[MemberInfo] = defn match
-    case cd: ClassDef =>
-      cd.body.members.get(name).map(_ -> Nil).orElse(ext.flatMap(_.getMember(name)))
-    case _: TermDefinition => ext.flatMap(_.getMember(name))
-    case _ => N
-  override def extendsCls(cls: ClassLikeDef): Bool =
-    clsDef.contains(cls) || ext.exists(_.applicationHead._1.extendsCls(cls))
+  def getInstanceMember(name: Str): MemberLookup = defn match
+    case cd: ClassDef => MemberLookup.inClass(cd, ext, name)
+    case _: TermDefinition => ext.fold[MemberLookup](MemberLookup.Missing)(_.getMember(name))
+    case _ => MemberLookup.Missing
+  /** Nominal ancestry of this definition, independent of whether its value is an instance. */
+  def classExtends(cls: ClassLikeDef): Bool =
+    clsDef.contains(cls) || ext.exists(_.isInstanceOfClass(cls))
+  override def isInstanceOfClass(cls: ClassLikeDef): Bool = defn match
+    case _: ModuleOrObjectDef => classExtends(cls)
+    case _ => false
   lazy val clsDef = defn match
     case defn: ClassLikeDef => S(defn)
     case defn: TermDefinition =>
@@ -316,12 +358,12 @@ class DefnShape(val defn: Definition, val ext: Opt[TermShape]) extends NonAppTer
     }'${defn.bsym.nme}'"
   // override def toString: String = s"DefnShape(${defn.describe} ${defn.bsym.nme})"
   override def toString: String = s"DefnShape(${defn.describe})"
-  protected def getMemberImpl(name: Str): Opt[MemberInfo] =
+  protected def getMemberImpl(name: Str): MemberLookup =
     defn match
     case defn: ModuleOrObjectDef =>
-      defn.body.members.get(name).map(_ -> Nil).orElse(ext.flatMap(_.getMember(name)))
+      MemberLookup.inClass(defn, ext, name)
     case defn: TermDefinition => ???
-    case _ => N
+    case _ => MemberLookup.Missing
   def toLoc: Opt[Loc] = defn.sym.toLoc
 
 /* 
@@ -342,7 +384,7 @@ final case class TupleShape(source: Term, elements: Ls[TupleShape.Element]) exte
     case TupleShape.Rest(_, segments) => segments
     case TupleShape.Spread(shape, marks) => shape.segments.map:
       case TupleShape.Field(field, inner) => TupleShape.Field(field, inner ::: marks :: Nil)
-      case TupleShape.Unknown(shape, inner) => TupleShape.Unknown(shape, inner ::: marks :: Nil)
+      case TupleShape.Unknown(source, inner, value) => TupleShape.Unknown(source, inner ::: marks :: Nil, value)
   /** Does this candidate already depend on the given producer in the given context?
     * `source` identifies the producer by syntax-node identity; `marks` distinguish
     * its spread contexts. Inspect the selected dependency tree, not flattened
@@ -361,7 +403,16 @@ final case class TupleShape(source: Term, elements: Ls[TupleShape.Element]) exte
       ((shape.source is source) && inner == marks) || shape.containsSpread(source, marks)
   def describe: Str = "tuple literal"
   def toLoc: Opt[Loc] = source.toLoc
-  protected def getMemberImpl(name: Str): Opt[MemberInfo] = ??? // Structural tuple members are not implemented yet.
+  protected def getMemberImpl(name: Str): MemberLookup = ??? // Structural tuple members are not implemented yet.
+
+/** Values whose members and call results are deliberately checked only at runtime.
+  * Unlike UnknownValueShape, this authorizes dynamic operations; it is introduced
+  * by JavaScript interop and explicit `dyn` types, not by failed inference.
+  */
+final case class DynShape() extends NonAppTermShape:
+  def describe: Str = "dynamic value"
+  def toLoc: Opt[Loc] = N
+  protected def getMemberImpl(name: Str): MemberLookup = MemberLookup.Dynamic(Nil)
 
 /** The element of an opaque or widened spread can be any value. Keep this
   * alternative in the flow graph so other, known arguments cannot silently make
@@ -370,7 +421,8 @@ final case class TupleShape(source: Term, elements: Ls[TupleShape.Element]) exte
 final case class UnknownValueShape(source: Term) extends NonAppTermShape:
   def describe: Str = "value of unknown shape"
   def toLoc: Opt[Loc] = source.toLoc
-  protected def getMemberImpl(name: Str): Opt[MemberInfo] = N
+  protected def getMemberImpl(name: Str): MemberLookup =
+    MemberLookup.Unknown(MemberLookup.Uncertainty.ValueShape, toLoc)
 
 object TupleShape:
   sealed trait Element
@@ -378,26 +430,72 @@ object TupleShape:
   final case class Field(field: Fld, marks: Ls[Marks]) extends Segment
   /** An arbitrary number of arbitrary values. Use this for opaque layouts and
     * recursive widening, never for a spread whose shape has not arrived yet.
-    * The `source` field is used for user-facing diagnostic purposes. */  
-  final case class Unknown(source: Term, marks: Ls[Marks]) extends Segment
+    * `value` distinguishes dynamically typed JS elements from values whose
+    * shape was lost through widening; `source` supplies diagnostic locations. */
+  final case class Unknown(source: Term, marks: Ls[Marks], value: NonMarkedShape) extends Segment
   final case class Spread(shape: TupleShape, marks: Marks) extends Element
-  def unknown(source: Term): TupleShape = TupleShape(source, Unknown(source, Nil) :: Nil)
+  def unknown(source: Term): TupleShape = TupleShape(source, Unknown(source, Nil, UnknownValueShape(source)) :: Nil)
   /** Retain the original candidate as well as the selected residual segments:
     * flattening away the parent would hide recursive producer dependencies from
     * containsSpread, allowing recursion through rest slicing to evade widening. */
   final case class Rest(shape: TupleShape, segments: Ls[Segment]) extends Element
 
 
-type IntroTerm = Term.Lit | Term.UnitVal | Term.Lam | Term.Rcd //| Term.New
+/** A field found by record member lookup. Spreading r into `mut {...r}` reuses
+  * its field symbols, but writes can change the copied values even if r is immutable.
+  * Store mutability on this lookup result: the mutable copy's initializer no longer
+  * determines its value shape, while reads from an immutable r can still use it.
+  */
+final case class RecordMember(field: RcdField, mutable: Bool)
+
+/** Keep spread candidates and their contexts rather than flattening away their
+  * provenance. Lookup follows runtime's last-write-wins order. Unknown entries
+  * are barriers: an opaque spread or computed key can overwrite earlier fields.
+  */
+final case class RecordShape(source: Term.Rcd, elements: Ls[RecordShape.Element]) extends NonAppTermShape:
+  def describe: Str = "record literal"
+  def toLoc: Opt[Loc] = source.toLoc
+  protected def getMemberImpl(name: Str): MemberLookup =
+    import MemberLookup.*
+    def unknown = Unknown(Uncertainty.RecordOverwrite, toLoc)
+    def loop(rest: Ls[RecordShape.Element]): MemberLookup = rest match
+      case Nil => Missing
+      case RecordShape.Field(field) :: rest => field.field match
+        case Term.Lit(Tree.StrLit(key)) =>
+          if key == name then Found(RecordMember(field, source.mut), Nil) else loop(rest)
+        case _ => unknown
+      case RecordShape.Unknown :: _ => unknown
+      case RecordShape.Dynamic(marks) :: _ => Dynamic(marks)
+      case RecordShape.Spread(shape, marks) :: rest => shape.getMember(name) match
+        case Dynamic(inner) => Dynamic(inner ::: marks :: Nil)
+        case Unknown(_, _) => unknown
+        case Missing => loop(rest)
+        case Found(member: RecordMember, inner) =>
+          Found(member.copy(mutable = member.mutable || source.mut), inner ::: marks :: Nil)
+        case Found(_: BlockMemberSymbol, _) =>
+          // Record spreads recursively look up RecordShapes, which only create RecordMembers.
+          lastWords("Record lookup returned a nominal member")
+    loop(elements.reverse)
+  def containsSpread(record: Term.Rcd, marks: Marks): Bool = elements.exists:
+    case RecordShape.Spread(shape, inner) =>
+      ((shape.source is record) && inner == marks) || shape.containsSpread(record, marks)
+    case _ => false
+
+object RecordShape:
+  enum Element:
+    case Field(field: RcdField)
+    case Spread(shape: RecordShape, marks: Marks)
+    case Unknown
+    case Dynamic(marks: Ls[Marks])
+  export Element.*
+
+
+type IntroTerm = Term.Lit | Term.UnitVal | Term.Lam //| Term.New
 class IntroShape(val trm: IntroTerm) extends NonAppTermShape:
   def describe: Str = trm.describe
-  protected def getMemberImpl(name: Str): Opt[MemberInfo] = trm match
-    case _: Term.Lit | _: Term.UnitVal => N // TODO: methods on literals
-    case lam: Term.Lam => N // TODO: methods on lambdas
-    case rcd: Term.Rcd =>
-      // rcd.stats.iterator.collect:
-      // TODO: handler RcdField, RcdSpread
-      ???
+  protected def getMemberImpl(name: Str): MemberLookup = trm match
+    case _: Term.Lit | _: Term.UnitVal => MemberLookup.Missing // TODO: methods on literals
+    case lam: Term.Lam => MemberLookup.Missing // TODO: methods on lambdas
     // case newTerm: Term.New =>
     //   Map.empty // TODO
   def toLoc: Opt[Loc] = trm.toLoc
@@ -405,7 +503,7 @@ class IntroShape(val trm: IntroTerm) extends NonAppTermShape:
 
 sealed trait LitShape extends NonAppTermShape:
   self: Term.Lit =>
-  protected def getMemberImpl(name: Str): Opt[MemberInfo] = N // TODO: methods on literals, e.g. string methods
+  protected def getMemberImpl(name: Str): MemberLookup = MemberLookup.Missing // TODO: methods on literals, e.g. string methods
 
 
 type ShapePublisher = Publisher[Shape]

@@ -29,3 +29,44 @@ fun captured(module Inner: Nested, x) =
 :expect [true, false]
 [captured(Nested, Nested.Wrapped(3)), captured(Nested, Nested.Wrapped(4))]
 //│ = [true, false]
+
+
+// @compile clones the constructor reference when generating the matcher. It must
+// still read constructors.make, even though the class stored there is named Direct.
+let constructors = {make: Direct}
+fun throughRecord(x) = if x is @compile constructors.make(3) then true else false
+//│ constructors = {make: fun Direct { class: class Direct }}
+
+:expect [true, false]
+[throughRecord(Direct(3)), throughRecord(Direct(4))]
+//│ = [true, false]
+
+
+// The opened name `make` must compile to a read of constructors.make.
+fun openedRecord(x) =
+  open constructors
+  if x is @compile make(3) then true else false
+
+:expect [true, false]
+[openedRecord(Direct(3)), openedRecord(Direct(4))]
+//│ = [true, false]
+
+// Calling the constructor function stored in `make` creates a Direct instance.
+:expect 35
+constructors.make(35).value
+//│ = 35
+
+// Static `new` currently requires a class declaration. The `make` record field
+// holds a constructor function, so it cannot be used with this syntax.
+:e
+new constructors.make(35)
+//│ ╔══[COMPILATION ERROR] Resolution error in object instantiation
+//│ ║  l.62: 	new constructors.make(35)
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Record field symbol 'make' cannot be instantiated with keyword 'new'.
+//│ ║  l.36: 	let constructors = {make: Direct}
+//│ ╙──      	                    ^^^^
+//│ ╔══[COMPILATION ERROR] Cannot resolve the class instantiated here
+//│ ║  l.62: 	new constructors.make(35)
+//│ ╙──      	    ^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.

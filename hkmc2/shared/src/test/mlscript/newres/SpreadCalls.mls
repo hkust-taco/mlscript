@@ -238,7 +238,9 @@ fun invokeRest(f, x, ...tail) = f()
 invokeRest(...new Array(() => 97), Box(0))
 //│ = 97
 
-// Structurally equal tuple nodes must each publish delayed spread candidates.
+// When repeatedTuples receives [Box(98)], both a and b must acquire its element
+// shape so that both `.value` selections resolve. Although the tuple expressions
+// have equal syntax, resolving a does not notify the listeners attached to b.
 :expect [98, 98]
 fun repeatedTuples(xs) =
   let a = [0, ...xs]

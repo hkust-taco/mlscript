@@ -1,3 +1,4 @@
+:.
 :js
 
 
@@ -18,9 +19,16 @@ val globalThis = "oops"
 //│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'freeze')
 //│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'freeze')
 
+:e
 :re
 globalThis.clearInterval
-//│ ═══[RUNTIME ERROR] TypeError: globalThis.Error is not a function
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.24: 	globalThis.clearInterval
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── String literal does not contain member 'clearInterval'
+//│ ║  l.18: 	val globalThis = "oops"
+//│ ╙──      	                 ^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'freeze')
 
 :re

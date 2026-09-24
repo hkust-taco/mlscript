@@ -99,7 +99,7 @@ object Elaborator:
       env: Map[Str, Ctx.Elem],
       mode: Mode,
       labels: Map[LabelSymbol, LabelBinding],
-      wildcardOpens: Ls[Ctx.Elem],
+      wildcardOpens: Ls[Ctx.OpenSource],
   ):
     
     override def toString: Str = s"${parent.fold("")(_.toString+"/")}${outer.showDbg}"
@@ -158,10 +158,11 @@ object Elaborator:
           case _ => inherited
         else inherited
 
-    private lazy val visibleWildcardOpens: Ls[Ctx.Elem] =
+    private lazy val visibleWildcardOpens: Ls[Ctx.OpenSource] =
       val inherited = parent.toList.flatMap(_.visibleWildcardOpens)
       wildcardOpens ::: (outer match
-        case OuterCtx.NonReturnContext(S(sym)) => inherited.map(Ctx.CaptElem(_, sym))
+        case OuterCtx.NonReturnContext(S(sym)) => inherited.map(source =>
+          Ctx.OpenSource(Ctx.CaptElem(source.elem, sym))(source.id))
         case _ => inherited)
     
     def lookupLabel(name: Str): LabelLookup =
@@ -401,6 +402,12 @@ object Elaborator:
       val primitivelyRepresentedRoots: Set[TypeSymbol] = Set(Num, Str, Bool)
   
   object Ctx:
+    /** The opening site is diagnostic metadata, excluded from equality so
+      * reopening the same receiver still contributes only one candidate.
+      * Captures must preserve this site independently of the receiver's definition.
+      */
+    final case class OpenSource(elem: Elem)(val id: Ident)
+
     abstract class Elem:
       def nme: Str
       def ref(id: Ident)(using Elaborator.State, Ctx, Config, NewResolver): Term
@@ -437,9 +444,11 @@ object Elaborator:
         else
           Term.SynthSel(prefix, name)(symOpt, FlowSymbol.synthSel(nme), N, S(summon))
       def symbol = symOpt
-    final case class WildcardElem(nme: Str, sources: Ls[Elem]) extends Elem:
+    final case class WildcardElem(nme: Str, sources: Ls[OpenSource]) extends Elem:
       def ref(id: Ident)(using Elaborator.State, Ctx, Config, NewResolver): Term =
-        val prefixes = sources.map(source => source.ref(Ident(source.nme)))
+        // Each ref is fresh. Locate its outer capture at the opening site too;
+        // a chained wildcard reference may already have attached this location.
+        val prefixes = sources.map(source => source.elem.ref(source.id).withoutLoc.withLocOf(source.id))
         val res = new Term.UnresolvedRef(prefixes, id)(FlowSymbol.synthSel(nme)).withLocOf(id)
         summon[NewResolver].unresolvedRef(res)
         res
@@ -1404,6 +1413,7 @@ extends Importer:
         val body = term(rhs, interp)
         Term.Constrained(constraints, body)
       case _ => lastWords(s"Unexpected lambda parameter shape: $lhs")
+    case Keywrd(Keyword.`dyn`) => Term.DynTy().withLocOf(tree)
     case InfixApp(lhs, Keywrd(Keyword.`as`), rhs) =>
       Term.Asc(subterm(lhs, interp), subterm(rhs, Tpe))
     case InfixApp(lhs, Keywrd(Keyword.`:`), rhs) =>
@@ -1963,7 +1973,7 @@ extends Importer:
           case baseId: Ident =>
             ctx.get(baseId.name) match
             case S(baseElem) if newResolution && importedTrees.isEmpty =>
-              ctx.copy(wildcardOpens = baseElem :: ctx.wildcardOpens).givenIn:
+              ctx.copy(wildcardOpens = Ctx.OpenSource(baseElem)(baseId) :: ctx.wildcardOpens).givenIn:
                 go(sts, Nil, acc)
             case S(baseElem) =>
               val importedNames = importedTrees match

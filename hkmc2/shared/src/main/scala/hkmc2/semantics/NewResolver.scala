@@ -47,6 +47,11 @@ class NewResolver:
   val introShapes: mutable.Map[IntroTerm, IntroShape] = mutable.Map.empty // TODO use symbols for faster lookup?
   val symShapes: mutable.Map[(BlockMemberSymbol, FlowSymbol, Ls[Marks]), SymShape] = mutable.Map.empty
   private val selfShapes: mutable.Map[InnerSymbol, BaseShape] = mutable.Map.empty
+  // Tuple and record AST nodes for which we have subscribed to spread operands.
+  // Each node owns its shapes and listeners. Comparing nodes by structural equality
+  // would skip subscriptions for a second equal expression, leaving its listeners
+  // without results; compare their identities instead.
+  private val aggregateProducers = mutable.Set.empty[Identity[Tup | Rcd]]
   val defnShapes: mutable.Map[DefinitionSymbol[?], DefnShape] = mutable.Map.empty
   
   /** Interpret types through completed symbolic candidates, independently of term overloads. */
@@ -78,6 +83,7 @@ class NewResolver:
           val l = typeResolution(left)
           val r = typeResolution(right)
           result.publish(if union then TypeShape.Union(l, r) else TypeShape.Intersection(l, r))
+        case DynTy() => result.publish(TypeShape.Dynamic)
         case _: FunTy => result.publish(TypeShape.Function)
         case UnitVal() => result.publish(TypeShape.Unit)
         case SimpleRef(sym: VarSymbol) if sym.decl.exists(_.isInstanceOf[TyParam]) =>
@@ -105,6 +111,7 @@ class NewResolver:
     val visited = mutable.Set.empty[TypeResolution]
     def follow(resolution: TypeResolution): Unit = if visited.add(resolution) then
       resolution.listen:
+        case TypeShape.Dynamic => listener(DynShape())
         case TypeShape.Nominal(defn) =>
           listenExt(defn.ext, ext => listener(selfShapes.getOrElseUpdate(defn.sym, BaseShape(defn, ext))))
         case TypeShape.Alias(_, rhs) => rhs.foreach(follow)
@@ -151,8 +158,8 @@ class NewResolver:
             if p.sign.isEmpty then segment match
               case TupleShape.Field(field, inner) => listenTerm(field.term): sh =>
                 publish(p, sh.exit(inner).exit(marks).enter(mss))
-              case TupleShape.Unknown(source, inner) =>
-                publish(p, UnknownValueShape(source).exit(inner).exit(marks).enter(mss))
+              case TupleShape.Unknown(_, inner, value) =>
+                publish(p, value.exit(inner).exit(marks).enter(mss))
         def loop(rest: Ls[TupleShape.Segment], before: Int, unknownBefore: Bool): Unit = rest match
           case Nil => ()
           case (field: TupleShape.Field) :: tail =>
@@ -180,9 +187,13 @@ class NewResolver:
             else xs match
               case Nil => Nil
               case (_: TupleShape.Field) :: rest => drop(rest, count - 1, approximate)
+              case (unknown: TupleShape.Unknown) :: Nil =>
+                // Consuming a prefix changes the length, but not the element
+                // shape, when there are no following fields to merge into it.
+                if approximate then unknown :: Nil else Nil
               case (_: TupleShape.Unknown) :: rest =>
                 val suffix = drop(rest, count, false)
-                if approximate then TupleShape.Unknown(tuple.source, Nil) :: suffix else suffix
+                if approximate then TupleShape.Unknown(tuple.source, Nil, UnknownValueShape(tuple.source)) :: suffix else suffix
           val remaining = drop(segments, expectedCount, true)
           val rest = if ps.isEmpty then tuple else TupleShape(tuple.source, TupleShape.Rest(tuple, remaining) :: Nil)
           publish(p, rest.exit(marks).enter(mss))
@@ -226,7 +237,16 @@ class NewResolver:
                   "pattern argument".pluralized(ps.params.length)}, but got ${args.length}" -> cls.toLoc :: Nil)
             ps.params.lazyZip(args).flatMap: (p, a) =>
               p.fldSym match
-                case S(fldSym: BlockMemberSymbol) => (fldSym -> a) :: Nil
+                case S(fldSym: BlockMemberSymbol) =>
+                  // withFields reports member/alias conflicts before dropping all
+                  // generated fields for recovery. Parameters retain their fldSym,
+                  // so verify its identity in the recovered body: a body member may
+                  // occupy the same name. Do not publish dangling pattern fields or
+                  // report another error for this already-diagnosed class.
+                  if cls.body.members.get(fldSym.nme).contains(fldSym) then (fldSym -> a) :: Nil
+                  else
+                    res.isErroneous = true
+                    Nil
                 case _ =>
                   res.isErroneous = true
                   resolError(res, msg"Pattern argument requires an accessible constructor field." -> p.toLoc :: Nil)
@@ -286,13 +306,22 @@ class NewResolver:
         def listenConstructor(psh: PatternShape): Unit = psh match
           case CtorPatternShape(cls, fs, _, resSym) =>
             def check(sh: TermShape): Unit =
-              if sh.isSaturated && sh.applicationHead._1.extendsCls(cls) then
+              if sh.isInstanceOfClass(cls) then
                 fs.foreach: (bms, pat) =>
                   sh.getMember(bms.nme) match
-                    case S((sym, marks)) =>
+                    case MemberLookup.Found(sym: BlockMemberSymbol, marks) =>
                       val field = symShapes.getOrElseUpdate((sym, resSym, marks), SymShape(sym, resSym, marks))
                       matchShapePat(field, pat)(_ => ())
-                    case N => softAssert(false, "Matched constructor is missing its field")
+                    case _ =>
+                      // classPattern only publishes fields present in cls.body.
+                      // The nominal test above admits only that class's instances,
+                      // this-values, and subclasses. Their member lookup follows
+                      // the same class bodies and inheritance chain; overrides are
+                      // also BlockMemberSymbols. Record members cannot replace a
+                      // class's own field. Thus this branch is an internal mismatch
+                      // between nominal matching and member lookup, not recovery
+                      // from a malformed class (filtered by classPattern above).
+                      softAssert(false, "Matched constructor is missing its field")
                 matched(sh)
             shape match
               case sh: TermShape => check(sh)
@@ -309,7 +338,7 @@ class NewResolver:
     // An unknown element used as a callee stays a dynamic call. Propagate its
     // unknown result rather than inferring callability from a different candidate.
     lhs match
-      case Marked(_: UnknownValueShape, _) =>
+      case Marked(_: (DynShape | UnknownValueShape), _) =>
         if res.shapes.add(lhs) then res.shapeListeners.foreach(_(lhs))
         return
       case _ => ()
@@ -373,20 +402,53 @@ class NewResolver:
         softAssert(res.isErroneous)
     else register
   
-  private def publishMember(host: ShapeHost, member: BlockMemberSymbol,
+  private def publishMember(host: NewResolvable & ShapeHost, member: BlockMemberSymbol | RecordMember,
       flow: FlowSymbol, marks: Ls[Marks]): Unit =
-    val shape = symShapes.getOrElseUpdate((member, flow, marks), SymShape(member, flow, marks))
-    if host.shapes.add(shape) then host.shapeListeners.foreach(_(shape))
+    def publish(shape: Shape): Unit =
+      if host.shapes.add(shape) then host.shapeListeners.foreach(_(shape))
+    def definition(sym: BlockMemberSymbol): Unit =
+      publish(symShapes.getOrElseUpdate((sym, flow, marks), SymShape(sym, flow, marks)))
+    member match
+      case member: BlockMemberSymbol => definition(member)
+      case RecordMember(field, false) => definition(field.sym)
+      case RecordMember(field, true) =>
+        // Assignments can replace the stored value, so its initializer no longer
+        // determines what a read returns. Publish the known property symbol for
+        // selection/assignment, but an unknown shape for the value being read.
+        if !host.resolvedTargets.contains(field.tsym) then host.resolvedTargets ::= field.tsym
+        publish(UnknownValueShape(field.rhs))
+
+  private def publishDynamic(host: NewResolvable & ShapeHost, marks: Ls[Marks]): Unit =
+    DynShape().exit(marks) match
+      case shape: TermShape =>
+        if host.shapes.add(shape) then host.shapeListeners.foreach(_(shape))
+      case NoShape => ()
+
+  private def unknownMember(host: NewResolvable, name: Str, reason: MemberLookup.Uncertainty, loc: Opt[Loc]): Unit =
+    host.isErroneous = true
+    val message = reason match
+      case MemberLookup.Uncertainty.ValueShape =>
+        msg"Cannot resolve member '$name' of a value with unknown shape."
+      case MemberLookup.Uncertainty.RecordOverwrite =>
+        msg"Cannot resolve member '$name' across a computed key or unknown record spread."
+    resolError(host, message -> loc :: Nil)
 
   def unresolvedRef(ref: UnresolvedRef): Unit =
     ref.prefixes.foreach: prefix =>
       listenTerm(prefix): shape =>
-        // A miss in one wildcard source is not an error: another may provide
-        // the name. A reference with no candidates is diagnosed by lowering.
-        shape.getMember(ref.id.name).foreach: (member, marks) =>
-          val candidate = prefix -> member
-          if !ref.resolvedMembers.contains(candidate) then ref.resolvedMembers ::= candidate
-          publishMember(ref, member, ref.resSym, marks)
+        shape.getMember(ref.id.name) match
+          case MemberLookup.Found(member, marks) =>
+            val candidate = prefix -> member.memberSymbol
+            if !ref.resolvedMembers.contains(candidate) then ref.resolvedMembers ::= candidate
+            publishMember(ref, member, ref.resSym, marks)
+          case MemberLookup.Dynamic(marks) =>
+            if !ref.dynamicPrefixes.contains(prefix) then ref.dynamicPrefixes ::= prefix
+            publishDynamic(ref, marks)
+          case MemberLookup.Missing =>
+            // A known miss in one wildcard source is not an error: another may
+            // provide the name. Lowering diagnoses references with no candidates.
+            ()
+          case MemberLookup.Unknown(reason, loc) => unknownMember(ref, ref.id.name, reason, loc)
 
   /** Inspect an overload set only once its definitions have all been published. */
   private def completedClass(shape: SymShape)(selected: ClassDef => Unit, absent: () => Unit): Unit =
@@ -425,28 +487,28 @@ class NewResolver:
 
   def newSel(sel: NewSel): Unit =
     log(s"newSel? sel = ${sel.showDbg}")
-    def member(info: Opt[MemberInfo], description: Message, loc: Opt[Loc]): Unit = info match
-      case S((bms, marks)) =>
-        log(s"newSel member: bms = ${bms.showDbg}, mss = ${marks.map(_.showDbg)}")
-        if !sel.resolvedMembers.contains(bms) then sel.resolvedMembers ::= bms
+    def member(info: MemberLookup, description: Message, loc: Opt[Loc]): Unit = info match
+      case MemberLookup.Found(bms, marks) =>
+        log(s"newSel member: bms = ${bms.memberSymbol.showDbg}, mss = ${marks.map(_.showDbg)}")
+        if !sel.resolvedMembers.contains(bms.memberSymbol) then sel.resolvedMembers ::= bms.memberSymbol
         publishMember(sel, bms, sel.resSym, marks)
-      case N =>
+      case MemberLookup.Dynamic(marks) =>
+        sel.hasDynamicTarget = true
+        publishDynamic(sel, marks)
+      case MemberLookup.Missing =>
         sel.isErroneous = true
         resolError(sel, msg"$description does not contain member '${sel.id.name}'" -> loc :: Nil)
+      case MemberLookup.Unknown(reason, loc) => unknownMember(sel, sel.id.name, reason, loc)
     sel.cls match
       case N => listenTerm(sel.prefix): shape =>
         log(s"newSel: sel = ${sel.showDbg}, shape = ${shape.shwDbg}")
-        shape match
-          case Marked(_: UnknownValueShape, _) =>
-            sel.isErroneous = true
-            resolError(sel, msg"Cannot resolve member '${sel.id.name}' of a value with unknown shape." -> shape.toLoc :: Nil)
-          case _ => member(shape.getMember(sel.id.name), msg"${shape.describe.capitalize}", shape.toLoc)
+        member(shape.getMember(sel.id.name), msg"${shape.describe.capitalize}", shape.toLoc)
       case S(cls) =>
         listenClass(cls)((cd, marks) =>
           val candidate = cd.sym -> marks
           if !sel.resolvedClasses.contains(candidate) then sel.resolvedClasses ::= candidate
           listenExt(cd.ext, ext =>
-            member(DefnShape(cd, ext).getInstanceMember(sel.id.name).map(_.mapSecond(_ ::: marks)),
+            member(DefnShape(cd, ext).getInstanceMember(sel.id.name).withMarks(marks),
               msg"Class '${cd.sym.nme}'", cd.toLoc))
         , sh =>
           sel.isErroneous = true
@@ -650,21 +712,34 @@ class NewResolver:
           case _ => ()
         )
   
+  /** Subscribe to spread operands once for each tuple or record AST node. Record
+    * the node before calling start: a recursive spread can call listen on the same
+    * node before start returns. Testing shapes.isEmpty would not prevent duplicate
+    * subscriptions while the node is waiting for a forward definition. Deliver
+    * cached shapes to each listener, which is already registered for future shapes.
+    */
+  private def listenAggregate(aggregate: Tup | Rcd, listener: Shape => Unit)
+      (start: (TermShape => Unit) => Unit): Unit =
+    val first = aggregateProducers.add(new Identity(aggregate))
+    // An imported definition can already have shapes computed by its own elaborator.
+    // Send those shapes to this listener even if first is true; recomputing the same
+    // shapes below will not notify it, because shapes.add rejects duplicates.
+    aggregate.shapes.foreach(listener)
+    if first then
+      start: shape =>
+        if aggregate.shapes.add(shape) then aggregate.shapeListeners.foreach(_(shape))
+
   def listen(trm: Term, discardMarks: Bool = false)(listener: Shape => Unit): Unit =
     log(s"listen: trm = ${trm.showDbg}")
     trm.shapeListeners += listener
     trm match
     case _: SynthSel =>
       lastWords("Synthetic selections must not enter new resolution")
+    case Asc(_, sign) => listenTypeValues(sign)(listener)
+    case _: DynSel | _: DynNew => listener(DynShape())
     case TyApp(underlying, _) => listen(underlying, discardMarks)(listener)
     case Mut(underlying) => listenTerm(underlying)(listener)
-    case tuple: Tup =>
-      if tuple.shapeProducerStarted then tuple.shapes.foreach(listener)
-      else
-        // Start before subscribing: recursive listeners must reuse this host.
-        tuple.shapeProducerStarted = true
-        def publish(shape: TermShape): Unit =
-          if tuple.shapes.add(shape) then tuple.shapeListeners.foreach(_(shape))
+    case tuple: Tup => listenAggregate(tuple, listener): publish =>
         def expand(elems: Ls[Elem], reversed: Ls[TupleShape.Element]): Unit = elems match
           case Nil =>
             // A sole spread preserves its operand's shape and context exactly.
@@ -693,17 +768,43 @@ class NewResolver:
                     then TupleShape.unknown(shape.source)
                     else shape
                   expand(rest, TupleShape.Spread(spread, marks) :: reversed)
+                case Marked(_: DynShape, marks) =>
+                  val spread = TupleShape(term, TupleShape.Unknown(term, Nil, DynShape()) :: Nil)
+                  expand(rest, TupleShape.Spread(spread, marks) :: reversed)
                 case Marked(_, marks) =>
                   // Opaque iterables (e.g. external Arrays) have no resolved
                   // element layout. Their runtime spread is still permitted.
                   expand(rest, TupleShape.Spread(TupleShape.unknown(term), marks) :: reversed)
         expand(tuple.fields, Nil)
+    case record: Rcd => listenAggregate(record, listener): publish =>
+        def expand(stats: Ls[Statement], reversed: Ls[RecordShape.Element]): Unit = stats match
+          case Nil =>
+            val shape = RecordShape(record, reversed.reverse)
+            publish(shape)
+          case (field: RcdField) :: rest => expand(rest, RecordShape.Field(field) :: reversed)
+          case RcdSpread(term) :: rest =>
+            val seen = mutable.Set.empty[TermShape]
+            listenTerm(term): shape =>
+              if seen.add(shape) then shape match
+                case Marked(shape: RecordShape, marks) =>
+                  // Bound recursive record producers just as for tuple spreads.
+                  // Keep surrounding explicit fields even when the spread widens.
+                  val spread = if shape.containsSpread(shape.source, marks)
+                    then RecordShape(shape.source, RecordShape.Unknown :: Nil)
+                    else shape
+                  expand(rest, RecordShape.Spread(spread, marks) :: reversed)
+                case Marked(_: DynShape, marks) => expand(rest, RecordShape.Dynamic(marks :: Nil) :: reversed)
+                case _ => expand(rest, RecordShape.Unknown :: reversed)
+          case _ :: rest => expand(rest, reversed)
+        expand(record.stats, Nil)
     case intro: IntroTerm =>
       val sh = introShapes.getOrElseUpdate(intro, {
         log(s"introShape: intro = $intro")
         IntroShape(intro)
       })
       listener(sh)
+    case Ref(sym) if sym is sym.getState.globalThisSymbol => listener(DynShape())
+    case SelfRef(sym) if sym is sym.getState.globalThisSymbol => listener(DynShape())
     case ref @ Ref(loc: LocalSymbol) =>
       loc.shapes.foreach(listener)
       loc.shapeListeners += listener

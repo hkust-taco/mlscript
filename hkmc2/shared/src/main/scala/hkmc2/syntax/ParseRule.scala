@@ -415,6 +415,7 @@ class ParseRules(using State):
     modified(`staged`),
     singleKw(`true`)(BoolLit(true)),
     singleKw(`false`)(BoolLit(false)),
+    singleKw(`dyn`)(Keywrd(`dyn`)),
     singleKw(`undefined`)(UnitLit(false)),
     singleKw(`null`)(UnitLit(true)),
     singleKw(`this`)(Ident("this")),

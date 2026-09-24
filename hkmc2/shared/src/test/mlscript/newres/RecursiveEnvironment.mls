@@ -1,0 +1,13 @@
+:.
+:!js
+
+// Compilation grows constructor exit marks through recursive method selection.
+// JavaScript is disabled; with execution enabled this call would return 0.
+data class Env(bindings) with
+  fun lookup(name) = bindings
+  fun extend(name) = Env(0)
+
+:fixme
+fun infer(env, x) = if x then env.lookup(x) else infer(env.extend(x), x)
+infer(Env(0), true)
+//│ /!!!\ Uncaught error: java.lang.StackOverflowError

@@ -129,13 +129,6 @@ object AnySel:
 end AnySel
 
 
-sealed trait TupImpl extends ShapeHost:
-  self: Term.Tup =>
-  /** Set by NewResolver before subscribing to spreads. An empty host can be
-    * pending, so its candidate set cannot indicate whether production started.
-    */
-  private[semantics] var shapeProducerStarted: Bool = false
-
 sealed trait AppImpl extends ResolvableImpl:
   self: Term.App =>
   var resolvedTargets: Ls[flow.AppTarget] = Nil // * filled during flow analysis
@@ -367,6 +360,8 @@ sealed trait NewRefImpl extends AnyRefImpl:
 
 sealed trait NewSelImpl extends NewResolvableImpl:
   self: Term.NewSel =>
+  // At least one receiver permits runtime lookup without a static member symbol.
+  var hasDynamicTarget: Bool = false
   var resolvedMembers: Ls[BlockMemberSymbol] = Nil // * filled during resolution
   // Class identity and captures must survive even when candidates share an inherited member.
   var resolvedClasses: Ls[(ClassSymbol, Ls[Marks])] = Nil
@@ -380,6 +375,7 @@ sealed trait UnresolvedRefImpl extends NewResolvableImpl:
   // Retain the receiver as well as the definition: two instances can expose
   // the same member symbol without denoting the same storage location.
   var resolvedMembers: Ls[(Term, BlockMemberSymbol)] = Nil
+  var dynamicPrefixes: Ls[Term] = Nil
 
 
 enum Term extends Statement, ShapePublisher:
@@ -388,6 +384,7 @@ enum Term extends Statement, ShapePublisher:
 
   case Error()
   case UnitVal()
+  case DynTy()
   case Missing // Placeholder terms that were not elaborated due to the "lightweight" elaboration mode `Mode.Light`
   case Lit(lit: Literal) extends Term
   
@@ -422,7 +419,7 @@ enum Term extends Statement, ShapePublisher:
   case TyApp(lhs: Term, targs: Ls[Term])
     (val typ: Opt[Type]) extends Term, ResolvableImpl
   case DynSel(prefix: Term, fld: Term, arrayIdx: Bool)
-  case Tup(fields: Ls[Elem])(val tree: Tree.Tup) extends Term, TupImpl
+  case Tup(fields: Ls[Elem])(val tree: Tree.Tup) extends Term, ShapeHost
   case Mut(underlying: Tup | Rcd | New | DynNew)
   case CtxTup(fields: Ls[Elem])(val tree: Tree.Tup)
   case IfLike(kw: Keyword.SplitLike, form: IfLikeForm, split: SimpleSplit) extends Term, ShapeHost
@@ -443,7 +440,7 @@ enum Term extends Statement, ShapePublisher:
   case Constrained(constraints: Ls[SubConstraint], body: Term)
   case WildcardTy(in: Opt[Term], out: Opt[Term])
   case Blk(stats: Ls[Statement], res: Term) extends Term, BlkImpl
-  case Rcd(mut: Bool, stats: Ls[Statement])
+  case Rcd(mut: Bool, stats: Ls[Statement]) extends Term, ShapeHost
   case Quoted(body: Term)
   case Unquoted(body: Term)
   case New(cls: Term, args: Ls[Term], rft: Opt[ClassSymbol -> ObjBody])
@@ -594,7 +591,7 @@ enum Term extends Statement, ShapePublisher:
       val bodyFree = body.freeVars
       if bodyFree(result.nme) then bodyFree - result.nme else bodyFree
     case Forall(_, _, body) => body.freeVars
-    case Error | Missing | _: Lit | _: UnitVal | _: LeadingDotSel | _: Continue => Set.empty
+    case Error | Missing | _: Lit | _: DynTy | _: UnitVal | _: LeadingDotSel | _: Continue => Set.empty
     case Break(_, result, value) => value.iterator.flatMap(_.freeVars).toSet + result.nme
     case _ => subTerms.iterator.flatMap(_.freeVars).toSet
 
@@ -635,6 +632,7 @@ enum Term extends Statement, ShapePublisher:
     val that = this match
       case Error() => Error()
       case UnitVal() => UnitVal()
+      case DynTy() => DynTy()
       case Missing => Missing
       case Lit(Tree.StrLit(value)) => Lit(Tree.StrLit(value))
       case Lit(Tree.IntLit(value)) => Lit(Tree.IntLit(value))
@@ -648,14 +646,17 @@ enum Term extends Statement, ShapePublisher:
         val copy = NewSel(prefix.mkClone, id, cls.map(_.mkClone))(term.resSym)
         copy.resolvedMembers = term.resolvedMembers
         copy.resolvedClasses = term.resolvedClasses
+        copy.hasDynamicTarget = term.hasDynamicTarget
         copyNewResolution(term, copyShapes(term, copy))
       case term @ UnresolvedRef(prefixes, id) =>
         val clonedPrefixes = prefixes.map(_.mkClone)
         val copy = UnresolvedRef(clonedPrefixes, id)(term.resSym)
-        copy.resolvedMembers = term.resolvedMembers.map: (receiver, member) =>
+        def cloneReceiver(receiver: Term): Term =
           val index = prefixes.indexWhere(_ is receiver)
           assert(index >= 0, "A wildcard candidate must belong to an opened prefix")
-          clonedPrefixes(index) -> member
+          clonedPrefixes(index)
+        copy.resolvedMembers = term.resolvedMembers.map((receiver, member) => cloneReceiver(receiver) -> member)
+        copy.dynamicPrefixes = term.dynamicPrefixes.map(cloneReceiver)
         copyNewResolution(term, copyShapes(term, copy))
       case Capture(base, thru) => Capture(base.mkClone, thru)
       case term @ Resolved(t, sym) => copyResolution(term, Resolved(t.mkClone, sym)(term.typ))
@@ -677,7 +678,6 @@ enum Term extends Statement, ShapePublisher:
           case f: Fld => f.copy(term = f.term.mkClone, asc = f.asc.map(_.mkClone))
           case s: Spd => s.copy(term = s.term.mkClone)
         })(term.tree)
-        copy.shapeProducerStarted = term.shapeProducerStarted
         copyShapes(term, copy)
       case Mut(underlying) => Mut(underlying.mkClone.asInstanceOf[Tup | Rcd | New | DynNew])
       case term @ CtxTup(fields) => CtxTup(fields.map {
@@ -693,7 +693,9 @@ enum Term extends Statement, ShapePublisher:
       case Constrained(constraints, body) => Constrained(constraints, body.mkClone)
       case WildcardTy(in, out) => WildcardTy(in.map(_.mkClone), out.map(_.mkClone))
       case blk: Blk => blk.mkBlkClone
-      case Rcd(mut, stats) => Rcd(mut, stats.map(_.mkClone))
+      case term @ Rcd(mut, stats) =>
+        val copy = Rcd(mut, stats.map(_.mkClone))
+        copyShapes(term, copy)
       case Quoted(body) => Quoted(body.mkClone)
       case Unquoted(body) => Unquoted(body.mkClone)
       case term @ New(cls, args, rft) =>
@@ -813,7 +815,7 @@ sealed trait Statement extends AutoLocated, ProductWithExtraInfo, Describable:
     case d: Definition => ???
     case imp: Import => Import(imp.sym, imp.str, imp.file)
     case LetDecl(sym, annotations) => LetDecl(sym, annotations.map(_.mkClone))
-    case RcdField(field, rhs) => RcdField(field.mkClone, rhs.mkClone)
+    case RcdField(field, rhs, sym) => RcdField(field.mkClone, rhs.mkClone, sym)
     case RcdSpread(rcd) => RcdSpread(rcd.mkClone)
     case DefineVar(sym, rhs) => DefineVar(sym, rhs.mkClone)
     case sc: SetConfig => sc
@@ -822,6 +824,8 @@ sealed trait Statement extends AutoLocated, ProductWithExtraInfo, Describable:
     val desc = this match
       case Error() => "‹error›"
       case UnitVal() => "unit value"
+      case DynTy() => "dynamic type"
+      case _: Rcd => "record literal"
       case Lit(lit) => lit.describeLit
       case Ref(sym) => "reference"
       case Capture(base, thru) => base.describe
@@ -896,11 +900,11 @@ sealed trait Statement extends AutoLocated, ProductWithExtraInfo, Describable:
     case Blk(stats, res) => stats.toVector :+ res
     case _ => subTerms
   def subTerms: Vector[Term] = this match
-    case Error() | Missing | _: Lit | _: AnyRef_ | _: UnitVal => Vector.empty
+    case Error() | Missing | _: Lit | _: AnyRef_ | _: DynTy | _: UnitVal => Vector.empty
     case Capture(base, thru) => Vector.single(base)
     case Resolved(t, sym) => Vector.single(t)
     case App(lhs, rhs) => Vector.double(lhs, rhs)
-    case RcdField(lhs, rhs) => Vector.double(lhs, rhs)
+    case RcdField(lhs, rhs, _) => Vector.double(lhs, rhs)
     case RcdSpread(bod) => Vector.single(bod)
     case FunTy(lhs, rhs, eff) => Vector.double(lhs, rhs) ++ eff.toVector
     case TyApp(pre, tarsg) => pre +: tarsg.toVector
@@ -994,6 +998,7 @@ sealed trait Statement extends AutoLocated, ProductWithExtraInfo, Describable:
     def res: Document = this match
       case lit: Lit => lit.lit.idStr
       case UnitVal() => doc"()"
+      case DynTy() => doc"dyn"
       case r: SimpleRef =>
         r.sym match
         case _: BuiltinSymbol => r.sym.nme
@@ -1107,7 +1112,7 @@ sealed trait Statement extends AutoLocated, ProductWithExtraInfo, Describable:
       case Rcd(mut, stats) =>
         (if mut then doc"mut " else doc"") :: braced:
           doc" # " :: stats.map(_.show).mkDocument(doc", # ")
-      case RcdField(field, rhs) => doc"${field.show}: ${rhs.show}"
+      case RcdField(field, rhs, _) => doc"${field.show}: ${rhs.show}"
       case RcdSpread(record) => doc"...${record.show}"
       case Quoted(body) => doc"""code"${body.show}""""
       case Unquoted(body) => doc"$${${body.show}}"
@@ -1178,6 +1183,7 @@ sealed trait Statement extends AutoLocated, ProductWithExtraInfo, Describable:
   
   def showPlain(using DebugPrinter): Str = this match
     case Term.UnitVal() => "()"
+    case Term.DynTy() => "dyn"
     case Lit(lit) => lit.idStr
     case Resolved(t, sym) => t.showPlain
     case r @ Ref(symbol) => symbol.showAsPlain
@@ -1186,7 +1192,7 @@ sealed trait Statement extends AutoLocated, ProductWithExtraInfo, Describable:
     case r @ SelfRef(sym) => sym.showAsPlain
     case Capture(base, thru) => s"${base.showDbg}^${thru.showDbg}"
     case App(lhs, rhs) => s"${lhs.showDbg}${rhs.showDbgAsParams}"
-    case RcdField(lhs, rhs) => s"${lhs.showDbg}: ${rhs.showDbg}"
+    case RcdField(lhs, rhs, _) => s"${lhs.showDbg}: ${rhs.showDbg}"
     case RcdSpread(bod) => s"...${bod.showDbg}"
     case FunTy(lhs: Tup, rhs, eff) =>
       s"${lhs.fields.map(_.showDbg).mkString(", ")} ->${
@@ -1265,7 +1271,37 @@ sealed trait Statement extends AutoLocated, ProductWithExtraInfo, Describable:
 
 final case class LetDecl(sym: LocalVarSymbol | TermSymbol, annotations: Ls[Annot]) extends Statement
 
-final case class RcdField(field: Term, rhs: Term) extends Statement
+/** The symbol identifies the property, independently of any local binding used
+  * to evaluate its value. Computed keys also have an identity, but cannot be
+  * selected statically until their key is known. Cloning preserves this identity.
+  */
+final case class RcdField(field: Term, rhs: Term, sym: BlockMemberSymbol) extends Statement:
+  // The two-argument RcdField.apply sets sym.tsym and its definition before
+  // constructing this node. Lowering clones reuse the same initialized symbols.
+  val tsym: TermSymbol = sym.tsym.get
+  require((tsym.k is RecordField) && tsym.owner.isEmpty && tsym.defn.exists(_.sym is sym))
+  field match
+    case Term.Lit(Tree.StrLit(name)) => require(sym.nme == name)
+    case _ => ()
+
+object RcdField:
+  def apply(field: Term, rhs: Term)(using State): RcdField =
+    val name = field match
+      case Term.Lit(Tree.StrLit(name)) => name
+      case _ => "computed field"
+    val id = new Tree.Ident(name)
+    id.withLocOf(field)
+    val sym = new BlockMemberSymbol(name, Nil)
+    val tsym = TermSymbol(RecordField, N, id, erasedType = N)
+    sym.tsym = S(tsym)
+    // fromBMS removes a capture mark for tsym when it reads this definition.
+    // Wrap rhs in Capture to supply that mark, so the entry and exit cancel and
+    // leave the enclosing call-site marks intact. Lowering evaluates RcdField.rhs;
+    // it does not evaluate this synthetic definition separately.
+    tsym.defn = S(TermDefinition(RecordField, sym, tsym, Nil, N, N,
+      S(Term.Capture(rhs, tsym)), TermDefFlags.empty, Modulefulness.none, Nil, N))
+    sym.complete()
+    RcdField(field, rhs, sym)
 final case class RcdSpread(rcd: Term) extends Statement
 
 final case class DefineVar(sym: LocalSymbol | TermSymbol, rhs: Term) extends Statement

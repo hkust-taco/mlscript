@@ -1082,7 +1082,7 @@ class Resolver(tl: TraceLogger)
       
       // Complex type: Function type, Wildcard type, Composed type,
       // Negation type, Forall type, 
-      case t: (Term.FunTy | Term.WildcardTy | Term.CompType | Term.Neg | Term.Forall | Term.Constrained | Term.Tup) =>
+      case t: (Term.DynTy | Term.FunTy | Term.WildcardTy | Term.CompType | Term.Neg | Term.Forall | Term.Constrained | Term.Tup) =>
         t.subTerms.foreach(traverseSign(_, expect = Expect.NonModule(N)))
       
       // t is not a type.
@@ -1168,7 +1168,7 @@ class Resolver(tl: TraceLogger)
       case Term.App(Term.Ref(_: BuiltinSymbol), Term.Tup(Fld(term = Term.Lit(_)) :: Nil)) => if expect.module
         then raiseError()
         else Type.NotImplemented // TODO: Support Lit with operator
-      case _: (Term.FunTy | Term.WildcardTy | Term.CompType | Term.Neg | Term.Forall | Term.Constrained | Term.Tup | Term.Lit) =>
+      case _: (Term.DynTy | Term.FunTy | Term.WildcardTy | Term.CompType | Term.Neg | Term.Forall | Term.Constrained | Term.Tup | Term.Lit) =>
         if expect.module
         then raiseError()
         else Type.NotImplemented // TODO: Support complex types

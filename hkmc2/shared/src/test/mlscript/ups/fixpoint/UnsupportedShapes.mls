@@ -1,3 +1,4 @@
+:.
 :js
 
 // Fixed-point-shaped patterns that the machine compilation does not support
@@ -32,8 +33,8 @@ if Box(Lit(7)) is PeelOnce(r) then r else "<no match>"
 :expect Lit(7)
 if Box(Lit(7)) is @compile PeelOnce(r) then r else "<no match>"
 //│ ╔══[WARNING] This fixed-point pattern is not supported by pattern compilation.
-//│ ║  l.33: 	if Box(Lit(7)) is @compile PeelOnce(r) then r else "<no match>"
-//│ ║        	                           ^^^^^^^^^^
+//│ ║  l.34: 	if Box(Lit(7)) is @compile PeelOnce(r) then r else "<no match>"
+//│ ║        	                           ^^^^^^^^^^^
 //│ ╟── `Rest` does not recurse back, so this pattern applies once rather than repeatedly.
 //│ ╙── Falling back to the naive translation.
 //│ = Lit(7)
@@ -57,9 +58,9 @@ if nested is SumLits(r) then r else "<no match>"
 :expect Lit(10)
 if nested is @compile SumLits(r) then r else "<no match>"
 //│ ╔══[WARNING] The recursive context must occur as exactly one direct constructor argument.
-//│ ║  l.46: 	pattern TwoHoles(pattern H) = H | Pair(TwoHoles(H), TwoHoles(H))
+//│ ║  l.47: 	pattern TwoHoles(pattern H) = H | Pair(TwoHoles(H), TwoHoles(H))
 //│ ║        	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.47: 	pattern SumLits = TwoHoles(Pair(Lit(a), Lit(b)) => Lit(a + b)) as SumLits | _
+//│ ║  l.48: 	pattern SumLits = TwoHoles(Pair(Lit(a), Lit(b)) => Lit(a + b)) as SumLits | _
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ = Lit(10)
 
@@ -92,8 +93,8 @@ reduce(Pair(Lit(1), Pair(Lit(3), Lit(2))))
 :expect Pair(Lit(1), Lit(2))
 if Pair(Lit(1), Lit(2)) is @compile Reduce(r) then r else "<no match>"
 //│ ╔══[WARNING] The recursive context has no redex alternative, so no rewriting step can apply.
-//│ ║  l.81: 	pattern Reduce = NoRedex(Sum) as Reduce | _
-//│ ╙──      	                 ^^^^^^^^^^^
+//│ ║  l.82: 	pattern Reduce = NoRedex(Sum) as Reduce | _
+//│ ╙──      	                 ^^^^^^^^^^^^
 //│ = Pair(Lit(1), Lit(2))
 
 
@@ -116,8 +117,8 @@ if Box(Box(7)) is OnlyRecursive(r) then r else "<no match>"
 :expect "<no match>"
 if Box(Box(7)) is @compile OnlyRecursive(r) then r else "<no match>"
 //│ ╔══[WARNING] This fixed-point pattern is not supported by pattern compilation.
-//│ ║  l.117: 	if Box(Box(7)) is @compile OnlyRecursive(r) then r else "<no match>"
-//│ ║         	                           ^^^^^^^^^^^^^^^
+//│ ║  l.118: 	if Box(Box(7)) is @compile OnlyRecursive(r) then r else "<no match>"
+//│ ║         	                           ^^^^^^^^^^^^^^^^
 //│ ╟── It has only recursive alternatives, so a match can never finish.
 //│ ╙── Falling back to the naive translation.
 //│ = "<no match>"
@@ -130,8 +131,8 @@ pattern EarlyWildcard = UnBox as EarlyWildcard | _ | Lit(_)
 :expect 7
 if Box(7) is @compile EarlyWildcard(r) then r else "<no match>"
 //│ ╔══[WARNING] This fixed-point pattern is not supported by pattern compilation.
-//│ ║  l.131: 	if Box(7) is @compile EarlyWildcard(r) then r else "<no match>"
-//│ ║         	                      ^^^^^^^^^^^^^^^
+//│ ║  l.132: 	if Box(7) is @compile EarlyWildcard(r) then r else "<no match>"
+//│ ║         	                      ^^^^^^^^^^^^^^^^
 //│ ╟── A wildcard alternative makes the alternatives after it unreachable.
 //│ ╙── Falling back to the naive translation.
 //│ = 7
@@ -144,8 +145,8 @@ pattern LateRecursion = UnBox as LateRecursion | UnTag as Rest | _
 :expect 7
 if Box(7) is @compile LateRecursion(r) then r else "<no match>"
 //│ ╔══[WARNING] This fixed-point pattern is not supported by pattern compilation.
-//│ ║  l.145: 	if Box(7) is @compile LateRecursion(r) then r else "<no match>"
-//│ ║         	                      ^^^^^^^^^^^^^^^
+//│ ║  l.146: 	if Box(7) is @compile LateRecursion(r) then r else "<no match>"
+//│ ║         	                      ^^^^^^^^^^^^^^^^
 //│ ╟── Its recursive alternatives must come before its other alternatives.
 //│ ╙── Falling back to the naive translation.
 //│ = 7
@@ -159,8 +160,8 @@ pattern ToExtracting = UnBox as Extracting | _
 :expect Box(7)
 if Box(7) is @compile ToExtracting(r) then r else "<no match>"
 //│ ╔══[WARNING] This fixed-point pattern is not supported by pattern compilation.
-//│ ║  l.160: 	if Box(7) is @compile ToExtracting(r) then r else "<no match>"
-//│ ║         	                      ^^^^^^^^^^^^^^
+//│ ║  l.161: 	if Box(7) is @compile ToExtracting(r) then r else "<no match>"
+//│ ║         	                      ^^^^^^^^^^^^^^^
 //│ ╟── The recursion goes through `Extracting`, which is not a parameterless pattern definition.
 //│ ╙── Falling back to the naive translation.
 //│ = Box(7)
@@ -175,8 +176,8 @@ pattern WanderC = UnBox as WanderB | _
 :expect 7
 if Box(7) is @compile WanderA(r) then r else "<no match>"
 //│ ╔══[WARNING] This fixed-point pattern is not supported by pattern compilation.
-//│ ║  l.176: 	if Box(7) is @compile WanderA(r) then r else "<no match>"
-//│ ║         	                      ^^^^^^^^^
+//│ ║  l.177: 	if Box(7) is @compile WanderA(r) then r else "<no match>"
+//│ ║         	                      ^^^^^^^^^^
 //│ ╟── The recursion goes through `WanderC` but never comes back to `WanderA`.
 //│ ╙── Falling back to the naive translation.
 //│ = 7
@@ -188,7 +189,7 @@ if Box(7) is @compile WanderA(r) then r else "<no match>"
 pattern PartOfCycleA = @compile (UnBox as PartOfCycleB) | _
 pattern PartOfCycleB = UnTag as PartOfCycleA | _
 //│ ╔══[WARNING] This fixed-point pattern is not supported by pattern compilation.
-//│ ║  l.188: 	pattern PartOfCycleA = @compile (UnBox as PartOfCycleB) | _
+//│ ║  l.189: 	pattern PartOfCycleA = @compile (UnBox as PartOfCycleB) | _
 //│ ║         	                                 ^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── `@compile` has to be placed on the whole body of a definition taking part in the recursion through `PartOfCycleB`.
 //│ ╙── Falling back to the naive translation.
@@ -215,12 +216,12 @@ pattern SideCtx(pattern H) = H | Pair(SideCtx(H), SideUnBox)
 pattern SideGo = SideCtx(SideSum) as SideGo | _
 fun sideGo(x) = if x is @compile SideGo(r) then r else "<no match>"
 //│ ╔══[WARNING] Side patterns of a context alternative must be transform-free.
-//│ ║  l.212: 	pattern SideUnBox = Box(x) => x
+//│ ║  l.213: 	pattern SideUnBox = Box(x) => x
 //│ ║         	        ^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.213: 	pattern SideSum = Pair(Lit(a), Lit(b)) => Lit(a + b)
+//│ ║  l.214: 	pattern SideSum = Pair(Lit(a), Lit(b)) => Lit(a + b)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.214: 	pattern SideCtx(pattern H) = H | Pair(SideCtx(H), SideUnBox)
-//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.215: 	pattern SideCtx(pattern H) = H | Pair(SideCtx(H), SideUnBox)
+//│ ╙──       	^^^^^^^^^^^^^^^
 
 
 // An alternative that is not a class pattern, so there is no constructor to
@@ -231,9 +232,9 @@ pattern TupleCtx(pattern H) = H | [TupleCtx(H), _]
 pattern TupleGo = TupleCtx(TupleSum) as TupleGo | _
 fun tupleGo(x) = if x is @compile TupleGo(r) then r else "<no match>"
 //│ ╔══[WARNING] This alternative is not supported by fixed-point pattern compilation.
-//│ ║  l.229: 	pattern TupleSum = Pair(Lit(a), Lit(b)) => Lit(a + b)
+//│ ║  l.230: 	pattern TupleSum = Pair(Lit(a), Lit(b)) => Lit(a + b)
 //│ ║         	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.230: 	pattern TupleCtx(pattern H) = H | [TupleCtx(H), _]
+//│ ║  l.231: 	pattern TupleCtx(pattern H) = H | [TupleCtx(H), _]
 //│ ╙──       	^^^^^^^^^^^^^^^^
 
 
@@ -245,20 +246,21 @@ pattern AritySum = Pair(Lit(a), Lit(b)) => Lit(a + b)
 pattern ArityCtx(pattern H) = H | Pair(ArityCtx(H))
 pattern ArityGo = ArityCtx(AritySum) as ArityGo | _
 fun arityGo(x) = if x is @compile ArityGo(r) then r else "<no match>"
+//│ ╔══[COMPILATION ERROR] Resolution error in constructor
+//│ ║  l.246: 	pattern ArityCtx(pattern H) = H | Pair(ArityCtx(H))
+//│ ║         	                                  ^^^^^^^^^^^^^^^^^
+//│ ╙── Class definition 'Pair' expected 2 pattern arguments, but got 1
 //│ ╔══[COMPILATION ERROR] Class `Pair` has 2 parameters.
-//│ ║  l.13: 	data class Pair(val first, val second)
+//│ ║  l.14: 	data class Pair(val first, val second)
 //│ ║        	                    ^^^^^^^^^^^^^^^^^
 //│ ╟── But 1 arguments were provided.
-//│ ║  l.245: 	pattern ArityCtx(pattern H) = H | Pair(ArityCtx(H))
-//│ ╙──       	                                       ^^^^^^^^^^
+//│ ║  l.246: 	pattern ArityCtx(pattern H) = H | Pair(ArityCtx(H))
+//│ ╙──       	                                       ^^^^^^^^^^^
 //│ ╔══[WARNING] Cannot rebuild `Pair` because not all of its parameters are accessible.
-//│ ║  l.244: 	pattern AritySum = Pair(Lit(a), Lit(b)) => Lit(a + b)
+//│ ║  l.245: 	pattern AritySum = Pair(Lit(a), Lit(b)) => Lit(a + b)
 //│ ║         	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.245: 	pattern ArityCtx(pattern H) = H | Pair(ArityCtx(H))
-//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╔══[COMPILATION ERROR] Expected two arguments, but found only one argument.
-//│ ║  l.245: 	pattern ArityCtx(pattern H) = H | Pair(ArityCtx(H))
-//│ ╙──       	                                       ^^^^^^^^^^
+//│ ║  l.246: 	pattern ArityCtx(pattern H) = H | Pair(ArityCtx(H))
+//│ ╙──       	^^^^^^^^^^^^^^^^
 
 
 // A rewriting alternative placed after one that descends.
@@ -268,8 +270,8 @@ pattern OrderCtx(pattern H) = H | Pair(OrderCtx(H), _) | Lit(_)
 pattern OrderGo = OrderCtx(OrderSum) as OrderGo | _
 fun orderGo(x) = if x is @compile OrderGo(r) then r else "<no match>"
 //│ ╔══[WARNING] Redex alternatives must precede all recursive context alternatives.
-//│ ║  l.268: 	pattern OrderGo = OrderCtx(OrderSum) as OrderGo | _
-//│ ╙──       	                  ^^^^^^^^^^^^^^^^^
+//│ ║  l.270: 	pattern OrderGo = OrderCtx(OrderSum) as OrderGo | _
+//│ ╙──       	                  ^^^^^^^^^^^^^^^^^^
 
 
 // Splitting those same definitions across blocks crashes while building the
