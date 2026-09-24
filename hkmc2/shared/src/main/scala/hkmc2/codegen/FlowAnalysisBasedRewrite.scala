@@ -150,6 +150,8 @@ class FlowAnalysisBasedRewrite(
       def rewriteArgs(args: Ls[Arg], eliminable: Set[Int])(k: Ls[Arg] => Block): Block =
         if eliminable.isEmpty then applyArgs(args)(k)
         else
+          val lastImpureEliminableIdx = args.iterator.zipWithIndex.foldLeft(-1):
+            case (last, (arg, idx)) => if eliminable(idx) && !arg.value.isPure then idx else last
           def rec(rest: Ls[Arg], idx: Int, changed: Bool, accRev: Ls[Arg]): Block = rest match
             case Nil =>
               k(if changed then accRev.reverse else args)
@@ -158,7 +160,12 @@ class FlowAnalysisBasedRewrite(
               else applyPath(arg.value)(Assign.discard(_, rec(tl, idx + 1, true, accRev)))
             case arg :: tl =>
               applyArg(arg): arg2 =>
-                rec(tl, idx + 1, changed || !(arg2 is arg), arg2 :: accRev)
+                if idx < lastImpureEliminableIdx then
+                  val tmp = TempSymbol(N, erasedType = arg2.value.erasedValueType, "arg")
+                  Scoped(
+                    Set.single(tmp),
+                    Assign(tmp, arg2.value, rec(tl, idx + 1, true, arg2.copy(value = tmp.asPath) :: accRev)))
+                else rec(tl, idx + 1, changed || !(arg2 is arg), arg2 :: accRev)
           rec(args, 0, false, Nil)
       end rewriteArgs
       
