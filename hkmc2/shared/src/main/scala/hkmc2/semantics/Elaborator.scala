@@ -470,7 +470,7 @@ object Elaborator:
       def isImport: Bool = true
     final case class CaptElem(base: Elem, thru: DefinitionSymbol[?]) extends Elem:
       def ref(id: Ident)(using Elaborator.State, Ctx, Config, NewResolver, NewResolverState): Term =
-        Term.Capture(base.ref(new Ident(base.nme).withLocOf(id)), thru).withLocOf(id)
+        Term.Capture(base.ref(id), thru)
       def symbol = base.symbol
       def isImport: Bool = false
       def nme: Str = base.nme
