@@ -82,7 +82,7 @@ class BlockSimplifier
         do ()
       
       if summon[Config].optimizer.dataFlowAnalysis then
-        val vp = new DataFlowAnalysis(LocalVars.analyze(res.main))
+        val vp = new DataFlowAnalysis(localVars(res.main))
         res = vp.apply(res)
         changed ||= vp.changed
         if vp.changed then log("▶ VP:\n" + printRes)
@@ -124,27 +124,24 @@ class BlockSimplifier
   // * Only such variables can be assigned directly in the IR
   type LocalVar = LocalVarSymbol
   
-  object LocalVars extends CachedAnalysis[Block, Set[LocalVar]]:
-    
-    def analyzeUncached(block: Block): Set[LocalVar] =
-      def paramsOf(paramLists: IterableOnce[ParamList]): Iterator[LocalVar] =
-        paramLists.iterator.flatMap(_.paramSyms).collect:
-          case v: LocalVar => v
-      def default =
-        block.subBlocks.iterator.flatMap(analyze)
-      block match
-      case Define(fd: FunDefn, rest) =>
-        (paramsOf(fd.params) ++ default).toSet
-      case Define(cd: ClsLikeDefn, rest) =>
-        (paramsOf(cd.paramsOpt.iterator ++ cd.auxParams.iterator) ++
-          paramsOf(cd.methods.iterator.flatMap(_.params)) ++
-          paramsOf(cd.companion.iterator.flatMap(_.methods).flatMap(_.params)) ++
-          default).toSet
-      case Scoped(syms, rest) =>
-        (rest.analyze.iterator ++ syms.iterator.collect { case v: LocalVar => v }).toSet
-      case _ => default.toSet
-    
-  end LocalVars
+  def localVars(block: Block): Set[LocalVar] =
+    val locals: MutSet[LocalVar] = MutSet.empty[LocalVar]
+    def paramsOf(paramLists: IterableOnce[ParamList]): Unit =
+      locals ++= paramLists.iterator.flatMap(_.paramSyms)
+    def rec(current: Block): Unit =
+      current match
+      case Define(fd: FunDefn, _) =>
+        paramsOf(fd.params)
+      case Define(cd: ClsLikeDefn, _) =>
+        paramsOf(cd.paramsOpt.iterator ++ cd.auxParams.iterator)
+        paramsOf(cd.methods.iterator.flatMap(_.params))
+        paramsOf(cd.companion.iterator.flatMap(_.methods).flatMap(_.params))
+      case Scoped(syms, _) =>
+        locals ++= syms.iterator.collect { case v: LocalVar => v }
+      case _ => ()
+      current.subBlocks.foreach(child => rec(child))
+    rec(block)
+    locals.toSet
   
   
   // ——————————————————————————————————————————————————————————————————————————————————————————— //
