@@ -1380,13 +1380,17 @@ extends Importer:
       raise(ErrorReport(msg"Name not found: $name" -> id.toLoc :: Nil))
       error
     case TyApp(lhs, targs) =>
-      Term.TyApp(subterm(lhs, interp), targs.map {
+      val result = Term.TyApp(subterm(lhs, interp), targs.map {
         case Modified(Keywrd(Keyword.`in`), arg) => Term.WildcardTy(S(subterm(arg, Tpe)), N)
         case Modified(Keywrd(Keyword.`out`), arg) => Term.WildcardTy(N, S(subterm(arg, Tpe)))
         case Tup(Modified(Keywrd(Keyword.`in`), arg1) :: Modified(Keywrd(Keyword.`out`), arg2) :: Nil) =>
           Term.WildcardTy(S(subterm(arg1, Tpe)), S(subterm(arg2, Tpe)))
         case arg => subterm(arg, Tpe)
       })(N).withLocOf(tree)
+      // A term specialization must validate its arguments even when unused.
+      // Type and constructor interpretations have their own argument checks.
+      if newResolution && interp == Trm then listenTerm(result)(_ => ())
+      result
     case InfixApp(TyTup(tvs), Keywrd(Keyword.`->`), body) =>
       val boundVars = mutable.HashMap.empty[Str, VarSymbol]
       def genSym(id: Tree.Ident) =

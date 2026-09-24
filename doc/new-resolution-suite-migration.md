@@ -100,7 +100,10 @@ The inventory below separates these from compiler and prelude gaps.
   annotations, with receiver contexts and override constraints preserved.
   Bidirectional nominal argument constraints now pass `appendTyped` and the
   recursive cases in `newres/MutableArrays.mls`, including isolation between
-  callers. Complete their integration with explicit specialization, constructors,
+  callers. Stored specializations of inferred functions also preserve independent
+  call-site binders, including deferred records and curried calls. Complete
+  pre-application observations of specialized inferred results (the callback
+  regression in `newres/StoredSpecializations.mls`), constructors,
   and holes; verify the whole graph's termination bound. Member-variable
   definitions still need work. Handler inference needs separate flows for the receiver, values
   passed to resumptions, and abortive results (`newres/HandlerResults.mls` and

@@ -274,15 +274,25 @@ final class NewResolverState private (
     new Seen(inherited.map(_.aggregateProducers))
   // Explicit instantiations are visible to every graph view in this consumer;
   // inherited flags are queried without enumerating an exporter's instantiations.
-  private val explicitTypeArguments = mutable.Set.empty[(VarSymbol, Ls[Marks])]
-  def markExplicitTypeArgument(symbol: VarSymbol, marks: Ls[Marks]): Unit =
-    root.explicitTypeArguments += ((symbol, marks))
-  def hasExplicitTypeArgument(symbol: VarSymbol, marks: Ls[Marks]): Bool =
-    root.explicitTypeArguments((symbol, marks)) || source.exists(_.hasExplicitTypeArgument(symbol, marks))
+  private val explicitTypeArguments = mutable.Set.empty[(VarSymbol, Marks)]
+  private def argumentContext(marks: Ls[Marks])(using TL): Opt[Marks] =
+    // A path can arrive as several fragments or one composed mark. Use the
+    // existing transport operation so these identify the same supplied slot.
+    DynShape().exit(marks) match
+      case Marked(_, context) => S(context)
+      case NoShape => N
+  def markExplicitTypeArgument(symbol: VarSymbol, marks: Ls[Marks])(using TL): Unit =
+    argumentContext(marks).foreach(context => root.explicitTypeArguments += ((symbol, context)))
+  def hasExplicitTypeArgument(symbol: VarSymbol, marks: Ls[Marks])(using TL): Bool =
+    argumentContext(marks).exists(context => hasExplicitTypeArgument((symbol, context)))
+  private def hasExplicitTypeArgument(key: (VarSymbol, Marks)): Bool =
+    root.explicitTypeArguments(key) || source.exists(_.hasExplicitTypeArgument(key))
   val typeConstraints: Seen[(DeclaredType, TermShape, Ls[Marks])] =
     new Seen(inherited.map(_.typeConstraints))
   val typeRelations: Seen[(ContextualType, ContextualType)] =
     new Seen(inherited.map(_.typeRelations))
+  val typeArgumentArityErrors: Seen[(Identity[TyApp], Int)] =
+    new Seen(inherited.map(_.typeArgumentArityErrors))
 
 private[semantics] final class TermShapeHost extends Host[TermShape]:
   def showDbg(using DebugPrinter): Str = "instance views"

@@ -79,6 +79,101 @@ class TypeRelationTest extends AnyFunSuite:
     assert(!h.state.typeConstraints((one, distinct, Nil)))
     assert(!h.state.typeConstraints((two, distinct, Nil)))
 
+  test("supplied arguments receive input obligations instead of discarding them"):
+    val h = new Harness
+    import h.given
+    val (a, at) = h.parameter("A")
+    val one = h.tpe(TypeShape.Unit)
+    val two = h.tpe(TypeShape.Abstract)
+    val first = IntroShape(Term.UnitVal(), N)
+    val second = DynShape()
+    h.state.markExplicitTypeArgument(a, Nil)
+    h.resolver.constrainTypes(ContextualType(h.tpe(TypeShape.Inferred(first)), Nil), ContextualType(at, Nil))
+    h.resolver.publishParameter(a, InstanceShape(one))
+    h.resolver.publishParameter(a, InstanceShape(two))
+    h.resolver.constrainTypes(ContextualType(h.tpe(TypeShape.Inferred(second)), Nil), ContextualType(at, Nil))
+    for target <- List(one, two); bound <- List(first, second) do
+      assert(h.state.typeConstraints((target, bound, Nil)))
+    assert(a.currentShapes.toSet == Set(InstanceShape(one), InstanceShape(two)))
+
+  test("a supplied union receives an input obligation as one type reference"):
+    val h = new Harness
+    import h.given
+    val (a, at) = h.parameter("A")
+    val one = h.tpe(TypeShape.Unit)
+    val two = h.tpe(TypeShape.Abstract)
+    val union = h.tpe(TypeShape.Union(one.resolution, two.resolution))
+    val bound = IntroShape(Term.UnitVal(), N)
+    h.state.markExplicitTypeArgument(a, Nil)
+    h.resolver.publishParameter(a, InstanceShape(union))
+    h.resolver.constrainTypes(ContextualType(h.tpe(TypeShape.Inferred(bound)), Nil), ContextualType(at, Nil))
+    assert(h.state.typeConstraints((union, bound, Nil)))
+    assert(!h.state.typeConstraints((one, bound, Nil)))
+    assert(!h.state.typeConstraints((two, bound, Nil)))
+
+  test("supplied parameter references forward input obligations across marked contexts"):
+    val h = new Harness
+    import h.given
+    val (a, at) = h.parameter("A")
+    val (b, bt) = h.parameter("B")
+    val source = ResolutionBoundary(TermSymbol(Fun, N, Tree.Ident("source")))
+    val outer = ResolutionBoundary(TermSymbol(Fun, N, Tree.Ident("outer")))
+    val target = ResolutionBoundary(TermSymbol(Fun, N, Tree.Ident("target")))
+    val site = FlowSymbol.app()
+    val sourceMarks = ExitMark(source, S(site), NoMarks) :: ExitMark(outer, S(site), NoMarks) :: Nil
+    val targetMarks = ExitMark(target, S(site), NoMarks) :: Nil
+    val concrete = h.tpe(TypeShape.Unit)
+    val bound = IntroShape(Term.UnitVal(), N)
+    h.state.markExplicitTypeArgument(a, targetMarks)
+    h.state.markExplicitTypeArgument(b, sourceMarks)
+    h.resolver.publishParameter(a, InstanceShape(bt).exit(sourceMarks).enter(targetMarks))
+    h.resolver.publishParameter(b, InstanceShape(concrete).enter(sourceMarks))
+    h.resolver.constrainTypes(ContextualType(h.tpe(TypeShape.Inferred(bound)), Nil), ContextualType(at, targetMarks))
+    assert(h.state.typeConstraints((concrete, bound, Nil)))
+    assert(b.currentShapes.toSet == Set(InstanceShape(concrete).enter(sourceMarks)))
+
+  test("a supplied argument receives only obligations for its marked activation"):
+    val h = new Harness
+    import h.given
+    val (a, at) = h.parameter("A")
+    val owner = ResolutionBoundary(TermSymbol(Fun, N, Tree.Ident("owner")))
+    val firstMarks = ExitMark(owner, S(FlowSymbol.app()), NoMarks) :: Nil
+    val secondMarks = ExitMark(owner, S(FlowSymbol.app()), NoMarks) :: Nil
+    val one = h.tpe(TypeShape.Unit)
+    val two = h.tpe(TypeShape.Abstract)
+    val bound = IntroShape(Term.UnitVal(), N)
+    h.state.markExplicitTypeArgument(a, firstMarks)
+    h.state.markExplicitTypeArgument(a, secondMarks)
+    h.resolver.publishParameter(a, InstanceShape(one).enter(firstMarks))
+    h.resolver.publishParameter(a, InstanceShape(two).enter(secondMarks))
+    h.resolver.constrainTypes(ContextualType(h.tpe(TypeShape.Inferred(bound)), Nil), ContextualType(at, firstMarks))
+    assert(h.state.typeConstraints((one, bound, Nil)))
+    assert(!h.state.typeConstraints((two, bound, Nil)))
+
+  test("supplied reference cycles saturate without expanding their arguments"):
+    val h = new Harness
+    import h.given
+    val (a, at) = h.parameter("A")
+    val (b, bt) = h.parameter("B")
+    val concrete = h.tpe(TypeShape.Unit)
+    val bound = IntroShape(Term.UnitVal(), N)
+    val lower = ContextualType(h.tpe(TypeShape.Inferred(bound)), Nil)
+    h.state.markExplicitTypeArgument(a, Nil)
+    h.state.markExplicitTypeArgument(b, Nil)
+    h.resolver.publishParameter(a, InstanceShape(bt))
+    h.resolver.publishParameter(b, InstanceShape(at))
+    h.resolver.constrainTypes(lower, ContextualType(at, Nil))
+    h.resolver.publishParameter(b, InstanceShape(concrete))
+    assert(h.state.typeConstraints((concrete, bound, Nil)))
+    val counts = (a.inferenceHost.listeners.size, b.inferenceHost.listeners.size)
+    (1 to 1000).foreach: _ =>
+      h.resolver.constrainTypes(lower, ContextualType(at, Nil))
+      h.resolver.publishParameter(a, InstanceShape(bt))
+      h.resolver.publishParameter(b, InstanceShape(at))
+    assert((a.inferenceHost.listeners.size, b.inferenceHost.listeners.size) == counts)
+    assert(a.currentShapes.toSet == Set(InstanceShape(bt)))
+    assert(b.currentShapes.toSet == Set(InstanceShape(at), InstanceShape(concrete)))
+
   test("reverse relations retain each endpoint's activation and exclude another caller"):
     val h = new Harness
     import h.given

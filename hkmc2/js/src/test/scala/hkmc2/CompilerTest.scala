@@ -346,7 +346,7 @@ class CompilerTest extends AnyFunSuite:
         "A consumer must not change the cached definition's inference graph")
 
   test("a supplied compound type stays inside one instance wrapper"):
-    import semantics.{InstanceShape, Marked, TermShape, TypeShape}
+    import semantics.{InstanceShape, Marked, Statement, Term, TermShape, TypeShape}
     val fs = new InMemoryFileSystem(loadStandardLibrary())
     given cctx: CompilerCtx = CompilerCtx.fresh(fs, paths, Config.default(io.Path("/")))
     given DebugPrinter = new DebugPrinter
@@ -363,8 +363,24 @@ class CompilerTest extends AnyFunSuite:
     val prelude = cctx.getPrelude(paths.preludeFile).ctx
     val unit = cctx.getElaboratedBlock(io.Path("/Types.mls"), prelude)
     val module = unit.compilationUnit.defaultExport.get.asModOrObj.get.defn.get
-    val parameter = module.body.members("identity").asTrm.get.defn.get.tparams.get.head.sym
-    val supplied = parameter.shapes.toList.flatMap:
+    val definition = module.body.members("identity").asTrm.get.defn.get
+    val parameter = definition.tparams.get.head.sym
+    def applications(statement: Statement): List[Term.App] =
+      val here = statement match
+        case app: Term.App => app :: Nil
+        case _ => Nil
+      here ::: statement.subStatements.toList.flatMap(applications)
+    val calls = applications(unit.term)
+    assert(calls.length == 1)
+    val state = unit.state.newResolverState
+    assert(state.allocatedTypeInstanceCount == 1)
+    val instance = state.instantiateTypeParameters(definition.tsym, calls.head.resSym, parameter :: Nil)(parameter)
+    assert(state.allocatedTypeInstanceCount == 1, "Observation must reuse the application's binder")
+    assert(!parameter.shapes.exists:
+      case Marked(_: InstanceShape, _) => true
+      case _ => false
+    , "Specialization must not publish supplied arguments into the source binder")
+    val supplied = instance.currentShapes(using state).toList.flatMap:
       case value: TermShape => value match
         case Marked(instance: InstanceShape, _) => instance.tpe.resolution :: Nil
         case _ => Nil

@@ -123,6 +123,10 @@ final class InterfaceExposure(resolver: NewResolver)(using NewResolverState, TL)
           val substitution = instances ++ contextual.instances
           valueIn(value, path, substitution)(using rstate.withInstances(substitution))
         case NoShape => ()
+      case specialized: SpecializedShape =>
+        resolver.instantiateShape(specialized.declaration, instances ++ specialized.instances).exit(marks) match
+          case value: TermShape => valueIn(value, path, instances)
+          case NoShape => ()
       case _: InstanceShape =>
         watch((shape, "instance view"))(resolver.listenInstanceViews(shape))(emit(_, path))
       case ds: DefnShape if ds.defn.sym.getState is rstate.owner =>

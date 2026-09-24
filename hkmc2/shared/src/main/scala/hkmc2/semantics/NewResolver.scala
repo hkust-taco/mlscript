@@ -299,6 +299,8 @@ class NewResolver:
             record.bindings.map((parameter, bound) => parameter -> bound.instantiate(instances))
           record.copy(bindings = bindings)
         case contextual: ContextualShape => contextual.copy(instances = instances ++ contextual.instances)
+        case specialized: SpecializedShape => specialized.copy(
+          arguments = specialized.arguments.map(_.instantiate(instances)), instances = instances ++ specialized.instances)
         case callable: CallableTypeShape =>
           val captured = instances -- callable.tparams.map(_.parameter.symbol)
           callable.copy(paramLists = callable.paramLists.map: params =>
@@ -554,10 +556,8 @@ class NewResolver:
       if params.length != args.length then
         resolError(source, msg"${callee.describe.capitalize} expected ${params.length} type ${
           "argument".pluralized(params.length)}, but got ${args.length}" -> callee.toLoc :: Nil)
-      params.zip(args).foreach: (param, arg) =>
-        rstate.markExplicitTypeArgument(param.parameter.symbol, marks)
-        listenTypeInstances(arg): tpe =>
-          publishParameter(param.parameter.host, tpe.enter(marks))
+      bindTypeArguments(params.map(_.parameter), marks,
+        args.map(arg => declaredType(typeResolution(arg), Map.empty).instantiate(rstate.instances)))
     callee match
       case callable: CallableTypeShape => apply(callable.tparams)
       case defn: DefnShape => defn.clsDef match
@@ -572,6 +572,14 @@ class NewResolver:
 
   private def declaredParameter(symbol: VarSymbol)(using NewResolverState): DeclaredTypeParameter =
     DeclaredTypeParameter(TypeShape.Parameter(symbol, symbol.inferenceHost), N, N)
+
+  private def bindTypeArguments(parameters: Ls[TypeShape.Parameter], marks: Ls[Marks], arguments: Ls[DeclaredType])
+      (using NewResolverState): Unit =
+    // Establish every supplied position before publication can replay body
+    // constraints or trigger observations of a mutually dependent parameter.
+    parameters.foreach(p => rstate.markExplicitTypeArgument(p.symbol, marks))
+    parameters.zip(arguments).foreach: (parameter, argument) =>
+      publishParameter(parameter.host, InstanceShape(argument).enter(marks))
 
   /** The first term application owns the binder group. Curried tails carry the
     * instantiated references and no scheme, so applying a later list reuses it.
@@ -594,11 +602,10 @@ class NewResolver:
           // can publish candidates or trigger another observation of this call.
           rstate.instantiatedCallables(key) = instantiated
           callable.supplied.foreach: arguments =>
-            scheme.parameters.zip(arguments).foreach: (parameter, argument) =>
+            val parameters: Ls[TypeShape.Parameter] = scheme.parameters.map: parameter =>
               val instance = substitution(parameter.parameter.symbol)
-              rstate.markExplicitTypeArgument(instance, marks)
-              listenTypeInstances(argument): value =>
-                publishParameter(instance, value.enter(marks))
+              TypeShape.Parameter(instance, instance.inferenceHost)
+            bindTypeArguments(parameters, marks, arguments)
           instantiated
 
   /** The body must satisfy its annotated result even if no value escapes or no
@@ -639,8 +646,20 @@ class NewResolver:
           case S(bound) => follow(bound.instantiate(tpe.instances), Nil, captures, next)
           case N =>
             val target = tpe.instances.get(symbol)
-            if !rstate.hasExplicitTypeArgument(target.getOrElse(symbol), marks) then
-              publishParameter(target.fold(host)(_.inferenceHost), value.enter(captures))
+            val destination = target.fold(host)(_.inferenceHost)
+            val lower = value.enter(captures)
+            if rstate.hasExplicitTypeArgument(target.getOrElse(symbol), marks) then
+              listenTypeArgument(destination): supplied =>
+                // Compare in the caller's scope, retaining the supplied
+                // reference's endpoint for any further parameter constraint.
+                supplied.exit(captures).exit(marks) match
+                  case Marked(instance: InstanceShape, context) =>
+                    val endpoint = if context == NoMarks then Nil else context :: Nil
+                    value.exit(marks).enter(context) match
+                      case actual: TermShape => inferTypeArguments(instance.tpe, actual, endpoint)
+                      case NoShape => ()
+                  case _ => ()
+            else publishParameter(destination, lower)
         case TypeShape.Captured(base, thru) =>
           follow(declaredType(base, tpe), args,
             EntryMark(ResolutionBoundary(thru), N, NoMarks) :: captures, next)
@@ -862,7 +881,8 @@ class NewResolver:
     array.ancestor(cls).flatMap(_.bindings.get(cls.tparams.head.sym))
 
   /** Element writes constrain the same declared parameter as Array's methods.
-    * Written concrete annotations remain opaque under inferTypeArguments.
+    * An annotated element type receives input constraints without exposing
+    * additional members from the assigned value.
     */
   private[semantics] def assignArrayElement(lhs: Term, rhs: Term)(using NewResolverState): Unit =
     val receiver = lhs match
@@ -1283,7 +1303,14 @@ class NewResolver:
   
   def appShape(source: TermShape, args: Term, res: App)(using NewResolverState): Unit =
     val callerInstances = rstate.instances
-    val (lhs, lexical) = contextualParts(source)
+    val (original, outer) = contextualParts(source)
+    val (lhs, lexical, supplied) = original match
+      case Marked(specialized: SpecializedShape, marks) =>
+        val declaration = marks match
+          case NoMarks => specialized.declaration
+          case marks: SomeMarks => MarkedShape(specialized.declaration, marks)
+        (declaration, outer ++ specialized.instances, S(specialized.arguments))
+      case _ => (original, outer, N)
     val captured = callerInstances ++ lexical
     val instances = lhs match
       case Marked(definition: DefnShape, _) => definition.defn match
@@ -1291,6 +1318,11 @@ class NewResolver:
           val marks = lhs.applicationHead._2
           val parameters = td.tparams.get.map(_.sym)
           val substitution = captured ++ rstate.instantiateTypeParameters(td.tsym, res.resSym, parameters)
+          supplied.foreach: arguments =>
+            bindTypeArguments(parameters.map: parameter =>
+              val instance = substitution(parameter)
+              TypeShape.Parameter(instance, instance.inferenceHost)
+            , marks, arguments)
           if rstate.inferredInstantiations.add((td.tsym, res.resSym, substitution, marks)) then
             parameters.foreach: parameter =>
               val instance = substitution(parameter)
@@ -1298,7 +1330,7 @@ class NewResolver:
               listenTypeArgument(parameter): bound =>
                 bound.applicationHead._1 match
                   case _: RigidTypeShape => ()
-                  case _ => publishParameter(instance, instantiateShape(bound, substitution))
+                  case _ => inferTypeArguments(instanceType(instance), instantiateShape(bound, substitution), marks)
           substitution
         case _ => captured
       case _ => captured
@@ -1930,21 +1962,39 @@ class NewResolver:
       lastWords("Synthetic selections must not enter new resolution")
     case Asc(_, sign) => listenTypeInstances(sign)(listener)
     case _: DynSel | _: DynNew => listener(DynShape())
-    case TyApp(underlying, args) =>
+    case application @ TyApp(underlying, args) =>
+      def checkArity(callee: TermShape, count: Int)(using NewResolverState): Unit =
+        if count != args.length && rstate.typeArgumentArityErrors.add((new Identity(application), count)) then
+          resolError(trm, msg"${callee.describe.capitalize} expected ${count} type ${
+            "argument".pluralized(count)}, but got ${args.length}" -> callee.toLoc :: Nil)
       listen(underlying, discardMarks): shape =>
         def instantiate(value: TermShape)(using NewResolverState): Unit = listenInstanceViews(value): viewed =>
-          viewed.applicationHead match
+          val (actual, captured) = contextualParts(viewed)
+          actual.applicationHead match
+            case (specialized: SpecializedShape, _) =>
+              checkArity(specialized, 0)
+              listener(value)
+            case (callable: CallableTypeShape, _) if callable.supplied.nonEmpty =>
+              checkArity(callable, 0)
+              listener(value)
             case (callable: CallableTypeShape, marks) =>
-              if callable.tparams.length != args.length then
-                resolError(trm, msg"${callable.describe.capitalize} expected ${callable.tparams.length} type ${
-                  "argument".pluralized(callable.tparams.length)}, but got ${args.length}" -> callable.toLoc :: Nil)
-              val supplied = args.map(arg => declaredType(typeResolution(arg), Map.empty))
+              checkArity(callable, callable.tparams.length)
+              val supplied = args.map(arg => declaredType(typeResolution(arg), Map.empty).instantiate(rstate.instances))
               callable.copy(supplied = S(supplied)).exit(marks) match
                 case value: TermShape => listener(value)
                 case NoShape => ()
             case (callee: DefnShape, marks) =>
-              applyTypeArguments(callee, marks, args, trm)
-              listener(value)
+              callee.defn match
+                case td: TermDefinition if !td.tsym.isInstanceOf[ClassCtorSymbol] =>
+                  val parameters = td.tparams.toList.flatten
+                  checkArity(callee, parameters.length)
+                  val supplied = args.map(arg => declaredType(typeResolution(arg), Map.empty).instantiate(rstate.instances))
+                  SpecializedShape(callee, supplied, captured).exit(marks) match
+                    case specialized: TermShape => listener(specialized)
+                    case NoShape => ()
+                case _ =>
+                  applyTypeArguments(callee, marks, args, trm)
+                  listener(value)
             case _ => listener(value)
         shape match
           case sym: SymShape => fromSymbol(sym, instantiate, underlying, _ => (), false)

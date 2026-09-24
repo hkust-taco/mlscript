@@ -31,6 +31,7 @@ sealed trait Shape extends ShapeLike:
     case ts: OpaqueTypeShape => s"OpaqueTypeShape(${ts.source.showDbg})"
     case ts: CallableTypeShape => s"CallableTypeShape(${ts.source.showDbg})"
     case view: ContextualShape => s"ContextualShape(${view.source.shwDbg})"
+    case specialized: SpecializedShape => s"SpecializedShape(${specialized.declaration.shwDbg})"
     case rigid: RigidTypeShape => s"RigidTypeShape(${rigid.parameter.showDbg})"
     case flow: ActivatedShape => s"ActivatedShape(${flow.value.shwDbg})"
     case bs: BaseShape => s"BaseShape(${bs.defn.sym.showDbg})"
@@ -176,6 +177,7 @@ sealed trait TermShape extends Shape:
   // All remaining parameter lists belong to the same callable and carry its
   // context. Keep the lists separate until the public view needs their pairs.
   private lazy val unappliedParamLists: Ls[ParamList] = this match
+    case specialized: SpecializedShape => (specialized.declaration: TermShape).unappliedParamLists
     case ds: DefnShape => ds.defn match
       case defn: TermDefinition => defn.params
       case defn: ClassDef =>
@@ -416,6 +418,15 @@ final case class ContextualShape(source: NonMarkedShape, instances: Map[VarSymbo
   def toLoc: Opt[Loc] = source.toLoc
   override def isInstanceOfClass(cls: ClassLikeDef)(using NewResolverState): Bool = source.isInstanceOfClass(cls)
   protected def getMemberImpl(name: Str)(using NewResolverState): MemberLookup = source.getMember(name).instantiate(instances)
+
+/** A standalone type application is a recipe, not a call activation. Each later
+  * application uses its own binder group while retaining these caller references.
+  */
+final case class SpecializedShape(declaration: DefnShape, arguments: Ls[DeclaredType],
+    instances: Map[VarSymbol, TypeParameterInstance]) extends NonAppTermShape:
+  def describe: Str = declaration.describe
+  def toLoc: Opt[Loc] = declaration.toLoc
+  protected def getMemberImpl(name: Str)(using NewResolverState): MemberLookup = declaration.getMember(name).instantiate(instances)
 
 /** A source-flow event identifies the activation in which its consumer executes.
   * The value separately retains the caller's type references; these maps cannot

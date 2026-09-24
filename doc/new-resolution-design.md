@@ -62,7 +62,8 @@ recursive calls, nested captures, partial construction, and independent field re
 
 Explicit and inferred function/constructor type arguments flow through the
 corresponding type-parameter symbols with entry/exit marks. Explicit arguments
-prevent further refinement from value arguments. Inference also connects nested
+receive input constraints without adding value-argument shapes to their output
+interface. Inference also connects nested
 nominal parameters, such as `Foo[A]` containing a `Box[A]`. Generic methods use
 the same flow as free functions, including callback-result inference and curried
 signatures. Declared callable shapes retain their type parameters.
@@ -90,6 +91,15 @@ caller-side type references remain distinct, including when recursion rebinds th
 same original parameter. Contextual observations select compatible activations;
 marks continue to distinguish enclosing callers of a shared inner site. See
 `newres/ContextualInference.mls` for stored-function and deferred-field cases.
+
+Standalone specializations of inferred functions retain their supplied types in
+`SpecializedShape` until application. Each application binds its own memoized
+parameter instances; the original generic binder remains unchanged. Argument
+arity is checked even for unused specializations. `newres/StoredSpecializations.mls`
+covers stored aliases, inferred record results, and curried calls. It also records
+the remaining gap in observing an inferred specialized result during callback
+checking before application; see the
+[type-flow reference](new-resolution-type-value-flow.md#partial-application-and-explicit-specialization).
 
 ## Declared interfaces and exposure checking
 

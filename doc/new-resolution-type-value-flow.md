@@ -11,13 +11,15 @@ are implemented. Explicit type application also observes annotated polymorphic
 values. Calls through complete callable signatures use the bounded binder-instance
 cache. `DeclaredType.instances` carries a flat substitution through their declared
 components; curried tails retain it, and independently quantified returned callables
-instantiate their own binders. Stored specializations of these callable signatures
-retain supplied arguments until application. Inline binders on partial and inferred
+instantiate their own binders. Stored specializations of complete signatures and
+inferred functions retain supplied arguments until application. Inline binders on partial and inferred
 functions also instantiate at application sites. Their shared bodies retain flat
 substitutions through deferred tuples, records, callbacks, and closures. Nominal
 argument comparisons retain both endpoint references and apply declaration/use-site
-variance. The recursive array acceptance cases pass. Explicit argument suppression,
-constructor instantiation, holes, inferred nominal member interfaces, and general
+variance. The recursive array acceptance cases pass. Supplied function arguments
+receive input obligations while retaining their declared output interface.
+Observing specialized inferred functions before application, replacing the remaining
+explicit-argument flags and constructor path, holes, inferred nominal member interfaces, and general
 recursive alias environments still need integration. The implementation order below
 remains the full design, not a claim that all its parts are complete.
 See the [resolver notes](new-resolution-design.md)
@@ -114,11 +116,14 @@ the implementation is a `Child`. Interpreting a function type exposes its declar
 domain and result. Interpreting a union for member lookup can observe each
 alternative, while transporting its wrapper preserves the original union node.
 
-This refactor alone does not implement the planned distinction between supplying
-a type argument and adding an ordinary bound. `inferTypeArguments` retains wrappers
-when contributing a parameter bound and observes them for structural comparison.
-Explicit arguments still suppress ordinary refinement; the constraint work must
-replace that suppression together with bidirectional flow.
+`inferTypeArguments` retains wrappers when contributing a parameter bound and
+observes them for structural comparison. For an explicitly supplied argument,
+an input obligation follows its retained type reference instead of becoming an
+additional output candidate. Each distinct supplied type receives the obligation;
+a supplied union stays whole. The implementation still identifies supplied
+positions with explicit-argument flags. Integrating those positions into the
+shared reference graph remains necessary for constructor views and general
+recursive type environments.
 
 ## Variance rules
 
@@ -346,8 +351,11 @@ source reference; a structured or concrete target subscribes to that reference's
 later bounds. Quiet concrete mismatch diagnostics do not discard these obligations.
 `TypeRelationTest` checks cyclic propagation, early/late bounds, every distinct
 upper target, preservation of a whole negative union, reverse endpoint contexts,
-and independent importers. These relation tests do not yet replace the separate
-explicit-argument path described above.
+and independent importers. The supplied-argument tests additionally check input
+obligations arriving before and after supplied references, chained parameters in
+different marked contexts, isolation between activations, and cycles without
+listener growth. These checks do not yet replace the remaining explicit-argument
+flags or establish the whole-graph termination bound.
 
 Existing marks still transport instance flow through lexical scopes and distinguish
 enclosing activations sharing a static inner call. Apply their current entry/exit
@@ -489,6 +497,38 @@ each application of `g` then binds its own site instances to `Int`. This avoids
 introducing a second allocation policy at type-application nodes. Check argument
 arity against the retained scheme immediately, and allow observations of the
 specialized interface to use its supplied type references before a term call.
+
+`SpecializedShape` retains the original inferred function, supplied argument
+references, and captured call-site instances. Application unwraps that recipe,
+allocates or reuses the definition/site binder group, and attaches the supplied
+references before replaying body constraints. It does not publish arguments into
+the original definition's type parameters. `newres/StoredSpecializations.mls`
+checks independent specializations through one stored alias, deferred record
+results, curried calls, and arity errors even when a specialization is unused.
+
+Pre-application observation of an inferred result is still missing. The same
+worksheet retains this concrete regression:
+
+```mlscript
+class Item(val value: Int)
+private fun identity[A](value: A) = value
+private fun use[B](f: Item -> B): B = f(Item(9))
+use(identity[Item]).value
+```
+
+The expected result is `9`. Checking the argument against `Item -> B` must observe
+`identity`'s inferred result with `A` referring to the supplied `Item`. Currently,
+the deferred body view can map `A` only to a call-site parameter symbol, and no
+call to `identity` has been observed at this point. Its result therefore fails to
+constrain `B`. Allocating an instance during callback checking or writing `Item`
+into the shared original `A` would violate the design.
+
+The proposed extension, pending review, is to let deferred views also reference
+supplied type-argument nodes. Such references must remain shared graph edges:
+recursively substituting `DeclaredType.bindings` maps into one another would lose
+the finite-domain argument below. The representation must support deferred tuple
+fields and closures as well as this scalar result. This regression remains a
+`:fixme` until that representation and its termination invariant are settled.
 
 ### Constraint propagation and implementation order
 
