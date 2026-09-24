@@ -808,14 +808,14 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
       .toSet.intersect(refdDSyms)
     
     /** Maps directly passed locals to the path representing that local within this object. */
-    protected def passedSymsMap: Map[ValueSymbol, LocalPath]
+    protected def passedSymsMap: Map[ScopedOrInnerSymbol, LocalPath]
     /** Maps scopes to the path representing their captures within this object. */
     protected def capSymsMap: Map[ScopedInfo, Path]
     /** Maps definition symbols to the path representing that definition. */
     protected def passedDefnsMap: Map[DefinitionSymbol[?], DefnRef]
     
     protected lazy val capturesOrdered: List[ScopedInfo] = reqCaptures.toList.sorted
-    protected final lazy val passedSymsOrdered: List[ValueSymbol] = reqPassedSymbols.toList.sortBy(_.uid)
+    protected final lazy val passedSymsOrdered: List[ScopedOrInnerSymbol] = reqPassedSymbols.toList.sortBy(_.uid)
     protected final lazy val reqDefnsOrdered: List[DefinitionSymbol[?]] = reqDefns.toList.sortBy(_.uid)
     
     override lazy val capturePaths: Map[ScopedInfo, Path] =
@@ -863,10 +863,10 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
         case _ => false
 
     /** Returns the erased type for the given symbol captured in `reqPassedSyms`. */
-    protected def reqPassedSymErasedType(s: ValueSymbol): Opt[ErasedValueType] = s match
+    protected def reqPassedSymErasedType(s: ScopedOrInnerSymbol): Opt[ErasedValueType] = s match
       case l: LocalVarSymbol => l.erasedType
       case clsLike: (ClassSymbol | ModuleOrObjectSymbol) => clsLike.asThis.erasedType
-      case sym =>
+      case sym: (BlockMemberSymbol | PatternSymbol | TopLevelSymbol) =>
         softAssert(false, s"Expected reqPassedSyms to contain only LocalVarSymbols or ClassLikeSymbols, got $sym")
         N
 
@@ -878,7 +878,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
       case modOrCls: ModuleOrObjectSymbol => modOrCls.erasedType
       // * A pattern object has no erased type.
       case _: PatternSymbol => N
-      case sym =>
+      case sym: (TypeAliasSymbol | TopLevelSymbol) =>
         softAssert(false, s"Expected reqDefns to contain only ClassLikeSymbols, TermSymbols or PatternSymbols, got $sym")
         N
   
@@ -1041,7 +1041,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
         LifterResult(newComp, rewriterCtor.extraDefns.toList ::: extras)
   
   class LiftedFunc(override val obj: ScopedObject.Func)(using ctx: LifterCtxNew) extends LiftedScope[FunDefn](obj) with GenericRewrittenScope[FunDefn]:
-    private val passedSymsMap_ : Map[ValueSymbol, VarSymbol] = passedSymsOrdered.map: s =>
+    private val passedSymsMap_ : Map[ScopedOrInnerSymbol, VarSymbol] = passedSymsOrdered.map: s =>
         // * The auxiliary parameter stands for the same slot as the passed local, so it takes the local's
         // * type.
         s -> VarSymbol(Tree.Ident(s.nme), reqPassedSymErasedType(s))
@@ -1147,7 +1147,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
     private val captureSym = TermSymbol(syntax.ImmutVal, S(obj.cls.isym), Tree.Ident(obj.nme + "$cap"), erasure = N)
     override lazy val capturePath: Path = Select(obj.cls.isym.asThis, captureSym.id)(S(captureSym))(false)
     
-    private val passedSymsMap_ : Map[ValueSymbol, (vs: VarSymbol, ts: TermSymbol)] = passedSymsOrdered.map: s =>
+    private val passedSymsMap_ : Map[ScopedOrInnerSymbol, (vs: VarSymbol, ts: TermSymbol)] = passedSymsOrdered.map: s =>
         val erasedType = reqPassedSymErasedType(s)
         s ->
           (
