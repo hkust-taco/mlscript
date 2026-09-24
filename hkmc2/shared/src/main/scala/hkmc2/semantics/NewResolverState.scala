@@ -252,8 +252,12 @@ final class NewResolverState private (
     new Cache(inherited.map(_.extremeTypes), identity)
   val variantTypes: Cache[(DeclaredType, Bool), DeclaredType] =
     new Cache(inherited.map(_.variantTypes), identity)
-  val abstractTypes: Cache[(TypeResolution, Opt[VarSymbol]), DeclaredType] =
+  val abstractTypes: Cache[TypeResolution, DeclaredType] =
     new Cache(inherited.map(_.abstractTypes), identity)
+  val omittedTypes: Cache[(TypeResolution, VarSymbol), DeclaredType] =
+    new Cache(inherited.map(_.omittedTypes), identity)
+  val exposedTypeHoles: Seen[(DeclaredType, TermShape, Ls[Marks])] =
+    new Seen(inherited.map(_.exposedTypeHoles))
   val signatureParameters: Cache[VarSymbol, DeclaredType] =
     new Cache(inherited.map(_.signatureParameters), identity)
   val capturedTypes: Cache[(DeclaredType, TermSymbol), DeclaredType] =

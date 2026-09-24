@@ -241,16 +241,80 @@ class NewResolver:
       declaredType(resolution, tpe)
 
   private def typeViews(using rs: NewResolverState) = rs.typeViews
+  /** Each missing formal position belongs to its source type use. Keeping one
+    * live host preserves late bounds without allocating a quantified parameter.
+    */
+  private[semantics] def omittedType(source: TypeResolution, parameter: VarSymbol)(using NewResolverState): DeclaredType =
+    rstate.omittedTypes.getOrElseUpdate((source, parameter), {
+      val resolution = new TypeResolution(source.source, source.fail)
+      val bounds = new TermShapeHost
+      resolution.publish(TypeShape.Hole(bounds.inferenceHost))
+      declaredType(resolution, Map.empty)
+    })
+
+  private def typeArguments(source: DeclaredType, arguments: Ls[DeclaredType], parameters: Ls[TyParam])
+      (using NewResolverState): Ls[DeclaredType] =
+    parameters.zipWithIndex.map: (parameter, index) =>
+      arguments.lift(index).getOrElse(omittedType(source.resolution, parameter.sym).instantiate(source.instances))
+
+  private def typeBindings(source: DeclaredType, arguments: Ls[DeclaredType], parameters: Ls[TyParam])
+      (using NewResolverState): Map[VarSymbol, DeclaredType] =
+    effectiveBindings(source) ++ parameters.zip(typeArguments(source, arguments, parameters)).map: (parameter, argument) =>
+      parameter.sym -> argumentType(argument, parameter.vce)
+
+  /** External inputs contribute unknowns only to missing annotation parts.
+    * A written binder still denotes its declared type, including after a partial
+    * application fixes it; exposure must not add arbitrary values to that binder.
+    */
+  private[semantics] def exposeTypeHoles(tpe: DeclaredType, unknown: TermShape, marks: Ls[Marks])
+      (using NewResolverState): Unit =
+    if !rstate.exposedTypeHoles.add((tpe, unknown, marks)) then return
+    def follow(current: DeclaredType, args: Ls[DeclaredType], captures: Ls[Marks], seen: Set[TypeResolution])
+        (using NewResolverState): Unit = if !seen(current.resolution) then
+      val next = seen + current.resolution
+      def descend(child: DeclaredType)(using NewResolverState): Unit = unknown.enter(captures) match
+        case value: TermShape => exposeTypeHoles(child, value, marks)
+        case NoShape => ()
+      current.resolution.listen:
+        case TypeShape.Hole(host) => unknown.enter(captures) match
+          case value: TermShape => host.publish(value)
+          case NoShape => ()
+        case TypeShape.Parameter(symbol, _) =>
+          current.bindings.get(symbol).foreach(bound => follow(bound.instantiate(current.instances), Nil, captures, next))
+        case TypeShape.Captured(base, thru) =>
+          follow(declaredType(base, current), args, EntryMark(ResolutionBoundary(thru), N, NoMarks) :: captures, next)
+        case TypeShape.Applied(base, arguments) =>
+          follow(declaredType(base, current), arguments.map(declaredType(_, current)), captures, next)
+        case TypeShape.Alias(symbol, S(rhs)) =>
+          follow(declaredType(rhs, typeBindings(current, args, symbol.defn.get.tparams)), Nil, captures, next)
+        case TypeShape.Nominal(cls) =>
+          cls.tparams.zip(typeArguments(current, args, cls.tparams)).foreach: (param, argument) =>
+            listenArgumentParts(argumentType(argument, param.vce)): parts =>
+              exposeTypeHoles(parts.output, unknown, marks)
+        case TypeShape.Tuple(fields) => fields.foreach(field => descend(declaredType(field, current)))
+        case TypeShape.Record(_, fields) => fields.foreach((_, field) => descend(declaredType(field, current)))
+        case TypeShape.Function(_, result) => descend(declaredType(result, current))
+        case TypeShape.Polymorphic(parameters, _, body) =>
+          val symbols = parameters.map(_.parameter.symbol)
+          val lexical = current.copy(bindings = current.bindings -- symbols, instances = current.instances -- symbols)
+          follow(declaredType(body, lexical), args, captures, next)
+        case TypeShape.Wildcard(_, output) => output.foreach(res => follow(declaredType(res, current), args, captures, next))
+        case TypeShape.Argument(parts) => follow(parts.output.instantiate(current.instances), args, captures, next)
+        case TypeShape.Union(left, right) =>
+          follow(declaredType(left, current), Nil, captures, next)
+          follow(declaredType(right, current), Nil, captures, next)
+        case TypeShape.Intersection(left, right) =>
+          follow(declaredType(left, current), Nil, captures, next)
+          follow(declaredType(right, current), Nil, captures, next)
+        case _ => ()
+    follow(tpe, Nil, Nil, Set.empty)
+
   private def abstractTypes(using rs: NewResolverState) = rs.abstractTypes
-  // An omitted argument in an annotation must not subscribe to constructor
-  // inference. Keep its parameter and annotation as a diagnostic witness: the
-  // enclosing nominal type is concrete even though this argument is unknown.
-  private def abstractType(source: TypeResolution, omitted: Opt[VarSymbol])(using NewResolverState): DeclaredType = abstractTypes.getOrElseUpdate((source, omitted), {
+  // Narrowing a nominal receiver by projection does not infer the narrower
+  // class's arguments. This abstract interface is distinct from an inference hole.
+  private def abstractType(source: TypeResolution)(using NewResolverState): DeclaredType = abstractTypes.getOrElseUpdate(source, {
     val resolution = new TypeResolution(source.source, source.fail)
-    resolution.publish(omitted match
-      case S(param) => TypeShape.Inferred(UnknownValueShape(source.source)(ShapeProvenance(
-        msg"Type argument '${param.nme}' is omitted in this annotation, so its shape is unknown." -> source.source.toLoc :: Nil)))
-      case N => TypeShape.Abstract)
+    resolution.publish(TypeShape.Abstract)
     declaredType(resolution, Map.empty)
   })
 
@@ -332,8 +396,7 @@ class NewResolver:
         def follow(current: DeclaredType, args: Ls[DeclaredType], aliases: Set[TypeResolution], publish: Listener)(using NewResolverState): Unit =
           current.resolution.listen: shape =>
             def bind(params: Ls[TyParam])(using NewResolverState): Map[VarSymbol, DeclaredType] =
-              effectiveBindings(current) ++ params.zipWithIndex.map: (param, index) =>
-                param.sym -> argumentType(args.lift(index).getOrElse(abstractType(current.resolution, S(param.sym))), param.vce)
+              typeBindings(current, args, params)
             def next(res: TypeResolution)(using NewResolverState): Unit = follow(declaredType(res, current), Nil, aliases, publish)
             shape match
               case TypeShape.Dynamic => publish(DynShape())
@@ -343,6 +406,8 @@ class NewResolver:
                 output.fold(publish(OpaqueTypeShape(tpe.resolution.source)))(next)
               case TypeShape.Argument(parts) => follow(parts.output.instantiate(current.instances), Nil, aliases, publish)
               case TypeShape.Inferred(value) => listenInstanceViews(instantiateShape(value, current.instances))(publish)
+              case TypeShape.Hole(host) => host.subscribe: value =>
+                listenInstanceViews(instantiateShape(value, current.instances))(publish)
               case TypeShape.Nominal(defn) =>
                 val bindings = bind(defn.tparams)
                 defn.ext match
@@ -615,9 +680,12 @@ class NewResolver:
   def checkDeclaredResult(definition: TermDefinition)(using NewResolverState): Unit =
     definition.body.foreach: body =>
       resultSignature(definition).foreach: sign =>
-        val expected = declaredType(typeResolution(sign), Map.empty)
-        listenTerm(body): shape =>
-          constrainFunction(expected, shape, Nil)
+        checkAscription(body, sign)
+
+  def checkAscription(body: Term, sign: Term)(using NewResolverState): Unit =
+    val expected = declaredType(typeResolution(sign), Map.empty)
+    listenTerm(body): shape =>
+      inferTypeArguments(expected.instantiate(rstate.instances), shape, Nil)
 
   // Install each constraint edge before subscribing: callback parameter/result
   // flow can revisit it immediately. Distinct instantiations retain their marks.
@@ -666,9 +734,13 @@ class NewResolver:
         case TypeShape.Applied(base, params) =>
           follow(declaredType(base, tpe), params.map(declaredType(_, tpe)), captures, next)
         case TypeShape.Alias(symbol, S(rhs)) =>
-          val bindings = effectiveBindings(tpe) ++ symbol.defn.get.tparams.map(_.sym).zip(args)
-          follow(declaredType(rhs, bindings), Nil, captures, next)
+          follow(declaredType(rhs, typeBindings(tpe, args, symbol.defn.get.tparams)), Nil, captures, next)
+        case TypeShape.Hole(host) => value.enter(captures) match
+          case value: TermShape => host.publish(value)
+          case NoShape => ()
         case TypeShape.Tuple(fields) => observe:
+          case unknown @ Marked(_: UnknownValueShape, _) =>
+            fields.foreach(field => inferTypeArguments(declaredType(field, tpe), unknown, marks))
           case Marked(tuple: TupleShape, context) =>
             fields.zipWithIndex.foreach: (field, index) =>
               tuple.getMember(index.toString) match
@@ -685,7 +757,8 @@ class NewResolver:
           follow(declaredType(body, tpe), args, captures, next)
         case TypeShape.Wildcard(input, _) => input.foreach(res => follow(declaredType(res, tpe), args, captures, next))
         case TypeShape.Argument(parts) => follow(parts.input.instantiate(tpe.instances), args, captures, next)
-        case TypeShape.Nominal(cls) if args.nonEmpty => listenInstanceViews(value): value =>
+        case TypeShape.Nominal(cls) => listenInstanceViews(value): value =>
+          val arguments = typeArguments(tpe, args, cls.tparams)
           val (actual, instances) = contextualParts(value)
           val (head, context) = actual.applicationHead
           def constrain(param: TyParam, bound: DeclaredType, pattern: DeclaredType)(using NewResolverState): Unit =
@@ -694,10 +767,14 @@ class NewResolver:
                 constrainTypes(ContextualType(actual.output, context), ContextualType(expected.output, Nil))
                 constrainTypes(ContextualType(expected.input, Nil), ContextualType(actual.input, context))
           def constrainNominal(nominal: NominalInstanceView)(using NewResolverState): Unit =
-            if nominal.defn is cls then cls.tparams.zip(args).foreach: (param, pattern) =>
+            if nominal.defn is cls then cls.tparams.zip(arguments).foreach: (param, pattern) =>
               nominal.bindings.get(param.sym).foreach(constrain(param, _, pattern))
           head match
-            case ds: DefnShape if ds.clsDef.contains(cls) => cls.tparams.zip(args).foreach: (param, pattern) =>
+            case _: UnknownValueShape =>
+              cls.tparams.zip(arguments).foreach: (param, argument) =>
+                listenArgumentParts(argumentType(argument, param.vce)): parts =>
+                  inferTypeArguments(parts.output, value, marks)
+            case ds: DefnShape if ds.clsDef.contains(cls) => cls.tparams.zip(arguments).foreach: (param, pattern) =>
               val bound = parameterType(TypeShape.Parameter(param.sym, param.sym.inferenceHost))
               constrain(param, argumentType(bound, param.vce), pattern)
             case nominal: NominalInstanceView => constrainNominal(nominal)
@@ -738,7 +815,9 @@ class NewResolver:
           case value: TermShape => receive(value)
           case NoShape => ()
         case _ => ()
-      member(actual.getMember(field.sym.nme), Map.empty)
+      actual match
+        case Marked(_: UnknownValueShape, _) => receive(actual)
+        case _ => member(actual.getMember(field.sym.nme), Map.empty)
 
   /** Function constraints reverse the parameter flow and preserve result flow.
     * Read an implementation only while checking it against its declared interface;
@@ -798,6 +877,11 @@ class NewResolver:
           constrainRecord(record.fields, record.bindings, actual, marks)
         case _ => ()
     actual match
+      case Marked(_: UnknownValueShape, _) =>
+        listenTypeViews(expected):
+          case Marked(callable: CallableTypeShape, _) =>
+            callable.result.foreach(ret => inferTypeArguments(ret, actual, marks))
+          case _ => ()
       case Marked(givenType: CallableTypeShape, actualContext) =>
         listenTypeViews(expected):
           case Marked(wanted: CallableTypeShape, expectedContext) =>
@@ -1625,7 +1709,7 @@ class NewResolver:
                         case N =>
                           // An explicit projection can name a narrower class, but
                           // it cannot recover that class's implementation arguments.
-                          val opaque = abstractType(new TypeResolution(sel, msgs => resolError(sel, msgs)), N)
+                          val opaque = abstractType(new TypeResolution(sel, msgs => resolError(sel, msgs)))
                           MemberLookup.Declared(bms, cd.tparams.map(_.sym -> opaque).toMap, context :: Nil, nominal.annotation)
                     case _ => info
                   member(selected, msg"Class '${cd.sym.nme}'", cd.toLoc, Map.empty)

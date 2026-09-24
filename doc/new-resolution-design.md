@@ -92,6 +92,15 @@ same original parameter. Contextual observations select compatible activations;
 marks continue to distinguish enclosing callers of a shared inner site. See
 `newres/ContextualInference.mls` for stored-function and deferred-field cases.
 
+Omitted generic arguments use `TypeShape.Hole`, a stable inference host for each
+source type-use/formal-position pair. They infer through arguments, result
+annotations, and ascriptions; an empty hole waits for evidence. Written fragments
+continue to restrict the interface. Exposure checking contributes unknown values
+to missing parts of external inputs, including callback results, without widening
+written binders. `newres/InferenceHoles.mls` also retains unresolved cases for
+recursive holes and omissions shared through an alias body. No hole creates a
+call-site parameter instance.
+
 Standalone specializations of inferred functions retain their supplied types in
 `SpecializedShape` until application. Each application binds its own memoized
 parameter instances; the original generic binder remains unchanged. Argument

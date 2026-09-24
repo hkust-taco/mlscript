@@ -16,12 +16,15 @@ inferred functions retain supplied arguments until application. Inline binders o
 functions also instantiate at application sites. Their shared bodies retain flat
 substitutions through deferred tuples, records, callbacks, and closures. Nominal
 argument comparisons retain both endpoint references and apply declaration/use-site
-variance. The recursive array acceptance cases pass. Supplied function arguments
+variance. The explicit-binder recursive array acceptance cases pass. Supplied function arguments
 receive input obligations while retaining their declared output interface.
 Observing specialized inferred functions before application, replacing the remaining
-explicit-argument flags and constructor path, holes, inferred nominal member interfaces, and general
-recursive alias environments still need integration. The implementation order below
-remains the full design, not a claim that all its parts are complete.
+explicit-argument flags and constructor path, inferred nominal member interfaces,
+and general recursive alias environments still need integration. Omitted arguments
+now use source-owned inference holes; recursive hole contexts and omissions inside
+alias bodies still need the contextual reference work described below. The
+implementation order below remains the full design, not a claim that all its parts
+are complete.
 See the [resolver notes](new-resolution-design.md)
 for current behavior and the [migration worklist](new-resolution-suite-migration.md)
 for remaining ports.
@@ -433,12 +436,35 @@ is transported with the alias use's context; expansion must not allocate more
 hole symbols. Excess arguments still indicate an arity error.
 
 The positive `Pair[Int]`, `HalfPair`, and bare `Array` cases in
-`newres/PartialSignatures.mls` record this missing behavior as `:fixme`s. Existing
+`newres/PartialSignatures.mls` now pass. Existing
 `DeclaredTypes.mls` examples selecting members from omitted arguments without any
 supporting flow remain negative tests: a hole is inferable, not evidence of an
-arbitrary member. Replace the current unconditional `abstractType` treatment of
-omissions; report insufficient inferred information when a genuinely unfilled
-hole is observed.
+arbitrary member. `TypeShape.Hole` retains a source inference host, cached by the
+type-use node and omitted formal parameter. Observation and constraint propagation
+share the argument-completion operation, so they reach the same hole. Bounds can
+arrive after an observation; an empty host emits no unknown candidate. Intentional
+abstraction remains `TypeShape.Abstract`. Type validation rejects excess arguments,
+including in unused annotations.
+
+Result annotations and ascriptions constrain their implementations, allowing their
+holes to receive evidence while their written fragments keep restricting the
+interface. Exposure checking contributes unknown shapes only to missing output
+parts of incoming values, including external callback results. It does not add
+arbitrary lower bounds to written binders fixed by a partial application. These
+unknowns represent real possible inputs and remain alongside local evidence.
+`newres/InferenceHoles.mls` checks source/formal-position isolation, these annotation
+boundaries, and exposed interfaces.
+
+Two context cases remain explicit `:fixme`s in that worksheet. A recursive
+`append(xs: Array, value, n: Int)` currently mixes the element interfaces of two
+external callers, whereas the explicit-binder version has separate call-site
+symbols. Holes must retain ordinary marked inference; copying the hole at each
+call is not an acceptable repair. Also, with `type SomeBox = Box`, the hole in the
+alias body is currently shared by both parameters of
+`both(left: SomeBox, right: SomeBox)`, even though their alias-use references differ.
+The contextual graph representation must preserve those uses without expanding
+the alias or allocating more hole symbols. Neither case is covered by the passing
+source-occurrence isolation test, which uses two directly written `Pair` annotations.
 
 The scheme therefore cannot be a closed type synthesized from whatever shapes
 happen to be available first. It must retain live links to inferred portions of
@@ -607,6 +633,14 @@ invariant checks enabled. For a fixed finite set of source type references, ther
 are finitely many endpoint/map/mark combinations, and replay adds no listeners.
 That local bound does not establish the remaining whole-graph alias-environment
 bound, which must also prove that source references cannot proliferate.
+
+For omitted arguments, each source type-use/formal-position pair allocates one
+`TypeShape.Hole` host. No recursive traversal or call allocates a parameter symbol
+for it. `TypeRelationTest` checks reuse across repeated observations, empty hosts
+waiting for evidence, cyclic constraints with stable listener counts, and private
+bounds in separate importers sharing the same source identity. This bounds hole
+allocation and replay; it does not establish the missing context precision for
+recursive holes or alias-body omissions noted above.
 
 During implementation, assert that a call instance's origin is an original binder,
 all of one scheme's binders are allocated before its constraints are activated,

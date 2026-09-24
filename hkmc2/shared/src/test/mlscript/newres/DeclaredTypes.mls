@@ -680,18 +680,24 @@ fun omittedSecond(x: Pair[Int]) = x.value.1.oops
 //│ ║  l.678: 	fun omittedSecond(x: Pair[Int]) = x.value.1.oops
 //│ ║         	                                  ^^^^^^^^^^^^^^
 //│ ╟── Cannot resolve member 'oops' of a value with unknown shape.
-//│ ╟── Type argument 'B' is omitted in this annotation, so its shape is unknown.
+//│ ╟── Parameter 'x' admits values of unknown shape.
 //│ ║  l.678: 	fun omittedSecond(x: Pair[Int]) = x.value.1.oops
-//│ ╙──       	                     ^^^^
+//│ ║         	                  ^^^^^^^^^^^^
+//│ ╟── 'omittedSecond' is exposed by this compilation unit.
+//│ ║  l.678: 	fun omittedSecond(x: Pair[Int]) = x.value.1.oops
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 // An unfilled omitted alias argument likewise cannot justify an arbitrary member.
 :ge
 type HalfPair[T] = Pair[Int, T]
 fun omittedAlias(x: HalfPair) = x.value.1.oops
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.690: 	fun omittedAlias(x: HalfPair) = x.value.1.oops
+//│ ║  l.693: 	fun omittedAlias(x: HalfPair) = x.value.1.oops
 //│ ║         	                                ^^^^^^^^^^^^^^
 //│ ╟── Cannot resolve member 'oops' of a value with unknown shape.
-//│ ╟── Type argument 'T' is omitted in this annotation, so its shape is unknown.
-//│ ║  l.690: 	fun omittedAlias(x: HalfPair) = x.value.1.oops
-//│ ╙──       	                    ^^^^^^^^
+//│ ╟── Parameter 'x' admits values of unknown shape.
+//│ ║  l.693: 	fun omittedAlias(x: HalfPair) = x.value.1.oops
+//│ ║         	                 ^^^^^^^^^^^
+//│ ╟── 'omittedAlias' is exposed by this compilation unit.
+//│ ║  l.693: 	fun omittedAlias(x: HalfPair) = x.value.1.oops
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

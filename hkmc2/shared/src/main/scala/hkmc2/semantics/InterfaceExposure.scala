@@ -72,11 +72,15 @@ final class InterfaceExposure(resolver: NewResolver)(using NewResolverState, TL)
               case shape: TermShape => listener(shape)
               case NoShape => ()))(emit(_, path))
 
-  private def parameter(param: Param, marks: Ls[Marks], path: Path)(using NewResolverState): Unit = if resolver.parameterSignature(param).isEmpty then
+  private def parameter(param: Param, marks: Ls[Marks], path: Path)(using NewResolverState): Unit =
     val ref = SimpleRef(param.sym)(param.sym.id)
     val unknown = UnknownValueShape(ref)(ShapeProvenance(
       (msg"Parameter '${param.sym.nme}' admits values of unknown shape." -> param.toLoc) :: path.diagnosticNotes))
-    resolver.constrainParameter(param, unknown.enter(marks), marks)
+    resolver.parameterSignature(param) match
+      case N => resolver.constrainParameter(param, unknown.enter(marks), marks)
+      case S(tpe) => unknown.enter(marks) match
+        case value: TermShape => resolver.exposeTypeHoles(tpe.instantiate(rstate.instances), value, marks)
+        case NoShape => ()
 
   private def parameters(lists: Ls[(ParamList, Ls[Marks])], path: Path)(using NewResolverState): Unit =
     lists.foreach: (params, marks) =>
@@ -161,6 +165,14 @@ final class InterfaceExposure(resolver: NewResolver)(using NewResolverState, TL)
         case _ => ()
       case base: BaseShape => members(base.defn, marks, path)
       case callable: CallableTypeShape =>
+        // Written structure constrains external values; missing output parts
+        // still admit unknown shapes even when local callers supplied evidence.
+        val unknown = UnknownValueShape(callable.source)(path)
+        callable.paramLists.foreach: params =>
+          (params.params.flatten ::: params.rest.toList).foreach: input =>
+            unknown.enter(marks) match
+              case value: TermShape => resolver.exposeTypeHoles(input, value, marks)
+              case NoShape => ()
         callable.result.foreach: result =>
           watch((result, marks))(resolver.listenTypeInstances(result)): shape =>
             emit(shape.exit(marks), path)

@@ -56,6 +56,87 @@ class TypeRelationTest extends AnyFunSuite:
     assert((a.inferenceHost.listeners.size, b.inferenceHost.listeners.size) == counts)
     assert(seen.toList == List(first, second))
 
+  test("omitted arguments reuse source-owned holes and wait for evidence"):
+    val h = new Harness
+    import h.given
+    val (a, _) = h.parameter("A")
+    val (b, _) = h.parameter("B")
+    val firstUse = h.tpe(TypeShape.Abstract).resolution
+    val secondUse = h.tpe(TypeShape.Abstract).resolution
+    val hole = h.resolver.omittedType(firstUse, a)
+    val otherPosition = h.resolver.omittedType(firstUse, b)
+    val otherUse = h.resolver.omittedType(secondUse, a)
+    assert(!(hole.resolution eq otherPosition.resolution))
+    assert(!(hole.resolution eq otherUse.resolution))
+    val seen = h.observe(ContextualType(hole, Nil))
+    val unrelated = h.observe(ContextualType(otherPosition, Nil))
+    assert(seen.isEmpty)
+    val bound = IntroShape(Term.UnitVal(), N)
+    h.resolver.constrainTypes(ContextualType(h.tpe(TypeShape.Inferred(bound)), Nil), ContextualType(hole, Nil))
+    assert(seen.toList == List(bound))
+    assert(unrelated.isEmpty)
+    (1 to 1000).foreach: _ =>
+      assert(h.resolver.omittedType(firstUse, a) eq hole)
+    assert(h.state.allocatedTypeInstanceCount == 0)
+
+  test("cyclic hole constraints saturate without allocating parameter instances"):
+    val h = new Harness
+    import h.given
+    val (parameter, _) = h.parameter("T")
+    val first = h.resolver.omittedType(h.tpe(TypeShape.Abstract).resolution, parameter)
+    val second = h.resolver.omittedType(h.tpe(TypeShape.Abstract).resolution, parameter)
+    val left = ContextualType(first, Nil)
+    val right = ContextualType(second, Nil)
+    h.resolver.constrainTypes(left, right)
+    h.resolver.constrainTypes(right, left)
+    val seen = h.observe(right)
+    assert(seen.isEmpty)
+    val bound = IntroShape(Term.UnitVal(), N)
+    val input = ContextualType(h.tpe(TypeShape.Inferred(bound)), Nil)
+    h.resolver.constrainTypes(input, left)
+    def listeners(tpe: DeclaredType): Int = tpe.resolution.currentShapes.toList match
+      case TypeShape.Hole(host) :: Nil => host.listeners.size
+      case _ => fail("An omitted argument must retain its inference host")
+    val counts = (listeners(first), listeners(second))
+    (1 to 1000).foreach: _ =>
+      h.resolver.constrainTypes(left, right)
+      h.resolver.constrainTypes(right, left)
+      h.resolver.constrainTypes(input, left)
+    assert(seen.toList == List(bound))
+    assert((listeners(first), listeners(second)) == counts)
+    assert(h.state.allocatedTypeInstanceCount == 0)
+
+  test("importers share hole identities while keeping inferred bounds private"):
+    val h = new Harness
+    import h.given
+    val (parameter, _) = h.parameter("T")
+    val source = h.tpe(TypeShape.Abstract).resolution
+    val hole = h.resolver.omittedType(source, parameter)
+    val output = new TermShapeHost
+    h.resolver.listenInstanceViews(InstanceShape(hole))(output.publish)
+    val exporter = ArrayBuffer.empty[TermShape]
+    val detach = output.inferenceHost.observe(exporter += _)
+    val left = new Elaborator.State().newResolverState.inGraph(h.state)
+    val right = new Elaborator.State().newResolverState.inGraph(h.state)
+    assert(h.resolver.omittedType(source, parameter)(using left) eq hole)
+    assert(h.resolver.omittedType(source, parameter)(using right) eq hole)
+    val leftValues = ArrayBuffer.empty[TermShape]
+    val rightValues = ArrayBuffer.empty[TermShape]
+    h.resolver.listenInstanceViews(InstanceShape(hole))(leftValues += _)(using left)
+    h.resolver.listenInstanceViews(InstanceShape(hole))(rightValues += _)(using right)
+    val first = IntroShape(Term.UnitVal(), N)
+    val second = DynShape()
+    h.resolver.constrainTypes(ContextualType(h.tpe(TypeShape.Inferred(first)), Nil), ContextualType(hole, Nil))(using left)
+    h.resolver.constrainTypes(ContextualType(h.tpe(TypeShape.Inferred(second)), Nil), ContextualType(hole, Nil))(using right)
+    assert(leftValues.toList == List(first))
+    assert(rightValues.toList == List(second))
+    assert(exporter.isEmpty)
+    assert(output.currentShapes.isEmpty)
+    assert(h.state.allocatedTypeInstanceCount == 0)
+    assert(left.allocatedTypeInstanceCount == 0)
+    assert(right.allocatedTypeInstanceCount == 0)
+    detach()
+
   test("each concrete upper target receives later bounds and a union stays whole"):
     val h = new Harness
     import h.given

@@ -1441,7 +1441,10 @@ extends Importer:
       case _ => lastWords(s"Unexpected lambda parameter shape: $lhs")
     case Keywrd(Keyword.`dyn`) => Term.DynTy().withLocOf(tree)
     case InfixApp(lhs, Keywrd(Keyword.`as`), rhs) =>
-      Term.Asc(subterm(lhs, interp), subterm(rhs, Tpe))
+      val body = subterm(lhs, interp)
+      val sign = subterm(rhs, Tpe)
+      if newResolution then checkAscription(body, sign)
+      Term.Asc(body, sign)
     case InfixApp(lhs, Keywrd(Keyword.`:`), rhs) =>
       block(Block(tree :: Nil), hasResult = false, resultInterp = interp)._1
     case PrefixApp(kw @ Keywrd(Keyword.`not`), rhs) =>

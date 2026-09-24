@@ -103,8 +103,10 @@ The inventory below separates these from compiler and prelude gaps.
   callers. Stored specializations of inferred functions also preserve independent
   call-site binders, including deferred records and curried calls. Complete
   pre-application observations of specialized inferred results (the callback
-  regression in `newres/StoredSpecializations.mls`), constructors,
-  and holes; verify the whole graph's termination bound. Member-variable
+  regression in `newres/StoredSpecializations.mls`) and constructors. Omitted
+  arguments now infer through partial annotations, results, and ascriptions;
+  complete their recursive and alias-use contexts (`newres/InferenceHoles.mls`).
+  Verify the whole graph's termination bound. Member-variable
   definitions still need work. Handler inference needs separate flows for the receiver, values
   passed to resumptions, and abortive results (`newres/HandlerResults.mls` and
   `codegen/ScopedBlocksAndHandlers`). Agree these designs before implementation.

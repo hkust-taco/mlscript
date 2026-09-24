@@ -23,6 +23,9 @@ enum TypeShape:
   // The same third-party symbol can have different inference in two exporters.
   // Retain its originating host so importing a result needs no whole-state copy.
   case Parameter(symbol: VarSymbol, host: Publisher.Data[Shape])
+  // An omitted argument owns one source inference node. It is not a quantified
+  // binder and is never instantiated at a call site; marks distinguish its flows.
+  case Hole(host: Publisher.Data[TermShape])
   // Synthesized generic arguments can retain inferred value shapes, for example
   // the element union of the Array supertype of a tuple. Written annotations
   // never introduce this case by inspecting their implementation.
@@ -69,7 +72,19 @@ final class TypeResolution(val source: Term, report: Ls[(Message, Opt[Loc])] => 
     shapes.foreach:
       case Alias(_, rhs) => rhs.foreach(_.validate(next))
       case Captured(base, _) => base.validate(next)
-      case Applied(base, args) => base.validate(next); args.foreach(_.validate(next))
+      case Applied(base, args) =>
+        base.validate(next)
+        args.foreach(_.validate(next))
+        def checkArity(base: TypeResolution, seen: Set[TypeResolution]): Unit = if !seen(base) then
+          def check(name: Str, count: Int, loc: Opt[Loc]): Unit = if args.length > count then
+            fail(msg"Type '$name' accepts at most $count type ${"argument".pluralized(count)}, but got ${args.length}." ->
+              source.toLoc :: (msg"The type parameters are declared here." -> loc) :: Nil)
+          base.shapes.toList match
+            case Nominal(defn) :: Nil => check(defn.sym.nme, defn.tparams.length, defn.toLoc)
+            case Alias(symbol, _) :: Nil => symbol.defn.foreach(d => check(symbol.nme, d.tparams.length, d.toLoc))
+            case Captured(inner, _) :: Nil => checkArity(inner, seen + base)
+            case _ => ()
+        checkArity(base, Set.empty)
       case Wildcard(input, output) => input.foreach(_.validate(next)); output.foreach(_.validate(next))
       case Argument(parts) => parts.input.resolution.validate(next); parts.output.resolution.validate(next)
       case Function(_, result) => result.validate(next)
