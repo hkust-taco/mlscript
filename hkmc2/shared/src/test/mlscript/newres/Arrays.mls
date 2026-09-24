@@ -84,8 +84,8 @@ values([Item(4)])
 :ge
 [1].map(x => x)
 //│ ╔══[COMPILATION ERROR] Resolution error in function type
-//│ ║  l.121: 	  fun map(f: (T, Int, Array[T]) -> Any): Array[Any]
-//│ ║         	             ^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.119: 	  fun map[U](f: (T, Int, Array[T]) -> U): Array[U]
+//│ ║         	                ^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Callback parameter list does not match its declared function type.
 //│ ║  in Arrays.mls:85
 //│ ║  l.85: 	[1].map(x => x)

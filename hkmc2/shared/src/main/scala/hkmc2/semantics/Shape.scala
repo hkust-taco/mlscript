@@ -381,9 +381,11 @@ final case class DeclaredParams(params: Ls[Opt[DeclaredType]], hasRest: Bool)
 
 /** Calls through annotations expose only the declared result. Argument shapes
   * constrain type parameters in the interface; they do not recover its implementation.
+  * Named generic declarations retain their parameter symbols so explicit type
+  * applications constrain the same parameters as inferred arguments.
   */
 final case class CallableTypeShape(source: Term, paramLists: Ls[DeclaredParams],
-    result: Opt[DeclaredType]) extends NonAppTermShape:
+    result: Opt[DeclaredType], tparams: Ls[VarSymbol]) extends NonAppTermShape:
   require(paramLists.nonEmpty)
   def describe: Str = "function with a declared signature"
   def toLoc: Opt[Loc] = source.toLoc

@@ -117,9 +117,7 @@ declare class Array[T] with
   fun pop(): T | undefined
   fun shift(): T | undefined
   fun concat(...arrays): Array[Any]
-  // These declarations retain the input element interface. Until method-level
-  // generic instantiation is supported, mapped results expose only Any.
-  fun map(f: (T, Int, Array[T]) -> Any): Array[Any]
+  fun map[U](f: (T, Int, Array[T]) -> U): Array[U]
   fun forEach(f: (T, Int, Array[T]) -> Any): undefined
   fun filter(f: (T, Int, Array[T]) -> Bool): Array[T]
   fun every(f: (T, Int, Array[T]) -> Bool): Bool

@@ -1,0 +1,142 @@
+:.
+
+// Generic methods use the same inferred and explicit arguments as free functions.
+:expect [1, 2]
+class First(val first: Int)
+class Second(val second: Int)
+class Methods with
+  fun identity[A](x: A): A = x
+fun test(m: Methods) =
+  [m.identity(First(1)).first, m.identity[Second](Second(2)).second]
+test(new Methods)
+//│ = [1, 2]
+
+// Class and method type arguments retain their separate scopes.
+:expect [1, 2]
+class First(val first: Int)
+class Second(val second: Int)
+class Box[T](val value: T) with
+  fun map[U](f: T -> U): Box[U] = Box(f(value))
+fun test[T](box: Box[T], f: T -> Second) = box.map(f).value.second
+[ (Box(First(1)) as Box[First]).map(x => x).value.first,
+  test(Box(First(1)), x => Second(x.first + 1)) ]
+//│ = [1, 2]
+
+// Imported generic methods infer result arguments from callback results.
+:expect [2]
+class Item(val value: Int)
+class Box[T](val value: T)
+[Item(1)].map((item, ...) => Box(Item(item.value + 1)))
+  .map((box, ...) => box.value.value)
+//│ = [2]
+
+// Instantiations of the same imported method must not contaminate each other.
+:expect [[1], [2]]
+class First(val first: Int)
+class Second(val second: Int)
+fun first() = [0].map((x, ...) => First(1))
+fun second() = [0].map((x, ...) => Second(2))
+[first().map((x, ...) => x.first), second().map((x, ...) => x.second)]
+//│ = [[1], [2]]
+
+// Explicit type arguments preserve the requested opaque result interface.
+:ge
+class Base
+class Child extends Base with
+  val extra = 1
+[new Child].map[Base]((x, ...) => x).map((x, ...) => x.extra)
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.47: 	[new Child].map[Base]((x, ...) => x).map((x, ...) => x.extra)
+//│ ║        	                                                     ^^^^^^^
+//│ ╙── Value of type 'Base' does not contain member 'extra'
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// Imported methods validate explicit type-argument counts too.
+:ge
+[1].map[Int, Int]((x, ...) => x)
+//│ ╔══[COMPILATION ERROR] Resolution error in type application
+//│ ║  l.56: 	[1].map[Int, Int]((x, ...) => x)
+//│ ║        	^^^^^^^^^^^^^^^^^
+//│ ╟── Function with a declared signature expected 1 type argument, but got 2
+//│ ║  l.56: 	[1].map[Int, Int]((x, ...) => x)
+//│ ╙──      	^^^^^^^
+//│ = [1]
+
+// Imported free functions and methods use the same inference as prelude methods.
+import "../../mlscript-compile/GenericLibrary.mls"
+
+:expect [1, 2, 3]
+class First(val first: Int)
+class Second(val second: Int)
+fun test(m: GenericLibrary.Methods) = m.identity[Second](Second(2)).second
+[GenericLibrary.identity(First(1)).first,
+ test(new GenericLibrary.Methods), GenericLibrary.known.known]
+//│ = [1, 2, 3]
+
+// Explicit method arguments also remain opaque for local declared interfaces.
+:ge
+class Base
+class Child extends Base with
+  val extra = 1
+class Methods with
+  fun identity[A](x: A): A = x
+fun test(m: Methods) = m.identity[Base](new Child).extra
+test(new Methods)
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.83: 	fun test(m: Methods) = m.identity[Base](new Child).extra
+//│ ║        	                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙── Value of type 'Base' does not contain member 'extra'
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// Curried declared methods preserve their type arguments across parameter lists.
+:expect [1, 2]
+class First(val first: Int)
+class Second(val second: Int)
+class Methods with
+  fun pick[A](x: A)(ignored: Int): A = x
+fun test(m: Methods) =
+  [m.pick(First(1))(0).first, m.pick[Second](Second(2))(0).second]
+test(new Methods)
+//│ = [1, 2]
+
+// Separate signatures preserve the method's generic parameter list.
+:expect 4
+class Item(val value: Int)
+class Methods with
+  fun identity[A]: A -> A = x => x
+fun test(m: Methods) = m.identity[Item](Item(4)).value
+test(new Methods)
+//│ = 4
+
+// FIXME: The defining unit's inferred Array argument lives in its local host.
+// Importing the value must also transport that dependency, not only its shape.
+:fixme
+:expect [5]
+GenericLibrary.mapped.map((item, ...) => item.known)
+//│ ╔══[COMPILATION ERROR] This selection of member 'known' has no resolved target
+//│ ║  l.115: 	GenericLibrary.mapped.map((item, ...) => item.known)
+//│ ╙──       	                                         ^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ ═══[RUNTIME ERROR] Expected: '[5]', got: 'undefined'
+
+// FIXME: The imported parameter-to-result listener still belongs to the defining
+// resolver. Rebuilding a declared result works; importing this inferred flow does not.
+:fixme
+:expect 6
+class Item(val value: Int)
+GenericLibrary.inferred(Item(6)).value
+//│ ╔══[COMPILATION ERROR] This selection of member 'value' has no resolved target
+//│ ║  l.127: 	GenericLibrary.inferred(Item(6)).value
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ ═══[RUNTIME ERROR] Expected: '6', got: 'undefined'
+
+// FIXME: A callback reading a constructor field in a module initializer still
+// crosses incompatible lexical capture paths, before any consumer imports it.
+:fixme
+:expect [5]
+module Local with
+  class Known(val known: Int)
+  val mapped = [Known(4)].map((item, ...) => Known(item.known + 1))
+Local.mapped.map((item, ...) => item.known)
+//│ /!!!\ Uncaught error: java.lang.AssertionError: assertion failed: Entry and exit cross different lexical resolution scopes

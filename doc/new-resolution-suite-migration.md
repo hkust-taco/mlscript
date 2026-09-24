@@ -130,9 +130,27 @@ lexical boundary. Mutable arrays discard their initial element shapes and length
 because methods such as `push` and `reverse` can change both. Unknown layouts still
 permit indexed access with an unknown result, without authorizing arbitrary members.
 
-Array declarations remain deliberately incomplete: `map` and `concat` return
-`Array[Any]`; polymorphic method results and richer foreign signatures need further
-work. This does not infer result precision from an opaque annotation.
+Generic methods use the same marked parameter flow as generic free functions,
+including explicit arguments, callback-result inference, and curried signatures.
+`Array.map[U]` returns `Array[U]`. Declared callable shapes retain their type
+parameters; consumer inference for imported parameters uses resolver-local hosts
+instead of mutating shared declarations. Existing candidates on imported parameter
+symbols remain readable. `newres/GenericMethods.mls` covers both local and imported
+methods, and a compiler-cache regression checks that consumers leave the prelude
+parameter's candidates and listeners unchanged.
+
+This is not yet general import of an inferred flow graph. The same worksheet keeps
+explicit `:fixme` regressions for an exported mapped array whose argument lives in
+the defining resolver's local host, and an imported generic function with an
+inferred result dependent on its parameter. Both currently lose the result shape.
+Transporting those dependencies requires the pending listener/flow-graph design;
+copying only candidates is insufficient, and copied closures would still reference
+the defining resolver. A third regression records a capture assertion when a map
+callback reads a constructor field in a module initializer.
+
+Array declarations remain incomplete: `concat` returns `Array[Any]` because its
+rest arguments currently have no declared element constraint. This does not infer
+result precision from an opaque annotation.
 
 **Accepted policy:** JavaScript imports (including package imports), `globalThis`,
 and explicit dynamic selection/instantiation introduce `DynShape`. Ordinary
@@ -358,7 +376,7 @@ These changes also fix the sibling-subclass field-extraction regression in
    UPS cases. Keep fixed-point behavior tested independently from matcher code
    generation. Preserve the now-passing constructor-field context regressions.
 5. **Complete type/interface and call validation.** Preserve opaque annotations
-   and marked generic flow; finish generic validation, polymorphic imported methods,
+   and marked generic flow; finish generic validation, rest-parameter signatures,
    module checks, and the WASM migration. Keep cross-block method work coordinated externally.
 6. **Migrate shared compilation fixtures from leaves upward.** Begin with the
    four UPS fixtures; then application parsing data types, lexer, parser helpers,
@@ -371,10 +389,10 @@ These changes also fix the sibling-subclass field-extraction regression in
 
 ## Validation
 
-- `ctest`: all 46 selected compilation tests pass.
+- `ctest`: all 47 selected compilation tests pass.
 - `catest`: all 20 application compilation fixtures pass in their existing mode.
 - `cwtest`: the WASM compilation fixture passes.
-- `hkmc2AllTests/test`: all 943 tests pass, including 707 main tests, 18 application
+- `hkmc2AllTests/test`: all 946 tests pass, including 708 main tests, 18 application
   tests, and 22 WASM tests. The main count includes directory configurations and
   new-resolution regressions; it is not a count of migrated worksheets.
 - All retained ports have reviewed goldens. Deferred worksheets retain their

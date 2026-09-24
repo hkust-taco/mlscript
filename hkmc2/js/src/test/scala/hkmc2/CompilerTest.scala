@@ -271,6 +271,43 @@ class CompilerTest extends AnyFunSuite:
     assert(valueDefn.flatMap(_.inlinerBodySummary |> Option.apply).exists(_ is summary),
       "The second importer should reuse the published summary instead of replacing it")
   
+  test("generic method inference does not mutate shared prelude parameters"):
+    val fs = new InMemoryFileSystem(loadStandardLibrary())
+    given cctx: CompilerCtx = CompilerCtx.fresh(fs, paths, Config.default(io.Path("/")))
+    given DebugPrinter = new DebugPrinter
+    given TL = new TraceLogger:
+      override def doTrace = false
+    given Raise = diagnostic => fail(diagnostic.toString)
+    val prelude = cctx.getPrelude(paths.preludeFile).ctx
+    val map = prelude.builtins.Array.defn.get.body.members("map").asTrm.get.defn.get
+    val parameter = map.tparams.get.head.sym
+    val originalShapes = parameter.shapes.toVector
+    val originalListeners = parameter.shapeListeners.length
+
+    fs.write("/Generic.mls", """module Generic with
+                                 |  fun identity[A](x: A): A = x
+                                 |""".stripMargin)
+    fs.write("/First.mls", """#lang(0.3.x, strictResolution: true)
+                               |import "./Generic.mls"
+                               |class Item(val first: Int)
+                               |[0].map((x, ...) => Generic.identity(Item(1)))
+                               |  .map((x, ...) => x.first)
+                               |""".stripMargin)
+    fs.write("/Second.mls", """#lang(0.3.x, strictResolution: true)
+                                |import "./Generic.mls"
+                                |class Item(val second: Int)
+                                |[0].map((x, ...) => Generic.identity[Item](Item(2)))
+                                |  .map((x, ...) => x.second)
+                                |""".stripMargin)
+    val compiler = new MLsCompiler(_ => summon[Raise])
+    compiler.compileModule(Path("/First.mls"))
+    compiler.compileModule(Path("/Second.mls"))
+
+    assert(parameter.shapes.toVector == originalShapes,
+      "Consumer inference must not publish into the shared prelude parameter")
+    assert(parameter.shapeListeners.length == originalListeners,
+      "Consumer inference must not attach listeners to the shared prelude parameter")
+
   test("compiler can report errors"):
     val (fs, compiler) = createCompiler()
     

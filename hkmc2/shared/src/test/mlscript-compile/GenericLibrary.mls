@@ -1,0 +1,10 @@
+#lang(0.3.x, strictResolution: true)
+
+module GenericLibrary with
+  class Known(val known: Int)
+  fun identity[A](x: A): A = x
+  class Methods with
+    fun identity[A](x: A): A = x
+  val known = identity(Known(3))
+  val mapped = [Known(4)].map((item, ...) => Known(5))
+  fun inferred[A](x: A) = x

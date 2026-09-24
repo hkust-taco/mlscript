@@ -200,11 +200,7 @@ class NewResolver:
               case TypeShape.Parameter(symbol) => current.bindings.get(symbol) match
                 case S(bound) => follow(bound, Nil, aliases, publish)
                 case N =>
-                  def receive(shape: Shape): Unit = shape match
-                    case value: TermShape => publish(value)
-                    case _ => softAssert(false, "A type parameter received a symbolic overload set")
-                  symbol.shapeListeners += receive
-                  symbol.shapes.foreach(receive)
+                  listenTypeArgument(symbol)(publish)
               case TypeShape.Captured(base, thru) =>
                 follow(declaredType(base, current.bindings), args, aliases,
                   shape => publish(shape match
@@ -219,7 +215,7 @@ class NewResolver:
                   , fields.exists(!_.isInstanceOf[Fld]))
                   case single => DeclaredParams(S(declaredType(typeResolution(single), current.bindings)) :: Nil, false)
                 publish(CallableTypeShape(tpe.resolution.source, ps :: Nil,
-                  S(declaredType(ret, current.bindings))))
+                  S(declaredType(ret, current.bindings)), Nil))
               case TypeShape.Tuple(fields) =>
                 publish(TupleShape(current.resolution.source,
                   fields.map(field => TupleShape.TypedField(declaredType(field, current.bindings), Nil)))(this))
@@ -268,11 +264,14 @@ class NewResolver:
           selected(symbol)
           val td = symbol.defn.get
           def publish(shape: TermShape): Unit =
+            val generic = shape match
+              case callable: CallableTypeShape => callable.copy(tparams = td.tparams.toList.flatten.map(_.sym))
+              case _ => shape
             // A synthesized field's signature is in the constructor parameter's
             // scope. Written member signatures are in their own definition scope.
             val exited = td.tsym.decl match
-              case S(_: Param) => shape
-              case _ => MarkedShape.exit(shape, ResolutionBoundary(td.tsym), S(flow))
+              case S(_: Param) => generic
+              case _ => MarkedShape.exit(generic, ResolutionBoundary(td.tsym), S(flow))
             exited match
               case value: TermShape => listener(value)
               case NoShape => ()
@@ -293,7 +292,7 @@ class NewResolver:
             listenTypeValues(signature(td.sign.get))(publish)
           else if td.params.nonEmpty then
             publish(CallableTypeShape(source,
-              td.params.map(ps => DeclaredParams(ps.params.map(_.sign.map(signature)), ps.restParam.nonEmpty)), result))
+              td.params.map(ps => DeclaredParams(ps.params.map(_.sign.map(signature)), ps.restParam.nonEmpty)), result, Nil))
           else result match
             case S(tpe) => listenTypeValues(tpe)(publish)
             case N => publish(UnknownValueShape(source))
@@ -313,20 +312,49 @@ class NewResolver:
     * must not add a more precise implementation shape to the declared interface.
     */
   private val explicitTypeArguments = mutable.Set.empty[(VarSymbol, Ls[Marks])]
-  private def publishTypeArgument(symbol: VarSymbol, shape: TermShape | NoShape): Unit = shape match
+  // Imported declarations are shared between compilation units. Their inferred
+  // arguments belong to this resolver, not to the imported symbols' mutable hosts.
+  // Both hosts carry the same entry/exit marks used for locally defined functions.
+  private val importedTypeArguments = mutable.Map.empty[VarSymbol, TypeValues]
+  private def importedTypeArgument(symbol: VarSymbol): TypeValues =
+    importedTypeArguments.getOrElseUpdate(symbol, {
+      val host = new TypeValues
+      // Completed imports can already expose inferred arguments through exported
+      // values. Read those candidates without registering listeners on their host.
+      symbol.shapes.foreach:
+        case value: TermShape => host.publish(value)
+        case _ => softAssert(false, "A type parameter received a symbolic overload set")
+      host
+    })
+  private def listenTypeArgument(symbol: VarSymbol)(listener: TermShape => Unit): Unit =
+    if isOwnedSym(symbol) then
+      def receive(shape: Shape): Unit = shape match
+        case value: TermShape => listener(value)
+        case _ => softAssert(false, "A type parameter received a symbolic overload set")
+      symbol.shapeListeners += receive
+      symbol.shapes.foreach(receive)
+    else importedTypeArgument(symbol).listen(listener)
+
+  private def publishOwnedParameter(symbol: VarSymbol, shape: TermShape | NoShape): Unit = shape match
     case value: TermShape if isOwnedSym(symbol) =>
       if symbol.shapes.add(value) then symbol.notifyShapeListeners(value)
     case _ => ()
 
-  private def applyTypeArguments(defn: DefnShape, marks: Ls[Marks], args: Ls[Term], source: Term): Unit =
-    val params = defn.clsDef match
-      case S(cls) => cls.tparams.map(_.sym)
-      case N => defn.defn match
-        case td: TermDefinition => td.tparams.toList.flatten.map(_.sym)
-        case _ => Nil
+  private def publishTypeArgument(symbol: VarSymbol, shape: TermShape | NoShape): Unit = shape match
+    case value: TermShape if !isOwnedSym(symbol) => importedTypeArgument(symbol).publish(value)
+    case _ => publishOwnedParameter(symbol, shape)
+
+  private def applyTypeArguments(callee: DefnShape | CallableTypeShape, marks: Ls[Marks], args: Ls[Term], source: Term): Unit =
+    val params = callee match
+      case callable: CallableTypeShape => callable.tparams
+      case defn: DefnShape => defn.clsDef match
+        case S(cls) => cls.tparams.map(_.sym)
+        case N => defn.defn match
+          case td: TermDefinition => td.tparams.toList.flatten.map(_.sym)
+          case _ => Nil
     if params.length != args.length then
-      resolError(source, msg"${defn.describe.capitalize} expected ${params.length} type ${
-        "argument".pluralized(params.length)}, but got ${args.length}" -> defn.toLoc :: Nil)
+      resolError(source, msg"${callee.describe.capitalize} expected ${params.length} type ${
+        "argument".pluralized(params.length)}, but got ${args.length}" -> callee.toLoc :: Nil)
     params.zip(args).foreach: (param, arg) =>
       explicitTypeArguments += ((param, marks))
       listenTypeValues(arg): tpe =>
@@ -371,13 +399,10 @@ class NewResolver:
         case TypeShape.Nominal(cls) if args.nonEmpty =>
           val (head, context) = value.applicationHead
           def constrain(param: TyParam, pattern: DeclaredType): Unit =
-            def receive(shape: Shape): Unit = shape match
-              case shape: TermShape => shape.exit(context) match
+            listenTypeArgument(param.sym): shape =>
+              shape.exit(context) match
                 case actual: TermShape => inferTypeArguments(pattern, actual, marks)
                 case NoShape => ()
-              case _ => softAssert(false, "A type parameter received a symbolic overload set")
-            param.sym.shapeListeners += receive
-            param.sym.shapes.foreach(receive)
           def constrainNominal(nominal: NominalTypeShape): Unit =
             if nominal.defn is cls then cls.tparams.zip(args).foreach: (param, pattern) =>
               nominal.bindings.get(param.sym).foreach: bound =>
@@ -523,7 +548,7 @@ class NewResolver:
         val sign = p.sign.map(sign => declaredType(typeResolution(sign), Map.empty)).orElse(signatureParameters.get(p.sym))
         sign match
           case S(tpe) => inferTypeArguments(tpe, sh, marks)
-          case N => publishTypeArgument(p.sym, sh)
+          case N => publishOwnedParameter(p.sym, sh)
 
   private def zipArgumentShapes(mss: Ls[Marks], expectedCount: Int, hasRest: Bool,
       args: Term, src: Term, funSh: TermShape)(publish: (Int, TermShape | NoShape) => Unit): Unit =
@@ -1249,7 +1274,7 @@ class NewResolver:
     case TyApp(underlying, args) =>
       listen(underlying, discardMarks): shape =>
         def instantiate(value: TermShape): Unit = value.applicationHead match
-          case (ds: DefnShape, marks) => applyTypeArguments(ds, marks, args, trm)
+          case (callee: (DefnShape | CallableTypeShape), marks) => applyTypeArguments(callee, marks, args, trm)
           case _ => ()
         shape match
           case sym: SymShape => fromSymbol(sym, instantiate, underlying, _ => ())
