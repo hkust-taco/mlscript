@@ -1,0 +1,21 @@
+:js
+:noInline
+:flowBasedOpt debugDpe
+
+
+// an eliminated arg with effects is still evaluated
+:re
+:soir
+private fun f(a) = 0
+fun g(o) = f(o.x)
+g(null)
+//│ dead-param-elim > >>> dead-param-elim results >>>
+//│ dead-param-elim > prodfun f#0 @ <root> -> eliminable: {0}
+//│ dead-param-elim > <<< dead-param-elim results <<<
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ @private
+//│ define f⁰ as fun f¹() { return 0 };
+//│ define g⁰ as fun g¹(o) { do o.x﹖; return f¹() };
+//│ return g¹(null)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of null (reading 'x')

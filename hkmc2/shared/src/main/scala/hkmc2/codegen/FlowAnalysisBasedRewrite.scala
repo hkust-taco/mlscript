@@ -154,7 +154,8 @@ class FlowAnalysisBasedRewrite(
             case Nil =>
               k(if changed then accRev.reverse else args)
             case arg :: tl if eliminable(idx) =>
-              rec(tl, idx + 1, true, accRev)
+              if arg.value.isPure then rec(tl, idx + 1, true, accRev)
+              else applyPath(arg.value)(Assign.discard(_, rec(tl, idx + 1, true, accRev)))
             case arg :: tl =>
               applyArg(arg): arg2 =>
                 rec(tl, idx + 1, changed || !(arg2 is arg), arg2 :: accRev)

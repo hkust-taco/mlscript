@@ -81,9 +81,12 @@ fun f() =
 f()
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ define f² as fun f³() {
-//│   let take;
-//│   define take as fun take⁰() { return undefined };
-//│   do Box⁰(1);
+//│   let take, tmp;
+//│   define take as fun take⁰() {
+//│     return undefined
+//│   };
+//│   set tmp = Box⁰(1);
+//│   do (tmp as! Box¹);
 //│   do take⁰();
 //│   return 42
 //│ };
