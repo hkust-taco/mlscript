@@ -40,7 +40,9 @@ adding an ordinary bound, the agreed variance rules, and the proposal to instant
 declared type parameters once per definition and syntactic call site are documented
 in [Instance types and parameter constraints](new-resolution-type-value-flow.md).
 The description below records current generic inference, which still needs that
-constraint extension.
+constraint extension. In particular, the implementation still treats omitted
+generic arguments as unknown interfaces; the reviewed design makes them inference
+holes and retains live inference for the missing parts of a partial signature.
 
 Class bodies introduce lexical captures, and a class and its constructor share
 one resolution boundary. A method's reference to an outer constructor must include
@@ -78,6 +80,10 @@ Generic aliases and inherited declared interfaces substitute their arguments;
 declared member selections carry those contexts without reading implementation
 value flow. An unannotated member read through a declared interface produces an
 unknown shape, rather than consulting its initializer or method body.
+This is current behavior pending the reviewed partial-signature design: missing
+member types will use the selected declaration's contextual inference graph,
+while nominal annotations continue to restrict the visible member set. Override
+compatibility must be checked before exposing inferred dispatch results.
 Callback parameter types constrain implementation parameters, and callback results
 constrain inferred type arguments. `newres/DeclaredTypes.mls` covers these paths,
 separate signatures, tuple constraints, and distinct generic instantiations.

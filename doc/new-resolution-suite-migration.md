@@ -94,8 +94,11 @@ The inventory below separates these from compiler and prelude gaps.
   its update callback. Instance wrappers are in place; the
   [type-argument constraint proposal](new-resolution-type-value-flow.md) records
   the agreed variance rules and once-per-definition/call-site instantiation of
-  declared type parameters. Review its integration with marks and partial
-  signatures before implementing both input and output constraints for `Array[A]`;
+  declared type parameters. Its design review specifies contextual views with
+  marks, partial signatures, and inference holes for omitted generic arguments.
+  Selected members also infer missing types through nominal annotations, with
+  receiver contexts and override constraints preserved.
+  Implement both input and output constraints for `Array[A]` together;
   `appendTyped` and the recursive cases in `newres/MutableArrays.mls` record the
   missing propagation and required isolation between callers. Member-variable
   definitions still need work. Handler inference needs separate flows for the receiver, values

@@ -6,10 +6,12 @@ nominal-only representation at annotation boundaries: parameter and result
 annotations, ascriptions, generic arguments, and annotated tuple fields retain
 a type reference until an operation requests its interface.
 
-The wrapper refactor is implemented. Instantiation of declared type parameters
-once per definition and call site is the agreed direction. The integration with
-marks and type constraints proposed below needs review before implementation;
-bidirectional constraints and variance are also still pending.
+The wrapper refactor is implemented. The design below specifies the next
+implementation: finite instantiation of explicit binders, contextual views of
+partial signatures, inference for explicit and omitted holes, and bidirectional
+constraints with variance. These changes are not implemented yet. The representation
+and implementation order below are the outcome of the design review, not evidence
+that the recursive acceptance cases already work.
 See the [resolver notes](new-resolution-design.md)
 for current behavior and the [migration worklist](new-resolution-suite-migration.md)
 for remaining ports.
@@ -143,12 +145,9 @@ admits only the input connection. Substitution into member types must select the
 appropriate part at each polarity, including nested arrows. Copy InvalML's
 variance semantics, not its fresh inference-variable implementation.
 
-## Why two independent candidate-copying edges are insufficient
+## Recursive acceptance example
 
-An experimental implementation made `appendTyped` propagate elements into an
-initially empty mutable array and passed the existing declaration worksheets.
-However, this recursive example exposed an activation-correlation failure.
-It is retained as a `:fixme` regression in
+This example is retained as a `:fixme` regression in
 [`newres/MutableArrays.mls`](../hkmc2/shared/src/test/mlscript/newres/MutableArrays.mls)
 (the recursive `append` block, immediately after `appendTyped`):
 
@@ -161,37 +160,16 @@ append(xs, Item(5), 2)
 xs.0.value
 ```
 
-The experiment reported an unknown element type originating from the generic
-body's abstract activation of `A`. That candidate must remain confined to that
-abstract activation. The experimental bound-copying implementation is not part
-of the retained compiler changes. On the committed resolver, the regression
-currently fails earlier: `xs.0.value` has no resolved target because generic
-array input propagation is still missing. Its expected result is `5`; the
-current golden output does not reproduce the discarded prototype's unknown-type
-diagnostic.
+The committed resolver cannot resolve `xs.0.value` because generic array input
+propagation is missing. Its expected result is `5`. A discarded implementation
+using two independent candidate-copying edges reached a different failure:
+transporting an expanded abstract candidate through a wildcard capture and back
+lost its original activation, letting it contaminate a real caller. The retained
+golden output does not reproduce that prototype's diagnostic. Both failures
+motivate the acceptance case: preserve type references and their contexts before
+observation, rather than trying to recover them from expanded candidates.
 
-The failure comes from independently applying an existing capture path and its
-reverse to already expanded candidates. Write `enter(f, s)` and `exit(f, s)` for
-marks at function `f` and site `s`, and `*` for a capture that matches any site.
-A candidate starting at `enter(f, abstract)` can travel as follows:
-
-```text
-forward:
-  enter(f, abstract) -- exit(f, *) --> no mark
-                    -- enter(f, recursiveCall) --> enter(f, recursiveCall)
-
-independent reverse:
-  enter(f, recursiveCall) -- exit(f, recursiveCall) --> no mark
-                         -- enter(f, *) --> enter(f, *)
-```
-
-The reverse traversal has forgotten `abstract`. Its wildcard can then match a
-real caller's exit. This demonstrates loss in the candidate-copying approach;
-it does not establish that the existing mark representation itself is inadequate.
-Discarding the abstract candidate, suppressing reverse propagation for recursion,
-or truncating paths would conceal the loss rather than preserve the constraint.
-
-## Proposed integration with the resolver
+## Resolver integration
 
 For the recursive example above there are three relevant versions of `A`:
 
@@ -208,10 +186,10 @@ must keep the two external contexts distinct. The original abstract candidate of
 `A_body` must not be copied into the call instances: instantiate the declared
 constraints, not the generic body's accumulated unknown-value candidates.
 
-This replaces the earlier proposal to retain wildcard matches across paired
-candidate-copying edges. It does not yet demonstrate that the recursive example
-works: the compiler still needs consistent substitution of the call instances
-through deferred type observations and body-result flow.
+Use constraints over these references, rather than restoring wildcard matches
+after copying expanded candidates. The argument endpoint retains its caller's
+substitution and context; the parameter endpoint uses the callee site's instances.
+An application must not overwrite both endpoints with the callee substitution.
 
 ### Definition and application identities
 
@@ -231,7 +209,10 @@ case with different element interfaces.
 
 For construction, use `Term.New.resSym` and canonicalize the constructor and
 class to the same original owner. For an anonymous polymorphic annotation, the
-proposed owner is its original quantified declaration node. Neither imported
+owner is its original quantified declaration node. An overload resolving to more
+than one definition instantiates each original definition at that site. Where
+the language implicitly invokes a getter, its source reference/selection is the
+invocation site; it is not a fresh site per resolver visit. Neither imported
 views nor instantiated callable views should manufacture a new original owner.
 
 ### Binder substitution before observation
@@ -254,7 +235,79 @@ annotated value until after the call. Carry the same substitution through those
 deferred observations. Keep generic-body checking on the original abstract
 activation; do not mutate the body or unconditionally connect its inference host
 to each call instance. The representation of these substituted body-result views
-is the main integration question to resolve before implementation.
+is described below.
+
+### Shared graph and contextual views
+
+Retain one source graph per definition. Its nodes describe written type structure,
+references to binders, and inferred flows from parameters, expressions, and holes.
+Give references to that graph an explicit view consisting of:
+
+```text
+source node + originating inference host
+substitution of this node's free explicit binders
+existing normalized marks
+```
+
+The binder substitution selects original binders or memoized call-site instances.
+It is a flat mapping over the source node's free binders, not a stack of past
+substitutions. Keep compound supplied types as graph references connected by
+constraints; do not insert their successive expansions into the substitution.
+Alias and nominal argument bindings likewise retain references to argument nodes,
+with recursive bindings represented by back-edges rather than nested map copies.
+This requires replacing the recursive structural use of `DeclaredType.bindings`
+where it would otherwise grow a new environment on every recursive visit.
+
+Memoize each view before observing its source node. Observing an inferred flow
+subscribes to its existing host in the consuming resolver and applies the view
+to arriving references. Observing a compound value exposes its outer shape while
+giving its deferred children the corresponding view. This applies to tuple and
+record fields, callable results, nested annotations, and closure captures; merely
+rewriting the outer `InstanceShape` is insufficient. Compose views by replacing
+bindings for the callee's own binders and retaining lexical captures, then discard
+bindings unused by the observed source node. Do not wrap a view in another view.
+
+For `pair[A](x: A, y) = [x, y]`, the result's first field observes the annotation
+node under `A -> A_s`; the second subscribes to `y` under the call's marks. A
+closure returning `x` keeps the first reference after the enclosing call returns.
+The body, field nodes, and `y` symbol are shared; only their views differ.
+
+Generic-body checking observes the source graph with its original abstract
+binders. Call inference observes it with the site's substitution. The abstract
+unknown produced to check operations on a rigid binder is a checking witness,
+not a lower bound to copy into the instantiated graph. Preserve the existing
+diagnostics for operations unsupported by `A`; do not suppress all unknown
+values or remove ordinary exposure-checking constraints. Keep the symbolic
+binder dependency until an observer has chosen its view. In particular,
+`registerTypeParameters` cannot keep seeding a host whose expanded candidates are
+then blindly reused as a call's inferred result.
+
+### Constraints and marks
+
+Memoize a directed constraint by its two contextual type references, including
+their originating hosts. Keep three operations distinct:
+
+- An ordinary instance contributes a lower-bound obligation to its expected type.
+- Supplying a type reference retains that reference and delivers lower and upper
+  obligations to it, including obligations that arrive later.
+- Comparing compound types follows their structure and argument variance, using
+  the same contextual references at every recursive step.
+
+Register listeners before replaying existing facts. Adding either a bound or a
+supplied type must process the other facts already present, so event order does
+not matter. For invariant arguments, install both directed constraints between
+the retained endpoints; do not obtain the second by reversing a path already
+applied to expanded candidates. Preserve a supplied union as a whole in negative
+position. Deduplicate relations and delivered obligations by semantic references,
+not by diagnostic witnesses.
+
+Existing marks still transport instance flow through lexical scopes and distinguish
+enclosing activations sharing a static inner call. Apply their current entry/exit
+operations to each endpoint in its own view. A callee's symbol allocation key
+does not include marks, and a caller's view is not replaced by a wildcard when
+forming the reverse constraint. The proposal adds no mark syntax, path truncation,
+or cloned lexical boundaries. Enable the existing path invariants in focused
+solver tests to catch a mistaken context composition rather than masking it.
 
 ### Partial signatures and inference holes
 
@@ -296,8 +349,11 @@ For schematic `Array[?]`, retain the declared `Array` structure and connect its
 element position to the hole's inferred flow. Reuse the source hole's node across
 visits and distinguish contexts with marks. No call-site symbol copy is allocated
 for the hole. Constraints follow the position's input/output polarity as usual.
-If no useful shape reaches a hole, it supplies no member interface; it does not
-grant dynamic access.
+An empty hole is pending inference, not an `UnknownValueShape` candidate to emit
+immediately: later evidence may resolve it. At completion, a hole without usable
+evidence supplies no member interface and does not grant dynamic access. An
+unknown alternative actually contributed by exposure checking is different and
+must remain even if some concrete candidates arrive too.
 
 An inference hole must be distinguishable from an intentionally abstract type,
 an `in`/`out` wildcard, and an unresolved or invalid annotation. These must not
@@ -305,12 +361,28 @@ all collapse to `TypeShape.Abstract`, which the current interpreter uses for
 several unsupported forms. Inferring one missing piece must not add members to
 an explicitly written concrete interface elsewhere in the annotation.
 
-Whether omitted generic arguments also denote inferable holes is still a design
-question. Current `DeclaredTypes.mls` tests treat missing arguments in annotations
-such as `Pair[Int]` for `Pair[A, B]` as unknown interfaces. Similarly, an unknown
-member type exposed through a nominal annotation is not automatically an
-inference hole. Preserve those distinctions until their intended behavior is
-decided; the agreement about explicit holes alone does not resolve them.
+**Omitted generic arguments are inference holes too.** For `Pair[A, B]`, a written
+`Pair[Int]` supplies `Int` for `A` and a hole for `B`; bare `Pair` has two distinct
+holes. Identify each omission by its source type-use occurrence and missing formal
+parameter. Two occurrences do not share a hole just because they name the same
+class. Reinterpreting an occurrence, following an alias, or observing another
+member reuses its contextual hole reference. Apply declaration-site variance to
+the missing argument just as to an unqualified written argument. Explicit
+`in`/`out` arguments retain their stated defaults; their absent parts are not holes.
+
+For `type HalfPair[T] = Pair[Int, T]`, a bare `HalfPair` introduces a hole for
+`T` at that use, and the alias body forwards that reference into `Pair`'s second
+argument. An omission written inside an alias body has its own source node and
+is transported with the alias use's context; expansion must not allocate more
+hole symbols. Excess arguments still indicate an arity error.
+
+The positive `Pair[Int]`, `HalfPair`, and bare `Array` cases in
+`newres/PartialSignatures.mls` record this missing behavior as `:fixme`s. Existing
+`DeclaredTypes.mls` examples selecting members from omitted arguments without any
+supporting flow remain negative tests: a hole is inferable, not evidence of an
+arbitrary member. Replace the current unconditional `abstractType` treatment of
+omissions; report insufficient inferred information when a genuinely unfilled
+hole is observed.
 
 The scheme therefore cannot be a closed type synthesized from whatever shapes
 happen to be available first. It must retain live links to inferred portions of
@@ -318,15 +390,57 @@ the definition, including bounds arriving later or through recursion. Existing
 exposure checks for unannotated parameters and generic-body checking still apply;
 partial annotations must not silently disable either.
 
+### Inferred member signatures through nominal annotations
+
+The agreed partial-signature semantics also apply to a selected member's missing
+types through a nominal annotation. For example:
+
+```mlscript
+class Item(val value: Int)
+class Box with
+  fun item() = Item(1)
+private fun read(x: Box) = x.item().value
+read(new Box)
+```
+
+Use `Box.item`'s inferred result here, consistently with partial function
+signatures. Missing parameter types, constructor-field types, and value-member
+types likewise link to the selected declaration's inference graph. Keep the
+receiver's context on those links; using the class's unmarked global inference
+would mix distinct instances. A nominal constraint must retain the actual
+receiver's contextual flow as an input to these missing member types. The current
+wrapper containing only a closed declared interface cannot recover an unannotated
+constructor field after that receiver flow has been discarded. Keep the receiver
+reference on the inferred member connection, while using the written nominal
+type for lookup; do not replace the annotation's view with the actual receiver's
+whole shape. Explicitly annotated member portions still use their written types.
+Class-qualified selections and overloaded names
+use the selected member's own scheme, including the term alternative of an
+overloaded name. The corresponding examples in `DeclaredTypes.mls` are now
+`:fixme` acceptance cases instead of requirements to reject inference.
+
+The nominal member set stays fixed: a `Base` annotation must not expose members
+found only on `Child`. Overrides must satisfy the selected declaration's input/output
+constraints. It is insufficient to assume that the base method's body describes
+every dynamic dispatch result. In particular, a base method returning `Item` and
+an override returning a type without `Item`'s members cannot justify selecting
+those members from the dispatched result. `PartialSignatures.mls` retains this
+negative regression. Connect override signatures to the inherited interface
+before completing member targets, following function input/output variance;
+do not expose an unchecked base implementation shape as a dispatch guarantee.
+Preserve the existing member-target completion checks for imported code as well.
+
 ### Partial application and explicit specialization
 
-For curried calls, the proposed rule is to instantiate when the first parameter
+For curried calls, instantiate when the first parameter
 list is consumed and retain that substitution in the partially applied callable.
 Later lists reuse it. A separately quantified returned callable has its own
 binders to instantiate at its later application. A standalone specialization such
-as `let g = f[Int]` can retain its supplied type arguments until application;
+as `let g = f[Int]` retains its supplied type arguments until application;
 each application of `g` then binds its own site instances to `Int`. This avoids
-introducing a second allocation policy at type-application nodes.
+introducing a second allocation policy at type-application nodes. Check argument
+arity against the retained scheme immediately, and allow observations of the
+specialized interface to use its supplied type references before a term call.
 
 ### Constraint propagation and implementation order
 
@@ -334,10 +448,12 @@ introducing a second allocation policy at type-application nodes.
    including links to inferred portions. Distinguish inference holes from
    intentionally abstract types and variance wildcards. Add a
    consumer-owned cache of complete call-site instances, with origin links back
-   to the declared binders. Do not add mutable caches to symbols.
+   to the declared binders. Keep omissions source-owned; do not add mutable caches
+   to symbols. Preserve `Forall` binders and their bounds instead of erasing them.
 2. Transport the memoized substitution through callable and result views before
    expanding instance wrappers. Keep the existing marks for value flow and
-   lexical captures. Verify the abstract generic-body candidate stays isolated.
+   lexical captures. Separate generic-body checking witnesses from the symbolic
+   constraints replayed in a call view. Verify delayed fields and returned closures.
 3. Relate the resulting type references in both input and output positions,
    retaining their hosts, substitutions, and marks. Ordinary arguments contribute
    bounds; supplied types receive all obligations at their applicable polarity.
@@ -345,15 +461,48 @@ introducing a second allocation policy at type-application nodes.
 4. Replace `applyTypeArguments`, nominal inference, explicit-argument suppression,
    and the positive-only conversion in `instanceBindings` together. Reuse the
    same mechanism for functions, constructors, and declared array interfaces.
+5. Route declared member lookup to partial member schemes, retaining receiver
+   contexts for inferred fields and results. Check override compatibility before
+   completing member targets. Convert the member-inference `:fixme`s together;
+   keep tests rejecting subclass-only members and unsupported override results.
+
+Keep this work inside resolution and type interpretation. Lowering still consumes
+completed member targets and value shapes; runtime values acquire no type-argument
+objects. The main source changes are in `TypeShape.scala` (schemes and contextual
+references), `NewResolverState.scala` (consumer-owned memo tables),
+`NewResolver.scala` (view observation and constraint delivery), and `Shape.scala`
+(transporting views through deferred children). Elaborator signature registration
+must preserve binders and missing positions before the body is observed.
+
+### Fixed points and implementation checks
 
 There are at most as many allocated parameter instances as the sum of each
-reachable definition's binder count over its syntactic call sites. This bounds
-symbol allocation, not every possible implementation of the solver. Recursive
-constraints must return to shared nodes and deduplicated relations; expanding
-substitution environments or nested types afresh could still fail to terminate.
-Demonstrate fixed points with recursive and mutually recursive calls before
-landing the propagation changes. Any needed change to mark normalization or to
-the context domain must be proposed separately.
+reachable definition's binder count over its syntactic call sites. Source hole
+nodes and written type/term nodes are finite independently of recursive visits.
+View substitutions range over the finite original and instantiated binders in
+lexical scope. With the existing no-repeated-boundary mark invariant, their
+normalized contexts also range over a finite domain. These facts bound the set
+of memoized views and endpoint pairs **provided** compound arguments remain shared
+graph edges and no cache key includes a growing substitution or capture history.
+Monotone, deduplicated propagation then reaches a fixed point.
+
+Check this at the graph layer as well as with worksheets. Replaying an existing
+definition/site must leave the instance count unchanged; replaying the same view
+or relation must add neither a listener nor a node. Include mutually recursive
+definitions and changing arguments such as a recursive call with `Array[A]`:
+the recursive site's parameter must receive a cyclic reference to the source
+`Array[A]` expression, not generate `Array[Array[...]]` nodes on every pass.
+Verify obligations delivered before and after edge creation, and two callers of
+one inner site with different enclosing marks. Count cache growth until saturation;
+passing a shallow recursion test is not sufficient evidence of termination.
+
+During implementation, assert that a call instance's origin is an original binder,
+all of one scheme's binders are allocated before its constraints are activated,
+views are composed rather than nested, and generic checking witnesses never become
+ordinary instantiated lower bounds. Retain consumer-private host copies and the
+existing prohibition on changing completed member targets. The design review does
+not license changing mark normalization if these checks fail; any such change
+requires a separate concrete example and proposal.
 
 ## Acceptance checks
 
@@ -370,6 +519,10 @@ the context domain must be proposed separately.
   tuple and callback cases in `newres/PartialSignatures.mls`. Nested inference
   holes retain written structure and use marked inference without extra
   call-site symbols; known annotation fragments still restrict the interface.
+- Selected members infer missing types through nominal annotations, including
+  constructor fields, method results, and overloaded value members. Receiver
+  contexts remain distinct; subclass-only members and unsafe override results
+  remain rejected. Deferred closure observations preserve the outer substitution.
 - Recursive input/output relations terminate with bounded call-site instances,
   no repeated-boundary paths, and no unbounded binding-environment construction.
 - Declaration-site `in`/`out`, use-site `in`/`out`, their overrides, and nested

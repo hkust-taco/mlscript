@@ -20,3 +20,107 @@ class Second(val second: Int)
 private fun apply[A](x: A, f) = f(x)
 [apply(First(5), x => x.first), apply(Second(6), x => x.second)]
 //│ = [5, 6]
+
+// TODO: an omitted trailing type argument is a hole inferred from each caller.
+// The written Int argument and the Pair interface remain in place.
+:fixme
+:expect [1, 2]
+class First(val first: Int)
+class Second(val second: Int)
+class Pair[A, B](val value: [A, B])
+private fun second(pair: Pair[Int]) = pair.value.1
+[second(Pair([0, First(1)])).first, second(Pair([0, Second(2)])).second]
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.32: 	[second(Pair([0, First(1)])).first, second(Pair([0, Second(2)])).second]
+//│ ║        	 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Cannot resolve member 'first' of a value with unknown shape.
+//│ ╟── Type argument 'B' is omitted in this annotation, so its shape is unknown.
+//│ ║  l.31: 	private fun second(pair: Pair[Int]) = pair.value.1
+//│ ╙──      	                         ^^^^
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.32: 	[second(Pair([0, First(1)])).first, second(Pair([0, Second(2)])).second]
+//│ ║        	                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Cannot resolve member 'second' of a value with unknown shape.
+//│ ╟── Type argument 'B' is omitted in this annotation, so its shape is unknown.
+//│ ║  l.31: 	private fun second(pair: Pair[Int]) = pair.value.1
+//│ ╙──      	                         ^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ ═══[RUNTIME ERROR] Expected: '[1, 2]', got: 'undefined'
+
+// TODO: bare alias uses infer their omitted argument without losing the alias body.
+:fixme
+:expect [3, 4]
+class First(val first: Int)
+class Second(val second: Int)
+class Pair[A, B](val value: [A, B])
+type HalfPair[T] = Pair[Int, T]
+private fun second(pair: HalfPair) = pair.value.1
+[second(Pair([0, First(3)])).first, second(Pair([0, Second(4)])).second]
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.58: 	[second(Pair([0, First(3)])).first, second(Pair([0, Second(4)])).second]
+//│ ║        	 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Cannot resolve member 'first' of a value with unknown shape.
+//│ ╟── Type argument 'T' is omitted in this annotation, so its shape is unknown.
+//│ ║  l.57: 	private fun second(pair: HalfPair) = pair.value.1
+//│ ╙──      	                         ^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.58: 	[second(Pair([0, First(3)])).first, second(Pair([0, Second(4)])).second]
+//│ ║        	                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Cannot resolve member 'second' of a value with unknown shape.
+//│ ╟── Type argument 'T' is omitted in this annotation, so its shape is unknown.
+//│ ║  l.57: 	private fun second(pair: HalfPair) = pair.value.1
+//│ ╙──      	                         ^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ ═══[RUNTIME ERROR] Expected: '[3, 4]', got: 'undefined'
+
+// TODO: a bare Array annotation has an inferred element hole in both positions.
+// This case has no declared type binder to instantiate at either call.
+:fixme
+:expect [5, 6]
+class First(val first: Int)
+class Second(val second: Int)
+private fun append(xs: Array, value) = xs.push(value)
+let xs = mut []
+let ys = mut []
+append(xs, First(5))
+append(ys, Second(6))
+[xs.0.first, ys.0.second]
+//│ ╔══[COMPILATION ERROR] This selection of member 'first' has no resolved target
+//│ ║  l.87: 	[xs.0.first, ys.0.second]
+//│ ╙──      	 ^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ ═══[RUNTIME ERROR] Expected: '[5, 6]', got: 'undefined'
+//│ xs = [First(5)]
+//│ ys = [Second(6)]
+
+// A returned closure observes annotated and inferred fields after the outer call.
+:expect [7, 8, 9, 10]
+class First(val first: Int)
+class Second(val second: Int)
+private fun delayed[A](x: A, y) = () => [x, y]
+let left = delayed(First(7), Second(8))
+let right = delayed(Second(9), First(10))
+[left().0.first, left().1.second, right().0.second, right().1.first]
+//│ = [7, 8, 9, 10]
+//│ left = fun
+//│ right = fun
+
+// Inferring a base member's result must not assume every override returns that shape.
+// Either an incompatible override or the unsupported selection must be rejected.
+:ge
+class Item(val value: Int)
+class Other(val other: Int)
+class Base with
+  fun item() = Item(1)
+class Child extends Base with
+  fun item() = Other(2)
+private fun read(x: Base) = x.item().value
+read(new Child)
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.117: 	private fun read(x: Base) = x.item().value
+//│ ║         	                            ^^^^^^^^^^^^^^
+//│ ╟── Cannot resolve member 'value' of a value with unknown shape.
+//│ ╟── The shape of this value is unknown.
+//│ ║  l.117: 	private fun read(x: Base) = x.item().value
+//│ ╙──       	                            ^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
