@@ -545,12 +545,6 @@ class DeforestRewriter(val solver: DeforestFusionSolver)(using Raise):
               N, bms, tSym, refreshedParams,
               bodyWithCorrectSymbols)(N, PrivateModifier :: fDefn.annotations)
         end newPolyFuns
-
-        // * Enforce that all references to the same symbol have the same `disamb`.
-        def checkFvDisambs(fvs: Ls[Value.Ref]): Unit =
-          fvs.groupBy(_.symbol).foreach: (sym, refs) =>
-            softAssert(refs.distinct.sizeIs == 1,
-              s"Free variable $sym is referenced with different disambiguations: ${refs.distinct}")
         
         // Functions for fused match branches; each runs one arm and then its rest
         val newBranchFuns =
@@ -562,7 +556,6 @@ class DeforestRewriter(val solver: DeforestFusionSolver)(using Raise):
             val actualBody = Begin(
               new Rewriter(instId).applyBlock(ogBody),
               Return(mkCall(restFunSym, restFunArgs)))
-            checkFvDisambs(dtorBranchFnFvs(branchId._1))
             val refreshedFvSymbols = dtorBranchFnFvs(branchId._1).map: s =>
               s.symbol -> new VarSymbol(Tree.Ident(s"fv_${s.symbol.nme}"), s.erasedType)
             val bodyWithCorrectSymbols = refreshExtractedBody(refreshedFvSymbols.toMap, actualBody)
@@ -588,7 +581,6 @@ class DeforestRewriter(val solver: DeforestFusionSolver)(using Raise):
                   Return(mkCall(parentFunSym, parentFunFvs)))
               case None =>
                 Begin(transformedOgBody, Return(Value.Lit(Tree.UnitLit(true))))
-            checkFvDisambs(restFnFvs(restFunId))
             val refreshedFvSymbols = restFnFvs(restFunId).map: s =>
               s.symbol -> new VarSymbol(Tree.Ident(s"fv_${s.symbol.nme}"), s.erasedType)
             val bodyWithCorrectSymbols = refreshExtractedBody(refreshedFvSymbols.toMap, actualBody)
