@@ -517,6 +517,10 @@ data class Some[T](value: T) extends Option[T]
 object None extends Option[Nothing]
 ```
 
+Under new resolution, classes, objects, and modules without an explicit parent
+inherit Object's declared member interface. Explicit parents and members declared
+on the receiver take precedence.
+
 ### Class with Multiple Parameter Lists
 
 ```mlscript
@@ -673,6 +677,11 @@ f(a: 0)              // calls f({a: 0})
 f of a: 0, b: 1      // calls f({a: 0, b: 1})
 ```
 
+With positional and named arguments mixed, positional values are followed by
+one record containing the named fields. Expressions still evaluate in source
+order, and later occurrences of a named field overwrite earlier ones.
+Here `a: expression` is a field value, not a type annotation.
+
 ---
 
 ## 10. Arrays
@@ -711,6 +720,13 @@ fun f(...xs) = xs        // xs is an array
 fun g(x, ...rest) = rest
 f(1, 2, 3)               // xs = [1, 2, 3]
 ```
+
+Under new resolution, an annotation on a rest parameter describes the whole rest
+array. Tuple values support precise zero-based projections such as `xs.0` and
+inherit the declared Array interface. Mutable arrays do not retain their initial
+length or precise element shapes after mutation. Array callbacks such as `map`
+receive the element, index, and array; their declared function interfaces must
+account for these arguments, for example with unused or rest parameters.
 
 ---
 
@@ -1271,6 +1287,48 @@ let x: Int = 42
 fun f(x: Int): Str = String(x)
 val v: Option[Int] = Some(1)
 ```
+
+### Resolution Interfaces
+
+With new resolution (`#lang(0.3.x)`), annotations determine the interface available
+to member lookup and calls. A receiver annotated `Base` exposes Base's declared
+members and preserves virtual dispatch; concrete arguments cannot add subclass
+members to that interface. The same rule applies to parameters, result annotations,
+separate signatures, and constructor fields. Reading an unannotated member through
+an annotated interface does not infer its shape from its initializer or method body.
+Structural record annotations likewise expose only their declared fields.
+
+Compilation files check that their exposed functions and values work for inputs
+admitted by their interfaces. A public `fun read(x) = x.a` needs an interface for
+`x` even if local callers all provide `{a: 1}`. A private helper can use local
+inference, but returning it or storing it in an exposed record or tuple makes its
+interface subject to the same check. Callable result annotations provide the
+declared parameter interface when checking returned functions.
+
+Worksheet blocks perform this exposed-interface check only under
+`#lang(strictResolution: true)`. Non-strict resolution allows multiple selection
+or call targets, but still rejects missing targets and known invalid operations.
+
+Generic parameters remain opaque regardless of strict mode, visibility, or local
+callers. For example, `private fun read[A](x: A) = x.a` is invalid because `A`
+does not supply member `a`, even when every call supplies a record with that field.
+Explicit and inferred type arguments still substitute into result interfaces:
+an identity function with parameter and result type `A` preserves its caller's type.
+
+### Dynamic Values
+
+JavaScript imports (including package imports), `globalThis`, and explicit dynamic
+selection or instantiation introduce dynamic values. Ordinary selections and
+calls on those values are checked at runtime and produce dynamic values.
+Use `value as dyn` for an explicit dynamic result or `fun useValue(x: dyn)`
+for a dynamic parameter. Type aliases can also denote `dyn`; dynamic construction
+uses `new!`.
+
+These rules apply in both strict and non-strict resolution. A value whose interface
+is unknown is not automatically dynamic. If inference includes both a dynamic
+candidate and a known candidate with an invalid operation, the known error is
+still reported. Dynamic values also do not remove the need for an unambiguous
+class or type identity in constructor patterns, class projections, or type references.
 
 ### Generic Type Parameters
 
