@@ -261,7 +261,7 @@ enum MemberLookup:
   case Found(member: BlockMemberSymbol | RecordMember, marks: Ls[Marks])
   // Declared members expose signatures only. Their marks transport dependent
   // type arguments; they never authorize reading an implementation's value flow.
-  case Declared(member: BlockMemberSymbol, bindings: Map[VarSymbol, DeclaredType], marks: Ls[Marks])
+  case Declared(member: BlockMemberSymbol, bindings: Map[VarSymbol, DeclaredType], marks: Ls[Marks], annotation: Opt[Term])
   case Indexed(field: TupleShape.Fixed, marks: Ls[Marks])
   case Dynamic(marks: Ls[Marks])
   case Missing
@@ -269,9 +269,14 @@ enum MemberLookup:
   
   def withMarks(marks: Ls[Marks]): MemberLookup = this match
     case Found(member, inner) => Found(member, inner ::: marks)
-    case Declared(member, bindings, inner) => Declared(member, bindings, inner ::: marks)
+    case Declared(member, bindings, inner, annotation) => Declared(member, bindings, inner ::: marks, annotation)
     case Indexed(field, inner) => Indexed(field, inner ::: marks)
     case Dynamic(inner) => Dynamic(inner ::: marks)
+    case _ => this
+
+  /** The receiver's annotation remains the diagnostic origin when lookup visits a parent. */
+  def withAnnotation(annotation: Opt[Term]): MemberLookup = this match
+    case Declared(member, bindings, marks, _) => Declared(member, bindings, marks, annotation)
     case _ => this
 
 object MemberLookup:
@@ -339,7 +344,7 @@ class SymShape(val sym: BlockMemberSymbol, val resSym: FlowSymbol, val markss: L
   * type, and constructor interpretations of the same overload set.
   */
 final class DeclaredSymShape(symbol: BlockMemberSymbol, site: FlowSymbol, marks: Ls[Marks],
-    val bindings: Map[VarSymbol, DeclaredType]) extends SymShape(symbol, site, marks)
+    val bindings: Map[VarSymbol, DeclaredType], val annotation: Opt[Term]) extends SymShape(symbol, site, marks)
 
 /* 
 class ThisShape(val defn: Definition) extends NonAppTermShape:
@@ -359,9 +364,11 @@ class BaseShape(val defn: ClassLikeDef, val ext: Opt[TermShape]) extends NonAppT
 
 /** A nominal annotation exposes only declarations, including inherited declarations.
   * In particular, selecting an unannotated field does not inspect its initializer.
+  * The annotation is a diagnostic witness, excluded from shape equality; synthesized
+  * interfaces such as a tuple's Array parent have no written annotation.
   */
 final case class NominalTypeShape(defn: ClassLikeDef, bindings: Map[VarSymbol, DeclaredType],
-    parent: Opt[TermShape]) extends NonAppTermShape:
+    parent: Opt[TermShape])(val annotation: Opt[Term]) extends NonAppTermShape:
   def describe: Str = s"value of type '${defn.sym.nme}'"
   def toLoc: Opt[Loc] = defn.toLoc
   override def isInstanceOfClass(cls: ClassLikeDef)(using NewResolverState): Bool =
@@ -373,8 +380,8 @@ final case class NominalTypeShape(defn: ClassLikeDef, bindings: Map[VarSymbol, D
       case _ => N
   protected def getMemberImpl(name: Str)(using NewResolverState): MemberLookup =
     defn.body.members.get(name) match
-      case S(member) => MemberLookup.Declared(member, bindings, Nil)
-      case N => parent.fold[MemberLookup](MemberLookup.Missing)(_.getMember(name))
+      case S(member) => MemberLookup.Declared(member, bindings, Nil, annotation)
+      case N => parent.fold[MemberLookup](MemberLookup.Missing)(_.getMember(name)).withAnnotation(annotation)
 
 /** Parameter types and arity exposed by one list in a declared calling interface. */
 final case class DeclaredParams(params: Ls[Opt[DeclaredType]], hasRest: Bool)
@@ -600,7 +607,7 @@ final case class RecordShape(source: Term.Rcd, elements: Ls[RecordShape.Element]
         case Missing => loop(rest)
         case Found(member: RecordMember, inner) =>
           Found(member.copy(mutable = member.mutable || source.mut), inner ::: marks :: Nil)
-        case Found(_: BlockMemberSymbol, _) | Declared(_, _, _) | Indexed(_, _) =>
+        case Found(_: BlockMemberSymbol, _) | Declared(_, _, _, _) | Indexed(_, _) =>
           // Record spreads recursively look up RecordShapes, which only create RecordMembers.
           lastWords("Record lookup returned a nominal member")
     loop(elements.reverse)

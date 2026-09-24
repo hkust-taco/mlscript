@@ -205,6 +205,9 @@ foo({a: 1})
 //│ ║  l.202: 	fun foo[A](x: A) = x.a
 //│ ║         	                   ^^^
 //│ ╟── Cannot resolve member 'a' of a value with unknown shape.
+//│ ╟── This type annotation supplies the value's shape.
+//│ ║  l.202: 	fun foo[A](x: A) = x.a
+//│ ║         	              ^
 //│ ╟── Type parameter 'A' does not specify a member interface.
 //│ ║  l.202: 	fun foo[A](x: A) = x.a
 //│ ╙──       	        ^
@@ -214,11 +217,14 @@ foo({a: 1})
 private fun foo[A](x: A) = x.a
 foo({a: 1})
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.214: 	private fun foo[A](x: A) = x.a
+//│ ║  l.217: 	private fun foo[A](x: A) = x.a
 //│ ║         	                           ^^^
 //│ ╟── Cannot resolve member 'a' of a value with unknown shape.
+//│ ╟── This type annotation supplies the value's shape.
+//│ ║  l.217: 	private fun foo[A](x: A) = x.a
+//│ ║         	                      ^
 //│ ╟── Type parameter 'A' does not specify a member interface.
-//│ ║  l.214: 	private fun foo[A](x: A) = x.a
+//│ ║  l.217: 	private fun foo[A](x: A) = x.a
 //│ ╙──       	                ^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 

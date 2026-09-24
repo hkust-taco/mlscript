@@ -19,6 +19,9 @@ generic({a: 1})
 //│ ║  l.16: 	fun generic[A](x: A) = x.a
 //│ ║        	                       ^^^
 //│ ╟── Cannot resolve member 'a' of a value with unknown shape.
+//│ ╟── This type annotation supplies the value's shape.
+//│ ║  l.16: 	fun generic[A](x: A) = x.a
+//│ ║        	                  ^
 //│ ╟── Type parameter 'A' does not specify a member interface.
 //│ ║  l.16: 	fun generic[A](x: A) = x.a
 //│ ╙──      	            ^
@@ -28,11 +31,14 @@ generic({a: 1})
 private fun generic[A](x: A) = x.a
 generic({a: 1})
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.28: 	private fun generic[A](x: A) = x.a
+//│ ║  l.31: 	private fun generic[A](x: A) = x.a
 //│ ║        	                               ^^^
 //│ ╟── Cannot resolve member 'a' of a value with unknown shape.
+//│ ╟── This type annotation supplies the value's shape.
+//│ ║  l.31: 	private fun generic[A](x: A) = x.a
+//│ ║        	                          ^
 //│ ╟── Type parameter 'A' does not specify a member interface.
-//│ ║  l.28: 	private fun generic[A](x: A) = x.a
+//│ ║  l.31: 	private fun generic[A](x: A) = x.a
 //│ ╙──      	                    ^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -41,11 +47,14 @@ class Item(val a: Int)
 private fun generic[A](x: A) = x.a
 generic[Item](Item(1))
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.41: 	private fun generic[A](x: A) = x.a
+//│ ║  l.47: 	private fun generic[A](x: A) = x.a
 //│ ║        	                               ^^^
 //│ ╟── Cannot resolve member 'a' of a value with unknown shape.
+//│ ╟── This type annotation supplies the value's shape.
+//│ ║  l.47: 	private fun generic[A](x: A) = x.a
+//│ ║        	                          ^
 //│ ╟── Type parameter 'A' does not specify a member interface.
-//│ ║  l.41: 	private fun generic[A](x: A) = x.a
+//│ ║  l.47: 	private fun generic[A](x: A) = x.a
 //│ ╙──      	                    ^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -59,9 +68,12 @@ fun identity[A](x: A): A = x
 :e
 private fun unused[A](x: A) = x.a
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.60: 	private fun unused[A](x: A) = x.a
+//│ ║  l.69: 	private fun unused[A](x: A) = x.a
 //│ ║        	                              ^^^
 //│ ╟── Cannot resolve member 'a' of a value with unknown shape.
+//│ ╟── This type annotation supplies the value's shape.
+//│ ║  l.69: 	private fun unused[A](x: A) = x.a
+//│ ║        	                         ^
 //│ ╟── Type parameter 'A' does not specify a member interface.
-//│ ║  l.60: 	private fun unused[A](x: A) = x.a
+//│ ║  l.69: 	private fun unused[A](x: A) = x.a
 //│ ╙──      	                   ^

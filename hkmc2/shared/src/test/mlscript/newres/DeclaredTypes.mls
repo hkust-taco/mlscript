@@ -77,12 +77,12 @@ read(Box(new Item))
 //│ ║  l.74: 	fun read(box: Box) = box.item.extra
 //│ ║        	                     ^^^^^^^^^^^^^^
 //│ ╟── Cannot resolve member 'extra' of a value with unknown shape.
-//│ ╟── Field 'item' is accessed through an annotated class type, so constructor arguments do not determine its shape.
-//│ ║  l.74: 	fun read(box: Box) = box.item.extra
-//│ ║        	                     ^^^^^^^^
 //│ ╟── Constructor parameter 'item' has no type annotation.
 //│ ║  l.73: 	class Box(val item)
-//│ ╙──      	              ^^^^
+//│ ║        	              ^^^^
+//│ ╟── This type annotation restricts access to the field's declared type; constructor arguments do not determine its shape.
+//│ ║  l.74: 	fun read(box: Box) = box.item.extra
+//│ ╙──      	              ^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 // An unannotated method result cannot reveal the method body either.
@@ -228,6 +228,9 @@ invoke[() -> Int](() => 42)
 //│ ╟── Value of unknown shape cannot be called like a function.
 //│ ║  l.223: 	private fun invoke[T](value: T) = value()
 //│ ║         	                   ^
+//│ ╟── This type annotation supplies the value's shape.
+//│ ║  l.223: 	private fun invoke[T](value: T) = value()
+//│ ║         	                             ^
 //│ ╟── Type parameter 'T' does not specify a member interface.
 //│ ║  l.223: 	private fun invoke[T](value: T) = value()
 //│ ╙──       	                   ^
@@ -241,15 +244,15 @@ class Box(val item)
 fun read(box: Box) = box.Box#item.extra
 read(Box(new Item))
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.241: 	fun read(box: Box) = box.Box#item.extra
+//│ ║  l.244: 	fun read(box: Box) = box.Box#item.extra
 //│ ║         	                     ^^^^^^^^^^^^^^^^^^
 //│ ╟── Cannot resolve member 'extra' of a value with unknown shape.
-//│ ╟── Field 'item' is accessed through an annotated class type, so constructor arguments do not determine its shape.
-//│ ║  l.241: 	fun read(box: Box) = box.Box#item.extra
-//│ ║         	                     ^^^^^^^^^^^^
 //│ ╟── Constructor parameter 'item' has no type annotation.
-//│ ║  l.240: 	class Box(val item)
-//│ ╙──       	              ^^^^
+//│ ║  l.243: 	class Box(val item)
+//│ ║         	              ^^^^
+//│ ╟── This type annotation restricts access to the field's declared type; constructor arguments do not determine its shape.
+//│ ║  l.244: 	fun read(box: Box) = box.Box#item.extra
+//│ ╙──       	              ^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 // A signature alias supplies the interface to both the body and callers.
@@ -278,7 +281,7 @@ class Child extends Base with
 fun identity[T](x: T): T = x
 identity[Base](new Child).extra
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.279: 	identity[Base](new Child).extra
+//│ ║  l.282: 	identity[Base](new Child).extra
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╙── Value of type 'Base' does not contain member 'extra'
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
@@ -320,11 +323,11 @@ class Box[T](val value: T)
 (new Box[Base](new Child)).value.extra
 Box[Base](new Child).value.extra
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.320: 	(new Box[Base](new Child)).value.extra
+//│ ║  l.323: 	(new Box[Base](new Child)).value.extra
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╙── Value of type 'Base' does not contain member 'extra'
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.321: 	Box[Base](new Child).value.extra
+//│ ║  l.324: 	Box[Base](new Child).value.extra
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╙── Value of type 'Base' does not contain member 'extra'
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
@@ -367,11 +370,11 @@ class Box with
   val item = new Item
 (new Box as Box).Box#item.extra
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.368: 	(new Box as Box).Box#item.extra
+//│ ║  l.371: 	(new Box as Box).Box#item.extra
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Cannot resolve member 'extra' of a value with unknown shape.
 //│ ╟── The shape of this value is unknown.
-//│ ║  l.368: 	(new Box as Box).Box#item.extra
+//│ ║  l.371: 	(new Box as Box).Box#item.extra
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -385,11 +388,11 @@ module Types with
 fun hidden(module types: Types) = types.Item.extra
 hidden(Types)
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.385: 	fun hidden(module types: Types) = types.Item.extra
+//│ ║  l.388: 	fun hidden(module types: Types) = types.Item.extra
 //│ ║         	                                  ^^^^^^^^^^^^^^^^
 //│ ╟── Cannot resolve member 'extra' of a value with unknown shape.
 //│ ╟── The shape of this value is unknown.
-//│ ║  l.385: 	fun hidden(module types: Types) = types.Item.extra
+//│ ║  l.388: 	fun hidden(module types: Types) = types.Item.extra
 //│ ╙──       	                                  ^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -408,7 +411,7 @@ class Child extends Base with
 fun apply[A](f: A -> A, x: A): A = f(x)
 apply[Base](arg => (arg.extra; arg), new Child)
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.409: 	apply[Base](arg => (arg.extra; arg), new Child)
+//│ ║  l.412: 	apply[Base](arg => (arg.extra; arg), new Child)
 //│ ║         	                    ^^^^^^^^^
 //│ ╙── Value of type 'Base' does not contain member 'extra'
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
@@ -431,7 +434,7 @@ class Child extends Base with
 fun read(xs: [Base, Int]) = xs.0.extra
 read([new Child, 0])
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.431: 	fun read(xs: [Base, Int]) = xs.0.extra
+//│ ║  l.434: 	fun read(xs: [Base, Int]) = xs.0.extra
 //│ ║         	                            ^^^^^^^^^^
 //│ ╙── Value of type 'Base' does not contain member 'extra'
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
@@ -452,11 +455,11 @@ let xs = mut [First(1)]
 set xs.0 = Second(2)
 [...xs].0.first
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.453: 	[...xs].0.first
+//│ ║  l.456: 	[...xs].0.first
 //│ ║         	^^^^^^^^^^^^^^^
 //│ ╟── Cannot resolve member 'first' of a value with unknown shape.
 //│ ╟── The shape of this value is unknown.
-//│ ║  l.451: 	let xs = mut [First(1)]
+//│ ║  l.454: 	let xs = mut [First(1)]
 //│ ╙──       	         ^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ xs = [Second(2)]
@@ -465,10 +468,10 @@ set xs.0 = Second(2)
 :ge
 [1, 2].2
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.466: 	[1, 2].2
+//│ ║  l.469: 	[1, 2].2
 //│ ║         	^^^^^^^^
 //│ ╟── Tuple literal does not contain member '2'
-//│ ║  l.466: 	[1, 2].2
+//│ ║  l.469: 	[1, 2].2
 //│ ╙──       	^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -504,15 +507,15 @@ private fun identity(value) = value
 fun read(box: Annotated) = identity(box.item).extra
 read(Child(new Item))
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.504: 	fun read(box: Annotated) = identity(box.item).extra
+//│ ║  l.507: 	fun read(box: Annotated) = identity(box.item).extra
 //│ ║         	                           ^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Cannot resolve member 'extra' of a value with unknown shape.
-//│ ╟── Field 'item' is accessed through an annotated class type, so constructor arguments do not determine its shape.
-//│ ║  l.504: 	fun read(box: Annotated) = identity(box.item).extra
-//│ ║         	                                    ^^^^^^^^
 //│ ╟── Constructor parameter 'item' has no type annotation.
-//│ ║  l.500: 	class Parent(val item)
-//│ ╙──       	                 ^^^^
+//│ ║  l.503: 	class Parent(val item)
+//│ ║         	                 ^^^^
+//│ ╟── This type annotation restricts access to the field's declared type; constructor arguments do not determine its shape.
+//│ ║  l.507: 	fun read(box: Annotated) = identity(box.item).extra
+//│ ╙──       	              ^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 // Calling an unannotated field reports the same declared-interface restriction.
@@ -521,15 +524,136 @@ class Box(val callback)
 fun invoke(box: Box) = box.callback()
 invoke(Box(() => 42))
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.521: 	fun invoke(box: Box) = box.callback()
+//│ ║  l.524: 	fun invoke(box: Box) = box.callback()
 //│ ║         	                       ^^^^^^^^^^^^^^
 //│ ╟── Value of unknown shape cannot be called like a function.
-//│ ║  l.521: 	fun invoke(box: Box) = box.callback()
-//│ ║         	                       ^^^^^^^^^^^^
-//│ ╟── Field 'callback' is accessed through an annotated class type, so constructor arguments do not determine its shape.
-//│ ║  l.521: 	fun invoke(box: Box) = box.callback()
+//│ ║  l.524: 	fun invoke(box: Box) = box.callback()
 //│ ║         	                       ^^^^^^^^^^^^
 //│ ╟── Constructor parameter 'callback' has no type annotation.
-//│ ║  l.520: 	class Box(val callback)
-//│ ╙──       	              ^^^^^^^^
+//│ ║  l.523: 	class Box(val callback)
+//│ ║         	              ^^^^^^^^
+//│ ╟── This type annotation restricts access to the field's declared type; constructor arguments do not determine its shape.
+//│ ║  l.524: 	fun invoke(box: Box) = box.callback()
+//│ ╙──       	                ^^^
+//│ = 42
+
+// Abstract tuple elements retain the use of the type parameter in the receiver annotation.
+:ge
+class Box[X](val value: [X, X])
+fun foo[A](x: Box[A]) = x.value.0.oops
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.543: 	fun foo[A](x: Box[A]) = x.value.0.oops
+//│ ║         	                        ^^^^^^^^^^^^^^
+//│ ╟── Cannot resolve member 'oops' of a value with unknown shape.
+//│ ╟── This type annotation supplies the value's shape.
+//│ ║  l.543: 	fun foo[A](x: Box[A]) = x.value.0.oops
+//│ ║         	                  ^
+//│ ╟── Type parameter 'A' does not specify a member interface.
+//│ ║  l.543: 	fun foo[A](x: Box[A]) = x.value.0.oops
+//│ ╙──       	        ^
+
+// Concrete callers cannot hide the annotation responsible for an abstract tuple element.
+:ge
+class Item with
+  val oops = 42
+class Box[X](val value: [X, X])
+private fun foo[A](x: Box[A]) = x.value.0.oops
+foo[Item](Box[Item]([new Item, new Item]))
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.560: 	private fun foo[A](x: Box[A]) = x.value.0.oops
+//│ ║         	                                ^^^^^^^^^^^^^^
+//│ ╟── Cannot resolve member 'oops' of a value with unknown shape.
+//│ ╟── This type annotation supplies the value's shape.
+//│ ║  l.560: 	private fun foo[A](x: Box[A]) = x.value.0.oops
+//│ ║         	                          ^
+//│ ╟── Type parameter 'A' does not specify a member interface.
+//│ ║  l.560: 	private fun foo[A](x: Box[A]) = x.value.0.oops
+//│ ╙──       	                ^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// Alias substitution and a function result still lead back to the written type argument.
+:ge
+class Box[X](val value: [X, X])
+type Wrapped[T] = Box[T]
+fun foo[A](factory: () -> Wrapped[A]) = factory().value.1.oops
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.578: 	fun foo[A](factory: () -> Wrapped[A]) = factory().value.1.oops
+//│ ║         	                                        ^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Cannot resolve member 'oops' of a value with unknown shape.
+//│ ╟── This type annotation supplies the value's shape.
+//│ ║  l.578: 	fun foo[A](factory: () -> Wrapped[A]) = factory().value.1.oops
+//│ ║         	                                  ^
+//│ ╟── Type parameter 'A' does not specify a member interface.
+//│ ║  l.578: 	fun foo[A](factory: () -> Wrapped[A]) = factory().value.1.oops
+//│ ╙──       	        ^
+
+// Tuple annotations do not need a nominal receiver to produce an abstract element.
+:ge
+fun foo[A](x: [A, A]) = x.0.oops
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.592: 	fun foo[A](x: [A, A]) = x.0.oops
+//│ ║         	                        ^^^^^^^^
+//│ ╟── Cannot resolve member 'oops' of a value with unknown shape.
+//│ ╟── This type annotation supplies the value's shape.
+//│ ║  l.592: 	fun foo[A](x: [A, A]) = x.0.oops
+//│ ║         	               ^
+//│ ╟── Type parameter 'A' does not specify a member interface.
+//│ ║  l.592: 	fun foo[A](x: [A, A]) = x.0.oops
+//│ ╙──       	        ^
+
+// An unannotated field can be reached through a function result annotation and an alias.
+:ge
+class Box(val value)
+type Wrapped = Box
+fun foo(factory: () -> Wrapped) = factory().value.oops
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.608: 	fun foo(factory: () -> Wrapped) = factory().value.oops
+//│ ║         	                                  ^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Cannot resolve member 'oops' of a value with unknown shape.
+//│ ╟── Constructor parameter 'value' has no type annotation.
+//│ ║  l.606: 	class Box(val value)
+//│ ║         	              ^^^^^
+//│ ╟── This type annotation restricts access to the field's declared type; constructor arguments do not determine its shape.
+//│ ║  l.608: 	fun foo(factory: () -> Wrapped) = factory().value.oops
+//│ ╙──       	                       ^^^^^^^
+
+// Explicit ascription supplies the annotation even when its operand is a known value.
+:ge
+class Item with
+  val oops = 42
+class Box(val value)
+(Box(new Item) as Box).value.oops
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.625: 	(Box(new Item) as Box).value.oops
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Cannot resolve member 'oops' of a value with unknown shape.
+//│ ╟── Constructor parameter 'value' has no type annotation.
+//│ ║  l.624: 	class Box(val value)
+//│ ║         	              ^^^^^
+//│ ╟── This type annotation restricts access to the field's declared type; constructor arguments do not determine its shape.
+//│ ║  l.625: 	(Box(new Item) as Box).value.oops
+//│ ╙──       	                  ^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// An abstract function result remains unknown after a nested tuple projection.
+:ge
+fun foo[A](factory: () -> [A, A]) = factory().0.oops
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.640: 	fun foo[A](factory: () -> [A, A]) = factory().0.oops
+//│ ║         	                                    ^^^^^^^^^^^^^^^^
+//│ ╟── Cannot resolve member 'oops' of a value with unknown shape.
+//│ ╟── This type annotation supplies the value's shape.
+//│ ║  l.640: 	fun foo[A](factory: () -> [A, A]) = factory().0.oops
+//│ ║         	                           ^
+//│ ╟── Type parameter 'A' does not specify a member interface.
+//│ ║  l.640: 	fun foo[A](factory: () -> [A, A]) = factory().0.oops
+//│ ╙──       	        ^
+
+// A concrete annotation supplies the nested member interface without losing tuple precision.
+:expect 42
+class Item with
+  val oops = 42
+class Box[X](val value: [X, X])
+fun foo(x: Box[Item]) = x.value.0.oops
+foo(Box[Item]([new Item, new Item]))
 //│ = 42

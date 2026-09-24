@@ -187,12 +187,12 @@ class NewResolver:
               case TypeShape.Nominal(defn) =>
                 val bindings = bind(defn.tparams)
                 defn.ext match
-                  case N => publish(NominalTypeShape(defn, bindings, N))
+                  case N => publish(NominalTypeShape(defn, bindings, N)(S(tpe.resolution.source)))
                   case S(parent) =>
                     // Only the parent's declared type is relevant here. Evaluating
                     // its constructor arguments would reintroduce implementation flow.
                     listenTypeValues(declaredType(typeResolution(parent.cls), bindings)): ext =>
-                      publish(NominalTypeShape(defn, bindings, S(ext)))
+                      publish(NominalTypeShape(defn, bindings, S(ext))(S(tpe.resolution.source)))
               case TypeShape.Alias(symbol, rhs) =>
                 // Revisiting the same alias reference without reaching an outer
                 // nominal/function shape supplies no additional interface. Track
@@ -208,7 +208,18 @@ class NewResolver:
               case TypeShape.Parameter(symbol, host) => current.bindings.get(symbol) match
                 case S(bound) => follow(bound, Nil, aliases, publish)
                 case N =>
-                  listenTypeArgument(host)(publish)
+                  listenTypeArgument(host): value =>
+                    // Report the use of an abstract parameter in a signature, not
+                    // just its declaration. This survives substitution through
+                    // generic members and nested tuple or function annotations.
+                    val annotated = value match
+                      case Marked(unknown: UnknownValueShape, marks) =>
+                        UnknownValueShape(unknown.source)(unknown.provenance.via(
+                          msg"This type annotation supplies the value's shape." -> tpe.resolution.source.toLoc)).exit(marks)
+                      case _ => value
+                    annotated match
+                      case value: TermShape => publish(value)
+                      case NoShape => ()
               case TypeShape.Captured(base, thru) =>
                 follow(declaredType(base, current.bindings), args, aliases,
                   shape => publish(shape match
@@ -265,7 +276,7 @@ class NewResolver:
     })
 
   private def listenDeclaredMember(member: BlockMemberSymbol, bindings: Map[VarSymbol, DeclaredType], flow: FlowSymbol,
-      source: Term, selected: ShapeListener[DefinitionSymbol[?]])(listener: Listener)(using NewResolverState): Unit =
+      source: Term, annotation: Opt[Term], selected: ShapeListener[DefinitionSymbol[?]])(listener: Listener)(using NewResolverState): Unit =
     member.onComplete: () =>
       member.asModOrObj.orElse(member.asTrm).orElse(member.asCls) match
         case S(symbol: TermSymbol) if !symbol.isInstanceOf[ClassCtorSymbol] =>
@@ -308,8 +319,9 @@ class NewResolver:
               // later selections and calls can explain why argument flow is hidden.
               val unknown = td.tsym.decl match
                 case S(param: Param) => UnknownValueShape(source)(ShapeProvenance(
-                  (msg"Field '${member.nme}' is accessed through an annotated class type, so constructor arguments do not determine its shape." -> source.toLoc) ::
-                  (msg"Constructor parameter '${param.sym.nme}' has no type annotation." -> param.toLoc) :: Nil))
+                  (msg"Constructor parameter '${param.sym.nme}' has no type annotation." -> param.toLoc) ::
+                  annotation.toList.map(sign =>
+                    msg"This type annotation restricts access to the field's declared type; constructor arguments do not determine its shape." -> sign.toLoc)))
                 case _ => UnknownValueShape.at(source)
               publish(unknown)
         case _ =>
@@ -522,7 +534,7 @@ class NewResolver:
         val cls = prelude.builtins.Array.defn.get
         softAssert(cls.tparams.length == 1, "The builtin Array must have one element type parameter")
         val elements = new TypeResolution(tuple.source, messages => resolError(tuple.source, messages))
-        val parent = NominalTypeShape(cls, Map(cls.tparams.head.sym -> declaredType(elements, Map.empty)), N)
+        val parent = NominalTypeShape(cls, Map(cls.tparams.head.sym -> declaredType(elements, Map.empty)), N)(N)
         tupleArrayParents(new Identity(tuple)) = parent
         tuple.segments.foreach:
           case field: TupleShape.Fixed => listenTupleField(field): value =>
@@ -749,8 +761,8 @@ class NewResolver:
                     case MemberLookup.Found(sym: BlockMemberSymbol, marks) =>
                       val field = symShapes.getOrElseUpdate((sym, resSym, marks), SymShape(sym, resSym, marks))
                       matchShapePat(field, pat)(_ => ())
-                    case MemberLookup.Declared(member, bindings, marks) =>
-                      listenDeclaredMember(member, bindings, resSym, ctor.target, _ => ()): field =>
+                    case MemberLookup.Declared(member, bindings, marks, annotation) =>
+                      listenDeclaredMember(member, bindings, resSym, ctor.target, annotation, _ => ()): field =>
                         field.exit(marks) match
                           case value: TermShape =>
                             val field = (value.applicationHead._1, unknown) match
@@ -922,9 +934,11 @@ class NewResolver:
         publish(UnknownValueShape.at(field.rhs))
 
   private def publishDeclared(host: NewResolvable & ShapeHost, member: BlockMemberSymbol, flow: FlowSymbol,
-      bindings: Map[VarSymbol, DeclaredType], marks: Ls[Marks])(using NewResolverState): Unit =
+      bindings: Map[VarSymbol, DeclaredType], marks: Ls[Marks], annotation: Opt[Term])(using NewResolverState): Unit =
+    // Keep one diagnostic witness per semantic candidate, as for unknown values.
+    // A different annotation location must not create additional inference flow.
     val shape = declaredSymShapes.getOrElseUpdate((member, flow, marks, bindings),
-      DeclaredSymShape(member, flow, marks, bindings))
+      DeclaredSymShape(member, flow, marks, bindings, annotation))
     if host.currentShapes.add(shape) then host.notifyShapeListeners(shape)
 
   private def publishDynamic(host: NewResolvable & ShapeHost, marks: Ls[Marks])(using NewResolverState): Unit =
@@ -950,10 +964,10 @@ class NewResolver:
             val candidate = prefix -> member.memberSymbol
             rstate.recordResolution(ref, ref.resolvedMembers.contains(candidate))(ref.resolvedMembers ::= candidate)
             publishMember(ref, member, ref.resSym, marks)
-          case MemberLookup.Declared(member, bindings, marks) if rstate.canResolve(ref) || ref.resolvedMembers.contains(prefix -> member) =>
+          case MemberLookup.Declared(member, bindings, marks, annotation) if rstate.canResolve(ref) || ref.resolvedMembers.contains(prefix -> member) =>
             val candidate = prefix -> member
             rstate.recordResolution(ref, ref.resolvedMembers.contains(candidate))(ref.resolvedMembers ::= candidate)
-            publishDeclared(ref, member, ref.resSym, bindings, marks)
+            publishDeclared(ref, member, ref.resSym, bindings, marks, annotation)
           case MemberLookup.Indexed(_, _) if rstate.canResolve(ref) =>
             resolError(ref, msg"Tuple elements must be selected by index." -> ref.toLoc :: Nil)
           case MemberLookup.Dynamic(marks) if rstate.canResolve(ref) || ref.dynamicPrefixes.contains(prefix) =>
@@ -1010,9 +1024,9 @@ class NewResolver:
         log(s"newSel member: bms = ${bms.memberSymbol.showDbg}, mss = ${marks.map(_.showDbg)}")
         rstate.recordResolution(sel, sel.resolvedMembers.contains(bms.memberSymbol))(sel.resolvedMembers ::= bms.memberSymbol)
         publishMember(sel, bms, sel.resSym, marks)
-      case MemberLookup.Declared(member, bindings, marks) if rstate.canResolve(sel) || sel.resolvedMembers.contains(member) =>
+      case MemberLookup.Declared(member, bindings, marks, annotation) if rstate.canResolve(sel) || sel.resolvedMembers.contains(member) =>
         rstate.recordResolution(sel, sel.resolvedMembers.contains(member))(sel.resolvedMembers ::= member)
-        publishDeclared(sel, member, sel.resSym, bindings, marks)
+        publishDeclared(sel, member, sel.resSym, bindings, marks, annotation)
       case MemberLookup.Indexed(field, marks) if rstate.canResolve(sel) || sel.tupleIndex == sel.id.name.toIntOption =>
         val index = sel.id.name.toIntOption
         softAssert(index.exists(_ >= 0), "Tuple lookup must identify a nonnegative index")
@@ -1055,12 +1069,12 @@ class NewResolver:
                   val selected = receiver match
                     case Marked(nominal: NominalTypeShape, context) =>
                       nominal.ancestor(cd) match
-                        case S(view) => view.getMember(sel.id.name).withMarks(context :: Nil)
+                        case S(view) => view.getMember(sel.id.name).withAnnotation(nominal.annotation).withMarks(context :: Nil)
                         case N =>
                           // An explicit projection can name a narrower class, but
                           // it cannot recover that class's implementation arguments.
                           val opaque = abstractType(new TypeResolution(sel, msgs => resolError(sel, msgs)))
-                          MemberLookup.Declared(bms, cd.tparams.map(_.sym -> opaque).toMap, context :: Nil)
+                          MemberLookup.Declared(bms, cd.tparams.map(_.sym -> opaque).toMap, context :: Nil, nominal.annotation)
                     case _ => info
                   member(selected, msg"Class '${cd.sym.nme}'", cd.toLoc)
               case _ => member(info, msg"Class '${cd.sym.nme}'", cd.toLoc))
@@ -1167,7 +1181,7 @@ class NewResolver:
   private def fromSymbol(shape: SymShape, listener: Listener, source: Term,
       selected: ShapeListener[DefinitionSymbol[?]])(using NewResolverState): Unit = shape match
     case declared: DeclaredSymShape =>
-      listenDeclaredMember(shape.sym, declared.bindings, shape.resSym, source, selected): value =>
+      listenDeclaredMember(shape.sym, declared.bindings, shape.resSym, source, declared.annotation, selected): value =>
         value.exit(shape.markss) match
           case value: TermShape => listener(value)
           case NoShape => ()
