@@ -723,12 +723,24 @@ f(1, 2, 3)               // xs = [1, 2, 3]
 
 Under new resolution, an annotation on a rest parameter describes the whole rest
 array. Tuple values support precise zero-based projections such as `xs.0` and
-inherit the declared Array interface. Mutable array literals use one `Array[T]`
-element interface: initializer elements and subsequent writes contribute to `T`. Reads
-see the accumulated element shapes, without tracking positions, length, or which
-elements have been overwritten or removed. Array callbacks such as `map`
-receive the element, index, and array; their declared function interfaces must
-account for these arguments, for example with unused or rest parameters.
+inherit the declared Array interface.
+
+Mutable array literals collect element shapes from their initializer and later
+writes. Statically resolved element reads are checked against all those shapes.
+For example,
+after `let xs = mut [First(1)]` followed by `xs.push(Second(2))`, resolution
+considers both `First` and `Second` when checking `xs.0`, even though the runtime
+value at index 0 is still a `First`. Overwriting or removing an element does not
+remove its shape from consideration. Resolution does not track individual
+positions or the array's length.
+
+An explicit annotation such as `Array[Base]` makes element reads use the members
+declared by `Base`. Storing a `Child` that extends `Base` does not permit access
+to `Child`-only members through that annotation.
+
+Array callbacks such as `map` receive the element, index, and array; their
+declared function interfaces must account for these arguments, for example with
+unused or rest parameters.
 
 ---
 

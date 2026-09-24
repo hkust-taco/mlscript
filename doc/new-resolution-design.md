@@ -105,20 +105,44 @@ across imports. See `newres/NamedFields.mls`, `ImportedNamedFields.mls`, and
 `RecordInterfaces.mls`.
 
 Tuples preserve zero-based projections and expose the builtin Array class as
-their parent. The parent's element argument is the union of element shapes,
-including annotations and call-context marks. Mutable literals instead bind the
-same builtin `Array[T]` parameter to live element flow. An allocation mark separates
-literals, and enclosing call marks separate activations. The consumer-owned cache
-publishes the nominal interface before subscribing to initializer elements, so
-empty arrays can receive writes and recursive arrays can refer to themselves.
-Indexed writes, `fill`, and typed `push`/`unshift` rest arguments contribute to the
-same parameter; numeric projections, spreads, patterns, and callbacks listen to it.
-The union retains overwritten and removed elements and has no positional or length
-precision. Written annotations remain opaque. Interface exposure follows element
-bindings so arrays cannot hide escaping closures. `newres/MutableArrays.mls` and
-`CompilerTest` cover element flow, capture contexts, and importer isolation.
-Unknown layouts permit indexed access with an unknown result without authorizing
-arbitrary members.
+their parent. For example, `[First(1), Second(2)]` has a `First` value at index 0
+and a `Second` value at index 1. An Array operation such as `map` can read either
+element, so its callback receives both candidate shapes.
+
+For a mutable literal, statically resolved element reads listen to the builtin
+`Array[T]` type parameter's symbol. The initializer and later indexed assignments, `fill`, `push`,
+and `unshift` send element shapes to that symbol. For example, starting with
+`mut [First(1)]` and then pushing `Second(2)` makes both `First` and `Second`
+candidates for each statically resolved element read. Overwriting or removing an element does not
+remove its shape from these candidates. Resolution does not track which shape
+belongs at which index or how long the array is. Each candidate is checked when
+resolving an operation on an element; the presence of a `First` candidate cannot
+justify accessing a `First`-only member when `Second` is also a candidate.
+
+The symbol is shared, but its shapes carry context marks that distinguish array
+allocations and enclosing function calls. This keeps writes to separate arrays
+from affecting each other's element reads. The cache in `NewResolverState` stores
+the array's shape before subscribing to its initializer, allowing empty arrays to
+receive writes and recursive arrays to refer to themselves. Numeric projections,
+spreads, patterns, and callbacks all receive the element shapes through `T`.
+
+An explicit element type restricts which members resolution may use. If an array
+is viewed as `Array[Base]`, inserting a `Child` that extends `Base` does not make
+`Child`-only members accessible through that view. Resolution uses `Base`'s
+declared members, regardless of the inserted value's more specific shape. In
+`Array[A]`, where `A` is a type parameter, element reads instead receive the shapes
+inferred for `A`.
+
+When an array is returned or otherwise exposed to callers, `InterfaceExposure`
+also follows its element shapes. A function stored in that array must be checked
+for calls from outside the compilation unit, just like a directly returned
+function. `newres/MutableArrays.mls` and `CompilerTest` cover element flow,
+separation between calls and importing compilation units, and exposed functions.
+See the [migration worklist](new-resolution-suite-migration.md) for the remaining
+`splice` and generic-parameter write propagation gaps.
+
+When an array's element shape is unknown, indexed access produces an unknown
+shape; that does not authorize arbitrary member access on the result.
 Tuple-pattern transfer handles leading, trailing, and rest elements, including
 declared Array element types. See `newres/Arrays.mls` and `TuplePatternBindings.mls`.
 

@@ -83,11 +83,11 @@ The inventory below separates these from compiler and prelude gaps.
   treated as the generator body's return value, leaving `.next` unresolved.
   Model the iterator result produced by lowering; use `codegen/Generators` as
   the worksheet acceptance case.
-- **Mutation and control flow:** mutable arrays use the coarse `Array[T]` element
-  union described in the [resolver notes](new-resolution-design.md); precise
-  positions and lengths are out of scope. Decide how reassignment affects the
-  inferred interface of mutable storage, including across already compiled worksheet
-  blocks. `newres/MutationFlow.mls` records a reassigned array still checked
+- **Mutation and control flow:** mutable-array reads use the element shapes
+  collected from the initializer and subsequent writes, as described in the
+  [resolver notes](new-resolution-design.md). Tracking individual positions and
+  lengths is out of scope. Decide how reassignment affects the inferred interface
+  of mutable storage, including across already compiled worksheet blocks. `newres/MutationFlow.mls` records a reassigned array still checked
   against its initializer's tuple length; accumulating both shapes would still
   reject valid later indexing. `codegen/SetStmt` also lacks argument flow through
   its update callback. Generic `Array[A]` parameters currently receive element
