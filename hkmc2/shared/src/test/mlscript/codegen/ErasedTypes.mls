@@ -880,8 +880,8 @@ fun test: Function = id
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define test² as fun test³(): Function⁰ { return (id¹ as! Function⁰) }; end
 
-// A function value is a subtype of `Object`, so a `Cast` is inserted to downcast the return value to
-// `Function`.
+// A cast is inserted at the return value to downcast the `Object` into `Function` - `Function` and `Object`
+// are related in the erased type hierarchy.
 fun test: Function = new Object
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define test⁴ as fun test⁵(): Function⁰ { return (new globalThis⁰.Object⁰() as! Function⁰) }; end
