@@ -161,47 +161,9 @@ before trying to fix recursive cases by adding recursion limits.
 Acceptance cases: bound members after tuple/record extraction, nested constructors,
 aliases, guards, transformed results, repeated references, qualified imported
 constructors, and recursive UPS matchers. Compare results and generated matcher
-structure with the existing tests. `ups/examples/HindleyMilner.mls` still exceeds
-the 25-second limit; the recursive environment reproducer below isolates its
-unbounded constructor-context marks.
-
-#### Blocker: constructor-pattern bindings mix unrelated instance contexts
-
-The final block of
-[`newres/ConstructorFieldRecovery.mls`](../hkmc2/shared/src/test/mlscript/newres/ConstructorFieldRecovery.mls)
-reproduces this with ordinary, valid constructor patterns:
-
-```mlscript
-class SharedBase(val field)
-class LeftChild extends SharedBase({left: 1})
-class RightChild extends SharedBase({right: 2})
-if (new LeftChild) is SharedBase(x) then x.left else 0
-if (new RightChild) is SharedBase(x) then x.right else 0
-```
-
-These expressions should resolve independently and return `1` and `2`.
-Instead, each pattern binding receives field shapes from both subclasses.
-Strict resolution rejects `x.left` because the right-hand record lacks `left`,
-and rejects `x.right` because the left-hand record lacks `right`. Thus another
-subclass's constructor arguments can make an otherwise valid selection fail.
-This affects the precision of nominal constructor-field extraction even when
-the scrutinee's concrete subclass is known; it is not confined to unsupported
-pattern forms or malformed-class recovery.
-
-The regression remains under `:fixme` to keep this failure visible. It is a
-serious migration blocker, not an accepted loss of resolution precision. The
-observed failure is rejection of valid programs; silent miscompilation has not
-been established by this reproducer. The exact point where receiver/constructor
-context is lost still needs tracing through inherited member lookup and pattern
-binding publication.
-
-The fix must preserve the matched receiver's constructor provenance through field
-extraction. Do not suppress missing-member diagnostics, drop capture marks, or
-pick one of the merged candidates to make this test pass. Completion requires
-removing this `:fixme`, verifying both independent results, and covering multiple
-instances of one class, sibling subclasses, objects extending a shared base,
-and nested constructor patterns. Genuinely ambiguous receiver alternatives must
-retain their diagnostics.
+structure with the existing tests. `ups/examples/HindleyMilner.mls` now finishes
+its new-resolution trial, but retains unsupported member and pattern cases
+(see the recheck below).
 
 ### 3. Declared interfaces versus inferred values
 
@@ -262,23 +224,25 @@ shows this without `yield`: a generator returning `1` makes resolution reject
 `.next` as a member of an integer literal. Generator calls need their own result
 shape and iterator-member behavior; annotation recognition already works.
 
-`ups/examples/HindleyMilner.mls` still exceeds 25 seconds with JavaScript disabled.
-The slowdown occurs while compiling `infer`. A live JVM stack shows deeply nested
-`ExitMark.hashCode` calls; temporary instrumentation identifies repetitions of the
-same `Env` constructor exit mark, accumulated through recursive environment
-passing and method selection. The reduced
+`ups/examples/HindleyMilner.mls` now finishes a new-resolution trial with JavaScript
+disabled in about 1.4 seconds. It still reports unsupported member-variable shapes
+and pattern/member errors, so the original worksheet retains its existing mode.
+The recursive environment regression
 [`newres/RecursiveEnvironment.mls`](../hkmc2/shared/src/test/mlscript/newres/RecursiveEnvironment.mls)
-reproduces this independently of imports, implicit arguments, patterns, and the
-earlier worksheet errors. With a 1 MiB JVM stack it reports a stack overflow in
-`TermShape.exit` within a few seconds. The runtime call would immediately return
-`0`; compilation must consider the recursive branch too.
+now resolves and executes, including actual recursive calls, explicit `new`,
+nested class captures, wildcard opens, and partial construction.
 
-Unlike the full worksheet, the reduced case finishes with a stack overflow in
-about 1.3 seconds under the normal suite configuration, so it remains an active
-`:fixme` regression. The required fix is a convergent approximation of recursive
-contexts that preserves meaningful member-access filtering. Dropping candidates or imposing an arbitrary
-mark-depth limit would not supply those semantics. No such limit or diagnostic
-instrumentation is retained. Both original worksheets keep their existing mode.
+The unbounded marks came from a missing lexical boundary: a method's reference to
+an outer constructor captured the method scope but skipped its enclosing instance.
+Class bodies now introduce captures, and a class and its constructor share one
+resolution boundary. Consuming a reconstructed instance cancels the old instance
+exit against its capture, retaining the fresh constructor exit. Explicit `new`
+uses the same constructor context, including for arguments and later parameter
+lists. Context fragments compose from the definition to its consumer; argument
+flow traverses that composition in reverse. Repeated boundaries in either
+direction assert an invariant violation; there is no truncation or depth limit.
+These changes also fix the sibling-subclass field-extraction regression in
+`newres/ConstructorFieldRecovery.mls`, whose independent results are now checked.
 
 ### Other implementation work
 
@@ -304,9 +268,8 @@ instrumentation is retained. Both original worksheets keep their existing mode.
    application difftests, and the aggregate suite. Review output changes; keep
    nonmigrated files intact. WASM `Basics` retains its previous configuration
    pending the capture fix, keeping this partial migration green.
-2. **Bound recursive context inference and model generator results.** Use the
-   isolated recursive environment case to establish convergence without dropping
-   possible shapes. Use `GeneratorResults` to specify iterator results rather
+2. **Model generator results.** Recursive constructor contexts now normalize
+   through lexical captures. Use `GeneratorResults` to specify iterator results rather
    than propagating the generator body's return shape. The earlier generator
    timeout was not reproduced.
 3. **Complete structural targets and external signatures.** Dynamic JS values and
@@ -468,7 +431,7 @@ The files themselves retain the pre-trial configuration and output.
 - `ups/examples/DoubleTripleList.mls`: Unexpected compilation error; [COMPILATION ERROR] This selection of member 'head' has no resolved target
 - `ups/examples/EvaluationContext.mls`: Unexpected exception; scala.NotImplementedError: an implementation is missing (`semantics.NewResolver.listen`)
 - `ups/examples/EvaluationContext2.mls`: Unexpected exception; scala.NotImplementedError: an implementation is missing (`semantics.NewResolver.listen`)
-- `ups/examples/HindleyMilner.mls`: Timeout during resolution even with JS disabled; recursive environment passing accumulates unbounded constructor exit marks (see the isolated reproducer above).
+- `ups/examples/HindleyMilner.mls`: The constructor-context timeout is fixed; the new-resolution trial finishes with unsupported member-variable shapes and pattern/member errors (see the recheck above).
 - `ups/examples/ListPredicates.mls`: Unexpected compilation error; [COMPILATION ERROR] This selection of member 'length' has no resolved target
 - `ups/examples/Negation.mls`: Unexpected compilation error; [COMPILATION ERROR] Resolution error in application; Function 'flatten' expected 1 argument, but got 3
 - `ups/examples/PrecedenceClimbStackParse.mls`: Unexpected compilation error; [COMPILATION ERROR] Resolution error in member reference; Expected a term; got pattern 'ParseStep'

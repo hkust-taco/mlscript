@@ -176,7 +176,7 @@ class Bar(b) with
 //│   fun Bar⁰
 //│   class Bar¹::Bar²(b²) {
 //│     @private val b³::b⁴ ‹flow:b¹› = b²^b⁴,
-//│     val foo²::foo³ ‹flow:foo¹› = Foo⁴^foo³(Bar².this.b³^foo³)‹app⁸›
+//│     val foo²::foo³ ‹flow:foo¹› = Foo⁴^Bar²^foo³(Bar².this.b³^foo³)‹app⁸›
 //│   }
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
@@ -238,7 +238,7 @@ g(2)
 //│ ╔══[COMPILATION ERROR] Resolution error in application
 //│ ║  l.237: 	g(2)
 //│ ║         	^^^^
-//│ ╟── Instance of class value cannot receive more argument lists.
+//│ ╟── Instance of class constructor 'Foo' cannot receive more argument lists.
 //│ ║  l.233: 	let g = f(1)
 //│ ╙──       	        ^^^^
 //│ ═══[RUNTIME ERROR] TypeError: g is not a function
@@ -248,19 +248,23 @@ let f = new Foo()
 //│ ╔══[COMPILATION ERROR] Resolution error in object instantiation
 //│ ║  l.247: 	let f = new Foo()
 //│ ║         	        ^^^^^^^^^
-//│ ╟── Class value expected 1 argument, but got 0
+//│ ╟── Class constructor 'Foo' expected 1 argument, but got 0
 //│ ║  l.84: 	class Foo(val a) {
-//│ ╙──      	      ^^^
+//│ ║        	^^^^^^^^^^^^^^^^^^
+//│ ║  l.85: 	  val b = a + 1
+//│ ║        	^^^^^^^^^^^^^^^
+//│ ║  l.86: 	}
+//│ ╙──      	^
 //│ f = Foo(undefined)
 
 
 :e
 new 42
 //│ ╔══[COMPILATION ERROR] Resolution error in object instantiation
-//│ ║  l.258: 	new 42
+//│ ║  l.262: 	new 42
 //│ ║         	^^^^^^
 //│ ╟── Invalid class expression: integer literal
-//│ ║  l.258: 	new 42
+//│ ║  l.262: 	new 42
 //│ ╙──       	    ^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 

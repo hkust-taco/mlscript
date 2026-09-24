@@ -72,9 +72,9 @@ x.r
 //│ ╔══[COMPILATION ERROR] Resolution error in object instantiation
 //│ ║  l.67: 	let x = new A(1, 2, 3)
 //│ ║        	        ^^^^^^^^^^^^^^
-//│ ╟── Class value expected 0 arguments, but got 3
+//│ ╟── Class constructor 'A' expected 0 arguments, but got 3
 //│ ║  l.66: 	data class A(...r)
-//│ ╙──      	           ^
+//│ ╙──      	     ^^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
 //│ ║  l.68: 	x.r
 //│ ║        	^^^
@@ -96,9 +96,11 @@ new A(1, 2, 3).getR
 //│ ╔══[COMPILATION ERROR] Resolution error in object instantiation
 //│ ║  l.92: 	new A(1, 2, 3).getR
 //│ ║        	^^^^^^^^^^^^^^
-//│ ╟── Class value expected 0 arguments, but got 3
+//│ ╟── Class constructor 'A' expected 0 arguments, but got 3
 //│ ║  l.90: 	data class A(...r) with
-//│ ╙──      	           ^
+//│ ║        	     ^^^^^^^^^^^^^^^^^^
+//│ ║  l.91: 	  fun getR = r
+//│ ╙──      	^^^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'r'
 //│ ╟── which references the symbol introduced here
 //│ ║  l.90: 	data class A(...r) with

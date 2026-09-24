@@ -133,7 +133,6 @@ M.p.id
 //│ | | | | PUSH module:Predef¹
 //│ | | | | fromBMS: bms = member:p¹, sh = MarkedShape(module:Predef¹, ↘⟨term:M⁰/p⁰⟩ϵ), flow = ⋅p⁰, markss = List()
 //│ | | | | .exit MarkedShape (MarkedShape(module:Predef¹, ↘⟨term:M⁰/p⁰⟩ϵ), term:M⁰/p⁰, ⋅p⁰)
-//│ | | | | | class hkmc2.semantics.TermSymbol Some(module:M⁰)
 //│ | | | | = module:Predef¹
 //│ | | | | MATCH module:Predef¹ for term:M⁰/p⁰ % ⋅p⁰
 //│ | | | ~> member:M¹.p
@@ -153,7 +152,6 @@ M.p.id
 //│ | | | PUSH module:Predef¹
 //│ | | | fromBMS: bms = member:p¹, sh = MarkedShape(module:Predef¹, ↘⟨term:M⁰/p⁰⟩ϵ), flow = ⋅p⁰, markss = List()
 //│ | | | .exit MarkedShape (MarkedShape(module:Predef¹, ↘⟨term:M⁰/p⁰⟩ϵ), term:M⁰/p⁰, ⋅p⁰)
-//│ | | | | class hkmc2.semantics.TermSymbol Some(module:M⁰)
 //│ | | | = module:Predef¹
 //│ | | | MATCH module:Predef¹ for term:M⁰/p⁰ % ⋅p⁰
 //│ | | | newSel: sel = member:M¹.p.id, shape = module:Predef¹
@@ -164,7 +162,6 @@ M.p.id
 //│ | | | listenedBMS: bms = function
 //│ | | | fromBMS: bms = member:id⁰, sh = member:id⁰, flow = ⋅id⁰, markss = List()
 //│ | | | .exit MarkedShape (member:id⁰, term:Predef¹/id¹, ⋅id⁰)
-//│ | | | | class hkmc2.semantics.TermSymbol Some(module:Predef¹)
 //│ | | | = MarkedShape(member:id⁰, ↗⟨term:Predef¹/id¹⟩%⟨⋅id⁰⟩ϵ)
 //│ | | | PUSH MarkedShape(member:id⁰, ↗⟨term:Predef¹/id¹⟩%⟨⋅id⁰⟩ϵ)
 //│ | | ~> member:M¹.p.id

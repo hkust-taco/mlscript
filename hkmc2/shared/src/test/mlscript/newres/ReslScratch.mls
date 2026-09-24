@@ -42,7 +42,7 @@ class Bar(a) with
 //│     @private val a¹::a² ‹flow:a⁰› = a⁰^a²,
 //│     let x⁰,
 //│     x⁰ = Bar².this.a¹,
-//│     Predef⁰.print⁰(x⁰)‹app⁰›
+//│     Predef⁰.print⁰^Bar²(x⁰)‹app⁰›
 //│   }
 //│ ——————————————| Resolved tree |—————————————————————————————————————————————————————————————————————
 //│ Blk:
@@ -77,9 +77,11 @@ class Bar(a) with
 //│               prefix = SelfRef of class:Bar³
 //│               id = Ident of "a"
 //│         res = App:
-//│           lhs = NewSel:
-//│             prefix = MemberRef of member:Predef⁰
-//│             id = Ident of "print"
+//│           lhs = Capture:
+//│             base = NewSel:
+//│               prefix = MemberRef of member:Predef⁰
+//│               id = Ident of "print"
+//│             thru = class:Bar³
 //│           rhs = Tup of Ls of
 //│             Fld:
 //│               term = MemberRef of term:Bar³/x⁰

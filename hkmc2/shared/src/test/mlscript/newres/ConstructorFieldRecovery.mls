@@ -72,24 +72,24 @@ if GoodObject is ObjectBase(x) then x else 0
 //│ = 43
 
 
-// TODO: Constructor-pattern bindings currently merge arguments from different
-// subclass instantiations. Retain this limitation separately from recovery tests.
-:fixme
+// Class exits keep the two inherited constructor-field contexts distinct.
+:expect [1, 2]
 class SharedBase(val field)
 class LeftChild extends SharedBase({left: 1})
 class RightChild extends SharedBase({right: 2})
-if (new LeftChild) is SharedBase(x) then x.left else 0
-if (new RightChild) is SharedBase(x) then x.right else 0
-//│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.81: 	if (new LeftChild) is SharedBase(x) then x.left else 0
-//│ ║        	                                         ^^^^^^
-//│ ╟── Record literal does not contain member 'left'
-//│ ║  l.80: 	class RightChild extends SharedBase({right: 2})
-//│ ╙──      	                                     ^^^^^^^^
-//│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.82: 	if (new RightChild) is SharedBase(x) then x.right else 0
-//│ ║        	                                          ^^^^^^^
-//│ ╟── Record literal does not contain member 'right'
-//│ ║  l.79: 	class LeftChild extends SharedBase({left: 1})
-//│ ╙──      	                                    ^^^^^^^
-//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+let left = if (new LeftChild) is SharedBase(x) then x.left else 0
+let right = if (new RightChild) is SharedBase(x) then x.right else 0
+[left, right]
+//│ = [1, 2]
+//│ left = 1
+//│ right = 2
+
+// Separate sites of one constructor retain distinct fields, including when nested.
+:expect [3, 4]
+class NestedField(val field)
+let first = if (new NestedField(new SharedBase({first: 3}))) is NestedField(SharedBase(x)) then x.first else 0
+let second = if (new NestedField(new SharedBase({second: 4}))) is NestedField(SharedBase(x)) then x.second else 0
+[first, second]
+//│ = [3, 4]
+//│ first = 3
+//│ second = 4

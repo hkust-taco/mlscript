@@ -478,10 +478,11 @@ class NewResolver:
     trm match
       case TyApp(base, _) => listenClass(base)(select, reject)
       case Capture(base, thru) =>
-        listenClass(base)((cls, marks) => select(cls, marks ::: EntryMark(thru, N, NoMarks) :: Nil), reject)
+        listenClass(base)((cls, marks) => select(cls, marks ::: EntryMark(ResolutionBoundary(thru), N, NoMarks) :: Nil), reject)
       case _ => listen(trm):
         case sh: SymShape =>
-          completedClass(sh)(cls => select(cls, sh.markss),
+          completedClass(sh)(cls => select(cls,
+            ExitMark(ResolutionBoundary(cls.sym), S(sh.resSym), NoMarks) :: sh.markss),
             () => fromBMS(sh.sym, sh.resSym, sh.markss, value, trm, _ => ()))
         case sh: TermShape => value(sh)
 
@@ -515,31 +516,51 @@ class NewResolver:
           resolError(sel, msg"${sh.describe.capitalize} cannot be used as a projection class." -> sh.toLoc :: Nil)
         )
   
-  def resolveNew(nw: Term.New): Unit =
-    log(s"resolveNew? res = ${nw.showDbg}")
-    nw.cls.classHead match
-      case trm: NewResolvable => listen(trm): shape =>
-        def reject(): Unit =
-          nw.isErroneous = true
-          resolError(nw, msg"${shape.describe.capitalize} cannot be instantiated with keyword 'new'." -> shape.toLoc :: Nil)
-        shape match
-          case ss: SymShape => completedClass(ss)(cd =>
-            if !trm.resolvedTargets.contains(cd.sym) then trm.resolvedTargets ::= cd.sym
-            listenExt(cd.ext, extsh =>
-              val dsh = DefnShape(cd, extsh)
-              val sh = newShapes.getOrElseUpdate((cd.sym, ss.markss, nw.resSym), {
-                dsh.unappliedParams.lazyZip(nw.args).foreach:
-                  case ((ps, mss), args) =>
-                    zipArgs(mss, ps.params, ps.restParam, args, nw, dsh)
-                NewShape(dsh, cd.sym, ss.markss, nw.args, nw)
-              })
-              if nw.shapes.add(sh) then nw.shapeListeners.foreach(_(sh))
-            )
-          , reject)
-          case _ => reject()
-      case _ =>
+  /** Both constructor references and explicit `new` use the same definition and
+    * parameter lists, including auxiliary constructor(...) lists. A partial `new`
+    * therefore retains the same callable head and contexts as a partial C(...).
+    */
+  private def constructorShape(cls: ClassDef, ext: Opt[TermShape]): DefnShape =
+    val (symbol, definition, base) = cls.ctorSym match
+      case S(ctor) => (ctor, ctor.defn.get, S(BaseShape(cls, ext)))
+      case N => (cls.sym, cls, ext)
+    val shape = defnShapes.getOrElseUpdate(symbol, DefnShape(definition, base))
+    softAssert(shape.defn is definition)
+    (shape.ext, base) match
+      case (S(left: BaseShape), S(right: BaseShape)) =>
+        softAssert((left.defn is right.defn) && left.ext == right.ext)
+      case (left, right) => softAssert(left == right)
+    shape
+  
+  def resolveNew(nw: Term.New): Unit = nw.cls.classHead match
+    case Term.Error() => nw.isErroneous = true
+    // Static construction records a resolved class on its reference for lowering.
+    // Other expression forms require dynamic construction, even if they publish
+    // no shapes (for example an unsupported reference in an extends clause).
+    case _: NewResolvable => resolveNewClass(nw)
+    case _ =>
+      nw.isErroneous = true
+      resolError(nw, msg"Invalid class expression: ${nw.cls.describe}" -> nw.cls.toLoc :: Nil)
+  
+  private def resolveNewClass(nw: Term.New): Unit =
+    // listenClass preserves captures and supplies the same class-body exit as a
+    // constructor value. In particular, a captured constructor already carries
+    // that exit; adding a second one here would duplicate its instance boundary.
+    listenClass(nw.cls)((cd, marks) =>
+      listenExt(cd.ext, extsh =>
+        val dsh = constructorShape(cd, extsh)
+        val sh = newShapes.getOrElseUpdate((cd.sym, marks, nw.resSym), {
+          dsh.unappliedParams.lazyZip(nw.args).foreach:
+            case ((ps, _), args) => zipArgs(marks, ps.params, ps.restParam, args, nw, dsh)
+          NewShape(dsh, cd.sym, marks, nw.args, nw)
+        })
+        if nw.shapes.add(sh) then nw.shapeListeners.foreach(_(sh))
+      )
+    , shape =>
+      if !nw.isErroneous then
         nw.isErroneous = true
-        resolError(nw, msg"Invalid class expression: ${nw.cls.describe}" -> nw.cls.toLoc :: Nil)
+        resolError(nw, msg"${shape.describe.capitalize} cannot be instantiated with keyword 'new'." -> shape.toLoc :: Nil)
+    )
   
   def defineVar(sym: LocalSymbol | TermSymbol, rhs: Term): DefineVar =
     if newResolution then sym match
@@ -600,7 +621,7 @@ class NewResolver:
           // Adding an exit here would create a mismatch because we do not track module captures explicitly.
           val exited = sym match
             case _: ModuleOrObjectSymbol => sh
-            case _ => MarkedShape.exit(sh, sym, S(resSym))
+            case _ => MarkedShape.exit(sh, ResolutionBoundary(sym), S(resSym))
           exited.exit(markss) match
             case NoShape =>
               log(s"FILTER OUT ${sh.shwDbg} for ${sym.showDbg} % ${resSym.showDbg}")
@@ -624,16 +645,7 @@ class NewResolver:
           d.tsym match
           case ccs: ClassCtorSymbol =>
             val cls = ccs.associatedCls.defn.get
-            listenExt(cls.ext, extsh =>
-              // Several uses (including deferred opens) can request the same
-              // constructor shape. Reuse it while checking the cache invariant.
-              val shape = defnShapes.getOrElseUpdate(sym, DefnShape(d, S(BaseShape(cls, extsh))))
-              softAssert(shape.defn is d)
-              shape.ext match
-                case S(base: BaseShape) => softAssert((base.defn is cls) && base.ext == extsh)
-                case _ => softAssert(false, "Constructor shape is missing its class base")
-              wrappedListener(shape)
-            )
+            listenExt(cls.ext, extsh => wrappedListener(constructorShape(cls, extsh)))
           case _ =>
             wrappedListener(defnShapes.getOrElseUpdate(sym, DefnShape(d, N)))
         case S(d: ClassLikeDef) =>
@@ -841,7 +853,7 @@ class NewResolver:
       if discardMarks then
         listen(base)(listener)
       else listenTerm(base): sh =>
-        listener(MarkedShape.enter(sh, thru, N))
+        listener(MarkedShape.enter(sh, ResolutionBoundary(thru), N))
     case ref @ Ref(sym: InnerSymbol) => // TODO: remove remaining occurrences of such refs
       sym.shapeListeners += listener
     case ref @ Ref(bsym: BlockMemberSymbol) =>

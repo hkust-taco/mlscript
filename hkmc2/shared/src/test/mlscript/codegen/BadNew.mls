@@ -106,12 +106,6 @@ let xs = new Oopsie
 //│ ╔══[COMPILATION ERROR] Name not found: Oopsie
 //│ ║  l.105: 	let xs = new Oopsie
 //│ ╙──       	             ^^^^^^
-//│ ╔══[COMPILATION ERROR] Resolution error in object instantiation
-//│ ║  l.105: 	let xs = new Oopsie
-//│ ║         	         ^^^^^^^^^^
-//│ ╟── Invalid class expression: ‹error›
-//│ ║  l.105: 	let xs = new Oopsie
-//│ ╙──       	             ^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ xs = undefined
 

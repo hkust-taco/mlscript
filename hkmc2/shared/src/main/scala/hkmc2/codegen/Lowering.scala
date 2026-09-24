@@ -714,9 +714,11 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
     case S(cls) =>
       if sel.isErroneous then false
       else if sel.hasAmbiguousClass then
+        // Different instance contexts can lead to the same class declaration.
+        // Preserve the ambiguity, but report each declaration's location once.
         raise:
           ErrorReport(msg"The projection class is ambiguous" -> cls.toLoc ::
-            sel.resolvedClasses.map((sym, _) => msg"class: '${sym.nme}'" -> sym.toLoc),
+            sel.resolvedClasses.map(_._1).distinct.map(sym => msg"class: '${sym.nme}'" -> sym.toLoc),
             source = Diagnostic.Source.Compilation)
         false
       else if sel.resolvedClasses.isEmpty then

@@ -9,9 +9,9 @@ new Foo
 //│ ╔══[COMPILATION ERROR] Resolution error in object instantiation
 //│ ║  l.8: 	new Foo
 //│ ║       	^^^^^^^
-//│ ╟── Object symbol 'Foo' cannot be instantiated with keyword 'new'.
+//│ ╟── Object 'Foo' cannot be instantiated with keyword 'new'.
 //│ ║  l.5: 	object Foo
-//│ ╙──     	^^^^^^^^^^
+//│ ╙──     	       ^^^
 //│ ═══[COMPILATION ERROR] Cannot resolve the class instantiated here
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -37,9 +37,9 @@ object Bar extends Foo
 //│ ╔══[COMPILATION ERROR] Resolution error in object instantiation
 //│ ║  l.36: 	object Bar extends Foo
 //│ ║        	                   ^^^
-//│ ╟── Object symbol 'Foo' cannot be instantiated with keyword 'new'.
+//│ ╟── Object 'Foo' cannot be instantiated with keyword 'new'.
 //│ ║  l.5: 	object Foo
-//│ ╙──     	^^^^^^^^^^
+//│ ╙──     	       ^^^
 //│ ═══[COMPILATION ERROR] Cannot resolve the class instantiated here
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 

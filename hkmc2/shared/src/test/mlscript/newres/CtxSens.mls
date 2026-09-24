@@ -76,7 +76,8 @@ class Foo(val a) {
   val b = A
 }
 //│ ————————————————| Resolved |————————————————————————————————————————————————————————————————————————
-//│   fun Foo⁰ class Foo¹::Foo²(val a⁰) { val a¹::a² ‹flow:a⁰› = a⁰^a², val b⁰::b¹ ‹flow:b⁰› = A⁰^b¹ }
+//│   fun Foo⁰
+//│   class Foo¹::Foo²(val a⁰) { val a¹::a² ‹flow:a⁰› = a⁰^a², val b⁰::b¹ ‹flow:b⁰› = A⁰^Foo²^b¹ }
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 let x = Foo(A)

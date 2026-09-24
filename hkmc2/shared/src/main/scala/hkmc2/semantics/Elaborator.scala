@@ -60,6 +60,18 @@ object Elaborator:
       case LambdaOrHandlerBlock => "LambdaOrHandlerBlock"
       case NonReturnContext(sym) => s"NonReturnContext(${sym})"
     
+    /** Functions and instantiated class bodies cross lexical resolution boundaries.
+      * Function's NonReturnContext already supplies its boundary, so Function must
+      * not introduce it again. Modules/objects have no per-instance boundary.
+      * In C's method, referring to the outer C constructor crosses the old instance
+      * boundary too. That capture cancels the old instance exit when the method's
+      * result is consumed; the fresh constructor exit belongs to the new instance.
+      */
+    def resolutionBoundary: Opt[AnyDefinitionSymbol] = this match
+      case NonReturnContext(sym) => sym
+      case InnerScope(sym: ClassSymbol) => S(sym)
+      case _ => N
+    
     def inner: Opt[InnerSymbol] = this match
       case InnerScope(inner) => S(inner)
       case _ => N
@@ -153,17 +165,15 @@ object Elaborator:
     private def getExplicit(name: Str)(using config: Config): Opt[Ctx.Elem] =
       env.get(name).orElse:
         val inherited = parent.flatMap(_.getExplicit(name))
-        if config.language.useNewResolution then outer match
-          case OuterCtx.NonReturnContext(S(sym)) => inherited.map(Ctx.CaptElem(_, sym))
-          case _ => inherited
+        if config.language.useNewResolution then inherited.map(capture)
         else inherited
+
+    private def capture(elem: Ctx.Elem): Ctx.Elem =
+      outer.resolutionBoundary.fold(elem)(Ctx.CaptElem(elem, _))
 
     private lazy val visibleWildcardOpens: Ls[Ctx.OpenSource] =
       val inherited = parent.toList.flatMap(_.visibleWildcardOpens)
-      wildcardOpens ::: (outer match
-        case OuterCtx.NonReturnContext(S(sym)) => inherited.map(source =>
-          Ctx.OpenSource(Ctx.CaptElem(source.elem, sym))(source.id))
-        case _ => inherited)
+      wildcardOpens ::: inherited.map(source => Ctx.OpenSource(capture(source.elem))(source.id))
     
     def lookupLabel(name: Str): LabelLookup =
       @tailrec

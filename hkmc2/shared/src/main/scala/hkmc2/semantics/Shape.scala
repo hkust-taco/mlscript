@@ -30,20 +30,49 @@ sealed trait Shape extends ShapeLike:
 sealed trait NonMarkedShape extends TermShape
 sealed trait NonAppTermShape extends NonMarkedShape
 
-// type Mark = Opt[AnyDefinitionSymbol] -> Bool
-// case class Mark(sym: Opt[AnyDefinitionSymbol], entry: Bool)
-// sealed abstract class Marks
-// case class MoreMarks(sym: Opt[AnyDefinitionSymbol], entry: Bool, rest: Marks) extends Marks
-// case object NoMark extends Marks
+/** A lexical resolution boundary, independent of a definition's term/type interpretation.
+  * A class and its companion constructor enter the same instance scope. Keeping their
+  * symbol identities distinct is still necessary for overload selection and lowering.
+  */
+final case class ResolutionBoundary private (symbol: AnyDefinitionSymbol):
+  def showDbg(using DebugPrinter): Str = symbol.showDbg
+  override def toString: Str = symbol.toString
+object ResolutionBoundary:
+  def apply(symbol: AnyDefinitionSymbol): ResolutionBoundary =
+    new ResolutionBoundary(symbol match
+      case ctor: ClassCtorSymbol => ctor.associatedCls
+      case symbol => symbol)
+
+/** A reduced lexical path: entries followed by exits, stored outermost first.
+  * Exiting cancels the leading entry when their sites agree (an absent site is
+  * a capture, compatible with any activation). Entering never cancels an exit:
+  * that pair records an inner value's provenance until a consumer accesses it.
+  * Each direction traverses distinct lexical scopes, so recursive calls cannot
+  * lengthen a normalized path indefinitely. Violations are asserted, not widened.
+  */
 sealed abstract class Marks:
   def showDbg(using DebugPrinter): Str = this match
-    case EntryMark(sym, id, rest) => s"↘⟨${sym.showDbg}⟩${id.fold("")("%⟨"+_.showDbg+"⟩")}${rest.showDbg}"
-    case ExitMark(sym, id, rest) => s"↗⟨${sym.showDbg}⟩${id.fold("")("%⟨"+_.showDbg+"⟩")}${rest.showDbg}"
+    case EntryMark(boundary, id, rest) => s"↘⟨${boundary.showDbg}⟩${id.fold("")("%⟨"+_.showDbg+"⟩")}${rest.showDbg}"
+    case ExitMark(boundary, id, rest) => s"↗⟨${boundary.showDbg}⟩${id.fold("")("%⟨"+_.showDbg+"⟩")}${rest.showDbg}"
     case NoMarks => "ϵ"
+  @scala.annotation.tailrec
+  final def hasEntry(boundary: ResolutionBoundary): Bool = this match
+    case EntryMark(b, _, rest) => b == boundary || rest.hasEntry(boundary)
+    case _ => false
+
 type SomeMarks = EntryMark | ExitMark
-case class EntryMark(sym: AnyDefinitionSymbol, id: Opt[FlowSymbol], rest: Marks) extends Marks
-sealed abstract class ExitMarks extends Marks
-case class ExitMark(sym: AnyDefinitionSymbol, id: Opt[FlowSymbol], rest: ExitMarks) extends ExitMarks
+case class EntryMark(boundary: ResolutionBoundary, id: Opt[FlowSymbol], rest: Marks) extends Marks:
+  // Consecutive entries descend lexical scopes; consecutive exits ascend them.
+  // Repeating a scope in either direction indicates a missing capture/exit, not
+  // another recursive activation to retain or silently truncate.
+  assert(!rest.hasEntry(boundary), "Repeated entry into the same lexical resolution scope")
+sealed abstract class ExitMarks extends Marks:
+  @scala.annotation.tailrec
+  final def hasExit(boundary: ResolutionBoundary): Bool = this match
+    case ExitMark(b, _, rest) => b == boundary || rest.hasExit(boundary)
+    case NoMarks => false
+case class ExitMark(boundary: ResolutionBoundary, id: Opt[FlowSymbol], rest: ExitMarks) extends ExitMarks:
+  assert(!rest.hasExit(boundary), "Repeated exit from the same lexical resolution scope")
 case object NoMarks extends ExitMarks
 
 sealed trait ShapeLike:
@@ -76,53 +105,19 @@ case class MarkedShape(sh: NonMarkedShape, mark: SomeMarks) extends TermShape:
   def describe: Str = sh.describe
   def toLoc: Opt[Loc] = sh.toLoc
 object MarkedShape:
-  def enter(sh: TermShape, sym: AnyDefinitionSymbol, id: Opt[FlowSymbol])(using TL): MarkedShape =
+  def enter(sh: TermShape, boundary: ResolutionBoundary, id: Opt[FlowSymbol])(using TL): MarkedShape =
     sh match
-    case sh: NonMarkedShape => MarkedShape(sh, EntryMark(sym, id, NoMarks))
-    case MarkedShape(sh, marks) =>
-      // marks match
-      // case marks: EntryMark => MarkedShape(sh, EntryMark(sym, id, marks))
-      // case ExitMark(sym2, id2, rest) =>
-      //   require(sym2 is sym)
-      //   id2 match
-      //   case S(`id`) => MarkedShape(sh, marks)
-      //   if id2 is id then
-      //     rest match
-      //     case NoMarks => sh
-      //     case rest: ExitMark => MarkedShape(sh, rest)
-      //   else
-      //     MarkedShape(sh, EntryMark(sym, id, marks))
-      //   // MarkedShape(sh, EntryMark(sym, marks))
-      //   ???
-      MarkedShape(sh, EntryMark(sym, id, marks))
-  def exit(sh: TermShape, sym: AnyDefinitionSymbol, id: Opt[FlowSymbol])(using TL): TermShape | NoShape =
-  tl.trace[TermShape | NoShape](s".exit MarkedShape (${sh.shwDbg}, ${sym.showDbg}, ${id.fold("")(_.showDbg)})", res => s"= ${res.shwDbg}"):
-    tl.log(s"${sym.getClass} ${sym match
-      case sym: TermSymbol => sym.owner.map(_.showDbg)
-      case _ => "?"
-    }")
+    case sh: NonMarkedShape => MarkedShape(sh, EntryMark(boundary, id, NoMarks))
+    case MarkedShape(sh, marks) => MarkedShape(sh, EntryMark(boundary, id, marks))
+  def exit(sh: TermShape, boundary: ResolutionBoundary, id: Opt[FlowSymbol])(using TL): TermShape | NoShape =
+  tl.trace[TermShape | NoShape](s".exit MarkedShape (${sh.shwDbg}, ${boundary.showDbg}, ${id.fold("")(_.showDbg)})", res => s"= ${res.shwDbg}"):
     sh match
-    case sh: NonMarkedShape => MarkedShape(sh, ExitMark(sym, id, NoMarks))
+    case sh: NonMarkedShape => MarkedShape(sh, ExitMark(boundary, id, NoMarks))
     case MarkedShape(sh, marks) =>
       marks match
-      case marks: ExitMark => MarkedShape(sh, ExitMark(sym, id, marks))
-      case EntryMark(sym2, id2, rest) =>
-        require(sym2 is sym, s"Expected symbol ${sym.showDbg} but got ${sym2.showDbg}")
-        // tl.log(s"!? ${id} vs ${id2}")
-        // // id2 match
-        // (id,id2) match
-        // // case S(`id`) | N =>
-        // // case `id` | N =>
-        // case (N, _) | (_, N) | (S(_), S(_)) if id === id2 =>
-        //   rest match
-        //   case NoMarks => sh
-        //   case rest: SomeMarks => MarkedShape(sh, rest)
-        // // case S(id2) =>
-        // case _ =>
-        //   // MarkedShape(sh, ExitMark(sym, id, marks))
-        //   NoShape
-        // // MarkedShape(sh, EntryMark(sym, marks))
-        // // ???
+      case marks: ExitMark => MarkedShape(sh, ExitMark(boundary, id, marks))
+      case EntryMark(entered, id2, rest) =>
+        assert(entered == boundary, "Entry and exit cross different lexical resolution scopes")
         if id.forall(i1 => id2.forall(i2 => i1 is i2)) then
           rest match
           case NoMarks => sh
@@ -141,13 +136,15 @@ sealed trait TermShape extends Shape:
     * value (e.g. a class without parameters) is still not an instance. */
   def isInstanceOfClass(cls: ClassLikeDef): Bool = false
   
+  // Context fragments run from the callable definition to its consumer, just as
+  // MemberLookup.withMarks does. Wrapping an applied shape appends its context.
   lazy val applicationHead: (NonAppTermShape, Ls[Marks]) = this match
     // case ds: DefnShape => ds
     // case as: AppShape => as.receiver.applicationHead
     case as: AppShape => as.receiver.applicationHead
-    case ns: NewShape => ns.receiver.applicationHead
+    case ns: NewShape => (ns.receiver, ns.clsMarks)
     case na: NonAppTermShape => (na, Nil)
-    case MarkedShape(sh, mark) => sh.applicationHead.mapSecond(mark :: _)
+    case MarkedShape(sh, mark) => sh.applicationHead.mapSecond(_ ::: mark :: Nil)
   lazy val unappliedParams: Ls[(ParamList, Ls[Marks])] = this match
     case ds: DefnShape => ds.defn match
       case defn: TermDefinition => defn.params.map(_ -> Nil)
@@ -159,8 +156,9 @@ sealed trait TermShape extends Shape:
         else Nil
       case _ => Nil
     case as: AppShape => as.receiver.unappliedParams.drop(1)
-    case ns: NewShape => ns.receiver.unappliedParams.drop(ns.argss.length)
-    case MarkedShape(sh, mark) => sh.unappliedParams.map(p => p._1 -> (mark :: p._2))
+    case ns: NewShape => ns.receiver.unappliedParams.drop(ns.argss.length).map:
+      case (ps, marks) => ps -> (marks ::: ns.clsMarks)
+    case MarkedShape(sh, mark) => sh.unappliedParams.map(p => p._1 -> (p._2 ::: mark :: Nil))
     case is: IntroShape =>
       is.trm match
       case Term.Lam(params, body) => (params -> Nil) :: 
@@ -218,7 +216,9 @@ sealed trait TermShape extends Shape:
   def enter(revMarkss: Ls[Marks])(using TL): TermShape | NoShape = revMarkss match
     case Nil => this
     case mark :: rest =>
-      enter(mark).enter(rest)
+      // Fragments describe travel from the definition out to its consumer.
+      // Passing an argument back in must undo that composition in reverse order.
+      enter(rest).enter(mark)
   
   def isSaturated: Bool = unappliedParams.isEmpty
   
@@ -283,15 +283,12 @@ class AppShape(val receiver: TermShape, val args: Term, val src: Term.App)(using
   override def toString: String = s"AppShape($receiver, ${args.showDbg})"
   // def target: Opt[AppTarget]
 
-class NewShape(val receiver: TermShape, val cls: ClassLikeSymbol, clsMarks: Ls[Marks], val argss: Ls[Term], val src: Term.New)(using DebugPrinter) extends NonMarkedShape:
+class NewShape(val receiver: DefnShape, val cls: ClassLikeSymbol, val clsMarks: Ls[Marks], val argss: Ls[Term], val src: Term.New)(using DebugPrinter) extends NonMarkedShape:
   protected def getMemberImpl(name: Str): MemberLookup =
-    receiver match
-      case ds: DefnShape => ds.getInstanceMember(name).withMarks(clsMarks)
-      case _ => MemberLookup.Missing
+    if isSaturated then receiver.getInstanceMember(name).withMarks(clsMarks)
+    else MemberLookup.Missing
   override def isInstanceOfClass(cls: ClassLikeDef): Bool =
-    isSaturated && (receiver match
-      case ds: DefnShape => ds.classExtends(cls)
-      case _ => false)
+    isSaturated && receiver.classExtends(cls)
   def describe: Str =
     // s"instantiation of ${receiver.describe}"
     s"instance of ${cls.defn.get.describeRef}"

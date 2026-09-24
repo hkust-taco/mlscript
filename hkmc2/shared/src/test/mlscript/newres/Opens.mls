@@ -279,9 +279,9 @@ new Shadowed
 //│ ╔══[COMPILATION ERROR] Resolution error in object instantiation
 //│ ║  l.278: 	new Shadowed
 //│ ║         	^^^^^^^^^^^^
-//│ ╟── Value symbol 'Shadowed' cannot be instantiated with keyword 'new'.
+//│ ╟── Integer literal cannot be instantiated with keyword 'new'.
 //│ ║  l.276: 	val Shadowed = 20
-//│ ╙──       	^^^^^^^^^^^^^^^^^
+//│ ╙──       	               ^^
 //│ ═══[COMPILATION ERROR] Cannot resolve the class instantiated here
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ Shadowed = 20

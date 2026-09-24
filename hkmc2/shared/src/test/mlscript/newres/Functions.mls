@@ -94,13 +94,11 @@ callid1(Predef)
 //│ | listenedBMS: bms = function
 //│ | fromBMS: bms = member:callid1⁰, sh = member:callid1⁰, flow = callid1¹, markss = List()
 //│ | .exit MarkedShape (member:callid1⁰, term:callid1², callid1¹)
-//│ | | class hkmc2.semantics.TermSymbol None
 //│ | = MarkedShape(member:callid1⁰, ↗⟨term:callid1²⟩%⟨callid1¹⟩ϵ)
 //│ | PUSH MarkedShape(member:callid1⁰, ↗⟨term:callid1²⟩%⟨callid1¹⟩ϵ)
 //│ | listenedBMS: bms = function
 //│ | fromBMS: bms = member:callid1⁰, sh = member:callid1⁰, flow = callid1¹, markss = List()
 //│ | .exit MarkedShape (member:callid1⁰, term:callid1², callid1¹)
-//│ | | class hkmc2.semantics.TermSymbol None
 //│ | = MarkedShape(member:callid1⁰, ↗⟨term:callid1²⟩%⟨callid1¹⟩ϵ)
 //│ | PUSH MarkedShape(member:callid1⁰, ↗⟨term:callid1²⟩%⟨callid1¹⟩ϵ)
 //│ | appShape: lhs = MarkedShape(member:callid1⁰, ↗⟨term:callid1²⟩%⟨callid1¹⟩ϵ), args = [member:Predef⁰], res = member:callid1⁰(member:Predef⁰)
@@ -124,7 +122,6 @@ callid1(Predef)
 //│ | listenedBMS: bms = function
 //│ | fromBMS: bms = member:id⁰, sh = member:id⁰, flow = ⋅id⁰, markss = List(↘⟨term:callid1²⟩%⟨callid1¹⟩ϵ)
 //│ | .exit MarkedShape (member:id⁰, term:Predef¹/id¹, ⋅id⁰)
-//│ | | class hkmc2.semantics.TermSymbol Some(module:Predef¹)
 //│ | = MarkedShape(member:id⁰, ↗⟨term:Predef¹/id¹⟩%⟨⋅id⁰⟩ϵ)
 //│ | .exit MarkedShape(member:id⁰, ↗⟨term:Predef¹/id¹⟩%⟨⋅id⁰⟩ϵ) (↘⟨term:callid1²⟩%⟨callid1¹⟩ϵ)
 //│ | | .exit MarkedShape(member:id⁰, ↗⟨term:Predef¹/id¹⟩%⟨⋅id⁰⟩ϵ) (ϵ)
@@ -135,7 +132,6 @@ callid1(Predef)
 //│ | listenedBMS: bms = function
 //│ | fromBMS: bms = member:id⁰, sh = member:id⁰, flow = ⋅id⁰, markss = List(↘⟨term:callid1²⟩%⟨callid1¹⟩ϵ)
 //│ | .exit MarkedShape (member:id⁰, term:Predef¹/id¹, ⋅id⁰)
-//│ | | class hkmc2.semantics.TermSymbol Some(module:Predef¹)
 //│ | = MarkedShape(member:id⁰, ↗⟨term:Predef¹/id¹⟩%⟨⋅id⁰⟩ϵ)
 //│ | .exit MarkedShape(member:id⁰, ↗⟨term:Predef¹/id¹⟩%⟨⋅id⁰⟩ϵ) (↘⟨term:callid1²⟩%⟨callid1¹⟩ϵ)
 //│ | | .exit MarkedShape(member:id⁰, ↗⟨term:Predef¹/id¹⟩%⟨⋅id⁰⟩ϵ) (ϵ)
@@ -152,7 +148,6 @@ callid1(Predef)
 //│ | = IntroShape(1)
 //│ | .enter IntroShape(1) (↘⟨term:callid1²⟩%⟨callid1¹⟩↗⟨term:Predef¹/id¹⟩%⟨⋅id⁰⟩ϵ)
 //│ | | .exit MarkedShape (IntroShape(1), term:callid1², callid1¹)
-//│ | | | class hkmc2.semantics.TermSymbol None
 //│ | | = MarkedShape(IntroShape(1), ↗⟨term:callid1²⟩%⟨callid1¹⟩ϵ)
 //│ | | .enter MarkedShape(IntroShape(1), ↗⟨term:callid1²⟩%⟨callid1¹⟩ϵ) (↗⟨term:Predef¹/id¹⟩%⟨⋅id⁰⟩ϵ)
 //│ | | | .enter MarkedShape(IntroShape(1), ↘⟨term:Predef¹/id¹⟩%⟨⋅id⁰⟩↗⟨term:callid1²⟩%⟨callid1¹⟩ϵ) (ϵ)

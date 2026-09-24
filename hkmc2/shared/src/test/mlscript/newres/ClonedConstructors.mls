@@ -56,17 +56,7 @@ fun openedRecord(x) =
 constructors.make(35).value
 //│ = 35
 
-// Static `new` currently requires a class declaration. The `make` record field
-// holds a constructor function, so it cannot be used with this syntax.
-:e
-new constructors.make(35)
-//│ ╔══[COMPILATION ERROR] Resolution error in object instantiation
-//│ ║  l.62: 	new constructors.make(35)
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── Record field symbol 'make' cannot be instantiated with keyword 'new'.
-//│ ║  l.36: 	let constructors = {make: Direct}
-//│ ╙──      	                    ^^^^
-//│ ╔══[COMPILATION ERROR] Cannot resolve the class instantiated here
-//│ ║  l.62: 	new constructors.make(35)
-//│ ╙──      	    ^^^^^^^^^^^^^^^^^
-//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+// Static `new` can also recover the known class through a constructor-valued field.
+:expect 35
+(new constructors.make(35)).value
+//│ = 35

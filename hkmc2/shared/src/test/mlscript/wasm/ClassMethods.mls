@@ -175,15 +175,14 @@ c.Counter#inc().Counter#double().Counter#get()
 
 :todo
 let d = Counter(c.Counter#get())
-//│ /!!!\ Uncaught error: java.lang.StackOverflowError
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Missing field `term:Counter/get` in struct `member:Counter` with type `(type $Counter (sub $Object (struct (field $$typeinfo (mut (ref $TypeInfoBase))) (field $x (mut (ref null any))))))`
 
 :todo
 d.Counter#inc().Counter#double().Counter#get()
-//│ ╔══[COMPILATION ERROR] Name not found: d
-//│ ║  l.181: 	d.Counter#inc().Counter#double().Counter#get()
-//│ ╙──       	^
-//│ Wasm result:
-//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ ╔══[COMPILATION ERROR] Cannot find variable `d` (VarSymbol) in local or global scope.
+//│ ║  l.177: 	let d = Counter(c.Counter#get())
+//│ ╙──       	    ^
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Missing type definition for symbol `member:Counter`
 
 :todo
 c.Counter#get()
@@ -202,7 +201,7 @@ class A(val x) with
   fun get() = x
 A(1).get
 //│ ╔══[COMPILATION ERROR] `member:get` is neither a field access nor a callable method
-//│ ║  l.203: 	A(1).get
+//│ ║  l.202: 	A(1).get
 //│ ╙──       	    ^^^^
 
 
