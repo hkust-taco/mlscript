@@ -60,3 +60,10 @@ constructors.make(35).value
 :expect 35
 (new constructors.make(35)).value
 //│ = 35
+
+:expect 35
+// :sjs // * `Amazing` properly extends `constructors.make.class`, not the `constructors.make` function
+object Amazing extends constructors.make(35)
+Amazing.value
+//│ = 35
+

@@ -55,7 +55,7 @@ recover(new Child)
 :expect 42
 class GoodBase(val field)
 class GoodChild extends GoodBase({answer: 42})
-if (new GoodChild) is GoodBase(x) then x.answer else 0
+if new GoodChild is GoodBase(x) then x.answer else 0
 //│ = 42
 
 
@@ -77,8 +77,8 @@ if GoodObject is ObjectBase(x) then x else 0
 class SharedBase(val field)
 class LeftChild extends SharedBase({left: 1})
 class RightChild extends SharedBase({right: 2})
-let left = if (new LeftChild) is SharedBase(x) then x.left else 0
-let right = if (new RightChild) is SharedBase(x) then x.right else 0
+let left = if new LeftChild is SharedBase(x) then x.left else 0
+let right = if new RightChild is SharedBase(x) then x.right else 0
 [left, right]
 //│ = [1, 2]
 //│ left = 1
@@ -87,8 +87,8 @@ let right = if (new RightChild) is SharedBase(x) then x.right else 0
 // Separate sites of one constructor retain distinct fields, including when nested.
 :expect [3, 4]
 class NestedField(val field)
-let first = if (new NestedField(new SharedBase({first: 3}))) is NestedField(SharedBase(x)) then x.first else 0
-let second = if (new NestedField(new SharedBase({second: 4}))) is NestedField(SharedBase(x)) then x.second else 0
+let first = if new NestedField(new SharedBase({first: 3})) is NestedField(SharedBase(x)) then x.first else 0
+let second = if new NestedField(new SharedBase({second: 4})) is NestedField(SharedBase(x)) then x.second else 0
 [first, second]
 //│ = [3, 4]
 //│ first = 3
