@@ -40,7 +40,7 @@ object Lifter:
     */
   case class AccessInfo(
       accessed: Set[ScopedOrInnerSymbol], 
-      mutated: Set[ScopedOrInnerSymbol], 
+      mutated: Set[LocalVarSymbol], 
       refdDefns: Set[ScopedInfo]
     ):
     def ++(that: AccessInfo) = AccessInfo(
@@ -50,16 +50,16 @@ object Lifter:
       )
     def withoutLocals(locals: Set[ScopedOrInnerSymbol]) = AccessInfo(
         accessed -- locals,
-        mutated -- locals,
+        mutated.filterNot(locals.contains),
         refdDefns
       )
     def intersectLocals(locals: Set[ScopedOrInnerSymbol]) = AccessInfo(
         accessed.intersect(locals),
-        mutated.intersect(locals),
+        mutated.filter(locals.contains),
         refdDefns
       )
     def addAccess(l: ScopedOrInnerSymbol) = copy(accessed = accessed + l)
-    def addMutated(l: ScopedOrInnerSymbol) = copy(accessed = accessed + l, mutated = mutated + l)
+    def addMutated(l: LocalVarSymbol) = copy(accessed = accessed + l, mutated = mutated + l)
     def addRefdScopedObj(l: ScopedInfo) = copy(refdDefns = refdDefns + l)
     
   object AccessInfo:
@@ -569,11 +569,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
         
         val ident = new Tree.Ident(nme)
         // * The capture field stands for the same slot as the captured local, so it takes the local's type.
-        val capturedType = sym match
-          case l: LocalVarSymbol => l.erasedType
-          case s: (BlockMemberSymbol | InnerSymbol) =>
-            softAssert(false, s"Expected reqdCaptures to contain only LocalVarSymbols, got $s")
-            N
+        val capturedType = sym.erasedType
         val varSym = VarSymbol(ident, erasedType = capturedType)
         val fldSym = BlockMemberSymbol(nme, Nil)
         val tSym = TermSymbol(syntax.MutVal, S(clsSym), ident, erasure = capturedType)
@@ -790,9 +786,12 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
     
     private val (reqPassedSymbols, captures) = reqSymbols
       .partitionMap: s =>
-        usedVars.capturesMap.get(s) match
-          case Some(info) => R((s, info))
-          case None => L(s)
+        s match
+          case l: LocalVarSymbol =>
+            usedVars.capturesMap.get(l) match
+              case Some(info) => R((l, info))
+              case None => L(l)
+          case s: ScopedOrInnerSymbol => L(s)
     
     /** Locals that are directly passed to this object, i.e. not via a capture. */
     final val passedSyms: Set[ScopedOrInnerSymbol] = reqPassedSymbols
