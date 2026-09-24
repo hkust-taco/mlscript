@@ -683,7 +683,13 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
           captureClass.sym.asMemberRef(captureClass.isym),
           captureInfo._2.map(
             (sym, _) => sym.asPath.asArg) :: Nil
-        )(InstantiateMetadata.empty, mut = true, rsc = false)
+        )(
+          InstantiateMetadata.empty,
+          mut = true,
+          // TODO(Derppening): Determine the resource-ness from everything that the capture class *captures* -
+          //                   this should be done after the new resolver has landed and no captures are `rsc?`.
+          rsc = false,
+        )
       else lastWords("tried to instantiate an empty capture")
     
     protected final def addExtraSyms(b: Block, captureSym: => LocalVarSymbol, objSyms: Iterable[ScopedSymbol]): Block =
