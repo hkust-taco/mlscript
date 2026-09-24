@@ -423,10 +423,12 @@ final case class DeclaredParams(params: Ls[Opt[DeclaredType]], hasRest: Bool, re
   * applications constrain the same parameters as inferred arguments.
   */
 final case class CallableTypeShape(source: Term, paramLists: Ls[DeclaredParams],
-    result: Opt[DeclaredType], tparams: Ls[DeclaredTypeParameter]) extends NonAppTermShape:
+    result: Opt[DeclaredType], scheme: Opt[TypeScheme], supplied: Opt[Ls[DeclaredType]],
+    declaration: Opt[TermDefinition]) extends NonAppTermShape:
   require(paramLists.nonEmpty)
-  def describe: Str = "function with a declared signature"
-  def toLoc: Opt[Loc] = source.toLoc
+  def tparams: Ls[DeclaredTypeParameter] = scheme.toList.flatMap(_.parameters)
+  def describe: Str = declaration.fold("function with a declared signature")(d => s"function '${d.bsym.nme}'")
+  def toLoc: Opt[Loc] = declaration.fold(source.toLoc)(_.toLoc)
   protected def getMemberImpl(name: Str)(using NewResolverState): MemberLookup = MemberLookup.Missing
 
 /** An abstract annotation authorizes no operations based on the implementation. */

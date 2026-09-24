@@ -193,6 +193,8 @@ final class NewResolverState private (
     new Cache(source.map(_.typeInterpretations), identity)
   val quantifiedTypes: Cache[(TypeResolution, Ls[VarSymbol]), TypeResolution] =
     new Cache(source.map(_.quantifiedTypes), identity)
+  val instantiatedCallables: Cache[(CallableTypeShape, FlowSymbol, Ls[Marks]), CallableTypeShape] =
+    new Cache(source.map(_.instantiatedCallables), identity)
   // A scheme is owned by its source definition, or by the original interpretation
   // of an anonymous quantified annotation. Neither a view nor an instance is an owner.
   private val typeInstances: Cache[(AnyDefinitionSymbol | TypeResolution, FlowSymbol), Map[VarSymbol, TypeParameterInstance]] =

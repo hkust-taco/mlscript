@@ -8,9 +8,14 @@ a type reference until an operation requests its interface.
 
 Instance wrappers and preservation of quantified signature binders and bounds
 are implemented. Explicit type application also observes annotated polymorphic
-values. The bounded binder-instance cache is implemented and tested independently;
-calls do not yet use it. Contextual views, bidirectional constraints, variance,
-hole inference, and inferred member interfaces remain to be connected to it.
+values. Calls through complete callable signatures use the bounded binder-instance
+cache. `DeclaredType.instances` carries a flat substitution through their declared
+components; curried tails retain it, and independently quantified returned callables
+instantiate their own binders. Stored specializations of these callable signatures
+retain supplied arguments until application. Partial and inferred bodies still use
+the earlier inference path. Contextual views of those bodies, bidirectional
+constraints, variance, hole inference, and inferred member interfaces remain to be
+connected to call-site instantiation.
 The representation and implementation order below are the outcome of the design
 review, not evidence that the recursive acceptance cases already work.
 See the [resolver notes](new-resolution-design.md)
@@ -497,6 +502,16 @@ the recursive site's parameter must receive a cyclic reference to the source
 Verify obligations delivered before and after edge creation, and two callers of
 one inner site with different enclosing marks. Count cache growth until saturation;
 passing a shallow recursion test is not sufficient evidence of termination.
+
+`TypeInstantiationTest` checks that repeated scheme/site allocation reuses the
+whole group, distinct applications through a stored declaration allocate distinct
+groups, and consumers do not copy generic checking candidates into their instances.
+For the implemented signature views, the substitution map contains only original
+binder keys and canonical instance-symbol values. Composition cannot add a nested
+environment or a compound type to that map. Instantiated callable views are cached
+before installing supplied-argument listeners. This bounds this part of the graph;
+the remaining inferred-body views and recursive alias bindings still need the
+corresponding convergence checks before the full design is complete.
 
 During implementation, assert that a call instance's origin is an original binder,
 all of one scheme's binders are allocated before its constraints are activated,

@@ -80,7 +80,16 @@ final class TypeResolution(val source: Term, report: Ls[(Message, Opt[Loc])] => 
 /** A type with its lexical type-parameter bindings. These bindings describe declared
   * interfaces, not constructor arguments or value-flow capture paths.
   */
-final case class DeclaredType(resolution: TypeResolution, bindings: Map[VarSymbol, DeclaredType])
+final case class DeclaredType(resolution: TypeResolution, bindings: Map[VarSymbol, DeclaredType],
+    instances: Map[VarSymbol, TypeParameterInstance]):
+  require(instances.forall((source, instance) => instance.origin eq source),
+    "A substitution must map original binders to their call-site instances")
+  /** Instantiation changes references to source binders, never expands their bounds.
+    * A reference already interpreted in another call retains that interpretation.
+    * The finite map contains original binders and canonical site instances only.
+    */
+  def instantiate(substitution: Map[VarSymbol, TypeParameterInstance]): DeclaredType =
+    copy(instances = substitution ++ instances)
 
 /** A quantified binder belongs to the source scheme; its bounds retain graph links
   * so mutually dependent bounds do not require expanding or copying their types.
@@ -91,3 +100,8 @@ final case class TypeQuantifier(parameter: TypeShape.Parameter,
 /** A callable's binder and bounds interpreted in the surrounding lexical bindings. */
 final case class DeclaredTypeParameter(parameter: TypeShape.Parameter,
     lower: Opt[DeclaredType], upper: Opt[DeclaredType])
+
+/** The owner is the original declaration, or a quantified annotation for an
+  * anonymous callable. Applied and imported views retain this identity.
+  */
+final case class TypeScheme(owner: AnyDefinitionSymbol | TypeResolution, parameters: Ls[DeclaredTypeParameter])

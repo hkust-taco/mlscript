@@ -168,3 +168,69 @@ identity[Int, Int](1)
 //│ ╙──       	                                  ^^^^^^
 //│ = 1
 //│ identity = fun identity
+
+// One stored polymorphic value has separate inferred arguments at each call site.
+:expect [14, 15]
+class First(val first: Int)
+class Second(val second: Int)
+let identity = (x => x) as [A] -> A -> A
+[identity(First(14)).first, identity(Second(15)).second]
+//│ = [14, 15]
+//│ identity = fun identity
+
+// Specialization is retained by the value; it does not specialize the shared source.
+:expect [16, 17]
+class First(val first: Int)
+class Second(val second: Int)
+let identity = (x => x) as [A] -> A -> A
+let first = identity[First]
+let second = identity[Second]
+[first(First(16)).first, second(Second(17)).second]
+//│ = [16, 17]
+//│ first = fun identity
+//│ identity = fun identity
+//│ second = fun identity
+
+// Later parameter lists retain the first application's type-parameter instance.
+:expect [18, 19]
+class First(val first: Int)
+class Second(val second: Int)
+let keep = (x => y => x) as [A] -> A -> A -> A
+let first = keep(First(18))
+let second = keep(Second(19))
+[first(First(0)).first, second(Second(0)).second]
+//│ = [18, 19]
+//│ first = fun
+//│ keep = fun keep
+//│ second = fun
+
+// A stored reference to a fully annotated declaration uses the application's site.
+:expect [20, 21]
+class First(val first: Int)
+class Second(val second: Int)
+private fun identity[A](x: A): A = x
+let shared = identity
+[shared(First(20)).first, shared(Second(21)).second]
+//│ = [20, 21]
+//│ shared = fun identity
+
+// A returned scheme binds B at its own call while retaining the captured A.
+:expect [22, 23, 24, 25]
+class First(val first: Int)
+class Second(val second: Int)
+let pair = (x => y => [x, y]) as [A] -> A -> ([B] -> B -> [A, B])
+let first = pair(First(22))
+let second = pair(Second(23))
+let left = first(Second(24))
+let right = second(First(25))
+[left.0.first, right.0.second, left.1.second, right.1.first]
+//│ = [22, 23, 24, 25]
+//│ first = fun
+//│ left = [First(22), Second(24)]
+//│ pair = fun pair
+//│ right = [Second(23), First(25)]
+//│ second = fun
+
+// A private returned closure must be checked from its annotation before any call.
+class Item(val value: Int)
+private fun get(): Item -> Int = x => x.value

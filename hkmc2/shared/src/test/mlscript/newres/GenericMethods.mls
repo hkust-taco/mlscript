@@ -57,9 +57,10 @@ class Child extends Base with
 //│ ╔══[COMPILATION ERROR] Resolution error in type application
 //│ ║  l.56: 	[1].map[Int, Int]((x, ...) => x)
 //│ ║        	^^^^^^^^^^^^^^^^^
-//│ ╟── Function with a declared signature expected 1 type argument, but got 2
-//│ ║  l.56: 	[1].map[Int, Int]((x, ...) => x)
-//│ ╙──      	^^^^^^^
+//│ ╟── Function 'map' expected 1 type argument, but got 2
+//│ ║  in ../decls/Prelude.mls
+//│ ║  l.162: 	  fun map[U](f: (T, Int, Array[T]) -> U): Array[U]
+//│ ╙──       	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ = [1]
 
 // Imported free functions and methods use the same inference as prelude methods.
@@ -83,7 +84,7 @@ class Methods with
 fun test(m: Methods) = m.identity[Base](new Child).extra
 test(new Methods)
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.83: 	fun test(m: Methods) = m.identity[Base](new Child).extra
+//│ ║  l.84: 	fun test(m: Methods) = m.identity[Base](new Child).extra
 //│ ║        	                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╙── Value of type 'Base' does not contain member 'extra'
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.

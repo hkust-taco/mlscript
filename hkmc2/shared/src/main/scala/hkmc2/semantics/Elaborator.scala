@@ -2229,6 +2229,7 @@ extends Importer:
                 TermDefFlags.empty.copy(isMethod = isMethod, hasResultAnnotation = td.annotatedResultType.isDefined), mfn, annotations, N).withLocOf(td)
               sym.tsym = S(tsym)
               tsym.defn = S(tdf)
+              if newResolution then checkDeclaredResult(tdf)
               
               tdf
             go(sts, Nil, tdf :: acc)

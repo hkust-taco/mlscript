@@ -7,6 +7,32 @@ import hkmc2.semantics.*
 
 
 class TypeInstantiationTest extends AnyFunSuite:
+  test("polymorphic declaration calls allocate by application rather than shared reference"):
+    import io.PlatformPath.given
+    val directory = os.temp.dir(prefix = "call-site-instances-")
+    val file: io.Path = directory / "Library.mls"
+    os.write(directory / "Library.mls",
+      """|#lang(0.3.x, strictResolution: true)
+         |module Library with
+         |  fun identity[A](x: A): A = x
+         |  val shared = identity
+         |  val first = shared(1)
+         |  val second = shared("two")
+         |""".stripMargin)
+    try
+      val paths = TestFolders.compilerPaths(os.pwd)
+      val compiler = CompilerCtx.fresh(io.FileSystem.default, paths,
+        Config.default(TestFolders.mainTestDir(os.pwd)))
+      given DebugPrinter = new DebugPrinter
+      given TL = new TraceLogger:
+        override def doTrace: Boolean = false
+      given Raise = diagnostic => fail(diagnostic.theMsg)
+      val prelude = compiler.getPrelude(paths.preludeFile)
+      val artifact = compiler.getElaboratedBlock(file, prelude.ctx)
+      assert(artifact.state.newResolverState.allocatedTypeInstanceCount == 2)
+      assert(prelude.state.newResolverState.allocatedTypeInstanceCount == 0)
+    finally os.remove.all(directory)
+
   test("a definition and static site allocate their binder group once"):
     given owner: Elaborator.State = new Elaborator.State
     val state = owner.newResolverState

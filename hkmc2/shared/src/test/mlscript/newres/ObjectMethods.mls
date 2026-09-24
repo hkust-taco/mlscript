@@ -26,9 +26,10 @@ Empty.toString(1)
 //│ ╔══[COMPILATION ERROR] Resolution error in application
 //│ ║  l.25: 	Empty.toString(1)
 //│ ║        	^^^^^^^^^^^^^^^^^
-//│ ╟── Function with a declared signature expected 0 arguments, but got 1
-//│ ║  l.25: 	Empty.toString(1)
-//│ ╙──      	^^^^^^^^^^^^^^
+//│ ╟── Function 'toString' expected 0 arguments, but got 1
+//│ ║  in ../decls/Prelude.mls
+//│ ║  l.7: 	  fun toString(): Str
+//│ ╙──     	  ^^^^^^^^^^^^^^^^^^^
 //│ = "Empty"
 
 :expect "empty"
