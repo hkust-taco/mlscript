@@ -362,6 +362,24 @@ class CompilerTest extends AnyFunSuite:
     compiler.compileModule(Path("/Unsafe.mls"))
     assert(errors.exists(_.theMsg.contains("Resolution error")))
     assert(errors.exists(_.allMsgs.exists(_._1.show.contains("Type parameter 'A'"))))
+    assert(!errors.exists(_.allMsgs.exists(_._1.show.contains("exposed by this compilation unit"))))
+
+  test("non-strict files still check their exported interfaces"):
+    val fs = new InMemoryFileSystem(loadStandardLibrary())
+    given cctx: CompilerCtx = CompilerCtx.fresh(fs, paths, Config.default(io.Path("/")))
+    given DebugPrinter = new DebugPrinter
+    given TL = new TraceLogger:
+      override def doTrace = false
+    val errors = scala.collection.mutable.ArrayBuffer.empty[Diagnostic]
+    given Raise = errors += _
+    fs.write("/Unsafe.mls", """#lang(0.3.x, strictResolution: false)
+                                |module Unsafe with
+                                |  fun foo(x) = x.a
+                                |Unsafe.foo({a: 1})
+                                |""".stripMargin)
+    val compiler = new MLsCompiler(_ => summon[Raise])
+    compiler.compileModule(Path("/Unsafe.mls"))
+    assert(errors.exists(_.allMsgs.exists(_._1.show.contains("exposed by this compilation unit"))))
 
   test("compiler can report errors"):
     val (fs, compiler) = createCompiler()

@@ -167,15 +167,25 @@ provides it to a parameter independently of call-site inference. Type aliases ma
 also denote `dyn`. These rules apply in both strict and non-strict resolution.
 Dynamic instantiation uses the existing `new!` syntax.
 
-Before sealing a file or diff-test block, `InterfaceExposure` checks the values
-reachable through its exposed interface. It seeds unannotated parameters and
-unconstrained generic parameters with `UnknownValueShape`, then follows returned
-functions, record/tuple contents, and public instance members. Local examples do
-not close an exposed interface: both `fun foo(x) = x.a` and
-`fun foo[A](x: A) = x.a` are rejected even if this unit calls `foo({a: 1})`.
-Private helpers can retain local inference unless their function values escape.
+Before sealing a file, `InterfaceExposure` checks the values reachable through its
+exposed interface. Diff-test/worksheet blocks run this check only under strict
+resolution; non-strict blocks retain local inference without flooding their public
+definitions. The pass seeds unannotated parameters with `UnknownValueShape`, then
+follows returned functions, record/tuple contents, and public instance members.
+Local examples do not close an exposed interface: `fun foo(x) = x.a` is rejected
+in a strict block even if that block calls `foo({a: 1})`. Private helpers can retain
+local inference unless their function values escape.
 Parameter annotations provide their declared shapes; callable result annotations
 constrain returned implementations through their declared domains.
+
+Generic opacity is independent of interface exposure, visibility, and strict mode.
+Each generic definition is checked under a fresh abstract activation when its type
+parameters are declared. Thus `private fun foo[A](x: A) = x.a` is also rejected,
+even without callers or when every local instantiation supplies a type with `a`.
+The diagnostic identifies the type parameter, without an exposure hint. The
+abstract activation cannot match a concrete caller's exit, so inferred and explicit
+type arguments still substitute into results such as `identity[A](x: A): A = x`.
+Coverage includes strict and non-strict `InterfaceExposure.mls` tests.
 
 Discovery uses a queue and temporary observers of shape publishers. Each reached
 shape is processed once, with listeners discovering subsequent candidates; there

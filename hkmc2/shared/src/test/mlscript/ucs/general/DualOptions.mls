@@ -126,7 +126,7 @@ add_5(Some(5), Some(9))
 //│ = 14
 
 
-private fun add_6(x, y) =
+fun add_6(x, y) =
   if [x, y] is
     [Some(xv), Some(yv)] then xv + yv
     [Some(xv), None]     then xv
@@ -149,7 +149,7 @@ add_6(Some(5), Some(9))
 // Functions from now on have a predicate `p` that can be used to add some preconditions.
 
 
-private fun add_6(p, x, y) =
+fun add_6(p, x, y) =
   if
     x is Some(xv) and y is Some(yv) then xv + yv
     y is None     and p(x) and x is Some(xv) then 42
@@ -179,7 +179,7 @@ add_6((x) => true, Some(5), Some(9))
 //│ = 14
 
 
-private fun add_7(p, x, y) =
+fun add_7(p, x, y) =
   if
     x is Some(xv) and y is Some(yv) then xv + yv
     // y is None    and p(x) and x is Some(xv) then 42
@@ -210,7 +210,7 @@ add_7((x) => x > 0, Some(5), Some(9))
 //│ = 14
 
 
-private fun add_8(p, x, y) =
+fun add_8(p, x, y) =
   if
     x is Some(xv) and y is Some(yv) then xv + yv
     y is None    and p(x) and x is Some(xv) then 42

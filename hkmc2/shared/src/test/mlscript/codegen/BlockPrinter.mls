@@ -112,12 +112,11 @@ fun f(x) =
 
 
 fun incr(n) = n + 1
-private fun (|>) pipe(x, f) = f(x)
+fun (|>) pipe(x, f) = f(x)
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define incr⁰ as fun incr¹(n) {
 //│   return +⁰(n, 1)
 //│ };
-//│ @private
 //│ define pipe⁰ as fun pipe¹(x, f) { return f(x) };
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————

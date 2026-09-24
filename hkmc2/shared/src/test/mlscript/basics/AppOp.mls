@@ -59,7 +59,7 @@ add@1@2
 //│ = [[1], 2, 3]
 
 
-private fun test(f) = f(42)
+fun test(f) = f(42)
 
 // :dp
 test @ x => x + 1

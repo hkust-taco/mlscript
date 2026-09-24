@@ -24,7 +24,7 @@ Cons(1, Nil)
 //│ ╙──      	     ^
 //│ = Cons(1, 2)
 
-private fun map(f, xs) = if xs is
+fun map(f, xs) = if xs is
   Nil then Nil
   x :: xs' then f(x) :: map(f, xs')
 

@@ -5,11 +5,11 @@ import "../../../mlscript-compile/Option.mls"
 
 open Option
 
-private fun map(f) = case
+fun map(f) = case
   Some(x)   then Some(f(x))
   None as n then n
 
-private fun map(f) = case
+fun map(f) = case
   Some(x as n) then Some of f(n)
   None as n then n
 

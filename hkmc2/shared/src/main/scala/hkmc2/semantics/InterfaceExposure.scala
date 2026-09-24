@@ -84,13 +84,6 @@ final class InterfaceExposure(resolver: NewResolver)(using NewResolverState, TL)
         val tuple = TupleShape(ref, TupleShape.Unknown(ref, Nil, unknown) :: Nil)(resolver)
         resolver.constrainParameter(rest, tuple.enter(marks), marks)
 
-  private def typeParameters(params: Ls[VarSymbol], marks: Ls[Marks], path: Path)(using NewResolverState): Unit =
-    params.foreach: param =>
-      if !rstate.hasExplicitTypeArgument(param, marks) then
-        val ref = SimpleRef(param)(param.id)
-        resolver.publishParameter(param, UnknownValueShape(ref)(ShapeProvenance(
-          (msg"Type parameter '${param.nme}' does not specify a member interface." -> param.toLoc) :: path.diagnosticNotes)).enter(marks))
-
   private def members(cls: ClassLikeDef, marks: Ls[Marks], path: Path)(using NewResolverState): Unit =
     cls.body.blk.stats.foreach:
       case d: Definition if InterfaceExposure.isPublic(d) => member(d.bsym, marks, path.via(msg"Member '${d.bsym.nme}' is accessible here." -> d.toLoc))
@@ -114,14 +107,6 @@ final class InterfaceExposure(resolver: NewResolver)(using NewResolverState, TL)
     val (head, marks) = shape.applicationHead
     head match
       case ds: DefnShape if ds.defn.sym.getState is rstate.owner =>
-        shape match
-          case Marked(_: DefnShape, _) =>
-            typeParameters(ds.defn match
-              case td: TermDefinition => td.tparams.toList.flatten.map(_.sym)
-              case cls: ClassLikeDef => cls.tparams.map(_.sym)
-              case _ => Nil
-            , marks, path)
-          case _ => ()
         parameters(shape.unappliedParams, path)
         ds.clsDef match
           case S(cls) =>

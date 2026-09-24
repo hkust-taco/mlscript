@@ -43,7 +43,7 @@ let x = 1
 //│ x = 1
 
 fun incr(n) = n + 1
-private fun (|>) pipe(x, f) = f(x)
+fun (|>) pipe(x, f) = f(x)
 
 let x = x |> incr
 //│ x = 2

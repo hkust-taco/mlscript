@@ -68,11 +68,11 @@ fun singleton(x) = [x]
 //│ ╙──      	^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
-// Nominal argument inference sees the tuple's Array supertype.
+// Nominal argument inference sees the tuple's Array supertype at the caller.
 :expect [4]
 class Item(val value: Int)
-private fun values[A](xs: Array[A]) = xs.map((item, ...) => item.value)
-values([Item(4)])
+fun values[A](xs: Array[A]) = xs.map((item, ...) => item)
+values([Item(4)]).map((item, ...) => item.value)
 //│ = [4]
 
 // Rest callback parameters retain the remaining argument tuple.

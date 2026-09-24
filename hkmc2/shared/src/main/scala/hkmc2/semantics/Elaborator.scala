@@ -2161,6 +2161,7 @@ extends Importer:
                   val (tps, ctx) = typeParams(t)
                   (S(tps), ctx)
                 case N => (N, ctx)
+              if newResolution then tps.foreach(ps => registerTypeParameters(tsym, ps.map(_.sym)))
               // * Add parameters to context
               var newCtx = newCtx1
               val pss = td.paramLists.map: ps =>
@@ -2278,6 +2279,7 @@ extends Importer:
           case N => Nil
         
         newCtx ++= tps.map(tp => tp.sym.name -> tp.sym) // TODO: correct ++?
+        if newResolution && (k isnt Als) then registerTypeParameters(td.symbol, tps.map(_.sym))
         
         val isDataClass = annotations.exists:
           case Annot.Modifier(Keyword.`data`) => true
@@ -2949,11 +2951,12 @@ extends Importer:
     val (res, ctx) = block(sts, hasResult = false, resultInterp = Trm)
     computeVariances(res)
     if newResolution then
-      val exports = res.stats.collect:
-        case d: Definition if InterfaceExposure.isPublic(d) => d.bsym
-      val values = res.stats.collect:
-        case DefineVar(sym: LocalVarSymbol, rhs) => Term.SimpleRef(sym)(new Ident(sym.nme).withLocOf(rhs))
-      InterfaceExposure(this).check(exports, res.res :: values)
+      if config.language.strictResolution then
+        val exports = res.stats.collect:
+          case d: Definition if InterfaceExposure.isPublic(d) => d.bsym
+        val values = res.stats.collect:
+          case DefineVar(sym: LocalVarSymbol, rhs) => Term.SimpleRef(sym)(new Ident(sym.nme).withLocOf(rhs))
+        InterfaceExposure(this).check(exports, res.res :: values)
       rstate.completeBlock(res)
     (res, ctx)
   

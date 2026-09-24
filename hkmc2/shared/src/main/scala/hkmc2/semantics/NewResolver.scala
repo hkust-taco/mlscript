@@ -312,6 +312,19 @@ class NewResolver:
   def resolError(src: Term | Pattern, msgs: Ls[(Message, Opt[Loc])])(using rs: NewResolverState): Unit = rs.report:
     ErrorReport(msg"Resolution error in ${src.describe}" -> src.toLoc ::msgs, source = Diagnostic.Source.Compilation)
   
+  def registerTypeParameters(owner: AnyDefinitionSymbol, params: Ls[VarSymbol])(using State, NewResolverState): Unit =
+    if params.nonEmpty then
+      // Check every generic body under an abstract activation, including private
+      // definitions and non-strict worksheets. Its fresh entry site cannot match
+      // a real caller's exit, so identity-like results still substitute the actual
+      // type argument without leaking this abstract candidate into the caller.
+      val site = FlowSymbol("generic interface")
+      params.foreach: param =>
+        val ref = SimpleRef(param)(param.id)
+        val unknown = UnknownValueShape(ref)(ShapeProvenance(
+          msg"Type parameter '${param.nme}' does not specify a member interface." -> param.toLoc :: Nil))
+        publishParameter(param, MarkedShape.enter(unknown, ResolutionBoundary(owner), S(site)))
+
   /** Explicit and inferred type arguments use the same entry/exit paths as term
     * arguments. An explicit argument fixes that instantiation; its value argument
     * must not add a more precise implementation shape to the declared interface.
