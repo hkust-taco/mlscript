@@ -1039,7 +1039,10 @@ class FlowConstraintsCollector(
             cc.constrain(processResult(qual), UnknownCons)
             cc.constrain(processResult(fld), UnknownCons)
             UnknownProd
-          case Cast(value, _, _) => processResult(value)
+          case Cast(value, _, _) =>
+            val valueStrat = processResult(value)
+            cc.constrain(valueStrat, UnknownCons)
+            valueStrat
           case Value.MemberRef(_, disamb) => generatedVars(disamb)
           case Value.SimpleRef(sym) => generatedVars(sym)
           case Value.This(_) => UnknownProd

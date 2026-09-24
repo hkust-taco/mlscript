@@ -4,12 +4,14 @@
 :wasm
 
 
-// FIXME: a checked cast observes its operand even when the cast's result is unused.
-// The allocation must remain live; replacing it with undefined makes this valid cast trap.
-:fixme
+data class Box(x)
+//│ Wasm result:
+//│ = {}
+
+
+// a cast observes its operand even when the cast's result is unused, so the allocation must remain live
 :flowBasedOpt mono
 :soir
-data class Box(x)
 fun cast() =
   let x = Box(1)
   val unused: Box = x as Object
@@ -17,23 +19,17 @@ fun cast() =
 cast()
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ define cast⁰ as fun cast¹() {
-//│   let unused;
-//│   define unused as val unused⁰ = (undefined as! Box⁰);
+//│   let unused, x;
+//│   set x = Box⁰(1);
+//│   define unused as val unused⁰ = (x as! Box¹);
 //│   return 42
-//│ };
-//│ @data
-//│ define Box¹ as class Box⁰ {
-//│   val x⁰;
-//│   constructor Box²(x) { define x⁰ as val x¹ = x; end }
 //│ };
 //│ return cast¹()
 //│ Wasm result:
-//│ ═══[RUNTIME ERROR] RuntimeError: illegal cast
+//│ = 42
 
-:fixme
 :flowBasedOpt mono
 :soir
-data class Box(x)
 fun cast() =
   let x = Box(1)
   val unused = x as Object
@@ -42,18 +38,55 @@ fun cast() =
 cast()
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ define cast² as fun cast³() {
-//│   let tmp, unused;
-//│   define unused as val unused¹ = undefined;
-//│   define tmp as val tmp⁰ = (unused¹ as! Box³);
+//│   let tmp, unused, x;
+//│   set x = Box⁰(1);
+//│   define unused as val unused¹ = x;
+//│   define tmp as val tmp⁰ = (unused¹ as! Box¹);
 //│   return 42
-//│ };
-//│ @data
-//│ define Box⁴ as class Box³ {
-//│   val x²;
-//│   constructor Box⁵(x) { define x² as val x³ = x; end }
 //│ };
 //│ return cast³()
 //│ Wasm result:
-//│ ═══[RUNTIME ERROR] RuntimeError: illegal cast
+//│ = 42
 
 
+
+:flowBasedOpt mono
+:soir
+fun f() =
+  fun mk(): Box = Box(1)
+  val u: Box = mk()
+  42
+f()
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ define f⁰ as fun f¹() {
+//│   let mk;
+//│   define mk as fun mk⁰() { return (Box⁰(1) as! Box¹) };
+//│   do mk⁰();
+//│   return 42
+//│ };
+//│ return f¹()
+//│ Wasm result:
+//│ = 42
+
+
+
+// although dead param elim removes the param, the checked cast output due to
+// the call to `take` still consumes the `Box(1)` so the allocation is not removed
+:flowBasedOpt mono
+:soir
+fun f() =
+  fun take(b: Box) = b
+  val u = take(Box(1))
+  42
+f()
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ define f² as fun f³() {
+//│   let take;
+//│   define take as fun take⁰() { return undefined };
+//│   do Box⁰(1);
+//│   do take⁰();
+//│   return 42
+//│ };
+//│ return f³()
+//│ Wasm result:
+//│ = 42
