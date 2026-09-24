@@ -1,0 +1,5 @@
+[mcp_servers.metals]
+command = "/opt/homebrew/bin/cs"
+args = ["launch", "org.scalameta:metals-mcp_2.13:1.6.9", "--", "--workspace", "/Users/parreaux/work/Research/code/mlscript", "--transport", "stdio"]
+startup_timeout_sec = 180
+tool_timeout_sec = 600

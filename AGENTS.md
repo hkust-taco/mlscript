@@ -3,6 +3,14 @@
 
 ## Workflow
 
+When working on Scala code, use the Metals MCP tools when available for semantic
+symbol searches, inspection, documentation, and finding usages, and for quick
+file or module compilation feedback. Codex's project configuration in
+`.codex/config.toml` can launch the headless Metals server automatically.
+If Metals is unavailable, continue with source searches and SBT, and report the
+connection problem. Metals compilation and test tools do not replace the SBT
+test prerequisites and final validation below.
+
 It is best to leave the SBT shell open (by just typing the `sbt` command line)
 and issue commands directly in that shell, as SBT startup is very slow.
 
@@ -114,5 +122,4 @@ to ensure that no needless empty-line changes are included in the PR. If you fin
 ## Manipulating IR representations
 
 When working with IR representations, please refer to the "Important design notes" in `hkmc2/shared/src/main/scala/hkmc2/codegen/Block.scala`.
-
 
