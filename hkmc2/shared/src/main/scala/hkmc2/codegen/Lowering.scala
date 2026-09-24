@@ -678,7 +678,10 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
   private def newSelection(sel: NewSel)(k: (Term, Tree.Ident, Opt[DefinitionSymbol[?]]) => Block)(using LoweringCtx): Block =
     val NewSel(prefix, id, _) = sel
     if !checkProjection(sel) || sel.isErroneous then compError
-    else if sel.hasDynamicTarget then k(prefix, memberIdent(id, N), N)
+    else if sel.tupleIndex.nonEmpty && sel.resolvedTargets.nonEmpty then fail:
+      ErrorReport(msg"This selection has both tuple and nominal member targets" -> sel.toLoc :: Nil,
+        source = Diagnostic.Source.Compilation)
+    else if sel.hasDynamicTarget || sel.tupleIndex.nonEmpty then k(prefix, memberIdent(id, N), N)
     else sel.resolvedTargets.distinct match
       case Nil => fail:
         ErrorReport(msg"This selection of member '${id.name}' has no resolved target" -> sel.toLoc :: Nil,
@@ -705,6 +708,11 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
             ,
             source = Diagnostic.Source.Compilation)
         else k(prefix, memberIdent(id, N), N)
+
+  private def selectionPath(sel: NewSel, prefix: Path, name: Tree.Ident,
+      target: Opt[DefinitionSymbol[?]]): Path = sel.tupleIndex match
+    case S(index) => DynSelect(prefix, Value.Lit(Tree.IntLit(BigInt(index))), true).withLocOf(sel)
+    case N => Select(prefix, name)(target)(false).withLocOf(sel)
 
   /** A projection must identify its class as well as its member: different
     * classes can inherit the same definition, and wildcard receivers can differ. */
@@ -1146,7 +1154,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
       // * are preserved in the call and not moved to a temporary variable.
       case sel: NewSel => newSelection(sel): (prefix, name, target) =>
         subTerm_nonTail(prefix): p =>
-          conclude(Select(p, name)(target)(false).withLocOf(sel))
+          conclude(selectionPath(sel, p, name, target))
       case ref: UnresolvedRef => openSelection(ref): (prefix, member, target) =>
         subTerm_nonTail(prefix): p =>
           conclude(Select(p, memberIdent(ref.id, member))(target)(false).withLocOf(ref))
@@ -1220,6 +1228,10 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
                 source = Diagnostic.Source.Compilation)
       case sel: NewSel => newSelection(sel): (prefix, name, target) =>
         target match
+          case N if sel.tupleIndex.nonEmpty =>
+            subTerm_nonTail(prefix): p =>
+              subTerm_nonTail(rhs): r =>
+                AssignDynField(p, Value.Lit(Tree.IntLit(BigInt(sel.tupleIndex.get))), true, r, k(unit))
           case S(sym: TermSymbol) =>
             subTerm_nonTail(prefix): p =>
               subTerm_nonTail(rhs): r =>
@@ -1290,8 +1302,9 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
 
     case whltrm: st.SynthWhile => ucs.Normalization(this)(whltrm)(k)
       
-    case sel: NewSel => newSelection(sel)((prefix, name, target) =>
-      setupNamedSelection(prefix, name, target)(k))
+    case sel: NewSel => newSelection(sel): (prefix, name, target) =>
+      if sel.tupleIndex.nonEmpty then subTerm_nonTail(prefix)(p => k(selectionPath(sel, p, name, target)))
+      else setupNamedSelection(prefix, name, target)(k)
         
     
     case sel @ Sel(prefix, nme) =>

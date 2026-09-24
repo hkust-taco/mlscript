@@ -191,9 +191,18 @@ carry those type-argument contexts without reading implementation value flow.
 `newres/DeclaredTypes.mls` covers unused annotated functions, unannotated fields,
 subclass overrides, inherited fields, curried constructors, nested captures,
 generic aliases, separate signatures, and distinct generic instantiations. Its
-function/tuple-constraint example remains an explicit `:fixme`: inferring through
-`Foo[[A, Int]]` with a callback requires function-parameter constraints and tuple
-projection shapes. REPL method cases remain assigned to the other branch.
+function/tuple-constraint example now passes: callback parameter types flow into
+implementation parameters, callback results constrain inferred type arguments,
+and calls through declared signatures contribute argument constraints. Tuple
+types retain their element interfaces, and zero-based projections preserve
+capture marks through tuple values, declared types, and spreads. Mutable tuple
+reads do not reuse initializer shapes. Distinct callback instantiations and
+opaque annotated tuple elements have regression coverage.
+
+WASM tuple reads and writes pass, using indexed lowering. The complete callback
+example and calls through tuple elements remain explicit WASM `:fixme` cases:
+that backend still lacks the required first-class function representation and
+anonymous-function lowering. REPL method cases remain assigned to the other branch.
 
 The original annotated-receiver cases from WASM `Basics` now pass and are covered
 by `newres/wasm/DeclaredTypes.mls`. A fresh trial reaches a later capture assertion

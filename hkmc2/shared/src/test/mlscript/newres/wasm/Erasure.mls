@@ -1,8 +1,6 @@
 :.
 
 
-:global
-:wasm
 
 
 // Erasure must prepare an unboxed call target before lowering the caller's body.

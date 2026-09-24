@@ -3,7 +3,6 @@
 // Empty blocks do not warn; each compiled block warns when both are enabled.
 :global
 :js
-:wasm
 
 :w
 1

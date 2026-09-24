@@ -99,6 +99,8 @@ class NewResolver:
         case UnitVal() => result.publish(TypeShape.Unit)
         case SimpleRef(sym: VarSymbol) if sym.decl.exists(_.isInstanceOf[TyParam]) =>
           result.publish(TypeShape.Parameter(sym))
+        case Tup(fields) if fields.forall(_.isInstanceOf[Fld]) =>
+          result.publish(TypeShape.Tuple(fields.collect { case Fld(_, sign, _) => typeResolution(sign) }))
         case _: WildcardTy | _: Neg | _: Rcd | _: Tup | _: Lit | Missing | Error() =>
           result.publish(TypeShape.Abstract)
         case _ => listen(term, discardMarks = true):
@@ -215,6 +217,9 @@ class NewResolver:
                   case single => DeclaredParams(S(declaredType(typeResolution(single), current.bindings)) :: Nil, false)
                 publish(CallableTypeShape(tpe.resolution.source, ps :: Nil,
                   S(declaredType(ret, current.bindings))))
+              case TypeShape.Tuple(fields) =>
+                publish(TupleShape(current.resolution.source,
+                  fields.map(field => TupleShape.TypedField(declaredType(field, current.bindings), Nil))))
               case TypeShape.Union(left, right) => next(left); next(right)
               case TypeShape.Intersection(left, right) => next(left); next(right)
               case TypeShape.Unit | TypeShape.Abstract => publish(OpaqueTypeShape(tpe.resolution.source))
@@ -305,8 +310,11 @@ class NewResolver:
       listenTypeValues(arg): tpe =>
         publishTypeArgument(param, tpe.enter(marks))
 
-  private def inferTypeArguments(tpe: DeclaredType, value: TermShape, marks: Ls[Marks],
-      seen: Set[TypeResolution]): Unit =
+  // Install each constraint edge before subscribing: callback parameter/result
+  // flow can revisit it immediately. Distinct instantiations retain their marks.
+  private val typeConstraints = mutable.Set.empty[(DeclaredType, TermShape, Ls[Marks])]
+  private def inferTypeArguments(tpe: DeclaredType, value: TermShape, marks: Ls[Marks]): Unit =
+    if !typeConstraints.add((tpe, value, marks)) then return
     def follow(tpe: DeclaredType, args: Ls[DeclaredType], captures: Ls[Marks],
         seen: Set[TypeResolution]): Unit = if !seen(tpe.resolution) then
       val next = seen + tpe.resolution
@@ -323,12 +331,27 @@ class NewResolver:
         case TypeShape.Alias(symbol, S(rhs)) =>
           val bindings = tpe.bindings ++ symbol.defn.get.tparams.map(_.sym).zip(args)
           follow(declaredType(rhs, bindings), Nil, captures, next)
+        case TypeShape.Tuple(fields) => value.enter(captures) match
+          case Marked(tuple: TupleShape, context) =>
+            fields.zipWithIndex.foreach: (field, index) =>
+              tuple.getMember(index.toString) match
+                case MemberLookup.Indexed(actual, inner) => listenTupleField(actual): shape =>
+                  shape.exit(inner).exit(context) match
+                    case value: TermShape =>
+                      inferTypeArguments(declaredType(field, tpe.bindings), value, marks)
+                    case NoShape => ()
+                case _ => ()
+          case _ => ()
+        case TypeShape.Function(_, _) => value.enter(captures) match
+          case actual: TermShape =>
+            constrainFunction(declaredType(tpe.resolution, tpe.bindings), actual, marks)
+          case NoShape => ()
         case TypeShape.Nominal(cls) if args.nonEmpty =>
           val (head, context) = value.applicationHead
           def constrain(param: TyParam, pattern: DeclaredType): Unit =
             def receive(shape: Shape): Unit = shape match
               case shape: TermShape => shape.exit(context) match
-                case actual: TermShape => inferTypeArguments(pattern, actual, marks, next)
+                case actual: TermShape => inferTypeArguments(pattern, actual, marks)
                 case NoShape => ()
               case _ => softAssert(false, "A type parameter received a symbolic overload set")
             param.sym.shapeListeners += receive
@@ -340,11 +363,77 @@ class NewResolver:
                 nominal.bindings.get(param.sym).foreach: bound =>
                   listenTypeValues(bound): shape =>
                     shape.exit(context) match
-                      case actual: TermShape => inferTypeArguments(pattern, actual, marks, next)
+                      case actual: TermShape => inferTypeArguments(pattern, actual, marks)
                       case NoShape => ()
             case _ => ()
         case _ => () // Concrete annotations are opaque, irrespective of the argument value.
-    follow(tpe, Nil, Nil, seen)
+    // Alias expansion guards only unproductive cycles. Descending into a tuple,
+    // nominal argument, or arrow installs another edge with its own cycle guard.
+    follow(tpe, Nil, Nil, Set.empty)
+
+  /** Function constraints reverse the parameter flow and preserve result flow.
+    * Read an implementation only while checking it against its declared interface;
+    * calls through that interface continue to expose only the declared result.
+    */
+  private def constrainFunction(expected: DeclaredType, actual: TermShape, marks: Ls[Marks]): Unit =
+    val context = actual.applicationHead._2
+    def results(listener: TermShape => Unit): Unit = actual.applicationHead._1 match
+      case intro: IntroShape => intro.trm match
+        case Lam(_, body) => listenTerm(body)(listener)
+        case _ => ()
+      case ds: DefnShape => ds.defn match
+        case td: TermDefinition => td.sign match
+          case S(sign) => listenSignatureResult(declaredType(typeResolution(sign), Map.empty),
+            if td.flags.hasResultAnnotation then 0 else td.params.length)(listener)
+          case N => td.body.foreach(listenTerm(_)(listener))
+        case _ => ()
+      case _ => ()
+    def matchLists(expected: DeclaredType, remaining: Ls[(ParamList, Ls[Marks])]): Unit =
+      listenTypeValues(expected):
+        case Marked(callable: CallableTypeShape, expectedContext) => remaining match
+          case (params, _) :: tail =>
+            val declared = callable.paramLists.head
+            if declared.params.length != params.params.length || declared.hasRest != params.restParam.nonEmpty then
+              resolError(expected.resolution.source, msg"Callback parameter list does not match its declared function type." -> actual.toLoc :: Nil)
+            else
+              params.params.zip(declared.params).foreach: (param, sign) =>
+                sign.foreach: tpe =>
+                  listenTypeValues(tpe): shape =>
+                    constrainParameter(param, shape.exit(expectedContext).enter(context), context)
+              callable.result.foreach: ret =>
+                tail match
+                  case Nil => results: shape =>
+                    shape.exit(context).enter(expectedContext) match
+                      case value: TermShape => inferTypeArguments(ret, value, marks)
+                      case NoShape => ()
+                  case _ => matchLists(ret, tail)
+          case Nil => ()
+        case _ => ()
+    actual match
+      case Marked(givenType: CallableTypeShape, actualContext) =>
+        listenTypeValues(expected):
+          case Marked(wanted: CallableTypeShape, expectedContext) =>
+            val domain = givenType.paramLists.head
+            val expectedDomain = wanted.paramLists.head
+            if domain.params.length != expectedDomain.params.length || domain.hasRest != expectedDomain.hasRest then
+              resolError(expected.resolution.source, msg"Callback parameter list does not match its declared function type." -> actual.toLoc :: Nil)
+            else
+              domain.params.zip(expectedDomain.params).foreach:
+                case (S(givenParam), S(wantedParam)) =>
+                  listenTypeValues(wantedParam): shape =>
+                    shape.exit(expectedContext).enter(actualContext) match
+                      case value: TermShape => inferTypeArguments(givenParam, value, context)
+                      case NoShape => ()
+                case _ => ()
+              wanted.result.foreach: ret =>
+                def receive(shape: TermShape): Unit = shape.exit(actualContext).enter(expectedContext) match
+                  case value: TermShape => inferTypeArguments(ret, value, marks)
+                  case NoShape => ()
+                givenType.paramLists.tail match
+                  case Nil => givenType.result.foreach(listenTypeValues(_)(receive))
+                  case tail => receive(givenType.copy(paramLists = tail))
+          case _ => ()
+      case _ => matchLists(expected, actual.unappliedParams)
 
   private def listenSignatureResult(tpe: DeclaredType, count: Int)(listener: TermShape => Unit): Unit =
     if count == 0 then listenTypeValues(tpe)(listener)
@@ -353,49 +442,64 @@ class NewResolver:
         callable.result.foreach(listenSignatureResult(_, count - 1)(listener))
       case _ => ()
 
+  private def listenTupleField(field: TupleShape.Fixed)(listener: TermShape => Unit): Unit =
+    def receive(shape: TermShape): Unit = shape.exit(field.marks) match
+      case value: TermShape => listener(value)
+      case NoShape => ()
+    field match
+      case TupleShape.Field(field, _) => listenTerm(field.term)(receive)
+      case TupleShape.TypedField(tpe, _) => listenTypeValues(tpe)(receive)
+      case TupleShape.UnknownField(source, _) => receive(UnknownValueShape(source))
+
   /** Subscribe once to complete argument-tuple candidates. A pending spread is not
     * an argument, nor evidence of an arity mismatch; each resolved combination is.
     */
   def zipArgs(mss: Ls[Marks], ps: Ls[Param], r: Opt[Param], args: Term, src: Term, funSh: TermShape): Unit =
-    val expectedCount = ps.length
-    def publish(p: Param, shape: TermShape | NoShape): Unit = shape match
+    val params = ps ::: r.toList
+    zipArgumentShapes(mss, ps.length, r.nonEmpty, args, src, funSh): (index, shape) =>
+      constrainParameter(params(index), shape, mss)
+
+  private def constrainParameter(p: Param, shape: TermShape | NoShape, marks: Ls[Marks]): Unit =
+    shape match
       case NoShape => ()
       case sh: TermShape =>
         val sign = p.sign.map(sign => declaredType(typeResolution(sign), Map.empty)).orElse(signatureParameters.get(p.sym))
         sign match
-          case S(tpe) => inferTypeArguments(tpe, sh, mss, Set.empty)
+          case S(tpe) => inferTypeArguments(tpe, sh, marks)
           case N => publishTypeArgument(p.sym, sh)
+
+  private def zipArgumentShapes(mss: Ls[Marks], expectedCount: Int, hasRest: Bool,
+      args: Term, src: Term, funSh: TermShape)(publish: (Int, TermShape | NoShape) => Unit): Unit =
     def matchSegments(tuple: TupleShape, marks: Marks): Unit =
       val segments = tuple.segments
-      val knownCount = segments.count(_.isInstanceOf[TupleShape.Field])
+      val knownCount = segments.count(_.isInstanceOf[TupleShape.Fixed])
       // Distribute only successful argument counts. Unknown spreads retain all
       // possible fixed positions and the residual tail for a rest parameter.
       val extra = (expectedCount - knownCount).max(0)
       def assign(segment: TupleShape.Segment, positions: Range): Unit =
         positions.foreach: index =>
-          val p = ps(index)
           segment match
-            case TupleShape.Field(field, inner) => listenTerm(field.term): sh =>
-              publish(p, sh.exit(inner).exit(marks).enter(mss))
+            case field: TupleShape.Fixed => listenTupleField(field): sh =>
+              publish(index, sh.exit(marks).enter(mss))
             case TupleShape.Unknown(_, inner, value) =>
-              publish(p, value.exit(inner).exit(marks).enter(mss))
+              publish(index, value.exit(inner).exit(marks).enter(mss))
       def loop(rest: Ls[TupleShape.Segment], before: Int, unknownBefore: Bool): Unit = rest match
         case Nil => ()
-        case (field: TupleShape.Field) :: tail =>
+        case (field: TupleShape.Fixed) :: tail =>
           val unknownAfter = tail.exists(_.isInstanceOf[TupleShape.Unknown])
           // With no later unknown segment, preceding spreads must supply all
           // missing fixed arguments, even when the function has a rest parameter.
           val first = if unknownBefore && !unknownAfter then before + extra else before
           val last = if !unknownBefore then before
-            else if r.nonEmpty then expectedCount - 1 else before + extra
+            else if hasRest then expectedCount - 1 else before + extra
           assign(field, first.max(0) until (last + 1).min(expectedCount))
           loop(tail, before + 1, unknownBefore)
         case (unknown: TupleShape.Unknown) :: tail =>
-          val end = if r.nonEmpty then expectedCount else before + extra
+          val end = if hasRest then expectedCount else before + extra
           assign(unknown, before until end)
           loop(tail, before, true)
       loop(segments, 0, false)
-      r.foreach: p =>
+      if hasRest then
         // If consumption reaches an unknown segment, some subsequent fields
         // may have been consumed too. Approximate that optional prefix with an
         // unknown segment, retaining the suffix that must remain. Publishing
@@ -405,7 +509,7 @@ class NewResolver:
           if count == 0 then xs
           else xs match
             case Nil => Nil
-            case (_: TupleShape.Field) :: rest => drop(rest, count - 1, approximate)
+            case (_: TupleShape.Fixed) :: rest => drop(rest, count - 1, approximate)
             case (unknown: TupleShape.Unknown) :: Nil =>
               // Consuming a prefix changes the length, but not the element
               // shape, when there are no following fields to merge into it.
@@ -414,9 +518,9 @@ class NewResolver:
               val suffix = drop(rest, count, false)
               if approximate then TupleShape.Unknown(tuple.source, Nil, UnknownValueShape(tuple.source)) :: suffix else suffix
         val remaining = drop(segments, expectedCount, true)
-        val rest = if ps.isEmpty then tuple else TupleShape(tuple.source, TupleShape.Rest(tuple, remaining) :: Nil)
-        publish(p, rest.exit(marks).enter(mss))
-    checkArgumentArity(args, expectedCount, r.nonEmpty, src, funSh):
+        val rest = if expectedCount == 0 then tuple else TupleShape(tuple.source, TupleShape.Rest(tuple, remaining) :: Nil)
+        publish(expectedCount, rest.exit(marks).enter(mss))
+    checkArgumentArity(args, expectedCount, hasRest, src, funSh):
       case (tuple, marks) => matchSegments(tuple, marks)
   
   private def checkArgumentArity(args: Term, expected: Int, rest: Bool, src: Term,
@@ -424,7 +528,7 @@ class NewResolver:
     val reportedCounts = mutable.Set.empty[Int]
     listenTerm(args):
       case Marked(tuple: TupleShape, marks) =>
-        val known = tuple.segments.count(_.isInstanceOf[TupleShape.Field])
+        val known = tuple.segments.count(_.isInstanceOf[TupleShape.Fixed])
         val unknown = known != tuple.segments.length
         val mismatch = (!unknown && known < expected) || (!rest && known > expected)
         if mismatch then
@@ -587,7 +691,11 @@ class NewResolver:
     lhs match
       case Marked(callable: CallableTypeShape, context) =>
         val ps = callable.paramLists.head
-        checkArgumentArity(args, ps.params.length, ps.hasRest, res, lhs)(_ => ())
+        zipArgumentShapes(context :: Nil, ps.params.length, ps.hasRest, args, res, lhs): (index, value) =>
+          if index < ps.params.length then ps.params(index).foreach: tpe =>
+            value match
+              case value: TermShape => inferTypeArguments(tpe, value, context :: Nil)
+              case NoShape => ()
         def publish(shape: TermShape): Unit = shape.exit(context) match
           case value: TermShape =>
             if res.shapes.add(value) then res.notifyShapeListeners(value)
@@ -715,6 +823,8 @@ class NewResolver:
             val candidate = prefix -> member
             if !ref.resolvedMembers.contains(candidate) then ref.resolvedMembers ::= candidate
             publishDeclared(ref, member, ref.resSym, bindings, marks)
+          case MemberLookup.Indexed(_, _) =>
+            resolError(ref, msg"Tuple elements must be selected by index." -> ref.toLoc :: Nil)
           case MemberLookup.Dynamic(marks) =>
             if !ref.dynamicPrefixes.contains(prefix) then ref.dynamicPrefixes ::= prefix
             publishDynamic(ref, marks)
@@ -770,6 +880,15 @@ class NewResolver:
       case MemberLookup.Declared(member, bindings, marks) =>
         if !sel.resolvedMembers.contains(member) then sel.resolvedMembers ::= member
         publishDeclared(sel, member, sel.resSym, bindings, marks)
+      case MemberLookup.Indexed(field, marks) =>
+        val index = sel.id.name.toIntOption
+        softAssert(index.exists(_ >= 0), "Tuple lookup must identify a nonnegative index")
+        sel.tupleIndex = index
+        listenTupleField(field): shape =>
+          shape.exit(marks) match
+            case value: TermShape =>
+              if sel.shapes.add(value) then sel.notifyShapeListeners(value)
+            case NoShape => ()
       case MemberLookup.Dynamic(marks) =>
         sel.hasDynamicTarget = true
         publishDynamic(sel, marks)
@@ -1073,6 +1192,15 @@ class NewResolver:
           case sym: SymShape => fromSymbol(sym, instantiate, underlying, _ => ())
           case value: TermShape => instantiate(value)
         listener(shape)
+    case Mut(underlying: Tup) => listenTerm(underlying):
+      case Marked(tuple: TupleShape, marks) =>
+        val fields = tuple.segments.map:
+          case _: TupleShape.Fixed => TupleShape.UnknownField(trm, Nil)
+          case unknown: TupleShape.Unknown => unknown
+        TupleShape(trm, TupleShape.Rest(tuple, fields) :: Nil).exit(marks) match
+          case shape: TermShape => listener(shape)
+          case NoShape => ()
+      case shape => listener(shape)
     case Mut(underlying) => listenTerm(underlying)(listener)
     case tuple: Tup => listenAggregate(tuple, listener): publish =>
         def expand(elems: Ls[Elem], reversed: Ls[TupleShape.Element]): Unit = elems match

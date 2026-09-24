@@ -262,6 +262,7 @@ enum MemberLookup:
   // Declared members expose signatures only. Their marks transport dependent
   // type arguments; they never authorize reading an implementation's value flow.
   case Declared(member: BlockMemberSymbol, bindings: Map[VarSymbol, DeclaredType], marks: Ls[Marks])
+  case Indexed(field: TupleShape.Fixed, marks: Ls[Marks])
   case Dynamic(marks: Ls[Marks])
   case Missing
   case Unknown(reason: MemberLookup.Uncertainty, loc: Opt[Loc])
@@ -269,6 +270,7 @@ enum MemberLookup:
   def withMarks(marks: Ls[Marks]): MemberLookup = this match
     case Found(member, inner) => Found(member, inner ::: marks)
     case Declared(member, bindings, inner) => Declared(member, bindings, inner ::: marks)
+    case Indexed(field, inner) => Indexed(field, inner ::: marks)
     case Dynamic(inner) => Dynamic(inner ::: marks)
     case _ => this
 
@@ -377,8 +379,8 @@ final case class NominalTypeShape(defn: ClassLikeDef, bindings: Map[VarSymbol, D
 /** Parameter types and arity exposed by one list in a declared calling interface. */
 final case class DeclaredParams(params: Ls[Opt[DeclaredType]], hasRest: Bool)
 
-/** Only the calling interface is visible through an annotation. No arguments are
-  * propagated into implementation parameters, and the result comes from its type.
+/** Calls through annotations expose only the declared result. Argument shapes
+  * constrain type parameters in the interface; they do not recover its implementation.
   */
 final case class CallableTypeShape(source: Term, paramLists: Ls[DeclaredParams],
     result: Opt[DeclaredType]) extends NonAppTermShape:
@@ -454,7 +456,7 @@ final case class TupleShape(source: Term, elements: Ls[TupleShape.Element]) exte
     case segment: TupleShape.Segment => segment :: Nil
     case TupleShape.Rest(_, segments) => segments
     case TupleShape.Spread(shape, marks) => shape.segments.map:
-      case TupleShape.Field(field, inner) => TupleShape.Field(field, inner ::: marks :: Nil)
+      case field: TupleShape.Fixed => field.withMarks(marks :: Nil)
       case TupleShape.Unknown(source, inner, value) => TupleShape.Unknown(source, inner ::: marks :: Nil, value)
   /** Does this candidate already depend on the given producer in the given context?
     * `source` identifies the producer by syntax-node identity; `marks` distinguish
@@ -474,7 +476,16 @@ final case class TupleShape(source: Term, elements: Ls[TupleShape.Element]) exte
       ((shape.source is source) && inner == marks) || shape.containsSpread(source, marks)
   def describe: Str = "tuple literal"
   def toLoc: Opt[Loc] = source.toLoc
-  protected def getMemberImpl(name: Str): MemberLookup = ??? // Structural tuple members are not implemented yet.
+  protected def getMemberImpl(name: Str): MemberLookup = name.toIntOption match
+    case S(index) if index >= 0 =>
+      def loop(rest: Ls[TupleShape.Segment], index: Int): MemberLookup = rest match
+        case (field: TupleShape.Fixed) :: tail =>
+          if index == 0 then MemberLookup.Indexed(field, Nil) else loop(tail, index - 1)
+        case (_: TupleShape.Unknown) :: _ =>
+          MemberLookup.Unknown(MemberLookup.Uncertainty.ValueShape, toLoc)
+        case Nil => MemberLookup.Missing
+      loop(segments, index)
+    case _ => MemberLookup.Missing
 
 /** Values whose members and call results are deliberately checked only at runtime.
   * Unlike UnknownValueShape, this authorizes dynamic operations; it is introduced
@@ -498,7 +509,17 @@ final case class UnknownValueShape(source: Term) extends NonAppTermShape:
 object TupleShape:
   sealed trait Element
   sealed trait Segment extends Element
-  final case class Field(field: Fld, marks: Ls[Marks]) extends Segment
+  sealed trait Fixed extends Segment:
+    def marks: Ls[Marks]
+    def withMarks(outer: Ls[Marks]): Fixed = this match
+      case Field(field, inner) => Field(field, inner ::: outer)
+      case TypedField(tpe, inner) => TypedField(tpe, inner ::: outer)
+      case UnknownField(source, inner) => UnknownField(source, inner ::: outer)
+  final case class Field(field: Fld, marks: Ls[Marks]) extends Fixed
+  final case class TypedField(tpe: DeclaredType, marks: Ls[Marks]) extends Fixed
+  // Mutable tuple slots retain their positions, but their initializer cannot
+  // supply the shape of later reads (including reads through a spread copy).
+  final case class UnknownField(source: Term, marks: Ls[Marks]) extends Fixed
   /** An arbitrary number of arbitrary values. Use this for opaque layouts and
     * recursive widening, never for a spread whose shape has not arrived yet.
     * `value` distinguishes dynamically typed JS elements from values whose
@@ -543,7 +564,7 @@ final case class RecordShape(source: Term.Rcd, elements: Ls[RecordShape.Element]
         case Missing => loop(rest)
         case Found(member: RecordMember, inner) =>
           Found(member.copy(mutable = member.mutable || source.mut), inner ::: marks :: Nil)
-        case Found(_: BlockMemberSymbol, _) | Declared(_, _, _) =>
+        case Found(_: BlockMemberSymbol, _) | Declared(_, _, _) | Indexed(_, _) =>
           // Record spreads recursively look up RecordShapes, which only create RecordMembers.
           lastWords("Record lookup returned a nominal member")
     loop(elements.reverse)

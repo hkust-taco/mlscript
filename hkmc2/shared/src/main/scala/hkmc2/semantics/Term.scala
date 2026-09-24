@@ -363,6 +363,9 @@ sealed trait NewSelImpl extends NewResolvableImpl:
   self: Term.NewSel =>
   // At least one receiver permits runtime lookup without a static member symbol.
   var hasDynamicTarget: Bool = false
+  // Resolution records a numeric tuple projection; lowering emits an indexed
+  // access rather than looking for a nominal field symbol.
+  var tupleIndex: Opt[Int] = N
   var resolvedMembers: Ls[BlockMemberSymbol] = Nil // * filled during resolution
   // Class identity and captures must survive even when candidates share an inherited member.
   var resolvedClasses: Ls[(ClassSymbol, Ls[Marks])] = Nil
