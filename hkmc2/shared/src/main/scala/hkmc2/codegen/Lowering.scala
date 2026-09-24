@@ -1544,7 +1544,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
           case _ => warn(a)
       case Annot.Modifier(syntax.Keyword.`public` | syntax.Keyword.`private` | syntax.Keyword.`virtual`) => ()
       case Annot.Modifier(syntax.Keyword("staged")) => ()
-      case Annot.MayNotRaiseEffects => ()
+      case Annot.Pure => ()
       case a: Annot.Affine => target match
         case TermDefinition(k = syntax.Fun) => ()
         case _ => warn(a)
