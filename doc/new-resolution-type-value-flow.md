@@ -629,6 +629,60 @@ references), `NewResolverState.scala` (consumer-owned memo tables),
 (transporting views through deferred children). Elaborator signature registration
 must preserve binders and missing positions before the body is observed.
 
+### Type-reference scope audit (proposal requiring review)
+
+The remaining graph work has a concrete termination regression in
+`newres/TypeGraphTermination.mls`:
+
+```mlscript
+type Chain[A] = {value: A, next: Chain[Array[A]]}
+private fun walk[A](chain: Chain[A], n: Int) =
+  if n > 0 then walk(chain.next, n - 1) else ()
+```
+
+Compilation currently overflows the stack, even without a call to `walk`.
+The variant whose `next` is simply `Chain[A]` fails too. Enabling the existing
+`checkMarkPaths` assertions exposes repeated exits before the stack overflows.
+Thus this failure is not evidence only of growing argument environments:
+value-flow paths themselves violate the finite-mark premise. Even the finite selection `chain.next.next.value` in a function with a written
+`Int` result currently overflows; that third regression needs no recursive call.
+Both constraint expansion and mark paths need validation, independently of runtime
+recursion depth.
+
+The proposed correction distinguishes these operations:
+
+- Expanding a type alias substitutes references to its arguments in its source
+  type graph. The alias declaration introduces no value invocation. Keep each
+  argument's caller context; do not add a value entry/exit for the alias's own
+  lexical qualification.
+- Selecting a structural record type's field follows its written type reference.
+  `RcdField.make` creates a synthetic captured definition for value-field lookup;
+  that synthetic value boundary must not be introduced by a type-field projection.
+  Keep the field symbol as the resolved selection target.
+- Function and class captures still cross actual value scopes and use the existing
+  mark operations. These paths must remain on references to captured parameters,
+  even when aliases or structural fields forward them.
+
+This is a proposal about which operations cross a value scope, not permission to
+truncate repeated marks, widen an alias, or allocate more inference variables.
+It must be reviewed before changing the type interpreter. Validation must include
+nested aliases inside generic functions and classes, fields containing callbacks,
+separate uses of one recursive alias, and imported annotations. All three
+regression blocks must eventually pass without `:fixme`, with mark checks enabled and
+stable relation/listener counts. Fixing the mark paths alone is insufficient if
+`DeclaredType.bindings` can still construct unbounded nested environments.
+
+The same graph audit must distinguish an open definition template from an already
+interpreted reference. In `Box[T].copy() = new Box[T](item)`, the source `T` in the
+supplied argument belongs to the receiver, while the constructed result refers to
+the new site's instance of `T`. One merged map cannot choose both meanings after
+the argument reference has been interpreted in the wrong view. Observe saved
+source-graph operations with their caller references before attaching the callee's
+instance map. Do not implement this by rerunning `resolveNew` over arbitrary syntax:
+legacy constructions can have value shapes without a new-resolution producer,
+and completed reference targets must remain immutable. A saved graph operation
+must retain its selected definition and interpreted argument references.
+
 ### Fixed points and implementation checks
 
 There are at most as many allocated parameter instances as the sum of each

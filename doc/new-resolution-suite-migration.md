@@ -92,7 +92,7 @@ The inventory below separates these from compiler and prelude gaps.
   constraints, reconstructed receiver contexts, inferred missing member types,
   and the whole graph's termination bound. Concrete outstanding cases are in
   `newres/StoredSpecializations.mls`, `ConstructorInstances.mls`,
-  `InferenceHoles.mls`, and `PartialSignatures.mls`.
+  `InferenceHoles.mls`, `PartialSignatures.mls`, and `TypeGraphTermination.mls`.
   Decide how reassignment affects mutable storage's inferred interface, including
   across compiled worksheet blocks. `newres/MutationFlow.mls` records a reassigned
   array still checked against its initializer's tuple length; accumulating both

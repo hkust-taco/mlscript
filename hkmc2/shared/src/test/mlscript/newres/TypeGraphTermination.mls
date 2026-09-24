@@ -1,0 +1,23 @@
+:.
+
+// A finite observation of a recursive alias has a finite declared interface.
+// It must also preserve the no-repeated-boundary invariant when mark checks are enabled.
+:fixme
+type Chain[A] = {value: A, next: Chain[A]}
+fun read(chain: Chain[Int]): Int = chain.next.next.value
+//│ /!!!\ Uncaught error: java.lang.StackOverflowError
+
+// Relating a recursive structural alias must reach a graph fixed point.
+:fixme
+type Chain[A] = {value: A, next: Chain[A]}
+private fun walk[A](chain: Chain[A], n: Int) =
+  if n > 0 then walk(chain.next, n - 1) else ()
+//│ /!!!\ Uncaught error: java.lang.StackOverflowError
+
+// Changing recursive arguments must retain symbolic edges, not grow mark paths
+// or expand Array[Array[...]] environments at each recursive comparison.
+:fixme
+type Chain[A] = {value: A, next: Chain[Array[A]]}
+private fun walk[A](chain: Chain[A], n: Int) =
+  if n > 0 then walk(chain.next, n - 1) else ()
+//│ /!!!\ Uncaught error: java.lang.StackOverflowError
