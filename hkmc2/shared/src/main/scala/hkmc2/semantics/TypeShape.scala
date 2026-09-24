@@ -2,8 +2,7 @@ package hkmc2
 package semantics
 
 import hkmc2.utils.*, shorthands.*
-import codegen.{ErasedType, ErasedValueType}
-import Elaborator.{Ctx, State}
+import codegen.Erasure
 
 /** A type interpretation, separate from the value shapes of the same reference syntax.
   * Compound types retain links to their operands so forward aliases need not be expanded eagerly.
@@ -23,6 +22,7 @@ enum TypeShape:
   */
 final class TypeResolution(val source: Term, report: Ls[(Message, Opt[Loc])] => Unit) extends Host[TypeShape]:
   private var reported = false
+  def hasErrors: Bool = reported
   def showDbg(using DebugPrinter): Str = s"type of ${source.showDbg}"
   def publish(shape: TypeShape): Unit =
     if shapes.add(shape) then shapeListeners.foreach(_(shape))
@@ -32,7 +32,7 @@ final class TypeResolution(val source: Term, report: Ls[(Message, Opt[Loc])] => 
   def fail(messages: Ls[(Message, Opt[Loc])]): Unit = if !reported then
     reported = true
     report(messages)
-  def validate(seen: Set[TypeResolution]): Unit = if !seen(this) then
+  def validate(seen: Set[TypeResolution])(using Erasure): Unit = if !seen(this) then
     import TypeShape.*
     import Message.MessageContext
     val next = seen + this
@@ -55,24 +55,3 @@ final class TypeResolution(val source: Term, report: Ls[(Message, Opt[Loc])] => 
       case Union(left, right) => left.validate(next); right.validate(next)
       case Intersection(left, right) => left.validate(next); right.validate(next)
       case _ => ()
-
-  def erase(seen: Set[TypeResolution])(using Ctx, State): ErasedValueType =
-    import TypeShape.*
-    import Message.MessageContext
-    validate(seen)
-    if seen(this) || reported then ErasedType.Unknown
-    else
-      val next = seen + this
-      shapes.toList match
-        case Nominal(defn) :: Nil => defn.sym match
-          case symbol: (ClassSymbol | ModuleOrObjectSymbol) => ErasedType.ValueLike(S(false), symbol)
-          case _ => ErasedType.Unknown
-        case Alias(_, rhs) :: Nil => rhs.fold(ErasedType.Unknown)(_.erase(next))
-        case Union(left, right) :: Nil => ErasedType.union(left.erase(next), right.erase(next))
-        case Intersection(_, _) :: Nil | Dynamic :: Nil | Abstract :: Nil => ErasedType.Unknown
-        case Function :: Nil => ErasedType.Function(S(false))
-        case Unit :: Nil => ErasedType.Unit
-        case Nil =>
-          ErasedType.Unknown
-        case _ =>
-          ErasedType.Unknown

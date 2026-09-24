@@ -17,7 +17,6 @@ import hkmc2.Message.MessageContext
 
 import Keyword.{`and`, `case`, `do`, `else`, `if`, `is`, `let`, `or`, `set`, `then`, `while`}
 import hkmc2.utils.Scope
-import codegen.{ErasedType, ErasedValueType}
 import SimpleSplit.*
 import ucs.{error, unapply}
 
@@ -822,7 +821,7 @@ extends Importer:
       val valueSym = spec.valueParamName.map(nme => VarSymbol(Ident(nme), erasedType = N))
       val resumeSym = VarSymbol(Ident("resume"), erasedType = N)
       val mtdSym = BlockMemberSymbol(spec.methodName, Nil, true)
-      val tsym = TermSymbol(Fun, N, Ident(spec.methodName), erasedType = N)
+      val tsym = TermSymbol(Fun, N, Ident(spec.methodName))
       val td = TermDefinition(
         Fun,
         mtdSym,
@@ -1377,21 +1376,21 @@ extends Importer:
       })(N).withLocOf(tree)
     case InfixApp(TyTup(tvs), Keywrd(Keyword.`->`), body) =>
       val boundVars = mutable.HashMap.empty[Str, VarSymbol]
-      def genSym(id: Tree.Ident, erasedType: Opt[ErasedValueType]) =
-        val sym = VarSymbol(id, erasedType)
+      def genSym(id: Tree.Ident) =
+        val sym = VarSymbol(id, erasedType = N)
         sym.decl = S(TyParam(FldFlags.empty, N, sym)) // TODO vce
         boundVars += id.name -> sym
         sym
       val syms = (tvs.collect:
-        case id: Tree.Ident => (genSym(id, erasedType = N), N, N)
-        case InfixApp(id: Tree.Ident, Keywrd(Keyword.`extends`), ub) => (genSym(id, erasedType = N), S(ub), N)
-        case InfixApp(id: Tree.Ident, Keywrd(Keyword.`restricts`), lb) => (genSym(id, erasedType = N), N, S(lb))
+        case id: Tree.Ident => (genSym(id), N, N)
+        case InfixApp(id: Tree.Ident, Keywrd(Keyword.`extends`), ub) => (genSym(id), S(ub), N)
+        case InfixApp(id: Tree.Ident, Keywrd(Keyword.`restricts`), lb) => (genSym(id), N, S(lb))
         case InfixApp(InfixApp(id: Tree.Ident, Keywrd(Keyword.`extends`), ub), Keywrd(Keyword.`restricts`), lb) =>
-          (genSym(id, erasedType = N), S(ub), S(lb))
+          (genSym(id), S(ub), S(lb))
       )
       val outer = (tvs.collect:
-        case Outer(S(name: Tree.Ident)) => genSym(name, erasedType = N)
-        case Outer(N) => genSym(Tree.Ident("outer"), erasedType = N)
+        case Outer(S(name: Tree.Ident)) => genSym(name)
+        case Outer(N) => genSym(Tree.Ident("outer"))
       ) match
         case ot :: Nil => S(ot)
         case _ :: rest =>
@@ -2146,7 +2145,7 @@ extends Importer:
               return go(sts, Nil, acc)
             val isMethod = owner.exists(_.isInstanceOf[ClassSymbol])
             
-            val tsym = TermSymbol(k, owner, id, erasedType = N) // TODO?
+            val tsym = TermSymbol(k, owner, id) // TODO?
             
             val tdf = ctx.nest(OuterCtx.NonReturnContext(S(tsym))).givenIn: newCtx ?=>
               // * Add type parameters to context
@@ -2200,80 +2199,10 @@ extends Importer:
                 case _ =>
                   Modulefulness.none
               
-              /** Splits a signature's arrow chain into the parameter lists it describes and the type it returns.
-                * Yields `N` if the signature is not an arrow or if some parameter list's arity cannot be read.
-                */
-              def splitSignature(sign: Term): Opt[(Ls[Ls[Opt[ErasedValueType]]], Term)] =
-                def paramsOf(lhs: Term): Opt[Ls[Opt[ErasedValueType]]] = lhs match
-                  // * A spread parameter leaves the list's arity unknown, so the signature is left unsplit.
-                  case Term.Tup(fields) =>
-                    val noParams: Opt[Ls[Opt[ErasedValueType]]] = S(Nil)
-                    fields.foldRight(noParams): (fld, acc) =>
-                      (fld, acc) match
-                        case (Fld(_, t, _), S(rest)) => S(eraseSignature(t) :: rest)
-                        case _ => N
-                  // * An unparenthesized type is a single parameter.
-                  case single => S(eraseSignature(single) :: Nil)
-                sign match
-                  case Term.Forall(_, _, body) => splitSignature(body)
-                  case Term.FunTy(lhs, rhs, _) => paramsOf(lhs).map: ps =>
-                    splitSignature(rhs) match
-                      case S((rest, ret)) => (ps :: rest, ret)
-                      case N => (ps :: Nil, rhs)
-                  case _ => N
-              
-              // * A signature's arrows are the definition's own parameter lists when a reference to it is not
-              // * auto-invoked.
-              // *
-              // * - A `fun` writing no parameter lists is a getter, so `fun bar: A -> Int` yields
-              // *   the arrow itself;
-              // * - A `declare`d `fun` becomes a `globalThis` selection, so its arrows are its parameters.
-              val sigShape: Opt[(Ls[Ls[Opt[ErasedValueType]]], Term)] =
-                if (k is syntax.Fun) && pss.isEmpty && Annot.declareModifierOf(annotations).isDefined
-                then s.flatMap(splitSignature)
-                else N
-              
-              // * A moduleful signature (`fun f: module M`) denotes the module itself.
-              val retTpe = mfn.msym match
-                case S(msym) => S(ErasedType.ValueLike(rsc = S(false), msym))
-                case N => s.flatMap: s =>
-                  // * A function that inherits a signature with leading arrows consumes those arrows as its own
-                  // * parameter lists. The exception is a `declare`d function, whose arrows are always its own
-                  // * parameters (see `sigShape`).
-                  def stripSignatureParams(s: Term, n: Int): Term = (s, n) match
-                    case (Term.Forall(_, _, body), _) => stripSignatureParams(body, n)
-                    case (Term.FunTy(_, rhs, _), n) if n > 0 => stripSignatureParams(rhs, n - 1)
-                    case _ => s
-                  val resultSign: Term =
-                    if (k is syntax.Fun) && td.annotatedResultType.isEmpty
-                    then stripSignatureParams(s, pss.length)
-                    else sigShape.map(_._2).getOrElse(s)
-                  eraseSignature(resultSign)
-              val erasedTpe = k match
-                case syntax.Fun =>
-                  // * A `declare`d function's parameter lists are derived from its signature when it writes none.
-                  val paramLists = sigShape match
-                    case S((ps, _)) => ps
-                    case N => pss.map(_.params.map(_.sym.erasedType))
-                  // * An erased type must describe what a definition is *compiled to*, and a paramless `fun` is
-                  // * compiled in two different ways:
-                  // *
-                  // * - As a class-like member, it becomes either a getter method or a `globalThis` selection depending
-                  // *   on if it is `declare`d or not - neither denotes a function value, so the erased type is its
-                  // *   result;
-                  // * - At block level, it is lowered to a function with an implicit empty parameter list which every
-                  // *   reference auto-invokes, so the erased type will carry that parameter list.
-                  val isCompiledAsGetter = owner.isDefined || Annot.declareModifierOf(annotations).isDefined
-                  val physicalParamLists =
-                    if paramLists.isEmpty && !isCompiledAsGetter then Nil :: Nil else paramLists
-                  if physicalParamLists.isEmpty then retTpe
-                  else S(ErasedType.FuncRef(rsc = S(false), physicalParamLists, retTpe))
-                case _: syntax.Val => retTpe
-                case _ => N
-              // val tsym = TermSymbol(k, owner, id, erasedType = erasedTpe) // TODO?
-              tsym.erasedType = erasedTpe
+              // Retain the source signature's meaning; Erasure decides which arrows are physical parameters.
+              if newResolution then s.foreach(registerSignature)
               val tdf = TermDefinition(k, sym, tsym, pss, tps, s, body, 
-                TermDefFlags.empty.copy(isMethod = isMethod), mfn, annotations, N).withLocOf(td)
+                TermDefFlags.empty.copy(isMethod = isMethod, hasResultAnnotation = td.annotatedResultType.isDefined), mfn, annotations, N).withLocOf(td)
               sym.tsym = S(tsym)
               tsym.defn = S(tdf)
               
@@ -2400,11 +2329,10 @@ extends Importer:
                 p.fldSym = S(fsym)
                 fsym.tsym = S(tsym)
                 tsym.defn = S(fdef)
-                p.sym.erasedType.foreach(tsym.populateErasedType)
                 fsym.complete()
                 fdef :: Nil
               else
-                val psym = TermSymbol(LetBind, owner, p.sym.id, erasedType = p.sym.erasedType)
+                val psym = TermSymbol(LetBind, owner, p.sym.id)
                 psym.sourceAliases = p.sym.sourceAliases
                 val decl = LetDecl(psym, Nil) // TODO: never use term symbols on LetDecl LHS
                 val defn = defineVar(psym, p.sym.ref())
@@ -2417,7 +2345,7 @@ extends Importer:
               val owner = td.symbol match
                 case s: InnerSymbol => S(s)
                 case _: TypeAliasSymbol => die
-              val psym = TermSymbol(LetBind, owner, p.sym.id, erasedType = p.sym.erasedType)
+              val psym = TermSymbol(LetBind, owner, p.sym.id)
               psym.sourceAliases = p.sym.sourceAliases
               val decl = LetDecl(psym, Nil)
               val defn = defineVar(psym, p.sym.ref())
@@ -2699,12 +2627,8 @@ extends Importer:
             id -> Nil
         val sig = sign.map(term(_, Tpe))
         val mfn = Modulefulness.ofSign(sig)(Mod in modifiers)
-        // * As for return signatures, a moduleful parameter (`module m: M`) denotes the module itself, which
-        // * `eraseSign` would miss by resolving the name through `asTpe`.
-        val erasedTpe = mfn.msym match
-          case S(msym) => S(ErasedType.ValueLike(rsc = S(false), msym))
-          case N => sig.flatMap(eraseSignature)
-        val sym = VarSymbol(canonicalId, erasedType = erasedTpe)
+        if newResolution then sig.foreach(registerSignature)
+        val sym = VarSymbol(canonicalId)
         sym.sourceAliases = aliases
         val p = Param(flg, sym, sig, mfn)
         sym.decl = S(p)

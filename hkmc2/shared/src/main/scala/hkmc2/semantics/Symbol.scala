@@ -10,7 +10,7 @@ import hkmc2.utils.*
 
 import Elaborator.State
 import Tree.Ident
-import hkmc2.codegen.{ErasedType, ErasedFuncType, ErasedValueType, HasErasedType, HasOnceMutableErasedType}
+import hkmc2.codegen.{ErasedType, ErasedFuncType, ErasedValueType, HasErasedType, HasOnceMutableErasedType, HasDelayedErasedType}
 import hkmc2.utils.SymbolSubst
 
 
@@ -271,9 +271,13 @@ class InstSymbol(val origin: Symbol)(using State) extends LocalSymbol:
   def subst(using sub: SymbolSubst): InstSymbol = sub.mapInstSym(this)
 
 
-class VarSymbol(val id: Ident, override val erasedType: Opt[ErasedValueType])(using State)
+class VarSymbol(val id: Ident)(using State)
     extends LocalVarSymbol(id.name)
+    with HasDelayedErasedType[ErasedValueType]
     with NamedSymbol:
+  def this(id: Ident, erasedType: Opt[ErasedValueType])(using State) =
+    this(id)
+    this.erasedType = erasedType
   val name: Str = id.name
   var sourceAliases: Ls[Str] = Nil
   override def toLoc: Opt[Loc] = id.toLoc
@@ -378,11 +382,14 @@ sealed abstract class MemberSymbol(using State) extends Symbol:
   def subst(using SymbolSubst): MemberSymbol
 
 
-class TermSymbol(val k: TermDefKind, val owner: Opt[InnerSymbol], val id: Tree.Ident, override var erasedType: Opt[ErasedType])(using State)
+class TermSymbol(val k: TermDefKind, val owner: Opt[InnerSymbol], val id: Tree.Ident)(using State)
     extends MemberSymbol
     with DefinitionSymbol[TermDefinition]
-    with HasOnceMutableErasedType
+    with HasDelayedErasedType[ErasedType]
     with NamedSymbol:
+  def this(k: TermDefKind, owner: Opt[InnerSymbol], id: Tree.Ident, erasedType: Opt[ErasedType])(using State) =
+    this(k, owner, id)
+    this.erasedType = erasedType
   var sourceAliases: Ls[Str] = Nil
   def nme: Str = id.name
   def name: Str = nme
@@ -473,7 +480,7 @@ sealed trait ClassLikeSymbol extends IdentifiedSymbol, HasErasedType:
   val tree: Tree.TypeDef
   def subst(using sub: SymbolSubst): ClassLikeSymbol
 
-  /** Published by lowering before class bodies are lowered, including for external declarations.
+  /** Published by erasure before class bodies are lowered, including for external declarations.
     * Full IR class definitions refresh this header when rewritten, just as they own `irDefn`.
     * Keeping the header separately is necessary for forward parents and declarations without
     * executable bodies; consumers must not reconstruct it from semantic terms.

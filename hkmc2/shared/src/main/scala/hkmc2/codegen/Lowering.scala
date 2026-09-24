@@ -85,8 +85,7 @@ object Lowering:
   
 import Lowering.*
 
-class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
-  private given Lowering = this
+class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasure):
   
   val newResolution: Bool = config.language.useNewResolution
   val strictResolution: Bool = config.language.strictResolution
@@ -1695,27 +1694,8 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
     ps.params.map(_.sym.erasedType)
 
 
-  /** Validate elaborated type interpretations and publish nominal parent links before
-    * lowering bodies can ask erased-type questions.
-    * This also handles declarations, whose executable definitions are deliberately omitted.
-    * An unresolved or ambiguous parent leaves the header absent, rather than inventing a root.
-    */
-  def prepareTypes(statement: Statement): Unit =
-    statement match
-      case term: Term => term.typeInterpretation.foreach(_.validate(Set.empty))
-      case _ => ()
-    statement match
-      case cls: ClassLikeDef => cls.sym match
-        case sym: ClassLikeSymbol if sym.irClassHeader.isEmpty =>
-          sym.irClassHeader = cls.ext match
-            case N => S(ClassHeader(N))
-            case S(parent) => parent.cls.resolvedSym.flatMap(_.asClsOrMod).map(p => ClassHeader(S(p)))
-        case _ => ()
-      case _ => ()
-    statement.subStatements.foreach(prepareTypes)
-
   def program(main: st.Blk, symbolsToPreserve: Set[BoundSymbol]): Program =
-    prepareTypes(main)
+    summon[Erasure].requireCompleted(main)
     
     val (imps, funs, rest) = splitBlock(main.stats, Nil, Nil, Nil)
     

@@ -69,7 +69,7 @@ object InvalCtx:
 end InvalCtx
 
 
-class InvalTyper(using codegen.Lowering)(using elState: Elaborator.State, tl: TL)(using Ctx, Config):
+class InvalTyper(using codegen.Erasure)(using elState: Elaborator.State, tl: TL)(using Ctx, Config):
   import tl.{trace, log}
 
   // InvalML expands patterns while typing. Its early use of lowering is valid only

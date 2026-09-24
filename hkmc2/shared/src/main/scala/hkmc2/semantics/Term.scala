@@ -15,6 +15,7 @@ import hkmc2.typing.Type
 import hkmc2.semantics.Elaborator.{Ctx, ctx}
 import hkmc2.Message.MessageContext
 import hkmc2.semantics.flow.{SelectionTarget, AppTarget}
+import hkmc2.codegen.Erasure
 
 
 final case class QuantVar(sym: VarSymbol, ub: Opt[Term], lb: Opt[Term])
@@ -77,7 +78,7 @@ enum Annot extends AutoLocated:
     case Trm(trm) => doc"@${trm.show}"
     case Config(_) => doc"@config(...)"
   
-  def mkClone(using State, codegen.Lowering): Annot = this match
+  def mkClone(using State, Erasure): Annot = this match
     case Untyped => Untyped
     case Modifier(mod) => Modifier(mod)
     case Trm(trm) => Trm(trm.mkClone)
@@ -365,7 +366,7 @@ sealed trait NewSelImpl extends NewResolvableImpl:
   var resolvedMembers: Ls[BlockMemberSymbol] = Nil // * filled during resolution
   // Class identity and captures must survive even when candidates share an inherited member.
   var resolvedClasses: Ls[(ClassSymbol, Ls[Marks])] = Nil
-  def hasAmbiguousClass: Bool = resolvedClasses.sizeCompare(1) > 0 || self.cls.exists:
+  def hasAmbiguousClass(using Erasure): Bool = resolvedClasses.sizeCompare(1) > 0 || self.cls.exists:
     _.withoutCaptures match
       case ref: Term.UnresolvedRef => ref.resolvedMembers.distinct.sizeCompare(1) > 0
       case _ => false
@@ -379,7 +380,7 @@ sealed trait UnresolvedRefImpl extends NewResolvableImpl:
 
 
 enum Term extends Statement, ShapePublisher:
-  /** Filled by the type interpreter during elaboration; lowering only validates the result. */
+  /** Filled by the type interpreter during elaboration; erasure validates the completed result. */
   private[hkmc2] var typeInterpretation: Opt[TypeResolution] = N
 
   case Error()
@@ -524,9 +525,9 @@ enum Term extends Statement, ShapePublisher:
   /**
    * The symbol representing the evaluation result of the term. This
    * symbol is resolved during the resolution stage. Reading its final value requires
-   * lowering; elaboration must listen for shapes instead.
+   * erasure; elaboration must listen for shapes instead.
    */
-  def resolvedSym(using codegen.Lowering): Opt[Symbol] = expanded match
+  def resolvedSym(using Erasure): Opt[Symbol] = expanded match
     case res: Resolved => S(res.sym)
     case SimpleRef(sym) => S(sym)
     case Capture(base, _) => base.resolvedSym
@@ -614,7 +615,7 @@ enum Term extends Statement, ShapePublisher:
   /** Duplicate an elaborated expression after resolution, retaining its semantic
     * identity and completed results. Listeners belong to elaboration and are not copied.
     */
-  override def mkClone(using State, codegen.Lowering): Term =
+  override def mkClone(using State, Erasure): Term =
     def copyShapes[T <: ShapeHost](source: ShapeHost, copy: T): T =
       copy.shapes ++= source.shapes
       copy
@@ -810,7 +811,7 @@ trait Describable:
 
 sealed trait Statement extends AutoLocated, ProductWithExtraInfo, Describable:
   
-  def mkClone(using State, codegen.Lowering): Statement = this match
+  def mkClone(using State, Erasure): Statement = this match
     case t: Term => lastWords(s"overridden implementation")
     case d: Definition => ???
     case imp: Import => Import(imp.sym, imp.str, imp.file)
@@ -1314,17 +1315,18 @@ final case class SetConfig(modify: hkmc2.Config => hkmc2.Config) extends Stateme
 enum Visibility:
   case Public, Private
 
-/**
- * isMethod: if the term is a method (as opposed to a function)
- */
-final case class TermDefFlags(isMethod: Bool):
+/** `isMethod` distinguishes methods from functions. `hasResultAnnotation` records whether a
+  * signature describes just the result; erasure consumes leading arrows only for full signatures.
+  */
+final case class TermDefFlags(isMethod: Bool, hasResultAnnotation: Bool):
   def showDbg: Str = 
     val flags = Buffer.empty[String]
     if isMethod then flags += "method "
+    if hasResultAnnotation then flags += "result annotation "
     flags.mkString
   override def toString: String = "‹" + showDbg + "›"
 
-object TermDefFlags { val empty: TermDefFlags = TermDefFlags(false) }
+object TermDefFlags { val empty: TermDefFlags = TermDefFlags(false, false) }
 
 /**
  * A case class representing the modulefulness of a declaration.
@@ -1825,7 +1827,7 @@ object Apps:
 
 trait BlkImpl:
   this: Blk =>
-  def mkBlkClone(using State, codegen.Lowering): Blk = Blk(stats.map(_.mkClone), res.mkClone)
+  def mkBlkClone(using State, Erasure): Blk = Blk(stats.map(_.mkClone), res.mkClone)
   def showTopLevel(using Scope, ShowCfg, Raise): Document =
     (stats ::: (res match
       case Lit(Tree.UnitLit(false)) => Nil

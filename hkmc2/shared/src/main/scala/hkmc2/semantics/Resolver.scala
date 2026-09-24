@@ -360,7 +360,7 @@ class Resolver(tl: TraceLogger)
   trace(s"Resolving definition: $defn"):
     def traverseTermDef(tdf: TermDefinition) =
       val TermDefinition(_k, _sym, _tsym, 
-        pss, tps, sign, body, TermDefFlags(isMethod), modulefulness, annotations, comp
+        pss, tps, sign, body, TermDefFlags(isMethod, _), modulefulness, annotations, comp
       ) = tdf
       /** 
        * Add the contextual parameters in pss to the ICtx so that they
@@ -423,7 +423,7 @@ class Resolver(tl: TraceLogger)
     defn match
     
     // Case: instance definition. Add the instance to the context.
-    case defn @ TermDefinition(k = Ins, sym = sym, tsym = tsym, flags = TermDefFlags(isMethod), sign = sign) =>
+    case defn @ TermDefinition(k = Ins, sym = sym, tsym = tsym, flags = TermDefFlags(isMethod, _), sign = sign) =>
       softAssert(defn.owner.isEmpty)
       log(s"Resolving instance definition ${defn.showDbg}")
       traverseTermDef(defn)

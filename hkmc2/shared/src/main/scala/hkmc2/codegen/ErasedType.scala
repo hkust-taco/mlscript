@@ -55,15 +55,6 @@ object ErasedType:
     // Ensures `toString` returns a stable string
     override def toString: Str = "ValueLike(?)"
 
-  /** Erasure of a type whose interpretation is still being published during elaboration.
-    * The thunk reads an already-resolved type graph when the backend needs its representation.
-    */
-  final class Deferred(compute: (Ctx, State) ?=> ErasedValueType) extends ErasedValueType:
-    override type Canonical = CanonicalErasedValueType
-    override def sym(using Ctx, State): TypeSymbol | NoSymbol = canonicalize.sym
-    override protected def computeCanonicalize(using Ctx, State): CanonicalErasedValueType = compute.canonicalize
-    override def toString: Str = "Deferred(?)"
-
   /** A reference to a function of a possibly-known shape.
     *
     * - `rsc` is true if this reference is a resource function.
@@ -246,10 +237,10 @@ object ErasedType:
 
   /** Erases a type-annotated term to an [[ErasedType]].
     *
-    * Note that the resulting erased type is **not** canonicalized to avoid using `ctx.builtins` during elaboration
-    * of `Prelude`.
+    * Used by the legacy resolver after resolution. Canonicalization is separate and may inspect the
+    * nominal hierarchy published by Erasure.
     */
-  def eraseSign(sign: Term): Opt[ErasedValueType] = sign match
+  def eraseSign(sign: Term)(using Erasure): Opt[ErasedValueType] = sign match
     case CompType(lhs, rhs, true) =>
       // * A union is kept as a transient `Union` surface form; `canonicalize` collapses it to the members' LUB.
       for
@@ -509,6 +500,22 @@ trait HasErasedType:
 
   /** Similar to `erasedValueType`, but coerces to the top type if the specific erased value type is not known. */
   lazy val erasedValueType_! : ErasedValueType = erasedValueType.getOrElse(ErasedType.Unknown)
+
+/** Erased types of source declarations are initialized by Erasure after resolution finishes.
+  * `null` means no representation has been assigned; `N` is an initialized, unknown representation.
+  * The checked getter also protects HasErasedType's lazy derived values from caching an early `N`.
+  * IR-generated symbols may initialize the same slot directly at construction.
+  */
+trait HasDelayedErasedType[T <: ErasedType] extends HasErasedType:
+  private var assignedErasedType: Opt[T] = null
+  final def isErased: Bool = assignedErasedType != null
+  final def erasedType: Opt[T] =
+    assert(isErased, "Erased type read before erasure")
+    assignedErasedType
+  final def erasedType_=(value: Opt[T]): Unit =
+    assert(!isErased, "Erased type initialized more than once")
+    assert(value != null, "An initialized erased type cannot be null")
+    assignedErasedType = value
 
 /** A [[HasErasedType]] whose erased type can be populated exactly once post-construction. */
 trait HasOnceMutableErasedType extends HasErasedType:

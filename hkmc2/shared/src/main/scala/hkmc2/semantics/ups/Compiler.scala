@@ -18,7 +18,7 @@ import collection.mutable.{Queue, Map as MutMap, LinkedHashMap}, collection.immu
   * a few matcher functions. Each matcher function matches a set of patterns
   * and returns a record that contains the results of each pattern.
   */
-class Compiler(using Context)(using codegen.Lowering)(using tl: TL)(using Ctx, State, Raise) extends TermSynthesizer:
+class Compiler(using Context)(using codegen.Erasure)(using tl: TL)(using Ctx, State, Raise) extends TermSynthesizer:
   import Compiler.*, tl.*
   import Pattern.*
 
@@ -573,7 +573,7 @@ object Compiler:
   /** Clone a source-level constructor reference for insertion into synthesized
     * matcher code, preserving the path chosen by source resolution.
     */
-  def preservedReference(term: Term)(using State, codegen.Lowering): Term =
+  def preservedReference(term: Term)(using State, codegen.Erasure): Term =
     /** To make `Lowering` happy about the terms. */
     def fillImplicitArgs(term: Term): Term = term match
       case ref: Ref =>

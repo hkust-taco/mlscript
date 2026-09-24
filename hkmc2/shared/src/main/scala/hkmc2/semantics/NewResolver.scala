@@ -98,11 +98,21 @@ class NewResolver:
           case shape: TermShape => reject(shape)
       result
 
-  def eraseSignature(sign: Term): Opt[codegen.ErasedValueType] =
-    if newResolution then
-      val resolution = typeResolution(sign)
-      S(new codegen.ErasedType.Deferred(resolution.erase(Set.empty)))
-    else codegen.ErasedType.eraseSign(sign)
+  /** Register complete signatures while resolution can still publish candidates. Arrow operands
+    * need their own interpretations: erasure may consume the arrows as physical parameter lists.
+    */
+  def registerSignature(sign: Term): Unit =
+    typeResolution(sign)
+    sign match
+      case Forall(_, _, body) => registerSignature(body)
+      case FunTy(lhs, rhs, _) =>
+        lhs match
+          case Tup(fields) => fields.foreach:
+            case Fld(_, term, _) => registerSignature(term)
+            case _ => ()
+          case single => registerSignature(single)
+        registerSignature(rhs)
+      case _ => ()
 
   /** Declared types provide instance members before there are any calls or assignments.
     * Recursive aliases are followed once per subscription; their operands may resolve later.

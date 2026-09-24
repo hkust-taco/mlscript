@@ -124,6 +124,7 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
     
     if noCodeGen.isUnset then
       given Elaborator.Ctx = curCtx
+      given codegen.Erasure = codegen.Erasure(blk)
       val low = ltl.givenIn:
         new codegen.Lowering()(using summon[Config], ltl, summon[Raise], loweringState, curCtx, summon[SymbolPrinter])
           with codegen.LoweringTraceLog(traceJS.isSet)

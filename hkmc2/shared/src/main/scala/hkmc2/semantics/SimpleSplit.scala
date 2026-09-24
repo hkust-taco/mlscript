@@ -90,13 +90,13 @@ enum SimpleSplit extends AutoLocated with ProductWithTail:
   /** This field is designed to be compatible with bbML. */
   private var _expandedSplit: Opt[Split] = N
   
-  /** Expand patterns after resolution, with symbol queries authorized by lowering. */
-  def getExpandedSplit(using codegen.Lowering, TL, Ctx, State, Raise, Config): Split = _expandedSplit.getOrElse:
+  /** Expand patterns after resolution, with symbol queries authorized by erasure. */
+  def getExpandedSplit(using codegen.Erasure, TL, Ctx, State, Raise, Config): Split = _expandedSplit.getOrElse:
     val split = Split.from(this)
     _expandedSplit = S(split)
     split
   
-  def mkClone(using State, codegen.Lowering): SimpleSplit = this match
+  def mkClone(using State, codegen.Erasure): SimpleSplit = this match
     case Cons(head, tail) => Cons(head match
       case Head.Match(scrutinee, pattern, consequent) =>
         Head.Match(scrutinee.mkClone.asInstanceOf, pattern, consequent.mkClone) // TODO: clone `pattern`?

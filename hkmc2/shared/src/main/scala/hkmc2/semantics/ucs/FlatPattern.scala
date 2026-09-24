@@ -37,7 +37,7 @@ enum FlatPattern extends AutoLocated:
   
   case Record(entries: List[(Ident -> LocalVarSymbol)])
   
-  def mkClone(using State, codegen.Lowering): FlatPattern = this match
+  def mkClone(using State, codegen.Erasure): FlatPattern = this match
     case Lit(literal) => Lit(literal)
     case pattern @ ClassLike(constructor, symbol, arguments, refined) =>
       ClassLike(constructor.mkClone, symbol, arguments, refined)(Tree.Dummy)

@@ -29,7 +29,7 @@ This means that if a program fragment containing definitions is rewritten at all
 then the rewritten version must be kept as the "currently valid" version, and the old one must no longer be reused,
 as a given symbol can never correspond to more than one IR definition.
 
-Class-like symbols also retain a nominal `ClassHeader`: lowering publishes these before executable bodies,
+Class-like symbols also retain a nominal `ClassHeader`: erasure publishes these before executable bodies,
 including for external declarations, and rewritten IR class definitions refresh them. This lets inheritance
 queries operate solely on IR even when a parent has no executable definition or has not been lowered yet.
 

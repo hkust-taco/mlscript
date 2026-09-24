@@ -1,0 +1,54 @@
+:.
+
+
+// The call is lowered before its callee and the alias declarations.
+:expect 42
+fun caller(): Number = later(42)
+fun later(value: Number): Number = value
+type Number = NextNumber
+type NextNumber = Int
+caller()
+//│ = 42
+
+
+// A forward signature supplies both constructor parameters and generated fields.
+:expect 42
+class Box(val value: Number) with
+  fun get(): Number = value
+type Number = Int
+Box(42).get()
+//│ = 42
+
+
+// Lambda parameter annotations must be prepared even inside a record field.
+:expect 42
+type Number = Int
+let record = {apply: (value: Number) => value}
+record.apply(42)
+//│ = 42
+//│ record = {apply: fun apply}
+
+
+// Both wildcard sources arrive after the annotation; the unused signature must still be checked.
+:ge
+open Left
+open Right
+fun unused(value: Types.Number) = value
+module Left with
+  module Types with
+    type Number = Int
+module Right with
+  module Types with
+    type Number = Str
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.36: 	fun unused(value: Types.Number) = value
+//│ ║        	                  ^^^^^^^^^^^^
+//│ ╟── This type is ambiguous, as it has multiple resolved targets
+//│ ║  l.36: 	fun unused(value: Types.Number) = value
+//│ ║        	                  ^^^^^^^^^^^^
+//│ ╟── candidate: type alias
+//│ ║  l.39: 	    type Number = Int
+//│ ║        	         ^^^^^^
+//│ ╟── candidate: type alias
+//│ ║  l.42: 	    type Number = Str
+//│ ╙──      	         ^^^^^^

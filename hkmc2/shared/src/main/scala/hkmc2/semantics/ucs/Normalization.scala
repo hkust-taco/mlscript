@@ -6,11 +6,10 @@ import hkmc2.utils.*, shorthands.*
 import syntax.{Literal, Tree, Keyword}, utils.*
 import Message.MessageContext
 import Elaborator.{Ctx, State, ctx}
-import codegen.Lowering
+import codegen.{Lowering, Erasure}
 
 
-class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, Config) extends TermSynthesizer:
-  private given Lowering = lowering
+class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, Config, Erasure) extends TermSynthesizer:
 
   import Normalization.*, Mode.*
   import tl.*
