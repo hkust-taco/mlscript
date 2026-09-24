@@ -122,28 +122,15 @@ retained.0.value
 class Base
 class Child extends Base with
   val extra = 1
-let xs = (mut []: Array[Base])
+let xs = (mut [] as Array[Base])
 xs.push(new Child)
 xs.0.extra
-//│ ╔══[COMPILATION ERROR] Unexpected record key shape.
-//│ ║  l.125: 	let xs = (mut []: Array[Base])
-//│ ╙──       	              ^^
-//│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.126: 	xs.push(new Child)
-//│ ║         	^^^^^^^
-//│ ╟── Cannot resolve member 'push' across a computed key or unknown record spread.
-//│ ╟── This computed key can overwrite the selected member.
-//│ ║  l.125: 	let xs = (mut []: Array[Base])
-//│ ╙──       	              ^^
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
 //│ ║  l.127: 	xs.0.extra
-//│ ║         	^^^^
-//│ ╟── Cannot resolve member '0' across a computed key or unknown record spread.
-//│ ╟── This computed key can overwrite the selected member.
-//│ ║  l.125: 	let xs = (mut []: Array[Base])
-//│ ╙──       	              ^^
+//│ ║         	^^^^^^^^^^
+//│ ╙── Value of type 'Base' does not contain member 'extra'
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
-//│ xs = undefined
+//│ xs = [Child { extra: 1 }]
 
 // Indexed and fill writes must invalidate initializer-only member assumptions.
 :ge
@@ -153,10 +140,10 @@ let xs = mut [First(1)]
 set xs.[0] = Second(2)
 xs.0.first
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.154: 	xs.0.first
+//│ ║  l.141: 	xs.0.first
 //│ ║         	^^^^^^^^^^
 //│ ╟── Instance of class 'Second' does not contain member 'first'
-//│ ║  l.153: 	set xs.[0] = Second(2)
+//│ ║  l.140: 	set xs.[0] = Second(2)
 //│ ╙──       	             ^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ xs = [Second(2)]
@@ -168,10 +155,10 @@ let xs = mut [First(1)]
 xs.fill(Second(2))
 xs.0.first
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.169: 	xs.0.first
+//│ ║  l.156: 	xs.0.first
 //│ ║         	^^^^^^^^^^
 //│ ╟── Instance of class 'Second' does not contain member 'first'
-//│ ║  l.168: 	xs.fill(Second(2))
+//│ ║  l.155: 	xs.fill(Second(2))
 //│ ╙──       	        ^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ xs = [Second(2)]
@@ -181,25 +168,25 @@ xs.0.first
 module Exposed with
   fun make() = mut [x => x.missing]
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.182: 	  fun make() = mut [x => x.missing]
+//│ ║  l.169: 	  fun make() = mut [x => x.missing]
 //│ ║         	                         ^^^^^^^^^
 //│ ╟── Cannot resolve member 'missing' of a value with unknown shape.
 //│ ╟── Parameter 'x' admits values of unknown shape.
-//│ ║  l.182: 	  fun make() = mut [x => x.missing]
+//│ ║  l.169: 	  fun make() = mut [x => x.missing]
 //│ ║         	                    ^
 //│ ╟── This value is stored in this array.
-//│ ║  l.182: 	  fun make() = mut [x => x.missing]
+//│ ║  l.169: 	  fun make() = mut [x => x.missing]
 //│ ║         	               ^^^^^^^^^^^^^^^^^^^^
 //│ ╟── This value is returned here.
-//│ ║  l.182: 	  fun make() = mut [x => x.missing]
+//│ ║  l.169: 	  fun make() = mut [x => x.missing]
 //│ ║         	               ^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Member 'make' is accessible here.
-//│ ║  l.182: 	  fun make() = mut [x => x.missing]
+//│ ║  l.169: 	  fun make() = mut [x => x.missing]
 //│ ║         	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── 'Exposed' is exposed by this compilation unit.
-//│ ║  l.181: 	module Exposed with
+//│ ║  l.168: 	module Exposed with
 //│ ║         	^^^^^^^^^^^^^^^^^^^
-//│ ║  l.182: 	  fun make() = mut [x => x.missing]
+//│ ║  l.169: 	  fun make() = mut [x => x.missing]
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 // Explicit constructor type arguments remain opaque when methods receive subtypes.
@@ -211,7 +198,7 @@ let xs = new mut Array[Base](0)
 xs.push(new Child)
 xs.map((x, ...) => x.extra)
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.212: 	xs.map((x, ...) => x.extra)
+//│ ║  l.199: 	xs.map((x, ...) => x.extra)
 //│ ║         	                   ^^^^^^^
 //│ ╙── Value of type 'Base' does not contain member 'extra'
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
@@ -233,7 +220,7 @@ let xs = mut []
 xs.splice(0, 0, Item(2))
 xs.0.value
 //│ ╔══[COMPILATION ERROR] This selection of member 'value' has no resolved target
-//│ ║  l.234: 	xs.0.value
+//│ ║  l.221: 	xs.0.value
 //│ ╙──       	^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ ═══[RUNTIME ERROR] Expected: '2', got: 'undefined'
@@ -248,7 +235,7 @@ let xs = mut []
 appendTyped(xs, Item(3))
 xs.0.value
 //│ ╔══[COMPILATION ERROR] This selection of member 'value' has no resolved target
-//│ ║  l.249: 	xs.0.value
+//│ ║  l.236: 	xs.0.value
 //│ ╙──       	^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ ═══[RUNTIME ERROR] Expected: '3', got: 'undefined'
