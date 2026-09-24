@@ -147,10 +147,9 @@ object Pattern:
   /** A shorthand for creating a variable pattern. */
   def Variable = Pattern.Wildcard() binds (_: Ident)
   
-  trait ConstructorImpl extends PatternShapeHost:
+  trait ConstructorImpl extends PatternShapeHost, PossiblyErroneous:
     self: Pattern.Constructor =>
     
-    var isErroneous: Bool = false
     // val resSym: FlowSymbol = FlowSymbol.app
     var resolvedTargets: Ls[DefinitionSymbol[?] | VarSymbol] = Nil
   

@@ -27,13 +27,15 @@ type AnyResolvable = Resolvable | NewResolvableImpl
 
 type NewResolvable = NewResolvableImpl & Term
 
-trait NewResolvableImpl:
+/** Suppress follow-on diagnostics after a resolution or flow error. */
+trait PossiblyErroneous:
+  var isErroneous: Bool = false
+
+trait NewResolvableImpl extends PossiblyErroneous:
   self: MemberRef | NewSel | UnresolvedRef =>
   var resolvedTargets: Ls[DefinitionSymbol[?]] = Nil // * filled during flow analysis
   // val resSym: FlowSymbol = FlowSymbol.simpleRef(self.sym.name)
   // var disamb: Opt[Disambiguation] = None // * filled during flow analysis
-  var isErroneous: Boolean = false // * filled during resolution
-
 
 
 

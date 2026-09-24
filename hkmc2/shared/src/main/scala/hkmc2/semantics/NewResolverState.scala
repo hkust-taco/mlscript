@@ -149,11 +149,11 @@ final class NewResolverState private (
     data(host)
     host.isOwnedBy(root) && !root.completedNodes(new Identity(host))
 
-  private val errors = mutable.Set.empty[Identity[Publisher[?]]]
-  def hasError(host: Publisher[?], original: Bool): Bool = original || root.errors(new Identity(host))
-  def markError(host: Publisher[?])(update: => Unit): Unit =
+  private val errors = mutable.Set.empty[Identity[PossiblyErroneous]]
+  def hasError(host: PossiblyErroneous): Bool = host.isErroneous || root.errors(new Identity(host))
+  def markError(host: Publisher[?] & PossiblyErroneous): Unit =
     root.errors += new Identity(host)
-    if canResolve(host) then update
+    if canResolve(host) then host.isErroneous = true
 
   /** Inference may refine an imported result, but the imported code has already
     * been compiled. Its member/constructor targets must remain unchanged.

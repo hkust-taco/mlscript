@@ -119,7 +119,6 @@ sealed trait AnySel extends ResolvableImpl:
   def validResolvedTargets = resolvedTargets.filterNot:
     case flow.SelectionTarget.Err(_) => true
     case _ => false
-  // var isErroneous: Bool = false // * to avoid reporting follow-on errors after a flow/resolution error
 end AnySel
 
 object AnySel:
@@ -138,12 +137,11 @@ end AppImpl
 
 type Resolvable = Term & ResolvableImpl
 
-sealed trait ResolvableImpl extends ShapeHost:
+sealed trait ResolvableImpl extends ShapeHost, PossiblyErroneous:
   this: Term =>
   
   import Resolvable.CallableDefinition
   
-  var isErroneous: Bool = false // * to avoid reporting follow-on errors after a flow/resolution error
   
   // private[semantics] val shapes: MutSet[Shape] = MutSet.empty
   def getShapes: Ls[Shape] = shapes.toList

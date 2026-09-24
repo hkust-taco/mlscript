@@ -615,7 +615,7 @@ class NewResolver:
         rstate.recordResolution(res, false)(res.resolvedTargets ::= sym)
         true
     def reject(sh: TermShape)(using NewResolverState): Unit =
-      rstate.markError(res)(res.isErroneous = true)
+      rstate.markError(res)
       resolError(res, msg"${sh.describe.capitalize} cannot be used as a constructor pattern." -> sh.toLoc :: Nil)
     def classPattern(cls: ClassLikeDef)(using NewResolverState): Unit = if select(cls.sym) then
       val assoc = res.arguments match
@@ -623,13 +623,13 @@ class NewResolver:
         case S(args) => cls.paramsOpt match
           case N =>
             if args.nonEmpty || cls.isInstanceOf[ClassDef] then
-              rstate.markError(res)(res.isErroneous = true)
+              rstate.markError(res)
               resolError(res, msg"${cls.describe.capitalize} does not take pattern arguments." -> cls.toLoc :: Nil)
             Nil
           case S(ps) =>
             if ps.restParam.nonEmpty then TODO(ps.restParam)
             if args.sizeCompare(ps.params) =/= 0 then
-              rstate.markError(res)(res.isErroneous = true)
+              rstate.markError(res)
               resolError(res,
                 msg"${cls.describe.capitalize} expected ${ps.params.length} ${
                   "pattern argument".pluralized(ps.params.length)}, but got ${args.length}" -> cls.toLoc :: Nil)
@@ -643,13 +643,13 @@ class NewResolver:
                   // report another error for this already-diagnosed class.
                   if cls.body.members.get(fldSym.nme).contains(fldSym) then (fldSym -> a) :: Nil
                   else
-                    rstate.markError(res)(res.isErroneous = true)
+                    rstate.markError(res)
                     Nil
                 case _ =>
-                  rstate.markError(res)(res.isErroneous = true)
+                  rstate.markError(res)
                   resolError(res, msg"Pattern argument requires an accessible constructor field." -> p.toLoc :: Nil)
                   Nil
-      if !rstate.hasError(res, res.isErroneous) then
+      if !rstate.hasError(res) then
         val psh = CtorPatternShape(cls, assoc, res, FlowSymbol.pat()(using rstate.owner))
         if res.currentShapes.add(psh) then res.notifyShapeListeners(psh)
     def valuePattern(sh: TermShape)(using NewResolverState): Unit = sh.applicationHead match
@@ -662,7 +662,7 @@ class NewResolver:
         case _ => reject(sh)
       case _ => reject(sh)
     lhs.withoutCaptures match
-      case Term.Error() => rstate.markError(res)(res.isErroneous = true)
+      case Term.Error() => rstate.markError(res)
       case Term.Ref(sym: VarSymbol) if sym.decl.exists(_.isPatternConstructor) =>
         res.resolvedTargets ::= sym
       case Term.SimpleRef(sym: VarSymbol) if sym.decl.exists(_.isPatternConstructor) =>
@@ -779,8 +779,8 @@ class NewResolver:
     def register(using NewResolverState) = if res.currentShapes.add(sh) then
       res.notifyShapeListeners(sh)
     log(s"lhs ${lhs.isSaturated} ${lhs.unappliedParams.map(_.mapFirst(_.showDbg).mapSecond(_.map(_.showDbg)))}")
-    if lhs.isSaturated && !rstate.hasError(res, res.isErroneous) then
-      rstate.markError(res)(res.isErroneous = true)
+    if lhs.isSaturated && !rstate.hasError(res) then
+      rstate.markError(res)
       // Marks transport a value across scopes; they do not apply arguments.
       // Inspect the value beneath them, retaining actual calls/instantiations
       // so an already constructed instance never gets the suggestion to use new.
@@ -827,16 +827,16 @@ class NewResolver:
                     case NoShape => ()
               case N => td.body.foreach(go(_, mss))
         case _ =>
-          softAssert(rstate.hasError(res, res.isErroneous))
+          softAssert(rstate.hasError(res))
       case (sh: IntroShape, mss) =>
         sh.trm match
         case Lam(params, body) =>
           // Exit the same context that zipArgs enters, filtering results from other uses.
           go(body, mss)
         case _ =>
-          softAssert(rstate.hasError(res, res.isErroneous))
+          softAssert(rstate.hasError(res))
       case _ =>
-        softAssert(rstate.hasError(res, res.isErroneous))
+        softAssert(rstate.hasError(res))
     else register
   
   private def publishMember(host: NewResolvable & ShapeHost, member: BlockMemberSymbol | RecordMember,
@@ -868,7 +868,7 @@ class NewResolver:
       case NoShape => ()
 
   private def unknownMember(host: NewResolvable, name: Str, reason: MemberLookup.Uncertainty, loc: Opt[Loc])(using NewResolverState): Unit =
-    rstate.markError(host)(host.isErroneous = true)
+    rstate.markError(host)
     val message = reason match
       case MemberLookup.Uncertainty.ValueShape =>
         msg"Cannot resolve member '$name' of a value with unknown shape."
@@ -960,7 +960,7 @@ class NewResolver:
         rstate.recordResolution(sel, sel.hasDynamicTarget)(sel.hasDynamicTarget = true)
         publishDynamic(sel, marks)
       case MemberLookup.Missing if rstate.canResolve(sel) =>
-        rstate.markError(sel)(sel.isErroneous = true)
+        rstate.markError(sel)
         resolError(sel, msg"$description does not contain member '${sel.id.name}'" -> loc :: Nil)
       case MemberLookup.Unknown(reason, loc) if rstate.canResolve(sel) => unknownMember(sel, sel.id.name, reason, loc)
       // Later activations still transport field values through the compiled
@@ -999,7 +999,7 @@ class NewResolver:
                   member(selected, msg"Class '${cd.sym.nme}'", cd.toLoc)
               case _ => member(info, msg"Class '${cd.sym.nme}'", cd.toLoc))
         , sh =>
-          rstate.markError(sel)(sel.isErroneous = true)
+          rstate.markError(sel)
           resolError(sel, msg"${sh.describe.capitalize} cannot be used as a projection class." -> sh.toLoc :: Nil)
         )
   
@@ -1024,13 +1024,13 @@ class NewResolver:
     shape
   
   def resolveNew(nw: Term.New)(using NewResolverState): Unit = nw.cls.classHead match
-    case Term.Error() => rstate.markError(nw)(nw.isErroneous = true)
+    case Term.Error() => rstate.markError(nw)
     // Static construction records a resolved class on its reference for lowering.
     // Other expression forms require dynamic construction, even if they publish
     // no shapes (for example an unsupported reference in an extends clause).
     case _: NewResolvable => resolveNewClass(nw)
     case _ =>
-      rstate.markError(nw)(nw.isErroneous = true)
+      rstate.markError(nw)
       resolError(nw, msg"Invalid class expression: ${nw.cls.describe}" -> nw.cls.toLoc :: Nil)
   
   private def resolveNewClass(nw: Term.New)(using NewResolverState): Unit =
@@ -1053,8 +1053,8 @@ class NewResolver:
         if nw.currentShapes.add(sh) then nw.notifyShapeListeners(sh)
       )
     , shape =>
-      if !rstate.hasError(nw, nw.isErroneous) then
-        rstate.markError(nw)(nw.isErroneous = true)
+      if !rstate.hasError(nw) then
+        rstate.markError(nw)
         resolError(nw, msg"${shape.describe.capitalize} cannot be instantiated with keyword 'new'." -> shape.toLoc :: Nil)
     )
   
@@ -1174,8 +1174,8 @@ class NewResolver:
           msg"Expected a term; got ${bms.describe} '${bms.nme}'" -> N :: Nil)
         trm.withoutCaptures match
           case ref: NewResolvable =>
-            if !rstate.hasError(ref, ref.isErroneous) then
-              rstate.markError(ref)(ref.isErroneous = true)
+            if !rstate.hasError(ref) then
+              rstate.markError(ref)
               reportError
           case _ => reportError
   
