@@ -76,11 +76,9 @@ type Right[B] = {value: B, next: Left[Str]}
 fun read(chain: Left[Int]): Str = chain.next.next.next.value.0
 
 // Transparent aliases do not change the recursive argument's type.
-:fixme
 type Identity[X] = X
 type Chain[A] = {value: A, next: Chain[Identity[A]]}
 fun read(chain: Chain[Int]): Int = chain.next.next.value
-//│ /!!!\ Uncaught error: java.lang.StackOverflowError
 
 // Forward aliases must retain an enclosing binder even before the target is known.
 :expect [5, 6]
@@ -137,3 +135,36 @@ module Items with
 private fun read(module items: Items) = items.item
 read(Items).value
 //│ = 13
+
+// Nested forwarding aliases normalize before the recursive environment is stored.
+type Identity[X] = X
+type Forward[Y] = Identity[Identity[Y]]
+type Chain[A] = {value: A, next: Chain[Forward[A]]}
+fun read(chain: Chain[Int]): Int = chain.next.next.next.value
+
+// A forwarding alias can select and permute arguments without nesting its environment.
+type FirstOf[X, Y] = X
+type SecondOf[X, Y] = Y
+class First(val first: Int)
+class Second(val second: Int)
+type Alternating[A, B] = {value: A, next: Alternating[SecondOf[A, B], FirstOf[A, B]]}
+fun read(chain: Alternating[First, Second]): Int = chain.next.value.second
+
+// Unproductive alias cycles must stop without eagerly unfolding growing arguments.
+type Loop[A] = Loop[Array[A]]
+private fun unused(value: Loop[Int]) = ()
+
+// An unresolved alias body must keep its argument binding until the target is known.
+type Forward[A] = Identity[A]
+type Chain[A] = {value: A, next: Chain[Forward[A]]}
+fun read(chain: Chain[Int]): Int = chain.next.next.value
+type Identity[X] = X
+
+// The same forwarding normalization is needed for aliases captured by a function.
+type Identity[X] = X
+private fun local[A](value: A) =
+  type Chain[B] = {value: B, next: Chain[Identity[B]]}
+  fun read(chain: Chain[A]): A = chain.next.next.value
+  value
+local[Int](1)
+//│ = 1

@@ -129,6 +129,33 @@ class TypeRelationTest extends AnyFunSuite:
     val seen = h.observe(ContextualType(inside, Nil))
     assert(seen.toList == List(MarkedShape.enter(bound, owner, S(invoked))))
 
+  test("alias argument normalization reaches a fixed point without changing its marks"):
+    val h = new Harness
+    import h.given
+    val (formal, ft) = h.parameter("X")
+    val symbol = TypeAliasSymbol(Tree.Ident("Identity"))
+    val member = BlockMemberSymbol("Identity", Nil)
+    symbol.defn = S(TypeDef(symbol, member, List(TyParam(FldFlags.empty, N, formal)),
+      S(ft.resolution.source), N, Nil))
+    val alias = h.tpe(TypeShape.Alias(symbol, S(ft.resolution)))
+    val (argument, at) = h.parameter("A")
+    val application = h.tpe(TypeShape.Applied(alias.resolution, List(at.resolution)))
+    val (target, tt) = h.parameter("Target")
+    val owner = ResolutionBoundary(TermSymbol(Fun, N, Tree.Ident("owner")))
+    val path = EntryMark(owner, S(FlowSymbol.app()), NoMarks)
+    val original = h.resolver.transportType(tt, path :: Nil)
+    val seen = h.observe(ContextualType(original, Nil))
+    val before = target.inferenceHost.listeners.size
+    var current = original
+    (1 to 1000).foreach: _ =>
+      current = h.resolver.declaredType(application.resolution, Map(argument -> current))
+      assert(current == original)
+    val value = DynShape()
+    h.resolver.publishParameter(target, value)
+    assert(seen.toList == List(MarkedShape.enter(value, owner, path.id)))
+    assert(target.inferenceHost.listeners.size == before)
+    assert(h.state.allocatedTypeInstanceCount == 0)
+
   test("recursive structural projections preserve bounds and reuse their listeners"):
     val h = new Harness
     import h.given

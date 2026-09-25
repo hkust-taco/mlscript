@@ -20,7 +20,10 @@ The following semantic decisions are settled:
   enclosing activations of the same site.
 - Infer every missing signature part through ordinary marked flow, including
   holes within annotations and omitted generic arguments. These positions do not
-  introduce quantified binders or receive fresh symbols at calls.
+  introduce quantified binders or receive fresh symbols at calls. For now, accept
+  the [omitted-argument context limitation](#omitted-argument-context-regression):
+  these holes can lose caller separation. Fixing their substitution contexts is
+  deferred; it does not block the remaining explicit-argument implementation.
 - Apply the same rule to selected members' missing parameter, result, and field
   types through nominal annotations. Retain the receiver context and the selected
   declaration's member set; check overrides against that interface.
@@ -45,8 +48,8 @@ implementation. This restriction and sharing regular recursive references are
 separate obligations; neither follows from the bound on call-site symbols.
 
 The finite call-site symbol bound alone is not a termination proof for the whole
-resolver. Non-regular expansion and regular recursion through transparent
-argument aliases still overflow. Contextual references preserve class-local aliases
+resolver. Non-regular expansion still overflows. Fully supplied alias applications
+are reduced before their arguments become part of recursive reference keys. Contextual references preserve class-local aliases
 and enclosing binders through nominal member projections. Dependency-based binding projection accepts regular
 argument resets, including compound constants and recursively unused arguments.
 The [fixed-point conditions](#fixed-points-and-implementation-checks) remain completion gates.
@@ -588,10 +591,10 @@ argument. An omission written inside an alias body has its own source node and
 is transported with the alias use's context; expansion must not allocate more
 hole symbols. Excess arguments still indicate an arity error.
 
-The positive `Pair[Int]`, `HalfPair`, and bare `Array` cases in
-`newres/PartialSignatures.mls` now pass. Existing
-`DeclaredTypes.mls` examples selecting members from omitted arguments without any
-supporting flow remain negative tests: a hole is inferable, not evidence of an
+The intended positive `Pair[Int]`, `HalfPair`, and bare `Array` cases in
+`newres/PartialSignatures.mls` are tracked as `:fixme`s under the accepted
+omitted-argument context limitation. Existing `DeclaredTypes.mls` examples selecting
+members from omitted arguments without any supporting flow remain negative tests: a hole is inferable, not evidence of an
 arbitrary member. `TypeShape.Hole` retains a source inference host, cached by the
 type-use node and omitted formal parameter. Observation and constraint propagation
 share the argument-completion operation, so they reach the same hole. Bounds can
@@ -615,8 +618,9 @@ symbols. Holes must retain ordinary marked inference; copying the hole at each
 call is not an acceptable repair. Also, with `type SomeBox = Box`, the hole in the
 alias body is currently shared by both parameters of
 `both(left: SomeBox, right: SomeBox)`, even though their alias-use references differ.
-The contextual graph representation must preserve those uses without expanding
-the alias or allocating more hole symbols. Neither case is covered by the passing
+A future correction must preserve those uses without expanding the alias or
+allocating more hole symbols; it is deferred under the accepted limitation.
+Neither case is covered by the passing
 source-occurrence isolation test, which uses two directly written `Pair` annotations.
 
 The scheme therefore cannot be a closed type synthesized from whatever shapes
@@ -931,6 +935,7 @@ same rules. It cannot assume that leaving and re-entering that scope is an ident
 If substitution requires a different relationship between the template and argument
 contexts, that relationship needs an explicit design and supporting examples; it
 must not be implemented by changing wildcard cancellation for deferred references.
+The omitted-argument limitation is accepted for now; its correction is deferred.
 
 `transportShape` composes paths on deferred instance references at projection and
 result boundaries before delivering them to another caller. Leaving a wildcard
@@ -1091,8 +1096,8 @@ previous binding map. The same holds for a fixed compound argument `Array[Int]`.
 Accepted regular types need finite reference keys and shared recursive edges,
 not a fresh nested environment on each visit.
 
-Dependency pruning alone does not identify transparent forwarding aliases. This
-additional regular regression still overflows:
+Dependency pruning alone does not identify transparent forwarding aliases. Alias
+application reduction now makes this regular regression reach a fixed point:
 
 ```mlscript
 type Identity[X] = X
@@ -1100,17 +1105,32 @@ type Chain[A] = {value: A, next: Chain[Identity[A]]}
 fun read(chain: Chain[Int]): Int = chain.next.next.value
 ```
 
-The argument continues to denote `Int`, but successive cache keys retain
-`(Identity[A], previous-environment)`. Here `A` is genuinely a free binder of the
-argument expression, so discarding unused bindings cannot help. A regularity
-check must not classify the transparent alias application as a growing type
-constructor. Canonical references must resolve forwarding through aliases and
-their substitutions, respecting argument variance and occurrence polarity.
-This needs to work through multiple aliases and parameter permutations, with a
-finite source-graph guard for unproductive alias cycles. Special-casing a directly
-written identity alias would not establish the required representation bound.
-`TypeGraphTermination.mls` records this case separately from non-regular array
-nesting and from the receiver-context failures.
+`declaredType` reduces a fully supplied application of a resolved alias before
+storing it as another reference's argument. Arguments are interpreted in the
+caller's environment first; then declaration variance is applied and the alias's
+formals are bound for its body. Existing occurrence-polarity selection still
+chooses each substituted argument's input or output part. Thus `Identity[A]`
+reduces to the same interpreted reference as `A`, instead of retaining another
+`(Identity[A], previous-environment)` layer on every recursive visit.
+
+Reduction follows alias applications until a non-alias type constructor, an
+unresolved target, a partial application, or an alias already being expanded is
+reached. The source-alias guard grows on body expansion, while processing argument
+syntax descends the finite source expression. Nested applications such as
+`Identity[Identity[A]]` reduce their operands before adding the outer alias to the
+guard. The reducer allocates no binder instances and does not unfold the children
+of nominal, record, or function types. Captures retain the ordinary mark operations.
+Forward references retain their bindings until dependency analysis can complete.
+
+For the forwarding cases, reducing the arguments and pruning unused bindings
+makes repeated projections return the same reference keys. `TypeRelationTest`
+checks a thousand reductions for equality, unchanged caller marks, stable listener
+counts, and zero binder allocation. `TypeGraphTermination.mls` covers nested
+forwarding aliases, parameter selection/permutation, forward definitions, a captured
+alias, and an unproductive cycle with growing arguments. This does not prove the
+whole-graph bound: non-regular structural expansion and other growing binding
+environments still need the regularity check. That check must not classify
+transparent alias forwarding as a growing type constructor.
 
 The implemented dependency analysis operates on source `TypeResolution` nodes.
 An edge forwards the child's free binders, excluding those bound by an alias or

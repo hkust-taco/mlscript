@@ -294,14 +294,34 @@ class NewResolver:
     declaredType(resolution, bindings, true)
 
   private def declaredType(resolution: TypeResolution, bindings: Map[VarSymbol, DeclaredType], positive: Bool)
-      (using NewResolverState): DeclaredType = resolution.currentShapes.toList match
-    case TypeShape.Parameter(symbol, _) :: Nil if bindings.contains(symbol) => selectArgument(bindings(symbol), positive)
-    case TypeShape.Captured(base, thru) :: Nil => captureType(declaredType(base, bindings, positive), thru)
-    case _ =>
-      val relevant = if bindings.isEmpty then bindings else typeDependencies(resolution) match
-        case R(binders) => bindings.filter((symbol, _) => binders(symbol))
-        case L(_) => bindings
-      DeclaredType(resolution, relevant, Map.empty, positive)
+      (using NewResolverState): DeclaredType =
+    def loop(resolution: TypeResolution, bindings: Map[VarSymbol, DeclaredType], aliases: Set[TypeAliasSymbol]): DeclaredType =
+      def retain: DeclaredType =
+        val relevant = if bindings.isEmpty then bindings else typeDependencies(resolution) match
+          case R(binders) => bindings.filter((symbol, _) => binders(symbol))
+          case L(_) => bindings
+        DeclaredType(resolution, relevant, Map.empty, positive)
+      resolution.currentShapes.toList match
+        case TypeShape.Parameter(symbol, _) :: Nil if bindings.contains(symbol) => selectArgument(bindings(symbol), positive)
+        case TypeShape.Captured(base, thru) :: Nil => captureType(loop(base, bindings, aliases), thru)
+        case TypeShape.Applied(base, arguments) :: Nil => base.currentShapes.toList match
+          case TypeShape.Alias(symbol, S(rhs)) :: Nil if !aliases(symbol) =>
+            val parameters = symbol.defn.get.tparams
+            if parameters.length != arguments.length then retain
+            else
+              // Reduce alias applications before storing them in another type's
+              // environment. Otherwise Chain[Identity[A]] retains a new wrapper
+              // around A on every recursive projection. Arguments are reduced in
+              // their original environment before the alias's formals are bound.
+              val supplied = arguments.map(loop(_, bindings, aliases))
+              val substitutions = parameters.zip(supplied).map: (parameter, argument) =>
+                parameter.sym -> argumentType(argument, parameter.vce)
+              // Unproductive source-alias cycles stop at their original node.
+              // No expansion through a nominal, record, or function is needed.
+              loop(rhs, bindings ++ substitutions, aliases + symbol)
+          case _ => retain
+        case _ => retain
+    loop(resolution, bindings, Set.empty)
 
   private def declaredType(resolution: TypeResolution, context: DeclaredType)(using NewResolverState): DeclaredType =
     declaredType(resolution, context.bindings, context.positive).instantiate(context.instances)
