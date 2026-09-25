@@ -717,6 +717,22 @@ retained through callback checking, tuple/record results, closures, and construc
 aliases. Elaboration defers observing the base reference of a type application
 until its arguments are available, preventing a second by-name instantiation.
 
+The supplied types belong to the type application's scope. For an ordinary
+function or constructor, first transport the referenced callable through all
+lexical captures, then bind its supplied arguments using that complete path.
+Binding arguments before entering those captures makes specialization and the
+later term application disagree about their common scope. In particular,
+`wrap[B](value: B) = identity[B](value)` could accumulate exit marks even though
+its source has no recursion. For a by-name definition, the reference itself
+executes the body: rebase supplied arguments to that reference's scope before
+invocation, then transport the result outward. Do not apply the supplied arguments
+a second time to a separately quantified result. These transfers use ordinary
+mark operations; no exit/reentry pair is treated as an identity.
+`newres/SpecializationCaptures.mls` checks both forms through nested captures,
+caller type parameters, and constructor specialization. These regressions also
+pass with `checkMarkPaths` enabled; the default remains unchanged because other
+existing paths still violate its invariants.
+
 Constructors use the same site policy. `C[T]` and `new C[T]` instantiate at their
 explicit type application, including when term arguments remain to be supplied.
 Without explicit arguments, an unapplied `new C` waits for its first term
@@ -732,11 +748,17 @@ for that scheme. By-name function/method cases, separate signatures, independent
 quantified results, shared mutation, and specialization inside generic bodies are
 also covered. Broader graph convergence remains a separate completion gate.
 
-`newres/ConstructorInstances.mls` still contains the failing reconstruction regression.
+`newres/ConstructorInstances.mls` retains the failing reconstruction regressions.
 Reconstruction with `class Box[T](val item: T) with { fun copy() = new Box[T](item) }`
 must retain the receiver's view of `T` separately from the new constructor's view;
 the first of two distinct receiver calls currently loses its resulting element
-interface. The separate supplied-callback regression now passes:
+interface. The unannotated control, `class Box(val item)` with
+`copy() = new Box(item)`, mixes field candidates from distinct receivers. Thus the
+remaining receiver-context problem also affects ordinary inferred value flow;
+correcting only the type-binder map does not establish receiver separation.
+The captured constructor-value form `Box[T](item)` now terminates, but its returned
+field still needs the same receiver-context work as explicit `new`.
+The separate supplied-callback regression now passes:
 
 ```mlscript
 class Item(val value: Int)

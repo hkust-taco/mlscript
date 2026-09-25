@@ -2561,24 +2561,33 @@ class NewResolver:
                 case specialized: TermShape => receive(specialized)
                 case NoShape => ()
           case _ => receive(value)
-      // Preserve lexical captures while supplying the invocation's arguments
-      // before a by-name reference publishes its result. Observing the result
-      // first would either consume the scheme twice or specialize a result scheme.
-      def observe(base: Term)(receive: Listener)(using NewResolverState): Unit = base match
+      // A value specialization binds its arguments in the type application's
+      // scope, after the reference has crossed all intervening captures. By-name
+      // definitions execute at the reference itself: supply their arguments there,
+      // rebasing from the application scope with the ordinary mark operations.
+      // Their result may have an independent scheme and must not be specialized
+      // again with the arguments belonging to the by-name definition.
+      def observe(base: Term, captures: Ls[Marks])
+          (receive: (TermShape, Bool) => NewResolverState ?=> Unit)(using NewResolverState): Unit = base match
         case Capture(inner, thru) =>
-          observe(inner)(shape => receive(if discardMarks then shape else MarkedShape.enter(shape, ResolutionBoundary(thru), N)))
+          val crossing = EntryMark(ResolutionBoundary(thru), N, NoMarks)
+          observe(inner, crossing :: captures): (shape, invoked) =>
+            receive(if discardMarks then shape else MarkedShape.enter(shape, ResolutionBoundary(thru), N), invoked)
         case _ => listen(base, discardMarks):
           case sym: SymShape => sym.sym.onComplete: () =>
             valueTarget(sym.sym, false).flatMap(_.defn) match
               case S(td: TermDefinition) if isByName(td) =>
                 val definition = defnShapes.getOrElseUpdate(td.tsym, DefnShape(td, N))
                 checkArity(definition, definitionBinders(td).length)
-                val arguments = args.map(arg => declaredType(typeResolution(arg), Map.empty).instantiate(rstate.instances))
-                fromSymbolAt(sym, receive, base, recordValueTarget(base, _), false,
+                val arguments = args.map: arg =>
+                  val caller = declaredType(typeResolution(arg), Map.empty).instantiate(rstate.instances)
+                  transportType(caller, inverseMarks(captures))
+                fromSymbolAt(sym, value => receive(value, true), base, recordValueTarget(base, _), false,
                   S((rstate.typeApplicationSite(application), arguments)))
-              case _ => fromSymbol(sym, value => instantiate(value)(receive), base, recordValueTarget(base, _), false)
-          case value: TermShape => instantiate(value)(receive)
-      observe(underlying)(listener)
+              case _ => fromSymbol(sym, value => receive(value, false), base, recordValueTarget(base, _), false)
+          case value: TermShape => receive(value, false)
+      observe(underlying, Nil): (value, invoked) =>
+        if invoked then listener(value) else instantiate(value)(listener)
     case mut @ Mut(underlying: Tup) => listener(mutableArray(mut, underlying))
     case Mut(underlying) => listenTerm(underlying)(listener)
     case tuple: Tup => listenAggregate(tuple, listener): publish =>

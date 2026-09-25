@@ -98,6 +98,10 @@ The inventory below separates these from compiler and prelude gaps.
   Concrete outstanding cases are in
   `newres/InstantiationSites.mls`, `StoredSpecializations.mls`, `ConstructorInstances.mls`,
   `InferenceHoles.mls`, `PartialSignatures.mls`, and `TypeGraphTermination.mls`.
+  Captured explicit specializations now bind arguments in the application scope;
+  `SpecializationCaptures.mls` covers nested function and by-name captures.
+  Reconstruction still mixes unannotated field flows as well as losing annotated
+  receiver contexts, so its remaining fix must cover ordinary value inference too.
   Loss of caller separation through omitted type arguments is an accepted current
   limitation; defer that substitution redesign while completing the other cases.
   Decide how reassignment affects mutable storage's inferred interface, including

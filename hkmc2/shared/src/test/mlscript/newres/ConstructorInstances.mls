@@ -199,3 +199,31 @@ first(...callbacks)(new Base).extra
 //│ ╙── Value of type 'Base' does not contain member 'extra'
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ callbacks = [fun]
+
+// Ordinary value flow through reconstruction also needs receiver separation.
+// This control contains no type binders or annotations on the Box field.
+:fixme
+:expect [21, 22]
+class First(val first: Int)
+class Second(val second: Int)
+class Box(val item) with
+  fun copy() = new Box(item)
+let first = new Box(First(21))
+let second = new Box(Second(22))
+[first.copy().item.first, second.copy().item.second]
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.213: 	[first.copy().item.first, second.copy().item.second]
+//│ ║         	                          ^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Instance of class 'First' does not contain member 'second'
+//│ ║  l.211: 	let first = new Box(First(21))
+//│ ╙──       	                    ^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.213: 	[first.copy().item.first, second.copy().item.second]
+//│ ║         	 ^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Instance of class 'Second' does not contain member 'first'
+//│ ║  l.212: 	let second = new Box(Second(22))
+//│ ╙──       	                     ^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ ═══[RUNTIME ERROR] Expected: '[21, 22]', got: 'undefined'
+//│ first = Box(First(21))
+//│ second = Box(Second(22))
