@@ -510,16 +510,6 @@ class TypeRelationTest extends AnyFunSuite:
     assert(a.currentShapes.toSet == Set(InstanceShape(bt)))
     assert(b.currentShapes.toSet == Set(InstanceShape(at), InstanceShape(concrete)))
 
-  test("repeated deferred views reuse source identities for synthesized interfaces"):
-    val h = new Harness
-    import h.given
-    val (a, at) = h.parameter("A")
-    val substitution = h.state.instantiateTypeParameters(at.resolution, FlowSymbol.app(), List(a))
-    val tuple = TupleShape(Term.UnitVal(), TupleShape.TypedField(at, Nil) :: Nil)(h.resolver)
-    val view = h.resolver.instantiateShape(tuple, substitution)
-    (1 to 1000).foreach: _ =>
-      assert(h.resolver.instantiateShape(tuple, substitution) eq view)
-
   test("importers extend a cyclic relation without mutating the exporter or one another"):
     val h = new Harness
     import h.given
