@@ -1,83 +1,54 @@
 # Deferred resolution design work
 
 This reference records confirmed implementation gaps and deferred design work.
-The convergence failures below must be corrected before claiming that accepted
-type graphs are finite. Other design refinements require review before implementation. Current
-contracts are in [instance types and parameter constraints](new-resolution-type-value-flow.md);
+Current contracts are in [instance types and parameter constraints](new-resolution-type-value-flow.md);
 remaining suite ports are in the [migration worklist](new-resolution-suite-migration.md).
-
-## Confirmed convergence failures
-
-### Partially supplied forwarding aliases
-
-```mlscript
-type First[A, B] = A
-type Chain[A] = {value: A, next: Chain[First[A]]}
-private fun walk[A](chain: Chain[A], n: Int) =
-  if n > 0 then walk(chain.next, n - 1) else ()
-```
-
-This has the same finite unfolding as `Chain[A] = {value: A, next: Chain[A]}`.
-`declaredType` reduces an applied alias only when every formal is supplied, whereas
-deferred interpretation fills omissions with source holes. Keeping `First[A]` as
-an argument retains another binding environment on each recursive constraint;
-eventually hashing `DeclaredType` overflows. Supplying the unused `B` makes the
-example terminate. The same failure occurs through a forwarding alias and with
-argument permutations. Unify the argument-binding rules while preserving omission
-identities, variance, captures, and the alias expansion guard.
-Regressions: `newres/TypeGraphPartialAliases.mls`.
-
-### Fresh sites during structural member constraints
-
-```mlscript
-type Link = {next: Link}
-class Node with
-  fun next[A] = this
-private fun take(x: Link) = ()
-take(new Node)
-```
-
-`constrainRecord` allocates a fresh `FlowSymbol.memSym` for the expected field on
-every visit. Selecting `next` invokes the by-name definition and uses this new
-symbol as its instantiation site. The resulting substitution distinguishes another
-receiver view, which repeats the structural constraint and allocates again.
-The definition/site cache cannot bound allocation when the sites themselves grow.
-An unused binder is sufficient; removing it makes the example terminate. Declared
-results and separate quantified signatures also reproduce the overflow.
-Synthetic projections need stable identities tied to the finite source graph,
-with ordinary marks retaining activation separation.
-Regressions: `newres/TypeGraphProjectionSites.mls`.
 
 ## Quantified bounds
 
-`TypeQuantifier` and `DeclaredTypeParameter` store lower and upper bounds, but
-`instantiateCallable` substitutes only the parameter/result types and supplied
-arguments. It never installs the bounds as relations on the new instances.
-For example, a result of `[A extends Item] -> () -> A` does not expose `Item`'s
-members when the type argument is inferred. A separately signed implementation
-also cannot use its parameter's declared upper-bound interface. This is distinct
-from postponing concrete mismatch diagnostics: the constraint edges and checking
-interfaces themselves are missing. Regressions: `newres/QuantifiedBounds.mls`.
+Instantiation installs `lower <: instance <: upper` with the complete binder
+substitution, after recording explicit arguments. This covers callables and by-name
+invocations; captured enclosing binders also specialize the bounds. Lower bounds
+contribute inference candidates, and upper relations propagate obligations through
+later candidates. Dependent and recursive bounds share the existing relation graph.
 
-## Inherited type-argument constraints
+Checking and observation gaps remain. An otherwise unconstrained result of
+`[A extends Item] -> () -> A` does not expose `Item`'s members. A separately signed
+implementation of `[A extends Item] -> A -> Int` cannot use that guaranteed
+interface either. Installing an upper constraint does not give the parameter's
+candidate host an observable shape. A recursive by-name getter with a lower bound
+on a class parameter can also leak that parameter's abstract checking candidate
+through inferred body constraints into a declared receiver. The same declared
+receiver works when the body contributes no recursive checking edge.
 
-Matching an actual subclass against `Parent[A]` currently leaves `A` unconstrained.
-The nominal branch of `inferTypeArguments` compares exact class identities and
-does not follow the instantiated parent view. Thus `read[A](p: Parent[A]) = p.item`
-loses its result interface for both constructed and declared `Child[Item]` inputs,
-while `Parent[Item]` works. The field has a complete signature, so this is separate
-from inferred member signatures. The exact-class restriction predates the current
-type-relation implementation. Follow the parent's bindings and scope transfers
-when installing both variance directions. Regressions: `newres/InheritedTypeArguments.mls`.
+Do not fix this by publishing the upper bound as an additional lower candidate.
+For `[A extends Base] -> A -> A`, inference from a `Child` input must still permit
+`Child`-only operations on the result; a second `Base` candidate would incorrectly
+forbid them. Conversely, a generic implementation must work for every permitted
+`A`, and cannot use a lower bound's members as its checking interface.
 
-## Productive Boolean alias cycles
+A design must distinguish a parameter's inferred candidates, its guaranteed upper
+interface, and its rigid checking witness. It must specify how observation uses
+those guarantees with delayed bounds and explicit arguments, without mixing the
+checking witness into a real call or losing scope marks. Regression and precision
+controls: `newres/QuantifiedBounds.mls`.
+
+## Unguarded Boolean alias cycles
 
 The alias observation guard publishes an opaque candidate when revisiting an alias.
-For `Choice[A] = A | Choice[A]`, this adds an unknown alternative alongside `A`,
-preventing member lookup even though the productive unfolding exposes only `A`.
-This behavior predates the current Boolean normalization. A correction must also
-specify unproductive cycles and recursive intersections; simply removing every
-opaque candidate is not a general solution. Regression: `newres/RecursiveBooleanInterfaces.mls`.
+For `Choice[A] = A | Choice[A]`, this prevents member lookup on `Choice[Item]`.
+The existing regression requests the least-fixed-point interpretation, where this
+alias is `Item`, but the equation alone does not determine that interpretation:
+`Any` is also a solution. Conversely, `X = Item & X` has least solution `Nothing`
+and greatest solution `Item`. A direct `X = X` supplies no choice at all.
+
+These cycles are unguarded: reaching the recursive reference crosses no nominal,
+record, tuple, or function constructor. Finite Boolean normalization is not a
+contract for their fixed points. Choose whether to reject unguarded recursive
+aliases or define their fixed-point semantics before changing the guard. Simply
+suppressing every repeated candidate would silently choose semantics and leave
+pure cycles without an interface or an explanatory diagnostic. Regressions and
+current diagnostic controls: `newres/RecursiveBooleanInterfaces.mls`.
 
 ## Receiver reconstruction
 

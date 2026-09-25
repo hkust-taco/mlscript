@@ -22,9 +22,9 @@ The first four have finite unfoldings. `Growing[Int]` exposes `Int`, `Array[Int]
 `Array[Array[Int]]`, and so on. It receives a regularity diagnostic,
 without widening the type or imposing an expansion-depth limit.
 
-Canonical references reduce fully supplied aliases and normalize Boolean
-combinations. The implemented check uses one dependency node per original formal
-parameter and rejects constructor-bearing dependency cycles before observing the
+Canonical references reduce applied aliases, including omitted arguments, and
+normalize Boolean combinations and wildcard parts. The implemented check uses one
+dependency node per original formal parameter and rejects constructor-bearing dependency cycles before observing the
 structural interface. This is an intentionally conservative restriction: it can
 reject regular types whose finite unfolding requires distinguishing argument parts
 or correlations between successive substitutions. The diagnostic says that the
@@ -59,7 +59,7 @@ normalization does not freeze its current bounds. Combined nodes are interned in
 the consuming resolution state, using the same inherited-cache discipline as other
 type references.
 
-Fully supplied aliases reduce before they become another type's argument. Arguments
+Applied aliases reduce before they become another type's argument. Arguments
 are interpreted in their caller environment first, then declaration variance is
 applied and the alias's formals are substituted. A guard on source alias symbols
 stops unproductive recursive expansion. Nested arguments are reduced before adding
@@ -94,14 +94,19 @@ This does **not** by itself bound the atoms. Constructor growth, retained argume
 parts that never become observable, and the existing requirements on finite marked
 contexts remain separate obligations.
 
-In particular, eager reduction currently excludes partially supplied aliases.
-With `type First[A, B] = A`, the recursive argument `First[A]` is semantically
-identical to `A`, but retains a new environment on each recursive constraint.
-`TypeGraphPartialAliases.mls` records the resulting stack overflow alongside the
-terminating `First[A, Int]` control. Passing the conservative regularity check
-therefore does not currently imply that the implementation reaches a fixed point.
-Omitted positions must keep their source-hole identities when normalization is
-extended; allocating holes during each expansion would create another source of growth.
+Eager reduction and deferred interpretation share the same argument-binding rule.
+Omitted positions reuse source-owned holes and follow the same scope transfers as
+supplied arguments. For `type First[A, B] = A`, the recursive argument `First[A]`
+therefore reduces to `A`; it does not retain a fresh environment on each recursive
+constraint. A relevant omission, such as `Second[A]` for `type Second[A, B] = B`,
+resets to its fixed source hole. Regressions: `TypeGraphPartialAliases.mls`.
+
+Written wildcard parts are normalized at their lexical polarities before the pair
+is interned. Repeated `out A`, `in A`, or two-part substitutions then select existing
+endpoints instead of retaining nested wildcard environments. The pair keeps its
+written source so it still overrides declaration variance, and missing parts keep
+that source for diagnostics. This does not discard unobserved parts: constructors
+in either part still participate in the conservative growth check.
 
 ## Conservative check
 
@@ -117,7 +122,7 @@ an interface is observed, so an unused annotation cannot avoid the check. Source
 visitation and alias expansion use finite source-node and alias-symbol guards;
 reachability uses the finite original-binder graph. Accepted and rejected results
 are cached by source root in the consuming resolver state. A rejected root does
-not reject an unrelated regular child. No inference variables are allocated and
+not reject an unrelated regular child. Omitted arguments reuse their source holes;
 no ordinary mark operation is changed.
 
 That handles ordinary permutations and resets, including:
@@ -144,10 +149,12 @@ The constructor inside the input part is not an observable growing component of
 this structural unfolding. A binder-only edge from `A` to `A` loses that fact.
 The worksheet records the rejection explicitly as a current precision limitation.
 
-The implementation also labels written wildcard dependencies as constructor-bearing,
-so even `next: Chain[out A]` is rejected although it contains no growing constructor
-and every positive `value` component remains `A`. The same worksheet records this
-simpler false positive; the diagnostic's constructor explanation is conservative too.
+Constructor-free wildcard dependencies do not count as growing constructors.
+For example, `next: Chain[out A]` is accepted and every positive `value` component
+remains `A`. Both parts are still analyzed, so `Chain[in Array[A]]` remains
+conservatively rejected. `TypeGraphTermination.mls` covers these boundaries, and
+`TypeRelationTest` checks repeated wildcard substitution, marked early/late bounds,
+and listener saturation.
 
 The representation needs the same distinction. Current free-binder projection
 retains the whole bound argument whenever a formal is relevant, including parts

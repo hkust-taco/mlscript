@@ -74,16 +74,21 @@ subscribing to constraints so reentrant observation finds it. Recursion reuses
 the group; marks distinguish enclosing activations of a shared inner site.
 No other observation, projection, or recursive traversal allocates fresh binders.
 `App.resSym`, `New.resSym`, and reference/selection sites provide stable identities;
-`typeApplicationSite` memoizes one identity per original `TyApp`. Class and
+`typeApplicationSite` memoizes one identity per original `TyApp`. Structural
+field constraints likewise reuse one projection site per source field across
+recursive and activated views (`TypeGraphProjectionSites.mls`). Class and
 constructor views use the same original owner. An anonymous polymorphic annotation
 uses its source scheme, and each alternative of an overload has its own owner.
 
 `TypeShape.Polymorphic` and `DeclaredTypeParameter` retain the original binders and
 their bounds. Inputs, results, and nested callbacks receive the site's substitution
-before interface expansion. Bounds are currently retained only as metadata:
-`instantiateCallable` does not install their constraints. Applying the same
-substitution to bounds and connecting them to the instances remains a
-[required correction](new-resolution-future-work.md#quantified-bounds).
+before interface expansion. The same substitution is applied to bounds, including
+captured enclosing binders. Instantiation connects `lower <: instance <: upper`
+after recording explicit supplied arguments, so a lower bound cannot widen a
+supplied interface. By-name invocations install these relations when their scheme
+is consumed. Recursive and dependent bounds share the existing relation graph.
+Using an upper guarantee as an interface for an unconstrained result or a generic
+checking body remains a [design issue](new-resolution-future-work.md#quantified-bounds).
 Enclosing binders remain lexical captures, not binders of the nested definition
 being instantiated.
 
@@ -119,6 +124,12 @@ Declaration variance applies to an unqualified argument. A written wildcard
 supplies its own parts and overrides declaration variance. Comparing actual `a`
 with expected `b` installs `a.output <: b.output` and `b.input <: a.input`.
 Missing wildcard parts are actual top/bottom types, not inference holes.
+
+A subclass contributes the arguments of the requested nominal ancestor. Each
+parent step preserves the child's binder substitution and the parent's scope
+marks before installing both variance directions. This applies to constructed
+receivers and declared nominal views, including multiple inheritance steps and
+captured enclosing binders (`InheritedTypeArguments.mls`).
 
 ### Substitute at the occurrence before applying argument variance
 
@@ -273,12 +284,13 @@ when their site labels also range over a finite set.
 Formula normalization is finite for a fixed atom set. These bounds do not alone
 establish finiteness of nested binding environments or the atom set.
 
-There are now [concrete counterexamples](new-resolution-future-work.md#confirmed-convergence-failures):
-structural member constraints manufacture fresh invocation sites, and partially
-supplied forwarding aliases retain growing environments. Both can overflow on
-semantically finite recursive types. A whole-graph termination argument must cover
-these paths as well as listener convergence. Cache keys must never contain growing
-substitution histories; depth limits and dropped marks do not establish a fixed point.
+Structural field constraints now reuse source projection sites, and partial
+forwarding aliases share deferred interpretation's source-hole binding rules.
+Wildcard normalization similarly retains canonical argument parts rather than
+nested substitution histories. Their regressions establish these local bounds;
+a [whole-graph termination argument](new-resolution-future-work.md#whole-graph-convergence-audit)
+must still cover all accepted contextual references, formula atoms, and listener
+convergence. Depth limits and dropped marks do not establish a fixed point.
 
 These representations are internal to resolution. Lowering consumes completed
 targets and value shapes; runtime values acquire no type-argument objects.

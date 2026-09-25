@@ -7,32 +7,45 @@ class Node with
 private fun take(x: Link) = ()
 take(new Node)
 
-// FIXME: An unused type binder must not turn this finite constraint into
-// infinitely many instantiations. constrainRecord creates a fresh field flow
-// on every visit, and by-name invocation uses that flow as its binder site.
-:fixme
+// An unused type binder must not turn this finite constraint into
+// infinitely many instantiations. The source field is a stable projection site.
 type Link = {next: Link}
 class Node with
   fun next[A] = this
 private fun take(x: Link) = ()
 take(new Node)
-//│ /!!!\ Uncaught error: java.lang.StackOverflowError
 
-// FIXME: The declared-result path has the same site-allocation problem.
-:fixme
+// Declared results obey the same finite-site rule.
 type Link = {next: Link}
 class Node with
   fun next[A]: Node = this
 private fun take(x: Link) = ()
 take(new Node)
-//│ /!!!\ Uncaught error: java.lang.StackOverflowError
 
-// FIXME: Separate quantified signatures must obey the same finite-site rule.
-:fixme
+// Separate quantified signatures obey the same finite-site rule.
 type Link = {next: Link}
 class Node with
   fun next: [A] -> Node
   fun next = this
 private fun take(x: Link) = ()
 take(new Node)
-//│ /!!!\ Uncaught error: java.lang.StackOverflowError
+
+// Sharing the static projection site must preserve the receivers' ordinary
+// activation marks and their distinct class arguments through the recursive edge.
+:expect [1, 2]
+class First(val first: Int)
+class Second(val second: Int)
+type Link[A] = {value: A, next: Link[A]}
+class Node[T](val value: T) with
+  fun next[Unused] = this
+private fun read[A](link: Link[A]) = link.next.value
+[read(new Node[First](First(1))).first, read(new Node[Second](Second(2))).second]
+//│ = [1, 2]
+
+// A quantified lower bound can itself close the projection cycle.
+type Link = {next: Link}
+class Node with
+  fun next: [A restricts Node] -> A
+  fun next = this
+private fun take(x: Link) = ()
+take(new Node)

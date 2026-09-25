@@ -336,6 +336,9 @@ class NewResolver:
             case TypeShape.Parameter(symbol, _) :: Nil => bound(symbol, wrapped)
             case TypeShape.Combined(formula) :: Nil => formula.atoms.flatMap(uses(_, wrapped, next, aliases))
             case TypeShape.Contextual(reference) :: Nil => uses(reference.tpe, wrapped, next, aliases)
+            case TypeShape.Wildcard(input, output) :: Nil =>
+              input.toSet.flatMap(part => uses(declaredType(part, tpe.copy(positive = !tpe.positive)), wrapped, next, aliases)) ++
+                output.toSet.flatMap(part => uses(declaredType(part, tpe), wrapped, next, aliases))
             case TypeShape.Argument(parts) :: Nil => uses(parts.input, wrapped, next, aliases) ++ uses(parts.output, wrapped, next, aliases)
             case TypeShape.SelectedArgument(argument, _) :: Nil => uses(argument, wrapped, next, aliases)
             case TypeShape.Applied(base, args) :: Nil => alias(base, Set.empty) match
@@ -403,7 +406,7 @@ class NewResolver:
 
   private def declaredType(resolution: TypeResolution, bindings: Map[VarSymbol, DeclaredType], positive: Bool)
       (using NewResolverState): DeclaredType =
-    def loop(resolution: TypeResolution, bindings: Map[VarSymbol, DeclaredType], aliases: Set[TypeAliasSymbol]): DeclaredType =
+    def loop(resolution: TypeResolution, bindings: Map[VarSymbol, DeclaredType], aliases: Set[TypeAliasSymbol], positive: Bool): DeclaredType =
       def retain: DeclaredType =
         val relevant = if bindings.isEmpty then bindings else typeDependencies(resolution) match
           case R(binders) => bindings.filter((symbol, _) => binders(symbol))
@@ -411,35 +414,47 @@ class NewResolver:
         DeclaredType(resolution, relevant, Map.empty, positive)
       resolution.currentShapes.toList match
         case TypeShape.Parameter(symbol, _) :: Nil if bindings.contains(symbol) => selectArgument(bindings(symbol), positive)
-        case TypeShape.Captured(base, thru) :: Nil => captureType(loop(base, bindings, aliases), thru)
+        case TypeShape.Captured(base, thru) :: Nil => captureType(loop(base, bindings, aliases, positive), thru)
         case TypeShape.Union(left, right) :: Nil =>
-          combinedType(resolution, typeFormula(loop(left, bindings, aliases)).union(typeFormula(loop(right, bindings, aliases))))
+          combinedType(resolution, typeFormula(loop(left, bindings, aliases, positive)).union(typeFormula(loop(right, bindings, aliases, positive))))
         case TypeShape.Intersection(left, right) :: Nil =>
-          combinedType(resolution, typeFormula(loop(left, bindings, aliases)).intersection(typeFormula(loop(right, bindings, aliases))))
+          combinedType(resolution, typeFormula(loop(left, bindings, aliases, positive)).intersection(typeFormula(loop(right, bindings, aliases, positive))))
+        case TypeShape.Wildcard(input, output) :: Nil =>
+          // Normalize both parts before retaining the argument. Otherwise even
+          // out A keeps another A-to-wildcard environment at each recursive
+          // step. Preserve the written source: it overrides declaration variance.
+          val parts = TypeArgument(input.fold(extremeType(false, S(resolution)))(loop(_, bindings, aliases, !positive)),
+            output.fold(extremeType(true, S(resolution)))(loop(_, bindings, aliases, positive)))
+          rstate.wildcardTypes.getOrElseUpdate((resolution, parts), {
+            val normalized = new TypeResolution(resolution.source, resolution.fail)
+            normalized.publish(TypeShape.Argument(parts))
+            DeclaredType(normalized, Map.empty, Map.empty, true)
+          })
         case TypeShape.Applied(base, arguments) :: Nil =>
-          def applyAlias(base: DeclaredType, supplied: Ls[DeclaredType], seen: Set[TypeResolution]): Opt[DeclaredType] =
+          def applyAlias(base: DeclaredType, supplied: TypeApplication, seen: Set[TypeResolution]): Opt[DeclaredType] =
             if seen(base.resolution) then N else base.resolution.currentShapes.toList match
               case TypeShape.Alias(symbol, S(rhs)) :: Nil if !aliases(symbol) =>
                 val parameters = symbol.defn.get.tparams
-                if parameters.length != supplied.length then N else
-                  val substitutions = parameters.zip(supplied).map: (parameter, argument) =>
-                    parameter.sym -> argumentType(argument, parameter.vce)
-                  S(loop(rhs, effectiveBindings(base) ++ substitutions, aliases + symbol))
+                if supplied.arguments.length > parameters.length then N else
+                  // Omitted formals use the same source holes as deferred
+                  // interpretation. Retaining a partial forwarding application
+                  // would nest its environment at each recursive projection.
+                  S(loop(rhs, typeBindings(base, supplied, parameters), aliases + symbol, positive))
               case TypeShape.Contextual(reference) :: Nil =>
                 // Use exactly the interpreter's application rule: move caller
                 // arguments to the template endpoint, substitute there, then
                 // transport the result back. A wildcard exit followed by entry
                 // is not cancelled; transportType retains its ordinary marks.
                 applyAlias(reference.tpe.instantiate(base.instances),
-                  supplied.map(transportType(_, inverseMarks(reference.marks))), seen + base.resolution)
+                  supplied.move(inverseMarks(reference.marks)), seen + base.resolution)
                   .map(transportType(_, reference.marks))
               case _ => N
           // Reduce arguments in their caller environment before binding formals.
           // The alias guard grows only on body expansion, so nested Identity
           // applications reduce while unproductive recursive aliases stop.
-          applyAlias(loop(base, bindings, aliases), arguments.map(loop(_, bindings, aliases)), Set.empty).getOrElse(retain)
+          applyAlias(loop(base, bindings, aliases, positive), TypeApplication(arguments.map(loop(_, bindings, aliases, positive)), Nil), Set.empty).getOrElse(retain)
         case _ => retain
-    loop(resolution, bindings, Set.empty)
+    loop(resolution, bindings, Set.empty, positive)
 
   /** Normalize Boolean combinations without observing an atom's candidates.
     * Transport distributes over components using the ordinary transportType
@@ -511,8 +526,12 @@ class NewResolver:
     })
 
   private def extremeType(top: Bool)(using NewResolverState): DeclaredType =
-    rstate.extremeTypes.getOrElseUpdate(top, {
-      val resolution = new TypeResolution(Term.Missing, _ => lastWords("A synthesized extreme type cannot be invalid"))
+    extremeType(top, N)
+
+  private def extremeType(top: Bool, source: Opt[TypeResolution])(using NewResolverState): DeclaredType =
+    rstate.extremeTypes.getOrElseUpdate((top, source), {
+      val resolution = new TypeResolution(source.fold[Term](Term.Missing)(_.source),
+        _ => lastWords("A synthesized extreme type cannot be invalid"))
       resolution.publish(if top then TypeShape.Top else TypeShape.Bottom)
       declaredType(resolution, Map.empty)
     })
@@ -715,9 +734,13 @@ class NewResolver:
           arguments = specialized.arguments.map(_.instantiate(instances)), instances = instances ++ specialized.instances)
         case callable: CallableTypeShape =>
           val captured = instances -- callable.tparams.map(_.parameter.symbol)
+          def instantiate(tpe: DeclaredType): DeclaredType = tpe.instantiate(captured)
+          val scheme = callable.scheme.map: scheme =>
+            scheme.copy(parameters = scheme.parameters.map: parameter =>
+              parameter.copy(lower = parameter.lower.map(instantiate), upper = parameter.upper.map(instantiate)))
           callable.copy(paramLists = callable.paramLists.map: params =>
-            DeclaredParams(params.params.map(_.map(_.instantiate(captured))), params.hasRest, params.rest.map(_.instantiate(captured)))
-          , result = callable.result.map(_.instantiate(captured)))
+            DeclaredParams(params.params.map(_.map(instantiate)), params.hasRest, params.rest.map(instantiate))
+          , result = callable.result.map(instantiate), scheme = scheme)
         case literal: IntroShape if !literal.trm.isInstanceOf[Lam] => literal
         case _: (UnknownValueShape | DynShape | OpaqueTypeShape | ErrShape) => source
         case _ => ContextualShape(source, instances)
@@ -940,12 +963,12 @@ class NewResolver:
           val td = symbol.defn.get
           val crossesValueScope = !(td.k is syntax.RecordField) && !td.tsym.decl.exists(_.isInstanceOf[Param])
           val callerInstances = rstate.instances
-          val instances = if isByName(td) then instantiateByName(td, flow,
-            ExitMark(ResolutionBoundary(td.tsym), S(flow), NoMarks) :: receiverMarks, specialization) else callerInstances
           // A selected generic method binds its own parameters anew. Receiver
           // bindings can mention an earlier call of that same source method in
           // their values, but cannot bind the new method's local names.
           val capturedBindings = bindings -- definitionBinders(td)
+          val instances = if isByName(td) then instantiateByName(td, flow,
+            ExitMark(ResolutionBoundary(td.tsym), S(flow), NoMarks) :: receiverMarks, specialization, capturedBindings) else callerInstances
           def publish(shape: TermShape)(using NewResolverState): Unit =
             val Marked(interface, context) = shape
             val generic = interface match
@@ -1038,6 +1061,18 @@ class NewResolver:
     parameters.zip(arguments).foreach: (parameter, argument) =>
       publishParameter(parameter.host, InstanceShape(argument).enter(marks))
 
+  /** Bounds constrain the instantiated references, never the shared checking
+    * binders. Install them after suppliedness is recorded, so a lower bound is
+    * checked against an explicit argument rather than widening its interface.
+    * Recursive and mutually dependent bounds reuse the ordinary relation graph.
+    */
+  private def constrainQuantifiedBounds(parameters: Ls[DeclaredTypeParameter], substitution: Map[VarSymbol, TypeParameterInstance])
+      (using NewResolverState): Unit =
+    parameters.foreach: parameter =>
+      val instance = ContextualType(parameterType(parameter.parameter).instantiate(substitution), Nil)
+      parameter.lower.foreach(bound => constrainTypes(ContextualType(bound.instantiate(substitution), Nil), instance))
+      parameter.upper.foreach(bound => constrainTypes(instance, ContextualType(bound.instantiate(substitution), Nil)))
+
   /** Consume the scheme at its authoritative site. Specialized values and curried
     * tails carry instantiated references and no scheme, so later calls reuse it.
     */
@@ -1063,6 +1098,7 @@ class NewResolver:
               val instance = substitution(parameter.parameter.symbol)
               TypeShape.Parameter(instance, instance.inferenceHost)
             bindTypeArguments(parameters, marks, arguments)
+          constrainQuantifiedBounds(scheme.parameters, substitution)
           instantiated
 
   /** The body must satisfy its annotated result even if no value escapes or no
@@ -1156,27 +1192,40 @@ class NewResolver:
             follow(if positive then parts.output else parts.input, args, captures, next)
         case TypeShape.Nominal(cls) => listenInstanceViews(value): value =>
           val arguments = typeArguments(tpe, args, cls.tparams).map(transportType(_, captures))
-          val (actual, instances) = contextualParts(value)
-          val (head, context) = actual.applicationHead
-          def constrain(param: TyParam, bound: DeclaredType, pattern: DeclaredType)(using NewResolverState): Unit =
-            listenArgumentParts(bound.instantiate(instances)): actual =>
-              listenArgumentParts(argumentType(pattern, param.vce)): expected =>
-                constrainTypes(ContextualType(actual.output, context), ContextualType(expected.output, Nil))
-                constrainTypes(ContextualType(expected.input, Nil), ContextualType(actual.input, context))
-          def constrainNominal(nominal: NominalInstanceView)(using NewResolverState): Unit =
-            if nominal.defn is cls then cls.tparams.zip(arguments).foreach: (param, pattern) =>
-              nominal.bindings.get(param.sym).foreach(constrain(param, _, pattern))
-          head match
-            case _: UnknownValueShape =>
-              cls.tparams.zip(arguments).foreach: (param, argument) =>
-                listenArgumentParts(argumentType(argument, param.vce)): parts =>
-                  inferTypeArguments(parts.output, value, marks)
-            case ds: DefnShape if ds.clsDef.contains(cls) => cls.tparams.zip(arguments).foreach: (param, pattern) =>
+          def constrainNominal(value: TermShape)(using NewResolverState): Unit =
+            val (actual, instances) = contextualParts(value)
+            val (head, context) = actual.applicationHead
+            def constrain(param: TyParam, bound: DeclaredType, pattern: DeclaredType)(using NewResolverState): Unit =
+              listenArgumentParts(bound.instantiate(instances)): actual =>
+                listenArgumentParts(argumentType(pattern, param.vce)): expected =>
+                  constrainTypes(ContextualType(actual.output, context), ContextualType(expected.output, Nil))
+                  constrainTypes(ContextualType(expected.input, Nil), ContextualType(actual.input, context))
+            def originalParameters()(using NewResolverState): Unit = cls.tparams.zip(arguments).foreach: (param, pattern) =>
               val bound = parameterType(TypeShape.Parameter(param.sym, param.sym.inferenceHost))
               constrain(param, argumentType(bound, param.vce), pattern)
-            case nominal: NominalInstanceView => constrainNominal(nominal)
-            case tuple: TupleShape => constrainNominal(tuple.arrayParent)
-            case _ => ()
+            def parent(ext: TermShape)(using NewResolverState): Unit =
+              // Parent arguments live at the parent's endpoint, which can cross
+              // both class and enclosing scopes. Preserve those marks together
+              // with the child's substitution on every step of the ancestry.
+              transportShape(instantiateShape(ext, instances), context) match
+                case value: TermShape => constrainNominal(value)
+                case NoShape => ()
+            head match
+              case _: UnknownValueShape =>
+                cls.tparams.zip(arguments).foreach: (param, argument) =>
+                  listenArgumentParts(argumentType(argument, param.vce)): parts =>
+                    inferTypeArguments(parts.output, value, marks)
+              case ds: DefnShape =>
+                if ds.clsDef.contains(cls) then originalParameters() else ds.ext.foreach(parent)
+              case base: BaseShape =>
+                if base.defn is cls then originalParameters() else base.ext.foreach(parent)
+              case nominal: NominalInstanceView =>
+                if nominal.defn is cls then cls.tparams.zip(arguments).foreach: (param, pattern) =>
+                  nominal.bindings.get(param.sym).foreach(constrain(param, _, pattern))
+                else nominal.parent.foreach(parent)
+              case tuple: TupleShape => parent(tuple.arrayParent)
+              case _ => ()
+          constrainNominal(value)
         case TypeShape.Top => ()
         case _ => value match
           // A concrete target stays fixed, but must receive bounds that arrive
@@ -1196,7 +1245,7 @@ class NewResolver:
       actual: TermShape, marks: Ls[Marks])(using NewResolverState): Unit =
     fields.foreach: (field, sign) =>
       val expected = declaredType(sign, bindings, positive)
-      val flow = FlowSymbol.memSym(field.sym)(using rstate.owner)
+      val flow = rstate.fieldProjectionSite(field.sym)
       def receive(value: TermShape)(using NewResolverState): Unit = inferTypeArguments(expected, value, marks)
       def member(info: MemberLookup, instances: Map[VarSymbol, TypeParameterInstance])(using NewResolverState): Unit = info match
         case MemberLookup.Contextual(source, substitution) => member(source, instances ++ substitution)
@@ -2302,16 +2351,25 @@ class NewResolver:
     * annotation instead belongs to the returned value and remains unconsumed.
     */
   private def definitionBinders(td: TermDefinition): Ls[VarSymbol] =
-    def signatureBinders(sign: Term): Ls[VarSymbol] = sign match
-      case Forall(parameters, _, body) => parameters.map(_.sym) ::: signatureBinders(body)
+    td.tparams.toList.flatten.map(_.sym) ::: definitionQuantifiers(td).map(_.sym)
+
+  private def definitionQuantifiers(td: TermDefinition): Ls[QuantVar] =
+    def signatureQuantifiers(sign: Term): Ls[QuantVar] = sign match
+      case Forall(parameters, _, body) => parameters ::: signatureQuantifiers(body)
       case _ => Nil
-    td.tparams.toList.flatten.map(_.sym) :::
-      (if td.flags.hasResultAnnotation then Nil else td.sign.toList.flatMap(signatureBinders))
+    if td.flags.hasResultAnnotation then Nil else td.sign.toList.flatMap(signatureQuantifiers)
 
   private def instantiateByName(td: TermDefinition, site: FlowSymbol, marks: Ls[Marks],
-      specialization: Opt[(FlowSymbol, Ls[DeclaredType])])(using NewResolverState): Map[VarSymbol, TypeParameterInstance] =
-    instantiateParameters(td.tsym, definitionBinders(td), specialization.fold(site)(_._1),
+      specialization: Opt[(FlowSymbol, Ls[DeclaredType])], bindings: Map[VarSymbol, DeclaredType])
+      (using NewResolverState): Map[VarSymbol, TypeParameterInstance] =
+    val instances = instantiateParameters(td.tsym, definitionBinders(td), specialization.fold(site)(_._1),
       marks, rstate.instances, specialization.map(_._2))
+    val parameters = definitionQuantifiers(td).map: parameter =>
+      DeclaredTypeParameter(TypeShape.Parameter(parameter.sym, parameter.sym.inferenceHost),
+        parameter.lb.map(bound => declaredType(typeResolution(bound), bindings)),
+        parameter.ub.map(bound => declaredType(typeResolution(bound), bindings)))
+    constrainQuantifiedBounds(parameters, instances)
+    instances
 
   private def fromBMSAt(bms: BlockMemberSymbol, resSym: FlowSymbol, markss: Ls[Marks], listener: Listener,
       trm: Term, selected: ShapeListener[DefinitionSymbol[?]], receiver: Bool,
@@ -2349,7 +2407,7 @@ class NewResolver:
           log(s"listenTerm: td.body = ${td.body.fold("N")(_.showDbg)}")
           val callerInstances = rstate.instances
           val instances = if isByName(td) then instantiateByName(td, resSym,
-            ExitMark(ResolutionBoundary(td.tsym), S(resSym), NoMarks) :: markss, specialization)
+            ExitMark(ResolutionBoundary(td.tsym), S(resSym), NoMarks) :: markss, specialization, Map.empty)
             else callerInstances -- td.tparams.toList.flatten.map(_.sym)
           def receive(shape: TermShape)(using NewResolverState): Unit =
             wrappedListener(instantiateShape(shape, instances))(using rstate.withInstances(callerInstances))

@@ -6,32 +6,24 @@ type Chain[A] = {value: A, next: Chain[First[A, Int]]}
 private fun walk[A](chain: Chain[A], n: Int) =
   if n > 0 then walk(chain.next, n - 1) else ()
 
-// FIXME: Omitting that same unused formal must preserve the finite graph.
-// Eager normalization currently retains First[A], nesting another binding on
-// every recursive constraint until hashing the environment overflows the stack.
-:fixme
+// Omitting that same unused formal must preserve the finite graph.
 type First[A, B] = A
 type Chain[A] = {value: A, next: Chain[First[A]]}
 private fun walk[A](chain: Chain[A], n: Int) =
   if n > 0 then walk(chain.next, n - 1) else ()
-//│ /!!!\ Uncaught error: java.lang.StackOverflowError
 
-// FIXME: A fully supplied forwarding alias still contains the partial application.
-:fixme
+// A fully supplied forwarding alias may itself contain a partial application.
 type First[A, B] = A
 type Forward[A] = First[A]
 type Chain[A] = {value: A, next: Chain[Forward[A]]}
 private fun walk[A](chain: Chain[A], n: Int) =
   if n > 0 then walk(chain.next, n - 1) else ()
-//│ /!!!\ Uncaught error: java.lang.StackOverflowError
 
-// FIXME: Partial projections must also permit a finite argument permutation.
-:fixme
+// Partial projections must also permit a finite argument permutation.
 type First[A, B, C] = A
 type Chain[A, B] = {value: A, next: Chain[First[B, A], First[A, B]]}
 private fun walk[A, B](chain: Chain[A, B], n: Int) =
   if n > 0 then walk(chain.next, n - 1) else ()
-//│ /!!!\ Uncaught error: java.lang.StackOverflowError
 
 // A fixed omitted argument is a reset with a stable source hole.
 type Identity[A] = A
@@ -46,5 +38,12 @@ private fun walk[A](chain: Chain[A], n: Int) =
 
 // Nominal recursive fields need not unfold their changing arguments eagerly.
 class Chain[A](val value: A, val next: Chain[Array[A]])
+private fun walk[A](chain: Chain[A], n: Int) =
+  if n > 0 then walk(chain.next, n - 1) else ()
+
+// A relevant omitted formal resets to its source hole, even though another
+// argument changes on the recursive edge. Normalization must reuse that hole.
+type Second[A, B] = B
+type Chain[A] = {value: A, next: Chain[Second[A]]}
 private fun walk[A](chain: Chain[A], n: Int) =
   if n > 0 then walk(chain.next, n - 1) else ()

@@ -216,6 +216,8 @@ final class NewResolverState private (
     new Cache(inherited.map(_.regularTypes), identity)
   val combinedTypes: Cache[TypeFormula[DeclaredType], DeclaredType] =
     new Cache(inherited.map(_.combinedTypes), identity)
+  val wildcardTypes: Cache[(TypeResolution, TypeArgument), DeclaredType] =
+    new Cache(inherited.map(_.wildcardTypes), identity)
   val pendingTypeDependencies: Cache[TypeResolution, TypeDependencyHost] =
     new Cache(inherited.map(_.pendingTypeDependencies), identity)
   val dependencySubscriptions: Seen[(TypeResolution, TypeResolution)] =
@@ -247,6 +249,15 @@ final class NewResolverState private (
     val key = new Identity(application)
     root.typeApplicationSites.getOrElseUpdate(key, typeApplicationSites.get(key).getOrElse(
       FlowSymbol("type application")(using owner)))
+  private val fieldProjectionSites: Cache[BlockMemberSymbol, FlowSymbol] =
+    new Cache(inherited.map(_.fieldProjectionSites), identity)
+  /** A structural field constraint is a static projection site. Recursive
+    * observations share it across substitution views; ordinary receiver marks
+    * distinguish activations, as they do for a written member selection.
+    */
+  def fieldProjectionSite(field: BlockMemberSymbol): FlowSymbol =
+    root.fieldProjectionSites.getOrElseUpdate(field, fieldProjectionSites.get(field).getOrElse(
+      FlowSymbol.memSym(field)(using owner)))
   private[hkmc2] def instantiateTypeParameters(scheme: AnyDefinitionSymbol | TypeResolution,
       site: FlowSymbol, parameters: Ls[VarSymbol]): Map[VarSymbol, TypeParameterInstance] =
     require(parameters.distinct.length == parameters.length, "A scheme cannot bind a parameter twice")
@@ -273,7 +284,7 @@ final class NewResolverState private (
     new Cache(inherited.map(_.patternTypes), identity)
   val primitiveTypes: Cache[ClassSymbol, DeclaredType] =
     new Cache(inherited.map(_.primitiveTypes), identity)
-  val extremeTypes: Cache[Bool, DeclaredType] =
+  val extremeTypes: Cache[(Bool, Opt[TypeResolution]), DeclaredType] =
     new Cache(inherited.map(_.extremeTypes), identity)
   val variantTypes: Cache[(DeclaredType, Bool), DeclaredType] =
     new Cache(inherited.map(_.variantTypes), identity)

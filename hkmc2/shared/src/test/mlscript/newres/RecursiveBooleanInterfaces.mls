@@ -8,9 +8,9 @@ private fun read(x: Choice[Item]) = x.value
 read(Item(1))
 //│ = 1
 
-// FIXME: A productive recursive union adds no unknown alternative. This
-// predates Boolean normalization: the alias recursion guard publishes an opaque
-// candidate alongside Item, preventing lookup even though the unfolding is finite.
+// FIXME: This expected result assumes the least fixed point of the unguarded
+// recursive union. The alias guard currently publishes an opaque alternative.
+// Choosing fixed-point semantics or rejecting unguarded cycles needs a design decision.
 :fixme
 :expect 2
 class Item(val value: Int)
@@ -26,3 +26,32 @@ read(Item(2))
 //│ ╙──      	                    ^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ ═══[RUNTIME ERROR] Expected: '2', got: 'undefined'
+
+// An unguarded self-alias has no concrete interface. Dropping the recursion
+// candidate must not make an arbitrary member operation silently acceptable.
+:e
+type Loop = Loop
+private fun read(x: Loop) = x.value
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.34: 	private fun read(x: Loop) = x.value
+//│ ║        	                            ^^^^^^^
+//│ ╟── Cannot resolve member 'value' of a value with unknown shape.
+//│ ╟── This abstract type does not specify a member interface.
+//│ ║  l.34: 	private fun read(x: Loop) = x.value
+//│ ╙──      	                    ^^^^
+
+// The equation X = Item | X has many solutions; Item is the least one, Any
+// the greatest. Conversely, X = Item & X has Nothing as its least solution
+// and Item as its greatest. Preserve the current diagnostic until the recursive
+// alias contract specifies a fixed point or rejects these unguarded equations.
+:e
+class Item(val value: Int)
+type Choice = Item & Choice
+private fun read(x: Choice) = x.value
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.50: 	private fun read(x: Choice) = x.value
+//│ ║        	                              ^^^^^^^
+//│ ╟── Cannot resolve member 'value' of a value with unknown shape.
+//│ ╟── This abstract type does not specify a member interface.
+//│ ║  l.50: 	private fun read(x: Choice) = x.value
+//│ ╙──      	                    ^^^^^^
