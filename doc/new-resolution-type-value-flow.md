@@ -868,6 +868,66 @@ legacy constructions can have value shapes without a new-resolution producer,
 and completed reference targets must remain immutable. A saved graph operation
 must retain its selected definition and interpreted argument references.
 
+### Receiver-context investigation
+
+Two current regressions isolate missing scope transfers. Both fail before any
+concrete type mismatch is relevant:
+
+```mlscript
+class Item(val value: Int)
+private fun local[A](value: A) =
+  class Local(val item: A)
+  let box = (new Local(value) as Local)
+  box.item
+local[Item](Item(7)).value
+```
+
+`Local.item`'s annotation captures the enclosing `A` into the class scope. The
+nominal view's member projection does not leave that scope. When `local` returns,
+the interpreter tries to cancel the function exit against the still-pending class
+entry, triggering the scope assertion. The regression is the final block of
+`newres/TypeGraphTermination.mls`.
+
+```mlscript
+class Item(val value: Int)
+class Box[A](val value: A) with
+  type Slot = {item: A}
+  fun get(): Slot = {item: value}
+(new Box[Item](Item(4))).get().item.value
+```
+
+Here the reference to `Slot` captures the type into `get`'s scope. The interpreter
+produces an unmarked `RecordTypeShape`, and its current capture rule only enters
+already-marked shapes. The method entry is therefore lost before the deferred
+field is inspected. The method exit then meets `A`'s class entry instead. This is
+the existing class-local alias regression in the same worksheet.
+
+Simply entering every compound interface is not a valid general correction.
+For `Chain[A]` inside a function, the type template `Chain` can come from an outer
+scope while the supplied argument `A` is already in the function's scope.
+Transporting the fully substituted interface moves both, introducing a second
+entry for the supplied argument. Captured template references and supplied
+argument references must retain their separate contexts.
+
+**Proposed representation extension, awaiting review:** use contextual references
+for declared substitutions and deferred member types, generalizing the existing
+`ContextualType` relation endpoints. Compose class/method transfers on these
+references before expanding their inferred shapes. A nominal member projection
+must explicitly leave its declaring class's scope; arguments supplied outside
+that scope must retain their corresponding entry. A compound result must keep
+the transfers needed by its deferred components. Apply the same reference
+transport in input and output constraints, including callback arguments.
+
+The extension must reuse original source references, canonical binder instances,
+and existing mark normalization. Each transported endpoint must contain a
+normalized path rather than a list of transport operations or nested wrappers.
+Repeated transport of a recursive interface must return the same endpoint key.
+This preserves the existing finite-source/finite-instance argument only if mark
+paths obey the no-repeated-boundary invariant and regular type bindings remain
+bounded; neither condition may be assumed merely because the two examples pass.
+Tests must also retain independent receivers/callers, imported-graph isolation,
+recursive aliases, and the input obligations of supplied callback types.
+
 ### Regular structural types
 
 The proposed restriction is that unfolding a structural type must admit a finite
@@ -893,6 +953,18 @@ and finite changes of arguments must also be considered. The precise check,
 including how it handles aliases and inferred holes, remains a design review
 item. It must terminate on rejected inputs too; waiting for an unfolding cache to
 stop growing is not a decision procedure. Do not impose a depth limit.
+
+Growth along one recursive edge is not sufficient to reject a type:
+
+```mlscript
+type Left[A] = {value: A, next: Right[Array[A]]}
+type Right[B] = {value: B, next: Left[Str]}
+```
+
+Starting from `Left[Int]` visits `Right[Array[Int]]`, then settles into the cycle
+`Left[Str]` / `Right[Array[Str]]`. The argument reset breaks the expanding
+dependency. `TypeGraphTermination.mls` includes this finite mutual unfolding as
+an acceptance case alongside the parameter-permutation and unused-argument cases.
 
 There is also a representation obligation for accepted types. Currently
 `DeclaredType.bindings` is a recursive map of `DeclaredType` values, and the whole

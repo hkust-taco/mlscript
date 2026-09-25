@@ -71,6 +71,11 @@ fun read(chain: Reset[Str]): Array[Int] = chain.next.next.value
 type Loop[A] = {value: Int, next: Loop[Array[A]]}
 fun read(chain: Loop[Str]): Int = chain.next.next.value
 
+// A wrapping edge followed by a reset has a finite mutual unfolding.
+type Left[A] = {value: A, next: Right[Array[A]]}
+type Right[B] = {value: B, next: Left[Str]}
+fun read(chain: Left[Int]): Str = chain.next.next.next.value.0
+
 // Forward aliases must retain an enclosing binder even before the target is known.
 :expect [5, 6]
 class First(val first: Int)
