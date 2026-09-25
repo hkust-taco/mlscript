@@ -994,6 +994,27 @@ previous binding map. The same holds for a fixed compound argument `Array[Int]`.
 Accepted regular types need finite reference keys and shared recursive edges,
 not a fresh nested environment on each visit.
 
+Dependency pruning alone does not identify transparent forwarding aliases. This
+additional regular regression still overflows:
+
+```mlscript
+type Identity[X] = X
+type Chain[A] = {value: A, next: Chain[Identity[A]]}
+fun read(chain: Chain[Int]): Int = chain.next.next.value
+```
+
+The argument continues to denote `Int`, but successive cache keys retain
+`(Identity[A], previous-environment)`. Here `A` is genuinely a free binder of the
+argument expression, so discarding unused bindings cannot help. A regularity
+check must not classify the transparent alias application as a growing type
+constructor. Canonical references must resolve forwarding through aliases and
+their substitutions, respecting argument variance and occurrence polarity.
+This needs to work through multiple aliases and parameter permutations, with a
+finite source-graph guard for unproductive alias cycles. Special-casing a directly
+written identity alias would not establish the required representation bound.
+`TypeGraphTermination.mls` records this case separately from non-regular array
+nesting and from the receiver-context failures.
+
 The implemented dependency analysis operates on source `TypeResolution` nodes.
 An edge forwards the child's free binders, excluding those bound by an alias or
 quantifier. An applied alias forwards an argument's dependencies only when its

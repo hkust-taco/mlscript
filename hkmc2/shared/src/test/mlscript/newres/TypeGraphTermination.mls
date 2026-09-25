@@ -76,6 +76,13 @@ type Left[A] = {value: A, next: Right[Array[A]]}
 type Right[B] = {value: B, next: Left[Str]}
 fun read(chain: Left[Int]): Str = chain.next.next.next.value.0
 
+// Transparent aliases do not change the recursive argument's type.
+:fixme
+type Identity[X] = X
+type Chain[A] = {value: A, next: Chain[Identity[A]]}
+fun read(chain: Chain[Int]): Int = chain.next.next.value
+//│ /!!!\ Uncaught error: java.lang.StackOverflowError
+
 // Forward aliases must retain an enclosing binder even before the target is known.
 :expect [5, 6]
 class First(val first: Int)
