@@ -1114,17 +1114,17 @@ class NewResolver:
   private def listenTypeArgument(symbol: VarSymbol)(listener: Listener)(using NewResolverState): Unit =
     listenTypeArgument(symbol.inferenceHost)(listener)
 
-  private def listenTypeArgument(host: Publisher.Data[Shape])(listener: Listener)(using NewResolverState): Unit =
+  private def listenTypeArgument(host: Publisher.Data[ShapeEvent])(listener: Listener)(using NewResolverState): Unit =
     host.subscribe:
       case value: TermShape => listener(value)
-      case _ => softAssert(false, "A type parameter received a symbolic overload set")
+      case _ => softAssert(false, "A type parameter's bounds must contain values without activation envelopes")
 
   private[semantics] def publishParameter(symbol: VarSymbol, shape: TermShape | NoShape)(using NewResolverState): Unit =
     shape match
       case value: TermShape if !symbol.decl.exists(_.isInstanceOf[TyParam]) => publishActivated(symbol, value)
       case _ => publishParameter(symbol.inferenceHost, shape)
 
-  private[semantics] def publishParameter(host: Publisher.Data[Shape], shape: TermShape | NoShape)(using NewResolverState): Unit = shape match
+  private[semantics] def publishParameter(host: Publisher.Data[ShapeEvent], shape: TermShape | NoShape)(using NewResolverState): Unit = shape match
     case value: TermShape => host.publish(value)
     case _ => ()
 
@@ -2154,10 +2154,7 @@ class NewResolver:
     else register
   
   private def publishActivated(host: ShapeHost, source: Shape)(using NewResolverState): Unit =
-    val shape = if rstate.instances.isEmpty then source else source match
-      case value: TermShape => ActivatedShape(value, rstate.instances)
-      case symbol: SymShape =>
-        rstate.activatedSymbols.getOrElseUpdate((symbol, rstate.instances), ActivatedSymShape(symbol, rstate.instances))
+    val shape = if rstate.instances.isEmpty then source else ActivatedShapeEvent(source, rstate.instances)
     if host.currentShapes.add(shape) then host.notifyShapeListeners(shape)
 
   /** `instances` interprets references in the value; rstate.instances identifies
@@ -2713,7 +2710,7 @@ class NewResolver:
     * subscriptions while the node is waiting for a forward definition. Deliver
     * cached shapes to each listener, which is already registered for future shapes.
     */
-  private def listenAggregate(aggregate: Tup | Rcd, listener: ShapeListener[Shape])
+  private def listenAggregate(aggregate: Tup | Rcd, listener: ShapeListener[ShapeEvent])
       (start: (Listener) => Unit)(using NewResolverState): Unit =
     val first = aggregateProducers.add(new Identity(aggregate))
     // An imported definition can already have shapes computed by its own elaborator.
@@ -2732,14 +2729,11 @@ class NewResolver:
     val requestedInstances = rstate.instances
     def compatible(instances: Map[VarSymbol, TypeParameterInstance]): Bool =
       requestedInstances.forall((parameter, instance) => instances.get(parameter).forall(_ eq instance))
-    val listener: ShapeListener[Shape] = shape => shape match
-      case ActivatedShape(value, instances) =>
+    val listener: ShapeListener[ShapeEvent] = event => event match
+      case ActivatedShapeEvent(value, instances) =>
         if compatible(instances) then receive(value)(using rstate.withInstances(requestedInstances ++ instances))
-      case activated: ActivatedSymShape =>
-        if compatible(activated.instances) then
-          receive(activated.source)(using rstate.withInstances(requestedInstances ++ activated.instances))
       case value: TermShape => receive(instantiateShape(value, rstate.instances))
-      case _ => receive(shape)
+      case symbol: SymShape => receive(symbol)
     log(s"listen: trm = ${trm.showDbg}")
     trm.addShapeListener(listener)
     trm match

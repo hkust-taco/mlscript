@@ -183,13 +183,13 @@ list has been applied.
 | --- | --- | --- |
 | `ContextualShape(source, instances)` | Observe a shared value using these bindings for references inside it. This does not consume the value's own generic scheme. | Member/body observation uses the substitution; `callableParts` extracts it before application. |
 | `SpecializedShape(declaration, arguments, instances)` | This declaration's scheme has already been consumed by explicit type application. Retain its supplied type references and chosen instance group. | `callableParts` reports a consumed scheme, so `appShape` reuses the group. |
-| `ActivatedShape(value, instances)` | Deliver an inference event to operations running in this body activation. The enclosed value retains its own, independent substitution. | `listen` checks compatibility, unwraps the envelope, and invokes the receiver in that activation. |
+| `ActivatedShapeEvent(value, instances)` | Deliver an inference event to operations running in this body activation. The enclosed value retains its own, independent substitution. | `listen` checks compatibility, unwraps the envelope, and invokes the receiver in that activation. |
 
 All three `instances` fields map original binders to `TypeParameterInstance`
 symbols, but the first two describe the value, whereas the third describes the
-receiving operation. `ContextualSymShape` and `ActivatedSymShape` provide the
-corresponding roles while an overload remains a `SymShape`, before selection
-produces a term shape.
+receiving operation. `ContextualSymShape` retains a value's substitution while
+an overload remains a `SymShape`, before selection produces a term shape.
+`ActivatedShapeEvent` accepts either a term shape or a symbolic shape as its payload.
 
 For a schematic nested definition:
 
@@ -219,7 +219,7 @@ still refer to `A@p`, while operations on the callee's shared body run with
 `A -> A@q`. Schematically, delivery can therefore carry:
 
 ```text
-ActivatedShape(
+ActivatedShapeEvent(
   ContextualShape(value, {A -> A@p}),
   {A -> A@q})
 ```
@@ -237,8 +237,17 @@ requested map therefore accepts all activations. On delivery, the receiver runs
 with the combined compatible activation maps, while the enclosed value keeps its
 own references. `NewResolverState.withInstances` shares consumer hosts, and
 `inGraph` preserves the incoming activation when invoking an imported listener.
-An `ActivatedShape` is thus an event envelope despite extending `TermShape`;
-member lookup on the envelope is invalid and must follow unwrapping.
+Publishers store `ShapeEvent`, a shared base with two alternatives: an ordinary
+`Shape` or an `ActivatedShapeEvent`. The envelope is not a `Shape` or `TermShape`,
+so it cannot enter member lookup, application, or mark transport. Its payload is
+a `Shape`, preventing nested event envelopes. Semantic listeners receive shapes
+only after dispatch. Ordinary shapes remain unwrapped when no activation is
+attached; dispatch contextualizes those values using the observing state.
+
+Event equality includes both the payload and activation. Repeated publication of
+one event is deduplicated, while the same shape in distinct activations remains
+separate. Publisher replay and imported-host copying retain the complete events;
+they do not replace saved activations with the state active during replay.
 
 ### Related interfaces and representation invariants
 
@@ -261,10 +270,9 @@ precedence over a later observation's map. For an open `CallableTypeShape`, its
 own quantified binders are excluded from capture substitution.
 
 The semantic requirements are independent value and activation substitutions,
-and an explicit distinction between open and consumed schemes. They do not
-require exactly these three subclasses: a common value-view representation could
-carry scheme status, and an event envelope could live outside `TermShape`. The
-current representation expresses those distinctions through the forms above.
+and an explicit distinction between open and consumed schemes. The first two
+value forms express scheme status separately; the event envelope belongs to the
+publisher protocol and shares no value operations with them.
 
 Keeping both maps does not itself introduce a chain of environments. Their keys
 are original binders and their values are canonical instance symbols, not further

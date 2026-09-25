@@ -144,7 +144,7 @@ sealed trait ResolvableImpl extends ShapeHost, PossiblyErroneous:
   
   
   // private[semantics] val shapes: MutSet[Shape] = MutSet.empty
-  def getShapes: Ls[Shape] = shapes.toList
+  def getShapes: Ls[ShapeEvent] = shapes.toList
   
   /**
    * The expanded form of the term, if it exists. 

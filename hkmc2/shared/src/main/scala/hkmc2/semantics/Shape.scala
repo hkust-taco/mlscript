@@ -9,7 +9,13 @@ import hkmc2.document.Document.*
 import scala.collection.mutable
 
 
-sealed trait Shape extends ShapeLike:
+/** Publisher payloads distinguish ordinary shapes from activation-tagged events.
+  * Only Shape supports value operations; an event must be dispatched first.
+  * Plain shapes need no allocation to participate in activation-independent flow.
+  */
+sealed trait ShapeEvent
+
+sealed trait Shape extends ShapeEvent, ShapeLike:
   def describe: Str
   /** Origin of the value or symbol described by this shape, independently of its use site. */
   def toLoc: Opt[Loc]
@@ -33,7 +39,6 @@ sealed trait Shape extends ShapeLike:
     case view: ContextualShape => s"ContextualShape(${view.source.shwDbg})"
     case specialized: SpecializedShape => s"SpecializedShape(${specialized.declaration.shwDbg})"
     case rigid: RigidTypeShape => s"RigidTypeShape(${rigid.parameter.showDbg})"
-    case flow: ActivatedShape => s"ActivatedShape(${flow.value.shwDbg})"
     case bs: BaseShape => s"BaseShape(${bs.defn.sym.showDbg})"
     case es: ErrShape => es.describe
 
@@ -372,12 +377,6 @@ class SymShape(val sym: BlockMemberSymbol, val resSym: FlowSymbol, val markss: L
 final class ContextualSymShape(val source: SymShape, val instances: Map[VarSymbol, TypeParameterInstance])
 extends SymShape(source.sym, source.resSym, source.markss)
 
-/** The symbolic counterpart of ActivatedShape. `listen` unwraps this event and
-  * invokes the receiver in `instances`; `source` can independently retain the
-  * value's substitution in a ContextualSymShape.
-  */
-final class ActivatedSymShape(val source: SymShape, val instances: Map[VarSymbol, TypeParameterInstance])
-extends SymShape(source.sym, source.resSym, source.markss)
 
 /** Keep a declared receiver's boundary while consumers choose between the term,
   * type, and constructor interpretations of the same overload set.
@@ -431,7 +430,7 @@ final case class InstanceShape(tpe: DeclaredType) extends NonAppTermShape:
   * `instantiateShape` composes views instead of nesting them; already captured
   * entries take precedence. Aggregates and declared types can store this view
   * directly rather than using a ContextualShape wrapper.
-  * Unlike ActivatedShape.instances, this map belongs to the value, not its receiver.
+  * Unlike ActivatedShapeEvent.instances, this map belongs to the value, not its receiver.
   * See doc/new-resolution-type-value-flow.md, "Value views, consumed schemes, and activation events".
   */
 final case class ContextualShape(source: NonMarkedShape, instances: Map[VarSymbol, TypeParameterInstance]) extends NonAppTermShape:
@@ -464,14 +463,13 @@ final case class SpecializedShape(declaration: DefnShape, arguments: Ls[Declared
   * The enclosed value separately retains its own substitution: in recursive f[A],
   * it can refer to the caller's A@p while the receiving body uses A@q. Merging those
   * maps would rebind the value or execute the operation in the wrong activation.
-  * Despite extending TermShape, this envelope must be unwrapped before lookup.
+  * The payload may be a value or an unresolved symbol; it cannot itself be an
+  * event. This envelope supports neither value operations nor mark transport.
+  * Equality includes the activation so distinct deliveries are not deduplicated.
   * Neither map changes the ordinary mark algebra used for lexical scope crossings.
   */
-final case class ActivatedShape(value: TermShape, instances: Map[VarSymbol, TypeParameterInstance]) extends NonAppTermShape:
-  def describe: Str = value.describe
-  def toLoc: Opt[Loc] = value.toLoc
-  protected def getMemberImpl(name: Str)(using NewResolverState): MemberLookup =
-    lastWords("Activation events must be unpacked before observing their values")
+final case class ActivatedShapeEvent(value: Shape, instances: Map[VarSymbol, TypeParameterInstance]) extends ShapeEvent:
+  require(instances.nonEmpty, "Publish an activation-independent shape without an envelope")
 
 /** A nominal annotation exposes only declarations, including inherited declarations.
   * In particular, selecting an unannotated field does not inspect its initializer.
@@ -808,6 +806,6 @@ sealed trait LitShape extends NonAppTermShape:
   protected def getMemberImpl(name: Str)(using NewResolverState): MemberLookup = MemberLookup.Missing // TODO: methods on literals, e.g. string methods
 
 
-type ShapePublisher = Publisher[Shape]
-type ShapeHost = Host[Shape]
+type ShapePublisher = Publisher[ShapeEvent]
+type ShapeHost = Host[ShapeEvent]
 

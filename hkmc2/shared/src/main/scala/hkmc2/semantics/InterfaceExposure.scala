@@ -121,7 +121,6 @@ final class InterfaceExposure(resolver: NewResolver)(using NewResolverState, TL)
         listener => resolver.listenTerm(value)(listener)(using rstate.withInstances(substitution))): shape =>
           emit(resolver.instantiateShape(shape, substitution).exit(context), path)
     head match
-      case _: ActivatedShape => lastWords("Exposure must observe values after activation dispatch")
       case contextual: ContextualShape => contextual.source.exit(marks) match
         case value: TermShape =>
           val substitution = instances ++ contextual.instances

@@ -35,7 +35,7 @@ enum TypeShape:
   case Contextual(reference: ContextualType)
   // The same third-party symbol can have different inference in two exporters.
   // Retain its originating host so importing a result needs no whole-state copy.
-  case Parameter(symbol: VarSymbol, host: Publisher.Data[Shape])
+  case Parameter(symbol: VarSymbol, host: Publisher.Data[ShapeEvent])
   // An omitted argument owns one source inference node. It is not a quantified
   // binder and is never instantiated at a call site; marks distinguish its flows.
   case Hole(host: Publisher.Data[TermShape])

@@ -236,8 +236,6 @@ final class NewResolverState private (
     new Cache(inherited.map(_.contextualSymbols), identity)
   val shapeViews: Cache[(TermShape, Map[VarSymbol, TypeParameterInstance]), TermShape] =
     new Cache(inherited.map(_.shapeViews), identity)
-  val activatedSymbols: Cache[(SymShape, Map[VarSymbol, TypeParameterInstance]), ActivatedSymShape] =
-    new Cache(inherited.map(_.activatedSymbols), identity)
   val inferredInstantiations: Seen[(AnyDefinitionSymbol, FlowSymbol, Map[VarSymbol, TypeParameterInstance], Ls[Marks])] =
     new Seen(inherited.map(_.inferredInstantiations))
   // A scheme is owned by its source definition, or by the original interpretation
