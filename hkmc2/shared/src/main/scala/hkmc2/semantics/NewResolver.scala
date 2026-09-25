@@ -1510,7 +1510,7 @@ class NewResolver:
               val suffix = drop(rest, count, false)
               if approximate then TupleShape.Unknown(tuple.source, Nil, UnknownValueShape.at(tuple.source)) :: suffix else suffix
         val remaining = drop(segments, expectedCount, true)
-        val rest = if expectedCount == 0 then tuple else TupleShape(tuple.source, TupleShape.Rest(tuple, remaining) :: Nil)(this)
+        val rest = if expectedCount == 0 then tuple else TupleShape.restView(tuple, remaining)(this)
         publish(expectedCount, rest.exit(marks).enter(mss))
     checkArgumentArity(args, expectedCount, hasRest, src, funSh):
       case (tuple, marks) => matchSegments(tuple, marks)
@@ -1758,7 +1758,7 @@ class NewResolver:
               // Reusing an unchanged view also bounds recursive tail matching on
               // arrays with unknown length; wrapping it again would grow forever.
               val rest = if middle == segments then tuple
-                else TupleShape(tuple.source, TupleShape.Rest(tuple, middle) :: Nil)(this)
+                else TupleShape.restView(tuple, middle)(this)
               rest.exit(marks) match
                 case value: TermShape => matchShapePat(value, p)(_ => ())
                 case NoShape => ()

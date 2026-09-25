@@ -694,6 +694,18 @@ object TupleShape:
     * flattening away the parent would hide recursive producer dependencies from
     * containsSpread, allowing recursion through rest slicing to evade widening. */
   final case class Rest(shape: TupleShape, segments: Ls[Segment]) extends Element
+  /** A view of `tuple` retaining only `segments`, which must be taken from
+    * `tuple.segments`. A view of another view refers to that view's parent:
+    * a view contributes no spreads of its own, so containsSpread gives the same
+    * answer for the parent as for the intermediate view. Nesting views instead
+    * would make the candidate's identity record the order in which fields were
+    * removed. For `if xs is [x, ...rest] then f(rest); [...rest, x] then f(rest)`
+    * on an n-tuple, that yields 2^n candidates for only O(n^2) distinct layouts. */
+  def restView(tuple: TupleShape, segments: Ls[Segment])(resolver: NewResolver): TupleShape =
+    val parent = tuple.elements match
+      case Rest(parent, _) :: Nil => parent
+      case _ => tuple
+    TupleShape(tuple.source, Rest(parent, segments) :: Nil)(resolver)
 
 
 /** A field found by record member lookup. Spreading r into `mut {...r}` reuses
