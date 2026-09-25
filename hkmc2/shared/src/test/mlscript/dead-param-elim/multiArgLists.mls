@@ -2,7 +2,7 @@
 :noInline
 
 // Test: Dead parameter elimination with multiple parameter lists
-:deadParamElim
+:flowBasedOpt
 :soir
 private fun f(a)(b) = a
 f(42)(99)
@@ -12,7 +12,7 @@ f(42)(99)
 //│ = 42
 
 // Test: Both params dead across two parameter lists
-:deadParamElim
+:flowBasedOpt
 :soir
 private fun g(x)(y) = 0
 g(1)(2)
@@ -22,7 +22,7 @@ g(1)(2)
 //│ = 0
 
 // Test: Dead param in second list only
-:deadParamElim
+:flowBasedOpt
 :soir
 private fun h(x)(y) = x
 h(5)(10)
@@ -32,7 +32,7 @@ h(5)(10)
 //│ = 5
 
 // Test: Dead param in first list only
-:deadParamElim
+:flowBasedOpt
 :soir
 private fun j(x)(y) = y
 j(5)(10)
@@ -42,7 +42,7 @@ j(5)(10)
 //│ = 10
 
 // Test: Three parameter lists, middle one dead
-:deadParamElim
+:flowBasedOpt
 :soir
 private fun k(a)(b)(c) = a + c
 k(1)(2)(3)

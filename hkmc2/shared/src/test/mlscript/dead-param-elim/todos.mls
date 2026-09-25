@@ -1,1 +1,216 @@
+:js
+:deforest
+:flowBasedOpt debugEta debugDpe
 
+open annotations { noInline }
+data class (::) Cons(h, t)
+data object Nil
+data object A
+data object B
+//│ deforest > >>> fusing >>>
+//│ deforest > <<< fusing <<<
+//│ eta-expansion > >>> eta-expansion targets shapes >>>
+//│ eta-expansion > <<< eta-expansion targets shapes <<<
+//│ dead-param-elim > >>> dead-param-elim results >>>
+//│ dead-param-elim > <<< dead-param-elim results <<<
+
+
+// TODO: dead eta expanded parameters from variables declared outside a fused match.
+// `r` is declared before the match in `c` and assigned in its branches, so it is a free variable of the
+// branch functions and becomes the eta expanded parameter `eta$0$0` of `p`, which is dead but kept by dpe.
+// Scoped branches will not fully help here, as `r` is not local to a branch.
+// A block simplifier before the fused pass makes `r` unread so that dpe eliminates it
+:expect 1
+:soir
+@noInline fun p(b) = if b then A else B
+fun c(x) =
+  let r = 0
+  if x is
+    A do set r = 1
+    B do set r = 2
+  r
+c(p(true))
+//│ deforest > >>> fusing >>>
+//│ deforest > A⁰ ->
+//│ deforest > 	match: x⁰
+//│ deforest > B⁰ ->
+//│ deforest > 	match: x⁰
+//│ deforest > <<< fusing <<<
+//│ eta-expansion > >>> eta-expansion targets shapes >>>
+//│ eta-expansion > p_7$p: [1, 1]
+//│ eta-expansion > <<< eta-expansion targets shapes <<<
+//│ dead-param-elim > >>> dead-param-elim results >>>
+//│ dead-param-elim > <<< dead-param-elim results <<<
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let p_7$p$worker;
+//│ @private @noInline
+//│ define p_7$p$worker as fun p_7$p$worker⁰(b, eta$0$0) {
+//│   match b
+//│     true =>
+//│       return 1
+//│     else
+//│       return 2
+//│   end
+//│ };
+//│ @noInline
+//│ define p⁰ as fun p¹(b) {
+//│   match b
+//│     true =>
+//│       return A⁰
+//│     else
+//│       return B⁰
+//│   end
+//│ };
+//│ define c⁰ as fun c¹(x) {
+//│   match x
+//│     A⁰ =>
+//│       return 1
+//│     B⁰ =>
+//│       return 2
+//│     else
+//│       return 0
+//│   end
+//│ };
+//│ return p_7$p$worker⁰(true, 0)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 1
+
+// TODO: some params also come from variables local to a branch, but
+// even with the block simplifier before the fused pass, eta expansion param 8 will not be eliminated:
+// param 8 is the match result `tmp1`, which is assigned the non-trivial `h + sumPlus(t)` in `sumPlus_16$ls_Cons`
+// and there is no way for block simplifier to remove it; this case scoped branches can help
+:expect 11
+:soir
+fun enum(x) = if x < 0 then Nil else x :: enum(x - 1)
+fun sumPlus(ls) =
+  let r = if ls is
+    Nil then 0
+    h :: t then h + sumPlus(t)
+  r + 1
+sumPlus(enum(3))
+//│ deforest > >>> fusing >>>
+//│ deforest > Nil⁰ ->
+//│ deforest > 	match: ls⁰
+//│ deforest > Cons⁰(x¹, tmp⁰) ->
+//│ deforest > 	match: ls⁰
+//│ deforest > 	fields: ls⁰.h⁰
+//│ deforest > 	fields: ls⁰.t⁰
+//│ deforest > <<< fusing <<<
+//│ eta-expansion > >>> eta-expansion targets shapes >>>
+//│ eta-expansion > enum_14$enum: [1, 9]
+//│ eta-expansion > <<< eta-expansion targets shapes <<<
+//│ dead-param-elim > >>> dead-param-elim results >>>
+//│ dead-param-elim > prodfun sumPlus_16$ls_Cons#1 @ <root> -> eliminable: {0, 5}
+//│ dead-param-elim > prodfun sumPlus_16$ls_Nil#1 @ <root> -> eliminable: {0, 5}
+//│ dead-param-elim > <<< dead-param-elim results <<<
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let enum_14$enum$worker;
+//│ @private
+//│ define enum_14$enum$worker as fun enum_14$enum$worker⁰(x, eta$0$1, eta$0$2, eta$0$3, eta$0$4, eta$0$6, eta$0$7, eta$0$8) {
+//│   let scrut, tmp;
+//│   set scrut = <⁰(x, 0);
+//│   match scrut
+//│     true =>
+//│       return 1
+//│     else
+//│       let fv_tmp, inlinedVal;
+//│       set tmp = -⁰(x, 1);
+//│       set inlinedVal = enum_14$enum$worker⁰(tmp, undefined, undefined, undefined, undefined, undefined, undefined, undefined);
+//│       set fv_tmp = +⁰(x, inlinedVal);
+//│       return +⁰(fv_tmp, 1)
+//│   end
+//│ };
+//│ define enum⁰ as fun enum¹(x) {
+//│   let scrut, tmp, tmp1;
+//│   set scrut = <⁰(x, 0);
+//│   match scrut
+//│     true =>
+//│       return Nil⁰
+//│     else
+//│       set tmp = -⁰(x, 1);
+//│       set tmp1 = enum¹(tmp);
+//│       return Cons⁰(x, tmp1)
+//│   end
+//│ };
+//│ define sumPlus⁰ as fun sumPlus¹(ls) {
+//│   let arg$Cons$0$, arg$Cons$1$, tmp, tmp1;
+//│   match ls
+//│     Nil⁰ =>
+//│       return 1
+//│     Cons¹ =>
+//│       set arg$Cons$0$ = ls.h⁰;
+//│       set arg$Cons$1$ = ls.t⁰;
+//│       set tmp1 = sumPlus¹(arg$Cons$1$);
+//│       set tmp = +⁰(arg$Cons$0$, tmp1);
+//│       return +⁰(tmp, 1)
+//│     else
+//│       throw new globalThis⁰.Error⁰("match error")
+//│   end
+//│ };
+//│ return enum_14$enum$worker⁰(3, undefined, undefined, undefined, undefined, undefined, undefined, undefined)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 11
+
+// TODO: stale `Call.isKnownUnsaturatedCall` (a lazy val) after eta expansion.
+// Only observable once a block simplifier runs before the fused pass: that simplifier inlines `c` into
+// `set tmp = p(true); return tmp()`, and in doing so caches `isKnownUnsaturatedCall = false` on the call
+// `p(true)`, as `p` has only one parameter list then. Eta expansion adds a second parameter list to `p` but keeps
+// that call node, so later simplifiers never combine the two calls into the saturated `p_N$p$worker(true)` below.
+// Currently without a block simplifier runs before the fused pass the program gets optimized fine.
+// Fix:
+// 1. make the fused pass rebuild calls to eta expanded functions (any pass that changes a definition's param lists
+//    has to rebuild every call to it.),
+// 2. or turn the lazy val `isKnownUnsaturatedCall` into a `def`, since it depends on the mutable
+//    `irDefn` of the callee symbol (enough for this example; unsure whether the lazy val `isPure`, which is computed
+//    from `isKnownUnsaturatedCall`, also needs to become a `def`).
+:expect 1
+:soir
+@noInline fun p(b) = if b then A else B
+fun c(x) = if x is
+  A then 1
+  B then 2
+c(p(true))
+//│ deforest > >>> fusing >>>
+//│ deforest > A⁰ ->
+//│ deforest > 	match: x²
+//│ deforest > B⁰ ->
+//│ deforest > 	match: x²
+//│ deforest > <<< fusing <<<
+//│ eta-expansion > >>> eta-expansion targets shapes >>>
+//│ eta-expansion > p_7$p: [1, 0]
+//│ eta-expansion > <<< eta-expansion targets shapes <<<
+//│ dead-param-elim > >>> dead-param-elim results >>>
+//│ dead-param-elim > <<< dead-param-elim results <<<
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let p_7$p$worker;
+//│ @private @noInline
+//│ define p_7$p$worker as fun p_7$p$worker¹(b) {
+//│   match b
+//│     true =>
+//│       return 1
+//│     else
+//│       return 2
+//│   end
+//│ };
+//│ @noInline
+//│ define p² as fun p³(b) {
+//│   match b
+//│     true =>
+//│       return A⁰
+//│     else
+//│       return B⁰
+//│   end
+//│ };
+//│ define c² as fun c³(x) {
+//│   match x
+//│     A⁰ =>
+//│       return 1
+//│     B⁰ =>
+//│       return 2
+//│     else
+//│       throw new globalThis⁰.Error⁰("match error")
+//│   end
+//│ };
+//│ return p_7$p$worker¹(true)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 1

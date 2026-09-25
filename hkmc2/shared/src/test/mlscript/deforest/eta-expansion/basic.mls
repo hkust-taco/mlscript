@@ -1,9 +1,7 @@
 :js
 :deforest
-:etaExpansion debug
+:flowBasedOpt debugEta
 
-//│ eta-expansion > >>> eta-expansion targets shapes >>>
-//│ eta-expansion > <<< eta-expansion targets shapes <<<
 
 data class X(a)
 data class Y(b)
@@ -132,7 +130,7 @@ main(3)
 //│ = 5
 
 
-:etaExpansion off
+:flowBasedOpt off
 :expect 3
 fun p(x) = X(x)
 fun c(x) = if x is

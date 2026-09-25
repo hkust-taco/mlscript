@@ -1,5 +1,5 @@
 :js
-:deadParamElim debug
+:flowBasedOpt debugDpe
 
 
 
@@ -45,7 +45,6 @@ let g = (b) => 0
 private fun pick(x)(y) = if false then x else y
 pick(f)(g)(5)
 //│ dead-param-elim > >>> dead-param-elim results >>>
-//│ dead-param-elim > prodfun pick$worker#0 @ <root> -> eliminable: {0, 1}
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ = 0
 //│ g = fun g
@@ -56,7 +55,6 @@ let g = (b) => 0
 private fun pick(x)(y) = if false then x else y
 pick(f)(g)(5)
 //│ dead-param-elim > >>> dead-param-elim results >>>
-//│ dead-param-elim > prodfun pick$worker#0 @ <root> -> eliminable: {0, 1}
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ = 0
 //│ g = fun g
@@ -103,7 +101,7 @@ main1()
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ = 1
 
-:deadParamElim debug poly
+:flowBasedOpt debugDpe poly
 :noInline
 private fun apply(f, x) = f(x)
 private fun main(f1, f2) =
@@ -118,7 +116,7 @@ main1()
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ = 1
 
-:deadParamElim debug mono
+:flowBasedOpt debugDpe mono
 :expect 0
 :noInline
 private fun f = (a) => 0

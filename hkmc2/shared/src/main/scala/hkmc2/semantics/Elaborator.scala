@@ -669,6 +669,8 @@ extends Importer:
     case App(Ident("config"), Tup(args)) =>
       val modify = ConfigParser.parseOverrides(args)
       S(Annot.Config(modify))
+    case App(Ident("affine"), Tup(IntLit(whichParamList) :: Nil)) =>
+      S(Annot.Affine(whichParamList.toInt).withLocOf(tree))
     case _ => term(tree) match
       case Term.Error() => N
       case trm =>

@@ -1,6 +1,6 @@
 :.
 // NOTE: due to conflict between flow analysis and lifter
-:deadParamElim off
+:flowBasedOpt off
 
 :sir
 data class A(x) with
