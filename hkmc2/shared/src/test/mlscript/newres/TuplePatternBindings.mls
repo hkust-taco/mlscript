@@ -1,0 +1,52 @@
+:.
+
+:expect "ABC"
+fun second(pair: [Int, Str]) = if pair is [_, text] then text.toUpperCase()
+second([1, "abc"])
+//│ = "ABC"
+
+:expect "a-b"
+fun joined(...parts: Array[Str]): Str = parts.join("-")
+joined("a", "b")
+//│ = "a-b"
+
+:expect ["a", "b", "c"]
+private fun split(values) = if values is [first, ...middle, last] then [first.name, middle.0.name, last.name]
+split([{name: "a"}, {name: "b"}, {name: "c"}])
+//│ = ["a", "b", "c"]
+
+:expect "ABC"
+fun head(values: Array[Str]) = if values is [first, ...] then first.toUpperCase()
+head(["abc", "def"])
+//│ = "ABC"
+
+:expect "FIRST"
+private fun select(value) = if value is [[first, _], _] then first.toUpperCase()
+select([["first", 2], 3])
+//│ = "FIRST"
+
+:e
+fun opaque[A](pair: [A, Int]) = if pair is [item, _] then item.name
+opaque([{name: "hidden"}, 1])
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.29: 	fun opaque[A](pair: [A, Int]) = if pair is [item, _] then item.name
+//│ ║        	                                                          ^^^^^^^^^
+//│ ╟── Cannot resolve member 'name' of a value with unknown shape.
+//│ ╟── This type annotation supplies the value's shape.
+//│ ║  l.29: 	fun opaque[A](pair: [A, Int]) = if pair is [item, _] then item.name
+//│ ║        	                     ^
+//│ ╟── Type parameter 'A' does not specify a member interface.
+//│ ║  l.29: 	fun opaque[A](pair: [A, Int]) = if pair is [item, _] then item.name
+//│ ╙──      	           ^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// Removing fields from either end in different orders reaches the same residual
+// layouts. Each remainder must be one candidate, not one per removal order,
+// or this 24-field tuple produces 2^24 candidates.
+:expect 24
+private fun peel(values) = if values is
+  [] then 0
+  [first, ...rest] and first > 100 then peel(rest)
+  [...rest, last] then 1 + peel(rest)
+peel([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24])
+//│ = 24

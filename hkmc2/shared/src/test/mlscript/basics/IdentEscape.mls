@@ -1,3 +1,4 @@
+:.
 let id"of" = 42
 fun id"fun"(x: Int) = x + 1
 
@@ -13,11 +14,11 @@ module id"object" with
 :pe
 id""
 //│ ╔══[LEXICAL ERROR] unexpected identifier escape
-//│ ║  l.14: 	id""
+//│ ║  l.15: 	id""
 //│ ╙──      	^
 //│ ╔══[PARSE ERROR] Expected an expression; found error instead
-//│ ║  l.14: 	id""
+//│ ║  l.15: 	id""
 //│ ╙──      	^^^^
 //│ ╔══[PARSE ERROR] Expected end of input; found error instead
-//│ ║  l.14: 	id""
+//│ ║  l.15: 	id""
 //│ ╙──      	^^^^

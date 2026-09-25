@@ -1,0 +1,11 @@
+:.
+
+
+
+// WASM lowering emits target-specific intrinsics; do not execute its IR as JS.
+:expect 3
+1 + 2
+//│ Wasm result:
+//│ = 3
+
+

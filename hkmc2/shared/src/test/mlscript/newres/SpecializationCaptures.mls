@@ -1,0 +1,64 @@
+:.
+
+// Explicit arguments are supplied after the reference enters the caller's scope.
+:expect 1
+class Item(val value: Int)
+private fun identity[A](value: A) = value
+private fun use() = identity[Item -> Int](x => x.value)(Item(1))
+use()
+//│ = 1
+
+// More than one enclosing capture must retain the order of scope crossings.
+:expect 2
+class Item(val value: Int)
+private fun identity[A](value: A) = value
+private fun wrap() =
+  fun inner() = identity[Item -> Int](x => x.value)(Item(2))
+  inner()
+wrap()
+//│ = 2
+
+// A by-name definition consumes the supplied arguments before producing a value.
+:expect 3
+class Item(val value: Int)
+private fun identity[A] = (value: A) => value
+private fun use() = identity[Item -> Int](x => x.value)(Item(3))
+use()
+//│ = 3
+
+// The supplied type itself can refer to the enclosing function's type parameter.
+:expect [4, 5]
+class First(val first: Int)
+class Second(val second: Int)
+private fun identity[A](value: A) = value
+private fun wrap[B](value: B) = identity[B](value)
+[wrap(First(4)).first, wrap(Second(5)).second]
+//│ = [4, 5]
+
+// By-name specialization also interprets enclosing parameters at the use site.
+:expect [6, 7]
+class First(val first: Int)
+class Second(val second: Int)
+private fun identity[A] = (value: A) => value
+private fun wrap[B](value: B) = identity[B](value)
+[wrap(First(6)).first, wrap(Second(7)).second]
+//│ = [6, 7]
+
+// By-name rebasing preserves multiple nested captures too.
+:expect [8, 9]
+class First(val first: Int)
+class Second(val second: Int)
+private fun identity[A] = (value: A) => value
+private fun wrap[B](value: B) =
+  fun inner() = identity[B](value)
+  inner()
+[wrap(First(8)).first, wrap(Second(9)).second]
+//│ = [8, 9]
+
+// Captured constructor specialization must terminate before any result use.
+:expect Box(Item(10))
+class Item(val value: Int)
+class Box[T](val item: T) with
+  fun copy() = Box[T](item)
+(new Box[Item](Item(10))).copy()
+//│ = Box(Item(10))

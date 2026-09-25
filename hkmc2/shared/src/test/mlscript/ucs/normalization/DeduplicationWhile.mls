@@ -1,3 +1,4 @@
+:.
 :js
 :patMatConsequentSharingThreshold 1
 // ^ force dedup even for small consequents
@@ -70,30 +71,31 @@ while x > 0 and x ===
 //│ @private
 //│ define lambda as fun lambda¹(x) {
 //│   loop lbl:
-//│     let scrut, scrut1, scrut2, scrut3, scrut4;
+//│     let scrut, scrut1, scrut2, scrut3, scrut4, scrut5;
 //│     set scrut = >⁰(x, 0);
 //│     match scrut
 //│       true =>
-//│         set scrut1 = ===⁰(x, 1);
-//│         match scrut1
+//│         set scrut1 = x;
+//│         set scrut2 = ===⁰(scrut1, 1);
+//│         match scrut2
 //│           true =>
 //│             do Predef⁰.print⁰("A");
 //│             continue lbl
 //│           else
-//│             set scrut2 = ===⁰(x, 2);
-//│             match scrut2
+//│             set scrut3 = ===⁰(scrut1, 2);
+//│             match scrut3
 //│               true =>
 //│                 do Predef⁰.print⁰("A");
 //│                 continue lbl
 //│               else
-//│                 set scrut3 = ===⁰(x, 3);
-//│                 match scrut3
+//│                 set scrut4 = ===⁰(scrut1, 3);
+//│                 match scrut4
 //│                   true =>
 //│                     do Predef⁰.print⁰("B");
 //│                     continue lbl
 //│                   else
-//│                     set scrut4 = ===⁰(x, 4);
-//│                     match scrut4
+//│                     set scrut5 = ===⁰(scrut1, 4);
+//│                     match scrut5
 //│                       true =>
 //│                         do Predef⁰.print⁰("B");
 //│                         continue lbl
@@ -122,20 +124,21 @@ while x > 0 and x ===
 //│ @private
 //│ define lambda as fun lambda²(x) {
 //│   loop lbl:
-//│     let scrut, scrut1, scrut2, scrut3, scrut4, scrut5, tmp;
+//│     let scrut, scrut1, scrut2, scrut3, scrut4, scrut5, scrut6, tmp;
 //│     set scrut = >⁰(x, 0);
 //│     match scrut
 //│       true =>
-//│         set scrut1 = ===⁰(x, 1);
+//│         set scrut1 = x;
+//│         set scrut2 = ===⁰(scrut1, 1);
 //│         block σ$x:
 //│           block σ:
-//│             match scrut1
+//│             match scrut2
 //│               true =>
-//│                 set scrut3 = false;
-//│                 match scrut3
+//│                 set scrut4 = false;
+//│                 match scrut4
 //│                   true =>
-//│                     set scrut2 = false;
-//│                     match scrut2
+//│                     set scrut3 = false;
+//│                     match scrut3
 //│                       true =>
 //│                         set tmp = Predef⁰.print⁰("A");
 //│                         break σ$x
@@ -148,11 +151,11 @@ while x > 0 and x ===
 //│               else
 //│                 break σ
 //│             end
-//│           set scrut4 = ===⁰(x, 2);
-//│           match scrut4
+//│           set scrut5 = ===⁰(scrut1, 2);
+//│           match scrut5
 //│             true =>
-//│               set scrut5 = false;
-//│               match scrut5
+//│               set scrut6 = false;
+//│               match scrut6
 //│                 true =>
 //│                   set tmp = Predef⁰.print⁰("B");
 //│                   break σ$x

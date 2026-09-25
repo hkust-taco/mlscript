@@ -71,7 +71,7 @@ continueFromNestedFunctionWithEffects()
 //│ let loop, handleBlock$, NonLocalLabelEffectbreak, NonLocalLabelEffectcontinue, NonLocalLabelEffect, Capture$scope0, handleBlock$$, NonLocalLabelEffectbreak$, tmp;
 //│ do runtime⁰.resetEffects﹖();
 //│ define NonLocalLabelEffectcontinue as fun NonLocalLabelEffectcontinue⁰(resume) {
-//│   return runtime⁰.Continue﹖
+//│   return runtime⁰.Continue⁰
 //│ };
 //│ @inline
 //│ define NonLocalLabelEffectbreak$ as fun NonLocalLabelEffectbreak$⁰(value)(resume) {

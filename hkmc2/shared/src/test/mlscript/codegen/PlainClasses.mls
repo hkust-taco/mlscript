@@ -1,3 +1,4 @@
+:.
 :js
 
 :global
@@ -49,8 +50,15 @@ Foo
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = class Foo
 
+:ge
 :re
 Foo()
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.55: 	Foo()
+//│ ║        	^^^^^
+//│ ╟── Class 'Foo' must be instantiated with 'new'.
+//│ ║  l.8: 	class Foo
+//│ ╙──     	      ^^^
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ return runtime.safeCall(Foo1())
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
@@ -119,15 +127,16 @@ let t = test()
 
 :e
 new t
-//│ ╔══[COMPILATION ERROR] Expected a statically known class; found reference.
-//│ ║  l.121: 	new t
-//│ ║         	    ^
-//│ ╙── The 'new' keyword requires a statically known class; use the 'new!' operator for dynamic instantiation.
+//│ ╔══[COMPILATION ERROR] Resolution error in object instantiation
+//│ ║  l.129: 	new t
+//│ ║         	^^^^^
+//│ ╟── Invalid class expression: reference
+//│ ║  l.129: 	new t
+//│ ╙──       	    ^
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ return globalThis.Object.freeze(new t())
+//│ throw "This code cannot be run as its compilation yielded an error."
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
-//│ > hi
-//│ = Foo
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 new! t
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
@@ -138,15 +147,16 @@ new! t
 
 :e
 new t()
-//│ ╔══[COMPILATION ERROR] Expected a statically known class; found reference.
-//│ ║  l.140: 	new t()
-//│ ║         	    ^
-//│ ╙── The 'new' keyword requires a statically known class; use the 'new!' operator for dynamic instantiation.
+//│ ╔══[COMPILATION ERROR] Resolution error in object instantiation
+//│ ║  l.149: 	new t()
+//│ ║         	^^^^^^^
+//│ ╟── Invalid class expression: reference
+//│ ║  l.149: 	new t()
+//│ ╙──       	    ^
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ return globalThis.Object.freeze(new t())
+//│ throw "This code cannot be run as its compilation yielded an error."
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
-//│ > hi
-//│ = Foo
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 new! t()
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
@@ -245,9 +255,9 @@ print(a.bar(1))
 //│ let a, tmp, tmp1;
 //│ a = globalThis.Object.freeze(new Foo12());
 //│ Predef.print(a.x);
-//│ tmp = runtime.safeCall(a.foo(1));
+//│ tmp = a.foo(1);
 //│ Predef.print(tmp);
-//│ tmp1 = runtime.safeCall(a.bar(1));
+//│ tmp1 = a.bar(1);
 //│ return Predef.print(tmp1)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > 1
@@ -263,10 +273,10 @@ class Foo with
   val x = 2
 //│ ╔══[COMPILATION ERROR] Multiple definitions of symbol 'x'
 //│ ╟── defined here
-//│ ║  l.262: 	  val x = 1
+//│ ║  l.272: 	  val x = 1
 //│ ║         	  ^^^^^^^^^
 //│ ╟── defined here
-//│ ║  l.263: 	  val x = 2
+//│ ║  l.273: 	  val x = 2
 //│ ╙──       	  ^^^^^^^^^
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let Foo14;
@@ -288,10 +298,10 @@ class Foo with
   val x = 1
   let x = 2
 //│ ╔══[COMPILATION ERROR] Name 'x' is already used
-//│ ║  l.289: 	  let x = 2
+//│ ║  l.299: 	  let x = 2
 //│ ║         	      ^^^^^
 //│ ╟── by a member declared in the same block
-//│ ║  l.288: 	  val x = 1
+//│ ║  l.298: 	  val x = 1
 //│ ╙──       	  ^^^^^^^^^
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let Foo16;
@@ -317,7 +327,7 @@ class Foo with
 :e
 class Foo with val x = 1
 //│ ╔══[COMPILATION ERROR] Illegal body of class definition (should be a block; found term definition).
-//│ ║  l.318: 	class Foo with val x = 1
+//│ ║  l.328: 	class Foo with val x = 1
 //│ ╙──       	               ^^^^^^^^^
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let Foo18;

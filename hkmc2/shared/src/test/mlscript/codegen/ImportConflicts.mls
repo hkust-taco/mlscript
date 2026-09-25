@@ -1,3 +1,4 @@
+:.
 :js
 
 
@@ -25,7 +26,7 @@ fun Some3 = "333"
 open Option3 { Some3 }
 Some3
 //│ ╔══[WARNING] Imported name 'Some3' is shadowed by a name already defined in the same scope
-//│ ║  l.25: 	open Option3 { Some3 }
+//│ ║  l.26: 	open Option3 { Some3 }
 //│ ╙──      	               ^^^^^
 //│ = "333"
 
@@ -45,8 +46,9 @@ module Option5 with { fun Some5 = 5 }
 fun Some5 = "555"
 fun bar =
   open Option5
+  // Note that the wildcard import does not shadow names that are already bound in scope
   Some5
 bar
-//│ = 5
+//│ = "555"
 
 

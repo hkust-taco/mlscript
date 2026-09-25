@@ -1,3 +1,4 @@
+:.
 :js
 :patMatConsequentSharingThreshold 1
 // ^ force dedup even for small consequents
@@ -19,10 +20,15 @@ if
   x then 0
   y then 0
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ if (x === true) {
+//│ let scrut, scrut1;
+//│ scrut = x;
+//│ if (scrut === true) {
 //│   return 0
 //│ }
-//│ if (y === true) { return 0 }
+//│ scrut1 = y;
+//│ if (scrut1 === true) {
+//│   return 0
+//│ }
 //│ throw globalThis.Object.freeze(new globalThis.Error("match error"));
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 0
@@ -33,10 +39,15 @@ if
   x then 0
   y then 1
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ if (x === true) {
+//│ let scrut2, scrut3;
+//│ scrut2 = x;
+//│ if (scrut2 === true) {
 //│   return 0
 //│ }
-//│ if (y === true) { return 1 }
+//│ scrut3 = y;
+//│ if (scrut3 === true) {
+//│   return 1
+//│ }
 //│ throw globalThis.Object.freeze(new globalThis.Error("match error"));
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 0
@@ -52,28 +63,35 @@ if
   y is [b] then let x = 1 in x + b
 //│ Normalized:
 //│ >  ‹if|while›
-//│ >    let-split σ = y is []=1 and
-//│ >      let tmp:element0$ = ((tmp:runtime⁰.)Tuple‹module:Tuple›.)get‹term:Tuple/get›(y⁰, 0)
-//│ >      let b = tmp:element0$⁰
-//│ >      else
-//│ >        let x
-//│ >        x = 1
-//│ >        builtin:+⁰(x⁰, b⁰)
-//│ >    x is true and
-//│ >      z is true then 1
+//│ >    let tmp:scrut = x⁰
+//│ >    let-split σ =
+//│ >      let tmp:scrut = y⁰
+//│ >      tmp:scrut is []=1 and
+//│ >        let tmp:element0$ = ((tmp:runtime⁰.)Tuple‹module:Tuple›.)get‹term:Tuple/get›(tmp:scrut⁰, 0)
+//│ >        let b = tmp:element0$⁰
+//│ >        else
+//│ >          let x
+//│ >          x = 1
+//│ >          builtin:+⁰(x¹, b⁰)
+//│ >    tmp:scrut is true and
+//│ >      let tmp:scrut = z⁰
+//│ >      tmp:scrut is true then 1
 //│ >      $σ
 //│ >    $σ
 //│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
-//│ let element0$, tmp;
+//│ let scrut4, scrut5, scrut6, element0$, tmp;
+//│ scrut4 = x;
 //│ σ$x: {
-//│   if (x === true) {
-//│     if (z === true) {
+//│   if (scrut4 === true) {
+//│     scrut5 = z;
+//│     if (scrut5 === true) {
 //│       tmp = 1;
 //│       break σ$x
 //│     }
 //│   }
-//│   if (runtime.Tuple.isArrayLike(y) && y.length === 1) {
-//│     element0$ = runtime.checkCall(runtime.Tuple.get(y, 0));
+//│   scrut6 = y;
+//│   if (runtime.Tuple.isArrayLike(scrut6) && scrut6.length === 1) {
+//│     element0$ = runtime.checkCall(runtime.Tuple.get(scrut6, 0));
 //│     tmp = 1 + element0$;
 //│   } else { throw globalThis.Object.freeze(new globalThis.Error("match error")) }
 //│ }

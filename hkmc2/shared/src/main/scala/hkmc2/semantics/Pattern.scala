@@ -7,6 +7,8 @@ import syntax.{Keyword, SpreadKind, Tree}, Tree.{Ident, StrLit}
 import Elaborator.State, Message.MessageContext, ucs.error
 import scala.annotation.tailrec, util.chaining.*
 import utils.{TraceLogger, tl}
+import hkmc2.document.*
+import hkmc2.document.Document.*
 
 object Pattern:
   /** The reason why a variable obtained from `Pattern.variables` is invalid. */
@@ -145,15 +147,11 @@ object Pattern:
   /** A shorthand for creating a variable pattern. */
   def Variable = Pattern.Wildcard() binds (_: Ident)
   
-  trait ConstructorImpl:
+  trait ConstructorImpl extends PatternShapeHost, PossiblyErroneous:
     self: Pattern.Constructor =>
     
-    /** Get the resolved symbol of the target term. */
-    def symbol: Opt[Symbol] = self.target.resolvedSym
-    
-    /** Expect the `symbol` to be set. */
-    def symbol_! : Symbol = symbol.getOrElse:
-      lastWords(s"target term `${self.target}` does not resolve to a symbol")
+    // val resSym: FlowSymbol = FlowSymbol.app
+    var resolvedTargets: Ls[DefinitionSymbol[?] | VarSymbol] = Nil
   
   /** Add a mutable field to the `Alias` pattern to store the symbol for the
    *  variable. Note that NOT every `Alias` pattern has a symbol. */
@@ -171,7 +169,7 @@ object Pattern:
 import Pattern.*, InvalidReason.*
 
 /** An inductive data type for patterns. */
-enum Pattern extends AutoLocated:
+enum Pattern extends AutoLocated, Describable, PatternShapePublisher:
   /** A pattern that matches a constructor and its arguments.
    *  @param target The term representing the constructor.
    *  @param arguments `None` if the pattern does not have a parameter list. The
@@ -250,6 +248,12 @@ enum Pattern extends AutoLocated:
    *  `and` in split. */
   case Guarded(pattern: Pattern, guard: Term)
   
+  
+  // val trmHost: ShapeHost = new ShapeHost{}
+  object trmHost extends ShapeHost:
+    def showDbg(using DebugPrinter): Str = s"trmHost(${Pattern.this.showDbg})"
+  end trmHost
+  
   infix def binds(id: Ident): Pattern.Alias = Pattern.Alias(this, id)
   
   /** Annotate the pattern using the given term. If the term is `Error`, then
@@ -301,6 +305,37 @@ enum Pattern extends AutoLocated:
       children.iterator.collect:
         case p: Pattern => p.varNamesUsedInGuards
       .foldLeft(Set.empty[Str])(_ ++ _)
+  
+  def show(using Scope, ShowCfg, Raise): Document = this match
+    // case Constructor(target, arguments) =>
+    //   target.show + arguments.fold(""):
+    //     args => s"(${args.map(_.show).mkString(", ")})"
+    case Composition(true, left, right) => doc"${left.show} | ${right.show}"
+    case Composition(false, left, right) => doc"${left.show} & ${right.show}"
+    case Negation(pattern) => doc"not ${pattern.show}"
+    case Wildcard() => "_"
+    case Literal(literal) => literal.idStr
+    case Range(lower, upper, rightInclusive) =>
+      doc"${lower.idStr} ${if rightInclusive then "to" else "until"} ${upper.idStr}"
+    case Concatenation(left, right) => doc"${left.show} ~ ${right.show}"
+    case Tuple(leading, spread) =>
+      (leading.iterator.map(_.show) ++ spread.fold(Iterator.empty):
+        case (_, middle, trailing) =>
+          Iterator.single(middle.show) ++ trailing.iterator.map(_.show)
+      ).toList.mkDocument("[", ", ", "]")
+    case Record(fields) => doc"{${fields.map((k, v) => doc"${k.name}: ${v.show}").mkString(", ")}}"
+    case Chain(first, second) => doc"${first.show} >> ${second.show}"
+    // case al @ Alias(pattern, alias) => doc"${pattern.show} as ${alias.name}‹${al.symbolOption.fold("")(_.showName)}›"
+    case al @ Alias(pattern, alias) => doc"${pattern.show} as ${al.symbolOption.fold(alias.name+"ˀˀˀ")(_.showName)}"
+    case Transform(pattern, _, transform) => doc"${pattern.show} => ${transform.show}"
+    case Annotated(pattern, annotations) => annotations.iterator.map:
+        case L(errorLoc) => "error"
+        case R(term) => term.show
+      .mkString("@", " @", " ") + pattern.show
+    case Guarded(pattern, guard) => pattern.show + " where " + guard.show
+    case Constructor(target, arguments) =>
+      target.show :: arguments.fold(doc""):
+        args => doc"(${args.map(_.show).mkDocument(", ")})"
   
   def children: Vector[Located] = this match
     case Constructor(target, arguments) => target +: arguments.fold(Vector.empty)(_.toVector)
@@ -382,9 +417,9 @@ enum Pattern extends AutoLocated:
           Iterator.single(spreadKind.str + middle.showDbg) ++
             trailing.iterator.map(_.showDbg)).mkString("[", ", ", "]")
     case Record(fields) => s"{${fields.map((k, v) => s"${k.name}: ${v.showDbg}").mkString(", ")}}"
-    case Chain(first, second) => s"${first.showDbgWithPar} as ${second.showDbgWithPar}"
-    case Alias(Wildcard(), alias) => alias.name
-    case Alias(pattern, alias) => s"${pattern.showDbgWithPar} as ${alias.name}"
+    case Chain(first, second) => s"${first.showDbgWithPar} >> ${second.showDbgWithPar}"
+    case al @ Alias(Wildcard(), alias) => s"${alias.name}‹${al.symbolOption.fold("?")(_.showDbg)}›"
+    case al @ Alias(pattern, alias) => s"${pattern.showDbgWithPar} as ${alias.name}‹${al.symbolOption.fold("")(_.showDbg)}›"
     case Transform(pattern, _, transform) => s"${pattern.showDbgWithPar} => ${transform.showDbg}"
     case Annotated(pattern, annotations) => annotations.iterator.map:
         case L(errorLoc) => "error"

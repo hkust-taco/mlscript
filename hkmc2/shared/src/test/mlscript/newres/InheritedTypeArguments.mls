@@ -1,0 +1,69 @@
+:.
+:flowBasedOpt off
+// ^ FIXME: DPE causes problems
+
+// Control: an exact nominal match transfers the supplied argument to read's A.
+:expect 1
+class Item(val value: Int)
+class Parent[A](val item: A)
+private fun read[A](parent: Parent[A]) = parent.item
+read(new Parent[Item](Item(1))).value
+//│ = 1
+
+// A constructed subclass must transfer its instantiated Parent argument.
+// The field signature is complete, so this does not require inferring members.
+:expect 2
+class Item(val value: Int)
+class Parent[A](val item: A)
+class Child[A](item: A) extends Parent[A](item)
+private fun read[A](parent: Parent[A]) = parent.item
+read(new Child[Item](Item(2))).value
+//│ = 2
+
+// A declared subclass interface must likewise follow its parent view.
+:expect 3
+class Item(val value: Int)
+class Parent[A](val item: A)
+class Child[A](item: A) extends Parent[A](item)
+private fun read[A](parent: Parent[A]) = parent.item
+private fun child(): Child[Item] = new Child[Item](Item(3))
+read(child()).value
+//│ = 3
+
+// Multiple parent steps compose substitutions, including permuted arguments.
+:expect [4, 5]
+class First(val first: Int)
+class Second(val second: Int)
+class Parent[A, B](val left: A, val right: B)
+class Middle[X, Y](x: X, y: Y) extends Parent[Y, X](y, x)
+class Child[P, Q](p: P, q: Q) extends Middle[P, Q](p, q)
+private fun read[A, B](parent: Parent[A, B]) = [parent.left, parent.right]
+let result = read(new Child[Second, First](Second(5), First(4)))
+[result.0.first, result.1.second]
+//│ = [4, 5]
+//│ result = [First(4), Second(5)]
+
+// A declared parent chain retains the same permutation and both call contexts.
+:expect [6, 7]
+class First(val first: Int)
+class Second(val second: Int)
+class Parent[A](val item: A)
+class Middle[X](x: X) extends Parent[X](x)
+class Child[Y](y: Y) extends Middle[Y](y)
+private fun read[A](parent: Parent[A]) = parent.item
+private fun first(): Child[First] = new Child[First](First(6))
+private fun second(): Child[Second] = new Child[Second](Second(7))
+[read(first()).first, read(second()).second]
+//│ = [6, 7]
+
+// An enclosing function's parameter remains captured while following a parent.
+:expect [8, 9]
+class First(val first: Int)
+class Second(val second: Int)
+class Parent[A](val item: A)
+private fun read[A](parent: Parent[A]) = parent.item
+private fun make[T](item: T) =
+  class Child extends Parent[T](item)
+  read(new Child)
+[make(First(8)).first, make(Second(9)).second]
+//│ = [8, 9]

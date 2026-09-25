@@ -1,0 +1,122 @@
+:.
+
+// Capturing the outer constructor crosses both the method and instance scopes.
+// The old instance exit cancels the class capture, leaving the fresh instance exit.
+data class Env(bindings) with
+  fun lookup(name) = bindings
+  fun extend(name) = Env(0)
+
+:expect 0
+private fun infer(env, x) = if x then env.lookup(x) else infer(env.extend(x), x)
+infer(Env(0), true)
+//│ = 0
+
+// Exercise the recursive branch at runtime as well as during resolution.
+:expect 0
+private fun advance(env, n) = if n == 0 then env.lookup(n) else advance(env.extend(n), n - 1)
+advance(Env(0), 3)
+//│ = 0
+
+// Explicit construction must carry the same instance boundary and captures.
+data class NewEnv(bindings) with
+  fun lookup(name) = bindings
+  fun extend(name) = new NewEnv(0)
+
+:expect 0
+private fun advanceNew(env, n) = if n == 0 then env.lookup(n) else advanceNew(env.extend(n), n - 1)
+advanceNew(new NewEnv(0), 3)
+//│ = 0
+
+// The instance capture matters even without a recursive source-level call.
+// FIXME: Rebuilding the same class loses the original constructor activation.
+:fixme
+:expect 42
+class Box(val value) with
+  fun copy() = Box(value)
+Box({answer: 42}).copy().value.answer
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.36: 	Box({answer: 42}).copy().value.answer
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Cannot resolve member 'answer' of a value with unknown shape.
+//│ ╟── Parameter 'value' admits values of unknown shape.
+//│ ║  l.34: 	class Box(val value) with
+//│ ║        	              ^^^^^
+//│ ╟── 'Box' is exposed by this compilation unit.
+//│ ║  l.34: 	class Box(val value) with
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.35: 	  fun copy() = Box(value)
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ ═══[RUNTIME ERROR] Expected: '42', got: 'undefined'
+
+// Rebuilding a nested class must also retain its enclosing function's capture.
+:expect 43
+private fun nested(enclosing) =
+  class Inner(val value) with
+    fun copy() = new Inner(value)
+    fun read() = enclosing.answer
+  (new Inner(0)).copy().read()
+nested({answer: 43})
+//│ = 43
+
+// Captures of inherited wildcard opens cross instance scopes too.
+// FIXME: Capturing a constructor alias loses its calling activation.
+:fixme
+:expect 44
+class OpenBox(val value)
+let makers = {create: OpenBox}
+private fun opened(value) =
+  open makers
+  class Wrapper with
+    fun make() = create(value)
+  (new Wrapper).make().value.answer
+opened({answer: 44})
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.72: 	  (new Wrapper).make().value.answer
+//│ ║        	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Cannot resolve member 'answer' of a value with unknown shape.
+//│ ╟── Parameter 'value' admits values of unknown shape.
+//│ ║  l.66: 	class OpenBox(val value)
+//│ ║        	                  ^^^^^
+//│ ╟── This value is stored in this record field.
+//│ ║  l.67: 	let makers = {create: OpenBox}
+//│ ║        	              ^^^^^^
+//│ ╟── This value is exposed by this compilation unit.
+//│ ║  l.67: 	let makers = {create: OpenBox}
+//│ ╙──      	              ^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ ═══[RUNTIME ERROR] Expected: '44', got: 'undefined'
+//│ makers = {create: fun OpenBox { class: class OpenBox }}
+
+// Remaining argument lists retain the context of an explicitly constructed class.
+// FIXME: An exposed partial constructor shares its remaining argument flow with callers.
+:fixme
+:expect [45, 46]
+fun partial(a) =
+  class Pair(val first)(val second)
+  new Pair(a)
+let finish = partial({answer: 45})
+let pair = finish({answer: 46})
+[pair.first.answer, pair.second.answer]
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.100: 	[pair.first.answer, pair.second.answer]
+//│ ║         	                    ^^^^^^^^^^^^^^^^^^
+//│ ╟── Cannot resolve member 'answer' of a value with unknown shape.
+//│ ╟── Parameter 'second' admits values of unknown shape.
+//│ ║  l.96: 	  class Pair(val first)(val second)
+//│ ║        	                            ^^^^^^
+//│ ╟── This value is exposed by this compilation unit.
+//│ ║  l.98: 	let finish = partial({answer: 45})
+//│ ╙──      	             ^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ ═══[RUNTIME ERROR] Expected: '[45, 46]', got: 'undefined'
+//│ finish = fun
+//│ pair = Pair({answer: 45})
+
+// Recursive data stays a finite graph of shapes even when it retains old instances.
+:expect 1
+class Chain(val value, val previous) with
+  fun prepend(value) = Chain(value, this)
+private fun build(chain, n) = if n == 0 then chain else build(chain.prepend(n), n - 1)
+build(Chain(0, ()), 3).value
+//│ = 1

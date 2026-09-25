@@ -14,12 +14,12 @@ import Elaborator.*
 import hkmc2.syntax.LetBind
 
 
-class Importer:
+class Importer extends NewResolver:
   self: Elaborator =>
   import tl.*
 
 
-  def importPath(path: Str, alias: Opt[syntax.Tree.Ident])(using cfg: Config): Import =
+  def importPath(path: Str, alias: Opt[syntax.Tree.Ident])(using cfg: Config, rs: NewResolverState): Import =
     // log(s"pwd: ${os.pwd}")
     // log(s"wd: ${wd}")
     
@@ -42,6 +42,7 @@ class Importer:
       file.ext match
       
       case "mjs" | "js" =>
+        if newResolution then sym.currentShapes.add(DynShape())
         Import(sym, file.toString, file)
         
       case "mls" =>
@@ -64,6 +65,13 @@ class Importer:
             val sym: VarSymbol | BlockMemberSymbol = alias.fold(importedSym): alias =>
               VarSymbol(alias, erasedType = N)
 
+            // An import alias denotes the imported value, just like a local
+            // binding. Publish its shapes so selection and opens can follow it.
+            if newResolution then sym match
+              case local: VarSymbol =>
+                pipeTerm(Term.MemberRef(importedSym)(local.id, FlowSymbol.memSym(importedSym)), local)
+              case _: BlockMemberSymbol => ()
+
             val jsFile = file.up / io.RelPath(file.baseName + ".mjs")
             Import(sym, jsFile.toString, jsFile)
         
@@ -73,5 +81,6 @@ class Importer:
         Import(sym, path, file)
       
     else
+      if newResolution then sym.currentShapes.add(DynShape())
       Import(sym, path, file)
     

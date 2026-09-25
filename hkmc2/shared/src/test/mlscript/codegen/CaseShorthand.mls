@@ -1,3 +1,4 @@
+:.
 :js
 
 
@@ -77,10 +78,10 @@ case
 :todo // TODO: support this braceless syntax?
 case [x] then x, [] then 0
 //│ ╔══[COMPILATION ERROR] Unexpected infix use of keyword 'then' here
-//│ ║  l.78: 	case [x] then x, [] then 0
+//│ ║  l.79: 	case [x] then x, [] then 0
 //│ ╙──      	                 ^^^^^^^^^
 //│ ╔══[WARNING] Pure expression in statement position
-//│ ║  l.78: 	case [x] then x, [] then 0
+//│ ║  l.79: 	case [x] then x, [] then 0
 //│ ╙──      	^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -123,6 +124,6 @@ val isDefined = case
 :todo
 case 0 | 1
 //│ ╔══[COMPILATION ERROR] Unrecognized pattern split (infix operator '|').
-//│ ║  l.124: 	case 0 | 1
+//│ ║  l.125: 	case 0 | 1
 //│ ╙──       	     ^^^^^
 //│ = fun

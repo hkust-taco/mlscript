@@ -1,0 +1,6 @@
+#lang(0.3.x, strictResolution: true)
+
+class OverloadedDefault {
+  fun answer() = 54
+}
+val OverloadedDefault = 19

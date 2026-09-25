@@ -9,3 +9,180 @@
 // :todo
 
 
+
+:rt
+:lot
+class Foo(a)
+//│ ——————————————| Resolved tree |—————————————————————————————————————————————————————————————————————
+//│ Blk:
+//│   stats = Ls of
+//│     Parameterized:
+//│       kind = Cls
+//│       sym = class:Foo⁰
+//│       bsym = member:Foo¹
+//│       ctorSym = S of term:Foo²
+//│       params = ParamList:
+//│         params = Ls of
+//│           Param:
+//│             sym = a⁰
+//│             modulefulness = Modulefulness of N
+//│       body = ObjBody of Blk:
+//│         stats = Ls of
+//│           LetDecl:
+//│             sym = term:Foo⁰/a¹
+//│           DefineVar:
+//│             sym = term:Foo⁰/a¹
+//│             rhs = Ref{sym=a⁰} of a⁰
+//│         res = Lit of UnitLit of false
+//│   res = Lit of UnitLit of false
+//│ —————————————| Lowered IR Tree |————————————————————————————————————————————————————————————————————
+//│ Program:
+//│   main = Define:
+//│     defn = ClsLikeDefn:
+//│       isym = class:Foo⁰
+//│       sym = member:Foo¹
+//│       ctorSym = S of term:Foo²
+//│       k = Cls
+//│       auxParams = Ls of
+//│         ParamList:
+//│           params = Ls of
+//│             Param:
+//│               sym = a⁰
+//│               modulefulness = Modulefulness of N
+//│       privateFields = Ls of
+//│         term:Foo⁰/a¹
+//│       ctor = AssignField:
+//│         lhs = This of class:Foo⁰
+//│         nme = Ident of "a"
+//│         rhs = SimpleRef of a⁰
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+:rt
+class Foo(val a)
+//│ ——————————————| Resolved tree |—————————————————————————————————————————————————————————————————————
+//│ Blk:
+//│   stats = Ls of
+//│     Parameterized:
+//│       kind = Cls
+//│       sym = class:Foo³
+//│       bsym = member:Foo⁴
+//│       ctorSym = S of term:Foo⁵
+//│       params = ParamList:
+//│         params = Ls of
+//│           Param:
+//│             flags = (val)
+//│             sym = a²
+//│             modulefulness = Modulefulness of N
+//│       body = ObjBody of Blk:
+//│         stats = Ls of
+//│           TermDefinition:
+//│             k = ImmutVal
+//│             sym = member:a³
+//│             tsym = term:Foo³/a⁴
+//│             body = S of Ref{sym=a²} of a²
+//│             modulefulness = Modulefulness of N
+//│         res = Lit of UnitLit of false
+//│   res = Lit of UnitLit of false
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+:rt
+:sjs
+new Foo(1)
+//│ ——————————————| Resolved tree |—————————————————————————————————————————————————————————————————————
+//│ Blk:
+//│   res = New{typ=class:Foo³}:
+//│     cls = Resolved{sym=class:Foo³}:
+//│       t = Ref{sym=member:Foo⁴} of member:Foo⁴
+//│       sym = class:Foo³
+//│     args = Ls of
+//│       Tup of Ls of
+//│         Fld:
+//│           term = Lit of IntLit of 1
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ return globalThis.Object.freeze(new Foo3.class(1))
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = Foo(1)
+
+
+:rt
+class Foo {
+  val b = 1
+}
+//│ ——————————————| Resolved tree |—————————————————————————————————————————————————————————————————————
+//│ Blk:
+//│   stats = Ls of
+//│     Plain:
+//│       kind = Cls
+//│       sym = class:Foo⁶
+//│       bsym = member:Foo⁷
+//│       body = ObjBody of Blk:
+//│         stats = Ls of
+//│           TermDefinition:
+//│             k = ImmutVal
+//│             sym = member:b⁰
+//│             tsym = term:Foo⁶/b¹
+//│             body = S of Lit of IntLit of 1
+//│             flags = (method)
+//│             modulefulness = Modulefulness of N
+//│         res = Lit of UnitLit of false
+//│   res = Lit of UnitLit of false
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+:rt
+new Foo
+//│ ——————————————| Resolved tree |—————————————————————————————————————————————————————————————————————
+//│ Blk:
+//│   res = New{typ=class:Foo⁶}:
+//│     cls = Resolved{sym=class:Foo⁶}:
+//│       t = Ref{sym=member:Foo⁷} of member:Foo⁷
+//│       sym = class:Foo⁶
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = Foo { b: 1 }
+
+
+
+class Foo(pred) {
+  val r = pred.id(42)
+  fun callId(x) = pred.id(x)
+}
+
+class Foo {
+  // a
+  fun f = 1
+}
+
+:sir
+:soir
+:sjs
+class Bar with
+  private val a = 1
+  print(a)
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define Bar⁰ as class Bar¹ {
+//│   private val a⁵;
+//│   constructor() { @private define a⁶ as val a⁵ = 1; do Predef⁰.print⁰(Bar¹.this.a⁵); end }
+//│ };
+//│ end
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ define Bar⁰ as class Bar¹ {
+//│   private val a⁵;
+//│   constructor() { @private define a⁶ as val a⁵ = 1; do Predef⁰.print⁰(Bar¹.this.a⁵); end }
+//│ };
+//│ end
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ let Bar1;
+//│ (class Bar {
+//│   static {
+//│     Bar1 = this
+//│   }
+//│   constructor() {
+//│     this.#a = 1;
+//│     Predef.print(this.#a);
+//│   }
+//│   #a;
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "Bar"];
+//│ });
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+

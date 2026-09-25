@@ -1,0 +1,414 @@
+:.
+
+// Multiple spreads, nested spreads, empty spreads, and fixed arguments after them.
+:expect [1, 2, 3, 4]
+fun four(a, b, c, d) = [a, b, c, d]
+four(...[], ...[1, ...[2]], 3, ...[4], ...[])
+//│ = [1, 2, 3, 4]
+
+// Both spread producers become available after the caller is elaborated.
+:expect [5, 6, 7, 8]
+fun delayed() = four(...left(), ...right())
+fun left() = [5, 6]
+fun right() = [7, 8]
+delayed()
+//│ = [5, 6, 7, 8]
+
+// Returned tuples preserve captured values through nested spreads and rest forwarding.
+:expect [11, 12, 21, 22]
+class Box(val value)
+fun pair(x, y) = [x, ...[y]]
+fun second(a, b) = b
+private fun forward(head, ...tail) = second(...tail)
+private fun captured(x, y) = () => forward(0, ...pair(x, y))
+let first = captured(Box(10), Box(11))
+let next = captured(Box(20), Box(21))
+[first().value, captured(Box(0), Box(12))().value, next().value, captured(Box(0), Box(22))().value]
+//│ = [11, 12, 21, 22]
+//│ first = fun
+//│ next = fun
+
+// Residual fields from distinct spreads and direct arguments keep separate marks.
+:expect 32
+private fun mixed(x, y) = forward(...[0, x], y)
+mixed(Box(31), Box(32)).value
+//│ = 32
+
+// An empty rest tuple can itself be spread into a zero-argument function.
+:expect 40
+fun zero() = 40
+fun empty(head, ...tail) = zero(...tail)
+empty(0)
+//│ = 40
+
+// Each list of a curried function or constructor is checked independently.
+// FIXME: Forwarding to a captured constructor loses the caller activation.
+:fixme
+:expect [51, 52, 53, 54]
+class Pair(val left)(val right)
+fun curried(x)(y) = Pair(x)(y)
+let built = curried(...[Box(51)])(...[Box(52)])
+let direct = new Pair(...[Box(53)])(...[Box(54)])
+[built.left.value, built.right.value, direct.left.value, direct.right.value]
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.52: 	[built.left.value, built.right.value, direct.left.value, direct.right.value]
+//│ ║        	 ^^^^^^^^^^^^^^^^
+//│ ╟── Cannot resolve member 'value' of a value with unknown shape.
+//│ ╟── Parameter 'x' admits values of unknown shape.
+//│ ║  l.49: 	fun curried(x)(y) = Pair(x)(y)
+//│ ║        	            ^
+//│ ╟── 'curried' is exposed by this compilation unit.
+//│ ║  l.49: 	fun curried(x)(y) = Pair(x)(y)
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.52: 	[built.left.value, built.right.value, direct.left.value, direct.right.value]
+//│ ║        	                   ^^^^^^^^^^^^^^^^^
+//│ ╟── Cannot resolve member 'value' of a value with unknown shape.
+//│ ╟── Parameter 'y' admits values of unknown shape.
+//│ ║  l.49: 	fun curried(x)(y) = Pair(x)(y)
+//│ ║        	               ^
+//│ ╟── 'curried' is exposed by this compilation unit.
+//│ ║  l.49: 	fun curried(x)(y) = Pair(x)(y)
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ ═══[RUNTIME ERROR] Expected: '[51, 52, 53, 54]', got: 'undefined'
+//│ built = Pair(Box(51))
+//│ direct = Pair(Box(53))
+
+// Plain tuple fields need no shapes for the tuple's arity to be known.
+:expect 60
+fun typed(x: Int) = second(...[x, 60])
+typed(0)
+//│ = 60
+
+// A delayed concrete spread establishes a real mismatch, including nested fields.
+:e
+fun tooShort() = four(...short())
+fun short() = [1, ...[2]]
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.86: 	fun tooShort() = four(...short())
+//│ ║        	                 ^^^^^^^^^^^^^^^^
+//│ ╟── Function 'four' expected 4 arguments, but got 2
+//│ ║  l.5: 	fun four(a, b, c, d) = [a, b, c, d]
+//│ ╙──     	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+:e
+four(...[1, 2], ...[3, 4], 5)
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.96: 	four(...[1, 2], ...[3, 4], 5)
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Function 'four' expected 4 arguments, but got 5
+//│ ║  l.5: 	fun four(a, b, c, d) = [a, b, c, d]
+//│ ╙──     	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] Error: Function 'four' expected 4 arguments but got 5
+
+// Opaque values are left to the runtime spread operation to validate.
+:re
+four(...Box(1))
+//│ ═══[RUNTIME ERROR] TypeError: Spread syntax requires ...iterable[Symbol.iterator] to be a function
+
+// Multiple alternatives for each spread are retained as their shapes arrive.
+:expect [[1, 2, 3, 4], [5, 6, 7, 8]]
+fun combine(xs, ys) = four(...xs, ...ys)
+[combine([1, 2], [3, 4]), combine([5, 6], [7, 8])]
+//│ = [[1, 2, 3, 4], [5, 6, 7, 8]]
+
+// Direct tuple returns preserve the field shapes of distinct call sites.
+:expect [71, 72]
+class Left(val l)
+class Right(val r)
+[second(...pair(0, Left(71))).l, second(...pair(0, Right(72))).r]
+//│ = [71, 72]
+
+// Returning a rest tuple preserves its caller's capture marks.
+:expect [81, 82]
+fun packed(...xs) = xs
+[second(...packed(0, Left(81))).l, second(...packed(0, Right(82))).r]
+//│ = [81, 82]
+
+// Nested applications of the same tuple producer remain distinct.
+:expect [0, 0, 1]
+fun nested(xs) = [0, ...xs]
+nested(nested([1]))
+//│ = [0, 0, 1]
+
+// Recursive rest forwarding should reach a fixed point.
+fun cycle(...xs) = cycle(...xs)
+fun seed() = cycle(1)
+
+// Slicing a rest tuple retains both known fields and approximated spread segments.
+:expect [0, 0, 1]
+fun nestedRest(ignored, ...xs) = [0, ...xs]
+nestedRest(9, ...nestedRest(9, 1))
+//│ = [0, 0, 1]
+
+// A later alternative must be checked even after a valid combination was seen.
+:e
+fun varying(xs, ys) = four(...xs, ...ys)
+fun knownGood() = varying([1], [2, 3, 4])
+fun laterBad() = varying([5], [6, 7])
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.147: 	fun varying(xs, ys) = four(...xs, ...ys)
+//│ ║         	                      ^^^^^^^^^^^^^^^^^^
+//│ ╟── Function 'four' expected 4 arguments, but got 3
+//│ ║  l.5: 	fun four(a, b, c, d) = [a, b, c, d]
+//│ ╙──     	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+// Recursive tuple growth has unknown length, but a rest-only function can forward it.
+:expect [3, 2, 1]
+fun growing = case
+  0 then []
+  n then [n, ...growing(n - 1)]
+packed(...growing(3))
+//│ = [3, 2, 1]
+
+// Known fields surrounding an unknown-length spread survive rest forwarding.
+:expect [9, 3, 2, 1, 8]
+fun keep(head, ...tail) = [head, ...tail]
+keep(9, ...growing(3), 8)
+//│ = [9, 3, 2, 1, 8]
+
+
+// Hide both length and element types while retaining concrete runtime test values.
+fun opaque(values): Array[Any] = values
+let arr = opaque([1,2,3,4])
+//│ arr = [1, 2, 3, 4]
+
+:sr
+[...arr]
+//│ ————————————————| Resolved |————————————————————————————————————————————————————————————————————————
+//│   [ ...arr⁰ ]
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = [1, 2, 3, 4]
+
+four(...arr)
+//│ = [1, 2, 3, 4]
+
+
+let arr = if maybe then [1, 2] else [1, 2, 3, 4]
+//│ arr = [1, 2]
+
+:e
+four(...arr)
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.192: 	four(...arr)
+//│ ║         	^^^^^^^^^^^^
+//│ ╟── Function 'four' expected 4 arguments, but got 2
+//│ ║  l.5: 	fun four(a, b, c, d) = [a, b, c, d]
+//│ ╙──     	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] Error: Function 'four' expected 4 arguments but got 2
+
+
+// Exact call arity anchors known suffixes and prefixes around opaque spreads.
+:expect [91, 92, 93]
+fun lastOfTwo(a, b) = b
+fun firstOfTwo(a, b) = a
+fun onlyOne(a) = a
+[lastOfTwo(...opaque(["ignored"]), Box(91)).value,
+  firstOfTwo(Box(92), ...opaque(["ignored"])).value,
+  onlyOne(...opaque([]), Box(93)).value]
+//│ = [91, 92, 93]
+
+// Every unknown segment can supply the remaining argument slots.
+:expect [1, 2, 3, 4]
+four(...opaque([1, 2]), ...opaque([3, 4]))
+//│ = [1, 2, 3, 4]
+
+// Rest consumption across an unknown segment stays unknown on subsequent calls.
+:expect [1, 2, 3, 4]
+fun dropTwo(a, b, ...tail) = tail
+four(...dropTwo(...opaque([0, 0, 1, 2, 3]), 4))
+//│ = [1, 2, 3, 4]
+
+// Known fields that must remain in the rest tail retain their value shapes.
+:expect 94
+fun afterOne(a, ...tail) = tail
+fun tailLast(a, b, c) = c
+tailLast(...afterOne(...opaque(["ignored"]), 1, 2, Box(94))).value
+//│ = 94
+
+// An opaque spread does not authorize a call through its unknown element.
+:e
+fun invokeUnknown(f) = f()
+invokeUnknown(...opaque([() => 95]))
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.232: 	fun invokeUnknown(f) = f()
+//│ ║         	                       ^^^
+//│ ╟── Value of abstract type cannot be called like a function.
+//│ ║  l.173: 	fun opaque(values): Array[Any] = values
+//│ ╙──       	                          ^^^
+//│ = 95
+
+// Unknown elements must not silently resolve against another known candidate.
+:e
+fun inspectUnknown(x) = x.value
+inspectUnknown(Box(96))
+inspectUnknown(...opaque([Box(96)]))
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.244: 	fun inspectUnknown(x) = x.value
+//│ ║         	                        ^^^^^^^
+//│ ╟── Cannot resolve member 'value' of a value with unknown shape.
+//│ ╟── This abstract type does not specify a member interface.
+//│ ║  l.173: 	fun opaque(values): Array[Any] = values
+//│ ╙──       	                          ^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// Too many known fields remain a proven mismatch even with an unknown spread.
+:e
+four(...opaque([]), 1, 2, 3, 4, 5)
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.258: 	four(...opaque([]), 1, 2, 3, 4, 5)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Function 'four' expected 4 arguments, but got at least 5
+//│ ║  l.5: 	fun four(a, b, c, d) = [a, b, c, d]
+//│ ╙──     	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] Error: Function 'four' expected 4 arguments but got 5
+
+// Rest arity may be valid while the callable argument remains unknown.
+:e
+fun invokeRest(f, x, ...tail) = f()
+invokeRest(...opaque([() => 97]), Box(0))
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.269: 	fun invokeRest(f, x, ...tail) = f()
+//│ ║         	                                ^^^
+//│ ╟── Value of abstract type cannot be called like a function.
+//│ ║  l.173: 	fun opaque(values): Array[Any] = values
+//│ ╙──       	                          ^^^
+//│ = 97
+
+// When repeatedTuples receives [Box(98)], both a and b must acquire its element
+// shape so that both `.value` selections resolve. Although the tuple expressions
+// have equal syntax, resolving a does not notify the listeners attached to b.
+:expect [98, 98]
+private fun repeatedTuples(xs) =
+  let a = [0, ...xs]
+  let b = [0, ...xs]
+  [second(...a).value, second(...b).value]
+repeatedTuples([Box(98)])
+//│ = [98, 98]
+
+// A public callback signature supplies the callable interface even for an opaque spread.
+:expect 97
+fun invokeAnnotatedRest(f: () -> Int, x, ...tail) = f()
+invokeAnnotatedRest(...opaque([() => 97]), Box(0))
+//│ = 97
+
+// Array element annotations survive spreads; their length remains unknown.
+:expect 97
+let callbacks = new mut Array[() -> Int](0)
+callbacks.push(() => 97)
+private fun invokeTypedRest(f, x, ...tail) = f()
+invokeTypedRest(...callbacks, Box(0))
+//│ = 97
+//│ callbacks = [fun]
+
+// A public unannotated callback is checked for unknown callers despite a typed local call.
+:e
+fun invokePublicRest(f, x, ...tail) = f()
+invokePublicRest(...callbacks, Box(0))
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.307: 	fun invokePublicRest(f, x, ...tail) = f()
+//│ ║         	                                      ^^^
+//│ ╟── Value of unknown shape cannot be called like a function.
+//│ ║  l.307: 	fun invokePublicRest(f, x, ...tail) = f()
+//│ ║         	                     ^
+//│ ╟── Parameter 'f' admits values of unknown shape.
+//│ ║  l.307: 	fun invokePublicRest(f, x, ...tail) = f()
+//│ ║         	                     ^
+//│ ╟── 'invokePublicRest' is exposed by this compilation unit.
+//│ ║  l.307: 	fun invokePublicRest(f, x, ...tail) = f()
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ = 97
+
+// A function parameter's Array annotation carries its element interface through a spread.
+:expect 97
+fun invokeArray(xs: Array[() -> Int]) =
+  private fun invoke(f, x, ...tail) = f()
+  invoke(...xs, Box(0))
+invokeArray(callbacks)
+//│ = 97
+
+// A private tuple-based call can infer the callback directly.
+:expect 98
+private fun invokeTuple(f, x, ...tail) = f()
+invokeTuple(...[() => 98], Box(0))
+//│ = 98
+
+// Aliases and nested tuple elements retain their declared shapes through rest forwarding.
+:expect 42
+class Item(val value: Int)
+type Pairs[T] = Array[[T, Int]]
+private fun first(head, ...tail) = head
+private fun skip(head, ...tail) = first(...tail)
+fun readPairs(xs: Pairs[Item]) = skip(0, ...xs).0.value
+readPairs([[Item(42), 1]])
+//│ = 42
+
+// Annotating an array with a base element type must hide subclass-only members.
+:ge
+class Base
+class Child extends Base with
+  val extra = 42
+fun readBase(xs: Array[Base]) = first(...xs).extra
+readBase([new Child])
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.352: 	fun readBase(xs: Array[Base]) = first(...xs).extra
+//│ ║         	                                ^^^^^^^^^^^^^^^^^^
+//│ ╙── Value of type 'Base' does not contain member 'extra'
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// Different type arguments keep distinct element interfaces at their call sites.
+:expect [41, 42]
+class Left(val left: Int)
+class Right(val right: Int)
+fun head[A](xs: Array[A]): A = first(...xs)
+[head[Left]([Left(41)]).left, head[Right]([Right(42)]).right]
+//│ = [41, 42]
+
+// Constructor type arguments are scoped to each array allocation.
+:expect [43, 44]
+let lefts = new mut Array[Left](0)
+let rights = new mut Array[Right](0)
+lefts.push(Left(43))
+rights.push(Right(44))
+[first(...lefts).left, first(...rights).right]
+//│ = [43, 44]
+//│ lefts = [Left(43)]
+//│ rights = [Right(44)]
+
+// An unannotated allocation infers its own element type from pushed values.
+:expect 99
+let unknownCallbacks = new mut Array(0)
+unknownCallbacks.push(() => 99)
+private fun invokeUnannotatedArray(f, ...tail) = f()
+invokeUnannotatedArray(...unknownCallbacks)
+//│ = 99
+//│ unknownCallbacks = [fun]
+
+// TODO: calling a captured helper merges the enclosing activations, also for ordinary tuples.
+:fixme
+:expect [43, 44]
+private fun firstInArray(xs) = first(...xs)
+[firstInArray(lefts).left, firstInArray(rights).right]
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.392: 	[firstInArray(lefts).left, firstInArray(rights).right]
+//│ ║         	 ^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Value of type 'Right' does not contain member 'left'
+//│ ║  l.363: 	class Right(val right: Int)
+//│ ╙──       	                       ^^^
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.392: 	[firstInArray(lefts).left, firstInArray(rights).right]
+//│ ║         	                           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Value of type 'Left' does not contain member 'right'
+//│ ║  l.362: 	class Left(val left: Int)
+//│ ╙──       	                     ^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ ═══[RUNTIME ERROR] Expected: '[43, 44]', got: 'undefined'
+
+// Passing an allocation through a private parameter preserves its declared element type.
+:expect [43, 44]
+private fun localFirstInArray(xs) =
+  private fun head(x, ...tail) = x
+  head(...xs)
+[localFirstInArray(lefts).left, localFirstInArray(rights).right]
+//│ = [43, 44]

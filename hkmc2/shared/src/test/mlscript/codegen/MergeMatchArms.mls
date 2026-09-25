@@ -1,3 +1,4 @@
+:.
 :js
 
 #config(commentGeneratedCode: true)
@@ -22,13 +23,15 @@ if a is
   C then 3
   D then 4
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ if (a instanceof A1.class) {
+//│ let scrut;
+//│ scrut = a;
+//│ if (scrut instanceof A1.class) {
 //│   return 1
-//│ } else if (a instanceof B1.class) {
+//│ } else if (scrut instanceof B1.class) {
 //│   return 2
-//│ } else if (a instanceof C1.class) {
+//│ } else if (scrut instanceof C1.class) {
 //│   return 3
-//│ } else if (a instanceof D1.class) {
+//│ } else if (scrut instanceof D1.class) {
 //│   return 4
 //│ }
 //│ throw globalThis.Object.freeze(new globalThis.Error("match error"));
@@ -45,11 +48,15 @@ if a is
       B then 2
       C then 3
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ if (a instanceof A1.class) {
+//│ let scrut1, scrut2;
+//│ scrut1 = a;
+//│ if (scrut1 instanceof A1.class) {
 //│   return 1
-//│ } else if (a instanceof B1.class) {
+//│ }
+//│ scrut2 = a;
+//│ if (scrut2 instanceof B1.class) {
 //│   return 2
-//│ } else if (a instanceof C1.class) {
+//│ } else if (scrut2 instanceof C1.class) {
 //│   return 3
 //│ }
 //│ throw globalThis.Object.freeze(new globalThis.Error("match error"));
@@ -65,16 +72,19 @@ if a is
   B then 2
   C then 3
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ if (a instanceof A1.class) {
-//│   if (b instanceof A1.class) {
+//│ let scrut3, scrut4;
+//│ scrut3 = a;
+//│ if (scrut3 instanceof A1.class) {
+//│   scrut4 = b;
+//│   if (scrut4 instanceof A1.class) {
 //│     return 1
-//│   } else if (b instanceof B1.class) {
+//│   } else if (scrut4 instanceof B1.class) {
 //│     return 2
 //│   }
 //│   throw globalThis.Object.freeze(new globalThis.Error("match error"));
-//│ } else if (a instanceof B1.class) {
+//│ } else if (scrut3 instanceof B1.class) {
 //│   return 2
-//│ } else if (a instanceof C1.class) {
+//│ } else if (scrut3 instanceof C1.class) {
 //│   return 3
 //│ }
 //│ throw globalThis.Object.freeze(new globalThis.Error("match error"));
@@ -100,22 +110,30 @@ let x = if a is
     print("done")
 print(x)
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let x, tmp;
-//│ if (a instanceof A1.class) {
+//│ let x, scrut5, scrut6, scrut7, tmp;
+//│ scrut5 = a;
+//│ if (scrut5 instanceof A1.class) {
 //│   tmp = 1;
-//│ } else if (a instanceof B1.class) {
+//│ } else if (scrut5 instanceof B1.class) {
 //│   tmp = 2;
-//│ } else if (a instanceof C1.class) {
+//│ } else if (scrut5 instanceof C1.class) {
 //│   tmp = 3;
-//│ } else if (a instanceof D1.class) {
-//│   if (a instanceof A1.class) {} else if (a instanceof B1.class) {} else {
+//│ } else {
+//│   scrut6 = a;
+//│   if (scrut6 instanceof D1.class) {
+//│     scrut7 = a;
+//│     if (scrut7 instanceof A1.class) {
+//│       /* Rest moved to non-abortive branch(es) */
+//│     } else if (scrut7 instanceof B1.class) {
+//│       /* Rest moved to non-abortive branch(es) */
+//│     } else {
+//│       throw globalThis.Object.freeze(new globalThis.Error("match error"))
+//│     }
+//│     /* Rest moved to non-abortive branch(es) */
+//│   } else if (scrut6 instanceof E1.class) {} else {
 //│     throw globalThis.Object.freeze(new globalThis.Error("match error"))
 //│   }
 //│   tmp = Predef.print("done");
-//│ } else if (a instanceof E1.class) {
-//│   tmp = Predef.print("done");
-//│ } else {
-//│   throw globalThis.Object.freeze(new globalThis.Error("match error"))
 //│ }
 //│ x = tmp;
 //│ return Predef.print(tmp)
@@ -132,9 +150,11 @@ if a is
   let tmp = 2
   B then 2 + tmp
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ if (a instanceof A1.class) {
+//│ let scrut8;
+//│ scrut8 = a;
+//│ if (scrut8 instanceof A1.class) {
 //│   return 1
-//│ } else if (a instanceof B1.class) {
+//│ } else if (scrut8 instanceof B1.class) {
 //│   return 4
 //│ }
 //│ throw globalThis.Object.freeze(new globalThis.Error("match error"));
@@ -154,11 +174,13 @@ if a is
   let tmp = printAndId(3)
   B then 2 + tmp
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ if (a instanceof A1.class) {
+//│ let scrut9;
+//│ scrut9 = a;
+//│ if (scrut9 instanceof A1.class) {
 //│   return 1
 //│ }
 //│ Predef.print(3);
-//│ if (a instanceof B1.class) {
+//│ if (scrut9 instanceof B1.class) {
 //│   return 5
 //│ }
 //│ throw globalThis.Object.freeze(new globalThis.Error("match error"));
@@ -177,14 +199,19 @@ if a is
       C then 3
     print(x)
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ if (a instanceof A1.class) {
+//│ let scrut10, scrut11;
+//│ scrut10 = a;
+//│ if (scrut10 instanceof A1.class) {
 //│   return 1
-//│ } else if (a instanceof B1.class) {
+//│ }
+//│ scrut11 = a;
+//│ if (scrut11 instanceof B1.class) {
 //│   return Predef.print(2)
-//│ } else if (a instanceof C1.class) {
+//│ } else if (scrut11 instanceof C1.class) {
 //│   return Predef.print(3)
 //│ }
 //│ throw globalThis.Object.freeze(new globalThis.Error("match error"));
+//│ /* Rest moved to non-abortive branch(es) */
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 1
 
@@ -203,13 +230,15 @@ if a is
     print(x + 1)
     print(x + 2)
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let tmp1, tmp2, tmp3;
-//│ if (a instanceof B1.class) {
+//│ let scrut12, scrut13, tmp1, tmp2, tmp3;
+//│ scrut12 = a;
+//│ if (scrut12 instanceof B1.class) {
 //│   return 1
 //│ }
-//│ if (a instanceof A1.class) {
+//│ scrut13 = a;
+//│ if (scrut13 instanceof A1.class) {
 //│   tmp1 = 2;
-//│ } else if (a instanceof C1.class) {
+//│ } else if (scrut13 instanceof C1.class) {
 //│   tmp1 = 3;
 //│ } else {
 //│   throw globalThis.Object.freeze(new globalThis.Error("match error"))
@@ -241,12 +270,14 @@ fun f(x) =
 //│   match x
 //│     5 =>
 //│       return ""
-//│     8 =>
-//│       do Predef⁰.print⁰("8");
-//│       do Predef⁰.print⁰("hi");
-//│       return ""
 //│     else
-//│       do Predef⁰.print⁰("?");
+//│       match x
+//│         8 =>
+//│           do Predef⁰.print⁰("8");
+//│           end
+//│         else
+//│           do Predef⁰.print⁰("?");
+//│           end
 //│       do Predef⁰.print⁰("hi");
 //│       return ""
 //│   end

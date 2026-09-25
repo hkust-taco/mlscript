@@ -1,6 +1,5 @@
+:.
 
-:global
-:wasm
 
 
 // Fixtures shared by the coercion tests below.
@@ -273,27 +272,27 @@ fun sccF(): Int31 = wasm.ref.i31(sccG())
 fun sccG(): Int32 = wasm.i31.get_s(sccF()) + wasm.i32.const(1)
 //│ ═══[COMPILATION ERROR] Cannot use a value of type 'Unknown' at an unrelated type 'Int32'
 //│ ╔══[COMPILATION ERROR] Types 'Int31' and 'Int32' have no common representation
-//│ ║  l.273: 	fun sccG(): Int32 = wasm.i31.get_s(sccF()) + wasm.i32.const(1)
+//│ ║  l.272: 	fun sccG(): Int32 = wasm.i31.get_s(sccF()) + wasm.i32.const(1)
 //│ ╙──       	    ^^^^
 //│ ═══[COMPILATION ERROR] Types 'Int31' and 'Int32' have no common representation
 //│ ╔══[COMPILATION ERROR] Types 'Int31' and 'Int32' have no common representation
-//│ ║  l.272: 	fun sccF(): Int31 = wasm.ref.i31(sccG())
+//│ ║  l.271: 	fun sccF(): Int31 = wasm.ref.i31(sccG())
 //│ ╙──       	    ^^^^
 //│ ═══[COMPILATION ERROR] Types 'Int31' and 'Int32' have no common representation
 //│ ╔══[COMPILATION ERROR] Types 'Int31' and 'Int32' have no common representation
-//│ ║  l.272: 	fun sccF(): Int31 = wasm.ref.i31(sccG())
+//│ ║  l.271: 	fun sccF(): Int31 = wasm.ref.i31(sccG())
 //│ ╙──       	    ^^^^
 //│ ╔══[COMPILATION ERROR] Types 'Int31' and 'Int32' have no common representation
-//│ ║  l.273: 	fun sccG(): Int32 = wasm.i31.get_s(sccF()) + wasm.i32.const(1)
+//│ ║  l.272: 	fun sccG(): Int32 = wasm.i31.get_s(sccF()) + wasm.i32.const(1)
 //│ ╙──       	    ^^^^
 //│ ═══[COMPILATION ERROR] Types 'Int31' and 'Int32' have no common representation
 //│ ═══[COMPILATION ERROR] Types 'Int31' and 'Int32' have no common representation
 //│ ═══[COMPILATION ERROR] Cannot cast a Wasm value of type `(ref null any)` to `i32` in a different type hierarchy
 //│ ╔══[COMPILATION ERROR] Wasm function `sccF` expects result to have type `(ref null i31)`, but got `(ref null any)`
-//│ ║  l.272: 	fun sccF(): Int31 = wasm.ref.i31(sccG())
+//│ ║  l.271: 	fun sccF(): Int31 = wasm.ref.i31(sccG())
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Wasm function `sccG` expects result to have type `i32`, but got `(ref null any)`
-//│ ║  l.273: 	fun sccG(): Int32 = wasm.i31.get_s(sccF()) + wasm.i32.const(1)
+//│ ║  l.272: 	fun sccG(): Int32 = wasm.i31.get_s(sccF()) + wasm.i32.const(1)
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
@@ -311,6 +310,6 @@ fun bar(m: Int32) =
   foo(wasm.ref.i31(m))
 //│ ═══[COMPILATION ERROR] Cannot cast a Wasm value of type `i32` to `(ref null any)` in a different type hierarchy
 //│ ╔══[COMPILATION ERROR] Operand #1 of wasm intrinsic 'ref.i31' must be of type 'Int32'
-//│ ║  l.311: 	  foo(wasm.ref.i31(m))
+//│ ║  l.310: 	  foo(wasm.ref.i31(m))
 //│ ╙──       	                   ^
 //│ ═══[COMPILATION ERROR] Cannot cast a Wasm value of type `i32` to `(ref null any)` in a different type hierarchy

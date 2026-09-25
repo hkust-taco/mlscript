@@ -51,6 +51,12 @@ abstract class WasmDiffMaker extends InvalMLDiffMaker:
   lazy val prettifyBinaryenWat = (content: Str) =>
     content.substring(2, content.length() - 2).replace("\\\\n", "\n").replace("\\\\\"", "\"")
 
+  override def processTrees(trees: Ls[syntax.Tree])(using Config, Raise): Unit =
+    if trees.nonEmpty && js.isSet && wasm.isSet && config.target == CompilationTarget.Wasm then
+      raise(WarningReport(
+        msg"Enabling both :js and :wasm is not currently supported; disable one before compiling this block." -> N :: Nil))
+    super.processTrees(trees)
+
   override def processIRBlock(
       pgrm: Program,
       definedValues: ComputeDefinedValues,
@@ -61,7 +67,7 @@ abstract class WasmDiffMaker extends InvalMLDiffMaker:
     
     val outerRaise: Raise = summon
 
-    if wasm.isSet then
+    if wasm.isSet && config.target == CompilationTarget.Wasm then
 
       val reportedMessages = mutable.Set.empty[Str]
 

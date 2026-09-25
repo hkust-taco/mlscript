@@ -110,11 +110,11 @@ apply(c, AA(3))
 //│ deforest > >>> non-affine syms >>>
 //│ deforest > c_for_c@29
 //│ deforest > cap_ub_(term:c,0)_for_c@32
-//│ deforest > f_for_apply@21
-//│ deforest > f_for_apply@46
+//│ deforest > f_for_apply@20
+//│ deforest > f_for_apply@45
 //│ deforest > tmp@1
-//│ deforest > x_for_apply@20
-//│ deforest > x_for_apply@45
+//│ deforest > x_for_apply@21
+//│ deforest > x_for_apply@46
 //│ deforest > <<< non-affine syms <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > <<< fusing <<<

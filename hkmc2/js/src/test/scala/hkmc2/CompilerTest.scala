@@ -271,6 +271,223 @@ class CompilerTest extends AnyFunSuite:
     assert(valueDefn.flatMap(_.inlinerBodySummary |> Option.apply).exists(_ is summary),
       "The second importer should reuse the published summary instead of replacing it")
   
+  test("generic method inference does not mutate shared prelude parameters"):
+    val fs = new InMemoryFileSystem(loadStandardLibrary())
+    given cctx: CompilerCtx = CompilerCtx.fresh(fs, paths, Config.default(io.Path("/")))
+    given DebugPrinter = new DebugPrinter
+    given TL = new TraceLogger:
+      override def doTrace = false
+    given Raise = diagnostic => fail(diagnostic.toString)
+    val prelude = cctx.getPrelude(paths.preludeFile).ctx
+    val map = prelude.builtins.Array.defn.get.body.members("map").asTrm.get.defn.get
+    val parameter = map.tparams.get.head.sym
+    val originalShapes = parameter.shapes.toVector
+    val originalListeners = parameter.shapeListeners.length
+    val callbackSignature = map.params.head.params.head.sign.get
+    val originalInterpretation = callbackSignature.typeInterpretation
+
+    fs.write("/Generic.mls", """module Generic with
+                                 |  fun identity[A](x: A): A = x
+                                 |""".stripMargin)
+    fs.write("/First.mls", """#lang(0.3.x, strictResolution: true)
+                               |import "./Generic.mls"
+                               |class Item(val first: Int)
+                               |[0].map((x, ...) => Generic.identity(Item(1)))
+                               |  .map((x, ...) => x.first)
+                               |""".stripMargin)
+    fs.write("/Second.mls", """#lang(0.3.x, strictResolution: true)
+                                |import "./Generic.mls"
+                                |class Item(val second: Int)
+                                |[0].map((x, ...) => Generic.identity[Item](Item(2)))
+                                |  .map((x, ...) => x.second)
+                                |""".stripMargin)
+    val compiler = new MLsCompiler(_ => summon[Raise])
+    compiler.compileModule(Path("/First.mls"))
+    compiler.compileModule(Path("/Second.mls"))
+
+    assert(parameter.shapes.toVector == originalShapes,
+      "Consumer inference must not publish into the shared prelude parameter")
+    assert(parameter.shapeListeners.length == originalListeners,
+      "Consumer inference must not attach listeners to the shared prelude parameter")
+    assert(callbackSignature.typeInterpretation == originalInterpretation,
+      "Interpreting a legacy signature must not cache consumer listeners on shared syntax")
+
+  test("imported inferred results leave the cached definition's listeners and candidates unchanged"):
+    val fs = new InMemoryFileSystem(loadStandardLibrary())
+    given cctx: CompilerCtx = CompilerCtx.fresh(fs, paths, Config.default(io.Path("/")))
+    given DebugPrinter = new DebugPrinter
+    given TL = new TraceLogger:
+      override def doTrace = false
+    given Raise = diagnostic => fail(diagnostic.toString)
+    fs.write("/Generic.mls", """#lang(0.3.x, strictResolution: true)
+                                 |module Generic with
+                                 |  class Known(val known: Int)
+                                 |  val mapped = [Known(4)].map((item, ...) => Known(5))
+                                 |  fun identity[A](x: A) = x
+                                 |""".stripMargin)
+    val compiler = new MLsCompiler(_ => summon[Raise])
+    compiler.compileModule(Path("/Generic.mls"))
+    val prelude = cctx.getPrelude(paths.preludeFile).ctx
+    val library = cctx.getElaboratedBlock(io.Path("/Generic.mls"), prelude)
+    val module = library.compilationUnit.defaultExport.get.asModOrObj.get.defn.get
+    val identity = module.body.members("identity").asTrm.get.defn.get
+    val parameters = identity.params.flatMap(_.params.map(_.sym)) ::: identity.tparams.get.map(_.sym)
+    val before = parameters.map(p => (p.shapes.toVector, p.shapeListeners.toVector))
+    List("first", "second").foreach: field =>
+      val path = s"/$field.mls"
+      fs.write(path, s"""#lang(0.3.x, strictResolution: true)
+                       |import "./Generic.mls"
+                       |class Item(val $field: Int)
+                       |Generic.identity(Item(1)).$field
+                       |Generic.mapped.map((item, ...) => item.known)
+                       |""".stripMargin)
+      compiler.compileModule(Path(path))
+      assert(parameters.map(p => (p.shapes.toVector, p.shapeListeners.toVector)) == before,
+        "A consumer must not change the cached definition's inference graph")
+
+  test("imported recursive structural aliases preserve their type arguments"):
+    val fs = new InMemoryFileSystem(loadStandardLibrary())
+    given cctx: CompilerCtx = CompilerCtx.fresh(fs, paths, Config.default(io.Path("/")))
+    given DebugPrinter = new DebugPrinter
+    given TL = new TraceLogger:
+      override def doTrace = false
+    given Raise = diagnostic => fail(diagnostic.toString)
+    fs.write("/Types.mls", """#lang(0.3.x, strictResolution: true)
+                               |module Types with
+                               |  type Chain[A] = {value: A, next: Chain[A]}
+                               |  fun step[A](chain: Chain[A]): Chain[A] = chain.next
+                               |""".stripMargin)
+    val compiler = new MLsCompiler(_ => summon[Raise])
+    compiler.compileModule(Path("/Types.mls"))
+    List("first", "second").foreach: field =>
+      val path = s"/$field.mls"
+      fs.write(path, s"""#lang(0.3.x, strictResolution: true)
+                       |import "./Types.mls"
+                       |class Item(val $field: Int)
+                       |private fun read(chain: Types.Chain[Item]): Int =
+                       |  Types.step[Item](chain).next.value.$field
+                       |""".stripMargin)
+      compiler.compileModule(Path(path))
+
+  test("a supplied compound type stays inside one instance wrapper"):
+    import semantics.{InstanceShape, Marked, Statement, Term, TermShape, TypeShape}
+    val fs = new InMemoryFileSystem(loadStandardLibrary())
+    given cctx: CompilerCtx = CompilerCtx.fresh(fs, paths, Config.default(io.Path("/")))
+    given DebugPrinter = new DebugPrinter
+    given TL = new TraceLogger:
+      override def doTrace = false
+    given Raise = diagnostic => fail(diagnostic.toString)
+    fs.write("/Types.mls", """#lang(0.3.x, strictResolution: true)
+                               |module Types with
+                               |  fun identity[A](x: A) = x
+                               |Types.identity[Int | Str](1)
+                               |""".stripMargin)
+    val compiler = new MLsCompiler(_ => summon[Raise])
+    compiler.compileModule(Path("/Types.mls"))
+    val prelude = cctx.getPrelude(paths.preludeFile).ctx
+    val unit = cctx.getElaboratedBlock(io.Path("/Types.mls"), prelude)
+    val module = unit.compilationUnit.defaultExport.get.asModOrObj.get.defn.get
+    val definition = module.body.members("identity").asTrm.get.defn.get
+    val parameter = definition.tparams.get.head.sym
+    def applications(statement: Statement): List[Term.App] =
+      val here = statement match
+        case app: Term.App => app :: Nil
+        case _ => Nil
+      here ::: statement.subStatements.toList.flatMap(applications)
+    val calls = applications(unit.term)
+    assert(calls.length == 1)
+    val state = unit.state.newResolverState
+    assert(state.allocatedTypeInstanceCount == 1)
+    val site = calls.head.lhs match
+      case application: Term.TyApp => state.typeApplicationSite(application)
+      case _ => fail("Expected an explicit type application")
+    val instance = state.instantiateTypeParameters(definition.tsym, site, parameter :: Nil)(parameter)
+    assert(state.allocatedTypeInstanceCount == 1, "Observation must reuse the specialization's binder")
+    assert(!parameter.shapes.exists:
+      case Marked(_: InstanceShape, _) => true
+      case _ => false
+    , "Specialization must not publish supplied arguments into the source binder")
+    val supplied = instance.currentShapes(using state).toList.flatMap:
+      case value: TermShape => value match
+        case Marked(instance: InstanceShape, _) => instance.tpe.resolution :: Nil
+        case _ => Nil
+      case _ => Nil
+    assert(supplied.length == 1, "A union argument must not become two supplied type arguments")
+    assert(supplied.head.shapes.toList match
+      case TypeShape.Combined(formula) :: Nil =>
+        formula.clauses.size == 2 && formula.clauses.forall(_.size == 1) &&
+          formula.atoms.flatMap(_.resolution.shapes.collect { case TypeShape.Nominal(cls) => cls.sym.nme }) == Set("Int", "Str")
+      case _ => false)
+
+  test("mutable array parameter flow stays private to each importer"):
+    val fs = new InMemoryFileSystem(loadStandardLibrary())
+    given cctx: CompilerCtx = CompilerCtx.fresh(fs, paths, Config.default(io.Path("/")))
+    given DebugPrinter = new DebugPrinter
+    given TL = new TraceLogger:
+      override def doTrace = false
+    given Raise = diagnostic => fail(diagnostic.toString)
+    val prelude = cctx.getPrelude(paths.preludeFile).ctx
+    val parameter = prelude.builtins.Array.defn.get.tparams.head.sym
+    val originalShapes = parameter.shapes.toVector
+    val originalListeners = parameter.shapeListeners.toVector
+    fs.write("/Arrays.mls", """#lang(0.3.x, strictResolution: true)
+                                |module Arrays with
+                                |  fun empty() = mut []
+                                |  fun singleton[A](x: A) = mut [x]
+                                |""".stripMargin)
+    val compiler = new MLsCompiler(_ => summon[Raise])
+    List("first", "second").foreach: field =>
+      val path = s"/$field.mls"
+      fs.write(path, s"""#lang(0.3.x, strictResolution: true)
+                       |import "./Arrays.mls"
+                       |class Item(val $field: Int)
+                       |let xs = Arrays.empty()
+                       |xs.push(Item(1))
+                       |xs.0.$field
+                       |Arrays.singleton(Item(2)).0.$field
+                       |""".stripMargin)
+      compiler.compileModule(Path(path))
+      assert(parameter.shapes.toVector == originalShapes,
+        "Mutable element inference must not publish into the shared Array parameter")
+      assert(parameter.shapeListeners.toVector == originalListeners,
+        "Mutable element inference must not attach listeners to the shared Array parameter")
+
+  test("an exported generic selection is rejected before a consumer can specialize it"):
+    val fs = new InMemoryFileSystem(loadStandardLibrary())
+    given cctx: CompilerCtx = CompilerCtx.fresh(fs, paths, Config.default(io.Path("/")))
+    given DebugPrinter = new DebugPrinter
+    given TL = new TraceLogger:
+      override def doTrace = false
+    val errors = scala.collection.mutable.ArrayBuffer.empty[Diagnostic]
+    given Raise = errors += _
+    fs.write("/Unsafe.mls", """#lang(0.3.x, strictResolution: true)
+                                |module Unsafe with
+                                |  fun foo[A](x: A) = x.a
+                                |Unsafe.foo({a: 1})
+                                |""".stripMargin)
+    val compiler = new MLsCompiler(_ => summon[Raise])
+    compiler.compileModule(Path("/Unsafe.mls"))
+    assert(errors.exists(_.theMsg.contains("Resolution error")))
+    assert(errors.exists(_.allMsgs.exists(_._1.show.contains("Type parameter 'A'"))))
+    assert(!errors.exists(_.allMsgs.exists(_._1.show.contains("exposed by this compilation unit"))))
+
+  test("non-strict files still check their exported interfaces"):
+    val fs = new InMemoryFileSystem(loadStandardLibrary())
+    given cctx: CompilerCtx = CompilerCtx.fresh(fs, paths, Config.default(io.Path("/")))
+    given DebugPrinter = new DebugPrinter
+    given TL = new TraceLogger:
+      override def doTrace = false
+    val errors = scala.collection.mutable.ArrayBuffer.empty[Diagnostic]
+    given Raise = errors += _
+    fs.write("/Unsafe.mls", """#lang(0.3.x, strictResolution: false)
+                                |module Unsafe with
+                                |  fun foo(x) = x.a
+                                |Unsafe.foo({a: 1})
+                                |""".stripMargin)
+    val compiler = new MLsCompiler(_ => summon[Raise])
+    compiler.compileModule(Path("/Unsafe.mls"))
+    assert(errors.exists(_.allMsgs.exists(_._1.show.contains("exposed by this compilation unit"))))
+
   test("compiler can report errors"):
     val (fs, compiler) = createCompiler()
     

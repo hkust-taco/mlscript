@@ -1,6 +1,5 @@
+:.
 
-:global
-:wasm
 
 
 :wat
@@ -181,7 +180,7 @@ let d = Counter(c.Counter#get())
 :todo
 d.Counter#inc().Counter#double().Counter#get()
 //│ ╔══[COMPILATION ERROR] Cannot find variable `d` (VarSymbol) in local or global scope.
-//│ ║  l.178: 	let d = Counter(c.Counter#get())
+//│ ║  l.177: 	let d = Counter(c.Counter#get())
 //│ ╙──       	    ^
 //│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Missing type definition for symbol `member:Counter`
 
@@ -192,7 +191,7 @@ c.Counter#get()
 
 class GetterOnly() with
   fun f = 1
-GetterOnly().f()
+GetterOnly().f
 //│ Wasm result:
 //│ = 1
 
@@ -202,7 +201,7 @@ class A(val x) with
   fun get() = x
 A(1).get
 //│ ╔══[COMPILATION ERROR] `member:get` is neither a field access nor a callable method
-//│ ║  l.203: 	A(1).get
+//│ ║  l.202: 	A(1).get
 //│ ╙──       	    ^^^^
 
 

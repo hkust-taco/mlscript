@@ -1,0 +1,79 @@
+:.
+
+// Non-strict worksheet blocks retain local inference for public definitions.
+:expect 1
+fun select(x) = x.a
+select({a: 1})
+//│ = 1
+
+:expect 2
+fun returned() = x => x.a
+returned()({a: 2})
+//│ = 2
+
+// Type parameters remain opaque independently of visibility and exposure checks.
+:e
+fun generic[A](x: A) = x.a
+generic({a: 1})
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.16: 	fun generic[A](x: A) = x.a
+//│ ║        	                       ^^^
+//│ ╟── Cannot resolve member 'a' of a value with unknown shape.
+//│ ╟── This type annotation supplies the value's shape.
+//│ ║  l.16: 	fun generic[A](x: A) = x.a
+//│ ║        	                  ^
+//│ ╟── Type parameter 'A' does not specify a member interface.
+//│ ║  l.16: 	fun generic[A](x: A) = x.a
+//│ ╙──      	            ^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+:e
+private fun generic[A](x: A) = x.a
+generic({a: 1})
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.31: 	private fun generic[A](x: A) = x.a
+//│ ║        	                               ^^^
+//│ ╟── Cannot resolve member 'a' of a value with unknown shape.
+//│ ╟── This type annotation supplies the value's shape.
+//│ ║  l.31: 	private fun generic[A](x: A) = x.a
+//│ ║        	                          ^
+//│ ╟── Type parameter 'A' does not specify a member interface.
+//│ ║  l.31: 	private fun generic[A](x: A) = x.a
+//│ ╙──      	                    ^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+:e
+class Item(val a: Int)
+private fun generic[A](x: A) = x.a
+generic[Item](Item(1))
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.47: 	private fun generic[A](x: A) = x.a
+//│ ║        	                               ^^^
+//│ ╟── Cannot resolve member 'a' of a value with unknown shape.
+//│ ╟── This type annotation supplies the value's shape.
+//│ ║  l.47: 	private fun generic[A](x: A) = x.a
+//│ ║        	                          ^
+//│ ╟── Type parameter 'A' does not specify a member interface.
+//│ ║  l.47: 	private fun generic[A](x: A) = x.a
+//│ ╙──      	                    ^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// Abstract checking must not contaminate results at concrete calling activations.
+:expect [3, 4]
+fun identity[A](x: A): A = x
+[identity(Item(3)).a, identity[Item](Item(4)).a]
+//│ = [3, 4]
+
+// A private generic body is checked even without local instantiations.
+:e
+private fun unused[A](x: A) = x.a
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.69: 	private fun unused[A](x: A) = x.a
+//│ ║        	                              ^^^
+//│ ╟── Cannot resolve member 'a' of a value with unknown shape.
+//│ ╟── This type annotation supplies the value's shape.
+//│ ║  l.69: 	private fun unused[A](x: A) = x.a
+//│ ║        	                         ^
+//│ ╟── Type parameter 'A' does not specify a member interface.
+//│ ║  l.69: 	private fun unused[A](x: A) = x.a
+//│ ╙──      	                   ^

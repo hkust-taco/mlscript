@@ -1,0 +1,24 @@
+:.
+
+
+
+
+// Erasure must prepare an unboxed call target before lowering the caller's body.
+:expect 42
+fun caller(): Number = later(wasm.i32.const(41))
+fun later(value: Number): Number = wasm.i32.add(value, wasm.i32.const(1))
+type Number = LaterNumber
+type LaterNumber = Int32
+caller()
+//│ Wasm result:
+//│ = 42
+
+
+// Forward aliases determine both the constructor slot and the generated field's representation.
+:expect 42
+class Box(val value: Number) with
+  fun get(): Number = value
+type Number = Int32
+Box(wasm.i32.const(42)).get()
+//│ Wasm result:
+//│ = 42

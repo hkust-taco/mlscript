@@ -116,7 +116,9 @@ class B extends A(1)(2)(3)
 
 :e
 class B extends A(0)
-//│ ═══[COMPILATION ERROR] Extending a partially applied class is not supported
+//│ ╔══[COMPILATION ERROR] Extending a partially applied class is not supported
+//│ ║  l.118: 	class B extends A(0)
+//│ ╙──       	                ^^^^
 
 new B
 //│ = B { x: 0 }
@@ -125,17 +127,27 @@ class C
 
 :e
 class D extends C(0)
-//│ ═══[COMPILATION ERROR] Too many parameter lists for parent class
+//│ ╔══[COMPILATION ERROR] Too many parameter lists for parent class
+//│ ║  l.129: 	class D extends C(0)
+//│ ╙──       	                ^^^^
 
 :e
 new A(1)(2) with
   fun a = 0
-//│ ═══[COMPILATION ERROR] Extending a partially applied class is not supported
+//│ ╔══[COMPILATION ERROR] Extending a partially applied class is not supported
+//│ ║  l.135: 	new A(1)(2) with
+//│ ║         	^^^^^^^^^^^^^^^^
+//│ ║  l.136: 	  fun a = 0
+//│ ╙──       	^^^^^^^^^^^
 //│ = $anon { x: 1 }
 
 :e
 new A(1)(2)(3)(4) with
   fun a = 0
 //? = $anon { x: 1 }
-//│ ═══[COMPILATION ERROR] Too many parameter lists for parent class
+//│ ╔══[COMPILATION ERROR] Too many parameter lists for parent class
+//│ ║  l.145: 	new A(1)(2)(3)(4) with
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.146: 	  fun a = 0
+//│ ╙──       	^^^^^^^^^^^
 //│ = $anon { x: 1 }

@@ -1,3 +1,4 @@
+:.
 :js
 
 :global
@@ -15,7 +16,7 @@
 1
 2
 //│ ╔══[WARNING] Pure expression in statement position
-//│ ║  l.15: 	1
+//│ ║  l.16: 	1
 //│ ╙──      	^
 //│ —————————————| Lowered IR Tree |————————————————————————————————————————————————————————————————————
 //│ Program:
@@ -57,8 +58,15 @@ print("Hi")
 //│ = 2
 
 
+:e
 :re
 2(2)
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.63: 	2(2)
+//│ ║        	^^^^
+//│ ╟── Integer literal cannot be called like a function.
+//│ ║  l.63: 	2(2)
+//│ ╙──      	^
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ return runtime.safeCall(2(2))
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————

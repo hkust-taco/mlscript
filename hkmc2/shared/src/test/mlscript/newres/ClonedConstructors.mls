@@ -1,0 +1,69 @@
+:.
+
+open annotations
+
+// Compiled patterns clone both direct and qualified constructor references.
+data class Direct(val value)
+module Nested with
+  data class Wrapped(val value)
+
+fun direct(x) = if x is @compile Direct(3) then true else false
+fun qualified(x) = if x is @compile Nested.Wrapped(3) then true else false
+
+:expect [true, false, true, false]
+[direct(Direct(3)), direct(Direct(4)), qualified(Nested.Wrapped(3)), qualified(Nested.Wrapped(4))]
+//│ = [true, false, true, false]
+
+// Wildcard candidates must keep the receiver selected by resolution.
+open Nested
+fun opened(x) = if x is @compile Wrapped(3) then true else false
+
+:expect [true, false]
+[opened(Nested.Wrapped(3)), opened(Nested.Wrapped(4))]
+//│ = [true, false]
+
+// Preserve a captured module parameter in a cloned constructor path.
+fun captured(module Inner: Nested, x) =
+  if x is @compile Inner.Wrapped(3) then true else false
+
+:expect [true, false]
+[captured(Nested, Nested.Wrapped(3)), captured(Nested, Nested.Wrapped(4))]
+//│ = [true, false]
+
+
+// @compile clones the constructor reference when generating the matcher. It must
+// still read constructors.make, even though the class stored there is named Direct.
+let constructors = {make: Direct}
+fun throughRecord(x) = if x is @compile constructors.make(3) then true else false
+//│ constructors = {make: fun Direct { class: class Direct }}
+
+:expect [true, false]
+[throughRecord(Direct(3)), throughRecord(Direct(4))]
+//│ = [true, false]
+
+
+// The opened name `make` must compile to a read of constructors.make.
+fun openedRecord(x) =
+  open constructors
+  if x is @compile make(3) then true else false
+
+:expect [true, false]
+[openedRecord(Direct(3)), openedRecord(Direct(4))]
+//│ = [true, false]
+
+// Calling the constructor function stored in `make` creates a Direct instance.
+:expect 35
+constructors.make(35).value
+//│ = 35
+
+// Static `new` can also recover the known class through a constructor-valued field.
+:expect 35
+(new constructors.make(35)).value
+//│ = 35
+
+:expect 35
+// :sjs // * `Amazing` properly extends `constructors.make.class`, not the `constructors.make` function
+object Amazing extends constructors.make(35)
+Amazing.value
+//│ = 35
+

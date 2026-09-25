@@ -20,7 +20,8 @@ abstract class MLsDiffMaker extends DiffMaker:
   val runtimeSourceFile: io.Path = predefFile.up / "Runtime.mls" // * Contains MLscript runtime sources
   val termFile: io.Path = predefFile.up / "Term.mjs" // * Contains MLscript runtime term definitions
   val blockFile: io.Path = predefFile.up / "Block.mjs" // * Contains MLscript runtime block definitions
-  val optionFile: io.Path = predefFile.up / "Option.mjs" // * Contains MLscipt runtime option definition
+  // Reflection must use the same option constructors as Block.mls.
+  val optionFile: io.Path = predefFile.up / "Option.mjs"
   
   val wd = file.up
   
@@ -47,6 +48,7 @@ abstract class MLsDiffMaker extends DiffMaker:
   val showResolve = NullaryCommand("r")
   val showResolvedTree = NullaryCommand("rt")
   val showFlows = FlagCommand(false, "sf")
+  val showResl = FlagCommand(false, "sr")
   val showLoweredTree = NullaryCommand("lot")
   val ppLoweredTreeOld = NullaryCommand("slot", () => output("Option ':slot' is deprecated, use ':sir' instead."))
   val showIR = NullaryCommand("sir")
@@ -234,7 +236,7 @@ abstract class MLsDiffMaker extends DiffMaker:
   given Elaborator.State = new Elaborator.State:
     override def dbg: Bool =
       dbgParsing.isSet
-      || dbgElab.isSet
+      // || dbgElab.isSet
       || dbgResolving.isSet
       || debug.isSet
   
@@ -302,6 +304,11 @@ abstract class MLsDiffMaker extends DiffMaker:
       val preludeArtifact = cctx.getPrelude(preludeFile)
       curCtx = preludeArtifact.ctx
       prelude = preludeArtifact.ctx
+    else
+      // The compiler loads the prelude as one compilation unit. Its mutually
+      // referring host signatures must see declarations across blank lines here
+      // too; worksheet block boundaries are not part of the prelude's semantics.
+      consumeEmptyLines.setCurrentValue(())
     super.run()
   
   
@@ -314,7 +321,9 @@ abstract class MLsDiffMaker extends DiffMaker:
       ()
     if file != preludeFile then
       val cfg = mkConfig
-      given Config = cfg.copy(optimizer = cfg.optimizer.copy(
+      // The synthetic Predef import bootstraps the host environment; it is not
+      // a WASM test block, even when :wasm is enabled at the top of the file.
+      given Config = cfg.copy(target = CompilationTarget.JS, optimizer = cfg.optimizer.copy(
         deforest = cfg.deforest.map: d =>
           d.copy(config = d.config.copy(
             debug = false,
@@ -356,7 +365,7 @@ abstract class MLsDiffMaker extends DiffMaker:
       case (syntax.IDENT(":..", true), _) :: rest =>
         doImportUp(file.up)
         dropCrap(rest.dropWhile(_._1 isnt syntax.NEWLINE).drop(1))
-      case (syntax.IDENT(":", true), _) :: (syntax.IDENT(nme, false), _) :: rest =>
+      case (syntax.IDENT(prefix @ (":" | ":!"), true), _) :: (syntax.IDENT(nme, false), _) :: rest =>
         if includeDirectives then
           val ln = rest.takeWhile(_._1 isnt syntax.NEWLINE)
           def render(ts: Ls[syntax.Stroken -> Loc]): Str = ts match
@@ -367,7 +376,7 @@ abstract class MLsDiffMaker extends DiffMaker:
                 case _ => TODO(st)
               str + render(rest)
             case Nil => ""
-          processLines(s":$nme ${render(ln)}" :: Nil, reprintCommands = false)
+          processLines(s"$prefix$nme ${render(ln)}" :: Nil, reprintCommands = false)
         dropCrap(rest.dropWhile(_._1 isnt syntax.NEWLINE).drop(1))
       case _ => ts
     
@@ -386,7 +395,7 @@ abstract class MLsDiffMaker extends DiffMaker:
     val elab = Elaborator(etl, wd, Ctx.empty)
     try
       val resBlk = new syntax.Tree.Block(res)
-      val (e, newCtx) = elab.importFrom(resBlk)
+      val (e, newCtx) = elab.importFrom(resBlk, resBlk.definedSymbols.iterator.map(_._2).toList)
       if file.toString === runtimeSourceFile.toString then
         summon[Elaborator.State].initRuntimeSymbolsFromBlock(e)
       val ctxWithImports = newCtx.withMembers(resBlk.definedSymbols)
@@ -452,14 +461,20 @@ abstract class MLsDiffMaker extends DiffMaker:
       case _ => ()
   
   def processTrees(trees: Ls[syntax.Tree])(using Config, Raise): Unit =
-    val elab = Elaborator(etl, file.up, prelude)
+    val blk = new syntax.Tree.Block(trees)
+    val elaborationConfig = Config.elaborationConfig(blk)
     // val blockSymbol =
     //   semantics.TopLevelSymbol("block#"+blockNum)
     blockNum += 1
     // given Elaborator.Ctx = curCtx.nest(S(blockSymbol))
     given Elaborator.Ctx = curCtx.nestLocal(s"block:${blockNum}")
-    val blk = new syntax.Tree.Block(trees)
-    val (e, newCtx) = elab.topLevel(blk)
+    // Match the compiler's prelude bootstrap: builtin lookup uses the original
+    // declaration symbols, including while those declarations are elaborated.
+    if file == preludeFile then prelude = summon[Elaborator.Ctx].withMembers(blk.definedSymbols)
+    val elab =
+      given Config = elaborationConfig
+      Elaborator(etl, file.up, prelude)
+    val (e, newCtx) = elaborationConfig.givenIn(elab.topLevel(blk))
     curCtx = newCtx
     
     extractConfig(e.stats)
@@ -471,8 +486,20 @@ abstract class MLsDiffMaker extends DiffMaker:
       outputSeparator(s"Elaborated tree")
       output(e.showAsTree)
     
+    if showResl.isSet then
+      import semantics.ShowCfg
+      given ShowCfg = ShowCfg(
+        showErasedTypes = showIRErasedTypes.isSet,
+        showExpansionMappings = true,
+        showFlowSymbols = true,
+        debug = debug.isSet,
+      )
+      outputSeparator(s"Resolved")
+      output:
+        import document.*
+        doc" #{ ${e.showTopLevel(using flowScp)} #} ".mkString(output.ColWidth)
+    
     processTerm(e, inImport = false)
-      
   
   
   def processTerm(trm: semantics.Term.Blk, inImport: Bool)(using Config, Raise): Unit =
@@ -481,8 +508,9 @@ abstract class MLsDiffMaker extends DiffMaker:
     if file.toString =/= runtimeSourceFile.toString && file.toString =/= preludeFile.toString then
       summon[Elaborator.State].initRuntimeSymbolsFromFile(runtimeSourceFile, prelude)(
         using summon[TL], summon[Raise], cctx)
-    val resolver = Resolver(rtl)
-    curICtx = resolver.traverseBlock(trm)(using curICtx)
+    if !config.language.useNewResolution then
+      val resolver = Resolver(rtl)
+      curICtx = resolver.traverseBlock(trm)(using curICtx)
     
     if showResolve.isSet then
       output(s"Resolved: ${trm.showDbg}")

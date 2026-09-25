@@ -1,3 +1,4 @@
+:.
 :js
 
 open annotations
@@ -59,10 +60,10 @@ null is Optional(Int) as Some(42)
 // Test the error message.
 fun toIntOption(x) = if x is (@compile Optional) as o then o
 //│ ╔══[COMPILATION ERROR] Pattern `Optional` has one pattern parameter.
-//│ ║  l.47: 	pattern Optional(pattern T) = (null => None) | ((T as x) => Some(x))
+//│ ║  l.48: 	pattern Optional(pattern T) = (null => None) | ((T as x) => Some(x))
 //│ ║        	                         ^
 //│ ╟── But zero pattern arguments were provided.
-//│ ║  l.60: 	fun toIntOption(x) = if x is (@compile Optional) as o then o
+//│ ║  l.61: 	fun toIntOption(x) = if x is (@compile Optional) as o then o
 //│ ╙──      	                                       ^^^^^^^^
 
 fun toIntOption(x) = if x is (@compile Optional(Int)) as o then o

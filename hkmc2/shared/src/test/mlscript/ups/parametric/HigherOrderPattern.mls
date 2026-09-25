@@ -1,3 +1,4 @@
+:.
 :js
 
 open annotations { compile }
@@ -9,21 +10,21 @@ object A
 :e
 null is @compile Nullable
 //│ ╔══[COMPILATION ERROR] Pattern `Nullable` has one pattern parameter.
-//│ ║  l.5: 	pattern Nullable(pattern T) = null | T
+//│ ║  l.6: 	pattern Nullable(pattern T) = null | T
 //│ ║       	                         ^
 //│ ╟── But zero pattern arguments were provided.
-//│ ║  l.10: 	null is @compile Nullable
+//│ ║  l.11: 	null is @compile Nullable
 //│ ╙──      	                 ^^^^^^^^
 //│ = false
 
 :e
 null is @compile Nullable(A, A)
 //│ ╔══[COMPILATION ERROR] Pattern `Nullable` has one pattern parameter.
-//│ ║  l.5: 	pattern Nullable(pattern T) = null | T
+//│ ║  l.6: 	pattern Nullable(pattern T) = null | T
 //│ ║       	                         ^
 //│ ╟── But two pattern arguments were provided.
-//│ ║  l.20: 	null is @compile Nullable(A, A)
-//│ ╙──      	                 ^^^^^^^^^^^^^
+//│ ║  l.21: 	null is @compile Nullable(A, A)
+//│ ╙──      	                 ^^^^^^^^^^^^^^
 //│ = false
 
 pattern Nullable(pattern T) = null | T

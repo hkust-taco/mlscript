@@ -360,7 +360,7 @@ class Resolver(tl: TraceLogger)
   trace(s"Resolving definition: $defn"):
     def traverseTermDef(tdf: TermDefinition) =
       val TermDefinition(_k, _sym, _tsym, 
-        pss, tps, sign, body, TermDefFlags(isMethod), modulefulness, annotations, comp
+        pss, tps, sign, body, TermDefFlags(isMethod, _), modulefulness, annotations, comp
       ) = tdf
       /** 
        * Add the contextual parameters in pss to the ICtx so that they
@@ -423,7 +423,7 @@ class Resolver(tl: TraceLogger)
     defn match
     
     // Case: instance definition. Add the instance to the context.
-    case defn @ TermDefinition(k = Ins, sym = sym, tsym = tsym, flags = TermDefFlags(isMethod), sign = sign) =>
+    case defn @ TermDefinition(k = Ins, sym = sym, tsym = tsym, flags = TermDefFlags(isMethod, _), sign = sign) =>
       softAssert(defn.owner.isEmpty)
       log(s"Resolving instance definition ${defn.showDbg}")
       traverseTermDef(defn)
@@ -525,7 +525,7 @@ class Resolver(tl: TraceLogger)
   def resolve(t: Resolvable, prefer: Expect, inAppPrefix: Bool, inCtxPrefix: Bool, inTyPrefix: Bool)(using ICtx): (Opt[CallableDefinition], ICtx) =
   trace[(Opt[CallableDefinition], ICtx)](
     s"Resolving resolvable term: ${t}, (prefer = ${prefer}, inAppPrefix = ${inAppPrefix}, inCtxPrefix = ${inCtxPrefix}, inTyPrefix = ${inTyPrefix})", 
-    _ => s"~> ${t.expanded} (sym = ${t.resolvedSym}, typ = ${t.resolvedTyp})"
+    _ => s"~> ${t.expanded} (sym = ${t.legacyResolvedSym}, typ = ${t.resolvedTyp})"
   ):
     // Resolve the sub-resolvable-terms of the term. 
     val (defn, newICtx1) = 
@@ -590,7 +590,7 @@ class Resolver(tl: TraceLogger)
         (N, ictx)
     
     t.expandedResolvableIn: t =>
-      log(s"Resolving resolvable term ${t} with sym = ${t.resolvedSym}, typ = ${t.resolvedTyp}")
+      log(s"Resolving resolvable term ${t} with sym = ${t.legacyResolvedSym}, typ = ${t.resolvedTyp}")
       
       // Fill the context with possibly the type arguments information.
       val newICtx2 = newICtx1.givenIn:
@@ -848,7 +848,7 @@ class Resolver(tl: TraceLogger)
   def resolveSymbol(t: Resolvable, prefer: Expect, sign: Bool)(using ictx: ICtx): Unit =
   trace[Unit](
     s"Resolving symbol for term: ${t} (prefer = ${prefer})", 
-    _ => s"-> (sym = ${t.resolvedSym}, typ = ${t.resolvedTyp})"
+    _ => s"-> (sym = ${t.legacyResolvedSym}, typ = ${t.resolvedTyp})"
   ):
     // If the term has an expansion already, it is likely that there is
     // an internal error because otherwise we should resolve the symbol
@@ -879,7 +879,7 @@ class Resolver(tl: TraceLogger)
         log(s"Resolving symbol for selection ${t}, defn = ${lhs.defn}")
         
         val clsDefn = cls.flatMap: sym =>
-          sym.resolvedSym.flatMap(_.asCls).map: clsSym =>
+          sym.legacyResolvedSym.flatMap(_.asCls).map: clsSym =>
             clsSym.defn.getOrElse(die)
         
         // Singleton Definitions
@@ -934,7 +934,7 @@ class Resolver(tl: TraceLogger)
       case t @ Term.New(cls, _, N) =>
         // cls is already resolved, so the symbol should be present;
         // otherwise, there is already an error raised.
-        cls.resolvedSym match
+        cls.legacyResolvedSym match
           case S(clsSym: ClassSymbol) =>
             t.expand(S(t.duplicate.resolved(clsSym)))
           case S(sym) =>
@@ -953,7 +953,7 @@ class Resolver(tl: TraceLogger)
    */
   def resolveType(t: Resolvable, prefer: Expect)(using ictx: ICtx): Unit = t.expandedResolvableIn: t =>
     trace[Unit](
-      s"Resolving the type for term: ${t} (prefer = ${prefer}, sym = ${t.resolvedSym})", 
+      s"Resolving the type for term: ${t} (prefer = ${prefer}, sym = ${t.legacyResolvedSym})",
       _ => s"-> typ = ${t.resolvedTyp}"
     ):
       def disambSym(bms: BlockMemberSymbol): Opt[DefinitionSymbol[?]] = prefer match
@@ -964,7 +964,7 @@ class Resolver(tl: TraceLogger)
         case _: PatternConstructor => TODO("disambSym for PatternConstructor")
       
       t match
-      case Term.New(cls, _, N) => cls.resolvedSym match
+      case Term.New(cls, _, N) => cls.legacyResolvedSym match
         case S(clsSym: ClassSymbol) =>
           val ty = Type.Ref(clsSym, Nil)
           t.expand(S(t.withTyp(ty)))
@@ -973,7 +973,7 @@ class Resolver(tl: TraceLogger)
           // otherwise, there is already an error raised.
           ()
       case t @ Apps(base: Resolvable, ass) => 
-        val decl = base.resolvedSym match
+        val decl = base.legacyResolvedSym match
           case S(bms: BlockMemberSymbol) => 
             val disambBms = disambSym(bms)
             log(s"Disambiguate ${bms} (${bms.asTrm}) into ${disambBms} (defn = ${disambBms.map(_.defn)}), preferring ${prefer}")
@@ -1065,6 +1065,9 @@ class Resolver(tl: TraceLogger)
       case Term.Ref(_) =>
       case Term.Lit(_) =>
       case Term.Tup(_) => t.subTerms.foreach(traverse(_, expect = NonModule(N)))
+      case Term.Rcd(_, stats) => stats.foreach:
+        case field: RcdField => traverseSign(field.rhs, expect = NonModule(N))
+        case stat => raise(ErrorReport(msg"Expected a field declaration in record type." -> stat.toLoc :: Nil))
       case Term.UnitVal() =>
       // Literals with operators. e.g., -42
       case Term.App(Term.Ref(_: BuiltinSymbol), Term.Tup(Fld(term = Term.Lit(_)) :: Nil)) =>
@@ -1082,7 +1085,7 @@ class Resolver(tl: TraceLogger)
       
       // Complex type: Function type, Wildcard type, Composed type,
       // Negation type, Forall type, 
-      case t: (Term.FunTy | Term.WildcardTy | Term.CompType | Term.Neg | Term.Forall | Term.Constrained | Term.Tup) =>
+      case t: (Term.DynTy | Term.FunTy | Term.WildcardTy | Term.CompType | Term.Neg | Term.Forall | Term.Constrained | Term.Tup) =>
         t.subTerms.foreach(traverseSign(_, expect = Expect.NonModule(N)))
       
       // t is not a type.
@@ -1168,13 +1171,13 @@ class Resolver(tl: TraceLogger)
       case Term.App(Term.Ref(_: BuiltinSymbol), Term.Tup(Fld(term = Term.Lit(_)) :: Nil)) => if expect.module
         then raiseError()
         else Type.NotImplemented // TODO: Support Lit with operator
-      case _: (Term.FunTy | Term.WildcardTy | Term.CompType | Term.Neg | Term.Forall | Term.Constrained | Term.Tup | Term.Lit) =>
+      case _: (Term.DynTy | Term.FunTy | Term.WildcardTy | Term.CompType | Term.Neg | Term.Forall | Term.Constrained | Term.Tup | Term.Rcd | Term.Lit) =>
         if expect.module
         then raiseError()
         else Type.NotImplemented // TODO: Support complex types
       
       // Otherwise, resolve the term directly.
-      case _ => t.resolvedSym match
+      case _ => t.legacyResolvedSym match
         // A VarSymbol is probably a type parameter.
         case S(sym: VarSymbol) if ModuleChecker.isTypeParam(sym) =>
           if expect.module 
@@ -1247,6 +1250,6 @@ object ModuleChecker:
       case N => false
     case _ => false
   
-  def isStaticClass(t: Term): Bool = t.resolvedSym.exists(_.asCls.isDefined)
+  def isStaticClass(t: Term): Bool = t.legacyResolvedSym.exists(_.asCls.isDefined)
 
 end ModuleChecker

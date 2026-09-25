@@ -1,0 +1,88 @@
+:.
+
+// Call-site shape correlation is incomplete even without member projections.
+:fixme
+:expect 40
+class A { fun get() = 17 }
+class B { fun get() = 23 }
+fun identity(value) = value
+fun forwarded(value) = identity(value)
+forwarded(new A).get() + forwarded(new B).get()
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.10: 	forwarded(new A).get() + forwarded(new B).get()
+//│ ║        	^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Cannot resolve member 'get' of a value with unknown shape.
+//│ ╟── Parameter 'value' admits values of unknown shape.
+//│ ║  l.9: 	fun forwarded(value) = identity(value)
+//│ ║       	              ^^^^^
+//│ ╟── 'forwarded' is exposed by this compilation unit.
+//│ ║  l.9: 	fun forwarded(value) = identity(value)
+//│ ╙──     	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.10: 	forwarded(new A).get() + forwarded(new B).get()
+//│ ║        	                         ^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Cannot resolve member 'get' of a value with unknown shape.
+//│ ╟── Parameter 'value' admits values of unknown shape.
+//│ ║  l.9: 	fun forwarded(value) = identity(value)
+//│ ║       	              ^^^^^
+//│ ╟── 'forwarded' is exposed by this compilation unit.
+//│ ║  l.9: 	fun forwarded(value) = identity(value)
+//│ ╙──     	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ ═══[RUNTIME ERROR] Expected: '40', got: 'undefined'
+
+// Projected functions expose the same limitation after argument forwarding.
+:fixme
+:expect 40
+class Id { fun apply(value) = value }
+let id = new Id
+val apply = Id::apply
+apply(id, new A).get() + apply(id, new B).get()
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.40: 	apply(id, new A).get() + apply(id, new B).get()
+//│ ║        	^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Cannot resolve member 'get' of a value with unknown shape.
+//│ ╟── Rest parameter 'args' admits elements of unknown shape.
+//│ ╟── 'apply' is exposed by this compilation unit.
+//│ ║  l.39: 	val apply = Id::apply
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.40: 	apply(id, new A).get() + apply(id, new B).get()
+//│ ║        	                         ^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Cannot resolve member 'get' of a value with unknown shape.
+//│ ╟── Rest parameter 'args' admits elements of unknown shape.
+//│ ╟── 'apply' is exposed by this compilation unit.
+//│ ║  l.39: 	val apply = Id::apply
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ ═══[RUNTIME ERROR] Expected: '40', got: 'undefined'
+//│ apply = fun
+//│ id = Id
+
+// Rest-argument forwarding has the same call-site correlation limitation.
+:fixme
+:expect 40
+fun restIdentity(ignored, ...args) = identity(...args)
+restIdentity(0, new A).get() + restIdentity(0, new B).get()
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.66: 	restIdentity(0, new A).get() + restIdentity(0, new B).get()
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Cannot resolve member 'get' of a value with unknown shape.
+//│ ╟── Rest parameter 'args' admits elements of unknown shape.
+//│ ║  l.65: 	fun restIdentity(ignored, ...args) = identity(...args)
+//│ ║        	                             ^^^^
+//│ ╟── 'restIdentity' is exposed by this compilation unit.
+//│ ║  l.65: 	fun restIdentity(ignored, ...args) = identity(...args)
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.66: 	restIdentity(0, new A).get() + restIdentity(0, new B).get()
+//│ ║        	                               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Cannot resolve member 'get' of a value with unknown shape.
+//│ ╟── Rest parameter 'args' admits elements of unknown shape.
+//│ ║  l.65: 	fun restIdentity(ignored, ...args) = identity(...args)
+//│ ║        	                             ^^^^
+//│ ╟── 'restIdentity' is exposed by this compilation unit.
+//│ ║  l.65: 	fun restIdentity(ignored, ...args) = identity(...args)
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ ═══[RUNTIME ERROR] Expected: '40', got: 'undefined'

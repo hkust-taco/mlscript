@@ -1,3 +1,4 @@
+:.
 :js
 
 :expect [[1, 2], 3]
@@ -78,13 +79,43 @@ sum2(arr)
 :e
 fun f(..xs) = xs
 //│ ╔══[COMPILATION ERROR] Lazy spread parameters not allowed.
-//│ ║  l.79: 	fun f(..xs) = xs
+//│ ║  l.80: 	fun f(..xs) = xs
 //│ ╙──      	      ^^^^
 
 :ge
 sum2(..arr)
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.86: 	sum2(..arr)
+//│ ║        	^^^^^^^^^^^
+//│ ╟── Function literal expected 1 argument, but got 0
+//│ ║  l.47: 	fun sum2 = case
+//│ ║        	           ^^^^
+//│ ║  l.48: 	  [] then 0
+//│ ║        	^^^^^^^^^^^^
+//│ ║  l.49: 	  [x, ..xs, y] then x + y + sum2(xs)
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.86: 	sum2(..arr)
+//│ ║        	^^^^^^^^^^^
+//│ ╟── Function literal expected 1 argument, but got 2
+//│ ║  l.47: 	fun sum2 = case
+//│ ║        	           ^^^^
+//│ ║  l.48: 	  [] then 0
+//│ ║        	^^^^^^^^^^^^
+//│ ║  l.49: 	  [x, ..xs, y] then x + y + sum2(xs)
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.86: 	sum2(..arr)
+//│ ║        	^^^^^^^^^^^
+//│ ╟── Function literal expected 1 argument, but got 4
+//│ ║  l.47: 	fun sum2 = case
+//│ ║        	           ^^^^
+//│ ║  l.48: 	  [] then 0
+//│ ║        	^^^^^^^^^^^^
+//│ ║  l.49: 	  [x, ..xs, y] then x + y + sum2(xs)
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Lazy spreads are not supported in call arguments
-//│ ║  l.85: 	sum2(..arr)
+//│ ║  l.86: 	sum2(..arr)
 //│ ╙──      	    ^^^^^^^
 //│ ═══[RUNTIME ERROR] Error: Function expected 1 argument but got 2
 

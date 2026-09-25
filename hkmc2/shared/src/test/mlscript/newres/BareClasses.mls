@@ -1,0 +1,159 @@
+:.
+
+
+:elt
+class Foo {
+  val b = 1
+}
+//│ —————————————| Elaborated tree |————————————————————————————————————————————————————————————————————
+//│ Blk:
+//│   stats = Ls of
+//│     Plain:
+//│       kind = Cls
+//│       sym = class:Foo⁰
+//│       bsym = member:Foo¹
+//│       body = ObjBody of Blk:
+//│         stats = Ls of
+//│           TermDefinition:
+//│             k = ImmutVal
+//│             sym = member:b⁰
+//│             tsym = term:Foo⁰/b¹
+//│             body = S of Lit of IntLit of 1
+//│             flags = (method)
+//│             modulefulness = Modulefulness of N
+//│         res = Lit of UnitLit of false
+//│   res = Lit of UnitLit of false
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+:sr
+:sir
+class Foo {
+  val b = 1
+  this.b
+}
+//│ ————————————————| Resolved |————————————————————————————————————————————————————————————————————————
+//│   class Foo⁰::Foo¹ { val b⁰::b¹ ‹flow:b⁰› = 1, Foo¹.this.b⁰ }
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define Foo² as class Foo³ { val b²; constructor() { define b² as val b³ = 1; end } }; end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+
+:sr
+Foo
+//│ ————————————————| Resolved |————————————————————————————————————————————————————————————————————————
+//│   Foo⁰
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = class Foo
+
+:e
+Foo.b
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.49: 	Foo.b
+//│ ║        	^^^^^
+//│ ╟── Class value does not contain member 'b'
+//│ ║  l.30: 	class Foo {
+//│ ╙──      	      ^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+let f = Foo
+//│ f = class Foo
+
+:e
+f.b
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.62: 	f.b
+//│ ║        	^^^
+//│ ╟── Class value does not contain member 'b'
+//│ ║  l.30: 	class Foo {
+//│ ╙──      	      ^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+
+:sr
+:sir
+:sjs
+let f = new Foo
+//│ ————————————————| Resolved |————————————————————————————————————————————————————————————————————————
+//│   let f⁰, f⁰ = new Foo⁰
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ set f⁰ = new Foo³(); end
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ let f1; f1 = globalThis.Object.freeze(new Foo3());
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ f = Foo { b: 1 }
+
+let f = new Foo()
+//│ f = Foo { b: 1 }
+
+:sr
+f.b
+//│ ————————————————| Resolved |————————————————————————————————————————————————————————————————————————
+//│   f¹.b⁰
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 1
+
+
+:e
+class Foo {
+  constructor(val a) {
+    val b = a + 1
+  }
+}
+//│ ╔══[COMPILATION ERROR] Unsupported constructor in this position.
+//│ ║  l.98: 	  constructor(val a) {
+//│ ║        	  ^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.99: 	    val b = a + 1
+//│ ║        	^^^^^^^^^^^^^^^^^
+//│ ║  l.100: 	  }
+//│ ╙──       	^^^
+
+
+// :fixme
+:breakme // `val` in ctor param list should be compiled or explicitly disallowed
+:sr
+class Foo {
+  constructor(val a)
+  val b = a + 1
+}
+//│ ————————————————| Resolved |————————————————————————————————————————————————————————————————————————
+//│   fun Foo² class Foo³::Foo⁴(val a⁰) { let a¹, a¹ = a⁰, val b²::b³ ‹flow:b¹› = +(a¹^b³, 1)‹app⁰› }
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+
+:e
+let f = Foo(1)
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.124: 	let f = Foo(1)
+//│ ║         	        ^^^^^^
+//│ ╟── Class 'Foo' must be instantiated with 'new'.
+//│ ║  l.114: 	class Foo {
+//│ ╙──       	      ^^^
+//│ ═══[RUNTIME ERROR] TypeError: Class constructor Foo6 cannot be invoked without 'new'
+//│ f = undefined
+
+
+let f = new Foo(1)
+//│ f = Foo { b: 2 }
+
+:fixme
+:sr
+f.a
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.140: 	f.a
+//│ ║         	^^^
+//│ ╟── Instance of class 'Foo' does not contain member 'a'
+//│ ║  l.135: 	let f = new Foo(1)
+//│ ╙──       	        ^^^^^^^^^^
+//│ ————————————————| Resolved |————————————————————————————————————————————————————————————————————————
+//│   f².aˀˀˀ
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+:sr
+f.b
+//│ ————————————————| Resolved |————————————————————————————————————————————————————————————————————————
+//│   f².b²
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 2
+
+

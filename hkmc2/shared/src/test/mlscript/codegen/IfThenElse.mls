@@ -1,3 +1,4 @@
+:.
 :js
 
 
@@ -48,7 +49,11 @@ let f = x => print((if x and x then "ok" else "ko") + "!")
 //│ lambda1 = (undefined, function (x) {
 //│   let tmp, tmp1;
 //│   if (x === true) {
-//│     tmp = "ok";
+//│     if (x === true) {
+//│       tmp = "ok";
+//│     } else {
+//│       tmp = "ko";
+//│     }
 //│   } else { tmp = "ko"; }
 //│   tmp1 = tmp + "!";
 //│   return Predef.print(tmp1)

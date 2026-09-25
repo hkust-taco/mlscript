@@ -1,0 +1,244 @@
+:.
+
+// An inferred result combines a declared type parameter and ordinary value flow.
+// Both calls must preserve their own annotations and unannotated argument shapes.
+:expect [1, 2, 3, 4]
+class First(val first: Int)
+class Second(val second: Int)
+private fun pair[A](x: A, y) = [x, y]
+let left = pair(First(1), Second(2))
+let right = pair(Second(3), First(4))
+[left.0.first, left.1.second, right.0.second, right.1.first]
+//│ = [1, 2, 3, 4]
+//│ left = [First(1), Second(2)]
+//│ right = [Second(3), First(4)]
+
+// An unannotated callback and inferred result retain their dependence on A.
+:expect [5, 6]
+class First(val first: Int)
+class Second(val second: Int)
+private fun apply[A](x: A, f) = f(x)
+[apply(First(5), x => x.first), apply(Second(6), x => x.second)]
+//│ = [5, 6]
+
+// An omitted trailing type argument is a hole inferred from each caller.
+// The written Int argument and the Pair interface remain in place.
+// TODO: template argument rebasing must not introduce a lossy wildcard round trip.
+:fixme
+:expect [1, 2]
+class First(val first: Int)
+class Second(val second: Int)
+class Pair[A, B](val value: [A, B])
+private fun second(pair: Pair[Int]) = pair.value.1
+[second(Pair([0, First(1)])).first, second(Pair([0, Second(2)])).second]
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.33: 	[second(Pair([0, First(1)])).first, second(Pair([0, Second(2)])).second]
+//│ ║        	 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Instance of class 'Second' does not contain member 'first'
+//│ ║  l.33: 	[second(Pair([0, First(1)])).first, second(Pair([0, Second(2)])).second]
+//│ ╙──      	                                                    ^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.33: 	[second(Pair([0, First(1)])).first, second(Pair([0, Second(2)])).second]
+//│ ║        	                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Instance of class 'First' does not contain member 'second'
+//│ ║  l.33: 	[second(Pair([0, First(1)])).first, second(Pair([0, Second(2)])).second]
+//│ ╙──      	                 ^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ ═══[RUNTIME ERROR] Expected: '[1, 2]', got: 'undefined'
+
+// Bare alias uses infer their omitted argument without losing the alias body.
+// TODO: the same template argument rebasing loses caller IDs through the alias.
+:fixme
+:expect [3, 4]
+class First(val first: Int)
+class Second(val second: Int)
+class Pair[A, B](val value: [A, B])
+type HalfPair[T] = Pair[Int, T]
+private fun second(pair: HalfPair) = pair.value.1
+[second(Pair([0, First(3)])).first, second(Pair([0, Second(4)])).second]
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.58: 	[second(Pair([0, First(3)])).first, second(Pair([0, Second(4)])).second]
+//│ ║        	 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Instance of class 'Second' does not contain member 'first'
+//│ ║  l.58: 	[second(Pair([0, First(3)])).first, second(Pair([0, Second(4)])).second]
+//│ ╙──      	                                                    ^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.58: 	[second(Pair([0, First(3)])).first, second(Pair([0, Second(4)])).second]
+//│ ║        	                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Instance of class 'First' does not contain member 'second'
+//│ ║  l.58: 	[second(Pair([0, First(3)])).first, second(Pair([0, Second(4)])).second]
+//│ ╙──      	                 ^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ ═══[RUNTIME ERROR] Expected: '[3, 4]', got: 'undefined'
+
+// A bare Array annotation has an inferred element hole in both positions.
+// This case has no declared type binder to instantiate at either call.
+// TODO: template argument rebasing currently mixes the two callers' hole bounds.
+:fixme
+:expect [5, 6]
+class First(val first: Int)
+class Second(val second: Int)
+private fun append(xs: Array, value) = xs.push(value)
+let xs = mut []
+let ys = mut []
+append(xs, First(5))
+append(ys, Second(6))
+[xs.0.first, ys.0.second]
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.86: 	[xs.0.first, ys.0.second]
+//│ ║        	             ^^^^^^^^^^^
+//│ ╟── Instance of class 'First' does not contain member 'second'
+//│ ║  l.84: 	append(xs, First(5))
+//│ ╙──      	           ^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.86: 	[xs.0.first, ys.0.second]
+//│ ║        	 ^^^^^^^^^^
+//│ ╟── Instance of class 'Second' does not contain member 'first'
+//│ ║  l.85: 	append(ys, Second(6))
+//│ ╙──      	           ^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ ═══[RUNTIME ERROR] Expected: '[5, 6]', got: 'undefined'
+//│ xs = [First(5)]
+//│ ys = [Second(6)]
+
+// A returned closure observes annotated and inferred fields after the outer call.
+:expect [7, 8, 9, 10]
+class First(val first: Int)
+class Second(val second: Int)
+private fun delayed[A](x: A, y) = () => [x, y]
+let left = delayed(First(7), Second(8))
+let right = delayed(Second(9), First(10))
+[left().0.first, left().1.second, right().0.second, right().1.first]
+//│ = [7, 8, 9, 10]
+//│ left = fun
+//│ right = fun
+
+// Inferring a base member's result must not assume every override returns that shape.
+// Either an incompatible override or the unsupported selection must be rejected.
+:ge
+class Item(val value: Int)
+class Other(val other: Int)
+class Base with
+  fun item() = Item(1)
+class Child extends Base with
+  fun item() = Other(2)
+private fun read(x: Base) = x.item().value
+read(new Child)
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.125: 	private fun read(x: Base) = x.item().value
+//│ ║         	                            ^^^^^^^^^^^^^^
+//│ ╟── Cannot resolve member 'value' of a value with unknown shape.
+//│ ╟── The shape of this value is unknown.
+//│ ║  l.125: 	private fun read(x: Base) = x.item().value
+//│ ╙──       	                            ^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// A separate polymorphic signature retains binders for explicit type application.
+:expect [11, 12]
+class First(val first: Int)
+class Second(val second: Int)
+private fun identity: [A] -> A -> A
+private fun identity(x) = x
+[identity[First](First(11)).first, identity[Second](Second(12)).second]
+//│ = [11, 12]
+
+// A polymorphic value annotation also retains its own binders.
+:expect 13
+class Item(val value: Int)
+let identity = (x => x) as [A] -> A -> A
+identity[Item](Item(13)).value
+//│ = 13
+//│ identity = fun identity
+
+// Explicit arguments of an annotated polymorphic value restrict its result interface.
+:ge
+class Base
+class Child extends Base with
+  val extra = 1
+let identity = (x => x) as [A] -> A -> A
+identity[Base](new Child).extra
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.159: 	identity[Base](new Child).extra
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙── Value of type 'Base' does not contain member 'extra'
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ identity = fun identity
+
+// Type application checks the retained quantified binder count.
+:ge
+let identity = (x => x) as [A] -> A -> A
+identity[Int, Int](1)
+//│ ╔══[COMPILATION ERROR] Resolution error in type application
+//│ ║  l.170: 	identity[Int, Int](1)
+//│ ║         	^^^^^^^^^^^^^^^^^^
+//│ ╟── Function with a declared signature expected 1 type argument, but got 2
+//│ ║  l.169: 	let identity = (x => x) as [A] -> A -> A
+//│ ╙──       	                                  ^^^^^^
+//│ = 1
+//│ identity = fun identity
+
+// One stored polymorphic value has separate inferred arguments at each call site.
+:expect [14, 15]
+class First(val first: Int)
+class Second(val second: Int)
+let identity = (x => x) as [A] -> A -> A
+[identity(First(14)).first, identity(Second(15)).second]
+//│ = [14, 15]
+//│ identity = fun identity
+
+// Specialization is retained by the value; it does not specialize the shared source.
+:expect [16, 17]
+class First(val first: Int)
+class Second(val second: Int)
+let identity = (x => x) as [A] -> A -> A
+let first = identity[First]
+let second = identity[Second]
+[first(First(16)).first, second(Second(17)).second]
+//│ = [16, 17]
+//│ first = fun identity
+//│ identity = fun identity
+//│ second = fun identity
+
+// Later parameter lists retain the first application's type-parameter instance.
+:expect [18, 19]
+class First(val first: Int)
+class Second(val second: Int)
+let keep = (x => y => x) as [A] -> A -> A -> A
+let first = keep(First(18))
+let second = keep(Second(19))
+[first(First(0)).first, second(Second(0)).second]
+//│ = [18, 19]
+//│ first = fun
+//│ keep = fun keep
+//│ second = fun
+
+// A stored reference to a fully annotated declaration uses the application's site.
+:expect [20, 21]
+class First(val first: Int)
+class Second(val second: Int)
+private fun identity[A](x: A): A = x
+let shared = identity
+[shared(First(20)).first, shared(Second(21)).second]
+//│ = [20, 21]
+//│ shared = fun identity
+
+// A returned scheme binds B at its own call while retaining the captured A.
+:expect [22, 23, 24, 25]
+class First(val first: Int)
+class Second(val second: Int)
+let pair = (x => y => [x, y]) as [A] -> A -> ([B] -> B -> [A, B])
+let first = pair(First(22))
+let second = pair(Second(23))
+let left = first(Second(24))
+let right = second(First(25))
+[left.0.first, right.0.second, left.1.second, right.1.first]
+//│ = [22, 23, 24, 25]
+//│ first = fun
+//│ left = [First(22), Second(24)]
+//│ pair = fun pair
+//│ right = [Second(23), First(25)]
+//│ second = fun
+
+// A private returned closure must be checked from its annotation before any call.
+class Item(val value: Int)
+private fun get(): Item -> Int = x => x.value

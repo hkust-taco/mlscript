@@ -34,6 +34,7 @@ module Ex with
 //│               t = Ref{sym=member:Int¹} of member:Int¹
 //│               sym = class:Int⁰
 //│             body = S of Lit of IntLit of 1
+//│             flags = (result annotation)
 //│             modulefulness = Modulefulness of N
 //│         res = App:
 //│           lhs = Resolved{sym=term:get⁰}:

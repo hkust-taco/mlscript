@@ -1,0 +1,15 @@
+#lang(0.3.x, strictResolution: true)
+
+class Hidden {
+  fun answer() = 51
+}
+val Hidden = 15
+
+module OverloadedClassLibrary {
+  fun fresh() = new Hidden
+  fun value() = Hidden
+  class Item {
+    fun answer() = 52
+  }
+  val Item = 16
+}

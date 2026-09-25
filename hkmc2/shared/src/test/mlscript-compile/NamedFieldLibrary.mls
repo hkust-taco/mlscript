@@ -1,0 +1,9 @@
+#lang(0.3.x)
+
+module NamedFieldLibrary with ...
+
+fun pack(x) = [value: x]
+fun select(fields: {value: Int}) = fields.value
+
+val fields = [value: 36]
+val observed = fields.0.value

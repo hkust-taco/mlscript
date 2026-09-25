@@ -1,0 +1,399 @@
+:.
+
+
+// Explicit bindings across the complete context chain precede wildcard sources.
+val explicit = 1
+module Values {
+  val explicit = 2
+  val extra = 3
+}
+fun outerBinding() = {
+  open Values
+  explicit + extra
+}
+//│ explicit = 1
+
+:expect 4
+outerBinding()
+//│ = 4
+
+
+// Neither order of a wildcard open lets it shadow a member definition.
+fun before() = {
+  open Values
+  val extra = 4
+  extra
+}
+fun after() = {
+  val extra = 5
+  open Values
+  extra
+}
+
+:expect [4, 5]
+[before(), after()]
+//│ = [4, 5]
+
+
+module Selected { val extra = 6 }
+fun named() = {
+  open Selected { extra }
+  fun nested() = {
+    open Values
+    extra
+  }
+  nested()
+}
+
+:expect 6
+named()
+//│ = 6
+
+
+// Both open forms work before the module definition is elaborated.
+fun forwardWildcard() = {
+  open Later
+  answer
+}
+fun forwardNamed() = {
+  open Later { answer }
+  answer
+}
+module Later { val answer = 7 }
+
+:expect [7, 7]
+[forwardWildcard(), forwardNamed()]
+//│ = [7, 7]
+
+
+// A nonmatching wildcard source does not suppress a matching one.
+module Other { val unrelated = 8 }
+fun several() = {
+  open Other
+  open Later
+  answer
+}
+
+:expect 7
+several()
+//│ = 7
+
+
+// Reopening the same source does not introduce a second candidate.
+fun repeated() = {
+  open Later
+  open Later
+  answer
+}
+
+:expect 7
+repeated()
+//│ = 7
+
+
+// Two distinct sources make a name ambiguous, independently of open order.
+:e
+fun ambiguous() = {
+  open Values
+  open Selected
+  extra
+}
+ambiguous()
+//│ ╔══[COMPILATION ERROR] Wildcard-open reference 'extra' is ambiguous
+//│ ║  l.99: 	  extra
+//│ ║        	  ^^^^^
+//│ ╟── candidate: value 'extra' defined here
+//│ ║  l.8: 	  val extra = 3
+//│ ║       	  ^^^^^^^^^^^^^
+//│ ╟── Opened here
+//│ ║  l.97: 	  open Values
+//│ ║        	       ^^^^^^
+//│ ╟── candidate: value 'extra' defined here
+//│ ║  l.38: 	module Selected { val extra = 6 }
+//│ ║        	                  ^^^^^^^^^^^^^
+//│ ╟── Opened here
+//│ ║  l.98: 	  open Selected
+//│ ╙──      	       ^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+:e
+fun missing() = {
+  open Later
+  absent
+}
+missing()
+//│ ╔══[COMPILATION ERROR] Name not found in wildcard opens: absent
+//│ ║  l.122: 	  absent
+//│ ╙──       	  ^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+:e
+open Later { absent }
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.131: 	open Later { absent }
+//│ ║         	             ^^^^^^
+//│ ╟── Module 'Later' does not contain member 'absent'
+//│ ║  l.62: 	module Later { val answer = 7 }
+//│ ╙──      	       ^^^^^
+
+
+// Wildcard lookup retains overload sets until the use chooses a definition.
+module Overloaded {
+  class Item { fun answer() = 9 }
+  mut val Item = 10
+}
+fun overload() = {
+  open Overloaded
+  set Item = 11
+  [Item, (new Item).answer()]
+}
+
+:expect [11, 9]
+overload()
+//│ = [11, 9]
+
+
+// Captured module contexts survive deferred lookup and nested functions.
+module Left { val left = 12 }
+module Right { val right = 13 }
+fun captured(initial) = {
+  module Local { val item = initial }
+  open Local
+  fun read() = item
+  read()
+}
+
+:expect [12, 13]
+[captured(Left).left, captured(Right).right]
+//│ = [12, 13]
+
+
+// An opened module can itself come from a wildcard source.
+module Outer {
+  module Inner { val innerValue = 14 }
+}
+fun chained() = {
+  open Outer
+  open Inner
+  innerValue
+}
+
+:expect 14
+chained()
+//│ = 14
+
+
+// Imported aliases expose the imported module's shapes.
+import "../../mlscript-compile/OverloadedClassLibrary.mls" as Library
+fun imported() = {
+  open Library
+  [Item, (new Item).answer()]
+}
+fun importedNamed() = {
+  open Library { Item }
+  [Item, (new Item).answer()]
+}
+
+:expect [[16, 52], [16, 52]]
+[imported(), importedNamed()]
+//│ = [[16, 52], [16, 52]]
+
+
+// Indented module bodies use the same completed shapes as braced bodies.
+fun indented() = {
+  open Indented
+  value
+}
+module Indented with
+  val value = 15
+
+:expect 15
+indented()
+//│ = 15
+
+
+// Two distinct receivers must not silently select the same member on the wrong instance.
+fun instance(n) = {
+  module M { val value = n }
+  M
+}
+
+:e
+let first = instance(16)
+let second = instance(17)
+fun twoInstances() = {
+  open first
+  open second
+  value
+}
+twoInstances()
+//│ ╔══[COMPILATION ERROR] Wildcard-open reference 'value' is ambiguous
+//│ ║  l.227: 	  value
+//│ ║         	  ^^^^^
+//│ ╟── candidate: value 'value' defined here
+//│ ║  l.217: 	  module M { val value = n }
+//│ ║         	             ^^^^^^^^^^^^^
+//│ ╟── Opened here
+//│ ║  l.225: 	  open first
+//│ ║         	       ^^^^^
+//│ ╟── candidate: value 'value' defined here
+//│ ║  l.217: 	  module M { val value = n }
+//│ ║         	             ^^^^^^^^^^^^^
+//│ ╟── Opened here
+//│ ║  l.226: 	  open second
+//│ ╙──       	       ^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ first = class M { value: 16 }
+//│ second = class M { value: 17 }
+
+
+// Parameters are explicit bindings even when an open provides the same name.
+fun parameter(extra) = {
+  open Values
+  extra
+}
+
+:expect 18
+parameter(18)
+//│ = 18
+
+
+// Applied constructor patterns demand the class interpretation, not a term value.
+module Constructors { class Box(val value) }
+fun unbox(box) = {
+  open Constructors
+  if box is Box(value) then value else 0
+}
+
+:expect 19
+unbox(Constructors.Box(19))
+//│ = 19
+
+
+// A binding brought in explicitly prevents wildcard class lookup too.
+:e
+module ClassSource { class Shadowed }
+val Shadowed = 20
+open ClassSource
+new Shadowed
+//│ ╔══[COMPILATION ERROR] Resolution error in object instantiation
+//│ ║  l.278: 	new Shadowed
+//│ ║         	^^^^^^^^^^^^
+//│ ╟── Integer literal cannot be instantiated with keyword 'new'.
+//│ ║  l.276: 	val Shadowed = 20
+//│ ╙──       	               ^^
+//│ ╔══[COMPILATION ERROR] Cannot resolve the class instantiated here
+//│ ║  l.278: 	new Shadowed
+//│ ╙──       	    ^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ Shadowed = 20
+
+
+// Explicit selective opens win regardless of their order relative to wildcard opens.
+fun namedAfter() = {
+  open Values
+  open Selected { extra }
+  extra
+}
+fun namedBefore() = {
+  open Selected { extra }
+  open Values
+  extra
+}
+
+:expect [6, 6]
+[namedAfter(), namedBefore()]
+//│ = [6, 6]
+
+:e
+fun ambiguousReversed() = {
+  open Selected
+  open Values
+  extra
+}
+ambiguousReversed()
+//│ ╔══[COMPILATION ERROR] Wildcard-open reference 'extra' is ambiguous
+//│ ║  l.312: 	  extra
+//│ ║         	  ^^^^^
+//│ ╟── candidate: value 'extra' defined here
+//│ ║  l.38: 	module Selected { val extra = 6 }
+//│ ║        	                  ^^^^^^^^^^^^^
+//│ ╟── Opened here
+//│ ║  l.310: 	  open Selected
+//│ ║         	       ^^^^^^^^
+//│ ╟── candidate: value 'extra' defined here
+//│ ║  l.8: 	  val extra = 3
+//│ ║       	  ^^^^^^^^^^^^^
+//│ ╟── Opened here
+//│ ║  l.311: 	  open Values
+//│ ╙──       	       ^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+
+// Both the temporary assignment and restoration use the selected open member.
+fun temporary() = {
+  open Overloaded
+  let during = set Item = 21 in Item
+  [during, Item]
+}
+
+:expect [21, 11]
+temporary()
+//│ = [21, 11]
+
+
+module Callable {
+  class Make { fun answer() = 22 }
+  fun Make() = new Make
+}
+fun callable() = {
+  open Callable
+  [Make().answer(), (new Make).answer()]
+}
+
+:expect [22, 22]
+callable()
+//│ = [22, 22]
+
+
+// Bare pattern names resolve through both forms of open.
+:expect [1, 0, 1, 0]
+module BarePatterns { class Token }
+fun bareWildcard(x) = {
+  open BarePatterns
+  if x is Token then 1 else 0
+}
+fun bareNamed(x) = {
+  open BarePatterns { Token }
+  if x is Token then 1 else 0
+}
+[bareWildcard(new BarePatterns.Token), bareWildcard(0),
+ bareNamed(new BarePatterns.Token), bareNamed(0)]
+//│ = [1, 0, 1, 0]
+
+
+// Opening sites survive capture by a nested function, independently of definitions.
+:e
+fun inheritedAmbiguity() = {
+  open Values
+  open Selected
+  fun nested() = extra
+  nested()
+}
+inheritedAmbiguity()
+//│ ╔══[COMPILATION ERROR] Wildcard-open reference 'extra' is ambiguous
+//│ ║  l.380: 	  fun nested() = extra
+//│ ║         	                 ^^^^^
+//│ ╟── candidate: value 'extra' defined here
+//│ ║  l.8: 	  val extra = 3
+//│ ║       	  ^^^^^^^^^^^^^
+//│ ╟── Opened here
+//│ ║  l.378: 	  open Values
+//│ ║         	       ^^^^^^
+//│ ╟── candidate: value 'extra' defined here
+//│ ║  l.38: 	module Selected { val extra = 6 }
+//│ ║        	                  ^^^^^^^^^^^^^
+//│ ╟── Opened here
+//│ ║  l.379: 	  open Selected
+//│ ╙──       	       ^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.

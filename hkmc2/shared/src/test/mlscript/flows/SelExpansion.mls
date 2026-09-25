@@ -15,7 +15,7 @@ module Foo with
 //│     val a⁰::a¹ ‹flow:a⁰› = 123
 //│   },
 //│   module Foo⁰::Foo² {
-//│     fun foo⁰::foo¹(x⁰: Foo⁰{ ~> Foo⁰ }) ‹flow:foo⁰› = x⁰.a‹?›{ ~> x⁰.a⁰ }
+//│     fun foo⁰::foo¹(x⁰: Foo⁰{ ~> Foo⁰ }) ‹flow:foo⁰› = x⁰.aˀˀˀ{ ~> x⁰.a⁰ }
 //│   }
 //│ where
 //│     x⁰  <~  type Foo
@@ -50,16 +50,16 @@ f.a.b
 //│ ║  l.10: 	  val a = 123
 //│ ╙──      	          ^^^
 //│ —————————————————| Flowed |—————————————————————————————————————————————————————————————————————————
-//│   f⁰.a⁰.b‹?›
+//│   f⁰.a⁰.bˀˀˀ
 //│ where
 //│     
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
-//│ ═══[RUNTIME ERROR] Error: Access to required field 'b' yielded 'undefined'
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :sjs
 f.foo
 //│ —————————————————| Flowed |—————————————————————————————————————————————————————————————————————————
-//│   f⁰.foo‹?›{ ~> Foo⁰.foo⁰(f⁰)‹app⁰› }
+//│   f⁰.Foo⁰.foo⁰{ ~> Foo⁰.foo⁰(f⁰)‹app⁰› }
 //│ where
 //│     f⁰  <~  Foo()
 //│     f⁰  ~>  {a: ⋅a⁰}  {a: ⋅a¹}  {foo: ⋅foo⁰}
@@ -78,7 +78,7 @@ fun id(x) = x
 
 id(f).foo
 //│ —————————————————| Flowed |—————————————————————————————————————————————————————————————————————————
-//│   id⁰{ ~> id⁰ }(f⁰)‹app¹›.foo‹?›{ ~> Foo⁰.foo⁰(id⁰(f⁰)‹app¹›)‹app²› }
+//│   id⁰{ ~> id⁰ }(f⁰)‹app¹›.Foo⁰.foo⁰{ ~> Foo⁰.foo⁰(id⁰(f⁰)‹app¹›)‹app²› }
 //│ where
 //│     f⁰  <~  Foo()
 //│     f⁰  ~>  {a: ⋅a⁰}  {a: ⋅a¹}  {foo: ⋅foo⁰}
@@ -100,7 +100,7 @@ let id(x) = x
 
 id(f).foo
 //│ —————————————————| Flowed |—————————————————————————————————————————————————————————————————————————
-//│   id²(f⁰)‹app³›.foo‹?›{ ~> Foo⁰.foo⁰(id²(f⁰)‹app³›)‹app⁴› }
+//│   id²(f⁰)‹app³›.Foo⁰.foo⁰{ ~> Foo⁰.foo⁰(id²(f⁰)‹app³›)‹app⁴› }
 //│ where
 //│     f⁰  <~  Foo()
 //│     f⁰  ~>  {a: ⋅a⁰}  {a: ⋅a¹}  {foo: ⋅foo⁰}
@@ -138,7 +138,7 @@ id(f).foo
 //│ ║  l.123: 	id(0)
 //│ ╙──       	   ^
 //│ —————————————————| Flowed |—————————————————————————————————————————————————————————————————————————
-//│   id³{ ~> id³ }(f⁰)‹app⁶›.foo‹?›{ ~> Foo⁰.foo⁰(id³(f⁰)‹app⁶›)‹app⁷› }
+//│   id³{ ~> id³ }(f⁰)‹app⁶›.Foo⁰.foo⁰{ ~> Foo⁰.foo⁰(id³(f⁰)‹app⁶›)‹app⁷› }
 //│ where
 //│     f⁰  <~  Foo()
 //│     f⁰  ~>  {a: ⋅a⁰}  {a: ⋅a¹}  {foo: ⋅foo⁰}
@@ -155,7 +155,7 @@ fun test(g) = g.foo
 //│ ║  l.153: 	fun test(g) = g.foo
 //│ ╙──       	              ^^^^^
 //│ —————————————————| Flowed |—————————————————————————————————————————————————————————————————————————
-//│   fun test⁰::test¹(g⁰) ‹flow:test⁰› = g⁰.foo‹?›
+//│   fun test⁰::test¹(g⁰) ‹flow:test⁰› = g⁰.fooˀˀˀ
 //│ where
 //│     g⁰  ~>  {foo: ⋅foo⁴}
 //│     flow:test⁰  <~  ((g⁰) -> ⋅foo⁴)
@@ -176,7 +176,7 @@ test(f)
 fun test(g) = g.foo
 test(f)
 //│ —————————————————| Flowed |—————————————————————————————————————————————————————————————————————————
-//│   fun test²::test³(g¹) ‹flow:test¹› = g¹.foo‹?›{ ~> Foo⁰.foo⁰(g¹)‹app⁹› },
+//│   fun test²::test³(g¹) ‹flow:test¹› = g¹.Foo⁰.foo⁰{ ~> Foo⁰.foo⁰(g¹)‹app⁹› },
 //│   test²{ ~> test² }(f⁰)‹app¹⁰›
 //│ where
 //│     f⁰  <~  Foo()
@@ -202,7 +202,7 @@ module AA with
 //│         val x⁴::x⁵: Int⁰{ ~> Int⁰ } ‹flow:x⁰› = 1
 //│       },
 //│       module CC⁰::CC² {
-//│         fun getX⁰::getX¹(self⁰: ⟨BB¹.⟩CC⁰) ‹flow:getX⁰› = self⁰.x‹?›{ ~> self⁰.x⁴ }
+//│         fun getX⁰::getX¹(self⁰: ⟨BB¹.⟩CC⁰) ‹flow:getX⁰› = self⁰.xˀˀˀ{ ~> self⁰.x⁴ }
 //│       }
 //│     }
 //│   }
@@ -215,7 +215,7 @@ module AA with
 :sjs
 new AA.BB.CC().x
 //│ —————————————————| Flowed |—————————————————————————————————————————————————————————————————————————
-//│   new AA⁰.BB⁰.CC⁰().x‹?›{ ~> new AA⁰.BB⁰.CC⁰().x⁴ }
+//│   new AA⁰.BB⁰.CC⁰().xˀˀˀ{ ~> new AA⁰.BB⁰.CC⁰().x⁴ }
 //│ where
 //│     
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
@@ -226,7 +226,7 @@ new AA.BB.CC().x
 :sjs
 new AA.BB.CC().getX
 //│ —————————————————| Flowed |—————————————————————————————————————————————————————————————————————————
-//│   new AA⁰.BB⁰.CC⁰().getX‹?›{ ~> AA⁰.BB⁰.CC⁰.getX⁰(new AA⁰.BB⁰.CC⁰())‹app¹¹› }
+//│   new AA⁰.BB⁰.CC⁰().AA⁰.BB⁰.CC⁰.getX⁰{ ~> AA⁰.BB⁰.CC⁰.getX⁰(new AA⁰.BB⁰.CC⁰())‹app¹¹› }
 //│ where
 //│     
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
@@ -266,12 +266,12 @@ foo.test
 //│ ║  l.264: 	foo.test
 //│ ╙──       	^^^^^^^^
 //│ —————————————————| Flowed |—————————————————————————————————————————————————————————————————————————
-//│   foo².test‹?›
+//│   foo².testˀˀˀ
 //│ where
 //│     foo²  <~  A
 //│     foo²  ~>  {test: ⋅test⁰}
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
-//│ ═══[RUNTIME ERROR] Error: Access to required field 'test' yielded 'undefined'
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
 let foo =
@@ -288,7 +288,7 @@ let foo =
 //│     module A³::A⁵ {
 //│       fun test⁶::test⁷(a³) ‹flow:test³› = new A³
 //│     },
-//│     new A³.test‹?›{ ~> A³.test⁶(new A³)‹app¹²› }
+//│     new A³.A³.test⁶{ ~> A³.test⁶(new A³)‹app¹²› }
 //│   }
 //│ where
 //│     foo³  <~  A
@@ -305,12 +305,12 @@ foo.test
 //│ ║  l.303: 	foo.test
 //│ ╙──       	^^^^^^^^
 //│ —————————————————| Flowed |—————————————————————————————————————————————————————————————————————————
-//│   foo³.test‹?›
+//│   foo³.testˀˀˀ
 //│ where
 //│     foo³  <~  A
 //│     foo³  ~>  {test: ⋅test²}
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
-//│ ═══[RUNTIME ERROR] Error: Access to required field 'test' yielded 'undefined'
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
 class CC(val x: Int)
@@ -322,7 +322,7 @@ module CC with
 //│     val x⁷::x⁸ ‹flow:x¹› = x⁶
 //│   },
 //│   module CC⁴::CC⁶ {
-//│     fun getX²::getX³(self¹: CC⁴{ ~> CC⁴ }) ‹flow:getX¹› = self¹.x‹?›{ ~> self¹.x⁷ }
+//│     fun getX²::getX³(self¹: CC⁴{ ~> CC⁴ }) ‹flow:getX¹› = self¹.xˀˀˀ{ ~> self¹.x⁷ }
 //│   }
 //│ where
 //│     x⁶  <~  type Int
@@ -335,7 +335,7 @@ module CC with
 :fixme // TODO: handle lifted class defs: the JS is missing the `.class` access to get the static member `CC2.class.getX`
 CC(123).getX
 //│ —————————————————| Flowed |—————————————————————————————————————————————————————————————————————————
-//│   CC⁴(123)‹app¹³›.getX‹?›{ ~> CC⁴.getX²(CC⁴(123)‹app¹³›)‹app¹⁴› }
+//│   CC⁴(123)‹app¹³›.CC⁴.getX²{ ~> CC⁴.getX²(CC⁴(123)‹app¹³›)‹app¹⁴› }
 //│ where
 //│     
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
@@ -351,7 +351,7 @@ module CC with
 //│     
 //│   },
 //│   module CC⁷::CC⁹ {
-//│     fun oops⁰::oops¹(x⁹: CC⁷{ ~> CC⁷ }) ‹flow:oops⁰› = x⁹.oops‹?›{ ~> CC⁷.oops⁰(x⁹)‹app¹⁵› }
+//│     fun oops⁰::oops¹(x⁹: CC⁷{ ~> CC⁷ }) ‹flow:oops⁰› = x⁹.CC⁷.oops⁰{ ~> CC⁷.oops⁰(x⁹)‹app¹⁵› }
 //│   }
 //│ where
 //│     x⁹  <~  type CC
@@ -363,7 +363,7 @@ module CC with
 :re
 new CC().oops
 //│ —————————————————| Flowed |—————————————————————————————————————————————————————————————————————————
-//│   new CC⁷().oops‹?›{ ~> CC⁷.oops⁰(new CC⁷())‹app¹⁶› }
+//│   new CC⁷().CC⁷.oops⁰{ ~> CC⁷.oops⁰(new CC⁷())‹app¹⁶› }
 //│ where
 //│     
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
@@ -379,7 +379,7 @@ module CC with
 //│     val okay⁰::okay¹ ‹flow:okay⁰› = 123
 //│   },
 //│   module CC¹⁰::CC¹² {
-//│     fun okay²::okay³(x¹⁰: CC¹⁰{ ~> CC¹⁰ }) ‹flow:okay¹› = x¹⁰.okay‹?›{ ~> x¹⁰.okay⁰ }
+//│     fun okay²::okay³(x¹⁰: CC¹⁰{ ~> CC¹⁰ }) ‹flow:okay¹› = x¹⁰.okayˀˀˀ{ ~> x¹⁰.okay⁰ }
 //│   }
 //│ where
 //│     x¹⁰  <~  type CC
@@ -389,7 +389,7 @@ module CC with
 
 new CC().okay
 //│ —————————————————| Flowed |—————————————————————————————————————————————————————————————————————————
-//│   new CC¹⁰().okay‹?›{ ~> new CC¹⁰().okay⁰ }
+//│   new CC¹⁰().okayˀˀˀ{ ~> new CC¹⁰().okay⁰ }
 //│ where
 //│     
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
@@ -430,7 +430,7 @@ let e = new Example.Test(123)
 :fixme // Same as test case above (missing `.class` access)
 e.next
 //│ —————————————————| Flowed |—————————————————————————————————————————————————————————————————————————
-//│   e⁰.next‹?›{ ~> Example⁰.Test¹.next⁰(e⁰)‹app¹⁹› }
+//│   e⁰.Example⁰.Test¹.next⁰{ ~> Example⁰.Test¹.next⁰(e⁰)‹app¹⁹› }
 //│ where
 //│     e⁰  <~  Test(123)
 //│     e⁰  ~>  {next: ⋅next⁰}

@@ -1,3 +1,4 @@
+:.
 :js
 
 
@@ -26,10 +27,15 @@ fun f1(x, y) = if
   else 3
 //│ Normalized:
 //│ >  ‹if|while›
-//│ >    x is Cat() and
-//│ >      y is 0 then 1
+//│ >    let tmp:scrut = x⁰
+//│ >    tmp:scrut is member:Cat⁰^term:f1⁰() and
+//│ >      let tmp:scrut = y⁰
+//│ >      tmp:scrut is 0 then 1
+//│ >      let tmp:scrut = x⁰
+//│ >      tmp:scrut is member:Dog⁰^term:f1⁰() then 2
 //│ >      else 3
-//│ >    x is Dog() then 2
+//│ >    let tmp:scrut = x⁰
+//│ >    tmp:scrut is member:Dog⁰^term:f1⁰() then 2
 //│ >    else 3
 
 // * Same shape but with an inner refining test on the `Dog()` branch — the
@@ -41,13 +47,19 @@ fun f2(x, y, z) = if
   else 3
 //│ Normalized:
 //│ >  ‹if|while›
-//│ >    x is Cat() and
-//│ >      y is 0 then 1
+//│ >    let tmp:scrut = x¹
+//│ >    let-split σ =
+//│ >      let tmp:scrut = x¹
+//│ >      tmp:scrut is member:Dog⁰^term:f2⁰() and
+//│ >        let tmp:scrut = z⁰
+//│ >        tmp:scrut is 0 then 2
+//│ >        else 3
 //│ >      else 3
-//│ >    x is Dog() and
-//│ >      z is 0 then 2
-//│ >      else 3
-//│ >    else 3
+//│ >    tmp:scrut is member:Cat⁰^term:f2⁰() and
+//│ >      let tmp:scrut = y¹
+//│ >      tmp:scrut is 0 then 1
+//│ >      $σ
+//│ >    $σ
 
 
 // === Specialized split duplication — must remain ===
@@ -67,9 +79,11 @@ fun g1(x) = if x is
   S(0) then "zero"
   S(_) then "any"
 //│ Normalized:
-//│ >  ‹if|while› x is S(arg$S$0$) and
-//│ >    tmp:arg$S$0$ is 0 then "zero"
-//│ >    else "any"
+//│ >  ‹if|while›
+//│ >    let tmp:scrut = x²
+//│ >    tmp:scrut is member:S⁰^term:g1⁰(arg$S$0$) and
+//│ >      tmp:arg$S$0$ is 0 then "zero"
+//│ >      else "any"
 
 // * Three branches on the same scrutinee with progressively coarser tests:
 // * each specialization produces a distinct simplified split.
@@ -79,7 +93,9 @@ fun g2(x) = if x is
   S(1) then "one"
   S(_) then "other"
 //│ Normalized:
-//│ >  ‹if|while› x is S(arg$S$0$) and
-//│ >    tmp:arg$S$0$ is 0 then "zero"
-//│ >    tmp:arg$S$0$ is 1 then "one"
-//│ >    else "other"
+//│ >  ‹if|while›
+//│ >    let tmp:scrut = x³
+//│ >    tmp:scrut is member:S⁰^term:g2⁰(arg$S$0$) and
+//│ >      tmp:arg$S$0$ is 0 then "zero"
+//│ >      tmp:arg$S$0$ is 1 then "one"
+//│ >      else "other"

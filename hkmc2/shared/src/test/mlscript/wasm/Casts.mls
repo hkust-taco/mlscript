@@ -1,6 +1,5 @@
+:.
 
-:global
-:wasm
 
 
 // In this example, the function call is equivalent to `useBox((id(new Box(42) as!! Box)))`.
@@ -151,10 +150,10 @@ wasm.ref.i31(wasm.i32.const(7))
 :noInline
 wasm.ref.i31(id(wasm.i32.const(7)))
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int32' at an unrelated type 'Unknown'
-//│ ║  l.152: 	wasm.ref.i31(id(wasm.i32.const(7)))
+//│ ║  l.151: 	wasm.ref.i31(id(wasm.i32.const(7)))
 //│ ╙──       	                ^^^^^^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Unknown' at an unrelated type 'Int32'
-//│ ║  l.152: 	wasm.ref.i31(id(wasm.i32.const(7)))
+//│ ║  l.151: 	wasm.ref.i31(id(wasm.i32.const(7)))
 //│ ╙──       	             ^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[COMPILATION ERROR] Cannot cast a Wasm value of type `i32` to `(ref null any)` in a different type hierarchy
 //│ ═══[COMPILATION ERROR] Operand #1 of wasm intrinsic 'ref.i31' must be of type 'Int32'
@@ -179,7 +178,7 @@ unpack(toObj())
 :e
 fun test: Function = id
 //│ ╔══[COMPILATION ERROR] Returning function instances is not supported
-//│ ║  l.180: 	fun test: Function = id
+//│ ║  l.179: 	fun test: Function = id
 //│ ╙──       	                     ^^
 
 :fixme
@@ -221,7 +220,7 @@ fun test: Function = castToA(123)
 :e
 castToA(wasm.i32.const(123))
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int32' at an unrelated type 'Unknown'
-//│ ║  l.222: 	castToA(wasm.i32.const(123))
+//│ ║  l.221: 	castToA(wasm.i32.const(123))
 //│ ╙──       	        ^^^^^^^^^^^^^^^^^^^
 //│ Wasm result:
 //│ = 123

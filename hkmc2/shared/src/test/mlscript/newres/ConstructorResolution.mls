@@ -1,0 +1,227 @@
+:.
+
+
+// Constructor lookup waits for forward definitions and ignores term overloads.
+fun forward(x) = {
+  open Constructors
+  if x is Token then 1 else 0
+}
+module Constructors {
+  class Token
+  val Token = 41
+  class Box(val value)
+  object Singleton
+}
+
+:expect [1, 0, 41]
+[forward(new Constructors.Token), forward(0), Constructors.Token]
+//│ = [1, 0, 41]
+
+
+fun named(x) = {
+  open Constructors {Token}
+  if x is Token then 1 else 0
+}
+fun selected(x) = if x is Constructors.Token then 1 else 0
+fun boxed(x) = {
+  open Constructors
+  if x is Box(value) then value else 0
+}
+fun singleton(x) = {
+  open Constructors
+  if x is Singleton then 1 else 0
+}
+
+:expect [1, 0, 1, 0, 42, 0, 1, 0]
+[named(new Constructors.Token), named(0), selected(new Constructors.Token), selected(0),
+ boxed(Constructors.Box(42)), boxed(0), singleton(Constructors.Singleton), singleton(0)]
+//│ = [1, 0, 1, 0, 42, 0, 1, 0]
+
+
+// Lowercase `as` names bind even when an open contains the same name.
+// Uppercase `as` names match constructors, including deferred open candidates.
+:expect [1, 0, 43]
+fun chained(x) = {
+  open Constructors
+  if x is _ as Token then 1 else 0
+}
+module Aliases { val saved = 99 }
+fun alias(x) = {
+  open Aliases
+  if x is Constructors.Box(_) as saved then saved.value else 0
+}
+[chained(new Constructors.Token), chained(0), alias(Constructors.Box(43))]
+//│ = [1, 0, 43]
+
+
+// A constructor declared later in the same scope is also visible in a pattern.
+fun localForward(x) = if x is Later then 1 else 0
+class Later
+fun Later() = new Later
+
+:expect [1, 0]
+[localForward(Later()), localForward(0)]
+//│ = [1, 0]
+
+
+// An explicit binding wins over every wildcard candidate.
+module Other { class Token }
+fun explicit(x) = {
+  open Other
+  open Constructors {Token}
+  if x is Token then 1 else 0
+}
+
+:expect [1, 0]
+[explicit(new Constructors.Token), explicit(new Other.Token)]
+//│ = [1, 0]
+
+
+:e
+fun ambiguous(x) = {
+  open Constructors
+  open Other
+  if x is Token then 1 else 0
+}
+ambiguous(new Constructors.Token)
+//│ ╔══[COMPILATION ERROR] Constructor pattern is ambiguous.
+//│ ║  l.84: 	  if x is Token then 1 else 0
+//│ ╙──      	          ^^^^^
+//│ = 0
+
+
+:e
+fun ambiguousReversed(x) = {
+  open Other
+  open Constructors
+  if x is Token then 1 else 0
+}
+ambiguousReversed(new Constructors.Token)
+//│ ╔══[COMPILATION ERROR] Constructor pattern is ambiguous.
+//│ ║  l.97: 	  if x is Token then 1 else 0
+//│ ╙──      	          ^^^^^
+//│ = 0
+
+
+// Unknown uppercase names in `as` never silently become bindings.
+:e
+fun unknown(x) = if x is _ as MissingConstructor then 1 else 0
+unknown(0)
+//│ ╔══[COMPILATION ERROR] Name not found: MissingConstructor
+//│ ║  l.108: 	fun unknown(x) = if x is _ as MissingConstructor then 1 else 0
+//│ ╙──       	                              ^^^^^^^^^^^^^^^^^^
+//│ = 0
+
+
+:expect [44, 45]
+module Pairs { class (><) Pair(val first, val second) }
+fun infix(x) = {
+  open Pairs
+  if x is a >< b then a else 0
+}
+fun appliedSelection(x) = if x is Pairs.Pair(a, b) then b else 0
+[infix(Pairs.Pair(44, 45)), appliedSelection(Pairs.Pair(44, 45))]
+//│ = [44, 45]
+
+
+// Repeating one source is unambiguous.
+:expect 1
+fun repeated(x) = {
+  open Constructors
+  open Constructors
+  if x is Token then 1 else 0
+}
+repeated(new Constructors.Token)
+//│ = 1
+
+
+// Distinct receivers can expose the same member symbol without denoting the
+// same constructor value. Candidate identity includes the receiver.
+fun factory() = {
+  module Local { class Token }
+  Local
+}
+val first = factory()
+val second = factory()
+//│ first = class Local { Token: class Token }
+//│ second = class Local { Token: class Token }
+
+:e
+fun sameMember(x) = {
+  open first
+  open second
+  if x is Token then 1 else 0
+}
+sameMember(new first.Token)
+//│ ╔══[COMPILATION ERROR] Constructor pattern is ambiguous.
+//│ ║  l.153: 	  if x is Token then 1 else 0
+//│ ╙──       	          ^^^^^
+//│ = 0
+
+
+// A non-pattern value is diagnosed rather than treated as a constructor.
+:e
+val NotAPattern = 1
+fun invalid(x) = if x is NotAPattern then 1 else 0
+invalid(0)
+//│ ╔══[COMPILATION ERROR] Resolution error in constructor
+//│ ║  l.165: 	fun invalid(x) = if x is NotAPattern then 1 else 0
+//│ ║         	                         ^^^^^^^^^^^
+//│ ╟── Integer literal cannot be used as a constructor pattern.
+//│ ║  l.164: 	val NotAPattern = 1
+//│ ╙──       	                  ^
+//│ = 0
+//│ NotAPattern = 1
+
+
+// Pattern definitions use the same deferred references as direct matches.
+:expect [1, 0]
+module PatternNames {
+  open Constructors
+  pattern Named = Token
+}
+fun namedDefinition(x) = {
+  open PatternNames
+  if x is Named then 1 else 0
+}
+[namedDefinition(new Constructors.Token), namedDefinition(0)]
+//│ = [1, 0]
+
+
+// Nominal filtering follows inheritance before propagating an alias's shape.
+:expect [46, 0]
+class Base { val field = 46 }
+class Derived extends Base
+fun inherited(x) = if x is Base as instance then instance.field else 0
+[inherited(new Derived), inherited(0)]
+//│ = [46, 0]
+
+
+:e
+fun ambiguousNew() = {
+  open Constructors
+  open Other
+  new Token
+}
+ambiguousNew()
+//│ ╔══[COMPILATION ERROR] The class instantiated here is ambiguous
+//│ ║  l.204: 	  new Token
+//│ ║         	      ^^^^^
+//│ ╟── target: class 'Token'
+//│ ║  l.10: 	  class Token
+//│ ║        	        ^^^^^
+//│ ╟── target: class 'Token'
+//│ ║  l.68: 	module Other { class Token }
+//│ ╙──      	                     ^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+
+// Pattern parameters preserve the caller's selected constructor interpretation.
+:expect [1, 0]
+pattern Identity(pattern P) = P
+fun parameterized(x) = {
+  open Constructors
+  if x is Identity(Token) then 1 else 0
+}
+[parameterized(new Constructors.Token), parameterized(0)]
+//│ = [1, 0]

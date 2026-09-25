@@ -1,3 +1,4 @@
+:.
 :js
 
 
@@ -69,9 +70,16 @@ test(123)
 :e
 :re
 test()
-//│ ╔══[COMPILATION ERROR] Expected 1 arguments, got 0
-//│ ║  l.71: 	test()
-//│ ╙──      	    ^^
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.72: 	test()
+//│ ║        	^^^^^^
+//│ ╟── Function 'test' expected 1 argument, but got 0
+//│ ║  l.38: 	fun test(x) =
+//│ ║        	^^^^^^^^^^^^^
+//│ ║  l.39: 	  data class Foo(a, b)
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.40: 	  Foo(x, x + 1)
+//│ ╙──      	^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] Error: Function 'test' expected 1 argument but got 0
 
 

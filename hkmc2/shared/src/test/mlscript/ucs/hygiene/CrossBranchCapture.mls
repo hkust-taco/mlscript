@@ -1,3 +1,4 @@
+:.
 :js
 
 data class Numb(n: Int)
@@ -8,8 +9,8 @@ fun process(e) =
     Numb(n) and n > 0 then n
     Numb(m) then n
 //│ ╔══[COMPILATION ERROR] Name not found: n
-//│ ║  l.9: 	    Numb(m) then n
-//│ ╙──     	                 ^
+//│ ║  l.10: 	    Numb(m) then n
+//│ ╙──      	                 ^
 
 
 :re
@@ -42,19 +43,19 @@ fun process(e) =
     Pair(Vec(n),  Numb(n)) then n
     Pair(Numb(n), Vec(n))  then n
 //│ ╔══[COMPILATION ERROR] Name not found: n
-//│ ║  l.41: 	    Pair(Vec(xs), Vec(ys)) then n
+//│ ║  l.42: 	    Pair(Vec(xs), Vec(ys)) then n
 //│ ╙──      	                                ^
 //│ ╔══[COMPILATION ERROR] Duplicated pattern variable.
-//│ ║  l.42: 	    Pair(Vec(n),  Numb(n)) then n
+//│ ║  l.43: 	    Pair(Vec(n),  Numb(n)) then n
 //│ ║        	                       ^
 //│ ╟── The previous definition is as follows.
-//│ ║  l.42: 	    Pair(Vec(n),  Numb(n)) then n
+//│ ║  l.43: 	    Pair(Vec(n),  Numb(n)) then n
 //│ ╙──      	             ^
 //│ ╔══[COMPILATION ERROR] Duplicated pattern variable.
-//│ ║  l.43: 	    Pair(Numb(n), Vec(n))  then n
+//│ ║  l.44: 	    Pair(Numb(n), Vec(n))  then n
 //│ ║        	                      ^
 //│ ╟── The previous definition is as follows.
-//│ ║  l.43: 	    Pair(Numb(n), Vec(n))  then n
+//│ ║  l.44: 	    Pair(Numb(n), Vec(n))  then n
 //│ ╙──      	              ^
 
 
@@ -64,10 +65,10 @@ fun process(e) =
   if e is
     Pair(Numb(n), Numb(n)) then n
 //│ ╔══[COMPILATION ERROR] Duplicated pattern variable.
-//│ ║  l.65: 	    Pair(Numb(n), Numb(n)) then n
+//│ ║  l.66: 	    Pair(Numb(n), Numb(n)) then n
 //│ ║        	                       ^
 //│ ╟── The previous definition is as follows.
-//│ ║  l.65: 	    Pair(Numb(n), Numb(n)) then n
+//│ ║  l.66: 	    Pair(Numb(n), Numb(n)) then n
 //│ ╙──      	              ^
 
 process(Pair(Numb(1), Numb(2)))

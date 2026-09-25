@@ -15,6 +15,7 @@ import syntax.Tree
 import Elaborator.{State, Ctx, ctx}
 import Producer as P
 import Consumer as C
+import hkmc2.semantics.ClassSymbol
 
 
 
@@ -27,9 +28,33 @@ type ProdCtor = Producer.Ctor | Producer.Fun | Producer.Typ | Producer.Tup | Pro
 case class ConcreteProd(path: Path, ctor: ProdCtor)
 
 
+enum AppTarget:
+  case ObjectMember(sym: ClassSymbol)
+  case Err(err: ErrorReport)
+
 enum SelectionTarget:
   case ObjectMember(sym: MemberSymbol)
   case CompanionMember(comp: Term, sym: MemberSymbol)
+  case Err(err: ErrorReport)
+  
+  def describe: Str = this match
+    case ObjectMember(sym) => s"member ${sym.nme}" // TODO: more info (owner)
+    case CompanionMember(_, sym) => s"companion member ${sym.nme}"
+    case Err(err) => s"erroneous selection (${err.mainMsg})"
+  
+  def loc: Opt[Loc] = this match
+    case ObjectMember(sym) => sym.toLoc
+    case CompanionMember(_, sym) => sym.toLoc
+    case Err(err) => N
+  
+  import hkmc2.document.*
+  import hkmc2.document.Document.*
+  def show(using Scope, ShowCfg, Raise): Document =
+    this match
+    case ObjectMember(sym) => sym.showName
+    case CompanionMember(comp, sym) => doc"${comp.show}.${sym.showName}"
+    case Err(err) => err.mainMsg
+end SelectionTarget
 
 
 /** This is a very sketchy exploration/proof of concept of flow analysis
@@ -157,7 +182,7 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
     case sel @ AnySel(pre, nme, cls) =>
       log(s"Selection ${sel.showDbg} ${sel.typ}")
       checkLDS(pre): pre_t =>
-        sel.resolvedSym match
+        sel.legacyResolvedSym match
         case S(sym: BlockMemberSymbol) =>
           log(s"RES ${sym.nme} in ${sel.showDbg}")
           getFlowSymOrType(sym)
@@ -174,7 +199,7 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
     case nw @ New(cls, args, rft) =>
       rft match
       case N =>
-        cls.resolvedSym.flatMap(_.asCls) match
+        cls.legacyResolvedSym.flatMap(_.asCls) match
         case N =>
           log(s"Unresolved or invalid class symbol in ${cls.showDbg}")
           P.Unknown(nw)
@@ -283,6 +308,7 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
             :: targets.map:
               case ObjectMember(sym) => msg"object member ${sym.nme}" -> sym.toLoc
               case CompanionMember(_, sym) => msg"companion member ${sym.nme}" -> sym.toLoc
+              case target: SelectionTarget.Err => msg"${target.describe}" -> target.loc
     leadingDotSelsToExpand.foreach: sel =>
       log(s"Resolved targets for ${sel.showDbg}: ${sel.resolvedTargets.mkString(", ")}")
       assert(sel.expansion.isEmpty)

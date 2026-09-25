@@ -1,0 +1,243 @@
+:.
+
+// Tuples retain indexed fields while inheriting the declared Array interface.
+:expect [3, "1-2-3", 2]
+let xs = [1, 2, 3]
+[xs.length, xs.join("-"), xs.1]
+//│ = [3, "1-2-3", 2]
+//│ xs = [1, 2, 3]
+
+// A tuple is also an instance of the Array class for pattern transfer.
+:expect 3
+let xs = [1, 2, 3]
+if xs is Array then xs.length else 0
+//│ = 3
+//│ xs = [1, 2, 3]
+
+// Inherited callbacks receive the union of the tuple's element shapes.
+:expect [2, 3]
+class Item(val value: Int)
+[Item(1), Item(2)].map((item, ...) => item.value + 1)
+//│ = [2, 3]
+
+// Declared tuple element types remain opaque through the Array interface.
+:ge
+class Base
+class Child extends Base with
+  val extra = 1
+fun read(xs: [Base]) = xs.map((item, ...) => item.extra)
+read([new Child])
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.28: 	fun read(xs: [Base]) = xs.map((item, ...) => item.extra)
+//│ ║        	                                             ^^^^^^^^^^
+//│ ╙── Value of type 'Base' does not contain member 'extra'
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// Mutable arrays expose methods without claiming their initial elements persist.
+:expect [3, "2,1,3", 3]
+let xs = mut [1, 2]
+xs.reverse()
+let size = xs.push(3)
+[size, xs.join(), xs.2]
+//│ = [3, "2,1,3", 3]
+//│ size = 3
+//│ xs = [2, 1, 3]
+
+// Array results retain their declared instance interface.
+:expect "2,3"
+[1, 2].map((x, ...) => x + 1).join()
+//│ = "2,3"
+
+// Tuple element inference must remain separate across function activations.
+:expect [[1], [2]]
+class First(val first: Int)
+class Second(val second: Int)
+fun singleton(x) = [x]
+[singleton(First(1)).map((x, ...) => x.first),
+ singleton(Second(2)).map((x, ...) => x.second)]
+//│ = [[1], [2]]
+
+// Inheriting Array does not authorize arbitrary properties.
+:ge
+[1].nonexistent
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.62: 	[1].nonexistent
+//│ ║        	^^^^^^^^^^^^^^^
+//│ ╟── Tuple literal does not contain member 'nonexistent'
+//│ ║  l.62: 	[1].nonexistent
+//│ ╙──      	^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// Nominal argument inference sees the tuple's Array supertype at the caller.
+:expect [4]
+class Item(val value: Int)
+fun values[A](xs: Array[A]) = xs.map((item, ...) => item)
+values([Item(4)]).map((item, ...) => item.value)
+//│ = [4]
+
+// Rest callback parameters retain the remaining argument tuple.
+:expect [3, 4]
+[10, 20].map((item, ...rest) => rest.0 + rest.1.length + 1)
+//│ = [3, 4]
+
+// Fixed callbacks must accept all three arguments supplied by Array.map.
+:ge
+[1].map(x => x)
+//│ ╔══[COMPILATION ERROR] Resolution error in function type
+//│ ║  l.162: 	  fun map[U](f: (T, Int, Array[T]) -> U): Array[U]
+//│ ║         	                ^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Callback parameter list does not match its declared function type.
+//│ ║  in Arrays.mls:85
+//│ ║  l.85: 	[1].map(x => x)
+//│ ╙──      	        ^^^^^^
+//│ ═══[RUNTIME ERROR] Error: Function expected 1 argument but got 3
+
+// Mutable arrays do not propagate stale initializer element shapes to callbacks.
+:ge
+class Original(val original: Int)
+class Replacement(val replacement: Int)
+let xs = mut [Original(1)]
+set xs.0 = Replacement(2)
+xs.map((x, ...) => x.original)
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.101: 	xs.map((x, ...) => x.original)
+//│ ║         	                   ^^^^^^^^^^
+//│ ╟── Instance of class 'Replacement' does not contain member 'original'
+//│ ║  l.100: 	set xs.0 = Replacement(2)
+//│ ╙──       	           ^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ xs = [Replacement(2)]
+
+// Declared constructor parameters do not introduce a generated `.class` binding.
+:sjs
+:expect 3
+let allocated = new Array[Int](3)
+allocated.length
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ let allocated;
+//│ allocated = globalThis.Object.freeze(new globalThis.Array(3));
+//│ return allocated.length
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 3
+//│ allocated = [<3 empty items>]
+
+// Both bare instance checks and constructor-field patterns use the native Array.
+:expect [true, 3]
+[allocated is Array, if allocated is Array(length) then length else 0]
+//│ = [true, 3]
+
+// Foreign classes with companion modules continue to use their native bindings.
+:expect true
+new String("hello") is String
+//│ = true
+
+// The length-only Array interface rejects element-list construction.
+:ge
+new Array[Int](1, 2)
+//│ ╔══[COMPILATION ERROR] Resolution error in object instantiation
+//│ ║  l.136: 	new Array[Int](1, 2)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Class 'Array' expected 1 argument, but got 2
+//│ ║  in ../decls/Prelude.mls
+//│ ║  l.149: 	declare class Array[T](val length: Int): Array[T] with
+//│ ║         	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.150: 	  fun join(...separators): Str
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.151: 	  fun reverse(): Array[T]
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.152: 	  fun sort(...compare): Array[T]
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.153: 	... (more lines omitted) ...
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ = [1, 2]
+
+:ge
+new Array[Int]()
+//│ ╔══[COMPILATION ERROR] Resolution error in object instantiation
+//│ ║  l.155: 	new Array[Int]()
+//│ ║         	^^^^^^^^^^^^^^^^
+//│ ╟── Class 'Array' expected 1 argument, but got 0
+//│ ║  in ../decls/Prelude.mls
+//│ ║  l.149: 	declare class Array[T](val length: Int): Array[T] with
+//│ ║         	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.150: 	  fun join(...separators): Str
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.151: 	  fun reverse(): Array[T]
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.152: 	  fun sort(...compare): Array[T]
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.153: 	... (more lines omitted) ...
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ = []
+
+// Calls select the callable overload even when the class has a companion module.
+:expect 3
+Array[Int](3).length
+//│ = 3
+
+// at supports negative indices; foreign undefined results normalize to unit.
+:expect [3, 1, ()]
+let xs = [1, 2, 3]
+[xs.at(-1), xs.at(0), xs.at(3)]
+//│ = [3, 1, ()]
+//│ xs = [1, 2, 3]
+
+:expect ["7,7,3", "7", "7,9,3"]
+let xs = mut [1, 2, 3]
+let filled = xs.fill(7, 0, 2).join()
+let removed = xs.splice(1, 1, 9).join()
+[filled, removed, xs.join()]
+//│ = ["7,7,3", "7", "7,9,3"]
+//│ filled = "7,7,3"
+//│ removed = "7"
+//│ xs = [7, 9, 3]
+
+// reduce's accumulator receives both the initial value and the callback results.
+:expect [3, 5]
+class Item(val value: Int)
+class Total(val total: Int)
+[[Item(1), Item(2)].reduce((acc, item, ...) => Total(acc.total + item.value), Total(0)).total,
+ [Item(5)].reduce((acc, item, ...) => acc + item.value, 0)]
+//│ = [3, 5]
+
+// An accumulator shape that comes only from the initial value is still checked.
+:e
+class Item(val value: Int)
+class Total(val total: Int)
+[Item(1)].reduce((acc, item, ...) => acc.missing, Total(0))
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.207: 	[Item(1)].reduce((acc, item, ...) => acc.missing, Total(0))
+//│ ║         	                                     ^^^^^^^^^^^
+//│ ╟── Instance of class 'Total' does not contain member 'missing'
+//│ ║  l.207: 	[Item(1)].reduce((acc, item, ...) => acc.missing, Total(0))
+//│ ╙──       	                                                  ^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// Without an initial value, the first element would be the accumulator,
+// which the declared signature does not describe.
+:e
+[1, 2].reduce((acc, x, ...) => acc + x)
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.219: 	[1, 2].reduce((acc, x, ...) => acc + x)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Function 'reduce' expected 2 arguments, but got 1
+//│ ║  in ../decls/Prelude.mls
+//│ ║  l.170: 	  fun reduce[U](f: (U, T, Int, Array[T]) -> U, initial: U): U
+//│ ╙──       	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ = 3
+
+// A tuple created in one activation of `mk` and passed to another has the path
+// `↘mk ↗mk`, whereas `[1]` has the path `↘mk`. Both receivers share the result
+// type parameter of the same `map` selection. The exit from the first activation
+// is provenance: Array's members remain at its global definition, so both paths
+// read that parameter from the same scope.
+:expect [1]
+private fun mk(xs) = xs.map((x, ...) => if x is Int then x else mk([x]))
+mk([1])
+//│ = [1]
+
+// The accumulator of reduce is fed back into the receiver in the same way.
+:expect 0
+private fun mk(...args) = args.reduce((acc, x, ...) => if acc is Int then acc else mk(...acc), 0)
+mk(1, 2)
+//│ = 0

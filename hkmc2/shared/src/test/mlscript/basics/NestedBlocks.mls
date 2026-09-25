@@ -1,3 +1,4 @@
+:.
 :js
 
 
@@ -10,10 +11,13 @@ object Foo with
 :e
 :re
 Foo.x
-//│ ╔══[COMPILATION ERROR] Object 'Foo' does not contain member 'x'
-//│ ║  l.12: 	Foo.x
-//│ ╙──      	   ^^
-//│ ═══[RUNTIME ERROR] Error: Access to required field 'x' yielded 'undefined'
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.13: 	Foo.x
+//│ ║        	^^^^^
+//│ ╟── Object 'Foo' does not contain member 'x'
+//│ ║  l.7: 	object Foo with
+//│ ╙──     	       ^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
 module Oops with
@@ -29,18 +33,30 @@ object Oops with
     val fakeField = 1
     print(fakeField)
   print(this.fakeField) // shouldn't work!
-//│ ╔══[COMPILATION ERROR] Object 'Oops' does not contain member 'fakeField'
-//│ ║  l.31: 	  print(this.fakeField) // shouldn't work!
-//│ ╙──      	        ^^^^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.35: 	  print(this.fakeField) // shouldn't work!
+//│ ║        	        ^^^^^^^^^^^^^^
+//│ ╟── Module/object definition 'Oops' does not contain member 'fakeField'
+//│ ║  l.32: 	  if true then
+//│ ║        	     ^^^^^^^^^
+//│ ║  l.33: 	    val fakeField = 1
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.34: 	    print(fakeField)
+//│ ║        	^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.35: 	  print(this.fakeField) // shouldn't work!
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^
 //│ > 1
-//│ ═══[RUNTIME ERROR] Error: Access to required field 'fakeField' yielded 'undefined'
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :e
 :re
 Oops.fakeField
-//│ ╔══[COMPILATION ERROR] Object 'Oops' does not contain member 'fakeField'
-//│ ║  l.40: 	Oops.fakeField
-//│ ╙──      	    ^^^^^^^^^^
-//│ ═══[RUNTIME ERROR] Error: Access to required field 'fakeField' yielded 'undefined'
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.53: 	Oops.fakeField
+//│ ║        	^^^^^^^^^^^^^^
+//│ ╟── Object 'Oops' does not contain member 'fakeField'
+//│ ║  l.31: 	object Oops with
+//│ ╙──      	       ^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 

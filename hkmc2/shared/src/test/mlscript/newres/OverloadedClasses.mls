@@ -1,0 +1,155 @@
+:.
+
+
+class Bar {
+  fun id(x) = x
+}
+val Bar = new Bar
+//│ Bar = Bar
+
+:sr
+:sir
+:lot
+let x = new Bar
+let y = new Bar()
+//│ ————————————————| Resolved |————————————————————————————————————————————————————————————————————————
+//│   let x⁰, x⁰ = new Bar⁰, let y⁰, y⁰ = new Bar⁰()
+//│ —————————————| Lowered IR Tree |————————————————————————————————————————————————————————————————————
+//│ Program:
+//│   main = Assign:
+//│     lhs = x⁰
+//│     rhs = Instantiate:
+//│       mut = false
+//│       cls = MemberRef{disamb=class:Bar⁰}:
+//│         bms = member:Bar¹
+//│         disamb = class:Bar⁰
+//│       argss = Ls of
+//│         Nil
+//│     rest = Assign: \
+//│     lhs = y⁰
+//│     rhs = Instantiate:
+//│       mut = false
+//│       cls = MemberRef{disamb=class:Bar⁰}:
+//│         bms = member:Bar¹
+//│         disamb = class:Bar⁰
+//│       argss = Ls of
+//│         Nil
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ set x⁰ = new Bar⁰(); set y⁰ = new Bar⁰(); end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ x = Bar
+//│ y = Bar
+
+
+class Bar {
+  fun id(x) = x
+}
+fun Bar() = new Bar
+
+:sr
+:sir
+:lot
+let x = new Bar
+let y = new Bar()
+//│ ————————————————| Resolved |————————————————————————————————————————————————————————————————————————
+//│   let x¹, x¹ = new Bar¹, let y¹, y¹ = new Bar¹()
+//│ —————————————| Lowered IR Tree |————————————————————————————————————————————————————————————————————
+//│ Program:
+//│   main = Assign:
+//│     lhs = x¹
+//│     rhs = Instantiate:
+//│       mut = false
+//│       cls = MemberRef{disamb=class:Bar²}:
+//│         bms = member:Bar³
+//│         disamb = class:Bar²
+//│       argss = Ls of
+//│         Nil
+//│     rest = Assign: \
+//│     lhs = y¹
+//│     rhs = Instantiate:
+//│       mut = false
+//│       cls = MemberRef{disamb=class:Bar²}:
+//│         bms = member:Bar³
+//│         disamb = class:Bar²
+//│       argss = Ls of
+//│         Nil
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ set x¹ = new Bar²(); set y¹ = new Bar²(); end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ x = Bar
+//│ y = Bar
+
+
+:sr
+:sir
+module Foo {
+  class Bar {
+    fun id(x) = x
+  }
+  val Bar = new Bar
+}//│ ————————————————| Resolved |————————————————————————————————————————————————————————————————————————
+//│ ————————————————| Resolved |————————————————————————————————————————————————————————————————————————
+//│   module Foo⁰::Foo¹ {
+//│     class Bar²::Bar³ {
+//│       fun id⁰::id¹(x²) ‹flow:id⁰› = x²
+//│     },
+//│     val Bar²::Bar⁴ ‹flow:Bar⁰› = new Foo¹.this.Bar²^Bar⁴
+//│   }
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define Foo⁰ as class Foo¹
+//│ module Foo² {
+//│   val Bar⁴;
+//│   constructor {
+//│     let tmp;
+//│     define Bar⁴ as class Bar⁵ {
+//│       method id⁰ = fun id¹(x) {
+//│         return x
+//│       }
+//│     };
+//│     set tmp = new Foo².this.Bar⁵();
+//│     define Bar⁴ as val Bar⁶ = tmp;
+//│     end
+//│   }
+//│ };
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+:sr
+:sir
+:lot
+let x = new Foo.Bar
+let x = new Foo.Bar()
+//│ ————————————————| Resolved |————————————————————————————————————————————————————————————————————————
+//│   let x³, x³ = new Foo⁰.Bar², let x⁴, x⁴ = new Foo⁰.Bar²()
+//│ —————————————| Lowered IR Tree |————————————————————————————————————————————————————————————————————
+//│ Program:
+//│   main = Scoped(syms = {x²}):
+//│     body = Assign:
+//│       lhs = x²
+//│       rhs = Instantiate:
+//│         mut = false
+//│         cls = Select{sym=class:Bar⁵}:
+//│           qual = MemberRef{disamb=module:Foo²}:
+//│             bms = member:Foo⁰
+//│             disamb = module:Foo²
+//│           name = Ident of "Bar"
+//│         argss = Ls of
+//│           Nil
+//│       rest = Assign: \
+//│       lhs = x³
+//│       rhs = Instantiate:
+//│         mut = false
+//│         cls = Select{sym=class:Bar⁵}:
+//│           qual = MemberRef{disamb=module:Foo²}:
+//│             bms = member:Foo⁰
+//│             disamb = module:Foo²
+//│           name = Ident of "Bar"
+//│         argss = Ls of
+//│           Nil
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let x; set x = new Foo².Bar⁵(); set x³ = new Foo².Bar⁵(); end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ x = Bar
+
+
+

@@ -169,6 +169,7 @@ fun f(module m: M): module M = m
 //│         t = Ref{sym=member:M¹} of member:M¹
 //│         sym = module:M⁰
 //│       body = S of Ref{sym=m²,typ=module:M⁰} of m²
+//│       flags = (result annotation)
 //│       modulefulness = Modulefulness of S of module:M⁰
 //│   res = Lit of UnitLit of false
 

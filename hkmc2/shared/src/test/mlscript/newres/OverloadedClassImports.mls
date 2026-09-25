@@ -1,0 +1,69 @@
+:.
+
+
+import "../../mlscript-compile/OverloadedClassLibrary.mls"
+
+// Inlining must import the private class binding independently from its term.
+:sjs
+:expect 51
+OverloadedClassLibrary.fresh().answer()
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ import { _$_modulePrivate_$_Hidden as Hidden } from "./../../mlscript-compile/OverloadedClassLibrary.mjs";
+//│ import { "mlscript.class:_$_modulePrivate_$_Hidden" as Hidden1 } from "./../../mlscript-compile/OverloadedClassLibrary.mjs";
+//│ let inlinedVal;
+//│ inlinedVal = globalThis.Object.freeze(new Hidden1());
+//│ return inlinedVal.answer()
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 51
+
+:noInline
+:expect 51
+OverloadedClassLibrary.fresh().answer()
+//│ = 51
+
+:expect 15
+OverloadedClassLibrary.value()
+//│ = 15
+
+:expect 16
+OverloadedClassLibrary.Item
+//│ = 16
+
+:expect 52
+(new OverloadedClassLibrary.Item).answer()
+//│ = 52
+
+open OverloadedClassLibrary { Item }
+
+:expect 52
+(new Item).answer()
+//│ = 52
+
+:expect 16
+Item
+//│ = 16
+
+
+// The default export's term and class also have independent import bindings.
+import "../../mlscript-compile/OverloadedDefault.mls"
+//│ OverloadedDefault = 19
+
+:expect 19
+OverloadedDefault
+//│ = 19
+
+:expect 54
+(new OverloadedDefault).answer()
+//│ = 54
+
+
+// Imported overloads retain their class interpretation in bare patterns.
+:expect [1, 0, 1, 0]
+fun importedPattern(x) = {
+  open OverloadedClassLibrary
+  if x is Item then 1 else 0
+}
+fun namedPattern(x) = if x is Item then 1 else 0
+[importedPattern(new OverloadedClassLibrary.Item), importedPattern(0),
+ namedPattern(new Item), namedPattern(0)]
+//│ = [1, 0, 1, 0]

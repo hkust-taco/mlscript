@@ -1,12 +1,20 @@
+:.
 :js
 
 
 let empty = []
 //│ empty = []
 
+:ge
 :re
 empty.0
-//│ ═══[RUNTIME ERROR] Error: Access to required field '0' yielded 'undefined'
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.10: 	empty.0
+//│ ║        	^^^^^^^
+//│ ╟── Tuple literal does not contain member '0'
+//│ ║  l.5: 	let empty = []
+//│ ╙──     	            ^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :sjs
 let single = [1]
@@ -44,13 +52,27 @@ val triple = [1, 2, 3]
 triple.2
 //│ = 3
 
+:ge
 :re
 triple.3
-//│ ═══[RUNTIME ERROR] Error: Access to required field '3' yielded 'undefined'
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.57: 	triple.3
+//│ ║        	^^^^^^^^
+//│ ╟── Tuple literal does not contain member '3'
+//│ ║  l.49: 	val triple = [1, 2, 3]
+//│ ╙──      	             ^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
+:ge
 :re
 triple.4
-//│ ═══[RUNTIME ERROR] Error: Access to required field '4' yielded 'undefined'
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.68: 	triple.4
+//│ ║        	^^^^^^^^
+//│ ╟── Tuple literal does not contain member '4'
+//│ ║  l.49: 	val triple = [1, 2, 3]
+//│ ╙──      	             ^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
 // * Array hacking (taken from Anto's original port of nofib, which was slightly deranged)

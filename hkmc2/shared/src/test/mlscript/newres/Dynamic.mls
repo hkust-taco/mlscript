@@ -1,0 +1,157 @@
+:.
+
+// JavaScript imports allow ordinary selection and calls, even in strict mode.
+:expect ()
+import "../../js/Test.mjs" as js
+js.greet()
+//│ > Hello from Test.mjs!
+
+:expect "/a/b"
+import "node:path" as path
+path.posix.join("/a", "b")
+//│ = "/a/b"
+
+// An ascription forgets the initializer's shape; successive selections and calls
+// remain dynamic rather than acquiring a fabricated member definition.
+:expect 3
+let d = ({nested: {get(): 3}} as dyn)
+d.nested.get()
+//│ = 3
+//│ d = {nested: {get: fun get}}
+
+// Notice: no resolution error for dynamic `d`
+:re
+d.nasted.get()
+//│ ═══[RUNTIME ERROR] Error: Access to required field 'nasted' yielded 'undefined'
+
+:expect 4
+fun readDynamic(x: dyn) = x.value
+readDynamic({value: 4})
+//│ = 4
+
+:expect 5
+type Dynamic = dyn
+fun readAlias(x: Dynamic) = x.value
+readAlias({value: 5})
+//│ = 5
+
+:expect 6
+let writable = mut {value: 0} as dyn
+set writable.value = 6
+writable.value
+//│ = 6
+//│ writable = {value: 6}
+
+:expect 7
+fun identity(x) = x
+identity({value: 7} as dyn).value
+//│ = 7
+
+// Dynamic spreads retain dynamic element values through parameter propagation.
+:expect 8
+fun readSpread(x: dyn) = x.value
+readSpread(...([{value: 8}] as dyn))
+//│ = 8
+
+:expect 9
+let copied = {...({value: 9} as dyn)}
+copied.value
+//│ = 9
+//│ copied = {value: 9}
+
+:expect 10
+fun fromOpen() =
+  let opened = ({value: 10} as dyn)
+  open opened
+  value
+fromOpen()
+//│ = 10
+
+// Explicit dynamic selections are also JS boundaries.
+:expect 11
+let explicit = {nested: {value: 11}}
+explicit."nested".value
+//│ = 11
+//│ explicit = {nested: {value: 11}}
+
+// Known invalid operations still fail; dynamicity is not inferred from failure.
+:e
+{value: 1}.missing
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.79: 	{value: 1}.missing
+//│ ║        	 ^^^^^^^^^^^^^^^^^
+//│ ╟── Record literal does not contain member 'missing'
+//│ ║  l.79: 	{value: 1}.missing
+//│ ╙──      	 ^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+:e
+1()
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.89: 	1()
+//│ ║        	^^^
+//│ ╟── Integer literal cannot be called like a function.
+//│ ║  l.89: 	1()
+//│ ╙──      	^
+//│ ═══[RUNTIME ERROR] TypeError: 1 is not a function
+
+:e
+dyn
+//│ ╔══[COMPILATION ERROR] Unexpected term form in expression position (dynamic type)
+//│ ║  l.99: 	dyn
+//│ ╙──      	^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// Dynamic result ascriptions apply after evaluating the call.
+:expect 12
+fun produce() = {value: 12}
+(produce() as dyn).value
+//│ = 12
+
+:expect 13
+globalThis.JSON.parse("{\"value\":13}").value
+//│ = 13
+
+// A dyn parameter supplies a shape without needing a call site.
+fun notCalled(x: dyn) = x.anything(1).result
+
+// A dynamic candidate must not disguise another candidate's known missing member.
+:e
+let mixed = if hide(true) then ({value: 1} as dyn) else {other: 2}
+mixed.value
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.121: 	mixed.value
+//│ ║         	^^^^^^^^^^^
+//│ ╟── Record literal does not contain member 'value'
+//│ ║  l.120: 	let mixed = if hide(true) then ({value: 1} as dyn) else {other: 2}
+//│ ╙──       	                                                         ^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ mixed = {value: 1}
+
+// Calling a selected JS method must preserve its receiver (`Map.get` uses this).
+:expect 14
+let map = new! globalThis.Map()
+map.set("key", 14)
+map.get("key")
+//│ = 14
+//│ map = Map(1) {"key" => 14}
+
+:expect 15
+fun skipFirst(first, ...tail) = readSpread(...tail)
+skipFirst(...([0, {value: 15}] as dyn))
+//│ = 15
+
+// A known and a dynamic alternative for one open still name one runtime receiver.
+:expect 16
+fun mixedOpen() =
+  let source = if hide(true) then ({value: 16} as dyn) else {value: 17}
+  open source
+  value
+mixedOpen()
+//│ = 16
+
+// Dynamicity permits compilation, while the runtime still checks the operation.
+:re
+(1 as dyn)()
+//│ ═══[RUNTIME ERROR] TypeError: 1 is not a function
+

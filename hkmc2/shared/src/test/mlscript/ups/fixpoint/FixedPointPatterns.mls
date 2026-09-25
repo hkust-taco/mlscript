@@ -1,3 +1,4 @@
+:.
 :js
 
 // Fixed-point patterns are patterns that pipe their own output back into
@@ -374,7 +375,7 @@ if term3 is EvalAnnotated(r) and r is Lit(n) then n
 // Only annotating the chained pattern doesn't work.
 pattern EvalAnnotatedStep = @compile (Ctx(Redex) as EvalAnnotatedStep) | _
 //│ ╔══[WARNING] This fixed-point pattern is not supported by pattern compilation.
-//│ ║  l.375: 	pattern EvalAnnotatedStep = @compile (Ctx(Redex) as EvalAnnotatedStep) | _
+//│ ║  l.376: 	pattern EvalAnnotatedStep = @compile (Ctx(Redex) as EvalAnnotatedStep) | _
 //│ ║         	                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── `EvalAnnotatedStep` is recursive and must be compiled as a whole (rather than just part of it).
 //│ ╙── Falling back to the naive translation.

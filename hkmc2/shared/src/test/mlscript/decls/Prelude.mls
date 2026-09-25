@@ -1,10 +1,11 @@
-
+#lang(0.3.x)
 
 declare type Any
 declare type Anything
 declare type Nothing
 
-declare class Object
+declare class Object with
+  fun toString(): Str
 declare module Object with
   fun
     create
@@ -35,24 +36,44 @@ declare module BigInt
 declare class Function
 declare module Function
 declare class String
+declare fun String(...args): Str
 declare module String with
   fun
     fromCharCode
     fromCodePoint
     raw
-declare class RegExp
+declare class RegExp with
+  fun exec(input: Str): Array[Str] | null
+  fun test(input: Str): Bool
 declare module RegExp
-declare class Set[V]
+declare class Set[V] with
+  val size: Int
+  fun add(value: V): Set[V]
+  fun has(value: V): Bool
+  fun delete(value: V): Bool
+  fun clear(): undefined
+  fun union(other: Set[V]): Set[V]
+  fun difference(other: Set[V]): Set[V]
 declare module Set
-declare class Map[K, V]
+declare class Map[K, V] with
+  val size: Int
+  fun get(key: K): V | undefined
+  fun has(key: K): Bool
+  fun delete(key: K): Bool
+  fun clear(): undefined
+  // `set` needs support for keyword-named declarations, like Reflect.set below.
 declare module Map
 declare class WeakSet[V]
 declare module WeakSet
 declare class WeakMap[K, V]
 declare module WeakMap
-declare class Error//(info) // TODO: handle JS classes that can be instantiated without `new` specially in codegen.
-declare class TypeError//(info) // TODO: handle JS classes that can be instantiated without `new` specially in codegen.
-declare class RangeError//(info) // TODO: handle JS classes that can be instantiated without `new` specially in codegen.
+declare class Error with
+  val message: Str
+declare fun Error(...args): Error
+declare class TypeError extends Error
+declare fun TypeError(...args): TypeError
+declare class RangeError extends Error
+declare fun RangeError(...args): RangeError
 declare class Date
 declare module Date
 
@@ -90,9 +111,29 @@ declare val Promise
 
 // MLscript-specific types
 declare class Bool
-declare class Num
+declare class Num with
+  fun toString(...radix): Str
+  fun toFixed(...digits): Str
 declare class Int extends Num
-declare class Str
+declare class Str with
+  val length: Int
+  fun toString(): Str
+  fun at(index: Int): Str | undefined
+  fun charAt(index: Int): Str
+  fun charCodeAt(index: Int): Num
+  fun codePointAt(index: Int): Int | undefined
+  fun indexOf(value: Str, ...from): Int
+  fun lastIndexOf(value: Str, ...from): Int
+  fun includes(value: Str, ...from): Bool
+  fun startsWith(value: Str, ...from): Bool
+  fun endsWith(value: Str, ...until): Bool
+  fun slice(...bounds): Str
+  fun substring(...bounds): Str
+  fun split(...separatorAndLimit): Array[Str]
+  fun repeat(count: Int): Str
+  fun toUpperCase(): Str
+  fun toLowerCase(): Str
+  fun trim(): Str
 declare class Class
 
 // The `Array` class/function is a footgun:
@@ -102,17 +143,42 @@ declare class Class
 //    [ <1 empty item> ]
 //    > Array(1, 2)
 //    [ 1, 2 ]
-// We used to declare it as a class taking exactly one argument here to avoid that footgun:
-//    declare class Array[T](val length: Int): Array[T]
-// but this made instance checks wrongly use `Array.class`;
-// TODO: handle Array and other JS classes that can be instantiated without `new` specially in codegen.
-declare class Array[T]
+// Expose only the length-taking constructor; use tuple literals for initial elements.
+// Foreign constructor signatures describe the native binding and do not introduce
+// the `.class` storage used by generated MLscript constructor functions.
+// The `val length` parameter also supports matching with `Array(length)`.
+declare class Array[T](val length: Int): Array[T] with
+  fun join(...separators): Str
+  fun reverse(): Array[T]
+  fun sort(...compare): Array[T]
+  fun slice(...bounds): Array[T]
+  fun at(index: Int): T | undefined
+  fun fill(value: T, ...bounds): Array[T]
+  fun splice(start: Int, ...items): Array[T]
+  fun push(...items: Array[T]): Int
+  fun unshift(...items: Array[T]): Int
+  fun pop(): T | undefined
+  fun shift(): T | undefined
+  fun concat(...arrays): Array[Any]
+  fun map[U](f: (T, Int, Array[T]) -> U): Array[U]
+  fun forEach(f: (T, Int, Array[T]) -> Any): undefined
+  fun filter(f: (T, Int, Array[T]) -> Bool): Array[T]
+  fun every(f: (T, Int, Array[T]) -> Bool): Bool
+  fun some(f: (T, Int, Array[T]) -> Bool): Bool
+  // Without an initial value, the first element becomes the accumulator, so the
+  // accumulator type would also have to include T. Methods cannot be overloaded
+  // by arity, so only the form with an initial value is declared.
+  fun reduce[U](f: (U, T, Int, Array[T]) -> U, initial: U): U
+  fun indexOf(value: T, ...from): Int
+  fun lastIndexOf(value: T, ...from): Int
+  fun includes(value: T, ...from): Bool
+  fun toString(): Str
 declare module Array with
+  fun from(...args): Array[Any]
   fun
-    from
     concat
     isArray
-    prototype
+  val prototype: Array[Any]
 
 declare class Symbol
 declare module Symbol with
@@ -210,8 +276,11 @@ declare module console with
       timeEnd
       trace
 
-declare val process // TODO make `module`
-declare val fs // TODO make `module`
+declare module process with
+  fun cwd(): Str
+  val env
+// Host APIs remain explicitly dynamic until their interfaces are modeled.
+declare val fs: dyn
 
 declare val Infinity
 
@@ -379,6 +448,17 @@ declare module runtime with
 
 // HTML DOM API definitions.
 // Move them to a separate Prelude file when there are enough of them.
-declare val document
-declare val customElements
-declare class HTMLElement
+declare val document: dyn
+declare val customElements: dyn
+// Preserve the nominal superclass while its host members remain dynamic.
+declare class HTMLElement with
+  val textContent: dyn
+  val innerHTML: dyn
+  val shadowRoot: dyn
+  val appendChild: dyn
+  val attachShadow: dyn
+  val addEventListener: dyn
+  val querySelector: dyn
+  val classList: dyn
+
+//│ ————————————————————————————————————————————————————————————————————————————————

@@ -1,6 +1,5 @@
+:.
 
-:global
-:wasm
 
 // An `Int32`-annotated `val` binds the unboxed result; `ref.i31` boxes it back into a reference.
 val k: Int32 = wasm.i32.const(1)
@@ -43,27 +42,33 @@ wasm.ref.i31(wasm.i32.add(wasm.i32.const(1), wasm.i32.const(2)))
 :ge
 wasm.i32.add(1, 2)
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int' at an unrelated type 'Int32'
-//│ ║  l.44: 	wasm.i32.add(1, 2)
+//│ ║  l.43: 	wasm.i32.add(1, 2)
 //│ ╙──      	             ^
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int' at an unrelated type 'Int32'
-//│ ║  l.44: 	wasm.i32.add(1, 2)
+//│ ║  l.43: 	wasm.i32.add(1, 2)
 //│ ╙──      	                ^
 //│ ╔══[COMPILATION ERROR] Operand #1 of wasm intrinsic 'i32.add' must be of type 'Int32'
-//│ ║  l.44: 	wasm.i32.add(1, 2)
+//│ ║  l.43: 	wasm.i32.add(1, 2)
 //│ ╙──      	             ^
 //│ ╔══[COMPILATION ERROR] Operand #2 of wasm intrinsic 'i32.add' must be of type 'Int32'
-//│ ║  l.44: 	wasm.i32.add(1, 2)
+//│ ║  l.43: 	wasm.i32.add(1, 2)
 //│ ╙──      	                ^
 
 
 // Mismatching arity is reported by both the elaborator and the backend.
 :ge
 wasm.i32.const(1, 2)
-//│ ╔══[COMPILATION ERROR] Expected 1 arguments, got 2
-//│ ║  l.61: 	wasm.i32.const(1, 2)
-//│ ╙──      	              ^^^^^^
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.60: 	wasm.i32.const(1, 2)
+//│ ║        	^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Function 'const' expected 1 argument, but got 2
+//│ ║  in ../decls/Prelude.mls
+//│ ║  l.322: 	    fun
+//│ ║         	    ^^^
+//│ ║  l.323: 	      const(c: Int): Int32
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Wasm intrinsic 'i32.const' called with incorrect arity (2)
-//│ ║  l.61: 	wasm.i32.const(1, 2)
+//│ ║  l.60: 	wasm.i32.const(1, 2)
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^
 
 
@@ -72,7 +77,7 @@ wasm.i32.const(1, 2)
 :ge
 fun constOf(x: Int) = wasm.ref.i31(wasm.i32.const(x))
 //│ ╔══[COMPILATION ERROR] Wasm intrinsic 'i32.const' expects an integer literal immediate
-//│ ║  l.73: 	fun constOf(x: Int) = wasm.ref.i31(wasm.i32.const(x))
+//│ ║  l.78: 	fun constOf(x: Int) = wasm.ref.i31(wasm.i32.const(x))
 //│ ╙──      	                                                  ^
 
 

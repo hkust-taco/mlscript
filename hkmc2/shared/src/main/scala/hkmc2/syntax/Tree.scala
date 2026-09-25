@@ -368,6 +368,11 @@ enum Tree extends AutoLocated:
       // fun f(a: A)
       case InfixApp(id: Ident, Keywrd(Keyword.`:`), sign) =>
         R(ParamTree(flags, id, S(sign), N, modifiers))
+      // The annotation describes the rest tuple, just as for an ordinary parameter.
+      case InfixApp(SpreadParam(id, spd), Keywrd(Keyword.`:`), sign) =>
+        R(ParamTree(flags, id, S(sign), S(spd), modifiers))
+      case Spread(kw, S(InfixApp(id: Ident, Keywrd(Keyword.`:`), sign))) =>
+        R(ParamTree(flags, id, S(sign), S(SpreadKind.fromKw(kw)), modifiers))
       // fun f(..a) | fun f(...a)
       case SpreadParam(id, spd) =>
         R(ParamTree(flags, id, N, S(spd), modifiers))
@@ -504,6 +509,7 @@ sealed abstract class ValLike(str: Str, desc: Str)(using Line) extends TermDefKi
 sealed abstract class Val(str: Str, desc: Str)(using Line) extends ValLike(str, desc)
 case object ImmutVal extends Val("val", "value")
 case object MutVal extends Val("mut val", "mutable value")
+case object RecordField extends ValLike("field", "record field")
 case object LetBind extends ValLike("let", "let binding")
 case object HandlerBind extends TermDefKind("handler", "handler binding")
 case object Fun extends TermDefKind("fun", "function")
@@ -672,7 +678,7 @@ trait TypeDefImpl(using State) extends TypeOrTermDef:
       pts.flatMap(_.desugared.asParam(inUsing = inUsing).toOption).collect:
         case pt @ ParamTree(ident = id, spd = N) =>
           val k = if pt.flags.mut then MutVal else ImmutVal
-          TermSymbol(k, symbol.asClsLike, id, erasedType = N)
+          TermSymbol(k, symbol.asClsLike, id)
       .toList
     
   lazy val allSymbols = definedSymbols ++

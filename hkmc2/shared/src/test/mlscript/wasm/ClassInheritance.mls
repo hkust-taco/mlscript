@@ -1,6 +1,5 @@
+:.
 
-:global
-:wasm
 
 
 class A(val x)
@@ -100,6 +99,7 @@ c.Parent#x + (c is Parent)
 //│       (return
 //│         (local.get $this))))
 //│   (func $entry (export "entry") (type $entry) (result (ref null any))
+//│     (local $scrut (ref null any))
 //│     (local $matchRes (ref null any))
 //│     (local $currentTypeInfo (ref null any))
 //│     (local $targetTypeInfo (ref null any))
@@ -109,19 +109,21 @@ c.Parent#x + (c is Parent)
 //│         (call $Child_ctor
 //│           (ref.i31
 //│             (i32.const 2))))
+//│       (local.set $scrut
+//│         (global.get $c))
 //│       (block $match
 //│         (local.set $matchRes
 //│           (ref.null any))
 //│         (if
 //│           (ref.test (ref $Object)
-//│             (global.get $c))
+//│             (local.get $scrut))
 //│           (then
 //│             (if
 //│               (block (result i32)
 //│                 (local.set $currentTypeInfo
 //│                   (struct.get $Object $$typeinfo
 //│                     (ref.cast (ref $Object)
-//│                       (global.get $c))))
+//│                       (local.get $scrut))))
 //│                 (local.set $targetTypeInfo
 //│                   (global.get $Parent_typeinfo))
 //│                 (local.set $typeInfoMatch
@@ -267,7 +269,7 @@ class B
 class A extends B
 class B extends A
 //│ ╔══[COMPILATION ERROR] Inheritance cycles are not supported.
-//│ ║  l.267: 	class A extends B
+//│ ║  l.269: 	class A extends B
 //│ ╙──       	^^^^^^^^^^^^^^^^^
 
 

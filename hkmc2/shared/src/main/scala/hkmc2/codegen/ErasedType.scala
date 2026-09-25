@@ -157,18 +157,8 @@ object ErasedType:
     * - `S(N)` for a root class with no parent.
     * - `N` for a class whose parent chain is not available in the IR (e.g. an unlinked import).
     */
-  private def parentOf(sym: BaseTypeSymbol)(using Ctx, State): Opt[Opt[TypeSymbol]] =
-    sym.asClsOrMod.flatMap: sym =>
-      sym.irClsLikeDefn.flatMap: defn =>
-        defn.parentPath match
-        case S(parent) => parent.targetSymbol.collect { case s: TypeSymbol => s }.map(S(_))
-        case N => S(N)
-      .orElse:
-        // FIXME: remove this fallback once imported classes have their `irClsLikeDefn` properly linked
-        sym.defn.flatMap: defn =>
-          defn.ext match
-            case S(parent) => parent.cls.resolvedSym.flatMap(_.asClsOrMod).map(S(_))
-            case N => S(N)
+  private def parentOf(sym: BaseTypeSymbol): Opt[Opt[TypeSymbol]] =
+    sym.asClsOrMod.flatMap(_.irClassHeader.map(_.parent))
 
   /** A symbol's ancestors, nearest first, starting with the symbol itself and following its single parent chain.
     *
@@ -247,10 +237,10 @@ object ErasedType:
 
   /** Erases a type-annotated term to an [[ErasedType]].
     *
-    * Note that the resulting erased type is **not** canonicalized to avoid using `ctx.builtins` during elaboration
-    * of `Prelude`.
+    * Used by the legacy resolver after resolution. Canonicalization is separate and may inspect the
+    * nominal hierarchy published by Erasure.
     */
-  def eraseSign(sign: Term): Opt[ErasedValueType] = sign match
+  def eraseSign(sign: Term)(using Erasure): Opt[ErasedValueType] = sign match
     case CompType(lhs, rhs, true) =>
       // * A union is kept as a transient `Union` surface form; `canonicalize` collapses it to the members' LUB.
       for
@@ -260,6 +250,7 @@ object ErasedType:
     // * An intersection is never decomposed: narrowing to one member would call for a GLB, which this lattice
     // * cannot express.
     case CompType(_, _, false) => S(ErasedType.Unknown)
+    case DynTy() => S(ErasedType.Unknown)
     case UnitVal() => S(ErasedType.Unit)
     // * A written arrow denotes a function value, and every function value is a `Function`.
     case FunTy(_, _, _) => S(ErasedType.Function(rsc = S(false)))
@@ -509,6 +500,22 @@ trait HasErasedType:
 
   /** Similar to `erasedValueType`, but coerces to the top type if the specific erased value type is not known. */
   lazy val erasedValueType_! : ErasedValueType = erasedValueType.getOrElse(ErasedType.Unknown)
+
+/** Erased types of source declarations are initialized by Erasure after resolution finishes.
+  * `null` means no representation has been assigned; `N` is an initialized, unknown representation.
+  * The checked getter also protects HasErasedType's lazy derived values from caching an early `N`.
+  * IR-generated symbols may initialize the same slot directly at construction.
+  */
+trait HasDelayedErasedType[T <: ErasedType] extends HasErasedType:
+  private var assignedErasedType: Opt[T] = null
+  final def isErased: Bool = assignedErasedType != null
+  final def erasedType: Opt[T] =
+    assert(isErased, "Erased type read before erasure")
+    assignedErasedType
+  final def erasedType_=(value: Opt[T]): Unit =
+    assert(!isErased, "Erased type initialized more than once")
+    assert(value != null, "An initialized erased type cannot be null")
+    assignedErasedType = value
 
 /** A [[HasErasedType]] whose erased type can be populated exactly once post-construction. */
 trait HasOnceMutableErasedType extends HasErasedType:

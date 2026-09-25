@@ -119,8 +119,10 @@ object SplitCompiler:
 import SplitCompiler.*
 
 /** This class compiles a pattern to a split that matches the pattern. */
-class SplitCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesizer:
+class SplitCompiler(using codegen.Erasure)(using tl: TL)(using State, Ctx, Raise, Config) extends TermSynthesizer:
   import tl.*, SP.*
+  
+  val newResolution: Bool = config.language.useNewResolution
   
   private lazy val lteq = State.builtinOpsMap("<=")
   private lazy val lt = State.builtinOpsMap("<")
@@ -600,6 +602,27 @@ class SplitCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
       // Here we go!
       wrapPatternArgumentDefinitions(wrapUnapply(wrapDestruction(wrapExtractionArguments(consequent))))
   
+  /** Validate recorded constructor candidates for both full and prefix matching. */
+  private def resolvedConstructor(ctor: Constructor): Opt[Symbol] =
+    val target = ctor.target.withoutCaptures
+    val ambiguousReceiver = target match
+      case ref: Term.UnresolvedRef => ref.resolvedMembers.distinct.sizeCompare(1) > 0
+      case _ => false
+    val erroneousTarget = target match
+      case ref: NewResolvable => ref.isErroneous
+      case Term.Error() => true
+      case _ => false
+    val targets = ctor.resolvedTargets.distinct
+    if ctor.isErroneous || erroneousTarget then N
+    else if ambiguousReceiver || targets.sizeCompare(1) > 0 then
+      error(msg"Constructor pattern is ambiguous." -> ctor.toLoc)
+      N
+    else targets match
+      case sym :: Nil => S(sym)
+      case _ =>
+        error(msg"Cannot use this ${target.describe} as a pattern." -> ctor.toLoc)
+        N
+
   /** Report errors when pattern parameters are used incorrectly. */
   private def validatePatternParameter[A](
       parameterTerm: Term,
@@ -649,6 +672,17 @@ class SplitCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
    */
   def makeMatchSplit(scrutinee: Scrut, pattern: SP, outputNeeded: Bool): MakeSplit =
     pattern match
+      case ctor @ Constructor(target, arguments) if newResolution =>
+        resolvedConstructor(ctor) match
+          case S(classSymbol: ClassSymbol) =>
+            makeMatchClassSplit(scrutinee, target, classSymbol, arguments, outputNeeded)
+          case S(objectSymbol: ModuleOrObjectSymbol) =>
+            makeMatchObjectSplit(pattern.toLoc, scrutinee, target, objectSymbol, arguments)
+          case S(patternSymbol: PatternSymbol) =>
+            makeMatchPatternSplit(scrutinee, target, patternSymbol, arguments)
+          case S(symbol: VarSymbol) =>
+            makeMatchPatternParameterSplit(scrutinee, target, symbol, arguments, pattern.toLoc)
+          case _ => RejectSplit
       case Constructor(target, arguments) => target.resolvedSym match
         case S(symbol: VarSymbol) =>
           makeMatchPatternParameterSplit(scrutinee, target, symbol, arguments, pattern.toLoc)
@@ -916,42 +950,43 @@ class SplitCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
       scrutinee: Scrut,
       pattern: SP,
   )(using Raise): MakePrefixSplit = pattern match
-    case Constructor(target, arguments) => target.resolvedSym match
-      // The case when the target refers to a pattern parameter.
-      case S(symbol: VarSymbol) =>
-        makeMatchPrefixPatternParameterSplit(scrutinee, target, symbol, arguments, pattern.toLoc)
-      case symbolOption => symbolOption.flatMap(_.asClsLike) match
-        case S(symbol: PatternSymbol) =>
-          makeMatchPrefixPatternSplit(scrutinee, target, symbol, arguments)
-        // We accept the string class as a valid string pattern as it literally
-        // means all strings.
-        case S(symbol: ClassSymbol) if symbol is ctx.builtins.Str =>
-          arguments match
-            case S(args) if args.nonEmpty =>
-              error(
-                msg"`${symbol.name}` does not take any arguments." -> target.toLoc,
-                msg"But the pattern has ${"sub-pattern" countBy args.size}." -> Loc(args)
-              )
-              RejectPrefixSplit
-            case _ => (makeConsequent, alternative) =>
-              val nonEmptySymbol = TempSymbol(N, erasedType = S(ErasedType.Bool), "nonEmpty")
-              val nonEmptyTerm = app(
-                this.lt.safeRef,
-                tup(fld(int(0)), fld(sel(scrutinee(), "length"))),
-                "string is not empty"
-              )
-              val outputSymbol = TempSymbol(N, erasedType = S(ErasedType.Str), "stringHead")
-              val outputTerm = callStringGet(scrutinee(), 0, "head")
-              val remainsSymbol = TempSymbol(N, erasedType = S(ErasedType.Str), "stringTail")
-              val remainsTerm = callStringDrop(scrutinee(), 1, "tail")
-              Split.Let(nonEmptySymbol, nonEmptyTerm,
-                Branch(nonEmptySymbol.safeRef,
-                  Split.Let(outputSymbol, outputTerm,
-                    Split.Let(remainsSymbol, remainsTerm,
-                      makeConsequent(outputSymbol.toScrut, remainsSymbol.toScrut, SeqMap.empty)))
-                ) ~: alternative)
-        case S(_: ModuleOrObjectSymbol) | S(_: ClassSymbol) | N =>
-          RejectPrefixSplit
+    case ctor @ Constructor(target, arguments) =>
+      (if newResolution then resolvedConstructor(ctor) else target.resolvedSym) match
+        // The case when the target refers to a pattern parameter.
+        case S(symbol: VarSymbol) =>
+          makeMatchPrefixPatternParameterSplit(scrutinee, target, symbol, arguments, pattern.toLoc)
+        case symbolOption => symbolOption.flatMap(_.asClsLike) match
+          case S(symbol: PatternSymbol) =>
+            makeMatchPrefixPatternSplit(scrutinee, target, symbol, arguments)
+          // We accept the string class as a valid string pattern as it literally
+          // means all strings.
+          case S(symbol: ClassSymbol) if symbol is ctx.builtins.Str =>
+            arguments match
+              case S(args) if args.nonEmpty =>
+                error(
+                  msg"`${symbol.name}` does not take any arguments." -> target.toLoc,
+                  msg"But the pattern has ${"sub-pattern" countBy args.size}." -> Loc(args)
+                )
+                RejectPrefixSplit
+              case _ => (makeConsequent, alternative) =>
+                val nonEmptySymbol = TempSymbol(N, erasedType = S(ErasedType.Bool), "nonEmpty")
+                val nonEmptyTerm = app(
+                  this.lt.safeRef,
+                  tup(fld(int(0)), fld(sel(scrutinee(), "length"))),
+                  "string is not empty"
+                )
+                val outputSymbol = TempSymbol(N, erasedType = S(ErasedType.Str), "stringHead")
+                val outputTerm = callStringGet(scrutinee(), 0, "head")
+                val remainsSymbol = TempSymbol(N, erasedType = S(ErasedType.Str), "stringTail")
+                val remainsTerm = callStringDrop(scrutinee(), 1, "tail")
+                Split.Let(nonEmptySymbol, nonEmptyTerm,
+                  Branch(nonEmptySymbol.safeRef,
+                    Split.Let(outputSymbol, outputTerm,
+                      Split.Let(remainsSymbol, remainsTerm,
+                        makeConsequent(outputSymbol.toScrut, remainsSymbol.toScrut, SeqMap.empty)))
+                  ) ~: alternative)
+          case S(_: ModuleOrObjectSymbol) | S(_: ClassSymbol) | N =>
+            RejectPrefixSplit
     case Composition(true, left, right) =>
       val makeLeft = makeStringPrefixMatchSplit(scrutinee, left)
       val makeRight = makeStringPrefixMatchSplit(scrutinee, right)

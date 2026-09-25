@@ -1,0 +1,24 @@
+:.
+:lift
+:effectHandlers
+
+// FIXME: The handler receiver and its result need shape propagation. This
+// handler aborts: its record, not the rest of the handled body, is the result.
+:fixme
+:expect 42
+abstract class AnswerEffect with
+  fun answer()
+fun handled() =
+  handle h = AnswerEffect with
+    fun answer()(resume) = {answer: 42}
+  h.answer()
+  {answer: 0}
+handled().answer
+//│ ╔══[COMPILATION ERROR] Member reference 'AnswerEffect' has no resolved target
+//│ ║  l.12: 	  handle h = AnswerEffect with
+//│ ╙──      	             ^^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] This selection of member 'answer' has no resolved target
+//│ ║  l.16: 	handled().answer
+//│ ╙──      	^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ ═══[RUNTIME ERROR] Expected: '42', got: 'undefined'

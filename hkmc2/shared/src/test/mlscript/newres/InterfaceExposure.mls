@@ -1,0 +1,411 @@
+:.
+
+// Observed calls cannot close an exposed unannotated parameter.
+:e
+fun foo(x) = x.a
+foo({a: 1})
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.5: 	fun foo(x) = x.a
+//│ ║       	             ^^^
+//│ ╟── Cannot resolve member 'a' of a value with unknown shape.
+//│ ╟── Parameter 'x' admits values of unknown shape.
+//│ ║  l.5: 	fun foo(x) = x.a
+//│ ║       	        ^
+//│ ╟── 'foo' is exposed by this compilation unit.
+//│ ║  l.5: 	fun foo(x) = x.a
+//│ ╙──     	^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// Nor can a type parameter acquire an interface from local instantiations.
+:e
+fun foo[A](x: A) = x.a
+foo({a: 1})
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.21: 	fun foo[A](x: A) = x.a
+//│ ║        	                   ^^^
+//│ ╟── Cannot resolve member 'a' of a value with unknown shape.
+//│ ╟── This type annotation supplies the value's shape.
+//│ ║  l.21: 	fun foo[A](x: A) = x.a
+//│ ║        	              ^
+//│ ╟── Type parameter 'A' does not specify a member interface.
+//│ ║  l.21: 	fun foo[A](x: A) = x.a
+//│ ╙──      	        ^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// The abstraction boundary applies to private functions too.
+:e
+private fun privateGeneric[A](x: A) = x.a
+privateGeneric({a: 1})
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.37: 	private fun privateGeneric[A](x: A) = x.a
+//│ ║        	                                      ^^^
+//│ ╟── Cannot resolve member 'a' of a value with unknown shape.
+//│ ╟── This type annotation supplies the value's shape.
+//│ ║  l.37: 	private fun privateGeneric[A](x: A) = x.a
+//│ ║        	                                 ^
+//│ ╟── Type parameter 'A' does not specify a member interface.
+//│ ║  l.37: 	private fun privateGeneric[A](x: A) = x.a
+//│ ╙──      	                           ^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// It also applies through captures and generic class members.
+:e
+private class GenericClass[A](value: A) with
+  fun read() = (() => value.a)()
+(new GenericClass({a: 1})).read()
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.54: 	  fun read() = (() => value.a)()
+//│ ║        	                      ^^^^^^^
+//│ ╟── Cannot resolve member 'a' of a value with unknown shape.
+//│ ╟── This type annotation supplies the value's shape.
+//│ ║  l.53: 	private class GenericClass[A](value: A) with
+//│ ║        	                                     ^
+//│ ╟── Type parameter 'A' does not specify a member interface.
+//│ ║  l.53: 	private class GenericClass[A](value: A) with
+//│ ╙──      	                           ^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// Concrete type arguments still substitute into generic results at call sites.
+:expect [3, 4]
+class IdentityItem(val a: Int)
+private fun identity[A](x: A): A = x
+[identity(IdentityItem(3)).a, identity[IdentityItem](IdentityItem(4)).a]
+//│ = [3, 4]
+
+:expect 1
+private fun foo(x) = x.a
+foo({a: 1})
+//│ = 1
+
+:expect 1
+class A(val a: Int)
+fun foo(x: A) = x.a
+foo(new A(1))
+//│ = 1
+
+// An unknown callable alternative is an error despite a known local call.
+:e
+fun apply(f) = f(1)
+apply(x => x)
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.88: 	fun apply(f) = f(1)
+//│ ║        	               ^^^^
+//│ ╟── Value of unknown shape cannot be called like a function.
+//│ ║  l.88: 	fun apply(f) = f(1)
+//│ ║        	          ^
+//│ ╟── Parameter 'f' admits values of unknown shape.
+//│ ║  l.88: 	fun apply(f) = f(1)
+//│ ║        	          ^
+//│ ╟── 'apply' is exposed by this compilation unit.
+//│ ║  l.88: 	fun apply(f) = f(1)
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^
+//│ = 1
+
+// A declared callable interface admits calls.
+:expect 1
+fun apply(f: Int -> Int) = f(1)
+apply(x => x)
+//│ = 1
+
+// Exposure follows returned closures and aggregate elements.
+:e
+fun escaped() = x => x.a
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.112: 	fun escaped() = x => x.a
+//│ ║         	                     ^^^
+//│ ╟── Cannot resolve member 'a' of a value with unknown shape.
+//│ ╟── Parameter 'x' admits values of unknown shape.
+//│ ║  l.112: 	fun escaped() = x => x.a
+//│ ║         	                ^
+//│ ╟── This value is returned here.
+//│ ║  l.112: 	fun escaped() = x => x.a
+//│ ║         	                ^^^^^^^^
+//│ ╟── 'escaped' is exposed by this compilation unit.
+//│ ║  l.112: 	fun escaped() = x => x.a
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^
+
+:e
+private fun hidden(x) = x.a
+val escaped = [hidden]
+hidden({a: 1})
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.128: 	private fun hidden(x) = x.a
+//│ ║         	                        ^^^
+//│ ╟── Cannot resolve member 'a' of a value with unknown shape.
+//│ ╟── Parameter 'x' admits values of unknown shape.
+//│ ║  l.128: 	private fun hidden(x) = x.a
+//│ ║         	                   ^
+//│ ╟── This value is stored in this tuple.
+//│ ║  l.129: 	val escaped = [hidden]
+//│ ║         	              ^^^^^^^^
+//│ ╟── 'escaped' is exposed by this compilation unit.
+//│ ║  l.129: 	val escaped = [hidden]
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ escaped = [fun hidden]
+
+:e
+private fun hidden(x) = x.a
+val escaped = {f: hidden}
+hidden({a: 1})
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.148: 	private fun hidden(x) = x.a
+//│ ║         	                        ^^^
+//│ ╟── Cannot resolve member 'a' of a value with unknown shape.
+//│ ╟── Parameter 'x' admits values of unknown shape.
+//│ ║  l.148: 	private fun hidden(x) = x.a
+//│ ║         	                   ^
+//│ ╟── This value is stored in this record field.
+//│ ║  l.149: 	val escaped = {f: hidden}
+//│ ║         	               ^
+//│ ╟── 'escaped' is exposed by this compilation unit.
+//│ ║  l.149: 	val escaped = {f: hidden}
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ escaped = {f: fun hidden}
+
+// Calling a private helper does not expose arbitrary inputs to it.
+:expect 1
+private fun hidden(x) = x.a
+fun closed() = hidden({a: 1})
+closed()
+//│ = 1
+
+// An annotated returned callback is checked under its declared domain.
+:expect 1
+class A(val a: Int)
+fun typed(): A -> Int = x => x.a
+typed()(new A(1))
+//│ = 1
+
+// The diagnostic retains the parameter, field storage, and returned record.
+:e
+private fun hiddenRecord(x) = x.a
+fun exportRecord() = {callback: hiddenRecord}
+hiddenRecord({a: 1})
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.183: 	private fun hiddenRecord(x) = x.a
+//│ ║         	                              ^^^
+//│ ╟── Cannot resolve member 'a' of a value with unknown shape.
+//│ ╟── Parameter 'x' admits values of unknown shape.
+//│ ║  l.183: 	private fun hiddenRecord(x) = x.a
+//│ ║         	                         ^
+//│ ╟── This value is stored in this record field.
+//│ ║  l.184: 	fun exportRecord() = {callback: hiddenRecord}
+//│ ║         	                      ^^^^^^^^
+//│ ╟── This value is returned here.
+//│ ║  l.184: 	fun exportRecord() = {callback: hiddenRecord}
+//│ ║         	                      ^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── 'exportRecord' is exposed by this compilation unit.
+//│ ║  l.184: 	fun exportRecord() = {callback: hiddenRecord}
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// Exposing a constructor must not pollute separately constructed instances.
+// FIXME: Rebuilding the same class loses the original constructor activation.
+:fixme
+:expect 42
+class CopyBox(val value) with
+  fun copy() = CopyBox(value)
+CopyBox({answer: 42}).copy().value.answer
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.210: 	CopyBox({answer: 42}).copy().value.answer
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Cannot resolve member 'answer' of a value with unknown shape.
+//│ ╟── Parameter 'value' admits values of unknown shape.
+//│ ║  l.208: 	class CopyBox(val value) with
+//│ ║         	                  ^^^^^
+//│ ╟── 'CopyBox' is exposed by this compilation unit.
+//│ ║  l.208: 	class CopyBox(val value) with
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.209: 	  fun copy() = CopyBox(value)
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ ═══[RUNTIME ERROR] Expected: '42', got: 'undefined'
+
+// A previously compiled private definition cannot acquire an open interface later.
+private fun oldHidden(x) = x.a
+oldHidden({a: 1})
+//│ = 1
+
+:e
+val oldEscape = {callback: oldHidden}
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.227: 	private fun oldHidden(x) = x.a
+//│ ║         	                           ^^^
+//│ ╟── Cannot resolve member 'a' of a value with unknown shape.
+//│ ╟── Parameter 'x' admits values of unknown shape.
+//│ ║  l.227: 	private fun oldHidden(x) = x.a
+//│ ║         	                      ^
+//│ ╟── This value is stored in this record field.
+//│ ║  l.232: 	val oldEscape = {callback: oldHidden}
+//│ ║         	                 ^^^^^^^^
+//│ ╟── 'oldEscape' is exposed by this compilation unit.
+//│ ║  l.232: 	val oldEscape = {callback: oldHidden}
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ oldEscape = {callback: fun oldHidden}
+
+// A spread retains the generic input that made its member interface unknown.
+:e
+fun spreadRecord[A](x: A) = ({...x}).a
+spreadRecord({a: 1})
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.250: 	fun spreadRecord[A](x: A) = ({...x}).a
+//│ ║         	                            ^^^^^^^^^^
+//│ ╟── Cannot resolve member 'a' across a computed key or unknown record spread.
+//│ ╟── This spread has no known element shape.
+//│ ║  l.250: 	fun spreadRecord[A](x: A) = ({...x}).a
+//│ ║         	                                 ^
+//│ ╟── This type annotation supplies the value's shape.
+//│ ║  l.250: 	fun spreadRecord[A](x: A) = ({...x}).a
+//│ ║         	                       ^
+//│ ╟── Type parameter 'A' does not specify a member interface.
+//│ ║  l.250: 	fun spreadRecord[A](x: A) = ({...x}).a
+//│ ╙──       	                 ^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// The same provenance survives indexing into an unresolved tuple spread.
+:e
+fun spreadTuple[A](x: A) = [...x].0.a
+spreadTuple([{a: 1}])
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.269: 	fun spreadTuple[A](x: A) = [...x].0.a
+//│ ║         	                           ^^^^^^^^^^
+//│ ╟── Cannot resolve member 'a' of a value with unknown shape.
+//│ ╟── This spread has no known element shape.
+//│ ║  l.269: 	fun spreadTuple[A](x: A) = [...x].0.a
+//│ ║         	                               ^
+//│ ╟── This type annotation supplies the value's shape.
+//│ ║  l.269: 	fun spreadTuple[A](x: A) = [...x].0.a
+//│ ║         	                      ^
+//│ ╟── Type parameter 'A' does not specify a member interface.
+//│ ║  l.269: 	fun spreadTuple[A](x: A) = [...x].0.a
+//│ ╙──       	                ^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// Explicit dynamic spreads still permit dynamic element operations.
+:expect 3
+[...([{a: 3}] as dyn)].0.a
+//│ = 3
+
+// Recursive discovery observes later shapes without repeatedly scanning the graph.
+:e
+private fun recursiveHidden(x) = x.a
+fun recursiveExport(n) = if n == 0 then {callback: recursiveHidden} else recursiveExport(n - 1)
+recursiveHidden({a: 1})
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.293: 	private fun recursiveHidden(x) = x.a
+//│ ║         	                                 ^^^
+//│ ╟── Cannot resolve member 'a' of a value with unknown shape.
+//│ ╟── Parameter 'x' admits values of unknown shape.
+//│ ║  l.293: 	private fun recursiveHidden(x) = x.a
+//│ ║         	                            ^
+//│ ╟── This value is stored in this record field.
+//│ ║  l.294: 	fun recursiveExport(n) = if n == 0 then {callback: recursiveHidden} else recursiveExport(n - 1)
+//│ ║         	                                         ^^^^^^^^
+//│ ╟── This value is returned here.
+//│ ║  l.294: 	fun recursiveExport(n) = if n == 0 then {callback: recursiveHidden} else recursiveExport(n - 1)
+//│ ║         	                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── 'recursiveExport' is exposed by this compilation unit.
+//│ ║  l.294: 	fun recursiveExport(n) = if n == 0 then {callback: recursiveHidden} else recursiveExport(n - 1)
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// A term overload cannot hide an exposed class interface from this check.
+:e
+class Shadowed {
+  fun bad(x) = x.a
+}
+val Shadowed = 0
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.317: 	  fun bad(x) = x.a
+//│ ║         	               ^^^
+//│ ╟── Cannot resolve member 'a' of a value with unknown shape.
+//│ ╟── Parameter 'x' admits values of unknown shape.
+//│ ║  l.317: 	  fun bad(x) = x.a
+//│ ║         	          ^
+//│ ╟── Member 'bad' is accessible here.
+//│ ║  l.317: 	  fun bad(x) = x.a
+//│ ║         	  ^^^^^^^^^^^^^^^^
+//│ ╟── 'Shadowed' is exposed by this compilation unit.
+//│ ║  l.316: 	class Shadowed {
+//│ ║         	^^^^^^^^^^^^^^^^
+//│ ║  l.317: 	  fun bad(x) = x.a
+//│ ║         	^^^^^^^^^^^^^^^^^^
+//│ ║  l.318: 	}
+//│ ║         	^
+//│ ║  l.319: 	val Shadowed = 0
+//│ ╙──       	^^^^^^^^^^^^^^^^
+//│ Shadowed = 0
+
+// A constructor test narrows the class, but cannot close its unannotated fields.
+:e
+class Holder(val value)
+fun inspect(x) = if x is Holder(y) then y.a else 0
+inspect(Holder({a: 1}))
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.344: 	fun inspect(x) = if x is Holder(y) then y.a else 0
+//│ ║         	                                        ^^^
+//│ ╟── Cannot resolve member 'a' of a value with unknown shape.
+//│ ╟── This constructor field may contain a value of unknown shape.
+//│ ║  l.343: 	class Holder(val value)
+//│ ║         	                 ^^^^^
+//│ ╟── Parameter 'x' admits values of unknown shape.
+//│ ║  l.344: 	fun inspect(x) = if x is Holder(y) then y.a else 0
+//│ ║         	            ^
+//│ ╟── 'inspect' is exposed by this compilation unit.
+//│ ║  l.344: 	fun inspect(x) = if x is Holder(y) then y.a else 0
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// Declared fields remain usable after narrowing an unknown input.
+:expect 2
+class KnownField(val a: Int)
+class TypedHolder(val value: KnownField)
+fun inspectTyped(x) = if x is TypedHolder(y) then y.a else 0
+inspectTyped(TypedHolder(KnownField(2)))
+//│ = 2
+
+// A class pattern also admits arbitrary instantiations of its type parameters.
+:e
+class GenericHolder[A](val value: A)
+fun inspectGeneric(x) = if x is GenericHolder(y) then y.a else 0
+inspectGeneric(GenericHolder({a: 1}))
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.372: 	fun inspectGeneric(x) = if x is GenericHolder(y) then y.a else 0
+//│ ║         	                                                      ^^^
+//│ ╟── Cannot resolve member 'a' of a value with unknown shape.
+//│ ╟── This constructor field may contain a value of unknown shape.
+//│ ║  l.371: 	class GenericHolder[A](val value: A)
+//│ ║         	                           ^^^^^
+//│ ╟── Parameter 'x' admits values of unknown shape.
+//│ ║  l.372: 	fun inspectGeneric(x) = if x is GenericHolder(y) then y.a else 0
+//│ ║         	                   ^
+//│ ╟── 'inspectGeneric' is exposed by this compilation unit.
+//│ ║  l.372: 	fun inspectGeneric(x) = if x is GenericHolder(y) then y.a else 0
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// Narrowing does not mix the external activation into concrete calls.
+:expect 3
+val unwrap = case Holder(y) then y
+unwrap(Holder({a: 3})).a
+//│ = 3
+//│ unwrap = fun
+
+// Abstract annotations still admit a class test and its declared field interface.
+:expect 4
+fun inspectAbstract(x: Any) = if x is TypedHolder(y) then y.a else 0
+inspectAbstract(TypedHolder(KnownField(4)))
+//│ = 4
+
+// A result annotation does not hide callable methods of a returned private class.
+// FIXME: Follow the declared member interface to its implementation without
+// exposing initializer shapes hidden by the nominal annotation.
+:breakme
+:e
+private class EscapedClass with
+  fun inspect(x) = x.a
+fun annotatedInstance(): EscapedClass = new EscapedClass
+(new EscapedClass).inspect({a: 1})
+//│ = 1

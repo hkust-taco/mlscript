@@ -1,3 +1,4 @@
+:.
 :js
 
 
@@ -9,12 +10,12 @@ open Stack
 :e
 :w
 pattern P = x :: xs => [x, xs]
-//│ ╔══[COMPILATION ERROR] Name not found: x
-//│ ║  l.11: 	pattern P = x :: xs => [x, xs]
-//│ ╙──      	                        ^
 //│ ╔══[WARNING] Unused pattern binding: x.
-//│ ║  l.11: 	pattern P = x :: xs => [x, xs]
+//│ ║  l.12: 	pattern P = x :: xs => [x, xs]
 //│ ╙──      	            ^
+//│ ╔══[COMPILATION ERROR] Name not found in wildcard opens: x
+//│ ║  l.12: 	pattern P = x :: xs => [x, xs]
+//│ ╙──      	                        ^
 
 pattern P = (x :: xs) => [x, xs]
 

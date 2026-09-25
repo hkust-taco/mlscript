@@ -1,2 +1,4 @@
+#lang(0.3.x)
+
 module CSPNest with ...
 fun nest_f() = 42

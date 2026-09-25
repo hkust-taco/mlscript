@@ -1,3 +1,4 @@
+:.
 :ignore
 :ucs normalized
 
@@ -8,54 +9,41 @@ open Option
 // OK
 x => if x is
   refined(None) then x
-//│ ╔══[COMPILATION ERROR] Name not found: refined
-//│ ║  l.10: 	  refined(None) then x
-//│ ╙──      	  ^^^^^^^
-//│ ╔══[COMPILATION ERROR] Cannot use this ‹error› as a pattern.
-//│ ║  l.10: 	  refined(None) then x
-//│ ╙──      	  ^^^^^^^
+//│ ╔══[COMPILATION ERROR] Cannot use this wildcard-open reference as a pattern.
+//│ ║  l.11: 	  refined(None) then x
+//│ ╙──      	  ^^^^^^^^^^^^^
 //│ Normalized:
-//│ >  ‹if|while›
+//│ >  ‹if|while› let tmp:scrut = x⁰
 
 // OK
 x => if x is
   refined(Some) then x
-//│ ╔══[COMPILATION ERROR] Name not found: refined
-//│ ║  l.22: 	  refined(Some) then x
-//│ ╙──      	  ^^^^^^^
-//│ ╔══[COMPILATION ERROR] Cannot use this ‹error› as a pattern.
-//│ ║  l.22: 	  refined(Some) then x
-//│ ╙──      	  ^^^^^^^
+//│ ╔══[COMPILATION ERROR] Cannot use this wildcard-open reference as a pattern.
+//│ ║  l.20: 	  refined(Some) then x
+//│ ╙──      	  ^^^^^^^^^^^^^
 //│ Normalized:
-//│ >  ‹if|while›
+//│ >  ‹if|while› let tmp:scrut = x¹
 
 // Should warn about the inconsistent refinement
 x => if x is
   refined(None) then x
   Some then x
-//│ ╔══[COMPILATION ERROR] Name not found: refined
-//│ ║  l.34: 	  refined(None) then x
-//│ ╙──      	  ^^^^^^^
-//│ ╔══[COMPILATION ERROR] Cannot use this ‹error› as a pattern.
-//│ ║  l.34: 	  refined(None) then x
-//│ ╙──      	  ^^^^^^^
+//│ ╔══[COMPILATION ERROR] Cannot use this wildcard-open reference as a pattern.
+//│ ║  l.29: 	  refined(None) then x
+//│ ╙──      	  ^^^^^^^^^^^^^
 //│ Normalized:
-//│ >  ‹if|while› x is Option.Some then x⁰
+//│ >  ‹if|while›
+//│ >    let tmp:scrut = x²
+//│ >    tmp:scrut is Some‹open› then x²
 
 x => if x is
   refined(None) then x
   refined(Some) then x
-//│ ╔══[COMPILATION ERROR] Name not found: refined
-//│ ║  l.46: 	  refined(None) then x
-//│ ╙──      	  ^^^^^^^
-//│ ╔══[COMPILATION ERROR] Name not found: refined
-//│ ║  l.47: 	  refined(Some) then x
-//│ ╙──      	  ^^^^^^^
-//│ ╔══[COMPILATION ERROR] Cannot use this ‹error› as a pattern.
-//│ ║  l.46: 	  refined(None) then x
-//│ ╙──      	  ^^^^^^^
-//│ ╔══[COMPILATION ERROR] Cannot use this ‹error› as a pattern.
-//│ ║  l.47: 	  refined(Some) then x
-//│ ╙──      	  ^^^^^^^
+//│ ╔══[COMPILATION ERROR] Cannot use this wildcard-open reference as a pattern.
+//│ ║  l.40: 	  refined(None) then x
+//│ ╙──      	  ^^^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Cannot use this wildcard-open reference as a pattern.
+//│ ║  l.41: 	  refined(Some) then x
+//│ ╙──      	  ^^^^^^^^^^^^^
 //│ Normalized:
-//│ >  ‹if|while›
+//│ >  ‹if|while› let tmp:scrut = x³

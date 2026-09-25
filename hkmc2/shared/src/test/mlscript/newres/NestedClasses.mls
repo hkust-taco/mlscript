@@ -1,0 +1,46 @@
+:.
+
+
+:sr
+:sir
+module Foo {
+  class Bar {
+    fun id(x) = x
+  }
+}
+//│ ————————————————| Resolved |————————————————————————————————————————————————————————————————————————
+//│   module Foo⁰::Foo¹ { class Bar⁰::Bar¹ { fun id⁰::id¹(x⁰) ‹flow:id⁰› = x⁰ } }
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define Foo⁰ as class Foo¹
+//│ module Foo² {
+//│   constructor { define Bar⁰ as class Bar¹ { method id⁰ = fun id¹(x) { return x } }; end }
+//│ };
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+:sr
+:sir
+:lot
+let x = new Foo.Bar
+//│ ————————————————| Resolved |————————————————————————————————————————————————————————————————————————
+//│   let x¹, x¹ = new Foo⁰.Bar⁰
+//│ —————————————| Lowered IR Tree |————————————————————————————————————————————————————————————————————
+//│ Program:
+//│   main = Assign:
+//│     lhs = x⁰
+//│     rhs = Instantiate:
+//│       mut = false
+//│       cls = Select{sym=class:Bar¹}:
+//│         qual = MemberRef{disamb=module:Foo²}:
+//│           bms = member:Foo⁰
+//│           disamb = module:Foo²
+//│         name = Ident of "Bar"
+//│       argss = Ls of
+//│         Nil
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ set x⁰ = new Foo².Bar¹(); end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ x = Bar
+
+
+

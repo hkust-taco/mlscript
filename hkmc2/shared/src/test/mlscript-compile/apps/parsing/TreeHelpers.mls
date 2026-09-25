@@ -16,7 +16,7 @@ fun first(array) = if array is [first, ...] then first
 
 fun second(array) = if array is [_, second, ...] then second
 
-fun indented(text) = text.split("\n").join("\n  ")
+fun indented(text: Str) = text.split("\n").join("\n  ")
 
 fun showAsTree(thing) =
   fun itemize(something) = if something is
@@ -33,7 +33,7 @@ fun showAsTree(thing) =
       tuple of ("Stack of \n" + "  " + indented of items.join("\n")), []
     Nil then ["Nil", []]
     Str then [JSON.stringify(something), []] // TODO: This doesn't work.
-    Int then [something.toString(), []]
+    Int as number then [number.toString(), []]
     Tree.Empty then ["Empty", []]
     Tree.Error(Tree.Empty, m) then tuple of "Error", [["message", go(m)]]
     Tree.Error(t, m) then tuple of "Error", [["tree", go(t)], ["message", go(m)]]

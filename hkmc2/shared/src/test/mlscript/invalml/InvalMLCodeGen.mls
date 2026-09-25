@@ -192,7 +192,7 @@ fun nott = case
 //│       case false:
 //│         return true;
 //│     }
-//│     throw globalThis.Object.freeze(new globalThis.Error.class("match error"))
+//│     throw globalThis.Object.freeze(new globalThis.Error("match error"))
 //│   });
 //│   return lambda2
 //│ };
@@ -208,7 +208,7 @@ nott of false
 //│ } else if (false === false) {
 //│   return true
 //│ }
-//│ throw globalThis.Object.freeze(new globalThis.Error.class("match error"));
+//│ throw globalThis.Object.freeze(new globalThis.Error("match error"));
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = true
 //│ Type: Bool

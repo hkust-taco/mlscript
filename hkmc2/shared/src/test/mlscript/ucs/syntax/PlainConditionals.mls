@@ -1,3 +1,4 @@
+:.
 :js
 
 fun f(x) = x
@@ -77,14 +78,14 @@ fun foo(x) = x is
   Pair(a, b) and a > b
   Int
 //│ ╔══[COMPILATION ERROR] Unrecognized pattern (infix operator 'and').
-//│ ║  l.77: 	  Pair(a, b) and a > b
+//│ ║  l.78: 	  Pair(a, b) and a > b
 //│ ╙──      	  ^^^^^^^^^^^^^^^^^^^^
 
 
 :e
 fun foo(x) = x is Pair(a, b) | Int
 //│ ╔══[COMPILATION ERROR] Unexpected term form in expression position (alternation)
-//│ ║  l.85: 	fun foo(x) = x is Pair(a, b) | Int
+//│ ║  l.86: 	fun foo(x) = x is Pair(a, b) | Int
 //│ ╙──      	             ^^^^^^^^^^^^^^^^^^^^^
 
 // Test how shorthand conditionals work together with lambda functions.
@@ -93,7 +94,7 @@ fun foo(x) = x is Pair(a, b) | Int
 data class A[T](arg: T)
 
 let foo = x => x is A(_)
-//│ foo = fun foo
+//│ foo = fun
 
 :expect [false, true]
 [foo(0), foo(A(0))]
