@@ -118,19 +118,17 @@ final class TypeResolution(val source: Term, report: Ls[(Message, Opt[Loc])] => 
 
 /** A type with its lexical type-parameter bindings. These bindings describe declared
   * interfaces, not constructor arguments or value-flow capture paths.
+  * `positive` interprets substitutions in the source expression; it is not the
+  * direction of a constraint subsequently applied to the interpreted type.
   */
 final case class DeclaredType(resolution: TypeResolution, bindings: Map[VarSymbol, DeclaredType],
-    instances: Map[VarSymbol, TypeParameterInstance], positive: Bool):
-  // This polarity interprets substitutions in the source expression; it is not
-  // the direction of a constraint subsequently applied to the interpreted type.
-  require(instances.forall((source, instance) => instance.origin eq source),
-    "A substitution must map original binders to their call-site instances")
+    instances: TypeSubstitution, positive: Bool):
   /** Instantiation changes references to source binders, never expands their bounds.
     * A reference already interpreted in another call retains that interpretation.
     * The finite map contains original binders and canonical site instances only.
     */
-  def instantiate(substitution: Map[VarSymbol, TypeParameterInstance]): DeclaredType =
-    copy(instances = substitution ++ instances)
+  def instantiate(substitution: TypeSubstitution): DeclaredType =
+    copy(instances = substitution.withOverrides(instances))
 
 /** A type reference observed from a common comparison scope. The marks belong
   * to this endpoint: reversing a constraint swaps endpoints, not an expanded

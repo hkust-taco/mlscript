@@ -22,7 +22,7 @@ class TypeRelationTest extends AnyFunSuite:
     def tpe(shape: TypeShape): DeclaredType =
       val resolution = new TypeResolution(Term.UnitVal(), _ => fail("Unexpected type error"))
       resolution.publish(shape)
-      DeclaredType(resolution, Map.empty, Map.empty, true)
+      DeclaredType(resolution, Map.empty, TypeSubstitution.empty, true)
     def parameter(name: String): (VarSymbol, DeclaredType) =
       val symbol = VarSymbol(Tree.Ident(name))
       (symbol, tpe(TypeShape.Parameter(symbol, symbol.inferenceHost)))
@@ -218,7 +218,7 @@ class TypeRelationTest extends AnyFunSuite:
       val nextField = RcdField.signature(Term.Lit(Tree.StrLit("next")), next)
       val source: Term.Rcd = Term.Rcd(false, List(valueField, nextField))
       resolution.publish(TypeShape.Record(source, List(valueField -> element.resolution, nextField -> resolution)))
-      DeclaredType(resolution, Map.empty, Map.empty, true)
+      DeclaredType(resolution, Map.empty, TypeSubstitution.empty, true)
     val left = ContextualType(recursiveRecord(at), Nil)
     val right = ContextualType(recursiveRecord(bt), Nil)
     val first = IntroShape(Term.UnitVal(), N)
@@ -275,7 +275,7 @@ class TypeRelationTest extends AnyFunSuite:
     val (input, inputType) = h.parameter("Input")
     val (output, outputType) = h.parameter("Output")
     val resolution = new TypeResolution(Term.UnitVal(), _ => fail("Unexpected type error"))
-    val argument = DeclaredType(resolution, Map.empty, Map.empty, true)
+    val argument = DeclaredType(resolution, Map.empty, TypeSubstitution.empty, true)
     val negative = h.resolver.selectArgument(argument, false)
     val positive = h.resolver.selectArgument(argument, true)
     val neg = ContextualType(negative, Nil)
@@ -310,7 +310,7 @@ class TypeRelationTest extends AnyFunSuite:
     val h = new Harness
     import h.given
     val resolution = new TypeResolution(Term.UnitVal(), _ => fail("Unexpected type error"))
-    val argument = DeclaredType(resolution, Map.empty, Map.empty, true)
+    val argument = DeclaredType(resolution, Map.empty, TypeSubstitution.empty, true)
     val selected = h.resolver.selectArgument(argument, true)
     val reference = ContextualType(selected, Nil)
     val seen = h.observe(reference)

@@ -1,0 +1,156 @@
+:.
+
+// Returning a generic curried function captures outer binders without consuming
+// its own scheme. Marks on its partial applications still distinguish callers.
+:expect [1, 3, 5, 2, 4, 6]
+class First(val first: Int)
+class Second(val second: Int)
+private fun enclosing[A](x: A) =
+  private fun pair[B](y: B)(z) = [x, y, z]
+  pair
+private val left = enclosing(First(1))
+private val right = enclosing(Second(2))
+private val leftTail = left[Second](Second(3))
+private val rightTail = right[First](First(4))
+let a = leftTail(First(5))
+let b = rightTail(Second(6))
+[a.0.first, a.1.second, a.2.first, b.0.second, b.1.first, b.2.second]
+//│ = [1, 3, 5, 2, 4, 6]
+//│ a = [First(1), Second(3), First(5)]
+//│ b = [Second(2), First(4), Second(6)]
+//│ left = fun pair
+//│ leftTail = fun
+//│ right = fun pair
+//│ rightTail = fun
+
+// A specialization and a consumed term list survive multiple nested captures.
+:expect [7, 8, 9]
+class First(val first: Int)
+class Second(val second: Int)
+private fun enclosing[A](x: A) =
+  private fun pair[B](y: B)(z) = [x, y, z]
+  private fun middle() =
+    private fun inner() = pair[Second](Second(8))
+    inner()
+  middle()
+private val tail = enclosing(First(7))
+let result = tail(First(9))
+[result.0.first, result.1.second, result.2.first]
+//│ = [7, 8, 9]
+//│ result = [First(7), Second(8), First(9)]
+//│ tail = fun
+
+// Callback checking must retain the binder view of a partially applied function.
+:expect 10
+class Item(val value: Int)
+private fun first[A](x: A)(get) = get(x)
+private fun use[B](f: (Item -> Int) -> B): B = f(x => x.value)
+use(first[Item](Item(10)))
+//│ = 10
+
+// A partial new expression keeps its constructor parameters and captured marks.
+:expect [11, 12, 13, 14]
+class First(val first: Int)
+class Second(val second: Int)
+class Pair[A](val left: A)(val right)
+private fun start[A](x: A) = new Pair[A](x)
+private val left = start(First(11))
+private val right = start(Second(13))
+let a = left(Second(12))
+let b = right(First(14))
+[a.left.first, a.right.second, b.left.second, b.right.first]
+//│ = [11, 12, 13, 14]
+//│ a = Pair(First(11))
+//│ b = Pair(Second(13))
+//│ left = fun
+//│ right = fun
+
+// Constructor patterns recognize an explicitly specialized constructor value.
+:expect 15
+class Box[A](val value: A)
+private val IntBox = Box[Int]
+private fun read(x) = if x is IntBox(value) then value else 0
+read(Box(15))
+//│ = 15
+//│ IntBox = fun Box { class: class Box }
+
+// A captured constructor value is still available as a constructor pattern.
+:expect 16
+class Box[A](val value: A)
+private fun makeConstructor[A](unused: A) = Box
+private val Alias = makeConstructor(0)
+private fun read(x) = if x is Alias(value) then value else 0
+read(Box(16))
+//│ = 16
+//│ Alias = fun Box { class: class Box }
+
+// An application head identifies the original constructor, but an already
+// constructed object is not itself a constructor pattern.
+:e
+class Box(val value: Int)
+private val instance = Box(17)
+private fun invalid(x) = if x is instance(value) then value else 0
+//│ ╔══[COMPILATION ERROR] Resolution error in constructor
+//│ ║  l.92: 	private fun invalid(x) = if x is instance(value) then value else 0
+//│ ║        	                                 ^^^^^^^^^^^^^^^
+//│ ╟── Instance of class 'Box' cannot be used as a constructor pattern.
+//│ ║  l.91: 	private val instance = Box(17)
+//│ ╙──      	                       ^^^^^^^
+//│ instance = Box(17)
+
+// Nor does a partially applied constructor denote the original constructor.
+:e
+class Pair(val left: Int)(val right: Int)
+private val partial = Pair(18)
+private fun invalid(x) = if x is partial(left) then left else 0
+//│ ╔══[COMPILATION ERROR] Resolution error in constructor
+//│ ║  l.105: 	private fun invalid(x) = if x is partial(left) then left else 0
+//│ ║         	                                 ^^^^^^^^^^^^^
+//│ ╟── Instance of class 'Pair' cannot be used as a constructor pattern.
+//│ ║  l.104: 	private val partial = Pair(18)
+//│ ╙──       	                      ^^^^^^^^
+//│ partial = fun
+
+// Explicit parent projections preserve an annotated receiver's binder view.
+:expect [19, 20]
+class First(val first: Int)
+class Second(val second: Int)
+class Parent[A](val item: A)
+class Child[A](item: A) extends Parent[A](item)
+private fun make[A](value: A): Child[A] = new Child[A](value)
+private fun read[A](value: Child[A]) = value.Parent#item
+[read(make[First](First(19))).first, read(make[Second](Second(20))).second]
+//│ = [19, 20]
+
+// A nominal parent may itself refer to a captured enclosing type parameter.
+// Disable the independent optimizer bug recorded in dead-param-elim/inherited-field.mls.
+:deadParamElim off
+:expect [21, 22]
+class First(val first: Int)
+class Second(val second: Int)
+private fun enclosing[A](item: A) =
+  class Parent(val value: A)
+  class Child(value: A) extends Parent(value)
+  private fun nested() =
+    let receiver = new Child(item) as Child
+    receiver.Parent#value
+  nested()
+[enclosing(First(21)).first, enclosing(Second(22)).second]
+//│ = [21, 22]
+
+// A selected annotated method can cross nested captures before its remaining
+// empty parameter list is consumed. Each receiver keeps its own type argument.
+:expect [23, 24]
+class First(val first: Int)
+class Second(val second: Int)
+class Holder[A](val item: A) with
+  fun keep[B](other: B)(): A = item
+private fun capture[A](holder: Holder[A]) =
+  private fun nested() = holder.keep[Int](0)
+  nested()
+private val first = capture(Holder[First](First(23)))
+private val second = capture(Holder[Second](Second(24)))
+[first().first, second().second]
+//│ = [23, 24]
+//│ first = fun
+//│ second = fun

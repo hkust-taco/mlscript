@@ -113,21 +113,21 @@ final class InterfaceExposure(resolver: NewResolver)(using NewResolverState, TL)
 
   private def value(shape: TermShape, path: Path)(using NewResolverState): Unit = valueIn(shape, path, rstate.instances)
 
-  private def valueIn(shape: TermShape, path: Path, instances: Map[VarSymbol, TypeParameterInstance])(using NewResolverState): Unit =
+  private def valueIn(shape: TermShape, path: Path, instances: TypeSubstitution)(using NewResolverState): Unit =
     val (head, marks) = shape.applicationHead
     def contextualTerm(value: Term, context: Ls[Marks], path: Path,
-        substitution: Map[VarSymbol, TypeParameterInstance])(using NewResolverState): Unit =
+        substitution: TypeSubstitution)(using NewResolverState): Unit =
       watch((new Identity(value), context, substitution))(
         listener => resolver.listenTerm(value)(listener)(using rstate.withInstances(substitution))): shape =>
           emit(resolver.instantiateShape(shape, substitution).exit(context), path)
     head match
       case contextual: ContextualShape => contextual.source.exit(marks) match
         case value: TermShape =>
-          val substitution = instances ++ contextual.instances
+          val substitution = instances.withOverrides(contextual.instances)
           valueIn(value, path, substitution)(using rstate.withInstances(substitution))
         case NoShape => ()
       case specialized: SpecializedShape =>
-        resolver.instantiateShape(specialized.declaration, instances ++ specialized.instances).exit(marks) match
+        resolver.instantiateShape(specialized.declaration, instances.withOverrides(specialized.instances)).exit(marks) match
           case value: TermShape => valueIn(value, path, instances)
           case NoShape => ()
       case _: InstanceShape =>
@@ -158,9 +158,9 @@ final class InterfaceExposure(resolver: NewResolver)(using NewResolverState, TL)
         case _ => ()
       case record: RecordShape => record.elements.foreach:
         case RecordShape.Field(field) => contextualTerm(field.rhs, marks,
-          path.via(msg"This value is stored in this record field." -> field.toLoc), instances ++ record.instances)
+          path.via(msg"This value is stored in this record field." -> field.toLoc), instances.withOverrides(record.instances))
         case RecordShape.Spread(inner, context) =>
-          emit(resolver.instantiateShape(inner, instances ++ record.instances).exit(context).exit(marks), path)
+          emit(resolver.instantiateShape(inner, instances.withOverrides(record.instances)).exit(context).exit(marks), path)
         case _ => ()
       case base: BaseShape => members(base.defn, marks, path)
       case callable: CallableTypeShape =>

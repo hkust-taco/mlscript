@@ -181,8 +181,8 @@ list has been applied.
 
 | Form | Meaning | How it is consumed |
 | --- | --- | --- |
-| `ContextualShape(source, instances)` | Observe a shared value using these bindings for references inside it. This does not consume the value's own generic scheme. | Member/body observation uses the substitution; `callableParts` extracts it before application. |
-| `SpecializedShape(declaration, arguments, instances)` | This declaration's scheme has already been consumed by explicit type application. Retain its supplied type references and chosen instance group. | `callableParts` reports a consumed scheme, so `appShape` reuses the group. |
+| `ContextualShape(source, instances)` | Observe a shared value using these bindings for references inside it. This does not consume the value's own generic scheme. | Member/body observation uses the substitution; `shapeParts` extracts it before application. |
+| `SpecializedShape(declaration, arguments, instances)` | This declaration's scheme has already been consumed by explicit type application. Retain its supplied type references and chosen instance group. | `shapeParts` retains the supplied arguments, so `appShape` reuses the consumed group. |
 | `ActivatedShapeEvent(value, instances)` | Deliver an inference event to operations running in this body activation. The enclosed value retains its own, independent substitution. | `listen` checks compatibility, unwraps the envelope, and invokes the receiver in that activation. |
 
 All three `instances` fields map original binders to `TypeParameterInstance`
@@ -250,6 +250,39 @@ separate. Publisher replay and imported-host copying retain the complete events;
 they do not replace saved activations with the state active during replay.
 
 ### Related interfaces and representation invariants
+
+The view normal form is enforced by the Scala types. `CoreShape` excludes
+`ContextualShape` and `SpecializedShape`, and `MarkedShape[T]` retains its core's
+type parameter. `AppShape.receiver` has type
+`CoreTermShape = CoreShape | MarkedShape[CoreShape]`: an application cannot contain
+a contextual or specialized receiver, even beneath marks or earlier applications.
+`ContextualShape.source` accepts only the shapes that defer substitution through
+a view (`AppShape`, `NewShape`, `DefnShape`, `BaseShape`, and `IntroShape`). It
+cannot contain another view, a marked shape, or a shape that stores substitutions
+directly. `SpecializedShape.declaration` is a `DefnShape`.
+
+The symbolic counterpart follows the same rule: `ContextualSymShape.source` is
+a `CoreSymShape` (plain or declared), so it cannot wrap another contextual symbol.
+`CallableTypeShape.paramLists` is a `NELs[DeclaredParams]`: every callable view
+has a next argument list, even when that list itself accepts zero arguments.
+Consuming the last list exposes the result instead of constructing an empty
+callable view. Mapping parameter types preserves nonemptiness with `ne_map`.
+
+Value captures and body activations use the opaque `TypeSubstitution`, whose
+underlying immutable map remains available for reads. Its constructor derives
+each key from the instance's original binder. `withOverrides` combines two valid
+substitutions with the right operand taking precedence, and `without` removes
+shadowed binders. Both preserve the substitution type; arbitrary map updates do
+not. This rules out mismatched binder/instance pairs without runtime validation
+at every `DeclaredType` construction.
+
+Consequently, `shapeParts` can decode one outer marking and one view with an
+exhaustive match. It returns a `CoreTermShape`, its captured instances, and any
+consumed type arguments. It preserves the application chain: peeling applications
+would forget consumed term lists and could mistake a constructed object for a
+constructor. Application, callback checking, constructor lookup, and constructor
+patterns share this decoder. `ShapeViews.mls` exercises nested captures,
+specialized curried values, callback constraints, and constructor-pattern controls.
 
 These roles must also be distinguished from interpreting an annotated instance:
 
