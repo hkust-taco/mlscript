@@ -64,24 +64,7 @@ class NewResolver:
     rs.typeInterpretations.get(new Identity(term)).orElse(term.typeInterpretation) match
       case S(result) => result
       case N =>
-        val interpreted = new TypeResolution(term, messages => resolError(term, messages))
-        def legacyCaptures(source: Term): Ls[AnyDefinitionSymbol] =
-          val graph = source.originalData.owner
-          val recorded = if graph == null then N else graph.nn.legacyReferenceCaptures.get(new Identity(source))
-          recorded.getOrElse(source match
-            case SynthSel(prefix, _) => legacyCaptures(prefix)
-            case Sel(prefix, _) => legacyCaptures(prefix)
-            case _ => Nil)
-        // The captured interpretation is consumer-owned. Source metadata is
-        // finite lexical syntax; it neither allocates call instances nor depends
-        // on the number of times an imported annotation is observed.
-        val result = legacyCaptures(term).foldLeft(interpreted): (base, scope) =>
-          scope match
-            case _: TypeAliasSymbol => base
-            case _ =>
-              val captured = new TypeResolution(term, messages => resolError(term, messages))
-              captured.publish(TypeShape.Captured(base, scope))
-              captured
+        val result = new TypeResolution(term, messages => resolError(term, messages))
         // Cache before following a recursive alias. Imported legacy annotations
         // have no stored interpretation: their new inference graph must remain
         // private to this consumer, including listeners on synthesized hosts.
@@ -92,27 +75,27 @@ class NewResolver:
               rstate.recordResolution(ref, ref.resolvedTargets.contains(symbol))(ref.resolvedTargets ::= symbol)
             case _ => ()
           def definition(defn: Definition)(using NewResolverState): Unit = defn match
-            case cls: ClassLikeDef => interpreted.publish(TypeShape.Nominal(cls))
+            case cls: ClassLikeDef => result.publish(TypeShape.Nominal(cls))
             case alias: TypeDef =>
-              interpreted.publish(TypeShape.Alias(alias.sym, alias.rhs.map(typeResolution)))
+              result.publish(TypeShape.Alias(alias.sym, alias.rhs.map(typeResolution)))
               // Validate unused annotations too, once their forward source graph
               // is complete. Interface observation uses the same gate below.
               withCanonicalType(DeclaredType(result, Map.empty, Map.empty, true))(_ => ())
-            case _ => interpreted.publish(TypeShape.Abstract)
+            case _ => result.publish(TypeShape.Abstract)
           symbol.defn match
             case S(defn) => definition(defn)
             case N => symbol.defnListeners += definition
         def reject(shape: Shape)(using NewResolverState): Unit =
           result.fail(msg"${shape.describe.capitalize} cannot be used as a type" -> shape.toLoc :: Nil)
-          interpreted.publish(TypeShape.Abstract)
+          result.publish(TypeShape.Abstract)
         def selectMember(member: BlockMemberSymbol)(using NewResolverState): Unit = member.onComplete: () =>
           member.asTpe.orElse(member.asModOrObj) match
             case S(symbol) => select(symbol)
             case N =>
               result.fail(msg"${member.describe.capitalize} cannot be used as a type" -> member.toLoc :: Nil)
-              interpreted.publish(TypeShape.Abstract)
+              result.publish(TypeShape.Abstract)
         term match
-          // Imported prelude declarations can still contain legacy references.
+          // Imported declarations can still contain legacy references.
           case Ref(symbol: TypeSymbol) => select(symbol)
           case Ref(member: BlockMemberSymbol) => selectMember(member)
           // Imported parent declarations can contain legacy synthesized selections.
@@ -124,32 +107,32 @@ class NewResolver:
             case S(member: BlockMemberSymbol) => selectMember(member)
             case _ =>
               result.fail(msg"This reference does not denote a type." -> ref.toLoc :: Nil)
-              interpreted.publish(TypeShape.Abstract)
+              result.publish(TypeShape.Abstract)
           // An alias's lexical qualification substitutes type references; it
           // does not cross an invocation boundary. Captured function and class
           // parameters still retain their actual value-scope crossings.
-          case Capture(base, _: TypeAliasSymbol) => typeResolution(base).listen(interpreted.publish)
-          case Capture(base, thru) => interpreted.publish(TypeShape.Captured(typeResolution(base), thru))
-          case TyApp(base, args) => interpreted.publish(TypeShape.Applied(typeResolution(base), args.map(typeResolution)))
+          case Capture(base, _: TypeAliasSymbol) => typeResolution(base).listen(result.publish)
+          case Capture(base, thru) => result.publish(TypeShape.Captured(typeResolution(base), thru))
+          case TyApp(base, args) => result.publish(TypeShape.Applied(typeResolution(base), args.map(typeResolution)))
           case Forall(params, outer, body) =>
-            interpreted.publish(TypeShape.Polymorphic(params.map: param =>
+            result.publish(TypeShape.Polymorphic(params.map: param =>
               TypeQuantifier(TypeShape.Parameter(param.sym, param.sym.inferenceHost),
                 param.lb.map(typeResolution), param.ub.map(typeResolution))
             , outer, typeResolution(body)))
           case CompType(left, right, union) =>
             val l = typeResolution(left)
             val r = typeResolution(right)
-            interpreted.publish(if union then TypeShape.Union(l, r) else TypeShape.Intersection(l, r))
-          case DynTy() => interpreted.publish(TypeShape.Dynamic)
-          case FunTy(params, ret, _) => interpreted.publish(TypeShape.Function(params, typeResolution(ret)))
-          case UnitVal() => interpreted.publish(TypeShape.Unit)
-          case WildcardTy(input, output) => interpreted.publish(TypeShape.Wildcard(input.map(typeResolution), output.map(typeResolution)))
+            result.publish(if union then TypeShape.Union(l, r) else TypeShape.Intersection(l, r))
+          case DynTy() => result.publish(TypeShape.Dynamic)
+          case FunTy(params, ret, _) => result.publish(TypeShape.Function(params, typeResolution(ret)))
+          case UnitVal() => result.publish(TypeShape.Unit)
+          case WildcardTy(input, output) => result.publish(TypeShape.Wildcard(input.map(typeResolution), output.map(typeResolution)))
           case SimpleRef(sym: VarSymbol) if sym.decl.exists(_.isInstanceOf[TyParam]) =>
-            interpreted.publish(TypeShape.Parameter(sym, sym.inferenceHost))
+            result.publish(TypeShape.Parameter(sym, sym.inferenceHost))
           case Ref(sym: VarSymbol) if sym.decl.exists(_.isInstanceOf[TyParam]) =>
-            interpreted.publish(TypeShape.Parameter(sym, sym.inferenceHost))
+            result.publish(TypeShape.Parameter(sym, sym.inferenceHost))
           case Tup(fields) if fields.forall(_.isInstanceOf[Fld]) =>
-            interpreted.publish(TypeShape.Tuple(fields.collect { case Fld(_, sign, _) => typeResolution(sign) }))
+            result.publish(TypeShape.Tuple(fields.collect { case Fld(_, sign, _) => typeResolution(sign) }))
           case record: Rcd =>
             val fields = record.stats.collect { case field: RcdField => field }
             if fields.length != record.stats.length || fields.exists(field => field.field match
@@ -157,11 +140,16 @@ class NewResolver:
               case _ => true)
             then
               result.fail(msg"A record type requires statically named fields." -> record.toLoc :: Nil)
-              interpreted.publish(TypeShape.Abstract)
-            else interpreted.publish(TypeShape.Record(record,
+              result.publish(TypeShape.Abstract)
+            else result.publish(TypeShape.Record(record,
               fields.reverse.distinctBy(_.sym.nme).reverse.map(field => field -> typeResolution(field.rhs))))
+          // Signed numeric literals use operator applications in the syntax tree.
+          // Like unsigned singleton types, they have no member interface here.
+          case App(Ref(op: BuiltinSymbol), Tup(Fld(_, Lit(_: Tree.IntLit | _: Tree.DecLit), _) :: Nil))
+              if op.nme === "-" || op.nme === "+" =>
+            result.publish(TypeShape.Abstract)
           case _: Neg | _: Tup | _: Lit | Missing | Error() =>
-            interpreted.publish(TypeShape.Abstract)
+            result.publish(TypeShape.Abstract)
           case _ => listen(term, discardMarks = true):
             case shape: SymShape => shape.sym.onComplete: () =>
               shape.sym.asTpe.orElse(shape.sym.asModOrObj) match

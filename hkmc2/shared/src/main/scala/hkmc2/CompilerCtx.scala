@@ -202,8 +202,9 @@ class CompilerCtx(
     // The prelude context is shared so every compilation unit sees the same prelude
     // symbols. Callers still elaborate their own files with a fresh State; the frozen
     // State remains the owner captured by the prelude symbols themselves.
-    // The prelude is elaborated once per context, under its root configuration: were it
-    // elaborated per requester, cached compilation units would keep referring to whichever
+    // The prelude is elaborated once per context, under its own file directives applied
+    // to the root configuration. Were it elaborated per requester, cached compilation
+    // units would keep referring to whichever
     // elaboration came first, and a body inlined across units would then carry prelude symbols
     // that the importing file does not recognize.
     val lastMod = fs.getLastChangedTimestamp(file)
@@ -219,13 +220,19 @@ class CompilerCtx(
         given Config = rootConfig
         given CompilerCtx = this
         val parse = ParserSetup(file)
-        val elab = Elaborator(tl, file.up, Ctx.empty)
-        val initCtx = State.init.nestLocal("prelude")
-        val (blk, ctx) = elab.importFrom(parse.resultBlk, Nil)(using initCtx)
+        val elaborationConfig = Config.elaborationConfig(parse.resultBlk)
+        // The prelude defines the builtins consulted during its own resolution.
+        // Seed lookup with the block's original symbols, as block elaboration does,
+        // so those lookups share the declarations that are being elaborated.
+        val initCtx = State.init.nestLocal("prelude").withMembers(parse.resultBlk.definedSymbols)
+        val elab =
+          given Config = elaborationConfig
+          Elaborator(tl, file.up, initCtx)
+        val (blk, ctx) = elaborationConfig.givenIn(elab.importFrom(parse.resultBlk, Nil)(using initCtx))
         // Prelude declarations have no executable program, but their signatures and nominal hierarchy
         // must be erased before any compilation unit can use them.
         given Ctx = ctx
-        codegen.Erasure(blk)
+        elaborationConfig.givenIn(codegen.Erasure(blk))
         PreludeArtifact(parse.resultBlk, blk, ctx, state, rootConfig, lastMod),
     )
   

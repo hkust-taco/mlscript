@@ -78,6 +78,27 @@ class CompilerCacheTest extends AnyFunSuite:
         graph.withDependency(fileC, fileA)(cycle => assert(cycle == List(fileC, fileA, fileB, fileC))):
           fail("The dependency closing the cycle should not be requested")
 
+  test("prelude directives select resolution independently of the session default"):
+    import io.PlatformPath.given
+    import semantics.*
+    import utils.*
+
+    val paths = TestFolders.compilerPaths(os.pwd)
+    val cfg = Config.default(TestFolders.mainTestDir(os.pwd))
+    assert(!cfg.language.useNewResolution)
+    val compiler = CompilerCtx.fresh(io.FileSystem.default, paths, cfg)
+    given DebugPrinter = new DebugPrinter
+    given TL = new TraceLogger:
+      override def doTrace: Boolean = false
+    given Raise = diagnostic => fail(diagnostic.theMsg)
+    val prelude = compiler.getPrelude(paths.preludeFile)
+    def hasCapturedAnnotation(statement: Statement): Boolean = statement match
+      case capture: Term.Capture if capture.typeInterpretation.nonEmpty => true
+      case _ => statement.subStatements.exists(hasCapturedAnnotation)
+    assert(hasCapturedAnnotation(prelude.term))
+    assert(compiler.getPrelude(paths.preludeFile) eq prelude)
+    assert(prelude.state.newResolverState.allocatedTypeInstanceCount == 0)
+
   test("legacy artifacts bind unused syntax hosts before consumers observe them"):
     import io.PlatformPath.given
     import semantics.*

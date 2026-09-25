@@ -53,16 +53,20 @@ replaced by truncating or widening paths. In particular, wildcard exit followed
 by wildcard entry is not an identity: it can discard a caller's activation ID.
 Reference transport uses the same operations as ordinary value flow.
 
-Legacy references do not contain `Capture` syntax. Elaboration records the lexical
-lookup path as immutable source metadata, and each consumer interprets it in its
-private type graph. Both concrete nominal references and parameter references
-need these paths. Guessing captures only for substituted class parameters misses
-concrete member results and nested callback arguments.
+The prelude uses its own `#lang(0.3.x)` directive. Its loader applies file
+configuration before elaboration and erasure, and supplies the block's original
+symbols for builtin lookup during bootstrap. Its signatures therefore carry the
+same `Capture` syntax as other new-resolution declarations.
+
+Legacy consumers can read completed new-resolution signature symbols through
+`legacyResolvedSym`. The lookup asserts that the referenced block is complete and
+shares erasure's symbol-selection rules, including ambiguity and error checks.
+It does not resolve imported syntax again or observe incomplete candidate sets.
 
 `newres/SpecializationCaptures.mls`, `RecursiveEnvironment.mls`, and
 `ConstructorFieldRecovery.mls` exercise captured specialization, recursion, and
 partial construction. `PrimitiveMembers.mls`, `Arrays.mls`, `GenericMethods.mls`,
-and `MutableArrays.mls` exercise legacy signature captures and array member paths.
+and `MutableArrays.mls` exercise prelude signature captures and array member paths.
 Receiver reconstruction and omitted-argument context precision are
 [deferred improvements](new-resolution-future-work.md).
 

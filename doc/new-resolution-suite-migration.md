@@ -63,15 +63,13 @@ and the temporary legacy `LegacyOption` compatibility fixture.
 
 ### Mixed-mode imports and fixture interfaces
 
-`Option` uses new resolution, but legacy consumers such as `apps/parsing/Parser`
-inspect imported return annotations through `Resolver.resolveType`/`resolveSign`.
-This queries legacy symbols on new-resolution syntax. The affected dependency
-graph imports `LegacyOption` temporarily; consumers exchanging `Some`/`None`
-values, including reflection and `Block`, must share the same constructor identities.
-Port these consumers together and delete `LegacyOption`, restoring `Option` imports.
-The same signature boundary blocks independent ports of `Token` and `Keywords`.
-A general interoperability bridge must consume completed type information without
-re-resolving imported nodes or querying erased types before erasure.
+Legacy consumers can read completed new-resolution symbols in imported signatures.
+The prelude uses new resolution. The parser dependency graph uses `LegacyOption`
+temporarily; consumers exchanging `Some`/`None` values, including reflection and
+`Block`, must share the same constructor identities. Port these consumers together
+and delete `LegacyOption`, restoring `Option` imports. Retry `Token` and `Keywords`
+with their consumers using the completed-symbol compatibility path. Imported nodes
+must not be re-resolved, and erased types must not be queried before erasure.
 
 Many fixtures also need source interfaces: for example, `QuoteExample.bind` calls
 an unannotated callback, and Nofib helpers expose comparators and printers.

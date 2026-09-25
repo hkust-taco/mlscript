@@ -367,7 +367,9 @@ sealed trait NewSelImpl extends NewResolvableImpl:
   var resolvedMembers: Ls[BlockMemberSymbol] = Nil // * filled during resolution
   // Class identity and captures must survive even when candidates share an inherited member.
   var resolvedClasses: Ls[(ClassSymbol, Ls[Marks])] = Nil
-  def hasAmbiguousClass(using Erasure): Bool = resolvedClasses.sizeCompare(1) > 0 || self.cls.exists:
+  def hasAmbiguousClass(using Erasure): Bool = hasAmbiguousClassImpl
+  // Also used by the guarded symbol lookup for completed imports.
+  private[semantics] def hasAmbiguousClassImpl: Bool = resolvedClasses.sizeCompare(1) > 0 || self.cls.exists:
     _.withoutCaptures match
       case ref: Term.UnresolvedRef => ref.resolvedMembers.distinct.sizeCompare(1) > 0
       case _ => false
@@ -528,12 +530,17 @@ enum Term extends Statement, ShapePublisher:
    * symbol is resolved during the resolution stage. Reading its final value requires
    * erasure; elaboration must listen for shapes instead.
    */
-  def resolvedSym(using Erasure): Opt[Symbol] = expanded match
+  def resolvedSym(using Erasure): Opt[Symbol] = resolvedSymImpl
+
+  /** Read-only lookup shared by erasure and legacy consumers of completed imports.
+    * The public accessors establish completion before reading new-resolution targets.
+    */
+  private def resolvedSymImpl: Opt[Symbol] = expanded match
     case res: Resolved => S(res.sym)
     case SimpleRef(sym) => S(sym)
-    case Capture(base, _) => base.resolvedSym
+    case Capture(base, _) => base.resolvedSymImpl
     case ref: UnresolvedRef if ref.resolvedMembers.distinct.sizeCompare(1) =/= 0 => N
-    case sel: NewSel if sel.hasAmbiguousClass => N
+    case sel: NewSel if sel.hasAmbiguousClassImpl => N
     case ref: NewResolvable =>
       if ref.isErroneous then N else ref.resolvedTargets.distinct match
         case sym :: Nil => S(sym)
@@ -542,15 +549,17 @@ enum Term extends Statement, ShapePublisher:
     case sel: Sel => sel.sym
     case sel: SynthSel => sel.sym
     case sel: SelProj => sel.sym
-    case app: TyApp => app.lhs.resolvedSym
+    case app: TyApp => app.lhs.resolvedSymImpl
     case _ => N
   
-  /** The old resolver may inspect its own expansions while resolving legacy terms.
-    * This deliberately rejects new references: their candidate sets are not final yet.
+  /** The old resolver may inspect its own expansions while resolving legacy terms,
+    * and completed references in imported new-resolution signatures. Never observe
+    * a new reference while its defining block can still change its selected targets.
     */
   private[semantics] def legacyResolvedSym: Opt[Symbol] = expanded match
-    case _: NewResolvable | _: NewRefImpl | _: Capture =>
-      lastWords("Legacy symbol query on a new-resolution term")
+    case term: (NewResolvable | NewRefImpl | Capture) =>
+      assert(term.originalData.completed, "Legacy symbol query on an incomplete new-resolution term")
+      term.resolvedSymImpl
     case app: TyApp => app.lhs.legacyResolvedSym
     case term => term.symbol
 

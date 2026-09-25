@@ -467,14 +467,20 @@ abstract class MLsDiffMaker extends DiffMaker:
       case _ => ()
   
   def processTrees(trees: Ls[syntax.Tree])(using Config, Raise): Unit =
-    val elab = Elaborator(etl, file.up, prelude)
+    val blk = new syntax.Tree.Block(trees)
+    val elaborationConfig = Config.elaborationConfig(blk)
     // val blockSymbol =
     //   semantics.TopLevelSymbol("block#"+blockNum)
     blockNum += 1
     // given Elaborator.Ctx = curCtx.nest(S(blockSymbol))
     given Elaborator.Ctx = curCtx.nestLocal(s"block:${blockNum}")
-    val blk = new syntax.Tree.Block(trees)
-    val (e, newCtx) = elab.topLevel(blk)
+    // Match the compiler's prelude bootstrap: builtin lookup uses the original
+    // declaration symbols, including while those declarations are elaborated.
+    if file == preludeFile then prelude = summon[Elaborator.Ctx].withMembers(blk.definedSymbols)
+    val elab =
+      given Config = elaborationConfig
+      Elaborator(etl, file.up, prelude)
+    val (e, newCtx) = elaborationConfig.givenIn(elab.topLevel(blk))
     curCtx = newCtx
     
     extractConfig(e.stats)

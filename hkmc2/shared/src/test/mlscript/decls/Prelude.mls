@@ -1,4 +1,4 @@
-
+#lang(0.3.x)
 
 declare type Any
 declare type Anything

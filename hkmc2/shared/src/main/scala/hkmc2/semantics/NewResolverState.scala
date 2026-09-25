@@ -204,10 +204,6 @@ final class NewResolverState private (
     new Cache(inherited.map(_.selfShapes), identity)
   val defnShapes: Cache[DefinitionSymbol[?], DefnShape] =
     new Cache(inherited.map(_.defnShapes), identity)
-  // Immutable source metadata recorded by legacy elaboration. Consumers recover
-  // captures without modifying the exporter's terms or resolving names again.
-  val legacyReferenceCaptures: Cache[Identity[Term], Ls[AnyDefinitionSymbol]] =
-    new Cache(inherited.map(_.legacyReferenceCaptures), identity)
   val typeInterpretations: Cache[Identity[Term], TypeResolution] =
     new Cache(inherited.map(_.typeInterpretations), identity)
   // Recorded before elaborating a declaration's members, including in legacy

@@ -202,11 +202,9 @@ composes paths on deferred instance references before delivering them at project
 and result boundaries. Leaving a wildcard entry outside a wrapper could consume a
 call exit before the wrapper's own path was considered.
 
-New-resolution syntax records lexical `Capture` nodes. Legacy elaboration records
-the same lookup path in `legacyReferenceCaptures`, while the lexical binding is
-known. A consuming resolver interprets that immutable metadata as captured type
-references in its own graph, including selection prefixes. It must not guess a
-missing path from a member's type parameters or mutate imported syntax.
+New-resolution syntax records lexical `Capture` nodes, including in the prelude.
+Imported type interpretations retain these source references in the consuming
+graph; they do not reconstruct capture paths from selected member parameters.
 
 For mutable array literals, the nominal interface lives at the literal's use site.
 The allocation context belongs to its element-parameter reference. Attaching that

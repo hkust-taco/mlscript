@@ -150,6 +150,7 @@ callid1(Predef)
 //│ | listen: trm = [1]
 //│ | listenTerm: trm = 1
 //│ | listen: trm = 1
+//│ | listen: trm = member:Num⁰
 //│ | .exit InstanceShape(member:Num⁰) (↘⟨class:Int⁰⟩ϵ)
 //│ | | .exit InstanceShape(member:Num⁰) (ϵ)
 //│ | | = InstanceShape(member:Num⁰)
