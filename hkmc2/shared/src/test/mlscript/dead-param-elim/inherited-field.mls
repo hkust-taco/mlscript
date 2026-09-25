@@ -1,0 +1,29 @@
+:..
+:js
+
+// FIXME: The producer is Child but the selected field belongs to Parent.
+// FlowConstraintSolver drops that flow instead of keeping the constructor input
+// live, so dead-parameter elimination replaces value with undefined.
+// Disable inlining to keep read available for the dead-parameter analysis.
+:fixme
+:deadParamElim debug
+:noInline
+:expect 21
+class Parent(val value)
+class Child(value) extends Parent(value)
+private fun read(value) = (new Child(value)).Parent#value
+read(21)
+//│ dead-param-elim > >>> dead-param-elim results >>>
+//│ dead-param-elim > prodfun read#0 @ <root> -> eliminable: {0}
+//│ dead-param-elim > <<< dead-param-elim results <<<
+//│ ═══[RUNTIME ERROR] Error: MLscript call unexpectedly returned `undefined`, the forbidden value.
+//│ ═══[RUNTIME ERROR] Expected: '21', got: 'undefined'
+
+:deadParamElim off
+:noInline
+:expect 21
+class Parent(val value)
+class Child(value) extends Parent(value)
+private fun read(value) = (new Child(value)).Parent#value
+read(21)
+//│ = 21
