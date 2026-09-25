@@ -19,16 +19,17 @@ type Growing[A] = {value: A, next: Growing[Array[A]]}
 ```
 
 The first four have finite unfoldings. `Growing[Int]` exposes `Int`, `Array[Int]`,
-`Array[Array[Int]]`, and so on. It must eventually receive a regularity diagnostic,
+`Array[Array[Int]]`, and so on. It receives a regularity diagnostic,
 without widening the type or imposing an expansion-depth limit.
 
-Canonical references now reduce fully supplied aliases and normalize Boolean
-combinations. The regularity diagnostic is **not implemented**. A check using one
-dependency node per formal parameter is insufficient: it conflates the parameter's
-input and output parts and loses correlations between arguments. The refinement
-below requires review before implementation.
-The existing stack-overflow regression remains a known failure, not an acceptance
-case for non-regular recursion.
+Canonical references reduce fully supplied aliases and normalize Boolean
+combinations. The implemented check uses one dependency node per original formal
+parameter and rejects constructor-bearing dependency cycles before observing the
+structural interface. This is an intentionally conservative restriction: it can
+reject regular types whose finite unfolding requires distinguishing argument parts
+or correlations between successive substitutions. The diagnostic says that the
+current check does not support the recursive type; it does not claim to prove
+non-regularity. The more precise design below is deferred for later review.
 
 ## Implemented normalization
 
@@ -93,13 +94,22 @@ This does **not** by itself bound the atoms. Constructor growth, retained argume
 parts that never become observable, and the existing requirements on finite marked
 contexts remain separate obligations.
 
-## Why a binder-only growth graph is insufficient
+## Implemented conservative check
 
-A candidate check connected original formals through recursive applications. An
-edge recorded whether the argument wrapped its source formal in a non-Boolean
-constructor. A growing edge on a dependency cycle caused rejection. Alias and
-Boolean normalization preceded edge construction; unused formals were removed by
-existing source dependency analysis.
+The check connects original formals through alias applications in the reachable
+source graph. An edge records whether the argument wraps its source formal in a
+non-Boolean constructor. A growing edge on a dependency cycle causes rejection.
+Alias and Boolean normalization precede edge construction; unused formals are
+removed by existing source dependency analysis.
+
+Validation waits until the source dependency graph is complete, including forward
+references. It runs both when an alias occurs in a written annotation and before
+an interface is observed, so an unused annotation cannot avoid the check. Source
+visitation and alias expansion use finite source-node and alias-symbol guards;
+reachability uses the finite original-binder graph. Accepted and rejected results
+are cached by source root in the consuming resolver state. A rejected root does
+not reject an unrelated regular child. No inference variables are allocated and
+no ordinary mark operation is changed.
 
 That handles ordinary permutations and resets, including:
 
@@ -112,7 +122,7 @@ The wrapping edge is followed by a reset, so no growing dependency cycle remains
 It also distinguishes an absorbed `A | (A & Array[A])` from the growing
 `A | Array[A]`.
 
-However, this finite case would be incorrectly rejected:
+The conservative restriction also rejects this finite case:
 
 ```mlscript
 type Chain[A] = {value: A, next: Chain[in Array[A]]}
@@ -123,17 +133,16 @@ At the positive occurrence `value: A`, substituting `in Array[A]` selects its
 missing output part, `Any`. All later `value` components have that output type.
 The constructor inside the input part is not an observable growing component of
 this structural unfolding. A binder-only edge from `A` to `A` loses that fact.
-The worksheet contains this finite projection as an acceptance test against an
-incorrect regularity diagnostic.
+The worksheet records the rejection explicitly as a current precision limitation.
 
 The representation needs the same distinction. Current free-binder projection
 retains the whole bound argument whenever a formal is relevant, including parts
 not selected by the structural body. Recursive observation can therefore accumulate
 input-part environments even when the resulting structural type is regular.
 Merely permitting this case in a rejection check would not establish termination.
-The candidate rejection rule has not been enabled.
+The conservative check rejects this case before that growth can occur.
 
-## Proposed refinement for review
+## Deferred refinement for later review
 
 Track dependencies on argument parts, rather than only on binder symbols. The
 analysis must distinguish lexical occurrence polarity and argument-part selection
@@ -206,20 +215,20 @@ Writing `X = A | (B & Array[A])`, its argument states are:
 
 The second step computes `X | (A & Array[X])`, which is `X` because `X` already
 contains `A`. The next step absorbs `X & Array[X]`. A per-parameter growth graph
-still contains a constructor cycle and would falsely reject the definition.
+still contains a constructor cycle and rejects the definition under the current restriction.
 `TypeGraphTermination.mls` includes a recursive observation of this example.
 
 Consequently, refining binder dependencies into part dependencies is necessary for
 environment projection, but it is **not sufficient** to make constructor cycles
-an exact regularity test after Boolean normalization. Such a graph can provide a
-sufficient acceptance criterion; a positive cycle cannot by itself justify a
-non-regularity diagnostic. The rejection procedure must also account for normalized
-substitution relationships, and must terminate on genuinely growing cases.
-This procedure is an unresolved design obligation. Repeatedly unfolding until a
-cache stops growing, imposing a depth limit, or assuming a constructor cycle proves
-growth would not resolve it.
+an exact regularity test after Boolean normalization. Such a graph provides a
+sufficient acceptance criterion; a positive cycle justifies the conservative
+restriction, but not a claim of non-regularity. A more precise procedure would need
+to account for normalized substitution relationships while terminating on genuinely
+growing cases. That design is deferred. Repeatedly unfolding until a cache stops
+growing, imposing a depth limit, or assuming a constructor cycle proves growth
+would not resolve it.
 
-Proposed implementation boundary for review:
+Possible refinement steps, requiring review before implementation:
 
 1. Specify and test the finite, part-sensitive demand equations above, including
    both polarities and alias substitution. This analysis itself has a finite
@@ -228,8 +237,8 @@ Proposed implementation boundary for review:
    live references. Verify the variance example and ordinary holes without claiming
    that this supplies a complete regularity decision procedure.
 3. Separately design a terminating rejection check that preserves correlations
-   needed by examples such as `Stable`. Only then enable regularity diagnostics,
-   including for unused written annotations.
+   needed by examples such as `Stable`. Use it to relax the current conservative
+   restriction without admitting unbounded reference environments.
 
 The whole resolver still needs a bound on accepted reference keys: finite source
 and binder identities alone do not bound nested environments. Boolean normalization
@@ -241,8 +250,9 @@ requirements on the marks algebra remain in force throughout.
 `newres/TypeGraphTermination.mls` covers regular recursion, permutations, mutual
 resets, unused arguments, transparent and captured forwarding aliases, forward
 references, union/intersection saturation, Boolean-only recursion, and the variance
-counterexample. Expected future regularity diagnostics are marked `:breakme`/`:e`;
-they are completion obligations, not implemented rejection behavior.
+counterexample. Rejected constructor cycles and the two accepted precision
+limitations use ordinary `:e` expectations; they no longer rely on stack overflows
+or future-diagnostic expectations.
 
 `TypeFormulaTest` checks normalization against Boolean truth tables and repeated
 alternating substitution. `TypeRelationTest` checks a thousand repeated reductions,

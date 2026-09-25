@@ -92,8 +92,9 @@ The inventory below separates these from compiler and prelude gaps.
   constraints, reconstructed receiver contexts, inferred missing member types,
   [regular structural interfaces](new-resolution-regular-types.md), and the whole
   graph's termination bound. Alias and Boolean argument normalization is implemented;
-  regularity checking still needs dependencies on input and output argument parts
-  and relationships between recursive arguments.
+  a conservative regularity check rejects constructor-bearing dependency cycles.
+  Refinements using input/output argument parts and relationships between recursive
+  arguments are deferred; the current diagnostic also rejects some regular types.
   Concrete outstanding cases are in
   `newres/InstantiationSites.mls`, `StoredSpecializations.mls`, `ConstructorInstances.mls`,
   `InferenceHoles.mls`, `PartialSignatures.mls`, and `TypeGraphTermination.mls`.

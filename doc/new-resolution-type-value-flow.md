@@ -43,12 +43,14 @@ substitution rules below are implemented for declared type views.
 
 Require structural types to have a finite recursive representation, after alias
 and union/intersection normalization. The [regularity design](new-resolution-regular-types.md)
-describes the implemented normalization and the input/output dependency refinement
-still requiring review. Diagnosing non-regular types and sharing regular recursive
-references are separate obligations; neither follows from the bound on call-site symbols.
+describes the implemented normalization and conservative regularity check. A more
+precise check using input/output dependencies and correlated substitutions is deferred.
+Rejecting unsupported recursion and sharing accepted recursive references are separate
+obligations; neither follows from the bound on call-site symbols.
 
 The finite call-site symbol bound alone is not a termination proof for the whole
-resolver. Non-regular expansion still overflows. Fully supplied alias applications
+resolver. The regularity check rejects constructor-bearing dependency cycles before
+structural observation, including some finite cases. Fully supplied alias applications
 are reduced and Boolean combinations normalized before their arguments become part
 of recursive reference keys. Contextual references preserve class-local aliases
 and enclosing binders through nominal member projections. Dependency-based binding projection accepts regular
@@ -730,11 +732,11 @@ for that scheme. By-name function/method cases, separate signatures, independent
 quantified results, shared mutation, and specialization inside generic bodies are
 also covered. Broader graph convergence remains a separate completion gate.
 
-`newres/ConstructorInstances.mls` still contains two failing regressions.
+`newres/ConstructorInstances.mls` still contains the failing reconstruction regression.
 Reconstruction with `class Box[T](val item: T) with { fun copy() = new Box[T](item) }`
 must retain the receiver's view of `T` separately from the new constructor's view;
 the first of two distinct receiver calls currently loses its resulting element
-interface. Separately, this callback must receive the supplied input type:
+interface. The separate supplied-callback regression now passes:
 
 ```mlscript
 class Item(val value: Int)
@@ -820,9 +822,10 @@ private fun walk[A](chain: Chain[A], n: Int) =
   if n > 0 then walk(chain.next, n - 1) else ()
 ```
 
-This non-regular variant still overflows the stack without any call to `walk`.
-With `checkMarkPaths` enabled it reports repeated exits first, so its failure is
-not evidence only of growing argument environments. The regular variant with
+The conservative check now rejects this non-regular variant even without a call
+to `walk`. Earlier unrestricted expansion also encountered repeated exits with
+`checkMarkPaths` enabled; rejecting this type does not establish the marks algebra's
+bound for other recursive constraints. The regular variant with
 `next: Chain[A]` and the finite selection `chain.next.next.value` now pass,
 including with mark checks enabled. Both constraint expansion and mark paths need
 validation independently of runtime recursion depth.
@@ -855,9 +858,9 @@ parameter instances.
 Class-local aliases and local nominal annotations retain their deferred member
 contexts through the contextual-reference transport described below. These passing
 regressions do not establish the whole-graph bound: repeated-mark failures in generic
-array-method paths and expanding alias environments still require separate checks.
-Dependency projection accepts regular argument resets, including compound constants.
-The expanding alias needs the regularity diagnostic described below.
+array-method paths still require separate checks. Dependency projection accepts
+regular argument resets, including compound constants. The conservative regularity
+check rejects the expanding alias before observation.
 
 The same graph audit must distinguish an open definition template from an already
 interpreted reference. In `Box[T].copy() = new Box[T](item)`, the source `T` in the
@@ -1033,7 +1036,7 @@ unfolding would not be acceptable.
 
 ### Regular structural types
 
-The proposed restriction is that unfolding a structural type must admit a finite
+The restriction is that unfolding an accepted structural type must admit a finite
 graph of distinct type components, with recursive occurrences represented by
 back-edges. A finite alias definition alone does not establish this property:
 
@@ -1046,17 +1049,20 @@ type Growing[A] = {value: A, next: Growing[Array[A]]}
 `Growing[Int]` exposes successive `value` types `Int`, `Array[Int]`,
 `Array[Array[Int]]`, and so on. It is non-regular and should be diagnosed rather
 than expanded indefinitely or silently approximated. The third block of
-`newres/TypeGraphTermination.mls` currently records this latter failure as a stack
-overflow; it is no longer an acceptance case for unrestricted structural recursion.
+`newres/TypeGraphTermination.mls` checks its rejection by the conservative
+regularity diagnostic before structural observation.
 
 Regularity is not a requirement that recursive arguments be textually unchanged.
 For example, `{value: A, next: Alternating[B, A]}` as the body of
 `Alternating[A, B]` has a finite two-state unfolding. Mutually recursive aliases
 and finite changes of arguments must also be considered. Alias and Boolean
-normalization is implemented. The remaining check must distinguish dependencies
-on input and output argument parts, including when pruning saved environments;
-its [refined design](new-resolution-regular-types.md#proposed-refinement-for-review)
-remains under review. It must terminate on rejected inputs too; waiting for an
+normalization is implemented. The current finite source-graph check rejects cycles
+that put an original binder underneath a non-Boolean constructor. It deliberately
+rejects some regular types: argument-part selection and absorption across recursive
+steps can make such a cycle finite. The diagnostic states this implementation
+restriction rather than claiming to prove non-regularity. The
+[refined design](new-resolution-regular-types.md#deferred-refinement-for-later-review)
+is deferred. Any replacement must terminate on rejected inputs too; waiting for an
 unfolding cache to stop growing is not a decision procedure. Do not impose a depth limit.
 
 Growth along one recursive edge is not sufficient to reject a type:
@@ -1131,12 +1137,11 @@ checks a thousand reductions for equality, unchanged caller marks, stable listen
 counts, and zero binder allocation. `TypeGraphTermination.mls` covers nested
 forwarding aliases, parameter selection/permutation, forward definitions, a captured
 alias, and an unproductive cycle with growing arguments. This does not prove the
-whole-graph bound: non-regular structural expansion and other growing binding
-environments still need the regularity check. That check must not classify
-transparent alias forwarding as a growing type constructor. See the
+whole-graph bound. The conservative regularity check rejects constructor-bearing
+cycles while treating transparent alias forwarding as substitution. See the
 [normalization implementation and variance counterexample](new-resolution-regular-types.md)
-for the Boolean normal form, captured alias reduction, and why a binder-only
-growth graph is insufficient.
+for the Boolean normal form, captured alias reduction, and the precision limits
+of the current binder-only growth graph.
 
 The implemented dependency analysis operates on source `TypeResolution` nodes.
 An edge forwards the child's free binders, excluding those bound by an alias or
@@ -1166,8 +1171,9 @@ tuple test check delayed discovery, independent substitutions, and replay withou
 additional listeners or parameter instances.
 
 This bounds dependency analysis and eliminates irrelevant environment growth.
-It does not yet establish the full representation bound for every regular type,
-or diagnose non-regular structural expansion; those remain completion obligations.
+Together with the conservative source-graph check, it prevents the recorded
+constructor-growth cases. It does not establish the whole resolver's representation
+bound; accepted reference environments and inferred constraints still need that audit.
 
 Keep structural alias unfolding distinct from inferred constraints at a recursive
 generic function call. The latter reuses a site's parameter symbol and can add an
