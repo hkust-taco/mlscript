@@ -886,7 +886,7 @@ class NewResolver:
       (using NewResolverState): Unit =
     // Establish every supplied position before publication can replay body
     // constraints or trigger observations of a mutually dependent parameter.
-    parameters.foreach(p => rstate.markExplicitTypeArgument(p.symbol, marks))
+    parameters.zip(arguments).foreach((p, _) => rstate.markExplicitTypeArgument(p.symbol))
     parameters.zip(arguments).foreach: (parameter, argument) =>
       publishParameter(parameter.host, InstanceShape(argument).enter(marks))
 
@@ -960,7 +960,7 @@ class NewResolver:
             val target = tpe.instances.get(symbol)
             val destination = target.fold(host)(_.inferenceHost)
             val lower = value.enter(captures)
-            if rstate.hasExplicitTypeArgument(target.getOrElse(symbol), marks) then
+            if rstate.hasExplicitTypeArgument(target.getOrElse(symbol)) then
               listenTypeArgument(destination): supplied =>
                 // Compare in the caller's scope, retaining the supplied
                 // reference's endpoint for any further parameter constraint.
@@ -2109,24 +2109,14 @@ class NewResolver:
     case N =>
       listener(implicitParent(defn))
   
-  /** Bodyless members reached through constructed instances need the same
-    * signature bindings as members reached through nominal annotations. Explicit
-    * constructor arguments are read-only interfaces; inferred arguments remain
-    * writable parameter flow. Keep the class context on each delivered value.
+  /** Constructed receivers and nominal annotations share the same symbolic
+    * parameter endpoints. Explicit arguments still receive input obligations;
+    * observing only their output candidates would discard callback constraints.
     */
-  private def instanceBindings(td: TermDefinition, marks: Ls[Marks])(using NewResolverState): Map[VarSymbol, DeclaredType] =
+  private def instanceBindings(td: TermDefinition)(using NewResolverState): Map[VarSymbol, DeclaredType] =
     td.tsym.owner.toList.flatMap(_.asDefnSym.defn.toList).flatMap(_.tparams).map: param =>
       val symbol = rstate.instances.getOrElse(param.sym, param.sym)
-      val explicit = rstate.hasExplicitTypeArgument(symbol, marks)
-      val bound = rstate.instanceParameterTypes.getOrElseUpdate((symbol, explicit), {
-        val source = SimpleRef(param.sym)(param.sym.id)
-        val resolution = new TypeResolution(source, messages => resolError(source, messages))
-        if explicit then listenTypeArgument(symbol): value =>
-          resolution.publish(TypeShape.Inferred(value))
-        else resolution.publish(TypeShape.Parameter(symbol, symbol.inferenceHost))
-        declaredType(resolution, Map.empty)
-      })
-      param.sym -> bound
+      param.sym -> parameterType(TypeShape.Parameter(symbol, symbol.inferenceHost))
     .toMap
 
   private def fromSymbol(shape: SymShape, listener: Listener, source: Term,
@@ -2234,7 +2224,7 @@ class NewResolver:
             ((d.sign.nonEmpty && (!d.flags.hasResultAnnotation || d.params.forall(ps =>
               (ps.params ::: ps.restParam.toList).forall(_.sign.nonEmpty)))) ||
               (d.body.isEmpty && d.tsym.owner.exists(_.asDefnSym.defn.exists(_.tparams.nonEmpty)))) =>
-          listenDeclaredMember(bms, instanceBindings(d, markss), resSym, trm, N, selected, receiver, true, markss, specialization): value =>
+          listenDeclaredMember(bms, instanceBindings(d), resSym, trm, N, selected, receiver, true, markss, specialization): value =>
             transportShape(value, markss) match
               case value: TermShape => listener(value)
               case NoShape => ()

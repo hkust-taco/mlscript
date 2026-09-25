@@ -287,8 +287,6 @@ final class NewResolverState private (
     new Cache(inherited.map(_.contextualTypes), identity)
   val tupleArrayParents: Cache[Identity[TupleShape], NominalInstanceView] =
     new Cache(inherited.map(_.tupleArrayParents), identity)
-  val instanceParameterTypes: Cache[(VarSymbol, Bool), DeclaredType] =
-    new Cache(inherited.map(_.instanceParameterTypes), identity)
   val parameterTypes: Cache[TypeShape.Parameter, DeclaredType] =
     new Cache(inherited.map(_.parameterTypes), identity)
   val mutableArrays: Cache[Identity[Term.Mut], TermShape] =
@@ -299,21 +297,16 @@ final class NewResolverState private (
     new Cache(inherited.map(_.namedTupleRecords), identity)
   val aggregateProducers: Seen[Identity[Tup | Rcd]] =
     new Seen(inherited.map(_.aggregateProducers))
-  // Explicit instantiations are visible to every graph view in this consumer;
-  // inherited flags are queried without enumerating an exporter's instantiations.
-  private val explicitTypeArguments = mutable.Set.empty[(VarSymbol, Marks)]
-  private def argumentContext(marks: Ls[Marks])(using TL): Opt[Marks] =
-    // A path can arrive as several fragments or one composed mark. Use the
-    // existing transport operation so these identify the same supplied slot.
-    DynShape().exit(marks) match
-      case Marked(_, context) => S(context)
-      case NoShape => N
-  def markExplicitTypeArgument(symbol: VarSymbol, marks: Ls[Marks])(using TL): Unit =
-    argumentContext(marks).foreach(context => root.explicitTypeArguments += ((symbol, context)))
-  def hasExplicitTypeArgument(symbol: VarSymbol, marks: Ls[Marks])(using TL): Bool =
-    argumentContext(marks).exists(context => hasExplicitTypeArgument((symbol, context)))
-  private def hasExplicitTypeArgument(key: (VarSymbol, Marks)): Bool =
-    root.explicitTypeArguments(key) || source.exists(_.hasExplicitTypeArgument(key))
+  // Whether a binder is supplied is fixed by its authoritative syntactic site.
+  // Each definition/site has its own parameter instances; marks distinguish the
+  // enclosing activations of their bounds, not whether the slot is explicit.
+  // A method projection or nested constraint can change the observation scope
+  // without changing this property. Missing supplied positions remain inferred.
+  private val explicitTypeArguments = mutable.Set.empty[VarSymbol]
+  def markExplicitTypeArgument(symbol: VarSymbol): Unit =
+    root.explicitTypeArguments += symbol
+  def hasExplicitTypeArgument(symbol: VarSymbol): Bool =
+    root.explicitTypeArguments(symbol) || source.exists(_.hasExplicitTypeArgument(symbol))
   val typeConstraints: Seen[(DeclaredType, TermShape, Ls[Marks])] =
     new Seen(inherited.map(_.typeConstraints))
   val typeRelations: Seen[(ContextualType, ContextualType)] =

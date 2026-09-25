@@ -116,19 +116,14 @@ private val invalid = Box[Int, Str]
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ invalid = fun Box { class: class Box }
 
-// Supplied member types must eventually receive callback input obligations too.
-:fixme
+// Supplied member types receive callback input obligations too.
 :expect 19
 class Item(val value: Int)
 let callbacks = new mut Array[Item -> Int](0)
 callbacks.push((x) => x.value)
 private fun first(callback, ...tail) = callback
 first(...callbacks)(Item(19))
-//│ ╔══[COMPILATION ERROR] This selection of member 'value' has no resolved target
-//│ ║  l.124: 	callbacks.push((x) => x.value)
-//│ ╙──       	                      ^^^^^^^
-//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
-//│ ═══[RUNTIME ERROR] Expected: '19', got: 'undefined'
+//│ = 19
 //│ callbacks = [fun]
 
 // Type application cannot turn a constructed object back into its constructor.
@@ -138,16 +133,16 @@ class Box[T](val item: T)
 let box = new Box[Int](1)
 box[Str]("bad")
 //│ ╔══[COMPILATION ERROR] Resolution error in type application
-//│ ║  l.139: 	box[Str]("bad")
+//│ ║  l.134: 	box[Str]("bad")
 //│ ║         	^^^^^^^^
 //│ ╟── Class 'Box' expected 0 type arguments, but got 1
-//│ ║  l.137: 	class Box[T](val item: T)
+//│ ║  l.132: 	class Box[T](val item: T)
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.139: 	box[Str]("bad")
+//│ ║  l.134: 	box[Str]("bad")
 //│ ║         	^^^^^^^^^^^^^^^
 //│ ╟── Instance of class 'Box' cannot receive more argument lists.
-//│ ║  l.138: 	let box = new Box[Int](1)
+//│ ║  l.133: 	let box = new Box[Int](1)
 //│ ╙──       	          ^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] TypeError: box1 is not a function
 //│ box = Box(1)
@@ -159,10 +154,48 @@ class Pair[T](val item: T)(val other: T)
 private val partial = Pair[Int](1)
 private val invalid = partial[Str]
 //│ ╔══[COMPILATION ERROR] Resolution error in type application
-//│ ║  l.160: 	private val invalid = partial[Str]
+//│ ║  l.155: 	private val invalid = partial[Str]
 //│ ║         	                      ^^^^^^^^^^^^
 //│ ╟── Class 'Pair' expected 0 type arguments, but got 1
-//│ ║  l.158: 	class Pair[T](val item: T)(val other: T)
+//│ ║  l.153: 	class Pair[T](val item: T)(val other: T)
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ invalid = fun
 //│ partial = fun
+
+// The supplied callback input exposes only its written nominal interface.
+:e
+:ge
+class Base
+class Child(val extra: Int) extends Base
+let callbacks = new mut Array[Base -> Int](0)
+callbacks.push(x => x.extra)
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.171: 	callbacks.push(x => x.extra)
+//│ ║         	                    ^^^^^^^
+//│ ╙── Value of type 'Base' does not contain member 'extra'
+//│ = 1
+//│ callbacks = [fun]
+
+// The method input constrains the callback even if the array is never invoked.
+:expect 1
+class Item(val value: Int)
+let callbacks = new mut Array[Item -> Int](0)
+callbacks.push(x => x.value)
+//│ = 1
+//│ callbacks = [fun]
+
+// A more precise implementation must not refine the supplied callback result.
+:e
+:ge
+class Base
+class Child(val extra: Int) extends Base
+let callbacks = new mut Array[Base -> Base](0)
+callbacks.push(x => new Child(20))
+private fun first(callback, ...tail) = callback
+first(...callbacks)(new Base).extra
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.195: 	first(...callbacks)(new Base).extra
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙── Value of type 'Base' does not contain member 'extra'
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ callbacks = [fun]

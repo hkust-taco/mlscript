@@ -72,8 +72,11 @@ nested function and nominal types. The explicit-binder recursive array acceptanc
 cases pass. Supplied function arguments receive input obligations while retaining
 their declared output interface.
 
-Replacing the remaining explicit-argument flags and positive-only member
-conversion, reconstructed receiver contexts, inferred nominal member interfaces,
+Constructed receivers retain symbolic type-parameter endpoints for declared
+members, so supplied callback types receive input obligations as well as providing
+output interfaces. Suppliedness is recorded on the canonical parameter instance;
+marks select its enclosing activation, rather than determining whether it is
+supplied. Reconstructed receiver contexts, inferred nominal member interfaces,
 and general recursive alias environments still need integration. Omitted arguments
 use source-owned inference holes. The recursive array-hole regression now preserves
 independent callers; distinguishing two omissions inside a shared alias body remains
@@ -196,10 +199,13 @@ alternative, while transporting its wrapper preserves the original union node.
 observes them for structural comparison. For an explicitly supplied argument,
 an input obligation follows its retained type reference instead of becoming an
 additional output candidate. Each distinct supplied type receives the obligation;
-a supplied union stays whole. The implementation still identifies supplied
-positions with explicit-argument flags. Integrating those positions into the
-shared reference graph remains necessary for constructor views and general
-recursive type environments.
+a supplied union stays whole. The implementation records suppliedness by canonical
+parameter instance. One authoritative definition/site always has the same supplied
+positions, even when nested comparisons observe it from different scopes. Only
+positions with an actual argument are marked supplied. Marks still select the
+applicable bounds and filter other enclosing activations; they do not determine
+whether a supplied slot is fixed. The metadata is consumer-owned and does not add
+symbols or contextual cache keys.
 
 ## Variance rules
 
@@ -504,8 +510,8 @@ upper target, preservation of a whole negative union, reverse endpoint contexts,
 and independent importers. The supplied-argument tests additionally check input
 obligations arriving before and after supplied references, chained parameters in
 different marked contexts, isolation between activations, and cycles without
-listener growth. These checks do not yet replace the remaining explicit-argument
-flags or establish the whole-graph termination bound.
+listener growth. These checks do not establish the whole-graph termination bound; suppliedness
+metadata and endpoint context have separate roles as described above.
 
 Existing marks still transport instance flow through lexical scopes and distinguish
 enclosing activations sharing a static inner call. Apply their current entry/exit
@@ -731,17 +737,15 @@ let callbacks = new mut Array[Item -> Int](0)
 callbacks.push((x) => x.value)
 ```
 
-The expected input of `x` is `Item`, but its member target remains unresolved.
-`instanceBindings` still expands explicitly supplied class arguments into
-positive interfaces. Simply replacing this conversion with `TypeShape.Parameter`
-is insufficient: nested nominal comparisons can reach that parameter with no
-outer constraint marks, even though the incoming value retains class and member
-entries. The explicit-argument flag then fails to identify the supplied slot and
-incorrectly treats the input as another output candidate. The shared reference
-graph must retain the supplied endpoint and its context through those comparisons;
-it must replace this conversion and the flag-based routing together. Both failures
-also occur before constructor call-site instantiation; they are not accepted
-behavior or reasons to change marks or allocate additional variables.
+The expected input of `x` is `Item`, including when the array is never invoked.
+`instanceBindings` preserves a symbolic `TypeShape.Parameter` endpoint for supplied
+and inferred class arguments alike. Nested nominal comparisons can observe that
+endpoint without outer constraint marks. Suppliedness therefore follows the
+canonical parameter instance, while the retained endpoint marks choose which
+supplied bound receives each obligation. The callback-input regressions pass,
+including rejection of a subclass-only input member and preservation of the
+written callback result. No implementation candidate is added to a supplied
+parameter by an input constraint. Reconstruction of `Box[T]` above remains open.
 
 Pre-application observation of an inferred result is still missing.
 `newres/StoredSpecializations.mls` retains this concrete regression:
@@ -783,11 +787,10 @@ arguments and recursive environments, independently of this instantiation fix.
    retaining their hosts, substitutions, and marks. Ordinary arguments contribute
    bounds; supplied types receive all obligations at their applicable polarity.
    Apply the InvalML variance rules above.
-4. Complete supplied-argument references and replace explicit-argument suppression
-   and the positive-only conversion in `instanceBindings` together. Functions
-   and constructors share instantiation-site binder allocation and retain consumed
-   groups; their remaining input/output obligations must use the same reference
-   mechanism as nominal arguments and declared array interfaces.
+4. Supplied member arguments retain symbolic references, and suppliedness is keyed
+   by canonical instance rather than observation path. Functions and constructors
+   share instantiation-site binder allocation and retain consumed groups. Preserve
+   this behavior while finishing reconstructed receiver and deferred body views.
 5. Route declared member lookup to partial member schemes, retaining receiver
    contexts for inferred fields and results. Check override compatibility before
    completing member targets. Convert the member-inference `:fixme`s together;
