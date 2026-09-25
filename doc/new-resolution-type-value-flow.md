@@ -78,9 +78,9 @@ output interfaces. Suppliedness is recorded on the canonical parameter instance;
 marks select its enclosing activation, rather than determining whether it is
 supplied. Reconstructed receiver contexts, inferred nominal member interfaces,
 and general recursive alias environments still need integration. Omitted arguments
-use source-owned inference holes. The recursive array-hole regression now preserves
-independent callers; distinguishing two omissions inside a shared alias body remains
-unfinished. The
+use source-owned inference holes. Omitted-argument rebasing currently loses caller
+identity, including without recursion; distinguishing two omissions inside a shared
+alias body also remains unfinished. See the context regression below. The
 implementation order below remains the full design, not a claim that all its parts
 are complete.
 See the [resolver notes](new-resolution-design.md)
@@ -916,15 +916,21 @@ all use this operation; inferred holes receive the same context as supplied argu
 Nominal constraints compare argument endpoints in the common observation scope,
 including both their input and output parts.
 
-A reference's lexical round trip must be composed before observing its host. In
-particular, leaving a scope with a wildcard mark and immediately re-entering that
-same lexical scope returns the same reference. Applying those operations to each
-host candidate instead would erase a concrete caller's identity at the wildcard
-exit. `transportType` cancels that pair on the reference. It never cancels a reverse
-pair containing an explicit invocation site. Ordinary value-flow mark operations
-are unchanged. `TypeRelationTest` checks early and late bounds from distinct caller
-sites, retained explicit invocation entries, and a thousand repeated transfers
-without additional listeners or binder instances.
+Deferred references use the ordinary value-flow mark algebra. Leaving a scope
+with a wildcard exit consumes a candidate's entry mark, including its call-site
+identity. Re-entering with a wildcard entry does not restore that identity, even
+when both operations name the same lexical scope. Those two operations must not
+cancel each other on the reference: doing so would incorrectly preserve an earlier
+caller's identity. `TypeRelationTest` compares deferred transport with
+ordinary candidate transport for wildcard and explicit exits, entries, and consumer
+sites, including bounds published before and after observation. Repeated transport
+of the same reference reuses its cache entry without allocating binder instances.
+
+Rebasing application arguments into a captured template's scope is subject to these
+same rules. It cannot assume that leaving and re-entering that scope is an identity.
+If substitution requires a different relationship between the template and argument
+contexts, that relationship needs an explicit design and supporting examples; it
+must not be implemented by changing wildcard cancellation for deferred references.
 
 `transportShape` composes paths on deferred instance references at projection and
 result boundaries before delivering them to another caller. Leaving a wildcard
@@ -937,6 +943,43 @@ The finite-source/finite-instance argument still requires bounded mark paths and
 regular type environments. Interning normalized endpoints prevents transport
 wrapper histories from growing; it does not prove those two separate bounds or
 justify truncating paths when an invariant fails.
+
+### Omitted-argument context regression
+
+Removing the incorrect wildcard exit-entry cancellation exposes four failing
+blocks, retained as `:fixme` regressions in `newres/PartialSignatures.mls` and
+`newres/InferenceHoles.mls`. The failure does not require recursion:
+
+```mlscript
+class First(val first: Int)
+class Second(val second: Int)
+class Pair[A, B](val value: [A, B])
+private fun second(pair: Pair[Int]) = pair.value.1
+[second(Pair([0, First(1)])).first, second(Pair([0, Second(2)])).second]
+```
+
+The intended result is `[1, 2]`. Currently both result selections receive both
+`First` and `Second`, causing missing-member diagnostics. The other failing blocks
+cover a bare `HalfPair` alias and mutable `Array` annotations with and without
+recursive calls.
+
+The hole for `B` belongs to the annotation occurrence in `second`. Following the
+captured `Pair` template moves that hole reference outward with a wildcard exit
+from `second`. Projecting the argument back into the annotation scope then adds a
+wildcard entry. The constraint interpreter applies the reversed reference path to
+each incoming bound before publishing it into the hole. For a bound entering
+`second` at call `c1`, the wildcard exit consumes the entry carrying `c1`; the
+wildcard re-entry replaces it with an entry without an ID. The second call loses
+its ID in the same way. The hole therefore already contains mixed caller bounds
+before its output is observed.
+
+This is evidence of an incorrect context relationship in the interpreter, not a
+proof that the ordinary marks algebra is insufficient. A replacement must explain
+how an argument reference remains associated with its annotation scope while being
+substituted into an outer template, including deferred fields and both constraint
+directions. It must retain ordinary inference for holes and cannot invent binder
+instances or assume that a wildcard exit-entry pair is reversible. Review that
+representation before implementing a replacement.
 
 ### Regular structural types
 
@@ -1129,16 +1172,18 @@ for it. `TypeRelationTest` checks reuse across repeated observations, empty host
 waiting for evidence, cyclic constraints with stable listener counts, and private
 bounds in separate importers sharing the same source identity. This bounds hole
 allocation and replay; it does not establish the missing context precision for
-alias-body omissions noted above. The recursive omitted-array regression now
-preserves independent caller contexts.
+alias-body omissions noted above. The omitted-array regressions currently mix
+caller contexts, both with and without recursion, as described in the context
+regression above.
 
 During implementation, assert that a call instance's origin is an original binder,
 all of one scheme's binders are allocated before its constraints are activated,
 views are composed rather than nested, and generic checking witnesses never become
 ordinary instantiated lower bounds. Retain consumer-private host copies and the
-existing prohibition on changing completed member targets. The contextual-reference round-trip rule above does not license changing ordinary
-value-flow mark normalization if these checks fail. Any further change requires a
-separate concrete example and proposal.
+existing prohibition on changing completed member targets. Deferred references and
+ordinary values must use the same mark algebra. If that algebra cannot express a
+required context relationship, document a concrete example and propose an extension
+before changing it.
 
 ## Acceptance checks
 

@@ -56,7 +56,7 @@ class TypeRelationTest extends AnyFunSuite:
     assert((a.inferenceHost.listeners.size, b.inferenceHost.listeners.size) == counts)
     assert(seen.toList == List(first, second))
 
-  test("lexical reference round trips preserve early and late caller identities"):
+  test("wildcard exit and reentry forget early and late caller identities"):
     val h = new Harness
     import h.given
     val (a, at) = h.parameter("A")
@@ -67,19 +67,52 @@ class TypeRelationTest extends AnyFunSuite:
     val enter = EntryMark(owner, N, NoMarks) :: Nil
     val outside = h.resolver.transportType(at, exit)
     val back = h.resolver.transportType(outside, enter)
-    assert(back == at)
+    assert(back != at)
     val first = IntroShape(Term.UnitVal(), N)
     val second = DynShape()
     h.resolver.publishParameter(a, MarkedShape.enter(first, owner, S(firstSite)))
+    val inside = h.observe(ContextualType(back, Nil))
     val seen = h.observe(ContextualType(back, ExitMark(owner, S(firstSite), NoMarks) :: Nil))
     h.resolver.publishParameter(a, MarkedShape.enter(second, owner, S(secondSite)))
-    assert(seen.toList == List(first))
+    assert(inside.toList == List(first, second).map(MarkedShape.enter(_, owner, N)))
+    assert(seen.toList == List(first, second))
     val listeners = a.inferenceHost.listeners.size
     (1 to 1000).foreach: _ =>
       assert(h.resolver.transportType(at, exit) eq outside)
-      assert(h.resolver.transportType(outside, enter) == at)
+      assert(h.resolver.transportType(outside, enter) eq back)
     assert(a.inferenceHost.listeners.size == listeners)
     assert(h.state.allocatedTypeInstanceCount == 0)
+
+  test("reference exit and reentry agree with value transport for wildcard and explicit sites"):
+    // Check both publication orders and every combination of wildcard/explicit
+    // exit, reentry, and consumer sites against the ordinary value operations.
+    for exitSite <- 0 to 2; entrySite <- 0 to 2; consumerSite <- 0 to 2 do
+      val h = new Harness
+      import h.given
+      val (a, at) = h.parameter("A")
+      val owner = ResolutionBoundary(TermSymbol(Fun, N, Tree.Ident("owner")))
+      val sites = Vector(N, S(FlowSymbol.app()), S(FlowSymbol.app()))
+      val exit = ExitMark(owner, sites(exitSite), NoMarks)
+      val entry = EntryMark(owner, sites(entrySite), NoMarks)
+      val consumer = ExitMark(owner, sites(consumerSite), NoMarks)
+      val first = MarkedShape.enter(IntroShape(Term.UnitVal(), N), owner, sites(1))
+      val second = MarkedShape.enter(DynShape(), owner, sites(2))
+      val outside = h.resolver.transportType(at, exit :: Nil)
+      val inside = h.resolver.transportType(outside, entry :: Nil)
+      h.resolver.publishParameter(a, first)
+      val observed = h.observe(ContextualType(inside, Nil))
+      def expected(values: List[TermShape], path: List[Marks]): Set[TermShape] =
+        values.flatMap: value =>
+          value.exit(path) match
+            case shape: TermShape => Some(shape)
+            case NoShape => None
+        .toSet
+      assert(observed.toSet == expected(List(first), List(exit, entry)))
+      h.resolver.publishParameter(a, second)
+      assert(observed.toSet == expected(List(first, second), List(exit, entry)))
+      val consumed = h.resolver.transportType(inside, consumer :: Nil)
+      assert(h.observe(ContextualType(consumed, Nil)).toSet ==
+        expected(List(first, second), List(exit, entry, consumer)))
 
   test("reference rebasing never cancels explicit invocation entries"):
     val h = new Harness

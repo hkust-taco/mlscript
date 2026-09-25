@@ -725,23 +725,10 @@ class NewResolver:
       case TypeShape.Contextual(_) => true
       case _ => false
     , "Contextual references must be flattened before they are interned")
-    def transfer(value: TermShape | NoShape, path: Marks): TermShape | NoShape = path match
-      case NoMarks => value
-      case EntryMark(boundary, N, rest) => transfer(value, rest) match
-        // These two wildcard operations rebase the same deferred reference
-        // out of a lexical scope and back. Cancel before observing its host:
-        // cancellation on the host's values would forget their caller sites.
-        // Explicit invocation marks are never erased by this rule.
-        case Marked(source, ExitMark(exited, N, tail)) if exited == boundary => source.exit(tail)
-        case value: TermShape => MarkedShape.enter(value, boundary, N)
-        case NoShape => NoShape
-      case EntryMark(boundary, site, rest) => transfer(value, rest) match
-        case value: TermShape => MarkedShape.enter(value, boundary, site)
-        case NoShape => NoShape
-      case ExitMark(boundary, site, rest) => transfer(value, rest) match
-        case value: TermShape => MarkedShape.exit(value, boundary, site)
-        case NoShape => NoShape
-    marks.foldLeft(InstanceShape(base).exit(previous))(transfer) match
+    // A wildcard exit followed by an entry is not an identity: the exit
+    // consumes a candidate's entry site and the new entry supplies its own.
+    // Deferred references use exactly the same transport as ordinary values.
+    InstanceShape(base).exit(previous).exit(marks) match
       case Marked(_, NoMarks) => base
       case Marked(_, path: SomeMarks) =>
         val reference = ContextualType(base, path :: Nil)
@@ -753,8 +740,9 @@ class NewResolver:
       case NoShape => extremeType(false)
 
   private def inverseMarks(marks: Ls[Marks])(using NewResolverState): Ls[Marks] =
-    // Inversion is an operation, not a reordered list of scopes. Use the same
-    // mark algebra as value transport and retain the resulting reduced path.
+    // Reverse directions using ordinary mark operations, not a reordered list
+    // of scopes. This is not an inverse on candidates: a wildcard exit can lose
+    // a call-site ID, which the reversed path cannot reconstruct.
     InstanceShape(extremeType(false)).enter(marks) match
       case Marked(_, NoMarks) => Nil
       case Marked(_, path: SomeMarks) => path :: Nil
