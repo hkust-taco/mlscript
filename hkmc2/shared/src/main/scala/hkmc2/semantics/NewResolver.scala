@@ -104,6 +104,10 @@ class NewResolver:
             case _ =>
               result.fail(msg"This reference does not denote a type." -> ref.toLoc :: Nil)
               result.publish(TypeShape.Abstract)
+          // An alias's lexical qualification substitutes type references; it
+          // does not cross an invocation boundary. Captured function and class
+          // parameters still retain their actual value-scope crossings.
+          case Capture(base, _: TypeAliasSymbol) => typeResolution(base).listen(result.publish)
           case Capture(base, thru) => result.publish(TypeShape.Captured(typeResolution(base), thru))
           case TyApp(base, args) => result.publish(TypeShape.Applied(typeResolution(base), args.map(typeResolution)))
           case Forall(params, outer, body) =>
@@ -585,6 +589,7 @@ class NewResolver:
         case S(symbol: TermSymbol) if !symbol.isInstanceOf[ClassCtorSymbol] =>
           selected(symbol)
           val td = symbol.defn.get
+          val crossesValueScope = !(td.k is syntax.RecordField) && !td.tsym.decl.exists(_.isInstanceOf[Param])
           val callerInstances = rstate.instances
           val instances = if isByName(td) then instantiateByName(td, flow,
             ExitMark(ResolutionBoundary(td.tsym), S(flow), NoMarks) :: Nil, specialization) else callerInstances
@@ -600,11 +605,11 @@ class NewResolver:
               case instance: InstanceShape if !isByName(td) =>
                 InstanceShape(quantifiedType(instance.tpe, td.tparams.toList.flatten.map(_.sym)))
               case _ => shape
-            // A synthesized field's signature is in the constructor parameter's
-            // scope. Written member signatures are in their own definition scope.
-            val exited = td.tsym.decl match
-              case S(_: Param) => generic
-              case _ => MarkedShape.exit(generic, ResolutionBoundary(td.tsym), S(flow))
+            // Constructor fields keep their parameter scope; structural fields
+            // follow their written type directly. Other members leave their own
+            // definition scope when their declared interface is selected.
+            val exited = if crossesValueScope then MarkedShape.exit(generic, ResolutionBoundary(td.tsym), S(flow))
+              else generic
             exited match
               case value: TermShape => listener(instantiateShape(value, instances))(using rstate.withInstances(callerInstances))
               case NoShape => ()
@@ -616,7 +621,7 @@ class NewResolver:
             def visit(term: Term)(using NewResolverState): Unit = term match
               case Ref(symbol: VarSymbol) if capturedBindings.contains(symbol) => legacyParameters += symbol
               case _ => term.subTerms.foreach(visit)
-            if !td.tsym.decl.exists(_.isInstanceOf[Param]) then visit(sign)
+            if crossesValueScope then visit(sign)
             val scopedBindings = capturedBindings.map: (symbol, bound) =>
               symbol -> (if legacyParameters(symbol) then captureType(bound, td.tsym) else bound)
             val tpe = declaredType(typeResolution(sign), scopedBindings, polarity)

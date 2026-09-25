@@ -345,6 +345,30 @@ class CompilerTest extends AnyFunSuite:
       assert(parameters.map(p => (p.shapes.toVector, p.shapeListeners.toVector)) == before,
         "A consumer must not change the cached definition's inference graph")
 
+  test("imported recursive structural aliases preserve their type arguments"):
+    val fs = new InMemoryFileSystem(loadStandardLibrary())
+    given cctx: CompilerCtx = CompilerCtx.fresh(fs, paths, Config.default(io.Path("/")))
+    given DebugPrinter = new DebugPrinter
+    given TL = new TraceLogger:
+      override def doTrace = false
+    given Raise = diagnostic => fail(diagnostic.toString)
+    fs.write("/Types.mls", """#lang(0.3.x, strictResolution: true)
+                               |module Types with
+                               |  type Chain[A] = {value: A, next: Chain[A]}
+                               |  fun step[A](chain: Chain[A]): Chain[A] = chain.next
+                               |""".stripMargin)
+    val compiler = new MLsCompiler(_ => summon[Raise])
+    compiler.compileModule(Path("/Types.mls"))
+    List("first", "second").foreach: field =>
+      val path = s"/$field.mls"
+      fs.write(path, s"""#lang(0.3.x, strictResolution: true)
+                       |import "./Types.mls"
+                       |class Item(val $field: Int)
+                       |private fun read(chain: Types.Chain[Item]): Int =
+                       |  Types.step[Item](chain).next.value.$field
+                       |""".stripMargin)
+      compiler.compileModule(Path(path))
+
   test("a supplied compound type stays inside one instance wrapper"):
     import semantics.{InstanceShape, Marked, Statement, Term, TermShape, TypeShape}
     val fs = new InMemoryFileSystem(loadStandardLibrary())

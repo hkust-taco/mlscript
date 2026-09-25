@@ -1299,14 +1299,12 @@ object RcdField:
     val sym = new BlockMemberSymbol(name, Nil)
     val tsym = TermSymbol(RecordField, N, id, erasedType = N)
     sym.tsym = S(tsym)
-    // fromBMS removes a capture mark for tsym when it reads this definition.
-    // Wrap rhs in Capture to supply that mark, so the entry and exit cancel and
-    // leave the enclosing call-site marks intact. Lowering evaluates RcdField.rhs;
-    // it does not evaluate this synthetic definition separately.
-    val captured = Term.Capture(rhs, tsym)
+    // Value-field lookup removes the synthetic definition's capture mark, leaving
+    // enclosing call-site marks intact. A structural type field instead refers
+    // directly to its written type: projection does not invoke a value definition.
     tsym.defn = S(TermDefinition(RecordField, sym, tsym, Nil, N,
-      if signature then S(captured) else N,
-      if signature then N else S(captured), TermDefFlags.empty, Modulefulness.none, Nil, N))
+      if signature then S(rhs) else N,
+      if signature then N else S(Term.Capture(rhs, tsym)), TermDefFlags.empty, Modulefulness.none, Nil, N))
     sym.complete()
     RcdField(field, rhs, sym)
 final case class RcdSpread(rcd: Term) extends Statement

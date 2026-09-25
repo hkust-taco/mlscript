@@ -56,6 +56,40 @@ class TypeRelationTest extends AnyFunSuite:
     assert((a.inferenceHost.listeners.size, b.inferenceHost.listeners.size) == counts)
     assert(seen.toList == List(first, second))
 
+  test("recursive structural projections preserve bounds and reuse their listeners"):
+    val h = new Harness
+    import h.given
+    val (a, at) = h.parameter("A")
+    val (b, bt) = h.parameter("B")
+    def recursiveRecord(element: DeclaredType): DeclaredType =
+      val resolution = new TypeResolution(Term.UnitVal(), _ => fail("Unexpected type error"))
+      val value = Term.UnitVal()
+      value.typeInterpretation = S(element.resolution)
+      val next = Term.UnitVal()
+      next.typeInterpretation = S(resolution)
+      val valueField = RcdField.signature(Term.Lit(Tree.StrLit("value")), value)
+      val nextField = RcdField.signature(Term.Lit(Tree.StrLit("next")), next)
+      val source: Term.Rcd = Term.Rcd(false, List(valueField, nextField))
+      resolution.publish(TypeShape.Record(source, List(valueField -> element.resolution, nextField -> resolution)))
+      DeclaredType(resolution, Map.empty, Map.empty, true)
+    val left = ContextualType(recursiveRecord(at), Nil)
+    val right = ContextualType(recursiveRecord(bt), Nil)
+    val first = IntroShape(Term.UnitVal(), N)
+    val later = DynShape()
+    h.resolver.publishParameter(a, first)
+    h.resolver.constrainTypes(left, right)
+    val seen = h.observe(ContextualType(bt, Nil))
+    assert(seen.toList == List(first))
+    def counts = List(left.tpe.resolution.inferenceHost.listeners.size, right.tpe.resolution.inferenceHost.listeners.size,
+      a.inferenceHost.listeners.size, b.inferenceHost.listeners.size)
+    val before = counts
+    h.resolver.publishParameter(a, later)
+    assert(seen.toList == List(first, later))
+    (1 to 1000).foreach: _ =>
+      h.resolver.constrainTypes(left, right)
+    assert(counts == before)
+    assert(h.state.allocatedTypeInstanceCount == 0)
+
   test("delayed argument selection fixes one endpoint for both constraint directions"):
     val h = new Harness
     import h.given

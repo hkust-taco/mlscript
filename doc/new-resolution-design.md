@@ -44,6 +44,14 @@ use source-owned inference holes and retain live inference through partial
 signatures. Recursive hole contexts, alias-body omissions, and missing nominal
 member types still need the contextual reference work described in that document.
 
+Type-alias qualification and structural type-field projection introduce no value
+scope. Alias captures forward type references, and structural fields retain their
+written types without the synthetic boundaries used for value-field lookup.
+The tested direct recursive aliases and finite parameter permutations now pass.
+A regular alias that resets its argument to `Int` still grows unused binding
+environments; non-regular expansion and class-local alias receiver contexts also
+remain incomplete.
+
 Class bodies introduce lexical captures, and a class and its constructor share
 one resolution boundary. A method's reference to an outer constructor must include
 the enclosing instance boundary as well as the method boundary. Consuming a

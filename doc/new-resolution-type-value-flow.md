@@ -45,8 +45,8 @@ implementation. This restriction and sharing regular recursive references are
 separate obligations; neither follows from the bound on call-site symbols.
 
 The finite call-site symbol bound alone is not a termination proof for the whole
-resolver. Recursive alias regressions currently overflow, and the [fixed-point
-conditions](#fixed-points-and-implementation-checks) remain completion gates.
+resolver. Both non-regular expansion and a regular argument-reset alias still
+overflow; class-local aliases expose a receiver-context failure. The [fixed-point conditions](#fixed-points-and-implementation-checks) remain completion gates.
 
 ## Implementation status
 
@@ -808,14 +808,12 @@ private fun walk[A](chain: Chain[A], n: Int) =
   if n > 0 then walk(chain.next, n - 1) else ()
 ```
 
-Compilation currently overflows the stack, even without a call to `walk`.
-The variant whose `next` is simply `Chain[A]` fails too. Enabling the existing
-`checkMarkPaths` assertions exposes repeated exits before the stack overflows.
-Thus this failure is not evidence only of growing argument environments:
-value-flow paths themselves violate the finite-mark premise. Even the finite selection `chain.next.next.value` in a function with a written
-`Int` result currently overflows; that third regression needs no recursive call.
-Both constraint expansion and mark paths need validation, independently of runtime
-recursion depth.
+This non-regular variant still overflows the stack without any call to `walk`.
+With `checkMarkPaths` enabled it reports repeated exits first, so its failure is
+not evidence only of growing argument environments. The regular variant with
+`next: Chain[A]` and the finite selection `chain.next.next.value` now pass,
+including with mark checks enabled. Both constraint expansion and mark paths need
+validation independently of runtime recursion depth.
 
 The approved correction distinguishes these operations:
 
@@ -833,13 +831,27 @@ The approved correction distinguishes these operations:
 
 This approval concerns which operations cross a value scope, not permission to
 truncate repeated marks, widen an alias, or allocate more inference variables.
-The interpreter has not yet been changed. Validation must include
-nested aliases inside generic functions and classes, fields containing callbacks,
-separate uses of one recursive alias, and imported annotations. The two regular
-regression blocks must eventually pass without `:fixme`, with mark checks enabled and
-stable relation/listener counts. The expanding third block needs the regularity
-diagnostic described below. Fixing the mark paths alone is insufficient if
-`DeclaredType.bindings` can still construct unbounded nested environments.
+The interpreter now forwards alias qualifications without a value capture, and
+structural field declarations retain their written type without a synthetic
+capture/exit. Worksheets cover regular recursion, finite parameter permutations,
+mutually recursive aliases, function-local aliases, and structural callbacks.
+An imported recursive alias is checked through two independent consumer modules.
+These cases pass with mark checks enabled. A graph-level structural cycle test
+also checks late bounds and verifies that repeated relations add no listeners or
+parameter instances.
+
+The class-local alias case remains a `:fixme`: projecting the result of
+`Box[A].get(): Slot`, where `Slot = {item: A}`, loses the correspondence between
+the method's scope and its receiver's scope. This also fails without the scope
+correction. Closed type interfaces need their deferred child references observed
+in the appropriate context; adding an entry to every closed interface instead
+breaks regular alias traversal. The whole-graph proof must address this context
+transport, and existing repeated-mark failures in generic array-method paths,
+not just the now-passing regular alias examples.
+
+The expanding alias needs the regularity diagnostic described below. The regular
+argument-reset regression also overflows: fixing mark paths is insufficient while
+`DeclaredType.bindings` retains nested, unused environments.
 
 The same graph audit must distinguish an open definition template from an already
 interpreted reference. In `Box[T].copy() = new Box[T](item)`, the source `T` in the
@@ -892,12 +904,23 @@ E2 = {A -> (Array[A], E1)}
 ```
 
 The source expression and binder identities stay fixed while the environments
-grow. This is a separate risk identified from the representation, not a claim
-that it is the sole cause of the existing stack overflows: mark assertions fail
-on those regressions first. Removing synthetic value-scope crossings does not
-bound these environments. Accepted regular types need canonical recursive
-references and finite keys, including their caller contexts, rather than a fresh
-nested environment on each visit.
+grow. Removing synthetic value-scope crossings does not bound these environments.
+There is now a concrete regular counterexample in `TypeGraphTermination.mls`:
+
+```mlscript
+type Reset[A] = {value: A, next: Reset[Int]}
+fun read(chain: Reset[Str]): Int = chain.next.next.value
+```
+
+The unfolding has only the `Reset[Str]` and `Reset[Int]` interfaces, but compilation
+still overflows. The closed `Int` reference retains the previous binding map,
+allowing semantically unused environments to nest. This case must be accepted;
+a regularity restriction cannot legitimately reject it. Canonical references
+must discard bindings that their source does not depend on, while retaining
+lexical dependencies such as the enclosing `A` in a class-local alias. This must
+also work for forward references: an unresolved dependency must not be mistaken
+for an absent one. Accepted regular types need finite reference keys and shared
+recursive edges, not a fresh nested environment on each visit.
 
 Keep structural alias unfolding distinct from inferred constraints at a recursive
 generic function call. The latter reuses a site's parameter symbol and can add an

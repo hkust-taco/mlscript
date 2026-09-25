@@ -2,17 +2,13 @@
 
 // A finite observation of a recursive alias has a finite declared interface.
 // It must also preserve the no-repeated-boundary invariant when mark checks are enabled.
-:fixme
 type Chain[A] = {value: A, next: Chain[A]}
 fun read(chain: Chain[Int]): Int = chain.next.next.value
-//│ /!!!\ Uncaught error: java.lang.StackOverflowError
 
 // Relating a recursive structural alias must reach a graph fixed point.
-:fixme
 type Chain[A] = {value: A, next: Chain[A]}
 private fun walk[A](chain: Chain[A], n: Int) =
   if n > 0 then walk(chain.next, n - 1) else ()
-//│ /!!!\ Uncaught error: java.lang.StackOverflowError
 
 // This non-regular structural alias must eventually receive a regularity diagnostic:
 // its value types expand to Array[Array[...]]. It must not overflow during checking.
@@ -20,4 +16,51 @@ private fun walk[A](chain: Chain[A], n: Int) =
 type Chain[A] = {value: A, next: Chain[Array[A]]}
 private fun walk[A](chain: Chain[A], n: Int) =
   if n > 0 then walk(chain.next, n - 1) else ()
+//│ /!!!\ Uncaught error: java.lang.StackOverflowError
+
+// A regular parameter permutation has two interfaces, not an expanding environment.
+class First(val first: Int)
+class Second(val second: Int)
+type Alternating[A, B] = {value: A, next: Alternating[B, A]}
+fun read(chain: Alternating[First, Second]): Int = chain.next.value.second
+
+// Mutually recursive aliases preserve a finite set of declared interfaces.
+type Left[A] = {value: A, next: Right[A]}
+type Right[A] = {value: A, next: Left[A]}
+fun read(chain: Left[Int]): Int = chain.next.next.value
+
+// An alias captures its enclosing function's parameter, without an alias scope.
+:expect [1, 2]
+class First(val first: Int)
+class Second(val second: Int)
+private fun choose[A](value: A) =
+  type Pair = {left: A, right: A}
+  let pair = ({left: value, right: value} as Pair)
+  pair.right
+[choose[First](First(1)).first, choose[Second](Second(2)).second]
+//│ = [1, 2]
+
+// A structural callback's inputs and outputs retain the supplied argument.
+:expect 3
+class Item(val value: Int)
+type Callback[A] = {run: A -> A}
+private fun make[A](value: A): Callback[A] = {run: (x: A) => x}
+make[Item](Item(0)).run(Item(3)).value
+//│ = 3
+
+// A member alias must retain the receiver context through its method result.
+:fixme
+:expect 4
+class Item(val value: Int)
+class Box[A](val value: A) with
+  type Slot = {item: A}
+  fun get(): Slot = {item: value}
+(new Box[Item](Item(4))).get().item.value
+//│ /!!!\ Uncaught error: java.lang.AssertionError: assertion failed: Entry and exit cross different lexical resolution scopes: class:Box⁰ vs term:Box⁰/get⁰ for NominalInstanceView(class:Item⁰)
+
+// Resetting an argument to a closed type has a finite structural unfolding.
+// The environment retained on Int must not nest the previous alias binding.
+:fixme
+type Reset[A] = {value: A, next: Reset[Int]}
+fun read(chain: Reset[Str]): Int = chain.next.next.value
 //│ /!!!\ Uncaught error: java.lang.StackOverflowError
