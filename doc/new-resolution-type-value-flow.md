@@ -35,10 +35,15 @@ order](#constraint-propagation-and-implementation-order). Correcting
 precedence over extending deferred value views to arbitrary supplied-type
 references: an explicit type application already provides a site and parameter
 instances for those views. The [distinction between type-reference operations and
-value-scope crossings](#type-reference-scope-audit-proposal-requiring-review)
-remains a proposal requiring review. Recursive reference graphs must preserve
-caller and receiver contexts without growing binding environments. The variance
+value-scope crossings](#type-reference-scope-audit) is approved. Recursive reference
+graphs must preserve caller and receiver contexts without growing binding environments. The variance
 substitution rules below are implemented for declared type views.
+
+Require structural types to have a finite recursive representation: the proposed
+[regularity restriction](#regular-structural-types) rules out structural unfolding
+that keeps producing distinct types. The exact check remains to be reviewed before
+implementation. This restriction and sharing regular recursive references are
+separate obligations; neither follows from the bound on call-site symbols.
 
 The finite call-site symbol bound alone is not a termination proof for the whole
 resolver. Recursive alias regressions currently overflow, and the [fixed-point
@@ -792,7 +797,7 @@ references), `NewResolverState.scala` (consumer-owned memo tables),
 (transporting views through deferred children). Elaborator signature registration
 must preserve binders and missing positions before the body is observed.
 
-### Type-reference scope audit (proposal requiring review)
+### Type-reference scope audit
 
 The remaining graph work has a concrete termination regression in
 `newres/TypeGraphTermination.mls`:
@@ -812,7 +817,7 @@ value-flow paths themselves violate the finite-mark premise. Even the finite sel
 Both constraint expansion and mark paths need validation, independently of runtime
 recursion depth.
 
-The proposed correction distinguishes these operations:
+The approved correction distinguishes these operations:
 
 - Expanding a type alias substitutes references to its arguments in its source
   type graph. The alias declaration introduces no value invocation. Keep each
@@ -826,13 +831,14 @@ The proposed correction distinguishes these operations:
   mark operations. These paths must remain on references to captured parameters,
   even when aliases or structural fields forward them.
 
-This is a proposal about which operations cross a value scope, not permission to
+This approval concerns which operations cross a value scope, not permission to
 truncate repeated marks, widen an alias, or allocate more inference variables.
-It must be reviewed before changing the type interpreter. Validation must include
+The interpreter has not yet been changed. Validation must include
 nested aliases inside generic functions and classes, fields containing callbacks,
-separate uses of one recursive alias, and imported annotations. All three
+separate uses of one recursive alias, and imported annotations. The two regular
 regression blocks must eventually pass without `:fixme`, with mark checks enabled and
-stable relation/listener counts. Fixing the mark paths alone is insufficient if
+stable relation/listener counts. The expanding third block needs the regularity
+diagnostic described below. Fixing the mark paths alone is insufficient if
 `DeclaredType.bindings` can still construct unbounded nested environments.
 
 The same graph audit must distinguish an open definition template from an already
@@ -846,6 +852,60 @@ legacy constructions can have value shapes without a new-resolution producer,
 and completed reference targets must remain immutable. A saved graph operation
 must retain its selected definition and interpreted argument references.
 
+### Regular structural types
+
+The proposed restriction is that unfolding a structural type must admit a finite
+graph of distinct type components, with recursive occurrences represented by
+back-edges. A finite alias definition alone does not establish this property:
+
+```mlscript
+type Chain[A] = {value: A, next: Chain[A]}
+type Growing[A] = {value: A, next: Growing[Array[A]]}
+```
+
+`Chain[Int]` repeats the same interface and can be represented by a cycle.
+`Growing[Int]` exposes successive `value` types `Int`, `Array[Int]`,
+`Array[Array[Int]]`, and so on. It is non-regular and should be diagnosed rather
+than expanded indefinitely or silently approximated. The third block of
+`newres/TypeGraphTermination.mls` currently records this latter failure as a stack
+overflow; it is no longer an acceptance case for unrestricted structural recursion.
+
+Regularity is not a requirement that recursive arguments be textually unchanged.
+For example, `{value: A, next: Alternating[B, A]}` as the body of
+`Alternating[A, B]` has a finite two-state unfolding. Mutually recursive aliases
+and finite changes of arguments must also be considered. The precise check,
+including how it handles aliases and inferred holes, remains a design review
+item. It must terminate on rejected inputs too; waiting for an unfolding cache to
+stop growing is not a decision procedure. Do not impose a depth limit.
+
+There is also a representation obligation for accepted types. Currently
+`DeclaredType.bindings` is a recursive map of `DeclaredType` values, and the whole
+reference is used as a view-cache key. `declaredType` substitutes a directly bound
+parameter, but retains the environment for a compound expression. Schematically,
+repeatedly binding `A` to the source expression `Array[A]` can build:
+
+```text
+E0 = {A -> Int}
+E1 = {A -> (Array[A], E0)}
+E2 = {A -> (Array[A], E1)}
+...
+```
+
+The source expression and binder identities stay fixed while the environments
+grow. This is a separate risk identified from the representation, not a claim
+that it is the sole cause of the existing stack overflows: mark assertions fail
+on those regressions first. Removing synthetic value-scope crossings does not
+bound these environments. Accepted regular types need canonical recursive
+references and finite keys, including their caller contexts, rather than a fresh
+nested environment on each visit.
+
+Keep structural alias unfolding distinct from inferred constraints at a recursive
+generic function call. The latter reuses a site's parameter symbol and can add an
+edge from the source `Array[A]` expression to that symbol without eagerly
+substituting its accumulated bounds. A regularity restriction on written
+structural interfaces does not by itself establish or replace the finite-domain
+argument for that constraint propagation.
+
 ### Fixed points and implementation checks
 
 There are at most as many allocated parameter instances as the sum of each
@@ -856,8 +916,9 @@ nodes and written type/term nodes are finite independently of recursive visits.
 View substitutions range over the finite original and instantiated binders in
 lexical scope. With the existing no-repeated-boundary mark invariant, their
 normalized contexts also range over a finite domain. These facts bound the set
-of memoized views and endpoint pairs **provided** compound arguments remain shared
-graph edges and no cache key includes a growing substitution or capture history.
+of memoized views and endpoint pairs **provided** structural interfaces satisfy
+the regularity restriction, compound arguments remain shared graph edges and no
+cache key includes a growing substitution or capture history.
 Monotone, deduplicated propagation then reaches a fixed point.
 
 Check this at the graph layer as well as with worksheets. Replaying an existing

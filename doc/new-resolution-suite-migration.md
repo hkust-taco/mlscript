@@ -91,7 +91,8 @@ The inventory below separates these from compiler and prelude gaps.
   authoritative instantiation at explicit type applications and by-name invocations,
   specialized inferred results observed before term application, supplied member-input
   constraints, reconstructed receiver contexts, inferred missing member types,
-  and the whole graph's termination bound. Concrete outstanding cases are in
+  regular structural interfaces, and the whole graph's termination bound.
+  Concrete outstanding cases are in
   `newres/InstantiationSites.mls`, `StoredSpecializations.mls`, `ConstructorInstances.mls`,
   `InferenceHoles.mls`, `PartialSignatures.mls`, and `TypeGraphTermination.mls`.
   Decide how reassignment affects mutable storage's inferred interface, including

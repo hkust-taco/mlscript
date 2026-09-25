@@ -14,8 +14,8 @@ private fun walk[A](chain: Chain[A], n: Int) =
   if n > 0 then walk(chain.next, n - 1) else ()
 //│ /!!!\ Uncaught error: java.lang.StackOverflowError
 
-// Changing recursive arguments must retain symbolic edges, not grow mark paths
-// or expand Array[Array[...]] environments at each recursive comparison.
+// This non-regular structural alias must eventually receive a regularity diagnostic:
+// its value types expand to Array[Array[...]]. It must not overflow during checking.
 :fixme
 type Chain[A] = {value: A, next: Chain[Array[A]]}
 private fun walk[A](chain: Chain[A], n: Int) =
