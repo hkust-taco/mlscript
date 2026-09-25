@@ -482,7 +482,7 @@ object Elaborator:
     * a runtime value merely because they use the same reference syntax.
     */
   enum Interpretation:
-    case Trm, Receiver, Clss, Ptrn, Tpe
+    case Trm, Receiver, Specialization, Clss, Ptrn, Tpe
 
   enum Mode:
     case Full
@@ -719,7 +719,7 @@ end Elaborator
 
 
 import Elaborator.*
-import Elaborator.Interpretation.{Trm, Receiver, Clss, Ptrn, Tpe}
+import Elaborator.Interpretation.{Trm, Receiver, Specialization, Clss, Ptrn, Tpe}
 
 
 class Elaborator(val tl: TraceLogger, val wd: io.Path, val prelude: Ctx)
@@ -1380,7 +1380,12 @@ extends Importer:
       raise(ErrorReport(msg"Name not found: $name" -> id.toLoc :: Nil))
       error
     case TyApp(lhs, targs) =>
-      val result = Term.TyApp(subterm(lhs, interp), targs.map {
+      // The whole type application owns a by-name invocation's binder group.
+      // Do not observe its underlying reference before its arguments are available.
+      val baseInterp = interp match
+        case Trm | Receiver | Specialization => Specialization
+        case _ => interp
+      val result = Term.TyApp(subterm(lhs, baseInterp), targs.map {
         case Modified(Keywrd(Keyword.`in`), arg) => Term.WildcardTy(S(subterm(arg, Tpe)), N)
         case Modified(Keywrd(Keyword.`out`), arg) => Term.WildcardTy(N, S(subterm(arg, Tpe)))
         case Tup(Modified(Keywrd(Keyword.`in`), arg1) :: Modified(Keywrd(Keyword.`out`), arg2) :: Nil) =>

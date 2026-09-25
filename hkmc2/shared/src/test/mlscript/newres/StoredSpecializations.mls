@@ -44,18 +44,12 @@ private val right = shared[Second](Second(7))
 //│ shared = fun pair
 
 // Callback checking must observe the specialization before an implementation call.
-// TODO: Instantiate at the type application before checking the callback.
-:fixme
 :expect 9
 class Item(val value: Int)
 private fun identity[A](value: A) = value
 private fun use[B](f: Item -> B): B = f(Item(9))
 use(identity[Item]).value
-//│ ╔══[COMPILATION ERROR] This selection of member 'value' has no resolved target
-//│ ║  l.53: 	use(identity[Item]).value
-//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
-//│ ═══[RUNTIME ERROR] Expected: '9', got: 'undefined'
+//│ = 9
 
 // Supplying the scheme's arguments consumes its type parameter list immediately.
 :ge
@@ -66,16 +60,16 @@ private val second = declared[Int]
 first[Str]
 second[Str]
 //│ ╔══[COMPILATION ERROR] Resolution error in type application
-//│ ║  l.66: 	first[Str]
+//│ ║  l.60: 	first[Str]
 //│ ║        	^^^^^^^^^^
 //│ ╟── Function 'inferred' expected 0 type arguments, but got 1
-//│ ║  l.62: 	private fun inferred[A](value: A) = value
+//│ ║  l.56: 	private fun inferred[A](value: A) = value
 //│ ╙──      	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Resolution error in type application
-//│ ║  l.67: 	second[Str]
+//│ ║  l.61: 	second[Str]
 //│ ║        	^^^^^^^^^^^
 //│ ╟── Function 'declared' expected 0 type arguments, but got 1
-//│ ║  l.63: 	private fun declared[A](value: A): A = value
+//│ ║  l.57: 	private fun declared[A](value: A): A = value
 //│ ╙──      	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ = fun declared
 //│ first = fun inferred
@@ -86,9 +80,9 @@ second[Str]
 private fun identity[A](value: A) = value
 private val tooMany = identity[Int, Str]
 //│ ╔══[COMPILATION ERROR] Resolution error in type application
-//│ ║  l.87: 	private val tooMany = identity[Int, Str]
+//│ ║  l.81: 	private val tooMany = identity[Int, Str]
 //│ ║        	                      ^^^^^^^^^^^^^^^^^^
 //│ ╟── Function 'identity' expected 1 type argument, but got 2
-//│ ║  l.86: 	private fun identity[A](value: A) = value
+//│ ║  l.80: 	private fun identity[A](value: A) = value
 //│ ╙──      	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ tooMany = fun identity

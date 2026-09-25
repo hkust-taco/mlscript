@@ -35,23 +35,23 @@ class TypeInstantiationTest extends AnyFunSuite:
          |  val second = shared("two")
          |""".stripMargin) == 2)
 
-  test("constructor instances belong to the first term application, including stored new recipes"):
+  test("constructor instances belong to explicit specializations or unspecialized term applications"):
     val cases = List(
       """|class Box[T](val item: T)
          |private val specialized = Box[Int]
          |private val deferred = new Box[Int]
-         |""".stripMargin -> 0,
+         |""".stripMargin -> 2,
       """|class Box[T](val item: T)
          |private val shared = Box
          |private val specialized = shared[Int]
          |private val direct = specialized(1)
          |private val explicit = new specialized(2)
-         |""".stripMargin -> 2,
+         |""".stripMargin -> 1,
       """|class Box[T](val item: T)
          |private val deferred = new Box[Int]
          |private val first = deferred(1)
          |private val second = deferred(2)
-         |""".stripMargin -> 2,
+         |""".stripMargin -> 1,
       """|class Box[T](val item: T)(val other: Int)
          |private val partial = new Box[Int](1)
          |private val first = partial(2)
@@ -65,6 +65,50 @@ class TypeInstantiationTest extends AnyFunSuite:
     cases.foreach: (source, count) =>
       withClue(source):
         assert(allocatedInstances(source) == count)
+
+  test("specializations consume binders before any later calls or observations"):
+    val definitions = List(
+      "private fun identity[A](x: A) = x",
+      "private fun identity[A](x: A): A = x")
+    definitions.foreach: definition =>
+      val source = definition + "\nprivate val specialized = identity[Int]\n"
+      assert(allocatedInstances(source) == 1)
+      assert(allocatedInstances(source +
+        "private val first = specialized(1)\nprivate val second = specialized(2)\n") == 1)
+
+  test("by-name invocations consume binders once, with explicit arguments choosing the site"):
+    val definitions = List(
+      "private fun make[A] = (x: A) => x",
+      "private fun make[A]: A -> A = (x: A) => x",
+      "private fun make: [A] -> A -> A\nprivate fun make = x => x")
+    definitions.foreach: definition =>
+      List("make", "make[Int]").foreach: invocation =>
+        val source = definition + "\nprivate val shared = " + invocation + "\n"
+        withClue(source):
+          assert(allocatedInstances(source) == 1)
+          assert(allocatedInstances(source +
+            "private val first = shared(1)\nprivate val second = shared(2)\n") == 1)
+          assert(allocatedInstances(source + "private val other = " + invocation + "\n") == 2)
+
+  test("selected by-name methods retain the invocation's group through nominal views"):
+    List("factory.make", "factory.make[Int]").foreach: invocation =>
+      val source = """|class Factory with
+                     |  fun make[A]: A -> A = (x: A) => x
+                     |private val factory: Factory = new Factory
+                     |""".stripMargin + "private val shared = " + invocation + "\n"
+      withClue(source):
+        assert(allocatedInstances(source) == 1)
+        assert(allocatedInstances(source +
+          "private val first = shared(1)\nprivate val second = shared(2)\n") == 1)
+        assert(allocatedInstances(source + "private val other = " + invocation + "\n") == 2)
+
+  test("a separately quantified result retains its own scheme after a by-name invocation"):
+    val source = """|private fun make: [A] -> A -> A = x => x
+                   |private val shared = make
+                   |""".stripMargin
+    assert(allocatedInstances(source) == 0)
+    assert(allocatedInstances(source +
+      "private val first = shared(1)\nprivate val second = shared(2)\n") == 2)
 
   test("a definition and static site allocate their binder group once"):
     given owner: Elaborator.State = new Elaborator.State

@@ -88,8 +88,7 @@ The inventory below separates these from compiler and prelude gaps.
   [resolver notes](new-resolution-design.md). Tracking individual positions and
   lengths is out of scope. Complete the
   [type-argument constraint design](new-resolution-type-value-flow.md), including
-  authoritative instantiation at explicit type applications and by-name invocations,
-  specialized inferred results observed before term application, supplied member-input
+  supplied member-input
   constraints, reconstructed receiver contexts, inferred missing member types,
   regular structural interfaces, and the whole graph's termination bound.
   Concrete outstanding cases are in

@@ -420,8 +420,8 @@ final case class ContextualShape(source: NonMarkedShape, instances: Map[VarSymbo
   override def isInstanceOfClass(cls: ClassLikeDef)(using NewResolverState): Bool = source.isInstanceOfClass(cls)
   protected def getMemberImpl(name: Str)(using NewResolverState): MemberLookup = source.getMember(name).instantiate(instances)
 
-/** A standalone type application is a recipe, not a call activation. Each later
-  * application uses its own binder group while retaining these caller references.
+/** A type application has consumed the declaration's scheme. Subsequent term
+  * applications retain this binder group and the supplied caller references.
   */
 final case class SpecializedShape(declaration: DefnShape, arguments: Ls[DeclaredType],
     instances: Map[VarSymbol, TypeParameterInstance]) extends NonAppTermShape:

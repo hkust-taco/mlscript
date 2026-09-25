@@ -224,6 +224,15 @@ final class NewResolverState private (
     new Cache(inherited.map(_.typeInstances), identity)
   private var allocatedTypeInstances: Int = 0
   private[hkmc2] def allocatedTypeInstanceCount: Int = root.allocatedTypeInstances
+  private val typeApplicationSites: Cache[Identity[TyApp], FlowSymbol] =
+    new Cache(inherited.map(_.typeApplicationSites), identity)
+  /** A type application consumes a scheme even when no term argument follows.
+    * Its site is shared across observations and activation views of the source.
+    */
+  def typeApplicationSite(application: TyApp): FlowSymbol =
+    val key = new Identity(application)
+    root.typeApplicationSites.getOrElseUpdate(key, typeApplicationSites.get(key).getOrElse(
+      FlowSymbol("type application")(using owner)))
   private[hkmc2] def instantiateTypeParameters(scheme: AnyDefinitionSymbol | TypeResolution,
       site: FlowSymbol, parameters: Ls[VarSymbol]): Map[VarSymbol, TypeParameterInstance] =
     require(parameters.distinct.length == parameters.length, "A scheme cannot bind a parameter twice")

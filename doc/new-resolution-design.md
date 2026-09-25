@@ -36,8 +36,8 @@ exported mapped arrays and imported generic functions and methods.
 `InstanceShape` retains a type reference at annotation boundaries; member lookup,
 application, and destructuring obtain specialized interfaces through
 `listenInstanceViews`. The distinction between supplying a type argument and
-adding an ordinary bound, the agreed variance rules, and the proposal to instantiate
-declared type parameters once per definition and syntactic call site are documented
+adding an ordinary bound, variance rules, and instantiating declared type parameters
+once per definition and authoritative syntactic site are documented
 in [Instance types and parameter constraints](new-resolution-type-value-flow.md).
 The description below records current generic inference. Omitted generic arguments
 use source-owned inference holes and retain live inference through partial
@@ -70,11 +70,11 @@ Inference also connects nested
 nominal parameters, such as `Foo[A]` containing a `Box[A]`. Generic methods use
 the same flow as free functions, including callback-result inference and curried
 signatures. Declared callable shapes retain their type parameters. Functions and
-constructors allocate explicit binders once per original definition and syntactic
-term application in the current implementation. This delays explicit specialization
-and by-name invocation too far: the [instantiation-site rules](new-resolution-type-value-flow.md#finite-call-site-instantiation-and-marks)
-require those operations to own their groups immediately and later applications
-to reuse them. Subsequent curried lists retain the selected instance map.
+constructors allocate explicit binders once per original definition and authoritative
+syntactic site: explicit type application, by-name invocation, or otherwise the
+first term application. The [instantiation-site rules](new-resolution-type-value-flow.md#finite-call-site-instantiation-and-marks)
+require later applications and curried tails to retain that group. Ordinary
+references to functions with parameter lists keep their schemes until instantiated.
 
 Nominal argument comparisons retain directed `ContextualType` endpoint pairs.
 Invariant arguments install both directions, rather than copying expanded
@@ -114,16 +114,17 @@ written binders. `newres/InferenceHoles.mls` also retains unresolved cases for
 recursive holes and omissions shared through an alias body. No hole creates a
 call-site parameter instance.
 
-Standalone specializations of inferred functions currently retain supplied types
-in `SpecializedShape` until application, which then binds its own parameter
-instances. This must change: the specialization owns the group and consumes that
-scheme; subsequent uses retain it. By-name functions and methods likewise
-instantiate at their implicit invocation before their result is observed. Argument
-arity is checked even for unused specializations. `newres/StoredSpecializations.mls`
-covers stored aliases, inferred record results, and curried calls. It also records
-the remaining gap in observing an inferred specialized result during callback
-checking before application; see the
-[type-flow reference](new-resolution-type-value-flow.md#partial-application-and-explicit-specialization).
+Standalone specializations of inferred functions retain their consumed group in
+`SpecializedShape`; complete callable signatures remove their scheme after
+instantiation. By-name functions and methods instantiate before observing their
+result. Their explicitly supplied type arguments select the same invocation's
+site, without also allocating a group for the underlying reference. Separate
+definition signatures consume their binders too; independently quantified result
+annotations retain their own schemes. Argument arity is checked even for unused
+specializations. `newres/StoredSpecializations.mls` covers stored aliases, inferred
+record results, curried calls, and callback checking before a term application.
+`newres/InstantiationSites.mls` checks shared mutation and implicit invocations;
+see the [type-flow reference](new-resolution-type-value-flow.md#partial-application-and-explicit-specialization).
 
 ## Declared interfaces and exposure checking
 
