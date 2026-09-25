@@ -283,8 +283,8 @@ final class NewResolverState private (
     new Seen(inherited.map(_.exposedTypeHoles))
   val signatureParameters: Cache[VarSymbol, DeclaredType] =
     new Cache(inherited.map(_.signatureParameters), identity)
-  val capturedTypes: Cache[(DeclaredType, AnyDefinitionSymbol), DeclaredType] =
-    new Cache(inherited.map(_.capturedTypes), identity)
+  val contextualTypes: Cache[ContextualType, DeclaredType] =
+    new Cache(inherited.map(_.contextualTypes), identity)
   val tupleArrayParents: Cache[Identity[TupleShape], NominalInstanceView] =
     new Cache(inherited.map(_.tupleArrayParents), identity)
   val instanceParameterTypes: Cache[(VarSymbol, Bool), DeclaredType] =

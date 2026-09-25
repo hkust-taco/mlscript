@@ -56,6 +56,46 @@ class TypeRelationTest extends AnyFunSuite:
     assert((a.inferenceHost.listeners.size, b.inferenceHost.listeners.size) == counts)
     assert(seen.toList == List(first, second))
 
+  test("lexical reference round trips preserve early and late caller identities"):
+    val h = new Harness
+    import h.given
+    val (a, at) = h.parameter("A")
+    val owner = ResolutionBoundary(TermSymbol(Fun, N, Tree.Ident("owner")))
+    val firstSite = FlowSymbol.app()
+    val secondSite = FlowSymbol.app()
+    val exit = ExitMark(owner, N, NoMarks) :: Nil
+    val enter = EntryMark(owner, N, NoMarks) :: Nil
+    val outside = h.resolver.transportType(at, exit)
+    val back = h.resolver.transportType(outside, enter)
+    assert(back == at)
+    val first = IntroShape(Term.UnitVal(), N)
+    val second = DynShape()
+    h.resolver.publishParameter(a, MarkedShape.enter(first, owner, S(firstSite)))
+    val seen = h.observe(ContextualType(back, ExitMark(owner, S(firstSite), NoMarks) :: Nil))
+    h.resolver.publishParameter(a, MarkedShape.enter(second, owner, S(secondSite)))
+    assert(seen.toList == List(first))
+    val listeners = a.inferenceHost.listeners.size
+    (1 to 1000).foreach: _ =>
+      assert(h.resolver.transportType(at, exit) eq outside)
+      assert(h.resolver.transportType(outside, enter) == at)
+    assert(a.inferenceHost.listeners.size == listeners)
+    assert(h.state.allocatedTypeInstanceCount == 0)
+
+  test("reference rebasing never cancels explicit invocation entries"):
+    val h = new Harness
+    import h.given
+    val (a, at) = h.parameter("A")
+    val owner = ResolutionBoundary(TermSymbol(Fun, N, Tree.Ident("owner")))
+    val original = FlowSymbol.app()
+    val invoked = FlowSymbol.app()
+    val outside = h.resolver.transportType(at, ExitMark(owner, S(original), NoMarks) :: Nil)
+    val inside = h.resolver.transportType(outside, EntryMark(owner, S(invoked), NoMarks) :: Nil)
+    assert(inside != at)
+    val bound = IntroShape(Term.UnitVal(), N)
+    h.resolver.publishParameter(a, MarkedShape.enter(bound, owner, S(original)))
+    val seen = h.observe(ContextualType(inside, Nil))
+    assert(seen.toList == List(MarkedShape.enter(bound, owner, S(invoked))))
+
   test("recursive structural projections preserve bounds and reuse their listeners"):
     val h = new Harness
     import h.given

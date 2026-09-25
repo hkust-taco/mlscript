@@ -457,7 +457,19 @@ final case class NominalInstanceView(defn: ClassLikeDef, bindings: Map[VarSymbol
       case _ => N
   protected def getMemberImpl(name: Str)(using NewResolverState): MemberLookup =
     defn.body.members.get(name) match
-      case S(member) => MemberLookup.Declared(member, bindings, Nil, annotation, true)
+      case S(member) =>
+        // Supplied arguments are outside the class; its parameter annotations
+        // are inside. Enclosing binders keep their own lexical contexts and
+        // enter the class through the annotation's explicit Capture nodes.
+        val parameters = defn.tparams.map(_.sym).toSet
+        // Module/object references introduce no value invocation boundary.
+        val scope = defn.sym match
+          case _: ModuleOrObjectSymbol => N
+          case symbol => S(ResolutionBoundary(symbol))
+        val local = bindings.map: (symbol, bound) =>
+          symbol -> (if parameters(symbol) && scope.nonEmpty then resolver.captureType(bound, defn.sym) else bound)
+        MemberLookup.Declared(member, local,
+          scope.toList.map(ExitMark(_, N, NoMarks)), annotation, true)
       case N =>
         (name.toIntOption, resolver.arrayElementType(this)) match
           case (S(index), S(element)) if index >= 0 => MemberLookup.Indexed(TupleShape.TypedField(element, Nil), Nil)

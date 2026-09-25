@@ -49,14 +49,13 @@ make[Item](Item(0)).run(Item(3)).value
 //│ = 3
 
 // A member alias must retain the receiver context through its method result.
-:fixme
 :expect 4
 class Item(val value: Int)
 class Box[A](val value: A) with
   type Slot = {item: A}
   fun get(): Slot = {item: value}
 (new Box[Item](Item(4))).get().item.value
-//│ /!!!\ Uncaught error: java.lang.AssertionError: assertion failed: Entry and exit cross different lexical resolution scopes: class:Box⁰ vs term:Box⁰/get⁰ for NominalInstanceView(class:Item⁰)
+//│ = 4
 
 // Resetting an argument to a closed type has a finite structural unfolding.
 // The environment retained on Int must not nest the previous alias binding.
@@ -96,7 +95,6 @@ private fun delayed[A](value: A) =
 //│ = [5, 6]
 
 // A nominal annotation must retain outer binders used only by its members.
-:fixme
 :expect [7, 8]
 class First(val first: Int)
 class Second(val second: Int)
@@ -105,4 +103,37 @@ private fun local[A](value: A) =
   let box = (new Local(value) as Local)
   box.item
 [local[First](First(7)).first, local[Second](Second(8)).second]
-//│ /!!!\ Uncaught error: java.lang.AssertionError: assertion failed: Entry and exit cross different lexical resolution scopes: class:Local⁰ vs term:local⁰ for NominalInstanceView(class:First⁰)
+//│ = [7, 8]
+
+// A separate signature reached through a member alias keeps its result context.
+:expect [9, 10]
+class First(val first: Int)
+class Second(val second: Int)
+class Box[A](val value: A) with
+  type Slot = {item: A}
+  type Getter = () -> Slot
+  fun get: Getter
+  fun get() = {item: value}
+[(new Box[First](First(9))).get().item.first,
+ (new Box[Second](Second(10))).get().item.second]
+//│ = [9, 10]
+
+// An inherited field retains the supplied argument through both class scopes.
+:expect [11, 12]
+class First(val first: Int)
+class Second(val second: Int)
+class Parent[A](val item: A)
+class Child[A](item: A) extends Parent[A](item)
+private fun read[A](child: Child[A]) = child.item
+[read[First](new Child[First](First(11))).first,
+ read[Second](new Child[Second](Second(12))).second]
+//│ = [11, 12]
+
+// A nominal module annotation introduces no class invocation boundary.
+:expect 13
+class Item(val value: Int)
+module Items with
+  val item: Item = Item(13)
+private fun read(module items: Items) = items.item
+read(Items).value
+//│ = 13

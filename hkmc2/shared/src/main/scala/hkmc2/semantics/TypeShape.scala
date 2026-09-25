@@ -23,6 +23,9 @@ enum TypeShape:
   // Substitution selects one part before the type is used in further constraints.
   // The argument stays in its own lexical environment, including delayed parts.
   case SelectedArgument(argument: DeclaredType, positive: Bool)
+  // A transported reference retains its context before any deferred component
+  // is observed. The resolver flattens these nodes and normalizes their marks.
+  case Contextual(reference: ContextualType)
   // The same third-party symbol can have different inference in two exporters.
   // Retain its originating host so importing a result needs no whole-state copy.
   case Parameter(symbol: VarSymbol, host: Publisher.Data[Shape])
@@ -91,6 +94,7 @@ final class TypeResolution(val source: Term, report: Ls[(Message, Opt[Loc])] => 
       case Wildcard(input, output) => input.foreach(_.validate(next)); output.foreach(_.validate(next))
       case Argument(parts) => parts.input.resolution.validate(next); parts.output.resolution.validate(next)
       case SelectedArgument(argument, _) => argument.resolution.validate(next)
+      case Contextual(reference) => reference.tpe.resolution.validate(next)
       case Function(_, result) => result.validate(next)
       case Polymorphic(params, _, body) =>
         params.foreach: param =>

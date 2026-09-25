@@ -93,8 +93,8 @@ box.apply(x => x.value)
 //│ ║        	               ^^^^^^^
 //│ ╟── Cannot resolve member 'value' of a value with unknown shape.
 //│ ╟── This abstract type does not specify a member interface.
-//│ ║  l.88: 	  fun apply(f: T -> Int): Int = f(item)
-//│ ╙──      	               ^
+//│ ║  l.89: 	let box = (new Box(Item(8)) as Box[in Item])
+//│ ╙──      	                                      ^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ box = Box(Item(8))
 

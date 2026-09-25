@@ -45,8 +45,9 @@ implementation. This restriction and sharing regular recursive references are
 separate obligations; neither follows from the bound on call-site symbols.
 
 The finite call-site symbol bound alone is not a termination proof for the whole
-resolver. Non-regular expansion still overflows; class-local aliases expose a
-receiver-context failure. Dependency-based binding projection now accepts regular
+resolver. Non-regular expansion and regular recursion through transparent
+argument aliases still overflow. Contextual references preserve class-local aliases
+and enclosing binders through nominal member projections. Dependency-based binding projection accepts regular
 argument resets, including compound constants and recursively unused arguments.
 The [fixed-point conditions](#fixed-points-and-implementation-checks) remain completion gates.
 
@@ -74,8 +75,9 @@ their declared output interface.
 Replacing the remaining explicit-argument flags and positive-only member
 conversion, reconstructed receiver contexts, inferred nominal member interfaces,
 and general recursive alias environments still need integration. Omitted arguments
-use source-owned inference holes; recursive hole contexts and omissions inside
-alias bodies still need the contextual reference work described below. The
+use source-owned inference holes. The recursive array-hole regression now preserves
+independent callers; distinguishing two omissions inside a shared alias body remains
+unfinished. The
 implementation order below remains the full design, not a claim that all its parts
 are complete.
 See the [resolver notes](new-resolution-design.md)
@@ -842,20 +844,12 @@ These cases pass with mark checks enabled. A graph-level structural cycle test
 also checks late bounds and verifies that repeated relations add no listeners or
 parameter instances.
 
-The class-local alias case remains a `:fixme`: projecting the result of
-`Box[A].get(): Slot`, where `Slot = {item: A}`, loses the correspondence between
-the method's scope and its receiver's scope. This also fails without the scope
-correction. Closed type interfaces need their deferred child references observed
-in the appropriate context; adding an entry to every closed interface instead
-breaks regular alias traversal. The whole-graph proof must address this context
-transport, and existing repeated-mark failures in generic array-method paths,
-not just the now-passing regular alias examples.
-
-The expanding alias needs the regularity diagnostic described below. The regular
-argument-reset regressions now pass after projecting `DeclaredType.bindings` onto
-the source type's dependencies. A local nominal annotation whose constructor
-field refers to an enclosing function parameter still exposes the receiver-context
-failure; it has its own regression beside the class-local alias case.
+Class-local aliases and local nominal annotations retain their deferred member
+contexts through the contextual-reference transport described below. These passing
+regressions do not establish the whole-graph bound: repeated-mark failures in generic
+array-method paths and expanding alias environments still require separate checks.
+Dependency projection accepts regular argument resets, including compound constants.
+The expanding alias needs the regularity diagnostic described below.
 
 The same graph audit must distinguish an open definition template from an already
 interpreted reference. In `Box[T].copy() = new Box[T](item)`, the source `T` in the
@@ -868,10 +862,38 @@ legacy constructions can have value shapes without a new-resolution producer,
 and completed reference targets must remain immutable. A saved graph operation
 must retain its selected definition and interpreted argument references.
 
-### Receiver-context investigation
+### Contextual references and receiver projection
 
-Two current regressions isolate missing scope transfers. Both fail before any
-concrete type mismatch is relevant:
+`TypeShape.Contextual(ContextualType(reference, marks))` retains an interpreted
+reference together with its path into the observation scope. Substitution maps and
+deferred fields keep these references as `DeclaredType` values. `transportType`
+flattens an existing contextual node before interning the resulting endpoint;
+contextual nodes contain one normalized mark path, never nested transport nodes.
+Their dependencies are already in the saved reference, so they do not read an
+ambient substitution map.
+
+For example:
+
+```mlscript
+class Item(val value: Int)
+class Box[A](val value: A) with
+  type Slot = {item: A}
+  fun get(): Slot = {item: value}
+(new Box[Item](Item(4))).get().item.value
+```
+
+The `Slot` reference enters `get`'s scope even though its immediate interpretation
+is an unmarked record interface. The method result leaves that scope, while the
+record's deferred `item` type retains the receiver's interpretation of `A`. Scope
+transport never depends on whether the current outer shape happens to be marked.
+Both this example and the corresponding separate-signature case are covered in
+`newres/TypeGraphTermination.mls`.
+
+Nominal member projection explicitly leaves the declaring class's scope. Its own
+type arguments enter that scope before substituting member annotations. Modules
+and objects introduce no such invocation boundary. Enclosing
+binders keep their original contexts: their annotation's `Capture` nodes supply
+the class entry. This also handles a local class capturing a function parameter:
 
 ```mlscript
 class Item(val value: Int)
@@ -882,51 +904,36 @@ private fun local[A](value: A) =
 local[Item](Item(7)).value
 ```
 
-`Local.item`'s annotation captures the enclosing `A` into the class scope. The
-nominal view's member projection does not leave that scope. When `local` returns,
-the interpreter tries to cancel the function exit against the still-pending class
-entry, triggering the scope assertion. The regression is the final block of
-`newres/TypeGraphTermination.mls`.
+A captured template and its application arguments have different starting scopes.
+For `Chain[A]` inside a function, `Chain` can denote an outer template while `A`
+already belongs to the function. `TypeApplication` rebases supplied arguments into
+the template's scope and records the same transfer for omitted positions. Expanding
+the template transports its interface back. Views, constraints, and hole exposure
+all use this operation; inferred holes receive the same context as supplied arguments.
+Nominal constraints compare argument endpoints in the common observation scope,
+including both their input and output parts.
 
-```mlscript
-class Item(val value: Int)
-class Box[A](val value: A) with
-  type Slot = {item: A}
-  fun get(): Slot = {item: value}
-(new Box[Item](Item(4))).get().item.value
-```
+A reference's lexical round trip must be composed before observing its host. In
+particular, leaving a scope with a wildcard mark and immediately re-entering that
+same lexical scope returns the same reference. Applying those operations to each
+host candidate instead would erase a concrete caller's identity at the wildcard
+exit. `transportType` cancels that pair on the reference. It never cancels a reverse
+pair containing an explicit invocation site. Ordinary value-flow mark operations
+are unchanged. `TypeRelationTest` checks early and late bounds from distinct caller
+sites, retained explicit invocation entries, and a thousand repeated transfers
+without additional listeners or binder instances.
 
-Here the reference to `Slot` captures the type into `get`'s scope. The interpreter
-produces an unmarked `RecordTypeShape`, and its current capture rule only enters
-already-marked shapes. The method entry is therefore lost before the deferred
-field is inspected. The method exit then meets `A`'s class entry instead. This is
-the existing class-local alias regression in the same worksheet.
+`transportShape` composes paths on deferred instance references at projection and
+result boundaries before delivering them to another caller. Leaving a wildcard
+entry outside an instance wrapper could otherwise consume a subsequent concrete
+call exit before the wrapper's own path was considered. Separate signatures retain
+context when supplying parameter types and when following arrow results. By-name
+members use the complete receiver path when consuming their binders.
 
-Simply entering every compound interface is not a valid general correction.
-For `Chain[A]` inside a function, the type template `Chain` can come from an outer
-scope while the supplied argument `A` is already in the function's scope.
-Transporting the fully substituted interface moves both, introducing a second
-entry for the supplied argument. Captured template references and supplied
-argument references must retain their separate contexts.
-
-**Proposed representation extension, awaiting review:** use contextual references
-for declared substitutions and deferred member types, generalizing the existing
-`ContextualType` relation endpoints. Compose class/method transfers on these
-references before expanding their inferred shapes. A nominal member projection
-must explicitly leave its declaring class's scope; arguments supplied outside
-that scope must retain their corresponding entry. A compound result must keep
-the transfers needed by its deferred components. Apply the same reference
-transport in input and output constraints, including callback arguments.
-
-The extension must reuse original source references, canonical binder instances,
-and existing mark normalization. Each transported endpoint must contain a
-normalized path rather than a list of transport operations or nested wrappers.
-Repeated transport of a recursive interface must return the same endpoint key.
-This preserves the existing finite-source/finite-instance argument only if mark
-paths obey the no-repeated-boundary invariant and regular type bindings remain
-bounded; neither condition may be assumed merely because the two examples pass.
-Tests must also retain independent receivers/callers, imported-graph isolation,
-recursive aliases, and the input obligations of supplied callback types.
+The finite-source/finite-instance argument still requires bounded mark paths and
+regular type environments. Interning normalized endpoints prevents transport
+wrapper histories from growing; it does not prove those two separate bounds or
+justify truncating paths when an invariant fails.
 
 ### Regular structural types
 
@@ -1119,15 +1126,16 @@ for it. `TypeRelationTest` checks reuse across repeated observations, empty host
 waiting for evidence, cyclic constraints with stable listener counts, and private
 bounds in separate importers sharing the same source identity. This bounds hole
 allocation and replay; it does not establish the missing context precision for
-recursive holes or alias-body omissions noted above.
+alias-body omissions noted above. The recursive omitted-array regression now
+preserves independent caller contexts.
 
 During implementation, assert that a call instance's origin is an original binder,
 all of one scheme's binders are allocated before its constraints are activated,
 views are composed rather than nested, and generic checking witnesses never become
 ordinary instantiated lower bounds. Retain consumer-private host copies and the
-existing prohibition on changing completed member targets. The design review does
-not license changing mark normalization if these checks fail; any such change
-requires a separate concrete example and proposal.
+existing prohibition on changing completed member targets. The contextual-reference round-trip rule above does not license changing ordinary
+value-flow mark normalization if these checks fail. Any further change requires a
+separate concrete example and proposal.
 
 ## Acceptance checks
 

@@ -130,10 +130,9 @@ let methods = new GenericLibrary.Methods
 
 // FIXME: A callback reading a constructor field in a module initializer still
 // crosses incompatible lexical capture paths, before any consumer imports it.
-:fixme
 :expect [5]
 module Local with
   class Known(val known: Int)
   val mapped = [Known(4)].map((item, ...) => Known(item.known + 1))
 Local.mapped.map((item, ...) => item.known)
-//│ /!!!\ Uncaught error: java.lang.AssertionError: assertion failed: Entry and exit cross different lexical resolution scopes: term:Local⁰/mapped⁰ vs term:Array⁰/map⁰ for InstanceShape(member:Int⁰^class:Known⁰)
+//│ = [5]
