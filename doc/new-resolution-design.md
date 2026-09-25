@@ -71,8 +71,10 @@ nominal parameters, such as `Foo[A]` containing a `Box[A]`. Generic methods use
 the same flow as free functions, including callback-result inference and curried
 signatures. Declared callable shapes retain their type parameters. Functions and
 constructors allocate explicit binders once per original definition and syntactic
-term application. Stored specializations and unapplied `new` retain supplied type
-references until that application; subsequent curried lists retain its instance map.
+term application in the current implementation. This delays explicit specialization
+and by-name invocation too far: the [instantiation-site rules](new-resolution-type-value-flow.md#finite-call-site-instantiation-and-marks)
+require those operations to own their groups immediately and later applications
+to reuse them. Subsequent curried lists retain the selected instance map.
 
 Nominal argument comparisons retain directed `ContextualType` endpoint pairs.
 Invariant arguments install both directions, rather than copying expanded
@@ -112,9 +114,11 @@ written binders. `newres/InferenceHoles.mls` also retains unresolved cases for
 recursive holes and omissions shared through an alias body. No hole creates a
 call-site parameter instance.
 
-Standalone specializations of inferred functions retain their supplied types in
-`SpecializedShape` until application. Each application binds its own memoized
-parameter instances; the original generic binder remains unchanged. Argument
+Standalone specializations of inferred functions currently retain supplied types
+in `SpecializedShape` until application, which then binds its own parameter
+instances. This must change: the specialization owns the group and consumes that
+scheme; subsequent uses retain it. By-name functions and methods likewise
+instantiate at their implicit invocation before their result is observed. Argument
 arity is checked even for unused specializations. `newres/StoredSpecializations.mls`
 covers stored aliases, inferred record results, and curried calls. It also records
 the remaining gap in observing an inferred specialized result during callback

@@ -1,0 +1,69 @@
+:.
+
+// A by-name invocation allocates storage before the returned closure is called.
+// Later calls through one stored result share that storage and its type instance.
+:expect [1, 2]
+private fun make[A] =
+  let cells = mut []
+  (value: A) =>
+    cells.push(value)
+    cells.length
+private val shared = make
+[shared(1), shared(2)]
+//│ = [1, 2]
+//│ shared = fun
+
+// Distinct by-name invocation sites create distinct storage, even in one class.
+:expect [1, 1, 2]
+class Factory with
+  fun make[A] =
+    let cells = mut []
+    (value: A) =>
+      cells.push(value)
+      cells.length
+private val factory = new Factory
+private val left = factory.make
+private val right = factory.make
+[left(1), right(2), left(3)]
+//│ = [1, 1, 2]
+//│ factory = Factory
+//│ left = fun
+//│ right = fun
+
+// One stored result cannot acquire independent element types on its later calls.
+// The second invocation returns the first inserted value, which has no .second.
+:ge
+class First(val first: Int)
+class Second(val second: Int)
+private fun make[A] =
+  let cells = mut []
+  (value: A) =>
+    cells.push(value)
+    cells.0
+private val shared = make
+shared(First(1))
+shared(Second(2)).second
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.45: 	shared(Second(2)).second
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Instance of class 'First' does not contain member 'second'
+//│ ║  l.44: 	shared(First(1))
+//│ ╙──      	       ^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ shared = fun
+
+// An annotated result must not re-generalize the by-name definition's binder.
+// Both calls use one allocated array; the result of the second is still First.
+:breakme
+:e
+class First(val first: Int)
+class Second(val second: Int)
+private fun make[A]: A -> A =
+  let cells = mut []
+  (value: A) =>
+    cells.push(value)
+    cells.0
+private val shared = make
+shared(First(3))
+shared(Second(4)).second
+//│ shared = fun

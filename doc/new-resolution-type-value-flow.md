@@ -13,8 +13,10 @@ The following semantic decisions are settled:
 - Wrap instance values, retaining references to their annotated types. Supplying
   a type argument affects both its input and output uses; an ordinary value
   argument contributes a lower bound.
-- Instantiate explicit binders once per original definition and syntactic term
-  application. Reuse those symbols during recursion and retain marks to separate
+- Instantiate explicit binders once per original definition and authoritative
+  instantiation site: an explicit term-level type application, an implicit
+  by-name invocation, or otherwise the first term application. Retain that group
+  on the resulting value. Reuse it during recursion and use marks to distinguish
   enclosing activations of the same site.
 - Infer every missing signature part through ordinary marked flow, including
   holes within annotations and omitted generic arguments. These positions do not
@@ -28,14 +30,15 @@ The following semantic decisions are settled:
   marks. Tracking positions and lengths is outside this design.
 
 The implementation plan is in [constraint propagation and implementation
-order](#constraint-propagation-and-implementation-order). Two representation
-proposals still require review: [supplied type references in deferred
-views](#partial-application-and-explicit-specialization), and [the distinction
-between type-reference operations and value-scope crossings](#type-reference-scope-audit-proposal-requiring-review).
-They must preserve caller and receiver contexts without recursively growing
-binding environments. The variance substitution rules below are implemented for
-declared type views; integrating supplied references into deferred value views
-remains separate work.
+order](#constraint-propagation-and-implementation-order). Correcting
+[instantiation sites](#partial-application-and-explicit-specialization) takes
+precedence over extending deferred value views to arbitrary supplied-type
+references: an explicit type application already provides a site and parameter
+instances for those views. The [distinction between type-reference operations and
+value-scope crossings](#type-reference-scope-audit-proposal-requiring-review)
+remains a proposal requiring review. Recursive reference graphs must preserve
+caller and receiver contexts without growing binding environments. The variance
+substitution rules below are implemented for declared type views.
 
 The finite call-site symbol bound alone is not a termination proof for the whole
 resolver. Recursive alias regressions currently overflow, and the [fixed-point
@@ -45,7 +48,9 @@ conditions](#fixed-points-and-implementation-checks) remain completion gates.
 
 Instance wrappers and preservation of quantified signature binders and bounds
 are implemented. Explicit type application also observes annotated polymorphic
-values. Calls through complete callable signatures use the bounded binder-instance
+values. The implementation still delays explicit specialization until a term
+application and can preserve a by-name definition's binders on its result; both
+must be corrected to follow the instantiation-site rules below. Calls through complete callable signatures use the bounded binder-instance
 cache. `DeclaredType.instances` carries a flat substitution through their declared
 components; curried tails retain it, and independently quantified returned callables
 instantiate their own binders. Stored specializations of complete signatures and
@@ -105,16 +110,34 @@ are one application of the rules.
 ## Finite call-site instantiation and marks
 
 **Instantiate each definition's explicitly declared type parameters once per
-syntactic call site.** This includes binders in inline annotations and separate
-type signatures, whether the call supplies type arguments or infers them. A call
-`f(x)` therefore instantiates a declared `f[A]` just as `f[Int](x)` does.
+syntactic instantiation site.** This includes binders in inline annotations and
+separate signatures. A site need not contain a term argument list:
+
+| Operation on an uninstantiated scheme | Authoritative site |
+| --- | --- |
+| Explicit type application `f[T]` | That type application |
+| By-name invocation `make` or `obj.make` | That reference or selection, unless its enclosing type application supplies arguments |
+| Ordinary function application `f(x)` | The first term application |
+| Constructor application | Its type application if explicit; otherwise its first term application, or saturated zero-list `new` |
+
+This table concerns term-level instantiation. A type expression such as `Array[Int]`
+inside an annotation does not invoke a computation or allocate a call-site group.
+A reference to an ordinary function with parameter lists, such as `let g = f`,
+does not invoke that function and may retain its uninstantiated scheme.
 
 Memoize a complete group of parameter symbols using this key:
 
 ```text
-(original definition, syntactic application site)
+(original definition, authoritative syntactic instantiation site)
     -> {original parameter -> instantiated parameter}
 ```
+
+After instantiation, carry the group on the resulting value. Neither passing that
+value through an alias nor supplying later term arguments instantiates the same
+scheme again. In `f[T](x)`, the type application owns the group; in `make[T]`, do
+not instantiate once at the reference and again at the type application. A
+separately quantified result scheme is a different scheme, not a reappearance of
+the definition's consumed binders.
 
 Different sites receive different symbols. Revisiting the same definition at the
 same site reuses its group, including during recursion. The key must not contain
@@ -142,7 +165,7 @@ This follows the finite-allocation idea in §3 of
 [Tate's type-outference paper](https://rosstate.org/publications/outference/outference-tate-oopsla25.pdf):
 label listeners introduce signature unknowns once per invocation site and nominal
 label, reusing them as bounds arrive rather than expanding every concrete type.
-Here the proposed key uses the original definition and application site. The
+Here the key uses the original definition and authoritative instantiation site. The
 paper's formal calculus has monomorphic methods; its termination result does not
 directly establish termination for our generic functions and marks.
 
@@ -330,8 +353,8 @@ An application must not overwrite both endpoints with the callee substitution.
 
 ### Definition and application identities
 
-Use the stable `Term.App.resSym` as application identity, rather than taking a
-site from the callee's marks. Marks can identify a function reference shared by
+For an ordinary implicit instantiation, use the stable `Term.App.resSym` as
+application identity, rather than taking a site from the callee's marks. Marks can identify a function reference shared by
 several applications:
 
 ```mlscript
@@ -344,8 +367,16 @@ These applications need distinct parameter instances. The two-array regression
 following the recursive `append` block in `newres/MutableArrays.mls` checks this
 case with different element interfaces.
 
-For construction, use `Term.New.resSym` and canonicalize the constructor and
-class to the same original owner. For an anonymous polymorphic annotation, the
+An explicit term-level `Term.TyApp` needs its own stable site identity, memoized
+by the original syntax node, never allocated afresh during observation. By-name
+invocations use the source reference/selection's site. Resolving an explicit
+application must choose that site before interpreting an underlying by-name
+reference, so its implicit invocation cannot allocate a competing group.
+
+For construction without explicit type arguments, use `Term.New.resSym` when it
+consumes arguments or saturates a zero-list class; an unapplied constructor uses
+its later first application. Canonicalize the constructor and class to the same
+original owner. For an anonymous polymorphic annotation, the
 owner is its original quantified declaration node. An overload resolving to more
 than one definition instantiates each original definition at that site. Where
 the language implicitly invokes a getter, its source reference/selection is the
@@ -621,37 +652,66 @@ Preserve the existing member-target completion checks for imported code as well.
 
 ### Partial application and explicit specialization
 
-For curried calls, instantiate when the first parameter
-list is consumed and retain that substitution in the partially applied callable.
-Later lists reuse it. A separately quantified returned callable has its own
-binders to instantiate at its later application. A standalone specialization such
-as `let g = f[Int]` retains its supplied type arguments until application;
-each application of `g` then binds its own site instances to `Int`. This avoids
-introducing a second allocation policy at type-application nodes. Check argument
-arity against the retained scheme immediately, and allow observations of the
-specialized interface to use its supplied type references before a term call.
+Explicit type application is an instantiation site, even before any term
+arguments are supplied. For `let g = f[Int]`, allocate the definition's group at
+`f[Int]`, attach `Int` to its parameter instance, and retain that map on `g`.
+Later applications of `g` reuse the map. They still have their own value-flow
+marks; sharing the type-parameter group does not make their term arguments or
+results the same runtime value. Check type-argument arity at specialization,
+including when the result is unused.
 
-`SpecializedShape` retains the original inferred function, supplied argument
-references, and captured call-site instances. Application unwraps that recipe,
-allocates or reuses the definition/site binder group, and attaches the supplied
-references before replaying body constraints. It does not publish arguments into
-the original definition's type parameters. `newres/StoredSpecializations.mls`
-checks independent specializations through one stored alias, deferred record
-results, curried calls, and arity errors even when a specialization is unused.
+Without explicit type arguments, a function with parameter lists instantiates
+when its first list is consumed. A curried tail retains that group for later
+lists. By contrast, referencing a by-name function or selecting a by-name method
+already invokes its body, so instantiate before observing its result. For example:
 
-Constructors use the same `instantiateDefinition` operation as inferred functions.
-`ClassReference` retains the selected class, marks, captured binder map, and supplied
-type references through aliases and captures. `new C[T]` with parameter lists still
-to consume retains a `NewShape` recipe; its first later term application owns the
-binder group. A saturated zero-list `new C[T]` owns its group at the `new` site.
-Later argument lists reuse the first group's map. Array spreads observe this
-instantiated element parameter, including bounds inferred from inserted values.
-`newres/ConstructorInstances.mls` checks independent aliases, explicit `new`, curried
-and unapplied constructors, class/method binder separation, and a shared allocation
-inside a generic function. Type application after the first consumed list cannot
-rebind that scheme or turn a constructed object back into its constructor.
+```mlscript
+private fun make[A] =
+  let cells = mut []
+  (value: A) =>
+    cells.push(value)
+    cells.0
+let shared = make
+```
 
-Two constructor-related cases remain failing regressions in that worksheet.
+`shared` closes over one array allocated by the invocation at `make`. Its later
+calls must all use that invocation's instance of `A`. Giving each call to
+`shared` an independent `A` would treat one shared array as unrelated element
+types. Separate expressions `let left = make` and `let right = make` are separate
+invocation sites. `newres/InstantiationSites.mls` checks shared storage, independent
+by-name method invocations, and rejection of an incompatible result selection
+through an inferred closure. Its annotated variant, `make[A]: A -> A`, currently
+accepts `shared(First(3)); shared(Second(4)).second` (written on separate lines in
+the test), although the second call returns the stored `First`. That case is a
+`:breakme` soundness regression: a result annotation must not re-generalize the
+by-name definition's binder. The same rule applies to explicitly specialized
+`make[T]`. Only a separately quantified result scheme retains its own binders,
+subject to ordinary generic-body checking.
+
+The existing `SpecializedShape` delays supplied arguments until a term call and
+`appShape` then allocates a group. Replace that recipe with a value whose scheme
+has already been instantiated at the type application. The same distinction is
+needed for complete callable signatures and inferred bodies: a shape carrying
+captured instances alone must not be mistaken for a consumed scheme, nor may a
+consumed scheme be instantiated again. Preserve the chosen substitution through
+callback checking, tuple/record results, closures, and constructor aliases.
+
+Constructors use the same site policy. `C[T]` and `new C[T]` instantiate at their
+explicit type application, including when term arguments remain to be supplied.
+Without explicit arguments, an unapplied `new C` waits for its first term
+application; a saturated zero-list `new C` invokes construction at the `new` site.
+Later lists and aliases reuse the selected group. Array spreads observe that
+element parameter, including bounds inferred from inserted values.
+
+`newres/StoredSpecializations.mls` covers independent specializations, deferred
+record results, curried calls, and unused arity errors. These behavioral tests
+must keep passing when ownership moves to specialization. The compiler-level
+allocation checks must change too: two explicit specializations allocate two
+groups even when unused; repeated calls through one specialization allocate only
+one group for that scheme. Add corresponding by-name function/method cases and
+verify shared mutation, independently quantified results, and replay under marks.
+
+`newres/ConstructorInstances.mls` still contains two failing regressions.
 Reconstruction with `class Box[T](val item: T) with { fun copy() = new Box[T](item) }`
 must retain the receiver's view of `T` separately from the new constructor's view;
 the first of two distinct receiver calls currently loses its resulting element
@@ -685,19 +745,15 @@ private fun use[B](f: Item -> B): B = f(Item(9))
 use(identity[Item]).value
 ```
 
-The expected result is `9`. Checking the argument against `Item -> B` must observe
-`identity`'s inferred result with `A` referring to the supplied `Item`. Currently,
-the deferred body view can map `A` only to a call-site parameter symbol, and no
-call to `identity` has been observed at this point. Its result therefore fails to
-constrain `B`. Allocating an instance during callback checking or writing `Item`
-into the shared original `A` would violate the design.
+The expected result is `9`. `identity[Item]` itself supplies the authoritative
+instantiation site. Checking it against `Item -> B` can therefore observe the
+inferred result under `A -> A_specialization`, with `Item` already attached to
+that instance. No call of the specialized value needs to have been observed.
 
-The proposed extension, pending review, is to let deferred views also reference
-supplied type-argument nodes. Such references must remain shared graph edges:
-recursively substituting `DeclaredType.bindings` maps into one another would lose
-the finite-domain argument below. The representation must support deferred tuple
-fields and closures as well as this scalar result. This regression remains a
-`:fixme` until that representation and its termination invariant are settled.
+This example does not require deferred views that map binders directly to
+supplied type expressions. Use the existing finite map to parameter instances;
+do not introduce that broader representation solely to repair this regression. Shared reference graphs remain necessary for compound
+arguments and recursive environments, independently of this instantiation fix.
 
 ### Constraint propagation and implementation order
 
@@ -705,7 +761,10 @@ fields and closures as well as this scalar result. This regression remains a
    including links to inferred portions. Distinguish inference holes from
    intentionally abstract types and variance wildcards. Add a
    consumer-owned cache of complete call-site instances, with origin links back
-   to the declared binders. Keep omissions source-owned; do not add mutable caches
+   to the declared binders. Select the authoritative site before observing the
+   value: explicit specialization and by-name invocation consume the definition's
+   scheme, and later applications preserve its group. Fix the annotated by-name
+   shared-storage soundness regression alongside the allocation-count tests. Keep omissions source-owned; do not add mutable caches
    to symbols. Preserve `Forall` binders and their bounds instead of erasing them.
 2. Transport the memoized substitution through callable and result views before
    expanding instance wrappers. Keep the existing marks for value flow and
@@ -790,7 +849,9 @@ must retain its selected definition and interpreted argument references.
 ### Fixed points and implementation checks
 
 There are at most as many allocated parameter instances as the sum of each
-reachable definition's binder count over its syntactic call sites. Source hole
+reachable definition's binder count over its syntactic instantiation sites.
+Explicit type applications and implicit by-name invocation sites are finite source
+occurrences too; observing them repeatedly does not add sites. Source hole
 nodes and written type/term nodes are finite independently of recursive visits.
 View substitutions range over the finite original and instantiated binders in
 lexical scope. With the existing no-repeated-boundary mark invariant, their
@@ -833,16 +894,15 @@ are finitely many endpoint/map/mark combinations, and replay adds no listeners.
 That local bound does not establish the remaining whole-graph alias-environment
 bound, which must also prove that source references cannot proliferate.
 
-Constructor recipes contain source type-argument nodes and flat binder maps,
-not expanded argument candidates. There are finitely many such recipes per source
-`new` expression. Their shape cache may distinguish recipes, but binder allocation
-continues to use only the original class and term application site. Constructor
-argument subscriptions are memoized by recipe and flat instance map before their
-arguments are observed. `TypeInstantiationTest` checks zero allocation for bare
-specialization and unapplied `new`, distinct groups for separate applications,
-reuse across curried tails, and allocation for saturated zero-list construction.
-These checks bound this constructor machinery; they do not establish the remaining
-whole-graph alias bound or repair the contextual failures above.
+Constructor views retain source type-argument nodes and flat binder maps, not
+expanded argument candidates. Binder allocation must use the original class and
+the authoritative instantiation site. Constructor argument subscriptions are
+memoized before observing their arguments. The current `TypeInstantiationTest`
+assertions expecting zero groups for explicit specialization or a fresh group for
+each later call describe the old implementation and must be replaced with the
+site counts above. Reusing groups across curried tails and saturated zero-list
+construction remains required. These local allocation checks do not establish
+the remaining whole-graph alias bound or repair reconstructed receiver contexts.
 
 For omitted arguments, each source type-use/formal-position pair allocates one
 `TypeShape.Hole` host. No recursive traversal or call allocates a parameter symbol
@@ -866,8 +926,11 @@ requires a separate concrete example and proposal.
 - Two calls using different arrays and incompatible element interfaces remain
   independent, including two callers of the recursive example above.
 - A repeated visit to the same definition/site reuses its parameter symbols;
-  two application sites through one alias obtain distinct instances. An inner
-  site shared by different enclosing activations remains distinguished by marks.
+  two applications through an uninstantiated ordinary function alias obtain
+  distinct instances, whereas calls through one explicit specialization reuse
+  its group. By-name references/selections instantiate before exposing their
+  results, without re-generalizing shared mutable state. An inner site shared by
+  different enclosing activations remains distinguished by marks.
 - Inline and separate polymorphic signatures instantiate consistently, with or
   without explicit call-site type arguments. Partial applications retain their
   substitutions and captured outer binders retain their original contexts.
