@@ -785,8 +785,12 @@ class NewResolver:
   private def listenTermViews(term: Term)(listener: Listener)(using NewResolverState): Unit =
     listenTerm(term)(shape => listenInstanceViews(shape)(listener))
 
-  /** Substitution changes a deferred observation, not its source graph. Compound
-    * children inherit the same flat map when they are subsequently observed.
+  /** Apply a value's binder substitution without copying the source inference
+    * graph, allocating parameter instances, or consuming a callable's scheme.
+    * Deferred children inherit the flat map; existing captures take precedence
+    * over incoming entries. Each representation stores the view in its own form
+    * (DeclaredType, aggregate fields, or ContextualShape), preserving outer marks.
+    * Receiver activation is separate and is attached by publishActivated.
     */
   private[semantics] def instantiateShape(value: TermShape, instances: Map[VarSymbol, TypeParameterInstance])(using NewResolverState): TermShape =
     if instances.isEmpty then value else rstate.shapeViews.getOrElseUpdate((value, instances), {
@@ -2156,6 +2160,10 @@ class NewResolver:
         rstate.activatedSymbols.getOrElseUpdate((symbol, rstate.instances), ActivatedSymShape(symbol, rstate.instances))
     if host.currentShapes.add(shape) then host.notifyShapeListeners(shape)
 
+  /** `instances` interprets references in the value; rstate.instances identifies
+    * the receiving body activation. Preserve both: a recursive argument may still
+    * refer to the caller's binder instance when delivered into a callee activation.
+    */
   private def publishViewed(host: ShapeHost, source: Shape,
       instances: Map[VarSymbol, TypeParameterInstance])(using NewResolverState): Unit =
     val shape = source match
@@ -2717,9 +2725,10 @@ class NewResolver:
         if aggregate.currentShapes.add(shape) then aggregate.notifyShapeListeners(shape)
 
   def listen(trm: Term, discardMarks: Bool = false)(receive: ShapeListener[Shape])(using NewResolverState): Unit =
-    // Source listeners process all activations. A deferred observation with a
-    // chosen substitution accepts only compatible activations of that source;
-    // the delivered value still keeps its independent caller-side references.
+    // A request and event are compatible when their activation maps agree on
+    // shared keys; an empty source request accepts all activations. Unwrap the
+    // event and supply that activation to the receiving operation, without
+    // replacing the enclosed value's independent caller-side substitution.
     val requestedInstances = rstate.instances
     def compatible(instances: Map[VarSymbol, TypeParameterInstance]): Bool =
       requestedInstances.forall((parameter, instance) => instances.get(parameter).forall(_ eq instance))

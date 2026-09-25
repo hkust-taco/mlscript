@@ -366,11 +366,16 @@ class SymShape(val sym: BlockMemberSymbol, val resSym: FlowSymbol, val markss: L
   def enter(revMarkss: Ls[Marks])(using TL): TermShape | NoShape = ???
   def enter(marks: Marks)(using TL): TermShape | NoShape = ???
 
-/** Deferred overload selection retains the value's binder substitution. */
+/** The symbolic counterpart of ContextualShape: retain the value's substitution
+  * until overload selection produces a term shape. This does not consume a scheme.
+  */
 final class ContextualSymShape(val source: SymShape, val instances: Map[VarSymbol, TypeParameterInstance])
 extends SymShape(source.sym, source.resSym, source.markss)
 
-/** Symbolic source-flow events carry the same body activation as value events. */
+/** The symbolic counterpart of ActivatedShape. `listen` unwraps this event and
+  * invokes the receiver in `instances`; `source` can independently retain the
+  * value's substitution in a ContextualSymShape.
+  */
 final class ActivatedSymShape(val source: SymShape, val instances: Map[VarSymbol, TypeParameterInstance])
 extends SymShape(source.sym, source.resSym, source.markss)
 
@@ -419,8 +424,15 @@ final case class InstanceShape(tpe: DeclaredType) extends NonAppTermShape:
   protected def getMemberImpl(name: Str)(using NewResolverState): MemberLookup =
     lastWords("Instance member lookup requires interpreting its type first")
 
-/** A deferred value observation shares its source shape and keeps a flat binder
-  * substitution. Members and function bodies are observed in that same view.
+/** A deferred value view: interpret references in the shared `source` using
+  * `instances`, a flat map from original binders to canonical parameter instances.
+  * This does not consume the source's own generic scheme. For example, a returned
+  * inner[B] can capture outer's A while leaving B available for a later call.
+  * `instantiateShape` composes views instead of nesting them; already captured
+  * entries take precedence. Aggregates and declared types can store this view
+  * directly rather than using a ContextualShape wrapper.
+  * Unlike ActivatedShape.instances, this map belongs to the value, not its receiver.
+  * See doc/new-resolution-type-value-flow.md, "Value views, consumed schemes, and activation events".
   */
 final case class ContextualShape(source: NonMarkedShape, instances: Map[VarSymbol, TypeParameterInstance]) extends NonAppTermShape:
   require(!source.isInstanceOf[ContextualShape], "Compose shape views rather than nesting them")
@@ -431,8 +443,13 @@ final case class ContextualShape(source: NonMarkedShape, instances: Map[VarSymbo
   override def getMemberThrough(name: Str, receiver: Marks)(using NewResolverState): MemberLookup =
     source.getMemberThrough(name, receiver).instantiate(instances)
 
-/** A type application has consumed the declaration's scheme. Subsequent term
-  * applications retain this binder group and the supplied caller references.
+/** Explicit type application, such as f[Int], has consumed this declaration's
+  * scheme before any term argument list need be applied. `arguments` retains the
+  * supplied caller type references; `instances` retains the chosen binder group
+  * and lexical captures. `callableParts` tells `appShape` to reuse that group even
+  * through stored aliases, rather than instantiate the declaration again.
+  * A ContextualShape alone does not record scheme consumption. Complete annotated
+  * CallableTypeShape views record consumption by substituting and clearing `scheme`.
   */
 final case class SpecializedShape(declaration: DefnShape, arguments: Ls[DeclaredType],
     instances: Map[VarSymbol, TypeParameterInstance]) extends NonAppTermShape:
@@ -440,9 +457,15 @@ final case class SpecializedShape(declaration: DefnShape, arguments: Ls[Declared
   def toLoc: Opt[Loc] = declaration.toLoc
   protected def getMemberImpl(name: Str)(using NewResolverState): MemberLookup = declaration.getMember(name).instantiate(instances)
 
-/** A source-flow event identifies the activation in which its consumer executes.
-  * The value separately retains the caller's type references; these maps cannot
-  * be merged when a recursive callee rebinds the same source parameter.
+/** An inference-event envelope, not a value interface. `publishActivated` saves
+  * the current body's original-binder-to-instance map; `listen` checks agreement
+  * with the requested activation on shared keys, unwraps `value`, and invokes the
+  * receiver in the combined compatible activation. An empty request accepts all.
+  * The enclosed value separately retains its own substitution: in recursive f[A],
+  * it can refer to the caller's A@p while the receiving body uses A@q. Merging those
+  * maps would rebind the value or execute the operation in the wrong activation.
+  * Despite extending TermShape, this envelope must be unwrapped before lookup.
+  * Neither map changes the ordinary mark algebra used for lexical scope crossings.
   */
 final case class ActivatedShape(value: TermShape, instances: Map[VarSymbol, TypeParameterInstance]) extends NonAppTermShape:
   def describe: Str = value.describe
@@ -479,8 +502,11 @@ final case class DeclaredParams(params: Ls[Opt[DeclaredType]], hasRest: Bool, re
 
 /** Calls through annotations expose only the declared result. Argument shapes
   * constrain type parameters in the interface; they do not recover its implementation.
-  * Named generic declarations retain their parameter symbols so explicit type
-  * applications constrain the same parameters as inferred arguments.
+  * `scheme` retains binders that are still available for instantiation; capture
+  * substitution leaves those binders alone. `instantiateCallable` consumes the
+  * scheme by substituting its references and clearing it, so stored values and
+  * remaining curried lists reuse the chosen instances. This is the annotated
+  * counterpart of SpecializedShape, not an inference-event activation.
   */
 final case class CallableTypeShape(source: Term, paramLists: Ls[DeclaredParams],
     result: Opt[DeclaredType], scheme: Opt[TypeScheme], supplied: Opt[Ls[DeclaredType]],

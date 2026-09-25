@@ -34,7 +34,10 @@ exported mapped arrays and imported generic functions and methods.
 
 [Instance types and parameter constraints](new-resolution-type-value-flow.md)
 specifies instance wrappers, input/output constraints, variance, canonical binder
-instances, shared body views, and partial-signature inference.
+instances, shared body views, and partial-signature inference. Its
+[shape roles](new-resolution-type-value-flow.md#value-views-consumed-schemes-and-activation-events)
+section distinguishes captured value substitutions, consumed callable schemes,
+and inference-event activations, with examples and their representation invariants.
 [Regular structural types](new-resolution-regular-types.md) specifies normalization
 and the conservative recursion restriction. Do not duplicate those algorithms in
 member lookup or value-flow handling.

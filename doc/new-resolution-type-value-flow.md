@@ -170,14 +170,111 @@ to instance-symbol substitutions through deferred tuples, records, callbacks, an
 closures. They do not copy expanded argument candidates into a new body graph.
 Shape substitution is memoized so repeated observations reuse aggregate identities.
 
-`ActivatedShape` records the body activation that produced an event.
-`ContextualShape` carries the value's caller-side view. These substitutions must
-remain separate: recursion can bind the same original parameter differently in
-the callee body and in a captured caller value. Composition keeps a fixed base
-state and flat maps, not a chain of activation environments. Source listeners
-accept all activations; contextual observations accept compatible ones.
-`NewResolverState.withInstances` shares consumer hosts, and `inGraph` preserves
-the incoming activation when invoking an imported listener.
+### Value views, consumed schemes, and activation events
+
+The similarly named forms in
+[`Shape.scala`](../hkmc2/shared/src/main/scala/hkmc2/semantics/Shape.scala)
+answer different questions. A **scheme** is a callable's explicitly quantified
+binders and their bounds. Consuming it chooses the canonical parameter instances
+for an authoritative instantiation site; it does not imply that a term argument
+list has been applied.
+
+| Form | Meaning | How it is consumed |
+| --- | --- | --- |
+| `ContextualShape(source, instances)` | Observe a shared value using these bindings for references inside it. This does not consume the value's own generic scheme. | Member/body observation uses the substitution; `callableParts` extracts it before application. |
+| `SpecializedShape(declaration, arguments, instances)` | This declaration's scheme has already been consumed by explicit type application. Retain its supplied type references and chosen instance group. | `callableParts` reports a consumed scheme, so `appShape` reuses the group. |
+| `ActivatedShape(value, instances)` | Deliver an inference event to operations running in this body activation. The enclosed value retains its own, independent substitution. | `listen` checks compatibility, unwraps the envelope, and invokes the receiver in that activation. |
+
+All three `instances` fields map original binders to `TypeParameterInstance`
+symbols, but the first two describe the value, whereas the third describes the
+receiving operation. `ContextualSymShape` and `ActivatedSymShape` provide the
+corresponding roles while an overload remains a `SymShape`, before selection
+produces a term shape.
+
+For a schematic nested definition:
+
+```text
+outer[A](a: A) defines inner[B](b: B) = (a, b), and returns inner.
+```
+
+The returned `inner` captures an instance of `A`; its own `B` remains quantified.
+A contextual view retains the captured `A` without selecting an instance for `B`.
+Two later calls can instantiate `B` at their respective sites. Treating every
+contextual view as specialized would prevent that instantiation.
+
+Conversely, in `let g = f[Int]`, the type application has already consumed `f`'s
+scheme, even if `g` has not received term arguments. `SpecializedShape` preserves
+that fact for an inferred declaration. Subsequent calls through `g` or its aliases
+reuse the chosen group. Treating this as only a contextual view would let
+`appShape` instantiate the declaration again. A complete annotated
+`CallableTypeShape` records the same transition differently: `instantiateCallable`
+substitutes its parameter/result references and clears `scheme`. Remaining curried
+lists retain those references; a separately quantified result has its own scheme.
+
+The activation envelope is independent of both cases. Suppose a recursive
+`f[A]` passes a value mentioning its caller's `A` into another call of `f`.
+Write `A@p` and `A@q` for the instances chosen at two static sites (these are
+explanatory names, not additional runtime identities). The incoming value must
+still refer to `A@p`, while operations on the callee's shared body run with
+`A -> A@q`. Schematically, delivery can therefore carry:
+
+```text
+ActivatedShape(
+  ContextualShape(value, {A -> A@p}),
+  {A -> A@q})
+```
+
+Replacing either map with the other would confuse the incoming value's type
+references with the callee's parameters. Marks still distinguish lexical
+activations when recursion revisits the same static site; these substitutions do
+not replace, cancel, or otherwise change mark operations.
+
+`publishViewed` first applies the value substitution with `instantiateShape`,
+then `publishActivated` records the current `NewResolverState.instances` on the
+event. `listen` accepts an event when its map and the requested activation agree
+on every shared key; absent keys do not conflict. A source listener with an empty
+requested map therefore accepts all activations. On delivery, the receiver runs
+with the combined compatible activation maps, while the enclosed value keeps its
+own references. `NewResolverState.withInstances` shares consumer hosts, and
+`inGraph` preserves the incoming activation when invoking an imported listener.
+An `ActivatedShape` is thus an event envelope despite extending `TermShape`;
+member lookup on the envelope is invalid and must follow unwrapping.
+
+### Related interfaces and representation invariants
+
+These roles must also be distinguished from interpreting an annotated instance:
+
+| Form | Role |
+| --- | --- |
+| `InstanceShape` | Preserve a `DeclaredType` reference in a value constraint, including its input and output uses. `listenInstanceViews` interprets it when an operation requests an interface. |
+| `NominalInstanceView` | Expose a nominal type's declared members and inherited interface with their argument bindings. |
+| `RecordTypeShape` | Expose a structural annotation's declared fields and their argument bindings. |
+| `CallableTypeShape` | Expose a declared calling interface. `scheme` records whether quantified binders remain available for instantiation. |
+
+`ContextualShape` is the general deferred value view, not a mandatory wrapper
+around every substituted shape. Tuples and records store their substitutions
+directly; `InstanceShape` stores one inside its `DeclaredType`; declared interfaces
+substitute their references. `instantiateShape` centralizes these cases and
+memoizes their results. Applying another substitution composes flat maps rather
+than nesting contextual wrappers. Entries already captured by a value take
+precedence over a later observation's map. For an open `CallableTypeShape`, its
+own quantified binders are excluded from capture substitution.
+
+The semantic requirements are independent value and activation substitutions,
+and an explicit distinction between open and consumed schemes. They do not
+require exactly these three subclasses: a common value-view representation could
+carry scheme status, and an event envelope could live outside `TermShape`. The
+current representation expresses those distinctions through the forms above.
+
+Keeping both maps does not itself introduce a chain of environments. Their keys
+are original binders and their values are canonical instance symbols, not further
+substitutions. `withInstances` reuses a fixed base state; `listen` removes the event
+envelope before handing its value to the operation. For a fixed finite set of
+binders and instantiation sites, there are finitely many such maps and map pairs.
+This is a local bound, not a proof of termination of the entire type graph; see
+[canonical references and termination obligations](#canonical-references-and-termination-obligations).
+
+### Checking witnesses and constraint edges
 
 Generic bodies also receive a checking activation containing `RigidTypeShape`
 witnesses. Those witnesses enforce generic opacity even in private/non-strict
