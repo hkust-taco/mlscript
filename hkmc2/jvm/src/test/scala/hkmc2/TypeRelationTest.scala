@@ -90,6 +90,38 @@ class TypeRelationTest extends AnyFunSuite:
     assert(counts == before)
     assert(h.state.allocatedTypeInstanceCount == 0)
 
+  test("forward type dependencies retain each observer's substitution until the target is known"):
+    val h = new Harness
+    import h.given
+    val (a, at) = h.parameter("A")
+    val first = IntroShape(Term.UnitVal(), N)
+    val second = DynShape()
+    val early = new TypeResolution(Term.UnitVal(), _ => fail("Unexpected type error"))
+    val late = new TypeResolution(Term.UnitVal(), _ => fail("Unexpected type error"))
+    early.publish(TypeShape.Tuple(List(at.resolution, late)))
+    val left = h.resolver.declaredType(early, Map(a -> h.tpe(TypeShape.Inferred(first))))
+    val right = h.resolver.declaredType(early, Map(a -> h.tpe(TypeShape.Inferred(second))))
+    val leftSeen = h.observe(ContextualType(left, Nil))
+    val rightSeen = h.observe(ContextualType(right, Nil))
+    assert(leftSeen.isEmpty && rightSeen.isEmpty)
+    // Closing a recursive dependency must wake both observers without merging
+    // their environments or allocating a parameter for the forward reference.
+    late.publish(TypeShape.Tuple(List(at.resolution, early)))
+    def firstField(values: ArrayBuffer[TermShape]): Set[TermShape] = values.toList match
+      case (tuple: TupleShape) :: Nil => tuple.elements.head match
+        case TupleShape.TypedField(tpe, marks) => h.observe(ContextualType(tpe, marks)).toSet
+        case _ => fail("Expected a declared tuple field")
+      case _ => fail("Expected one declared tuple")
+    assert(firstField(leftSeen) == Set(first))
+    assert(firstField(rightSeen) == Set(second))
+    (1 to 1000).foreach: _ =>
+      h.resolver.constrainTypes(ContextualType(left, Nil), ContextualType(right, Nil))
+    val saturated = (early.inferenceHost.listeners.size, late.inferenceHost.listeners.size)
+    (1 to 1000).foreach: _ =>
+      h.resolver.constrainTypes(ContextualType(left, Nil), ContextualType(right, Nil))
+    assert((early.inferenceHost.listeners.size, late.inferenceHost.listeners.size) == saturated)
+    assert(h.state.allocatedTypeInstanceCount == 0)
+
   test("delayed argument selection fixes one endpoint for both constraint directions"):
     val h = new Harness
     import h.given

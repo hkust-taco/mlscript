@@ -45,8 +45,10 @@ implementation. This restriction and sharing regular recursive references are
 separate obligations; neither follows from the bound on call-site symbols.
 
 The finite call-site symbol bound alone is not a termination proof for the whole
-resolver. Both non-regular expansion and a regular argument-reset alias still
-overflow; class-local aliases expose a receiver-context failure. The [fixed-point conditions](#fixed-points-and-implementation-checks) remain completion gates.
+resolver. Non-regular expansion still overflows; class-local aliases expose a
+receiver-context failure. Dependency-based binding projection now accepts regular
+argument resets, including compound constants and recursively unused arguments.
+The [fixed-point conditions](#fixed-points-and-implementation-checks) remain completion gates.
 
 ## Implementation status
 
@@ -850,8 +852,10 @@ transport, and existing repeated-mark failures in generic array-method paths,
 not just the now-passing regular alias examples.
 
 The expanding alias needs the regularity diagnostic described below. The regular
-argument-reset regression also overflows: fixing mark paths is insufficient while
-`DeclaredType.bindings` retains nested, unused environments.
+argument-reset regressions now pass after projecting `DeclaredType.bindings` onto
+the source type's dependencies. A local nominal annotation whose constructor
+field refers to an enclosing function parameter still exposes the receiver-context
+failure; it has its own regression beside the class-local alias case.
 
 The same graph audit must distinguish an open definition template from an already
 interpreted reference. In `Box[T].copy() = new Box[T](item)`, the source `T` in the
@@ -893,8 +897,8 @@ stop growing is not a decision procedure. Do not impose a depth limit.
 There is also a representation obligation for accepted types. Currently
 `DeclaredType.bindings` is a recursive map of `DeclaredType` values, and the whole
 reference is used as a view-cache key. `declaredType` substitutes a directly bound
-parameter, but retains the environment for a compound expression. Schematically,
-repeatedly binding `A` to the source expression `Array[A]` can build:
+parameter and projects compound references onto their free binders. A genuinely
+expanding dependency, such as repeatedly binding `A` to `Array[A]`, can still build:
 
 ```text
 E0 = {A -> Int}
@@ -905,22 +909,49 @@ E2 = {A -> (Array[A], E1)}
 
 The source expression and binder identities stay fixed while the environments
 grow. Removing synthetic value-scope crossings does not bound these environments.
-There is now a concrete regular counterexample in `TypeGraphTermination.mls`:
+The regular argument-reset regression in `TypeGraphTermination.mls` is:
 
 ```mlscript
 type Reset[A] = {value: A, next: Reset[Int]}
 fun read(chain: Reset[Str]): Int = chain.next.next.value
 ```
 
-The unfolding has only the `Reset[Str]` and `Reset[Int]` interfaces, but compilation
-still overflows. The closed `Int` reference retains the previous binding map,
-allowing semantically unused environments to nest. This case must be accepted;
-a regularity restriction cannot legitimately reject it. Canonical references
-must discard bindings that their source does not depend on, while retaining
-lexical dependencies such as the enclosing `A` in a class-local alias. This must
-also work for forward references: an unresolved dependency must not be mistaken
-for an absent one. Accepted regular types need finite reference keys and shared
-recursive edges, not a fresh nested environment on each visit.
+The unfolding has only the `Reset[Str]` and `Reset[Int]` interfaces. Compilation
+now terminates: the closed `Int` reference has no free binders, so it retains no
+previous binding map. The same holds for a fixed compound argument `Array[Int]`.
+Accepted regular types need finite reference keys and shared recursive edges,
+not a fresh nested environment on each visit.
+
+The implemented dependency analysis operates on source `TypeResolution` nodes.
+An edge forwards the child's free binders, excluding those bound by an alias or
+quantifier. An applied alias forwards an argument's dependencies only when its
+body depends on the corresponding formal. All equations are monotone over the
+finite set of source binders, so iteration reaches a least fixed point. This also
+accepts `Loop[A] = {value: Int, next: Loop[Array[A]]}`: no observable component uses
+`A`, and the cycle alone cannot introduce that dependency. Nominal arguments
+remain relevant regardless of whether the class's members mention them.
+
+Nominal declarations conservatively retain all enclosing explicit type binders.
+Elaboration records this immutable set before elaborating members, including for
+legacy exporters. Consumers read it from the declaring graph. This preserves
+parameters used through nested aliases, member annotations, or inferred member
+types without making dependency analysis wait on member inference. The class's
+own parameters are supplied by its type application, rather than treated as free.
+
+No summary is finalized while a reachable source type lacks a target. Interface
+observation, constraints, and hole exposure wait on shared dependency hosts;
+when the target arrives, each observer projects its own saved environment. There
+is at most one waiting subscription per source/dependency pair. Completed summaries
+are immutable; inference hosts and waiting callbacks use the usual consumer-private
+graph copies. Valid written types have one target, while synthesized argument,
+selection, and inferred-value nodes retain their own references and do not read
+an ambient binding map. The forward-alias worksheet and a graph-level recursive
+tuple test check delayed discovery, independent substitutions, and replay without
+additional listeners or parameter instances.
+
+This bounds dependency analysis and eliminates irrelevant environment growth.
+It does not yet establish the full representation bound for every regular type,
+or diagnose non-regular structural expansion; those remain completion obligations.
 
 Keep structural alias unfolding distinct from inferred constraints at a recursive
 generic function call. The latter reuses a site's parameter symbol and can add an

@@ -169,6 +169,123 @@ class NewResolver:
         registerSignature(rhs)
       case _ => ()
 
+  /** Compute free binders on the finite source graph, not on substituted types.
+    * Each edge can hide binders introduced by an alias or quantifier. Iterating
+    * finite binder sets reaches a fixed point even for mutually recursive types.
+    * An unresolved target is a dependency still to discover, never a closed type.
+    * Valid written types have one target (validation rejects ambiguity). The
+    * synthetic nodes that can receive more candidates use no ambient bindings.
+    */
+  private def typeDependencies(resolution: TypeResolution)(using NewResolverState)
+      : Either[Set[TypeResolution], Set[VarSymbol]] = rstate.typeDependencies.get(resolution) match
+    case S(binders) => R(binders)
+    case N =>
+      val graph = mutable.LinkedHashMap.empty[TypeResolution, (Set[VarSymbol], Ls[(TypeResolution, Set[VarSymbol])])]
+      val argumentUses = mutable.Map.empty[TypeResolution, Ls[(TypeResolution, VarSymbol, TypeResolution)]]
+      val pending = mutable.Set.empty[TypeResolution]
+      def visit(res: TypeResolution): Unit = if !graph.contains(res) then
+        graph(res) = (Set.empty, Nil)
+        rstate.typeDependencies.get(res) match
+          case S(binders) => graph(res) = (binders, Nil)
+          case N =>
+            val shapes = res.currentShapes.toList
+            if shapes.isEmpty then pending += res
+            var direct = Set.empty[VarSymbol]
+            var edges = List.empty[(TypeResolution, Set[VarSymbol])]
+            def edge(child: TypeResolution, hidden: Set[VarSymbol]): Unit =
+              edges ::= child -> hidden
+              visit(child)
+            def child(res: TypeResolution): Unit = edge(res, Set.empty)
+            shapes.foreach:
+              case TypeShape.Parameter(symbol, _) => direct += symbol
+              case TypeShape.Nominal(defn) =>
+                // This immutable declaration metadata belongs to the original
+                // graph, even when the type was reached through an imported AST.
+                direct ++= defn.sym.getState.newResolverState.lexicalTypeBinders.get(defn.sym).getOrElse(
+                  lastWords(s"Nominal declaration ${defn.sym.nme} must record its enclosing type binders"))
+              case TypeShape.Alias(symbol, rhs) =>
+                val bound = symbol.defn.get.tparams.map(_.sym).toSet
+                rhs.foreach(edge(_, bound))
+              case TypeShape.Captured(base, _) => child(base)
+              case TypeShape.Applied(base, args) =>
+                child(base)
+                // An alias argument contributes dependencies only if the body
+                // uses its formal. Solve this with the other equations: a cycle
+                // such as Loop[A] = {next: Loop[Array[A]]} has no use of A.
+                def arguments(base: TypeResolution, seen: Set[TypeResolution]): Unit =
+                  if seen(base) then args.foreach(child) else base.currentShapes.toList match
+                    case TypeShape.Captured(inner, _) :: Nil => arguments(inner, seen + base)
+                    case TypeShape.Alias(symbol, S(rhs)) :: Nil =>
+                      visit(rhs)
+                      val formals = symbol.defn.get.tparams
+                      args.zipWithIndex.foreach: (arg, index) =>
+                        formals.lift(index) match
+                          case S(formal) =>
+                            visit(arg)
+                            argumentUses(res) = (rhs, formal.sym, arg) :: argumentUses.getOrElse(res, Nil)
+                          case N => child(arg)
+                    case _ => args.foreach(child)
+                arguments(base, Set.empty)
+              case TypeShape.Tuple(fields) => fields.foreach(child)
+              case TypeShape.Record(_, fields) => fields.foreach((_, field) => child(field))
+              case TypeShape.Function(params, result) => child(typeResolution(params)); child(result)
+              case TypeShape.Polymorphic(params, _, body) =>
+                val bound = params.map(_.parameter.symbol).toSet
+                params.foreach: param =>
+                  param.lower.foreach(edge(_, bound))
+                  param.upper.foreach(edge(_, bound))
+                edge(body, bound)
+              case TypeShape.Union(left, right) => child(left); child(right)
+              case TypeShape.Intersection(left, right) => child(left); child(right)
+              case TypeShape.Wildcard(input, output) => input.foreach(child); output.foreach(child)
+              // These synthesized nodes retain their own interpreted references
+              // or inference hosts; none reads the surrounding binding map.
+              case TypeShape.Argument(_) | TypeShape.SelectedArgument(_, _) | TypeShape.Inferred(_) |
+                  TypeShape.Hole(_) | TypeShape.Unit | TypeShape.Dynamic | TypeShape.Abstract |
+                  TypeShape.Top | TypeShape.Bottom => ()
+            graph(res) = (direct, edges)
+      visit(resolution)
+      if pending.nonEmpty then L(pending.toSet) else
+        val dependencies = mutable.Map.from(graph.iterator.map((res, node) => res -> node._1))
+        var changed = true
+        while changed do
+          changed = false
+          graph.foreach: (res, node) =>
+            val direct = argumentUses.getOrElse(res, Nil).foldLeft(node._1): (acc, use) =>
+              if dependencies(use._1)(use._2) then acc ++ dependencies(use._3) else acc
+            val next = node._2.foldLeft(direct): (acc, edge) =>
+              acc ++ (dependencies(edge._1) -- edge._2)
+            if next != dependencies(res) then
+              dependencies(res) = next
+              changed = true
+        dependencies.foreach((res, binders) => rstate.typeDependencies(res) = binders)
+        R(dependencies(resolution))
+
+  /** Wait for the source graph before observing a substituted interface. The
+    * retained environment is projected only after every forward dependency has
+    * a target. Subscriptions and completed summaries are shared by source node;
+    * callbacks and their hosts remain private to each consuming inference graph.
+    */
+  private def withCanonicalType(tpe: DeclaredType)(listener: ShapeListener[DeclaredType])(using NewResolverState): Unit =
+    def publish(binders: Set[VarSymbol])(using NewResolverState): Unit =
+      listener(declaredType(tpe.resolution, tpe.bindings.filter((symbol, _) => binders(symbol)), tpe.positive)
+        .instantiate(tpe.instances))
+    typeDependencies(tpe.resolution) match
+      case R(binders) => publish(binders)
+      case L(_) =>
+        rstate.pendingTypeDependencies.get(tpe.resolution) match
+          case S(host) => host.listen(publish)
+          case N =>
+            val host = new TypeDependencyHost
+            rstate.pendingTypeDependencies(tpe.resolution) = host
+            host.listen(publish)
+            def retry()(using NewResolverState): Unit = typeDependencies(tpe.resolution) match
+              case R(binders) => host.publish(binders)
+              case L(pending) => pending.foreach: unresolved =>
+                if rstate.dependencySubscriptions.add((tpe.resolution, unresolved)) then
+                  unresolved.listen(_ => retry())
+            retry()
+
   /** Substitute a bound parameter before storing an argument. Otherwise recursive
     * interfaces such as Tree[A] = Node[A] | Empty would accumulate equivalent
     * A-to-A environments every time a recursive field is selected.
@@ -179,7 +296,11 @@ class NewResolver:
   private def declaredType(resolution: TypeResolution, bindings: Map[VarSymbol, DeclaredType], positive: Bool)
       (using NewResolverState): DeclaredType = resolution.currentShapes.toList match
     case TypeShape.Parameter(symbol, _) :: Nil if bindings.contains(symbol) => selectArgument(bindings(symbol), positive)
-    case _ => DeclaredType(resolution, bindings, Map.empty, positive)
+    case _ =>
+      val relevant = if bindings.isEmpty then bindings else typeDependencies(resolution) match
+        case R(binders) => bindings.filter((symbol, _) => binders(symbol))
+        case L(_) => bindings
+      DeclaredType(resolution, relevant, Map.empty, positive)
 
   private def declaredType(resolution: TypeResolution, context: DeclaredType)(using NewResolverState): DeclaredType =
     declaredType(resolution, context.bindings, context.positive).instantiate(context.instances)
@@ -351,7 +472,7 @@ class NewResolver:
           follow(declaredType(left, current), Nil, captures, next)
           follow(declaredType(right, current), Nil, captures, next)
         case _ => ()
-    follow(tpe, Nil, Nil, Set.empty)
+    withCanonicalType(tpe)(follow(_, Nil, Nil, Set.empty))
 
   private def abstractTypes(using rs: NewResolverState) = rs.abstractTypes
   // Narrowing a nominal receiver by projection does not infer the narrower
@@ -547,7 +668,7 @@ class NewResolver:
               case TypeShape.Union(left, right) => next(left); next(right)
               case TypeShape.Intersection(left, right) => next(left); next(right)
               case TypeShape.Unit | TypeShape.Abstract => publish(OpaqueTypeShape(tpe.resolution.source))
-        follow(tpe, Nil, Set.empty, host.publish)
+        withCanonicalType(tpe)(follow(_, Nil, Set.empty, host.publish))
 
   // A separate full signature also annotates the implementation's parameters.
   // Register these before its body is elaborated, so observed calls can never
@@ -843,7 +964,7 @@ class NewResolver:
           case _ => ()
     // Alias expansion guards only unproductive cycles. Descending into a tuple,
     // nominal argument, or arrow installs another edge with its own cycle guard.
-    follow(tpe, Nil, Nil, Set.empty)
+    withCanonicalType(tpe)(follow(_, Nil, Nil, Set.empty))
 
   /** Structural constraints follow declared fields only. This supplies generic
     * argument inference and callback checking without refining the annotation

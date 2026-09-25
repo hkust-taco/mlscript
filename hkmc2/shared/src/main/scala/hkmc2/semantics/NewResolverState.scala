@@ -206,6 +206,16 @@ final class NewResolverState private (
     new Cache(inherited.map(_.defnShapes), identity)
   val typeInterpretations: Cache[Identity[Term], TypeResolution] =
     new Cache(inherited.map(_.typeInterpretations), identity)
+  // Recorded before elaborating a declaration's members, including in legacy
+  // exporters. Nominal interfaces may use any enclosing explicit type binder.
+  val lexicalTypeBinders: Cache[AnyDefinitionSymbol, Set[VarSymbol]] =
+    new Cache(inherited.map(_.lexicalTypeBinders), identity)
+  val typeDependencies: Cache[TypeResolution, Set[VarSymbol]] =
+    new Cache(inherited.map(_.typeDependencies), identity)
+  val pendingTypeDependencies: Cache[TypeResolution, TypeDependencyHost] =
+    new Cache(inherited.map(_.pendingTypeDependencies), identity)
+  val dependencySubscriptions: Seen[(TypeResolution, TypeResolution)] =
+    new Seen(inherited.map(_.dependencySubscriptions))
   val quantifiedTypes: Cache[(TypeResolution, Ls[VarSymbol]), TypeResolution] =
     new Cache(inherited.map(_.quantifiedTypes), identity)
   val instantiatedCallables: Cache[(CallableTypeShape, FlowSymbol, Ls[Marks]), CallableTypeShape] =
@@ -316,4 +326,11 @@ private[semantics] final class TermShapeHost extends Host[TermShape]:
   def publish(shape: TermShape)(using NewResolverState): Unit =
     if currentShapes.add(shape) then notifyShapeListeners(shape)
   def listen(listener: NewResolverState.Listener)(using NewResolverState): Unit =
+    subscribeToShapes(listener)
+
+private[semantics] final class TypeDependencyHost extends Host[Set[VarSymbol]]:
+  def showDbg(using DebugPrinter): Str = "type dependencies"
+  def publish(binders: Set[VarSymbol])(using NewResolverState): Unit =
+    if currentShapes.add(binders) then notifyShapeListeners(binders)
+  def listen(listener: ShapeListener[Set[VarSymbol]])(using NewResolverState): Unit =
     subscribeToShapes(listener)

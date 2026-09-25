@@ -116,6 +116,13 @@ object Elaborator:
     override def toString: Str = s"${parent.fold("")(_.toString+"/")}${outer.showDbg}"
     
     lazy val scope: SrcScope = SrcScope(outer, parent.map(_.scope))
+
+    /** A nominal member can refer to enclosing binders even when its own
+      * signature does not mention them, for example through a local type alias.
+      */
+    lazy val typeBinders: Set[VarSymbol] = parent.fold(Set.empty[VarSymbol])(_.typeBinders) ++
+      env.valuesIterator.flatMap(_.symbol).collect:
+        case symbol: VarSymbol if symbol.decl.exists(_.isInstanceOf[TyParam]) => symbol
     
     def +(local: Str -> Symbol): Ctx =
       copy(env = env + local.mapSecond(Ctx.RefElem(_)))
@@ -2279,6 +2286,7 @@ extends Importer:
         val sym = members.getOrElse(nme.name, lastWords(s"Symbol not found: ${nme.name}"))
         
         val outerCtx = ctx
+        rstate.lexicalTypeBinders(td.symbol) = ctx.typeBinders
         
         var newCtx = S(td.symbol).collectFirst:
             case s: InnerSymbol => s

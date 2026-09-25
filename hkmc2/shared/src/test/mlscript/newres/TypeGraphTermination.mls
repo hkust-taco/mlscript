@@ -60,7 +60,37 @@ class Box[A](val value: A) with
 
 // Resetting an argument to a closed type has a finite structural unfolding.
 // The environment retained on Int must not nest the previous alias binding.
-:fixme
 type Reset[A] = {value: A, next: Reset[Int]}
 fun read(chain: Reset[Str]): Int = chain.next.next.value
-//│ /!!!\ Uncaught error: java.lang.StackOverflowError
+
+// A fixed compound argument is also independent of the previous alias binding.
+type Reset[A] = {value: A, next: Reset[Array[Int]]}
+fun read(chain: Reset[Str]): Array[Int] = chain.next.next.value
+
+// An unused argument cannot make a structurally constant recursive type grow.
+type Loop[A] = {value: Int, next: Loop[Array[A]]}
+fun read(chain: Loop[Str]): Int = chain.next.next.value
+
+// Forward aliases must retain an enclosing binder even before the target is known.
+:expect [5, 6]
+class First(val first: Int)
+class Second(val second: Int)
+private fun delayed[A](value: A) =
+  type Early = Later
+  let wrapped = ({item: value} as Early)
+  type Later = {item: A}
+  wrapped.item
+[delayed[First](First(5)).first, delayed[Second](Second(6)).second]
+//│ = [5, 6]
+
+// A nominal annotation must retain outer binders used only by its members.
+:fixme
+:expect [7, 8]
+class First(val first: Int)
+class Second(val second: Int)
+private fun local[A](value: A) =
+  class Local(val item: A)
+  let box = (new Local(value) as Local)
+  box.item
+[local[First](First(7)).first, local[Second](Second(8)).second]
+//│ /!!!\ Uncaught error: java.lang.AssertionError: assertion failed: Entry and exit cross different lexical resolution scopes: class:Local⁰ vs term:local⁰ for NominalInstanceView(class:First⁰)
