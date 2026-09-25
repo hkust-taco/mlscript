@@ -29,6 +29,7 @@ abstract class CodeBuilder:
 
 class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
   import JSBuilder.*
+  private given PostCondAnalysis = new PostCondAnalysis
   
   def checkMLsCalls: Bool = false
   def checkSelections: Bool = false
