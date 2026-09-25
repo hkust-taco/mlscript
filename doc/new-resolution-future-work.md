@@ -1,9 +1,39 @@
 # Deferred resolution design work
 
-These improvements are deferred, not completion blockers for the current
-implementation batch. They require design review before implementation. Current
-contracts are in [instance types and parameter constraints](new-resolution-type-value-flow.md);
+This reference records confirmed implementation gaps and deferred design work.
+Current contracts are in [instance types and parameter constraints](new-resolution-type-value-flow.md);
 remaining suite ports are in the [migration worklist](new-resolution-suite-migration.md).
+
+## Upper-bound interfaces
+
+This interface and checking-witness redesign is deferred future work.
+
+Instantiation installs `lower <: instance <: upper` with the complete binder
+substitution, after recording explicit arguments. This covers callables and by-name
+invocations; captured enclosing binders also specialize the bounds. Lower bounds
+contribute inference candidates, and upper relations propagate obligations through
+later candidates. Dependent and recursive bounds share the existing relation graph.
+
+Checking and observation gaps remain. An otherwise unconstrained result of
+`[A extends Item] -> () -> A` does not expose `Item`'s members. A separately signed
+implementation of `[A extends Item] -> A -> Int` cannot use that guaranteed
+interface either. Installing an upper constraint does not give the parameter's
+candidate host an observable shape. A recursive by-name getter with a lower bound
+on a class parameter can also leak that parameter's abstract checking candidate
+through inferred body constraints into a declared receiver. The same declared
+receiver works when the body contributes no recursive checking edge.
+
+Do not fix this by publishing the upper bound as an additional lower candidate.
+For `[A extends Base] -> A -> A`, inference from a `Child` input must still permit
+`Child`-only operations on the result; a second `Base` candidate would incorrectly
+forbid them. Conversely, a generic implementation must work for every permitted
+`A`, and cannot use a lower bound's members as its checking interface.
+
+A design must distinguish a parameter's inferred candidates, its guaranteed upper
+interface, and its rigid checking witness. It must specify how observation uses
+those guarantees with delayed bounds and explicit arguments, without mixing the
+checking witness into a real call or losing scope marks. Regression and precision
+controls: `newres/QuantifiedBounds.mls`.
 
 ## Receiver reconstruction
 
@@ -95,9 +125,10 @@ conservative implementation.
 
 ## Whole-graph convergence audit
 
-Finite binder allocation, source dependency analysis, and relation replay have
-local bounds. A complete argument must also bound accepted contextual reference
-keys, nested environments, and formula atoms, then establish listener convergence.
+Binder allocation for fixed definition/site keys, source dependency analysis,
+and relation replay have local bounds. A complete argument must also bound the
+sites themselves, accepted contextual reference keys, nested environments, and
+formula atoms, then establish listener convergence.
 Retain marked parameter references and shared recursive edges; do not expand live
 bounds into fresh type trees. Test delayed delivery, mutually recursive calls,
 changing compound arguments, and independent consumers at the graph level.

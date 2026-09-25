@@ -1,0 +1,359 @@
+:.
+
+// An ordinary forwarding alias preserves the declared interface.
+:expect 1
+class Item(val value: Int)
+type Choice[A] = A
+private fun read(x: Choice[Item]) = x.value
+read(Item(1))
+//│ = 1
+
+// Reject the definition itself, even when no value observes its interface.
+:e
+type Loop = Loop
+//│ ╔══[COMPILATION ERROR] Resolution error in member reference
+//│ ║  l.13: 	type Loop = Loop
+//│ ║        	            ^^^^
+//│ ╟── Unguarded recursive type alias 'Loop'.
+//│ ║  l.13: 	type Loop = Loop
+//│ ║        	            ^^^^
+//│ ╟── Recursive references must pass through a record, tuple, function, or nominal type.
+//│ ║  l.13: 	type Loop = Loop
+//│ ╙──      	     ^^^^
+
+:e
+type Choice[A] = A | Choice[A]
+//│ ╔══[COMPILATION ERROR] Resolution error in alternation
+//│ ║  l.25: 	type Choice[A] = A | Choice[A]
+//│ ║        	                 ^^^^^^^^^^^^^
+//│ ╟── Unguarded recursive type alias 'Choice'.
+//│ ║  l.25: 	type Choice[A] = A | Choice[A]
+//│ ║        	                     ^^^^^^
+//│ ╟── Recursive references must pass through a record, tuple, function, or nominal type.
+//│ ║  l.25: 	type Choice[A] = A | Choice[A]
+//│ ╙──      	     ^^^^^^
+
+:e
+type Choice[A] = A & Choice[A]
+//│ ╔══[COMPILATION ERROR] Resolution error in composition
+//│ ║  l.37: 	type Choice[A] = A & Choice[A]
+//│ ║        	                 ^^^^^^^^^^^^^
+//│ ╟── Unguarded recursive type alias 'Choice'.
+//│ ║  l.37: 	type Choice[A] = A & Choice[A]
+//│ ║        	                     ^^^^^^
+//│ ╟── Recursive references must pass through a record, tuple, function, or nominal type.
+//│ ║  l.37: 	type Choice[A] = A & Choice[A]
+//│ ╙──      	     ^^^^^^
+
+// Mutual recursion may cross several transparent aliases before cycling.
+:e
+type First = Second
+type Second = Third
+type Third = First
+//│ ╔══[COMPILATION ERROR] Resolution error in member reference
+//│ ║  l.51: 	type Second = Third
+//│ ║        	              ^^^^^
+//│ ╟── Unguarded recursive type alias 'Second'.
+//│ ║  l.50: 	type First = Second
+//│ ║        	             ^^^^^^
+//│ ╟── Recursive references must pass through a record, tuple, function, or nominal type.
+//│ ║  l.51: 	type Second = Third
+//│ ╙──      	     ^^^^^^
+//│ ╔══[COMPILATION ERROR] Resolution error in member reference
+//│ ║  l.52: 	type Third = First
+//│ ║        	             ^^^^^
+//│ ╟── Unguarded recursive type alias 'Third'.
+//│ ║  l.51: 	type Second = Third
+//│ ║        	              ^^^^^
+//│ ╟── Recursive references must pass through a record, tuple, function, or nominal type.
+//│ ║  l.52: 	type Third = First
+//│ ╙──      	     ^^^^^
+//│ ╔══[COMPILATION ERROR] Resolution error in member reference
+//│ ║  l.50: 	type First = Second
+//│ ║        	             ^^^^^^
+//│ ╟── Unguarded recursive type alias 'First'.
+//│ ║  l.52: 	type Third = First
+//│ ║        	             ^^^^^
+//│ ╟── Recursive references must pass through a record, tuple, function, or nominal type.
+//│ ║  l.50: 	type First = Second
+//│ ╙──      	     ^^^^^
+
+// A guarded branch does not guard a separate recursive alternative.
+:e
+type Mixed = ({next: Mixed} | Mixed)
+//│ ╔══[COMPILATION ERROR] Resolution error in alternation
+//│ ║  l.83: 	type Mixed = ({next: Mixed} | Mixed)
+//│ ║        	               ^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Unguarded recursive type alias 'Mixed'.
+//│ ║  l.83: 	type Mixed = ({next: Mixed} | Mixed)
+//│ ║        	                              ^^^^^
+//│ ╟── Recursive references must pass through a record, tuple, function, or nominal type.
+//│ ║  l.83: 	type Mixed = ({next: Mixed} | Mixed)
+//│ ╙──      	     ^^^^^
+
+// Boolean absorption must not conceal a written unguarded cycle.
+:e
+type Hidden[A] = A | (A & Hidden[A])
+//│ ╔══[COMPILATION ERROR] Resolution error in alternation
+//│ ║  l.96: 	type Hidden[A] = A | (A & Hidden[A])
+//│ ║        	                 ^^^^^^^^^^^^^^^^^^
+//│ ╟── Unguarded recursive type alias 'Hidden'.
+//│ ║  l.96: 	type Hidden[A] = A | (A & Hidden[A])
+//│ ║        	                          ^^^^^^
+//│ ╟── Recursive references must pass through a record, tuple, function, or nominal type.
+//│ ║  l.96: 	type Hidden[A] = A | (A & Hidden[A])
+//│ ╙──      	     ^^^^^^
+
+// An enclosing constructor does not make an invalid alias definition valid.
+:e
+type Wrapper = {value: Loop}
+type Loop = Loop
+//│ ╔══[COMPILATION ERROR] Resolution error in member reference
+//│ ║  l.110: 	type Loop = Loop
+//│ ║         	            ^^^^
+//│ ╟── Unguarded recursive type alias 'Loop'.
+//│ ║  l.110: 	type Loop = Loop
+//│ ║         	            ^^^^
+//│ ╟── Recursive references must pass through a record, tuple, function, or nominal type.
+//│ ║  l.110: 	type Loop = Loop
+//│ ╙──       	     ^^^^
+
+// Forwarding formals and captures remain transparent to the guardedness check.
+:e
+type Identity[A] = A
+type Loop = Identity[Loop]
+//│ ╔══[COMPILATION ERROR] Resolution error in type application
+//│ ║  l.124: 	type Loop = Identity[Loop]
+//│ ║         	            ^^^^^^^^^^^^^^
+//│ ╟── Unguarded recursive type alias 'Loop'.
+//│ ║  l.124: 	type Loop = Identity[Loop]
+//│ ║         	                     ^^^^
+//│ ╟── Recursive references must pass through a record, tuple, function, or nominal type.
+//│ ║  l.124: 	type Loop = Identity[Loop]
+//│ ╙──       	     ^^^^
+
+:e
+private fun local() =
+  type Identity[A] = A
+  type Loop = Identity[Loop]
+  ()
+//│ ╔══[COMPILATION ERROR] Resolution error in type application
+//│ ║  l.138: 	  type Loop = Identity[Loop]
+//│ ║         	              ^^^^^^^^^^^^^^
+//│ ╟── Unguarded recursive type alias 'Loop'.
+//│ ║  l.138: 	  type Loop = Identity[Loop]
+//│ ║         	                       ^^^^
+//│ ╟── Recursive references must pass through a record, tuple, function, or nominal type.
+//│ ║  l.138: 	  type Loop = Identity[Loop]
+//│ ╙──       	       ^^^^
+
+// A forward reference must resolve before formal-use summaries are finalized.
+:e
+type Loop = Forward[Loop]
+type Forward[A] = Identity[A]
+type Identity[A] = A
+//│ ╔══[COMPILATION ERROR] Resolution error in type application
+//│ ║  l.152: 	type Loop = Forward[Loop]
+//│ ║         	            ^^^^^^^^^^^^^
+//│ ╟── Unguarded recursive type alias 'Loop'.
+//│ ║  l.152: 	type Loop = Forward[Loop]
+//│ ║         	                    ^^^^
+//│ ╟── Recursive references must pass through a record, tuple, function, or nominal type.
+//│ ║  l.152: 	type Loop = Forward[Loop]
+//│ ╙──       	     ^^^^
+
+// Growing arguments do not guard a recursive alias application.
+:e
+type Loop[A] = Loop[Array[A]]
+//│ ╔══[COMPILATION ERROR] Resolution error in type application
+//│ ║  l.167: 	type Loop[A] = Loop[Array[A]]
+//│ ║         	               ^^^^^^^^^^^^^^
+//│ ╟── Unguarded recursive type alias 'Loop'.
+//│ ║  l.167: 	type Loop[A] = Loop[Array[A]]
+//│ ║         	               ^^^^
+//│ ╟── Recursive references must pass through a record, tuple, function, or nominal type.
+//│ ║  l.167: 	type Loop[A] = Loop[Array[A]]
+//│ ╙──       	     ^^^^
+
+// Guards may appear in a wrapper alias, including one declared later.
+type Loop = Wrap[Loop]
+type Wrap[A] = {next: A}
+private fun walk(x: Loop) = x.next.next
+
+type Wrap[A] = [A]
+type Loop = Wrap[Loop]
+private fun walk(x: Loop) = x.0.0
+
+type Wrap[A] = () -> A
+type Loop = Wrap[Loop]
+private fun walk(x: Loop) = x()()
+
+class Box[A](val value: A)
+type Loop = Box[Loop]
+private fun walk(x: Loop) = x.value.value
+
+// A mutual cycle with a structural guard is valid.
+type Left = Right
+type Right = {next: Left}
+private fun walk(x: Left) = x.next.next
+
+// Reusing an identity alias in a finite expression is not recursive.
+:expect 2
+class Item(val value: Int)
+type Identity[A] = A
+type Twice[A] = Identity[Identity[A]]
+private fun read(x: Twice[Item]) = x.value
+read(Item(2))
+//│ = 2
+
+// An unused actual argument cannot introduce a cycle into the expanded alias.
+:expect 3
+class Item(val value: Int)
+type Ignore[A] = Item
+type Loop = Ignore[Loop]
+private fun read(x: Loop) = x.value
+read(Item(3))
+//│ = 3
+
+// Forwarded parameter uses must be composed across multiple alias applications.
+type Pair[A, B] = [B, A]
+type Wrap[A] = Pair[Int, A]
+type Loop = Wrap[Loop]
+private fun walk(x: Loop) = x.0.0
+
+// Unrelated guarded aliases in the same source graph remain usable.
+:e
+type Bad = Bad | Good
+type Good = {next: Good}
+private fun walk(x: Good) = x.next.next
+//│ ╔══[COMPILATION ERROR] Resolution error in alternation
+//│ ║  l.226: 	type Bad = Bad | Good
+//│ ║         	           ^^^^^^^^^^
+//│ ╟── Unguarded recursive type alias 'Bad'.
+//│ ║  l.226: 	type Bad = Bad | Good
+//│ ║         	           ^^^
+//│ ╟── Recursive references must pass through a record, tuple, function, or nominal type.
+//│ ║  l.226: 	type Bad = Bad | Good
+//│ ╙──       	     ^^^
+
+// Quantification alone is not a structural guard.
+:e
+type Loop = [A] -> Loop
+//│ ╔══[COMPILATION ERROR] Resolution error in universal quantification
+//│ ║  l.241: 	type Loop = [A] -> Loop
+//│ ║         	                   ^^^^
+//│ ╟── Unguarded recursive type alias 'Loop'.
+//│ ║  l.241: 	type Loop = [A] -> Loop
+//│ ║         	                   ^^^^
+//│ ╟── Recursive references must pass through a record, tuple, function, or nominal type.
+//│ ║  l.241: 	type Loop = [A] -> Loop
+//│ ╙──       	     ^^^^
+
+// Function domains, as well as results, guard recursive references.
+type Loop = Loop -> Int
+private fun apply(f: Loop, x: Loop): Int = f(x)
+
+// Guarded and unguarded uses of the same formal must both be considered.
+:e
+type MixedUse[A] = A | [A]
+type Loop = MixedUse[Loop]
+//│ ╔══[COMPILATION ERROR] Resolution error in type application
+//│ ║  l.259: 	type Loop = MixedUse[Loop]
+//│ ║         	            ^^^^^^^^^^^^^^
+//│ ╟── Unguarded recursive type alias 'Loop'.
+//│ ║  l.259: 	type Loop = MixedUse[Loop]
+//│ ║         	                     ^^^^
+//│ ╟── Recursive references must pass through a record, tuple, function, or nominal type.
+//│ ║  l.259: 	type Loop = MixedUse[Loop]
+//│ ╙──       	     ^^^^
+
+// A forwarding alias may omit an unused parameter without introducing a guard.
+:e
+type First[A, B] = A
+type Loop = First[Loop]
+//│ ╔══[COMPILATION ERROR] Resolution error in type application
+//│ ║  l.273: 	type Loop = First[Loop]
+//│ ║         	            ^^^^^^^^^^^
+//│ ╟── Unguarded recursive type alias 'Loop'.
+//│ ║  l.273: 	type Loop = First[Loop]
+//│ ║         	                  ^^^^
+//│ ╟── Recursive references must pass through a record, tuple, function, or nominal type.
+//│ ║  l.273: 	type Loop = First[Loop]
+//│ ╙──       	     ^^^^
+
+// Negation is a Boolean operation, not a structural guard, even though the
+// current resolver otherwise treats negated interfaces as opaque.
+:e
+type Loop = ~Loop
+//│ ╔══[COMPILATION ERROR] Resolution error in negation type
+//│ ║  l.287: 	type Loop = ~Loop
+//│ ║         	             ^^^^
+//│ ╟── Unguarded recursive type alias 'Loop'.
+//│ ║  l.287: 	type Loop = ~Loop
+//│ ║         	             ^^^^
+//│ ╟── Recursive references must pass through a record, tuple, function, or nominal type.
+//│ ║  l.287: 	type Loop = ~Loop
+//│ ╙──       	     ^^^^
+
+:e
+type Negated[A] = ~A
+type Loop = Negated[Loop]
+//│ ╔══[COMPILATION ERROR] Resolution error in type application
+//│ ║  l.300: 	type Loop = Negated[Loop]
+//│ ║         	            ^^^^^^^^^^^^^
+//│ ╟── Unguarded recursive type alias 'Loop'.
+//│ ║  l.300: 	type Loop = Negated[Loop]
+//│ ║         	                    ^^^^
+//│ ╟── Recursive references must pass through a record, tuple, function, or nominal type.
+//│ ║  l.300: 	type Loop = Negated[Loop]
+//│ ╙──       	     ^^^^
+
+// Keeping negation's source dependencies does not reject nonrecursive types.
+type NotInt = ~Int
+private fun unused(x: NotInt) = ()
+
+// A constructor underneath negation still guards its recursive reference.
+type Loop = ~[Loop]
+private fun unused(x: Loop) = ()
+
+// A bound on a quantified parameter is not a structural guard.
+:e
+type Loop = [A extends Loop] -> A
+//│ ╔══[COMPILATION ERROR] Resolution error in universal quantification
+//│ ║  l.321: 	type Loop = [A extends Loop] -> A
+//│ ║         	                                ^
+//│ ╟── Unguarded recursive type alias 'Loop'.
+//│ ║  l.321: 	type Loop = [A extends Loop] -> A
+//│ ║         	                       ^^^^
+//│ ╟── Recursive references must pass through a record, tuple, function, or nominal type.
+//│ ║  l.321: 	type Loop = [A extends Loop] -> A
+//│ ╙──       	     ^^^^
+
+// Wildcard bounds are transparent, including through a forwarding alias.
+:e
+type Identity[A] = A
+type Loop = Identity[out Loop]
+//│ ╔══[COMPILATION ERROR] Resolution error in type application
+//│ ║  l.335: 	type Loop = Identity[out Loop]
+//│ ║         	            ^^^^^^^^^^^^^^^^^^
+//│ ╟── Unguarded recursive type alias 'Loop'.
+//│ ║  l.335: 	type Loop = Identity[out Loop]
+//│ ║         	                         ^^^^
+//│ ╟── Recursive references must pass through a record, tuple, function, or nominal type.
+//│ ║  l.335: 	type Loop = Identity[out Loop]
+//│ ╙──       	     ^^^^
+
+// Applying an abstract type parameter supplies no known structural guard.
+:e
+type Apply[F, A] = F[A]
+type Identity[A] = A
+type Loop = Apply[Identity, Loop]
+//│ ╔══[COMPILATION ERROR] Resolution error in type application
+//│ ║  l.350: 	type Loop = Apply[Identity, Loop]
+//│ ║         	            ^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Unguarded recursive type alias 'Loop'.
+//│ ║  l.350: 	type Loop = Apply[Identity, Loop]
+//│ ║         	                            ^^^^
+//│ ╟── Recursive references must pass through a record, tuple, function, or nominal type.
+//│ ║  l.350: 	type Loop = Apply[Identity, Loop]
+//│ ╙──       	     ^^^^

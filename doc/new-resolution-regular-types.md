@@ -4,6 +4,45 @@ This is an internal reference for structural recursion in new resolution. The
 instance-wrapper and variance semantics are specified in
 [instance types and parameter constraints](new-resolution-type-value-flow.md).
 
+## Guarded alias recursion
+
+Every recursive alias cycle must pass through a record, tuple, function arrow,
+or nominal type. Aliases, type applications, unions, intersections, negation,
+quantifiers, and wildcard bounds do not themselves supply a guard. An abstract
+constructor is not assumed to guard its arguments. Reject unguarded cycles at
+their definitions, including unused aliases and cycles through forward or mutually
+recursive references. For example:
+
+```mlscript
+type Loop = Loop                       // rejected
+type Choice[A] = A | Choice[A]          // rejected
+type Left = Right                      // rejected with Right below
+type Right = Left
+
+type Chain = {next: Chain}              // guarded
+type Wrap[A] = {next: A}
+type Indirect = Wrap[Indirect]          // guarded after forwarding A
+```
+
+Guardedness follows alias substitutions: `Identity[Loop]` forwards an unguarded
+occurrence, whereas `Wrap[Loop]` above guards its argument. An unused argument
+cannot create a cycle in the expanded alias. Repeated finite applications such as
+`Identity[Identity[Int]]` are not recursive aliases.
+
+The check operates on the completed source graph before Boolean normalization;
+absorption does not excuse a written unguarded cycle. The source dependency solver
+also computes which formals are used without a structural guard. Alias applications
+follow those actual arguments when checking for cycles, rather than treating every
+argument as unguarded or every application as a guard. These summaries use the same
+finite-set fixed point as free-binder discovery, but structural constructors stop
+dependency propagation. The cycle check starts a fresh path inside each constructor
+so a guarded use cannot hide an invalid alias's own definition.
+
+Diagnostics name the alias and point to the recursive reference and declaration.
+The resolver does not choose least or greatest solutions for unguarded Boolean
+equations. This rule is separate from the finite-representation check below:
+a guarded alias can still grow its type arguments without bound.
+
 ## Regularity requirement
 
 A structural type must unfold into a finite graph of distinct type components.
@@ -22,9 +61,9 @@ The first four have finite unfoldings. `Growing[Int]` exposes `Int`, `Array[Int]
 `Array[Array[Int]]`, and so on. It receives a regularity diagnostic,
 without widening the type or imposing an expansion-depth limit.
 
-Canonical references reduce fully supplied aliases and normalize Boolean
-combinations. The implemented check uses one dependency node per original formal
-parameter and rejects constructor-bearing dependency cycles before observing the
+Canonical references reduce applied aliases, including omitted arguments, and
+normalize Boolean combinations and wildcard parts. The implemented check uses one
+dependency node per original formal parameter and rejects constructor-bearing dependency cycles before observing the
 structural interface. This is an intentionally conservative restriction: it can
 reject regular types whose finite unfolding requires distinguishing argument parts
 or correlations between successive substitutions. The diagnostic says that the
@@ -59,7 +98,7 @@ normalization does not freeze its current bounds. Combined nodes are interned in
 the consuming resolution state, using the same inherited-cache discipline as other
 type references.
 
-Fully supplied aliases reduce before they become another type's argument. Arguments
+Applied aliases reduce before they become another type's argument. Arguments
 are interpreted in their caller environment first, then declaration variance is
 applied and the alias's formals are substituted. A guard on source alias symbols
 stops unproductive recursive expansion. Nested arguments are reduced before adding
@@ -94,6 +133,20 @@ This does **not** by itself bound the atoms. Constructor growth, retained argume
 parts that never become observable, and the existing requirements on finite marked
 contexts remain separate obligations.
 
+Eager reduction and deferred interpretation share the same argument-binding rule.
+Omitted positions reuse source-owned holes and follow the same scope transfers as
+supplied arguments. For `type First[A, B] = A`, the recursive argument `First[A]`
+therefore reduces to `A`; it does not retain a fresh environment on each recursive
+constraint. A relevant omission, such as `Second[A]` for `type Second[A, B] = B`,
+resets to its fixed source hole. Regressions: `TypeGraphPartialAliases.mls`.
+
+Written wildcard parts are normalized at their lexical polarities before the pair
+is interned. Repeated `out A`, `in A`, or two-part substitutions then select existing
+endpoints instead of retaining nested wildcard environments. The pair keeps its
+written source so it still overrides declaration variance, and missing parts keep
+that source for diagnostics. This does not discard unobserved parts: constructors
+in either part still participate in the conservative growth check.
+
 ## Conservative check
 
 The check connects original formals through alias applications in the reachable
@@ -108,7 +161,7 @@ an interface is observed, so an unused annotation cannot avoid the check. Source
 visitation and alias expansion use finite source-node and alias-symbol guards;
 reachability uses the finite original-binder graph. Accepted and rejected results
 are cached by source root in the consuming resolver state. A rejected root does
-not reject an unrelated regular child. No inference variables are allocated and
+not reject an unrelated regular child. Omitted arguments reuse their source holes;
 no ordinary mark operation is changed.
 
 That handles ordinary permutations and resets, including:
@@ -134,6 +187,13 @@ missing output part, `Any`. All later `value` components have that output type.
 The constructor inside the input part is not an observable growing component of
 this structural unfolding. A binder-only edge from `A` to `A` loses that fact.
 The worksheet records the rejection explicitly as a current precision limitation.
+
+Constructor-free wildcard dependencies do not count as growing constructors.
+For example, `next: Chain[out A]` is accepted and every positive `value` component
+remains `A`. Both parts are still analyzed, so `Chain[in Array[A]]` remains
+conservatively rejected. `TypeGraphTermination.mls` covers these boundaries, and
+`TypeRelationTest` checks repeated wildcard substitution, marked early/late bounds,
+and listener saturation.
 
 The representation needs the same distinction. Current free-binder projection
 retains the whole bound argument whenever a formal is relevant, including parts
@@ -249,8 +309,9 @@ requirements on the marks algebra remain in force throughout.
 
 `newres/TypeGraphTermination.mls` covers regular recursion, permutations, mutual
 resets, unused arguments, transparent and captured forwarding aliases, forward
-references, union/intersection saturation, Boolean-only recursion, and the variance
-counterexample. Rejected constructor cycles and the two documented precision
+references, union/intersection saturation, rejected unguarded recursion, and the
+variance counterexample. `newres/RecursiveBooleanInterfaces.mls` covers direct,
+mutual, captured, and forwarding cycles alongside guarded wrapper controls. Rejected constructor cycles and the two documented precision
 limitations use ordinary `:e` expectations.
 
 `TypeFormulaTest` checks normalization against Boolean truth tables.

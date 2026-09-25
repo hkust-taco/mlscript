@@ -103,8 +103,10 @@ headers identify the remaining legacy fixtures.
   scope. [Type-flow design improvements](new-resolution-future-work.md) are deferred:
   receiver reconstruction, inferred missing member types through nominal views,
   omitted-argument caller separation, and a more precise regularity check. These
-  do not block the current implementation batch. The whole-graph convergence audit
-  remains open; local allocation and replay bounds are documented in the
+  do not block the current implementation batch. The reproduced alias/projection
+  termination failures now have fixes and regressions; the remaining
+  [whole-graph convergence audit](new-resolution-future-work.md#whole-graph-convergence-audit)
+  and local allocation/replay bounds are documented in the
   [type-flow reference](new-resolution-type-value-flow.md#canonical-references-and-termination-obligations).
   For broader mutation migration, decide how reassignment changes storage's
   inferred interface, including across worksheet blocks. `newres/MutationFlow.mls`

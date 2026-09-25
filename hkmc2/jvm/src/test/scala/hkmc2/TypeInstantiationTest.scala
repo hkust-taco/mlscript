@@ -47,6 +47,27 @@ class TypeInstantiationTest extends AnyFunSuite:
     intercept[IllegalArgumentException]:
       state.instantiateTypeParameters(scheme, FlowSymbol.app(), List(instance))
 
+  test("structural projections bound allocation across activation and importer views"):
+    // Diff tests check recursive getter behavior; this checks that repeated
+    // projections and imported activations allocate only one binder group.
+    given owner: Elaborator.State = new Elaborator.State
+    val source = owner.newResolverState
+    val consumer = new Elaborator.State().newResolverState
+    val field = BlockMemberSymbol("next", Nil)
+    val site = source.fieldProjectionSite(field)
+    assert(consumer.inGraph(source).fieldProjectionSite(field) eq site)
+    val scheme = new TypeResolution(Term.UnitVal(), _ => fail("Unexpected type error"))
+    val parameter = new VarSymbol(new syntax.Tree.Ident("A"))
+    val instances = consumer.instantiateTypeParameters(scheme, site, List(parameter))
+    val views = List(consumer, consumer.withInstances(instances), consumer.inGraph(source),
+      consumer.withInstances(instances).inGraph(source))
+    (1 to 1000).foreach: _ =>
+      views.foreach: view =>
+        assert(view.fieldProjectionSite(field) eq site)
+        assert(view.instantiateTypeParameters(scheme, view.fieldProjectionSite(field), List(parameter)) == instances)
+    assert(consumer.allocatedTypeInstanceCount == 1)
+    assert(source.allocatedTypeInstanceCount == 0)
+
   test("consumer instantiation leaves another consumer and the source untouched"):
     given owner: Elaborator.State = new Elaborator.State
     val source = owner.newResolverState

@@ -114,13 +114,14 @@ class TypeRelationTest extends AnyFunSuite:
     assert(target.inferenceHost.listeners.size == before)
     assert(h.state.allocatedTypeInstanceCount == 0)
 
-  test("captured alias reduction uses ordinary exit and entry including caller identity loss"):
+  test("partial captured alias reduction uses ordinary exit and entry including caller identity loss"):
     val h = new Harness
     import h.given
     val (formal, ft) = h.parameter("X")
+    val (unused, _) = h.parameter("Unused")
     val symbol = TypeAliasSymbol(Tree.Ident("Identity"))
     val member = BlockMemberSymbol("Identity", Nil)
-    symbol.defn = S(TypeDef(symbol, member, List(TyParam(FldFlags.empty, N, formal)),
+    symbol.defn = S(TypeDef(symbol, member, List(TyParam(FldFlags.empty, N, formal), TyParam(FldFlags.empty, N, unused)),
       S(ft.resolution.source), N, Nil))
     val alias = h.tpe(TypeShape.Alias(symbol, S(ft.resolution)))
     val scope = TermSymbol(Fun, N, Tree.Ident("owner"))
@@ -146,6 +147,35 @@ class TypeRelationTest extends AnyFunSuite:
       assert(h.resolver.declaredType(application.resolution, Map(argument -> actual)) == expected)
     assert(target.inferenceHost.listeners.size == count)
     assert(h.state.allocatedTypeInstanceCount == 0)
+
+  test("wildcard normalization bounds recursive environments while retaining late marked bounds"):
+    // Unlike a finite number of source projections, this measures saturation of
+    // the saved argument graph and its listeners under repeated substitution.
+    for input <- List(false, true); output <- List(false, true) do
+      val h = new Harness
+      import h.given
+      val (formal, ft) = h.parameter("A")
+      val (target, tt) = h.parameter("Target")
+      val scope = ResolutionBoundary(TermSymbol(Fun, N, Tree.Ident("owner")))
+      val site = S(FlowSymbol.app())
+      val original = h.resolver.transportType(tt, EntryMark(scope, site, NoMarks) :: Nil)
+      val wildcard = h.tpe(TypeShape.Wildcard(Option.when(input)(ft.resolution), Option.when(output)(ft.resolution)))
+      val first = h.resolver.declaredType(wildcard.resolution, Map(formal -> original))
+      val observed = h.observe(ContextualType(first, Nil))
+      val inputObserved = h.observe(ContextualType(h.resolver.selectArgument(first, false), Nil))
+      val before = target.inferenceHost.listeners.size
+      var current = first
+      (1 to 1000).foreach: _ =>
+        current = h.resolver.declaredType(wildcard.resolution, Map(formal -> current))
+        assert(current eq first)
+      val value = DynShape()
+      h.resolver.publishParameter(target, value)
+      if output then assert(observed.toList == List(MarkedShape.enter(value, scope, site)))
+      else assert(!observed.exists(_.applicationHead._1.isInstanceOf[DynShape]))
+      if input then assert(inputObserved.toList == List(MarkedShape.enter(value, scope, site)))
+      else assert(inputObserved.isEmpty)
+      assert(target.inferenceHost.listeners.size == before)
+      assert(h.state.allocatedTypeInstanceCount == 0)
 
   test("recursive Boolean arguments share a fixed point and preserve each atom's marks and late bounds"):
     val h = new Harness

@@ -74,14 +74,23 @@ subscribing to constraints so reentrant observation finds it. Recursion reuses
 the group; marks distinguish enclosing activations of a shared inner site.
 No other observation, projection, or recursive traversal allocates fresh binders.
 `App.resSym`, `New.resSym`, and reference/selection sites provide stable identities;
-`typeApplicationSite` memoizes one identity per original `TyApp`. Class and
+`typeApplicationSite` memoizes one identity per original `TyApp`. Structural
+field constraints likewise reuse one projection site per source field across
+recursive and activated views (`TypeGraphProjectionSites.mls`). Class and
 constructor views use the same original owner. An anonymous polymorphic annotation
 uses its source scheme, and each alternative of an overload has its own owner.
 
 `TypeShape.Polymorphic` and `DeclaredTypeParameter` retain the original binders and
-their bounds. Apply the site's substitution to bounds, inputs, results, and nested
-callbacks before interface expansion. Enclosing binders remain lexical captures,
-not binders of the nested definition being instantiated.
+their bounds. Inputs, results, and nested callbacks receive the site's substitution
+before interface expansion. The same substitution is applied to bounds, including
+captured enclosing binders. Instantiation connects `lower <: instance <: upper`
+after recording explicit supplied arguments, so a lower bound cannot widen a
+supplied interface. By-name invocations install these relations when their scheme
+is consumed. Recursive and dependent bounds share the existing relation graph.
+Using an upper guarantee as an interface for an unconstrained result or a generic
+checking body remains a [design issue](new-resolution-future-work.md#upper-bound-interfaces).
+Enclosing binders remain lexical captures, not binders of the nested definition
+being instantiated.
 
 ### Partial application and explicit specialization
 
@@ -115,6 +124,12 @@ Declaration variance applies to an unqualified argument. A written wildcard
 supplies its own parts and overrides declaration variance. Comparing actual `a`
 with expected `b` installs `a.output <: b.output` and `b.input <: a.input`.
 Missing wildcard parts are actual top/bottom types, not inference holes.
+
+A subclass contributes the arguments of the requested nominal ancestor. Each
+parent step preserves the child's binder substitution and the parent's scope
+marks before installing both variance directions. This applies to constructed
+receivers and declared nominal views, including multiple inheritance steps and
+captured enclosing binders (`InheritedTypeArguments.mls`).
 
 ### Substitute at the occurrence before applying argument variance
 
@@ -196,6 +211,15 @@ The relevant scope crossings are:
 - Constructor invocation: use the same instance boundary for its class and
   constructor, including later parameter lists.
 
+`Marks` stores the most recent crossing first. `shape.exit(path)` applies the
+tail before the head; a list of path fragments is applied from left to right.
+`shape.enter(fragments)` reverses both directions and fragment order. Thus
+`shape.enter(p :: q :: Nil)` agrees with `shape.enter(q).enter(p)`.
+For one boundary, entering at site `i` and then exiting at site `j` cancels when
+either site is absent or the sites agree, and rejects the candidate otherwise.
+Exiting and then entering retains both crossings. Associativity of composition
+does not make these two operations mutual inverses.
+
 Alias qualification and structural type-field projection introduce no value scope.
 Modules introduce no invocation boundary. Transport must follow the source
 reference's scope, including references nested inside structured types; inspecting
@@ -259,20 +283,29 @@ own saved environments. Synthetic formula/argument/selection nodes follow their
 saved references instead of reading an ambient binding map. This removes irrelevant
 bindings without freezing inference candidates or treating forward references as closed.
 
-[Regular structural types](new-resolution-regular-types.md) specifies alias reduction,
-Boolean normalization, and the conservative constructor-cycle rejection check.
+[Regular structural types](new-resolution-regular-types.md) specifies guarded alias
+recursion, alias reduction, Boolean normalization, and the conservative
+constructor-cycle rejection check.
 Accepted recursive references must share graph edges rather than grow substituted
 environments. Structural recursion and recursive generic function constraints are
 different: a call can add an edge to a reusable parameter instance without eagerly
 unfolding its accumulated bounds.
 
-The following local bounds hold: finitely many definition/site binder instances,
-source holes, flat binder substitutions, and normalized paths over distinct lexical
-boundaries. Formula normalization is finite for a fixed atom set. These bounds do
-not alone establish finiteness of nested binding environments or the atom set.
-A whole-graph termination argument still needs to bound all accepted reference keys
-and demonstrate listener convergence. Cache keys must never contain growing
-substitution histories; depth limits and dropped marks do not establish a fixed point.
+For a fixed set of instantiation sites, the binder cache allocates finitely many
+instances, so flat substitutions over the original binders also have a finite range.
+Source holes have stable identities. Normalized paths contain distinct lexical
+boundaries in each direction; their bounded length gives finitely many paths only
+when their site labels also range over a finite set.
+Formula normalization is finite for a fixed atom set. These bounds do not alone
+establish finiteness of nested binding environments or the atom set.
+
+Structural field constraints now reuse source projection sites, and partial
+forwarding aliases share deferred interpretation's source-hole binding rules.
+Wildcard normalization similarly retains canonical argument parts rather than
+nested substitution histories. Their regressions establish these local bounds;
+a [whole-graph termination argument](new-resolution-future-work.md#whole-graph-convergence-audit)
+must still cover all accepted contextual references, formula atoms, and listener
+convergence. Depth limits and dropped marks do not establish a fixed point.
 
 These representations are internal to resolution. Lowering consumes completed
 targets and value shapes; runtime values acquire no type-argument objects.
@@ -281,7 +314,11 @@ targets and value shapes; runtime values acquire no type-argument objects.
 
 Graph tests cover bounded instance allocation and replay (`TypeInstantiationTest`), directed
 relations, delayed targets and consumer isolation (`TypeRelationTest`), and Boolean
-normalization (`TypeFormulaTest`). `PublisherTest` checks exporter immutability.
+normalization, including substitutions that identify atoms (`TypeFormulaTest`).
+`MarksTest` checks activation matching, normalized composition, regrouping, reverse
+transport, and wildcard identity loss across nested and sibling scopes.
+These algebraic checks cover combinations that worksheet examples cannot exhaust.
+`PublisherTest` checks exporter immutability.
 
 Worksheet coverage under `newres` includes `MutableArrays`, `ContextualInference`,
 `InstantiationSites`, `StoredSpecializations`, `SpecializationCaptures`,
