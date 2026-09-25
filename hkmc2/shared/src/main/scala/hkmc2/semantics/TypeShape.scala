@@ -12,6 +12,9 @@ enum TypeShape:
   case Alias(symbol: TypeAliasSymbol, rhs: Opt[TypeResolution])
   case Union(left: TypeResolution, right: TypeResolution)
   case Intersection(left: TypeResolution, right: TypeResolution)
+  // Negated interfaces remain opaque, but their dependencies must participate
+  // in source validation, including the rejection of unguarded alias cycles.
+  case Negation(base: TypeResolution)
   // Substituted unions/intersections retain whole interpreted endpoints. Keeping
   // their lattice normal form prevents repeated Boolean substitutions from
   // nesting environments, without expanding bounds or changing endpoint marks.
@@ -109,6 +112,7 @@ final class TypeResolution(val source: Term, report: Ls[(Message, Opt[Loc])] => 
       case Record(_, fields) => fields.foreach(_._2.validate(next))
       case Union(left, right) => left.validate(next); right.validate(next)
       case Intersection(left, right) => left.validate(next); right.validate(next)
+      case Negation(base) => base.validate(next)
       case Combined(formula) => formula.orderedAtoms.foreach(_.resolution.validate(next))
       case _ => ()
 

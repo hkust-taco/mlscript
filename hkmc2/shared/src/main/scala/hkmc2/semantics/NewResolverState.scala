@@ -212,6 +212,8 @@ final class NewResolverState private (
     new Cache(inherited.map(_.lexicalTypeBinders), identity)
   val typeDependencies: Cache[TypeResolution, Set[VarSymbol]] =
     new Cache(inherited.map(_.typeDependencies), identity)
+  val unguardedTypeDependencies: Cache[TypeResolution, Set[VarSymbol]] =
+    new Cache(inherited.map(_.unguardedTypeDependencies), identity)
   val regularTypes: Cache[TypeResolution, Bool] =
     new Cache(inherited.map(_.regularTypes), identity)
   val combinedTypes: Cache[TypeFormula[DeclaredType], DeclaredType] =

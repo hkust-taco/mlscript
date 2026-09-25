@@ -88,7 +88,7 @@ after recording explicit supplied arguments, so a lower bound cannot widen a
 supplied interface. By-name invocations install these relations when their scheme
 is consumed. Recursive and dependent bounds share the existing relation graph.
 Using an upper guarantee as an interface for an unconstrained result or a generic
-checking body remains a [design issue](new-resolution-future-work.md#quantified-bounds).
+checking body remains a [design issue](new-resolution-future-work.md#upper-bound-interfaces).
 Enclosing binders remain lexical captures, not binders of the nested definition
 being instantiated.
 
@@ -269,8 +269,9 @@ own saved environments. Synthetic formula/argument/selection nodes follow their
 saved references instead of reading an ambient binding map. This removes irrelevant
 bindings without freezing inference candidates or treating forward references as closed.
 
-[Regular structural types](new-resolution-regular-types.md) specifies alias reduction,
-Boolean normalization, and the conservative constructor-cycle rejection check.
+[Regular structural types](new-resolution-regular-types.md) specifies guarded alias
+recursion, alias reduction, Boolean normalization, and the conservative
+constructor-cycle rejection check.
 Accepted recursive references must share graph edges rather than grow substituted
 environments. Structural recursion and recursive generic function constraints are
 different: a call can add an edge to a reusable parameter instance without eagerly

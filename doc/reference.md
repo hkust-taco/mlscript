@@ -1404,9 +1404,16 @@ new-resolution migration.
 type Point = { x: Num, y: Num }
 ```
 
-Under new resolution, recursive structural types must have a finite graph
-representation of their unfolding. The current check conservatively rejects constructor-bearing cycles between used
-type parameters, after alias and union/intersection normalization. For example:
+Under new resolution, recursive type aliases must be guarded: every recursive
+cycle must pass through a record, tuple, function arrow, or nominal type.
+`type Loop = Loop` and `type Choice[A] = A | Choice[A]` are rejected, even when
+unused. Alias applications follow the guards in the alias body: a wrapper defined
+as `type Wrap[A] = {next: A}` permits `type Loop = Wrap[Loop]`.
+
+Recursive structural types must also have a finite graph representation of their
+unfolding. The current check conservatively rejects constructor-bearing cycles
+between used type parameters, after alias and union/intersection normalization.
+For example:
 
 ```mlscript
 type Chain[A] = {value: A, next: Chain[A]}

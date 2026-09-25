@@ -4,6 +4,45 @@ This is an internal reference for structural recursion in new resolution. The
 instance-wrapper and variance semantics are specified in
 [instance types and parameter constraints](new-resolution-type-value-flow.md).
 
+## Guarded alias recursion
+
+Every recursive alias cycle must pass through a record, tuple, function arrow,
+or nominal type. Aliases, type applications, unions, intersections, negation,
+quantifiers, and wildcard bounds do not themselves supply a guard. An abstract
+constructor is not assumed to guard its arguments. Reject unguarded cycles at
+their definitions, including unused aliases and cycles through forward or mutually
+recursive references. For example:
+
+```mlscript
+type Loop = Loop                       // rejected
+type Choice[A] = A | Choice[A]          // rejected
+type Left = Right                      // rejected with Right below
+type Right = Left
+
+type Chain = {next: Chain}              // guarded
+type Wrap[A] = {next: A}
+type Indirect = Wrap[Indirect]          // guarded after forwarding A
+```
+
+Guardedness follows alias substitutions: `Identity[Loop]` forwards an unguarded
+occurrence, whereas `Wrap[Loop]` above guards its argument. An unused argument
+cannot create a cycle in the expanded alias. Repeated finite applications such as
+`Identity[Identity[Int]]` are not recursive aliases.
+
+The check operates on the completed source graph before Boolean normalization;
+absorption does not excuse a written unguarded cycle. The source dependency solver
+also computes which formals are used without a structural guard. Alias applications
+follow those actual arguments when checking for cycles, rather than treating every
+argument as unguarded or every application as a guard. These summaries use the same
+finite-set fixed point as free-binder discovery, but structural constructors stop
+dependency propagation. The cycle check starts a fresh path inside each constructor
+so a guarded use cannot hide an invalid alias's own definition.
+
+Diagnostics name the alias and point to the recursive reference and declaration.
+The resolver does not choose least or greatest solutions for unguarded Boolean
+equations. This rule is separate from the finite-representation check below:
+a guarded alias can still grow its type arguments without bound.
+
 ## Regularity requirement
 
 A structural type must unfold into a finite graph of distinct type components.
@@ -270,8 +309,9 @@ requirements on the marks algebra remain in force throughout.
 
 `newres/TypeGraphTermination.mls` covers regular recursion, permutations, mutual
 resets, unused arguments, transparent and captured forwarding aliases, forward
-references, union/intersection saturation, Boolean-only recursion, and the variance
-counterexample. Rejected constructor cycles and the two documented precision
+references, union/intersection saturation, rejected unguarded recursion, and the
+variance counterexample. `newres/RecursiveBooleanInterfaces.mls` covers direct,
+mutual, captured, and forwarding cycles alongside guarded wrapper controls. Rejected constructor cycles and the two documented precision
 limitations use ordinary `:e` expectations.
 
 `TypeFormulaTest` checks normalization against Boolean truth tables.

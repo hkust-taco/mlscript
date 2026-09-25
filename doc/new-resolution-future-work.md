@@ -4,7 +4,9 @@ This reference records confirmed implementation gaps and deferred design work.
 Current contracts are in [instance types and parameter constraints](new-resolution-type-value-flow.md);
 remaining suite ports are in the [migration worklist](new-resolution-suite-migration.md).
 
-## Quantified bounds
+## Upper-bound interfaces
+
+This interface and checking-witness redesign is deferred future work.
 
 Instantiation installs `lower <: instance <: upper` with the complete binder
 substitution, after recording explicit arguments. This covers callables and by-name
@@ -32,23 +34,6 @@ interface, and its rigid checking witness. It must specify how observation uses
 those guarantees with delayed bounds and explicit arguments, without mixing the
 checking witness into a real call or losing scope marks. Regression and precision
 controls: `newres/QuantifiedBounds.mls`.
-
-## Unguarded Boolean alias cycles
-
-The alias observation guard publishes an opaque candidate when revisiting an alias.
-For `Choice[A] = A | Choice[A]`, this prevents member lookup on `Choice[Item]`.
-The existing regression requests the least-fixed-point interpretation, where this
-alias is `Item`, but the equation alone does not determine that interpretation:
-`Any` is also a solution. Conversely, `X = Item & X` has least solution `Nothing`
-and greatest solution `Item`. A direct `X = X` supplies no choice at all.
-
-These cycles are unguarded: reaching the recursive reference crosses no nominal,
-record, tuple, or function constructor. Finite Boolean normalization is not a
-contract for their fixed points. Choose whether to reject unguarded recursive
-aliases or define their fixed-point semantics before changing the guard. Simply
-suppressing every repeated candidate would silently choose semantics and leave
-pure cycles without an interface or an explanatory diagnostic. Regressions and
-current diagnostic controls: `newres/RecursiveBooleanInterfaces.mls`.
 
 ## Receiver reconstruction
 
