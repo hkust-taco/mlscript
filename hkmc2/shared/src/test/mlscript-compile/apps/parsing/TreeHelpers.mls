@@ -1,4 +1,4 @@
-import "../../LegacyOption.mls"
+import "../../Option.mls"
 import "../../Predef.mls"
 import "../../Stack.mls"
 import "./Tree.mls"
@@ -8,7 +8,7 @@ import "./Token.mls"
 open Predef
 open Stack
 open Token { LiteralKind }
-open LegacyOption { Some, None }
+open Option { Some, None }
 
 module TreeHelpers with ...
 

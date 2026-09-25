@@ -28,14 +28,13 @@ imply that its dependencies have been migrated.
 
 | Compilation suite | New resolution | Legacy resolution | Total |
 | --- | ---: | ---: | ---: |
-| Main (including quotes, UPS, and regression/compatibility fixtures) | 26 | 23 | 49 |
-| Applications | 6 | 14 | 20 |
+| Main (including quotes, UPS, and regression fixtures) | 26 | 22 | 48 |
+| Applications | 8 | 12 | 20 |
 | Nofib | 12 | 27 | 39 |
 | WASM | 0 | 1 | 1 |
-| Total | 44 | 65 | 109 |
+| Total | 46 | 62 | 108 |
 
-These totals include the new-resolution `NamedFieldLibrary` regression fixture
-and the temporary legacy `LegacyOption` compatibility fixture.
+These totals include the new-resolution `NamedFieldLibrary` regression fixture.
 
 ## Migration procedure
 
@@ -64,12 +63,29 @@ and the temporary legacy `LegacyOption` compatibility fixture.
 ### Mixed-mode imports and fixture interfaces
 
 Legacy consumers can read completed new-resolution symbols in imported signatures.
-The prelude uses new resolution. The parser dependency graph uses `LegacyOption`
-temporarily; consumers exchanging `Some`/`None` values, including reflection and
-`Block`, must share the same constructor identities. Port these consumers together
-and delete `LegacyOption`, restoring `Option` imports. Retry `Token` and `Keywords`
-with their consumers using the completed-symbol compatibility path. Imported nodes
-must not be re-resolved, and erased types must not be queried before erasure.
+The prelude, `Option`, `apps/parsing/Token`, and `apps/parsing/Keywords` use new
+resolution; all option consumers share `Option`'s constructor identities. Imported
+nodes must not be re-resolved, and erased types must not be queried before erasure.
+Other parser implementation modules retain legacy resolution and need individual
+migration checks even though their worksheets use new resolution.
+
+The remaining option consumers have these blockers when compiled with
+`#lang(0.3.x)`:
+
+| Fixtures | Current blockers |
+| --- | --- |
+| `Block`, `Shape` | Missing nominal members and callback arity mismatches; `Block` also needs a public interface for `showArm`. |
+| `Iter`, `MutMap`, `ups/EvaluationContext` | Missing public parameter interfaces and unresolved member selections. |
+| `FingerTreeList` | Repeated `reduce` lookup errors on rest tuples; compilation exceeds the 25-second test limit. Convergence needs investigation. |
+| `parsing/Extension`, `ParseRule`, `Test`, `TreeHelpers` | Repeated-entry mark assertion during nominal field projection: `NominalInstanceView.getMemberImpl` calls `captureType` on an argument whose path already contains that scope. Determine the source of the duplicate transfer without weakening the marks algebra. |
+| `parsing/Lexer` | Opened binary `~` conflicts with the builtin; calls with trailing contextual parameters leave function values where tokens are expected. |
+| `parsing/Parser` | Pattern-field flow and unresolved nominal members. |
+| `parsing/ParseRuleVisualizer`, `Rules`, `parsing-web-demo/main` | Missing host/public interfaces and unresolved selections. |
+| `parsing/Tree` | `JSON.stringify` has no result interface, so selecting `slice` on its result fails. |
+
+To reproduce a blocker, temporarily add the language directive to the named
+compilation fixture and run `ctest <name>` or `catest <name>` as appropriate.
+The blocked fixtures retain their existing resolution mode.
 
 Many fixtures also need source interfaces: for example, `QuoteExample.bind` calls
 an unannotated callback, and Nofib helpers expose comparators and printers.
@@ -157,9 +173,8 @@ recursive UPS matchers. Preserve both runtime results and matcher structure.
   `ups/syntax/MixedParameters` without changing the selected symbol.
 
 Retry legacy worksheets and compilation fixtures against the current compiler and
-prelude before diagnosing a blocker. Keep deferred fixtures on legacy resolution;
-imports exchanging options must use `LegacyOption` consistently. The WASM fixture
-`wasm/Wasm.mls` needs interfaces for `WebAssembly.Instance.exports` and its exposed
+prelude before diagnosing a blocker. Keep deferred fixtures on legacy resolution.
+The WASM fixture `wasm/Wasm.mls` needs interfaces for `WebAssembly.Instance.exports` and its exposed
 `wasmInst.imports` receiver.
 
 ## Validation and completion gates
@@ -174,8 +189,7 @@ Follow the [repository test workflow](../README.md#running-the-tests-1):
 3. Run `hkmc2AllTests/test` for each retained batch. Commit intentional golden
    updates together with the change, using the agent's identity for agent commits.
 4. Remove legacy suite configurations only after all covered files migrate,
-   without new failure suppressions or lost negative diagnostics. Remove
-   `LegacyOption` once its consumers use the new interfaces consistently.
+   without new failure suppressions or lost negative diagnostics.
 
 Update the counts and remaining work after each retained batch. Test totals
 include configurations and regression tests, so they are not migration counts.

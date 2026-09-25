@@ -20,9 +20,8 @@ abstract class MLsDiffMaker extends DiffMaker:
   val runtimeSourceFile: io.Path = predefFile.up / "Runtime.mls" // * Contains MLscript runtime sources
   val termFile: io.Path = predefFile.up / "Term.mjs" // * Contains MLscript runtime term definitions
   val blockFile: io.Path = predefFile.up / "Block.mjs" // * Contains MLscript runtime block definitions
-  // Reflection must use the same option constructors as Block.mls. Switch both
-  // back to Option when Block and its consumers no longer need LegacyOption.
-  val optionFile: io.Path = predefFile.up / "LegacyOption.mjs"
+  // Reflection must use the same option constructors as Block.mls.
+  val optionFile: io.Path = predefFile.up / "Option.mjs"
   
   val wd = file.up
   

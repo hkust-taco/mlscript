@@ -1,5 +1,5 @@
 import "../../Predef.mls"
-import "../../LegacyOption.mls"
+import "../../Option.mls"
 import "../../Stack.mls"
 import "../../MutMap.mls"
 import "../../Iter.mls"
@@ -9,7 +9,7 @@ import "./Tree.mls"
 import "./ParseRule.mls"
 
 open Predef
-open LegacyOption
+open Option
 open Stack
 open ParseRule { Choice, rule }
 open Token { Curly, Square, Round }
@@ -24,7 +24,7 @@ val syntaxKinds = MutMap.empty
 
 val extendedKinds = new Set()
 
-fun getRuleByKind(kind: Str): ParseRule.ParseRule[out Anything] = syntaxKinds |> MutMap.get(kind) |> LegacyOption.unsafe.get
+fun getRuleByKind(kind: Str): ParseRule.ParseRule[out Anything] = syntaxKinds |> MutMap.get(kind) |> Option.unsafe.get
 
 fun define(name: Str)(...choices) = syntaxKinds |> MutMap.updateWith(name) of case
   None       then Some(rule(name, ...choices))

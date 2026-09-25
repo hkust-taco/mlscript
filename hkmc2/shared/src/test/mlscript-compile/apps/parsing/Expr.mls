@@ -1,11 +1,11 @@
 #lang(0.3.x)
 
 import "../../StrOps.mls"
-import "../../LegacyOption.mls"
+import "../../Option.mls"
 import "../../Predef.mls"
 
 open StrOps { parenthesizedIf }
-open LegacyOption { Some, None }
+open Option { Some, None }
 
 type OptionT[A] = Some[A] | None
 

@@ -1,14 +1,14 @@
 import "../../Iter.mls"
 import "../../Predef.mls"
 import "../../Stack.mls"
-import "../../LegacyOption.mls"
+import "../../Option.mls"
 import "../../StrOps.mls"
 import "./Keywords.mls"
 import "./Token.mls"
 
 open Predef { fold, mkStr }
 open Stack
-open LegacyOption { Some, None }
+open Option { Some, None }
 open Token { LiteralKind, BracketKind }
 open Keywords { opPrec, INT_MAX }
 
