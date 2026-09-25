@@ -33,106 +33,38 @@ exported mapped arrays and imported generic functions and methods.
 
 ## Captures and generic flow
 
-`InstanceShape` retains a type reference at annotation boundaries; member lookup,
-application, and destructuring obtain specialized interfaces through
-`listenInstanceViews`. The distinction between supplying a type argument and
-adding an ordinary bound, variance rules, and instantiating declared type parameters
-once per definition and authoritative syntactic site are documented
-in [Instance types and parameter constraints](new-resolution-type-value-flow.md).
-The description below records current generic inference. Omitted generic arguments
-use source-owned inference holes and retain live inference through partial
-signatures. Recursive hole contexts, alias-body omissions, and missing nominal
-member types still need the contextual reference work described in that document.
+[Instance types and parameter constraints](new-resolution-type-value-flow.md)
+specifies instance wrappers, input/output constraints, variance, canonical binder
+instances, shared body views, and partial-signature inference.
+[Regular structural types](new-resolution-regular-types.md) specifies normalization
+and the conservative recursion restriction. Do not duplicate those algorithms in
+member lookup or value-flow handling.
 
-Type-alias qualification and structural type-field projection introduce no value
-scope. Alias captures forward type references, and structural fields retain their
-written types without the synthetic boundaries used for value-field lookup.
-The tested direct recursive aliases and finite parameter permutations now pass.
-A regular alias that resets its argument to `Int` still grows unused binding
-environments; non-regular expansion and class-local alias receiver contexts also
-remain incomplete.
+Context fragments compose from a definition to its consumer; argument flow
+traverses that composition in reverse. A class and its constructor share one
+resolution boundary. Methods capture their enclosing instance scope as well as
+the enclosing function scopes. Alias qualification and structural type-field
+projection introduce no value boundary; modules introduce no invocation boundary.
 
-Class bodies introduce lexical captures, and a class and its constructor share
-one resolution boundary. A method's reference to an outer constructor must include
-the enclosing instance boundary as well as the method boundary. Consuming a
-reconstructed instance cancels the old instance exit against its capture, retaining
-the fresh constructor exit. Explicit `new` uses the same constructor context for
-arguments and subsequent parameter lists.
+A normalized mark path contains entries followed by exits, with no repeated
+lexical boundary in either direction. `Shape.scala` enables assertions for this
+invariant. Checking each new tail costs linear time in its depth; it must not be
+replaced by truncating or widening paths. In particular, wildcard exit followed
+by wildcard entry is not an identity: it can discard a caller's activation ID.
+Reference transport uses the same operations as ordinary value flow.
 
-Context fragments compose from the definition to its consumer; argument flow
-traverses that composition in reverse. Capture paths have no truncation or depth
-limit. The optional `checkMarkPaths` assertions in
-[`Shape.scala`](../hkmc2/shared/src/main/scala/hkmc2/semantics/Shape.scala)
-detect repeated boundaries in either direction. They are disabled by default
-because scanning every new mark's tail makes chain construction quadratic in depth.
-`newres/RecursiveEnvironment.mls` and `ConstructorFieldRecovery.mls` exercise
-recursive calls, nested captures, partial construction, and independent field results.
+Legacy references do not contain `Capture` syntax. Elaboration records the lexical
+lookup path as immutable source metadata, and each consumer interprets it in its
+private type graph. Both concrete nominal references and parameter references
+need these paths. Guessing captures only for substituted class parameters misses
+concrete member results and nested callback arguments.
 
-Explicit and inferred function/constructor type arguments flow through the
-corresponding type-parameter symbols with entry/exit marks. Explicit arguments
-receive input constraints without adding value-argument shapes to their output
-interface at ordinary call boundaries. Bodyless members of constructed instances
-still use a positive-only conversion for supplied class arguments; the callback
-input regression in `newres/ConstructorInstances.mls` records this limitation.
-Inference also connects nested
-nominal parameters, such as `Foo[A]` containing a `Box[A]`. Generic methods use
-the same flow as free functions, including callback-result inference and curried
-signatures. Declared callable shapes retain their type parameters. Functions and
-constructors allocate explicit binders once per original definition and authoritative
-syntactic site: explicit type application, by-name invocation, or otherwise the
-first term application. The [instantiation-site rules](new-resolution-type-value-flow.md#finite-call-site-instantiation-and-marks)
-require later applications and curried tails to retain that group. Ordinary
-references to functions with parameter lists keep their schemes until instantiated.
-
-Nominal argument comparisons retain directed `ContextualType` endpoint pairs.
-Invariant arguments install both directions, rather than copying expanded
-candidates. `in`/`out` arguments use InvalML's input/output comparison rules;
-written wildcards override declaration variance. Substitution selects a bound
-argument's part at the occurrence's polarity before applying the enclosing
-nominal declaration's variance. Deferred selections retain that choice for both
-directions of later constraints; see the
-[substitution rules](new-resolution-type-value-flow.md#substitute-at-the-occurrence-before-applying-argument-variance).
-A parameter receives a symbolic
-instance wrapper, and structured/concrete targets retain listeners for later
-bounds. `newres/MutableArrays.mls` includes passing direct and recursive append
-cases, including distinct callers through one stored function reference.
-`TypeRelationTest` checks graph replay and consumer isolation directly.
-
-Generic definitions receive a distinct checking activation when their type
-parameters are declared. Its `RigidTypeShape` witnesses enforce generic opacity
-independently of visibility, exposure, or strict mode. Interface observation turns
-a witness into an unknown interface, but call-site inference does not copy that
-witness as a bound. Symbolic references remain available for substitution instead.
-
-Inline explicit binders in partially annotated functions use the same finite
-definition/application-site allocation as complete callable signatures. The
-shared body carries a flat substitution through deferred tuples, records,
-callbacks, and closures. A source-flow event's body activation and its value's
-caller-side type references remain distinct, including when recursion rebinds the
-same original parameter. Contextual observations select compatible activations;
-marks continue to distinguish enclosing callers of a shared inner site. See
-`newres/ContextualInference.mls` for stored-function and deferred-field cases.
-
-Omitted generic arguments use `TypeShape.Hole`, a stable inference host for each
-source type-use/formal-position pair. They infer through arguments, result
-annotations, and ascriptions; an empty hole waits for evidence. Written fragments
-continue to restrict the interface. Exposure checking contributes unknown values
-to missing parts of external inputs, including callback results, without widening
-written binders. `newres/InferenceHoles.mls` also retains unresolved cases for
-recursive holes and omissions shared through an alias body. No hole creates a
-call-site parameter instance.
-
-Standalone specializations of inferred functions retain their consumed group in
-`SpecializedShape`; complete callable signatures remove their scheme after
-instantiation. By-name functions and methods instantiate before observing their
-result. Their explicitly supplied type arguments select the same invocation's
-site, without also allocating a group for the underlying reference. Separate
-definition signatures consume their binders too; independently quantified result
-annotations retain their own schemes. Argument arity is checked even for unused
-specializations. `newres/StoredSpecializations.mls` covers stored aliases, inferred
-record results, curried calls, and callback checking before a term application.
-`newres/InstantiationSites.mls` checks shared mutation and implicit invocations;
-see the [type-flow reference](new-resolution-type-value-flow.md#partial-application-and-explicit-specialization).
+`newres/SpecializationCaptures.mls`, `RecursiveEnvironment.mls`, and
+`ConstructorFieldRecovery.mls` exercise captured specialization, recursion, and
+partial construction. `PrimitiveMembers.mls`, `Arrays.mls`, `GenericMethods.mls`,
+and `MutableArrays.mls` exercise legacy signature captures and array member paths.
+Receiver reconstruction and omitted-argument context precision are
+[deferred improvements](new-resolution-future-work.md).
 
 ## Declared interfaces and exposure checking
 
@@ -141,10 +73,8 @@ Generic aliases and inherited declared interfaces substitute their arguments;
 declared member selections carry those contexts without reading implementation
 value flow. An unannotated member read through a declared interface produces an
 unknown shape, rather than consulting its initializer or method body.
-This is current behavior pending the reviewed partial-signature design: missing
-member types will use the selected declaration's contextual inference graph,
-while nominal annotations continue to restrict the visible member set. Override
-compatibility must be checked before exposing inferred dispatch results.
+Inferring these missing member types is a [deferred improvement](new-resolution-future-work.md#inferred-member-signatures)
+that also requires override compatibility checks.
 Callback parameter types constrain implementation parameters, and callback results
 constrain inferred type arguments. `newres/DeclaredTypes.mls` covers these paths,
 separate signatures, tuple constraints, and distinct generic instantiations.
@@ -180,34 +110,22 @@ order, last-write-wins lookup, computed-key uncertainty, and property identities
 across imports. See `newres/NamedFields.mls`, `ImportedNamedFields.mls`, and
 `RecordInterfaces.mls`.
 
-Tuples preserve zero-based projections and expose the builtin Array class as
-their parent. For example, `[First(1), Second(2)]` has a `First` value at index 0
-and a `Second` value at index 1. An Array operation such as `map` can read either
-element, so its callback receives both candidate shapes.
+Tuples preserve zero-based projections and expose the builtin Array interface.
+An Array callback receives candidate shapes from every element. The
+[language reference](reference.md#10-arrays) specifies mutable-array behavior and
+the restriction imposed by explicit element annotations.
 
-For a mutable literal, statically resolved element reads listen to the builtin
-`Array[T]` type parameter's symbol. The initializer and later indexed assignments, `fill`, `push`,
-and `unshift` send element shapes to that symbol. For example, starting with
-`mut [First(1)]` and then pushing `Second(2)` makes both `First` and `Second`
-candidates for each statically resolved element read. Overwriting or removing an element does not
-remove its shape from these candidates. Resolution does not track which shape
-belongs at which index or how long the array is. Each candidate is checked when
-resolving an operation on an element; the presence of a `First` candidate cannot
-justify accessing a `First`-only member when `Second` is also a candidate.
+For a mutable literal, all element reads and writes use the builtin `Array[T]`
+parameter's symbol. Marks distinguish allocations and enclosing calls. Cache the
+nominal view before subscribing to the initializer so empty arrays can receive
+writes and recursive arrays can refer to themselves. Numeric projections, spreads,
+patterns, and callbacks all use the same element endpoint.
 
-The symbol is shared, but its shapes carry context marks that distinguish array
-allocations and enclosing function calls. This keeps writes to separate arrays
-from affecting each other's element reads. The cache in `NewResolverState` stores
-the array's shape before subscribing to its initializer, allowing empty arrays to
-receive writes and recursive arrays to refer to themselves. Numeric projections,
-spreads, patterns, and callbacks all receive the element shapes through `T`.
-
-An explicit element type restricts which members resolution may use. If an array
-is viewed as `Array[Base]`, inserting a `Child` that extends `Base` does not make
-`Child`-only members accessible through that view. Resolution uses `Base`'s
-declared members, regardless of the inserted value's more specific shape. In
-`Array[A]`, where `A` is a type parameter, element reads instead receive the shapes
-inferred for `A`.
+The nominal interface is located at the literal's use site. Its element reference
+carries the allocation exit; the interface itself does not. Member lookup already
+exits the nominal class scope. Adding the allocation exit to the entire view would
+therefore cross that boundary twice. Initializer shapes enter the allocation
+context before reaching the parameter host.
 
 When an array is returned or otherwise exposed to callers, `InterfaceExposure`
 also follows its element shapes. A function stored in that array must be checked
@@ -215,7 +133,7 @@ for calls from outside the compilation unit, just like a directly returned
 function. `newres/MutableArrays.mls` and `CompilerTest` cover element flow,
 separation between calls and importing compilation units, and exposed functions.
 See the [migration worklist](new-resolution-suite-migration.md) for the remaining
-`splice` and generic-parameter write propagation gaps.
+`splice` contract and storage-reassignment gaps.
 
 When an array's element shape is unknown, indexed access produces an unknown
 shape; that does not authorize arbitrary member access on the result.

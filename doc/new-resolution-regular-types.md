@@ -4,7 +4,7 @@ This is an internal reference for structural recursion in new resolution. The
 instance-wrapper and variance semantics are specified in
 [instance types and parameter constraints](new-resolution-type-value-flow.md).
 
-## Requirement and current status
+## Regularity requirement
 
 A structural type must unfold into a finite graph of distinct type components.
 Check regularity after reducing aliases and normalizing unions/intersections;
@@ -31,7 +31,7 @@ or correlations between successive substitutions. The diagnostic says that the
 current check does not support the recursive type; it does not claim to prove
 non-regularity. The more precise design below is deferred for later review.
 
-## Implemented normalization
+## Normalization
 
 `TypeFormula` represents a union of intersections as a set of sets of interpreted
 references. It applies associativity, commutativity, idempotence, distribution,
@@ -47,9 +47,9 @@ A | (A & Array[A])          = A
 
 `TypeShape.Combined` retains the formula as one type. In particular, supplying a
 union still creates one instance wrapper, and a negative obligation against that
-union stays whole. Member-interface observation can inspect its components, just
-as it did for source unions and intersections. Normalization does not turn one
-supplied union into several independently supplied types.
+union stays whole. Member-interface observation can inspect its components, as
+for source unions and intersections. Normalization does not turn one supplied
+union into several independently supplied types.
 
 Formula atoms retain their lexical bindings, canonical binder instances, and
 ordinary marks. Different written references to the same unbound parameter and
@@ -94,7 +94,7 @@ This does **not** by itself bound the atoms. Constructor growth, retained argume
 parts that never become observable, and the existing requirements on finite marked
 contexts remain separate obligations.
 
-## Implemented conservative check
+## Conservative check
 
 The check connects original formals through alias applications in the reachable
 source graph. An edge records whether the argument wraps its source formal in a
@@ -250,9 +250,8 @@ requirements on the marks algebra remain in force throughout.
 `newres/TypeGraphTermination.mls` covers regular recursion, permutations, mutual
 resets, unused arguments, transparent and captured forwarding aliases, forward
 references, union/intersection saturation, Boolean-only recursion, and the variance
-counterexample. Rejected constructor cycles and the two accepted precision
-limitations use ordinary `:e` expectations; they no longer rely on stack overflows
-or future-diagnostic expectations.
+counterexample. Rejected constructor cycles and the two documented precision
+limitations use ordinary `:e` expectations.
 
 `TypeFormulaTest` checks normalization against Boolean truth tables and repeated
 alternating substitution. `TypeRelationTest` checks a thousand repeated reductions,

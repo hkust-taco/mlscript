@@ -75,7 +75,8 @@ re-resolving imported nodes or querying erased types before erasure.
 
 Many fixtures also need source interfaces: for example, `QuoteExample.bind` calls
 an unannotated callback, and Nofib helpers expose comparators and printers.
-The inventory below separates these from compiler and prelude gaps.
+Check each fixture's public API and its consumers when porting it; the source
+headers identify the remaining legacy fixtures.
 
 ### Shape propagation and capture precision
 
@@ -83,35 +84,23 @@ The inventory below separates these from compiler and prelude gaps.
   treated as the generator body's return value, leaving `.next` unresolved.
   Model the iterator result produced by lowering; use `codegen/Generators` as
   the worksheet acceptance case.
-- **Mutation and control flow:** mutable-array reads use the element shapes
-  collected from the initializer and subsequent writes, as described in the
-  [resolver notes](new-resolution-design.md). Tracking individual positions and
-  lengths is out of scope. Complete the
-  [type-argument constraint design](new-resolution-type-value-flow.md), including
-  supplied member-input
-  constraints, reconstructed receiver contexts, inferred missing member types,
-  [regular structural interfaces](new-resolution-regular-types.md), and the whole
-  graph's termination bound. Alias and Boolean argument normalization is implemented;
-  a conservative regularity check rejects constructor-bearing dependency cycles.
-  Refinements using input/output argument parts and relationships between recursive
-  arguments are deferred; the current diagnostic also rejects some regular types.
-  Concrete outstanding cases are in
-  `newres/InstantiationSites.mls`, `StoredSpecializations.mls`, `ConstructorInstances.mls`,
-  `InferenceHoles.mls`, `PartialSignatures.mls`, and `TypeGraphTermination.mls`.
-  Captured explicit specializations now bind arguments in the application scope;
-  `SpecializationCaptures.mls` covers nested function and by-name captures.
-  Reconstruction still mixes unannotated field flows as well as losing annotated
-  receiver contexts, so its remaining fix must cover ordinary value inference too.
-  Loss of caller separation through omitted type arguments is an accepted current
-  limitation; defer that substitution redesign while completing the other cases.
-  Decide how reassignment affects mutable storage's inferred interface, including
-  across compiled worksheet blocks. `newres/MutationFlow.mls` records a reassigned
-  array still checked against its initializer's tuple length; accumulating both
-  shapes would still reject valid later indexing. `codegen/SetStmt` also lacks
-  argument flow through its update callback. Member-variable definitions still
-  need work. Handler inference needs separate flows for the receiver, values
-  passed to resumptions, and abortive results (`newres/HandlerResults.mls` and
-  `codegen/ScopedBlocksAndHandlers`). Agree these designs before implementation.
+- **Mutation and control flow:** mutable arrays propagate initializer and write
+  shapes through their element parameter. Position and length tracking is out of
+  scope. [Type-flow design improvements](new-resolution-future-work.md) are deferred:
+  receiver reconstruction, inferred missing member types through nominal views,
+  omitted-argument caller separation, and a more precise regularity check. These
+  do not block the current implementation batch. The whole-graph convergence audit
+  remains open; local allocation and replay bounds are documented in the
+  [type-flow reference](new-resolution-type-value-flow.md#canonical-references-and-termination-obligations).
+  For broader mutation migration, decide how reassignment changes storage's
+  inferred interface, including across worksheet blocks. `newres/MutationFlow.mls`
+  records a reassigned array checked against its initializer's tuple length;
+  accumulating both shapes would still reject valid later indexing.
+  `codegen/SetStmt` needs argument flow through its update callback. Member-variable
+  definitions also need work. Handler inference needs separate flows for the
+  receiver, values passed to resumptions, and abortive results
+  (`newres/HandlerResults.mls` and `codegen/ScopedBlocksAndHandlers`). Review these
+  designs before implementation.
 - **Captured activations:** preserve activation identity through captured
   functions, constructor aliases, reconstruction of the same class, and partial
   construction. Existing regressions include `CtxSens`, `ValCtxSens`,
@@ -169,72 +158,11 @@ recursive UPS matchers. Preserve both runtime results and matcher structure.
   check the lost undefined-binding use sites in `ups/UpsBugsBacklog` and
   `ups/syntax/MixedParameters` without changing the selected symbol.
 
-Retry remaining legacy worksheets against the current compiler and prelude before
-treating a previously observed diagnostic as an implementation gap.
-
-## Deferred compilation fixtures
-
-Paths are relative to `hkmc2/shared/src/test/mlscript-compile/`. These are the
-last recorded obstructions, not a fresh failure audit or an exhaustive diagnosis.
-Retry each fixture before implementing a fix: subsequent compiler and prelude
-changes may have removed its first blocker. Deferred fixtures retain legacy
-resolution; imports that exchange options must use `LegacyOption` consistently.
-
-| Main fixture | Observed obstruction |
-| --- | --- |
-| `Benchmark.mls` | Exposed `suite.run` and callback interfaces. |
-| `Block.mls` | `Str.replaceAll`, `Any.toString`, and pattern-value interfaces. |
-| `CSP.mls` | Quasiquote type selections and wildcard opens. |
-| `CachedHash.mls` | Retry candidate: implicit Object inheritance supplies the required `this.toString` interface. |
-| `Char.mls` | `AnyChar` loses the string shape before its `length` guard. |
-| `FingerTreeList.mls` | `Array.reduce` and numeric projection on an array rather than a fixed tuple. |
-| `Iter.mls` | Exposed callbacks and iterator `next` interfaces. |
-| `LazyArray.mls` | `null.next` and missing pattern-field shapes through mutation. |
-| `LazyFingerTree.mls` | Exposed `xs.length` and pattern-field interfaces. |
-| `MutMap.mls` | Exposed `m.underlying` and keyword-named `Map.set`. |
-| `ObjectBuffer.mls` | Exposed `cls.size` and constructor interfaces. |
-| `LegacyOption.mls` | Temporary copy for legacy consumers; delete when those consumers are ported. |
-| `Predef.mls` | Exposed generic callbacks and rest-argument `.call`. |
-| `QuoteExample.mls` | Exposed callback `k` in `bind`. |
-| `QuoteExample1.mls` | Quasiquote wildcard-open references. |
-| `Rendering.mls` | Nullable string flow, callbacks, and pattern-field interfaces. |
-| `Runtime.mls` | `Map.set` and nullable `contTrace` flow. |
-| `Shape.mls` | Pattern-derived receivers for `join`, `every`, `length`, and `name`. |
-| `Stack.mls` | Exposed `arr.length` and predicate callbacks. |
-| `Term.mls` | `Map.set` and generic pattern/value interfaces. |
-| `TreeTracer.mls` | Exposed `message.split` and pattern-reference forms. |
-| `XML.mls` | Exposed `value.toValue`. |
-| `ups/EvaluationContext.mls` | Exposed `target.freeVars` and context interfaces. |
-
-| Application fixture | Observed obstruction |
-| --- | --- |
-| `apps/Accounting.mls` | Array callback arity, `reduce`, and receiver interfaces. |
-| `apps/CSV.mls` | Retry with the mutable-array element flow; regexp/nullish result interfaces and `at` results still need checking. |
-| `apps/parsing/Extension.mls` | Receivers for `display`, `add`, and `extendChoices` have no resolved target. |
-| `apps/parsing/Keywords.mls` | Legacy `Parser` consumers cannot inspect its new-resolution signatures. |
-| `apps/parsing/Lexer.mls` | Missing automatic contextual argument insertion and opened binary `~` resolution. |
-| `apps/parsing/ParseRule.mls` | Flow through private module/class `let` bindings and imported mutable maps. |
-| `apps/parsing/ParseRuleVisualizer.mls` | Imported JS railroad API lacks member interfaces. |
-| `apps/parsing/Parser.mls` | Synthetic selections from imported legacy forms reach new resolution. |
-| `apps/parsing/Rules.mls` | An `extendChoices` receiver has no resolved target through mutable map lookup. |
-| `apps/parsing/Test.mls` | `flags.has` and `tracer.reset` lose shapes through tuple/import flow. |
-| `apps/parsing/Token.mls` | Legacy contextual-argument consumers cannot read its new-resolution signatures. |
-| `apps/parsing/Tree.mls` | Chained `JSON.stringify(...).slice(...)` lacks a result interface; also coupled to legacy consumers. |
-| `apps/parsing/TreeHelpers.mls` | Coupled to `Tree` and its consumers. |
-| `apps/parsing-web-demo/main.mls` | String callback interfaces, dynamic receiver flow through aliases/mutation, and tuple-bound `example.name`. |
-
-| Nofib fixture (under `nofib/`) | Observed obstruction |
-| --- | --- |
-| `NofibPrelude.mls`, `ansi.mls`, `atom.mls`, `awards.mls`, `constraints.mls`, `cse.mls`, `fish.mls`, `integer.mls`, `lambda.mls`, `lastpiece.mls`, `life.mls`, `mate.mls`, `minimax.mls`, `para.mls`, `power.mls`, `pretty.mls`, `primetest.mls`, `scc.mls`, `secretary.mls` | Exposed callback parameters need callable interfaces. |
-| `eliza.mls`, `knights.mls`, `sorting.mls` | Unannotated string receivers and callbacks. |
-| `circsim.mls` | Exposed record receivers such as `p.pid` and `p.compType`. |
-| `cryptarithm2.mls` | Callable interface for an unannotated constructor field. |
-| `cichelli.mls` | Callback interfaces. |
-| `treejoin.mls` | Pattern flow. |
-| `lcss.mls` | Function result has no interface for `toString`. |
-
-The remaining WASM fixture, `wasm/Wasm.mls`, needs interfaces for
-`WebAssembly.Instance.exports` and its exposed `wasmInst.imports` receiver.
+Retry legacy worksheets and compilation fixtures against the current compiler and
+prelude before diagnosing a blocker. Keep deferred fixtures on legacy resolution;
+imports exchanging options must use `LegacyOption` consistently. The WASM fixture
+`wasm/Wasm.mls` needs interfaces for `WebAssembly.Instance.exports` and its exposed
+`wasmInst.imports` receiver.
 
 ## Validation and completion gates
 
@@ -251,5 +179,5 @@ Follow the [repository test workflow](../README.md#running-the-tests-1):
    without new failure suppressions or lost negative diagnostics. Remove
    `LegacyOption` once its consumers use the new interfaces consistently.
 
-Update the counts and blocker inventory after each retained batch. Test totals
+Update the counts and remaining work after each retained batch. Test totals
 include configurations and regression tests, so they are not migration counts.
