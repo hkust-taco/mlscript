@@ -372,3 +372,23 @@ private fun walk[A, B](chain: Stable[A, B], n: Int) =
 //│ ╔══[COMPILATION ERROR] This selection of member 'next' has no resolved target
 //│ ║  l.362: 	  if n > 0 then walk(chain.next, n - 1) else ()
 //│ ╙──       	                     ^^^^^^^^^^
+
+// Even a constructor-free output wildcard is rejected by the conservative check.
+// All positive value components remain A; the deferred polarity analysis should
+// distinguish an argument part from a growing nominal/tuple/function constructor.
+:e
+type Chain[A] = {value: A, next: Chain[out A]}
+private fun walk[A](chain: Chain[A], n: Int) =
+  if n > 0 then walk(chain.next, n - 1) else ()
+//│ ╔══[COMPILATION ERROR] Resolution error in type application
+//│ ║  l.380: 	type Chain[A] = {value: A, next: Chain[out A]}
+//│ ║         	                                 ^^^^^^^^^^^^
+//│ ╟── Recursive type 'Chain' is not supported by the current regularity check.
+//│ ║  l.380: 	type Chain[A] = {value: A, next: Chain[out A]}
+//│ ║         	                                 ^^^^^^^^^^^^
+//│ ╟── Type parameter 'A' occurs under a type constructor on a recursive dependency cycle.
+//│ ║  l.380: 	type Chain[A] = {value: A, next: Chain[out A]}
+//│ ╙──       	           ^
+//│ ╔══[COMPILATION ERROR] This selection of member 'next' has no resolved target
+//│ ║  l.382: 	  if n > 0 then walk(chain.next, n - 1) else ()
+//│ ╙──       	                     ^^^^^^^^^^

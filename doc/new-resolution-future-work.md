@@ -1,9 +1,83 @@
 # Deferred resolution design work
 
-These improvements are deferred, not completion blockers for the current
-implementation batch. They require design review before implementation. Current
+This reference records confirmed implementation gaps and deferred design work.
+The convergence failures below must be corrected before claiming that accepted
+type graphs are finite. Other design refinements require review before implementation. Current
 contracts are in [instance types and parameter constraints](new-resolution-type-value-flow.md);
 remaining suite ports are in the [migration worklist](new-resolution-suite-migration.md).
+
+## Confirmed convergence failures
+
+### Partially supplied forwarding aliases
+
+```mlscript
+type First[A, B] = A
+type Chain[A] = {value: A, next: Chain[First[A]]}
+private fun walk[A](chain: Chain[A], n: Int) =
+  if n > 0 then walk(chain.next, n - 1) else ()
+```
+
+This has the same finite unfolding as `Chain[A] = {value: A, next: Chain[A]}`.
+`declaredType` reduces an applied alias only when every formal is supplied, whereas
+deferred interpretation fills omissions with source holes. Keeping `First[A]` as
+an argument retains another binding environment on each recursive constraint;
+eventually hashing `DeclaredType` overflows. Supplying the unused `B` makes the
+example terminate. The same failure occurs through a forwarding alias and with
+argument permutations. Unify the argument-binding rules while preserving omission
+identities, variance, captures, and the alias expansion guard.
+Regressions: `newres/TypeGraphPartialAliases.mls`.
+
+### Fresh sites during structural member constraints
+
+```mlscript
+type Link = {next: Link}
+class Node with
+  fun next[A] = this
+private fun take(x: Link) = ()
+take(new Node)
+```
+
+`constrainRecord` allocates a fresh `FlowSymbol.memSym` for the expected field on
+every visit. Selecting `next` invokes the by-name definition and uses this new
+symbol as its instantiation site. The resulting substitution distinguishes another
+receiver view, which repeats the structural constraint and allocates again.
+The definition/site cache cannot bound allocation when the sites themselves grow.
+An unused binder is sufficient; removing it makes the example terminate. Declared
+results and separate quantified signatures also reproduce the overflow.
+Synthetic projections need stable identities tied to the finite source graph,
+with ordinary marks retaining activation separation.
+Regressions: `newres/TypeGraphProjectionSites.mls`.
+
+## Quantified bounds
+
+`TypeQuantifier` and `DeclaredTypeParameter` store lower and upper bounds, but
+`instantiateCallable` substitutes only the parameter/result types and supplied
+arguments. It never installs the bounds as relations on the new instances.
+For example, a result of `[A extends Item] -> () -> A` does not expose `Item`'s
+members when the type argument is inferred. A separately signed implementation
+also cannot use its parameter's declared upper-bound interface. This is distinct
+from postponing concrete mismatch diagnostics: the constraint edges and checking
+interfaces themselves are missing. Regressions: `newres/QuantifiedBounds.mls`.
+
+## Inherited type-argument constraints
+
+Matching an actual subclass against `Parent[A]` currently leaves `A` unconstrained.
+The nominal branch of `inferTypeArguments` compares exact class identities and
+does not follow the instantiated parent view. Thus `read[A](p: Parent[A]) = p.item`
+loses its result interface for both constructed and declared `Child[Item]` inputs,
+while `Parent[Item]` works. The field has a complete signature, so this is separate
+from inferred member signatures. The exact-class restriction predates the current
+type-relation implementation. Follow the parent's bindings and scope transfers
+when installing both variance directions. Regressions: `newres/InheritedTypeArguments.mls`.
+
+## Productive Boolean alias cycles
+
+The alias observation guard publishes an opaque candidate when revisiting an alias.
+For `Choice[A] = A | Choice[A]`, this adds an unknown alternative alongside `A`,
+preventing member lookup even though the productive unfolding exposes only `A`.
+This behavior predates the current Boolean normalization. A correction must also
+specify unproductive cycles and recursive intersections; simply removing every
+opaque candidate is not a general solution. Regression: `newres/RecursiveBooleanInterfaces.mls`.
 
 ## Receiver reconstruction
 
@@ -95,9 +169,10 @@ conservative implementation.
 
 ## Whole-graph convergence audit
 
-Finite binder allocation, source dependency analysis, and relation replay have
-local bounds. A complete argument must also bound accepted contextual reference
-keys, nested environments, and formula atoms, then establish listener convergence.
+Binder allocation for fixed definition/site keys, source dependency analysis,
+and relation replay have local bounds. A complete argument must also bound the
+sites themselves, accepted contextual reference keys, nested environments, and
+formula atoms, then establish listener convergence.
 Retain marked parameter references and shared recursive edges; do not expand live
 bounds into fresh type trees. Test delayed delivery, mutually recursive calls,
 changing compound arguments, and independent consumers at the graph level.

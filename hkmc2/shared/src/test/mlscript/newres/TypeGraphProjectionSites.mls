@@ -1,0 +1,38 @@
+:.
+
+// The structural constraint closes a cycle through a by-name getter.
+type Link = {next: Link}
+class Node with
+  fun next = this
+private fun take(x: Link) = ()
+take(new Node)
+
+// FIXME: An unused type binder must not turn this finite constraint into
+// infinitely many instantiations. constrainRecord creates a fresh field flow
+// on every visit, and by-name invocation uses that flow as its binder site.
+:fixme
+type Link = {next: Link}
+class Node with
+  fun next[A] = this
+private fun take(x: Link) = ()
+take(new Node)
+//│ /!!!\ Uncaught error: java.lang.StackOverflowError
+
+// FIXME: The declared-result path has the same site-allocation problem.
+:fixme
+type Link = {next: Link}
+class Node with
+  fun next[A]: Node = this
+private fun take(x: Link) = ()
+take(new Node)
+//│ /!!!\ Uncaught error: java.lang.StackOverflowError
+
+// FIXME: Separate quantified signatures must obey the same finite-site rule.
+:fixme
+type Link = {next: Link}
+class Node with
+  fun next: [A] -> Node
+  fun next = this
+private fun take(x: Link) = ()
+take(new Node)
+//│ /!!!\ Uncaught error: java.lang.StackOverflowError

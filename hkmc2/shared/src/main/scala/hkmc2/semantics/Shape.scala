@@ -58,7 +58,7 @@ object ResolutionBoundary:
 // of allowing repeated boundaries to accumulate in contextual reference keys.
 private val checkMarkPaths = true
 
-/** A reduced lexical path: entries followed by exits, stored outermost first.
+/** A reduced lexical path: entries followed by exits, most recent crossing first.
   * Exiting cancels the leading entry when their sites agree (an absent site is
   * a capture, compatible with any activation). Entering never cancels an exit:
   * that pair records an inner value's provenance until a consumer accesses it.

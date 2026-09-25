@@ -1,0 +1,34 @@
+:.
+
+// Control: an explicit type argument supplies the declared member interface.
+class Item(val value: Int)
+declare fun make: [A extends Item] -> () -> A
+private fun read() = make[Item]().value
+
+// FIXME: Every result satisfies the upper bound, even without explicit arguments.
+// Quantified bounds are currently retained as metadata but not used by inference.
+:fixme
+class Item(val value: Int)
+declare fun make: [A extends Item] -> () -> A
+private fun read() = make().value
+//│ ╔══[COMPILATION ERROR] This selection of member 'value' has no resolved target
+//│ ║  l.13: 	private fun read() = make().value
+//│ ╙──      	                     ^^^^^^^^^^^^
+
+// FIXME: A generic implementation should also be checked using its upper bound.
+:fixme
+class Item(val value: Int)
+fun read: [A extends Item] -> A -> Int
+fun read(x) = x.value
+//│ ╔══[COMPILATION ERROR] This selection of member 'value' has no resolved target
+//│ ║  l.22: 	fun read(x) = x.value
+//│ ╙──      	              ^^^^^^^
+
+// A lower bound must supply an inference constraint before the result is used.
+:fixme
+class Item(val value: Int)
+declare fun make: [A restricts Item] -> () -> A
+private fun read() = make().value
+//│ ╔══[COMPILATION ERROR] This selection of member 'value' has no resolved target
+//│ ║  l.31: 	private fun read() = make().value
+//│ ╙──      	                     ^^^^^^^^^^^^

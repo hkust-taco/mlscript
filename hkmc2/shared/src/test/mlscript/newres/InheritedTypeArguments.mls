@@ -1,0 +1,39 @@
+:.
+
+// Control: an exact nominal match transfers the supplied argument to read's A.
+:expect 1
+class Item(val value: Int)
+class Parent[A](val item: A)
+private fun read[A](parent: Parent[A]) = parent.item
+read(new Parent[Item](Item(1))).value
+//│ = 1
+
+// FIXME: A constructed subclass must transfer its instantiated Parent argument.
+// The field signature is complete, so this does not require inferring members.
+:fixme
+:expect 2
+class Item(val value: Int)
+class Parent[A](val item: A)
+class Child[A](item: A) extends Parent[A](item)
+private fun read[A](parent: Parent[A]) = parent.item
+read(new Child[Item](Item(2))).value
+//│ ╔══[COMPILATION ERROR] This selection of member 'value' has no resolved target
+//│ ║  l.19: 	read(new Child[Item](Item(2))).value
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ ═══[RUNTIME ERROR] Expected: '2', got: 'undefined'
+
+// FIXME: A declared subclass interface must likewise follow its parent view.
+:fixme
+:expect 3
+class Item(val value: Int)
+class Parent[A](val item: A)
+class Child[A](item: A) extends Parent[A](item)
+private fun read[A](parent: Parent[A]) = parent.item
+private fun child(): Child[Item] = new Child[Item](Item(3))
+read(child()).value
+//│ ╔══[COMPILATION ERROR] This selection of member 'value' has no resolved target
+//│ ║  l.34: 	read(child()).value
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ ═══[RUNTIME ERROR] Expected: '3', got: 'undefined'

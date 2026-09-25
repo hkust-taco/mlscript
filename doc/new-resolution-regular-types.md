@@ -94,6 +94,15 @@ This does **not** by itself bound the atoms. Constructor growth, retained argume
 parts that never become observable, and the existing requirements on finite marked
 contexts remain separate obligations.
 
+In particular, eager reduction currently excludes partially supplied aliases.
+With `type First[A, B] = A`, the recursive argument `First[A]` is semantically
+identical to `A`, but retains a new environment on each recursive constraint.
+`TypeGraphPartialAliases.mls` records the resulting stack overflow alongside the
+terminating `First[A, Int]` control. Passing the conservative regularity check
+therefore does not currently imply that the implementation reaches a fixed point.
+Omitted positions must keep their source-hole identities when normalization is
+extended; allocating holes during each expansion would create another source of growth.
+
 ## Conservative check
 
 The check connects original formals through alias applications in the reachable
@@ -134,6 +143,11 @@ missing output part, `Any`. All later `value` components have that output type.
 The constructor inside the input part is not an observable growing component of
 this structural unfolding. A binder-only edge from `A` to `A` loses that fact.
 The worksheet records the rejection explicitly as a current precision limitation.
+
+The implementation also labels written wildcard dependencies as constructor-bearing,
+so even `next: Chain[out A]` is rejected although it contains no growing constructor
+and every positive `value` component remains `A`. The same worksheet records this
+simpler false positive; the diagnostic's constructor explanation is conservative too.
 
 The representation needs the same distinction. Current free-binder projection
 retains the whole bound argument whenever a formal is relevant, including parts

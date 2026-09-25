@@ -1,0 +1,28 @@
+:.
+
+// Control: an ordinary forwarding alias preserves the declared interface.
+:expect 1
+class Item(val value: Int)
+type Choice[A] = A
+private fun read(x: Choice[Item]) = x.value
+read(Item(1))
+//│ = 1
+
+// FIXME: A productive recursive union adds no unknown alternative. This
+// predates Boolean normalization: the alias recursion guard publishes an opaque
+// candidate alongside Item, preventing lookup even though the unfolding is finite.
+:fixme
+:expect 2
+class Item(val value: Int)
+type Choice[A] = A | Choice[A]
+private fun read(x: Choice[Item]) = x.value
+read(Item(2))
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.18: 	private fun read(x: Choice[Item]) = x.value
+//│ ║        	                                    ^^^^^^^
+//│ ╟── Cannot resolve member 'value' of a value with unknown shape.
+//│ ╟── This abstract type does not specify a member interface.
+//│ ║  l.18: 	private fun read(x: Choice[Item]) = x.value
+//│ ╙──      	                    ^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ ═══[RUNTIME ERROR] Expected: '2', got: 'undefined'

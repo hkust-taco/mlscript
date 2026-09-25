@@ -104,7 +104,8 @@ headers identify the remaining legacy fixtures.
   receiver reconstruction, inferred missing member types through nominal views,
   omitted-argument caller separation, and a more precise regularity check. These
   do not block the current implementation batch. The whole-graph convergence audit
-  remains open; local allocation and replay bounds are documented in the
+  has found [concrete termination failures](new-resolution-future-work.md#confirmed-convergence-failures);
+  local allocation and replay bounds are documented in the
   [type-flow reference](new-resolution-type-value-flow.md#canonical-references-and-termination-obligations).
   For broader mutation migration, decide how reassignment changes storage's
   inferred interface, including across worksheet blocks. `newres/MutationFlow.mls`

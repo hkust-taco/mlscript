@@ -79,9 +79,13 @@ constructor views use the same original owner. An anonymous polymorphic annotati
 uses its source scheme, and each alternative of an overload has its own owner.
 
 `TypeShape.Polymorphic` and `DeclaredTypeParameter` retain the original binders and
-their bounds. Apply the site's substitution to bounds, inputs, results, and nested
-callbacks before interface expansion. Enclosing binders remain lexical captures,
-not binders of the nested definition being instantiated.
+their bounds. Inputs, results, and nested callbacks receive the site's substitution
+before interface expansion. Bounds are currently retained only as metadata:
+`instantiateCallable` does not install their constraints. Applying the same
+substitution to bounds and connecting them to the instances remains a
+[required correction](new-resolution-future-work.md#quantified-bounds).
+Enclosing binders remain lexical captures, not binders of the nested definition
+being instantiated.
 
 ### Partial application and explicit specialization
 
@@ -194,6 +198,15 @@ The relevant scope crossings are:
 - Constructor invocation: use the same instance boundary for its class and
   constructor, including later parameter lists.
 
+`Marks` stores the most recent crossing first. `shape.exit(path)` applies the
+tail before the head; a list of path fragments is applied from left to right.
+`shape.enter(fragments)` reverses both directions and fragment order. Thus
+`shape.enter(p :: q :: Nil)` agrees with `shape.enter(q).enter(p)`.
+For one boundary, entering at site `i` and then exiting at site `j` cancels when
+either site is absent or the sites agree, and rejects the candidate otherwise.
+Exiting and then entering retains both crossings. Associativity of composition
+does not make these two operations mutual inverses.
+
 Alias qualification and structural type-field projection introduce no value scope.
 Modules introduce no invocation boundary. Transport must follow the source
 reference's scope, including references nested inside structured types; inspecting
@@ -252,12 +265,19 @@ environments. Structural recursion and recursive generic function constraints ar
 different: a call can add an edge to a reusable parameter instance without eagerly
 unfolding its accumulated bounds.
 
-The following local bounds hold: finitely many definition/site binder instances,
-source holes, flat binder substitutions, and normalized paths over distinct lexical
-boundaries. Formula normalization is finite for a fixed atom set. These bounds do
-not alone establish finiteness of nested binding environments or the atom set.
-A whole-graph termination argument still needs to bound all accepted reference keys
-and demonstrate listener convergence. Cache keys must never contain growing
+For a fixed set of instantiation sites, the binder cache allocates finitely many
+instances, so flat substitutions over the original binders also have a finite range.
+Source holes have stable identities. Normalized paths contain distinct lexical
+boundaries in each direction; their bounded length gives finitely many paths only
+when their site labels also range over a finite set.
+Formula normalization is finite for a fixed atom set. These bounds do not alone
+establish finiteness of nested binding environments or the atom set.
+
+There are now [concrete counterexamples](new-resolution-future-work.md#confirmed-convergence-failures):
+structural member constraints manufacture fresh invocation sites, and partially
+supplied forwarding aliases retain growing environments. Both can overflow on
+semantically finite recursive types. A whole-graph termination argument must cover
+these paths as well as listener convergence. Cache keys must never contain growing
 substitution histories; depth limits and dropped marks do not establish a fixed point.
 
 These representations are internal to resolution. Lowering consumes completed
@@ -267,7 +287,11 @@ targets and value shapes; runtime values acquire no type-argument objects.
 
 Graph tests cover bounded instance allocation and replay (`TypeInstantiationTest`), directed
 relations, delayed targets and consumer isolation (`TypeRelationTest`), and Boolean
-normalization (`TypeFormulaTest`). `PublisherTest` checks exporter immutability.
+normalization, including substitutions that identify atoms (`TypeFormulaTest`).
+`MarksTest` checks activation matching, normalized composition, regrouping, reverse
+transport, and wildcard identity loss across nested and sibling scopes.
+These algebraic checks cover combinations that worksheet examples cannot exhaust.
+`PublisherTest` checks exporter immutability.
 
 Worksheet coverage under `newres` includes `MutableArrays`, `ContextualInference`,
 `InstantiationSites`, `StoredSpecializations`, `SpecializationCaptures`,

@@ -28,3 +28,27 @@ class TypeFormulaTest extends AnyFunSuite:
     assert(a.union(b).orderedAtoms == Vector(0, 1))
     assert(b.union(a).orderedAtoms == Vector(1, 0))
     assert(a.union(a.intersection(b)).orderedAtoms == Vector(0))
+
+  test("all three-atom formulas retain their meaning when substitution identifies atoms"):
+    // Enumerate every DNF over three atoms, including the empty clause (top)
+    // and no clauses (bottom). This checks absorption after a non-injective map,
+    // which recursive substitutions can cause even if the source was reduced.
+    val clauses = (0 until 8).map: bits =>
+      (0 until 3).filter(atom => (bits & (1 << atom)) != 0).foldLeft(TypeFormula.top[Int]): (clause, atom) =>
+        clause.intersection(TypeFormula.atom(atom))
+    val formulas = (0 until 256).map: bits =>
+      clauses.zipWithIndex.filter((_, index) => (bits & (1 << index)) != 0).foldLeft(TypeFormula.bottom[Int]):
+        case (formula, (clause, _)) => formula.union(clause)
+    .distinct
+    assert(formulas.size == 20)
+    for formula <- formulas; a <- 0 until 3; b <- 0 until 3; c <- 0 until 3 do
+      val substitution = Vector(a, b, c)
+      val mapped = formula.map(substitution)
+      assert(mapped.orderedAtoms.toSet == mapped.atoms)
+      assert(mapped.orderedAtoms.distinct == mapped.orderedAtoms)
+      val second = Vector(1, 1, 0)
+      assert(mapped.map(second) == formula.map(atom => second(substitution(atom))))
+      for assignment <- 0 until 8 do
+        val expected = formula.clauses.exists(_.forall(atom => (assignment & (1 << substitution(atom))) != 0))
+        val actual = mapped.clauses.exists(_.forall(atom => (assignment & (1 << atom)) != 0))
+        assert(actual == expected)
