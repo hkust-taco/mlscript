@@ -1,9 +1,7 @@
 :js
 :deforest
-:etaExpansion debug
+:flowBasedOpt debugEta
 
-//│ eta-expansion > >>> eta-expansion targets shapes >>>
-//│ eta-expansion > <<< eta-expansion targets shapes <<<
 
 
 data class (::) Cons(h, t)
@@ -88,6 +86,10 @@ sum(enum(5), 0)
 //│ = 15
 
 
+// [FUSED PASS PR TODO]: all the eta expanded parameters can be dead-param-eliminated, but now param 1, 4, 5 are still considered live.
+// Those are the parameters related to variables that could be locally scoped to a branch (they are assigned in branch body functions).
+// Those parameters are detected to be dead by dpe after block simplifier, but now dpe is run before block simplifier.
+// But instead of running an additional block simplifier before the fused pass, it'd be better to enable scoped branches to address this
 :expect 3
 :soir
 fun append(xs, ys) = if xs is
@@ -115,11 +117,11 @@ len(flatten(id((1 :: 2 :: Nil) :: (3 :: Nil) :: Nil)))
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ let tmp, tmp1, tmp2, tmp3, tmp4, flatten_31$flatten, flatten_31_append_16$append$worker, flatten_31$flatten$worker;
 //│ @inline @private
-//│ define flatten_31$flatten as fun flatten_31$flatten⁰(xss)() {
-//│   return flatten_31$flatten$worker⁰(xss)
+//│ define flatten_31$flatten as fun flatten_31$flatten⁰(xss)(eta$0$1, eta$0$4, eta$0$5) {
+//│   return flatten_31$flatten$worker⁰(xss, eta$0$1, eta$0$4, eta$0$5)
 //│ };
 //│ @private
-//│ define flatten_31$flatten$worker as fun flatten_31$flatten$worker⁰(xss) {
+//│ define flatten_31$flatten$worker as fun flatten_31$flatten$worker⁰(xss, eta$0$1, eta$0$4, eta$0$5) {
 //│   let arg$Cons$0$, arg$Cons$1$;
 //│   match xss
 //│     Nil⁰ =>
@@ -129,21 +131,21 @@ len(flatten(id((1 :: 2 :: Nil) :: (3 :: Nil) :: Nil)))
 //│       set arg$Cons$0$ = xss.h⁰;
 //│       set arg$Cons$1$ = xss.t⁰;
 //│       set ys = flatten_31$flatten⁰(arg$Cons$1$);
-//│       return flatten_31_append_16$append$worker⁰(arg$Cons$0$, ys)
+//│       return flatten_31_append_16$append$worker⁰(arg$Cons$0$, ys, eta$0$1, eta$0$4, eta$0$5)
 //│     else
 //│       throw new globalThis⁰.Error⁰("match error")
 //│   end
 //│ };
 //│ @private
-//│ define flatten_31_append_16$append$worker as fun flatten_31_append_16$append$worker⁰(xs, ys) {
+//│ define flatten_31_append_16$append$worker as fun flatten_31_append_16$append$worker⁰(xs, ys, eta$0$1, eta$0$4, eta$0$5) {
 //│   let arg$Cons$1$;
 //│   match xs
 //│     Nil⁰ =>
-//│       return ys()
+//│       return ys(eta$0$1, eta$0$4, eta$0$5)
 //│     Cons¹ =>
 //│       let inlinedVal;
 //│       set arg$Cons$1$ = xs.t⁰;
-//│       set inlinedVal = flatten_31_append_16$append$worker⁰(arg$Cons$1$, ys);
+//│       set inlinedVal = flatten_31_append_16$append$worker⁰(arg$Cons$1$, ys, undefined, undefined, undefined);
 //│       return +⁰(1, inlinedVal)
 //│     else
 //│       throw new globalThis⁰.Error⁰("match error")
@@ -195,12 +197,12 @@ len(flatten(id((1 :: 2 :: Nil) :: (3 :: Nil) :: Nil)))
 //│ set tmp2 = Cons⁰(3, Nil⁰);
 //│ set tmp3 = Cons⁰(tmp2, Nil⁰);
 //│ set tmp4 = Cons⁰(tmp1, tmp3);
-//│ return flatten_31$flatten$worker⁰(tmp4)
+//│ return flatten_31$flatten$worker⁰(tmp4, undefined, undefined, undefined)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 3
 
 // the analysis shouldn't stackoverflow
-:etaExpansion debug
+:flowBasedOpt debugEta
 fun f(x) = f
 //│ deforest > >>> fusing >>>
 //│ deforest > <<< fusing <<<

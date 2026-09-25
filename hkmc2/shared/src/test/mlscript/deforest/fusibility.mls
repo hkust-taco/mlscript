@@ -97,7 +97,7 @@ fun c(x) = if x is AA(_) then 0
 let p = AA(10) in
   c(p) + c(p)
 //│ deforest > >>> non-affine syms >>>
-//│ deforest > p@2
+//│ deforest > p@1
 //│ deforest > <<< non-affine syms <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > <<< fusing <<<
@@ -110,11 +110,11 @@ apply(c, AA(3))
 //│ deforest > >>> non-affine syms >>>
 //│ deforest > c_for_c@29
 //│ deforest > cap_ub_(term:c,0)_for_c@32
-//│ deforest > f_for_apply@21
-//│ deforest > f_for_apply@46
+//│ deforest > f_for_apply@20
+//│ deforest > f_for_apply@45
 //│ deforest > tmp@1
-//│ deforest > x_for_apply@20
-//│ deforest > x_for_apply@45
+//│ deforest > x_for_apply@21
+//│ deforest > x_for_apply@46
 //│ deforest > <<< non-affine syms <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > <<< fusing <<<
@@ -198,10 +198,10 @@ nest_consume(nest_pickB, nest_prod(10))
 //│ deforest > arg$AA$0$_for_nest_consume@45
 //│ deforest > arg$AA$0$_for_nest_consume@72
 //│ deforest > cap_ub_(term:nest_pickB,0)_for_nest_pickB@50
-//│ deforest > f_for_nest_consume@36
-//│ deforest > f_for_nest_consume@63
-//│ deforest > i_for_nest_consume@35
-//│ deforest > i_for_nest_consume@62
+//│ deforest > f_for_nest_consume@35
+//│ deforest > f_for_nest_consume@62
+//│ deforest > i_for_nest_consume@36
+//│ deforest > i_for_nest_consume@63
 //│ deforest > nest_pickB_for_nest_pickB@47
 //│ deforest > sel_res_for_nest_consume@46
 //│ deforest > sel_res_for_nest_consume@73

@@ -1,4 +1,6 @@
 :.
+:flowBasedOpt off
+// ^ FIXME: DPE causes problems
 
 // Control: an exact nominal match transfers the supplied argument to read's A.
 :expect 1

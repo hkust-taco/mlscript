@@ -2,31 +2,46 @@ package hkmc2
 package codegen
 
 import scala.annotation.tailrec
-import scala.collection.mutable.{Map as MutMap, Set as MutSet}
+import scala.collection.mutable.{Map as MutMap, LinkedHashMap}
 
 import hkmc2.utils.*, shorthands.*
 import utils.*
 
 import hkmc2.codegen.flowAnalysis.*
 import semantics.*
-import syntax.Tree
-import scala.collection.mutable.LinkedHashMap
+
+case class EtaTargets(paramCount: Int, hasRestParam: Bool, prodFuns: Set[ProdFun]):
+  def paramInfo: (Int, Bool) = paramCount -> hasRestParam
+  def ppParamInfo: Str = if hasRestParam then s"$paramCount+rest" else s"$paramCount"
+  def pp: Str = s"$ppParamInfo${prodFuns.map(_.exprId).mkString("<", ", ", ">")}"
+
+abstract class EtaExpansionResult extends FlowAnalysisSolverResult:
+  def etaExpandedFunShape: collection.Map[ConcreteFunId, Ls[EtaTargets]]
+
+  final def hasWorkToDo: Bool = etaExpandedFunShape.nonEmpty
+
+  final def polyInstIds: Iterator[InstantiationId] =
+    etaExpandedFunShape.keysIterator.map(_.instId)
+
+end EtaExpansionResult
 
 
-class EtaExpansionSolver(val constraintSolver: FlowConstraintSolver):
-  private val tl = constraintSolver.tl
-  given FlowAnalysis.State = constraintSolver.collector.fState
-  assert(constraintSolver.collector.mono)
+object NoEtaExpansion extends EtaExpansionResult:
+  val etaExpandedFunShape = Map.empty[ConcreteFunId, Ls[EtaTargets]]
 
 
-  private val cache = MutMap.empty[ProdFun, Ls[Int]]
-
+class EtaExpansionSolver(val constraintSolver: FlowConstraintSolver, tl: TraceLogger) extends EtaExpansionResult:
+  given fState: FlowAnalysis.State = constraintSolver.fState
+  given eState: Elaborator.State = constraintSolver.eState
+  
+  private val cache = MutMap.empty[ProdFun, Ls[EtaTargets]]
+  
   // the result is a list describing the target shape
-  // e.g., 1 :: 0 :: 2 :: 3 :: Nil means
+  // e.g., entries with arities of 1, 0, 2, 3 means
   // fun f(x) = x
   // will be expanded to
   // fun f(x)()(p1, p2)(p3, p4, p5) = x()(p1, p2)(p3, p4, p5)
-  private def etaExpansionTargetShapes(pf: ProdFun)(using processing: Set[ProdFun]): Ls[Int] =
+  private def etaExpansionTargetShapes(pf: ProdFun)(using processing: Set[ProdFun]): Ls[EtaTargets] =
     given newProcessing: Set[ProdFun] = processing + pf
     def funResShape(res: ProdStrat) =
       def isDeclaredNextParamList(resPf: ProdFun): Bool =
@@ -35,7 +50,7 @@ class EtaExpansionSolver(val constraintSolver: FlowConstraintSolver):
           (funSym1 is funSym2) && idx2 === (idx1 + 1)
         case _ => false
       end isDeclaredNextParamList
-
+      
       def prodFunIsAffine(pf: ProdFun) =
         pf.exprId match
         case lamId: ResultId =>
@@ -57,7 +72,7 @@ class EtaExpansionSolver(val constraintSolver: FlowConstraintSolver):
         // iterate through all the lower bounds of prodvar
         val lbs = v.lowerBounds.iterator
         @tailrec
-        def go(res: Opt[Ls[Int]]): Ls[Int] =
+        def go(res: Opt[Ls[EtaTargets]]): Ls[EtaTargets] =
           if !lbs.hasNext then res.getOrElse(Nil)
           else lbs.next() match
             case pv: StratVar => go(res)
@@ -69,15 +84,21 @@ class EtaExpansionSolver(val constraintSolver: FlowConstraintSolver):
                 val mergedRes = res match
                   case N => curRes
                   case S(prevRes) => prevRes.zip(curRes).map: (a, b) =>
-                    assert(a === b)
-                    a
+                    assert(a.paramInfo === b.paramInfo,
+                      s"eta expansion targets disagree on arity: ${a.pp} vs ${b.pp}")
+                    EtaTargets(a.paramCount, a.hasRestParam, a.prodFuns ++ b.prodFuns)
                 go(S(mergedRes))
               else Nil
             case UnknownProd => Nil
             case _: Ctor => Nil
         end go
         
-        go(N)
+        val ubs = constraintSolver.AllUpperBounds(v)
+        if ubs.exists:
+          case _: ConsFun | UnknownCons => true
+          case _ => false
+        then go(N)
+        else Nil
       case UnknownProd => Nil
       case _: Ctor => Nil
     end funResShape
@@ -85,151 +106,55 @@ class EtaExpansionSolver(val constraintSolver: FlowConstraintSolver):
     cache.get(pf) match
     case S(res) => res
     case N =>
-      val paramCount = pf.params.size + pf.restParam.fold(0)(_ => 1)
+      val targets = EtaTargets(pf.params.size, pf.restParam.isDefined, Set.single(pf))
       if !processing.contains(pf) then
-        val res = paramCount :: funResShape(pf.res)
+        val res = targets :: funResShape(pf.res)
         cache(pf) = res
         res
       else
-        cache(pf) = paramCount :: Nil
+        cache(pf) = targets :: Nil
         Nil
   end etaExpansionTargetShapes
 
-  val funShape = LinkedHashMap.empty[TermSymbol | ResultId, Ls[Int]]
+  val etaExpandedFunShape: LinkedHashMap[ConcreteFunId, Ls[EtaTargets]] = LinkedHashMap.empty
+
 
   for pf <- constraintSolver.prodFunsWithDests do
+    def addFunShapeIfChanged(): Unit =
+      def isEtaExpanded(funId: FunId, shape: Ls[EtaTargets]): Bool = funId match
+        case (funSym: TermSymbol, _) =>
+          val prev = constraintSolver.preAnalyzer.res.funSymToFunDefn(funSym).params.size
+          val now = shape.size
+          now > prev
+        case _: ResultId => shape.size > 1
+      end isEtaExpanded
+      val id = pf.concreteId
+      if !etaExpandedFunShape.contains(id) then
+        val shape = etaExpansionTargetShapes(pf)(using Set.empty)
+        if isEtaExpanded(id.exprId, shape) then etaExpandedFunShape(id) = shape
+    end addFunShapeIfChanged
     pf.exprId match
-    case lamId: ResultId => funShape.getOrElseUpdate(lamId, etaExpansionTargetShapes(pf)(using Set.empty))
-    case (funSym: TermSymbol, 0) => funShape.getOrElseUpdate(funSym, etaExpansionTargetShapes(pf)(using Set.empty))
+    case _: ResultId => addFunShapeIfChanged()
+    case (_: TermSymbol, 0) => addFunShapeIfChanged()
     case _ => ()
 
-
-  private def showFunShapeId(id: TermSymbol | ResultId): Str = id match
-    case funSym: TermSymbol => funSym.nme
-    case lamId: ResultId =>
-      lamId.getResult match
-      case Lambda(_, _) => s"lambda@$lamId"
-      case r => lastWords(s"not lambda $r")
-
-  private def checkIsEtaExpanded(
-    id: TermSymbol | ResultId,
-    shape: Ls[Int]
-  ): Bool = id match
-    case funSym: TermSymbol =>
-      val prev = constraintSolver.preAnalyzer.res.funSymToFunDefn(funSym).params.size
-      val now = shape.size
-      now > prev
-    case lamId: ResultId => shape.size > 1
-
-  def hasEtaExpansionTargets: Bool =
-    funShape.exists:
-      case (id, shape) => checkIsEtaExpanded(id, shape)
-
   if tl.doTrace then
+    def showFunShapeId(id: ConcreteFunId): Str =
+      val funStr = id.exprId match
+        case (funSym: TermSymbol, _) => funSym.nme
+        case lamId: ResultId =>
+          lamId.getResult match
+          case Lambda(_, _) => s"lambda@$lamId"
+          case r => lastWords(s"not lambda $r")
+      if id.instId.isEmpty then funStr else s"$funStr @ ${id.instId.showInstId}"
+    end showFunShapeId
+    
     tl.log(">>> eta-expansion targets shapes >>>")
-    for
-      (id, shape) <- funShape
-      if checkIsEtaExpanded(id, shape)
-    do
-      tl.log(s"${showFunShapeId(id)}: ${shape.mkString("[", ", ", "]")}")
+    for (id, shape) <- etaExpandedFunShape do
+      tl.log(s"${showFunShapeId(id)}: ${shape.map(_.ppParamInfo).mkString("[", ", ", "]")}")
     tl.log("<<< eta-expansion targets shapes <<<")
   end if
 end EtaExpansionSolver
-
-
-class EtaExpansionRewrite(val etaExpansionSolver: EtaExpansionSolver)(using Raise):
-  private val constraintSolver = etaExpansionSolver.constraintSolver
-  private val pre = constraintSolver.preAnalyzer
-  given eState: Elaborator.State = constraintSolver.eState
-  given fState: FlowAnalysis.State = constraintSolver.fState
-
-  private case class EtaParamList(params: ParamList, args: Ls[Arg])
-
-  def apply(): Program =
-    if etaExpansionSolver.hasEtaExpansionTargets then
-      val newBody = Rewriter().applyBlock(pre.pgrm.main)
-      if newBody is pre.pgrm.main then pre.pgrm
-      else Program(pre.pgrm.imports, newBody)
-    else pre.pgrm
-
-  class Rewriter extends BlockTransformer(SymbolSubst.Id):
-    private var activeEtaArgss: Ls[Ls[Arg]] = Nil
-    
-    private def withEtaArgss[A](etaArgss: Ls[Ls[Arg]])(thunk: => A): A =
-      val saved = activeEtaArgss
-      activeEtaArgss = etaArgss
-      val res = thunk
-      activeEtaArgss = saved
-      res
-    
-    private def paramCount(pl: ParamList): Int =
-      pl.params.size + pl.restParam.fold(0)(_ => 1)
-    
-    private def etaParamLists(id: TermSymbol | ResultId, existingParams: Ls[ParamList]): Ls[EtaParamList] =
-      etaExpansionSolver.funShape.get(id).toList.flatMap: targetShape =>
-        val existingShape = existingParams.map(paramCount)
-        if targetShape.startsWith(existingShape) then
-          targetShape.drop(existingShape.size).zipWithIndex.map:
-            case (count, idx) =>
-              val params = (0 until count).toList.map: i =>
-                Param.simple(new VarSymbol(new Tree.Ident(s"eta$$$idx$$$i"), erasedType = N))
-              EtaParamList(
-                ParamList(ParamListFlags.empty, params, N),
-                params.map(p => Arg(N, p.sym.asSimpleRef)),
-              )
-        else
-          lastWords("not the same shape?")
-    
-    private def etaCall(base: Path): Result =
-      Call(base, activeEtaArgss.ne_!)(CallMetadata.mlsFunWithEffect)
-    
-    override def applyBlock(b: Block): Block = b match
-      case Return(res) if activeEtaArgss.nonEmpty =>
-        applyResult(res): res2 =>
-          if activeEtaArgss.isEmpty then Return(res2)
-          else res2 match
-          case p: Path =>
-            Return(etaCall(p).withLocOf(res2))
-          case c @ Call(fun, argss) =>
-            Return(
-              Call(fun, (argss ++ activeEtaArgss).ne_!)(c.metadata))
-          case _ =>
-            val tmp = TempSymbol(N, erasedType = N, "eta$res")
-            Scoped(
-              Set.single(tmp),
-              Assign(tmp, res2, Return(etaCall(tmp.asPath).withLocOf(res2))))
-      case _ => super.applyBlock(b)
-    
-    override def applyDefn(defn: Defn)(k: Defn => Block): Block = defn match
-      case cls: ClsLikeDefn =>
-        withEtaArgss(Nil):
-          super.applyDefn(cls)(k)
-      case _ =>
-        super.applyDefn(defn)(k)
-    
-    override def applyObjBody(defn: ClsLikeBody): ClsLikeBody =
-      withEtaArgss(Nil):
-        super.applyObjBody(defn)
-    
-    override def applyFunDefn(fun: FunDefn): FunDefn =
-      val etaParams = etaParamLists(fun.dSym, fun.params)
-      val params2 = fun.params.mapConserve(applyParamList) ::: etaParams.map(_.params)
-      val body2 = withEtaArgss(etaParams.map(_.args)):
-        applyFunBodyLikeBlock(fun.body)
-      if (params2 is fun.params) && (body2 is fun.body) then fun
-      else FunDefn(fun.owner, fun.sym, fun.dSym, params2, body2)(fun.configOverride, fun.annotations)
-    
-    override def applyLam(lam: Lambda): Lambda =
-      val etaParams = etaParamLists(lam.uid, lam.params :: Nil)
-      val body2 = withEtaArgss(etaParams.map(_.args)):
-        applyFunBodyLikeBlock(lam.body)
-      val wrappedBody = etaParams.map(_.params).foldRight(body2): (params, body) =>
-        Return(Lambda(params, body)(Nil))
-      if (wrappedBody is lam.body) then lam
-      else Lambda(lam.params, wrappedBody)(lam.annot).withLocOf(lam)
-  end Rewriter
-  
-end EtaExpansionRewrite
 
 
 object EtaExpansion:
@@ -239,15 +164,5 @@ object EtaExpansion:
     raise: Raise,
     eState: Elaborator.State,
     symbolPrinter: SymbolPrinter,
-  ): Program =
-    cfg.etaExpansion match
-    case N => p
-    case S(eCfg) =>
-      FlowAnalysis.mkTraceLogger(eCfg.config, "eta-expansion > ", tl).givenIn:
-        val flowAnalysisRes = FlowAnalysis(
-          p,
-          mono = true,
-          nonAffineTracking = false,
-          accumulatorTracking = false,
-        )
-        new EtaExpansionRewrite(new EtaExpansionSolver(flowAnalysisRes)).apply()
+  ): Program = cfg.flowBasedOpt.fold(p):
+    FlowAnalysisBasedRewrite.rewriteWith(p, _, dpe = false, dce = false)

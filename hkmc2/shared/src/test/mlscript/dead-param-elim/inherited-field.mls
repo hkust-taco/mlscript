@@ -6,7 +6,7 @@
 // live, so dead-parameter elimination replaces value with undefined.
 // Disable inlining to keep read available for the dead-parameter analysis.
 :fixme
-:deadParamElim debug
+:flowBasedOpt debugDpe
 :noInline
 :expect 21
 class Parent(val value)
@@ -19,7 +19,7 @@ read(21)
 //│ ═══[RUNTIME ERROR] Error: MLscript call unexpectedly returned `undefined`, the forbidden value.
 //│ ═══[RUNTIME ERROR] Expected: '21', got: 'undefined'
 
-:deadParamElim off
+:flowBasedOpt off
 :noInline
 :expect 21
 class Parent(val value)

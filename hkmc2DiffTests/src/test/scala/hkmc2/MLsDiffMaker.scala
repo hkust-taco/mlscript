@@ -56,6 +56,8 @@ abstract class MLsDiffMaker extends DiffMaker:
   val checkIR = NullaryCommand("checkIR")
   val showOptimizedIR = NullaryCommand("soir")
   val showOptimizedTree = NullaryCommand("olot")
+  val showPipeline = NullaryCommand("showPipeline")
+  val showPipelineTree = NullaryCommand("showPipelineTree")
   val debugOptimizations = NullaryCommand("dopt")
   val noOptimizations = NullaryCommand("noOpt")
   val showIRErasedTypes = NullaryCommand("siret", () =>
@@ -97,9 +99,8 @@ abstract class MLsDiffMaker extends DiffMaker:
   val inlineThreshold = Command("inlineThreshold")(_.trim.toInt)
   val noTailRecOpt = NullaryCommand("noTailRec")
   val deforest = Command("deforest")(_.trim)
-  val etaExpansion = Command("etaExpansion")(_.trim)
   val patMatConsequentSharingThreshold = Command("patMatConsequentSharingThreshold")(_.trim.toInt)
-  val deadParamElim = Command("deadParamElim")(_.trim)
+  val flowBasedOpt = Command("flowBasedOpt")(_.trim)
 
   private val DeforestKnownFlags = Set(
     "mono",
@@ -112,8 +113,8 @@ abstract class MLsDiffMaker extends DiffMaker:
     "logAccumulator",
     "noLogAccumulator",
   )
-  private val EtaExpansionKnownFlags = Set("debug", "on", "off")
-  private val DeadParamElimKnownFlags = Set("debug", "mono", "poly", "off")
+  private val FlowBasedOptKnownFlags =
+    Set("debug", "debugEta", "debugDpe", "debugDce", "on", "off", "mono", "poly")
   
   def mkConfig: Config =
     import Config.*
@@ -173,16 +174,6 @@ abstract class MLsDiffMaker extends DiffMaker:
       target = if wasm.isSet then CompilationTarget.Wasm else CompilationTarget.JS,
       rewriteWhileLoops = rewriteWhile.isSet,
 
-      etaExpansion =
-        val etaExpansionFlags =
-          if etaExpansion.isUnset then Set.empty[Str]
-          else parseFlags(etaExpansion.get)
-        if etaExpansion.isUnset then S(EtaExpansion.default)
-          else
-            reportUnknownFlags(":etaExpansion", etaExpansionFlags, EtaExpansionKnownFlags)
-            reportExclusiveFlagConflict(":etaExpansion", etaExpansionFlags, "on", "off")
-            if etaExpansionFlags.contains("off") then N
-            else S(EtaExpansion.withDebug(etaExpansionFlags.contains("debug"))),
       qqEnabled = importQQ.isSet,
       funcToCls = funcToCls.isSet,
       commentGeneratedCode = debug.isSet,
@@ -209,24 +200,25 @@ abstract class MLsDiffMaker extends DiffMaker:
           inlineThreshold.get.getOrElse(Config.default.inlineThreshold))),
         deadBranchRemoval = Config.default.deadBranchRemoval,
         deadCodeElim = noOptimizations.isUnset,
-        deadParamElim =
-          if deadParamElim.isUnset then S(DeadParamElim.default)
+        flowBasedOpt =
+          if flowBasedOpt.isUnset then S(FlowBasedOpt.default)
           else
-            val flags = parseFlags(deadParamElim.get)
-            reportUnknownFlags(":deadParamElim", flags, DeadParamElimKnownFlags)
-            reportExclusiveFlagConflict(":deadParamElim", flags, "mono", "poly")
-            if flags.contains("off") && (flags - "off").nonEmpty then
-              output(s"$errMarker ':deadParamElim off' conflicts with other flags")
+            val flags = parseFlags(flowBasedOpt.get)
+            reportUnknownFlags(":flowBasedOpt", flags, FlowBasedOptKnownFlags)
+            reportExclusiveFlagConflict(":flowBasedOpt", flags, "on", "off")
+            reportExclusiveFlagConflict(":flowBasedOpt", flags, "mono", "poly")
             if flags.contains("off") then N
-            else
-              S(DeadParamElim(FlowAnalysisConfig(
-                debug = flags.contains("debug"),
-                mono = !flags.contains("poly"),
-                trackNonAffine = false,
-                trackAccumulator = false,
-                logNonAffine = false,
-                logAccumulator = false,
-              ))),
+            else S(FlowBasedOpt(FlowAnalysisConfig(
+              debug = flags.contains("debug"),
+              mono = !flags.contains("poly"),
+              trackNonAffine = false,
+              trackAccumulator = false,
+              logNonAffine = false,
+              logAccumulator = false,
+              debugEta = flags.contains("debugEta"),
+              debugDpe = flags.contains("debugDpe"),
+              debugDce = flags.contains("debugDce"),
+            ))),
         dataFlowAnalysis = noOptimizations.isUnset,
       )
     )
@@ -338,11 +330,14 @@ abstract class MLsDiffMaker extends DiffMaker:
             logAccumulator = false,
             logNonAffine = false
           )),
-        deadParamElim = cfg.deadParamElim.map: d =>
+        flowBasedOpt = cfg.flowBasedOpt.map: d =>
           d.copy(config = d.config.copy(
             debug = false,
             logAccumulator = false,
-            logNonAffine = false
+            logNonAffine = false,
+            debugEta = false,
+            debugDpe = false,
+            debugDce = false,
           ))
       ))
       processTrees(

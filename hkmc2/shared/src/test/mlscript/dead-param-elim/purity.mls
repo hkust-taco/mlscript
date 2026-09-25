@@ -3,66 +3,79 @@
 :flowBasedOpt debugDpe
 
 
-
+// an eliminated arg with effects is still evaluated
+:re
 :soir
-private fun f(a) =
-  a = 3
-  g(a)
-private fun g(a) = 2
-f(undefined)
+private fun f(a) = 0
+fun g(o) = f(o.x)
+g(null)
 //│ dead-param-elim > >>> dead-param-elim results >>>
 //│ dead-param-elim > prodfun f#0 @ <root> -> eliminable: {0}
-//│ dead-param-elim > prodfun g#0 @ <root> -> eliminable: {0}
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ @private
-//│ define f⁰ as fun f¹() { return g⁰() };
-//│ @private
-//│ define g¹ as fun g⁰() { return 2 };
-//│ return f¹()
+//│ define f⁰ as fun f¹() { return 0 };
+//│ define g⁰ as fun g¹(o) { do o.x﹖; return f¹() };
+//│ return g¹(null)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
-//│ = 2
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of null (reading 'x')
 
-
-data class Box(x)
-//│ dead-param-elim > >>> dead-param-elim results >>>
-//│ dead-param-elim > <<< dead-param-elim results <<<
-
-
+// args before it are evaluated first, so this throws on `x` rather than on `y`
+:re
 :soir
-private fun f(a) = Box(a)
-if f(42) is Box(v) then 0
+private fun f(a, b) = a
+fun g(o, p) = f(o.x, p.y)
+g(null, null)
 //│ dead-param-elim > >>> dead-param-elim results >>>
-//│ dead-param-elim > prodfun f#0 @ <root> -> eliminable: {0}
+//│ dead-param-elim > prodfun f#0 @ <root> -> eliminable: {1}
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let scrut;
 //│ @private
-//│ define f² as fun f³() {
-//│   return Box⁰(undefined)
+//│ define f² as fun f³(a) {
+//│   return a
 //│ };
-//│ set scrut = f³();
-//│ match scrut
-//│   Box¹ =>
-//│     return 0
-//│   else
-//│     throw new globalThis⁰.Error⁰("match error")
-//│ end
+//│ define g² as fun g³(o, p) {
+//│   let arg;
+//│   set arg = o.x﹖;
+//│   do p.y﹖;
+//│   return f³(arg)
+//│ };
+//│ return g³(null, null)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
-//│ = 0
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of null (reading 'x')
 
-
-
+// pure args before it are evaluated first too: `bump` sets `n`, so passing `n` must still give 0
 :soir
-private fun f(a) =
-  let x = a
-  0
-f(42)
+let n = 0
+class A with
+  fun bump = set n = 1
+private fun f(a, b) = a
+fun g(o) = f(n, o.bump)
+g(new A)
 //│ dead-param-elim > >>> dead-param-elim results >>>
-//│ dead-param-elim > prodfun f#0 @ <root> -> eliminable: {0}
+//│ dead-param-elim > prodfun f#0 @ <root> -> eliminable: {1}
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ @private define f⁴ as fun f⁵() { return 0 }; return f⁵()
+//│ let tmp;
+//│ @private
+//│ define f⁴ as fun f⁵(a) {
+//│   return a
+//│ };
+//│ define g⁴ as fun g⁵(o) {
+//│   let arg;
+//│   set arg = n⁰;
+//│   do o.bump﹖;
+//│   return f⁵(arg)
+//│ };
+//│ set n⁰ = 0;
+//│ define A⁰ as class A¹ {
+//│   method bump⁰ = fun bump¹ {
+//│     set n⁰ = 1;
+//│     return runtime⁰.Unit⁰
+//│   }
+//│ };
+//│ set tmp = new A¹();
+//│ return g⁵(tmp)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 0
-
+//│ n = 1

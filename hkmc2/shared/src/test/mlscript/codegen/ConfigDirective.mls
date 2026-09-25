@@ -149,7 +149,7 @@ print(42)
 //│ > 42
 
 
-#config(deadParamElim: Some(DeadParamElim(debug: true, mono: true)), inlining: None)
+#config(flowBasedOpt: Some(FlowBasedOpt(debugDpe: true, mono: true)), inlining: None)
 //│ dead-param-elim > >>> dead-param-elim results >>>
 //│ dead-param-elim > <<< dead-param-elim results <<<
 
@@ -160,7 +160,7 @@ deadParamConfig(42)
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ = 0
 
-#config(deadParamElim: None)
+#config(flowBasedOpt: None)
 
 
 #config(deforest: Some(Deforest(mono: false)))

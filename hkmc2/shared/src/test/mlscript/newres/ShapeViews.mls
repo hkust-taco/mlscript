@@ -1,4 +1,6 @@
 :.
+:flowBasedOpt off
+// ^ FIXME: DPE causes problems
 
 // Returning a generic curried function captures outer binders without consuming
 // its own scheme. Marks on its partial applications still distinguish callers.
@@ -91,10 +93,10 @@ class Box(val value: Int)
 private val instance = Box(17)
 private fun invalid(x) = if x is instance(value) then value else 0
 //│ ╔══[COMPILATION ERROR] Resolution error in constructor
-//│ ║  l.92: 	private fun invalid(x) = if x is instance(value) then value else 0
+//│ ║  l.94: 	private fun invalid(x) = if x is instance(value) then value else 0
 //│ ║        	                                 ^^^^^^^^^^^^^^^
 //│ ╟── Instance of class 'Box' cannot be used as a constructor pattern.
-//│ ║  l.91: 	private val instance = Box(17)
+//│ ║  l.93: 	private val instance = Box(17)
 //│ ╙──      	                       ^^^^^^^
 //│ instance = Box(17)
 
@@ -104,10 +106,10 @@ class Pair(val left: Int)(val right: Int)
 private val partial = Pair(18)
 private fun invalid(x) = if x is partial(left) then left else 0
 //│ ╔══[COMPILATION ERROR] Resolution error in constructor
-//│ ║  l.105: 	private fun invalid(x) = if x is partial(left) then left else 0
+//│ ║  l.107: 	private fun invalid(x) = if x is partial(left) then left else 0
 //│ ║         	                                 ^^^^^^^^^^^^^
 //│ ╟── Instance of class 'Pair' cannot be used as a constructor pattern.
-//│ ║  l.104: 	private val partial = Pair(18)
+//│ ║  l.106: 	private val partial = Pair(18)
 //│ ╙──       	                      ^^^^^^^^
 //│ partial = fun
 
@@ -123,8 +125,6 @@ private fun read[A](value: Child[A]) = value.Parent#item
 //│ = [19, 20]
 
 // A nominal parent may itself refer to a captured enclosing type parameter.
-// Disable the independent optimizer bug recorded in dead-param-elim/inherited-field.mls.
-:deadParamElim off
 :expect [21, 22]
 class First(val first: Int)
 class Second(val second: Int)

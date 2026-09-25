@@ -1297,12 +1297,14 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
     case st.Lam(params, body) =>
       warnStmt
       val (paramLists, bodyBlock) = setupFunctionDef(params :: Nil, body, N, N)
+      val affineAnnots = annots.collect:
+        case a @ Annot.Affine(0) => a
       if k.isInstanceOf[TailOp] || bodyBlock.size <= 5
-      then k(Lambda(paramLists.head, bodyBlock)(Nil))
+      then k(Lambda(paramLists.head, bodyBlock)(affineAnnots))
       else
         val lamSym = new BlockMemberSymbol("lambda", Nil, false)
         loweringCtx.collectScopedSym(lamSym)
-        val lamDef = FunDefn.withFreshSymbol(N, lamSym, paramLists, bodyBlock)(configOverride = N, annotations = Nil)
+        val lamDef = FunDefn.withFreshSymbol(N, lamSym, paramLists, bodyBlock)(configOverride = N, annotations = affineAnnots)
         Define(
           lamDef,
           k(lamDef.asPath))
@@ -1791,6 +1793,9 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
       case Annot.Modifier(syntax.Keyword.`public` | syntax.Keyword.`private` | syntax.Keyword.`virtual`) => ()
       case Annot.Modifier(syntax.Keyword("staged")) => ()
       case Annot.Pure => ()
+      case a: Annot.Affine => target match
+        case TermDefinition(k = syntax.Fun) => ()
+        case _ => warn(a)
       case _: Annot.Config => () // Config annotations are handled during FunDefn creation
       case annot => warn(annot)
   
@@ -1815,6 +1820,10 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
         case st.App(Ref(_: BuiltinSymbol), _) => warn(a, S(msg"The @tailcall annotation has no effect on calls to built-in symbols."))
         case st.App(_, _) => ()
         case st.Resolved(_, defnSym) if isImplicitNullaryCall(defnSym) => ()
+        case _ => warn(a)
+      // a lambda has a single parameter list, so only `@affine(0)` means anything on it
+      case a @ Annot.Affine(0) => receiver match
+        case _: st.Lam => ()
         case _ => warn(a)
       case annot => warn(annot)
 
