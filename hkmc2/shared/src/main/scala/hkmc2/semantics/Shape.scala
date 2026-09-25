@@ -118,7 +118,7 @@ end Marked
 
 case class MarkedShape(sh: NonMarkedShape, mark: SomeMarks) extends TermShape:
   protected def getMemberImpl(name: Str)(using NewResolverState): MemberLookup =
-    sh.getMember(name).withMarks(mark :: Nil)
+    sh.getMemberThrough(name, mark)
   override def isInstanceOfClass(cls: ClassLikeDef)(using NewResolverState): Bool = sh.isInstanceOfClass(cls)
   def describe: Str = sh.describe
   def toLoc: Opt[Loc] = sh.toLoc
@@ -148,6 +148,14 @@ sealed trait TermShape extends Shape:
   final def getMember(name: Str)(using state: NewResolverState): MemberLookup =
     state.membersCache.getOrElseUpdate((new Identity[TermShape](this), name), getMemberImpl(name))
   protected def getMemberImpl(name: Str)(using NewResolverState): MemberLookup
+  /** Lookup on this shape as reached through the receiver path `receiver`.
+    * Shapes whose members are declared by a nominal class override this to
+    * locate the member at the class's definition (see NewResolver.nominalMember);
+    * other members are transported through the whole path.
+    */
+  def getMemberThrough(name: Str, receiver: Marks)(using NewResolverState): MemberLookup = receiver match
+    case NoMarks => getMember(name)
+    case receiver: SomeMarks => getMember(name).withMarks(receiver :: Nil)
   
   /** Whether this value is an instance of the nominal class. A saturated class
     * value (e.g. a class without parameters) is still not an instance. */
@@ -420,6 +428,8 @@ final case class ContextualShape(source: NonMarkedShape, instances: Map[VarSymbo
   def toLoc: Opt[Loc] = source.toLoc
   override def isInstanceOfClass(cls: ClassLikeDef)(using NewResolverState): Bool = source.isInstanceOfClass(cls)
   protected def getMemberImpl(name: Str)(using NewResolverState): MemberLookup = source.getMember(name).instantiate(instances)
+  override def getMemberThrough(name: Str, receiver: Marks)(using NewResolverState): MemberLookup =
+    source.getMemberThrough(name, receiver).instantiate(instances)
 
 /** A type application has consumed the declaration's scheme. Subsequent term
   * applications retain this binder group and the supplied caller references.
@@ -457,24 +467,9 @@ final case class NominalInstanceView(defn: ClassLikeDef, bindings: Map[VarSymbol
       case Marked(parent: NominalInstanceView, _) => parent.ancestor(cls)
       case _ => N
   protected def getMemberImpl(name: Str)(using NewResolverState): MemberLookup =
-    defn.body.members.get(name) match
-      case S(member) =>
-        // Supplied arguments are outside the class; its parameter annotations
-        // are inside. Enclosing binders keep their own lexical contexts and
-        // enter the class through the annotation's explicit Capture nodes.
-        val parameters = defn.tparams.map(_.sym).toSet
-        // Module/object references introduce no value invocation boundary.
-        val scope = defn.sym match
-          case _: ModuleOrObjectSymbol => N
-          case symbol => S(ResolutionBoundary(symbol))
-        val local = bindings.map: (symbol, bound) =>
-          symbol -> (if parameters(symbol) && scope.nonEmpty then resolver.captureType(bound, defn.sym) else bound)
-        MemberLookup.Declared(member, local,
-          scope.toList.map(ExitMark(_, N, NoMarks)), annotation, true)
-      case N =>
-        (name.toIntOption, resolver.arrayElementType(this)) match
-          case (S(index), S(element)) if index >= 0 => MemberLookup.Indexed(TupleShape.TypedField(element, Nil), Nil)
-          case _ => parent.fold[MemberLookup](MemberLookup.Missing)(_.getMember(name)).withAnnotation(annotation)
+    resolver.nominalMember(this, name, NoMarks)
+  override def getMemberThrough(name: Str, receiver: Marks)(using NewResolverState): MemberLookup =
+    resolver.nominalMember(this, name, receiver)
 
 /** Parameter types and arity exposed by one list in a declared calling interface.
   * A rest annotation describes the whole trailing array; hasRest also distinguishes
@@ -602,6 +597,9 @@ final case class TupleShape(source: Term, elements: Ls[TupleShape.Element],
         case Nil => MemberLookup.Missing
       loop(segments, index)
     case _ => arrayParent.getMember(name)
+  override def getMemberThrough(name: Str, receiver: Marks)(using NewResolverState): MemberLookup = name.toIntOption match
+    case S(index) if index >= 0 => super.getMemberThrough(name, receiver)
+    case _ => arrayParent.getMemberThrough(name, receiver)
 
 /** Values whose members and call results are deliberately checked only at runtime.
   * Unlike UnknownValueShape, this authorizes dynamic operations; it is introduced
@@ -771,6 +769,9 @@ class IntroShape(val trm: IntroTerm, val primitive: Opt[NominalInstanceView]) ex
     case lam: Term.Lam => MemberLookup.Missing // TODO: methods on lambdas
     // case newTerm: Term.New =>
     //   Map.empty // TODO
+  override def getMemberThrough(name: Str, receiver: Marks)(using NewResolverState): MemberLookup = trm match
+    case _: Term.Lit | _: Term.UnitVal => primitive.fold[MemberLookup](MemberLookup.Missing)(_.getMemberThrough(name, receiver))
+    case _: Term.Lam => super.getMemberThrough(name, receiver)
   override def isInstanceOfClass(cls: ClassLikeDef)(using NewResolverState): Bool =
     primitive.exists(_.isInstanceOfClass(cls))
   def toLoc: Opt[Loc] = trm.toLoc

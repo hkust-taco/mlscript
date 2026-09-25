@@ -210,6 +210,10 @@ final class NewResolverState private (
   // exporters. Nominal interfaces may use any enclosing explicit type binder.
   val lexicalTypeBinders: Cache[AnyDefinitionSymbol, Set[VarSymbol]] =
     new Cache(inherited.map(_.lexicalTypeBinders), identity)
+  // Recorded with lexicalTypeBinders: the resolution scopes enclosing a type
+  // definition. Declared members are located at their class's definition.
+  val lexicalBoundaries: Cache[AnyDefinitionSymbol, Set[ResolutionBoundary]] =
+    new Cache(inherited.map(_.lexicalBoundaries), identity)
   val typeDependencies: Cache[TypeResolution, Set[VarSymbol]] =
     new Cache(inherited.map(_.typeDependencies), identity)
   val regularTypes: Cache[TypeResolution, Bool] =

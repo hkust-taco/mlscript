@@ -55,3 +55,11 @@ let xs = Array(3)
 [xs is Array, xs.length, String(42), (new Error("new")) is Error]
 //│ = [true, 3, "42", true]
 //│ xs = [<3 empty items>]
+
+// Int inherits toString from Num. The parent reference is captured into Int's
+// scope, so the inherited member must leave that scope before the receiver's
+// path, here the exit from `one`, is applied.
+:expect "1"
+fun one() = 1
+one().toString()
+//│ = "1"

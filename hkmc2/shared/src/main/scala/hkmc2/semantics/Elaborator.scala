@@ -124,6 +124,10 @@ object Elaborator:
       env.valuesIterator.flatMap(_.symbol).collect:
         case symbol: VarSymbol if symbol.decl.exists(_.isInstanceOf[TyParam]) => symbol
     
+    /** The resolution scopes that references from this context capture through. */
+    lazy val resolutionBoundaries: Set[ResolutionBoundary] =
+      parent.fold(Set.empty[ResolutionBoundary])(_.resolutionBoundaries) ++ outer.resolutionBoundary.map(ResolutionBoundary(_))
+    
     def +(local: Str -> Symbol): Ctx =
       copy(env = env + local.mapSecond(Ctx.RefElem(_)))
     def ++(locals: IterableOnce[Str -> Symbol]): Ctx =
@@ -2287,6 +2291,7 @@ extends Importer:
         
         val outerCtx = ctx
         rstate.lexicalTypeBinders(td.symbol) = ctx.typeBinders
+        rstate.lexicalBoundaries(td.symbol) = ctx.resolutionBoundaries
         
         var newCtx = S(td.symbol).collectFirst:
             case s: InnerSymbol => s

@@ -136,3 +136,25 @@ module Local with
   val mapped = [Known(4)].map((item, ...) => Known(item.known + 1))
 Local.mapped.map((item, ...) => item.known)
 //│ = [5]
+
+// A local class's members are located inside its enclosing activation. Receivers
+// annotated in a nested function add an exit from that function, which is only
+// the receiver's provenance: it must not move the members of the local class.
+:expect [1, 2, 3]
+class First(val first: Int)
+class Second(val second: Int)
+class Item(val value: Int)
+private fun wrap[A](value: A) =
+  class Local(val item: A) with
+    fun get[U](f: A -> U): U = f(item)
+  fun inner() = (new Local(value) as Local)
+  [inner().item, inner().get(x => x)]
+private fun wrapped[A](value: A) =
+  class Local(val item: A) with
+    fun get[U](f: A -> U): U = f(item)
+  (new Local(value) as Local)
+private fun viaNested(x) =
+  fun nested() = wrapped[Item](x)
+  nested().get(i => i.value)
+[wrap[First](First(1)).0.first, wrap[Second](Second(2)).1.second, viaNested(Item(3))]
+//│ = [1, 2, 3]

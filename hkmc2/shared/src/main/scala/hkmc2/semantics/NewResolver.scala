@@ -1361,6 +1361,89 @@ class NewResolver:
             publishParameter(param, element.enter(context :: Nil))
         shape
 
+  /** Member lookup on a declared nominal interface reached through `receiver`.
+    *
+    * A member's signature is interpreted at its class's definition: its Capture
+    * nodes cross from the member into the class's enclosing scopes. The receiver
+    * path, however, starts where the value was created or annotated, which can be
+    * nested more deeply. For example, in
+    * `fun mk(xs) = xs.map((x, ...) => mk([x]))`, the tuple `[x]` is created in
+    * one activation of `mk` and passed to another, so its path is `↘mk ↗mk`,
+    * whereas `mk([1])` passes a tuple with path `↘mk`. The innermost exits of
+    * scopes that do not enclose the class's definition (here, the first `↗mk`,
+    * since `Array` is global) are the value's provenance. They transport the
+    * class's type-argument bindings, but do not move the member's scope.
+    * Appending the whole path to the member instead places the scope of `map`
+    * inside `mk` for one receiver and outside it for the other. Both receivers
+    * share the `U` instance of the same `map` selection. Candidates published
+    * through one path then cross the same scope twice when they are read
+    * through the other path.
+    */
+  private[semantics] def nominalMember(view: NominalInstanceView, name: Str, receiver: Marks)(using NewResolverState): MemberLookup =
+    val defn = view.defn
+    // Module/object references introduce no value invocation boundary.
+    val scope = defn.sym match
+      case _: ModuleOrObjectSymbol => N
+      case symbol => S(ResolutionBoundary(symbol))
+    defn.body.members.get(name) match
+      case S(member) =>
+        val (location, provenance) = splitReceiverPath(defn, receiver)
+        // Supplied arguments are outside the class; its parameter annotations
+        // are inside. Enclosing binders keep their own lexical contexts and
+        // enter the class through the annotation's explicit Capture nodes.
+        val parameters = defn.tparams.map(_.sym).toSet
+        val local = view.bindings.map: (symbol, bound) =>
+          val transported = provenance match
+            case NoMarks => bound
+            case provenance: ExitMark => transportType(bound, provenance :: Nil)
+          symbol -> (if parameters(symbol) && scope.nonEmpty then captureType(transported, defn.sym) else transported)
+        MemberLookup.Declared(member, local, scope.toList.map(ExitMark(_, N, NoMarks)), view.annotation, true)
+          .withMarks(location match
+            case NoMarks => Nil
+            case location: SomeMarks => location :: Nil)
+      case N =>
+        (name.toIntOption, arrayElementType(view)) match
+          // An element's value keeps its whole path, including its provenance.
+          case (S(index), S(element)) if index >= 0 =>
+            MemberLookup.Indexed(TupleShape.TypedField(element, Nil), Nil).withMarks(receiver :: Nil)
+          case _ =>
+            // The parent is referenced inside the class, like its own members'
+            // annotations: `class Int extends Num` captures `Num` into Int's
+            // scope. An inherited member exits that scope before the receiver
+            // path applies, just like an own member.
+            val exit = scope.fold[Marks](NoMarks)(ExitMark(_, N, NoMarks))
+            val inherited = view.parent.fold[MemberLookup](MemberLookup.Missing): parent =>
+              val Marked(parentView, inner) = parent
+              InstanceShape(extremeType(false)).exit(inner).exit(exit).exit(receiver) match
+                case Marked(_, path) => parentView.getMemberThrough(name, path)
+                // The parent interface is not reachable through this receiver;
+                // applying these marks to its members yields no candidates.
+                case NoShape => parentView.getMember(name).withMarks(inner :: exit :: receiver :: Nil)
+            inherited.withAnnotation(view.annotation)
+
+  /** Split a receiver path into the path from `defn`'s definition to the consumer,
+    * and the innermost exits of scopes not enclosing that definition. Exits are
+    * applied innermost first, so once a path leaves an enclosing scope of `defn`,
+    * it cannot leave a scope that does not enclose `defn`.
+    */
+  private def splitReceiverPath(defn: ClassLikeDef, receiver: Marks)(using NewResolverState): (Marks, ExitMarks) =
+    val enclosing = defn.sym.getState.newResolverState.lexicalBoundaries.get(defn.sym).getOrElse(
+      lastWords(s"Nominal declaration ${defn.sym.nme} must record its enclosing resolution scopes"))
+    def exits(path: ExitMarks): (ExitMarks, ExitMarks) = path match
+      case ExitMark(boundary, id, rest) if enclosing(boundary) =>
+        val (location, provenance) = exits(rest)
+        (ExitMark(boundary, id, location), provenance)
+      case provenance =>
+        softAssert(!enclosing.exists(provenance.hasExit),
+          "A receiver path cannot leave an enclosing scope of its class before a nested scope")
+        (NoMarks, provenance)
+    def go(path: Marks): (Marks, ExitMarks) = path match
+      case EntryMark(boundary, id, rest) =>
+        val (location, provenance) = go(rest)
+        (EntryMark(boundary, id, location), provenance)
+      case path: ExitMarks => exits(path)
+    go(receiver)
+
   private[semantics] def arrayElementType(array: NominalInstanceView): Opt[DeclaredType] =
     val cls = prelude.builtins.Array.defn.get
     array.ancestor(cls).flatMap(_.bindings.get(cls.tparams.head.sym))

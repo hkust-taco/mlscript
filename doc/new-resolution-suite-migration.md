@@ -76,8 +76,8 @@ The remaining option consumers have these blockers when compiled with
 | --- | --- |
 | `Block`, `Shape` | Missing nominal members and callback arity mismatches; `Block` also needs a public interface for `showArm`. |
 | `Iter`, `MutMap`, `ups/EvaluationContext` | Missing public parameter interfaces and unresolved member selections. |
-| `FingerTreeList` | Assertion failure in the mark-path invariant ("Repeated exit from the same lexical resolution scope") when `mk` calls `args.reduce` with a callback that feeds the accumulator back into `mk`. The same failure occurs for `map` when a callback element reaches the receiver through a recursive call; `newres/Arrays.mls` records it as a `:fixme`. |
-| `parsing/Extension`, `ParseRule`, `Test`, `TreeHelpers` | Repeated-entry mark assertion during nominal field projection: `NominalInstanceView.getMemberImpl` calls `captureType` on an argument whose path already contains that scope. Determine the source of the duplicate transfer without weakening the marks algebra. |
+| `FingerTreeList` | Compilation exceeds the 25-second test limit. Tuple literals with several spreads, such as `concatMiddle`'s `[...ay1, ...middle, ...ax2]`, produce one candidate per combination of operand candidates, and each is matched again by `toNodes`. Candidate sets compare shapes structurally, which rehashes these deep shapes; identity-based candidate storage is the next step. |
+| `parsing/Extension`, `ParseRule`, `Test` | Selections on values imported from legacy-resolution modules, such as `Parser.tracer`, have no resolved target. `TreeHelpers` compiles standalone; its consumers remain to be checked. |
 | `parsing/Lexer` | Opened binary `~` conflicts with the builtin; calls with trailing contextual parameters leave function values where tokens are expected. |
 | `parsing/Parser` | Pattern-field flow and unresolved nominal members. |
 | `parsing/ParseRuleVisualizer`, `Rules`, `parsing-web-demo/main` | Missing host/public interfaces and unresolved selections. |

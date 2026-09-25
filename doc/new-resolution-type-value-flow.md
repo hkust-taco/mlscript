@@ -190,7 +190,9 @@ The relevant scope crossings are:
 
 - Function/method entry and exit, and lexical captures of enclosing definitions.
 - Nominal member projection: capture argument references into the class and exit
-  the class when publishing its selected member view.
+  the class when publishing its selected member view. Inherited members also exit
+  the class through which they are selected, since the parent reference is
+  captured into that class.
 - Constructor invocation: use the same instance boundary for its class and
   constructor, including later parameter lists.
 
@@ -201,6 +203,18 @@ only whether an outer shape is marked cannot decide this. `transportShape`
 composes paths on deferred instance references before delivering them at projection
 and result boundaries. Leaving a wildcard entry outside a wrapper could consume a
 call exit before the wrapper's own path was considered.
+
+A declared member is located at its class's definition, where its signature's
+`Capture` nodes start. A receiver path starts where the value was created or
+annotated instead. Its innermost exits from scopes that do not enclose the class's
+definition are the receiver's provenance: they transport the class's argument
+bindings, but not the member's own scope. Otherwise a member's scope would move
+with each receiver's origin. Receivers created at different depths then disagree
+about the scopes that enclose shared nodes such as a method's type-parameter
+instance at one call site, and a candidate published through one receiver crosses
+a scope twice when read through another. `NewResolver.nominalMember` performs this
+split using the enclosing scopes that elaboration records for each type definition.
+`newres/Arrays.mls` and `GenericMethods.mls` cover recursive and nested receivers.
 
 New-resolution syntax records lexical `Capture` nodes, including in the prelude.
 Imported type interpretations retain these source references in the consuming
