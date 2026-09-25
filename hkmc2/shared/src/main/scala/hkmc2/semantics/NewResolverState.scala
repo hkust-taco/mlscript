@@ -212,6 +212,8 @@ final class NewResolverState private (
     new Cache(inherited.map(_.lexicalTypeBinders), identity)
   val typeDependencies: Cache[TypeResolution, Set[VarSymbol]] =
     new Cache(inherited.map(_.typeDependencies), identity)
+  val combinedTypes: Cache[TypeFormula[DeclaredType], DeclaredType] =
+    new Cache(inherited.map(_.combinedTypes), identity)
   val pendingTypeDependencies: Cache[TypeResolution, TypeDependencyHost] =
     new Cache(inherited.map(_.pendingTypeDependencies), identity)
   val dependencySubscriptions: Seen[(TypeResolution, TypeResolution)] =

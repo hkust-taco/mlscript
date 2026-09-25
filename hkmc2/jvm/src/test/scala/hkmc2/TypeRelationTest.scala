@@ -156,6 +156,65 @@ class TypeRelationTest extends AnyFunSuite:
     assert(target.inferenceHost.listeners.size == before)
     assert(h.state.allocatedTypeInstanceCount == 0)
 
+  test("captured alias reduction uses ordinary exit and entry including caller identity loss"):
+    val h = new Harness
+    import h.given
+    val (formal, ft) = h.parameter("X")
+    val symbol = TypeAliasSymbol(Tree.Ident("Identity"))
+    val member = BlockMemberSymbol("Identity", Nil)
+    symbol.defn = S(TypeDef(symbol, member, List(TyParam(FldFlags.empty, N, formal)),
+      S(ft.resolution.source), N, Nil))
+    val alias = h.tpe(TypeShape.Alias(symbol, S(ft.resolution)))
+    val scope = TermSymbol(Fun, N, Tree.Ident("owner"))
+    val owner = ResolutionBoundary(scope)
+    val captured = h.tpe(TypeShape.Captured(alias.resolution, scope))
+    val (argument, at) = h.parameter("A")
+    val application = h.tpe(TypeShape.Applied(captured.resolution, List(at.resolution)))
+    val (target, tt) = h.parameter("Target")
+    val original = h.resolver.transportType(tt, EntryMark(owner, S(FlowSymbol.app()), NoMarks) :: Nil)
+    val outside = h.resolver.transportType(original, ExitMark(owner, N, NoMarks) :: Nil)
+    val expected = h.resolver.transportType(outside, EntryMark(owner, N, NoMarks) :: Nil)
+    assert(expected != original)
+    val actual = h.resolver.declaredType(application.resolution, Map(argument -> original))
+    assert(actual == expected)
+    val early = IntroShape(Term.UnitVal(), N)
+    val late = DynShape()
+    h.resolver.publishParameter(target, early)
+    val seen = h.observe(ContextualType(actual, Nil))
+    h.resolver.publishParameter(target, late)
+    assert(seen.toList == List(early, late).map(MarkedShape.enter(_, owner, N)))
+    val count = target.inferenceHost.listeners.size
+    (1 to 1000).foreach: _ =>
+      assert(h.resolver.declaredType(application.resolution, Map(argument -> actual)) == expected)
+    assert(target.inferenceHost.listeners.size == count)
+    assert(h.state.allocatedTypeInstanceCount == 0)
+
+  test("recursive Boolean arguments share a fixed point and preserve each atom's marks and late bounds"):
+    val h = new Harness
+    import h.given
+    val (a, at) = h.parameter("A")
+    val (b, bt) = h.parameter("B")
+    val (target, tt) = h.parameter("Target")
+    val owner = ResolutionBoundary(TermSymbol(Fun, N, Tree.Ident("owner")))
+    val path = EntryMark(owner, S(FlowSymbol.app()), NoMarks)
+    val original = h.resolver.transportType(tt, path :: Nil)
+    val source = h.tpe(TypeShape.Union(at.resolution, bt.resolution))
+    val expected = h.resolver.declaredType(source.resolution, Map(a -> original))
+    val early = IntroShape(Term.UnitVal(), N)
+    val late = DynShape()
+    h.resolver.publishParameter(target, early)
+    val seen = h.observe(ContextualType(expected, Nil))
+    val counts = (target.inferenceHost.listeners.size, b.inferenceHost.listeners.size)
+    var current = expected
+    (1 to 1000).foreach: _ =>
+      current = h.resolver.declaredType(source.resolution, Map(a -> current))
+      assert(current eq expected)
+      h.resolver.listenInstanceViews(InstanceShape(current))(_ => ())
+    h.resolver.publishParameter(b, late)
+    assert(seen.toSet == Set(MarkedShape.enter(early, owner, path.id), late))
+    assert((target.inferenceHost.listeners.size, b.inferenceHost.listeners.size) == counts)
+    assert(h.state.allocatedTypeInstanceCount == 0)
+
   test("recursive structural projections preserve bounds and reuse their listeners"):
     val h = new Harness
     import h.given
@@ -370,7 +429,8 @@ class TypeRelationTest extends AnyFunSuite:
     val (a, at) = h.parameter("A")
     val one = h.tpe(TypeShape.Unit)
     val two = h.tpe(TypeShape.Abstract)
-    val union = h.tpe(TypeShape.Union(one.resolution, two.resolution))
+    val writtenUnion = h.tpe(TypeShape.Union(one.resolution, two.resolution))
+    val union = h.resolver.declaredType(writtenUnion.resolution, Map.empty)
     val first = IntroShape(Term.UnitVal(), N)
     val second = DynShape()
     h.resolver.publishParameter(a, first)
@@ -410,7 +470,8 @@ class TypeRelationTest extends AnyFunSuite:
     val (a, at) = h.parameter("A")
     val one = h.tpe(TypeShape.Unit)
     val two = h.tpe(TypeShape.Abstract)
-    val union = h.tpe(TypeShape.Union(one.resolution, two.resolution))
+    val writtenUnion = h.tpe(TypeShape.Union(one.resolution, two.resolution))
+    val union = h.resolver.declaredType(writtenUnion.resolution, Map.empty)
     val bound = IntroShape(Term.UnitVal(), N)
     h.state.markExplicitTypeArgument(a)
     h.resolver.publishParameter(a, InstanceShape(union))

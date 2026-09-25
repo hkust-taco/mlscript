@@ -196,6 +196,9 @@ class NewResolver:
               edges ::= child -> hidden
               visit(child)
             def child(res: TypeResolution): Unit = edge(res, Set.empty)
+            def reference(tpe: DeclaredType): Unit =
+              visit(tpe.resolution)
+              tpe.bindings.values.foreach(reference)
             shapes.foreach:
               case TypeShape.Parameter(symbol, _) => direct += symbol
               case TypeShape.Nominal(defn) =>
@@ -240,8 +243,11 @@ class NewResolver:
               case TypeShape.Wildcard(input, output) => input.foreach(child); output.foreach(child)
               // These synthesized nodes retain their own interpreted references
               // or inference hosts; none reads the surrounding binding map.
-              case TypeShape.Argument(_) | TypeShape.SelectedArgument(_, _) | TypeShape.Contextual(_) | TypeShape.Inferred(_) |
-                  TypeShape.Hole(_) | TypeShape.Unit | TypeShape.Dynamic | TypeShape.Abstract |
+              case TypeShape.Combined(formula) => formula.orderedAtoms.foreach(reference)
+              case TypeShape.Argument(parts) => reference(parts.input); reference(parts.output)
+              case TypeShape.SelectedArgument(argument, _) => reference(argument)
+              case TypeShape.Contextual(context) => reference(context.tpe)
+              case TypeShape.Inferred(_) | TypeShape.Hole(_) | TypeShape.Unit | TypeShape.Dynamic | TypeShape.Abstract |
                   TypeShape.Top | TypeShape.Bottom => ()
             graph(res) = (direct, edges)
       visit(resolution)
@@ -304,24 +310,62 @@ class NewResolver:
       resolution.currentShapes.toList match
         case TypeShape.Parameter(symbol, _) :: Nil if bindings.contains(symbol) => selectArgument(bindings(symbol), positive)
         case TypeShape.Captured(base, thru) :: Nil => captureType(loop(base, bindings, aliases), thru)
-        case TypeShape.Applied(base, arguments) :: Nil => base.currentShapes.toList match
-          case TypeShape.Alias(symbol, S(rhs)) :: Nil if !aliases(symbol) =>
-            val parameters = symbol.defn.get.tparams
-            if parameters.length != arguments.length then retain
-            else
-              // Reduce alias applications before storing them in another type's
-              // environment. Otherwise Chain[Identity[A]] retains a new wrapper
-              // around A on every recursive projection. Arguments are reduced in
-              // their original environment before the alias's formals are bound.
-              val supplied = arguments.map(loop(_, bindings, aliases))
-              val substitutions = parameters.zip(supplied).map: (parameter, argument) =>
-                parameter.sym -> argumentType(argument, parameter.vce)
-              // Unproductive source-alias cycles stop at their original node.
-              // No expansion through a nominal, record, or function is needed.
-              loop(rhs, bindings ++ substitutions, aliases + symbol)
-          case _ => retain
+        case TypeShape.Union(left, right) :: Nil =>
+          combinedType(resolution, typeFormula(loop(left, bindings, aliases)).union(typeFormula(loop(right, bindings, aliases))))
+        case TypeShape.Intersection(left, right) :: Nil =>
+          combinedType(resolution, typeFormula(loop(left, bindings, aliases)).intersection(typeFormula(loop(right, bindings, aliases))))
+        case TypeShape.Applied(base, arguments) :: Nil =>
+          def applyAlias(base: DeclaredType, supplied: Ls[DeclaredType], seen: Set[TypeResolution]): Opt[DeclaredType] =
+            if seen(base.resolution) then N else base.resolution.currentShapes.toList match
+              case TypeShape.Alias(symbol, S(rhs)) :: Nil if !aliases(symbol) =>
+                val parameters = symbol.defn.get.tparams
+                if parameters.length != supplied.length then N else
+                  val substitutions = parameters.zip(supplied).map: (parameter, argument) =>
+                    parameter.sym -> argumentType(argument, parameter.vce)
+                  S(loop(rhs, effectiveBindings(base) ++ substitutions, aliases + symbol))
+              case TypeShape.Contextual(reference) :: Nil =>
+                // Use exactly the interpreter's application rule: move caller
+                // arguments to the template endpoint, substitute there, then
+                // transport the result back. A wildcard exit followed by entry
+                // is not cancelled; transportType retains its ordinary marks.
+                applyAlias(reference.tpe.instantiate(base.instances),
+                  supplied.map(transportType(_, inverseMarks(reference.marks))), seen + base.resolution)
+                  .map(transportType(_, reference.marks))
+              case _ => N
+          // Reduce arguments in their caller environment before binding formals.
+          // The alias guard grows only on body expansion, so nested Identity
+          // applications reduce while unproductive recursive aliases stop.
+          applyAlias(loop(base, bindings, aliases), arguments.map(loop(_, bindings, aliases)), Set.empty).getOrElse(retain)
         case _ => retain
     loop(resolution, bindings, Set.empty)
+
+  /** Normalize Boolean combinations without observing an atom's candidates.
+    * Transport distributes over components using the ordinary transportType
+    * operation; no exit/entry cancellation is introduced by normalization.
+    */
+  private def typeFormula(tpe: DeclaredType)(using NewResolverState): TypeFormula[DeclaredType] =
+    tpe.resolution.currentShapes.toList match
+      case (parameter: TypeShape.Parameter) :: Nil if !tpe.bindings.contains(parameter.symbol) =>
+        // Different written occurrences of A are the same lattice atom. Limit
+        // this canonicalization to combinations, so ordinary annotation and
+        // storage references retain their precise diagnostic source location.
+        TypeFormula.atom(parameterType(parameter).copy(positive = tpe.positive).instantiate(tpe.instances))
+      case TypeShape.Combined(formula) :: Nil => formula.map(_.instantiate(tpe.instances))
+      case TypeShape.Contextual(reference) :: Nil =>
+        typeFormula(reference.tpe.instantiate(tpe.instances)).map(transportType(_, reference.marks))
+      case TypeShape.Top :: Nil => TypeFormula.top
+      case TypeShape.Bottom :: Nil => TypeFormula.bottom
+      case _ => TypeFormula.atom(tpe)
+
+  private def combinedType(source: TypeResolution, formula: TypeFormula[DeclaredType])(using NewResolverState): DeclaredType =
+    if formula.clauses.isEmpty then extremeType(false)
+    else if formula.clauses.contains(Set.empty) then extremeType(true)
+    else if formula.clauses.size == 1 && formula.atoms.size == 1 then formula.atoms.head
+    else rstate.combinedTypes.getOrElseUpdate(formula, {
+      val resolution = new TypeResolution(source.source, source.fail)
+      resolution.publish(TypeShape.Combined(formula))
+      DeclaredType(resolution, Map.empty, Map.empty, true)
+    })
 
   private def declaredType(resolution: TypeResolution, context: DeclaredType)(using NewResolverState): DeclaredType =
     declaredType(resolution, context.bindings, context.positive).instantiate(context.instances)
@@ -509,6 +553,8 @@ class NewResolver:
         case TypeShape.Intersection(left, right) =>
           follow(declaredType(left, current), noTypeArguments, captures, next)
           follow(declaredType(right, current), noTypeArguments, captures, next)
+        case TypeShape.Combined(formula) => formula.orderedAtoms.foreach: atom =>
+          follow(atom.instantiate(current.instances), noTypeArguments, captures, next)
         case _ => ()
     withCanonicalType(tpe)(follow(_, noTypeArguments, Nil, Set.empty))
 
@@ -705,6 +751,8 @@ class NewResolver:
               case TypeShape.Record(source, fields) => publish(RecordTypeShape(source, fields, effectiveBindings(current), current.positive))
               case TypeShape.Union(left, right) => next(left); next(right)
               case TypeShape.Intersection(left, right) => next(left); next(right)
+              case TypeShape.Combined(formula) => formula.orderedAtoms.foreach: atom =>
+                follow(atom.instantiate(current.instances), noTypeArguments, aliases, publish)
               case TypeShape.Unit | TypeShape.Abstract => publish(OpaqueTypeShape(tpe.resolution.source))
         withCanonicalType(tpe)(follow(_, noTypeArguments, Set.empty, host.publish))
 

@@ -90,7 +90,10 @@ The inventory below separates these from compiler and prelude gaps.
   [type-argument constraint design](new-resolution-type-value-flow.md), including
   supplied member-input
   constraints, reconstructed receiver contexts, inferred missing member types,
-  regular structural interfaces, and the whole graph's termination bound.
+  [regular structural interfaces](new-resolution-regular-types.md), and the whole
+  graph's termination bound. Alias and Boolean argument normalization is implemented;
+  regularity checking still needs dependencies on input and output argument parts
+  and relationships between recursive arguments.
   Concrete outstanding cases are in
   `newres/InstantiationSites.mls`, `StoredSpecializations.mls`, `ConstructorInstances.mls`,
   `InferenceHoles.mls`, `PartialSignatures.mls`, and `TypeGraphTermination.mls`.

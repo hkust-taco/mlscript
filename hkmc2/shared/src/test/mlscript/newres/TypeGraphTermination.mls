@@ -168,3 +168,104 @@ private fun local[A](value: A) =
   value
 local[Int](1)
 //│ = 1
+
+// Repeated unions reach a finite set of components.
+type Chain[A] = {value: A, next: Chain[A | Int]}
+private fun walk[A](chain: Chain[A], n: Int) =
+  if n > 0 then walk(chain.next, n - 1) else ()
+
+// Repeated intersections also reach a fixed point.
+type Chain[A] = {value: A, next: Chain[A & Int]}
+private fun walk[A](chain: Chain[A], n: Int) =
+  if n > 0 then walk(chain.next, n - 1) else ()
+
+// Alternating Boolean operations need distribution and absorption to saturate.
+type Chain[A] = {value: A, next: Chain[(A | Int) & Str]}
+private fun walk[A](chain: Chain[A], n: Int) =
+  if n > 0 then walk(chain.next, n - 1) else ()
+
+// An absorbed constructor does not cause recursive argument growth.
+type Chain[A] = {value: A, next: Chain[A | (A & Array[A])]}
+private fun walk[A](chain: Chain[A], n: Int) =
+  if n > 0 then walk(chain.next, n - 1) else ()
+
+// A union does not hide a constructor that survives normalization.
+:breakme
+:e
+type Chain[A] = {value: A, next: Chain[A | Array[A]]}
+private fun unused[A](chain: Chain[A]) = ()
+
+// Growth through a forwarding alias and a mutual cycle is still non-regular.
+:breakme
+:e
+type Wrap[A] = Array[A]
+type Left[A] = {value: A, next: Right[Wrap[A]]}
+type Right[B] = {value: B, next: Left[B]}
+private fun unused[A](chain: Left[A]) = ()
+
+// Tuple and function constructors also count as growth.
+:breakme
+:e
+type Chain[A] = {value: A, next: Chain[[A, A]]}
+private fun unused[A](chain: Chain[A]) = ()
+
+:breakme
+:e
+type Chain[A] = {value: A, next: Chain[Int -> A]}
+private fun unused[A](chain: Chain[A]) = ()
+
+// A forward alias must be resolved before deciding whether an argument grows.
+:breakme
+:e
+type Chain[A] = {value: A, next: Chain[Later[A]]}
+private fun unused[A](chain: Chain[A]) = ()
+type Later[A] = Array[A]
+
+// Boolean combinations can include an omitted argument, which remains a source hole.
+type Chain[A] = {value: A, next: Chain[A | Array]}
+private fun walk[A](chain: Chain[A], n: Int) =
+  if n > 0 then walk(chain.next, n - 1) else ()
+
+// A record constructor is growth even when its field is itself a union.
+:breakme
+:e
+type Chain[A] = {value: A, next: Chain[{item: A | Int}]}
+private fun unused[A](chain: Chain[A]) = ()
+
+// Captured forwarding aliases inside a Boolean argument must also saturate.
+type Identity[X] = X
+private fun local[A](value: A) =
+  type Chain[B] = {value: B, next: Chain[B | Identity[B]]}
+  private fun walk[B](chain: Chain[B], n: Int) =
+    if n > 0 then walk(chain.next, n - 1) else ()
+  value
+local[Int](1)
+//│ = 1
+
+// Reusing one alias body twice must not hide the second constructor layer.
+:breakme
+:e
+type Wrap[A] = Array[A]
+type Chain[A] = {value: A, next: Chain[Wrap[Wrap[A]]]}
+private fun unused[A](chain: Chain[A]) = ()
+
+// Boolean-only recursion also needs stable references, without a record boundary.
+type Choice[A] = A | Choice[A | Int]
+fun choose(value: Choice[Str]): Choice[Str] = value
+
+// Constructor growth is observable through a Boolean-only recursive alias too.
+:breakme
+:e
+type Choice[A] = A | Choice[Array[A]]
+private fun unused(value: Choice[Int]) = ()
+
+// Selecting an absent output resets the observable argument to Any.
+// This finite observation must not be rejected as non-regular constructor growth.
+type Chain[A] = {value: A, next: Chain[in Array[A]]}
+private fun read[A](chain: Chain[A]) = chain.next.value
+
+// Absorption across recursive steps can depend on the relationship between arguments.
+// After two steps both arguments stabilize, despite a syntactic constructor cycle.
+type Stable[A, B] = {value: A, next: Stable[A | (B & Array[A]), A]}
+private fun walk[A, B](chain: Stable[A, B], n: Int) =
+  if n > 0 then walk(chain.next, n - 1) else ()

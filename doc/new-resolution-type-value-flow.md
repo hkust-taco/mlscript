@@ -41,15 +41,16 @@ value-scope crossings](#type-reference-scope-audit) is approved. Recursive refer
 graphs must preserve caller and receiver contexts without growing binding environments. The variance
 substitution rules below are implemented for declared type views.
 
-Require structural types to have a finite recursive representation: the proposed
-[regularity restriction](#regular-structural-types) rules out structural unfolding
-that keeps producing distinct types. The exact check remains to be reviewed before
-implementation. This restriction and sharing regular recursive references are
-separate obligations; neither follows from the bound on call-site symbols.
+Require structural types to have a finite recursive representation, after alias
+and union/intersection normalization. The [regularity design](new-resolution-regular-types.md)
+describes the implemented normalization and the input/output dependency refinement
+still requiring review. Diagnosing non-regular types and sharing regular recursive
+references are separate obligations; neither follows from the bound on call-site symbols.
 
 The finite call-site symbol bound alone is not a termination proof for the whole
 resolver. Non-regular expansion still overflows. Fully supplied alias applications
-are reduced before their arguments become part of recursive reference keys. Contextual references preserve class-local aliases
+are reduced and Boolean combinations normalized before their arguments become part
+of recursive reference keys. Contextual references preserve class-local aliases
 and enclosing binders through nominal member projections. Dependency-based binding projection accepts regular
 argument resets, including compound constants and recursively unused arguments.
 The [fixed-point conditions](#fixed-points-and-implementation-checks) remain completion gates.
@@ -1051,10 +1052,12 @@ overflow; it is no longer an acceptance case for unrestricted structural recursi
 Regularity is not a requirement that recursive arguments be textually unchanged.
 For example, `{value: A, next: Alternating[B, A]}` as the body of
 `Alternating[A, B]` has a finite two-state unfolding. Mutually recursive aliases
-and finite changes of arguments must also be considered. The precise check,
-including how it handles aliases and inferred holes, remains a design review
-item. It must terminate on rejected inputs too; waiting for an unfolding cache to
-stop growing is not a decision procedure. Do not impose a depth limit.
+and finite changes of arguments must also be considered. Alias and Boolean
+normalization is implemented. The remaining check must distinguish dependencies
+on input and output argument parts, including when pruning saved environments;
+its [refined design](new-resolution-regular-types.md#proposed-refinement-for-review)
+remains under review. It must terminate on rejected inputs too; waiting for an
+unfolding cache to stop growing is not a decision procedure. Do not impose a depth limit.
 
 Growth along one recursive edge is not sufficient to reject a type:
 
@@ -1130,7 +1133,10 @@ forwarding aliases, parameter selection/permutation, forward definitions, a capt
 alias, and an unproductive cycle with growing arguments. This does not prove the
 whole-graph bound: non-regular structural expansion and other growing binding
 environments still need the regularity check. That check must not classify
-transparent alias forwarding as a growing type constructor.
+transparent alias forwarding as a growing type constructor. See the
+[normalization implementation and variance counterexample](new-resolution-regular-types.md)
+for the Boolean normal form, captured alias reduction, and why a binder-only
+growth graph is insufficient.
 
 The implemented dependency analysis operates on source `TypeResolution` nodes.
 An edge forwards the child's free binders, excluding those bound by an alias or

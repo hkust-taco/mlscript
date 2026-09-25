@@ -12,6 +12,10 @@ enum TypeShape:
   case Alias(symbol: TypeAliasSymbol, rhs: Opt[TypeResolution])
   case Union(left: TypeResolution, right: TypeResolution)
   case Intersection(left: TypeResolution, right: TypeResolution)
+  // Substituted unions/intersections retain whole interpreted endpoints. Keeping
+  // their lattice normal form prevents repeated Boolean substitutions from
+  // nesting environments, without expanding bounds or changing endpoint marks.
+  case Combined(formula: TypeFormula[DeclaredType])
   case Tuple(fields: Ls[TypeResolution])
   case Record(source: Term.Rcd, fields: Ls[(RcdField, TypeResolution)])
   case Function(params: Term, result: TypeResolution)
@@ -105,6 +109,7 @@ final class TypeResolution(val source: Term, report: Ls[(Message, Opt[Loc])] => 
       case Record(_, fields) => fields.foreach(_._2.validate(next))
       case Union(left, right) => left.validate(next); right.validate(next)
       case Intersection(left, right) => left.validate(next); right.validate(next)
+      case Combined(formula) => formula.orderedAtoms.foreach(_.resolution.validate(next))
       case _ => ()
 
 /** A type with its lexical type-parameter bindings. These bindings describe declared

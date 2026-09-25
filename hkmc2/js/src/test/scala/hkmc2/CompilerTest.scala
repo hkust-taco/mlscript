@@ -414,7 +414,9 @@ class CompilerTest extends AnyFunSuite:
       case _ => Nil
     assert(supplied.length == 1, "A union argument must not become two supplied type arguments")
     assert(supplied.head.shapes.toList match
-      case (_: TypeShape.Union) :: Nil => true
+      case TypeShape.Combined(formula) :: Nil =>
+        formula.clauses.size == 2 && formula.clauses.forall(_.size == 1) &&
+          formula.atoms.flatMap(_.resolution.shapes.collect { case TypeShape.Nominal(cls) => cls.sym.nme }) == Set("Int", "Str")
       case _ => false)
 
   test("mutable array parameter flow stays private to each importer"):
