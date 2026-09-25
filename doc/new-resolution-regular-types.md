@@ -253,8 +253,8 @@ references, union/intersection saturation, Boolean-only recursion, and the varia
 counterexample. Rejected constructor cycles and the two documented precision
 limitations use ordinary `:e` expectations.
 
-`TypeFormulaTest` checks normalization against Boolean truth tables and repeated
-alternating substitution. `TypeRelationTest` checks a thousand repeated reductions,
+`TypeFormulaTest` checks normalization against Boolean truth tables.
+`TypeRelationTest` checks a thousand repeated reductions,
 unchanged binder allocation and source-listener counts, late bounds, whole negative
 union targets, and the loss of caller identity under captured alias rebasing. These
 checks support normalization's local invariants; they do not establish the whole

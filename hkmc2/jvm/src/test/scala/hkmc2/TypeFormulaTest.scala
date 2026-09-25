@@ -28,13 +28,3 @@ class TypeFormulaTest extends AnyFunSuite:
     assert(a.union(b).orderedAtoms == Vector(0, 1))
     assert(b.union(a).orderedAtoms == Vector(1, 0))
     assert(a.union(a.intersection(b)).orderedAtoms == Vector(0))
-
-  test("alternating recursive substitutions saturate without accumulating syntax"):
-    val a = TypeFormula.atom("A")
-    val b = TypeFormula.atom("B")
-    val c = TypeFormula.atom("C")
-    var value = a
-    val expected = a.union(b).intersection(c)
-    (1 to 1000).foreach: _ =>
-      value = value.union(b).intersection(c)
-      assert(value == expected)

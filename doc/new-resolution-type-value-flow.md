@@ -265,9 +265,9 @@ targets and value shapes; runtime values acquire no type-argument objects.
 
 ## Validation
 
-Graph tests cover instance counts and replay (`TypeInstantiationTest`), directed
+Graph tests cover bounded instance allocation and replay (`TypeInstantiationTest`), directed
 relations, delayed targets and consumer isolation (`TypeRelationTest`), and Boolean
-normalization (`TypeFormulaTest`). `CompilerCacheTest` checks exporter immutability.
+normalization (`TypeFormulaTest`). `PublisherTest` checks exporter immutability.
 
 Worksheet coverage under `newres` includes `MutableArrays`, `ContextualInference`,
 `InstantiationSites`, `StoredSpecializations`, `SpecializationCaptures`,

@@ -24,10 +24,9 @@ active against private host data, but cannot change completed reference targets.
 This applies even between worksheet blocks sharing an elaborator state. An unknown
 reaching a sealed elimination can still report an error without changing its target.
 
-[`CompilerCacheTest`](../hkmc2/jvm/src/test/scala/hkmc2/CompilerCacheTest.scala)
-checks independent consumers and unchanged source candidates, listeners, and
-legacy annotations. [`PublisherTest`](../hkmc2/jvm/src/test/scala/hkmc2/PublisherTest.scala)
-covers cycles, reentrant replay, transitive private inference, and bounded copying
+[`PublisherTest`](../hkmc2/jvm/src/test/scala/hkmc2/PublisherTest.scala)
+checks independent consumers and unchanged source candidates and listeners,
+cycles, reentrant replay, transitive private inference, and bounded copying
 in the presence of unrelated exporter hosts. `newres/GenericMethods.mls` covers
 exported mapped arrays and imported generic functions and methods.
 

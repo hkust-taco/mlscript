@@ -29,6 +29,11 @@ Any commit that does not include the latest changes to test outputs will fail th
 
 Please also read the files in `.github/skills/hkmc2-difftests`.
 
+Use `.mls` diff tests for compiler behavior. Do not add Scala tests that duplicate
+that coverage or merely pin internal representation or assertion details. Reserve
+unit tests for properties diff tests cannot reliably observe, such as concurrency,
+cache isolation, bounded graph growth, or algebraic laws; state the extra coverage.
+
 When you create a commit, author it under your (the agent's) own identity,
 not under the user's identity.
 Set this identity for the commit command only

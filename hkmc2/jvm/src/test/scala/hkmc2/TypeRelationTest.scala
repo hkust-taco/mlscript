@@ -56,33 +56,6 @@ class TypeRelationTest extends AnyFunSuite:
     assert((a.inferenceHost.listeners.size, b.inferenceHost.listeners.size) == counts)
     assert(seen.toList == List(first, second))
 
-  test("wildcard exit and reentry forget early and late caller identities"):
-    val h = new Harness
-    import h.given
-    val (a, at) = h.parameter("A")
-    val owner = ResolutionBoundary(TermSymbol(Fun, N, Tree.Ident("owner")))
-    val firstSite = FlowSymbol.app()
-    val secondSite = FlowSymbol.app()
-    val exit = ExitMark(owner, N, NoMarks) :: Nil
-    val enter = EntryMark(owner, N, NoMarks) :: Nil
-    val outside = h.resolver.transportType(at, exit)
-    val back = h.resolver.transportType(outside, enter)
-    assert(back != at)
-    val first = IntroShape(Term.UnitVal(), N)
-    val second = DynShape()
-    h.resolver.publishParameter(a, MarkedShape.enter(first, owner, S(firstSite)))
-    val inside = h.observe(ContextualType(back, Nil))
-    val seen = h.observe(ContextualType(back, ExitMark(owner, S(firstSite), NoMarks) :: Nil))
-    h.resolver.publishParameter(a, MarkedShape.enter(second, owner, S(secondSite)))
-    assert(inside.toList == List(first, second).map(MarkedShape.enter(_, owner, N)))
-    assert(seen.toList == List(first, second))
-    val listeners = a.inferenceHost.listeners.size
-    (1 to 1000).foreach: _ =>
-      assert(h.resolver.transportType(at, exit) eq outside)
-      assert(h.resolver.transportType(outside, enter) eq back)
-    assert(a.inferenceHost.listeners.size == listeners)
-    assert(h.state.allocatedTypeInstanceCount == 0)
-
   test("reference exit and reentry agree with value transport for wildcard and explicit sites"):
     // Check both publication orders and every combination of wildcard/explicit
     // exit, reentry, and consumer sites against the ordinary value operations.
@@ -113,21 +86,6 @@ class TypeRelationTest extends AnyFunSuite:
       val consumed = h.resolver.transportType(inside, consumer :: Nil)
       assert(h.observe(ContextualType(consumed, Nil)).toSet ==
         expected(List(first, second), List(exit, entry, consumer)))
-
-  test("reference rebasing never cancels explicit invocation entries"):
-    val h = new Harness
-    import h.given
-    val (a, at) = h.parameter("A")
-    val owner = ResolutionBoundary(TermSymbol(Fun, N, Tree.Ident("owner")))
-    val original = FlowSymbol.app()
-    val invoked = FlowSymbol.app()
-    val outside = h.resolver.transportType(at, ExitMark(owner, S(original), NoMarks) :: Nil)
-    val inside = h.resolver.transportType(outside, EntryMark(owner, S(invoked), NoMarks) :: Nil)
-    assert(inside != at)
-    val bound = IntroShape(Term.UnitVal(), N)
-    h.resolver.publishParameter(a, MarkedShape.enter(bound, owner, S(original)))
-    val seen = h.observe(ContextualType(inside, Nil))
-    assert(seen.toList == List(MarkedShape.enter(bound, owner, S(invoked))))
 
   test("alias argument normalization reaches a fixed point without changing its marks"):
     val h = new Harness
@@ -342,29 +300,6 @@ class TypeRelationTest extends AnyFunSuite:
     assert(seen.toList == List(value))
     assert(h.state.allocatedTypeInstanceCount == 0)
 
-  test("omitted arguments reuse source-owned holes and wait for evidence"):
-    val h = new Harness
-    import h.given
-    val (a, _) = h.parameter("A")
-    val (b, _) = h.parameter("B")
-    val firstUse = h.tpe(TypeShape.Abstract).resolution
-    val secondUse = h.tpe(TypeShape.Abstract).resolution
-    val hole = h.resolver.omittedType(firstUse, a)
-    val otherPosition = h.resolver.omittedType(firstUse, b)
-    val otherUse = h.resolver.omittedType(secondUse, a)
-    assert(!(hole.resolution eq otherPosition.resolution))
-    assert(!(hole.resolution eq otherUse.resolution))
-    val seen = h.observe(ContextualType(hole, Nil))
-    val unrelated = h.observe(ContextualType(otherPosition, Nil))
-    assert(seen.isEmpty)
-    val bound = IntroShape(Term.UnitVal(), N)
-    h.resolver.constrainTypes(ContextualType(h.tpe(TypeShape.Inferred(bound)), Nil), ContextualType(hole, Nil))
-    assert(seen.toList == List(bound))
-    assert(unrelated.isEmpty)
-    (1 to 1000).foreach: _ =>
-      assert(h.resolver.omittedType(firstUse, a) eq hole)
-    assert(h.state.allocatedTypeInstanceCount == 0)
-
   test("cyclic hole constraints saturate without allocating parameter instances"):
     val h = new Harness
     import h.given
@@ -423,6 +358,9 @@ class TypeRelationTest extends AnyFunSuite:
     assert(right.allocatedTypeInstanceCount == 0)
     detach()
 
+  // Primitive incompatibilities do not yet produce diagnostics, so diff tests
+  // cannot establish that these input obligations were recorded at all. Check
+  // the constraint targets directly, including a whole union versus its parts.
   test("each concrete upper target receives later bounds and a union stays whole"):
     val h = new Harness
     import h.given
@@ -541,27 +479,6 @@ class TypeRelationTest extends AnyFunSuite:
     assert((a.inferenceHost.listeners.size, b.inferenceHost.listeners.size) == counts)
     assert(a.currentShapes.toSet == Set(InstanceShape(bt)))
     assert(b.currentShapes.toSet == Set(InstanceShape(at), InstanceShape(concrete)))
-
-  test("reverse relations retain each endpoint's activation and exclude another caller"):
-    val h = new Harness
-    import h.given
-    val (a, at) = h.parameter("A")
-    val (b, bt) = h.parameter("B")
-    val source = ResolutionBoundary(TermSymbol(Fun, N, Tree.Ident("source")))
-    val target = ResolutionBoundary(TermSymbol(Fun, N, Tree.Ident("target")))
-    val site = FlowSymbol.app()
-    val other = FlowSymbol.app()
-    val sourceMarks = ExitMark(source, S(site), NoMarks) :: Nil
-    val targetMarks = ExitMark(target, S(site), NoMarks) :: Nil
-    val ar = ContextualType(at, sourceMarks)
-    val br = ContextualType(bt, targetMarks)
-    h.resolver.constrainTypes(ar, br)
-    h.resolver.constrainTypes(br, ar)
-    val seen = h.observe(ar)
-    val accepted = IntroShape(Term.UnitVal(), N)
-    h.resolver.publishParameter(b, accepted.enter(targetMarks))
-    h.resolver.publishParameter(b, MarkedShape.enter(DynShape(), target, S(other)))
-    assert(seen.toList == List(accepted))
 
   test("repeated deferred views reuse source identities for synthesized interfaces"):
     val h = new Harness
