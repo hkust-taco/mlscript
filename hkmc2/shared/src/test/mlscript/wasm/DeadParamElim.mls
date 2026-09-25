@@ -1,0 +1,29 @@
+:noInline
+
+:global
+:wasm
+
+
+data class Box(x)
+//│ Wasm result:
+//│ = {}
+
+
+// the checked cast on an eliminated arg still runs
+:re
+:flowBasedOpt mono
+:soir
+fun f(o) =
+  fun take(b: Box) = 0
+  take(o)
+f(0)
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ define f⁰ as fun f¹(o) {
+//│   let take;
+//│   define take as fun take⁰() { return 0 };
+//│   do (o as! Box⁰);
+//│   return take⁰()
+//│ };
+//│ return f¹(0)
+//│ Wasm result:
+//│ ═══[RUNTIME ERROR] RuntimeError: illegal cast

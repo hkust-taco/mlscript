@@ -1,0 +1,279 @@
+:js
+:flowBasedOpt debugEta
+
+
+// each function value produced by `f(a)` is one-shot, so `g` can take `b` directly
+:soir
+:expect 3
+@affine(1) fun f(a)(b) = a + b
+fun g(x) = f(x)
+g(1)(2)
+//│ eta-expansion > >>> eta-expansion targets shapes >>>
+//│ eta-expansion > g: [1, 1]
+//│ eta-expansion > <<< eta-expansion targets shapes <<<
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ @inline @affine(1)
+//│ define f⁰ as fun f¹(a)(b) {
+//│   return +⁰(a, b)
+//│ };
+//│ @inline
+//│ define g⁰ as fun g¹(x)(eta$0$0) { return +⁰(x, eta$0$0) };
+//│ return 3
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 3
+
+
+// without the annotation, `g` is left alone
+:soir
+:expect 3
+fun f(a)(b) = a + b
+fun g(x) = f(x)
+g(1)(2)
+//│ eta-expansion > >>> eta-expansion targets shapes >>>
+//│ eta-expansion > <<< eta-expansion targets shapes <<<
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ @inline
+//│ define f² as fun f³(a)(b) { return +⁰(a, b) };
+//│ define g² as fun g³(x) { return f³(x) };
+//│ return 3
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 3
+
+
+// the returned lambda is one-shot, so `h` can take `y` directly
+:soir
+:expect 3
+fun h(x) = @affine(0) y => x + y
+h(1)(2)
+//│ eta-expansion > >>> eta-expansion targets shapes >>>
+//│ eta-expansion > h: [1, 1]
+//│ eta-expansion > <<< eta-expansion targets shapes <<<
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ @inline define h⁰ as fun h¹(x)(eta$0$0) { return +⁰(x, eta$0$0) }; return 3
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 3
+
+
+// the monomorphic analysis merges `f` and `h` into `k`, and `h(x)` is not marked as one-shot,
+// so `g` is left alone
+:soir
+:noInline
+:expect 15
+@affine(1) fun f(a)(b) = a + b
+fun h(a)(b) = a * b
+fun g(k, x) = k(x)
+g(f, 1)(2) + g(h, 3)(4)
+//│ eta-expansion > >>> eta-expansion targets shapes >>>
+//│ eta-expansion > <<< eta-expansion targets shapes <<<
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let baseCall, tmp, baseCall1, tmp1;
+//│ @affine(1)
+//│ define f⁴ as fun f⁵(a)(b) {
+//│   return +⁰(a, b)
+//│ };
+//│ define h² as fun h³(a)(b) {
+//│   return *⁰(a, b)
+//│ };
+//│ define g⁴ as fun g⁵(k, x) {
+//│   return k(x)
+//│ };
+//│ set baseCall = g⁵(f⁵, 1);
+//│ set tmp = baseCall(2);
+//│ set baseCall1 = g⁵(h³, 3);
+//│ set tmp1 = baseCall1(4);
+//│ return +⁰(tmp, tmp1)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 15
+
+
+// the polymorphic one expands only the copy of `g` that is called with `f`
+:flowBasedOpt debugEta poly
+:soir
+:noInline
+:expect 15
+@affine(1) fun f(a)(b) = a + b
+fun h(a)(b) = a * b
+fun g(k, x) = k(x)
+g(f, 1)(2) + g(h, 3)(4)
+//│ eta-expansion > >>> eta-expansion targets shapes >>>
+//│ eta-expansion > g @ g@4: [2, 1]
+//│ eta-expansion > <<< eta-expansion targets shapes <<<
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let tmp, baseCall, tmp1, g_4$g;
+//│ define g_4$g as fun g_4$g⁰(k, x)(eta$0$0) {
+//│   return k(x)(eta$0$0)
+//│ };
+//│ @affine(1)
+//│ define f⁶ as fun f⁷(a)(b) {
+//│   return +⁰(a, b)
+//│ };
+//│ define h⁴ as fun h⁵(a)(b) {
+//│   return *⁰(a, b)
+//│ };
+//│ define g⁶ as fun g⁷(k, x) {
+//│   return k(x)
+//│ };
+//│ set tmp = g_4$g⁰(f⁷, 1)(2);
+//│ set baseCall = g⁷(h⁵, 3);
+//│ set tmp1 = baseCall(4);
+//│ return +⁰(tmp, tmp1)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 15
+
+
+// a lambda has only parameter list 0
+:w
+fun h(x) = @affine(1) y => x + y
+//│ ╔══[WARNING] This annotation has no effect.
+//│ ║  l.126: 	fun h(x) = @affine(1) y => x + y
+//│ ║         	           ^^^^^^^^^^
+//│ ╟── This annotation is not supported on function literal terms.
+//│ ║  l.126: 	fun h(x) = @affine(1) y => x + y
+//│ ╙──       	                      ^^^^^^^^^^
+//│ eta-expansion > >>> eta-expansion targets shapes >>>
+//│ eta-expansion > <<< eta-expansion targets shapes <<<
+
+:w
+@affine(0) val v = 1
+//│ ╔══[WARNING] This annotation has no effect.
+//│ ║  l.137: 	@affine(0) val v = 1
+//│ ╙──       	^^^^^^^^^^
+//│ eta-expansion > >>> eta-expansion targets shapes >>>
+//│ eta-expansion > <<< eta-expansion targets shapes <<<
+//│ v = 1
+
+:w
+fun h(x) = @affine(0) x
+//│ ╔══[WARNING] This annotation has no effect.
+//│ ║  l.146: 	fun h(x) = @affine(0) x
+//│ ║         	           ^^^^^^^^^^
+//│ ╟── This annotation is not supported on reference terms.
+//│ ║  l.146: 	fun h(x) = @affine(0) x
+//│ ╙──       	                      ^
+//│ eta-expansion > >>> eta-expansion targets shapes >>>
+//│ eta-expansion > <<< eta-expansion targets shapes <<<
+
+
+// `f(b)`'s result discarded so `g1` and `h1` keep the liveness of their own call sites and
+// would disagree on eliminable parameters if we keep the eta-expandability of `f1`
+:noInline
+:flowBasedOpt debugEta debugDpe
+:soir
+@affine(0) private fun g1(x) = 0
+@affine(0) private fun h1(x) = x
+private fun f1(b) = if b then g1 else h1
+private fun main1(b) =
+  f1(b)
+  g1(1) + h1(2)
+main1(true)
+//│ eta-expansion > >>> eta-expansion targets shapes >>>
+//│ eta-expansion > <<< eta-expansion targets shapes <<<
+//│ dead-param-elim > >>> dead-param-elim results >>>
+//│ dead-param-elim > prodfun g1#0 @ <root> -> eliminable: {0}
+//│ dead-param-elim > <<< dead-param-elim results <<<
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ @affine(0) @private
+//│ define g1⁰ as fun g1¹() {
+//│   return 0
+//│ };
+//│ @affine(0) @private
+//│ define h1⁰ as fun h1¹(x) {
+//│   return x
+//│ };
+//│ @private
+//│ define f1⁰ as fun f1¹(b) {
+//│   match b
+//│     true =>
+//│       return g1¹
+//│     else
+//│       return h1¹
+//│   end
+//│ };
+//│ @private
+//│ define main1⁰ as fun main1¹(b) {
+//│   let tmp, tmp1;
+//│   do f1¹(b);
+//│   set tmp = g1¹();
+//│   set tmp1 = h1¹(2);
+//│   return +⁰(tmp, tmp1)
+//│ };
+//│ return main1¹(true)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 2
+
+// similar as above, but `f2(b)` is not discarded but pattern matched
+:noInline
+:flowBasedOpt debugEta debugDpe
+:expect 0
+@affine(0) private fun g2(x) = 0
+@affine(0) private fun h2(x) = x
+private fun f2(b) = if b then g2 else h2
+private fun main2(b) =
+  if f2(b) is 0 then 0 else 1
+  g2(1)
+main2(true)
+//│ eta-expansion > >>> eta-expansion targets shapes >>>
+//│ eta-expansion > <<< eta-expansion targets shapes <<<
+//│ dead-param-elim > >>> dead-param-elim results >>>
+//│ dead-param-elim > prodfun g2#0 @ <root> -> eliminable: {0}
+//│ dead-param-elim > <<< dead-param-elim results <<<
+//│ = 0
+
+
+
+// eta expansion keeps the target's rest parameter and spreads it at the call site
+:flowBasedOpt mono debugEta
+:soir
+:noInline
+:expect [1, 2, 3]
+@affine(1) fun rest(a)(...xs) = xs
+fun returnRest(a) = rest(a)
+returnRest(0)(1, 2, 3)
+//│ eta-expansion > >>> eta-expansion targets shapes >>>
+//│ eta-expansion > returnRest: [1, 0+rest]
+//│ eta-expansion > <<< eta-expansion targets shapes <<<
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ @affine(1)
+//│ define rest⁰ as fun rest¹(a)(...xs) {
+//│   return xs
+//│ };
+//│ define returnRest⁰ as fun returnRest¹(a)(...eta$0$rest) {
+//│   return rest¹(a)(...eta$0$rest)
+//│ };
+//│ return returnRest¹(0)(1, 2, 3)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = [1, 2, 3]
+
+// eta expansion and dead param elim working at the same time
+:flowBasedOpt mono debugEta debugDpe
+:soir
+:noInline
+:expect [2, 3]
+@affine(1) private fun rest2(a)(b, ...xs) = xs
+private fun returnRest2(a) = rest2(a)
+private fun app(f) = f(1, 2, 3)
+app(returnRest2(0))
+//│ eta-expansion > >>> eta-expansion targets shapes >>>
+//│ eta-expansion > returnRest2: [1, 1+rest]
+//│ eta-expansion > <<< eta-expansion targets shapes <<<
+//│ dead-param-elim > >>> dead-param-elim results >>>
+//│ dead-param-elim > prodfun rest2#0 @ <root> -> eliminable: {0}
+//│ dead-param-elim > prodfun rest2#1 @ <root> -> eliminable: {0}
+//│ dead-param-elim > prodfun returnRest2#0 @ <root> -> eliminable: {0}
+//│ dead-param-elim > <<< dead-param-elim results <<<
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let tmp;
+//│ @affine(1) @private
+//│ define rest2⁰ as fun rest2¹()(...xs) {
+//│   return xs
+//│ };
+//│ @private
+//│ define returnRest2⁰ as fun returnRest2¹()(...eta$0$rest) {
+//│   return rest2¹()(...eta$0$rest)
+//│ };
+//│ @private
+//│ define app⁰ as fun app¹(f) { return f(2, 3) };
+//│ set tmp = returnRest2¹();
+//│ return app¹(tmp)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = [2, 3]

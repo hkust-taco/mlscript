@@ -75,12 +75,12 @@ f(p())
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let tmp, p_8$p, f_10$f, f_10$x_X, f_10$x_rest, f_10$arg$X$0$_Y, f_10$arg$X$0$_rest;
 //│ @private
-//│ define p_8$p as fun p_8$p⁰()(eta$0$0, eta$0$1, eta$0$2) {
+//│ define p_8$p as fun p_8$p⁰() {
 //│   let tmp1, Y_b, X_a;
 //│   set Y_b = O⁰;
 //│   set tmp1 = f_10$arg$X$0$_Y⁰(Y_b);
 //│   set X_a = tmp1;
-//│   return f_10$x_X⁰(X_a)(eta$0$0, eta$0$1, eta$0$2)
+//│   return f_10$x_X⁰(X_a)
 //│ };
 //│ @private
 //│ define f_10$f as fun f_10$f⁰(x) {

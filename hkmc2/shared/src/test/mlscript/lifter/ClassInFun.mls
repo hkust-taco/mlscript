@@ -1,6 +1,6 @@
 :.
 :noInline
-// :deadParamElim off // used to be `off` because lifter changes the parameter lists and DPE used to look at the original ones
+// :flowBasedOpt off // used to be `off` because lifter changes the parameter lists and DPE used to look at the original ones
 
 // This test was previously used to demonstrate immutable captures names are not properly discriminated,
 // but handler no longer occur before lifting so this now yield the correct result.
@@ -398,7 +398,7 @@ set e.a = 0
 // flow analysis, which is used by dead param elimination. It would be a pain to change all the
 // class symbols because they could be nested in other symbols at an arbitrary depth.
 // :fixme
-:deadParamElim 
+:flowBasedOpt 
 fun f(x) =
   class A(y) with
     fun get = x + y

@@ -41,7 +41,6 @@ class CompilationPipeline(using Config, Raise, State, Ctx, SymbolPrinter):
         case Some(dCfg) =>
           flowAnalysis.FlowAnalysis.mkTraceLogger(dCfg.config, "deforest > ", outterTl).givenIn:
             deforest.Deforest(prog)
-    runPass("EtaExpansion")(EtaExpansion.apply)
     runPass("Lifter"): prog =>
       if config.liftDefns.isDefined then
         blockPass(Lifter(_).transform)(prog)
@@ -71,6 +70,12 @@ class CompilationPipeline(using Config, Raise, State, Ctx, SymbolPrinter):
     
     val preservedSymbols = symbolsToPreserve ++ extraSymbolsToPreserveFrom(result)
     
+    // TODO: can be more aggressive to add another blksimplifier here,
+    // which can simplify the variables in branch bodies,
+    // see hkmc2/shared/src/test/mlscript/dead-param-elim/todos.mls
+    
+    runPass("FlowAnalysisBasedRewrite")(otl.givenIn(FlowAnalysisBasedRewrite.apply))
+    
     runPass("WorkerWrapper")(WorkerWrapper(preservedSymbols, otl, printer))
     
     // * The simplifier is instantiated once and applied twice below so that both passes draw from
@@ -79,8 +84,6 @@ class CompilationPipeline(using Config, Raise, State, Ctx, SymbolPrinter):
     
     // * First simplification pass
     runPass("BlockSimplifier 1")(simplifier.apply)
-    
-    runPass("DeadParamElim")(otl.givenIn(DeadParamElim.apply))
     
     // * More tailrec opportunities might be revealed after WorkerWrapper + BlockSimplifier,
     // * which might bring split curried recursive calls (such as those coming out of Deforest + EtaExpansion)

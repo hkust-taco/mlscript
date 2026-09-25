@@ -674,6 +674,8 @@ extends Importer:
       S(Annot.Config(modify))
     case App(Ident("matchShapes"), Tup(patterns)) =>
       S(Annot.MatchShapes(patterns.map(pattern)))
+    case App(Ident("affine"), Tup(IntLit(whichParamList) :: Nil)) =>
+      S(Annot.Affine(whichParamList.toInt).withLocOf(tree))
     case _ => term(tree) match
       case Term.Error() => N
       case trm =>
