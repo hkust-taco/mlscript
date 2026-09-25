@@ -287,6 +287,16 @@ _.f(0, _, 2)     // (x, y) => x.f(0, y, 2)
 {_ + 1}          // x => x + 1
 ```
 
+**Resource lambdas and partial applications** — a function value is `rsc?` unless marked as a resource:
+```mlscript
+rsc (x => x)     // a resource function value
+fun add(x)(y) = x + y
+rsc add(1)       // a resource partial application
+```
+The modifier has no effect on a call that is not known to leave some of its callee's parameter lists unapplied.
+These are the only expressions a modifier applies to: written on any other one, including an instantiation (whose
+modifier goes inside the `new`, see *Instantiation*), it has no effect and is reported as such.
+
 ### Function Declarations (without definition)
 
 ```mlscript
@@ -548,6 +558,7 @@ new Foo          // create (static class required)
 new Foo()        // with empty args
 new Foo(1, 2)    // with args
 new mut Foo      // mutable instance (not frozen)
+new rsc Foo      // resource instance (in either order with `mut`)
 new! c           // dynamic instantiation (class value at runtime)
 new Foo(...xs)   // spread args
 ```
@@ -1292,6 +1303,51 @@ type Transformer[A, B] = A -> B
 type BinOp[A] = (A, A) -> A
 ```
 
+### Resource Types
+
+`rsc` marks a type as a resource; `rsc?` leaves it to a runtime check:
+```mlscript
+fun f(x: rsc Foo): Int = 0
+fun g(x: rsc? Foo): Int = 0
+type Handle = rsc Foo
+```
+
+`rsc` binds tighter than `|` and `&`, and covers a whole function type:
+```mlscript
+type A = rsc Foo | Bar     // only `Foo`; the union becomes `rsc?`
+type B = rsc (Foo | Bar)   // both
+type F = rsc Foo -> Bar    // the whole function type, not just `Foo`
+```
+
+A modifier on a reference to an alias combines with the modifiers written inside the alias: `rsc` overrides them,
+while `rsc?` keeps them:
+```mlscript
+type List = Cons | Nil
+type U = rsc Foo | Bar
+fun f(x: rsc List): Int = 0    // both members
+fun g(x: rsc? U): Int = 0      // `rsc Foo | rsc? Bar`, so the union becomes `rsc?`
+fun h(x: rsc U): Int = 0       // both members
+```
+
+The same holds for a union written in place, whose members combine with a modifier written on it:
+```mlscript
+fun f(x: rsc ((rsc? Foo) | Bar)): Int = 0     // both members
+fun g(x: rsc? ((rsc Foo) | Bar)): Int = 0     // `rsc Foo | rsc? Bar`, so the union becomes `rsc?`
+```
+
+A modifier is only supported on a type that keeps it once erased, so it is rejected on a negation, a tuple, a
+literal type and `()`, whether written on them directly or on a union reaching them:
+```mlscript
+fun f(x: rsc [Foo, Bar]): Int = 0   // error: not supported yet
+fun g(x: rsc (~Foo | Bar)): Int = 0 // error: not supported yet
+```
+
+A modifier may be written on a use of a type parameter, but not on its declaration:
+```mlscript
+fun f[A](x: rsc A): Int = 0    // OK
+class Box[rsc A]               // error: not supported yet
+```
+
 ### `forall` (Universal Quantification)
 
 ```mlscript
@@ -1808,7 +1864,7 @@ decl      ::= 'declare' def
 
 expr      ::= literal | name | app | lambda | if | case | while
             | let | set | 'return' | 'throw' | 'drop' | 'do'
-            | 'new' [mut] class args | 'handle' | 'using'
+            | 'new' (mut | rsc)* class args | 'handle' | 'using'
             | annotation expr | infix | block
 
 if        ::= 'if' scrutinee? branches

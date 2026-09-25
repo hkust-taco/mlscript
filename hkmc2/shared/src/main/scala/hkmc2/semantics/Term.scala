@@ -95,6 +95,28 @@ object Annot:
   
   val Private = Modifier(Keyword.`private`)
   
+  /** Matches a resource modifier, yielding the resource-ness it denotes. */
+  object Resource:
+    def unapply(annot: Annot): Opt[Opt[Bool]] = annot match
+      case Modifier(Keyword.`rsc`) => S(S(true))
+      case Modifier(Keyword.`rsc?`) => S(N)
+      case _ => N
+    
+    /** Reports the resource modifier `kw` on the declaration of a type parameter. */
+    def unsupportedOnTyParam(kw: Keyword, loc: Opt[Loc]): ErrorReport =
+      ErrorReport(msg"'${kw.name}' modifiers on type parameters are not supported yet." -> loc :: Nil)
+  
+  /** Reports that an annotation written at `annotLoc` has no effect on `receiver`,
+    * because of `reason` or, by default, because `receiver` does not support it.
+    */
+  def noEffect(annotLoc: Opt[Loc], receiver: Term, reason: Opt[Message]): WarningReport =
+    val message = reason match
+      case N => msg"This annotation is not supported on ${receiver.describe} terms."
+      case S(value) => value
+    WarningReport(
+      msg"This annotation has no effect." -> annotLoc ::
+      message -> receiver.toLoc :: Nil)
+  
   /** The `declare` modifier in `annotations`, if present. */
   def declareModifierOf(annotations: Ls[Annot]): Opt[Annot.Modifier] = annotations.collectFirst:
     case mod @ Annot.Modifier(Keyword.`declare`) => mod
@@ -685,6 +707,9 @@ sealed trait Statement extends AutoLocated, ProductWithExtraInfo:
       case Quoted(term) => "quoted term"
       case Unquoted(term) => "unquoted term"
       case New(cls, args, rft) => "object creation"
+      case DynNew(cls, args) => "dynamic object creation"
+      case Mut(underlying) => s"mutable ${underlying.describe}"
+      case Rcd(mut, stats) => "record literal"
       case SelProj(pre, cls, proj) => "field selection"
       case Asc(term, ty) => "type ascription"
       case CompType(lhs, rhs, pol) => if pol then "alternation" else "composition"

@@ -150,10 +150,10 @@ wasm.ref.i31(wasm.i32.const(7))
 :ge
 :noInline
 wasm.ref.i31(id(wasm.i32.const(7)))
-//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int32' at an unrelated type 'Unknown'
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int32' at an unrelated type 'rsc? Unknown'
 //│ ║  l.152: 	wasm.ref.i31(id(wasm.i32.const(7)))
 //│ ╙──       	                ^^^^^^^^^^^^^^^^^
-//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Unknown' at an unrelated type 'Int32'
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'rsc? Unknown' at an unrelated type 'Int32'
 //│ ║  l.152: 	wasm.ref.i31(id(wasm.i32.const(7)))
 //│ ╙──       	             ^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[COMPILATION ERROR] Cannot cast a Wasm value of type `i32` to `(ref null any)` in a different type hierarchy
@@ -220,7 +220,7 @@ fun test: Function = castToA(123)
 
 :e
 castToA(wasm.i32.const(123))
-//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int32' at an unrelated type 'Unknown'
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int32' at an unrelated type 'rsc? Unknown'
 //│ ║  l.222: 	castToA(wasm.i32.const(123))
 //│ ╙──       	        ^^^^^^^^^^^^^^^^^^^
 //│ Wasm result:

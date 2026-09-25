@@ -724,18 +724,18 @@ class FixedPointCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynt
       (stepMatcher, stepImpls, postMatcherOpt)
 
     val inputSymbol = VarSymbol(Ident("input"), erasedType = N)
-    val phaseSymbol = TempSymbol(N, erasedType = N, "phase")
-    val focusSymbol = TempSymbol(N, erasedType = N, "focus")
+    val phaseSymbol = TempSymbol(N, initErasedType = N, "phase")
+    val focusSymbol = TempSymbol(N, initErasedType = N, "focus")
     // The phase whose step failed, selecting the link whose alternatives
     // process the final term. Since the loop only ever exits through a step
     // failure, it is always set before `result` runs.
-    val failPhaseSymbol = TempSymbol(N, erasedType = N, "failPhase")
+    val failPhaseSymbol = TempSymbol(N, initErasedType = N, "failPhase")
     val size = links.size
 
     val loop = matchers.iterator.zipWithIndex.foldRight(Split.End: Split):
       case (((stepMatcher, _, _), index), rest) =>
-        val resultSym = TempSymbol(N, erasedType = N, s"step$index$$Result")
-        val outputSym = TempSymbol(N, erasedType = N, "stepOutput")
+        val resultSym = TempSymbol(N, initErasedType = N, s"step$index$$Result")
+        val outputSym = TempSymbol(N, initErasedType = N, "stepOutput")
         Branch(phaseSymbol.safeRef, intPattern(index),
           Split.Let(resultSym, callMatcher(stepMatcher, focusSymbol.safeRef, "step result"),
             Branch(resultSym.safeRef, matchSuccessPattern(S(outputSym :: Nil)),
@@ -802,14 +802,14 @@ class FixedPointCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynt
 
     // ---- Machine state ----
     val inputSymbol = VarSymbol(Ident("input"), erasedType = N)
-    val modeSymbol = TempSymbol(N, erasedType = N, "mode")
-    val focusSymbol = TempSymbol(N, erasedType = N, "focus")
-    val stackSymbol = TempSymbol(N, erasedType = N, "stack")
-    val resultSymbol = TempSymbol(N, erasedType = N, "finalResult")
+    val modeSymbol = TempSymbol(N, initErasedType = N, "mode")
+    val focusSymbol = TempSymbol(N, initErasedType = N, "focus")
+    val stackSymbol = TempSymbol(N, initErasedType = N, "stack")
+    val resultSymbol = TempSymbol(N, initErasedType = N, "finalResult")
     // Whether at least one contraction has fired. Only the one-or-more shape
     // (`P as (S | _)`) tracks it: it requires the first step to succeed, so a
     // run with zero contractions is a match failure.
-    val progressedSymbol = TempSymbol(N, erasedType = S(ErasedType.Bool), "progressed")
+    val progressedSymbol = TempSymbol(N, initErasedType = S(ErasedType.Bool), "progressed")
 
     def bool(value: Bool): Term = Term.Lit(BoolLit(value))
     def markProgress: Ls[Statement] =
@@ -844,14 +844,14 @@ class FixedPointCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynt
       sides match
         case Nil => success
         case (index, side) :: rest =>
-          val okSymbol = TempSymbol(N, erasedType = N, "sideOk")
+          val okSymbol = TempSymbol(N, initErasedType = N, "sideOk")
           Split.Let(okSymbol, callMatcher(sideMatchers(side), child(index), "side condition"),
             Branch(okSymbol.safeRef, sideChecks(rest, child, success, failure)) ~: failure())
 
     /** Call the redex matcher on `scrutinee` and branch on its result. */
     def matchRedex(scrutinee: Term, onSuccess: TempSymbol => Split, onFailure: Split): Split =
-      val resultSym = TempSymbol(N, erasedType = N, "redexResult")
-      val outputSym = TempSymbol(N, erasedType = N, "contractum")
+      val resultSym = TempSymbol(N, initErasedType = N, "redexResult")
+      val outputSym = TempSymbol(N, initErasedType = N, "contractum")
       Split.Let(resultSym, callMatcher(redexMatcher, scrutinee, "redex match"),
         Branch(resultSym.safeRef, matchSuccessPattern(S(outputSym :: Nil)),
           onSuccess(outputSym)) ~: onFailure)
@@ -870,7 +870,7 @@ class FixedPointCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynt
           sideChecks(alt.sides, index => children(index).safeRef, push, failure)
     val findSplit =
       val classChain = classes.foldRight(goUp()): (cls, rest) =>
-        val children = List.tabulate(cls.paramCount)(index => TempSymbol(N, erasedType = N, s"scrut$index"))
+        val children = List.tabulate(cls.paramCount)(index => TempSymbol(N, initErasedType = N, s"scrut$index"))
         Branch(focusSymbol.safeRef, classPattern(cls, children), findDescend(cls, children)) ~: rest
       matchRedex(focusSymbol.safeRef,
         // A contraction: refocus on the contractum and keep searching. This
@@ -890,7 +890,7 @@ class FixedPointCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynt
         if index == hole then focusSymbol.safeRef else children(index).safeRef
       def inert(index: Int): Term =
         if index == hole then bool(true) else inerts(index).safeRef
-      val rebuiltSymbol = TempSymbol(N, erasedType = N, "rebuilt")
+      val rebuiltSymbol = TempSymbol(N, initErasedType = N, "rebuilt")
       val pop = perform(
         setStmt(stackSymbol, tailSym.safeRef),
         setStmt(focusSymbol, rebuiltSymbol.safeRef))
@@ -909,7 +909,7 @@ class FixedPointCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynt
       // Plugging preserves identity: when no contraction happened below the
       // frame, the focus is still the very child we descended into, and the
       // frame's node can be reused instead of allocating a rebuilt copy.
-      val unchangedSymbol = TempSymbol(N, erasedType = S(ErasedType.Bool), "unchanged")
+      val unchangedSymbol = TempSymbol(N, initErasedType = S(ErasedType.Bool), "unchanged")
       Split.Let(unchangedSymbol, refEq(focusSymbol.safeRef, children(hole).safeRef),
         Split.Let(rebuiltSymbol,
           Term.SynthIf(
@@ -922,14 +922,14 @@ class FixedPointCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynt
               setStmt(modeSymbol, int(ModeFind)) :: markProgress)*),
             altChain)))
     def upClass(cls: ClassInfo): Split =
-      val children = List.tabulate(cls.paramCount)(index => TempSymbol(N, erasedType = N, s"frameChild$index"))
-      val inerts = List.tabulate(cls.paramCount)(index => TempSymbol(N, erasedType = N, s"frameInert$index"))
-      val nodeSym = TempSymbol(N, erasedType = N, "frameNode")
-      val tailSym = TempSymbol(N, erasedType = N, "frameTail")
+      val children = List.tabulate(cls.paramCount)(index => TempSymbol(N, initErasedType = N, s"frameChild$index"))
+      val inerts = List.tabulate(cls.paramCount)(index => TempSymbol(N, initErasedType = N, s"frameInert$index"))
+      val nodeSym = TempSymbol(N, initErasedType = N, "frameNode")
+      val tailSym = TempSymbol(N, initErasedType = N, "frameTail")
       val core = cls.alts.map(_.holeIndex).distinct match
         case only :: Nil => upHole(cls, only, children, inerts, nodeSym, tailSym)
         case multiple =>
-          val holeSymbol = TempSymbol(N, erasedType = N, "frameHole")
+          val holeSymbol = TempSymbol(N, initErasedType = N, "frameHole")
           Split.Let(holeSymbol, sel(stackSymbol.safeRef, "h"),
             multiple.init.foldRight(upHole(cls, multiple.last, children, inerts, nodeSym, tailSym)): (hole, rest) =>
               Branch(holeSymbol.safeRef, intPattern(hole),
@@ -951,7 +951,7 @@ class FixedPointCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynt
         case Nil => Split.End // No frames are ever pushed.
         case only :: Nil => upClass(only)
         case multiple =>
-          val tagSymbol = TempSymbol(N, erasedType = N, "frameTag")
+          val tagSymbol = TempSymbol(N, initErasedType = N, "frameTag")
           Split.Let(tagSymbol, sel(stackSymbol.safeRef, "tag"),
             multiple.init.foldRight(upClass(multiple.last)): (cls, rest) =>
               Branch(tagSymbol.safeRef, intPattern(cls.index), upClass(cls)) ~: rest)

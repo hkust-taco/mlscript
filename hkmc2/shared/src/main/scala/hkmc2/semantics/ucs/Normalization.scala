@@ -402,14 +402,14 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
         // the Label body into the rest. Wrap with an exit label and temp variable so every path stores its
         // result, breaks to exitLabel, then the original cont runs once.
         val exitLabel = new LabelSymbol(N, sym.nme + "$x")
-        val tmp = new TempSymbol(N, erasedType = N)
+        val tmp = TempSymbol(N, initErasedType = N)
         LoweringCtx.loweringCtx.collectScopedSym(tmp)
         // The representations of the results stored into `tmp`, recorded as each path is lowered. As with the
         // `if`-result temp below, `tmp` is named before those paths are lowered, so the join can only be
         // applied once both have been seen - here, before `cont` reads it.
         var pathTypes: Ls[Opt[codegen.ErasedValueType]] = Nil
         val exitCont: Result => Block = r =>
-          pathTypes ::= r.erasedValueType
+          pathTypes ::= r.erasedType
           Assign(tmp, r, Break(exitLabel))
         val bodyBlock = lowerSplit(sym.body, exitCont)
         val tailBlock = lowerSplit(tail, exitCont)
@@ -425,8 +425,8 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
     * match failure in the future.
     */
   private def throwMatchErrorBlock =
-    Throw(Instantiate(mut = false, Select(State.globalThisSymbol.asThis, Tree.Ident("Error"))(S(ctx.builtins.Error))(false),
-        (Value.Lit(syntax.Tree.StrLit("match error")).asArg :: Nil) :: Nil)(InstantiateMetadata.empty)) // TODO add failed-match scrutinee info
+    Throw(Instantiate(Select(State.globalThisSymbol.asThis, Tree.Ident("Error"))(S(ctx.builtins.Error))(false),
+        (Value.Lit(syntax.Tree.StrLit("match error")).asArg :: Nil) :: Nil)(InstantiateMetadata.empty, mut = false, rsc = false)) // TODO add failed-match scrutinee info
 
   /** Gives a lowering temp the join of the representations of the results stored into it.
     *
@@ -441,7 +441,7 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
     if branchTypes.nonEmpty && branchTypes.forall(_.isDefined) then
       branchTypes.flatten.map(_.canonicalize).reduce(ErasedType.lub) match
       case _: ErasedType.Incompatible => ()
-      case joined => sym.populateErasedType(joined)
+      case joined => sym.erasedType = S(joined)
 
   import syntax.Keyword.{`if`, `while`}
   
@@ -483,7 +483,7 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
       // 3. The term is a `while` and the result is used.
       lazy val l =
         usesResTmp = true
-        val res = new TempSymbol(t, erasedType = N)
+        val res = TempSymbol(t, initErasedType = N)
         outerCtx.collectScopedSym(res)
         res
       // The symbol for the loop label if the term is a `while`.
@@ -492,7 +492,10 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
         val res = new BlockMemberSymbol("while", Nil, false)
         outerCtx.collectScopedSym(res)
         res
-      lazy val tSym = TermSymbol.fromFunBms(f, N, erasedType = N)
+      // * The loop function takes a single empty parameter list. It returns either a result of the loop body or
+      // * `Runtime.LoopEnd`, so its result type is unknown.
+      lazy val tSym = TermSymbol.fromFunBms(f, N,
+        erasedType = S(codegen.ErasedFuncSignature.Signature(paramLists = Nil :: Nil, ret = N)))
       val normalized = tl.scoped("ucs:normalize"):
         normalize(inputSplit)(using VarSet())
       tl.scoped("ucs:normalized"):
@@ -502,14 +505,14 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
         case IfLikeForm.ReturningIf =>
           if (k is Ret) || (k is Thrw) then k(r)
           else
-            branchTypes ::= r.erasedValueType
+            branchTypes ::= r.erasedType
             Assign(l, r, End())
         case IfLikeForm.ImperativeIf => Assign.discard(r, End())
         case IfLikeForm.While => Assign(NoSymbol, r, loopCont)
       // NOTE: `shouldRewriteWhile` is not the same as `config.rewriteWhileLoops`
       // as shouldRewriteWhile is always true when effect handler lowering is on
       lazy val loopCont = if config.shouldRewriteWhile
-        then Return(Call(f.asMemberRef(tSym), Nil ne_:: Nil)(CallMetadata.mlsFunWithEffect))
+        then Return(Call(f.asMemberRef(tSym), Nil ne_:: Nil)(CallMetadata.mlsFunWithEffect, rsc = false))
         else Continue(loopLabel)
       val cont =
         form match
@@ -541,19 +544,19 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
           // NOTE: `shouldRewriteWhile` is not the same as `config.rewriteWhileLoops`
           // as shouldRewriteWhile is always true when effect handler lowering is on
           if config.shouldRewriteWhile then
-            val loopResult = TempSymbol(N, erasedType = N)
-            val isReturned = TempSymbol(N, erasedType = S(ErasedType.Bool))
+            val loopResult = TempSymbol(N, initErasedType = N)
+            val isReturned = TempSymbol(N, initErasedType = S(ErasedType.Bool))
             outerCtx.collectScopedSym(loopResult)
             outerCtx.collectScopedSym(isReturned)
             val loopEnd: Path =
               Select(State.runtimeSymbol.asSimpleRef, Tree.Ident("LoopEnd"))(S(State.loopEndSymbol))(false)
             val blk = blockBuilder
               .define(FunDefn(N, f, tSym, PlainParamList(Nil) :: Nil, Begin(body, Return(loopEnd)))(configOverride = N, annotations = Nil))
-              .assign(loopResult, Call(f.asMemberRef(tSym), Nil ne_:: Nil)(CallMetadata.mlsFunWithEffect))
+              .assign(loopResult, Call(f.asMemberRef(tSym), Nil ne_:: Nil)(CallMetadata.mlsFunWithEffect, rsc = false))
             if summon[LoweringCtx].mayRet then
               blk
                 .assign(isReturned, Call(State.builtinOpsMap("!==").asSimpleRef,
-                  (loopResult.asPath.asArg :: loopEnd.asArg :: Nil) ne_:: Nil)(CallMetadata.defaultMlsFun))
+                  (loopResult.asPath.asArg :: loopEnd.asArg :: Nil) ne_:: Nil)(CallMetadata.defaultMlsFun, rsc = false))
                 .ifthen(isReturned.asSimpleRef, Case.Lit(Tree.BoolLit(true)),
                   Return(loopResult.asSimpleRef),
                   N

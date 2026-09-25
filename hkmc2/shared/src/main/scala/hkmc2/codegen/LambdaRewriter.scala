@@ -19,7 +19,8 @@ object LambdaRewriter:
           val sym = BlockMemberSymbol("lambda", Nil, nameIsMeaningful = false)
           val lam2 = super.applyLam(lam)
           val Lambda(params, body) = lam2
-          val lamDefn = FunDefn.withFreshSymbol(N, sym, params :: Nil, body)(N, annotations = Annot.Private :: lam2.annot)
+          val lamDefn =
+            FunDefn.withFreshSymbol(N, sym, params :: Nil, body)(N, annotations = Annot.Private :: lam2.liftedAnnotations)
           Scoped(Set.single(sym), Define(lamDefn, k(lamDefn.asPath)))
         case _ => super.applyResult(r)(k)
       
@@ -30,7 +31,7 @@ object LambdaRewriter:
             nameIsMeaningful = true // TODO: lhs.nme is not always meaningful
           )
           val defn = FunDefn.withFreshSymbol(N, newSym, params :: Nil, applyBlock(body))
-            (N, annotations = Annot.Private :: lam.annot)
+            (N, annotations = Annot.Private :: lam.liftedAnnotations)
           val blk = blockBuilder
             .define(defn)
             .assign(lhs, defn.asPath)

@@ -447,7 +447,7 @@ foo()()
 :ge
 fun takeTop(m: Int32) = m
 takeTop(1)
-//│ ═══[COMPILATION ERROR] Cannot use a value of type 'Int32' at an unrelated type 'Unknown'
+//│ ═══[COMPILATION ERROR] Cannot use a value of type 'Int32' at an unrelated type 'rsc? Unknown'
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int' at an unrelated type 'Int32'
 //│ ║  l.449: 	takeTop(1)
 //│ ╙──       	        ^

@@ -210,7 +210,7 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
       val exportedScoped = symbolsToPreserve.collect:
         case sym: ScopedSymbol if !importedSymbols.contains(sym) => sym
       
-      val resSym = new TempSymbol(N, erasedType = N, "block$res")
+      val resSym = TempSymbol(N, initErasedType = N, "block$res")
       
       val resNme = nestedScp.allocateName(resSym)
       
@@ -290,7 +290,7 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
               NoSymbol,
               Call(
                 Elaborator.State.runtimeSymbol.asSimpleRef.selSN("printRaw"),
-                (Arg(N, sym.asPath) :: Nil) ne_:: Nil)(CallMetadata.defaultMlsFun),
+                (Arg(N, sym.asPath) :: Nil) ne_:: Nil)(CallMetadata.defaultMlsFun, rsc = false),
               End())
           val je = nestedScp.givenIn:
             jsb.block(le, endSemi = false)

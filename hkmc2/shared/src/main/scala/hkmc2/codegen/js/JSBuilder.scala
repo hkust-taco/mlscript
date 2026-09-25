@@ -77,7 +77,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
     case _ => false
   
   private def getPrivateAccessorSymbol(ts: semantics.TermSymbol): semantics.TempSymbol =
-    privateAccessorSymbols.getOrElseUpdate(ts, semantics.TempSymbol(N, erasedType = N, s"${ts.name}$$accessorSymbol"))
+    privateAccessorSymbols.getOrElseUpdate(ts, semantics.TempSymbol(N, initErasedType = N, s"${ts.name}$$accessorSymbol"))
 
   private def selectPrivateField(ts: semantics.TermSymbol, loc: Opt[Loc])(using Raise, Scope): Opt[Document] =
     ts.owner.collect:
@@ -274,9 +274,9 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
     paramLists match
     case Nil => body
     case params :: Nil =>
-      Return(Lambda(params, body)(if generator then Annot.Generator :: Nil else Nil))
+      Return(Lambda(params, body)(if generator then Annot.Generator :: Nil else Nil, rsc = false))
     case params :: rest =>
-      Return(Lambda(params, curriedFunctionBody(rest, body, generator))(Nil))
+      Return(Lambda(params, curriedFunctionBody(rest, body, generator))(Nil, rsc = false))
 
   /** Looks through the casts that a JS program does not materialize. */
   @tailrec
@@ -384,11 +384,12 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
       if ai
       then doc"${resultQual(qual)}.at(${result(fld)})"
       else doc"${result(qual)}[${result(fld)}]"
-    case Instantiate(mut, cls, argss) =>
+    // * TODO: handle `rsc`
+    case inst @ Instantiate(cls, argss) =>
       val calls = argss.foldLeft(resultInst(cls)): (acc, args) =>
         doc"${acc}(${args.map(argument).mkDocument(", ")})"
       val inner = doc"new $calls"
-      if mut then inner else doc"$freeze(${inner})"
+      if inst.mut then inner else doc"$freeze(${inner})"
     case Tuple(mut, es) if es.isEmpty => if mut then "[]" else doc"$freeze([])"
     case Tuple(mut, es) =>
       val inner =
@@ -606,7 +607,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
                 pubFlds.collect:
                   case (_, sym) if sym.k is MutVal =>
                     sym -> TermSymbol(
-                      syntax.LetBind, S(isym), Tree.Ident(sym.nme), erasedType = sym.erasedType)
+                      syntax.LetBind, S(isym), Tree.Ident(sym.nme), erasure = sym.erasedType)
               val allPrivFlds = privFlds ++ mutPubFields.map(_._2)
               val privDecls = allPrivFlds.map: fld =>
                 val nme = isym.privatesScope.allocateOrGetName(fld)
@@ -1207,7 +1208,7 @@ trait JSBuilderArgNumSanityChecks(using TL, Config, Elaborator.State)
   override def checkSelections: Bool = instrument
   override def freezeDefinitions: Bool = instrument
   
-  val functionParamVarargSymbol = semantics.TempSymbol(N, erasedType = N, "args")
+  val functionParamVarargSymbol = semantics.TempSymbol(N, initErasedType = N, "args")
   
   override def setupFunction(name: Option[Str], params: ParamList, body: Block, isLambda: Bool)(using Raise, Scope): (Document, Document) =
     // * We used to instrument `fun f(x, y) = x + y` into something like

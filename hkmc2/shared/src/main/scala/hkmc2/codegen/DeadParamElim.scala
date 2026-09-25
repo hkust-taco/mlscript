@@ -162,17 +162,15 @@ class Rewrite(val deadParamElimSolver: DeadParamElimSolver)(using Raise):
         groupFuns
           .map: f =>
             val name = instId.mkFunName + s"$$${f.nme}"
-            val specializedErasedType = f.erasedType match
-              case S(fr: ErasedType.FuncRef) =>
-                S(fr.copy(
-                  paramLists = fr.paramLists.zipWithIndex.map: (pl, i) =>
-                    val eliminable = deadParamElimSolver.eliminableParamsById(ConcreteId((f, i), instId))
-                    pl.zipWithIndex.collect:
-                      case (t, j) if !eliminable(j) => t))
-              case other => other
+            val specializedSym = f.withMappedErasure(Fun, N, Tree.Ident(name)): sig =>
+              val paramLists = sig.paramLists.zipWithIndex.map: (pl, i) =>
+                val eliminable = deadParamElimSolver.eliminableParamsById(ConcreteId((f, i), instId))
+                pl.zipWithIndex.collect:
+                  case (t, j) if !eliminable(j) => t
+              ErasedFuncSignature.Signature(paramLists, sig.ret)
             f -> (
               new BlockMemberSymbol(name, Nil, true),
-              new TermSymbol(Fun, N, Tree.Ident(name), erasedType = specializedErasedType))
+              specializedSym)
           .toMap)
     end mkNewPolyFnSyms
     
@@ -276,15 +274,15 @@ class Rewrite(val deadParamElimSolver: DeadParamElimSolver)(using Raise):
           rewriteArgs(args, eliminable): args2 =>
             k(
               if (fun2 is fun) && (args2 is args) then c
-              else Call(fun2, args2 ne_:: restArgss)(c.metadata).withLocOf(c)
+              else Call(fun2, args2 ne_:: restArgss)(c.metadata, c.rsc).withLocOf(c)
             )
-      case i@Instantiate(mut, cls, args :: restArgss) if args.forall(_.spread.isEmpty) =>
+      case i@Instantiate(cls, args :: restArgss) if args.forall(_.spread.isEmpty) =>
         val eliminable = deadParamElimSolver.eliminableCallSiteArgsById(ConcreteId(i.uid, instId))
         applyPath(cls): cls2 =>
           rewriteArgs(args, eliminable): args2 =>
             k(
               if (cls2 is cls) && (args2 is args) then i
-              else Instantiate(mut, cls2, args2 :: restArgss)(i.metadata).withLocOf(i)
+              else Instantiate(cls2, args2 :: restArgss)(i.metadata, i.mut, i.rsc).withLocOf(i)
             )
       case _ => super.applyResult(r)(k)
     
@@ -292,7 +290,7 @@ class Rewrite(val deadParamElimSolver: DeadParamElimSolver)(using Raise):
       val (params2, removed) = filterParamList(lam.params, deadParamElimSolver.eliminableParamsById(ConcreteId(lam.uid, instId)))
       val body2 = withEliminatedParams(removed):
         applyFunBodyLikeBlock(lam.body)
-      if (params2 is lam.params) && (body2 is lam.body) then lam else Lambda(params2, body2)(lam.annot)
+      if (params2 is lam.params) && (body2 is lam.body) then lam else Lambda(params2, body2)(lam.annot, lam.rsc)
     
     override def applyFunDefn(fun: FunDefn): FunDefn =
       val own2 = fun.owner.mapConserve(_.subst)

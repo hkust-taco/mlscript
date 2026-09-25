@@ -10,8 +10,9 @@ import hkmc2.utils.*
 
 import Elaborator.State
 import Tree.Ident
-import hkmc2.codegen.{ErasedType, ErasedFuncType, ErasedValueType, HasErasedType, HasOnceMutableErasedType}
+import hkmc2.codegen.{ErasedType, ErasedFuncSignature, ErasedValueType}
 import hkmc2.utils.SymbolSubst
+import sourcecode.{FileName, Line}
 
 
 sealed abstract class MaybeSymbol:
@@ -225,24 +226,41 @@ class SplitSymbol(val body: Split, name: Str = "split")(using State) extends Loc
   def toLoc = body.toLoc
   override def prefix: Str = "split:"
 
-sealed abstract class LocalVarSymbol(name: Str)(using State) extends FlowSymbol(name) with LocalSymbol with HasErasedType:
+sealed abstract class LocalVarSymbol(name: Str)(using State) extends FlowSymbol(name) with LocalSymbol:
   self: LocalSymbol => // * using `with LocalSymbol` in the `extends` clause makes Scala think there's a bad override
   var decl: Opt[Declaration] = N
+  /** The [[ErasedValueType]] of this variable, or `N` if the erased type is not known. */
+  def erasedType: Opt[ErasedValueType]
   def subst(using s: SymbolSubst): LocalVarSymbol
 
 /** A temporary variable introduced by lowering.
   *
-  * Its `erasedType` is once-mutable: a temp holding a branching term's result is named before those branches
-  * are lowered, so `Normalization` populates it with the join of their representations once they have all
-  * been seen. `Normalization.joinTempType` is its only write site.
+  * Its `erasedType` may be initialized late and only once: a temp holding a branching term's result is named before
+  * those branches are lowered, so `Normalization` populates it with the join of their representations once they have
+  * all been seen. `Normalization.joinTempType` is its only write site.
   */
-class TempSymbol(val trm: Opt[Term], override var erasedType: Opt[ErasedType], dbgNme: Str = "tmp")(using State)
-    extends LocalVarSymbol(dbgNme)
-    with HasOnceMutableErasedType:
+class TempSymbol(val trm: Opt[Term], initErasedType: Opt[ErasedValueType], dbgNme: Str = "tmp")(using State)
+    extends LocalVarSymbol(dbgNme):
   // val nameHints: MutSet[Str] = MutSet.empty // * May be useful later?
+  private var _erasedType: Opt[ErasedValueType] = initErasedType
+  
   override def toLoc: Option[Loc] = trm.flatMap(_.toLoc)
   override def prefix: Str = "tmp:"
   override def subst(using s: SymbolSubst): TempSymbol = s.mapTempSym(this)
+  
+  def erasedType: Opt[ErasedValueType] = _erasedType
+  
+  /** Sets the erased type, or raises a soft assertion if it is already set. */
+  def erasedType_=(newType: Opt[ErasedValueType])(using Line, FileName, Raise): Unit =
+    initErasure(this, _erasedType, newType)(_erasedType = _)
+
+/** Initializes an erased type or signature that is only known after its symbol is created, raising a soft assertion
+  * if `current` is already set.
+  */
+private def initErasure[T](sym: Symbol, current: Opt[?], newErasure: Opt[T])(set: Opt[T] => Unit)
+    (using Line, FileName, Raise): Unit =
+  softAssert(current.isEmpty, s"Cannot set the erasure of '$sym' to $newErasure, as it is already $current")
+  if current.isEmpty then set(newErasure)
 
 
 // * When instantiating forall-qualified TVs, we need to duplicate the information
@@ -345,11 +363,16 @@ sealed abstract class MemberSymbol(using State) extends Symbol:
   def subst(using SymbolSubst): MemberSymbol
 
 
-class TermSymbol(val k: TermDefKind, val owner: Opt[InnerSymbol], val id: Tree.Ident, override var erasedType: Opt[ErasedType])(using State)
+class TermSymbol(
+    val k: TermDefKind,
+    val owner: Opt[InnerSymbol],
+    val id: Tree.Ident,
+    private var erasure: Opt[ErasedValueType | ErasedFuncSignature],
+)(using State)
     extends MemberSymbol
     with DefinitionSymbol[TermDefinition]
-    with HasOnceMutableErasedType
     with NamedSymbol:
+  
   var sourceAliases: Ls[Str] = Nil
   def nme: Str = id.name
   def name: Str = nme
@@ -367,14 +390,48 @@ class TermSymbol(val k: TermDefKind, val owner: Opt[InnerSymbol], val id: Tree.I
     owner.exists(!_.isInstanceOf[TopLevelSymbol]) &&
       ((k is LetBind) || isExplicitlyPrivate)
   
+  /** The erased type of what a reference to this term evaluates to.
+    *
+    * A definition with an [[erasedSignature]] evaluates to a closure the compiler builds, i.e. a first-class
+    * `Function`. Nothing states the resource-ness of such a closure, so it is `rsc?`.
+    */
+  def erasedType: Opt[ErasedValueType] = erasure match
+    case S(_: ErasedFuncSignature) => S(ErasedType.Function(rsc = N))
+    case S(tpe: ErasedValueType) => S(tpe)
+    case N => N
+  
+  /** Sets the erased type, or raises a soft assertion if this term already has an erased type or signature. */
+  def erasedType_=(newType: Opt[ErasedValueType])(using Line, FileName, Raise): Unit =
+    initErasure(this, erasure, newType)(erasure = _)
+  
+  /** The erased signature of a `fun` definition with parameter lists, or `N` if this term has none. */
+  def erasedSignature: Opt[ErasedFuncSignature] = erasure match
+    case S(sig: ErasedFuncSignature) => S(sig)
+    case S(_: ErasedValueType) | N => N
+  
+  /** Sets the erased signature, or raises a soft assertion if this term already has an erased type or signature. */
+  def erasedSignature_=(newSignature: Opt[ErasedFuncSignature])(using Line, FileName, Raise): Unit =
+    initErasure(this, erasure, newSignature)(erasure = _)
+  
+  /** Creates a symbol with the same erased type or signature as this one. */
+  def withSameErasure(k: TermDefKind, owner: Opt[InnerSymbol], id: Tree.Ident)(using State): TermSymbol =
+    withMappedErasure(k, owner, id)(identity)
+  
+  /** Creates a symbol with the same erased type as this one, or its erased signature mapped by `f`. */
+  def withMappedErasure(k: TermDefKind, owner: Opt[InnerSymbol], id: Tree.Ident)
+      (f: ErasedFuncSignature => ErasedFuncSignature)(using State): TermSymbol =
+    val erasure = this.erasure match
+      case S(sig: ErasedFuncSignature) => S(f(sig))
+      case other => other
+    new TermSymbol(k, owner, id, erasure)
+  
   /** The erased type of this term's return value.
     *
-    * This method differs for `fun` definitions with parameter lists, whose `erasedType` is the function type rather
-    * than its result type.
+    * This method differs for `fun` definitions with parameter lists, whose result type is that of their signature.
     */
-  def declaredResultType: Opt[ErasedValueType] = erasedType match
-    case S(ft: ErasedFuncType) => ft.ret
-    case S(vt: ErasedValueType) => S(vt)
+  def declaredResultType: Opt[ErasedValueType] = erasure match
+    case S(sig: ErasedFuncSignature) => sig.ret
+    case S(tpe: ErasedValueType) => S(tpe)
     case N => N
 
   def subst(using sub: SymbolSubst): TermSymbol = sub.mapTermSym(this)
@@ -382,7 +439,7 @@ class TermSymbol(val k: TermDefKind, val owner: Opt[InnerSymbol], val id: Tree.I
     defn.forall(_.mayRaiseEffects)
 
 object TermSymbol:
-  def fromFunBms(b: BlockMemberSymbol, owner: Opt[InnerSymbol], erasedType: Opt[ErasedType])(using State) =
+  def fromFunBms(b: BlockMemberSymbol, owner: Opt[InnerSymbol], erasedType: Opt[ErasedFuncSignature])(using State) =
     TermSymbol(syntax.Fun, owner, Tree.Ident(b.nme), erasedType)
 
 
@@ -408,8 +465,7 @@ case class Extr(isTop: Bool)(using State) extends CtorSymbol:
   def toLoc: Option[Loc] = N
   override def toString: Str = nme
 
-sealed abstract case class LitSymbol(lit: Literal)(using State) extends CtorSymbol, HasErasedType:
-  override val erasedType: Opt[ErasedType] = N
+sealed abstract case class LitSymbol(lit: Literal)(using State) extends CtorSymbol:
   def nme: Str = lit.idStr
   def toLoc: Option[Loc] = lit.toLoc
   override def prefix: Str = "lit:"
@@ -434,7 +490,7 @@ case class ErrorSymbol(val nme: Str, tree: Tree)(using State) extends MemberSymb
   override def subst(using sub: SymbolSubst): ErrorSymbol = sub.mapErrorSym(this)
   override def prefix: Str = "error:"
 
-sealed trait ClassLikeSymbol extends IdentifiedSymbol, HasErasedType:
+sealed trait ClassLikeSymbol extends IdentifiedSymbol:
   self: MemberSymbol & DefinitionSymbol[? <: ClassDef | ModuleOrObjectDef] =>
   def defn: Opt[ClassLikeDef]
   val tree: Tree.TypeDef
@@ -505,7 +561,7 @@ sealed trait InnerSymbol(using State) extends Symbol:
   self: DefinitionSymbol[? <: ClassLikeDef] =>
   val privatesScope: Scope = Scope.empty(Scope.Cfg.default) // * Scope for private members of this symbol
   // TODO(Derppening): Can we meaningfully infer the erased type of `this` from the definition?
-  val thisProxy: TempSymbol = TempSymbol(N, erasedType = N, s"this$$$nme")
+  val thisProxy: TempSymbol = TempSymbol(N, initErasedType = N, s"this$$$nme")
   def subst(using SymbolSubst): InnerSymbol
   def asDefnSym: DefinitionSymbol[? <: ClassLikeDef] & InnerSymbol = this match
     case d: DefinitionSymbol[? <: ClassLikeDef] => d
@@ -520,8 +576,6 @@ class ClassSymbol(val tree: Tree.TypeDef, val id: Tree.Ident)(using State)
     with DefinitionSymbol[ClassDef]
     with InnerSymbol
     with NamedSymbol:
-
-  override val erasedType: Opt[ErasedValueType] = S(ErasedType.ValueLike(rsc = S(false), this))
 
   def name: Str = nme
   def nme = id.name
@@ -540,7 +594,8 @@ class ModuleOrObjectSymbol(val tree: Tree.TypeDef, val id: Tree.Ident)(using Sta
     with InnerSymbol
     with NamedSymbol:
 
-  override val erasedType: Opt[ErasedValueType] = S(ErasedType.ValueLike(rsc = S(false), this))
+  /** The [[ErasedValueType]] of this module or object. */
+  val erasedType: Opt[ErasedValueType] = S(ErasedType.ValueLike(rsc = S(false), this))
   
   def name: Str = nme
   def nme = id.name
@@ -553,10 +608,7 @@ class ModuleOrObjectSymbol(val tree: Tree.TypeDef, val id: Tree.Ident)(using Sta
 
 class TypeAliasSymbol(val id: Tree.Ident)(using State)
     extends MemberSymbol
-    with DefinitionSymbol[TypeDef]
-    with HasErasedType:
-
-  override val erasedType: Opt[ErasedType] = S(ErasedType.ValueLike(rsc = S(false), this))
+    with DefinitionSymbol[TypeDef]:
   
   def nme = id.name
   def toLoc: Option[Loc] = id.toLoc // TODO track source tree of type alias here

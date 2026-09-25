@@ -30,11 +30,11 @@ class FirstClassFunctionTransformer
     val args = params.params.map(_.sym.asSimpleRef.asArg) :::
       params.restParam.toList.map(p => Arg(S(SpreadKind.Eager), p.sym.asSimpleRef))
     val callDef = FunDefn.withFreshSymbol(Some(clsSym), new BlockMemberSymbol("call", Nil, true), params :: Nil,
-      Return(Call(p, args ne_:: Nil)(CallMetadata.defaultMlsFun)))(N, annotations = Nil)
+      Return(Call(p, args ne_:: Nil)(CallMetadata.defaultMlsFun, rsc = false)))(N, annotations = Nil)
     ClsLikeDefn(None, clsSym, defSym, None, syntax.Cls, None, Nil,
       Some(Select(State.globalThisSymbol.asThis, Tree.Ident("Function"))(Some(ctx.builtins.Function))(false)),
       callDef :: Nil, Nil, Nil, Assign.discard(
-        Call(State.builtinOpsMap("super").asSimpleRef, Nil ne_:: Nil)(CallMetadata.defaultFun),
+        Call(State.builtinOpsMap("super").asSimpleRef, Nil ne_:: Nil)(CallMetadata.defaultFun, rsc = false),
         End()), End(), None, None)(N, annotations = Nil)
 
   private def getParamList(l: BlockMemberSymbol): Option[ParamList] = funDefns.get(l) match
@@ -59,17 +59,24 @@ class FirstClassFunctionTransformer
         case TermDefinition(k = syntax.Fun, params = Nil) => true
         case _ => false
   
-  private def etaExpandPath(p: Path, params: ParamList)(k: Path => Block): Block =
+  /** Wraps the function `p` refers to into a function object, which is a resource iff `rsc`. */
+  private def etaExpandPath(p: Path, params: ParamList, rsc: Bool)(k: Path => Block): Block =
     val clsDef = generateFCFunctionClass(p, params)
-    val tmp = new TempSymbol(None, erasedType = S(ErasedType.ValueLike(rsc = S(false), clsDef.isym.asClsOrMod.get)))
+    // * The wrapper captures what `p` does, so it is a resource iff `p` is. Only a lifted resource lambda is known to
+    // * be one; the resource-ness of any other function value is undetermined.
+    val tmpRsc = if rsc then S(true) else N
+    val tmp = TempSymbol(None, initErasedType = S(ErasedType.ValueLike(rsc = tmpRsc, clsDef.isym.asClsOrMod.get)))
     val cls = clsDef.sym.asMemberRef(clsDef.isym)
-    Scoped(Set(clsDef.sym, tmp), Define(clsDef, Assign(tmp, Instantiate(false, cls, Nil :: Nil)(InstantiateMetadata.empty), k(tmp.asSimpleRef))))
+    // TODO: Instantiate the wrapper as a resource iff `p` is one, once the resource-ness of other function values is
+    //       resolved.
+    Scoped(Set(clsDef.sym, tmp), Define(clsDef, Assign(tmp, Instantiate(cls, Nil :: Nil)(InstantiateMetadata.empty, mut = false, rsc), k(tmp.asSimpleRef))))
   
   override def applyPath(p: Path)(k: Path => Block): Block = p match
     case ref @ Value.MemberRef(l, disamb) => disamb match
       case s: TermSymbol if s.k is syntax.Fun =>
         if isGetter(l) then k(p)
-        else etaExpandPath(ref, getParamList(l).getOrElse(lastWords(s"Cannot get ${l.nme}'s parameter list.")))(k)
+        else etaExpandPath(ref, getParamList(l).getOrElse(lastWords(s"Cannot get ${l.nme}'s parameter list.")),
+          funDefns.get(l).exists(_.rsc))(k)
       case _ => k(p)
     case sel: Select => sel.symbol match
       case Some(s: TermSymbol) if (s.k is syntax.Fun) =>
@@ -81,7 +88,7 @@ class FirstClassFunctionTransformer
                 -> sel.toLoc :: Nil,
                 source = Diagnostic.Source.Compilation)
             PlainParamList(Nil)
-          etaExpandPath(sel, params)(k)
+          etaExpandPath(sel, params, s.irFunDefn.exists(_.rsc))(k)
       case Some(_) => k(p)
       case _ =>
         raise(ErrorReport(msg"Cannot determine if ${sel.name.name} is a function." -> sel.toLoc :: Nil,
@@ -94,7 +101,7 @@ class FirstClassFunctionTransformer
       def call(f: Path) =
         if (f is fun) && (argss is argss2)
         then c
-        else Call(f, argss2.ne_!)(c.metadata)
+        else Call(f, argss2.ne_!)(c.metadata, c.rsc)
       fun match
         case ref @ Value.SimpleRef(sym) => sym match
           case _: VarSymbol |  _: TempSymbol => k(call(ref.selSN("call")))

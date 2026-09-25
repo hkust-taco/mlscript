@@ -271,7 +271,7 @@ broadExit(1)
 :ge
 fun sccF(): Int31 = wasm.ref.i31(sccG())
 fun sccG(): Int32 = wasm.i31.get_s(sccF()) + wasm.i32.const(1)
-//│ ═══[COMPILATION ERROR] Cannot use a value of type 'Unknown' at an unrelated type 'Int32'
+//│ ═══[COMPILATION ERROR] Cannot use a value of type 'rsc? Unknown' at an unrelated type 'Int32'
 //│ ╔══[COMPILATION ERROR] Types 'Int31' and 'Int32' have no common representation
 //│ ║  l.273: 	fun sccG(): Int32 = wasm.i31.get_s(sccF()) + wasm.i32.const(1)
 //│ ╙──       	    ^^^^

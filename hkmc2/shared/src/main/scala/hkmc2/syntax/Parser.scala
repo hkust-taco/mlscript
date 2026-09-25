@@ -163,6 +163,8 @@ abstract class Parser(
       (IDENT("new!", false), l1 ++ l2) :: preprocessTokens(rest)
     case (IDENT("yield", false), l1) :: (IDENT("*", true), l2) :: rest =>
       (IDENT("yield*", false), l1 ++ l2) :: preprocessTokens(rest)
+    case (IDENT("rsc", false), l1) :: (IDENT("?", true), l2) :: rest =>
+      (IDENT("rsc?", false), l1 ++ l2) :: preprocessTokens(rest)
     // * Remove empty indented sections
     case (BRACKETS(Indent, toks), _) :: rest
     if toks.forall:

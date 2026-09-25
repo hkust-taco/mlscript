@@ -863,7 +863,7 @@ class BlockSimplifier
           registerChange(s"immediate assigned call prefix ${lhs.showDbg} ~> ${path.showDbg}")
           applyPath(path): path2 =>
             val lhs2 = recordAssignmentFact(lhs, path2, ass)
-            val combined = Call(path2, argss)(call.metadata).withLocOf(call)
+            val combined = Call(path2, argss)(call.metadata, call.rsc).withLocOf(call)
             val res = applyBlock(Assign(nextLhs, combined, rst))
             // * Note that it is incorrect to eliminate the `lhs` assignment even if `!rst.freeVars(lhs)`,
             // * because the assignment may be visible from an outer block
@@ -878,7 +878,7 @@ class BlockSimplifier
           registerChange(s"immediate returned call prefix ${lhs.showDbg} ~> ${path.showDbg}")
           applyPath(path): path2 =>
             val lhs2 = recordAssignmentFact(lhs, path2, ass)
-            val combined = Call(path2, argss)(call.metadata).withLocOf(call)
+            val combined = Call(path2, argss)(call.metadata, call.rsc).withLocOf(call)
             val res = applyBlock(Return(combined))
             if symbolsToPreserve(lhs) then Assign(lhs2, path2, res) else res
 
@@ -1005,7 +1005,7 @@ class BlockSimplifier
                     case S(sym: ClassSymbol) =>
                       Set.single(sym)
                     case _ => giveUp
-                  case Instantiate(_, cls, _) =>
+                  case Instantiate(cls, _) =>
                     // * Note: Instantiate nodes are globally assumed to be saturated
                     getInstCtorShape(cls) match
                     case S(sym) =>
@@ -1203,6 +1203,8 @@ class BlockSimplifier
               prefix.metadata.mayRaiseEffects || c.metadata.mayRaiseEffects,
               prefix.metadata.annotations ++ c.metadata.annotations,
             ),
+            // * The combined call denotes the value of the outer call, so it is a resource iff the outer call is.
+            c.rsc,
           ).withLocOf(c)
           super.applyResult(combined)(k)
         case N => super.applyResult(r)(k)
@@ -1256,7 +1258,7 @@ class BlockSimplifier
       case Value.Lit(lit) => S(lit)
       case path: Path => path.targetSymbol.flatMap(_.asModOrObj)
       case Call(path, argss) => getCallCtorShape(path, argss)
-      case Instantiate(_, cls, _) => getInstCtorShape(cls)
+      case Instantiate(cls, _) => getInstCtorShape(cls)
       case _ => N
     
     /** Find the shape held by `target` after a straight-line producer arm.
@@ -1906,7 +1908,7 @@ class BlockSimplifier
                   case Nil =>
                     val resSym = TempSymbol(
                       N,
-                      erasedType = if extraArgss.isEmpty then call.erasedValueType else N,
+                      initErasedType = if extraArgss.isEmpty then call.erasedType else N,
                       "inlinedVal",
                     )
                     val copier = Copier(resSym, mapping, thisMapping)
@@ -1918,7 +1920,7 @@ class BlockSimplifier
                         k(Call(resSym.asSimpleRef, extraArgss.ne_!)(
                           call.metadata.copy(
                             annotations = call.metadata.annotations.filterNot(_ == Annot.TailCall),
-                          ))))))
+                          ), call.rsc)))))
                   case (sym, value) :: argRest =>
                     val newSym = VarSymbol(sym.id, erasedType = sym.erasedType)
                     go(acc.assignScoped(newSym, value), argRest, mapping + (sym -> newSym))

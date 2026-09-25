@@ -17,7 +17,7 @@ import hkmc2.Message.MessageContext
 
 import Keyword.{`and`, `case`, `do`, `else`, `if`, `is`, `let`, `or`, `set`, `then`, `while`}
 import hkmc2.utils.Scope
-import codegen.{ErasedType, ErasedValueType}
+import codegen.{ErasedFuncSignature, ErasedType, ErasedValueType}
 import SimpleSplit.*
 import ucs.{error, unapply}
 
@@ -63,6 +63,41 @@ object Elaborator:
     def inner: Opt[InnerSymbol] = this match
       case InnerScope(inner) => S(inner)
       case _ => N
+  
+  /** An elaborated signature, parsed into the chain of function types it describes. */
+  enum Sig:
+    /** A possibly-quantified function type `params -> ret`, together with the resource modifiers written around it
+      * (outermost first).
+      */
+    case Arrow(tpe: Term, mods: Ls[Term], params: Term, ret: Sig)
+    /** Anything else, including a resource-modified type that is not a function type. */
+    case Result(tpe: Term)
+    
+    /** The signature as written, including its quantifiers and resource modifiers. */
+    val tpe: Term
+  
+  object Sig:
+    def parse(sign: Term): Sig =
+      def go(t: Term, mods: Ls[Term]): Sig = t match
+        case Term.Forall(_, _, body) => go(body, mods)
+        case mod @ Term.Annotated(Annot.Resource(_), target) => go(target, mods :+ mod)
+        case Term.FunTy(params, ret, _) => Sig.Arrow(sign, mods, params, parse(ret))
+        case _ => Sig.Result(sign)
+      go(sign, Nil)
+  
+  /** The definition of `sym` that shares the elaborated signature of its separately written declaration, if any.
+    *
+    * A declaration such as `fun f: Int -> Int` followed by a definition `fun f(x) = x` would otherwise have that
+    * signature elaborated and resolved once for each, reporting every diagnostic in it twice. The signature is not
+    * shared with a definition that has type parameters of its own, as the signature may then refer to them.
+    */
+  def sharedSignatureDefinition(sym: BlockMemberSymbol): Opt[Tree.TermDef] =
+    val hasSeparateSignature = sym.trees.exists:
+      case td: Tree.TermDef => td.rhs.isEmpty && td.annotatedResultType.isDefined && td.paramLists.isEmpty
+      case _ => false
+    if !hasSeparateSignature then N
+    else sym.trees.collectFirst:
+      case td: Tree.TermDef if td.rhs.isDefined && td.annotatedResultType.isEmpty && td.typeParams.isEmpty => td
   
   /** Label metadata threaded through elaboration. */
   final case class LabelBinding(
@@ -549,13 +584,13 @@ object Elaborator:
     val importSymbol = new VarSymbol(Ident("import"), erasedType = N)
     @deprecated("Use the `NoSymbol` singleton instead.")
     val noSymbol = NoSymbol
-    val runtimeSymbol = TempSymbol(N, erasedType = N, "runtime")
-    val definitionMetadataSymbol = TempSymbol(N, erasedType = N, "definitionMetadata")
-    val prettyPrintSymbol = TempSymbol(N, erasedType = N, "prettyPrint")
-    val termSymbol = TempSymbol(N, erasedType = N, "Term")
-    val blockSymbol = TempSymbol(N, erasedType = N, "Block")
-    val optionSymbol = TempSymbol(N, erasedType = N, "option")
-    val wasmSymbol = TempSymbol(N, erasedType = N, "wasm")
+    val runtimeSymbol = TempSymbol(N, initErasedType = N, "runtime")
+    val definitionMetadataSymbol = TempSymbol(N, initErasedType = N, "definitionMetadata")
+    val prettyPrintSymbol = TempSymbol(N, initErasedType = N, "prettyPrint")
+    val termSymbol = TempSymbol(N, initErasedType = N, "Term")
+    val blockSymbol = TempSymbol(N, initErasedType = N, "Block")
+    val optionSymbol = TempSymbol(N, initErasedType = N, "option")
+    val wasmSymbol = TempSymbol(N, initErasedType = N, "wasm")
     val nonLocalRetHandlerTrm =
       val id = new Ident("NonLocalReturn")
       val sym = ClassSymbol(DummyTypeDef(syntax.Cls), id)
@@ -656,6 +691,23 @@ extends Importer:
         N
     case _ => N
   
+  /** Applies the resource modifier `kw`, written at `kwLoc` inside an instantiation (`new rsc C()`),
+    * to the elaborated instantiation `inst`. A modifier has no effect if written outside one (`rsc (new C())`).
+    */
+  def rscInstantiation(kw: Keyword.RscLike, kwLoc: Opt[Loc], inst: Term): Term =
+    def reject(msg: Message): Term =
+      raise(ErrorReport(msg -> kwLoc :: Nil))
+      inst
+    inst match
+    case Term.DynNew(_, _) | Term.Mut(_: Term.DynNew) =>
+      reject(msg"Resource instantiation with 'new!' is not supported yet.")
+    case _ if kw == Keyword.`rsc?` =>
+      reject(msg"An instance cannot be 'rsc?': it either is a resource or is not.")
+    case Term.New(_, _, S(_)) | Term.Mut(Term.New(_, _, S(_))) =>
+      reject(msg"Resource instantiation with a refinement is not supported yet.")
+    // * The modifier wraps the instantiation in an annotation, just as it wraps a type.
+    case _ => Term.Annotated(Annot.Modifier(kw), inst)
+  
   def annot(tree: Tree): Ctxl[Opt[Annot]] = tree match
     case Keywrd(kw @ (
       Keyword.`abstract`
@@ -665,6 +717,8 @@ extends Importer:
       | Keyword.`virtual`
       | Keyword.`public`
       | Keyword.`private`
+      | Keyword.`rsc`
+      | Keyword.`rsc?`
     )) => S(Annot.Modifier(kw))
     case App(Ident("config"), Tup(args)) =>
       val modify = ConfigParser.parseOverrides(args)
@@ -727,7 +781,7 @@ extends Importer:
       val valueSym = spec.valueParamName.map(nme => VarSymbol(Ident(nme), erasedType = N))
       val resumeSym = VarSymbol(Ident("resume"), erasedType = N)
       val mtdSym = BlockMemberSymbol(spec.methodName, Nil, true)
-      val tsym = TermSymbol(Fun, N, Ident(spec.methodName), erasedType = N)
+      val tsym = TermSymbol(Fun, N, Ident(spec.methodName), erasure = N)
       val td = TermDefinition(
         Fun,
         mtdSym,
@@ -918,7 +972,7 @@ extends Importer:
       ((ctx + (ident.name -> symbol)), head ~: End)
     // Interleaved-`do` statements like `{ x is A then 0; do log(1); ... }`.
     case PrefixApp(Keywrd(`do`), rhsTree) =>
-      (ctx, Head.Let(TempSymbol(N, erasedType = N, "unused"), term(rhsTree)) ~: End)
+      (ctx, Head.Let(TempSymbol(N, initErasedType = N, "unused"), term(rhsTree)) ~: End)
     // Although the `else`-clause marks the end of the split, we cannot
     // stop and still have to elaborate the remaining trees.
     case PrefixApp(kwTree @ Keywrd(`else`), elseTree) =>
@@ -1018,7 +1072,7 @@ extends Importer:
         case Term.Ref(symbol) => continuation(() => symbol.ref().withLocOf(term))
         // Otherwise, we need to create a temporary symbol holding the term.
         case term: Term =>
-          val symbol = TempSymbol(N, erasedType = N, "scrut")
+          val symbol = TempSymbol(N, initErasedType = N, "scrut")
           Head.Let(symbol, term) ~: continuation(() => symbol.ref())
   
   private type TT = (Tree, Tree)
@@ -1136,7 +1190,7 @@ extends Importer:
         error
       else
         val lt = subterm(lhs)
-        val sym = TempSymbol(S(lt), erasedType = N, "old")
+        val sym = TempSymbol(S(lt), initErasedType = N, "old")
         Blk(
           LetDecl(sym, Nil) :: DefineVar(sym, lt) :: Nil, Term.Try(Blk(
             Term.Assgn(lt, subterm(rhs)) :: Nil,
@@ -1223,6 +1277,10 @@ extends Importer:
         sym
       val syms = (tvs.collect:
         case id: Tree.Ident => (genSym(id, erasedType = N), N, N)
+        // * The binder is still declared, so its uses in the body resolve.
+        case Modified(kw @ Keywrd(_: Keyword.RscLike), id: Tree.Ident) =>
+          raise(Annot.Resource.unsupportedOnTyParam(kw.kw, kw.toLoc))
+          (genSym(id, erasedType = N), N, N)
         case InfixApp(id: Tree.Ident, Keywrd(Keyword.`extends`), ub) => (genSym(id, erasedType = N), S(ub), N)
         case InfixApp(id: Tree.Ident, Keywrd(Keyword.`restricts`), lb) => (genSym(id, erasedType = N), N, S(lb))
         case InfixApp(InfixApp(id: Tree.Ident, Keywrd(Keyword.`extends`), ub), Keywrd(Keyword.`restricts`), lb) =>
@@ -1433,16 +1491,17 @@ extends Importer:
     case tree @ Tup(fields) =>
       Term.Tup(fields.map(fld(_)))(tree)
       
-    case DynamicNew(Apps(c, args)) =>
+    case DynamicNew(Apps(c, args), rsc) =>
       val (mut, c2) = c match
         case Modified(Keywrd(Keyword.`mut`), c) => (true, c)
         case c => (false, c)
       val base = new Term.DynNew(subterm(c2), args.map(subterm(_))).withLocOf(tree)
-      if mut then Term.Mut(base) else base
+      val withMut = if mut then Term.Mut(base) else base
+      rsc.fold(withMut)(kw => rscInstantiation(kw.kw, kw.toLoc, withMut))
     // case New(c, rfto) =>
     //   assert(rfto.isEmpty)
     //   Term.New(cls(subterm(c), inAppPrefix = inAppPrefix), params.map(subterm(_)), bodo).withLocOf(tree)
-    case ProperNew(body, rfto) => // TODO handle Under
+    case ProperNew(body, rfto, rscKw) => // TODO handle Under
       lazy val bodo = rfto.map: rft =>
         val clsSym = new ClassSymbol(DummyTypeDef(syntax.Cls), Ident("$anon"))
         ctx.nestInner(clsSym).givenIn:
@@ -1460,7 +1519,8 @@ extends Importer:
           args.map(subterm(_)),
           bodo
         )(N).withLocOf(tree)
-        if mut then Term.Mut(inner) else inner
+        val withMut = if mut then Term.Mut(inner) else inner
+        rscKw.fold(withMut)(kw => rscInstantiation(kw.kw, kw.toLoc, withMut))
       case N =>
         val objectRef = ctx.builtins.Object.bms.get.ref(Ident("Object"))
         Term.New(objectRef, Nil, bodo)(N).withLocOf(tree)
@@ -1524,10 +1584,10 @@ extends Importer:
         subterm(body)
     case PrefixApp(kw @ Keywrd(Keyword.`do`), InfixApp(labelId: Ident, Keywrd(Keyword.`:`), body)) =>
       val labelSym = new LabelSymbol(N, labelId.name)
-      val resultSym = new TempSymbol(N, erasedType = N, s"${labelId.name}$$result")
-      val nonLocalHandlerSym = TempSymbol(N, erasedType = N, s"nonLocalHandler$$${labelId.name}")
-      val nonLocalBreakMethodMarker = TempSymbol(N, erasedType = N, s"nonLocalBreakMethod$$${labelId.name}")
-      val nonLocalContinueMethodMarker = TempSymbol(N, erasedType = N, s"nonLocalContinueMethod$$${labelId.name}")
+      val resultSym = TempSymbol(N, initErasedType = N, s"${labelId.name}$$result")
+      val nonLocalHandlerSym = TempSymbol(N, initErasedType = N, s"nonLocalHandler$$${labelId.name}")
+      val nonLocalBreakMethodMarker = TempSymbol(N, initErasedType = N, s"nonLocalBreakMethod$$${labelId.name}")
+      val nonLocalContinueMethodMarker = TempSymbol(N, initErasedType = N, s"nonLocalContinueMethod$$${labelId.name}")
       val bodyTerm = ctx.withLabel(
         labelSym, resultSym, nonLocalHandlerSym, nonLocalBreakMethodMarker, nonLocalContinueMethodMarker).givenIn:
         subterm(body)
@@ -1570,6 +1630,18 @@ extends Importer:
         raise(ErrorReport(msg"Expected a record after 'mut' keyword; found a block" -> blk.toLoc :: Nil))
         blk
       case (rcd: Rcd, ctx) => rcd.copy(mut = true).withLocOf(rcd)
+    case Modified(kwt @ Keywrd(kw: Keyword.RscLike), body) =>
+      val trm = subterm(body)
+      // * An instance's resource modifier is written inside the instantiation, so one written outside has no effect.
+      // * This is reported here, as `Lowering` sees both forms as the same term.
+      def unannotated(t: Term): Term = t match
+        case Term.Annotated(_, t) => unannotated(t)
+        case _ => t
+      unannotated(trm) match
+      case inst @ (Term.New(_, _, _) | Term.DynNew(_, _) | Term.Mut(_: Term.New | _: Term.DynNew)) =>
+        raise(Annot.noEffect(kwt.toLoc, inst, N))
+        trm
+      case _ => Term.Annotated(Annot.Modifier(kw), trm)
     case Modified(kw, body) =>
       raise(ErrorReport(msg"Illegal position for '${kw.name}' modifier." -> kw.toLoc :: Nil))
       subterm(body)
@@ -1701,6 +1773,8 @@ extends Importer:
     
     val members = blk.definedSymbols.toMap
     val newSignatureTrees = mutable.Map.empty[Str, Tree] // * Store trees of signatures
+    // * Signatures elaborated once for both a declaration and its definition
+    val sharedSignatures = mutable.Map.empty[Str, Opt[Term]]
     
     // * Check for double/incompatible definitions and declarations
     blk.definedSymbols.foreach: (name, sym) =>
@@ -1980,18 +2054,25 @@ extends Importer:
                 newCtx = newCtx2
                 res
               // * Elaborate signature
-              val st = td.annotatedResultType.orElse(newSignatureTrees.get(id.name)) // FIXME: may elaborate external sig twice!!
-              val s = st.map:
+              val st = td.annotatedResultType.orElse(newSignatureTrees.get(id.name))
+              def elabSignature = st.map:
                 // unwrap possible module modifier
                 // e.g, `fun f: module M`
                 //              ^^^^^^
                 case TypeDef(Mod, st, N) => term(st)(using newCtx)
                 case st => term(st)(using newCtx)
+              // * A declaration and the definition that consumes its signature share its elaboration, whichever comes
+              // * first in the block.
+              val sharesSignature = Elaborator.sharedSignatureDefinition(sym).exists: defn =>
+                (defn is td) || td.rhs.isEmpty && td.paramLists.isEmpty && td.annotatedResultType.isDefined
+              val s =
+                if sharesSignature then sharedSignatures.getOrElseUpdate(id.name, elabSignature)
+                else elabSignature
               val body: Opt[Term] = rhs match
                 case N => N
                 case _ if ctx.mode is Mode.Light => S(Term.Missing)
                 case S(rhs) => S:
-                  val nonLocalRetHandler = TempSymbol(N, erasedType = N, s"nonLocalRetHandler$$${id.name}")
+                  val nonLocalRetHandler = TempSymbol(N, initErasedType = N, s"nonLocalRetHandler$$${id.name}")
                   val hasGeneratorAnnotation = annotations.contains(Annot.Generator)
                   val hasAsyncAnnotation = annotations.contains(Annot.Async)
                   if pss.isEmpty && hasGeneratorAnnotation then
@@ -2016,10 +2097,13 @@ extends Importer:
                 case _ =>
                   Modulefulness.none
               
-              /** Splits a signature's arrow chain into the parameter lists it describes and the type it returns.
-                * Yields `N` if the signature is not an arrow or if some parameter list's arity cannot be read.
+              val sig = s.map(Sig.parse)
+              
+              /** Splits a signature's chain of function types into the parameter lists it describes and the type it
+                * returns. Yields `N` if the signature is not a function type or if some parameter list's arity cannot
+                * be read.
                 */
-              def splitSignature(sign: Term): Opt[(Ls[Ls[Opt[ErasedValueType]]], Term)] =
+              def splitSignature(sig: Sig): Opt[(Ls[Ls[Opt[ErasedValueType]]], Term)] =
                 def paramsOf(lhs: Term): Opt[Ls[Opt[ErasedValueType]]] = lhs match
                   // * A spread parameter leaves the list's arity unknown, so the signature is left unsplit.
                   case Term.Tup(fields) =>
@@ -2030,42 +2114,63 @@ extends Importer:
                         case _ => N
                   // * An unparenthesized type is a single parameter.
                   case single => S(ErasedType.eraseSign(single) :: Nil)
-                sign match
-                  case Term.Forall(_, _, body) => splitSignature(body)
-                  case Term.FunTy(lhs, rhs, _) => paramsOf(lhs).map: ps =>
-                    splitSignature(rhs) match
-                      case S((rest, ret)) => (ps :: rest, ret)
-                      case N => (ps :: Nil, rhs)
-                  case _ => N
+                sig match
+                // * The split only reads parameter lists, so it ignores the resource modifiers;
+                // * they are rejected in `stripSignatureParams` if the definition consumes those lists.
+                case Sig.Arrow(_, _, params, ret) => paramsOf(params).map: ps =>
+                  splitSignature(ret) match
+                  case S((rest, retTpe)) => (ps :: rest, retTpe)
+                  case N => (ps :: Nil, ret.tpe)
+                case Sig.Result(_) => N
               
-              // * A signature's arrows are the definition's own parameter lists when a reference to it is not
-              // * auto-invoked.
+              /** Strips `sig`'s first `n` parameter lists, which the definition consumes as its own.
+                * Returns what remains of `sig`, and the resource modifiers on the stripped lists' function types.
+                *
+                * A modifier on anything else wraps the result and stays, so `fun f: rsc C` keeps it however many
+                * parameter lists `f` writes, and `eraseSign` reads it off there.
+                */
+              def stripSignatureParams(sig: Sig, n: Int): (Term, Ls[Term]) = sig match
+                case Sig.Arrow(_, mods, _, ret) if n > 0 =>
+                  val (result, retMods) = stripSignatureParams(ret, n - 1)
+                  (result, mods ::: retMods)
+                case _ => (sig.tpe, Nil)
+              
+              // * A signature's parameter lists are the definition's own when a reference to it is not auto-invoked.
               // *
               // * - A `fun` writing no parameter lists is a getter, so `fun bar: A -> Int` yields
-              // *   the arrow itself;
-              // * - A `declare`d `fun` becomes a `globalThis` selection, so its arrows are its parameters.
+              // *   the function type itself;
+              // * - A `declare`d `fun` becomes a `globalThis` selection, so its signature's parameter lists are
+              // *   its own.
               val sigShape: Opt[(Ls[Ls[Opt[ErasedValueType]]], Term)] =
                 if (k is syntax.Fun) && pss.isEmpty && Annot.declareModifierOf(annotations).isDefined
-                then s.flatMap(splitSignature)
+                then sig.flatMap(splitSignature)
                 else N
+              
+              // * A `fun` definition that has a separately written signature (rather than annotating its own result)
+              // * consumes as many of the signature's leading parameter lists as it writes; a paramless `declare`d one
+              // * consumes all of them, and any other consumes none.
+              val inheritsSignature = (k is syntax.Fun) && td.annotatedResultType.isEmpty
+              val consumedParamLists = if inheritsSignature then pss.length else sigShape.fold(0)(_._1.length)
+              val strippedSign = sig.map(stripSignatureParams(_, consumedParamLists))
+              // * A definition's own parameter lists have no resource-ness to state.
+              // TODO: Also point to the definition's parameter list that consumes the function type, as it is what
+              //       makes the modifier an error.
+              strippedSign.foreach: (_, mods) =>
+                mods.foreach: mod =>
+                  raise(ErrorReport(
+                    msg"Resource modifiers apply to function values, not to a function definition's parameter lists." ->
+                      mod.toLoc :: Nil))
               
               // * A moduleful signature (`fun f: module M`) denotes the module itself.
               val retTpe = mfn.msym match
                 case S(msym) => S(ErasedType.ValueLike(rsc = S(false), msym))
-                case N => s.flatMap: s =>
-                  // * A function that inherits a signature with leading arrows consumes those arrows as its own
-                  // * parameter lists. The exception is a `declare`d function, whose arrows are always its own
-                  // * parameters (see `sigShape`).
-                  def stripSignatureParams(s: Term, n: Int): Term = (s, n) match
-                    case (Term.Forall(_, _, body), _) => stripSignatureParams(body, n)
-                    case (Term.FunTy(_, rhs, _), n) if n > 0 => stripSignatureParams(rhs, n - 1)
-                    case _ => s
+                case N => s.zip(strippedSign).flatMap: (s, stripped) =>
                   val resultSign: Term =
-                    if (k is syntax.Fun) && td.annotatedResultType.isEmpty
-                    then stripSignatureParams(s, pss.length)
+                    if inheritsSignature
+                    then stripped._1
                     else sigShape.map(_._2).getOrElse(s)
                   ErasedType.eraseSign(resultSign)
-              val erasedTpe = k match
+              val erasedTpe: Opt[ErasedValueType | ErasedFuncSignature] = k match
                 case syntax.Fun =>
                   // * A `declare`d function's parameter lists are derived from its signature when it writes none.
                   val paramLists = sigShape match
@@ -2078,15 +2183,15 @@ extends Importer:
                   // *   on if it is `declare`d or not - neither denotes a function value, so the erased type is its
                   // *   result;
                   // * - At block level, it is lowered to a function with an implicit empty parameter list which every
-                  // *   reference auto-invokes, so the erased type will carry that parameter list.
+                  // *   reference auto-invokes, so the erased signature will carry that parameter list.
                   val isCompiledAsGetter = owner.isDefined || Annot.declareModifierOf(annotations).isDefined
                   val physicalParamLists =
                     if paramLists.isEmpty && !isCompiledAsGetter then Nil :: Nil else paramLists
                   if physicalParamLists.isEmpty then retTpe
-                  else S(ErasedType.FuncRef(rsc = S(false), physicalParamLists, retTpe))
+                  else S(ErasedFuncSignature.Signature(physicalParamLists, retTpe))
                 case _: syntax.Val => retTpe
                 case _ => N
-              val tsym = TermSymbol(k, owner, id, erasedType = erasedTpe) // TODO?
+              val tsym = TermSymbol(k, owner, id, erasure = erasedTpe) // TODO?
               val tdf = TermDefinition(k, sym, tsym, pss, tps, s, body, 
                 TermDefFlags.empty.copy(isMethod = isMethod), mfn, annotations, N).withLocOf(td)
               tsym.defn = S(tdf)
@@ -2141,16 +2246,22 @@ extends Importer:
                 val res = TyParam(FldFlags.empty, vce, vs)
                 vs.decl = S(res)
                 res :: Nil
-              targ match
+              // * A variance and a resource modifier may each be written at most once, in either order.
+              def go(t: Tree, vce: Opt[Bool], rscd: Bool): Ls[TyParam] = t match
                 case id: Ident =>
-                  mk(id, N)
-                case Modified(Keywrd(Keyword.`in`), id: Ident) =>
-                  mk(id, S(false))
-                case Modified(Keywrd(Keyword.`out`), id: Ident) =>
-                  mk(id, S(true))
+                  mk(id, vce)
+                case Modified(Keywrd(Keyword.`in`), body) if vce.isEmpty =>
+                  go(body, S(false), rscd)
+                case Modified(Keywrd(Keyword.`out`), body) if vce.isEmpty =>
+                  go(body, S(true), rscd)
+                // * The parameter is still declared, so its uses resolve.
+                case Modified(kw @ Keywrd(_: Keyword.RscLike), body) if !rscd =>
+                  raise(Annot.Resource.unsupportedOnTyParam(kw.kw, kw.toLoc))
+                  go(body, vce, rscd = true)
                 case _ =>
                   raise(ErrorReport(msg"Unsupported type parameter ${targ.describe}" -> targ.toLoc :: Nil))
                   Nil
+              go(targ, N, rscd = false)
           case N => Nil
         
         newCtx ++= tps.map(tp => tp.sym.name -> tp.sym) // TODO: correct ++?
@@ -2209,10 +2320,10 @@ extends Importer:
                 p.fldSym = S(fsym)
                 fsym.tsym = S(tsym)
                 tsym.defn = S(fdef)
-                p.sym.erasedType.foreach(tsym.populateErasedType)
+                p.sym.erasedType.foreach(tpe => tsym.erasedType = S(tpe))
                 fdef :: Nil
               else
-                val psym = TermSymbol(LetBind, owner, p.sym.id, erasedType = p.sym.erasedType)
+                val psym = TermSymbol(LetBind, owner, p.sym.id, erasure = p.sym.erasedType)
                 psym.sourceAliases = p.sym.sourceAliases
                 val decl = LetDecl(psym, Nil)
                 val defn = DefineVar(psym, p.sym.ref())
@@ -2225,7 +2336,7 @@ extends Importer:
               val owner = td.symbol match
                 case s: InnerSymbol => S(s)
                 case _: TypeAliasSymbol => die
-              val psym = TermSymbol(LetBind, owner, p.sym.id, erasedType = p.sym.erasedType)
+              val psym = TermSymbol(LetBind, owner, p.sym.id, erasure = p.sym.erasedType)
               psym.sourceAliases = p.sym.sourceAliases
               val decl = LetDecl(psym, Nil)
               val defn = DefineVar(psym, p.sym.ref())
@@ -2406,6 +2517,11 @@ extends Importer:
               cd
         case Trt | Mxn => lastWords(s"Unexpected type definition kind here: $k")
         go(sts, Nil, defn :: acc)
+      // * `Tree.desugared` lifts a resource modifier written on a definition to an annotation. It is rejected here,
+      // * where the definition is known, and dropped, keeping the definition.
+      case Annotated(kw @ Keywrd(_: Keyword.RscLike), target @ PossiblyAnnotated(_, d: TypeOrTermDef)) :: sts =>
+        raise(ErrorReport(msg"Resource modifiers apply to types, not to ${d.k.desc} definitions." -> kw.toLoc :: Nil))
+        go(target :: sts, annotations, acc)
       case Annotated(annotation, target) :: sts =>
         go(target :: sts, annotations ++ annot(annotation), acc)
       // * With tight right precedence, `#config(args)` is parsed as `App(Directive(config, Tup()), Tup(args))`.
@@ -2458,7 +2574,7 @@ extends Importer:
   def newOf(td: TypeDef): Ctxl[Opt[Term.New]] =
     td.extension
     match
-    case S(ext) => S(term(ProperNew(S(ext), N)))
+    case S(ext) => S(term(ProperNew(S(ext), N, N)))
     case N => N
     match
     case S(n: Term.New) => S(n)
@@ -2470,13 +2586,15 @@ extends Importer:
     case N => N
   
   def fieldOrVarSym(k: TermDefKind, id: Ident)(using Ctx): TermSymbol | VarSymbol =
-    if ctx.outer.inner.isDefined then TermSymbol(k, ctx.outer.inner, id, erasedType = N)
+    if ctx.outer.inner.isDefined then TermSymbol(k, ctx.outer.inner, id, erasure = N)
     else VarSymbol(id, erasedType = N)
   
   def param(t: Tree, inUsing: Bool, inDataClass: Bool): Ctxl[Diagnostic \/ (Param, Opt[SpreadKind], Ls[Str])] =
     t.desugared.asParam(inUsing).map:
-      case pt @ ParamTree(flags, id, sign, spd, modifiers) =>
+      case pt @ ParamTree(flags, id, sign, spd, modifiers, rscModifiers) =>
         log(s"Elaborating ParamTree: ${pt}")
+        rscModifiers.foreach: kw =>
+          raise(ErrorReport(msg"Resource modifiers apply to types, not to parameters." -> kw.toLoc :: Nil))
         val flg = flags.copy(isVal = flags.isVal || inDataClass)
         val (canonicalId, aliases) = symbolicSuffixBase(id.name) match
           case S(base) =>
@@ -2757,11 +2875,16 @@ extends Importer:
   
   def typeParams(t: Tree): Ctxl[(Ls[Param], Ctx)] = t match
     case TyTup(ps) =>
+      def mk(id: Ident): Ls[Param] =
+        val sym = VarSymbol(id, erasedType = N)
+        sym.decl = S(TyParam(FldFlags.empty, N, sym))
+        Param(FldFlags.empty, sym, N, Modulefulness.none) :: Nil
       val vs = ps.flatMap:
-        case id: Ident =>
-          val sym = VarSymbol(id, erasedType = N)
-          sym.decl = S(TyParam(FldFlags.empty, N, sym))
-          Param(FldFlags.empty, sym, N, Modulefulness.none) :: Nil
+        case id: Ident => mk(id)
+        // * The parameter is still declared, so its uses resolve.
+        case Modified(kw @ Keywrd(_: Keyword.RscLike), id: Ident) =>
+          raise(Annot.Resource.unsupportedOnTyParam(kw.kw, kw.toLoc))
+          mk(id)
         case t =>
           raise(ErrorReport(msg"Unsupported type parameter ${t.describe}" -> t.toLoc :: Nil))
           Nil

@@ -34,26 +34,26 @@ class Printer(using Config, Ctx, Raise, ShowCfg, State, SymbolPrinter):
   def printTpe(tpeSym: TypeSymbol)(using Scope): Document =
     if tpeSym.asMod.isDefined then doc"module ${print(tpeSym)}" else print(tpeSym)
 
-  def print(cet: CanonicalErasedType)(using Scope): Document = cet match
-    case ErasedType.Unknown => doc"Unknown"
+  def print(cet: CanonicalErasedValueType)(using Scope): Document = cet match
+    case ErasedType.Unknown(rsc) => doc"${ErasedType.rscPrefix(rsc)}Unknown"
     case ErasedType.Incompatible(lhs, rhs) => doc"‹incompatible(${print(lhs)}, ${print(rhs)})›"
-    case ErasedType.AnyRef(rsc, tpeSym: TypeSymbol) => doc"${rsc.fold("rsc? ")(if _ then "rsc " else "")}${printTpe(tpeSym)}"
-    case ErasedType.CanonicalFuncRef(rsc, paramLists, ret) =>
-      // * Curried functions are rendered as `(A) => (B) => R`, so that an under-applied call reads as the residual
-      // * function type it actually has.
-      val sig = paramLists.foldRight(ret.fold(doc"?")(print)): (ps, acc) =>
-        doc"(${ps.map(_.fold(doc"?")(print)).mkDocument(sep = doc", ")}) => $acc"
-      doc"${rsc.fold("rsc? ")(if _ then "rsc " else "")}$sig"
+    case ErasedType.AnyRef(rsc, tpeSym: TypeSymbol) => doc"${ErasedType.rscPrefix(rsc)}${printTpe(tpeSym)}"
     case ErasedType.Primitive(prim) => doc"${prim.toString}"
 
-  def print(et: ErasedType)(using Scope): Document = et match
-    case cet: CanonicalErasedType => print(cet)
+  def print(et: ErasedValueType)(using Scope): Document = et match
+    case cet: CanonicalErasedValueType => print(cet)
     case _ => print(et.canonicalize)
 
-  /** Renders the type annotation for a symbol with an [[ErasedType]]. */
-  def erasedTypeAnnot(x: HasErasedType)(using Scope): Document =
+  def print(sig: ErasedFuncSignature)(using Scope): Document =
+    val canon = sig.canonicalize
+    // * Curried functions are rendered as `(A) => (B) => R`, one arrow per parameter list.
+    canon.paramLists.foldRight(canon.ret.fold(doc"?")(print)): (ps, acc) =>
+      doc"(${ps.map(_.fold(doc"?")(print)).mkDocument(sep = doc", ")}) => $acc"
+
+  /** Renders the type annotation for a symbol of erased type `tpe`. */
+  def erasedTypeAnnot(tpe: Opt[ErasedValueType])(using Scope): Document =
     if !summon[ShowCfg].showErasedTypes then doc""
-    else doc": ${x.erasedType.fold(doc"?")(print)}"
+    else doc": ${tpe.fold(doc"?")(print)}"
 
   /** Renders a function's return type, as declared by its definition symbol. */
   def returnTypeAnnot(dSym: TermSymbol)(using Scope): Document =
@@ -100,7 +100,7 @@ class Printer(using Config, Ctx, Raise, ShowCfg, State, SymbolPrinter):
       scope.nest.givenIn:
         import hkmc2.given_Ordering_Uid // Not sure why needed...
         val names = syms.toList.sortBy(_.uid).map:
-          case sym: LocalVarSymbol => doc"${scope.allocateName(sym)}${erasedTypeAnnot(sym)}"
+          case sym: LocalVarSymbol => doc"${scope.allocateName(sym)}${erasedTypeAnnot(sym.erasedType)}"
           case bms: BlockMemberSymbol => doc"${scope.allocateName(bms)}"
         doc"let ${names.mkDocument(", ")}; # ${print(body)}"
     case End(msg) if msg.nonEmpty && config.commentGeneratedCode => doc"end /* ${msg} */"
@@ -131,8 +131,8 @@ class Printer(using Config, Ctx, Raise, ShowCfg, State, SymbolPrinter):
       ctor: Block,
       ctorSym: Opt[TermSymbol],
   )(using Scope): Document =
-    val privFields = privateFields.map(x => doc"private val ${print(x)}${erasedTypeAnnot(x)};").mkDocument(sep = doc" # ")
-    val pubFields = publicFields.map(x => doc"val ${print(x._1)}${erasedTypeAnnot(x._2)};").mkDocument(sep = doc" # ")
+    val privFields = privateFields.map(x => doc"private val ${print(x)}${erasedTypeAnnot(x.erasedType)};").mkDocument(sep = doc" # ")
+    val pubFields = publicFields.map(x => doc"val ${print(x._1)}${erasedTypeAnnot(x._2.erasedType)};").mkDocument(sep = doc" # ")
     val docPrivFlds = if privateFields.isEmpty then doc"" else doc" # ${privFields}"
     val docPubFlds = if publicFields.isEmpty then doc"" else doc" # ${pubFields}"
     val docPreCtor = preCtor match
@@ -161,8 +161,8 @@ class Printer(using Config, Ctx, Raise, ShowCfg, State, SymbolPrinter):
     paramss
       .map: pl =>
         val allParams =
-          pl.params.map(x => doc"${scope.allocateName(x.sym)}${erasedTypeAnnot(x.sym)}") ++
-          pl.restParam.map(x => doc"...${scope.allocateName(x.sym)}${erasedTypeAnnot(x.sym)}")
+          pl.params.map(x => doc"${scope.allocateName(x.sym)}${erasedTypeAnnot(x.sym.erasedType)}") ++
+          pl.restParam.map(x => doc"...${scope.allocateName(x.sym)}${erasedTypeAnnot(x.sym.erasedType)}")
         allParams.mkDocument("(", ", ", ")")
       .mkDocument("")
   
@@ -174,7 +174,7 @@ class Printer(using Config, Ctx, Raise, ShowCfg, State, SymbolPrinter):
         val docStaged = if fun.isStaged then doc"staged " else doc""
         doc"${docStaged}fun ${print(dSym)}${docParams}${returnTypeAnnot(dSym)} ${bracedbk(docBody)}"
     case ValDefn(tsym, sym, rhs) =>
-      doc"val ${print(tsym)}${erasedTypeAnnot(tsym)} = ${print(rhs)}"
+      doc"val ${print(tsym)}${erasedTypeAnnot(tsym.erasedType)} = ${print(rhs)}"
     case cls @ ClsLikeDefn(own, isym, sym, ctorSym, k, paramsOpt, auxParams, parentSym, methods,
         privateFields, publicFields, preCtor, ctor, mod, bufferable)
     => scope.nest.givenIn:
@@ -225,17 +225,17 @@ class Printer(using Config, Ctx, Raise, ShowCfg, State, SymbolPrinter):
     result.match
     case call @ Call(fun, argss) =>
       val chainedArgs = argss.map(args => doc"(${args.map(print).mkDocument(", ")})").mkDocument("")
-      doc"${printAnnotations(call.metadata.annotations, doc" ")}${print(fun)}${chainedArgs}"
-    case inst @ Instantiate(mut, cls, argss) =>
+      doc"${printAnnotations(call.metadata.annotations, doc" ")}${if call.rsc then "rsc " else ""}${print(fun)}${chainedArgs}"
+    case inst @ Instantiate(cls, argss) =>
       val chainedArgs = argss.map(args => doc"(${args.map(print).mkDocument(", ")})").mkDocument("")
-      doc"${printAnnotations(inst.metadata.annotations, doc" ")}new ${if mut then "mut " else ""}${print(cls)}${chainedArgs}"
-    case Lambda(params, body) =>
+      doc"${printAnnotations(inst.metadata.annotations, doc" ")}new ${if inst.mut then "mut " else ""}${if inst.rsc then "rsc " else ""}${print(cls)}${chainedArgs}"
+    case lam @ Lambda(params, body) =>
       scope.nest.givenIn:
         val allParams =
-          params.params.map(x => doc"${scope.allocateName(x.sym)}${erasedTypeAnnot(x.sym)}") ++
-          params.restParam.map(x => doc"...${scope.allocateName(x.sym)}${erasedTypeAnnot(x.sym)}")
+          params.params.map(x => doc"${scope.allocateName(x.sym)}${erasedTypeAnnot(x.sym.erasedType)}") ++
+          params.restParam.map(x => doc"...${scope.allocateName(x.sym)}${erasedTypeAnnot(x.sym.erasedType)}")
         val docParams = allParams.mkDocument("(", ", ", ")")
-        doc"$docParams => ${bracedbk(print(body))}"
+        doc"${if lam.rsc then "rsc " else ""}$docParams => ${bracedbk(print(body))}"
     case Tuple(mut, elems) =>
       val docElems = elems.map(x => print(x)).mkDocument(", ")
       doc"${if mut then "mut " else ""}[${docElems}]"
