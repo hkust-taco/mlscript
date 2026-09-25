@@ -1,0 +1,667 @@
+:classTags debug mono
+:js
+:noFreeze
+
+//│ >>> start class-tags collection-phase
+//│ <<< end class-tags collection-phase
+//│ >>> start class-tags transform-phase
+//│ <<< end class-tags transform-phase
+
+class Foo(val x, val y)
+class Bar(val x)
+//│ >>> start class-tags collection-phase
+//│ <<< end class-tags collection-phase
+//│ >>> start class-tags transform-phase
+//│ <<< end class-tags transform-phase
+
+
+fun foo(x, y) = new Foo(x, y)
+//│ >>> start class-tags collection-phase
+//│ <<< end class-tags collection-phase
+//│ >>> start class-tags transform-phase
+//│ <<< end class-tags transform-phase
+
+
+fun foo(x, y) =
+  let f = new Foo(x, y)
+  @matchShapes(Foo(_, _)) shape.match of f, () => new Bar(f.Foo#x + f.Foo#y)
+//│ >>> start class-tags collection-phase
+//│ class-tags collection-phase > track construction of Foo@2 in foo
+//│ class-tags collection-phase > track consumption at match@5 in foo
+//│ <<< end class-tags collection-phase
+//│ >>> start class-tags web-computation-phase
+//│ class-tags web-computation-phase > web 0:
+//│ class-tags web-computation-phase >   producers: Foo@2
+//│ class-tags web-computation-phase >   field accesses: Foo.x@0, Foo.y@1
+//│ class-tags web-computation-phase >   pattern matches: match@5
+//│ <<< end class-tags web-computation-phase
+//│ >>> start class-tags transform-phase
+//│ class-tags transform-phase > allocated tag 0 for Foo(x: _, y: _)
+//│ class-tags transform-phase > match shapes Foo(x: _, y: _) against Foo(x: _, y: _)@0
+//│ <<< end class-tags transform-phase
+
+
+private fun bar(x) = new Bar(x)
+//│ >>> start class-tags collection-phase
+//│ <<< end class-tags collection-phase
+//│ >>> start class-tags transform-phase
+//│ <<< end class-tags transform-phase
+
+
+module Baz with
+  fun bar(x) = new Bar(x)
+  private fun barr(x) =
+    let f = new Foo(x, x)
+    if f is
+      Foo(x, y) then new Bar(x + y)
+  fun baz(x) =
+    let f = new Foo(x, x)
+    @matchShapes(Foo(_, _)) shape.match of f, () => new Bar(f.Foo#x + f.Foo#y)
+//│ >>> start class-tags collection-phase
+//│ class-tags collection-phase > track construction of Foo@6 in Baz.barr
+//│ class-tags collection-phase > track consumption at Foo.x@0, Foo.y@1 in Baz.barr
+//│ class-tags collection-phase > track construction of Foo@9 in Baz.baz
+//│ class-tags collection-phase > track consumption at match@12 in Baz.baz
+//│ <<< end class-tags collection-phase
+//│ >>> start class-tags web-computation-phase
+//│ class-tags web-computation-phase > web 0:
+//│ class-tags web-computation-phase >   producers: Foo@6
+//│ class-tags web-computation-phase >   field accesses: Foo.x@0, Foo.y@1
+//│ class-tags web-computation-phase >   pattern matches: match@2
+//│ class-tags web-computation-phase > web 1:
+//│ class-tags web-computation-phase >   producers: Foo@9
+//│ class-tags web-computation-phase >   field accesses: Foo.x@3, Foo.y@4
+//│ class-tags web-computation-phase >   pattern matches: match@12
+//│ <<< end class-tags web-computation-phase
+//│ >>> start class-tags transform-phase
+//│ class-tags transform-phase > allocated tag 0 for Foo(x: _, y: _)
+//│ class-tags transform-phase > match shapes Foo(x: _, y: _) against Foo(x: _, y: _)@0
+//│ <<< end class-tags transform-phase
+
+
+:ssjs
+fun foo(x, y) =
+  let f = new Foo(x, y)
+  bar(f) * baz(f)
+private fun bar(f) =
+  @matchShapes(Foo(_, _)) shape.match of f, () => f.Foo#x + f.Foo#y
+private fun baz(f) =
+  @matchShapes(Foo(_, _)) shape.match of f, () => f.Foo#x - f.Foo#y
+//│ >>> start class-tags collection-phase
+//│ class-tags collection-phase > track construction of Foo@4 in foo
+//│ class-tags collection-phase > track consumption at match@9 in bar
+//│ class-tags collection-phase > track consumption at match@11 in baz
+//│ <<< end class-tags collection-phase
+//│ >>> start class-tags web-computation-phase
+//│ class-tags web-computation-phase > web 0:
+//│ class-tags web-computation-phase >   producers: Foo@4
+//│ class-tags web-computation-phase >   field accesses: Foo.x@0, Foo.y@1, Foo.x@2, Foo.y@3
+//│ class-tags web-computation-phase >   pattern matches: match@9, match@11
+//│ <<< end class-tags web-computation-phase
+//│ >>> start class-tags transform-phase
+//│ class-tags transform-phase > allocated tag 0 for Foo(x: _, y: _)
+//│ class-tags transform-phase > match shapes Foo(x: _, y: _) against Foo(x: _, y: _)@0
+//│ class-tags transform-phase > match shapes Foo(x: _, y: _) against Foo(x: _, y: _)@0
+//│ <<< end class-tags transform-phase
+//│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
+//│ let bar1, foo2, baz;
+//│ foo2 = function foo(x, y) {
+//│   runtime.checkArgs("foo", 2, true, arguments.length);
+//│   let tmp, shapeMatchResult, shapeMatchResult1;
+//│   tmp = (new Foo1.class(x, y));
+//│   tmp.__tag$ = 0;
+//│   if (tmp.__tag$ === 0) {
+//│     shapeMatchResult1 = tmp.x + tmp.y;
+//│   }
+//│   if (tmp.__tag$ === 0) {
+//│     shapeMatchResult = tmp.x - tmp.y;
+//│     return shapeMatchResult1 * shapeMatchResult
+//│   }
+//│   return shapeMatchResult1 * undefined;
+//│ };
+//│ bar1 = function bar(f) {
+//│   runtime.checkArgs("bar", 1, true, arguments.length);
+//│   let shapeMatchResult;
+//│   if (f.__tag$ === 0) {
+//│     shapeMatchResult = f.x + f.y;
+//│   }
+//│   return shapeMatchResult
+//│ };
+//│ baz = function baz(f) {
+//│   runtime.checkArgs("baz", 1, true, arguments.length);
+//│   let shapeMatchResult;
+//│   if (f.__tag$ === 0) { shapeMatchResult = f.x - f.y; }
+//│   return shapeMatchResult
+//│ };
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+
+:expect 3
+foo(2, 1)
+//│ >>> start class-tags collection-phase
+//│ <<< end class-tags collection-phase
+//│ >>> start class-tags transform-phase
+//│ <<< end class-tags transform-phase
+//│ = 3
+
+
+:ssjs
+fun foo(x, y) =
+  let f = new Foo(x, y)
+  baz(f)
+fun bar(x) =
+  let b = new Bar(x)
+  baz(b)
+private fun baz(t) =
+  @matchShapes(Foo(_, _), Bar(_)) shape.match of t,
+    () => t.Foo#x + t.Foo#y
+    () => t.Bar#x
+//│ >>> start class-tags collection-phase
+//│ class-tags collection-phase > track construction of Foo@3 in foo
+//│ class-tags collection-phase > track construction of Bar@5 in bar
+//│ class-tags collection-phase > track consumption at match@8 in baz
+//│ <<< end class-tags collection-phase
+//│ >>> start class-tags web-computation-phase
+//│ class-tags web-computation-phase > web 0:
+//│ class-tags web-computation-phase >   producers: Foo@3, Bar@5
+//│ class-tags web-computation-phase >   field accesses: Foo.x@0, Foo.y@1, Bar.x@2
+//│ class-tags web-computation-phase >   pattern matches: match@8
+//│ <<< end class-tags web-computation-phase
+//│ >>> start class-tags transform-phase
+//│ class-tags transform-phase > allocated tag 0 for Foo(x: _, y: _)
+//│ class-tags transform-phase > allocated tag 1 for Bar(x: _)
+//│ class-tags transform-phase > match shapes Foo(x: _, y: _), Bar(x: _) against Foo(x: _, y: _)@0, Bar(x: _)@1
+//│ <<< end class-tags transform-phase
+//│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
+//│ let bar2, foo3, baz1;
+//│ foo3 = function foo(x, y) {
+//│   runtime.checkArgs("foo", 2, true, arguments.length);
+//│   let tmp1;
+//│   tmp1 = (new Foo1.class(x, y));
+//│   tmp1.__tag$ = 0;
+//│   if (tmp1.__tag$ === 0) {
+//│     return tmp1.x + tmp1.y
+//│   } else if (tmp1.__tag$ === 1) {
+//│     return tmp1.x
+//│   }
+//│   return runtime.Unit;
+//│ };
+//│ bar2 = function bar(x) {
+//│   runtime.checkArgs("bar", 1, true, arguments.length);
+//│   let tmp1;
+//│   tmp1 = (new Bar1.class(x));
+//│   tmp1.__tag$ = 1;
+//│   if (tmp1.__tag$ === 0) {
+//│     return tmp1.x + tmp1.y
+//│   } else if (tmp1.__tag$ === 1) {
+//│     return tmp1.x
+//│   }
+//│   return runtime.Unit;
+//│ };
+//│ baz1 = function baz(t) {
+//│   runtime.checkArgs("baz", 1, true, arguments.length);
+//│   let shapeMatchResult2;
+//│   if (t.__tag$ === 0) {
+//│     shapeMatchResult2 = t.x + t.y;
+//│   } else if (t.__tag$ === 1) { shapeMatchResult2 = t.x; }
+//│   return shapeMatchResult2
+//│ };
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+
+class Some(val x)
+object None
+//│ >>> start class-tags collection-phase
+//│ <<< end class-tags collection-phase
+//│ >>> start class-tags transform-phase
+//│ <<< end class-tags transform-phase
+
+
+:ssjs
+private fun foo(x) =
+  if x > 0 then new Some(x) else None
+fun bar(x) =
+  let t = foo(x)
+  @matchShapes(Some(_), None) shape.match of t,
+    () => t.Some#x,
+    () => 0
+//│ >>> start class-tags collection-phase
+//│ class-tags collection-phase > track construction of None@4, Some@3 in foo
+//│ class-tags collection-phase > track consumption at match@6 in bar
+//│ <<< end class-tags collection-phase
+//│ >>> start class-tags web-computation-phase
+//│ class-tags web-computation-phase > web 0:
+//│ class-tags web-computation-phase >   producers: Some@3, None@4
+//│ class-tags web-computation-phase >   field accesses: Some.x@1
+//│ class-tags web-computation-phase >   pattern matches: match@6
+//│ <<< end class-tags web-computation-phase
+//│ >>> start class-tags transform-phase
+//│ class-tags transform-phase > allocated tag 0 for Some(x: _)
+//│ class-tags transform-phase > allocated tag 1 for None
+//│ class-tags transform-phase > match shapes Some(x: _), None against Some(x: _)@0, None@1
+//│ <<< end class-tags transform-phase
+//│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
+//│ let bar3, foo4;
+//│ foo4 = function foo(x) {
+//│   runtime.checkArgs("foo", 1, true, arguments.length);
+//│   let scrut;
+//│   scrut = x > 0;
+//│   if (scrut === true) {
+//│     let tmp1;
+//│     tmp1 = (new Some1.class(x));
+//│     tmp1.__tag$ = 0;
+//│     return tmp1
+//│   }
+//│   None1.__tag$ = 1;
+//│   return None1;
+//│ };
+//│ bar3 = function bar(x) {
+//│   runtime.checkArgs("bar", 1, true, arguments.length);
+//│   let inlinedVal, scrut;
+//│   scrut = x > 0;
+//│   if (scrut === true) {
+//│     let tmp1;
+//│     tmp1 = (new Some1.class(x));
+//│     tmp1.__tag$ = 0;
+//│     inlinedVal = tmp1;
+//│   } else {
+//│     None1.__tag$ = 1;
+//│     inlinedVal = None1;
+//│   }
+//│   if (inlinedVal.__tag$ === 0) {
+//│     return inlinedVal.x
+//│   } else if (inlinedVal.__tag$ === 1) { return 0 }
+//│   return runtime.Unit;
+//│ };
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+
+:ssjs
+fun callCtor(x, y) =
+  let f = Foo(x, y)
+  @matchShapes(Foo(_, _)) shape.match of f, () => f.Foo#x + f.Foo#y
+//│ >>> start class-tags collection-phase
+//│ class-tags collection-phase > track construction of Foo@2 in callCtor
+//│ class-tags collection-phase > track consumption at match@4 in callCtor
+//│ <<< end class-tags collection-phase
+//│ >>> start class-tags web-computation-phase
+//│ class-tags web-computation-phase > web 0:
+//│ class-tags web-computation-phase >   producers: Foo@2
+//│ class-tags web-computation-phase >   field accesses: Foo.x@0, Foo.y@1
+//│ class-tags web-computation-phase >   pattern matches: match@4
+//│ <<< end class-tags web-computation-phase
+//│ >>> start class-tags transform-phase
+//│ class-tags transform-phase > allocated tag 0 for Foo(x: _, y: _)
+//│ class-tags transform-phase > match shapes Foo(x: _, y: _) against Foo(x: _, y: _)@0
+//│ <<< end class-tags transform-phase
+//│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
+//│ let callCtor;
+//│ callCtor = function callCtor(x, y) {
+//│   runtime.checkArgs("callCtor", 2, true, arguments.length);
+//│   let tmp1;
+//│   tmp1 = runtime.checkCall(Foo1(x, y));
+//│   tmp1.__tag$ = 0;
+//│   if (tmp1.__tag$ === 0) { return tmp1.x + tmp1.y }
+//│   return runtime.Unit;
+//│ };
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+
+:ssjs
+fun foo(x, y) =
+  let f = [1, 2, 3]
+  if f is
+    [x, y, z] then new Bar(x + y + z)
+//│ >>> start class-tags collection-phase
+//│ class-tags collection-phase > track construction of tup(size 3)@4 in foo
+//│ class-tags collection-phase > track consumption at tup(size 3).2@2, tup(size 3).1@1, tup(size 3).0@0 in foo
+//│ <<< end class-tags collection-phase
+//│ >>> start class-tags web-computation-phase
+//│ class-tags web-computation-phase > web 0:
+//│ class-tags web-computation-phase >   producers: tup(size 3)@4
+//│ class-tags web-computation-phase >   field accesses: tup(size 3).0@0, tup(size 3).1@1, tup(size 3).2@2
+//│ class-tags web-computation-phase >   pattern matches: match@3
+//│ <<< end class-tags web-computation-phase
+//│ >>> start class-tags transform-phase
+//│ <<< end class-tags transform-phase
+//│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
+//│ let foo5;
+//│ foo5 = function foo(x, y) {
+//│   runtime.checkArgs("foo", 2, true, arguments.length);
+//│   let f, element2$, element1$, element0$, tmp1, tmp2;
+//│   f = ([
+//│     1,
+//│     2,
+//│     3
+//│   ]);
+//│   if (runtime.Tuple.isArrayLike(f) && f.length === 3) {
+//│     element0$ = runtime.checkCall(runtime.Tuple.get(f, 0));
+//│     element1$ = runtime.checkCall(runtime.Tuple.get(f, 1));
+//│     element2$ = runtime.checkCall(runtime.Tuple.get(f, 2));
+//│     tmp1 = element0$ + element1$;
+//│     tmp2 = tmp1 + element2$;
+//│     return (new Bar1.class(tmp2))
+//│   }
+//│   throw (new globalThis.Error("match error"));
+//│ };
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+
+:ssjs
+fun foo(x, y) =
+  let t = new Some(x)
+  let p = @matchShapes(Some(_), None) shape.match of t, () => new Bar(t.Some#x), () => new Bar(0)
+  @matchShapes(Bar(_)) shape.match of p, () => p.Bar#x + 1
+//│ >>> start class-tags collection-phase
+//│ class-tags collection-phase > track construction of Some@2 in foo
+//│ class-tags collection-phase > track consumption at match@7, match@5 in foo
+//│ <<< end class-tags collection-phase
+//│ >>> start class-tags web-computation-phase
+//│ class-tags web-computation-phase > web 0:
+//│ class-tags web-computation-phase >   producers: Some@2, Bar@3, Bar@4
+//│ class-tags web-computation-phase >   field accesses: Some.x@0, Bar.x@1
+//│ class-tags web-computation-phase >   pattern matches: match@5, match@7
+//│ <<< end class-tags web-computation-phase
+//│ >>> start class-tags transform-phase
+//│ class-tags transform-phase > allocated tag 0 for Some(x: _)
+//│ class-tags transform-phase > allocated tag 1 for Bar(x: _)
+//│ class-tags transform-phase > allocated tag 2 for Bar(x: 0)
+//│ class-tags transform-phase > match shapes Some(x: _), None against Some(x: _)@0
+//│ class-tags transform-phase > match shapes Bar(x: _) against Bar(x: _)@1, Bar(x: 0)@2
+//│ <<< end class-tags transform-phase
+//│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
+//│ let foo6;
+//│ foo6 = function foo(x, y) {
+//│   runtime.checkArgs("foo", 2, true, arguments.length);
+//│   let tmp1, shapeMatchResult2;
+//│   tmp1 = (new Some1.class(x));
+//│   tmp1.__tag$ = 0;
+//│   if (tmp1.__tag$ === 0) {
+//│     let tmp2;
+//│     tmp2 = (new Bar1.class(tmp1.x));
+//│     tmp2.__tag$ = 1;
+//│     shapeMatchResult2 = tmp2;
+//│   }
+//│   if (shapeMatchResult2.__tag$ === 1) {
+//│     return shapeMatchResult2.x + 1
+//│   } else if (shapeMatchResult2.__tag$ === 2) {
+//│     return shapeMatchResult2.x + 1
+//│   }
+//│   return runtime.Unit;
+//│ };
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+
+class C(val x)
+class D(val x)
+//│ >>> start class-tags collection-phase
+//│ <<< end class-tags collection-phase
+//│ >>> start class-tags transform-phase
+//│ <<< end class-tags transform-phase
+
+:ssjs
+fun foo(x) =
+  let t = if x then new Bar(new C(0)) else new Bar(new D(1))
+  @matchShapes(Bar(_)) shape.match of t, () => t.Bar#x.x
+//│ >>> start class-tags collection-phase
+//│ class-tags collection-phase > track construction of Bar@5, Bar@3 in foo
+//│ class-tags collection-phase > track consumption at match@6 in foo
+//│ <<< end class-tags collection-phase
+//│ >>> start class-tags web-computation-phase
+//│ class-tags web-computation-phase > web 0:
+//│ class-tags web-computation-phase >   producers: C@2, Bar@3, D@4, Bar@5
+//│ class-tags web-computation-phase >   field accesses: Bar.x@1
+//│ class-tags web-computation-phase >   pattern matches: match@6
+//│ <<< end class-tags web-computation-phase
+//│ >>> start class-tags transform-phase
+//│ class-tags transform-phase > allocated tag 0 for C(x: 0)
+//│ class-tags transform-phase > allocated tag 1 for Bar(x: C(x: 0))
+//│ class-tags transform-phase > allocated tag 2 for D(x: 1)
+//│ class-tags transform-phase > allocated tag 3 for Bar(x: D(x: 1))
+//│ class-tags transform-phase > match shapes Bar(x: _) against Bar(x: C(x: 0))@1, Bar(x: D(x: 1))@3
+//│ <<< end class-tags transform-phase
+//│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
+//│ let foo7;
+//│ foo7 = function foo(x) {
+//│   runtime.checkArgs("foo", 1, true, arguments.length);
+//│   let tmp1;
+//│   if (x === true) {
+//│     let tmp2, tmp3;
+//│     tmp2 = (new C1.class(0));
+//│     tmp2.__tag$ = 0;
+//│     tmp3 = (new Bar1.class(tmp2));
+//│     tmp3.__tag$ = 1;
+//│     tmp1 = tmp3;
+//│   } else {
+//│     let tmp2, tmp3;
+//│     tmp2 = (new D1.class(1));
+//│     tmp2.__tag$ = 2;
+//│     tmp3 = (new Bar1.class(tmp2));
+//│     tmp3.__tag$ = 3;
+//│     tmp1 = tmp3;
+//│   }
+//│   if (tmp1.__tag$ === 1) {
+//│     return runtime.checkSelect(tmp1.x.x, "x", tmp1.x)
+//│   } else if (tmp1.__tag$ === 3) {
+//│     return runtime.checkSelect(tmp1.x.x, "x", tmp1.x)
+//│   }
+//│   return runtime.Unit;
+//│ };
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+
+:ssjs
+fun foo(x) =
+  let t = if x then new C(0) else new C(0)
+  @matchShapes(C(_)) shape.match of t, () => t.C#x
+//│ >>> start class-tags collection-phase
+//│ class-tags collection-phase > track construction of C@2, C@3 in foo
+//│ class-tags collection-phase > track consumption at match@4 in foo
+//│ <<< end class-tags collection-phase
+//│ >>> start class-tags web-computation-phase
+//│ class-tags web-computation-phase > web 0:
+//│ class-tags web-computation-phase >   producers: C@2, C@3
+//│ class-tags web-computation-phase >   field accesses: C.x@1
+//│ class-tags web-computation-phase >   pattern matches: match@4
+//│ <<< end class-tags web-computation-phase
+//│ >>> start class-tags transform-phase
+//│ class-tags transform-phase > allocated tag 0 for C(x: 0)
+//│ class-tags transform-phase > match shapes C(x: _) against C(x: 0)@0
+//│ <<< end class-tags transform-phase
+//│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
+//│ let foo8;
+//│ foo8 = function foo(x) {
+//│   runtime.checkArgs("foo", 1, true, arguments.length);
+//│   let tmp1;
+//│   if (x === true) {
+//│     let tmp2;
+//│     tmp2 = (new C1.class(0));
+//│     tmp2.__tag$ = 0;
+//│     tmp1 = tmp2;
+//│   } else {
+//│     let tmp2;
+//│     tmp2 = (new C1.class(0));
+//│     tmp2.__tag$ = 0;
+//│     tmp1 = tmp2;
+//│   }
+//│   if (tmp1.__tag$ === 0) { return tmp1.x }
+//│   return runtime.Unit;
+//│ };
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+
+:ssjs
+fun foo(x) =
+  let tuple = if x then [1, 3] else [1, 4]
+  let value = new Bar(tuple)
+  @matchShapes(Bar([1, 3]), Bar([1, 4])) shape.match of value,
+    () => 3,
+    () => 4
+//│ >>> start class-tags collection-phase
+//│ class-tags collection-phase > track construction of Bar@3 in foo
+//│ class-tags collection-phase > track consumption at match@4 in foo
+//│ <<< end class-tags collection-phase
+//│ >>> start class-tags web-computation-phase
+//│ class-tags web-computation-phase > web 0:
+//│ class-tags web-computation-phase >   producers: tup(size 2)@1, tup(size 2)@2, Bar@3
+//│ class-tags web-computation-phase >   pattern matches: match@4
+//│ <<< end class-tags web-computation-phase
+//│ >>> start class-tags transform-phase
+//│ class-tags transform-phase > allocated tag 0 for Bar(x: tup(size 2)(1, 3))
+//│ class-tags transform-phase > allocated tag 1 for Bar(x: tup(size 2)(1, 4))
+//│ class-tags transform-phase > match shapes Bar(x: tup(size 2)(1, 3)), Bar(x: tup(size 2)(1, 4)) against Bar(x: tup(size 2)(1, 3))@0, Bar(x: tup(size 2)(1, 4))@1
+//│ <<< end class-tags transform-phase
+//│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
+//│ let foo9;
+//│ foo9 = function foo(x) {
+//│   runtime.checkArgs("foo", 1, true, arguments.length);
+//│   let tmp1, tmp2, tmp3;
+//│   if (x === true) {
+//│     tmp1 = ([
+//│       1,
+//│       3
+//│     ]);
+//│   } else {
+//│     tmp1 = ([
+//│       1,
+//│       4
+//│     ]);
+//│   }
+//│   tmp2 = (new Bar1.class(tmp1));
+//│   if (runtime.Tuple.isArrayLike(tmp1) && tmp1.length === 2) {
+//│     let tmp4, tmp5;
+//│     tmp4 = tmp1.at(0) === 1;
+//│     if (tmp4 === true) {
+//│       let tmp6;
+//│       tmp6 = tmp1.at(1) === 3;
+//│       tmp5 = tmp6;
+//│     } else {
+//│       tmp5 = false;
+//│     }
+//│     tmp3 = tmp5;
+//│   } else {
+//│     tmp3 = false;
+//│   }
+//│   if (tmp3 === true) {
+//│     tmp2.__tag$ = 0;
+//│   } else {
+//│     let tmp4;
+//│     if (runtime.Tuple.isArrayLike(tmp1) && tmp1.length === 2) {
+//│       let tmp5, tmp6;
+//│       tmp5 = tmp1.at(0) === 1;
+//│       if (tmp5 === true) {
+//│         let tmp7;
+//│         tmp7 = tmp1.at(1) === 4;
+//│         tmp6 = tmp7;
+//│       } else {
+//│         tmp6 = false;
+//│       }
+//│       tmp4 = tmp6;
+//│     } else {
+//│       tmp4 = false;
+//│     }
+//│     if (tmp4 === true) {
+//│       tmp2.__tag$ = 1;
+//│     }
+//│   }
+//│   if (tmp2.__tag$ === 0) {
+//│     return 3
+//│   } else if (tmp2.__tag$ === 1) { return 4 }
+//│   return runtime.Unit;
+//│ };
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+
+:expect 3
+foo(true)
+//│ >>> start class-tags collection-phase
+//│ <<< end class-tags collection-phase
+//│ >>> start class-tags transform-phase
+//│ <<< end class-tags transform-phase
+//│ = 3
+
+
+:expect 4
+foo(false)
+//│ >>> start class-tags collection-phase
+//│ <<< end class-tags collection-phase
+//│ >>> start class-tags transform-phase
+//│ <<< end class-tags transform-phase
+//│ = 4
+
+
+:ssjs
+fun foo(x, y) =
+  let tuple = if x then [1, y] else [2, y]
+  let value = new Bar(tuple)
+  @matchShapes(Bar([1, _]), Bar([2, _])) shape.match of value,
+    () => 3,
+    () => 4
+//│ >>> start class-tags collection-phase
+//│ class-tags collection-phase > track construction of Bar@3 in foo
+//│ class-tags collection-phase > track consumption at match@4 in foo
+//│ <<< end class-tags collection-phase
+//│ >>> start class-tags web-computation-phase
+//│ class-tags web-computation-phase > web 0:
+//│ class-tags web-computation-phase >   producers: tup(size 2)@1, tup(size 2)@2, Bar@3
+//│ class-tags web-computation-phase >   pattern matches: match@4
+//│ <<< end class-tags web-computation-phase
+//│ >>> start class-tags transform-phase
+//│ class-tags transform-phase > allocated tag 0 for Bar(x: tup(size 2)(1, _))
+//│ class-tags transform-phase > allocated tag 1 for Bar(x: tup(size 2)(2, _))
+//│ class-tags transform-phase > match shapes Bar(x: tup(size 2)(1, _)), Bar(x: tup(size 2)(2, _)) against Bar(x: tup(size 2)(1, _))@0, Bar(x: tup(size 2)(2, _))@1
+//│ <<< end class-tags transform-phase
+//│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
+//│ let foo10;
+//│ foo10 = function foo(x, y) {
+//│   runtime.checkArgs("foo", 2, true, arguments.length);
+//│   let tmp1, tmp2;
+//│   if (x === true) {
+//│     tmp1 = ([
+//│       1,
+//│       y
+//│     ]);
+//│   } else {
+//│     tmp1 = ([
+//│       2,
+//│       y
+//│     ]);
+//│   }
+//│   tmp2 = (new Bar1.class(tmp1));
+//│   if (runtime.Tuple.isArrayLike(tmp1) && tmp1.length === 2) {
+//│     let tmp3;
+//│     tmp3 = tmp1.at(0) === 1;
+//│     if (tmp3 === true) {
+//│       tmp2.__tag$ = 0;
+//│     } else {
+//│       let tmp4;
+//│       if (runtime.Tuple.isArrayLike(tmp1) && tmp1.length === 2) {
+//│         let tmp5;
+//│         tmp5 = tmp1.at(0) === 2;
+//│         tmp4 = tmp5;
+//│       } else {
+//│         tmp4 = false;
+//│       }
+//│       if (tmp4 === true) {
+//│         tmp2.__tag$ = 1;
+//│       }
+//│     }
+//│   } else {
+//│     let tmp3;
+//│     if (runtime.Tuple.isArrayLike(tmp1) && tmp1.length === 2) {
+//│       let tmp4;
+//│       tmp4 = tmp1.at(0) === 2;
+//│       tmp3 = tmp4;
+//│     } else {
+//│       tmp3 = false;
+//│     }
+//│     if (tmp3 === true) {
+//│       tmp2.__tag$ = 1;
+//│     }
+//│   }
+//│   if (tmp2.__tag$ === 0) {
+//│     return 3
+//│   } else if (tmp2.__tag$ === 1) { return 4 }
+//│   return runtime.Unit;
+//│ };
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————

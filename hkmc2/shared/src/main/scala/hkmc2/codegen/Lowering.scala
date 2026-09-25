@@ -128,6 +128,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
     case WasmIntrinsic
     case DebugPrintStack
     case ScopeLocally
+    case ShapeMatch
   private lazy val specialBuiltinSymbols: Map[BlockMemberSymbol, SpecialBuiltin] =
     val blt = ctx.builtins
     Map(
@@ -138,6 +139,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
       blt.js.try_catch -> SpecialBuiltin.RuntimeIntrinsic("try_catch"),
       blt.debug.printStack -> SpecialBuiltin.DebugPrintStack,
       blt.scope.locally -> SpecialBuiltin.ScopeLocally,
+      blt.shape.`match` -> SpecialBuiltin.ShapeMatch,
       blt.wasm.plus_impl -> SpecialBuiltin.WasmIntrinsic,
       blt.wasm.minus_impl -> SpecialBuiltin.WasmIntrinsic,
       blt.wasm.times_impl -> SpecialBuiltin.WasmIntrinsic,
@@ -964,6 +966,13 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
                   msg"Unsupported form for scope.locally." ->
                     t.toLoc :: Nil,
                   source = Diagnostic.Source.Compilation)
+          case S(SpecialBuiltin.ShapeMatch) =>
+            if config.classTags.isEmpty then
+              return fail:
+                ErrorReport(
+                  msg"Class tag insertion is not enabled." ->
+                    t.toLoc :: Nil,
+                  source = Diagnostic.Source.Compilation)
           case N =>
         case N =>
       case N =>
@@ -1563,6 +1572,10 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
     
     annotations.foreach:
       case Annot.Untyped => ()
+      case annot: Annot.MatchShapes => receiver match
+        case st.App(fun, _) if fun.resolvedSym.flatMap(_.asBlkMember).contains(ctx.builtins.shape.`match`) => ()
+        case _: st.App => warn(annot, S(msg"The @matchShapes annotation only applies to shape.match calls."))
+        case _ => warn(annot)
       case annot: Annot.Trm => receiver match
         case st.App(Ref(_: BuiltinSymbol), _) => warn(annot)
         case st.App(_, _) | New(_, _, _) | DynNew(_, _) | Mut(_: New | _: DynNew) => ()

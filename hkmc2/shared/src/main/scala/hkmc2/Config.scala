@@ -28,6 +28,7 @@ case class Config(
   stageCode: Bool,
   target: CompilationTarget,
   rewriteWhileLoops: Bool,
+  classTags: Opt[ClassTags],
   qqEnabled: Bool,
   funcToCls: Bool,
   commentGeneratedCode: Bool,
@@ -80,6 +81,7 @@ object Config:
     target = CompilationTarget.JS,
     rewriteWhileLoops = false,
     stageCode = false,
+    classTags = N,
     qqEnabled = false,
     funcToCls = false,
     commentGeneratedCode = false,
@@ -212,6 +214,13 @@ object Config:
     def withDebug(debug: Bool) =
       FlowBasedOpt(default.config.copy(debug = debug))
 
+  case class ClassTags(debug: Bool, mono: Bool)
+  object ClassTags:
+    val default = ClassTags(
+      debug = false,
+      mono = false,
+    )
+  
   /** `altSmallThreshold` is the alternative threshold for inlining things into @inline functions.
     * Normally, we avoid inlining into @inline functions as that could lead to unexpected code bloat. */
   case class Inliner(inlineThreshold: Int, altSmallThreshold: Int = 2)
@@ -595,6 +604,24 @@ object ConfigParser:
     ).map:
       Config.FlowBasedOpt.apply
 
+  private def parseClassTags(tree: Tree, current: Opt[Config.ClassTags])(using Raise): Opt[Config.ClassTags] =
+    tree match
+    case Call("ClassTags", args) =>
+      val base = current.getOrElse(Config.ClassTags.default)
+      var debug = base.debug
+      var mono = base.mono
+      args.foreach:
+        case NamedArg("debug", value) =>
+          setFrom(value)(parseBool)(v => debug = v)
+        case NamedArg("mono", value) =>
+          setFrom(value)(parseBool)(v => mono = v)
+        case other =>
+          unsupported("ClassTags", other)
+      S(Config.ClassTags(debug, mono))
+    case _ =>
+      expect("ClassTags(...)")(tree)
+      N
+  
   /** Parse a single field override like `tailRecOpt: false`. */
   private def parseField(name: Str, value: Tree)(using Raise): Config => Config = name match
     case "language" => parseLanguageOverride(value)
@@ -626,6 +653,10 @@ object ConfigParser:
       optionalFieldWithCurrent(value)(_.deforest)(
         (tree, current) => parseDeforest(tree, current)
       )(v => _.mapOptimizer(_.copy(deforest = v)))
+    case "classTags" =>
+      optionalFieldWithCurrent(value)(_.classTags)(
+        (tree, current) => parseClassTags(tree, current)
+      )(v => _.copy(classTags = v))
     case "flowBasedOpt" =>
       optionalFieldWithCurrent(value)(_.flowBasedOpt)(
         (tree, current) => parseFlowBasedOpt(tree, current)
