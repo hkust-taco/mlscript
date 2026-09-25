@@ -53,9 +53,10 @@ object ResolutionBoundary:
       case ctor: ClassCtorSymbol => ctor.associatedCls
       case symbol => symbol)
 
-// Scanning every new mark's tail makes chain construction quadratic in its depth.
-// Enable these invariant checks only when debugging mark propagation.
-private val checkMarkPaths = false
+// Scanning each new tail makes chain construction quadratic in its depth.
+// Keep the checks enabled so missing scope transfers fail at their source instead
+// of allowing repeated boundaries to accumulate in contextual reference keys.
+private val checkMarkPaths = true
 
 /** A reduced lexical path: entries followed by exits, stored outermost first.
   * Exiting cancels the leading entry when their sites agree (an absent site is

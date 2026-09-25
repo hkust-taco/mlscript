@@ -174,6 +174,14 @@ object Elaborator:
         if config.language.useNewResolution then inherited.map(capture)
         else inherited
 
+    /** Legacy syntax omits Capture nodes, but its type references can later be
+      * interpreted by a new-resolution consumer. Save the same lexical path
+      * while lookup still knows where the binding was found.
+      */
+    def referenceCaptures(name: Str): Ls[AnyDefinitionSymbol] =
+      if env.contains(name) then Nil
+      else parent.toList.flatMap(_.referenceCaptures(name)) ::: outer.resolutionBoundary.toList
+
     private def capture(elem: Ctx.Elem): Ctx.Elem =
       outer.resolutionBoundary.fold(elem)(Ctx.CaptElem(elem, _))
 
@@ -2750,14 +2758,19 @@ extends Importer:
           msg"Expected a parameter list (a tuple of parameters), but found ${t.describe}" -> t.toLoc :: Nil
       (ParamList(ParamListFlags.empty, Nil, N).withLocOf(t), ctx)
   
-  def ident(id: Ident)(using Ctx): Ctxl[Opt[Term]] = ctx.get(id.name) match
-    case candidate @ (S(_: Ctx.WildcardElem) | N) =>
-      // Primitive operators are implicit bindings outside the Ctx environments;
-      // like explicit bindings, they take precedence over wildcard sources.
-      state.builtinOpsMap.get(id.name) match
-        case S(bi) => S(bi.ref(id))
-        case N => candidate.map(_.ref(id))
-    case S(elem) => S(elem.ref(id))
+  def ident(id: Ident)(using Ctx): Ctxl[Opt[Term]] =
+    val result = ctx.get(id.name) match
+      case candidate @ (S(_: Ctx.WildcardElem) | N) =>
+        // Primitive operators are implicit bindings outside the Ctx environments;
+        // like explicit bindings, they take precedence over wildcard sources.
+        state.builtinOpsMap.get(id.name) match
+          case S(bi) => S(bi.ref(id))
+          case N => candidate.map(_.ref(id))
+      case S(elem) => S(elem.ref(id))
+    if !newResolution then result.foreach: reference =>
+      rstate.data(reference)
+      rstate.legacyReferenceCaptures(new Identity(reference)) = ctx.referenceCaptures(id.name)
+    result
   
   def pattern(t: Tree): Ctxl[Pattern] =
     import ucs.{Ctor, unapply, error}, ucs.extractors.*, Keyword.*, Pattern.*, InvalidReason.*
