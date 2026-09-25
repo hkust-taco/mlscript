@@ -63,9 +63,9 @@ wasm.i32.const(1, 2)
 //│ ║        	^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Function 'const' expected 1 argument, but got 2
 //│ ║  in ../decls/Prelude.mls
-//│ ║  l.318: 	    fun
+//│ ║  l.322: 	    fun
 //│ ║         	    ^^^
-//│ ║  l.319: 	      const(c: Int): Int32
+//│ ║  l.323: 	      const(c: Int): Int32
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Wasm intrinsic 'i32.const' called with incorrect arity (2)
 //│ ║  l.60: 	wasm.i32.const(1, 2)

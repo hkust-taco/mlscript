@@ -76,7 +76,7 @@ The remaining option consumers have these blockers when compiled with
 | --- | --- |
 | `Block`, `Shape` | Missing nominal members and callback arity mismatches; `Block` also needs a public interface for `showArm`. |
 | `Iter`, `MutMap`, `ups/EvaluationContext` | Missing public parameter interfaces and unresolved member selections. |
-| `FingerTreeList` | The prelude `Array` interface has no `reduce`, which `mk` calls on its rest parameter; the error is reported once per distinct `args` tuple candidate. Compilation converges but takes about 20 seconds (legacy: 1.5 seconds), close to the 25-second limit. Each combination of candidates for `concatMiddle`'s `[...ay1, ...middle, ...ax2]` produces a separate tuple candidate, and each one is matched again by `toNodes`. |
+| `FingerTreeList` | Assertion failure in the mark-path invariant ("Repeated exit from the same lexical resolution scope") when `mk` calls `args.reduce` with a callback that feeds the accumulator back into `mk`. The same failure occurs for `map` when a callback element reaches the receiver through a recursive call; `newres/Arrays.mls` records it as a `:fixme`. |
 | `parsing/Extension`, `ParseRule`, `Test`, `TreeHelpers` | Repeated-entry mark assertion during nominal field projection: `NominalInstanceView.getMemberImpl` calls `captureType` on an argument whose path already contains that scope. Determine the source of the duplicate transfer without weakening the marks algebra. |
 | `parsing/Lexer` | Opened binary `~` conflicts with the builtin; calls with trailing contextual parameters leave function values where tokens are expected. |
 | `parsing/Parser` | Pattern-field flow and unresolved nominal members. |
@@ -160,8 +160,10 @@ recursive UPS matchers. Preserve both runtime results and matcher structure.
   member lookup (`codegen/ParamClasses`, `basics/DynamicInstantiation`), and
   module/call checks. Decide nominal module-forwarding compatibility for
   `basics/CyclicModuleForwarders` before changing its expected outcomes.
-- Extend host interfaces where needed: `Array.reduce` accumulator/callback
-  contracts, keyword-named `Map.set` and `Reflect.set`, and WebAssembly exports.
+- Extend host interfaces where needed: keyword-named `Map.set` and `Reflect.set`,
+  and WebAssembly exports. `Array.reduce` requires an initial value because
+  declared methods cannot be overloaded by arity; the form without one would need
+  an accumulator type that also includes the element type.
   `Array.concat` currently returns `Array[Any]`; improving precision needs a
   declared element constraint on its rest arguments. `Array.splice` must separate
   its optional deletion count from inserted elements before those elements can

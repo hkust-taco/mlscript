@@ -740,7 +740,10 @@ to `Child`-only members through that annotation.
 
 Array callbacks such as `map` receive the element, index, and array; their
 declared function interfaces must account for these arguments, for example with
-unused or rest parameters.
+unused or rest parameters. `reduce` also passes the accumulator first, and must be
+given an initial value: `xs.reduce((acc, x, ...) => acc + x, 0)`. Without one,
+JavaScript uses the first element as the initial accumulator, which the declared
+signature does not describe.
 
 ---
 
