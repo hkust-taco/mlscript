@@ -116,6 +116,17 @@ object Elaborator:
     override def toString: Str = s"${parent.fold("")(_.toString+"/")}${outer.showDbg}"
     
     lazy val scope: SrcScope = SrcScope(outer, parent.map(_.scope))
+
+    /** A nominal member can refer to enclosing binders even when its own
+      * signature does not mention them, for example through a local type alias.
+      */
+    lazy val typeBinders: Set[VarSymbol] = parent.fold(Set.empty[VarSymbol])(_.typeBinders) ++
+      env.valuesIterator.flatMap(_.symbol).collect:
+        case symbol: VarSymbol if symbol.decl.exists(_.isInstanceOf[TyParam]) => symbol
+    
+    /** The resolution scopes that references from this context capture through. */
+    lazy val resolutionBoundaries: Set[ResolutionBoundary] =
+      parent.fold(Set.empty[ResolutionBoundary])(_.resolutionBoundaries) ++ outer.resolutionBoundary.map(ResolutionBoundary(_))
     
     def +(local: Str -> Symbol): Ctx =
       copy(env = env + local.mapSecond(Ctx.RefElem(_)))
@@ -482,7 +493,7 @@ object Elaborator:
     * a runtime value merely because they use the same reference syntax.
     */
   enum Interpretation:
-    case Trm, Receiver, Clss, Ptrn, Tpe
+    case Trm, Receiver, Specialization, Clss, Ptrn, Tpe
 
   enum Mode:
     case Full
@@ -719,7 +730,7 @@ end Elaborator
 
 
 import Elaborator.*
-import Elaborator.Interpretation.{Trm, Receiver, Clss, Ptrn, Tpe}
+import Elaborator.Interpretation.{Trm, Receiver, Specialization, Clss, Ptrn, Tpe}
 
 
 class Elaborator(val tl: TraceLogger, val wd: io.Path, val prelude: Ctx)
@@ -1380,13 +1391,22 @@ extends Importer:
       raise(ErrorReport(msg"Name not found: $name" -> id.toLoc :: Nil))
       error
     case TyApp(lhs, targs) =>
-      Term.TyApp(subterm(lhs, interp), targs.map {
+      // The whole type application owns a by-name invocation's binder group.
+      // Do not observe its underlying reference before its arguments are available.
+      val baseInterp = interp match
+        case Trm | Receiver | Specialization => Specialization
+        case _ => interp
+      val result = Term.TyApp(subterm(lhs, baseInterp), targs.map {
         case Modified(Keywrd(Keyword.`in`), arg) => Term.WildcardTy(S(subterm(arg, Tpe)), N)
         case Modified(Keywrd(Keyword.`out`), arg) => Term.WildcardTy(N, S(subterm(arg, Tpe)))
         case Tup(Modified(Keywrd(Keyword.`in`), arg1) :: Modified(Keywrd(Keyword.`out`), arg2) :: Nil) =>
           Term.WildcardTy(S(subterm(arg1, Tpe)), S(subterm(arg2, Tpe)))
         case arg => subterm(arg, Tpe)
       })(N).withLocOf(tree)
+      // A term specialization must validate its arguments even when unused.
+      // Type and constructor interpretations have their own argument checks.
+      if newResolution && interp == Trm then listenTerm(result)(_ => ())
+      result
     case InfixApp(TyTup(tvs), Keywrd(Keyword.`->`), body) =>
       val boundVars = mutable.HashMap.empty[Str, VarSymbol]
       def genSym(id: Tree.Ident) =
@@ -1437,7 +1457,10 @@ extends Importer:
       case _ => lastWords(s"Unexpected lambda parameter shape: $lhs")
     case Keywrd(Keyword.`dyn`) => Term.DynTy().withLocOf(tree)
     case InfixApp(lhs, Keywrd(Keyword.`as`), rhs) =>
-      Term.Asc(subterm(lhs, interp), subterm(rhs, Tpe))
+      val body = subterm(lhs, interp)
+      val sign = subterm(rhs, Tpe)
+      if newResolution then checkAscription(body, sign)
+      Term.Asc(body, sign)
     case InfixApp(lhs, Keywrd(Keyword.`:`), rhs) =>
       block(Block(tree :: Nil), hasResult = false, resultInterp = interp)._1
     case PrefixApp(kw @ Keywrd(Keyword.`not`), rhs) =>
@@ -2229,6 +2252,7 @@ extends Importer:
                 TermDefFlags.empty.copy(isMethod = isMethod, hasResultAnnotation = td.annotatedResultType.isDefined), mfn, annotations, N).withLocOf(td)
               sym.tsym = S(tsym)
               tsym.defn = S(tdf)
+              if newResolution then checkDeclaredResult(tdf)
               
               tdf
             go(sts, Nil, tdf :: acc)
@@ -2266,6 +2290,8 @@ extends Importer:
         val sym = members.getOrElse(nme.name, lastWords(s"Symbol not found: ${nme.name}"))
         
         val outerCtx = ctx
+        rstate.lexicalTypeBinders(td.symbol) = ctx.typeBinders
+        rstate.lexicalBoundaries(td.symbol) = ctx.resolutionBoundaries
         
         var newCtx = S(td.symbol).collectFirst:
             case s: InnerSymbol => s
@@ -2956,7 +2982,7 @@ extends Importer:
     // TODO handle name clashes
     if newResolution then
       InterfaceExposure(this).check(exports, Nil)
-      rstate.completeBlock(res)
+    rstate.completeBlock(res)
     (res, newCtx)
   
   def topLevel(sts: Block): Ctxl[(Blk, Ctx)] =
@@ -2970,7 +2996,7 @@ extends Importer:
         val values = res.stats.collect:
           case DefineVar(sym: LocalVarSymbol, rhs) => Term.SimpleRef(sym)(new Ident(sym.nme).withLocOf(rhs))
         InterfaceExposure(this).check(exports, res.res :: values)
-      rstate.completeBlock(res)
+    rstate.completeBlock(res)
     (res, ctx)
   
   def computeVariances(s: Statement): Unit =

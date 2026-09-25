@@ -1,9 +1,9 @@
 #config(liftDefns: Some(LiftDefns))
 
-import "./LegacyOption.mls"
+import "./Option.mls"
 import "./Stack.mls"
 
-open LegacyOption { Some, None }
+open Option { Some, None }
 open Stack { Nil, Cons }
 
 

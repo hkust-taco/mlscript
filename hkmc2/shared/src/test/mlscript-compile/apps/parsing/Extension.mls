@@ -4,14 +4,14 @@ import "./Token.mls"
 import "./ParseRule.mls"
 import "./Tree.mls"
 import "../../Stack.mls"
-import "../../LegacyOption.mls"
+import "../../Option.mls"
 import "../../Predef.mls"
 import "../../Iter.mls"
 import "../../MutMap.mls"
 
 open Predef
 open Stack
-open LegacyOption { Some, None }
+open Option { Some, None }
 open Token { LiteralKind }
 open ParseRule { Choice }
 

@@ -284,6 +284,15 @@ class VarSymbol(val id: Ident)(using State)
   // override def toString: Str = s"$name@$uid"
   override def subst(using s: SymbolSubst): VarSymbol = s.mapVarSym(this)
 
+/** A source type binder instantiated at a static application site. Its inference
+  * host starts empty: the source binder's checking witnesses and subscriptions
+  * belong to the generic definition, not to any of its applications.
+  */
+final class TypeParameterInstance(val origin: VarSymbol)(using State) extends VarSymbol(origin.id):
+  require(!origin.isInstanceOf[TypeParameterInstance], "Instantiate original type binders only")
+  decl = origin.decl
+  val reference: Term.SimpleRef = Term.SimpleRef(this)(origin.id)
+
 class BuiltinSymbol
     (val nme: Str, val binary: Bool, val unary: Bool, val nullary: Bool, val functionLike: Bool, val isPure: Bool)(using State)
     extends Symbol:

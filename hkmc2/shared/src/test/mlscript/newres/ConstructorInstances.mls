@@ -1,0 +1,229 @@
+:.
+
+// Specializing one stored constructor must not mutate its original parameters.
+:expect [1, 2]
+class First(val first: Int)
+class Second(val second: Int)
+class Box[T](val item: T)
+private val shared = Box
+private val first = shared[First]
+private val second = shared[Second]
+[first(First(1)).item.first, second(Second(2)).item.second]
+//│ = [1, 2]
+//│ first = fun Box { class: class Box }
+//│ second = fun Box { class: class Box }
+//│ shared = fun Box { class: class Box }
+
+// Explicit new uses the same specialization recipe through a stored alias.
+:expect [3, 4]
+class First(val first: Int)
+class Second(val second: Int)
+class Box[T](val item: T)
+private val shared = Box
+private val first = shared[First]
+private val second = shared[Second]
+[(new first(First(3))).item.first, (new second(Second(4))).item.second]
+//│ = [3, 4]
+//│ first = fun Box { class: class Box }
+//│ second = fun Box { class: class Box }
+//│ shared = fun Box { class: class Box }
+
+// Later constructor lists retain the instances chosen by the first list.
+:expect [5, 6, 7, 8]
+class First(val first: Int)
+class Second(val second: Int)
+class Pair[T](val item: T)(val other)
+private val shared = Pair
+private val left = shared[First](First(5))
+private val right = shared[Second](Second(7))
+[left(Second(6)).item.first, left(Second(6)).other.second,
+ right(First(8)).item.second, right(First(8)).other.first]
+//│ = [5, 6, 7, 8]
+//│ left = fun
+//│ right = fun
+//│ shared = fun Pair { class: class Pair }
+
+// An unapplied new expression keeps supplied types until its first application.
+:expect [9, 10]
+class First(val first: Int)
+class Second(val second: Int)
+class Box[T](val item: T)
+private val first = new Box[First]
+private val second = new Box[Second]
+[first(First(9)).item.first, second(Second(10)).item.second]
+//│ = [9, 10]
+//│ first = fun
+//│ second = fun
+
+// Class and method binders retain independent views of the receiver and argument.
+:expect [11, 12]
+class First(val first: Int)
+class Second(val second: Int)
+class Box[T](val item: T) with
+  fun pair[U](other: U) = [item, other]
+let box = new Box[First](First(11))
+[box.pair(Second(12)).0.first, box.pair(Second(12)).1.second]
+//│ = [11, 12]
+//│ box = Box(First(11))
+
+// The receiver's Array parameter must not specialize a literal in a call argument.
+:expect 14
+class First(val first: Int)
+class Second(val second: Int)
+let xs = new mut Array[First](0)
+xs.push(First(13))
+xs.map((item, ...) => (mut [Second(14)]).0.second).0
+//│ = 14
+//│ xs = [First(13)]
+
+// A shared allocation site retains the enclosing function's distinct activations.
+:expect [15, 16]
+class First(val first: Int)
+class Second(val second: Int)
+class Box[T](val item: T)
+private fun boxed[A](value: A) = new Box[A](value)
+[boxed(First(15)).item.first, boxed(Second(16)).item.second]
+//│ = [15, 16]
+
+// Reconstructing a receiver's class retains the supplied argument's outer view.
+:fixme
+:expect [17, 18]
+class First(val first: Int)
+class Second(val second: Int)
+class Box[T](val item: T) with
+  fun copy() = new Box[T](item)
+let first = new Box[First](First(17))
+let second = new Box[Second](Second(18))
+[first.copy().item.first, second.copy().item.second]
+//│ ╔══[COMPILATION ERROR] This selection of member 'first' has no resolved target
+//│ ║  l.97: 	[first.copy().item.first, second.copy().item.second]
+//│ ╙──      	 ^^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ ═══[RUNTIME ERROR] Expected: '[17, 18]', got: 'undefined'
+//│ first = Box(First(17))
+//│ second = Box(Second(18))
+
+// Specialization checks its arity without waiting for a constructor application.
+:e
+:ge
+class Box[T](val item: T)
+private val invalid = Box[Int, Str]
+//│ ╔══[COMPILATION ERROR] Resolution error in type application
+//│ ║  l.110: 	private val invalid = Box[Int, Str]
+//│ ║         	                      ^^^^^^^^^^^^^
+//│ ╟── Class 'Box' expected 1 type argument, but got 2
+//│ ║  l.109: 	class Box[T](val item: T)
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ invalid = fun Box { class: class Box }
+
+// Supplied member types receive callback input obligations too.
+:expect 19
+class Item(val value: Int)
+let callbacks = new mut Array[Item -> Int](0)
+callbacks.push((x) => x.value)
+private fun first(callback, ...tail) = callback
+first(...callbacks)(Item(19))
+//│ = 19
+//│ callbacks = [fun]
+
+// Type application cannot turn a constructed object back into its constructor.
+:e
+:re
+class Box[T](val item: T)
+let box = new Box[Int](1)
+box[Str]("bad")
+//│ ╔══[COMPILATION ERROR] Resolution error in type application
+//│ ║  l.134: 	box[Str]("bad")
+//│ ║         	^^^^^^^^
+//│ ╟── Class 'Box' expected 0 type arguments, but got 1
+//│ ║  l.132: 	class Box[T](val item: T)
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.134: 	box[Str]("bad")
+//│ ║         	^^^^^^^^^^^^^^^
+//│ ╟── Instance of class 'Box' cannot receive more argument lists.
+//│ ║  l.133: 	let box = new Box[Int](1)
+//│ ╙──       	          ^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] TypeError: box1 is not a function
+//│ box = Box(1)
+
+// A partial constructor has already bound its type parameters at its first list.
+:e
+:ge
+class Pair[T](val item: T)(val other: T)
+private val partial = Pair[Int](1)
+private val invalid = partial[Str]
+//│ ╔══[COMPILATION ERROR] Resolution error in type application
+//│ ║  l.155: 	private val invalid = partial[Str]
+//│ ║         	                      ^^^^^^^^^^^^
+//│ ╟── Class 'Pair' expected 0 type arguments, but got 1
+//│ ║  l.153: 	class Pair[T](val item: T)(val other: T)
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ invalid = fun
+//│ partial = fun
+
+// The supplied callback input exposes only its written nominal interface.
+:e
+:ge
+class Base
+class Child(val extra: Int) extends Base
+let callbacks = new mut Array[Base -> Int](0)
+callbacks.push(x => x.extra)
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.171: 	callbacks.push(x => x.extra)
+//│ ║         	                    ^^^^^^^
+//│ ╙── Value of type 'Base' does not contain member 'extra'
+//│ = 1
+//│ callbacks = [fun]
+
+// The method input constrains the callback even if the array is never invoked.
+:expect 1
+class Item(val value: Int)
+let callbacks = new mut Array[Item -> Int](0)
+callbacks.push(x => x.value)
+//│ = 1
+//│ callbacks = [fun]
+
+// A more precise implementation must not refine the supplied callback result.
+:e
+:ge
+class Base
+class Child(val extra: Int) extends Base
+let callbacks = new mut Array[Base -> Base](0)
+callbacks.push(x => new Child(20))
+private fun first(callback, ...tail) = callback
+first(...callbacks)(new Base).extra
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.195: 	first(...callbacks)(new Base).extra
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙── Value of type 'Base' does not contain member 'extra'
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ callbacks = [fun]
+
+// Ordinary value flow through reconstruction also needs receiver separation.
+// This control contains no type binders or annotations on the Box field.
+:fixme
+:expect [21, 22]
+class First(val first: Int)
+class Second(val second: Int)
+class Box(val item) with
+  fun copy() = new Box(item)
+let first = new Box(First(21))
+let second = new Box(Second(22))
+[first.copy().item.first, second.copy().item.second]
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.213: 	[first.copy().item.first, second.copy().item.second]
+//│ ║         	                          ^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Instance of class 'First' does not contain member 'second'
+//│ ║  l.211: 	let first = new Box(First(21))
+//│ ╙──       	                    ^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.213: 	[first.copy().item.first, second.copy().item.second]
+//│ ║         	 ^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Instance of class 'Second' does not contain member 'first'
+//│ ║  l.212: 	let second = new Box(Second(22))
+//│ ╙──       	                     ^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ ═══[RUNTIME ERROR] Expected: '[21, 22]', got: 'undefined'
+//│ first = Box(First(21))
+//│ second = Box(Second(22))

@@ -20,9 +20,8 @@ abstract class MLsDiffMaker extends DiffMaker:
   val runtimeSourceFile: io.Path = predefFile.up / "Runtime.mls" // * Contains MLscript runtime sources
   val termFile: io.Path = predefFile.up / "Term.mjs" // * Contains MLscript runtime term definitions
   val blockFile: io.Path = predefFile.up / "Block.mjs" // * Contains MLscript runtime block definitions
-  // Reflection must use the same option constructors as Block.mls. Switch both
-  // back to Option when Block and its consumers no longer need LegacyOption.
-  val optionFile: io.Path = predefFile.up / "LegacyOption.mjs"
+  // Reflection must use the same option constructors as Block.mls.
+  val optionFile: io.Path = predefFile.up / "Option.mjs"
   
   val wd = file.up
   
@@ -467,14 +466,20 @@ abstract class MLsDiffMaker extends DiffMaker:
       case _ => ()
   
   def processTrees(trees: Ls[syntax.Tree])(using Config, Raise): Unit =
-    val elab = Elaborator(etl, file.up, prelude)
+    val blk = new syntax.Tree.Block(trees)
+    val elaborationConfig = Config.elaborationConfig(blk)
     // val blockSymbol =
     //   semantics.TopLevelSymbol("block#"+blockNum)
     blockNum += 1
     // given Elaborator.Ctx = curCtx.nest(S(blockSymbol))
     given Elaborator.Ctx = curCtx.nestLocal(s"block:${blockNum}")
-    val blk = new syntax.Tree.Block(trees)
-    val (e, newCtx) = elab.topLevel(blk)
+    // Match the compiler's prelude bootstrap: builtin lookup uses the original
+    // declaration symbols, including while those declarations are elaborated.
+    if file == preludeFile then prelude = summon[Elaborator.Ctx].withMembers(blk.definedSymbols)
+    val elab =
+      given Config = elaborationConfig
+      Elaborator(etl, file.up, prelude)
+    val (e, newCtx) = elaborationConfig.givenIn(elab.topLevel(blk))
     curCtx = newCtx
     
     extractConfig(e.stats)

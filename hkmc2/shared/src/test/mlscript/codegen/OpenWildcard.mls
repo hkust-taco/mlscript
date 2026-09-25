@@ -1,14 +1,14 @@
 :js
 
 
-import "../../mlscript-compile/LegacyOption.mls"
+import "../../mlscript-compile/Option.mls"
 
 module OtherModule with
   val None = 123
 
 
 :sjs
-open LegacyOption
+open Option
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ 
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
@@ -17,10 +17,10 @@ open LegacyOption
 None isDefined()
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let x;
-//│ x = LegacyOption.None;
-//│ if (x instanceof LegacyOption.Some.class) {
+//│ x = Option.None;
+//│ if (x instanceof Option.Some.class) {
 //│   return true
-//│ } else if (x instanceof LegacyOption.None.class) {
+//│ } else if (x instanceof Option.None.class) {
 //│   return false
 //│ }
 //│ throw globalThis.Object.freeze(new globalThis.Error("match error"));
@@ -30,7 +30,7 @@ None isDefined()
 Some(1) isDefined()
 //│ = true
 
-None === LegacyOption.None
+None === Option.None
 //│ = true
 
 
@@ -38,14 +38,14 @@ fun none() = None
 
 open OtherModule
 
-None === LegacyOption.None
+None === Option.None
 //│ = false
 
-none() === LegacyOption.None
+none() === Option.None
 //│ = true
 
 
-open LegacyOption
+open Option
 fun none() = None
 console.log(None)
 open OtherModule
@@ -59,24 +59,24 @@ none()
 // * `open` statements are hygienic and are not affected by redefinitions
 
 :sjs
-val LegacyOption = "Oops"
+val Option = "Oops"
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let LegacyOption1; LegacyOption1 = "Oops";
+//│ let Option1; Option1 = "Oops";
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
-//│ LegacyOption = "Oops"
+//│ Option = "Oops"
 
 :sjs
 Some(123)
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ return LegacyOption.Some(123)
+//│ return Option.Some(123)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = Some(123)
 
-module LegacyOption with
+module Option with
   val None = 123
 
 :sjs
-open LegacyOption
+open Option
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ 
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
@@ -84,14 +84,14 @@ open LegacyOption
 :sjs
 Some
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ return LegacyOption.Some
+//│ return Option.Some
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = fun Some { class: class Some }
 
 :sjs
 None
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ return LegacyOption3.None
+//│ return Option3.None
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 123
 

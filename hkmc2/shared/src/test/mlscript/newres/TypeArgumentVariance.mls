@@ -1,0 +1,118 @@
+:.
+
+// An output wildcard retains the declared element interface.
+:expect 1
+class Item(val value: Int)
+let xs = (mut [Item(1)] as Array[out Item])
+xs.0.value
+//│ = 1
+//│ xs = [Item(1)]
+
+// An input wildcard accepts elements but supplies no output member interface.
+:ge
+class Item(val value: Int)
+let xs = (mut [] as Array[in Item])
+xs.push(Item(2))
+xs.0.value
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.16: 	xs.0.value
+//│ ║        	^^^^^^^^^^
+//│ ╟── Cannot resolve member 'value' of a value with unknown shape.
+//│ ╟── This abstract type does not specify a member interface.
+//│ ║  l.14: 	let xs = (mut [] as Array[in Item])
+//│ ╙──      	                             ^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ xs = [Item(2)]
+
+// An output-only argument must not send an unrelated lower bound back to the array.
+:ge
+class Item(val value: Int)
+private fun connect[A](xs: Array[out A], value: A) = ()
+let xs = mut []
+connect(xs, Item(3))
+xs.0.value
+//│ ╔══[COMPILATION ERROR] This selection of member 'value' has no resolved target
+//│ ║  l.33: 	xs.0.value
+//│ ╙──      	^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ xs = []
+
+// Declaration-site contravariance does not infer A from the sink's input type.
+:expect 4
+class Base
+class Child(val extra: Int) extends Base
+class Sink[in T] with
+  fun put(value: T) = ()
+private fun infer[A](sink: Sink[A], value: A): A = value
+infer(new Sink[Base], Child(4)).extra
+//│ = 4
+
+// A written invariant argument uses the declaration's output variance.
+:expect 5
+class Item(val value: Int)
+class Box[out T](val item: T)
+private fun get[A](box: Box[A]): A = box.item
+get(new Box(Item(5))).value
+//│ = 5
+
+// A use-site input wildcard overrides an output declaration.
+:ge
+class Item(val value: Int)
+class Box[out T](val item: T)
+let box = (new Box(Item(6)) as Box[in Item])
+box.item.value
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.63: 	box.item.value
+//│ ║        	^^^^^^^^^^^^^^
+//│ ╟── Cannot resolve member 'value' of a value with unknown shape.
+//│ ╟── This abstract type does not specify a member interface.
+//│ ║  l.62: 	let box = (new Box(Item(6)) as Box[in Item])
+//│ ╙──      	                                      ^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ box = Box(Item(6))
+
+// Callback inputs reverse function polarity inside a member's own input.
+:expect 7
+class Item(val value: Int)
+class Box[T](val item: T) with
+  fun apply(f: T -> Int): Int = f(item)
+let box = (new Box(Item(7)) as Box[out Item])
+box.apply(x => x.value)
+//│ = 7
+//│ box = Box(Item(7))
+
+// The same callback sees Any when the argument supplies only an input part.
+:ge
+class Item(val value: Int)
+class Box[T](val item: T) with
+  fun apply(f: T -> Int): Int = f(item)
+let box = (new Box(Item(8)) as Box[in Item])
+box.apply(x => x.value)
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.90: 	box.apply(x => x.value)
+//│ ║        	               ^^^^^^^
+//│ ╟── Cannot resolve member 'value' of a value with unknown shape.
+//│ ╟── This abstract type does not specify a member interface.
+//│ ║  l.89: 	let box = (new Box(Item(8)) as Box[in Item])
+//│ ╙──      	                                      ^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ box = Box(Item(8))
+
+// Explicit input and output parts can both be written on the same argument.
+:expect 9
+class Item(val value: Int)
+let xs = (mut [] as Array[in Item out Item])
+xs.push(Item(9))
+xs.0.value
+//│ = 9
+//│ xs = [Item(9)]
+
+// Recursive covariant aliases retain the source argument's lexical environment.
+:expect 10
+type Tree[out A] = Node[A] | Empty
+object Empty
+data class Node[out A](item: A, tail: Tree[A])
+class Item(val value: Int)
+private fun item[A](node: Node[A]): A = node.item
+item(Node(Item(10), Node(Item(11), Empty))).value
+//│ = 10

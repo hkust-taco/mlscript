@@ -6,14 +6,14 @@ open Predef
 import "../../Char.mls"
 import "../../Stack.mls"
 import "../../StrOps.mls"
-import "../../LegacyOption.mls"
+import "../../Option.mls"
 import "../../Iter.mls"
 
 import "./Token.mls"
 
 open Stack
 open StrOps
-open LegacyOption { Some, None}
+open Option { Some, None}
 open Token { LiteralKind, LineLookupTable }
 
 type TokenType = Token.Token

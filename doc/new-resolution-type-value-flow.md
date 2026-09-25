@@ -1,543 +1,465 @@
 # Instance types and parameter constraints
 
-`InstanceShape(T)` describes an instance of the type `T`. Types remain in the
-`TypeShape`/`DeclaredType` graph. The instance wrapper replaces the earlier
-nominal-only representation at annotation boundaries: parameter and result
-annotations, ascriptions, generic arguments, and annotated tuple fields retain
-a type reference until an operation requests its interface.
+This internal reference describes the current type-flow representation in new
+resolution. User-facing rules are in the [language reference](reference.md#resolution-interfaces).
+[Deferred improvements](new-resolution-future-work.md) cover receiver reconstruction,
+inferred member signatures, omitted-argument contexts, and regularity precision.
 
-The wrapper refactor is implemented. The design below specifies the next
-implementation: finite instantiation of explicit binders, contextual views of
-partial signatures, inference for explicit and omitted holes, and bidirectional
-constraints with variance. These changes are not implemented yet. The representation
-and implementation order below are the outcome of the design review, not evidence
-that the recursive acceptance cases already work.
-See the [resolver notes](new-resolution-design.md)
-for current behavior and the [migration worklist](new-resolution-suite-migration.md)
-for remaining ports.
-
-## Type arguments are different from instance bounds
+## Type arguments and instance bounds
 
 Supplying `Int` as the type argument for a contextual parameter `A` affects both
-positive and negative uses of `A`:
+its input and output uses:
 
 ```text
-A has the supplied type Int:
-
 L <: A    requires    L <: Int
 A <: U    requires    Int <: U
 ```
 
-An ordinary integer argument to a parameter `x: A` contributes only a lower
-bound. It does not supply `Int` as the meaning of every occurrence of `A`.
-For `pair[A](x: A, y: A)`, an integer and a string therefore contribute two lower
-bounds; neither argument must satisfy the other's type.
+An ordinary integer argument to `x: A` contributes only a lower bound. For
+`pair[A](x: A, y: A)`, integer and string arguments contribute two lower bounds;
+neither argument must satisfy the other's type.
 
-If two distinct type values, `Int` and `Str`, reach the same activation of `A`,
-each bound must apply to both. `L <: A` requires both `L <: Int` and `L <: Str`;
-`A <: U` requires both `Int <: U` and `Str <: U`. Supplying the single type value
-`Int | Str` is different: its complete type expression remains the constraint
-target. Decomposing a union in positive position does not justify decomposing it
-conjunctively in negative position.
-
-Concrete mismatches such as `Str <: Int` may remain quiet during this migration.
-The absence of a loud diagnostic does not authorize dropping constraints before
-they reach the relevant type or parameter.
-
-These rules concern inputs/outputs, or equivalently lower/upper bounds. Function
-parameters reverse polarity and function results preserve it. Array operations
-are one application of the rules.
-
-## Finite call-site instantiation and marks
-
-**Instantiate each definition's explicitly declared type parameters once per
-syntactic call site.** This includes binders in inline annotations and separate
-type signatures, whether the call supplies type arguments or infers them. A call
-`f(x)` therefore instantiates a declared `f[A]` just as `f[Int](x)` does.
-
-Memoize a complete group of parameter symbols using this key:
-
-```text
-(original definition, syntactic application site)
-    -> {original parameter -> instantiated parameter}
-```
-
-Different sites receive different symbols. Revisiting the same definition at the
-same site reuses its group, including during recursion. The key must not contain
-the supplied types, incoming bounds, marks, or an already instantiated definition.
-Install the group before subscribing to constraints so reentrant propagation
-finds it. The only permitted allocation resembling fresh inference variables is
-this bounded instantiation; do not allocate another variable per flow, constraint
-match, or recursive visit.
-
-Symbols identify these instances; marks still identify the contexts in which
-their bounds flow. A single call inside a helper shares its parameter instances
-across the helper's callers, while enclosing marks distinguish those callers.
-Keep the original lexical resolution boundaries and existing normalization;
-instantiated symbols must not introduce additional scope boundaries. Mutable
-array literals retain the builtin `Array` element parameter with allocation marks;
-actual element shapes contribute bounds there. They need no fresh element variable.
-
-Keeping a reference to an unresolved parameter is essential. Copying its current
-positive candidates loses its negative uses and its identity as a type argument.
-Subscriptions must also account for constraints or candidates arriving later.
-Graph caches and listeners belong to the consuming `NewResolverState`; extending
-a consumer must not mutate a prelude or an exporter's inference graph.
-
-This follows the finite-allocation idea in §3 of
-[Tate's type-outference paper](https://rosstate.org/publications/outference/outference-tate-oopsla25.pdf):
-label listeners introduce signature unknowns once per invocation site and nominal
-label, reusing them as bounds arrive rather than expanding every concrete type.
-Here the proposed key uses the original definition and application site. The
-paper's formal calculus has monomorphic methods; its termination result does not
-directly establish termination for our generic functions and marks.
+If two distinct supplied types `Int` and `Str` reach the same activation of `A`,
+each obligation applies to both. Supplying the single type `Int | Str` instead
+retains that complete type as the negative constraint target. Positive union
+elimination does not justify splitting a negative union into conjunctive obligations.
+Concrete mismatches such as `Str <: Int` can remain quiet during migration; this
+does not permit dropping the corresponding constraints.
 
 ## Instance wrappers and interface observations
 
-`InstanceShape` holds a `DeclaredType`, including its lexical bindings.
-`listenTypeInstances` supplies this wrapper; `listenInstanceViews` interprets it
-for an operation such as selection, application, or destructuring. The cached
-`listenTypeViews` observations reuse the specialized nominal, callable, record,
-and tuple interfaces. `NominalInstanceView` is the nominal member-lookup view
-previously called `NominalTypeShape`.
+`InstanceShape(DeclaredType)` describes an instance of a type. Parameter/result
+annotations, ascriptions, and annotated fields retain this wrapper until lookup,
+application, or destructuring requests an interface through `listenInstanceViews`.
+The type itself stays in the `TypeResolution`/`TypeShape` graph. A written interface
+restricts observation even when more specific implementation values reach it.
 
-For example, an instance viewed as `Base` exposes `Base`'s declarations even if
-the implementation is a `Child`. Interpreting a function type exposes its declared
-domain and result. Interpreting a union for member lookup can observe each
-alternative, while transporting its wrapper preserves the original union node.
+A `DeclaredType` contains:
 
-This refactor alone does not implement the planned distinction between supplying
-a type argument and adding an ordinary bound. In particular, the current
-`inferTypeArguments` still expands wrappers when inferring from an instance, and
-explicit arguments still suppress ordinary refinement. The proposed constraint
-work must replace these behaviors together.
+- A source `TypeResolution` node.
+- Bindings from original formals to contextual argument references.
+- A flat substitution from original binders to canonical call-site instances.
+- The lexical polarity at which to interpret substitutions.
 
-## Variance rules to implement
+An interface view does not replace these references with their current candidates.
+Late constraints must remain connected to the same endpoints. Nominal views retain
+symbolic parameter endpoints for constructed receivers, including supplied arguments.
+Suppliedness is recorded on the canonical parameter instance; marks choose which
+activation's supplied bounds receive an obligation. An input obligation does not
+add its implementation shape to a supplied parameter's output interface.
 
-Follow InvalML's argument interpretation in
-[`typeAndSubstType`](../hkmc2/shared/src/main/scala/hkmc2/invalml/InvalML.scala)
-and argument comparison in
-[`constrainArgs`](../hkmc2/shared/src/main/scala/hkmc2/invalml/ConstraintSolver.scala).
-Its [`TypeArg`](../hkmc2/shared/src/main/scala/hkmc2/invalml/types.scala) exposes an
-input part (`negPart`) and an output part (`posPart`):
+## Finite call-site instantiation and marks
+
+Each explicitly declared binder is instantiated once per original definition and
+**authoritative syntactic instantiation site**. Inline binders and separate
+signatures follow the same policy:
+
+| Operation on an uninstantiated scheme | Authoritative site |
+| --- | --- |
+| Explicit term-level type application `f[T]` | That type application |
+| By-name invocation `make` or `obj.make` | The reference or selection, unless an enclosing type application supplies arguments |
+| Ordinary application `f(x)` | The first term application |
+| Constructor application | Its explicit type application; otherwise its first term application, or saturated zero-list `new` |
+
+An annotation such as `Array[Int]` is a type expression, not an invocation.
+An ordinary reference to a function with parameter lists can retain its scheme.
+A by-name reference has already invoked the computation: retaining its consumed
+scheme and independently instantiating it at later uses would misrepresent shared
+state returned by that invocation.
+
+The cache maps `(original definition or source scheme, syntactic site)` to the
+complete group of parameter instances. It contains no supplied types, incoming
+bounds, marks, or instantiated-definition identities. Install a group before
+subscribing to constraints so reentrant observation finds it. Recursion reuses
+the group; marks distinguish enclosing activations of a shared inner site.
+No other observation, projection, or recursive traversal allocates fresh binders.
+`App.resSym`, `New.resSym`, and reference/selection sites provide stable identities;
+`typeApplicationSite` memoizes one identity per original `TyApp`. Structural
+field constraints likewise reuse one projection site per source field across
+recursive and activated views (`TypeGraphProjectionSites.mls`). Class and
+constructor views use the same original owner. An anonymous polymorphic annotation
+uses its source scheme, and each alternative of an overload has its own owner.
+
+`TypeShape.Polymorphic` and `DeclaredTypeParameter` retain the original binders and
+their bounds. Inputs, results, and nested callbacks receive the site's substitution
+before interface expansion. The same substitution is applied to bounds, including
+captured enclosing binders. Instantiation connects `lower <: instance <: upper`
+after recording explicit supplied arguments, so a lower bound cannot widen a
+supplied interface. By-name invocations install these relations when their scheme
+is consumed. Recursive and dependent bounds share the existing relation graph.
+Using an upper guarantee as an interface for an unconstrained result or a generic
+checking body remains a [design issue](new-resolution-future-work.md#upper-bound-interfaces).
+Enclosing binders remain lexical captures, not binders of the nested definition
+being instantiated.
+
+### Partial application and explicit specialization
+
+`f[T]` consumes its scheme even before a term application occurs. `SpecializedShape`
+retains the group for an inferred function; an instantiated complete callable view
+removes that scheme. Stored aliases and remaining curried lists reuse the group.
+A separately quantified result retains its independent scheme.
+
+For ordinary explicit applications, lexical captures are applied to the callable
+before binding caller-supplied arguments. By-name invocation needs the arguments
+before observing its result: the resolver records the reference's captures and
+rebases those arguments through the ordinary mark operations into the invocation.
+It records that invocation so its result is not specialized a second time.
+Arity checks also apply to unused specializations.
+
+## Variance and substitution
+
+Follow InvalML's [`typeAndSubstType`](../hkmc2/shared/src/main/scala/hkmc2/invalml/InvalML.scala)
+and [`constrainArgs`](../hkmc2/shared/src/main/scala/hkmc2/invalml/ConstraintSolver.scala).
+Its [`TypeArg`](../hkmc2/shared/src/main/scala/hkmc2/invalml/types.scala) supplies
+input and output parts:
 
 | Argument | Input part | Output part |
 | --- | --- | --- |
 | `S` | `S` | `S` |
 | `in T` | `T` | `Any` |
 | `out U` | `Nothing` | `U` |
+| `in T out U` | `T` | `U` |
 
-Thus `S` means `in S out S`. The internal pair can also represent a written
-`in T out U`. For an unqualified argument, a declaration's `in` or `out` annotation
-selects the corresponding form. An explicitly written use-site wildcard supplies
-its own parts, as it does in InvalML; it is not combined by guessing a variance.
+Declaration variance applies to an unqualified argument. A written wildcard
+supplies its own parts and overrides declaration variance. Comparing actual `a`
+with expected `b` installs `a.output <: b.output` and `b.input <: a.input`.
+Missing wildcard parts are actual top/bottom types, not inference holes.
 
-For actual argument `a` and expected argument `b`, require:
+A subclass contributes the arguments of the requested nominal ancestor. Each
+parent step preserves the child's binder substitution and the parent's scope
+marks before installing both variance directions. This applies to constructed
+receivers and declared nominal views, including multiple inheritance steps and
+captured enclosing binders (`InheritedTypeArguments.mls`).
 
-```text
-a.output <: b.output
-b.input  <: a.input
-```
+### Substitute at the occurrence before applying argument variance
 
-A plain invariant `Array[Int]` against `Array[A]` therefore retains both uses of
-the element type. `Array[out A]` admits only the output connection; `Array[in A]`
-admits only the input connection. Substitution into member types must select the
-appropriate part at each polarity, including nested arrows. Copy InvalML's
-variance semantics, not its fresh inference-variable implementation.
+First interpret an argument expression at its lexical occurrence polarity. A
+formal bound to `in L out U` selects `U` positively and `L` negatively. Function
+domains and written wildcard input parts reverse polarity; results and structural
+fields preserve it. Then apply the enclosing formal's declaration variance to the
+interpreted argument. An invariant formal uses that one type for both parts.
 
-## Recursive acceptance example
-
-This example is retained as a `:fixme` regression in
-[`newres/MutableArrays.mls`](../hkmc2/shared/src/test/mlscript/newres/MutableArrays.mls)
-(the recursive `append` block, immediately after `appendTyped`):
+For example, with `Child <: Base`:
 
 ```mlscript
-class Item(val value: Int)
-fun append[A](xs: Array[A], value: A, n: Int) =
-  if n > 0 then append(xs, value, n - 1) else xs.push(value)
-let xs = mut []
-append(xs, Item(5), 2)
-xs.0.value
+class Box[T](val item: T)
+class Receiver[T] with
+  fun accept(box: Box[T]): () = ()
 ```
 
-The committed resolver cannot resolve `xs.0.value` because generic array input
-propagation is missing. Its expected result is `5`. A discarded implementation
-using two independent candidate-copying edges reached a different failure:
-transporting an expanded abstract candidate through a wildcard capture and back
-lost its original activation, letting it contaminate a real caller. The retained
-golden output does not reproduce that prototype's diagnostic. Both failures
-motivate the acceptance case: preserve type references and their contexts before
-observation, rather than trying to recover them from expanded candidates.
+On `Receiver[in Child out Base]`, `accept` expects `Box[Child]`: the occurrence of
+`T` is negative, and the invariant `Box` argument uses the selected `Child` for
+both parts. A declaration's `in` annotation does not itself change the lexical
+polarity at which a substituted argument is evaluated.
 
-## Resolver integration
+`DeclaredType.positive` records this lexical polarity, independently of a later
+constraint's direction. `TypeShape.Wildcard` retains written parts;
+`TypeShape.Argument` retains contextual references for synthesized variance.
+Neither transplants supplied syntax into the callee's binding environment.
 
-For the recursive example above there are three relevant versions of `A`:
+`TypeShape.SelectedArgument` saves a requested part when the argument is deferred.
+Both subsequent constraint directions use that same selected type. Selections are
+cached by argument reference and polarity; selecting an existing selection is
+idempotent. Forwarding cycles retain subscriptions but stop repeated observation.
+For a fixed argument-reference set, selection adds at most two nodes per reference.
+
+## Shared bodies and contextual constraints
+
+The inferred body is a shared graph. Instantiated views carry flat original-binder
+to instance-symbol substitutions through deferred tuples, records, callbacks, and
+closures. They do not copy expanded argument candidates into a new body graph.
+Shape substitution is memoized so repeated observations reuse aggregate identities.
+
+### Value views, consumed schemes, and activation events
+
+The similarly named forms in
+[`Shape.scala`](../hkmc2/shared/src/main/scala/hkmc2/semantics/Shape.scala)
+answer different questions. A **scheme** is a callable's explicitly quantified
+binders and their bounds. Consuming it chooses the canonical parameter instances
+for an authoritative instantiation site; it does not imply that a term argument
+list has been applied.
+
+| Form | Meaning | How it is consumed |
+| --- | --- | --- |
+| `ContextualShape(source, instances)` | Observe a shared value using these bindings for references inside it. This does not consume the value's own generic scheme. | Member/body observation uses the substitution; `shapeParts` extracts it before application. |
+| `SpecializedShape(declaration, arguments, instances)` | This declaration's scheme has already been consumed by explicit type application. Retain its supplied type references and chosen instance group. | `shapeParts` retains the supplied arguments, so `appShape` reuses the consumed group. |
+| `ActivatedShapeEvent(value, instances)` | Deliver an inference event to operations running in this body activation. The enclosed value retains its own, independent substitution. | `listen` checks compatibility, unwraps the envelope, and invokes the receiver in that activation. |
+
+All three `instances` fields map original binders to `TypeParameterInstance`
+symbols, but the first two describe the value, whereas the third describes the
+receiving operation. `ContextualSymShape` retains a value's substitution while
+an overload remains a `SymShape`, before selection produces a term shape.
+`ActivatedShapeEvent` accepts either a term shape or a symbolic shape as its payload.
+
+For a schematic nested definition:
 
 ```text
-A_body       original binder used to check the generic definition
-A_outer      instance for append(xs, Item(5), 2)
-A_recursive  instance for append(xs, value, n - 1)
+outer[A](a: A) defines inner[B](b: B) = (a, b), and returns inner.
 ```
 
-Further recursive visits reuse `A_recursive`; they do not create
-`A_recursive_recursive`. A second external application gets its own instance of
-`A`, but still reaches the same recursive application site. Its enclosing marks
-must keep the two external contexts distinct. The original abstract candidate of
-`A_body` must not be copied into the call instances: instantiate the declared
-constraints, not the generic body's accumulated unknown-value candidates.
+The returned `inner` captures an instance of `A`; its own `B` remains quantified.
+A contextual view retains the captured `A` without selecting an instance for `B`.
+Two later calls can instantiate `B` at their respective sites. Treating every
+contextual view as specialized would prevent that instantiation.
 
-Use constraints over these references, rather than restoring wildcard matches
-after copying expanded candidates. The argument endpoint retains its caller's
-substitution and context; the parameter endpoint uses the callee site's instances.
-An application must not overwrite both endpoints with the callee substitution.
+Conversely, in `let g = f[Int]`, the type application has already consumed `f`'s
+scheme, even if `g` has not received term arguments. `SpecializedShape` preserves
+that fact for an inferred declaration. Subsequent calls through `g` or its aliases
+reuse the chosen group. Treating this as only a contextual view would let
+`appShape` instantiate the declaration again. A complete annotated
+`CallableTypeShape` records the same transition differently: `instantiateCallable`
+substitutes its parameter/result references and clears `scheme`. Remaining curried
+lists retain those references; a separately quantified result has its own scheme.
 
-### Definition and application identities
-
-Use the stable `Term.App.resSym` as application identity, rather than taking a
-site from the callee's marks. Marks can identify a function reference shared by
-several applications:
-
-```mlscript
-let g = append
-g(xs, First(1), 2)
-g(ys, Second(2), 2)
-```
-
-These applications need distinct parameter instances. The two-array regression
-following the recursive `append` block in `newres/MutableArrays.mls` checks this
-case with different element interfaces.
-
-For construction, use `Term.New.resSym` and canonicalize the constructor and
-class to the same original owner. For an anonymous polymorphic annotation, the
-owner is its original quantified declaration node. An overload resolving to more
-than one definition instantiates each original definition at that site. Where
-the language implicitly invokes a getter, its source reference/selection is the
-invocation site; it is not a fresh site per resolver visit. Neither imported
-views nor instantiated callable views should manufacture a new original owner.
-
-### Binder substitution before observation
-
-Normalize binders from inline declarations and separate signatures into a
-reusable scheme with its parameter bounds, declared type fragments, and links to
-inference for unannotated parts. Do not require a complete signature. Currently,
-`typeResolution` strips `Forall` to its body; that loses the information needed
-to instantiate separate polymorphic signatures. Preserve the quantifiers first.
-
-An instantiated callable must retain one immutable substitution from that
-scheme's own binders to the site's parameter symbols. Use it for parameter
-annotations, results, nested callback types, bounds, and type arguments before
-`listenInstanceViews` expands a parameter. Enclosing class or function parameters
-remain captures; they are not binders of the nested definition being instantiated.
-
-Argument matching alone is insufficient. The generic body was elaborated using
-the original binders, and a returned tuple or closure can defer observing an
-annotated value until after the call. Carry the same substitution through those
-deferred observations. Keep generic-body checking on the original abstract
-activation; do not mutate the body or unconditionally connect its inference host
-to each call instance. The representation of these substituted body-result views
-is described below.
-
-### Shared graph and contextual views
-
-Retain one source graph per definition. Its nodes describe written type structure,
-references to binders, and inferred flows from parameters, expressions, and holes.
-Give references to that graph an explicit view consisting of:
+The activation envelope is independent of both cases. Suppose a recursive
+`f[A]` passes a value mentioning its caller's `A` into another call of `f`.
+Write `A@p` and `A@q` for the instances chosen at two static sites (these are
+explanatory names, not additional runtime identities). The incoming value must
+still refer to `A@p`, while operations on the callee's shared body run with
+`A -> A@q`. Schematically, delivery can therefore carry:
 
 ```text
-source node + originating inference host
-substitution of this node's free explicit binders
-existing normalized marks
+ActivatedShapeEvent(
+  ContextualShape(value, {A -> A@p}),
+  {A -> A@q})
 ```
 
-The binder substitution selects original binders or memoized call-site instances.
-It is a flat mapping over the source node's free binders, not a stack of past
-substitutions. Keep compound supplied types as graph references connected by
-constraints; do not insert their successive expansions into the substitution.
-Alias and nominal argument bindings likewise retain references to argument nodes,
-with recursive bindings represented by back-edges rather than nested map copies.
-This requires replacing the recursive structural use of `DeclaredType.bindings`
-where it would otherwise grow a new environment on every recursive visit.
+Replacing either map with the other would confuse the incoming value's type
+references with the callee's parameters. Marks still distinguish lexical
+activations when recursion revisits the same static site; these substitutions do
+not replace, cancel, or otherwise change mark operations.
 
-Memoize each view before observing its source node. Observing an inferred flow
-subscribes to its existing host in the consuming resolver and applies the view
-to arriving references. Observing a compound value exposes its outer shape while
-giving its deferred children the corresponding view. This applies to tuple and
-record fields, callable results, nested annotations, and closure captures; merely
-rewriting the outer `InstanceShape` is insufficient. Compose views by replacing
-bindings for the callee's own binders and retaining lexical captures, then discard
-bindings unused by the observed source node. Do not wrap a view in another view.
+`publishViewed` first applies the value substitution with `instantiateShape`,
+then `publishActivated` records the current `NewResolverState.instances` on the
+event. `listen` accepts an event when its map and the requested activation agree
+on every shared key; absent keys do not conflict. A source listener with an empty
+requested map therefore accepts all activations. On delivery, the receiver runs
+with the combined compatible activation maps, while the enclosed value keeps its
+own references. `NewResolverState.withInstances` shares consumer hosts, and
+`inGraph` preserves the incoming activation when invoking an imported listener.
+Publishers store `ShapeEvent`, a shared base with two alternatives: an ordinary
+`Shape` or an `ActivatedShapeEvent`. The envelope is not a `Shape` or `TermShape`,
+so it cannot enter member lookup, application, or mark transport. Its payload is
+a `Shape`, preventing nested event envelopes. Semantic listeners receive shapes
+only after dispatch. Ordinary shapes remain unwrapped when no activation is
+attached; dispatch contextualizes those values using the observing state.
 
-For `pair[A](x: A, y) = [x, y]`, the result's first field observes the annotation
-node under `A -> A_s`; the second subscribes to `y` under the call's marks. A
-closure returning `x` keeps the first reference after the enclosing call returns.
-The body, field nodes, and `y` symbol are shared; only their views differ.
+Event equality includes both the payload and activation. Repeated publication of
+one event is deduplicated, while the same shape in distinct activations remains
+separate. Publisher replay and imported-host copying retain the complete events;
+they do not replace saved activations with the state active during replay.
 
-Generic-body checking observes the source graph with its original abstract
-binders. Call inference observes it with the site's substitution. The abstract
-unknown produced to check operations on a rigid binder is a checking witness,
-not a lower bound to copy into the instantiated graph. Preserve the existing
-diagnostics for operations unsupported by `A`; do not suppress all unknown
-values or remove ordinary exposure-checking constraints. Keep the symbolic
-binder dependency until an observer has chosen its view. In particular,
-`registerTypeParameters` cannot keep seeding a host whose expanded candidates are
-then blindly reused as a call's inferred result.
+### Related interfaces and representation invariants
 
-### Constraints and marks
+The view normal form is enforced by the Scala types. `CoreShape` excludes
+`ContextualShape` and `SpecializedShape`, and `MarkedShape[T]` retains its core's
+type parameter. `AppShape.receiver` has type
+`CoreTermShape = CoreShape | MarkedShape[CoreShape]`: an application cannot contain
+a contextual or specialized receiver, even beneath marks or earlier applications.
+`ContextualShape.source` accepts only the shapes that defer substitution through
+a view (`AppShape`, `NewShape`, `DefnShape`, `BaseShape`, and `IntroShape`). It
+cannot contain another view, a marked shape, or a shape that stores substitutions
+directly. `SpecializedShape.declaration` is a `DefnShape`.
 
-Memoize a directed constraint by its two contextual type references, including
-their originating hosts. Keep three operations distinct:
+The symbolic counterpart follows the same rule: `ContextualSymShape.source` is
+a `CoreSymShape` (plain or declared), so it cannot wrap another contextual symbol.
+`CallableTypeShape.paramLists` is a `NELs[DeclaredParams]`: every callable view
+has a next argument list, even when that list itself accepts zero arguments.
+Consuming the last list exposes the result instead of constructing an empty
+callable view. Mapping parameter types preserves nonemptiness with `ne_map`.
 
-- An ordinary instance contributes a lower-bound obligation to its expected type.
-- Supplying a type reference retains that reference and delivers lower and upper
-  obligations to it, including obligations that arrive later.
-- Comparing compound types follows their structure and argument variance, using
-  the same contextual references at every recursive step.
+Value captures and body activations use the opaque `TypeSubstitution`, whose
+underlying immutable map remains available for reads. Its constructor derives
+each key from the instance's original binder. `withOverrides` combines two valid
+substitutions with the right operand taking precedence, and `without` removes
+shadowed binders. Both preserve the substitution type; arbitrary map updates do
+not. This rules out mismatched binder/instance pairs without runtime validation
+at every `DeclaredType` construction.
 
-Register listeners before replaying existing facts. Adding either a bound or a
-supplied type must process the other facts already present, so event order does
-not matter. For invariant arguments, install both directed constraints between
-the retained endpoints; do not obtain the second by reversing a path already
-applied to expanded candidates. Preserve a supplied union as a whole in negative
-position. Deduplicate relations and delivered obligations by semantic references,
-not by diagnostic witnesses.
+Consequently, `shapeParts` can decode one outer marking and one view with an
+exhaustive match. It returns a `CoreTermShape`, its captured instances, and any
+consumed type arguments. It preserves the application chain: peeling applications
+would forget consumed term lists and could mistake a constructed object for a
+constructor. Application, callback checking, constructor lookup, and constructor
+patterns share this decoder. `ShapeViews.mls` exercises nested captures,
+specialized curried values, callback constraints, and constructor-pattern controls.
 
-Existing marks still transport instance flow through lexical scopes and distinguish
-enclosing activations sharing a static inner call. Apply their current entry/exit
-operations to each endpoint in its own view. A callee's symbol allocation key
-does not include marks, and a caller's view is not replaced by a wildcard when
-forming the reverse constraint. The proposal adds no mark syntax, path truncation,
-or cloned lexical boundaries. Enable the existing path invariants in focused
-solver tests to catch a mistaken context composition rather than masking it.
+These roles must also be distinguished from interpreting an annotated instance:
 
-### Partial signatures and inference holes
-
-Instantiation applies to explicit type binders even when the rest of a definition
-is only partially annotated. The recursive `append[A]` example already has an
-inferred result. A more direct example mixes annotated and unannotated inputs:
-
-```mlscript
-private fun pair[A](x: A, y) = [x, y]
-```
-
-At an application site `s`, instantiate `A` as `A_s`. The annotation of `x`
-becomes `InstanceShape(A_s)`. The unannotated `y` retains its existing value-flow
-symbol and obtains argument shapes under the call's marks. Infer the result from
-the body: its first field retains the reference to `A_s`, and its second field
-retains the marked flow from `y`. Neither `y` nor the result needs an invented
-quantified parameter or a fresh type variable at the call.
-
-The substitution must survive delayed tuple-field observations. Likewise, in
-`private fun apply[A](x: A, f) = f(x)`, the unannotated callback and its result
-must remain connected to the contextual `A`. Both examples, called with distinct
-element interfaces, currently pass in
-[`newres/PartialSignatures.mls`](../hkmc2/shared/src/test/mlscript/newres/PartialSignatures.mls).
-The instantiation refactor must preserve that behavior.
-
-Represent a partial signature position by position:
-
-| Part of the definition | Source of its interface at a call |
+| Form | Role |
 | --- | --- |
-| Explicit type binder `A` | The memoized call-site instance `A_s` |
-| Written type fragment | Its instance wrapper, using the call's substitution |
-| Unannotated value parameter | Its existing inference host and marks |
-| Unannotated result | The body's flow graph, retaining substitution and marks |
-| Inferable hole within a type | A stable inference node for that source hole, under marks |
+| `InstanceShape` | Preserve a `DeclaredType` reference in a value constraint, including its input and output uses. `listenInstanceViews` interprets it when an operation requests an interface. |
+| `NominalInstanceView` | Expose a nominal type's declared members and inherited interface with their argument bindings. |
+| `RecordTypeShape` | Expose a structural annotation's declared fields and their argument bindings. |
+| `CallableTypeShape` | Expose a declared calling interface. `scheme` records whether quantified binders remain available for instantiation. |
 
-**Inferable holes use ordinary marked inference, not anonymous quantified
-parameters.** This is the agreed semantics; hole syntax is not selected here.
-For schematic `Array[?]`, retain the declared `Array` structure and connect its
-element position to the hole's inferred flow. Reuse the source hole's node across
-visits and distinguish contexts with marks. No call-site symbol copy is allocated
-for the hole. Constraints follow the position's input/output polarity as usual.
-An empty hole is pending inference, not an `UnknownValueShape` candidate to emit
-immediately: later evidence may resolve it. At completion, a hole without usable
-evidence supplies no member interface and does not grant dynamic access. An
-unknown alternative actually contributed by exposure checking is different and
-must remain even if some concrete candidates arrive too.
+`ContextualShape` is the general deferred value view, not a mandatory wrapper
+around every substituted shape. Tuples and records store their substitutions
+directly; `InstanceShape` stores one inside its `DeclaredType`; declared interfaces
+substitute their references. `instantiateShape` centralizes these cases and
+memoizes their results. Applying another substitution composes flat maps rather
+than nesting contextual wrappers. Entries already captured by a value take
+precedence over a later observation's map. For an open `CallableTypeShape`, its
+own quantified binders are excluded from capture substitution.
 
-An inference hole must be distinguishable from an intentionally abstract type,
-an `in`/`out` wildcard, and an unresolved or invalid annotation. These must not
-all collapse to `TypeShape.Abstract`, which the current interpreter uses for
-several unsupported forms. Inferring one missing piece must not add members to
-an explicitly written concrete interface elsewhere in the annotation.
+The semantic requirements are independent value and activation substitutions,
+and an explicit distinction between open and consumed schemes. The first two
+value forms express scheme status separately; the event envelope belongs to the
+publisher protocol and shares no value operations with them.
 
-**Omitted generic arguments are inference holes too.** For `Pair[A, B]`, a written
-`Pair[Int]` supplies `Int` for `A` and a hole for `B`; bare `Pair` has two distinct
-holes. Identify each omission by its source type-use occurrence and missing formal
-parameter. Two occurrences do not share a hole just because they name the same
-class. Reinterpreting an occurrence, following an alias, or observing another
-member reuses its contextual hole reference. Apply declaration-site variance to
-the missing argument just as to an unqualified written argument. Explicit
-`in`/`out` arguments retain their stated defaults; their absent parts are not holes.
+Keeping both maps does not itself introduce a chain of environments. Their keys
+are original binders and their values are canonical instance symbols, not further
+substitutions. `withInstances` reuses a fixed base state; `listen` removes the event
+envelope before handing its value to the operation. For a fixed finite set of
+binders and instantiation sites, there are finitely many such maps and map pairs.
+This is a local bound, not a proof of termination of the entire type graph; see
+[canonical references and termination obligations](#canonical-references-and-termination-obligations).
 
-For `type HalfPair[T] = Pair[Int, T]`, a bare `HalfPair` introduces a hole for
-`T` at that use, and the alias body forwards that reference into `Pair`'s second
-argument. An omission written inside an alias body has its own source node and
-is transported with the alias use's context; expansion must not allocate more
-hole symbols. Excess arguments still indicate an arity error.
+### Checking witnesses and constraint edges
 
-The positive `Pair[Int]`, `HalfPair`, and bare `Array` cases in
-`newres/PartialSignatures.mls` record this missing behavior as `:fixme`s. Existing
-`DeclaredTypes.mls` examples selecting members from omitted arguments without any
-supporting flow remain negative tests: a hole is inferable, not evidence of an
-arbitrary member. Replace the current unconditional `abstractType` treatment of
-omissions; report insufficient inferred information when a genuinely unfilled
-hole is observed.
+Generic bodies also receive a checking activation containing `RigidTypeShape`
+witnesses. Those witnesses enforce generic opacity even in private/non-strict
+code. Interface observation sees an unknown interface; call-site inference must
+not copy a checking witness into its bounds.
 
-The scheme therefore cannot be a closed type synthesized from whatever shapes
-happen to be available first. It must retain live links to inferred portions of
-the definition, including bounds arriving later or through recursion. Existing
-exposure checks for unannotated parameters and generic-body checking still apply;
-partial annotations must not silently disable either.
+`constrainTypes` memoizes directed pairs of `ContextualType` endpoints before
+installing subscriptions. Invariant arguments install both directions. A parameter
+receives a symbolic instance wrapper; structured and concrete endpoints retain
+listeners for future bounds. Delivery before and after edge creation must agree.
+Relation replay adds no candidates, listeners, or parameter instances.
 
-### Inferred member signatures through nominal annotations
+## Scope transport
 
-The agreed partial-signature semantics also apply to a selected member's missing
-types through a nominal annotation. For example:
+`ContextualType` pairs a reference with an ordinary normalized mark path.
+`transportType` uses the same mark operations as value flow and
+flattens existing contextual nodes before interning the endpoint; references contain
+one normalized path, not nested transport histories. `inverseMarks` reverses
+directions for constraint transport; it is not a mathematical inverse
+on candidates. A wildcard exit can consume an entry carrying a call-site ID.
+Re-entering without an ID does not restore it. Exit followed by entry must not be
+cancelled as an identity, including on deferred references.
 
-```mlscript
-class Item(val value: Int)
-class Box with
-  fun item() = Item(1)
-private fun read(x: Box) = x.item().value
-read(new Box)
-```
+The relevant scope crossings are:
 
-Use `Box.item`'s inferred result here, consistently with partial function
-signatures. Missing parameter types, constructor-field types, and value-member
-types likewise link to the selected declaration's inference graph. Keep the
-receiver's context on those links; using the class's unmarked global inference
-would mix distinct instances. A nominal constraint must retain the actual
-receiver's contextual flow as an input to these missing member types. The current
-wrapper containing only a closed declared interface cannot recover an unannotated
-constructor field after that receiver flow has been discarded. Keep the receiver
-reference on the inferred member connection, while using the written nominal
-type for lookup; do not replace the annotation's view with the actual receiver's
-whole shape. Explicitly annotated member portions still use their written types.
-Class-qualified selections and overloaded names
-use the selected member's own scheme, including the term alternative of an
-overloaded name. The corresponding examples in `DeclaredTypes.mls` are now
-`:fixme` acceptance cases instead of requirements to reject inference.
+- Function/method entry and exit, and lexical captures of enclosing definitions.
+- Nominal member projection: capture argument references into the class and exit
+  the class when publishing its selected member view. Inherited members also exit
+  the class through which they are selected, since the parent reference is
+  captured into that class.
+- Constructor invocation: use the same instance boundary for its class and
+  constructor, including later parameter lists.
 
-The nominal member set stays fixed: a `Base` annotation must not expose members
-found only on `Child`. Overrides must satisfy the selected declaration's input/output
-constraints. It is insufficient to assume that the base method's body describes
-every dynamic dispatch result. In particular, a base method returning `Item` and
-an override returning a type without `Item`'s members cannot justify selecting
-those members from the dispatched result. `PartialSignatures.mls` retains this
-negative regression. Connect override signatures to the inherited interface
-before completing member targets, following function input/output variance;
-do not expose an unchecked base implementation shape as a dispatch guarantee.
-Preserve the existing member-target completion checks for imported code as well.
+`Marks` stores the most recent crossing first. `shape.exit(path)` applies the
+tail before the head; a list of path fragments is applied from left to right.
+`shape.enter(fragments)` reverses both directions and fragment order. Thus
+`shape.enter(p :: q :: Nil)` agrees with `shape.enter(q).enter(p)`.
+For one boundary, entering at site `i` and then exiting at site `j` cancels when
+either site is absent or the sites agree, and rejects the candidate otherwise.
+Exiting and then entering retains both crossings. Associativity of composition
+does not make these two operations mutual inverses.
 
-### Partial application and explicit specialization
+Alias qualification and structural type-field projection introduce no value scope.
+Modules introduce no invocation boundary. Transport must follow the source
+reference's scope, including references nested inside structured types; inspecting
+only whether an outer shape is marked cannot decide this. `transportShape`
+composes paths on deferred instance references before delivering them at projection
+and result boundaries. Leaving a wildcard entry outside a wrapper could consume a
+call exit before the wrapper's own path was considered.
 
-For curried calls, instantiate when the first parameter
-list is consumed and retain that substitution in the partially applied callable.
-Later lists reuse it. A separately quantified returned callable has its own
-binders to instantiate at its later application. A standalone specialization such
-as `let g = f[Int]` retains its supplied type arguments until application;
-each application of `g` then binds its own site instances to `Int`. This avoids
-introducing a second allocation policy at type-application nodes. Check argument
-arity against the retained scheme immediately, and allow observations of the
-specialized interface to use its supplied type references before a term call.
+A declared member is located at its class's definition, where its signature's
+`Capture` nodes start. A receiver path starts where the value was created or
+annotated instead. Its innermost exits from scopes that do not enclose the class's
+definition are the receiver's provenance: they transport the class's argument
+bindings, but not the member's own scope. Otherwise a member's scope would move
+with each receiver's origin. Receivers created at different depths then disagree
+about the scopes that enclose shared nodes such as a method's type-parameter
+instance at one call site, and a candidate published through one receiver crosses
+a scope twice when read through another. `NewResolver.nominalMember` performs this
+split using the enclosing scopes that elaboration records for each type definition.
+`newres/Arrays.mls` and `GenericMethods.mls` cover recursive and nested receivers.
 
-### Constraint propagation and implementation order
+New-resolution syntax records lexical `Capture` nodes, including in the prelude.
+Imported type interpretations retain these source references in the consuming
+graph; they do not reconstruct capture paths from selected member parameters.
 
-1. Preserve partial declaration/signature schemes and their original identities,
-   including links to inferred portions. Distinguish inference holes from
-   intentionally abstract types and variance wildcards. Add a
-   consumer-owned cache of complete call-site instances, with origin links back
-   to the declared binders. Keep omissions source-owned; do not add mutable caches
-   to symbols. Preserve `Forall` binders and their bounds instead of erasing them.
-2. Transport the memoized substitution through callable and result views before
-   expanding instance wrappers. Keep the existing marks for value flow and
-   lexical captures. Separate generic-body checking witnesses from the symbolic
-   constraints replayed in a call view. Verify delayed fields and returned closures.
-3. Relate the resulting type references in both input and output positions,
-   retaining their hosts, substitutions, and marks. Ordinary arguments contribute
-   bounds; supplied types receive all obligations at their applicable polarity.
-   Apply the InvalML variance rules above.
-4. Replace `applyTypeArguments`, nominal inference, explicit-argument suppression,
-   and the positive-only conversion in `instanceBindings` together. Reuse the
-   same mechanism for functions, constructors, and declared array interfaces.
-5. Route declared member lookup to partial member schemes, retaining receiver
-   contexts for inferred fields and results. Check override compatibility before
-   completing member targets. Convert the member-inference `:fixme`s together;
-   keep tests rejecting subclass-only members and unsupported override results.
+For mutable array literals, the nominal interface lives at the literal's use site.
+The allocation context belongs to its element-parameter reference. Attaching that
+exit to the whole interface would duplicate the class exit during member lookup.
 
-Keep this work inside resolution and type interpretation. Lowering still consumes
-completed member targets and value shapes; runtime values acquire no type-argument
-objects. The main source changes are in `TypeShape.scala` (schemes and contextual
-references), `NewResolverState.scala` (consumer-owned memo tables),
-`NewResolver.scala` (view observation and constraint delivery), and `Shape.scala`
-(transporting views through deferred children). Elaborator signature registration
-must preserve binders and missing positions before the body is observed.
+## Partial signatures and inference holes
 
-### Fixed points and implementation checks
+Unannotated function parameters and results use ordinary marked inference.
+Omitted generic arguments use one `TypeShape.Hole` host per source type-use and
+formal position. They receive constraints from arguments, results, and ascriptions;
+no invocation allocates another hole or a quantified binder for it. For example,
+`Pair[Int]` omits the second formal of `Pair[A, B]`, while bare `Pair` omits both.
+Distinct source occurrences have distinct holes; revisiting one occurrence or
+expanding its alias reuses it. Declaration variance applies to omitted arguments,
+and excess arguments are rejected, including in unused annotations. An empty hole
+waits for evidence instead of immediately publishing an unknown candidate.
 
-There are at most as many allocated parameter instances as the sum of each
-reachable definition's binder count over its syntactic call sites. Source hole
-nodes and written type/term nodes are finite independently of recursive visits.
-View substitutions range over the finite original and instantiated binders in
-lexical scope. With the existing no-repeated-boundary mark invariant, their
-normalized contexts also range over a finite domain. These facts bound the set
-of memoized views and endpoint pairs **provided** compound arguments remain shared
-graph edges and no cache key includes a growing substitution or capture history.
-Monotone, deduplicated propagation then reaches a fixed point.
+Written fragments continue to restrict the interface. Abstract types remain
+`TypeShape.Abstract`; variance extremes are not holes. Interface exposure adds
+unknown values to genuinely missing external inputs, including callback results.
+Those unknown candidates remain alongside any local evidence.
 
-Check this at the graph layer as well as with worksheets. Replaying an existing
-definition/site must leave the instance count unchanged; replaying the same view
-or relation must add neither a listener nor a node. Include mutually recursive
-definitions and changing arguments such as a recursive call with `Array[A]`:
-the recursive site's parameter must receive a cyclic reference to the source
-`Array[A]` expression, not generate `Array[Array[...]]` nodes on every pass.
-Verify obligations delivered before and after edge creation, and two callers of
-one inner site with different enclosing marks. Count cache growth until saturation;
-passing a shallow recursion test is not sufficient evidence of termination.
+Current limitations are [omitted-argument context precision](new-resolution-future-work.md#omitted-argument-contexts)
+and [missing selected member types](new-resolution-future-work.md#inferred-member-signatures).
 
-During implementation, assert that a call instance's origin is an original binder,
-all of one scheme's binders are allocated before its constraints are activated,
-views are composed rather than nested, and generic checking witnesses never become
-ordinary instantiated lower bounds. Retain consumer-private host copies and the
-existing prohibition on changing completed member targets. The design review does
-not license changing mark normalization if these checks fail; any such change
-requires a separate concrete example and proposal.
+## Canonical references and termination obligations
 
-## Acceptance checks
+Source dependency analysis computes free original binders over the finite
+`TypeResolution` graph. Alias/quantifier edges hide their bound formals; an alias
+application forwards argument dependencies only for formals used by its body.
+Monotone finite-set equations reach a least fixed point. Nominal arguments remain
+relevant, and nominal declarations conservatively retain all enclosing explicit
+binders recorded by elaboration, including dependencies through local aliases.
 
-- An initially empty mutable array receives an element through `Array[A]`.
-- Two calls using different arrays and incompatible element interfaces remain
-  independent, including two callers of the recursive example above.
-- A repeated visit to the same definition/site reuses its parameter symbols;
-  two application sites through one alias obtain distinct instances. An inner
-  site shared by different enclosing activations remains distinguished by marks.
-- Inline and separate polymorphic signatures instantiate consistently, with or
-  without explicit call-site type arguments. Partial applications retain their
-  substitutions and captured outer binders retain their original contexts.
-- Mixed annotated/unannotated inputs and inferred results preserve the passing
-  tuple and callback cases in `newres/PartialSignatures.mls`. Nested inference
-  holes retain written structure and use marked inference without extra
-  call-site symbols; known annotation fragments still restrict the interface.
-- Selected members infer missing types through nominal annotations, including
-  constructor fields, method results, and overloaded value members. Receiver
-  contexts remain distinct; subclass-only members and unsafe override results
-  remain rejected. Deferred closure observations preserve the outer substitution.
-- Recursive input/output relations terminate with bounded call-site instances,
-  no repeated-boundary paths, and no unbounded binding-environment construction.
-- Declaration-site `in`/`out`, use-site `in`/`out`, their overrides, and nested
-  function polarity agree with InvalML.
-- Explicit function type arguments constrain callback inputs even when the
-  function never calls the callback locally.
-- Two supplied types at one activation each receive every relevant bound; one
-  supplied union remains a single negative constraint target. Inspect delivery
-  directly where concrete mismatch diagnostics are intentionally quiet.
-- Candidates arriving before or after relations produce the same result.
-  Separate importers leave the exporter and prelude hosts unchanged.
-- Generic-body checking, interface exposure, and completed member targets remain
-  intact. Run `ctest` before focused worksheets and `hkmc2AllTests/test` before
-  completion; review and commit the generated golden outputs.
+No summary is finalized while a reachable source target is unresolved. Observations,
+constraints, and hole exposure wait on shared dependency hosts, then project their
+own saved environments. Synthetic formula/argument/selection nodes follow their
+saved references instead of reading an ambient binding map. This removes irrelevant
+bindings without freezing inference candidates or treating forward references as closed.
 
-Precise array positions/lengths, loud concrete-mismatch diagnostics, optional
-`splice` arguments, general storage reassignment, and handler inference remain
-separate work.
+[Regular structural types](new-resolution-regular-types.md) specifies guarded alias
+recursion, alias reduction, Boolean normalization, and the conservative
+constructor-cycle rejection check.
+Accepted recursive references must share graph edges rather than grow substituted
+environments. Structural recursion and recursive generic function constraints are
+different: a call can add an edge to a reusable parameter instance without eagerly
+unfolding its accumulated bounds.
+
+For a fixed set of instantiation sites, the binder cache allocates finitely many
+instances, so flat substitutions over the original binders also have a finite range.
+Source holes have stable identities. Normalized paths contain distinct lexical
+boundaries in each direction; their bounded length gives finitely many paths only
+when their site labels also range over a finite set.
+Formula normalization is finite for a fixed atom set. These bounds do not alone
+establish finiteness of nested binding environments or the atom set.
+
+Structural field constraints now reuse source projection sites, and partial
+forwarding aliases share deferred interpretation's source-hole binding rules.
+Wildcard normalization similarly retains canonical argument parts rather than
+nested substitution histories. Their regressions establish these local bounds;
+a [whole-graph termination argument](new-resolution-future-work.md#whole-graph-convergence-audit)
+must still cover all accepted contextual references, formula atoms, and listener
+convergence. Depth limits and dropped marks do not establish a fixed point.
+
+These representations are internal to resolution. Lowering consumes completed
+targets and value shapes; runtime values acquire no type-argument objects.
+
+## Validation
+
+Graph tests cover bounded instance allocation and replay (`TypeInstantiationTest`), directed
+relations, delayed targets and consumer isolation (`TypeRelationTest`), and Boolean
+normalization, including substitutions that identify atoms (`TypeFormulaTest`).
+`MarksTest` checks activation matching, normalized composition, regrouping, reverse
+transport, and wildcard identity loss across nested and sibling scopes.
+These algebraic checks cover combinations that worksheet examples cannot exhaust.
+`PublisherTest` checks exporter immutability.
+
+Worksheet coverage under `newres` includes `MutableArrays`, `ContextualInference`,
+`InstantiationSites`, `StoredSpecializations`, `SpecializationCaptures`,
+`TypeArgumentVariance`, `VarianceSubstitution`, `AnnotationContexts`, and
+`TypeGraphTermination`. Deferred cases retain explicit regression expectations;
+see the [future-work reference](new-resolution-future-work.md).

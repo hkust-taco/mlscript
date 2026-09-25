@@ -72,11 +72,15 @@ final class InterfaceExposure(resolver: NewResolver)(using NewResolverState, TL)
               case shape: TermShape => listener(shape)
               case NoShape => ()))(emit(_, path))
 
-  private def parameter(param: Param, marks: Ls[Marks], path: Path)(using NewResolverState): Unit = if resolver.parameterSignature(param).isEmpty then
+  private def parameter(param: Param, marks: Ls[Marks], path: Path)(using NewResolverState): Unit =
     val ref = SimpleRef(param.sym)(param.sym.id)
     val unknown = UnknownValueShape(ref)(ShapeProvenance(
       (msg"Parameter '${param.sym.nme}' admits values of unknown shape." -> param.toLoc) :: path.diagnosticNotes))
-    resolver.constrainParameter(param, unknown.enter(marks), marks)
+    resolver.parameterSignature(param) match
+      case N => resolver.constrainParameter(param, unknown.enter(marks), marks)
+      case S(tpe) => unknown.enter(marks) match
+        case value: TermShape => resolver.exposeTypeHoles(tpe.instantiate(rstate.instances), value, marks)
+        case NoShape => ()
 
   private def parameters(lists: Ls[(ParamList, Ls[Marks])], path: Path)(using NewResolverState): Unit =
     lists.foreach: (params, marks) =>
@@ -101,15 +105,31 @@ final class InterfaceExposure(resolver: NewResolver)(using NewResolverState, TL)
       // Check returned implementations against the declared calling interface.
       // Its parameter types constrain returned closures instead of unrestricted
       // unknowns, and consumers see only the annotated result.
-      val declared = resolver.declaredType(resolver.typeResolution(sign), Map.empty)
+      val declared = resolver.declaredType(resolver.typeResolution(sign), Map.empty).instantiate(rstate.instances)
       watch((new Identity(body), declared, marks))(resolver.listenTerm(body)): shape =>
         resolver.constrainFunction(declared, shape, marks)
       watch((declared, marks))(resolver.listenTypeInstances(declared)): shape =>
         emit(shape.exit(marks), path)
 
-  private def value(shape: TermShape, path: Path)(using NewResolverState): Unit =
+  private def value(shape: TermShape, path: Path)(using NewResolverState): Unit = valueIn(shape, path, rstate.instances)
+
+  private def valueIn(shape: TermShape, path: Path, instances: TypeSubstitution)(using NewResolverState): Unit =
     val (head, marks) = shape.applicationHead
+    def contextualTerm(value: Term, context: Ls[Marks], path: Path,
+        substitution: TypeSubstitution)(using NewResolverState): Unit =
+      watch((new Identity(value), context, substitution))(
+        listener => resolver.listenTerm(value)(listener)(using rstate.withInstances(substitution))): shape =>
+          emit(resolver.instantiateShape(shape, substitution).exit(context), path)
     head match
+      case contextual: ContextualShape => contextual.source.exit(marks) match
+        case value: TermShape =>
+          val substitution = instances.withOverrides(contextual.instances)
+          valueIn(value, path, substitution)(using rstate.withInstances(substitution))
+        case NoShape => ()
+      case specialized: SpecializedShape =>
+        resolver.instantiateShape(specialized.declaration, instances.withOverrides(specialized.instances)).exit(marks) match
+          case value: TermShape => valueIn(value, path, instances)
+          case NoShape => ()
       case _: InstanceShape =>
         watch((shape, "instance view"))(resolver.listenInstanceViews(shape))(emit(_, path))
       case ds: DefnShape if ds.defn.sym.getState is rstate.owner =>
@@ -129,7 +149,7 @@ final class InterfaceExposure(resolver: NewResolver)(using NewResolverState, TL)
       case intro: IntroShape => intro.trm match
         case Lam(_, body) =>
           parameters(shape.unappliedParams, path)
-          term(body, marks, path.via(msg"This value is returned here." -> body.toLoc))
+          contextualTerm(body, marks, path.via(msg"This value is returned here." -> body.toLoc), instances)
         case _ => ()
       case tuple: TupleShape => tuple.segments.foreach:
         case field: TupleShape.Fixed =>
@@ -137,12 +157,21 @@ final class InterfaceExposure(resolver: NewResolver)(using NewResolverState, TL)
             emit(shape.exit(marks), path.via(msg"This value is stored in this tuple." -> tuple.source.toLoc))
         case _ => ()
       case record: RecordShape => record.elements.foreach:
-        case RecordShape.Field(field) => term(field.rhs, marks,
-          path.via(msg"This value is stored in this record field." -> field.toLoc))
-        case RecordShape.Spread(inner, context) => emit(inner.exit(context).exit(marks), path)
+        case RecordShape.Field(field) => contextualTerm(field.rhs, marks,
+          path.via(msg"This value is stored in this record field." -> field.toLoc), instances.withOverrides(record.instances))
+        case RecordShape.Spread(inner, context) =>
+          emit(resolver.instantiateShape(inner, instances.withOverrides(record.instances)).exit(context).exit(marks), path)
         case _ => ()
       case base: BaseShape => members(base.defn, marks, path)
       case callable: CallableTypeShape =>
+        // Written structure constrains external values; missing output parts
+        // still admit unknown shapes even when local callers supplied evidence.
+        val unknown = UnknownValueShape(callable.source)(path)
+        callable.paramLists.foreach: params =>
+          (params.params.flatten ::: params.rest.toList).foreach: input =>
+            unknown.enter(marks) match
+              case value: TermShape => resolver.exposeTypeHoles(input, value, marks)
+              case NoShape => ()
         callable.result.foreach: result =>
           watch((result, marks))(resolver.listenTypeInstances(result)): shape =>
             emit(shape.exit(marks), path)
@@ -154,7 +183,7 @@ final class InterfaceExposure(resolver: NewResolver)(using NewResolverState, TL)
             emit(element, path.via(msg"This value is stored in this array." -> binding.resolution.source.toLoc))
       // Structural annotations hide initializer implementations. Unknown and
       // dynamic values have no static graph.
-      case _: (RecordTypeShape | OpaqueTypeShape | UnknownValueShape | DynShape | ErrShape) => ()
+      case _: (RecordTypeShape | OpaqueTypeShape | UnknownValueShape | RigidTypeShape | DynShape | ErrShape) => ()
 
   def check(exports: Ls[BlockMemberSymbol], values: Ls[Term]): Unit =
     try

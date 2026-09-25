@@ -1,8 +1,8 @@
 import "./Block.mls"
-import "./LegacyOption.mls"
+import "./Option.mls"
 
 open Block { Literal, ClassSymbol, showSymbol, isPrimitiveType, isPrimitiveTypeOf }
-open LegacyOption
+open Option
 
 type Shape = Shape.Shape
 
@@ -57,7 +57,7 @@ fun silh(p: Case): Shape = if p is
     Class(sym, Array(size).fill(Dyn))
   Block.Tup(n) then Arr(Array(n).fill(Dyn))
 
-// TODO: use LegacyOption instead, since all of them return at most one shape
+// TODO: use Option instead, since all of them return at most one shape
 fun filter(s: Shape, p: Case): Array[Shape] =
   if [s, p] is
     [Lit(l1), Block.Lit(l2)] and l1 == l2 then [s]

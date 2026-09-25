@@ -1,0 +1,131 @@
+:.
+
+// Control: an explicit type argument supplies the declared member interface.
+class Item(val value: Int)
+declare fun make: [A extends Item] -> () -> A
+private fun read() = make[Item]().value
+
+// FIXME: Every result satisfies the upper bound, even without explicit arguments.
+// The upper constraint is installed, but observing an unconstrained instance
+// still has no interface. Its guarantee must be kept apart from lower candidates.
+:fixme
+class Item(val value: Int)
+declare fun make: [A extends Item] -> () -> A
+private fun read() = make().value
+//│ ╔══[COMPILATION ERROR] This selection of member 'value' has no resolved target
+//│ ║  l.14: 	private fun read() = make().value
+//│ ╙──      	                     ^^^^^^^^^^^^
+
+// FIXME: A generic implementation should also be checked using its upper bound.
+:fixme
+class Item(val value: Int)
+fun read: [A extends Item] -> A -> Int
+fun read(x) = x.value
+//│ ╔══[COMPILATION ERROR] This selection of member 'value' has no resolved target
+//│ ║  l.23: 	fun read(x) = x.value
+//│ ╙──      	              ^^^^^^^
+
+// A lower bound must supply an inference constraint before the result is used.
+class Item(val value: Int)
+declare fun make: [A restricts Item] -> () -> A
+private fun read() = make().value
+
+// Dependent lower bounds share the entire instance group, including binders
+// whose arguments arrive after the bound relation is installed.
+class Item(val value: Int)
+declare fun make: [A, B restricts A] -> A -> B
+private fun read() = make(Item(1)).value
+
+class Item(val value: Int)
+declare fun make: [A restricts B, B restricts Item] -> () -> A
+private fun read() = make().value
+
+// An upper-bound relation must infer the nested argument from a later A input.
+class Item(val value: Int)
+class Box[T](val item: T)
+declare fun make: [A extends Box[B], B] -> A -> B
+private fun read() = make(new Box[Item](Item(2))).value
+
+// An explicit A supplies the same upper-bound obligation without a value input.
+class Item(val value: Int)
+class Box[T](val item: T)
+declare fun make: [A extends Box[B], B] -> () -> B
+private fun read() = make[Box[Item], Item]().value
+
+// Lower bounds constrain a supplied type, but do not enlarge its interface.
+:e
+class Base
+class Child(val extra: Int) extends Base
+declare fun make: [A restricts Child] -> () -> A
+private fun read() = make[Base]().extra
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.60: 	private fun read() = make[Base]().extra
+//│ ║        	                     ^^^^^^^^^^^^^^^^^^
+//│ ╙── Value of type 'Base' does not contain member 'extra'
+
+// A by-name invocation consumes the quantified scheme at the selection itself.
+// Its recursive body supplies no concrete candidate.
+class Item(val value: Int)
+fun make: [A restricts Item] -> A
+fun make = make
+private fun read() = make.value
+
+// A recursive lower bound connects a finite graph instead of unfolding a tree.
+declare fun make: [A restricts {next: A}] -> () -> A
+private fun walk(n: Int) =
+  let x = make()
+  if n > 0 then x.next.next.next else x
+
+// Upper bounds are obligations, not additional inferred lower candidates.
+// Seeding Base into A's candidate host would incorrectly hide Child.extra.
+class Base
+class Child(val extra: Int) extends Base
+declare fun identity: [A extends Base] -> A -> A
+private fun read() = identity(Child(4)).extra
+
+// A generic body cannot assume its lower bound's members: A may be a supertype.
+:e
+class Item(val value: Int)
+fun read: [A restricts Item] -> A -> Int
+fun read(x) = x.value
+//│ ╔══[COMPILATION ERROR] This selection of member 'value' has no resolved target
+//│ ║  l.90: 	fun read(x) = x.value
+//│ ╙──      	              ^^^^^^^
+
+// Capturing an enclosing binder specializes the bounds as well as the result.
+:expect [5, 6]
+class First(val first: Int)
+class Second(val second: Int)
+private fun make[T](item: T) =
+  fun nested: [A restricts T] -> () -> A
+  fun nested() = item
+  nested
+[make(First(5))().first, make(Second(6))().second]
+//│ = [5, 6]
+
+// FIXME: The recursive body leaks a checking-only T candidate through its
+// inferred constraints, even though the declared receiver fixes T to Item.
+:fixme
+class Item(val value: Int)
+class Provider[T] with
+  fun make: [A restricts T] -> A
+  fun make = make
+private fun read(provider: Provider[Item]) = provider.make.value
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.113: 	private fun read(provider: Provider[Item]) = provider.make.value
+//│ ║         	                                             ^^^^^^^^^^^^^^^^^^^
+//│ ╟── Cannot resolve member 'value' of a value with unknown shape.
+//│ ╟── This type annotation supplies the value's shape.
+//│ ║  l.111: 	  fun make: [A restricts T] -> A
+//│ ║         	                         ^
+//│ ╟── Type parameter 'T' does not specify a member interface.
+//│ ║  l.110: 	class Provider[T] with
+//│ ╙──       	               ^
+
+// Without that recursive checking edge, the declared receiver supplies its
+// lexical class bindings to the by-name bound. The body supplies no candidates.
+class Item(val value: Int)
+class Provider[T] with
+  fun make: [A restricts T] -> A
+  fun make = throw 0
+private fun read(provider: Provider[Item]) = provider.make.value

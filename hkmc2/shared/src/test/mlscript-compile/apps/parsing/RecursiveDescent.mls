@@ -2,14 +2,14 @@
 
 import "../../Predef.mls"
 import "../../Stack.mls"
-import "../../LegacyOption.mls"
+import "../../Option.mls"
 import "../../Iter.mls"
 import "./Token.mls"
 import "./BasicExpr.mls"
 
 open Predef { mkStr }
 open Stack
-open LegacyOption { Some, None }
+open Option { Some, None }
 open Token { Round, LiteralKind }
 open BasicExpr { Expr }
 

@@ -24,54 +24,53 @@ active against private host data, but cannot change completed reference targets.
 This applies even between worksheet blocks sharing an elaborator state. An unknown
 reaching a sealed elimination can still report an error without changing its target.
 
-[`CompilerCacheTest`](../hkmc2/jvm/src/test/scala/hkmc2/CompilerCacheTest.scala)
-checks independent consumers and unchanged source candidates, listeners, and
-legacy annotations. [`PublisherTest`](../hkmc2/jvm/src/test/scala/hkmc2/PublisherTest.scala)
-covers cycles, reentrant replay, transitive private inference, and bounded copying
+[`PublisherTest`](../hkmc2/jvm/src/test/scala/hkmc2/PublisherTest.scala)
+checks independent consumers and unchanged source candidates and listeners,
+cycles, reentrant replay, transitive private inference, and bounded copying
 in the presence of unrelated exporter hosts. `newres/GenericMethods.mls` covers
 exported mapped arrays and imported generic functions and methods.
 
 ## Captures and generic flow
 
-`InstanceShape` retains a type reference at annotation boundaries; member lookup,
-application, and destructuring obtain specialized interfaces through
-`listenInstanceViews`. The distinction between supplying a type argument and
-adding an ordinary bound, the agreed variance rules, and the proposal to instantiate
-declared type parameters once per definition and syntactic call site are documented
-in [Instance types and parameter constraints](new-resolution-type-value-flow.md).
-The description below records current generic inference, which still needs that
-constraint extension. In particular, the implementation still treats omitted
-generic arguments as unknown interfaces; the reviewed design makes them inference
-holes and retains live inference for the missing parts of a partial signature.
+[Instance types and parameter constraints](new-resolution-type-value-flow.md)
+specifies instance wrappers, input/output constraints, variance, canonical binder
+instances, shared body views, and partial-signature inference. Its
+[shape roles](new-resolution-type-value-flow.md#value-views-consumed-schemes-and-activation-events)
+section distinguishes captured value substitutions, consumed callable schemes,
+and inference-event activations, with examples and their representation invariants.
+[Regular structural types](new-resolution-regular-types.md) specifies normalization
+and the conservative recursion restriction. Do not duplicate those algorithms in
+member lookup or value-flow handling.
 
-Class bodies introduce lexical captures, and a class and its constructor share
-one resolution boundary. A method's reference to an outer constructor must include
-the enclosing instance boundary as well as the method boundary. Consuming a
-reconstructed instance cancels the old instance exit against its capture, retaining
-the fresh constructor exit. Explicit `new` uses the same constructor context for
-arguments and subsequent parameter lists.
+Context fragments compose from a definition to its consumer; argument flow
+traverses that composition in reverse. A class and its constructor share one
+resolution boundary. Methods capture their enclosing instance scope as well as
+the enclosing function scopes. Alias qualification and structural type-field
+projection introduce no value boundary; modules introduce no invocation boundary.
 
-Context fragments compose from the definition to its consumer; argument flow
-traverses that composition in reverse. Capture paths have no truncation or depth
-limit. The optional `checkMarkPaths` assertions in
-[`Shape.scala`](../hkmc2/shared/src/main/scala/hkmc2/semantics/Shape.scala)
-detect repeated boundaries in either direction. They are disabled by default
-because scanning every new mark's tail makes chain construction quadratic in depth.
-`newres/RecursiveEnvironment.mls` and `ConstructorFieldRecovery.mls` exercise
-recursive calls, nested captures, partial construction, and independent field results.
+A normalized mark path contains entries followed by exits, with no repeated
+lexical boundary in either direction. `Shape.scala` enables assertions for this
+invariant. Checking each new tail costs linear time in its depth; it must not be
+replaced by truncating or widening paths. In particular, wildcard exit followed
+by wildcard entry is not an identity: it can discard a caller's activation ID.
+Reference transport uses the same operations as ordinary value flow.
 
-Explicit and inferred function/constructor type arguments flow through the
-corresponding type-parameter symbols with entry/exit marks. Explicit arguments
-prevent further refinement from value arguments. Inference also connects nested
-nominal parameters, such as `Foo[A]` containing a `Box[A]`. Generic methods use
-the same flow as free functions, including callback-result inference and curried
-signatures. Declared callable shapes retain their type parameters.
+The prelude uses its own `#lang(0.3.x)` directive. Its loader applies file
+configuration before elaboration and erasure, and supplies the block's original
+symbols for builtin lookup during bootstrap. Its signatures therefore carry the
+same `Capture` syntax as other new-resolution declarations.
 
-Generic definitions receive a fresh abstract activation when their type parameters
-are declared. This enforces generic opacity independently of visibility, exposure,
-or strict mode. The abstract activation cannot match a concrete caller's exit,
-so concrete calls still substitute into generic results without specializing the
-definition's allowed operations.
+Legacy consumers can read completed new-resolution signature symbols through
+`legacyResolvedSym`. The lookup asserts that the referenced block is complete and
+shares erasure's symbol-selection rules, including ambiguity and error checks.
+It does not resolve imported syntax again or observe incomplete candidate sets.
+
+`newres/SpecializationCaptures.mls`, `RecursiveEnvironment.mls`, and
+`ConstructorFieldRecovery.mls` exercise captured specialization, recursion, and
+partial construction. `PrimitiveMembers.mls`, `Arrays.mls`, `GenericMethods.mls`,
+and `MutableArrays.mls` exercise prelude signature captures and array member paths.
+Receiver reconstruction and omitted-argument context precision are
+[deferred improvements](new-resolution-future-work.md).
 
 ## Declared interfaces and exposure checking
 
@@ -80,10 +79,8 @@ Generic aliases and inherited declared interfaces substitute their arguments;
 declared member selections carry those contexts without reading implementation
 value flow. An unannotated member read through a declared interface produces an
 unknown shape, rather than consulting its initializer or method body.
-This is current behavior pending the reviewed partial-signature design: missing
-member types will use the selected declaration's contextual inference graph,
-while nominal annotations continue to restrict the visible member set. Override
-compatibility must be checked before exposing inferred dispatch results.
+Inferring these missing member types is a [deferred improvement](new-resolution-future-work.md#inferred-member-signatures)
+that also requires override compatibility checks.
 Callback parameter types constrain implementation parameters, and callback results
 constrain inferred type arguments. `newres/DeclaredTypes.mls` covers these paths,
 separate signatures, tuple constraints, and distinct generic instantiations.
@@ -119,34 +116,22 @@ order, last-write-wins lookup, computed-key uncertainty, and property identities
 across imports. See `newres/NamedFields.mls`, `ImportedNamedFields.mls`, and
 `RecordInterfaces.mls`.
 
-Tuples preserve zero-based projections and expose the builtin Array class as
-their parent. For example, `[First(1), Second(2)]` has a `First` value at index 0
-and a `Second` value at index 1. An Array operation such as `map` can read either
-element, so its callback receives both candidate shapes.
+Tuples preserve zero-based projections and expose the builtin Array interface.
+An Array callback receives candidate shapes from every element. The
+[language reference](reference.md#10-arrays) specifies mutable-array behavior and
+the restriction imposed by explicit element annotations.
 
-For a mutable literal, statically resolved element reads listen to the builtin
-`Array[T]` type parameter's symbol. The initializer and later indexed assignments, `fill`, `push`,
-and `unshift` send element shapes to that symbol. For example, starting with
-`mut [First(1)]` and then pushing `Second(2)` makes both `First` and `Second`
-candidates for each statically resolved element read. Overwriting or removing an element does not
-remove its shape from these candidates. Resolution does not track which shape
-belongs at which index or how long the array is. Each candidate is checked when
-resolving an operation on an element; the presence of a `First` candidate cannot
-justify accessing a `First`-only member when `Second` is also a candidate.
+For a mutable literal, all element reads and writes use the builtin `Array[T]`
+parameter's symbol. Marks distinguish allocations and enclosing calls. Cache the
+nominal view before subscribing to the initializer so empty arrays can receive
+writes and recursive arrays can refer to themselves. Numeric projections, spreads,
+patterns, and callbacks all use the same element endpoint.
 
-The symbol is shared, but its shapes carry context marks that distinguish array
-allocations and enclosing function calls. This keeps writes to separate arrays
-from affecting each other's element reads. The cache in `NewResolverState` stores
-the array's shape before subscribing to its initializer, allowing empty arrays to
-receive writes and recursive arrays to refer to themselves. Numeric projections,
-spreads, patterns, and callbacks all receive the element shapes through `T`.
-
-An explicit element type restricts which members resolution may use. If an array
-is viewed as `Array[Base]`, inserting a `Child` that extends `Base` does not make
-`Child`-only members accessible through that view. Resolution uses `Base`'s
-declared members, regardless of the inserted value's more specific shape. In
-`Array[A]`, where `A` is a type parameter, element reads instead receive the shapes
-inferred for `A`.
+The nominal interface is located at the literal's use site. Its element reference
+carries the allocation exit; the interface itself does not. Member lookup already
+exits the nominal class scope. Adding the allocation exit to the entire view would
+therefore cross that boundary twice. Initializer shapes enter the allocation
+context before reaching the parameter host.
 
 When an array is returned or otherwise exposed to callers, `InterfaceExposure`
 also follows its element shapes. A function stored in that array must be checked
@@ -154,7 +139,7 @@ for calls from outside the compilation unit, just like a directly returned
 function. `newres/MutableArrays.mls` and `CompilerTest` cover element flow,
 separation between calls and importing compilation units, and exposed functions.
 See the [migration worklist](new-resolution-suite-migration.md) for the remaining
-`splice` and generic-parameter write propagation gaps.
+`splice` contract and storage-reassignment gaps.
 
 When an array's element shape is unknown, indexed access produces an unknown
 shape; that does not authorize arbitrary member access on the result.

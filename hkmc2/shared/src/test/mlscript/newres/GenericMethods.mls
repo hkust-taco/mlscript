@@ -57,9 +57,10 @@ class Child extends Base with
 //│ ╔══[COMPILATION ERROR] Resolution error in type application
 //│ ║  l.56: 	[1].map[Int, Int]((x, ...) => x)
 //│ ║        	^^^^^^^^^^^^^^^^^
-//│ ╟── Function with a declared signature expected 1 type argument, but got 2
-//│ ║  l.56: 	[1].map[Int, Int]((x, ...) => x)
-//│ ╙──      	^^^^^^^
+//│ ╟── Function 'map' expected 1 type argument, but got 2
+//│ ║  in ../decls/Prelude.mls
+//│ ║  l.162: 	  fun map[U](f: (T, Int, Array[T]) -> U): Array[U]
+//│ ╙──       	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ = [1]
 
 // Imported free functions and methods use the same inference as prelude methods.
@@ -83,7 +84,7 @@ class Methods with
 fun test(m: Methods) = m.identity[Base](new Child).extra
 test(new Methods)
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.83: 	fun test(m: Methods) = m.identity[Base](new Child).extra
+//│ ║  l.84: 	fun test(m: Methods) = m.identity[Base](new Child).extra
 //│ ║        	                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╙── Value of type 'Base' does not contain member 'extra'
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
@@ -129,10 +130,31 @@ let methods = new GenericLibrary.Methods
 
 // FIXME: A callback reading a constructor field in a module initializer still
 // crosses incompatible lexical capture paths, before any consumer imports it.
-:fixme
 :expect [5]
 module Local with
   class Known(val known: Int)
   val mapped = [Known(4)].map((item, ...) => Known(item.known + 1))
 Local.mapped.map((item, ...) => item.known)
-//│ /!!!\ Uncaught error: java.lang.AssertionError: assertion failed: Entry and exit cross different lexical resolution scopes: term:Local⁰/mapped⁰ vs term:Array⁰/map⁰ for InstanceShape(member:Int⁰^class:Known⁰)
+//│ = [5]
+
+// A local class's members are located inside its enclosing activation. Receivers
+// annotated in a nested function add an exit from that function, which is only
+// the receiver's provenance: it must not move the members of the local class.
+:expect [1, 2, 3]
+class First(val first: Int)
+class Second(val second: Int)
+class Item(val value: Int)
+private fun wrap[A](value: A) =
+  class Local(val item: A) with
+    fun get[U](f: A -> U): U = f(item)
+  fun inner() = (new Local(value) as Local)
+  [inner().item, inner().get(x => x)]
+private fun wrapped[A](value: A) =
+  class Local(val item: A) with
+    fun get[U](f: A -> U): U = f(item)
+  (new Local(value) as Local)
+private fun viaNested(x) =
+  fun nested() = wrapped[Item](x)
+  nested().get(i => i.value)
+[wrap[First](First(1)).0.first, wrap[Second](Second(2)).1.second, viaNested(Item(3))]
+//│ = [1, 2, 3]

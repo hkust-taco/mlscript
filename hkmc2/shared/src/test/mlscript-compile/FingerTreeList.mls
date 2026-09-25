@@ -1,7 +1,7 @@
-import "./LegacyOption.mls"
+import "./Option.mls"
 import "./Iter.mls"
 
-open LegacyOption
+open Option
 open Iter
 open FingerTreeList
 

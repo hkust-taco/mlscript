@@ -740,7 +740,10 @@ to `Child`-only members through that annotation.
 
 Array callbacks such as `map` receive the element, index, and array; their
 declared function interfaces must account for these arguments, for example with
-unused or rest parameters.
+unused or rest parameters. `reduce` also passes the accumulator first, and must be
+given an initial value: `xs.reduce((acc, x, ...) => acc + x, 0)`. Without one,
+JavaScript uses the first element as the initial accumulator, which the declared
+signature does not describe.
 
 ---
 
@@ -1309,7 +1312,8 @@ to member lookup and calls. A receiver annotated `Base` exposes Base's declared
 members and preserves virtual dispatch; concrete arguments cannot add subclass
 members to that interface. The same rule applies to parameters, result annotations,
 separate signatures, and constructor fields. Reading an unannotated member through
-an annotated interface does not infer its shape from its initializer or method body.
+an annotated interface currently does not infer its shape from its initializer or
+method body. Inference of missing selected-member types is a planned improvement.
 Structural record annotations likewise expose only their declared fields.
 
 Compilation files check that their exposed functions and values work for inputs
@@ -1358,11 +1362,73 @@ Bounded type parameters:
 fun f[A <: Num](x: A): A = x
 ```
 
+Under new resolution, supplying a type argument affects both inputs and outputs.
+For an invariant `Array[A]`, supplying `Int` means that lower bounds of `A` are
+checked against `Int`, and upper bounds must accept `Int`. Passing an ordinary
+integer value to `x: A` instead contributes only a lower bound; it does not fix
+all uses of `A` to `Int`.
+
+Use-site type arguments have input and output parts:
+
+| Argument | Input | Output |
+| --- | --- | --- |
+| `S` | `S` | `S` |
+| `in T` | `T` | `Any` |
+| `out U` | `Nothing` | `U` |
+| `in T out U` | `T` | `U` |
+
+For an unqualified argument, the declaration's `in` or `out` annotation selects
+the corresponding form. An explicitly written use-site variance supplies its own
+parts. Substitution selects the output part in positive positions and the input
+part in negative positions. Function inputs reverse polarity; results preserve it.
+Interpret an argument at its occurrence before applying the enclosing declaration's
+variance. For example, a method input `Box[T]` on `Receiver[in Child out Base]`
+uses `Box[Child]` when `Box` is invariant.
+
+Each explicit generic parameter is instantiated once at the expression that
+specializes or invokes its definition: `f[T]`, a by-name reference/selection, or
+otherwise the first term application. Stored specializations and later curried
+argument lists share that instantiation. A by-name reference invokes its body even
+without parentheses, so later uses of its result share any state it created.
+An ordinary reference to a function with parameter lists can retain its generic
+scheme until specialization or invocation.
+
+Missing parameter/result annotations use inference. Omitted generic arguments
+likewise count as inference holes rather than anonymous generic parameters; written
+parts continue to restrict the interface. Currently an omitted argument inside a
+shared annotation or alias can mix inferred types from different callers. These
+annotations therefore do not always preserve the precision of a wholly unannotated
+parameter. Concrete type-mismatch diagnostics are also incomplete during the
+new-resolution migration.
+
 ### Structural Record Types
 
 ```mlscript
 type Point = { x: Num, y: Num }
 ```
+
+Under new resolution, recursive type aliases must be guarded: every recursive
+cycle must pass through a record, tuple, function arrow, or nominal type.
+`type Loop = Loop` and `type Choice[A] = A | Choice[A]` are rejected, even when
+unused. Alias applications follow the guards in the alias body: a wrapper defined
+as `type Wrap[A] = {next: A}` permits `type Loop = Wrap[Loop]`.
+
+Recursive structural types must also have a finite graph representation of their
+unfolding. The current check conservatively rejects constructor-bearing cycles
+between used type parameters, after alias and union/intersection normalization.
+For example:
+
+```mlscript
+type Chain[A] = {value: A, next: Chain[A]}
+type Reset[A] = {value: A, next: Reset[Array[Int]]}
+type Saturating[A] = {value: A, next: Saturating[A | Int]}
+type Growing[A] = {value: A, next: Growing[Array[A]]}
+```
+
+The first three are supported. `Growing[Int]` would expose `Int`, `Array[Int]`,
+`Array[Array[Int]]`, and so on, and is rejected. The check also rejects some finite
+types whose regularity depends on variance or relationships between recursive
+arguments. Its diagnostic indicates a limitation of the current check.
 
 ### Function Types
 

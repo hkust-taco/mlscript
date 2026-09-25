@@ -1,10 +1,12 @@
-import "../../LegacyOption.mls"
+#lang(0.3.x)
+
+import "../../Option.mls"
 import "../../Iter.mls"
 import "../../Predef.mls"
 import "../../MutMap.mls"
 
 open Predef
-open LegacyOption { Some, None }
+open Option { Some, None }
 
 module Keywords with ...
 
@@ -105,7 +107,7 @@ let precMap = makePrecMap of
   "."
 
 // The largest precedence value of all operators.
-val periodPrec = precMap |> MutMap.get(".") |> LegacyOption.unsafe.get
+val periodPrec = precMap |> MutMap.get(".") |> Option.unsafe.get
 
 val _period = keyword of ".", Some(periodPrec), Some(periodPrec)
 
@@ -114,7 +116,7 @@ val appPrec = maxOperatorPrec - 1
 val prefixPrec = appPrec - 1
 
 // Get the precedence of a single character operator.
-fun charPrec(op) = precMap |> MutMap.get(op) |> LegacyOption.unsafe.get
+fun charPrec(op) = precMap |> MutMap.get(op) |> Option.unsafe.get
 
 fun charPrecOpt(op) = precMap |> MutMap.get(op)
 

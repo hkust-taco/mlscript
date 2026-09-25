@@ -1,0 +1,88 @@
+:.
+
+// Explicit specializations through one shared reference remain independent.
+:expect [1, 2]
+class First(val first: Int)
+class Second(val second: Int)
+private fun identity[A](x: A) = x
+private val shared = identity
+private val first = shared[First]
+private val second = shared[Second]
+[first(First(1)).first, second(Second(2)).second]
+//│ = [1, 2]
+//│ first = fun identity
+//│ second = fun identity
+//│ shared = fun identity
+
+// Deferred inferred results retain the supplied type reference.
+:expect [3, 4]
+class First(val first: Int)
+class Second(val second: Int)
+private fun delayed[A](x: A) = {get: () => x}
+private val shared = delayed
+private val first = shared[First]
+private val second = shared[Second]
+[first(First(3)).get().first, second(Second(4)).get().second]
+//│ = [3, 4]
+//│ first = fun delayed
+//│ second = fun delayed
+//│ shared = fun delayed
+
+// Curried tails retain their specialization and captured argument flows.
+:expect [5, 6, 7, 8]
+class First(val first: Int)
+class Second(val second: Int)
+private fun pair[A](x: A)(y) = [x, y]
+private val shared = pair
+private val left = shared[First](First(5))
+private val right = shared[Second](Second(7))
+[left(Second(6)).0.first, left(Second(6)).1.second,
+ right(First(8)).0.second, right(First(8)).1.first]
+//│ = [5, 6, 7, 8]
+//│ left = fun
+//│ right = fun
+//│ shared = fun pair
+
+// Callback checking must observe the specialization before an implementation call.
+:expect 9
+class Item(val value: Int)
+private fun identity[A](value: A) = value
+private fun use[B](f: Item -> B): B = f(Item(9))
+use(identity[Item]).value
+//│ = 9
+
+// Supplying the scheme's arguments consumes its type parameter list immediately.
+:ge
+private fun inferred[A](value: A) = value
+private fun declared[A](value: A): A = value
+private val first = inferred[Int]
+private val second = declared[Int]
+first[Str]
+second[Str]
+//│ ╔══[COMPILATION ERROR] Resolution error in type application
+//│ ║  l.60: 	first[Str]
+//│ ║        	^^^^^^^^^^
+//│ ╟── Function 'inferred' expected 0 type arguments, but got 1
+//│ ║  l.56: 	private fun inferred[A](value: A) = value
+//│ ╙──      	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Resolution error in type application
+//│ ║  l.61: 	second[Str]
+//│ ║        	^^^^^^^^^^^
+//│ ╟── Function 'declared' expected 0 type arguments, but got 1
+//│ ║  l.57: 	private fun declared[A](value: A): A = value
+//│ ╙──      	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ = fun declared
+//│ first = fun inferred
+//│ second = fun declared
+
+// Arity is checked at specialization even if the value is never called.
+:ge
+private fun identity[A](value: A) = value
+private val tooMany = identity[Int, Str]
+//│ ╔══[COMPILATION ERROR] Resolution error in type application
+//│ ║  l.81: 	private val tooMany = identity[Int, Str]
+//│ ║        	                      ^^^^^^^^^^^^^^^^^^
+//│ ╟── Function 'identity' expected 1 type argument, but got 2
+//│ ║  l.80: 	private fun identity[A](value: A) = value
+//│ ╙──      	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ tooMany = fun identity

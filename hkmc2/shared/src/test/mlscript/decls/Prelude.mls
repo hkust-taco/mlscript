@@ -1,4 +1,4 @@
-
+#lang(0.3.x)
 
 declare type Any
 declare type Anything
@@ -165,6 +165,10 @@ declare class Array[T](val length: Int): Array[T] with
   fun filter(f: (T, Int, Array[T]) -> Bool): Array[T]
   fun every(f: (T, Int, Array[T]) -> Bool): Bool
   fun some(f: (T, Int, Array[T]) -> Bool): Bool
+  // Without an initial value, the first element becomes the accumulator, so the
+  // accumulator type would also have to include T. Methods cannot be overloaded
+  // by arity, so only the form with an initial value is declared.
+  fun reduce[U](f: (U, T, Int, Array[T]) -> U, initial: U): U
   fun indexOf(value: T, ...from): Int
   fun lastIndexOf(value: T, ...from): Int
   fun includes(value: T, ...from): Bool
