@@ -981,6 +981,50 @@ directions. It must retain ordinary inference for holes and cannot invent binder
 instances or assume that a wildcard exit-entry pair is reversible. Review that
 representation before implementing a replacement.
 
+### Template context versus argument context
+
+`newres/AnnotationContexts.mls` distinguishes a template's enclosing parameter from
+an argument supplied where that template is used:
+
+```mlscript
+private fun enclosing[A](x: A) =
+  type Both[B] = {left: A, right: B}
+  private fun wrap[B](y: B): Both[B] = {left: x, right: y}
+  wrap[Second](Second(2))
+```
+
+`Both`'s free `A` belongs to `enclosing`, whereas the supplied `B` belongs to `wrap`.
+The current implementation handles this explicit-argument example. The worksheet
+checks two enclosing calls with different types, a passing unannotated control,
+and a failing omitted-argument version marked `:fixme`.
+
+Simply removing `args.move(inverseMarks(reference.marks))` from the three type
+interpreters is not a fix. That experiment leaves the omitted-argument failures
+and makes the explicit-argument example fail a mark assertion: an entry into
+`wrap` is matched against an exit from `enclosing`. The experimental change was
+removed. Both directions of a constraint, as well as deferred member observation,
+need the argument's original scope to be understood. Dropping the template's
+transport instead is not a general solution either: the free `A` still needs its
+path from `enclosing` into `wrap`. The template's free references and the supplied
+arguments cannot uniformly receive the same treatment.
+
+The current interpreter substitutes arguments into the template and then applies
+the template's transport to the resulting interface. That transport consequently
+acts on substituted arguments as well as on references from the template itself.
+Moving arguments backward first compensates for their different starting scopes,
+but can lose caller identity through wildcard exits.
+
+A possible correction is to keep the template endpoint separate from the argument
+environment, so that following a formal uses the supplied reference at its own
+endpoint, while following a free reference uses the template's context. This is a
+change to how substitution and transport compose, not permission to cancel a
+wildcard exit-entry pair. It has not been implemented or established as a small
+local change. Review the representation and its interaction with nominal member
+projection, recursive aliases, occurrence polarity, and both constraint directions
+before proceeding. Any new interpretation nodes must retain the finite source and
+canonical-context bounds; allocating a new environment identity on each recursive
+unfolding would not be acceptable.
+
 ### Regular structural types
 
 The proposed restriction is that unfolding a structural type must admit a finite

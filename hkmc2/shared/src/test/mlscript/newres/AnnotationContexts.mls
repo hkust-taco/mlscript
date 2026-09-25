@@ -1,0 +1,57 @@
+:.
+
+// A captured alias combines its enclosing binder with a supplied local binder.
+:expect [1, 2, 3, 2]
+class First(val first: Int)
+class Second(val second: Int)
+private fun enclosing[A](x: A) =
+  type Both[B] = {left: A, right: B}
+  private fun wrap[B](y: B): Both[B] = {left: x, right: y}
+  wrap[Second](Second(2))
+let one = enclosing[First](First(1))
+let two = enclosing[Second](Second(3))
+[one.left.first, one.right.second, two.left.second, two.right.second]
+//│ = [1, 2, 3, 2]
+//│ one = {left: First(1), right: Second(2)}
+//│ two = {left: Second(3), right: Second(2)}
+
+// Ordinary value inference distinguishes the same two calls without an annotation.
+:expect [1, 2, 1, 4]
+class First(val first: Int)
+class Second(val second: Int)
+private fun enclosing[A](x: A) =
+  type Both[B] = {left: A, right: B}
+  private fun wrap(value) = value
+  [wrap({left: x, right: First(2)}), wrap({left: x, right: Second(4)})]
+let result = enclosing[First](First(1))
+[result.0.left.first, result.0.right.first, result.1.left.first, result.1.right.second]
+//│ = [1, 2, 1, 4]
+//│ result = [{left: First(1), right: First(2)}, {left: First(1), right: Second(4)}]
+
+// A missing argument must retain its scope independently of the captured binder.
+// TODO: rebasing the omitted B strips wrap's caller IDs before publishing its bounds.
+:fixme
+:expect [1, 2, 1, 4]
+class First(val first: Int)
+class Second(val second: Int)
+private fun enclosing[A](x: A) =
+  type Both[B] = {left: A, right: B}
+  private fun wrap(value: Both) = value
+  [wrap({left: x, right: First(2)}), wrap({left: x, right: Second(4)})]
+let result = enclosing[First](First(1))
+[result.0.left.first, result.0.right.first, result.1.left.first, result.1.right.second]
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.42: 	[result.0.left.first, result.0.right.first, result.1.left.first, result.1.right.second]
+//│ ║        	                      ^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Instance of class 'Second' does not contain member 'first'
+//│ ║  l.40: 	  [wrap({left: x, right: First(2)}), wrap({left: x, right: Second(4)})]
+//│ ╙──      	                                                           ^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.42: 	[result.0.left.first, result.0.right.first, result.1.left.first, result.1.right.second]
+//│ ║        	                                                                 ^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Instance of class 'First' does not contain member 'second'
+//│ ║  l.40: 	  [wrap({left: x, right: First(2)}), wrap({left: x, right: Second(4)})]
+//│ ╙──      	                         ^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ ═══[RUNTIME ERROR] Expected: '[1, 2, 1, 4]', got: 'undefined'
+//│ result = [{left: First(1), right: First(2)}, {left: First(1), right: Second(4)}]
