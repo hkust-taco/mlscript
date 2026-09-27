@@ -1138,9 +1138,9 @@ sealed abstract class Result extends Located:
           sizeCmp match
           // * An exactly-applied call yields the function's result type.
           case 0 => sig.ret
-          // * An under-applied call yields a closure over the remaining parameter lists. Without a modifier, its
-          // * resource-ness is undetermined.
-          case c if c < 0 => S(ErasedType.Function(if call.rsc then S(true) else N))
+          // * An under-applied call yields a closure over the remaining parameter lists. It is a resource if the call
+          // * is marked `rsc`.
+          case c if c < 0 => S(ErasedType.Function(rsc = S(call.rsc)))
           // * An over-applied call applies arguments to whatever the function returns, which the function's
           // * signature is oblivious about.
           case _ => N
@@ -1167,8 +1167,8 @@ sealed abstract class Result extends Located:
       clsSym.map(sym => ErasedType.ValueLike(S(inst.rsc), sym))
     // * A tuple literal is typed as `Array` at runtime.
     case Tuple(_, _) => S(ErasedType.Array)
-    // * A lambda is a function value. Without a modifier, its resource-ness is undetermined.
-    case lam: Lambda => S(ErasedType.Function(if lam.rsc then S(true) else N))
+    // * A lambda is a function value. It is a resource if the lambda is marked `rsc`.
+    case lam: Lambda => S(ErasedType.Function(rsc = S(lam.rsc)))
     case _ => N
 
   /** Similar to `erasedType`, but coerces to the top type if the specific erased type is not known. */

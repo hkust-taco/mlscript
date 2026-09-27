@@ -23,11 +23,15 @@ continuation = function continuation(Runtime2, resume, value) {
 };
 lambda$4 = (undefined, function (Runtime2, promise) {
   return (resume) => {
-    return runtime.safeCall(promise.then(continuation$(Runtime2, resume)))
+    let continuation$here;
+    continuation$here = continuation$(Runtime2, resume);
+    return runtime.safeCall(promise.then(continuation$here))
   }
 });
 lambda3 = (undefined, function (Runtime2, promise, resume) {
-  return runtime.safeCall(promise.then(continuation$(Runtime2, resume)))
+  let continuation$here;
+  continuation$here = continuation$(Runtime2, resume);
+  return runtime.safeCall(promise.then(continuation$here))
 });
 (class Capture$scope32 {
   static {
@@ -202,7 +206,9 @@ lambda4 = (undefined, function (Runtime2, EffectHandle1, value) {
       }
       #_reified;
       resumeWith(value) {
-        return Runtime._try(lambda$(Runtime, this, value))
+        let lambda$here;
+        lambda$here = lambda$(Runtime, this, value);
+        return Runtime._try(lambda$here)
       }
       raise() {
         Runtime.curEffect = this.reified;
@@ -619,7 +625,9 @@ lambda4 = (undefined, function (Runtime2, EffectHandle1, value) {
         globalThis.Object.freeze(this);
       }
       delay() {
-        return Runtime.mkEffect(this, lambda$1(Runtime))
+        let lambda$here;
+        lambda$here = lambda$1(Runtime);
+        return Runtime.mkEffect(this, lambda$here)
       }
       toString() { return runtime.render(this); }
       static [definitionMetadata] = ["object", "StackDelayHandler"];
@@ -866,12 +874,13 @@ lambda4 = (undefined, function (Runtime2, EffectHandle1, value) {
     return header;
   }
   static showFunctionContChain(cont, hl, vis, reps) {
-    let scrut, scrut1, scrut2, tmp, tmp1, tmp2, tmp3, tmp4, scope30$cap;
+    let scrut, scrut1, scrut2, tmp, tmp1, tmp2, tmp3, tmp4, scope30$cap, lambda$here;
     scope30$cap = new Capture$scope301(undefined);
     if (cont instanceof Runtime.FunctionContFrame.class) {
       tmp = cont["constructor"]["name"] + "(pc=";
       scope30$cap.result$0 = tmp + cont.saved.at(1);
-      runtime.safeCall(hl.forEach(lambda$2(scope30$cap, cont)));
+      lambda$here = lambda$2(scope30$cap, cont);
+      runtime.safeCall(hl.forEach(lambda$here));
       scrut = runtime.safeCall(vis.has(cont));
       if (scrut === true) {
         tmp1 = reps + 1;
@@ -896,11 +905,12 @@ lambda4 = (undefined, function (Runtime2, EffectHandle1, value) {
     return "(NOT CONT)";
   }
   static showHandlerContChain(cont, hl, vis, reps) {
-    let scrut, scrut1, scrut2, tmp, tmp1, tmp2, tmp3, scope32$cap;
+    let scrut, scrut1, scrut2, tmp, tmp1, tmp2, tmp3, scope32$cap, lambda$here;
     scope32$cap = new Capture$scope321(undefined);
     if (cont instanceof Runtime.HandlerContFrame.class) {
       scope32$cap.result$0 = cont.handler["constructor"]["name"];
-      runtime.safeCall(hl.forEach(lambda$3(scope32$cap, cont)));
+      lambda$here = lambda$3(scope32$cap, cont);
+      runtime.safeCall(hl.forEach(lambda$here));
       scrut = runtime.safeCall(vis.has(cont));
       if (scrut === true) {
         tmp = reps + 1;
@@ -1165,7 +1175,9 @@ lambda4 = (undefined, function (Runtime2, EffectHandle1, value) {
     }
   }
   static await(promise) {
-    return Runtime.mkEffect(Runtime.AsyncEffectMarker, lambda$4(Runtime, promise))
+    let lambda$here;
+    lambda$here = lambda$4(Runtime, promise);
+    return Runtime.mkEffect(Runtime.AsyncEffectMarker, lambda$here)
   }
   static toJsAsync(thunk) {
     let r, scrut;

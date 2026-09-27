@@ -536,14 +536,14 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
       k(Call(fr, Nil ne_:: Nil)(CallMetadata(isMlsFun, true, Nil), rsc = false, loc))
   
   /** Whether the resource modifiers in `annots` make a function value (a lambda or a partial application) a resource.
-    * A function value is `rsc?` unless stated otherwise, so `rsc?` is reported as having no effect.
+    * A function value is not a resource unless stated otherwise, and `rsc?` is reported as having no effect.
     */
   def functionValueRsc(annots: Ls[Annot], loc: Opt[Loc]): Bool =
     annots.foldLeft(false):
       // * The annotation does not record where its keyword is written, so the warning points at `loc`.
       case (rsc, Annot.Resource(N)) =>
         raise(WarningReport(
-          msg"A function value is 'rsc?' unless stated otherwise, so 'rsc?' has no effect." -> loc :: Nil,
+          msg"A function value is not a resource unless marked 'rsc', so 'rsc?' has no effect." -> loc :: Nil,
           source = Diagnostic.Source.Compilation))
         rsc
       case (rsc, Annot.Resource(S(annotRsc))) => rsc || annotRsc
@@ -1390,14 +1390,13 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
       val (paramLists, bodyBlock) = setupFunctionDef(params :: Nil, body, N, N)
       val affineAnnots = annots.collect:
         case a @ Annot.Affine(0) => a
-      // * A resource lambda is not lifted into a function definition here: a reference to the lifted definition would
-      // * be `rsc?` (like any function value), hiding the lambda's resource-ness from the slots it flows into.
-      if rsc || k.isInstanceOf[TailOp] || bodyBlock.size <= 5
-      then k(Lambda(paramLists.head, bodyBlock)(affineAnnots, rsc, trm.toLoc))
+      val lam = Lambda(paramLists.head, bodyBlock)(affineAnnots, rsc, trm.toLoc)
+      if k.isInstanceOf[TailOp] || bodyBlock.size <= 5
+      then k(lam)
       else
         val lamSym = new BlockMemberSymbol("lambda", Nil, false)
         loweringCtx.collectScopedSym(lamSym)
-        val lamDef = FunDefn.withFreshSymbol(N, lamSym, paramLists, bodyBlock)(configOverride = N, annotations = affineAnnots)
+        val lamDef = FunDefn.withFreshSymbol(N, lamSym, paramLists, bodyBlock)(configOverride = N, annotations = lam.liftedAnnotations)
         Define(
           lamDef,
           k(lamDef.asPath))
@@ -1804,7 +1803,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
       case lam @ Lambda(params, body) if !lam.rsc =>
         val lamSym = BlockMemberSymbol("lambda", Nil, false)
         loweringCtx.collectScopedSym(lamSym)
-        val lamDef = FunDefn.withFreshSymbol(N, lamSym, params :: Nil, body)(configOverride = N, annotations = lam.annot)
+        val lamDef = FunDefn.withFreshSymbol(N, lamSym, params :: Nil, body)(configOverride = N, annotations = lam.liftedAnnotations)
         Define(lamDef, k(lamDef.asPath))
       case r =>
         val l = loweringCtx.registerTempSymbol(N, erasedType = r.erasedType)

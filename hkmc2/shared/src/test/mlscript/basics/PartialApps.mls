@@ -126,7 +126,7 @@ passTo(1, add(., 1) @ _ + _)(2)
 :sjs
 let f = add(_, 1)
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let f11, f12; f12 = function f(_0) { return _0 + 1 }; f11 = f12;
+//│ let f1, f2; f2 = function f(_0) { return _0 + 1 }; f1 = f2;
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ f = fun f
 
@@ -149,7 +149,7 @@ let f = add(., 1)
 
 :fixme
 f(1)
-//│ ═══[RUNTIME ERROR] TypeError: f13 is not a function
+//│ ═══[RUNTIME ERROR] TypeError: f3 is not a function
 
 let f = add of _, 1
 //│ f = fun f

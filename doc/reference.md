@@ -287,7 +287,7 @@ _.f(0, _, 2)     // (x, y) => x.f(0, y, 2)
 {_ + 1}          // x => x + 1
 ```
 
-**Resource lambdas and partial applications** — a function value is `rsc?` unless marked as a resource:
+**Resource lambdas and partial applications** — a function value is not a resource unless marked as one:
 ```mlscript
 rsc (x => x)     // a resource function value
 fun add(x)(y) = x + y

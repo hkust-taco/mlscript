@@ -460,10 +460,10 @@ class TermSymbol(val k: TermDefKind, val owner: Opt[InnerSymbol], val id: Tree.I
   /** The erased type of what a reference to this term evaluates to.
     *
     * A definition with an [[erasedSignature]] evaluates to a closure the compiler builds, i.e. a first-class
-    * `Function`. Nothing states the resource-ness of such a closure, so it is `rsc?`.
+    * `Function`.
     */
   def erasedType: Opt[ErasedValueType] = erasure match
-    case S(_: ErasedFuncSignature) => S(ErasedType.Function(rsc = N))
+    case S(_: ErasedFuncSignature) => S(ErasedType.Function(rsc = S(irFunDefn.exists(_.rsc))))
     case S(tpe: ErasedValueType) => S(tpe)
     case N => N
   
