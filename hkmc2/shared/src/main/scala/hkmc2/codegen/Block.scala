@@ -821,9 +821,19 @@ private[codegen] object InlinerBodySummary:
 
 object FunDefn:
   def withFreshSymbol(owner: Opt[InnerSymbol], sym: BlockMemberSymbol, params: Ls[ParamList], body: Block)(configOverride: Opt[Config], annotations: Ls[Annot])(using State) =
-    val tSym = TermSymbol(syntax.Fun, owner, Tree.Ident(sym.nme), erasure = N)
+    // * A function without paramlists are getters, and a reference to such a function evaluates to `Unknown`
+    // * (there is currently no param in `withFreshSymbol` that carries this info)
+    val erasure = params.optionUnless(_.isEmpty).map: pss =>
+      ErasedFuncSignature.Signature(
+        paramLists = pss.map(_.params.map(_.sym.erasedType)),
+        // TODO(Derppening): Take `ret` from a parameter
+        ret = N,
+      )
+    val tSym = TermSymbol(syntax.Fun, owner, Tree.Ident(sym.nme), erasure)
     sym.tsym = S(tSym)
-    FunDefn(owner, sym, tSym, params, body)(configOverride, annotations)
+    val fd = FunDefn(owner, sym, tSym, params, body)(configOverride, annotations)
+    tSym.irDefn = S(fd)
+    fd
 
 final case class ValDefn(
     tsym: TermSymbol,
