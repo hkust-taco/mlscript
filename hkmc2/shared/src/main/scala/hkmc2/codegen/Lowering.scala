@@ -539,15 +539,17 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
     * A function value is not a resource unless stated otherwise, and `rsc?` is reported as having no effect.
     */
   def functionValueRsc(annots: Ls[Annot], loc: Opt[Loc]): Bool =
-    annots.foldLeft(false):
+    if annots.exists:
+      case Annot.Resource(N) => true
+      case _ => false
+    then
       // * The annotation does not record where its keyword is written, so the warning points at `loc`.
-      case (rsc, Annot.Resource(N)) =>
-        raise(WarningReport(
-          msg"A function value is not a resource unless marked 'rsc', so 'rsc?' has no effect." -> loc :: Nil,
-          source = Diagnostic.Source.Compilation))
-        rsc
-      case (rsc, Annot.Resource(S(annotRsc))) => rsc || annotRsc
-      case (rsc, _) => rsc
+      raise(WarningReport(
+        msg"A function value is not a resource unless marked 'rsc', so 'rsc?' has no effect." -> loc :: Nil,
+        source = Diagnostic.Source.Compilation))
+    annots.exists:
+      case Annot.Resource(S(annotRsc)) => annotRsc
+      case _ => false
 
   /** Lower a call with multiple argument lists into `Call` nodes,
     * trying to group as many as possible into a single one
