@@ -1,0 +1,25 @@
+:classTags
+:js
+:noFreeze
+
+class Box(val x)
+class A(val x)
+class B(val x)
+
+
+// One allocation site can have different shapes at different call sites.
+// Both flow instantiations must survive when collecting shapes by ResultId.
+private fun wrap(x) = new Box(x)
+fun poly(flag) =
+  let a = wrap(new A(0))
+  let b = wrap(new B(0))
+  let value = if flag then a else b
+  @matchShapes(Box(A(_)), Box(B(_))) shape.match of value, () => 1, () => 2
+
+// Which tag wins currently depends on set iteration order. Compare the two
+// outcomes to expose the lost distinction without snapshotting that choice.
+:fixme // Both calls to wrap receive the same tag, so both branches return the same value.
+:expect 1
+poly(false) - poly(true)
+//│ ═══[RUNTIME ERROR] Expected: '1', got: '0'
+//│ = 0

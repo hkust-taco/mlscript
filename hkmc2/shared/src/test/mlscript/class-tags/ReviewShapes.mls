@@ -1,0 +1,65 @@
+:classTags mono
+:js
+:noFreeze
+
+class Box(val x)
+class MutableBox(mut val x)
+class A(val x)
+class B(val x)
+
+
+// A tag derived from constructor arguments becomes stale after a field write.
+// The flow analysis marks the escape, but web traversal still admits this producer.
+fun mutatedField() =
+  let value = new MutableBox(new A(0))
+  set value.MutableBox#x = new B(0)
+  @matchShapes(MutableBox(A(_)), MutableBox(B(_))) shape.match of value, () => 1, () => 2
+
+:fixme // The field contains B, but the tag still selects the A branch.
+:expect 2
+mutatedField()
+//│ ═══[RUNTIME ERROR] Expected: '2', got: '1'
+//│ = 1
+
+
+// Constructor bodies can change fields even before the tag is first assigned.
+class Altered(mut val x) with
+  set x = new B(0)
+fun constructorMutation() =
+  let value = new Altered(new A(0))
+  @matchShapes(Altered(A(_)), Altered(B(_))) shape.match of value, () => 1, () => 2
+
+:fixme // The tag describes the original argument rather than the constructed value.
+:expect 2
+constructorMutation()
+//│ ═══[RUNTIME ERROR] Expected: '2', got: '1'
+//│ = 1
+
+
+// A wildcard field permits null as well as locally constructed class instances.
+fun dynamicField(flag, external) =
+  let field = if flag then new A(0) else external
+  let value = new Box(field)
+  @matchShapes(Box(_)) shape.match of value, () => 1
+
+:expect 1
+dynamicField(true, null)
+//│ = 1
+
+:fixme // Multi-shape tag assignment reads null.__tag$ before trying the wildcard.
+:expect 1
+dynamicField(false, null)
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of null (reading '__tag$')
+//│ ═══[RUNTIME ERROR] Expected: '1', got: 'undefined'
+
+
+// Unknown incoming values must be rejected or checked, not silently discarded
+// when proving exhaustiveness from the known constructor sources.
+fun unknownAlternative(flag, external) =
+  let value = if flag > 0 then new A(0) else if flag < 0 then new B(0) else external
+  @matchShapes(A(_), B(_)) shape.match of value, () => 1, () => 2
+
+:fixme // The untagged external B falls through both tag checks and returns unit.
+:expect 2
+unknownAlternative(0, new B(0))
+//│ ═══[RUNTIME ERROR] Expected: '2', got: '()'

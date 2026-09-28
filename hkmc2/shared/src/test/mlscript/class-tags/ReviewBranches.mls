@@ -1,0 +1,63 @@
+:classTags mono
+:js
+:noFreeze
+
+class Box(val x)
+
+
+// A branch is called once with no arguments; further parameter lists are retained.
+private fun curried()() = 42
+fun curriedBranch() =
+  let value = new Box(0)
+  let result = @matchShapes(Box(_)) shape.match of value, curried
+  result()
+
+:fixme // The branch's final body is inlined, making result the number 42.
+:expect 42
+curriedBranch()
+//│ ═══[RUNTIME ERROR] TypeError: 42 is not a function
+//│ ═══[RUNTIME ERROR] Expected: '42', got: 'undefined'
+
+
+// If overlaps are unsupported they need a hard error, since there is no runtime fallback.
+:w
+fun overlap() =
+  let value = new Box(0)
+  @matchShapes(Box(_), _) shape.match of value, () => 1, () => 2
+//│ ╔══[WARNING] Shape tag 0 for Box(x: 0) can fall into more than one shape.match branch.
+//│ ║  l.26: 	  @matchShapes(Box(_), _) shape.match of value, () => 1, () => 2
+//│ ║        	               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── It can fall into branch 1, matched by Box(x: _).
+//│ ║  l.26: 	  @matchShapes(Box(_), _) shape.match of value, () => 1, () => 2
+//│ ║        	               ^^^^^
+//│ ╟── It can fall into branch 2, matched by _.
+//│ ║  l.26: 	  @matchShapes(Box(_), _) shape.match of value, () => 1, () => 2
+//│ ╙──      	                       ^
+
+:fixme // The warning leaves a call to the unimplemented intrinsic.
+overlap()
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'match')
+
+
+// A missing annotation also needs a diagnostic before reaching the backend.
+fun unannotated() =
+  let value = new Box(0)
+  shape.match of value, () => 1
+
+:fixme // This compiles without diagnostics but calls undefined shape.match.
+unannotated()
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'match')
+
+
+// Recursive branch calls must not be recursively expanded by the compiler.
+// This program would return 42 after one recursive call at runtime.
+:fixme // mkBranch re-enters rewriteShapeMatch until the compiler stack overflows.
+let remaining = 1
+private fun recursiveBranch() =
+  if remaining > 0 then
+    set remaining = remaining - 1
+    let value = new Box(0)
+    @matchShapes(Box(_)) shape.match of value, recursiveBranch
+  else 42
+fun recursiveMatch() = recursiveBranch()
+//│ /!!!\ Uncaught error: java.lang.StackOverflowError
