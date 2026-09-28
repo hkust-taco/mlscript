@@ -112,3 +112,67 @@ fun unknownScrutinee(t) =
 //│ ║  l.104: 	    () => 0
 //│ ╙──       	^^^^^^^^^^^
 //│ <<< end class-tags transform-phase
+
+
+
+class MutableBox(mut val x)
+class A(val x)
+class B(val x)
+//│ >>> start class-tags collection-phase
+//│ <<< end class-tags collection-phase
+//│ >>> start class-tags transform-phase
+//│ <<< end class-tags transform-phase
+
+
+// A tag derived from constructor arguments becomes stale after a field write.
+// The flow analysis marks the escape, but web traversal still admits this producer.
+:ge
+fun mutatedField() =
+  let value = new MutableBox(new A(0))
+  set value.MutableBox#x = new B(0)
+  @matchShapes(MutableBox(A(_)), MutableBox(B(_))) shape.match of value, () => 1, () => 2
+//│ >>> start class-tags collection-phase
+//│ class-tags collection-phase > track consumption at match@3 in mutatedField
+//│ <<< end class-tags collection-phase
+//│ >>> start class-tags web-computation-phase
+//│ class-tags web-computation-phase > web 0:
+//│ class-tags web-computation-phase >   producers: A@0, MutableBox@1
+//│ class-tags web-computation-phase >   pattern matches: match@3
+//│ <<< end class-tags web-computation-phase
+//│ >>> start class-tags transform-phase
+//│ class-tags transform-phase > allocated tag 0 for A(x: 0)
+//│ ╔══[COMPILATION ERROR] Class tags do not support mutable fields yet.
+//│ ║  l.118: 	class MutableBox(mut val x)
+//│ ╙──       	                         ^
+//│ class-tags transform-phase > allocated tag 1 for MutableBox(x: A(x: 0))
+//│ ╔══[COMPILATION ERROR] Class tags do not support set operations yet.
+//│ ║  l.132: 	  set value.MutableBox#x = new B(0)
+//│ ╙──       	      ^^^^^
+//│ class-tags transform-phase > match shapes MutableBox(x: A(x: _)), MutableBox(x: B(x: _)) against MutableBox(x: A(x: 0))@1
+//│ <<< end class-tags transform-phase
+
+
+// Constructor bodies can change fields even before the tag is first assigned.
+:ge
+class Altered(mut val x) with
+  set x = new B(0)
+fun constructorMutation() =
+  let value = new Altered(new A(0))
+  @matchShapes(Altered(A(_)), Altered(B(_))) shape.match of value, () => 1, () => 2
+//│ >>> start class-tags collection-phase
+//│ class-tags collection-phase > track construction of Altered@1 in constructorMutation
+//│ class-tags collection-phase > track consumption at match@2 in constructorMutation
+//│ <<< end class-tags collection-phase
+//│ >>> start class-tags web-computation-phase
+//│ class-tags web-computation-phase > web 0:
+//│ class-tags web-computation-phase >   producers: A@0, Altered@1
+//│ class-tags web-computation-phase >   pattern matches: match@2
+//│ <<< end class-tags web-computation-phase
+//│ >>> start class-tags transform-phase
+//│ class-tags transform-phase > allocated tag 0 for A(x: 0)
+//│ ╔══[COMPILATION ERROR] Class tags do not support mutable fields yet.
+//│ ║  l.157: 	class Altered(mut val x) with
+//│ ╙──       	                      ^
+//│ class-tags transform-phase > allocated tag 1 for Altered(x: A(x: 0))
+//│ class-tags transform-phase > match shapes Altered(x: A(x: _)), Altered(x: B(x: _)) against Altered(x: A(x: 0))@1
+//│ <<< end class-tags transform-phase

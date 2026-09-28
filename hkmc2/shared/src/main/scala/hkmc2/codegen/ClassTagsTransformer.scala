@@ -314,6 +314,11 @@ class ClassTagsTransformer(
             fields.size === fieldsOrElements.size,
             s"Unexpected class fields in ${ClassTagsDebug.showProducer(producer)}",
           )
+          for (field, _) <- fields if field.k is syntax.MutVal do
+            summon[Raise].apply(ErrorReport(
+              msg"Class tags do not support mutable fields yet." -> field.toLoc :: Nil,
+              source = Diagnostic.Source.Compilation,
+            ))
           ClassShape(cls, fields.toMap)
         case length: Int =>
           softAssert(
@@ -458,6 +463,21 @@ class ClassTagsTransformer(
 
   override def applyFunDefn(fun: FunDefn): FunDefn =
     val transformer = new BlockTransformerShallow(SymbolSubst.Id):
+      override def applyBlock(block: Block): Block =
+        block match
+          case AssignField(lhs, _, _, _) =>
+            summon[Raise].apply(ErrorReport(
+              msg"Class tags do not support set operations yet." -> lhs.toLoc :: Nil,
+              source = Diagnostic.Source.Compilation,
+            ))
+          case AssignDynField(lhs, _, _, _, _) =>
+            summon[Raise].apply(ErrorReport(
+              msg"Class tags do not support set operations yet." -> lhs.toLoc :: Nil,
+              source = Diagnostic.Source.Compilation,
+            ))
+          case _ => ()
+        super.applyBlock(block)
+
       private def isShapeMatch(path: Path): Bool =
         path.targetSymbol.flatMap(_.asBlkMember).contains(Elaborator.ctx.builtins.shape.`match`)
 

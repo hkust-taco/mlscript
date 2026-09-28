@@ -2,11 +2,11 @@
 :global
 :classTags mono
 :noFreeze
+:todo
+
+
+// TODO: make the tag a real field
 :wasm
-
-
-// The pass currently emits unresolved fields even when the target is Wasm.
-:fixme // Tags need resolved fields, or this configuration needs an explicit rejection.
 class Box(val x)
 private fun tagged() =
   let value = new Box(0)
