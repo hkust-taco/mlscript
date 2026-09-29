@@ -487,7 +487,7 @@ class DeforestRewriter(val solver: DeforestFusionSolver)(using Raise)
         pl.params.map: p =>
           val newSym = new VarSymbol(Tree.Ident(p.sym.name), erasedType = p.sym.erasedType)
           refreshParamMap(p.sym) = newSym
-          Param(p.flags, newSym, p.sign, p.modulefulness),
+          Param(p.flags, newSym, p.sign, p.modulefulness)(p.toLoc),
         pl.restParam)
     val bodyWithCorrectSymbols = refreshExtractedBody(refreshParamMap.toMap, rewrittenBody)
     FunDefn(

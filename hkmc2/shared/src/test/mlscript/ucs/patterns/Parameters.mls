@@ -110,14 +110,16 @@ fun test(x) = if x is Test(_, _, _) then "ok"
 //│ ╔══[COMPILATION ERROR] Resolution error in constructor
 //│ ║  l.109: 	fun test(x) = if x is Test(_, _, _) then "ok"
 //│ ║         	                      ^^^^^^^^^^^^^
-//│ ╙── Class definition 'Test' expected 6 pattern arguments, but got 3
+//│ ╟── Class definition 'Test' expected 6 pattern arguments, but got 3
+//│ ║  l.53: 	class Test(a, b, c, d, e, f)
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 fun test(x) = if x is Test(_, _, _, _, _, _) then "ok"
 
 :e
 fun test(x) = if x is Test(_, _, _, a, _, _) then "ok"
 //│ ╔══[COMPILATION ERROR] This pattern cannot be matched
-//│ ║  l.118: 	fun test(x) = if x is Test(_, _, _, a, _, _) then "ok"
+//│ ║  l.120: 	fun test(x) = if x is Test(_, _, _, a, _, _) then "ok"
 //│ ║         	                                    ^
 //│ ╟── because the corresponding parameter `d` is not publicly accessible
 //│ ║  l.53: 	class Test(a, b, c, d, e, f)
@@ -143,18 +145,20 @@ object A
 :e
 fun foo(x) = if x is A() then 0
 //│ ╔══[COMPILATION ERROR] `A` is an object.
-//│ ║  l.141: 	object A
+//│ ║  l.143: 	object A
 //│ ║         	       ^
 //│ ╟── Its pattern cannot have an argument list.
-//│ ║  l.144: 	fun foo(x) = if x is A() then 0
+//│ ║  l.146: 	fun foo(x) = if x is A() then 0
 //│ ╙──       	                     ^^^
 
 :e
 fun foo(x) = if x is A(y) then y
 //│ ╔══[COMPILATION ERROR] Resolution error in constructor
-//│ ║  l.153: 	fun foo(x) = if x is A(y) then y
+//│ ║  l.155: 	fun foo(x) = if x is A(y) then y
 //│ ║         	                     ^^^^
-//│ ╙── Module/object definition 'A' does not take pattern arguments.
+//│ ╟── Module/object definition 'A' does not take pattern arguments.
+//│ ║  l.143: 	object A
+//│ ╙──       	^^^^^^^^
 
 0 is Foo
 //│ = false
@@ -208,7 +212,7 @@ if p is Crazy(a, b, c, d, e, f, g) then
 :re
 if p is Crazy(a, b, c, d, e, f) then 42
 //│ ╔══[COMPILATION ERROR] Expected seven extraction arguments, but found only six arguments.
-//│ ║  l.209: 	if p is Crazy(a, b, c, d, e, f) then 42
+//│ ║  l.213: 	if p is Crazy(a, b, c, d, e, f) then 42
 //│ ╙──       	              ^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] Error: match error
 
@@ -216,7 +220,7 @@ if p is Crazy(a, b, c, d, e, f) then 42
 :re
 if p is Crazy(all) then 42
 //│ ╔══[COMPILATION ERROR] Expected seven extraction arguments, but found only one argument.
-//│ ║  l.217: 	if p is Crazy(all) then 42
+//│ ║  l.221: 	if p is Crazy(all) then 42
 //│ ╙──       	              ^^^
 //│ ═══[RUNTIME ERROR] Error: match error
 

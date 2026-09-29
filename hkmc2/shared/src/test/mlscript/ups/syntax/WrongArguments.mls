@@ -17,7 +17,7 @@ pattern Baz(pattern A) = A
 pattern Baz(pattern A) = A()
 //│ ╔══[COMPILATION ERROR] `A` is a pattern parameter.
 //│ ║  l.17: 	pattern Baz(pattern A) = A()
-//│ ║        	                    ^
+//│ ║        	            ^^^^^^^^^
 //│ ╟── It cannot be applied.
 //│ ║  l.17: 	pattern Baz(pattern A) = A()
 //│ ╙──      	                         ^^^
@@ -26,7 +26,7 @@ pattern Baz(pattern A) = A()
 pattern Baz(pattern A) = A(1, 2, 3)
 //│ ╔══[COMPILATION ERROR] `A` is a pattern parameter.
 //│ ║  l.26: 	pattern Baz(pattern A) = A(1, 2, 3)
-//│ ║        	                    ^
+//│ ║        	            ^^^^^^^^^
 //│ ╟── It cannot be applied to any arguments.
 //│ ║  l.26: 	pattern Baz(pattern A) = A(1, 2, 3)
 //│ ╙──      	                         ^^^^^^^^^^

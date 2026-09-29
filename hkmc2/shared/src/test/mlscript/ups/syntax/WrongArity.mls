@@ -10,7 +10,7 @@ pattern LessArity = Pair("meow")
 //│ ║       	                    ^^^^^^^^^^^^
 //│ ╟── Class definition 'Pair' expected 2 pattern arguments, but got 1
 //│ ║  l.4: 	data class Pair[A, B](val first: A, val second: B)
-//│ ╙──     	                                 ^^^^^^^^^^^^^^^^
+//│ ╙──     	     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 :e
 pattern MoreArity = Pair("meow", "woof", "moo")
@@ -19,4 +19,4 @@ pattern MoreArity = Pair("meow", "woof", "moo")
 //│ ║        	                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Class definition 'Pair' expected 2 pattern arguments, but got 3
 //│ ║  l.4: 	data class Pair[A, B](val first: A, val second: B)
-//│ ╙──     	                                 ^^^^^^^^^^^^^^^^
+//│ ╙──     	     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

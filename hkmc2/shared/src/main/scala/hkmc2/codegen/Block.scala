@@ -586,7 +586,7 @@ object HandleBlock:
     val handlerMtds = handlers.map: handler =>
       val sym = BlockMemberSymbol(cls.nme + handler.sym.nme, Nil, true)
       val fDef = FunDefn.withFreshSymbol(
-        N, sym, PlainParamList(Param(FldFlags.empty, handler.resumeSym, N, Modulefulness.none) :: Nil) :: Nil,
+        N, sym, PlainParamList(Param.simple(handler.resumeSym) :: Nil) :: Nil,
         handler.body
         )(N, annotations = Nil)
       val rSym = TempSymbol(N, erasedType = N, "suspendRes")

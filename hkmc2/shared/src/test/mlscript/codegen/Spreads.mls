@@ -68,7 +68,7 @@ let x = new A(1, 2, 3)
 x.r
 //│ ╔══[COMPILATION ERROR] Spread parameters are not supported in class parameters.
 //│ ║  l.66: 	data class A(...r)
-//│ ╙──      	                ^
+//│ ╙──      	             ^^^^
 //│ ╔══[COMPILATION ERROR] Resolution error in object instantiation
 //│ ║  l.67: 	let x = new A(1, 2, 3)
 //│ ║        	        ^^^^^^^^^^^^^^
@@ -92,7 +92,7 @@ data class A(...r) with
 new A(1, 2, 3).getR
 //│ ╔══[COMPILATION ERROR] Spread parameters are not supported in class parameters.
 //│ ║  l.90: 	data class A(...r) with
-//│ ╙──      	                ^
+//│ ╙──      	             ^^^^
 //│ ╔══[COMPILATION ERROR] Resolution error in object instantiation
 //│ ║  l.92: 	new A(1, 2, 3).getR
 //│ ║        	^^^^^^^^^^^^^^

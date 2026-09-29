@@ -34,7 +34,7 @@ class BufferableTransform()(using State, Raise):
                   (sym, VarSymbol(sym.id, erasedType = N))
                 .toMap
               def mapParam(p: Param) =
-                Param(p.flags, varMap(p.sym), p.sign, p.modulefulness)
+                Param(p.flags, varMap(p.sym), p.sign, p.modulefulness)(p.toLoc)
               (params.map(pl => ParamList(pl.flags, pl.params.map(mapParam), pl.restParam.map(mapParam))), varMap.toMap)
             def mkFieldReplacer(buf: VarSymbol, baseIdx: VarSymbol, symMap: Map[SimpleSymbol, SimpleSymbol]) =
               def getOffset(off: Int)(k: Path => Block): Block =
@@ -79,7 +79,7 @@ class BufferableTransform()(using State, Raise):
               val (newParams, symMap) = mkSymbolReplacer(f.params)
               val blk = mkFieldReplacer(buf, idx, symMap).applyBlock(f.body)
               FunDefn(f.owner, f.sym, TermSymbol(f.dSym.k, f.dSym.owner, f.dSym.id, erasedType = N), PlainParamList(
-                Param(FldFlags.empty, buf, N, Modulefulness.none) :: Param(FldFlags.empty, idx, N, Modulefulness.none) :: Nil) :: newParams,
+                Param.simple(buf) :: Param.simple(idx) :: Nil) :: newParams,
                 if isCtor then Begin(blk, Return(idx.asSimpleRef)) else blk)(configOverride = f.configOverride, annotations = f.annotations)
             val fakeCtor = transformFunDefn(FunDefn.withFreshSymbol(
                 S(companionSym), 

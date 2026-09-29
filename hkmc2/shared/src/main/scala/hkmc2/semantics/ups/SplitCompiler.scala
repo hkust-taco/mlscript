@@ -827,7 +827,7 @@ class SplitCompiler(using codegen.Erasure)(using tl: TL)(using State, Ctx, Raise
           val symbols = pattern.variables.symbols
           val params = parameters.map:
             case (_, parameterSymbol) =>
-              Param(FldFlags.empty, parameterSymbol, N, Modulefulness.none)
+              Param.simple(parameterSymbol)
           val lambdaSymbol = new TempSymbol(N, erasedType = N, "transform")
           // Next, we need to elaborate the pattern into a split. Note that
           // `makeMatchSplit` returns a function that takes a split as the
@@ -1106,7 +1106,7 @@ class SplitCompiler(using codegen.Erasure)(using tl: TL)(using State, Ctx, Raise
         val symbols = pattern.variables.symbols
         val params = parameters.map:
           case (_, parameterSymbol) =>
-            Param(FldFlags.empty, parameterSymbol, N, Modulefulness.none)
+            Param.simple(parameterSymbol)
         val lambdaSymbol = new TempSymbol(N, erasedType = N, "transform")
         (makeConsequent, alternative) => Split.Let(
           sym = lambdaSymbol,
@@ -1282,9 +1282,9 @@ class SplitCompiler(using codegen.Erasure)(using tl: TL)(using State, Ctx, Raise
   ): (BlockMemberSymbol, ParamList, Split) =
     val sym = BlockMemberSymbol(name, Nil)
     // Pattern parameters are passed as objects.
-    val patternInputs = patternParameters.map(_.copy(flags = FldFlags.empty))
+    val patternInputs = patternParameters.map(p => p.copy(flags = FldFlags.empty)(p.toLoc))
     // The last parameter is the scrutinee.
-    val scrutParam = Param(FldFlags.empty, scrut, N, Modulefulness.none)
+    val scrutParam = Param.simple(scrut)
     val ps = PlainParamList(patternInputs :+ scrutParam)
     (sym, ps, topmost)
   
@@ -1354,7 +1354,7 @@ class SplitCompiler(using codegen.Erasure)(using tl: TL)(using State, Ctx, Raise
   ): Ls[Statement] =
     val fieldSymbol = TempSymbol(N, erasedType = N, name)
     val decl = LetDecl(fieldSymbol, Nil)
-    val param = Param(FldFlags.empty, scrut, N, Modulefulness.none)
+    val param = Param.simple(scrut)
     val paramList = PlainParamList(param :: Nil)
     val lambda = Term.Lam(paramList, Term.SynthIf(topmost))
     val defineVar = DefineVar(fieldSymbol, lambda)

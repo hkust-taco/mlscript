@@ -93,8 +93,8 @@ class TypeRelationTest extends AnyFunSuite:
     val (formal, ft) = h.parameter("X")
     val symbol = TypeAliasSymbol(Tree.Ident("Identity"))
     val member = BlockMemberSymbol("Identity", Nil)
-    symbol.defn = S(TypeDef(symbol, member, List(TyParam(FldFlags.empty, N, formal)),
-      S(ft.resolution.source), N, Nil))
+    symbol.defn = S(TypeDef(symbol, member, List(TyParam(FldFlags.empty, N, formal)(N)),
+      S(ft.resolution.source), N, Nil)(N))
     val alias = h.tpe(TypeShape.Alias(symbol, S(ft.resolution)))
     val (argument, at) = h.parameter("A")
     val application = h.tpe(TypeShape.Applied(alias.resolution, List(at.resolution)))
@@ -121,8 +121,8 @@ class TypeRelationTest extends AnyFunSuite:
     val (unused, _) = h.parameter("Unused")
     val symbol = TypeAliasSymbol(Tree.Ident("Identity"))
     val member = BlockMemberSymbol("Identity", Nil)
-    symbol.defn = S(TypeDef(symbol, member, List(TyParam(FldFlags.empty, N, formal), TyParam(FldFlags.empty, N, unused)),
-      S(ft.resolution.source), N, Nil))
+    symbol.defn = S(TypeDef(symbol, member, List(TyParam(FldFlags.empty, N, formal)(N), TyParam(FldFlags.empty, N, unused)(N)),
+      S(ft.resolution.source), N, Nil)(N))
     val alias = h.tpe(TypeShape.Alias(symbol, S(ft.resolution)))
     val scope = TermSymbol(Fun, N, Tree.Ident("owner"))
     val owner = ResolutionBoundary(scope)

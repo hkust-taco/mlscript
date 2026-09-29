@@ -70,7 +70,7 @@ restIdentity(0, new A).get() + restIdentity(0, new B).get()
 //│ ╟── Cannot resolve member 'get' of a value with unknown shape.
 //│ ╟── Rest parameter 'args' admits elements of unknown shape.
 //│ ║  l.65: 	fun restIdentity(ignored, ...args) = identity(...args)
-//│ ║        	                             ^^^^
+//│ ║        	                          ^^^^^^^
 //│ ╟── 'restIdentity' is exposed by this compilation unit.
 //│ ║  l.65: 	fun restIdentity(ignored, ...args) = identity(...args)
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -80,7 +80,7 @@ restIdentity(0, new A).get() + restIdentity(0, new B).get()
 //│ ╟── Cannot resolve member 'get' of a value with unknown shape.
 //│ ╟── Rest parameter 'args' admits elements of unknown shape.
 //│ ║  l.65: 	fun restIdentity(ignored, ...args) = identity(...args)
-//│ ║        	                             ^^^^
+//│ ║        	                          ^^^^^^^
 //│ ╟── 'restIdentity' is exposed by this compilation unit.
 //│ ║  l.65: 	fun restIdentity(ignored, ...args) = identity(...args)
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

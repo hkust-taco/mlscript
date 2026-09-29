@@ -33,7 +33,7 @@ trait TermSynthesizer(using State):
   protected final def splitLet(sym: LocalVarSymbol, term: Term)(inner: Split): Split =
     Split.Let(sym, term, inner)
   
-  protected final def param = Param(FldFlags.empty, _, N, Modulefulness.none)
+  protected final def param = Param.simple
   protected final def paramList(params: Param*) = PlainParamList(params.toList)
     
   private lazy val runtimeRef: Term.Ref = State.runtimeSymbol.ref().resolve

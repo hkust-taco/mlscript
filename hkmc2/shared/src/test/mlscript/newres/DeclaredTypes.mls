@@ -88,7 +88,7 @@ read(Box(new Item))
 //│ ╟── Cannot resolve member 'extra' of a value with unknown shape.
 //│ ╟── Constructor parameter 'item' has no type annotation.
 //│ ║  l.82: 	class Box(val item)
-//│ ║        	              ^^^^
+//│ ║        	          ^^^^^^^^
 //│ ╟── This type annotation does not provide a type for field 'item'.
 //│ ║  l.83: 	fun read(box: Box) = box.item.extra
 //│ ╙──      	              ^^^
@@ -270,7 +270,7 @@ read(Box(new Item))
 //│ ╟── Cannot resolve member 'extra' of a value with unknown shape.
 //│ ╟── Constructor parameter 'item' has no type annotation.
 //│ ║  l.264: 	class Box(val item)
-//│ ║         	              ^^^^
+//│ ║         	          ^^^^^^^^
 //│ ╟── This type annotation does not provide a type for field 'item'.
 //│ ║  l.265: 	fun read(box: Box) = box.Box#item.extra
 //│ ╙──       	              ^^^
@@ -548,7 +548,7 @@ read(Child(new Item))
 //│ ╟── Cannot resolve member 'extra' of a value with unknown shape.
 //│ ╟── Constructor parameter 'item' has no type annotation.
 //│ ║  l.539: 	class Parent(val item)
-//│ ║         	                 ^^^^
+//│ ║         	             ^^^^^^^^
 //│ ╟── This type annotation does not provide a type for field 'item'.
 //│ ║  l.543: 	fun read(box: Annotated) = identity(box.item).extra
 //│ ╙──       	              ^^^^^^^^^
@@ -569,7 +569,7 @@ invoke(Box(() => 42))
 //│ ║         	                       ^^^^^^^^^^^^
 //│ ╟── Constructor parameter 'callback' has no type annotation.
 //│ ║  l.561: 	class Box(val callback)
-//│ ║         	              ^^^^^^^^
+//│ ║         	          ^^^^^^^^^^^^
 //│ ╟── This type annotation does not provide a type for field 'callback'.
 //│ ║  l.562: 	fun invoke(box: Box) = box.callback()
 //│ ╙──       	                ^^^
@@ -646,7 +646,7 @@ fun foo(factory: () -> Wrapped) = factory().value.oops
 //│ ╟── Cannot resolve member 'oops' of a value with unknown shape.
 //│ ╟── Constructor parameter 'value' has no type annotation.
 //│ ║  l.640: 	class Box(val value)
-//│ ║         	              ^^^^^
+//│ ║         	          ^^^^^^^^^
 //│ ╟── This type annotation does not provide a type for field 'value'.
 //│ ║  l.642: 	fun foo(factory: () -> Wrapped) = factory().value.oops
 //│ ╙──       	                       ^^^^^^^
@@ -664,7 +664,7 @@ class Box(val value)
 //│ ╟── Cannot resolve member 'oops' of a value with unknown shape.
 //│ ╟── Constructor parameter 'value' has no type annotation.
 //│ ║  l.659: 	class Box(val value)
-//│ ║         	              ^^^^^
+//│ ║         	          ^^^^^^^^^
 //│ ╟── This type annotation does not provide a type for field 'value'.
 //│ ║  l.660: 	(Box(new Item) as Box).value.oops
 //│ ╙──       	                  ^^^

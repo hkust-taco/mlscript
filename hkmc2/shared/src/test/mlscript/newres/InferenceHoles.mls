@@ -127,7 +127,7 @@ private fun excess(value: Box[Int, Str]) = ()
 //│ ║         	                          ^^^^^^^^^^^^^
 //│ ╟── The type parameters are declared here.
 //│ ║  l.120: 	class Box[T](val item: T)
-//│ ╙──       	                       ^
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^
 
 // A type alias checks its own argument list before interpreting the body.
 :ge
@@ -142,7 +142,7 @@ private fun excess(value: Alias[Int, Str]) = ()
 //│ ║         	                          ^^^^^^^^^^^^^^^
 //│ ╟── The type parameters are declared here.
 //│ ║  l.135: 	type Alias[A] = Box[A]
-//│ ╙──       	                ^^^^^^
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^
 
 // Annotated results do not hide missing input types from exposure checking.
 :ge

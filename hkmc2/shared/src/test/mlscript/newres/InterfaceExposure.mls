@@ -211,7 +211,7 @@ CopyBox({answer: 42}).copy().value.answer
 //│ ╟── Cannot resolve member 'answer' of a value with unknown shape.
 //│ ╟── Parameter 'value' admits values of unknown shape.
 //│ ║  l.205: 	class CopyBox(val value) with
-//│ ║         	                  ^^^^^
+//│ ║         	              ^^^^^^^^^
 //│ ╟── 'CopyBox' is exposed by this compilation unit.
 //│ ║  l.205: 	class CopyBox(val value) with
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

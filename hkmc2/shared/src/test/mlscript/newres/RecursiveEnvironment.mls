@@ -40,7 +40,7 @@ Box({answer: 42}).copy().value.answer
 //│ ╟── Cannot resolve member 'answer' of a value with unknown shape.
 //│ ╟── Parameter 'value' admits values of unknown shape.
 //│ ║  l.34: 	class Box(val value) with
-//│ ║        	              ^^^^^
+//│ ║        	          ^^^^^^^^^
 //│ ╟── 'Box' is exposed by this compilation unit.
 //│ ║  l.34: 	class Box(val value) with
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -77,7 +77,7 @@ opened({answer: 44})
 //│ ╟── Cannot resolve member 'answer' of a value with unknown shape.
 //│ ╟── Parameter 'value' admits values of unknown shape.
 //│ ║  l.66: 	class OpenBox(val value)
-//│ ║        	                  ^^^^^
+//│ ║        	              ^^^^^^^^^
 //│ ╟── This value is stored in this record field.
 //│ ║  l.67: 	let makers = {create: OpenBox}
 //│ ║        	              ^^^^^^
@@ -104,7 +104,7 @@ let pair = finish({answer: 46})
 //│ ╟── Cannot resolve member 'answer' of a value with unknown shape.
 //│ ╟── Parameter 'second' admits values of unknown shape.
 //│ ║  l.96: 	  class Pair(val first)(val second)
-//│ ║        	                            ^^^^^^
+//│ ║        	                        ^^^^^^^^^^
 //│ ╟── This value is exposed by this compilation unit.
 //│ ║  l.98: 	let finish = partial({answer: 45})
 //│ ╙──      	             ^^^^^^^^^^^^^^^^^^^^^

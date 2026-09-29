@@ -32,14 +32,14 @@ f(using 32)
 //│ ║        	^^^^^^^^^^^
 //│ ╟── Required by contextual parameter declaration: 
 //│ ║  l.25: 	fun f(using i: Int)(using j: Int)(using k: Int): Int = i + j + k
-//│ ║        	                          ^^^^^^
+//│ ║        	                    ^^^^^^^^^^^^
 //│ ╙── Missing instance: Expected: Int; Available: ‹none available›
 //│ ╔══[COMPILATION ERROR] Cannot query instance of type Int for call: 
 //│ ║  l.29: 	f(using 32)
 //│ ║        	^^^^^^^^^^^
 //│ ╟── Required by contextual parameter declaration: 
 //│ ║  l.25: 	fun f(using i: Int)(using j: Int)(using k: Int): Int = i + j + k
-//│ ║        	                                        ^^^^^^
+//│ ║        	                                  ^^^^^^^^^^^^
 //│ ╙── Missing instance: Expected: Int; Available: ‹none available›
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -51,7 +51,7 @@ f(using 32)(using 8)
 //│ ║        	^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Required by contextual parameter declaration: 
 //│ ║  l.25: 	fun f(using i: Int)(using j: Int)(using k: Int): Int = i + j + k
-//│ ║        	                                        ^^^^^^
+//│ ║        	                                  ^^^^^^^^^^^^
 //│ ╙── Missing instance: Expected: Int; Available: ‹none available›
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -70,7 +70,7 @@ f(using 32)
 //│ ║        	^^^^^^^^^^^
 //│ ╟── Required by contextual parameter declaration: 
 //│ ║  l.63: 	fun f(using i: Int)(j: Int)(using k: Int)(l: Num): Int = i + j + k + l
-//│ ║        	                                  ^^^^^^
+//│ ║        	                            ^^^^^^^^^^^^
 //│ ╙── Missing instance: Expected: Int; Available: ‹none available›
 //│ = fun
 
@@ -82,7 +82,7 @@ f(using 32)(8)
 //│ ║        	^^^^^^^^^^^^^^
 //│ ╟── Required by contextual parameter declaration: 
 //│ ║  l.63: 	fun f(using i: Int)(j: Int)(using k: Int)(l: Num): Int = i + j + k + l
-//│ ║        	                                  ^^^^^^
+//│ ║        	                            ^^^^^^^^^^^^
 //│ ╙── Missing instance: Expected: Int; Available: ‹none available›
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 

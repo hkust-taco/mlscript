@@ -249,10 +249,12 @@ fun arityGo(x) = if x is @compile ArityGo(r) then r else "<no match>"
 //│ ╔══[COMPILATION ERROR] Resolution error in constructor
 //│ ║  l.246: 	pattern ArityCtx(pattern H) = H | Pair(ArityCtx(H))
 //│ ║         	                                  ^^^^^^^^^^^^^^^^^
-//│ ╙── Class definition 'Pair' expected 2 pattern arguments, but got 1
+//│ ╟── Class definition 'Pair' expected 2 pattern arguments, but got 1
+//│ ║  l.14: 	data class Pair(val first, val second)
+//│ ╙──      	     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Class `Pair` has 2 parameters.
 //│ ║  l.14: 	data class Pair(val first, val second)
-//│ ║        	                    ^^^^^^^^^^^^^^^^^
+//│ ║        	                ^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── But 1 arguments were provided.
 //│ ║  l.246: 	pattern ArityCtx(pattern H) = H | Pair(ArityCtx(H))
 //│ ╙──       	                                       ^^^^^^^^^^^
@@ -270,7 +272,7 @@ pattern OrderCtx(pattern H) = H | Pair(OrderCtx(H), _) | Lit(_)
 pattern OrderGo = OrderCtx(OrderSum) as OrderGo | _
 fun orderGo(x) = if x is @compile OrderGo(r) then r else "<no match>"
 //│ ╔══[WARNING] Redex alternatives must precede all recursive context alternatives.
-//│ ║  l.270: 	pattern OrderGo = OrderCtx(OrderSum) as OrderGo | _
+//│ ║  l.272: 	pattern OrderGo = OrderCtx(OrderSum) as OrderGo | _
 //│ ╙──       	                  ^^^^^^^^^^^^^^^^^^
 
 

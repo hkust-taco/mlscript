@@ -325,21 +325,21 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
                   stagedAnnots,
                   Nil,
                   N,
-                )
+                )(mod.toLoc)
             case _ => _defn
           reportAnnotations(defn, defn.extraAnnotations)
           val bufferableAnnots = defn.annotations.flatMap:
             case Annot.Trm(trm: SynthSel) =>
               if trm.sym.contains(ctx.builtins.annotations.buffered) then
-                S(false)
+                S(false -> trm)
               else if trm.sym.contains(ctx.builtins.annotations.bufferable) then
-                S(true)
+                S(true -> trm)
               else
                 N
             case _ => N
           if bufferableAnnots.length > 1 then
             raise(ErrorReport(
-              msg"Only one of bufferable annotation is allowed." -> defn.toLoc :: Nil,
+              msg"Only one of bufferable annotation is allowed." -> Loc(bufferableAnnots.map(_._2)) :: Nil,
               source = Diagnostic.Source.Compilation
             ))
           if bufferableAnnots.length >= 1 then
@@ -348,7 +348,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
                 msg"No companion class is allowed with @buffered or @bufferable." -> defn.toLoc :: Nil,
                 source = Diagnostic.Source.Compilation
               ))
-          val bufferable = bufferableAnnots.headOption
+          val bufferable = bufferableAnnots.headOption.map(_._1)
           // Forbid @buffered classes from having a main parameter list
           bufferable.foreach: isBufferable =>
             if !isBufferable && defn.paramsOpt.isDefined then
@@ -560,7 +560,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
           case ps :: rest =>
             val freshSyms = ps.params.map(p => new VarSymbol(new Tree.Ident(p.sym.nme), erasedType = N))
             softTODO(ps.restParam.isEmpty, "Eta expanding rest parameters in constructor definitions is not yet supported")
-            val freshParams = (ps.params zip freshSyms).map((p, s) => Param(p.flags, s, N, p.modulefulness))
+            val freshParams = (ps.params zip freshSyms).map((p, s) => Param(p.flags, s, N, p.modulefulness)(p.toLoc))
             val freshParamList = ParamList(ps.flags, freshParams, N)
             val freshArgs = freshSyms.map(s => Arg(N, s.asSimpleRef))
             Lambda(freshParamList, Return(etaExpand(rest, accArgss :+ freshArgs)))(Nil)
@@ -791,8 +791,8 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
       if sym.binary then
         val t1 = new Tree.Ident("arg1")
         val t2 = new Tree.Ident("arg2")
-        val p1 = Param(FldFlags.empty, VarSymbol(t1, erasedType = N), N, Modulefulness.none)
-        val p2 = Param(FldFlags.empty, VarSymbol(t2, erasedType = N), N, Modulefulness.none)
+        val p1 = Param(FldFlags.empty, VarSymbol(t1, erasedType = N), N, Modulefulness.none)(t1.toLoc)
+        val p2 = Param(FldFlags.empty, VarSymbol(t2, erasedType = N), N, Modulefulness.none)(t2.toLoc)
         val ps = PlainParamList(p1 :: p2 :: Nil)
         val bod = st.App(ref, st.Tup(List(st.Ref(p1.sym)(t1, N).resolve, st.Ref(p2.sym)(t2, N).resolve))
           (Tree.Tup(Nil // FIXME should not be required (using dummy value)
@@ -807,7 +807,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
         return k(Lambda(paramLists.head, bodyBlock)(Nil).withLocOf(ref))
       if sym.unary then
         val t1 = new Tree.Ident("arg")
-        val p1 = Param(FldFlags.empty, VarSymbol(t1, erasedType = N), N, Modulefulness.none)
+        val p1 = Param(FldFlags.empty, VarSymbol(t1, erasedType = N), N, Modulefulness.none)(t1.toLoc)
         val ps = PlainParamList(p1 :: Nil)
         val bod = st.App(ref, st.Tup(List(st.Ref(p1.sym)(t1, N).resolve))
           (Tree.Tup(Nil // FIXME should not be required (using dummy value)
@@ -896,7 +896,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
           Modulefulness.none,
           Annot.RaiseEffects :: Nil,
           N,
-        )
+        )(trm.toLoc)
         val rewritten = st.App(
           State.runtimeSymbol.ref().synthSel(State.toJsAsyncSymbol),
           st.Tup(PlainFld(st.Blk(td :: Nil, bms.ref(ident).resolved(dsym))) :: Nil)(Tree.DummyTup)

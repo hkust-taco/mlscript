@@ -53,7 +53,7 @@ fun missing(a) = a.Later#missing()
 //│ ║        	                 ^^^^^^^^^^^^^^^
 //│ ╟── Class 'Later' does not contain member 'missing'
 //│ ║  l.7: 	class Later(val x) { fun get() = x }
-//│ ╙──     	                                 ^
+//│ ╙──     	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 :e
 val NotClass = 1
