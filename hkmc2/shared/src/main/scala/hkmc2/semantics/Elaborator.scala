@@ -1399,10 +1399,10 @@ extends Importer:
         case Trm | Receiver | Specialization => Specialization
         case _ => interp
       val result = Term.TyApp(subterm(lhs, baseInterp), targs.map {
-        case Modified(Keywrd(Keyword.`in`), arg) => Term.WildcardTy(S(subterm(arg, Tpe)), N)
-        case Modified(Keywrd(Keyword.`out`), arg) => Term.WildcardTy(N, S(subterm(arg, Tpe)))
-        case Tup(Modified(Keywrd(Keyword.`in`), arg1) :: Modified(Keywrd(Keyword.`out`), arg2) :: Nil) =>
-          Term.WildcardTy(S(subterm(arg1, Tpe)), S(subterm(arg2, Tpe)))
+        case Modified(kw @ Keywrd(Keyword.`in`), arg) => Term.WildcardTy(S(subterm(arg, Tpe)), N).mkLocWith(kw)
+        case Modified(kw @ Keywrd(Keyword.`out`), arg) => Term.WildcardTy(N, S(subterm(arg, Tpe))).mkLocWith(kw)
+        case Tup(Modified(in @ Keywrd(Keyword.`in`), arg1) :: Modified(out @ Keywrd(Keyword.`out`), arg2) :: Nil) =>
+          Term.WildcardTy(S(subterm(arg1, Tpe)), S(subterm(arg2, Tpe))).mkLocWith(in, out)
         case arg => subterm(arg, Tpe)
       })(N).withLocOf(tree)
       // A term specialization must validate its arguments even when unused.

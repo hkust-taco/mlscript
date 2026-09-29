@@ -130,7 +130,7 @@ class PublisherTest extends AnyFunSuite:
     def publish(shape: TermShape)(using NewResolverState): Unit =
       if variable.currentShapes.add(shape) then variable.notifyShapeListeners(shape)
     val before = DynShape()
-    val after = OpaqueTypeShape(Term.UnitVal())
+    val after = OpaqueTypeShape(Term.UnitVal())(semantics.TypeInterfaceReason.Unavailable(Term.UnitVal()))
     publish(before)
     val originalListeners = use.shapeListeners.toVector
     state.completeBlock(use)

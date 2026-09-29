@@ -541,13 +541,49 @@ final case class CallableTypeShape(source: Term, paramLists: NELs[DeclaredParams
   def toLoc: Opt[Loc] = declaration.fold(source.toLoc)(_.toLoc)
   protected def getMemberImpl(name: Str)(using NewResolverState): MemberLookup = MemberLookup.Missing
 
-/** An abstract annotation authorizes no operations based on the implementation. */
-final case class OpaqueTypeShape(source: Term) extends CoreHeadShape:
-  def describe: Str = "value of abstract type"
+/** Why observing a type did not expose a member interface. Keep this evidence
+  * separate from semantic candidates: normalization can synthesize Any without
+  * making the written input bound an abstract type. Each reason retains a finite
+  * source witness, not a path that grows when recursive aliases are revisited.
+  */
+enum TypeInterfaceReason:
+  case MissingOutput(source: Term)
+  case ContravariantParameter(parameter: TyParam, source: Term)
+  case Unrestricted(source: Term)
+  case AbstractDeclaration(symbol: TypeAliasSymbol)
+  case RecursiveAlias(symbol: TypeAliasSymbol)
+  case Negated(source: Term)
+  case Unavailable(source: Term)
+
+  def provenance: ShapeProvenance = ShapeProvenance(this match
+    case MissingOutput(source) =>
+      (msg"This type argument specifies only an input bound." -> source.toLoc) ::
+        (msg"Values read through it have no output bound more specific than 'Any'." -> N) :: Nil
+    case ContravariantParameter(parameter, source) =>
+      (msg"This type argument supplies only an input bound for '${parameter.sym.nme}'." -> source.toLoc) ::
+        (msg"Type parameter '${parameter.sym.nme}' is declared contravariant here." -> parameter.sym.toLoc) ::
+        (msg"Values read through it have no output bound more specific than 'Any'." -> N) :: Nil
+    case Unrestricted(source) =>
+      msg"This type permits values of any type, so no member interface is guaranteed." -> source.toLoc :: Nil
+    case AbstractDeclaration(symbol) =>
+      msg"Type '${symbol.nme}' is declared without a member interface." -> symbol.toLoc :: Nil
+    case RecursiveAlias(symbol) =>
+      msg"Following type alias '${symbol.nme}' does not expose a member interface." -> symbol.toLoc :: Nil
+    case Negated(source) =>
+      msg"This negated type does not specify a member interface." -> source.toLoc :: Nil
+    case Unavailable(source) =>
+      msg"No member interface is known for this type." -> source.toLoc :: Nil
+  )
+
+/** A type view that authorizes no member operations. The diagnostic reason is
+  * excluded from equality so alternative witnesses do not add inference flow.
+  */
+final case class OpaqueTypeShape(source: Term)(val reason: TypeInterfaceReason) extends CoreHeadShape:
+  def describe: Str = "value with no known interface"
   def toLoc: Opt[Loc] = source.toLoc
+  def provenance: ShapeProvenance = reason.provenance
   protected def getMemberImpl(name: Str)(using NewResolverState): MemberLookup =
-    MemberLookup.Unknown(MemberLookup.Uncertainty.ValueShape,
-      ShapeProvenance(msg"This abstract type does not specify a member interface." -> toLoc :: Nil))
+    MemberLookup.Unknown(MemberLookup.Uncertainty.ValueShape, provenance)
 
 class DefnShape(val defn: Definition, val ext: Opt[TermShape]) extends CoreHeadShape:
   /** Instance lookup is shared by constructor calls and explicit `new`.
