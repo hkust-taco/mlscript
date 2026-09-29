@@ -35,15 +35,15 @@ class BufferableTransform()(using State, Raise):
                 .toMap
               def mapParam(p: Param) =
                 Param(p.flags, varMap(p.sym), p.sign, p.modulefulness)(p.toLoc)
-              (params.map(pl => ParamList(pl.flags, pl.params.map(mapParam), pl.restParam.map(mapParam))), varMap.toMap)
+              (params.map(pl => ParamList(pl.flags, pl.params.map(mapParam), pl.restParam.map(mapParam))(pl.toLoc)), varMap.toMap)
             def mkFieldReplacer(buf: VarSymbol, baseIdx: VarSymbol, symMap: Map[SimpleSymbol, SimpleSymbol]) =
-              def getOffset(off: Int)(k: Path => Block): Block =
+              def getOffset(off: Int, loc: Opt[Loc])(k: Path => Block): Block =
                 val idxSymbol = new TempSymbol(N, erasedType = S(ErasedType.Int), "idx")
-                Scoped(Set.single(idxSymbol), Assign(idxSymbol, Call(State.builtinOpsMap("+").asSimpleRef, (baseIdx.asSimpleRef.asArg :: Value.Lit(Tree.IntLit(off)).asArg :: Nil) ne_:: Nil)(CallMetadata.defaultMlsFun),
-                  k(DynSelect(buf.asSimpleRef.selSN("buf"), idxSymbol.asSimpleRef, true))))
+                Scoped(Set.single(idxSymbol), Assign(idxSymbol, Call(State.builtinOpsMap("+").asSimpleRef, (baseIdx.asSimpleRef.asArg :: Value.Lit(Tree.IntLit(off))(N).asArg :: Nil) ne_:: Nil)(CallMetadata.defaultMlsFun, N),
+                  k(DynSelect(buf.asSimpleRef.selSN("buf"), idxSymbol.asSimpleRef, true)(loc))))
               def assignToOffset(off: Int, r: Result, rst: Block) =
                 val idxSymbol = new TempSymbol(N, erasedType = S(ErasedType.Int), "idx")
-                Scoped(Set.single(idxSymbol), Assign(idxSymbol, Call(State.builtinOpsMap("+").asSimpleRef, (baseIdx.asSimpleRef.asArg :: Value.Lit(Tree.IntLit(off)).asArg :: Nil) ne_:: Nil)(CallMetadata.defaultMlsFun),
+                Scoped(Set.single(idxSymbol), Assign(idxSymbol, Call(State.builtinOpsMap("+").asSimpleRef, (baseIdx.asSimpleRef.asArg :: Value.Lit(Tree.IntLit(off))(N).asArg :: Nil) ne_:: Nil)(CallMetadata.defaultMlsFun, N),
                   AssignDynField(buf.asSimpleRef.selSN("buf"), idxSymbol.asSimpleRef, true, r, applyBlock(rst))))
               new BlockTransformer(SymbolSubst.Id):
                 override def applySimpleSymbol(sym: SimpleSymbol): SimpleSymbol = symMap.getOrElse(sym, sym)
@@ -66,11 +66,11 @@ class BufferableTransform()(using State, Raise):
                   case sel: Select =>
                     sel.symbol.fold(super.applyPath(p)(k)): sym =>
                       fieldMap.get(sym).orElse(pubFieldMap.get(sym).flatMap(fieldMap.get(_))).fold(super.applyPath(p)(k)): off =>
-                        getOffset(off): res =>
+                        getOffset(off, p.toLoc): res =>
                           k(res)
                   case r: Value.Ref =>
                     fieldMap.get(r.symbol).fold(super.applyPath(p)(k)): off =>
-                      getOffset(off): res =>
+                      getOffset(off, p.toLoc): res =>
                         k(res)
                   case _ => super.applyPath(p)(k)
             def transformFunDefn(f: FunDefn, isCtor: Bool): FunDefn =
@@ -79,7 +79,7 @@ class BufferableTransform()(using State, Raise):
               val (newParams, symMap) = mkSymbolReplacer(f.params)
               val blk = mkFieldReplacer(buf, idx, symMap).applyBlock(f.body)
               FunDefn(f.owner, f.sym, TermSymbol(f.dSym.k, f.dSym.owner, f.dSym.id, erasedType = N), PlainParamList(
-                Param.simple(buf) :: Param.simple(idx) :: Nil) :: newParams,
+                Param.simple(buf) :: Param.simple(idx) :: Nil)(N) :: newParams,
                 if isCtor then Begin(blk, Return(idx.asSimpleRef)) else blk)(configOverride = f.configOverride, annotations = f.annotations)
             val fakeCtor = transformFunDefn(FunDefn.withFreshSymbol(
                 S(companionSym), 
@@ -92,7 +92,7 @@ class BufferableTransform()(using State, Raise):
               fakeCtor :: cls.methods.map(transformFunDefn(_, false)),
               Nil,
               clsSizeSym -> clsSizeTermSym :: Nil,
-              Define(ValDefn(clsSizeTermSym, clsSizeSym, Value.Lit(Tree.IntLit(fields.size)))(N, Nil), End()),
+              Define(ValDefn(clsSizeTermSym, clsSizeSym, Value.Lit(Tree.IntLit(fields.size))(N))(N, Nil), End()),
               annotations = Nil,
             )
             k:

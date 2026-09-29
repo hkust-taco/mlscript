@@ -56,22 +56,22 @@ class AsyncLowering(using TL, Raise, Elaborator.State, Elaborator.Ctx, Config):
           )
       )
       val vars = fun.params.flatMap(_.paramSyms)
-      val noAsync = fun.annotations.filterNot(_ is Annot.Async)
+      val noAsync = fun.annotations.filterNot(_.isInstanceOf[Annot.Async])
       val transformer = new BlockTransformer(SymbolSubst.Id):
         override def applySimpleSymbol(sym: SimpleSymbol): SimpleSymbol =
           symMap.getOrElse(sym, sym)
         override def applyValue(v: Value)(k: Value => Block): Block = v match
           case Value.This(sym) if fun.owner.contains(sym) =>
-            k(Value.SimpleRef(thisVar))
+            k(Value.SimpleRef(thisVar)(v.toLoc))
           case _ => super.applyValue(v)(k)
       val newBody = transformer.applyBlock(wrapAwait(true)(applyFunBodyLikeBlock(fun.body)))
-      collectedFunDefn += FunDefn(N, outerBms, outerDsym, PlainParamList((thisParam.iterator ++ outerParams.iterator.map(_._2)).toList) :: PlainParamList(Nil) :: Nil, newBody)(fun.configOverride, noAsync)
-      val callArgs = (fun.owner.iterator.map(s => Arg(N, Value.This(s))) ++ fun.params.iterator.flatMap(_.allParams.iterator.map(p => Arg(N, Value.SimpleRef(p.sym))))).toList
-      val outerCall = Call(Value.MemberRef(outerBms, outerDsym), callArgs ne_:: Nil)(CallMetadata.mlsFunWithEffect)
+      collectedFunDefn += FunDefn(N, outerBms, outerDsym, PlainParamList((thisParam.iterator ++ outerParams.iterator.map(_._2)).toList)(N) :: PlainParamList(Nil)(N) :: Nil, newBody)(fun.configOverride, noAsync)
+      val callArgs = (fun.owner.iterator.map(s => Arg(N, Value.This(s)(N))) ++ fun.params.iterator.flatMap(_.allParams.iterator.map(p => Arg(N, Value.SimpleRef(p.sym)(N))))).toList
+      val outerCall = Call(Value.MemberRef(outerBms, outerDsym)(N), callArgs ne_:: Nil)(CallMetadata.mlsFunWithEffect, N)
       val tmp = TempSymbol(N, erasedType = outerCall.erasedValueType, "tmp")
       val wrapperBody = blockBuilder
         .assignScoped(tmp, outerCall)
-        .ret(Call(Value.SimpleRef(State.runtimeSymbol).selSN("toJsAsync"), (tmp.asSimpleRef.asArg :: Nil) ne_:: Nil)(CallMetadata.defaultMlsFun))
+        .ret(Call(Value.SimpleRef(State.runtimeSymbol)(N).selSN("toJsAsync"), (tmp.asSimpleRef.asArg :: Nil) ne_:: Nil)(CallMetadata.defaultMlsFun, N))
       FunDefn(fun.owner, fun.sym, fun.dSym, fun.params, wrapperBody)(fun.configOverride, noAsync)
     
     override def applyMainBlock(main: Block): Block =

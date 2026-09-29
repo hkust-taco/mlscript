@@ -289,7 +289,7 @@ class BlockSimplifier
       case Value.SimpleRef(loc: LocalVarSymbol) if localVars.contains(loc) && !definedVars.contains(loc) =>
         registerChange(s"${loc.showDbg} is never assigned; replacing read with undefined")
         // if !symbolsToPreserve(loc) then removedLocals += loc
-        k(Value.Lit(syntax.Tree.UnitLit(false)))
+        k(Value.Lit(syntax.Tree.UnitLit(false))(v.toLoc))
       case _ => super.applyValue(v)(k)
     
     override def applyBlock(b: Block): Block = b match
@@ -863,7 +863,7 @@ class BlockSimplifier
           registerChange(s"immediate assigned call prefix ${lhs.showDbg} ~> ${path.showDbg}")
           applyPath(path): path2 =>
             val lhs2 = recordAssignmentFact(lhs, path2, ass)
-            val combined = Call(path2, argss)(call.metadata).withLocOf(call)
+            val combined = Call(path2, argss)(call.metadata, call.toLoc)
             val res = applyBlock(Assign(nextLhs, combined, rst))
             // * Note that it is incorrect to eliminate the `lhs` assignment even if `!rst.freeVars(lhs)`,
             // * because the assignment may be visible from an outer block
@@ -878,7 +878,7 @@ class BlockSimplifier
           registerChange(s"immediate returned call prefix ${lhs.showDbg} ~> ${path.showDbg}")
           applyPath(path): path2 =>
             val lhs2 = recordAssignmentFact(lhs, path2, ass)
-            val combined = Call(path2, argss)(call.metadata).withLocOf(call)
+            val combined = Call(path2, argss)(call.metadata, call.toLoc)
             val res = applyBlock(Return(combined))
             if symbolsToPreserve(lhs) then Assign(lhs2, path2, res) else res
 
@@ -1157,7 +1157,7 @@ class BlockSimplifier
         analysis.litValue match
         case true =>
           registerChange(s"${loc.showDbg} ~> undefined")
-          return k(Value.Lit(syntax.Tree.UnitLit(false)))
+          return k(Value.Lit(syntax.Tree.UnitLit(false))(v.toLoc))
         case lit: (Value | Cast) =>
           registerChange(s"${loc.showDbg} ~> ${lit.showDbg}")
           return k(lit)
@@ -1203,7 +1203,7 @@ class BlockSimplifier
               prefix.metadata.mayRaiseEffects || c.metadata.mayRaiseEffects,
               prefix.metadata.annotations ++ c.metadata.annotations,
             ),
-          ).withLocOf(c)
+            c.toLoc)
           super.applyResult(combined)(k)
         case N => super.applyResult(r)(k)
       
@@ -1474,7 +1474,7 @@ class BlockSimplifier
             if args.size < params.params.size then return N
             val (fixedArgs, restArgs) = args.splitAt(params.params.size)
             S(fixedArgs.zip(params.params).map((arg, param) => (param.sym, arg.value)) ++
-              List((params.restParam.get.sym, Tuple(true, restArgs))))
+              List((params.restParam.get.sym, Tuple(true, restArgs)(N))))
       
       /** Match multiple argument lists against multiple parameter lists.
         * Returns None if any arg list fails to match its corresponding param list,
@@ -1917,8 +1917,8 @@ class BlockSimplifier
                       acc(Scoped(Set(resSym), newBlk(
                         k(Call(resSym.asSimpleRef, extraArgss.ne_!)(
                           call.metadata.copy(
-                            annotations = call.metadata.annotations.filterNot(_ == Annot.TailCall),
-                          ))))))
+                            annotations = call.metadata.annotations.filterNot(_.isInstanceOf[Annot.TailCall]),
+                          ), call.toLoc)))))
                   case (sym, value) :: argRest =>
                     val newSym = VarSymbol(sym.id, erasedType = sym.erasedType)
                     go(acc.assignScoped(newSym, value), argRest, mapping + (sym -> newSym))

@@ -34,7 +34,7 @@ trait TermSynthesizer(using State):
     Split.Let(sym, term, inner)
   
   protected final def param = Param.simple
-  protected final def paramList(params: Param*) = PlainParamList(params.toList)
+  protected final def paramList(params: Param*) = PlainParamList(params.toList)(N)
     
   private lazy val runtimeRef: Term.Ref = State.runtimeSymbol.ref().resolve
 

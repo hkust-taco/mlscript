@@ -638,8 +638,8 @@ extends Importer:
     msg"Member names must start with a letter or underscore, followed by letters, digits, or underscores." -> N
     :: Nil
   
-  def mkLetBinding(kw: Tree.Keywrd[?], sym: LocalVarSymbol | TermSymbol, rhs: Term, annotations: Ls[Annot]): Ls[Statement] =
-    LetDecl(sym, annotations).mkLocWith(kw, sym) :: DefineVar(sym, rhs) :: Nil
+  def mkLetBinding(sym: LocalVarSymbol | TermSymbol, rhs: Term, annotations: Ls[Annot])(loc: Opt[Loc]): Ls[Statement] =
+    LetDecl(sym, annotations)(loc) :: DefineVar(sym, rhs)(loc) :: Nil
   
   def resolveField(srcTree: Tree, base: Opt[Symbol], nme: Ident): Opt[MemberSymbol] =
     base match
@@ -665,12 +665,12 @@ extends Importer:
       | Keyword.`virtual`
       | Keyword.`public`
       | Keyword.`private`
-    )) => S(Annot.Modifier(kw))
+    )) => S(Annot.Modifier(kw)(tree.toLoc))
     case App(Ident("config"), Tup(args)) =>
       val modify = ConfigParser.parseOverrides(args)
-      S(Annot.Config(modify))
+      S(Annot.Config(modify)(tree.toLoc))
     case App(Ident("affine"), Tup(IntLit(whichParamList) :: Nil)) =>
-      S(Annot.Affine(whichParamList.toInt).withLocOf(tree))
+      S(Annot.Affine(whichParamList.toInt)(tree.toLoc))
     case _ => term(tree) match
       case Term.Error() => N
       case trm =>
@@ -678,24 +678,24 @@ extends Importer:
         case S(sym) =>
           sym match
           case ctx.builtins.annotations.untyped =>
-            return S(Annot.Untyped)
+            return S(Annot.Untyped()(tree.toLoc))
           case ctx.builtins.annotations.tailcall =>
-            return S(Annot.TailCall)
+            return S(Annot.TailCall()(tree.toLoc))
           case ctx.builtins.annotations.tailrec =>
-            return S(Annot.TailRec)
+            return S(Annot.TailRec()(tree.toLoc))
           case ctx.builtins.annotations.inline =>
-            return S(Annot.Inline)
+            return S(Annot.Inline()(tree.toLoc))
           case ctx.builtins.annotations.noInline =>
-            return S(Annot.NoInline)
+            return S(Annot.NoInline()(tree.toLoc))
           case ctx.builtins.annotations.generator =>
-            return S(Annot.Generator)
+            return S(Annot.Generator()(tree.toLoc))
           case ctx.builtins.annotations.async =>
-            return S(Annot.Async)
+            return S(Annot.Async()(tree.toLoc))
           case ctx.builtins.annotations.pure =>
-            return S(Annot.Pure)
+            return S(Annot.Pure()(tree.toLoc))
           case _ => ()
         case _ => ()
-        S(Annot.Trm(trm))
+        S(Annot.Trm(trm)(tree.toLoc))
   
   private final case class EffectHandlerMethodSpec(
       methodName: Str,
@@ -734,7 +734,7 @@ extends Importer:
         Fun,
         mtdSym,
         tsym,
-        PlainParamList(valueSym.fold(Nil)(sym => Param.simple(sym) :: Nil)) :: Nil,
+        PlainParamList(valueSym.fold(Nil)(sym => Param.simple(sym) :: Nil))(N) :: Nil,
         N,
         N,
         S(spec.methodBody(valueSym)),
@@ -1067,7 +1067,7 @@ extends Importer:
         Param.simple(sym)
       .toList
     if params.isEmpty then st
-    else Term.Lam(PlainParamList(params), st)
+    else Term.Lam(PlainParamList(params)(N), st)
   
   def subterm(tree: Tree): Ctxl[UnderCtx ?=> Term] =
   trace[Term](s"Elab subterm ${tree.showDbg}", r => s"~> $r"):
@@ -1140,7 +1140,7 @@ extends Importer:
         val lt = subterm(lhs)
         val sym = TempSymbol(S(lt), erasedType = N, "old")
         Blk(
-          LetDecl(sym, Nil) :: DefineVar(sym, lt) :: Nil, Term.Try(Blk(
+          LetDecl(sym, Nil)(tree.toLoc) :: DefineVar(sym, lt)(tree.toLoc) :: Nil, Term.Try(Blk(
             Term.Assgn(lt, subterm(rhs)) :: Nil,
             subterm(bod),
         ), Term.Assgn(lt, sym.ref())))
@@ -1421,7 +1421,7 @@ extends Importer:
         Param.simple(self) :: Nil,
         S:
           Param.simple(args)
-      )
+      )(N)
       val rs = FlowSymbol.app()
       Term.Lam(ps,
         Term.App(Term.SelProj(self.ref(), c, nme)(f, FlowSymbol.selProj(nme.name), N, S(summon)), args.ref())(
@@ -1492,7 +1492,7 @@ extends Importer:
       val scrut = VarSymbol(Ident("caseScrut"), erasedType = N)
       val body = caseSplit(scrut, tree)
       val params = Param.simple(scrut) :: Nil
-      Term.Lam(PlainParamList(params), body).mkLocWith(kw)
+      Term.Lam(PlainParamList(params)(N), body).mkLocWith(kw)
     case PrefixApp(kw @ Keywrd(Keyword.`return`), body) =>
       ctx.getRetHandler match
       case ReturnHandler.Required(sym) =>
@@ -1851,7 +1851,7 @@ extends Importer:
           case pathArg => S((pathArg, N))
         val (newCtx, newAcc) = pathAndAlias match
           case S((StrLit(path), alias)) =>
-            val stmt = importPath(path, alias).withLocOf(m)
+            val stmt = importPath(path, alias)(m.toLoc)
             (ctx + (stmt.sym.nme -> stmt.sym),
               stmt :: acc)
           case S((pathArg, _)) =>
@@ -1882,8 +1882,8 @@ extends Importer:
             val sym = new VarSymbol(id, erasedType = N)
             newCtx += id.name -> sym
             RcdField(Term.Lit(StrLit(id.name)).withLocOf(id), sym.ref(id))
-              :: DefineVar(sym, rhs_t)
-              :: LetDecl(sym, annotations)
+              :: DefineVar(sym, rhs_t)(Loc(rlhs, rhs))
+              :: LetDecl(sym, annotations)(id.toLoc)
               :: acc
           case lit: Literal =>
             reportUnusedAnnotations
@@ -1908,17 +1908,17 @@ extends Importer:
           case S(rhs) =>
             val rrhs = tups.foldRight(rhs):
               InfixApp(_, Keywrd(Keyword.`=>`), _)
-            mkLetBinding(kw, sym, term(rrhs), annotations) reverse_::: acc
+            mkLetBinding(sym, term(rrhs), annotations)(hd.toLoc) reverse_::: acc
           case N =>
             if tups.nonEmpty then
               raise(ErrorReport(msg"Expected a right-hand side for let bindings with parameters" -> hd.toLoc :: Nil))
-            LetDecl(sym, annotations).mkLocWith(kw) :: acc
+            LetDecl(sym, annotations)(hd.toLoc) :: acc
         (ctx + (id.name -> sym)) givenIn:
           go(sts, Nil, newAcc)
       case (tree @ LetLike(Keywrd(`let`), lhs, _, N)) :: sts =>
         raise(ErrorReport(msg"Unsupported let binding shape" -> tree.toLoc :: Nil))
         go(sts, Nil, Term.Error().withLocOf(tree) :: acc)
-      case Def(lhs, rhs) :: sts =>
+      case (definition @ Def(lhs, rhs)) :: sts =>
         reportUnusedAnnotations
         lhs match
         case id: Ident =>
@@ -1926,7 +1926,7 @@ extends Importer:
           ctx.get(id.name) match
           case S(elem) =>
             elem.symbol match
-            case S(sym: (LocalSymbol | TermSymbol)) => go(sts, Nil, DefineVar(sym, r) :: acc)
+            case S(sym: (LocalSymbol | TermSymbol)) => go(sts, Nil, DefineVar(sym, r)(definition.toLoc) :: acc)
             case S(sym) =>
               raise(ErrorReport(msg"Symbol '${id.name}' is not a variable and cannot be reassigned" -> id.toLoc :: Nil))
               go(sts, Nil, Term.Error().withLocOf(id) :: acc)
@@ -1994,8 +1994,8 @@ extends Importer:
                 case _ if ctx.mode is Mode.Light => S(Term.Missing)
                 case S(rhs) => S:
                   val nonLocalRetHandler = TempSymbol(N, erasedType = N, s"nonLocalRetHandler$$${id.name}")
-                  val hasGeneratorAnnotation = annotations.contains(Annot.Generator)
-                  val hasAsyncAnnotation = annotations.contains(Annot.Async)
+                  val hasGeneratorAnnotation = annotations.exists(_.isInstanceOf[Annot.Generator])
+                  val hasAsyncAnnotation = annotations.exists(_.isInstanceOf[Annot.Async])
                   if pss.isEmpty && hasGeneratorAnnotation then
                     raise(ErrorReport(msg"Generators are not supported on functions without a parameter list" -> td.toLoc :: Nil))
                   newCtx.nest(OuterCtx.Function(nonLocalRetHandler)(pss.nonEmpty && hasGeneratorAnnotation, hasAsyncAnnotation)).givenIn: newCtx ?=>
@@ -2170,7 +2170,7 @@ extends Importer:
           res.restParam.foreach: rp =>
             raise(ErrorReport(
               msg"Spread parameters are not supported in class parameters." -> rp.toLoc :: Nil))
-          res.copy(restParam = N)
+          res.copy(restParam = N)(res.toLoc)
         
         def withFields(extraParams: Ls[ParamList])(using Ctx)(fn: (Ctx) ?=> (Term.Blk, Ctx)): (Term.Blk, Ctx) =
           softAssert(pss.sizeCompare(td.clsParams) === 0,
@@ -2216,8 +2216,8 @@ extends Importer:
               else
                 val psym = TermSymbol(LetBind, owner, p.sym.id, erasedType = p.sym.erasedType)
                 psym.sourceAliases = p.sym.sourceAliases
-                val decl = LetDecl(psym, Nil)
-                val defn = DefineVar(psym, p.sym.ref())
+                val decl = LetDecl(psym, Nil)(p.toLoc) // TODO: never use term symbols on LetDecl LHS
+                val defn = DefineVar(psym, p.sym.ref())(p.toLoc)
                 p.fldSym = S(psym)
                 decl :: defn :: Nil
           
@@ -2229,8 +2229,8 @@ extends Importer:
                 case _: TypeAliasSymbol => die
               val psym = TermSymbol(LetBind, owner, p.sym.id, erasedType = p.sym.erasedType)
               psym.sourceAliases = p.sym.sourceAliases
-              val decl = LetDecl(psym, Nil)
-              val defn = DefineVar(psym, p.sym.ref())
+              val decl = LetDecl(psym, Nil)(p.toLoc)
+              val defn = DefineVar(psym, p.sym.ref())(p.toLoc)
               p.fldSym = S(psym)
               decl :: defn :: Nil
           
@@ -2372,7 +2372,7 @@ extends Importer:
             res.restParam.foreach: rp =>
               raise(ErrorReport(
                 msg"Spread parameters are not supported in class parameters." -> rp.toLoc :: Nil))
-            res.copy(restParam = N)
+            res.copy(restParam = N)(res.toLoc)
           newCtx.givenIn:
             trace(s"Processing class definition $nme"):
               val comp = sym.asMod
@@ -2414,14 +2414,14 @@ extends Importer:
       // * Reconstruct as `Directive(config, Tup(args))` and re-process.
       case App(Directive(prefix, _), args) :: sts =>
         go(Directive(prefix, args) :: sts, annotations, acc)
-      case Directive(Ident("config"), Tup(args)) :: sts =>
+      case (directive @ Directive(Ident("config"), Tup(args))) :: sts =>
         reportUnusedAnnotations
         val modify = ConfigParser.parseOverrides(args)
-        go(sts, Nil, SetConfig(modify) :: acc)
-      case Directive(Ident("lang"), Tup(args)) :: sts =>
+        go(sts, Nil, SetConfig(modify)(directive.toLoc) :: acc)
+      case (directive @ Directive(Ident("lang"), Tup(args))) :: sts =>
         reportUnusedAnnotations
         val modify = ConfigParser.parseLanguageDirective(args)
-        go(sts, Nil, SetConfig(modify) :: acc)
+        go(sts, Nil, SetConfig(modify)(directive.toLoc) :: acc)
       case Directive(Ident(name), _) :: sts =>
         raise(ErrorReport(
           msg"Unknown directive '#${name}'" -> sts.headOption.flatMap(_.toLoc) :: Nil,
@@ -2536,7 +2536,7 @@ extends Importer:
     case Tup(ps) =>
       def go(ps: Ls[Tree], acc: Ls[Param], ctx: Ctx, flags: ParamListFlags): (ParamList, Ctx) =
         ps match
-        case Nil => (ParamList(flags, acc.reverse, N).withLocOf(t), ctx)
+        case Nil => (ParamList(flags, acc.reverse, N)(t.toLoc), ctx)
         case hd :: tl =>
           val isCtxParam = hd.isModified(Ins)
           val inUsing = flags.ctx || isCtxParam
@@ -2552,7 +2552,7 @@ extends Importer:
               if spd is SpreadKind.Lazy then
                 raise(ErrorReport(msg"Lazy spread parameters not allowed." -> hd.toLoc :: Nil))
               if tl.isEmpty then
-                (ParamList(flags, acc.reverse, S(p)).withLocOf(t), newCtx)
+                (ParamList(flags, acc.reverse, S(p))(t.toLoc), newCtx)
               else
                 raise(ErrorReport(msg"Spread parameters must be the last in the parameter list." -> hd.toLoc :: Nil))
                 go(tl, p :: acc, newCtx, newFlags)
@@ -2563,7 +2563,7 @@ extends Importer:
       raise:
         ErrorReport:
           msg"Expected a parameter list (a tuple of parameters), but found ${t.describe}" -> t.toLoc :: Nil
-      (ParamList(ParamListFlags.empty, Nil, N).withLocOf(t), ctx)
+      (ParamList(ParamListFlags.empty, Nil, N)(t.toLoc), ctx)
   
   def ident(id: Ident)(using Ctx): Ctxl[Opt[Term]] = ctx.get(id.name) match
     case S(elem) => S(elem.ref(id))

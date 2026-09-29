@@ -218,7 +218,7 @@ class Compiler(using Context)(using tl: TL)(using Ctx, State, Raise) extends Ter
           val consequent = Split.Else(makeResult(fieldSymbol))
           val branch = Branch(scrutinee.safeRef, fieldTest, consequent)
           SynthIf(branch ~: Split.Else(subScrutinee.default))
-      LetDecl(subScrutinee.symbol, Nil) :: DefineVar(subScrutinee.symbol, result) :: Nil
+      LetDecl(subScrutinee.symbol, Nil)(N) :: DefineVar(subScrutinee.symbol, result)(N) :: Nil
     .toList
     // For each pattern, we compile a split and bind the result to a variable.
     // The variable will be a field of the output record.
@@ -235,7 +235,7 @@ class Compiler(using Context)(using tl: TL)(using Ctx, State, Raise) extends Ter
             else makeMatchSuccess(outputSymbol.use, nullifyEmptyBindings(bindings.use)),
           alternative = Split.Else(emptyMatchResult("topmost")))
         val test = SynthIf(split)
-        (DefineVar(symbol, test) :: LetDecl(symbol, Nil) :: stmts, (label, symbol.safeRef) :: results)
+        (DefineVar(symbol, test)(N) :: LetDecl(symbol, Nil)(N) :: stmts, (label, symbol.safeRef) :: results)
     // Materialize the matcher's final return value. Singleton matchers return
     // their only field directly; multi-label matchers still return a record.
     val resultTerm = resultTerms.reverse match
@@ -528,8 +528,8 @@ class Compiler(using Context)(using tl: TL)(using Ctx, State, Raise) extends Ter
         // then `term`.
         val letBindings = pattern.symbols.flatMap: symbol =>
           val termSymbol = correspondence(symbol)
-          LetDecl(termSymbol, Nil) ::
-          DefineVar(termSymbol, sel(bindingsSymbol.safeRef, termSymbol.name)) :: Nil
+          LetDecl(termSymbol, Nil)(N) ::
+          DefineVar(termSymbol, sel(bindingsSymbol.safeRef, termSymbol.name))(N) :: Nil
         val makeSplit = completePattern(pattern, scrutinee, subScrutinees, Nil)
         (makeConsequent, alternative) => Split.Let(
           sym = transformSymbol,
