@@ -72,6 +72,9 @@ xs.0.value
 //│ ║  l.70: 	xs.0.value
 //│ ║        	^^^^^^^^^^
 //│ ╟── Cannot resolve member 'value' of a value with unknown shape.
+//│ ╟── This type annotation supplies the value's shape.
+//│ ║  l.69: 	let xs = (mut [Item(5)] as Array[Any])
+//│ ║        	                                 ^^^
 //│ ╟── Type 'Any' is declared without a member interface.
 //│ ║  in ../decls/Prelude.mls
 //│ ║  l.2: 	declare type Any
@@ -84,47 +87,50 @@ xs.0.value
 declare type Hidden
 fun inspect(value: Hidden) = value.member
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.85: 	fun inspect(value: Hidden) = value.member
+//│ ║  l.88: 	fun inspect(value: Hidden) = value.member
 //│ ║        	                             ^^^^^^^^^^^^
 //│ ╟── Cannot resolve member 'member' of a value with unknown shape.
+//│ ╟── This type annotation supplies the value's shape.
+//│ ║  l.88: 	fun inspect(value: Hidden) = value.member
+//│ ║        	                   ^^^^^^
 //│ ╟── Type 'Hidden' is declared without a member interface.
-//│ ║  l.84: 	declare type Hidden
+//│ ║  l.87: 	declare type Hidden
 //│ ╙──      	             ^^^^^^
 
 // Unsupported singleton interfaces must not be described as abstract declarations.
 :ge
 fun inspect(value: 1) = value.member
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.96: 	fun inspect(value: 1) = value.member
-//│ ║        	                        ^^^^^^^^^^^^
+//│ ║  l.102: 	fun inspect(value: 1) = value.member
+//│ ║         	                        ^^^^^^^^^^^^
 //│ ╟── Cannot resolve member 'member' of a value with unknown shape.
 //│ ╟── No member interface is known for this type.
-//│ ║  l.96: 	fun inspect(value: 1) = value.member
-//│ ╙──      	                   ^
+//│ ║  l.102: 	fun inspect(value: 1) = value.member
+//│ ╙──       	                   ^
 
 // Negation has a different explanation from an abstract declaration.
 :ge
 fun inspect(value: ~Int) = value.member
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.107: 	fun inspect(value: ~Int) = value.member
+//│ ║  l.113: 	fun inspect(value: ~Int) = value.member
 //│ ║         	                           ^^^^^^^^^^^^
 //│ ╟── Cannot resolve member 'member' of a value with unknown shape.
 //│ ╟── This negated type does not specify a member interface.
-//│ ║  l.107: 	fun inspect(value: ~Int) = value.member
-//│ ╙──       	                    ^^^
+//│ ║  l.113: 	fun inspect(value: ~Int) = value.member
+//│ ╙──       	                   ^^^^
 
 // Calling a value retains the same explanation as selecting its members.
 :ge
 class Item(val value: Int)
 fun invoke(xs: Array[in Item]) = xs.0()
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.119: 	fun invoke(xs: Array[in Item]) = xs.0()
+//│ ║  l.125: 	fun invoke(xs: Array[in Item]) = xs.0()
 //│ ║         	                                 ^^^^^^
 //│ ╟── Value with no known interface cannot be called like a function.
-//│ ║  l.119: 	fun invoke(xs: Array[in Item]) = xs.0()
+//│ ║  l.125: 	fun invoke(xs: Array[in Item]) = xs.0()
 //│ ║         	                     ^^^^^^^
 //│ ╟── This type argument specifies only an input bound.
-//│ ║  l.119: 	fun invoke(xs: Array[in Item]) = xs.0()
+//│ ║  l.125: 	fun invoke(xs: Array[in Item]) = xs.0()
 //│ ║         	                     ^^^^^^^
 //│ ╙── Values read through it have no output bound more specific than 'Any'.
 
@@ -137,14 +143,14 @@ type Pair[A] = [Left[A], Right[A]]
 let pair = ([new Left(Item(1)), new Right(Item(2))] as Pair[Item])
 pair.1.item.value
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.138: 	pair.1.item.value
+//│ ║  l.144: 	pair.1.item.value
 //│ ║         	^^^^^^^^^^^^^^^^^
 //│ ╟── Cannot resolve member 'value' of a value with unknown shape.
 //│ ╟── This type argument supplies only an input bound for 'R'.
-//│ ║  l.137: 	let pair = ([new Left(Item(1)), new Right(Item(2))] as Pair[Item])
+//│ ║  l.143: 	let pair = ([new Left(Item(1)), new Right(Item(2))] as Pair[Item])
 //│ ║         	                                                            ^^^^
 //│ ╟── Type parameter 'R' is declared contravariant here.
-//│ ║  l.135: 	class Right[in R](val item: R)
+//│ ║  l.141: 	class Right[in R](val item: R)
 //│ ║         	               ^
 //│ ╙── Values read through it have no output bound more specific than 'Any'.
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
@@ -160,15 +166,31 @@ private fun delay[A](value: A) = () => value
 let pair = ([new Left(Item(1)), new Right(Item(2))] as Pair[Item])
 delay(pair)().1.item.value
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.161: 	delay(pair)().1.item.value
+//│ ║  l.167: 	delay(pair)().1.item.value
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Cannot resolve member 'value' of a value with unknown shape.
 //│ ╟── This type argument supplies only an input bound for 'R'.
-//│ ║  l.160: 	let pair = ([new Left(Item(1)), new Right(Item(2))] as Pair[Item])
+//│ ║  l.166: 	let pair = ([new Left(Item(1)), new Right(Item(2))] as Pair[Item])
 //│ ║         	                                                            ^^^^
 //│ ╟── Type parameter 'R' is declared contravariant here.
-//│ ║  l.157: 	class Right[in R](val item: R)
+//│ ║  l.163: 	class Right[in R](val item: R)
 //│ ║         	               ^
 //│ ╙── Values read through it have no output bound more specific than 'Any'.
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ pair = [Left(Item(1)), Right(Item(2))]
+
+// An alias keeps the annotation use as well as the abstract declaration's location.
+:ge
+declare type Hidden
+type Alias = Hidden
+fun inspect(value: Alias) = value.member
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.186: 	fun inspect(value: Alias) = value.member
+//│ ║         	                            ^^^^^^^^^^^^
+//│ ╟── Cannot resolve member 'member' of a value with unknown shape.
+//│ ╟── This type annotation supplies the value's shape.
+//│ ║  l.186: 	fun inspect(value: Alias) = value.member
+//│ ║         	                   ^^^^^
+//│ ╟── Type 'Hidden' is declared without a member interface.
+//│ ║  l.184: 	declare type Hidden
+//│ ╙──       	             ^^^^^^

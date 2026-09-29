@@ -550,7 +550,7 @@ enum TypeInterfaceReason:
   case MissingOutput(source: Term)
   case ContravariantParameter(parameter: TyParam, source: Term)
   case Unrestricted(source: Term)
-  case AbstractDeclaration(symbol: TypeAliasSymbol)
+  case AbstractDeclaration(symbol: TypeAliasSymbol, source: Term)
   case RecursiveAlias(symbol: TypeAliasSymbol)
   case Negated(source: Term)
   case Unavailable(source: Term)
@@ -565,8 +565,9 @@ enum TypeInterfaceReason:
         (msg"Values read through it have no output bound more specific than 'Any'." -> N) :: Nil
     case Unrestricted(source) =>
       msg"This type permits values of any type, so no member interface is guaranteed." -> source.toLoc :: Nil
-    case AbstractDeclaration(symbol) =>
-      msg"Type '${symbol.nme}' is declared without a member interface." -> symbol.toLoc :: Nil
+    case AbstractDeclaration(symbol, source) =>
+      (msg"This type annotation supplies the value's shape." -> source.toLoc) ::
+        (msg"Type '${symbol.nme}' is declared without a member interface." -> symbol.toLoc) :: Nil
     case RecursiveAlias(symbol) =>
       msg"Following type alias '${symbol.nme}' does not expose a member interface." -> symbol.toLoc :: Nil
     case Negated(source) =>

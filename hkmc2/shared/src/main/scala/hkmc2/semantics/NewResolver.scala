@@ -630,26 +630,32 @@ class NewResolver:
     */
   private def argumentType(tpe: DeclaredType, parameter: TyParam)(using NewResolverState): DeclaredType =
     val variance = parameter.vce
+    // SelectedArgument fixes one endpoint of a type argument. If the argument
+    // was a wildcard, its source survives for diagnostics even though it no
+    // longer denotes an input/output pair. Treating that retained syntax as a
+    // fresh use-site override would wrongly skip this parameter's variance.
+    // Only an unselected written wildcard overrides declaration-site variance.
     val selected = tpe.resolution.currentShapes.exists:
       case TypeShape.SelectedArgument(_, _) => true
       case _ => false
     if variance.isEmpty || (!selected && tpe.resolution.source.withoutCaptures.isInstanceOf[WildcardTy]) then tpe else
+      val varianceValue = variance.get
       // Apply declaration variance to the interpreted type, not another pair.
       // Reusing a synthesized argument must select it first, so recursive
       // substitutions cannot accumulate repeated variance wrappers.
       tpe.resolution.currentShapes.toList match
         case TypeShape.Argument(_) :: Nil => argumentType(selectArgument(tpe, tpe.positive), parameter)
         case _ =>
-          val variant = rstate.variantTypes.getOrElseUpdate((tpe, variance.get), {
+          val variant = rstate.variantTypes.getOrElseUpdate((tpe, varianceValue), {
             val resolution = new TypeResolution(tpe.resolution.source, tpe.resolution.fail)
-            val parts = if variance.get then TypeArgument(extremeType(false), tpe)
+            val parts = if varianceValue then TypeArgument(extremeType(false), tpe)
               else TypeArgument(tpe, extremeType(true))
             resolution.publish(TypeShape.Argument(parts))
             declaredType(resolution, Map.empty)
           })
           // Different parameters can share the same semantic argument pair.
           // Keep the declaration witness on this use, outside the interned pair.
-          if variance.get then variant else variant.withOrigin(
+          if varianceValue then variant else variant.withOrigin(
             S(TypeInterfaceReason.ContravariantParameter(parameter, tpe.resolution.source)))
 
   private def listenArgumentParts(tpe: DeclaredType)(listener: ShapeListener[TypeArgument])(using NewResolverState): Unit =
@@ -916,7 +922,7 @@ class NewResolver:
                 else rhs match
                   case S(rhs) => follow(declaredType(rhs, bind(symbol.defn.get.tparams), current.positive), noTypeArguments,
                     aliases + current.resolution, publish)
-                  case N => publish(OpaqueTypeShape(tpe.resolution.source)(TypeInterfaceReason.AbstractDeclaration(symbol)))
+                  case N => publish(OpaqueTypeShape(tpe.resolution.source)(TypeInterfaceReason.AbstractDeclaration(symbol, tpe.resolution.source)))
               case TypeShape.Applied(base, params) =>
                 follow(declaredType(base, current), TypeApplication(params.map(declaredType(_, current)), Nil), aliases, publish)
               case TypeShape.Parameter(symbol, host) => current.bindings.get(symbol) match

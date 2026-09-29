@@ -1499,7 +1499,7 @@ extends Importer:
     case App(Ident("!"), Tup(rhs :: Nil)) =>
       Term.Deref(subterm(rhs))
     case App(Ident("~"), Tup(rhs :: Nil)) =>
-      Term.Neg(subterm(rhs, Tpe))
+      Term.Neg(subterm(rhs, Tpe)).withLocOf(tree)
     case PrefixApp(Keywrd(Keyword.`|` | Keyword.`&`), rhs) =>
       subterm(rhs, interp)
     case tree @ OpSplit(lhs, rhss) =>
