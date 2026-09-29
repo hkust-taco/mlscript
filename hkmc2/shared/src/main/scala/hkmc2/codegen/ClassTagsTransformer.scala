@@ -490,6 +490,11 @@ class ClassTagsTransformer(
     val transformer = new BlockTransformerShallow(SymbolSubst.Id):
       override def applyBlock(block: Block): Block =
         block match
+          case Assign(lhs: VarSymbol, _, _) if fun.body.freeVars.contains(lhs) =>
+            summon[Raise].apply(ErrorReport(
+              msg"Class tags do not support set operations yet." -> lhs.toLoc :: Nil,
+              source = Diagnostic.Source.Compilation,
+            ))
           case AssignField(lhs, _, _, _) =>
             summon[Raise].apply(ErrorReport(
               msg"Class tags do not support set operations yet." -> lhs.toLoc :: Nil,
@@ -542,76 +547,87 @@ class ClassTagsTransformer(
             N
           else
             val branchDefns = branches.flatten
-            val branchesWithParams = branchArgs.zip(branchDefns).collect:
-              case (arg, branch)
-                  if branch.params.exists(paramList => paramList.params.nonEmpty || paramList.restParam.nonEmpty) =>
-                arg.value
-            if branchesWithParams.nonEmpty then
+            val namedBranches = branchArgs.zip(branchDefns).collect:
+              case (arg, branch) if branch.sym.nameIsMeaningful => arg.value
+            if namedBranches.nonEmpty then
               summon[Raise].apply(ErrorReport(
-                msg"Annotated shape.match branches must take no arguments." -> call.toLoc ::
-                branchesWithParams.map: branch =>
-                  msg"This branch takes arguments." -> branch.toLoc,
+                msg"Annotated shape.match branches must be anonymous functions." -> call.toLoc ::
+                namedBranches.map: branch =>
+                  msg"This branch is a named function." -> branch.toLoc,
                 source = Diagnostic.Source.Compilation,
               ))
               N
             else
-              val patternShapes = patterns.map(Shape.mkShapeByPattern)
-              val taggedShapes = taggedShapesOfMatchScrutinee(call.uid)
-              if debug then
-                val shownTaggedShapes =
-                  if taggedShapes.isEmpty then "<none>"
-                  else taggedShapes.map((shape, tag) => s"${shape.show}@$tag").mkString(", ")
-                summon[TL].emitDbg(
-                  s"class-tags transform-phase > match shapes ${patternShapes.map(_.show).mkString(", ")} against $shownTaggedShapes")
-              if patternShapes.exists(_.containsUnion) then
-                softAssert(false, "@matchShapes patterns must not contain union shapes.")
+              val branchesWithParams = branchArgs.zip(branchDefns).collect:
+                case (arg, branch)
+                    if branch.params.exists(paramList => paramList.params.nonEmpty || paramList.restParam.nonEmpty) =>
+                  arg.value
+              if branchesWithParams.nonEmpty then
+                summon[Raise].apply(ErrorReport(
+                  msg"Annotated shape.match branches must take no arguments." -> call.toLoc ::
+                  branchesWithParams.map: branch =>
+                    msg"This branch takes arguments." -> branch.toLoc,
+                  source = Diagnostic.Source.Compilation,
+                ))
                 N
               else
-                val ambiguousTags = taggedShapes.flatMap: (taggedShape, tag) =>
-                  val branchIndices = taggedShape.flattenShape.flatMap: concreteShape =>
-                    patternShapes.zipWithIndex.collect:
-                      case (patternShape, index) if concreteShape <= patternShape => index
-                  .distinct
-                  if branchIndices.size > 1 then S((taggedShape, tag, branchIndices)) else N
-                if ambiguousTags.nonEmpty then
-                  for (taggedShape, tag, branchIndices) <- ambiguousTags do
-                    val messages =
-                      msg"Shape tag $tag for ${taggedShape.show} can fall into more than one shape.match branch." -> call.toLoc ::
-                      branchIndices.map: index =>
-                        msg"It can fall into branch ${index + 1}, matched by ${patternShapes(index).show}." -> patterns(index).toLoc
-                    summon[Raise].apply(ErrorReport(
-                      messages,
-                      source = Diagnostic.Source.Compilation,
-                    ))
+                val patternShapes = patterns.map(Shape.mkShapeByPattern)
+                val taggedShapes = taggedShapesOfMatchScrutinee(call.uid)
+                if debug then
+                  val shownTaggedShapes =
+                    if taggedShapes.isEmpty then "<none>"
+                    else taggedShapes.map((shape, tag) => s"${shape.show}@$tag").mkString(", ")
+                  summon[TL].emitDbg(
+                    s"class-tags transform-phase > match shapes ${patternShapes.map(_.show).mkString(", ")} against $shownTaggedShapes")
+                if patternShapes.exists(_.containsUnion) then
+                  softAssert(false, "@matchShapes patterns must not contain union shapes.")
                   N
                 else
-                  val matchingBranches = patternShapes.zip(branchDefns).flatMap: (patternShape, branch) =>
-                    taggedShapes.collect:
-                      case (taggedShape, tag) if taggedShape <= patternShape =>
-                        (taggedShape, tag, branch)
-                  val matchedTags = matchingBranches.iterator.map(_._2).toSet
-                  val unmatchedShapes = taggedShapes.filter((_, tag) => !matchedTags.contains(tag))
-                  if taggedShapes.isEmpty then
-                    summon[Raise].apply(ErrorReport(
-                      msg"Annotated shape.match has no tagged class shapes for its scrutinee." -> call.toLoc :: Nil,
-                      source = Diagnostic.Source.Compilation,
-                    ))
-                    N
-                  else if unmatchedShapes.nonEmpty then
-                    summon[Raise].apply(ErrorReport(
-                      msg"Annotated shape.match does not cover every possible scrutinee shape." -> call.toLoc ::
-                      unmatchedShapes.map: (shape, tag) =>
-                        msg"Shape ${shape.show} with tag $tag does not match any @matchShapes pattern." -> call.toLoc,
-                      source = Diagnostic.Source.Compilation,
-                    ))
+                  val ambiguousTags = taggedShapes.flatMap: (taggedShape, tag) =>
+                    val branchIndices = taggedShape.flattenShape.flatMap: concreteShape =>
+                      patternShapes.zipWithIndex.collect:
+                        case (patternShape, index) if concreteShape <= patternShape => index
+                    .distinct
+                    if branchIndices.size > 1 then S((taggedShape, tag, branchIndices)) else N
+                  if ambiguousTags.nonEmpty then
+                    for (taggedShape, tag, branchIndices) <- ambiguousTags do
+                      val messages =
+                        msg"Shape tag $tag for ${taggedShape.show} can fall into more than one shape.match branch." -> call.toLoc ::
+                        branchIndices.map: index =>
+                          msg"It can fall into branch ${index + 1}, matched by ${patternShapes(index).show}." -> patterns(index).toLoc
+                      summon[Raise].apply(ErrorReport(
+                        messages,
+                        source = Diagnostic.Source.Compilation,
+                      ))
                     N
                   else
-                    val resultSymbol = new TempSymbol(N, erasedType = call.erasedValueType, "shapeMatchResult")
-                    val resultRef = resultSymbol.asSimpleRef.withLocOf(call)
-                    val tagAccess = Select(scrutinee, tagField)(N)(false).withLocOf(scrutinee)
-                    val arms = matchingBranches.map: (_, tag, branch) =>
-                      Case.Lit(syntax.Tree.IntLit(tag)) -> mkBranch(branch, resultSymbol)
-                    S(Scoped(Set.single(resultSymbol), new Match(tagAccess, arms, N, k(resultRef))))
+                    val matchingBranches = patternShapes.zip(branchDefns).flatMap: (patternShape, branch) =>
+                      taggedShapes.collect:
+                        case (taggedShape, tag) if taggedShape <= patternShape =>
+                          (taggedShape, tag, branch)
+                    val matchedTags = matchingBranches.iterator.map(_._2).toSet
+                    val unmatchedShapes = taggedShapes.filter((_, tag) => !matchedTags.contains(tag))
+                    if taggedShapes.isEmpty then
+                      summon[Raise].apply(ErrorReport(
+                        msg"Annotated shape.match has no tagged class shapes for its scrutinee." -> call.toLoc :: Nil,
+                        source = Diagnostic.Source.Compilation,
+                      ))
+                      N
+                    else if unmatchedShapes.nonEmpty then
+                      summon[Raise].apply(ErrorReport(
+                        msg"Annotated shape.match does not cover every possible scrutinee shape." -> call.toLoc ::
+                        unmatchedShapes.map: (shape, tag) =>
+                          msg"Shape ${shape.show} with tag $tag does not match any @matchShapes pattern." -> call.toLoc,
+                        source = Diagnostic.Source.Compilation,
+                      ))
+                      N
+                    else
+                      val resultSymbol = new TempSymbol(N, erasedType = call.erasedValueType, "shapeMatchResult")
+                      val resultRef = resultSymbol.asSimpleRef.withLocOf(call)
+                      val tagAccess = Select(scrutinee, tagField)(N)(false).withLocOf(scrutinee)
+                      val arms = matchingBranches.map: (_, tag, branch) =>
+                        Case.Lit(syntax.Tree.IntLit(tag)) -> mkBranch(branch, resultSymbol)
+                      S(Scoped(Set.single(resultSymbol), new Match(tagAccess, arms, N, k(resultRef))))
 
       override def applyResult(result: Result)(k: Result => Block): Block =
         result match

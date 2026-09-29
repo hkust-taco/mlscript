@@ -308,3 +308,87 @@ fun foo() =
 //│ ╙── Field x cannot be checked using a class tag.
 //│ class-tags transform-phase > match shapes C(x: _), D(x: _) against C(x: D(x: 0))@0, C(x: _)@1, D(x: 0)@2
 //│ <<< end class-tags transform-phase
+
+
+:ge
+private fun curried()() = 42
+fun curriedBranch() =
+  let value = new Box(0)
+  let result = @matchShapes(Box(_)) shape.match of value, curried
+  result()
+//│ >>> start class-tags collection-phase
+//│ class-tags collection-phase > track construction of Box@0 in curriedBranch
+//│ class-tags collection-phase > track consumption at match@1 in curriedBranch
+//│ <<< end class-tags collection-phase
+//│ >>> start class-tags web-computation-phase
+//│ class-tags web-computation-phase > web 0:
+//│ class-tags web-computation-phase >   producers: Box@0
+//│ class-tags web-computation-phase >   pattern matches: match@1
+//│ <<< end class-tags web-computation-phase
+//│ >>> start class-tags transform-phase
+//│ class-tags transform-phase > allocated tag 0 for Box(x: 0)
+//│ ╔══[COMPILATION ERROR] Annotated shape.match branches must be anonymous functions.
+//│ ║  l.317: 	  let result = @matchShapes(Box(_)) shape.match of value, curried
+//│ ║         	                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── This branch is a named function.
+//│ ║  l.317: 	  let result = @matchShapes(Box(_)) shape.match of value, curried
+//│ ╙──       	                                                          ^^^^^^^
+//│ <<< end class-tags transform-phase
+
+
+:ge
+private fun f() = 42
+fun uncurriedBranch() =
+  let value = new C(0)
+  let result = @matchShapes(C(_)) shape.match of value, f
+  result
+//│ >>> start class-tags collection-phase
+//│ class-tags collection-phase > track construction of C@0 in uncurriedBranch
+//│ class-tags collection-phase > track consumption at match@1 in uncurriedBranch
+//│ <<< end class-tags collection-phase
+//│ >>> start class-tags web-computation-phase
+//│ class-tags web-computation-phase > web 0:
+//│ class-tags web-computation-phase >   producers: C@0
+//│ class-tags web-computation-phase >   pattern matches: match@1
+//│ <<< end class-tags web-computation-phase
+//│ >>> start class-tags transform-phase
+//│ class-tags transform-phase > allocated tag 0 for C(x: 0)
+//│ ╔══[COMPILATION ERROR] Annotated shape.match branches must be anonymous functions.
+//│ ║  l.343: 	  let result = @matchShapes(C(_)) shape.match of value, f
+//│ ║         	                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── This branch is a named function.
+//│ ║  l.343: 	  let result = @matchShapes(C(_)) shape.match of value, f
+//│ ╙──       	                                                        ^
+//│ <<< end class-tags transform-phase
+
+:ge
+let remaining = 1
+private fun recursiveBranch() =
+  if remaining > 0 then
+    set remaining = remaining - 1
+    let value = new Box(0)
+    @matchShapes(Box(_)) shape.match of value, recursiveBranch
+  else 42
+fun recursiveMatch() = recursiveBranch()
+//│ >>> start class-tags collection-phase
+//│ class-tags collection-phase > track construction of Box@3 in recursiveBranch
+//│ class-tags collection-phase > track consumption at match@4 in recursiveBranch
+//│ <<< end class-tags collection-phase
+//│ >>> start class-tags web-computation-phase
+//│ class-tags web-computation-phase > web 0:
+//│ class-tags web-computation-phase >   producers: Box@3
+//│ class-tags web-computation-phase >   pattern matches: match@4
+//│ <<< end class-tags web-computation-phase
+//│ >>> start class-tags transform-phase
+//│ class-tags transform-phase > allocated tag 0 for Box(x: 0)
+//│ ╔══[COMPILATION ERROR] Class tags do not support set operations yet.
+//│ ║  l.365: 	let remaining = 1
+//│ ╙──       	    ^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Annotated shape.match branches must be anonymous functions.
+//│ ║  l.370: 	    @matchShapes(Box(_)) shape.match of value, recursiveBranch
+//│ ║         	                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── This branch is a named function.
+//│ ║  l.370: 	    @matchShapes(Box(_)) shape.match of value, recursiveBranch
+//│ ╙──       	                                               ^^^^^^^^^^^^^^^
+//│ <<< end class-tags transform-phase
+//│ remaining = 1
