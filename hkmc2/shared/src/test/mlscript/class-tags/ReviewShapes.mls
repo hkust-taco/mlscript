@@ -7,23 +7,6 @@ class MutableBox(mut val x)
 class A(val x)
 class B(val x)
 
-// A wildcard field permits null as well as locally constructed class instances.
-fun dynamicField(flag, external) =
-  let field = if flag then new A(0) else external
-  let value = new Box(field)
-  @matchShapes(Box(_)) shape.match of value, () => 1
-
-:expect 1
-dynamicField(true, null)
-//│ = 1
-
-:fixme // Multi-shape tag assignment reads null.__tag$ before trying the wildcard.
-:expect 1
-dynamicField(false, null)
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of null (reading '__tag$')
-//│ ═══[RUNTIME ERROR] Expected: '1', got: 'undefined'
-
-
 // Unknown incoming values must be rejected or checked, not silently discarded
 // when proving exhaustiveness from the known constructor sources.
 fun unknownAlternative(flag, external) =

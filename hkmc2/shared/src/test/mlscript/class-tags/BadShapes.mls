@@ -176,3 +176,32 @@ fun constructorMutation() =
 //│ class-tags transform-phase > allocated tag 1 for Altered(x: A(x: 0))
 //│ class-tags transform-phase > match shapes Altered(x: A(x: _)), Altered(x: B(x: _)) against Altered(x: A(x: 0))@1
 //│ <<< end class-tags transform-phase
+
+
+:ge
+class Box(val x)
+fun dynamicField(flag, external) =
+  let field = if flag then new A(0) else external
+  let value = new Box(field)
+  @matchShapes(Box(_)) shape.match of value, () => 1
+//│ >>> start class-tags collection-phase
+//│ class-tags collection-phase > track construction of Box@2 in dynamicField
+//│ class-tags collection-phase > track consumption at match@3 in dynamicField
+//│ <<< end class-tags collection-phase
+//│ >>> start class-tags web-computation-phase
+//│ class-tags web-computation-phase > web 0:
+//│ class-tags web-computation-phase >   producers: A@1, Box@2
+//│ class-tags web-computation-phase >   pattern matches: match@3
+//│ <<< end class-tags web-computation-phase
+//│ >>> start class-tags transform-phase
+//│ class-tags transform-phase > allocated tag 0 for A(x: 0)
+//│ class-tags transform-phase > allocated tag 1 for Box(x: A(x: 0))
+//│ class-tags transform-phase > allocated tag 2 for Box(x: _)
+//│ ╔══[COMPILATION ERROR] Cannot insert a class tag using constructor arguments that may come from outside.
+//│ ║  l.185: 	  let value = new Box(field)
+//│ ║         	                  ^^^^^^^^^
+//│ ╟── Field x cannot be checked using a class tag.
+//│ ║  l.185: 	  let value = new Box(field)
+//│ ╙──       	                      ^^^^^
+//│ class-tags transform-phase > match shapes Box(x: _) against Box(x: A(x: 0))@1, Box(x: _)@2
+//│ <<< end class-tags transform-phase

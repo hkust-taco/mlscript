@@ -364,6 +364,25 @@ class ClassTagsTransformer(
   private def insertTagForMultiShapes(
     result: Result, args: List[Arg], producer: Ctor, taggedShapes: List[ClassShape -> Int]
   )(k: Path => Block): Block =
+    def canCheck(shape: Shape): Bool =
+      shapeTags.contains(shape) || (shape match
+        case _: LitShape => true
+        case TupleShape(_, elements) => elements.forall(canCheck)
+        case _ => false)
+
+    val outsideArguments = producer.args.iterator.zip(args.iterator).collect:
+      case ((field: TermSymbol, argumentFlow), argument)
+          if taggedShapes.exists((shape, _) => !canCheck(shape.fields(field))) =>
+        field -> argument.value
+    .toList
+    if outsideArguments.nonEmpty then
+      summon[Raise].apply(ErrorReport(
+        msg"Cannot insert a class tag using constructor arguments that may come from outside." -> result.toLoc ::
+        outsideArguments.map: (field, argument) =>
+          msg"Field ${ClassTagsDebug.showField(field)} cannot be checked using a class tag." -> argument.toLoc,
+        source = Diagnostic.Source.Compilation,
+      ))
+
     val arguments = producer.args.iterator.map(_._1).zip(args.iterator.map(_.value)).collect:
       case (field: TermSymbol, path) => field -> path
     .toList
