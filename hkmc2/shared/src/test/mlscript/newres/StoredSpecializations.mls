@@ -70,7 +70,7 @@ second[Str]
 //│ ║        	^^^^^^^^^^^
 //│ ╟── Function 'declared' expected 0 type arguments, but got 1
 //│ ║  l.57: 	private fun declared[A](value: A): A = value
-//│ ╙──      	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ = fun declared
 //│ first = fun inferred
 //│ second = fun declared

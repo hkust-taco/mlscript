@@ -28,8 +28,10 @@ class C with
   fun f =
     yield 1
 //│ ╔══[COMPILATION ERROR] Generators are not supported on functions without a parameter list
+//│ ║  l.27: 	  @generator
+//│ ║        	  ^^^^^^^^^^
 //│ ║  l.28: 	  fun f =
-//│ ║        	  ^^^^^^^
+//│ ║        	^^^^^^^^^
 //│ ║  l.29: 	    yield 1
 //│ ╙──      	^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Yield expressions are not allowed in this context.
@@ -40,5 +42,7 @@ class C with
 @generator
 fun bad = 1
 //│ ╔══[COMPILATION ERROR] Generators are not supported on functions without a parameter list
-//│ ║  l.41: 	fun bad = 1
+//│ ║  l.42: 	@generator
+//│ ║        	^^^^^^^^^^
+//│ ║  l.43: 	fun bad = 1
 //│ ╙──      	^^^^^^^^^^^

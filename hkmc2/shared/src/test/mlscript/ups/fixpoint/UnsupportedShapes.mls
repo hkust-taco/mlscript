@@ -251,7 +251,7 @@ fun arityGo(x) = if x is @compile ArityGo(r) then r else "<no match>"
 //│ ║         	                                  ^^^^^^^^^^^^^^^^^
 //│ ╟── Class definition 'Pair' expected 2 pattern arguments, but got 1
 //│ ║  l.14: 	data class Pair(val first, val second)
-//│ ╙──      	     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Class `Pair` has 2 parameters.
 //│ ║  l.14: 	data class Pair(val first, val second)
 //│ ║        	                ^^^^^^^^^^^^^^^^^^^^^
