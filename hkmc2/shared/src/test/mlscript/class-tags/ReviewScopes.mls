@@ -7,41 +7,6 @@ class A(val x)
 class B(val x)
 
 
-// Main blocks need the same intrinsic lowering as function bodies.
-:fixme // The intrinsic survives into JS, where shape.match is undefined.
-:expect 1
-let topBox = new Box(0)
-@matchShapes(Box(_)) shape.match of topBox, () => 1
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'match')
-//│ ═══[RUNTIME ERROR] Expected: '1', got: 'undefined'
-//│ topBox = Box(0)
-
-
-// Class initializers are another executable scope outside applyFunDefn.
-class Initialized() with
-  val value =
-    let box = new Box(0)
-    @matchShapes(Box(_)) shape.match of box, () => 1
-
-:fixme // Constructor bodies also retain the unimplemented intrinsic.
-:expect 1
-Initialized().value
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'match')
-//│ ═══[RUNTIME ERROR] Expected: '1', got: 'undefined'
-
-
-// The shallow per-function collector must also visit each nested definition.
-:fixme // The local allocation is omitted, producing a spurious no-tagged-shapes error.
-fun localFunction() =
-  fun inner() =
-    let value = new Box(0)
-    @matchShapes(Box(_)) shape.match of value, () => 1
-  inner()
-//│ ╔══[COMPILATION ERROR] Annotated shape.match has no tagged class shapes for its scrutinee.
-//│ ║  l.38: 	    @matchShapes(Box(_)) shape.match of value, () => 1
-//│ ╙──      	                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-
 // One covered entry must not suppress every other independent entry in a function.
 // Visiting inspect covers the Box web, but does not cover either the A or B web.
 :fixme // Both independent matches are rejected as having no tagged class shapes.
@@ -56,8 +21,8 @@ fun second() =
   let value = new B(0)
   @matchShapes(B(_)) shape.match of value, () => 2
 //│ ╔══[COMPILATION ERROR] Annotated shape.match has no tagged class shapes for its scrutinee.
-//│ ║  l.53: 	  @matchShapes(A(_)) shape.match of value, () => 1
+//│ ║  l.18: 	  @matchShapes(A(_)) shape.match of value, () => 1
 //│ ╙──      	               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Annotated shape.match has no tagged class shapes for its scrutinee.
-//│ ║  l.57: 	  @matchShapes(B(_)) shape.match of value, () => 2
+//│ ║  l.22: 	  @matchShapes(B(_)) shape.match of value, () => 2
 //│ ╙──      	               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

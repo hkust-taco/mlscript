@@ -265,6 +265,55 @@ class ClassTagsTransformer(
 
   private val tagField = new syntax.Tree.Ident("__tag$")
 
+  private enum ShapeMatchScope:
+    case TopLevel, SupportedFunction, NestedFunction, ClassValue
+
+  private def isShapeMatch(path: Path): Bool =
+    path.targetSymbol.flatMap(_.asBlkMember).contains(Elaborator.ctx.builtins.shape.`match`)
+
+  private def rejectUnsupportedShapeMatches(program: Program): Unit =
+    class Checker(val scope: ShapeMatchScope) extends BlockTraverser:
+      override def applyResult(result: Result): Unit =
+        result match
+          case call @ Call(fun, _) if isShapeMatch(fun) =>
+            val errorMessage = scope match
+              case ShapeMatchScope.TopLevel =>
+                S(msg"shape.match is not supported at the top level.")
+              case ShapeMatchScope.NestedFunction =>
+                S(msg"shape.match is not supported in nested functions.")
+              case ShapeMatchScope.ClassValue =>
+                S(msg"shape.match is not supported in class value initializers.")
+              case ShapeMatchScope.SupportedFunction => N
+            errorMessage.foreach: message =>
+              summon[Raise].apply(ErrorReport(
+                message -> call.toLoc :: Nil,
+                source = Diagnostic.Source.Compilation,
+              ))
+          case _ => ()
+        super.applyResult(result)
+
+      override def applyFunDefn(fun: FunDefn): Unit =
+        // Anonymous functions originate from lambdas and are lifted later.
+        val functionScope =
+          if !fun.sym.nameIsMeaningful then ShapeMatchScope.SupportedFunction
+          else scope match
+            case ShapeMatchScope.TopLevel => ShapeMatchScope.SupportedFunction
+            case _ => ShapeMatchScope.NestedFunction
+        new Checker(functionScope).applyBlock(fun.body)
+
+      override def applyClsLikeDefn(defn: ClsLikeDefn): Unit =
+        defn.parentPath.foreach(applyPath)
+        defn.methods.foreach: method =>
+          new Checker(ShapeMatchScope.SupportedFunction).applyBlock(method.body)
+        new Checker(ShapeMatchScope.ClassValue).applyBlock(defn.preCtor)
+        new Checker(ShapeMatchScope.ClassValue).applyBlock(defn.ctor)
+        defn.companion.foreach: companion =>
+          companion.methods.foreach: method =>
+            new Checker(ShapeMatchScope.SupportedFunction).applyBlock(method.body)
+          new Checker(ShapeMatchScope.ClassValue).applyBlock(companion.ctor)
+
+    new Checker(ShapeMatchScope.TopLevel).applyBlock(program.main)
+
   // * Allocate a tag for a shape in the web
   private def allocateTag(shape: Shape): Int =
     shapeTags.getOrElseUpdate(shape, {
@@ -480,6 +529,7 @@ class ClassTagsTransformer(
   override def applyProgram(program: Program): Program =
     if debug then
       summon[TL].emitDbg(">>> start class-tags transform-phase")
+    rejectUnsupportedShapeMatches(program)
     val _ = taggedShapesByProducer
     val result = super.applyProgram(program)
     if debug then
@@ -507,9 +557,6 @@ class ClassTagsTransformer(
             ))
           case _ => ()
         super.applyBlock(block)
-
-      private def isShapeMatch(path: Path): Bool =
-        path.targetSymbol.flatMap(_.asBlkMember).contains(Elaborator.ctx.builtins.shape.`match`)
 
       // * get the branch body defined as a FunDefn
       private def getBranch(path: Path): Opt[FunDefn] =
