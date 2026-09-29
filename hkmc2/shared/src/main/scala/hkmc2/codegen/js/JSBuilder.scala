@@ -546,7 +546,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
     case AssignDynField(p, f, ai, r, rst) =>
       doc" # ${result(p)}[${result(f)}] = ${result(r)};${returningTerm(rst, endSemi)}"
     case Define(defn, rst) =>
-      def mkThis(sym: InnerSymbol): Document =
+      inline def mkThis(sym: InnerSymbol): Document =
         result(sym.asThis)
       val resJS = defn match
       case ValDefn(tsym, sym, p) =>
@@ -556,13 +556,6 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
         case N =>
           doc"${scope.lookup_!(sym, sym.toLoc)} = ${result(p)};${returningTerm(rst, endSemi)}"
         case S(owner) =>
-          
-          
-          
-          
-          
-          
-          
           val thisDoc = mkThis(owner)
           val nme = sym.nme
           owner match 

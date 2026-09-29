@@ -307,9 +307,6 @@ enum Pattern extends AutoLocated, Describable, PatternShapePublisher:
       .foldLeft(Set.empty[Str])(_ ++ _)
   
   def show(using Scope, ShowCfg, Raise): Document = this match
-    // case Constructor(target, arguments) =>
-    //   target.show + arguments.fold(""):
-    //     args => s"(${args.map(_.show).mkString(", ")})"
     case Composition(true, left, right) => doc"${left.show} | ${right.show}"
     case Composition(false, left, right) => doc"${left.show} & ${right.show}"
     case Negation(pattern) => doc"not ${pattern.show}"
