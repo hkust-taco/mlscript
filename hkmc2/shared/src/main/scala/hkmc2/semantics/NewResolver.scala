@@ -1281,11 +1281,12 @@ class NewResolver:
           case Marked(tuple: TupleShape, context) =>
             fields.zipWithIndex.foreach: (field, index) =>
               tuple.getMember(index.toString) match
-                case MemberLookup.Indexed(actual, inner) => listenTupleField(actual): shape =>
-                  shape.exit(inner).exit(context) match
-                    case value: TermShape =>
-                      inferTypeArguments(declaredType(field, tpe), value, marks)
-                    case NoShape => ()
+                case MemberLookup.Indexed(actual, inner) => actual.foreach: element =>
+                  listenTupleField(element): shape =>
+                    shape.exit(inner).exit(context) match
+                      case value: TermShape =>
+                        inferTypeArguments(declaredType(field, tpe), value, marks)
+                      case NoShape => ()
                 case _ => ()
           case _ => ()
         case TypeShape.Record(_, fields) => observe(constrainRecord(fields, effectiveBindings(tpe), tpe.positive, _, marks))
@@ -1414,7 +1415,7 @@ class NewResolver:
                   case S(tpe) => TupleShape.TypedField(tpe, Nil)
                   case N => TupleShape.UnknownField(callable.source, Nil)
                 val suffix = if declared.hasRest
-                  then TupleShape.Unknown(callable.source, Nil, UnknownValueShape.at(callable.source)) :: Nil
+                  then TupleShape.Unknown(callable.source, TupleShape.UnknownField(callable.source, Nil)) :: Nil
                   else Nil
                 val tuple = TupleShape(callable.source, fields ::: suffix)(this)
                 constrainParameterIn(rest, tuple.exit(expectedContext).enter(context), context, instances)
@@ -1481,12 +1482,9 @@ class NewResolver:
         val elements = new TypeResolution(tuple.source, messages => resolError(tuple.source, messages))
         val parent = NominalInstanceView(cls, Map(cls.tparams.head.sym -> declaredType(elements, Map.empty)), implicitParent(cls))(N)(this)
         tupleArrayParents(new Identity(tuple)) = parent
-        tuple.segments.foreach:
-          case field: TupleShape.Fixed => listenTupleField(field): value =>
+        tuple.segments.foreach: segment =>
+          listenTupleField(segment.element): value =>
             elements.publish(TypeShape.Inferred(value))
-          case TupleShape.Unknown(_, marks, value) => value.exit(marks) match
-            case value: TermShape => elements.publish(TypeShape.Inferred(value))
-            case NoShape => ()
         parent
 
   /** Mutable literals share Array's existing element parameter, with an allocation
@@ -1561,7 +1559,7 @@ class NewResolver:
         (name.toIntOption, arrayElementType(view)) match
           // An element's value keeps its whole path, including its provenance.
           case (S(index), S(element)) if index >= 0 =>
-            MemberLookup.Indexed(TupleShape.TypedField(element, Nil), Nil).withMarks(receiver :: Nil)
+            MemberLookup.Indexed(TupleShape.TypedField(element, Nil) :: Nil, Nil).withMarks(receiver :: Nil)
           case _ =>
             // The parent is referenced inside the class, like its own members'
             // annotations: `class Int extends Num` captures `Num` into Int's
@@ -1729,11 +1727,8 @@ class NewResolver:
       val extra = (expectedCount - knownCount).max(0)
       def assign(segment: TupleShape.Segment, positions: Range)(using NewResolverState): Unit =
         positions.foreach: index =>
-          segment match
-            case field: TupleShape.Fixed => listenTupleField(field): sh =>
-              publish(index, sh.exit(marks).enter(mss))
-            case TupleShape.Unknown(_, inner, value) =>
-              publish(index, value.exit(inner).exit(marks).enter(mss))
+          listenTupleField(segment.element): sh =>
+            publish(index, sh.exit(marks).enter(mss))
       def loop(rest: Ls[TupleShape.Segment], before: Int, unknownBefore: Bool)(using NewResolverState): Unit = rest match
         case Nil => ()
         case (field: TupleShape.Fixed) :: tail =>
@@ -1767,7 +1762,7 @@ class NewResolver:
               if approximate then unknown :: Nil else Nil
             case (_: TupleShape.Unknown) :: rest =>
               val suffix = drop(rest, count, false)
-              if approximate then TupleShape.Unknown(tuple.source, Nil, UnknownValueShape.at(tuple.source)) :: suffix else suffix
+              if approximate then TupleShape.Unknown(tuple.source, TupleShape.UnknownField(tuple.source, Nil)) :: suffix else suffix
         val remaining = drop(segments, expectedCount, true)
         val rest = if expectedCount == 0 then tuple else TupleShape.restView(tuple, remaining)(this)
         publish(expectedCount, rest.exit(marks).enter(mss))
@@ -1985,11 +1980,7 @@ class NewResolver:
               def receive(value: TermShape)(using NewResolverState): Unit = value.exit(marks) match
                 case value: TermShape => matchShapePat(value, p)(_ => ())
                 case NoShape => ()
-              segment match
-                case field: TupleShape.Fixed => listenTupleField(field)(receive)
-                case TupleShape.Unknown(_, inner, value) => value.exit(inner) match
-                  case value: TermShape => receive(value)
-                  case NoShape => ()
+              listenTupleField(segment.element)(receive)
             // A spread can move subsequent fields. Retain every possible position
             // rather than treating the first unknown segment as the only candidate.
             def positions(xs: Ls[TupleShape.Segment], ps: Ls[Pattern])(using NewResolverState): Unit =
@@ -2028,14 +2019,13 @@ class NewResolver:
           case Marked(tuple: TupleShape, marks) => tupleBindings(tuple, marks)
           case Marked(unknown: UnknownValueShape, marks) =>
             tupleBindings(TupleShape(unknown.source,
-              TupleShape.Unknown(unknown.source, Nil, unknown) :: Nil)(this), marks)
+              TupleShape.Unknown(unknown.source, TupleShape.ValueField(unknown, Nil)) :: Nil)(this), marks)
           case Marked(nominal: NominalInstanceView, marks) =>
-            nominal.ancestor(prelude.builtins.Array.defn.get).foreach: array =>
-              array.bindings.get(prelude.builtins.Array.defn.get.tparams.head.sym).foreach: element =>
-                listenTypeViews(element):
-                  case Marked(shape, inner) =>
-                    tupleBindings(TupleShape(element.resolution.source,
-                      TupleShape.Unknown(element.resolution.source, inner :: Nil, shape) :: Nil)(this), marks)
+            // Binding an element does not request its interface. Keep the declared
+            // type so later uses can apply the enclosing tuple's substitution.
+            arrayElementType(nominal).foreach: element =>
+              tupleBindings(TupleShape(element.resolution.source,
+                TupleShape.Unknown(element.resolution.source, TupleShape.TypedField(element, Nil)) :: Nil)(this), marks)
           case _ => ()
         shape match
           case value: TermShape => narrow(value)
@@ -2359,15 +2349,16 @@ class NewResolver:
       case MemberLookup.Declared(member, bindings, marks, annotation, positive) if rstate.canResolve(sel) || sel.resolvedMembers.contains(member) =>
         rstate.recordResolution(sel, sel.resolvedMembers.contains(member))(sel.resolvedMembers ::= member)
         publishDeclared(sel, member, sel.resSym, bindings, marks, annotation, positive, instances)
-      case MemberLookup.Indexed(field, marks) if rstate.canResolve(sel) || sel.tupleIndex == sel.id.name.toIntOption =>
+      case MemberLookup.Indexed(fields, marks) if rstate.canResolve(sel) || sel.tupleIndex == sel.id.name.toIntOption =>
         val index = sel.id.name.toIntOption
         softAssert(index.exists(_ >= 0), "Tuple lookup must identify a nonnegative index")
         rstate.recordResolution(sel, sel.tupleIndex == index)(sel.tupleIndex = index)
-        listenTupleField(field): shape =>
-          transportShape(shape, marks) match
-            case value: TermShape =>
-              publishViewed(sel, value, instances)
-            case NoShape => ()
+        fields.foreach: field =>
+          listenTupleField(field): shape =>
+            transportShape(shape, marks) match
+              case value: TermShape =>
+                publishViewed(sel, value, instances)
+              case NoShape => ()
       case MemberLookup.Dynamic(marks) if rstate.canResolve(sel) || sel.hasDynamicTarget =>
         rstate.recordResolution(sel, sel.hasDynamicTarget)(sel.hasDynamicTarget = true)
         publishDynamic(sel, marks)
@@ -2903,17 +2894,19 @@ class NewResolver:
                     else shape
                   expand(rest, TupleShape.Spread(spread, marks) :: reversed)
                 case Marked(_: DynShape, marks) =>
-                  val spread = TupleShape(term, TupleShape.Unknown(term, Nil, DynShape()) :: Nil)(this)
+                  val spread = TupleShape(term, TupleShape.Unknown(term, TupleShape.ValueField(DynShape(), Nil)) :: Nil)(this)
                   expand(rest, TupleShape.Spread(spread, marks) :: reversed)
                 case shape @ Marked(_, marks) =>
                   val typed = listenArrayElements(shape):
                     case Marked(element, context) =>
-                      val spread = TupleShape(term, TupleShape.Unknown(term, context :: Nil, element) :: Nil)(this)
+                      val field = TupleShape.ValueField(element, context :: Nil)
+                      val spread = TupleShape(term, TupleShape.Unknown(term, field) :: Nil)(this)
                       expand(rest, TupleShape.Spread(spread, NoMarks) :: reversed)
                   if !typed then
                     // Other opaque iterables have no known element type. Their
                     // runtime spread remains permitted without authorizing calls.
-                    val unknown = TupleShape(term, TupleShape.Unknown(term, Nil, UnknownValueShape.spread(term, shape)) :: Nil)(this)
+                    val field = TupleShape.ValueField(UnknownValueShape.spread(term, shape), Nil)
+                    val unknown = TupleShape(term, TupleShape.Unknown(term, field) :: Nil)(this)
                     expand(rest, TupleShape.Spread(unknown, marks) :: reversed)
         expand(tuple.fields, Nil)
     case record: Rcd => listenAggregate(record, listener): publish =>

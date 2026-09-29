@@ -1,0 +1,86 @@
+:.
+
+// Unknown-length segments retain type arguments just like fixed tuple fields.
+:expect [1, 2]
+class First(val first: Int)
+class Second(val second: Int)
+private fun copy[A](xs: Array[A]) = [...xs]
+[copy([First(1)]).0.first, copy([Second(2)]).0.second]
+//│ = [1, 2]
+
+// Spreading a declared array keeps separate callers' interfaces distinct.
+:expect [3, 4]
+class First(val first: Int)
+class Second(val second: Int)
+fun first(): Array[First] = [First(3)]
+fun second(): Array[Second] = [Second(4)]
+private fun copy(xs) = [...xs]
+[copy(first()).0.first, copy(second()).0.second]
+//│ = [3, 4]
+
+// Array patterns observe the same declared element type without expanding it early.
+:expect [5, 6]
+class First(val first: Int)
+class Second(val second: Int)
+private fun head[A](xs: Array[A]) = if xs is [x, ...rest] then x else throw "empty"
+[head([First(5)]).first, head([Second(6)]).second]
+//│ = [5, 6]
+
+// A static array index also sees substitutions through an enclosing generic call.
+:expect [7, 8]
+class First(val first: Int)
+class Second(val second: Int)
+private fun copy[A](xs: Array[A]) = [...xs]
+private fun wrap[B](x: B) = copy([x]).[0]
+[wrap(First(7)).first, wrap(Second(8)).second]
+//│ = [7, 8]
+
+// A spread can be empty: the explicit suffix can occupy index zero too.
+:e
+class First(val first: Int)
+class Second(val second: Int)
+fun pick(xs: Array[First]) = [...xs, Second(2)].0.first
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.42: 	fun pick(xs: Array[First]) = [...xs, Second(2)].0.first
+//│ ║        	                             ^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Instance of class 'Second' does not contain member 'first'
+//│ ║  l.42: 	fun pick(xs: Array[First]) = [...xs, Second(2)].0.first
+//│ ╙──      	                                     ^^^^^^^^^
+
+// A fixed prefix remains precise even when a later spread has a different type.
+:expect 9
+class First(val first: Int)
+class Second(val second: Int)
+private fun pick[A](x: A, xs: Array[Second]) = [x, ...xs].0
+pick(First(9), [Second(10)]).first
+//│ = 9
+
+// Rest slicing and spreading into a call preserve the deferred element's view.
+:expect [11, 12]
+class First(val first: Int)
+class Second(val second: Int)
+private fun prepend[A](xs: Array[A]) = [0, ...xs]
+private fun tail[B](x: B) = if prepend([x]) is [_, ...rest] then rest else throw "empty"
+private fun head(x) = x
+[head(...tail(First(11))).first, head(...tail(Second(12))).second]
+//│ = [11, 12]
+
+// Multiple unknown-length segments can move either an element or the suffix here.
+:e
+class First(val first: Int)
+class Second(val second: Int)
+fun pick(xs: Array[First], ys: Array[First]) = [0, ...xs, ...ys, Second(2)].1.first
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.72: 	fun pick(xs: Array[First], ys: Array[First]) = [0, ...xs, ...ys, Second(2)].1.first
+//│ ║        	                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Instance of class 'Second' does not contain member 'first'
+//│ ║  l.72: 	fun pick(xs: Array[First], ys: Array[First]) = [0, ...xs, ...ys, Second(2)].1.first
+//│ ╙──      	                                                                 ^^^^^^^^^
+
+// Fields whose minimum position is past the selected index cannot contribute.
+:expect 13
+class First(val first: Int)
+class Second(val second: Int)
+private fun pick(xs: Array[First]) = [...xs, First(13), Second(14)].0.first
+pick([])
+//│ = 13

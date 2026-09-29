@@ -89,7 +89,7 @@ final class InterfaceExposure(resolver: NewResolver)(using NewResolverState, TL)
         val ref = SimpleRef(rest.sym)(rest.sym.id)
         val unknown = UnknownValueShape(ref)(ShapeProvenance(
           (msg"Rest parameter '${rest.sym.nme}' admits elements of unknown shape." -> rest.toLoc) :: path.diagnosticNotes))
-        val tuple = TupleShape(ref, TupleShape.Unknown(ref, Nil, unknown) :: Nil)(resolver)
+        val tuple = TupleShape(ref, TupleShape.Unknown(ref, TupleShape.ValueField(unknown, Nil)) :: Nil)(resolver)
         resolver.constrainParameter(rest, tuple.enter(marks), marks)
 
   private def members(cls: ClassLikeDef, marks: Ls[Marks], path: Path)(using NewResolverState): Unit =

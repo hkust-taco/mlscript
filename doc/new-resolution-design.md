@@ -146,6 +146,15 @@ shape; that does not authorize arbitrary member access on the result.
 Tuple-pattern transfer handles leading, trailing, and rest elements, including
 declared Array element types. See `newres/Arrays.mls` and `TuplePatternBindings.mls`.
 
+An unknown-length tuple segment retains a deferred element field, just as a
+fixed tuple position does. Tuple views instantiate both through the same field
+representation, and indexing, array interfaces, argument transfer, and patterns
+observe that field through `listenTupleField`. Unknown length does not erase the
+element's type arguments or captured environment. A positional selection after
+a spread includes every field that can occupy that position, including a fixed
+suffix when the spread is empty; positions before a spread remain precise.
+`newres/ArraySpreadViews.mls` covers these cases and distinct generic callers.
+
 `DynShape` is distinct from `UnknownValueShape`: recursive widening, mutable reads,
 and other losses of precision do not license dynamic lookup or calls. Known invalid
 alternatives still report errors alongside dynamic candidates. Constructor patterns
