@@ -242,7 +242,7 @@ private fun mk(...args) = args.reduce((acc, x, ...) => if acc is Int then acc el
 mk(1, 2)
 //│ = 0
 
-// A static index reads some element: its result has the element interface.
+// A checked index reads some element: its result has the element interface.
 :expect [2, "b", 3, 4]
 class Item(val value: Int)
 fun get(xs: Array[Item], i: Int) = xs.[i].value
@@ -252,7 +252,7 @@ let items = mut [Item(4)]
 //│ = [2, "b", 3, 4]
 //│ items = [Item(4)]
 
-// Only arrays can be indexed statically.
+// Checked indexing requires an array receiver.
 :e
 :re
 class Item(val value: Int)
@@ -260,13 +260,13 @@ class Item(val value: Int)
 //│ ╔══[COMPILATION ERROR] Resolution error in array index
 //│ ║  l.259: 	(new Item(1)).[0]
 //│ ║         	 ^^^^^^^^^^^^^^^
-//│ ╟── Instance of class 'Item' cannot be indexed statically.
+//│ ╟── Instance of class 'Item' does not support checked array indexing.
 //│ ║  l.259: 	(new Item(1)).[0]
 //│ ║         	 ^^^^^^^^^^^
 //│ ╙── Use '![...]' for a dynamic access.
 //│ ═══[RUNTIME ERROR] TypeError: tmp48.at is not a function
 
-// A dynamic access authorizes dynamic operations on its result; a static index does not.
+// A dynamic access authorizes dynamic operations on its result; a checked index does not.
 :e
 fun first(xs: Array[Int]) = [xs![0].whatever, xs.[0].whatever]
 //│ ╔══[COMPILATION ERROR] Resolution error in selection

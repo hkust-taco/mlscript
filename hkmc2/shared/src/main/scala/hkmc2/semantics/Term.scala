@@ -422,9 +422,10 @@ enum Term extends Statement, ShapePublisher:
     (val tree: Tree.App, val typ: Opt[Type], val resSym: FlowSymbol) extends Term, AppImpl
   case TyApp(lhs: Term, targs: Ls[Term])
     (val typ: Opt[Type]) extends Term, ResolvableImpl
-  /** A static selection (`obj.[idx]`) indexes an array whose element type
-    * resolution determines; other selections are only checked at runtime. */
-  case DynSel(prefix: Term, fld: Term, arrayIdx: Bool, static: Bool)
+  /** `checked` asks resolution to validate the receiver and determine the element
+    * interface (`obj.[idx]`); it does not require a compile-time index value.
+    * `arrayIdx` independently selects array indexing in the generated code. */
+  case DynSel(prefix: Term, fld: Term, arrayIdx: Bool, checked: Bool)
   case Tup(fields: Ls[Elem])(val tree: Tree.Tup) extends Term, ShapeHost
   case Mut(underlying: Tup | Rcd | New | DynNew)
   case CtxTup(fields: Ls[Elem])(val tree: Tree.Tup)
@@ -685,7 +686,7 @@ enum Term extends Statement, ShapePublisher:
         val copy = LeadingDotSel(Tree.Ident(nme.name))(term.originalCtx)
         copy.resolvedTargets = term.resolvedTargets
         copyResolution(term, copy)
-      case DynSel(prefix, fld, arrayIdx, static) => DynSel(prefix.mkClone, fld.mkClone, arrayIdx, static)
+      case DynSel(prefix, fld, arrayIdx, checked) => DynSel(prefix.mkClone, fld.mkClone, arrayIdx, checked)
       case term @ Tup(fields) =>
         val copy = Tup(fields.map {
           case f: Fld => f.copy(term = f.term.mkClone, asc = f.asc.map(_.mkClone))
@@ -850,7 +851,7 @@ sealed trait Statement extends AutoLocated, ProductWithExtraInfo, Describable:
       case NewSel(pre, nme, _) => "selection"
       case Sel(pre, nme) => "selection"
       case SynthSel(pre, nme) => "selection"
-      case DynSel(o, f, _, static) => if static then "array index" else "dynamic selection"
+      case DynSel(o, f, _, checked) => if checked then "array index" else "dynamic selection"
       case Tup(fields) => "tuple literal"
       case CtxTup(fields) => "contextual tuple literal"
       case IfLike(_, IfLikeForm.ReturningIf, body) => "`if` expression"

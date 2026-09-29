@@ -1598,8 +1598,8 @@ class NewResolver:
       case path: ExitMarks => exits(path)
     go(receiver)
 
-  /** A static index `prefix.[idx]` reads an element of an array. The index is
-    * not known statically, so every element is a candidate, as for a spread.
+  /** A checked index `prefix.[idx]` reads an element of an array. The index is
+    * evaluated at runtime, so every element is a candidate, as for a spread.
     * Unlike a dynamic access `prefix![idx]`, it does not authorize dynamic
     * operations on the result: only a dynamic array has dynamic elements.
     */
@@ -1614,7 +1614,7 @@ class NewResolver:
               case NoShape => ()
         case _ =>
           if rstate.arrayIndexErrors.add(new Identity(sel)) then
-            resolError(sel, (msg"${receiver.describe.capitalize} cannot be indexed statically." -> receiver.toLoc) ::
+            resolError(sel, (msg"${receiver.describe.capitalize} does not support checked array indexing." -> receiver.toLoc) ::
               (msg"Use '![...]' for a dynamic access." -> N) :: Nil)
 
   private[semantics] def arrayElementType(array: NominalInstanceView): Opt[DeclaredType] =
@@ -1628,7 +1628,7 @@ class NewResolver:
   private[semantics] def assignArrayElement(lhs: Term, rhs: Term)(using NewResolverState): Unit =
     val receiver = lhs match
       case NewSel(prefix, id, N) if id.name.toIntOption.exists(_ >= 0) => S(prefix)
-      // Dynamic writes also reach the elements that static indexing reads.
+      // Dynamic writes also reach the elements that checked indexing reads.
       case DynSel(prefix, _, true, _) => S(prefix)
       case _ => N
     receiver.foreach: prefix =>
