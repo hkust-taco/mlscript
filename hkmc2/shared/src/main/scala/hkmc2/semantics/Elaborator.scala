@@ -1762,7 +1762,11 @@ extends Importer:
     // * @param funs:
     // *  While elaborating a block, we move all function definitions to the top (similar to JS function semantics)
     @tailrec
-    def go(sts: Ls[Tree], annotations: Ls[Annot], acc: Ls[Statement]): Ctxl[(Blk | Rcd, Ctx)] =
+    def go(sts: Ls[Tree], annotations: Ls[Annot], acc: Ls[Statement])(sourceLoc: Opt[Loc]): Ctxl[(Blk | Rcd, Ctx)] =
+      // Annotation wrappers belong to the declaration's source span even when the
+      // annotation itself is invalid. Preserve the outer syntax while unwrapping;
+      // advancing to another statement starts a fresh span.
+      val statementLoc = sourceLoc.orElse(sts.headOption.flatMap(_.toLoc))
       /** Call this function when the following term cannot be annotated. */
       def reportUnusedAnnotations: Unit = if annotations.nonEmpty then raise:
         WarningReport:
@@ -1780,16 +1784,16 @@ extends Importer:
         (mkBlk(acc, N, hasResult), ctx)
       case Constructor(Block(ctors)) :: sts =>
         // TODO properly handle (it currently desugars to sibling classes)
-        go(sts, annotations, acc)
+        go(sts, annotations, acc)(N)
       case (ctorParams @ Constructor(ConstructorParamDecl(_))) :: sts =>
         // constructor(x, y) or constructor(x, y)(u, v) syntax: params are extracted during class elaboration
         ctx.getOuter match
         case S(_: ClassSymbol) =>
-          go(sts, annotations, acc)
+          go(sts, annotations, acc)(N)
         case _ =>
           raise(ErrorReport(msg"'constructor(...)' declarations are only allowed in class bodies"
             -> ctorParams.toLoc :: Nil))
-          go(sts, annotations, acc)
+          go(sts, annotations, acc)(N)
       case Open(bod) :: sts =>
         reportUnusedAnnotations
         bod match
@@ -1805,7 +1809,7 @@ extends Importer:
             raise(ErrorReport(msg"Illegal 'open' statement shape." -> bod.toLoc :: Nil))
             N
         match
-        case N => go(sts, annotations, acc)
+        case N => go(sts, annotations, acc)(N)
         case S((base, importedTrees)) =>
           base match
           case baseId: Ident =>
@@ -1831,13 +1835,13 @@ extends Importer:
                     raise(ErrorReport(msg"Illegal 'open' statement element." -> t.toLoc :: Nil))
                     Nil
               (ctx elem_++ importedNames).givenIn:
-                go(sts, Nil, acc)
+                go(sts, Nil, acc)(N)
             case N =>
               raise(ErrorReport(msg"Name not found: ${baseId.name}" -> baseId.toLoc :: Nil))
-              go(sts, Nil, acc)
+              go(sts, Nil, acc)(N)
           case _ =>
             raise(ErrorReport(msg"Illegal 'open' statement base." -> base.toLoc :: Nil))
-            go(sts, Nil, acc)
+            go(sts, Nil, acc)(N)
       case (m @ PrefixApp(Keywrd(Keyword.`import`), arg)) :: sts =>
         reportUnusedAnnotations
         val pathAndAlias: Opt[(Tree, Opt[Ident])] = arg match
@@ -1851,7 +1855,7 @@ extends Importer:
           case pathArg => S((pathArg, N))
         val (newCtx, newAcc) = pathAndAlias match
           case S((StrLit(path), alias)) =>
-            val stmt = importPath(path, alias)(m.toLoc)
+            val stmt = importPath(path, alias)(statementLoc)
             (ctx + (stmt.sym.nme -> stmt.sym),
               stmt :: acc)
           case S((pathArg, _)) =>
@@ -1862,11 +1866,11 @@ extends Importer:
           case N => // errors have been reported above.
             (ctx, acc)
         newCtx.givenIn:
-          go(sts, Nil, newAcc)
+          go(sts, Nil, newAcc)(N)
       
       case Spread(Keywrd(Keyword.`...`), S(body)) :: sts =>
         reportUnusedAnnotations
-        go(sts, Nil, RcdSpread(term(body)) :: acc)
+        go(sts, Nil, RcdSpread(term(body)) :: acc)(N)
       case InfixApp(lhs, Keywrd(Keyword.`:`), rhs) :: sts =>
         var newCtx = ctx
         val (rlhs, rhs_t) = rhs match
@@ -1895,7 +1899,7 @@ extends Importer:
             raise(ErrorReport(msg"Unexpected record key shape." -> rlhs.toLoc :: Nil))
             RcdField(Term.Error().withLocOf(rlhs), rhs_t) :: acc
         newCtx.givenIn:
-          go(sts, Nil, newAcc)
+          go(sts, Nil, newAcc)(N)
       case (hd @ LetLike(kw @ Keywrd(`let`), Apps(id: Ident, tups), rhso, N)) :: sts
       if tups.isEmpty || id.name.headOption.exists(_.isLower) =>
         val sym =
@@ -1908,16 +1912,16 @@ extends Importer:
           case S(rhs) =>
             val rrhs = tups.foldRight(rhs):
               InfixApp(_, Keywrd(Keyword.`=>`), _)
-            mkLetBinding(sym, term(rrhs), annotations)(hd.toLoc) reverse_::: acc
+            mkLetBinding(sym, term(rrhs), annotations)(statementLoc) reverse_::: acc
           case N =>
             if tups.nonEmpty then
               raise(ErrorReport(msg"Expected a right-hand side for let bindings with parameters" -> hd.toLoc :: Nil))
-            LetDecl(sym, annotations)(hd.toLoc) :: acc
+            LetDecl(sym, annotations)(statementLoc) :: acc
         (ctx + (id.name -> sym)) givenIn:
-          go(sts, Nil, newAcc)
+          go(sts, Nil, newAcc)(N)
       case (tree @ LetLike(Keywrd(`let`), lhs, _, N)) :: sts =>
         raise(ErrorReport(msg"Unsupported let binding shape" -> tree.toLoc :: Nil))
-        go(sts, Nil, Term.Error().withLocOf(tree) :: acc)
+        go(sts, Nil, Term.Error().withLocOf(tree) :: acc)(N)
       case (definition @ Def(lhs, rhs)) :: sts =>
         reportUnusedAnnotations
         lhs match
@@ -1926,23 +1930,23 @@ extends Importer:
           ctx.get(id.name) match
           case S(elem) =>
             elem.symbol match
-            case S(sym: (LocalSymbol | TermSymbol)) => go(sts, Nil, DefineVar(sym, r)(definition.toLoc) :: acc)
+            case S(sym: (LocalSymbol | TermSymbol)) => go(sts, Nil, DefineVar(sym, r)(statementLoc) :: acc)(N)
             case S(sym) =>
               raise(ErrorReport(msg"Symbol '${id.name}' is not a variable and cannot be reassigned" -> id.toLoc :: Nil))
-              go(sts, Nil, Term.Error().withLocOf(id) :: acc)
+              go(sts, Nil, Term.Error().withLocOf(id) :: acc)(N)
             case N =>
               raise(ErrorReport(msg"Name not found: ${id.name}" -> id.toLoc :: Nil))
-              go(sts, Nil, Term.Error().withLocOf(id) :: acc)
+              go(sts, Nil, Term.Error().withLocOf(id) :: acc)(N)
           case N =>
             // TODO lookup in members? inherited/refined stuff?
             raise(ErrorReport(msg"Name not found: ${id.name}" -> id.toLoc :: Nil))
-            go(sts, Nil, Term.Error().withLocOf(id) :: acc)
+            go(sts, Nil, Term.Error().withLocOf(id) :: acc)(N)
         case App(base, args) =>
-          go(Def(base, InfixApp(args, Keywrd(Keyword.`=>`), rhs)) :: sts, Nil, acc)
+          go(Def(base, InfixApp(args, Keywrd(Keyword.`=>`), rhs)) :: sts, Nil, acc)(statementLoc)
         case _ =>
           raise(ErrorReport(msg"Unrecognized definitional assignment left-hand side: ${lhs.describe}"
             -> lhs.toLoc :: Nil)) // TODO BE
-          go(sts, Nil, Term.Error().withLocOf(lhs) :: acc)
+          go(sts, Nil, Term.Error().withLocOf(lhs) :: acc)(N)
       case (td @ TermDef(k, nme, rhs)) :: sts =>
         log(s"Processing term definition $nme")
         td.symbName match
@@ -1958,15 +1962,15 @@ extends Importer:
             if (k is MutVal) && owner.isEmpty then
               raise:
                 ErrorReport:
-                  msg"Mutable 'val' definitions are only valid as members of a module, object, or class definition" -> td.toLoc
+                  msg"Mutable 'val' definitions are only valid as members of a module, object, or class definition" -> statementLoc
                   :: Nil
-              return go(sts, Nil, acc)
+              return go(sts, Nil, acc)(N)
             if owner.isDefined && !identifierPattern.matches(id.name) then
               raise:
                 ErrorReport:
                   msg"Illegal ${k.desc} member name: '${id.name}'" -> nme.toLoc
                   :: illegalMemberNameTail
-              return go(sts, Nil, acc)
+              return go(sts, Nil, acc)(N)
             val isMethod = owner.exists(_.isInstanceOf[ClassSymbol])
             val tdf = ctx.nest(OuterCtx.NonReturnContext).givenIn: newCtx ?=>
               // * Add type parameters to context
@@ -1997,7 +2001,7 @@ extends Importer:
                   val hasGeneratorAnnotation = annotations.exists(_.isInstanceOf[Annot.Generator])
                   val hasAsyncAnnotation = annotations.exists(_.isInstanceOf[Annot.Async])
                   if pss.isEmpty && hasGeneratorAnnotation then
-                    raise(ErrorReport(msg"Generators are not supported on functions without a parameter list" -> td.toLoc :: Nil))
+                    raise(ErrorReport(msg"Generators are not supported on functions without a parameter list" -> statementLoc :: Nil))
                   newCtx.nest(OuterCtx.Function(nonLocalRetHandler)(pss.nonEmpty && hasGeneratorAnnotation, hasAsyncAnnotation)).givenIn: newCtx ?=>
                     val b = term(rhs)(using newCtx)
                     if nonLocalRetHandler.directRefs.isEmpty then b else
@@ -2090,16 +2094,16 @@ extends Importer:
                 case _ => N
               val tsym = TermSymbol(k, owner, id, erasedType = erasedTpe) // TODO?
               val tdf = TermDefinition(k, sym, tsym, pss, tps, s, body, 
-                TermDefFlags.empty.copy(isMethod = isMethod), mfn, annotations, N)(td.toLoc)
+                TermDefFlags.empty.copy(isMethod = isMethod), mfn, annotations, N)(statementLoc)
               tsym.defn = S(tdf)
               sym.tsym = S(tsym)
               
               tdf
-            go(sts, Nil, tdf :: acc)
+            go(sts, Nil, tdf :: acc)(N)
           case L(d) =>
             reportUnusedAnnotations
             raise(d)
-            go(sts, Nil, acc)
+            go(sts, Nil, acc)(N)
       case (td @ TypeDef(k, head, rhs)) :: sts =>
         val owner = ctx.outer.inner
         
@@ -2118,14 +2122,14 @@ extends Importer:
           case R(id) => id
           case L(d) =>
             raise(d)
-            return go(sts, Nil, acc)
+            return go(sts, Nil, acc)(N)
         
         if owner.isDefined && !identifierPattern.matches(nme.name) then
           raise:
             ErrorReport:
               msg"Illegal ${k.desc} member name: '${nme.name}'" -> nme.toLoc
               :: illegalMemberNameTail
-          return go(sts, Nil, acc)
+          return go(sts, Nil, acc)(N)
         
         val sym = members.getOrElse(nme.name, lastWords(s"Symbol not found: ${nme.name}"))
         
@@ -2279,7 +2283,7 @@ extends Importer:
             assert(body.isEmpty)
             val d =
               given Ctx = newCtx
-              semantics.TypeDef(alsSym, sym, tps, rhs.map(term(_)), N, annotations)(td.toLoc)
+              semantics.TypeDef(alsSym, sym, tps, rhs.map(term(_)), N, annotations)(statementLoc)
             alsSym.defn = S(d)
             d
         case Pat =>
@@ -2288,7 +2292,7 @@ extends Importer:
             if pss.length > 1 then raise:
                 ErrorReport:
                   msg"Multiple parameter lists are not supported for this definition." ->
-                    td.toLoc :: Nil
+                    statementLoc :: Nil
             // Pattern definition should not have a body like class definition.
             assert(body.isEmpty)
             val ps = pss.headOption
@@ -2311,7 +2315,7 @@ extends Importer:
             log(s"`${patSym.nme}`'s extraction parameters: ${extractionParams.mkString("[", ", ", "]")}")
             // Empty pattern body is considered as wildcard patterns.
             val rhs = td.rhs.getOrElse:
-              raise(ErrorReport(msg"Pattern definitions must have a body." -> td.toLoc :: Nil))
+              raise(ErrorReport(msg"Pattern definitions must have a body." -> statementLoc :: Nil))
               Tree.Under()
             // Elaborate the pattern body with the pattern parameters.
             val pat = pattern(rhs)(using ctx ++ patternParams.iterator.map(p => p.sym.name -> p.sym))
@@ -2334,7 +2338,7 @@ extends Importer:
             // `paramsOpt` is set to `N` because we don't want parameters to
             // appear in the generated class's constructor.
             val pd = PatternDef(owner, patSym, sym, tps, allParams,
-              patternParams, extractionParams, pat, annotations)(td.toLoc)
+              patternParams, extractionParams, pat, annotations)(statementLoc)
             patSym.defn = S(pd)
             pd
         case k: (Mod.type | Obj.type) =>
@@ -2350,7 +2354,7 @@ extends Importer:
               val md =
                 val (bod, c) = mkBody(Nil)
                 ModuleOrObjectDef(owner, modSym, sym,
-                  tps, pss.headOption, pss.tailOr(Nil), newOf(td), k, ObjBody(bod), comp, annotations)(outerCtx.scope, td.toLoc)
+                  tps, pss.headOption, pss.tailOr(Nil), newOf(td), k, ObjBody(bod), comp, annotations)(outerCtx.scope, statementLoc)
               modSym.defn = S(md)
               md
         case Cls =>
@@ -2395,7 +2399,7 @@ extends Importer:
                       case a @ Annot.Modifier(Keyword.`declare`) => a
                     ,
                     S(clsSym),
-                  )(td.toLoc)
+                  )(statementLoc)
                 if pss.nonEmpty then sym.tsym = S(ctsym)
                 ctsym.defn = S(ctdef)
                 // Note: do NOT set sym.tsym for constructor(...) classes; they are not callable as functions.
@@ -2403,46 +2407,46 @@ extends Importer:
               else N
               val cd =
                 val (bod, c) = mkBody(auxCtorPss)
-                ClassDef(owner, Cls, clsSym, sym, tsym, tps, pss, newOf(td), ObjBody(bod), annotations, comp, auxCtorParams = auxCtorPss)(td.toLoc)
+                ClassDef(owner, Cls, clsSym, sym, tsym, tps, pss, newOf(td), ObjBody(bod), annotations, comp, auxCtorParams = auxCtorPss)(statementLoc)
               clsSym.defn = S(cd)
               cd
         case Trt | Mxn => lastWords(s"Unexpected type definition kind here: $k")
-        go(sts, Nil, defn :: acc)
+        go(sts, Nil, defn :: acc)(N)
       case Annotated(annotation, target) :: sts =>
-        go(target :: sts, annotations ++ annot(annotation), acc)
+        go(target :: sts, annotations ++ annot(annotation), acc)(statementLoc)
       // * With tight right precedence, `#config(args)` is parsed as `App(Directive(config, Tup()), Tup(args))`.
       // * Reconstruct as `Directive(config, Tup(args))` and re-process.
       case App(Directive(prefix, _), args) :: sts =>
-        go(Directive(prefix, args) :: sts, annotations, acc)
+        go(Directive(prefix, args) :: sts, annotations, acc)(statementLoc)
       case (directive @ Directive(Ident("config"), Tup(args))) :: sts =>
         reportUnusedAnnotations
         val modify = ConfigParser.parseOverrides(args)
-        go(sts, Nil, SetConfig(modify)(directive.toLoc) :: acc)
+        go(sts, Nil, SetConfig(modify)(statementLoc) :: acc)(N)
       case (directive @ Directive(Ident("lang"), Tup(args))) :: sts =>
         reportUnusedAnnotations
         val modify = ConfigParser.parseLanguageDirective(args)
-        go(sts, Nil, SetConfig(modify)(directive.toLoc) :: acc)
+        go(sts, Nil, SetConfig(modify)(statementLoc) :: acc)(N)
       case Directive(Ident(name), _) :: sts =>
         raise(ErrorReport(
           msg"Unknown directive '#${name}'" -> sts.headOption.flatMap(_.toLoc) :: Nil,
           source = Diagnostic.Source.Compilation))
-        go(sts, annotations, acc)
+        go(sts, annotations, acc)(N)
       case (dir @ Directive(prefix, _)) :: sts =>
         raise(ErrorReport(
           msg"Expected a directive name after '#', but found ${prefix.describe}" -> prefix.toLoc :: Nil,
           source = Diagnostic.Source.Compilation))
-        go(sts, annotations, acc)
+        go(sts, annotations, acc)(N)
       case (st: Tree) :: sts =>
         // TODO reject plain term statements? Currently, `(1, 2)` is allowed to elaborate (tho it should be rejected in type checking later)
         val res = annotations.foldLeft(term(st)):
           case (acc, ann) => Term.Annotated(ann, acc)
         sts match
         case Nil => (mkBlk(acc, S(res), hasResult), ctx)
-        case _ => go(sts, Nil, res :: acc)
+        case _ => go(sts, Nil, res :: acc)(N)
     end go
     
     ctx.withMembers(members).givenIn:
-      go(blk.desugStmts, Nil, Nil)
+      go(blk.desugStmts, Nil, Nil)(N)
   
   
   def mkBlk(acc: Ls[Statement], res: Opt[Term], hasResult: Bool): Blk | Rcd =
