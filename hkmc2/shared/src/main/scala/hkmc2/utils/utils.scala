@@ -129,7 +129,7 @@ object DebugPrinter:
   
   val emptyValues: Set[Any] = Set(
     None, Nil, Vector.empty,
-    semantics.PlainParamList(Nil),
+    semantics.PlainParamList(Nil)(N),
     ParamListFlags.empty,
     TermDefFlags.empty,
     FldFlags.empty,

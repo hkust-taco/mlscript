@@ -10,7 +10,7 @@ import NewResolverState.Listener
 object InterfaceExposure:
   def isPublic(definition: Definition): Bool =
     !definition.annotations.contains(Annot.Private) && (definition match
-      case td: TermDefinition => (td.k isnt syntax.LetBind) || td.annotations.contains(Annot.Modifier(syntax.Keyword.`public`))
+      case td: TermDefinition => (td.k isnt syntax.LetBind) || td.annotations.contains(Annot.Modifier(syntax.Keyword.`public`)(N))
       case _: TypeDef => false
       case _ => true)
 

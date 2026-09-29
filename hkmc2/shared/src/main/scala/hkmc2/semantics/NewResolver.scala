@@ -2460,7 +2460,7 @@ class NewResolver:
         resolError(nw, (msg"${shape.describe.capitalize} cannot be instantiated with keyword 'new'." -> shape.diagnosticLocation) :: shape.diagnosticNotes)
     )
   
-  def defineVar(sym: LocalSymbol | TermSymbol, rhs: Term)(using NewResolverState): DefineVar =
+  def defineVar(sym: LocalSymbol | TermSymbol, rhs: Term)(loc: Opt[Loc])(using NewResolverState): DefineVar =
     if newResolution then sym match
       case sym: TermSymbol =>
         // symShape(sym, rhs)
@@ -2470,7 +2470,7 @@ class NewResolver:
       case sym: LocalSymbol =>
         listen(rhs): sh =>
           publishActivated(sym, sh)
-    DefineVar(sym, rhs)
+    DefineVar(sym, rhs)(loc)
   
   def listenDefn(sym: TermSymbol, listener: Listener)(using NewResolverState): Unit =
     sym.defn match

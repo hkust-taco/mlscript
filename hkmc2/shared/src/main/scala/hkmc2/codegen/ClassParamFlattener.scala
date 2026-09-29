@@ -30,14 +30,14 @@ class ClassParamFlattener(using State) extends BlockTransformer(SymbolSubst.Id):
     val flags = paramss.headOption.fold(ParamListFlags.empty)(_.flags)
     val (init, last) = paramss.splitAt(paramss.length - 1)
     val params = init.flatMap(_.allParams) ::: last.flatMap(_.params)
-    ParamList(flags, params, last.flatMap(_.restParam).headOption)
+    ParamList(flags, params, last.flatMap(_.restParam).headOption)(Loc(paramss))
   
   /** Normalize class params so that `paramsOpt = N` and `auxParams` has exactly one element. */
   private def flattenClsParams(cls: ClsLikeDefn): ClsLikeDefn =
     if cls.paramsOpt.isEmpty && cls.auxParams.sizeIs == 1 then return cls
     val paramss = cls.paramsOpt.toList ::: cls.auxParams
     val flatAux = paramss match
-      case Nil => PlainParamList(Nil)
+      case Nil => PlainParamList(Nil)(N)
       case single :: Nil => single
       case _ => flattenParamLists(paramss)
     cls.copy(paramsOpt = N, auxParams = flatAux :: Nil)(
@@ -46,8 +46,8 @@ class ClassParamFlattener(using State) extends BlockTransformer(SymbolSubst.Id):
     )
   
   private def classPathFor(fun: Path, cls: ClassSymbol): Opt[Path] = fun match
-    case Value.MemberRef(bms, _) => S(bms.asMemberRef(cls))
-    case s @ Select(qual, name) => S(Select(qual, name)(S(cls))(s.sanitize))
+    case Value.MemberRef(bms, _) => S(bms.asMemberRef(cls).withLoc(fun.toLoc))
+    case s @ Select(qual, name) => S(Select(qual, name)(S(cls), s.toLoc)(s.sanitize))
     case _ => N
 
   private def saturatedCurriedClassCall(fun: Path, argss: NELs[Ls[Arg]]): Opt[Path] =
@@ -77,7 +77,7 @@ class ClassParamFlattener(using State) extends BlockTransformer(SymbolSubst.Id):
           else argss2
         k:
           if flatArgss is argss then c
-          else Call(r, flatArgss)(c.metadata).withLocOf(c)
+          else Call(r, flatArgss)(c.metadata, c.toLoc)
     case call @ Call(fun, argss) =>
       saturatedCurriedClassCall(fun, argss) match
       case S(cls) =>
@@ -86,7 +86,7 @@ class ClassParamFlattener(using State) extends BlockTransformer(SymbolSubst.Id):
             val flatArgss =
               if argss2.lengthCompare(1) > 0 then argss2.flatten ne_:: Nil
               else argss2
-            k(Instantiate(false, cls2, flatArgss)(InstantiateMetadata(call.metadata.annotations)).withLocOf(call))
+            k(Instantiate(false, cls2, flatArgss)(InstantiateMetadata(call.metadata.annotations), call.toLoc))
       case N =>
         super.applyResult(r)(k)
     case inst @ Instantiate(mut, cls, argss) =>
@@ -97,7 +97,7 @@ class ClassParamFlattener(using State) extends BlockTransformer(SymbolSubst.Id):
             else argss2
           k:
             if (cls2 is cls) && (flatArgss is argss) then inst
-            else Instantiate(mut, cls2, flatArgss)(inst.metadata).withLocOf(inst)
+            else Instantiate(mut, cls2, flatArgss)(inst.metadata, inst.toLoc)
     case _ =>
       super.applyResult(r)(k)
   

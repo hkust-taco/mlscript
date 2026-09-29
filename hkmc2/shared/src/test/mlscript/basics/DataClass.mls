@@ -12,6 +12,8 @@ Foo(1).x
 :todo
 data Foo(x: Int)
 //│ ╔══[WARNING] This annotation has no effect.
+//│ ║  l.13: 	data Foo(x: Int)
+//│ ║        	^^^^
 //│ ╟── This annotation is not supported on application terms.
 //│ ║  l.13: 	data Foo(x: Int)
 //│ ╙──      	     ^^^^^^^^^^^

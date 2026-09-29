@@ -409,8 +409,8 @@ object Throw:
   def error(msg: Str)(using State): Throw = Throw(Instantiate(
     mut = false,
     State.globalThisSymbol.asThis.selN(Tree.Ident("Error")),
-    (Value.Lit(Tree.StrLit(msg)).asArg :: Nil) :: Nil,
-  )(InstantiateMetadata.empty))
+    (Value.Lit(Tree.StrLit(msg))(N).asArg :: Nil) :: Nil,
+  )(InstantiateMetadata.empty, N))
 
 case class Label(label: LabelSymbol, loop: Bool, body: Block, rest: Block)
 extends Block with NonBlockTail with ProductWithTail
@@ -563,11 +563,11 @@ object HandleBlock:
 
   def suspend(tag: Path, handlerFun: Path)(using Elaborator.Ctx): Result =
     val bms = Elaborator.ctx.builtins.runtime.suspend
-    Call(bms.asMemberRef(bms.asPrincipal.get), (tag.asArg :: handlerFun.asArg :: Nil) ne_:: Nil)(CallMetadata.mlsFunWithEffect)
+    Call(bms.asMemberRef(bms.asPrincipal.get), (tag.asArg :: handlerFun.asArg :: Nil) ne_:: Nil)(CallMetadata.mlsFunWithEffect, N)
 
   def handleSuspension(tag: Path, bodyFun: Path)(using Elaborator.Ctx): Result =
     val bms = Elaborator.ctx.builtins.runtime.handle_suspension
-    Call(bms.asMemberRef(bms.asPrincipal.get), (tag.asArg :: bodyFun.asArg :: Nil) ne_:: Nil)(CallMetadata.mlsFunWithEffect)
+    Call(bms.asMemberRef(bms.asPrincipal.get), (tag.asArg :: bodyFun.asArg :: Nil) ne_:: Nil)(CallMetadata.mlsFunWithEffect, N)
   
   private def create(
       lhs: LocalVarSymbol,
@@ -581,12 +581,12 @@ object HandleBlock:
   )(using Elaborator.State, Elaborator.Ctx) =
     val sym = new BlockMemberSymbol("handleBlock$", Nil, false)
 
-    val bodyDefn = FunDefn.withFreshSymbol(N, sym, PlainParamList(Nil) :: Nil, body)(N, annotations = Nil)
+    val bodyDefn = FunDefn.withFreshSymbol(N, sym, PlainParamList(Nil)(N) :: Nil, body)(N, annotations = Nil)
     
     val handlerMtds = handlers.map: handler =>
       val sym = BlockMemberSymbol(cls.nme + handler.sym.nme, Nil, true)
       val fDef = FunDefn.withFreshSymbol(
-        N, sym, PlainParamList(Param.simple(handler.resumeSym) :: Nil) :: Nil,
+        N, sym, PlainParamList(Param.simple(handler.resumeSym) :: Nil)(N) :: Nil,
         handler.body
         )(N, annotations = Nil)
       val rSym = TempSymbol(N, erasedType = N, "suspendRes")
@@ -607,7 +607,7 @@ object HandleBlock:
       N, Nil,
       S(par), handlerMtds, Nil, Nil,
       // Apparently, the lifter is not happy with any assignment in the preCtor...
-      Assign(NoSymbol, Call(State.builtinOpsMap("super").asSimpleRef, args.map(_.asArg) ne_:: Nil)(CallMetadata.mlsFunWithEffect), End()),
+      Assign(NoSymbol, Call(State.builtinOpsMap("super").asSimpleRef, args.map(_.asArg) ne_:: Nil)(CallMetadata.mlsFunWithEffect, N), End()),
       End(),
       N,
       N,
@@ -616,7 +616,7 @@ object HandleBlock:
     blockBuilder
       .scopedVars(Set(clsDefn.sym, sym))
       .define(clsDefn)
-      .assign(lhs, Instantiate(mut = true, clsDefn.sym.asMemberRef(cls), Nil :: Nil)(InstantiateMetadata.empty))
+      .assign(lhs, Instantiate(mut = true, clsDefn.sym.asMemberRef(cls), Nil :: Nil)(InstantiateMetadata.empty, N))
       .define(bodyDefn)
       .assign(res, handleSuspension(lhs.asSimpleRef, bodyDefn.sym.asMemberRef(bodyDefn.dSym)))
       .rest(rest)
@@ -710,11 +710,11 @@ final case class FunDefn(
 ) extends Defn:
   val defnSym = S(dSym)
   val asPath = sym.asMemberRef(dSym)
-  lazy val tailRec: Bool = annotations.contains(Annot.TailRec)
-  lazy val inline: Bool = annotations.contains(Annot.Inline)
-  lazy val noInline: Bool = annotations.contains(Annot.NoInline) || generator || async
-  lazy val generator: Bool = annotations.contains(Annot.Generator)
-  lazy val async: Bool = annotations.contains(Annot.Async)
+  lazy val tailRec: Bool = annotations.exists(_.isInstanceOf[Annot.TailRec])
+  lazy val inline: Bool = annotations.exists(_.isInstanceOf[Annot.Inline])
+  lazy val noInline: Bool = annotations.exists(_.isInstanceOf[Annot.NoInline]) || generator || async
+  lazy val generator: Bool = annotations.exists(_.isInstanceOf[Annot.Generator])
+  lazy val async: Bool = annotations.exists(_.isInstanceOf[Annot.Async])
   lazy val affineInfo: Ls[Int] =
     annotations.collect:
       case Annot.Affine(whichParamList) => whichParamList
@@ -994,7 +994,14 @@ enum Case:
 
 sealed trait TrivialResult extends Result
 
-sealed abstract class Result extends AutoLocated, HasErasedType:
+/** The source expression that produced an IR result is independent of its operands.
+  * Rewrites preserve this span; generated results with no source expression use `N`.
+  */
+sealed abstract class Result extends Located, HasErasedType:
+  val toLoc: Opt[Loc]
+  /** Return a result with explicit provenance without mutating a shared IR node. */
+  def withLoc(loc: Opt[Loc]): Result
+  def withLocOf(source: Located): Result = withLoc(source.toLoc)
 // // * Used for debugging locations:
 // sealed abstract class Result extends AutoLocated with ProductWithExtraInfo:
 //   def extraInfo: Str = toLoc.toString
@@ -1043,24 +1050,6 @@ sealed abstract class Result extends AutoLocated, HasErasedType:
     case Cast(value, _, check) => !check && value.isPure
     // case Instantiate(mut, cls, args) => // TODO?
     case _ => false
-  
-  // * Note: this function is used to piece together a location;
-  // * for the location to be valid, we should NOT have it include children whose location
-  // * is from some different place (with a different Origin), such as the location attached to symbols.
-  // * That's why for example, we're not adding the `l` of `Value.Ref` to the children list.
-  protected def children: Vector[Located] = this match
-    case Call(fun, argss) => fun +: argss.iterator.flatten.map(_.value).toVector
-    case Instantiate(mut, cls, argss) => cls +: argss.iterator.flatten.map(_.value).toVector
-    case Cast(value, target, _) => Vector.single(value)
-    case Select(qual, name) => Vector.double(qual, name)
-    case DynSelect(qual, fld, arrayIdx) => Vector.double(qual, fld)
-    case Lambda(params, body) => Vector.single(params)
-    case Tuple(mut, elems) => elems.iterator.map(_.value).toVector
-    case Record(mut, elems) => elems.iterator.map(_.value).toVector
-    case Value.SimpleRef(l) => Vector.empty
-    case Value.MemberRef(bms, disamb) => Vector.empty
-    case Value.This(sym) => Vector.empty
-    case Value.Lit(lit) => Vector.single(lit)
   
   // TODO rm Lam from values and thus the need for this method
   def subBlocks: Ls[Block] = this match
@@ -1169,7 +1158,7 @@ sealed abstract class Result extends AutoLocated, HasErasedType:
         val target = expected match
           case ft: ErasedFuncType => ErasedType.Function(ft.rsc)
           case v: ErasedValueType => v
-        Cast(this, target, config.checkCasts)
+        Cast(this, target, config.checkCasts)(loc)
       case N =>
         // * An `Incompatible` side is not an unrelated type but an unrepresentable one, so it gets its own message.
         def membersOf(et: CanonicalErasedType): Opt[(CanonicalErasedValueType, CanonicalErasedValueType)] = et match
@@ -1191,7 +1180,7 @@ case class CallMetadata(
   mayRaiseEffects: Bool,
   annotations: Ls[Annot],
 ):
-  lazy val explicitTailCall: Bool = annotations.contains(Annot.TailCall)
+  lazy val explicitTailCall: Bool = annotations.exists(_.isInstanceOf[Annot.TailCall])
 
 object CallMetadata:
   val defaultMlsFun = CallMetadata(true, false, Nil)
@@ -1199,7 +1188,8 @@ object CallMetadata:
   val mlsFunWithEffect = CallMetadata(true, true, Nil)
 
 
-case class Call(fun: Path, argss: NELs[Ls[Arg]])(val metadata: CallMetadata) extends Result:
+case class Call(fun: Path, argss: NELs[Ls[Arg]])(val metadata: CallMetadata, val toLoc: Opt[Loc]) extends Result:
+  def withLoc(loc: Opt[Loc]): Call = if loc == toLoc then this else copy()(metadata, loc)
   lazy val isKnownUnsaturatedCall: Bool =
     fun.targetSymbol match
     case S(ts: TermSymbol) =>
@@ -1220,20 +1210,20 @@ case class Call(fun: Path, argss: NELs[Ls[Arg]])(val metadata: CallMetadata) ext
 
 object Call:
   
-  def raw(fun: Path, argss: NELs[Ls[Arg]])(metadata: CallMetadata): Call =
-    new Call(fun, argss)(metadata)
+  def raw(fun: Path, argss: NELs[Ls[Arg]])(metadata: CallMetadata, toLoc: Opt[Loc]): Call =
+    new Call(fun, argss)(metadata, toLoc)
   
-  def apply(fun: Path, argss: NELs[Ls[Arg]])(metadata: CallMetadata): Result =
+  def apply(fun: Path, argss: NELs[Ls[Arg]])(metadata: CallMetadata, toLoc: Opt[Loc]): Result =
     fun match
     case Value.SimpleRef(sym: BuiltinSymbol) =>
       argss match
       case (Arg(N, arg1: Value) :: Arg(N, arg2: Value) :: Nil) :: Nil =>
-        evalBuiltin(sym, arg1, arg2)(return _)
+        evalBuiltin(sym, arg1, arg2)(value => return value.withLoc(toLoc))
       case (Arg(N, arg1: Value) :: Nil) :: Nil =>
-        evalBuiltin(sym, arg1)(return _)
+        evalBuiltin(sym, arg1)(value => return value.withLoc(toLoc))
       case _ =>
     case _ =>
-    raw(fun, argss)(metadata)
+    raw(fun, argss)(metadata, toLoc)
   
   private def literalArgValues(args: Ls[Arg]): Opt[Ls[Value]] =
     args.foldRight[Opt[Ls[Value]]](S(Nil)):
@@ -1244,27 +1234,27 @@ object Call:
   
   private inline def evalBuiltin(sym: BuiltinSymbol, arg1: Value, arg2: Value)(inline k: Value => Unit): Unit =
     (sym.nme, arg1, arg2) match
-    case ("+", Lit(Tree.IntLit(v1)), Lit(Tree.IntLit(v2))) => k(Lit(Tree.IntLit(v1 + v2)))
-    case ("+", Lit(Tree.StrLit(v1)), Lit(Tree.StrLit(v2))) => k(Lit(Tree.StrLit(v1 + v2)))
-    case ("-", Lit(Tree.IntLit(v1)), Lit(Tree.IntLit(v2))) => k(Lit(Tree.IntLit(v1 - v2)))
-    case ("*", Lit(Tree.IntLit(v1)), Lit(Tree.IntLit(v2))) => k(Lit(Tree.IntLit(v1 * v2)))
+    case ("+", Lit(Tree.IntLit(v1)), Lit(Tree.IntLit(v2))) => k(Lit(Tree.IntLit(v1 + v2))(N))
+    case ("+", Lit(Tree.StrLit(v1)), Lit(Tree.StrLit(v2))) => k(Lit(Tree.StrLit(v1 + v2))(N))
+    case ("-", Lit(Tree.IntLit(v1)), Lit(Tree.IntLit(v2))) => k(Lit(Tree.IntLit(v1 - v2))(N))
+    case ("*", Lit(Tree.IntLit(v1)), Lit(Tree.IntLit(v2))) => k(Lit(Tree.IntLit(v1 * v2))(N))
     // * For "/", should check for 0 and return a DecLit.
-    case ("%", Lit(Tree.IntLit(v1)), Lit(Tree.IntLit(v2))) if v2 =/= 0 => k(Lit(Tree.IntLit(v1 % v2)))
-    case ("===", Lit(l1), Lit(l2)) => k(Lit(Tree.BoolLit(l1 == l2)))
-    case ("!==", Lit(l1), Lit(l2)) => k(Lit(Tree.BoolLit(l1 != l2)))
-    case ("<", Lit(Tree.IntLit(v1)), Lit(Tree.IntLit(v2))) => k(Lit(Tree.BoolLit(v1 < v2)))
-    case ("<=", Lit(Tree.IntLit(v1)), Lit(Tree.IntLit(v2))) => k(Lit(Tree.BoolLit(v1 <= v2)))
-    case (">", Lit(Tree.IntLit(v1)), Lit(Tree.IntLit(v2))) => k(Lit(Tree.BoolLit(v1 > v2)))
-    case (">=", Lit(Tree.IntLit(v1)), Lit(Tree.IntLit(v2))) => k(Lit(Tree.BoolLit(v1 >= v2)))
-    case ("&&", Lit(Tree.BoolLit(v1)), Lit(Tree.BoolLit(v2))) => k(Lit(Tree.BoolLit(v1 && v2)))
-    case ("||", Lit(Tree.BoolLit(v1)), Lit(Tree.BoolLit(v2))) => k(Lit(Tree.BoolLit(v1 || v2)))
+    case ("%", Lit(Tree.IntLit(v1)), Lit(Tree.IntLit(v2))) if v2 =/= 0 => k(Lit(Tree.IntLit(v1 % v2))(N))
+    case ("===", Lit(l1), Lit(l2)) => k(Lit(Tree.BoolLit(l1 == l2))(N))
+    case ("!==", Lit(l1), Lit(l2)) => k(Lit(Tree.BoolLit(l1 != l2))(N))
+    case ("<", Lit(Tree.IntLit(v1)), Lit(Tree.IntLit(v2))) => k(Lit(Tree.BoolLit(v1 < v2))(N))
+    case ("<=", Lit(Tree.IntLit(v1)), Lit(Tree.IntLit(v2))) => k(Lit(Tree.BoolLit(v1 <= v2))(N))
+    case (">", Lit(Tree.IntLit(v1)), Lit(Tree.IntLit(v2))) => k(Lit(Tree.BoolLit(v1 > v2))(N))
+    case (">=", Lit(Tree.IntLit(v1)), Lit(Tree.IntLit(v2))) => k(Lit(Tree.BoolLit(v1 >= v2))(N))
+    case ("&&", Lit(Tree.BoolLit(v1)), Lit(Tree.BoolLit(v2))) => k(Lit(Tree.BoolLit(v1 && v2))(N))
+    case ("||", Lit(Tree.BoolLit(v1)), Lit(Tree.BoolLit(v2))) => k(Lit(Tree.BoolLit(v1 || v2))(N))
     case _ =>
     
   private inline def evalBuiltin(sym: BuiltinSymbol, arg1: Value)(inline k: Value => Unit): Unit =
     (sym.nme, arg1) match
-    case ("+", Lit(Tree.IntLit(v1))) => k(Lit(Tree.IntLit(v1)))
-    case ("-", Lit(Tree.IntLit(v1))) => k(Lit(Tree.IntLit(-v1)))
-    case ("!", Lit(Tree.BoolLit(v))) => k(Lit(Tree.BoolLit(!v)))
+    case ("+", Lit(Tree.IntLit(v1))) => k(Lit(Tree.IntLit(v1))(N))
+    case ("-", Lit(Tree.IntLit(v1))) => k(Lit(Tree.IntLit(-v1))(N))
+    case ("!", Lit(Tree.BoolLit(v))) => k(Lit(Tree.BoolLit(!v))(N))
     case _ =>
   
 end Call
@@ -1277,7 +1267,8 @@ case class InstantiateMetadata(
 object InstantiateMetadata:
   def empty: InstantiateMetadata = InstantiateMetadata(Nil)
 
-case class Instantiate(mut: Bool, cls: Path, argss: Ls[Ls[Arg]])(val metadata: InstantiateMetadata) extends Result
+case class Instantiate(mut: Bool, cls: Path, argss: Ls[Ls[Arg]])(val metadata: InstantiateMetadata, val toLoc: Opt[Loc]) extends Result:
+  def withLoc(loc: Opt[Loc]): Instantiate = if loc == toLoc then this else copy()(metadata, loc)
 
 /** A coercion of `value` to `target`.
   *
@@ -1295,7 +1286,8 @@ case class Instantiate(mut: Bool, cls: Path, argss: Ls[Ls[Arg]])(val metadata: I
   * - `value` is not a `Cast`.
   * - `target` must be a proper subtype of `value`'s erased type.
   */
-case class Cast private(value: Result, target: ErasedValueType, check: Bool) extends Path
+case class Cast private(value: Result, target: ErasedValueType, check: Bool)(val toLoc: Opt[Loc]) extends Path:
+  def withLoc(loc: Opt[Loc]): Cast = if loc == toLoc then this else copy()(loc)
 
 object Cast:
   /** Builds a cast while collapsing a nested cast.
@@ -1309,23 +1301,28 @@ object Cast:
     *
     * Note that explicitly-checked casts are never lost to preserve the semantics of eagerly failing when casts fail.
     */
-  def apply(value: Result, target: ErasedValueType, check: Bool): Cast =
+  def apply(value: Result, target: ErasedValueType, check: Bool)(toLoc: Opt[Loc]): Cast =
     value match
-      case Cast(inner, _, innerCheck) => new Cast(inner, target, check || innerCheck)
-      case _ => new Cast(value, target, check)
+      case Cast(inner, _, innerCheck) => new Cast(inner, target, check || innerCheck)(toLoc)
+      case _ => new Cast(value, target, check)(toLoc)
 
-case class Lambda(params: ParamList, body: Block)(val annot: Ls[Annot]) extends Result:
+case class Lambda(params: ParamList, body: Block)(val annot: Ls[Annot], val toLoc: Opt[Loc]) extends Result:
+  def withLoc(loc: Opt[Loc]): Lambda = if loc == toLoc then this else copy()(annot, loc)
   lazy val affine: Bool = annot.exists(_.isInstanceOf[Annot.Affine])
 
 
-case class Tuple(mut: Bool, elems: Ls[Arg]) extends Result
+case class Tuple(mut: Bool, elems: Ls[Arg])(val toLoc: Opt[Loc]) extends Result:
+  def withLoc(loc: Opt[Loc]): Tuple = if loc == toLoc then this else copy()(loc)
 
-case class Record(mut: Bool, elems: Ls[RcdArg]) extends Result
+case class Record(mut: Bool, elems: Ls[RcdArg])(val toLoc: Opt[Loc]) extends Result:
+  def withLoc(loc: Opt[Loc]): Record = if loc == toLoc then this else copy()(loc)
 
 
 sealed abstract class Path extends TrivialResult:
-  def selN(id: Tree.Ident): Path = Select(this, id)(N)(false)
-  def sel(id: Tree.Ident, sym: DefinitionSymbol[?]): Path = Select(this, id)(S(sym))(false)
+  override def withLoc(loc: Opt[Loc]): Path
+  override def withLocOf(source: Located): Path = withLoc(source.toLoc)
+  def selN(id: Tree.Ident): Path = Select(this, id)(N, N)(false)
+  def sel(id: Tree.Ident, sym: DefinitionSymbol[?]): Path = Select(this, id)(S(sym), N)(false)
   def selSN(id: Str): Path = selN(new Tree.Ident(id))
   def asArg = Arg(spread = N, this)
   def targetSymbol: Opt[DefinitionSymbol[?]] = this match
@@ -1336,19 +1333,28 @@ sealed abstract class Path extends TrivialResult:
 /**
  * @param symbol The symbol representing the definition that the selection refers to, if known.
  */
-case class Select(qual: Path, name: Tree.Ident)(val symbol: Opt[DefinitionSymbol[?]])(val sanitize: Boolean) extends Path with ProductWithExtraInfo:
+case class Select(qual: Path, name: Tree.Ident)(val symbol: Opt[DefinitionSymbol[?]], val toLoc: Opt[Loc])(val sanitize: Boolean) extends Path with ProductWithExtraInfo:
+  def withLoc(loc: Opt[Loc]): Select = if loc == toLoc then this else copy()(symbol, loc)(sanitize)
   def extraInfo(using DebugPrinter): Str = symbol.map(s => s"sym=${s.showAsPlain}").mkString
 
-case class DynSelect(qual: Path, fld: Path, arrayIdx: Bool) extends Path
+case class DynSelect(qual: Path, fld: Path, arrayIdx: Bool)(val toLoc: Opt[Loc]) extends Path:
+  def withLoc(loc: Opt[Loc]): DynSelect = if loc == toLoc then this else copy()(loc)
 
 enum Value extends Path with ProductWithExtraInfo:
-  case SimpleRef(sym: SimpleSymbol)
+  case SimpleRef(sym: SimpleSymbol)(val toLoc: Opt[Loc])
   /**
     * @param disamb The symbol disambiguating the definition that the reference refers to.
     */
-  case MemberRef(bms: BlockMemberSymbol, disamb: DefinitionSymbol[?])
-  case This(sym: InnerSymbol)
-  case Lit(lit: Literal)
+  case MemberRef(bms: BlockMemberSymbol, disamb: DefinitionSymbol[?])(val toLoc: Opt[Loc])
+  case This(sym: InnerSymbol)(val toLoc: Opt[Loc])
+  case Lit(lit: Literal)(val toLoc: Opt[Loc])
+
+  override def withLoc(loc: Opt[Loc]): Value = if loc == toLoc then this else this match
+    case v: SimpleRef => v.copy()(loc)
+    case v: MemberRef => v.copy()(loc)
+    case v: This => v.copy()(loc)
+    case v: Lit => v.copy()(loc)
+  override def withLocOf(source: Located): Value = withLoc(source.toLoc)
   
   override def extraInfo(using DebugPrinter): Str = this match
     case MemberRef(bms, disamb) => s"disamb=${disamb.showAsPlain}"
@@ -1437,13 +1443,13 @@ extension (k: Block => Block)
 def blockBuilder: Block => Block = identity
 
 extension (s: SimpleSymbol)
-  inline def asSimpleRef: Value.SimpleRef = Value.SimpleRef(s)
+  inline def asSimpleRef: Value.SimpleRef = Value.SimpleRef(s)(N)
 
 extension (bms: BlockMemberSymbol)
-  inline def asMemberRef(disamb: DefinitionSymbol[?]): Value.MemberRef = Value.MemberRef(bms, disamb)
+  inline def asMemberRef(disamb: DefinitionSymbol[?]): Value.MemberRef = Value.MemberRef(bms, disamb)(N)
 
 extension (sym: InnerSymbol)
-  inline def asThis: Value.This = Value.This(sym)
+  inline def asThis: Value.This = Value.This(sym)(N)
 
 extension (l: ValueSymbol)
   // TODO(Derppening): Inline `Value.Ref.apply` into this function once that function is removed

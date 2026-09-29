@@ -202,7 +202,7 @@ class A(val x) with
 A(1).get
 //│ ╔══[COMPILATION ERROR] `member:get` is neither a field access nor a callable method
 //│ ║  l.202: 	A(1).get
-//│ ╙──       	    ^^^^
+//│ ╙──       	^^^^^^^^
 
 
 // Method result types are taken from the return annotation, so primitives stay unboxed

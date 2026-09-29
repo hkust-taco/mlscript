@@ -762,11 +762,11 @@ class FixedPointCompiler(using codegen.Erasure)(using tl: TL)(using State, Ctx, 
       matchers.flatMap((_, stepImpls, postMatcherOpt) =>
         stepImpls ::: postMatcherOpt.fold(Nil)(_._2)
       ).flatMap: (symbol, params, body) =>
-        LetDecl(symbol, Nil) :: DefineVar(symbol, Term.Lam(params, body)) :: Nil
+        LetDecl(symbol, Nil)(N) :: DefineVar(symbol, Term.Lam(params, body))(N) :: Nil
       ::: List(
-        LetDecl(phaseSymbol, Nil), DefineVar(phaseSymbol, int(0)),
-        LetDecl(focusSymbol, Nil), DefineVar(focusSymbol, inputSymbol.safeRef),
-        LetDecl(failPhaseSymbol, Nil), DefineVar(failPhaseSymbol, int(-1)))
+        LetDecl(phaseSymbol, Nil)(N), DefineVar(phaseSymbol, int(0))(N),
+        LetDecl(focusSymbol, Nil)(N), DefineVar(focusSymbol, inputSymbol.safeRef)(N),
+        LetDecl(failPhaseSymbol, Nil)(N), DefineVar(failPhaseSymbol, int(-1))(N))
 
     Machine(paramList(param(inputSymbol)), prelude, loop, result)
 
@@ -965,14 +965,14 @@ class FixedPointCompiler(using codegen.Erasure)(using tl: TL)(using State, Ctx, 
 
     val prelude =
       (redexImpls ::: sideImpls ::: postMatcherOpt.fold(Nil)(_._2)).flatMap: (symbol, params, body) =>
-        LetDecl(symbol, Nil) :: DefineVar(symbol, Term.Lam(params, body)) :: Nil
+        LetDecl(symbol, Nil)(N) :: DefineVar(symbol, Term.Lam(params, body))(N) :: Nil
       ::: List(
-        LetDecl(modeSymbol, Nil), DefineVar(modeSymbol, int(ModeFind)),
-        LetDecl(focusSymbol, Nil), DefineVar(focusSymbol, inputSymbol.safeRef),
-        LetDecl(stackSymbol, Nil), DefineVar(stackSymbol, `null`),
-        LetDecl(resultSymbol, Nil), DefineVar(resultSymbol, `null`))
+        LetDecl(modeSymbol, Nil)(N), DefineVar(modeSymbol, int(ModeFind))(N),
+        LetDecl(focusSymbol, Nil)(N), DefineVar(focusSymbol, inputSymbol.safeRef)(N),
+        LetDecl(stackSymbol, Nil)(N), DefineVar(stackSymbol, `null`)(N),
+        LetDecl(resultSymbol, Nil)(N), DefineVar(resultSymbol, `null`)(N))
       ::: (if requireProgress then
-        LetDecl(progressedSymbol, Nil) :: DefineVar(progressedSymbol, bool(false)) :: Nil
+        LetDecl(progressedSymbol, Nil)(N) :: DefineVar(progressedSymbol, bool(false))(N) :: Nil
       else Nil)
 
     // Succeed with the normal form, post-processed by the trailing

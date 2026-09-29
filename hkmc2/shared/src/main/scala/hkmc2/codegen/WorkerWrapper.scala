@@ -25,10 +25,10 @@ class WorkerWrapper
   import tl.*
   
   private def withInline(annotations: Ls[Annot]): Ls[Annot] =
-    if annotations.contains(Annot.Inline) then annotations else Annot.Inline :: annotations
+    if annotations.exists(_.isInstanceOf[Annot.Inline]) then annotations else Annot.Inline()(N) :: annotations
   
   private def withoutInline(annotations: Ls[Annot]): Ls[Annot] =
-    annotations.filterNot(_ == Annot.Inline)
+    annotations.filterNot(_.isInstanceOf[Annot.Inline])
   
   private def isPlainParamList(params: ParamList): Bool =
     params.flags == ParamListFlags.empty && params.restParam.isEmpty
@@ -53,7 +53,7 @@ class WorkerWrapper
     val mapping = collection.mutable.LinkedHashMap.empty[Symbol, Symbol]
     val flatParams = params.flatMap: params =>
       params.params.map(freshParam(_, mapping))
-    PlainParamList(flatParams) -> mapping.toMap
+    PlainParamList(flatParams)(Loc(params)) -> mapping.toMap
   
   private def rewriteParams(body: Block, mapping: Map[Symbol, Symbol]): Block =
     val subst = new SymbolSubst:
@@ -76,7 +76,7 @@ class WorkerWrapper
     val workerArgs = fun.params.flatMap(_.params).map: param =>
       Arg(N, param.sym.asSimpleRef)
     val wrapperBody = Return(
-      Call(worker.asPath, workerArgs ne_:: Nil)(CallMetadata.mlsFunWithEffect),
+      Call(worker.asPath, workerArgs ne_:: Nil)(CallMetadata.mlsFunWithEffect, N),
     )
     val wrapper = FunDefn(
       fun.owner,
@@ -85,7 +85,7 @@ class WorkerWrapper
       fun.params,
       wrapperBody,
     )(fun.configOverride, withInline(fun.annotations.filter:
-      case Annot.NoInline | Annot.Generator => false
+      case Annot.NoInline() | Annot.Generator() => false
       case _ => true
     ))
     log(s"▶ Worker-wrapper: ${fun.dSym.showDbg} -> ${worker.dSym.showDbg}")

@@ -20,22 +20,27 @@ import hkmc2.codegen.Erasure
 
 final case class QuantVar(sym: VarSymbol, ub: Opt[Term], lb: Opt[Term])
 
-enum Annot extends AutoLocated:
-  case Untyped
-  case Modifier(mod: Keyword)
-  case Trm(trm: Term)
+/** Each annotation occurrence owns its source span, including marker annotations.
+  * The auxiliary location does not affect equality or matching by annotation kind.
+  */
+enum Annot extends Located:
+  val toLoc: Opt[Loc]
+
+  case Untyped()(val toLoc: Opt[Loc])
+  case Modifier(mod: Keyword)(val toLoc: Opt[Loc])
+  case Trm(trm: Term)(val toLoc: Opt[Loc])
   // NOTE: The presence of TailRec and TailCall annotations does not affect whether a function is optimized or not;
   // it only affects whether a warning is thrown if the function/call is not actually tail-recursive.
-  case TailRec
-  case TailCall
-  case Inline
-  case NoInline
-  case Generator
-  case Async
-  case RaiseEffects
+  case TailRec()(val toLoc: Opt[Loc])
+  case TailCall()(val toLoc: Opt[Loc])
+  case Inline()(val toLoc: Opt[Loc])
+  case NoInline()(val toLoc: Opt[Loc])
+  case Generator()(val toLoc: Opt[Loc])
+  case Async()(val toLoc: Opt[Loc])
+  case RaiseEffects()(val toLoc: Opt[Loc])
   // Whether the function is guaranteed to not raise effects.
-  case Pure
-  case Config(modify: hkmc2.Config => hkmc2.Config)
+  case Pure()(val toLoc: Opt[Loc])
+  case Config(modify: hkmc2.Config => hkmc2.Config)(val toLoc: Opt[Loc])
   // Marks if a function or lambda is one-shot, i.e. called at most once.
   // Functions with multiple parameter lists are considered here as a chain of
   // function values. `whichParamList` is the zero-based index of the parameter
@@ -46,7 +51,7 @@ enum Annot extends AutoLocated:
   //   each function value produced by `f(a)` is one-shot;
   // - its list of annotations containing both `Affine(0)` and `Affine(1)` says that
   //   `f` is one-shot and each function value produced by `f(a)` is also one-shot.
-  case Affine(whichParamList: Int)
+  case Affine(whichParamList: Int)(val toLoc: Opt[Loc])
   
   def symbol: Opt[Symbol] = this match
     case Trm(trm) => trm.symbol
@@ -54,48 +59,31 @@ enum Annot extends AutoLocated:
   
   def subTerms: Vector[Term] = this match
     case Trm(trm) => Vector.single(trm)
-    case _: Modifier | Untyped | TailRec | TailCall | Inline | NoInline
-      | Generator | Async | RaiseEffects | Pure | _: Config | _: Affine => Vector.empty
-  
-  def children: Vector[Located] = this match
-    case Trm(trm) => Vector.single(trm)
-    // case Modifier(kw) => Vector.single(kw) // TODO: make `kw` a `Keywrd`
-    case _: Modifier | Untyped | TailRec | TailCall | Inline | NoInline
-      | Generator | Async | RaiseEffects | Pure | _: Config | _: Affine => Vector.empty
+    case _: Modifier | Untyped() | TailRec() | TailCall() | Inline() | NoInline()
+      | Generator() | Async() | RaiseEffects() | Pure() | _: Config | _: Affine => Vector.empty
   
   def show(using Scope, ShowCfg, Raise): Document = this match
-    case Untyped => doc"@untyped"
-    case Inline => doc"@inline"
-    case NoInline => doc"@noInline"
-    case Generator => doc"@generator"
-    case Async => doc"@async"
-    case RaiseEffects => doc"@raiseEffects"
-    case TailRec => doc"@tailrec"
-    case TailCall => doc"@tailcall"
+    case Untyped() => doc"@untyped"
+    case Inline() => doc"@inline"
+    case NoInline() => doc"@noInline"
+    case Generator() => doc"@generator"
+    case Async() => doc"@async"
+    case RaiseEffects() => doc"@raiseEffects"
+    case TailRec() => doc"@tailrec"
+    case TailCall() => doc"@tailcall"
     case Affine(n) => doc"@affine($n)"
     case Modifier(mod) => doc"@${mod.name}"
-    case Pure => doc"@pure"
+    case Pure() => doc"@pure"
     case Trm(trm) => doc"@${trm.show}"
     case Config(_) => doc"@config(...)"
   
   def mkClone(using State, Erasure): Annot = this match
-    case Untyped => Untyped
-    case Modifier(mod) => Modifier(mod)
-    case Trm(trm) => Trm(trm.mkClone)
-    case TailRec => TailRec
-    case TailCall => TailCall
-    case Inline => Inline
-    case NoInline => NoInline
-    case Generator => Generator
-    case Async => Async
-    case RaiseEffects => RaiseEffects
-    case Pure => Pure
-    case c: Config => c
-    case a: Affine => a
+    case Trm(trm) => Trm(trm.mkClone)(toLoc)
+    case _ => this
 
 object Annot:
   
-  val Private = Modifier(Keyword.`private`)
+  val Private = Modifier(Keyword.`private`)(N)
   
   /** The `declare` modifier in `annotations`, if present. */
   def declareModifierOf(annotations: Ls[Annot]): Opt[Annot.Modifier] = annotations.collectFirst:
@@ -827,11 +815,11 @@ sealed trait Statement extends Located, ProductWithExtraInfo, Describable:
   def mkClone(using State, Erasure): Statement = this match
     case t: Term => lastWords(s"overridden implementation")
     case d: Definition => ???
-    case imp: Import => Import(imp.sym, imp.str, imp.file)
-    case LetDecl(sym, annotations) => LetDecl(sym, annotations.map(_.mkClone))
+    case imp: Import => Import(imp.sym, imp.str, imp.file)(imp.toLoc)
+    case LetDecl(sym, annotations) => LetDecl(sym, annotations.map(_.mkClone))(toLoc)
     case RcdField(field, rhs, sym) => RcdField(field.mkClone, rhs.mkClone, sym)
     case RcdSpread(rcd) => RcdSpread(rcd.mkClone)
-    case DefineVar(sym, rhs) => DefineVar(sym, rhs.mkClone)
+    case DefineVar(sym, rhs) => DefineVar(sym, rhs.mkClone)(toLoc)
     case sc: SetConfig => sc
   
   def describe: Str =
@@ -1284,7 +1272,7 @@ sealed trait Statement extends Located, ProductWithExtraInfo, Describable:
     case LeadingDotSel(nme) => s"_?_.${nme.name}"
     case SetConfig(_) => "#config(...)"
 
-final case class LetDecl(sym: LocalVarSymbol | TermSymbol, annotations: Ls[Annot]) extends Statement, AutoLocated
+final case class LetDecl(sym: LocalVarSymbol | TermSymbol, annotations: Ls[Annot])(val toLoc: Opt[Loc]) extends Statement
 
 /** The symbol identifies the property, independently of any local binding used
   * to evaluate its value. Computed keys also have an identity, but cannot be
@@ -1321,11 +1309,11 @@ object RcdField:
     RcdField(field, rhs, sym)
 final case class RcdSpread(rcd: Term) extends Statement, AutoLocated
 
-final case class DefineVar(sym: LocalSymbol | TermSymbol, rhs: Term) extends Statement, AutoLocated
+final case class DefineVar(sym: LocalSymbol | TermSymbol, rhs: Term)(val toLoc: Opt[Loc]) extends Statement
 
 /** A global configuration change directive (`#config(...)`).
   * Records a function that modifies the current compiler configuration. */
-final case class SetConfig(modify: hkmc2.Config => hkmc2.Config) extends Statement, AutoLocated:
+final case class SetConfig(modify: hkmc2.Config => hkmc2.Config)(val toLoc: Opt[Loc]) extends Statement:
   override def toString: String = "#config(...)"
 
 enum Visibility:
@@ -1413,7 +1401,7 @@ final case class TermDefinition(
     .getOrElse(Visibility.Public)
   lazy val mayRaiseEffects: Bool =
     annotations.forall:
-      case Annot.Pure => false
+      case Annot.Pure() => false
       case _ => true
   def extraAnnotations: Ls[Annot] = annotations.filter:
     case Annot.Modifier(Keyword.`declare` | Keyword.`abstract`) => false
@@ -1487,7 +1475,7 @@ end ObjBody
   * in which case it is a `BlockMemberSymbol` when importing files explicitly
   * and a `TermSymbol` when the import is made implicitly by the compiler (eg, importing "Predef").
   * Note that the `file` Path may not represent a real file; eg when importing "fs". */
-case class Import(sym: ImportSymbol, str: Str, file: io.Path) extends Statement, AutoLocated
+case class Import(sym: ImportSymbol, str: Str, file: io.Path)(val toLoc: Opt[Loc]) extends Statement
 
 
 /** Declaration spans come from the syntax that introduced them, never from semantic
@@ -1790,8 +1778,7 @@ final case class Param(flags: FldFlags, sym: VarSymbol, sign: Opt[Term], modulef
   def showDbg(using DebugPrinter): Str = flags.show(true) + sym.showDbg + sign.fold("")(": " + _.showDbg)
 
 final case class ParamList(flags: ParamListFlags, params: Ls[Param], restParam: Opt[Param])
-extends AutoLocated:
-  override protected def children: Vector[Located] = params.toVector ++ restParam
+(val toLoc: Opt[Loc]) extends Located:
   def foreach(f: Param => Unit): Unit = (params.iterator ++ restParam).foreach(f)
   def paramCountLB: Int = params.length
   def paramCountUB: Bool = restParam.isEmpty
@@ -1809,8 +1796,8 @@ extends AutoLocated:
   def showDbg(using DebugPrinter): Str = flags.showDbg
     + (params.map(_.showDbg) ++ restParam.toList.map("..." + _.showDbg)).mkString("(", ", ", ")")
 object PlainParamList:
-  def apply(params: Ls[Param]) =
-    ParamList(ParamListFlags.empty, params, N)
+  def apply(params: Ls[Param])(toLoc: Opt[Loc]) =
+    ParamList(ParamListFlags.empty, params, N)(toLoc)
   def unapply(pl: ParamList): Opt[Ls[Param]] = pl match
     case ParamList(ParamListFlags.empty, params, N) => S(params)
     case _ => N
