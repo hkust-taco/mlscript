@@ -48,14 +48,17 @@ class Child extends Base with
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
 //│ ║  l.47: 	[new Child].map[Base]((x, ...) => x).map((x, ...) => x.extra)
 //│ ║        	                                                     ^^^^^^^
-//│ ╙── Value of type 'Base' does not contain member 'extra'
+//│ ╟── Value of type 'Base' does not contain member 'extra'
+//│ ╟── This type annotation supplies the value's shape.
+//│ ║  l.47: 	[new Child].map[Base]((x, ...) => x).map((x, ...) => x.extra)
+//│ ╙──      	                ^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 // Imported methods validate explicit type-argument counts too.
 :ge
 [1].map[Int, Int]((x, ...) => x)
 //│ ╔══[COMPILATION ERROR] Resolution error in type application
-//│ ║  l.56: 	[1].map[Int, Int]((x, ...) => x)
+//│ ║  l.59: 	[1].map[Int, Int]((x, ...) => x)
 //│ ║        	^^^^^^^^^^^^^^^^^
 //│ ╟── Function 'map' expected 1 type argument, but got 2
 //│ ║  in ../decls/Prelude.mls
@@ -84,9 +87,12 @@ class Methods with
 fun test(m: Methods) = m.identity[Base](new Child).extra
 test(new Methods)
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.84: 	fun test(m: Methods) = m.identity[Base](new Child).extra
+//│ ║  l.87: 	fun test(m: Methods) = m.identity[Base](new Child).extra
 //│ ║        	                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╙── Value of type 'Base' does not contain member 'extra'
+//│ ╟── Value of type 'Base' does not contain member 'extra'
+//│ ╟── This type annotation supplies the value's shape.
+//│ ║  l.87: 	fun test(m: Methods) = m.identity[Base](new Child).extra
+//│ ╙──      	                                  ^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 // Curried declared methods preserve their type arguments across parameter lists.

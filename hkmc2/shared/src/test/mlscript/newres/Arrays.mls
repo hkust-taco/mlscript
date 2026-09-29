@@ -30,7 +30,10 @@ read([new Child])
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
 //│ ║  l.28: 	fun read(xs: [Base]) = xs.map((item, ...) => item.extra)
 //│ ║        	                                             ^^^^^^^^^^
-//│ ╙── Value of type 'Base' does not contain member 'extra'
+//│ ╟── Value of type 'Base' does not contain member 'extra'
+//│ ╟── This type annotation supplies the value's shape.
+//│ ║  l.28: 	fun read(xs: [Base]) = xs.map((item, ...) => item.extra)
+//│ ╙──      	              ^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 // Mutable arrays expose methods without claiming their initial elements persist.
@@ -61,10 +64,10 @@ fun singleton(x) = [x]
 :ge
 [1].nonexistent
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.62: 	[1].nonexistent
+//│ ║  l.65: 	[1].nonexistent
 //│ ║        	^^^^^^^^^^^^^^^
 //│ ╟── Tuple literal does not contain member 'nonexistent'
-//│ ║  l.62: 	[1].nonexistent
+//│ ║  l.65: 	[1].nonexistent
 //│ ╙──      	^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -87,8 +90,8 @@ values([Item(4)]).map((item, ...) => item.value)
 //│ ║  l.162: 	  fun map[U](f: (T, Int, Array[T]) -> U): Array[U]
 //│ ║         	                ^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Callback parameter list does not match its declared function type.
-//│ ║  in Arrays.mls:85
-//│ ║  l.85: 	[1].map(x => x)
+//│ ║  in Arrays.mls:88
+//│ ║  l.88: 	[1].map(x => x)
 //│ ╙──      	        ^^^^^^
 //│ ═══[RUNTIME ERROR] Error: Function expected 1 argument but got 3
 
@@ -100,10 +103,10 @@ let xs = mut [Original(1)]
 set xs.0 = Replacement(2)
 xs.map((x, ...) => x.original)
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.101: 	xs.map((x, ...) => x.original)
+//│ ║  l.104: 	xs.map((x, ...) => x.original)
 //│ ║         	                   ^^^^^^^^^^
 //│ ╟── Instance of class 'Replacement' does not contain member 'original'
-//│ ║  l.100: 	set xs.0 = Replacement(2)
+//│ ║  l.103: 	set xs.0 = Replacement(2)
 //│ ╙──       	           ^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ xs = [Replacement(2)]
@@ -135,7 +138,7 @@ new String("hello") is String
 :ge
 new Array[Int](1, 2)
 //│ ╔══[COMPILATION ERROR] Resolution error in object instantiation
-//│ ║  l.136: 	new Array[Int](1, 2)
+//│ ║  l.139: 	new Array[Int](1, 2)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Class 'Array' expected 1 argument, but got 2
 //│ ║  in ../decls/Prelude.mls
@@ -154,7 +157,7 @@ new Array[Int](1, 2)
 :ge
 new Array[Int]()
 //│ ╔══[COMPILATION ERROR] Resolution error in object instantiation
-//│ ║  l.155: 	new Array[Int]()
+//│ ║  l.158: 	new Array[Int]()
 //│ ║         	^^^^^^^^^^^^^^^^
 //│ ╟── Class 'Array' expected 1 argument, but got 0
 //│ ║  in ../decls/Prelude.mls
@@ -206,10 +209,10 @@ class Item(val value: Int)
 class Total(val total: Int)
 [Item(1)].reduce((acc, item, ...) => acc.missing, Total(0))
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.207: 	[Item(1)].reduce((acc, item, ...) => acc.missing, Total(0))
+//│ ║  l.210: 	[Item(1)].reduce((acc, item, ...) => acc.missing, Total(0))
 //│ ║         	                                     ^^^^^^^^^^^
 //│ ╟── Instance of class 'Total' does not contain member 'missing'
-//│ ║  l.207: 	[Item(1)].reduce((acc, item, ...) => acc.missing, Total(0))
+//│ ║  l.210: 	[Item(1)].reduce((acc, item, ...) => acc.missing, Total(0))
 //│ ╙──       	                                                  ^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -218,7 +221,7 @@ class Total(val total: Int)
 :e
 [1, 2].reduce((acc, x, ...) => acc + x)
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.219: 	[1, 2].reduce((acc, x, ...) => acc + x)
+//│ ║  l.222: 	[1, 2].reduce((acc, x, ...) => acc + x)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Function 'reduce' expected 2 arguments, but got 1
 //│ ║  in ../decls/Prelude.mls
@@ -258,10 +261,10 @@ let items = mut [Item(4)]
 class Item(val value: Int)
 (new Item(1)).[0]
 //│ ╔══[COMPILATION ERROR] Resolution error in array index
-//│ ║  l.259: 	(new Item(1)).[0]
+//│ ║  l.262: 	(new Item(1)).[0]
 //│ ║         	 ^^^^^^^^^^^^^^^
 //│ ╟── Instance of class 'Item' does not support checked array indexing.
-//│ ║  l.259: 	(new Item(1)).[0]
+//│ ║  l.262: 	(new Item(1)).[0]
 //│ ║         	 ^^^^^^^^^^^
 //│ ╙── Use '![...]' for a dynamic access.
 //│ ═══[RUNTIME ERROR] TypeError: tmp48.at is not a function
@@ -270,6 +273,9 @@ class Item(val value: Int)
 :e
 fun first(xs: Array[Int]) = [xs![0].whatever, xs.[0].whatever]
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.271: 	fun first(xs: Array[Int]) = [xs![0].whatever, xs.[0].whatever]
+//│ ║  l.274: 	fun first(xs: Array[Int]) = [xs![0].whatever, xs.[0].whatever]
 //│ ║         	                                                ^^^^^^^^^^^^^
-//│ ╙── Value of type 'Int' does not contain member 'whatever'
+//│ ╟── Value of type 'Int' does not contain member 'whatever'
+//│ ╟── This type annotation supplies the value's shape.
+//│ ║  l.274: 	fun first(xs: Array[Int]) = [xs![0].whatever, xs.[0].whatever]
+//│ ╙──       	                    ^^^

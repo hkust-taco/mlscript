@@ -172,7 +172,10 @@ callbacks.push(x => x.extra)
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
 //│ ║  l.171: 	callbacks.push(x => x.extra)
 //│ ║         	                    ^^^^^^^
-//│ ╙── Value of type 'Base' does not contain member 'extra'
+//│ ╟── Value of type 'Base' does not contain member 'extra'
+//│ ╟── This type annotation supplies the value's shape.
+//│ ║  l.170: 	let callbacks = new mut Array[Base -> Int](0)
+//│ ╙──       	                              ^^^^
 //│ = 1
 //│ callbacks = [fun]
 
@@ -194,9 +197,12 @@ callbacks.push(x => new Child(20))
 private fun first(callback, ...tail) = callback
 first(...callbacks)(new Base).extra
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.195: 	first(...callbacks)(new Base).extra
+//│ ║  l.198: 	first(...callbacks)(new Base).extra
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╙── Value of type 'Base' does not contain member 'extra'
+//│ ╟── Value of type 'Base' does not contain member 'extra'
+//│ ╟── This type annotation supplies the value's shape.
+//│ ║  l.195: 	let callbacks = new mut Array[Base -> Base](0)
+//│ ╙──       	                                      ^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ callbacks = [fun]
 
@@ -212,16 +218,16 @@ let first = new Box(First(21))
 let second = new Box(Second(22))
 [first.copy().item.first, second.copy().item.second]
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.213: 	[first.copy().item.first, second.copy().item.second]
+//│ ║  l.219: 	[first.copy().item.first, second.copy().item.second]
 //│ ║         	                          ^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Instance of class 'First' does not contain member 'second'
-//│ ║  l.211: 	let first = new Box(First(21))
+//│ ║  l.217: 	let first = new Box(First(21))
 //│ ╙──       	                    ^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.213: 	[first.copy().item.first, second.copy().item.second]
+//│ ║  l.219: 	[first.copy().item.first, second.copy().item.second]
 //│ ║         	 ^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Instance of class 'Second' does not contain member 'first'
-//│ ║  l.212: 	let second = new Box(Second(22))
+//│ ║  l.218: 	let second = new Box(Second(22))
 //│ ╙──       	                     ^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ ═══[RUNTIME ERROR] Expected: '[21, 22]', got: 'undefined'

@@ -1615,7 +1615,7 @@ class NewResolver:
         case _ =>
           if rstate.arrayIndexErrors.add(new Identity(sel)) then
             resolError(sel, (msg"${receiver.describe.capitalize} does not support checked array indexing." -> receiver.toLoc) ::
-              (msg"Use '![...]' for a dynamic access." -> N) :: Nil)
+              (msg"Use '![...]' for a dynamic access." -> N) :: receiver.diagnosticNotes)
 
   private[semantics] def arrayElementType(array: NominalInstanceView): Opt[DeclaredType] =
     val cls = prelude.builtins.Array.defn.get
@@ -1780,8 +1780,8 @@ class NewResolver:
         if mismatch then
           if rstate.reportedArities.getOrElseUpdate(reportKey, mutable.Set.empty).add(known) then
             val count = if unknown then msg"at least ${known}" else msg"${known}"
-            resolError(src, msg"${callable.describe.capitalize} expected ${expected} ${
-              "argument".pluralized(expected)}, but got ${count}" -> callable.toLoc :: Nil)
+            resolError(src, (msg"${callable.describe.capitalize} expected ${expected} ${
+              "argument".pluralized(expected)}, but got ${count}" -> callable.toLoc) :: callable.diagnosticNotes)
         else matched((tuple, marks))
       case _ => resolError(src, msg"Expected an argument tuple." -> args.toLoc :: Nil)
   
@@ -1802,7 +1802,7 @@ class NewResolver:
         true
     def reject(sh: TermShape)(using NewResolverState): Unit =
       rstate.markError(res)
-      resolError(res, msg"${sh.describe.capitalize} cannot be used as a constructor pattern." -> sh.toLoc :: Nil)
+      resolError(res, (msg"${sh.describe.capitalize} cannot be used as a constructor pattern." -> sh.toLoc) :: sh.diagnosticNotes)
     def classPattern(cls: ClassLikeDef)(using NewResolverState): Unit = if select(cls.sym) then
       val assoc = res.arguments match
         case N => Nil
@@ -2142,11 +2142,7 @@ class NewResolver:
           msg"${lhs.describe.capitalize} cannot receive more argument lists."
         case _ =>
           msg"${lhs.describe.capitalize} cannot be called like a function."
-      val notes = lhs.applicationHead._1 match
-        case unknown: UnknownValueShape => unknown.provenance.diagnosticNotes
-        case opaque: OpaqueTypeShape => opaque.provenance.diagnosticNotes
-        case _ => Nil
-      resolError(res, (message -> lhs.toLoc) :: notes)
+      resolError(res, (message -> lhs.toLoc) :: lhs.diagnosticNotes)
     if sh.isSaturated then
       def go(body: Term, mss: Ls[Marks])(using NewResolverState) =
         listenTerm(body): sh =>
@@ -2339,9 +2335,9 @@ class NewResolver:
 
   def newSel(sel: NewSel)(using NewResolverState): Unit =
     log(s"newSel? sel = ${sel.showDbg}")
-    def member(info: MemberLookup, description: Message, loc: Opt[Loc],
+    def member(info: MemberLookup, description: Message, loc: Opt[Loc], notes: => Ls[(Message, Opt[Loc])],
         instances: TypeSubstitution)(using NewResolverState): Unit = info match
-      case MemberLookup.Contextual(source, substitution) => member(source, description, loc, instances.withOverrides(substitution))
+      case MemberLookup.Contextual(source, substitution) => member(source, description, loc, notes, instances.withOverrides(substitution))
       case MemberLookup.Found(bms, marks) if rstate.canResolve(sel) || sel.resolvedMembers.contains(bms.memberSymbol) =>
         log(s"newSel member: bms = ${bms.memberSymbol.showDbg}, mss = ${marks.map(_.showDbg)}")
         rstate.recordResolution(sel, sel.resolvedMembers.contains(bms.memberSymbol))(sel.resolvedMembers ::= bms.memberSymbol)
@@ -2364,7 +2360,7 @@ class NewResolver:
         publishDynamic(sel, marks)
       case MemberLookup.Missing if rstate.canResolve(sel) =>
         rstate.markError(sel)
-        resolError(sel, msg"$description does not contain member '${sel.id.name}'" -> loc :: Nil)
+        resolError(sel, (msg"$description does not contain member '${sel.id.name}'" -> loc) :: notes)
       case MemberLookup.Unknown(reason, provenance) => unknownMember(sel, sel.id.name, reason, provenance)
       // Later activations still transport field values through the compiled
       // selection, but cannot choose a different member for that old syntax.
@@ -2372,7 +2368,7 @@ class NewResolver:
     sel.cls match
       case N => listenReceiver(sel.prefix): shape =>
         log(s"newSel: sel = ${sel.showDbg}, shape = ${shape.shwDbg}")
-        member(shape.getMember(sel.id.name), msg"${shape.describe.capitalize}", shape.toLoc, TypeSubstitution.empty)
+        member(shape.getMember(sel.id.name), msg"${shape.describe.capitalize}", shape.toLoc, shape.diagnosticNotes, TypeSubstitution.empty)
       case S(cls) =>
         listenClass(cls)(ref =>
           val cd = ref.definition
@@ -2401,11 +2397,11 @@ class NewResolver:
                           val opaque = abstractType(new TypeResolution(sel, msgs => resolError(sel, msgs)))
                           MemberLookup.Declared(bms, cd.tparams.map(_.sym -> opaque).toMap, context :: Nil, nominal.annotation, true)
                     case _ => info
-                  member(selected, msg"Class '${cd.sym.nme}'", cd.toLoc, TypeSubstitution.empty)
-              case _ => member(info, msg"Class '${cd.sym.nme}'", cd.toLoc, TypeSubstitution.empty))
+                  member(selected, msg"Class '${cd.sym.nme}'", cd.toLoc, receiver.diagnosticNotes, TypeSubstitution.empty)
+              case _ => member(info, msg"Class '${cd.sym.nme}'", cd.toLoc, Nil, TypeSubstitution.empty))
         , sh =>
           rstate.markError(sel)
-          resolError(sel, msg"${sh.describe.capitalize} cannot be used as a projection class." -> sh.toLoc :: Nil)
+          resolError(sel, (msg"${sh.describe.capitalize} cannot be used as a projection class." -> sh.toLoc) :: sh.diagnosticNotes)
         )
   
   /** Both constructor references and explicit `new` use the same definition and
@@ -2463,7 +2459,7 @@ class NewResolver:
     , shape =>
       if !rstate.hasError(nw) then
         rstate.markError(nw)
-        resolError(nw, msg"${shape.describe.capitalize} cannot be instantiated with keyword 'new'." -> shape.toLoc :: Nil)
+        resolError(nw, (msg"${shape.describe.capitalize} cannot be instantiated with keyword 'new'." -> shape.toLoc) :: shape.diagnosticNotes)
     )
   
   def defineVar(sym: LocalSymbol | TermSymbol, rhs: Term)(using NewResolverState): DefineVar =
@@ -2784,8 +2780,8 @@ class NewResolver:
     case application @ TyApp(underlying, args) =>
       def checkArity(callee: TermShape, count: Int)(using NewResolverState): Unit =
         if count != args.length && rstate.typeArgumentArityErrors.add((new Identity(application), count)) then
-          resolError(trm, msg"${callee.describe.capitalize} expected ${count} type ${
-            "argument".pluralized(count)}, but got ${args.length}" -> callee.toLoc :: Nil)
+          resolError(trm, (msg"${callee.describe.capitalize} expected ${count} type ${
+            "argument".pluralized(count)}, but got ${args.length}" -> callee.toLoc) :: callee.diagnosticNotes)
       def instantiate(value: TermShape)(receive: Listener)(using NewResolverState): Unit = listenInstanceViews(value): viewed =>
         val ShapeParts(actual, captured, supplied) = shapeParts(viewed)
         if supplied.nonEmpty then

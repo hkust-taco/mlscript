@@ -19,6 +19,28 @@ sealed trait Shape extends ShapeEvent, ShapeLike:
   def describe: Str
   /** Origin of the value or symbol described by this shape, independently of its use site. */
   def toLoc: Opt[Loc]
+  /** Explain the interface used by a failing operation, independently of its marks.
+    * Keep annotation witnesses out of shape equality and evaluate their messages
+    * only when reporting; diagnostic context must not add inference candidates.
+    */
+  final def diagnosticNotes: Ls[(Message, Opt[Loc])] =
+    def annotation(source: Term): Ls[(Message, Opt[Loc])] =
+      msg"This type annotation supplies the value's shape." -> source.toLoc :: Nil
+    this match
+      case value: TermShape => value.applicationHead._1 match
+        case view: NominalInstanceView => view.annotation.toList.flatMap(annotation)
+        case view: RecordTypeShape => annotation(view.source)
+        // A declaration-backed callable already locates its signature with toLoc;
+        // its source is the member selection, not a written type annotation.
+        case view: CallableTypeShape => if view.declaration.isEmpty then annotation(view.source) else Nil
+        case view: InstanceShape => annotation(view.tpe.resolution.source)
+        case view: ContextualShape => view.source.diagnosticNotes
+        case view: SpecializedShape => view.declaration.diagnosticNotes
+        case unknown: UnknownValueShape => unknown.provenance.diagnosticNotes
+        case opaque: OpaqueTypeShape => opaque.provenance.diagnosticNotes
+        case rigid: RigidTypeShape => rigid.provenance.diagnosticNotes
+        case _ => Nil
+      case _: SymShape => Nil
   def shwDbg(using DebugPrinter): Str = this match
     // case ds: DefnShape => s"DefnShape(${ds.defn.describe} ${ds.defn.sym.showDbg})"
     case ds: DefnShape => ds.defn.sym.showDbg

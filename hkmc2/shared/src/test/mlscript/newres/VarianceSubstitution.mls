@@ -125,7 +125,10 @@ box.item.value
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
 //│ ║  l.124: 	box.item.value
 //│ ║         	^^^^^^^^^^^^^^
-//│ ╙── Value of type 'Base' does not contain member 'value'
+//│ ╟── Value of type 'Base' does not contain member 'value'
+//│ ╟── This type annotation supplies the value's shape.
+//│ ║  l.121: 	let receiver = (new Receiver as Receiver[in Child out Base])
+//│ ╙──       	                                                      ^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ box = Box(Child(8))
 //│ receiver = Receiver

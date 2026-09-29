@@ -18,6 +18,9 @@ hidden(name: "visible", extra: 1)
 //│ ║        	                                  ^^^^^^^^^^^^
 //│ ╟── Record type does not contain member 'extra'
 //│ ║  l.14: 	fun hidden(fields: {name: Str}) = fields.extra
+//│ ║        	                    ^^^^^^^^^
+//│ ╟── This type annotation supplies the value's shape.
+//│ ║  l.14: 	fun hidden(fields: {name: Str}) = fields.extra
 //│ ╙──      	                    ^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -25,14 +28,14 @@ hidden(name: "visible", extra: 1)
 private fun opaque[A](fields: {value: A}) = fields.value.answer
 opaque(value: {answer: 42})
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.25: 	private fun opaque[A](fields: {value: A}) = fields.value.answer
+//│ ║  l.28: 	private fun opaque[A](fields: {value: A}) = fields.value.answer
 //│ ║        	                                            ^^^^^^^^^^^^^^^^^^^
 //│ ╟── Cannot resolve member 'answer' of a value with unknown shape.
 //│ ╟── This type annotation supplies the value's shape.
-//│ ║  l.25: 	private fun opaque[A](fields: {value: A}) = fields.value.answer
+//│ ║  l.28: 	private fun opaque[A](fields: {value: A}) = fields.value.answer
 //│ ║        	                                      ^
 //│ ╟── Type parameter 'A' does not specify a member interface.
-//│ ║  l.25: 	private fun opaque[A](fields: {value: A}) = fields.value.answer
+//│ ║  l.28: 	private fun opaque[A](fields: {value: A}) = fields.value.answer
 //│ ╙──      	                   ^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -56,12 +59,16 @@ callback(f: x => x.toUpperCase())
 fun expose(): {f: Object -> Int} = {f: x => x.answer}
 expose().f({answer: 1})
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.56: 	fun expose(): {f: Object -> Int} = {f: x => x.answer}
+//│ ║  l.59: 	fun expose(): {f: Object -> Int} = {f: x => x.answer}
 //│ ║        	                                            ^^^^^^^^
 //│ ╟── Value of type 'Object' does not contain member 'answer'
 //│ ║  in ../decls/Prelude.mls
 //│ ║  l.7: 	  fun toString(): Str
-//│ ╙──     	                  ^^^
+//│ ║       	                  ^^^
+//│ ╟── This type annotation supplies the value's shape.
+//│ ║  in RecordInterfaces.mls:59
+//│ ║  l.59: 	fun expose(): {f: Object -> Int} = {f: x => x.answer}
+//│ ╙──      	                  ^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :expect "ALIAS"

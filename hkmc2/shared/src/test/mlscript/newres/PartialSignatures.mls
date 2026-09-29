@@ -160,7 +160,10 @@ identity[Base](new Child).extra
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
 //│ ║  l.159: 	identity[Base](new Child).extra
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╙── Value of type 'Base' does not contain member 'extra'
+//│ ╟── Value of type 'Base' does not contain member 'extra'
+//│ ╟── This type annotation supplies the value's shape.
+//│ ║  l.159: 	identity[Base](new Child).extra
+//│ ╙──       	         ^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ identity = fun identity
 
@@ -169,10 +172,13 @@ identity[Base](new Child).extra
 let identity = (x => x) as [A] -> A -> A
 identity[Int, Int](1)
 //│ ╔══[COMPILATION ERROR] Resolution error in type application
-//│ ║  l.170: 	identity[Int, Int](1)
+//│ ║  l.173: 	identity[Int, Int](1)
 //│ ║         	^^^^^^^^^^^^^^^^^^
 //│ ╟── Function with a declared signature expected 1 type argument, but got 2
-//│ ║  l.169: 	let identity = (x => x) as [A] -> A -> A
+//│ ║  l.172: 	let identity = (x => x) as [A] -> A -> A
+//│ ║         	                                  ^^^^^^
+//│ ╟── This type annotation supplies the value's shape.
+//│ ║  l.172: 	let identity = (x => x) as [A] -> A -> A
 //│ ╙──       	                                  ^^^^^^
 //│ = 1
 //│ identity = fun identity
