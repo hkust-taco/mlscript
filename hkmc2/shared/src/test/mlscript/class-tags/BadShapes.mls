@@ -70,31 +70,32 @@ fun missingPatternArgument(t) =
 
 
 :ge
-fun foo(x) =
-  let t = new C(x)
+fun foo() =
+  let t = new C(0)
   @matchShapes(D(_)) shape.match of t,
-    () => t.x
+    () => t.D#x
 //│ >>> start class-tags collection-phase
-//│ class-tags collection-phase > track consumption at match@1 in foo
+//│ class-tags collection-phase > track construction of C@1 in foo
+//│ class-tags collection-phase > track consumption at match@2 in foo
 //│ <<< end class-tags collection-phase
 //│ >>> start class-tags web-computation-phase
 //│ class-tags web-computation-phase > web 0:
-//│ class-tags web-computation-phase >   producers: C@0
-//│ class-tags web-computation-phase >   pattern matches: match@1
+//│ class-tags web-computation-phase >   producers: C@1
+//│ class-tags web-computation-phase >   pattern matches: match@2
 //│ <<< end class-tags web-computation-phase
 //│ >>> start class-tags transform-phase
-//│ class-tags transform-phase > allocated tag 0 for C(x: _)
-//│ class-tags transform-phase > match shapes D(x: _) against C(x: _)@0
+//│ class-tags transform-phase > allocated tag 0 for C(x: 0)
+//│ class-tags transform-phase > match shapes D(x: _) against C(x: 0)@0
 //│ ╔══[COMPILATION ERROR] Annotated shape.match does not cover every possible scrutinee shape.
 //│ ║  l.75: 	  @matchShapes(D(_)) shape.match of t,
 //│ ║        	               ^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.76: 	    () => t.x
-//│ ║        	^^^^^^^^^^^^^
-//│ ╟── Shape C(x: _) with tag 0 does not match any @matchShapes pattern.
+//│ ║  l.76: 	    () => t.D#x
+//│ ║        	^^^^^^^^^^^^^^^^
+//│ ╟── Shape C(x: 0) with tag 0 does not match any @matchShapes pattern.
 //│ ║  l.75: 	  @matchShapes(D(_)) shape.match of t,
 //│ ║        	               ^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.76: 	    () => t.x
-//│ ╙──      	^^^^^^^^^^^^^
+//│ ║  l.76: 	    () => t.D#x
+//│ ╙──      	^^^^^^^^^^^^^^^^
 //│ <<< end class-tags transform-phase
 
 
@@ -107,9 +108,9 @@ fun unknownScrutinee(t) =
 //│ >>> start class-tags transform-phase
 //│ class-tags transform-phase > match shapes C(x: _) against <none>
 //│ ╔══[COMPILATION ERROR] Annotated shape.match has no tagged class shapes for its scrutinee.
-//│ ║  l.103: 	  @matchShapes(C(_)) shape.match of t,
+//│ ║  l.104: 	  @matchShapes(C(_)) shape.match of t,
 //│ ║         	               ^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.104: 	    () => 0
+//│ ║  l.105: 	    () => 0
 //│ ╙──       	^^^^^^^^^^^
 //│ <<< end class-tags transform-phase
 
@@ -132,23 +133,15 @@ fun mutatedField() =
   set value.MutableBox#x = new B(0)
   @matchShapes(MutableBox(A(_)), MutableBox(B(_))) shape.match of value, () => 1, () => 2
 //│ >>> start class-tags collection-phase
-//│ class-tags collection-phase > track consumption at match@3 in mutatedField
 //│ <<< end class-tags collection-phase
-//│ >>> start class-tags web-computation-phase
-//│ class-tags web-computation-phase > web 0:
-//│ class-tags web-computation-phase >   producers: A@0, MutableBox@1
-//│ class-tags web-computation-phase >   pattern matches: match@3
-//│ <<< end class-tags web-computation-phase
 //│ >>> start class-tags transform-phase
-//│ class-tags transform-phase > allocated tag 0 for A(x: 0)
-//│ ╔══[COMPILATION ERROR] Class tags do not support mutable fields yet.
-//│ ║  l.118: 	class MutableBox(mut val x)
-//│ ╙──       	                         ^
-//│ class-tags transform-phase > allocated tag 1 for MutableBox(x: A(x: 0))
 //│ ╔══[COMPILATION ERROR] Class tags do not support set operations yet.
-//│ ║  l.132: 	  set value.MutableBox#x = new B(0)
+//│ ║  l.133: 	  set value.MutableBox#x = new B(0)
 //│ ╙──       	      ^^^^^
-//│ class-tags transform-phase > match shapes MutableBox(x: A(x: _)), MutableBox(x: B(x: _)) against MutableBox(x: A(x: 0))@1
+//│ class-tags transform-phase > match shapes MutableBox(x: A(x: _)), MutableBox(x: B(x: _)) against <none>
+//│ ╔══[COMPILATION ERROR] Annotated shape.match has no tagged class shapes for its scrutinee.
+//│ ║  l.134: 	  @matchShapes(MutableBox(A(_)), MutableBox(B(_))) shape.match of value, () => 1, () => 2
+//│ ╙──       	               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ <<< end class-tags transform-phase
 
 
@@ -171,7 +164,7 @@ fun constructorMutation() =
 //│ >>> start class-tags transform-phase
 //│ class-tags transform-phase > allocated tag 0 for A(x: 0)
 //│ ╔══[COMPILATION ERROR] Class tags do not support mutable fields yet.
-//│ ║  l.157: 	class Altered(mut val x) with
+//│ ║  l.150: 	class Altered(mut val x) with
 //│ ╙──       	                      ^
 //│ class-tags transform-phase > allocated tag 1 for Altered(x: A(x: 0))
 //│ class-tags transform-phase > match shapes Altered(x: A(x: _)), Altered(x: B(x: _)) against Altered(x: A(x: 0))@1
@@ -198,10 +191,72 @@ fun dynamicField(flag, external) =
 //│ class-tags transform-phase > allocated tag 1 for Box(x: A(x: 0))
 //│ class-tags transform-phase > allocated tag 2 for Box(x: _)
 //│ ╔══[COMPILATION ERROR] Cannot insert a class tag using constructor arguments that may come from outside.
-//│ ║  l.185: 	  let value = new Box(field)
+//│ ║  l.178: 	  let value = new Box(field)
 //│ ║         	                  ^^^^^^^^^
 //│ ╟── Field x cannot be checked using a class tag.
-//│ ║  l.185: 	  let value = new Box(field)
+//│ ║  l.178: 	  let value = new Box(field)
 //│ ╙──       	                      ^^^^^
 //│ class-tags transform-phase > match shapes Box(x: _) against Box(x: A(x: 0))@1, Box(x: _)@2
+//│ <<< end class-tags transform-phase
+
+
+
+:ge
+fun unknownAlternative(flag, external) =
+  let value = if flag > 0 then new A(0) else if flag < 0 then new B(0) else external
+  @matchShapes(A(_), B(_)) shape.match of value, () => 1, () => 2
+//│ >>> start class-tags collection-phase
+//│ <<< end class-tags collection-phase
+//│ >>> start class-tags transform-phase
+//│ class-tags transform-phase > match shapes A(x: _), B(x: _) against <none>
+//│ ╔══[COMPILATION ERROR] Annotated shape.match has no tagged class shapes for its scrutinee.
+//│ ║  l.207: 	  @matchShapes(A(_), B(_)) shape.match of value, () => 1, () => 2
+//│ ╙──       	               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ <<< end class-tags transform-phase
+
+
+// A consumer must not pull a constructor that escapes the function back into a web.
+:ge
+fun escapingAlternative() =
+  let value = new A(0)
+  let _ = @matchShapes(A(_)) shape.match of value, () => 1
+  value
+//│ >>> start class-tags collection-phase
+//│ <<< end class-tags collection-phase
+//│ >>> start class-tags transform-phase
+//│ class-tags transform-phase > match shapes A(x: _) against <none>
+//│ ╔══[COMPILATION ERROR] Annotated shape.match has no tagged class shapes for its scrutinee.
+//│ ║  l.222: 	  let _ = @matchShapes(A(_)) shape.match of value, () => 1
+//│ ╙──       	                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ <<< end class-tags transform-phase
+
+
+// this would not happen in the generated code
+// since bar(false) should be specialized and become another function
+:ge
+private fun bar(x) =
+  if x then new C(bar(false)) else new D(0)
+fun foo() =
+  let value = bar(true)
+  @matchShapes(C(_), D(_)) shape.match of value,
+    () => 1
+    () => 0
+//│ >>> start class-tags collection-phase
+//│ class-tags collection-phase > track construction of C@2, D@3 in bar
+//│ class-tags collection-phase > track consumption at match@5 in foo
+//│ <<< end class-tags collection-phase
+//│ >>> start class-tags web-computation-phase
+//│ class-tags web-computation-phase > web 0:
+//│ class-tags web-computation-phase >   producers: C@2, D@3
+//│ class-tags web-computation-phase >   pattern matches: match@5
+//│ <<< end class-tags web-computation-phase
+//│ >>> start class-tags transform-phase
+//│ class-tags transform-phase > allocated tag 0 for C(x: D(x: 0))
+//│ class-tags transform-phase > allocated tag 1 for C(x: _)
+//│ class-tags transform-phase > allocated tag 2 for D(x: 0)
+//│ ╔══[COMPILATION ERROR] Cannot insert a class tag using constructor arguments that may come from outside.
+//│ ║  l.238: 	  if x then new C(bar(false)) else new D(0)
+//│ ║         	                ^
+//│ ╙── Field x cannot be checked using a class tag.
+//│ class-tags transform-phase > match shapes C(x: _), D(x: _) against C(x: D(x: 0))@0, C(x: _)@1, D(x: 0)@2
 //│ <<< end class-tags transform-phase

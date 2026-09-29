@@ -68,6 +68,9 @@ class WebEntryCollector(val flowRes: FlowConstraintSolver)(using val tl: TL) ext
       resultId <- collector.resultIds
       ctor <- concreteCtorsByResultId.get(resultId)
       if !ctor.dests.contains(UnknownCons) // does not leak out of the web
+      if !ctor.dests.exists:
+        case consumer: ConcreteCtorConsumer => consumer.srcs.contains(UnknownProd)
+        case _ => false
     do seenProducerEntryPoints.add(ctor)
 
     if !seenProducerEntryPoints.isEmpty then
@@ -78,6 +81,9 @@ class WebEntryCollector(val flowRes: FlowConstraintSolver)(using val tl: TL) ext
       resultId <- collector.resultIds
       consumer <- concreteConsumersByResultId.getOrElse(resultId, Nil)
       if !consumer.srcs.contains(UnknownProd) // not allocated out of the web
+      if !consumer.srcs.exists:
+        case ctor: Ctor => ctor.dests.contains(UnknownCons)
+        case _ => false
       if consumer.srcs.exists:
         case _: Ctor => true
         case _ => false
