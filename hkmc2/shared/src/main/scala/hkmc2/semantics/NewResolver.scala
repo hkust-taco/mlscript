@@ -935,11 +935,9 @@ class NewResolver:
                     // generic members and nested tuple or function annotations.
                     val annotated = value match
                       case Marked(rigid: RigidTypeShape, marks) =>
-                        UnknownValueShape(rigid.source)(rigid.provenance.via(
-                          msg"This type annotation supplies the value's shape." -> tpe.resolution.source.toLoc)).exit(marks)
+                        UnknownValueShape(rigid.source)(rigid.provenance.withTypeOrigin(tpe.resolution.source)).exit(marks)
                       case Marked(unknown: UnknownValueShape, marks) =>
-                        UnknownValueShape(unknown.source)(unknown.provenance.via(
-                          msg"This type annotation supplies the value's shape." -> tpe.resolution.source.toLoc)).exit(marks)
+                        UnknownValueShape(unknown.source)(unknown.provenance.withTypeOrigin(tpe.resolution.source)).exit(marks)
                       case _ => value
                     annotated match
                       case value: TermShape => listenInstanceViews(instantiateShape(value, current.instances))(publish)
@@ -1614,7 +1612,7 @@ class NewResolver:
               case NoShape => ()
         case _ =>
           if rstate.arrayIndexErrors.add(new Identity(sel)) then
-            resolError(sel, (msg"${receiver.describe.capitalize} does not support checked array indexing." -> receiver.toLoc) ::
+            resolError(sel, (msg"${receiver.describe.capitalize} does not support checked array indexing." -> receiver.diagnosticLocation) ::
               (msg"Use '![...]' for a dynamic access." -> N) :: receiver.diagnosticNotes)
 
   private[semantics] def arrayElementType(array: NominalInstanceView): Opt[DeclaredType] =
@@ -1781,7 +1779,7 @@ class NewResolver:
           if rstate.reportedArities.getOrElseUpdate(reportKey, mutable.Set.empty).add(known) then
             val count = if unknown then msg"at least ${known}" else msg"${known}"
             resolError(src, (msg"${callable.describe.capitalize} expected ${expected} ${
-              "argument".pluralized(expected)}, but got ${count}" -> callable.toLoc) :: callable.diagnosticNotes)
+              "argument".pluralized(expected)}, but got ${count}" -> callable.diagnosticLocation) :: callable.diagnosticNotes)
         else matched((tuple, marks))
       case _ => resolError(src, msg"Expected an argument tuple." -> args.toLoc :: Nil)
   
@@ -1802,7 +1800,7 @@ class NewResolver:
         true
     def reject(sh: TermShape)(using NewResolverState): Unit =
       rstate.markError(res)
-      resolError(res, (msg"${sh.describe.capitalize} cannot be used as a constructor pattern." -> sh.toLoc) :: sh.diagnosticNotes)
+      resolError(res, (msg"${sh.describe.capitalize} cannot be used as a constructor pattern." -> sh.diagnosticLocation) :: sh.diagnosticNotes)
     def classPattern(cls: ClassLikeDef)(using NewResolverState): Unit = if select(cls.sym) then
       val assoc = res.arguments match
         case N => Nil
@@ -2142,7 +2140,7 @@ class NewResolver:
           msg"${lhs.describe.capitalize} cannot receive more argument lists."
         case _ =>
           msg"${lhs.describe.capitalize} cannot be called like a function."
-      resolError(res, (message -> lhs.toLoc) :: lhs.diagnosticNotes)
+      resolError(res, (message -> lhs.diagnosticLocation) :: lhs.diagnosticNotes)
     if sh.isSaturated then
       def go(body: Term, mss: Ls[Marks])(using NewResolverState) =
         listenTerm(body): sh =>
@@ -2246,7 +2244,7 @@ class NewResolver:
         msg"Cannot resolve member '$name' of a value with unknown shape."
       case MemberLookup.Uncertainty.RecordOverwrite =>
         msg"Cannot resolve member '$name' across a computed key or unknown record spread."
-    resolError(host, (message -> N) :: provenance.diagnosticNotes)
+    resolError(host, (message -> provenance.typeOrigin.flatMap(_.toLoc)) :: provenance.diagnosticNotes)
 
   def unresolvedRef(ref: UnresolvedRef)(using NewResolverState): Unit =
     ref.prefixes.foreach: prefix =>
@@ -2368,7 +2366,7 @@ class NewResolver:
     sel.cls match
       case N => listenReceiver(sel.prefix): shape =>
         log(s"newSel: sel = ${sel.showDbg}, shape = ${shape.shwDbg}")
-        member(shape.getMember(sel.id.name), msg"${shape.describe.capitalize}", shape.toLoc, shape.diagnosticNotes, TypeSubstitution.empty)
+        member(shape.getMember(sel.id.name), msg"${shape.describe.capitalize}", shape.diagnosticLocation, shape.diagnosticNotes, TypeSubstitution.empty)
       case S(cls) =>
         listenClass(cls)(ref =>
           val cd = ref.definition
@@ -2397,11 +2395,11 @@ class NewResolver:
                           val opaque = abstractType(new TypeResolution(sel, msgs => resolError(sel, msgs)))
                           MemberLookup.Declared(bms, cd.tparams.map(_.sym -> opaque).toMap, context :: Nil, nominal.annotation, true)
                     case _ => info
-                  member(selected, msg"Class '${cd.sym.nme}'", cd.toLoc, receiver.diagnosticNotes, TypeSubstitution.empty)
+                  member(selected, msg"Class '${cd.sym.nme}'", cd.toLoc, Nil, TypeSubstitution.empty)
               case _ => member(info, msg"Class '${cd.sym.nme}'", cd.toLoc, Nil, TypeSubstitution.empty))
         , sh =>
           rstate.markError(sel)
-          resolError(sel, (msg"${sh.describe.capitalize} cannot be used as a projection class." -> sh.toLoc) :: sh.diagnosticNotes)
+          resolError(sel, (msg"${sh.describe.capitalize} cannot be used as a projection class." -> sh.diagnosticLocation) :: sh.diagnosticNotes)
         )
   
   /** Both constructor references and explicit `new` use the same definition and
@@ -2459,7 +2457,7 @@ class NewResolver:
     , shape =>
       if !rstate.hasError(nw) then
         rstate.markError(nw)
-        resolError(nw, (msg"${shape.describe.capitalize} cannot be instantiated with keyword 'new'." -> shape.toLoc) :: shape.diagnosticNotes)
+        resolError(nw, (msg"${shape.describe.capitalize} cannot be instantiated with keyword 'new'." -> shape.diagnosticLocation) :: shape.diagnosticNotes)
     )
   
   def defineVar(sym: LocalSymbol | TermSymbol, rhs: Term)(using NewResolverState): DefineVar =
@@ -2781,7 +2779,7 @@ class NewResolver:
       def checkArity(callee: TermShape, count: Int)(using NewResolverState): Unit =
         if count != args.length && rstate.typeArgumentArityErrors.add((new Identity(application), count)) then
           resolError(trm, (msg"${callee.describe.capitalize} expected ${count} type ${
-            "argument".pluralized(count)}, but got ${args.length}" -> callee.toLoc) :: callee.diagnosticNotes)
+            "argument".pluralized(count)}, but got ${args.length}" -> callee.diagnosticLocation) :: callee.diagnosticNotes)
       def instantiate(value: TermShape)(receive: Listener)(using NewResolverState): Unit = listenInstanceViews(value): viewed =>
         val ShapeParts(actual, captured, supplied) = shapeParts(viewed)
         if supplied.nonEmpty then

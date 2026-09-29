@@ -237,9 +237,6 @@ invokeUnknown(...opaque([() => 95]))
 //│ ╟── Value with no known interface cannot be called like a function.
 //│ ║  l.173: 	fun opaque(values): Array[Any] = values
 //│ ║         	                          ^^^
-//│ ╟── This type annotation supplies the value's shape.
-//│ ║  l.173: 	fun opaque(values): Array[Any] = values
-//│ ║         	                          ^^^
 //│ ╟── Type 'Any' is declared without a member interface.
 //│ ║  in ../decls/Prelude.mls
 //│ ║  l.2: 	declare type Any
@@ -252,10 +249,9 @@ fun inspectUnknown(x) = x.value
 inspectUnknown(Box(96))
 inspectUnknown(...opaque([Box(96)]))
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.251: 	fun inspectUnknown(x) = x.value
+//│ ║  l.248: 	fun inspectUnknown(x) = x.value
 //│ ║         	                        ^^^^^^^
 //│ ╟── Cannot resolve member 'value' of a value with unknown shape.
-//│ ╟── This type annotation supplies the value's shape.
 //│ ║  l.173: 	fun opaque(values): Array[Any] = values
 //│ ║         	                          ^^^
 //│ ╟── Type 'Any' is declared without a member interface.
@@ -268,7 +264,7 @@ inspectUnknown(...opaque([Box(96)]))
 :e
 four(...opaque([]), 1, 2, 3, 4, 5)
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.269: 	four(...opaque([]), 1, 2, 3, 4, 5)
+//│ ║  l.265: 	four(...opaque([]), 1, 2, 3, 4, 5)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Function 'four' expected 4 arguments, but got at least 5
 //│ ║  l.5: 	fun four(a, b, c, d) = [a, b, c, d]
@@ -280,12 +276,9 @@ four(...opaque([]), 1, 2, 3, 4, 5)
 fun invokeRest(f, x, ...tail) = f()
 invokeRest(...opaque([() => 97]), Box(0))
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.280: 	fun invokeRest(f, x, ...tail) = f()
+//│ ║  l.276: 	fun invokeRest(f, x, ...tail) = f()
 //│ ║         	                                ^^^
 //│ ╟── Value with no known interface cannot be called like a function.
-//│ ║  l.173: 	fun opaque(values): Array[Any] = values
-//│ ║         	                          ^^^
-//│ ╟── This type annotation supplies the value's shape.
 //│ ║  l.173: 	fun opaque(values): Array[Any] = values
 //│ ║         	                          ^^^
 //│ ╟── Type 'Any' is declared without a member interface.
@@ -325,16 +318,16 @@ invokeTypedRest(...callbacks, Box(0))
 fun invokePublicRest(f, x, ...tail) = f()
 invokePublicRest(...callbacks, Box(0))
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.325: 	fun invokePublicRest(f, x, ...tail) = f()
+//│ ║  l.318: 	fun invokePublicRest(f, x, ...tail) = f()
 //│ ║         	                                      ^^^
 //│ ╟── Value of unknown shape cannot be called like a function.
-//│ ║  l.325: 	fun invokePublicRest(f, x, ...tail) = f()
+//│ ║  l.318: 	fun invokePublicRest(f, x, ...tail) = f()
 //│ ║         	                     ^
 //│ ╟── Parameter 'f' admits values of unknown shape.
-//│ ║  l.325: 	fun invokePublicRest(f, x, ...tail) = f()
+//│ ║  l.318: 	fun invokePublicRest(f, x, ...tail) = f()
 //│ ║         	                     ^
 //│ ╟── 'invokePublicRest' is exposed by this compilation unit.
-//│ ║  l.325: 	fun invokePublicRest(f, x, ...tail) = f()
+//│ ║  l.318: 	fun invokePublicRest(f, x, ...tail) = f()
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ = 97
 
@@ -370,11 +363,10 @@ class Child extends Base with
 fun readBase(xs: Array[Base]) = first(...xs).extra
 readBase([new Child])
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.370: 	fun readBase(xs: Array[Base]) = first(...xs).extra
+//│ ║  l.363: 	fun readBase(xs: Array[Base]) = first(...xs).extra
 //│ ║         	                                ^^^^^^^^^^^^^^^^^^
 //│ ╟── Value of type 'Base' does not contain member 'extra'
-//│ ╟── This type annotation supplies the value's shape.
-//│ ║  l.370: 	fun readBase(xs: Array[Base]) = first(...xs).extra
+//│ ║  l.363: 	fun readBase(xs: Array[Base]) = first(...xs).extra
 //│ ╙──       	                       ^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -412,22 +404,16 @@ invokeUnannotatedArray(...unknownCallbacks)
 private fun firstInArray(xs) = first(...xs)
 [firstInArray(lefts).left, firstInArray(rights).right]
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.413: 	[firstInArray(lefts).left, firstInArray(rights).right]
+//│ ║  l.405: 	[firstInArray(lefts).left, firstInArray(rights).right]
 //│ ║         	 ^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Value of type 'Right' does not contain member 'left'
-//│ ║  l.384: 	class Right(val right: Int)
-//│ ║         	                       ^^^
-//│ ╟── This type annotation supplies the value's shape.
-//│ ║  l.392: 	let rights = new mut Array[Right](0)
+//│ ║  l.384: 	let rights = new mut Array[Right](0)
 //│ ╙──       	                           ^^^^^
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.413: 	[firstInArray(lefts).left, firstInArray(rights).right]
+//│ ║  l.405: 	[firstInArray(lefts).left, firstInArray(rights).right]
 //│ ║         	                           ^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Value of type 'Left' does not contain member 'right'
-//│ ║  l.383: 	class Left(val left: Int)
-//│ ║         	                     ^^^
-//│ ╟── This type annotation supplies the value's shape.
-//│ ║  l.391: 	let lefts = new mut Array[Left](0)
+//│ ║  l.383: 	let lefts = new mut Array[Left](0)
 //│ ╙──       	                          ^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ ═══[RUNTIME ERROR] Expected: '[43, 44]', got: 'undefined'

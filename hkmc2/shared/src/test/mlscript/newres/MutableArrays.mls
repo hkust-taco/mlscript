@@ -129,7 +129,6 @@ xs.0.extra
 //│ ║  l.127: 	xs.0.extra
 //│ ║         	^^^^^^^^^^
 //│ ╟── Value of type 'Base' does not contain member 'extra'
-//│ ╟── This type annotation supplies the value's shape.
 //│ ║  l.125: 	let xs = (mut [] as Array[Base])
 //│ ╙──       	                          ^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
@@ -143,10 +142,10 @@ let xs = mut [First(1)]
 set xs.[0] = Second(2)
 xs.0.first
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.144: 	xs.0.first
+//│ ║  l.143: 	xs.0.first
 //│ ║         	^^^^^^^^^^
 //│ ╟── Instance of class 'Second' does not contain member 'first'
-//│ ║  l.143: 	set xs.[0] = Second(2)
+//│ ║  l.142: 	set xs.[0] = Second(2)
 //│ ╙──       	             ^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ xs = [Second(2)]
@@ -158,10 +157,10 @@ let xs = mut [First(1)]
 xs.fill(Second(2))
 xs.0.first
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.159: 	xs.0.first
+//│ ║  l.158: 	xs.0.first
 //│ ║         	^^^^^^^^^^
 //│ ╟── Instance of class 'Second' does not contain member 'first'
-//│ ║  l.158: 	xs.fill(Second(2))
+//│ ║  l.157: 	xs.fill(Second(2))
 //│ ╙──       	        ^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ xs = [Second(2)]
@@ -171,25 +170,25 @@ xs.0.first
 module Exposed with
   fun make() = mut [x => x.missing]
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.172: 	  fun make() = mut [x => x.missing]
+//│ ║  l.171: 	  fun make() = mut [x => x.missing]
 //│ ║         	                         ^^^^^^^^^
 //│ ╟── Cannot resolve member 'missing' of a value with unknown shape.
 //│ ╟── Parameter 'x' admits values of unknown shape.
-//│ ║  l.172: 	  fun make() = mut [x => x.missing]
+//│ ║  l.171: 	  fun make() = mut [x => x.missing]
 //│ ║         	                    ^
 //│ ╟── This value is stored in this array.
-//│ ║  l.172: 	  fun make() = mut [x => x.missing]
+//│ ║  l.171: 	  fun make() = mut [x => x.missing]
 //│ ║         	               ^^^^^^^^^^^^^^^^^^^^
 //│ ╟── This value is returned here.
-//│ ║  l.172: 	  fun make() = mut [x => x.missing]
+//│ ║  l.171: 	  fun make() = mut [x => x.missing]
 //│ ║         	               ^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Member 'make' is accessible here.
-//│ ║  l.172: 	  fun make() = mut [x => x.missing]
+//│ ║  l.171: 	  fun make() = mut [x => x.missing]
 //│ ║         	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── 'Exposed' is exposed by this compilation unit.
-//│ ║  l.171: 	module Exposed with
+//│ ║  l.170: 	module Exposed with
 //│ ║         	^^^^^^^^^^^^^^^^^^^
-//│ ║  l.172: 	  fun make() = mut [x => x.missing]
+//│ ║  l.171: 	  fun make() = mut [x => x.missing]
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 // Explicit constructor type arguments remain opaque when methods receive subtypes.
@@ -201,11 +200,10 @@ let xs = new mut Array[Base](0)
 xs.push(new Child)
 xs.map((x, ...) => x.extra)
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.202: 	xs.map((x, ...) => x.extra)
+//│ ║  l.201: 	xs.map((x, ...) => x.extra)
 //│ ║         	                   ^^^^^^^
 //│ ╟── Value of type 'Base' does not contain member 'extra'
-//│ ╟── This type annotation supplies the value's shape.
-//│ ║  l.200: 	let xs = new mut Array[Base](0)
+//│ ║  l.199: 	let xs = new mut Array[Base](0)
 //│ ╙──       	                       ^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ xs = [Child { extra: 1 }]
@@ -226,7 +224,7 @@ let xs = mut []
 xs.splice(0, 0, Item(2))
 xs.0.value
 //│ ╔══[COMPILATION ERROR] This selection of member 'value' has no resolved target
-//│ ║  l.227: 	xs.0.value
+//│ ║  l.225: 	xs.0.value
 //│ ╙──       	^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ ═══[RUNTIME ERROR] Expected: '2', got: 'undefined'

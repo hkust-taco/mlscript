@@ -19,28 +19,32 @@ sealed trait Shape extends ShapeEvent, ShapeLike:
   def describe: Str
   /** Origin of the value or symbol described by this shape, independently of its use site. */
   def toLoc: Opt[Loc]
-  /** Explain the interface used by a failing operation, independently of its marks.
-    * Keep annotation witnesses out of shape equality and evaluate their messages
-    * only when reporting; diagnostic context must not add inference candidates.
+  /** Location supporting a description of this value's interface. A nominal
+    * view's class declaration and the annotation restricting this value are
+    * different sources: interface errors use the annotation, while toLoc keeps
+    * identifying the declaration. No diagnostic text is inspected to choose it.
     */
-  final def diagnosticNotes: Ls[(Message, Opt[Loc])] =
-    def annotation(source: Term): Ls[(Message, Opt[Loc])] =
-      msg"This type annotation supplies the value's shape." -> source.toLoc :: Nil
-    this match
-      case value: TermShape => value.applicationHead._1 match
-        case view: NominalInstanceView => view.annotation.toList.flatMap(annotation)
-        case view: RecordTypeShape => annotation(view.source)
-        // A declaration-backed callable already locates its signature with toLoc;
-        // its source is the member selection, not a written type annotation.
-        case view: CallableTypeShape => if view.declaration.isEmpty then annotation(view.source) else Nil
-        case view: InstanceShape => annotation(view.tpe.resolution.source)
-        case view: ContextualShape => view.source.diagnosticNotes
-        case view: SpecializedShape => view.declaration.diagnosticNotes
-        case unknown: UnknownValueShape => unknown.provenance.diagnosticNotes
-        case opaque: OpaqueTypeShape => opaque.provenance.diagnosticNotes
-        case rigid: RigidTypeShape => rigid.provenance.diagnosticNotes
-        case _ => Nil
-      case _: SymShape => Nil
+  final def diagnosticLocation: Opt[Loc] = this match
+    case value: TermShape => value.applicationHead._1 match
+      case view: NominalInstanceView => view.annotation.flatMap(_.toLoc).orElse(toLoc)
+      case view: ContextualShape => view.source.diagnosticLocation
+      case view: SpecializedShape => view.declaration.diagnosticLocation
+      case unknown: UnknownValueShape => unknown.provenance.typeOrigin.flatMap(_.toLoc).orElse(toLoc)
+      case opaque: OpaqueTypeShape => opaque.provenance.typeOrigin.flatMap(_.toLoc).orElse(toLoc)
+      case _ => toLoc
+    case _: SymShape => toLoc
+  /** Additional explanations, separate from the interface location attached to
+    * the primary message. Annotation witnesses do not change shape equality.
+    */
+  final def diagnosticNotes: Ls[(Message, Opt[Loc])] = this match
+    case value: TermShape => value.applicationHead._1 match
+      case view: ContextualShape => view.source.diagnosticNotes
+      case view: SpecializedShape => view.declaration.diagnosticNotes
+      case unknown: UnknownValueShape => unknown.provenance.diagnosticNotes
+      case opaque: OpaqueTypeShape => opaque.provenance.diagnosticNotes
+      case rigid: RigidTypeShape => rigid.provenance.diagnosticNotes
+      case _ => Nil
+    case _: SymShape => Nil
   def shwDbg(using DebugPrinter): Str = this match
     // case ds: DefnShape => s"DefnShape(${ds.defn.describe} ${ds.defn.sym.showDbg})"
     case ds: DefnShape => ds.defn.sym.showDbg
@@ -578,26 +582,29 @@ enum TypeInterfaceReason:
   case Negated(source: Term)
   case Unavailable(source: Term)
 
-  def provenance: ShapeProvenance = ShapeProvenance(this match
-    case MissingOutput(source) =>
-      (msg"This type argument specifies only an input bound." -> source.toLoc) ::
-        (msg"Values read through it have no output bound more specific than 'Any'." -> N) :: Nil
-    case ContravariantParameter(parameter, source) =>
-      (msg"This type argument supplies only an input bound for '${parameter.sym.nme}'." -> source.toLoc) ::
-        (msg"Type parameter '${parameter.sym.nme}' is declared contravariant here." -> parameter.sym.toLoc) ::
-        (msg"Values read through it have no output bound more specific than 'Any'." -> N) :: Nil
-    case Unrestricted(source) =>
-      msg"This type permits values of any type, so no member interface is guaranteed." -> source.toLoc :: Nil
-    case AbstractDeclaration(symbol, source) =>
-      (msg"This type annotation supplies the value's shape." -> source.toLoc) ::
+  def provenance: ShapeProvenance =
+    val result = ShapeProvenance(this match
+      case MissingOutput(source) =>
+        (msg"This type argument specifies only an input bound." -> source.toLoc) ::
+          (msg"Values read through it have no output bound more specific than 'Any'." -> N) :: Nil
+      case ContravariantParameter(parameter, source) =>
+        (msg"This type argument supplies only an input bound for '${parameter.sym.nme}'." -> source.toLoc) ::
+          (msg"Type parameter '${parameter.sym.nme}' is declared contravariant here." -> parameter.sym.toLoc) ::
+          (msg"Values read through it have no output bound more specific than 'Any'." -> N) :: Nil
+      case Unrestricted(source) =>
+        msg"This type permits values of any type, so no member interface is guaranteed." -> source.toLoc :: Nil
+      case AbstractDeclaration(symbol, _) =>
         (msg"Type '${symbol.nme}' is declared without a member interface." -> symbol.toLoc) :: Nil
-    case RecursiveAlias(symbol) =>
-      msg"Following type alias '${symbol.nme}' does not expose a member interface." -> symbol.toLoc :: Nil
-    case Negated(source) =>
-      msg"This negated type does not specify a member interface." -> source.toLoc :: Nil
-    case Unavailable(source) =>
-      msg"No member interface is known for this type." -> source.toLoc :: Nil
-  )
+      case RecursiveAlias(symbol) =>
+        msg"Following type alias '${symbol.nme}' does not expose a member interface." -> symbol.toLoc :: Nil
+      case Negated(source) =>
+        msg"This negated type does not specify a member interface." -> source.toLoc :: Nil
+      case Unavailable(source) =>
+        msg"No member interface is known for this type." -> source.toLoc :: Nil
+    )
+    this match
+      case AbstractDeclaration(_, source) => result.withTypeOrigin(source)
+      case _ => result
 
 /** A type view that authorizes no member operations. The diagnostic reason is
   * excluded from equality so alternative witnesses do not add inference flow.
@@ -730,12 +737,18 @@ final case class DynShape() extends CoreHeadShape:
   * locations, and the flattened chain are evaluated only when reporting an error.
   * Discovery retains one witness per reached shape to bound recursive paths.
   */
-final class ShapeProvenance(notes: => Ls[(Message, Opt[Loc])]):
+final class ShapeProvenance private (notes: => Ls[(Message, Opt[Loc])], val typeOrigin: Opt[Term]):
   lazy val diagnosticNotes: Ls[(Message, Opt[Loc])] = notes
   def via(note: => (Message, Opt[Loc])): ShapeProvenance =
-    ShapeProvenance(note :: diagnosticNotes)
+    new ShapeProvenance(note :: diagnosticNotes, typeOrigin)
+  /** The written type restricting this observation belongs on the operation's
+    * primary message; storage/exposure reasons remain separate diagnostic notes.
+    */
+  def withTypeOrigin(source: Term): ShapeProvenance =
+    new ShapeProvenance(diagnosticNotes, S(source))
 
 object ShapeProvenance:
+  def apply(notes: => Ls[(Message, Opt[Loc])]): ShapeProvenance = new ShapeProvenance(notes, N)
   val empty = ShapeProvenance(Nil)
 
 /** An unknown input or the element of an opaque or widened spread can be any
@@ -765,12 +778,10 @@ object UnknownValueShape:
   def at(source: Term): UnknownValueShape =
     UnknownValueShape(source)(ShapeProvenance(msg"The shape of this value is unknown." -> source.toLoc :: Nil))
   def spread(source: Term, value: TermShape): UnknownValueShape =
-    UnknownValueShape(source)(ShapeProvenance {
-      val notes = value.applicationHead._1 match
-        case unknown: UnknownValueShape => unknown.provenance.diagnosticNotes
-        case _ => Nil
-      (msg"This spread has no known element shape." -> source.toLoc) :: notes
-    })
+    val provenance = value.applicationHead._1 match
+      case unknown: UnknownValueShape => unknown.provenance
+      case _ => ShapeProvenance.empty
+    UnknownValueShape(source)(provenance.via(msg"This spread has no known element shape." -> source.toLoc))
 
 object TupleShape:
   def apply(source: Term, elements: Ls[Element])(resolver: NewResolver): TupleShape =

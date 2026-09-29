@@ -24,7 +24,6 @@ foo({a: 1})
 //│ ║  l.21: 	fun foo[A](x: A) = x.a
 //│ ║        	                   ^^^
 //│ ╟── Cannot resolve member 'a' of a value with unknown shape.
-//│ ╟── This type annotation supplies the value's shape.
 //│ ║  l.21: 	fun foo[A](x: A) = x.a
 //│ ║        	              ^
 //│ ╟── Type parameter 'A' does not specify a member interface.
@@ -37,14 +36,13 @@ foo({a: 1})
 private fun privateGeneric[A](x: A) = x.a
 privateGeneric({a: 1})
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.37: 	private fun privateGeneric[A](x: A) = x.a
+//│ ║  l.36: 	private fun privateGeneric[A](x: A) = x.a
 //│ ║        	                                      ^^^
 //│ ╟── Cannot resolve member 'a' of a value with unknown shape.
-//│ ╟── This type annotation supplies the value's shape.
-//│ ║  l.37: 	private fun privateGeneric[A](x: A) = x.a
+//│ ║  l.36: 	private fun privateGeneric[A](x: A) = x.a
 //│ ║        	                                 ^
 //│ ╟── Type parameter 'A' does not specify a member interface.
-//│ ║  l.37: 	private fun privateGeneric[A](x: A) = x.a
+//│ ║  l.36: 	private fun privateGeneric[A](x: A) = x.a
 //│ ╙──      	                           ^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -54,14 +52,13 @@ private class GenericClass[A](value: A) with
   fun read() = (() => value.a)()
 (new GenericClass({a: 1})).read()
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.54: 	  fun read() = (() => value.a)()
+//│ ║  l.52: 	  fun read() = (() => value.a)()
 //│ ║        	                      ^^^^^^^
 //│ ╟── Cannot resolve member 'a' of a value with unknown shape.
-//│ ╟── This type annotation supplies the value's shape.
-//│ ║  l.53: 	private class GenericClass[A](value: A) with
+//│ ║  l.51: 	private class GenericClass[A](value: A) with
 //│ ║        	                                     ^
 //│ ╟── Type parameter 'A' does not specify a member interface.
-//│ ║  l.53: 	private class GenericClass[A](value: A) with
+//│ ║  l.51: 	private class GenericClass[A](value: A) with
 //│ ╙──      	                           ^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -88,16 +85,16 @@ foo(new A(1))
 fun apply(f) = f(1)
 apply(x => x)
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.88: 	fun apply(f) = f(1)
+//│ ║  l.85: 	fun apply(f) = f(1)
 //│ ║        	               ^^^^
 //│ ╟── Value of unknown shape cannot be called like a function.
-//│ ║  l.88: 	fun apply(f) = f(1)
+//│ ║  l.85: 	fun apply(f) = f(1)
 //│ ║        	          ^
 //│ ╟── Parameter 'f' admits values of unknown shape.
-//│ ║  l.88: 	fun apply(f) = f(1)
+//│ ║  l.85: 	fun apply(f) = f(1)
 //│ ║        	          ^
 //│ ╟── 'apply' is exposed by this compilation unit.
-//│ ║  l.88: 	fun apply(f) = f(1)
+//│ ║  l.85: 	fun apply(f) = f(1)
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^
 //│ = 1
 
@@ -111,17 +108,17 @@ apply(x => x)
 :e
 fun escaped() = x => x.a
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.112: 	fun escaped() = x => x.a
+//│ ║  l.109: 	fun escaped() = x => x.a
 //│ ║         	                     ^^^
 //│ ╟── Cannot resolve member 'a' of a value with unknown shape.
 //│ ╟── Parameter 'x' admits values of unknown shape.
-//│ ║  l.112: 	fun escaped() = x => x.a
+//│ ║  l.109: 	fun escaped() = x => x.a
 //│ ║         	                ^
 //│ ╟── This value is returned here.
-//│ ║  l.112: 	fun escaped() = x => x.a
+//│ ║  l.109: 	fun escaped() = x => x.a
 //│ ║         	                ^^^^^^^^
 //│ ╟── 'escaped' is exposed by this compilation unit.
-//│ ║  l.112: 	fun escaped() = x => x.a
+//│ ║  l.109: 	fun escaped() = x => x.a
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^
 
 :e
@@ -129,17 +126,17 @@ private fun hidden(x) = x.a
 val escaped = [hidden]
 hidden({a: 1})
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.128: 	private fun hidden(x) = x.a
+//│ ║  l.125: 	private fun hidden(x) = x.a
 //│ ║         	                        ^^^
 //│ ╟── Cannot resolve member 'a' of a value with unknown shape.
 //│ ╟── Parameter 'x' admits values of unknown shape.
-//│ ║  l.128: 	private fun hidden(x) = x.a
+//│ ║  l.125: 	private fun hidden(x) = x.a
 //│ ║         	                   ^
 //│ ╟── This value is stored in this tuple.
-//│ ║  l.129: 	val escaped = [hidden]
+//│ ║  l.126: 	val escaped = [hidden]
 //│ ║         	              ^^^^^^^^
 //│ ╟── 'escaped' is exposed by this compilation unit.
-//│ ║  l.129: 	val escaped = [hidden]
+//│ ║  l.126: 	val escaped = [hidden]
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ escaped = [fun hidden]
@@ -149,17 +146,17 @@ private fun hidden(x) = x.a
 val escaped = {f: hidden}
 hidden({a: 1})
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.148: 	private fun hidden(x) = x.a
+//│ ║  l.145: 	private fun hidden(x) = x.a
 //│ ║         	                        ^^^
 //│ ╟── Cannot resolve member 'a' of a value with unknown shape.
 //│ ╟── Parameter 'x' admits values of unknown shape.
-//│ ║  l.148: 	private fun hidden(x) = x.a
+//│ ║  l.145: 	private fun hidden(x) = x.a
 //│ ║         	                   ^
 //│ ╟── This value is stored in this record field.
-//│ ║  l.149: 	val escaped = {f: hidden}
+//│ ║  l.146: 	val escaped = {f: hidden}
 //│ ║         	               ^
 //│ ╟── 'escaped' is exposed by this compilation unit.
-//│ ║  l.149: 	val escaped = {f: hidden}
+//│ ║  l.146: 	val escaped = {f: hidden}
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ escaped = {f: fun hidden}
@@ -184,20 +181,20 @@ private fun hiddenRecord(x) = x.a
 fun exportRecord() = {callback: hiddenRecord}
 hiddenRecord({a: 1})
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.183: 	private fun hiddenRecord(x) = x.a
+//│ ║  l.180: 	private fun hiddenRecord(x) = x.a
 //│ ║         	                              ^^^
 //│ ╟── Cannot resolve member 'a' of a value with unknown shape.
 //│ ╟── Parameter 'x' admits values of unknown shape.
-//│ ║  l.183: 	private fun hiddenRecord(x) = x.a
+//│ ║  l.180: 	private fun hiddenRecord(x) = x.a
 //│ ║         	                         ^
 //│ ╟── This value is stored in this record field.
-//│ ║  l.184: 	fun exportRecord() = {callback: hiddenRecord}
+//│ ║  l.181: 	fun exportRecord() = {callback: hiddenRecord}
 //│ ║         	                      ^^^^^^^^
 //│ ╟── This value is returned here.
-//│ ║  l.184: 	fun exportRecord() = {callback: hiddenRecord}
+//│ ║  l.181: 	fun exportRecord() = {callback: hiddenRecord}
 //│ ║         	                      ^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── 'exportRecord' is exposed by this compilation unit.
-//│ ║  l.184: 	fun exportRecord() = {callback: hiddenRecord}
+//│ ║  l.181: 	fun exportRecord() = {callback: hiddenRecord}
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -209,16 +206,16 @@ class CopyBox(val value) with
   fun copy() = CopyBox(value)
 CopyBox({answer: 42}).copy().value.answer
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.210: 	CopyBox({answer: 42}).copy().value.answer
+//│ ║  l.207: 	CopyBox({answer: 42}).copy().value.answer
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Cannot resolve member 'answer' of a value with unknown shape.
 //│ ╟── Parameter 'value' admits values of unknown shape.
-//│ ║  l.208: 	class CopyBox(val value) with
+//│ ║  l.205: 	class CopyBox(val value) with
 //│ ║         	                  ^^^^^
 //│ ╟── 'CopyBox' is exposed by this compilation unit.
-//│ ║  l.208: 	class CopyBox(val value) with
+//│ ║  l.205: 	class CopyBox(val value) with
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.209: 	  fun copy() = CopyBox(value)
+//│ ║  l.206: 	  fun copy() = CopyBox(value)
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ ═══[RUNTIME ERROR] Expected: '42', got: 'undefined'
@@ -231,17 +228,17 @@ oldHidden({a: 1})
 :e
 val oldEscape = {callback: oldHidden}
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.227: 	private fun oldHidden(x) = x.a
+//│ ║  l.224: 	private fun oldHidden(x) = x.a
 //│ ║         	                           ^^^
 //│ ╟── Cannot resolve member 'a' of a value with unknown shape.
 //│ ╟── Parameter 'x' admits values of unknown shape.
-//│ ║  l.227: 	private fun oldHidden(x) = x.a
+//│ ║  l.224: 	private fun oldHidden(x) = x.a
 //│ ║         	                      ^
 //│ ╟── This value is stored in this record field.
-//│ ║  l.232: 	val oldEscape = {callback: oldHidden}
+//│ ║  l.229: 	val oldEscape = {callback: oldHidden}
 //│ ║         	                 ^^^^^^^^
 //│ ╟── 'oldEscape' is exposed by this compilation unit.
-//│ ║  l.232: 	val oldEscape = {callback: oldHidden}
+//│ ║  l.229: 	val oldEscape = {callback: oldHidden}
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ oldEscape = {callback: fun oldHidden}
 
@@ -250,17 +247,16 @@ val oldEscape = {callback: oldHidden}
 fun spreadRecord[A](x: A) = ({...x}).a
 spreadRecord({a: 1})
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.250: 	fun spreadRecord[A](x: A) = ({...x}).a
+//│ ║  l.247: 	fun spreadRecord[A](x: A) = ({...x}).a
 //│ ║         	                            ^^^^^^^^^^
 //│ ╟── Cannot resolve member 'a' across a computed key or unknown record spread.
-//│ ╟── This spread has no known element shape.
-//│ ║  l.250: 	fun spreadRecord[A](x: A) = ({...x}).a
-//│ ║         	                                 ^
-//│ ╟── This type annotation supplies the value's shape.
-//│ ║  l.250: 	fun spreadRecord[A](x: A) = ({...x}).a
+//│ ║  l.247: 	fun spreadRecord[A](x: A) = ({...x}).a
 //│ ║         	                       ^
+//│ ╟── This spread has no known element shape.
+//│ ║  l.247: 	fun spreadRecord[A](x: A) = ({...x}).a
+//│ ║         	                                 ^
 //│ ╟── Type parameter 'A' does not specify a member interface.
-//│ ║  l.250: 	fun spreadRecord[A](x: A) = ({...x}).a
+//│ ║  l.247: 	fun spreadRecord[A](x: A) = ({...x}).a
 //│ ╙──       	                 ^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -269,17 +265,16 @@ spreadRecord({a: 1})
 fun spreadTuple[A](x: A) = [...x].0.a
 spreadTuple([{a: 1}])
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.269: 	fun spreadTuple[A](x: A) = [...x].0.a
+//│ ║  l.265: 	fun spreadTuple[A](x: A) = [...x].0.a
 //│ ║         	                           ^^^^^^^^^^
 //│ ╟── Cannot resolve member 'a' of a value with unknown shape.
-//│ ╟── This spread has no known element shape.
-//│ ║  l.269: 	fun spreadTuple[A](x: A) = [...x].0.a
-//│ ║         	                               ^
-//│ ╟── This type annotation supplies the value's shape.
-//│ ║  l.269: 	fun spreadTuple[A](x: A) = [...x].0.a
+//│ ║  l.265: 	fun spreadTuple[A](x: A) = [...x].0.a
 //│ ║         	                      ^
+//│ ╟── This spread has no known element shape.
+//│ ║  l.265: 	fun spreadTuple[A](x: A) = [...x].0.a
+//│ ║         	                               ^
 //│ ╟── Type parameter 'A' does not specify a member interface.
-//│ ║  l.269: 	fun spreadTuple[A](x: A) = [...x].0.a
+//│ ║  l.265: 	fun spreadTuple[A](x: A) = [...x].0.a
 //│ ╙──       	                ^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -294,20 +289,20 @@ private fun recursiveHidden(x) = x.a
 fun recursiveExport(n) = if n == 0 then {callback: recursiveHidden} else recursiveExport(n - 1)
 recursiveHidden({a: 1})
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.293: 	private fun recursiveHidden(x) = x.a
+//│ ║  l.288: 	private fun recursiveHidden(x) = x.a
 //│ ║         	                                 ^^^
 //│ ╟── Cannot resolve member 'a' of a value with unknown shape.
 //│ ╟── Parameter 'x' admits values of unknown shape.
-//│ ║  l.293: 	private fun recursiveHidden(x) = x.a
+//│ ║  l.288: 	private fun recursiveHidden(x) = x.a
 //│ ║         	                            ^
 //│ ╟── This value is stored in this record field.
-//│ ║  l.294: 	fun recursiveExport(n) = if n == 0 then {callback: recursiveHidden} else recursiveExport(n - 1)
+//│ ║  l.289: 	fun recursiveExport(n) = if n == 0 then {callback: recursiveHidden} else recursiveExport(n - 1)
 //│ ║         	                                         ^^^^^^^^
 //│ ╟── This value is returned here.
-//│ ║  l.294: 	fun recursiveExport(n) = if n == 0 then {callback: recursiveHidden} else recursiveExport(n - 1)
+//│ ║  l.289: 	fun recursiveExport(n) = if n == 0 then {callback: recursiveHidden} else recursiveExport(n - 1)
 //│ ║         	                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── 'recursiveExport' is exposed by this compilation unit.
-//│ ║  l.294: 	fun recursiveExport(n) = if n == 0 then {callback: recursiveHidden} else recursiveExport(n - 1)
+//│ ║  l.289: 	fun recursiveExport(n) = if n == 0 then {callback: recursiveHidden} else recursiveExport(n - 1)
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -318,23 +313,23 @@ class Shadowed {
 }
 val Shadowed = 0
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.317: 	  fun bad(x) = x.a
+//│ ║  l.312: 	  fun bad(x) = x.a
 //│ ║         	               ^^^
 //│ ╟── Cannot resolve member 'a' of a value with unknown shape.
 //│ ╟── Parameter 'x' admits values of unknown shape.
-//│ ║  l.317: 	  fun bad(x) = x.a
+//│ ║  l.312: 	  fun bad(x) = x.a
 //│ ║         	          ^
 //│ ╟── Member 'bad' is accessible here.
-//│ ║  l.317: 	  fun bad(x) = x.a
+//│ ║  l.312: 	  fun bad(x) = x.a
 //│ ║         	  ^^^^^^^^^^^^^^^^
 //│ ╟── 'Shadowed' is exposed by this compilation unit.
-//│ ║  l.316: 	class Shadowed {
+//│ ║  l.311: 	class Shadowed {
 //│ ║         	^^^^^^^^^^^^^^^^
-//│ ║  l.317: 	  fun bad(x) = x.a
+//│ ║  l.312: 	  fun bad(x) = x.a
 //│ ║         	^^^^^^^^^^^^^^^^^^
-//│ ║  l.318: 	}
+//│ ║  l.313: 	}
 //│ ║         	^
-//│ ║  l.319: 	val Shadowed = 0
+//│ ║  l.314: 	val Shadowed = 0
 //│ ╙──       	^^^^^^^^^^^^^^^^
 //│ Shadowed = 0
 
@@ -344,17 +339,17 @@ class Holder(val value)
 fun inspect(x) = if x is Holder(y) then y.a else 0
 inspect(Holder({a: 1}))
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.344: 	fun inspect(x) = if x is Holder(y) then y.a else 0
+//│ ║  l.339: 	fun inspect(x) = if x is Holder(y) then y.a else 0
 //│ ║         	                                        ^^^
 //│ ╟── Cannot resolve member 'a' of a value with unknown shape.
 //│ ╟── This constructor field may contain a value of unknown shape.
-//│ ║  l.343: 	class Holder(val value)
+//│ ║  l.338: 	class Holder(val value)
 //│ ║         	                 ^^^^^
 //│ ╟── Parameter 'x' admits values of unknown shape.
-//│ ║  l.344: 	fun inspect(x) = if x is Holder(y) then y.a else 0
+//│ ║  l.339: 	fun inspect(x) = if x is Holder(y) then y.a else 0
 //│ ║         	            ^
 //│ ╟── 'inspect' is exposed by this compilation unit.
-//│ ║  l.344: 	fun inspect(x) = if x is Holder(y) then y.a else 0
+//│ ║  l.339: 	fun inspect(x) = if x is Holder(y) then y.a else 0
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -372,17 +367,17 @@ class GenericHolder[A](val value: A)
 fun inspectGeneric(x) = if x is GenericHolder(y) then y.a else 0
 inspectGeneric(GenericHolder({a: 1}))
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.372: 	fun inspectGeneric(x) = if x is GenericHolder(y) then y.a else 0
+//│ ║  l.367: 	fun inspectGeneric(x) = if x is GenericHolder(y) then y.a else 0
 //│ ║         	                                                      ^^^
 //│ ╟── Cannot resolve member 'a' of a value with unknown shape.
 //│ ╟── This constructor field may contain a value of unknown shape.
-//│ ║  l.371: 	class GenericHolder[A](val value: A)
+//│ ║  l.366: 	class GenericHolder[A](val value: A)
 //│ ║         	                           ^^^^^
 //│ ╟── Parameter 'x' admits values of unknown shape.
-//│ ║  l.372: 	fun inspectGeneric(x) = if x is GenericHolder(y) then y.a else 0
+//│ ║  l.367: 	fun inspectGeneric(x) = if x is GenericHolder(y) then y.a else 0
 //│ ║         	                   ^
 //│ ╟── 'inspectGeneric' is exposed by this compilation unit.
-//│ ║  l.372: 	fun inspectGeneric(x) = if x is GenericHolder(y) then y.a else 0
+//│ ║  l.367: 	fun inspectGeneric(x) = if x is GenericHolder(y) then y.a else 0
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
