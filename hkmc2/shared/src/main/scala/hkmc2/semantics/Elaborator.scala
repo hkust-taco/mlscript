@@ -560,7 +560,7 @@ object Elaborator:
       val id = new Ident("NonLocalReturn")
       val sym = ClassSymbol(DummyTypeDef(syntax.Cls), id)
       val bsym = BlockMemberSymbol("ret", Nil, true)
-      val defn = ClassDef(N, syntax.Cls, sym, bsym, N, Nil, Nil, N, ObjBody(Blk(Nil, Term.Lit(UnitLit(false)))), Nil, N, auxCtorParams = Nil)
+      val defn = ClassDef(N, syntax.Cls, sym, bsym, N, Nil, Nil, N, ObjBody(Blk(Nil, Term.Lit(UnitLit(false)))), Nil, N, auxCtorParams = Nil)(N)
       sym.defn = S(defn)
       Term.SynthSel(runtimeSymbol.ref(), id)(S(sym), FlowSymbol.synthSel(id.name), N, N)
     val nonLocalRet =
@@ -734,7 +734,7 @@ extends Importer:
         Fun,
         mtdSym,
         tsym,
-        PlainParamList(valueSym.fold(Nil)(sym => Param(FldFlags.empty, sym, N, Modulefulness.none) :: Nil)) :: Nil,
+        PlainParamList(valueSym.fold(Nil)(sym => Param.simple(sym) :: Nil)) :: Nil,
         N,
         N,
         S(spec.methodBody(valueSym)),
@@ -742,7 +742,7 @@ extends Importer:
         Modulefulness.none,
         Nil,
         N,
-      )
+      )(N)
       tsym.defn = S(td)
       mtdSym.tsym = S(tsym)
       HandlerTermDefinition(resumeSym, td)
@@ -1064,7 +1064,7 @@ extends Importer:
     given UnderCtx = new UnderCtx(S(unders))
     val st = subterm(tree)
     val params = unders.iterator.map: sym =>
-        Param(FldFlags.empty, sym, N, Modulefulness.none)
+        Param.simple(sym)
       .toList
     if params.isEmpty then st
     else Term.Lam(PlainParamList(params), st)
@@ -1159,7 +1159,7 @@ extends Importer:
       derivedClsSym.defn = S(ClassDef(
         N, syntax.Cls, derivedClsSym,
         BlockMemberSymbol(derivedClsSym.name, Nil), N,
-        Nil, Nil, N, ObjBody(Blk(Nil, Term.Lit(Tree.UnitLit(false)))), Nil, N, auxCtorParams = Nil))
+        Nil, Nil, N, ObjBody(Blk(Nil, Term.Lit(Tree.UnitLit(false)))), Nil, N, auxCtorParams = Nil)(hd.toLoc))
       
       val elabed = ctx.nestInner(derivedClsSym).givenIn:
         block(sts_, hasResult = false)._1
@@ -1174,7 +1174,7 @@ extends Importer:
               case ParamList(_, value :: Nil, _) :: newParams =>
                 if newParams.isEmpty then
                   raise(ErrorReport(msg"Handler function cannot be a getter" -> td.toLoc :: Nil))
-                val newTd = TermDefinition(Fun, sym, tsym, newParams.reverse, tparams, sign, body, flags, mf, annotations, comp)
+                val newTd = TermDefinition(Fun, sym, tsym, newParams.reverse, tparams, sign, body, flags, mf, annotations, comp)(td.toLoc)
                 S(HandlerTermDefinition(value.sym, newTd))
               case _ =>
                 raise(ErrorReport(msg"Handler function is missing resumption parameter" -> td.toLoc :: Nil))
@@ -1220,7 +1220,7 @@ extends Importer:
       val boundVars = mutable.HashMap.empty[Str, VarSymbol]
       def genSym(id: Tree.Ident, erasedType: Opt[ErasedValueType]) =
         val sym = VarSymbol(id, erasedType)
-        sym.decl = S(TyParam(FldFlags.empty, N, sym)) // TODO vce
+        sym.decl = S(TyParam(FldFlags.empty, N, sym)(id.toLoc)) // TODO vce
         boundVars += id.name -> sym
         sym
       val syms = (tvs.collect:
@@ -1418,9 +1418,9 @@ extends Importer:
       val self = VarSymbol(Ident("self"), erasedType = N)
       val args = VarSymbol(Ident("args"), erasedType = N)
       val ps = ParamList(ParamListFlags.empty,
-        Param(FldFlags.empty, self, N, Modulefulness.none) :: Nil,
+        Param.simple(self) :: Nil,
         S:
-          Param(FldFlags.empty, args, N, Modulefulness.none)
+          Param.simple(args)
       )
       val rs = FlowSymbol.app()
       Term.Lam(ps,
@@ -1491,7 +1491,7 @@ extends Importer:
     case tree @ Case(kw, _) =>
       val scrut = VarSymbol(Ident("caseScrut"), erasedType = N)
       val body = caseSplit(scrut, tree)
-      val params = Param(FldFlags.empty, scrut, N, Modulefulness.none) :: Nil
+      val params = Param.simple(scrut) :: Nil
       Term.Lam(PlainParamList(params), body).mkLocWith(kw)
     case PrefixApp(kw @ Keywrd(Keyword.`return`), body) =>
       ctx.getRetHandler match
@@ -2090,7 +2090,7 @@ extends Importer:
                 case _ => N
               val tsym = TermSymbol(k, owner, id, erasedType = erasedTpe) // TODO?
               val tdf = TermDefinition(k, sym, tsym, pss, tps, s, body, 
-                TermDefFlags.empty.copy(isMethod = isMethod), mfn, annotations, N).withLocOf(td)
+                TermDefFlags.empty.copy(isMethod = isMethod), mfn, annotations, N)(td.toLoc)
               tsym.defn = S(tdf)
               sym.tsym = S(tsym)
               
@@ -2140,7 +2140,7 @@ extends Importer:
             ts.tys.flatMap: targ =>
               def mk(id: Ident, vce: Opt[Bool]): Ls[TyParam] =
                 val vs = VarSymbol(id, erasedType = N)
-                val res = TyParam(FldFlags.empty, vce, vs)
+                val res = TyParam(FldFlags.empty, vce, vs)(targ.toLoc)
                 vs.decl = S(res)
                 res :: Nil
               targ match
@@ -2206,7 +2206,7 @@ extends Importer:
                   p.modulefulness,
                   Nil,
                   N,
-                ).withLocOf(p)
+                )(p.toLoc)
                 assert(p.fldSym.isEmpty)
                 p.fldSym = S(fsym)
                 fsym.tsym = S(tsym)
@@ -2279,7 +2279,7 @@ extends Importer:
             assert(body.isEmpty)
             val d =
               given Ctx = newCtx
-              semantics.TypeDef(alsSym, sym, tps, rhs.map(term(_)), N, annotations)
+              semantics.TypeDef(alsSym, sym, tps, rhs.map(term(_)), N, annotations)(td.toLoc)
             alsSym.defn = S(d)
             d
         case Pat =>
@@ -2334,7 +2334,7 @@ extends Importer:
             // `paramsOpt` is set to `N` because we don't want parameters to
             // appear in the generated class's constructor.
             val pd = PatternDef(owner, patSym, sym, tps, allParams,
-              patternParams, extractionParams, pat, annotations)
+              patternParams, extractionParams, pat, annotations)(td.toLoc)
             patSym.defn = S(pd)
             pd
         case k: (Mod.type | Obj.type) =>
@@ -2350,7 +2350,7 @@ extends Importer:
               val md =
                 val (bod, c) = mkBody(Nil)
                 ModuleOrObjectDef(owner, modSym, sym,
-                  tps, pss.headOption, pss.tailOr(Nil), newOf(td), k, ObjBody(bod), comp, annotations)(outerCtx.scope)
+                  tps, pss.headOption, pss.tailOr(Nil), newOf(td), k, ObjBody(bod), comp, annotations)(outerCtx.scope, td.toLoc)
               modSym.defn = S(md)
               md
         case Cls =>
@@ -2386,7 +2386,7 @@ extends Importer:
                     sym,
                     ctsym,
                     allCtorPss,
-                    S(tps.map(tp => Param(FldFlags.empty, tp.sym, N, Modulefulness.none))),
+                    S(tps.map(tp => Param(FldFlags.empty, tp.sym, N, Modulefulness.none)(tp.toLoc))),
                     S(clsSym.ref()),
                     N,
                     TermDefFlags.empty,
@@ -2395,7 +2395,7 @@ extends Importer:
                       case a @ Annot.Modifier(Keyword.`declare`) => a
                     ,
                     S(clsSym),
-                  )
+                  )(td.toLoc)
                 if pss.nonEmpty then sym.tsym = S(ctsym)
                 ctsym.defn = S(ctdef)
                 // Note: do NOT set sym.tsym for constructor(...) classes; they are not callable as functions.
@@ -2403,7 +2403,7 @@ extends Importer:
               else N
               val cd =
                 val (bod, c) = mkBody(auxCtorPss)
-                ClassDef(owner, Cls, clsSym, sym, tsym, tps, pss, newOf(td), ObjBody(bod), annotations, comp, auxCtorParams = auxCtorPss)
+                ClassDef(owner, Cls, clsSym, sym, tsym, tps, pss, newOf(td), ObjBody(bod), annotations, comp, auxCtorParams = auxCtorPss)(td.toLoc)
               clsSym.defn = S(cd)
               cd
         case Trt | Mxn => lastWords(s"Unexpected type definition kind here: $k")
@@ -2494,7 +2494,7 @@ extends Importer:
           case N => sig.flatMap(ErasedType.eraseSign)
         val sym = VarSymbol(canonicalId, erasedType = erasedTpe)
         sym.sourceAliases = aliases
-        val p = Param(flg, sym, sig, mfn)
+        val p = Param(flg, sym, sig, mfn)(t.toLoc)
         sym.decl = S(p)
         (p, spd, aliases)
   
@@ -2762,8 +2762,8 @@ extends Importer:
       val vs = ps.flatMap:
         case id: Ident =>
           val sym = VarSymbol(id, erasedType = N)
-          sym.decl = S(TyParam(FldFlags.empty, N, sym))
-          Param(FldFlags.empty, sym, N, Modulefulness.none) :: Nil
+          sym.decl = S(TyParam(FldFlags.empty, N, sym)(id.toLoc))
+          Param.simple(sym) :: Nil
         case t =>
           raise(ErrorReport(msg"Unsupported type parameter ${t.describe}" -> t.toLoc :: Nil))
           Nil

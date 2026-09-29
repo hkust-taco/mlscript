@@ -267,7 +267,7 @@ object Resolvable:
         Nil,
         if defn.tparams.isEmpty
         then N
-        else S(defn.tparams.map(tp => Param(FldFlags.empty, tp.sym, N, Modulefulness.none))), 
+        else S(defn.tparams.map(tp => Param(FldFlags.empty, tp.sym, N, Modulefulness.none)(tp.toLoc))),
         defn.rhs,
         TermDefFlags.empty, // TODO: handle class-like definitions with flags
         Modulefulness.none, // TODO: handle modulefulness for class-like definitions
@@ -278,7 +278,7 @@ object Resolvable:
         defn.paramsOpt.toList ::: defn.auxParams, 
         if defn.tparams.isEmpty
         then N
-        else S(defn.tparams.map(tp => Param(FldFlags.empty, tp.sym, N, Modulefulness.none))), 
+        else S(defn.tparams.map(tp => Param(FldFlags.empty, tp.sym, N, Modulefulness.none)(tp.toLoc))),
         N, // TODO: handle class-like definitions with signatures
         TermDefFlags.empty, // TODO: handle class-like definitions with flags
         Modulefulness.none, // TODO: handle modulefulness for class-like definitions
@@ -325,7 +325,7 @@ case class SrcScope(outer: Elaborator.OuterCtx, parent: Opt[SrcScope]):
 object SrcScope:
   given s: Ctx => SrcScope = summon[Ctx].scope
 
-enum Term extends Statement:
+enum Term extends Statement, AutoLocated:
   case Error()
   case UnitVal()
   case Missing // Placeholder terms that were not elaborated due to the "lightweight" elaboration mode `Mode.Light`
@@ -646,7 +646,7 @@ object ShowCfg:
 end ShowCfg
 
 
-sealed trait Statement extends AutoLocated, ProductWithExtraInfo:
+sealed trait Statement extends Located, ProductWithExtraInfo:
   
   def mkClone(using State): Statement = this match
     case t: Term => lastWords(s"overridden implementation")
@@ -984,16 +984,16 @@ sealed trait Statement extends AutoLocated, ProductWithExtraInfo:
     case LeadingDotSel(nme) => s"_?_.${nme.name}"
     case SetConfig(_) => "#config(...)"
 
-final case class LetDecl(sym: LocalVarSymbol | TermSymbol, annotations: Ls[Annot]) extends Statement
+final case class LetDecl(sym: LocalVarSymbol | TermSymbol, annotations: Ls[Annot]) extends Statement, AutoLocated
 
-final case class RcdField(field: Term, rhs: Term) extends Statement
-final case class RcdSpread(rcd: Term) extends Statement
+final case class RcdField(field: Term, rhs: Term) extends Statement, AutoLocated
+final case class RcdSpread(rcd: Term) extends Statement, AutoLocated
 
-final case class DefineVar(sym: LocalSymbol | TermSymbol, rhs: Term) extends Statement
+final case class DefineVar(sym: LocalSymbol | TermSymbol, rhs: Term) extends Statement, AutoLocated
 
 /** A global configuration change directive (`#config(...)`).
   * Records a function that modifies the current compiler configuration. */
-final case class SetConfig(modify: hkmc2.Config => hkmc2.Config) extends Statement:
+final case class SetConfig(modify: hkmc2.Config => hkmc2.Config) extends Statement, AutoLocated:
   override def toString: String = "#config(...)"
 
 enum Visibility:
@@ -1058,7 +1058,7 @@ final case class TermDefinition(
     modulefulness: Modulefulness,
     annotations: Ls[Annot],
     companion: Opt[CompanionSymbol],
-) extends CompanionValue:
+)(val toLoc: Opt[Loc]) extends CompanionValue:
   require(k is tsym.k)
   def bsym: BlockMemberSymbol = sym
   val owner = tsym.owner
@@ -1143,10 +1143,15 @@ end ObjBody
   * in which case it is a `BlockMemberSymbol` when importing files explicitly
   * and a `TermSymbol` when the import is made implicitly by the compiler (eg, importing "Predef").
   * Note that the `file` Path may not represent a real file; eg when importing "fs". */
-case class Import(sym: ImportSymbol, str: Str, file: io.Path) extends Statement
+case class Import(sym: ImportSymbol, str: Str, file: io.Path) extends Statement, AutoLocated
 
 
-sealed abstract class Declaration:
+/** Declaration spans come from the syntax that introduced them, never from semantic
+  * subterms: those omit names and may contain synthesized or unrelated source terms.
+  * Rewrites preserve the original span; declarations without source syntax use `N`.
+  */
+sealed abstract class Declaration extends Located:
+  val toLoc: Opt[Loc]
   val sym: Symbol
   
   /** Whether this declares a class, a pattern, an object, or a pattern
@@ -1218,7 +1223,8 @@ case class ModuleOrObjectDef(
   companion: Opt[ModuleCompanionSymbol],
   annotations: Ls[Annot],
 )(
-  val path: SrcScope
+  val path: SrcScope,
+  val toLoc: Opt[Loc],
 ) extends ClassLikeDef, CompanionValue:
   val ctorSym: Option[ClassCtorSymbol] = N
 
@@ -1240,7 +1246,7 @@ case class PatternDef(
      */
     pattern: Pattern,
     annotations: Ls[Annot],
-) extends ClassLikeDef:
+)(val toLoc: Opt[Loc]) extends ClassLikeDef:
   self =>
   val kind: ClsLikeKind = Pat
   val ext: Opt[New] = N
@@ -1286,14 +1292,14 @@ object ClassDef:
       annotations: Ls[Annot],
       comp: Opt[ClassCompanionSymbol],
       auxCtorParams: Ls[ParamList],
-  ): ClassDef =
+  )(toLoc: Opt[Loc]): ClassDef =
     params match
       case ps :: pss => Parameterized(owner, kind, sym.asInstanceOf// TODO: improve
         , bsym, S(ctorSym.getOrElse(lastWords("Parameterized classes should have a ctor symbol.")))
-        , tparams, ps, pss ::: auxCtorParams, ext, body, comp, annotations)
+        , tparams, ps, pss ::: auxCtorParams, ext, body, comp, annotations)(toLoc)
       case Nil => Plain(owner, kind, sym.asInstanceOf// TODO: improve
         , bsym
-        , tparams, ext, body, comp, annotations, auxParams = auxCtorParams, ctorSym = ctorSym)
+        , tparams, ext, body, comp, annotations, auxParams = auxCtorParams, ctorSym = ctorSym)(toLoc)
   
   def unapply(cls: ClassDef): Opt[(ClassSymbol, Ls[TyParam], Opt[ParamList], ObjBody)] =
     S((cls.sym, cls.tparams, cls.paramsOpt, cls.body))
@@ -1311,7 +1317,7 @@ object ClassDef:
       body: ObjBody,
       companion: Opt[ClassCompanionSymbol],
       annotations: Ls[Annot],
-  ) extends ClassDef:
+  )(val toLoc: Opt[Loc]) extends ClassDef:
     val paramsOpt: Opt[ParamList] = S(params)
   
   case class Plain(
@@ -1326,7 +1332,7 @@ object ClassDef:
       annotations: Ls[Annot],
       auxParams: List[ParamList],
       ctorSym: Opt[ClassCtorSymbol],
-  ) extends ClassDef:
+  )(val toLoc: Opt[Loc]) extends ClassDef:
     val paramsOpt: Opt[ParamList] = N
   
 end ClassDef
@@ -1339,7 +1345,7 @@ case class TypeDef(
   rhs: Opt[Term],
   companion: Opt[CompanionValue],
   annotations: Ls[Annot],
-) extends TypeLikeDef:
+)(val toLoc: Opt[Loc]) extends TypeLikeDef:
   val kind: ObjDefKind = Als
 
 
@@ -1386,7 +1392,7 @@ final case class Spd(k: SpreadKind, term: Term) extends Elem:
   def showDbg(using DebugPrinter): Str = k.str + term.showDbg
   def children: Vector[Located] = Vector.single(term)
 
-final case class TyParam(flags: FldFlags, vce: Opt[Bool], sym: VarSymbol) extends Declaration:
+final case class TyParam(flags: FldFlags, vce: Opt[Bool], sym: VarSymbol)(val toLoc: Opt[Loc]) extends Declaration:
   
   // * For variance analysis
   var isCovariant: Bool = true
@@ -1402,10 +1408,10 @@ final case class TyParam(flags: FldFlags, vce: Opt[Bool], sym: VarSymbol) extend
 
 
 object Param:
-  def simple(sym: VarSymbol) = Param(FldFlags.empty, sym, N, Modulefulness.none)
+  def simple(sym: VarSymbol) = Param(FldFlags.empty, sym, N, Modulefulness.none)(sym.toLoc)
 
 final case class Param(flags: FldFlags, sym: VarSymbol, sign: Opt[Term], modulefulness: Modulefulness)
-extends Declaration, AutoLocated:
+(val toLoc: Opt[Loc]) extends Declaration:
   var fldSym: Opt[MemberSymbol] = N
   
   val flow: FlowSymbol = sym
@@ -1420,7 +1426,6 @@ extends Declaration, AutoLocated:
   
   def subTerms: Ls[Term] = sign.toList
   
-  override protected def children: Vector[Located] = sym +: sign.toVector
   
   def show(using Scope, ShowCfg, Raise): Document =
     doc"${flags.show(true)}${sym.showName}${sign.fold(doc"")(": " :: _.show)}"

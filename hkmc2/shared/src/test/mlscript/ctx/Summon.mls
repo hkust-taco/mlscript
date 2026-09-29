@@ -21,7 +21,7 @@ use[Num]
 //│ ╟── Required by contextual parameter declaration: 
 //│ ║  in ../../mlscript-compile/Predef.mls
 //│ ║  l.133: 	fun use[T](using instance: T) = instance
-//│ ║         	                 ^^^^^^^^^^^
+//│ ║         	           ^^^^^^^^^^^^^^^^^
 //│ ╙── Missing instance: Expected: Num (type parameter T); Available: Int, Str
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -58,7 +58,7 @@ fun f(using Int) = use[Num]
 //│ ╟── Required by contextual parameter declaration: 
 //│ ║  in ../../mlscript-compile/Predef.mls
 //│ ║  l.133: 	fun use[T](using instance: T) = instance
-//│ ║         	                 ^^^^^^^^^^^
+//│ ║         	           ^^^^^^^^^^^^^^^^^
 //│ ╙── Missing instance: Expected: Num (type parameter T); Available: Int, Str
 
 
@@ -88,7 +88,7 @@ use([Some[Int]].value)
 //│ ╟── Required by contextual parameter declaration: 
 //│ ║  in ../../mlscript-compile/Predef.mls
 //│ ║  l.133: 	fun use[T](using instance: T) = instance
-//│ ║         	                 ^^^^^^^^^^^
+//│ ║         	           ^^^^^^^^^^^^^^^^^
 //│ ╙── Illegal query for an unspecified type variable T.
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -107,7 +107,7 @@ f
 //│ ║         	^
 //│ ╟── Required by contextual parameter declaration: 
 //│ ║  l.97: 	fun f[T](using T) = use[T]
-//│ ║        	               ^
+//│ ║        	         ^^^^^^^
 //│ ╙── Illegal query for an unspecified type variable T.
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 

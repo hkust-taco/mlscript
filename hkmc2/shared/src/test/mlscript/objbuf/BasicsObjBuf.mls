@@ -48,8 +48,8 @@ class A2(x) with
 @buffered
 class B0(x)
 //│ ╔══[COMPILATION ERROR] Buffered classes must not have a main parameter list; use `constructor(...)` syntax instead.
-//│ ║  l.48: 	@buffered
-//│ ╙──      	^^^^^^^^^
+//│ ║  l.49: 	class B0(x)
+//│ ╙──      	^^^^^^^^^^^
 
 :ge
 @buffered
@@ -61,38 +61,34 @@ class B1(x)
 //│ ║  l.56: 	@buffered
 //│ ╙──      	^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Buffered classes must not have a main parameter list; use `constructor(...)` syntax instead.
-//│ ║  l.55: 	@buffered
-//│ ║        	^^^^^^^^^
-//│ ║  l.56: 	@buffered
-//│ ╙──      	^^^^^^^^^
+//│ ║  l.57: 	class B1(x)
+//│ ╙──      	^^^^^^^^^^^
 
 :ge
 @buffered
 @bufferable
 class B2(x)
 //│ ╔══[COMPILATION ERROR] Only one of bufferable annotation is allowed.
-//│ ║  l.70: 	@buffered
+//│ ║  l.68: 	@buffered
 //│ ║        	^^^^^^^^^
-//│ ║  l.71: 	@bufferable
+//│ ║  l.69: 	@bufferable
 //│ ╙──      	^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Buffered classes must not have a main parameter list; use `constructor(...)` syntax instead.
-//│ ║  l.70: 	@buffered
-//│ ║        	^^^^^^^^^
-//│ ║  l.71: 	@bufferable
+//│ ║  l.70: 	class B2(x)
 //│ ╙──      	^^^^^^^^^^^
 
 :w
 @bufferable
 module B3
 //│ ╔══[WARNING] This annotation has no effect.
-//│ ║  l.85: 	@bufferable
+//│ ║  l.81: 	@bufferable
 //│ ╙──      	^^^^^^^^^^^
 
 :w
 @bufferable
 object B3
 //│ ╔══[WARNING] This annotation has no effect.
-//│ ║  l.92: 	@bufferable
+//│ ║  l.88: 	@bufferable
 //│ ╙──      	^^^^^^^^^^^
 
 

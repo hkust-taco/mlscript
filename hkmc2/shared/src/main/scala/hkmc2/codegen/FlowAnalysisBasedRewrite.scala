@@ -262,7 +262,7 @@ class FlowAnalysisBasedRewrite(
     def refreshParam(p: Param): Param =
       val newSym = new VarSymbol(Tree.Ident(p.sym.name), erasedType = p.sym.erasedType)
       refreshParamMap(p.sym) = newSym
-      Param(p.flags, newSym, p.sign, p.modulefulness)
+      Param(p.flags, newSym, p.sign, p.modulefulness)(p.toLoc)
     val refreshedParams = rewrittenParams.map:
       case ParamList(flags, params, restParam) =>
         ParamList(flags, params.map(refreshParam), restParam.map(refreshParam))

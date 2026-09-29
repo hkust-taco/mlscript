@@ -61,7 +61,7 @@ data class Example2(val a) with
 //│ ╔══[COMPILATION ERROR] Duplicate definition of member named 'a'.
 //│ ╟── Defined at: 
 //│ ║  l.58: 	data class Example2(val a) with
-//│ ║        	                        ^
+//│ ║        	                    ^^^^^
 //│ ╟── Defined at: 
 //│ ║  l.59: 	  val a = 1
 //│ ╙──      	  ^^^^^^^^^

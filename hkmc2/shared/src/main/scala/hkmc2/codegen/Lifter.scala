@@ -582,7 +582,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
         val fldSym = BlockMemberSymbol(nme, Nil)
         val tSym = TermSymbol(syntax.MutVal, S(clsSym), ident, erasedType = capturedType)
         
-        val p = Param(FldFlags.empty.copy(isVal = true), varSym, N, Modulefulness.none)
+        val p = Param(FldFlags.empty.copy(isVal = true), varSym, N, Modulefulness.none)(varSym.toLoc)
         varSym.decl = S(p) // * Currently this is only accessed to create the class' toString method
         
         val vd = ValDefn(
@@ -909,7 +909,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
       else b
   
   // some helpers
-  private def dupParam(p: Param): Param = p.copy(sym = VarSymbol(Tree.Ident(p.sym.nme), erasedType = p.sym.erasedType))
+  private def dupParam(p: Param): Param = p.copy(sym = VarSymbol(Tree.Ident(p.sym.nme), erasedType = p.sym.erasedType))(p.toLoc)
   private def dupParams(plist: List[Param]): List[Param] = plist.map(dupParam)
   private def dupParamList(plist: ParamList): ParamList =
     plist.copy(params = dupParams(plist.params), restParam = plist.restParam.map(dupParam))
@@ -1043,7 +1043,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
     lazy val auxParams: List[Param] =
       (reqDefnsOrdered.map(defnSymsMap_) ::: capturesOrdered.map(capSymsMap_) ::: passedSymsOrdered.map(passedSymsMap_))
       .map: s =>
-        val decl = Param(FldFlags.empty.copy(isVal = false), s, N, Modulefulness.none)
+        val decl = Param(FldFlags.empty.copy(isVal = false), s, N, Modulefulness.none)(s.toLoc)
         s.decl = S(decl)
         decl
     

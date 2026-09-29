@@ -89,8 +89,10 @@ foo(h)
 //│ ║  l.84: 	  val x = 24
 //│ ╙──      	  ^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Only function definitions are allowed in handler blocks
+//│ ║  l.85: 	  class Test with
+//│ ║        	  ^^^^^^^^^^^^^^^
 //│ ║  l.86: 	    fun x() = x
-//│ ╙──      	              ^
+//│ ╙──      	^^^^^^^^^^^^^^^
 
 :e
 handle h = Eff with
@@ -104,19 +106,19 @@ handle h = Eff with
     foo(h)
 foo(h)
 //│ ╔══[COMPILATION ERROR] Handler function is missing resumption parameter
-//│ ║  l.100: 	      fun f = r(0)
+//│ ║  l.102: 	      fun f = r(0)
 //│ ╙──       	      ^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Handler function is missing resumption parameter
-//│ ║  l.101: 	      fun g() = r(0)
+//│ ║  l.103: 	      fun g() = r(0)
 //│ ╙──       	      ^^^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Handler function is missing resumption parameter
-//│ ║  l.102: 	      fun h()() = r(1)
+//│ ║  l.104: 	      fun h()() = r(1)
 //│ ╙──       	      ^^^^^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Handler function is missing resumption parameter
-//│ ║  l.103: 	      fun h2()(a, b) = r(1)
+//│ ║  l.105: 	      fun h2()(a, b) = r(1)
 //│ ╙──       	      ^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Name not found: h
-//│ ║  l.104: 	    foo(h)
+//│ ║  l.106: 	    foo(h)
 //│ ╙──       	        ^
 
 :w
@@ -127,6 +129,6 @@ handle h = Eff with
   12345
 foo(h)
 //│ ╔══[WARNING] Terms in handler block do nothing
-//│ ║  l.127: 	  12345
+//│ ║  l.129: 	  12345
 //│ ╙──       	  ^^^^^
 //│ Elab: { handle h = Ref(member:Eff)() List(HandlerTermDefinition(r,TermDefinition(Fun,member:f,term:Handler$h$/f,List(ParamList(‹›,List(),None)),None,None,Some(App(Ref(r),Tup(List(Fld(‹›,Lit(IntLit(0)),None))))),‹method ›,Modulefulness(None),List(),None)), HandlerTermDefinition(r,TermDefinition(Fun,member:g,term:Handler$h$/g,List(ParamList(‹›,List(Param(‹›,a,None,Modulefulness(None))),None)),None,None,Some(App(Ref(r),Tup(List(Fld(‹›,Lit(IntLit(1)),None))))),‹method ›,Modulefulness(None),List(),None))) in App(Ref(member:foo),Tup(List(Fld(‹›,Ref(h),None)))) }
