@@ -1,4 +1,3 @@
-:.
 :js
 open annotations
 
@@ -9,10 +8,10 @@ class First
 @inline
 class Second
 //│ ╔══[WARNING] This annotation has no effect.
-//│ ║  l.7: 	@inline
+//│ ║  l.6: 	@inline
 //│ ╙──     	^^^^^^^
 //│ ╔══[WARNING] This annotation has no effect.
-//│ ║  l.9: 	@inline
+//│ ║  l.8: 	@inline
 //│ ╙──     	^^^^^^^
 
 // Annotations on let bindings point to the annotation occurrence.
@@ -20,7 +19,7 @@ class Second
 @tailrec
 let value = 1
 //│ ╔══[WARNING] This annotation has no effect.
-//│ ║  l.20: 	@tailrec
+//│ ║  l.19: 	@tailrec
 //│ ╙──      	^^^^^^^^
 //│ value = 1
 
@@ -29,7 +28,7 @@ let value = 1
 @inline
 fun abstractFunction()
 //│ ╔══[WARNING] Only functions with a body may be marked as @inline.
-//│ ║  l.29: 	@inline
+//│ ║  l.28: 	@inline
 //│ ╙──      	^^^^^^^
 
 // This error is emitted from lowered IR after the prefix has become a temporary.
@@ -38,6 +37,6 @@ fun abstractFunction()
 let index = 0
 [(x => x)].(index)(1)
 //│ ╔══[COMPILATION ERROR] Cannot determine if the dynamic selection is a function object.
-//│ ║  l.39: 	[(x => x)].(index)(1)
+//│ ║  l.38: 	[(x => x)].(index)(1)
 //│ ╙──      	^^^^^^^^^^^^^^^^^
 //│ index = 0

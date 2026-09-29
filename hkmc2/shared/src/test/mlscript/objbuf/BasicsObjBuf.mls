@@ -170,3 +170,26 @@ class A with
   fun f(y) = x + y + z
 
 
+
+// The declaration span includes nested modifiers and multiline annotations.
+:ge
+@buffered
+@untyped
+public data class LocatedBuffer(x)
+//│ ╔══[COMPILATION ERROR] Buffered classes must not have a main parameter list; use `constructor(...)` syntax instead.
+//│ ║  l.176: 	@buffered
+//│ ║         	^^^^^^^^^
+//│ ║  l.177: 	@untyped
+//│ ║         	^^^^^^^^
+//│ ║  l.178: 	public data class LocatedBuffer(x)
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+// The following declaration starts a fresh span.
+:ge
+@buffered
+class NextLocatedBuffer(x)
+//│ ╔══[COMPILATION ERROR] Buffered classes must not have a main parameter list; use `constructor(...)` syntax instead.
+//│ ║  l.189: 	@buffered
+//│ ║         	^^^^^^^^^
+//│ ║  l.190: 	class NextLocatedBuffer(x)
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^

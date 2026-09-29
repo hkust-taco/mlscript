@@ -82,7 +82,7 @@ fun constOf(x: Int) = wasm.ref.i31(wasm.i32.const(x))
 :ge
 wasm.i32.const(-1)
 //│ ╔══[COMPILATION ERROR] Wasm intrinsic 'i32.const' expects an integer literal immediate
-//│ ║  l.88: 	wasm.i32.const(-1)
+//│ ║  l.83: 	wasm.i32.const(-1)
 //│ ╙──      	               ^^
 
 
