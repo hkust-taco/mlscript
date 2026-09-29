@@ -938,13 +938,13 @@ abstract class Parser(
         consume
         consume
         val inner = rec(toks, S(br.innerLoc), br.describe).concludeWith(_.expr(0, allowNewlines = true))
-        exprCont(DynAccess(acc, Bra(bk, inner)), prec, allowNewlines = allowNewlines)
-      // TODO: these should eventually no longer be treated as dynamic:
+        exprCont(DynAccess(acc, Bra(bk, inner), true), prec, allowNewlines = allowNewlines)
+      // `obj.[idx]` indexes an array; `obj.(fld)` should eventually no longer be dynamic either.
       case (PERIOD, l0) :: (br @ BRACKETS(bk @ (Round | Square), toks), l1) :: _ =>
         consume
         consume
         val inner = rec(toks, S(br.innerLoc), br.describe).concludeWith(_.expr(0, allowNewlines = true))
-        exprCont(DynAccess(acc, Bra(bk, inner)).withLoc(S(l0 ++ l1)), prec, allowNewlines = allowNewlines)
+        exprCont(DynAccess(acc, Bra(bk, inner), bk is Round).withLoc(S(l0 ++ l1)), prec, allowNewlines = allowNewlines)
       
       case (PERIOD, l0) :: (br @ BRACKETS(Curly, toks), l1) :: _ =>
         consume
@@ -955,7 +955,7 @@ abstract class Parser(
       case (PERIOD, l0) :: (LITVAL(lit: (Tree & Literal)), l1) :: _ =>
         consume
         consume
-        exprCont(DynAccess(acc, lit.withLoc(S(l1))).withLoc(S(l0 ++ l1)), prec, allowNewlines = allowNewlines)
+        exprCont(DynAccess(acc, lit.withLoc(S(l1)), true).withLoc(S(l0 ++ l1)), prec, allowNewlines = allowNewlines)
         
         /* 
       case (PERIOD, l0) :: (br @ BRACKETS(Square, toks), l1) :: _ =>
@@ -1058,7 +1058,7 @@ abstract class Parser(
       case (SELECT(name, dyn), l0) :: _ if SelPrec >= prec =>
         consume
         val tree = if dyn then
-          DynAccess(acc, new Ident(name).withLoc(S(l0)))
+          DynAccess(acc, new Ident(name).withLoc(S(l0)), true)
         else
           Sel(acc, new Ident(name).withLoc(S(l0)))
         exprCont(tree, prec, allowNewlines = allowNewlines)

@@ -1275,7 +1275,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
         subTerm(prefix): p =>
           subTerm_nonTail(rhs): r =>
             AssignField(p, memberIdent(nme, sel.sym), castTo(r, fieldErasedType(sym), sel.toLoc), k(unit))(sym)
-      case sel @ DynSel(prefix, fld, ai) =>
+      case sel @ DynSel(prefix, fld, ai, _) =>
         subTerm(prefix): p =>
           subTerm_nonTail(fld): f =>
             subTerm_nonTail(rhs): r =>
@@ -1346,7 +1346,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
       subTerm(prefix): p =>
         k(Select(p, definitionIdent(nme, sym))(S(sym))(false))
     
-    case DynSel(prefix, fld, ai) =>
+    case DynSel(prefix, fld, ai, _) =>
       subTerm(prefix): p =>
         subTerm_nonTail(fld): f =>
           k(DynSelect(p, f, ai))

@@ -241,3 +241,35 @@ mk([1])
 private fun mk(...args) = args.reduce((acc, x, ...) => if acc is Int then acc else mk(...acc), 0)
 mk(1, 2)
 //│ = 0
+
+// A static index reads some element: its result has the element interface.
+:expect [2, "b", 3, 4]
+class Item(val value: Int)
+fun get(xs: Array[Item], i: Int) = xs.[i].value
+private fun last(xs) = xs.[xs.length - 1]
+let items = mut [Item(4)]
+[get([Item(1), Item(2)], 1), ["a", "b"].[1], last([Item(3)]).value, items.[0].value]
+//│ = [2, "b", 3, 4]
+//│ items = [Item(4)]
+
+// Only arrays can be indexed statically.
+:e
+:re
+class Item(val value: Int)
+(new Item(1)).[0]
+//│ ╔══[COMPILATION ERROR] Resolution error in array index
+//│ ║  l.259: 	(new Item(1)).[0]
+//│ ║         	 ^^^^^^^^^^^^^^^
+//│ ╟── Instance of class 'Item' cannot be indexed statically.
+//│ ║  l.259: 	(new Item(1)).[0]
+//│ ║         	 ^^^^^^^^^^^
+//│ ╙── Use '![...]' for a dynamic access.
+//│ ═══[RUNTIME ERROR] TypeError: tmp48.at is not a function
+
+// A dynamic access authorizes dynamic operations on its result; a static index does not.
+:e
+fun first(xs: Array[Int]) = [xs![0].whatever, xs.[0].whatever]
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.271: 	fun first(xs: Array[Int]) = [xs![0].whatever, xs.[0].whatever]
+//│ ║         	                                                ^^^^^^^^^^^^^
+//│ ╙── Value of type 'Int' does not contain member 'whatever'

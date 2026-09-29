@@ -1812,12 +1812,12 @@ extends Importer:
       error
     case OpenIn(op, body) =>
       subterm(Block(Open(op) :: body :: Nil), interp)
-    case DynAccess(obj, rhs) =>
+    case DynAccess(obj, rhs, dynamic) =>
       rhs match
-      case Bra(bk @ (Round | Square), fld) => Term.DynSel(subterm(obj), subterm(fld), bk is Square)
-      case fld: Literal => Term.DynSel(subterm(obj), subterm(fld), false)
+      case Bra(bk @ (Round | Square), fld) => Term.DynSel(subterm(obj), subterm(fld), bk is Square, !dynamic)
+      case fld: Literal => Term.DynSel(subterm(obj), subterm(fld), false, false)
       case id: Ident =>
-        Term.DynSel(subterm(obj), Term.Lit(StrLit(id.name)).withLocOf(id), false)
+        Term.DynSel(subterm(obj), Term.Lit(StrLit(id.name)).withLocOf(id), false, false)
       case _ =>
         raise(ErrorReport(msg"Illegal dynamic field access selector (${rhs.describe})." -> tree.toLoc :: Nil))
         error

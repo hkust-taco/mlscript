@@ -332,6 +332,8 @@ final class NewResolverState private (
     new Seen(inherited.map(_.typeRelations))
   val typeArgumentArityErrors: Seen[(Identity[TyApp], Int)] =
     new Seen(inherited.map(_.typeArgumentArityErrors))
+  val arrayIndexErrors: Seen[Identity[Term]] =
+    new Seen(inherited.map(_.arrayIndexErrors))
 
 private[semantics] final class TermShapeHost extends Host[TermShape]:
   def showDbg(using DebugPrinter): Str = "instance views"

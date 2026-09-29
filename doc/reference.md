@@ -691,9 +691,14 @@ Here `a: expression` is a field value, not a type annotation.
 mut [1, 2, 3]        // mutable array
 
 xs.[0]               // index access (uses .at() internally)
+xs![0]               // dynamic index access
 xs.(0)               // dynamic index access
 set xs.[0] = v       // index assignment
 ```
+
+Under new resolution, `xs.[i]` is checked like the array's methods: `xs` must be
+an array, and the result has its element type. A dynamic access such as `xs![i]`
+is only checked at runtime, and so are operations on its result.
 
 **Spread syntax:**
 ```mlscript

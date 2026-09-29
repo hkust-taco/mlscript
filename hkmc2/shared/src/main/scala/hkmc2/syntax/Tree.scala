@@ -79,7 +79,8 @@ enum Tree extends AutoLocated:
     extends Tree with TypeDefImpl
   case Open(opened: Tree)
   case OpenIn(opened: Tree, body: Tree)
-  case DynAccess(obj: Tree, fld: Tree)
+  /** `dynamic` is false only for `obj.[idx]`, an array index checked during resolution. */
+  case DynAccess(obj: Tree, fld: Tree, dynamic: Bool)
   case Modified(modifier: Keywrd[Keyword.Modifier], body: Tree)
   case Quoted(body: Tree)
   case Unquoted(body: Tree)
@@ -160,7 +161,7 @@ enum Tree extends AutoLocated:
     case TyTup(tys) => tys.toVector
     case Sel(prefix, name) => Vector.double(prefix, name)
     case SynthSel(prefix, name) => Vector.single(prefix)
-    case DynAccess(prefix, fld) => Vector.double(prefix, fld)
+    case DynAccess(prefix, fld, _) => Vector.double(prefix, fld)
     case Open(bod) => Vector.single(bod)
     case OpenIn(opened, body) => Vector.double(opened, body)
     case Def(lhs, rhs) => Vector.double(lhs, rhs)
@@ -203,7 +204,7 @@ enum Tree extends AutoLocated:
     case Reft(base, reft) => "refinement"
     case Sel(prefix, name) => "selection"
     case SynthSel(prefix, name) => "synthetic selection"
-    case DynAccess(prefix, name) => "dynamic field access"
+    case DynAccess(prefix, name, _) => "dynamic field access"
     case PrefixApp(kw, body) => s"prefix operator '${kw.name}'"
     case InfixApp(lhs, kw, rhs) => s"infix operator '${kw.name}'"
     case LexicalNew(body, _) => "new"
@@ -304,7 +305,7 @@ enum Tree extends AutoLocated:
         case N => this
       case N => this
     case Sel(pre, nme) if nme.name.startsWith("'") =>
-      DynAccess(pre.desugared, StrLit(nme.name.drop(1)).withLocOf(nme)).withLocOf(this)
+      DynAccess(pre.desugared, StrLit(nme.name.drop(1)).withLocOf(nme), true).withLocOf(this)
     
     case Pun(false, id) =>
       InfixApp(id, Keywrd(Keyword.`:`), id)

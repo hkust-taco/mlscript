@@ -422,7 +422,9 @@ enum Term extends Statement, ShapePublisher:
     (val tree: Tree.App, val typ: Opt[Type], val resSym: FlowSymbol) extends Term, AppImpl
   case TyApp(lhs: Term, targs: Ls[Term])
     (val typ: Opt[Type]) extends Term, ResolvableImpl
-  case DynSel(prefix: Term, fld: Term, arrayIdx: Bool)
+  /** A static selection (`obj.[idx]`) indexes an array whose element type
+    * resolution determines; other selections are only checked at runtime. */
+  case DynSel(prefix: Term, fld: Term, arrayIdx: Bool, static: Bool)
   case Tup(fields: Ls[Elem])(val tree: Tree.Tup) extends Term, ShapeHost
   case Mut(underlying: Tup | Rcd | New | DynNew)
   case CtxTup(fields: Ls[Elem])(val tree: Tree.Tup)
@@ -683,7 +685,7 @@ enum Term extends Statement, ShapePublisher:
         val copy = LeadingDotSel(Tree.Ident(nme.name))(term.originalCtx)
         copy.resolvedTargets = term.resolvedTargets
         copyResolution(term, copy)
-      case DynSel(prefix, fld, arrayIdx) => DynSel(prefix.mkClone, fld.mkClone, arrayIdx)
+      case DynSel(prefix, fld, arrayIdx, static) => DynSel(prefix.mkClone, fld.mkClone, arrayIdx, static)
       case term @ Tup(fields) =>
         val copy = Tup(fields.map {
           case f: Fld => f.copy(term = f.term.mkClone, asc = f.asc.map(_.mkClone))
@@ -848,7 +850,7 @@ sealed trait Statement extends AutoLocated, ProductWithExtraInfo, Describable:
       case NewSel(pre, nme, _) => "selection"
       case Sel(pre, nme) => "selection"
       case SynthSel(pre, nme) => "selection"
-      case DynSel(o, f, _) => "dynamic selection"
+      case DynSel(o, f, _, static) => if static then "array index" else "dynamic selection"
       case Tup(fields) => "tuple literal"
       case CtxTup(fields) => "contextual tuple literal"
       case IfLike(_, IfLikeForm.ReturningIf, body) => "`if` expression"
@@ -924,7 +926,7 @@ sealed trait Statement extends AutoLocated, ProductWithExtraInfo, Describable:
     case SynthSel(pre, _) => Vector.single(pre)
     case NewSel(pre, _, cls) => Vector.single(pre) ++ cls.toVector
     case UnresolvedRef(prefixes, _) => prefixes.toVector
-    case DynSel(o, f, _) => Vector.double(o, f)
+    case DynSel(o, f, _, _) => Vector.double(o, f)
     case Tup(fields) => fields.flatMap(_.subTerms).toVector
     case Mut(und) => Vector.single(und)
     case CtxTup(fields) => fields.flatMap(_.subTerms).toVector
@@ -1100,7 +1102,7 @@ sealed trait Statement extends AutoLocated, ProductWithExtraInfo, Describable:
         // val fs = fomr match
       case Missing => doc"‹missing›"
       case TyApp(lhs, targs) => doc"${lhs.show}[${targs.map(_.show).mkDocument(", ")}]"
-      case DynSel(prefix, field, arrayIdx) =>
+      case DynSel(prefix, field, arrayIdx, _) =>
         if arrayIdx then doc"${prefix.show}.[${field.show}]"
         else doc"${prefix.show}.(${field.show})"
       case SelProj(prefix, cls, field) => doc"${prefix.show}.${cls.show}#${field.name}"
@@ -1219,7 +1221,7 @@ sealed trait Statement extends AutoLocated, ProductWithExtraInfo, Describable:
     case SynthSel(pre, nme) => s"(${pre.showDbg}.)${nme.name}"
     case NewSel(pre, nme, cls) => s"${pre.showDbg}.${cls.fold("")(c => s"${c.showDbg}#")}${nme.name}"
     case UnresolvedRef(_, id) => s"${id.name}‹open›"
-    case DynSel(pre, fld, _) => s"${pre.showDbg}[${fld.showDbg}]"
+    case DynSel(pre, fld, _, _) => s"${pre.showDbg}[${fld.showDbg}]"
     case IfLike(kw, _, split) => s"${kw.name} { ${split.showDbg} }"
     case SynthIf(split) => s"if { ${split.showDbg} }"
     case SynthWhile(split) => s"while { ${split.showDbg} }"
