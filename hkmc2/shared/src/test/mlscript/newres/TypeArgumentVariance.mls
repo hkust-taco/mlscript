@@ -18,9 +18,10 @@ xs.0.value
 //│ ║  l.16: 	xs.0.value
 //│ ║        	^^^^^^^^^^
 //│ ╟── Cannot resolve member 'value' of a value with unknown shape.
-//│ ╟── This abstract type does not specify a member interface.
+//│ ╟── This type argument specifies only an input bound.
 //│ ║  l.14: 	let xs = (mut [] as Array[in Item])
-//│ ╙──      	                             ^^^^
+//│ ║        	                          ^^^^^^^
+//│ ╙── Values read through it have no output bound more specific than 'Any'.
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ xs = [Item(2)]
 
@@ -32,7 +33,7 @@ let xs = mut []
 connect(xs, Item(3))
 xs.0.value
 //│ ╔══[COMPILATION ERROR] This selection of member 'value' has no resolved target
-//│ ║  l.33: 	xs.0.value
+//│ ║  l.34: 	xs.0.value
 //│ ╙──      	^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ xs = []
@@ -62,12 +63,13 @@ class Box[out T](val item: T)
 let box = (new Box(Item(6)) as Box[in Item])
 box.item.value
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.63: 	box.item.value
+//│ ║  l.64: 	box.item.value
 //│ ║        	^^^^^^^^^^^^^^
 //│ ╟── Cannot resolve member 'value' of a value with unknown shape.
-//│ ╟── This abstract type does not specify a member interface.
-//│ ║  l.62: 	let box = (new Box(Item(6)) as Box[in Item])
-//│ ╙──      	                                      ^^^^
+//│ ╟── This type argument specifies only an input bound.
+//│ ║  l.63: 	let box = (new Box(Item(6)) as Box[in Item])
+//│ ║        	                                   ^^^^^^^
+//│ ╙── Values read through it have no output bound more specific than 'Any'.
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ box = Box(Item(6))
 
@@ -89,12 +91,13 @@ class Box[T](val item: T) with
 let box = (new Box(Item(8)) as Box[in Item])
 box.apply(x => x.value)
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.90: 	box.apply(x => x.value)
+//│ ║  l.92: 	box.apply(x => x.value)
 //│ ║        	               ^^^^^^^
 //│ ╟── Cannot resolve member 'value' of a value with unknown shape.
-//│ ╟── This abstract type does not specify a member interface.
-//│ ║  l.89: 	let box = (new Box(Item(8)) as Box[in Item])
-//│ ╙──      	                                      ^^^^
+//│ ╟── This type argument specifies only an input bound.
+//│ ║  l.91: 	let box = (new Box(Item(8)) as Box[in Item])
+//│ ║        	                                   ^^^^^^^
+//│ ╙── Values read through it have no output bound more specific than 'Any'.
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ box = Box(Item(8))
 

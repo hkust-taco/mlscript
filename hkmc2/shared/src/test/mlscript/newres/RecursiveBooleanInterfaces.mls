@@ -287,7 +287,7 @@ type Loop = First[Loop]
 type Loop = ~Loop
 //│ ╔══[COMPILATION ERROR] Resolution error in negation type
 //│ ║  l.287: 	type Loop = ~Loop
-//│ ║         	             ^^^^
+//│ ║         	            ^^^^^
 //│ ╟── Unguarded recursive type alias 'Loop'.
 //│ ║  l.287: 	type Loop = ~Loop
 //│ ║         	             ^^^^

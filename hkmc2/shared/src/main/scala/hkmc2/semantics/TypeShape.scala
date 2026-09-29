@@ -122,13 +122,20 @@ final class TypeResolution(val source: Term, report: Ls[(Message, Opt[Loc])] => 
   * direction of a constraint subsequently applied to the interpreted type.
   */
 final case class DeclaredType(resolution: TypeResolution, bindings: Map[VarSymbol, DeclaredType],
-    instances: TypeSubstitution, positive: Bool):
+    instances: TypeSubstitution, positive: Bool)(val origin: Opt[TypeInterfaceReason]):
+  /** Diagnostic evidence is not part of type equality or cache keys. Retain one
+    * witness when normalizing/substituting the type; do not accumulate paths.
+    * A use's witness takes precedence over evidence in a shared cached reference.
+    */
+  def withOrigin(witness: Opt[TypeInterfaceReason]): DeclaredType =
+    copy()(witness.orElse(origin))
+
   /** Instantiation changes references to source binders, never expands their bounds.
     * A reference already interpreted in another call retains that interpretation.
     * The finite map contains original binders and canonical site instances only.
     */
   def instantiate(substitution: TypeSubstitution): DeclaredType =
-    copy(instances = substitution.withOverrides(instances))
+    copy(instances = substitution.withOverrides(instances))(origin)
 
 /** A type reference observed from a common comparison scope. The marks belong
   * to this endpoint: reversing a constraint swaps endpoints, not an expanded
