@@ -518,9 +518,14 @@ class ClassTagsTransformer(
           case Return(result) => Assign(resultSymbol, result, End())
 
       private def rewriteShapeMatch(call: Call, scrutinee: Path, branchArgs: List[Arg])(k: Result => Block): Opt[Block] =
-        call.metadata.annotations.collectFirst:
+        val annotation = call.metadata.annotations.collectFirst:
           case Annot.MatchShapes(patterns) => patterns
-        .flatMap: patterns =>
+        if annotation.isEmpty then
+          summon[Raise].apply(ErrorReport(
+            msg"shape.match must be annotated with @matchShapes." -> call.toLoc :: Nil,
+            source = Diagnostic.Source.Compilation,
+          ))
+        annotation.flatMap: patterns =>
           val branches = branchArgs.map(arg => getBranch(arg.value))
           val malformedReasons =
             (if patterns.size =/= branchArgs.size then
@@ -574,7 +579,10 @@ class ClassTagsTransformer(
                       msg"Shape tag $tag for ${taggedShape.show} can fall into more than one shape.match branch." -> call.toLoc ::
                       branchIndices.map: index =>
                         msg"It can fall into branch ${index + 1}, matched by ${patternShapes(index).show}." -> patterns(index).toLoc
-                    summon[Raise].apply(WarningReport(messages))
+                    summon[Raise].apply(ErrorReport(
+                      messages,
+                      source = Diagnostic.Source.Compilation,
+                    ))
                   N
                 else
                   val matchingBranches = patternShapes.zip(branchDefns).flatMap: (patternShape, branch) =>
