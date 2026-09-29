@@ -702,20 +702,36 @@ end ClassTagsTransformer
 
 
 object ClassTagsTransformer:
-  private def mkWeb(entries: WebEntryCollector.EntryPoints): Web =
-    val result = FlowWebComputation[ProdStrat, ConcreteCtorConsumer | ProdStrat](
+  private type WebProducer = ProdStrat | WebEntryCollector.EntryPoints
+  private type WebConsumer = ConcreteCtorConsumer | ProdStrat | WebEntryCollector.EntryPoints
+
+  private def mkWeb(
+    entries: WebEntryCollector.EntryPoints,
+    entriesByProducer: Map[Ctor, List[WebEntryCollector.EntryPoints]],
+    entriesByConsumer: Map[ConcreteCtorConsumer, List[WebEntryCollector.EntryPoints]],
+  ): Web =
+    val result = FlowWebComputation[WebProducer, WebConsumer](
       producer => producer match
         case ctor: Ctor =>
           val consumers = ctor.dests.iterator.collect:
-            case consumer: ConcreteCtorConsumer =>
-              consumer: ConcreteCtorConsumer | ProdStrat
-          consumers ++ ctor.args.iterator.map(_._2)
-        case variable: StratVar => variable.lowerBounds
+            case consumer: ConcreteCtorConsumer => consumer: WebConsumer
+          consumers
+            ++ ctor.args.iterator.map(arg => arg._2: WebConsumer)
+            ++ entriesByProducer.getOrElse(ctor, Nil) // also connect other entries in the same function to the current web
+        case variable: StratVar =>
+          variable.lowerBounds.iterator.map(producer => producer: WebConsumer)
+        case entries: WebEntryCollector.EntryPoints =>
+          entries.producers.iterator.map(producer => producer: WebConsumer)
+            ++ entries.consumers
         case _ => Nil,
       consumer => consumer match
-        case consumer: ConcreteCtorConsumer => consumer.srcs
-        case variable: StratVar => variable.lowerBounds
-        case producer: ProdStrat => producer :: Nil,
+        case consumer: ConcreteCtorConsumer =>
+          consumer.srcs.iterator.map(producer => producer: WebProducer)
+            ++ entriesByConsumer.getOrElse(consumer, Nil) // also connect other entries in the same function to the current web
+        case variable: StratVar =>
+          variable.lowerBounds.iterator.map(producer => producer: WebProducer)
+        case producer: ProdStrat => (producer: WebProducer) :: Nil
+        case entries: WebEntryCollector.EntryPoints => (entries: WebProducer) :: Nil,
       entries.producers,
       entries.consumers,
     )
@@ -727,6 +743,12 @@ object ClassTagsTransformer:
     )
 
   private def mkWebs(entryPoints: List[WebEntryCollector.EntryPoints]) =
+    val entriesByProducer = entryPoints.iterator // other entrypoints in the same function as the producer
+      .flatMap(entries => entries.producers.map(_ -> entries))
+      .toList.groupMap(_._1)(_._2)
+    val entriesByConsumer = entryPoints.iterator // other entrypoints in the same function as the consumer
+      .flatMap(entries => entries.consumers.map(_ -> entries))
+      .toList.groupMap(_._1)(_._2)
     val coveredProducers = MutSet.empty[Ctor]
     val coveredConsumers = MutSet.empty[ConcreteCtorConsumer]
     val webs = ListBuffer.empty[Web]
@@ -736,7 +758,7 @@ object ClassTagsTransformer:
           && !entries.producers.exists(coveredProducers)
           && !entries.consumers.exists(coveredConsumers)
       then
-        val web = mkWeb(entries)
+        val web = mkWeb(entries, entriesByProducer, entriesByConsumer)
         coveredProducers ++= web.markedProducers
         coveredConsumers ++= web.markedConsumers
         webs += web

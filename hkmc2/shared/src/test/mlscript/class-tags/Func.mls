@@ -645,3 +645,76 @@ fun bar(x, y) =
 //│ };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
+
+class Box(val x)
+class A(val x)
+class B(val x)
+//│ >>> start class-tags collection-phase
+//│ <<< end class-tags collection-phase
+//│ >>> start class-tags transform-phase
+//│ <<< end class-tags transform-phase
+
+:ssjs
+private fun inspect(value) =
+  @matchShapes(Box(_)) shape.match of value, () => 0
+fun first() =
+  inspect(new Box(0))
+  let value = new A(0)
+  @matchShapes(A(_)) shape.match of value, () => 1
+fun second() =
+  inspect(new Box(0))
+  let value = new B(0)
+  @matchShapes(B(_)) shape.match of value, () => 2
+//│ >>> start class-tags collection-phase
+//│ class-tags collection-phase > track consumption at match@0 in inspect
+//│ class-tags collection-phase > track construction of A@3, Box@1 in first
+//│ class-tags collection-phase > track consumption at match@4 in first
+//│ class-tags collection-phase > track construction of Box@5, B@7 in second
+//│ class-tags collection-phase > track consumption at match@8 in second
+//│ <<< end class-tags collection-phase
+//│ >>> start class-tags web-computation-phase
+//│ class-tags web-computation-phase > web 0:
+//│ class-tags web-computation-phase >   producers: Box@1, A@3, Box@5, B@7
+//│ class-tags web-computation-phase >   pattern matches: match@0, match@4, match@8
+//│ <<< end class-tags web-computation-phase
+//│ >>> start class-tags transform-phase
+//│ class-tags transform-phase > allocated tag 0 for Box(x: 0)
+//│ class-tags transform-phase > allocated tag 1 for A(x: 0)
+//│ class-tags transform-phase > allocated tag 2 for B(x: 0)
+//│ class-tags transform-phase > match shapes Box(x: _) against Box(x: 0)@0
+//│ class-tags transform-phase > match shapes A(x: _) against A(x: 0)@1
+//│ class-tags transform-phase > match shapes B(x: _) against B(x: 0)@2
+//│ <<< end class-tags transform-phase
+//│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
+//│ let inspect, first, second;
+//│ inspect = function inspect(value) {
+//│   runtime.checkArgs("inspect", 1, true, arguments.length);
+//│   if (value.__tag$ === 0) {
+//│     return 0
+//│   }
+//│   return 0;
+//│ };
+//│ first = function first() {
+//│   runtime.checkArgs("first", 0, true, arguments.length);
+//│   let tmp, tmp1;
+//│   tmp = (new Box1.class(0));
+//│   tmp.__tag$ = 0;
+//│   tmp1 = (new A1.class(0));
+//│   tmp1.__tag$ = 1;
+//│   if (tmp1.__tag$ === 1) {
+//│     return 1
+//│   }
+//│   return 1;
+//│ };
+//│ second = function second() {
+//│   runtime.checkArgs("second", 0, true, arguments.length);
+//│   let tmp, tmp1;
+//│   tmp = (new Box1.class(0));
+//│   tmp.__tag$ = 0;
+//│   tmp1 = (new B1.class(0));
+//│   tmp1.__tag$ = 2;
+//│   if (tmp1.__tag$ === 2) { return 2 }
+//│   return 2;
+//│ };
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
