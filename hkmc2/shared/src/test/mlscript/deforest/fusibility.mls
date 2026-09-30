@@ -58,8 +58,8 @@ fun c(p) =
   cl() + cl()
 c(AA(7))
 //│ deforest > >>> non-affine syms >>>
-//│ deforest > cap_ub_(term:lambda,0)_for_c_for_c¹
-//│ deforest > cap_ub_(term:lambda,0)_for_c_for_c⁰
+//│ deforest > cap_ub_(term:lambda,0)_for_c¹
+//│ deforest > cap_ub_(term:lambda,0)_for_c⁰
 //│ deforest > cl_for_c¹
 //│ deforest > cl_for_c⁰
 //│ deforest > lambda_for_c¹
@@ -109,7 +109,7 @@ fun apply(f, x) = f(x) + f(x)
 apply(c, AA(3))
 //│ deforest > >>> non-affine syms >>>
 //│ deforest > c_for_c⁰
-//│ deforest > cap_ub_(term:c,0)_for_c_for_c⁰
+//│ deforest > cap_ub_(term:c,0)_for_c⁰
 //│ deforest > f_for_apply¹
 //│ deforest > f_for_apply⁰
 //│ deforest > tmp⁰
@@ -197,14 +197,14 @@ nest_consume(nest_pickB, nest_prod(10))
 //│ deforest > >>> non-affine syms >>>
 //│ deforest > arg$AA$0$_for_nest_consume¹
 //│ deforest > arg$AA$0$_for_nest_consume⁰
-//│ deforest > cap_ub_(term:nest_pickB,0)_for_nest_pickB_for_nest_pickB⁰
+//│ deforest > cap_ub_(term:nest_pickB,0)_for_nest_pickB⁰
 //│ deforest > f_for_nest_consume¹
 //│ deforest > f_for_nest_consume⁰
 //│ deforest > i_for_nest_consume¹
 //│ deforest > i_for_nest_consume⁰
 //│ deforest > nest_pickB_for_nest_pickB⁰
-//│ deforest > sel_res_for_nest_consume_for_nest_consume¹
-//│ deforest > sel_res_for_nest_consume_for_nest_consume⁰
+//│ deforest > sel_res_for_nest_consume¹
+//│ deforest > sel_res_for_nest_consume⁰
 //│ deforest > tmp_for_nest_prod⁰
 //│ deforest > x_for_nest_prod⁰
 //│ deforest > <<< non-affine syms <<<
@@ -224,8 +224,8 @@ fun length(ls) = if ls is
 fun from(n, acc) = if n == 0 then acc else from(n - 1, n :: acc)
 length(from(5, Nil))
 //│ deforest > >>> non-affine syms >>>
-//│ deforest > call_res_for_from_for_from¹
-//│ deforest > call_res_for_from_for_from⁰
+//│ deforest > call_res_for_from¹
+//│ deforest > call_res_for_from⁰
 //│ deforest > n_for_from¹
 //│ deforest > n_for_from⁰
 //│ deforest > tmp_for_from¹
@@ -410,12 +410,12 @@ fun foo(a) =
       f() + f()
 foo of AA of () => 1
 //│ deforest > >>> non-affine syms >>>
-//│ deforest > cap_ub_(term:lambda,0)_for_lambda_for_lambda⁰
+//│ deforest > cap_ub_(term:lambda,0)_for_lambda⁰
 //│ deforest > f_for_foo¹
 //│ deforest > f_for_foo⁰
 //│ deforest > lambda_for_lambda⁰
-//│ deforest > sel_res_for_foo_for_foo¹
-//│ deforest > sel_res_for_foo_for_foo⁰
+//│ deforest > sel_res_for_foo¹
+//│ deforest > sel_res_for_foo⁰
 //│ deforest > <<< non-affine syms <<<
 //│ deforest > >>> accumulator syms >>>
 //│ deforest > <<< accumulator syms <<<
