@@ -86,7 +86,7 @@ values([Item(4)]).map((item, ...) => item.value)
 :ge
 [1].map(x => x)
 //│ ╔══[COMPILATION ERROR] Resolution error in function type
-//│ ║  l.162: 	  fun map[U](f: (T, Int, Array[T]) -> U): Array[U]
+//│ ║  l.167: 	  fun map[U](f: (T, Int, Array[T]) -> U): Array[U]
 //│ ║         	                ^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Callback parameter list does not match its declared function type.
 //│ ║  in Arrays.mls:87
@@ -141,15 +141,15 @@ new Array[Int](1, 2)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Class 'Array' expected 1 argument, but got 2
 //│ ║  in ../decls/Prelude.mls
-//│ ║  l.149: 	declare class Array[T](val length: Int): Array[T] with
+//│ ║  l.154: 	declare class Array[T](val length: Int): Array[T] with
 //│ ║         	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.150: 	  fun join(...separators): Str
+//│ ║  l.155: 	  fun join(...separators): Str
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.151: 	  fun reverse(): Array[T]
+//│ ║  l.156: 	  fun reverse(): Array[T]
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.152: 	  fun sort(...compare): Array[T]
+//│ ║  l.157: 	  fun sort(...compare): Array[T]
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.153: 	... (more lines omitted) ...
+//│ ║  l.158: 	... (more lines omitted) ...
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ = [1, 2]
 
@@ -160,15 +160,15 @@ new Array[Int]()
 //│ ║         	^^^^^^^^^^^^^^^^
 //│ ╟── Class 'Array' expected 1 argument, but got 0
 //│ ║  in ../decls/Prelude.mls
-//│ ║  l.149: 	declare class Array[T](val length: Int): Array[T] with
+//│ ║  l.154: 	declare class Array[T](val length: Int): Array[T] with
 //│ ║         	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.150: 	  fun join(...separators): Str
+//│ ║  l.155: 	  fun join(...separators): Str
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.151: 	  fun reverse(): Array[T]
+//│ ║  l.156: 	  fun reverse(): Array[T]
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.152: 	  fun sort(...compare): Array[T]
+//│ ║  l.157: 	  fun sort(...compare): Array[T]
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.153: 	... (more lines omitted) ...
+//│ ║  l.158: 	... (more lines omitted) ...
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ = []
 
@@ -224,7 +224,7 @@ class Total(val total: Int)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Function 'reduce' expected 2 arguments, but got 1
 //│ ║  in ../decls/Prelude.mls
-//│ ║  l.170: 	  fun reduce[U](f: (U, T, Int, Array[T]) -> U, initial: U): U
+//│ ║  l.175: 	  fun reduce[U](f: (U, T, Int, Array[T]) -> U, initial: U): U
 //│ ╙──       	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ = 3
 

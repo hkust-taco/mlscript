@@ -60,7 +60,7 @@ class View(val underlying, val start, val end) extends LazyFT with
   fun iterator() =
     let idx = start
     let until = underlying.length - end
-    Iterator of () =>
+    Iter.Iterator of () =>
       if idx < until then
         let next = underlying.at(idx)
         set idx = idx + 1

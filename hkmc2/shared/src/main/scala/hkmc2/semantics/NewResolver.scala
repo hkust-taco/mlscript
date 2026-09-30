@@ -2132,6 +2132,14 @@ class NewResolver:
         return
       case _ => ()
     lhs match
+      case Marked(nominal: NominalInstanceView, _) if nominal.isInstanceOfClass(prelude.builtins.Function.defn.get) =>
+        // The builtin Function class guarantees callability, including through
+        // aliases and subclasses, but supplies neither an arity nor a result
+        // interface. Check the argument tuple and leave arity checks to runtime;
+        // the result must remain unknown rather than acquiring dynamic access.
+        checkArgumentArity(args, 0, true, res, lhs)(_ => ())
+        publish(UnknownValueShape.at(res))
+        return
       case Marked(original: CallableTypeShape, context) =>
         val viewed = instantiateShape(original, instances) match
           case callable: CallableTypeShape => callable

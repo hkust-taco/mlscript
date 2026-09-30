@@ -1,0 +1,76 @@
+:.
+
+// Function annotations expose callability without requiring an observed call.
+fun unused(f: Function) = f(1)
+
+// Arity is unknown: zero, multiple, and spread arguments are all permitted.
+:expect 42
+fun call0(f: Function) = f()
+fun call2(f: Function) = f(20, 22)
+fun spread(f: Function, args: Array[Int]) = f(...args)
+call0(() => call2((x, y) => spread((a, b) => a + b, [x, y])))
+//│ = 42
+
+// Aliases, stored values, and nested scopes retain builtin identity.
+:expect 42
+type Callback = Function
+class Holder(val callback: Callback)
+fun nested(holder: Holder) =
+  fun inner() = holder.callback(41)
+  inner()
+nested(Holder((x) => x + 1))
+//│ = 42
+
+// A nominal subclass retains the callability of Function.
+class CallbackClass extends Function
+fun inherited(f: CallbackClass) = f(1)
+
+// A call does not expose the concrete callback's result members.
+:ge
+class Item(val value: Int)
+fun read(f: Function) = f().value
+read(() => Item(42))
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.31: 	fun read(f: Function) = f().value
+//│ ║        	                        ^^^^^^^^^
+//│ ╟── Cannot resolve member 'value' of a value with unknown shape.
+//│ ╟── The shape of this value is unknown.
+//│ ║  l.31: 	fun read(f: Function) = f().value
+//│ ╙──      	                        ^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// Nor does it authorize another call on the unknown result.
+:ge
+fun curried(f: Function) = f(1)(2)
+curried((x) => (y) => x + y)
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.44: 	fun curried(f: Function) = f(1)(2)
+//│ ║        	                           ^^^^^^^
+//│ ╟── Value of unknown shape cannot be called like a function.
+//│ ║  l.44: 	fun curried(f: Function) = f(1)(2)
+//│ ║        	                           ^^^^
+//│ ╟── The shape of this value is unknown.
+//│ ║  l.44: 	fun curried(f: Function) = f(1)(2)
+//│ ╙──      	                           ^^^^
+//│ = 3
+
+// Knowing that a value is callable does not permit arbitrary member access.
+:ge
+fun missing(f: Function) = f.nonexistent
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.59: 	fun missing(f: Function) = f.nonexistent
+//│ ║        	                           ^^^^^^^^^^^^^
+//│ ╟── Value of type 'Function' does not contain member 'nonexistent'
+//│ ║  l.59: 	fun missing(f: Function) = f.nonexistent
+//│ ╙──      	               ^^^^^^^^
+
+// A user-defined class named Function is not the builtin.
+:ge
+class Function
+fun shadowed(f: Function) = f(1)
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.70: 	fun shadowed(f: Function) = f(1)
+//│ ║        	                            ^^^^
+//│ ╟── Value of type 'Function' cannot be called like a function.
+//│ ║  l.70: 	fun shadowed(f: Function) = f(1)
+//│ ╙──      	                ^^^^^^^^
