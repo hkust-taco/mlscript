@@ -1,0 +1,95 @@
+:noInline
+
+:global
+:wasm
+
+
+data class Box(x)
+//│ Wasm result:
+//│ = {}
+
+
+// a cast observes its operand even when the cast's result is unused, so the allocation must remain live
+:flowBasedOpt mono
+:soir
+fun cast() =
+  let x = Box(1)
+  val unused: Box = x as Object
+  42
+cast()
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ define cast⁰ as fun cast¹() {
+//│   let unused, x;
+//│   set x = Box⁰(1);
+//│   define unused as val unused⁰ = (x as! Box¹);
+//│   return 42
+//│ };
+//│ return cast¹()
+//│ Wasm result:
+//│ = 42
+
+:flowBasedOpt mono
+:soir
+fun cast() =
+  let x = Box(1)
+  val unused = x as Object
+  val tmp: Box = unused
+  42
+cast()
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ define cast² as fun cast³() {
+//│   let tmp, unused, x;
+//│   set x = Box⁰(1);
+//│   define unused as val unused¹ = x;
+//│   define tmp as val tmp⁰ = (unused¹ as! Box¹);
+//│   return 42
+//│ };
+//│ return cast³()
+//│ Wasm result:
+//│ = 42
+
+
+
+:flowBasedOpt mono
+:soir
+fun f() =
+  fun mk(): Box = Box(1)
+  val u: Box = mk()
+  42
+f()
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ define f⁰ as fun f¹() {
+//│   let mk;
+//│   define mk as fun mk⁰() { return (Box⁰(1) as! Box¹) };
+//│   do mk⁰();
+//│   return 42
+//│ };
+//│ return f¹()
+//│ Wasm result:
+//│ = 42
+
+
+
+// although dead param elim removes the param, the checked cast output due to
+// the call to `take` still consumes the `Box(1)` so the allocation is not removed
+:flowBasedOpt mono
+:soir
+fun f() =
+  fun take(b: Box) = b
+  val u = take(Box(1))
+  42
+f()
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ define f² as fun f³() {
+//│   let take, tmp;
+//│   define take as fun take⁰() {
+//│     return undefined
+//│   };
+//│   set tmp = Box⁰(1);
+//│   do (tmp as! Box¹);
+//│   do take⁰();
+//│   return 42
+//│ };
+//│ return f³()
+//│ Wasm result:
+//│ = 42

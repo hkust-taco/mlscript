@@ -1,6 +1,6 @@
 :.
 // NOTE: due to conflict between flow analysis and lifter
-:deadParamElim off
+:flowBasedOpt off
 
 
 // * Lifting an object may require it to gain some mutable fields

@@ -121,10 +121,10 @@ class CompilerCtx(
         case _ => t.subTerms.exists(findQuote)
       val hasQuote = findQuote(blk0)
       val blk = new Term.Blk(
-        Import(State.runtimeSymbol, paths.runtimeFile.toString, paths.runtimeFile) ::
+        Import(State.runtimeSymbol, paths.runtimeFile.toString, paths.runtimeFile)(N) ::
           // Only import `Term.mls` when necessary.
           (if hasQuote then
-            Import(State.termSymbol, paths.termFile.toString, paths.termFile) :: blk0.stats
+            Import(State.termSymbol, paths.termFile.toString, paths.termFile)(N) :: blk0.stats
           else
             blk0.stats),
         blk0.res

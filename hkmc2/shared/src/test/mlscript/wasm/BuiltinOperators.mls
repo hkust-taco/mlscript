@@ -81,7 +81,9 @@ fun constOf(x: Int) = wasm.ref.i31(wasm.i32.const(x))
 // not used as an immediate (or just do it away entirely).
 :ge
 wasm.i32.const(-1)
-//│ ═══[COMPILATION ERROR] Wasm intrinsic 'i32.const' expects an integer literal immediate
+//│ ╔══[COMPILATION ERROR] Wasm intrinsic 'i32.const' expects an integer literal immediate
+//│ ║  l.83: 	wasm.i32.const(-1)
+//│ ╙──      	               ^^
 
 
 // The remaining arithmetic instructions. Each runs on operands whose result identifies it - `-1`, `42`, `3`

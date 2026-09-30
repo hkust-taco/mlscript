@@ -18,22 +18,27 @@ import hkmc2.Message.MessageContext
 
 final case class QuantVar(sym: VarSymbol, ub: Opt[Term], lb: Opt[Term])
 
-enum Annot extends AutoLocated:
-  case Untyped
-  case Modifier(mod: Keyword)
-  case Trm(trm: Term)
+/** Each annotation occurrence owns its source span, including marker annotations.
+  * The auxiliary location does not affect equality or matching by annotation kind.
+  */
+enum Annot extends Located:
+  val toLoc: Opt[Loc]
+
+  case Untyped()(val toLoc: Opt[Loc])
+  case Modifier(mod: Keyword)(val toLoc: Opt[Loc])
+  case Trm(trm: Term)(val toLoc: Opt[Loc])
   // NOTE: The presence of TailRec and TailCall annotations does not affect whether a function is optimized or not;
   // it only affects whether a warning is thrown if the function/call is not actually tail-recursive.
-  case TailRec
-  case TailCall
-  case Inline
-  case NoInline
-  case Generator
-  case Async
-  case RaiseEffects
+  case TailRec()(val toLoc: Opt[Loc])
+  case TailCall()(val toLoc: Opt[Loc])
+  case Inline()(val toLoc: Opt[Loc])
+  case NoInline()(val toLoc: Opt[Loc])
+  case Generator()(val toLoc: Opt[Loc])
+  case Async()(val toLoc: Opt[Loc])
+  case RaiseEffects()(val toLoc: Opt[Loc])
   // Whether the function is guaranteed to not raise effects.
-  case MayNotRaiseEffects
-  case Config(modify: hkmc2.Config => hkmc2.Config)
+  case Pure()(val toLoc: Opt[Loc])
+  case Config(modify: hkmc2.Config => hkmc2.Config)(val toLoc: Opt[Loc])
   // Marks if a function or lambda is one-shot, i.e. called at most once.
   // Functions with multiple parameter lists are considered here as a chain of
   // function values. `whichParamList` is the zero-based index of the parameter
@@ -44,7 +49,7 @@ enum Annot extends AutoLocated:
   //   each function value produced by `f(a)` is one-shot;
   // - its list of annotations containing both `Affine(0)` and `Affine(1)` says that
   //   `f` is one-shot and each function value produced by `f(a)` is also one-shot.
-  case Affine(whichParamList: Int)
+  case Affine(whichParamList: Int)(val toLoc: Opt[Loc])
   
   def symbol: Opt[Symbol] = this match
     case Trm(trm) => trm.symbol
@@ -52,48 +57,31 @@ enum Annot extends AutoLocated:
   
   def subTerms: Vector[Term] = this match
     case Trm(trm) => Vector.single(trm)
-    case _: Modifier | Untyped | TailRec | TailCall | Inline | NoInline
-      | Generator | Async | RaiseEffects | MayNotRaiseEffects | _: Config | _: Affine => Vector.empty
-  
-  def children: Vector[Located] = this match
-    case Trm(trm) => Vector.single(trm)
-    // case Modifier(kw) => Vector.single(kw) // TODO: make `kw` a `Keywrd`
-    case _: Modifier | Untyped | TailRec | TailCall | Inline | NoInline
-      | Generator | Async | RaiseEffects | MayNotRaiseEffects | _: Config | _: Affine => Vector.empty
+    case _: Modifier | Untyped() | TailRec() | TailCall() | Inline() | NoInline()
+      | Generator() | Async() | RaiseEffects() | Pure() | _: Config | _: Affine => Vector.empty
   
   def show(using Scope, ShowCfg, Raise): Document = this match
-    case Untyped => doc"@untyped"
-    case Inline => doc"@inline"
-    case NoInline => doc"@noInline"
-    case Generator => doc"@generator"
-    case Async => doc"@async"
-    case RaiseEffects => doc"@raiseEffects"
-    case TailRec => doc"@tailrec"
-    case TailCall => doc"@tailcall"
+    case Untyped() => doc"@untyped"
+    case Inline() => doc"@inline"
+    case NoInline() => doc"@noInline"
+    case Generator() => doc"@generator"
+    case Async() => doc"@async"
+    case RaiseEffects() => doc"@raiseEffects"
+    case TailRec() => doc"@tailrec"
+    case TailCall() => doc"@tailcall"
     case Affine(n) => doc"@affine($n)"
     case Modifier(mod) => doc"@${mod.name}"
-    case MayNotRaiseEffects => doc"@mayNotRaiseEffects"
+    case Pure() => doc"@pure"
     case Trm(trm) => doc"@${trm.show}"
     case Config(_) => doc"@config(...)"
   
   def mkClone(using State): Annot = this match
-    case Untyped => Untyped
-    case Modifier(mod) => Modifier(mod)
-    case Trm(trm) => Trm(trm.mkClone)
-    case TailRec => TailRec
-    case TailCall => TailCall
-    case Inline => Inline
-    case NoInline => NoInline
-    case Generator => Generator
-    case Async => Async
-    case RaiseEffects => RaiseEffects
-    case MayNotRaiseEffects => MayNotRaiseEffects
-    case c: Config => c
-    case a: Affine => a
+    case Trm(trm) => Trm(trm.mkClone)(toLoc)
+    case _ => this
 
 object Annot:
   
-  val Private = Modifier(Keyword.`private`)
+  val Private = Modifier(Keyword.`private`)(N)
   
   /** The `declare` modifier in `annotations`, if present. */
   def declareModifierOf(annotations: Ls[Annot]): Opt[Annot.Modifier] = annotations.collectFirst:
@@ -267,7 +255,7 @@ object Resolvable:
         Nil,
         if defn.tparams.isEmpty
         then N
-        else S(defn.tparams.map(tp => Param(FldFlags.empty, tp.sym, N, Modulefulness.none))), 
+        else S(defn.tparams.map(tp => Param(FldFlags.empty, tp.sym, N, Modulefulness.none)(tp.toLoc))),
         defn.rhs,
         TermDefFlags.empty, // TODO: handle class-like definitions with flags
         Modulefulness.none, // TODO: handle modulefulness for class-like definitions
@@ -278,7 +266,7 @@ object Resolvable:
         defn.paramsOpt.toList ::: defn.auxParams, 
         if defn.tparams.isEmpty
         then N
-        else S(defn.tparams.map(tp => Param(FldFlags.empty, tp.sym, N, Modulefulness.none))), 
+        else S(defn.tparams.map(tp => Param(FldFlags.empty, tp.sym, N, Modulefulness.none)(tp.toLoc))),
         N, // TODO: handle class-like definitions with signatures
         TermDefFlags.empty, // TODO: handle class-like definitions with flags
         Modulefulness.none, // TODO: handle modulefulness for class-like definitions
@@ -325,7 +313,7 @@ case class SrcScope(outer: Elaborator.OuterCtx, parent: Opt[SrcScope]):
 object SrcScope:
   given s: Ctx => SrcScope = summon[Ctx].scope
 
-enum Term extends Statement:
+enum Term extends Statement, AutoLocated:
   case Error()
   case UnitVal()
   case Missing // Placeholder terms that were not elaborated due to the "lightweight" elaboration mode `Mode.Light`
@@ -646,16 +634,16 @@ object ShowCfg:
 end ShowCfg
 
 
-sealed trait Statement extends AutoLocated, ProductWithExtraInfo:
+sealed trait Statement extends Located, ProductWithExtraInfo:
   
   def mkClone(using State): Statement = this match
     case t: Term => lastWords(s"overridden implementation")
     case d: Definition => ???
-    case imp: Import => Import(imp.sym, imp.str, imp.file)
-    case LetDecl(sym, annotations) => LetDecl(sym, annotations.map(_.mkClone))
+    case imp: Import => Import(imp.sym, imp.str, imp.file)(imp.toLoc)
+    case LetDecl(sym, annotations) => LetDecl(sym, annotations.map(_.mkClone))(toLoc)
     case RcdField(field, rhs) => RcdField(field.mkClone, rhs.mkClone)
     case RcdSpread(rcd) => RcdSpread(rcd.mkClone)
-    case DefineVar(sym, rhs) => DefineVar(sym, rhs.mkClone)
+    case DefineVar(sym, rhs) => DefineVar(sym, rhs.mkClone)(toLoc)
     case sc: SetConfig => sc
   
   def describe: Str =
@@ -984,16 +972,16 @@ sealed trait Statement extends AutoLocated, ProductWithExtraInfo:
     case LeadingDotSel(nme) => s"_?_.${nme.name}"
     case SetConfig(_) => "#config(...)"
 
-final case class LetDecl(sym: LocalVarSymbol | TermSymbol, annotations: Ls[Annot]) extends Statement
+final case class LetDecl(sym: LocalVarSymbol | TermSymbol, annotations: Ls[Annot])(val toLoc: Opt[Loc]) extends Statement
 
-final case class RcdField(field: Term, rhs: Term) extends Statement
-final case class RcdSpread(rcd: Term) extends Statement
+final case class RcdField(field: Term, rhs: Term) extends Statement, AutoLocated
+final case class RcdSpread(rcd: Term) extends Statement, AutoLocated
 
-final case class DefineVar(sym: LocalSymbol | TermSymbol, rhs: Term) extends Statement
+final case class DefineVar(sym: LocalSymbol | TermSymbol, rhs: Term)(val toLoc: Opt[Loc]) extends Statement
 
 /** A global configuration change directive (`#config(...)`).
   * Records a function that modifies the current compiler configuration. */
-final case class SetConfig(modify: hkmc2.Config => hkmc2.Config) extends Statement:
+final case class SetConfig(modify: hkmc2.Config => hkmc2.Config)(val toLoc: Opt[Loc]) extends Statement:
   override def toString: String = "#config(...)"
 
 enum Visibility:
@@ -1058,7 +1046,7 @@ final case class TermDefinition(
     modulefulness: Modulefulness,
     annotations: Ls[Annot],
     companion: Opt[CompanionSymbol],
-) extends CompanionValue:
+)(val toLoc: Opt[Loc]) extends CompanionValue:
   require(k is tsym.k)
   def bsym: BlockMemberSymbol = sym
   val owner = tsym.owner
@@ -1069,7 +1057,7 @@ final case class TermDefinition(
     .getOrElse(Visibility.Public)
   lazy val mayRaiseEffects: Bool =
     annotations.forall:
-      case Annot.MayNotRaiseEffects => false
+      case Annot.Pure() => false
       case _ => true
   def extraAnnotations: Ls[Annot] = annotations.filter:
     case Annot.Modifier(Keyword.`declare` | Keyword.`abstract`) => false
@@ -1143,10 +1131,15 @@ end ObjBody
   * in which case it is a `BlockMemberSymbol` when importing files explicitly
   * and a `TermSymbol` when the import is made implicitly by the compiler (eg, importing "Predef").
   * Note that the `file` Path may not represent a real file; eg when importing "fs". */
-case class Import(sym: ImportSymbol, str: Str, file: io.Path) extends Statement
+case class Import(sym: ImportSymbol, str: Str, file: io.Path)(val toLoc: Opt[Loc]) extends Statement
 
 
-sealed abstract class Declaration:
+/** Declaration spans come from the syntax that introduced them, never from semantic
+  * subterms: those omit names and may contain synthesized or unrelated source terms.
+  * Rewrites preserve the original span; declarations without source syntax use `N`.
+  */
+sealed abstract class Declaration extends Located:
+  val toLoc: Opt[Loc]
   val sym: Symbol
   
   /** Whether this declares a class, a pattern, an object, or a pattern
@@ -1218,7 +1211,8 @@ case class ModuleOrObjectDef(
   companion: Opt[ModuleCompanionSymbol],
   annotations: Ls[Annot],
 )(
-  val path: SrcScope
+  val path: SrcScope,
+  val toLoc: Opt[Loc],
 ) extends ClassLikeDef, CompanionValue:
   val ctorSym: Option[ClassCtorSymbol] = N
 
@@ -1240,7 +1234,7 @@ case class PatternDef(
      */
     pattern: Pattern,
     annotations: Ls[Annot],
-) extends ClassLikeDef:
+)(val toLoc: Opt[Loc]) extends ClassLikeDef:
   self =>
   val kind: ClsLikeKind = Pat
   val ext: Opt[New] = N
@@ -1286,14 +1280,14 @@ object ClassDef:
       annotations: Ls[Annot],
       comp: Opt[ClassCompanionSymbol],
       auxCtorParams: Ls[ParamList],
-  ): ClassDef =
+  )(toLoc: Opt[Loc]): ClassDef =
     params match
       case ps :: pss => Parameterized(owner, kind, sym.asInstanceOf// TODO: improve
         , bsym, S(ctorSym.getOrElse(lastWords("Parameterized classes should have a ctor symbol.")))
-        , tparams, ps, pss ::: auxCtorParams, ext, body, comp, annotations)
+        , tparams, ps, pss ::: auxCtorParams, ext, body, comp, annotations)(toLoc)
       case Nil => Plain(owner, kind, sym.asInstanceOf// TODO: improve
         , bsym
-        , tparams, ext, body, comp, annotations, auxParams = auxCtorParams, ctorSym = ctorSym)
+        , tparams, ext, body, comp, annotations, auxParams = auxCtorParams, ctorSym = ctorSym)(toLoc)
   
   def unapply(cls: ClassDef): Opt[(ClassSymbol, Ls[TyParam], Opt[ParamList], ObjBody)] =
     S((cls.sym, cls.tparams, cls.paramsOpt, cls.body))
@@ -1311,7 +1305,7 @@ object ClassDef:
       body: ObjBody,
       companion: Opt[ClassCompanionSymbol],
       annotations: Ls[Annot],
-  ) extends ClassDef:
+  )(val toLoc: Opt[Loc]) extends ClassDef:
     val paramsOpt: Opt[ParamList] = S(params)
   
   case class Plain(
@@ -1326,7 +1320,7 @@ object ClassDef:
       annotations: Ls[Annot],
       auxParams: List[ParamList],
       ctorSym: Opt[ClassCtorSymbol],
-  ) extends ClassDef:
+  )(val toLoc: Opt[Loc]) extends ClassDef:
     val paramsOpt: Opt[ParamList] = N
   
 end ClassDef
@@ -1339,7 +1333,7 @@ case class TypeDef(
   rhs: Opt[Term],
   companion: Opt[CompanionValue],
   annotations: Ls[Annot],
-) extends TypeLikeDef:
+)(val toLoc: Opt[Loc]) extends TypeLikeDef:
   val kind: ObjDefKind = Als
 
 
@@ -1386,7 +1380,7 @@ final case class Spd(k: SpreadKind, term: Term) extends Elem:
   def showDbg(using DebugPrinter): Str = k.str + term.showDbg
   def children: Vector[Located] = Vector.single(term)
 
-final case class TyParam(flags: FldFlags, vce: Opt[Bool], sym: VarSymbol) extends Declaration:
+final case class TyParam(flags: FldFlags, vce: Opt[Bool], sym: VarSymbol)(val toLoc: Opt[Loc]) extends Declaration:
   
   // * For variance analysis
   var isCovariant: Bool = true
@@ -1402,10 +1396,10 @@ final case class TyParam(flags: FldFlags, vce: Opt[Bool], sym: VarSymbol) extend
 
 
 object Param:
-  def simple(sym: VarSymbol) = Param(FldFlags.empty, sym, N, Modulefulness.none)
+  def simple(sym: VarSymbol) = Param(FldFlags.empty, sym, N, Modulefulness.none)(sym.toLoc)
 
 final case class Param(flags: FldFlags, sym: VarSymbol, sign: Opt[Term], modulefulness: Modulefulness)
-extends Declaration, AutoLocated:
+(val toLoc: Opt[Loc]) extends Declaration:
   var fldSym: Opt[MemberSymbol] = N
   
   val flow: FlowSymbol = sym
@@ -1420,7 +1414,6 @@ extends Declaration, AutoLocated:
   
   def subTerms: Ls[Term] = sign.toList
   
-  override protected def children: Vector[Located] = sym +: sign.toVector
   
   def show(using Scope, ShowCfg, Raise): Document =
     doc"${flags.show(true)}${sym.showName}${sign.fold(doc"")(": " :: _.show)}"
@@ -1428,8 +1421,7 @@ extends Declaration, AutoLocated:
   def showDbg(using DebugPrinter): Str = flags.show(true) + sym.showDbg + sign.fold("")(": " + _.showDbg)
 
 final case class ParamList(flags: ParamListFlags, params: Ls[Param], restParam: Opt[Param])
-extends AutoLocated:
-  override protected def children: Vector[Located] = params.toVector ++ restParam
+(val toLoc: Opt[Loc]) extends Located:
   def foreach(f: Param => Unit): Unit = (params.iterator ++ restParam).foreach(f)
   def paramCountLB: Int = params.length
   def paramCountUB: Bool = restParam.isEmpty
@@ -1447,8 +1439,8 @@ extends AutoLocated:
   def showDbg(using DebugPrinter): Str = flags.showDbg
     + (params.map(_.showDbg) ++ restParam.toList.map("..." + _.showDbg)).mkString("(", ", ", ")")
 object PlainParamList:
-  def apply(params: Ls[Param]) =
-    ParamList(ParamListFlags.empty, params, N)
+  def apply(params: Ls[Param])(toLoc: Opt[Loc]) =
+    ParamList(ParamListFlags.empty, params, N)(toLoc)
   def unapply(pl: ParamList): Opt[Ls[Param]] = pl match
     case ParamList(ParamListFlags.empty, params, N) => S(params)
     case _ => N

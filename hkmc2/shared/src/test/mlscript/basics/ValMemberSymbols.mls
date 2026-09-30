@@ -119,7 +119,7 @@ case A as a then a.x
 :sir
 :lift
 // TODO: remove this flag when the lifter problem is resolved (see: the end of ClassInFun.mls)
-:deadParamElim off
+:flowBasedOpt off
 fun foo(x, y) =
   class A(val u) with { val v = y }
   let a = new A(x)
