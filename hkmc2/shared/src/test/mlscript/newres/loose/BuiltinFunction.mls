@@ -1,0 +1,24 @@
+:.
+
+// Explicit Function annotations check erased callbacks even without strict exports.
+:ge
+private fun discard(f: Function) = ()
+discard(x => x.value)
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.6: 	discard(x => x.value)
+//│ ║       	             ^^^^^^^
+//│ ╟── Cannot resolve member 'value' of a value with unknown shape.
+//│ ║  l.5: 	private fun discard(f: Function) = ()
+//│ ║       	                       ^^^^^^^^
+//│ ╟── Parameter 'x' admits values of unknown shape.
+//│ ║  l.6: 	discard(x => x.value)
+//│ ║       	        ^
+//│ ╙── The 'Function' type does not specify parameter types.
+
+// A callback's own annotation still supplies the interface used by its body.
+:expect 42
+class Item(val value: Int)
+private fun invoke(f: Function) = f(Item(42))
+invoke((x: Item) => x.value)
+//│ = 42
+

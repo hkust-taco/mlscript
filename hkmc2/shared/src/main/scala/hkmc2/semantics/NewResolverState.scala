@@ -64,6 +64,20 @@ final class NewResolverState private (
 
   def isOwnedSym(symbol: Symbol): Bool = symbol.getState is owner
 
+  // Annotation constraints record escaping implementations in the consuming
+  // unit, including their activation context. The block's exposure pass drains
+  // these roots before sealing resolution; they are neither copied from imports
+  // nor retained across worksheet blocks. One witness suffices for each value.
+  private val exposureInputs = mutable.LinkedHashMap.empty[(TermShape, NewResolverState), ShapeProvenance]
+  def exposeValue(shape: TermShape, provenance: ShapeProvenance): Unit =
+    root.exposureInputs.getOrElseUpdate((shape, this), provenance)
+  def takeExposureInputs(): Ls[InterfaceExposure.Input] =
+    val inputs = root.exposureInputs.iterator.map:
+      case ((shape, state), provenance) => InterfaceExposure.Input(shape, state)(provenance)
+    .toList
+    root.exposureInputs.clear()
+    inputs
+
   // A listener carries its defining graph, not its defining mutable resolver.
   // Views share the consumer's host copies, but consult the source's bindings and
   // memoized nodes individually. Creating a view never traverses a source map.

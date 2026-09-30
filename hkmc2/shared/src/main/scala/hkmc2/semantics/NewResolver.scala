@@ -1247,6 +1247,7 @@ class NewResolver:
 
   private def inferTypeArguments(tpe: DeclaredType, value: TermShape, marks: Ls[Marks])(using NewResolverState): Unit =
     if !typeConstraints.add((tpe, value, marks)) then return
+    val annotation = tpe.resolution.source
     def follow(tpe: DeclaredType, args: TypeApplication, captures: Ls[Marks],
         seen: Set[TypeResolution])(using NewResolverState): Unit = if !seen(tpe.resolution) then
       val next = seen + tpe.resolution
@@ -1310,6 +1311,18 @@ class NewResolver:
           listenArgumentParts(argument.instantiate(tpe.instances)): parts =>
             follow(if positive then parts.output else parts.input, args, captures, next)
         case TypeShape.Nominal(cls) => listenInstanceViews(value): value =>
+          // Erasing a callback's signature must not erase the obligation to
+          // check its implementation. Its unannotated inputs can receive any
+          // value, independently of the calls observed through Function.
+          listenTypeViews(tpe):
+            case Marked(nominal: NominalInstanceView, _) if nominal.isInstanceOfClass(prelude.builtins.Function.defn.get) =>
+              value.enter(captures) match
+                case actual: TermShape =>
+                  val provenance = ShapeProvenance(msg"The 'Function' type does not specify parameter types." -> N :: Nil)
+                    .withTypeOrigin(annotation)
+                  rstate.exposeValue(instantiateShape(actual, rstate.instances), provenance)
+                case NoShape => ()
+            case _ => ()
           val arguments = typeArguments(tpe, args, cls.tparams).map(transportType(_, captures))
           def constrainNominal(value: TermShape)(using NewResolverState): Unit =
             val ShapeParts(actual, instances, _) = shapeParts(value)

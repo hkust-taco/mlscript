@@ -3002,6 +3002,9 @@ extends Importer:
         val values = res.stats.collect:
           case DefineVar(sym: LocalVarSymbol, rhs) => Term.SimpleRef(sym)(new Ident(sym.nme).withLocOf(rhs))
         InterfaceExposure(this).check(exports, res.res :: values)
+      else
+        // Explicit annotations still check callbacks whose signatures they hide.
+        InterfaceExposure(this).check(Nil, Nil)
     rstate.completeBlock(res)
     (res, ctx)
   
