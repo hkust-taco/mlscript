@@ -63,7 +63,7 @@ class View(val underlying, val start, val end) extends LazyArr with
   fun iterator() =
     let idx = start
     let until = underlying.length - end
-    Iter.Iterator of () =>
+    IteratorImpl of () =>
       if idx < until then
         let next = underlying.at(idx)
         set idx = idx + 1
@@ -108,7 +108,7 @@ class Splice(val bits, val len) extends LazyArr with
             set idx += 1
             Result.Next of value
       else Result.Done
-    Iter.Iterator of nextf
+    IteratorImpl of nextf
 
   fun reify = 
     let counter = 0

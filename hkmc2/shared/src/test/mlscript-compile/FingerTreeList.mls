@@ -32,7 +32,7 @@ data class View[T](e1: T, rest: FingerTree[T])
 class FingerTree[T] extends IterableBase with
   fun iterator() =
     let current = this
-    Iter.Iterator of () => if popFront(current) is
+    IteratorImpl of () => if popFront(current) is
       Nil then Result.Done
       View(head, tail) then
         set current = tail

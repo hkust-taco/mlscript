@@ -76,7 +76,7 @@ class Iterable(mk) extends IterableBase with
 
 // * Implements the `Iterator` protocol.
 // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Iteration_protocols#the_iterator_protocol
-class Iterator(val next)
+class IteratorImpl(val next)
 
 module Result with
   class Next(val value) with
@@ -100,7 +100,7 @@ fun getIterator(something) =
 
 fun adaptIterable(iterable, makeNext) = Iterable of () =>
   let iterator = getIterator of iterable
-  Iterator of makeNext of iterator
+  IteratorImpl of makeNext of iterator
 
 fun mapping(xs, op) =
   xs adaptIterable of iterator => () =>
@@ -128,7 +128,7 @@ fun flattening(xss) =
       let nextResult = nextIterator.next()
       nextResult.done then skipEmptyIterables()
       else Some of [nextIterator, nextResult.value]
-    Iterator of () =>
+    IteratorImpl of () =>
       if currentIterator is
         None then Result.Done // No more `Iterator`s means we're done.
         Some(iterator) and
@@ -185,7 +185,7 @@ fun appended(xs, ys) =
   Iterable of () =>
     let xsIterator = getIterator of xs
     let currentIterator = xsIterator
-    Iterator of () => if
+    IteratorImpl of () => if
       let next = currentIterator.next()
       next.done and
         currentIterator == xsIterator and
@@ -268,7 +268,7 @@ fun toArray(view) = Array.from(view)
 
 fun fromStack(stack) = Iterable of () =>
   let current = stack
-  Iterator of () => if current is
+  IteratorImpl of () => if current is
     Cons(head, tail) then
       set current = tail
       Result.Next of head
