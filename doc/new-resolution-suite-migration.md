@@ -81,7 +81,7 @@ The remaining option consumers have these blockers when compiled with
 | --- | --- |
 | `Block`, `Shape` | Missing nominal members and callback arity mismatches; `Block` also needs a public interface for `showArm`. |
 | `Iter`, `MutMap`, `ups/EvaluationContext` | Missing public parameter interfaces and unresolved member selections. |
-| `FingerTreeList` | Compilation exceeds the 25-second test limit. Tuple literals with several spreads, such as `concatMiddle`'s `[...ay1, ...middle, ...ax2]`, produce one candidate per combination of operand candidates, and each is matched again by `toNodes`. Candidate sets compare shapes structurally, which rehashes these deep shapes; identity-based candidate storage is the next step. |
+| `FingerTreeList` | Compilation exceeds the 25-second test limit. Tuple literals with several spreads, such as `concatMiddle`'s `[...ay1, ...middle, ...ax2]`, produce one candidate per combination of operand candidates, and each is matched again by `toNodes`. Candidate sets compare shapes structurally, which rehashes these deep shapes; identity-based candidate storage is the next step. Already fixed on branch `LPTK/new-resolution-no-hashing`. |
 | `parsing/Extension`, `ParseRule`, `Test` | Selections on values imported from legacy-resolution modules, such as `Parser.tracer`, have no resolved target. `TreeHelpers` compiles standalone; its consumers remain to be checked. |
 | `parsing/Lexer` | Calls with trailing contextual parameters leave function values where tokens are expected. The binary `~` is explicitly imported, as required to override the builtin under new open semantics. |
 | `parsing/Parser` | Pattern-field flow and unresolved nominal members. |
