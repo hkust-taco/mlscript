@@ -249,12 +249,12 @@ spreadRecord({a: 1})
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
 //│ ║  l.247: 	fun spreadRecord[A](x: A) = ({...x}).a
 //│ ║         	                            ^^^^^^^^^^
-//│ ╟── Cannot resolve member 'a' across a computed key or unknown record spread.
-//│ ║  l.247: 	fun spreadRecord[A](x: A) = ({...x}).a
-//│ ║         	                       ^
 //│ ╟── This spread has no known element shape.
 //│ ║  l.247: 	fun spreadRecord[A](x: A) = ({...x}).a
 //│ ║         	                                 ^
+//│ ╟── Cannot resolve member 'a' across a computed key or unknown record spread.
+//│ ║  l.247: 	fun spreadRecord[A](x: A) = ({...x}).a
+//│ ║         	                       ^
 //│ ╟── Type parameter 'A' does not specify a member interface.
 //│ ║  l.247: 	fun spreadRecord[A](x: A) = ({...x}).a
 //│ ╙──       	                 ^
@@ -267,12 +267,12 @@ spreadTuple([{a: 1}])
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
 //│ ║  l.265: 	fun spreadTuple[A](x: A) = [...x].0.a
 //│ ║         	                           ^^^^^^^^^^
-//│ ╟── Cannot resolve member 'a' of a value with unknown shape.
-//│ ║  l.265: 	fun spreadTuple[A](x: A) = [...x].0.a
-//│ ║         	                      ^
 //│ ╟── This spread has no known element shape.
 //│ ║  l.265: 	fun spreadTuple[A](x: A) = [...x].0.a
 //│ ║         	                               ^
+//│ ╟── Cannot resolve member 'a' of a value with unknown shape.
+//│ ║  l.265: 	fun spreadTuple[A](x: A) = [...x].0.a
+//│ ║         	                      ^
 //│ ╟── Type parameter 'A' does not specify a member interface.
 //│ ║  l.265: 	fun spreadTuple[A](x: A) = [...x].0.a
 //│ ╙──       	                ^

@@ -19,32 +19,22 @@ sealed trait Shape extends ShapeEvent, ShapeLike:
   def describe: Str
   /** Origin of the value or symbol described by this shape, independently of its use site. */
   def toLoc: Opt[Loc]
-  /** Location supporting a description of this value's interface. A nominal
-    * view's class declaration and the annotation restricting this value are
-    * different sources: interface errors use the annotation, while toLoc keeps
-    * identifying the declaration. No diagnostic text is inspected to choose it.
+  /** Keep the operation's explanation at its interface witness, after any path
+    * from the observed value to that witness. Wrappers preserve this ordering.
+    * An annotation restricting a value and its class declaration are different
+    * witnesses: interface errors use the annotation, while toLoc identifies the
+    * declaration. Diagnostic witnesses do not change shape equality.
     */
-  final def diagnosticLocation: Opt[Loc] = this match
+  final def diagnostic(message: Message): Ls[(Message, Opt[Loc])] = this match
     case value: TermShape => value.applicationHead._1 match
-      case view: NominalInstanceView => view.annotation.flatMap(_.toLoc).orElse(toLoc)
-      case view: ContextualShape => view.source.diagnosticLocation
-      case view: SpecializedShape => view.declaration.diagnosticLocation
-      case unknown: UnknownValueShape => unknown.provenance.typeOrigin.flatMap(_.toLoc).orElse(toLoc)
-      case opaque: OpaqueTypeShape => opaque.provenance.typeOrigin.flatMap(_.toLoc).orElse(toLoc)
-      case _ => toLoc
-    case _: SymShape => toLoc
-  /** Additional explanations, separate from the interface location attached to
-    * the primary message. Annotation witnesses do not change shape equality.
-    */
-  final def diagnosticNotes: Ls[(Message, Opt[Loc])] = this match
-    case value: TermShape => value.applicationHead._1 match
-      case view: ContextualShape => view.source.diagnosticNotes
-      case view: SpecializedShape => view.declaration.diagnosticNotes
-      case unknown: UnknownValueShape => unknown.provenance.diagnosticNotes
-      case opaque: OpaqueTypeShape => opaque.provenance.diagnosticNotes
-      case rigid: RigidTypeShape => rigid.provenance.diagnosticNotes
-      case _ => Nil
-    case _: SymShape => Nil
+      case view: NominalInstanceView => (message -> view.annotation.flatMap(_.toLoc).orElse(toLoc)) :: Nil
+      case view: ContextualShape => view.source.diagnostic(message)
+      case view: SpecializedShape => view.declaration.diagnostic(message)
+      case unknown: UnknownValueShape => unknown.provenance.diagnostic(message, toLoc)
+      case opaque: OpaqueTypeShape => opaque.provenance.diagnostic(message, toLoc)
+      case rigid: RigidTypeShape => rigid.provenance.diagnostic(message, toLoc)
+      case _ => (message -> toLoc) :: Nil
+    case _: SymShape => (message -> toLoc) :: Nil
   def shwDbg(using DebugPrinter): Str = this match
     // case ds: DefnShape => s"DefnShape(${ds.defn.describe} ${ds.defn.sym.showDbg})"
     case ds: DefnShape => ds.defn.sym.showDbg
@@ -737,18 +727,28 @@ final case class DynShape() extends CoreHeadShape:
   * locations, and the flattened chain are evaluated only when reporting an error.
   * Discovery retains one witness per reached shape to bound recursive paths.
   */
-final class ShapeProvenance private (notes: => Ls[(Message, Opt[Loc])], val typeOrigin: Opt[Term]):
-  lazy val diagnosticNotes: Ls[(Message, Opt[Loc])] = notes
+final class ShapeProvenance private (path: => Ls[(Message, Opt[Loc])], notes: => Ls[(Message, Opt[Loc])],
+    typeOrigin: Opt[Term]):
+  private lazy val pathNotes = path
+  private lazy val originNotes = notes
+  /** A type origin anchors the operation's explanation: first trace the value
+    * back to that annotation, then explain the interface it provides. Without
+    * an annotation witness, report the operation at its fallback location first
+    * and follow it with the reasons the value's shape is unknown.
+    */
+  def diagnostic(message: Message, fallback: Opt[Loc]): Ls[(Message, Opt[Loc])] = typeOrigin match
+    case S(source) => pathNotes ::: (message -> source.toLoc.orElse(fallback)) :: originNotes
+    case N => (message -> fallback) :: pathNotes ::: originNotes
   def via(note: => (Message, Opt[Loc])): ShapeProvenance =
-    new ShapeProvenance(note :: diagnosticNotes, typeOrigin)
-  /** The written type restricting this observation belongs on the operation's
-    * primary message; storage/exposure reasons remain separate diagnostic notes.
+    new ShapeProvenance(note :: pathNotes, originNotes, typeOrigin)
+  /** Keep the written type restricting this observation separate from the path
+    * through parameters, returns, and storage that led to the observation.
     */
   def withTypeOrigin(source: Term): ShapeProvenance =
-    new ShapeProvenance(diagnosticNotes, S(source))
+    new ShapeProvenance(pathNotes, originNotes, S(source))
 
 object ShapeProvenance:
-  def apply(notes: => Ls[(Message, Opt[Loc])]): ShapeProvenance = new ShapeProvenance(notes, N)
+  def apply(notes: => Ls[(Message, Opt[Loc])]): ShapeProvenance = new ShapeProvenance(Nil, notes, N)
   val empty = ShapeProvenance(Nil)
 
 /** An unknown input or the element of an opaque or widened spread can be any

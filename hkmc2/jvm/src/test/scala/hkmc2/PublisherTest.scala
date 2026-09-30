@@ -180,8 +180,8 @@ class PublisherTest extends AnyFunSuite:
     assert(Set(first, second).size == 1)
     assert(RecordShape.Unknown(source)(provenance) == RecordShape.Unknown(source)(provenance))
     assert(evaluated == 0)
-    assert(first.provenance.diagnosticNotes.isEmpty)
-    assert(first.provenance.diagnosticNotes.isEmpty)
+    first.provenance.diagnostic(msg"Operation failed", None)
+    first.provenance.diagnostic(msg"Operation failed", None)
     assert(evaluated == 1)
     var noteEvaluated = 0
     val extended = first.provenance.via {
@@ -189,7 +189,7 @@ class PublisherTest extends AnyFunSuite:
       msg"A deferred provenance step" -> None
     }
     assert(noteEvaluated == 0)
-    assert(extended.diagnosticNotes.size == 1)
-    assert(extended.diagnosticNotes.size == 1)
+    extended.diagnostic(msg"Operation failed", None)
+    extended.diagnostic(msg"Operation failed", None)
     assert(noteEvaluated == 1)
     assert(evaluated == 1)

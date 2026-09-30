@@ -7,12 +7,12 @@ discard(x => x.value)
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
 //│ ║  l.6: 	discard(x => x.value)
 //│ ║       	             ^^^^^^^
-//│ ╟── Cannot resolve member 'value' of a value with unknown shape.
-//│ ║  l.5: 	private fun discard(f: Function) = ()
-//│ ║       	                       ^^^^^^^^
 //│ ╟── Parameter 'x' admits values of unknown shape.
 //│ ║  l.6: 	discard(x => x.value)
 //│ ║       	        ^
+//│ ╟── Cannot resolve member 'value' of a value with unknown shape.
+//│ ║  l.5: 	private fun discard(f: Function) = ()
+//│ ║       	                       ^^^^^^^^
 //│ ╙── The 'Function' type does not specify parameter types.
 
 // A callback's own annotation still supplies the interface used by its body.
