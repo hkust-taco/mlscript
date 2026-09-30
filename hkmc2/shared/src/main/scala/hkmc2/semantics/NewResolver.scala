@@ -2138,7 +2138,11 @@ class NewResolver:
         // interface. Check the argument tuple and leave arity checks to runtime;
         // the result must remain unknown rather than acquiring dynamic access.
         checkArgumentArity(args, 0, true, res, lhs)(_ => ())
-        publish(UnknownValueShape.at(res))
+        // The call identifies the result in the flow graph, while the annotation
+        // explains its missing interface. Preserve that distinction so subsequent
+        // selections and applications both diagnose the restricting type once.
+        val provenance = ShapeProvenance(msg"The 'Function' type does not specify a return type." -> N :: Nil)
+        publish(UnknownValueShape(res)(nominal.annotation.fold(provenance)(provenance.withTypeOrigin)))
         return
       case Marked(original: CallableTypeShape, context) =>
         val viewed = instantiateShape(original, instances) match

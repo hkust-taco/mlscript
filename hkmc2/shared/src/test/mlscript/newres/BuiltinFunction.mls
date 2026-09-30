@@ -34,9 +34,9 @@ read(() => Item(42))
 //│ ║  l.31: 	fun read(f: Function) = f().value
 //│ ║        	                        ^^^^^^^^^
 //│ ╟── Cannot resolve member 'value' of a value with unknown shape.
-//│ ╟── The shape of this value is unknown.
 //│ ║  l.31: 	fun read(f: Function) = f().value
-//│ ╙──      	                        ^^^
+//│ ║        	            ^^^^^^^^
+//│ ╙── The 'Function' type does not specify a return type.
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 // Nor does it authorize another call on the unknown result.
@@ -48,20 +48,57 @@ curried((x) => (y) => x + y)
 //│ ║        	                           ^^^^^^^
 //│ ╟── Value of unknown shape cannot be called like a function.
 //│ ║  l.44: 	fun curried(f: Function) = f(1)(2)
-//│ ║        	                           ^^^^
-//│ ╟── The shape of this value is unknown.
-//│ ║  l.44: 	fun curried(f: Function) = f(1)(2)
-//│ ╙──      	                           ^^^^
+//│ ║        	               ^^^^^^^^
+//│ ╙── The 'Function' type does not specify a return type.
 //│ = 3
+
+// The diagnostic points to the written alias annotation, not its definition or call.
+:ge
+type Callback = Function
+fun aliased(f: Callback) =
+  val result = f()
+  result.value
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.60: 	  result.value
+//│ ║        	  ^^^^^^^^^^^^
+//│ ╟── Cannot resolve member 'value' of a value with unknown shape.
+//│ ║  l.58: 	fun aliased(f: Callback) =
+//│ ║        	               ^^^^^^^^
+//│ ╙── The 'Function' type does not specify a return type.
+
+// Storing a call result and capturing it preserves the outer Function annotation.
+:ge
+fun captured(f: Function) =
+  val result = f(1)
+  fun inner() = result(2)
+  inner()
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.73: 	  fun inner() = result(2)
+//│ ║        	                ^^^^^^^^^
+//│ ╟── Value of unknown shape cannot be called like a function.
+//│ ║  l.71: 	fun captured(f: Function) =
+//│ ║        	                ^^^^^^^^
+//│ ╙── The 'Function' type does not specify a return type.
+
+// Inherited callability retains the subclass annotation as its diagnostic witness.
+:ge
+fun inheritedResult(f: CallbackClass) = f().value
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.85: 	fun inheritedResult(f: CallbackClass) = f().value
+//│ ║        	                                        ^^^^^^^^^
+//│ ╟── Cannot resolve member 'value' of a value with unknown shape.
+//│ ║  l.85: 	fun inheritedResult(f: CallbackClass) = f().value
+//│ ║        	                       ^^^^^^^^^^^^^
+//│ ╙── The 'Function' type does not specify a return type.
 
 // Knowing that a value is callable does not permit arbitrary member access.
 :ge
 fun missing(f: Function) = f.nonexistent
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.59: 	fun missing(f: Function) = f.nonexistent
+//│ ║  l.96: 	fun missing(f: Function) = f.nonexistent
 //│ ║        	                           ^^^^^^^^^^^^^
 //│ ╟── Value of type 'Function' does not contain member 'nonexistent'
-//│ ║  l.59: 	fun missing(f: Function) = f.nonexistent
+//│ ║  l.96: 	fun missing(f: Function) = f.nonexistent
 //│ ╙──      	               ^^^^^^^^
 
 // A user-defined class named Function is not the builtin.
@@ -69,8 +106,8 @@ fun missing(f: Function) = f.nonexistent
 class Function
 fun shadowed(f: Function) = f(1)
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.70: 	fun shadowed(f: Function) = f(1)
-//│ ║        	                            ^^^^
+//│ ║  l.107: 	fun shadowed(f: Function) = f(1)
+//│ ║         	                            ^^^^
 //│ ╟── Value of type 'Function' cannot be called like a function.
-//│ ║  l.70: 	fun shadowed(f: Function) = f(1)
-//│ ╙──      	                ^^^^^^^^
+//│ ║  l.107: 	fun shadowed(f: Function) = f(1)
+//│ ╙──       	                ^^^^^^^^
