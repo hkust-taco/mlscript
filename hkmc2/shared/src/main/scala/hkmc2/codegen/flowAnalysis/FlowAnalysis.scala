@@ -37,7 +37,7 @@ object FlowAnalysis:
           .map: i =>
             s"${i.getReferredFun.get.name}_$i"
           .mkString("_")
-      def showInstId(using Elaborator.State): Str =
+      def showInstId(using SymbolPrinter, Raise, ShowCfg): Str =
         if instId.isEmpty then "<root>" else instId.map(_.showRefSite).mkString(".")
     
     extension (resultId: ResultId)
@@ -54,10 +54,8 @@ object FlowAnalysis:
         resultId.getResult match
         case FunRef(f, _) => Some(f)
         case _ => None
-      def showRefSite(using Elaborator.State): Str =
-        resultId.getReferredFun match
-        case Some(fun) => s"${fun.nme}@$resultId"
-        case None => s"${resultId.getResult}@$resultId"
+      def showRefSite(using SymbolPrinter, Raise, ShowCfg): Str =
+        summon[SymbolPrinter].printSymbol(resultId)
     
     extension (r: Result)
       def uid = resultToResultId.get(r) match

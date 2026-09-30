@@ -130,22 +130,11 @@ class DeadParamElimSolver(val constraintSolver: FlowConstraintSolver, traceLogge
   if tl.doTrace then
     given ShowCfg = ShowCfg.internal
 
-    def showTermSymbol(sym: TermSymbol): Str =
-      symbolPrinter.printSymbol(sym)
-
-    def showRefSite(resultId: ResultId): Str =
-      symbolPrinter.printSymbol(resultId)
-    end showRefSite
-
-    def showInstId(instId: InstantiationId): Str =
-      if instId.isEmpty then "<root>" else instId.map(showRefSite).mkString(".")
-    end showInstId
-
     def showProdFun(prodFun: ProdFun): Str =
       def showFunId(funId: FunId): Str = funId match
-        case (funSym: TermSymbol, whichParamList) => s"${showTermSymbol(funSym)}#$whichParamList"
-        case exprId: ResultId => showRefSite(exprId)
-      val inst = prodFun.instantiationId.fold("")(instId => s" @ ${showInstId(instId)}")
+        case (funSym: TermSymbol, whichParamList) => s"${symbolPrinter.printSymbol(funSym)}#$whichParamList"
+        case exprId: ResultId => exprId.showRefSite
+      val inst = prodFun.instantiationId.fold("")(instId => s" @ ${instId.showInstId}")
       s"prodfun ${showFunId(prodFun.exprId)}$inst"
     end showProdFun
     

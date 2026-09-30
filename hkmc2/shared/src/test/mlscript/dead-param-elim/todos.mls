@@ -37,7 +37,7 @@ c(p(true))
 //│ deforest > 	match: x⁰
 //│ deforest > <<< fusing <<<
 //│ eta-expansion > >>> eta-expansion targets shapes >>>
-//│ eta-expansion > p_p$p: [1, 1]
+//│ eta-expansion > p_p$p⁰: [1, 1]
 //│ eta-expansion > <<< eta-expansion targets shapes <<<
 //│ dead-param-elim > >>> dead-param-elim results >>>
 //│ dead-param-elim > <<< dead-param-elim results <<<
@@ -97,7 +97,7 @@ sumPlus(enum(3))
 //│ deforest > 	fields: ls⁰.t⁰
 //│ deforest > <<< fusing <<<
 //│ eta-expansion > >>> eta-expansion targets shapes >>>
-//│ eta-expansion > enum_enum$enum: [1, 9]
+//│ eta-expansion > enum_enum$enum⁰: [1, 9]
 //│ eta-expansion > <<< eta-expansion targets shapes <<<
 //│ dead-param-elim > >>> dead-param-elim results >>>
 //│ dead-param-elim > prodfun sumPlus_sumPlus$ls_Cons⁰#1 @ <root> -> eliminable: {0, 5}
@@ -177,7 +177,7 @@ c(p(true))
 //│ deforest > 	match: x²
 //│ deforest > <<< fusing <<<
 //│ eta-expansion > >>> eta-expansion targets shapes >>>
-//│ eta-expansion > p_p$p: [1, 0]
+//│ eta-expansion > p_p$p⁰: [1, 0]
 //│ eta-expansion > <<< eta-expansion targets shapes <<<
 //│ dead-param-elim > >>> dead-param-elim results >>>
 //│ dead-param-elim > <<< dead-param-elim results <<<
