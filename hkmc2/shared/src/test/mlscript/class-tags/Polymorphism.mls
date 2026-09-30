@@ -1,0 +1,87 @@
+:classTags debug
+:js
+:noFreeze
+
+//│ >>> start class-tags collection-phase
+//│ <<< end class-tags collection-phase
+//│ >>> start class-tags transform-phase
+//│ <<< end class-tags transform-phase
+class Box(val x)
+class A(val x)
+class B(val x)
+//│ >>> start class-tags collection-phase
+//│ <<< end class-tags collection-phase
+//│ >>> start class-tags transform-phase
+//│ <<< end class-tags transform-phase
+
+
+:ssjs
+private fun wrap(x) = new Box(x)
+fun poly(flag) =
+  let a = wrap(new A(0))
+  let b = wrap(new B(0))
+  let value = if flag then a else b
+  @matchShapes(Box(A(_)), Box(B(_))) shape.match of value, () => 1, () => 2
+//│ >>> start class-tags collection-phase
+//│ class-tags collection-phase > track construction of Box@1 in wrap
+//│ class-tags collection-phase > track consumption at match@8 in poly
+//│ <<< end class-tags collection-phase
+//│ >>> start class-tags web-computation-phase
+//│ class-tags web-computation-phase > web 0:
+//│ class-tags web-computation-phase >   producers: Box@1, Box@1, A@2, B@5
+//│ class-tags web-computation-phase >   pattern matches: match@8
+//│ <<< end class-tags web-computation-phase
+//│ >>> start class-tags transform-phase
+//│ class-tags transform-phase > allocated tag 0 for Box(x: A(x: 0))
+//│ class-tags transform-phase > allocated tag 1 for Box(x: B(x: 0))
+//│ class-tags transform-phase > allocated tag 2 for A(x: 0)
+//│ class-tags transform-phase > allocated tag 3 for B(x: 0)
+//│ class-tags transform-phase > match shapes Box(x: A(x: _)), Box(x: B(x: _)) against Box(x: A(x: 0))@0, Box(x: B(x: 0))@1
+//│ <<< end class-tags transform-phase
+//│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
+//│ let poly, wrap;
+//│ wrap = function wrap(x) {
+//│   runtime.checkArgs("wrap", 1, true, arguments.length);
+//│   let tmp, tmp1;
+//│   tmp = (new Box1.class(x));
+//│   tmp1 = x.__tag$ === 2;
+//│   if (tmp1 === true) {
+//│     tmp.__tag$ = 0;
+//│     return tmp
+//│   }
+//│   {
+//│     let tmp2;
+//│     tmp2 = x.__tag$ === 3;
+//│     if (tmp2 === true) {
+//│       tmp.__tag$ = 1;
+//│       return tmp
+//│     }
+//│     return tmp;
+//│   }
+//│ };
+//│ poly = function poly(flag) {
+//│   runtime.checkArgs("poly", 1, true, arguments.length);
+//│   let a, b, tmp, tmp1, tmp2;
+//│   tmp1 = (new A1.class(0));
+//│   tmp1.__tag$ = 2;
+//│   a = runtime.checkCall(wrap(tmp1));
+//│   tmp2 = (new B1.class(0));
+//│   tmp2.__tag$ = 3;
+//│   b = runtime.checkCall(wrap(tmp2));
+//│   if (flag === true) {
+//│     tmp = a;
+//│   } else {
+//│     tmp = b;
+//│   }
+//│   if (tmp.__tag$ === 0) { return 1 } else if (tmp.__tag$ === 1) { return 2 }
+//│   return runtime.Unit;
+//│ };
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+:expect 1
+poly(false) - poly(true)
+//│ >>> start class-tags collection-phase
+//│ <<< end class-tags collection-phase
+//│ >>> start class-tags transform-phase
+//│ <<< end class-tags transform-phase
+//│ = 1

@@ -43,9 +43,9 @@ class WebEntryCollector(val flowRes: FlowConstraintSolver)(using val tl: TL) ext
   private given eState: State = flowRes.eState
 
   private val entryPoints = ListBuffer.empty[WebEntryCollector.EntryPoints]
-  private val concreteCtorsByResultId = MutMap.empty[ResultId, Ctor]
+  private val concreteCtorsByResultId = MutMap.empty[ResultId, ListBuffer[Ctor]]
   for ctor <- flowRes.ctorsWithDests do
-    concreteCtorsByResultId.addOne(ctor.exprId, ctor)
+    concreteCtorsByResultId.getOrElseUpdate(ctor.exprId, ListBuffer.empty) += ctor
   private val concreteConsumersByResultId = MutMap.empty[ResultId, ListBuffer[ConcreteCtorConsumer]]
   for consumer <- flowRes.consumersWithSrcs do
     concreteConsumersByResultId.getOrElseUpdate(consumer.exprId, ListBuffer.empty) += consumer
@@ -66,7 +66,7 @@ class WebEntryCollector(val flowRes: FlowConstraintSolver)(using val tl: TL) ext
     val seenProducerEntryPoints = MutSet.empty[Ctor]
     for
       resultId <- collector.resultIds
-      ctor <- concreteCtorsByResultId.get(resultId)
+      ctor <- concreteCtorsByResultId.getOrElse(resultId, Nil)
       if !ctor.dests.contains(UnknownCons) // does not leak out of the web
       if !ctor.dests.exists:
         case consumer: ConcreteCtorConsumer => consumer.srcs.contains(UnknownProd)
@@ -254,7 +254,7 @@ class ClassTagsTransformer(
 
   private val producersInWeb = webs.iterator.flatMap(_.markedProducers).toSet
 
-  private val ctorsByResultId = producersInWeb.iterator.map(ctor => ctor.exprId -> ctor).toMap
+  private val ctorsByResultId = producersInWeb.toList.groupBy(_.exprId)
 
   private val patternMatchesByResultId =
     flowRes.consumersWithSrcs.iterator.collect:
@@ -324,17 +324,46 @@ class ClassTagsTransformer(
       tag
     })
 
-  private lazy val taggedShapesByProducer: Map[Ctor, List[ClassShape -> Int]] =
+  private def validateProducers(producers: List[Ctor]): Unit =
+    producers match
+      case head :: rest =>
+        val fields = head.args.map(_._1)
+        for producer <- rest do
+          softAssert(producer.ctor === head.ctor && producer.args.map(_._1) === fields,
+            s"Mismatched polymorphism for ${ClassTagsDebug.showProducer(head)}")
+        val mutableFields = fields.collect:
+          case field: TermSymbol if field.k is syntax.MutVal => field
+        for field <- mutableFields do
+          summon[Raise].apply(ErrorReport(
+            msg"Class tags do not support mutable fields yet." -> field.toLoc :: Nil,
+            source = Diagnostic.Source.Compilation,
+          ))
+      case Nil =>
+        softAssert(false, "Missing constructor for an allocation site.")
+
+  private lazy val shapesByProducer: Map[Ctor, List[ClassShape]] =
     given visit: Set[ProdStrat] = Set.empty
-    producersInWeb.toList.sortBy(_.exprId.uid).flatMap: producer =>
+    producersInWeb.iterator.map: producer =>
       val shapes = shapeOfProducer(producer) match
         case shape: ClassShape =>
           shape.flattenShape.collect:
             case shape: ClassShape => shape
         case _ => Nil
+      producer -> shapes
+    .toMap
+
+  private lazy val taggedShapesByResultId: Map[ResultId, List[ClassShape -> Int]] =
+    ctorsByResultId.toList.sortBy(_._1.uid).flatMap: (resultId, producers) =>
+      validateProducers(producers)
+      val shapes = producers.flatMap(shapesByProducer.getOrElse(_, Nil)).distinct.sortBy(_.show)
       val taggedShapes = shapes.map(shape => shape -> allocateTag(shape))
-      if taggedShapes.isEmpty then Nil
-      else (producer -> taggedShapes) :: Nil
+      if taggedShapes.isEmpty then Nil else (resultId -> taggedShapes) :: Nil
+    .toMap
+
+  private lazy val taggedShapesByProducer: Map[Ctor, List[ClassShape -> Int]] =
+    val _ = taggedShapesByResultId
+    shapesByProducer.iterator.map: (producer, shapes) =>
+      producer -> shapes.map(shape => shape -> shapeTags(shape))
     .toMap
 
   private def getCtorArgs(producer: Ctor) =
@@ -369,11 +398,6 @@ class ClassTagsTransformer(
             fields.size === fieldsOrElements.size,
             s"Unexpected class fields in ${ClassTagsDebug.showProducer(producer)}",
           )
-          for (field, _) <- fields if field.k is syntax.MutVal do
-            summon[Raise].apply(ErrorReport(
-              msg"Class tags do not support mutable fields yet." -> field.toLoc :: Nil,
-              source = Diagnostic.Source.Compilation,
-            ))
           ClassShape(cls, fields.toMap)
         case length: Int =>
           softAssert(
@@ -530,7 +554,7 @@ class ClassTagsTransformer(
     if debug then
       summon[TL].emitDbg(">>> start class-tags transform-phase")
     rejectUnsupportedShapeMatches(program)
-    val _ = taggedShapesByProducer
+    val _ = taggedShapesByResultId
     val result = super.applyProgram(program)
     if debug then
       summon[TL].emitDbg("<<< end class-tags transform-phase")
@@ -685,9 +709,11 @@ class ClassTagsTransformer(
           case CtorProducer(_, _, _) =>
             // Insert tags for instantiations
             // TODO: make the tag a real field? 
-            (ctorsByResultId.get(result.uid).flatMap: ctor =>
-              taggedShapesByProducer.get(ctor).map(ctor -> _)
-            ) match
+            (for
+              ctors <- ctorsByResultId.get(result.uid)
+              ctor <- ctors.headOption // we need ctor here only for args, so any can be taken.
+              taggedShapes <- taggedShapesByResultId.get(result.uid)
+            yield ctor -> taggedShapes) match
               case S((ctor, taggedShapes)) =>
                 super.applyResult(result): transformed =>
                   insertShapeTag(transformed, ctor, taggedShapes)(k)
