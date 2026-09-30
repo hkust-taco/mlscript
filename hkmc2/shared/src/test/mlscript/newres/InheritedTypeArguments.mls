@@ -67,3 +67,91 @@ private fun make[T](item: T) =
   read(new Child)
 [make(First(8)).first, make(Second(9)).second]
 //│ = [8, 9]
+
+// Qualified subclass annotations retain the parent's capture into the class,
+// even when the annotated value travels through a tuple and nested calls.
+:expect 3
+module Tokens with
+  class Parent with
+    fun value: Int = 3
+  class Child() extends Parent
+private fun run() =
+  fun make(): [Int, Tokens.Child] = [0, Tokens.Child()]
+  fun read(pair: [Int, Tokens.Parent]) = pair.1.value
+  read(make())
+run()
+//│ = 3
+
+// Parent type arguments must survive more than one ancestry step and keep
+// separate calls distinct.
+:expect [4, 5]
+module Types with
+  class First(val first: Int)
+  class Second(val second: Int)
+  class Parent[A](val item: A)
+  class Middle[A](item: A) extends Parent[A](item)
+  class Child[A](item: A) extends Middle[A](item)
+private fun make[A](item: A): Types.Child[A] = new Types.Child[A](item)
+private fun read[A](parent: Types.Parent[A]) = parent.item
+[read(make(Types.First(4))).first, read(make(Types.Second(5))).second]
+//│ = [4, 5]
+
+// A qualified parent under an enclosing generic activation retains the outer
+// binder, rather than treating it as one of the child's own type parameters.
+// FIXME: Reading the outer binder through the local module still loses the
+// intervening read scope after the parent constraint has been transported.
+:fixme
+:expect [6, 7]
+class First(val first: Int)
+class Second(val second: Int)
+private fun make[A](item: A) =
+  module Types with
+    class Parent(val item: A)
+    class Child(item: A) extends Parent(item)
+  fun child(): Types.Child = new Types.Child(item)
+  fun read(parent: Types.Parent) = parent.item
+  read(child())
+[make(First(6)).first, make(Second(7)).second]
+//│ /!!!\ Uncaught error: java.lang.AssertionError: assertion failed: Entry and exit cross different lexical resolution scopes: term:make⁰ vs term:read⁰ for ContextualShape(AppShape(MarkedShape(member:First⁰, ↗⟨class:First¹⟩%⟨First²⟩ϵ), [6]))
+
+// Constraints on a callable parent argument must also propagate its input.
+:expect 8
+module Types with
+  class Item(val value: Int)
+  class Parent[A](val run: A -> Int)
+  class Child[A](run: A -> Int) extends Parent[A](run)
+private fun make[A](run: A -> Int): Types.Child[A] = new Types.Child[A](run)
+private fun call[A](parent: Types.Parent[A], item: A) = parent.run(item)
+call(make(x => x.value), Types.Item(8))
+//│ = 8
+
+// Distinct annotated subclass calls must not mix their ancestor arguments.
+:e
+module Types with
+  class First(val first: Int)
+  class Second(val second: Int)
+  class Parent[A](val item: A)
+  class Child[A](item: A) extends Parent[A](item)
+private fun make[A](item: A): Types.Child[A] = new Types.Child[A](item)
+private fun read[A](parent: Types.Parent[A]) = parent.item
+read(make(Types.Second(9))).second
+read(make(Types.First(8))).second
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.138: 	read(make(Types.First(8))).second
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Instance of class 'First' does not contain member 'second'
+//│ ║  l.138: 	read(make(Types.First(8))).second
+//│ ╙──       	          ^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// The imported recursive Stack type supplies an argument to Cons, but Cons's
+// Base parent does not use it. Interpreting Base must not capture that argument
+// again while a nested pattern is already observing it inside Cons.
+:expect 2
+import "../../mlscript-compile/Stack.mls"
+open Stack
+private fun second(xs: Stack[Int]) = if xs is
+  Cons(_, Cons(value, _)) then value
+  else 0
+second(Cons(1, Cons(2, Nil)))
+//│ = 2

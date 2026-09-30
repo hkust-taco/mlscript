@@ -131,6 +131,13 @@ marks before installing both variance directions. This applies to constructed
 receivers and declared nominal views, including multiple inheritance steps and
 captured enclosing binders (`InheritedTypeArguments.mls`).
 
+A nominal annotation's parent is interpreted inside the subclass instance scope,
+whereas the annotated value and its supplied type arguments are outside it.
+Capture the arguments used by the parent before substitution, and leave the
+subclass scope before applying the value's caller path. `nominalParent` shares
+that exit between ancestor constraints and inherited member lookup. Constructed
+receivers already carry the exit in their constructor context.
+
 ### Substitute at the occurrence before applying argument variance
 
 First interpret an argument expression at its lexical occurrence polarity. A

@@ -28,11 +28,11 @@ imply that its dependencies have been migrated.
 
 | Compilation suite | New resolution | Legacy resolution | Total |
 | --- | ---: | ---: | ---: |
-| Main (including quotes, UPS, and regression fixtures) | 26 | 22 | 48 |
+| Main (including quotes, UPS, and regression fixtures) | 27 | 21 | 48 |
 | Applications | 8 | 12 | 20 |
 | Nofib | 12 | 27 | 39 |
 | WASM | 0 | 1 | 1 |
-| Total | 46 | 62 | 108 |
+| Total | 47 | 61 | 108 |
 
 These totals include the new-resolution `NamedFieldLibrary` regression fixture.
 
@@ -78,7 +78,7 @@ The remaining option consumers have these blockers when compiled with
 | `Iter`, `MutMap`, `ups/EvaluationContext` | Missing public parameter interfaces and unresolved member selections. |
 | `FingerTreeList` | Compilation exceeds the 25-second test limit. Tuple literals with several spreads, such as `concatMiddle`'s `[...ay1, ...middle, ...ax2]`, produce one candidate per combination of operand candidates, and each is matched again by `toNodes`. Candidate sets compare shapes structurally, which rehashes these deep shapes; identity-based candidate storage is the next step. |
 | `parsing/Extension`, `ParseRule`, `Test` | Selections on values imported from legacy-resolution modules, such as `Parser.tracer`, have no resolved target. `TreeHelpers` compiles standalone; its consumers remain to be checked. |
-| `parsing/Lexer` | Opened binary `~` conflicts with the builtin; calls with trailing contextual parameters leave function values where tokens are expected. |
+| `parsing/Lexer` | Calls with trailing contextual parameters leave function values where tokens are expected. The binary `~` is explicitly imported, as required to override the builtin under new open semantics. |
 | `parsing/Parser` | Pattern-field flow and unresolved nominal members. |
 | `parsing/ParseRuleVisualizer`, `Rules`, `parsing-web-demo/main` | Missing host/public interfaces and unresolved selections. |
 | `parsing/Tree` | `JSON.stringify` has no result interface, so selecting `slice` on its result fails. |
@@ -86,6 +86,30 @@ The remaining option consumers have these blockers when compiled with
 To reproduce a blocker, temporarily add the language directive to the named
 compilation fixture and run `ctest <name>` or `catest <name>` as appropriate.
 The blocked fixtures retain their existing resolution mode.
+
+The 2026-09-30 `Lexer` investigation fixed an assertion encountered before its
+listed blockers: ancestor constraints applied a nominal value's caller path to
+its parent annotation without first leaving the subclass's instance scope.
+The trigger is passing `Lexer.string`'s `[Int, Token.Literal]` result to the
+helper expecting `[Int, Token.Token]`.
+Parent type arguments now enter that scope before substitution, and ancestor
+constraints and inherited member lookup share the corresponding exit. Only
+parameters used by the parent are captured, including when recursively observing
+a legacy imported type. `newres/InheritedTypeArguments.mls` covers qualified
+subclass annotations, tuple transport, multiple parent steps, callback inputs,
+and caller separation. A local module's captured outer binder still has a
+separate scope failure recorded there with `:fixme`.
+
+All 61 legacy compilation fixtures were probed individually with their dependencies
+in their existing modes. No fixture was newly unblocked by this correction.
+`CachedHash` and `parsing/TreeHelpers` compile standalone in new resolution both
+before and after the correction; their consumer migrations remain unchecked.
+`FingerTreeList` still reaches the test timeout. `Lexer` now explicitly imports
+`~`, as intended by the new open semantics, and reaches the contextual-argument
+blocker instead of crashing. `newres/LexerMigration.mls` covers the explicit import
+and records missing argument insertion. Completing the migration requires contextual
+instance lookup and argument insertion in the new resolver; passing every instance
+explicitly would bypass that missing feature rather than complete it.
 
 Many fixtures also need source interfaces: for example, `QuoteExample.bind` calls
 an unannotated callback, and Nofib helpers expose comparators and printers.
@@ -157,7 +181,7 @@ recursive UPS matchers. Preserve both runtime results and matcher structure.
 
 - Implement automatic contextual argument insertion for `Lexer` calls to
   `Token.integer`, `symbol`, and related APIs with trailing `using` lists.
-  Resolve the opened binary `~`/builtin-operator conflict without removing those APIs.
+  Operators that override builtins must be imported explicitly, as in `Lexer`.
 - Complete type-argument validation (`basics/GenericClasses`), constructor-value
   member lookup (`codegen/ParamClasses`, `basics/DynamicInstantiation`), and
   module/call checks. Decide nominal module-forwarding compatibility for

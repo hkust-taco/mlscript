@@ -452,23 +452,30 @@ class NewResolver:
     * callbacks and their hosts remain private to each consuming inference graph.
     */
   private def withCanonicalType(tpe: DeclaredType)(listener: ShapeListener[DeclaredType])(using NewResolverState): Unit =
-    def publish(binders: Set[VarSymbol])(using NewResolverState): Unit =
+    withTypeDependencies(tpe.resolution): binders =>
       if regularType(tpe.resolution) then
         listener(declaredType(tpe.resolution, tpe.bindings.filter((symbol, _) => binders(symbol)), tpe.positive)
           .instantiate(tpe.instances).withOrigin(tpe.origin))
-    typeDependencies(tpe.resolution) match
-      case R(binders) => publish(binders)
+
+  /** Discover binders without normalizing the type. Parent annotations must
+    * receive their bindings at the original lexical endpoint: normalization
+    * can move captures into references with their own closed environments.
+    */
+  private def withTypeDependencies(resolution: TypeResolution)(listener: ShapeListener[Set[VarSymbol]])
+      (using NewResolverState): Unit =
+    typeDependencies(resolution) match
+      case R(binders) => listener(binders)
       case L(_) =>
-        rstate.pendingTypeDependencies.get(tpe.resolution) match
-          case S(host) => host.listen(publish)
+        rstate.pendingTypeDependencies.get(resolution) match
+          case S(host) => host.listen(listener)
           case N =>
             val host = new TypeDependencyHost
-            rstate.pendingTypeDependencies(tpe.resolution) = host
-            host.listen(publish)
-            def retry()(using NewResolverState): Unit = typeDependencies(tpe.resolution) match
+            rstate.pendingTypeDependencies(resolution) = host
+            host.listen(listener)
+            def retry()(using NewResolverState): Unit = typeDependencies(resolution) match
               case R(binders) => host.publish(binders)
               case L(pending) => pending.foreach: unresolved =>
-                if rstate.dependencySubscriptions.add((tpe.resolution, unresolved)) then
+                if rstate.dependencySubscriptions.add((resolution, unresolved)) then
                   unresolved.listen(_ => retry())
             retry()
 
@@ -912,8 +919,14 @@ class NewResolver:
                   case S(parent) =>
                     // Only the parent's declared type is relevant here. Evaluating
                     // its constructor arguments would reintroduce implementation flow.
-                    listenTypeViews(declaredType(typeResolution(parent.cls), bindings)): ext =>
-                      publish(NominalInstanceView(defn, bindings, S(ext))(S(tpe.resolution.source))(this))
+                    // Restrict substitution before capturing: a recursive field
+                    // can supply an argument already inside this class. A parent
+                    // that does not use it must not attempt that scope crossing.
+                    val parentType = typeResolution(parent.cls)
+                    withTypeDependencies(parentType): dependencies =>
+                      val local = captureNominalBindings(defn, bindings.filter((symbol, _) => dependencies(symbol)))
+                      listenTypeViews(declaredType(parentType, local)): ext =>
+                        publish(NominalInstanceView(defn, bindings, S(ext))(S(tpe.resolution.source))(this))
               case TypeShape.Alias(symbol, rhs) =>
                 // Revisiting the same alias reference without reaching a structural
                 // shape supplies no additional interface. Track
@@ -1328,7 +1341,7 @@ class NewResolver:
               case nominal: NominalInstanceView =>
                 if nominal.defn is cls then cls.tparams.zip(arguments).foreach: (param, pattern) =>
                   nominal.bindings.get(param.sym).foreach(constrain(param, _, pattern))
-                else nominal.parent.foreach(parent)
+                else nominalParent(nominal).foreach(parent)
               case tuple: TupleShape => parent(tuple.arrayParent)
               case _ => ()
           constrainNominal(value)
@@ -1543,12 +1556,12 @@ class NewResolver:
         // Supplied arguments are outside the class; its parameter annotations
         // are inside. Enclosing binders keep their own lexical contexts and
         // enter the class through the annotation's explicit Capture nodes.
-        val parameters = defn.tparams.map(_.sym).toSet
-        val local = view.bindings.map: (symbol, bound) =>
-          val transported = provenance match
+        val transported = view.bindings.map: (symbol, bound) =>
+          val argument = provenance match
             case NoMarks => bound
             case provenance: ExitMark => transportType(bound, provenance :: Nil)
-          symbol -> (if parameters(symbol) && scope.nonEmpty then captureType(transported, defn.sym) else transported)
+          symbol -> argument
+        val local = captureNominalBindings(defn, transported)
         MemberLookup.Declared(member, local, scope.toList.map(ExitMark(_, N, NoMarks)), view.annotation, true)
           .withMarks(location match
             case NoMarks => Nil
@@ -1563,15 +1576,40 @@ class NewResolver:
             // annotations: `class Int extends Num` captures `Num` into Int's
             // scope. An inherited member exits that scope before the receiver
             // path applies, just like an own member.
-            val exit = scope.fold[Marks](NoMarks)(ExitMark(_, N, NoMarks))
-            val inherited = view.parent.fold[MemberLookup](MemberLookup.Missing): parent =>
+            val inherited = nominalParent(view).fold[MemberLookup](MemberLookup.Missing): parent =>
               val Marked(parentView, inner) = parent
-              InstanceShape(extremeType(false)).exit(inner).exit(exit).exit(receiver) match
+              InstanceShape(extremeType(false)).exit(inner).exit(receiver) match
                 case Marked(_, path) => parentView.getMemberThrough(name, path)
                 // The parent interface is not reachable through this receiver;
                 // applying these marks to its members yields no candidates.
-                case NoShape => parentView.getMember(name).withMarks(inner :: exit :: receiver :: Nil)
+                case NoShape => parentView.getMember(name).withMarks(inner :: receiver :: Nil)
             inherited.withAnnotation(view.annotation)
+
+  /** Supplied class arguments are outside the instance scope. Both member and
+    * parent annotations refer to those parameters from inside that scope.
+    * Enclosing binders instead enter through their own explicit Capture nodes.
+    */
+  private def captureNominalBindings(defn: ClassLikeDef, bindings: Map[VarSymbol, DeclaredType])
+      (using NewResolverState): Map[VarSymbol, DeclaredType] =
+    val parameters = defn.tparams.map(_.sym).toSet
+    bindings.map: (symbol, bound) =>
+      symbol -> (if parameters(symbol) && !defn.sym.isInstanceOf[ModuleOrObjectSymbol]
+        then captureType(bound, defn.sym) else bound)
+
+  /** A nominal value lives outside its class's instance scope, but its parent
+    * annotation is resolved inside that scope. Leave it before applying the
+    * value's caller path, both for inherited members and ancestor constraints.
+    * Constructed shapes already carry this exit in their constructor context;
+    * adding it to those shapes would cross the same boundary twice.
+    */
+  private def nominalParent(view: NominalInstanceView)(using NewResolverState): Opt[TermShape] =
+    view.parent.flatMap: parent =>
+      val exited = view.defn.sym match
+        case _: ModuleOrObjectSymbol => parent
+        case symbol => transportShape(parent, ExitMark(ResolutionBoundary(symbol), N, NoMarks) :: Nil)
+      exited match
+        case parent: TermShape => S(parent)
+        case NoShape => N
 
   /** Split a receiver path into the path from `defn`'s definition to the consumer,
     * and the innermost exits of scopes not enclosing that definition. Exits are
