@@ -1218,9 +1218,9 @@ object Call:
     case Value.SimpleRef(sym: BuiltinSymbol) =>
       argss match
       case (Arg(N, arg1: Value) :: Arg(N, arg2: Value) :: Nil) :: Nil =>
-        evalBuiltin(sym, arg1, arg2)(value => return value.withLoc(toLoc))
+        evalBuiltin(sym, arg1, arg2)(toLoc)(return _)
       case (Arg(N, arg1: Value) :: Nil) :: Nil =>
-        evalBuiltin(sym, arg1)(value => return value.withLoc(toLoc))
+        evalBuiltin(sym, arg1)(toLoc)(return _)
       case _ =>
     case _ =>
     raw(fun, argss)(metadata, toLoc)
@@ -1232,29 +1232,29 @@ object Call:
   
   import Value.Lit
   
-  private inline def evalBuiltin(sym: BuiltinSymbol, arg1: Value, arg2: Value)(inline k: Value => Unit): Unit =
+  private inline def evalBuiltin(sym: BuiltinSymbol, arg1: Value, arg2: Value)(toLoc: Opt[Loc])(inline k: Value => Unit): Unit =
     (sym.nme, arg1, arg2) match
-    case ("+", Lit(Tree.IntLit(v1)), Lit(Tree.IntLit(v2))) => k(Lit(Tree.IntLit(v1 + v2))(N))
-    case ("+", Lit(Tree.StrLit(v1)), Lit(Tree.StrLit(v2))) => k(Lit(Tree.StrLit(v1 + v2))(N))
-    case ("-", Lit(Tree.IntLit(v1)), Lit(Tree.IntLit(v2))) => k(Lit(Tree.IntLit(v1 - v2))(N))
-    case ("*", Lit(Tree.IntLit(v1)), Lit(Tree.IntLit(v2))) => k(Lit(Tree.IntLit(v1 * v2))(N))
+    case ("+", Lit(Tree.IntLit(v1)), Lit(Tree.IntLit(v2))) => k(Lit(Tree.IntLit(v1 + v2))(toLoc))
+    case ("+", Lit(Tree.StrLit(v1)), Lit(Tree.StrLit(v2))) => k(Lit(Tree.StrLit(v1 + v2))(toLoc))
+    case ("-", Lit(Tree.IntLit(v1)), Lit(Tree.IntLit(v2))) => k(Lit(Tree.IntLit(v1 - v2))(toLoc))
+    case ("*", Lit(Tree.IntLit(v1)), Lit(Tree.IntLit(v2))) => k(Lit(Tree.IntLit(v1 * v2))(toLoc))
     // * For "/", should check for 0 and return a DecLit.
-    case ("%", Lit(Tree.IntLit(v1)), Lit(Tree.IntLit(v2))) if v2 =/= 0 => k(Lit(Tree.IntLit(v1 % v2))(N))
-    case ("===", Lit(l1), Lit(l2)) => k(Lit(Tree.BoolLit(l1 == l2))(N))
-    case ("!==", Lit(l1), Lit(l2)) => k(Lit(Tree.BoolLit(l1 != l2))(N))
-    case ("<", Lit(Tree.IntLit(v1)), Lit(Tree.IntLit(v2))) => k(Lit(Tree.BoolLit(v1 < v2))(N))
-    case ("<=", Lit(Tree.IntLit(v1)), Lit(Tree.IntLit(v2))) => k(Lit(Tree.BoolLit(v1 <= v2))(N))
-    case (">", Lit(Tree.IntLit(v1)), Lit(Tree.IntLit(v2))) => k(Lit(Tree.BoolLit(v1 > v2))(N))
-    case (">=", Lit(Tree.IntLit(v1)), Lit(Tree.IntLit(v2))) => k(Lit(Tree.BoolLit(v1 >= v2))(N))
-    case ("&&", Lit(Tree.BoolLit(v1)), Lit(Tree.BoolLit(v2))) => k(Lit(Tree.BoolLit(v1 && v2))(N))
-    case ("||", Lit(Tree.BoolLit(v1)), Lit(Tree.BoolLit(v2))) => k(Lit(Tree.BoolLit(v1 || v2))(N))
+    case ("%", Lit(Tree.IntLit(v1)), Lit(Tree.IntLit(v2))) if v2 =/= 0 => k(Lit(Tree.IntLit(v1 % v2))(toLoc))
+    case ("===", Lit(l1), Lit(l2)) => k(Lit(Tree.BoolLit(l1 == l2))(toLoc))
+    case ("!==", Lit(l1), Lit(l2)) => k(Lit(Tree.BoolLit(l1 != l2))(toLoc))
+    case ("<", Lit(Tree.IntLit(v1)), Lit(Tree.IntLit(v2))) => k(Lit(Tree.BoolLit(v1 < v2))(toLoc))
+    case ("<=", Lit(Tree.IntLit(v1)), Lit(Tree.IntLit(v2))) => k(Lit(Tree.BoolLit(v1 <= v2))(toLoc))
+    case (">", Lit(Tree.IntLit(v1)), Lit(Tree.IntLit(v2))) => k(Lit(Tree.BoolLit(v1 > v2))(toLoc))
+    case (">=", Lit(Tree.IntLit(v1)), Lit(Tree.IntLit(v2))) => k(Lit(Tree.BoolLit(v1 >= v2))(toLoc))
+    case ("&&", Lit(Tree.BoolLit(v1)), Lit(Tree.BoolLit(v2))) => k(Lit(Tree.BoolLit(v1 && v2))(toLoc))
+    case ("||", Lit(Tree.BoolLit(v1)), Lit(Tree.BoolLit(v2))) => k(Lit(Tree.BoolLit(v1 || v2))(toLoc))
     case _ =>
     
-  private inline def evalBuiltin(sym: BuiltinSymbol, arg1: Value)(inline k: Value => Unit): Unit =
+  private inline def evalBuiltin(sym: BuiltinSymbol, arg1: Value)(toLoc: Opt[Loc])(inline k: Value => Unit): Unit =
     (sym.nme, arg1) match
-    case ("+", Lit(Tree.IntLit(v1))) => k(Lit(Tree.IntLit(v1))(N))
-    case ("-", Lit(Tree.IntLit(v1))) => k(Lit(Tree.IntLit(-v1))(N))
-    case ("!", Lit(Tree.BoolLit(v))) => k(Lit(Tree.BoolLit(!v))(N))
+    case ("+", Lit(Tree.IntLit(v1))) => k(Lit(Tree.IntLit(v1))(toLoc))
+    case ("-", Lit(Tree.IntLit(v1))) => k(Lit(Tree.IntLit(-v1))(toLoc))
+    case ("!", Lit(Tree.BoolLit(v))) => k(Lit(Tree.BoolLit(!v))(toLoc))
     case _ =>
   
 end Call
