@@ -65,10 +65,6 @@ module Baz with
 //│ <<< end class-tags collection-phase
 //│ >>> start class-tags web-computation-phase
 //│ class-tags web-computation-phase > web 0:
-//│ class-tags web-computation-phase >   producers: Foo@6
-//│ class-tags web-computation-phase >   field accesses: Foo.x@0, Foo.y@1
-//│ class-tags web-computation-phase >   pattern matches: match@2
-//│ class-tags web-computation-phase > web 1:
 //│ class-tags web-computation-phase >   producers: Foo@9
 //│ class-tags web-computation-phase >   field accesses: Foo.x@3, Foo.y@4
 //│ class-tags web-computation-phase >   pattern matches: match@12
@@ -316,12 +312,6 @@ fun foo(x, y) =
 //│ class-tags collection-phase > track construction of tup(size 3)@4 in foo
 //│ class-tags collection-phase > track consumption at tup(size 3).2@2, tup(size 3).1@1, tup(size 3).0@0 in foo
 //│ <<< end class-tags collection-phase
-//│ >>> start class-tags web-computation-phase
-//│ class-tags web-computation-phase > web 0:
-//│ class-tags web-computation-phase >   producers: tup(size 3)@4
-//│ class-tags web-computation-phase >   field accesses: tup(size 3).0@0, tup(size 3).1@1, tup(size 3).2@2
-//│ class-tags web-computation-phase >   pattern matches: match@3
-//│ <<< end class-tags web-computation-phase
 //│ >>> start class-tags transform-phase
 //│ <<< end class-tags transform-phase
 //│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
@@ -588,4 +578,35 @@ foo(false)
 //│ >>> start class-tags transform-phase
 //│ <<< end class-tags transform-phase
 //│ = 4
+
+
+// do not insert a tag for t, since it is not matched by shape.match
+:ssjs
+fun foo(x) =
+  let t = if x then new Bar(new C(0)) else new Bar(new D(1))
+  if t is
+    Bar then t.Bar#x.x
+//│ >>> start class-tags collection-phase
+//│ class-tags collection-phase > track construction of Bar@6, Bar@4 in foo
+//│ <<< end class-tags collection-phase
+//│ >>> start class-tags transform-phase
+//│ <<< end class-tags transform-phase
+//│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
+//│ let foo10;
+//│ foo10 = function foo(x) {
+//│   runtime.checkArgs("foo", 1, true, arguments.length);
+//│   let tmp1, tmp2, tmp3;
+//│   if (x === true) {
+//│     tmp1 = (new C1.class(0));
+//│     tmp2 = (new Bar1.class(tmp1));
+//│   } else {
+//│     tmp3 = (new D1.class(1));
+//│     tmp2 = (new Bar1.class(tmp3));
+//│   }
+//│   if (tmp2 instanceof Bar1.class) {
+//│     return runtime.checkSelect(tmp2.x.x, "x", tmp2.x)
+//│   }
+//│   throw (new globalThis.Error("match error"));
+//│ };
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 

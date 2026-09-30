@@ -284,7 +284,7 @@ class ClassTagsTransformer(
     case TopLevel, SupportedFunction, NestedFunction, ClassValue
 
   private def isShapeMatch(path: Path): Bool =
-    path.targetSymbol.flatMap(_.asBlkMember).contains(Elaborator.ctx.builtins.shape.`match`)
+    ClassTagsTransformer.isShapeMatch(path)
 
   private def rejectUnsupportedShapeMatches(program: Program): Unit =
     class Checker(val scope: ShapeMatchScope) extends BlockTraverser:
@@ -746,6 +746,20 @@ object ClassTagsTransformer:
   private type WebProducer = ProdStrat | WebEntryCollector.EntryPoints
   private type WebConsumer = ConcreteCtorConsumer | ProdStrat | WebEntryCollector.EntryPoints
 
+  private def isShapeMatch(path: Path)(using ctx: Elaborator.Ctx): Bool =
+    path.targetSymbol.flatMap(_.asBlkMember).contains(ctx.builtins.shape.`match`)
+
+  private def getShapeMatchCalls(program: Program)(using Elaborator.Ctx): List[Call] =
+    val calls = ListBuffer.empty[Call]
+    val collector = new BlockTraverser:
+      override def applyResult(result: Result): Unit =
+        result match
+          case call: Call if isShapeMatch(call.fun) => calls += call
+          case _ => ()
+        super.applyResult(result)
+    collector.applyProgram(program)
+    calls.toList
+
   private def mkWeb(
     entries: WebEntryCollector.EntryPoints,
     entriesByProducer: Map[Ctor, List[WebEntryCollector.EntryPoints]],
@@ -783,7 +797,10 @@ object ClassTagsTransformer:
         case consumer: ConcreteCtorConsumer => consumer,
     )
 
-  private def mkWebs(entryPoints: List[WebEntryCollector.EntryPoints]) =
+  private def mkWebs(
+    entryPoints: List[WebEntryCollector.EntryPoints],
+    shapeMatchResultIds: Set[ResultId],
+  ) =
     val entriesByProducer = entryPoints.iterator // other entrypoints in the same function as the producer
       .flatMap(entries => entries.producers.map(_ -> entries))
       .toList.groupMap(_._1)(_._2)
@@ -803,7 +820,10 @@ object ClassTagsTransformer:
         coveredProducers ++= web.markedProducers
         coveredConsumers ++= web.markedConsumers
         webs += web
-    webs.toList
+    webs.toList.filter: web =>
+      web.markedConsumers.exists:
+        case patternMatch: Dtor => shapeMatchResultIds.contains(patternMatch.exprId)
+        case _ => false
 
   private def logWebs(webs: List[Web])(using tl: TL): Unit =
     if webs.nonEmpty then
@@ -839,6 +859,7 @@ object ClassTagsTransformer:
         ))
         p
       case S(dCfg) =>
+        val matchCalls = getShapeMatchCalls(p)
         val flowCfg = Config.FlowAnalysisConfig(
           debug = false,
           mono = dCfg.mono,
@@ -855,6 +876,9 @@ object ClassTagsTransformer:
               nonAffineTracking = false,
               accumulatorTracking = false,
             )
+        val matchResultIds =
+          given FlowAnalysis.State = flowAnalysisRes.fState
+          matchCalls.iterator.map(_.uid).toSet
         val collectorTl = new TraceLogger(using tl.debugPrinter):
           override def doTrace: Bool = dCfg.debug
           override def emitDbg(str: Str): Unit =
@@ -864,6 +888,6 @@ object ClassTagsTransformer:
           val result = WebEntryCollector(p, flowAnalysisRes)
           if dCfg.debug then tl.emitDbg("<<< end class-tags collection-phase")
           result
-        val webs = mkWebs(entryPoints)
+        val webs = mkWebs(entryPoints, matchResultIds)
         if dCfg.debug then logWebs(webs)
         new ClassTagsTransformer(webs, flowAnalysisRes, dCfg.debug).applyProgram(p)
