@@ -111,6 +111,19 @@ object WebEntryCollector:
 private sealed abstract class Shape:
   def show: Str
 
+  final def flattenShape(at: Opt[Loc])(using raise: Raise): List[Shape] =
+    flattenShape(at, Shape.defaultFlattenThreshold)
+
+  final def flattenShape(at: Opt[Loc], threshold: Int)(using raise: Raise): List[Shape] =
+    val result = flattenShape
+    if result.length > threshold then
+      raise(ErrorReport(
+        msg"Flattening this shape would produce more than $threshold alternatives." -> at :: Nil,
+        source = Diagnostic.Source.Compilation,
+      ))
+      Nil
+    else result
+
   def flattenShape: List[Shape]
 
   def containsUnion: Bool
@@ -135,6 +148,8 @@ private sealed abstract class Shape:
     case _ => false
 
 private object Shape:
+  val defaultFlattenThreshold: Int = 256
+
   def mkShapeByPattern(pattern: Pattern)(using raise: Raise): Shape =
     pattern match
       case ctorPattern @ Pattern.Constructor(_, arguments) =>
@@ -346,7 +361,7 @@ class ClassTagsTransformer(
     producersInWeb.iterator.map: producer =>
       val shapes = shapeOfProducer(producer) match
         case shape: ClassShape =>
-          shape.flattenShape.collect:
+          shape.flattenShape(producer.exprId.getResult.toLoc).collect:
             case shape: ClassShape => shape
         case _ => Nil
       producer -> shapes
@@ -655,7 +670,7 @@ class ClassTagsTransformer(
                   N
                 else
                   val ambiguousTags = taggedShapes.flatMap: (taggedShape, tag) =>
-                    val branchIndices = taggedShape.flattenShape.flatMap: concreteShape =>
+                    val branchIndices = taggedShape.flattenShape(call.toLoc).flatMap: concreteShape =>
                       patternShapes.zipWithIndex.collect:
                         case (patternShape, index) if concreteShape <= patternShape => index
                     .distinct
