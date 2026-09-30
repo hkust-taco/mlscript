@@ -41,7 +41,7 @@ class FlowAnalysisBasedRewrite(
           case (param, i) =>
             if eliminable(i) then removed.add(param.sym)
             else keptParams.append(param)
-        ParamList(pl.flags, keptParams.toList, pl.restParam) -> removed.toSet
+        ParamList(pl.flags, keptParams.toList, pl.restParam)(pl.toLoc) -> removed.toSet
     
     private def filterFunParams(funSym: TermSymbol, params: Ls[ParamList]): (Ls[ParamList], Set[VarSymbol]) =
       val removed = MutSet.empty[VarSymbol]
@@ -94,7 +94,7 @@ class FlowAnalysisBasedRewrite(
               .toList
               val restParam = Option.when(targets.hasRestParam)(etaParam("rest"))
               EtaParamList(
-                ParamList(ParamListFlags.empty, params, restParam),
+                ParamList(ParamListFlags.empty, params, restParam)(N),
                 params.map(p => Arg(N, p.sym.asSimpleRef)) :::
                   restParam.toList.map(p => Arg(S(SpreadKind.Eager), p.sym.asSimpleRef)),
               )
@@ -102,7 +102,7 @@ class FlowAnalysisBasedRewrite(
           lastWords("not the same shape?")
     
     private def etaCall(base: Path): Result =
-      Call(base, activeEtaArgss.ne_!)(CallMetadata.mlsFunWithEffect)
+      Call(base, activeEtaArgss.ne_!)(CallMetadata.mlsFunWithEffect, N)
     
     
     override def rewriteFunDefn(fun: FunDefn): RewrittenFunDefn =
@@ -123,7 +123,7 @@ class FlowAnalysisBasedRewrite(
     
     override def applyValue(v: Value)(k: Value => Block): Block = v match
       case ref@Value.SimpleRef(l: VarSymbol) if activeEliminatedParams(l) =>
-        k(Value.Lit(Tree.UnitLit(false)).withLocOf(ref))
+        k(Value.Lit(Tree.UnitLit(false))(ref.toLoc))
       case _ => super.applyValue(v)(k)
     
     override def applyBlock(b: Block): Block = b match
@@ -138,7 +138,7 @@ class FlowAnalysisBasedRewrite(
             Return(etaCall(p).withLocOf(res2))
           case c @ Call(fun, argss) =>
             Return(
-              Call(fun, (argss ++ activeEtaArgss).ne_!)(c.metadata))
+              Call(fun, (argss ++ activeEtaArgss).ne_!)(c.metadata, c.toLoc))
           case _ =>
             val tmp = TempSymbol(N, erasedType = N, "eta$res")
             Scoped(
@@ -174,7 +174,7 @@ class FlowAnalysisBasedRewrite(
         if deadConstructorElimSolver.deadCtors.contains(ConcreteId(ctorSite.uid, instId)) =>
         (args.reverseIterator.map(_.value) ++ selectedFrom)
           .filterNot(_.isPure)
-          .foldLeft(k(Value.Lit(Tree.UnitLit(false)).withLocOf(ctorSite))): (rest, p) =>
+          .foldLeft(k(Value.Lit(Tree.UnitLit(false))(ctorSite.toLoc))): (rest, p) =>
             applyPath(p)(Assign.discard(_, rest))
       case c@Call(fun, args :: restArgss) if args.forall(_.spread.isEmpty) =>
         val eliminable = deadParamElimSolver.eliminableCallSiteArgs(ConcreteId(c.uid, instId))
@@ -182,7 +182,7 @@ class FlowAnalysisBasedRewrite(
           rewriteArgs(args, eliminable): args2 =>
             k(
               if (fun2 is fun) && (args2 is args) then c
-              else Call(fun2, args2 ne_:: restArgss)(c.metadata).withLocOf(c)
+              else Call(fun2, args2 ne_:: restArgss)(c.metadata, c.toLoc)
             )
       case i@Instantiate(mut, cls, args :: restArgss) if args.forall(_.spread.isEmpty) =>
         val eliminable = deadParamElimSolver.eliminableCallSiteArgs(ConcreteId(i.uid, instId))
@@ -190,7 +190,7 @@ class FlowAnalysisBasedRewrite(
           rewriteArgs(args, eliminable): args2 =>
             k(
               if (cls2 is cls) && (args2 is args) then i
-              else Instantiate(mut, cls2, args2 :: restArgss)(i.metadata).withLocOf(i)
+              else Instantiate(mut, cls2, args2 :: restArgss)(i.metadata, i.toLoc)
             )
       case _ => super.applyResult(r)(k)
     
@@ -219,9 +219,9 @@ class FlowAnalysisBasedRewrite(
         withEtaArgss(etaParams.map(_.args)):
           applyFunBodyLikeBlock(lam.body)
       val wrappedBody = etaParams.map(_.params).foldRight(body2): (params, body) =>
-        Return(Lambda(params, body)(Nil))
+        Return(Lambda(params, body)(Nil, N))
       if (params2 is lam.params) && (wrappedBody is lam.body) then lam
-      else Lambda(params2, wrappedBody)(lam.annot).withLocOf(lam)
+      else Lambda(params2, wrappedBody)(lam.annot, lam.toLoc)
     
   end Rewriter
   
@@ -262,10 +262,10 @@ class FlowAnalysisBasedRewrite(
     def refreshParam(p: Param): Param =
       val newSym = new VarSymbol(Tree.Ident(p.sym.name), erasedType = p.sym.erasedType)
       refreshParamMap(p.sym) = newSym
-      Param(p.flags, newSym, p.sign, p.modulefulness)
+      Param(p.flags, newSym, p.sign, p.modulefulness)(p.toLoc)
     val refreshedParams = rewrittenParams.map:
-      case ParamList(flags, params, restParam) =>
-        ParamList(flags, params.map(refreshParam), restParam.map(refreshParam))
+      case pl @ ParamList(flags, params, restParam) =>
+        ParamList(flags, params.map(refreshParam), restParam.map(refreshParam))(pl.toLoc)
     FunDefn(
       N, bms, tSym, refreshedParams,
       new RefreshSymbol(refreshParamMap.toMap).apply(rewrittenBody))(

@@ -10,7 +10,7 @@ object A
 null is @compile Nullable
 //│ ╔══[COMPILATION ERROR] Pattern `Nullable` has one pattern parameter.
 //│ ║  l.5: 	pattern Nullable(pattern T) = null | T
-//│ ║       	                         ^
+//│ ║       	                 ^^^^^^^^^
 //│ ╟── But zero pattern arguments were provided.
 //│ ║  l.10: 	null is @compile Nullable
 //│ ╙──      	                 ^^^^^^^^
@@ -20,7 +20,7 @@ null is @compile Nullable
 null is @compile Nullable(A, A)
 //│ ╔══[COMPILATION ERROR] Pattern `Nullable` has one pattern parameter.
 //│ ║  l.5: 	pattern Nullable(pattern T) = null | T
-//│ ║       	                         ^
+//│ ║       	                 ^^^^^^^^^
 //│ ╟── But two pattern arguments were provided.
 //│ ║  l.20: 	null is @compile Nullable(A, A)
 //│ ╙──      	                 ^^^^^^^^^^^^^

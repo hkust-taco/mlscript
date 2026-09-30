@@ -164,33 +164,33 @@ class BlockTransformer(subst: SymbolSubst):
       applyPath(fun): fun2 =>
         applyListOf(argss, (args, k2) => applyArgs(args)(k2)): argss2 =>
           k(if (fun2 is fun) && (argss2 is argss) then r
-            else Call(fun2, argss2.ne_!)(r.metadata).withLocOf(r))
+            else Call(fun2, argss2.ne_!)(r.metadata, r.toLoc))
     case r @ Instantiate(mut, cls, argss) =>
       applyPath(cls): cls2 =>
         applyListOf(argss, (args, k2) => applyArgs(args)(k2)): argss2 =>
           k(if (cls2 is cls) && (argss2 is argss) then r
-            else Instantiate(mut, cls2, argss2)(r.metadata).withLocOf(r))
+            else Instantiate(mut, cls2, argss2)(r.metadata, r.toLoc))
     case l: Lambda => k(applyLam(l))
     case Tuple(mut, elems) =>
       applyArgs(elems): elems2 =>
-        k(if (elems2 is elems) then r else Tuple(mut, elems2).withLocOf(r))
+        k(if (elems2 is elems) then r else Tuple(mut, elems2)(r.toLoc))
     case Record(mut, fields) =>
       applyRcdArgs(fields): fields2 =>
-        k(if fields2 is fields then r else Record(mut, fields2).withLocOf(r))
+        k(if fields2 is fields then r else Record(mut, fields2)(r.toLoc))
     case p: Path => applyPath(p)(k)
   
   def applyPath(p: Path)(k: Path => Block): Block = p match
     case DynSelect(qual, fld, arrayIdx) =>
       applyPath(qual): qual2 =>
         applyPath(fld): fld2 =>
-          k(if (qual2 is qual) && (fld2 is fld) then p else DynSelect(qual2, fld2, arrayIdx).withLocOf(p))
+          k(if (qual2 is qual) && (fld2 is fld) then p else DynSelect(qual2, fld2, arrayIdx)(p.toLoc))
     case p @ Select(qual, name) =>
       applyPath(qual): qual2 =>
         val sym2 = p.symbol.mapConserve(_.subst)
-        k(if (qual2 is qual) && (sym2 is p.symbol) then p else Select(qual2, name)(sym2)(p.sanitize).withLocOf(p))
+        k(if (qual2 is qual) && (sym2 is p.symbol) then p else Select(qual2, name)(sym2, p.toLoc)(p.sanitize))
     case c @ Cast(value, target, check) =>
       applyResult(value): value2 =>
-        k(if value2 is value then c else Cast(value2, target, check).withLocOf(c))
+        k(if value2 is value then c else Cast(value2, target, check)(c.toLoc))
     case v: Value => applyValue(v)(k)
   
   def applyValue(v: Value)(k: Value => Block) = v match
@@ -300,11 +300,11 @@ class BlockTransformer(subst: SymbolSubst):
   def applyParamList(pl: ParamList): ParamList =
     def applyParam(p: Param): Param =
       val sym2 = p.sym.subst
-      if sym2 is p.sym then p else p.copy(sym = sym2)
+      if sym2 is p.sym then p else p.copy(sym = sym2)(p.toLoc)
     val params2 = pl.params.mapConserve(applyParam)
     val rest2 = pl.restParam.mapConserve(applyParam)
     if (params2 is pl.params) && (rest2 is pl.restParam)
-      then pl else ParamList(pl.flags, params2, rest2)
+      then pl else ParamList(pl.flags, params2, rest2)(pl.toLoc)
   
   def applyCase(cse: Case)(k: Case => Block): Block = cse match
     case Case.Lit(lit) => k(cse)
@@ -327,7 +327,7 @@ class BlockTransformer(subst: SymbolSubst):
   def applyLam(lam: Lambda): Lambda =
     val params2 = applyParamList(lam.params)
     val body2 = applyFunBodyLikeBlock(lam.body)
-    if (params2 is lam.params) && (body2 is lam.body) then lam else Lambda(params2, body2)(lam.annot)
+    if (params2 is lam.params) && (body2 is lam.body) then lam else Lambda(params2, body2)(lam.annot, lam.toLoc)
   
   def applyListOf[A](ls: List[A], f: (A, (A => Block)) => Block)(k: List[A] => Block): Block =
     def rec(ls: List[A], k: List[A] => Block): Block = ls match

@@ -117,10 +117,10 @@ bar([foo].0)
 bar([foo, x => x].1)
 //│ ╔══[COMPILATION ERROR] Cannot determine if 0 is a function.
 //│ ║  l.116: 	bar([foo].0)
-//│ ╙──       	         ^^
+//│ ╙──       	    ^^^^^^^
 //│ ╔══[COMPILATION ERROR] Cannot determine if 1 is a function.
 //│ ║  l.117: 	bar([foo, x => x].1)
-//│ ╙──       	                 ^^
+//│ ╙──       	    ^^^^^^^^^^^^^^^
 //│ = 0
 
 
@@ -135,7 +135,7 @@ bar([foo, x => x].(i))
 [foo, x => x].(i)(0)
 //│ ╔══[COMPILATION ERROR] Cannot determine if the dynamic selection is a function object.
 //│ ║  l.135: 	[foo, x => x].(i)(0)
-//│ ╙──       	               ^
+//│ ╙──       	^^^^^^^^^^^^^^^^
 
 
 class Foo() with

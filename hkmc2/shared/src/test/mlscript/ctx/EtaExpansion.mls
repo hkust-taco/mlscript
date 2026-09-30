@@ -16,7 +16,7 @@ baz
 //│ ║        	^^^
 //│ ╟── Required by contextual parameter declaration: 
 //│ ║  l.9: 	fun baz(x)(using Int)(y)(using Num) = [x, use[Int], y, use[Num]]
-//│ ║       	                               ^^^
+//│ ║       	                         ^^^^^^^^^
 //│ ╙── Missing instance: Expected: Num; Available: Int
 //│ = fun
 

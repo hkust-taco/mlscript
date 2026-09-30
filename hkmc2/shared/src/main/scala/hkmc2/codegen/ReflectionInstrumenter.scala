@@ -38,7 +38,7 @@ class ReflectionInstrumenter(using State, Raise, Ctx) extends BlockTransformer(n
       case b: Bool => Tree.BoolLit(b)
       case s: Str => Tree.StrLit(s)
       case n: BigDecimal => Tree.DecLit(n)
-    Value.Lit(l)
+    Value.Lit(l)(l.toLoc)
 
   extension [A, B](ls: Ls[(A => B) => B])
     def collectApply(f: Ls[A] => B): B =
@@ -58,11 +58,11 @@ class ReflectionInstrumenter(using State, Raise, Ctx) extends BlockTransformer(n
     Scoped(Set(sym), Assign(sym, res, k(sym.asSimpleRef)))
 
   def tuple(elems: Ls[ArgWrappable], symName: Str = "tmp")(k: Path => Block): Block =
-    assign(Tuple(false, elems.map(asArg)), symName)(k)
+    assign(Tuple(false, elems.map(asArg))(N), symName)(k)
 
   // isMlsFun is probably always true?
   def call(fun: Path, args: Ls[ArgWrappable], isMlsFun: Bool = true, symName: Str = "tmp")(k: Path => Block): Block =
-    assign(Call(fun, args.map(asArg) ne_:: Nil)(CallMetadata(isMlsFun, false, Nil)), symName)(k)
+    assign(Call(fun, args.map(asArg) ne_:: Nil)(CallMetadata(isMlsFun, false, Nil), N), symName)(k)
 
   // helpers for instrumenting Block
 
@@ -217,14 +217,14 @@ class ReflectionInstrumenter(using State, Raise, Ctx) extends BlockTransformer(n
           raise(ErrorReport(msg"Instantiate with multiple argument lists not supported in staged module." -> r.toLoc :: Nil))
           End()
     // desugar Runtime.Tuple.get into Select
-    case Call(fun, Ls(Arg(_, scrut), Arg(_, Value.Lit(Tree.IntLit(idx)))) :: _) if fun == Value.SimpleRef(State.runtimeSymbol).selSN("Tuple").selSN("get") =>
-      transformPath(Select(scrut, Tree.Ident(idx.toString()))(N)(false))(k)
+    case Call(fun, Ls(Arg(_, scrut), Arg(_, Value.Lit(Tree.IntLit(idx)))) :: _) if fun == Value.SimpleRef(State.runtimeSymbol)(N).selSN("Tuple").selSN("get") =>
+      transformPath(Select(scrut, Tree.Ident(idx.toString()))(N, r.toLoc)(false))(k)
     case Call(fun, argss) =>
       val stagedFunPath = fun match
         case s @ Select(qual, Tree.Ident(name)) => s.symbol.flatMap({
             case t: TermSymbol => t.owner.flatMap({ case sym: DefinitionSymbol[?] =>
                 sym.defn.flatMap(_.hasStagedModifier.map(_ =>
-                  Select(qual, Tree.Ident(name + "_gen"))(N)(false)
+                  Select(qual, Tree.Ident(name + "_gen"))(N, N)(false)
                 ))
               })
             case _ => N
@@ -265,7 +265,7 @@ class ReflectionInstrumenter(using State, Raise, Ctx) extends BlockTransformer(n
     transformOption(pOpt, transformParamList)(k)
 
   def transformCase(cse: Case)(using Context)(k: Path => Block): Block = cse match
-    case Case.Lit(lit) => blockCtor("Lit", Ls(Value.Lit(lit)))(k)
+    case Case.Lit(lit) => blockCtor("Lit", Ls(Value.Lit(lit)(N)))(k)
     case Case.Cls(cls, path) =>
       transformSymbol(cls): cls =>
         transformPath(path): path =>
@@ -308,7 +308,7 @@ class ReflectionInstrumenter(using State, Raise, Ctx) extends BlockTransformer(n
                 // * owned field symbol is selected on its owner rather than emitted as a
                 // * plain reference (which would otherwise reach `JSBuilder`'s owned-`SimpleRef` path).
                 ((cont: Block) => AssignField(lhs, nme, xStaged, cont)(S(ts))):
-                  given Context = ctx.clone() += Select(lhs, nme)(S(ts))(false) -> xStaged
+                  given Context = ctx.clone() += Select(lhs, nme)(S(ts), N)(false) -> xStaged
                   transformBlock(rest): (z, ctx) =>
                     blockCtor("Assign", Ls(xSym, y, z), "assign")(k(_, ctx))
         case _ =>
@@ -384,7 +384,7 @@ class ReflectionInstrumenter(using State, Raise, Ctx) extends BlockTransformer(n
 
     // TODO: remove it. only for test
     val debug = (k: Block) => call(sym, Nil)(fnPrintCode(_)(k))
-    val newFun = f.copy(sym = genSym, dSym = dSym, params = Ls(PlainParamList(Nil)), body = newBody)(f.configOverride, f.annotations)
+    val newFun = f.copy(sym = genSym, dSym = dSym, params = Ls(PlainParamList(Nil)(N)), body = newBody)(f.configOverride, f.annotations)
     (newFun, debug)
 
   override def applyBlock(b: Block): Block = super.applyBlock(b) match
@@ -395,7 +395,7 @@ class ReflectionInstrumenter(using State, Raise, Ctx) extends BlockTransformer(n
       val (stagedMethods, debugPrintCode) = companion.methods
         .map(applyFunDefnInner)
         .unzip
-      val ctor = FunDefn.withFreshSymbol(S(companion.isym), BlockMemberSymbol("ctor$", Nil), Ls(PlainParamList(Nil)), companion.ctor)(N, Nil)
+      val ctor = FunDefn.withFreshSymbol(S(companion.isym), BlockMemberSymbol("ctor$", Nil), Ls(PlainParamList(Nil)(N)), companion.ctor)(N, Nil)
       val (stagedCtor, ctorPrint) = applyFunDefnInner(ctor)
 
       val debugBlock = (ctorPrint :: debugPrintCode)

@@ -793,7 +793,7 @@ class SplitCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
           val symbols = pattern.variables.symbols
           val params = parameters.map:
             case (_, parameterSymbol) =>
-              Param(FldFlags.empty, parameterSymbol, N, Modulefulness.none)
+              Param.simple(parameterSymbol)
           val lambdaSymbol = new TempSymbol(N, erasedType = N, "transform")
           // Next, we need to elaborate the pattern into a split. Note that
           // `makeMatchSplit` returns a function that takes a split as the
@@ -802,7 +802,7 @@ class SplitCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
           // consequence split.
           (makeConsequent, alternative) => Split.Let(
             sym = lambdaSymbol,
-            term = Term.Lam(PlainParamList(params), transform.mkClone),
+            term = Term.Lam(PlainParamList(params)(N), transform.mkClone),
             // Declare the lambda function at the outermost level. Even if there
             // are multiple disjunctions in the consequent, we will not need to
             // repeat the `transform` term.
@@ -1071,11 +1071,11 @@ class SplitCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
         val symbols = pattern.variables.symbols
         val params = parameters.map:
           case (_, parameterSymbol) =>
-            Param(FldFlags.empty, parameterSymbol, N, Modulefulness.none)
+            Param.simple(parameterSymbol)
         val lambdaSymbol = new TempSymbol(N, erasedType = N, "transform")
         (makeConsequent, alternative) => Split.Let(
           sym = lambdaSymbol,
-          term = Term.Lam(PlainParamList(params), transform),
+          term = Term.Lam(PlainParamList(params)(N), transform),
           tail = make(
             // Note that the output is not used. Semantically, the `transform`
             // term can only access the matched values by bindings.
@@ -1247,10 +1247,10 @@ class SplitCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
   ): (BlockMemberSymbol, ParamList, Split) =
     val sym = BlockMemberSymbol(name, Nil)
     // Pattern parameters are passed as objects.
-    val patternInputs = patternParameters.map(_.copy(flags = FldFlags.empty))
+    val patternInputs = patternParameters.map(p => p.copy(flags = FldFlags.empty)(p.toLoc))
     // The last parameter is the scrutinee.
-    val scrutParam = Param(FldFlags.empty, scrut, N, Modulefulness.none)
-    val ps = PlainParamList(patternInputs :+ scrutParam)
+    val scrutParam = Param.simple(scrut)
+    val ps = PlainParamList(patternInputs :+ scrutParam)(N)
     (sym, ps, topmost)
   
   /** Translate a list of extractor/matching functions for the given pattern.
@@ -1318,11 +1318,11 @@ class SplitCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
       topmost: Split
   ): Ls[Statement] =
     val fieldSymbol = TempSymbol(N, erasedType = N, name)
-    val decl = LetDecl(fieldSymbol, Nil)
-    val param = Param(FldFlags.empty, scrut, N, Modulefulness.none)
-    val paramList = PlainParamList(param :: Nil)
+    val decl = LetDecl(fieldSymbol, Nil)(N)
+    val param = Param.simple(scrut)
+    val paramList = PlainParamList(param :: Nil)(N)
     val lambda = Term.Lam(paramList, Term.SynthIf(topmost))
-    val defineVar = DefineVar(fieldSymbol, lambda)
+    val defineVar = DefineVar(fieldSymbol, lambda)(N)
     val field = RcdField(str(name), fieldSymbol.safeRef)
     decl :: defineVar :: field :: Nil
   
