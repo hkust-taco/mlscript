@@ -61,7 +61,12 @@ declare class Map[K, V] with
   fun has(key: K): Bool
   fun delete(key: K): Bool
   fun clear(): undefined
-  // `set` needs support for keyword-named declarations, like Reflect.set below.
+  fun id"set"(key: K, value: V): Map[K, V]
+  fun keys(): Iterator[K]
+  fun values(): Iterator[V]
+  fun entries(): Iterator[[K, V]]
+declare class Iterator[T] with
+  fun next(): { value: T, done: Bool }
 declare module Map
 declare class WeakSet[V]
 declare module WeakSet
@@ -248,7 +253,7 @@ declare module Math with
 declare module Reflect with
   fun
     get
-    // set // TODO: handle keyword-named members
+    id"set"
     has
     ownKeys
     getPrototypeOf
