@@ -314,7 +314,7 @@ object FlowAnalysisBasedRewrite:
       )
     
     val etaExpansionSolver =
-      if eta then new EtaExpansionSolver(
+      if eta && cfg.liftDefns.isDefined then new EtaExpansionSolver(
         flowAnalysisRes, mkTl("eta-expansion > ", optCfg.effectiveDebugEta))
       else NoEtaExpansion
     val deadParamElimSolver =
