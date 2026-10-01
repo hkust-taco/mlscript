@@ -77,21 +77,37 @@ They count language directives in source files, not test-runner test cases.
 
 ### Mixed-mode imports and fixture interfaces
 
-Some migrated worksheets import legacy compilation fixtures. Check each fixture's
-exposed interfaces and its consumers together. The table lists all remaining
-legacy fixtures and the areas to check when retrying them; these leads do not
-establish that each fixture requires a compiler change.
+Some migrated worksheets import legacy compilation fixtures. An import across
+resolution modes is supported and is not itself a migration blocker. Check each
+fixture's exposed interfaces and its consumers together. Routine annotations and
+source corrections should be attempted before attributing a failure to the
+resolver. The remaining fixtures need the following work:
 
-| Legacy fixtures | Outstanding checks |
+| Legacy fixtures | Concrete work and known failures |
 | --- | --- |
-| `Block`, `Shape` | Nominal members, callback arity, and the public interface for `showArm`. |
-| `LazyArray`, `FingerTreeList`, `LazyFingerTree` | Collection interfaces, shape propagation, and termination when combining tuple spreads. |
-| `Runtime`, `Rendering`, `Predef` | Runtime/host interfaces and their consumers; `Predef.use` also depends on contextual arguments. |
+| `Block` | Annotate `showArm(a: Arm)`. Adapt callbacks such as `args.map(showArg)` to accept unused JS callback arguments, e.g. `(arg, ...) => showArg(arg)`. Declare `Str.replaceAll` in the host interface. `showLiteral` also selects `toString` through a union containing `null` and `undefined`; its branches need usable receiver interfaces. |
+| `Shape` | Correct reads of `sym.args`: neither `ClassSymbol` nor `Symbol` defines that member. The available constructor metadata is `ConcreteClassSymbol.paramsOpt`. Check the intended name lookup and parameter-count operations, and adapt `map`/`every` callbacks to accept unused arguments. These are fixture corrections, not a demonstrated resolver design gap. |
+| `LazyArray`, `LazyFingerTree` | Give indexable inputs and elements of concatenation arguments interfaces for `length`, `at`, and `slice`. Check nullable iterator/cache variables and preserve the `[index, collection]` shape of stack entries. `LazyArray` currently rejects `uitr.next()` because `uitr` includes `null`, and rejects `vals.bits` even inside `if vals is Splice`. These need flow/refinement investigation in addition to annotations. |
+| `FingerTreeList` | Enabling new resolution exceeds the compilation test's time limit. Diagnose inference growth around recursive trees and tuple spreads before calling this an annotation-only port. |
+| `Runtime`, `Rendering`, `Predef` | Audit callable and host interfaces; `Predef.use` also depends on contextual argument insertion. No separate design blocker is established for their missing annotations. |
 | `CSP`, `QuoteExample1` | Quasiquote type selections and wildcard-reference lowering. |
-| `apps/Accounting`, `apps/CSV` | Public interfaces and their worksheet consumers. |
-| `parsing/Extension`, `ParseRule`, `Parser`, `ParseRuleVisualizer`, `parsing-web-demo/main` | Exposed interfaces and mixed-mode parser dependencies. |
-| `parsing/Lexer` | Calls with trailing contextual parameters leave function values where tokens are expected. |
-| `nofib/lastpiece`, `nofib/sorting` | Exposed interfaces and value flow. |
+| `apps/Accounting` | Annotate `process`'s callback as `Report -> Any`, give array callbacks their `Line` input interface and unused argument tails, expose the numeric receiver of `toFixed`, and explicitly import binary `~`. Validate the resulting report with the accounting worksheet. |
+| `apps/CSV` | Refine the `Array[Str] | null` result of `RegExp.exec` before selecting captures, and the possibly undefined result of `Array.at` before calling `push`. Add the missing `Str.replace` host declaration. The existing `!== null` condition does not provide the required receiver interface. |
+| `parsing/Lexer` | Calls to token constructors with trailing `using` parameters need automatic contextual argument insertion; `newres/LexerMigration.mls` records the missing behavior. |
+| `parsing/ParseRule` | Correct `andThen`'s helper signature: it transforms a rule's result into a pair with the following rule's result, rather than preserving `B`. Compilation also triggers a repeated lexical-scope-exit assertion, including with a generic helper and an explicit pair result. This is a compiler bug to isolate, not an interface-design decision. |
+| `parsing/Extension` | Resolve `display`, `extendChoices`, and `andThen` on rules obtained from `Rules.syntaxKinds`. Migrating its `ParseRule` dependency also encounters the assertion above. |
+| `parsing/Parser` | Give rule/options parameters their interfaces. `exprCont` selects `infix.rule` and `infix.process` from an `Option` without unwrapping it. Compilation also rejects uses of the virtual `source` module at `source.line`; investigate those separately from annotations. |
+| `parsing/ParseRuleVisualizer` | Declare the railroad-library interface passed as `rr` (`Sequence`, `Diagram`, `Terminal`, `Optional`, `NonTerminal`, and `Choice`) and resolve the mutable `renderedKinds` set's `has`/`union` selections. Its migrated parser dependencies have the failures listed above. |
+| `parsing-web-demo/main` | Annotate iterator callback inputs and the DOM/railroad host boundary. Replace `examples.get(...)` with the module-style `MutMap.get` API. Validate in the browser as described in the fixture; parser dependency failures remain separate prerequisites. |
+| `nofib/lastpiece`, `nofib/sorting` | Retry exposed-interface annotations and identify any residual flow errors. No specific design blocker is established. |
+
+Array callbacks must accept the arguments supplied by the JS API: three for
+`map`/`filter`/`forEach` and four for `reduce`. An unused rest parameter satisfies
+this existing rule (`newres/Arrays.mls`); it does not require relaxing callback
+arity checking. Missing host declarations and ordinary parameter annotations do
+not require a language-design discussion. Compiler assertions and timeouts need
+reproductions and fixes; a design question should name the unresolved semantic
+choice, rather than merely name the failing subsystem.
 
 To reproduce a blocker, temporarily add the language directive to the named
 compilation fixture and run `ctest <name>` or `catest <name>` as appropriate.
