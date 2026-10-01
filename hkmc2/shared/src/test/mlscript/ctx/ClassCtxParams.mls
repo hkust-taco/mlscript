@@ -36,7 +36,7 @@ Bar
 //│ ║        	^^^
 //│ ╟── Required by contextual parameter declaration: 
 //│ ║  l.30: 	class Bar(using val s: Str)
-//│ ║        	                    ^^^^^^
+//│ ║        	          ^^^^^^^^^^^^^^^^
 //│ ╙── Missing instance: Expected: Str; Available: Int
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -49,7 +49,7 @@ Bar
 //│ ║        	^^^
 //│ ╟── Required by contextual parameter declaration: 
 //│ ║  l.43: 	class Bar(using s: Str)
-//│ ║        	                ^^^^^^
+//│ ║        	          ^^^^^^^^^^^^
 //│ ╙── Missing instance: Expected: Str; Available: Int
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -87,7 +87,7 @@ Foo
 //│ ║        	^^^
 //│ ╟── Required by contextual parameter declaration: 
 //│ ║  l.79: 	class Foo(using Int)(using Str) with
-//│ ║        	                           ^^^
+//│ ║        	                     ^^^^^^^^^
 //│ ╙── Missing instance: Expected: Str; Available: Int
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -128,7 +128,7 @@ x => x.Foo#S
 //│ ║         	      ^^^^
 //│ ╟── Required by contextual parameter declaration: 
 //│ ║  l.101: 	class Foo(using T) with
-//│ ║         	                ^
+//│ ║         	          ^^^^^^^
 //│ ╙── Missing instance: Expected: T; Available: Int
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let lambda; lambda = (undefined, function (x) { return x.S }); return lambda

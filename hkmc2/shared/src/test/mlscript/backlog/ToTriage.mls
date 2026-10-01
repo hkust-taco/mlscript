@@ -238,7 +238,7 @@ id(Foo)(1)
 data class FooSpd(...args)
 //│ ╔══[COMPILATION ERROR] Spread parameters are not supported in class parameters.
 //│ ║  l.238: 	data class FooSpd(...args)
-//│ ╙──       	                     ^^^^
+//│ ╙──       	                  ^^^^^^^
 
 FooSpd(1, 2, 3).args
 //│ ╔══[COMPILATION ERROR] Expected 0 arguments, got 3

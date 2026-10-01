@@ -39,7 +39,7 @@ fun foo(x) = @matchShapes(C(D(_)), C(E(1)), F(_)) shape.match of x,
 @matchShapes(C(_)) 1
 //│ ╔══[WARNING] This annotation has no effect.
 //│ ║  l.39: 	@matchShapes(C(_)) 1
-//│ ║        	             ^^^
+//│ ║        	^^^^^^^^^^^^^^^^^^
 //│ ╟── This annotation is not supported on integer literal terms.
 //│ ║  l.39: 	@matchShapes(C(_)) 1
 //│ ╙──      	                   ^
@@ -53,7 +53,7 @@ fun foo(x) = @matchShapes(C(D(_)), C(E(1)), F(_)) shape.match of x,
 @matchShapes(C(_)) fun foo(x) = x
 //│ ╔══[WARNING] This annotation has no effect.
 //│ ║  l.53: 	@matchShapes(C(_)) fun foo(x) = x
-//│ ╙──      	             ^^^
+//│ ╙──      	^^^^^^^^^^^^^^^^^^
 //│ >>> start class-tags collection-phase
 //│ <<< end class-tags collection-phase
 //│ >>> start class-tags transform-phase
@@ -65,7 +65,7 @@ fun foo(x) = x
 @matchShapes(C(_)) foo(42)
 //│ ╔══[WARNING] This annotation has no effect.
 //│ ║  l.65: 	@matchShapes(C(_)) foo(42)
-//│ ║        	             ^^^
+//│ ║        	^^^^^^^^^^^^^^^^^^
 //│ ╟── The @matchShapes annotation only applies to shape.match calls.
 //│ ║  l.65: 	@matchShapes(C(_)) foo(42)
 //│ ╙──      	                   ^^^^^^^

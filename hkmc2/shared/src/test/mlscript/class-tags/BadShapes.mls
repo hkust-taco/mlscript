@@ -287,7 +287,7 @@ fun dynamicField(flag, external) =
 //│ class-tags transform-phase > allocated tag 2 for Box(x: _)
 //│ ╔══[COMPILATION ERROR] Cannot insert a class tag using constructor arguments that may come from outside.
 //│ ║  l.273: 	  let value = new Box(field)
-//│ ║         	                  ^^^^^^^^^
+//│ ║         	              ^^^^^^^^^^^^^^
 //│ ╟── Field x cannot be checked using a class tag.
 //│ ║  l.273: 	  let value = new Box(field)
 //│ ╙──       	                      ^^^^^
@@ -351,7 +351,7 @@ fun foo() =
 //│ class-tags transform-phase > allocated tag 2 for D(x: 0)
 //│ ╔══[COMPILATION ERROR] Cannot insert a class tag using constructor arguments that may come from outside.
 //│ ║  l.333: 	  if x then new C(bar(false)) else new D(0)
-//│ ║         	                ^
+//│ ║         	            ^^^^^^^^^^^^^^^^^
 //│ ╙── Field x cannot be checked using a class tag.
 //│ class-tags transform-phase > match shapes C(x: _), D(x: _) against C(x: D(x: 0))@0, C(x: _)@1, D(x: 0)@2
 //│ <<< end class-tags transform-phase
@@ -457,7 +457,7 @@ fun flattenBudget(flag) =
 //│ >>> start class-tags transform-phase
 //│ ╔══[COMPILATION ERROR] Flattening this shape would produce more than 256 alternatives.
 //│ ║  l.446: 	  let value = new TooManyShapes(field, field, field, field, field, field, field, field, field)
-//│ ╙──       	                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙──       	              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ class-tags transform-phase > allocated tag 0 for A(x: 0)
 //│ class-tags transform-phase > allocated tag 1 for B(x: 0)
 //│ class-tags transform-phase > match shapes TooManyShapes(h: _, a: _, e: _, f: _, b: _, g: _, c: _, d: _, i: _) against <none>

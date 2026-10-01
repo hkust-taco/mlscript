@@ -308,9 +308,13 @@ class Lexer(origin: Origin, dbg: Bool)(using raise: Raise):
             loc(i + 1, j)
           ) :: Nil)(loc(i, j)))
       case 'i' if i + 2 < length && bytes(i + 1) === 'd' && bytes(i + 2) === '"' =>
-        val (n, j) = takeWhile(i + 3)(isIdentChar)
-        go(j + 1,
-          if bytes(j) === '"' && !n.isEmpty() then ESC_IDENT(n)
+        // Escaped identifiers accept string contents, including spaces and escape sequences.
+        // Reuse string scanning so unterminated names stop safely at a newline or end of input.
+        val (n, j) = str(i + 3, false)(using false)
+        val k = closeStr(j, false)
+        go(k,
+          if k === j then ERROR
+          else if n.nonEmpty then ESC_IDENT(n)
           else { pe(msg"unexpected identifier escape"); ERROR }
         )
       case ';' =>

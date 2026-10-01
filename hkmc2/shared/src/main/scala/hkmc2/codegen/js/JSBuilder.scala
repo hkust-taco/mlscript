@@ -58,7 +58,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
     case Operand(prec: Int)
   
   def mkErr(errMsg: Message)(using Raise, Scope): Document =
-    doc"throw globalThis.Error(${result(Value.Lit(syntax.Tree.StrLit(errMsg.show)))})"
+    doc"throw globalThis.Error(${result(Value.Lit(syntax.Tree.StrLit(errMsg.show))(N))})"
   
   def errExpr(errMsg: Message)(using Raise, Scope): Document =
     raise(ErrorReport(errMsg -> N :: Nil,
@@ -274,9 +274,9 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
     paramLists match
     case Nil => body
     case params :: Nil =>
-      Return(Lambda(params, body)(if generator then Annot.Generator :: Nil else Nil))
+      Return(Lambda(params, body)(if generator then Annot.Generator()(N) :: Nil else Nil, N))
     case params :: rest =>
-      Return(Lambda(params, curriedFunctionBody(rest, body, generator))(Nil))
+      Return(Lambda(params, curriedFunctionBody(rest, body, generator))(Nil, N))
 
   /** Looks through the casts that a JS program does not materialize. */
   @tailrec
@@ -352,7 +352,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
       else doc"$runtimeVar.safeCall(${calls})"
     case lam @ Lambda(ps, bod) => scope.nest givenIn:
       val (params, bodyDoc) = setupFunction(none, ps, bod, isLambda = true)
-      if lam.annot.contains(Annot.Generator)
+      if lam.annot.exists(_.isInstanceOf[Annot.Generator])
       then
         // JavaScript has no generator arrows, so bind `this` to preserve the
         // lexical-`this` behavior of the Lambda IR.
@@ -818,7 +818,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
     case SpecializedSwitch(scrut, cases, dflt, rest) =>
       val switchBod = cases.foldLeft(doc""): (acc, arm) =>
         val needsBreak = arm.isInstanceOf[SwitchCase.ExplicitBreak]
-        acc :: doc" # case ${result(Value.Lit(arm.litValue))}: #{ ${
+        acc :: doc" # case ${result(Value.Lit(arm.litValue)(arm.litValue.toLoc))}: #{ ${
           // * Note: we use `block` here so that Scoped nodes will create proper brace sections,
           // * necessary since `case` clauses do not create a new scope,
           // * so something like `switch (x) { case 1: let y = 1; break; case 2: let y = 2 }` is ill-formed!

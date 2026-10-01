@@ -107,10 +107,10 @@ class A(x1, x2, ...xs)(y1, ...ys) with
   fun fields = [x1, x2, xs, y1, ys]
 //│ ╔══[COMPILATION ERROR] Spread parameters are not supported in class parameters.
 //│ ║  l.106: 	class A(x1, x2, ...xs)(y1, ...ys) with
-//│ ╙──       	                   ^^
+//│ ╙──       	                ^^^^^
 //│ ╔══[COMPILATION ERROR] Spread parameters are not supported in class parameters.
 //│ ║  l.106: 	class A(x1, x2, ...xs)(y1, ...ys) with
-//│ ╙──       	                              ^^
+//│ ╙──       	                           ^^^^^
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'xs'
 //│ ║  l.107: 	  fun fields = [x1, x2, xs, y1, ys]
 //│ ║         	                        ^^

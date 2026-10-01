@@ -13,6 +13,8 @@ yield 1
 @generator
 () => 3
 //│ ╔══[WARNING] This annotation has no effect.
+//│ ║  l.13: 	@generator
+//│ ║        	^^^^^^^^^^
 //│ ╟── This annotation is not supported on function literal terms.
 //│ ║  l.14: 	() => 3
 //│ ╙──      	^^^^^^^
@@ -25,17 +27,21 @@ class C with
   fun f =
     yield 1
 //│ ╔══[COMPILATION ERROR] Generators are not supported on functions without a parameter list
-//│ ║  l.25: 	  fun f =
-//│ ║        	  ^^^^^^^
-//│ ║  l.26: 	    yield 1
+//│ ║  l.26: 	  @generator
+//│ ║        	  ^^^^^^^^^^
+//│ ║  l.27: 	  fun f =
+//│ ║        	^^^^^^^^^
+//│ ║  l.28: 	    yield 1
 //│ ╙──      	^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Yield expressions are not allowed in this context.
-//│ ║  l.26: 	    yield 1
+//│ ║  l.28: 	    yield 1
 //│ ╙──      	    ^^^^^^^
 
 :ge
 @generator
 fun bad = 1
 //│ ╔══[COMPILATION ERROR] Generators are not supported on functions without a parameter list
-//│ ║  l.38: 	fun bad = 1
+//│ ║  l.41: 	@generator
+//│ ║        	^^^^^^^^^^
+//│ ║  l.42: 	fun bad = 1
 //│ ╙──      	^^^^^^^^^^^

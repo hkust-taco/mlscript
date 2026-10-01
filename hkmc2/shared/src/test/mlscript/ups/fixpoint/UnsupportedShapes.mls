@@ -247,7 +247,7 @@ pattern ArityGo = ArityCtx(AritySum) as ArityGo | _
 fun arityGo(x) = if x is @compile ArityGo(r) then r else "<no match>"
 //│ ╔══[COMPILATION ERROR] Class `Pair` has 2 parameters.
 //│ ║  l.13: 	data class Pair(val first, val second)
-//│ ║        	                    ^^^^^^^^^^^^^^^^^
+//│ ║        	                ^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── But 1 arguments were provided.
 //│ ║  l.245: 	pattern ArityCtx(pattern H) = H | Pair(ArityCtx(H))
 //│ ╙──       	                                       ^^^^^^^^^^

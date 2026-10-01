@@ -247,7 +247,7 @@ res.a
 res.b
 //│ ╔══[COMPILATION ERROR] Spread parameters are not supported in class parameters.
 //│ ║  l.241: 	  class A(...r) with
-//│ ╙──       	             ^
+//│ ╙──       	          ^^^^
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'r'
 //│ ║  l.242: 	    fun a = r.push_back(x)
 //│ ║         	            ^

@@ -49,50 +49,56 @@ class A2(x) with
 class B0(x)
 //│ ╔══[COMPILATION ERROR] Buffered classes must not have a main parameter list; use `constructor(...)` syntax instead.
 //│ ║  l.48: 	@buffered
-//│ ╙──      	^^^^^^^^^
+//│ ║        	^^^^^^^^^
+//│ ║  l.49: 	class B0(x)
+//│ ╙──      	^^^^^^^^^^^
 
 :ge
 @buffered
 @buffered
 class B1(x)
 //│ ╔══[COMPILATION ERROR] Only one of bufferable annotation is allowed.
-//│ ║  l.55: 	@buffered
+//│ ║  l.57: 	@buffered
 //│ ║        	^^^^^^^^^
-//│ ║  l.56: 	@buffered
+//│ ║  l.58: 	@buffered
 //│ ╙──      	^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Buffered classes must not have a main parameter list; use `constructor(...)` syntax instead.
-//│ ║  l.55: 	@buffered
+//│ ║  l.57: 	@buffered
 //│ ║        	^^^^^^^^^
-//│ ║  l.56: 	@buffered
-//│ ╙──      	^^^^^^^^^
+//│ ║  l.58: 	@buffered
+//│ ║        	^^^^^^^^^
+//│ ║  l.59: 	class B1(x)
+//│ ╙──      	^^^^^^^^^^^
 
 :ge
 @buffered
 @bufferable
 class B2(x)
 //│ ╔══[COMPILATION ERROR] Only one of bufferable annotation is allowed.
-//│ ║  l.70: 	@buffered
+//│ ║  l.74: 	@buffered
 //│ ║        	^^^^^^^^^
-//│ ║  l.71: 	@bufferable
+//│ ║  l.75: 	@bufferable
 //│ ╙──      	^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Buffered classes must not have a main parameter list; use `constructor(...)` syntax instead.
-//│ ║  l.70: 	@buffered
+//│ ║  l.74: 	@buffered
 //│ ║        	^^^^^^^^^
-//│ ║  l.71: 	@bufferable
+//│ ║  l.75: 	@bufferable
+//│ ║        	^^^^^^^^^^^
+//│ ║  l.76: 	class B2(x)
 //│ ╙──      	^^^^^^^^^^^
 
 :w
 @bufferable
 module B3
 //│ ╔══[WARNING] This annotation has no effect.
-//│ ║  l.85: 	@bufferable
+//│ ║  l.91: 	@bufferable
 //│ ╙──      	^^^^^^^^^^^
 
 :w
 @bufferable
 object B3
 //│ ╔══[WARNING] This annotation has no effect.
-//│ ║  l.92: 	@bufferable
+//│ ║  l.98: 	@bufferable
 //│ ╙──      	^^^^^^^^^^^
 
 
@@ -164,3 +170,26 @@ class A with
   fun f(y) = x + y + z
 
 
+
+// The declaration span includes nested modifiers and multiline annotations.
+:ge
+@buffered
+@untyped
+public data class LocatedBuffer(x)
+//│ ╔══[COMPILATION ERROR] Buffered classes must not have a main parameter list; use `constructor(...)` syntax instead.
+//│ ║  l.176: 	@buffered
+//│ ║         	^^^^^^^^^
+//│ ║  l.177: 	@untyped
+//│ ║         	^^^^^^^^
+//│ ║  l.178: 	public data class LocatedBuffer(x)
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+// The following declaration starts a fresh span.
+:ge
+@buffered
+class NextLocatedBuffer(x)
+//│ ╔══[COMPILATION ERROR] Buffered classes must not have a main parameter list; use `constructor(...)` syntax instead.
+//│ ║  l.189: 	@buffered
+//│ ║         	^^^^^^^^^
+//│ ║  l.190: 	class NextLocatedBuffer(x)
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^

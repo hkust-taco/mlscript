@@ -609,7 +609,7 @@ class InvalTyper(using elState: Elaborator.State, tl: TL)(using Ctx):
   trace[(GeneralType, Type)](s"${ctx.lvl}. Typing ${t.showDbg}", res => s": (${res._1.showDbg}, ${res._2.showDbg})"):
     given CCtx = CCtx.init(t, N)
     t match
-      case Term.Annotated(Annot.Untyped, _) => (Bot, Bot)
+      case Term.Annotated(Annot.Untyped(), _) => (Bot, Bot)
       case sel @ Term.SynthSel(Ref(_: TopLevelSymbol), nme)
         if sel.symbol.isDefined =>
         typeCheck(Ref(sel.symbol.get)(sel.nme, N)) // FIXME 666
