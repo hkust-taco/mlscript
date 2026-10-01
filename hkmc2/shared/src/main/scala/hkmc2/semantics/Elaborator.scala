@@ -61,12 +61,14 @@ object Elaborator:
     
     /** Functions and instantiated class bodies cross lexical resolution boundaries.
       * Function's NonReturnContext already supplies its boundary, so Function must
-      * not introduce it again. Modules/objects have no per-instance boundary.
+      * not introduce it again. Modules/objects have no per-instance boundary;
+      * type aliases substitute types without entering any value activation.
       * In C's method, referring to the outer C constructor crosses the old instance
       * boundary too. That capture cancels the old instance exit when the method's
       * result is consumed; the fresh constructor exit belongs to the new instance.
       */
     def resolutionBoundary: Opt[AnyDefinitionSymbol] = this match
+      case NonReturnContext(S(_: TypeAliasSymbol)) => N
       case NonReturnContext(sym) => sym
       case InnerScope(sym: ClassSymbol) => S(sym)
       case _ => N

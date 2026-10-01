@@ -237,6 +237,10 @@ final class NewResolverState private (
     new Cache(inherited.map(_.defnShapes), identity)
   val typeInterpretations: Cache[Identity[Term], TypeResolution] =
     new Cache(inherited.map(_.typeInterpretations), identity)
+  // Qualification can deliver the same declaration in several environments.
+  // Its open source type is shared before any environment observes the body.
+  val selectedTypes: Cache[(Identity[Term], TypeSymbol), TypeResolution] =
+    new Cache(inherited.map(_.selectedTypes), identity)
   // Recorded before elaborating a declaration's members, including in legacy
   // exporters. Nominal interfaces may use any enclosing explicit type binder.
   val lexicalTypeBinders: Cache[AnyDefinitionSymbol, Set[VarSymbol]] =
@@ -317,6 +321,10 @@ final class NewResolverState private (
     new Cache(inherited.map(_.typeViews), identity)
   val patternTypes: Cache[(Identity[Pattern.Constructor], InnerSymbol), DeclaredType] =
     new Cache(inherited.map(_.patternTypes), identity)
+  // Repeated refinement of one input must reuse its synthesized type hosts.
+  // Constructor paths distinguish references to the same captured class.
+  val patternRefinements: Cache[(Identity[Pattern.Constructor], InnerSymbol, Ls[Marks], TermShape), DeclaredType] =
+    new Cache(inherited.map(_.patternRefinements), identity)
   val primitiveTypes: Cache[ClassSymbol, DeclaredType] =
     new Cache(inherited.map(_.primitiveTypes), identity)
   val extremeTypes: Cache[(Bool, Opt[TypeResolution]), DeclaredType] =

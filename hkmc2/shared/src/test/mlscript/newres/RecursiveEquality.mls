@@ -3,8 +3,6 @@
 // Keep the unannotated deep-equality implementation separate from Predef's
 // public Any × Any -> Bool interface. Recursing on array elements must not
 // cause unbounded inference or a stack overflow.
-// FIXME: Recursive inference through Array.every currently overflows the stack.
-:fixme
 :expect [true, false, true, false]
 fun deepEqual(a, b) = if
   a === b then true
@@ -15,7 +13,15 @@ fun deepEqual(a, b) = if
     ac !== undefined and ac === b!constructor and
       let md = ac!(Predef.Symbols.definitionMetadata)
       md !== undefined and
-        md.2.every(field => field !== null and deepEqual(a!(field), b!(field)))
+        md.2.every((field, ...) => field !== null and deepEqual(a!(field), b!(field)))
 class Box(val value: Int)
 [deepEqual([[1], [2]], [[1], [2]]), deepEqual([[1]], [[2]]), deepEqual(Box(3), Box(3)), deepEqual(Box(3), Box(4))]
-//│ /!!!\ Uncaught error: java.lang.StackOverflowError
+//│ = [true, false, true, false]
+
+// Refinement must also reach a fixed point through mutually recursive helpers.
+// Exposure supplies unknown inputs independently of these concrete local calls.
+:expect true
+fun visit(value) = if value is Array as items then visitArray(items) else true
+fun visitArray(items: Array) = items.every((item, ...) => visit(item))
+visit([1, [2, [3]], []])
+//│ = true

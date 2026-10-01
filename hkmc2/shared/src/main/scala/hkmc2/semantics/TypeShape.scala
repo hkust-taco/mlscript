@@ -43,7 +43,10 @@ enum TypeShape:
   // the element union of the Array supertype of a tuple. Singleton annotations
   // also retain their literal shape; no implementation is inspected.
   case Inferred(value: TermShape)
-  case Captured(base: TypeResolution, thru: AnyDefinitionSymbol)
+  // An open type expression reached through a reference. Unlike Contextual,
+  // its free binders still receive the observing declaration's substitution.
+  // Qualified references retain the receiver's bindings and lexical path too.
+  case Reference(base: TypeResolution, marks: Ls[Marks], bindings: Map[VarSymbol, DeclaredType], instances: TypeSubstitution)
   case Unit
   case Dynamic
   case Abstract
@@ -74,17 +77,20 @@ final class TypeResolution(val source: Term, report: Ls[(Message, Opt[Loc])] => 
       case _ => false
     if shapes.isEmpty then fail(msg"This type has no resolved target" -> source.toLoc :: Nil)
     else if ambiguousReceiver || shapes.sizeCompare(1) > 0 then
+      def declarations(resolution: TypeResolution, seen: Set[TypeResolution]): Ls[(Message, Opt[Loc])] =
+        if seen(resolution) then Nil else resolution.shapes.toList.flatMap:
+          case Nominal(defn) => msg"candidate: ${defn.sym.describeKind}" -> defn.toLoc :: Nil
+          case Alias(symbol, _) => msg"candidate: ${symbol.describeKind}" -> symbol.toLoc :: Nil
+          case Reference(base, _, _, _) => declarations(base, seen + resolution)
+          case _ => Nil
       val candidates = source.withoutCaptures match
         case ref: Term.UnresolvedRef => ref.resolvedMembers.distinct.map: (prefix, member) =>
           msg"candidate: ${member.describe}" -> member.toLoc
-        case _ => shapes.toList.flatMap:
-          case Nominal(defn) => msg"candidate: ${defn.sym.describeKind}" -> defn.toLoc :: Nil
-          case Alias(symbol, _) => msg"candidate: ${symbol.describeKind}" -> symbol.toLoc :: Nil
-          case _ => Nil
+        case _ => declarations(this, Set.empty).distinct
       fail(msg"This type is ambiguous, as it has multiple resolved targets" -> source.toLoc :: candidates)
     shapes.foreach:
       case Alias(_, rhs) => rhs.foreach(_.validate(next))
-      case Captured(base, _) => base.validate(next)
+      case Reference(base, _, _, _) => base.validate(next)
       case Applied(base, args) =>
         base.validate(next)
         args.foreach(_.validate(next))
@@ -95,7 +101,7 @@ final class TypeResolution(val source: Term, report: Ls[(Message, Opt[Loc])] => 
           base.shapes.toList match
             case Nominal(defn) :: Nil => check(defn.sym.nme, defn.tparams.length, defn.toLoc)
             case Alias(symbol, _) :: Nil => symbol.defn.foreach(d => check(symbol.nme, d.tparams.length, d.toLoc))
-            case Captured(inner, _) :: Nil => checkArity(inner, seen + base)
+            case Reference(inner, _, _, _) :: Nil => checkArity(inner, seen + base)
             case _ => ()
         checkArity(base, Set.empty)
       case Wildcard(input, output) => input.foreach(_.validate(next)); output.foreach(_.validate(next))

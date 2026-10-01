@@ -126,7 +126,8 @@ class TypeRelationTest extends AnyFunSuite:
     val alias = h.tpe(TypeShape.Alias(symbol, S(ft.resolution)))
     val scope = TermSymbol(Fun, N, Tree.Ident("owner"))
     val owner = ResolutionBoundary(scope)
-    val captured = h.tpe(TypeShape.Captured(alias.resolution, scope))
+    val captured = h.tpe(TypeShape.Reference(alias.resolution,
+      EntryMark(owner, N, NoMarks) :: Nil, Map.empty, TypeSubstitution.empty))
     val (argument, at) = h.parameter("A")
     val application = h.tpe(TypeShape.Applied(captured.resolution, List(at.resolution)))
     val (target, tt) = h.parameter("Target")

@@ -69,22 +69,42 @@ class NewResolver:
         // have no stored interpretation: their new inference graph must remain
         // private to this consumer, including listeners on synthesized hosts.
         rs.typeInterpretations(new Identity(term)) = result
-        def select(symbol: TypeSymbol)(using NewResolverState): Unit =
+        def selectInto(symbol: TypeSymbol, publish: ShapeListener[TypeShape])(using NewResolverState): Unit =
           term.withoutCaptures match
             case ref: NewResolvable =>
               rstate.recordResolution(ref, ref.resolvedTargets.contains(symbol))(ref.resolvedTargets ::= symbol)
             case _ => ()
           def definition(defn: Definition)(using NewResolverState): Unit = defn match
-            case cls: ClassLikeDef => result.publish(TypeShape.Nominal(cls))
+            case cls: ClassLikeDef => publish(TypeShape.Nominal(cls))
             case alias: TypeDef =>
-              result.publish(TypeShape.Alias(alias.sym, alias.rhs.map(typeResolution)))
+              publish(TypeShape.Alias(alias.sym, alias.rhs.map(typeResolution)))
               // Validate unused annotations too, once their forward source graph
               // is complete. Interface observation uses the same gate below.
               withCanonicalType(DeclaredType(result, Map.empty, TypeSubstitution.empty, true)(N))(_ => ())
-            case _ => result.publish(TypeShape.Abstract)
+            case _ => publish(TypeShape.Abstract)
           symbol.defn match
             case S(defn) => definition(defn)
             case N => symbol.defnListeners += definition
+        def select(symbol: TypeSymbol)(using NewResolverState): Unit = selectInto(symbol, result.publish)
+        def selectReference(symbol: TypeSymbol, shape: SymShape)(using NewResolverState): Unit =
+          val (source, instances) = shape match
+            case contextual: ContextualSymShape => (contextual.source, contextual.instances)
+            case source: CoreSymShape => (source, TypeSubstitution.empty)
+          val bindings = source match
+            case declared: DeclaredSymShape => declared.bindings
+            case _ => Map.empty[VarSymbol, DeclaredType]
+          if shape.markss.isEmpty && bindings.isEmpty && instances.isEmpty then select(symbol)
+          else
+            // A symbol identity determines erasure, but not the environment of
+            // its free binders. Keep the selected declaration at its own endpoint
+            // and transport it just as a syntactic Capture transports a type.
+            val key = (new Identity(term), symbol)
+            val base = rstate.selectedTypes.get(key).getOrElse:
+              val base = new TypeResolution(term, result.fail)
+              rstate.selectedTypes(key) = base
+              selectInto(symbol, base.publish)
+              base
+            result.publish(TypeShape.Reference(base, shape.markss, bindings, instances))
         def reject(shape: Shape)(using NewResolverState): Unit =
           result.fail(msg"${shape.describe.capitalize} cannot be used as a type" -> shape.toLoc :: Nil)
           result.publish(TypeShape.Abstract)
@@ -112,7 +132,8 @@ class NewResolver:
           // does not cross an invocation boundary. Captured function and class
           // parameters still retain their actual value-scope crossings.
           case Capture(base, _: TypeAliasSymbol) => typeResolution(base).listen(result.publish)
-          case Capture(base, thru) => result.publish(TypeShape.Captured(typeResolution(base), thru))
+          case Capture(base, thru) => result.publish(TypeShape.Reference(typeResolution(base),
+            EntryMark(ResolutionBoundary(thru), N, NoMarks) :: Nil, Map.empty, TypeSubstitution.empty))
           case TyApp(base, args) => result.publish(TypeShape.Applied(typeResolution(base), args.map(typeResolution)))
           case Forall(params, outer, body) =>
             result.publish(TypeShape.Polymorphic(params.map: param =>
@@ -156,7 +177,7 @@ class NewResolver:
           case _ => listen(term, discardMarks = true):
             case shape: SymShape => shape.sym.onComplete: () =>
               shape.sym.asTpe.orElse(shape.sym.asModOrObj) match
-                case S(symbol) => select(symbol)
+                case S(symbol) => selectReference(symbol, shape)
                 case N => reject(shape)
             case shape: TermShape => reject(shape)
         result
@@ -187,7 +208,7 @@ class NewResolver:
     @tailrec
     def loop(base: TypeResolution, seen: Set[TypeResolution]): Opt[TypeShape] =
       if seen(base) then N else base.currentShapes.toList match
-        case TypeShape.Captured(inner, _) :: Nil => loop(inner, seen + base)
+        case TypeShape.Reference(inner, _, _, _) :: Nil => loop(inner, seen + base)
         case shape :: Nil => S(shape)
         case _ => N
     loop(base, Set.empty)
@@ -243,7 +264,9 @@ class NewResolver:
               case TypeShape.Alias(symbol, rhs) =>
                 val bound = symbol.defn.get.tparams.map(_.sym).toSet
                 rhs.foreach(edge(_, bound))
-              case TypeShape.Captured(base, _) => child(base)
+              case TypeShape.Reference(base, _, bindings, _) =>
+                edge(base, bindings.keySet)
+                bindings.values.foreach(reference)
               case TypeShape.Applied(base, args) =>
                 child(base)
                 // An alias argument contributes dependencies only if the body
@@ -324,7 +347,7 @@ class NewResolver:
       def visit(res: TypeResolution): Unit = if visited.add(res) then
         res.currentShapes.foreach:
           case TypeShape.Alias(_, rhs) => rhs.foreach(visit)
-          case TypeShape.Captured(base, _) => visit(base)
+          case TypeShape.Reference(base, _, _, _) => visit(base)
           case TypeShape.Applied(base, args) =>
             alias(base).foreach: (symbol, rhs) =>
               applications += ((res, symbol, rhs, args))
@@ -368,7 +391,7 @@ class NewResolver:
           def follow(child: TypeResolution): Unit = checkGuarded(child, next)
           res.currentShapes.foreach:
             case TypeShape.Alias(_, rhs) => rhs.foreach(follow)
-            case TypeShape.Captured(base, _) => follow(base)
+            case TypeShape.Reference(base, _, _, _) => follow(base)
             case TypeShape.Applied(base, args) =>
               follow(base)
               typeApplicationTarget(base) match
@@ -498,7 +521,9 @@ class NewResolver:
         DeclaredType(resolution, relevant, TypeSubstitution.empty, positive)(N)
       resolution.currentShapes.toList match
         case TypeShape.Parameter(symbol, _) :: Nil if bindings.contains(symbol) => selectArgument(bindings(symbol), positive)
-        case TypeShape.Captured(base, thru) :: Nil => captureType(loop(base, bindings, aliases, positive), thru)
+        case (reference: TypeShape.Reference) :: Nil =>
+          transportType(loop(reference.base, bindings ++ reference.bindings, aliases, positive)
+            .instantiate(reference.instances), reference.marks)
         case TypeShape.Union(left, right) :: Nil =>
           combinedType(resolution, loop(left, bindings, aliases, positive), loop(right, bindings, aliases, positive), true)
         case TypeShape.Intersection(left, right) :: Nil =>
@@ -606,7 +631,7 @@ class NewResolver:
             declaredType(part, argument.copy(positive = if positive then argument.positive else !argument.positive)(argument.origin))
         case TypeShape.Contextual(reference) :: Nil =>
           transportType(selectArgument(reference.tpe.instantiate(argument.instances).withOrigin(argument.origin), positive), reference.marks)
-        case Nil | TypeShape.Captured(_, _) :: Nil => deferred
+        case Nil | TypeShape.Reference(_, _, _, _) :: Nil => deferred
         case _ => argument
 
   private def instanceType(instance: TypeParameterInstance)(using NewResolverState): DeclaredType =
@@ -674,9 +699,8 @@ class NewResolver:
           output.fold(missingOutput(tpe.resolution))(declaredType(_, tpe))))
       case TypeShape.Argument(parts) =>
         listener(TypeArgument(parts.input.instantiate(tpe.instances), parts.output.instantiate(tpe.instances).withOrigin(tpe.origin)))
-      case TypeShape.Captured(base, thru) =>
-        listenArgumentParts(declaredType(base, tpe)): parts =>
-          listener(TypeArgument(captureType(parts.input, thru), captureType(parts.output, thru)))
+      case reference: TypeShape.Reference =>
+        listenArgumentParts(referenceType(reference, tpe))(listener)
       case TypeShape.Contextual(reference) =>
         listenArgumentParts(reference.tpe.instantiate(tpe.instances).withOrigin(tpe.origin)): parts =>
           listener(TypeArgument(transportType(parts.input, reference.marks), transportType(parts.output, reference.marks)))
@@ -756,8 +780,8 @@ class NewResolver:
           case NoShape => ()
         case TypeShape.Parameter(symbol, _) =>
           current.bindings.get(symbol).foreach(bound => follow(selectArgument(bound.instantiate(current.instances), current.positive), noTypeArguments, captures, next))
-        case TypeShape.Captured(base, thru) =>
-          follow(captureType(declaredType(base, current), thru), args, captures, next)
+        case reference: TypeShape.Reference =>
+          follow(referenceType(reference, current), args, captures, next)
         case TypeShape.Contextual(reference) =>
           follow(reference.tpe.instantiate(current.instances).withOrigin(current.origin), args.move(inverseMarks(reference.marks)),
             reference.marks ::: captures, next)
@@ -960,8 +984,8 @@ class NewResolver:
                     annotated match
                       case value: TermShape => listenInstanceViews(instantiateShape(value, current.instances))(publish)
                       case NoShape => ()
-              case TypeShape.Captured(base, thru) =>
-                follow(captureType(declaredType(base, current), thru), args, aliases, publish)
+              case reference: TypeShape.Reference =>
+                follow(referenceType(reference, current), args, aliases, publish)
               case TypeShape.Contextual(reference) =>
                 // Arguments belong to the application scope, whereas the
                 // template belongs to the reference's source scope. Move the
@@ -1063,6 +1087,10 @@ class NewResolver:
       case Marked(_, NoMarks) => Nil
       case Marked(_, path: SomeMarks) => path :: Nil
       case NoShape => lastWords("Inverting a scope path cannot reject a candidate")
+
+  private def referenceType(reference: TypeShape.Reference, context: DeclaredType)(using NewResolverState): DeclaredType =
+    transportType(declaredType(reference.base, context.bindings ++ reference.bindings, context.positive)
+      .instantiate(context.instances.withOverrides(reference.instances)).withOrigin(context.origin), reference.marks)
 
   private[semantics] def captureType(bound: DeclaredType, scope: AnyDefinitionSymbol)(using NewResolverState): DeclaredType =
     transportType(bound, EntryMark(ResolutionBoundary(scope), N, NoMarks) :: Nil)
@@ -1280,8 +1308,8 @@ class NewResolver:
                       case NoShape => ()
                   case _ => ()
             else publishParameter(destination, lower)
-        case TypeShape.Captured(base, thru) =>
-          follow(captureType(declaredType(base, tpe), thru), args, captures, next)
+        case reference: TypeShape.Reference =>
+          follow(referenceType(reference, tpe), args, captures, next)
         case TypeShape.Contextual(reference) =>
           follow(reference.tpe.instantiate(tpe.instances).withOrigin(tpe.origin), args.move(inverseMarks(reference.marks)),
             reference.marks ::: captures, next)
@@ -2081,15 +2109,23 @@ class NewResolver:
                 // A class test can succeed for an external input. Its fields then
                 // expose their declarations, not shapes observed in local calls.
                 // Unknown type arguments retain the original diagnostic witness.
-                val base = testedClass.resolution
-                val arg = new TypeResolution(unknown.source, messages => resolError(unknown.source, messages))
-                val contextual = transportShape(sh, inverseMarks(context))
-                contextual match
-                  case value: TermShape => arg.publish(TypeShape.Inferred(value))
-                  case NoShape => ()
-                val applied = new TypeResolution(ctor.target, messages => resolError(ctor.target, messages))
-                applied.publish(TypeShape.Applied(base, cls.tparams.map(_ => arg)))
-                atPattern(declaredType(applied, Map.empty))(check(_, S(sh)))
+                // Refinement is a function of a static test and its input, not
+                // an allocation on every delivery. A recursive callback can
+                // feed the same unknown back to this test through Array[T].
+                // Fresh argument hosts would make each otherwise identical
+                // refined Array a new candidate and prevent a fixed point.
+                val refined = rstate.patternRefinements.getOrElseUpdate((new Identity(ctor), cls.sym, context, sh), {
+                  val base = testedClass.resolution
+                  val arg = new TypeResolution(unknown.source, messages => resolError(unknown.source, messages))
+                  val contextual = transportShape(sh, inverseMarks(context))
+                  contextual match
+                    case value: TermShape => arg.publish(TypeShape.Inferred(value))
+                    case NoShape => ()
+                  val applied = new TypeResolution(ctor.target, messages => resolError(ctor.target, messages))
+                  applied.publish(TypeShape.Applied(base, cls.tparams.map(_ => arg)))
+                  declaredType(applied, Map.empty)
+                })
+                atPattern(refined)(check(_, S(sh)))
               case Marked(opaque: OpaqueTypeShape, marks) =>
                 UnknownValueShape(opaque.source)(opaque.provenance).exit(marks) match
                   case value: TermShape => narrow(value)

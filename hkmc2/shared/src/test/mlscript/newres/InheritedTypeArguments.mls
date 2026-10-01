@@ -98,9 +98,6 @@ private fun read[A](parent: Types.Parent[A]) = parent.item
 
 // A qualified parent under an enclosing generic activation retains the outer
 // binder, rather than treating it as one of the child's own type parameters.
-// FIXME: Reading the outer binder through the local module still loses the
-// intervening read scope after the parent constraint has been transported.
-:fixme
 :expect [6, 7]
 class First(val first: Int)
 class Second(val second: Int)
@@ -112,7 +109,7 @@ private fun make[A](item: A) =
   fun read(parent: Types.Parent) = parent.item
   read(child())
 [make(First(6)).first, make(Second(7)).second]
-//│ /!!!\ Uncaught error: java.lang.AssertionError: assertion failed: Entry and exit cross different lexical resolution scopes: term:make⁰ vs term:read⁰ for ContextualShape(AppShape(MarkedShape(member:First⁰, ↗⟨class:First¹⟩%⟨First²⟩ϵ), [6]))
+//│ = [6, 7]
 
 // Constraints on a callable parent argument must also propagate its input.
 :expect 8
@@ -137,10 +134,10 @@ private fun read[A](parent: Types.Parent[A]) = parent.item
 read(make(Types.Second(9))).second
 read(make(Types.First(8))).second
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.138: 	read(make(Types.First(8))).second
+//│ ║  l.135: 	read(make(Types.First(8))).second
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Instance of class 'First' does not contain member 'second'
-//│ ║  l.138: 	read(make(Types.First(8))).second
+//│ ║  l.135: 	read(make(Types.First(8))).second
 //│ ╙──       	          ^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 

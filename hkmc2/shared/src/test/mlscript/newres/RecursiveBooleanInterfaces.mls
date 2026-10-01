@@ -51,6 +51,15 @@ type First = Second
 type Second = Third
 type Third = First
 //│ ╔══[COMPILATION ERROR] Resolution error in member reference
+//│ ║  l.50: 	type First = Second
+//│ ║        	             ^^^^^^
+//│ ╟── Unguarded recursive type alias 'First'.
+//│ ║  l.52: 	type Third = First
+//│ ║        	             ^^^^^
+//│ ╟── Recursive references must pass through a record, tuple, function, or nominal type.
+//│ ║  l.50: 	type First = Second
+//│ ╙──      	     ^^^^^
+//│ ╔══[COMPILATION ERROR] Resolution error in member reference
 //│ ║  l.51: 	type Second = Third
 //│ ║        	              ^^^^^
 //│ ╟── Unguarded recursive type alias 'Second'.
@@ -67,15 +76,6 @@ type Third = First
 //│ ║        	              ^^^^^
 //│ ╟── Recursive references must pass through a record, tuple, function, or nominal type.
 //│ ║  l.52: 	type Third = First
-//│ ╙──      	     ^^^^^
-//│ ╔══[COMPILATION ERROR] Resolution error in member reference
-//│ ║  l.50: 	type First = Second
-//│ ║        	             ^^^^^^
-//│ ╟── Unguarded recursive type alias 'First'.
-//│ ║  l.52: 	type Third = First
-//│ ║        	             ^^^^^
-//│ ╟── Recursive references must pass through a record, tuple, function, or nominal type.
-//│ ║  l.50: 	type First = Second
 //│ ╙──      	     ^^^^^
 
 // A guarded branch does not guard a separate recursive alternative.

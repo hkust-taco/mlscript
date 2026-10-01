@@ -85,3 +85,47 @@ class MarksTest extends AnyFunSuite:
     val uncancelled = h.value.exit(h.path(scope, scope, N, N))
     assert(uncancelled != h.value)
     assert(uncancelled.exit(h.exits(scope, h.sites(2))) == h.value.exit(h.exits(scope, N)))
+
+  test("arbitrary lexical walks preserve stack semantics and have a lexical depth bound"):
+    val h = new Harness
+    import h.given
+    case class Crossing(entering: Boolean, boundary: ResolutionBoundary, site: Opt[FlowSymbol])
+    type Stack = List[(ResolutionBoundary, Opt[FlowSymbol])]
+    // Interpret the unreduced walk independently, on a complete activation
+    // stack. Diff tests cannot observe this equivalence for every path prefix.
+    def step(stack: Opt[Stack], crossing: Crossing): Opt[Stack] = stack.flatMap: stack =>
+      if crossing.entering then S((crossing.boundary, crossing.site) :: stack)
+      else stack match
+        case (boundary, site) :: rest =>
+          assert(boundary == crossing.boundary)
+          if site.isEmpty || crossing.site.isEmpty || site == crossing.site then S(rest) else N
+        case Nil => fail("A lexical walk cannot exit the root")
+    def crossings(marks: Marks): List[Crossing] = marks match
+      case NoMarks => Nil
+      case EntryMark(boundary, site, rest) => crossings(rest) :+ Crossing(true, boundary, site)
+      case ExitMark(boundary, site, rest) => crossings(rest) :+ Crossing(false, boundary, site)
+    val random = new scala.util.Random(0L)
+    for trial <- 0 until 400 do
+      val start = h.scopes(random.nextInt(h.scopes.size))
+      val inputs = h.sites.map(site => start.reverse.map(_ -> site))
+      var expected = inputs.map(S(_): Opt[Stack])
+      var scope = start
+      var reduced: TermShape | NoShape = h.value
+      for _ <- 0 until 80 do
+        val children = h.scopes.filter(s => s.length == scope.length + 1 && s.startsWith(scope))
+        val entering = scope.isEmpty || (children.nonEmpty && random.nextBoolean())
+        val boundary = if entering then children(random.nextInt(children.size)).last else scope.last
+        // Half the walks never filter: repeated recursion must remain bounded
+        // even when every possible return site is accepted.
+        val site = if trial % 2 == 0 then N else h.sites(random.nextInt(h.sites.size))
+        val crossing = Crossing(entering, boundary, site)
+        expected = expected.map(step(_, crossing))
+        scope = if entering then scope :+ boundary else scope.init
+        val mark = if entering then EntryMark(boundary, site, NoMarks) else ExitMark(boundary, site, NoMarks)
+        reduced = reduced.exit(mark)
+        reduced match
+          case NoShape => assert(expected.forall(_.isEmpty))
+          case Marked(_, marks) =>
+            val normal = crossings(marks)
+            assert(normal.length <= start.length + scope.length)
+            assert(inputs.map(input => normal.foldLeft[Opt[Stack]](S(input))(step)) == expected)

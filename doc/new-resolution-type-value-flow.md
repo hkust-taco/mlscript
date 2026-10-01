@@ -342,6 +342,11 @@ Relation replay adds no candidates, listeners, or parameter instances.
 
 ## Scope transport
 
+See [Lexical paths in resolution](new-resolution-scopes.md) for the scope-tree
+model, reduction proof, and producer obligations. Syntactic captures and qualified
+type selections share `TypeShape.Reference`; both retain the declaration's
+endpoint before the enclosing substitution is applied.
+
 `ContextualType` pairs a reference with an ordinary normalized mark path.
 `transportType` uses the same mark operations as value flow and
 flattens existing contextual nodes before interning the endpoint; references contain

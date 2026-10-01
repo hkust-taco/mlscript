@@ -53,6 +53,11 @@ resolution boundary. Methods capture their enclosing instance scope as well as
 the enclosing function scopes. Alias qualification and structural type-field
 projection introduce no value boundary; modules introduce no invocation boundary.
 
+[Lexical paths in resolution](new-resolution-scopes.md) derives the normal form,
+boundary agreement, and depth bound from walks in the lexical scope tree. It also
+states the endpoint obligations on producers and the separate requirement for
+stable identities in recursive inference graphs.
+
 A normalized mark path contains entries followed by exits, with no repeated
 lexical boundary in either direction. `Shape.scala` enables assertions for this
 invariant. Checking each new tail costs linear time in its depth; it must not be

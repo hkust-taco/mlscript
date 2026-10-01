@@ -30,7 +30,7 @@ final class Erasure private (using Config, Ctx, State):
           case _ => ErasedType.Unknown
         case Alias(_, rhs) :: Nil => rhs.fold(ErasedType.Unknown)(erase(_, next))
         case Union(left, right) :: Nil => ErasedType.union(erase(left, next), erase(right, next))
-        case Captured(base, _) :: Nil => erase(base, next)
+        case Reference(base, _, _, _) :: Nil => erase(base, next)
         case Applied(base, _) :: Nil => erase(base, next)
         case Function(_, _) :: Nil => ErasedType.Function(S(false))
         case Polymorphic(_, _, body) :: Nil => erase(body, next)
@@ -79,7 +79,7 @@ final class Erasure private (using Config, Ctx, State):
       else if count == 0 then erase(res, Set.empty)
       else res.shapes.toList match
         case TypeShape.Alias(_, S(rhs)) :: Nil => fullResult(rhs, count, seen + res)
-        case TypeShape.Captured(base, _) :: Nil => fullResult(base, count, seen + res)
+        case TypeShape.Reference(base, _, _, _) :: Nil => fullResult(base, count, seen + res)
         case TypeShape.Applied(base, _) :: Nil => fullResult(base, count, seen + res)
         case TypeShape.Polymorphic(_, _, body) :: Nil => fullResult(body, count, seen + res)
         case TypeShape.Function(_, ret) :: Nil => fullResult(ret, count - 1, seen + res)

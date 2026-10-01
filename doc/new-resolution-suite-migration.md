@@ -141,8 +141,8 @@ packaging constraint.
   functions, constructor aliases, reconstruction of the same class, and partial
   construction. Existing regressions include `CtxSens`, `ValCtxSens`,
   `Projections`, `RecursiveEnvironment`, `SpreadCalls`, and `InterfaceExposure`
-  under `newres`. A local module capturing an outer binder has a scope failure
-  recorded with `:fixme` in `newres/InheritedTypeArguments.mls`. Do not turn unknown
+  under `newres`. Local modules capturing outer binders are covered by
+  `newres/InheritedTypeArguments.mls` and `ScopePaths.mls`. Do not turn unknown
   shapes into dynamic values or truncate capture paths to make these cases pass.
 - **Exposed nominal results:** `newres/InterfaceExposure.mls` records a returned
   private class whose callable methods are not checked through its nominal result
@@ -151,10 +151,11 @@ packaging constraint.
 - **Cross-block flow:** remaining cases include parameter flow in
   `basics/MiscArrayTests`, unfinished closures in `codegen/FirstClassFunctionTransform`,
   and the unresolved receiver in `codegen/ObjectMethodDebinding`.
-- **Recursive inference:** `newres/RecursiveEquality.mls` preserves the unannotated
-  deep-equality function and its expected results. Resolution currently overflows
-  the stack on its recursive array callback. `Predef.equals` uses the public
-  `Any × Any -> Bool` interface; that annotation does not fix unannotated inference.
+- **Recursive inference:** `newres/RecursiveEquality.mls` now runs the unannotated
+  deep-equality function and mutually recursive array callbacks. Pattern refinement
+  reuses synthesized type arguments for the same test, constructor path, and input,
+  allowing publisher deduplication to close the cycle. See the
+  [scope and graph invariants](new-resolution-scopes.md).
 
 ### Patterns and generated references
 

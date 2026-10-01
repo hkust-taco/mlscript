@@ -88,6 +88,7 @@ final case class ResolutionBoundary private (symbol: AnyDefinitionSymbol):
   override def toString: Str = symbol.toString
 object ResolutionBoundary:
   def apply(symbol: AnyDefinitionSymbol): ResolutionBoundary =
+    assert(!symbol.isInstanceOf[TypeAliasSymbol], "Type aliases do not introduce value resolution scopes")
     new ResolutionBoundary(symbol match
       case ctor: ClassCtorSymbol => ctor.associatedCls
       case symbol => symbol)
@@ -104,6 +105,13 @@ private val checkMarkPaths = true
   * Each direction traverses distinct lexical scopes, so recursive calls cannot
   * lengthen a normalized path indefinitely. Debug assertions check this invariant
   * without widening paths.
+  *
+  * A well-scoped walk's adjacent entry/exit steps traverse the same tree edge.
+  * Cancelling them preserves endpoints; a reduced walk only ascends, then
+  * descends. Neither run can revisit a boundary, and its length is bounded by
+  * the sum of the endpoint depths. Producers must preserve those endpoints,
+  * including through qualified type selections and deferred type references.
+  * See doc/new-resolution-scopes.md for the proof and the producer contracts.
   */
 sealed abstract class Marks:
   def showDbg(using DebugPrinter): Str = this match
