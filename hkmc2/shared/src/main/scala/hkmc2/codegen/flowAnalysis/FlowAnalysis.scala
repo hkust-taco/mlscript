@@ -35,7 +35,7 @@ object FlowAnalysis:
       def mkFunName(using Elaborator.State): String =
         instId
           .map: i =>
-            s"${i.getReferredFun.get.name}_${i.nme}"
+            i.getReferredFun.get.name
           .mkString("_")
       def showInstId(using SymbolPrinter, Raise, ShowCfg): Str =
         if instId.isEmpty then "<root>" else instId.map(_.showRefSite).mkString(".")
@@ -168,9 +168,9 @@ object FunRef:
 sealed trait ProdStrat
 sealed trait ConsStrat
 
-class StratVar(val baseName: Str, val sourceSymbol: Opt[Symbol], val generatedForFun: Opt[TermSymbol])(using eState: Elaborator.State)
+class StratVar(val name: Str, val sourceSymbol: Opt[Symbol], val generatedForFun: Opt[TermSymbol])(using eState: Elaborator.State)
   extends Symbol(using eState) with ProdStrat with ConsStrat:
-  def nme: Str = StratVar.displayName(baseName, sourceSymbol, generatedForFun)
+  def nme: Str = name
   def subst(using SymbolSubst): StratVar = this
   def toLoc: Opt[Loc] = sourceSymbol.flatMap(_.toLoc)
   // Bounds belong to this analysis-local variable and are populated by FlowConstraintSolver.
@@ -185,8 +185,8 @@ object StratVar:
   final class PossibleAccumulatorImpl private[StratVar] (val s: StratVar) extends ConsStrat:
     override def toString(): String = s"PossibleAccumulator($s)"
   
-  private def displayName(nme: String, sourceSymbol: Opt[Symbol], generatedForFun: Opt[TermSymbol]): Str =
-    val ownName = sourceSymbol.fold(if nme.isEmpty then "$stratvar" else nme)(_.nme)
+  private def displayName(nme: String, generatedForFun: Opt[TermSymbol]): Str =
+    val ownName = if nme.isEmpty then "$stratvar" else nme
     generatedForFun.fold(ownName)(fun => s"${ownName}_for_${fun.nme}")
 
   def freshVar(nme: String)(using fState: FlowAnalysis.State): StratVar =
@@ -194,7 +194,7 @@ object StratVar:
   def freshVar(nme: String, generatedForFun: TermSymbol)(using fState: FlowAnalysis.State): StratVar =
     freshVar(nme, N, S(generatedForFun))
   def freshVar(nme: String, sourceSymbol: Opt[Symbol], generatedForFun: Opt[TermSymbol])(using fState: FlowAnalysis.State): StratVar =
-    val stratVar = StratVar(nme, sourceSymbol, generatedForFun)(using fState.eState)
+    val stratVar = StratVar(displayName(nme, generatedForFun), sourceSymbol, generatedForFun)(using fState.eState)
     fState.stratVars += stratVar
     stratVar
   def freshVar(nme: String, forFunOpt: Opt[TermSymbol])(using fState: FlowAnalysis.State): StratVar =
@@ -793,7 +793,7 @@ class FlowConstraintsCollector(
       def duplicateVarState(s: StratVar) =
         if s.generatedForFun.fold(false):
           forFun => funToSccRep(forFun).fold(false)(_ is groupRep)
-        then stratVarMap.getOrElseUpdate(s, freshVar(s.baseName, s.sourceSymbol, cc.forFunGroup.orElse(s.generatedForFun)))
+        then stratVarMap.getOrElseUpdate(s, freshVar(s.name, s.sourceSymbol, cc.forFunGroup))
         else s
       def duplicateProdStrat(s: ProdStrat): ProdStrat = s match
         case v: StratVar => duplicateVarState(v)

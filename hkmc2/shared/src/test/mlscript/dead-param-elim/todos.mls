@@ -37,14 +37,14 @@ c(p(true))
 //│ deforest > 	match: x⁰
 //│ deforest > <<< fusing <<<
 //│ eta-expansion > >>> eta-expansion targets shapes >>>
-//│ eta-expansion > p_p$p⁰: [1, 1]
+//│ eta-expansion > p$p⁰: [1, 1]
 //│ eta-expansion > <<< eta-expansion targets shapes <<<
 //│ dead-param-elim > >>> dead-param-elim results >>>
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let p_p$p$worker;
+//│ let p$p$worker;
 //│ @private @noInline
-//│ define p_p$p$worker as fun p_p$p$worker⁰(b, eta$0$0) {
+//│ define p$p$worker as fun p$p$worker⁰(b, eta$0$0) {
 //│   match b
 //│     true =>
 //│       return 1
@@ -71,7 +71,7 @@ c(p(true))
 //│       return 0
 //│   end
 //│ };
-//│ return p_p$p$worker⁰(true, 0)
+//│ return p$p$worker⁰(true, 0)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 1
 
@@ -97,16 +97,16 @@ sumPlus(enum(3))
 //│ deforest > 	fields: ls⁰.t⁰
 //│ deforest > <<< fusing <<<
 //│ eta-expansion > >>> eta-expansion targets shapes >>>
-//│ eta-expansion > enum_enum$enum⁰: [1, 9]
+//│ eta-expansion > enum$enum⁰: [1, 9]
 //│ eta-expansion > <<< eta-expansion targets shapes <<<
 //│ dead-param-elim > >>> dead-param-elim results >>>
-//│ dead-param-elim > prodfun sumPlus_sumPlus$ls_Cons⁰#1 @ <root> -> eliminable: {0, 5}
-//│ dead-param-elim > prodfun sumPlus_sumPlus$ls_Nil⁰#1 @ <root> -> eliminable: {0, 5}
+//│ dead-param-elim > prodfun sumPlus$ls_Cons⁰#1 @ <root> -> eliminable: {0, 5}
+//│ dead-param-elim > prodfun sumPlus$ls_Nil⁰#1 @ <root> -> eliminable: {0, 5}
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let enum_enum$enum$worker;
+//│ let enum$enum$worker;
 //│ @private
-//│ define enum_enum$enum$worker as fun enum_enum$enum$worker⁰(x, eta$0$1, eta$0$2, eta$0$3, eta$0$4, eta$0$6, eta$0$7, eta$0$8) {
+//│ define enum$enum$worker as fun enum$enum$worker⁰(x, eta$0$1, eta$0$2, eta$0$3, eta$0$4, eta$0$6, eta$0$7, eta$0$8) {
 //│   let scrut, tmp;
 //│   set scrut = <⁰(x, 0);
 //│   match scrut
@@ -115,7 +115,7 @@ sumPlus(enum(3))
 //│     else
 //│       let fv_tmp, inlinedVal;
 //│       set tmp = -⁰(x, 1);
-//│       set inlinedVal = enum_enum$enum$worker⁰(tmp, undefined, undefined, undefined, undefined, undefined, undefined, undefined);
+//│       set inlinedVal = enum$enum$worker⁰(tmp, undefined, undefined, undefined, undefined, undefined, undefined, undefined);
 //│       set fv_tmp = +⁰(x, inlinedVal);
 //│       return +⁰(fv_tmp, 1)
 //│   end
@@ -147,7 +147,7 @@ sumPlus(enum(3))
 //│       throw new globalThis⁰.Error⁰("match error")
 //│   end
 //│ };
-//│ return enum_enum$enum$worker⁰(3, undefined, undefined, undefined, undefined, undefined, undefined, undefined)
+//│ return enum$enum$worker⁰(3, undefined, undefined, undefined, undefined, undefined, undefined, undefined)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 11
 
@@ -177,14 +177,14 @@ c(p(true))
 //│ deforest > 	match: x²
 //│ deforest > <<< fusing <<<
 //│ eta-expansion > >>> eta-expansion targets shapes >>>
-//│ eta-expansion > p_p$p⁰: [1, 0]
+//│ eta-expansion > p$p⁰: [1, 0]
 //│ eta-expansion > <<< eta-expansion targets shapes <<<
 //│ dead-param-elim > >>> dead-param-elim results >>>
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let p_p$p$worker;
+//│ let p$p$worker;
 //│ @private @noInline
-//│ define p_p$p$worker as fun p_p$p$worker¹(b) {
+//│ define p$p$worker as fun p$p$worker¹(b) {
 //│   match b
 //│     true =>
 //│       return 1
@@ -211,6 +211,6 @@ c(p(true))
 //│       throw new globalThis⁰.Error⁰("match error")
 //│   end
 //│ };
-//│ return p_p$p$worker¹(true)
+//│ return p$p$worker¹(true)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 1
