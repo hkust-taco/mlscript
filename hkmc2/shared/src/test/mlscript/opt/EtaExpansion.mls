@@ -47,15 +47,10 @@ g(1)(2)
 fun h(x) = @affine(0) y => x + y
 h(1)(2)
 //│ eta-expansion > >>> eta-expansion targets shapes >>>
+//│ eta-expansion > h⁰#0 @ <root>: [1, 1]
 //│ eta-expansion > <<< eta-expansion targets shapes <<<
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let lambda$;
-//│ @inline @private @affine(0)
-//│ define lambda$ as fun lambda$⁰(x)(y) {
-//│   return +⁰(x, y)
-//│ };
-//│ define h⁰ as fun h¹(x) { return lambda$⁰(x) };
-//│ return 3
+//│ @inline define h⁰ as fun h¹(x)(eta$0$0) { return +⁰(x, eta$0$0) }; return 3
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 3
 
@@ -131,10 +126,10 @@ g(f, 1)(2) + g(h, 3)(4)
 :w
 fun h(x) = @affine(1) y => x + y
 //│ ╔══[WARNING] This annotation has no effect.
-//│ ║  l.132: 	fun h(x) = @affine(1) y => x + y
+//│ ║  l.127: 	fun h(x) = @affine(1) y => x + y
 //│ ║         	           ^^^^^^^^^^
 //│ ╟── This annotation is not supported on function literal terms.
-//│ ║  l.132: 	fun h(x) = @affine(1) y => x + y
+//│ ║  l.127: 	fun h(x) = @affine(1) y => x + y
 //│ ╙──       	                      ^^^^^^^^^^
 //│ eta-expansion > >>> eta-expansion targets shapes >>>
 //│ eta-expansion > <<< eta-expansion targets shapes <<<
@@ -142,7 +137,7 @@ fun h(x) = @affine(1) y => x + y
 :w
 @affine(0) val v = 1
 //│ ╔══[WARNING] This annotation has no effect.
-//│ ║  l.143: 	@affine(0) val v = 1
+//│ ║  l.138: 	@affine(0) val v = 1
 //│ ╙──       	^^^^^^^^^^
 //│ eta-expansion > >>> eta-expansion targets shapes >>>
 //│ eta-expansion > <<< eta-expansion targets shapes <<<
@@ -151,10 +146,10 @@ fun h(x) = @affine(1) y => x + y
 :w
 fun h(x) = @affine(0) x
 //│ ╔══[WARNING] This annotation has no effect.
-//│ ║  l.152: 	fun h(x) = @affine(0) x
+//│ ║  l.147: 	fun h(x) = @affine(0) x
 //│ ║         	           ^^^^^^^^^^
 //│ ╟── This annotation is not supported on reference terms.
-//│ ║  l.152: 	fun h(x) = @affine(0) x
+//│ ║  l.147: 	fun h(x) = @affine(0) x
 //│ ╙──       	                      ^
 //│ eta-expansion > >>> eta-expansion targets shapes >>>
 //│ eta-expansion > <<< eta-expansion targets shapes <<<
