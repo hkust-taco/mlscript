@@ -1,11 +1,13 @@
+#lang(0.3.x)
+
 
 fun max(a, b) = if a < b then b else a
 
 module ObjectBuffer with
   abstract class ObjectBuffer with
     val buf
-    fun mkNew(cls)
-    fun del(cls, inst)
+    fun mkNew(cls: { size: Int, ctor: (ObjectBuffer, Int) -> Any })
+    fun del(cls: { size: Int }, inst)
     fun read(idx)
     fun write(idx, v)
 
@@ -17,12 +19,12 @@ module ObjectBuffer with
       buf.[0] = buf.length
       buf.[1] = -1
 
-    fun mkNew(cls) =
+    fun mkNew(cls: { size: Int, ctor: (ObjectBuffer, Int) -> Any }) =
       if cls.size === 0 do return 0
       val idx = _alloc(getBlockSize(cls.size))
       cls.ctor(this, idx)
 
-    fun del(cls, inst) =
+    fun del(cls: { size: Int }, inst) =
       if cls.size !== 0 do
         _free(inst, getBlockSize(cls.size))
 

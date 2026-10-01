@@ -1,3 +1,5 @@
+#lang(0.3.x)
+
 import "../Option.mls"
 
 open Option { Some, None }
@@ -15,13 +17,13 @@ data class Term with
   let _freeVars = None
   
   // Compute free variables. Retrieve the cache if it exists.
-  fun freeVars = if _freeVars is
+  fun freeVars: Set[Str] = if _freeVars is
     Some(fv) then fv
     None then
       let fv = if this is
         Var(name) then new Set([name])
-        App(lhs, rhs) then lhs.freeVars.union(rhs.freeVars)
-        Abs(name, body) then body.freeVars.difference(new Set([name]))
+        App(lhs, rhs) then (lhs as Term).freeVars.union((rhs as Term).freeVars)
+        Abs(name, body) then (body as Term).freeVars.difference(new Set([name]))
       set _freeVars = Some(fv)
       fv
   
@@ -41,20 +43,20 @@ data class Term with
   fun equals(that) = if this is
     Var(name) and that is Var(name') then name === name'
     App(lhs, rhs) and that is App(lhs', rhs') then
-      lhs.equals(lhs') && rhs.equals(rhs')
+      (lhs as Term).equals(lhs') && (rhs as Term).equals(rhs')
     Abs(Var(name), body) and that is Abs(Var(name'), body') then
-      name === name' && body.equals(body')
+      name === name' && (body as Term).equals(body')
     else false
   
   // Pretty-print the term.
   fun show = if this is
     Var(name) then name
-    App(Abs as lhs, rhs) then "(" + lhs.show + ") " + rhs.show
-    App(lhs, App as rhs) then lhs.show + " (" + rhs.show + ")"
-    App(lhs, rhs) then lhs.show + " " + rhs.show
-    Abs(Var(name), body) then "λ" + name + ". " + body.show
+    App(Abs as lhs, rhs) then "(" + (lhs as Term).show + ") " + (rhs as Term).show
+    App(lhs, App as rhs) then (lhs as Term).show + " (" + (rhs as Term).show + ")"
+    App(lhs, rhs) then (lhs as Term).show + " " + (rhs as Term).show
+    Abs(Var(name), body) then "λ" + name + ". " + (body as Term).show
 
-fun subst(term, name, target) = if term is
+fun subst(term, name, target: Term) = if term is
   Var(name') and
     name === name' then target
     else term

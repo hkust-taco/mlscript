@@ -24,7 +24,7 @@ open Rules { termRule, typeRule, declRule, syntaxKinds }
 
 module Parser with ...
 
-val tracer = new TreeTracer.TreeTracer
+val tracer: TreeTracer.TreeTracer = new TreeTracer.TreeTracer
 
 let termOptions =
   kind: "term", rule: termRule

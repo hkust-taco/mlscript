@@ -1,3 +1,5 @@
+#lang(0.3.x)
+
 import "../../Predef.mls"
 import "../../Option.mls"
 import "../../Stack.mls"
@@ -28,7 +30,7 @@ fun getRuleByKind(kind: Str): ParseRule.ParseRule[out Anything] = syntaxKinds |>
 
 fun define(name: Str)(...choices) = syntaxKinds |> MutMap.updateWith(name) of case
   None       then Some(rule(name, ...choices))
-  Some(rule) then Some(rule.extendChoices(choices Iter.toStack()))
+  Some(rule) then Some((rule as ParseRule.ParseRule).extendChoices(choices Iter.toStack()))
 
 fun idFirst(value, _) = value
 fun idSecond(_, value) = value

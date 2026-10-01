@@ -1,3 +1,5 @@
+#lang(0.3.x)
+
 import "./Predef.mls"
 import "./Iter.mls"
 
@@ -14,12 +16,12 @@ module XML with ...
 
 fun serializeValue(value) = if value is
   Str then JSON.stringify(value)
-  StyleAttributeValue then value.toValue()
+  StyleAttributeValue then (value as StyleAttributeValue).toValue()
     
 fun joinAttributes(attributes) = attributes
   mapping of case
     [name, value] then name + "=" + serializeValue(value)
-    StyleAttributeValue as style then "style=" + style.toValue()
+    StyleAttributeValue as style then "style=" + (style as StyleAttributeValue).toValue()
     Object as record then joinAttributes(Object.entries(record))
   joined(" ")
 
