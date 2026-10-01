@@ -21,9 +21,9 @@ object EffectAnalysis:
 
 
   def summarize(effectVar: StratVar): EffectSummary =
-    if effectVar.lowerBounds.contains(UnsafeEta)
-    then EffectSummary.UnsafeEta
-    else EffectSummary.Pure
+    if effectVar.lowerBounds.forall(_.isInstanceOf[StratVar])
+    then EffectSummary.Pure
+    else EffectSummary.UnsafeEta
 
   def apply(solver: FlowConstraintSolver)(using tl: TraceLogger): EffectAnalysisResult =
     given fState: FlowAnalysis.State = solver.fState
