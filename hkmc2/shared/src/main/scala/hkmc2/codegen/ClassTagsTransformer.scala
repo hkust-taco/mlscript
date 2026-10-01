@@ -578,12 +578,7 @@ class ClassTagsTransformer(
   override def applyFunDefn(fun: FunDefn): FunDefn =
     val transformer = new BlockTransformerShallow(SymbolSubst.Id):
       override def applyBlock(block: Block): Block =
-        block match
-          case Assign(lhs: VarSymbol, _, _) if fun.body.freeVars.contains(lhs) =>
-            summon[Raise].apply(ErrorReport(
-              msg"Class tags do not support set operations yet." -> lhs.toLoc :: Nil,
-              source = Diagnostic.Source.Compilation,
-            ))
+        block match // * do not check against Assign, since it can be used to initialize variables encaptured by the shape.match arm lambdas
           case AssignField(lhs, _, _, _) =>
             summon[Raise].apply(ErrorReport(
               msg"Class tags do not support set operations yet." -> lhs.toLoc :: Nil,

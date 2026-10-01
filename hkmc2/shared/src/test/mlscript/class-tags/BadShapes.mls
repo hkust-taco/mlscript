@@ -428,9 +428,6 @@ fun recursiveMatch() = recursiveBranch()
 //│ <<< end class-tags web-computation-phase
 //│ >>> start class-tags transform-phase
 //│ class-tags transform-phase > allocated tag 0 for Box(x: 0)
-//│ ╔══[COMPILATION ERROR] Class tags do not support set operations yet.
-//│ ║  l.412: 	let remaining = 1
-//│ ╙──       	    ^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Annotated shape.match branches must be anonymous functions.
 //│ ║  l.417: 	    @matchShapes(Box(_)) shape.match of value, recursiveBranch
 //│ ║         	                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -459,12 +456,12 @@ fun flattenBudget(flag) =
 //│ <<< end class-tags web-computation-phase
 //│ >>> start class-tags transform-phase
 //│ ╔══[COMPILATION ERROR] Flattening this shape would produce more than 256 alternatives.
-//│ ║  l.449: 	  let value = new TooManyShapes(field, field, field, field, field, field, field, field, field)
+//│ ║  l.446: 	  let value = new TooManyShapes(field, field, field, field, field, field, field, field, field)
 //│ ╙──       	                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ class-tags transform-phase > allocated tag 0 for A(x: 0)
 //│ class-tags transform-phase > allocated tag 1 for B(x: 0)
 //│ class-tags transform-phase > match shapes TooManyShapes(h: _, a: _, e: _, f: _, b: _, g: _, c: _, d: _, i: _) against <none>
 //│ ╔══[COMPILATION ERROR] Annotated shape.match has no tagged class shapes for its scrutinee.
-//│ ║  l.450: 	  @matchShapes(TooManyShapes(_, _, _, _, _, _, _, _, _)) shape.match of value, () => 1
+//│ ║  l.447: 	  @matchShapes(TooManyShapes(_, _, _, _, _, _, _, _, _)) shape.match of value, () => 1
 //│ ╙──       	               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ <<< end class-tags transform-phase
