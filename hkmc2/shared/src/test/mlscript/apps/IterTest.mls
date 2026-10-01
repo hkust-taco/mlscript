@@ -115,7 +115,7 @@ open Stack { Cons, Nil }
 
 [1, 2, -3, 4, 5, 6]
   Iter.mapping of x => () => print(x + " was accessed"); x
-  Iter.some of get => get() < 0
+  Iter.some of (get: () -> Int) => get() < 0
 //│ > 1 was accessed
 //│ > 2 was accessed
 //│ > -3 was accessed
@@ -123,7 +123,7 @@ open Stack { Cons, Nil }
 
 [1, 2, 3, -4, 5, 6]
   Iter.mapping of x => () => print(x + " was accessed"); x
-  Iter.every of get => get() > 0
+  Iter.every of (get: () -> Int) => get() > 0
 //│ > 1 was accessed
 //│ > 2 was accessed
 //│ > 3 was accessed

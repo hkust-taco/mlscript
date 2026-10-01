@@ -1,3 +1,5 @@
+#lang(0.3.x)
+
 #config(liftDefns: Some(LiftDefns))
 
 import "./Option.mls"
@@ -14,11 +16,11 @@ class IterableBase with
   fun iterator() = throw new Error("Not implemented: iterator()")
 
   // require that subclasses are immutable
-  fun toArray() = [...this]
+  fun toArray(): Array = [...this]
   
   let array = null
   
-  fun asArray =
+  fun asArray: Array =
     if array is null then
       set array = toArray() Object.freeze()
       array
@@ -71,12 +73,12 @@ class IterableBase with
 
 // * Implements the `Iterable` protocol.
 // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Iteration_protocols#the_iterable_protocol
-class Iterable(mk) extends IterableBase with
+class Iterable(mk: () -> Iterator) extends IterableBase with
   fun iterator() = mk()
 
 // * Implements the `Iterator` protocol.
 // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Iteration_protocols#the_iterator_protocol
-class IteratorImpl(val next)
+class IteratorImpl(val next: Function)
 
 module Result with
   class Next(val value) with
@@ -87,7 +89,7 @@ module Result with
 
 // A helper function to detect if `Symbol.iterator` is on an object, and if not,
 // indicate the object's class in the error message, which is useful for debugging.
-fun getIterator(something) =
+fun getIterator(something): Iterator =
   let test = something.(Symbol.iterator)
   if test is undefined then
     throw TypeError of "Not an iterable: " + if
@@ -98,12 +100,12 @@ fun getIterator(something) =
       else prototype.constructor.name
   else test.call(something)
 
-fun adaptIterable(iterable, makeNext) = Iterable of () =>
+fun adaptIterable(iterable, makeNext: Function) = Iterable of () =>
   let iterator = getIterator of iterable
   IteratorImpl of makeNext of iterator
 
-fun mapping(xs, op) =
-  xs adaptIterable of iterator => () =>
+fun mapping(xs, op: Function) =
+  xs adaptIterable of (iterator: Iterator) => () =>
     let next = iterator.next()
     if next.done then
       Result.Done
@@ -142,8 +144,8 @@ fun flattening(xss) =
               Result.Done
           else Result.Next of next.value
 
-fun filtering(xs, op) =
-  xs adaptIterable of iterator => () =>
+fun filtering(xs, op: Function) =
+  xs adaptIterable of (iterator: Iterator) => () =>
     let next = iterator.next()
     while next.done is false and op(next.value) is false do
       set next = iterator.next()
@@ -174,7 +176,7 @@ fun zippingWithIndex(xs) =
     set i = i + 1
     [x, j]
 
-fun foldingImpl(iterator, acc, op) =
+fun foldingImpl(iterator: Iterator, acc, op: Function) =
   let next = iterator.next()
   while next.done is false do
     set acc = op(acc, next.value)
@@ -198,18 +200,18 @@ fun appended(xs, ys) =
 
 fun withAppended(xs) = _ appended(xs)
 
-fun reduced(xs, op) =
+fun reduced(xs, op: Function) =
   let iterator = getIterator of xs
   let next = iterator.next()
   if next.done do
     throw new Error("Empty iterator")
   foldingImpl(iterator, next.value, op)
 
-fun folded(xs, z, op) =
+fun folded(xs, z, op: Function) =
   let iterator = getIterator of xs
   foldingImpl(iterator, z, op)
 
-fun rightFolded(xs, z, op) =
+fun rightFolded(xs, z, op: Function) =
   let iterator = getIterator of xs
   fun go() = if
     let next = iterator.next()
@@ -229,7 +231,7 @@ fun joined(xs, sep) =
       String(next.value)
       (acc, x) => acc + sep + String(x)
 
-fun firstDefined(xs, op) =
+fun firstDefined(xs, op: Function) =
   let iterator = getIterator of xs
   let next = iterator.next()
   let result = None
@@ -240,7 +242,7 @@ fun firstDefined(xs, op) =
   result
 
 // `exists` is a keyword
-fun some(xs, op) =
+fun some(xs, op: Function) =
   let iterator = getIterator of xs
   let next = iterator.next()
   while next.done is false do
@@ -249,7 +251,7 @@ fun some(xs, op) =
   false
 
 // `forall` is a keyword
-fun every(xs, op) =
+fun every(xs, op: Function) =
   let iterator = getIterator of xs
   let next = iterator.next()
   while next.done is false do
@@ -257,7 +259,7 @@ fun every(xs, op) =
     set next = iterator.next()
   true
 
-fun each(xs, op) =
+fun each(xs, op: Function) =
   let iterator = getIterator of xs
   let next = iterator.next()
   while next.done is false do

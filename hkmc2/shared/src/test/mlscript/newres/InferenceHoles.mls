@@ -12,7 +12,7 @@ both(Pair([First(1), Second(2)]), Pair([Second(3), First(4)]))
 
 // TODO: preserve distinct callers through a recursive hole reference.
 // This hole must use ordinary inference, not fresh call-site parameter symbols.
-// Template argument rebasing currently strips the caller IDs from its bounds.
+// Recursive hole references currently conflate bounds from distinct callers.
 :fixme
 :expect [5, 6]
 class First(val first: Int)

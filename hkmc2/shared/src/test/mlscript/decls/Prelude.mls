@@ -157,6 +157,13 @@ declare class Array[T](val length: Int): Array[T] with
   fun reverse(): Array[T]
   fun sort(...compare): Array[T]
   fun slice(...bounds): Array[T]
+  fun copyWithin(target: Int, start: Int, ...end): Array[T]
+  fun entries(): Iterator[[Int, T]]
+  fun keys(): Iterator[Int]
+  fun toReversed(): Array[T]
+  fun toSorted(...compare): Array[T]
+  fun toSpliced(start: Int, ...items): Array[T]
+  fun id"with"(index: Int, value: T): Array[T]
   fun at(index: Int): T | undefined
   fun fill(value: T, ...bounds): Array[T]
   fun splice(start: Int, ...items): Array[T]
@@ -168,16 +175,24 @@ declare class Array[T](val length: Int): Array[T] with
   fun map[U](f: (T, Int, Array[T]) -> U): Array[U]
   fun forEach(f: (T, Int, Array[T]) -> Any): undefined
   fun filter(f: (T, Int, Array[T]) -> Bool): Array[T]
+  fun find(f: (T, Int, Array[T]) -> Bool, ...thisArg): T | undefined
+  fun findIndex(f: (T, Int, Array[T]) -> Bool, ...thisArg): Int
+  fun findLast(f: (T, Int, Array[T]) -> Bool, ...thisArg): T | undefined
+  fun findLastIndex(f: (T, Int, Array[T]) -> Bool, ...thisArg): Int
+  fun flat(...depth): Array[Any]
+  fun flatMap[U](f: (T, Int, Array[T]) -> (U | Array[U]), ...thisArg): Array[U]
   fun every(f: (T, Int, Array[T]) -> Bool): Bool
   fun some(f: (T, Int, Array[T]) -> Bool): Bool
   // Without an initial value, the first element becomes the accumulator, so the
   // accumulator type would also have to include T. Methods cannot be overloaded
   // by arity, so only the form with an initial value is declared.
   fun reduce[U](f: (U, T, Int, Array[T]) -> U, initial: U): U
+  fun reduceRight[U](f: (U, T, Int, Array[T]) -> U, initial: U): U
   fun indexOf(value: T, ...from): Int
   fun lastIndexOf(value: T, ...from): Int
   fun includes(value: T, ...from): Bool
   fun toString(): Str
+  fun toLocaleString(...options): Str
 declare module Array with
   fun from(...args): Array[Any]
   fun
@@ -251,12 +266,13 @@ declare module Math with
       trunc: Num -> Num
 
 declare module Reflect with
+  // Prototype objects may expose arbitrary host properties.
+  fun getPrototypeOf(target): dyn
   fun
     get
     id"set"
     has
     ownKeys
-    getPrototypeOf
     apply
     construct
 declare module console with

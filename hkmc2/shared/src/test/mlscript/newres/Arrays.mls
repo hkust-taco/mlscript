@@ -86,7 +86,7 @@ values([Item(4)]).map((item, ...) => item.value)
 :ge
 [1].map(x => x)
 //│ ╔══[COMPILATION ERROR] Resolution error in function type
-//│ ║  l.167: 	  fun map[U](f: (T, Int, Array[T]) -> U): Array[U]
+//│ ║  l.174: 	  fun map[U](f: (T, Int, Array[T]) -> U): Array[U]
 //│ ║         	                ^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Callback parameter list does not match its declared function type.
 //│ ║  in Arrays.mls:87
@@ -224,7 +224,7 @@ class Total(val total: Int)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Function 'reduce' expected 2 arguments, but got 1
 //│ ║  in ../decls/Prelude.mls
-//│ ║  l.175: 	  fun reduce[U](f: (U, T, Int, Array[T]) -> U, initial: U): U
+//│ ║  l.188: 	  fun reduce[U](f: (U, T, Int, Array[T]) -> U, initial: U): U
 //│ ╙──       	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ = 3
 

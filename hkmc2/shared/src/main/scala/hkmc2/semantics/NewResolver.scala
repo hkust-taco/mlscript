@@ -534,7 +534,7 @@ class NewResolver:
           // Reduce arguments in their caller environment before binding formals.
           // The alias guard grows only on body expansion, so nested Identity
           // applications reduce while unproductive recursive aliases stop.
-          applyAlias(loop(base, bindings, aliases, positive), TypeApplication(arguments.map(loop(_, bindings, aliases, positive)), Nil), Set.empty).getOrElse(retain)
+          applyAlias(loop(base, bindings, aliases, positive), TypeApplication(arguments.map(loop(_, bindings, aliases, positive))), Set.empty).getOrElse(retain)
         case _ => retain
     loop(resolution, bindings, Set.empty, positive)
 
@@ -713,19 +713,22 @@ class NewResolver:
       declaredType(resolution, Map.empty)
     })
 
-  /** Supplied arguments and omitted positions belong to the application scope.
-    * Moving a template must rebase both, even before an omitted host is needed.
+  /** Supplied arguments belong to the application scope and move back to the
+    * template's endpoint before substitution. Omitted arguments instead belong
+    * to the source type reference: all views must read and constrain their shared
+    * host in that same scope. Rebasing an omitted host with each observation's
+    * path would reinterpret its bounds in unrelated callers' lexical scopes.
     */
-  private case class TypeApplication(arguments: Ls[DeclaredType], context: Ls[Marks]):
+  private case class TypeApplication(arguments: Ls[DeclaredType]):
     def move(marks: Ls[Marks])(using NewResolverState): TypeApplication =
-      TypeApplication(arguments.map(transportType(_, marks)), context ::: marks)
-  private val noTypeArguments = TypeApplication(Nil, Nil)
+      TypeApplication(arguments.map(transportType(_, marks)))
+  private val noTypeArguments = TypeApplication(Nil)
 
   private def typeArguments(source: DeclaredType, application: TypeApplication, parameters: Ls[TyParam])
       (using NewResolverState): Ls[DeclaredType] =
     parameters.zipWithIndex.map: (parameter, index) =>
       application.arguments.lift(index).getOrElse(
-        transportType(omittedType(source.resolution, parameter.sym).instantiate(source.instances), application.context))
+        omittedType(source.resolution, parameter.sym).instantiate(source.instances))
 
   private def typeBindings(source: DeclaredType, arguments: TypeApplication, parameters: Ls[TyParam])
       (using NewResolverState): Map[VarSymbol, DeclaredType] =
@@ -757,7 +760,7 @@ class NewResolver:
           follow(reference.tpe.instantiate(current.instances).withOrigin(current.origin), args.move(inverseMarks(reference.marks)),
             reference.marks ::: captures, next)
         case TypeShape.Applied(base, arguments) =>
-          follow(declaredType(base, current), TypeApplication(arguments.map(declaredType(_, current)), Nil), captures, next)
+          follow(declaredType(base, current), TypeApplication(arguments.map(declaredType(_, current))), captures, next)
         case TypeShape.Alias(symbol, S(rhs)) =>
           follow(declaredType(rhs, typeBindings(current, args, symbol.defn.get.tparams), current.positive), noTypeArguments, captures, next)
         case TypeShape.Nominal(cls) =>
@@ -937,7 +940,7 @@ class NewResolver:
                     aliases + current.resolution, publish)
                   case N => publish(OpaqueTypeShape(tpe.resolution.source)(TypeInterfaceReason.AbstractDeclaration(symbol, tpe.resolution.source)))
               case TypeShape.Applied(base, params) =>
-                follow(declaredType(base, current), TypeApplication(params.map(declaredType(_, current)), Nil), aliases, publish)
+                follow(declaredType(base, current), TypeApplication(params.map(declaredType(_, current))), aliases, publish)
               case TypeShape.Parameter(symbol, host) => current.bindings.get(symbol) match
                 case S(bound) => follow(selectArgument(bound.instantiate(current.instances), current.positive), noTypeArguments, aliases, publish)
                 case N =>
@@ -1281,7 +1284,7 @@ class NewResolver:
           follow(reference.tpe.instantiate(tpe.instances).withOrigin(tpe.origin), args.move(inverseMarks(reference.marks)),
             reference.marks ::: captures, next)
         case TypeShape.Applied(base, params) =>
-          follow(declaredType(base, tpe), TypeApplication(params.map(declaredType(_, tpe)), Nil), captures, next)
+          follow(declaredType(base, tpe), TypeApplication(params.map(declaredType(_, tpe))), captures, next)
         case TypeShape.Alias(symbol, S(rhs)) =>
           follow(declaredType(rhs, typeBindings(tpe, args, symbol.defn.get.tparams), tpe.positive), noTypeArguments, captures, next)
         case TypeShape.Hole(host) => value.enter(captures) match
