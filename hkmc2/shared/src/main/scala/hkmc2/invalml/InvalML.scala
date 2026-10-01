@@ -128,6 +128,7 @@ class InvalTyper(using codegen.Erasure)(using elState: Elaborator.State, tl: TL)
     def mono(ty: Term, pol: Bool): Type =
       monoOrErr(typeAndSubstType(ty, pol), ty)
     ty match
+    case Capture(base, _) => typeAndSubstType(base, pol)
     case Ref(sym: LocalSymbol) =>
       log(s"Type lookup: ${sym.nme} ${sym.uid} ${map.keySet}")
       map.get(sym.uid) match

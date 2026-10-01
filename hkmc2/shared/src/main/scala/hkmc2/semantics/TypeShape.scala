@@ -39,9 +39,9 @@ enum TypeShape:
   // An omitted argument owns one source inference node. It is not a quantified
   // binder and is never instantiated at a call site; marks distinguish its flows.
   case Hole(host: Publisher.Data[TermShape])
-  // Synthesized generic arguments can retain inferred value shapes, for example
-  // the element union of the Array supertype of a tuple. Written annotations
-  // never introduce this case by inspecting their implementation.
+  // Synthesized generic arguments retain inferred value shapes, for example
+  // the element union of the Array supertype of a tuple. Singleton annotations
+  // also retain their literal shape; no implementation is inspected.
   case Inferred(value: TermShape)
   case Captured(base: TypeResolution, thru: AnyDefinitionSymbol)
   case Unit

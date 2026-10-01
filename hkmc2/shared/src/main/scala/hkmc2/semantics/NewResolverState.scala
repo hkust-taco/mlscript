@@ -86,15 +86,20 @@ final class NewResolverState private (
   private[hkmc2] def inGraph(graph: NewResolverState): NewResolverState =
     rebase(graph.contextBase.getOrElse(graph), root).withInstances(instances)
   private def rebase(graph: NewResolverState, destination: NewResolverState): NewResolverState =
-    val origin = source.fold(graph)(_.rebase(graph, destination))
-    if origin.root eq root then origin
-    else if root eq destination then
-      root.views.getOrElseUpdate(origin, new NewResolverState(owner, S(root), S(origin), N, TypeSubstitution.empty))
-    else root.views.get(origin).getOrElse:
-      // A previously unused path can require a view of an intermediate exporter.
-      // Memoize that read-only view in the consumer, never in the exporter.
-      destination.inheritedViews.getOrElseUpdate((root, origin),
-        new NewResolverState(owner, S(root), S(origin), N, TypeSubstitution.empty))
+    // A callback registered in this consuming unit already names its graph.
+    // Sending it through the current import view would create X(Y(X(...)))
+    // when an imported callback invokes a consumer callback and returns.
+    if graph.root eq root then graph
+    else
+      val origin = source.fold(graph)(_.rebase(graph, destination))
+      if origin.root eq root then origin
+      else if root eq destination then
+        root.views.getOrElseUpdate(origin, new NewResolverState(owner, S(root), S(origin), N, TypeSubstitution.empty))
+      else root.views.get(origin).getOrElse:
+        // A previously unused path can require a view of an intermediate exporter.
+        // Memoize that read-only view in the consumer, never in the exporter.
+        destination.inheritedViews.getOrElseUpdate((root, origin),
+          new NewResolverState(owner, S(root), S(origin), N, TypeSubstitution.empty))
 
   private val copies = mutable.Map.empty[Publisher.Data[?], Publisher.Data[?]]
   private val pending = mutable.Map.empty[Identity[Publisher[?]], Publisher.Data[?]]
@@ -212,6 +217,18 @@ final class NewResolverState private (
     new Cache(inherited.map(_.introShapes), identity)
   val symShapes: Cache[(BlockMemberSymbol, FlowSymbol, Ls[Marks]), CoreSymShape] =
     new Cache(inherited.map(_.symShapes), identity)
+  // Member `let`s have no TermDefinition body. Their initializers and subsequent
+  // assignments feed this host, just as assignments feed a local variable.
+  // Keep the host in resolver state so imported observations use the existing
+  // consumer-local publisher machinery rather than mutating the source symbol.
+  private val memberVariables: Cache[TermSymbol, ShapeHost] =
+    new Cache(inherited.map(_.memberVariables), identity)
+  def memberVariable(symbol: TermSymbol): ShapeHost =
+    root.memberVariables.getOrElseUpdate(symbol,
+      symbol.getState.newResolverState.memberVariables.get(symbol).getOrElse(
+        new Host[ShapeEvent]:
+          def showDbg(using DebugPrinter): Str = s"assignments to ${symbol.nme}"
+      ))
   val declaredSymShapes: Cache[(BlockMemberSymbol, FlowSymbol, Ls[Marks], Map[VarSymbol, DeclaredType], Bool), DeclaredSymShape] =
     new Cache(inherited.map(_.declaredSymShapes), identity)
   val selfShapes: Cache[InnerSymbol, BaseShape] =

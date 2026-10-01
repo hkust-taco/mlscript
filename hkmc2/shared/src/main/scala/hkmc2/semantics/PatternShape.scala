@@ -28,10 +28,11 @@ sealed abstract class PatternShape:
 
 // TODO: not a case class...?
 case class CtorPatternShape(
-    cls: ClassLikeDef,
+    cls: ClassDef | ModuleOrObjectDef,
     fs: Ls[BlockMemberSymbol -> Pattern],
     src: Pattern.Constructor,
     resSym: FlowSymbol,
+    marks: Ls[Marks],
 ) extends PatternShape:
   def showDbg(using DebugPrinter): Str = src.showDbg
 

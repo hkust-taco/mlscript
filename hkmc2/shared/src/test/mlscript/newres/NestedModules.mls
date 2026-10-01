@@ -84,7 +84,7 @@ m.id
 //│ ║        	^^^^
 //│ ╟── target: function 'id' in module 'Predef'
 //│ ║  in ../../mlscript-compile/Predef.mls
-//│ ║  l.18: 	fun id(x) = x
+//│ ║  l.19: 	fun id(x) = x
 //│ ║        	    ^^
 //│ ╟── target: function 'id' in module 'Bar'
 //│ ║  in NestedModules.mls:6

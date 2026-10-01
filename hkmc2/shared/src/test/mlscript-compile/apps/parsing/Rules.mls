@@ -22,7 +22,7 @@ type Opt[A] = Some[A] | None
 
 module Rules with ...
 
-val syntaxKinds = MutMap.empty
+val syntaxKinds: MutMap.MutMap[Str, ParseRule.ParseRule] = MutMap.empty
 
 val extendedKinds = new Set()
 

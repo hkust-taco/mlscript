@@ -32,10 +32,8 @@ fun toArrays(strData: Str) =
   // Keep looping over the regular expression matches until we can no longer find a match.
   while
     let arrMatches = objPattern.exec(strData)
-    arrMatches !== null do
+    arrMatches is Array as matches do
       
-      // The loop condition guarantees a successful regular-expression match.
-      val matches = arrMatches as Array[Str]
       // Get the delimiter that was found.
       let strMatchedDelimiter = matches.1
       

@@ -1062,6 +1062,11 @@ class Resolver(tl: TraceLogger)
       
       // * Traverse through the sub-terms.
       t match
+      // Captures retain lexical scopes for consumers using new resolution;
+      // they do not change the type interpreted by legacy resolution.
+      case Term.Capture(base, _) =>
+        traverseSign(base, expect, inAppPrefix)
+        break()
       case Term.Ref(_) =>
       case Term.Lit(_) =>
       case Term.Tup(_) => t.subTerms.foreach(traverse(_, expect = NonModule(N)))
@@ -1153,6 +1158,7 @@ class Resolver(tl: TraceLogger)
       Type.Error
     
     t match
+      case Term.Capture(base, _) => resolveSign(base, expect)
       // If the term is a type application, e.g., T[A, ...], resolve the
       // type constructor and arguments respectively.
       case Term.TyApp(con, args) => resolveSign(con, expect = expect) match

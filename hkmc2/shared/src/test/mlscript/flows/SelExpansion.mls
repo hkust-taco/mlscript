@@ -15,7 +15,7 @@ module Foo with
 //│     val a⁰::a¹ ‹flow:a⁰› = 123
 //│   },
 //│   module Foo⁰::Foo² {
-//│     fun foo⁰::foo¹(x⁰: Foo⁰{ ~> Foo⁰ }) ‹flow:foo⁰› = x⁰.aˀˀˀ{ ~> x⁰.a⁰ }
+//│     fun foo⁰::foo¹(x⁰: Foo⁰{ ~> Foo⁰ }^foo¹) ‹flow:foo⁰› = x⁰.aˀˀˀ{ ~> x⁰.a⁰ }
 //│   }
 //│ where
 //│     x⁰  <~  type Foo
@@ -199,10 +199,10 @@ module AA with
 //│   module AA⁰::AA¹ {
 //│     module BB⁰::BB¹ {
 //│       class CC⁰::CC¹ {
-//│         val x⁴::x⁵: Int⁰{ ~> Int⁰ } ‹flow:x⁰› = 1
+//│         val x⁴::x⁵: Int⁰{ ~> Int⁰ }^CC¹^x⁵ ‹flow:x⁰› = 1
 //│       },
 //│       module CC⁰::CC² {
-//│         fun getX⁰::getX¹(self⁰: ⟨BB¹.⟩CC⁰) ‹flow:getX⁰› = self⁰.xˀˀˀ{ ~> self⁰.x⁴ }
+//│         fun getX⁰::getX¹(self⁰: ⟨BB¹.⟩CC⁰^getX¹) ‹flow:getX⁰› = self⁰.xˀˀˀ{ ~> self⁰.x⁴ }
 //│       }
 //│     }
 //│   }
@@ -318,11 +318,11 @@ module CC with
   fun getX(self: CC) = self.x
 //│ —————————————————| Flowed |—————————————————————————————————————————————————————————————————————————
 //│   fun CC³
-//│   class CC⁴::CC⁵(val x⁶: Int⁰{ ~> Int⁰ }) {
+//│   class CC⁴::CC⁵(val x⁶: Int⁰{ ~> Int⁰ }^CC⁵) {
 //│     val x⁷::x⁸ ‹flow:x¹› = x⁶
 //│   },
 //│   module CC⁴::CC⁶ {
-//│     fun getX²::getX³(self¹: CC⁴{ ~> CC⁴ }) ‹flow:getX¹› = self¹.xˀˀˀ{ ~> self¹.x⁷ }
+//│     fun getX²::getX³(self¹: CC⁴{ ~> CC⁴ }^getX³) ‹flow:getX¹› = self¹.xˀˀˀ{ ~> self¹.x⁷ }
 //│   }
 //│ where
 //│     x⁶  <~  type Int
@@ -351,7 +351,7 @@ module CC with
 //│     
 //│   },
 //│   module CC⁷::CC⁹ {
-//│     fun oops⁰::oops¹(x⁹: CC⁷{ ~> CC⁷ }) ‹flow:oops⁰› = x⁹.CC⁷.oops⁰{ ~> CC⁷.oops⁰(x⁹)‹app¹⁵› }
+//│     fun oops⁰::oops¹(x⁹: CC⁷{ ~> CC⁷ }^oops¹) ‹flow:oops⁰› = x⁹.CC⁷.oops⁰{ ~> CC⁷.oops⁰(x⁹)‹app¹⁵› }
 //│   }
 //│ where
 //│     x⁹  <~  type CC
@@ -379,7 +379,7 @@ module CC with
 //│     val okay⁰::okay¹ ‹flow:okay⁰› = 123
 //│   },
 //│   module CC¹⁰::CC¹² {
-//│     fun okay²::okay³(x¹⁰: CC¹⁰{ ~> CC¹⁰ }) ‹flow:okay¹› = x¹⁰.okayˀˀˀ{ ~> x¹⁰.okay⁰ }
+//│     fun okay²::okay³(x¹⁰: CC¹⁰{ ~> CC¹⁰ }^okay³) ‹flow:okay¹› = x¹⁰.okayˀˀˀ{ ~> x¹⁰.okay⁰ }
 //│   }
 //│ where
 //│     x¹⁰  <~  type CC
@@ -403,11 +403,11 @@ module Example with
 //│ —————————————————| Flowed |—————————————————————————————————————————————————————————————————————————
 //│   module Example⁰::Example¹ {
 //│     fun Test⁰
-//│     class Test¹::Test²(val field⁰: Int⁰{ ~> Int⁰ }) {
+//│     class Test¹::Test²(val field⁰: Int⁰{ ~> Int⁰ }^Test²) {
 //│       val field¹::field² ‹flow:field⁰› = field⁰
 //│     },
 //│     module Test¹::Test³ {
-//│       fun next⁰::next¹(self²: ⟨Example¹.⟩Test¹) ‹flow:next⁰› = ⟨Example¹.⟩Test¹(+(self².field¹, 1)‹app¹⁷›)‹app¹⁸›
+//│       fun next⁰::next¹(self²: ⟨Example¹.⟩Test¹^next¹) ‹flow:next⁰› = ⟨Example¹.⟩Test¹(+(self².field¹, 1)‹app¹⁷›)‹app¹⁸›
 //│     }
 //│   }
 //│ where

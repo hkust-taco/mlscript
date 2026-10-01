@@ -264,6 +264,7 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
   def typeType(t: Term): Type =
   trace[Type](s"Typing consumer: ${t.showDbg}", post = res => s": ${res.showDbg}"):
     t match
+    case Capture(base, _) => typeType(base)
     case Ref(sym: VarSymbol) => Type.Ref(sym, Nil) // unparameterized type variable
     case Ref(cls: ClassSymbol) => Type.Ref(cls, Nil)
     case Ref(ts: BlockMemberSymbol) =>

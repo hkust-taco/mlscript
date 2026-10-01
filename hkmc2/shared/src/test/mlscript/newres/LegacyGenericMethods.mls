@@ -4,9 +4,16 @@ import "../../mlscript-compile/FingerTreeList.mls"
 
 // Calling a generic method imported from a legacy fixture must preserve the
 // class's type argument when interpreting the method's annotated result.
-// FIXME: The method result currently exits the method scope while its mark
-// still denotes the enclosing class scope. This blocks LazyFingerTree.
-:fixme
 :expect 42
 FingerTreeList.mk(42).at(0)
-//│ /!!!\ Uncaught error: java.lang.AssertionError: assertion failed: Entry and exit cross different lexical resolution scopes: class:FingerTree⁰ vs term:FingerTree⁰/at⁰ for InstanceShape(T⁰)
+//│ = 42
+
+import "../../mlscript-compile/LegacyGenericLibrary.mls"
+
+:expect [7, "other"]
+class NumberBox(val number: Int)
+class TextBox(val text: Str)
+fun readNumber(cell: LegacyGenericLibrary.Cell[NumberBox]) = cell.get.number
+fun readText(cell: LegacyGenericLibrary.Cell[TextBox]) = cell.getAt(0).text
+[readNumber(LegacyGenericLibrary.Cell(NumberBox(7))), readText(LegacyGenericLibrary.Cell(TextBox("other")))]
+//│ = [7, "other"]

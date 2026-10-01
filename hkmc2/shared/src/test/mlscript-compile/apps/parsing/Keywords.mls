@@ -34,7 +34,7 @@ fun makePrecMap(startPrec: Int, ...ops: Array[Str]) =
         m |> MutMap.insert of op, i + startPrec
   m
 
-val all = MutMap.empty
+val all: MutMap.MutMap[Str, Keyword] = MutMap.empty
 fun keyword(name: Str, leftPrec: Some[Int] | None, rightPrec: Some[Int] | None) =
   let result = Keyword(name, leftPrec, rightPrec)
   all |> MutMap.insert(name, result)

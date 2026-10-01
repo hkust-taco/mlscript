@@ -178,9 +178,17 @@ callid1(Predef)
 //│ | = MarkedShape(IntroShape(1), ↘⟨term:Predef¹/id¹⟩%⟨⋅id⁰⟩↗⟨term:callid1²⟩%⟨callid1¹⟩ϵ)
 //│ | appShape isSaturated? true; head? (DefnShape(term definition 'id'),List(EntryMark(term:callid1,Some(callid1),ExitMark(term:Predef/id,Some(⋅id),NoMarks))))
 //│ | lhs false List(((x⁰),List(↘⟨term:callid1²⟩%⟨callid1¹⟩↗⟨term:Predef¹/id¹⟩%⟨⋅id⁰⟩ϵ)))
-//│ | appShape: td.body = Some(Ref(x))
+//│ | appShape: td.body = Some(SimpleRef(x))
 //│ | listenTerm: trm = x⁰
 //│ | listen: trm = x⁰
+//│ | .exit MarkedShape(UnknownValueShape(x⁰), ↘⟨term:Predef¹/id¹⟩%⟨exposed⁰⟩ϵ) (↘⟨term:callid1²⟩%⟨callid1¹⟩↗⟨term:Predef¹/id¹⟩%⟨⋅id⁰⟩ϵ)
+//│ | | .exit MarkedShape(UnknownValueShape(x⁰), ↘⟨term:Predef¹/id¹⟩%⟨exposed⁰⟩ϵ) (↗⟨term:Predef¹/id¹⟩%⟨⋅id⁰⟩ϵ)
+//│ | | | .exit MarkedShape(UnknownValueShape(x⁰), ↘⟨term:Predef¹/id¹⟩%⟨exposed⁰⟩ϵ) (ϵ)
+//│ | | | = MarkedShape(UnknownValueShape(x⁰), ↘⟨term:Predef¹/id¹⟩%⟨exposed⁰⟩ϵ)
+//│ | | | .exit MarkedShape (MarkedShape(UnknownValueShape(x⁰), ↘⟨term:Predef¹/id¹⟩%⟨exposed⁰⟩ϵ), term:Predef¹/id¹, ⋅id⁰)
+//│ | | | = NoShape
+//│ | | = NoShape
+//│ | = NoShape
 //│ | .exit MarkedShape(IntroShape(1), ↘⟨term:Predef¹/id¹⟩%⟨⋅id⁰⟩↗⟨term:callid1²⟩%⟨callid1¹⟩ϵ) (↘⟨term:callid1²⟩%⟨callid1¹⟩↗⟨term:Predef¹/id¹⟩%⟨⋅id⁰⟩ϵ)
 //│ | | .exit MarkedShape(IntroShape(1), ↘⟨term:Predef¹/id¹⟩%⟨⋅id⁰⟩↗⟨term:callid1²⟩%⟨callid1¹⟩ϵ) (↗⟨term:Predef¹/id¹⟩%⟨⋅id⁰⟩ϵ)
 //│ | | | .exit MarkedShape(IntroShape(1), ↘⟨term:Predef¹/id¹⟩%⟨⋅id⁰⟩↗⟨term:callid1²⟩%⟨callid1¹⟩ϵ) (ϵ)

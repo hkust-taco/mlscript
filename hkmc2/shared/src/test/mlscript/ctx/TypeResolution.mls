@@ -101,9 +101,11 @@ fun f(x: Foo) = x
 //│           params = Ls of
 //│             Param:
 //│               sym = x⁰
-//│               sign = S of Resolved{sym=class:Foo⁰}:
-//│                 t = Ref{sym=member:Foo¹} of member:Foo¹
-//│                 sym = class:Foo⁰
+//│               sign = S of Capture:
+//│                 base = Resolved{sym=class:Foo⁰}:
+//│                   t = Ref{sym=member:Foo¹} of member:Foo¹
+//│                   sym = class:Foo⁰
+//│                 thru = term:f¹
 //│               modulefulness = Modulefulness of N
 //│       body = S of Ref{sym=x⁰,typ=class:Foo⁰} of x⁰
 //│       modulefulness = Modulefulness of N
@@ -161,13 +163,17 @@ fun f(module m: M): module M = m
 //│           params = Ls of
 //│             Param:
 //│               sym = m²
-//│               sign = S of Resolved{sym=module:M⁰,typ=module:M⁰}:
-//│                 t = Ref{sym=member:M¹} of member:M¹
-//│                 sym = module:M⁰
+//│               sign = S of Capture:
+//│                 base = Resolved{sym=module:M⁰,typ=module:M⁰}:
+//│                   t = Ref{sym=member:M¹} of member:M¹
+//│                   sym = module:M⁰
+//│                 thru = term:f³
 //│               modulefulness = Modulefulness of S of module:M⁰
-//│       sign = S of Resolved{sym=module:M⁰,typ=module:M⁰}:
-//│         t = Ref{sym=member:M¹} of member:M¹
-//│         sym = module:M⁰
+//│       sign = S of Capture:
+//│         base = Resolved{sym=module:M⁰,typ=module:M⁰}:
+//│           t = Ref{sym=member:M¹} of member:M¹
+//│           sym = module:M⁰
+//│         thru = term:f³
 //│       body = S of Ref{sym=m²,typ=module:M⁰} of m²
 //│       flags = (result annotation)
 //│       modulefulness = Modulefulness of S of module:M⁰
@@ -187,9 +193,11 @@ fun f(o: O) = o
 //│           params = Ls of
 //│             Param:
 //│               sym = o²
-//│               sign = S of Resolved{sym=object:O⁰,typ=object:O⁰}:
-//│                 t = Ref{sym=member:O¹} of member:O¹
-//│                 sym = object:O⁰
+//│               sign = S of Capture:
+//│                 base = Resolved{sym=object:O⁰,typ=object:O⁰}:
+//│                   t = Ref{sym=member:O¹} of member:O¹
+//│                   sym = object:O⁰
+//│                 thru = term:f⁵
 //│               modulefulness = Modulefulness of N
 //│       body = S of Ref{sym=o²,typ=object:O⁰} of o²
 //│       modulefulness = Modulefulness of N

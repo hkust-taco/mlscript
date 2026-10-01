@@ -125,3 +125,14 @@ class TypeInstantiationTest extends AnyFunSuite:
     assert(local.currentShapes(using source).size == 1)
     assert(local.currentShapes(using other.inGraph(source)).size == 1)
     assert(consumer.allocatedTypeInstanceCount == 1)
+
+  test("imported callbacks return to the consumer without growing graph-view chains"):
+    val exporter = new Elaborator.State().newResolverState
+    val middle = new Elaborator.State().newResolverState
+    val consumer = new Elaborator.State().newResolverState
+    val imported = consumer.inGraph(middle.inGraph(exporter))
+    // A worksheet can observe successful values without detecting an extra
+    // import-view layer per callback. Check the graph's boundedness directly.
+    (1 to 1000).foreach: _ =>
+      assert(imported.inGraph(consumer) eq consumer)
+      assert(imported.inGraph(imported) eq imported)

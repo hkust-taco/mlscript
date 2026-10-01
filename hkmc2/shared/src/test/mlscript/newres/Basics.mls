@@ -90,7 +90,7 @@ Predef.idd(1)
 //│ ║        	^^^^^^^^^^
 //│ ╟── Module 'Predef' does not contain member 'idd'
 //│ ║  in ../../mlscript-compile/Predef.mls
-//│ ║  l.15: 	module Predef with ...
+//│ ║  l.16: 	module Predef with ...
 //│ ╙──      	       ^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 

@@ -508,6 +508,7 @@ enum Term extends Statement, AutoLocated, ShapePublisher:
    * elaboration. 
    */
   lazy val symbol: Opt[Symbol] = this match
+    case Capture(base, _) => base.symbol
     case res: Resolved => S(res.sym)
     case Ref(sym) => S(sym)
     case sel: Sel => sel.sym

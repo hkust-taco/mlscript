@@ -213,7 +213,7 @@ MutMap.empty |> MutMap.updateWith("key") of (x => x.value)
 //│ ║         	                                             ^
 //│ ╟── Cannot resolve member 'value' of a value with unknown shape.
 //│ ║  in ../../mlscript-compile/MutMap.mls
-//│ ║  l.29: 	fun updateWith(key)(op: Function)(m: MutMap) =
+//│ ║  l.30: 	fun updateWith(key)(op: Function)(m: MutMap) =
 //│ ║        	                        ^^^^^^^^
 //│ ╙── The 'Function' type does not specify parameter types.
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.

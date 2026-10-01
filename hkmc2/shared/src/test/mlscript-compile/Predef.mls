@@ -1,3 +1,4 @@
+#lang(0.3.x)
 
 import "./RuntimeJS.mjs"
 
@@ -23,31 +24,33 @@ fun id(x) = x
 fun maybe = hide(true)
 
 
-fun (@) apply(f, ...args) = f(...args)
+// Arbitrary variadic forwarding has no fixed callback domain. Keep this
+// reflective calling convention explicit; the fixed-arity helpers use arrows.
+fun (@) apply(f: dyn, ...args) = f(...args)
 
-fun (|>) pipeInto(x, f) = f(x)
-fun (<|) pipeFrom(f, x) = f(x)
+fun (|>) pipeInto[A, B](x: A, f: A -> B): B = f(x)
+fun (<|) pipeFrom[A, B](f: A -> B, x: A): B = f(x)
 
 // Same as above but with high precedence
-fun (.>) pipeIntoHi(x, f) = f(x)
-fun (<.) pipeFromHi(f, x) = f(x)
+fun (.>) pipeIntoHi[A, B](x: A, f: A -> B): B = f(x)
+fun (<.) pipeFromHi[A, B](f: A -> B, x: A): B = f(x)
 
-fun (!>) tap(x, f) = f(x); x
-fun (<!) pat(f, x) = f(x); x
+fun (!>) tap[A, B](x: A, f: A -> B): A = f(x); x
+fun (<!) pat[A, B](f: A -> B, x: A): A = f(x); x
 
 fun (|!) alsoDo(x, eff) = x
 
-fun (>>) andThen(f, g)(x) = g(f(x))
-fun (<<) compose(f, g)(x) = f(g(x))
+fun (>>) andThen[A, B, C](f: A -> B, g: B -> C)(x: A): C = g(f(x))
+fun (<<) compose[A, B, C](f: B -> C, g: A -> B)(x: A): C = f(g(x))
 
 // x \foo(a, b, c) == foo(x, a, b, c)
-fun (\) passTo(receiver, f)(...args) = f(receiver, ...args)
+fun (\) passTo(receiver, f: dyn)(...args) = f(receiver, ...args)
 
 // Same as above but with low precedence
-fun (|.) passToLo(receiver, f)(...args) = f(receiver, ...args)
+fun (|.) passToLo(receiver, f: dyn)(...args) = f(receiver, ...args)
 
 // x |>. foo(a, b, c) == foo.call(x, a, b, c)
-fun (|>.) call(receiver, f)(...args) = f.call(receiver, ...args)
+fun (|>.) call(receiver, f: dyn)(...args) = f.call(receiver, ...args)
 
 
 object Symbols with
@@ -70,17 +73,17 @@ type (>:>) Sup[A, B] = Sub[B, A]
 // * - arrays of values that are pairwise recursively equal;
 // * - instances of the same parameterized MLscript class when all fields are public and recursively equal.
 // TODO: compare lazy arrays and other sequences and collections
-fun (==) equals(a, b) = if
+fun (==) equals(a: Any, b: Any): Bool = if
   a === b then true
-  a is Array and b is Array and a.length === b.length then a.every((a, i) => a == b.at(i))
+  a is Array as a and b is Array as b and a.length === b.length then a.every((a, i, ...) => a == b.at(i))
   else a !== undefined and a !== null and b !== undefined and b !== null and 
-    let ac = a.constructor
-    ac !== undefined and ac === b.constructor and
-      let md = ac.(Symbols.definitionMetadata)
+    let ac = a!constructor
+    ac !== undefined and ac === b!constructor and
+      let md = ac!(Symbols.definitionMetadata)
       md !== undefined and
-        md.2.every(field => field !== null and a.(field) == b.(field))
+        md.2.every(field => field !== null and a!(field) == b!(field))
 
-fun (!=) nequals(a, b) = not a == b
+fun (!=) nequals(a: Any, b: Any): Bool = not a == b
 
 
 fun pass1 = Rendering.pass1
@@ -113,7 +116,7 @@ fun mkSet(...xs) = new Set(xs)
 val foldl = fold
 
 // fun foldr(f)(...rest, init) = // TODO allow this syntax
-fun foldr(f)(first, ...rest) =
+fun foldr[A](f: (A, A) -> A)(first: A, ...rest: Array[A]): A =
   let len = rest.length
   if len === 0 then first else...
   let

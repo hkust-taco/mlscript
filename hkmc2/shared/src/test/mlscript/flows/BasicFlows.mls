@@ -60,7 +60,7 @@ fun test(x) = x.m
 // :df
 fun test(x: Foo) = x.m
 //│ —————————————————| Flowed |—————————————————————————————————————————————————————————————————————————
-//│   fun test²::test³(x²: Foo⁰{ ~> Foo⁰ }) ‹flow:test¹› = x².mˀˀˀ{ ~> x².m⁰ }
+//│   fun test²::test³(x²: Foo⁰{ ~> Foo⁰ }^test³) ‹flow:test¹› = x².mˀˀˀ{ ~> x².m⁰ }
 //│ where
 //│     x²  <~  type Foo
 //│     flow:test¹  <~  ((type Foo) -> flow:m⁰)

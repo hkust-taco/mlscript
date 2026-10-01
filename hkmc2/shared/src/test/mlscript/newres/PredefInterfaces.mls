@@ -1,0 +1,25 @@
+:.
+
+// The migrated public helpers preserve result interfaces across callbacks.
+:expect [4, 5, 6, 7]
+class Box(val value: Int)
+fun box(x: Int): Box = Box(x)
+[(4 |> box).value, (box <| 5).value, (6 .> box).value, (box <. 7).value]
+//│ = [4, 5, 6, 7]
+
+:expect [8, 9]
+class Box(val value: Int)
+fun box(x: Int): Box = Box(x)
+fun value(box: Box): Int = box.value
+[(box >> value)(8), (value << box)(9)]
+//│ = [8, 9]
+
+:expect [true, false, true, false, false, true]
+class Box(val value: Int)
+[[[1], [2]] == [[1], [2]], [[1]] == [[2]], Box(3) == Box(3), Box(3) == Box(4), null == 0, null == null]
+//│ = [true, false, true, false, false, true]
+
+:expect ["a", "b", "c"]
+fun stringify(n: Int): Str = ["a", "b", "c"].[n]
+[0, 1, 2].map(pass1(stringify))
+//│ = ["a", "b", "c"]

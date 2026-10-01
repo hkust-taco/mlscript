@@ -166,16 +166,19 @@ object Elaborator:
     
     /** Explicit bindings in any enclosing scope take precedence over every wildcard open. */
     def get(name: Str)(using config: Config): Opt[Ctx.Elem] =
-      getExplicit(name).orElse:
+      get(name, config.language.useNewResolution)
+
+    def get(name: Str, captureScopes: Bool)(using config: Config): Opt[Ctx.Elem] =
+      getExplicit(name, captureScopes).orElse:
         if config.language.useNewResolution then
           val sources = visibleWildcardOpens.distinct
           if sources.isEmpty then N else S(Ctx.WildcardElem(name, sources))
         else N
 
-    private def getExplicit(name: Str)(using config: Config): Opt[Ctx.Elem] =
+    private def getExplicit(name: Str, captureScopes: Bool)(using config: Config): Opt[Ctx.Elem] =
       env.get(name).orElse:
-        val inherited = parent.flatMap(_.getExplicit(name))
-        if config.language.useNewResolution then inherited.map(capture)
+        val inherited = parent.flatMap(_.getExplicit(name, captureScopes))
+        if captureScopes then inherited.map(capture)
         else inherited
 
     private def capture(elem: Ctx.Elem): Ctx.Elem =
@@ -1209,6 +1212,7 @@ extends Importer:
     if newResolution then
       listenTerm(lhs)(_ => ())
       assignArrayElement(lhs, rhs)
+      assignVariable(lhs, rhs)
     Term.Assgn(lhs, rhs)
 
   def ifLike(kw: Keyword.SplitLike, form: IfLikeForm, split: SimpleSplit, loc: Opt[Loc]): Term.IfLike =
@@ -1393,7 +1397,7 @@ extends Importer:
         raise:
           ErrorReport(msg"Cannot use 'this' outside of an object scope" -> tree.toLoc :: Nil)
         error
-    case id @ Ident(name) => ident(id).map(interpretRef(_, interp)).getOrElse:
+    case id @ Ident(name) => ident(id, interp).map(interpretRef(_, interp)).getOrElse:
       raise(ErrorReport(msg"Name not found: $name" -> id.toLoc :: Nil))
       error
     case TyApp(lhs, targs) =>
@@ -1726,7 +1730,7 @@ extends Importer:
     case PrefixApp(kw @ Keywrd(Keyword.`yield` | Keyword.`yield*`), body) =>
       if ctx.inGenerator then
         val synthIdent = new Tree.Ident(kw.kw.name).withLocOf(kw)
-        app(ident(synthIdent).get, Term.Tup(PlainFld(subterm(body)) :: Nil)(DummyTup))(DummyApp, N, FlowSymbol("yield"))
+        app(ident(synthIdent, Trm).get, Term.Tup(PlainFld(subterm(body)) :: Nil)(DummyTup))(DummyApp, N, FlowSymbol("yield"))
       else
         raise:
           ErrorReport(msg"Yield expressions are not allowed in this context." -> tree.toLoc :: Nil)
@@ -2767,14 +2771,17 @@ extends Importer:
           msg"Expected a parameter list (a tuple of parameters), but found ${t.describe}" -> t.toLoc :: Nil
       (ParamList(ParamListFlags.empty, Nil, N)(t.toLoc), ctx)
   
-  def ident(id: Ident)(using Ctx): Ctxl[Opt[Term]] = ctx.get(id.name) match
-    case candidate @ (S(_: Ctx.WildcardElem) | N) =>
-      // Primitive operators are implicit bindings outside the Ctx environments;
-      // like explicit bindings, they take precedence over wildcard sources.
-      state.builtinOpsMap.get(id.name) match
-        case S(bi) => S(bi.ref(id))
-        case N => candidate.map(_.ref(id))
-    case S(elem) => S(elem.ref(id))
+  // Imported legacy signatures are also consumed by the new resolver. Keep
+  // their lexical type captures even though legacy term lookup ignores scopes.
+  def ident(id: Ident, interp: Interpretation)(using Ctx): Ctxl[Opt[Term]] =
+    ctx.get(id.name, newResolution || interp == Tpe) match
+      case candidate @ (S(_: Ctx.WildcardElem) | N) =>
+        // Primitive operators are implicit bindings outside the Ctx environments;
+        // like explicit bindings, they take precedence over wildcard sources.
+        state.builtinOpsMap.get(id.name) match
+          case S(bi) => S(bi.ref(id))
+          case N => candidate.map(_.ref(id))
+      case S(elem) => S(elem.ref(id))
   
   def pattern(t: Tree): Ctxl[Pattern] = pattern(t, Map.empty)
 

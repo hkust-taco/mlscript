@@ -51,24 +51,24 @@ data class Report(fileName) with
   
   fun init() =
     wln of ""
-    wln of "|" ~ "Year" ~ "|" ~ lines.map((x: Line, ...) => x.name).join("|") ~ "|"
-    wln of "|" ~ "---" ~ "|" ~ lines.map((x, ...) => "--:").join("|") ~ "|"
+    wln of "|" ~ "Year" ~ "|" ~ lines.map(pass1((x: Line) => x.name)).join("|") ~ "|"
+    wln of "|" ~ "---" ~ "|" ~ lines.map(pass1(x => "--:")).join("|") ~ "|"
   
   fun snapShot(label) =
-    wln of "|" ~ String(label) ~ "|" ~ lines.map((x: Line, ...) => display(x.balance)).join("|") ~ "|"
+    wln of "|" ~ String(label) ~ "|" ~ lines.map(pass1((x: Line) => display(x.balance))).join("|") ~ "|"
     
   fun wrapUp() =
     wln of ""
-    warnings.forEach of (x, ...) => (wln(x), wln(""))
+    warnings.forEach of pass1(x => (wln(x), wln("")))
     wln of "### Remaining Available Funds"
     wln of ""
     wln of "|" ~ "Summary" ~ "|   |"
     wln of "|" ~ "---" ~ "|--:|"
     wln of "|" ~ "Matchable" ~ "|" ~ display(
-      lines.filter((x: Line, ...) => x.isMatchable).map((x: Line, ...) => x.balance).reduce((a, b, ...) => a +. b, 0)
+      lines.filter(pass1((x: Line) => x.isMatchable)).map(pass1((x: Line) => x.balance)).reduce(pass2((a, b) => a +. b), 0)
     ) ~ "|"
     wln of "|" ~ "Non-matchable" ~ "|" ~ display(
-      lines.filter((x: Line, ...) => not x.isMatchable).map((x: Line, ...) => x.balance).reduce((a, b, ...) => a +. b, 0)
+      lines.filter(pass1((x: Line) => not x.isMatchable)).map(pass1((x: Line) => x.balance)).reduce(pass2((a, b) => a +. b), 0)
     ) ~ "|"
 
 fun process(filename: Str, k: Report -> ()) =

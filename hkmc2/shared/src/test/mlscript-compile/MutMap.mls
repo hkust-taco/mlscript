@@ -14,12 +14,13 @@ class MutMap[A, B](val underlying: Map[A, B]) with
   set this.(Symbol.iterator) =
     () => underlying.(Symbol.iterator)()
 
-fun get(key)(m: MutMap) =
+fun get[A, B](key: A)(m: MutMap[A, B]): Option[B] =
+  // Map.get also admits undefined for absent keys; has excludes that case.
   if m.underlying.has(key)
-  then Some of m.underlying.get(key)
+  then Some of (m.underlying.get(key) as B)
   else None
 
-fun insert(key, value)(m: MutMap) =
+fun insert[A, B](key: A, value: B)(m: MutMap[A, B]) =
   m.underlying.set(key, value)
   ()
 
@@ -48,6 +49,6 @@ fun toMap(entries: Array) =
     set i += 1
   m
 
-fun empty = new MutMap(new Map())
+fun empty[A, B]: MutMap[A, B] = new MutMap(new Map())
 
 

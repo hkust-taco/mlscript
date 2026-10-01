@@ -163,13 +163,13 @@ module A with
   fun g(x) = 3
 A.x
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ define A¹ as class A²
-//│ module A⁰ {
+//│ define A⁰ as class A¹
+//│ module A² {
 //│   private val y⁰;
 //│   val x⁷;
 //│   constructor {
 //│     define x⁷ as val x⁸ = 2;
-//│     set A⁰.this.y⁰ = 3;
+//│     set A².this.y⁰ = 3;
 //│     define C³ as class C⁵ {
 //│       private val x⁹;
 //│       constructor C⁴(x) {
@@ -185,7 +185,7 @@ A.x
 //│   }
 //│   method g⁰ = fun g¹(x) { return 3 }
 //│ };
-//│ return A⁰.x⁸
+//│ return A².x⁸
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 2
 

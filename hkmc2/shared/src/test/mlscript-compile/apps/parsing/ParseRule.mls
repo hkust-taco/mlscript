@@ -216,7 +216,7 @@ data class ParseRule[A](name: Str, mut val choices: Stack[Choice[A]]) with
     MutMap.toMap()
   
   // Collect all keyword choices in this rule.
-  fun keywordChoices = _keywordChoices.get()
+  fun keywordChoices: MutMap.MutMap[Str, ParseRule[A]] = _keywordChoices.get()
   
   let _refChoice = lazy of () => choices
     Iter.fromStack()

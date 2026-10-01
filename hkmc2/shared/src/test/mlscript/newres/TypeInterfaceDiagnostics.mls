@@ -101,8 +101,7 @@ fun inspect(value: 1) = value.member
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
 //│ ║  l.100: 	fun inspect(value: 1) = value.member
 //│ ║         	                        ^^^^^^^^^^^^
-//│ ╟── Cannot resolve member 'member' of a value with unknown shape.
-//│ ╟── No member interface is known for this type.
+//│ ╟── Integer literal does not contain member 'member'
 //│ ║  l.100: 	fun inspect(value: 1) = value.member
 //│ ╙──       	                   ^
 
@@ -110,11 +109,11 @@ fun inspect(value: 1) = value.member
 :ge
 fun inspect(value: ~Int) = value.member
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.111: 	fun inspect(value: ~Int) = value.member
+//│ ║  l.110: 	fun inspect(value: ~Int) = value.member
 //│ ║         	                           ^^^^^^^^^^^^
 //│ ╟── Cannot resolve member 'member' of a value with unknown shape.
 //│ ╟── This negated type does not specify a member interface.
-//│ ║  l.111: 	fun inspect(value: ~Int) = value.member
+//│ ║  l.110: 	fun inspect(value: ~Int) = value.member
 //│ ╙──       	                   ^^^^
 
 // Calling a value retains the same explanation as selecting its members.
@@ -122,13 +121,13 @@ fun inspect(value: ~Int) = value.member
 class Item(val value: Int)
 fun invoke(xs: Array[in Item]) = xs.0()
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.123: 	fun invoke(xs: Array[in Item]) = xs.0()
+//│ ║  l.122: 	fun invoke(xs: Array[in Item]) = xs.0()
 //│ ║         	                                 ^^^^^^
 //│ ╟── Value with no known interface cannot be called like a function.
-//│ ║  l.123: 	fun invoke(xs: Array[in Item]) = xs.0()
+//│ ║  l.122: 	fun invoke(xs: Array[in Item]) = xs.0()
 //│ ║         	                     ^^^^^^^
 //│ ╟── This type argument specifies only an input bound.
-//│ ║  l.123: 	fun invoke(xs: Array[in Item]) = xs.0()
+//│ ║  l.122: 	fun invoke(xs: Array[in Item]) = xs.0()
 //│ ║         	                     ^^^^^^^
 //│ ╙── Values read through it have no output bound more specific than 'Any'.
 
@@ -141,14 +140,14 @@ type Pair[A] = [Left[A], Right[A]]
 let pair = ([new Left(Item(1)), new Right(Item(2))] as Pair[Item])
 pair.1.item.value
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.142: 	pair.1.item.value
+//│ ║  l.141: 	pair.1.item.value
 //│ ║         	^^^^^^^^^^^^^^^^^
 //│ ╟── Cannot resolve member 'value' of a value with unknown shape.
 //│ ╟── This type argument supplies only an input bound for 'R'.
-//│ ║  l.141: 	let pair = ([new Left(Item(1)), new Right(Item(2))] as Pair[Item])
+//│ ║  l.140: 	let pair = ([new Left(Item(1)), new Right(Item(2))] as Pair[Item])
 //│ ║         	                                                            ^^^^
 //│ ╟── Type parameter 'R' is declared contravariant here.
-//│ ║  l.139: 	class Right[in R](val item: R)
+//│ ║  l.138: 	class Right[in R](val item: R)
 //│ ║         	               ^
 //│ ╙── Values read through it have no output bound more specific than 'Any'.
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
@@ -164,14 +163,14 @@ private fun delay[A](value: A) = () => value
 let pair = ([new Left(Item(1)), new Right(Item(2))] as Pair[Item])
 delay(pair)().1.item.value
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.165: 	delay(pair)().1.item.value
+//│ ║  l.164: 	delay(pair)().1.item.value
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Cannot resolve member 'value' of a value with unknown shape.
 //│ ╟── This type argument supplies only an input bound for 'R'.
-//│ ║  l.164: 	let pair = ([new Left(Item(1)), new Right(Item(2))] as Pair[Item])
+//│ ║  l.163: 	let pair = ([new Left(Item(1)), new Right(Item(2))] as Pair[Item])
 //│ ║         	                                                            ^^^^
 //│ ╟── Type parameter 'R' is declared contravariant here.
-//│ ║  l.161: 	class Right[in R](val item: R)
+//│ ║  l.160: 	class Right[in R](val item: R)
 //│ ║         	               ^
 //│ ╙── Values read through it have no output bound more specific than 'Any'.
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
@@ -183,10 +182,10 @@ class Base
 type Alias = Base
 fun inspect(value: Alias) = (() => value)().missing
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.184: 	fun inspect(value: Alias) = (() => value)().missing
+//│ ║  l.183: 	fun inspect(value: Alias) = (() => value)().missing
 //│ ║         	                            ^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Value of type 'Base' does not contain member 'missing'
-//│ ║  l.184: 	fun inspect(value: Alias) = (() => value)().missing
+//│ ║  l.183: 	fun inspect(value: Alias) = (() => value)().missing
 //│ ╙──       	                   ^^^^^
 
 // A function result identifies the annotation that hides implementation members.
@@ -195,10 +194,10 @@ class Base
 fun make(): Base = new Base
 make().missing
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.196: 	make().missing
+//│ ║  l.195: 	make().missing
 //│ ║         	^^^^^^^^^^^^^^
 //│ ╟── Value of type 'Base' does not contain member 'missing'
-//│ ║  l.195: 	fun make(): Base = new Base
+//│ ║  l.194: 	fun make(): Base = new Base
 //│ ╙──       	            ^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -206,10 +205,10 @@ make().missing
 :ge
 fun inspect(value: {present: Int}) = value.missing
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.207: 	fun inspect(value: {present: Int}) = value.missing
+//│ ║  l.206: 	fun inspect(value: {present: Int}) = value.missing
 //│ ║         	                                     ^^^^^^^^^^^^^
 //│ ╟── Record type does not contain member 'missing'
-//│ ║  l.207: 	fun inspect(value: {present: Int}) = value.missing
+//│ ║  l.206: 	fun inspect(value: {present: Int}) = value.missing
 //│ ╙──       	                    ^^^^^^^^^^^^
 
 // Calling a nominal value points to the annotation that made it non-callable.
@@ -217,40 +216,40 @@ fun inspect(value: {present: Int}) = value.missing
 class Base
 fun invoke(value: Base) = value()
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.218: 	fun invoke(value: Base) = value()
+//│ ║  l.217: 	fun invoke(value: Base) = value()
 //│ ║         	                          ^^^^^^^
 //│ ╟── Value of type 'Base' cannot be called like a function.
-//│ ║  l.218: 	fun invoke(value: Base) = value()
+//│ ║  l.217: 	fun invoke(value: Base) = value()
 //│ ╙──       	                  ^^^^
 
 // Arity errors on a declared callback identify its function type.
 :ge
 fun invoke(callback: Int -> Int) = callback()
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.228: 	fun invoke(callback: Int -> Int) = callback()
+//│ ║  l.227: 	fun invoke(callback: Int -> Int) = callback()
 //│ ║         	                                   ^^^^^^^^^^
 //│ ╟── Function with a declared signature expected 1 argument, but got 0
-//│ ║  l.228: 	fun invoke(callback: Int -> Int) = callback()
+//│ ║  l.227: 	fun invoke(callback: Int -> Int) = callback()
 //│ ╙──       	                     ^^^^^^^^^^
 
 // Type argument arity errors retain the same callback signature witness.
 :ge
 fun invoke(callback: Int -> Int) = callback[Int](0)
 //│ ╔══[COMPILATION ERROR] Resolution error in type application
-//│ ║  l.238: 	fun invoke(callback: Int -> Int) = callback[Int](0)
+//│ ║  l.237: 	fun invoke(callback: Int -> Int) = callback[Int](0)
 //│ ║         	                                   ^^^^^^^^^^^^^
 //│ ╟── Function with a declared signature expected 0 type arguments, but got 1
-//│ ║  l.238: 	fun invoke(callback: Int -> Int) = callback[Int](0)
+//│ ║  l.237: 	fun invoke(callback: Int -> Int) = callback[Int](0)
 //│ ╙──       	                     ^^^^^^^^^^
 
 // A function interface also explains missing members on the callback itself.
 :ge
 fun inspect(callback: Int -> Int) = callback.missing
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.248: 	fun inspect(callback: Int -> Int) = callback.missing
+//│ ║  l.247: 	fun inspect(callback: Int -> Int) = callback.missing
 //│ ║         	                                    ^^^^^^^^^^^^^^^^
 //│ ╟── Function with a declared signature does not contain member 'missing'
-//│ ║  l.248: 	fun inspect(callback: Int -> Int) = callback.missing
+//│ ║  l.247: 	fun inspect(callback: Int -> Int) = callback.missing
 //│ ╙──       	                      ^^^^^^^^^^
 
 // Checked indexing reports the annotation that does not expose an array.
@@ -258,10 +257,10 @@ fun inspect(callback: Int -> Int) = callback.missing
 class Base
 fun inspect(value: Base) = value.[0]
 //│ ╔══[COMPILATION ERROR] Resolution error in array index
-//│ ║  l.259: 	fun inspect(value: Base) = value.[0]
+//│ ║  l.258: 	fun inspect(value: Base) = value.[0]
 //│ ║         	                           ^^^^^^^^
 //│ ╟── Value of type 'Base' does not support checked array indexing.
-//│ ║  l.259: 	fun inspect(value: Base) = value.[0]
+//│ ║  l.258: 	fun inspect(value: Base) = value.[0]
 //│ ║         	                   ^^^^
 //│ ╙── Use '![...]' for a dynamic access.
 
@@ -271,13 +270,13 @@ class Base
 val instance: Base = new Base
 new instance
 //│ ╔══[COMPILATION ERROR] Resolution error in object instantiation
-//│ ║  l.272: 	new instance
+//│ ║  l.271: 	new instance
 //│ ║         	^^^^^^^^^^^^
 //│ ╟── Value with a declared type cannot be instantiated with keyword 'new'.
-//│ ║  l.271: 	val instance: Base = new Base
+//│ ║  l.270: 	val instance: Base = new Base
 //│ ╙──       	              ^^^^
 //│ ╔══[COMPILATION ERROR] Cannot resolve the class instantiated here
-//│ ║  l.272: 	new instance
+//│ ║  l.271: 	new instance
 //│ ╙──       	    ^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ instance = Base
@@ -288,11 +287,11 @@ declare type Hidden
 type Alias = Hidden
 fun inspect(value: Alias) = value.member
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.289: 	fun inspect(value: Alias) = value.member
+//│ ║  l.288: 	fun inspect(value: Alias) = value.member
 //│ ║         	                            ^^^^^^^^^^^^
 //│ ╟── Cannot resolve member 'member' of a value with unknown shape.
-//│ ║  l.289: 	fun inspect(value: Alias) = value.member
+//│ ║  l.288: 	fun inspect(value: Alias) = value.member
 //│ ║         	                   ^^^^^
 //│ ╟── Type 'Hidden' is declared without a member interface.
-//│ ║  l.287: 	declare type Hidden
+//│ ║  l.286: 	declare type Hidden
 //│ ╙──       	             ^^^^^^

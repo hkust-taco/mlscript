@@ -1,6 +1,9 @@
 #lang(0.3.x)
 import "./Block.mls"
 import "./Option.mls"
+import "./Predef.mls"
+
+open Predef { pass1 }
 
 open Block { Literal, ClassSymbol, ConcreteClassSymbol, showSymbol, isPrimitiveType, isPrimitiveTypeOf }
 open Option
@@ -20,13 +23,13 @@ fun show(s: Shape) =
   if s is
     Dyn then "Dyn"
     Lit(lit) then "Lit(" + Block.showLiteral(lit) + ")"
-    Arr(shapes) then "Arr(" + shapes.map((s, ...) => show(s)).join(", ") + ")"
-    Class(sym, params) then "Class(" + showSymbol(sym) + ", [" + params.map((s, ...) => show(s)).join(", ") + "])"
+    Arr(shapes) then "Arr(" + shapes.map(pass1(show)).join(", ") + ")"
+    Class(sym, params) then "Class(" + showSymbol(sym) + ", [" + params.map(pass1(show)).join(", ") + "])"
 
 fun sel(s1: Shape, s2: Shape): Array[Shape] = 
   if [s1, s2] is
     [Class(ConcreteClassSymbol(_, _, Some(args), _), params), Lit(n)] and n is Str as n then
-      let i = args.findIndex((arg, ...) => arg.name == n)
+      let i = args.findIndex(pass1((arg: Block.Symbol) => arg.name == n))
       if i >= 0 then [params.(i)] else []
     [Dyn, Lit(n)] and n is Str
       then [Dyn()]
@@ -44,8 +47,8 @@ fun static(s: Shape) =
   if s is
     Dyn then false
     Lit(l) then not (l is Str and isPrimitiveType(Block.Symbol(l))) // redundant bracket?
-    Class(_, params) then params.every((s, ...) => static(s))
-    Arr(shapes) then shapes.every((s, ...) => static(s))
+    Class(_, params) then params.every(pass1(static))
+    Arr(shapes) then shapes.every(pass1(static))
 
 open Block { Case }
 

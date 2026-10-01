@@ -241,6 +241,7 @@ object ErasedType:
     * nominal hierarchy published by Erasure.
     */
   def eraseSign(sign: Term)(using Erasure): Opt[ErasedValueType] = sign match
+    case Capture(base, _) => eraseSign(base)
     case CompType(lhs, rhs, true) =>
       // * A union is kept as a transient `Union` surface form; `canonicalize` collapses it to the members' LUB.
       for
