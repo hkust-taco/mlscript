@@ -59,7 +59,7 @@ fun toArrays(strData: Str) =
           // We found a non-quoted value.
           matches.3
       
-      (arrData.at(arrData.length - 1) as Array[Str]).push(strMatchedValue)
+      (arrData.at(arrData.length - 1) as Array).push(strMatchedValue)
   
   arrData
 

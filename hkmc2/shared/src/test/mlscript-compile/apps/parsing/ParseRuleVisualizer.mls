@@ -1,4 +1,5 @@
 #lang(0.3.x)
+
 import "../../Predef.mls"
 import "../../Stack.mls"
 import "../../Iter.mls"
@@ -41,7 +42,7 @@ fun render[T](rr: dyn, title: Str, rule: ParseRule.ParseRule[T]) =
       None then lhs
   fun diagram(choicesOpt) =
     rr.Diagram of if choicesOpt is Some(choices) then choices else []
-  fun renderChoice(parentRule, choice: Choice[Any]) = if choice is
+  fun renderChoice(parentRule, choice: Choice) = if choice is
     Choice.End then
       tracer.print of "found Choice.End"
       None
@@ -89,7 +90,7 @@ fun render[T](rr: dyn, title: Str, rule: ParseRule.ParseRule[T]) =
     set referencedKinds = new Set()
     diagrams.push of ...currentKinds
       Iter.mapping of kind => 
-        let theRule = (syntaxKinds |> MutMap.get(kind) |> Option.unsafe.get) as ParseRule.ParseRule[T]
+        let theRule = syntaxKinds |> MutMap.get(kind) |> Option.unsafe.get
         [kind, diagram of renderRule(theRule)]
       Iter.toArray()
   diagrams

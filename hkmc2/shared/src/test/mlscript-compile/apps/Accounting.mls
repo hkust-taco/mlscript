@@ -10,9 +10,6 @@ import "../Predef.mls"
 open Predef
 
 
-
-
-
 data class Project(val num: Str)
 
 
@@ -74,7 +71,7 @@ data class Report(fileName) with
       lines.filter((x: Line, ...) => not x.isMatchable).map((x: Line, ...) => x.balance).reduce((a, b, ...) => a +. b, 0)
     ) ~ "|"
 
-fun process(filename: Str, k: Report -> Any) =
+fun process(filename: Str, k: Report -> ()) =
   let report = Report(filename)
   report.init()
   k(report)
