@@ -13,19 +13,19 @@ resolver invariants and regression coverage live in the
 [resolver design notes](new-resolution-design.md). Backend-specific constraints
 are in [WASM resolution](new-resolution-wasm.md).
 
-The checked-in worksheet headers give the following status. Counts exclude shared
-`.mls` configurations, new-resolution regression tests, and the 51 files under
+The checked-in worksheet headers give the following status as of 2026-10-01.
+Counts exclude shared `.mls` configurations, new-resolution regression tests, and the 51 files under
 `ucs/staging`, which the test runner excludes.
 
 | Suite | Migrated | Legacy configuration | Active files |
 | --- | ---: | ---: | ---: |
-| basics | 61 | 29 | 90 |
-| codegen | 86 | 39 | 125 |
-| ucs | 52 | 18 | 70 |
-| ups | 49 | 22 | 71 |
+| basics | 67 | 23 | 90 |
+| codegen | 93 | 33 | 126 |
+| ucs | 69 | 1 | 70 |
+| ups | 58 | 13 | 71 |
 | apps | 13 | 3 | 16 |
-| Total | 261 | 111 | 372 |
-| wasm (separate backend) | 19 | 2 | 21 |
+| Total | 300 | 73 | 373 |
+| wasm (separate backend) | 22 | 1 | 23 |
 
 All twelve `apps/parsing` worksheets use new resolution, but some implementation
 modules they import still use legacy resolution. Worksheet migration does not
@@ -33,13 +33,65 @@ imply that its dependencies have been migrated.
 
 | Compilation suite | New resolution | Legacy resolution | Total |
 | --- | ---: | ---: | ---: |
-| Main (including quotes, UPS, and regression fixtures) | 27 | 21 | 48 |
-| Applications | 8 | 12 | 20 |
-| Nofib | 12 | 27 | 39 |
-| WASM | 0 | 1 | 1 |
-| Total | 47 | 61 | 108 |
+| Main (including quotes, UPS, and regression fixtures) | 38 | 10 | 48 |
+| Applications | 12 | 8 | 20 |
+| Nofib | 37 | 2 | 39 |
+| WASM | 1 | 0 | 1 |
+| Total | 88 | 20 | 108 |
 
 These totals include the new-resolution `NamedFieldLibrary` regression fixture.
+They count language directives in source files, not test-runner test cases.
+`CachedHash` and `parsing/TreeHelpers` already use new resolution and are included
+in the totals; the earlier table undercounted them.
+
+### Recent compilation ports
+
+The following 39 fixtures migrated after the previous documentation revision:
+
+| Suite | Migrated fixtures |
+| --- | --- |
+| Main | `Benchmark`, `Char`, `Iter`, `MutMap`, `ObjectBuffer`, `QuoteExample`, `Stack`, `TreeTracer`, `XML`, `ups/EvaluationContext` |
+| Applications | `parsing/Rules`, `parsing/Test`, `parsing/Tree` |
+| Nofib | `NofibPrelude`, `ansi`, `atom`, `awards`, `cichelli`, `circsim`, `constraints`, `cryptarithm2`, `cse`, `eliza`, `fish`, `integer`, `knights`, `lambda`, `lcss`, `life`, `mate`, `minimax`, `para`, `power`, `pretty`, `primetest`, `scc`, `secretary`, `treejoin` |
+| WASM | `wasm/Wasm` |
+
+These ports add exposed callback, collection, and nominal interfaces. The `Iter`
+and `cse` investigations also fixed lexical-scope transport for omitted type
+arguments; `newres/InferenceHoleScopes` records the regression coverage.
+`Char.AnyChar` now uses `s.length` directly: named-pattern definitions propagate
+shapes from class tests into alias bindings, guards, and transformation parameters.
+The WASM utility fixture declares its JavaScript/WebAssembly boundary explicitly
+with `dyn`; its migration does not mean that all host exports have static interfaces.
+
+### Worksheet retry, 2026-10-01
+
+All 115 then-legacy worksheets in the suites above were tried with `:.`, after
+rebuilding their compilation fixtures. Forty-one ports were retained: 6 basics,
+6 codegen, 17 UCS, 9 UPS, and 3 WASM worksheets. Thirty need only the configuration
+change and regenerated goldens. The other eleven need these small changes:
+
+| Worksheets | Source or expectation changes |
+| --- | --- |
+| `basics/Classes`, `ucs/syntax/SimpleUCS` | Structural interfaces for the `id` and `get` callbacks used by otherwise unconstrained parameters. |
+| `ucs/normalization/Deduplication` | `Str` on the helper that selects `length`. |
+| `ups/examples/BasicSeqStackParse` | Array interfaces for the parser stack and token input, and `Str` for the text input. Existing parser results and known limitations are preserved. |
+| `codegen/ImportedOps`, `ucs/examples/ListFold` | Explicitly open the binary `~` operator to override the builtin. |
+| `ucs/examples/EitherOrBoth` | Explicitly open `~` and correct the binary callback signature to `(A, B) -> C`; runtime checks cover all three fold branches. |
+| `ups/examples/DoubleTripleList` | Use `testList!head` and `testList!tail` for the reflectively installed getters in the explicit logging check. Reads through `Cons`'s `val` interface are pure. |
+| `basics/Inheritance`, `basics/CompanionModules_Functions`, `basics/Overloading` | Remove resolved `:todo`/`:fixme` expectations. The separate non-inlined overload failures remain covered. |
+
+Newly migrated pattern worksheets include `ucs/general/BooleanPatterns`,
+`ucs/patterns/{BooleansOps,ConjunctionPattern,RecordPattern,String}`,
+`ups/RecursiveTransformations`, and `ups/examples/Record`. The WASM ports are
+`Basics`, `DeadConstructorElim`, and `DeadParamElim`.
+
+`basics/CompanionModules_Classes` passed the runner's failure policy but was not
+retained: its contextual call returns a function instead of `42` because automatic
+`using` insertion remains unsupported. Reviewing successful values as well as
+failure markers is necessary when accepting a migration.
+
+Blocked worksheets keep their original source and goldens. No new failure
+suppressions were added to obtain these ports.
 
 ## Migration procedure
 
@@ -74,19 +126,21 @@ nodes must not be re-resolved, and erased types must not be queried before erasu
 Other parser implementation modules retain legacy resolution and need individual
 migration checks even though their worksheets use new resolution.
 
-The remaining option consumers have these blockers when compiled with
-`#lang(0.3.x)`:
+The remaining compilation fixtures are listed below. The 2026-10-01 worksheet
+retry did not re-probe these fixtures in new resolution; the interface and compiler
+issues are investigation leads from earlier compilation attempts, not a claim that
+every listed file still needs a compiler change.
 
-| Fixtures | Current blockers |
+| Legacy fixtures | Outstanding checks |
 | --- | --- |
-| `Block`, `Shape` | Missing nominal members and callback arity mismatches; `Block` also needs a public interface for `showArm`. |
-| `Iter`, `MutMap`, `ups/EvaluationContext` | Missing public parameter interfaces and unresolved member selections. |
-| `FingerTreeList` | Compilation exceeds the 25-second test limit. Tuple literals with several spreads, such as `concatMiddle`'s `[...ay1, ...middle, ...ax2]`, produce one candidate per combination of operand candidates, and each is matched again by `toNodes`. Candidate sets compare shapes structurally, which rehashes these deep shapes; identity-based candidate storage is the next step. Already fixed on branch `LPTK/new-resolution-no-hashing`. |
-| `parsing/Extension`, `ParseRule`, `Test` | Selections on values imported from legacy-resolution modules, such as `Parser.tracer`, have no resolved target. `TreeHelpers` compiles standalone; its consumers remain to be checked. |
-| `parsing/Lexer` | Calls with trailing contextual parameters leave function values where tokens are expected. The binary `~` is explicitly imported, as required to override the builtin under new open semantics. |
-| `parsing/Parser` | Pattern-field flow and unresolved nominal members. |
-| `parsing/ParseRuleVisualizer`, `Rules`, `parsing-web-demo/main` | Missing host/public interfaces and unresolved selections. |
-| `parsing/Tree` | `JSON.stringify` has no result interface, so selecting `slice` on its result fails. |
+| `Block`, `Shape` | Nominal members, callback arity, and the public interface for `showArm`. |
+| `LazyArray`, `FingerTreeList`, `LazyFingerTree` | Collection interfaces and shape propagation. An earlier `FingerTreeList` probe exceeded the 25-second limit while combining tuple spreads; the candidate-storage fix is on `LPTK/new-resolution-no-hashing`. Retry against the current resolver before attributing a new timeout to that cause. |
+| `Runtime`, `Rendering`, `Predef` | Runtime/host interfaces and their consumers; `Predef.use` also depends on contextual arguments. |
+| `CSP`, `QuoteExample1` | Quasiquote type selections and wildcard-reference lowering. |
+| `apps/Accounting`, `apps/CSV` | Public interfaces and their worksheet consumers. |
+| `parsing/Extension`, `ParseRule`, `Parser`, `ParseRuleVisualizer`, `parsing-web-demo/main` | Remaining exposed interfaces and mixed-mode parser dependencies. `Rules`, `Test`, `Tree`, and `TreeHelpers` are already migrated. |
+| `parsing/Lexer` | Calls with trailing contextual parameters leave function values where tokens are expected. The binary `~` is explicitly imported. |
+| `nofib/lastpiece`, `nofib/sorting` | Remaining Nofib interface and flow issues; all other Nofib fixtures use new resolution. |
 
 To reproduce a blocker, temporarily add the language directive to the named
 compilation fixture and run `ctest <name>` or `catest <name>` as appropriate.
@@ -105,21 +159,15 @@ subclass annotations, tuple transport, multiple parent steps, callback inputs,
 and caller separation. A local module's captured outer binder still has a
 separate scope failure recorded there with `:fixme`.
 
-All 61 legacy compilation fixtures were probed individually with their dependencies
-in their existing modes. No fixture was newly unblocked by this correction.
-`CachedHash` and `parsing/TreeHelpers` compile standalone in new resolution both
-before and after the correction; their consumer migrations remain unchecked.
-`FingerTreeList` still reaches the test timeout. `Lexer` now explicitly imports
-`~`, as intended by the new open semantics, and reaches the contextual-argument
-blocker instead of crashing. `newres/LexerMigration.mls` covers the explicit import
-and records missing argument insertion. Completing the migration requires contextual
+The earlier 2026-09-30 probe of 61 legacy compilation fixtures found no additional
+ports from the ancestor-constraint correction alone. Subsequent interface
+annotations and the omitted-type-argument scope fix enabled the compilation ports
+listed above. Do not use the old probe as the current migration inventory.
+
+`newres/LexerMigration.mls` covers the explicit operator import and records missing
+contextual argument insertion. Completing that migration requires contextual
 instance lookup and argument insertion in the new resolver; passing every instance
 explicitly would bypass that missing feature rather than complete it.
-
-Many fixtures also need source interfaces: for example, `QuoteExample.bind` calls
-an unannotated callback, and Nofib helpers expose comparators and printers.
-Check each fixture's public API and its consumers when porting it; the source
-headers identify the remaining legacy fixtures.
 
 ### Shape propagation and capture precision
 
@@ -161,22 +209,50 @@ headers identify the remaining legacy fixtures.
   and the unresolved receiver in `codegen/ObjectMethodDebinding`. Coordinate
   cross-block method changes with the separate implementation work before porting.
 
+### Reflective getter instrumentation
+
+`ups/examples/DoubleTripleList` uses `Object.defineProperty` to replace `Cons.head`
+and `Cons.tail` with getters. New resolution identifies their direct reads as
+reads of the original `val` members, which are pure and may be discarded when
+unused. Reflectively replacing those data properties does not change the contract
+of their declared interface. This is not a getter-preservation bug.
+
+The migrated worksheet uses `testList!head` and `testList!tail` in its explicit
+logging check to observe the JavaScript getters dynamically. Both log lines and
+all existing matcher results and logs are preserved. `newres/GetterReadEffects.mls`
+covers direct and abstract getters, both dynamic-selection forms, and the nominal,
+structural, and abstract field interfaces whose unused reads are eliminated.
+Ordinary MLscript getter reads remain effectful; an effectful getter cannot be
+assumed to satisfy a pure `val` interface merely because it returns the right type.
+The abstract-val case also exhibits the same elimination under legacy resolution.
+
 ### Patterns and generated references
 
-Complete record, conjunction/negation, string concatenation, guarded and
-transforming pattern flow, and pattern values such as `.unapply`. Representative
-worksheets are `ucs/general/BooleanPatterns`, `ucs/patterns/RecordPattern`,
-`ucs/patterns/String`, `ups/RecursiveTransformations`, and `ups/examples/HindleyMilner`.
-`Char.AnyChar` also loses its string interface before its `length` guard.
+Named-pattern definitions now analyze an unknown input through the same shape
+matcher used for direct matches. Constructor tests refine `as` bindings; guards
+retain their binding symbols, and transformations receive those shapes through
+their generated parameters. `newres/PatternDefinitionBindings` covers this flow,
+and `Char.AnyChar` no longer needs its redundant `Str` annotation.
 
-`ucs/examples/EitherOrBoth` and the imported parser implementation expose
-synthetic selections entering new resolution. Generated matcher code should retain
-the source reference's completed target and receiver path through the `Lowering`
-capability, without re-running lookup or cloning listener hosts with no candidates.
-Transfer rules must distinguish matched inputs, bound fields, and transformed
-outputs. Union alternatives, filter conjunctions successively, and avoid inventing
-positive bindings for negation. Recursive patterns need cycle-aware subscriptions
-and demonstrated convergence.
+This does not supply every compound pattern's output interface. Conjunctions test
+both operands against the input and can produce a pair; chains feed one output
+into the next match. Concatenations and rebuilt constructor outputs remain
+conservative. Remaining worksheet blockers include:
+
+- `ups/examples/Computation`: a numeric range does not yet refine its bound
+  minute value enough for `toString` and `padStart`.
+- `ups/examples/ListPredicates`: the transformation in a higher-order pattern
+  argument leaves the result of `toString` without a resolved `length` selection.
+- `ucs/patterns/where`, `ups/MatchResult`, `ups/SimpleTransform`, and several regex
+  worksheets: pattern values and direct `.unapply`/`.unapplyStringPrefix` access.
+- `ups/examples/{EvaluationContext,EvaluationContext2,HindleyMilner}`: unresolved
+  member selections in worksheet-local definitions, despite the migration of the
+  separate `ups/EvaluationContext` compilation fixture.
+
+Generated matcher code must retain source targets and receiver paths through
+lowering. Transfer rules must distinguish matched inputs, bound fields, and
+transformed outputs; negation must not export positive bindings. Recursive pattern
+flow still needs cycle-aware subscriptions and demonstrated convergence.
 
 Acceptance coverage should include tuple/record extraction, nested and imported
 constructors, aliases, guards, transformed results, repeated references, and
@@ -187,13 +263,15 @@ recursive UPS matchers. Preserve both runtime results and matcher structure.
 - Implement automatic contextual argument insertion for `Lexer` calls to
   `Token.integer`, `symbol`, and related APIs with trailing `using` lists.
   Operators that override builtins must be imported explicitly, as in `Lexer`.
-- Complete type-argument validation (`basics/GenericClasses`), constructor-value
-  member lookup (`codegen/ParamClasses`, `basics/DynamicInstantiation`), and
-  module/call checks. Decide nominal module-forwarding compatibility for
-  `basics/CyclicModuleForwarders` before changing its expected outcomes.
-- Extend host interfaces where needed: keyword-named `Map.set` and `Reflect.set`,
-  and WebAssembly exports. `Array.reduce` requires an initial value because
-  declared methods cannot be overloaded by arity; the form without one would need
+- Complete constructor-value member lookup (`codegen/ParamClasses`,
+  `basics/DynamicInstantiation`) and module/call checks. `basics/GenericClasses`
+  now migrates with its type-argument-count diagnostics intact. Decide nominal
+  module-forwarding compatibility for `basics/CyclicModuleForwarders` before
+  changing its expected outcomes.
+- Extend host interfaces where needed. `Map.set`, `Reflect.set`, and the array
+  methods needed by `Iter` now have declarations; statically describing arbitrary
+  WebAssembly exports remains separate work. `Array.reduce` requires an initial
+  value because declared methods cannot be overloaded by arity; the form without one would need
   an accumulator type that also includes the element type.
   `Array.concat` currently returns `Array[Any]`; improving precision needs a
   declared element constraint on its rest arguments. `Array.splice` must separate
@@ -207,8 +285,10 @@ recursive UPS matchers. Preserve both runtime results and matcher structure.
 
 Retry legacy worksheets and compilation fixtures against the current compiler and
 prelude before diagnosing a blocker. Keep deferred fixtures on legacy resolution.
-The WASM fixture `wasm/Wasm.mls` needs interfaces for `WebAssembly.Instance.exports` and its exposed
-`wasmInst.imports` receiver.
+The WASM fixture `wasm/Wasm.mls` is migrated. The remaining legacy WASM worksheet,
+`wasm/Binaryen`, still fails when given the common language configuration; it
+exercises JavaScript host tooling alongside backend directives and needs its
+configuration and backend diagnostics reviewed separately.
 
 ## Validation and completion gates
 

@@ -1,3 +1,4 @@
+:.
 :js
 
 
@@ -21,7 +22,7 @@ class Foo {
   fun f = 1
 }
 
-class Foo(pred) {
+class Foo(pred: {id: Any -> Any}) {
   val r = pred.id(42)
   fun callId(x) = pred.id(x)
 }
@@ -30,7 +31,7 @@ class Foo(pred) {
 class Foo(x: Int)
   val y = x
 //│ ╔══[PARSE ERROR] Expected end of input; found indented block instead
-//│ ║  l.31: 	  val y = x
+//│ ║  l.32: 	  val y = x
 //│ ╙──      	^^
 
 class Foo(x: Int) { print("Hello!", x) }
@@ -52,7 +53,7 @@ Foo().x
 :todo
 class Foo() extends Bar { x = 1 }
 //│ ╔══[COMPILATION ERROR] Name not found: x
-//│ ║  l.53: 	class Foo() extends Bar { x = 1 }
+//│ ║  l.54: 	class Foo() extends Bar { x = 1 }
 //│ ╙──      	                          ^
 
 
@@ -60,16 +61,16 @@ class Foo() extends Bar { x = 1 }
 class Foo() extends Bar { val x = 1 } with
   val y = this.x
 //│ ╔══[COMPILATION ERROR] Multiple type definition bodies are not supported.
-//│ ║  l.61: 	  val y = this.x
+//│ ║  l.62: 	  val y = this.x
 //│ ╙──      	  ^^^^^^^^^^^^^^
 
 :e
 class Foo() extends Bar { x = 1 } with
   val y = this.x
 //│ ╔══[COMPILATION ERROR] Multiple type definition bodies are not supported.
-//│ ║  l.68: 	  val y = this.x
+//│ ║  l.69: 	  val y = this.x
 //│ ╙──      	  ^^^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Name not found: x
-//│ ║  l.67: 	class Foo() extends Bar { x = 1 } with
+//│ ║  l.68: 	class Foo() extends Bar { x = 1 } with
 //│ ╙──      	                          ^
 

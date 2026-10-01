@@ -1,3 +1,4 @@
+:.
 :js
 
 import "../../../mlscript-compile/Option.mls"
@@ -40,16 +41,27 @@ fun h1(a) =
     a is None then 0
 //│ Normalized:
 //│ >  ‹if|while›
-//│ >    a is Option.Some(arg$Some$0$) and
-//│ >      let x = tmp:arg$Some$0$⁰
-//│ >      x is Left(arg$Left$0$) and
+//│ >    let tmp:scrut = a⁰
+//│ >    let-split σ =
+//│ >      let tmp:scrut = a⁰
+//│ >      tmp:scrut is member:Option⁰.Some^term:h1⁰(arg$Some$0$) and
+//│ >        let y = tmp:arg$Some$0$⁰
+//│ >        let tmp:scrut = y⁰
+//│ >        tmp:scrut is member:Right⁰^term:h1⁰(arg$Right$0$) and
+//│ >          let z = tmp:arg$Right$0$⁰
+//│ >          else z⁰
+//│ >        let tmp:scrut = a⁰
+//│ >        tmp:scrut is member:Option⁰.None^term:h1⁰ then 0
+//│ >      let tmp:scrut = a⁰
+//│ >      tmp:scrut is member:Option⁰.None^term:h1⁰ then 0
+//│ >    tmp:scrut is member:Option⁰.Some^term:h1⁰(arg$Some$0$) and
+//│ >      let x = tmp:arg$Some$0$¹
+//│ >      let tmp:scrut = x⁰
+//│ >      tmp:scrut is member:Left⁰^term:h1⁰(arg$Left$0$) and
 //│ >        let y = tmp:arg$Left$0$⁰
-//│ >        else y⁰
-//│ >      let y = tmp:arg$Some$0$⁰
-//│ >      y is Right(arg$Right$0$) and
-//│ >        let z = tmp:arg$Right$0$⁰
-//│ >        else z⁰
-//│ >    a is Option.None then 0
+//│ >        else y¹
+//│ >      $σ
+//│ >    $σ
 
 h1(Some(Left(42)))
 //│ = 42
@@ -72,18 +84,30 @@ fun h2(a) =
     a is None then 0
 //│ Normalized:
 //│ >  ‹if|while›
-//│ >    a is Option.Some(arg$Some$0$) and
-//│ >      let x = tmp:arg$Some$0$¹
-//│ >      let x' = x⁰
-//│ >      x' is Left(arg$Left$0$) and
+//│ >    let tmp:scrut = a¹
+//│ >    let-split σ =
+//│ >      let tmp:scrut = a¹
+//│ >      tmp:scrut is member:Option⁰.Some^term:h2⁰(arg$Some$0$) and
+//│ >        let y = tmp:arg$Some$0$²
+//│ >        let y' = y²
+//│ >        let tmp:scrut = y'⁰
+//│ >        tmp:scrut is member:Right⁰^term:h2⁰(arg$Right$0$) and
+//│ >          let z = tmp:arg$Right$0$¹
+//│ >          else z¹
+//│ >        let tmp:scrut = a¹
+//│ >        tmp:scrut is member:Option⁰.None^term:h2⁰ then 0
+//│ >      let tmp:scrut = a¹
+//│ >      tmp:scrut is member:Option⁰.None^term:h2⁰ then 0
+//│ >    tmp:scrut is member:Option⁰.Some^term:h2⁰(arg$Some$0$) and
+//│ >      let x = tmp:arg$Some$0$³
+//│ >      let tmp:scrut = x¹
+//│ >      let x' = tmp:scrut⁰
+//│ >      let tmp:scrut = x'⁰
+//│ >      tmp:scrut is member:Left⁰^term:h2⁰(arg$Left$0$) and
 //│ >        let y = tmp:arg$Left$0$¹
-//│ >        else y¹
-//│ >      let y = tmp:arg$Some$0$¹
-//│ >      let y' = y²
-//│ >      y' is Right(arg$Right$0$) and
-//│ >        let z = tmp:arg$Right$0$¹
-//│ >        else z¹
-//│ >    a is Option.None then 0
+//│ >        else y³
+//│ >      $σ
+//│ >    $σ
 
 // :w
 fun h3(x, y, f, p) =

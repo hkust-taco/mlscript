@@ -1,0 +1,105 @@
+:.
+
+// A source-level getter is effectful even when its result is discarded.
+:expect 1
+fun test() =
+  let calls = 0
+  class Box with
+    fun value: Int =
+      set calls += 1
+      42
+  let box = new Box
+  box.value
+  calls
+test()
+//│ = 1
+
+// Replacing a data field with a JS getter does not change its declared val
+// contract. Reads through that nominal interface are pure and may be eliminated.
+:expect 0
+fun test() =
+  let calls = 0
+  class Box(val value: Int)
+  let box = new mut Box(42)
+  Object.defineProperty(box, "value", (get: () =>
+    set calls += 1
+    42))
+  box.value
+  calls
+test()
+//│ = 0
+
+// Dynamic reads make no field-purity assumption and must retain getter effects.
+:expect 1
+fun test() =
+  let calls = 0
+  class Box(val value: Int)
+  val box: dyn = new mut Box(42)
+  Object.defineProperty(box, "value", (get: () =>
+    set calls += 1
+    42))
+  box.value
+  calls
+test()
+//│ = 1
+
+// An explicit dynamic selection also retains effects on a nominal receiver.
+:expect 1
+fun test() =
+  let calls = 0
+  class Box(val value: Int)
+  let box = new mut Box(42)
+  Object.defineProperty(box, "value", (get: () =>
+    set calls += 1
+    42))
+  box!value
+  calls
+test()
+//│ = 1
+
+// Structural field interfaces likewise describe pure reads. Passing a host
+// accessor through this interface does not preserve its undeclared effects.
+:expect 0
+fun test() =
+  let calls = 0
+  val box: {value: Int} = Object.defineProperty(mut {}, "value", (get: () =>
+    set calls += 1
+    42))
+  box.value
+  calls
+test()
+//│ = 0
+
+// The abstract val interface also promises a pure read. This getter violates
+// that promise; its side effects cannot be relied on through the base interface.
+// The same discarded-read behavior occurs under legacy resolution.
+:expect 0
+fun test() =
+  let calls = 0
+  abstract class Base with
+    val value: Int
+  class Child extends Base with
+    fun value: Int =
+      set calls += 1
+      42
+  val box: Base = new Child
+  box.value
+  calls
+test()
+//│ = 0
+
+// An abstract getter interface preserves effects when dispatching to its child.
+:expect 1
+fun test() =
+  let calls = 0
+  abstract class Base with
+    fun value: Int
+  class Child extends Base with
+    fun value: Int =
+      set calls += 1
+      42
+  val box: Base = new Child
+  box.value
+  calls
+test()
+//│ = 1

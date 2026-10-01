@@ -1,3 +1,4 @@
+:.
 :js
 
 abstract class Option[A]: Some[A] | None
@@ -181,7 +182,7 @@ data class IntVal(value: Int) extends ValBase
 data class BoolVal(value: Bool) extends ValBase
 data class Lit(value: ValBase)
 
-fun p(e, context) =
+fun p(e, context: {get: Str -> Option[ValBase]}) =
   if e is
     Var(x) and context.get(x) is
       Some(IntVal(v)) then Left(v)
@@ -199,9 +200,9 @@ fun f(x) =
     0 ::
       Nil() then "oh"
 //│ ╔══[COMPILATION ERROR] Unrecognized pattern split (operator application).
-//│ ║  l.199: 	    0 ::
+//│ ║  l.200: 	    0 ::
 //│ ║         	    ^^^^
-//│ ║  l.200: 	      Nil() then "oh"
+//│ ║  l.201: 	      Nil() then "oh"
 //│ ╙──       	^^^^^^
 
 
