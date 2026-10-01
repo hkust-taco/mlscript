@@ -1260,25 +1260,29 @@ extends Importer:
     
     def elaborateSelection(tree: Sel): Term =
       val preTrm = subterm(tree.prefix, Receiver)
-      if newResolution then
+      // `source` has no runtime object. Recognize its statically named fields
+      // before constructing a runtime selection, in either resolution mode.
+      // Compare symbols so a user-defined binding named `source` stays ordinary.
+      val sym = if newResolution then preTrm.withoutCaptures match
+        case Term.MemberRef(bms) if bms === ctx.builtins.source.bms =>
+          ctx.builtins.source.module.tree.definedSymbols.get(tree.name.name)
+        case _ => N
+      else resolveField(tree.name, preTrm.symbol, tree.name)
+      if sym.contains(ctx.builtins.source.line) then
+        val loc = tree.toLoc.getOrElse(???)
+        val (line, _, _) = loc.origin.fph.getLineColAt(loc.spanStart)
+        Term.Lit(IntLit(loc.origin.startLineNum + line))
+      else if sym.contains(ctx.builtins.source.name) then
+        Term.Lit(StrLit(ctx.getOuter.map(_.nme).getOrElse("")))
+      else if sym.contains(ctx.builtins.source.file) then
+        val loc = tree.toLoc.getOrElse(???)
+        Term.Lit(StrLit(loc.origin.fileName.toString))
+      else if newResolution then
         val res = new Term.NewSel(preTrm, tree.name, N)(FlowSymbol.sel(tree.name.name)).withLocOf(tree)
-        // listenTerm(preTrm, shape => selShape2(shape, tree.name, res))
         newSel(res)
         interpretRef(res, interp)
       else
-        val sym = if newResolution then N
-          else resolveField(tree.name, preTrm.symbol, tree.name)
-        if sym.contains(ctx.builtins.source.line) then
-          val loc = tree.toLoc.getOrElse(???)
-          val (line, _, _) = loc.origin.fph.getLineColAt(loc.spanStart)
-          Term.Lit(IntLit(loc.origin.startLineNum + line))
-        else if sym.contains(ctx.builtins.source.name) then
-          Term.Lit(StrLit(ctx.getOuter.map(_.nme).getOrElse("")))
-        else if sym.contains(ctx.builtins.source.file) then
-          val loc = tree.toLoc.getOrElse(???)
-          Term.Lit(StrLit(loc.origin.fileName.toString))
-        else
-          Term.Sel(preTrm, tree.name)(sym, FlowSymbol.sel(tree.name.name), N, S(summon))
+        Term.Sel(preTrm, tree.name)(sym, FlowSymbol.sel(tree.name.name), N, S(summon))
     
     tree.desugared match
     case Tree.Trm(term) => interpretRef(term, interp)

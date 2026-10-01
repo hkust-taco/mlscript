@@ -458,3 +458,13 @@ mkStr of "A", x is Str
 //│ = "Afalse"
 
 
+
+// Leading separators must resume module parsing, not return the parser function.
+example of ";; ;; 42"
+//│ > «42»
+
+// Exercise continuation lookup for application, operators, and type expressions.
+example of "f x + y"
+example of "let x: int = 42"
+//│ > «f x + y»
+//│ > «let x : int = 42»

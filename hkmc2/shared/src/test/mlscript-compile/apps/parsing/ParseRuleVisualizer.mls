@@ -1,3 +1,4 @@
+#lang(0.3.x)
 import "../../Predef.mls"
 import "../../Stack.mls"
 import "../../Iter.mls"
@@ -24,13 +25,13 @@ val tracer = new TreeTracer.TreeTracer()
 
 let defaultKinds = tuple of "type", "term", "typevar", "ident"
 
-let renderedKinds = new Set of defaultKinds
+mut val renderedKinds: Set[Str] = new Set of defaultKinds
 
 fun reset() =
   set renderedKinds = new Set of defaultKinds
 
 // * `rr` is the railroad library.
-fun render[T](rr, title: Str, rule: ParseRule.ParseRule[T]) =
+fun render[T](rr: dyn, title: Str, rule: ParseRule.ParseRule[T]) =
   let helperRules = mut []
   let referencedKinds = new Set()
   let renderCache = new Map()
@@ -40,7 +41,7 @@ fun render[T](rr, title: Str, rule: ParseRule.ParseRule[T]) =
       None then lhs
   fun diagram(choicesOpt) =
     rr.Diagram of if choicesOpt is Some(choices) then choices else []
-  fun renderChoice(parentRule, choice) = if choice is
+  fun renderChoice(parentRule, choice: Choice[Any]) = if choice is
     Choice.End then
       tracer.print of "found Choice.End"
       None
@@ -85,10 +86,10 @@ fun render[T](rr, title: Str, rule: ParseRule.ParseRule[T]) =
   while referencedKinds.size > 0 do
     let currentKinds = referencedKinds
     set renderedKinds = renderedKinds.union of currentKinds
-    referencedKinds = new Set()
+    set referencedKinds = new Set()
     diagrams.push of ...currentKinds
       Iter.mapping of kind => 
-        let theRule = syntaxKinds |> MutMap.get(kind) |> Option.unsafe.get
+        let theRule = (syntaxKinds |> MutMap.get(kind) |> Option.unsafe.get) as ParseRule.ParseRule[T]
         [kind, diagram of renderRule(theRule)]
       Iter.toArray()
   diagrams

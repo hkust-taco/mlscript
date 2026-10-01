@@ -1,3 +1,4 @@
+#lang(0.3.x)
 
 // Adapted from https://www.bennadel.com/blog/1504-ask-ben-parsing-csv-strings-with-javascript-exec-regular-expression-command.htm
 // (JS code commented at bottom)
@@ -23,7 +24,7 @@ val objPattern = new mut RegExp of
   "gi"
 
 // This will parse a delimited string into an array of arrays.
-fun toArrays(strData) =
+fun toArrays(strData: Str) =
   
   // Create an array to hold our data. Give the array a default empty first row.
   let arrData = mut [mut []]
@@ -33,8 +34,10 @@ fun toArrays(strData) =
     let arrMatches = objPattern.exec(strData)
     arrMatches !== null do
       
+      // The loop condition guarantees a successful regular-expression match.
+      val matches = arrMatches as Array[Str]
       // Get the delimiter that was found.
-      let strMatchedDelimiter = arrMatches.1
+      let strMatchedDelimiter = matches.1
       
       // Check to see if the given delimiter has a length (is not the start of string)
       // and if it matches field delimiter.
@@ -46,17 +49,17 @@ fun toArrays(strData) =
       // Now that we have our delimiter out of the way,
       // let's check to see which kind of value we captured (quoted or unquoted).
       let strMatchedValue =
-        if arrMatches.2 != undefined
+        if matches.2 != undefined
         then
           // We found a quoted value. When we capture this value, unescape any double quotes.
-          arrMatches.2.replace of
+          matches.2.replace of
             new mut RegExp("\"\"", "g")
             "\""
         else
           // We found a non-quoted value.
-          arrMatches.3
+          matches.3
       
-      arrData.at(arrData.length - 1).push(strMatchedValue)
+      (arrData.at(arrData.length - 1) as Array[Str]).push(strMatchedValue)
   
   arrData
 

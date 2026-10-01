@@ -23,8 +23,8 @@ Counts exclude shared `.mls` configurations, new-resolution regression tests, an
 | codegen | 93 | 33 | 126 |
 | ucs | 69 | 1 | 70 |
 | ups | 58 | 13 | 71 |
-| apps | 13 | 3 | 16 |
-| Total | 300 | 73 | 373 |
+| apps | 15 | 1 | 16 |
+| Total | 302 | 71 | 373 |
 | wasm (separate backend) | 22 | 1 | 23 |
 
 All twelve `apps/parsing` worksheets use new resolution, but some implementation
@@ -33,11 +33,11 @@ imply that its dependencies have been migrated.
 
 | Compilation suite | New resolution | Legacy resolution | Total |
 | --- | ---: | ---: | ---: |
-| Main (including quotes, UPS, and regression fixtures) | 38 | 10 | 48 |
-| Applications | 12 | 8 | 20 |
+| Main (including quotes, UPS, and regression fixtures) | 41 | 7 | 48 |
+| Applications | 17 | 3 | 20 |
 | Nofib | 37 | 2 | 39 |
 | WASM | 1 | 0 | 1 |
-| Total | 88 | 20 | 108 |
+| Total | 96 | 12 | 108 |
 
 These totals include the new-resolution `NamedFieldLibrary` regression fixture.
 They count language directives in source files, not test-runner test cases.
@@ -85,21 +85,14 @@ resolver. The remaining fixtures need the following work:
 
 | Legacy fixtures | Concrete work and known failures |
 | --- | --- |
-| `Block` | Annotate `showArm(a: Arm)`. Adapt callbacks such as `args.map(showArg)` to accept unused JS callback arguments, e.g. `(arg, ...) => showArg(arg)`. Declare `Str.replaceAll` in the host interface. `showLiteral` also selects `toString` through a union containing `null` and `undefined`; its branches need usable receiver interfaces. |
-| `Shape` | Correct reads of `sym.args`: neither `ClassSymbol` nor `Symbol` defines that member. The available constructor metadata is `ConcreteClassSymbol.paramsOpt`. Check the intended name lookup and parameter-count operations, and adapt `map`/`every` callbacks to accept unused arguments. These are fixture corrections, not a demonstrated resolver design gap. |
-| `LazyArray`, `LazyFingerTree` | Give indexable inputs and elements of concatenation arguments interfaces for `length`, `at`, and `slice`. Check nullable iterator/cache variables and preserve the `[index, collection]` shape of stack entries. `LazyArray` currently rejects `uitr.next()` because `uitr` includes `null`, and rejects `vals.bits` even inside `if vals is Splice`. These need flow/refinement investigation in addition to annotations. |
+| `LazyFingerTree` | Indexable annotations and casts expose an assertion when calling the imported generic `FingerTree.at` method: its result crosses the class and method scopes incorrectly. `newres/LegacyGenericMethods.mls` reproduces it with `FingerTreeList.mk(42).at(0)`. |
 | `FingerTreeList` | Enabling new resolution exceeds the compilation test's time limit. Diagnose inference growth around recursive trees and tuple spreads before calling this an annotation-only port. |
 | `Runtime`, `Rendering`, `Predef` | Audit callable and host interfaces; `Predef.use` also depends on contextual argument insertion. No separate design blocker is established for their missing annotations. |
 | `CSP`, `QuoteExample1` | Quasiquote type selections and wildcard-reference lowering. |
-| `apps/Accounting` | Annotate `process`'s callback as `Report -> Any`, give array callbacks their `Line` input interface and unused argument tails, expose the numeric receiver of `toFixed`, and explicitly import binary `~`. Validate the resulting report with the accounting worksheet. |
-| `apps/CSV` | Refine the `Array[Str] | null` result of `RegExp.exec` before selecting captures, and the possibly undefined result of `Array.at` before calling `push`. Add the missing `Str.replace` host declaration. The existing `!== null` condition does not provide the required receiver interface. |
 | `parsing/Lexer` | Calls to token constructors with trailing `using` parameters need automatic contextual argument insertion; `newres/LexerMigration.mls` records the missing behavior. |
 | `parsing/ParseRule` | Correct `andThen`'s helper signature: it transforms a rule's result into a pair with the following rule's result, rather than preserving `B`. Compilation also triggers a repeated lexical-scope-exit assertion, including with a generic helper and an explicit pair result. This is a compiler bug to isolate, not an interface-design decision. |
-| `parsing/Extension` | Resolve `display`, `extendChoices`, and `andThen` on rules obtained from `Rules.syntaxKinds`. Migrating its `ParseRule` dependency also encounters the assertion above. |
-| `parsing/Parser` | Give rule/options parameters their interfaces. `exprCont` selects `infix.rule` and `infix.process` from an `Option` without unwrapping it. Compilation also rejects uses of the virtual `source` module at `source.line`; investigate those separately from annotations. |
-| `parsing/ParseRuleVisualizer` | Declare the railroad-library interface passed as `rr` (`Sequence`, `Diagram`, `Terminal`, `Optional`, `NonTerminal`, and `Choice`) and resolve the mutable `renderedKinds` set's `has`/`union` selections. Its migrated parser dependencies have the failures listed above. |
-| `parsing-web-demo/main` | Annotate iterator callback inputs and the DOM/railroad host boundary. Replace `examples.get(...)` with the module-style `MutMap.get` API. Validate in the browser as described in the fixture; parser dependency failures remain separate prerequisites. |
-| `nofib/lastpiece`, `nofib/sorting` | Retry exposed-interface annotations and identify any residual flow errors. No specific design blocker is established. |
+| `parsing/Extension` | Giving rules their `ParseRule[Tree]` interface exposes a lexical-scope assertion in `ParseRule.andThen`, even while the dependency remains on legacy resolution. Explicit generic arguments and a result annotation do not resolve it. |
+| `nofib/lastpiece`, `nofib/sorting` | Both exceed the compilation time limit under new resolution. `sorting` first needs `int_of_char(c: Str)`; adding it reveals the timeout. Diagnose inference growth before retrying these ports. |
 
 Array callbacks must accept the arguments supplied by the JS API: three for
 `map`/`filter`/`forEach` and four for `reduce`. An unused rest parameter satisfies
@@ -112,6 +105,19 @@ choice, rather than merely name the failing subsystem.
 To reproduce a blocker, temporarily add the language directive to the named
 compilation fixture and run `ctest <name>` or `catest <name>` as appropriate.
 The blocked fixtures retain their existing resolution mode.
+
+`Block`, `Shape`, `LazyArray`, `Accounting`, `CSV`, `Parser`,
+`ParseRuleVisualizer`, and the parser web demo use new resolution. Nullable host
+results are cast after their existing checks; mutable traversal arrays use `mut`.
+The parser unwraps optional continuation rules and resumes module parsing after
+leading separators. The virtual `source` fields expand in both resolution modes
+(`newres/SourceLocations`); constructor metadata is covered by `newres/ShapeFixture`.
+
+The web demo compiles, but serving its checked-in HTML directly still encounters
+Node-only imports (`fs`, `process`, `path`, and `url`) through `Predef` and `Term`.
+Browser packaging must separate that dependency before direct startup works.
+Parser and visualizer worksheets run under Node and do not exercise this browser
+packaging constraint.
 
 ### Shape propagation and capture precision
 

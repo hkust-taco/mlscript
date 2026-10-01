@@ -1,0 +1,12 @@
+:.
+
+import "../../mlscript-compile/FingerTreeList.mls"
+
+// Calling a generic method imported from a legacy fixture must preserve the
+// class's type argument when interpreting the method's annotated result.
+// FIXME: The method result currently exits the method scope while its mark
+// still denotes the enclosing class scope. This blocks LazyFingerTree.
+:fixme
+:expect 42
+FingerTreeList.mk(42).at(0)
+//│ /!!!\ Uncaught error: java.lang.AssertionError: assertion failed: Entry and exit cross different lexical resolution scopes: class:FingerTree⁰ vs term:FingerTree⁰/at⁰ for InstanceShape(T⁰)

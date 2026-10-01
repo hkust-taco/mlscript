@@ -1,3 +1,4 @@
+#lang(0.3.x)
 import "../../Predef.mls"
 import "../../Option.mls"
 import "../../Stack.mls"
@@ -26,6 +27,11 @@ module Parser with ...
 
 val tracer: TreeTracer.TreeTracer = new TreeTracer.TreeTracer
 
+type ExprOptions = {
+  kind: Str, rule: ParseRule.ParseRule[Tree],
+  allowOperators: Bool, allowLiterals: Bool
+}
+
 let termOptions =
   kind: "term", rule: termRule
   allowOperators: true, allowLiterals: true
@@ -33,7 +39,7 @@ let typeOptions =
   kind: "type", rule: typeRule
   allowOperators: false, allowLiterals: true, 
 
-fun parse(tokens) =
+fun parse(tokens: Stack[Token.Token]) =
   let counter = 0
   
   fun consume =
@@ -62,9 +68,9 @@ fun parse(tokens) =
       token :: _ then Tree.error("expect a type variable but found " + token)
       Nil then Tree.error("expect a type variable but found the end of input")
     // * other rule-based kinds
-    syntaxKinds |> MutMap.get(kind) is Some(rule) then
+    syntaxKinds |> MutMap.get(kind) is Some(ParseRule.ParseRule as rule) then
       let tree = parseRule(prec, rule)
-      if rule.refChoice is Some(Ref(kind', process, None, None, rest)) and kind == kind' do
+      if (rule as ParseRule.ParseRule[Tree]).refChoice is Some(Ref(kind', process, None, None, rest)) and kind == kind' do
         let shouldParse = true
         while shouldParse do
           let tree' = parseRule(prec, rest)
@@ -76,21 +82,21 @@ fun parse(tokens) =
       tree
     else throw Error("Unknown syntax kind: \"" + kind + "\"")
   
-  fun parseRule(prec: Int, rule) = tracer.trace of
+  fun parseRule(prec: Int, rule: ParseRule.ParseRule[Tree]): Tree = tracer.trace of
     "parsing rule \"" + rule.name + "\" with precedence " + prec
     result => "parsed rule \"" + rule.name + "\": " + result Tree.summary()
     () => if tokens is...
     Token.Identifier(name, _) :: _ and
       do tracer.print of "found an identifier \"" + name + "\"", source.line
       Keywords.all |> MutMap.get(name) is Some(keyword) and
-        do tracer.print of keyword.toString(), source.line
+        do tracer.print of (keyword as Keywords.Keyword).toString(), source.line
         do tracer.print of "keyword choices: ", rule.keywordChoices
           Iter.mapping of case [k, v] then "`" + k + "`"
           Iter.joined(", ")
         rule.keywordChoices |> MutMap.get(name) is
-          Some(rest) then
+          Some(ParseRule.ParseRule as rest) then
             tracer.print of "found a rule starting with `" + name + "`", source.line
-            tracer.print of "the rest of the rule: " + rest.display, source.line
+            tracer.print of "the rest of the rule: " + (rest as ParseRule.ParseRule[Tree]).display, source.line
             consume
             parseRule(0, rest)
           do tracer.print of "\"" + name + "\" is not a keyword", source.line
@@ -131,17 +137,17 @@ fun parse(tokens) =
         tracer.print of "no end choice but found the end of input", source.line
         Tree.error("unexpected end of input")
   
-  fun expr(prec: Int, options): Tree = tracer.trace of
+  fun expr(prec: Int, options: ExprOptions): Tree = tracer.trace of
     options.kind + " <<< " + prec + " " + TokenHelpers.preview(tokens)
     result => options.kind + " >>> " + result Tree.summary()
     () => if tokens is ...
     Token.Identifier(name, symbolic) :: _ and Keywords.all |> MutMap.get(name) is
       // * the keyword case
       Some(keyword) and options.rule.keywordChoices |> MutMap.get(name) is
-        Some(rule) and
-          keyword.leftPrecOrMin > prec then
+        Some(ParseRule.ParseRule as rule) and
+          (keyword as Keywords.Keyword).leftPrecOrMin > prec then
             consume
-            parseRule(keyword.rightPrecOrMax, rule) exprCont(prec, options)
+            parseRule((keyword as Keywords.Keyword).rightPrecOrMax, rule) exprCont(prec, options)
           else
             tracer.print of "the left precedence of \"" + name + "\" is less", source.line
             Tree.empty
@@ -163,26 +169,30 @@ fun parse(tokens) =
     token :: _ then Tree.error("unrecognized token: " + token)
     Nil then Tree.error("unexpected end of input")
   
-  fun exprCont(acc: Tree, prec: Int, options) = if tokens is
-    let infix = options.rule.refChoice Option.flatMap of case
+  fun infixRule(options: ExprOptions): Option[{process: (Tree, Tree) -> Tree, rule: ParseRule.ParseRule[Tree]}] =
+    // A category may have no continuation rule (for example, an atomic kind).
+    options.rule.refChoice Option.flatMap of case
       Ref(kind, process, None, None, rest) and kind == options.kind then
-        { process: process, rule: rest }
+        Some of { process: process, rule: rest }
       else throw Error("Kind " + options.kind + " does not have infix rules")
+  
+  fun exprCont(acc: Tree, prec: Int, options: ExprOptions) = if tokens is
+    let infix = infixRule(options)
     do tracer.print of ">>> " + options.kind + "Cont " + prec + " " + acc Tree.summary() + " <<<", source.line
     // * the case of infix keyword rules
     do tracer.print of "check keyword " + TokenHelpers.preview(tokens), source.line
     Token.Identifier(name, _) :: _ and Keywords.all |> MutMap.get(name) is Some(keyword) and
       do tracer.print of "found a keyword: " + name, source.line
-      infix.rule.keywordChoices |> MutMap.get(name) is Some(rule) and
+      infix is Some(infix) and infix.rule.keywordChoices |> MutMap.get(name) is Some(ParseRule.ParseRule as rule) and
         do tracer.print of "keyword `" + name + "` is found in infix rules", source.line
-        keyword.leftPrecOrMin > prec and rule.refChoice is
+        (keyword as Keywords.Keyword).leftPrecOrMin > prec and (rule as ParseRule.ParseRule[Tree]).refChoice is
           Some(Ref(kind, process, outerPrec, innerPrec, rest)) and
             do tracer.print of "try to parse kind \"" + kind + "\" at " + TokenHelpers.preview(tokens), source.line
             let outerPrec' = outerPrec Option.getOrElse(Keywords.maxOperatorPrec)
             let innerPrec' = innerPrec Option.getOrElse(outerPrec')
             outerPrec' > prec then
               consume
-              let rhs = parseKind(kind, keyword.rightPrecOrMin)
+              let rhs = parseKind(kind, (keyword as Keywords.Keyword).rightPrecOrMin)
               let restRes = parseRule(innerPrec', rest)
               infix.process(acc, process(rhs, restRes)) exprCont(prec, options)
           None then acc
@@ -201,7 +211,7 @@ fun parse(tokens) =
           acc
     // * the case of application
     do tracer.print of "not a keyword", source.line
-    token :: _ and infix.rule.refChoice is
+    token :: _ and infix is Some(infix) and infix.rule.refChoice is
       Some(Ref(kind, process, outerPrec, innerPrec, rest)) and
         do tracer.print of "found reference to " + kind + " with outerPrec = " + outerPrec, source.line
         let outerPrec' = outerPrec Option.getOrElse(Keywords.maxOperatorPrec)
@@ -223,7 +233,7 @@ fun parse(tokens) =
       None then
         tracer.print of "cannot consume " + token, source.line
         acc
-    Nil then acc
+    _ then acc
   
   fun handleDirective(tree: Tree, acc: Stack[Tree]) = if tree is
     // Call the corresponding handler for the directive.
@@ -245,11 +255,11 @@ fun parse(tokens) =
     do tracer.print of ">>>>>> mod <<<<<<", source.line
     Token.Identifier(";;", _) :: _ then
       consume
-      mod
+      mod(acc)
     Token.Identifier(name, _) :: _ and
       Keywords.all |> MutMap.get(name) is Some(keyword) and
         // First, try if the keyword is the prefix of the term.
-        termRule.keywordChoices |> MutMap.get(name) is Some(rule) then
+        termRule.keywordChoices |> MutMap.get(name) is Some(ParseRule.ParseRule as rule) then
           let tree = expr(0, termOptions)
           if tree is Tree.LetIn(bindings, Tree.Empty) then
             // If the body is empty, then this is a let-definition.
@@ -257,7 +267,7 @@ fun parse(tokens) =
           else
             modCont of tree :: acc
         // Then try to parse according to the rules of the definition.
-        declRule.keywordChoices |> MutMap.get(name) is Some(rule) then
+        declRule.keywordChoices |> MutMap.get(name) is Some(ParseRule.ParseRule as rule) then
           consume
           parseRule(0, rule) handleDirective(acc)
     _ :: _ then modCont of expr(0, termOptions) :: acc

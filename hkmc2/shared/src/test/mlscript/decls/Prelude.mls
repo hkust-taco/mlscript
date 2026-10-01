@@ -74,6 +74,8 @@ declare class WeakMap[K, V]
 declare module WeakMap
 declare class Error with
   val message: Str
+  val name: Str
+  val stack: Str | undefined
 declare fun Error(...args): Error
 declare class TypeError extends Error
 declare fun TypeError(...args): TypeError
@@ -135,6 +137,8 @@ declare class Str with
   fun slice(...bounds): Str
   fun substring(...bounds): Str
   fun split(...separatorAndLimit): Array[Str]
+  fun replace(search: Str | RegExp, replacement: Str | Function): Str
+  fun replaceAll(search: Str | RegExp, replacement: Str | Function): Str
   fun repeat(count: Int): Str
   fun toUpperCase(): Str
   fun toLowerCase(): Str
