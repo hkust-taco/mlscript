@@ -1,8 +1,8 @@
 :.
 
-// FIXME: Assignment leaves the variable's initializer shape in place, so the
+// Assignment leaves the variable's initializer shape in place, so the
 // later read is checked against a one-element tuple instead of the stored array.
-:fixme
+:e
 :expect 1
 let values = [0]
 set values = values.concat([1])

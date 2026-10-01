@@ -22,7 +22,7 @@ class Foo {
   fun f = 1
 }
 
-class Foo(pred: {id: Any -> Any}) {
+class Foo(pred: {id: Function}) {
   val r = pred.id(42)
   fun callId(x) = pred.id(x)
 }

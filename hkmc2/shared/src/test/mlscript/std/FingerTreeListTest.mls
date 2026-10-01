@@ -101,14 +101,14 @@ if xs is
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let element0$;
 //│ if (runtime.Tuple.isArrayLike(xs2) && xs2.length >= 1) {
-//│   let xs3, inlinedVal27, tmp16;
+//│   let xs3, inlinedVal38, tmp16;
 //│   element0$ = runtime.Tuple.get(xs2, 0);
 //│   xs3 = xs2;
 //│   tmp16 = xs3.length - 0;
-//│   inlinedVal27 = runtime.safeCall(xs3.slice(1, tmp16));
+//│   inlinedVal38 = runtime.safeCall(xs3.slice(1, tmp16));
 //│   return globalThis.Object.freeze([
 //│     element0$,
-//│     inlinedVal27
+//│     inlinedVal38
 //│   ])
 //│ }
 //│ throw globalThis.Object.freeze(new globalThis.Error("match error"));
