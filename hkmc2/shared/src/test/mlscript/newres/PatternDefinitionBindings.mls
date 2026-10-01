@@ -1,0 +1,145 @@
+:.
+
+// A definition's guard sees the same narrowed alias as a direct match.
+:expect ["a", "no", "no"]
+pattern AnyChar = (Str as s where s.length is 1) => s
+fun read(value) = if value is AnyChar(s) then s else "no"
+[read("a"), read("ab"), read(1)]
+//│ = ["a", "no", "no"]
+
+// The transformation has its own parameters, which receive the alias's shapes.
+:expect "AB"
+pattern Upper = Str as s => s.toUpperCase()
+fun read(value) = if value is Upper(s) then s else "no"
+read("ab")
+//│ = "AB"
+
+// Class declarations supply an interface even without local pattern callers.
+:expect 3
+class Box(val value: Str)
+pattern Length = Box(Str as text) => text.length
+fun read(value) = if value is Length(n) then n else 0
+read(Box("abc"))
+//│ = 3
+
+// Constructor-field signatures also flow to plain binding patterns.
+:expect 3
+class Box(val value: Str)
+pattern Length = Box(text) => text.length
+fun read(value) = if value is Length(n) then n else 0
+read(Box("abc"))
+//│ = 3
+
+// Exported extraction parameters and guards must share the binding's flow.
+:expect "ab"
+pattern Text(s) = Str as s where s.length > 0
+fun read(value) = if value is Text(s) then s else "no"
+read("ab")
+//│ = "ab"
+
+// An untested input remains unknown, even when every local call is a string.
+:ge
+pattern Bad = s => s.length
+fun read(value) = if value is Bad(n) then n else 0
+read("abc")
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.42: 	pattern Bad = s => s.length
+//│ ║        	                   ^^^^^^^^
+//│ ╟── Cannot resolve member 'length' of a value with unknown shape.
+//│ ╟── Pattern 'Bad' accepts values of unknown shape.
+//│ ║  l.42: 	pattern Bad = s => s.length
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// A wrong member is rejected on the narrowed type, rather than left unresolved.
+:ge
+pattern Bad = Str as s => s.missingMember()
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.56: 	pattern Bad = Str as s => s.missingMember()
+//│ ║        	                          ^^^^^^^^^^^^^^^
+//│ ╟── Value of type 'Str' does not contain member 'missingMember'
+//│ ║  l.56: 	pattern Bad = Str as s => s.missingMember()
+//│ ╙──      	              ^^^
+
+// Deferred constructor resolution must still reach guards and transformations.
+:expect 4
+pattern Length = Later(Str as s where s.length > 0) => s.length
+class Later(val value: Str)
+fun read(value) = if value is Length(n) then n else 0
+read(Later("abcd"))
+//│ = 4
+
+// Each alternative supplies the same extraction symbol to its own guard.
+:expect ["a", "ab", "no"]
+pattern Text(s) = (Str as s where s.length is 1) | (Str as s where s.length is 2)
+fun read(value) = if value is Text(s) then s else "no"
+[read("a"), read("ab"), read("abc")]
+//│ = ["a", "ab", "no"]
+
+// A transform's inner binding is distinct from the outer extraction binding
+// with the same spelling. The inner s is a string; the extracted s is its length.
+:expect 3
+pattern Length(s) = (Str as s => s.length) as s
+fun read(value) = if value is Length(s) then s else 0
+read("abc")
+//│ = 3
+
+// A nested class test refines a record field before its guard and transformation.
+:expect "AB"
+pattern Name = ((name: Str as s where s.length > 0)) => s.toUpperCase()
+fun read(value) = if value is Name(s) then s else "no"
+read((name: "ab"))
+//│ = "AB"
+
+// An outer alias receives the transformed result, not the tested input shape.
+:ge
+pattern Bad = ((Str as s => s.length) as n) => n.toUpperCase()
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.96: 	pattern Bad = ((Str as s => s.length) as n) => n.toUpperCase()
+//│ ║        	                                               ^^^^^^^^^^^^^
+//│ ╟── Value of type 'Int' does not contain member 'toUpperCase'
+//│ ║  in ../decls/Prelude.mls
+//│ ║  l.123: 	  val length: Int
+//│ ╙──       	              ^^^
+
+// Conjunction produces a pair, not the string tested by its left operand.
+:ge
+pattern Bad = ((Str & _) as pair) => pair.toUpperCase()
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.107: 	pattern Bad = ((Str & _) as pair) => pair.toUpperCase()
+//│ ║         	                                     ^^^^^^^^^^^^^^^^
+//│ ╟── Cannot resolve member 'toUpperCase' of a value with unknown shape.
+//│ ╟── The output shape of this pattern is not yet known.
+//│ ║  l.107: 	pattern Bad = ((Str & _) as pair) => pair.toUpperCase()
+//│ ╙──       	                ^^^^^^^
+
+// Rebuilding a constructor must not retain its input's generic field shape.
+:ge
+class Box[A](val value: A)
+pattern Bad = (Box(Str as s => s.length) as box) => box.value.toUpperCase()
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.119: 	pattern Bad = (Box(Str as s => s.length) as box) => box.value.toUpperCase()
+//│ ║         	                                                    ^^^^^^^^^
+//│ ╟── Cannot resolve member 'value' of a value with unknown shape.
+//│ ╟── The output shape of this pattern is not yet known.
+//│ ║  l.119: 	pattern Bad = (Box(Str as s => s.length) as box) => box.value.toUpperCase()
+//│ ╙──       	               ^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] This selection of member 'toUpperCase' has no resolved target
+//│ ║  l.119: 	pattern Bad = (Box(Str as s => s.length) as box) => box.value.toUpperCase()
+//│ ╙──       	                                                    ^^^^^^^^^^^^^^^^^^^^^
+
+// FIXME: Concatenation output interfaces are not yet inferred.
+:fixme
+:expect 2
+pattern Joined = ("a" ~ "b") as s => s.length
+fun read(value) = if value is Joined(n) then n else 0
+read("ab")
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.134: 	pattern Joined = ("a" ~ "b") as s => s.length
+//│ ║         	                                     ^^^^^^^^
+//│ ╟── Cannot resolve member 'length' of a value with unknown shape.
+//│ ╟── The output shape of this pattern is not yet known.
+//│ ║  l.134: 	pattern Joined = ("a" ~ "b") as s => s.length
+//│ ╙──       	                  ^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ ═══[RUNTIME ERROR] Expected: '2', got: 'undefined'

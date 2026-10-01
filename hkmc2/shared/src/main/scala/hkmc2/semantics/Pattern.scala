@@ -43,7 +43,12 @@ object Pattern:
       invalidVars: Ls[(Pattern.Alias, InvalidReason)]
   ):
     /** Allocate symbols for all variables. */
-    def allocate(using State, TraceLogger): Seq[(Str, VarSymbol)] =
+    def allocate(using State, TraceLogger): Seq[(Str, VarSymbol)] = allocate(Map.empty)
+
+    /** Extraction parameters already own their binding symbols. Guards must use
+      * those symbols from the start, before their references are elaborated.
+      */
+    def allocate(preallocated: Map[Str, VarSymbol])(using State, TraceLogger): Seq[(Str, VarSymbol)] =
       varMap.iterator.map: (name, aliases) =>
         // We need to assign the same symbol to the same name. But I realize
         // that the following cases will break this constraint: `(x where x > 0)
@@ -54,8 +59,10 @@ object Pattern:
         val symbols = aliases.iterator.flatMap(_.symbolOption).toSet
         // TODO: The above edge case would fail the following assertion.
         assert(symbols.size <= 1)
+        preallocated.get(name).foreach: expected =>
+          assert(symbols.forall(_ is expected), "Guard bindings must retain their extraction parameter symbol")
         // If no symbol had been created before, create a new symbol now.
-        val symbol = symbols.headOption.getOrElse(VarSymbol(Ident(name), erasedType = N))
+        val symbol = symbols.headOption.orElse(preallocated.get(name)).getOrElse(VarSymbol(Ident(name), erasedType = N))
         aliases.foreach: alias =>
           // For guarded patterns (`p where t`), the variables in `p` have to be
           // allocated before `t` is elaborated. In that case, we don't need to

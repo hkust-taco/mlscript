@@ -1920,6 +1920,17 @@ class NewResolver:
                   fromBMS(bms, FlowSymbol.pat()(using rstate.owner), sh.markss, valuePattern, lhs, _ => (), false)
           case sh: TermShape => valuePattern(sh)
   
+  /** Pattern bodies are resolved before their runtime matching code is generated.
+    * Check their bindings against an arbitrary input, so a local caller cannot
+    * supply undeclared assumptions to guards or transformations.
+    */
+  def checkPatternDefinition(definition: PatternDef)(using NewResolverState): Unit =
+    val source = Term.MemberRef(definition.bsym)(new syntax.Tree.Ident(definition.bsym.nme).withLocOf(definition),
+      FlowSymbol.pat()(using rstate.owner))
+    val unknown = UnknownValueShape(source)(ShapeProvenance(
+      msg"Pattern '${definition.sym.nme}' accepts values of unknown shape." -> definition.toLoc :: Nil))
+    matchShapePat(unknown, definition.pattern)(_ => ())
+
   /** Propagate possible values to pattern bindings. Constructor tests filter by
     * nominal class; guards and literal tests may conservatively retain shapes.
     * Both scrutinee and constructor shapes can arrive after this registration. */
@@ -1929,6 +1940,21 @@ class NewResolver:
         listenInstanceViews(value)(matchShapePat(_, pattern)(matched))
         return
       case _ => ()
+    // Some pattern outputs (notably concatenations and rebuilt constructors)
+    // need a separate output interface. Do not reuse the input's fields for them.
+    def unknownOutput: UnknownValueShape = UnknownValueShape(Term.Error().withLocOf(pattern))(ShapeProvenance(
+      msg"The output shape of this pattern is not yet known." -> pattern.toLoc :: Nil))
+    def preservesInput(pat: Pattern): Bool = pat match
+      case Pattern.Wildcard() | Pattern.Literal(_) | Pattern.Range(_, _, _) | Pattern.Negation(_) => true
+      case Pattern.Alias(inner, _) => preservesInput(inner)
+      case Pattern.Guarded(inner, _) => preservesInput(inner)
+      case Pattern.Annotated(inner, _) => preservesInput(inner)
+      case ctor: Pattern.Constructor =>
+        ctor.resolvedTargets.nonEmpty && ctor.resolvedTargets.forall:
+          case _: ClassSymbol | _: ModuleOrObjectSymbol => true
+          case _ => false
+        && ctor.arguments.forall(_.forall(preservesInput))
+      case _ => false
     pattern match
       case al @ Pattern.Alias(pat, _) =>
         matchShapePat(shape, pat): sh =>
@@ -1937,14 +1963,41 @@ class NewResolver:
           al.symbolOption.foreach: symbol =>
             publishActivated(symbol, sh)
           matched(sh)
-      case Pattern.Wildcard() | Pattern.Literal(_) => matched(shape)
+      case Pattern.Wildcard() | Pattern.Literal(_) | Pattern.Range(_, _, _) => matched(shape)
       case Pattern.Chain(left, right) =>
         matchShapePat(shape, left)(sh => matchShapePat(sh, right)(matched))
       case Pattern.Composition(false, left, right) =>
-        matchShapePat(shape, left)(sh => matchShapePat(sh, right)(matched))
+        // Conjunction tests both sides against the input and produces a pair;
+        // only a chain feeds one pattern's output into the next pattern.
+        matchShapePat(shape, left)(_ => ())
+        matchShapePat(shape, right)(_ => ())
+        matched(unknownOutput)
       case Pattern.Composition(true, left, right) =>
         matchShapePat(shape, left)(matched)
         matchShapePat(shape, right)(matched)
+      case Pattern.Negation(pat) =>
+        matchShapePat(shape, pat)(_ => ())
+        matched(shape)
+      case Pattern.Concatenation(left, right) =>
+        // Prefix matching and concatenating transformed results need their own
+        // shape rules. Still check nested bindings; no output interface is assumed.
+        val unknown = unknownOutput
+        matchShapePat(unknown, left)(_ => ())
+        matchShapePat(unknown, right)(_ => ())
+        matched(unknown)
+      case Pattern.Record(fields) =>
+        // A field-presence test supplies no field interface by itself. Nested
+        // class tests can refine these unknowns before guards use their aliases.
+        val unknown = unknownOutput
+        fields.foreach((_, pat) => matchShapePat(unknown, pat)(_ => ()))
+        matched(unknown)
+      case Pattern.Transform(pat, parameters, transform) =>
+        // The transform is lowered to a separate lambda. Its source references
+        // already name these parameter symbols, not the aliases used by guards.
+        parameters.foreach: (binding, parameter) =>
+          pipeTerm(Term.SimpleRef(binding)(binding.id), parameter)
+        matchShapePat(shape, pat)(_ => ())
+        listenTerm(transform)(matched)
       case Pattern.Guarded(pat, _) => matchShapePat(shape, pat)(matched)
       // Compilation-strategy annotations do not change the pattern's bindings.
       case Pattern.Annotated(pat, _) => matchShapePat(shape, pat)(matched)
@@ -1984,7 +2037,7 @@ class NewResolver:
                       // from a malformed class (filtered by classPattern above).
                       softAssert(false, "Matched constructor is missing its field")
                   member(sh.getMember(bms.nme), TypeSubstitution.empty)
-                matched(sh)
+                matched(if fs.forall((_, pat) => preservesInput(pat)) then sh else unknownOutput)
             def narrow(sh: TermShape)(using NewResolverState): Unit = sh match
               case Marked(unknown: UnknownValueShape, _) =>
                 // A class test can succeed for an external input. Its fields then

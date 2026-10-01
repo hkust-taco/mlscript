@@ -2489,12 +2489,13 @@ extends Importer:
               raise(ErrorReport(msg"Pattern definitions must have a body." -> statementLoc :: Nil))
               Tree.Under()
             // Elaborate the pattern body with the pattern parameters.
-            val pat = pattern(rhs)(using ctx ++ patternParams.iterator.map(p => p.sym.name -> p.sym))
+            val pat = pattern(rhs, extractionParams.map(p => p.sym.name -> p.sym).toMap)(
+              using ctx ++ patternParams.iterator.map(p => p.sym.name -> p.sym))
             // Report all invalid variables we found in the top-level pattern.
             pat.variables.report
-            // Note that the remaining variables have not been bound to any
-            // `VarSymbol` yet. Thus, we need to pair them with the extraction
-            // parameters. We only report warnings for unbound variables
+            // Pair the remaining variables with the extraction parameters.
+            // Guarded aliases already use these symbols so their elaborated
+            // references remain valid. We only report warnings for unbound variables
             // because they are harmless. Variables used in guard conditions
             // (from `where` clauses) are not considered useless.
             val guardedNames = pat.varNamesUsedInGuards
@@ -2511,6 +2512,7 @@ extends Importer:
             val pd = PatternDef(owner, patSym, sym, tps, allParams,
               patternParams, extractionParams, pat, annotations)(statementLoc)
             patSym.defn = S(pd)
+            if newResolution then checkPatternDefinition(pd)
             pd
         case k: (Mod.type | Obj.type) =>
           val modSym = td.symbol.asInstanceOf[ModuleOrObjectSymbol] // TODO: improve `asInstanceOf`
@@ -2770,7 +2772,9 @@ extends Importer:
         case N => candidate.map(_.ref(id))
     case S(elem) => S(elem.ref(id))
   
-  def pattern(t: Tree): Ctxl[Pattern] =
+  def pattern(t: Tree): Ctxl[Pattern] = pattern(t, Map.empty)
+
+  private def pattern(t: Tree, extractionBindings: Map[Str, VarSymbol]): Ctxl[Pattern] =
     import ucs.{Ctor, unapply, error}, ucs.extractors.*, Keyword.*, Pattern.*, InvalidReason.*
     /** String range bounds must be single characters. */
     def isInvalidStringBounds(lo: StrLit, hi: StrLit)(using Raise): Bool =
@@ -2811,7 +2815,9 @@ extends Importer:
     /** Elaborate arrow patterns like `p => t`. Meanwhile, report all invalid
      *  variables we found in `p`. */
     def arrow(lhs: Tree, rhs: Tree): Ctxl[Pattern] =
-      val pattern = go(lhs)
+      // A transform consumes its inner bindings; they are not extraction
+      // parameters of the surrounding definition, even if their names coincide.
+      val pattern = this.pattern(lhs)
       // The symbol allocated here will be bound in `split` to the values
       // destructed from the scrutinee.
       val variables = pattern.variables.allocate
@@ -2924,7 +2930,7 @@ extends Importer:
         case _: Tree => Chain(go(p), go(q))
       case p where t =>
         val q = go(p)
-        Guarded(q, term(t, Trm)(using ctx ++ q.variables.allocate))
+        Guarded(q, term(t, Trm)(using ctx ++ q.variables.allocate(extractionBindings)))
       case Under() => Pattern.Wildcard().withLocOf(t)
       // Singleton blocks like `{1}`.
       case Block(p :: Nil) => go(p)
