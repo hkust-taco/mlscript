@@ -1,0 +1,18 @@
+:classTags debug mono
+:ge
+1
+//│ ═══[COMPILATION ERROR] Class tag insertion requires :noFreeze.
+
+//│ Error: hkmc2.ErrorReport: Class tag insertion requires :noFreeze.
+
+:ge
+class Foo(val x, val y)
+fun foo(x, y) =
+  let f = new Foo(x, y)
+  @matchShapes(Foo(_, _)) shape.match of f, () => f.Foo#x + f.Foo#y
+//│ ═══[COMPILATION ERROR] Class tag insertion requires :noFreeze.
+
+
+:ge
+foo(1, 5)
+//│ ═══[COMPILATION ERROR] Class tag insertion requires :noFreeze.
