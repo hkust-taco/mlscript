@@ -336,7 +336,7 @@ enum MemberLookup:
   case Indexed(fields: Ls[TupleShape.Fixed], marks: Ls[Marks])
   case Dynamic(marks: Ls[Marks])
   case Missing
-  case Unknown(reason: MemberLookup.Uncertainty, provenance: ShapeProvenance)
+  case Unknown(reason: MemberLookup.Uncertainty, fromPublicInterface: Bool, provenance: ShapeProvenance)
   
   def withMarks(marks: Ls[Marks]): MemberLookup = this match
     case Contextual(source, instances) => Contextual(source.withMarks(marks), instances)
@@ -356,7 +356,7 @@ enum MemberLookup:
   def instantiate(instances: TypeSubstitution): MemberLookup =
     if instances.isEmpty then this else this match
       case Contextual(source, previous) => Contextual(source, instances.withOverrides(previous))
-      case Missing | Unknown(_, _) | Dynamic(_) => this
+      case Missing | Unknown(_, _, _) | Dynamic(_) => this
       case _ => Contextual(this, instances)
 
 object MemberLookup:
@@ -617,7 +617,7 @@ final case class OpaqueTypeShape(source: Term)(val reason: TypeInterfaceReason) 
   def toLoc: Opt[Loc] = source.toLoc
   def provenance: ShapeProvenance = reason.provenance
   protected def getMemberImpl(name: Str)(using NewResolverState): MemberLookup =
-    MemberLookup.Unknown(MemberLookup.Uncertainty.ValueShape, provenance)
+    MemberLookup.Unknown(MemberLookup.Uncertainty.ValueShape, false, provenance)
 
 class DefnShape(val defn: Definition, val ext: Opt[TermShape]) extends CoreHeadShape:
   /** Instance lookup is shared by constructor calls and explicit `new`.
@@ -765,16 +765,17 @@ object ShapeProvenance:
   val empty = ShapeProvenance(Nil)
 
 /** An unknown input or the element of an opaque or widened spread can be any
-  * value. Retain this alternative to explain unresolved operations and let eager
-  * member resolution reject unknown prefixes even when other candidates have targets.
+  * value. Inputs admitted by an exposed interface always require checking, even
+  * when local calls resolve the same selection. Keep that distinction in shape
+  * equality so an ordinary unknown cannot hide the public input's obligation.
   * Provenance is outside case-class equality: another diagnostic witness must
   * not turn the same unknown into a new inference candidate.
   */
-final case class UnknownValueShape(source: Term)(val provenance: ShapeProvenance) extends CoreHeadShape:
+final case class UnknownValueShape(source: Term, fromPublicInterface: Bool)(val provenance: ShapeProvenance) extends CoreHeadShape:
   def describe: Str = "value of unknown shape"
   def toLoc: Opt[Loc] = source.toLoc
   protected def getMemberImpl(name: Str)(using NewResolverState): MemberLookup =
-    MemberLookup.Unknown(MemberLookup.Uncertainty.ValueShape, provenance)
+    MemberLookup.Unknown(MemberLookup.Uncertainty.ValueShape, fromPublicInterface, provenance)
 
 /** A generic definition must be valid without choosing a caller's type. This
   * checking witness is not an inferred bound on any call-site parameter.
@@ -785,16 +786,16 @@ final case class RigidTypeShape(parameter: VarSymbol, source: Term) extends Core
   def provenance: ShapeProvenance = ShapeProvenance(
     msg"Type parameter '${parameter.nme}' does not specify a member interface." -> parameter.toLoc :: Nil)
   protected def getMemberImpl(name: Str)(using NewResolverState): MemberLookup =
-    MemberLookup.Unknown(MemberLookup.Uncertainty.ValueShape, provenance)
+    MemberLookup.Unknown(MemberLookup.Uncertainty.ValueShape, false, provenance)
 
 object UnknownValueShape:
   def at(source: Term): UnknownValueShape =
-    UnknownValueShape(source)(ShapeProvenance(msg"The shape of this value is unknown." -> source.toLoc :: Nil))
+    UnknownValueShape(source, fromPublicInterface = false)(ShapeProvenance(msg"The shape of this value is unknown." -> source.toLoc :: Nil))
   def spread(source: Term, value: TermShape): UnknownValueShape =
-    val provenance = value.applicationHead._1 match
-      case unknown: UnknownValueShape => unknown.provenance
-      case _ => ShapeProvenance.empty
-    UnknownValueShape(source)(provenance.via(msg"This spread has no known element shape." -> source.toLoc))
+    val origin = value.applicationHead._1 match
+      case unknown: UnknownValueShape => unknown
+      case _ => UnknownValueShape(source, fromPublicInterface = false)(ShapeProvenance.empty)
+    origin.copy(source = source)(origin.provenance.via(msg"This spread has no known element shape." -> source.toLoc))
 
 object TupleShape:
   def apply(source: Term, elements: Ls[Element])(resolver: NewResolver): TupleShape =
@@ -867,7 +868,7 @@ final case class RecordShape(source: Term.Rcd, elements: Ls[RecordShape.Element]
   def toLoc: Opt[Loc] = source.toLoc
   protected def getMemberImpl(name: Str)(using NewResolverState): MemberLookup =
     import MemberLookup.*
-    def unknown(source: Located) = Unknown(Uncertainty.RecordOverwrite,
+    def unknown(source: Located) = Unknown(Uncertainty.RecordOverwrite, false,
       ShapeProvenance(msg"This computed key can overwrite the selected member." -> source.toLoc :: Nil))
     def loop(rest: Ls[RecordShape.Element]): MemberLookup = rest match
       case Nil => Missing
@@ -875,13 +876,13 @@ final case class RecordShape(source: Term.Rcd, elements: Ls[RecordShape.Element]
         case Term.Lit(Tree.StrLit(key)) =>
           if key == name then Found(RecordMember(field, source.mut), Nil) else loop(rest)
         case _ => unknown(field.field)
-      case (unknown: RecordShape.Unknown) :: _ => Unknown(Uncertainty.RecordOverwrite, unknown.provenance)
+      case RecordShape.Unknown(shape) :: _ => Unknown(Uncertainty.RecordOverwrite, shape.fromPublicInterface, shape.provenance)
       case RecordShape.Dynamic(marks) :: _ => Dynamic(marks)
       case RecordShape.Spread(shape, marks) :: rest =>
         def spread(info: MemberLookup): Opt[MemberLookup] = info match
           case Contextual(source, instances) => spread(source).map(_.instantiate(instances))
           case Dynamic(inner) => S(Dynamic(inner ::: marks :: Nil))
-          case Unknown(_, provenance) => S(Unknown(Uncertainty.RecordOverwrite, provenance))
+          case Unknown(_, fromPublicInterface, provenance) => S(Unknown(Uncertainty.RecordOverwrite, fromPublicInterface, provenance))
           case Missing => N
           case Found(member: RecordMember, inner) =>
             S(Found(member.copy(mutable = member.mutable || source.mut), inner ::: marks :: Nil))
@@ -900,7 +901,7 @@ object RecordShape:
   enum Element:
     case Field(field: RcdField)
     case Spread(shape: RecordShape, marks: Marks)
-    case Unknown(source: Term)(val provenance: ShapeProvenance)
+    case Unknown(shape: UnknownValueShape)
     case Dynamic(marks: Ls[Marks])
   export Element.*
 

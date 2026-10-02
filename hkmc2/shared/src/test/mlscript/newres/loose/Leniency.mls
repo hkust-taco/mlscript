@@ -37,13 +37,10 @@ fun missing(x: M1 | M2) = x.absent
 //│ ║        	                          ^^^^^^^^
 //│ ╟── Value of type 'M1' does not contain member 'absent'
 //│ ║  l.34: 	fun missing(x: M1 | M2) = x.absent
-//│ ╙──      	               ^^^^^^^
-//│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.34: 	fun missing(x: M1 | M2) = x.absent
-//│ ║        	                          ^^^^^^^^
+//│ ║        	               ^^
 //│ ╟── Value of type 'M2' does not contain member 'absent'
 //│ ║  l.34: 	fun missing(x: M1 | M2) = x.absent
-//│ ╙──      	               ^^^^^^^
+//│ ╙──      	                    ^^
 
 // Indexed and dynamic selections have targets without nominal member symbols.
 :expect 4
@@ -63,16 +60,13 @@ dynamic.value
 let records = if hide(true) then {left: 1} else {right: 2}
 records.absent
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.64: 	records.absent
+//│ ║  l.61: 	records.absent
 //│ ║        	^^^^^^^^^^^^^^
 //│ ╟── Record literal does not contain member 'absent'
-//│ ║  l.63: 	let records = if hide(true) then {left: 1} else {right: 2}
-//│ ╙──      	                                  ^^^^^^^
-//│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.64: 	records.absent
-//│ ║        	^^^^^^^^^^^^^^
+//│ ║  l.60: 	let records = if hide(true) then {left: 1} else {right: 2}
+//│ ║        	                                  ^^^^^^^
 //│ ╟── Record literal does not contain member 'absent'
-//│ ║  l.63: 	let records = if hide(true) then {left: 1} else {right: 2}
+//│ ║  l.60: 	let records = if hide(true) then {left: 1} else {right: 2}
 //│ ╙──      	                                                 ^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ records = {left: 1}
@@ -94,11 +88,11 @@ defaultLeniency(M1)
 #lang(eagerResolution: true)
 fun eager(x: M1 | M2) = x.u
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.95: 	fun eager(x: M1 | M2) = x.u
+//│ ║  l.89: 	fun eager(x: M1 | M2) = x.u
 //│ ║        	                        ^^^
 //│ ╟── Value of type 'M2' does not contain member 'u'
-//│ ║  l.95: 	fun eager(x: M1 | M2) = x.u
-//│ ╙──      	             ^^^^^^^
+//│ ║  l.89: 	fun eager(x: M1 | M2) = x.u
+//│ ╙──      	                  ^^
 
 // Requiring a unique target is independent of requiring every shape to match.
 :expect 1
@@ -111,10 +105,10 @@ unique(M1)
 module M3 { val u = 3 }
 fun ambiguous(x: M1 | M2 | M3) = x.u
 //│ ╔══[COMPILATION ERROR] This selection of member 'u' is ambiguous, as it has multiple resolved targets
-//│ ║  l.112: 	fun ambiguous(x: M1 | M2 | M3) = x.u
+//│ ║  l.106: 	fun ambiguous(x: M1 | M2 | M3) = x.u
 //│ ║         	                                 ^^^
 //│ ╟── target: value 'u' in module 'M3'
-//│ ║  l.111: 	module M3 { val u = 3 }
+//│ ║  l.105: 	module M3 { val u = 3 }
 //│ ║         	                ^
 //│ ╟── target: value 'u' in module 'M1'
 //│ ║  l.4: 	module M1 { val u = 1 }
@@ -138,13 +132,13 @@ withUnknown(M2 as Any, false)
 private fun discard(f: Function) = ()
 discard(x => x.value)
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.139: 	discard(x => x.value)
+//│ ║  l.133: 	discard(x => x.value)
 //│ ║         	             ^^^^^^^
 //│ ╟── Parameter 'x' admits values of unknown shape.
-//│ ║  l.139: 	discard(x => x.value)
+//│ ║  l.133: 	discard(x => x.value)
 //│ ║         	        ^
 //│ ╟── Cannot resolve member 'value' of a value with unknown shape.
-//│ ║  l.138: 	private fun discard(f: Function) = ()
+//│ ║  l.132: 	private fun discard(f: Function) = ()
 //│ ║         	                       ^^^^^^^^
 //│ ╙── The 'Function' type does not specify parameter types.
 
@@ -153,19 +147,17 @@ discard(x => x.value)
 fun noCandidate(x) = x.absent
 [noCandidate(M2 as Any), noCandidate(M1)]
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.153: 	fun noCandidate(x) = x.absent
+//│ ║  l.147: 	fun noCandidate(x) = x.absent
 //│ ║         	                     ^^^^^^^^
 //│ ╟── Cannot resolve member 'absent' of a value with unknown shape.
-//│ ║  l.154: 	[noCandidate(M2 as Any), noCandidate(M1)]
+//│ ║  l.148: 	[noCandidate(M2 as Any), noCandidate(M1)]
 //│ ║         	                   ^^^
 //│ ╟── Type 'Any' is declared without a member interface.
 //│ ║  in ../../decls/Prelude.mls
 //│ ║  l.2: 	declare type Any
-//│ ╙──     	             ^^^
-//│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.153: 	fun noCandidate(x) = x.absent
-//│ ║         	                     ^^^^^^^^
+//│ ║       	             ^^^
 //│ ╟── Module 'M1' does not contain member 'absent'
+//│ ║  in Leniency.mls:4
 //│ ║  l.4: 	module M1 { val u = 1 }
 //│ ╙──     	       ^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
@@ -182,11 +174,11 @@ computed.value
 :e
 {(key): 0}.value
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.183: 	{(key): 0}.value
+//│ ║  l.175: 	{(key): 0}.value
 //│ ║         	 ^^^^^^^^^^^^^^^
 //│ ╟── Cannot resolve member 'value' across a computed key or unknown record spread.
 //│ ╟── This computed key can overwrite the selected member.
-//│ ║  l.183: 	{(key): 0}.value
+//│ ║  l.175: 	{(key): 0}.value
 //│ ╙──       	  ^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -195,10 +187,10 @@ computed.value
 let eagerUnknown = if hide(true) then M1 else (M2 as Any)
 eagerUnknown.u
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.196: 	eagerUnknown.u
+//│ ║  l.188: 	eagerUnknown.u
 //│ ║         	^^^^^^^^^^^^^^
 //│ ╟── Cannot resolve member 'u' of a value with unknown shape.
-//│ ║  l.195: 	let eagerUnknown = if hide(true) then M1 else (M2 as Any)
+//│ ║  l.187: 	let eagerUnknown = if hide(true) then M1 else (M2 as Any)
 //│ ║         	                                                     ^^^
 //│ ╟── Type 'Any' is declared without a member interface.
 //│ ║  in ../../decls/Prelude.mls
@@ -213,6 +205,6 @@ eagerUnknown.u
 #lang(0.3.x)
 import "../../../mlscript-compile/LenientSelections.mls"
 [LenientSelections.observed,
- LenientSelections.read({value: 8}, true),
- LenientSelections.read(M2 as Any, false)]
+ LenientSelections.read(LenientSelections.WithValue(8), true),
+ LenientSelections.read((new LenientSelections.WithoutValue) as Any, false)]
 //│ = [7, 8, 0]

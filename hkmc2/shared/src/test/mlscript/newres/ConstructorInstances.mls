@@ -220,13 +220,31 @@ let second = new Box(Second(22))
 //│ ║         	                          ^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Instance of class 'First' does not contain member 'second'
 //│ ║  l.215: 	let first = new Box(First(21))
-//│ ╙──       	                    ^^^^^^^^^
+//│ ║         	                    ^^^^^^^^^
+//│ ╟── Cannot resolve member 'second' of a value with unknown shape.
+//│ ╟── Parameter 'item' admits values of unknown shape.
+//│ ║  l.213: 	class Box(val item) with
+//│ ║         	          ^^^^^^^^
+//│ ╟── 'Box' is exposed by this compilation unit.
+//│ ║  l.213: 	class Box(val item) with
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.214: 	  fun copy() = new Box(item)
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
 //│ ║  l.217: 	[first.copy().item.first, second.copy().item.second]
 //│ ║         	 ^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Instance of class 'Second' does not contain member 'first'
 //│ ║  l.216: 	let second = new Box(Second(22))
-//│ ╙──       	                     ^^^^^^^^^^
+//│ ║         	                     ^^^^^^^^^^
+//│ ╟── Cannot resolve member 'first' of a value with unknown shape.
+//│ ╟── Parameter 'item' admits values of unknown shape.
+//│ ║  l.213: 	class Box(val item) with
+//│ ║         	          ^^^^^^^^
+//│ ╟── 'Box' is exposed by this compilation unit.
+//│ ║  l.213: 	class Box(val item) with
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.214: 	  fun copy() = new Box(item)
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ ═══[RUNTIME ERROR] Expected: '[21, 22]', got: 'undefined'
 //│ first = Box(First(21))

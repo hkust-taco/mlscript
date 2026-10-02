@@ -96,6 +96,7 @@ object Config:
     allowUnresolvedAccesses: Bool,
     useNewResolution: Bool,
     strictResolution: Bool, // Reject multiple resolved selection targets as well as missing targets
+    // Unknown inputs admitted by a public interface are checked regardless of this flag.
     eagerResolution: Bool, // Reject selections whose prefixes have shapes that do not support them, even though the selection might have other valid targets
     typeCheck: Opt[TypeChecking],
   )(val versionName: Str)

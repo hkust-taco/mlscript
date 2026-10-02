@@ -76,7 +76,7 @@ final class InterfaceExposure(resolver: NewResolver)(using NewResolverState, TL)
 
   private def parameter(param: Param, marks: Ls[Marks], path: Path)(using NewResolverState): Unit =
     val ref = SimpleRef(param.sym)(param.sym.id)
-    val unknown = UnknownValueShape(ref)(path.via(
+    val unknown = UnknownValueShape(ref, fromPublicInterface = true)(path.via(
       msg"Parameter '${param.sym.nme}' admits values of unknown shape." -> param.toLoc))
     resolver.parameterSignature(param) match
       case N => resolver.constrainParameter(param, unknown.enter(marks), marks)
@@ -89,7 +89,7 @@ final class InterfaceExposure(resolver: NewResolver)(using NewResolverState, TL)
       params.params.foreach(parameter(_, marks, path))
       params.restParam.foreach: rest =>
         val ref = SimpleRef(rest.sym)(rest.sym.id)
-        val unknown = UnknownValueShape(ref)(path.via(
+        val unknown = UnknownValueShape(ref, fromPublicInterface = true)(path.via(
           msg"Rest parameter '${rest.sym.nme}' admits elements of unknown shape." -> rest.toLoc))
         val tuple = TupleShape(ref, TupleShape.Unknown(ref, TupleShape.ValueField(unknown, Nil)) :: Nil)(resolver)
         resolver.constrainParameter(rest, tuple.enter(marks), marks)
@@ -168,7 +168,7 @@ final class InterfaceExposure(resolver: NewResolver)(using NewResolverState, TL)
       case callable: CallableTypeShape =>
         // Written structure constrains external values; missing output parts
         // still admit unknown shapes even when local callers supplied evidence.
-        val unknown = UnknownValueShape(callable.source)(path)
+        val unknown = UnknownValueShape(callable.source, fromPublicInterface = true)(path)
         callable.paramLists.foreach: params =>
           (params.params.flatten ::: params.rest.toList).foreach: input =>
             unknown.enter(marks) match

@@ -175,10 +175,10 @@ class PublisherTest extends AnyFunSuite:
       Nil
     }
     val source = Term.UnitVal()
-    val first = UnknownValueShape(source)(provenance)
-    val second = UnknownValueShape(source)(provenance)
+    val first = UnknownValueShape(source, fromPublicInterface = false)(provenance)
+    val second = UnknownValueShape(source, fromPublicInterface = false)(provenance)
     assert(Set(first, second).size == 1)
-    assert(RecordShape.Unknown(source)(provenance) == RecordShape.Unknown(source)(provenance))
+    assert(RecordShape.Unknown(first) == RecordShape.Unknown(second))
     assert(evaluated == 0)
     first.provenance.diagnostic(msg"Operation failed", None)
     first.provenance.diagnostic(msg"Operation failed", None)

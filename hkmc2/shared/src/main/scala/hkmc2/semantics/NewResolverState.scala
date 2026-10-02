@@ -3,6 +3,7 @@ package semantics
 
 import scala.collection.mutable
 import hkmc2.utils.*, shorthands.*
+import hkmc2.Message.MessageContext
 import Term.*
 
 inline def rstate(using state: NewResolverState): NewResolverState = state
@@ -61,6 +62,8 @@ final class NewResolverState private (
   def report(diagnostic: Diagnostic): Unit =
     assert(root.reporter != null, "Resolution requires a diagnostic collector")
     root.reporter.nn(diagnostic)
+  def reportResolutionError(src: Term | Pattern, messages: Ls[(Message, Opt[Loc])]): Unit =
+    report(ErrorReport(msg"Resolution error in ${src.describe}" -> src.toLoc :: messages, source = Diagnostic.Source.Compilation))
 
   def isOwnedSym(symbol: Symbol): Bool = symbol.getState is owner
 
@@ -133,18 +136,21 @@ final class NewResolverState private (
   private val completedNodes = mutable.Set.empty[Identity[Publisher[?]]]
 
   // A receiver shape can lack a member that another shape supplies later in
-  // inference. Keep its diagnostic lazy so successful selections do not expand
-  // provenance paths. Only this block's owned selections are queued; imported
-  // and previously completed selections can be checked against their fixed targets.
-  private val missingMembers = mutable.ListBuffer.empty[(NewSel, () => Diagnostic)]
+  // inference. Retain lazy witnesses by selection, including those from later
+  // activations of completed syntax, and report them together at block completion.
+  // Eager problems invalidate the selection immediately, regardless of its targets;
+  // delaying their report lets the same error include every relevant witness.
+  private val missingMembers = mutable.LinkedHashMap.empty[Identity[NewSel],
+    mutable.ListBuffer[(Bool, () => Ls[(Message, Opt[Loc])])]]
   private def hasSelectionTarget(selection: NewSel): Bool =
     selection.resolvedTargets.nonEmpty || selection.hasDynamicTarget || selection.tupleIndex.nonEmpty
-  def missingMember(selection: NewSel, eager: Bool)(diagnostic: => Diagnostic): Unit =
-    if eager || !canResolve(selection) then
-      if eager || !hasSelectionTarget(selection) then
-        markError(selection)
-        report(diagnostic)
-    else root.missingMembers += ((selection, () => diagnostic))
+  def missingMember(selection: NewSel, eager: Bool)(messages: => Ls[(Message, Opt[Loc])]): Unit =
+    val key = new Identity(selection)
+    // Accumulate witnesses for this block's error without replaying errors on
+    // completed selections or adding follow-on errors to unrelated failures.
+    if !hasError(selection) || root.missingMembers.contains(key) then
+      if eager then markError(selection)
+      root.missingMembers.getOrElseUpdate(key, mutable.ListBuffer.empty) += ((eager, () => messages))
 
   /** Seal the decisions and original host data read by erasure/lowering. The
     * inference graph keeps private, live host data and all its listeners, so
@@ -193,10 +199,15 @@ final class NewResolverState private (
         case _ => ()
       statement.subStatements.foreach(visit)
     visit(block)
-    root.missingMembers.foreach: (selection, diagnostic) =>
-      if !hasSelectionTarget(selection) then
+    root.missingMembers.foreach: (key, problems) =>
+      val selection = key.value
+      val unresolved = !hasSelectionTarget(selection)
+      val messages = problems.iterator.collect:
+        case (eager, messages) if eager || unresolved => messages()
+      .flatten.toList.distinct
+      if messages.nonEmpty then
         markError(selection)
-        report(diagnostic())
+        reportResolutionError(selection, messages)
     root.missingMembers.clear()
     root.pending.foreach: (key, value) =>
       if !key.value.isInstanceOf[Symbol] && root.completedNodes.add(key) then value.completed = true

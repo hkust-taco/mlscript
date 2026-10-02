@@ -172,13 +172,27 @@ nestedWrap({second: 23}).value.second
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Record literal does not contain member 'first'
 //│ ║  l.169: 	nestedWrap({second: 23}).value.second
-//│ ╙──       	            ^^^^^^^^^^
+//│ ║         	            ^^^^^^^^^^
+//│ ╟── Cannot resolve member 'first' of a value with unknown shape.
+//│ ╟── Parameter 'x' admits values of unknown shape.
+//│ ║  l.167: 	fun nestedWrap(x) = {...wrap(x)}
+//│ ║         	               ^
+//│ ╟── 'nestedWrap' is exposed by this compilation unit.
+//│ ║  l.167: 	fun nestedWrap(x) = {...wrap(x)}
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
 //│ ║  l.169: 	nestedWrap({second: 23}).value.second
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Record literal does not contain member 'second'
 //│ ║  l.168: 	nestedWrap({first: 22}).value.first
-//│ ╙──       	            ^^^^^^^^^
+//│ ║         	            ^^^^^^^^^
+//│ ╟── Cannot resolve member 'second' of a value with unknown shape.
+//│ ╟── Parameter 'x' admits values of unknown shape.
+//│ ║  l.167: 	fun nestedWrap(x) = {...wrap(x)}
+//│ ║         	               ^
+//│ ╟── 'nestedWrap' is exposed by this compilation unit.
+//│ ║  l.167: 	fun nestedWrap(x) = {...wrap(x)}
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
@@ -193,11 +207,11 @@ fun unknownOpen() =
   a
 unknownOpen()
 //│ ╔══[COMPILATION ERROR] Resolution error in wildcard-open reference
-//│ ║  l.193: 	  a
+//│ ║  l.207: 	  a
 //│ ║         	  ^
 //│ ╟── Cannot resolve member 'a' across a computed key or unknown record spread.
 //│ ╟── This computed key can overwrite the selected member.
-//│ ║  l.188: 	let unknownKeys = {(key): 0}
+//│ ║  l.202: 	let unknownKeys = {(key): 0}
 //│ ╙──       	                    ^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ unknownKeys = {a: 0}
@@ -220,13 +234,13 @@ forwardRecord.answer
 fun choose(flag) = if flag then {answer: 1} else {answer: 2}
 choose(true).answer
 //│ ╔══[COMPILATION ERROR] This selection of member 'answer' is ambiguous, as it has multiple resolved targets
-//│ ║  l.221: 	choose(true).answer
+//│ ║  l.235: 	choose(true).answer
 //│ ║         	^^^^^^^^^^^^^^^^^^^
 //│ ╟── target: record field 'answer'
-//│ ║  l.220: 	fun choose(flag) = if flag then {answer: 1} else {answer: 2}
+//│ ║  l.234: 	fun choose(flag) = if flag then {answer: 1} else {answer: 2}
 //│ ║         	                                                  ^^^^^^
 //│ ╟── target: record field 'answer'
-//│ ║  l.220: 	fun choose(flag) = if flag then {answer: 1} else {answer: 2}
+//│ ║  l.234: 	fun choose(flag) = if flag then {answer: 1} else {answer: 2}
 //│ ╙──       	                                 ^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -238,11 +252,11 @@ fun recursiveRecord(n) =
   else {...recursiveRecord(n - 1)}
 recursiveRecord(2).answer
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.239: 	recursiveRecord(2).answer
+//│ ║  l.253: 	recursiveRecord(2).answer
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Cannot resolve member 'answer' across a computed key or unknown record spread.
 //│ ╟── This spread has no known element shape.
-//│ ║  l.238: 	  else {...recursiveRecord(n - 1)}
+//│ ║  l.252: 	  else {...recursiveRecord(n - 1)}
 //│ ╙──       	           ^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -258,11 +272,11 @@ fun unknownValueOpen() =
   answer3
 unknownValueOpen()
 //│ ╔══[COMPILATION ERROR] Resolution error in wildcard-open reference
-//│ ║  l.258: 	  answer3
+//│ ║  l.272: 	  answer3
 //│ ║         	  ^^^^^^^
 //│ ╟── Cannot resolve member 'answer3' of a value with unknown shape.
 //│ ╟── The shape of this value is unknown.
-//│ ║  l.253: 	  let unknownValue = mut {value: {answer3: 0}}
+//│ ║  l.267: 	  let unknownValue = mut {value: {answer3: 0}}
 //│ ╙──       	                          ^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -286,7 +300,7 @@ fun allMissingOpen() =
   nonexistent
 allMissingOpen()
 //│ ╔══[COMPILATION ERROR] Name not found in wildcard opens: nonexistent
-//│ ║  l.286: 	  nonexistent
+//│ ║  l.300: 	  nonexistent
 //│ ╙──       	  ^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -332,11 +346,11 @@ let mutableNested = mut {...stableNested}
 set mutableNested.value = {after: 34}
 [stableNested.value.before, mutableNested.value.after]
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.333: 	[stableNested.value.before, mutableNested.value.after]
+//│ ║  l.347: 	[stableNested.value.before, mutableNested.value.after]
 //│ ║         	                            ^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Cannot resolve member 'after' of a value with unknown shape.
 //│ ╟── The shape of this value is unknown.
-//│ ║  l.330: 	let stableNested = {value: {before: 33}}
+//│ ║  l.344: 	let stableNested = {value: {before: 33}}
 //│ ╙──       	                    ^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ mutableNested = {value: {after: 34}}
@@ -353,18 +367,18 @@ fun ambiguousRecordOpen() =
   shared
 ambiguousRecordOpen()
 //│ ╔══[COMPILATION ERROR] Wildcard-open reference 'shared' is ambiguous
-//│ ║  l.353: 	  shared
+//│ ║  l.367: 	  shared
 //│ ║         	  ^^^^^^
 //│ ╟── candidate: record field 'shared' defined here
-//│ ║  l.349: 	  let firstRecord = {shared: 1}
+//│ ║  l.363: 	  let firstRecord = {shared: 1}
 //│ ║         	                     ^^^^^^
 //│ ╟── Opened here
-//│ ║  l.351: 	  open firstRecord
+//│ ║  l.365: 	  open firstRecord
 //│ ║         	       ^^^^^^^^^^^
 //│ ╟── candidate: record field 'shared' defined here
-//│ ║  l.350: 	  let secondRecord = {shared: 2}
+//│ ║  l.364: 	  let secondRecord = {shared: 2}
 //│ ║         	                      ^^^^^^
 //│ ╟── Opened here
-//│ ║  l.352: 	  open secondRecord
+//│ ║  l.366: 	  open secondRecord
 //│ ╙──       	       ^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
