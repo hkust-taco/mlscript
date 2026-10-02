@@ -723,11 +723,21 @@ class SplitCompiler(using codegen.Erasure)(using tl: TL)(using State, Ctx, Raise
         // to be a function that takes a diagnostic information generation
         // function.
         val outputSymbol = new LazyScrut()
-        makeMatchSplit(scrutinee, pattern, false)(
-          (_output, _bindings) => alternative, // The output and bindings are discarded.
-          // The place where the diagnostic information should be stored.
-          outputSymbol.toLet(scrutinee(), makeConsequent(outputSymbol, SeqMap.empty) ~~: alternative)
-        )
+        val success = outputSymbol.toLet(scrutinee(), makeConsequent(outputSymbol, SeqMap.empty) ~~: alternative)
+        if alternative.isFull then
+          makeMatchSplit(scrutinee, pattern, false)(
+            (_output, _bindings) => alternative, // The output and bindings are discarded.
+            success)
+        else
+          // An unfinished split means fallthrough, not a committed rejection.
+          // Swapping it into the inner pattern's consequent would let a match
+          // fall through to `success` (notably when a while loop should exit).
+          // Complete both inner outcomes before branching on the match result.
+          val test = Term.SynthIf(makeMatchSplit(scrutinee, pattern, false)(
+            (_output, _bindings) => Split.Else(Term.Lit(Tree.BoolLit(true))),
+            Split.Else(Term.Lit(Tree.BoolLit(false)))))
+          tempLet("negated", test): result =>
+            Branch(result.safeRef, FlatPattern.Lit(Tree.BoolLit(false)), success) ~: alternative
       // Note that we might duplicate the alternative split here.
       case Wildcard() => (makeConsequent, alternative) => makeConsequent(scrutinee, SeqMap.empty) ~~: alternative
       case Literal(literal) => (makeConsequent, alternative) =>

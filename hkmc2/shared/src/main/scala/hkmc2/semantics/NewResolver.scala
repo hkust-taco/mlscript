@@ -1984,17 +1984,61 @@ class NewResolver:
     // need a separate output interface. Do not reuse the input's fields for them.
     def unknownOutput: UnknownValueShape = UnknownValueShape(Term.Error().withLocOf(pattern))(ShapeProvenance(
       msg"The output shape of this pattern is not yet known." -> pattern.toLoc :: Nil))
+    def isNominal(ctor: Pattern.Constructor): Bool =
+      ctor.resolvedTargets.nonEmpty && ctor.resolvedTargets.forall:
+        case _: ClassSymbol | _: ModuleOrObjectSymbol => true
+        case _ => false
     def preservesInput(pat: Pattern): Bool = pat match
       case Pattern.Wildcard() | Pattern.Literal(_) | Pattern.Range(_, _, _) | Pattern.Negation(_) => true
       case Pattern.Alias(inner, _) => preservesInput(inner)
       case Pattern.Guarded(inner, _) => preservesInput(inner)
       case Pattern.Annotated(inner, _) => preservesInput(inner)
       case ctor: Pattern.Constructor =>
-        ctor.resolvedTargets.nonEmpty && ctor.resolvedTargets.forall:
-          case _: ClassSymbol | _: ModuleOrObjectSymbol => true
-          case _ => false
-        && ctor.arguments.forall(_.forall(preservesInput))
+        isNominal(ctor) && ctor.arguments.forall(_.forall(preservesInput))
       case _ => false
+    // Negation filters the input, never a transformed output. Only discard a
+    // candidate when the whole shape must match the excluded pattern. In
+    // particular, failing to prove membership in a class is not proof of its
+    // complement: abstract and structural inputs may still contain instances.
+    def exclude(input: Shape, pat: Pattern)(receive: ShapeListener[Shape])(using NewResolverState): Unit =
+      input match
+        case value @ Marked(_: InstanceShape, _) =>
+          listenInstanceViews(value)(exclude(_, pat)(receive))
+        case symbol: SymShape => fromSymbol(symbol, exclude(_, pat)(receive),
+          Term.Error().withLocOf(pat), _ => (), false)
+        case value: TermShape => pat match
+          case Pattern.Wildcard() => ()
+          case Pattern.Literal(literal) => shapeParts(value).value match
+            case Marked(intro: IntroShape, _) => intro.trm match
+              case Lit(actual) if actual === literal => ()
+              case _ => receive(value)
+            case _ => receive(value)
+          case Pattern.Alias(inner, _) => exclude(value, inner)(receive)
+          case Pattern.Annotated(inner, _) => exclude(value, inner)(receive)
+          case Pattern.Composition(true, left, right) =>
+            // Not (left or right): exclude both alternatives from the input.
+            exclude(value, left)(exclude(_, right)(receive))
+          case Pattern.Composition(false, left, right) =>
+            // Not (left and right): either failed test admits the input.
+            exclude(value, left)(receive)
+            exclude(value, right)(receive)
+          case Pattern.Negation(inner) if preservesInput(inner) =>
+            matchShapePat(value, inner)(receive)
+          case ctor: Pattern.Constructor if isNominal(ctor) =>
+            def unrestricted(pat: Pattern): Bool = pat match
+              case Pattern.Wildcard() => true
+              case Pattern.Alias(inner, _) => unrestricted(inner)
+              case Pattern.Annotated(inner, _) => unrestricted(inner)
+              case _ => false
+            ctor.subscribeToShapes:
+              case CtorPatternShape(cls, fields, _, _, _) =>
+                // A nominal match alone cannot exclude C(p) when p tests a
+                // field's value. Retain it unless every field accepts anything.
+                if !value.isInstanceOfClass(cls) || !fields.forall((_, p) => unrestricted(p)) then receive(value)
+          // Guards, extractors, and patterns with transformed intermediate
+          // results may fail even on a matching nominal input. Retain their
+          // input interfaces until those tests have a definite shape semantics.
+          case _ => receive(value)
     pattern match
       case al @ Pattern.Alias(pat, _) =>
         matchShapePat(shape, pat): sh =>
@@ -2017,7 +2061,7 @@ class NewResolver:
         matchShapePat(shape, right)(matched)
       case Pattern.Negation(pat) =>
         matchShapePat(shape, pat)(_ => ())
-        matched(shape)
+        exclude(shape, pat)(matched)
       case Pattern.Concatenation(left, right) =>
         // Prefix matching and concatenating transformed results need their own
         // shape rules. Still check nested bindings; no output interface is assumed.

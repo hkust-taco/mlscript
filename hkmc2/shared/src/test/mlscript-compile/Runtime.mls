@@ -82,7 +82,7 @@ class EffectHandle(_reified: EffectSig) with
 
 fun _try(f: () -> Any) =
   let res = f()
-  if curEffect is EffectSig as tmp then
+  if curEffect is ~null as tmp then
     set curEffect = null
     EffectHandle(tmp)
   else res
@@ -278,9 +278,9 @@ fun showStackTrace(header: Text, tr: EffectSig, debug: Bool, showLocals: Bool) =
     curHandler = tr.contTrace
     atTail = true
   if debug do
-    while curHandler is (ContTrace | HandlerContFrame) as handlerFrame do
+    while curHandler is ~null as handlerFrame do
       let cur = handlerFrame.next
-      while cur is FunctionContFrame as frame do
+      while cur is ~null as frame do
         let curLocals = frame.getLocals
         let loc = frame.getLoc
         let localsMsg = if showLocals and curLocals.length > 0
@@ -291,8 +291,9 @@ fun showStackTrace(header: Text, tr: EffectSig, debug: Bool, showLocals: Bool) =
           msg += localsMsg
           cur = frame.next
           atTail = false
-      set curHandler = handlerFrame.nextHandler
-      if curHandler is HandlerContFrame as handlerFrame do
+      let nextHandler = handlerFrame.nextHandler
+      set curHandler = nextHandler
+      if nextHandler is ~null as handlerFrame do
         set
           msg += "\n\twith handler " + handlerFrame.handler!constructor!name
           atTail = false
@@ -350,7 +351,7 @@ fun debugContTrace(contTrace) =
     hl.set("last-handler", new Set([contTrace.lastHandler]))
     console.log(showFunctionContChain(contTrace.next, hl, vis, 0))
     let cur = contTrace.nextHandler
-    while cur is HandlerContFrame as frame do
+    while cur is ~null as frame do
       console.log(showHandlerContChain(frame, hl, vis, 0))
       set cur = frame.nextHandler
     console.log()
@@ -414,7 +415,7 @@ fun handleEffect(cur: EffectSig): Any =
   // debugEff(cur)
   // find the handle block corresponding to the current effect
   let prevHandlerFrame = cur.contTrace
-  while prevHandlerFrame.nextHandler is HandlerContFrame as next and next.handler !== cur.handler do
+  while prevHandlerFrame.nextHandler is ~null as next and next.handler !== cur.handler do
     set prevHandlerFrame = next
 
   // no matching handle block

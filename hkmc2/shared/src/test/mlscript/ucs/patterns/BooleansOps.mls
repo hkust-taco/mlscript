@@ -38,7 +38,7 @@ if 5 is ~a then a
 //│ ╔══[COMPILATION ERROR] Name not found: a
 //│ ║  l.37: 	if 5 is ~a then a
 //│ ╙──      	                ^
-//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ ═══[RUNTIME ERROR] Error: match error
 
 if 5 is ~Bool as c then c
 //│ = 5
