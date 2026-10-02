@@ -1,3 +1,8 @@
+NOTE: This document was written by Codex Astra and has not been deeply reviewed;
+it is not meant to be official documentation and
+is in fact likely to contain parts that are unintelligible to readers who lack sufficient context.
+
+
 # Lexical paths in resolution
 
 This note gives the scope calculus used by `Shape.scala`, the invariant needed
