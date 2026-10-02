@@ -1527,7 +1527,8 @@ class NewResolver:
                   case _ => matchLists(ret, tail)
           case Nil => ()
         case Marked(record: RecordTypeShape, _) =>
-          constrainRecord(record.fields.toList.map((name, tpe) => record.declarations(name) -> tpe), actual, marks)
+          constrainRecord(record.fields.iterator.map((name, tpe) => record.declarations(name) -> tpe).toList,
+            actual, marks)
         case _ => ()
     actual match
       case Marked(_: UnknownValueShape, _) =>
