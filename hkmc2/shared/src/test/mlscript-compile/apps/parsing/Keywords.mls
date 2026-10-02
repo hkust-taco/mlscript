@@ -27,11 +27,14 @@ class Keyword(val name: Str, val leftPrec: Some[Int] | None, val rightPrec: Some
     (if rightPrec is Some(prec) then prec.toString() else "N/A"), ")"
 
 fun makePrecMap(startPrec: Int, ...ops: Array[Str]) =
-  let m = MutMap.empty
-  ops.forEach of (names, i, _) =>
-    names.split(" ").forEach of (op, _, _) =>
+  let
+    m = MutMap.empty
+    i = 0
+  while i < ops.length do
+    ops.at(i).split(" ").forEach of (op, _, _) =>
       if op.length > 0 do
         m |> MutMap.insert of op, i + startPrec
+    set i += 1
   m
 
 val all: MutMap.MutMap[Str, Keyword] = MutMap.empty

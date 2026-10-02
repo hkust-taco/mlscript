@@ -101,8 +101,8 @@ fun showLiteral(l: Literal) =
   if l is 
     undefined then "undefined"
     null then "null"
-    Str then "\"" + String(l) + "\""
-    else String(l)
+    Str then "\"" + l.toString() + "\""
+    else l.toString()
 
 fun showSymbol(s: Symbol) = s.name.replaceAll("$", "_")
 

@@ -173,8 +173,7 @@ class ErrorDisplay extends HTMLElement with
     this.render()
   
   fun render() = if _error is Some(error) do
-    let stack = error.stack
-    let stackLines = if stack is Str then stack.split("\n") else mut []
+    let stackLines = error.stack.split("\n")
     if stackLines.length > 0 and stackLines.[0].startsWith(error.name) do
       stackLines.shift()
     set this.shadowRoot.innerHTML = elem("div", "class": "error-container") of
