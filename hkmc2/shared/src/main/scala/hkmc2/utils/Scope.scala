@@ -224,12 +224,14 @@ object Scope:
     Scope(L(cfg), S(S(State.globalThisSymbol)), MutMap.empty, MutMap.empty)
   
   def replaceInvalidCharacters(str: Str): Str =
-    str.iterator.map:
+    val escaped = str.iterator.map:
         case c if c.isLetter || c.isDigit => c
         // case '\'' => "$tick"
         case '$' => "$"
         case '_' => "_"
         case _ => "$_"
       .mkString
+    // Quoted source identifiers may start with digits, but generated JS bindings cannot.
+    if escaped.headOption.exists(_.isDigit) then "$" + escaped else escaped
   
 end Scope
