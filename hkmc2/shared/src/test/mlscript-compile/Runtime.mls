@@ -7,8 +7,6 @@ import "./Iter.mjs"
 open annotations { pure }
 
 
-// The runtime also exports a Str helper module; keep the host string type unambiguous.
-type Text = Str
 // Tuple patterns also accept lazy views and other IterableBase instances.
 type Indexable = {length: Int, at: Int -> Any, slice: Function}
 
@@ -31,10 +29,10 @@ val short_or = RuntimeJS.short_or
 
 fun unreachable = throw Error("unreachable")
 
-fun assertFail(file: Text, line: Text) = throw Error("Assertion failed (" + file + ":" + line + ")")
+fun assertFail(file: Str, line: Str) = throw Error("Assertion failed (" + file + ":" + line + ")")
 
 
-fun checkArgs(functionName: Text, expected: Int, isUB: Bool, got: Int) =
+fun checkArgs(functionName: Str, expected: Int, isUB: Bool, got: Int) =
   if got < expected || isUB && got > expected do
     let name = if functionName.length > 0 then " '" + functionName + "'" else ""
     // throw globalThis.Error("Function" + name + " expected "
@@ -116,22 +114,22 @@ module Tuple with
   fun isArrayLike(xs) = Iter.isArrayLike(xs)
   val split = LazyArray.__split
 
-module Str with
+module StrOps with
   
   @pure
-  fun startsWith(string: Text, prefix: Text) = string.startsWith(prefix)
+  fun startsWith(string: Str, prefix: Str) = string.startsWith(prefix)
   
   @pure
-  fun get(string: Text, i: Int) =
+  fun get(string: Str, i: Int) =
     if i >= string.length then
       throw RangeError("Str.get: index out of bounds")
     else string.at(i)
   
   @pure
-  fun take(string: Text, n: Int) = string.slice(0, n)
+  fun take(string: Str, n: Int) = string.slice(0, n)
   
   @pure
-  fun leaveOut(string: Text, n: Int) = string.slice(n)
+  fun leaveOut(string: Str, n: Int) = string.slice(n)
 
 // Re-export rendering functions
 val render = Rendering.render
@@ -153,7 +151,7 @@ module TraceLogger with
     if enabled then
       set indentLvl = n
     else ()
-  fun log(msg: Text) =
+  fun log(msg: Str) =
     if enabled then
       console.log("| ".repeat(indentLvl) + msg.replaceAll("\n", "\n" + "  ".repeat(indentLvl)))
     else ()
@@ -238,9 +236,9 @@ data class EffectSig(contTrace: ContTrace, handler: Any, handlerFun: Function | 
 class NonLocalReturn with
   fun ret(value)
 
-data class FnLocalsInfo(fnName: Text, locals: Array[LocalVarInfo])
-data class LocalVarInfo(localName: Text, value: Any)
-data class CustomStackError(stack: Text) with
+data class FnLocalsInfo(fnName: Str, locals: Array[LocalVarInfo])
+data class LocalVarInfo(localName: Str, value: Any)
+data class CustomStackError(stack: Str) with
   fun toString() = stack
 
 
@@ -272,7 +270,7 @@ fun illegalEffect(position) =
   set curEffect = null
   throw CustomStackError(showStackTrace("Error: Effect " + tmp.handler!constructor!name + " is raised " + position, tmp, false, false))
 
-fun showStackTrace(header: Text, tr: EffectSig, debug: Bool, showLocals: Bool) =
+fun showStackTrace(header: Str, tr: EffectSig, debug: Bool, showLocals: Bool) =
   let
     msg = header
     curHandler = tr.contTrace
@@ -301,7 +299,7 @@ fun showStackTrace(header: Text, tr: EffectSig, debug: Bool, showLocals: Bool) =
       set msg += "\n\tat tail position"
   msg
 
-fun showFunctionContChain(cont: Any, hl: Map[Text, Set[Any]], vis: Set[Any], reps: Int): Text =
+fun showFunctionContChain(cont: Any, hl: Map[Str, Set[Any]], vis: Set[Any], reps: Int): Str =
   if cont is FunctionContFrame as frame then
     let result = frame!constructor!name + "(pc=" + frame.saved.[1]
     hl.forEach((m, marker, ...) => if m.has(cont) do set result += ", " + marker)
@@ -318,7 +316,7 @@ fun showFunctionContChain(cont: Any, hl: Map[Text, Set[Any]], vis: Set[Any], rep
   else
     "(NOT CONT)"
 
-fun showHandlerContChain(cont: Any, hl: Map[Text, Set[Any]], vis: Set[Any], reps: Int): Text =
+fun showHandlerContChain(cont: Any, hl: Map[Str, Set[Any]], vis: Set[Any], reps: Int): Str =
   if cont is HandlerContFrame as frame then
     let result = frame.handler!constructor!name
     hl.forEach((m, marker, ...) => if m.has(cont) do set result += ", " + marker)

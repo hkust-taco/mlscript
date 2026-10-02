@@ -62,29 +62,29 @@ print of Tuple.get([1, 2, 3, 4], -1)
 print of Tuple.get([1, 2, 3, 4], 5)
 //│ ═══[RUNTIME ERROR] RangeError: Tuple.get: index out of bounds
 
-print of Str.leaveOut("hello, world", 2)
+print of StrOps.leaveOut("hello, world", 2)
 //│ > llo, world
 
-print of Str.leaveOut("hello, world", -2)
+print of StrOps.leaveOut("hello, world", -2)
 //│ > ld
 
-print of Str.get("hello, world", 2)
+print of StrOps.get("hello, world", 2)
 //│ > l
 
 :re
-print of Str.get("hello, world", 22)
+print of StrOps.get("hello, world", 22)
 //│ ═══[RUNTIME ERROR] RangeError: Str.get: index out of bounds
 
-print of Str.get("hello, world", -1)
+print of StrOps.get("hello, world", -1)
 //│ > d
 
-print of Str.startsWith("hello, world", "hello")
+print of StrOps.startsWith("hello, world", "hello")
 //│ > true
 
-print of Str.startsWith("hello, world", "")
+print of StrOps.startsWith("hello, world", "")
 //│ > true
 
-print of Str.startsWith("hello, world", "farewell")
+print of StrOps.startsWith("hello, world", "farewell")
 //│ > false
 
 

@@ -281,9 +281,9 @@ lambda4 = (undefined, function (Runtime2, EffectHandle1, value) {
       toString() { return runtime.render(this); }
       static [definitionMetadata] = ["class", "Tuple"];
     });
-    (class Str {
+    (class StrOps {
       static {
-        Runtime.Str = this
+        Runtime.StrOps = this
       }
       static startsWith(string, prefix) {
         return runtime.safeCall(string.startsWith(prefix))
@@ -303,7 +303,7 @@ lambda4 = (undefined, function (Runtime2, EffectHandle1, value) {
         return runtime.safeCall(string.slice(n))
       }
       toString() { return runtime.render(this); }
-      static [definitionMetadata] = ["class", "Str"];
+      static [definitionMetadata] = ["class", "StrOps"];
     });
     Runtime.render = Rendering.render;
     (class TraceLogger {

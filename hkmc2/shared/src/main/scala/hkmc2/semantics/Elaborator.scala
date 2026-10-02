@@ -558,7 +558,7 @@ object Elaborator:
           .getOrElse(lastWords(s"Runtime.mls module '${module.nme}' does not define term '$memberName'."))
 
       val tuple = modOrObj("Tuple")
-      val str = modOrObj("Str")
+      val str = modOrObj("StrOps")
       RuntimeSymbols(
         unit = modOrObj("Unit"),
         loopEnd = modOrObj("LoopEnd"),

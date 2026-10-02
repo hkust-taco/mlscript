@@ -13,7 +13,7 @@ fun enforceArray = case
   (LazyArr | Array | String | Str | TypedArray) as a then a as Indexable
   ow then throw Error("Expected an Array, got: " + String(ow))
 
-fun concatHelper(a: Array[Any], l: Int, ...args: Array[Indexable]) =
+fun concatHelper(a: Array, l: Int, ...args: Array[Indexable]) =
   let
     idx = 0
     init_len = a.length
