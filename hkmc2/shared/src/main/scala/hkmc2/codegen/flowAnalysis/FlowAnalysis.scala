@@ -680,13 +680,23 @@ class FlowConstraintsCollector(
   given tl: TraceLogger = preAnalyzer.tl
   import StratVar.freshVar
   
-  private class ConstraintsCollector(val forFunGroup: Opt[TermSymbol]):
-    var constraints = Ls.empty[ProdStrat -> ConsStrat]
+  private class ConstraintsCollector private (
+    val forFunGroup: Opt[TermSymbol],
+    val forFun: Opt[TermSymbol],
+    buffer: mutable.ListBuffer[ProdStrat -> ConsStrat],
+  ):
+    def constraints: Ls[ProdStrat -> ConsStrat] = buffer.toList
     val instId: Opt[InstantiationId] = forFunGroup.fold(S(Nil))(_ => N)
-    def constrain(p: ProdStrat, c: ConsStrat) = constraints ::= p -> c
-    def constrain(cs: Iterable[ProdStrat -> ConsStrat]) = constraints :::= cs.toList
+    def constrain(p: ProdStrat, c: ConsStrat) = buffer.prepend(p -> c)
+    def constrain(cs: Iterable[ProdStrat -> ConsStrat]) = buffer.prependAll(cs)
+    def forActualRootFun(fun: TermSymbol): ConstraintsCollector =
+      assert(preAnalyzer.res.rootFunDefns.contains(fun))
+      new ConstraintsCollector(forFunGroup, S(fun), buffer)
+  private object ConstraintsCollector:
+    def apply(forFunGroup: Opt[TermSymbol], forFun: Opt[TermSymbol]): ConstraintsCollector =
+      new ConstraintsCollector(forFunGroup, forFun, mutable.ListBuffer.empty)
   
-  private val globalCollector = new ConstraintsCollector(N)
+  private val globalCollector = ConstraintsCollector(N, N)
   def allConstraints = globalCollector.constraints
   val funToSccGroups = MutMap.empty[TermSymbol, Ls[TermSymbol]]
   def funToSccRep(tSym: TermSymbol): Option[TermSymbol] = funToSccGroups.get(tSym).map(_.head)
@@ -723,8 +733,9 @@ class FlowConstraintsCollector(
         protected def handleScc(groupedFuns: Ls[TermSymbol], sccId: Int): Unit =
           for f <- groupedFuns do funToSccGroups(f) = groupedFuns
           val groupRep = groupedFuns.head
-          new ConstraintsCollector(Some(groupRep)).givenIn: cc ?=>
+          ConstraintsCollector(Some(groupRep), N).givenIn: cc ?=>
             for funSym <- groupedFuns do
+              given ConstraintsCollector = cc.forActualRootFun(funSym)
               val fun = preAnalyzer.res.funSymToFunDefn(funSym)
               val thisFunVar = generatedVars(fun.dSym)
               val funProdStrat = mkFunProdStrat(
@@ -799,7 +810,7 @@ class FlowConstraintsCollector(
       def duplicateVarState(s: StratVar) =
         if s.generatedForFun.fold(false):
           forFun => funToSccRep(forFun).fold(false)(_ is groupRep)
-        then stratVarMap.getOrElseUpdate(s, freshVar(s.name, s.sourceSymbol, cc.forFunGroup))
+        then stratVarMap.getOrElseUpdate(s, freshVar(s.name, s.sourceSymbol, cc.forFun))
         else s
       def duplicateProdStrat(s: ProdStrat): ProdStrat = s match
         case v: StratVar => duplicateVarState(v)
@@ -858,14 +869,14 @@ class FlowConstraintsCollector(
         case (sym: TermSymbol, _) => preAnalyzer.res.capturedVars(sym)
         case lamExprId: ResultId => preAnalyzer.res.capturedVars(lamExprId)
         case other => lastWords(s"unexpected funLamId shape: $other")
-      val res = freshVar(resName, cc.forFunGroup)
+      val res = freshVar(resName, cc.forFun)
       params.foreach:
         _.restParam.foreach: p =>
           generatedVars(p.sym).constrainOpaque
       val funValueStrat = params.zipWithIndex.foldRight[ProdStrat](res):
         case ((ps, whichParamList), acc) =>
           val plFunId = paramListFunId(whichParamList)
-          val capUB = freshVar(s"cap_ub_$plFunId", cc.forFunGroup)
+          val capUB = freshVar(s"cap_ub_$plFunId", cc.forFun)
           for
             v <- capturedSyms
             capturedSymStrat <- generatedVars.get(v)
@@ -880,7 +891,9 @@ class FlowConstraintsCollector(
       funValueStrat
 
     def processFunctionDefn(fun: FunDefn)(using cc: ConstraintsCollector): Unit =
-      if mono || !preAnalyzer.res.rootFunDefns.contains(fun.dSym) then
+      val isRoot = preAnalyzer.res.rootFunDefns.contains(fun.dSym)
+      if mono || !isRoot then
+        given ConstraintsCollector = if isRoot then cc.forActualRootFun(fun.dSym) else cc
         val funProdStrat = mkFunProdStrat(
           s"${fun.dSym.nme}_res",
           fun.params,
@@ -972,13 +985,13 @@ class FlowConstraintsCollector(
           argsStrat.foreach(arg => cc.constrain(arg, UnknownCons))
           UnknownProd
         else
-          val callRes = freshVar("call_res", cc.forFunGroup)
+          val callRes = freshVar("call_res", cc.forFun)
           cc.constrain(fStrat, new ConsFun(callExprId, instId)(argsStrat, callRes))
           callRes
       r match
         case sel@TrackableSelect(from, field, owner) =>
           val fromStrat = processResult(from)
-          val selRes = freshVar("sel_res", cc.forFunGroup)
+          val selRes = freshVar("sel_res", cc.forFun)
           cc.constrain(
             fromStrat,
             new FieldSel(sel.uid, instId)(field, owner, selRes))
