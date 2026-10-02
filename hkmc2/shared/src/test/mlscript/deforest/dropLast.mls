@@ -1,3 +1,4 @@
+:.
 :js
 
 data class (::) Cons(h, t)

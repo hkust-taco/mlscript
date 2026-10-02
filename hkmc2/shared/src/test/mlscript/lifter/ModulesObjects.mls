@@ -1,3 +1,4 @@
+:..
 :.
 // NOTE: due to conflict between flow analysis and lifter
 :flowBasedOpt off
@@ -15,7 +16,7 @@ fun foo(x, y) =
       x + y + test
   M.foo()
 //│ ╔══[WARNING] Objects are not yet lifted.
-//│ ║  l.11: 	  object M with
+//│ ║  l.12: 	  object M with
 //│ ╙──      	         ^
 
 :expect 14
@@ -60,8 +61,9 @@ fun foo(y) =
 
 let
   cc = foo(10)
-  c0 = cc.0
-  c1 = cc.1
+// Exercise writes to undeclared fields with checked dynamic access.
+val c0: dyn = cc.0
+val c1: dyn = cc.1
 //│ c0 = C
 //│ c1 = C
 //│ cc = [C, C]
@@ -86,10 +88,10 @@ fun foo(y) =
       set y = 2
   O
 //│ ╔══[WARNING] Objects are not yet lifted.
-//│ ║  l.84: 	  object O with
+//│ ║  l.86: 	  object O with
 //│ ╙──      	         ^
 
-let o = foo(10)
+val o: dyn = foo(10)
 //│ o = O
 
 :re
@@ -108,7 +110,7 @@ fun foo(x, y) =
   fun foo3 = M.foo2()
   foo3
 //│ ╔══[WARNING] Objects are not yet lifted.
-//│ ║  l.104: 	  object M with
+//│ ║  l.106: 	  object M with
 //│ ╙──       	         ^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let foo3;
@@ -138,7 +140,7 @@ data class A(x) with
     fun bar = M.getB()
     bar
 //│ ╔══[WARNING] Objects are not yet lifted.
-//│ ║  l.135: 	  object M with
+//│ ║  l.137: 	  object M with
 //│ ╙──       	         ^
 
 :expect 2
@@ -195,7 +197,7 @@ fun f =
   foo
 f.a
 //│ ╔══[WARNING] Objects are not yet lifted.
-//│ ║  l.191: 	  object A with
+//│ ║  l.193: 	  object A with
 //│ ╙──       	         ^
 //│ = 2
 
@@ -274,7 +276,7 @@ fun foo(x) =
     val baz = x
   [x === O.bar, set x += 1 in [x === O.bar, x === O.baz], x === O.bar]
 //│ ╔══[WARNING] Objects are not yet lifted.
-//│ ║  l.272: 	  object O with
+//│ ║  l.274: 	  object O with
 //│ ╙──       	         ^
 
 foo(123)
@@ -323,13 +325,13 @@ fun f =
   A.B.C
 f
 //│ ╔══[WARNING] Objects are not yet lifted.
-//│ ║  l.320: 	  object A with
+//│ ║  l.322: 	  object A with
 //│ ╙──       	         ^
 //│ ╔══[WARNING] Objects are not yet lifted.
-//│ ║  l.321: 	    object B with
+//│ ║  l.323: 	    object B with
 //│ ╙──       	           ^
 //│ ╔══[WARNING] Objects are not yet lifted.
-//│ ║  l.322: 	      object C
+//│ ║  l.324: 	      object C
 //│ ╙──       	             ^
 //│ = C
 
@@ -342,10 +344,10 @@ fun f =
   A.B.C
 f
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.339: 	  module A with
+//│ ║  l.341: 	  module A with
 //│ ╙──       	         ^
 //│ ╔══[WARNING] Objects are not yet lifted.
-//│ ║  l.341: 	      object C
+//│ ║  l.343: 	      object C
 //│ ╙──       	             ^
 //│ = C
 
@@ -358,7 +360,7 @@ fun f =
   A.B.C
 f
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.355: 	  module A with
+//│ ║  l.357: 	  module A with
 //│ ╙──       	         ^
 //│ = C
 

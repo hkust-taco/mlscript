@@ -1,3 +1,4 @@
+:.
 // The staged-module compiler (`ReflectionInstrumenter`) has to keep a `Cast` as data rather than
 // dropping it: the staged mirror (`Block.mls`) has a `Cast` node, so the coercion survives into the
 // produced IR instead of being silently discarded on the way in.

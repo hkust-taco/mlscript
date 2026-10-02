@@ -1,3 +1,4 @@
+:.
 :js
 
 
@@ -57,7 +58,7 @@
 
 let xs = [1, 2, 3]
 let ys = [4, 5, 6]
-fun len(xs) = xs.length
+fun len(xs: Array) = xs.length
 //│ xs = [1, 2, 3]
 //│ ys = [4, 5, 6]
 
@@ -84,7 +85,7 @@ let r = 10 in r
 //│   rhs = Tup of Ls of
 //│     IntLit of 1
 //│ ╔══[WARNING] Pure expression in statement position
-//│ ║  l.74: 	let r = 10 in r
+//│ ║  l.75: 	let r = 10 in r
 //│ ╙──      	              ^
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = -1
@@ -160,11 +161,20 @@ let x
   .a
 //│ = 2
 
+:e
 :re
 2
   |> (a: _)
     .a
-//│ ═══[RUNTIME ERROR] Error: Access to required field 'a' yielded 'undefined'
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.167: 	  |> (a: _)
+//│ ║         	     ^^^^^^
+//│ ║  l.168: 	    .a
+//│ ║         	^^^^^^
+//│ ╟── Function literal does not contain member 'a'
+//│ ║  l.167: 	  |> (a: _)
+//│ ╙──       	      ^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :ge
 :re
@@ -172,7 +182,7 @@ let x
   |> (a: _)
 .a
 //│ ╔══[COMPILATION ERROR] Unexpected term form in expression position (leading dot selection)
-//│ ║  l.173: 	.a
+//│ ║  l.183: 	.a
 //│ ╙──       	^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -215,7 +225,7 @@ let x
 :e // Note: this used to parse as a juxtaposition (the curly braces were treated equally to an indented section)
 2 { * 1 { + 2 } }
 //│ ╔══[COMPILATION ERROR] Unsupported refinement in this position.
-//│ ║  l.216: 	2 { * 1 { + 2 } }
+//│ ║  l.226: 	2 { * 1 { + 2 } }
 //│ ╙──       	      ^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -322,10 +332,10 @@ let incr = _ + 1
 :w
 2, * 3
 //│ ╔══[PARSE ERROR] Expected end of input; found literal instead
-//│ ║  l.323: 	2, * 3
+//│ ║  l.333: 	2, * 3
 //│ ╙──       	     ^
 //│ ╔══[WARNING] Pure expression in statement position
-//│ ║  l.323: 	2, * 3
+//│ ║  l.333: 	2, * 3
 //│ ╙──       	^
 //│ = fun
 
@@ -349,7 +359,7 @@ let incr = _ + 1
 //│ = 16
 
 module Arr with
-  val len = _.length
+  val len = (xs: Array) => xs.length
 
 let
   xs = [1, 2]
@@ -379,9 +389,9 @@ xs |> Arr.len
 ,+
 ys |> Arr.len
 //│ ╔══[PARSE ERROR] Expected start of expression in this position; found new line instead
-//│ ║  l.379: 	,+
+//│ ║  l.389: 	,+
 //│ ║         	  ^
-//│ ║  l.380: 	ys |> Arr.len
+//│ ║  l.390: 	ys |> Arr.len
 //│ ╙──
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -395,9 +405,9 @@ xs |> Arr.len
 +,
 ys |> Arr.len
 //│ ╔══[PARSE ERROR] Expected start of expression in this position; found new line instead
-//│ ║  l.395: 	+,
+//│ ║  l.405: 	+,
 //│ ║         	  ^
-//│ ║  l.396: 	ys |> Arr.len
+//│ ║  l.406: 	ys |> Arr.len
 //│ ╙──
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -428,10 +438,10 @@ new Foo(1) is Foo
 :fixme // ?
 new Foo(1) ,is Foo
 //│ ╔══[PARSE ERROR] Expected start of expression in this position; found 'is' keyword instead
-//│ ║  l.429: 	new Foo(1) ,is Foo
+//│ ║  l.439: 	new Foo(1) ,is Foo
 //│ ╙──       	            ^^
 //│ ╔══[PARSE ERROR] Expected end of input; found identifier instead
-//│ ║  l.429: 	new Foo(1) ,is Foo
+//│ ║  l.439: 	new Foo(1) ,is Foo
 //│ ╙──       	               ^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -439,10 +449,10 @@ new Foo(1) ,is Foo
 new Foo(1)
 is Foo
 //│ ╔══[PARSE ERROR] Expected start of expression in this position; found 'is' keyword instead
-//│ ║  l.440: 	is Foo
+//│ ║  l.450: 	is Foo
 //│ ╙──       	^^
 //│ ╔══[PARSE ERROR] Expected end of input; found identifier instead
-//│ ║  l.440: 	is Foo
+//│ ║  l.450: 	is Foo
 //│ ╙──       	   ^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 

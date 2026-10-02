@@ -1,3 +1,4 @@
+:.
 :js
 :noInline
 :flowBasedOpt debugDpe
@@ -145,13 +146,14 @@ foo.bar(99)
 //│ define Foo⁰ as class Foo² {
 //│   private val x⁰;
 //│   constructor Foo¹(x) {
-//│     set Foo².this.x⁰ = x;
+//│     @private
+//│     define x¹ as val x⁰ = x;
 //│     end
 //│   }
 //│   method bar⁰ = fun bar¹(a) { return Foo².this.x⁰ }
 //│ };
 //│ set foo⁰ = Foo¹(1);
-//│ return foo⁰.bar﹖(99)
+//│ return foo⁰.bar¹(99)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 1
 //│ foo = Foo(_)
@@ -298,7 +300,7 @@ fun f(c) = Runtime.Tuple.get(c, 1) + 1
 //│       set tmp = Runtime⁰.Tuple⁰.get⁰(c, 1);
 //│       return +⁰(tmp, 1)
 //│     else
-//│       return runtime⁰.unwind﹖(f²⁴, -1, "basic.mls:288:1", null, null, 1, 1, c, 0)
+//│       return runtime⁰.unwind﹖(f²⁴, -1, "basic.mls:290:1", null, null, 1, 1, c, 0)
 //│   end
 //│ };
 //│ end

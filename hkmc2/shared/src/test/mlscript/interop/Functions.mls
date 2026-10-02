@@ -1,23 +1,24 @@
+:.
 :js
 
 
-(x => x).constructor == Function
+(x => x)!constructor == Function
 //│ = true
 
 fun foo(x) = x
-foo.constructor == Function
+foo!constructor == Function
 //│ = true
 
-foo.name
+foo!name
 //│ = "foo"
 
-foo.constructor.name
+foo!constructor!name
 //│ = "Function"
 
 typeof(foo)
 //│ = "function"
 
-typeof(foo.constructor)
+typeof(foo!constructor)
 //│ = "function"
 
 

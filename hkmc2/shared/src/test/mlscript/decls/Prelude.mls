@@ -6,6 +6,7 @@ declare type Nothing
 
 declare class Object with
   fun toString(): Str
+declare fun Object(...args): Object
 declare module Object with
   fun entries(target): Array[[Str, Any]]
   fun getOwnPropertyDescriptor(target, key): Object | undefined
@@ -23,6 +24,7 @@ declare module JSON with
   fun
     stringify
 declare class Number
+declare fun Number(...args): Num
 declare module Number with
   val
     MIN_VALUE
@@ -33,6 +35,7 @@ declare module Number with
     POSITIVE_INFINITY
 declare class BigInt with
   fun toString(...radix): Str
+declare fun BigInt(value): BigInt
 declare module BigInt
 declare class Function with
   val name: Str
@@ -157,6 +160,7 @@ declare class Str with
   fun repeat(count: Int): Str
   fun toUpperCase(): Str
   fun toLowerCase(): Str
+  fun localeCompare(other: Str, ...localesAndOptions): Int
   fun trim(): Str
 declare class Class
 
@@ -221,6 +225,7 @@ declare module Array with
 
 declare class Symbol with
   val description: Str | undefined
+declare fun Symbol(...description): Symbol
 declare module Symbol with
   // The `TermDef` needs `rhs` to be defined to be recognized as `isMLsFun`.
   // Otherwise, it would be wrapped in `runtime.safeCall`, which accesses the
@@ -327,7 +332,8 @@ declare val Infinity
 
 // Wasm support
 declare object WebAssembly with
-  declare class Instance
+  declare class Instance with
+    val exports: dyn
   declare class Memory
   declare class Module
   declare module Module with

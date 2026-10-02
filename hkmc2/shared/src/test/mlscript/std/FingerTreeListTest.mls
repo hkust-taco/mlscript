@@ -1,3 +1,4 @@
+:.
 :js
 
 import "../../mlscript-compile/FingerTreeList.mls"
@@ -34,19 +35,19 @@ ys |> ith(8)
 ys |> ith(9)
 //│ = None
 
-let ys = (ys |> popFront).rest
+let ys = if ys |> popFront is {rest: rest} then rest
 //│ ys = [2, 3, 1, 2, 3, 1, 2, 3]
-let ys = (ys |> popBack).rest
+let ys = if ys |> popBack is {rest: rest} then rest
 //│ ys = [2, 3, 1, 2, 3, 1, 2]
-let ys = (ys |> popBack).rest
+let ys = if ys |> popBack is {rest: rest} then rest
 //│ ys = [2, 3, 1, 2, 3, 1]
-let ys = (ys |> popBack).rest
+let ys = if ys |> popBack is {rest: rest} then rest
 //│ ys = [2, 3, 1, 2, 3]
-let ys = (ys |> popFront).rest
+let ys = if ys |> popFront is {rest: rest} then rest
 //│ ys = [3, 1, 2, 3]
-let ys = (ys |> popFront).rest
+let ys = if ys |> popFront is {rest: rest} then rest
 //│ ys = [1, 2, 3]
-let ys = (ys |> popFront).rest
+let ys = if ys |> popFront is {rest: rest} then rest
 //│ ys = [2, 3]
 
 let ys = xs ++ xs ++ xs
@@ -99,13 +100,13 @@ let xs = FingerTreeList.mk(1, 2, 3)
 if xs is
   [a, ...ls] then [a, ls]
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let element0$;
-//│ if (runtime.Tuple.isArrayLike(xs2) && xs2.length >= 1) {
-//│   let xs3, inlinedVal38, tmp16;
-//│   element0$ = runtime.Tuple.get(xs2, 0);
-//│   xs3 = xs2;
-//│   tmp16 = xs3.length - 0;
-//│   inlinedVal38 = runtime.safeCall(xs3.slice(1, tmp16));
+//│ let scrut, element0$;
+//│ scrut = xs2;
+//│ if (runtime.Tuple.isArrayLike(scrut) && scrut.length >= 1) {
+//│   let inlinedVal38, tmp16;
+//│   element0$ = runtime.Tuple.get(scrut, 0);
+//│   tmp16 = scrut.length - 0;
+//│   inlinedVal38 = runtime.safeCall(scrut.slice(1, tmp16));
 //│   return globalThis.Object.freeze([
 //│     element0$,
 //│     inlinedVal38
@@ -132,16 +133,16 @@ fun popUntilEmpty(lft, acc) =
     [] then acc
 
 :sjs
-fun popByIndex(start, end, acc, lft) =
+fun popByIndex(start, end, acc, lft: Indexable) =
   if start >= end then acc
   else popByIndex(start + 1, end, [...acc, lft.at(start)], lft)
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let popByIndex;
 //│ popByIndex = function popByIndex(start, end, acc, lft) {
 //│   loopLabel: while (true) {
-//│     let scrut, tmp16, tmp17, tmp18;
-//│     scrut = start >= end;
-//│     if (scrut === true) {
+//│     let scrut1, tmp16, tmp17, tmp18;
+//│     scrut1 = start >= end;
+//│     if (scrut1 === true) {
 //│       return acc
 //│     }
 //│     tmp16 = start + 1;

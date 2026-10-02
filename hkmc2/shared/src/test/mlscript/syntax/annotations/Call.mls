@@ -1,3 +1,4 @@
+:.
 :sir
 
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
@@ -31,7 +32,14 @@ fun curried(x)(y) = x
 //│ return @special curried¹(1)(2)
 
 
+:e
 @special identity(1)(2)
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.36: 	@special identity(1)(2)
+//│ ║        	         ^^^^^^^^^^^^^^
+//│ ╟── Integer literal cannot be called like a function.
+//│ ║  l.36: 	@special identity(1)(2)
+//│ ╙──      	                  ^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let baseCall; set baseCall = identity¹(1); return @special baseCall(2)
 
@@ -40,7 +48,14 @@ fun nullary = 1
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define nullary⁰ as fun nullary¹() { return 1 }; end
 
+:w
 @special nullary
+//│ ╔══[WARNING] This annotation has no effect.
+//│ ║  l.52: 	@special nullary
+//│ ║        	^^^^^^^^
+//│ ╟── This annotation is not supported on member reference terms.
+//│ ║  l.52: 	@special nullary
+//│ ╙──      	         ^^^^^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ return @special nullary¹()
 
@@ -49,7 +64,7 @@ class Box(value: Int)
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define Box⁰ as class Box² {
 //│   private val value⁰;
-//│   constructor Box¹(value) { set Box².this.value⁰ = value; end }
+//│   constructor Box¹(value) { @private define value¹ as val value⁰ = value; end }
 //│ };
 //│ end
 
@@ -64,8 +79,10 @@ class CurriedBox(first: Int)(second: Int)
 //│   private val first⁰;
 //│   private val second⁰;
 //│   constructor CurriedBox¹(first, second) {
-//│     set CurriedBox².this.first⁰ = first;
-//│     set CurriedBox².this.second⁰ = second;
+//│     @private
+//│     define first¹ as val first⁰ = first;
+//│     @private
+//│     define second¹ as val second⁰ = second;
 //│     end
 //│   }
 //│ };

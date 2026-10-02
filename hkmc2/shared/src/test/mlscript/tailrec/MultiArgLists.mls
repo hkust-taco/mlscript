@@ -1,3 +1,4 @@
+:.
 :js
 open annotations
 
@@ -180,7 +181,7 @@ fun resume(x)(y) = handleEffects(x)
 //│       1 =>
 //│         let tmp;
 //│         set tmp = resume⁰(undefined);
-//│         do sink⁰.push﹖(tmp);
+//│         do sink⁰.push⁰(tmp);
 //│         set id = 0;
 //│         continue loopLabel
 //│       else

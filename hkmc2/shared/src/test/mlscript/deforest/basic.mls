@@ -1,3 +1,4 @@
+:.
 :js
 :deforest
 
@@ -19,14 +20,14 @@ let lsit = [2, 1] in
   let useless = if lsit is [a, b] then 0
 //│ deforest > >>> fusing >>>
 //│ deforest > [2, 1] ->
-//│ deforest > 	match: lsit⁰
-//│ deforest > 	fields: runtime⁰.Tuple⁰.get⁰(lsit⁰, 0)
-//│ deforest > 	fields: runtime⁰.Tuple⁰.get⁰(lsit⁰, 1)
+//│ deforest > 	match: scrut⁰
+//│ deforest > 	fields: runtime⁰.Tuple⁰.get⁰(scrut⁰, 0)
+//│ deforest > 	fields: runtime⁰.Tuple⁰.get⁰(scrut⁰, 1)
 //│ deforest > <<< fusing <<<
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let lsit, useless, a, b, element1$, element0$, tmp, $lsit_tup2, $lsit_rest, tup2_0, tup2_1;
+//│ let lsit, useless, scrut, a, b, element1$, element0$, tmp, $scrut_tup2, $scrut_rest, tup2_0, tup2_1;
 //│ @affine(1) @private
-//│ define $lsit_tup2 as fun $lsit_tup2⁰(tup2_01, tup2_11)() {
+//│ define $scrut_tup2 as fun $scrut_tup2⁰(tup2_01, tup2_11)() {
 //│   set element0$ = tup2_01;
 //│   set element1$ = tup2_11;
 //│   set b = element1$;
@@ -36,13 +37,14 @@ let lsit = [2, 1] in
 //│   return runtime⁰.Unit⁰
 //│ };
 //│ @private
-//│ define $lsit_rest as fun $lsit_rest⁰() {
+//│ define $scrut_rest as fun $scrut_rest⁰() {
 //│   return null
 //│ };
 //│ set tup2_0 = 2;
 //│ set tup2_1 = 1;
-//│ set lsit = $lsit_tup2⁰(tup2_0, tup2_1);
-//│ return lsit()
+//│ set lsit = $scrut_tup2⁰(tup2_0, tup2_1);
+//│ set scrut = lsit;
+//│ return scrut()
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 :expect O
@@ -52,8 +54,8 @@ fun c(x) = if x is
 c(p())
 //│ deforest > >>> fusing >>>
 //│ deforest > X⁰(O⁰) ->
-//│ deforest > 	match: x⁰
-//│ deforest > 	fields: x⁰.a⁰
+//│ deforest > 	match: scrut¹
+//│ deforest > 	fields: scrut¹.a⁰
 //│ deforest > <<< fusing <<<
 //│ = O
 
@@ -66,29 +68,30 @@ fun f(x) = if x is
 f(p())
 //│ deforest > >>> fusing >>>
 //│ deforest > X⁰(tmp⁰) ->
-//│ deforest > 	match: x¹
-//│ deforest > 	fields: x¹.a⁰
+//│ deforest > 	match: scrut²
+//│ deforest > 	fields: scrut².a⁰
 //│ deforest > Y⁰(O⁰) ->
 //│ deforest > 	match: arg$X$0$⁰
 //│ deforest > 	fields: arg$X$0$⁰.b⁰
 //│ deforest > <<< fusing <<<
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let tmp, p_8$p, f_10$f, f_10$x_X, f_10$x_rest, f_10$arg$X$0$_Y, f_10$arg$X$0$_rest;
+//│ let tmp, p_8$p, f_10$f, f_10$scrut_X, f_10$scrut_rest, f_10$arg$X$0$_Y, f_10$arg$X$0$_rest;
 //│ @private
 //│ define p_8$p as fun p_8$p⁰() {
 //│   let tmp1, Y_b, X_a;
 //│   set Y_b = O⁰;
 //│   set tmp1 = f_10$arg$X$0$_Y⁰(Y_b);
 //│   set X_a = tmp1;
-//│   return f_10$x_X⁰(X_a)
+//│   return f_10$scrut_X⁰(X_a)
 //│ };
 //│ @private
 //│ define f_10$f as fun f_10$f⁰(x) {
-//│   let y, arg$X$0$, arg$Y$0$;
-//│   return x(y, arg$X$0$, arg$Y$0$)
+//│   let scrut, y, arg$X$0$, arg$Y$0$;
+//│   set scrut = x;
+//│   return scrut(y, arg$X$0$, arg$Y$0$)
 //│ };
 //│ @affine(1) @private
-//│ define f_10$x_X as fun f_10$x_X⁰(X_a)(fv_y, fv_arg$X$0$, fv_arg$Y$0$) {
+//│ define f_10$scrut_X as fun f_10$scrut_X⁰(X_a)(fv_y, fv_arg$X$0$, fv_arg$Y$0$) {
 //│   set fv_arg$X$0$ = X_a;
 //│   return fv_arg$X$0$(fv_y, fv_arg$Y$0$)
 //│ };
@@ -99,12 +102,12 @@ f(p())
 //│   return fv_y
 //│ };
 //│ @private
-//│ define f_10$x_rest as fun f_10$x_rest⁰() {
+//│ define f_10$scrut_rest as fun f_10$scrut_rest⁰() {
 //│   return null
 //│ };
 //│ @private
 //│ define f_10$arg$X$0$_rest as fun f_10$arg$X$0$_rest⁰() {
-//│   return f_10$x_rest⁰()
+//│   return f_10$scrut_rest⁰()
 //│ };
 //│ define p⁰ as fun p¹() {
 //│   let tmp1;
@@ -112,10 +115,11 @@ f(p())
 //│   return X⁰(tmp1)
 //│ };
 //│ define f⁰ as fun f¹(x) {
-//│   let y, arg$X$0$, arg$Y$0$;
-//│   match x
+//│   let scrut, y, arg$X$0$, arg$Y$0$;
+//│   set scrut = x;
+//│   match scrut
 //│     X¹ =>
-//│       set arg$X$0$ = x.a⁰;
+//│       set arg$X$0$ = scrut.a⁰;
 //│       match arg$X$0$
 //│         Y¹ =>
 //│           set arg$Y$0$ = arg$X$0$.b⁰;
@@ -144,11 +148,11 @@ fun f(x, res) = if x is
 f(p(), 2)
 //│ deforest > >>> fusing >>>
 //│ deforest > X⁰(tmp¹) ->
-//│ deforest > 	match: x²
-//│ deforest > 	fields: x².a⁰
+//│ deforest > 	match: scrut³
+//│ deforest > 	fields: scrut³.a⁰
 //│ deforest > Y⁰(O⁰) ->
-//│ deforest > 	match: a¹
-//│ deforest > 	fields: a¹.b⁰
+//│ deforest > 	match: scrut⁴
+//│ deforest > 	fields: scrut⁴.b⁰
 //│ deforest > <<< fusing <<<
 //│ = 14
 
@@ -165,8 +169,8 @@ fun f(x, y, res) = if x is
 f(X(1), Y(2), 3)
 //│ deforest > >>> fusing >>>
 //│ deforest > X⁰(1) ->
-//│ deforest > 	match: x³
-//│ deforest > 	fields: x³.a⁰
+//│ deforest > 	match: scrut⁵
+//│ deforest > 	fields: scrut⁵.a⁰
 //│ deforest > <<< fusing <<<
 //│ = 16
 
@@ -176,18 +180,18 @@ fun c(x, d) = if x is
   X(a) then c(X(a), d)
 () => c(X(3), 2)
 //│ deforest > >>> fusing >>>
-//│ deforest > X⁰(a²) ->
-//│ deforest > 	match: x⁴
-//│ deforest > 	fields: x⁴.a⁰
+//│ deforest > X⁰(a¹) ->
+//│ deforest > 	match: scrut⁶
+//│ deforest > 	fields: scrut⁶.a⁰
 //│ deforest > X⁰(3) ->
-//│ deforest > 	match: x⁴
-//│ deforest > 	fields: x⁴.a⁰
-//│ deforest > X⁰(a²) ->
-//│ deforest > 	match: x⁴
-//│ deforest > 	fields: x⁴.a⁰
+//│ deforest > 	match: scrut⁶
+//│ deforest > 	fields: scrut⁶.a⁰
+//│ deforest > X⁰(a¹) ->
+//│ deforest > 	match: scrut⁶
+//│ deforest > 	fields: scrut⁶.a⁰
 //│ deforest > X⁰(3) ->
-//│ deforest > 	match: x⁴
-//│ deforest > 	fields: x⁴.a⁰
+//│ deforest > 	match: scrut⁶
+//│ deforest > 	fields: scrut⁶.a⁰
 //│ deforest > <<< fusing <<<
 //│ = fun lambda_7$lambda
 
@@ -201,7 +205,7 @@ fun p(x) = if x is
 p(c())
 //│ deforest > >>> fusing >>>
 //│ deforest > O⁰ ->
-//│ deforest > 	match: x⁵
+//│ deforest > 	match: scrut⁷
 //│ deforest > <<< fusing <<<
 //│ = 2
 
@@ -212,14 +216,14 @@ if [1, 2] is
   [a, b] then a + b
 //│ deforest > >>> fusing >>>
 //│ deforest > [1, 2] ->
-//│ deforest > 	match: scrut⁰
-//│ deforest > 	fields: runtime⁰.Tuple⁰.get⁰(scrut⁰, 0)
-//│ deforest > 	fields: runtime⁰.Tuple⁰.get⁰(scrut⁰, 1)
+//│ deforest > 	match: scrut⁸
+//│ deforest > 	fields: runtime⁰.Tuple⁰.get⁰(scrut⁸, 0)
+//│ deforest > 	fields: runtime⁰.Tuple⁰.get⁰(scrut⁸, 1)
 //│ deforest > <<< fusing <<<
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let scrut, a, b, element1$, element0$, $scrut_tup2, $scrut_rest, tup2_0, tup2_1;
 //│ @affine(1) @private
-//│ define $scrut_tup2 as fun $scrut_tup2⁰(tup2_01, tup2_11)() {
+//│ define $scrut_tup2 as fun $scrut_tup2¹(tup2_01, tup2_11)() {
 //│   set element0$ = tup2_01;
 //│   set element1$ = tup2_11;
 //│   set b = element1$;
@@ -227,12 +231,12 @@ if [1, 2] is
 //│   return +⁰(a, b)
 //│ };
 //│ @private
-//│ define $scrut_rest as fun $scrut_rest⁰() {
+//│ define $scrut_rest as fun $scrut_rest¹() {
 //│   return null
 //│ };
 //│ set tup2_0 = 1;
 //│ set tup2_1 = 2;
-//│ set scrut = $scrut_tup2⁰(tup2_0, tup2_1);
+//│ set scrut = $scrut_tup2¹(tup2_0, tup2_1);
 //│ return scrut()
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 3
@@ -244,9 +248,9 @@ fun f(x) = if x is
 f([1,2])
 //│ deforest > >>> fusing >>>
 //│ deforest > [1, 2] ->
-//│ deforest > 	match: x⁶
-//│ deforest > 	fields: runtime⁰.Tuple⁰.get⁰(x⁶, 0)
-//│ deforest > 	fields: runtime⁰.Tuple⁰.get⁰(x⁶, 1)
+//│ deforest > 	match: scrut⁹
+//│ deforest > 	fields: runtime⁰.Tuple⁰.get⁰(scrut⁹, 0)
+//│ deforest > 	fields: runtime⁰.Tuple⁰.get⁰(scrut⁹, 1)
 //│ deforest > <<< fusing <<<
 //│ = 3
 
@@ -278,8 +282,8 @@ fun f(x) = if x is
 f(A(1))
 //│ deforest > >>> fusing >>>
 //│ deforest > A⁰(1) ->
-//│ deforest > 	match: x⁷
-//│ deforest > 	fields: x⁷.x⁸
+//│ deforest > 	match: scrut¹⁰
+//│ deforest > 	fields: scrut¹⁰.x⁰
 //│ deforest > <<< fusing <<<
 //│ = 1
 
@@ -289,10 +293,6 @@ fun f(x) = if x is
   A(a) then x.A#x + a
 f(A(1))
 //│ deforest > >>> fusing >>>
-//│ deforest > A⁰(1) ->
-//│ deforest > 	match: x⁹
-//│ deforest > 	fields: x⁹.x⁸
-//│ deforest > 	fields: x⁹.x⁸
 //│ deforest > <<< fusing <<<
 //│ = 2
 
@@ -303,11 +303,11 @@ fun f(x) = if x is
 f(A(2)) + f(A(3))
 //│ deforest > >>> fusing >>>
 //│ deforest > A⁰(3) ->
-//│ deforest > 	match: x¹⁰
-//│ deforest > 	fields: x¹⁰.x⁸
+//│ deforest > 	match: scrut¹¹
+//│ deforest > 	fields: scrut¹¹.x⁰
 //│ deforest > A⁰(2) ->
-//│ deforest > 	match: x¹⁰
-//│ deforest > 	fields: x¹⁰.x⁸
+//│ deforest > 	match: scrut¹¹
+//│ deforest > 	fields: scrut¹¹.x⁰
 //│ deforest > <<< fusing <<<
 //│ = 4
 
@@ -319,18 +319,18 @@ if localFuse(3) is
   B(a) then a
 localFuse(4)
 //│ deforest > >>> fusing >>>
-//│ deforest > A⁰(x¹¹) ->
-//│ deforest > 	match: scrut¹
-//│ deforest > 	fields: scrut¹.x⁸
-//│ deforest > A⁰(x¹¹) ->
-//│ deforest > 	match: scrut¹
-//│ deforest > 	fields: scrut¹.x⁸
-//│ deforest > A⁰(x¹¹) ->
-//│ deforest > 	match: scrut¹
-//│ deforest > 	fields: scrut¹.x⁸
+//│ deforest > A⁰(x¹) ->
+//│ deforest > 	match: scrut¹²
+//│ deforest > 	fields: scrut¹².x⁰
+//│ deforest > A⁰(x¹) ->
+//│ deforest > 	match: scrut¹²
+//│ deforest > 	fields: scrut¹².x⁰
+//│ deforest > A⁰(x¹) ->
+//│ deforest > 	match: scrut¹²
+//│ deforest > 	fields: scrut¹².x⁰
 //│ deforest > B⁰(y⁰) ->
-//│ deforest > 	match: scrut²
-//│ deforest > 	fields: scrut².x¹²
+//│ deforest > 	match: scrut¹³
+//│ deforest > 	fields: scrut¹³.x²
 //│ deforest > <<< fusing <<<
 //│ = B(4)
 
@@ -356,7 +356,7 @@ let f() = x
 f()
 //│ deforest > >>> fusing >>>
 //│ deforest > A⁰(0) ->
-//│ deforest > 	match: scrut³
+//│ deforest > 	match: scrut¹⁴
 //│ deforest > <<< fusing <<<
 //│ = 1
 //│ f = undefined
@@ -377,12 +377,9 @@ fun dtor(x) = if x is
 dtor(A(B(0)))
 //│ deforest > >>> fusing >>>
 //│ deforest > B⁰(4) ->
-//│ deforest > 	match: y¹
+//│ deforest > 	match: scrut¹⁵
 //│ deforest > B⁰(4) ->
-//│ deforest > 	match: y¹
-//│ deforest > A⁰(tmp²) ->
-//│ deforest > 	match: x¹³
-//│ deforest > 	fields: x¹³.x⁸
+//│ deforest > 	match: scrut¹⁵
 //│ deforest > <<< fusing <<<
 //│ = B(0)
 

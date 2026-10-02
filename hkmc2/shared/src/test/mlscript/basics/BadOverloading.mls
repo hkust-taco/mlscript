@@ -1,3 +1,4 @@
+:.
 :js
 
 
@@ -6,30 +7,30 @@ class Foo
 class Foo
 //│ ╔══[COMPILATION ERROR] Multiple definitions of symbol 'Foo'
 //│ ╟── defined here
-//│ ║  l.5: 	class Foo
+//│ ║  l.6: 	class Foo
 //│ ║       	^^^^^^^^^
 //│ ╟── defined here
-//│ ║  l.6: 	class Foo
+//│ ║  l.7: 	class Foo
 //│ ╙──     	^^^^^^^^^
 
 :e
 class Foo
 object Foo
 //│ ╔══[COMPILATION ERROR] Illegal overloading of class 'Foo'
-//│ ║  l.16: 	class Foo
+//│ ║  l.17: 	class Foo
 //│ ║        	^^^^^^^^^
 //│ ╟── with object of the same name
-//│ ║  l.17: 	object Foo
+//│ ║  l.18: 	object Foo
 //│ ╙──      	^^^^^^^^^^
 
 :e
 object Foo
 class Foo
 //│ ╔══[COMPILATION ERROR] Illegal overloading of class 'Foo'
-//│ ║  l.27: 	class Foo
+//│ ║  l.28: 	class Foo
 //│ ║        	^^^^^^^^^
 //│ ╟── with object of the same name
-//│ ║  l.26: 	object Foo
+//│ ║  l.27: 	object Foo
 //│ ╙──      	^^^^^^^^^^
 
 :todo // TODO: silence such internal errors when a compilation error is already reported?
@@ -37,10 +38,10 @@ class Foo
 fun Foo = 1
 object Foo
 //│ ╔══[COMPILATION ERROR] Illegal overloading of function 'Foo'
-//│ ║  l.37: 	fun Foo = 1
+//│ ║  l.38: 	fun Foo = 1
 //│ ║        	^^^^^^^^^^^
 //│ ╟── with object of the same name
-//│ ║  l.38: 	object Foo
+//│ ║  l.39: 	object Foo
 //│ ╙──      	^^^^^^^^^^
 //│ ╔══[INTERNAL ERROR] Compiler reached an unsupported state: Unexpected class storage for Foo: parameters=None, independent=None
 //│ ╟── The compilation result may be incorrect.
@@ -60,57 +61,36 @@ fun Foo = 1
 object Foo
 class Foo
 //│ ╔══[COMPILATION ERROR] Illegal overloading of function 'Foo'
-//│ ║  l.59: 	fun Foo = 1
+//│ ║  l.60: 	fun Foo = 1
 //│ ║        	^^^^^^^^^^^
 //│ ╟── with object of the same name
-//│ ║  l.60: 	object Foo
+//│ ║  l.61: 	object Foo
 //│ ╙──      	^^^^^^^^^^
-//│ ╔══[COMPILATION ERROR] Not yet supported: overloading of function 'Foo'
-//│ ║  l.59: 	fun Foo = 1
-//│ ║        	^^^^^^^^^^^
-//│ ╟── with class of the same name
-//│ ║  l.61: 	class Foo
-//│ ╙──      	^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Illegal overloading of class 'Foo'
-//│ ║  l.61: 	class Foo
+//│ ║  l.62: 	class Foo
 //│ ║        	^^^^^^^^^
 //│ ╟── with object of the same name
-//│ ║  l.60: 	object Foo
+//│ ║  l.61: 	object Foo
 //│ ╙──      	^^^^^^^^^^
 
 
-:todo // TODO: support
-:e
+// Class and module companions can have a function with the same name.
 class Foo
 fun Foo = 1
-//│ ╔══[COMPILATION ERROR] Not yet supported: overloading of function 'Foo'
-//│ ║  l.85: 	fun Foo = 1
-//│ ║        	^^^^^^^^^^^
-//│ ╟── with class of the same name
-//│ ║  l.84: 	class Foo
-//│ ╙──      	^^^^^^^^^
 
-// TODO: support
-:e
 fun Foo = 1
 module Foo
-//│ ╔══[COMPILATION ERROR] Not yet supported: overloading of function 'Foo'
-//│ ║  l.95: 	fun Foo = 1
-//│ ║        	^^^^^^^^^^^
-//│ ╟── with module of the same name
-//│ ║  l.96: 	module Foo
-//│ ╙──      	^^^^^^^^^^
 
 // TODO: support
 :e
 val Foo = 1
 module Foo
 //│ ╔══[COMPILATION ERROR] Not yet supported: overloading of value 'Foo'
-//│ ║  l.106: 	val Foo = 1
-//│ ║         	^^^^^^^^^^^
+//│ ║  l.86: 	val Foo = 1
+//│ ║        	^^^^^^^^^^^
 //│ ╟── with module of the same name
-//│ ║  l.107: 	module Foo
-//│ ╙──       	^^^^^^^^^^
+//│ ║  l.87: 	module Foo
+//│ ╙──      	^^^^^^^^^^
 //│ Foo = class Foo
 
 
@@ -118,11 +98,11 @@ module Foo
 fun (**) f1(a, b) = "[" + a + " * " + b + "]"
 fun (**) f2(a, b) = "(" + a + " + " + b + ")"
 //│ ╔══[COMPILATION ERROR] Symbolic name '**' of definition 'f1' is already used
-//│ ║  l.118: 	fun (**) f1(a, b) = "[" + a + " * " + b + "]"
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.98: 	fun (**) f1(a, b) = "[" + a + " * " + b + "]"
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── by sibling member 'f2'
-//│ ║  l.119: 	fun (**) f2(a, b) = "(" + a + " + " + b + ")"
-//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.99: 	fun (**) f2(a, b) = "(" + a + " + " + b + ")"
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 1 ** 2
 //│ = "(1 + 2)"
@@ -132,10 +112,10 @@ fun (**) t() = 0
 fun (++) t() = 1
 //│ ╔══[COMPILATION ERROR] Multiple definitions of symbol 't'
 //│ ╟── defined here
-//│ ║  l.131: 	fun (**) t() = 0
+//│ ║  l.111: 	fun (**) t() = 0
 //│ ║         	^^^^^^^^^^^^^^^^
 //│ ╟── defined here
-//│ ║  l.132: 	fun (++) t() = 1
+//│ ║  l.112: 	fun (++) t() = 1
 //│ ╙──       	^^^^^^^^^^^^^^^^
 
 

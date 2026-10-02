@@ -1,3 +1,4 @@
+:.
 :js
 
 
@@ -6,12 +7,26 @@
 js.try_catch(() => 123, id)
 //│ = 123
 
+:e
 js.try_catch(() => 123(), id)
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.11: 	js.try_catch(() => 123(), id)
+//│ ║        	                   ^^^^^
+//│ ╟── Integer literal cannot be called like a function.
+//│ ║  l.11: 	js.try_catch(() => 123(), id)
+//│ ╙──      	                   ^^^
 //│ = TypeError: 123 is not a function
 
+:e
 js.try_catch of
   () => 123()
   case { TypeError then 666, e then throw e }
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.22: 	  () => 123()
+//│ ║        	        ^^^^^
+//│ ╟── Integer literal cannot be called like a function.
+//│ ║  l.22: 	  () => 123()
+//│ ╙──      	        ^^^
 //│ = 666
 
 :re

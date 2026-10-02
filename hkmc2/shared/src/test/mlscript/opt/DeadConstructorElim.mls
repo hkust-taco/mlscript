@@ -1,3 +1,4 @@
+:.
 :js
 :flowBasedOpt debugDce
 
@@ -314,7 +315,7 @@ s(new O)
 //│ dead-constructor-elim > eliminable: Call(member:A²‹term:A⁰›, [[Select(y⁰, Ident(x))]])
 //│ dead-constructor-elim > <<< dead-constructor-elim results <<<
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let tmp; define s⁰ as fun s¹(y) { do y.x﹖; return 2 }; set tmp = new O⁰(); return s¹(tmp)
+//│ let tmp; define s⁰ as fun s¹(y) { do y.x¹; return 2 }; set tmp = new O⁰(); return s¹(tmp)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > get x
 //│ = 2
@@ -332,7 +333,7 @@ t(new O)
 //│ dead-constructor-elim > <<< dead-constructor-elim results <<<
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ let tmp;
-//│ define t⁰ as fun t¹(y) { do y.z﹖; do y.x﹖; do y!"z"; return 2 };
+//│ define t⁰ as fun t¹(y) { do y.z⁰; do y.x¹; do y!"z"; return 2 };
 //│ set tmp = new O⁰();
 //│ return t¹(tmp)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
@@ -356,8 +357,8 @@ u(new O)
 //│ let tmp;
 //│ define u⁰ as fun u¹(y) {
 //│   let b;
-//│   do y.z﹖;
-//│   do y.x﹖;
+//│   do y.z⁰;
+//│   do y.x¹;
 //│   set b = A⁰(undefined);
 //│   match b
 //│     A¹ =>
@@ -382,7 +383,7 @@ v(new O)
 //│ dead-constructor-elim > >>> dead-constructor-elim results >>>
 //│ dead-constructor-elim > <<< dead-constructor-elim results <<<
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let tmp; define v⁰ as fun v¹(y) { return [y.z﹖, y.x﹖] }; set tmp = new O⁰(); return v¹(tmp)
+//│ let tmp; define v⁰ as fun v¹(y) { return [y.z⁰, y.x¹] }; set tmp = new O⁰(); return v¹(tmp)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > get z
 //│ > get x
@@ -402,7 +403,7 @@ w(new O)
 //│ let tmp;
 //│ define w⁰ as fun w¹(y) {
 //│   let b;
-//│   set b = [y.z﹖, 1];
+//│   set b = [y.z⁰, 1];
 //│   match b
 //│     Array(2) =>
 //│       do runtime⁰.Tuple⁰.get⁰(b, 0);
@@ -443,17 +444,20 @@ consume()
 //│ };
 //│ @data
 //│ define Observed⁰ as class Observed² {
-//│   val x¹;
+//│   val x²;
 //│   constructor Observed¹(x) {
-//│     define x¹ as val x² = x;
+//│     define x² as val x³ = x;
 //│     end
 //│   }
 //│ };
 //│ define Consumer¹ as class Consumer² {
-//│   private val x³;
+//│   private val x⁴;
 //│   constructor Consumer⁰(x) {
-//│     set Consumer².this.x³ = x;
-//│     match Consumer².this.x³
+//│     let scrut;
+//│     @private
+//│     define x⁵ as val x⁴ = x;
+//│     set scrut = Consumer².this.x⁴;
+//│     match scrut
 //│       Observed² =>
 //│         end
 //│       else
@@ -500,8 +504,9 @@ capture()
 //│ define capture⁰ as fun capture¹() {
 //│   let instance;
 //│   set instance = new Capturing¹(0, undefined);
-//│   return instance.get﹖()
+//│   return instance.get²()
 //│ };
 //│ return capture¹()
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
-//│ ═══[RUNTIME ERROR] Expected: '[1, 2]', got: '()'
+//│ ═══[RUNTIME ERROR] Error: MLscript call unexpectedly returned `undefined`, the forbidden value.
+//│ ═══[RUNTIME ERROR] Expected: '[1, 2]', got: 'undefined'

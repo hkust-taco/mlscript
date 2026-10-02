@@ -1,3 +1,4 @@
+:.
 :js
 
 
@@ -18,10 +19,14 @@ Example.pubFun
 :e
 :re
 Example.privFun
-//│ ╔══[COMPILATION ERROR] Module 'Example' does not contain member 'privFun'
-//│ ║  l.20: 	Example.privFun
-//│ ╙──      	       ^^^^^^^^
-//│ ═══[RUNTIME ERROR] Error: Access to required field 'privFun' yielded 'undefined'
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.21: 	Example.privFun
+//│ ║        	^^^^^^^^^^^^^^^
+//│ ╟── Module 'Example' does not contain member 'privFun'
+//│ ║  in ../../mlscript-compile/Example.mls
+//│ ║  l.9: 	module Example with ...
+//│ ╙──     	       ^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :re
 Example.assertFail()
@@ -42,6 +47,7 @@ n / 2
 // * Builtin operators can be shadowed/rebound
 
 open Example
+open Example { funnySlash, / }
 
 :sjs
 inc / 2

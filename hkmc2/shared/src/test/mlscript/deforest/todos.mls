@@ -1,3 +1,4 @@
+:.
 :js
 :deforest
 
@@ -40,36 +41,38 @@ let p = AA(AA(AA(10)))
 test(p) + f(p) + test(AA(AA(AA(10)))) + test(B)
 //│ deforest > >>> fusing >>>
 //│ deforest > B⁰ ->
-//│ deforest > 	match: x⁰
+//│ deforest > 	match: scrut⁰
 //│ deforest > AA⁰(tmp⁰) ->
-//│ deforest > 	match: x⁰
-//│ deforest > 	fields: x⁰.x¹
+//│ deforest > 	match: scrut⁰
+//│ deforest > 	fields: scrut⁰.x⁰
 //│ deforest > AA⁰(tmp¹) ->
 //│ deforest > 	match: arg$AA$0$⁰
-//│ deforest > 	fields: arg$AA$0$⁰.x¹
+//│ deforest > 	fields: arg$AA$0$⁰.x⁰
 //│ deforest > AA⁰(10) ->
 //│ deforest > 	match: arg$AA$0$¹
-//│ deforest > 	fields: arg$AA$0$¹.x¹
+//│ deforest > 	fields: arg$AA$0$¹.x⁰
 //│ deforest > <<< fusing <<<
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10, test_28$test, test_25$test, test_28$x_dflt, test_28$x_rest, test_25$x_AA, test_25$x_rest, test_25$arg$AA$0$_AA, test_25$arg$AA$0$_rest, test_25$arg$AA$0$_AA1, test_25$arg$AA$0$_rest1, AA_x, AA_x1, AA_x2, deforest$lam;
+//│ let tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10, test_28$test, test_25$test, test_28$scrut_dflt, test_28$scrut_rest, test_25$scrut_AA, test_25$scrut_rest, test_25$arg$AA$0$_AA, test_25$arg$AA$0$_rest, test_25$arg$AA$0$_AA1, test_25$arg$AA$0$_rest1, AA_x, AA_x1, AA_x2, deforest$lam;
 //│ @private
 //│ define test_28$test as fun test_28$test⁰(x) {
-//│   let t, a, arg$AA$0$, arg$AA$0$1, arg$AA$0$2, tmp11, tmp12, tmp13, tmp14;
-//│   return x(tmp11, t, tmp11, tmp12, tmp13, tmp14)
+//│   let t, scrut, a, arg$AA$0$, arg$AA$0$1, arg$AA$0$2, tmp11, tmp12, tmp13, tmp14;
+//│   set scrut = x;
+//│   return scrut(tmp11, t, tmp11, tmp12, tmp13, tmp14)
 //│ };
 //│ @private
 //│ define test_25$test as fun test_25$test⁰(x) {
-//│   let t, a, arg$AA$0$, arg$AA$0$1, arg$AA$0$2, tmp11, tmp12, tmp13, tmp14;
-//│   return x(t, a, arg$AA$0$, arg$AA$0$1, arg$AA$0$2, tmp11, tmp12, tmp13, tmp14, t, tmp11, tmp12, tmp13, tmp14)
+//│   let t, scrut, a, arg$AA$0$, arg$AA$0$1, arg$AA$0$2, tmp11, tmp12, tmp13, tmp14;
+//│   set scrut = x;
+//│   return scrut(t, a, arg$AA$0$, arg$AA$0$1, arg$AA$0$2, tmp11, tmp12, tmp13, tmp14, t, tmp11, tmp12, tmp13, tmp14)
 //│ };
 //│ @affine(1) @private
-//│ define test_28$x_dflt as fun test_28$x_dflt⁰()(fv_tmp, fv_t, fv_tmp1, fv_tmp2, fv_tmp3, fv_tmp4) {
+//│ define test_28$scrut_dflt as fun test_28$scrut_dflt⁰()(fv_tmp, fv_t, fv_tmp1, fv_tmp2, fv_tmp3, fv_tmp4) {
 //│   set fv_tmp1 = 4;
-//│   return test_28$x_rest⁰(fv_t, fv_tmp1, fv_tmp2, fv_tmp3, fv_tmp4)
+//│   return test_28$scrut_rest⁰(fv_t, fv_tmp1, fv_tmp2, fv_tmp3, fv_tmp4)
 //│ };
 //│ @affine(1) @private
-//│ define test_25$x_AA as fun test_25$x_AA⁰(AA_x3)(fv_t, fv_a, fv_arg$AA$0$, fv_arg$AA$0$1, fv_arg$AA$0$2, fv_tmp, fv_tmp1, fv_tmp2, fv_tmp3, fv_t1, fv_tmp4, fv_tmp5, fv_tmp6, fv_tmp7) {
+//│ define test_25$scrut_AA as fun test_25$scrut_AA⁰(AA_x3)(fv_t, fv_a, fv_arg$AA$0$, fv_arg$AA$0$1, fv_arg$AA$0$2, fv_tmp, fv_tmp1, fv_tmp2, fv_tmp3, fv_t1, fv_tmp4, fv_tmp5, fv_tmp6, fv_tmp7) {
 //│   set fv_arg$AA$0$ = AA_x3;
 //│   return fv_arg$AA$0$(fv_t1, fv_a, fv_arg$AA$0$1, fv_arg$AA$0$2, fv_tmp4, fv_tmp5, fv_tmp6, fv_tmp7, fv_t1, fv_tmp4, fv_tmp5, fv_tmp6, fv_tmp7)
 //│ };
@@ -86,7 +89,7 @@ test(p) + f(p) + test(AA(AA(AA(10)))) + test(B)
 //│   return test_25$arg$AA$0$_rest⁰(fv_t, fv_tmp1, fv_tmp2, fv_tmp3, fv_tmp4)
 //│ };
 //│ @private
-//│ define test_28$x_rest as fun test_28$x_rest⁰(fv_t, fv_tmp, fv_tmp1, fv_tmp2, fv_tmp3) {
+//│ define test_28$scrut_rest as fun test_28$scrut_rest⁰(fv_t, fv_tmp, fv_tmp1, fv_tmp2, fv_tmp3) {
 //│   set fv_t = fv_tmp;
 //│   set fv_tmp1 = +⁰(fv_t, 20);
 //│   set fv_tmp2 = -⁰(fv_tmp1, 3);
@@ -94,7 +97,7 @@ test(p) + f(p) + test(AA(AA(AA(10)))) + test(B)
 //│   return -⁰(fv_tmp3, 1)
 //│ };
 //│ @private
-//│ define test_25$x_rest as fun test_25$x_rest⁰(fv_t, fv_tmp, fv_tmp1, fv_tmp2, fv_tmp3) {
+//│ define test_25$scrut_rest as fun test_25$scrut_rest⁰(fv_t, fv_tmp, fv_tmp1, fv_tmp2, fv_tmp3) {
 //│   set fv_t = fv_tmp;
 //│   set fv_tmp1 = +⁰(fv_t, 20);
 //│   set fv_tmp2 = -⁰(fv_tmp1, 3);
@@ -103,23 +106,24 @@ test(p) + f(p) + test(AA(AA(AA(10)))) + test(B)
 //│ };
 //│ @private
 //│ define test_25$arg$AA$0$_rest as fun test_25$arg$AA$0$_rest¹(fv_t, fv_tmp, fv_tmp1, fv_tmp2, fv_tmp3) {
-//│   return test_25$x_rest⁰(fv_t, fv_tmp, fv_tmp1, fv_tmp2, fv_tmp3)
+//│   return test_25$scrut_rest⁰(fv_t, fv_tmp, fv_tmp1, fv_tmp2, fv_tmp3)
 //│ };
 //│ @private
 //│ define test_25$arg$AA$0$_rest1 as fun test_25$arg$AA$0$_rest⁰(fv_t, fv_tmp, fv_tmp1, fv_tmp2, fv_tmp3) {
 //│   return test_25$arg$AA$0$_rest¹(fv_t, fv_tmp, fv_tmp1, fv_tmp2, fv_tmp3)
 //│ };
 //│ define test⁰ as fun test¹(x) {
-//│   let t, a, arg$AA$0$, arg$AA$0$1, arg$AA$0$2, tmp11, tmp12, tmp13, tmp14;
-//│   match x
+//│   let t, scrut, a, arg$AA$0$, arg$AA$0$1, arg$AA$0$2, tmp11, tmp12, tmp13, tmp14;
+//│   set scrut = x;
+//│   match scrut
 //│     AA¹ =>
-//│       set arg$AA$0$ = x.x¹;
+//│       set arg$AA$0$ = scrut.x⁰;
 //│       match arg$AA$0$
 //│         AA¹ =>
-//│           set arg$AA$0$1 = arg$AA$0$.x¹;
+//│           set arg$AA$0$1 = arg$AA$0$.x⁰;
 //│           match arg$AA$0$1
 //│             AA¹ =>
-//│               set arg$AA$0$2 = arg$AA$0$1.x¹;
+//│               set arg$AA$0$2 = arg$AA$0$1.x⁰;
 //│               set a = arg$AA$0$2;
 //│               set tmp11 = a;
 //│               end
@@ -141,10 +145,11 @@ test(p) + f(p) + test(AA(AA(AA(10)))) + test(B)
 //│   return -⁰(tmp14, 1)
 //│ };
 //│ define f⁰ as fun f¹(a) {
-//│   let arg$AA$0$;
-//│   match a
+//│   let scrut, arg$AA$0$;
+//│   set scrut = a;
+//│   match scrut
 //│     AA¹ =>
-//│       set arg$AA$0$ = a.x¹;
+//│       set arg$AA$0$ = scrut.x⁰;
 //│       match arg$AA$0$
 //│         AA¹ =>
 //│           return 0
@@ -166,10 +171,10 @@ test(p) + f(p) + test(AA(AA(AA(10)))) + test(B)
 //│ set AA_x1 = tmp5;
 //│ set tmp6 = test_25$arg$AA$0$_AA⁰(AA_x1);
 //│ set AA_x2 = tmp6;
-//│ set tmp7 = test_25$x_AA⁰(AA_x2);
+//│ set tmp7 = test_25$scrut_AA⁰(AA_x2);
 //│ set tmp8 = test_25$test⁰(tmp7);
 //│ set tmp9 = +⁰(tmp4, tmp8);
-//│ set deforest$lam = test_28$x_dflt⁰();
+//│ set deforest$lam = test_28$scrut_dflt⁰();
 //│ set tmp10 = test_28$test⁰(deforest$lam);
 //│ return +⁰(tmp9, tmp10)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
@@ -188,17 +193,17 @@ fun test() =
 test()
 //│ deforest > >>> fusing >>>
 //│ deforest > Global⁰(1) ->
-//│ deforest > 	match: scrut⁰
-//│ deforest > 	fields: scrut⁰.x²
+//│ deforest > 	match: scrut¹
+//│ deforest > 	fields: scrut¹.x¹
 //│ deforest > Global⁰(1) ->
-//│ deforest > 	match: scrut⁰
-//│ deforest > 	fields: scrut⁰.x²
+//│ deforest > 	match: scrut¹
+//│ deforest > 	fields: scrut¹.x¹
 //│ deforest > <<< fusing <<<
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'Local'
-//│ ║  l.187: 	    Global(x) then Local(x + 1)
+//│ ║  l.192: 	    Global(x) then Local(x + 1)
 //│ ║         	                   ^^^^^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.185: 	  data class Local(x)
+//│ ║  l.190: 	  data class Local(x)
 //│ ╙──       	             ^^^^^^^^
 //│ ═══[RUNTIME ERROR] ReferenceError: Local is not defined
 //│ ═══[RUNTIME ERROR] Expected: 'Local(2)', got: 'undefined'
@@ -223,9 +228,9 @@ fun f(x) = if x is A then 1
 f(A) + f(A)
 //│ deforest > >>> fusing >>>
 //│ deforest > A⁰ ->
-//│ deforest > 	match: x³
+//│ deforest > 	match: scrut²
 //│ deforest > A⁰ ->
-//│ deforest > 	match: x³
+//│ deforest > 	match: scrut²
 //│ deforest > <<< fusing <<<
 //│ = 2
 
@@ -239,7 +244,7 @@ module Test with
 Test.Test2.foo(AA(2))
 //│ deforest > >>> fusing >>>
 //│ deforest > AA⁰(2) ->
-//│ deforest > 	match: a⁰
-//│ deforest > 	fields: a⁰.x¹
+//│ deforest > 	match: scrut³
+//│ deforest > 	fields: scrut³.x⁰
 //│ deforest > <<< fusing <<<
 //│ ═══[RUNTIME ERROR] ReferenceError: Test2 is not defined

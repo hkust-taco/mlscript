@@ -1,3 +1,4 @@
+:.
 :js
 
 
@@ -51,19 +52,27 @@ new! (id(C))
 :e
 :re
 new id(C)
-//│ ╔══[COMPILATION ERROR] Expected a statically known class; found selection.
-//│ ║  l.53: 	new id(C)
-//│ ║        	    ^^
-//│ ╙── The 'new' keyword requires a statically known class; use the 'new!' operator for dynamic instantiation.
-//│ ═══[RUNTIME ERROR] TypeError: Predef.id is not a constructor
+//│ ╔══[COMPILATION ERROR] Resolution error in object instantiation
+//│ ║  l.54: 	new id(C)
+//│ ║        	^^^^^^^^^
+//│ ╟── Function 'id' cannot be instantiated with keyword 'new'.
+//│ ║  in ../../mlscript-compile/Predef.mls
+//│ ║  l.19: 	fun id(x) = x
+//│ ╙──      	^^^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Cannot resolve the class instantiated here
+//│ ║  l.54: 	new id(C)
+//│ ╙──      	    ^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :e
 new (id(C))
-//│ ╔══[COMPILATION ERROR] Expected a statically known class; found application.
-//│ ║  l.61: 	new (id(C))
-//│ ║        	     ^^^^^
-//│ ╙── The 'new' keyword requires a statically known class; use the 'new!' operator for dynamic instantiation.
-//│ = C
+//│ ╔══[COMPILATION ERROR] Resolution error in object instantiation
+//│ ║  l.68: 	new (id(C))
+//│ ║        	^^^^^^^^^^^
+//│ ╟── Invalid class expression: application
+//│ ║  l.68: 	new (id(C))
+//│ ╙──      	     ^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
 data class C(x, y)
@@ -89,7 +98,7 @@ f(1, 2)
 //│ ═══[RUNTIME ERROR] TypeError: f3 is not a function
 
 
-new! C.class(1, 2)
+new! C!class(1, 2)
 //│ = C(1, 2)
 
 

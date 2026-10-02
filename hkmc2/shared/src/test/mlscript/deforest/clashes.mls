@@ -1,3 +1,4 @@
+:.
 :js
 :deforest
 
@@ -42,8 +43,8 @@ fun f2(p) = if p is A(b) then b + 2
 f1(one) + f2(one) + f2(two)
 //│ deforest > >>> fusing >>>
 //│ deforest > A⁰(x⁰) ->
-//│ deforest > 	match: p⁰
-//│ deforest > 	fields: p⁰.x¹
+//│ deforest > 	match: scrut⁰
+//│ deforest > 	fields: scrut⁰.x¹
 //│ deforest > <<< fusing <<<
 //│ = 9
 

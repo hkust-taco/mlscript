@@ -1,3 +1,4 @@
+:.
 :js
 
 :global
@@ -5,7 +6,7 @@
 
 
 :silent
-declare val console
+declare val console: {log: Function}
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ 
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
@@ -26,7 +27,7 @@ console.log("b")
 let l = console.log
 l(123)
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let l; l = globalThis.console.log; return runtime.safeCall(l(123))
+//│ let l; l = globalThis.console.log; return runtime.safeCall(globalThis.console.log(123))
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > 123
 //│ l = fun log

@@ -1,3 +1,4 @@
+:.
 :js
 :deforest
 
@@ -45,11 +46,11 @@ fun bar(v) = if v is
 foo(bar, 123)
 //│ deforest > >>> fusing >>>
 //│ deforest > A⁰ ->
-//│ deforest > 	match: v⁰
+//│ deforest > 	match: scrut⁰
 //│ deforest > A⁰ ->
-//│ deforest > 	match: v⁰
+//│ deforest > 	match: scrut⁰
 //│ deforest > B⁰ ->
-//│ deforest > 	match: v⁰
+//│ deforest > 	match: scrut⁰
 //│ deforest > <<< fusing <<<
 //│ = 1
 

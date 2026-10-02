@@ -1,3 +1,4 @@
+:.
 :js
 :noInline
 
@@ -300,7 +301,7 @@ data class Foo(x) with
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 
-fun foo(f) =
+fun foo(f: {oops: Int}) =
   f.oops
 
 
@@ -308,7 +309,7 @@ foo(Foo(42))
 //│ = 42
 
 
-fun foo(f) =
+fun foo(f: {oops: Int}) =
   f.oops
 
 data class Foo(x) with
@@ -317,8 +318,15 @@ data class Foo(x) with
 foo(Foo(42))
 //│ = 42
 
+:e
 :re
 foo(Foo(42))()
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.323: 	foo(Foo(42))()
+//│ ║         	^^^^^^^^^^^^^^
+//│ ╟── Value of type 'Int' cannot be called like a function.
+//│ ║  l.312: 	fun foo(f: {oops: Int}) =
+//│ ╙──       	                  ^^^
 //│ ═══[RUNTIME ERROR] TypeError: baseCall3 is not a function
 
 

@@ -1,3 +1,4 @@
+:.
 :js
 :deforest
 
@@ -30,12 +31,9 @@ fun c(x) = if x is
 c(AA(2))
 //│ deforest > >>> fusing >>>
 //│ deforest > A⁰ ->
-//│ deforest > 	match: A⁰
+//│ deforest > 	match: scrut⁰
 //│ deforest > A⁰ ->
-//│ deforest > 	match: A⁰
-//│ deforest > AA⁰(2) ->
-//│ deforest > 	match: x⁰
-//│ deforest > 	fields: x⁰.x¹
+//│ deforest > 	match: scrut⁰
 //│ deforest > <<< fusing <<<
 //│ = 2
 
@@ -48,10 +46,7 @@ fun c(x, y) = if x is
 c(AA(2), A)
 //│ deforest > >>> fusing >>>
 //│ deforest > A⁰ ->
-//│ deforest > 	match: y⁰
-//│ deforest > AA⁰(2) ->
-//│ deforest > 	match: x²
-//│ deforest > 	fields: x².x¹
+//│ deforest > 	match: scrut¹
 //│ deforest > <<< fusing <<<
 //│ = 2
 
@@ -66,10 +61,7 @@ fun p() = AA(2)
 c(p(), A)
 //│ deforest > >>> fusing >>>
 //│ deforest > A⁰ ->
-//│ deforest > 	match: y¹
-//│ deforest > AA⁰(2) ->
-//│ deforest > 	match: x³
-//│ deforest > 	fields: x³.x¹
+//│ deforest > 	match: scrut²
 //│ deforest > <<< fusing <<<
 //│ = 2
 
@@ -86,10 +78,7 @@ fun p() = AA(2)
 c(p(), A)
 //│ deforest > >>> fusing >>>
 //│ deforest > A⁰ ->
-//│ deforest > 	match: y²
-//│ deforest > AA⁰(2) ->
-//│ deforest > 	match: x⁴
-//│ deforest > 	fields: x⁴.x¹
+//│ deforest > 	match: scrut³
 //│ deforest > <<< fusing <<<
 //│ = 3
 
@@ -105,22 +94,22 @@ fun g(x) = if x is
 f(AA(AA(AA(AA(AA(A))))))
 //│ deforest > >>> fusing >>>
 //│ deforest > AA⁰(tmp⁰) ->
-//│ deforest > 	match: x⁵
-//│ deforest > 	fields: x⁵.x¹
+//│ deforest > 	match: scrut⁴
+//│ deforest > 	fields: scrut⁴.x⁰
 //│ deforest > AA⁰(tmp¹) ->
 //│ deforest > 	match: arg$AA$0$⁰
-//│ deforest > 	fields: arg$AA$0$⁰.x¹
+//│ deforest > 	fields: arg$AA$0$⁰.x⁰
 //│ deforest > AA⁰(tmp²) ->
-//│ deforest > 	match: x⁶
-//│ deforest > 	fields: x⁶.x¹
+//│ deforest > 	match: scrut⁵
+//│ deforest > 	fields: scrut⁵.x⁰
 //│ deforest > AA⁰(tmp³) ->
-//│ deforest > 	match: x⁵
-//│ deforest > 	fields: x⁵.x¹
+//│ deforest > 	match: scrut⁴
+//│ deforest > 	fields: scrut⁴.x⁰
 //│ deforest > AA⁰(A⁰) ->
 //│ deforest > 	match: arg$AA$0$⁰
-//│ deforest > 	fields: arg$AA$0$⁰.x¹
+//│ deforest > 	fields: arg$AA$0$⁰.x⁰
 //│ deforest > A⁰ ->
-//│ deforest > 	match: x⁶
+//│ deforest > 	match: scrut⁵
 //│ deforest > <<< fusing <<<
 //│ = 42
 
@@ -130,11 +119,11 @@ fun f(x) = if x is
 f(AA(AA(A)))
 //│ deforest > >>> fusing >>>
 //│ deforest > AA⁰(tmp⁴) ->
-//│ deforest > 	match: x⁷
-//│ deforest > 	fields: x⁷.x¹
+//│ deforest > 	match: scrut⁶
+//│ deforest > 	fields: scrut⁶.x⁰
 //│ deforest > AA⁰(A⁰) ->
 //│ deforest > 	match: arg$AA$0$¹
-//│ deforest > 	fields: arg$AA$0$¹.x¹
+//│ deforest > 	fields: arg$AA$0$¹.x⁰
 //│ deforest > <<< fusing <<<
 //│ = A
 
@@ -145,11 +134,11 @@ fun p() = AA(AA(A))
 f(p())
 //│ deforest > >>> fusing >>>
 //│ deforest > AA⁰(tmp⁵) ->
-//│ deforest > 	match: x⁸
-//│ deforest > 	fields: x⁸.x¹
+//│ deforest > 	match: scrut⁷
+//│ deforest > 	fields: scrut⁷.x⁰
 //│ deforest > AA⁰(A⁰) ->
 //│ deforest > 	match: arg$AA$0$²
-//│ deforest > 	fields: arg$AA$0$².x¹
+//│ deforest > 	fields: arg$AA$0$².x⁰
 //│ deforest > <<< fusing <<<
 //│ = A
 
@@ -165,11 +154,8 @@ fun c(x, y) =
 c(AA(2), 10)
 //│ deforest > >>> fusing >>>
 //│ deforest > A⁰ ->
-//│ deforest > 	match: A⁰
+//│ deforest > 	match: scrut⁸
 //│ deforest > A⁰ ->
-//│ deforest > 	match: A⁰
-//│ deforest > AA⁰(2) ->
-//│ deforest > 	match: x⁹
-//│ deforest > 	fields: x⁹.x¹
+//│ deforest > 	match: scrut⁸
 //│ deforest > <<< fusing <<<
 //│ = 12

@@ -1,3 +1,4 @@
+:.
 :js
 :deforest
 
@@ -36,14 +37,14 @@ let a = AA(AA(3))
 f(a, 2) + g(a) + f(BB(3), 2) + f(AA(AA(4)), 5)
 //│ deforest > >>> fusing >>>
 //│ deforest > AA⁰(tmp⁰) ->
-//│ deforest > 	match: x⁰
-//│ deforest > 	fields: x⁰.x¹
+//│ deforest > 	match: scrut⁰
+//│ deforest > 	fields: scrut⁰.x⁰
 //│ deforest > AA⁰(4) ->
-//│ deforest > 	match: a⁰
-//│ deforest > 	fields: a⁰.x¹
+//│ deforest > 	match: scrut¹
+//│ deforest > 	fields: scrut¹.x⁰
 //│ deforest > BB⁰(3) ->
-//│ deforest > 	match: x⁰
-//│ deforest > 	fields: x⁰.x²
+//│ deforest > 	match: scrut⁰
+//│ deforest > 	fields: scrut⁰.x¹
 //│ deforest > <<< fusing <<<
 //│ = 37
 //│ a = AA(AA(3))
@@ -60,17 +61,17 @@ fun f(x, y) =
 f(AA(AA(3)), 9) + f(AA(AA(4)), 10)
 //│ deforest > >>> fusing >>>
 //│ deforest > AA⁰(tmp¹) ->
-//│ deforest > 	match: x³
-//│ deforest > 	fields: x³.x¹
+//│ deforest > 	match: scrut²
+//│ deforest > 	fields: scrut².x⁰
 //│ deforest > AA⁰(4) ->
-//│ deforest > 	match: a¹
-//│ deforest > 	fields: a¹.x¹
+//│ deforest > 	match: scrut³
+//│ deforest > 	fields: scrut³.x⁰
 //│ deforest > AA⁰(tmp²) ->
-//│ deforest > 	match: x³
-//│ deforest > 	fields: x³.x¹
+//│ deforest > 	match: scrut²
+//│ deforest > 	fields: scrut².x⁰
 //│ deforest > AA⁰(3) ->
-//│ deforest > 	match: a¹
-//│ deforest > 	fields: a¹.x¹
+//│ deforest > 	match: scrut³
+//│ deforest > 	fields: scrut³.x⁰
 //│ deforest > <<< fusing <<<
 //│ = 30
 
@@ -86,11 +87,11 @@ fun f(x) =
 f(AA(AA(3)))
 //│ deforest > >>> fusing >>>
 //│ deforest > AA⁰(tmp³) ->
-//│ deforest > 	match: x⁴
-//│ deforest > 	fields: x⁴.x¹
+//│ deforest > 	match: scrut⁴
+//│ deforest > 	fields: scrut⁴.x⁰
 //│ deforest > AA⁰(3) ->
-//│ deforest > 	match: a²
-//│ deforest > 	fields: a².x¹
+//│ deforest > 	match: scrut⁵
+//│ deforest > 	fields: scrut⁵.x⁰
 //│ deforest > <<< fusing <<<
 //│ = 5
 
@@ -104,17 +105,17 @@ fun f(x) =
 f(AA(AA(A))) + f(AA(AA(A)))
 //│ deforest > >>> fusing >>>
 //│ deforest > AA⁰(tmp⁴) ->
-//│ deforest > 	match: x⁵
-//│ deforest > 	fields: x⁵.x¹
+//│ deforest > 	match: scrut⁶
+//│ deforest > 	fields: scrut⁶.x⁰
 //│ deforest > AA⁰(A⁰) ->
 //│ deforest > 	match: arg$AA$0$⁰
-//│ deforest > 	fields: arg$AA$0$⁰.x¹
+//│ deforest > 	fields: arg$AA$0$⁰.x⁰
 //│ deforest > AA⁰(tmp⁵) ->
-//│ deforest > 	match: x⁵
-//│ deforest > 	fields: x⁵.x¹
+//│ deforest > 	match: scrut⁶
+//│ deforest > 	fields: scrut⁶.x⁰
 //│ deforest > AA⁰(A⁰) ->
 //│ deforest > 	match: arg$AA$0$⁰
-//│ deforest > 	fields: arg$AA$0$⁰.x¹
+//│ deforest > 	fields: arg$AA$0$⁰.x⁰
 //│ deforest > <<< fusing <<<
 //│ = "A3A3"
 
@@ -126,11 +127,11 @@ fun c2(x) = if x is
 c2(AA(AA(0)))
 //│ deforest > >>> fusing >>>
 //│ deforest > AA⁰(tmp⁶) ->
-//│ deforest > 	match: x⁶
-//│ deforest > 	fields: x⁶.x¹
+//│ deforest > 	match: scrut⁷
+//│ deforest > 	fields: scrut⁷.x⁰
 //│ deforest > AA⁰(0) ->
 //│ deforest > 	match: arg$AA$0$¹
-//│ deforest > 	fields: arg$AA$0$¹.x¹
+//│ deforest > 	fields: arg$AA$0$¹.x⁰
 //│ deforest > <<< fusing <<<
 //│ = 0
 
@@ -142,11 +143,11 @@ fun f(a) = if a is
 f(AA(BB(B)))
 //│ deforest > >>> fusing >>>
 //│ deforest > AA⁰(tmp⁷) ->
-//│ deforest > 	match: a³
-//│ deforest > 	fields: a³.x¹
+//│ deforest > 	match: scrut⁸
+//│ deforest > 	fields: scrut⁸.x⁰
 //│ deforest > BB⁰(B⁰) ->
 //│ deforest > 	match: arg$AA$0$²
-//│ deforest > 	fields: arg$AA$0$².x²
+//│ deforest > 	fields: arg$AA$0$².x¹
 //│ deforest > B⁰ ->
 //│ deforest > 	match: arg$BB$0$⁰
 //│ deforest > <<< fusing <<<
@@ -164,23 +165,23 @@ fun test(x, y, z, i) = if x is
 test(AA(1), AA(2), BB(3), 4) + test(AA(1), AA(2), BB(3), 4)
 //│ deforest > >>> fusing >>>
 //│ deforest > BB⁰(3) ->
-//│ deforest > 	match: z⁰
-//│ deforest > 	fields: z⁰.x²
+//│ deforest > 	match: scrut⁹
+//│ deforest > 	fields: scrut⁹.x¹
 //│ deforest > AA⁰(2) ->
-//│ deforest > 	match: y⁰
-//│ deforest > 	fields: y⁰.x¹
+//│ deforest > 	match: scrut¹⁰
+//│ deforest > 	fields: scrut¹⁰.x⁰
 //│ deforest > AA⁰(1) ->
-//│ deforest > 	match: x⁷
-//│ deforest > 	fields: x⁷.x¹
+//│ deforest > 	match: scrut¹¹
+//│ deforest > 	fields: scrut¹¹.x⁰
 //│ deforest > BB⁰(3) ->
-//│ deforest > 	match: z⁰
-//│ deforest > 	fields: z⁰.x²
+//│ deforest > 	match: scrut⁹
+//│ deforest > 	fields: scrut⁹.x¹
 //│ deforest > AA⁰(2) ->
-//│ deforest > 	match: y⁰
-//│ deforest > 	fields: y⁰.x¹
+//│ deforest > 	match: scrut¹⁰
+//│ deforest > 	fields: scrut¹⁰.x⁰
 //│ deforest > AA⁰(1) ->
-//│ deforest > 	match: x⁷
-//│ deforest > 	fields: x⁷.x¹
+//│ deforest > 	match: scrut¹¹
+//│ deforest > 	fields: scrut¹¹.x⁰
 //│ deforest > <<< fusing <<<
 //│ = 10
 
@@ -199,14 +200,14 @@ fun aa(x) = AA(x)
 let cc = CC("cc")
 f1(aa(BB(cc))) + f2(aa(BB(CC(0)))) + f3(cc)
 //│ deforest > >>> fusing >>>
-//│ deforest > AA⁰(x⁸) ->
-//│ deforest > 	match: x⁹
-//│ deforest > AA⁰(x⁸) ->
-//│ deforest > 	match: x¹⁰
-//│ deforest > 	fields: x¹⁰.x¹
+//│ deforest > AA⁰(x²) ->
+//│ deforest > 	match: scrut¹²
+//│ deforest > AA⁰(x²) ->
+//│ deforest > 	match: scrut¹³
+//│ deforest > 	fields: scrut¹³.x⁰
 //│ deforest > BB⁰(cc⁰) ->
-//│ deforest > 	match: x1⁰
-//│ deforest > 	fields: x1⁰.x²
+//│ deforest > 	match: scrut¹⁴
+//│ deforest > 	fields: scrut¹⁴.x¹
 //│ deforest > <<< fusing <<<
 //│ = "ccf2f3cc"
 //│ cc = CC("cc")
@@ -222,11 +223,8 @@ fun c(x, y) = if x is
 let y = A in
   c(AA(2), y)
 //│ deforest > >>> fusing >>>
-//│ deforest > AA⁰(2) ->
-//│ deforest > 	match: x¹¹
-//│ deforest > 	fields: x¹¹.x¹
 //│ deforest > A⁰ ->
-//│ deforest > 	match: y¹
+//│ deforest > 	match: scrut¹⁵
 //│ deforest > <<< fusing <<<
 //│ = 4
 
@@ -241,10 +239,6 @@ fun c2(y) = if y is A then 3
 let y = A in
   c(AA(2), y) + c2(y)
 //│ deforest > >>> fusing >>>
-//│ deforest > AA⁰(2) ->
-//│ deforest > 	match: x¹²
-//│ deforest > 	fields: x¹².x¹
-//│ deforest > 	fields: x¹².x¹
 //│ deforest > <<< fusing <<<
 //│ = 9
 
@@ -262,8 +256,8 @@ let p = AA(AA(AA("10")))
 test(p) + f(p) + test(AA(A))
 //│ deforest > >>> fusing >>>
 //│ deforest > AA⁰(A⁰) ->
-//│ deforest > 	match: x¹³
-//│ deforest > 	fields: x¹³.x¹
+//│ deforest > 	match: scrut¹⁶
+//│ deforest > 	fields: scrut¹⁶.x⁰
 //│ deforest > A⁰ ->
 //│ deforest > 	match: arg$AA$0$³
 //│ deforest > <<< fusing <<<
@@ -287,30 +281,21 @@ fun f(x, y) =
 let aa = AA(3)
 f(aa, 3) + f(aa, 4)
 //│ deforest > >>> fusing >>>
-//│ deforest > BB⁰(tmp⁸) ->
-//│ deforest > 	match: tmp⁹
-//│ deforest > 	fields: tmp⁹.x²
 //│ deforest > AA⁰(2) ->
-//│ deforest > 	match: scrut⁰
-//│ deforest > 	fields: scrut⁰.x¹
+//│ deforest > 	match: scrut¹⁷
+//│ deforest > 	fields: scrut¹⁷.x⁰
 //│ deforest > AA⁰(3) ->
-//│ deforest > 	match: scrut¹
-//│ deforest > BB⁰(tmp⁸) ->
-//│ deforest > 	match: tmp⁹
-//│ deforest > 	fields: tmp⁹.x²
+//│ deforest > 	match: scrut¹⁸
 //│ deforest > AA⁰(2) ->
-//│ deforest > 	match: scrut⁰
-//│ deforest > 	fields: scrut⁰.x¹
+//│ deforest > 	match: scrut¹⁷
+//│ deforest > 	fields: scrut¹⁷.x⁰
 //│ deforest > AA⁰(3) ->
-//│ deforest > 	match: scrut¹
-//│ deforest > BB⁰(tmp⁸) ->
-//│ deforest > 	match: tmp⁹
-//│ deforest > 	fields: tmp⁹.x²
+//│ deforest > 	match: scrut¹⁸
 //│ deforest > AA⁰(2) ->
-//│ deforest > 	match: scrut⁰
-//│ deforest > 	fields: scrut⁰.x¹
+//│ deforest > 	match: scrut¹⁷
+//│ deforest > 	fields: scrut¹⁷.x⁰
 //│ deforest > AA⁰(3) ->
-//│ deforest > 	match: scrut¹
+//│ deforest > 	match: scrut¹⁸
 //│ deforest > <<< fusing <<<
 //│ = 13
 //│ aa = AA(3)
@@ -329,23 +314,23 @@ fun test(n, p, q) =
 test(3, AA(2), AA(3)) + test(3, AA(2), AA(3))
 //│ deforest > >>> fusing >>>
 //│ deforest > AA⁰(0) ->
-//│ deforest > 	match: scrut²
+//│ deforest > 	match: scrut¹⁹
 //│ deforest > AA⁰(0) ->
-//│ deforest > 	match: scrut²
+//│ deforest > 	match: scrut¹⁹
 //│ deforest > AA⁰(3) ->
-//│ deforest > 	match: q⁰
-//│ deforest > 	fields: q⁰.x¹
+//│ deforest > 	match: scrut²⁰
+//│ deforest > 	fields: scrut²⁰.x⁰
 //│ deforest > AA⁰(2) ->
-//│ deforest > 	match: p⁰
-//│ deforest > 	fields: p⁰.x¹
+//│ deforest > 	match: scrut²¹
+//│ deforest > 	fields: scrut²¹.x⁰
 //│ deforest > AA⁰(0) ->
-//│ deforest > 	match: scrut²
+//│ deforest > 	match: scrut¹⁹
 //│ deforest > AA⁰(3) ->
-//│ deforest > 	match: q⁰
-//│ deforest > 	fields: q⁰.x¹
+//│ deforest > 	match: scrut²⁰
+//│ deforest > 	fields: scrut²⁰.x⁰
 //│ deforest > AA⁰(2) ->
-//│ deforest > 	match: p⁰
-//│ deforest > 	fields: p⁰.x¹
+//│ deforest > 	match: scrut²¹
+//│ deforest > 	fields: scrut²¹.x⁰
 //│ deforest > <<< fusing <<<
 //│ = 16
 
@@ -369,17 +354,17 @@ fun c(a) = if a is A then 0
 test(1, AA(2), AA(3), a) + test(2, AA(2), AA(3), a) + c(a)
 //│ deforest > >>> fusing >>>
 //│ deforest > AA⁰(3) ->
-//│ deforest > 	match: q¹
-//│ deforest > 	fields: q¹.x¹
+//│ deforest > 	match: scrut²²
+//│ deforest > 	fields: scrut²².x⁰
 //│ deforest > AA⁰(2) ->
-//│ deforest > 	match: p¹
-//│ deforest > 	fields: p¹.x¹
+//│ deforest > 	match: scrut²³
+//│ deforest > 	fields: scrut²³.x⁰
 //│ deforest > AA⁰(3) ->
-//│ deforest > 	match: q¹
-//│ deforest > 	fields: q¹.x¹
+//│ deforest > 	match: scrut²²
+//│ deforest > 	fields: scrut²².x⁰
 //│ deforest > AA⁰(2) ->
-//│ deforest > 	match: p¹
-//│ deforest > 	fields: p¹.x¹
+//│ deforest > 	match: scrut²³
+//│ deforest > 	fields: scrut²³.x⁰
 //│ deforest > <<< fusing <<<
 //│ = 13
 //│ a = A
@@ -399,23 +384,23 @@ fun test(x, y, z, i) =
 test(AA(1), AA(2), BB(3), 4) + test(AA(1), AA(2), BB(3), 4)
 //│ deforest > >>> fusing >>>
 //│ deforest > BB⁰(3) ->
-//│ deforest > 	match: z¹
-//│ deforest > 	fields: z¹.x²
+//│ deforest > 	match: scrut²⁴
+//│ deforest > 	fields: scrut²⁴.x¹
 //│ deforest > AA⁰(2) ->
-//│ deforest > 	match: y²
-//│ deforest > 	fields: y².x¹
+//│ deforest > 	match: scrut²⁵
+//│ deforest > 	fields: scrut²⁵.x⁰
 //│ deforest > AA⁰(1) ->
-//│ deforest > 	match: x¹⁴
-//│ deforest > 	fields: x¹⁴.x¹
+//│ deforest > 	match: scrut²⁶
+//│ deforest > 	fields: scrut²⁶.x⁰
 //│ deforest > BB⁰(3) ->
-//│ deforest > 	match: z¹
-//│ deforest > 	fields: z¹.x²
+//│ deforest > 	match: scrut²⁴
+//│ deforest > 	fields: scrut²⁴.x¹
 //│ deforest > AA⁰(2) ->
-//│ deforest > 	match: y²
-//│ deforest > 	fields: y².x¹
+//│ deforest > 	match: scrut²⁵
+//│ deforest > 	fields: scrut²⁵.x⁰
 //│ deforest > AA⁰(1) ->
-//│ deforest > 	match: x¹⁴
-//│ deforest > 	fields: x¹⁴.x¹
+//│ deforest > 	match: scrut²⁶
+//│ deforest > 	fields: scrut²⁶.x⁰
 //│ deforest > <<< fusing <<<
 //│ = 18
 
@@ -434,23 +419,23 @@ fun test(x, y, z, i) =
 test(AA(1), AA(2), BB(3), 4) + test(AA(1), BB(2), BB(3), 4)
 //│ deforest > >>> fusing >>>
 //│ deforest > BB⁰(3) ->
-//│ deforest > 	match: z²
-//│ deforest > 	fields: z².x²
+//│ deforest > 	match: scrut²⁷
+//│ deforest > 	fields: scrut²⁷.x¹
 //│ deforest > BB⁰(2) ->
-//│ deforest > 	match: y³
-//│ deforest > 	fields: y³.x²
+//│ deforest > 	match: scrut²⁸
+//│ deforest > 	fields: scrut²⁸.x¹
 //│ deforest > AA⁰(1) ->
-//│ deforest > 	match: x¹⁵
-//│ deforest > 	fields: x¹⁵.x¹
+//│ deforest > 	match: scrut²⁹
+//│ deforest > 	fields: scrut²⁹.x⁰
 //│ deforest > BB⁰(3) ->
-//│ deforest > 	match: z²
-//│ deforest > 	fields: z².x²
+//│ deforest > 	match: scrut²⁷
+//│ deforest > 	fields: scrut²⁷.x¹
 //│ deforest > AA⁰(2) ->
-//│ deforest > 	match: y³
-//│ deforest > 	fields: y³.x¹
+//│ deforest > 	match: scrut²⁸
+//│ deforest > 	fields: scrut²⁸.x⁰
 //│ deforest > AA⁰(1) ->
-//│ deforest > 	match: x¹⁵
-//│ deforest > 	fields: x¹⁵.x¹
+//│ deforest > 	match: scrut²⁹
+//│ deforest > 	fields: scrut²⁹.x⁰
 //│ deforest > <<< fusing <<<
 //│ = 10
 
@@ -466,20 +451,20 @@ fun c(x) = if x is AA then 0
 fun p(x) = AA(x)
 test(p(BB(3))) + test(p(CC(3))) + c(p(A))
 //│ deforest > >>> fusing >>>
-//│ deforest > AA⁰(x¹⁶) ->
-//│ deforest > 	match: x¹⁷
-//│ deforest > AA⁰(x¹⁶) ->
-//│ deforest > 	match: x¹⁸
-//│ deforest > 	fields: x¹⁸.x¹
+//│ deforest > AA⁰(x³) ->
+//│ deforest > 	match: scrut³⁰
+//│ deforest > AA⁰(x³) ->
+//│ deforest > 	match: scrut³¹
+//│ deforest > 	fields: scrut³¹.x⁰
 //│ deforest > CC⁰(3) ->
 //│ deforest > 	match: arg$AA$0$⁴
-//│ deforest > 	fields: arg$AA$0$⁴.x¹⁹
-//│ deforest > AA⁰(x¹⁶) ->
-//│ deforest > 	match: x¹⁸
-//│ deforest > 	fields: x¹⁸.x¹
+//│ deforest > 	fields: arg$AA$0$⁴.x⁴
+//│ deforest > AA⁰(x³) ->
+//│ deforest > 	match: scrut³¹
+//│ deforest > 	fields: scrut³¹.x⁰
 //│ deforest > BB⁰(3) ->
 //│ deforest > 	match: arg$AA$0$⁴
-//│ deforest > 	fields: arg$AA$0$⁴.x²
+//│ deforest > 	fields: arg$AA$0$⁴.x¹
 //│ deforest > <<< fusing <<<
 //│ = 12
 
@@ -501,43 +486,25 @@ fun f(x, y, z, k) =
         AA then m + k
 f(AA(3), 3, true, 10) + f(AA(5), 4, false, 20)
 //│ deforest > >>> fusing >>>
-//│ deforest > BB⁰(tmp¹⁰) ->
-//│ deforest > 	match: tmp¹¹
-//│ deforest > 	fields: tmp¹¹.x²
-//│ deforest > BB⁰(tmp¹²) ->
-//│ deforest > 	match: tmp¹¹
-//│ deforest > 	fields: tmp¹¹.x²
 //│ deforest > AA⁰(2) ->
-//│ deforest > 	match: scrut³
-//│ deforest > 	fields: scrut³.x¹
+//│ deforest > 	match: scrut³²
+//│ deforest > 	fields: scrut³².x⁰
 //│ deforest > AA⁰(3) ->
-//│ deforest > 	match: scrut⁴
-//│ deforest > BB⁰(tmp¹⁰) ->
-//│ deforest > 	match: tmp¹¹
-//│ deforest > 	fields: tmp¹¹.x²
-//│ deforest > BB⁰(tmp¹²) ->
-//│ deforest > 	match: tmp¹¹
-//│ deforest > 	fields: tmp¹¹.x²
+//│ deforest > 	match: scrut³³
 //│ deforest > AA⁰(2) ->
-//│ deforest > 	match: scrut³
-//│ deforest > 	fields: scrut³.x¹
+//│ deforest > 	match: scrut³²
+//│ deforest > 	fields: scrut³².x⁰
 //│ deforest > AA⁰(3) ->
-//│ deforest > 	match: scrut⁴
+//│ deforest > 	match: scrut³³
 //│ deforest > AA⁰(5) ->
-//│ deforest > 	match: x²⁰
-//│ deforest > BB⁰(tmp¹⁰) ->
-//│ deforest > 	match: tmp¹¹
-//│ deforest > 	fields: tmp¹¹.x²
-//│ deforest > BB⁰(tmp¹²) ->
-//│ deforest > 	match: tmp¹¹
-//│ deforest > 	fields: tmp¹¹.x²
+//│ deforest > 	match: scrut³⁴
 //│ deforest > AA⁰(2) ->
-//│ deforest > 	match: scrut³
-//│ deforest > 	fields: scrut³.x¹
+//│ deforest > 	match: scrut³²
+//│ deforest > 	fields: scrut³².x⁰
 //│ deforest > AA⁰(3) ->
-//│ deforest > 	match: scrut⁴
+//│ deforest > 	match: scrut³³
 //│ deforest > AA⁰(3) ->
-//│ deforest > 	match: x²⁰
+//│ deforest > 	match: scrut³⁴
 //│ deforest > <<< fusing <<<
 //│ = 41
 
@@ -573,13 +540,13 @@ fun test(a, b) =
 test(B, B) + test(A, A)
 //│ deforest > >>> fusing >>>
 //│ deforest > A⁰ ->
-//│ deforest > 	match: a⁴
+//│ deforest > 	match: scrut³⁵
 //│ deforest > A⁰ ->
-//│ deforest > 	match: b⁰
+//│ deforest > 	match: scrut³⁶
 //│ deforest > B⁰ ->
-//│ deforest > 	match: a⁴
+//│ deforest > 	match: scrut³⁵
 //│ deforest > B⁰ ->
-//│ deforest > 	match: b⁰
+//│ deforest > 	match: scrut³⁶
 //│ deforest > <<< fusing <<<
 //│ > B
 //│ > 1
@@ -600,15 +567,15 @@ fun sum(ls) = if ls is
 sum(prodDouble(4))
 //│ deforest > >>> fusing >>>
 //│ deforest > Nil⁰ ->
-//│ deforest > 	match: ls⁰
-//│ deforest > Cons⁰(n⁰, tmp¹³) ->
-//│ deforest > 	match: ls⁰
-//│ deforest > 	fields: ls⁰.h⁰
-//│ deforest > 	fields: ls⁰.t⁰
-//│ deforest > Cons⁰(n⁰, tmp¹⁴) ->
-//│ deforest > 	match: ls⁰
-//│ deforest > 	fields: ls⁰.h⁰
-//│ deforest > 	fields: ls⁰.t⁰
+//│ deforest > 	match: scrut³⁷
+//│ deforest > Cons⁰(n⁰, tmp⁸) ->
+//│ deforest > 	match: scrut³⁷
+//│ deforest > 	fields: scrut³⁷.h⁰
+//│ deforest > 	fields: scrut³⁷.t⁰
+//│ deforest > Cons⁰(n⁰, tmp⁹) ->
+//│ deforest > 	match: scrut³⁷
+//│ deforest > 	fields: scrut³⁷.h⁰
+//│ deforest > 	fields: scrut³⁷.t⁰
 //│ deforest > <<< fusing <<<
 //│ = 20
 

@@ -1,3 +1,4 @@
+:.
 :js
 :deforest
 :flowBasedOpt debugEta
@@ -23,8 +24,8 @@ fun c(x) = if x is
 c(p(3))
 //│ deforest > >>> fusing >>>
 //│ deforest > X⁰(x⁰) ->
-//│ deforest > 	match: x¹
-//│ deforest > 	fields: x¹.a⁰
+//│ deforest > 	match: scrut⁰
+//│ deforest > 	fields: scrut⁰.a⁰
 //│ deforest > <<< fusing <<<
 //│ eta-expansion > >>> eta-expansion targets shapes >>>
 //│ eta-expansion > p_4$p: [1, 2]
@@ -42,9 +43,9 @@ fun c(x) = if x is
 c(p(true))
 //│ deforest > >>> fusing >>>
 //│ deforest > A⁰ ->
-//│ deforest > 	match: x²
+//│ deforest > 	match: scrut¹
 //│ deforest > B⁰ ->
-//│ deforest > 	match: x²
+//│ deforest > 	match: scrut¹
 //│ deforest > <<< fusing <<<
 //│ eta-expansion > >>> eta-expansion targets shapes >>>
 //│ eta-expansion > p_7$p: [1, 0]
@@ -61,16 +62,16 @@ fun g(y) = if y is
 g(f(p()))
 //│ deforest > >>> fusing >>>
 //│ deforest > X⁰(tmp⁰) ->
-//│ deforest > 	match: x³
-//│ deforest > 	fields: x³.a⁰
+//│ deforest > 	match: scrut²
+//│ deforest > 	fields: scrut².a⁰
 //│ deforest > Y⁰(O⁰) ->
-//│ deforest > 	match: y⁰
-//│ deforest > 	fields: y⁰.b⁰
+//│ deforest > 	match: scrut³
+//│ deforest > 	fields: scrut³.b⁰
 //│ deforest > <<< fusing <<<
 //│ eta-expansion > >>> eta-expansion targets shapes >>>
 //│ eta-expansion > f_10$f: [1, 2]
 //│ eta-expansion > p_8$p: [0, 2, 2]
-//│ eta-expansion > f_10$x_X: [1, 2, 2]
+//│ eta-expansion > f_10$scrut_X: [1, 2, 2]
 //│ eta-expansion > <<< eta-expansion targets shapes <<<
 //│ = O
 
@@ -84,14 +85,14 @@ fun c(x) = if x is
 c(p(true))
 //│ deforest > >>> fusing >>>
 //│ deforest > X⁰(tmp¹) ->
-//│ deforest > 	match: x⁴
-//│ deforest > 	fields: x⁴.a⁰
+//│ deforest > 	match: scrut⁴
+//│ deforest > 	fields: scrut⁴.a⁰
 //│ deforest > Y⁰(22) ->
 //│ deforest > 	match: arg$X$0$⁰
 //│ deforest > 	fields: arg$X$0$⁰.b⁰
 //│ deforest > X⁰(tmp²) ->
-//│ deforest > 	match: x⁴
-//│ deforest > 	fields: x⁴.a⁰
+//│ deforest > 	match: scrut⁴
+//│ deforest > 	fields: scrut⁴.a⁰
 //│ deforest > Y⁰(33) ->
 //│ deforest > 	match: arg$X$0$⁰
 //│ deforest > 	fields: arg$X$0$⁰.b⁰
@@ -111,14 +112,14 @@ fun main(x) =
 main(3)
 //│ deforest > >>> fusing >>>
 //│ deforest > X⁰(tmp³) ->
-//│ deforest > 	match: x⁵
-//│ deforest > 	fields: x⁵.a⁰
+//│ deforest > 	match: scrut⁵
+//│ deforest > 	fields: scrut⁵.a⁰
 //│ deforest > Y⁰(tmp⁴) ->
 //│ deforest > 	match: arg$X$0$¹
 //│ deforest > 	fields: arg$X$0$¹.b⁰
 //│ deforest > X⁰(tmp³) ->
-//│ deforest > 	match: x⁵
-//│ deforest > 	fields: x⁵.a⁰
+//│ deforest > 	match: scrut⁵
+//│ deforest > 	fields: scrut⁵.a⁰
 //│ deforest > Y⁰(tmp⁴) ->
 //│ deforest > 	match: arg$X$0$¹
 //│ deforest > 	fields: arg$X$0$¹.b⁰
@@ -137,8 +138,8 @@ fun c(x) = if x is
   X(a) then a
 c(p(3))
 //│ deforest > >>> fusing >>>
-//│ deforest > X⁰(x⁶) ->
-//│ deforest > 	match: x⁷
-//│ deforest > 	fields: x⁷.a⁰
+//│ deforest > X⁰(x¹) ->
+//│ deforest > 	match: scrut⁶
+//│ deforest > 	fields: scrut⁶.a⁰
 //│ deforest > <<< fusing <<<
 //│ = 3
