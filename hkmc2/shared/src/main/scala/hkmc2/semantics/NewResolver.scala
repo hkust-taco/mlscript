@@ -867,9 +867,7 @@ class NewResolver:
             nominal.bindings.map((parameter, bound) => parameter -> bound.instantiate(instances))
           nominal.copy(bindings = bindings, parent = nominal.parent.map(instantiateShape(_, instances)))(nominal.annotation)(this)
         case record: RecordTypeShape =>
-          val bindings = instances.map((parameter, instance) => parameter -> instanceType(instance)) ++
-            record.bindings.map((parameter, bound) => parameter -> bound.instantiate(instances))
-          record.copy(bindings = bindings)
+          RecordTypeShape(record.fields.map((name, tpe) => name -> tpe.instantiate(instances)))(record.source, record.declarations)
         case contextual: ContextualShape => contextual.copy(instances = instances.withOverrides(contextual.instances))
         case specialized: SpecializedShape => specialized.copy(
           arguments = specialized.arguments.map(_.instantiate(instances)), instances = instances.withOverrides(specialized.instances))
@@ -902,6 +900,29 @@ class NewResolver:
         ShapeParts(Marked(declaration, marks), instances, S(arguments))
       case source: CoreShape => ShapeParts(Marked(source, marks), TypeSubstitution.empty, N)
 
+  /** Merge only the outer fields, retaining symbolic references at every depth.
+    * Shared names use the same interned Boolean combinations as written types;
+    * recursively selecting a merged field therefore returns to existing typeViews.
+    * No merged shape is embedded in another or used as a new type atom. A finite
+    * set of regular field references yields finitely many normalized field types.
+    * The enclosing typeViews host caches the observation, and combinedTypes caches
+    * field combinations; a separate cache keyed by whole record sets is unnecessary.
+    */
+  private def intersectViews(values: Ls[TermShape])(publish: Listener)(using NewResolverState): Unit =
+    val records = values.collect:
+      case Marked(record: RecordTypeShape, marks) =>
+        RecordTypeShape(record.fields.map((name, tpe) => name -> transportType(tpe, marks :: Nil)))(record.source, record.declarations)
+    records.headOption.foreach: first =>
+      val merged = records.tail.foldLeft(first): (left, right) =>
+        val fields = right.fields.foldLeft(left.fields):
+          case (fields, (name, tpe)) => fields.updated(name, fields.get(name).fold(tpe)(previous =>
+            combinedType(previous.resolution, previous, tpe, false)))
+        RecordTypeShape(fields)(left.source, right.declarations ++ left.declarations)
+      publish(merged)
+    values.distinct.foreach:
+      case Marked(_: RecordTypeShape, _) => ()
+      case other => publish(other)
+
   private def listenTypeViews(tpe: DeclaredType)(listener: Listener)(using NewResolverState): Unit =
     // Equal types can be observed through different input-only arguments. Reuse
     // their semantic host, but report this observation's witness rather than the
@@ -923,6 +944,12 @@ class NewResolver:
             def bind(params: Ls[TyParam])(using NewResolverState): Map[VarSymbol, DeclaredType] =
               typeBindings(current, args, params)
             def next(res: TypeResolution)(using NewResolverState): Unit = follow(declaredType(res, current), noTypeArguments, aliases, publish)
+            // Each type can expose several union alternatives. Form products
+            // within a conjunction, never across separate union clauses.
+            def conjunction(remaining: Ls[DeclaredType], values: Ls[TermShape])(using NewResolverState): Unit = remaining match
+              case head :: tail => follow(head, noTypeArguments, aliases,
+                value => conjunction(tail, value :: values))
+              case Nil => intersectViews(values.reverse)(publish)
             shape match
               case TypeShape.Dynamic => publish(DynShape())
               case TypeShape.Top => publish(OpaqueTypeShape(tpe.resolution.source)(
@@ -1018,11 +1045,18 @@ class NewResolver:
               case TypeShape.Tuple(fields) =>
                 publish(TupleShape(current.resolution.source,
                   fields.map(field => TupleShape.TypedField(declaredType(field, current), Nil)))(this))
-              case TypeShape.Record(source, fields) => publish(RecordTypeShape(source, fields, effectiveBindings(current), current.positive))
+              case TypeShape.Record(source, fields) =>
+                publish(RecordTypeShape(fields.map((field, sign) => field.sym.nme -> declaredType(sign, current)).toMap)(
+                  source, fields.map((field, _) => field.sym.nme -> field).toMap))
               case TypeShape.Union(left, right) => next(left); next(right)
-              case TypeShape.Intersection(left, right) => next(left); next(right)
-              case TypeShape.Combined(formula) => formula.orderedAtoms.foreach: atom =>
-                follow(atom.instantiate(current.instances), noTypeArguments, aliases, publish)
+              case TypeShape.Intersection(left, right) =>
+                conjunction(declaredType(left, current) :: declaredType(right, current) :: Nil, Nil)
+              case TypeShape.Combined(formula) =>
+                // Choose witnesses in source order, independently of set hashing.
+                val clauses = formula.clauses.toList.sortWith((left, right) =>
+                  formula.orderedAtoms.find(atom => left(atom) != right(atom)).exists(left))
+                clauses.foreach: clause =>
+                  conjunction(formula.orderedAtoms.filter(clause).map(_.instantiate(current.instances)).toList, Nil)
               case TypeShape.Negation(_) => publish(OpaqueTypeShape(tpe.resolution.source)(TypeInterfaceReason.Negated(current.resolution.source)))
               case TypeShape.Unit | TypeShape.Abstract =>
                 publish(OpaqueTypeShape(tpe.resolution.source)(TypeInterfaceReason.Unavailable(current.resolution.source)))
@@ -1334,7 +1368,14 @@ class NewResolver:
                       case NoShape => ()
                 case _ => ()
           case _ => ()
-        case TypeShape.Record(_, fields) => observe(constrainRecord(fields, effectiveBindings(tpe), tpe.positive, _, marks))
+        case TypeShape.Intersection(left, right) =>
+          follow(declaredType(left, tpe), noTypeArguments, captures, next)
+          follow(declaredType(right, tpe), noTypeArguments, captures, next)
+        // Every conjunct is required. Disjunctions need alternative matching;
+        // propagating to every branch would instead impose their intersection.
+        case TypeShape.Combined(formula) if formula.clauses.size == 1 =>
+          formula.orderedAtoms.foreach(atom => follow(atom.instantiate(tpe.instances), noTypeArguments, captures, next))
+        case TypeShape.Record(_, fields) => observe(constrainRecord(fields.map((field, sign) => field -> declaredType(sign, tpe)), _, marks))
         case TypeShape.Function(_, _) => observe(constrainFunction(tpe, _, marks))
         case TypeShape.Polymorphic(_, _, body) =>
           follow(declaredType(body, tpe), args, captures, next)
@@ -1406,10 +1447,9 @@ class NewResolver:
     * argument inference and callback checking without refining the annotation
     * with additional properties from an actual record.
     */
-  private def constrainRecord(fields: Ls[(RcdField, TypeResolution)], bindings: Map[VarSymbol, DeclaredType], positive: Bool,
+  private def constrainRecord(fields: Ls[(RcdField, DeclaredType)],
       actual: TermShape, marks: Ls[Marks])(using NewResolverState): Unit =
-    fields.foreach: (field, sign) =>
-      val expected = declaredType(sign, bindings, positive)
+    fields.foreach: (field, expected) =>
       val flow = rstate.fieldProjectionSite(field.sym)
       def receive(value: TermShape)(using NewResolverState): Unit = inferTypeArguments(expected, value, marks)
       def member(info: MemberLookup, instances: TypeSubstitution)(using NewResolverState): Unit = info match
@@ -1422,6 +1462,8 @@ class NewResolver:
             transportShape(instantiateShape(value, instances), inner) match
               case value: TermShape => receive(value)
               case NoShape => ()
+        case MemberLookup.Typed(_, tpe, inner) =>
+          receive(InstanceShape(transportType(tpe.instantiate(instances), inner)))
         case MemberLookup.Dynamic(inner) => DynShape().exit(inner) match
           case value: TermShape => receive(value)
           case NoShape => ()
@@ -1485,7 +1527,7 @@ class NewResolver:
                   case _ => matchLists(ret, tail)
           case Nil => ()
         case Marked(record: RecordTypeShape, _) =>
-          constrainRecord(record.fields, record.bindings, record.positive, actual, marks)
+          constrainRecord(record.fields.toList.map((name, tpe) => record.declarations(name) -> tpe), actual, marks)
         case _ => ()
     actual match
       case Marked(_: UnknownValueShape, _) =>
@@ -2465,6 +2507,11 @@ class NewResolver:
       DeclaredSymShape(member, flow, marks, bindings, annotation, positive))
     publishViewed(host, shape, instances)
 
+  private def publishTyped(host: NewResolvable & ShapeHost, field: RcdField, tpe: DeclaredType,
+      marks: Ls[Marks], instances: TypeSubstitution)(using NewResolverState): Unit =
+    rstate.recordResolution(host, host.resolvedTargets.contains(field.tsym))(host.resolvedTargets ::= field.tsym)
+    publishActivated(host, InstanceShape(transportType(tpe.instantiate(instances), marks)))
+
   private def publishDynamic(host: NewResolvable & ShapeHost, marks: Ls[Marks])(using NewResolverState): Unit =
     DynShape().exit(marks) match
       case shape: TermShape =>
@@ -2493,6 +2540,10 @@ class NewResolver:
             val candidate = prefix -> member
             rstate.recordResolution(ref, ref.resolvedMembers.contains(candidate))(ref.resolvedMembers ::= candidate)
             publishDeclared(ref, member, ref.resSym, bindings, marks, annotation, positive, instances)
+          case MemberLookup.Typed(field, tpe, marks) if rstate.canResolve(ref) || ref.resolvedMembers.contains(prefix -> field.sym) =>
+            val candidate = prefix -> field.sym
+            rstate.recordResolution(ref, ref.resolvedMembers.contains(candidate))(ref.resolvedMembers ::= candidate)
+            publishTyped(ref, field, tpe, marks, instances)
           case MemberLookup.Indexed(_, _) if rstate.canResolve(ref) =>
             resolError(ref, msg"Tuple elements must be selected by index." -> ref.toLoc :: Nil)
           case MemberLookup.Dynamic(marks) if rstate.canResolve(ref) || ref.dynamicPrefixes.contains(prefix) =>
@@ -2577,6 +2628,9 @@ class NewResolver:
       case MemberLookup.Declared(member, bindings, marks, annotation, positive) if rstate.canResolve(sel) || sel.resolvedMembers.contains(member) =>
         rstate.recordResolution(sel, sel.resolvedMembers.contains(member))(sel.resolvedMembers ::= member)
         publishDeclared(sel, member, sel.resSym, bindings, marks, annotation, positive, instances)
+      case MemberLookup.Typed(field, tpe, marks) if rstate.canResolve(sel) || sel.resolvedMembers.contains(field.sym) =>
+        rstate.recordResolution(sel, sel.resolvedMembers.contains(field.sym))(sel.resolvedMembers ::= field.sym)
+        publishTyped(sel, field, tpe, marks, instances)
       case MemberLookup.Indexed(fields, marks) if rstate.canResolve(sel) || sel.tupleIndex == sel.id.name.toIntOption =>
         val index = sel.id.name.toIntOption
         softAssert(index.exists(_ >= 0), "Tuple lookup must identify a nonnegative index")

@@ -330,6 +330,8 @@ enum MemberLookup:
   // Declared members expose signatures only. Their marks transport dependent
   // type arguments; they never authorize reading an implementation's value flow.
   case Declared(member: BlockMemberSymbol, bindings: Map[VarSymbol, DeclaredType], marks: Ls[Marks], annotation: Opt[Term], positive: Bool)
+  // A structural field already has its lexical bindings and intersection applied.
+  case Typed(field: RcdField, tpe: DeclaredType, marks: Ls[Marks])
   // A preceding spread can place several different fields at the same index.
   case Indexed(fields: Ls[TupleShape.Fixed], marks: Ls[Marks])
   case Dynamic(marks: Ls[Marks])
@@ -340,6 +342,7 @@ enum MemberLookup:
     case Contextual(source, instances) => Contextual(source.withMarks(marks), instances)
     case Found(member, inner) => Found(member, inner ::: marks)
     case Declared(member, bindings, inner, annotation, positive) => Declared(member, bindings, inner ::: marks, annotation, positive)
+    case Typed(field, tpe, inner) => Typed(field, tpe, inner ::: marks)
     case Indexed(fields, inner) => Indexed(fields, inner ::: marks)
     case Dynamic(inner) => Dynamic(inner ::: marks)
     case _ => this
@@ -455,15 +458,17 @@ class BaseShape(val defn: ClassLikeDef, val ext: Opt[TermShape]) extends CoreHea
 
 /** A structural annotation exposes only its declared fields. Their symbols belong
   * to the annotation, not to whichever record happens to be passed by a caller.
+  * Field types are deferred references, including for recursive intersections.
+  * Source declarations are witnesses for diagnostics and property selection, not
+  * part of semantic equality: a merged field may have several such witnesses.
   */
-final case class RecordTypeShape(source: Term.Rcd, fields: Ls[(RcdField, TypeResolution)],
-    bindings: Map[VarSymbol, DeclaredType], positive: Bool) extends CoreHeadShape:
+final case class RecordTypeShape(fields: Map[Str, DeclaredType])(
+    val source: Term.Rcd, val declarations: Map[Str, RcdField]) extends CoreHeadShape:
   def describe: Str = "record type"
   def toLoc: Opt[Loc] = source.toLoc
   protected def getMemberImpl(name: Str)(using NewResolverState): MemberLookup =
-    fields.reverseIterator.collectFirst {
-      case (field, _) if field.sym.nme == name => MemberLookup.Declared(field.sym, bindings, Nil, S(source), positive)
-    }.getOrElse(MemberLookup.Missing)
+    fields.get(name).fold[MemberLookup](MemberLookup.Missing)(tpe =>
+      MemberLookup.Typed(declarations(name), tpe, Nil))
 
 /** An instance described by a type, in either position of a constraint. Keep the
   * type reference intact during transport: expanding it to its current positive
@@ -880,7 +885,7 @@ final case class RecordShape(source: Term.Rcd, elements: Ls[RecordShape.Element]
           case Missing => N
           case Found(member: RecordMember, inner) =>
             S(Found(member.copy(mutable = member.mutable || source.mut), inner ::: marks :: Nil))
-          case Found(_: BlockMemberSymbol, _) | Declared(_, _, _, _, _) | Indexed(_, _) =>
+          case Found(_: BlockMemberSymbol, _) | Declared(_, _, _, _, _) | Typed(_, _, _) | Indexed(_, _) =>
             // Record spreads recursively look up RecordShapes, which only create RecordMembers.
             lastWords("Record lookup returned a nominal member")
         spread(shape.getMember(name)).getOrElse(loop(rest))

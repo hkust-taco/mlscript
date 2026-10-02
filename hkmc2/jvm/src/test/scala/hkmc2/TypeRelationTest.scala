@@ -539,3 +539,29 @@ class TypeRelationTest extends AnyFunSuite:
     assert(exporter.isEmpty)
     assert(output.currentShapes.isEmpty)
     detach()
+
+  test("recursive record intersections reuse type views and stop adding graph edges"):
+    // Diff tests check member behavior; this measures graph growth and object
+    // reuse after saturation, which their golden output cannot observe.
+    val h = new Harness
+    import h.given
+    val left = new TypeResolution(Term.UnitVal(), _ => fail("Unexpected type error"))
+    val right = new TypeResolution(Term.UnitVal(), _ => fail("Unexpected type error"))
+    def recursive(resolution: TypeResolution): Unit =
+      val next = RcdField.signature(Term.Lit(Tree.StrLit("next")), Term.UnitVal())
+      val source: Term.Rcd = Term.Rcd(false, List(next))
+      resolution.publish(TypeShape.Record(source, List(next -> resolution)))
+    recursive(left)
+    recursive(right)
+    val intersection = h.tpe(TypeShape.Intersection(left, right))
+    def record(tpe: DeclaredType): RecordTypeShape = h.observe(ContextualType(tpe, Nil)).toList match
+      case (value: RecordTypeShape) :: Nil => value
+      case _ => fail("Expected one merged record")
+    val first = record(intersection)
+    val next = first.fields("next")
+    val saturated = record(next)
+    val counts = (left.inferenceHost.listeners.size, right.inferenceHost.listeners.size)
+    (1 to 1000).foreach: _ =>
+      assert(record(saturated.fields("next")) eq saturated)
+    assert((left.inferenceHost.listeners.size, right.inferenceHost.listeners.size) == counts)
+    assert(h.state.allocatedTypeInstanceCount == 0)

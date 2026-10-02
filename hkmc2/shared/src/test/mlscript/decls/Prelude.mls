@@ -507,4 +507,4 @@ declare class HTMLElement with
 // Shared read interfaces for arrays, strings, and lazy views. Element types are
 // covariant, so using these interfaces does not widen an invariant collection.
 type Indexable[out A] = {length: Int, at: Int -> A, slice: Function}
-type IterableIndexable[out A] = {length: Int, at: Int -> A, slice: Function, iterator: () -> Iterator[A]}
+type IterableIndexable[out A] = Indexable[A] & {iterator: () -> Iterator[A]}
