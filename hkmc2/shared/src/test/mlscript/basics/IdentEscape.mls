@@ -22,3 +22,92 @@ id""
 //│ ╔══[PARSE ERROR] Expected end of input; found error instead
 //│ ║  l.15: 	id""
 //│ ╙──      	^^^^
+
+// Quoted names need not follow ordinary identifier syntax.
+:js
+:expect 123
+fun id"hi there" = 123
+id"hi there"
+//│ = 123
+
+:js
+:expect 42
+fun id"123 + punctuation.!?"(id"argument name") = id"argument name" + 1
+id"123 + punctuation.!?"(41)
+//│ = 42
+
+// Escaping a leading digit must still allocate distinct names when the JS spellings collide.
+:js
+:expect 43
+fun id"0"(x) = x + 1
+fun id"$0"(x) = x + 2
+id"0"(20) + id"$0"(20)
+//│ = 43
+
+// Use the same escape sequences as strings, including alternate spellings of a name.
+:js
+:expect 42
+fun id"quote\" and backslash\\" = 42
+id"quote\u0022 and backslash\u005c"
+//│ = 42
+
+:js
+:expect 42
+fun id"hello\t世界\u{1F600}" = 42
+id"hello\u0009世界😀"
+//│ = 42
+
+// Malformed names must report lexical errors without reading past the input or consuming a newline.
+:pe
+id"
+//│ ╔══[LEXICAL ERROR] unclosed quotation mark
+//│ ║  l.62: 	id"
+//│ ╙──      	   ^
+//│ ╔══[PARSE ERROR] Expected an expression; found error instead
+//│ ║  l.62: 	id"
+//│ ╙──      	^^^
+//│ ╔══[PARSE ERROR] Expected end of input; found error instead
+//│ ║  l.62: 	id"
+//│ ╙──      	^^^
+
+:pe
+id"unterminated
+//│ ╔══[LEXICAL ERROR] unclosed quotation mark
+//│ ║  l.74: 	id"unterminated
+//│ ╙──      	               ^
+//│ ╔══[PARSE ERROR] Expected an expression; found error instead
+//│ ║  l.74: 	id"unterminated
+//│ ╙──      	^^^^^^^^^^^^^^^
+//│ ╔══[PARSE ERROR] Expected end of input; found error instead
+//│ ║  l.74: 	id"unterminated
+//│ ╙──      	^^^^^^^^^^^^^^^
+
+:pe
+id"trailing escape\
+//│ ╔══[LEXICAL ERROR] Expected an escape character
+//│ ║  l.86: 	id"trailing escape\
+//│ ╙──      	                   ^
+//│ ╔══[LEXICAL ERROR] unclosed quotation mark
+//│ ║  l.86: 	id"trailing escape\
+//│ ╙──      	                   ^
+//│ ╔══[PARSE ERROR] Expected an expression; found error instead
+//│ ║  l.86: 	id"trailing escape\
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^
+//│ ╔══[PARSE ERROR] Expected end of input; found error instead
+//│ ║  l.86: 	id"trailing escape\
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^
+
+:pe
+id"unterminated
+let afterUnterminated = 1
+//│ ╔══[LEXICAL ERROR] unclosed quotation mark
+//│ ║  l.101: 	id"unterminated
+//│ ║         	               ^
+//│ ║  l.102: 	let afterUnterminated = 1
+//│ ╙──
+//│ ╔══[PARSE ERROR] Expected an expression; found error instead
+//│ ║  l.101: 	id"unterminated
+//│ ╙──       	^^^^^^^^^^^^^^^
+//│ ╔══[PARSE ERROR] Expected end of input; found error instead
+//│ ║  l.101: 	id"unterminated
+//│ ╙──       	^^^^^^^^^^^^^^^
