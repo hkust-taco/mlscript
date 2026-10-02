@@ -10,7 +10,6 @@ import scala.jdk.CollectionConverters.*
 import org.scalatest.funsuite.AnyFunSuite
 
 import hkmc2.CompilerCache.{ActiveDependencyGraph, ArtifactCache}
-import hkmc2.utils.TraceLogger
 
 
 class CompilerCacheTest extends AnyFunSuite:
@@ -155,17 +154,6 @@ class CompilerCacheTest extends AnyFunSuite:
         paths,
         Config.default(TestFolders.mainTestDir(os.pwd)),
       )
-
-      // Compile shared prerequisites before starting the deadlock deadline: a cold prelude and
-      // runtime can take longer than it under CI load. A and B remain uncached, so the barrier
-      // still forces their builds to hold opposite path locks before either requests its import.
-      locally:
-        given DebugPrinter = new DebugPrinter
-        given TraceLogger = new TraceLogger:
-          override def doTrace: Boolean = false
-        given Raise = diagnostic => fail(s"Unexpected setup diagnostic: ${diagnostic.theMsg}")
-        val prelude = CompilerCtx.get.getPrelude(paths.preludeFile).ctx
-        CompilerCtx.get.getElaboratedBlock(paths.runtimeSourceFile, prelude)
 
       def compile(file: io.Path): Future[Unit] = Future({
         val compiler = MLsCompiler(mkRaise = _ => diagnostic =>
