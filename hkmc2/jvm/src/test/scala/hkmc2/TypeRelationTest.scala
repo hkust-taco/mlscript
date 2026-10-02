@@ -3,7 +3,7 @@ package semantics
 
 import org.scalatest.funsuite.AnyFunSuite
 import scala.collection.mutable.ArrayBuffer
-import hkmc2.syntax.{Fun, Tree}
+import hkmc2.syntax.{Cls, Fun, Tree}
 import hkmc2.utils.*, shorthands.*
 
 
@@ -389,32 +389,60 @@ class TypeRelationTest extends AnyFunSuite:
     assert(right.allocatedTypeInstanceCount == 0)
     detach()
 
-  // Primitive incompatibilities do not yet produce diagnostics, so diff tests
-  // cannot establish that these input obligations were recorded at all. Check
-  // the constraint targets directly, including a whole union versus its parts.
-  test("each concrete upper target receives later bounds and a union stays whole"):
+  test("closed nominal candidates do not multiply along generic substitution paths"):
+    // A worksheet can check the selected member, but cannot detect redundant
+    // candidates that multiply when a constraint cycle crosses generic callers.
+    val h = new Harness
+    import h.given
+    val name: Tree.Ident = Tree.Ident("Closed")
+    val symbol = ClassSymbol(Tree.TypeDef(Cls, name, N), name)
+    val defn = ClassDef.Plain(N, Cls, symbol, BlockMemberSymbol("Closed", Nil), Nil, N,
+      ObjBody(Term.Blk(Nil, Term.UnitVal())), N, Nil, Nil, N)(N)
+    h.state.lexicalTypeBinders(symbol) = Set.empty
+    val original = NominalInstanceView(defn, Map.empty, N)(N)(h.resolver)
+    val scheme = h.tpe(TypeShape.Top).resolution
+    val substitutions = (1 to 16).map: index =>
+      val (parameter, _) = h.parameter(s"A$index")
+      h.state.instantiateTypeParameters(scheme, FlowSymbol.app(), List(parameter))
+    val host = new TermShapeHost
+    var current: TermShape = original
+    (1 to 1000).foreach: index =>
+      current = h.resolver.instantiateShape(current, substitutions(index % substitutions.size))
+      host.publish(current)
+      assert(host.currentShapes.size == 1)
+    assert(h.state.allocatedTypeInstanceCount == substitutions.size)
+
+  test("intersection inputs propagate independently and reuse their subscriptions"):
+    // Diff tests cover inferred interfaces. This also checks that one intersection
+    // component can propagate before the other has any candidates, and that replay
+    // of the relation does not grow subscriptions or allocate parameter instances.
     val h = new Harness
     import h.given
     val (a, at) = h.parameter("A")
-    val one = h.tpe(TypeShape.Unit)
-    val two = h.tpe(TypeShape.Abstract)
-    val writtenUnion = h.tpe(TypeShape.Union(one.resolution, two.resolution))
-    val union = h.resolver.declaredType(writtenUnion.resolution, Map.empty)
+    val (b, bt) = h.parameter("B")
+    val (_, result) = h.parameter("Result")
+    val input = ContextualType(h.tpe(TypeShape.Intersection(at.resolution, bt.resolution)), Nil)
+    val expected = ContextualType(h.tpe(TypeShape.Tuple(result.resolution :: Nil)), Nil)
+    val seen = h.observe(ContextualType(result, Nil))
+    def tuple(value: TermShape): TermShape =
+      InstanceShape(h.tpe(TypeShape.Tuple(h.tpe(TypeShape.Inferred(value)).resolution :: Nil)))
     val first = IntroShape(Term.UnitVal(), N)
     val second = DynShape()
-    h.resolver.publishParameter(a, first)
-    h.resolver.constrainTypes(ContextualType(at, Nil), ContextualType(one, Nil))
-    h.resolver.constrainTypes(ContextualType(at, Nil), ContextualType(two, Nil))
-    h.resolver.publishParameter(a, second)
-    for target <- List(one, two); bound <- List(first, second) do
-      assert(h.state.typeConstraints((target, bound, Nil)))
-    val (b, bt) = h.parameter("B")
-    val distinct = OpaqueTypeShape(Term.UnitVal())(TypeInterfaceReason.Unavailable(Term.UnitVal()))
-    h.resolver.constrainTypes(ContextualType(bt, Nil), ContextualType(union, Nil))
-    h.resolver.publishParameter(b, distinct)
-    assert(h.state.typeConstraints((union, distinct, Nil)))
-    assert(!h.state.typeConstraints((one, distinct, Nil)))
-    assert(!h.state.typeConstraints((two, distinct, Nil)))
+    val left = tuple(first)
+    val right = tuple(second)
+    h.resolver.constrainTypes(input, expected)
+    h.resolver.publishParameter(a, left)
+    assert(seen.toList == List(first))
+    h.resolver.publishParameter(b, right)
+    assert(seen.toSet == Set(first, second))
+    val counts = (a.inferenceHost.listeners.size, b.inferenceHost.listeners.size)
+    (1 to 1000).foreach: _ =>
+      h.resolver.constrainTypes(input, expected)
+      h.resolver.publishParameter(a, left)
+      h.resolver.publishParameter(b, right)
+    assert((a.inferenceHost.listeners.size, b.inferenceHost.listeners.size) == counts)
+    assert(seen.size == 2)
+    assert(h.state.allocatedTypeInstanceCount == 0)
 
   test("supplied arguments receive input obligations instead of discarding them"):
     val h = new Harness
@@ -433,21 +461,6 @@ class TypeRelationTest extends AnyFunSuite:
       assert(h.state.typeConstraints((target, bound, Nil)))
     assert(a.currentShapes.toSet == Set(InstanceShape(one), InstanceShape(two)))
 
-  test("a supplied union receives an input obligation as one type reference"):
-    val h = new Harness
-    import h.given
-    val (a, at) = h.parameter("A")
-    val one = h.tpe(TypeShape.Unit)
-    val two = h.tpe(TypeShape.Abstract)
-    val writtenUnion = h.tpe(TypeShape.Union(one.resolution, two.resolution))
-    val union = h.resolver.declaredType(writtenUnion.resolution, Map.empty)
-    val bound = IntroShape(Term.UnitVal(), N)
-    h.state.markExplicitTypeArgument(a)
-    h.resolver.publishParameter(a, InstanceShape(union))
-    h.resolver.constrainTypes(ContextualType(h.tpe(TypeShape.Inferred(bound)), Nil), ContextualType(at, Nil))
-    assert(h.state.typeConstraints((union, bound, Nil)))
-    assert(!h.state.typeConstraints((one, bound, Nil)))
-    assert(!h.state.typeConstraints((two, bound, Nil)))
 
   test("supplied parameter references forward input obligations across marked contexts"):
     val h = new Harness

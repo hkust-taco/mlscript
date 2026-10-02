@@ -1,0 +1,96 @@
+:.
+
+// An upper union sends argument constraints into both sets of type parameters.
+// Observe the element's members, not just a wrapper that contains the element.
+:expect 3
+fun structural[A, B](x: Indexable[A] | Indexable[B]) = x.at(0)
+fun runStructural(x: Indexable[Array]) = structural(x).length
+runStructural([[1, 2, 3]])
+//│ = 3
+
+fun nominal[A, B](x: Iterator[A] | Iterator[B]) = x.next()
+
+(x: Iterator[Array]) => nominal(x).value.length
+//│ = fun
+
+// Explicit arguments retain their interfaces while nested variables still infer.
+fun identity[T](x: T): T = x
+fun supplied[A, B](x: Indexable[A] | Indexable[B]) =
+  identity[Indexable[A] | Indexable[B]](x).at(0)
+
+:expect 2
+fun runSupplied(x: Indexable[Array]) = supplied(x).length
+runSupplied([[1, 2]])
+//│ = 2
+
+// The same rule applies without record or nominal structure.
+fun either[A, B](x: A | B) = x
+
+:expect 4
+either([1, 2, 3, 4]).length
+//│ = 4
+
+// Constraint inspection treats a lower intersection as independent candidates.
+// Ordinary member lookup still combines the two declared record interfaces,
+// including when the constraint view of that type has already been observed.
+:expect [3, "SECOND"]
+type Cell[A] = {value: A}
+type First = {first: Int}
+type Second = {second: Str}
+fun extract[A](x: Cell[A]) = x.value
+fun direct(x: Cell[First] & Cell[Second]) =
+  extract(x)
+  [x.value.first, x.value.second.toUpperCase()]
+direct(value: {first: 3, second: "second"})
+//│ = [3, "SECOND"]
+
+// With eager diagnostics, the separate inferred candidates are observable:
+// Second contributes a candidate without first, instead of merging into First.
+:e
+(x: Cell[First] & Cell[Second]) => extract(x).first
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.50: 	(x: Cell[First] & Cell[Second]) => extract(x).first
+//│ ║        	                                   ^^^^^^^^^^^^^^^^
+//│ ╟── Record type does not contain member 'first'
+//│ ║  l.39: 	type Second = {second: Str}
+//│ ╙──      	               ^^^^^^^^^^^
+//│ = fun
+
+// The default lenient mode accepts a member supplied by either candidate.
+:expect [5, "six"]
+#lang(eagerResolution: false)
+fun projected(x: Cell[First] & Cell[Second]) =
+  let value = extract(x)
+  [value.first, value.second]
+projected(value: {first: 5, second: "six"})
+//│ = [5, "six"]
+
+// Nested generic calls retain the captures of each separate outer activation.
+:expect [7, "eight"]
+#lang(eagerResolution: true)
+private fun enclosing[A](x: Cell[A]) =
+  fun inner[B](y: Cell[A] | Cell[B]) = y.value
+  inner(x)
+[enclosing(value: {first: 7}).first, enclosing(value: {second: "eight"}).second]
+//│ = [7, "eight"]
+
+// Recursive unions reuse the same constraint edges rather than expanding paths.
+:expect 3
+type Node[A, B] = {item: A, next: Chain[B, A]}
+type Chain[A, B] = Node[A, B] | Node[B, A]
+class Link(val item: Array) with
+  val next = this
+fun recursive[A, B](x: Chain[A, B]) = x.next.next.item
+recursive(Link([1, 2, 3])).length
+//│ = 3
+
+// Nominal views discard unrelated substitutions but retain their own arguments
+// and enclosing binders when union constraints cross generic calls.
+:expect [1, "ABC", 2]
+private fun captured[A](x: A) =
+  class Box[B](val second: B) with
+    fun first(): A = x
+  private fun pass[B, C](box: Box[B] | Box[C]) = box
+  pass(new Box[Array]([1, 2]))
+[captured([1]).first().length, captured("abc").first().toUpperCase(), captured([1]).second.length]
+//│ = [1, "ABC", 2]

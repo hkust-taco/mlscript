@@ -227,3 +227,24 @@ foo({a: 1})
 
 
 
+fun test[A, B](x: Iterator[A] | Iterator[B]) =
+  x.next()
+
+(x: Iterator[Array]) => test(x).value
+//│ = fun
+
+
+fun test[A, B](x: Indexable[A] | Indexable[B]) =
+  x.at(0)
+
+(x: Indexable[Array]) => test(x).length
+//│ = fun
+
+
+fun test[A, B](x: Indexable[A]) =
+  x.at(0)
+
+(x: Indexable[Array]) => test(x).length
+//│ = fun
+
+

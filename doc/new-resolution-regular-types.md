@@ -89,11 +89,12 @@ A | (A & Array[A])          = A
 ((A | Int) & Str | Int) & Str = (A | Int) & Str
 ```
 
-`TypeShape.Combined` retains the formula as one type. In particular, supplying a
-union still creates one instance wrapper, and a negative obligation against that
-union stays whole. Member-interface observation can inspect its components, as
-for source unions and intersections. Normalization does not turn one supplied
-union into several independently supplied types.
+`TypeShape.Combined` retains the formula as one type. Supplying a union still
+creates one instance wrapper. Constraint propagation approximates an upper union
+by constraining every component, and observes lower intersection components
+independently. Member lookup still merges record intersection interfaces.
+Normalization itself does not turn one supplied union into several independently
+supplied types.
 
 Formula atoms retain their lexical bindings, canonical binder instances, and
 ordinary marks. Different written references to the same unbound parameter and

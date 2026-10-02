@@ -25,11 +25,13 @@ An ordinary integer argument to `x: A` contributes only a lower bound. For
 neither argument must satisfy the other's type.
 
 If two distinct supplied types `Int` and `Str` reach the same activation of `A`,
-each obligation applies to both. Supplying the single type `Int | Str` instead
-retains that complete type as the negative constraint target. Positive union
-elimination does not justify splitting a negative union into conjunctive obligations.
-Concrete mismatches such as `Str <: Int` can remain quiet during migration; this
-does not permit dropping the corresponding constraints.
+each obligation applies to both. Resolution also approximates an upper union by
+constraining both components: `L <: A | B` propagates into both `A` and `B`. A lower
+intersection supplies either component independently when inspecting its interface
+for constraints. These rules collect possible resolution targets without solving
+alternative constraint sets or forming products of intersection candidates.
+They deliberately approximate type inference; concrete incompatibilities such as
+`Str <: Int` do not currently produce resolution diagnostics.
 
 ## Instance wrappers and interface observations
 
@@ -38,6 +40,11 @@ annotations, ascriptions, and annotated fields retain this wrapper until lookup,
 application, or destructuring requests an interface through `listenInstanceViews`.
 The type itself stays in the `TypeResolution`/`TypeShape` graph. A written interface
 restricts observation even when more specific implementation values reach it.
+
+Member lookup merges the fields of record intersections. Constraint inspection
+instead observes each component independently, including through aliases, type
+parameters, and inference holes. The type-view cache distinguishes these two
+observations so inferred arguments cannot change the interface of an annotation.
 
 A `DeclaredType` contains:
 

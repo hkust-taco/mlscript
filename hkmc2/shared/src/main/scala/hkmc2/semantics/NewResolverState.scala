@@ -347,7 +347,8 @@ final class NewResolverState private (
     })
     assert(instances.keySet == parameters.toSet, "A source scheme's binders must remain stable")
     instances
-  val typeViews: Cache[DeclaredType, TermShapeHost] =
+  // The flag selects merged member interfaces versus independent constraint inputs.
+  val typeViews: Cache[(DeclaredType, Bool), TermShapeHost] =
     new Cache(inherited.map(_.typeViews), identity)
   val patternTypes: Cache[(Identity[Pattern.Constructor], InnerSymbol), DeclaredType] =
     new Cache(inherited.map(_.patternTypes), identity)

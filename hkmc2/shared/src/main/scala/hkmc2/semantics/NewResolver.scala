@@ -259,8 +259,7 @@ class NewResolver:
                 // This immutable declaration metadata belongs to the original
                 // graph, even when the type was reached through an imported AST.
                 if !unguardedOnly then
-                  direct ++= defn.sym.getState.newResolverState.lexicalTypeBinders.get(defn.sym).getOrElse(
-                    lastWords(s"Nominal declaration ${defn.sym.nme} must record its enclosing type binders"))
+                  direct ++= nominalLexicalBinders(defn)
               case TypeShape.Alias(symbol, rhs) =>
                 val bound = symbol.defn.get.tparams.map(_.sym).toSet
                 rhs.foreach(edge(_, bound))
@@ -839,9 +838,15 @@ class NewResolver:
     * observations before following parameters so recursive interfaces reach the
     * same graph nodes instead of allocating fresh inference variables.
     */
-  private[semantics] def listenInstanceViews(value: TermShape)(listener: Listener)(using NewResolverState): Unit = value match
+  private[semantics] def listenInstanceViews(value: TermShape)(listener: Listener)(using NewResolverState): Unit =
+    listenInstanceViews(value, mergeIntersections = true)(listener)
+
+  private def listenConstraintViews(value: TermShape)(listener: Listener)(using NewResolverState): Unit =
+    listenInstanceViews(value, mergeIntersections = false)(listener)
+
+  private def listenInstanceViews(value: TermShape, mergeIntersections: Bool)(listener: Listener)(using NewResolverState): Unit = value match
     case Marked(instance: InstanceShape, marks) =>
-      listenTypeViews(transportType(instance.tpe, marks :: Nil))(listener)
+      listenTypeViews(transportType(instance.tpe, marks :: Nil), mergeIntersections)(listener)
     case _ => listener(value)
 
   private def listenTermViews(term: Term)(listener: Listener)(using NewResolverState): Unit =
@@ -863,7 +868,12 @@ class NewResolver:
         case tuple: TupleShape => tuple.copy(instances = instances.withOverrides(tuple.instances))(this)
         case record: RecordShape => record.copy(instances = instances.withOverrides(record.instances))
         case nominal: NominalInstanceView =>
-          val bindings = instances.map((parameter, instance) => parameter -> instanceType(instance)) ++
+          // Own arguments are already bound; only enclosing binders can acquire
+          // new entries. Retaining unrelated callers' binders makes closed types
+          // such as Int distinct on each path through a cyclic constraint graph.
+          val lexical = nominalLexicalBinders(nominal.defn)
+          val bindings = instances.filter((parameter, _) => lexical(parameter))
+            .map((parameter, instance) => parameter -> instanceType(instance)) ++
             nominal.bindings.map((parameter, bound) => parameter -> bound.instantiate(instances))
           nominal.copy(bindings = bindings, parent = nominal.parent.map(instantiateShape(_, instances)))(nominal.annotation)(this)
         case record: RecordTypeShape =>
@@ -924,6 +934,14 @@ class NewResolver:
       case other => publish(other)
 
   private def listenTypeViews(tpe: DeclaredType)(listener: Listener)(using NewResolverState): Unit =
+    listenTypeViews(tpe, mergeIntersections = true)(listener)
+
+  /** Constraint inputs approximate an intersection by its separate alternatives.
+    * They must not wait for every component or form products of their candidates.
+    * Member lookup still merges record intersections, so cache the two kinds of
+    * observation separately and retain the choice through deferred references.
+    */
+  private def listenTypeViews(tpe: DeclaredType, mergeIntersections: Bool)(listener: Listener)(using NewResolverState): Unit =
     // Equal types can be observed through different input-only arguments. Reuse
     // their semantic host, but report this observation's witness rather than the
     // parameter declaration retained by the host's first subscriber.
@@ -933,11 +951,12 @@ class NewResolver:
       (shape, origin) match
         case (Marked(opaque: OpaqueTypeShape, marks), S(reason)) => listener(Marked(opaque.copy()(reason), marks))
         case _ => listener(shape)
-    typeViews.get(tpe) match
+    val key = (tpe, mergeIntersections)
+    typeViews.get(key) match
       case S(host) => host.listen(observe)
       case N =>
         val host = new TermShapeHost
-        typeViews(tpe) = host
+        typeViews(key) = host
         host.listen(observe)
         def follow(current: DeclaredType, args: TypeApplication, aliases: Set[TypeResolution], source: Term,
             publish: Listener)(using NewResolverState): Unit =
@@ -969,11 +988,12 @@ class NewResolver:
                 if !aliases(current.resolution) then
                   listenArgumentParts(argument.instantiate(current.instances)): parts =>
                     follow(if positive then parts.output else parts.input, args, aliases + current.resolution, source, publish)
-              case TypeShape.Inferred(value) => listenInstanceViews(instantiateShape(value, current.instances))(publish)
+              case TypeShape.Inferred(value) => listenInstanceViews(instantiateShape(value, current.instances), mergeIntersections)(publish)
               case TypeShape.Hole(host) => host.subscribe: value =>
-                listenInstanceViews(instantiateShape(value, current.instances))(publish)
+                listenInstanceViews(instantiateShape(value, current.instances), mergeIntersections)(publish)
               case TypeShape.Nominal(defn) =>
-                val bindings = bind(defn.tparams)
+                val parameters = nominalLexicalBinders(defn) ++ defn.tparams.map(_.sym)
+                val bindings = bind(defn.tparams).filter((parameter, _) => parameters(parameter))
                 defn.ext match
                   case N => publish(NominalInstanceView(defn, bindings, implicitParent(defn))(S(source))(this))
                   case S(parent) =>
@@ -985,7 +1005,7 @@ class NewResolver:
                     val parentType = typeResolution(parent.cls)
                     withTypeDependencies(parentType): dependencies =>
                       val local = captureNominalBindings(defn, bindings.filter((symbol, _) => dependencies(symbol)))
-                      listenTypeViews(declaredType(parentType, local)): ext =>
+                      listenTypeViews(declaredType(parentType, local), mergeIntersections): ext =>
                         publish(NominalInstanceView(defn, bindings, S(ext))(S(source))(this))
               case TypeShape.Alias(symbol, rhs) =>
                 // Revisiting the same alias reference without reaching a structural
@@ -1013,7 +1033,7 @@ class NewResolver:
                         unknown.copy()(unknown.provenance.withTypeOrigin(source)).exit(marks)
                       case _ => value
                     annotated match
-                      case value: TermShape => listenInstanceViews(instantiateShape(value, current.instances))(publish)
+                      case value: TermShape => listenInstanceViews(instantiateShape(value, current.instances), mergeIntersections)(publish)
                       case NoShape => ()
               case reference: TypeShape.Reference =>
                 follow(referenceType(reference, current), args, aliases, source, publish)
@@ -1053,8 +1073,13 @@ class NewResolver:
                 publish(RecordTypeShape(fields.map((field, sign) => field.sym.nme -> declaredType(sign, current)).toMap)(
                   source, fields.map((field, _) => field.sym.nme -> field).toMap))
               case TypeShape.Union(left, right) => next(left); next(right)
+              case TypeShape.Intersection(left, right) if !mergeIntersections => next(left); next(right)
               case TypeShape.Intersection(left, right) =>
                 conjunction(declaredType(left, current) :: declaredType(right, current) :: Nil, Nil)
+              case TypeShape.Combined(formula) if !mergeIntersections =>
+                formula.orderedAtoms.foreach: atom =>
+                  val component = atom.instantiate(current.instances)
+                  follow(component, noTypeArguments, aliases, component.resolution.source, publish)
               case TypeShape.Combined(formula) =>
                 // Choose witnesses in source order, independently of set hashing.
                 val clauses = formula.clauses.toList.sortWith((left, right) =>
@@ -1323,7 +1348,7 @@ class NewResolver:
         seen: Set[TypeResolution])(using NewResolverState): Unit = if !seen(tpe.resolution) then
       val next = seen + tpe.resolution
       def observe(listener: Listener)(using NewResolverState): Unit =
-        listenInstanceViews(value): actual =>
+        listenConstraintViews(value): actual =>
           actual.enter(captures) match
             case actual: TermShape => listener(actual)
             case NoShape => ()
@@ -1372,12 +1397,17 @@ class NewResolver:
                       case NoShape => ()
                 case _ => ()
           case _ => ()
+        case TypeShape.Union(left, right) =>
+          follow(declaredType(left, tpe), noTypeArguments, captures, next)
+          follow(declaredType(right, tpe), noTypeArguments, captures, next)
         case TypeShape.Intersection(left, right) =>
           follow(declaredType(left, tpe), noTypeArguments, captures, next)
           follow(declaredType(right, tpe), noTypeArguments, captures, next)
-        // Every conjunct is required. Disjunctions need alternative matching;
-        // propagating to every branch would instead impose their intersection.
-        case TypeShape.Combined(formula) if formula.clauses.size == 1 =>
+        // Resolution approximates an upper union by constraining every component.
+        // This supplies bounds without choosing branches or retaining alternative
+        // constraint sets. Lower intersections likewise contribute independent
+        // candidates through listenConstraintViews, avoiding candidate products.
+        case TypeShape.Combined(formula) =>
           formula.orderedAtoms.foreach(atom => follow(atom.instantiate(tpe.instances), noTypeArguments, captures, next))
         case TypeShape.Record(_, fields) => observe(constrainRecord(fields.map((field, sign) => field -> declaredType(sign, tpe)), _, marks))
         case TypeShape.Function(_, _) => observe(constrainFunction(tpe, _, marks))
@@ -1388,7 +1418,7 @@ class NewResolver:
         case TypeShape.SelectedArgument(argument, positive) =>
           listenArgumentParts(argument.instantiate(tpe.instances)): parts =>
             follow(if positive then parts.output else parts.input, args, captures, next)
-        case TypeShape.Nominal(cls) => listenInstanceViews(value): value =>
+        case TypeShape.Nominal(cls) => listenConstraintViews(value): value =>
           // Erasing a callback's signature must not erase the obligation to
           // check its implementation. Its unannotated inputs can receive any
           // value, independently of the calls observed through Function.
@@ -1441,7 +1471,7 @@ class NewResolver:
           // A concrete target stays fixed, but must receive bounds that arrive
           // through a symbolic source later. Concrete mismatch reporting is
           // separate from retaining this obligation in the graph.
-          case Marked(_: InstanceShape, _) => listenInstanceViews(value)(inferTypeArguments(tpe, _, marks))
+          case Marked(_: InstanceShape, _) => listenConstraintViews(value)(inferTypeArguments(tpe, _, marks))
           case _ => ()
     // Alias expansion guards only unproductive cycles. Descending into a tuple,
     // nominal argument, or arrow installs another edge with its own cycle guard.
@@ -1484,7 +1514,7 @@ class NewResolver:
     val ShapeParts(actual, instances, _) = shapeParts(source)
     actual match
       case Marked(_: InstanceShape, _) =>
-        listenInstanceViews(actual)(constrainFunction(expected, _, marks))
+        listenConstraintViews(actual)(constrainFunction(expected, _, marks))
         return
       case _ => ()
     val context = actual.applicationHead._2
@@ -1677,6 +1707,10 @@ class NewResolver:
                 // applying these marks to its members yields no candidates.
                 case NoShape => parentView.getMember(name).withMarks(inner :: receiver :: Nil)
             inherited.withAnnotation(view.annotation)
+
+  private def nominalLexicalBinders(defn: ClassLikeDef): Set[VarSymbol] =
+    defn.sym.getState.newResolverState.lexicalTypeBinders.get(defn.sym).getOrElse(
+      lastWords(s"Nominal declaration ${defn.sym.nme} must record its enclosing type binders"))
 
   /** Supplied class arguments are outside the instance scope. Both member and
     * parent annotations refer to those parameters from inside that scope.
