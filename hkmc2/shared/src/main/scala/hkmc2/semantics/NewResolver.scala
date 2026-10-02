@@ -936,8 +936,9 @@ class NewResolver:
   private def listenTypeViews(tpe: DeclaredType)(listener: Listener)(using NewResolverState): Unit =
     listenTypeViews(tpe, mergeIntersections = true)(listener)
 
-  /** Constraint inputs approximate an intersection by its separate alternatives.
-    * They must not wait for every component or form products of their candidates.
+  /** Constraint inspection propagates every intersection component separately.
+    * L1 & L2 <: R installs both L1 <: R and L2 <: R; it does not choose one.
+    * Do not wait for every component or form products of their candidates.
     * Member lookup still merges record intersections, so cache the two kinds of
     * observation separately and retain the choice through deferred references.
     */

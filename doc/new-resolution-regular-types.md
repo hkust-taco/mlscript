@@ -322,7 +322,11 @@ limitations use ordinary `:e` expectations.
 
 `TypeFormulaTest` checks normalization against Boolean truth tables.
 `TypeRelationTest` checks a thousand repeated reductions,
-unchanged binder allocation and source-listener counts, late bounds, whole negative
-union targets, and the loss of caller identity under captured alias rebasing. These
-checks support normalization's local invariants; they do not establish the whole
-resolver's termination argument.
+unchanged binder allocation and source-listener counts, late bounds, independent
+intersection propagation, and the loss of caller identity under captured alias
+rebasing. These checks support normalization's local invariants; they do not
+establish the whole resolver's termination argument.
+
+`newres/FunctionIntersectionConstraints.mls` checks that both function components
+contribute result bounds and contravariant parameter bounds, with eager diagnostics
+also observing each concrete result candidate.

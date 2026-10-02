@@ -49,11 +49,11 @@ compilation fixture; mixed-mode imports are supported.
 
 | Compilation suite | New resolution | Legacy resolution | Total |
 | --- | ---: | ---: | ---: |
-| Main | 45 | 4 | 49 |
+| Main | 46 | 4 | 50 |
 | Applications | 18 | 2 | 20 |
-| Nofib | 37 | 2 | 39 |
+| Nofib | 38 | 1 | 39 |
 | WASM | 1 | 0 | 1 |
-| Total | 101 | 8 | 109 |
+| Total | 103 | 7 | 110 |
 
 `LegacyGenericLibrary` deliberately uses legacy resolution to test mixed-mode
 imports. The other legacy compilation fixtures are listed below. Counts describe
@@ -66,8 +66,8 @@ source configuration, not the number of test cases reported by SBT.
 | `FingerTreeList` | New resolution exceeds the compilation time limit around recursive trees and tuple spreads. |
 | `CSP`, `QuoteExample1` | Quasiquote type selections and wildcard-reference lowering are unsupported. |
 | `parsing/Lexer` | Token constructors with trailing `using` parameters need automatic contextual argument insertion. `newres/LexerMigration` reproduces the missing behavior. |
-| `parsing/ParseRule` | Recursive rule inference exceeds the compilation time limit when compiling consumers. |
-| `nofib/lastpiece`, `nofib/sorting` | New resolution exceeds the compilation time limit. `sorting` also needs an `int_of_char(c: Str)` parameter annotation. |
+| `parsing/ParseRule` | Recursive rule inference exceeds the compilation time limit when compiling consumers. Callback inputs exposed by `Iter.mapping` also leave `rule.map` with an unknown receiver. |
+| `nofib/sorting` | New resolution exceeds the compilation time limit, including with the required `int_of_char(c: Str)` parameter annotation. |
 
 ## Remaining worksheet constraints
 
@@ -112,7 +112,7 @@ following constraints identify the current failing behavior and representative t
   transformations lack result interfaces in `ups/examples/Computation` and
   `ups/examples/ListPredicates`. Evaluation-context and Hindley–Milner worksheets
   additionally need recursive member interfaces; `ups/examples/EvaluationContext`
-  exceeds the worksheet time limit.
+  has unknown `freeVars` results and unresolved `show` and `unapply` selections.
 - **Quasiquotes:** `codegen/Quasiquotes` needs type-selection and generated-reference
   support. Pattern and quote lowering must preserve source targets and receiver paths.
 

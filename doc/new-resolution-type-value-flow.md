@@ -27,8 +27,11 @@ neither argument must satisfy the other's type.
 If two distinct supplied types `Int` and `Str` reach the same activation of `A`,
 each obligation applies to both. Resolution also approximates an upper union by
 constraining both components: `L <: A | B` propagates into both `A` and `B`. A lower
-intersection supplies either component independently when inspecting its interface
-for constraints. These rules collect possible resolution targets without solving
+intersection contributes every component separately when inspecting its interface
+for constraints: `L1 & L2 <: R` installs both `L1 <: R` and `L2 <: R`.
+For example, `(Int -> Int) & (Str -> Str) <: A -> B` constrains both arrows,
+producing `A <: Int`, `Int <: B`, `A <: Str`, and `Str <: B`.
+These rules collect possible resolution targets without solving
 alternative constraint sets or forming products of intersection candidates.
 They deliberately approximate type inference; concrete incompatibilities such as
 `Str <: Int` do not currently produce resolution diagnostics.
