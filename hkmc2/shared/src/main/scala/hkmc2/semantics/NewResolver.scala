@@ -2193,7 +2193,15 @@ class NewResolver:
                 resolution.publish(TypeShape.Nominal(cls))
                 declaredType(resolution, Map.empty)
               })
-            def narrow(sh: TermShape)(using NewResolverState): Unit = sh match
+            def subclass(base: ClassLikeDef)(using NewResolverState): Unit =
+              // A base-class annotation or self reference can denote a subclass
+              // instance. The test exposes that subclass's declared fields even
+              // when no constructor call supplies a concrete receiver shape.
+              // Omitted subclass arguments remain abstract and share the cached
+              // type, rather than borrowing types from unrelated allocations.
+              atPattern(testedClass): candidate =>
+                if candidate.isInstanceOfClass(base) then check(candidate, N)
+            def narrow(sh: TermShape)(using NewResolverState): Unit = shapeParts(sh).value match
               case Marked(_: RecordTypeShape, _) =>
                 atPattern(testedClass)(check(_, N))
               case Marked(unknown: UnknownValueShape, _) =>
@@ -2222,14 +2230,9 @@ class NewResolver:
                   case value: TermShape => narrow(value)
                   case NoShape => ()
               case Marked(nominal: NominalInstanceView, _) if !nominal.isInstanceOfClass(cls) =>
-                // A base-class annotation can contain a subclass instance. Its
-                // constructor test exposes that subclass's declarations; omitted
-                // subclass type arguments remain abstract, never inferred from
-                // unrelated constructor calls elsewhere in the unit.
-                // Reuse the abstract instantiation when recursive flow reaches
-                // this test again, so its omitted arguments have stable identities.
-                atPattern(testedClass): candidate =>
-                  if candidate.isInstanceOfClass(nominal.defn) then check(candidate, N)
+                subclass(nominal.defn)
+              case Marked(base: BaseShape, _) if !base.isInstanceOfClass(cls) =>
+                subclass(base.defn)
               case _ => check(sh, N)
             shape match
               case sh: TermShape => narrow(sh)
