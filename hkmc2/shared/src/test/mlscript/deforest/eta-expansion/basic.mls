@@ -27,7 +27,7 @@ c(p(3))
 //│ deforest > 	fields: x¹.a⁰
 //│ deforest > <<< fusing <<<
 //│ eta-expansion > >>> eta-expansion targets shapes >>>
-//│ eta-expansion > p$p⁰: [1, 2]
+//│ eta-expansion > p$p⁰#0 @ <root>: [1, 2]
 //│ eta-expansion > <<< eta-expansion targets shapes <<<
 //│ = 3
 
@@ -47,7 +47,7 @@ c(p(true))
 //│ deforest > 	match: x²
 //│ deforest > <<< fusing <<<
 //│ eta-expansion > >>> eta-expansion targets shapes >>>
-//│ eta-expansion > p$p⁰: [1, 0]
+//│ eta-expansion > p$p⁰#0 @ <root>: [1, 0]
 //│ eta-expansion > <<< eta-expansion targets shapes <<<
 //│ = 1
 
@@ -68,9 +68,9 @@ g(f(p()))
 //│ deforest > 	fields: y⁰.b⁰
 //│ deforest > <<< fusing <<<
 //│ eta-expansion > >>> eta-expansion targets shapes >>>
-//│ eta-expansion > f$f⁰: [1, 2]
-//│ eta-expansion > p$p⁰: [0, 2, 2]
-//│ eta-expansion > f$x_X⁰: [1, 2, 2]
+//│ eta-expansion > f$f⁰#0 @ <root>: [1, 2]
+//│ eta-expansion > p$p⁰#0 @ <root>: [0, 2, 2]
+//│ eta-expansion > f$x_X⁰#0 @ <root>: [1, 2, 2]
 //│ eta-expansion > <<< eta-expansion targets shapes <<<
 //│ = O
 
@@ -97,7 +97,7 @@ c(p(true))
 //│ deforest > 	fields: arg$X$0$⁰.b⁰
 //│ deforest > <<< fusing <<<
 //│ eta-expansion > >>> eta-expansion targets shapes >>>
-//│ eta-expansion > p$p⁰: [1, 3]
+//│ eta-expansion > p$p⁰#0 @ <root>: [1, 3]
 //│ eta-expansion > <<< eta-expansion targets shapes <<<
 //│ = 22
 
@@ -124,8 +124,8 @@ main(3)
 //│ deforest > 	fields: arg$X$0$¹.b⁰
 //│ deforest > <<< fusing <<<
 //│ eta-expansion > >>> eta-expansion targets shapes >>>
-//│ eta-expansion > p⁰: [1, 3]
-//│ eta-expansion > p¹: [1, 3]
+//│ eta-expansion > p⁰#0 @ <root>: [1, 3]
+//│ eta-expansion > p¹#0 @ <root>: [1, 3]
 //│ eta-expansion > <<< eta-expansion targets shapes <<<
 //│ = 5
 

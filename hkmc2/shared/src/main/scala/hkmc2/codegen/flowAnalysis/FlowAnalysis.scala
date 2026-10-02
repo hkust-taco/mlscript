@@ -57,6 +57,13 @@ object FlowAnalysis:
       def showRefSite(using SymbolPrinter, Raise, ShowCfg): Str =
         summon[SymbolPrinter].printSymbol(resultId)
     
+    extension (id: ConcreteFunId)
+      def showConcreteFunId(using SymbolPrinter, Raise, ShowCfg): Str =
+        val funStr = id.exprId match
+          case (funSym: TermSymbol, whichParamList) => s"${summon[SymbolPrinter].printSymbol(funSym)}#$whichParamList"
+          case lamId: ResultId => lamId.showRefSite
+        s"$funStr @ ${id.instId.showInstId}"
+    
     extension (r: Result)
       def uid = resultToResultId.get(r) match
         case None =>
@@ -104,6 +111,7 @@ type CtorCls = ClassLikeSymbol | Int
 type SelField = TermSymbol | Int
 type FunId = (funSym: TermSymbol, whichParamList: Int) | ResultId
 type OriginId = ResultId | FunId
+type ConcreteFunId = ConcreteId[FunId]
 
 
 object TrackableFieldSelect:
@@ -185,16 +193,15 @@ object StratVar:
   final class PossibleAccumulatorImpl private[StratVar] (val s: StratVar) extends ConsStrat:
     override def toString(): String = s"PossibleAccumulator($s)"
   
-  private def displayName(nme: String, generatedForFun: Opt[TermSymbol]): Str =
-    val ownName = if nme.isEmpty then "$stratvar" else nme
-    generatedForFun.fold(ownName)(fun => s"${ownName}_for_${fun.nme}")
 
   def freshVar(nme: String)(using fState: FlowAnalysis.State): StratVar =
     freshVar(nme, N, N)
   def freshVar(nme: String, generatedForFun: TermSymbol)(using fState: FlowAnalysis.State): StratVar =
     freshVar(nme, N, S(generatedForFun))
   def freshVar(nme: String, sourceSymbol: Opt[Symbol], generatedForFun: Opt[TermSymbol])(using fState: FlowAnalysis.State): StratVar =
-    val stratVar = StratVar(displayName(nme, generatedForFun), sourceSymbol, generatedForFun)(using fState.eState)
+    val ownName = if nme.isEmpty then "$stratvar" else nme
+    val name = generatedForFun.fold(ownName)(fun => s"${ownName}_for_${fun.nme}")
+    val stratVar = StratVar(name, sourceSymbol, generatedForFun)(using fState.eState)
     fState.stratVars += stratVar
     stratVar
   def freshVar(nme: String, forFunOpt: Opt[TermSymbol])(using fState: FlowAnalysis.State): StratVar =
@@ -280,7 +287,6 @@ case class ConcreteId[A <: OriginId](exprId: A, instId: InstantiationId):
   def pp(using FlowAnalysis.State): Str = exprId match
     case (sym: TermSymbol, idx: Int) => s"${sym.nme}#$idx"
     case r: ResultId => s"${r.getResult}"
-
 
 
 class ProdStratScheme(val s: StratVar, val constraints: Ls[ProdStrat -> ConsStrat])

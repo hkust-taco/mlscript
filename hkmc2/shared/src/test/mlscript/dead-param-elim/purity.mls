@@ -10,7 +10,7 @@ private fun f(a) = 0
 fun g(o) = f(o.x)
 g(null)
 //│ dead-param-elim > >>> dead-param-elim results >>>
-//│ dead-param-elim > prodfun f⁰#0 @ <root> -> eliminable: {0}
+//│ dead-param-elim > f⁰#0 @ <root> -> eliminable: {0}
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ @private
@@ -27,7 +27,7 @@ private fun f(a, b) = a
 fun g(o, p) = f(o.x, p.y)
 g(null, null)
 //│ dead-param-elim > >>> dead-param-elim results >>>
-//│ dead-param-elim > prodfun f²#0 @ <root> -> eliminable: {1}
+//│ dead-param-elim > f²#0 @ <root> -> eliminable: {1}
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ @private
@@ -53,7 +53,7 @@ private fun f(a, b) = a
 fun g(o) = f(n, o.bump)
 g(new A)
 //│ dead-param-elim > >>> dead-param-elim results >>>
-//│ dead-param-elim > prodfun f⁴#0 @ <root> -> eliminable: {1}
+//│ dead-param-elim > f⁴#0 @ <root> -> eliminable: {1}
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ let tmp;

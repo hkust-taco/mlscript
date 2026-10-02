@@ -37,7 +37,7 @@ c(p(true))
 //│ deforest > 	match: x⁰
 //│ deforest > <<< fusing <<<
 //│ eta-expansion > >>> eta-expansion targets shapes >>>
-//│ eta-expansion > p$p⁰: [1, 1]
+//│ eta-expansion > p$p⁰#0 @ <root>: [1, 1]
 //│ eta-expansion > <<< eta-expansion targets shapes <<<
 //│ dead-param-elim > >>> dead-param-elim results >>>
 //│ dead-param-elim > <<< dead-param-elim results <<<
@@ -97,11 +97,11 @@ sumPlus(enum(3))
 //│ deforest > 	fields: ls⁰.t⁰
 //│ deforest > <<< fusing <<<
 //│ eta-expansion > >>> eta-expansion targets shapes >>>
-//│ eta-expansion > enum$enum⁰: [1, 9]
+//│ eta-expansion > enum$enum⁰#0 @ <root>: [1, 9]
 //│ eta-expansion > <<< eta-expansion targets shapes <<<
 //│ dead-param-elim > >>> dead-param-elim results >>>
-//│ dead-param-elim > prodfun sumPlus$ls_Cons⁰#1 @ <root> -> eliminable: {0, 5}
-//│ dead-param-elim > prodfun sumPlus$ls_Nil⁰#1 @ <root> -> eliminable: {0, 5}
+//│ dead-param-elim > sumPlus$ls_Cons⁰#1 @ <root> -> eliminable: {0, 5}
+//│ dead-param-elim > sumPlus$ls_Nil⁰#1 @ <root> -> eliminable: {0, 5}
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ let enum$enum$worker;
@@ -177,7 +177,7 @@ c(p(true))
 //│ deforest > 	match: x²
 //│ deforest > <<< fusing <<<
 //│ eta-expansion > >>> eta-expansion targets shapes >>>
-//│ eta-expansion > p$p⁰: [1, 0]
+//│ eta-expansion > p$p⁰#0 @ <root>: [1, 0]
 //│ eta-expansion > <<< eta-expansion targets shapes <<<
 //│ dead-param-elim > >>> dead-param-elim results >>>
 //│ dead-param-elim > <<< dead-param-elim results <<<

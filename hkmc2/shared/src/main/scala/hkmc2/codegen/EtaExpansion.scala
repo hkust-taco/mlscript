@@ -143,19 +143,9 @@ class EtaExpansionSolver(val constraintSolver: FlowConstraintSolver, tl: TraceLo
   if tl.doTrace then
     given ShowCfg = ShowCfg.internal
     
-    def showFunShapeId(id: ConcreteFunId): Str =
-      val funStr = id.exprId match
-        case (funSym: TermSymbol, _) => symbolPrinter.printSymbol(funSym)
-        case lamId: ResultId =>
-          lamId.getResult match
-          case Lambda(_, _) => lamId.showRefSite
-          case r => lastWords(s"not lambda $r")
-      if id.instId.isEmpty then funStr else s"$funStr @ ${id.instId.showInstId}"
-    end showFunShapeId
-    
     tl.log(">>> eta-expansion targets shapes >>>")
     for (id, shape) <- etaExpandedFunShape do
-      tl.log(s"${showFunShapeId(id)}: ${shape.map(_.ppParamInfo).mkString("[", ", ", "]")}")
+      tl.log(s"${id.showConcreteFunId}: ${shape.map(_.ppParamInfo).mkString("[", ", ", "]")}")
     tl.log("<<< eta-expansion targets shapes <<<")
   end if
 end EtaExpansionSolver

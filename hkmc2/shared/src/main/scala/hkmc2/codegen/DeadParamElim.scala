@@ -8,7 +8,6 @@ import hkmc2.codegen.flowAnalysis.*
 import scala.collection.mutable.{LinkedHashMap, Buffer}
 
 
-type ConcreteFunId = ConcreteId[FunId]
 type ConcreteCallSiteId = ConcreteId[ResultId]
 
 
@@ -130,21 +129,10 @@ class DeadParamElimSolver(val constraintSolver: FlowConstraintSolver, traceLogge
   if tl.doTrace then
     given ShowCfg = ShowCfg.internal
 
-    def showProdFun(prodFun: ProdFun): Str =
-      def showFunId(funId: FunId): Str = funId match
-        case (funSym: TermSymbol, whichParamList) => s"${symbolPrinter.printSymbol(funSym)}#$whichParamList"
-        case exprId: ResultId => exprId.showRefSite
-      val inst = prodFun.instantiationId.fold("")(instId => s" @ ${instId.showInstId}")
-      s"prodfun ${showFunId(prodFun.exprId)}$inst"
-    end showProdFun
-    
     assert(eliminableCallSiteArgsById.nonEmpty === eliminableParamsById.nonEmpty)
     tl.log(">>> dead-param-elim results >>>")
-    for (prodFun, prodFunStr) <- prodFuns.map(p => p -> showProdFun(p)).sortBy(_._2) do
-      eliminableParamsById.get(prodFun.concreteId) match
-        case Some(elim) =>
-          tl.log(s"$prodFunStr -> eliminable: {${elim.toSeq.sorted.mkString(", ")}}")
-        case _ => ()
+    for (id, elim) <- eliminableParamsById do
+      tl.log(s"${id.showConcreteFunId} -> eliminable: {${elim.toSeq.sorted.mkString(", ")}}")
     tl.log("<<< dead-param-elim results <<<")
   end if
 end DeadParamElimSolver
