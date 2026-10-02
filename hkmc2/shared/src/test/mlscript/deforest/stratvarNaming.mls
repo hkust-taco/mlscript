@@ -1,0 +1,47 @@
+:js
+:deforest logNonAffine
+
+
+// `m` and `r` are source-symbol vars of `g`, `call_res` is generated inside `g`; `f` and `g` form one SCC
+fun f(n) = if n == 0 then 0 else g(n - 1)
+fun g(m) =
+  let r = f(m)
+  [m, m, r, r]
+f(3)
+//│ deforest > >>> non-affine syms >>>
+//│ deforest > call_res_for_f²
+//│ deforest > call_res_for_f³
+//│ deforest > call_res_for_f¹
+//│ deforest > call_res_for_f⁰
+//│ deforest > call_res_for_f⁴
+//│ deforest > call_res_for_f⁵
+//│ deforest > call_res_for_f⁶
+//│ deforest > call_res_for_f⁷
+//│ deforest > call_res_for_f⁸
+//│ deforest > f_res_for_f²
+//│ deforest > f_res_for_f¹
+//│ deforest > f_res_for_f⁰
+//│ deforest > g_res_for_f²
+//│ deforest > g_res_for_f¹
+//│ deforest > g_res_for_f⁰
+//│ deforest > m_for_g²
+//│ deforest > m_for_g¹
+//│ deforest > m_for_g⁰
+//│ deforest > n_for_f²
+//│ deforest > n_for_f¹
+//│ deforest > n_for_f⁰
+//│ deforest > r_for_g²
+//│ deforest > r_for_g¹
+//│ deforest > r_for_g⁰
+//│ deforest > tmp_for_f²
+//│ deforest > tmp_for_f¹
+//│ deforest > tmp_for_f⁰
+//│ deforest > <<< non-affine syms <<<
+//│ deforest > >>> fusing >>>
+//│ deforest > <<< fusing <<<
+//│ = [
+//│   2,
+//│   2,
+//│   [1, 1, [0, 0, 0, 0], [0, 0, 0, 0]],
+//│   [1, 1, [0, 0, 0, 0], [0, 0, 0, 0]]
+//│ ]
