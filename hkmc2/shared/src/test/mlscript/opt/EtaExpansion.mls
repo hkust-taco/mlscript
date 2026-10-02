@@ -9,7 +9,7 @@
 fun g(x) = f(x)
 g(1)(2)
 //│ eta-expansion > >>> eta-expansion targets shapes >>>
-//│ eta-expansion > g: [1, 1]
+//│ eta-expansion > g⁰#0 @ <root>: [1, 1]
 //│ eta-expansion > <<< eta-expansion targets shapes <<<
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ @inline @affine(1)
@@ -46,7 +46,7 @@ g(1)(2)
 fun h(x) = @affine(0) y => x + y
 h(1)(2)
 //│ eta-expansion > >>> eta-expansion targets shapes >>>
-//│ eta-expansion > h: [1, 1]
+//│ eta-expansion > h⁰#0 @ <root>: [1, 1]
 //│ eta-expansion > <<< eta-expansion targets shapes <<<
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ @inline define h⁰ as fun h¹(x)(eta$0$0) { return +⁰(x, eta$0$0) }; return 3
@@ -96,11 +96,11 @@ fun h(a)(b) = a * b
 fun g(k, x) = k(x)
 g(f, 1)(2) + g(h, 3)(4)
 //│ eta-expansion > >>> eta-expansion targets shapes >>>
-//│ eta-expansion > g @ g@4: [2, 1]
+//│ eta-expansion > g⁶#0 @ g⁷: [2, 1]
 //│ eta-expansion > <<< eta-expansion targets shapes <<<
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let tmp, baseCall, tmp1, g_4$g;
-//│ define g_4$g as fun g_4$g⁰(k, x)(eta$0$0) {
+//│ let tmp, baseCall, tmp1, g$g;
+//│ define g$g as fun g$g⁰(k, x)(eta$0$0) {
 //│   return k(x)(eta$0$0)
 //│ };
 //│ @affine(1)
@@ -113,7 +113,7 @@ g(f, 1)(2) + g(h, 3)(4)
 //│ define g⁶ as fun g⁷(k, x) {
 //│   return k(x)
 //│ };
-//│ set tmp = g_4$g⁰(f⁷, 1)(2);
+//│ set tmp = g$g⁰(f⁷, 1)(2);
 //│ set baseCall = g⁷(h⁵, 3);
 //│ set tmp1 = baseCall(4);
 //│ return +⁰(tmp, tmp1)
@@ -169,7 +169,7 @@ main1(true)
 //│ eta-expansion > >>> eta-expansion targets shapes >>>
 //│ eta-expansion > <<< eta-expansion targets shapes <<<
 //│ dead-param-elim > >>> dead-param-elim results >>>
-//│ dead-param-elim > prodfun g1#0 @ <root> -> eliminable: {0}
+//│ dead-param-elim > g1⁰#0 @ <root> -> eliminable: {0}
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ @affine(0) @private
@@ -215,7 +215,7 @@ main2(true)
 //│ eta-expansion > >>> eta-expansion targets shapes >>>
 //│ eta-expansion > <<< eta-expansion targets shapes <<<
 //│ dead-param-elim > >>> dead-param-elim results >>>
-//│ dead-param-elim > prodfun g2#0 @ <root> -> eliminable: {0}
+//│ dead-param-elim > g2⁰#0 @ <root> -> eliminable: {0}
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ = 0
 
@@ -230,7 +230,7 @@ main2(true)
 fun returnRest(a) = rest(a)
 returnRest(0)(1, 2, 3)
 //│ eta-expansion > >>> eta-expansion targets shapes >>>
-//│ eta-expansion > returnRest: [1, 0+rest]
+//│ eta-expansion > returnRest⁰#0 @ <root>: [1, 0+rest]
 //│ eta-expansion > <<< eta-expansion targets shapes <<<
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ @affine(1)
@@ -254,12 +254,12 @@ private fun returnRest2(a) = rest2(a)
 private fun app(f) = f(1, 2, 3)
 app(returnRest2(0))
 //│ eta-expansion > >>> eta-expansion targets shapes >>>
-//│ eta-expansion > returnRest2: [1, 1+rest]
+//│ eta-expansion > returnRest2⁰#0 @ <root>: [1, 1+rest]
 //│ eta-expansion > <<< eta-expansion targets shapes <<<
 //│ dead-param-elim > >>> dead-param-elim results >>>
-//│ dead-param-elim > prodfun rest2#0 @ <root> -> eliminable: {0}
-//│ dead-param-elim > prodfun rest2#1 @ <root> -> eliminable: {0}
-//│ dead-param-elim > prodfun returnRest2#0 @ <root> -> eliminable: {0}
+//│ dead-param-elim > returnRest2⁰#0 @ <root> -> eliminable: {0}
+//│ dead-param-elim > rest2⁰#0 @ <root> -> eliminable: {0}
+//│ dead-param-elim > rest2⁰#1 @ <root> -> eliminable: {0}
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ let tmp;

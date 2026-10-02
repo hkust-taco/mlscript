@@ -8,7 +8,6 @@ import hkmc2.codegen.flowAnalysis.*
 import scala.collection.mutable.{LinkedHashMap, Buffer}
 
 
-type ConcreteFunId = ConcreteId[FunId]
 type ConcreteCallSiteId = ConcreteId[ResultId]
 
 
@@ -42,6 +41,8 @@ class DeadParamElimSolver(val constraintSolver: FlowConstraintSolver, traceLogge
   given tl: TraceLogger = traceLogger
   given fState: FlowAnalysis.State = constraintSolver.fState
   given eState: Elaborator.State = constraintSolver.eState
+  given raise: Raise = constraintSolver.preAnalyzer.raise
+  given symbolPrinter: SymbolPrinter = constraintSolver.preAnalyzer.traceSymbolPrinter
 
   val collector: FlowConstraintsCollector = constraintSolver.collector
   val prodFuns: collection.Seq[ProdFun] = constraintSolver.prodFunsWithDests
@@ -126,23 +127,12 @@ class DeadParamElimSolver(val constraintSolver: FlowConstraintSolver, traceLogge
       case S(existing) => assert(existing.toList.sorted === eliminable)
   
   if tl.doTrace then
-    def showProdFun(prodFun: ProdFun): Str =
-      def showFunId(funId: FunId): Str = funId match
-        case (funSym: Symbol, whichParamList) => s"${funSym.nme}#$whichParamList"
-        case exprId: ResultId => exprId.getResult match
-          case Lambda(_, _) => s"lambda@$exprId"
-          case _ => exprId.showRefSite
-      val inst = prodFun.instantiationId.fold("")(instId => s" @ ${instId.showInstId}")
-      s"prodfun ${showFunId(prodFun.exprId)}$inst"
-    end showProdFun
-    
+    given ShowCfg = ShowCfg.internal
+
     assert(eliminableCallSiteArgsById.nonEmpty === eliminableParamsById.nonEmpty)
     tl.log(">>> dead-param-elim results >>>")
-    for (prodFun, prodFunStr) <- prodFuns.map(p => p -> showProdFun(p)).sortBy(_._2) do
-      eliminableParamsById.get(prodFun.concreteId) match
-        case Some(elim) =>
-          tl.log(s"$prodFunStr -> eliminable: {${elim.toSeq.sorted.mkString(", ")}}")
-        case _ => ()
+    for (id, elim) <- eliminableParamsById do
+      tl.log(s"${id.showConcreteFunId} -> eliminable: {${elim.toSeq.sorted.mkString(", ")}}")
     tl.log("<<< dead-param-elim results <<<")
   end if
 end DeadParamElimSolver

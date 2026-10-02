@@ -153,16 +153,16 @@ g() + g()
 //│ dead-constructor-elim > eliminable: Call(member:B¹‹term:B²›, [[1]])
 //│ dead-constructor-elim > <<< dead-constructor-elim results <<<
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let tmp, tmp1, g_2$g, g_4$g;
-//│ define g_2$g as fun g_2$g⁰() {
+//│ let tmp, tmp1, g$g, g$g1;
+//│ define g$g as fun g$g⁰() {
 //│   return 2
 //│ };
-//│ define g_4$g as fun g_4$g⁰() {
+//│ define g$g1 as fun g$g¹() {
 //│   return 2
 //│ };
 //│ define g² as fun g³() { return 2 };
-//│ set tmp = g_2$g⁰();
-//│ set tmp1 = g_4$g⁰();
+//│ set tmp = g$g⁰();
+//│ set tmp1 = g$g¹();
 //│ return +⁰(tmp, tmp1)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 4
@@ -214,15 +214,15 @@ app(c => 2) + app(c => if c is C then 1 else 0)
 //│ dead-constructor-elim > eliminable: Call(member:C²‹term:C⁰›, [[1]])
 //│ dead-constructor-elim > <<< dead-constructor-elim results <<<
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let tmp, lambda, tmp1, lambda_7$lambda, app_6$app, app_6_ctor_3$ctor;
-//│ define lambda_7$lambda as fun lambda_7$lambda⁰() {
+//│ let tmp, lambda, tmp1, lambda$lambda, app$app, app_ctor$ctor;
+//│ define lambda$lambda as fun lambda$lambda⁰() {
 //│   return 2
 //│ };
-//│ define app_6$app as fun app_6$app⁰(k) {
-//│   do app_6_ctor_3$ctor⁰();
+//│ define app$app as fun app$app⁰(k) {
+//│   do app_ctor$ctor⁰();
 //│   return k()
 //│ };
-//│ define app_6_ctor_3$ctor as fun app_6_ctor_3$ctor⁰() {
+//│ define app_ctor$ctor as fun app_ctor$ctor⁰() {
 //│   return undefined
 //│ };
 //│ define ctor⁰ as fun ctor¹() {
@@ -233,7 +233,7 @@ app(c => 2) + app(c => if c is C then 1 else 0)
 //│   set tmp2 = ctor¹();
 //│   return k(tmp2)
 //│ };
-//│ set tmp = app_6$app⁰(lambda_7$lambda⁰);
+//│ set tmp = app$app⁰(lambda$lambda⁰);
 //│ define lambda as fun lambda²(c) {
 //│   match c
 //│     C¹ =>
