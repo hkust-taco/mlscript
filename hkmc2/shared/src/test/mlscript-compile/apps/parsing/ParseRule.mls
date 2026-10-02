@@ -152,14 +152,15 @@ fun lazy(init) = new Lazy of init
 data class ParseRule[A](name: Str, mut val choices: Stack[Choice[A]]) with
   open Choice { Keyword, Ref, End, Siding }
   
-  fun map[B](op: A -> B) =
+  fun map[B](op: A -> B): ParseRule[B] =
     new mut ParseRule of name, choices
       Iter.fromStack()
       Iter.mapping of choice => choice Choice.map(op)
       Iter.toStack()
   
-  fun andThen[B, C](rest: ParseRule[B], process: (A, B) -> C) =
-    fun go(rule: ParseRule[B]) = new ParseRule of rule.name, rule.choices
+  fun andThen[B, C](rest: ParseRule[B], process: (A, B) -> C): ParseRule[C] =
+    // Each choice may have a different intermediate result type; append B to that result.
+    fun go[X](rule: ParseRule[X]): ParseRule[[X, B]] = new ParseRule of rule.name, rule.choices
       Iter.fromStack()
       Iter.mapping of case
         Keyword(keyword, rest') then [Keyword(keyword, go(rest'))]
@@ -245,7 +246,7 @@ data class ParseRule[A](name: Str, mut val choices: Stack[Choice[A]]) with
     this
   
   // Display parse rules as a tree in a BNF-like format.
-  fun display =
+  fun display: Str =
     /// Display a single `Choice`.
     fun displayChoice[A](choice: Choice[A]) = if choice is
       Choice.Keyword(keyword, rest) then

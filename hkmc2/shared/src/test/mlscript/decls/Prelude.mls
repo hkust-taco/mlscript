@@ -7,17 +7,17 @@ declare type Nothing
 declare class Object with
   fun toString(): Str
 declare module Object with
+  fun entries(target): Array[[Str, Any]]
+  fun getOwnPropertyDescriptor(target, key): Object | undefined
+  fun getOwnPropertyDescriptors(target): Object
   fun
     create
     freeze
     assign
-    entries
     prototype
     fromEntries
     getPrototypeOf
     defineProperty
-    getOwnPropertyDescriptor
-    getOwnPropertyDescriptors
 declare class JSON
 declare module JSON with
   fun
@@ -31,9 +31,13 @@ declare module Number with
     MAX_SAFE_INTEGER
     NEGATIVE_INFINITY
     POSITIVE_INFINITY
-declare class BigInt
+declare class BigInt with
+  fun toString(...radix): Str
 declare module BigInt
-declare class Function
+declare class Function with
+  val name: Str
+  fun bind(thisArg, ...args): Function
+  fun apply(thisArg, args: Array[Any]): Any
 declare module Function
 declare class String
 declare fun String(...args): Str
@@ -43,6 +47,7 @@ declare module String with
     fromCodePoint
     raw
 declare class RegExp with
+  fun toString(): Str
   fun exec(input: Str): Array[Str] | null
   fun test(input: Str): Bool
 declare module RegExp
@@ -52,6 +57,7 @@ declare class Set[V] with
   fun has(value: V): Bool
   fun delete(value: V): Bool
   fun clear(): undefined
+  fun values(): Iterator[V]
   fun union(other: Set[V]): Set[V]
   fun difference(other: Set[V]): Set[V]
 declare module Set
@@ -65,12 +71,17 @@ declare class Map[K, V] with
   fun keys(): Iterator[K]
   fun values(): Iterator[V]
   fun entries(): Iterator[[K, V]]
+  fun forEach(f: (V, K, Map[K, V]) -> Any): undefined
 declare class Iterator[T] with
   fun next(): { value: T, done: Bool }
 declare module Map
 declare class WeakSet[V]
 declare module WeakSet
-declare class WeakMap[K, V]
+declare class WeakMap[K, V] with
+  fun get(key: K): V | undefined
+  fun has(key: K): Bool
+  fun delete(key: K): Bool
+  fun id"set"(key: K, value: V): WeakMap[K, V]
 declare module WeakMap
 declare class Error with
   val message: Str
@@ -113,8 +124,12 @@ declare module BigInt64Array
 declare class BigUint64Array
 declare module BigUint64Array
 
-declare class Promise
-declare val Promise
+declare class Promise with
+  fun id"then"(onFulfilled: Function, ...onRejected): Promise
+declare module Promise with
+  fun resolve(value): Promise
+  fun reject(reason): Promise
+  fun all(values): Promise
 
 // MLscript-specific types
 declare class Bool
@@ -204,7 +219,8 @@ declare module Array with
     isArray
   val prototype: Array[Any]
 
-declare class Symbol
+declare class Symbol with
+  val description: Str | undefined
 declare module Symbol with
   // The `TermDef` needs `rhs` to be defined to be recognized as `isMLsFun`.
   // Otherwise, it would be wrapped in `runtime.safeCall`, which accesses the

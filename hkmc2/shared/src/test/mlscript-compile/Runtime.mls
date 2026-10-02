@@ -1,3 +1,4 @@
+#lang(0.3.x)
 import "./RuntimeJS.mjs"
 import "./Rendering.mjs"
 import "./LazyArray.mjs"
@@ -5,6 +6,11 @@ import "./Iter.mjs"
 
 open annotations { pure }
 
+
+// The runtime also exports a Str helper module; keep the host string type unambiguous.
+type Text = Str
+// Tuple patterns also accept lazy views and other IterableBase instances.
+type Indexable = {length: Int, at: Int -> Any, slice: Function}
 
 module Runtime with ...
 
@@ -25,10 +31,10 @@ val short_or = RuntimeJS.short_or
 
 fun unreachable = throw Error("unreachable")
 
-fun assertFail(file, line) = throw Error("Assertion failed (" + file + ":" + line + ")")
+fun assertFail(file: Text, line: Text) = throw Error("Assertion failed (" + file + ":" + line + ")")
 
 
-fun checkArgs(functionName, expected, isUB, got) =
+fun checkArgs(functionName: Text, expected: Int, isUB: Bool, got: Int) =
   if got < expected || isUB && got > expected do
     let name = if functionName.length > 0 then " '" + functionName + "'" else ""
     // throw globalThis.Error("Function" + name + " expected "
@@ -67,17 +73,16 @@ val bitor = RuntimeJS.bitor
 val shl = RuntimeJS.shl
 val try_catch = RuntimeJS.try_catch
 
-class EffectHandle(_reified) with
+class EffectHandle(_reified: EffectSig) with
   val reified = _reified
   fun resumeWith(value) =
     _try(() => resume(reified.contTrace)(value))
   fun raise() =
     set curEffect = reified
 
-fun _try(f) =
+fun _try(f: () -> Any) =
   let res = f()
-  if curEffect !== null then
-    let tmp = curEffect
+  if curEffect is EffectSig as tmp then
     set curEffect = null
     EffectHandle(tmp)
   else res
@@ -91,20 +96,21 @@ data class MatchFailure(errors)
 module Tuple with
   
   @pure
-  fun slice(xs, i, j) = xs.slice(i, xs.length - j)
+  fun slice(xs: Indexable, i: Int, j: Int) = xs.slice(i, xs.length - j)
   
   @pure
-  fun lazySlice(xs, i, j) = LazyArray.dropLeftRight(i, j)(xs)
+  fun lazySlice(xs: Indexable, i: Int, j: Int) = LazyArray.dropLeftRight(i, j)(xs)
   @pure
   fun lazyConcat(...args) = LazyArray.__concat(...args)
   
   @pure
-  fun get(xs, i) =
+  fun get(xs: Indexable, i: Int) =
     if i >= xs.length do
       throw RangeError("Tuple.get: index out of bounds")
     if i < -xs.length do
       throw RangeError("Tuple.get: negative index out of bounds")
-    xs.[i]
+    // Raw indexing preserves undefined elements; a foreign method call would normalize them to Unit.
+    xs![i]
   
   @pure
   fun isArrayLike(xs) = Iter.isArrayLike(xs)
@@ -113,19 +119,19 @@ module Tuple with
 module Str with
   
   @pure
-  fun startsWith(string, prefix) = string.startsWith(prefix)
+  fun startsWith(string: Text, prefix: Text) = string.startsWith(prefix)
   
   @pure
-  fun get(string, i) =
+  fun get(string: Text, i: Int) =
     if i >= string.length then
       throw RangeError("Str.get: index out of bounds")
     else string.at(i)
   
   @pure
-  fun take(string, n) = string.slice(0, n)
+  fun take(string: Text, n: Int) = string.slice(0, n)
   
   @pure
-  fun leaveOut(string, n) = string.slice(n)
+  fun leaveOut(string: Text, n: Int) = string.slice(n)
 
 // Re-export rendering functions
 val render = Rendering.render
@@ -143,11 +149,11 @@ module TraceLogger with
       set indentLvl = prev + 1
       prev
     else ()
-  fun resetIndent(n) =
+  fun resetIndent(n: Int) =
     if enabled then
       set indentLvl = n
     else ()
-  fun log(msg) =
+  fun log(msg: Text) =
     if enabled then
       console.log("| ".repeat(indentLvl) + msg.replaceAll("\n", "\n" + "  ".repeat(indentLvl)))
     else ()
@@ -157,8 +163,10 @@ module TraceLogger with
 // layout:
 // | f | pc | pcStr | debugInfo | this | argLists... (*) | localCnt | locals... |
 // (*) argLists is length encoded nested array
+// The packed array mixes functions, counters, debug tables, and arbitrary saved values.
+// Casts below decode slots whose types are fixed by this layout.
 
-mut val curEffect = null
+mut val curEffect: EffectSig | null = null
 mut val resumeValue = null
 mut val resumeArr = null
 mut val resumeIdx = null
@@ -167,11 +175,11 @@ mut val resumePc = -1
 object FatalEffect
 object PrintStackEffect
 
-data class FunctionContFrame(next, saved) with
+data class FunctionContFrame(next: FunctionContFrame | null, saved: Array[Any]) with
   fun resume(value) =
     let
       i = 0
-      f = saved.[0]
+      f = saved.[0] as Function
       argListsLength = saved.[5]
       currentArgList = 6
     set
@@ -183,15 +191,15 @@ data class FunctionContFrame(next, saved) with
     while i < argListsLength - 1 do
       let argListLength = saved.[currentArgList]
       set
-        f = f.apply(saved.[4], saved.slice(currentArgList + 1, currentArgList + 1 + argListLength))
+        f = f.apply(saved.[4], saved.slice(currentArgList + 1, currentArgList + 1 + argListLength)) as Function
         currentArgList += argListLength + 1
         i += 1
     let argListLength = saved.[currentArgList]
     set
       resumeIdx = currentArgList + argListLength + 2
     f.apply(saved.[4], saved.slice(currentArgList + 1, currentArgList + 1 + argListLength))
-  fun getLocals =
-    let debugInfo = saved.[3]
+  fun getLocals: Array[LocalVarInfo] =
+    let debugInfo = saved.[3] as Array[Any]
     let i = 0
     let cur = 6
     while i < saved.[5] do
@@ -204,24 +212,35 @@ data class FunctionContFrame(next, saved) with
       res.push(new LocalVarInfo(debugInfo.[i + 1], saved.[cur + 1 + debugInfo.[i]]))
       set i += 2
     res
-  fun getNme = saved.[3].[0]
+  fun getNme = (saved.[3] as Array[Any]).[0]
   fun getLoc =
     let loc = saved.[2]
     if
       loc is null then "pc=" + saved.[1]
       else loc
 
-data class HandlerContFrame(next, nextHandler, handler)
+data class HandlerContFrame(next: FunctionContFrame | null, nextHandler: HandlerContFrame | null, handler: Any)
 
-data class ContTrace(next, last, nextHandler, lastHandler, resumed)
-data class EffectSig(contTrace, handler, handlerFun)
+data class ContTrace(
+  next: FunctionContFrame | null,
+  last: ContTrace | HandlerContFrame | FunctionContFrame | null,
+  nextHandler: HandlerContFrame | null,
+  lastHandler: ContTrace | HandlerContFrame | null,
+  resumed: Bool
+) with
+  // mkEffect fills both tail links before publishing the trace in curEffect.
+  // Empty chains point back to the trace itself; null is only used during construction.
+  fun lastFrame: ContTrace | HandlerContFrame | FunctionContFrame = last as (ContTrace | HandlerContFrame | FunctionContFrame)
+  fun lastHandlerFrame: ContTrace | HandlerContFrame = lastHandler as (ContTrace | HandlerContFrame)
+// PrintStackEffect stores the showLocals flag; FatalEffect has no handler function.
+data class EffectSig(contTrace: ContTrace, handler: Any, handlerFun: Function | Bool | null)
 
 class NonLocalReturn with
   fun ret(value)
 
-data class FnLocalsInfo(fnName, locals)
-data class LocalVarInfo(localName, value)
-data class CustomStackError(stack) with
+data class FnLocalsInfo(fnName: Text, locals: Array[LocalVarInfo])
+data class LocalVarInfo(localName: Text, value: Any)
+data class CustomStackError(stack: Text) with
   fun toString() = stack
 
 
@@ -236,55 +255,55 @@ fun raisePrintStackEffect(showLocals) =
 fun topLevelEffect(debug) =
   let tr = curEffect
   let v = null
-  while tr is EffectSig and tr.handler === PrintStackEffect do
-    console.log(showStackTrace("Stack Trace:", tr, debug, tr.handlerFun))
+  while tr is EffectSig as eff and eff.handler === PrintStackEffect do
+    console.log(showStackTrace("Stack Trace:", eff, debug, eff.handlerFun as Bool))
     set
       curEffect = null
-      v = resume(tr.contTrace)(())
+      v = resume(eff.contTrace)(())
       tr = curEffect
-  if tr is EffectSig then
+  if tr is EffectSig as tr then
     set curEffect = null
-    throw CustomStackError(showStackTrace("Error: Unhandled effect " + tr.handler.constructor.name, tr, debug, false))
+    throw CustomStackError(showStackTrace("Error: Unhandled effect " + tr.handler!constructor!name, tr, debug, false))
   else
     v
 
 fun illegalEffect(position) =
-  let tmp = curEffect
+  let tmp = curEffect as EffectSig
   set curEffect = null
-  throw CustomStackError(showStackTrace("Error: Effect " + tmp.handler.constructor.name + " is raised " + position, tmp, false, false))
+  throw CustomStackError(showStackTrace("Error: Effect " + tmp.handler!constructor!name + " is raised " + position, tmp, false, false))
 
-fun showStackTrace(header, tr, debug, showLocals) =
+fun showStackTrace(header: Text, tr: EffectSig, debug: Bool, showLocals: Bool) =
   let
     msg = header
     curHandler = tr.contTrace
     atTail = true
   if debug do
-    while curHandler !== null do
-      let cur = curHandler.next
-      while cur !== null do
-        let curLocals = cur.getLocals
-        let loc = cur.getLoc
+    while curHandler is (ContTrace | HandlerContFrame) as handlerFrame do
+      let cur = handlerFrame.next
+      while cur is FunctionContFrame as frame do
+        let curLocals = frame.getLocals
+        let loc = frame.getLoc
         let localsMsg = if showLocals and curLocals.length > 0
-          then " with locals: " + curLocals.map(l => l.localName + "=" + Rendering.render(l.value)).join(", ")
+          then " with locals: " + curLocals.map((l, ...) => l.localName + "=" + Rendering.render(l.value)).join(", ")
           else ""
         set
-          msg += "\n\tat " + cur.getNme + " (" + loc + ")"
+          msg += "\n\tat " + frame.getNme + " (" + loc + ")"
           msg += localsMsg
-          cur = cur.next
+          cur = frame.next
           atTail = false
-      set curHandler = curHandler.nextHandler
-      if curHandler !== null do
+      set curHandler = handlerFrame.nextHandler
+      if curHandler is HandlerContFrame as handlerFrame do
         set
-          msg += "\n\twith handler " + curHandler.handler.constructor.name
+          msg += "\n\twith handler " + handlerFrame.handler!constructor!name
           atTail = false
     if atTail do
       set msg += "\n\tat tail position"
   msg
 
-fun showFunctionContChain(cont, hl, vis, reps) =
-  if cont is FunctionContFrame then
-    let result = cont.constructor.name + "(pc=" + cont.saved.[1]
-    hl.forEach((m, marker) => if m.has(cont) do set result += ", " + marker)
+fun showFunctionContChain(cont: Any, hl: Map[Text, Set[Any]], vis: Set[Any], reps: Int): Text =
+  if cont is FunctionContFrame as frame then
+    let result = frame!constructor!name + "(pc=" + frame.saved.[1]
+    hl.forEach((m, marker, ...) => if m.has(cont) do set result += ", " + marker)
     if vis.has(cont) then
       set reps = reps + 1
       if reps > 10 do
@@ -292,16 +311,16 @@ fun showFunctionContChain(cont, hl, vis, reps) =
       set result += ", REPEAT"
     else
       vis.add(cont)
-    result + ") -> " + showFunctionContChain(cont.next, hl, vis, reps)
+    result + ") -> " + showFunctionContChain(frame.next, hl, vis, reps)
   else if cont === null then
     "(null)"
   else
     "(NOT CONT)"
 
-fun showHandlerContChain(cont, hl, vis, reps) =
-  if cont is HandlerContFrame then
-    let result = cont.handler.constructor.name
-    hl.forEach((m, marker) => if m.has(cont) do set result += ", " + marker)
+fun showHandlerContChain(cont: Any, hl: Map[Text, Set[Any]], vis: Set[Any], reps: Int): Text =
+  if cont is HandlerContFrame as frame then
+    let result = frame.handler!constructor!name
+    hl.forEach((m, marker, ...) => if m.has(cont) do set result += ", " + marker)
     if vis.has(cont) then
       set reps = reps + 1
       if reps > 10 do
@@ -309,7 +328,7 @@ fun showHandlerContChain(cont, hl, vis, reps) =
       set result += ", REPEAT"
     else
       vis.add(cont)
-    result + " -> " + showFunctionContChain(cont.next, hl, vis, reps)
+    result + " -> " + showFunctionContChain(frame.next, hl, vis, reps)
   else if cont === null then
     "(null)"
   else
@@ -319,7 +338,7 @@ fun debugCont(cont) = console.log(showFunctionContChain(cont, new Map(), new Set
 fun debugHandler(cont) = console.log(showHandlerContChain(cont, new Map(), new Set(), 0))
 
 fun debugContTrace(contTrace) =
-  if contTrace is ContTrace then
+  if contTrace is ContTrace as contTrace then
     console.log("resumed: ", contTrace.resumed)
     if contTrace.last === contTrace do
       console.log("<last is self>")
@@ -331,18 +350,18 @@ fun debugContTrace(contTrace) =
     hl.set("last-handler", new Set([contTrace.lastHandler]))
     console.log(showFunctionContChain(contTrace.next, hl, vis, 0))
     let cur = contTrace.nextHandler
-    while cur !== null do
-      console.log(showHandlerContChain(cur, hl, vis, 0))
-      set cur = cur.nextHandler
+    while cur is HandlerContFrame as frame do
+      console.log(showHandlerContChain(frame, hl, vis, 0))
+      set cur = frame.nextHandler
     console.log()
   else
     console.log("Not a cont trace:")
     console.log(contTrace)
 
 fun debugEff(eff) =
-  if eff is EffectSig then
+  if eff is EffectSig as eff then
     console.log("Debug EffectSig:")
-    console.log("handler: ", eff.handler.constructor.name)
+    console.log("handler: ", eff.handler!constructor!name)
     console.log("handlerFun: ", eff.handlerFun)
     debugContTrace(eff.contTrace)
   else
@@ -351,36 +370,37 @@ fun debugEff(eff) =
 
 // runtime implementations
 fun unwind(...saved) =
+  val effect = curEffect as EffectSig
   set
-    curEffect.contTrace.last.next = new mut FunctionContFrame(null, saved)
-    curEffect.contTrace.last = curEffect.contTrace.last.next
+    effect.contTrace.lastFrame.next = new mut FunctionContFrame(null, saved)
+    effect.contTrace.last = effect.contTrace.lastFrame.next
 
-fun mkEffect(handler, handlerFun) =
+fun mkEffect(handler: Any, handlerFun: Function | Bool | null) =
   let res = new mut EffectSig(new mut ContTrace(null, null, null, null, false), handler, handlerFun)
   set
     res.contTrace.last = res.contTrace
     res.contTrace.lastHandler = res.contTrace
     curEffect = res
 
-fun handleBlockImpl(cur, handler) =
+fun handleBlockImpl(cur: EffectSig, handler: Any) =
   let handlerFrame = new mut HandlerContFrame(null, null, handler)
   set
-    cur.contTrace.lastHandler.nextHandler = handlerFrame
+    cur.contTrace.lastHandlerFrame.nextHandler = handlerFrame
     cur.contTrace.lastHandler = handlerFrame
     cur.contTrace.last = handlerFrame
   handleEffects(cur)
 
-fun enterHandleBlock(handler, body) =
+fun enterHandleBlock(handler: Any, body: () -> Any) =
   let tmp = body()
   if curEffect === null then
     tmp
   else
-    handleBlockImpl(curEffect, handler)
+    handleBlockImpl(curEffect as EffectSig, handler)
 
-fun handleEffects(cur) =
+fun handleEffects(cur: Any): Any =
   while cur is
-    EffectSig then
-      let nxt = handleEffect(cur)
+    EffectSig as effect then
+      let nxt = handleEffect(effect)
       if cur === nxt then
         set curEffect = cur
         return null
@@ -390,19 +410,19 @@ fun handleEffects(cur) =
       return cur
 
 // return either new effect, final result or the same continuation if there is no handler
-fun handleEffect(cur) =
+fun handleEffect(cur: EffectSig): Any =
   // debugEff(cur)
   // find the handle block corresponding to the current effect
   let prevHandlerFrame = cur.contTrace
-  while prevHandlerFrame.nextHandler !== null and prevHandlerFrame.nextHandler.handler !== cur.handler do
-    set prevHandlerFrame = prevHandlerFrame.nextHandler
+  while prevHandlerFrame.nextHandler is HandlerContFrame as next and next.handler !== cur.handler do
+    set prevHandlerFrame = next
 
   // no matching handle block
   if prevHandlerFrame.nextHandler === null do
     return cur
 
   // the matching handle block
-  let handlerFrame = prevHandlerFrame.nextHandler
+  let handlerFrame = prevHandlerFrame.nextHandler as HandlerContFrame
 
   // unlink and save frames
   let saved = new mut ContTrace(
@@ -424,60 +444,60 @@ fun handleEffect(cur) =
 
   // handle the effect
   set curEffect = null
-  let tmp = set stackDepth += 2 in cur.handlerFun(resume(cur.contTrace))
+  let tmp = set stackDepth += 2 in (cur.handlerFun as Function)(resume(cur.contTrace))
   if curEffect !== null then
-    set cur = curEffect
+    set cur = curEffect as EffectSig
     // relink the saved frames
     if saved.next !== null do
-      set cur.contTrace.last.next = saved.next
+      set cur.contTrace.lastFrame.next = saved.next
     if saved.last !== saved do
       set cur.contTrace.last = saved.last
     if saved.nextHandler !== null do
       set
-        cur.contTrace.lastHandler.nextHandler = saved.nextHandler
+        cur.contTrace.lastHandlerFrame.nextHandler = saved.nextHandler
         cur.contTrace.lastHandler = saved.lastHandler
     cur
   else
     // resume the unlinked handle blocks
     resumeContTrace(saved, tmp)
 
-fun resume(contTrace)(value) =
+fun resume(contTrace: ContTrace)(value: Any): Any =
   if contTrace.resumed do
     throw Error("Multiple resumption")
   set contTrace.resumed = true
   handleEffects(resumeContTrace(contTrace, value))
 
-fun resumeContTrace(contTrace, value) =
+fun resumeContTrace(contTrace: ContTrace, value: Any): Any =
   let cont = contTrace.next
   let handlerCont = contTrace.nextHandler
   while
-    cont is FunctionContFrame then
+    cont is FunctionContFrame as frame then
       set curEffect = null
-      set value = set stackDepth += 3 in cont.resume(value)
+      set value = set stackDepth += 3 in frame.resume(value)
       if curEffect !== null do
         set value = curEffect
-      if value is EffectSig then
+      if value is EffectSig as effect then
         set
-          value.contTrace.last.next = cont.next
-          value.contTrace.lastHandler.nextHandler = handlerCont
+          effect.contTrace.lastFrame.next = frame.next
+          effect.contTrace.lastHandlerFrame.nextHandler = handlerCont
         if contTrace.last !== cont do
-          set value.contTrace.last = contTrace.last
+          set effect.contTrace.last = contTrace.last
         if handlerCont !== null do
-          set value.contTrace.lastHandler = contTrace.lastHandler
+          set effect.contTrace.lastHandler = contTrace.lastHandler
         return value
       else
-        set cont = cont.next
-    handlerCont is HandlerContFrame then
-      set cont = handlerCont.next
-      set handlerCont = handlerCont.nextHandler
+        set cont = frame.next
+    handlerCont is HandlerContFrame as frame then
+      set cont = frame.next
+      set handlerCont = frame.nextHandler
     else
       return value
 
 // js async
 object AsyncEffectMarker
 
-fun await(promise) =
-  mkEffect(AsyncEffectMarker, resume =>
+fun await(promise: Promise) =
+  mkEffect(AsyncEffectMarker, (resume: Any -> Any) =>
     fun continuation(value) =
       let r = resume(value)
       if curEffect !== null do
@@ -486,7 +506,7 @@ fun await(promise) =
     promise.then(continuation)
   )
 
-fun toJsAsync(thunk) =
+fun toJsAsync(thunk: () -> Any) =
   let r = enterHandleBlock(AsyncEffectMarker, thunk)
   if curEffect !== null do
     illegalEffect("in exported async function")
@@ -505,11 +525,11 @@ object StackDelayHandler with
 fun checkDepth() =
   if stackDepth >= stackLimit && stackHandler !== null then
     // this is a tail call to effectful function
-    stackHandler.delay()
+    (stackHandler as StackDelayHandler).delay()
   else
     ()
 
-fun runStackSafe(limit, f) =
+fun runStackSafe(limit: Int, f: () -> Any) =
   set stackLimit = limit in...
   set stackDepth = 1 in...
   set stackHandler = StackDelayHandler in...
@@ -517,7 +537,7 @@ fun runStackSafe(limit, f) =
   if curEffect !== null do
     throw new Error("Effect crossed through stack safe boundary")
   while stackResume !== null do
-    let saved = stackResume
+    let saved = stackResume as Function
     set
       stackResume = null
       stackDepth = 1
@@ -526,7 +546,7 @@ fun runStackSafe(limit, f) =
       throw new Error("Effect crossed through stack safe boundary")
   result
 
-class Int31(v) with
+class Int31(v: Int) with
   fun zext() = bitand(v, bitnot(shl(1, 31))) as Int
   fun sext() = bitor(v, shl(1, 31)) as Int
 

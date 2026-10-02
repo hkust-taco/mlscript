@@ -177,8 +177,8 @@ fun g(n) =
 //│         set tmp1 = [3, 4];
 //│         set tmp2 = [5, param0];
 //│         set argList = [param0, ...tmp, 3, ...tmp1, ...tmp2, 7, param0];
-//│         set tmp3 = -¹(argList.length﹖, 0);
-//│         set inlinedVal = argList.slice﹖(5, tmp3);
+//│         set tmp3 = -¹(argList.length⁰, 0);
+//│         set inlinedVal = argList.slice⁰(5, tmp3);
 //│         set param0 = argList.0;
 //│         do argList.1;
 //│         do argList.2;

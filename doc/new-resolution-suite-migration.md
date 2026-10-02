@@ -13,7 +13,7 @@ resolver invariants and regression coverage live in the
 [resolver design notes](new-resolution-design.md). Backend-specific constraints
 are in [WASM resolution](new-resolution-wasm.md).
 
-The checked-in worksheet headers give the following status as of 2026-10-01.
+The checked-in worksheet headers give the following status as of 2026-10-02.
 Counts exclude shared `.mls` configurations, new-resolution regression tests, and the 51 files under
 `ucs/staging`, which the test runner excludes.
 
@@ -23,21 +23,21 @@ Counts exclude shared `.mls` configurations, new-resolution regression tests, an
 | codegen | 93 | 33 | 126 |
 | ucs | 69 | 1 | 70 |
 | ups | 58 | 13 | 71 |
-| apps | 15 | 1 | 16 |
-| Total | 302 | 71 | 373 |
+| apps | 16 | 1 | 17 |
+| Total | 303 | 71 | 374 |
 | wasm (separate backend) | 22 | 1 | 23 |
 
-All twelve `apps/parsing` worksheets use new resolution, but some implementation
+All thirteen `apps/parsing` worksheets use new resolution, but some implementation
 modules they import still use legacy resolution. Worksheet migration does not
 imply that its dependencies have been migrated.
 
 | Compilation suite | New resolution | Legacy resolution | Total |
 | --- | ---: | ---: | ---: |
-| Main (including quotes, UPS, and regression fixtures) | 42 | 7 | 49 |
-| Applications | 17 | 3 | 20 |
+| Main (including quotes, UPS, and regression fixtures) | 45 | 4 | 49 |
+| Applications | 18 | 2 | 20 |
 | Nofib | 37 | 2 | 39 |
 | WASM | 1 | 0 | 1 |
-| Total | 97 | 12 | 109 |
+| Total | 101 | 8 | 109 |
 
 These totals include the new-resolution `NamedFieldLibrary` regression fixture
 and the deliberately legacy `LegacyGenericLibrary` mixed-mode regression fixture.
@@ -86,14 +86,11 @@ resolver. The remaining fixtures need the following work:
 
 | Legacy fixtures | Concrete work and known failures |
 | --- | --- |
-| `LazyFingerTree` | Supply indexable interfaces and check its consumers. Imported generic method results are covered by the passing `newres/LegacyGenericMethods.mls`, including `FingerTreeList.mk(42).at(0)`. |
 | `FingerTreeList` | Enabling new resolution exceeds the compilation test's time limit. Diagnose inference growth around recursive trees and tuple spreads before calling this an annotation-only port. |
-| `Runtime`, `Rendering` | Audit callable and host interfaces. No separate design blocker is established for their missing annotations. |
 | `CSP`, `QuoteExample1` | Quasiquote type selections and wildcard-reference lowering. |
 | `parsing/Lexer` | Calls to token constructors with trailing `using` parameters need automatic contextual argument insertion; `newres/LexerMigration.mls` records the missing behavior. |
-| `parsing/ParseRule` | Correct `andThen`'s helper signature: it transforms a rule's result into a pair with the following rule's result, rather than preserving `B`. Recheck migration with lexical type captures preserved in legacy signatures. |
-| `parsing/Extension` | Give rules their `ParseRule[Tree]` interfaces and validate calls to `ParseRule.andThen` together with that dependency's migration. |
-| `nofib/lastpiece`, `nofib/sorting` | Both exceed the compilation time limit under new resolution. `sorting` first needs `int_of_char(c: Str)`; adding it reveals the timeout. Diagnose inference growth before retrying these ports. |
+| `parsing/ParseRule` | The `andThen` helper now pairs its own result type with the following rule's result; `map` and `andThen` expose their result interfaces. Enabling new resolution still exceeds the 25-second compilation limit when compiling its consumers, even with cache-result annotations or with the recursive helper lifted out of the method. Keep the implementation on legacy resolution pending an inference-growth fix. |
+| `nofib/lastpiece`, `nofib/sorting` | Both still exceed the 25-second compilation time limit under new resolution (retried 2026-10-02). `sorting` first needs `int_of_char(c: Str)`; adding it reveals the timeout. Diagnose inference growth before retrying these ports. |
 
 Array callbacks must accept the arguments supplied by the JS API: three for
 `map`/`filter`/`forEach` and four for `reduce`. Use `pass1(f)` or `pass2(f)` when
@@ -108,6 +105,7 @@ To reproduce a blocker, temporarily add the language directive to the named
 compilation fixture and run `ctest <name>` or `catest <name>` as appropriate.
 The blocked fixtures retain their existing resolution mode.
 
+`Runtime`, `Rendering`, `LazyFingerTree`, `Term`, `Extension`,
 `Predef`, `Block`, `Shape`, `LazyArray`, `Accounting`, `CSV`, `Parser`,
 `ParseRuleVisualizer`, and the parser web demo use new resolution. Nullable host
 results use pattern matching where possible; mutable traversal arrays use `mut`.
@@ -117,6 +115,19 @@ their initializer and assignment shapes, including in the web demo.
 The parser unwraps optional continuation rules and resumes module parsing after
 leading separators. The virtual `source` fields expand in both resolution modes
 (`newres/SourceLocations`); constructor metadata is covered by `newres/ShapeFixture`.
+
+The runtime describes packed continuation arrays and nullable frame links explicitly;
+casts decode the packed slots and initialized tail links. Tuple helpers use a structural
+indexable interface so lazy views remain supported without nominal array casts.
+Raw indexing preserves undefined elements and existing tuple fusion. Rendering uses typed callback
+adapters and host collection interfaces, with dynamic access confined to reflective
+properties. `newres/MigratedFixtureInterfaces` covers imported result interfaces and
+lazy materialization. `Term` exposes typed printer interfaces and converts nullable
+literals with `String`; the same regression checks literal printing and fresh names.
+`apps/parsing/ParseRuleTest` checks heterogeneous sequencing.
+`Extension` constructs `Choice[Stack[Tree]]` before mapping the accumulated trees to
+an application expression. Existing rendering, handler, and parser consumers retain
+their results.
 
 The web demo compiles, but serving its checked-in HTML directly still encounters
 Node-only imports (`fs`, `process`, `path`, and `url`) through `Predef` and `Term`.

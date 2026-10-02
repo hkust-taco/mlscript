@@ -1,7 +1,10 @@
+#lang(0.3.x)
 import "./Iter.mls"
+import "./LazyArray.mls"
 import "./FingerTreeList.mls"
 
 open Iter
+open LazyArray { Indexable }
 open LazyFingerTree
 open FingerTreeList
 
@@ -9,7 +12,7 @@ fun normIdx(i, len) =
   if i < 0 then len + i
   else i
 
-fun concatHelper(a, l, ...args) =
+fun concatHelper(a: Array[Any], l: Int, ...args: Array[Indexable]) =
   let idx = 0
   let init_len = a.length
   set a.length = init_len + args.length * 2
@@ -30,7 +33,7 @@ fun normIdxSlice(i, len) =
     else 0
   else i
 
-fun sliceHelper(beg, fin, arr) =
+fun sliceHelper(beg: Int, fin: Int, arr: Indexable) =
   let len = arr.length
   set beg = normIdxSlice(beg, len)
   set fin = normIdxSlice(fin, len)
@@ -53,9 +56,9 @@ fun sliceHelper(beg, fin, arr) =
 class LazyFT extends IterableBase with
 
   fun toString() = "[" + this joined(", ") + "]"
-  fun concat(...args) = concatHelper(mut [SpliceMarker, this], this.length, ...args)
+  fun concat(...args: Array[Indexable]) = concatHelper(mut [SpliceMarker, this], this.length, ...args)
 
-class View(val underlying, val start, val end) extends LazyFT with
+class View(val underlying: Indexable, val start: Int, val end: Int) extends LazyFT with
 
   fun iterator() =
     let idx = start
@@ -67,7 +70,7 @@ class View(val underlying, val start, val end) extends LazyFT with
         Result.Next of next
       else Result.Done
 
-  fun materialize() = underlying.slice(start, underlying.length - end)
+  fun materialize(): Indexable = underlying.slice(start, underlying.length - end)
   
   fun at(i) =
     if i < -length || i >= length do
@@ -80,22 +83,23 @@ class View(val underlying, val start, val end) extends LazyFT with
   fun toString() = "[" + this joined(", ") + "]"
 
 object SpliceMarker
-class Splice(val bits, val len) extends LazyFT with
+class Splice(val bits: Array[Any], val len: Int) extends LazyFT with
   let materialized = null
 
   fun iterator() = materialize().iterator()
 
   fun reify =
     let acc = FingerTreeList.mk()
-    let stack = mut []
+    val stack: Array[[Int, Indexable]] = mut []
     stack.push([0, bits])
     while stack.length > 0 do
-      let e = stack.pop()
-      let idx = e.[0]
-      let vals = e.[1]
+      // The loop condition excludes the undefined result of popping an empty stack.
+      let e = stack.pop() as [Int, Indexable]
+      let idx = e.0
+      let vals = e.1
 
-      if vals is Splice do
-        set vals = vals.bits
+      if vals is Splice as splice do
+        set vals = splice.bits
 
       while (idx < vals.length and
           (vals.at(idx) is SpliceMarker) is false) do
@@ -107,10 +111,11 @@ class Splice(val bits, val len) extends LazyFT with
         let next = vals.at(idx + 1)
         if FingerTreeList.isFingerTree(next)
           then set acc = acc ++ next
-          else stack.push([0, next])
+          // SpliceMarker is always followed by an indexable sequence.
+          else stack.push([0, next as Indexable])
     acc
 
-  fun materialize() =
+  fun materialize(): {length: Int, at: Int -> Any, slice: Function, iterator: () -> Iterator[Any]} =
     if materialized == null do
       set materialized = reify
     materialized
@@ -118,7 +123,7 @@ class Splice(val bits, val len) extends LazyFT with
   fun at(i) = materialize().at(i)
   // called on eager spreads in matches
   fun slice(beg, fin) = sliceHelper(beg, fin, this)
-  fun concat(...args) =
+  fun concat(...args: Array[Indexable]) =
     if materialized === null 
     then concatHelper(mut [SpliceMarker, this], len, ...args)
     else concatHelper(mut [SpliceMarker, materialized], len, ...args)   
@@ -131,15 +136,15 @@ module LazyFingerTree with...
 
 
 fun mk(...args) = View of FingerTreeList.mk(...args), 0, 0
-fun concat(...args) = concatHelper(mut [], 0, ...args)
-fun dropLeftRight(beg, fin)(xs) = 
+fun concat(...args: Array[Indexable]) = concatHelper(mut [], 0, ...args)
+fun dropLeftRight(beg: Int, fin: Int)(xs: Indexable) =
   if beg < 0 || fin < 0 do
     throw RangeError("LazyFingerTree.dropLeftRight: indices must be non-negative")
   if beg > xs.length || fin > xs.length do
     throw RangeError("LazyFingerTree.dropLeftRight: indices out of bounds")
   sliceHelper(beg, xs.length - fin, xs)
 
-fun equals(xs, ys) =
+fun equals(xs: Indexable, ys: Indexable) =
   if xs is
     [x, ...xs] then
       if ys is
@@ -155,7 +160,7 @@ fun __concat(...args) =
   let idx = 0
   while (idx < args.length) do
     if args.[idx] is SpliceMarker then
-      set len += args.[idx + 1].length
+      set len += (args.[idx + 1] as Indexable).length
       set idx += 2
     else
       set len += 1
