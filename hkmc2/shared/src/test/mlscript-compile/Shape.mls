@@ -28,7 +28,7 @@ fun show(s: Shape) =
 
 fun sel(s1: Shape, s2: Shape): Array[Shape] = 
   if [s1, s2] is
-    [Class(ConcreteClassSymbol(_, _, Some(args), _), params), Lit(n)] and n is Str as n then
+    [Class(ConcreteClassSymbol(_, _, Some(args), _), params), Lit(n)] and n is Str then
       let i = args.findIndex(pass1((arg: Block.Symbol) => arg.name == n))
       if i >= 0 then [params.(i)] else []
     [Dyn, Lit(n)] and n is Str

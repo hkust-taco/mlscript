@@ -111,7 +111,7 @@ fun render(target, ...args): Str =
   // Add indentations to results of `toString` from other objects.
   fun indentText(text: Str, currentLevel: Int): Str =
     if indent is null then text else...
-    let indents = (indent as Str).repeat(currentLevel + 1)
+    let indents = indent.repeat(currentLevel + 1)
     text
       .split("\n")
       .map of (line, index, lines) =>
@@ -127,7 +127,7 @@ fun render(target, ...args): Str =
       // The length of indentations that should be prepended to items in this
       // array if this array is displayed in multi-lines.
       itemIndentationLength =
-        if indent is ~null as indent then (level + 1) * indent.length else 0
+        if indent is null then 0 else (level + 1) * indent.length
     // Return `true` if the array has no remaining elements.
     let done() =
       let isDone = null
@@ -161,7 +161,7 @@ fun render(target, ...args): Str =
       // The length of indentations that should be prepended to items in this
       // array if this array is displayed in multi-lines.
       itemIndentationLength =
-        if indent is ~null as indent then (level + 1) * indent.length else 0
+        if indent is null then 0 else (level + 1) * indent.length
     // Return `true` if the array has no remaining elements.
     let done() = peek.done
     let next(isFirst: Bool, prefixLength: Int) =
@@ -181,7 +181,7 @@ fun render(target, ...args): Str =
     let
       length = fieldNames.length
       i = 0
-      itemIndentationLength = if indent is ~null as indent then (level + 1) * indent.length else 0
+      itemIndentationLength = if indent is null then 0 else (level + 1) * indent.length
     let done() = i >= length
     let next(isFirst: Bool, prefixLength: Int) = if fieldNames.[i] is
       do set i += 1
@@ -202,8 +202,8 @@ fun render(target, ...args): Str =
       // brackets and spaces around items are excluded from the length.
       singleLineLength = startPos + symbols.start.length +
         (if symbols.padding then padding.length else 0)
-      parentIndent = if indent is ~null as indent then indent.repeat(level) else ""
-      itemIdent = if indent is ~null as indent then indent.repeat(level + 1) else ""
+      parentIndent = if indent is null then null else indent.repeat(level)
+      itemIdent = if indent is null then null else indent.repeat(level + 1)
     // Iterate through and render all items.
     while done() is false do
       let item = next(items.length is 0, singleLineLength)
@@ -240,7 +240,7 @@ fun render(target, ...args): Str =
       length = entries.length
       i = 0
       itemIndentationLength =
-        if indent is ~null as indent then (level + 1) * indent.length else 0
+        if indent is null then 0 else (level + 1) * indent.length
     let skipNonEnumerable() =
       while i < length and entries.[i].1!enumerable is false do set i += 1
     let done() = i >= length
@@ -278,7 +278,7 @@ fun render(target, ...args): Str =
       // The length of indentations that should be prepended to items in this
       // array if this array is displayed in multi-lines.
       itemIndentationLength =
-        if indent is ~null as indent then (level + 1) * indent.length else 0
+        if indent is null then 0 else (level + 1) * indent.length
     // Return `true` if the array has no remaining elements.
     let done() = peek.done
     let next(isFirst: Bool, prefixLength: Int) =
@@ -315,8 +315,8 @@ fun render(target, ...args): Str =
       items = mut []
       hasMultiline = false
       singleLineLength = startPos + symbols.start.length + startPadding.length
-      parentIndent = if indent is ~null as indent then indent.repeat(level) else ""
-      itemIdent = if indent is ~null as indent then indent.repeat(level + 1) else ""
+      parentIndent = if indent is null then null else indent.repeat(level)
+      itemIdent = if indent is null then null else indent.repeat(level + 1)
     while done() is false do
       let
         keyValue = next(items.length is 0, singleLineLength)
@@ -363,7 +363,7 @@ fun render(target, ...args): Str =
       false     then "false"
     arg === ()  then "()"
     // Reuse the cached result if the display mode is inline.
-    indent is null and visitedObjects.get(arg) is Str as cached then cached
+    visitedObjects.has(arg) and indent is null then visitedObjects.get(arg)
     visitingObjects.has(arg) and visitingObjects.get(arg) is
       // We have already found this circular reference before
       Int as index then "ref'" + index
@@ -389,7 +389,7 @@ fun render(target, ...args): Str =
           let desc = Object.getOwnPropertyDescriptor(arg, "prototype")
           let head = if
             // ES 2015 classes: `desc.writable` is `false`.
-            desc is Object as desc and desc!writable is false and
+            desc is Object and desc!writable is false and
               // If it is from MLscript, use the kind written in metadata.
               desc!value!constructor!hasOwnProperty(definitionMetadataSymbol) and
                 desc!value!constructor!(definitionMetadataSymbol) is [kind, name, ...] then

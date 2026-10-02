@@ -98,7 +98,7 @@ fun parseIndentedText(text: Str) =
   text.split("\n")
     Iter.filtering((line: Str) => line.trim().length > 0)
     Iter.each of (line: Str) =>
-      let indent = (indentRegex.exec(line) as Array[Str]).[1].length
+      let indent = indentRegex.exec(line).1.length
       let text = line.substring(indent)
       while indent <= stack.[stack.length - 1].indent do
         stack.pop()
@@ -173,7 +173,8 @@ class ErrorDisplay extends HTMLElement with
     this.render()
   
   fun render() = if _error is Some(error) do
-    let stackLines = if error.stack is Str as stack then stack.split("\n") else mut []
+    let stack = error.stack
+    let stackLines = if stack is Str then stack.split("\n") else mut []
     if stackLines.length > 0 and stackLines.[0].startsWith(error.name) do
       stackLines.shift()
     set this.shadowRoot.innerHTML = elem("div", "class": "error-container") of

@@ -35,19 +35,19 @@ ys |> ith(8)
 ys |> ith(9)
 //│ = None
 
-let ys = if ys |> popFront is {rest: rest} then rest
+let ys = (ys |> popFront).rest
 //│ ys = [2, 3, 1, 2, 3, 1, 2, 3]
-let ys = if ys |> popBack is {rest: rest} then rest
+let ys = (ys |> popBack).rest
 //│ ys = [2, 3, 1, 2, 3, 1, 2]
-let ys = if ys |> popBack is {rest: rest} then rest
+let ys = (ys |> popBack).rest
 //│ ys = [2, 3, 1, 2, 3, 1]
-let ys = if ys |> popBack is {rest: rest} then rest
+let ys = (ys |> popBack).rest
 //│ ys = [2, 3, 1, 2, 3]
-let ys = if ys |> popFront is {rest: rest} then rest
+let ys = (ys |> popFront).rest
 //│ ys = [3, 1, 2, 3]
-let ys = if ys |> popFront is {rest: rest} then rest
+let ys = (ys |> popFront).rest
 //│ ys = [1, 2, 3]
-let ys = if ys |> popFront is {rest: rest} then rest
+let ys = (ys |> popFront).rest
 //│ ys = [2, 3]
 
 let ys = xs ++ xs ++ xs

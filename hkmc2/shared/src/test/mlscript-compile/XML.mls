@@ -23,7 +23,7 @@ fun serializeValue(value) = if value is
 fun joinAttributes(attributes) = attributes
   mapping of case
     [name, value] then name + "=" + serializeValue(value)
-    StyleAttributeValue as style then "style=" + (style as StyleAttributeValue).toValue()
+    StyleAttributeValue as style then "style=" + style.toValue()
     Object as record then joinAttributes(Object.entries(record))
   joined(" ")
 

@@ -32,10 +32,10 @@ fun toArrays(strData: Str) =
   // Keep looping over the regular expression matches until we can no longer find a match.
   while
     let arrMatches = objPattern.exec(strData)
-    arrMatches is Array as matches do
+    arrMatches !== null do
       
       // Get the delimiter that was found.
-      let strMatchedDelimiter = matches.1
+      let strMatchedDelimiter = arrMatches.1
       
       // Check to see if the given delimiter has a length (is not the start of string)
       // and if it matches field delimiter.
@@ -47,17 +47,17 @@ fun toArrays(strData: Str) =
       // Now that we have our delimiter out of the way,
       // let's check to see which kind of value we captured (quoted or unquoted).
       let strMatchedValue =
-        if matches.2 != undefined
+        if arrMatches.2 != undefined
         then
           // We found a quoted value. When we capture this value, unescape any double quotes.
-          matches.2.replace of
+          arrMatches.2.replace of
             new mut RegExp("\"\"", "g")
             "\""
         else
           // We found a non-quoted value.
-          matches.3
+          arrMatches.3
       
-      (arrData.at(arrData.length - 1) as Array).push(strMatchedValue)
+      arrData.at(arrData.length - 1).push(strMatchedValue)
   
   arrData
 

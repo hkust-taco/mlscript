@@ -74,7 +74,7 @@ class Term with
 
 class Context(val names: Map[Str, Int], val bindings: Map[Symbol, Str], val dependencies: Set[Str], val printOnly: Bool) with
   fun get(sym: Symbol): Str =
-    if bindings.get(sym) is Str as name then name
+    if bindings.has(sym) then bindings.get(sym)
     else if printOnly then sym.name
     else throw Error(StrOps.concat("Invalid binding name ", sym.name))
   fun nest: Context = Context(names, new Map(bindings), dependencies, printOnly)
@@ -84,7 +84,9 @@ class Context(val names: Map[Str, Int], val bindings: Map[Symbol, Str], val depe
     fn
   fun depends(d: Str) = dependencies.add(d)
   fun freshName(name: Str): Str =
-    let i = if names.get(name) is Int as i then i else 0
+    if not names.has(name) do
+      names.set(name, 0)
+    let i = names.get(name)
     names.set(name, i + 1)
     StrOps.concat of name, "_", i.toString()
 

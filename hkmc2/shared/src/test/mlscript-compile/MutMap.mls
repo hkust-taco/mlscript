@@ -17,7 +17,7 @@ class MutMap[A, B](val underlying: Map[A, B]) with
 fun get[A, B](key: A)(m: MutMap[A, B]): Option[B] =
   // Map.get also admits undefined for absent keys; has excludes that case.
   if m.underlying.has(key)
-  then Some of (m.underlying.get(key) as B)
+  then Some of m.underlying.get(key)
   else None
 
 fun insert[A, B](key: A, value: B)(m: MutMap[A, B]) =

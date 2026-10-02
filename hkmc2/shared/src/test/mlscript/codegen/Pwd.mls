@@ -3,7 +3,7 @@
 
 
 :sjs
-let folderName1 = (process.env!PWD as Str).split("/").pop()
+let folderName1 = process.env!PWD.split("/").pop()
 in let folderName2 = process.cwd().split("/").pop()
 in folderName2 === folderName1 || folderName2 === "shared"
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————

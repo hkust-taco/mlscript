@@ -10,7 +10,7 @@ fun normIdx(i, len) =
   else i
 
 fun enforceArray = case
-  (LazyArr | Array | String | Str | TypedArray) as a then a as Indexable
+  (LazyArr | Array | String | Str | TypedArray) as a then a
   ow then throw Error("Expected an Array, got: " + String(ow))
 
 fun concatHelper(a: Array, l: Int, ...args: Array[Indexable]) =
@@ -97,7 +97,7 @@ class Splice(val bits: Array, val len: Int) extends LazyArr with
           SpliceMarker then
             if uitr === null do 
               set uitr = bits.[idx + 1].(Symbol.iterator)()
-            let n = (uitr as Iterator).next()
+            let n = uitr.next()
             if n.done then
               set uitr = null
               set idx += 2
@@ -117,7 +117,7 @@ class Splice(val bits: Array, val len: Int) extends LazyArr with
     val stack: Array[[Int, Indexable]] = mut []
     stack.push([0, bits])
     while stack.length > 0 do
-      let e = stack.pop() as [Int, Indexable]
+      let e = stack.pop()
       let idx = e.0
       let vals = e.1
 
@@ -132,7 +132,7 @@ class Splice(val bits: Array, val len: Int) extends LazyArr with
       
       if (idx < vals.length and vals.at(idx) is SpliceMarker) do
         stack.push([idx + 2, vals])
-        stack.push([0, vals.at(idx + 1) as Indexable])
+        stack.push([0, vals.at(idx + 1)])
     arr
 
   fun materialize(): Array =

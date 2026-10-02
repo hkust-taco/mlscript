@@ -77,7 +77,8 @@ class EffectHandle(_reified: EffectSig) with
 
 fun _try(f: () -> Any) =
   let res = f()
-  if curEffect is ~null as tmp then
+  if curEffect !== null then
+    let tmp = curEffect
     set curEffect = null
     EffectHandle(tmp)
   else res
@@ -222,11 +223,7 @@ data class ContTrace(
   nextHandler: HandlerContFrame | null,
   lastHandler: ContTrace | HandlerContFrame | null,
   resumed: Bool
-) with
-  // mkEffect fills both tail links before publishing the trace in curEffect.
-  // Empty chains point back to the trace itself; null is only used during construction.
-  fun lastFrame: ContTrace | HandlerContFrame | FunctionContFrame = last as (ContTrace | HandlerContFrame | FunctionContFrame)
-  fun lastHandlerFrame: ContTrace | HandlerContFrame = lastHandler as (ContTrace | HandlerContFrame)
+)
 // PrintStackEffect stores the showLocals flag; FatalEffect has no handler function.
 data class EffectSig(contTrace: ContTrace, handler: Any, handlerFun: Function | Bool | null)
 
@@ -250,20 +247,20 @@ fun raisePrintStackEffect(showLocals) =
 fun topLevelEffect(debug) =
   let tr = curEffect
   let v = null
-  while tr is EffectSig as eff and eff.handler === PrintStackEffect do
-    console.log(showStackTrace("Stack Trace:", eff, debug, eff.handlerFun as Bool))
+  while tr is EffectSig and tr.handler === PrintStackEffect do
+    console.log(showStackTrace("Stack Trace:", tr, debug, tr.handlerFun))
     set
       curEffect = null
-      v = resume(eff.contTrace)(())
+      v = resume(tr.contTrace)(())
       tr = curEffect
-  if tr is EffectSig as tr then
+  if tr is EffectSig then
     set curEffect = null
     throw CustomStackError(showStackTrace("Error: Unhandled effect " + tr.handler!constructor!name, tr, debug, false))
   else
     v
 
 fun illegalEffect(position) =
-  let tmp = curEffect as EffectSig
+  let tmp = curEffect
   set curEffect = null
   throw CustomStackError(showStackTrace("Error: Effect " + tmp.handler!constructor!name + " is raised " + position, tmp, false, false))
 
@@ -273,24 +270,23 @@ fun showStackTrace(header: Str, tr: EffectSig, debug: Bool, showLocals: Bool) =
     curHandler = tr.contTrace
     atTail = true
   if debug do
-    while curHandler is ~null as handlerFrame do
-      let cur = handlerFrame.next
-      while cur is ~null as frame do
-        let curLocals = frame.getLocals
-        let loc = frame.getLoc
+    while curHandler !== null do
+      let cur = curHandler.next
+      while cur !== null do
+        let curLocals = cur.getLocals
+        let loc = cur.getLoc
         let localsMsg = if showLocals and curLocals.length > 0
           then " with locals: " + curLocals.map((l, ...) => l.localName + "=" + Rendering.render(l.value)).join(", ")
           else ""
         set
-          msg += "\n\tat " + frame.getNme + " (" + loc + ")"
+          msg += "\n\tat " + cur.getNme + " (" + loc + ")"
           msg += localsMsg
-          cur = frame.next
+          cur = cur.next
           atTail = false
-      let nextHandler = handlerFrame.nextHandler
-      set curHandler = nextHandler
-      if nextHandler is ~null as handlerFrame do
+      set curHandler = curHandler.nextHandler
+      if curHandler !== null do
         set
-          msg += "\n\twith handler " + handlerFrame.handler!constructor!name
+          msg += "\n\twith handler " + curHandler.handler!constructor!name
           atTail = false
     if atTail do
       set msg += "\n\tat tail position"
@@ -346,9 +342,9 @@ fun debugContTrace(contTrace) =
     hl.set("last-handler", new Set([contTrace.lastHandler]))
     console.log(showFunctionContChain(contTrace.next, hl, vis, 0))
     let cur = contTrace.nextHandler
-    while cur is ~null as frame do
-      console.log(showHandlerContChain(frame, hl, vis, 0))
-      set cur = frame.nextHandler
+    while cur !== null do
+      console.log(showHandlerContChain(cur, hl, vis, 0))
+      set cur = cur.nextHandler
     console.log()
   else
     console.log("Not a cont trace:")
@@ -366,10 +362,9 @@ fun debugEff(eff) =
 
 // runtime implementations
 fun unwind(...saved) =
-  val effect = curEffect as EffectSig
   set
-    effect.contTrace.lastFrame.next = new mut FunctionContFrame(null, saved)
-    effect.contTrace.last = effect.contTrace.lastFrame.next
+    curEffect.contTrace.last.next = new mut FunctionContFrame(null, saved)
+    curEffect.contTrace.last = curEffect.contTrace.last.next
 
 fun mkEffect(handler: Any, handlerFun: Function | Bool | null) =
   let res = new mut EffectSig(new mut ContTrace(null, null, null, null, false), handler, handlerFun)
@@ -381,7 +376,7 @@ fun mkEffect(handler: Any, handlerFun: Function | Bool | null) =
 fun handleBlockImpl(cur: EffectSig, handler: Any) =
   let handlerFrame = new mut HandlerContFrame(null, null, handler)
   set
-    cur.contTrace.lastHandlerFrame.nextHandler = handlerFrame
+    cur.contTrace.lastHandler.nextHandler = handlerFrame
     cur.contTrace.lastHandler = handlerFrame
     cur.contTrace.last = handlerFrame
   handleEffects(cur)
@@ -391,7 +386,7 @@ fun enterHandleBlock(handler: Any, body: () -> Any) =
   if curEffect === null then
     tmp
   else
-    handleBlockImpl(curEffect as EffectSig, handler)
+    handleBlockImpl(curEffect, handler)
 
 fun handleEffects(cur: Any): Any =
   while cur is
@@ -410,15 +405,15 @@ fun handleEffect(cur: EffectSig): Any =
   // debugEff(cur)
   // find the handle block corresponding to the current effect
   let prevHandlerFrame = cur.contTrace
-  while prevHandlerFrame.nextHandler is ~null as next and next.handler !== cur.handler do
-    set prevHandlerFrame = next
+  while prevHandlerFrame.nextHandler !== null and prevHandlerFrame.nextHandler.handler !== cur.handler do
+    set prevHandlerFrame = prevHandlerFrame.nextHandler
 
   // no matching handle block
   if prevHandlerFrame.nextHandler === null do
     return cur
 
   // the matching handle block
-  let handlerFrame = prevHandlerFrame.nextHandler as HandlerContFrame
+  let handlerFrame = prevHandlerFrame.nextHandler
 
   // unlink and save frames
   let saved = new mut ContTrace(
@@ -442,15 +437,15 @@ fun handleEffect(cur: EffectSig): Any =
   set curEffect = null
   let tmp = set stackDepth += 2 in (cur.handlerFun as Function)(resume(cur.contTrace))
   if curEffect !== null then
-    set cur = curEffect as EffectSig
+    set cur = curEffect
     // relink the saved frames
     if saved.next !== null do
-      set cur.contTrace.lastFrame.next = saved.next
+      set cur.contTrace.last.next = saved.next
     if saved.last !== saved do
       set cur.contTrace.last = saved.last
     if saved.nextHandler !== null do
       set
-        cur.contTrace.lastHandlerFrame.nextHandler = saved.nextHandler
+        cur.contTrace.lastHandler.nextHandler = saved.nextHandler
         cur.contTrace.lastHandler = saved.lastHandler
     cur
   else
@@ -467,25 +462,25 @@ fun resumeContTrace(contTrace: ContTrace, value: Any): Any =
   let cont = contTrace.next
   let handlerCont = contTrace.nextHandler
   while
-    cont is FunctionContFrame as frame then
+    cont is FunctionContFrame then
       set curEffect = null
-      set value = set stackDepth += 3 in frame.resume(value)
+      set value = set stackDepth += 3 in cont.resume(value)
       if curEffect !== null do
         set value = curEffect
       if value is EffectSig as effect then
         set
-          effect.contTrace.lastFrame.next = frame.next
-          effect.contTrace.lastHandlerFrame.nextHandler = handlerCont
+          effect.contTrace.last.next = cont.next
+          effect.contTrace.lastHandler.nextHandler = handlerCont
         if contTrace.last !== cont do
           set effect.contTrace.last = contTrace.last
         if handlerCont !== null do
           set effect.contTrace.lastHandler = contTrace.lastHandler
         return value
       else
-        set cont = frame.next
-    handlerCont is HandlerContFrame as frame then
-      set cont = frame.next
-      set handlerCont = frame.nextHandler
+        set cont = cont.next
+    handlerCont is HandlerContFrame then
+      set cont = handlerCont.next
+      set handlerCont = handlerCont.nextHandler
     else
       return value
 
