@@ -98,14 +98,33 @@ g()
 
 @async
 fun g() =
-  await(Promise.all([@async f(), @async f()]))
+  let state = 0
+  let work1resolve
+  let work2resolve
+  @async
+  fun f1() =
+    print("f1 started")
+    let work1 = new Promise((resolve, reject) =>
+      set work1resolve = resolve
+    )
+    await(work1)
+    print("f1 done")
+    work2resolve()
+  @async
+  fun f2() =
+    print("f2 started")
+    let work2 = new Promise((resolve, reject) =>
+      set work2resolve = resolve
+      work1resolve()
+    )
+    await(work2)
+    print("f2 done")
+  await(Promise.all([@async f1(), @async f2()]))
 
 :await
 g()
-//│ > 0
-//│ > 0
-//│ > # MLscript
-//│ > # MLscript
-//│ > true
-//│ > true
+//│ > f1 started
+//│ > f2 started
+//│ > f1 done
+//│ > f2 done
 //│ = [(), ()]
