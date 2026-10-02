@@ -37,7 +37,7 @@ declare module BigInt
 declare class Function with
   val name: Str
   fun bind(thisArg, ...args): Function
-  fun apply(thisArg, args: Array[Any]): Any
+  fun apply(thisArg, args: Array): Any
 declare module Function
 declare class String
 declare fun String(...args): Str
@@ -72,7 +72,7 @@ declare class Map[K, V] with
   fun values(): Iterator[V]
   fun entries(): Iterator[[K, V]]
   fun forEach(f: (V, K, Map[K, V]) -> Any): undefined
-declare class Iterator[T] with
+declare class Iterator[out T] with
   fun next(): { value: T, done: Bool }
 declare module Map
 declare class WeakSet[V]
@@ -503,3 +503,8 @@ declare class HTMLElement with
   val classList: dyn
 
 //│ ————————————————————————————————————————————————————————————————————————————————
+
+// Shared read interfaces for arrays, strings, and lazy views. Element types are
+// covariant, so using these interfaces does not widen an invariant collection.
+type Indexable[out A] = {length: Int, at: Int -> A, slice: Function}
+type IterableIndexable[out A] = {length: Int, at: Int -> A, slice: Function, iterator: () -> Iterator[A]}

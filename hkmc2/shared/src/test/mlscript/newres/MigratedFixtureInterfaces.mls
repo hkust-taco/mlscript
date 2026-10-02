@@ -70,3 +70,24 @@ Term.show(Term.Lam([termSymbol], Term.Ref(termSymbol)), termContext)
 :expect "undefined"
 Term.showPattern(Term.LitPattern(undefined), termContext)
 //│ = "undefined"
+
+// Shared read interfaces retain element types without invariant Array[Any] annotations.
+:expect [4, 5, 6]
+class Item(val value: Int)
+fun firstValue(xs: Indexable[Item]) = xs.at(0).value
+fun iteratedValue(xs: IterableIndexable[Item]) = xs.iterator().next().value.value
+[firstValue([Item(4)]), firstValue(LazyFingerTree.mk(Item(5))),
+ iteratedValue(LazyFingerTree.concat([Item(6)]).materialize())]
+//│ = [4, 5, 6]
+
+// Iterator is covariant: a more specific iterator remains usable through its base interface.
+:expect 7
+class SpecialItem extends Item(7)
+fun iteratorValue(xs: Iterator[Item]) = xs.next().value.value
+val items: Set[SpecialItem] = new Set
+items.add(new SpecialItem)
+val specialized: Iterator[SpecialItem] = items.values()
+iteratorValue(specialized)
+//│ = 7
+//│ items = Set(1) {SpecialItem { value: 7 }}
+//│ specialized = Iterator {}

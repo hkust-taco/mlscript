@@ -7,8 +7,6 @@ import "./Iter.mjs"
 open annotations { pure }
 
 
-// Tuple patterns also accept lazy views and other IterableBase instances.
-type Indexable = {length: Int, at: Int -> Any, slice: Function}
 
 module Runtime with ...
 
@@ -173,7 +171,7 @@ mut val resumePc = -1
 object FatalEffect
 object PrintStackEffect
 
-data class FunctionContFrame(next: FunctionContFrame | null, saved: Array[Any]) with
+data class FunctionContFrame(next: FunctionContFrame | null, saved: Array) with
   fun resume(value) =
     let
       i = 0
@@ -197,7 +195,7 @@ data class FunctionContFrame(next: FunctionContFrame | null, saved: Array[Any]) 
       resumeIdx = currentArgList + argListLength + 2
     f.apply(saved.[4], saved.slice(currentArgList + 1, currentArgList + 1 + argListLength))
   fun getLocals: Array[LocalVarInfo] =
-    let debugInfo = saved.[3] as Array[Any]
+    let debugInfo = saved.[3] as Array
     let i = 0
     let cur = 6
     while i < saved.[5] do
@@ -210,7 +208,7 @@ data class FunctionContFrame(next: FunctionContFrame | null, saved: Array[Any]) 
       res.push(new LocalVarInfo(debugInfo.[i + 1], saved.[cur + 1 + debugInfo.[i]]))
       set i += 2
     res
-  fun getNme = (saved.[3] as Array[Any]).[0]
+  fun getNme = (saved.[3] as Array).[0]
   fun getLoc =
     let loc = saved.[2]
     if
@@ -299,7 +297,7 @@ fun showStackTrace(header: Str, tr: EffectSig, debug: Bool, showLocals: Bool) =
       set msg += "\n\tat tail position"
   msg
 
-fun showFunctionContChain(cont: Any, hl: Map[Str, Set[Any]], vis: Set[Any], reps: Int): Str =
+fun showFunctionContChain(cont: Any, hl: Map[Str, Set], vis: Set, reps: Int): Str =
   if cont is FunctionContFrame as frame then
     let result = frame!constructor!name + "(pc=" + frame.saved.[1]
     hl.forEach((m, marker, ...) => if m.has(cont) do set result += ", " + marker)
@@ -316,7 +314,7 @@ fun showFunctionContChain(cont: Any, hl: Map[Str, Set[Any]], vis: Set[Any], reps
   else
     "(NOT CONT)"
 
-fun showHandlerContChain(cont: Any, hl: Map[Str, Set[Any]], vis: Set[Any], reps: Int): Str =
+fun showHandlerContChain(cont: Any, hl: Map[Str, Set], vis: Set, reps: Int): Str =
   if cont is HandlerContFrame as frame then
     let result = frame.handler!constructor!name
     hl.forEach((m, marker, ...) => if m.has(cont) do set result += ", " + marker)

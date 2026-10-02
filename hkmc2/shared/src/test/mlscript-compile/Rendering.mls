@@ -119,7 +119,7 @@ fun render(target, ...args): Str =
         let prefix = if index === 0 then "" else indents
         prefix + line + postfix
       .join("\n")
-  fun renderArray(array: Array[Any], level, keyLength, startPos) =
+  fun renderArray(array: Array, level, keyLength, startPos) =
     let
       i = 0
       length = array.length
@@ -154,7 +154,7 @@ fun render(target, ...args): Str =
         valueStr
       else throw new Error("All items in this array has been rendered.")
     renderSequence of done, next, level, keyLength, startPos, symbolsForArray
-  fun renderSet(theSet: Set[Any], level, keyLength, startPos) =
+  fun renderSet(theSet: Set, level, keyLength, startPos) =
     let
       iterator = theSet.values()
       peek = iterator.next()
@@ -271,7 +271,7 @@ fun render(target, ...args): Str =
     skipNonEnumerable()
     renderRecordLike of
       done, next, level, keyLength, startPos, symbolsForObject, isRefinement
-  fun renderMap(map: Map[Any, Any], level, keyLength, startPos) =
+  fun renderMap(map: Map, level, keyLength, startPos) =
     let
       iterator = map.entries()
       peek = iterator.next()

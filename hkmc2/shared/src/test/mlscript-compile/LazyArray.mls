@@ -84,7 +84,7 @@ class View(val underlying: Indexable, val start: Int, val end: Int) extends Lazy
   fun toString() = "[" + this joined(", ") + "]"
 
 object SpliceMarker
-class Splice(val bits: Array[Any], val len: Int) extends LazyArr with
+class Splice(val bits: Array, val len: Int) extends LazyArr with
   let materialized = null
 
   fun iterator() =
@@ -97,7 +97,7 @@ class Splice(val bits: Array[Any], val len: Int) extends LazyArr with
           SpliceMarker then
             if uitr === null do 
               set uitr = bits.[idx + 1].(Symbol.iterator)()
-            let n = (uitr as Iterator[Any]).next()
+            let n = (uitr as Iterator).next()
             if n.done then
               set uitr = null
               set idx += 2
@@ -135,7 +135,7 @@ class Splice(val bits: Array[Any], val len: Int) extends LazyArr with
         stack.push([0, vals.at(idx + 1) as Indexable])
     arr
 
-  fun materialize(): Array[Any] =
+  fun materialize(): Array =
     if materialized === null do
       set materialized = reify
     materialized
@@ -153,8 +153,6 @@ class Splice(val bits: Array[Any], val len: Int) extends LazyArr with
 
 module LazyArray with...
 
-// Arrays, strings, and lazy views share this indexable interface.
-type Indexable = {length: Int, at: Int -> Any, slice: Function}
 
 
 fun mk(...args) = View of args, 0, 0

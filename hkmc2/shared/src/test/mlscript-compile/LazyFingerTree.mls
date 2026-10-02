@@ -1,10 +1,8 @@
 #lang(0.3.x)
 import "./Iter.mls"
-import "./LazyArray.mls"
 import "./FingerTreeList.mls"
 
 open Iter
-open LazyArray { Indexable }
 open LazyFingerTree
 open FingerTreeList
 
@@ -12,7 +10,7 @@ fun normIdx(i, len) =
   if i < 0 then len + i
   else i
 
-fun concatHelper(a: Array[Any], l: Int, ...args: Array[Indexable]) =
+fun concatHelper(a: Array, l: Int, ...args: Array[Indexable]) =
   let idx = 0
   let init_len = a.length
   set a.length = init_len + args.length * 2
@@ -83,7 +81,7 @@ class View(val underlying: Indexable, val start: Int, val end: Int) extends Lazy
   fun toString() = "[" + this joined(", ") + "]"
 
 object SpliceMarker
-class Splice(val bits: Array[Any], val len: Int) extends LazyFT with
+class Splice(val bits: Array, val len: Int) extends LazyFT with
   let materialized = null
 
   fun iterator() = materialize().iterator()
@@ -115,7 +113,7 @@ class Splice(val bits: Array[Any], val len: Int) extends LazyFT with
           else stack.push([0, next as Indexable])
     acc
 
-  fun materialize(): {length: Int, at: Int -> Any, slice: Function, iterator: () -> Iterator[Any]} =
+  fun materialize(): IterableIndexable =
     if materialized == null do
       set materialized = reify
     materialized
