@@ -132,8 +132,6 @@ let methods = new GenericLibrary.Methods
 //│ = [7, 8]
 //│ methods = Methods
 
-// FIXME: A callback reading a constructor field in a module initializer still
-// crosses incompatible lexical capture paths, before any consumer imports it.
 :expect [5]
 module Local with
   class Known(val known: Int)

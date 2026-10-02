@@ -130,8 +130,6 @@ sealed trait ResolvableImpl extends ShapeHost, PossiblyErroneous:
   
   import Resolvable.CallableDefinition
   
-  
-  // private[semantics] val shapes: MutSet[Shape] = MutSet.empty
   def getShapes: Ls[ShapeEvent] = shapes.toList
   
   /**
@@ -334,10 +332,6 @@ type AnyRef_ = AnyRefImpl & Term
 sealed trait AnyRefImpl:
   self: Term.Ref | Term.SimpleRef | Term.MemberRef | Term.SelfRef =>
   def tree: Tree.Ident
-  // val refNum: Int
-  // val typ: Opt[Type]
-  // val sym: Symbol
-  // val resSym: FlowSymbol
   def sym: Symbol
 
 sealed trait NewRefImpl extends AnyRefImpl:

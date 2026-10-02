@@ -63,7 +63,7 @@ They count language directives in source files, not test-runner test cases.
   behavior, or rewrite a callable-constructor test to avoid the feature it tests.
   Review successful values and logs as well as failure markers: unsupported
   contextual calls can return function values without failing the test runner.
-- Open operators explicitly when overriding builtins, as in `codegen/ImportedOps`
+- Open operators explicitly when shadowing builtins, as in `codegen/ImportedOps`
   and `ucs/examples/ListFold`.
 - Use dynamic selection for reflective host access whose effects are not described
   by the static interface. For example, `ups/examples/DoubleTripleList` uses
