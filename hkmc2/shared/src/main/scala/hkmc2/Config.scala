@@ -96,6 +96,7 @@ object Config:
     allowUnresolvedAccesses: Bool,
     useNewResolution: Bool,
     strictResolution: Bool, // Reject multiple resolved selection targets as well as missing targets
+    eagerResolution: Bool, // Reject selections whose prefixes have shapes that do not support them, even though the selection might have other valid targets
     typeCheck: Opt[TypeChecking],
   )(val versionName: Str)
   
@@ -105,6 +106,7 @@ object Config:
       typeCheck = N,
       useNewResolution = false,
       strictResolution = false,
+      eagerResolution = false,
       allowUnresolvedAccesses = true,
     )(
       versionName = "0.2.x",
@@ -114,6 +116,7 @@ object Config:
       typeCheck = N,
       useNewResolution = true,
       strictResolution = false,
+      eagerResolution = false,
       allowUnresolvedAccesses = false,
     )(
       versionName = "0.3.x",
@@ -413,6 +416,9 @@ object ConfigParser:
     case NamedArg("strictResolution", value) =>
       parsedLanguageModifier(value)(parseBool): v =>
         lang => lang.copy(strictResolution = v)(lang.versionName)
+    case NamedArg("eagerResolution", value) =>
+      parsedLanguageModifier(value)(parseBool): v =>
+        lang => lang.copy(eagerResolution = v)(lang.versionName)
     case NamedArg("typeCheck", value) =>
       parsedLanguageModifier(value)(tree => parseOpt(tree)(parseTypeChecking)): v =>
         lang => lang.copy(typeCheck = v)(lang.versionName)

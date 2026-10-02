@@ -471,7 +471,7 @@ class CompilerTest extends AnyFunSuite:
     assert(errors.exists(_.allMsgs.exists(_._1.show.contains("Type parameter 'A'"))))
     assert(!errors.exists(_.allMsgs.exists(_._1.show.contains("exposed by this compilation unit"))))
 
-  test("non-strict files still check their exported interfaces"):
+  test("eager resolution checks exported interfaces in non-strict files"):
     val fs = new InMemoryFileSystem(loadStandardLibrary())
     given cctx: CompilerCtx = CompilerCtx.fresh(fs, paths, Config.default(io.Path("/")))
     given DebugPrinter = new DebugPrinter
@@ -479,7 +479,7 @@ class CompilerTest extends AnyFunSuite:
       override def doTrace = false
     val errors = scala.collection.mutable.ArrayBuffer.empty[Diagnostic]
     given Raise = errors += _
-    fs.write("/Unsafe.mls", """#lang(0.3.x, strictResolution: false)
+    fs.write("/Unsafe.mls", """#lang(0.3.x, strictResolution: false, eagerResolution: true)
                                 |module Unsafe with
                                 |  fun foo(x) = x.a
                                 |Unsafe.foo({a: 1})

@@ -1199,8 +1199,10 @@ class NewResolver:
           // selecting it does not inspect an instance field or method body.
           fromBMSAt(member, flow, Nil, listener, source, selected, receiver, specialization)
 
-  def resolError(src: Term | Pattern, msgs: Ls[(Message, Opt[Loc])])(using rs: NewResolverState): Unit = rs.report:
+  private def resolutionError(src: Term | Pattern, msgs: Ls[(Message, Opt[Loc])]): ErrorReport =
     ErrorReport(msg"Resolution error in ${src.describe}" -> src.toLoc ::msgs, source = Diagnostic.Source.Compilation)
+  def resolError(src: Term | Pattern, msgs: Ls[(Message, Opt[Loc])])(using rs: NewResolverState): Unit =
+    rs.report(resolutionError(src, msgs))
   
   def registerTypeParameters(owner: AnyDefinitionSymbol, params: Ls[VarSymbol])(using State, NewResolverState): Unit =
     if params.nonEmpty then
@@ -2520,13 +2522,18 @@ class NewResolver:
       case NoShape => ()
 
   private def unknownMember(host: NewResolvable, name: Str, reason: MemberLookup.Uncertainty, provenance: ShapeProvenance)(using NewResolverState): Unit = if !rstate.hasError(host) then
-    rstate.markError(host)
     val message = reason match
       case MemberLookup.Uncertainty.ValueShape =>
         msg"Cannot resolve member '$name' of a value with unknown shape."
       case MemberLookup.Uncertainty.RecordOverwrite =>
         msg"Cannot resolve member '$name' across a computed key or unknown record spread."
-    resolError(host, provenance.diagnostic(message, N))
+    host match
+      case sel: NewSel =>
+        rstate.missingMember(sel, config.language.eagerResolution):
+          resolutionError(sel, provenance.diagnostic(message, N))
+      case _ =>
+        rstate.markError(host)
+        resolError(host, provenance.diagnostic(message, N))
 
   def unresolvedRef(ref: UnresolvedRef)(using NewResolverState): Unit =
     ref.prefixes.foreach: prefix =>
@@ -2646,8 +2653,8 @@ class NewResolver:
         rstate.recordResolution(sel, sel.hasDynamicTarget)(sel.hasDynamicTarget = true)
         publishDynamic(sel, marks)
       case MemberLookup.Missing if rstate.canResolve(sel) =>
-        rstate.markError(sel)
-        resolError(sel, diagnostic(msg"$description does not contain member '${sel.id.name}'"))
+        rstate.missingMember(sel, config.language.eagerResolution):
+          resolutionError(sel, diagnostic(msg"$description does not contain member '${sel.id.name}'"))
       case MemberLookup.Unknown(reason, provenance) => unknownMember(sel, sel.id.name, reason, provenance)
       // Later activations still transport field values through the compiled
       // selection, but cannot choose a different member for that old syntax.

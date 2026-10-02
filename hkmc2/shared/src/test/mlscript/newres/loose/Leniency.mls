@@ -1,0 +1,218 @@
+:.
+
+
+module M1 { val u = 1 }
+module M2 { val v = 2 }
+
+
+fun foo(x: M1 | M2) = x.u
+
+:expect [1, undefined]
+fun bar(x, flag) = if flag then x.u else 0
+tuple of
+  bar(M1, true)
+  bar(M2, true)
+//│ = [1, undefined]
+
+
+// A miss can arrive before the candidate that resolves the selection.
+:expect [0, 1]
+fun later(x, flag) = if flag then x.u else 0
+[later(M2, false), later(M1, true)]
+//│ = [0, 1]
+
+// Forward declarations can supply the target after the selection is visited.
+:expect 3
+fun forward(x: Before | After) = x.u
+module Before { val v = 0 }
+module After { val u = 3 }
+forward(After)
+//│ = 3
+
+// When no candidate supplies the member, retain both annotation witnesses.
+:e
+fun missing(x: M1 | M2) = x.absent
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.34: 	fun missing(x: M1 | M2) = x.absent
+//│ ║        	                          ^^^^^^^^
+//│ ╟── Value of type 'M1' does not contain member 'absent'
+//│ ║  l.34: 	fun missing(x: M1 | M2) = x.absent
+//│ ╙──      	               ^^^^^^^
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.34: 	fun missing(x: M1 | M2) = x.absent
+//│ ║        	                          ^^^^^^^^
+//│ ╟── Value of type 'M2' does not contain member 'absent'
+//│ ║  l.34: 	fun missing(x: M1 | M2) = x.absent
+//│ ╙──      	               ^^^^^^^
+
+// Indexed and dynamic selections have targets without nominal member symbols.
+:expect 4
+let tuples = if hide(true) then [4] else []
+tuples.0
+//│ = 4
+//│ tuples = [4]
+
+:expect 5
+let dynamic = if hide(true) then ({value: 5} as dyn) else {other: 0}
+dynamic.value
+//│ = 5
+//│ dynamic = {value: 5}
+
+// Deferred misses must still be reported for a wholly unresolved record access.
+:e
+let records = if hide(true) then {left: 1} else {right: 2}
+records.absent
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.64: 	records.absent
+//│ ║        	^^^^^^^^^^^^^^
+//│ ╟── Record literal does not contain member 'absent'
+//│ ║  l.63: 	let records = if hide(true) then {left: 1} else {right: 2}
+//│ ╙──      	                                  ^^^^^^^
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.64: 	records.absent
+//│ ║        	^^^^^^^^^^^^^^
+//│ ╟── Record literal does not contain member 'absent'
+//│ ║  l.63: 	let records = if hide(true) then {left: 1} else {right: 2}
+//│ ╙──      	                                                 ^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ records = {left: 1}
+
+// A successful selection in the next worksheet block must not replay old misses.
+:expect 1
+foo(M1)
+//│ = 1
+
+// Resetting the language preset enables leniency without an explicit override.
+:expect 1
+#lang(0.3.x)
+fun defaultLeniency(x: M2 | M1) = x.u
+defaultLeniency(M1)
+//│ = 1
+
+// Eager checking rejects a missing alternative even with a resolved target.
+:e
+#lang(eagerResolution: true)
+fun eager(x: M1 | M2) = x.u
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.95: 	fun eager(x: M1 | M2) = x.u
+//│ ║        	                        ^^^
+//│ ╟── Value of type 'M2' does not contain member 'u'
+//│ ║  l.95: 	fun eager(x: M1 | M2) = x.u
+//│ ╙──      	             ^^^^^^^
+
+// Requiring a unique target is independent of requiring every shape to match.
+:expect 1
+#lang(eagerResolution: false, strictResolution: true)
+fun unique(x: M1 | M2) = x.u
+unique(M1)
+//│ = 1
+
+:e
+module M3 { val u = 3 }
+fun ambiguous(x: M1 | M2 | M3) = x.u
+//│ ╔══[COMPILATION ERROR] This selection of member 'u' is ambiguous, as it has multiple resolved targets
+//│ ║  l.112: 	fun ambiguous(x: M1 | M2 | M3) = x.u
+//│ ║         	                                 ^^^
+//│ ╟── target: value 'u' in module 'M3'
+//│ ║  l.111: 	module M3 { val u = 3 }
+//│ ║         	                ^
+//│ ╟── target: value 'u' in module 'M1'
+//│ ║  l.4: 	module M1 { val u = 1 }
+//│ ╙──     	                ^
+
+
+// Unknown inputs are tolerated when another input resolves the selection.
+:expect [0, 1]
+#lang(0.3.x)
+fun withUnknown(x, flag) = if flag then x.u else 0
+[withUnknown(M2 as Any, false), withUnknown(M1, true)]
+//│ = [0, 1]
+
+// Later calls use the completed selection's target without replaying its misses.
+:expect 0
+withUnknown(M2 as Any, false)
+//│ = 0
+
+// Unresolved unknown inputs keep the path back to the annotation hiding their shape.
+:e
+private fun discard(f: Function) = ()
+discard(x => x.value)
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.139: 	discard(x => x.value)
+//│ ║         	             ^^^^^^^
+//│ ╟── Parameter 'x' admits values of unknown shape.
+//│ ║  l.139: 	discard(x => x.value)
+//│ ║         	        ^
+//│ ╟── Cannot resolve member 'value' of a value with unknown shape.
+//│ ║  l.138: 	private fun discard(f: Function) = ()
+//│ ║         	                       ^^^^^^^^
+//│ ╙── The 'Function' type does not specify parameter types.
+
+// Preserve both known misses and unknown provenance when neither supplies a target.
+:e
+fun noCandidate(x) = x.absent
+[noCandidate(M2 as Any), noCandidate(M1)]
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.153: 	fun noCandidate(x) = x.absent
+//│ ║         	                     ^^^^^^^^
+//│ ╟── Cannot resolve member 'absent' of a value with unknown shape.
+//│ ║  l.154: 	[noCandidate(M2 as Any), noCandidate(M1)]
+//│ ║         	                   ^^^
+//│ ╟── Type 'Any' is declared without a member interface.
+//│ ║  in ../../decls/Prelude.mls
+//│ ║  l.2: 	declare type Any
+//│ ╙──     	             ^^^
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.153: 	fun noCandidate(x) = x.absent
+//│ ║         	                     ^^^^^^^^
+//│ ╟── Module 'M1' does not contain member 'absent'
+//│ ║  l.4: 	module M1 { val u = 1 }
+//│ ╙──     	       ^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// A computed key is another source of uncertainty about the selected member.
+:expect 6
+let key = hide("value")
+let computed = if hide(true) then {value: 6} else {(key): 0}
+computed.value
+//│ = 6
+//│ computed = {value: 6}
+//│ key = "value"
+
+:e
+{(key): 0}.value
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.183: 	{(key): 0}.value
+//│ ║         	 ^^^^^^^^^^^^^^^
+//│ ╟── Cannot resolve member 'value' across a computed key or unknown record spread.
+//│ ╟── This computed key can overwrite the selected member.
+//│ ║  l.183: 	{(key): 0}.value
+//│ ╙──       	  ^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+:e
+#lang(eagerResolution: true)
+let eagerUnknown = if hide(true) then M1 else (M2 as Any)
+eagerUnknown.u
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.196: 	eagerUnknown.u
+//│ ║         	^^^^^^^^^^^^^^
+//│ ╟── Cannot resolve member 'u' of a value with unknown shape.
+//│ ║  l.195: 	let eagerUnknown = if hide(true) then M1 else (M2 as Any)
+//│ ║         	                                                     ^^^
+//│ ╟── Type 'Any' is declared without a member interface.
+//│ ║  in ../../decls/Prelude.mls
+//│ ║  l.2: 	declare type Any
+//│ ╙──     	             ^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ eagerUnknown = class M1 { u: 1 }
+
+
+// Compiled selections retain their targets when imports supply new receiver shapes.
+:expect [7, 8, 0]
+#lang(0.3.x)
+import "../../../mlscript-compile/LenientSelections.mls"
+[LenientSelections.observed,
+ LenientSelections.read({value: 8}, true),
+ LenientSelections.read(M2 as Any, false)]
+//│ = [7, 8, 0]

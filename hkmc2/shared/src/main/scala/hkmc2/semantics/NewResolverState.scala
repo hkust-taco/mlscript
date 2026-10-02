@@ -132,6 +132,20 @@ final class NewResolverState private (
 
   private val completedNodes = mutable.Set.empty[Identity[Publisher[?]]]
 
+  // A receiver shape can lack a member that another shape supplies later in
+  // inference. Keep its diagnostic lazy so successful selections do not expand
+  // provenance paths. Only this block's owned selections are queued; imported
+  // and previously completed selections can be checked against their fixed targets.
+  private val missingMembers = mutable.ListBuffer.empty[(NewSel, () => Diagnostic)]
+  private def hasSelectionTarget(selection: NewSel): Bool =
+    selection.resolvedTargets.nonEmpty || selection.hasDynamicTarget || selection.tupleIndex.nonEmpty
+  def missingMember(selection: NewSel, eager: Bool)(diagnostic: => Diagnostic): Unit =
+    if eager || !canResolve(selection) then
+      if eager || !hasSelectionTarget(selection) then
+        markError(selection)
+        report(diagnostic)
+    else root.missingMembers += ((selection, () => diagnostic))
+
   /** Seal the decisions and original host data read by erasure/lowering. The
     * inference graph keeps private, live host data and all its listeners, so
     * later calls can still transport arguments and results through these nodes.
@@ -179,6 +193,11 @@ final class NewResolverState private (
         case _ => ()
       statement.subStatements.foreach(visit)
     visit(block)
+    root.missingMembers.foreach: (selection, diagnostic) =>
+      if !hasSelectionTarget(selection) then
+        markError(selection)
+        report(diagnostic())
+    root.missingMembers.clear()
     root.pending.foreach: (key, value) =>
       if !key.value.isInstanceOf[Symbol] && root.completedNodes.add(key) then value.completed = true
     root.pending.clear()

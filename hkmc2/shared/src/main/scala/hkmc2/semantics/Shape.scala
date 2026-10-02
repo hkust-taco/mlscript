@@ -765,8 +765,8 @@ object ShapeProvenance:
   val empty = ShapeProvenance(Nil)
 
 /** An unknown input or the element of an opaque or widened spread can be any
-  * value. Keep this alternative in the flow graph so known candidates cannot
-  * silently make an unresolved operation appear to have a static target.
+  * value. Retain this alternative to explain unresolved operations and let eager
+  * member resolution reject unknown prefixes even when other candidates have targets.
   * Provenance is outside case-class equality: another diagnostic witness must
   * not turn the same unknown into a new inference candidate.
   */

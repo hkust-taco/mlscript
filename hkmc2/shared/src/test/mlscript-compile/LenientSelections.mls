@@ -1,0 +1,7 @@
+#lang(0.3.x)
+
+// The local call supplies a target even though exported parameters also admit
+// unknown inputs. Importers must preserve that target and its runtime access.
+module LenientSelections with
+  fun read(x, enabled) = if enabled then x.value else 0
+  val observed = read({value: 7}, true)
