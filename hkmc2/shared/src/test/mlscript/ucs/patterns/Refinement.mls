@@ -13,7 +13,7 @@ x => if x is
 //│ ║  l.11: 	  refined(None) then x
 //│ ╙──      	  ^^^^^^^^^^^^^
 //│ Normalized:
-//│ >  ‹if|while› let tmp:scrut = x⁰
+//│ >  ‹if|while›
 
 // OK
 x => if x is
@@ -22,7 +22,7 @@ x => if x is
 //│ ║  l.20: 	  refined(Some) then x
 //│ ╙──      	  ^^^^^^^^^^^^^
 //│ Normalized:
-//│ >  ‹if|while› let tmp:scrut = x¹
+//│ >  ‹if|while›
 
 // Should warn about the inconsistent refinement
 x => if x is
@@ -32,18 +32,16 @@ x => if x is
 //│ ║  l.29: 	  refined(None) then x
 //│ ╙──      	  ^^^^^^^^^^^^^
 //│ Normalized:
-//│ >  ‹if|while›
-//│ >    let tmp:scrut = x²
-//│ >    tmp:scrut is Some‹open› then x²
+//│ >  ‹if|while› x is Some‹open› then x⁰
 
 x => if x is
   refined(None) then x
   refined(Some) then x
 //│ ╔══[COMPILATION ERROR] Cannot use this wildcard-open reference as a pattern.
-//│ ║  l.40: 	  refined(None) then x
+//│ ║  l.38: 	  refined(None) then x
 //│ ╙──      	  ^^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Cannot use this wildcard-open reference as a pattern.
-//│ ║  l.41: 	  refined(Some) then x
+//│ ║  l.39: 	  refined(Some) then x
 //│ ╙──      	  ^^^^^^^^^^^^^
 //│ Normalized:
-//│ >  ‹if|while› let tmp:scrut = x³
+//│ >  ‹if|while›

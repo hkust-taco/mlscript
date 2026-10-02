@@ -280,9 +280,7 @@ fun isBool(v) = if v is Bool then 1 else 0
 isInt(1)
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define isInt⁰ as fun isInt¹(v: ?): ? {
-//│   let scrut: ?;
-//│   set scrut = v;
-//│   match scrut
+//│   match v
 //│     Int⁰ =>
 //│       return 1
 //│     else
@@ -290,9 +288,7 @@ isInt(1)
 //│   end
 //│ };
 //│ define isBool⁰ as fun isBool¹(v: ?): ? {
-//│   let scrut: ?;
-//│   set scrut = v;
-//│   match scrut
+//│   match v
 //│     Bool⁰ =>
 //│       return 1
 //│     else

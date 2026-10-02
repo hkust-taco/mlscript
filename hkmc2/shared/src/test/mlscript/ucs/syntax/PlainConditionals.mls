@@ -94,7 +94,7 @@ fun foo(x) = x is Pair(a, b) | Int
 data class A[T](arg: T)
 
 let foo = x => x is A(_)
-//│ foo = fun
+//│ foo = fun foo
 
 :expect [false, true]
 [foo(0), foo(A(0))]

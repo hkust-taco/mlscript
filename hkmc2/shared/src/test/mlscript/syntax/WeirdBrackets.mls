@@ -78,14 +78,12 @@ fun interesting(x) =
   if x is Box( Int then 1, Bool then 2 )
 //│ Split with nested patterns:
 //│ >  if
-//│ >    let tmp:scrut = x⁰
-//│ >    tmp:scrut is member:Box⁰^term:interesting⁰(member:Int⁰^term:interesting⁰) then 1
-//│ >    tmp:scrut is member:Box⁰^term:interesting⁰(member:Bool⁰^term:interesting⁰) then 2
+//│ >    x is member:Box⁰^term:interesting⁰(member:Int⁰^term:interesting⁰) then 1
+//│ >    x is member:Box⁰^term:interesting⁰(member:Bool⁰^term:interesting⁰) then 2
 //│ Expanded split with flattened patterns:
 //│ >  ‹if|while›
-//│ >    let tmp:scrut = x⁰
-//│ >    tmp:scrut is member:Box⁰^term:interesting⁰(arg$Box$0$) and tmp:arg$Box$0$ is member:Int⁰^term:interesting⁰ then 1
-//│ >    tmp:scrut is member:Box⁰^term:interesting⁰(arg$Box$0$) and tmp:arg$Box$0$ is member:Bool⁰^term:interesting⁰ then 2
+//│ >    x is member:Box⁰^term:interesting⁰(arg$Box$0$) and tmp:arg$Box$0$ is member:Int⁰^term:interesting⁰ then 1
+//│ >    x is member:Box⁰^term:interesting⁰(arg$Box$0$) and tmp:arg$Box$0$ is member:Bool⁰^term:interesting⁰ then 2
 
 interesting of Box(42)
 //│ = 1

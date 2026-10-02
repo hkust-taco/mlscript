@@ -22,11 +22,11 @@ fun sum(ls, acc) = if ls is
 sum(enum(5), 0)
 //│ deforest > >>> fusing >>>
 //│ deforest > Nil⁰ ->
-//│ deforest > 	match: scrut⁰
+//│ deforest > 	match: ls⁰
 //│ deforest > Cons⁰(x⁰, tmp⁰) ->
-//│ deforest > 	match: scrut⁰
-//│ deforest > 	fields: scrut⁰.h⁰
-//│ deforest > 	fields: scrut⁰.t⁰
+//│ deforest > 	match: ls⁰
+//│ deforest > 	fields: ls⁰.h⁰
+//│ deforest > 	fields: ls⁰.t⁰
 //│ deforest > <<< fusing <<<
 //│ eta-expansion > >>> eta-expansion targets shapes >>>
 //│ eta-expansion > enum_13$enum: [1, 7]
@@ -105,11 +105,11 @@ fun len(ls) = if ls is
 len(flatten(id((1 :: 2 :: Nil) :: (3 :: Nil) :: Nil)))
 //│ deforest > >>> fusing >>>
 //│ deforest > Nil⁰ ->
-//│ deforest > 	match: scrut¹
+//│ deforest > 	match: ls¹
 //│ deforest > Cons⁰(h¹, tmp¹) ->
-//│ deforest > 	match: scrut¹
-//│ deforest > 	fields: scrut¹.h⁰
-//│ deforest > 	fields: scrut¹.t⁰
+//│ deforest > 	match: ls¹
+//│ deforest > 	fields: ls¹.h⁰
+//│ deforest > 	fields: ls¹.t⁰
 //│ deforest > <<< fusing <<<
 //│ eta-expansion > >>> eta-expansion targets shapes >>>
 //│ eta-expansion > flatten_31_append_16$append: [2, 6]

@@ -44,11 +44,11 @@ fun f(a) = if a is
 (x => 0)(f(f(C)))
 //│ deforest > >>> fusing >>>
 //│ deforest > C⁰ ->
-//│ deforest > 	match: scrut⁰
+//│ deforest > 	match: a⁰
 //│ deforest > C⁰ ->
-//│ deforest > 	match: scrut⁰
+//│ deforest > 	match: a⁰
 //│ deforest > D⁰ ->
-//│ deforest > 	match: scrut⁰
+//│ deforest > 	match: a⁰
 //│ deforest > <<< fusing <<<
 //│ = 0
 
@@ -78,11 +78,11 @@ fun modSome(x, m) = if x is
 modSome(Some(17), 3)
 //│ deforest > >>> fusing >>>
 //│ deforest > Some⁰(tmp⁰) ->
-//│ deforest > 	match: scrut¹
-//│ deforest > 	fields: scrut¹.x⁰
+//│ deforest > 	match: x⁰
+//│ deforest > 	fields: x⁰.x¹
 //│ deforest > Some⁰(17) ->
-//│ deforest > 	match: scrut¹
-//│ deforest > 	fields: scrut¹.x⁰
+//│ deforest > 	match: x⁰
+//│ deforest > 	fields: x⁰.x¹
 //│ deforest > <<< fusing <<<
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ let Some_x, fv_m, fv_scrut, fv_tmp, inlinedVal;
@@ -91,7 +91,7 @@ modSome(Some(17), 3)
 //│     let scrut, arg$Some$0$, tmp, tmp1;
 //│     match x
 //│       Some¹ =>
-//│         set arg$Some$0$ = x.x⁰;
+//│         set arg$Some$0$ = x.x¹;
 //│         set scrut = >=⁰(arg$Some$0$, m);
 //│         match scrut
 //│           true =>
@@ -151,12 +151,12 @@ fun zipWith(xsys, f) = if xsys is
 zipWith([id(Nil), id(Nil)], (x, y) => x)
 //│ deforest > >>> fusing >>>
 //│ deforest > [tx⁰, ty⁰] ->
-//│ deforest > 	match: scrut²
-//│ deforest > 	fields: runtime⁰.Tuple⁰.get⁰(scrut², 0)
-//│ deforest > 	fields: runtime⁰.Tuple⁰.get⁰(scrut², 1)
+//│ deforest > 	match: xsys⁰
+//│ deforest > 	fields: runtime⁰.Tuple⁰.get⁰(xsys⁰, 0)
+//│ deforest > 	fields: runtime⁰.Tuple⁰.get⁰(xsys⁰, 1)
 //│ deforest > [tmp¹, tmp²] ->
-//│ deforest > 	match: scrut²
-//│ deforest > 	fields: runtime⁰.Tuple⁰.get⁰(scrut², 0)
-//│ deforest > 	fields: runtime⁰.Tuple⁰.get⁰(scrut², 1)
+//│ deforest > 	match: xsys⁰
+//│ deforest > 	fields: runtime⁰.Tuple⁰.get⁰(xsys⁰, 0)
+//│ deforest > 	fields: runtime⁰.Tuple⁰.get⁰(xsys⁰, 1)
 //│ deforest > <<< fusing <<<
 //│ = Nil

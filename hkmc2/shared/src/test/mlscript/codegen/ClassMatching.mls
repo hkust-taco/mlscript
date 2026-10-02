@@ -27,10 +27,8 @@ let s = Some(0)
 if s is
   Some(x) then x
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let scrut1;
-//│ scrut1 = s;
-//│ if (scrut1 instanceof Some1.class) {
-//│   return scrut1.value
+//│ if (s instanceof Some1.class) {
+//│   return s.value
 //│ }
 //│ throw globalThis.Object.freeze(new globalThis.Error("match error"));
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
@@ -48,11 +46,10 @@ if s is
   Some(1) then 0
   None then 1
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let scrut, arg$Some$0$;
-//│ set scrut = s⁰;
-//│ match scrut
+//│ let arg$Some$0$;
+//│ match s⁰
 //│   Some⁰ =>
-//│     set arg$Some$0$ = scrut.value⁰;
+//│     set arg$Some$0$ = s⁰.value⁰;
 //│     match arg$Some$0$
 //│       1 =>
 //│         return 0
@@ -65,11 +62,10 @@ if s is
 //│     throw new globalThis⁰.Error⁰("match error")
 //│ end
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let scrut, arg$Some$0$;
-//│ set scrut = s⁰;
-//│ match scrut
+//│ let arg$Some$0$;
+//│ match s⁰
 //│   Some⁰ =>
-//│     set arg$Some$0$ = scrut.value⁰;
+//│     set arg$Some$0$ = s⁰.value⁰;
 //│     match arg$Some$0$
 //│       1 =>
 //│         return 0
@@ -159,11 +155,11 @@ fun f(x) = if x is
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let f4;
 //│ f4 = function f(x2) {
-//│   let scrut5, arg$Some$0$1;
+//│   let scrut1, arg$Some$0$1;
 //│   if (x2 instanceof Some1.class) {
 //│     arg$Some$0$1 = x2.value;
-//│     scrut5 = arg$Some$0$1 > 0;
-//│     if (scrut5 === true) {
+//│     scrut1 = arg$Some$0$1 > 0;
+//│     if (scrut1 === true) {
 //│       return 42
 //│     }
 //│     return Predef.print("oops");

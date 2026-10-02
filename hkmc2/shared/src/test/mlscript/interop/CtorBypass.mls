@@ -19,7 +19,7 @@ A!prototype
 
 // * This can be used for deserialization. The constructor has not initialized its
 // * fields, so use a dynamic receiver to retain runtime checks for missing fields.
-val b: dyn = Object.create(A!prototype)
+let b = Object.create(A!prototype) as dyn
 //│ b = A
 
 :sjs

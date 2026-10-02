@@ -49,12 +49,10 @@ fun f = while x
   else return 42 // TODO: support `break` here
 f
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let f;
+//│ let f, inlinedVal;
 //│ f = function f() {
 //│   lbl4: while (true) {
-//│     let scrut;
-//│     scrut = x2;
-//│     if (scrut === true) {
+//│     if (x2 === true) {
 //│       Predef.print("Hello World");
 //│       x2 = false;
 //│       continue lbl4
@@ -62,7 +60,18 @@ f
 //│     return 42;
 //│   }
 //│ };
-//│ return f()
+//│ inlinedLbl: {
+//│   lbl4: while (true) {
+//│     if (x2 === true) {
+//│       Predef.print("Hello World");
+//│       x2 = false;
+//│       continue lbl4
+//│     }
+//│     inlinedVal = 42;
+//│     break inlinedLbl;
+//│   }
+//│ }
+//│ return inlinedVal
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > Hello World
 //│ = 42
@@ -73,10 +82,10 @@ fun f = while (print("Hello World"), false)
   else return 1
 f
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.72: 	  then 0(0)
+//│ ║  l.81: 	  then 0(0)
 //│ ║        	       ^^^^
 //│ ╟── Integer literal cannot be called like a function.
-//│ ║  l.72: 	  then 0(0)
+//│ ║  l.81: 	  then 0(0)
 //│ ╙──      	       ^
 //│ > Hello World
 //│ = 1
@@ -163,10 +172,8 @@ if x
   else 42
 //│ Normalized:
 //│ >  ‹if|while›
-//│ >    let tmp:scrut = x⁰
-//│ >    tmp:scrut is true and
-//│ >      let tmp:scrut = y⁰
-//│ >      tmp:scrut is true then 0
+//│ >    x is true and
+//│ >      y is true then 0
 //│ >      else 1
 //│ >    else 42
 //│ = 42
@@ -179,10 +186,8 @@ if x
   else 42
 //│ Normalized:
 //│ >  ‹if|while›
-//│ >    let tmp:scrut = x⁰
-//│ >    tmp:scrut is true and
-//│ >      let tmp:scrut = y⁰
-//│ >      tmp:scrut is true then 0
+//│ >    x is true and
+//│ >      y is true then 0
 //│ >      else 1
 //│ >    else 42
 //│ = 42
@@ -204,14 +209,14 @@ fun f(ls) =
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let f6;
 //│ f6 = function f(ls) {
-//│   lbl8: while (true) {
+//│   lbl9: while (true) {
 //│     let arg$Cons$0$, arg$Cons$1$;
 //│     if (ls instanceof Cons1.class) {
 //│       arg$Cons$0$ = ls.hd;
 //│       arg$Cons$1$ = ls.tl;
 //│       ls = arg$Cons$1$;
 //│       Predef.print(arg$Cons$0$);
-//│       continue lbl8
+//│       continue lbl9
 //│     }
 //│     break;
 //│   }
@@ -254,10 +259,8 @@ let x = 1
 :sjs
 while x is {} do()
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ lbl10: while (true) {
-//│   let scrut4;
-//│   scrut4 = x3;
-//│   if (scrut4 instanceof globalThis.Object) { continue lbl10 }
+//│ lbl11: while (true) {
+//│   if (x3 instanceof globalThis.Object) { continue lbl11 }
 //│   break;
 //│ }
 //│ return runtime.Unit
@@ -332,10 +335,10 @@ while print("Hello World"); false
   then 0(0)
   else 1
 //│ ╔══[PARSE ERROR] Unexpected 'then' keyword here
-//│ ║  l.332: 	  then 0(0)
+//│ ║  l.335: 	  then 0(0)
 //│ ╙──       	  ^^^^
 //│ ╔══[COMPILATION ERROR] Unrecognized term split (false literal)
-//│ ║  l.331: 	while print("Hello World"); false
+//│ ║  l.334: 	while print("Hello World"); false
 //│ ╙──       	                            ^^^^^
 //│ > Hello World
 
@@ -344,12 +347,12 @@ while { print("Hello World"), false }
   then 0(0)
   else 1
 //│ ╔══[COMPILATION ERROR] Unexpected infix use of keyword 'then' here
-//│ ║  l.343: 	while { print("Hello World"), false }
+//│ ║  l.346: 	while { print("Hello World"), false }
 //│ ║         	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.344: 	  then 0(0)
+//│ ║  l.347: 	  then 0(0)
 //│ ╙──       	^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Illegal position for prefix keyword 'else'.
-//│ ║  l.345: 	  else 1
+//│ ║  l.348: 	  else 1
 //│ ╙──       	  ^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -360,14 +363,14 @@ while
   then 0(0)
   else 1
 //│ ╔══[COMPILATION ERROR] Unexpected infix use of keyword 'then' here
-//│ ║  l.358: 	    print("Hello World")
+//│ ║  l.361: 	    print("Hello World")
 //│ ║         	    ^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.359: 	    false
+//│ ║  l.362: 	    false
 //│ ║         	^^^^^^^^^
-//│ ║  l.360: 	  then 0(0)
+//│ ║  l.363: 	  then 0(0)
 //│ ╙──       	^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Illegal position for prefix keyword 'else'.
-//│ ║  l.361: 	  else 1
+//│ ║  l.364: 	  else 1
 //│ ╙──       	  ^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 

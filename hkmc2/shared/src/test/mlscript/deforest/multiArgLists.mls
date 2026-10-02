@@ -13,9 +13,9 @@ fun test(a)(b) =
 test(Pair(1, 2))(3)
 //│ deforest > >>> fusing >>>
 //│ deforest > Pair⁰(1, 2) ->
-//│ deforest > 	match: scrut⁰
-//│ deforest > 	fields: scrut⁰.x⁰
-//│ deforest > 	fields: scrut⁰.y⁰
+//│ deforest > 	match: a⁰
+//│ deforest > 	fields: a⁰.x⁰
+//│ deforest > 	fields: a⁰.y⁰
 //│ deforest > <<< fusing <<<
 //│ = 6
 
@@ -29,8 +29,8 @@ fun unbox(b)(offset) =
 unbox(Box(10))(5)
 //│ deforest > >>> fusing >>>
 //│ deforest > Box⁰(10) ->
-//│ deforest > 	match: scrut¹
-//│ deforest > 	fields: scrut¹.v⁰
+//│ deforest > 	match: b⁰
+//│ deforest > 	fields: b⁰.v⁰
 //│ deforest > <<< fusing <<<
 //│ = 15
 

@@ -903,8 +903,8 @@ extends Importer:
     if methods.isEmpty then body else
       mkEffectHandleAbortive(nonLocalHandlerSym, "NonLocalLabelEffect", methods, body)
   
-  /** A scrutinee is a function that returns a reference to the symbol. */
-  private type Reference = () => Term.Ref
+  /** A scrutinee reference retains captures until its pattern has been resolved. */
+  private type Reference = () => Term
   
   private type Connective = `do`.type | `then`.type
   
@@ -973,10 +973,16 @@ extends Importer:
       // case _ => ???
     Head.Let(binding, term)
   
-  protected def mkMatch(scrutinee: Term.Ref, pattern: Pattern, consequent: SimpleSplit) =
+  protected def mkMatch(scrutinee: Term, pattern: Pattern, consequent: SimpleSplit) =
     log(s"mkMatch: scrutinee = ${scrutinee.showDbg}, pattern = ${pattern.showDbg}, consequent = ${consequent.showDbg}")
     matchScrutPat(scrutinee, pattern)
-    Head.Match(scrutinee, pattern, consequent)
+    // Captures carry the scope crossings needed to resolve extracted bindings,
+    // but matching the value at runtime only needs the underlying reference.
+    val ref = scrutinee.withoutCaptures match
+      case ref: Term.Ref => ref
+      case ref: (Term.SimpleRef | Term.SelfRef) => ref.sym.ref().withLocOf(scrutinee)
+      case _ => lastWords("A pattern scrutinee must be a reference")
+    Head.Match(ref, pattern, consequent)
   
   /** Elaborate shorthand expressions. */
   protected def shorthandSplit(tree: Tree)(using UnderCtx): Ctxl[SimpleSplit] =
@@ -1148,10 +1154,13 @@ extends Importer:
       term match
         // If the term is already a reference, we can re-reference its symbol.
         case Term.Ref(symbol) => continuation(() => symbol.ref().withLocOf(term))
-        // Otherwise, we need to create a temporary symbol holding the term.
-        case term: Term =>
-          val symbol = TempSymbol(N, erasedType = N, "scrut")
-          mkSplitLet(symbol, term) ~: continuation(() => symbol.ref())
+        // New references may carry lexical captures with no runtime evaluation.
+        case _ => term.withoutCaptures match
+          case _: Term.SimpleRef | _: Term.SelfRef => continuation(() => term)
+          // Member references can invoke getters; evaluate those only once.
+          case _ =>
+            val symbol = TempSymbol(N, erasedType = N, "scrut")
+            mkSplitLet(symbol, term) ~: continuation(() => symbol.ref())
   
   private type TT = (Tree, Tree)
   

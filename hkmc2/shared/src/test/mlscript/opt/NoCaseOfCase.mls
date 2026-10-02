@@ -36,7 +36,7 @@ fun foo(x) =
     false
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ define foo⁰ as fun foo¹(x) {
-//│   let y, f, scrut, lambda;
+//│   let y, f, lambda;
 //│   define lambda as fun lambda⁰(w) {
 //│     set y = w;
 //│     return runtime⁰.Unit⁰
@@ -46,15 +46,14 @@ fun foo(x) =
 //│     true =>
 //│       set y = "ok";
 //│       do f("nope");
+//│       match y
+//│         "ok" =>
+//│           return true
+//│         else
+//│           return false
 //│       end
 //│     else
 //│       set y = "nope";
-//│       end
-//│   set scrut = y;
-//│   match scrut
-//│     "ok" =>
-//│       return true
-//│     else
 //│       return false
 //│   end
 //│ };

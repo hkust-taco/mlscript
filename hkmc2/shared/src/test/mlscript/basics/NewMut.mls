@@ -10,9 +10,9 @@ class Foo with
 
 // Dynamic receivers allow these tests to add fields while retaining runtime checks.
 :sjs
-val f: dyn = new Foo
+let f = new Foo as dyn
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let f, tmp; tmp = globalThis.Object.freeze(new Foo1()); f = tmp;
+//│ let f; f = globalThis.Object.freeze(new Foo1());
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ f = Foo { x: 0 }
 
@@ -39,9 +39,9 @@ f.y
 
 :sjs
 // :elt
-val f: dyn = new mut Foo
+let f = new mut Foo as dyn
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let f1, tmp1; tmp1 = new Foo1(); f1 = tmp1;
+//│ let f1; f1 = new Foo1();
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ f = Foo { x: 0 }
 
@@ -79,7 +79,7 @@ new mut Foo.x
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
-val f: dyn = new mut Foo()
+let f = new mut Foo() as dyn
 //│ f = Foo { x: 0 }
 
 set
@@ -128,7 +128,7 @@ f.x
 //│ = 1
 
 
-val f: dyn = Foo(0)
+let f = Foo(0) as dyn
 //│ f = Foo(0)
 
 set
@@ -168,8 +168,8 @@ f.y
 
 
 
-val f: dyn = new Object with
-  val x = 12
+let f = (new Object with
+  val x = 12) as dyn
 //│ f = $anon { x: 12 }
 
 set
@@ -184,8 +184,8 @@ f.y
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'y' yielded 'undefined'
 
 
-val f: dyn = new mut Object with
-  val x = 12
+let f = (new mut Object with
+  val x = 12) as dyn
 //│ f = $anon { x: 12 }
 
 set

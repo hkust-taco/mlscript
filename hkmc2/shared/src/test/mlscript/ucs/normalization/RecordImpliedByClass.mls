@@ -10,10 +10,8 @@ fun f(x) =
   else 0
 //│ Normalized:
 //│ >  ‹if|while›
-//│ >    let tmp:scrut = x⁰
-//│ >    tmp:scrut is member:Foo⁰^term:f⁰ and
-//│ >      let tmp:scrut = x⁰
-//│ >      tmp:scrut is { a: tmp:field_a$, b: tmp:field_b$ } and
+//│ >    x is member:Foo⁰^term:f⁰ and
+//│ >      x is { a: tmp:field_a$, b: tmp:field_b$ } and
 //│ >        let bv = tmp:field_b$⁰
 //│ >        let av = tmp:field_a$⁰
 //│ >        else builtin:+⁰(av⁰, bv⁰)

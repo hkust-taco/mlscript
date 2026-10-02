@@ -3,7 +3,7 @@
 
 
 // Dynamic receivers keep property additions and missing-field checks observable at runtime.
-val r: dyn = {a: 0}
+let r = ({a: 0} as dyn)
 //│ r = {a: 0}
 
 set
@@ -19,7 +19,7 @@ r.foo
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'foo' yielded 'undefined'
 
 
-val r: dyn = mut {a: 1}
+let r = mut {a: 1} as dyn
 //│ r = {a: 1}
 
 set
@@ -35,7 +35,7 @@ r.foo
 //│ = 1
 
 
-val r: dyn = mut {}
+let r = mut {} as dyn
 //│ r = {}
 
 set r.foo = 1
@@ -46,7 +46,7 @@ r.foo
 
 
 :sjs
-val r: dyn = {}
+let r = ({} as dyn)
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let r3; r3 = runtime.Unit;
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
@@ -66,7 +66,7 @@ r.foo
 (() as dyn).foo
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'foo' yielded 'undefined'
 
-val s: dyn = {}
+let s = ({} as dyn)
 //│ s = ()
 
 set s.foo = 2

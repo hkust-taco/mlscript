@@ -99,7 +99,6 @@ c.Parent#x + (c is Parent)
 //│       (return
 //│         (local.get $this))))
 //│   (func $entry (export "entry") (type $entry) (result (ref null any))
-//│     (local $scrut (ref null any))
 //│     (local $matchRes (ref null any))
 //│     (local $currentTypeInfo (ref null any))
 //│     (local $targetTypeInfo (ref null any))
@@ -109,21 +108,19 @@ c.Parent#x + (c is Parent)
 //│         (call $Child_ctor
 //│           (ref.i31
 //│             (i32.const 2))))
-//│       (local.set $scrut
-//│         (global.get $c))
 //│       (block $match
 //│         (local.set $matchRes
 //│           (ref.null any))
 //│         (if
 //│           (ref.test (ref $Object)
-//│             (local.get $scrut))
+//│             (global.get $c))
 //│           (then
 //│             (if
 //│               (block (result i32)
 //│                 (local.set $currentTypeInfo
 //│                   (struct.get $Object $$typeinfo
 //│                     (ref.cast (ref $Object)
-//│                       (local.get $scrut))))
+//│                       (global.get $c))))
 //│                 (local.set $targetTypeInfo
 //│                   (global.get $Parent_typeinfo))
 //│                 (local.set $typeInfoMatch
@@ -269,7 +266,7 @@ class B
 class A extends B
 class B extends A
 //│ ╔══[COMPILATION ERROR] Inheritance cycles are not supported.
-//│ ║  l.269: 	class A extends B
+//│ ║  l.266: 	class A extends B
 //│ ╙──       	^^^^^^^^^^^^^^^^^
 
 

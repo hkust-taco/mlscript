@@ -59,15 +59,11 @@ if x is
   1 then "1"
   else ""
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let scrut, scrut1, scrut2;
-//│ set scrut = x⁰;
-//│ match scrut
+//│ match x⁰
 //│   0 =>
-//│     set scrut1 = y⁰;
-//│     match scrut1
+//│     match y⁰
 //│       0 =>
-//│         set scrut2 = z⁰;
-//│         match scrut2
+//│         match z⁰
 //│           0 =>
 //│             return "000"
 //│           1 =>
@@ -99,15 +95,11 @@ if x is
   1 then "1-------------------------------------------------------------------------"
   else "-------------------------------------------------------------------------"
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let scrut, scrut1, scrut2;
-//│ set scrut = x⁰;
-//│ match scrut
+//│ match x⁰
 //│   0 =>
-//│     set scrut1 = y⁰;
-//│     match scrut1
+//│     match y⁰
 //│       0 =>
-//│         set scrut2 = z⁰;
-//│         match scrut2
+//│         match z⁰
 //│           0 =>
 //│             return "000-------------------------------------------------------------------------"
 //│           1 =>
@@ -138,15 +130,12 @@ let qqq = if x is
   1 then "1"
   else ""
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let scrut, scrut1, scrut2, tmp;
-//│ set scrut = x⁰;
-//│ match scrut
+//│ let tmp;
+//│ match x⁰
 //│   0 =>
-//│     set scrut1 = y⁰;
-//│     match scrut1
+//│     match y⁰
 //│       0 =>
-//│         set scrut2 = z⁰;
-//│         match scrut2
+//│         match z⁰
 //│           0 =>
 //│             set tmp = "000";
 //│             end
@@ -185,15 +174,12 @@ print of if x is
   1 then "1"
   else ""
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let scrut, scrut1, scrut2, tmp;
-//│ set scrut = x⁰;
-//│ match scrut
+//│ let tmp;
+//│ match x⁰
 //│   0 =>
-//│     set scrut1 = y⁰;
-//│     match scrut1
+//│     match y⁰
 //│       0 =>
-//│         set scrut2 = z⁰;
-//│         match scrut2
+//│         match z⁰
 //│           0 =>
 //│             set tmp = "000";
 //│             return Predef⁰.print⁰(tmp)
@@ -233,15 +219,11 @@ fun foo(x, y, z) =
     else ""
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define foo⁰ as fun foo¹(x, y, z) {
-//│   let scrut, scrut1, scrut2;
-//│   set scrut = x;
-//│   match scrut
+//│   match x
 //│     0 =>
-//│       set scrut1 = y;
-//│       match scrut1
+//│       match y
 //│         0 =>
-//│           set scrut2 = z;
-//│           match scrut2
+//│           match z
 //│             0 =>
 //│               return "000"
 //│             1 =>
@@ -277,66 +259,54 @@ print of if
   y is 2 then "_2_"
   else "___"
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let scrut, scrut1, scrut2, scrut3, scrut4, scrut5, scrut6, tmp, tmp1, tmp2;
-//│ set scrut = x⁰;
-//│ block σ$x:
-//│   block σ:
-//│     match scrut
+//│ let tmp;
+//│ match x⁰
+//│   0 =>
+//│     match y⁰
 //│       0 =>
-//│         set scrut1 = y⁰;
-//│         block σ$x1:
-//│           block σ1:
-//│             match scrut1
-//│               0 =>
-//│                 set scrut2 = z⁰;
-//│                 match scrut2
-//│                   0 =>
-//│                     set tmp1 = "000";
-//│                     break σ$x1
-//│                   else
-//│                     break σ1
-//│                 end
-//│               else
-//│                 break σ1
-//│             end
-//│           set scrut3 = y⁰;
-//│           match scrut3
-//│             1 =>
-//│               set tmp1 = "01_";
-//│               break σ$x1
-//│             else
-//│               set scrut4 = z⁰;
-//│               match scrut4
-//│                 1 =>
-//│                   set tmp1 = "0_1";
-//│                   break σ$x1
-//│                 else
-//│                   break σ
-//│               end
-//│           end
-//│         set tmp = tmp1;
-//│         break σ$x
+//│         match z⁰
+//│           0 =>
+//│             set tmp = "000";
+//│             return Predef⁰.print⁰(tmp)
+//│           1 =>
+//│             set tmp = "0_1";
+//│             return Predef⁰.print⁰(tmp)
+//│           else
+//│             set tmp = "___";
+//│             return Predef⁰.print⁰(tmp)
+//│         end
+//│       1 =>
+//│         set tmp = "01_";
+//│         return Predef⁰.print⁰(tmp)
 //│       else
-//│         break σ
+//│         match z⁰
+//│           1 =>
+//│             set tmp = "0_1";
+//│             return Predef⁰.print⁰(tmp)
+//│           else
+//│             match y⁰
+//│               2 =>
+//│                 set tmp = "_2_";
+//│                 return Predef⁰.print⁰(tmp)
+//│               else
+//│                 set tmp = "___";
+//│                 return Predef⁰.print⁰(tmp)
+//│             end
+//│         end
 //│     end
-//│   set scrut5 = x⁰;
-//│   match scrut5
-//│     1 =>
-//│       set tmp = "1__";
-//│       break σ$x
-//│     else
-//│       set scrut6 = y⁰;
-//│       match scrut6
-//│         2 =>
-//│           set tmp = "_2_";
-//│           break σ$x
-//│         else
-//│           set tmp = "___";
-//│           break σ$x
-//│       end
-//│   end
-//│ set tmp2 = tmp;
-//│ return Predef⁰.print⁰(tmp2)
+//│   1 =>
+//│     set tmp = "1__";
+//│     return Predef⁰.print⁰(tmp)
+//│   else
+//│     match y⁰
+//│       2 =>
+//│         set tmp = "_2_";
+//│         return Predef⁰.print⁰(tmp)
+//│       else
+//│         set tmp = "___";
+//│         return Predef⁰.print⁰(tmp)
+//│     end
+//│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > 000
 
@@ -353,27 +323,18 @@ fun foo(x, y, z) = if
   else "___"
 //│ Normalized:
 //│ >  ‹if|while›
-//│ >    let tmp:scrut = x¹
-//│ >    let-split σ =
-//│ >      let tmp:scrut = x¹
-//│ >      tmp:scrut is 1 then "1__"
-//│ >      let tmp:scrut = y¹
-//│ >      tmp:scrut is 2 then "_2_"
+//│ >    x is 0 and
+//│ >      y is 0 and
+//│ >        z is 0 then "000"
+//│ >        z is 1 then "0_1"
+//│ >        else "___"
+//│ >      y is 1 then "01_"
+//│ >      z is 1 then "0_1"
+//│ >      y is 2 then "_2_"
 //│ >      else "___"
-//│ >    tmp:scrut is 0 and
-//│ >      let tmp:scrut = y¹
-//│ >      let-split σ =
-//│ >        let tmp:scrut = y¹
-//│ >        tmp:scrut is 1 then "01_"
-//│ >        let tmp:scrut = z¹
-//│ >        tmp:scrut is 1 then "0_1"
-//│ >        $σ
-//│ >      tmp:scrut is 0 and
-//│ >        let tmp:scrut = z¹
-//│ >        tmp:scrut is 0 then "000"
-//│ >        $σ
-//│ >      $σ
-//│ >    $σ
+//│ >    x is 1 then "1__"
+//│ >    y is 2 then "_2_"
+//│ >    else "___"
 
 fun expensive_call(str: Str) = Math.pow(2, str.length)
 
@@ -390,15 +351,12 @@ fun foo(x, y, z) = if x is
     expensive_call(value)
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define foo² as fun foo³(x, y, z) {
-//│   let scrut, scrut1, scrut2, value;
-//│   set scrut = x;
-//│   match scrut
+//│   let value;
+//│   match x
 //│     0 =>
-//│       set scrut1 = y;
-//│       match scrut1
+//│       match y
 //│         0 =>
-//│           set scrut2 = z;
-//│           match scrut2
+//│           match z
 //│             0 =>
 //│               return "000"
 //│             1 =>
@@ -437,17 +395,7 @@ fun foo(x, y, z) =
   if x is A then "Hello"
   else "Goodbye"
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ define foo⁴ as fun foo⁵(x, y, z) {
-//│   let scrut;
-//│   set scrut = x;
-//│   match scrut
-//│     A⁰ =>
-//│       return "Hello"
-//│     else
-//│       return "Goodbye"
-//│   end
-//│ };
-//│ end
+//│ define foo⁴ as fun foo⁵(x, y, z) { match x A⁰ => return "Hello" else return "Goodbye" end }; end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 :sir
@@ -467,15 +415,11 @@ fun foo(x, y, z) =
   else "Goodbye"
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define foo⁶ as fun foo⁷(x, y, z) {
-//│   let scrut, scrut1, scrut2;
-//│   set scrut = x;
-//│   match scrut
+//│   match x
 //│     A⁰ =>
-//│       set scrut2 = y;
-//│       match scrut2
+//│       match y
 //│         B⁰ =>
-//│           set scrut1 = z;
-//│           match scrut1
+//│           match z
 //│             C⁰ =>
 //│               return "Hello"
 //│             else
@@ -497,15 +441,11 @@ fun foo(x, y, z) =
   if x is A and y is B and z is C then "Hello"
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define foo⁸ as fun foo⁹(x, y, z) {
-//│   let scrut, scrut1, scrut2;
-//│   set scrut = x;
-//│   match scrut
+//│   match x
 //│     A⁰ =>
-//│       set scrut2 = y;
-//│       match scrut2
+//│       match y
 //│         B⁰ =>
-//│           set scrut1 = z;
-//│           match scrut1
+//│           match z
 //│             C⁰ =>
 //│               return "Hello"
 //│             else
@@ -545,7 +485,7 @@ let y = if true then 1 else 2
 //│   else
 //│     set tmp = 2;
 //│     end
-//│ set y² = tmp;
+//│ set y¹ = tmp;
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ y = 1
@@ -560,13 +500,11 @@ fun foo1(x, y, z) = if
   else print of 3
 //│ Normalized:
 //│ >  ‹if|while›
-//│ >    let tmp:scrut = x²
 //│ >    let-split σ =
-//│ >      let tmp:scrut = z²
-//│ >      tmp:scrut is member:A¹^term:foo1⁰ then member:Predef¹.print^term:foo1⁰(2)
+//│ >      z is member:A¹^term:foo1⁰ then member:Predef¹.print^term:foo1⁰(2)
 //│ >      else member:Predef¹.print^term:foo1⁰(3)
-//│ >    tmp:scrut is member:A¹^term:foo1⁰ and
-//│ >      let tmp:scrut = member:pred⁰^term:foo1⁰(x²)
+//│ >    x is member:A¹^term:foo1⁰ and
+//│ >      let tmp:scrut = member:pred⁰^term:foo1⁰(x¹)
 //│ >      tmp:scrut is true then member:Predef¹.print^term:foo1⁰(1)
 //│ >      $σ
 //│ >    $σ
@@ -580,20 +518,17 @@ fun foo2(x, y, z) = if
   else print of 4
 //│ Normalized:
 //│ >  ‹if|while›
-//│ >    let tmp:scrut = x³
 //│ >    let-split σ =
-//│ >      let tmp:scrut = y³
 //│ >      let-split σ =
-//│ >        let tmp:scrut = z³
-//│ >        tmp:scrut is member:A¹^term:foo2⁰ then member:Predef¹.print^term:foo2⁰(3)
+//│ >        z is member:A¹^term:foo2⁰ then member:Predef¹.print^term:foo2⁰(3)
 //│ >        else member:Predef¹.print^term:foo2⁰(4)
-//│ >      tmp:scrut is member:A¹^term:foo2⁰ and
-//│ >        let tmp:scrut = member:pred⁰^term:foo2⁰(y³)
+//│ >      y is member:A¹^term:foo2⁰ and
+//│ >        let tmp:scrut = member:pred⁰^term:foo2⁰(y²)
 //│ >        tmp:scrut is true then member:Predef¹.print^term:foo2⁰(2)
 //│ >        $σ
 //│ >      $σ
-//│ >    tmp:scrut is member:A¹^term:foo2⁰ and
-//│ >      let tmp:scrut = member:pred⁰^term:foo2⁰(x³)
+//│ >    x is member:A¹^term:foo2⁰ and
+//│ >      let tmp:scrut = member:pred⁰^term:foo2⁰(x²)
 //│ >      tmp:scrut is true then member:Predef¹.print^term:foo2⁰(1)
 //│ >      $σ
 //│ >    $σ

@@ -143,9 +143,7 @@ fun loopReturnDoesNotPolluteExit(flag) =
 //│   let x;
 //│   set x = 1;
 //│   loop lbl:
-//│     let scrut;
-//│     set scrut = flag;
-//│     match scrut
+//│     match flag
 //│       true =>
 //│         set x = 2;
 //│         return x

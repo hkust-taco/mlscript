@@ -16,8 +16,8 @@ module M with
 M.f(M.p())
 //│ deforest > >>> fusing >>>
 //│ deforest > M⁰.this.XX⁰(tmp⁰) ->
-//│ deforest > 	match: scrut⁰
-//│ deforest > 	fields: scrut⁰.a⁰
+//│ deforest > 	match: x⁰
+//│ deforest > 	fields: x⁰.a⁰
 //│ deforest > M⁰.this.YY⁰(M⁰.this.OO⁰) ->
 //│ deforest > 	match: arg$XX$0$⁰
 //│ deforest > 	fields: arg$XX$0$⁰.b⁰
@@ -43,23 +43,23 @@ module DeforestList with
 DeforestList.res + DeforestList.main()
 //│ deforest > >>> fusing >>>
 //│ deforest > DeforestList⁰.this.Nil⁰ ->
-//│ deforest > 	match: scrut¹
+//│ deforest > 	match: ls⁰
 //│ deforest > DeforestList⁰.this.Cons⁰(n⁰, tmp¹) ->
-//│ deforest > 	match: scrut¹
-//│ deforest > 	fields: scrut¹.h⁰
-//│ deforest > 	fields: scrut¹.t⁰
+//│ deforest > 	match: ls⁰
+//│ deforest > 	fields: ls⁰.h⁰
+//│ deforest > 	fields: ls⁰.t⁰
 //│ deforest > DeforestList⁰.this.Nil⁰ ->
-//│ deforest > 	match: scrut¹
+//│ deforest > 	match: ls⁰
 //│ deforest > DeforestList⁰.this.Cons⁰(n⁰, tmp¹) ->
-//│ deforest > 	match: scrut¹
-//│ deforest > 	fields: scrut¹.h⁰
-//│ deforest > 	fields: scrut¹.t⁰
+//│ deforest > 	match: ls⁰
+//│ deforest > 	fields: ls⁰.h⁰
+//│ deforest > 	fields: ls⁰.t⁰
 //│ deforest > DeforestList⁰.this.Cons⁰(n⁰, tmp¹) ->
-//│ deforest > 	match: scrut¹
-//│ deforest > 	fields: scrut¹.h⁰
-//│ deforest > 	fields: scrut¹.t⁰
+//│ deforest > 	match: ls⁰
+//│ deforest > 	fields: ls⁰.h⁰
+//│ deforest > 	fields: ls⁰.t⁰
 //│ deforest > DeforestList⁰.this.Nil⁰ ->
-//│ deforest > 	match: scrut¹
+//│ deforest > 	match: ls⁰
 //│ deforest > <<< fusing <<<
 //│ = 5056
 
@@ -83,23 +83,23 @@ module DeforestList with
 DeforestList.res + DeforestList.main()
 //│ deforest > >>> fusing >>>
 //│ deforest > DeforestList¹.this.Nil¹ ->
-//│ deforest > 	match: scrut²
+//│ deforest > 	match: ls¹
 //│ deforest > DeforestList¹.this.Cons¹(n¹, tmp²) ->
-//│ deforest > 	match: scrut²
-//│ deforest > 	fields: scrut².h¹
-//│ deforest > 	fields: scrut².t¹
+//│ deforest > 	match: ls¹
+//│ deforest > 	fields: ls¹.h¹
+//│ deforest > 	fields: ls¹.t¹
 //│ deforest > DeforestList¹.this.Nil¹ ->
-//│ deforest > 	match: scrut²
+//│ deforest > 	match: ls¹
 //│ deforest > DeforestList¹.this.Cons¹(n¹, tmp²) ->
-//│ deforest > 	match: scrut²
-//│ deforest > 	fields: scrut².h¹
-//│ deforest > 	fields: scrut².t¹
+//│ deforest > 	match: ls¹
+//│ deforest > 	fields: ls¹.h¹
+//│ deforest > 	fields: ls¹.t¹
 //│ deforest > DeforestList¹.this.Cons¹(n¹, tmp²) ->
-//│ deforest > 	match: scrut²
-//│ deforest > 	fields: scrut².h¹
-//│ deforest > 	fields: scrut².t¹
+//│ deforest > 	match: ls¹
+//│ deforest > 	fields: ls¹.h¹
+//│ deforest > 	fields: ls¹.t¹
 //│ deforest > DeforestList¹.this.Nil¹ ->
-//│ deforest > 	match: scrut²
+//│ deforest > 	match: ls¹
 //│ deforest > <<< fusing <<<
 //│ = 5056
 
@@ -116,11 +116,11 @@ module MMM with
 MMM.f()
 //│ deforest > >>> fusing >>>
 //│ deforest > MMM⁰.this.A⁰ ->
-//│ deforest > 	match: scrut³
+//│ deforest > 	match: scrut⁰
 //│ deforest > MMM⁰.this.A⁰ ->
-//│ deforest > 	match: scrut³
+//│ deforest > 	match: scrut⁰
 //│ deforest > MMM⁰.this.A⁰ ->
-//│ deforest > 	match: scrut³
+//│ deforest > 	match: scrut⁰
 //│ deforest > <<< fusing <<<
 //│ = 3
 
@@ -140,7 +140,7 @@ module M with
 M.f(M.X)
 //│ deforest > >>> fusing >>>
 //│ deforest > M¹.X⁰ ->
-//│ deforest > 	match: scrut⁴
+//│ deforest > 	match: k⁰
 //│ deforest > <<< fusing <<<
 //│ = X
 
@@ -167,25 +167,25 @@ module M with
 [M.f(3), M.g(true)]
 //│ deforest > >>> fusing >>>
 //│ deforest > B⁰(0) ->
-//│ deforest > 	match: scrut⁵
+//│ deforest > 	match: scrut¹
 //│ deforest > D⁰ ->
-//│ deforest > 	match: scrut⁵
+//│ deforest > 	match: scrut¹
 //│ deforest > A¹ ->
-//│ deforest > 	match: scrut⁶
+//│ deforest > 	match: scrut²
 //│ deforest > A¹ ->
-//│ deforest > 	match: scrut⁶
+//│ deforest > 	match: scrut²
 //│ deforest > C⁰ ->
-//│ deforest > 	match: scrut⁶
+//│ deforest > 	match: scrut²
 //│ deforest > B⁰(0) ->
-//│ deforest > 	match: scrut⁵
+//│ deforest > 	match: scrut¹
 //│ deforest > D⁰ ->
-//│ deforest > 	match: scrut⁵
+//│ deforest > 	match: scrut¹
 //│ deforest > A¹ ->
-//│ deforest > 	match: scrut⁶
+//│ deforest > 	match: scrut²
 //│ deforest > A¹ ->
-//│ deforest > 	match: scrut⁶
+//│ deforest > 	match: scrut²
 //│ deforest > C⁰ ->
-//│ deforest > 	match: scrut⁶
+//│ deforest > 	match: scrut²
 //│ deforest > <<< fusing <<<
 //│ = [D, A]
 
@@ -206,8 +206,8 @@ private fun g(x, module I: O.I) = if x is
 g(f(O.I), O.I)
 //│ deforest > >>> fusing >>>
 //│ deforest > I⁰.C¹(3) ->
-//│ deforest > 	match: scrut⁷
-//│ deforest > 	fields: scrut⁷.x⁰
+//│ deforest > 	match: x¹
+//│ deforest > 	fields: x¹.x²
 //│ deforest > <<< fusing <<<
 //│ = 5
 
@@ -220,7 +220,7 @@ private fun g(x, module O: O) = if x is
 g(f(O), O)
 //│ deforest > >>> fusing >>>
 //│ deforest > O⁰.I¹.C¹(3) ->
-//│ deforest > 	match: scrut⁸
-//│ deforest > 	fields: scrut⁸.x⁰
+//│ deforest > 	match: x³
+//│ deforest > 	fields: x³.x²
 //│ deforest > <<< fusing <<<
 //│ = 5
