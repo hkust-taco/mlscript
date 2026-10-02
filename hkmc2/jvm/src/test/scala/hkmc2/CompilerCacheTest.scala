@@ -1,6 +1,6 @@
 package hkmc2
 
-import java.util.concurrent.{ConcurrentLinkedQueue, CountDownLatch, Executors, ThreadFactory, TimeUnit}
+import java.util.concurrent.{ConcurrentLinkedQueue, CountDownLatch, Executors, ThreadFactory, TimeUnit, TimeoutException}
 import java.util.concurrent.atomic.AtomicInteger
 import collection.concurrent.TrieMap
 import scala.concurrent.{Await, ExecutionContext, Future}
@@ -10,6 +10,7 @@ import scala.jdk.CollectionConverters.*
 import org.scalatest.funsuite.AnyFunSuite
 
 import hkmc2.CompilerCache.{ActiveDependencyGraph, ArtifactCache}
+import hkmc2.utils.TraceLogger
 
 
 class CompilerCacheTest extends AnyFunSuite:
@@ -137,9 +138,11 @@ class CompilerCacheTest extends AnyFunSuite:
       def getLastChangedTimestamp(path: io.Path): Long =
         underlyingFs.getLastChangedTimestamp(path)
 
+    val workerThreads = new ConcurrentLinkedQueue[Thread]
     val threadFactory: ThreadFactory = runnable =>
       val thread = new Thread(runnable, "compiler-cache-deadlock-reproducer")
       thread.setDaemon(true)
+      workerThreads.add(thread)
       thread
     val executor = Executors.newFixedThreadPool(2, threadFactory)
     val executionContext = ExecutionContext.fromExecutorService(executor)
@@ -153,6 +156,17 @@ class CompilerCacheTest extends AnyFunSuite:
         Config.default(TestFolders.mainTestDir(os.pwd)),
       )
 
+      // Compile shared prerequisites before starting the deadlock deadline: a cold prelude and
+      // runtime can take longer than it under CI load. A and B remain uncached, so the barrier
+      // still forces their builds to hold opposite path locks before either requests its import.
+      locally:
+        given DebugPrinter = new DebugPrinter
+        given TraceLogger = new TraceLogger:
+          override def doTrace: Boolean = false
+        given Raise = diagnostic => fail(s"Unexpected setup diagnostic: ${diagnostic.theMsg}")
+        val prelude = CompilerCtx.get.getPrelude(paths.preludeFile).ctx
+        CompilerCtx.get.getElaboratedBlock(paths.runtimeSourceFile, prelude)
+
       def compile(file: io.Path): Future[Unit] = Future({
         val compiler = MLsCompiler(mkRaise = _ => diagnostic =>
           diagnostics.add(diagnostic)
@@ -160,7 +174,11 @@ class CompilerCacheTest extends AnyFunSuite:
         compiler.compileModule(file)
       })(using executionContext)
 
-      Await.result(Future.sequence(List(compile(fileA), compile(fileB))), 10.seconds)
+      try Await.result(Future.sequence(List(compile(fileA), compile(fileB))), 10.seconds)
+      catch case timeout: TimeoutException =>
+        val workerStacks = workerThreads.asScala.map: thread =>
+          s"${thread.getName}: ${thread.getState}\n${thread.getStackTrace.mkString("\n")}"
+        fail(s"Concurrent circular imports did not finish:\n${workerStacks.mkString("\n\n")}", timeout)
       assert(diagnostics.asScala.exists(_.theMsg.contains("Circular imports")),
         "A circular import diagnostic should be reported")
     finally

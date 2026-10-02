@@ -500,6 +500,7 @@ abstract class MLsDiffMaker extends DiffMaker:
         doc" #{ ${e.showTopLevel(using flowScp)} #} ".mkString(output.ColWidth)
     
     processTerm(e, inImport = false)
+      
   
   
   def processTerm(trm: semantics.Term.Blk, inImport: Bool)(using Config, Raise): Unit =

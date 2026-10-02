@@ -154,7 +154,6 @@ class Splice(val bits: Array, val len: Int) extends LazyArr with
 module LazyArray with...
 
 
-
 fun mk(...args) = View of args, 0, 0
 fun concat(...args: Array[Indexable]) = concatHelper(mut [], 0, ...args)
 fun dropLeftRight(beg: Int, fin: Int)(xs: Indexable) = 

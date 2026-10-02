@@ -751,7 +751,7 @@ extends Importer:
   lazy val illegalMemberNameTail =
     msg"Member names must start with a letter or underscore, followed by letters, digits, or underscores." -> N
     :: Nil
-
+  
   def mkLetBinding(sym: LocalVarSymbol | TermSymbol, rhs: Term, annotations: Ls[Annot])(loc: Opt[Loc]): Ls[Statement] =
     LetDecl(sym, annotations)(loc) :: defineVar(sym, rhs)(loc) :: Nil
   
