@@ -43,17 +43,17 @@ object Foo
 //│ ╟── with object of the same name
 //│ ║  l.39: 	object Foo
 //│ ╙──      	^^^^^^^^^^
-//│ ╔══[INTERNAL ERROR] Compiler reached an unsupported state: Unexpected class storage for Foo: parameters=None, independent=None
-//│ ╟── The compilation result may be incorrect.
-//│ ╙── This is a known compiler limitation; if it is a blocker for you, please report it to the maintainers.
 
-:fixme
-// * Note that this does not report an error at the moment:
+:e
+// A term declaration does not create a function that can own its companion.
 fun Foo: Int
 object Foo
-//│ ╔══[INTERNAL ERROR] Compiler reached an unsupported state: Unexpected class storage for Foo: parameters=None, independent=None
-//│ ╟── The compilation result may be incorrect.
-//│ ╙── This is a known compiler limitation; if it is a blocker for you, please report it to the maintainers.
+//│ ╔══[COMPILATION ERROR] A term declaration cannot have an implemented object companion
+//│ ║  l.49: 	fun Foo: Int
+//│ ║        	^^^^^^^^^^^^
+//│ ╟── Companion 'Foo' is defined here
+//│ ║  l.50: 	object Foo
+//│ ╙──      	^^^^^^^^^^
 
 :todo
 :e
@@ -66,30 +66,37 @@ class Foo
 //│ ╟── with object of the same name
 //│ ║  l.61: 	object Foo
 //│ ╙──      	^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] A class companion must be a function with a parameter list
+//│ ║  l.60: 	fun Foo = 1
+//│ ║        	^^^^^^^^^^^
+//│ ╟── Arbitrary values cannot be overloaded with class 'Foo'
+//│ ║  l.62: 	class Foo
+//│ ╙──      	^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Illegal overloading of class 'Foo'
 //│ ║  l.62: 	class Foo
 //│ ║        	^^^^^^^^^
 //│ ╟── with object of the same name
 //│ ║  l.61: 	object Foo
 //│ ╙──      	^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] TypeError: Cannot assign to read only property 'class' of object '[object Object]'
 
 
-// Class and module companions can have a function with the same name.
+// Class and module companions require a function definition with parameters.
 class Foo
-fun Foo = 1
+fun Foo() = 1
 
-fun Foo = 1
+fun Foo() = 1
 module Foo
 
-// TODO: support
+// An existing value cannot own a companion.
 :e
 val Foo = 1
 module Foo
-//│ ╔══[COMPILATION ERROR] Not yet supported: overloading of value 'Foo'
-//│ ║  l.86: 	val Foo = 1
+//│ ╔══[COMPILATION ERROR] A module companion must be a function with a parameter list
+//│ ║  l.93: 	val Foo = 1
 //│ ║        	^^^^^^^^^^^
-//│ ╟── with module of the same name
-//│ ║  l.87: 	module Foo
+//│ ╟── Arbitrary values cannot be overloaded with module 'Foo'
+//│ ║  l.94: 	module Foo
 //│ ╙──      	^^^^^^^^^^
 //│ Foo = class Foo
 
@@ -98,11 +105,11 @@ module Foo
 fun (**) f1(a, b) = "[" + a + " * " + b + "]"
 fun (**) f2(a, b) = "(" + a + " + " + b + ")"
 //│ ╔══[COMPILATION ERROR] Symbolic name '**' of definition 'f1' is already used
-//│ ║  l.98: 	fun (**) f1(a, b) = "[" + a + " * " + b + "]"
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.105: 	fun (**) f1(a, b) = "[" + a + " * " + b + "]"
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── by sibling member 'f2'
-//│ ║  l.99: 	fun (**) f2(a, b) = "(" + a + " + " + b + ")"
-//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.106: 	fun (**) f2(a, b) = "(" + a + " + " + b + ")"
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 1 ** 2
 //│ = "(1 + 2)"
@@ -112,10 +119,10 @@ fun (**) t() = 0
 fun (++) t() = 1
 //│ ╔══[COMPILATION ERROR] Multiple definitions of symbol 't'
 //│ ╟── defined here
-//│ ║  l.111: 	fun (**) t() = 0
+//│ ║  l.118: 	fun (**) t() = 0
 //│ ║         	^^^^^^^^^^^^^^^^
 //│ ╟── defined here
-//│ ║  l.112: 	fun (++) t() = 1
+//│ ║  l.119: 	fun (++) t() = 1
 //│ ╙──       	^^^^^^^^^^^^^^^^
 
 

@@ -8,13 +8,13 @@ fun forward(x) = {
 }
 module Constructors {
   class Token
-  val Token = 41
+  fun Token() = 41
   class Box(val value)
   object Singleton
 }
 
 :expect [1, 0, 41]
-[forward(new Constructors.Token), forward(0), Constructors.Token]
+[forward(new Constructors.Token), forward(0), Constructors.Token()]
 //│ = [1, 0, 41]
 
 

@@ -140,12 +140,13 @@ open Later { absent }
 // Wildcard lookup retains overload sets until the use chooses a definition.
 module Overloaded {
   class Item { fun answer() = 9 }
-  mut val Item = 10
+  fun Item() = 11
+  mut val value = 11
 }
 fun overload() = {
   open Overloaded
-  set Item = 11
-  [Item, (new Item).answer()]
+  // The call and constructor choose different definitions of Item.
+  [Item(), (new Item).answer()]
 }
 
 :expect [11, 9]
@@ -187,11 +188,11 @@ chained()
 import "../../mlscript-compile/OverloadedClassLibrary.mls" as Library
 fun imported() = {
   open Library
-  [Item, (new Item).answer()]
+  [Item(), (new Item).answer()]
 }
 fun importedNamed() = {
   open Library { Item }
-  [Item, (new Item).answer()]
+  [Item(), (new Item).answer()]
 }
 
 :expect [[16, 52], [16, 52]]
@@ -228,19 +229,19 @@ fun twoInstances() = {
 }
 twoInstances()
 //│ ╔══[COMPILATION ERROR] Wildcard-open reference 'value' is ambiguous
-//│ ║  l.227: 	  value
+//│ ║  l.228: 	  value
 //│ ║         	  ^^^^^
 //│ ╟── candidate: value 'value' defined here
-//│ ║  l.217: 	  module M { val value = n }
+//│ ║  l.218: 	  module M { val value = n }
 //│ ║         	             ^^^^^^^^^^^^^
 //│ ╟── Opened here
-//│ ║  l.225: 	  open first
+//│ ║  l.226: 	  open first
 //│ ║         	       ^^^^^
 //│ ╟── candidate: value 'value' defined here
-//│ ║  l.217: 	  module M { val value = n }
+//│ ║  l.218: 	  module M { val value = n }
 //│ ║         	             ^^^^^^^^^^^^^
 //│ ╟── Opened here
-//│ ║  l.226: 	  open second
+//│ ║  l.227: 	  open second
 //│ ╙──       	       ^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ first = class M { value: 16 }
@@ -277,13 +278,13 @@ val Shadowed = 20
 open ClassSource
 new Shadowed
 //│ ╔══[COMPILATION ERROR] Resolution error in object instantiation
-//│ ║  l.278: 	new Shadowed
+//│ ║  l.279: 	new Shadowed
 //│ ║         	^^^^^^^^^^^^
 //│ ╟── Integer literal cannot be instantiated with keyword 'new'.
-//│ ║  l.276: 	val Shadowed = 20
+//│ ║  l.277: 	val Shadowed = 20
 //│ ╙──       	               ^^
 //│ ╔══[COMPILATION ERROR] Cannot resolve the class instantiated here
-//│ ║  l.278: 	new Shadowed
+//│ ║  l.279: 	new Shadowed
 //│ ╙──       	    ^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ Shadowed = 20
@@ -313,19 +314,19 @@ fun ambiguousReversed() = {
 }
 ambiguousReversed()
 //│ ╔══[COMPILATION ERROR] Wildcard-open reference 'extra' is ambiguous
-//│ ║  l.312: 	  extra
+//│ ║  l.313: 	  extra
 //│ ║         	  ^^^^^
 //│ ╟── candidate: value 'extra' defined here
 //│ ║  l.38: 	module Selected { val extra = 6 }
 //│ ║        	                  ^^^^^^^^^^^^^
 //│ ╟── Opened here
-//│ ║  l.310: 	  open Selected
+//│ ║  l.311: 	  open Selected
 //│ ║         	       ^^^^^^^^
 //│ ╟── candidate: value 'extra' defined here
 //│ ║  l.8: 	  val extra = 3
 //│ ║       	  ^^^^^^^^^^^^^
 //│ ╟── Opened here
-//│ ║  l.311: 	  open Values
+//│ ║  l.312: 	  open Values
 //│ ╙──       	       ^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -333,8 +334,8 @@ ambiguousReversed()
 // Both the temporary assignment and restoration use the selected open member.
 fun temporary() = {
   open Overloaded
-  let during = set Item = 21 in Item
-  [during, Item]
+  let during = set value = 21 in value
+  [during, value]
 }
 
 :expect [21, 11]
@@ -382,18 +383,18 @@ fun inheritedAmbiguity() = {
 }
 inheritedAmbiguity()
 //│ ╔══[COMPILATION ERROR] Wildcard-open reference 'extra' is ambiguous
-//│ ║  l.380: 	  fun nested() = extra
+//│ ║  l.381: 	  fun nested() = extra
 //│ ║         	                 ^^^^^
 //│ ╟── candidate: value 'extra' defined here
 //│ ║  l.8: 	  val extra = 3
 //│ ║       	  ^^^^^^^^^^^^^
 //│ ╟── Opened here
-//│ ║  l.378: 	  open Values
+//│ ║  l.379: 	  open Values
 //│ ║         	       ^^^^^^
 //│ ╟── candidate: value 'extra' defined here
 //│ ║  l.38: 	module Selected { val extra = 6 }
 //│ ║        	                  ^^^^^^^^^^^^^
 //│ ╟── Opened here
-//│ ║  l.379: 	  open Selected
+//│ ║  l.380: 	  open Selected
 //│ ╙──       	       ^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.

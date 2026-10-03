@@ -6,13 +6,13 @@ package text
 import hkmc2.utils.*, shorthands.*
 
 import document.*
-import semantics.{BlockMemberSymbol, DefinitionSymbol, Elaborator, InnerSymbol, LocalVarSymbol, TempSymbol}, Elaborator.State
+import semantics.{BlockMemberSymbol, ClassSymbol, DefinitionSymbol, Elaborator, InnerSymbol, LocalVarSymbol, TempSymbol}, Elaborator.State
 import utils.Scope
 
 import scala.collection.Map
 
 /** Symbols that can represent an importable or exportable Wasm construct. */
-private[text] type ExternSymbol = BlockMemberSymbol | TempSymbol
+private[text] type ExternSymbol = BlockMemberSymbol | ClassSymbol | TempSymbol
 
 /** Symbols that can be lowered into a global or local slot in a Wasm function (i.e. parameters and locals). */
 private[text] type SlotSymbol = InnerSymbol | ScopedSymbol
@@ -28,7 +28,7 @@ extension (doc: Document)
 
 extension (scp: Scope)
   /** Convenience function for [[Scope.allocateOrGetName]] with an optional prefix and suffix. */
-  private[text] def allocateOrGetNameWrapped(sym: ScopedSymbol, wrapId: Opt[Str] -> Opt[Str])(using Raise): Str =
+  private[text] def allocateOrGetNameWrapped(sym: ScopedSymbol | ClassSymbol, wrapId: Opt[Str] -> Opt[Str])(using Raise): Str =
     val prefix = wrapId._1.fold("")(prefix => s"${prefix}_")
     wrapId._2 match
       case S(suffix) =>
@@ -305,7 +305,7 @@ object ExternType:
     def toWat: Document = doc"""(global ${id.toWat} ${globalType.toWat})"""
 end ExternType
 
-sealed abstract class ExternType(val sym: ScopedSymbol) extends ToWat:
+sealed abstract class ExternType(val sym: ScopedSymbol | ClassSymbol) extends ToWat:
 
   /** Symbolic identifier for the extern declaration. */
   val id: SymIdx

@@ -408,13 +408,13 @@ class Box with
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ ═══[RUNTIME ERROR] Expected: '42', got: 'undefined'
 
-// TODO: infer the selected term alternative of an overloaded member's missing type.
+// TODO: infer an unannotated field selected through a module parameter.
 :fixme
 :expect 42
 class Secret with
   val extra = 42
 module Types with
-  class Item
+  class ItemClass
   val Item = new Secret
 fun hidden(module types: Types) = types.Item.extra
 hidden(Types)

@@ -4,8 +4,7 @@
 class Bar {
   fun id(x) = x
 }
-val Bar = new Bar
-//│ Bar = Bar
+fun Bar() = new Bar
 
 :sr
 :sir
@@ -86,30 +85,27 @@ module Foo {
   class Bar {
     fun id(x) = x
   }
-  val Bar = new Bar
+  fun Bar() = new Bar
 }//│ ————————————————| Resolved |————————————————————————————————————————————————————————————————————————
 //│ ————————————————| Resolved |————————————————————————————————————————————————————————————————————————
 //│   module Foo⁰::Foo¹ {
 //│     class Bar²::Bar³ {
 //│       fun id⁰::id¹(x²) ‹flow:id⁰› = x²
 //│     },
-//│     val Bar²::Bar⁴ ‹flow:Bar⁰› = new Foo¹.this.Bar²^Bar⁴
+//│     fun Bar²::Bar⁴() ‹flow:Bar⁰› = new Foo¹.this.Bar²^Bar⁴
 //│   }
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define Foo⁰ as class Foo¹
 //│ module Foo² {
-//│   val Bar⁴;
 //│   constructor {
-//│     let tmp;
 //│     define Bar⁴ as class Bar⁵ {
 //│       method id⁰ = fun id¹(x) {
 //│         return x
 //│       }
 //│     };
-//│     set tmp = new Foo².this.Bar⁵();
-//│     define Bar⁴ as val Bar⁶ = tmp;
 //│     end
 //│   }
+//│   method Bar⁴ = fun Bar⁶() { return new Foo².this.Bar⁵() }
 //│ };
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————

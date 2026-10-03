@@ -41,11 +41,10 @@ fun ambiguous(n: Ambiguous) = n
 
 // A type annotation selects the class even when its name also has a value.
 class Box
-val Box = 7
+fun Box() = 7
 fun identity(box: Box): Box = box
 identity(new Box) is Box
 //│ = true
-//│ Box = 7
 
 // Forward aliases are checked even when the annotated function is unused.
 :ge
@@ -53,9 +52,9 @@ fun unused(value: Invalid) = value
 type Invalid = notAType
 val notAType = 1
 //│ ╔══[COMPILATION ERROR] Resolution error in member reference
-//│ ║  l.53: 	type Invalid = notAType
+//│ ║  l.52: 	type Invalid = notAType
 //│ ║        	               ^^^^^^^^
 //│ ╟── Value symbol 'notAType' cannot be used as a type
-//│ ║  l.54: 	val notAType = 1
+//│ ║  l.53: 	val notAType = 1
 //│ ╙──      	^^^^^^^^^^^^^^^^
 //│ notAType = 1

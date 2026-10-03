@@ -1,15 +1,14 @@
 :.
 
 
-// The term need not be an object that can carry a `.class` property.
+// A function definition creates a fresh companion that can own its class.
 class Primitive {
   fun answer() = 42
 }
-val Primitive = 7
-//│ Primitive = 7
+fun Primitive() = 7
 
 :expect 7
-Primitive
+Primitive()
 //│ = 7
 
 :expect 42
@@ -17,12 +16,11 @@ Primitive
 //│ = 42
 
 
-// Declaration order and nullary functions must not change class selection.
-val Reverse = 13
+// Declaration order must not change class selection.
+fun Reverse() = 13
 class Reverse {
   fun answer() = 43
 }
-//│ Reverse = 13
 
 :expect 43
 (new Reverse()).answer()
@@ -31,10 +29,10 @@ class Reverse {
 class Getter {
   fun answer() = 44
 }
-fun Getter = 14
+fun Getter() = 14
 
 :expect 14
-Getter
+Getter()
 //│ = 14
 
 :expect 44
@@ -60,7 +58,7 @@ module Members {
   class Item {
     fun answer() = 45
   }
-  val Item = new Item
+  fun Item() = new Item
   fun fresh() = new Item
   class Factory {
     fun answer() = 46
@@ -69,7 +67,7 @@ module Members {
 }
 
 :expect 45
-Members.Item.answer()
+Members.Item().answer()
 //│ = 45
 
 :expect 45
@@ -109,9 +107,8 @@ Aux(41).answer()
 class Parent {
   fun answer() = 47
 }
-val Parent = false
+fun Parent() = false
 class Child extends Parent
-//│ Parent = false
 
 // Inherited members retain their class interpretation despite the term overload.
 :expect 47
@@ -130,19 +127,19 @@ Factory().answer()
 //│ = 49
 
 
-// Bare classes still coexist with independent values inside class instances.
+// A class instance can expose a nested class alongside an ordinary field.
 class Container {
   class Inner {
     fun answer() = 50
   }
-  val Inner = 5
+  val value = 5
   fun fresh() = new Inner
 }
 let container = new Container
-//│ container = Container { Inner: 5 }
+//│ container = Container { Inner: class Inner, value: 5 }
 
 :expect 5
-container.Inner
+container.value
 //│ = 5
 
 :expect 50
@@ -158,12 +155,12 @@ module MutableMembers {
   class Item {
     fun answer() = 53
   }
-  mut val Item = 17
+  mut val value = 17
 }
-set MutableMembers.Item = 18
+set MutableMembers.value = 18
 
 :expect 18
-MutableMembers.Item
+MutableMembers.value
 //│ = 18
 
 :expect 53
@@ -176,20 +173,20 @@ MutableMembers.Item
 class Parameterized()
 fun Parameterized() = 0
 //│ ╔══[COMPILATION ERROR] Not yet supported: overloading of function 'Parameterized'
-//│ ║  l.177: 	fun Parameterized() = 0
+//│ ║  l.174: 	fun Parameterized() = 0
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── with class of the same name
-//│ ║  l.176: 	class Parameterized()
+//│ ║  l.173: 	class Parameterized()
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^
 
 :e
 class ParameterizedValue(x)
 val ParameterizedValue = 0
-//│ ╔══[COMPILATION ERROR] Illegal overloading of value 'ParameterizedValue'
-//│ ║  l.187: 	val ParameterizedValue = 0
+//│ ╔══[COMPILATION ERROR] A class companion must be a function with a parameter list
+//│ ║  l.184: 	val ParameterizedValue = 0
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── with class of the same name
-//│ ║  l.186: 	class ParameterizedValue(x)
+//│ ╟── Arbitrary values cannot be overloaded with class 'ParameterizedValue'
+//│ ║  l.183: 	class ParameterizedValue(x)
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ParameterizedValue = 0
 
@@ -198,11 +195,17 @@ val ParameterizedValue = 0
 class Duplicate
 fun Duplicate() = 0
 val Duplicate = 1
+//│ ╔══[COMPILATION ERROR] A class companion must be a function with a parameter list
+//│ ║  l.197: 	val Duplicate = 1
+//│ ║         	^^^^^^^^^^^^^^^^^
+//│ ╟── Arbitrary values cannot be overloaded with class 'Duplicate'
+//│ ║  l.195: 	class Duplicate
+//│ ╙──       	^^^^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Illegal overloading of value 'Duplicate'
-//│ ║  l.200: 	val Duplicate = 1
+//│ ║  l.197: 	val Duplicate = 1
 //│ ║         	^^^^^^^^^^^^^^^^^
 //│ ╟── with function of the same name
-//│ ║  l.199: 	fun Duplicate() = 0
+//│ ║  l.196: 	fun Duplicate() = 0
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^
 
 
@@ -215,8 +218,8 @@ val Duplicate = 1
 
 fun unusedClass() = {
   class Unused
-  val Unused = 55
-  Unused
+  fun Unused() = 55
+  Unused()
 }
 
 :inlineThreshold 10000

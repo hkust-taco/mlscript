@@ -9,7 +9,7 @@ import hkmc2.utils.*
 import document.*
 import document.Document
 import semantics.{
-  BlockMemberSymbol, Elaborator,
+  BlockMemberSymbol, ClassSymbol, Elaborator,
   InnerSymbol, LabelSymbol, LocalVarSymbol, ModuleOrObjectSymbol, ParamList, TempSymbol,
 },
   Elaborator.State
@@ -47,14 +47,19 @@ object SessionBinding:
   *   The Wasm function type expected by the import.
   */
 final case class SessionFunc(
-    sym: BlockMemberSymbol,
+    sym: BlockMemberSymbol | ClassSymbol,
     wrapId: Opt[Str] -> Opt[Str],
     moduleName: Str,
     exportName: Str,
     funcType: FunctionType,
 ) extends SessionBinding:
   def bindingKey: Str = s"func:$moduleName:$exportName"
-  def bindingSyms: Seq[SlotSymbol] = sym :: Nil
+  // MIR free variables use the block member even when the reference selects its class.
+  // Importing that member must recover both its function and its constructor, under distinct keys.
+  // Prefer the IR member: inlining refreshes symbols but retains their source definitions.
+  def bindingSyms: Seq[SlotSymbol] = sym match
+    case cls: ClassSymbol => cls :: cls.irClsLikeDefn.map(_.sym).orElse(cls.asBlkMember).toList
+    case sym: BlockMemberSymbol => sym :: Nil
   override def exportNameOpt: Opt[Str] = S(exportName)
 
 /** Metadata for an exported global that later Wasm REPL modules can import.
@@ -971,9 +976,7 @@ class Ctx(using Elaborator.Ctx, State) extends ToWat:
   def addFunc(funcInfo: FuncInfo)(using Ctx, Raise): FuncIdx =
     val id = funcInfo.id
     funcs = funcs + (id -> funcInfo)
-    funcInfo.sym match
-      case bms: BlockMemberSymbol => namedFuncs(bms) = funcInfo
-      case _ =>
+    namedFuncs(funcInfo.sym) = funcInfo
     val idx = FuncIdx(funcInfo.id)
     val refType = RefType(funcInfo.typeUse.typeIdx, nullable = false)
     elemSegments = elemSegments +

@@ -16,11 +16,11 @@ forwardValue()
 // Parentheses and locally opened blocks preserve a class target's interpretation.
 module Choices {
   class Item { fun answer() = 24 }
-  val Item = 25
+  fun Item() = 25
 }
 fun choices() = {
   open Choices
-  [Item, (new (Item)).answer(), (new (Choices.{Item})).answer()]
+  [Item(), (new (Item)).answer(), (new (Choices.{Item})).answer()]
 }
 
 :expect [25, 24, 24]
@@ -32,11 +32,11 @@ choices()
 module Arguments {
   class Box(val value)
   class Item
-  val Item = 26
+  fun Item() = 26
 }
 fun construct() = {
   open Arguments
-  (new Box(Item)).value
+  (new Box(Item())).value
 }
 
 :expect 26
@@ -47,7 +47,7 @@ construct()
 // Pattern targets retain the class interpretation; guards and results are terms.
 fun matchBox(box) = {
   open Arguments
-  if box is Box(value) and value > 0 then Item else 0
+  if box is Box(value) and value > 0 then Item() else 0
 }
 
 :expect [26, 0]
@@ -91,9 +91,8 @@ invalidValue()
 
 // The prefix of a class selection is a term, even if that name also has a class.
 class Carrier
-val Carrier = Arguments
-//│ Carrier = class Arguments { Box: fun Box { class: class Box }, Item: 26 }
+fun Carrier() = Arguments
 
 :expect 26
-(new Carrier.Box(Carrier.Item)).value
+(new (Carrier().Box)(Carrier().Item())).value
 //│ = 26

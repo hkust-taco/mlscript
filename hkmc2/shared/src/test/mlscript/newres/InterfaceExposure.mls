@@ -311,7 +311,7 @@ recursiveHidden({a: 1})
 class Shadowed {
   fun bad(x) = x.a
 }
-val Shadowed = 0
+fun Shadowed() = 0
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
 //│ ║  l.312: 	  fun bad(x) = x.a
 //│ ║         	               ^^^
@@ -329,9 +329,8 @@ val Shadowed = 0
 //│ ║         	^^^^^^^^^^^^^^^^^^
 //│ ║  l.313: 	}
 //│ ║         	^
-//│ ║  l.314: 	val Shadowed = 0
-//│ ╙──       	^^^^^^^^^^^^^^^^
-//│ Shadowed = 0
+//│ ║  l.314: 	fun Shadowed() = 0
+//│ ╙──       	^^^^^^^^^^^^^^^^^^
 
 // A constructor test narrows the class, but cannot close its unannotated fields.
 :e
@@ -339,17 +338,17 @@ class Holder(val value)
 fun inspect(x) = if x is Holder(y) then y.a else 0
 inspect(Holder({a: 1}))
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.339: 	fun inspect(x) = if x is Holder(y) then y.a else 0
+//│ ║  l.338: 	fun inspect(x) = if x is Holder(y) then y.a else 0
 //│ ║         	                                        ^^^
 //│ ╟── Cannot resolve member 'a' of a value with unknown shape.
 //│ ╟── This constructor field may contain a value of unknown shape.
-//│ ║  l.338: 	class Holder(val value)
+//│ ║  l.337: 	class Holder(val value)
 //│ ║         	                 ^^^^^
 //│ ╟── Parameter 'x' admits values of unknown shape.
-//│ ║  l.339: 	fun inspect(x) = if x is Holder(y) then y.a else 0
+//│ ║  l.338: 	fun inspect(x) = if x is Holder(y) then y.a else 0
 //│ ║         	            ^
 //│ ╟── 'inspect' is exposed by this compilation unit.
-//│ ║  l.339: 	fun inspect(x) = if x is Holder(y) then y.a else 0
+//│ ║  l.338: 	fun inspect(x) = if x is Holder(y) then y.a else 0
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -367,17 +366,17 @@ class GenericHolder[A](val value: A)
 fun inspectGeneric(x) = if x is GenericHolder(y) then y.a else 0
 inspectGeneric(GenericHolder({a: 1}))
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.367: 	fun inspectGeneric(x) = if x is GenericHolder(y) then y.a else 0
+//│ ║  l.366: 	fun inspectGeneric(x) = if x is GenericHolder(y) then y.a else 0
 //│ ║         	                                                      ^^^
 //│ ╟── Cannot resolve member 'a' of a value with unknown shape.
 //│ ╟── This constructor field may contain a value of unknown shape.
-//│ ║  l.366: 	class GenericHolder[A](val value: A)
+//│ ║  l.365: 	class GenericHolder[A](val value: A)
 //│ ║         	                           ^^^^^
 //│ ╟── Parameter 'x' admits values of unknown shape.
-//│ ║  l.367: 	fun inspectGeneric(x) = if x is GenericHolder(y) then y.a else 0
+//│ ║  l.366: 	fun inspectGeneric(x) = if x is GenericHolder(y) then y.a else 0
 //│ ║         	                   ^
 //│ ╟── 'inspectGeneric' is exposed by this compilation unit.
-//│ ║  l.367: 	fun inspectGeneric(x) = if x is GenericHolder(y) then y.a else 0
+//│ ║  l.366: 	fun inspectGeneric(x) = if x is GenericHolder(y) then y.a else 0
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 

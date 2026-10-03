@@ -211,6 +211,16 @@ companion modules. Preserve this distinction through nested captures and opens.
 `newres/OverloadedCalls.mls` covers direct, generic, stored-function, module-member,
 and captured uses.
 
+Bare classes can share their name with a function definition that has a parameter
+list. The generated function owns the class reference, so JS uses the existing
+`.class` property for references, selections, and imports. Arbitrary values,
+parameterless functions, and term declarations cannot supply that companion:
+their results may be primitive, aliased, or frozen, and must never be augmented.
+Instance methods cannot supply per-instance companions either, because their
+function objects are shared. Inlining may replace calls to a companion function,
+but must preserve its binding while the class is used. WASM identifies constructor
+functions by their class symbols, separately from explicit function companions.
+
 Foreign declarations expose call and constructor capabilities explicitly.
 The JS backend uses native class values for `new` and patterns without generated
 MLscript `.class` storage. Bodyless foreign methods use foreign-call normalization

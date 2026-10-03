@@ -1964,13 +1964,26 @@ extends Importer:
             log(s"Processing overloadings for '$name'")
             defns.iterator.foreach: defn =>
               if defn.k > k then
-                val bareClassOverload = newResolution && ((k is Fun) || k.isInstanceOf[Val]) && (defn match
+                // Only function definitions with parameters create a fresh companion object.
+                // A val initializer or parameterless function can yield an existing value;
+                // attaching a class to that value would mutate it (and may fail if frozen).
+                val functionCompanion = (k is Fun) && mainDefn.paramLists.nonEmpty
+                val instanceMethodCompanion = functionCompanion && ctx.outer.inner.exists(_.isInstanceOf[ClassSymbol])
+                val bareClassOverload = newResolution && functionCompanion && !instanceMethodCompanion && (defn match
                   case td: TypeDef => (td.k is Cls) && td.paramLists.isEmpty
                   case _ => false)
-                val functionModuleOverload = newResolution && (k is Fun) && (defn.k is Mod)
+                val functionModuleOverload = newResolution && functionCompanion && !instanceMethodCompanion && (defn.k is Mod)
                 if !supportedOverloadings(k -> defn.k) && !bareClassOverload && !functionModuleOverload then raise:
                   ErrorReport:
-                    if notYetSupportedOverloadings(k -> defn.k)
+                    if ((defn.k is Cls) || (defn.k is Mod)) && instanceMethodCompanion then
+                      msg"Not yet supported: ${defn.k.desc} companion '$name' defined as an instance method" -> mainDefn.toLoc
+                        :: msg"An instance method is shared by all instances, but its companion is created per instance" -> defn.toLoc
+                        :: Nil
+                    else if ((defn.k is Cls) || (defn.k is Mod)) && ((k is Fun) || k.isInstanceOf[Val]) && !functionCompanion then
+                      msg"A ${defn.k.desc} companion must be a function with a parameter list" -> mainDefn.toLoc
+                        :: msg"Arbitrary values cannot be overloaded with ${defn.k.desc} '$name'" -> defn.toLoc
+                        :: Nil
+                    else if notYetSupportedOverloadings(k -> defn.k)
                     then msg"Not yet supported: overloading of ${k.desc} '$name'" -> mainDefn.toLoc
                       :: msg"with ${defn.k.desc} of the same name" -> defn.toLoc
                       :: Nil
@@ -2651,6 +2664,16 @@ extends Importer:
       bms.symbols.foreach:
         case sym: (ClassLikeSymbol & InnerSymbol) =>
           sym.defn.foreach: d => // erroneous code may not have a defn even after the BMS is completed
+            // A declaration supplies no fresh function object to hold a companion.
+            // Generated constructor functions also have no source body, but lowering creates them.
+            // Foreign class-like declarations produce no companion initialization at all.
+            if d.hasDeclareModifier.isEmpty then
+              bms.asTrm.filterNot(_.isInstanceOf[ClassCtorSymbol]).flatMap(_.defn).foreach: term =>
+                if term.body.isEmpty || term.hasDeclareModifier.isDefined then raise:
+                  ErrorReport:
+                    msg"A term declaration cannot have an implemented ${sym.describeKind} companion" -> term.toLoc
+                      :: msg"Companion '${sym.nme}' is defined here" -> d.toLoc
+                      :: Nil
             d.ext match
             case S(ext) =>
               listenTerm(ext): esh =>

@@ -3,4 +3,4 @@
 class OverloadedDefault {
   fun answer() = 54
 }
-val OverloadedDefault = 19
+fun OverloadedDefault() = 19

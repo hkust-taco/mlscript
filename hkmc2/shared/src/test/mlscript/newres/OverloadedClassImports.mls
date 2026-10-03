@@ -3,15 +3,14 @@
 
 import "../../mlscript-compile/OverloadedClassLibrary.mls"
 
-// Inlining must import the private class binding independently from its term.
+// Inlining imports one companion binding for both calls and class references.
 :sjs
 :expect 51
 OverloadedClassLibrary.fresh().answer()
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ import { _$_modulePrivate_$_Hidden as Hidden } from "./../../mlscript-compile/OverloadedClassLibrary.mjs";
-//│ import { "mlscript.class:_$_modulePrivate_$_Hidden" as Hidden1 } from "./../../mlscript-compile/OverloadedClassLibrary.mjs";
 //│ let inlinedVal;
-//│ inlinedVal = globalThis.Object.freeze(new Hidden1());
+//│ inlinedVal = globalThis.Object.freeze(new Hidden.class());
 //│ return inlinedVal.answer()
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 51
@@ -26,7 +25,7 @@ OverloadedClassLibrary.value()
 //│ = 15
 
 :expect 16
-OverloadedClassLibrary.Item
+OverloadedClassLibrary.Item()
 //│ = 16
 
 :expect 52
@@ -40,16 +39,15 @@ open OverloadedClassLibrary { Item }
 //│ = 52
 
 :expect 16
-Item
+Item()
 //│ = 16
 
 
-// The default export's term and class also have independent import bindings.
+// The default export also carries its class on its function companion.
 import "../../mlscript-compile/OverloadedDefault.mls"
-//│ OverloadedDefault = 19
 
 :expect 19
-OverloadedDefault
+OverloadedDefault()
 //│ = 19
 
 :expect 54

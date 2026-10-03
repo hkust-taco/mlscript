@@ -1,0 +1,52 @@
+:.
+
+
+// A class constructor and an explicitly overloaded function have distinct identities.
+:noInline
+:expect 42
+class Factory {
+  val answer: Int = 21
+}
+fun Factory(x: Int): Int = x + 1
+Factory(20) + (new Factory).answer
+//│ Wasm result:
+//│ = 42
+
+
+// Imported constructors and term functions remain distinct in later blocks.
+:noInline
+:expect 43
+Factory(21) + (new Factory).answer
+//│ Wasm result:
+//│ = 43
+
+
+// Declaration order and nominal class tests select the same constructor.
+:noInline
+:expect 42
+fun Reverse(): Int = 40
+class Reverse { val answer: Int = 2 }
+Reverse() + (new Reverse).answer
+//│ Wasm result:
+//│ = 42
+
+
+:noInline
+:expect 1
+if new Reverse is Reverse then 1 else 0
+//│ Wasm result:
+//│ = 1
+
+
+// Duplicated local classes and their function companions keep distinct identities.
+:lift
+:inlineThreshold 10000
+:expect 45
+fun make(n: Int): Int = {
+  class Local { val answer: Int = 20 }
+  fun Local(x: Int): Int = x + 1
+  Local(n) + (new Local).answer
+}
+make(1) + make(2)
+//│ Wasm result:
+//│ = 45

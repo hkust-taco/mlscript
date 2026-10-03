@@ -6,7 +6,7 @@ fun writeLater(value) = {
   set Later.Item = value
 }
 module Later {
-  class Item {
+  class ItemClass {
     fun answer() = 42
   }
   mut val Item = 0
@@ -18,7 +18,7 @@ Later.Item
 //│ = 7
 
 :expect 42
-(new Later.Item).answer()
+(new Later.ItemClass).answer()
 //│ = 42
 
 
@@ -43,7 +43,7 @@ Later.Item
 // Resolving the assignment must preserve captures through the nested module.
 fun replace(initial) = {
   module Local {
-    class Item
+    class ItemClass
     mut val Item = initial
   }
   set Local.Item = 9

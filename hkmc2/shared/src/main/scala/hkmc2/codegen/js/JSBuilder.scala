@@ -49,32 +49,6 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
   val freeze = if !config.noFreeze then "globalThis.Object.freeze" else ""
   lazy val freezeDefns = if freezeDefinitions && !config.noFreeze then "globalThis.Object.freeze" else ""
   private val privateAccessorSymbols = LinkedHashMap.empty[semantics.TermSymbol, semantics.TempSymbol]
-  // Filled only by reserveNames for the current program. Refreshed IR members keep
-  // their original syntax trees, so their live class symbols must come from IR definitions.
-  private val independentClassSymbols = LinkedHashMap.empty[BlockMemberSymbol, ClassSymbol]
-
-  /** Bare classes overloaded with terms have independent storage: their term may be
-    * uninitialized, primitive, or frozen. A symbol key keeps member class slots separate
-    * from source fields, and stable across separately compiled modules and inheritance. */
-  private def independentClass(sym: DefinitionSymbol[?]): Opt[ClassSymbol] =
-    if sym.asTrm.isDefined then N
-    else (sym.asCls orElse sym.asBlkMember.flatMap(_.asCls)).filter:
-      cls => cls.asBlkMember.exists(_.asTrm.isDefined) &&
-        cls.defn.exists(d => d.paramsOpt.isEmpty && d.hasDeclareModifier.isEmpty)
-
-  private def classField(cls: ClassSymbol): Document =
-    doc"[globalThis.Symbol.for(${makeStringLiteral("mlscript.class." + cls.nme)})]"
-
-  private def independentClassBindings(ss: Iterable[ScopedSymbol])(using Raise, Scope): Iterator[(Symbol, Str)] =
-    ss.toList.sortBy(_.uid).iterator.flatMap:
-      case bms: BlockMemberSymbol =>
-        independentClassSymbols.get(bms)
-      case _ => N
-    .map(cls => cls -> scope.lookup_!(cls, cls.toLoc))
-
-  private def classExportName(sym: BlockMemberSymbol)(using Raise): Document =
-    // A string export name cannot collide with the identifier exports allocated for terms.
-    makeStringLiteral("mlscript.class:" + modulePrivateExportName(sym))
   
   // TODO use this to avoid parens when we generate recomposed expressions later
   enum Context:
@@ -191,9 +165,8 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
   private case class Imports(
     defaults: Ls[ImportSymbol -> Str],
     privates: Ls[BlockMemberSymbol -> Str],
-    classes: Ls[BlockMemberSymbol -> Str],
   ):
-    def symbols: Ls[Symbol] = defaults.map(_._1) ::: privates.map(_._1) ::: classes.map(_._1.asCls.get)
+    def symbols: Ls[ImportSymbol] = defaults.map(_._1) ::: privates.map(_._1)
   
   
   /** Recovers imports that are not necessarily recorded in `p.imports`.
@@ -228,7 +201,6 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
     
     val defaultImports = collection.mutable.Map.empty[ImportSymbol, Str]
     val privateImports = collection.mutable.Map.empty[BlockMemberSymbol, Str]
-    val classImports = collection.mutable.Map.empty[BlockMemberSymbol, Str]
     
     /** State identity, rather than equal path strings, is the compilation-unit ownership
       * invariant: all symbols belonging to the current artifact were created by this builder's
@@ -250,13 +222,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
       override def applyValue(value: Value): Unit = value match
         case Value.SimpleRef(sym: TempSymbol) => note(sym)
         case Value.SimpleRef(sym: VarSymbol) => note(sym)
-        case Value.MemberRef(sym, disamb) =>
-          note(sym)
-          if independentClass(disamb).isDefined && !localSymbols(sym) then
-            sym.getState.externalModuleImport(sym, State) match
-            case S(ExternalModuleImport.Default(_, path)) => classImports(sym) = path
-            case S(ExternalModuleImport.Private(_, path)) => classImports(sym) = path
-            case N => ()
+        case Value.MemberRef(sym, _) => note(sym)
         case _ =>
     ).applyBlock(p.main)
     
@@ -265,7 +231,6 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
     Imports(
       orderedExternalImports(defaultImports),
       orderedExternalImports(privateImports),
-      orderedExternalImports(classImports),
     )
   end externalImports
   
@@ -280,11 +245,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
       scope.lookup(sym).isEmpty
     privates.foreach: (sym, _) =>
       scope.allocateName(sym)
-    val classes = external.classes.filter: (sym, _) =>
-      scope.lookup(sym.asCls.get).isEmpty
-    classes.foreach: (sym, _) =>
-      scope.allocateName(sym.asCls.get)
-    Imports(defaults ::: externalDefaults, privates, classes)
+    Imports(defaults ::: externalDefaults, privates)
 
   private def ownCompilationUnitSymbols(p: Program): Ls[BlockMemberSymbol] =
     p.main match
@@ -353,11 +314,8 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
     case Value.Lit(Tree.StrLit(value)) => makeStringLiteral(value)
     case Value.Lit(lit) => lit.idStr
     case Value.MemberRef(bms, disamb) =>
-      independentClass(disamb) match
-      case S(cls) => scope.lookup_!(cls, r.toLoc)
-      case N =>
-        if disamb.shouldBeLifted then doc"${scope.lookup_!(bms, bms.toLoc)}.class"
-        else scope.lookup_!(bms, r.toLoc)
+      if disamb.shouldBeLifted then doc"${scope.lookup_!(bms, bms.toLoc)}.class"
+      else scope.lookup_!(bms, r.toLoc)
     case Value.SimpleRef(l: BuiltinSymbol) =>
       if l.nullary then l.nme
       else errExpr(msg"Illegal reference to builtin symbol '${l.nme}'")
@@ -403,11 +361,10 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
     case s @ Select(qual, id) => 
       val checkCurrentSelection = checkSelections && s.sanitize
       val dotClass = s.symbol match
-        case S(ds) if independentClass(ds).isEmpty && ds.shouldBeLifted => doc".class"
+        case S(ds) if ds.shouldBeLifted => doc".class"
         case _ => doc""
       val field = s.symbol match
         case S(ts: semantics.TermSymbol) => selectPrivateField(ts, s.toLoc)
-        case S(ds) => independentClass(ds).map(classField)
         case _ => N
       val name = symbolicSuffixBase(id.name).getOrElse(id.name)
       val fieldDoc = field.getOrElse:
@@ -597,12 +554,6 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
               // * in that case, we can't really use it as an inner name, as this would result in unintended capture.
               case S(otherSym: FreeSymbol) if (otherSym isnt sym) && bod.freeVars.contains(otherSym) =>
                 doc"${varName} = $functionKeyword ($params) ${ braced(bodyDoc) };"
-              case S(cls: ClassSymbol) if independentClass(cls).isDefined && bod.freeVars.exists {
-                  case bms: BlockMemberSymbol => independentClassSymbols.get(bms).orElse(bms.asCls).contains(cls)
-                  case _ => false
-                } =>
-                // The function's display name must not capture its sibling class binding.
-                doc"${varName} = $functionKeyword ($params) ${ braced(bodyDoc) };"
               case _ =>
                 doc"${varName} = $functionKeyword ${sym.nme}($params) ${ braced(bodyDoc) };"
             else
@@ -622,14 +573,12 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
             val backendParamList = auxParams.head
             val ctorParams = backendParamList.paramSyms.map(p => p -> scope.allocateName(p))
             val sourceParamsOpt = isym.defn.flatMap(_.paramsOpt)
-            val independentCls = independentClass(isym)
             
-            // * Whether the class should be "lifted" to a "class" property of the companion term
-            // * should currently be consistent with whether the class has source parameters.
-            // * This currently fails for faulty input programs (such as `object O(x)`);
-            // * we should make sure such programs fail compilation before they reach this point.
-            softTODO(sourceParamsOpt.isDefined === (isym.shouldBeLifted && independentCls.isEmpty),
-              s"Unexpected class storage for ${isym.nme}: parameters=$sourceParamsOpt, independent=$independentCls")
+            // Parameterized classes have a generated constructor function; bare classes can
+            // instead have an explicit function companion. Both own their `.class` property.
+            // Invalid parameterized objects can still reach this point without a constructor.
+            softTODO(sourceParamsOpt.isEmpty || isym.shouldBeLifted,
+              s"Missing constructor function for parameterized class ${isym.nme}")
             
             def mkMethodName(td: FunDefn, owner: InnerSymbol): Document =
               if td.dSym.isPrivate
@@ -749,9 +698,6 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
                   then doc" # new $v"
                   else
                     ownr match
-                    case S(owner) if independentCls.isDefined =>
-                      doc" # ${result(owner.asThis)}${classField(independentCls.get)} = $v"
-                    case N if independentCls.isDefined => doc""
                     case S(owner) =>
                       doc" # ${result(owner.asThis)}.${sym.nme}$extraPath = $v"
                     case N =>
@@ -845,8 +791,6 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
                 fun match
                 case S(f) =>
                   doc"${scope.lookup_!(sym, sym.toLoc)} = ${f}; # $freezeDefns($clsJS);"
-                case N if independentCls.isDefined =>
-                  doc"${outerScope.lookup_!(isym, isym.toLoc)} = $freezeDefns($clsJS);"
                 case N =>
                   doc"$freezeDefns(${clsJS});"
         
@@ -1002,14 +946,12 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
     *   but the result has the same semantics.
     *  */
   def reserveNames(p: Program)(using Scope, Raise): Unit =
-    independentClassSymbols.clear()
     def go(blk: Block): Unit = tl.trace(s"avoidNames ${blk.toString.take(100)}..."):
       blk match
       case Define(defn, rest) =>
         defn match
           case d: ClsLikeDefn =>
             val nme = scope.allocateName(d.isym)
-            independentClass(d.isym).foreach(cls => independentClassSymbols(d.sym) = cls)
             d.companion match
             case N => ()
             case S(comp) =>
@@ -1049,21 +991,15 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
     val privateImps = imports.privates.map: (sym, path) =>
       val relPath = relativeImportPath(path, wd)
       doc"""import { ${modulePrivateExportName(sym)} as ${scope.lookup_!(sym, N)} } from "${relPath}";"""
-    val classImps = imports.classes.map: (sym, path) =>
-      val relPath = relativeImportPath(path, wd)
-      doc"""import { ${classExportName(sym)} as ${scope.lookup_!(sym.asCls.get, N)} } from "${relPath}";"""
     val bodyDoc = nonNestedScoped(p.main)(block(_, endSemi = false)).stripBreaks
-    val privateExports = (if exportPrivates then ownCompilationUnitSymbols(p) else Nil).flatMap: sym =>
-      doc"""export { ${scope.lookup_!(sym, sym.toLoc)} as ${modulePrivateExportName(sym)} };""" ::
-        independentClassSymbols.get(sym).toList.map: cls =>
-          doc"""export { ${scope.lookup_!(cls, cls.toLoc)} as ${classExportName(sym)} };"""
-    withPrivateAccessorDecls((imps ::: privateImps ::: classImps).mkDocument(doc" # "))
+    val privateExports = (if exportPrivates then ownCompilationUnitSymbols(p) else Nil).map: sym =>
+      doc"""export { ${scope.lookup_!(sym, sym.toLoc)} as ${modulePrivateExportName(sym)} };"""
+    withPrivateAccessorDecls((imps ::: privateImps).mkDocument(doc" # "))
     :/: bodyDoc
     :: (if privateExports.isEmpty then doc"" else doc" # " :: privateExports.mkDocument(doc" # "))
     :: locally:
       exprt match
       case S(sym) =>
-        // Export the allocated binding directly; the source name may belong to its class facet.
         doc"\nexport default ${scope.lookup_!(sym, sym.toLoc)};\n"
       case N => doc""
   
@@ -1074,15 +1010,13 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
     val imports = bindImports(p)
     val importedScopedSymbols: Set[ScopedSymbol] =
       p.imports.iterator.map(_._1).toSet
-    val importBindings: Ls[Symbol -> Str] =
+    val importBindings: Ls[ImportSymbol -> Str] =
       imports.symbols.map(sym => sym -> scope.lookup_!(sym, N))
     val imps =
       imports.defaults.map: (sym, path) =>
         doc"""${scope.lookup_!(sym, N)} = await import("${path}").then(m => m.default ?? m);"""
       ::: imports.privates.map: (sym, path) =>
         doc"""${scope.lookup_!(sym, N)} = await import("${path}").then(m => m.${modulePrivateExportName(sym)});"""
-      ::: imports.classes.map: (sym, path) =>
-        doc"""${scope.lookup_!(sym.asCls.get, N)} = await import("${path}").then(m => m[${classExportName(sym)}]);"""
     p.main match
     case Scoped(syms, body) =>
       val fvs = body.freeVars
@@ -1090,7 +1024,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
           !s.isInstanceOf[TempSymbol]
           // ^ VarSymbols and TermSymbols should be kept as their value will be acessed and printed by the worksheet
           || fvs(s)))
-      genLetDecls(importBindings.iterator ++ allocateScopedBindings(localSymbols) ++ independentClassBindings(localSymbols)) ->
+      genLetDecls(importBindings.iterator ++ allocateScopedBindings(localSymbols)) ->
         (withPrivateAccessorDecls(imps.mkDocument(doc" # ")) :/: block(body, endSemi = false).stripBreaks)
     case body =>
       genLetDecls(importBindings.iterator) ->
@@ -1112,7 +1046,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
       l -> scope.allocateName(l)
 
   def blockPreamble(ss: Iterable[ScopedSymbol])(using Raise, Scope): Document =
-    genLetDecls(allocateScopedBindings(ss) ++ independentClassBindings(ss))
+    genLetDecls(allocateScopedBindings(ss))
 
   /** Specially handle top-level Scoped node: output the bindings, but do not add another pair of braces */
   def nonBracedScoped(blk: Block)(k: Scope ?=> Block => Document)(using Raise, Scope): Document = blk match
@@ -1241,15 +1175,15 @@ object JSBuilder:
     }.mkString
   
   extension (dsym: DefinitionSymbol[?])
-    /** Whether a class-like definition has a term companion. Parameterized classes
-      * store the class value in the generated constructor function's `.class` property;
-      * explicitly overloaded bare classes use independent storage instead.
+    /** In JS, when a class is overloaded with a term (either explicitly, or because it has a primary parameter list),
+      * then its class value is stored in a `.class` property of the term.
       * 
-      * After checking for independent storage, reference sites use this to append `.class`
+      * This helper is used at reference sites (MemberRef, Select) to decide whether to append `.class`
       * when accessing a class value. It returns true only for class/module/object symbols,
       * not for term symbols — so constructor calls like `Foo(args)` which resolve to the term
-      * symbol are not affected. Foreign declarations do not generate companion storage:
-      * their class value is the native binding even when constructor parameters are declared. */
+      * symbol are not affected. Elaboration rejects arbitrary values and parameterless
+      * functions as companions: the class property belongs to a compiler-created function,
+      * never to an existing value. Foreign declarations use their native binding instead. */
     def shouldBeLifted: Bool =
       val bsym = dsym.asBlkMember
       (
