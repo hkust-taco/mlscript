@@ -87,7 +87,7 @@ test(f: print)(1)
 //│ ╟── No member interface is known for this type.
 //│ ║  l.64: 	let test = (_.f(0, _, 2)) as (({f: (Int, Int, Int) -> ()}, Int) -> ())
 //│ ╙──      	                                                                   ^^
-//│ ═══[RUNTIME ERROR] Error: Function 'test' expected 2 arguments but got 1
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 test((f: print), 1)
 //│ > 0 1 2

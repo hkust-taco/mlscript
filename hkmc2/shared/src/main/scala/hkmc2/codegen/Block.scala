@@ -1015,6 +1015,7 @@ sealed abstract class Result extends Located, HasErasedType:
     case Value.This(sym) => s"this[${sym.showDbg}]"
     case Value.Lit(lit) => lit.idStr
     case Select(q, n) => s"Select(${q.showDbg}, ${n.showDbg})"
+    case SuperSelect(q, base, n) => s"SuperSelect(${q.showDbg}, ${base.showDbg}, ${n.showDbg})"
     case DynSelect(q, fld, arrayIdx) => s"DynSelect(${q.showDbg}, ${fld.showDbg}, $arrayIdx)"
     case Call(fun, argss) => s"Call(${fun.showDbg}, [${
       argss.map(_.map(a => a.value.showDbg).mkString("[", ", ", "]")).mkString(", ")}])"
@@ -1043,6 +1044,7 @@ sealed abstract class Result extends Located, HasErasedType:
     case _: Value => true
     case sel @ Select(q, n) =>
       q.isPure && sel.symbol.exists(_.isPure)
+    case sel @ SuperSelect(q, base, _) => q.isPure && base.isPure && sel.symbol.isPure
     case c @ Call(fun, ass) if c.isKnownUnsaturatedCall =>
       fun.isPure && ass.forall(_.forall(a => a.spread.isEmpty && a.value.isPure))
     case Call(Value.SimpleRef(bs: BuiltinSymbol), ass) if bs.isPure =>
@@ -1059,6 +1061,7 @@ sealed abstract class Result extends Located, HasErasedType:
     case Call(fun, argss) => fun.subBlocks ::: argss.flatten.flatMap(_.value.subBlocks)
     case Instantiate(mut, cls, argss) => argss.flatten.flatMap(_.value.subBlocks)
     case Select(qual, name) => qual.subBlocks
+    case SuperSelect(qual, base, _) => qual.subBlocks ::: base.subBlocks
     case Lambda(params, body) => body :: Nil
     case Tuple(mut, elems) => elems.flatMap(_.value.subBlocks)
     case _ => Nil
@@ -1068,6 +1071,7 @@ sealed abstract class Result extends Located, HasErasedType:
     case Instantiate(mut, cls, argss) => cls.freeVars ++ argss.flatten.flatMap(_.value.freeVars).toSet
     case Cast(value, _, _) => value.freeVars
     case Select(qual, name) => qual.freeVars
+    case SuperSelect(qual, base, _) => qual.freeVars ++ base.freeVars
     case Lambda(params, body) => body.freeVars -- params.paramSyms
     case Tuple(mut, elems) => elems.flatMap(_.value.freeVars).toSet
     case Record(mut, args) =>
@@ -1083,6 +1087,7 @@ sealed abstract class Result extends Located, HasErasedType:
     case Instantiate(mut, cls, argss) => cls.size + argss.iterator.flatten.map(_.value.size).sum
     case Cast(value, _, _) => value.size
     case Select(qual, name) => qual.size
+    case SuperSelect(qual, base, _) => qual.size + base.size
     case Lambda(params, body) => 1 + body.size
     case Tuple(mut, elems) => elems.iterator.map(_.value.size).sum
     case Record(mut, args) => args.iterator.map(arg => arg.idx.fold(0)(_.size) + arg.value.size).sum
@@ -1128,6 +1133,7 @@ sealed abstract class Result extends Located, HasErasedType:
       case _ => N
     // * A resolved selection has the type of the member it refers to (e.g. `this.field`); an
     // * unresolved selection (dynamic field access) stays unknown.
+    case sel: SuperSelect => sel.symbol.erasedType
     case sel @ Select(_, _) => sel.symbol match
       case S(ts: TermSymbol) => ts.erasedType
       // * A class reference is the class object, so it stays unknown.
@@ -1331,6 +1337,7 @@ sealed abstract class Path extends TrivialResult:
   def targetSymbol: Opt[DefinitionSymbol[?]] = this match
     case ref: Value.MemberRef => S(ref.disamb)
     case sel: Select => sel.symbol
+    case sel: SuperSelect => S(sel.symbol)
     case _ => N
 
 /**
@@ -1339,6 +1346,14 @@ sealed abstract class Path extends TrivialResult:
 case class Select(qual: Path, name: Tree.Ident)(val symbol: Opt[DefinitionSymbol[?]], val toLoc: Opt[Loc])(val sanitize: Boolean) extends Path with ProductWithExtraInfo:
   def withLoc(loc: Opt[Loc]): Select = if loc == toLoc then this else copy()(symbol, loc)(sanitize)
   def extraInfo(using DebugPrinter): Str = symbol.map(s => s"sym=${s.showAsPlain}").mkString
+
+/** Direct lookup on the lexical parent's prototype, with the original receiver as `this`.
+  * `base` is captured when the class is defined, so an extends expression is never re-evaluated
+  * at a super call. Explicit operands preserve this meaning through lifting and inlining.
+  * For Wasm's static dispatch, `base` is a class reference and `symbol` names the called function.
+  */
+case class SuperSelect(qual: Path, base: Path, name: Tree.Ident)(val symbol: TermSymbol, val toLoc: Opt[Loc]) extends Path:
+  def withLoc(loc: Opt[Loc]): SuperSelect = if loc == toLoc then this else copy()(symbol, loc)
 
 case class DynSelect(qual: Path, fld: Path, arrayIdx: Bool)(val toLoc: Opt[Loc]) extends Path:
   def withLoc(loc: Opt[Loc]): DynSelect = if loc == toLoc then this else copy()(loc)
@@ -1411,6 +1426,7 @@ object TermSymbolPath:
     case selection: Select => selection.symbol match
       case S(sym: TermSymbol) => S(sym)
       case _ => N
+    case selection: SuperSelect => S(selection.symbol)
     case _ => N
 
 case class Arg(spread: Opt[SpreadKind], value: Path)

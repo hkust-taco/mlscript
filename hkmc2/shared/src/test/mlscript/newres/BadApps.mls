@@ -11,7 +11,7 @@
 //│ ╟── Integer literal cannot be called like a function.
 //│ ║  l.7: 	42()
 //│ ╙──     	^^
-//│ ═══[RUNTIME ERROR] TypeError: 42 is not a function
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
 let x = 123
@@ -25,7 +25,7 @@ x(456)
 //│ ╟── Integer literal cannot be called like a function.
 //│ ║  l.17: 	let x = 123
 //│ ╙──      	        ^^^
-//│ ═══[RUNTIME ERROR] TypeError: x is not a function
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
 // Returning a non-callable value adds capture marks, not an argument list.
@@ -38,7 +38,7 @@ result()()
 //│ ╟── Integer literal cannot be called like a function.
 //│ ║  l.33: 	fun result() = 1
 //│ ╙──      	               ^
-//│ ═══[RUNTIME ERROR] TypeError: 1 is not a function
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 // A captured module is still a non-callable value.
 :e
@@ -51,7 +51,7 @@ call(M)
 //│ ╟── Module 'M' cannot be called like a function.
 //│ ║  l.45: 	module M
 //│ ╙──      	       ^
-//│ ═══[RUNTIME ERROR] TypeError: Class constructor M cannot be invoked without 'new'
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 // Plain class values require new, including when passed through a parameter.
 :e
@@ -64,7 +64,7 @@ instantiate(Plain)
 //│ ╟── Class 'Plain' must be instantiated with 'new'.
 //│ ║  l.58: 	class Plain
 //│ ╙──      	      ^^^^^
-//│ ═══[RUNTIME ERROR] TypeError: Class constructor Plain cannot be invoked without 'new'
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 // A fully applied constructor really has received all its argument lists.
 :e
@@ -77,7 +77,7 @@ overapply(Curried(1)(2))
 //│ ╟── Instance of class 'Curried' cannot receive more argument lists.
 //│ ║  l.73: 	overapply(Curried(1)(2))
 //│ ╙──      	          ^^^^^^^^^^^^^
-//│ ═══[RUNTIME ERROR] TypeError: tmp is not a function
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 // Explicitly constructed instances must not be told to add another new.
 :e
@@ -90,5 +90,5 @@ overapply(new Plain)
 //│ ╟── Instance of class 'Plain' cannot receive more argument lists.
 //│ ║  l.86: 	overapply(new Plain)
 //│ ╙──      	          ^^^^^^^^^
-//│ ═══[RUNTIME ERROR] TypeError: tmp1 is not a function
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 

@@ -31,7 +31,7 @@ receiver.missing
 //│ ╟── Integer literal cannot be called like a function.
 //│ ║  l.27: 	1()
 //│ ╙──      	^
-//│ ═══[RUNTIME ERROR] TypeError: 1 is not a function
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 // Missing names are still errors when used as callees.
 :e

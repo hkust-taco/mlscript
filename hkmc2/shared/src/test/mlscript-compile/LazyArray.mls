@@ -54,14 +54,14 @@ fun sliceHelper(beg: Int, fin: Int, arr: Indexable) =
 // Marker base class for View and Splice
 class LazyArr extends IterableBase with
 
-  fun toString() = "[" + this joined(", ") + "]"
-  fun concat(...args: Array[Indexable]) = concatHelper(mut [SpliceMarker, this], this.length, ...args)
+  open override fun toString() = "[" + this joined(", ") + "]"
+  open override fun concat(...args: Array[Indexable]) = concatHelper(mut [SpliceMarker, this], this.length, ...args)
 
 // Requires that the underlying iterable is constant-time indexable
 // Note: Ideally `underlying` should be typed as `IterableBase`, but `Array` currently does not extend it.
 class View(val underlying: Indexable, val start: Int, val end: Int) extends LazyArr with
 
-  fun iterator() =
+  override fun iterator() =
     let idx = start
     let until = underlying.length - end
     IteratorImpl of () =>
@@ -73,21 +73,21 @@ class View(val underlying: Indexable, val start: Int, val end: Int) extends Lazy
 
   fun materialize(): Indexable = underlying.slice(start, underlying.length - end)
   
-  fun at(i) =
+  override fun at(i) =
     if i < -length || i >= length do
       throw RangeError("View.at: Index out of bounds")
     underlying.at(normIdx(i, length) + start)
-  fun slice(beg, fin) = sliceHelper(beg, fin, this)
+  override fun slice(beg, fin) = sliceHelper(beg, fin, this)
 
   val len = underlying.length - start - end
-  fun length = len
-  fun toString() = "[" + this joined(", ") + "]"
+  override fun length = len
+  override fun toString() = "[" + this joined(", ") + "]"
 
 object SpliceMarker
 class Splice(val bits: Array, val len: Int) extends LazyArr with
   let materialized = null
 
-  fun iterator() =
+  override fun iterator() =
     let idx = 0
     let uitr = null
     
@@ -140,15 +140,15 @@ class Splice(val bits: Array, val len: Int) extends LazyArr with
       set materialized = reify
     materialized
   
-  fun at(i) = materialize().at(i)
-  fun slice(beg, fin) = sliceHelper(beg, fin, this)
-  fun concat(...args: Array[Indexable]) = 
+  override fun at(i) = materialize().at(i)
+  override fun slice(beg, fin) = sliceHelper(beg, fin, this)
+  override fun concat(...args: Array[Indexable]) = 
     if materialized === null 
     then concatHelper(mut [SpliceMarker, this], len, ...args)
     else concatHelper(mut [SpliceMarker, materialized], len, ...args)
   
-  fun length = len
-  fun toString() = "[" + materialize() joined(", ") + "]"
+  override fun length = len
+  override fun toString() = "[" + materialize() joined(", ") + "]"
 
 
 module LazyArray with...

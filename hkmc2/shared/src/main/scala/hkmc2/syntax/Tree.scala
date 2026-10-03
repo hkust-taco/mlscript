@@ -314,6 +314,9 @@ enum Tree extends AutoLocated:
     case LetLike(kw, und @ Under(), r, b) =>
       LetLike(kw, Ident("_").withLocOf(und), r, b)
     
+    // `open` keeps its existing expression grammar; a declaration operand makes it a modifier.
+    case Open(body: (TypeOrTermDef | Modified | Annotated)) =>
+      Annotated(Keywrd(Keyword.`open`).withLocOf(this), body.desugared)
     case PossiblyAnnotated(anns, m: Modified) =>
       PossiblyAnnotated(anns,
         m match
@@ -326,6 +329,8 @@ enum Tree extends AutoLocated:
         case Modified(kw @ Keywrd(Keyword.`staged`), s) =>
           Annotated(kw, s.desugared)
         case Modified(kw @ Keywrd(Keyword.`virtual`), s) =>
+          Annotated(kw, s.desugared)
+        case Modified(kw @ Keywrd(Keyword.`override`), s) =>
           Annotated(kw, s.desugared)
         case Modified(kw @ Keywrd(Keyword.`public`), s) =>
           Annotated(kw, s.desugared)

@@ -87,6 +87,7 @@ foo()()
 //│ ║  l.85: 	foo()()
 //│ ║        	^^^^^^^
 //│ ╙── Unit value cannot be called like a function.
-//│ = 2
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ ═══[RUNTIME ERROR] Expected: '2', got: 'undefined'
 
 

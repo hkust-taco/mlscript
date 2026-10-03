@@ -21,7 +21,7 @@ class Baz[C](x: C)
 class Bar[B](x: Foo[Int], y: Baz[B] -> Int)
 
 
-class Foo[A] with
+abstract class Foo[A] with
   fun foo: A -> A
 
 

@@ -2704,6 +2704,28 @@ class NewResolver:
       selected(ref)
     , reject)
 
+  /** Super references expose every inherited candidate to inference, but never dispatch
+    * through the overriding member. The parent shape retains generic arguments and scope marks.
+    */
+  def resolveSuper(sup: Super)(using NewResolverState): Unit =
+    def receive(info: MemberLookup, instances: TypeSubstitution)(using NewResolverState): Unit = info match
+      case MemberLookup.Contextual(source, substitution) => receive(source, instances.withOverrides(substitution))
+      case MemberLookup.Found(member, marks) => publishMember(sup, member, sup.resSym, marks, instances)
+      case MemberLookup.Declared(member, bindings, marks, annotation, positive) =>
+        publishDeclared(sup, member, sup.resSym, bindings, marks, annotation, positive, instances)
+      case _ =>
+        rstate.markError(sup)
+        resolError(sup, msg"No inherited member '${sup.id.name}' is available through 'super'" -> sup.toLoc :: Nil)
+    def completed(defn: ClassLikeDef)(using NewResolverState): Unit =
+      listenInheritedMember(defn, sup.id.name): info =>
+        def captures(term: Term): Ls[Marks] = term match
+          case Capture(base, thru) => EntryMark(ResolutionBoundary(thru), N, NoMarks) :: captures(base)
+          case _ => Nil
+        receive(info.withMarks(captures(sup.receiver)), TypeSubstitution.empty)
+    sup.owner.asDefnSym.defn match
+      case S(defn) => completed(defn)
+      case N => sup.owner.asDefnSym.defnListeners += completed
+
   def newSel(sel: NewSel)(using NewResolverState): Unit =
     log(s"newSel? sel = ${sel.showDbg}")
     def member(info: MemberLookup, description: Message, diagnostic: Message => Ls[(Message, Opt[Loc])],
@@ -2831,12 +2853,13 @@ class NewResolver:
     // constructor value. In particular, a captured constructor already carries
     // that exit; adding a second one here would duplicate its instance boundary.
     listenClass(nw.cls, recordTargets = true)(ref =>
-      val cd = ref.definition
+      val cd = nw.rft.flatMap(_._1.defn).getOrElse(ref.definition)
       // Constructor arity is compiled from these shapes even when the runtime
       // operand is a variable with no resolved class symbol of its own.
       assert(rstate.canResolve(nw) || ClassValueShape.targetsOf(nw).contains(ref.target),
         "Inference changed a completed constructor target")
-      val marks = ref.marks
+      val marks = nw.rft.fold(ref.marks): (symbol, _) =>
+        ExitMark(ResolutionBoundary(symbol), S(nw.resSym), NoMarks) :: Nil
       val callerInstances = rstate.instances
       listenExt(cd, extsh =>
         val dsh = constructorShape(cd, extsh)
@@ -2928,6 +2951,32 @@ class NewResolver:
   private lazy val objectShape = NominalInstanceView(prelude.builtins.Object.defn.get, Map.empty, N)(N)(this)
   private def implicitParent(defn: ClassLikeDef): Opt[TermShape] =
     if defn.sym is prelude.builtins.Object then N else S(objectShape)
+
+  /** Register declaration edges even for unused classes. Parent lookup waits for forward
+    * definitions and follows inherited members using the same shapes as ordinary selection.
+    */
+  def registerInheritance(defn: ClassLikeDef)(using NewResolverState): Unit =
+    defn.body.members.values.toList.distinct.foreach: member =>
+      member.asTrm.filterNot(sym => sym.isInstanceOf[ClassCtorSymbol] || sym.isPrivate).foreach: own =>
+        // Bind this host to the defining unit before an importer can observe its edges.
+        own.overrideLinks.inferenceHost
+        listenInheritedMember(defn, member.nme): lookup =>
+          def record(info: MemberLookup): Unit = info match
+            case MemberLookup.Contextual(source, _) => record(source)
+            case MemberLookup.Found(base: BlockMemberSymbol, _) => link(base)
+            case MemberLookup.Declared(base, _, _, _, _) => link(base)
+            case _ => ()
+          def link(base: BlockMemberSymbol): Unit = base.onComplete: () =>
+            base.asTrm.filterNot(_.isPrivate).foreach: target =>
+              if target isnt own then own.overrideLinks.inferenceHost.publish(target)
+          record(lookup)
+
+  private def listenInheritedMember(defn: ClassLikeDef, name: Str)
+      (listener: ShapeListener[MemberLookup])(using NewResolverState): Unit =
+    // Legacy preludes may have no Object declaration or even an enclosing prelude context.
+    // Their root classes have no implicit nominal parent in the legacy resolver.
+    if !newResolution && defn.ext.isEmpty then listener(MemberLookup.Missing)
+    else listenExt(defn, parent => listener(parent.fold[MemberLookup](MemberLookup.Missing)(_.getMember(name))))
 
   def listenExt(defn: ClassLikeDef, listener: ShapeListener[Opt[TermShape]])(using NewResolverState): Unit =
     defn.ext match

@@ -13,7 +13,7 @@ module Iter with ...
 
 class IterableBase with
   set this.(Symbol.iterator) = iterator
-  fun iterator() = throw new Error("Not implemented: iterator()")
+  open fun iterator() = throw new Error("Not implemented: iterator()")
 
   // require that subclasses are immutable
   fun toArray(): Array = [...this]
@@ -27,8 +27,8 @@ class IterableBase with
     else array
   
   // * Functions that create a fresh new result
-  fun at(idx) = asArray.at(idx)
-  fun concat(...xs) = asArray.concat(...xs)
+  open fun at(idx) = asArray.at(idx)
+  open fun concat(...xs) = asArray.concat(...xs)
   fun copyWithin(...args) = asArray.copyWithin(...args)
   fun entries() = asArray.entries()
   fun every(...args) = asArray.every(...args)
@@ -48,13 +48,13 @@ class IterableBase with
   fun map(...args) = asArray.map(...args)
   fun reduce(...args) = asArray.reduce(...args)
   fun reduceRight(...args) = asArray.reduceRight(...args)
-  fun slice(...args) = asArray.slice(...args)
+  open fun slice(...args) = asArray.slice(...args)
   fun some(...args) = asArray.some(...args)
   fun toLocaleString(...args) = asArray.toLocaleString(...args)
   fun toReversed() = asArray.toReversed()
   fun toSorted(...args) = asArray.toSorted(...args)
   fun toSpliced(...args) = asArray.toSpliced(...args)
-  fun toString() = asArray.toString()
+  open fun toString() = asArray.toString()
   // `with` is an mls keyword
   fun id"with"(...args) = asArray.with(...args)
   
@@ -68,13 +68,13 @@ class IterableBase with
   fun splice(...args) = toArray().splice(...args)
   fun unshift(...args) = toArray().unshift(...args)
   
-  fun length = asArray.length
+  open fun length = asArray.length
   fun values() = iterator()
 
 // * Implements the `IterableImpl` protocol.
 // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Iteration_protocols#the_iterable_protocol
 class IterableImpl(mk: () -> Iterator) extends IterableBase with
-  fun iterator() = mk()
+  override fun iterator() = mk()
 
 // * Implements the `Iterator` protocol.
 // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Iteration_protocols#the_iterator_protocol

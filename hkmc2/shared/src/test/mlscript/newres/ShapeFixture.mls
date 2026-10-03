@@ -9,7 +9,7 @@ class Pair(val left: Int, val right: Str)
 val pair = Block.ConcreteClassSymbol("Pair", Pair, Option.Some([
   Block.Symbol("left"), Block.Symbol("right")]), [])
 //│ pair = ConcreteClassSymbol(
-//│   "Pair",
+//│   _,
 //│   fun Pair { class: class Pair },
 //│   Some([Symbol("left"), Symbol("right")]),
 //│   []
@@ -29,7 +29,7 @@ Shape.sel(pairShape, Shape.Lit("left")).map((s, ...) => Shape.show(s))
 //│ = ["Lit(42)"]
 //│ pairShape = Class(
 //│   ConcreteClassSymbol(
-//│     "Pair",
+//│     _,
 //│     fun Pair { class: class Pair },
 //│     Some([Symbol("left"), Symbol("right")]),
 //│     []

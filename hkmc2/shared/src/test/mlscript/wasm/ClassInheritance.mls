@@ -265,6 +265,9 @@ class B
 :ge
 class A extends B
 class B extends A
+//│ ╔══[COMPILATION ERROR] Inheritance cycle involving 'A'
+//│ ║  l.266: 	class A extends B
+//│ ╙──       	^^^^^^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Inheritance cycles are not supported.
 //│ ║  l.266: 	class A extends B
 //│ ╙──       	^^^^^^^^^^^^^^^^^

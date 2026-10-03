@@ -128,7 +128,7 @@ let f = Foo(1)
 //│ ╟── Class 'Foo' must be instantiated with 'new'.
 //│ ║  l.114: 	class Foo {
 //│ ╙──       	      ^^^
-//│ ═══[RUNTIME ERROR] TypeError: Class constructor Foo6 cannot be invoked without 'new'
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ f = undefined
 
 

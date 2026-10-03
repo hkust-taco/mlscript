@@ -15,7 +15,7 @@ js.try_catch(() => 123(), id)
 //│ ╟── Integer literal cannot be called like a function.
 //│ ║  l.11: 	js.try_catch(() => 123(), id)
 //│ ╙──      	                   ^^^
-//│ = TypeError: 123 is not a function
+//│ = "This code cannot be run as its compilation yielded an error."
 
 :e
 js.try_catch of
@@ -27,7 +27,7 @@ js.try_catch of
 //│ ╟── Integer literal cannot be called like a function.
 //│ ║  l.22: 	  () => 123()
 //│ ╙──      	        ^^^
-//│ = 666
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :re
 js.try_catch of

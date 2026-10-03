@@ -778,6 +778,8 @@ extends Importer:
       | Keyword.`data`
       | Keyword.`staged`
       | Keyword.`virtual`
+      | Keyword.`open`
+      | Keyword.`override`
       | Keyword.`public`
       | Keyword.`private`
     )) => S(Annot.Modifier(kw)(tree.toLoc))
@@ -1262,6 +1264,18 @@ extends Importer:
     
     def mkNew(cls: Term, args: Ls[Term], rft: Opt[ClassSymbol -> ObjBody])(typ: Opt[typing.Type]): Term.New =
       val res = new Term.New(cls, args, rft)(FlowSymbol.neww(), typ).withLocOf(tree)
+      rft.foreach: (symbol, body) =>
+        // An anonymous refinement is a concrete subclass too. Publish its declaration
+        // so override lookup, super references and implementation checks use the same graph.
+        // The written class and arguments occur outside the anonymous class's scope.
+        // Its synthetic extends clause crosses that boundary just like a named class.
+        def captured(term: Term): Term = if newResolution then Term.Capture(term, symbol) else term
+        val parent = new Term.New(captured(cls), args.map(captured), N)(FlowSymbol.neww(), typ).withLocOf(tree)
+        if newResolution then resolveNew(parent)
+        val definition = ClassDef.Plain(ctx.getOuter, syntax.Cls, symbol,
+          BlockMemberSymbol(symbol.nme, Nil), Nil, S(parent), body, N, Nil, Nil, N)(tree.toLoc)
+        symbol.defn = S(definition)
+        registerInheritance(definition)
       if newResolution then resolveNew(res)
       res
     
@@ -1417,6 +1431,9 @@ extends Importer:
         raise:
           ErrorReport(msg"Cannot use 'this' outside of an object scope" -> tree.toLoc :: Nil)
         error
+    case Ident("super") =>
+      raise(ErrorReport(msg"'super' must be followed by a member selection" -> tree.toLoc :: Nil))
+      error
     case id @ Ident(name) => ident(id, interp).map(interpretRef(_, interp)).getOrElse:
       raise(ErrorReport(msg"Name not found: $name" -> id.toLoc :: Nil))
       error
@@ -1624,6 +1641,15 @@ extends Importer:
           mkNonLocalContinueInvocation(binding, nme)
       case LabelLookup.NotFound =>
         elaborateSelection(sel)
+    case sel @ Sel(id @ Ident("super"), nme) =>
+      (ctx.getOuter, ctx.getReceiver) match
+        case (S(owner: (ClassSymbol | ModuleOrObjectSymbol)), S(receiver)) =>
+          val res = new Term.Super(receiver.ref(id), owner, nme)(FlowSymbol.sel(nme.name)).withLocOf(sel)
+          resolveSuper(res)
+          interpretRef(res, interp)
+        case _ =>
+          raise(ErrorReport(msg"Cannot use 'super' outside of an object scope" -> sel.toLoc :: Nil))
+          error
     case sel @ Sel(pre, nme) =>
       elaborateSelection(sel)
     case MemberProj(ct, nme) =>
@@ -2669,6 +2695,7 @@ extends Importer:
       bms.symbols.foreach:
         case sym: (ClassLikeSymbol & InnerSymbol) =>
           sym.defn.foreach: d => // erroneous code may not have a defn even after the BMS is completed
+            registerInheritance(d)
             // A declaration supplies no fresh function object to hold a companion.
             // Generated constructor functions also have no source body, but lowering creates them.
             // Foreign class-like declarations produce no companion initialization at all.

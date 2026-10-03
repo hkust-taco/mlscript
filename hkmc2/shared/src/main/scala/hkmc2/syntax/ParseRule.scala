@@ -419,6 +419,7 @@ class ParseRules(using State):
     singleKw(`undefined`)(UnitLit(false)),
     singleKw(`null`)(UnitLit(true)),
     singleKw(`this`)(Ident("this")),
+    singleKw(`super`)(Ident("super")),
     singleKw(Keyword.__)(Under()),
     Kw(`#`)(
       ParseRule(s"'#' directive keyword")(

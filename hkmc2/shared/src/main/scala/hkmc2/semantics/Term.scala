@@ -385,6 +385,8 @@ enum Term extends Statement, AutoLocated, ShapePublisher:
   case SimpleRef(sym: codegen.SimpleSymbol)(val tree: Tree.Ident) extends Term, NewRefImpl
   case SelfRef(sym: InnerSymbol)(val tree: Tree.Ident) extends Term, NewRefImpl
   case MemberRef(sym: MemberSymbol)(val tree: Tree.Ident, val resSym: FlowSymbol) extends Term, NewResolvableImpl, NewRefImpl
+  /** A direct reference to an inherited implementation, retaining the lexical receiver. */
+  case Super(receiver: Term, owner: InnerSymbol, id: Tree.Ident)(val resSym: FlowSymbol) extends Term, NewResolvableImpl, ShapeHost
   /** An optional class selection fixes the lookup scope for an explicit member projection. */
   case NewSel(prefix: Term, id: Tree.Ident, cls: Opt[NewSel])(val resSym: FlowSymbol) extends Term, NewSelImpl, ShapeHost
   case UnresolvedRef(prefixes: Ls[Term], id: Tree.Ident)(val resSym: FlowSymbol) extends Term, UnresolvedRefImpl, ShapeHost
@@ -657,6 +659,9 @@ enum Term extends Statement, AutoLocated, ShapePublisher:
       case term @ SimpleRef(sym) => SimpleRef(sym)(term.tree)
       case term @ SelfRef(sym) => SelfRef(sym)(term.tree)
       case term @ MemberRef(sym) => copyNewResolution(term, MemberRef(sym)(term.tree, term.resSym))
+      case term @ Super(receiver, owner, id) =>
+        return copyMetadata(term, copyShapes(term, copyNewResolution(term,
+          Super(receiver.mkClone, owner, id)(term.resSym))))
       case term: NewSel => return cloneSel(term)
       case term @ UnresolvedRef(prefixes, id) =>
         val clonedPrefixes = prefixes.map(_.mkClone)
@@ -842,6 +847,7 @@ sealed trait Statement extends Located, ProductWithExtraInfo, Describable:
       case UnresolvedRef(_, _) => "wildcard-open reference"
       case App(lhs, rhs) => "application"
       case TyApp(lhs, targs) => "type application"
+      case _: Super => "super reference"
       case NewSel(pre, nme, _) => "selection"
       case Sel(pre, nme) => "selection"
       case SynthSel(pre, nme) => "selection"
@@ -919,6 +925,7 @@ sealed trait Statement extends Located, ProductWithExtraInfo, Describable:
     case TyApp(pre, tarsg) => pre +: tarsg.toVector
     case Sel(pre, _) => Vector.single(pre)
     case SynthSel(pre, _) => Vector.single(pre)
+    case Super(receiver, _, _) => Vector.single(receiver)
     case NewSel(pre, _, cls) => Vector.single(pre) ++ cls.toVector
     case UnresolvedRef(prefixes, _) => prefixes.toVector
     case DynSel(o, f, _, _) => Vector.double(o, f)
@@ -1022,6 +1029,7 @@ sealed trait Statement extends Located, ProductWithExtraInfo, Describable:
         r.sym match
         case _: BuiltinSymbol => r.sym.nme
         case _ => r.sym.showName
+      case sup: Super => doc"super.${sup.id.name}"
       case sel: NewSel =>
         val str = sel.id.name
         val pre = sel.cls.fold(doc"${sel.prefix.show}.")(cls => doc"${sel.prefix.show}.${cls.show}#")
@@ -1216,6 +1224,7 @@ sealed trait Statement extends Located, ProductWithExtraInfo, Describable:
     case WildcardTy(in, out) => s"in ${in.map(_.toString).getOrElse("⊥")} out ${out.map(_.toString).getOrElse("⊤")}"
     case Sel(pre, nme) => s"${pre.showDbg}.${nme.name}"
     case SynthSel(pre, nme) => s"(${pre.showDbg}.)${nme.name}"
+    case Super(_, owner, id) => s"super[${owner.showDbg}].${id.name}"
     case NewSel(pre, nme, cls) => s"${pre.showDbg}.${cls.fold("")(c => s"${c.showDbg}#")}${nme.name}"
     case UnresolvedRef(_, id) => s"${id.name}‹open›"
     case DynSel(pre, fld, _, _) => s"${pre.showDbg}[${fld.showDbg}]"

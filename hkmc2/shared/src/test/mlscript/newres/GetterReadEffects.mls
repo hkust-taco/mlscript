@@ -70,10 +70,9 @@ fun test() =
 test()
 //│ = 0
 
-// The abstract val interface also promises a pure read. This getter violates
-// that promise; its side effects cannot be relied on through the base interface.
-// The same discarded-read behavior occurs under legacy resolution.
-:expect 0
+// An abstract val promises a pure read, so implementing it with an effectful
+// getter is rejected by override validation.
+:e
 fun test() =
   let calls = 0
   abstract class Base with
@@ -86,6 +85,16 @@ fun test() =
   box.value
   calls
 test()
+//│ ╔══[COMPILATION ERROR] Overriding member 'value' must preserve whether the member is a field, getter, or method
+//│ ║  l.81: 	    fun value: Int =
+//│ ║        	    ^^^^^^^^^^^^^^^^
+//│ ║  l.82: 	      set calls += 1
+//│ ║        	^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.83: 	      42
+//│ ║        	^^^^^^^^
+//│ ╟── Inherited member 'value' is defined here
+//│ ║  l.79: 	    val value: Int
+//│ ╙──      	        ^^^^^
 //│ = 0
 
 // An abstract getter interface preserves effects when dispatching to its child.

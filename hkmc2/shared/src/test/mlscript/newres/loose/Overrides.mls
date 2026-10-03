@@ -1,0 +1,49 @@
+:.
+
+class Base { open fun foo() = 1 }
+class Left extends Base { override fun foo() = 2 }
+class Right extends Base { override fun foo() = 3 }
+
+// Loose mode also retains the common member symbol in the lowered selection.
+:sir
+:expect [2, 3]
+private fun read(x) = x.foo()
+[read(new Left), read(new Right)]
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let tmp, tmp1, tmp2, tmp3;
+//│ @private
+//│ define read⁰ as fun read¹(x) {
+//│   return x.foo⁰()
+//│ };
+//│ set tmp = new Left⁰();
+//│ set tmp1 = read¹(tmp);
+//│ set tmp2 = new Right⁰();
+//│ set tmp3 = read¹(tmp2);
+//│ return [tmp1, tmp3]
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = [2, 3]
+
+// Unrelated targets still use loose mode's dynamic selection.
+:sir
+:expect [1, 4]
+class Other { fun foo() = 4 }
+private fun readOther(x) = x.foo()
+[readOther(new Base), readOther(new Other)]
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let tmp, tmp1, tmp2, tmp3;
+//│ @private
+//│ define readOther⁰ as fun readOther¹(x) {
+//│   return x.foo﹖()
+//│ };
+//│ define Other⁰ as class Other¹ {
+//│   method foo¹ = fun foo²() {
+//│     return 4
+//│   }
+//│ };
+//│ set tmp = new Base⁰();
+//│ set tmp1 = readOther¹(tmp);
+//│ set tmp2 = new Other¹();
+//│ set tmp3 = readOther¹(tmp2);
+//│ return [tmp1, tmp3]
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = [1, 4]

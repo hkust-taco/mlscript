@@ -163,7 +163,7 @@ id(0
 //│ ╟── Integer literal cannot be called like a function.
 //│ ║  l.150: 	id(0
 //│ ╙──       	   ^
-//│ ═══[RUNTIME ERROR] TypeError: 0 is not a function
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
 :soir

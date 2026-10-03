@@ -225,5 +225,5 @@ object Keyword:
   
   type LetLike = `let`.type | `set`.type
   
-  type Modifier = `in`.type | `out`.type | `mut`.type | `abstract`.type | `declare`.type | `data`.type | `virtual`.type | `override`.type |
+  type Modifier = `in`.type | `out`.type | `mut`.type | `abstract`.type | `declare`.type | `data`.type | `virtual`.type | `override`.type | `open`.type |
     `public`.type | `private`.type | `staged`.type

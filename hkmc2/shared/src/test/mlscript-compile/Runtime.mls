@@ -231,7 +231,7 @@ data class ContTrace(
 // PrintStackEffect stores the showLocals flag; FatalEffect has no handler function.
 data class EffectSig(contTrace: ContTrace, handler: Any, handlerFun: Function | Bool | null)
 
-class NonLocalReturn with
+abstract class NonLocalReturn with
   fun ret(value)
 
 data class FnLocalsInfo(fnName: Str, locals: Array[LocalVarInfo])

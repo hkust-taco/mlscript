@@ -46,7 +46,7 @@ let c = b(100)
 //│ ╟── Instance of class 'Bar' cannot receive more argument lists.
 //│ ║  l.34: 	let b = Bar(123)(1234)
 //│ ╙──      	        ^^^^^^^^^^^^^^
-//│ ═══[RUNTIME ERROR] TypeError: b is not a function
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ c = undefined
 
 :fixme
@@ -61,7 +61,7 @@ Bar(123)(1234)(100).a
 //│ ╟── Instance of class 'Bar' cannot receive more argument lists.
 //│ ║  l.57: 	Bar(123)(1234)(100).a
 //│ ╙──      	^^^^^^^^^^^^^^
-//│ ═══[RUNTIME ERROR] TypeError: baseCall is not a function
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :ge
 :re
@@ -112,7 +112,7 @@ let c = b(100)
 //│ ╟── Instance of class 'Bar' cannot receive more argument lists.
 //│ ║  l.100: 	let b = b1(1234)
 //│ ╙──       	        ^^^^^^^^
-//│ ═══[RUNTIME ERROR] TypeError: b2 is not a function
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ c = undefined
 
 :fixme
@@ -151,7 +151,7 @@ let c = b(100)
 //│ ╟── Instance of class 'Baz' cannot receive more argument lists.
 //│ ║  l.142: 	let b = Baz(123)(1234)
 //│ ╙──       	        ^^^^^^^^^^^^^^
-//│ ═══[RUNTIME ERROR] TypeError: b3 is not a function
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ c = undefined
 
 :re

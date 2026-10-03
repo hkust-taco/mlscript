@@ -41,7 +41,7 @@ fun curried(x)(y) = x
 //│ ║  l.36: 	@special identity(1)(2)
 //│ ╙──      	                  ^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let baseCall; set baseCall = identity¹(1); return @special baseCall(2)
+//│ throw "This code cannot be run as its compilation yielded an error."
 
 
 fun nullary = 1

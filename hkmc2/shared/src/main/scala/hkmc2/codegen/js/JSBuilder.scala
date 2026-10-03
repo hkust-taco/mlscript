@@ -340,6 +340,14 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
     case Call(s @ Select(_, Elaborator.ctx.builtins.BuiltInOpIdent(jsOp)), (lhs :: rhs :: Nil) :: Nil) =>
       val res = doc"${operand(lhs)} ${jsOp} ${operand(rhs)}"
       if needsParens(jsOp) then doc"(${res})" else res
+    case c @ Call(fun: SuperSelect, argss) =>
+      val first = argss.head.map(argument)
+      val base = doc"${result(fun)}.call(${(result(fun.qual) :: first).mkDocument(", ")})"
+      val calls = argss.tail.foldLeft(base): (acc, args) =>
+        doc"${acc}(${args.map(argument).mkDocument(", ")})"
+      if c.metadata.isMlsFun then
+        if checkMLsCalls then doc"$runtimeVar.checkCall($calls)" else calls
+      else doc"$runtimeVar.safeCall($calls)"
     case c @ Call(fun, argss) =>
       val base = subexpression(fun)
       val calls = argss.foldLeft(base): (acc, args) =>
@@ -358,6 +366,8 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
         // lexical-`this` behavior of the Lambda IR.
         doc"(function* ($params) ${ braced(bodyDoc) }).bind(this)"
       else doc"($params) => ${ braced(bodyDoc) }"
+    case s @ SuperSelect(qual, base, id) =>
+      doc"Reflect.get(${resultQual(base)}.prototype, ${makeStringLiteral(id.name)}, ${result(qual)})"
     case s @ Select(qual, id) => 
       val checkCurrentSelection = checkSelections && s.sanitize
       val dotClass = s.symbol match

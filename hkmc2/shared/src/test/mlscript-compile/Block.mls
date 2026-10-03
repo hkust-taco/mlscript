@@ -21,10 +21,10 @@ type ParamList = Array[Symbol]
 
 class Symbol(val name: Str)
 // this is so that we're able to retrieve information about the class from the symbol
-class ClassSymbol(val name: Str) extends Symbol(name)
-class VirtualClassSymbol(val name: Str) extends ClassSymbol(name)
-class ConcreteClassSymbol(val name: Str, val value: Class, val paramsOpt: Opt[ParamList], val auxParams: Array[ParamList]) extends ClassSymbol(name)
-class ModuleSymbol(val name: Str, val value: Class) extends Symbol(name)
+class ClassSymbol(name: Str) extends Symbol(name)
+class VirtualClassSymbol(name: Str) extends ClassSymbol(name)
+class ConcreteClassSymbol(name: Str, val value: Class, val paramsOpt: Opt[ParamList], val auxParams: Array[ParamList]) extends ClassSymbol(name)
+class ModuleSymbol(name: Str, val value: Class) extends Symbol(name)
 class NoSymbol() extends Symbol("$no_symbol$")
 class Arm(val cse: Case, val body: Block)
 
@@ -109,7 +109,7 @@ fun showSymbol(s: Symbol) = s.name.replaceAll("$", "_")
 fun showPath(p: Path): Str =
   if p is
     // avoids needing to import the runtime module
-    Select(ValueSimpleRef(Symbol("runtime")), ModuleSymbol("Unit", Runtime.Unit)) then "()"
+    Select(ValueSimpleRef(Symbol("runtime")), name) and name is ModuleSymbol(_, Runtime.Unit) and name.name is "Unit" then "()"
     Select(qual, name) then showPath(qual) + "." + showSymbol(name)
     DynSelect(qual, fld, false) then showPath(qual) + ".(" + showPath(fld) + ")"
     DynSelect(qual, fld, true) then showPath(qual) + ".[" + showPath(fld) + "]"

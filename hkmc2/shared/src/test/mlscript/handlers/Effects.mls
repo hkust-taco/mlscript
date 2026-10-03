@@ -311,7 +311,7 @@ if true do
 //│ > 3
 
 module A with
-  data class Effect(x) with
+  data abstract class Effect(x) with
     fun test() = x
     fun perform(arg)
 

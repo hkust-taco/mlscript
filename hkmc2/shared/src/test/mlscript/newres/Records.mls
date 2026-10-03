@@ -85,7 +85,7 @@ answer2
 //│ ╟── Integer literal cannot be called like a function.
 //│ ║  l.81: 	{a: 1}.a()
 //│ ╙──      	    ^
-//│ ═══[RUNTIME ERROR] TypeError: tmp10.a is not a function
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :todo // TODO: Resolve computed keys. Until then, do not look through an unknown overwrite.
 let key = "a"

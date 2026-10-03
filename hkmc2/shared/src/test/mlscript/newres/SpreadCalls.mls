@@ -241,7 +241,7 @@ invokeUnknown(...opaque([() => 95]))
 //│ ║  in ../decls/Prelude.mls
 //│ ║  l.2: 	declare type Any
 //│ ╙──     	             ^^^
-//│ = 95
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 // Unknown elements must not silently resolve against another known candidate.
 :e
@@ -293,7 +293,7 @@ invokeRest(...opaque([() => 97]), Box(0))
 //│ ║  in ../decls/Prelude.mls
 //│ ║  l.2: 	declare type Any
 //│ ╙──     	             ^^^
-//│ = 97
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 // When repeatedTuples receives [Box(98)], both a and b must acquire its element
 // shape so that both `.value` selections resolve. Although the tuple expressions
@@ -337,7 +337,7 @@ invokePublicRest(...callbacks, Box(0))
 //│ ╟── 'invokePublicRest' is exposed by this compilation unit.
 //│ ║  l.326: 	fun invokePublicRest(f, x, ...tail) = f()
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ = 97
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 // A function parameter's Array annotation carries its element interface through a spread.
 :expect 97

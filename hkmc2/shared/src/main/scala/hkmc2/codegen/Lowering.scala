@@ -90,6 +90,21 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
   val newResolution: Bool = config.language.useNewResolution
   val strictResolution: Bool = config.language.strictResolution
   
+  // Methods are lowered before their class's extends expression. Reserve the captured parent
+  // here and initialize it at the class definition, in the surrounding lexical scope.
+  private val superBases = scala.collection.mutable.Map.empty[InnerSymbol, TempSymbol]
+  private def superBase(owner: InnerSymbol): TempSymbol =
+    superBases.getOrElseUpdate(owner, TempSymbol(N, erasedType = N, "superBase"))
+  private def captureSuperBase(owner: InnerSymbol, parent: Path)(body: => Block)(using LoweringCtx): Block =
+    superBases.get(owner) match
+      case S(sym) =>
+        // classOf evaluates computed class values into temporaries. The remaining path is
+        // stable across this assignment and the immediately following class definition.
+        softAssert(parent.isPure, "Superclass operand must be evaluated before it is captured")
+        loweringCtx.collectScopedSym(sym)
+        Assign(sym, parent, body)
+      case N => body
+  
   extension (t: Term)
     def instantiated = t match
       case r: Resolvable =>
@@ -386,7 +401,8 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
           case N =>
             val cfgOverride = defn.extraAnnotations.collectFirst:
               case Annot.Config(modify) => modify(config)
-            Define(
+            captureSuperBase(defn.sym,
+              Select(State.globalThisSymbol.asThis, Tree.Ident("Object"))(S(ctx.builtins.Object), defn.toLoc)(false))(Define(
               ClsLikeDefn(defn.owner, defn.sym, defn.bsym, defn.ctorSym, defn.kind, defn.paramsOpt, defn.auxParams, N,
                 mtds,
                 privateFlds,
@@ -396,20 +412,20 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
                 mod,
                 bufferable,
               )(cfgOverride, defn.annotations),
-              blockImpl(stats, res))
+              blockImpl(stats, res)))
           case S(ext) =>
             assert(k isnt syntax.Mod) // modules can't extend things and can't have super calls
             val cfgOverride = defn.extraAnnotations.collectFirst:
               case Annot.Config(modify) => modify(config)
             classOf(ext.cls, ext): (clsp, params) =>
               val pctor = inScopedBlock(parentConstructor(params, ext.args, ext.toLoc))
-              Define(
+              captureSuperBase(defn.sym, clsp)(Define(
                 ClsLikeDefn(
                   defn.owner, defn.sym, defn.bsym, defn.ctorSym, defn.kind, defn.paramsOpt, defn.auxParams, S(clsp),
                   mtds, privateFlds, publicFlds, pctor, ctor, mod, bufferable,
                 )(cfgOverride, defn.annotations),
                 blockImpl(stats, res)
-              )
+              ))
         case td: TypeDef => // * Type definitions are erased
           blockImpl(stats, res)
     
@@ -691,7 +707,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
       ErrorReport(msg"This selection has both tuple and nominal member targets" -> sel.toLoc :: Nil,
         source = Diagnostic.Source.Compilation)
     else if sel.hasDynamicTarget || sel.tupleIndex.nonEmpty then k(prefix, memberIdent(id, N), N)
-    else sel.resolvedTargets.distinct match
+    else Inheritance.commonMember(sel.resolvedTargets).fold(sel.resolvedTargets.distinct)(_ :: Nil) match
       case Nil => fail:
         ErrorReport(msg"This selection of member '${id.name}' has no resolved target" -> sel.toLoc :: Nil,
           source = Diagnostic.Source.Compilation)
@@ -722,6 +738,26 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
       target: Opt[DefinitionSymbol[?]]): Path = sel.tupleIndex match
     case S(index) => DynSelect(prefix, Value.Lit(Tree.IntLit(BigInt(index)))(N), true)(sel.toLoc)
     case N => Select(prefix, name)(target, sel.toLoc)(false)
+
+  private def superReference(sup: st.Super)(k: Path => Block)(using LoweringCtx): Block =
+    if sup.isErroneous then compError else sup.resolvedTargets.distinct match
+      case (target: TermSymbol) :: Nil if !target.isPrivate && target.defn.exists(d => !Inheritance.isAbstract(d)) =>
+        subTerm_nonTail(sup.receiver): receiver =>
+          // Fields live on the receiver; only methods/getters have a base implementation
+          // on the prototype. In particular Reflect.get(base.prototype, ...) cannot read fields.
+          if target.k is syntax.Fun then
+            // Wasm dispatches to a statically named function and only supports static parents;
+            // its class operand, like an Instantiate operand, need not be a runtime class value.
+            val base = if config.target == CompilationTarget.Wasm then
+              val owner = target.owner.get
+              owner.asBlkMember.get.asMemberRef(owner.asDefnSym)
+            else superBase(sup.owner).asSimpleRef
+            k(SuperSelect(receiver, base, target.id)(target, sup.toLoc))
+          else k(Select(receiver, target.id)(S(target), sup.toLoc)(false))
+      case targets => fail(ErrorReport(
+        msg"Super reference '${sup.id.name}' requires one inherited implementation" -> sup.toLoc ::
+          targets.map(target => msg"Candidate '${target.nme}' is declared here" -> target.toLoc),
+        source = Diagnostic.Source.Compilation))
 
   /** A projection must identify its class as well as its member: different
     * classes can inherit the same definition. Captures do not disambiguate classes. */
@@ -1071,7 +1107,8 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
           msg"Unexpected arguments for builtin symbol '${sym.nme}'" -> arg.toLoc :: Nil, S(arg),
           source = Diagnostic.Source.Compilation)
     case st.TyApp(f, ts) => term(f)(k) // * Type arguments are erased
-    case st.App(f, arg) =>
+    case app @ st.App(f, arg) =>
+      if app.isErroneous then return compError
       
       // Collect chains of App nodes: `f(a)(b)(c)` → (f, [a, b, c])
       // This allows lowering curried calls as a single `Call` with multiple arg lists.
@@ -1164,6 +1201,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
       instantiated match
       // * Due to whacky JS semantics, we need to make sure that selections leading to a call
       // * are preserved in the call and not moved to a temporary variable.
+      case sup: st.Super => superReference(sup)(conclude)
       case sel: NewSel if sel.isClassValue => classOf(sel.prefix, sel)((p, _) => conclude(p))
       case sel: NewSel => newSelection(sel): (prefix, name, target) =>
         subTerm_nonTail(prefix): p =>
@@ -1326,6 +1364,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
     case whltrm: st.SynthWhile => ucs.Normalization(this)(whltrm)(k)
       
     case sel: NewSel if sel.isClassValue => classOf(sel.prefix, sel)((p, _) => k(p))
+    case sup: st.Super => superReference(sup)(k)
     case sel: NewSel => newSelection(sel): (prefix, name, target) =>
       if sel.tupleIndex.nonEmpty then subTerm_nonTail(prefix)(p => k(selectionPath(sel, p, name, target)))
       else setupNamedSelection(prefix, name, target, sel.toLoc)(k)
@@ -1375,14 +1414,14 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
         rft match
         case N => lowerMultiInstantiate(mut, sr, params, as, annots, trm.toLoc)(k)
         case S((isym, rft)) =>
-          val sym = new BlockMemberSymbol(isym.name, Nil)
+          val sym = isym.defn.get.bsym
           loweringCtx.collectScopedSym(sym)
           val (mtds, publicFlds, privateFlds, ctor) = gatherMembers(rft)
           val pctor = parentConstructor(params, as, nw.toLoc)
           val clsDef = ClsLikeDefn(N, isym, sym, N, syntax.Cls, N, Nil, S(sr),
             mtds, privateFlds, publicFlds, pctor, ctor, N, N)(N, Nil)
           val inner = new New(sym.ref().resolved(isym), Nil, N)(FlowSymbol.neww(), N)
-          Define(clsDef, term_nonTail(if mut then Mut(inner) else inner)(k))
+          captureSuperBase(isym, sr)(Define(clsDef, term_nonTail(if mut then Mut(inner) else inner)(k)))
       
     case Try(sub, finallyDo) =>
       val l = loweringCtx.registerTempSymbol(S(sub), erasedType = N)
@@ -1803,6 +1842,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
       case Annot.Modifier(syntax.Keyword.`public` | syntax.Keyword.`private` | syntax.Keyword.`virtual`) => ()
       case Annot.Modifier(syntax.Keyword("staged")) => ()
       case Annot.Pure() => ()
+      case Annot.Modifier(syntax.Keyword.`open` | syntax.Keyword.`override`) => ()
       case a: Annot.Affine => target match
         case TermDefinition(k = syntax.Fun) => ()
         case _ => warn(a)

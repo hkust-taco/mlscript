@@ -6,7 +6,7 @@ let id = 0
 //│ id = 0
 
 // FIXME: if the following 2 blocks are together, lifter causes class ordering issue
-class MaybeStop with
+abstract class MaybeStop with
   fun f(x: Bool): ()
 
 fun handleEffects(g) =
@@ -89,7 +89,7 @@ handleEffects(f)
 //│ > h1 end 10
 
 
-class Eff with
+abstract class Eff with
   fun perform(): ()
 data class Box(n)
 let box = new mut Box(0)

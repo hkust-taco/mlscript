@@ -69,9 +69,9 @@ renderObject(Box(3))
 
 :expect "child"
 class HasMethod with
-  fun label(): Str = "parent"
+  open fun label(): Str = "parent"
 class Child extends HasMethod with
-  fun label(): Str = "child"
+  override fun label(): Str = "child"
 new Child().label()
 //│ = "child"
 

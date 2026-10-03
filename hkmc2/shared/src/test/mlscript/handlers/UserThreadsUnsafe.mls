@@ -3,7 +3,7 @@
 :lift
 
 
-class ThreadEffect with
+abstract class ThreadEffect with
   fun fork(thread: () -> ()): ()
   fun yld(): ()
 

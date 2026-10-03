@@ -60,9 +60,9 @@ Foo()
 //│ ║  l.8: 	class Foo
 //│ ╙──     	      ^^^
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ return runtime.safeCall(Foo1())
+//│ throw "This code cannot be run as its compilation yielded an error."
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
-//│ ═══[RUNTIME ERROR] TypeError: Class constructor Foo cannot be invoked without 'new'
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
 data class Foo with { print("hi") }

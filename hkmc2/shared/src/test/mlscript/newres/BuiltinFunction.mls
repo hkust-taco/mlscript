@@ -50,7 +50,7 @@ curried((x) => (y) => x + y)
 //│ ║  l.44: 	fun curried(f: Function) = f(1)(2)
 //│ ║        	               ^^^^^^^^
 //│ ╙── The 'Function' type does not specify a return type.
-//│ = 3
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 // The diagnostic points to the written alias annotation, not its definition or call.
 :ge

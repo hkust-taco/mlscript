@@ -7,11 +7,12 @@ import hkmc2.utils.*, shorthands.*
 import semantics.*
 import semantics.Elaborator.{Ctx, State}
 import semantics.Term.*
+import hkmc2.Message.MessageContext
 
 /** The capability to inspect completed resolution. Created only after elaboration/resolution;
   * executable lowering additionally requires this instance's whole-program pass to have finished.
   */
-final class Erasure private (using Config, Ctx, State):
+final class Erasure private (using Config, Ctx, State)(using Raise):
   private given Erasure = this
   private var completed: Opt[Statement] = N
 
@@ -107,6 +108,15 @@ final class Erasure private (using Config, Ctx, State):
     val visited = mutable.Set.empty[Identity[Statement]]
     val statements = mutable.ArrayBuffer.empty[Statement]
     val parameters = mutable.ArrayBuffer.empty[Param]
+    val parentConstructions = mutable.Set.empty[Identity[Statement]]
+    def parentHead(term: Term): Unit = if parentConstructions.add(Identity(term)) then term match
+      // Legacy resolution can expand a parent reference to an implicit constructor call.
+      // Follow only the class head; constructions in argument expressions are real allocations.
+      case ref: Resolvable if ref.expanded isnt ref => parentHead(ref.expanded)
+      case New(cls, _, _) => parentHead(cls)
+      case App(lhs, _) => parentHead(lhs)
+      case TyApp(lhs, _) => parentHead(lhs)
+      case _ => ()
     def params(ps: ParamList): Unit = ps.foreach(parameters += _)
     // Handler continuations and rejected class rest parameters can survive as references after their
     // parameter list has been removed. The symbol retains the source declaration needed for erasure.
@@ -124,7 +134,9 @@ final class Erasure private (using Config, Ctx, State):
           cls.auxParams.foreach: ps =>
             params(ps)
             ps.subTerms.foreach(visit)
-          cls.ext.foreach(visit)
+          cls.ext.foreach: parent =>
+            parentHead(parent)
+            visit(parent)
           cls match
             case pat: PatternDef =>
               parameters ++= pat.parameters
@@ -137,7 +149,8 @@ final class Erasure private (using Config, Ctx, State):
           visit(d.td)
         case Ref(sym: VarSymbol) => referencedParameter(sym)
         case SimpleRef(sym: VarSymbol) => referencedParameter(sym)
-        case New(_, _, refinement) => refinement.foreach(r => visit(r._2.blk))
+        case New(_, _, refinement) => refinement.foreach: (symbol, body) =>
+          symbol.defn.fold(visit(body.blk))(visit)
         case Rcd(_, stats) => stats.foreach(visit)
         case _ => ()
       statement.subStatements.foreach(visit)
@@ -147,6 +160,12 @@ final class Erasure private (using Config, Ctx, State):
         case term: Resolvable => visit(term.expanded)
         case _ => ()
     visit(root)
+
+    def parentClass(parent: New): Opt[ClassLikeDef] =
+      parent.cls.resolvedSym.flatMap(_.asClsOrMod).flatMap(_.defn).orElse:
+        ClassValueShape.targetsOf(parent) match
+          case target :: Nil => S(ClassValueShape.definitionOf(target))
+          case _ => N
 
     // No erased representation is read until every interpretation has been validated and every
     // nominal parent header has been published, including forward and external declarations.
@@ -158,8 +177,67 @@ final class Erasure private (using Config, Ctx, State):
         case sym: ClassLikeSymbol if sym.irClassHeader.isEmpty =>
           sym.irClassHeader = cls.ext match
             case N => S(ClassHeader(N))
-            case S(parent) => parent.cls.resolvedSym.flatMap(_.asClsOrMod).map(p => ClassHeader(S(p)))
+            case S(parent) => parentClass(parent).flatMap(_.sym.asClsOrMod).map(p => ClassHeader(S(p)))
         case _ => ()
+      case _ => ()
+
+    // Public members replace inherited names; private members retain their declaration identity.
+    // A subclass cannot implement a private declaration by introducing the same name.
+    type MemberKey = Either[TermSymbol, Str]
+    val effectiveMembers = mutable.Map.empty[ClassLikeDef, Map[MemberKey, TermSymbol]]
+    def checkConstruction(term: Term & PossiblyErroneous, cls: ClassDef): Unit =
+      if Inheritance.hasModifier(cls, syntax.Keyword.`abstract`) then
+        term.isErroneous = true
+        raise(ErrorReport(
+          msg"Cannot instantiate abstract class '${cls.sym.nme}'" -> term.toLoc ::
+            (msg"Abstract class defined here" -> cls.toLoc) :: Nil, source = Diagnostic.Source.Compilation))
+    def members(cls: ClassLikeDef, visiting: Set[ClassLikeDef]): Map[MemberKey, TermSymbol] =
+      effectiveMembers.getOrElseUpdate(cls,
+        if visiting(cls) then
+          raise(ErrorReport(msg"Inheritance cycle involving '${cls.sym.nme}'" -> cls.toLoc :: Nil,
+            source = Diagnostic.Source.Compilation))
+          Map.empty
+        else
+          val inherited = cls.ext.flatMap(parentClass)
+            .fold(Map.empty[MemberKey, TermSymbol])(members(_, visiting + cls))
+          inherited ++ cls.body.members.toList.flatMap: (name, member) =>
+            member.asTrm.map: symbol =>
+              val key: MemberKey = if symbol.isPrivate then Left(symbol) else Right(name)
+              key -> symbol
+      )
+    statements.foreach:
+      case td: TermDefinition => Inheritance.validateMember(td)
+      case cls: ClassLikeDef if !Inheritance.isExternal(cls) &&
+          !Inheritance.hasModifier(cls, syntax.Keyword.`abstract`) =>
+        val missing = members(cls, Set.empty).values.toList
+          .distinct.filter(_.defn.exists(Inheritance.isAbstract))
+          .sortBy(_.nme)
+        if missing.nonEmpty then raise(ErrorReport(
+          msg"${cls.sym.describeKind.capitalize} '${cls.sym.nme}' has unimplemented members" -> cls.toLoc ::
+            missing.map(sym => msg"Member '${sym.nme}' requires an implementation" -> sym.toLoc),
+          source = Diagnostic.Source.Compilation))
+      case nw: New if nw.rft.isEmpty && !parentConstructions(Identity(nw)) =>
+        parentClass(nw).collect { case cls: ClassDef => cls }.foreach(checkConstruction(nw, _))
+      case app: App if !parentConstructions(Identity(app)) =>
+        // Constructor functions can flow through variables and parameters; their call shapes
+        // retain the declaration even when the callee has no single resolved symbol.
+        def constructed(event: ShapeEvent): Ls[ClassDef] = event match
+          case ActivatedShapeEvent(value, _) => constructed(value)
+          case MarkedShape(value, _) => constructed(value)
+          case ContextualShape(value, _) => constructed(value)
+          case shape: AppShape if shape.src is app => shape.applicationHead._1 match
+            case definition: DefnShape => definition.defn match
+              case td: TermDefinition => td.tsym match
+                case ctor: ClassCtorSymbol => ctor.associatedCls.defn.toList
+                case _ => Nil
+              case cls: ClassDef => cls :: Nil
+              case _ => Nil
+            case _ => Nil
+          case _ => Nil
+        val direct = app.lhs.resolvedSym.toList.flatMap:
+          case ctor: ClassCtorSymbol => ctor.associatedCls.defn.toList
+          case _ => Nil
+        (direct ::: app.shapes.toList.flatMap(constructed)).distinct.foreach(checkConstruction(app, _))
       case _ => ()
 
     parameters.foreach: p =>
@@ -182,7 +260,7 @@ final class Erasure private (using Config, Ctx, State):
 
 object Erasure:
   /** Prelude declarations use the same pass even though they have no executable program. */
-  def apply(root: Statement)(using Config, Ctx, State): Erasure =
+  def apply(root: Statement)(using Config, Ctx, State)(using Raise): Erasure =
     val erasure = new Erasure
     erasure.run(root)
     erasure

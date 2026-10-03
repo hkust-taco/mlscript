@@ -32,7 +32,7 @@ trait PossiblyErroneous:
   var isErroneous: Bool = false
 
 trait NewResolvableImpl extends PossiblyErroneous:
-  self: MemberRef | NewSel | UnresolvedRef =>
+  self: MemberRef | NewSel | UnresolvedRef | Super =>
   var resolvedTargets: Ls[DefinitionSymbol[?]] = Nil // * filled during flow analysis
   // val resSym: FlowSymbol = FlowSymbol.simpleRef(self.sym.name)
   // var disamb: Opt[Disambiguation] = None // * filled during flow analysis

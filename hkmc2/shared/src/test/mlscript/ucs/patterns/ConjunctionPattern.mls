@@ -7,7 +7,7 @@ open Stack
 
 
 abstract class Q
-abstract class A extends Q
+class A extends Q
 abstract class B extends Q
 
 // Note: A and B are sibling classes (both extend Q but neither extends the

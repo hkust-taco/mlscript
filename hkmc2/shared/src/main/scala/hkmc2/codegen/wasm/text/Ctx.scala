@@ -9,8 +9,8 @@ import hkmc2.utils.*
 import document.*
 import document.Document
 import semantics.{
-  BlockMemberSymbol, ClassSymbol, Elaborator,
-  InnerSymbol, LabelSymbol, LocalVarSymbol, ModuleOrObjectSymbol, ParamList, Symbol, TempSymbol,
+  BlockMemberSymbol, ClassSymbol, ClassLikeSymbol, ClassCtorSymbol, Elaborator,
+  InnerSymbol, LabelSymbol, LocalVarSymbol, ModuleOrObjectSymbol, ParamList, Symbol, TempSymbol, TermSymbol,
 },
   Elaborator.State
 import text.Param as WasmParam
@@ -43,8 +43,18 @@ object SessionBinding:
     */
   def referencedSymbols(block: Block)(using Elaborator.Ctx, State): Ls[Symbol] =
     val symbols = LinkedHashSet.empty[Symbol]
+    val visited = scala.collection.mutable.Set.empty[Symbol]
     new BlockTraverser:
-      override def applySymbol(sym: Symbol): Unit = symbols += sym
+      override def applySymbol(sym: Symbol): Unit = if visited.add(sym) then
+        // An imported subclass layout refers to its ancestors even when no source expression
+        // names them. Parents must precede children in Wasm's type declaration order.
+        sym match
+          case cls: ClassLikeSymbol => cls.irClassHeader.flatMap(_.parent).foreach(applySymbol)
+          case ctor: ClassCtorSymbol => applySymbol(ctor.associatedCls)
+          case member: BlockMemberSymbol => member.asClsOrMod.foreach(applySymbol)
+          case member: TermSymbol => member.owner.foreach(applySymbol)
+          case _ => ()
+        symbols += sym
       override def applyValue(value: Value): Unit = value match
         case Value.MemberRef(bms, disamb) => applySymbol(ExternSymbol.forReference(bms, disamb))
         case _ => super.applyValue(value)

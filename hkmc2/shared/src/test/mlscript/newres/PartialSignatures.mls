@@ -119,9 +119,9 @@ let right = delayed(Second(9), First(10))
 class Item(val value: Int)
 class Other(val other: Int)
 class Base with
-  fun item() = Item(1)
+  open fun item() = Item(1)
 class Child extends Base with
-  fun item() = Other(2)
+  override fun item() = Other(2)
 private fun read(x: Base) = x.item().value
 read(new Child)
 //│ ╔══[COMPILATION ERROR] Resolution error in selection

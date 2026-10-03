@@ -52,9 +52,8 @@ useBox(id(new Box(42)))
 //│       (local.get $a)))
 //│   (func $useBox (export "useBox") (type $useBox) (param $b (ref $Box)) (result (ref null i31))
 //│     (return
-//│       (ref.cast (ref i31)
-//│         (struct.get $Box $v
-//│           (local.get $b)))))
+//│       (struct.get $Box $v
+//│         (local.get $b))))
 //│   (func $entry (export "entry") (type $entry) (result (ref null i31))
 //│     (local $tmp (ref $Box))
 //│     (local $tmp1 (ref null any))
@@ -150,10 +149,10 @@ wasm.ref.i31(wasm.i32.const(7))
 :noInline
 wasm.ref.i31(id(wasm.i32.const(7)))
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int32' at an unrelated type 'Unknown'
-//│ ║  l.151: 	wasm.ref.i31(id(wasm.i32.const(7)))
+//│ ║  l.150: 	wasm.ref.i31(id(wasm.i32.const(7)))
 //│ ╙──       	                ^^^^^^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Unknown' at an unrelated type 'Int32'
-//│ ║  l.151: 	wasm.ref.i31(id(wasm.i32.const(7)))
+//│ ║  l.150: 	wasm.ref.i31(id(wasm.i32.const(7)))
 //│ ╙──       	             ^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[COMPILATION ERROR] Cannot cast a Wasm value of type `i32` to `(ref null any)` in a different type hierarchy
 //│ ═══[COMPILATION ERROR] Operand #1 of wasm intrinsic 'ref.i31' must be of type 'Int32'
@@ -178,7 +177,7 @@ unpack(toObj())
 :e
 fun test: Function = id
 //│ ╔══[COMPILATION ERROR] Returning function instances is not supported
-//│ ║  l.179: 	fun test: Function = id
+//│ ║  l.178: 	fun test: Function = id
 //│ ╙──       	                     ^^
 
 :fixme
@@ -220,7 +219,7 @@ fun test: Function = castToA(123)
 :e
 castToA(wasm.i32.const(123))
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int32' at an unrelated type 'Unknown'
-//│ ║  l.221: 	castToA(wasm.i32.const(123))
+//│ ║  l.220: 	castToA(wasm.i32.const(123))
 //│ ╙──       	        ^^^^^^^^^^^^^^^^^^^
 //│ Wasm result:
 //│ = 123
