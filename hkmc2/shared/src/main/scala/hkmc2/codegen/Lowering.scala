@@ -417,23 +417,28 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
   
   def classOf(trm: Term, nw: PossiblyErroneous)(k: (Path, Ls[ParamList]) => Block)(using LoweringCtx): Block =
     def classValue: Block = nw match
-      case term: New if !term.isErroneous =>
-        NewShape.classesOf(term) match
-          case cls :: Nil =>
+      case term: Term if !nw.isErroneous =>
+        ClassValueShape.targetsOf(term) match
+          case target :: Nil =>
+            val cls = ClassValueShape.definitionOf(target)
             subTerm(trm): value =>
+              val classPath = target match
+                case _: ClassCtorSymbol => value.selSN("class")
+                case _ => value
               // Read a stored class before evaluating arguments or building a
               // partial constructor, even if its binding is assigned later.
               val saved = loweringCtx.registerTempSymbol(S(trm), erasedType = N, "classValue")
-              Assign(saved, value, k(saved.asSimpleRef, classParamLists(cls.defn.get)))
+              Assign(saved, classPath, k(saved.asSimpleRef, classParamLists(cls)))
           case Nil => fail:
-            ErrorReport(msg"Cannot resolve the class instantiated here" -> trm.toLoc :: Nil,
+            ErrorReport(msg"Cannot resolve the class referenced here" -> trm.toLoc :: Nil,
               source = Diagnostic.Source.Compilation)
-          case classes => fail:
-            ErrorReport(msg"The class instantiated here is ambiguous" -> trm.toLoc ::
-              classes.map(cls => msg"class '${cls.nme}' defined here" -> cls.toLoc),
+          case targets => fail:
+            ErrorReport(msg"The class interpretation here is ambiguous" -> trm.toLoc ::
+              targets.map(target => msg"${target.describeKind} '${target.nme}' defined here" -> target.toLoc),
               source = Diagnostic.Source.Compilation)
       case _ => compError
-    if newResolution then
+    if newResolution && nw.isErroneous then compError
+    else if newResolution then
       trm.classHead match
       case resolved @ Resolved(_, _: ClassSymbol) =>
         // Synthesized runtime constructors already carry an explicit class target.
@@ -445,10 +450,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
           cls.defn match
           case S(clsDef: ClassLikeDef) =>
             subTerm(resl)(p => k(p, classParamLists(clsDef)))
-          case _ if nw.isInstanceOf[New] => classValue
-          case _ =>
-            softAssert(resl.isErroneous, s"Unexpected `new` target: ${cls.showDbg}")
-            compError
+          case _ => classValue
         case Nil =>
           if !resl.isErroneous then raise:
             ErrorReport(

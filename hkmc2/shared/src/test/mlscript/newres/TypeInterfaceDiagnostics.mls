@@ -275,9 +275,6 @@ new instance
 //│ ╟── Value with a declared type cannot be instantiated with keyword 'new'.
 //│ ║  l.270: 	val instance: Base = new Base
 //│ ╙──       	              ^^^^
-//│ ╔══[COMPILATION ERROR] Cannot resolve the class instantiated here
-//│ ║  l.271: 	new instance
-//│ ╙──       	    ^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ instance = Base
 
@@ -287,11 +284,11 @@ declare type Hidden
 type Alias = Hidden
 fun inspect(value: Alias) = value.member
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.288: 	fun inspect(value: Alias) = value.member
+//│ ║  l.285: 	fun inspect(value: Alias) = value.member
 //│ ║         	                            ^^^^^^^^^^^^
 //│ ╟── Cannot resolve member 'member' of a value with unknown shape.
-//│ ║  l.288: 	fun inspect(value: Alias) = value.member
+//│ ║  l.285: 	fun inspect(value: Alias) = value.member
 //│ ║         	                   ^^^^^
 //│ ╟── Type 'Hidden' is declared without a member interface.
-//│ ║  l.286: 	declare type Hidden
+//│ ║  l.283: 	declare type Hidden
 //│ ╙──       	             ^^^^^^

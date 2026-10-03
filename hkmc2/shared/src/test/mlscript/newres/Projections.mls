@@ -201,3 +201,24 @@ val AliasToNumber = SourceNumber
 //│ ╙──       	                   ^^^
 //│ AliasToNumber = 123
 //│ SourceNumber = 123
+
+// A single stored field can still contain distinct captured class values.
+:e
+class CapturedLibrary(val number) {
+  class Entry { fun get() = number }
+}
+let leftLibrary = CapturedLibrary(1)
+let rightLibrary = CapturedLibrary(2)
+fun chooseEntry(flag) = if flag then leftLibrary.Entry.class else rightLibrary.Entry.class
+val classFields = {entry: chooseEntry(true)}
+open classFields
+fun storedProjection(value) = value.entry#get()
+//│ ╔══[COMPILATION ERROR] The projection class is ambiguous
+//│ ║  l.215: 	fun storedProjection(value) = value.entry#get()
+//│ ║         	                                   ^^^^^^
+//│ ╟── class: 'Entry'
+//│ ║  l.208: 	  class Entry { fun get() = number }
+//│ ╙──       	        ^^^^^
+//│ classFields = {entry: class Entry}
+//│ leftLibrary = CapturedLibrary(1)
+//│ rightLibrary = CapturedLibrary(2)

@@ -59,18 +59,15 @@ new id(C)
 //│ ║  in ../../mlscript-compile/Predef.mls
 //│ ║  l.19: 	fun id(x) = x
 //│ ╙──      	^^^^^^^^^^^^^
-//│ ╔══[COMPILATION ERROR] Cannot resolve the class instantiated here
-//│ ║  l.54: 	new id(C)
-//│ ╙──      	    ^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :e
 new (id(C))
 //│ ╔══[COMPILATION ERROR] Resolution error in object instantiation
-//│ ║  l.68: 	new (id(C))
+//│ ║  l.65: 	new (id(C))
 //│ ║        	^^^^^^^^^^^
 //│ ╟── Invalid class expression: application
-//│ ║  l.68: 	new (id(C))
+//│ ║  l.65: 	new (id(C))
 //│ ╙──      	     ^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 

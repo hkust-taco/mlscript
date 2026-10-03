@@ -399,8 +399,9 @@ class AppShape(val receiver: CoreTermShape, val args: Term, val src: Term.App)(u
   override def toString: String = s"AppShape($receiver, ${args.showDbg})"
   // def target: Opt[AppTarget]
 
-class NewShape(val receiver: DefnShape, val cls: ClassLikeSymbol, val clsMarks: Ls[Marks], val argss: Ls[Term], val src: Term.New,
+class NewShape(val receiver: DefnShape, val classTarget: ClassValueTarget, val clsMarks: Ls[Marks], val argss: Ls[Term], val src: Term.New,
     val supplied: Opt[Ls[DeclaredType]])(using DebugPrinter) extends CoreShape:
+  def cls: ClassSymbol = ClassValueShape.definitionOf(classTarget).sym
   protected def getMemberImpl(name: Str)(using NewResolverState): MemberLookup =
     if isSaturated then receiver.getInstanceMember(name).withMarks(clsMarks)
     else MemberLookup.Missing
@@ -412,19 +413,33 @@ class NewShape(val receiver: DefnShape, val cls: ClassLikeSymbol, val clsMarks: 
   override def toString: String = s"NewNewShape(${cls.showDbg}, $argss)"
   def toLoc: Opt[Loc] = src.toLoc
 
-object NewShape:
-  /** Constructor parameter lists are fixed when the originating unit is compiled.
-    * Read its original shapes, ignoring substitutions and capture paths, both
-    * for lowering and to check that later inference preserves this class identity.
+/** A class expression can denote a class directly or recover it from its
+  * generated constructor function. Keep the source definition in the inference
+  * shape so lowering does not need a separate mutable access-mode annotation.
+  */
+type ClassValueTarget = ClassSymbol | ClassCtorSymbol
+
+final case class ClassValueShape(target: ClassValueTarget, parent: Opt[TermShape])
+    extends DefnShape(ClassValueShape.definitionOf(target), parent)
+
+object ClassValueShape:
+  def definitionOf(target: ClassValueTarget): ClassDef = target match
+    case cls: ClassSymbol => cls.defn.get
+    case ctor: ClassCtorSymbol => ctor.associatedCls.defn.get
+
+  /** Read the originating unit's completed interpretation. Later inference must
+    * preserve both the class identity and whether its operand needs unwrapping.
     */
-  def classesOf(term: Term.New): Ls[ClassSymbol] =
-    def classes(event: ShapeEvent): Ls[ClassSymbol] = event match
-      case ActivatedShapeEvent(value, _) => classes(value)
-      case MarkedShape(value, _) => classes(value)
-      case ContextualShape(value, _) => classes(value)
-      case shape: NewShape => shape.cls.asCls.toList
+  def targetsOf(term: Term): Ls[ClassValueTarget] =
+    def targets(event: ShapeEvent): Ls[ClassValueTarget] = event match
+      case ActivatedShapeEvent(value, _) => targets(value)
+      case MarkedShape(value, _) => targets(value)
+      case ContextualShape(value, _) => targets(value)
+      case SpecializedShape(value, _, _) => targets(value)
+      case shape: NewShape => shape.classTarget :: Nil
+      case shape: ClassValueShape => shape.target :: Nil
       case _ => Nil
-    term.getShapes.flatMap(classes).distinct
+    term.shapes.toList.flatMap(targets).distinct
 
 sealed abstract class SymShape(val sym: BlockMemberSymbol, val resSym: FlowSymbol, val markss: Ls[Marks]) extends Shape:
   def describe: Str = s"${sym.describe} symbol '${sym.nme}'"
