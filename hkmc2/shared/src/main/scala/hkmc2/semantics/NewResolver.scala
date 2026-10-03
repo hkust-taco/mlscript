@@ -76,6 +76,9 @@ class NewResolver:
             case _ => ()
           def definition(defn: Definition)(using NewResolverState): Unit = defn match
             case cls: ClassLikeDef => publish(TypeShape.Nominal(cls))
+            // Nothing admits no values. In particular, a rejected promise must
+            // not contribute an unknown fulfillment alternative to catch or any.
+            case alias: TypeDef if alias.sym is prelude.builtins.Nothing => publish(TypeShape.Bottom)
             case alias: TypeDef =>
               publish(TypeShape.Alias(alias.sym, alias.rhs.map(typeResolution)))
               // Validate unused annotations too, once their forward source graph

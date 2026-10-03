@@ -61,7 +61,7 @@ class Child extends Base with
 //│ ║        	^^^^^^^^^^^^^^^^^
 //│ ╟── Function 'map' expected 1 type argument, but got 2
 //│ ║  in ../decls/Prelude.mls
-//│ ║  l.252: 	  fun map[U](f: (T, Int, Array[T]) -> U): Array[U]
+//│ ║  l.260: 	  fun map[U](f: (T, Int, Array[T]) -> U): Array[U]
 //│ ╙──       	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ = [1]
 

@@ -112,18 +112,18 @@ fun g() =
   @async
   fun f1() =
     print("f1 started")
-    let work1 = new Promise((resolve, reject) =>
+    let work1 = new Promise[undefined]((resolve, reject) =>
       set work1resolve = resolve
     )
     await(work1)
     print("f1 done")
-    work2resolve(())
+    work2resolve(undefined)
   @async
   fun f2() =
     print("f2 started")
-    let work2 = new Promise((resolve, reject) =>
+    let work2 = new Promise[undefined]((resolve, reject) =>
       set work2resolve = resolve
-      work1resolve(())
+      work1resolve(undefined)
     )
     await(work2)
     print("f2 done")

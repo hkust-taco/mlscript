@@ -483,6 +483,20 @@ Both `await` and `.then` observe this projection; constructors may receive a pro
 through their resolve callback. Factories and async results expose
 `Promise[Awaited[A]]`, while `Promise.all` applies the projection to its element type.
 
+The Promise declarations follow TypeScript's library where the current language
+can express the signatures. Executor, resolve, reject, and finalizer callbacks use
+`undefined` for TypeScript's `void`; only rejection reasons are unrestricted `Any`.
+`then` keeps separate fulfillment and rejection result parameters, `catch` includes
+the original fulfillment type, and `finally` preserves it. `Nothing` is the empty
+fulfillment type of a rejected promise, including through type aliases.
+
+Optional first callbacks, zero-argument factories, and default type arguments still
+require language support. The rejection callback of `then` uses the existing rest
+parameter convention; it, `catch`, and `finally` accept explicit `undefined` or
+`null`. Promise inputs currently support native promises; structural
+`PromiseLike` values, general JS
+iterables, and tuple-mapped `all` results remain outside these signatures.
+
 An async definition's result annotation describes its body before the async wrapper.
 Inferred bodies feed a shared deferred type edge, preserving their lexical marks.
 The `Awaited` application stays symbolic until the caller supplies its substitution:

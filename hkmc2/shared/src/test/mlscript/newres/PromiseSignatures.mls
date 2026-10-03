@@ -1,0 +1,149 @@
+:.
+
+// Explicit callback result arguments distinguish fulfillment from rejection.
+:await
+:expect 1
+Promise.resolve("start").then[Int, Str](value => 1, reason => "recovered")
+//│ = 1
+
+:await
+:expect "recovered"
+Promise.reject("failed").then[Int, Str](value => 1, reason => "recovered")
+//│ = "recovered"
+
+// Rejection handlers may return a promised value, just like fulfillment handlers.
+:await
+:expect 2
+Promise.reject("failed").catch(reason => Promise.resolve({answer: 2})).then(value => value.answer)
+//│ = 2
+
+// Catch preserves a successful value and includes the rejection handler's result.
+:await
+:expect 3
+class Answer(val answer: Int)
+Promise.resolve(Answer(3)).catch(reason => Promise.resolve(Answer(0))).then(value => value.answer)
+//│ = 3
+
+// Finally runs after settlement and preserves the original fulfillment interface.
+:await
+:expect 4
+Promise.resolve({answer: 4}).finally(() => console.log("finally")).then(value => value.answer)
+//│ > finally
+//│ = 4
+
+:await
+:expect "recovered: failure"
+Promise.reject("failure").finally(() => console.log("rejected finally")).catch(reason => "recovered: " + reason)
+//│ > rejected finally
+//│ = "recovered: failure"
+
+// An explicitly typed constructor accepts a promise for its payload.
+:await
+:expect 5
+(new Promise[{answer: Int}]((resolve, reject) => resolve(Promise.resolve({answer: 5})))).then(value => value.answer)
+//│ = 5
+
+// Race and any adopt the winning promise before exposing its payload.
+:await
+:expect 6
+Promise.race([Promise.resolve({answer: 6})]).then(value => value.answer)
+//│ = 6
+
+:await
+:expect 7
+Promise.any([Promise.reject("failed"), Promise.resolve({answer: 7})]).then(value => value.answer)
+//│ = 7
+
+// An absent rejection handler contributes no additional fulfillment candidate.
+:await
+:expect 8
+Promise.resolve({answer: 8}).then(value => value, undefined).then(value => value.answer)
+//│ = 8
+
+:await
+:expect 9
+Promise.resolve({answer: 9}).then(value => value, null).then(value => value.answer)
+//│ = 9
+
+// A promise used only as a completion signal has an undefined payload.
+:await
+:expect true
+(new Promise[undefined]((resolve, reject) => resolve(undefined))).then(value => value === undefined)
+//│ = true
+
+// Explicitly absent catch/finally callbacks preserve the original settlement.
+:await
+:expect 14
+Promise.resolve({answer: 14}).catch(null).finally(undefined).then(value => value.answer)
+//│ = 14
+
+:await
+:re
+Promise.reject("still rejected").catch(undefined).finally(null)
+//│ ═══[RUNTIME ERROR] still rejected
+//│ = Promise {}
+
+// Resolve and reject callbacks return undefined, not an unconstrained value.
+:!js
+:e
+new Promise((resolve, reject) => resolve(10).missing)
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.89: 	new Promise((resolve, reject) => resolve(10).missing)
+//│ ║        	                                 ^^^^^^^^^^^^^^^^^^^
+//│ ╟── Undefined literal does not contain member 'missing'
+//│ ║  in ../decls/Prelude.mls
+//│ ║  l.184: 	declare class Promise[out A](executor: ((A | Promise[A]) -> undefined, Any -> undefined) -> undefined) {
+//│ ╙──       	                                                            ^^^^^^^^^
+
+:!js
+:e
+new Promise((resolve, reject) => reject("failed").missing)
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.100: 	new Promise((resolve, reject) => reject("failed").missing)
+//│ ║         	                                 ^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Undefined literal does not contain member 'missing'
+//│ ║  in ../decls/Prelude.mls
+//│ ║  l.184: 	declare class Promise[out A](executor: ((A | Promise[A]) -> undefined, Any -> undefined) -> undefined) {
+//│ ╙──       	                                                                              ^^^^^^^^^
+
+// Both then branches contribute to the resulting promise type.
+:!js
+:e
+Promise.resolve({answer: 11}).then(value => value, reason => 0).then(value => value.answer)
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.112: 	Promise.resolve({answer: 11}).then(value => value, reason => 0).then(value => value.answer)
+//│ ║         	                                                                              ^^^^^^^^^^^^
+//│ ╟── Integer literal does not contain member 'answer'
+//│ ║  l.112: 	Promise.resolve({answer: 11}).then(value => value, reason => 0).then(value => value.answer)
+//│ ╙──       	                                                             ^
+
+// A rejection handler's output does not replace the fulfilled input type.
+:!js
+:e
+Promise.resolve(0).catch(reason => Promise.resolve({answer: 12})).then(value => value.answer)
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.123: 	Promise.resolve(0).catch(reason => Promise.resolve({answer: 12})).then(value => value.answer)
+//│ ║         	                                                                                ^^^^^^^^^^^^
+//│ ╟── Integer literal does not contain member 'answer'
+//│ ║  l.123: 	Promise.resolve(0).catch(reason => Promise.resolve({answer: 12})).then(value => value.answer)
+//│ ╙──       	                ^
+
+// A finalizer's return value does not become the promise's fulfillment value.
+:!js
+:e
+Promise.resolve(0).finally(() => console.log("finally")).then(value => value.answer)
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.134: 	Promise.resolve(0).finally(() => console.log("finally")).then(value => value.answer)
+//│ ║         	                                                                       ^^^^^^^^^^^^
+//│ ╟── Integer literal does not contain member 'answer'
+//│ ║  l.134: 	Promise.resolve(0).finally(() => console.log("finally")).then(value => value.answer)
+//│ ╙──       	                ^
+
+// The bottom type stays empty through aliases used by promise interfaces.
+:js
+:await
+:expect 13
+type NeverFulfilled = Nothing
+fun neverFulfilled(): Promise[NeverFulfilled] = Promise.reject("failed")
+neverFulfilled().catch(reason => Promise.resolve({answer: 13})).then(value => value.answer)
+//│ = 13

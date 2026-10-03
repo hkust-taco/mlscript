@@ -300,6 +300,7 @@ object Elaborator:
       val Function = assumeBuiltinCls("Function")
       lazy val Promise = assumeBuiltinCls("Promise")
       lazy val Awaited = assumeBuiltinTpe("Awaited")
+      lazy val Nothing = assumeBuiltinTpe("Nothing")
       val Error = assumeBuiltinCls("Error")
       val Bool = assumeBuiltinCls("Bool")
       val Object = assumeBuiltinCls("Object")

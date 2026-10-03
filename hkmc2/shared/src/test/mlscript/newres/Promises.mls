@@ -458,11 +458,15 @@ val escapedCallback = @annotations.async {value => value.answer}
 //│ ║         	                                          ^^^^^
 //│ ╟── This value is fulfilled by this promise.
 //│ ║  in ../decls/Prelude.mls
-//│ ║  l.180: 	declare class Promise[out A](executor: (A -> Any, Any -> Any) -> Any) {
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.181: 	  fun id"then"[B](onFulfilled: Awaited[A] -> B, ...onRejected: Array[Any -> B]): Promise[Awaited[B]]
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.182: 	}
+//│ ║  l.184: 	declare class Promise[out A](executor: ((A | Promise[A]) -> undefined, Any -> undefined) -> undefined) {
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.185: 	  fun id"then"[B, C](onFulfilled: Awaited[A] -> (B | Promise[B]), ...onRejected: Array[(Any -> (C | Promise[C])) | undefined | null]): Promise[Awaited[B | C]]
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.186: 	  fun id"catch"[B](onRejected: (Any -> (B | Promise[B])) | undefined | null): Promise[Awaited[A | B]]
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.187: 	  fun id"finally"(onFinally: (() -> undefined) | undefined | null): Promise[A]
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.188: 	... (more lines omitted) ...
 //│ ║         	^
 //│ ╟── 'escapedCallback' is exposed by this compilation unit.
 //│ ║  in Promises.mls:451
@@ -476,7 +480,7 @@ val escapedCallback = @annotations.async {value => value.answer}
 fun noFulfillment() = noFulfillment()
 noFulfillment().then(value => value.answer)
 //│ ╔══[COMPILATION ERROR] This selection of member 'answer' has no resolved target
-//│ ║  l.477: 	noFulfillment().then(value => value.answer)
+//│ ║  l.481: 	noFulfillment().then(value => value.answer)
 //│ ╙──       	                              ^^^^^^^^^^^^
 
 // TODO: Infer structural thenables' fulfillment callbacks. Their original fields
@@ -484,12 +488,12 @@ noFulfillment().then(value => value.answer)
 :!js
 :fixme
 class Thenable with
-  fun id"then"(resolve: {answer: Int} -> Any, reject: Any -> Any) = resolve({answer: 77})
+  fun id"then"(resolve: {answer: Int} -> undefined, reject: Any -> undefined) = resolve({answer: 77})
 Promise.resolve(new Thenable).then(value => value.answer)
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.488: 	Promise.resolve(new Thenable).then(value => value.answer)
+//│ ║  l.492: 	Promise.resolve(new Thenable).then(value => value.answer)
 //│ ║         	                                            ^^^^^^^^^^^^
 //│ ╟── Cannot resolve member 'answer' of a value with unknown shape.
 //│ ╟── This value may be a thenable; its fulfillment interface is not known.
-//│ ║  l.488: 	Promise.resolve(new Thenable).then(value => value.answer)
+//│ ║  l.492: 	Promise.resolve(new Thenable).then(value => value.answer)
 //│ ╙──       	                ^^^^^^^^^^^^
