@@ -176,13 +176,15 @@ declare module BigInt64Array
 declare class BigUint64Array
 declare module BigUint64Array
 
-declare class Promise(executor: (Function, Function) -> Any) {
-  fun id"then"(onFulfilled: Function, ...onRejected): Promise
+// Awaited recursively unwraps promises, as JavaScript's promise resolution does.
+declare type Awaited[out A]
+declare class Promise[out A](executor: (A -> Any, Any -> Any) -> Any) {
+  fun id"then"[B](onFulfilled: Awaited[A] -> B, ...onRejected: Array[Any -> B]): Promise[Awaited[B]]
 }
 declare module Promise {
-  fun resolve(value): Promise
-  fun reject(reason): Promise
-  fun all(values): Promise
+  fun resolve[A](value: A): Promise[Awaited[A]]
+  fun reject(reason: Any): Promise[Nothing]
+  fun all[A](values: Array[A]): Promise[Array[Awaited[A]]]
 }
 
 // MLscript-specific types
@@ -560,7 +562,7 @@ declare module annotations {
 }
 
 declare module handlers {
-  fun await(promise: Promise): Any
+  fun await[A](promise: Promise[A]): Awaited[A]
 }
 
 declare module scope {

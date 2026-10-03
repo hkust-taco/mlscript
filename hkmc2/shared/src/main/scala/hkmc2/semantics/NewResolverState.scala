@@ -270,6 +270,14 @@ final class NewResolverState private (
   // identity so imported listeners use the consumer's private publisher data.
   val byNameResults: Cache[(TermSymbol, TypeSubstitution), ShapeHost] =
     new Cache(inherited.map(_.byNameResults), identity)
+  // Async payloads are deferred type edges, not snapshots of the body's current
+  // candidates. Register each host before following recursive function results.
+  val resultTypes: Cache[(Identity[Term], TypeSubstitution), DeclaredType] =
+    new Cache(inherited.map(_.resultTypes), identity)
+  val awaitedTypes: Cache[DeclaredType, DeclaredType] =
+    new Cache(inherited.map(_.awaitedTypes), identity)
+  val awaitedValues: Cache[(TermShape, TypeSubstitution), DeclaredType] =
+    new Cache(inherited.map(_.awaitedValues), identity)
   val typeInterpretations: Cache[Identity[Term], TypeResolution] =
     new Cache(inherited.map(_.typeInterpretations), identity)
   // Qualification can deliver the same declaration in several environments.

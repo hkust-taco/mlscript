@@ -182,6 +182,8 @@ final class InterfaceExposure(resolver: NewResolver)(using NewResolverState, TL)
         watch((callable, marks, "call result"))(resolver.listenCallableResult(callable)): shape =>
           emit(shape.exit(marks), path)
       case nominal: NominalInstanceView =>
+        watch((shape, "promise payload"))(listener => { resolver.listenPromisePayload(shape)(listener); () }): payload =>
+          emit(payload, path.via(msg"This value is fulfilled by this promise." -> nominal.toLoc))
         // Array element bindings may contain escaping closures. Follow only the
         // declared binding; concrete annotations still hide implementation shapes.
         resolver.arrayElementType(nominal).foreach: binding =>
