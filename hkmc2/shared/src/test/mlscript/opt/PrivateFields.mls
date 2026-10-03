@@ -139,3 +139,64 @@ UnusedObjectPrivate.get + UnusedModulePrivate.get
 //│ = "()()"
 
 
+// Unused constructor parameters and explicit private values need no instance fields.
+:soir
+class UnusedParameter(value)
+class UnusedField with
+  private val value = 1
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ define UnusedParameter⁰ as class UnusedParameter² {
+//│   constructor UnusedParameter¹
+//│ };
+//│ define UnusedField⁰ as class UnusedField¹;
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+
+// A read in the constructor alone keeps the initialized member storage live.
+:soir
+class ConstructorLocal(value) with
+  let stored = value
+  print(stored)
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ define ConstructorLocal⁰ as class ConstructorLocal² {
+//│   private val value⁰;
+//│   private val stored⁰;
+//│   constructor ConstructorLocal¹(value) {
+//│     @private
+//│     define value¹ as val value⁰ = value;
+//│     set ConstructorLocal².this.stored⁰ = ConstructorLocal².this.value⁰;
+//│     do Predef⁰.print⁰(ConstructorLocal².this.stored⁰);
+//│     end
+//│   }
+//│ };
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+ConstructorLocal(123)
+//│ > 123
+//│ = ConstructorLocal(_)
+
+
+:soir
+class ConstructorRead with
+  private val value = 1
+  print(value)
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ define ConstructorRead⁰ as class ConstructorRead¹ {
+//│   private val value²;
+//│   constructor() {
+//│     @private
+//│     define value³ as val value² = 1;
+//│     do Predef⁰.print⁰(ConstructorRead¹.this.value²);
+//│     end
+//│   }
+//│ };
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+new ConstructorRead
+//│ > 1
+//│ = ConstructorRead
+
+
