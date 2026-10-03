@@ -21,6 +21,10 @@ if 5 is a & b then a
 //│ ╔══[COMPILATION ERROR] Name not found: b
 //│ ║  l.20: 	if 5 is a & b then a
 //│ ╙──      	            ^
+//│ ╔══[COMPILATION ERROR] Resolution error in composition
+//│ ║  l.20: 	if 5 is a & b then a
+//│ ║        	   ^^^^^^^^^^
+//│ ╙── A type cannot be used as a runtime value.
 //│ ╔══[COMPILATION ERROR] Name not found: a
 //│ ║  l.20: 	if 5 is a & b then a
 //│ ╙──      	                   ^
@@ -36,7 +40,7 @@ if 5 is (a & b) as c then [a, b, c]
 :e
 if 5 is ~a then a
 //│ ╔══[COMPILATION ERROR] Name not found: a
-//│ ║  l.37: 	if 5 is ~a then a
+//│ ║  l.41: 	if 5 is ~a then a
 //│ ╙──      	                ^
 //│ ═══[RUNTIME ERROR] Error: match error
 

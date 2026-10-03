@@ -97,6 +97,10 @@ explicit."nested".value
 
 :e
 dyn
+//│ ╔══[COMPILATION ERROR] Resolution error in dynamic type
+//│ ║  l.99: 	dyn
+//│ ║        	^^^
+//│ ╙── A type cannot be used as a runtime value.
 //│ ╔══[COMPILATION ERROR] Unexpected term form in expression position (dynamic type)
 //│ ║  l.99: 	dyn
 //│ ╙──      	^^^
@@ -120,10 +124,10 @@ fun notCalled(x: dyn) = x.anything(1).result
 let mixed = if hide(true) then ({value: 1} as dyn) else {other: 2}
 mixed.value
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.121: 	mixed.value
+//│ ║  l.125: 	mixed.value
 //│ ║         	^^^^^^^^^^^
 //│ ╟── Record literal does not contain member 'value'
-//│ ║  l.120: 	let mixed = if hide(true) then ({value: 1} as dyn) else {other: 2}
+//│ ║  l.124: 	let mixed = if hide(true) then ({value: 1} as dyn) else {other: 2}
 //│ ╙──       	                                                         ^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ mixed = {value: 1}

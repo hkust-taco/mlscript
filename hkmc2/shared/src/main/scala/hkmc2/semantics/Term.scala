@@ -375,7 +375,7 @@ enum Term extends Statement, AutoLocated, ShapePublisher:
   case DynSel(prefix: Term, fld: Term, arrayIdx: Bool, checked: Bool)
   case Tup(fields: Ls[Elem])(val tree: Tree.Tup) extends Term, ShapeHost
   case Mut(underlying: Tup | Rcd | New | DynNew)
-  case CtxTup(fields: Ls[Elem])(val tree: Tree.Tup)
+  case CtxTup(fields: Ls[Elem])(val tree: Tree.Tup) extends Term, ShapeHost
   case IfLike(kw: Keyword.SplitLike, form: IfLikeForm, split: SimpleSplit) extends Term, ShapeHost
   /** `If` expressions synthesized by the pattern compiler. It should only be
    *  created and used in `Lowering`. One must make sure that all terms in the
@@ -651,10 +651,12 @@ enum Term extends Statement, AutoLocated, ShapePublisher:
         })(term.tree)
         copyShapes(term, copy)
       case Mut(underlying) => Mut(underlying.mkClone.asInstanceOf[Tup | Rcd | New | DynNew])
-      case term @ CtxTup(fields) => CtxTup(fields.map {
-        case f: Fld => f.copy(term = f.term.mkClone, asc = f.asc.map(_.mkClone))
-        case s: Spd => s.copy(term = s.term.mkClone)
-      })(term.tree)
+      case term @ CtxTup(fields) =>
+        val copy = CtxTup(fields.map {
+          case f: Fld => f.copy(term = f.term.mkClone, asc = f.asc.map(_.mkClone))
+          case s: Spd => s.copy(term = s.term.mkClone)
+        })(term.tree)
+        copyShapes(term, copy)
       case term @ IfLike(kw, form, split) => copyShapes(term, IfLike(kw, form, split.mkClone))
       case SynthIf(split) => SynthIf(split.mkClone)
       case SynthWhile(split) => SynthWhile(split.mkClone)

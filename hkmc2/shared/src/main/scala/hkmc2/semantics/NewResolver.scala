@@ -1323,7 +1323,9 @@ class NewResolver:
   def checkDeclaredResult(definition: TermDefinition)(using NewResolverState): Unit =
     definition.body.foreach: body =>
       resultSignature(definition).foreach: sign =>
-        checkAscription(body, sign)
+        val expected = declaredType(typeResolution(sign), Map.empty)
+        listenResult(body): shape =>
+          inferTypeArguments(expected.instantiate(rstate.instances), shape, Nil)
 
   def checkAscription(body: Term, sign: Term)(using NewResolverState): Unit =
     val expected = declaredType(typeResolution(sign), Map.empty)
@@ -1521,13 +1523,13 @@ class NewResolver:
     val context = actual.applicationHead._2
     def results(listener: Listener)(using NewResolverState): Unit = actual.applicationHead._1 match
       case intro: IntroShape => intro.trm match
-        case Lam(_, body) => listenTerm(body)(shape => listener(instantiateShape(shape, instances)))(using rstate.withInstances(instances))
+        case Lam(_, body) => listenResult(body)(shape => listener(instantiateShape(shape, instances)))(using rstate.withInstances(instances))
         case _ => ()
       case ds: DefnShape => ds.defn match
         case td: TermDefinition => td.sign match
           case S(sign) => listenSignatureResult(declaredType(typeResolution(sign), Map.empty).instantiate(instances),
             if td.flags.hasResultAnnotation then 0 else td.params.length)(listener)
-          case N => td.body.foreach(body => listenTerm(body)(shape => listener(instantiateShape(shape, instances)))(using rstate.withInstances(instances)))
+          case N => td.body.foreach(body => listenResult(body)(shape => listener(instantiateShape(shape, instances)))(using rstate.withInstances(instances)))
         case _ => ()
       case _ => ()
     def matchLists(expected: DeclaredType, remaining: Ls[(ParamList, Ls[Marks])])(using NewResolverState): Unit =
@@ -2464,7 +2466,7 @@ class NewResolver:
       resolError(res, lhs.diagnostic(message))
     if sh.isSaturated then
       def go(body: Term, mss: Ls[Marks])(using NewResolverState) =
-        listenTerm(body): sh =>
+        listenResult(body): sh =>
           transportShape(sh, mss) match
           case NoShape =>
           case sh: TermShape =>
@@ -2938,7 +2940,7 @@ class NewResolver:
           def showDbg(using DebugPrinter): Str = s"result of ${td.tsym.nme}"
         rstate.byNameResults(key) = host
         listenValueHost(host)(listener)
-        listenTerm(body)(publishActivated(host, _))
+        listenResult(body)(publishActivated(host, _))
 
   def pipeTerm(from: Term, to: ShapeHost)(using NewResolverState): Unit =
     log(s"pipeTerm: from = ${from.showDbg}, to = ${to.showDbg}; ${to.currentShapes}")
@@ -3200,6 +3202,88 @@ class NewResolver:
     if receiver then member.asModOrObj.orElse(member.asTrm).orElse(member.asCls).orElse(member.asPat)
     else member.asTrm.orElse(member.asModOrObj).orElse(member.asCls).orElse(member.asPat)
 
+  /** Syntactic control transfers within one evaluation scope. Calls may return,
+    * but an explicit return/break/throw cannot also supply a normal value. Keep
+    * exit operands at their lexical endpoint; the function or label observing
+    * them applies the same shape transport as for its normal body result.
+    */
+  private case class ResultFlow(normal: Bool, exits: Map[Opt[LabelSymbol], Vector[Term]]):
+    // None identifies the current function's return; Some(label) identifies a break.
+    def or(that: ResultFlow): ResultFlow = ResultFlow(normal || that.normal,
+      exits ++ that.exits.map((target, values) => target -> (exits.getOrElse(target, Vector.empty) ++ values)))
+    def andThen(that: => ResultFlow): ResultFlow =
+      if normal then copy(normal = false).or(that) else this
+    def leave(target: Opt[LabelSymbol], value: Term): ResultFlow =
+      andThen(ResultFlow(false, Map(target -> Vector.single(value))))
+
+  private def resultFlow(term: Term): ResultFlow =
+    val normal = ResultFlow(true, Map.empty)
+    def sequence(terms: Iterable[Term]): ResultFlow =
+      terms.foldLeft(normal)((flow, term) => flow.andThen(resultFlow(term)))
+    def statement(stat: Statement): ResultFlow = stat match
+      // A definition's body belongs to its own invocation, not to the enclosing
+      // function. In particular, a nested getter's return must not escape here.
+      case _: Definition => normal
+      case term: Term => resultFlow(term)
+      case _ => sequence(stat.subTerms)
+    def split(branches: SimpleSplit, onEnd: ResultFlow): ResultFlow = branches match
+      case SimpleSplit.Else(value) => resultFlow(value)
+      case SimpleSplit.End => onEnd
+      case SimpleSplit.Cons(SimpleSplit.Head.Let(_, value), tail) => resultFlow(value).andThen(split(tail, onEnd))
+      case SimpleSplit.Cons(SimpleSplit.Head.Match(scrutinee, pattern, consequent), tail) =>
+        // A failed pattern can skip its guards. Retain that path as well as
+        // any control transfer from a guard which is evaluated.
+        val guards = pattern.subTerms.foldLeft(normal)((flow, term) => flow.or(resultFlow(term)))
+        resultFlow(scrutinee).andThen(guards.andThen(split(consequent, onEnd).or(split(tail, onEnd))))
+    def quoted(term: Term, depth: Int): ResultFlow = term match
+      // Only splices crossing back to the current stage execute now. Nested
+      // quotations delay their own splices, including any returns they contain.
+      case Unquoted(body) if depth == 1 => resultFlow(body)
+      case Unquoted(body) => quoted(body, depth - 1)
+      case Quoted(body) => quoted(body, depth + 1)
+      case _ => term.subTerms.foldLeft(normal)((flow, term) => flow.andThen(quoted(term, depth)))
+    term match
+      case Ret(value) => resultFlow(value).leave(N, value)
+      case Break(label, _, value) => value.fold(normal)(resultFlow).leave(S(label), value.getOrElse(unit))
+      case Throw(value) => resultFlow(value).copy(normal = false)
+      case _: Continue => ResultFlow(false, Map.empty)
+      case Blk(stats, value) => stats.foldLeft(normal)((flow, stat) => flow.andThen(statement(stat))).andThen(resultFlow(value))
+      case Label(label, _, body, _) =>
+        val flow = resultFlow(body)
+        ResultFlow(flow.normal || flow.exits.contains(S(label)), flow.exits - S(label))
+      case Try(body, cleanup) =>
+        val first = resultFlow(body)
+        val last = resultFlow(cleanup)
+        // An abrupt cleanup replaces the pending return/break as well as the
+        // normal body value. A normally completing cleanup contributes no value.
+        if last.normal then first.or(last.copy(normal = false)) else last
+      case IfLike(_, form, branches) =>
+        // Falling off an imperative split returns unit; falling off a returning
+        // split throws a match error. A loop may finish without running its body.
+        val flow = split(branches, if form.isImperative then normal else ResultFlow(false, Map.empty))
+        if form == IfLikeForm.While then flow.or(normal) else flow
+      case Quoted(body) => quoted(body, 1)
+      case _: Lam | _: Unquoted | _: FunTy | _: Forall | _: Constrained | _: WildcardTy
+          | _: CompType | _: Neg | _: DynTy => normal
+      case Annotated(Annot.Async(), _) => normal
+      case Annotated(_, target) => resultFlow(target)
+      case Handle(_, rhs, args, _, _, _) => sequence(rhs :: args)
+      case New(cls, args, _) => sequence(cls :: args)
+      case Rcd(_, stats) => stats.foldLeft(normal)((flow, stat) => flow.andThen(statement(stat)))
+      case Asc(value, _) => resultFlow(value)
+      case TyApp(value, _) => resultFlow(value)
+      case _ => sequence(term.subTerms)
+
+  /** Function results include explicit returns, whereas listenTerm observes only
+    * normal completion. Share this rule between calls, result checking, getters,
+    * and interface exposure so a returned closure is checked even when no caller
+    * observes it locally.
+    */
+  private[semantics] def listenResult(body: Term)(listener: Listener)(using NewResolverState): Unit =
+    val flow = resultFlow(body)
+    if flow.normal then listenTerm(body)(listener)
+    flow.exits.getOrElse(N, Vector.empty).foreach(value => listenTerm(value)(listener))
+
   def listenTerm(trm: Term)(listener: Listener)(using NewResolverState): Unit =
     log(s"listenTerm: trm = ${trm.showDbg}")
     listenValue(trm, false)(listener)
@@ -3228,7 +3312,7 @@ class NewResolver:
     * subscriptions while the node is waiting for a forward definition. Deliver
     * cached shapes to each listener, which is already registered for future shapes.
     */
-  private def listenAggregate(aggregate: Tup | Rcd, listener: ShapeListener[ShapeEvent])
+  private def listenAggregate(aggregate: Tup | CtxTup | Rcd, listener: ShapeListener[ShapeEvent])
       (start: (Listener) => Unit)(using NewResolverState): Unit =
     val first = aggregateProducers.add(new Identity(aggregate))
     // An imported definition can already have shapes computed by its own elaborator.
@@ -3338,8 +3422,11 @@ class NewResolver:
         if invoked then listener(value) else instantiate(value)(listener)
     case mut @ Mut(underlying: Tup) => listener(mutableArray(mut, underlying))
     case Mut(underlying) => listenTerm(underlying)(listener)
-    case tuple: Tup => listenAggregate(tuple, listener): publish =>
-        val fields = tuple.fields.collect { case Fld(_, key, S(value)) => (key, value) }
+    case tuple: (Tup | CtxTup) => listenAggregate(tuple, listener): publish =>
+        val elements = tuple match
+          case Tup(fields) => fields
+          case CtxTup(fields) => fields
+        val fields = elements.collect { case Fld(_, key, S(value)) => (key, value) }
         val named = if fields.isEmpty then Nil else
           // Reuse the defining graph's property symbols when an imported tuple
           // is observed directly, as well as when its copied listeners fire.
@@ -3399,7 +3486,7 @@ class NewResolver:
                     val field = TupleShape.ValueField(UnknownValueShape.spread(term, shape), Nil)
                     val unknown = TupleShape(term, TupleShape.Unknown(term, field) :: Nil)(this)
                     expand(rest, TupleShape.Spread(unknown, marks) :: reversed)
-        expand(tuple.fields, Nil)
+        expand(elements, Nil)
     case record: Rcd => listenAggregate(record, listener): publish =>
         def expand(stats: Ls[Statement], reversed: Ls[RecordShape.Element])(using NewResolverState): Unit = stats match
           case Nil =>
@@ -3484,6 +3571,13 @@ class NewResolver:
       val fs = ref.resSym
       val sh = symShapes.getOrElseUpdate((sym, fs, Nil), CoreSymShape(sym, fs, Nil))
       listener(sh)
+    case ref @ MemberRef(_: ErrorSymbol) => rstate.markError(ref)
+    case ref @ MemberRef(sym: TypeAliasSymbol) =>
+      rstate.markError(ref)
+      resolError(ref, msg"Type alias '${sym.nme}' cannot be used as a runtime value." -> sym.toLoc :: Nil)
+    case MemberRef(_: InnerSymbol) =>
+      // Ctx.RefElem uses SelfRef for class/module receivers, not MemberRef.
+      lastWords("Direct inner-symbol references must use SelfRef")
     case Capture(base, thru) =>
       if discardMarks then
         listen(base, discardMarks = true)(listener)
@@ -3492,25 +3586,45 @@ class NewResolver:
     case ref @ Ref(sym: InnerSymbol) => // TODO: remove remaining occurrences of such refs
       sym.addShapeListener(listener)
     case ref @ Ref(bsym: BlockMemberSymbol) =>
-      ???
-    case res: ResolvableImpl =>
+      lastWords("Legacy block member references must not enter new resolution")
+    case res: (App | New | Ref | Sel | SelProj | Resolved | LeadingDotSel) =>
       res.replayShapes(listener)
-      // ???
-    case sh: ShapeHost =>
+    case sh: (NewSel | UnresolvedRef | Super | IfLike) =>
       sh.replayShapes(listener)
-    case Blk(sts, rs) =>
-      listen(rs)(listener)
-    case Try(body, _) =>
+    case block @ Blk(_, result) =>
+      if resultFlow(block).normal then listen(result, discardMarks)(listener)
+    case cleanup @ Try(body, _) =>
       // Finally is evaluated for effects; normal completion returns the body's
       // value. Its cleanup value must not contribute candidates to this result.
-      listen(body)(listener)
+      if resultFlow(cleanup).normal then listen(body, discardMarks)(listener)
+    case Label(label, _, body, _) =>
+      val flow = resultFlow(body)
+      if flow.normal then listen(body, discardMarks)(listener)
+      flow.exits.getOrElse(S(label), Vector.empty).foreach(value => listen(value, discardMarks)(listener))
+    case Annotated(Annot.Async(), _) =>
+      // Lowering returns a JavaScript promise, not the body's value. Until the
+      // promise interface is declared, it cannot justify a static member lookup.
+      listener(UnknownValueShape.at(trm))
+    case Annotated(_, target) => listen(target, discardMarks)(listener)
     case _: Assgn | _: Drop => listener(unitResultShape)
-    case _: Throw | _: Continue => () // These expressions do not complete normally.
-    // case u: UnitVal =>
+    case _: Ret | _: Break | _: Throw | _: Continue => () // These expressions do not complete normally.
+    case _: Quoted | _: Unquoted =>
+      // Quotation constructs a runtime syntax value; splicing supplies syntax
+      // for a different stage. Neither has the value interface of its operand.
+      listener(UnknownValueShape.at(trm))
+    case _: Handle =>
+      // An effect handler can abort or replace the continuation's result. The
+      // normal body's interface alone therefore cannot describe this value.
+      listener(UnknownValueShape(trm, fromPublicInterface = false)(ShapeProvenance(
+        msg"An effect handler can replace the handled body's result." -> trm.toLoc :: Nil)))
+    case _: DynTy | _: FunTy | _: Forall | _: Constrained | _: WildcardTy | _: CompType | _: Neg =>
+      resolError(trm, msg"A type cannot be used as a runtime value." -> N :: Nil)
+    case Error() => () // Elaboration has already reported the error; it supplies no candidate.
     case Missing =>
       () // FIXME: Currently get this from light-elaborated Predef import
-    case _ =>
-      println(s"TODO: listen for ${trm.describe} (${trm.getClass})")
-      ()
+    case _: SynthIf | _: SynthWhile =>
+      lastWords("Lowering-generated control flow must not enter resolution")
+    case _: Region | _: RegRef | _: Deref | _: SetRef =>
+      lastWords("InvalML reference operations require legacy resolution")
   
 end NewResolver

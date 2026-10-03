@@ -1,0 +1,63 @@
+:qq
+:.
+
+// Quotation constructs syntax; it does not return the quoted integer.
+:expect Lit(42)
+let syntaxValue = `42
+syntaxValue
+//│ = Lit(42)
+//│ syntaxValue = Lit(42)
+
+// Splices supply syntax to the enclosing quotation.
+:expect Lam([Symbol("x")], Ref(Symbol("x")))
+x `=> x
+//│ = Lam([Symbol("x")], Ref(Symbol("x")))
+
+// Unknown syntax interfaces must not silently authorize static selections.
+:e
+let syntaxValue = `42
+syntaxValue.answer
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.19: 	syntaxValue.answer
+//│ ║        	^^^^^^^^^^^^^^^^^^
+//│ ╟── Cannot resolve member 'answer' of a value with unknown shape.
+//│ ╟── The shape of this value is unknown.
+//│ ║  l.18: 	let syntaxValue = `42
+//│ ╙──      	                   ^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ syntaxValue = Lit(42)
+
+// Type syntax is not a runtime value.
+:e
+let typeValue = dyn
+typeValue
+//│ ╔══[COMPILATION ERROR] Resolution error in dynamic type
+//│ ║  l.32: 	let typeValue = dyn
+//│ ║        	                ^^^
+//│ ╙── A type cannot be used as a runtime value.
+//│ ╔══[COMPILATION ERROR] Unexpected term form in expression position (dynamic type)
+//│ ║  l.32: 	let typeValue = dyn
+//│ ╙──      	                ^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ typeValue = undefined
+
+// Async expression annotations return a promise, not the body's record.
+:e
+let promise = @annotations.async {answer: 42}
+promise.answer
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.47: 	promise.answer
+//│ ║        	^^^^^^^^^^^^^^
+//│ ╟── Cannot resolve member 'answer' of a value with unknown shape.
+//│ ╟── The shape of this value is unknown.
+//│ ║  l.46: 	let promise = @annotations.async {answer: 42}
+//│ ╙──      	                                  ^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ promise = Promise {}
+
+// A splice executes while constructing syntax and can return from its function.
+:expect 42
+fun returnedFromSplice() =
+  `let quotedValue = (return {answer: 42}) `in quotedValue
+returnedFromSplice().answer
+//│ = 42

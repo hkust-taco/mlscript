@@ -14,11 +14,21 @@ fun handled() =
   h.answer()
   {answer: 0}
 handled().answer
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.16: 	handled().answer
+//│ ║        	^^^^^^^^^^^^^^^^
+//│ ╟── Cannot resolve member 'answer' of a value with unknown shape.
+//│ ╟── An effect handler can replace the handled body's result.
+//│ ║  l.12: 	  handle h = AnswerEffect with
+//│ ║        	             ^^^^^^^^^^^^^^^^^
+//│ ║  l.13: 	    fun answer()(resume) = {answer: 42}
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.14: 	  h.answer()
+//│ ║        	^^^^^^^^^^^^
+//│ ║  l.15: 	  {answer: 0}
+//│ ╙──      	^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Member reference 'AnswerEffect' has no resolved target
 //│ ║  l.12: 	  handle h = AnswerEffect with
 //│ ╙──      	             ^^^^^^^^^^^^
-//│ ╔══[COMPILATION ERROR] This selection of member 'answer' has no resolved target
-//│ ║  l.16: 	handled().answer
-//│ ╙──      	^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ ═══[RUNTIME ERROR] Expected: '42', got: 'undefined'

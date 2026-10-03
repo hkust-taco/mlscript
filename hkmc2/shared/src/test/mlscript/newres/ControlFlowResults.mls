@@ -81,3 +81,124 @@ private fun maybeAnswer(fail) =
   if fail then throw new Error("no answer") else {answer: 42}
 maybeAnswer(false).answer
 //│ = 42
+
+// Explicit returns supply function results, including returns in statements.
+:expect [42, 43]
+fun returned() = return {answer: 42}
+fun early() =
+  return {answer: 43}
+  ()
+[returned().answer, early().answer]
+//│ = [42, 43]
+
+// Conditional returns and fall-through results preserve the calling context.
+:expect [42, 43]
+private fun choose(flag, value) =
+  if flag do return value
+  value
+[choose(true, {first: 42}).first, choose(false, {second: 43}).second]
+//│ = [42, 43]
+
+// Returns in nested definitions belong to those definitions only.
+:expect 42
+fun enclosing() =
+  fun nested() = return {other: 0}
+  {answer: 42}
+enclosing().answer
+//│ = 42
+
+// Abrupt cleanup replaces the pending return.
+:expect 43
+fun cleanupReturn() =
+  try return {other: 42}
+  finally return {answer: 43}
+cleanupReturn().answer
+//│ = 43
+
+// A return's operand never becomes an assignment's normal value.
+:expect 42
+fun noAssignmentResult() =
+  let value = return {answer: 42}
+  value.other
+noAssignmentResult().answer
+//│ = 42
+
+// Labels collect their own break values, not a nested label's values.
+:expect [42, 43]
+let first = do outerLabel:
+  do innerLabel: innerLabel.break({other: 0})
+  outerLabel.break({answer: 42})
+let second = do exitLabel: {answer: 43}
+[first.answer, second.answer]
+//│ = [42, 43]
+//│ first = {answer: 42}
+//│ second = {answer: 43}
+
+// A break without a value yields unit; statements after it are unreachable.
+:e
+let stopped = do exitLabel:
+  exitLabel.break
+  {answer: 42}
+stopped.answer
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.142: 	stopped.answer
+//│ ║         	^^^^^^^^^^^^^^
+//│ ╙── Unit value does not contain member 'answer'
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ stopped = undefined
+
+// Transparent annotations retain the target's value interface.
+:expect 42
+let annotated = @annotations.untyped {answer: 42}
+annotated.answer
+//│ = 42
+//│ annotated = {answer: 42}
+
+// Explicit contextual arguments have the same tuple layout as ordinary arguments.
+:expect 42
+private fun contextual(using value: {answer: Int}) = value
+contextual(using {answer: 42}).answer
+//│ = 42
+
+// Cleanup can replace a pending labeled break with a different value.
+:expect 43
+let cleaned = do exitLabel:
+  try exitLabel.break({other: 42})
+  finally exitLabel.break({answer: 43})
+cleaned.answer
+//│ = 43
+//│ cleaned = {answer: 43}
+
+// Result annotations check a closure returned by an explicit return.
+:expect 42
+class ReturnedAnswer(val answer: Int)
+fun returnedClosure(): Int -> ReturnedAnswer = return (value => new ReturnedAnswer(value))
+returnedClosure()(42).answer
+//│ = 42
+
+// Publicly returned closures must not infer their interface only from local calls.
+:e
+fun exposedClosure() = return value => value.answer
+exposedClosure()({answer: 42})
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.181: 	fun exposedClosure() = return value => value.answer
+//│ ║         	                                       ^^^^^^^^^^^^
+//│ ╟── Cannot resolve member 'answer' of a value with unknown shape.
+//│ ╟── Parameter 'value' admits values of unknown shape.
+//│ ║  l.181: 	fun exposedClosure() = return value => value.answer
+//│ ║         	                              ^^^^^
+//│ ╟── This value is returned here.
+//│ ║  l.181: 	fun exposedClosure() = return value => value.answer
+//│ ║         	                              ^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── 'exposedClosure' is exposed by this compilation unit.
+//│ ║  l.181: 	fun exposedClosure() = return value => value.answer
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// Pattern guards execute in the enclosing function's return scope.
+:expect 42
+fun guardedReturn() =
+  if 0 is (_ where (return {answer: 42})) then throw new Error("unreachable")
+  else throw new Error("unreachable")
+guardedReturn().answer
+//│ = 42

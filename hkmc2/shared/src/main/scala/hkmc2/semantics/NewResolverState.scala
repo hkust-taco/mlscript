@@ -387,9 +387,9 @@ final class NewResolverState private (
     new Cache(inherited.map(_.mutableArrays), identity)
   // Named tuple fields have stable property identities, shared with consumers
   // through the tuple's original graph rather than allocated per spread candidate.
-  val namedTupleRecords: Cache[Identity[Tup], Rcd] =
+  val namedTupleRecords: Cache[Identity[Tup | CtxTup], Rcd] =
     new Cache(inherited.map(_.namedTupleRecords), identity)
-  val aggregateProducers: Seen[Identity[Tup | Rcd]] =
+  val aggregateProducers: Seen[Identity[Tup | CtxTup | Rcd]] =
     new Seen(inherited.map(_.aggregateProducers))
   // Whether a binder is supplied is fixed by its authoritative syntactic site.
   // Each definition/site has its own parameter instances; marks distinguish the
