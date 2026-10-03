@@ -67,15 +67,15 @@ Companion.class
 //│ = 42
 
 :expect 12
-(new Primary.class(12)).x
+new Primary.class(12).x
 //│ = 12
 
 :expect 13
-(new Auxiliary.class(13)).value()
+new Auxiliary.class(13).value()
 //│ = 13
 
 :expect 15
-(new Curried.class(14)(15)).y
+new Curried.class(14)(15).y
 //│ = 15
 
 // Evaluated terms do not preserve the class-selection syntax.
@@ -100,10 +100,24 @@ raw.class
 //│ ╙──     	      ^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
+:expect fun
+new raw
+//│ = fun
+
+:e
+new ctor
+//│ ╔══[COMPILATION ERROR] Resolution error in object instantiation
+//│ ║  l.108: 	new ctor
+//│ ║         	^^^^^^^^
+//│ ╟── Class 'Primary' cannot be instantiated with keyword 'new'.
+//│ ║  l.7: 	class Primary(val x)
+//│ ╙──     	^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
 :e
 ctor.class
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.104: 	ctor.class
+//│ ║  l.118: 	ctor.class
 //│ ║         	^^^^^^^^^^
 //│ ╟── Class 'Primary' does not contain member 'class'
 //│ ║  l.7: 	class Primary(val x)
@@ -113,7 +127,7 @@ ctor.class
 :e
 saved.class
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.114: 	saved.class
+//│ ║  l.128: 	saved.class
 //│ ║         	^^^^^^^^^^^
 //│ ╟── Class 'Primary' does not contain member 'class'
 //│ ║  l.7: 	class Primary(val x)
@@ -123,7 +137,7 @@ saved.class
 :e
 Primary.class.class
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.124: 	Primary.class.class
+//│ ║  l.138: 	Primary.class.class
 //│ ║         	^^^^^^^^^^^^^^^^^^^
 //│ ╟── Class value does not contain member 'class'
 //│ ║  l.7: 	class Primary(val x)
@@ -133,7 +147,7 @@ Primary.class.class
 :e
 ({make: Primary}).make.class
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.134: 	({make: Primary}).make.class
+//│ ║  l.148: 	({make: Primary}).make.class
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Class 'Primary' does not contain member 'class'
 //│ ║  l.7: 	class Primary(val x)
@@ -185,17 +199,17 @@ Explosive.class
 :e
 Empty().class
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.186: 	Empty().class
+//│ ║  l.200: 	Empty().class
 //│ ║         	^^^^^^^^^^^^^
 //│ ╟── Instance of class 'Empty' does not contain member 'class'
-//│ ║  l.186: 	Empty().class
+//│ ║  l.200: 	Empty().class
 //│ ╙──       	^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :e
 set Bare.class = 1
 //│ ╔══[COMPILATION ERROR] Assignment requires a term member
-//│ ║  l.196: 	set Bare.class = 1
+//│ ║  l.210: 	set Bare.class = 1
 //│ ╙──       	    ^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -204,11 +218,11 @@ class Generic[T](val value: T)
 class Payload(val number: Int)
 
 :expect 31
-(new Generic[Payload].class(Payload(31))).value.number
+new Generic[Payload].class(Payload(31)).value.number
 //│ = 31
 
 :expect 32
-(new Generic.class[Payload](Payload(32))).value.number
+new Generic.class[Payload](Payload(32)).value.number
 //│ = 32
 
 :expect true
@@ -273,7 +287,7 @@ record.class
 private fun classOfValue(value) = value.class
 classOfValue(Empty)
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.273: 	private fun classOfValue(value) = value.class
+//│ ║  l.287: 	private fun classOfValue(value) = value.class
 //│ ║         	                                  ^^^^^^^^^^^
 //│ ╟── Class 'Empty' does not contain member 'class'
 //│ ║  l.6: 	class Empty()
@@ -287,6 +301,123 @@ declare class String with
 declare fun String(value: Str): Str
 
 :expect 5
-(new String.class("hello")).length
+new String.class("hello").length
 //│ = 5
+
+// Class values retain constructor arity and captured receivers through bindings.
+:expect 16
+new raw(16).x
+//│ = 16
+
+let rawCurried = Curried.class
+//│ rawCurried = class Curried
+
+:expect 18
+new rawCurried(17)(18).y
+//│ = 18
+
+let partial = new rawCurried(19)
+//│ partial = fun partial
+
+:expect 20
+partial(20).y
+//│ = 20
+
+val storedClass = Primary.class
+let classRecord = {make: Primary.class}
+//│ classRecord = {make: class Primary}
+//│ storedClass = class Primary
+
+:expect [21, 22]
+[new storedClass(21).x, new classRecord.make(22).x]
+//│ = [21, 22]
+
+let specializedClass = Generic[Payload].class
+//│ specializedClass = class Generic
+
+:expect 33
+new specializedClass(Payload(33)).value.number
+//│ = 33
+
+let nestedClass = first.Inner.class
+//│ nestedClass = class Inner
+
+:expect 41
+new nestedClass().result()
+//│ = 41
+
+// A partial construction captures the class object before its binding changes.
+class Enclosing(val number) {
+  class Nested(val argument) {
+    fun result() = number + argument
+  }
+}
+let earlier = Enclosing(100)
+let later = Enclosing(200)
+let currentClass = earlier.Nested.class
+let construct = new currentClass
+set currentClass = later.Nested.class
+//│ construct = fun construct
+//│ currentClass = class Nested
+//│ earlier = Enclosing(100)
+//│ later = Enclosing(200)
+
+:noInline
+:expect [101, 201]
+[construct(1).result(), new currentClass(1).result()]
+//│ = [101, 201]
+
+// Class values can flow through function parameters and getter results.
+:expect 34
+private fun instantiate(cls, x) = new cls(x)
+instantiate(Primary.class, 34).x
+//│ = 34
+
+fun storedGetter = Primary.class
+
+:expect 35
+new storedGetter(35).x
+//│ = 35
+
+// Inheritance uses the same class value and constructor parameter lists.
+class Derived extends rawCurried(36)(37)
+
+:expect 37
+new Derived().y
+//│ = 37
+
+let bareClass = Bare
+//│ bareClass = class Bare
+
+:expect true
+new bareClass is Bare
+//│ = true
+
+:e
+let invalidClass = 0
+new invalidClass
+//│ ╔══[COMPILATION ERROR] Resolution error in object instantiation
+//│ ║  l.398: 	new invalidClass
+//│ ║         	^^^^^^^^^^^^^^^^
+//│ ╟── Integer literal cannot be instantiated with keyword 'new'.
+//│ ║  l.397: 	let invalidClass = 0
+//│ ╙──       	                   ^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ invalidClass = 0
+
+:e
+let ambiguousClass = Primary.class
+set ambiguousClass = Curried.class
+new ambiguousClass
+//│ ╔══[COMPILATION ERROR] The class instantiated here is ambiguous
+//│ ║  l.411: 	new ambiguousClass
+//│ ║         	    ^^^^^^^^^^^^^^
+//│ ╟── class 'Primary' defined here
+//│ ║  l.7: 	class Primary(val x)
+//│ ║       	      ^^^^^^^
+//│ ╟── class 'Curried' defined here
+//│ ║  l.12: 	class Curried(val x)(val y)
+//│ ╙──      	      ^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ ambiguousClass = class Curried
 

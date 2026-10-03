@@ -412,6 +412,20 @@ class NewShape(val receiver: DefnShape, val cls: ClassLikeSymbol, val clsMarks: 
   override def toString: String = s"NewNewShape(${cls.showDbg}, $argss)"
   def toLoc: Opt[Loc] = src.toLoc
 
+object NewShape:
+  /** Constructor parameter lists are fixed when the originating unit is compiled.
+    * Read its original shapes, ignoring substitutions and capture paths, both
+    * for lowering and to check that later inference preserves this class identity.
+    */
+  def classesOf(term: Term.New): Ls[ClassSymbol] =
+    def classes(event: ShapeEvent): Ls[ClassSymbol] = event match
+      case ActivatedShapeEvent(value, _) => classes(value)
+      case MarkedShape(value, _) => classes(value)
+      case ContextualShape(value, _) => classes(value)
+      case shape: NewShape => shape.cls.asCls.toList
+      case _ => Nil
+    term.getShapes.flatMap(classes).distinct
+
 sealed abstract class SymShape(val sym: BlockMemberSymbol, val resSym: FlowSymbol, val markss: Ls[Marks]) extends Shape:
   def describe: Str = s"${sym.describe} symbol '${sym.nme}'"
   def toLoc: Opt[Loc] = sym.toLoc
