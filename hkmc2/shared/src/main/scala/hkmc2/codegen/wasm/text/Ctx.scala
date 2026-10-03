@@ -10,7 +10,7 @@ import document.*
 import document.Document
 import semantics.{
   BlockMemberSymbol, ClassSymbol, Elaborator,
-  InnerSymbol, LabelSymbol, LocalVarSymbol, ModuleOrObjectSymbol, ParamList, TempSymbol,
+  InnerSymbol, LabelSymbol, LocalVarSymbol, ModuleOrObjectSymbol, ParamList, Symbol, TempSymbol,
 },
   Elaborator.State
 import text.Param as WasmParam
@@ -35,6 +35,33 @@ sealed trait SessionBinding:
 object SessionBinding:
   val ReplModuleName: Str = "repl"
 
+  /** Dependencies to look up among previously exported session bindings.
+    * MIR `freeVars` describes lexical bindings, which cannot distinguish a class from
+    * its function companion. Follow resolved references and cast targets instead.
+    * Symbols defined in this block cannot match earlier exports: their identities
+    * are distinct, including after inlining refreshes local definitions.
+    */
+  def referencedSymbols(block: Block)(using Elaborator.Ctx, State): Ls[Symbol] =
+    val symbols = LinkedHashSet.empty[Symbol]
+    new BlockTraverser:
+      override def applySymbol(sym: Symbol): Unit = symbols += sym
+      override def applyValue(value: Value): Unit = value match
+        case Value.MemberRef(bms, disamb) => applySymbol(ExternSymbol.forReference(bms, disamb))
+        case _ => super.applyValue(value)
+      override def applyResult(result: codegen.Result): Unit =
+        result match
+          case Cast(_, target, _) => target.canonicalize match
+            case ErasedType.AnyRef(_, tpeSym) => applySymbol(tpeSym)
+            case _ => ()
+          case _ => ()
+        super.applyResult(result)
+      override def applyPath(path: Path): Unit = path match
+        // ValDefn traverses its RHS as a Path, whereas Return and Assign use Result.
+        case cast: Cast => applyResult(cast)
+        case _ => super.applyPath(path)
+    .applyBlock(block)
+    symbols.toList
+
 /** Metadata for an exported function that later Wasm REPL modules can import.
   *
   * @param sym
@@ -54,12 +81,7 @@ final case class SessionFunc(
     funcType: FunctionType,
 ) extends SessionBinding:
   def bindingKey: Str = s"func:$moduleName:$exportName"
-  // MIR free variables use the block member even when the reference selects its class.
-  // Importing that member must recover both its function and its constructor, under distinct keys.
-  // Prefer the IR member: inlining refreshes symbols but retains their source definitions.
-  def bindingSyms: Seq[SlotSymbol] = sym match
-    case cls: ClassSymbol => cls :: cls.irClsLikeDefn.map(_.sym).orElse(cls.asBlkMember).toList
-    case sym: BlockMemberSymbol => sym :: Nil
+  def bindingSyms: Seq[SlotSymbol] = sym :: Nil
   override def exportNameOpt: Opt[Str] = S(exportName)
 
 /** Metadata for an exported global that later Wasm REPL modules can import.

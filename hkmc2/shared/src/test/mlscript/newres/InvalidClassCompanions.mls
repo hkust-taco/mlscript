@@ -175,3 +175,15 @@ class ModuleContainer(val value: Int) {
 //│ ╟── An instance method is shared by all instances, but its companion is created per instance
 //│ ║  l.169: 	  module Item { val answer = value }
 //│ ╙──       	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+// A bare declaration is rejected even when it precedes its companion.
+:e
+fun Bare
+class Bare
+//│ ╔══[COMPILATION ERROR] A term declaration cannot have an implemented class companion
+//│ ║  l.182: 	fun Bare
+//│ ║         	^^^^^^^^
+//│ ╟── Companion 'Bare' is defined here
+//│ ║  l.183: 	class Bare
+//│ ╙──       	^^^^^^^^^^

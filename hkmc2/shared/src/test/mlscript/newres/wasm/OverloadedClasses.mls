@@ -8,6 +8,8 @@ class Factory {
   val answer: Int = 21
 }
 fun Factory(x: Int): Int = x + 1
+fun originalFactory() = new Factory
+type OriginalFactory = Factory
 Factory(20) + (new Factory).answer
 //│ Wasm result:
 //│ = 42
@@ -50,3 +52,27 @@ fun make(n: Int): Int = {
 make(1) + make(2)
 //│ Wasm result:
 //│ = 45
+
+
+// A class-only import must not require its old companion function's signature.
+:noInline
+:expect 99
+fun Factory(): Int = 99
+Factory()
+//│ Wasm result:
+//│ = 99
+
+:inlineThreshold 10000
+:expect 21
+originalFactory().answer
+//│ Wasm result:
+//│ = 21
+
+
+// A cast depends on the original class too, without referring to its constructor.
+:noInline
+:expect 21
+fun checkOriginal(x): OriginalFactory = x
+checkOriginal(originalFactory()).answer
+//│ Wasm result:
+//│ = 21

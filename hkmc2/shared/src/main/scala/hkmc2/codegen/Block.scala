@@ -67,7 +67,10 @@ type ValueSymbol = SimpleSymbol | TermSymbol | BlockMemberSymbol | InnerSymbol
   */
 type BoundSymbol = ScopedSymbol | TermSymbol
 
-/** Symbols that may occur in MIR free-variable sets.
+/** Symbols of lexical bindings required by MIR, including assignment destinations.
+  * A `MemberRef` requires its block member binding regardless of the selected definition:
+  * `Scoped` introduces that binding, and JS can store its class on the companion function.
+  * Analyses needing individual definitions must instead inspect the reference's `disamb`.
   */
 type FreeSymbol = SimpleSymbol | BlockMemberSymbol | LabelSymbol
 

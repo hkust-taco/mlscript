@@ -6,13 +6,22 @@ package text
 import hkmc2.utils.*, shorthands.*
 
 import document.*
-import semantics.{BlockMemberSymbol, ClassSymbol, DefinitionSymbol, Elaborator, InnerSymbol, LocalVarSymbol, TempSymbol}, Elaborator.State
+import semantics.{BlockMemberSymbol, ClassCtorSymbol, ClassSymbol, DefinitionSymbol, Elaborator, InnerSymbol, LocalVarSymbol, TempSymbol}, Elaborator.State
 import utils.Scope
 
 import scala.collection.Map
 
 /** Symbols that can represent an importable or exportable Wasm construct. */
 private[text] type ExternSymbol = BlockMemberSymbol | ClassSymbol | TempSymbol
+
+private[text] object ExternSymbol:
+  /** Class constructors and explicit function companions share a source name but
+    * have distinct Wasm functions. Imports and calls must use the same identity. */
+  def forReference(bms: BlockMemberSymbol, disamb: DefinitionSymbol[?]): BlockMemberSymbol | ClassSymbol =
+    disamb match
+      case cls: ClassSymbol => cls
+      case ctor: ClassCtorSymbol => ctor.associatedCls
+      case _ => bms
 
 /** Symbols that can be lowered into a global or local slot in a Wasm function (i.e. parameters and locals). */
 private[text] type SlotSymbol = InnerSymbol | ScopedSymbol

@@ -220,6 +220,10 @@ Instance methods cannot supply per-instance companions either, because their
 function objects are shared. Inlining may replace calls to a companion function,
 but must preserve its binding while the class is used. WASM identifies constructor
 functions by their class symbols, separately from explicit function companions.
+Session imports follow the selected definition and cast target, rather than MIR
+`freeVars`, which tracks lexical bindings introduced by `Scoped`. Importing a
+class must not also import its function companion: the two have independent
+signatures and can be shadowed independently in later worksheet blocks.
 
 Foreign declarations expose call and constructor capabilities explicitly.
 The JS backend uses native class values for `new` and patterns without generated

@@ -887,11 +887,6 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
     case cls: ClassSymbol => cls
     case _ => defn.sym
 
-  private def functionSymbol(bms: BlockMemberSymbol, disamb: DefinitionSymbol[?]): BlockMemberSymbol | ClassSymbol =
-    disamb match
-      case ctor: ClassCtorSymbol => ctor.associatedCls
-      case _ => bms
-
   /** Registers a placeholder class-associated function so later lowering can overwrite it. */
   private def predeclareClassFunc(
       defn: ClsLikeDefn,
@@ -1738,7 +1733,7 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
             errExpr:
               Ls(msg"Plain class references are not supported in Wasm; instantiate the class instead." -> r.toLoc)
           else
-            ctx.getFunc(functionSymbol(bms, disamb)) match
+            ctx.getFunc(ExternSymbol.forReference(bms, disamb)) match
               case S(funcIdx) => ref.func(funcIdx, RefType(ctx.getFuncTypeUse_!(funcIdx).typeIdx, nullable = false))
               case N => getVar(bms, r.toLoc)
     case Value.This(sym) =>
@@ -1833,7 +1828,7 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
         case N =>
           fun match
             case Value.MemberRef(l, disamb) =>
-              val base = ctx.getFunc(functionSymbol(l, disamb))
+              val base = ctx.getFunc(ExternSymbol.forReference(l, disamb))
               val baseFuncIdx = base match
                 case S(idx) => idx
                 case N => return errExpr(
@@ -2415,9 +2410,7 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
                       objectTag = typeinfo.objectTag,
                       rttiTypeInfo = rttiTypeInfo,
                       rttiGlobalExportName = rttiGlobalInfo.exportName.get,
-                      aliasSyms = clsLikeDefn.isym match
-                        case mos: ModuleOrObjectSymbol => mos :: Nil
-                        case _ => Nil,
+                      aliasSyms = clsLikeDefn.isym :: Nil,
                     ))
                     if !isSingletonObj && clsLikeDefn.sym.nameIsMeaningful then
                       summon[SessionExportCtx].emit(SessionFunc(
