@@ -359,9 +359,21 @@ sealed trait NewSelImpl extends NewResolvableImpl:
   // Also used by the guarded symbol lookup for completed imports.
   private[semantics] def hasAmbiguousClassImpl: Bool = projectionClassesImpl.sizeCompare(1) > 0
   def projectionClasses(using Erasure): Ls[ClassSymbol] = projectionClassesImpl
-  private def projectionClassesImpl: Ls[ClassSymbol] = self.cls.toList.flatMap:
-    case qualifier: Term.NewSel => qualifier.resolvedTargets.collect { case cls: ClassSymbol => cls }.distinct
-    case _ => lastWords("A projection qualifier must be a class selection")
+  private def projectionClassesImpl: Ls[ClassSymbol] = self.cls.toList.flatMap: qualifier =>
+    qualifier.resolvedTargets.collect { case cls: ClassSymbol => cls }.distinct
+
+  /** Preserve the selection subtype when cloning a projection's class qualifier. */
+  def mkSelClone(using State, Erasure): Term.NewSel =
+    val copy = new Term.NewSel(self.prefix.mkClone, self.id, self.cls.map(_.mkSelClone))(self.resSym)
+    copy.withLocOf(self)
+    copy.resolvedMembers = resolvedMembers
+    copy.hasDynamicTarget = hasDynamicTarget
+    copy.tupleIndex = tupleIndex
+    copy.resolvedTargets = resolvedTargets
+    copy.isErroneous = isErroneous
+    copy.shapes ++= self.shapes
+    copy.typeInterpretation = self.typeInterpretation
+    copy
 
 sealed trait UnresolvedRefImpl extends NewResolvableImpl:
   self: Term.UnresolvedRef =>
@@ -385,8 +397,8 @@ enum Term extends Statement, AutoLocated, ShapePublisher:
   case SimpleRef(sym: codegen.SimpleSymbol)(val tree: Tree.Ident) extends Term, NewRefImpl
   case SelfRef(sym: InnerSymbol)(val tree: Tree.Ident) extends Term, NewRefImpl
   case MemberRef(sym: MemberSymbol)(val tree: Tree.Ident, val resSym: FlowSymbol) extends Term, NewResolvableImpl, NewRefImpl
-  /** An optional class fixes the lookup scope for an explicit member projection. */
-  case NewSel(prefix: Term, id: Tree.Ident, cls: Opt[Term])(val resSym: FlowSymbol) extends Term, NewSelImpl, ShapeHost
+  /** An optional class selection fixes the lookup scope for an explicit member projection. */
+  case NewSel(prefix: Term, id: Tree.Ident, cls: Opt[NewSel])(val resSym: FlowSymbol) extends Term, NewSelImpl, ShapeHost
   case UnresolvedRef(prefixes: Ls[Term], id: Tree.Ident)(val resSym: FlowSymbol) extends Term, UnresolvedRefImpl, ShapeHost
   case Capture(base: Term, thru: AnyDefinitionSymbol) extends Term
   // --- LEGACY ---
@@ -646,11 +658,7 @@ enum Term extends Statement, AutoLocated, ShapePublisher:
       case term @ SimpleRef(sym) => SimpleRef(sym)(term.tree)
       case term @ SelfRef(sym) => SelfRef(sym)(term.tree)
       case term @ MemberRef(sym) => copyNewResolution(term, MemberRef(sym)(term.tree, term.resSym))
-      case term @ NewSel(prefix, id, cls) =>
-        val copy = NewSel(prefix.mkClone, id, cls.map(_.mkClone))(term.resSym)
-        copy.resolvedMembers = term.resolvedMembers
-        copy.hasDynamicTarget = term.hasDynamicTarget
-        copyNewResolution(term, copyShapes(term, copy))
+      case term: NewSel => return term.mkSelClone
       case term @ UnresolvedRef(prefixes, id) =>
         val clonedPrefixes = prefixes.map(_.mkClone)
         val copy = UnresolvedRef(clonedPrefixes, id)(term.resSym)

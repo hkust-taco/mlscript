@@ -2756,7 +2756,7 @@ class NewResolver:
       case N => listenReceiver(sel.prefix): shape =>
         log(s"newSel: sel = ${sel.showDbg}, shape = ${shape.shwDbg}")
         member(shape.getMember(sel.id.name), msg"${shape.describe.capitalize}", shape.diagnostic, TypeSubstitution.empty)
-      case S(cls: NewSel) =>
+      case S(cls) =>
         classSelection(cls)(ref =>
           val cd = ref.definition
           listenExt(cd, ext =>
@@ -2795,7 +2795,6 @@ class NewResolver:
           rstate.markError(sel)
           resolError(sel, sh.diagnostic(msg"${sh.describe.capitalize} cannot be used as a projection class."))
         )
-      case S(_) => lastWords("A projection qualifier must be a class selection")
   
   /** Both constructor references and explicit `new` use the same definition and
     * parameter lists, including auxiliary constructor(...) lists. A partial `new`
