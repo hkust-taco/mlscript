@@ -194,8 +194,8 @@ fun f(x, y, res) = if x is
         res + tmp + a
 f(X(1), Y(2), 3)
 //│ deforest > >>> effect-analysis results >>>
-//│ deforest > function _d#0 @ f@f -> Pure
-//│ deforest > function _d#0 @ f@f -> Pure
+//│ deforest > function _d#0 @ f@f -> UnsafeEta
+//│ deforest > function _d#0 @ f@f -> UnsafeEta
 //│ deforest > function f#0 @ f@f -> UnsafeEta
 //│ deforest > function f#0 @ f@f -> UnsafeEta
 //│ deforest > call +@result @ f@f -> Pure
@@ -465,13 +465,13 @@ fun f(x) = x.A#x
 let o = A(1)
 g(o) + f(o) + o.A#x
 //│ deforest > >>> effect-analysis results >>>
-//│ deforest > function f#0 @ f@f -> Pure
-//│ deforest > function f#0 @ f@f -> Pure
+//│ deforest > function f#0 @ f@f -> UnsafeEta
+//│ deforest > function f#0 @ f@f -> UnsafeEta
 //│ deforest > function g#0 @ g@g -> UnsafeEta
 //│ deforest > function g#0 @ g@g -> UnsafeEta
 //│ deforest > call +@result @ <root> -> Pure
 //│ deforest > call +@result @ <root> -> Pure
-//│ deforest > call f@result @ <root> -> Pure
+//│ deforest > call f@result @ <root> -> UnsafeEta
 //│ deforest > call g@result @ <root> -> UnsafeEta
 //│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
@@ -486,7 +486,7 @@ let x = if A(0) is
 let f() = x
 f()
 //│ deforest > >>> effect-analysis results >>>
-//│ deforest > function f#0 @ <root> -> Pure
+//│ deforest > function f#0 @ <root> -> UnsafeEta
 //│ deforest > call f@result @ <root> -> UnsafeEta
 //│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>

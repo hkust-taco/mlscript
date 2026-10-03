@@ -96,6 +96,14 @@ object FlowAnalysis:
       if tl.doTrace then EffectAnalysis(solver)
     solver
 
+  private[flowAnalysis] def isPureCall(call: Call): Bool = call.fun match
+    case Value.SimpleRef(b: BuiltinSymbol) => b.isPure
+    case p => p.targetSymbol.exists:
+      case s: TermSymbol => s.irFunDefn match
+        case S(fun) => fun.annotations.exists(_.isInstanceOf[Annot.Pure])
+        case N => s.defn.exists(_.annotations.exists(_.isInstanceOf[Annot.Pure]))
+      case _ => false
+
   def mkTraceLogger(
     cfg: Config.FlowAnalysisConfig,
     prefix: Str,
@@ -254,7 +262,7 @@ class ProdFun(
 
 case object UnknownProd extends MarkerProdStrat
 
-/** The lower bound marker marking an effect variable as effect-raising. */
+/** A coarse effect marker indicating that the variable is unsafe for eta-epansion. */
 case object UnsafeEta extends MarkerProdStrat
 
 class Ctor(
@@ -729,6 +737,10 @@ class FlowConstraintsCollector(
   
   private val generatedVars: collection.Map[Symbol, StratVar] =
     preAnalyzer.res.generatedVars.withDefaultValue(preAnalyzer.res.primitiveStratVar)
+
+  // * This is for effect analysis. The nonlocal variables that are potentially shared. 
+  // * If a function accesses a nonlocal, it is conservatively considered unsafe for eta-expansion. 
+  private val nonlocals = preAnalyzer.res.capturedVars.valuesIterator.flatten.toSet - eState.runtimeSymbol
   
   locally {
     val funsToProdStratScheme = MutMap.empty[TermSymbol, ProdStratScheme]
@@ -958,11 +970,16 @@ class FlowConstraintsCollector(
     def constrainOpaqueResult(r: Result)(using cc: ConstraintsCollector, currentEffect: Opt[StratVar]): Unit =
       cc.constrain(processResult(r), UnknownCons)
 
+    def markUnsafeEta()(using cc: ConstraintsCollector, currentEffect: Opt[StratVar]): Unit =
+      currentEffect.foreach(e => cc.constrain(UnsafeEta, e))
+
     def processBlock(b: Block)(using cc: ConstraintsCollector, blkRes: ConsStrat, currentEffect: Opt[StratVar]): Unit =
       val instId = cc.instId
       b match
       case Return(res) => cc.constrain(processResult(res), blkRes)
-      case Throw(exc) => constrainOpaqueResult(exc)
+      case Throw(exc) =>
+        markUnsafeEta()
+        constrainOpaqueResult(exc)
       case Match(scrut, arms, dflt, rest) =>
         val scrutStrat = processResult(scrut)
         cc.constrain(scrutStrat, new Dtor(scrut.uid, instId))
@@ -983,17 +1000,21 @@ class FlowConstraintsCollector(
         val rhsStrat = processResult(rhs)
         lhs.match
           case NoSymbol => ()
-          case lhs: (LocalVarSymbol | TermSymbol) => cc.constrain(rhsStrat, generatedVars(lhs))
+          case lhs: (LocalVarSymbol | TermSymbol) =>
+            if nonlocals.contains(lhs) then markUnsafeEta()
+            cc.constrain(rhsStrat, generatedVars(lhs))
         processBlock(rest)
       case TryBlock(sub, finallyDo, rest) =>
         processBlock(sub)
         processBlock(finallyDo)
         processBlock(rest)
       case AssignField(lhs, nme, rhs, rest) =>
+        markUnsafeEta()
         constrainOpaqueResult(lhs)
         constrainOpaqueResult(rhs)
         processBlock(rest)
       case AssignDynField(lhs, fld, arrayIdx, rhs, rest) =>
+        markUnsafeEta()
         constrainOpaqueResult(lhs)
         constrainOpaqueResult(fld)
         constrainOpaqueResult(rhs)
@@ -1004,8 +1025,12 @@ class FlowConstraintsCollector(
           val rhsStrat = processResult(rhs)
           cc.constrain(rhsStrat, generatedVars(tsym))
         case fun: FunDefn =>
+          // The eta optimizer requires lifting. 
+          // Other definitions are deliberately opaque.
+          markUnsafeEta()
           processFunctionDefn(fun)
         case cls: ClsLikeDefn =>
+          markUnsafeEta()
           processClsLikeDefn(cls)
         processBlock(rest)
       case End(msg) => ()
@@ -1021,11 +1046,11 @@ class FlowConstraintsCollector(
         effect
       def constrainConstructorEffect(result: Result): Unit =
         val unsafeEta = result match
-          case call: Call => call.metadata.mayRaiseEffects
+          case call: Call => !FlowAnalysis.isPureCall(call)
           case _: Instantiate => true
           case _ => false
         // Constructor bodies are not modeled here; instantiation may have effects.
-        if unsafeEta then currentEffect.foreach(e => cc.constrain(UnsafeEta, e))
+        if unsafeEta then markUnsafeEta()
       def handleCallLike(
         call: Call,
         args: List[Arg],
@@ -1036,9 +1061,7 @@ class FlowConstraintsCollector(
         val argsStrat = args.map(a => processResult(a.value))
         if args.exists(_.spread.isDefined) then
           // TODO: preserve callee-effect precision for spread calls without modeling their argument flow.
-          // Honor trusted call metadata; otherwise mark the caller without a separate call summary.
-          if call.metadata.mayRaiseEffects then
-            currentEffect.foreach(e => cc.constrain(UnsafeEta, e))
+          markUnsafeEta()
           cc.constrain(fStrat, UnknownCons)
           argsStrat.foreach(arg => cc.constrain(arg, UnknownCons))
           UnknownProd
@@ -1054,6 +1077,7 @@ class FlowConstraintsCollector(
           callRes
       r match
         case sel@TrackableSelect(from, field, owner) =>
+          markUnsafeEta()
           val fromStrat = processResult(from)
           val selRes = freshVar("sel_res", cc.forFun)
           cc.constrain(
@@ -1085,7 +1109,7 @@ class FlowConstraintsCollector(
           case tupSize: Int =>
             registerCtor(new Ctor(c.uid, instId)(tupSize, (0 until tupSize).zip(argsStrat).toList))
         case c@CtorProducer(_, args, selectedFrom) =>
-          constrainConstructorEffect(c)
+          markUnsafeEta()
           for qual <- selectedFrom do
             cc.constrain(processResult(qual), UnknownCons)
           args.foreach(arg => cc.constrain(processResult(arg.value), UnknownCons))
@@ -1113,6 +1137,7 @@ class FlowConstraintsCollector(
           mkFunProdStrat("lam_res", ps :: Nil, body, lam.uid, Nil)
         case _: Tuple => lastWords("should be handled in CtorProducer")
         case Record(_, fields) =>
+          if fields.exists(_.spread) then markUnsafeEta()
           fields.foreach:
             case RcdArg(idx, value) =>
               idx.foreach(p => cc.constrain(processResult(p), UnknownCons))
@@ -1121,6 +1146,9 @@ class FlowConstraintsCollector(
         case p: Path =>
           p match
           case refSite@FunRef(f, selectedFrom) =>
+            // ? It's a special case for module getters but I'm not sure if
+            // ? this is good enough. It just conservatively marks it unsafe.
+            if preAnalyzer.res.funSymToFunDefn.get(f).exists(_.params.isEmpty) then markUnsafeEta()
             for qual <- selectedFrom do
               cc.constrain(processResult(qual), UnknownCons)
             funsToProdStratScheme.get(f) match
@@ -1128,19 +1156,26 @@ class FlowConstraintsCollector(
               fScheme.instantiate(refSite.uid, f)
             case None => generatedVars(f)
           case s@Select(qual, name) =>
+            markUnsafeEta()
             cc.constrain(processResult(qual), UnknownCons)
             s.symbol.fold(UnknownProd): selSym =>
               generatedVars(selSym)
           case DynSelect(qual, fld, arrayIdx) =>
+            markUnsafeEta()
             cc.constrain(processResult(qual), UnknownCons)
             cc.constrain(processResult(fld), UnknownCons)
             UnknownProd
-          case Cast(value, _, _) =>
+          case Cast(value, _, check) =>
+            if check then markUnsafeEta()
             val valueStrat = processResult(value)
             cc.constrain(valueStrat, UnknownCons)
             valueStrat
-          case Value.MemberRef(_, disamb) => generatedVars(disamb)
-          case Value.SimpleRef(sym) => generatedVars(sym)
+          case Value.MemberRef(_, disamb) =>
+            markUnsafeEta()
+            generatedVars(disamb)
+          case Value.SimpleRef(sym) =>
+            if nonlocals.contains(sym) then markUnsafeEta()
+            generatedVars(sym)
           case Value.This(_) => UnknownProd
           case Value.Lit(lit) => UnknownProd
   }
@@ -1242,11 +1277,11 @@ class FlowConstraintSolver(val collector: FlowConstraintsCollector):
         p.effect.foreach(effect => functionEffectVars(p.concreteId) = effect)
         registerFunctionEffects(p.res)
       case _ => ()
-    // Trusted call metadata overrides all inferred contributions, not just unknown callees.
+    // Trusted metadata overrides all inferred contributions, not just unknown callees.
     // Keep c.effect registered so a trusted-pure call still has a Pure summary.
     def inferredCallEffect(c: ConsFun): Opt[StratVar] =
       c.exprId.getResult match
-        case call: Call if !call.metadata.mayRaiseEffects => N
+        case call: Call if FlowAnalysis.isPureCall(call) => N
         case _ => c.effect
     def handle(constraint: ProdStrat -> ConsStrat): Unit =
       assert:

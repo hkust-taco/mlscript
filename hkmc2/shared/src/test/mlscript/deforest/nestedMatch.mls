@@ -704,9 +704,9 @@ test(p(BB(3))) + test(p(CC(3))) + c(p(A))
 //│ deforest > function p#0 @ p@p -> UnsafeEta
 //│ deforest > function p#0 @ p@p -> UnsafeEta
 //│ deforest > function p#0 @ p@p -> UnsafeEta
-//│ deforest > function test#0 @ test@test -> Pure
-//│ deforest > function test#0 @ test@test -> Pure
-//│ deforest > function test#0 @ test@test -> Pure
+//│ deforest > function test#0 @ test@test -> UnsafeEta
+//│ deforest > function test#0 @ test@test -> UnsafeEta
+//│ deforest > function test#0 @ test@test -> UnsafeEta
 //│ deforest > call +@result @ <root> -> Pure
 //│ deforest > call +@result @ <root> -> Pure
 //│ deforest > call +@result @ test@test -> Pure
@@ -716,8 +716,8 @@ test(p(BB(3))) + test(p(CC(3))) + c(p(A))
 //│ deforest > call p@result @ <root> -> UnsafeEta
 //│ deforest > call p@result @ <root> -> UnsafeEta
 //│ deforest > call p@result @ <root> -> UnsafeEta
-//│ deforest > call test@result @ <root> -> Pure
-//│ deforest > call test@result @ <root> -> Pure
+//│ deforest > call test@result @ <root> -> UnsafeEta
+//│ deforest > call test@result @ <root> -> UnsafeEta
 //│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > AA⁰(x¹⁶) ->
@@ -942,8 +942,8 @@ fun cons(ls) = if ls is
   _ then 0
 cons(prod(4))
 //│ deforest > >>> effect-analysis results >>>
-//│ deforest > function cons#0 @ cons@cons -> Pure
-//│ deforest > function cons#0 @ cons@cons -> Pure
+//│ deforest > function cons#0 @ cons@cons -> UnsafeEta
+//│ deforest > function cons#0 @ cons@cons -> UnsafeEta
 //│ deforest > function prod#0 @ prod@prod -> UnsafeEta
 //│ deforest > function prod#0 @ prod@prod -> UnsafeEta
 //│ deforest > call +@result @ cons@cons -> Pure
@@ -952,9 +952,9 @@ cons(prod(4))
 //│ deforest > call +@result @ cons@cons -> Pure
 //│ deforest > call -@result @ prod@prod -> Pure
 //│ deforest > call -@result @ prod@prod -> Pure
-//│ deforest > call cons@result @ <root> -> Pure
-//│ deforest > call cons@result @ cons@cons -> Pure
-//│ deforest > call cons@result @ cons@cons -> Pure
+//│ deforest > call cons@result @ <root> -> UnsafeEta
+//│ deforest > call cons@result @ cons@cons -> UnsafeEta
+//│ deforest > call cons@result @ cons@cons -> UnsafeEta
 //│ deforest > call prod@result @ <root> -> UnsafeEta
 //│ deforest > call prod@result @ prod@prod -> UnsafeEta
 //│ deforest > call prod@result @ prod@prod -> UnsafeEta

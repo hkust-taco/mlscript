@@ -47,10 +47,10 @@ test(p) + f(p) + test(AA(AA(AA(10)))) + test(B)
 //│ deforest > >>> effect-analysis results >>>
 //│ deforest > function f#0 @ f@f -> UnsafeEta
 //│ deforest > function f#0 @ f@f -> UnsafeEta
-//│ deforest > function test#0 @ test@test -> Pure
-//│ deforest > function test#0 @ test@test -> Pure
-//│ deforest > function test#0 @ test@test -> Pure
-//│ deforest > function test#0 @ test@test -> Pure
+//│ deforest > function test#0 @ test@test -> UnsafeEta
+//│ deforest > function test#0 @ test@test -> UnsafeEta
+//│ deforest > function test#0 @ test@test -> UnsafeEta
+//│ deforest > function test#0 @ test@test -> UnsafeEta
 //│ deforest > call +@result @ <root> -> Pure
 //│ deforest > call +@result @ <root> -> Pure
 //│ deforest > call +@result @ <root> -> Pure
@@ -71,9 +71,9 @@ test(p) + f(p) + test(AA(AA(AA(10)))) + test(B)
 //│ deforest > call -@result @ test@test -> Pure
 //│ deforest > call -@result @ test@test -> Pure
 //│ deforest > call f@result @ <root> -> UnsafeEta
-//│ deforest > call test@result @ <root> -> Pure
-//│ deforest > call test@result @ <root> -> Pure
-//│ deforest > call test@result @ <root> -> Pure
+//│ deforest > call test@result @ <root> -> UnsafeEta
+//│ deforest > call test@result @ <root> -> UnsafeEta
+//│ deforest > call test@result @ <root> -> UnsafeEta
 //│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > B⁰ ->

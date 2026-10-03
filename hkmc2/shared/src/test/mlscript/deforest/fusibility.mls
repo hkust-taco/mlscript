@@ -225,8 +225,8 @@ c(AA(1))
 //│ deforest > y_for_c⁰
 //│ deforest > <<< non-affine syms <<<
 //│ deforest > >>> effect-analysis results >>>
-//│ deforest > function _d#0 @ c@c -> Pure
-//│ deforest > function _d#0 @ c@c -> Pure
+//│ deforest > function _d#0 @ c@c -> UnsafeEta
+//│ deforest > function _d#0 @ c@c -> UnsafeEta
 //│ deforest > function c#0 @ c@c -> UnsafeEta
 //│ deforest > function c#0 @ c@c -> UnsafeEta
 //│ deforest > call c@result @ <root> -> UnsafeEta
@@ -247,13 +247,13 @@ let p = AA(AA(AA(10))) in
 //│ deforest > tmp⁰
 //│ deforest > <<< non-affine syms <<<
 //│ deforest > >>> effect-analysis results >>>
-//│ deforest > function c1#0 @ c1@c1 -> Pure
-//│ deforest > function c1#0 @ c1@c1 -> Pure
-//│ deforest > function c2#0 @ c2@c2 -> Pure
-//│ deforest > function c2#0 @ c2@c2 -> Pure
+//│ deforest > function c1#0 @ c1@c1 -> UnsafeEta
+//│ deforest > function c1#0 @ c1@c1 -> UnsafeEta
+//│ deforest > function c2#0 @ c2@c2 -> UnsafeEta
+//│ deforest > function c2#0 @ c2@c2 -> UnsafeEta
 //│ deforest > call +@result @ <root> -> Pure
-//│ deforest > call c1@result @ <root> -> Pure
-//│ deforest > call c2@result @ <root> -> Pure
+//│ deforest > call c1@result @ <root> -> UnsafeEta
+//│ deforest > call c2@result @ <root> -> UnsafeEta
 //│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > <<< fusing <<<

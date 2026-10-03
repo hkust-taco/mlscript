@@ -2212,30 +2212,30 @@ fun f() =
   [() => h(B), () => h(B), () => h(B), () => h(B), h(B)]
 f
 //│ deforest > >>> effect-analysis results >>>
-//│ deforest > function f#0 @ f@f -> Pure
-//│ deforest > function f#0 @ f@f -> Pure
-//│ deforest > function h#0 @ f@f -> Pure
-//│ deforest > function h#0 @ f@f -> Pure
-//│ deforest > function lambda#0 @ f@f -> Pure
-//│ deforest > function lambda#0 @ f@f -> Pure
-//│ deforest > function lambda#0 @ f@f -> Pure
-//│ deforest > function lambda#0 @ f@f -> Pure
-//│ deforest > function lambda#0 @ f@f -> Pure
-//│ deforest > function lambda#0 @ f@f -> Pure
-//│ deforest > function lambda#0 @ f@f -> Pure
-//│ deforest > function lambda#0 @ f@f -> Pure
-//│ deforest > call f@result @ f@f -> Pure
-//│ deforest > call f@result @ f@f -> Pure
-//│ deforest > call h@result @ f@f -> Pure
-//│ deforest > call h@result @ f@f -> Pure
-//│ deforest > call h@result @ f@f -> Pure
-//│ deforest > call h@result @ f@f -> Pure
-//│ deforest > call h@result @ f@f -> Pure
-//│ deforest > call h@result @ f@f -> Pure
-//│ deforest > call h@result @ f@f -> Pure
-//│ deforest > call h@result @ f@f -> Pure
-//│ deforest > call h@result @ f@f -> Pure
-//│ deforest > call h@result @ f@f -> Pure
+//│ deforest > function f#0 @ f@f -> UnsafeEta
+//│ deforest > function f#0 @ f@f -> UnsafeEta
+//│ deforest > function h#0 @ f@f -> UnsafeEta
+//│ deforest > function h#0 @ f@f -> UnsafeEta
+//│ deforest > function lambda#0 @ f@f -> UnsafeEta
+//│ deforest > function lambda#0 @ f@f -> UnsafeEta
+//│ deforest > function lambda#0 @ f@f -> UnsafeEta
+//│ deforest > function lambda#0 @ f@f -> UnsafeEta
+//│ deforest > function lambda#0 @ f@f -> UnsafeEta
+//│ deforest > function lambda#0 @ f@f -> UnsafeEta
+//│ deforest > function lambda#0 @ f@f -> UnsafeEta
+//│ deforest > function lambda#0 @ f@f -> UnsafeEta
+//│ deforest > call f@result @ f@f -> UnsafeEta
+//│ deforest > call f@result @ f@f -> UnsafeEta
+//│ deforest > call h@result @ f@f -> UnsafeEta
+//│ deforest > call h@result @ f@f -> UnsafeEta
+//│ deforest > call h@result @ f@f -> UnsafeEta
+//│ deforest > call h@result @ f@f -> UnsafeEta
+//│ deforest > call h@result @ f@f -> UnsafeEta
+//│ deforest > call h@result @ f@f -> UnsafeEta
+//│ deforest > call h@result @ f@f -> UnsafeEta
+//│ deforest > call h@result @ f@f -> UnsafeEta
+//│ deforest > call h@result @ f@f -> UnsafeEta
+//│ deforest > call h@result @ f@f -> UnsafeEta
 //│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > B⁰ ->
