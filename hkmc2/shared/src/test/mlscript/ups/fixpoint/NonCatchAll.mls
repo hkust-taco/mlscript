@@ -1,3 +1,4 @@
+:.
 :js
 
 // A fixed-point pattern need not end in a catch-all wildcard:
@@ -138,13 +139,13 @@ if 42 is KeepOriginalInt(r) then r else "<no match>"
 :expect 42
 if 42 is @compile KeepOriginalInt(r) then r else "<no match>"
 //│ ╔══[WARNING] This fixed-point pattern is not supported by pattern compilation.
-//│ ║  l.139: 	if 42 is @compile KeepOriginalInt(r) then r else "<no match>"
-//│ ║         	                  ^^^^^^^^^^^^^^^^^
+//│ ║  l.140: 	if 42 is @compile KeepOriginalInt(r) then r else "<no match>"
+//│ ║         	                  ^^^^^^^^^^^^^^^^^^
 //│ ╟── A term this pattern can still rewrite
-//│ ║  l.131: 	pattern KeepOriginalInt = IntToStr as KeepOriginalInt | Num
+//│ ║  l.132: 	pattern KeepOriginalInt = IntToStr as KeepOriginalInt | Num
 //│ ║         	                          ^^^^^^^^
 //│ ╟── can also be matched by a trailing alternative.
-//│ ║  l.131: 	pattern KeepOriginalInt = IntToStr as KeepOriginalInt | Num
+//│ ║  l.132: 	pattern KeepOriginalInt = IntToStr as KeepOriginalInt | Num
 //│ ║         	                                                        ^^^
 //│ ╙── Falling back to the naive translation.
 //│ = 42
@@ -247,14 +248,14 @@ pattern AddStep =
 :w
 pattern AddSteps = @compile ((AddStep as AddSteps) | Add(Lit, Lit))
 //│ ╔══[WARNING] This fixed-point pattern is not supported by pattern compilation.
-//│ ║  l.248: 	pattern AddSteps = @compile ((AddStep as AddSteps) | Add(Lit, Lit))
-//│ ║         	                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.249: 	pattern AddSteps = @compile ((AddStep as AddSteps) | Add(Lit, Lit))
+//│ ║         	                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── A term this pattern can still rewrite
-//│ ║  l.248: 	pattern AddSteps = @compile ((AddStep as AddSteps) | Add(Lit, Lit))
+//│ ║  l.249: 	pattern AddSteps = @compile ((AddStep as AddSteps) | Add(Lit, Lit))
 //│ ║         	                              ^^^^^^^
 //│ ╟── can also be matched by a trailing alternative.
-//│ ║  l.248: 	pattern AddSteps = @compile ((AddStep as AddSteps) | Add(Lit, Lit))
-//│ ║         	                                                     ^^^^^^^^^^^^
+//│ ║  l.249: 	pattern AddSteps = @compile ((AddStep as AddSteps) | Add(Lit, Lit))
+//│ ║         	                                                     ^^^^^^^^^^^^^
 //│ ╙── Falling back to the naive translation.
 
 

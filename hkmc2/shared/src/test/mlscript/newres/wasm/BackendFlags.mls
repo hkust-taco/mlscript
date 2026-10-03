@@ -1,0 +1,17 @@
+:.
+
+// Empty blocks do not warn; each compiled block warns when both are enabled.
+:global
+:js
+
+:w
+1
+//│ ═══[WARNING] Enabling both :js and :wasm is not currently supported; disable one before compiling this block.
+//│ = 1
+//│ Wasm result:
+//│ = 1
+
+:!js
+2
+//│ Wasm result:
+//│ = 2

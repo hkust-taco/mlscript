@@ -1,3 +1,5 @@
+#lang(0.3.x)
+
 import "./NofibPrelude.mls"
 import "../../../../../../hkmc2/shared/src/test/mlscript-compile/Predef.mls"
 open NofibPrelude
@@ -14,7 +16,7 @@ fun unwords(ws) = if ws is
       v :: vs then " " :: (v +: go(vs))
     w +: go(ws)
 
-fun break_(p, xs) = if xs is
+fun break_(p: Function, xs) = if xs is
   Nil then [Nil, Nil]
   x :: xs and
     p(x) then [Nil, x :: xs]
@@ -37,15 +39,15 @@ fun lines(s) = if break_(x => x === "\n", s) is [l, s_] then
 
 fun unlines(ls) = concat(map(l => l +: nofibStringToList("\n"), ls))
 
-fun all(p, xs) = if xs is
+fun all(p: Function, xs) = if xs is
   Nil then true
   x :: xs then p(x) && all(p, xs)
 
-fun fold1(f, g, xs) = if xs is
+fun fold1(f: Function, g: Function, xs) = if xs is
   a :: Nil then g(a)
   a :: x then f(a, fold1(f, g, x))
 
-fun scan1(f, g, xs) = fold1((a, s) => f(a, head(s)) :: s, a => g(a) :: Nil, xs)
+fun scan1(f: Function, g: Function, xs) = fold1((a, s) => f(a, head(s)) :: s, a => g(a) :: Nil, xs)
 
 fun tails(xs) = scan1((a, s) => a :: s, a => a :: Nil, xs)
 
@@ -53,7 +55,7 @@ fun single(xs) = if xs is
   a :: Nil then true
   _ then false
 
-fun minWith(f, xs) = fold1((a, b) => if f(a) < f(b) then a else b, x => x, xs)
+fun minWith(f: Function, xs) = fold1((a, b) => if f(a) < f(b) then a else b, x => x, xs)
 
 fun new_(w, ls) = (w :: Nil) :: ls
 
@@ -170,7 +172,7 @@ fun startr(a) = if
 
 fun ceildiv(n, m) = intDiv(n + m - 1, m)
 
-fun fmtWith(par) = unparse(map(x => par(concat(x)), parse(par)))
+fun fmtWith(par: Function) = unparse(map(x => par(concat(x)), parse(par)))
 
 fun stepr(w, ps_tw_tl) = if ps_tw_tl is [ps, tw, tl] then
   let tot_width = w + 1 + tw

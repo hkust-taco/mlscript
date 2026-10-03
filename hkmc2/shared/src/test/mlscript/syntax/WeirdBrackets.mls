@@ -1,3 +1,4 @@
+:.
 :js
 
 
@@ -11,15 +12,19 @@
 :e
 \{ Int }
 //│ ╔══[COMPILATION ERROR] Unsupported refinement in this position.
-//│ ║  l.12: 	\{ Int }
+//│ ║  l.13: 	\{ Int }
 //│ ╙──      	^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :e
 \(0)
-//│ ╔══[COMPILATION ERROR] Expected 2 arguments, got 1
-//│ ║  l.19: 	\(0)
-//│ ╙──      	 ^^^
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.20: 	\(0)
+//│ ║        	^^^^
+//│ ╟── Function 'passTo' expected 2 arguments, but got 1
+//│ ║  in ../../mlscript-compile/Predef.mls
+//│ ║  l.46: 	fun (\) passTo(receiver, f: dyn)(...args) = f(receiver, ...args)
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ = fun
 
 fun (\) huh(x) = x
@@ -33,7 +38,7 @@ fun (\) huh(x) = x
 // syntax. In the new `Desugarer`, we chose not to support this syntax.
 fun f(x) = if x is {( Int then 1, Bool then 2 )}
 //│ ╔══[COMPILATION ERROR] Unrecognized pattern split (parenthesis section).
-//│ ║  l.34: 	fun f(x) = if x is {( Int then 1, Bool then 2 )}
+//│ ║  l.39: 	fun f(x) = if x is {( Int then 1, Bool then 2 )}
 //│ ╙──      	                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
@@ -42,23 +47,29 @@ fun f(x) = if x is {( Int then 1, Bool then 2 )}
 :e
 fun f(x) = if x is ( Int then 1, Bool then 2 )
 //│ ╔══[COMPILATION ERROR] Unrecognized pattern split (parenthesis section).
-//│ ║  l.43: 	fun f(x) = if x is ( Int then 1, Bool then 2 )
+//│ ║  l.48: 	fun f(x) = if x is ( Int then 1, Bool then 2 )
 //│ ╙──      	                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 :e
 fun f(x) = if x is \{ Int then 1, Bool then 2 }
 //│ ╔══[COMPILATION ERROR] Unrecognized pattern split (refinement).
-//│ ║  l.49: 	fun f(x) = if x is \{ Int then 1, Bool then 2 }
+//│ ║  l.54: 	fun f(x) = if x is \{ Int then 1, Bool then 2 }
 //│ ╙──      	                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 :e
 fun f(x) = if x is \( Int then 1, Bool then 2 )
-//│ ╔══[COMPILATION ERROR] Cannot use this reference as a pattern.
-//│ ║  l.55: 	fun f(x) = if x is \( Int then 1, Bool then 2 )
-//│ ╙──      	                   ^
-//│ ╔══[COMPILATION ERROR] Cannot use this reference as a pattern.
-//│ ║  l.55: 	fun f(x) = if x is \( Int then 1, Bool then 2 )
-//│ ╙──      	                   ^
+//│ ╔══[COMPILATION ERROR] Resolution error in constructor
+//│ ║  l.60: 	fun f(x) = if x is \( Int then 1, Bool then 2 )
+//│ ║        	                   ^^^^^^
+//│ ╟── Function 'huh' cannot be used as a constructor pattern.
+//│ ║  l.30: 	fun (\) huh(x) = x
+//│ ╙──      	^^^^^^^^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Resolution error in constructor
+//│ ║  l.60: 	fun f(x) = if x is \( Int then 1, Bool then 2 )
+//│ ║        	                   ^^^^^^^^^^^^^^^^^^^
+//│ ╟── Function 'huh' cannot be used as a constructor pattern.
+//│ ║  l.30: 	fun (\) huh(x) = x
+//│ ╙──      	^^^^^^^^^^^^^^^^^^
 
 class Box[T](val content: T)
 
@@ -67,12 +78,12 @@ fun interesting(x) =
   if x is Box( Int then 1, Bool then 2 )
 //│ Split with nested patterns:
 //│ >  if
-//│ >    x is Box(Int) then 1
-//│ >    x is Box(Bool) then 2
+//│ >    x is member:Box⁰^term:interesting⁰(member:Int⁰^term:interesting⁰) then 1
+//│ >    x is member:Box⁰^term:interesting⁰(member:Bool⁰^term:interesting⁰) then 2
 //│ Expanded split with flattened patterns:
 //│ >  ‹if|while›
-//│ >    x is Box(arg$Box$0$) and tmp:arg$Box$0$ is Int then 1
-//│ >    x is Box(arg$Box$0$) and tmp:arg$Box$0$ is Bool then 2
+//│ >    x is member:Box⁰^term:interesting⁰(arg$Box$0$) and tmp:arg$Box$0$ is member:Int⁰^term:interesting⁰ then 1
+//│ >    x is member:Box⁰^term:interesting⁰(arg$Box$0$) and tmp:arg$Box$0$ is member:Bool⁰^term:interesting⁰ then 2
 
 interesting of Box(42)
 //│ = 1

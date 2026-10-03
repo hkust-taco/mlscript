@@ -1,0 +1,105 @@
+:.
+
+// Module members can capture an enclosing function parameter.
+fun get(initial) = {
+  module Local {
+    val item = initial
+  }
+  Local.item
+}
+
+:expect [0, 1]
+[get(0), get(1)]
+//│ = [0, 1]
+
+// Each additional module remains transparent to capture marks.
+fun nested(initial) = {
+  module Outer {
+    module Inner {
+      val item = initial
+    }
+  }
+  Outer.Inner.item
+}
+
+:expect [2, 3]
+[nested(2), nested(3)]
+//│ = [2, 3]
+
+// Objects follow the same rule; class capture behavior stays unchanged.
+fun obj(initial) = {
+  object Local {
+    val item = initial
+  }
+  Local.item
+}
+
+:expect [4, 5]
+[obj(4), obj(5)]
+//│ = [4, 5]
+
+fun cls(initial) = {
+  class Local {
+    val item = initial
+  }
+  (new Local).item
+}
+
+:expect [6, 7]
+[cls(6), cls(7)]
+//│ = [6, 7]
+
+// Member functions retain their own boundaries across the module.
+fun getters(initial) = {
+  module Local {
+    fun item = initial
+    fun method() = initial
+  }
+  [Local.item, Local.method()]
+}
+
+:expect [[8, 8], [9, 9]]
+[getters(8), getters(9)]
+//│ = [[8, 8], [9, 9]]
+
+// Distinct member names expose accidental mixing of shapes from different calls.
+module Left { val left = 11 }
+module Right { val right = 12 }
+
+:expect [11, 12]
+[get(Left).left, get(Right).right]
+//│ = [11, 12]
+
+// Returning a module must retain its enclosing call context for later selections.
+fun escape(initial) = {
+  module Local { val item = initial }
+  Local
+}
+
+:expect [11, 12]
+[escape(Left).item.left, escape(Right).item.right]
+//│ = [11, 12]
+
+fun escapedNested(initial) = {
+  module Outer {
+    module Inner { val item = initial }
+  }
+  Outer
+}
+
+:expect [11, 12]
+[escapedNested(Left).Inner.item.left, escapedNested(Right).Inner.item.right]
+//│ = [11, 12]
+
+// A returned module's methods retain both their own and their enclosing contexts.
+fun escapedMethod(initial) = {
+  module Local {
+    fun read() = initial
+  }
+  Local
+}
+
+:noInline
+:expect [11, 12]
+[escapedMethod(Left).read().left, escapedMethod(Right).read().right]
+//│ = [11, 12]

@@ -158,30 +158,37 @@ abstract class Parser(
   protected var indent = 0
   private var _cur: Ls[TokLoc] = preprocessTokens(tokens)
   
-  private def preprocessTokens(tokens: Ls[TokLoc]): Ls[TokLoc] = tokens match
-    case (IDENT("new", false), l1) :: (IDENT("!", true), l2) :: rest =>
-      (IDENT("new!", false), l1 ++ l2) :: preprocessTokens(rest)
-    case (IDENT("yield", false), l1) :: (IDENT("*", true), l2) :: rest =>
-      (IDENT("yield*", false), l1 ++ l2) :: preprocessTokens(rest)
-    // * Remove empty indented sections
-    case (BRACKETS(Indent, toks), _) :: rest
-    if toks.forall:
-      case (NEWLINE | SPACE, _) => true
-      case _ => false
-    =>
-      preprocessTokens(rest)
-    // * Expands end-of-line suspensions that introduce implied indentation,
-    // * skipping NOISE tokens between `...` and NEWLINE (eg `... // hello\n body`)
-    // * Note: using `NEWLINE_COMMA` instead of `NEWLINE` causes misparsing of things like `fun foo(..., ...)`
-    case (SUSPENSION(true), l0) :: NOISE((NEWLINE, l1) :: rest) =>
-      val outerLoc = l0.left ++ rest.lastOption.map(_._2.right)
-      val innerLoc = l1.right ++ rest.lastOption.map(_._2.left)
-      BRACKETS(Indent, preprocessTokens(rest))(innerLoc) -> outerLoc :: Nil
-    case tl :: rest =>
-      val rest2 = preprocessTokens(rest)
-      if rest2 is rest then tokens
-      else tl :: rest2
-    case Nil => tokens
+  private def preprocessTokens(tokens: Ls[TokLoc]): Ls[TokLoc] =
+    // Flat token streams can exceed the JavaScript stack even without nested syntax.
+    // Keep nonempty suffixes in reverse order so rebuilding can share unchanged tails.
+    def rebuild(prefixes: Ls[Ls[TokLoc]], rest: Ls[TokLoc]): Ls[TokLoc] =
+      prefixes.foldLeft(rest): (rest, original) =>
+        if rest is original.tail then original
+        else original.head :: rest
+    @tailrec
+    def loop(tokens: Ls[TokLoc], prefixes: Ls[Ls[TokLoc]]): Ls[TokLoc] = tokens match
+      case (IDENT("new", false), l1) :: (IDENT("!", true), l2) :: rest =>
+        loop(rest, (IDENT("new!", false) -> (l1 ++ l2) :: Nil) :: prefixes)
+      case (IDENT("yield", false), l1) :: (IDENT("*", true), l2) :: rest =>
+        loop(rest, (IDENT("yield*", false) -> (l1 ++ l2) :: Nil) :: prefixes)
+      // * Remove empty indented sections
+      case (BRACKETS(Indent, toks), _) :: rest
+      if toks.forall:
+        case (NEWLINE | SPACE, _) => true
+        case _ => false
+      =>
+        loop(rest, prefixes)
+      // * Expands end-of-line suspensions that introduce implied indentation,
+      // * skipping NOISE tokens between `...` and NEWLINE (eg `... // hello\n body`)
+      // * Note: using `NEWLINE_COMMA` instead of `NEWLINE` causes misparsing of things like `fun foo(..., ...)`
+      case (SUSPENSION(true), l0) :: NOISE((NEWLINE, l1) :: rest) =>
+        val outerLoc = l0.left ++ rest.lastOption.map(_._2.right)
+        val innerLoc = l1.right ++ rest.lastOption.map(_._2.left)
+        rebuild(prefixes, BRACKETS(Indent, preprocessTokens(rest))(innerLoc) -> outerLoc :: Nil)
+      case _ :: rest =>
+        loop(rest, tokens :: prefixes)
+      case Nil => rebuild(prefixes, Nil)
+    loop(tokens, Nil)
   
   private def wrap[R](args: => Any)(using l: Line, n: Name)(mkRes: => R): R =
     printDbg(s"@ ${n.value}${args match {
@@ -938,13 +945,13 @@ abstract class Parser(
         consume
         consume
         val inner = rec(toks, S(br.innerLoc), br.describe).concludeWith(_.expr(0, allowNewlines = true))
-        exprCont(DynAccess(acc, Bra(bk, inner)), prec, allowNewlines = allowNewlines)
-      // TODO: these should eventually no longer be treated as dynamic:
+        exprCont(DynAccess(acc, Bra(bk, inner), true), prec, allowNewlines = allowNewlines)
+      // `obj.[idx]` indexes an array; `obj.(fld)` should eventually no longer be dynamic either.
       case (PERIOD, l0) :: (br @ BRACKETS(bk @ (Round | Square), toks), l1) :: _ =>
         consume
         consume
         val inner = rec(toks, S(br.innerLoc), br.describe).concludeWith(_.expr(0, allowNewlines = true))
-        exprCont(DynAccess(acc, Bra(bk, inner)).withLoc(S(l0 ++ l1)), prec, allowNewlines = allowNewlines)
+        exprCont(DynAccess(acc, Bra(bk, inner), bk is Round).withLoc(S(l0 ++ l1)), prec, allowNewlines = allowNewlines)
       
       case (PERIOD, l0) :: (br @ BRACKETS(Curly, toks), l1) :: _ =>
         consume
@@ -955,7 +962,7 @@ abstract class Parser(
       case (PERIOD, l0) :: (LITVAL(lit: (Tree & Literal)), l1) :: _ =>
         consume
         consume
-        exprCont(DynAccess(acc, lit.withLoc(S(l1))).withLoc(S(l0 ++ l1)), prec, allowNewlines = allowNewlines)
+        exprCont(DynAccess(acc, lit.withLoc(S(l1)), true).withLoc(S(l0 ++ l1)), prec, allowNewlines = allowNewlines)
         
         /* 
       case (PERIOD, l0) :: (br @ BRACKETS(Square, toks), l1) :: _ =>
@@ -1058,7 +1065,7 @@ abstract class Parser(
       case (SELECT(name, dyn), l0) :: _ if SelPrec >= prec =>
         consume
         val tree = if dyn then
-          DynAccess(acc, new Ident(name).withLoc(S(l0)))
+          DynAccess(acc, new Ident(name).withLoc(S(l0)), true)
         else
           Sel(acc, new Ident(name).withLoc(S(l0)))
         exprCont(tree, prec, allowNewlines = allowNewlines)

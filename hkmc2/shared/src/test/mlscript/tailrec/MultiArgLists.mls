@@ -1,3 +1,4 @@
+:.
 :js
 open annotations
 
@@ -180,7 +181,7 @@ fun resume(x)(y) = handleEffects(x)
 //│       1 =>
 //│         let tmp;
 //│         set tmp = resume⁰(undefined);
-//│         do sink⁰.push﹖(tmp);
+//│         do sink⁰.push⁰(tmp);
 //│         set id = 0;
 //│         continue loopLabel
 //│       else
@@ -243,8 +244,8 @@ fun g(n)(m) =
 //│         set param0_tmp = param0;
 //│         set param0 = tmp;
 //│         set argList = [...tmp1, 3, ...tmp2, ...tmp3, 7, param0_tmp];
-//│         set tmp4 = -¹(argList.length﹖, 0);
-//│         set inlinedVal = argList.slice﹖(4, tmp4);
+//│         set tmp4 = -¹(argList.length⁰, 0);
+//│         set inlinedVal = argList.slice⁰(4, tmp4);
 //│         set param1 = argList.0;
 //│         do argList.1;
 //│         do argList.2;
@@ -287,8 +288,8 @@ fun f(a)(...z) = if z is
 //│       Array(1+) =>
 //│         let inlinedVal, tmp1;
 //│         do runtime⁰.Tuple⁰.get⁰(z, 0);
-//│         set tmp1 = -¹(z.length﹖, 0);
-//│         set inlinedVal = z.slice﹖(1, tmp1);
+//│         set tmp1 = -¹(z.length⁰, 0);
+//│         set inlinedVal = z.slice⁰(1, tmp1);
 //│         set tmp = +⁰(a, 1);
 //│         set a = tmp;
 //│         set z = inlinedVal;
@@ -494,8 +495,8 @@ fun f(n)(a)(...z) =
 //│           Array(1+) =>
 //│             let inlinedVal, tmp2;
 //│             do runtime⁰.Tuple⁰.get⁰(z, 0);
-//│             set tmp2 = -¹(z.length﹖, 0);
-//│             set inlinedVal = z.slice﹖(1, tmp2);
+//│             set tmp2 = -¹(z.length⁰, 0);
+//│             set inlinedVal = z.slice⁰(1, tmp2);
 //│             set tmp1 = +⁰(a, 1);
 //│             set res = f$tailrec³(n, tmp1, inlinedVal);
 //│             do Predef⁰.print⁰("hi!");

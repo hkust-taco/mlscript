@@ -1,3 +1,4 @@
+:.
 :js
 
 
@@ -8,14 +9,8 @@ class Foo with
 
 object Bar extends Foo
 
-:todo // recognize fields that are inherited from superclasses
+:expect [10, 11]
 [Bar.x, Bar.foo]
-//│ ╔══[COMPILATION ERROR] Object 'Bar' does not contain member 'x'
-//│ ║  l.12: 	[Bar.x, Bar.foo]
-//│ ╙──      	    ^^
-//│ ╔══[COMPILATION ERROR] Object 'Bar' does not contain member 'foo'
-//│ ║  l.12: 	[Bar.x, Bar.foo]
-//│ ╙──      	           ^^^^
 //│ = [10, 11]
 
 let b = id(Bar) in [b.x, b.foo]
@@ -95,7 +90,7 @@ data class Some[out T](x: T) extends Option[T]
 
 
 data class Barr(x: Int)(y: Num) with
-  fun f = x + y
+  open fun f = x + y
 
 data class Bazz(z: Int) extends Barr(z % 10)(z / 10) with
   fun g = z
@@ -106,7 +101,7 @@ Bazz(42).f
 
 
 new Barr(40)(2) with
-  fun f = 43
+  override fun f = 43
 //│ = $anon { x: 40, y: 2 }
 
 

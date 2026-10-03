@@ -1,3 +1,4 @@
+#lang(0.3.x)
 import "./Keywords.mls"
 import "./Rules.mls"
 import "./Token.mls"
@@ -74,7 +75,7 @@ fun extendCategory(choiceBodyTree: Tree) =
       print of "Invalid syntax description: " + choiceBodyTree Tree.summary()
 
 fun parseChoiceTree(tree: Tree) = 
-  fun go(trees: Stack[Tree]): Choice[Tree] = 
+  fun go(trees: Stack[Tree]): Choice[Stack[Tree]] =
     let res = if trees is
       Tree.App(Tree.Ident("keyword", _), Tree.Literal(LiteralKind.String, name)) :: rest and
         Keywords.all |> MutMap.get(name) is Some(keyword) then
@@ -88,7 +89,7 @@ fun parseChoiceTree(tree: Tree) =
     Tree.Tuple(categoryIdent :: choiceTree :: funcIdent :: Nil) and
       categoryIdent is Tree.Literal(LiteralKind.String, categoryName) and
         funcIdent is Tree.Ident and
-          let op = (trees) => trees
+          let op = (trees: Stack[Tree]) => trees
             Iter.fromStack()
             Iter.folded of funcIdent, (f, x) => Tree.App(f, x)
           choiceTree is

@@ -1,3 +1,4 @@
+:.
 :js
 
 import "../../../mlscript-compile/Iter.mls"
@@ -105,7 +106,8 @@ print of Rules.declRule.display
 //│ >   | "#" <ident> <term>
 
 Rules.syntaxKinds
-  Iter.mapping of case [name, rule] then rule.display
+  Iter.mapping of (entry: [Str, {display: Str}]) =>
+    if entry is [name, rule] then rule.display
   Iter.joined("\n")
   print()
 //│ > <let-bindings> ::= <term> "=" <term> ["and" <let-bindings>]

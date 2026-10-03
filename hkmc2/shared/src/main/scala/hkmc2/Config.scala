@@ -95,6 +95,9 @@ object Config:
   case class Language(
     allowUnresolvedAccesses: Bool,
     useNewResolution: Bool,
+    strictResolution: Bool, // Reject multiple resolved selection targets as well as missing targets
+    // Unknown inputs admitted by a public interface are checked regardless of this flag.
+    eagerResolution: Bool, // Reject selections whose prefixes have shapes that do not support them, even though the selection might have other valid targets
     typeCheck: Opt[TypeChecking],
   )(val versionName: Str)
   
@@ -103,6 +106,8 @@ object Config:
     val v0_2_x = Language(
       typeCheck = N,
       useNewResolution = false,
+      strictResolution = false,
+      eagerResolution = false,
       allowUnresolvedAccesses = true,
     )(
       versionName = "0.2.x",
@@ -111,6 +116,8 @@ object Config:
     val v0_3_x = Language(
       typeCheck = N,
       useNewResolution = true,
+      strictResolution = false,
+      eagerResolution = false,
       allowUnresolvedAccesses = false,
     )(
       versionName = "0.3.x",
@@ -216,6 +223,19 @@ object Config:
     * Normally, we avoid inlining into @inline functions as that could lead to unexpected code bloat. */
   case class Inliner(inlineThreshold: Int, altSmallThreshold: Int = 2)
   
+  /** File directives apply to the whole compilation unit, including elaboration.
+    * Read them before constructing the elaborator so its resolver agrees with lowering.
+    * Elaboration still records SetConfig statements and reports directive errors once. */
+  def elaborationConfig(prgm: syntax.Tree.Block)(using Config): Config =
+    import syntax.Tree.*
+    given Raise = _ => ()
+    def modifier(tree: syntax.Tree): Config => Config = tree match
+      case App(Directive(prefix, _), args) => modifier(Directive(prefix, args))
+      case Directive(Ident("config"), Tup(args)) => ConfigParser.parseOverrides(args)
+      case Directive(Ident("lang"), Tup(args)) => ConfigParser.parseLanguageDirective(args)
+      case _ => identity
+    prgm.desugStmts.foldLeft(config)((cfg, tree) => modifier(tree)(cfg))
+
   def extractConfigFromStats(prgm: semantics.Term.Blk)(using Config) =
     // Extract cumulative config modifications from SetConfig statements
     val configModify = prgm.stats.collect:
@@ -378,20 +398,6 @@ object ConfigParser:
             source = Diagnostic.Source.Compilation))
           N
 
-  private def withLanguage(
-    base: Config.Language,
-    allowUnresolvedAccesses: Bool,
-    useNewResolution: Bool,
-    typeCheck: Opt[Config.TypeChecking],
-  ): Config.Language =
-    Config.Language(
-      allowUnresolvedAccesses,
-      useNewResolution,
-      typeCheck,
-    )(
-      base.versionName,
-    )
-
   private def parsedLanguageModifier[A](
     value: Tree,
   )(
@@ -404,13 +410,19 @@ object ConfigParser:
   private def parseLanguageFieldModifier(tree: Tree)(using Raise): Opt[Config.Language => Config.Language] = tree match
     case NamedArg("allowUnresolvedAccesses", value) =>
       parsedLanguageModifier(value)(parseBool): v =>
-        language => withLanguage(language, v, language.useNewResolution, language.typeCheck)
+        lang => lang.copy(allowUnresolvedAccesses = v)(lang.versionName)
     case NamedArg("useNewResolution", value) =>
       parsedLanguageModifier(value)(parseBool): v =>
-        language => withLanguage(language, language.allowUnresolvedAccesses, v, language.typeCheck)
+        lang => lang.copy(useNewResolution = v)(lang.versionName)
+    case NamedArg("strictResolution", value) =>
+      parsedLanguageModifier(value)(parseBool): v =>
+        lang => lang.copy(strictResolution = v)(lang.versionName)
+    case NamedArg("eagerResolution", value) =>
+      parsedLanguageModifier(value)(parseBool): v =>
+        lang => lang.copy(eagerResolution = v)(lang.versionName)
     case NamedArg("typeCheck", value) =>
       parsedLanguageModifier(value)(tree => parseOpt(tree)(parseTypeChecking)): v =>
-        language => withLanguage(language, language.allowUnresolvedAccesses, language.useNewResolution, v)
+        lang => lang.copy(typeCheck = v)(lang.versionName)
     case other =>
       unsupported("Language", other)
       N

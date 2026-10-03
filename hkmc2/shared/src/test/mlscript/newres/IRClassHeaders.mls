@@ -1,0 +1,19 @@
+:.
+
+// Functions are lowered before class bodies. Their pattern specialization must
+// already know the inheritance chain, including nested class declarations.
+:expect 1
+fun classify(x) =
+  if x is Classes.Child and x is Classes.Parent then 1 else 2
+module Classes with
+  class Parent
+  class Child extends Parent
+classify(new Classes.Child)
+//│ = 1
+
+// Prelude classes have no executable definitions to supply their parent links.
+:expect 1
+fun classifyNumber(x) =
+  if x is Int and x is Num then 1 else 2
+classifyNumber(42)
+//│ = 1

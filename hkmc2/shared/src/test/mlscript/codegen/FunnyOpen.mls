@@ -1,3 +1,4 @@
+:.
 :js
 
 
@@ -8,9 +9,6 @@ module Mod with
 :ctx
 open Mod
 //│ Env:
-//│   pipee -> SelElem(RefElem(member:Mod),pipee,Some(member:pipee),true)
-//│   printt -> SelElem(RefElem(member:Mod),printt,Some(member:printt),true)
-//│   |>> -> SelElem(RefElem(member:Mod),pipee,Some(member:pipee),true)
 
 pipee
 //│ = fun pipee
@@ -25,14 +23,11 @@ pipee
 :e
 Mod.|>>
 //│ ╔══[PARSE ERROR] Expected start of expression in this position; found end of input instead
-//│ ║  l.26: 	Mod.|>>
+//│ ║  l.24: 	Mod.|>>
 //│ ╙──      	       ^
-//│ ╔══[COMPILATION ERROR] Name not found: .|>>
-//│ ║  l.26: 	Mod.|>>
+//│ ╔══[COMPILATION ERROR] Name not found in wildcard opens: .|>>
+//│ ║  l.24: 	Mod.|>>
 //│ ╙──      	   ^^^^
-//│ ╔══[COMPILATION ERROR] Unexpected moduleful reference of type Mod.
-//│ ║  l.26: 	Mod.|>>
-//│ ╙──      	^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
@@ -44,17 +39,17 @@ Mod.|>>
 :e
 open Mod { |>> }
 //│ ╔══[PARSE ERROR] Expected start of expression in this position; found end of input instead
-//│ ║  l.45: 	open Mod { |>> }
+//│ ║  l.40: 	open Mod { |>> }
 //│ ╙──      	                ^
 //│ ╔══[COMPILATION ERROR] Illegal 'open' statement shape.
-//│ ║  l.45: 	open Mod { |>> }
+//│ ║  l.40: 	open Mod { |>> }
 //│ ╙──      	     ^^^^^^^^^^^
 
 
 :e
 open Mod { (|>>) }
 //│ ╔══[COMPILATION ERROR] Illegal 'open' statement element.
-//│ ║  l.55: 	open Mod { (|>>) }
+//│ ║  l.50: 	open Mod { (|>>) }
 //│ ╙──      	           ^^^^^
 
 12 |>> print

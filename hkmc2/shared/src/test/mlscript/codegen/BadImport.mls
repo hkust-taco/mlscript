@@ -1,10 +1,11 @@
+:.
 :js
 
 
 :e
 import 123
 //│ ╔══[COMPILATION ERROR] Expected string literal after 'import' keyword
-//│ ║  l.5: 	import 123
+//│ ║  l.6: 	import 123
 //│ ╙──     	       ^^^
 
 

@@ -1,17 +1,13 @@
+#lang(0.3.x)
 
 import "fs"
 
 import "../StrOps.mls"
 open StrOps
+open StrOps { concat2, ~ }
 
 import "../Predef.mls"
 open Predef
-
-
-declare class Num
-declare class Bool
-
-declare val String
 
 
 data class Project(val num: Str)
@@ -20,7 +16,7 @@ data class Project(val num: Str)
 data class Accounting with ...
 
 
-fun display(amt): Str = (amt / 1000).toFixed(1)
+fun display(amt: Num): Str = ((amt / 1000) as Num).toFixed(1)
 
 val warnings = mut []
 
@@ -55,27 +51,27 @@ data class Report(fileName) with
   
   fun init() =
     wln of ""
-    wln of "|" ~ "Year" ~ "|" ~ lines.map(x => x.name).join("|") ~ "|"
-    wln of "|" ~ "---" ~ "|" ~ lines.map(x => "--:").join("|") ~ "|"
+    wln of "|" ~ "Year" ~ "|" ~ lines.map(pass1((x: Line) => x.name)).join("|") ~ "|"
+    wln of "|" ~ "---" ~ "|" ~ lines.map(pass1(x => "--:")).join("|") ~ "|"
   
   fun snapShot(label) =
-    wln of "|" ~ String(label) ~ "|" ~ lines.map(x => display(x.balance)).join("|") ~ "|"
+    wln of "|" ~ String(label) ~ "|" ~ lines.map(pass1((x: Line) => display(x.balance))).join("|") ~ "|"
     
   fun wrapUp() =
     wln of ""
-    warnings.forEach of x => (wln(x), wln(""))
+    warnings.forEach of pass1(x => (wln(x), wln("")))
     wln of "### Remaining Available Funds"
     wln of ""
     wln of "|" ~ "Summary" ~ "|   |"
     wln of "|" ~ "---" ~ "|--:|"
     wln of "|" ~ "Matchable" ~ "|" ~ display(
-      lines.filter(x => x.isMatchable).map(x => x.balance).reduce((a, b) => a +. b, 0)
+      lines.filter(pass1((x: Line) => x.isMatchable)).map(pass1((x: Line) => x.balance)).reduce(pass2((a, b) => a +. b), 0)
     ) ~ "|"
     wln of "|" ~ "Non-matchable" ~ "|" ~ display(
-      lines.filter(x => not x.isMatchable).map(x => x.balance).reduce((a, b) => a +. b, 0)
+      lines.filter(pass1((x: Line) => not x.isMatchable)).map(pass1((x: Line) => x.balance)).reduce(pass2((a, b) => a +. b), 0)
     ) ~ "|"
 
-fun process(filename, k) =
+fun process(filename: Str, k: Report -> ()) =
   let report = Report(filename)
   report.init()
   k(report)

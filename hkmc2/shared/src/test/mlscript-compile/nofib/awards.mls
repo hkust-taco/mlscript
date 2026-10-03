@@ -1,3 +1,5 @@
+#lang(0.3.x)
+
 import "./NofibPrelude.mls"
 import "../../../../../../hkmc2/shared/src/test/mlscript-compile/Predef.mls"
 open NofibPrelude
@@ -17,7 +19,7 @@ fun qsort(le, ls, r) = if ls is
   x :: Nil then x :: r
   x :: xs then qpart(le, x, xs, Nil, Nil, r)
 
-fun qpart(le, x, ys, rlt, rge, r) = if ys is
+fun qpart(le: Function, x, ys, rlt, rge, r) = if ys is
   Nil then rqsort(le, rlt, x :: rqsort(le, rge, r))
   y :: ys and
     le(x, y) then qpart(le, x, ys, rlt, y :: rge, r)
@@ -28,7 +30,7 @@ fun rqsort(le, ls, r) = if ls is
   x :: Nil then x :: r
   x :: xs then rqpart(le, x, xs, Nil, Nil, r)
 
-fun rqpart(le, x, yss, rle, rgt, r) = if yss is
+fun rqpart(le: Function, x, yss, rle, rgt, r) = if yss is
   Nil then qsort(le, rle, x :: qsort(le, rgt, r))
   y :: ys and
     le(y, x) then rqpart(le, x, ys, y :: rle, rgt, r)

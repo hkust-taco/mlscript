@@ -1,3 +1,4 @@
+:.
 :js
 
 // Regression test: `if true` with `then` on a new indented line should work

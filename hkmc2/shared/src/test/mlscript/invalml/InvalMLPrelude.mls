@@ -4,7 +4,7 @@ open annotations
 declare class Any
 declare class Anything
 declare class Nothing
-declare class Object
+declare open class Object
 
 declare class Unit
 declare class Bool

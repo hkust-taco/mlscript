@@ -1,3 +1,4 @@
+:.
 :js
 :deforest
 
@@ -195,10 +196,10 @@ test()
 //│ deforest > 	fields: scrut⁰.x²
 //│ deforest > <<< fusing <<<
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'Local'
-//│ ║  l.187: 	    Global(x) then Local(x + 1)
+//│ ║  l.188: 	    Global(x) then Local(x + 1)
 //│ ║         	                   ^^^^^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.185: 	  data class Local(x)
+//│ ║  l.186: 	  data class Local(x)
 //│ ╙──       	             ^^^^^^^^
 //│ ═══[RUNTIME ERROR] ReferenceError: Local is not defined
 //│ ═══[RUNTIME ERROR] Expected: 'Local(2)', got: 'undefined'

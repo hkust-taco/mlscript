@@ -1538,6 +1538,10 @@ class BlockSimplifier
         def canBeInlineEliminated: Bool =
           isPrivate && !isMethod && !defn.noInline && useCount <= 1 && !disallowElimination && !isLoopBreaker
             && !isPatternHelper && !hasDuplicateBindings
+            // Class/module references still need the function object that owns their `.class`.
+            // Term-only use counts cannot establish that this shared binding is dead;
+            // ordinary DCE can remove it once neither interpretation is referenced.
+            && defn.sym.asClsOrMod.isEmpty
           // false
         
         def inlineCost(newBlk: Block, threshold: Int): Opt[Int] =

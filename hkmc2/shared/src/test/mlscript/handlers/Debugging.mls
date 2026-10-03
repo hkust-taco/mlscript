@@ -129,7 +129,7 @@ res.resumeWith(42)
 
 
 
-class Debugger() with
+abstract class Debugger() with
   fun break(payload)
 
 module Test with

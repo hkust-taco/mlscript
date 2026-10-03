@@ -1,3 +1,5 @@
+#lang(0.3.x)
+
 import "./NofibPrelude.mls"
 import "../../../../../../hkmc2/shared/src/test/mlscript-compile/Predef.mls"
 open NofibPrelude
@@ -14,7 +16,7 @@ data class MyState[S, A](r: S -> [S, A])
 
 fun myRunState(m, s) = if m is MyState(f) then f(s)
 
-fun myBind(m, f) = MyState(s => if myRunState(m, s) is [s_, a] then myRunState(f(a), s_))
+fun myBind(m, f: Function) = MyState(s => if myRunState(m, s) is [s_, a] then myRunState(f(a), s_))
 
 fun myReturn(a) = MyState(s => [s, a])
 
@@ -60,7 +62,7 @@ fun eqTerm(a, b) = if a is
   else false
 //│ ————————————————————————————————————————————————————————————————————————————————
 
-fun myMaybe(d, f, x) = if x is Some(x) then f(x)
+fun myMaybe(d, f: Function, x) = if x is Some(x) then f(x)
 
 val incr = myReturn(Unit)
 //│ incr = MyState([function])

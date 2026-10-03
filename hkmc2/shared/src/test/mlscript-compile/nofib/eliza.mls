@@ -1,3 +1,5 @@
+#lang(0.3.x)
+
 import "./NofibPrelude.mls"
 import "../../../../../../hkmc2/shared/src/test/mlscript-compile/Predef.mls"
 open NofibPrelude
@@ -7,9 +9,9 @@ module eliza with ...
 
 
 
-fun toUpper(c) = c.toUpperCase()
+fun toUpper(c: Str) = c.toUpperCase()
 
-fun lz_map(f, ls) = lazy of () =>
+fun lz_map(f: Function, ls) = lazy of () =>
   if ls is
     Nil then LzNil
     h :: t then LzCons(f(h), lz_map(f, t))

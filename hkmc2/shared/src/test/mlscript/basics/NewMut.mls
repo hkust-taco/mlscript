@@ -1,3 +1,4 @@
+:.
 :js
 
 
@@ -7,8 +8,9 @@ class Foo with
     set x += 1
 
 
+// Dynamic receivers allow these tests to add fields while retaining runtime checks.
 :sjs
-let f = new Foo
+let f = new Foo as dyn
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let f; f = globalThis.Object.freeze(new Foo1());
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
@@ -37,7 +39,7 @@ f.y
 
 :sjs
 // :elt
-let f = new mut Foo
+let f = new mut Foo as dyn
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let f1; f1 = new Foo1();
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
@@ -61,21 +63,23 @@ f.y
 :e
 let f = mut new Foo
 //│ ╔══[COMPILATION ERROR] Illegal position for 'mut' modifier.
-//│ ║  l.62: 	let f = mut new Foo
+//│ ║  l.64: 	let f = mut new Foo
 //│ ╙──      	        ^^^
 //│ f = Foo { x: 0 }
 
 :e
 :re
 new mut Foo.x
-//│ ╔══[COMPILATION ERROR] Expected a statically known class; found selection.
-//│ ║  l.70: 	new mut Foo.x
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.72: 	new mut Foo.x
 //│ ║        	        ^^^^^
-//│ ╙── The 'new' keyword requires a statically known class; use the 'new!' operator for dynamic instantiation.
-//│ ═══[RUNTIME ERROR] Error: Access to required field 'x' yielded 'undefined'
+//│ ╟── Class value does not contain member 'x'
+//│ ║  l.5: 	class Foo with
+//│ ╙──     	      ^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
-let f = new mut Foo()
+let f = new mut Foo() as dyn
 //│ f = Foo { x: 0 }
 
 set
@@ -124,7 +128,7 @@ f.x
 //│ = 1
 
 
-let f = Foo(0)
+let f = Foo(0) as dyn
 //│ f = Foo(0)
 
 set
@@ -164,8 +168,8 @@ f.y
 
 
 
-let f = new Object with
-  val x = 12
+let f = (new Object with
+  val x = 12) as dyn
 //│ f = $anon { x: 12 }
 
 set
@@ -180,8 +184,8 @@ f.y
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'y' yielded 'undefined'
 
 
-let f = new mut Object with
-  val x = 12
+let f = (new mut Object with
+  val x = 12) as dyn
 //│ f = $anon { x: 12 }
 
 set

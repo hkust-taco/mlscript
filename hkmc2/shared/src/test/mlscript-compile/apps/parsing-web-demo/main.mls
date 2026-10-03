@@ -1,3 +1,5 @@
+#lang(0.3.x)
+
 // Note: This file does not have a corresponding test file. It is recommended to
 // test it through the following steps.
 // 
@@ -17,6 +19,7 @@ import "../../StrOps.mls"
 import "../../Iter.mls"
 import "../../XML.mls"
 import "../../Option.mls"
+import "../../MutMap.mls"
 import "../../Runtime.mls"
 import "../../Predef.mls"
 import "../parsing/TreeHelpers.mls"
@@ -33,13 +36,17 @@ open Examples
 
 module Main with ...
 
+type Example = {name: Str, source: Str}
+
 let query = document.querySelector.bind(document)
 let editor = query("#editor")
 let selector = query("select#example")
 let parseButton = query("button#parse")
 let outputPanel = query("#output")
 
-examples Iter.each of case [key, example] then
+examples Iter.each of (entry: [Str, Example]) =>
+  let key = entry.0
+  let example = entry.1
   let option = document.createElement of "option"
   set option.value = key
   set option.textContent = example.name
@@ -49,7 +56,7 @@ examples Iter.each of case [key, example] then
     set editor.value = example.source
 
 // Make pressing <kbd>Tab</kbd> add two spaces at the caret's position.
-editor.addEventListener of "keydown", event =>
+editor.addEventListener of "keydown", (event: dyn) =>
   if event.key is "Tab" do
     // Prevent the default tab behavior (focusing the next element).
     event.preventDefault()
@@ -59,12 +66,12 @@ editor.addEventListener of "keydown", event =>
     set editor.selectionEnd = start + 2
     set editor.selectionStart = editor.selectionEnd
 
-selector.addEventListener of "change", event =>
-  if examples.get(selector.value) is
+selector.addEventListener of "change", (event: dyn) =>
+  if (examples |> MutMap.get(selector.value)) is
     Some(example) do set editor.value = example.source
     None do throw new Error of "Example \"" + selector.value + "\" not found"
 
-parseButton.addEventListener of "click", event =>
+parseButton.addEventListener of "click", (event: dyn) =>
   let tokens = Lexer.lex(editor.value, noWhitespace: true)
   set outputPanel.innerHTML = ""
   Runtime.try_catch of
@@ -83,17 +90,19 @@ parseButton.addEventListener of "click", event =>
 
 let indentRegex = new RegExp("""^(\s*)""")
 
-fun parseIndentedText(text) =
-  let root = (text: "", children: [])
-  let stack = [(node: root, indent: -1)]
+type IndentedNode = {text: Str, children: Array[IndentedNode]}
+
+fun parseIndentedText(text: Str) =
+  let root = (text: "", children: mut [])
+  let stack = mut [(node: root, indent: -1)]
   text.split("\n")
-    Iter.filtering(line => line.trim().length > 0)
-    Iter.each of line =>
-      let indent = line.match(indentRegex).[1].length
+    Iter.filtering((line: Str) => line.trim().length > 0)
+    Iter.each of (line: Str) =>
+      let indent = indentRegex.exec(line).1.length
       let text = line.substring(indent)
       while indent <= stack.[stack.length - 1].indent do
         stack.pop()
-      let newNode = (text: text, children: [])
+      let newNode = (text: text, children: mut [])
       stack.[stack.length - 1].node.children.push of newNode
       stack.push of node: newNode, indent: indent
   root.children
@@ -132,9 +141,9 @@ class CollapsibleTree extends HTMLElement with
     let treeElement = createDetailsTree(treeData)
     this.appendChild(treeElement)
   
-  fun createDetailsTree(nodes) =
+  fun createDetailsTree(nodes: Array[IndentedNode]) =
     let fragment = document.createDocumentFragment()
-    nodes Iter.each of node =>
+    nodes Iter.each of (node: IndentedNode) =>
       let details = document.createElement("details")
       details.setAttribute("open", "")
       let summary = document.createElement("summary")
@@ -159,20 +168,20 @@ class ErrorDisplay extends HTMLElement with
   
   fun connectedCallback() = this.render()
   
-  fun setError(value) =
+  fun setError(value: Error) =
     set _error = Some(value)
     this.render()
   
   fun render() = if _error is Some(error) do
     let stackLines = error.stack.split("\n")
-    if stackLines.[0].startsWith(error.name) do
+    if stackLines.length > 0 and stackLines.[0].startsWith(error.name) do
       stackLines.shift()
     set this.shadowRoot.innerHTML = elem("div", "class": "error-container") of
       elem("h3", "class": "error-message") of
         error.name + ": " + error.message
       elem("ul", "class": "stack-trace") of
         stackLines
-          Iter.mapping of line => elem("li") of line.trim()
+          Iter.mapping of (line: Str) => elem("li") of line.trim()
           Iter.joined("")
       elem("style") of errorDisplayStyle
 
@@ -184,7 +193,7 @@ fun makeFigures(entries) = entries
   Iter.joined("")
 
 fun displayRules() =
-  open ParseRuleVisualizer
+  open ParseRuleVisualizer {render, reset}
   open Rules
   reset()
   set query("#syntax-diagrams>main").innerHTML = StrOps.concat of

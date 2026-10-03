@@ -1,3 +1,5 @@
+#lang(0.3.x)
+
 import "./NofibPrelude.mls"
 import "../../../../../../hkmc2/shared/src/test/mlscript-compile/Predef.mls"
 open NofibPrelude
@@ -69,10 +71,10 @@ fun cShow(seq) = flatten(0, true, seq, Nil)
 
 data class MkPrettyRep(cseq: CSeq, n: Int, b1: Bool, b2: Bool)
 
-fun ppShow(width, p) = if p(width, false) is
+fun ppShow(width, p: Function) = if p(width, false) is
   MkPrettyRep(seq, ll, emp, sl) then cShow(seq)
 
-fun ppUnformatted(p) = if p(80, false) is
+fun ppUnformatted(p: Function) = if p(80, false) is
   MkPrettyRep(seq, ll, emp, sl) then cShow(seq)
 
 fun ppNil(width, is_vert) = MkPrettyRep(cNil, 0, true, width >= 0)
@@ -105,16 +107,16 @@ fun andL(a, b) = if a then b else false
 
 fun orL(a, b) = if a then true else b
 
-fun ppBeside(p1, p2, width, is_vert) = if p1(width, false) is
+fun ppBeside(p1: Function, p2: Function, width, is_vert) = if p1(width, false) is
   MkPrettyRep(seq1, ll1, emp1, sl1) and p2(width - ll1, false) is
     MkPrettyRep(seq2, ll2, emp2, sl2) then
       MkPrettyRep(cAppend(seq1, cIndent(ll1, seq2)), ll1 + ll2, andL(emp1, emp2), andL(width >= 0, andL(sl1, sl2)))
 
-fun ppBesides(ps) = if ps is
+fun ppBesides(ps: List[Function]) = if ps is
   Nil then ppNil
   else foldr1((a, b) => (c, d) => ppBeside(a, b, c, d), ps)
 
-fun ppBesideSP(p1, p2, width, is_vert) = if p1(width, false) is MkPrettyRep(seq1, ll1, emp1, sl1) then
+fun ppBesideSP(p1: Function, p2: Function, width, is_vert) = if p1(width, false) is MkPrettyRep(seq1, ll1, emp1, sl1) then
   let li = if emp1 then 0 else ll1 + 1
   if p2(width - li, false) is MkPrettyRep(seq2, ll2, emp2, sl2) then
     let wi = if emp1 then 0 else 1
@@ -123,20 +125,20 @@ fun ppBesideSP(p1, p2, width, is_vert) = if p1(width, false) is MkPrettyRep(seq1
 
 fun ppCat(ps) = if ps is Nil then ppNil else foldr1((a, b) => (c, d) => ppBesideSP(a, b, c, d), ps)
 
-fun ppAbove(p1, p2, width, is_vert) = if p1(width, true) is
+fun ppAbove(p1: Function, p2: Function, width, is_vert) = if p1(width, true) is
   MkPrettyRep(seq1, ll1, emp1, sl1) and p2(width, true) is
     MkPrettyRep(seq2, ll2, emp2, sl2) then
       let nl = if orL(emp1, emp2) then cNil else cNL
       MkPrettyRep(cAppend(seq1, cAppend(nl, seq2)), ll2, andL(emp1, emp2), false)
 
-fun ppAboves(ps, a, b) = if ps is Nil then ppNil(a, b) else foldr1((a, b) => (c, d) => ppAbove(a, b, c, d), ps)(a, b)
+fun ppAboves(ps: List[Function], a, b) = if ps is Nil then ppNil(a, b) else foldr1((a, b) => (c, d) => ppAbove(a, b, c, d), ps)(a, b)
 
-fun ppNest(n, p, width, is_vert) = if
+fun ppNest(n, p: Function, width, is_vert) = if
   is_vert and p(width - n, true) is MkPrettyRep(seq, ll, emp, sl) then
     MkPrettyRep(cIndent(n, seq), ll + n, emp, sl)
   else p(width, false)
 
-fun ppHang(p1, n, p2, width, is_vert) = if p1(width, false) is
+fun ppHang(p1: Function, n, p2: Function, width, is_vert) = if p1(width, false) is
   MkPrettyRep(seq1, ll1, emp1, sl1) and p2(width - (ll1 + 1), false) is
     MkPrettyRep(seq2, ll2, emp2, sl2) and p2(width - n, false) is
       MkPrettyRep(seq2_, ll2_, emp2_, sl2_) and

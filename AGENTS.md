@@ -3,6 +3,14 @@
 
 ## Workflow
 
+When working on Scala code, use the Metals MCP tools when available for semantic
+symbol searches, inspection, documentation, and finding usages, and for quick
+file or module compilation feedback. Codex's project configuration in
+`.codex/config.toml` can launch the headless Metals server automatically.
+If Metals is unavailable, continue with source searches and SBT, and report the
+connection problem. Metals compilation and test tools do not replace the SBT
+test prerequisites and final validation below.
+
 It is best to leave the SBT shell open (by just typing the `sbt` command line)
 and issue commands directly in that shell, as SBT startup is very slow.
 
@@ -20,6 +28,11 @@ After you are done fixing all the problems and all the tests pass,
 Any commit that does not include the latest changes to test outputs will fail the CI.
 
 Please also read the files in `.github/skills/hkmc2-difftests`.
+
+Use `.mls` diff tests for compiler behavior. Do not add Scala tests that duplicate
+that coverage or merely pin internal representation or assertion details. Reserve
+unit tests for properties diff tests cannot reliably observe, such as concurrency,
+cache isolation, bounded graph growth, or algebraic laws; state the extra coverage.
 
 When you create a commit, author it under your (the agent's) own identity,
 not under the user's identity.
@@ -73,6 +86,24 @@ When appropriate, explain the history of what led to the current implementation,
 especially if it involves non-obvious decisions/trade-offs
 or if alternative approaches were considered and rejected.
 
+Comments must be understandable from the current code alone, without the conversation,
+commit history, or an earlier version of the implementation. Explain the concrete
+invariant, behavior, or failure being prevented. Name the relevant data and operations;
+avoid vague claims about where a "lifecycle" or "responsibility" belongs. If history
+or a rejected alternative matters, include enough context to explain the tradeoff
+after commits are squashed.
+
+
+## User-Facing Diagnostics
+
+Never use `showDbg`, `shwDbg`, raw AST/IR `toString` output, or other debug-only
+representations in user-facing error messages, warnings, or diagnostic notes.
+Use source-level names and user-facing descriptions, with source locations to
+identify the relevant definitions or expressions. Do not expose internal symbol
+IDs, resolution marks, or compiler representation details to users.
+Debug representations belong only in internal logs and explicitly requested
+debug output, not in ordinary diagnostics.
+
 
 ## Editing Style
 
@@ -96,5 +127,4 @@ to ensure that no needless empty-line changes are included in the PR. If you fin
 ## Manipulating IR representations
 
 When working with IR representations, please refer to the "Important design notes" in `hkmc2/shared/src/main/scala/hkmc2/codegen/Block.scala`.
-
 

@@ -14,10 +14,10 @@ module TypMod with
 fun TrmMod = 42
 module TrmMod with
   val whoami = "module"
-//│ ╔══[COMPILATION ERROR] Not yet supported: overloading of function 'TrmMod'
+//│ ╔══[COMPILATION ERROR] A module companion must be a function with a parameter list
 //│ ║  l.14: 	fun TrmMod = 42
 //│ ║        	^^^^^^^^^^^^^^^
-//│ ╟── with module of the same name
+//│ ╟── Arbitrary values cannot be overloaded with module 'TrmMod'
 //│ ║  l.15: 	module TrmMod with
 //│ ║        	^^^^^^^^^^^^^^^^^^
 //│ ║  l.16: 	  val whoami = "module"

@@ -1,3 +1,4 @@
+:.
 :js
 
 open annotations
@@ -153,10 +154,10 @@ class Add2(val x, val y, z)
 :e
 case @compile (Add2(0, _, _) | Add2(_, 1, _)) then 0
 //│ ╔══[COMPILATION ERROR] Parameter `z` is not accessible.
-//│ ║  l.151: 	class Add2(val x, val y, z)
+//│ ║  l.152: 	class Add2(val x, val y, z)
 //│ ╙──       	                         ^
 //│ ╔══[COMPILATION ERROR] Parameter `z` is not accessible.
-//│ ║  l.151: 	class Add2(val x, val y, z)
+//│ ║  l.152: 	class Add2(val x, val y, z)
 //│ ╙──       	                         ^
 //│ = fun
 

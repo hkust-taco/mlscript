@@ -1,0 +1,189 @@
+:.
+:!js
+
+
+// Companions are definitions of fresh functions, never values to be augmented.
+:e
+class Primitive
+val Primitive = 7
+//│ ╔══[COMPILATION ERROR] A class companion must be a function with a parameter list
+//│ ║  l.8: 	val Primitive = 7
+//│ ║       	^^^^^^^^^^^^^^^^^
+//│ ╟── Arbitrary values cannot be overloaded with class 'Primitive'
+//│ ║  l.7: 	class Primitive
+//│ ╙──     	^^^^^^^^^^^^^^^
+
+:e
+val Reverse = 13
+class Reverse
+//│ ╔══[COMPILATION ERROR] A class companion must be a function with a parameter list
+//│ ║  l.17: 	val Reverse = 13
+//│ ║        	^^^^^^^^^^^^^^^^
+//│ ╟── Arbitrary values cannot be overloaded with class 'Reverse'
+//│ ║  l.18: 	class Reverse
+//│ ╙──      	^^^^^^^^^^^^^
+
+:e
+class Getter
+fun Getter = 14
+//│ ╔══[COMPILATION ERROR] A class companion must be a function with a parameter list
+//│ ║  l.28: 	fun Getter = 14
+//│ ║        	^^^^^^^^^^^^^^^
+//│ ╟── Arbitrary values cannot be overloaded with class 'Getter'
+//│ ║  l.27: 	class Getter
+//│ ╙──      	^^^^^^^^^^^^
+
+:e
+module MutableMembers {
+  class Mutable
+  mut val Mutable = 17
+}
+//│ ╔══[COMPILATION ERROR] A class companion must be a function with a parameter list
+//│ ║  l.39: 	  mut val Mutable = 17
+//│ ║        	      ^^^^^^^^^^^^^^^^
+//│ ╟── Arbitrary values cannot be overloaded with class 'Mutable'
+//│ ║  l.38: 	  class Mutable
+//│ ╙──      	  ^^^^^^^^^^^^^
+
+
+// Object-valued initializers are rejected too: they may be frozen or aliased.
+:e
+class Instance
+val Instance = new Instance
+//│ ╔══[COMPILATION ERROR] A class companion must be a function with a parameter list
+//│ ║  l.52: 	val Instance = new Instance
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Arbitrary values cannot be overloaded with class 'Instance'
+//│ ║  l.51: 	class Instance
+//│ ╙──      	^^^^^^^^^^^^^^
+
+val existing = { answer: 42 }
+
+:e
+class Aliased
+val Aliased = existing
+//│ ╔══[COMPILATION ERROR] A class companion must be a function with a parameter list
+//│ ║  l.64: 	val Aliased = existing
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Arbitrary values cannot be overloaded with class 'Aliased'
+//│ ║  l.63: 	class Aliased
+//│ ╙──      	^^^^^^^^^^^^^
+
+:e
+class FreshRecord
+val FreshRecord = { answer: 42 }
+//│ ╔══[COMPILATION ERROR] A class companion must be a function with a parameter list
+//│ ║  l.74: 	val FreshRecord = { answer: 42 }
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Arbitrary values cannot be overloaded with class 'FreshRecord'
+//│ ║  l.73: 	class FreshRecord
+//│ ╙──      	^^^^^^^^^^^^^^^^^
+
+:e
+class FunctionValue
+val FunctionValue = x => x
+//│ ╔══[COMPILATION ERROR] A class companion must be a function with a parameter list
+//│ ║  l.84: 	val FunctionValue = x => x
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Arbitrary values cannot be overloaded with class 'FunctionValue'
+//│ ║  l.83: 	class FunctionValue
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^
+
+
+// The same rule applies inside modules and local scopes.
+:e
+module Members {
+  class Item
+  val Item = existing
+}
+//│ ╔══[COMPILATION ERROR] A class companion must be a function with a parameter list
+//│ ║  l.97: 	  val Item = existing
+//│ ║        	  ^^^^^^^^^^^^^^^^^^^
+//│ ╟── Arbitrary values cannot be overloaded with class 'Item'
+//│ ║  l.96: 	  class Item
+//│ ╙──      	  ^^^^^^^^^^
+
+:e
+fun local() = {
+  class Item
+  val Item = 0
+  Item
+}
+//│ ╔══[COMPILATION ERROR] A class companion must be a function with a parameter list
+//│ ║  l.109: 	  val Item = 0
+//│ ║         	  ^^^^^^^^^^^^
+//│ ╟── Arbitrary values cannot be overloaded with class 'Item'
+//│ ║  l.108: 	  class Item
+//│ ╙──       	  ^^^^^^^^^^
+
+
+// A prototype method cannot hold a class that differs between instances.
+:e
+class Container(val value: Int) {
+  class Item { fun answer() = value }
+  fun Item() = new Item
+}
+//│ ╔══[COMPILATION ERROR] Not yet supported: class companion 'Item' defined as an instance method
+//│ ║  l.124: 	  fun Item() = new Item
+//│ ║         	  ^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── An instance method is shared by all instances, but its companion is created per instance
+//│ ║  l.123: 	  class Item { fun answer() = value }
+//│ ╙──       	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+// Parameterless functions cannot own a module companion either.
+:e
+fun GetterModule = existing
+module GetterModule { val answer = 42 }
+//│ ╔══[COMPILATION ERROR] A module companion must be a function with a parameter list
+//│ ║  l.136: 	fun GetterModule = existing
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Arbitrary values cannot be overloaded with module 'GetterModule'
+//│ ║  l.137: 	module GetterModule { val answer = 42 }
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+// Declarations do not allocate companion functions either.
+:e
+class Declared
+fun Declared(): Int
+//│ ╔══[COMPILATION ERROR] A term declaration cannot have an implemented class companion
+//│ ║  l.149: 	fun Declared(): Int
+//│ ║         	^^^^^^^^^^^^^^^^^^^
+//│ ╟── Companion 'Declared' is defined here
+//│ ║  l.148: 	class Declared
+//│ ╙──       	^^^^^^^^^^^^^^
+
+:e
+class ForeignFunction
+declare fun ForeignFunction(): Int
+//│ ╔══[COMPILATION ERROR] A term declaration cannot have an implemented class companion
+//│ ║  l.159: 	declare fun ForeignFunction(): Int
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Companion 'ForeignFunction' is defined here
+//│ ║  l.158: 	class ForeignFunction
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^
+
+:e
+class ModuleContainer(val value: Int) {
+  module Item { val answer = value }
+  fun Item() = value
+}
+//│ ╔══[COMPILATION ERROR] Not yet supported: module companion 'Item' defined as an instance method
+//│ ║  l.170: 	  fun Item() = value
+//│ ║         	  ^^^^^^^^^^^^^^^^^^
+//│ ╟── An instance method is shared by all instances, but its companion is created per instance
+//│ ║  l.169: 	  module Item { val answer = value }
+//│ ╙──       	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+// A bare declaration is rejected even when it precedes its companion.
+:e
+fun Bare
+class Bare
+//│ ╔══[COMPILATION ERROR] A term declaration cannot have an implemented class companion
+//│ ║  l.182: 	fun Bare
+//│ ║         	^^^^^^^^
+//│ ╟── Companion 'Bare' is defined here
+//│ ║  l.183: 	class Bare
+//│ ╙──       	^^^^^^^^^^

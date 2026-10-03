@@ -1,7 +1,11 @@
+#lang(0.3.x)
 import "./Block.mls"
 import "./Option.mls"
+import "./Predef.mls"
 
-open Block { Literal, ClassSymbol, showSymbol, isPrimitiveType, isPrimitiveTypeOf }
+open Predef { pass1 }
+
+open Block { Literal, ClassSymbol, ConcreteClassSymbol, showSymbol, isPrimitiveType, isPrimitiveTypeOf }
 open Option
 
 type Shape = Shape.Shape
@@ -19,16 +23,14 @@ fun show(s: Shape) =
   if s is
     Dyn then "Dyn"
     Lit(lit) then "Lit(" + Block.showLiteral(lit) + ")"
-    Arr(shapes) then "Arr(" + shapes.map(show).join(", ") + ")"
-    Class(sym, params) then "Class(" + showSymbol(sym) + ", [" + params.map(show).join(", ") + "])"
+    Arr(shapes) then "Arr(" + shapes.map(pass1(show)).join(", ") + ")"
+    Class(sym, params) then "Class(" + showSymbol(sym) + ", [" + params.map(pass1(show)).join(", ") + "])"
 
 fun sel(s1: Shape, s2: Shape): Array[Shape] = 
   if [s1, s2] is
-    [Class(sym, params), Lit(n)] and n is Str
-      and sym.args is Some(args)
-      and args.find(_ == n)
-        == () then []
-        is i then [params.(i)]
+    [Class(ConcreteClassSymbol(_, _, Some(args), _), params), Lit(n)] and n is Str then
+      let i = args.findIndex(pass1((arg: Block.Symbol) => arg.name == n))
+      if i >= 0 then [params.(i)] else []
     [Dyn, Lit(n)] and n is Str
       then [Dyn()]
     [Arr(shapes), Lit(n)] and n is Int
@@ -44,18 +46,18 @@ fun sel(s1: Shape, s2: Shape): Array[Shape] =
 fun static(s: Shape) = 
   if s is
     Dyn then false
-    Lit(l) then not (l is Str and isPrimitiveType(l)) // redundant bracket?
-    Class(_, params) then params.every(static)
-    Arr(shapes) then shapes.every(static)
+    Lit(l) then not (l is Str and isPrimitiveType(Block.Symbol(l))) // redundant bracket?
+    Class(_, params) then params.every(pass1(static))
+    Arr(shapes) then shapes.every(pass1(static))
 
 open Block { Case }
 
 fun silh(p: Case): Shape = if p is
   Block.Lit(l) then Lit(l)
   Block.Cls(sym, path) then
-    val size = if sym.args is Some(i) then i else 0
-    Class(sym, Array(size).fill(Dyn))
-  Block.Tup(n) then Arr(Array(n).fill(Dyn))
+    val size = if sym is ConcreteClassSymbol(_, _, Some(params), _) then params.length else 0
+    Class(sym, Array(size).fill(Dyn()))
+  Block.Tup(n) then Arr(Array(n).fill(Dyn()))
 
 // TODO: use Option instead, since all of them return at most one shape
 fun filter(s: Shape, p: Case): Array[Shape] =

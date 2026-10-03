@@ -1,3 +1,4 @@
+:.
 :staging
 :js
 
@@ -5,6 +6,7 @@ import "../../mlscript-compile/Block.mls"
 import "../../mlscript-compile/Option.mls"
 
 open Block
+open Block { Symbol }
 open Option
 
 printCode(FunDefn(Symbol("f"), [[Symbol("x")]], Return(ValueLit(1))))

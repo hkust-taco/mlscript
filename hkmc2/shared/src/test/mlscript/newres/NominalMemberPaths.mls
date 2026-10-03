@@ -1,0 +1,65 @@
+:.
+
+// Inherited fields and generic methods retain the two callers' arguments after
+// an annotated receiver leaves its allocation scope and crosses another call.
+:expect [1, 2]
+class First(val first: Int)
+class Second(val second: Int)
+class Parent[A](val item: A) with
+  fun map[B](f: A -> B): B = f(item)
+class Child[A](item: A) extends Parent[A](item)
+private fun make[A](value: A): Child[A] = new Child[A](value)
+private fun forward(x) = x
+[forward(make[First](First(1))).item.first,
+ forward(make[Second](Second(2))).map(x => x).second]
+//│ = [1, 2]
+
+// The superclass and subclass are both local to a generic activation. Their
+// inherited signatures must keep that activation when receivers escape.
+:expect [3, 4]
+class First(val first: Int)
+class Second(val second: Int)
+private fun make[A](value: A) =
+  class Parent(val item: A) with
+    fun map[B](f: A -> B): B = f(item)
+  class Child(item: A) extends Parent(item)
+  fun nested() = new Child(value) as Child
+  nested()
+private fun forward(x) = x
+[forward(make[First](First(3))).item.first,
+ forward(make[Second](Second(4))).map(x => x).second]
+//│ = [3, 4]
+
+// Rest slicing through a generic body preserves the field substitutions even
+// when both ends are removed in successive views.
+:expect [5, 6]
+class First(val first: Int)
+class Second(val second: Int)
+private fun trim[A](value: A) =
+  let values = [0, value, 9]
+  if values is [_, ...tail] and tail is [...middle, _] then middle
+[trim[First](First(5)).0.first, trim[Second](Second(6)).0.second]
+//│ = [5, 6]
+
+// reduce feeds the callback result into the next callback invocation, even
+// when it has a different shape from the initial accumulator.
+:e
+class Initial(val start: Int)
+class Later(val result: Int)
+[1, 2].reduce((acc, value, ...) => Later(acc.start + value), Initial(0))
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.49: 	[1, 2].reduce((acc, value, ...) => Later(acc.start + value), Initial(0))
+//│ ║        	                                         ^^^^^^^^^
+//│ ╟── Instance of class 'Later' does not contain member 'start'
+//│ ║  l.49: 	[1, 2].reduce((acc, value, ...) => Later(acc.start + value), Initial(0))
+//│ ╙──      	                                   ^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// The remaining callback arguments retain their declared positions and types.
+:expect [7, 3]
+class Total(val total: Int)
+val empty: Array[Int] = mut []
+[empty.reduce((acc, value, ...) => Total(acc.total + value), Total(7)).total,
+ [4, 5].reduce((acc, value, index, array) => acc + index + array.length, -2)]
+//│ = [7, 3]
+//│ empty = []

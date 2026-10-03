@@ -1,6 +1,6 @@
 package hkmc2
 
-import java.util.concurrent.{ConcurrentLinkedQueue, CountDownLatch, Executors, ThreadFactory, TimeUnit}
+import java.util.concurrent.{ConcurrentLinkedQueue, CountDownLatch, Executors, ThreadFactory, TimeUnit, TimeoutException}
 import java.util.concurrent.atomic.AtomicInteger
 import collection.concurrent.TrieMap
 import scala.concurrent.{Await, ExecutionContext, Future}
@@ -14,6 +14,11 @@ import hkmc2.CompilerCache.{ActiveDependencyGraph, ArtifactCache}
 
 class CompilerCacheTest extends AnyFunSuite:
   private given ExecutionContext = ExecutionContext.global
+
+  // Allow more time for both worker startup and completion on shared CI runners.
+  private val (startupTimeout, completionTimeout) =
+    if sys.env.contains("CI") then (15.seconds, 15.seconds)
+    else (5.seconds, 10.seconds)
 
   private final class Entry
 
@@ -35,9 +40,9 @@ class CompilerCacheTest extends AnyFunSuite:
 
     val requests = List(request(io.Path("/A.mls")), request(io.Path("/B.mls")))
     val overlapped =
-      try bothStarted.await(5, TimeUnit.SECONDS)
+      try bothStarted.await(startupTimeout.toMillis, TimeUnit.MILLISECONDS)
       finally release.countDown()
-    Await.result(Future.sequence(requests), 10.seconds)
+    Await.result(Future.sequence(requests), completionTimeout)
 
     assert(overlapped, "Building one path should not hold the cache monitor while it evaluates")
 
@@ -58,11 +63,11 @@ class CompilerCacheTest extends AnyFunSuite:
         })
 
     val first = request()
-    assert(buildStarted.await(5, TimeUnit.SECONDS), "The first artifact build should start")
+    assert(buildStarted.await(startupTimeout.toMillis, TimeUnit.MILLISECONDS), "The first artifact build should start")
     val second = request()
     release.countDown()
-    val firstResult = Await.result(first, 10.seconds)
-    val secondResult = Await.result(second, 10.seconds)
+    val firstResult = Await.result(first, completionTimeout)
+    val secondResult = Await.result(second, completionTimeout)
 
     assert(buildCount.get() == 1, "Concurrent requesters should share one build for a path")
     assert(firstResult eq secondResult, "Concurrent requesters should observe one artifact identity")
@@ -128,7 +133,7 @@ class CompilerCacheTest extends AnyFunSuite:
       def read(path: io.Path): String =
         if synchronizedRoots.contains(path) then
           bothRootsLocked.countDown()
-          assert(bothRootsLocked.await(5, TimeUnit.SECONDS),
+          assert(bothRootsLocked.await(startupTimeout.toMillis, TimeUnit.MILLISECONDS),
             "Both root compilations should reach source parsing while holding their path locks")
         underlyingFs.read(path)
 
@@ -137,9 +142,11 @@ class CompilerCacheTest extends AnyFunSuite:
       def getLastChangedTimestamp(path: io.Path): Long =
         underlyingFs.getLastChangedTimestamp(path)
 
+    val workerThreads = new ConcurrentLinkedQueue[Thread]
     val threadFactory: ThreadFactory = runnable =>
       val thread = new Thread(runnable, "compiler-cache-deadlock-reproducer")
       thread.setDaemon(true)
+      workerThreads.add(thread)
       thread
     val executor = Executors.newFixedThreadPool(2, threadFactory)
     val executionContext = ExecutionContext.fromExecutorService(executor)
@@ -160,7 +167,11 @@ class CompilerCacheTest extends AnyFunSuite:
         compiler.compileModule(file)
       })(using executionContext)
 
-      Await.result(Future.sequence(List(compile(fileA), compile(fileB))), 10.seconds)
+      try Await.result(Future.sequence(List(compile(fileA), compile(fileB))), completionTimeout)
+      catch case timeout: TimeoutException =>
+        val workerStacks = workerThreads.asScala.map: thread =>
+          s"${thread.getName}: ${thread.getState}\n${thread.getStackTrace.mkString("\n")}"
+        fail(s"Concurrent circular imports did not finish:\n${workerStacks.mkString("\n\n")}", timeout)
       assert(diagnostics.asScala.exists(_.theMsg.contains("Circular imports")),
         "A circular import diagnostic should be reported")
     finally

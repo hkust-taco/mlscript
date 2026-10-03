@@ -1,0 +1,19 @@
+:.
+
+import "../../mlscript-compile/FingerTreeList.mls"
+
+// Calling a generic method imported from a legacy fixture must preserve the
+// class's type argument when interpreting the method's annotated result.
+:expect 42
+FingerTreeList.mk(42).at(0)
+//│ = 42
+
+import "../../mlscript-compile/LegacyGenericLibrary.mls"
+
+:expect [7, "other"]
+class NumberBox(val number: Int)
+class TextBox(val text: Str)
+fun readNumber(cell: LegacyGenericLibrary.Cell[NumberBox]) = cell.get.number
+fun readText(cell: LegacyGenericLibrary.Cell[TextBox]) = cell.getAt(0).text
+[readNumber(LegacyGenericLibrary.Cell(NumberBox(7))), readText(LegacyGenericLibrary.Cell(TextBox("other")))]
+//│ = [7, "other"]

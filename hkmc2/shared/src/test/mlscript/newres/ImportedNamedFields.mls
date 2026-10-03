@@ -1,0 +1,19 @@
+:.
+
+import "../../mlscript-compile/NamedFieldLibrary.mls"
+
+:expect ["A", 2, 3]
+let a = NamedFieldLibrary.pack("a")
+let b = NamedFieldLibrary.pack([1, 2])
+[a.0.value.toUpperCase(), b.0.value.length, NamedFieldLibrary.select(value: 3)]
+//│ = ["A", 2, 3]
+//│ a = [{value: "a"}]
+//│ b = [{value: [1, 2]}]
+
+:expect [4, 5]
+[NamedFieldLibrary.select(value: 4), NamedFieldLibrary.pack(5).0.value]
+//│ = [4, 5]
+
+:expect [36, 36]
+[NamedFieldLibrary.fields.0.value, NamedFieldLibrary.observed]
+//│ = [36, 36]

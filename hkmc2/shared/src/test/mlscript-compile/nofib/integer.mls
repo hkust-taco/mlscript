@@ -1,3 +1,5 @@
+#lang(0.3.x)
+
 import "./NofibPrelude.mls"
 import "../../../../../../hkmc2/shared/src/test/mlscript-compile/Predef.mls"
 open NofibPrelude
@@ -6,7 +8,7 @@ module integer with ...
 
 
 
-fun integerbench(op, astart, astep, alim, bstart, bstep, blim) =
+fun integerbench(op: Function, astart, astep, alim, bstart, bstep, blim) =
   fun lscomp1(ls) = if ls is
     Nil then Nil
     a :: t1 then
@@ -17,7 +19,7 @@ fun integerbench(op, astart, astep, alim, bstart, bstep, blim) =
 
   lscomp1(enumFromThenTo(astart, astart + astep, alim))
 
-fun intbench(op, astart, astep, alim, bstart, bstep, blim) =
+fun intbench(op: Function, astart, astep, alim, bstart, bstep, blim) =
   fun lscomp1(ls) = if ls is
     Nil then Nil
     a :: t1 then
@@ -55,7 +57,7 @@ fun runalltests(astart, astep, alim, bstart, bstep, blim) =
   runbench((a, b) => z_gt(a, b), (a, b) => a > b, "(>)", astart, astep, alim, astart, astep, alim);
   runbench((a, b) => z_geq(a, b), (a, b) => a >= b, "(>=)", astart, astep, alim, astart, astep, alim)
 
-fun testInteger_nofib(n) = runalltests(-2100000000, n, 2100000000, -2100000000, n, -2100000000)
+fun testInteger_nofib(n): List[Bool] = runalltests(-2100000000, n, 2100000000, -2100000000, n, -2100000000)
 
 
 // NOTE: original input -2100000000 14000001 2100000000

@@ -1,3 +1,4 @@
+:.
 :js
 :flowBasedOpt debugDpe
 
@@ -31,7 +32,7 @@ f(1, 2).get()
 //│ @private
 //│ define f⁰ as fun f¹(used) { return new C⁰(used) };
 //│ set tmp = f¹(1);
-//│ return tmp.get﹖()
+//│ return tmp.get¹()
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 1
 

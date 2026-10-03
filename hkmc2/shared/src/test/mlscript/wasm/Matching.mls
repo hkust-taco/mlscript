@@ -1,6 +1,5 @@
+:.
 
-:global
-:wasm
 
 if true then 0 else 2
 //│ Wasm result:

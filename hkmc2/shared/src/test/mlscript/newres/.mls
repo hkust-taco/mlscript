@@ -1,0 +1,4 @@
+:..
+:js
+#lang(strictResolution: true)
+#lang(eagerResolution: true)

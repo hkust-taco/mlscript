@@ -1,0 +1,99 @@
+:.
+
+// An invariant omitted argument receives constraints from both functions.
+// Its bounds must keep their source scope when the result flows to another call.
+:expect 2
+class Box[T](val item: T)
+fun make(x): Box = Box(x)
+fun read(box: Box) = box.item
+fun call(x) = read(make(x))
+call(2)
+//│ = 2
+
+// Iterator annotations retain their declared members while inferring elements.
+:expect 3
+fun getIterator(xs): Iterator = xs.(Symbol.iterator)()
+fun foldingImpl(iterator: Iterator, acc, op: Function) =
+  let next = iterator.next()
+  while next.done is false do
+    set acc = op(acc, next.value)
+    set next = iterator.next()
+  acc
+fun folded(xs, z, op: Function) =
+  let iterator = getIterator(xs)
+  foldingImpl(iterator, z, op)
+folded([1, 2], 0, (x, y) => x + y)
+//│ = 3
+
+// A nested caller must observe the same hole through its own lexical path.
+:expect [1, 2]
+fun getIterator(xs): Iterator = xs.(Symbol.iterator)()
+fun foldingImpl(iterator: Iterator) = iterator.next().value
+fun folded(xs) = foldingImpl(getIterator(xs))
+fun flattened(xss) =
+  let iterableIterator = getIterator(xss)
+  fun skipEmptyIterables() =
+    let nextIterableResult = iterableIterator.next()
+    let nextIterator = getIterator(nextIterableResult.value)
+    let nextResult = nextIterator.next()
+    [nextIterator, nextResult.value]
+  skipEmptyIterables().1
+[flattened([[1]]), folded([2])]
+//│ = [1, 2]
+
+// Partially supplied arguments move with the application; the omitted position
+// remains anchored to its source reference, including inside a nested function.
+:expect [1, 2]
+class Pair[A, B](val first: A, val second: B)
+fun make(x): Pair[Int] = Pair(1, x)
+fun read(pair: Pair[Int]) = [pair.first, pair.second]
+fun call(x) =
+  fun nested() = read(make(x))
+  nested()
+call(2)
+//│ = [1, 2]
+
+// Exposure still contributes unknowns to the hole. Keeping scope paths correct
+// must not let one local caller narrow the public interface.
+:ge
+class Item(val value: Int)
+class Box[T](val item: T)
+fun make(x): Box = Box(x)
+fun read(box: Box) = box.item.value
+fun call(x) = read(make(x))
+call(Item(2))
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.62: 	fun read(box: Box) = box.item.value
+//│ ║        	                     ^^^^^^^^^^^^^^
+//│ ╟── Parameter 'x' admits values of unknown shape.
+//│ ║  l.61: 	fun make(x): Box = Box(x)
+//│ ║        	         ^
+//│ ╟── 'make' is exposed by this compilation unit.
+//│ ║  l.61: 	fun make(x): Box = Box(x)
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Cannot resolve member 'value' of a value with unknown shape.
+//│ ║  l.60: 	class Box[T](val item: T)
+//│ ║        	          ^
+//│ ╟── Cannot resolve member 'value' of a value with unknown shape.
+//│ ╟── Parameter 'box' admits values of unknown shape.
+//│ ║  l.62: 	fun read(box: Box) = box.item.value
+//│ ║        	         ^^^^^^^^
+//│ ╟── 'read' is exposed by this compilation unit.
+//│ ║  l.62: 	fun read(box: Box) = box.item.value
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Parameter 'x' admits values of unknown shape.
+//│ ║  l.63: 	fun call(x) = read(make(x))
+//│ ║        	         ^
+//│ ╟── 'call' is exposed by this compilation unit.
+//│ ║  l.63: 	fun call(x) = read(make(x))
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// Inference through an explicit callback signature also transports bounds back
+// from a generic callee to the caller's omitted argument (as in nofib/cse).
+:expect [1, 2]
+class Box[T](val item: T)
+fun fold[A, B](f: (A, B) -> B, z: B, xs: Box[A]): B = f(xs.item, z)
+fun call(xs: Box) = fold((x, z) => [x, z], 2, xs)
+call(Box(1))
+//│ = [1, 2]

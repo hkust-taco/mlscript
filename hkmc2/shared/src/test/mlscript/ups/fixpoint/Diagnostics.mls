@@ -1,3 +1,4 @@
+:.
 :js
 
 // Diagnostics parity: warnings produced by the other compilation paths must
@@ -21,7 +22,7 @@ pattern Steps = UnBox as Steps | _
 :expect "matched"
 if Box(0) is @compile Steps(CaptureBit(ZeroToOne)) then "matched" else "no match"
 //│ ╔══[WARNING] This extraction argument's transformation result is discarded by pattern `CaptureBit`.
-//│ ║  l.22: 	if Box(0) is @compile Steps(CaptureBit(ZeroToOne)) then "matched" else "no match"
+//│ ║  l.23: 	if Box(0) is @compile Steps(CaptureBit(ZeroToOne)) then "matched" else "no match"
 //│ ║        	                                       ^^^^^^^^^
 //│ ╙── Write `... as _` to discard it explicitly.
 //│ = "matched"
@@ -35,9 +36,9 @@ if Box(0) is @compile Steps(CaptureBit(ZeroToOne)) then "matched" else "no match
 pattern FastSteps = @compile ((Box(CaptureBit(ZeroToOne)) => 0) as FastSteps | _)
 //│ ╔══[COMPILATION ERROR] Pattern `CaptureBit` has zero pattern parameters.
 //│ ╟── But one pattern argument were provided.
-//│ ║  l.35: 	pattern FastSteps = @compile ((Box(CaptureBit(ZeroToOne)) => 0) as FastSteps | _)
-//│ ╙──      	                                   ^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.36: 	pattern FastSteps = @compile ((Box(CaptureBit(ZeroToOne)) => 0) as FastSteps | _)
+//│ ╙──      	                                   ^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[WARNING] This extraction argument's transformation result is discarded by pattern `CaptureBit`.
-//│ ║  l.35: 	pattern FastSteps = @compile ((Box(CaptureBit(ZeroToOne)) => 0) as FastSteps | _)
+//│ ║  l.36: 	pattern FastSteps = @compile ((Box(CaptureBit(ZeroToOne)) => 0) as FastSteps | _)
 //│ ║        	                                              ^^^^^^^^^
 //│ ╙── Write `... as _` to discard it explicitly.

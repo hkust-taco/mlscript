@@ -70,9 +70,10 @@ class DebugPrinter:
       case xs: List[_] => "Ls of\n" + xs.iterator.map(aux(_)).mkString("\n").indent("  ")
       case xs: Vector[_] => "Vector of\n" + xs.iterator.map(aux(_)).mkString("\n").indent("  ")
       case s: Str => s.escaped
-      case TermDefFlags(isMethod) =>
+      case TermDefFlags(isMethod, hasResultAnnotation) =>
         val flags = Buffer.empty[Str]
         if isMethod then flags += "method"
+        if hasResultAnnotation then flags += "result annotation"
         flags.mkString("(", ", ", ")")
       case FldFlags(mut, spec, pat, value) =>
         val flags = Buffer.empty[Str]

@@ -1,0 +1,228 @@
+:.
+
+
+// A function definition creates a fresh companion that can own its class.
+class Primitive {
+  fun answer() = 42
+}
+fun Primitive() = 7
+
+:expect 7
+Primitive()
+//│ = 7
+
+:expect 42
+(new Primitive).answer()
+//│ = 42
+
+
+// Declaration order must not change class selection.
+fun Reverse() = 13
+class Reverse {
+  fun answer() = 43
+}
+
+:expect 43
+(new Reverse()).answer()
+//│ = 43
+
+class Getter {
+  fun answer() = 44
+}
+fun Getter() = 14
+
+:expect 14
+Getter()
+//│ = 14
+
+:expect 44
+(new Getter).answer()
+//│ = 44
+
+
+// Both meanings remain available inside closures and local scopes.
+fun local(n) = {
+  class Item {
+    fun answer() = n
+  }
+  fun Item(x) = (new Item).answer() + x
+  Item(2)
+}
+
+:expect 42
+local(40)
+//│ = 42
+
+
+module Members {
+  class Item {
+    fun answer() = 45
+  }
+  fun Item() = new Item
+  fun fresh() = new Item
+  class Factory {
+    fun answer() = 46
+  }
+  fun Factory(x) = (new Factory).answer() + x
+}
+
+:expect 45
+Members.Item().answer()
+//│ = 45
+
+:expect 45
+Members.fresh().answer()
+//│ = 45
+
+:expect 45
+(new Members.Item).answer()
+//│ = 45
+
+:expect 48
+Members.Factory(2)
+//│ = 48
+
+:expect 46
+(new Members.Factory()).answer()
+//│ = 46
+
+
+// An explicit constructor list does not make a bare class a callable class.
+class Aux {
+  constructor(val x)
+  fun answer() = x
+}
+fun Aux(x) = new Aux(x + 1)
+
+// Constructor fields retain the selected constructor and its capture path.
+:expect 42
+Aux(41).answer()
+//│ = 42
+
+:expect 41
+(new Aux(41)).answer()
+//│ = 41
+
+
+class Parent {
+  fun answer() = 47
+}
+fun Parent() = false
+class Child extends Parent
+
+// Inherited members retain their class interpretation despite the term overload.
+:expect 47
+(new Child).answer()
+//│ = 47
+
+
+class Factory {
+  fun answer() = 49
+}
+fun Factory() = new Factory
+
+:noInline
+:expect 49
+Factory().answer()
+//│ = 49
+
+
+// A class instance can expose a nested class alongside an ordinary field.
+class Container {
+  class Inner {
+    fun answer() = 50
+  }
+  val value = 5
+  fun fresh() = new Inner
+}
+let container = new Container
+//│ container = Container { Inner: class Inner, value: 5 }
+
+:expect 5
+container.value
+//│ = 5
+
+:expect 50
+(new container.Inner).answer()
+//│ = 50
+
+:expect 50
+container.fresh().answer()
+//│ = 50
+
+
+module MutableMembers {
+  class Item {
+    fun answer() = 53
+  }
+  mut val value = 17
+}
+set MutableMembers.value = 18
+
+:expect 18
+MutableMembers.value
+//│ = 18
+
+:expect 53
+(new MutableMembers.Item).answer()
+//│ = 53
+
+
+// Direct parameter lists already define a constructor function with this name.
+:e
+class Parameterized()
+fun Parameterized() = 0
+//│ ╔══[COMPILATION ERROR] Not yet supported: overloading of function 'Parameterized'
+//│ ║  l.174: 	fun Parameterized() = 0
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── with class of the same name
+//│ ║  l.173: 	class Parameterized()
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^
+
+:e
+class ParameterizedValue(x)
+val ParameterizedValue = 0
+//│ ╔══[COMPILATION ERROR] A class companion must be a function with a parameter list
+//│ ║  l.184: 	val ParameterizedValue = 0
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Arbitrary values cannot be overloaded with class 'ParameterizedValue'
+//│ ║  l.183: 	class ParameterizedValue(x)
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ParameterizedValue = 0
+
+// Distinct term definitions are still duplicate definitions, even beside a class.
+:e
+class Duplicate
+fun Duplicate() = 0
+val Duplicate = 1
+//│ ╔══[COMPILATION ERROR] A class companion must be a function with a parameter list
+//│ ║  l.197: 	val Duplicate = 1
+//│ ║         	^^^^^^^^^^^^^^^^^
+//│ ╟── Arbitrary values cannot be overloaded with class 'Duplicate'
+//│ ║  l.195: 	class Duplicate
+//│ ╙──       	^^^^^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Illegal overloading of value 'Duplicate'
+//│ ║  l.197: 	val Duplicate = 1
+//│ ║         	^^^^^^^^^^^^^^^^^
+//│ ╟── with function of the same name
+//│ ║  l.196: 	fun Duplicate() = 0
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^
+
+
+// Inlining the same local definitions twice must keep their class identities separate.
+:inlineThreshold 10000
+:expect [42, 43]
+[local(40), local(41)]
+//│ = [42, 43]
+
+
+fun unusedClass() = {
+  class Unused
+  fun Unused() = 55
+  Unused()
+}
+
+:inlineThreshold 10000
+:expect 55
+unusedClass()
+//│ = 55

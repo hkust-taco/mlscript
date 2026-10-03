@@ -1,3 +1,4 @@
+:.
 :js
 
 import "../../../mlscript-compile/Stack.mls"
@@ -7,6 +8,7 @@ import "../../../mlscript-compile/StrOps.mls"
 open Stack
 open Option
 open StrOps
+open StrOps { concat2, ~ }
 
 fun (|>) pipe(x, f) = f(x)
 

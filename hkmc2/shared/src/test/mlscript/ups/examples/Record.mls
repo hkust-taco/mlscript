@@ -1,3 +1,4 @@
+:.
 :js
 
 open annotations
@@ -38,7 +39,7 @@ fun bmi(record) = if record is MatchOrNone(RoundedBMI) as value then value
 // alternatively?
 fun bmi'(record) = if record is MatchOrNone[RoundedBMI] as value then value
 //│ ╔══[COMPILATION ERROR] Unrecognized pattern (application).
-//│ ║  l.39: 	fun bmi'(record) = if record is MatchOrNone[RoundedBMI] as value then value
+//│ ║  l.40: 	fun bmi'(record) = if record is MatchOrNone[RoundedBMI] as value then value
 //│ ╙──      	                                ^^^^^^^^^^^^^^^^^^^^^^^
 
 :expect Some(23)
@@ -51,7 +52,7 @@ bmi of height: 1.75
 :todo // Make it happen!
 fun bmi'(record) = if record is (@compile MatchOrNone(RoundedBMI)) as value then value
 //│ ╔══[COMPILATION ERROR] Pattern chaining is not supported in pattern compilation.
-//│ ║  l.20: 	pattern RoundedBMI = CalculateBMI as Rounded
+//│ ║  l.21: 	pattern RoundedBMI = CalculateBMI as Rounded
 //│ ╙──      	                     ^^^^^^^^^^^^^^^^^^^^^^^
 
 // Calculate the area of different shapes

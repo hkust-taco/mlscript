@@ -1,3 +1,4 @@
+:.
 :js
 
 
@@ -25,7 +26,14 @@ let g = f(_, 3)
 g(2)
 //│ = [1, 2, 3]
 
+:e
 foo(_, _, 3) of 1, 2
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.30: 	foo(_, _, 3) of 1, 2
+//│ ║        	^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Tuple literal cannot be called like a function.
+//│ ║  l.5: 	fun foo(x, y, z) = [x, y, z]
+//│ ╙──     	                   ^^^^^^^^^
 //│ = fun
 
 {foo(_, _, 3)} of 1, 2
@@ -87,8 +95,15 @@ let i = _(0, 1, _)
 i(print, 2)
 //│ > 0 1 2
 
+:e
 :re
 i(print)(2)
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.100: 	i(print)(2)
+//│ ║         	^^^^^^^^
+//│ ╟── Function literal expected 2 arguments, but got 1
+//│ ║  l.89: 	let i = _(0, 1, _)
+//│ ╙──      	        ^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] Error: Function 'i' expected 2 arguments but got 1
 
 // :re
@@ -96,7 +111,20 @@ i((x, y, z) => x + y + z, 2)
 //│ = 3
 
 // :re
+:e
 i((...args) => [...args], _)(2)
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.100: 	i(print)(2)
+//│ ║         	^^^^^^^^^^^
+//│ ╟── Tuple literal cannot be called like a function.
+//│ ║  l.89: 	let i = _(0, 1, _)
+//│ ╙──      	         ^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.115: 	i((...args) => [...args], _)(2)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Tuple literal cannot be called like a function.
+//│ ║  l.89: 	let i = _(0, 1, _)
+//│ ╙──      	         ^^^^^^^^^
 //│ = fun
 
 
@@ -110,8 +138,16 @@ i((...args) => [...args], _)(2)
 123 |> ((_ + 1) >> (_ * 2))
 //│ = 248
 
+:e
 :re
 123 |> (_ + 1 >> _ * 2)
+//│ ╔══[COMPILATION ERROR] Resolution error in function type
+//│ ║  l.30: 	fun (|>) pipeInto[A, B](x: A, f: A -> B): B = f(x)
+//│ ║        	                                 ^^^^^^
+//│ ╟── Callback parameter list does not match its declared function type.
+//│ ║  in PartialApps.mls:143
+//│ ║  l.143: 	123 |> (_ + 1 >> _ * 2)
+//│ ╙──       	          ^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] Error: Function expected 2 arguments but got 1
 
 (_ + 1 + _ * 2) of 123, 456
@@ -201,16 +237,20 @@ _ - _ of 1, 2
 :pe
 |> 1
 //│ ╔══[PARSE ERROR] Expected end of input; found literal instead
-//│ ║  l.202: 	|> 1
+//│ ║  l.238: 	|> 1
 //│ ╙──       	   ^
 //│ = fun pipeInto
 
 :e
 :re
 |> (1)
-//│ ╔══[COMPILATION ERROR] Expected 2 arguments, got 1
-//│ ║  l.210: 	|> (1)
-//│ ╙──       	   ^^^
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.246: 	|> (1)
+//│ ║         	^^^^^^
+//│ ╟── Function 'pipeInto' expected 2 arguments, but got 1
+//│ ║  in ../../mlscript-compile/Predef.mls
+//│ ║  l.30: 	fun (|>) pipeInto[A, B](x: A, f: A -> B): B = f(x)
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] TypeError: f is not a function
 
 |> (1, _ - 2)
@@ -227,21 +267,21 @@ _ - _ of 1, 2
 :sjs
 1 \ (_ - 2)
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let lambda8;
-//│ lambda8 = (undefined, function (_0) { return _0 - 2 });
-//│ return Predef.passTo(1, lambda8)
+//│ let lambda32;
+//│ lambda32 = (undefined, function (_0) { return _0 - 2 });
+//│ return Predef.passTo(1, lambda32)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = fun
 
 :sjs
 1 \ (_ - 2)()
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let lambda9, args;
-//│ lambda9 = (undefined, function (_0) {
+//│ let lambda33, args;
+//│ lambda33 = (undefined, function (_0) {
 //│   return _0 - 2
 //│ });
 //│ args = [];
-//│ return runtime.safeCall(lambda9(1, ...args))
+//│ return runtime.safeCall(lambda33(1, ...args))
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = -1
 
@@ -254,13 +294,13 @@ _ - _ of 1, 2
 :w
 let f = if _ then 1 else 0
 //│ ╔══[WARNING] This catch-all clause makes the following branches unreachable.
-//│ ║  l.255: 	let f = if _ then 1 else 0
+//│ ║  l.295: 	let f = if _ then 1 else 0
 //│ ║         	             ^^^^^^
 //│ ╟── This branch is unreachable.
-//│ ║  l.255: 	let f = if _ then 1 else 0
+//│ ║  l.295: 	let f = if _ then 1 else 0
 //│ ╙──       	                    ^^^^^^
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let f13; f13 = 1;
+//│ let f23; f23 = 1;
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ f = 1
 
@@ -270,8 +310,8 @@ fun f(x) =
     0 then 1
     _ then 2
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let f14;
-//│ f14 = function f(x3) {
+//│ let f24;
+//│ f24 = function f(x3) {
 //│   let scrut;
 //│   scrut = Predef.equals(x3, 0);
 //│   if (scrut === true) { return 1 }

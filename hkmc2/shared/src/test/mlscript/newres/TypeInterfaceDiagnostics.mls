@@ -1,0 +1,294 @@
+:.
+
+// Following an alias must retain the input wildcard's source witness.
+:ge
+class Item(val value: Int)
+type Items[A] = Array[A]
+let xs = (mut [] as Items[in Item])
+xs.0.value
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.8: 	xs.0.value
+//│ ║       	^^^^^^^^^^
+//│ ╟── Cannot resolve member 'value' of a value with unknown shape.
+//│ ╟── This type argument specifies only an input bound.
+//│ ║  l.7: 	let xs = (mut [] as Items[in Item])
+//│ ║       	                          ^^^^^^^
+//│ ╙── Values read through it have no output bound more specific than 'Any'.
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ xs = []
+
+// Boolean normalization must retain why the output became unrestricted.
+:ge
+class Item(val value: Int)
+type Items[A] = Array[A | Int]
+let xs = (mut [] as Items[in Item])
+xs.0.value
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.25: 	xs.0.value
+//│ ║        	^^^^^^^^^^
+//│ ╟── Cannot resolve member 'value' of a value with unknown shape.
+//│ ╟── This type argument specifies only an input bound.
+//│ ║  l.24: 	let xs = (mut [] as Items[in Item])
+//│ ║        	                          ^^^^^^^
+//│ ╙── Values read through it have no output bound more specific than 'Any'.
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ xs = []
+
+// A precise intersection must not inherit the discarded top operand's diagnostic.
+:expect 3
+class Item(val value: Int)
+type Items[A] = Array[A & Item]
+let xs = (mut [Item(3)] as Items[in Item])
+xs.0.value
+//│ = 3
+//│ xs = [Item(3)]
+
+// Declaration-site input variance identifies the responsible parameter.
+:ge
+class Item(val value: Int)
+class Box[in T](val item: T)
+let box = (new Box(Item(4)) as Box[Item])
+box.item.value
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.51: 	box.item.value
+//│ ║        	^^^^^^^^^^^^^^
+//│ ╟── Cannot resolve member 'value' of a value with unknown shape.
+//│ ╟── This type argument supplies only an input bound for 'T'.
+//│ ║  l.50: 	let box = (new Box(Item(4)) as Box[Item])
+//│ ║        	                                   ^^^^
+//│ ╟── Type parameter 'T' is declared contravariant here.
+//│ ║  l.49: 	class Box[in T](val item: T)
+//│ ║        	             ^
+//│ ╙── Values read through it have no output bound more specific than 'Any'.
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ box = Box(Item(4))
+
+// Explicit Any does not become an unnamed abstract type in the diagnostic.
+:ge
+class Item(val value: Int)
+let xs = (mut [Item(5)] as Array[Any])
+xs.0.value
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.70: 	xs.0.value
+//│ ║        	^^^^^^^^^^
+//│ ╟── Cannot resolve member 'value' of a value with unknown shape.
+//│ ║  l.69: 	let xs = (mut [Item(5)] as Array[Any])
+//│ ║        	                                 ^^^
+//│ ╟── Type 'Any' is declared without a member interface.
+//│ ║  in ../decls/Prelude.mls
+//│ ║  l.2: 	declare type Any
+//│ ╙──     	             ^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ xs = [Item(5)]
+
+// An abstract declaration is identified by its name and declaration location.
+:ge
+declare type Hidden
+fun inspect(value: Hidden) = value.member
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.87: 	fun inspect(value: Hidden) = value.member
+//│ ║        	                             ^^^^^^^^^^^^
+//│ ╟── Cannot resolve member 'member' of a value with unknown shape.
+//│ ║  l.87: 	fun inspect(value: Hidden) = value.member
+//│ ║        	                   ^^^^^^
+//│ ╟── Type 'Hidden' is declared without a member interface.
+//│ ║  l.86: 	declare type Hidden
+//│ ╙──      	             ^^^^^^
+
+// Unsupported singleton interfaces must not be described as abstract declarations.
+:ge
+fun inspect(value: 1) = value.member
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.100: 	fun inspect(value: 1) = value.member
+//│ ║         	                        ^^^^^^^^^^^^
+//│ ╟── Integer literal does not contain member 'member'
+//│ ║  l.100: 	fun inspect(value: 1) = value.member
+//│ ╙──       	                   ^
+
+// Negation has a different explanation from an abstract declaration.
+:ge
+fun inspect(value: ~Int) = value.member
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.110: 	fun inspect(value: ~Int) = value.member
+//│ ║         	                           ^^^^^^^^^^^^
+//│ ╟── Cannot resolve member 'member' of a value with unknown shape.
+//│ ╟── This negated type does not specify a member interface.
+//│ ║  l.110: 	fun inspect(value: ~Int) = value.member
+//│ ╙──       	                   ^^^^
+
+// Calling a value retains the same explanation as selecting its members.
+:ge
+class Item(val value: Int)
+fun invoke(xs: Array[in Item]) = xs.0()
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.122: 	fun invoke(xs: Array[in Item]) = xs.0()
+//│ ║         	                                 ^^^^^^
+//│ ╟── Value with no known interface cannot be called like a function.
+//│ ║  l.122: 	fun invoke(xs: Array[in Item]) = xs.0()
+//│ ║         	                     ^^^^^^^
+//│ ╟── This type argument specifies only an input bound.
+//│ ║  l.122: 	fun invoke(xs: Array[in Item]) = xs.0()
+//│ ║         	                     ^^^^^^^
+//│ ╙── Values read through it have no output bound more specific than 'Any'.
+
+// Shared argument types must not attribute a different declaration's variance.
+:ge
+class Item(val value: Int)
+class Left[in L](val item: L)
+class Right[in R](val item: R)
+type Pair[A] = [Left[A], Right[A]]
+let pair = ([new Left(Item(1)), new Right(Item(2))] as Pair[Item])
+pair.1.item.value
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.141: 	pair.1.item.value
+//│ ║         	^^^^^^^^^^^^^^^^^
+//│ ╟── Cannot resolve member 'value' of a value with unknown shape.
+//│ ╟── This type argument supplies only an input bound for 'R'.
+//│ ║  l.140: 	let pair = ([new Left(Item(1)), new Right(Item(2))] as Pair[Item])
+//│ ║         	                                                            ^^^^
+//│ ╟── Type parameter 'R' is declared contravariant here.
+//│ ║  l.138: 	class Right[in R](val item: R)
+//│ ║         	               ^
+//│ ╙── Values read through it have no output bound more specific than 'Any'.
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ pair = [Left(Item(1)), Right(Item(2))]
+
+// Capturing and returning a typed value preserves the selected parameter's witness.
+:ge
+class Item(val value: Int)
+class Left[in L](val item: L)
+class Right[in R](val item: R)
+type Pair[A] = [Left[A], Right[A]]
+private fun delay[A](value: A) = () => value
+let pair = ([new Left(Item(1)), new Right(Item(2))] as Pair[Item])
+delay(pair)().1.item.value
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.164: 	delay(pair)().1.item.value
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Cannot resolve member 'value' of a value with unknown shape.
+//│ ╟── This type argument supplies only an input bound for 'R'.
+//│ ║  l.163: 	let pair = ([new Left(Item(1)), new Right(Item(2))] as Pair[Item])
+//│ ║         	                                                            ^^^^
+//│ ╟── Type parameter 'R' is declared contravariant here.
+//│ ║  l.160: 	class Right[in R](val item: R)
+//│ ║         	               ^
+//│ ╙── Values read through it have no output bound more specific than 'Any'.
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ pair = [Left(Item(1)), Right(Item(2))]
+
+// Known nominal interfaces retain the annotation use through aliases and captures.
+:ge
+class Base
+type Alias = Base
+fun inspect(value: Alias) = (() => value)().missing
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.183: 	fun inspect(value: Alias) = (() => value)().missing
+//│ ║         	                            ^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Value of type 'Base' does not contain member 'missing'
+//│ ║  l.183: 	fun inspect(value: Alias) = (() => value)().missing
+//│ ╙──       	                   ^^^^^
+
+// A function result identifies the annotation that hides implementation members.
+:ge
+class Base
+fun make(): Base = new Base
+make().missing
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.195: 	make().missing
+//│ ║         	^^^^^^^^^^^^^^
+//│ ╟── Value of type 'Base' does not contain member 'missing'
+//│ ║  l.194: 	fun make(): Base = new Base
+//│ ╙──       	            ^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// Structural interfaces explain which written fields restrict a selection.
+:ge
+fun inspect(value: {present: Int}) = value.missing
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.206: 	fun inspect(value: {present: Int}) = value.missing
+//│ ║         	                                     ^^^^^^^^^^^^^
+//│ ╟── Record type does not contain member 'missing'
+//│ ║  l.206: 	fun inspect(value: {present: Int}) = value.missing
+//│ ╙──       	                    ^^^^^^^^^^^^
+
+// Calling a nominal value points to the annotation that made it non-callable.
+:ge
+class Base
+fun invoke(value: Base) = value()
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.217: 	fun invoke(value: Base) = value()
+//│ ║         	                          ^^^^^^^
+//│ ╟── Value of type 'Base' cannot be called like a function.
+//│ ║  l.217: 	fun invoke(value: Base) = value()
+//│ ╙──       	                  ^^^^
+
+// Arity errors on a declared callback identify its function type.
+:ge
+fun invoke(callback: Int -> Int) = callback()
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.227: 	fun invoke(callback: Int -> Int) = callback()
+//│ ║         	                                   ^^^^^^^^^^
+//│ ╟── Function with a declared signature expected 1 argument, but got 0
+//│ ║  l.227: 	fun invoke(callback: Int -> Int) = callback()
+//│ ╙──       	                     ^^^^^^^^^^
+
+// Type argument arity errors retain the same callback signature witness.
+:ge
+fun invoke(callback: Int -> Int) = callback[Int](0)
+//│ ╔══[COMPILATION ERROR] Resolution error in type application
+//│ ║  l.237: 	fun invoke(callback: Int -> Int) = callback[Int](0)
+//│ ║         	                                   ^^^^^^^^^^^^^
+//│ ╟── Function with a declared signature expected 0 type arguments, but got 1
+//│ ║  l.237: 	fun invoke(callback: Int -> Int) = callback[Int](0)
+//│ ╙──       	                     ^^^^^^^^^^
+
+// A function interface also explains missing members on the callback itself.
+:ge
+fun inspect(callback: Int -> Int) = callback.missing
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.247: 	fun inspect(callback: Int -> Int) = callback.missing
+//│ ║         	                                    ^^^^^^^^^^^^^^^^
+//│ ╟── Function with a declared signature does not contain member 'missing'
+//│ ║  l.247: 	fun inspect(callback: Int -> Int) = callback.missing
+//│ ╙──       	                      ^^^^^^^^^^
+
+// Checked indexing reports the annotation that does not expose an array.
+:ge
+class Base
+fun inspect(value: Base) = value.[0]
+//│ ╔══[COMPILATION ERROR] Resolution error in array index
+//│ ║  l.258: 	fun inspect(value: Base) = value.[0]
+//│ ║         	                           ^^^^^^^^
+//│ ╟── Value of type 'Base' does not support checked array indexing.
+//│ ║  l.258: 	fun inspect(value: Base) = value.[0]
+//│ ║         	                   ^^^^
+//│ ╙── Use '![...]' for a dynamic access.
+
+// An annotated instance cannot be used as a constructor.
+:ge
+class Base
+val instance: Base = new Base
+new instance
+//│ ╔══[COMPILATION ERROR] Resolution error in object instantiation
+//│ ║  l.271: 	new instance
+//│ ║         	^^^^^^^^^^^^
+//│ ╟── Value with a declared type cannot be instantiated with keyword 'new'.
+//│ ║  l.270: 	val instance: Base = new Base
+//│ ╙──       	              ^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ instance = Base
+
+// An alias keeps the annotation use as well as the abstract declaration's location.
+:ge
+declare type Hidden
+type Alias = Hidden
+fun inspect(value: Alias) = value.member
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.285: 	fun inspect(value: Alias) = value.member
+//│ ║         	                            ^^^^^^^^^^^^
+//│ ╟── Cannot resolve member 'member' of a value with unknown shape.
+//│ ║  l.285: 	fun inspect(value: Alias) = value.member
+//│ ║         	                   ^^^^^
+//│ ╟── Type 'Hidden' is declared without a member interface.
+//│ ║  l.283: 	declare type Hidden
+//│ ╙──       	             ^^^^^^

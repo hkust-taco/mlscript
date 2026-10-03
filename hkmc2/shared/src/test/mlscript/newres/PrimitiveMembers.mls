@@ -1,0 +1,65 @@
+:.
+
+:expect [3, "abab", "A", 98, "1.00", "23"]
+["abc".length, "ab".repeat(2), "abc".charAt(0).toUpperCase(),
+ "abc".charCodeAt(1), (1).toFixed(2), (23).toString()]
+//│ = [3, "abab", "A", 98, "1.00", "23"]
+
+:expect ["AB", "1.5", "a-b"]
+fun upper(s: Str) = s.toUpperCase()
+fun decimal(n: Num) = n.toFixed(1)
+[upper("ab"), decimal(1.5), "a b".split(" ").join("-")]
+//│ = ["AB", "1.5", "a-b"]
+
+:e
+"abc".nonexistent
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.15: 	"abc".nonexistent
+//│ ║        	^^^^^^^^^^^^^^^^^
+//│ ╟── String literal does not contain member 'nonexistent'
+//│ ║  l.15: 	"abc".nonexistent
+//│ ╙──      	^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+:expect [true, 2, false, 1]
+let values = new mut Set
+values.add("a")
+values.add("b")
+let present = values.has("a")
+let size = values.size
+values.delete("a")
+[present, size, values.has("a"), values.size]
+//│ = [true, 2, false, 1]
+//│ present = true
+//│ size = 2
+//│ values = Set(1) {"b"}
+
+:expect [true, "ab", null, false]
+let re = new RegExp("a+")
+let groups = new RegExp("ab").exec("abc")
+[re.test("aa"), (if groups is Array as array then array.at(0) else "missing"),
+ re.exec("c"), (new Map).has("missing")]
+//│ = [true, "ab", null, false]
+//│ groups = ["ab"]
+//│ re = /a+/
+
+:expect [true, true, true, "oops"]
+let error = Error("oops")
+[error is Error, TypeError("bad") is TypeError,
+ RangeError("bounds") is RangeError, error.message]
+//│ = [true, true, true, "oops"]
+//│ error = Error: oops
+
+:expect [true, 3, "42", true]
+let xs = Array(3)
+[xs is Array, xs.length, String(42), (new Error("new")) is Error]
+//│ = [true, 3, "42", true]
+//│ xs = [<3 empty items>]
+
+// Int inherits toString from Num. The parent reference is captured into Int's
+// scope, so the inherited member must leave that scope before the receiver's
+// path, here the exit from `one`, is applied.
+:expect "1"
+fun one() = 1
+one().toString()
+//│ = "1"

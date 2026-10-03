@@ -1,3 +1,4 @@
+:.
 :js
 
 
@@ -41,7 +42,7 @@ obj
 :pe
 obj. a
 //│ ╔══[PARSE ERROR] Expected end of input; found period instead
-//│ ║  l.42: 	obj. a
+//│ ║  l.43: 	obj. a
 //│ ╙──      	   ^
 //│ = {a: 1}
 
@@ -55,20 +56,20 @@ obj .("a")
 obj
   .("a")
 //│ ╔══[PARSE ERROR] Expected an expression; found period instead
-//│ ║  l.56: 	  .("a")
+//│ ║  l.57: 	  .("a")
 //│ ╙──      	  ^
 //│ ╔══[PARSE ERROR] Unexpected period here
-//│ ║  l.56: 	  .("a")
+//│ ║  l.57: 	  .("a")
 //│ ╙──      	  ^
 //│ ╔══[COMPILATION ERROR] Illegal juxtaposition right-hand side (‹erroneous syntax›).
-//│ ║  l.56: 	  .("a")
+//│ ║  l.57: 	  .("a")
 //│ ╙──      	  ^
 //│ = {a: 1}
 
 :pe
 obj. ("a")
 //│ ╔══[PARSE ERROR] Expected end of input; found period instead
-//│ ║  l.69: 	obj. ("a")
+//│ ║  l.70: 	obj. ("a")
 //│ ╙──      	   ^
 //│ = {a: 1}
 
@@ -82,20 +83,20 @@ obj ."a"
 obj
   ."a"
 //│ ╔══[PARSE ERROR] Expected an expression; found period instead
-//│ ║  l.83: 	  ."a"
+//│ ║  l.84: 	  ."a"
 //│ ╙──      	  ^
 //│ ╔══[PARSE ERROR] Unexpected period here
-//│ ║  l.83: 	  ."a"
+//│ ║  l.84: 	  ."a"
 //│ ╙──      	  ^
 //│ ╔══[COMPILATION ERROR] Illegal juxtaposition right-hand side (‹erroneous syntax›).
-//│ ║  l.83: 	  ."a"
+//│ ║  l.84: 	  ."a"
 //│ ╙──      	  ^
 //│ = {a: 1}
 
 :pe
 obj. "a"
 //│ ╔══[PARSE ERROR] Expected end of input; found period instead
-//│ ║  l.96: 	obj. "a"
+//│ ║  l.97: 	obj. "a"
 //│ ╙──      	   ^
 //│ = {a: 1}
 
@@ -111,7 +112,7 @@ obj." "
 :w
 obj."¯\_(ツ)_/¯"
 //│ ╔══[WARNING] Found invalid escape character
-//│ ║  l.112: 	obj."¯\_(ツ)_/¯"
+//│ ║  l.113: 	obj."¯\_(ツ)_/¯"
 //│ ╙──       	       ^
 //│ = 2
 
@@ -123,21 +124,21 @@ obj."¯\\_(ツ)_/¯"
 :w
 "¯\_(ツ)_/¯"
 //│ ╔══[WARNING] Found invalid escape character
-//│ ║  l.124: 	"¯\_(ツ)_/¯"
+//│ ║  l.125: 	"¯\_(ツ)_/¯"
 //│ ╙──       	   ^
 //│ = "¯_(ツ)_/¯"
 
 :w
 let obj = "¯\_(ツ)_/¯": 2
 //│ ╔══[WARNING] Found invalid escape character
-//│ ║  l.131: 	let obj = "¯\_(ツ)_/¯": 2
+//│ ║  l.132: 	let obj = "¯\_(ツ)_/¯": 2
 //│ ╙──       	             ^
 //│ obj = {"¯_(ツ)_/¯": 2}
 
 :w
 obj."¯\_(ツ)_/¯"
 //│ ╔══[WARNING] Found invalid escape character
-//│ ║  l.138: 	obj."¯\_(ツ)_/¯"
+//│ ║  l.139: 	obj."¯\_(ツ)_/¯"
 //│ ╙──       	       ^
 //│ = 2
 

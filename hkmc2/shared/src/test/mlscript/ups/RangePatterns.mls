@@ -1,3 +1,4 @@
+:.
 :js
 
 pattern Lower = "a"..="z"
@@ -50,19 +51,16 @@ pattern UnsignedShort = 0 ..< 65536
 // Don't forget to add a space between numbers and the range operator.
 pattern UnsignedByte = 0..< 256
 //│ ╔══[LEXICAL ERROR] Expected at least one digit after the  decimal point
-//│ ║  l.51: 	pattern UnsignedByte = 0..< 256
+//│ ║  l.52: 	pattern UnsignedByte = 0..< 256
 //│ ╙──      	                         ^
 //│ ╔══[COMPILATION ERROR] Name not found: .<
-//│ ║  l.51: 	pattern UnsignedByte = 0..< 256
-//│ ╙──      	                         ^^
-//│ ╔══[COMPILATION ERROR] Cannot use this ‹error› as a pattern.
-//│ ║  l.51: 	pattern UnsignedByte = 0..< 256
+//│ ║  l.52: 	pattern UnsignedByte = 0..< 256
 //│ ╙──      	                         ^^
 
 :e
 pattern BadRange = "s"..=0
 //│ ╔══[COMPILATION ERROR] The upper and lower bounds of range patterns should be literals of the same type.
-//│ ║  l.63: 	pattern BadRange = "s"..=0
+//│ ║  l.61: 	pattern BadRange = "s"..=0
 //│ ╙──      	                   ^^^^^^^
 
 // It becomes an absurd pattern.
@@ -72,14 +70,14 @@ pattern BadRange = "s"..=0
 :e
 pattern BadRange = 0 ..= "s"
 //│ ╔══[COMPILATION ERROR] The upper and lower bounds of range patterns should be literals of the same type.
-//│ ║  l.73: 	pattern BadRange = 0 ..= "s"
+//│ ║  l.71: 	pattern BadRange = 0 ..= "s"
 //│ ╙──      	                   ^^^^^^^^^
 
 :e
 pattern BadRange = "yolo" ..= "swag"
 //│ ╔══[COMPILATION ERROR] The lower bound of character ranges must be a single character.
-//│ ║  l.79: 	pattern BadRange = "yolo" ..= "swag"
+//│ ║  l.77: 	pattern BadRange = "yolo" ..= "swag"
 //│ ║        	                   ^^^^^^
 //│ ╟── The upper bound of character ranges must be a single character.
-//│ ║  l.79: 	pattern BadRange = "yolo" ..= "swag"
+//│ ║  l.77: 	pattern BadRange = "yolo" ..= "swag"
 //│ ╙──      	                              ^^^^^^

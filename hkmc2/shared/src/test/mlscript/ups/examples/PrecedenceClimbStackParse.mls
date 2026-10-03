@@ -1,3 +1,4 @@
+:.
 :js
 
 
@@ -139,12 +140,9 @@ f("*")
 // * Note: this fails due to `,` terminating the function scope...
 :e
 fun f(x) = assert x is str as AtPrec as prec, [str, prec]
-//│ ╔══[COMPILATION ERROR] Name not found: str
-//│ ║  l.141: 	fun f(x) = assert x is str as AtPrec as prec, [str, prec]
+//│ ╔══[COMPILATION ERROR] Name not found in wildcard opens: str
+//│ ║  l.142: 	fun f(x) = assert x is str as AtPrec as prec, [str, prec]
 //│ ╙──       	                                               ^^^
-//│ ╔══[COMPILATION ERROR] Name not found: prec
-//│ ║  l.141: 	fun f(x) = assert x is str as AtPrec as prec, [str, prec]
-//│ ╙──       	                                                    ^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 

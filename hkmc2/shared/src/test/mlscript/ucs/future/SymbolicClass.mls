@@ -1,3 +1,4 @@
+:.
 :js
 
 // :de
@@ -19,7 +20,7 @@ Cons(1, Nil)
 :ge
 1 :: 2
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int' at an unrelated type 'Object'
-//│ ║  l.20: 	1 :: 2
+//│ ║  l.21: 	1 :: 2
 //│ ╙──      	     ^
 //│ = Cons(1, 2)
 
@@ -33,39 +34,37 @@ fun map(f, xs) = if xs is
 :re
 :sjs
 new 1 :: 2
-//│ ╔══[COMPILATION ERROR] Expected a statically known class; found integer literal.
-//│ ║  l.35: 	new 1 :: 2
-//│ ║        	    ^
-//│ ╙── The 'new' keyword requires a statically known class; use the 'new!' operator for dynamic instantiation.
-//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int' at an unrelated type 'Object'
-//│ ║  l.35: 	new 1 :: 2
-//│ ╙──      	         ^
+//│ ╔══[COMPILATION ERROR] Resolution error in object instantiation
+//│ ║  l.36: 	new 1 :: 2
+//│ ║        	^^^^^
+//│ ╟── Invalid class expression: integer literal
+//│ ║  l.36: 	new 1 :: 2
+//│ ╙──      	    ^
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let tmp; tmp = globalThis.Object.freeze(new 1()); return Cons1(tmp, 2)
+//│ throw "This code cannot be run as its compilation yielded an error."
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
-//│ ═══[RUNTIME ERROR] TypeError: 1 is not a constructor
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 // TODO?
 :e
 :re
 :sjs
 new (1 :: 2)
-//│ ╔══[COMPILATION ERROR] Expected a statically known class; found application of type Cons.
+//│ ╔══[COMPILATION ERROR] Resolution error in object instantiation
 //│ ║  l.52: 	new (1 :: 2)
-//│ ║        	     ^^^^^^
-//│ ╙── The 'new' keyword requires a statically known class; use the 'new!' operator for dynamic instantiation.
-//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int' at an unrelated type 'Object'
+//│ ║        	^^^^^^^^^^^^
+//│ ╟── Invalid class expression: application
 //│ ║  l.52: 	new (1 :: 2)
-//│ ╙──      	          ^
+//│ ╙──      	     ^^^^^^
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let tmp1; tmp1 = Cons1(1, 2); return globalThis.Object.freeze(new tmp1())
+//│ throw "This code cannot be run as its compilation yielded an error."
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
-//│ ═══[RUNTIME ERROR] TypeError: tmp1 is not a constructor
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :ge
 new ::(1, 2)
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int' at an unrelated type 'Object'
-//│ ║  l.66: 	new ::(1, 2)
+//│ ║  l.65: 	new ::(1, 2)
 //│ ╙──      	          ^
 //│ = Cons(1, 2)
 

@@ -69,6 +69,8 @@ class BlockTraverser:
     case p: Path => applyPath(p)
   
   def applyPath(p: Path): Unit = p match
+    case p @ SuperSelect(qual, base, _) =>
+      applyPath(qual); applyPath(base); p.symbol.traverse
     case DynSelect(qual, fld, arrayIdx) =>
       applyPath(qual); applyPath(fld)
     case p @ Select(qual, name) =>

@@ -8,6 +8,10 @@ import hkmc2.utils.*, shorthands.*
   * `mlscript-compile/` subdirectories (for compile tests) that it owns. */
 object TestFolders:
   
+  /** Directory configuration files named `.mls` are not standalone test sources. */
+  def isTestSource(file: os.BasePath): Bool =
+    file.ext === "mls" && file.baseName.nonEmpty
+  
   /** Helper to check whether `file` is inside (i.e. a descendant of) `dir`. */
   def isInDir(file: os.Path, dir: os.Path): Bool =
     file.startsWith(dir)

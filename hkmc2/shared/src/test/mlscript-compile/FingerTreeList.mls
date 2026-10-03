@@ -1,3 +1,7 @@
+// #lang(0.3.x)
+// ^ Can't be used yet due to spreads;
+//    needs the perf. fixes at `LPTK/new-resolution-no-hashing`
+
 import "./Option.mls"
 import "./Iter.mls"
 
@@ -32,16 +36,16 @@ data class View[T](e1: T, rest: FingerTree[T])
 class FingerTree[T] extends IterableBase with
   fun iterator() =
     let current = this
-    Iterator of () => if popFront(current) is
+    IteratorImpl of () => if popFront(current) is
       Nil then Result.Done
       View(head, tail) then
         set current = tail
         Result.Next of head
-  fun toString() = "[" + this joined(", ") + "]"
-  fun length = FingerTreeList.length(this)
-  fun at(i) = get(i)(this)
-  fun concat(other) = FingerTreeList.concat(this, other)
-  fun slice(beg, end) = 
+  fun toString(): Str = "[" + this joined(", ") + "]"
+  fun length: Int = FingerTreeList.length(this)
+  fun at(i: Int): T = get(i)(this)
+  fun concat(other: FingerTree[T] | Array[T]): FingerTree[T] = FingerTreeList.concat(this, other)
+  fun slice(beg: Int, end: Int): FingerTree[T] = 
     let len = this.length
     set beg = normIdxSlice(beg, len)
     set end = normIdxSlice(end, len)
@@ -54,14 +58,14 @@ class FingerTree[T] extends IterableBase with
     FingerTreeList.dropLeftRight(beg, len - end)(this)
 
 object Empty extends FingerTree[Nothing] with
-  fun toString() = "[" + this joined(", ") + "]"
+  fun toString(): Str = "[" + this joined(", ") + "]"
 
 class Single[T](val e: T) extends FingerTree[T] with
-  fun toString() = "[" + this joined(", ") + "]"
+  fun toString(): Str = "[" + this joined(", ") + "]"
 
 // prefix and suffix are at most length 4
 class Deep[T](val size: Int, val prefix: Array[T], val middle: FingerTree[Node[T]], val suffix: Array[T]) extends FingerTree[T] with
-  fun toString() = "[" + [...this].join(", ") + "]"
+  fun toString(): Str = "[" + [...this].join(", ") + "]"
 
 // amortized O(log n)
 fun concatMiddle(ft1, middle, ft2) = if [ft1, middle, ft2] is
@@ -132,12 +136,12 @@ object SpliceMarker
 module FingerTreeList with...
 
 
-fun toFingerTree(xs) = if xs is
+fun toFingerTree[T](xs: FingerTree[T] | Array[T]): FingerTree[T] = if xs is
   FingerTree then xs
   else mk(...xs) // assume that the input is iterable if not a finger tree
 
 // amortized O(1)
-fun (+:) cons(x, xs) = if toFingerTree(xs) is
+fun (+:) cons[T](x: T, xs: FingerTree[T] | Array[T]): FingerTree[T] = if toFingerTree(xs) is
   Empty then Single(x)
   Single(y) then Deep(getNodeSize(y) + getNodeSize(x), [x], Empty, [y])
   Deep(s, ax, dt, ay) then if (ax.length >= 4)
@@ -147,7 +151,7 @@ fun (+:) cons(x, xs) = if toFingerTree(xs) is
     else Deep(s + getNodeSize(x), [x, ...ax], dt, ay)
 
 // amortized O(1)
-fun (:+) snoc(xs, x) = if toFingerTree(xs) is
+fun (:+) snoc[T](xs: FingerTree[T] | Array[T], x: T): FingerTree[T] = if toFingerTree(xs) is
   Empty then Single(x)
   Single(y) then Deep(getNodeSize(y) + getNodeSize(x), [y], Empty, [x])
   Deep(s, ax, dt, ay) then if (ay.length >= 4)
@@ -156,23 +160,23 @@ fun (:+) snoc(xs, x) = if toFingerTree(xs) is
       ay.0, ay.1, ay.2)), [ay.3, x])
     else Deep(s + getNodeSize(x), ax, dt, [...ay, x])
 
-fun mk(...args) = args.reduce(
+fun mk[T](...args: Array[T]): FingerTree[T] = args.reduce(
     (acc, x, ...) => snoc(acc, x),
     Empty)
 
-fun isEmpty = case
+fun isEmpty[T]: FingerTree[T] -> Bool = case
   Empty then true
   _ then false
 
 // O(1)
-fun length = case
+fun length[T]: (FingerTree[T] | Array[T]) -> Int = case
   Array as a then a.length
   Empty then 0
   Single(x) then getNodeSize(x)
   Deep(s, _, _, _) then s
 
 // amortized O(1)
-fun popFront(ft) = if toFingerTree(ft) is
+fun popFront[T](ft: FingerTree[T] | Array[T]): Nil | View[T] = if toFingerTree(ft) is
   Empty then Nil
   Single(x) then View(x, Empty)
   Deep(s, [x], dt, ay) then if (popFront(dt)) is
@@ -185,7 +189,7 @@ fun popFront(ft) = if toFingerTree(ft) is
     View(x, Deep(s - getNodeSize(x), ax, dt, ay))
 
 // amortized O(1)
-fun popBack(ft) = if toFingerTree(ft) is
+fun popBack[T](ft: FingerTree[T] | Array[T]): Nil | View[T] = if toFingerTree(ft) is
   Empty then Nil
   Single(x) then View(x, Empty)
   Deep(s, ax, dt, [x]) then if popBack(dt) is
@@ -198,10 +202,11 @@ fun popBack(ft) = if toFingerTree(ft) is
     View(y, Deep(s - getNodeSize(y), ax, dt, ay))
 
 // amortized O(log n)
-fun (++) concat(ft1, ft2) = concatMiddle(toFingerTree(ft1), [], toFingerTree(ft2))
+fun (++) concat[T](ft1: FingerTree[T] | Array[T], ft2: FingerTree[T] | Array[T]): FingerTree[T] =
+  concatMiddle(toFingerTree(ft1), [], toFingerTree(ft2))
 
 // amortized O(log n)
-fun ith(idx) = case
+fun ith[T](idx: Int): FingerTree[T] -> Option[T] = case
   Empty then None
   Single(x) then ithNode(idx, x)
   Deep(s, ax, dt, ay) and
@@ -211,27 +216,27 @@ fun ith(idx) = case
       else ithAffixElement(idx - getAffixSize(ax) - length(dt), ay)
     else None
 
-fun get(idx) = case
+fun get[T](idx: Int): (FingerTree[T] | Array[T]) -> T = case
   Array as a then a.at(idx)
   FingerTree as lft then if ith(normIdx(idx, length(lft)))(lft) is
     None then throw "get: index out of bounds"
     Some(x) then x
 
-fun toArray(ft) = [...ft]
+fun toArray[T](ft: FingerTree[T]): Array[T] = [...ft]
 
 /// amortized O(beg + end)
-fun dropLeftRight(beg, end)(und) = if beg < 0 || end < 0 || beg + end > length(und)
+fun dropLeftRight[T](beg: Int, end: Int)(und: FingerTree[T] | Array[T]): FingerTree[T] = if beg < 0 || end < 0 || beg + end > length(und)
     then throw "dropLeftRight: index out of bounds"
     else repeatPopFront(beg)(repeatPopBack(end)(toFingerTree(und)))
 
-fun isFingerTree(xs) = if xs is
+fun isFingerTree(xs: Any): Bool = if xs is
   FingerTree then true
   else false
 
 // The following functions are not meant for users; it's meant referred to by Runtime.mls
 // TODO: use `FingerTreeList.internals.concat` when this is implemented
 
-fun __markerConcat(...arr) =
+fun __markerConcat(...arr: Array[Any]): FingerTree[Any] =
   let acc = FingerTreeList.mk()
   let idx = 0
   while idx < arr.length do
@@ -244,4 +249,4 @@ fun __markerConcat(...arr) =
       set idx = idx + 1
   acc
 
-val __split = SpliceMarker
+val __split: SpliceMarker = SpliceMarker

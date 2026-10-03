@@ -1,3 +1,4 @@
+:.
 :js
 
 // Regression test: spread destructuring with different trailing sizes should

@@ -1,3 +1,4 @@
+:.
 :js
 
 
@@ -6,33 +7,32 @@ class Foo
 class Foo
 //│ ╔══[COMPILATION ERROR] Multiple definitions of symbol 'Foo'
 //│ ╟── defined here
-//│ ║  l.5: 	class Foo
+//│ ║  l.6: 	class Foo
 //│ ║       	^^^^^^^^^
 //│ ╟── defined here
-//│ ║  l.6: 	class Foo
+//│ ║  l.7: 	class Foo
 //│ ╙──     	^^^^^^^^^
 
 :e
 class Foo
 object Foo
 //│ ╔══[COMPILATION ERROR] Illegal overloading of class 'Foo'
-//│ ║  l.16: 	class Foo
+//│ ║  l.17: 	class Foo
 //│ ║        	^^^^^^^^^
 //│ ╟── with object of the same name
-//│ ║  l.17: 	object Foo
+//│ ║  l.18: 	object Foo
 //│ ╙──      	^^^^^^^^^^
 
 :e
 object Foo
 class Foo
 //│ ╔══[COMPILATION ERROR] Illegal overloading of class 'Foo'
-//│ ║  l.27: 	class Foo
+//│ ║  l.28: 	class Foo
 //│ ║        	^^^^^^^^^
 //│ ╟── with object of the same name
-//│ ║  l.26: 	object Foo
+//│ ║  l.27: 	object Foo
 //│ ╙──      	^^^^^^^^^^
 
-:todo // TODO: silence such internal errors when a compilation error is already reported?
 :e
 fun Foo = 1
 object Foo
@@ -42,17 +42,17 @@ object Foo
 //│ ╟── with object of the same name
 //│ ║  l.38: 	object Foo
 //│ ╙──      	^^^^^^^^^^
-//│ ╔══[INTERNAL ERROR] Compiler reached an unsupported state: None.isDefined =/= true
-//│ ╟── The compilation result may be incorrect.
-//│ ╙── This is a known compiler limitation; if it is a blocker for you, please report it to the maintainers.
 
-:fixme
-// * Note that this does not report an error at the moment:
+:e
+// A term declaration does not create a function that can own its companion.
 fun Foo: Int
 object Foo
-//│ ╔══[INTERNAL ERROR] Compiler reached an unsupported state: None.isDefined =/= true
-//│ ╟── The compilation result may be incorrect.
-//│ ╙── This is a known compiler limitation; if it is a blocker for you, please report it to the maintainers.
+//│ ╔══[COMPILATION ERROR] A term declaration cannot have an implemented object companion
+//│ ║  l.48: 	fun Foo: Int
+//│ ║        	^^^^^^^^^^^^
+//│ ╟── Companion 'Foo' is defined here
+//│ ║  l.49: 	object Foo
+//│ ╙──      	^^^^^^^^^^
 
 :todo
 :e
@@ -65,10 +65,10 @@ class Foo
 //│ ╟── with object of the same name
 //│ ║  l.60: 	object Foo
 //│ ╙──      	^^^^^^^^^^
-//│ ╔══[COMPILATION ERROR] Not yet supported: overloading of function 'Foo'
+//│ ╔══[COMPILATION ERROR] A class companion must be a function with a parameter list
 //│ ║  l.59: 	fun Foo = 1
 //│ ║        	^^^^^^^^^^^
-//│ ╟── with class of the same name
+//│ ╟── Arbitrary values cannot be overloaded with class 'Foo'
 //│ ║  l.61: 	class Foo
 //│ ╙──      	^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Illegal overloading of class 'Foo'
@@ -77,50 +77,26 @@ class Foo
 //│ ╟── with object of the same name
 //│ ║  l.60: 	object Foo
 //│ ╙──      	^^^^^^^^^^
-//│ ╔══[INTERNAL ERROR] Compiler reached an unsupported state: None.isDefined =/= true
-//│ ╟── The compilation result may be incorrect.
-//│ ╙── This is a known compiler limitation; if it is a blocker for you, please report it to the maintainers.
-//│ ╔══[INTERNAL ERROR] Compiler reached an unsupported state: None.isDefined =/= true
-//│ ╟── The compilation result may be incorrect.
-//│ ╙── This is a known compiler limitation; if it is a blocker for you, please report it to the maintainers.
 //│ ═══[RUNTIME ERROR] TypeError: Cannot assign to read only property 'class' of object '[object Object]'
 
 
-:todo // TODO: support
-:e
+// Class and module companions require a function definition with parameters.
 class Foo
-fun Foo = 1
-//│ ╔══[COMPILATION ERROR] Not yet supported: overloading of function 'Foo'
-//│ ║  l.92: 	fun Foo = 1
-//│ ║        	^^^^^^^^^^^
-//│ ╟── with class of the same name
-//│ ║  l.91: 	class Foo
-//│ ╙──      	^^^^^^^^^
-//│ ╔══[INTERNAL ERROR] Compiler reached an unsupported state: None.isDefined =/= true
-//│ ╟── The compilation result may be incorrect.
-//│ ╙── This is a known compiler limitation; if it is a blocker for you, please report it to the maintainers.
+fun Foo() = 1
 
-// TODO: support
-:e
-fun Foo = 1
+fun Foo() = 1
 module Foo
-//│ ╔══[COMPILATION ERROR] Not yet supported: overloading of function 'Foo'
-//│ ║  l.105: 	fun Foo = 1
-//│ ║         	^^^^^^^^^^^
-//│ ╟── with module of the same name
-//│ ║  l.106: 	module Foo
-//│ ╙──       	^^^^^^^^^^
 
-// TODO: support
+// An existing value cannot own a companion.
 :e
 val Foo = 1
 module Foo
-//│ ╔══[COMPILATION ERROR] Not yet supported: overloading of value 'Foo'
-//│ ║  l.116: 	val Foo = 1
-//│ ║         	^^^^^^^^^^^
-//│ ╟── with module of the same name
-//│ ║  l.117: 	module Foo
-//│ ╙──       	^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] A module companion must be a function with a parameter list
+//│ ║  l.92: 	val Foo = 1
+//│ ║        	^^^^^^^^^^^
+//│ ╟── Arbitrary values cannot be overloaded with module 'Foo'
+//│ ║  l.93: 	module Foo
+//│ ╙──      	^^^^^^^^^^
 //│ Foo = class Foo
 
 
@@ -128,10 +104,10 @@ module Foo
 fun (**) f1(a, b) = "[" + a + " * " + b + "]"
 fun (**) f2(a, b) = "(" + a + " + " + b + ")"
 //│ ╔══[COMPILATION ERROR] Symbolic name '**' of definition 'f1' is already used
-//│ ║  l.128: 	fun (**) f1(a, b) = "[" + a + " * " + b + "]"
+//│ ║  l.104: 	fun (**) f1(a, b) = "[" + a + " * " + b + "]"
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── by sibling member 'f2'
-//│ ║  l.129: 	fun (**) f2(a, b) = "(" + a + " + " + b + ")"
+//│ ║  l.105: 	fun (**) f2(a, b) = "(" + a + " + " + b + ")"
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 1 ** 2
@@ -142,10 +118,10 @@ fun (**) t() = 0
 fun (++) t() = 1
 //│ ╔══[COMPILATION ERROR] Multiple definitions of symbol 't'
 //│ ╟── defined here
-//│ ║  l.141: 	fun (**) t() = 0
+//│ ║  l.117: 	fun (**) t() = 0
 //│ ║         	^^^^^^^^^^^^^^^^
 //│ ╟── defined here
-//│ ║  l.142: 	fun (++) t() = 1
+//│ ║  l.118: 	fun (++) t() = 1
 //│ ╙──       	^^^^^^^^^^^^^^^^
 
 

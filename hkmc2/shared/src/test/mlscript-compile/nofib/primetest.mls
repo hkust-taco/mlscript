@@ -1,3 +1,5 @@
+#lang(0.3.x)
+
 import "./NofibPrelude.mls"
 import "../../../../../../hkmc2/shared/src/test/mlscript-compile/Predef.mls"
 open NofibPrelude
@@ -16,7 +18,7 @@ fun int_val_of_string(s) =
     h :: t then f(t, 10 * a + int_val_of_char(h))
   f(s, 0)
 
-fun break_(p, ls) = if ls is
+fun break_(p: Function, ls) = if ls is
   Nil then [Nil, Nil]
   x :: xs and
     p(x) then [Nil, x :: xs]
@@ -115,7 +117,7 @@ fun multiTest(k, rs, n) =
   if ((n <= 1) || even(n)) then [n==2, rs] else mTest(k, rs)
 
 
-fun doLine(cs, cont, rs) =
+fun doLine(cs, cont: Function, rs) =
   let n = int_val_of_string(cs)
   if multiTest(100, rs, n) is [t, rs_] and
     t then "Probably prime" :: (cont(rs_))

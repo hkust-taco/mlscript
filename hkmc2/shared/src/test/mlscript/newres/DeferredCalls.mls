@@ -1,0 +1,39 @@
+:.
+
+// The callee's definition becomes available after the call is elaborated.
+:expect Box(1)
+class Box(val value)
+fun forward(x) = later(x)
+fun later(x) = Box(x)
+forward(1)
+//│ = Box(1)
+
+// A returned lambda must publish its result shape to the next application.
+:expect 2
+fun makeBox() = x => Box(x)
+makeBox()(2).value
+//│ = 2
+
+// Curried constructor applications retain both parameter lists and field shapes.
+:expect [3, 4, 5, 6]
+class Pair(val left)(val right)
+fun buildPair(x)(y) = Pair(x)(y)
+let partial = buildPair(3)
+let built = partial(4)
+let direct = new Pair(5)(6)
+[built.left, built.right, direct.left, direct.right]
+//│ = [3, 4, 5, 6]
+//│ built = Pair(3)
+//│ direct = Pair(5)
+//│ partial = fun
+
+// Validation waits for a forward callee, but still diagnoses a proven mismatch.
+:e
+fun bad(x) = laterArity(x)
+fun laterArity(x, y) = x
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.32: 	fun bad(x) = laterArity(x)
+//│ ║        	             ^^^^^^^^^^^^^
+//│ ╟── Function 'laterArity' expected 2 arguments, but got 1
+//│ ║  l.33: 	fun laterArity(x, y) = x
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^

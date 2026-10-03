@@ -1,3 +1,5 @@
+#lang(0.3.x)
+
 import "../../Iter.mls"
 import "../../Predef.mls"
 import "../../Stack.mls"
@@ -43,7 +45,7 @@ module Tree with
       Modified(modifier, subject) extends Tree
       Tuple(trees: Stack[Tree]) extends Tree
       Sequence(trees: Stack[Tree]) extends Tree
-      Literal(kind, value) extends Tree
+      Literal(kind: Token.LiteralKind, value: Str) extends Tree
       Match(scrutinee: Tree, branches: Stack[Tree]) extends Tree
       Lambda(params: Stack[Tree], body: Tree) extends Tree
       App(callee: Tree, argument: Tree) extends Tree
@@ -100,7 +102,7 @@ module Tree with
       Tuple(trees) then "(" + trees Iter.fromStack() Iter.mapping(go) Iter.joined(", ") + ")"
       Sequence(trees) then trees Iter.fromStack() Iter.mapping(go) Iter.joined("; ")
       Literal(LiteralKind.String, value) and
-        value.length > 5 then JSON.stringify(value.slice(0, 5)).slice(0, -1) + "…\""
+        value.length > 5 then (JSON.stringify(value.slice(0, 5)) as Str).slice(0, -1) + "…\""
         else JSON.stringify(value)
       Literal(_, value) then value
       Match(scrutinee, branches) then mkStr of

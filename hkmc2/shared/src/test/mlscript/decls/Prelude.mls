@@ -1,102 +1,230 @@
-
+#lang(0.3.x)
 
 declare type Any
 declare type Anything
 declare type Nothing
 
-declare class Object
-declare module Object with
+declare open class Object {
+  fun toString(): Str
+}
+declare fun Object(...args): Object // TODO: use an optional parameter when supported
+declare module Object {
+  fun entries(target): Array[[Str, Any]]
+  fun getOwnPropertyDescriptor(target, key): Object | undefined
+  fun getOwnPropertyDescriptors(target): Object
   fun
     create
     freeze
     assign
-    entries
     prototype
     fromEntries
     getPrototypeOf
     defineProperty
-    getOwnPropertyDescriptor
-    getOwnPropertyDescriptors
+}
+
 declare class JSON
-declare module JSON with
+declare module JSON {
   fun
     stringify
-declare class Number
-declare module Number with
+}
+
+declare class Number: Num
+// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/Number
+declare fun Number(...args): Number // TODO: use an optional parameter when supported
+declare module Number {
   val
-    MIN_VALUE
-    MAX_VALUE
-    MIN_SAFE_INTEGER
-    MAX_SAFE_INTEGER
-    NEGATIVE_INFINITY
-    POSITIVE_INFINITY
-declare class BigInt
+    MIN_VALUE: Num
+    MAX_VALUE: Num
+    MIN_SAFE_INTEGER: Int
+    MAX_SAFE_INTEGER: Int
+    NEGATIVE_INFINITY: Num
+    POSITIVE_INFINITY: Num
+}
+
+declare class BigInt {
+  // private constructor() // FIXME: Unsupported constructor in this position.
+  fun toString(...radix): Str
+}
+// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/BigInt/BigInt
+declare fun BigInt(value: Str | Int | Bool | BigInt): BigInt
 declare module BigInt
-declare class Function
+
+declare open class Function {
+  val name: Str
+  fun bind(thisArg, ...args): Function
+  fun apply(thisArg, args: Array): Any
+}
 declare module Function
+
 declare class String
-declare module String with
+// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/String
+declare fun String(...args): Str // TODO: use an optional parameter when supported
+declare module String {
   fun
     fromCharCode
     fromCodePoint
     raw
-declare class RegExp
+}
+
+declare class RegExp {
+  fun toString(): Str
+  fun exec(input: Str): Array[Str] | null
+  fun test(input: Str): Bool
+}
 declare module RegExp
-declare class Set[V]
+
+declare class Set[V] {
+  val size: Int
+  fun add(value: V): Set[V]
+  fun has(value: V): Bool
+  fun delete(value: V): Bool
+  fun clear(): undefined
+  fun values(): Iterator[V]
+  fun union(other: Set[V]): Set[V]
+  fun difference(other: Set[V]): Set[V]
+}
 declare module Set
-declare class Map[K, V]
+
+declare class Map[K, V] {
+  val size: Int
+  fun get(key: K): V | undefined
+  fun has(key: K): Bool
+  fun delete(key: K): Bool
+  fun clear(): undefined
+  fun id"set"(key: K, value: V): Map[K, V]
+  fun keys(): Iterator[K]
+  fun values(): Iterator[V]
+  fun entries(): Iterator[[K, V]]
+  fun forEach(f: (V, K, Map[K, V]) -> Any): undefined
+}
+
+declare class Iterator[out T] {
+  fun next(): { value: T, done: Bool }
+}
+
 declare module Map
+
 declare class WeakSet[V]
 declare module WeakSet
-declare class WeakMap[K, V]
+
+declare class WeakMap[K, V] {
+  fun get(key: K): V | undefined
+  fun has(key: K): Bool
+  fun delete(key: K): Bool
+  fun id"set"(key: K, value: V): WeakMap[K, V]
+}
 declare module WeakMap
-declare class Error//(info) // TODO: handle JS classes that can be instantiated without `new` specially in codegen.
-declare class TypeError//(info) // TODO: handle JS classes that can be instantiated without `new` specially in codegen.
-declare class RangeError//(info) // TODO: handle JS classes that can be instantiated without `new` specially in codegen.
+
+declare class Error {
+  val message: Str
+  val name: Str
+  val stack: Str | undefined
+}
+// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error/Error
+declare fun Error(...args): Error // TODO: use optional parameters when supported
+
+// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypeError/TypeError
+declare class TypeError extends Error
+declare fun TypeError(...args): TypeError
+
+// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RangeError/RangeError
+declare class RangeError extends Error
+declare fun RangeError(...args): RangeError
+
 declare class Date
 declare module Date
 
 declare class ArrayBuffer
 declare module ArrayBuffer
+
 declare class TypedArray
 declare module TypedArray
+
 declare class Int8Array
 declare module Int8Array
+
 declare class Uint8Array
 declare module Uint8Array
+
 declare class Uint8ClampedArray
 declare module Uint8ClampedArray
+
 declare class Int16Array
 declare module Int16Array
+
 declare class Uint16Array
 declare module Uint16Array
+
 declare class Int32Array
 declare module Int32Array
+
 declare class Uint32Array
 declare module Uint32Array
+
 declare class Float16Array
 declare module Float16Array
+
 declare class Float32Array
 declare module Float32Array
+
 declare class Float64Array
 declare module Float64Array
+
 declare class BigInt64Array
 declare module BigInt64Array
+
 declare class BigUint64Array
 declare module BigUint64Array
 
-declare class Promise
-declare module Promise with
-  fun
-    all
-    resolve
-    reject
+// Awaited recursively unwraps promises, as JavaScript's promise resolution does.
+declare type Awaited[out A]
+// Follow TypeScript's Promise declarations, translating void returns to undefined.
+// Optional parameters and default type arguments are not supported yet: callers
+// must supply the first callback, and then's rejection callback uses a rest list.
+// Structural PromiseLike values and tuple-mapped all results remain unsupported.
+declare class Promise[out A](executor: ((A | Promise[A]) -> undefined, Any -> undefined) -> undefined) {
+  fun id"then"[B, C](onFulfilled: Awaited[A] -> (B | Promise[B]), ...onRejected: Array[(Any -> (C | Promise[C])) | undefined | null]): Promise[Awaited[B | C]]
+  fun id"catch"[B](onRejected: (Any -> (B | Promise[B])) | undefined | null): Promise[Awaited[A | B]]
+  fun id"finally"(onFinally: (() -> undefined) | undefined | null): Promise[A]
+}
+declare module Promise {
+  fun resolve[A](value: A | Promise[A]): Promise[Awaited[A]]
+  fun reject(reason: Any): Promise[Nothing]
+  fun all[A](values: Array[A]): Promise[Array[Awaited[A]]]
+  fun race[A](values: Array[A]): Promise[Awaited[A]]
+  fun any[A](values: Array[A]): Promise[Awaited[A]]
+}
 
 // MLscript-specific types
 declare class Bool
-declare class Num
+declare class Num {
+  fun toString(...radix): Str
+  fun toFixed(...digits): Str
+}
 declare class Int extends Num
-declare class Str
+declare class Str {
+  val length: Int
+  fun toString(): Str
+  fun at(index: Int): Str | undefined
+  fun charAt(index: Int): Str
+  fun charCodeAt(index: Int): Num
+  fun codePointAt(index: Int): Int | undefined
+  fun indexOf(value: Str, ...from): Int
+  fun lastIndexOf(value: Str, ...from): Int
+  fun includes(value: Str, ...from): Bool
+  fun startsWith(value: Str, ...from): Bool
+  fun endsWith(value: Str, ...until): Bool
+  fun slice(...bounds): Str
+  fun substring(...bounds): Str
+  fun split(...separatorAndLimit): Array[Str]
+  fun replace(search: Str | RegExp, replacement: Str | Function): Str
+  fun replaceAll(search: Str | RegExp, replacement: Str | Function): Str
+  fun repeat(count: Int): Str
+  fun toUpperCase(): Str
+  fun toLowerCase(): Str
+  fun localeCompare(other: Str, ...localesAndOptions): Int
+  fun trim(): Str
+}
 declare class Class
 
 // The `Array` class/function is a footgun:
@@ -106,25 +234,72 @@ declare class Class
 //    [ <1 empty item> ]
 //    > Array(1, 2)
 //    [ 1, 2 ]
-// We used to declare it as a class taking exactly one argument here to avoid that footgun:
-//    declare class Array[T](val length: Int): Array[T]
-// but this made instance checks wrongly use `Array.class`;
-// TODO: handle Array and other JS classes that can be instantiated without `new` specially in codegen.
-declare class Array[T]
-declare module Array with
+// Expose only the length-taking constructor; use tuple literals for initial elements.
+// Foreign constructor signatures describe the native binding and do not introduce
+// the `.class` storage used by generated MLscript constructor functions.
+// The `val length` parameter also supports matching with `Array(length)`.
+declare class Array[T](val length: Int) {
+  fun join(...separators): Str
+  fun reverse(): Array[T]
+  fun sort(...compare): Array[T]
+  fun slice(...bounds): Array[T]
+  fun copyWithin(target: Int, start: Int, ...end): Array[T]
+  fun entries(): Iterator[[Int, T]]
+  fun keys(): Iterator[Int]
+  fun toReversed(): Array[T]
+  fun toSorted(...compare): Array[T]
+  fun toSpliced(start: Int, ...items): Array[T]
+  fun id"with"(index: Int, value: T): Array[T]
+  fun at(index: Int): T | undefined
+  fun fill(value: T, ...bounds): Array[T]
+  fun splice(start: Int, ...items): Array[T]
+  fun push(...items: Array[T]): Int
+  fun unshift(...items: Array[T]): Int
+  fun pop(): T | undefined
+  fun shift(): T | undefined
+  fun concat(...arrays): Array[Any]
+  fun map[U](f: (T, Int, Array[T]) -> U): Array[U]
+  fun forEach(f: (T, Int, Array[T]) -> Any): undefined
+  fun filter(f: (T, Int, Array[T]) -> Bool): Array[T]
+  fun find(f: (T, Int, Array[T]) -> Bool, ...thisArg): T | undefined
+  fun findIndex(f: (T, Int, Array[T]) -> Bool, ...thisArg): Int
+  fun findLast(f: (T, Int, Array[T]) -> Bool, ...thisArg): T | undefined
+  fun findLastIndex(f: (T, Int, Array[T]) -> Bool, ...thisArg): Int
+  fun flat(...depth): Array[Any]
+  fun flatMap[U](f: (T, Int, Array[T]) -> (U | Array[U]), ...thisArg): Array[U]
+  fun every(f: (T, Int, Array[T]) -> Bool): Bool
+  fun some(f: (T, Int, Array[T]) -> Bool): Bool
+  // Without an initial value, the first element becomes the accumulator, so the
+  // accumulator type would also have to include T. Methods cannot be overloaded
+  // by arity, so only the form with an initial value is declared.
+  fun reduce[U](f: (U, T, Int, Array[T]) -> U, initial: U): U
+  fun reduceRight[U](f: (U, T, Int, Array[T]) -> U, initial: U): U
+  fun indexOf(value: T, ...from): Int
+  fun lastIndexOf(value: T, ...from): Int
+  fun includes(value: T, ...from): Bool
+  fun toString(): Str
+  fun toLocaleString(...options): Str
+}
+declare module Array {
+  // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/from
+  fun from(...args): Array[Any] // TODO: use optional parameters when supported
   fun
-    from
     concat
     isArray
-    prototype
+  val prototype: Array[Any]
+}
 
-declare class Symbol
-declare module Symbol with
+declare class Symbol {
+  val description: Str | undefined
+}
+declare fun Symbol(...description): Symbol
+declare module Symbol {
   // The `TermDef` needs `rhs` to be defined to be recognized as `isMLsFun`.
   // Otherwise, it would be wrapped in `runtime.safeCall`, which accesses the
   // uninitialized `runtime` in the `Rendering` module.
   fun for: Str -> Any = ()
   val iterator: Any
+}
 
 // MLwasm-specific types
 declare class Int32
@@ -134,7 +309,7 @@ declare class Float64
 declare class Int31 extends Int  // `i31ref`
 
 // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math
-declare module Math with
+declare module Math {
   declare
     val
       E: Num
@@ -182,17 +357,21 @@ declare module Math with
       tan: Num -> Num
       tanh: Num -> Num
       trunc: Num -> Num
+}
 
-declare module Reflect with
+declare module Reflect {
+  // Prototype objects may expose arbitrary host properties.
+  fun getPrototypeOf(target): dyn
   fun
     get
-    // set // TODO: handle keyword-named members
+    id"set"
     has
     ownKeys
-    getPrototypeOf
     apply
     construct
-declare module console with
+}
+
+declare module console {
   declare
     fun
       log
@@ -213,25 +392,35 @@ declare module console with
       time
       timeEnd
       trace
+}
 
-declare val process // TODO make `module`
-declare val fs // TODO make `module`
+declare module process {
+  fun cwd(): Str
+  val env
+}
+
+// Host APIs remain explicitly dynamic until their interfaces are modeled.
+declare val fs: dyn
 
 declare val Infinity
 
 // Wasm support
-declare object WebAssembly with
-  declare class Instance
+declare object WebAssembly {
+  declare class Instance {
+    val exports: dyn
+  }
   declare class Memory
   declare class Module
-  declare module Module with
+  declare module Module {
     fun
       exports
       imports
+  }
 
   fun
     instantiate
     validate
+}
 
 // declare fun typeof: (Any) -> Str
 
@@ -239,22 +428,24 @@ declare fun parseInt(str: Str, radix: Int): Int
 declare fun parseFloat(str: Str): Num
 
 
-declare module source with
+declare module source {
   object
     line
     name
     file
+}
 
-declare module js with
+declare module js {
   fun
     bitand
     bitnot
     bitor
     shl
     try_catch
+}
 
-declare module wasm with
-  module i32 with
+declare module wasm {
+  module i32 {
     fun
       const(c: Int): Int32
       add(i1: Int32, i2: Int32): Int32
@@ -273,7 +464,8 @@ declare module wasm with
       ge_s(i1: Int32, i2: Int32): Int32
       eqz(i: Int32): Int32
       reinterpret_f32(f: Float32): Int32
-  module i64 with
+  }
+  module i64 {
     fun
       const(c: Int): Int64
       add(i1: Int64, i2: Int64): Int64
@@ -292,7 +484,8 @@ declare module wasm with
       ge_s(i1: Int64, i2: Int64): Int32
       eqz(i: Int64): Int32
       reinterpret_f64(f: Float64): Int64
-  module f32 with
+  }
+  module f32 {
     fun
       const(c: Num): Float32
       add(f1: Float32, f2: Float32): Float32
@@ -311,7 +504,8 @@ declare module wasm with
       gt(f1: Float32, f2: Float32): Int32
       ge(f1: Float32, f2: Float32): Int32
       reinterpret_i32(i: Int32): Float32
-  module f64 with
+  }
+  module f64 {
     fun
       const(c: Num): Float64
       add(f1: Float64, f2: Float64): Float64
@@ -330,13 +524,16 @@ declare module wasm with
       gt(f1: Float64, f2: Float64): Int32
       ge(f1: Float64, f2: Float64): Int32
       reinterpret_i64(i: Int64): Float64
-  module ref with
+  }
+  module ref {
     fun
       i31(i: Int32): Int31
-  module i31 with
+  }
+  module i31 {
     fun
       get_s(i: Int31): Int32
       get_u(i: Int31): Int32
+  }
   fun
     plus_impl
     minus_impl
@@ -352,11 +549,13 @@ declare module wasm with
     neg_impl
     pos_impl
     not_impl
+}
 
-declare module debug with
+declare module debug {
   fun printStack
+}
 
-declare module annotations with
+declare module annotations {
   object pure
   object untyped
   object tailrec
@@ -368,21 +567,44 @@ declare module annotations with
   object bufferable
   object generator
   object async
+}
 
-declare module handlers with
-  fun await
+declare module handlers {
+  fun await[A](promise: Promise[A]): Awaited[A]
+}
 
-declare module scope with
+declare module scope {
   fun locally
+}
 
-declare module runtime with
+declare module runtime {
   fun
     suspend
     handle_suspension
+}
 
 
 // HTML DOM API definitions.
 // Move them to a separate Prelude file when there are enough of them.
-declare val document
-declare val customElements
-declare class HTMLElement
+declare val document: dyn
+declare val customElements: dyn
+// Preserve the nominal superclass while its host members remain dynamic.
+declare open class HTMLElement {
+  val textContent: dyn
+  val innerHTML: dyn
+  val shadowRoot: dyn
+  val appendChild: dyn
+  val attachShadow: dyn
+  val addEventListener: dyn
+  val querySelector: dyn
+  val classList: dyn
+}
+
+//│ ————————————————————————————————————————————————————————————————————————————————
+
+// Shared read interfaces for arrays, strings, and lazy views. Element types are
+// covariant, so using these interfaces does not widen an invariant collection.
+type Indexable[out A] = {length: Int, at: Int -> A, slice: Function}
+type Iterable[out A] = {iterator: () -> Iterator[A]}
+type IterableIndexable[out A] = Indexable[A] & Iterable[A]
+

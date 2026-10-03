@@ -1,0 +1,14 @@
+:.
+
+// These host declarations are checked without requiring a DOM in the test VM.
+:!js
+fun readFile(path: Str) = fs.readFileSync(path).toString()
+fun query(selector: Str) = document.querySelector(selector).classList.contains("active")
+fun register(name: Str, ctor: dyn) = customElements.define(name, ctor)
+class Element extends HTMLElement with
+  fun render(text: Str) = {
+    set this.textContent = text
+    this.appendChild(document.createElement("span"))
+    this.attachShadow({mode: "open"})
+    set this.shadowRoot.innerHTML = text
+  }

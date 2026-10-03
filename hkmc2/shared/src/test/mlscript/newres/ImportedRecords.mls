@@ -1,0 +1,16 @@
+:.
+
+import "../../mlscript-compile/RecordProducers.mls"
+
+// Resolving RecordProducers.observed in the imported file already discovered the
+// `value` field. Our first read of fields.value must receive that cached information.
+:expect [36, 36]
+[RecordProducers.fields.value, RecordProducers.observed]
+//│ = [36, 36]
+
+// Spreading the imported record must also expose its `value` field on the copy.
+:expect 36
+let importedFields = {...RecordProducers.fields}
+importedFields.value
+//│ = 36
+//│ importedFields = {value: 36}

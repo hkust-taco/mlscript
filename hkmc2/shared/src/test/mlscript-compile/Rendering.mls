@@ -1,3 +1,4 @@
+#lang(0.3.x)
 import "./RuntimeJS.mjs"
 
 
@@ -7,15 +8,15 @@ module Rendering with ...
 let definitionMetadataSymbol = RuntimeJS.symbols.definitionMetadata
 let prettyPrintSymbol = RuntimeJS.symbols.prettyPrint
 
-fun pass1(f)(...xs) = f(xs.0)
-fun pass2(f)(...xs) = f(xs.0, xs.1)
-fun pass3(f)(...xs) = f(xs.0, xs.1, xs.2)
+fun pass1[A, B](f: A -> B)(...xs): B = f(xs.0)
+fun pass2[A, B, C](f: (A, B) -> C)(...xs): C = f(xs.0, xs.1)
+fun pass3[A, B, C, D](f: (A, B, C) -> D)(...xs): D = f(xs.0, xs.1, xs.2)
 
-fun passing(f, ...args) = f.bind(null, ...args)
+fun passing(f: Function, ...args) = f.bind(null, ...args)
 
-fun map(f)(...xs) = xs.map(pass1(f))
+fun map[A, B](f: A -> B)(...xs: Array[A]): Array[B] = xs.map(pass1(f))
 
-fun fold(f)(init, ...rest) =
+fun fold[A, B](f: (A, B) -> A)(init: A, ...rest: Array[B]): A =
   let
     i = 0
     len = rest.length
@@ -84,7 +85,7 @@ private fun symbolsForMap(n: Int) =
   start: headline + " {", end: "}",
   entrySeparator: ",", keyValueSeparator: " => ", empty: headline + " {}", padding: true
 
-fun render(target, ...args) =
+fun render(target, ...args): Str =
   let
     options = if args is [options, ...] then options else emptyOptions
     indent = if
@@ -118,7 +119,7 @@ fun render(target, ...args) =
         let prefix = if index === 0 then "" else indents
         prefix + line + postfix
       .join("\n")
-  fun renderArray(array, level, keyLength, startPos) =
+  fun renderArray(array: Array, level, keyLength, startPos) =
     let
       i = 0
       length = array.length
@@ -153,9 +154,9 @@ fun render(target, ...args) =
         valueStr
       else throw new Error("All items in this array has been rendered.")
     renderSequence of done, next, level, keyLength, startPos, symbolsForArray
-  fun renderSet(theSet, level, keyLength, startPos) =
+  fun renderSet(theSet: Set, level, keyLength, startPos) =
     let
-      iterator = theSet.(Symbol.iterator)()
+      iterator = theSet.values()
       peek = iterator.next()
       // The length of indentations that should be prepended to items in this
       // array if this array is displayed in multi-lines.
@@ -176,7 +177,7 @@ fun render(target, ...args) =
     renderSequence of
       done, next, level, keyLength, startPos, symbolsForSet(theSet.size)
   // Render instances of MLscript classes.
-  fun renderClassInstance(constructorName, fieldNames, instance, level, keyLength, startPos) =
+  fun renderClassInstance(constructorName: Str, fieldNames: Array[Str | null], instance: Any, level, keyLength, startPos) =
     let
       length = fieldNames.length
       i = 0
@@ -193,7 +194,7 @@ fun render(target, ...args) =
             then itemIndentationLength else prefixLengthIfSameLine
         renderValue(value, level + 1, 0, valueStartLength)
     renderSequence of done, next, level, keyLength, startPos, symbolsForClass(constructorName)
-  fun renderSequence(done, next, level: Int, keyLength: Int, startPos: Int, symbols) =
+  fun renderSequence(done: () -> Bool, next: (Bool, Int) -> Str, level: Int, keyLength: Int, startPos: Int, symbols: {start: Str, end: Str, separator: Str, empty: Str, padding: Bool}) =
     let
       items = mut []
       hasMultiline = false
@@ -241,7 +242,7 @@ fun render(target, ...args) =
       itemIndentationLength =
         if indent is null then 0 else (level + 1) * indent.length
     let skipNonEnumerable() =
-      while i < length and entries.[i].1.enumerable is false do set i += 1
+      while i < length and entries.[i].1!enumerable is false do set i += 1
     let done() = i >= length
     let next(isFirst: Bool, prefixLength: Int) =
       let
@@ -270,9 +271,9 @@ fun render(target, ...args) =
     skipNonEnumerable()
     renderRecordLike of
       done, next, level, keyLength, startPos, symbolsForObject, isRefinement
-  fun renderMap(map, level, keyLength, startPos) =
+  fun renderMap(map: Map, level, keyLength, startPos) =
     let
-      iterator = map.(Symbol.iterator)()
+      iterator = map.entries()
       peek = iterator.next()
       // The length of indentations that should be prepended to items in this
       // array if this array is displayed in multi-lines.
@@ -301,7 +302,7 @@ fun render(target, ...args) =
         [keyStr, valueStr]
     renderRecordLike of
       done, next, level, keyLength, startPos, symbolsForMap(map.size), false
-  fun renderRecordLike(done, next, level, keyLength, startPos, symbols, isRefinement) =
+  fun renderRecordLike(done: () -> Bool, next: (Bool, Int) -> [Str, Str], level, keyLength, startPos, symbols: {start: Str, end: Str, entrySeparator: Str, keyValueSeparator: Str, empty: Str, padding: Bool}, isRefinement) =
     let
       startPadding = if
         isRefinement then " "
@@ -347,17 +348,17 @@ fun render(target, ...args) =
       let lengthIfBreakParent = parentIndent.length + (singleLineLength - startPos + keyLength)
       lengthIfBreakParent <= breakLength then layoutSingleLine()
       else layoutMultiLine()
-  fun renderValue(arg, level, keyLength, startPos) = if
+  fun renderValue(arg: Any, level: Int, keyLength: Int, startPos: Int): Str = if
     arg is // Primitive values
       undefined then "undefined"
       null      then "null"
       Str       then JSON.stringify(arg)
-      BigInt    then arg.toString() + "n"
-      Symbol    and
+      BigInt as arg then arg.toString() + "n"
+      Symbol as arg and
         arg.description is undefined then "Symbol()"
         else "Symbol(\"" + arg.description + "\")"
-      Num       then arg.toString()
-      RegExp    then arg.toString()
+      Num as arg then arg.toString()
+      RegExp as arg then arg.toString()
       true      then "true"
       false     then "false"
     arg === ()  then "()"
@@ -383,15 +384,15 @@ fun render(target, ...args) =
         Map then renderMap of arg, level, keyLength, startPos
         WeakSet then "WeakSet { <items unknown> }"
         WeakMap then "WeakMap { <items unknown> }"
-        Error then arg.name + ": " + arg.message
-        Function then
+        Error as arg then arg.name + ": " + arg.message
+        Function as arg then
           let desc = Object.getOwnPropertyDescriptor(arg, "prototype")
           let head = if
             // ES 2015 classes: `desc.writable` is `false`.
-            desc is Object and desc.writable is false and
+            desc is Object and desc!writable is false and
               // If it is from MLscript, use the kind written in metadata.
-              desc.value.constructor.hasOwnProperty(definitionMetadataSymbol) and
-                desc.value.constructor.(definitionMetadataSymbol) is [kind, name, ...] then
+              desc!value!constructor!hasOwnProperty(definitionMetadataSymbol) and
+                desc!value!constructor!(definitionMetadataSymbol) is [kind, name, ...] then
                   kind + " " + name
               arg.name is "" then "class" // Show "class" if there is no name.
               else "class " + arg.name // Or, we can use the name.
@@ -426,19 +427,19 @@ fun render(target, ...args) =
               // patterns, or parameter-less classes), use the constructor name.
               definitionMetadata is [kind, name] then
                 // For class instances and objects, do not show the kind.
-                let head = if kind is
+                let head = (if kind is
                   "class" | "object" then name
-                  else kind + " " + name
+                  else kind + " " + name) as Str
                 let body = renderObject of
                   arg, level, keyLength, startPos + head.length, true
                 head + (if body is "{}" then "" else " " + body)
             // Otherwise, we print the name of the constructor and the properties.
-            let head = proto.constructor.name + " "
+            let head = (proto.constructor.name + " ") as Str
             else head + renderObject of
               arg, level, keyLength, startPos + head.length, true
           // Otherwise, the prototype is not a function.
           // If the prototype has its own implementation of `toString`, call it.
-          proto.hasOwnProperty("toString") then arg.toString() indentText(level)
+          proto.hasOwnProperty("toString") then arg!toString() indentText(level)
           // Otherwise, treat the input as a normal object.
           else renderObject(arg, level, keyLength, startPos, false)
     // We have finished visiting this object.

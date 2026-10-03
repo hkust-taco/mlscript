@@ -1,0 +1,36 @@
+:.
+:js
+
+import "../../mlscript-compile/MutMap.mls"
+import "../../mlscript-compile/Option.mls"
+
+open Option { Some, None }
+
+// updateWith receives None for a missing key and inserts a returned Some.
+:expect Some(20)
+val m = MutMap.empty
+m |> MutMap.updateWith("key") of case
+  None then Some(20)
+  Some(value) then Some(value + 1)
+m |> MutMap.get("key")
+//│ = Some(20)
+//│ m = MutMap(Map(1) {"key" => 20})
+
+// An existing value is passed to the callback and replaced by its result.
+:expect Some(42)
+m |> MutMap.updateWith("key") of case
+  None then Some(0)
+  Some(value) then Some(value + 22)
+m |> MutMap.get("key")
+//│ = Some(42)
+
+// Returning None deletes an existing key and leaves an absent key absent.
+:expect None
+m |> MutMap.updateWith("key") of ((_) => None)
+m |> MutMap.get("key")
+//│ = None
+
+:expect None
+m |> MutMap.updateWith("missing") of ((_) => None)
+m |> MutMap.get("missing")
+//│ = None

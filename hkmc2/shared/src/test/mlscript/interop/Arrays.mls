@@ -1,3 +1,4 @@
+:.
 :js
 
 
@@ -6,8 +7,16 @@ let arr = [true, false]
 
 
 // * Array methods annoyingly supply extra arguments, such as the index and the array itself
+:e
 :re
 arr.map(_ === false)
+//│ ╔══[COMPILATION ERROR] Resolution error in function type
+//│ ║  l.260: 	  fun map[U](f: (T, Int, Array[T]) -> U): Array[U]
+//│ ║         	                ^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Callback parameter list does not match its declared function type.
+//│ ║  in Arrays.mls:12
+//│ ║  l.12: 	arr.map(_ === false)
+//│ ╙──      	          ^^^^^^^^^
 //│ ═══[RUNTIME ERROR] Error: Function expected 1 argument but got 3
 
 :sjs
@@ -33,7 +42,7 @@ arr.map((_, ...) => 1)
 :e
 arr.map((..., ...) => 1)
 //│ ╔══[COMPILATION ERROR] Spread parameters must be the last in the parameter list.
-//│ ║  l.34: 	arr.map((..., ...) => 1)
+//│ ║  l.43: 	arr.map((..., ...) => 1)
 //│ ╙──      	         ^^^
 //│ = [1, 1]
 
@@ -41,8 +50,15 @@ arr.map((..., ...) => 1)
 :re
 arr.map((..., e) => e)
 //│ ╔══[COMPILATION ERROR] Spread parameters must be the last in the parameter list.
-//│ ║  l.42: 	arr.map((..., e) => e)
+//│ ║  l.51: 	arr.map((..., e) => e)
 //│ ╙──      	         ^^^
+//│ ╔══[COMPILATION ERROR] Resolution error in function type
+//│ ║  l.260: 	  fun map[U](f: (T, Int, Array[T]) -> U): Array[U]
+//│ ║         	                ^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Callback parameter list does not match its declared function type.
+//│ ║  in Arrays.mls:51
+//│ ║  l.51: 	arr.map((..., e) => e)
+//│ ╙──      	        ^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] Error: Function expected 2 arguments but got 3
 
 arr.map(pass1(_ === false))
@@ -63,28 +79,49 @@ Array
 Array(1)
 //│ = [<1 empty items>]
 
-:breakme // TODO better report an error, here
 :e
 Array()
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.83: 	Array()
+//│ ║        	^^^^^^^
+//│ ╟── Class 'Array' expected 1 argument, but got 0
+//│ ║  in ../decls/Prelude.mls
+//│ ║  l.240: 	declare class Array[T](val length: Int) {
+//│ ║         	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.241: 	  fun join(...separators): Str
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.242: 	  fun reverse(): Array[T]
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.243: 	  fun sort(...compare): Array[T]
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.244: 	... (more lines omitted) ...
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ = []
 
-:breakme // TODO better report an error, here
 :e
 Array(1, 2, 3)
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.102: 	Array(1, 2, 3)
+//│ ║         	^^^^^^^^^^^^^^
+//│ ╟── Class 'Array' expected 1 argument, but got 3
+//│ ║  in ../decls/Prelude.mls
+//│ ║  l.240: 	declare class Array[T](val length: Int) {
+//│ ║         	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.241: 	  fun join(...separators): Str
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.242: 	  fun reverse(): Array[T]
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.243: 	  fun sort(...compare): Array[T]
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.244: 	... (more lines omitted) ...
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ = [1, 2, 3]
 
 
 if arr is Array then "ok"
 //│ = "ok"
 
-:fixme // TODO handle?
+:expect 2
 if arr is Array(n) then n
-//│ ╔══[COMPILATION ERROR] Class Array does not have a parameter list
-//│ ║  l.81: 	if arr is Array(n) then n
-//│ ║        	          ^^^^^
-//│ ╟── but the pattern has one sub-pattern
-//│ ║  l.81: 	if arr is Array(n) then n
-//│ ╙──      	                ^
-//│ ═══[RUNTIME ERROR] Error: match error
-
+//│ = 2
 
