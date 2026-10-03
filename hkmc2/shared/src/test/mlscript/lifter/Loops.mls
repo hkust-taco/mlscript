@@ -1,3 +1,4 @@
+:..
 :.
 // :ignore // used to be ON with comment: Lifting should not require scope flattening (which doesn't handle loops)
 
@@ -80,7 +81,12 @@ fun foo() =
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 :expect 2
+:e
 foo()()
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.85: 	foo()()
+//│ ║        	^^^^^^^
+//│ ╙── Unit value cannot be called like a function.
 //│ = 2
 
 

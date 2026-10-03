@@ -89,8 +89,6 @@ following constraints identify the current failing behavior and representative t
   callable result precision across branches with different parameter lists.
   `std/LazyFingerTreeTest` loses the private view interface through slicing helpers;
   its general slice result also includes finger trees without `materialize`.
-  `lifter/Loops` includes an implicit unit result after an unconditional loop return,
-  preventing the returned closure from being called directly.
 - **Generators:** `codegen/Generators` needs the iterator interface produced by
   generator lowering. `newres/GeneratorResults` records the unresolved `.next`.
 - **Handlers:** handler-generated receiver and member references remain unresolved

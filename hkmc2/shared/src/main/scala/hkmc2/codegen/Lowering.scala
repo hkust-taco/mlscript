@@ -188,9 +188,9 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
         new TailOp(transfersControl = true):
           override def apply(k: Result): Block = Ret(castTo(k, returnType, N))
   
-  def parentConstructor(parentClsPath: Path, cls: Term, args: Ls[Term], loc: Opt[Loc])(using LoweringCtx) =
+  def parentConstructor(ctorParamLists: Ls[ParamList], args: Ls[Term], loc: Opt[Loc])(using LoweringCtx) =
     lowerSuperCtorCall(
-      parentClsPath,
+      ctorParamLists,
       State.builtinOpsMap("super").asSimpleRef,
       isMlsFun = true,
       args,
@@ -401,8 +401,8 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
             assert(k isnt syntax.Mod) // modules can't extend things and can't have super calls
             val cfgOverride = defn.extraAnnotations.collectFirst:
               case Annot.Config(modify) => modify(config)
-            classOf(ext.cls, ext): clsp =>
-              val pctor = inScopedBlock(parentConstructor(clsp, ext.cls, ext.args, ext.toLoc))
+            classOf(ext.cls, ext): (clsp, params) =>
+              val pctor = inScopedBlock(parentConstructor(params, ext.args, ext.toLoc))
               Define(
                 ClsLikeDefn(
                   defn.owner, defn.sym, defn.bsym, defn.ctorSym, defn.kind, defn.paramsOpt, defn.auxParams, S(clsp),
@@ -415,21 +415,42 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
     
     blockImpl(imps ::: funs ::: rest, res)
   
-  def classOf(trm: Term, nw: Resolvable)(k: Path => Block)(using LoweringCtx): Block =
-    if newResolution then
+  def classOf(trm: Term, nw: PossiblyErroneous)(k: (Path, Ls[ParamList]) => Block)(using LoweringCtx): Block =
+    def classValue: Block = nw match
+      case term: Term if !nw.isErroneous =>
+        ClassValueShape.targetsOf(term) match
+          case target :: Nil =>
+            val cls = ClassValueShape.definitionOf(target)
+            subTerm(trm): value =>
+              val classPath = target match
+                case _: ClassCtorSymbol => value.selSN("class")
+                case _ => value
+              // Read a stored class before evaluating arguments or building a
+              // partial constructor, even if its binding is assigned later.
+              val saved = loweringCtx.registerTempSymbol(S(trm), erasedType = N, "classValue")
+              Assign(saved, classPath, k(saved.asSimpleRef, classParamLists(cls)))
+          case Nil => fail:
+            ErrorReport(msg"Cannot resolve the class referenced here" -> trm.toLoc :: Nil,
+              source = Diagnostic.Source.Compilation)
+          case targets => fail:
+            ErrorReport(msg"The class interpretation here is ambiguous" -> trm.toLoc ::
+              targets.map(target => msg"${target.describeKind} '${target.nme}' defined here" -> target.toLoc),
+              source = Diagnostic.Source.Compilation)
+      case _ => compError
+    if newResolution && nw.isErroneous then compError
+    else if newResolution then
       trm.classHead match
       case resolved @ Resolved(_, _: ClassSymbol) =>
         // Synthesized runtime constructors already carry an explicit class target.
-        subTerm(resolved)(k)
+        subTerm(resolved)(p => k(p, getClassParamLists(p)))
+      case _: SimpleRef => classValue
       case resl: NewResolvable =>
         resl.resolvedTargets.distinct match
         case cls :: Nil =>
           cls.defn match
           case S(clsDef: ClassLikeDef) =>
-            subTerm(resl)(k)
-          case _ =>
-            softAssert(resl.isErroneous, s"Unexpected `new` target: ${cls.showDbg}")
-            compError
+            subTerm(resl)(p => k(p, classParamLists(clsDef)))
+          case _ => classValue
         case Nil =>
           if !resl.isErroneous then raise:
             ErrorReport(
@@ -444,17 +465,18 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
       case _ =>
         softAssert(nw.isErroneous, "Unexpected class term shape")
         compError
-    else subTerm(trm)(k)
+    else subTerm(trm)(p => k(p, getClassParamLists(p)))
   
+  private def classParamLists(cls: ClassLikeDef): Ls[ParamList] = cls.paramsOpt.toList ::: cls.auxParams
+
   def getClassParamLists(cls: Path): Ls[ParamList] =
     cls.targetSymbol match
     case S(clsSym: ClassSymbol) =>
-      clsSym.defn.map(clsDef => clsDef.paramsOpt.toList ::: clsDef.auxParams).getOrElse(Nil)
+      clsSym.defn.map(classParamLists).getOrElse(Nil)
     case _ => Nil
   
   // * Lowers the `super(...)(...)` call we get from the `extends C(...)(...)` syntax
-  def lowerSuperCtorCall(parentClsPth: Path, fr: Path, isMlsFun: Bool, args: List[Term], loc: Opt[Loc])(k: Result => Block)(using LoweringCtx): Block =
-    val ctorParamLists = getClassParamLists(parentClsPth)
+  def lowerSuperCtorCall(ctorParamLists: Ls[ParamList], fr: Path, isMlsFun: Bool, args: List[Term], loc: Opt[Loc])(k: Result => Block)(using LoweringCtx): Block =
     args match
     case _ :: _ =>
       def zipArgs(remainingParamss: Ls[ParamList], args: Ls[Term], acc: Ls[Ls[Arg]]): Block = (remainingParamss, args) match
@@ -525,7 +547,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
     * when they correspond to constructor parameter lists of the same class.
     * If fewer argument lists are provided than constructor parameter lists, eta-expands
     * the missing ones with fresh lambdas (avoiding reliance on mutable JS class curry semantics). */
-  def lowerMultiInstantiate(mut: Bool, cls: Path, args: Ls[Term], annotations: Ls[Annot], loc: Opt[Loc])(k: Result => Block)(using LoweringCtx): Block =
+  def lowerMultiInstantiate(mut: Bool, cls: Path, ctorParamLists: Ls[ParamList], args: Ls[Term], annotations: Ls[Annot], loc: Opt[Loc])(k: Result => Block)(using LoweringCtx): Block =
     // Nullary instantiations are represented with one empty argument list, matching existing `Instantiate` usage.
     def buildInstantiate(argss: Ls[Ls[Arg]]): Instantiate =
       Instantiate(mut, cls, if argss.isEmpty then Nil :: Nil else argss)(InstantiateMetadata(annotations), loc)
@@ -558,12 +580,6 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
             val freshArgs = freshSyms.map(s => Arg(N, s.asSimpleRef))
             Lambda(freshParamList, Return(etaExpand(rest, accArgss :+ freshArgs)))(Nil, loc)
         k(etaExpand(remainingParamss, acc.reverse))
-    // * Resolve the class definition to get the constructor param lists.
-    // * The class path typically resolves to a TermSymbol (the constructor function),
-    // * so we also look up the owner InnerSymbol via TermDefinition#owner.
-    // * Note: apparently, this can also be accessed through TermDefinition#companionClass
-    // * (what Copilot initially used), which is weird.
-    val ctorParamLists = getClassParamLists(cls)
     if ctorParamLists.isEmpty then
       // * Need to specially handle no-param classes
       args match
@@ -708,20 +724,19 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
     case N => Select(prefix, name)(target, sel.toLoc)(false)
 
   /** A projection must identify its class as well as its member: different
-    * classes can inherit the same definition, and wildcard receivers can differ. */
+    * classes can inherit the same definition. Captures do not disambiguate classes. */
   private def checkProjection(sel: NewSel): Bool = sel.cls match
     case N => true
     case S(cls) =>
       if sel.isErroneous then false
       else if sel.hasAmbiguousClass then
-        // Different instance contexts can lead to the same class declaration.
-        // Preserve the ambiguity, but report each declaration's location once.
+        // Qualifiers denote class declarations; their runtime receivers are irrelevant.
         raise:
           ErrorReport(msg"The projection class is ambiguous" -> cls.toLoc ::
-            sel.resolvedClasses.map(_._1).distinct.map(sym => msg"class: '${sym.nme}'" -> sym.toLoc),
+            sel.projectionClasses.map(sym => msg"class: '${sym.nme}'" -> sym.toLoc),
             source = Diagnostic.Source.Compilation)
         false
-      else if sel.resolvedClasses.isEmpty then
+      else if sel.projectionClasses.isEmpty then
         raise:
           ErrorReport(msg"Cannot resolve the projection class" -> cls.toLoc :: Nil,
             source = Diagnostic.Source.Compilation)
@@ -1149,6 +1164,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
       instantiated match
       // * Due to whacky JS semantics, we need to make sure that selections leading to a call
       // * are preserved in the call and not moved to a temporary variable.
+      case sel: NewSel if sel.isClassValue => classOf(sel.prefix, sel)((p, _) => conclude(p))
       case sel: NewSel => newSelection(sel): (prefix, name, target) =>
         subTerm_nonTail(prefix): p =>
           conclude(selectionPath(sel, p, name, target))
@@ -1309,6 +1325,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
 
     case whltrm: st.SynthWhile => ucs.Normalization(this)(whltrm)(k)
       
+    case sel: NewSel if sel.isClassValue => classOf(sel.prefix, sel)((p, _) => k(p))
     case sel: NewSel => newSelection(sel): (prefix, name, target) =>
       if sel.tupleIndex.nonEmpty then subTerm_nonTail(prefix)(p => k(selectionPath(sel, p, name, target)))
       else setupNamedSelection(prefix, name, target, sel.toLoc)(k)
@@ -1346,22 +1363,22 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
       
       
     case DynNew(cls, args) =>
-      subTerm(cls)(sr => lowerMultiInstantiate(false, sr, args, annots, trm.toLoc)(k))
+      subTerm(cls)(sr => lowerMultiInstantiate(false, sr, getClassParamLists(sr), args, annots, trm.toLoc)(k))
     case Mut(DynNew(cls, args)) =>
-      subTerm(cls)(sr => lowerMultiInstantiate(true, sr, args, annots, trm.toLoc)(k))
+      subTerm(cls)(sr => lowerMultiInstantiate(true, sr, getClassParamLists(sr), args, annots, trm.toLoc)(k))
     case nw @ (_: New | Mut(_: New)) =>
       val (mut, cls, as, rft, nwtrm) = nw match
         case nwtrm @ New(c, a, r) => (false, c, a, r, nwtrm)
         case Mut(nwtrm @ New(c, a, r)) => (true, c, a, r, nwtrm)
         case _ => spuriousWarning
-      classOf(cls, nwtrm): sr =>
+      classOf(cls, nwtrm): (sr, params) =>
         rft match
-        case N => lowerMultiInstantiate(mut, sr, as, annots, trm.toLoc)(k)
+        case N => lowerMultiInstantiate(mut, sr, params, as, annots, trm.toLoc)(k)
         case S((isym, rft)) =>
           val sym = new BlockMemberSymbol(isym.name, Nil)
           loweringCtx.collectScopedSym(sym)
           val (mtds, publicFlds, privateFlds, ctor) = gatherMembers(rft)
-          val pctor = parentConstructor(sr, cls, as, nw.toLoc)
+          val pctor = parentConstructor(params, as, nw.toLoc)
           val clsDef = ClsLikeDefn(N, isym, sym, N, syntax.Cls, N, Nil, S(sr),
             mtds, privateFlds, publicFlds, pctor, ctor, N, N)(N, Nil)
           val inner = new New(sym.ref().resolved(isym), Nil, N)(FlowSymbol.neww(), N)

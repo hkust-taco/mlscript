@@ -239,7 +239,7 @@ final class NewResolverState private (
     new Cache(inherited.map(_.reportedArities), _.clone())
   val appShapes: Cache[(CoreTermShape, FlowSymbol), AppShape] =
     new Cache(inherited.map(_.appShapes), identity)
-  val newShapes: Cache[(ClassLikeSymbol, Ls[Marks], FlowSymbol, Opt[Ls[DeclaredType]]), NewShape] =
+  val newShapes: Cache[(ClassValueTarget, Ls[Marks], FlowSymbol, Opt[Ls[DeclaredType]]), NewShape] =
     new Cache(inherited.map(_.newShapes), identity)
   val constructorApplications: Seen[(NewShape, TypeSubstitution)] =
     new Seen(inherited.map(_.constructorApplications))

@@ -1266,7 +1266,10 @@ extends Importer:
       res
     
     def elaborateProjection(prefix: Term, cls: Term, name: Ident): Term =
-      val res = new Term.NewSel(prefix, name, S(cls))(FlowSymbol.selProj(name.name)).withLocOf(tree)
+      // The qualifier denotes a class even when its source is a stored constructor.
+      // Resolve that interpretation on the qualifier itself, as for explicit `.class`.
+      val qualifier = new Term.NewSel(cls, new Ident("class").withLocOf(cls), N)(FlowSymbol.sel("class")).withLocOf(cls)
+      val res = new Term.NewSel(prefix, name, S(qualifier))(FlowSymbol.selProj(name.name)).withLocOf(tree)
       newSel(res)
       interpretRef(res, interp)
 
@@ -1278,7 +1281,9 @@ extends Importer:
       app(lt, rt)(tree, N, sym)
     
     def elaborateSelection(tree: Sel): Term =
-      val preTrm = subterm(tree.prefix, Receiver)
+      // `.class` chooses the class overload before requesting a receiver value.
+      // Interpreting C as a receiver first would also select its companion.
+      val preTrm = subterm(tree.prefix, if newResolution && tree.name.name == "class" then Clss else Receiver)
       // `source` has no runtime object. Recognize its statically named fields
       // before constructing a runtime selection, in either resolution mode.
       // Compare symbols so a user-defined binding named `source` stays ordinary.

@@ -350,14 +350,18 @@ sealed trait NewSelImpl extends NewResolvableImpl:
   // access rather than looking for a nominal field symbol.
   var tupleIndex: Opt[Int] = N
   var resolvedMembers: Ls[BlockMemberSymbol] = Nil // * filled during resolution
-  // Class identity and captures must survive even when candidates share an inherited member.
-  var resolvedClasses: Ls[(ClassSymbol, Ls[Marks])] = Nil
+  // Unlike a field whose value happens to be a class, C.class has a class
+  // target without an ordinary member. Its receiver remains the class reference.
+  def isClassValue(using Erasure): Bool =
+    !isErroneous && self.cls.isEmpty && self.id.name == "class" && resolvedMembers.isEmpty &&
+      !hasDynamicTarget && resolvedTargets.exists(_.isInstanceOf[ClassSymbol])
   def hasAmbiguousClass(using Erasure): Bool = hasAmbiguousClassImpl
   // Also used by the guarded symbol lookup for completed imports.
-  private[semantics] def hasAmbiguousClassImpl: Bool = resolvedClasses.sizeCompare(1) > 0 || self.cls.exists:
-    _.withoutCaptures match
-      case ref: Term.UnresolvedRef => ref.resolvedMembers.distinct.sizeCompare(1) > 0
-      case _ => false
+  private[semantics] def hasAmbiguousClassImpl: Bool = projectionClassesImpl.sizeCompare(1) > 0
+  def projectionClasses(using Erasure): Ls[ClassSymbol] = projectionClassesImpl
+  private def projectionClassesImpl: Ls[ClassSymbol] = self.cls.toList.flatMap: qualifier =>
+    qualifier.resolvedTargets.collect { case cls: ClassSymbol => cls }.distinct
+
 
 sealed trait UnresolvedRefImpl extends NewResolvableImpl:
   self: Term.UnresolvedRef =>
@@ -381,8 +385,8 @@ enum Term extends Statement, AutoLocated, ShapePublisher:
   case SimpleRef(sym: codegen.SimpleSymbol)(val tree: Tree.Ident) extends Term, NewRefImpl
   case SelfRef(sym: InnerSymbol)(val tree: Tree.Ident) extends Term, NewRefImpl
   case MemberRef(sym: MemberSymbol)(val tree: Tree.Ident, val resSym: FlowSymbol) extends Term, NewResolvableImpl, NewRefImpl
-  /** An optional class fixes the lookup scope for an explicit member projection. */
-  case NewSel(prefix: Term, id: Tree.Ident, cls: Opt[Term])(val resSym: FlowSymbol) extends Term, NewSelImpl, ShapeHost
+  /** An optional class selection fixes the lookup scope for an explicit member projection. */
+  case NewSel(prefix: Term, id: Tree.Ident, cls: Opt[NewSel])(val resSym: FlowSymbol) extends Term, NewSelImpl, ShapeHost
   case UnresolvedRef(prefixes: Ls[Term], id: Tree.Ident)(val resSym: FlowSymbol) extends Term, UnresolvedRefImpl, ShapeHost
   case Capture(base: Term, thru: AnyDefinitionSymbol) extends Term
   // --- LEGACY ---
@@ -615,20 +619,31 @@ enum Term extends Statement, AutoLocated, ShapePublisher:
     * identity and completed results. Listeners belong to elaboration and are not copied.
     */
   override def mkClone(using State, Erasure): Term =
-    def copyShapes[T <: ShapeHost](source: ShapeHost, copy: T): T =
+    def copyMetadata(source: Term, copy: Term): copy.type =
+      copy.withLocOf(source)
+      copy.typeInterpretation = source.typeInterpretation
+      copy
+    def copyShapes(source: ShapeHost, copy: ShapeHost): copy.type =
       copy.shapes ++= source.shapes
       copy
-    def copyResolution[T <: Resolvable](source: Resolvable, copy: T): T =
+    def copyResolution(source: Resolvable, copy: Resolvable): copy.type =
       copy.isErroneous = source.isErroneous
       source.expansion.foreach(expansion => copy.expand(expansion.map(_.mkClone)))
       copyShapes(source, copy)
-    def copySelection[T <: Term & AnySel](source: Term & AnySel, copy: T): T =
+    def copySelection(source: Term & AnySel, copy: Term & AnySel): copy.type =
       copy.resolvedTargets = source.resolvedTargets
       copyResolution(source, copy)
-    def copyNewResolution[T <: NewResolvable](source: NewResolvable, copy: T): T =
+    def copyNewResolution(source: NewResolvable, copy: NewResolvable): copy.type =
       copy.resolvedTargets = source.resolvedTargets
       copy.isErroneous = source.isErroneous
       copy
+    // Keep class qualifiers typed as selections while sharing all clone metadata copying.
+    def cloneSel(term: NewSel): NewSel =
+      val copy = new NewSel(term.prefix.mkClone, term.id, term.cls.map(cloneSel))(term.resSym)
+      copy.resolvedMembers = term.resolvedMembers
+      copy.hasDynamicTarget = term.hasDynamicTarget
+      copy.tupleIndex = term.tupleIndex
+      copyMetadata(term, copyNewResolution(term, copyShapes(term, copy)))
     val that = this match
       case Error() => Error()
       case UnitVal() => UnitVal()
@@ -642,12 +657,7 @@ enum Term extends Statement, AutoLocated, ShapePublisher:
       case term @ SimpleRef(sym) => SimpleRef(sym)(term.tree)
       case term @ SelfRef(sym) => SelfRef(sym)(term.tree)
       case term @ MemberRef(sym) => copyNewResolution(term, MemberRef(sym)(term.tree, term.resSym))
-      case term @ NewSel(prefix, id, cls) =>
-        val copy = NewSel(prefix.mkClone, id, cls.map(_.mkClone))(term.resSym)
-        copy.resolvedMembers = term.resolvedMembers
-        copy.resolvedClasses = term.resolvedClasses
-        copy.hasDynamicTarget = term.hasDynamicTarget
-        copyNewResolution(term, copyShapes(term, copy))
+      case term: NewSel => return cloneSel(term)
       case term @ UnresolvedRef(prefixes, id) =>
         val clonedPrefixes = prefixes.map(_.mkClone)
         val copy = UnresolvedRef(clonedPrefixes, id)(term.resSym)
@@ -721,9 +731,7 @@ enum Term extends Statement, AutoLocated, ShapePublisher:
       case Annotated(annot, target) => Annotated(annot, target.mkClone)
       case Handle(lhs, rhs, args, derivedClsSym, defs, body) =>
         Handle(lhs, rhs.mkClone, args.map(_.mkClone), derivedClsSym, defs, body.mkClone)
-    that.withLocOf(this)
-    that.typeInterpretation = typeInterpretation
-    that
+    copyMetadata(this, that)
   
   // // private[semantics] val reslListeners: Buffer[Resolution] = MutSet.empty
   // private[semantics] val shapeListeners: Buffer[Shape => Unit] = Buffer.empty
@@ -1020,6 +1028,8 @@ sealed trait Statement extends Located, ProductWithExtraInfo, Describable:
         if summon[ShowCfg].showFlowSymbols
         then doc"$pre${
             sel.resolvedMembers match
+            case Nil if sel.resolvedTargets.nonEmpty =>
+              doc"$str‹" :: sel.resolvedTargets.distinct.map(_.showName).mkDocument(", ") :: doc"›"
             case Nil => doc"${str}ˀˀˀ"
             case t :: Nil => t.showName
             case ts => doc"$str‹" :: ts.map(_.showName).mkDocument(", ") :: doc"›"

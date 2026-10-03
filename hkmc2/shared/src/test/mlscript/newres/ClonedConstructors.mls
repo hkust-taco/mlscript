@@ -67,3 +67,18 @@ object Amazing extends constructors.make(35)
 Amazing.value
 //│ = 35
 
+// Selecting the class from a let-bound constructor also survives pattern cloning.
+let ctor = Direct
+fun throughVariableClass(x) = if x is @compile ctor.class(3) then true else false
+//│ ctor = fun Direct { class: class Direct }
+
+:expect [true, false]
+[throughVariableClass(Direct(3)), throughVariableClass(Direct(4))]
+//│ = [true, false]
+
+// The pattern instantiator mistakes a local constructor value for a pattern
+// parameter and looks it up in the pattern-argument substitution.
+:fixme
+fun throughVariable(x) = if x is @compile ctor(3) then true else false
+//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: ctor
+

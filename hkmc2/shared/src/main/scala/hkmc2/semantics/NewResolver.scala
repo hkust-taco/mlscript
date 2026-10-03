@@ -2008,7 +2008,9 @@ class NewResolver:
           // An ambiguous lookup can publish several constructors. Pair each
           // declaration only with its own references; the lookup diagnoses
           // competing candidates independently of this shape subscription.
-          case _: ClassDef => listenClass(lhs)(ref =>
+          // The pattern already selected its class target above; this subscription
+          // recovers capture marks without adding the operand's term target.
+          case _: ClassDef => listenClass(lhs, recordTargets = false)(ref =>
             if ref.definition eq cls then publish(ref.marks)
           , _ => ())
           case _: ModuleOrObjectDef => publish(Nil)
@@ -2619,53 +2621,88 @@ class NewResolver:
   /** Class interpretations wait for completed overload sets, independently of term
     * companions. Aliases can supply constructor shapes; applied instances cannot.
     * Capture marks are retained for subsequent instance-member lookup. */
-  private case class ClassReference(definition: ClassDef, marks: Ls[Marks],
-      instances: TypeSubstitution, supplied: Opt[Ls[DeclaredType]])
+  private case class ClassReference(target: ClassValueTarget, marks: Ls[Marks],
+      instances: TypeSubstitution, supplied: Opt[Ls[DeclaredType]]):
+    def definition: ClassDef = ClassValueShape.definitionOf(target)
 
-  private def listenClass(trm: Term)(selected: ShapeListener[ClassReference], reject: ShapeListener[Shape])(using NewResolverState): Unit =
+  // Declaration references choose their class overload. Stored values instead
+  // retain their runtime representation, whether a class or its constructor.
+  private def listenClass(trm: Term, recordTargets: Bool)(selected: ShapeListener[ClassReference], reject: ShapeListener[TermShape])(using NewResolverState): Unit =
     def select(ref: ClassReference)(using NewResolverState): Unit =
-      trm.classHead match
-        case target: NewResolvable =>
-          rstate.recordResolution(target, target.resolvedTargets.contains(ref.definition.sym))(
-            target.resolvedTargets ::= ref.definition.sym)
-        case _ => ()
+      if recordTargets then recordValueTarget(trm.classHead, ref.definition.sym)
       selected(ref)
     def value(sh: TermShape)(using NewResolverState): Unit =
       val ShapeParts(source, instances, supplied) = shapeParts(sh)
       val marks = source.applicationHead._2
-      def fromDefinition(ds: DefnShape): Unit =
-        ds.clsDef match
-          case S(cls: ClassDef) => select(ClassReference(cls, marks, instances, supplied))
-          case _ => reject(sh)
       source match
-        case Marked(ds: DefnShape, _) => fromDefinition(ds)
+        case Marked(ds: DefnShape, _) => ds.clsDef match
+          case S(cls: ClassDef) =>
+            val target: ClassValueTarget = ds.defn match
+              case td: TermDefinition => td.tsym match
+                case ctor: ClassCtorSymbol => ctor
+                case _ => lastWords("Class shape without a class or constructor definition")
+              case _: ClassDef => cls.sym
+              case _ => lastWords("Class shape without a class or constructor definition")
+            selected(ClassReference(target, marks, instances, supplied))
+          case _ => reject(sh)
         case _ => reject(sh)
     trm match
-      case application @ TyApp(base, args) => listenClass(base)(ref =>
+      // Local variables store the term interpretation of their initializer, even
+      // when their flow still contains its unconverted overload-set shape.
+      case _: SimpleRef => listenTerm(trm)(value)
+      case application @ TyApp(base, args) => listenClass(base, recordTargets)(ref =>
         val count = if ref.supplied.nonEmpty then 0 else ref.definition.tparams.length
         if count != args.length && rstate.typeArgumentArityErrors.add((new Identity(application), count)) then
           resolError(trm, msg"Class '${ref.definition.sym.nme}' expected ${count} type ${
             "argument".pluralized(count)}, but got ${args.length}" -> ref.definition.toLoc :: Nil)
         val supplied = args.map(arg => declaredType(typeResolution(arg), Map.empty).instantiate(rstate.instances))
-        if ref.supplied.nonEmpty then select(ref)
+        if ref.supplied.nonEmpty then selected(ref)
         else
           val instances = instantiateParameters(ref.definition.sym, ref.definition.tparams.map(_.sym),
             rstate.typeApplicationSite(application), ref.marks, rstate.instances.withOverrides(ref.instances), S(supplied))
-          select(ref.copy(instances = instances, supplied = S(supplied)))
+          selected(ref.copy(instances = instances, supplied = S(supplied)))
       , reject)
       case Capture(base, thru) =>
-        listenClass(base)(ref => select(ref.copy(marks =
+        listenClass(base, recordTargets)(ref => selected(ref.copy(marks =
           ref.marks ::: EntryMark(ResolutionBoundary(thru), N, NoMarks) :: Nil)), reject)
       case _ => listen(trm):
         case sh: SymShape =>
-          completedClass(sh)(cls => select(ClassReference(cls,
+          completedClass(sh)(cls => select(ClassReference(cls.sym,
             ExitMark(ResolutionBoundary(cls.sym), S(sh.resSym), NoMarks) :: sh.markss,
             sh match
               case contextual: ContextualSymShape => contextual.instances
               case _ => TypeSubstitution.empty
             , N)),
-            () => fromSymbol(sh, value, trm, _ => (), false))
+            () => fromSymbol(sh, value, trm, sym => if recordTargets then recordValueTarget(trm, sym), false))
         case sh: TermShape => value(sh)
+
+  /** Locate a projected declaration in the actual receiver's class ancestry.
+    * Each parent shape carries the crossing from its class into the child, so
+    * keep those crossings before adding the receiver's outer captures.
+    */
+  private def projectedMember(receiver: TermShape, cls: ClassDef, name: Str)(using NewResolverState): Opt[MemberLookup] =
+    val ShapeParts(source, instances, _) = shapeParts(receiver)
+    val (head, marks) = source.applicationHead
+    val member = head match
+      case definition: DefnShape =>
+        if definition.clsDef.contains(cls) then S(definition.getInstanceMember(name))
+        else definition.ext.flatMap(projectedMember(_, cls, name))
+      case base: BaseShape =>
+        if base.defn is cls then S(base.getMember(name))
+        else base.ext.flatMap(projectedMember(_, cls, name))
+      case _ => N
+    member.map(_.withMarks(marks).instantiate(instances))
+
+  /** Class selections own their resolved class targets, including for aliases.
+    * Projection qualifiers use this same representation without evaluating it.
+    * The caller decides whether non-class values permit ordinary field selection.
+    */
+  private def classSelection(sel: NewSel)(selected: ShapeListener[ClassReference], reject: ShapeListener[TermShape])(using NewResolverState): Unit =
+    listenClass(sel.prefix, recordTargets = true)(ref =>
+      val cls = ref.definition.sym
+      rstate.recordResolution(sel, sel.resolvedTargets.contains(cls))(sel.resolvedTargets ::= cls)
+      selected(ref)
+    , reject)
 
   def newSel(sel: NewSel)(using NewResolverState): Unit =
     log(s"newSel? sel = ${sel.showDbg}")
@@ -2704,19 +2741,28 @@ class NewResolver:
       // selection, but cannot choose a different member for that old syntax.
       case _ => ()
     sel.cls match
+      case N if sel.id.name == "class" =>
+        classSelection(sel)(ref =>
+          listenExt(ref.definition, ext =>
+            val shape = ClassValueShape(ref.target, ext)
+            assert(rstate.canResolve(sel) || ClassValueShape.targetsOf(sel).contains(ref.target),
+              "Inference changed a completed class-value interpretation")
+            val specialized = ref.supplied.fold[TermShape](shape)(args => SpecializedShape(shape, args, ref.instances))
+            transportShape(specialized, ref.marks) match
+              case value: TermShape => publishViewed(sel, value, ref.instances)
+              case NoShape => ())
+        , shape =>
+          member(shape.getMember(sel.id.name), msg"${shape.describe.capitalize}", shape.diagnostic, TypeSubstitution.empty))
       case N => listenReceiver(sel.prefix): shape =>
         log(s"newSel: sel = ${sel.showDbg}, shape = ${shape.shwDbg}")
         member(shape.getMember(sel.id.name), msg"${shape.describe.capitalize}", shape.diagnostic, TypeSubstitution.empty)
       case S(cls) =>
-        listenClass(cls)(ref =>
+        classSelection(cls)(ref =>
           val cd = ref.definition
-          val marks = ref.marks
-          val candidate = cd.sym -> marks
-          rstate.recordResolution(sel, sel.resolvedClasses.contains(candidate))(sel.resolvedClasses ::= candidate)
           listenExt(cd, ext =>
-            val info = DefnShape(cd, ext).getInstanceMember(sel.id.name).withMarks(marks)
+            val info = DefnShape(cd, ext).getInstanceMember(sel.id.name)
             info match
-              case MemberLookup.Found(bms: BlockMemberSymbol, _) =>
+              case MemberLookup.Found(bms: BlockMemberSymbol, declarationMarks) =>
                 // Resolve the projection target even in an unused function. Wait
                 // for the receiver before deciding whether its result may expose
                 // implementation flow or only the declared member signature.
@@ -2734,7 +2780,15 @@ class NewResolver:
                           // it cannot recover that class's implementation arguments.
                           val opaque = abstractType(new TypeResolution(sel, msgs => resolError(sel, msgs)))
                           MemberLookup.Declared(bms, cd.tparams.map(_.sym -> opaque).toMap, context :: Nil, nominal.annotation, true)
-                    case _ => info
+                    case _ =>
+                      // C# selects a declaration, not an instance of C. Transport
+                      // the member through the actual receiver, never the qualifier.
+                      projectedMember(receiver, cd, sel.id.name).getOrElse:
+                        // Without a path into this class, only its declared
+                        // interface is available; qualifier values add no evidence.
+                        val opaque = abstractType(new TypeResolution(sel, msgs => resolError(sel, msgs)))
+                        MemberLookup.Declared(bms, cd.tparams.map(_.sym -> opaque).toMap,
+                          declarationMarks ::: ExitMark(ResolutionBoundary(cd.sym), N, NoMarks) :: Nil, N, true)
                   member(selected, msg"Class '${cd.sym.nme}'", message => (message -> cd.toLoc) :: Nil, TypeSubstitution.empty)
               case _ => member(info, msg"Class '${cd.sym.nme}'", message => (message -> cd.toLoc) :: Nil, TypeSubstitution.empty))
         , sh =>
@@ -2764,10 +2818,10 @@ class NewResolver:
   
   def resolveNew(nw: Term.New)(using NewResolverState): Unit = nw.cls.classHead match
     case Term.Error() => rstate.markError(nw)
-    // Static construction records a resolved class on its reference for lowering.
+    // Class references resolve symbolically; variables must carry a class value.
     // Other expression forms require dynamic construction, even if they publish
     // no shapes (for example an unsupported reference in an extends clause).
-    case _: NewResolvable => resolveNewClass(nw)
+    case _: NewResolvable | _: SimpleRef => resolveNewClass(nw)
     case _ =>
       rstate.markError(nw)
       resolError(nw, msg"Invalid class expression: ${nw.cls.describe}" -> nw.cls.toLoc :: Nil)
@@ -2776,8 +2830,12 @@ class NewResolver:
     // listenClass preserves captures and supplies the same class-body exit as a
     // constructor value. In particular, a captured constructor already carries
     // that exit; adding a second one here would duplicate its instance boundary.
-    listenClass(nw.cls)(ref =>
+    listenClass(nw.cls, recordTargets = true)(ref =>
       val cd = ref.definition
+      // Constructor arity is compiled from these shapes even when the runtime
+      // operand is a variable with no resolved class symbol of its own.
+      assert(rstate.canResolve(nw) || ClassValueShape.targetsOf(nw).contains(ref.target),
+        "Inference changed a completed constructor target")
       val marks = ref.marks
       val callerInstances = rstate.instances
       listenExt(cd, extsh =>
@@ -2787,8 +2845,8 @@ class NewResolver:
         // unapplied constructor waits for its first term application.
         val instances = if ref.supplied.nonEmpty || (nw.args.isEmpty && dsh.unappliedParams.nonEmpty) then captured
           else instantiateDefinition(dsh, nw.resSym, marks, captured, N)
-        val sh = newShapes.getOrElseUpdate((cd.sym, marks, nw.resSym, ref.supplied),
-          NewShape(dsh, cd.sym, marks, nw.args, nw, ref.supplied))
+        val sh = newShapes.getOrElseUpdate((ref.target, marks, nw.resSym, ref.supplied),
+          NewShape(dsh, ref.target, marks, nw.args, nw, ref.supplied))
         if rstate.constructorApplications.add((sh, instances)) then
           dsh.unappliedParams.lazyZip(nw.args).foreach:
             case ((ps, _), args) => zipArgsIn(marks, ps.params, ps.restParam, args, nw, dsh, instances)
