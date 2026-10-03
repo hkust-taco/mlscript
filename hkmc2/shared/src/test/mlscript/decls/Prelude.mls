@@ -7,7 +7,7 @@ declare type Nothing
 declare class Object {
   fun toString(): Str
 }
-declare fun Object(...args): Object
+declare fun Object(...args): Object // TODO: use an optional parameter when supported
 declare module Object {
   fun entries(target): Array[[Str, Any]]
   fun getOwnPropertyDescriptor(target, key): Object | undefined
@@ -28,16 +28,17 @@ declare module JSON {
     stringify
 }
 
-declare class Number
-declare fun Number(...args): Num
+declare class Number: Num
+// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/Number
+declare fun Number(...args): Number // TODO: use an optional parameter when supported
 declare module Number {
   val
-    MIN_VALUE
-    MAX_VALUE
-    MIN_SAFE_INTEGER
-    MAX_SAFE_INTEGER
-    NEGATIVE_INFINITY
-    POSITIVE_INFINITY
+    MIN_VALUE: Num
+    MAX_VALUE: Num
+    MIN_SAFE_INTEGER: Int
+    MAX_SAFE_INTEGER: Int
+    NEGATIVE_INFINITY: Num
+    POSITIVE_INFINITY: Num
 }
 
 declare class BigInt {
@@ -56,7 +57,8 @@ declare class Function {
 declare module Function
 
 declare class String
-declare fun String(...args): Str
+// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/String
+declare fun String(...args): Str // TODO: use an optional parameter when supported
 declare module String {
   fun
     fromCharCode
@@ -118,11 +120,14 @@ declare class Error {
   val name: Str
   val stack: Str | undefined
 }
-declare fun Error(...args): Error
+// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error/Error
+declare fun Error(...args): Error // TODO: use optional parameters when supported
 
+// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypeError/TypeError
 declare class TypeError extends Error
 declare fun TypeError(...args): TypeError
 
+// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RangeError/RangeError
 declare class RangeError extends Error
 declare fun RangeError(...args): RangeError
 
@@ -223,7 +228,7 @@ declare class Class
 // Foreign constructor signatures describe the native binding and do not introduce
 // the `.class` storage used by generated MLscript constructor functions.
 // The `val length` parameter also supports matching with `Array(length)`.
-declare class Array[T](val length: Int): Array[T] {
+declare class Array[T](val length: Int) {
   fun join(...separators): Str
   fun reverse(): Array[T]
   fun sort(...compare): Array[T]
@@ -266,7 +271,8 @@ declare class Array[T](val length: Int): Array[T] {
   fun toLocaleString(...options): Str
 }
 declare module Array {
-  fun from(...args): Array[Any]
+  // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/from
+  fun from(...args): Array[Any] // TODO: use optional parameters when supported
   fun
     concat
     isArray
