@@ -49,9 +49,10 @@ promise.answer
 //│ ║  l.47: 	promise.answer
 //│ ║        	^^^^^^^^^^^^^^
 //│ ╟── Cannot resolve member 'answer' of a value with unknown shape.
-//│ ╟── The shape of this value is unknown.
+//│ ╟── This async expression returns a promise, rather than the value of its body.
 //│ ║  l.46: 	let promise = @annotations.async {answer: 42}
-//│ ╙──      	                                  ^^^^^^^^^^
+//│ ║        	              ^^^^^^^^^^^^^^^^^^
+//│ ╙── Member resolution for async results is not supported yet.
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ promise = Promise {}
 

@@ -3601,10 +3601,13 @@ class NewResolver:
       val flow = resultFlow(body)
       if flow.normal then listen(body, discardMarks)(listener)
       flow.exits.getOrElse(S(label), Vector.empty).foreach(value => listen(value, discardMarks)(listener))
-    case Annotated(Annot.Async(), _) =>
-      // Lowering returns a JavaScript promise, not the body's value. Until the
-      // promise interface is declared, it cannot justify a static member lookup.
-      listener(UnknownValueShape.at(trm))
+    case Annotated(annotation @ Annot.Async(), _) =>
+      // Async lowering wraps the result in a promise. Point to the annotation
+      // that changes the result, rather than suggesting that the body's shape
+      // is unknown. The declared Promise interface is not yet connected here.
+      listener(UnknownValueShape(trm, fromPublicInterface = false)(ShapeProvenance(
+        (msg"This async expression returns a promise, rather than the value of its body." -> annotation.toLoc) ::
+        (msg"Member resolution for async results is not supported yet." -> N) :: Nil)))
     case Annotated(_, target) => listen(target, discardMarks)(listener)
     case _: Assgn | _: Drop => listener(unitResultShape)
     case _: Ret | _: Break | _: Throw | _: Continue => () // These expressions do not complete normally.
