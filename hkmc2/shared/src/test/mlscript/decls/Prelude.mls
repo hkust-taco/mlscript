@@ -19,10 +19,12 @@ declare module Object with
     fromEntries
     getPrototypeOf
     defineProperty
+
 declare class JSON
 declare module JSON with
   fun
     stringify
+
 declare class Number
 declare fun Number(...args): Num
 declare module Number with
@@ -33,15 +35,20 @@ declare module Number with
     MAX_SAFE_INTEGER
     NEGATIVE_INFINITY
     POSITIVE_INFINITY
+
 declare class BigInt with
+  // private constructor() // FIXME: Unsupported constructor in this position.
   fun toString(...radix): Str
-declare fun BigInt(value): BigInt
+// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/BigInt/BigInt
+declare fun BigInt(value: Str | Int | Bool | BigInt): BigInt
 declare module BigInt
+
 declare class Function with
   val name: Str
   fun bind(thisArg, ...args): Function
   fun apply(thisArg, args: Array): Any
 declare module Function
+
 declare class String
 declare fun String(...args): Str
 declare module String with
@@ -49,11 +56,13 @@ declare module String with
     fromCharCode
     fromCodePoint
     raw
+
 declare class RegExp with
   fun toString(): Str
   fun exec(input: Str): Array[Str] | null
   fun test(input: Str): Bool
 declare module RegExp
+
 declare class Set[V] with
   val size: Int
   fun add(value: V): Set[V]
@@ -64,6 +73,7 @@ declare class Set[V] with
   fun union(other: Set[V]): Set[V]
   fun difference(other: Set[V]): Set[V]
 declare module Set
+
 declare class Map[K, V] with
   val size: Int
   fun get(key: K): V | undefined
@@ -75,55 +85,76 @@ declare class Map[K, V] with
   fun values(): Iterator[V]
   fun entries(): Iterator[[K, V]]
   fun forEach(f: (V, K, Map[K, V]) -> Any): undefined
+
 declare class Iterator[out T] with
   fun next(): { value: T, done: Bool }
+
 declare module Map
+
 declare class WeakSet[V]
 declare module WeakSet
+
 declare class WeakMap[K, V] with
   fun get(key: K): V | undefined
   fun has(key: K): Bool
   fun delete(key: K): Bool
   fun id"set"(key: K, value: V): WeakMap[K, V]
 declare module WeakMap
+
 declare class Error with
   val message: Str
   val name: Str
   val stack: Str | undefined
 declare fun Error(...args): Error
+
 declare class TypeError extends Error
 declare fun TypeError(...args): TypeError
+
 declare class RangeError extends Error
 declare fun RangeError(...args): RangeError
+
 declare class Date
 declare module Date
 
 declare class ArrayBuffer
 declare module ArrayBuffer
+
 declare class TypedArray
 declare module TypedArray
+
 declare class Int8Array
 declare module Int8Array
+
 declare class Uint8Array
 declare module Uint8Array
+
 declare class Uint8ClampedArray
 declare module Uint8ClampedArray
+
 declare class Int16Array
 declare module Int16Array
+
 declare class Uint16Array
 declare module Uint16Array
+
 declare class Int32Array
 declare module Int32Array
+
 declare class Uint32Array
 declare module Uint32Array
+
 declare class Float16Array
 declare module Float16Array
+
 declare class Float32Array
 declare module Float32Array
+
 declare class Float64Array
 declare module Float64Array
+
 declare class BigInt64Array
 declare module BigInt64Array
+
 declare class BigUint64Array
 declare module BigUint64Array
 
@@ -300,6 +331,7 @@ declare module Reflect with
     ownKeys
     apply
     construct
+
 declare module console with
   declare
     fun
@@ -325,6 +357,7 @@ declare module console with
 declare module process with
   fun cwd(): Str
   val env
+
 // Host APIs remain explicitly dynamic until their interfaces are modeled.
 declare val fs: dyn
 
@@ -513,4 +546,6 @@ declare class HTMLElement with
 // Shared read interfaces for arrays, strings, and lazy views. Element types are
 // covariant, so using these interfaces does not widen an invariant collection.
 type Indexable[out A] = {length: Int, at: Int -> A, slice: Function}
-type IterableIndexable[out A] = Indexable[A] & {iterator: () -> Iterator[A]}
+type Iterable[out A] = {iterator: () -> Iterator[A]}
+type IterableIndexable[out A] = Indexable[A] & Iterable[A]
+

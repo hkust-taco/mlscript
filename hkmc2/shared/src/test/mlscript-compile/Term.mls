@@ -74,7 +74,7 @@ class Term with
 
 class Context(val names: Map[Str, Int], val bindings: Map[Symbol, Str], val dependencies: Set[Str], val printOnly: Bool) with
   fun get(sym: Symbol): Str =
-    if bindings.has(sym) then bindings.get(sym)
+    if bindings.get(sym) is ~undefined as name then name
     else if printOnly then sym.name
     else throw Error(StrOps.concat("Invalid binding name ", sym.name))
   fun nest: Context = Context(names, new Map(bindings), dependencies, printOnly)

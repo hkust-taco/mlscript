@@ -25,7 +25,7 @@ js.oops
 //│ ║        	^^^^^^^
 //│ ╟── Module 'js' does not contain member 'oops'
 //│ ║  in ../decls/Prelude.mls
-//│ ║  l.359: 	declare module js with
+//│ ║  l.390: 	declare module js with
 //│ ╙──       	               ^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 

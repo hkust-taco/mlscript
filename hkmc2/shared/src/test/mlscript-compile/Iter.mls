@@ -71,9 +71,9 @@ class IterableBase with
   fun length = asArray.length
   fun values() = iterator()
 
-// * Implements the `Iterable` protocol.
+// * Implements the `IterableImpl` protocol.
 // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Iteration_protocols#the_iterable_protocol
-class Iterable(mk: () -> Iterator) extends IterableBase with
+class IterableImpl(mk: () -> Iterator) extends IterableBase with
   fun iterator() = mk()
 
 // * Implements the `Iterator` protocol.
@@ -100,7 +100,7 @@ fun getIterator(something): Iterator =
       else prototype.constructor.name
   else test.call(something)
 
-fun adaptIterable(iterable, makeNext: Function) = Iterable of () =>
+fun adaptIterable(iterable, makeNext: Function) = IterableImpl of () =>
   let iterator = getIterator of iterable
   IteratorImpl of makeNext of iterator
 
@@ -115,14 +115,14 @@ fun mapping(xs, op: Function) =
 fun withMap(op) = _ mapping(op)
 
 fun flattening(xss) =
-  Iterable of () =>
+  IterableImpl of () =>
     let iterableIterator = getIterator of xss
-    // Get the first `Iterator` from the first `Iterable`.
+    // Get the first `Iterator` from the first `IterableImpl`.
     let currentIterator = if
       let firstIterableResult = iterableIterator.next()
       firstIterableResult.done then None
       else Some of getIterator of firstIterableResult.value
-    // Recursively skip empty `Iterable`s and get the next `Iterator` and value.
+    // Recursively skip empty `IterableImpl`s and get the next `Iterator` and value.
     fun skipEmptyIterables() = if
       let nextIterableResult = iterableIterator.next()
       nextIterableResult.done then None
@@ -184,7 +184,7 @@ fun foldingImpl(iterator: Iterator, acc, op: Function) =
   acc
 
 fun appended(xs, ys) =
-  Iterable of () =>
+  IterableImpl of () =>
     let xsIterator = getIterator of xs
     let currentIterator = xsIterator
     IteratorImpl of () => if
@@ -268,7 +268,7 @@ fun each(xs, op: Function) =
 
 fun toArray(view) = Array.from(view)
 
-fun fromStack(stack) = Iterable of () =>
+fun fromStack(stack) = IterableImpl of () =>
   let current = stack
   IteratorImpl of () => if current is
     Cons(head, tail) then

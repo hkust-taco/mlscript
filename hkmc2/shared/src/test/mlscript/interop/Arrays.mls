@@ -11,7 +11,7 @@ let arr = [true, false]
 :re
 arr.map(_ === false)
 //│ ╔══[COMPILATION ERROR] Resolution error in function type
-//│ ║  l.197: 	  fun map[U](f: (T, Int, Array[T]) -> U): Array[U]
+//│ ║  l.228: 	  fun map[U](f: (T, Int, Array[T]) -> U): Array[U]
 //│ ║         	                ^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Callback parameter list does not match its declared function type.
 //│ ║  in Arrays.mls:12
@@ -53,7 +53,7 @@ arr.map((..., e) => e)
 //│ ║  l.51: 	arr.map((..., e) => e)
 //│ ╙──      	         ^^^
 //│ ╔══[COMPILATION ERROR] Resolution error in function type
-//│ ║  l.197: 	  fun map[U](f: (T, Int, Array[T]) -> U): Array[U]
+//│ ║  l.228: 	  fun map[U](f: (T, Int, Array[T]) -> U): Array[U]
 //│ ║         	                ^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Callback parameter list does not match its declared function type.
 //│ ║  in Arrays.mls:51
@@ -86,15 +86,15 @@ Array()
 //│ ║        	^^^^^^^
 //│ ╟── Class 'Array' expected 1 argument, but got 0
 //│ ║  in ../decls/Prelude.mls
-//│ ║  l.177: 	declare class Array[T](val length: Int): Array[T] with
+//│ ║  l.208: 	declare class Array[T](val length: Int): Array[T] with
 //│ ║         	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.178: 	  fun join(...separators): Str
+//│ ║  l.209: 	  fun join(...separators): Str
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.179: 	  fun reverse(): Array[T]
+//│ ║  l.210: 	  fun reverse(): Array[T]
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.180: 	  fun sort(...compare): Array[T]
+//│ ║  l.211: 	  fun sort(...compare): Array[T]
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.181: 	... (more lines omitted) ...
+//│ ║  l.212: 	... (more lines omitted) ...
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ = []
 
@@ -105,15 +105,15 @@ Array(1, 2, 3)
 //│ ║         	^^^^^^^^^^^^^^
 //│ ╟── Class 'Array' expected 1 argument, but got 3
 //│ ║  in ../decls/Prelude.mls
-//│ ║  l.177: 	declare class Array[T](val length: Int): Array[T] with
+//│ ║  l.208: 	declare class Array[T](val length: Int): Array[T] with
 //│ ║         	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.178: 	  fun join(...separators): Str
+//│ ║  l.209: 	  fun join(...separators): Str
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.179: 	  fun reverse(): Array[T]
+//│ ║  l.210: 	  fun reverse(): Array[T]
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.180: 	  fun sort(...compare): Array[T]
+//│ ║  l.211: 	  fun sort(...compare): Array[T]
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.181: 	... (more lines omitted) ...
+//│ ║  l.212: 	... (more lines omitted) ...
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ = [1, 2, 3]
 
