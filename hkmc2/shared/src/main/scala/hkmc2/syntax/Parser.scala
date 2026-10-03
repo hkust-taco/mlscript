@@ -168,9 +168,9 @@ abstract class Parser(
     @tailrec
     def loop(tokens: Ls[TokLoc], prefixes: Ls[Ls[TokLoc]]): Ls[TokLoc] = tokens match
       case (IDENT("new", false), l1) :: (IDENT("!", true), l2) :: rest =>
-        loop(rest, List(IDENT("new!", false) -> (l1 ++ l2)) :: prefixes)
+        loop(rest, (IDENT("new!", false) -> (l1 ++ l2) :: Nil) :: prefixes)
       case (IDENT("yield", false), l1) :: (IDENT("*", true), l2) :: rest =>
-        loop(rest, List(IDENT("yield*", false) -> (l1 ++ l2)) :: prefixes)
+        loop(rest, (IDENT("yield*", false) -> (l1 ++ l2) :: Nil) :: prefixes)
       // * Remove empty indented sections
       case (BRACKETS(Indent, toks), _) :: rest
       if toks.forall:
