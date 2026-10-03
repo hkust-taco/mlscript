@@ -23,11 +23,19 @@ module Companion {
 //│ Overloaded = 7
 
 :expect class Bare
+:sr
 Bare.class
+//│ ————————————————| Resolved |————————————————————————————————————————————————————————————————————————
+//│   Bare⁰.class‹Bare¹›
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = class Bare
 
 :expect class Empty
+:sr
 Empty.class
+//│ ————————————————| Resolved |————————————————————————————————————————————————————————————————————————
+//│   Empty⁰.class‹Empty¹›
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = class Empty
 
 :expect class Primary
@@ -70,23 +78,67 @@ Companion.class
 (new Curried.class(14)(15)).y
 //│ = 15
 
-// Class-valued aliases and constructor aliases have different representations.
+// Evaluated terms do not preserve the class-selection syntax.
 let raw = Primary.class
 let ctor = Primary
+val saved = Primary
 //│ ctor = fun Primary { class: class Primary }
 //│ raw = class Primary
+//│ saved = fun Primary { class: class Primary }
 
 :expect true
 raw == Primary.class
 //│ = true
 
-:expect true
-raw.class == raw
-//│ = true
+:e
+raw.class
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.94: 	raw.class
+//│ ║        	^^^^^^^^^
+//│ ╟── Class value does not contain member 'class'
+//│ ║  l.7: 	class Primary(val x)
+//│ ╙──     	      ^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
-:expect true
-ctor.class == raw
-//│ = true
+:e
+ctor.class
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.104: 	ctor.class
+//│ ║         	^^^^^^^^^^
+//│ ╟── Class 'Primary' does not contain member 'class'
+//│ ║  l.7: 	class Primary(val x)
+//│ ╙──     	^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+:e
+saved.class
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.114: 	saved.class
+//│ ║         	^^^^^^^^^^^
+//│ ╟── Class 'Primary' does not contain member 'class'
+//│ ║  l.7: 	class Primary(val x)
+//│ ╙──     	^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+:e
+Primary.class.class
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.124: 	Primary.class.class
+//│ ║         	^^^^^^^^^^^^^^^^^^^
+//│ ╟── Class value does not contain member 'class'
+//│ ║  l.7: 	class Primary(val x)
+//│ ╙──     	      ^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+:e
+({make: Primary}).make.class
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.134: 	({make: Primary}).make.class
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Class 'Primary' does not contain member 'class'
+//│ ║  l.7: 	class Primary(val x)
+//│ ╙──     	^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 // Qualified, opened, and captured classes must retain their runtime receiver.
 module Namespace {
@@ -133,17 +185,17 @@ Explosive.class
 :e
 Empty().class
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.134: 	Empty().class
+//│ ║  l.186: 	Empty().class
 //│ ║         	^^^^^^^^^^^^^
 //│ ╟── Instance of class 'Empty' does not contain member 'class'
-//│ ║  l.134: 	Empty().class
+//│ ║  l.186: 	Empty().class
 //│ ╙──       	^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :e
 set Bare.class = 1
 //│ ╔══[COMPILATION ERROR] Assignment requires a term member
-//│ ║  l.144: 	set Bare.class = 1
+//│ ║  l.196: 	set Bare.class = 1
 //│ ╙──       	    ^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -216,27 +268,17 @@ let record = {"class": 5}
 record.class
 //│ = 5
 
+// Passing a constructor as an argument does not preserve class-selection syntax.
 :e
-fun ambiguousClass(flag) = {
-  let mixed = if flag then Primary else Primary.class
-  mixed.class
-}
-ambiguousClass(true)
-//│ ╔══[COMPILATION ERROR] This '.class' selection cannot mix class objects, constructor functions, and ordinary fields.
-//│ ║  l.222: 	  mixed.class
-//│ ╙──       	  ^^^^^^^^^^^
-//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
-
-// Later worksheet blocks may pass new constructors to an already compiled helper.
-:expect true
 private fun classOfValue(value) = value.class
-classOfValue(Empty) == Empty.class
-//│ = true
-
-:noInline
-:expect true
-classOfValue(Primary) == Primary.class
-//│ = true
+classOfValue(Empty)
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.273: 	private fun classOfValue(value) = value.class
+//│ ║         	                                  ^^^^^^^^^^^
+//│ ╟── Class 'Empty' does not contain member 'class'
+//│ ║  l.6: 	class Empty()
+//│ ╙──     	^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 // Foreign class declarations denote their native binding directly.
 declare class String with
@@ -248,11 +290,3 @@ declare fun String(value: Str): Str
 (new String.class("hello")).length
 //│ = 5
 
-:e
-classOfValue(Primary.class)
-//│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.232: 	private fun classOfValue(value) = value.class
-//│ ║         	                                  ^^^^^^^^^^^
-//│ ╟── This previously defined '.class' selection cannot mix class objects and constructor functions.
-//│ ║  l.232: 	private fun classOfValue(value) = value.class
-//│ ╙──       	                                  ^^^^^^^^^^^

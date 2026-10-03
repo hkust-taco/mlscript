@@ -2008,7 +2008,7 @@ class NewResolver:
           // An ambiguous lookup can publish several constructors. Pair each
           // declaration only with its own references; the lookup diagnoses
           // competing candidates independently of this shape subscription.
-          case _: ClassDef => listenClass(lhs, true)(ref =>
+          case _: ClassDef => listenClass(lhs, allowValueAliases = true)(ref =>
             if ref.definition eq cls then publish(ref.marks)
           , _ => ())
           case _: ModuleOrObjectDef => publish(Nil)
@@ -2620,15 +2620,14 @@ class NewResolver:
     * companions. Aliases can supply constructor shapes; applied instances cannot.
     * Capture marks are retained for subsequent instance-member lookup. */
   private case class ClassReference(definition: ClassDef, marks: Ls[Marks],
-      instances: TypeSubstitution, supplied: Opt[Ls[DeclaredType]], access: ClassValueAccess)
+      instances: TypeSubstitution, supplied: Opt[Ls[DeclaredType]])
 
-  // Class consumers such as `new` attach the class target to the operand.
-  // `.class` instead keeps value aliases bound to their original storage and
-  // records how to extract the class on the selection itself.
-  private def listenClass(trm: Term, recordTarget: Bool)(selected: ShapeListener[ClassReference], reject: ShapeListener[TermShape])(using NewResolverState): Unit =
+  // `new` and projections can follow inferred class values. `.class` selects
+  // only declarations: evaluating a class reference as a term loses that syntax.
+  private def listenClass(trm: Term, allowValueAliases: Bool)(selected: ShapeListener[ClassReference], reject: ShapeListener[TermShape])(using NewResolverState): Unit =
     def select(ref: ClassReference)(using NewResolverState): Unit =
       trm.classHead match
-        case target: NewResolvable if recordTarget || ref.access == ClassValueAccess.Declaration =>
+        case target: NewResolvable =>
           rstate.recordResolution(target, target.resolvedTargets.contains(ref.definition.sym))(
             target.resolvedTargets ::= ref.definition.sym)
         case _ => ()
@@ -2638,21 +2637,16 @@ class NewResolver:
       val marks = source.applicationHead._2
       def fromDefinition(ds: DefnShape): Unit =
         ds.clsDef match
-          case S(cls: ClassDef) =>
-            val access = ds.defn match
-              case td: TermDefinition if td.tsym.isInstanceOf[ClassCtorSymbol] && cls.hasDeclareModifier.isEmpty =>
-                ClassValueAccess.Constructor
-              case _ => ClassValueAccess.Value
-            select(ClassReference(cls, marks, instances, supplied, access))
+          case S(cls: ClassDef) => select(ClassReference(cls, marks, instances, supplied))
           case _ => reject(sh)
       source match
-        case Marked(ds: DefnShape, _) => fromDefinition(ds)
+        case Marked(ds: DefnShape, _) if allowValueAliases => fromDefinition(ds)
         case _ => reject(sh)
     trm match
       // Local variables store the term interpretation of their initializer, even
       // when their flow still contains its unconverted overload-set shape.
-      case _: SimpleRef if !recordTarget => listenTerm(trm)(value)
-      case application @ TyApp(base, args) => listenClass(base, recordTarget)(ref =>
+      case _: SimpleRef if !allowValueAliases => listenTerm(trm)(value)
+      case application @ TyApp(base, args) => listenClass(base, allowValueAliases)(ref =>
         val count = if ref.supplied.nonEmpty then 0 else ref.definition.tparams.length
         if count != args.length && rstate.typeArgumentArityErrors.add((new Identity(application), count)) then
           resolError(trm, msg"Class '${ref.definition.sym.nme}' expected ${count} type ${
@@ -2665,7 +2659,7 @@ class NewResolver:
           select(ref.copy(instances = instances, supplied = S(supplied)))
       , reject)
       case Capture(base, thru) =>
-        listenClass(base, recordTarget)(ref => select(ref.copy(marks =
+        listenClass(base, allowValueAliases)(ref => select(ref.copy(marks =
           ref.marks ::: EntryMark(ResolutionBoundary(thru), N, NoMarks) :: Nil)), reject)
       case _ => listen(trm):
         case sh: SymShape =>
@@ -2674,9 +2668,9 @@ class NewResolver:
             sh match
               case contextual: ContextualSymShape => contextual.instances
               case _ => TypeSubstitution.empty
-            , N, ClassValueAccess.Declaration)),
+            , N)),
             () => fromSymbol(sh, value, trm,
-              sym => if !recordTarget then recordValueTarget(trm, sym), !recordTarget))
+              sym => if !allowValueAliases then recordValueTarget(trm, sym), !allowValueAliases))
         case sh: TermShape => value(sh)
 
   def newSel(sel: NewSel)(using NewResolverState): Unit =
@@ -2717,34 +2711,25 @@ class NewResolver:
       case _ => ()
     sel.cls match
       case N if sel.id.name == "class" =>
-        // Preserve a class interpretation even when the declaration also has a
-        // constructor, a module, or an unrelated term overload. Value aliases
-        // retain their runtime path and only unwrap actual constructor values.
-        listenClass(sel.prefix, false)(ref =>
+        // Resolve the class overload directly, without selecting its constructor
+        // or companion. The resolved class symbol also identifies this selection
+        // during lowering; no ordinary member named `class` is involved.
+        listenClass(sel.prefix, allowValueAliases = false)(ref =>
           val cd = ref.definition
-          if rstate.canResolve(sel) then
-            rstate.recordResolution(sel, sel.classValueAccesses(ref.access))(sel.classValueAccesses += ref.access)
-            rstate.recordResolution(sel, sel.resolvedTargets.contains(cd.sym))(sel.resolvedTargets ::= cd.sym)
-          // A compiled helper can receive other constructors, but its emitted
-          // property access cannot change into an identity operation (or vice versa).
-          // Transport the new class's shape without mutating completed targets.
-          if sel.classValueAccesses(ref.access) then
-            listenExt(cd, ext =>
-              val shape = defnShapes.getOrElseUpdate(cd.sym, DefnShape(cd, ext))
-              val specialized = ref.supplied.fold[TermShape](shape)(args => SpecializedShape(shape, args, ref.instances))
-              transportShape(specialized, ref.marks) match
-                case value: TermShape => publishViewed(sel, value, ref.instances)
-                case NoShape => ())
-          else if !rstate.hasError(sel) then
-            rstate.markError(sel)
-            resolError(sel, msg"This previously defined '.class' selection cannot mix class objects and constructor functions." -> sel.toLoc :: Nil)
+          rstate.recordResolution(sel, sel.resolvedTargets.contains(cd.sym))(sel.resolvedTargets ::= cd.sym)
+          listenExt(cd, ext =>
+            val shape = defnShapes.getOrElseUpdate(cd.sym, DefnShape(cd, ext))
+            val specialized = ref.supplied.fold[TermShape](shape)(args => SpecializedShape(shape, args, ref.instances))
+            transportShape(specialized, ref.marks) match
+              case value: TermShape => publishViewed(sel, value, ref.instances)
+              case NoShape => ())
         , shape =>
           member(shape.getMember(sel.id.name), msg"${shape.describe.capitalize}", shape.diagnostic, TypeSubstitution.empty))
       case N => listenReceiver(sel.prefix): shape =>
         log(s"newSel: sel = ${sel.showDbg}, shape = ${shape.shwDbg}")
         member(shape.getMember(sel.id.name), msg"${shape.describe.capitalize}", shape.diagnostic, TypeSubstitution.empty)
       case S(cls) =>
-        listenClass(cls, true)(ref =>
+        listenClass(cls, allowValueAliases = true)(ref =>
           val cd = ref.definition
           val marks = ref.marks
           val candidate = cd.sym -> marks
@@ -2812,7 +2797,7 @@ class NewResolver:
     // listenClass preserves captures and supplies the same class-body exit as a
     // constructor value. In particular, a captured constructor already carries
     // that exit; adding a second one here would duplicate its instance boundary.
-    listenClass(nw.cls, true)(ref =>
+    listenClass(nw.cls, allowValueAliases = true)(ref =>
       val cd = ref.definition
       val marks = ref.marks
       val callerInstances = rstate.instances
