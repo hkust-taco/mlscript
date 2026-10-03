@@ -1278,7 +1278,9 @@ extends Importer:
       app(lt, rt)(tree, N, sym)
     
     def elaborateSelection(tree: Sel): Term =
-      val preTrm = subterm(tree.prefix, Receiver)
+      // `.class` chooses the class overload before requesting a receiver value.
+      // Interpreting C as a receiver first would also select its companion.
+      val preTrm = subterm(tree.prefix, if newResolution && tree.name.name == "class" then Clss else Receiver)
       // `source` has no runtime object. Recognize its statically named fields
       // before constructing a runtime selection, in either resolution mode.
       // Compare symbols so a user-defined binding named `source` stays ordinary.

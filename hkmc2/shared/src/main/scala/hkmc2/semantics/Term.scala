@@ -342,6 +342,13 @@ sealed trait NewRefImpl extends AnyRefImpl:
   // def tree: Tree.Ident = Tree.Dummy
   def refNum: Int = 0 // TODO
 
+/** How a class reference reaches its runtime class object. Declaration references
+  * use the backend's class binding; constructor values carry it in `.class`;
+  * values obtained from an earlier class selection already are class objects.
+  */
+enum ClassValueAccess:
+  case Declaration, Constructor, Value
+
 sealed trait NewSelImpl extends NewResolvableImpl:
   self: Term.NewSel =>
   // At least one receiver permits runtime lookup without a static member symbol.
@@ -352,6 +359,7 @@ sealed trait NewSelImpl extends NewResolvableImpl:
   var resolvedMembers: Ls[BlockMemberSymbol] = Nil // * filled during resolution
   // Class identity and captures must survive even when candidates share an inherited member.
   var resolvedClasses: Ls[(ClassSymbol, Ls[Marks])] = Nil
+  var classValueAccesses: Set[ClassValueAccess] = Set.empty
   def hasAmbiguousClass(using Erasure): Bool = hasAmbiguousClassImpl
   // Also used by the guarded symbol lookup for completed imports.
   private[semantics] def hasAmbiguousClassImpl: Bool = resolvedClasses.sizeCompare(1) > 0 || self.cls.exists:
@@ -646,6 +654,7 @@ enum Term extends Statement, AutoLocated, ShapePublisher:
         val copy = NewSel(prefix.mkClone, id, cls.map(_.mkClone))(term.resSym)
         copy.resolvedMembers = term.resolvedMembers
         copy.resolvedClasses = term.resolvedClasses
+        copy.classValueAccesses = term.classValueAccesses
         copy.hasDynamicTarget = term.hasDynamicTarget
         copyNewResolution(term, copyShapes(term, copy))
       case term @ UnresolvedRef(prefixes, id) =>

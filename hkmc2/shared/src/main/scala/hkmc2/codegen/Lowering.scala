@@ -415,7 +415,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
     
     blockImpl(imps ::: funs ::: rest, res)
   
-  def classOf(trm: Term, nw: Resolvable)(k: Path => Block)(using LoweringCtx): Block =
+  def classOf(trm: Term, nw: PossiblyErroneous)(k: Path => Block)(using LoweringCtx): Block =
     if newResolution then
       trm.classHead match
       case resolved @ Resolved(_, _: ClassSymbol) =>
@@ -701,6 +701,20 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
             ,
             source = Diagnostic.Source.Compilation)
         else k(prefix, memberIdent(id, N), N)
+
+  /** Class selection uses the declaration binding or unwraps a constructor
+    * value, never the companion's ordinary member namespace. Mixed runtime
+    * representations cannot share one property access safely.
+    */
+  private def classValue(sel: NewSel)(k: Path => Block)(using LoweringCtx): Block =
+    if sel.isErroneous then compError
+    else if sel.hasDynamicTarget || sel.resolvedMembers.nonEmpty || sel.classValueAccesses.size != 1 then fail:
+      ErrorReport(msg"This '.class' selection cannot mix class objects, constructor functions, and ordinary fields." -> sel.toLoc :: Nil,
+        source = Diagnostic.Source.Compilation)
+    else sel.classValueAccesses.head match
+      case ClassValueAccess.Declaration => classOf(sel.prefix, sel)(k)
+      case ClassValueAccess.Constructor => subTerm_nonTail(sel.prefix)(p => k(p.selSN("class")))
+      case ClassValueAccess.Value => subTerm(sel.prefix)(k)
 
   private def selectionPath(sel: NewSel, prefix: Path, name: Tree.Ident,
       target: Opt[DefinitionSymbol[?]]): Path = sel.tupleIndex match
@@ -1149,6 +1163,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
       instantiated match
       // * Due to whacky JS semantics, we need to make sure that selections leading to a call
       // * are preserved in the call and not moved to a temporary variable.
+      case sel: NewSel if sel.classValueAccesses.nonEmpty => classValue(sel)(conclude)
       case sel: NewSel => newSelection(sel): (prefix, name, target) =>
         subTerm_nonTail(prefix): p =>
           conclude(selectionPath(sel, p, name, target))
@@ -1309,6 +1324,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
 
     case whltrm: st.SynthWhile => ucs.Normalization(this)(whltrm)(k)
       
+    case sel: NewSel if sel.classValueAccesses.nonEmpty => classValue(sel)(k)
     case sel: NewSel => newSelection(sel): (prefix, name, target) =>
       if sel.tupleIndex.nonEmpty then subTerm_nonTail(prefix)(p => k(selectionPath(sel, p, name, target)))
       else setupNamedSelection(prefix, name, target, sel.toLoc)(k)

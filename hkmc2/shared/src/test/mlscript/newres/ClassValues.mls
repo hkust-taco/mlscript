@@ -1,0 +1,258 @@
+:.
+:js
+
+// Class objects are independent of constructor syntax and term overloads.
+class Bare
+class Empty()
+class Primary(val x)
+class Auxiliary {
+  constructor(val x)
+  fun value() = x
+}
+class Curried(val x)(val y)
+class Overloaded {
+  fun answer() = 42
+}
+val Overloaded = 7
+class Getter
+fun Getter = throw "must not evaluate the term overload"
+class Companion()
+module Companion {
+  val value = 10
+}
+//│ Overloaded = 7
+
+:expect class Bare
+Bare.class
+//│ = class Bare
+
+:expect class Empty
+Empty.class
+//│ = class Empty
+
+:expect class Primary
+Primary.class
+//│ = class Primary
+
+:expect class Auxiliary
+Auxiliary.class
+//│ = class Auxiliary
+
+:expect class Curried
+Curried.class
+//│ = class Curried
+
+:expect class Overloaded
+Overloaded.class
+//│ = class Overloaded
+
+:expect class Getter
+Getter.class
+//│ = class Getter
+
+:expect class Companion { value: 10 }
+Companion.class
+//│ = class Companion { value: 10 }
+
+:expect 42
+(new Overloaded.class).answer()
+//│ = 42
+
+:expect 12
+(new Primary.class(12)).x
+//│ = 12
+
+:expect 13
+(new Auxiliary.class(13)).value()
+//│ = 13
+
+:expect 15
+(new Curried.class(14)(15)).y
+//│ = 15
+
+// Class-valued aliases and constructor aliases have different representations.
+let raw = Primary.class
+let ctor = Primary
+//│ ctor = fun Primary { class: class Primary }
+//│ raw = class Primary
+
+:expect true
+raw == Primary.class
+//│ = true
+
+:expect true
+raw.class == raw
+//│ = true
+
+:expect true
+ctor.class == raw
+//│ = true
+
+// Qualified, opened, and captured classes must retain their runtime receiver.
+module Namespace {
+  class Item(val value)
+  class Plain
+  val Plain = 100
+}
+
+:expect class Item
+Namespace.Item.class
+//│ = class Item
+
+:expect class Plain
+Namespace.Plain.class
+//│ = class Plain
+
+open Namespace
+
+:expect true
+Item.class == Namespace.Item.class
+//│ = true
+
+fun captured(x) = {
+  class Local {
+    fun value() = x
+  }
+  val Local = 1
+  (new Local.class).value()
+}
+
+:expect 23
+captured(23)
+//│ = 23
+
+// Selecting the runtime class does not instantiate it.
+class Explosive() {
+  throw "must not run the constructor"
+}
+
+:expect class Explosive
+Explosive.class
+//│ = class Explosive
+
+:e
+Empty().class
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.134: 	Empty().class
+//│ ║         	^^^^^^^^^^^^^
+//│ ╟── Instance of class 'Empty' does not contain member 'class'
+//│ ║  l.134: 	Empty().class
+//│ ╙──       	^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+:e
+set Bare.class = 1
+//│ ╔══[COMPILATION ERROR] Assignment requires a term member
+//│ ║  l.144: 	set Bare.class = 1
+//│ ╙──       	    ^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// Specialization must survive class selection and subsequent construction.
+class Generic[T](val value: T)
+class Payload(val number: Int)
+
+:expect 31
+(new Generic[Payload].class(Payload(31))).value.number
+//│ = 31
+
+:expect 32
+(new Generic.class[Payload](Payload(32))).value.number
+//│ = 32
+
+:expect true
+Generic[Payload].class == Generic.class
+//│ = true
+
+// Each outer instance owns a distinct nested class object.
+class Outer(val value) {
+  class Inner {
+    fun result() = value
+  }
+  val Inner = 0
+}
+let first = Outer(41)
+let second = Outer(42)
+//│ first = Outer(41)
+//│ second = Outer(42)
+
+:expect [41, 42, false]
+[(new first.Inner.class).result(), (new second.Inner.class).result(),
+ first.Inner.class == second.Inner.class]
+//│ = [41, 42, false]
+
+// Calling through a closure retains the selected class, even with inlining off.
+fun runtimeClass() = Primary.class
+
+:noInline
+:expect true
+runtimeClass() == Primary.class
+//│ = true
+
+// Forward references wait for the whole overload set to complete.
+fun forwardClass() = Forward.class
+class Forward
+val Forward = false
+//│ Forward = false
+
+:expect class Forward
+forwardClass()
+//│ = class Forward
+
+import "../../mlscript-compile/OverloadedClassLibrary.mls"
+
+:expect class Item
+OverloadedClassLibrary.Item.class
+//│ = class Item
+
+:expect 52
+(new OverloadedClassLibrary.Item.class).answer()
+//│ = 52
+
+// Ordinary fields and foreign dynamic selections keep their usual behavior.
+let record = {"class": 5}
+//│ record = {class: 5}
+
+:expect 5
+record.class
+//│ = 5
+
+:e
+fun ambiguousClass(flag) = {
+  let mixed = if flag then Primary else Primary.class
+  mixed.class
+}
+ambiguousClass(true)
+//│ ╔══[COMPILATION ERROR] This '.class' selection cannot mix class objects, constructor functions, and ordinary fields.
+//│ ║  l.222: 	  mixed.class
+//│ ╙──       	  ^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// Later worksheet blocks may pass new constructors to an already compiled helper.
+:expect true
+private fun classOfValue(value) = value.class
+classOfValue(Empty) == Empty.class
+//│ = true
+
+:noInline
+:expect true
+classOfValue(Primary) == Primary.class
+//│ = true
+
+// Foreign class declarations denote their native binding directly.
+declare class String with
+  constructor(value: Str)
+  val length: Int
+declare fun String(value: Str): Str
+
+:expect 5
+(new String.class("hello")).length
+//│ = 5
+
+:e
+classOfValue(Primary.class)
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.232: 	private fun classOfValue(value) = value.class
+//│ ║         	                                  ^^^^^^^^^^^
+//│ ╟── This previously defined '.class' selection cannot mix class objects and constructor functions.
+//│ ║  l.232: 	private fun classOfValue(value) = value.class
+//│ ╙──       	                                  ^^^^^^^^^^^
