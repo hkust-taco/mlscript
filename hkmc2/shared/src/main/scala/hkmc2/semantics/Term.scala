@@ -619,21 +619,21 @@ enum Term extends Statement, AutoLocated, ShapePublisher:
     * identity and completed results. Listeners belong to elaboration and are not copied.
     */
   override def mkClone(using State, Erasure): Term =
-    def copyMetadata[T <: Term](source: Term, copy: T): T =
+    def copyMetadata(source: Term, copy: Term): copy.type =
       copy.withLocOf(source)
       copy.typeInterpretation = source.typeInterpretation
       copy
-    def copyShapes[T <: ShapeHost](source: ShapeHost, copy: T): T =
+    def copyShapes(source: ShapeHost, copy: ShapeHost): copy.type =
       copy.shapes ++= source.shapes
       copy
-    def copyResolution[T <: Resolvable](source: Resolvable, copy: T): T =
+    def copyResolution(source: Resolvable, copy: Resolvable): copy.type =
       copy.isErroneous = source.isErroneous
       source.expansion.foreach(expansion => copy.expand(expansion.map(_.mkClone)))
       copyShapes(source, copy)
-    def copySelection[T <: Term & AnySel](source: Term & AnySel, copy: T): T =
+    def copySelection(source: Term & AnySel, copy: Term & AnySel): copy.type =
       copy.resolvedTargets = source.resolvedTargets
       copyResolution(source, copy)
-    def copyNewResolution[T <: NewResolvable](source: NewResolvable, copy: T): T =
+    def copyNewResolution(source: NewResolvable, copy: NewResolvable): copy.type =
       copy.resolvedTargets = source.resolvedTargets
       copy.isErroneous = source.isErroneous
       copy
