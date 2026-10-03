@@ -1,4 +1,5 @@
 :js
+:lift
 :flowBasedOpt debugEta
 
 
@@ -125,10 +126,10 @@ g(f, 1)(2) + g(h, 3)(4)
 :w
 fun h(x) = @affine(1) y => x + y
 //│ ╔══[WARNING] This annotation has no effect.
-//│ ║  l.126: 	fun h(x) = @affine(1) y => x + y
+//│ ║  l.127: 	fun h(x) = @affine(1) y => x + y
 //│ ║         	           ^^^^^^^^^^
 //│ ╟── This annotation is not supported on function literal terms.
-//│ ║  l.126: 	fun h(x) = @affine(1) y => x + y
+//│ ║  l.127: 	fun h(x) = @affine(1) y => x + y
 //│ ╙──       	                      ^^^^^^^^^^
 //│ eta-expansion > >>> eta-expansion targets shapes >>>
 //│ eta-expansion > <<< eta-expansion targets shapes <<<
@@ -136,7 +137,7 @@ fun h(x) = @affine(1) y => x + y
 :w
 @affine(0) val v = 1
 //│ ╔══[WARNING] This annotation has no effect.
-//│ ║  l.137: 	@affine(0) val v = 1
+//│ ║  l.138: 	@affine(0) val v = 1
 //│ ╙──       	^^^^^^^^^^
 //│ eta-expansion > >>> eta-expansion targets shapes >>>
 //│ eta-expansion > <<< eta-expansion targets shapes <<<
@@ -145,10 +146,10 @@ fun h(x) = @affine(1) y => x + y
 :w
 fun h(x) = @affine(0) x
 //│ ╔══[WARNING] This annotation has no effect.
-//│ ║  l.146: 	fun h(x) = @affine(0) x
+//│ ║  l.147: 	fun h(x) = @affine(0) x
 //│ ║         	           ^^^^^^^^^^
 //│ ╟── This annotation is not supported on reference terms.
-//│ ║  l.146: 	fun h(x) = @affine(0) x
+//│ ║  l.147: 	fun h(x) = @affine(0) x
 //│ ╙──       	                      ^
 //│ eta-expansion > >>> eta-expansion targets shapes >>>
 //│ eta-expansion > <<< eta-expansion targets shapes <<<
@@ -277,3 +278,25 @@ app(returnRest2(0))
 //│ return app¹(tmp)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = [2, 3]
+
+
+// * It doesn't eta-expand if there's no lifting :)
+:expect 42
+#config(liftDefns: None)
+@affine(0) fun leaf() = 42
+fun node() = leaf
+node()()
+//│ dead-param-elim > >>> dead-param-elim results >>>
+//│ dead-param-elim > <<< dead-param-elim results <<<
+//│ = 42
+:expect 42
+#config(liftDefns: Some(LiftDefns))
+@affine(0) fun leaf() = 42
+fun node() = leaf
+node()()
+//│ eta-expansion > >>> eta-expansion targets shapes >>>
+//│ eta-expansion > node⁰#0 @ <root>: [0, 0]
+//│ eta-expansion > <<< eta-expansion targets shapes <<<
+//│ dead-param-elim > >>> dead-param-elim results >>>
+//│ dead-param-elim > <<< dead-param-elim results <<<
+//│ = 42

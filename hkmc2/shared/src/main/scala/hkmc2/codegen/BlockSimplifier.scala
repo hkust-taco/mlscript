@@ -1200,7 +1200,7 @@ class BlockSimplifier
           val combined = Call(prefix.fun, (prefix.argss ::: argss).ne_!)(
             CallMetadata(
               prefix.metadata.isMlsFun,
-              prefix.metadata.mayRaiseEffects || c.metadata.mayRaiseEffects,
+              prefix.metadata.mayHaveEffects || c.metadata.mayHaveEffects,
               prefix.metadata.annotations ++ c.metadata.annotations,
             ),
             c.toLoc)

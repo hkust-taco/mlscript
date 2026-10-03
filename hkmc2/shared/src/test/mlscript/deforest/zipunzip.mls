@@ -6,6 +6,8 @@
 object Nil
 data class (::) Cons(h, t)
 data class Pair(a, b)
+//│ deforest > >>> effect-analysis results >>>
+//│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > <<< fusing <<<
 
@@ -19,6 +21,57 @@ fun unzip(ls_unzip) = if ls_unzip is
 fun enumFromTo(a, b) = if a < b then a :: enumFromTo(a + 1, b) else Nil
 fun testUnzipZip(n) = unzip(zip(id(enumFromTo(1, n)), id(enumFromTo(2, n + 3))))
 testUnzipZip(3)
+//│ deforest > >>> effect-analysis results >>>
+//│ deforest > function enumFromTo#0 @ enumFromTo@enumFromTo -> UnsafeEta
+//│ deforest > function enumFromTo#0 @ testUnzipZip@testUnzipZip.enumFromTo@enumFromTo -> UnsafeEta
+//│ deforest > function enumFromTo#0 @ testUnzipZip@testUnzipZip.enumFromTo@enumFromTo -> UnsafeEta
+//│ deforest > function enumFromTo#0 @ testUnzipZip@testUnzipZip.enumFromTo@enumFromTo -> UnsafeEta
+//│ deforest > function enumFromTo#0 @ testUnzipZip@testUnzipZip.enumFromTo@enumFromTo -> UnsafeEta
+//│ deforest > function testUnzipZip#0 @ testUnzipZip@testUnzipZip -> UnsafeEta
+//│ deforest > function testUnzipZip#0 @ testUnzipZip@testUnzipZip -> UnsafeEta
+//│ deforest > function unzip#0 @ testUnzipZip@testUnzipZip.unzip@unzip -> UnsafeEta
+//│ deforest > function unzip#0 @ testUnzipZip@testUnzipZip.unzip@unzip -> UnsafeEta
+//│ deforest > function unzip#0 @ unzip@unzip -> UnsafeEta
+//│ deforest > function zip#0 @ testUnzipZip@testUnzipZip.zip@zip -> UnsafeEta
+//│ deforest > function zip#0 @ testUnzipZip@testUnzipZip.zip@zip -> UnsafeEta
+//│ deforest > function zip#0 @ zip@zip -> UnsafeEta
+//│ deforest > call +@result @ enumFromTo@enumFromTo -> Pure
+//│ deforest > call +@result @ testUnzipZip@testUnzipZip -> Pure
+//│ deforest > call +@result @ testUnzipZip@testUnzipZip -> Pure
+//│ deforest > call +@result @ testUnzipZip@testUnzipZip.enumFromTo@enumFromTo -> Pure
+//│ deforest > call +@result @ testUnzipZip@testUnzipZip.enumFromTo@enumFromTo -> Pure
+//│ deforest > call +@result @ testUnzipZip@testUnzipZip.enumFromTo@enumFromTo -> Pure
+//│ deforest > call +@result @ testUnzipZip@testUnzipZip.enumFromTo@enumFromTo -> Pure
+//│ deforest > call <@result @ enumFromTo@enumFromTo -> Pure
+//│ deforest > call <@result @ testUnzipZip@testUnzipZip.enumFromTo@enumFromTo -> Pure
+//│ deforest > call <@result @ testUnzipZip@testUnzipZip.enumFromTo@enumFromTo -> Pure
+//│ deforest > call <@result @ testUnzipZip@testUnzipZip.enumFromTo@enumFromTo -> Pure
+//│ deforest > call <@result @ testUnzipZip@testUnzipZip.enumFromTo@enumFromTo -> Pure
+//│ deforest > call enumFromTo@result @ enumFromTo@enumFromTo -> UnsafeEta
+//│ deforest > call enumFromTo@result @ testUnzipZip@testUnzipZip -> UnsafeEta
+//│ deforest > call enumFromTo@result @ testUnzipZip@testUnzipZip -> UnsafeEta
+//│ deforest > call enumFromTo@result @ testUnzipZip@testUnzipZip -> UnsafeEta
+//│ deforest > call enumFromTo@result @ testUnzipZip@testUnzipZip -> UnsafeEta
+//│ deforest > call enumFromTo@result @ testUnzipZip@testUnzipZip.enumFromTo@enumFromTo -> UnsafeEta
+//│ deforest > call enumFromTo@result @ testUnzipZip@testUnzipZip.enumFromTo@enumFromTo -> UnsafeEta
+//│ deforest > call enumFromTo@result @ testUnzipZip@testUnzipZip.enumFromTo@enumFromTo -> UnsafeEta
+//│ deforest > call enumFromTo@result @ testUnzipZip@testUnzipZip.enumFromTo@enumFromTo -> UnsafeEta
+//│ deforest > call id@result @ testUnzipZip@testUnzipZip -> UnsafeEta
+//│ deforest > call id@result @ testUnzipZip@testUnzipZip -> UnsafeEta
+//│ deforest > call id@result @ testUnzipZip@testUnzipZip -> UnsafeEta
+//│ deforest > call id@result @ testUnzipZip@testUnzipZip -> UnsafeEta
+//│ deforest > call testUnzipZip@result @ <root> -> UnsafeEta
+//│ deforest > call unzip@result @ testUnzipZip@testUnzipZip -> UnsafeEta
+//│ deforest > call unzip@result @ testUnzipZip@testUnzipZip -> UnsafeEta
+//│ deforest > call unzip@result @ testUnzipZip@testUnzipZip.unzip@unzip -> UnsafeEta
+//│ deforest > call unzip@result @ testUnzipZip@testUnzipZip.unzip@unzip -> UnsafeEta
+//│ deforest > call unzip@result @ unzip@unzip -> UnsafeEta
+//│ deforest > call zip@result @ testUnzipZip@testUnzipZip -> UnsafeEta
+//│ deforest > call zip@result @ testUnzipZip@testUnzipZip -> UnsafeEta
+//│ deforest > call zip@result @ testUnzipZip@testUnzipZip.zip@zip -> UnsafeEta
+//│ deforest > call zip@result @ testUnzipZip@testUnzipZip.zip@zip -> UnsafeEta
+//│ deforest > call zip@result @ zip@zip -> UnsafeEta
+//│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > Nil⁰ ->
 //│ deforest > 	match: ls_unzip⁰
@@ -60,6 +113,46 @@ fun makeZippedList(n) = if n > 0 then Pair(n, n + 1) :: makeZippedList(n - 1) el
 fun testZipUnzip(n) = if unzip(id(makeZippedList(n))) is
   Pair(xs, ys) then zip(xs, ys)
 testZipUnzip(3)
+//│ deforest > >>> effect-analysis results >>>
+//│ deforest > function makeZippedList#0 @ makeZippedList@makeZippedList -> UnsafeEta
+//│ deforest > function makeZippedList#0 @ testZipUnzip@testZipUnzip.makeZippedList@makeZippedList -> UnsafeEta
+//│ deforest > function makeZippedList#0 @ testZipUnzip@testZipUnzip.makeZippedList@makeZippedList -> UnsafeEta
+//│ deforest > function testZipUnzip#0 @ testZipUnzip@testZipUnzip -> UnsafeEta
+//│ deforest > function testZipUnzip#0 @ testZipUnzip@testZipUnzip -> UnsafeEta
+//│ deforest > function unzip#0 @ testZipUnzip@testZipUnzip.unzip@unzip -> UnsafeEta
+//│ deforest > function unzip#0 @ testZipUnzip@testZipUnzip.unzip@unzip -> UnsafeEta
+//│ deforest > function unzip#0 @ unzip@unzip -> UnsafeEta
+//│ deforest > function zip#0 @ testZipUnzip@testZipUnzip.zip@zip -> UnsafeEta
+//│ deforest > function zip#0 @ testZipUnzip@testZipUnzip.zip@zip -> UnsafeEta
+//│ deforest > function zip#0 @ zip@zip -> UnsafeEta
+//│ deforest > call +@result @ makeZippedList@makeZippedList -> Pure
+//│ deforest > call +@result @ testZipUnzip@testZipUnzip.makeZippedList@makeZippedList -> Pure
+//│ deforest > call +@result @ testZipUnzip@testZipUnzip.makeZippedList@makeZippedList -> Pure
+//│ deforest > call -@result @ makeZippedList@makeZippedList -> Pure
+//│ deforest > call -@result @ testZipUnzip@testZipUnzip.makeZippedList@makeZippedList -> Pure
+//│ deforest > call -@result @ testZipUnzip@testZipUnzip.makeZippedList@makeZippedList -> Pure
+//│ deforest > call >@result @ makeZippedList@makeZippedList -> Pure
+//│ deforest > call >@result @ testZipUnzip@testZipUnzip.makeZippedList@makeZippedList -> Pure
+//│ deforest > call >@result @ testZipUnzip@testZipUnzip.makeZippedList@makeZippedList -> Pure
+//│ deforest > call id@result @ testZipUnzip@testZipUnzip -> UnsafeEta
+//│ deforest > call id@result @ testZipUnzip@testZipUnzip -> UnsafeEta
+//│ deforest > call makeZippedList@result @ makeZippedList@makeZippedList -> UnsafeEta
+//│ deforest > call makeZippedList@result @ testZipUnzip@testZipUnzip -> UnsafeEta
+//│ deforest > call makeZippedList@result @ testZipUnzip@testZipUnzip -> UnsafeEta
+//│ deforest > call makeZippedList@result @ testZipUnzip@testZipUnzip.makeZippedList@makeZippedList -> UnsafeEta
+//│ deforest > call makeZippedList@result @ testZipUnzip@testZipUnzip.makeZippedList@makeZippedList -> UnsafeEta
+//│ deforest > call testZipUnzip@result @ <root> -> UnsafeEta
+//│ deforest > call unzip@result @ testZipUnzip@testZipUnzip -> UnsafeEta
+//│ deforest > call unzip@result @ testZipUnzip@testZipUnzip -> UnsafeEta
+//│ deforest > call unzip@result @ testZipUnzip@testZipUnzip.unzip@unzip -> UnsafeEta
+//│ deforest > call unzip@result @ testZipUnzip@testZipUnzip.unzip@unzip -> UnsafeEta
+//│ deforest > call unzip@result @ unzip@unzip -> UnsafeEta
+//│ deforest > call zip@result @ testZipUnzip@testZipUnzip -> UnsafeEta
+//│ deforest > call zip@result @ testZipUnzip@testZipUnzip -> UnsafeEta
+//│ deforest > call zip@result @ testZipUnzip@testZipUnzip.zip@zip -> UnsafeEta
+//│ deforest > call zip@result @ testZipUnzip@testZipUnzip.zip@zip -> UnsafeEta
+//│ deforest > call zip@result @ zip@zip -> UnsafeEta
+//│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > Nil⁰ ->
 //│ deforest > 	match: xs_zip⁰
@@ -106,6 +199,73 @@ fun testZipMapBothUnzip(n) = if unzip(id(makeZippedList(n))) is
     map(x => x * x, ys)
   )
 testZipMapBothUnzip(4)
+//│ deforest > >>> effect-analysis results >>>
+//│ deforest > function lambda#0 @ testZipMapBothUnzip@testZipMapBothUnzip -> Pure
+//│ deforest > function lambda#0 @ testZipMapBothUnzip@testZipMapBothUnzip -> Pure
+//│ deforest > function lambda#0 @ testZipMapBothUnzip@testZipMapBothUnzip -> Pure
+//│ deforest > function lambda#0 @ testZipMapBothUnzip@testZipMapBothUnzip -> Pure
+//│ deforest > function makeZippedList#0 @ makeZippedList@makeZippedList -> UnsafeEta
+//│ deforest > function makeZippedList#0 @ testZipMapBothUnzip@testZipMapBothUnzip.makeZippedList@makeZippedList -> UnsafeEta
+//│ deforest > function makeZippedList#0 @ testZipMapBothUnzip@testZipMapBothUnzip.makeZippedList@makeZippedList -> UnsafeEta
+//│ deforest > function map#0 @ map@map -> UnsafeEta
+//│ deforest > function map#0 @ testZipMapBothUnzip@testZipMapBothUnzip.map@map -> UnsafeEta
+//│ deforest > function map#0 @ testZipMapBothUnzip@testZipMapBothUnzip.map@map -> UnsafeEta
+//│ deforest > function map#0 @ testZipMapBothUnzip@testZipMapBothUnzip.map@map -> UnsafeEta
+//│ deforest > function map#0 @ testZipMapBothUnzip@testZipMapBothUnzip.map@map -> UnsafeEta
+//│ deforest > function testZipMapBothUnzip#0 @ testZipMapBothUnzip@testZipMapBothUnzip -> UnsafeEta
+//│ deforest > function testZipMapBothUnzip#0 @ testZipMapBothUnzip@testZipMapBothUnzip -> UnsafeEta
+//│ deforest > function unzip#0 @ testZipMapBothUnzip@testZipMapBothUnzip.unzip@unzip -> UnsafeEta
+//│ deforest > function unzip#0 @ testZipMapBothUnzip@testZipMapBothUnzip.unzip@unzip -> UnsafeEta
+//│ deforest > function unzip#0 @ unzip@unzip -> UnsafeEta
+//│ deforest > function zip#0 @ testZipMapBothUnzip@testZipMapBothUnzip.zip@zip -> UnsafeEta
+//│ deforest > function zip#0 @ testZipMapBothUnzip@testZipMapBothUnzip.zip@zip -> UnsafeEta
+//│ deforest > function zip#0 @ zip@zip -> UnsafeEta
+//│ deforest > call *@result @ testZipMapBothUnzip@testZipMapBothUnzip -> Pure
+//│ deforest > call *@result @ testZipMapBothUnzip@testZipMapBothUnzip -> Pure
+//│ deforest > call +@result @ makeZippedList@makeZippedList -> Pure
+//│ deforest > call +@result @ testZipMapBothUnzip@testZipMapBothUnzip -> Pure
+//│ deforest > call +@result @ testZipMapBothUnzip@testZipMapBothUnzip -> Pure
+//│ deforest > call +@result @ testZipMapBothUnzip@testZipMapBothUnzip.makeZippedList@makeZippedList -> Pure
+//│ deforest > call +@result @ testZipMapBothUnzip@testZipMapBothUnzip.makeZippedList@makeZippedList -> Pure
+//│ deforest > call -@result @ makeZippedList@makeZippedList -> Pure
+//│ deforest > call -@result @ testZipMapBothUnzip@testZipMapBothUnzip.makeZippedList@makeZippedList -> Pure
+//│ deforest > call -@result @ testZipMapBothUnzip@testZipMapBothUnzip.makeZippedList@makeZippedList -> Pure
+//│ deforest > call >@result @ makeZippedList@makeZippedList -> Pure
+//│ deforest > call >@result @ testZipMapBothUnzip@testZipMapBothUnzip.makeZippedList@makeZippedList -> Pure
+//│ deforest > call >@result @ testZipMapBothUnzip@testZipMapBothUnzip.makeZippedList@makeZippedList -> Pure
+//│ deforest > call f@result @ map@map -> UnsafeEta
+//│ deforest > call f@result @ testZipMapBothUnzip@testZipMapBothUnzip.map@map -> Pure
+//│ deforest > call f@result @ testZipMapBothUnzip@testZipMapBothUnzip.map@map -> Pure
+//│ deforest > call f@result @ testZipMapBothUnzip@testZipMapBothUnzip.map@map -> Pure
+//│ deforest > call f@result @ testZipMapBothUnzip@testZipMapBothUnzip.map@map -> Pure
+//│ deforest > call id@result @ testZipMapBothUnzip@testZipMapBothUnzip -> UnsafeEta
+//│ deforest > call id@result @ testZipMapBothUnzip@testZipMapBothUnzip -> UnsafeEta
+//│ deforest > call makeZippedList@result @ makeZippedList@makeZippedList -> UnsafeEta
+//│ deforest > call makeZippedList@result @ testZipMapBothUnzip@testZipMapBothUnzip -> UnsafeEta
+//│ deforest > call makeZippedList@result @ testZipMapBothUnzip@testZipMapBothUnzip -> UnsafeEta
+//│ deforest > call makeZippedList@result @ testZipMapBothUnzip@testZipMapBothUnzip.makeZippedList@makeZippedList -> UnsafeEta
+//│ deforest > call makeZippedList@result @ testZipMapBothUnzip@testZipMapBothUnzip.makeZippedList@makeZippedList -> UnsafeEta
+//│ deforest > call map@result @ map@map -> UnsafeEta
+//│ deforest > call map@result @ testZipMapBothUnzip@testZipMapBothUnzip -> UnsafeEta
+//│ deforest > call map@result @ testZipMapBothUnzip@testZipMapBothUnzip -> UnsafeEta
+//│ deforest > call map@result @ testZipMapBothUnzip@testZipMapBothUnzip -> UnsafeEta
+//│ deforest > call map@result @ testZipMapBothUnzip@testZipMapBothUnzip -> UnsafeEta
+//│ deforest > call map@result @ testZipMapBothUnzip@testZipMapBothUnzip.map@map -> UnsafeEta
+//│ deforest > call map@result @ testZipMapBothUnzip@testZipMapBothUnzip.map@map -> UnsafeEta
+//│ deforest > call map@result @ testZipMapBothUnzip@testZipMapBothUnzip.map@map -> UnsafeEta
+//│ deforest > call map@result @ testZipMapBothUnzip@testZipMapBothUnzip.map@map -> UnsafeEta
+//│ deforest > call testZipMapBothUnzip@result @ <root> -> UnsafeEta
+//│ deforest > call unzip@result @ testZipMapBothUnzip@testZipMapBothUnzip -> UnsafeEta
+//│ deforest > call unzip@result @ testZipMapBothUnzip@testZipMapBothUnzip -> UnsafeEta
+//│ deforest > call unzip@result @ testZipMapBothUnzip@testZipMapBothUnzip.unzip@unzip -> UnsafeEta
+//│ deforest > call unzip@result @ testZipMapBothUnzip@testZipMapBothUnzip.unzip@unzip -> UnsafeEta
+//│ deforest > call unzip@result @ unzip@unzip -> UnsafeEta
+//│ deforest > call zip@result @ testZipMapBothUnzip@testZipMapBothUnzip -> UnsafeEta
+//│ deforest > call zip@result @ testZipMapBothUnzip@testZipMapBothUnzip -> UnsafeEta
+//│ deforest > call zip@result @ testZipMapBothUnzip@testZipMapBothUnzip.zip@zip -> UnsafeEta
+//│ deforest > call zip@result @ testZipMapBothUnzip@testZipMapBothUnzip.zip@zip -> UnsafeEta
+//│ deforest > call zip@result @ zip@zip -> UnsafeEta
+//│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > Nil⁰ ->
 //│ deforest > 	match: ls_map⁰

@@ -1153,13 +1153,13 @@ sealed abstract class Result extends Located, HasErasedType:
           ErrorReport(message -> loc :: Nil, source = Diagnostic.Source.Compilation)
         this
 
-/* mayRaiseEffects indicates whether this call may raise effect (algebraic effect),
+/* mayHaveEffects indicates whether this call may raise effect (algebraic effect),
  * regardless of whether the check for effect is inserted or not.
  * Note that the check for effect is inserted during HandlerLowering and setting this to true
  * after handler is lowered does not have any effect on the code generation. */
 case class CallMetadata(
   isMlsFun: Bool,
-  mayRaiseEffects: Bool,
+  mayHaveEffects: Bool,
   annotations: Ls[Annot],
 ):
   lazy val explicitTailCall: Bool = annotations.exists(_.isInstanceOf[Annot.TailCall])

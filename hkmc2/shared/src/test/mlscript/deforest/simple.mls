@@ -15,6 +15,8 @@ object None
 data class Some(value)
 data object Nil
 data class (::) Cons(h, t)
+//│ deforest > >>> effect-analysis results >>>
+//│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > <<< fusing <<<
 
@@ -30,6 +32,19 @@ fun test(x) =
     AA(AA(v)) then v
   y + 1 + 2 + 3 + 4
 test(AA(AA(10)))
+//│ deforest > >>> effect-analysis results >>>
+//│ deforest > function test#0 @ test@test -> UnsafeEta
+//│ deforest > function test#0 @ test@test -> UnsafeEta
+//│ deforest > call +@result @ test@test -> Pure
+//│ deforest > call +@result @ test@test -> Pure
+//│ deforest > call +@result @ test@test -> Pure
+//│ deforest > call +@result @ test@test -> Pure
+//│ deforest > call +@result @ test@test -> Pure
+//│ deforest > call +@result @ test@test -> Pure
+//│ deforest > call +@result @ test@test -> Pure
+//│ deforest > call +@result @ test@test -> Pure
+//│ deforest > call test@result @ <root> -> UnsafeEta
+//│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > AA⁰(tmp⁰) ->
 //│ deforest > 	match: x⁰
@@ -47,6 +62,8 @@ let x = if true then A else B in...
 if x is
   A then 1
   B then 2
+//│ deforest > >>> effect-analysis results >>>
+//│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > B⁰ ->
 //│ deforest > 	match: x¹
@@ -60,6 +77,8 @@ let x = if true then AA(A) else BB(B) in...
 if x is
   AA(x) then x
   BB(x) then x
+//│ deforest > >>> effect-analysis results >>>
+//│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > BB⁰(B⁰) ->
 //│ deforest > 	match: x²
@@ -79,6 +98,13 @@ let x = if true then AA(A) else BB(B) in...
 if x is
   AA(x) then f(x)
   BB(x) then f(x)
+//│ deforest > >>> effect-analysis results >>>
+//│ deforest > function f#0 @ f@f -> UnsafeEta
+//│ deforest > function f#0 @ f@f -> UnsafeEta
+//│ deforest > function f#0 @ f@f -> UnsafeEta
+//│ deforest > call f@result @ <root> -> UnsafeEta
+//│ deforest > call f@result @ <root> -> UnsafeEta
+//│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > BB⁰(B⁰) ->
 //│ deforest > 	match: x³
@@ -108,6 +134,14 @@ let x = if true then AA(A) else BB(B) in...
 if x is
   AA then f1(x.AA#aa)
   BB then f2(x.BB#bb)
+//│ deforest > >>> effect-analysis results >>>
+//│ deforest > function f1#0 @ f1@f1 -> UnsafeEta
+//│ deforest > function f1#0 @ f1@f1 -> UnsafeEta
+//│ deforest > function f2#0 @ f2@f2 -> UnsafeEta
+//│ deforest > function f2#0 @ f2@f2 -> UnsafeEta
+//│ deforest > call f1@result @ <root> -> UnsafeEta
+//│ deforest > call f2@result @ <root> -> UnsafeEta
+//│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > BB⁰(B⁰) ->
 //│ deforest > 	match: x⁴
@@ -129,6 +163,14 @@ fun c(x) = if x is
   AA(x) then x
   BB(x) then x
 c(g(true))
+//│ deforest > >>> effect-analysis results >>>
+//│ deforest > function c#0 @ c@c -> UnsafeEta
+//│ deforest > function c#0 @ c@c -> UnsafeEta
+//│ deforest > function g#0 @ g@g -> UnsafeEta
+//│ deforest > function g#0 @ g@g -> UnsafeEta
+//│ deforest > call c@result @ <root> -> UnsafeEta
+//│ deforest > call g@result @ <root> -> UnsafeEta
+//│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > AA⁰(11) ->
 //│ deforest > 	match: x⁵
@@ -150,6 +192,8 @@ if x is
   B then 3
 if x is
   B then 2
+//│ deforest > >>> effect-analysis results >>>
+//│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > <<< fusing <<<
 //│ = 2
@@ -164,6 +208,8 @@ if x is
   A then 1
 if y is
   B then 2
+//│ deforest > >>> effect-analysis results >>>
+//│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > B⁰ ->
 //│ deforest > 	match: y⁰
@@ -181,6 +227,17 @@ fun c(a) =
   print(x)
   x
 c(A) + c(B)
+//│ deforest > >>> effect-analysis results >>>
+//│ deforest > function c#0 @ c@c -> UnsafeEta
+//│ deforest > function c#0 @ c@c -> UnsafeEta
+//│ deforest > function c#0 @ c@c -> UnsafeEta
+//│ deforest > call +@result @ <root> -> Pure
+//│ deforest > call c@result @ <root> -> UnsafeEta
+//│ deforest > call c@result @ <root> -> UnsafeEta
+//│ deforest > call print@result @ c@c -> UnsafeEta
+//│ deforest > call print@result @ c@c -> UnsafeEta
+//│ deforest > call print@result @ c@c -> UnsafeEta
+//│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > B⁰ ->
 //│ deforest > 	match: a³
@@ -201,6 +258,13 @@ fun c(x) =
     AA then 2
   n + t
 c(AA(3))
+//│ deforest > >>> effect-analysis results >>>
+//│ deforest > function c#0 @ c@c -> UnsafeEta
+//│ deforest > function c#0 @ c@c -> UnsafeEta
+//│ deforest > call +@result @ c@c -> Pure
+//│ deforest > call +@result @ c@c -> Pure
+//│ deforest > call c@result @ <root> -> UnsafeEta
+//│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > <<< fusing <<<
 //│ = 5
@@ -212,6 +276,11 @@ fun f(a, b) = if a is
   A then if b is
     B then 3
 f(A, B)
+//│ deforest > >>> effect-analysis results >>>
+//│ deforest > function f#0 @ f@f -> UnsafeEta
+//│ deforest > function f#0 @ f@f -> UnsafeEta
+//│ deforest > call f@result @ <root> -> UnsafeEta
+//│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > A⁰ ->
 //│ deforest > 	match: a⁴
@@ -225,6 +294,17 @@ f(A, B)
 fun f(x) = if x is
   Some then if x.Some#value > 1 then f(Some(x.Some#value - 1)) else 0
 f(Some(2))
+//│ deforest > >>> effect-analysis results >>>
+//│ deforest > function f#0 @ f@f -> UnsafeEta
+//│ deforest > function f#0 @ f@f -> UnsafeEta
+//│ deforest > call -@result @ f@f -> Pure
+//│ deforest > call -@result @ f@f -> Pure
+//│ deforest > call >@result @ f@f -> Pure
+//│ deforest > call >@result @ f@f -> Pure
+//│ deforest > call f@result @ <root> -> UnsafeEta
+//│ deforest > call f@result @ f@f -> UnsafeEta
+//│ deforest > call f@result @ f@f -> UnsafeEta
+//│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > Some⁰(tmp¹) ->
 //│ deforest > 	match: x⁷
@@ -246,6 +326,8 @@ if x is
   A then 1
 if y is
   B then 2
+//│ deforest > >>> effect-analysis results >>>
+//│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > B⁰ ->
 //│ deforest > 	match: y¹
@@ -263,6 +345,45 @@ fun f(x, y) =
     BBB(n, m) then m + 1 - n
   a + 3
 f(AAA(1, 3), 1) + f(BBB(2, 3), 2) + f(AAA(3, 2), 4) + f(BBB(4, 6), 0)
+//│ deforest > >>> effect-analysis results >>>
+//│ deforest > function f#0 @ f@f -> UnsafeEta
+//│ deforest > function f#0 @ f@f -> UnsafeEta
+//│ deforest > function f#0 @ f@f -> UnsafeEta
+//│ deforest > function f#0 @ f@f -> UnsafeEta
+//│ deforest > function f#0 @ f@f -> UnsafeEta
+//│ deforest > call +@result @ <root> -> Pure
+//│ deforest > call +@result @ <root> -> Pure
+//│ deforest > call +@result @ <root> -> Pure
+//│ deforest > call +@result @ f@f -> Pure
+//│ deforest > call +@result @ f@f -> Pure
+//│ deforest > call +@result @ f@f -> Pure
+//│ deforest > call +@result @ f@f -> Pure
+//│ deforest > call +@result @ f@f -> Pure
+//│ deforest > call +@result @ f@f -> Pure
+//│ deforest > call +@result @ f@f -> Pure
+//│ deforest > call +@result @ f@f -> Pure
+//│ deforest > call +@result @ f@f -> Pure
+//│ deforest > call +@result @ f@f -> Pure
+//│ deforest > call +@result @ f@f -> Pure
+//│ deforest > call +@result @ f@f -> Pure
+//│ deforest > call +@result @ f@f -> Pure
+//│ deforest > call +@result @ f@f -> Pure
+//│ deforest > call +@result @ f@f -> Pure
+//│ deforest > call -@result @ f@f -> Pure
+//│ deforest > call -@result @ f@f -> Pure
+//│ deforest > call -@result @ f@f -> Pure
+//│ deforest > call -@result @ f@f -> Pure
+//│ deforest > call -@result @ f@f -> Pure
+//│ deforest > call -@result @ f@f -> Pure
+//│ deforest > call -@result @ f@f -> Pure
+//│ deforest > call -@result @ f@f -> Pure
+//│ deforest > call -@result @ f@f -> Pure
+//│ deforest > call -@result @ f@f -> Pure
+//│ deforest > call f@result @ <root> -> UnsafeEta
+//│ deforest > call f@result @ <root> -> UnsafeEta
+//│ deforest > call f@result @ <root> -> UnsafeEta
+//│ deforest > call f@result @ <root> -> UnsafeEta
+//│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > BBB⁰(4, 6) ->
 //│ deforest > 	match: x⁹
@@ -293,6 +414,23 @@ fun c2(x) = if x is
   AA then x.AA#aa
 fun p(a) = c1(a) + c2(a)
 p(AA(1))
+//│ deforest > >>> effect-analysis results >>>
+//│ deforest > function c1#0 @ c1@c1 -> UnsafeEta
+//│ deforest > function c1#0 @ p@p.c1@c1 -> UnsafeEta
+//│ deforest > function c1#0 @ p@p.c1@c1 -> UnsafeEta
+//│ deforest > function c2#0 @ c2@c2 -> UnsafeEta
+//│ deforest > function c2#0 @ p@p.c2@c2 -> UnsafeEta
+//│ deforest > function c2#0 @ p@p.c2@c2 -> UnsafeEta
+//│ deforest > function p#0 @ p@p -> UnsafeEta
+//│ deforest > function p#0 @ p@p -> UnsafeEta
+//│ deforest > call +@result @ p@p -> Pure
+//│ deforest > call +@result @ p@p -> Pure
+//│ deforest > call c1@result @ p@p -> UnsafeEta
+//│ deforest > call c1@result @ p@p -> UnsafeEta
+//│ deforest > call c2@result @ p@p -> UnsafeEta
+//│ deforest > call c2@result @ p@p -> UnsafeEta
+//│ deforest > call p@result @ <root> -> UnsafeEta
+//│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > A⁰ ->
 //│ deforest > 	match: A⁰
@@ -311,6 +449,11 @@ fun c(x, y) = if x is
     if y is
       A then a
 c(AA(2), A)
+//│ deforest > >>> effect-analysis results >>>
+//│ deforest > function c#0 @ c@c -> UnsafeEta
+//│ deforest > function c#0 @ c@c -> UnsafeEta
+//│ deforest > call c@result @ <root> -> UnsafeEta
+//│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > A⁰ ->
 //│ deforest > 	match: y⁴
@@ -328,6 +471,40 @@ fun f(x, y) =
     CCC(n) then n + 1
   a + 3
 f(AAA(1, 3), 1) + f(CCC(2), 2) + f(AAA(3, 2), 4) + f(CCC(4), 0)
+//│ deforest > >>> effect-analysis results >>>
+//│ deforest > function f#0 @ f@f -> UnsafeEta
+//│ deforest > function f#0 @ f@f -> UnsafeEta
+//│ deforest > function f#0 @ f@f -> UnsafeEta
+//│ deforest > function f#0 @ f@f -> UnsafeEta
+//│ deforest > function f#0 @ f@f -> UnsafeEta
+//│ deforest > call +@result @ <root> -> Pure
+//│ deforest > call +@result @ <root> -> Pure
+//│ deforest > call +@result @ <root> -> Pure
+//│ deforest > call +@result @ f@f -> Pure
+//│ deforest > call +@result @ f@f -> Pure
+//│ deforest > call +@result @ f@f -> Pure
+//│ deforest > call +@result @ f@f -> Pure
+//│ deforest > call +@result @ f@f -> Pure
+//│ deforest > call +@result @ f@f -> Pure
+//│ deforest > call +@result @ f@f -> Pure
+//│ deforest > call +@result @ f@f -> Pure
+//│ deforest > call +@result @ f@f -> Pure
+//│ deforest > call +@result @ f@f -> Pure
+//│ deforest > call +@result @ f@f -> Pure
+//│ deforest > call +@result @ f@f -> Pure
+//│ deforest > call +@result @ f@f -> Pure
+//│ deforest > call +@result @ f@f -> Pure
+//│ deforest > call +@result @ f@f -> Pure
+//│ deforest > call -@result @ f@f -> Pure
+//│ deforest > call -@result @ f@f -> Pure
+//│ deforest > call -@result @ f@f -> Pure
+//│ deforest > call -@result @ f@f -> Pure
+//│ deforest > call -@result @ f@f -> Pure
+//│ deforest > call f@result @ <root> -> UnsafeEta
+//│ deforest > call f@result @ <root> -> UnsafeEta
+//│ deforest > call f@result @ <root> -> UnsafeEta
+//│ deforest > call f@result @ <root> -> UnsafeEta
+//│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > CCC⁰(4) ->
 //│ deforest > 	match: x¹³
@@ -356,6 +533,29 @@ fun f(x, y) =
     CCC(n) then n + 1
   a + 3
 f(AAA(1, 3), 1) + f(CCC(2), 2) + f(AAA(3, 2), 4)
+//│ deforest > >>> effect-analysis results >>>
+//│ deforest > function f#0 @ f@f -> UnsafeEta
+//│ deforest > function f#0 @ f@f -> UnsafeEta
+//│ deforest > function f#0 @ f@f -> UnsafeEta
+//│ deforest > function f#0 @ f@f -> UnsafeEta
+//│ deforest > call +@result @ <root> -> Pure
+//│ deforest > call +@result @ <root> -> Pure
+//│ deforest > call +@result @ f@f -> Pure
+//│ deforest > call +@result @ f@f -> Pure
+//│ deforest > call +@result @ f@f -> Pure
+//│ deforest > call +@result @ f@f -> Pure
+//│ deforest > call +@result @ f@f -> Pure
+//│ deforest > call +@result @ f@f -> Pure
+//│ deforest > call +@result @ f@f -> Pure
+//│ deforest > call +@result @ f@f -> Pure
+//│ deforest > call +@result @ f@f -> Pure
+//│ deforest > call +@result @ f@f -> Pure
+//│ deforest > call +@result @ f@f -> Pure
+//│ deforest > call +@result @ f@f -> Pure
+//│ deforest > call f@result @ <root> -> UnsafeEta
+//│ deforest > call f@result @ <root> -> UnsafeEta
+//│ deforest > call f@result @ <root> -> UnsafeEta
+//│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > AAA⁰(3, 2) ->
 //│ deforest > 	match: x¹⁴
@@ -375,6 +575,13 @@ fun c(x, m) = if x is
   AA(n) then n + 1
   else m
 c(BB(3), 0)
+//│ deforest > >>> effect-analysis results >>>
+//│ deforest > function c#0 @ c@c -> UnsafeEta
+//│ deforest > function c#0 @ c@c -> UnsafeEta
+//│ deforest > call +@result @ c@c -> Pure
+//│ deforest > call +@result @ c@c -> Pure
+//│ deforest > call c@result @ <root> -> UnsafeEta
+//│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > BB⁰(3) ->
 //│ deforest > 	match: x¹⁵
@@ -390,6 +597,19 @@ fun f(x) = if x is
 fun g(b) = if b is
   AA(a) then a + 1
 f(AA(AA(0)))
+//│ deforest > >>> effect-analysis results >>>
+//│ deforest > function f#0 @ f@f -> UnsafeEta
+//│ deforest > function f#0 @ f@f -> UnsafeEta
+//│ deforest > function g#0 @ f@f.g@g -> UnsafeEta
+//│ deforest > function g#0 @ f@f.g@g -> UnsafeEta
+//│ deforest > function g#0 @ g@g -> UnsafeEta
+//│ deforest > call +@result @ f@f.g@g -> Pure
+//│ deforest > call +@result @ f@f.g@g -> Pure
+//│ deforest > call +@result @ g@g -> Pure
+//│ deforest > call f@result @ <root> -> UnsafeEta
+//│ deforest > call g@result @ f@f -> UnsafeEta
+//│ deforest > call g@result @ f@f -> UnsafeEta
+//│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > AA⁰(tmp²) ->
 //│ deforest > 	match: x¹⁶
@@ -405,6 +625,11 @@ f(AA(AA(0)))
 :expect 3
 fun f(x) = x.AA#aa.AA#aa
 f(AA(AA(3)))
+//│ deforest > >>> effect-analysis results >>>
+//│ deforest > function f#0 @ f@f -> UnsafeEta
+//│ deforest > function f#0 @ f@f -> UnsafeEta
+//│ deforest > call f@result @ <root> -> UnsafeEta
+//│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > AA⁰(tmp³) ->
 //│ deforest > 	select: aa
@@ -431,6 +656,69 @@ fun outer2(x, y, z) =
   t + y
 let p = AA(AA(3))
 outer1(p, 1, 2) + outer2(p, 3, 4) + inner(AA(5), 6)
+//│ deforest > >>> effect-analysis results >>>
+//│ deforest > function inner#0 @ inner@inner -> UnsafeEta
+//│ deforest > function inner#0 @ inner@inner -> UnsafeEta
+//│ deforest > function inner#0 @ outer1@outer1.inner@inner -> UnsafeEta
+//│ deforest > function inner#0 @ outer1@outer1.inner@inner -> UnsafeEta
+//│ deforest > function inner#0 @ outer1@outer1.inner@inner -> UnsafeEta
+//│ deforest > function inner#0 @ outer1@outer1.inner@inner -> UnsafeEta
+//│ deforest > function inner#0 @ outer2@outer2.inner@inner -> UnsafeEta
+//│ deforest > function inner#0 @ outer2@outer2.inner@inner -> UnsafeEta
+//│ deforest > function inner#0 @ outer2@outer2.inner@inner -> UnsafeEta
+//│ deforest > function inner#0 @ outer2@outer2.inner@inner -> UnsafeEta
+//│ deforest > function outer1#0 @ outer1@outer1 -> UnsafeEta
+//│ deforest > function outer1#0 @ outer1@outer1 -> UnsafeEta
+//│ deforest > function outer2#0 @ outer2@outer2 -> UnsafeEta
+//│ deforest > function outer2#0 @ outer2@outer2 -> UnsafeEta
+//│ deforest > call *@result @ inner@inner -> Pure
+//│ deforest > call *@result @ inner@inner -> Pure
+//│ deforest > call *@result @ outer1@outer1.inner@inner -> Pure
+//│ deforest > call *@result @ outer1@outer1.inner@inner -> Pure
+//│ deforest > call *@result @ outer1@outer1.inner@inner -> Pure
+//│ deforest > call *@result @ outer1@outer1.inner@inner -> Pure
+//│ deforest > call *@result @ outer2@outer2.inner@inner -> Pure
+//│ deforest > call *@result @ outer2@outer2.inner@inner -> Pure
+//│ deforest > call *@result @ outer2@outer2.inner@inner -> Pure
+//│ deforest > call *@result @ outer2@outer2.inner@inner -> Pure
+//│ deforest > call +@result @ <root> -> Pure
+//│ deforest > call +@result @ <root> -> Pure
+//│ deforest > call +@result @ inner@inner -> Pure
+//│ deforest > call +@result @ inner@inner -> Pure
+//│ deforest > call +@result @ outer1@outer1 -> Pure
+//│ deforest > call +@result @ outer1@outer1 -> Pure
+//│ deforest > call +@result @ outer1@outer1.inner@inner -> Pure
+//│ deforest > call +@result @ outer1@outer1.inner@inner -> Pure
+//│ deforest > call +@result @ outer1@outer1.inner@inner -> Pure
+//│ deforest > call +@result @ outer1@outer1.inner@inner -> Pure
+//│ deforest > call +@result @ outer2@outer2 -> Pure
+//│ deforest > call +@result @ outer2@outer2 -> Pure
+//│ deforest > call +@result @ outer2@outer2.inner@inner -> Pure
+//│ deforest > call +@result @ outer2@outer2.inner@inner -> Pure
+//│ deforest > call +@result @ outer2@outer2.inner@inner -> Pure
+//│ deforest > call +@result @ outer2@outer2.inner@inner -> Pure
+//│ deforest > call -@result @ inner@inner -> Pure
+//│ deforest > call -@result @ inner@inner -> Pure
+//│ deforest > call -@result @ outer1@outer1.inner@inner -> Pure
+//│ deforest > call -@result @ outer1@outer1.inner@inner -> Pure
+//│ deforest > call -@result @ outer1@outer1.inner@inner -> Pure
+//│ deforest > call -@result @ outer1@outer1.inner@inner -> Pure
+//│ deforest > call -@result @ outer2@outer2.inner@inner -> Pure
+//│ deforest > call -@result @ outer2@outer2.inner@inner -> Pure
+//│ deforest > call -@result @ outer2@outer2.inner@inner -> Pure
+//│ deforest > call -@result @ outer2@outer2.inner@inner -> Pure
+//│ deforest > call inner@result @ <root> -> UnsafeEta
+//│ deforest > call inner@result @ outer1@outer1 -> UnsafeEta
+//│ deforest > call inner@result @ outer1@outer1 -> UnsafeEta
+//│ deforest > call inner@result @ outer1@outer1 -> UnsafeEta
+//│ deforest > call inner@result @ outer1@outer1 -> UnsafeEta
+//│ deforest > call inner@result @ outer2@outer2 -> UnsafeEta
+//│ deforest > call inner@result @ outer2@outer2 -> UnsafeEta
+//│ deforest > call inner@result @ outer2@outer2 -> UnsafeEta
+//│ deforest > call inner@result @ outer2@outer2 -> UnsafeEta
+//│ deforest > call outer1@result @ <root> -> UnsafeEta
+//│ deforest > call outer2@result @ <root> -> UnsafeEta
+//│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > AA⁰(5) ->
 //│ deforest > 	match: x¹⁷
@@ -444,6 +732,15 @@ outer1(p, 1, 2) + outer2(p, 3, 4) + inner(AA(5), 6)
 fun mapHead(f, x) = if x is
   AAA(h, t) then f(h)
 mapHead(x => x, AAA(1, AAA(2, None)))
+//│ deforest > >>> effect-analysis results >>>
+//│ deforest > function lambda#0 @ lambda@lambda -> Pure
+//│ deforest > function lambda#0 @ lambda@lambda -> Pure
+//│ deforest > function mapHead#0 @ mapHead@mapHead -> UnsafeEta
+//│ deforest > function mapHead#0 @ mapHead@mapHead -> UnsafeEta
+//│ deforest > call f@result @ mapHead@mapHead -> Pure
+//│ deforest > call f@result @ mapHead@mapHead -> UnsafeEta
+//│ deforest > call mapHead@result @ <root> -> UnsafeEta
+//│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > AAA⁰(1, tmp⁴) ->
 //│ deforest > 	match: x¹⁸
@@ -459,6 +756,9 @@ if A is
   A then
     k = 3
 k + 2
+//│ deforest > >>> effect-analysis results >>>
+//│ deforest > call +@result @ <root> -> Pure
+//│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > A⁰ ->
 //│ deforest > 	match: A⁰
@@ -471,6 +771,14 @@ fun test(a) = if a is
   AA then 1
   else 2
 test(B) + test(C)
+//│ deforest > >>> effect-analysis results >>>
+//│ deforest > function test#0 @ test@test -> UnsafeEta
+//│ deforest > function test#0 @ test@test -> UnsafeEta
+//│ deforest > function test#0 @ test@test -> UnsafeEta
+//│ deforest > call +@result @ <root> -> Pure
+//│ deforest > call test@result @ <root> -> UnsafeEta
+//│ deforest > call test@result @ <root> -> UnsafeEta
+//│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > C⁰ ->
 //│ deforest > 	match: a⁵
@@ -491,6 +799,17 @@ fun test(x, y, z) = if x is
       AA(a2) then a2 - z
     m + n
 test(AA(1), AA(2), AA(3))
+//│ deforest > >>> effect-analysis results >>>
+//│ deforest > function test#0 @ test@test -> UnsafeEta
+//│ deforest > function test#0 @ test@test -> UnsafeEta
+//│ deforest > call +@result @ test@test -> Pure
+//│ deforest > call +@result @ test@test -> Pure
+//│ deforest > call +@result @ test@test -> Pure
+//│ deforest > call +@result @ test@test -> Pure
+//│ deforest > call -@result @ test@test -> Pure
+//│ deforest > call -@result @ test@test -> Pure
+//│ deforest > call test@result @ <root> -> UnsafeEta
+//│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > AA⁰(2) ->
 //│ deforest > 	match: y⁵
@@ -511,6 +830,23 @@ fun test(x) =
   t(123).AA#aa + 5 * 4 - 3 + 2 - 1
 let p = if true then AA(CCC(AA)) else BB(CCC(AA)) in...
 test(p)
+//│ deforest > >>> effect-analysis results >>>
+//│ deforest > function test#0 @ test@test -> UnsafeEta
+//│ deforest > function test#0 @ test@test -> UnsafeEta
+//│ deforest > call +@result @ test@test -> Pure
+//│ deforest > call +@result @ test@test -> Pure
+//│ deforest > call +@result @ test@test -> Pure
+//│ deforest > call +@result @ test@test -> Pure
+//│ deforest > call -@result @ test@test -> Pure
+//│ deforest > call -@result @ test@test -> Pure
+//│ deforest > call -@result @ test@test -> Pure
+//│ deforest > call -@result @ test@test -> Pure
+//│ deforest > call id@result @ test@test -> UnsafeEta
+//│ deforest > call id@result @ test@test -> UnsafeEta
+//│ deforest > call t@result @ test@test -> UnsafeEta
+//│ deforest > call t@result @ test@test -> UnsafeEta
+//│ deforest > call test@result @ <root> -> UnsafeEta
+//│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > BB⁰(tmp⁵) ->
 //│ deforest > 	match: x²⁰
@@ -538,6 +874,22 @@ fun test(x, y) =
   t(123).CCC#c + 5 * 4 - 3 + 2 - 1
 let p = if true then AA(CCC) else BB(CCC) in...
 test(p, id(CCC(123)))
+//│ deforest > >>> effect-analysis results >>>
+//│ deforest > function test#0 @ test@test -> UnsafeEta
+//│ deforest > function test#0 @ test@test -> UnsafeEta
+//│ deforest > call +@result @ test@test -> Pure
+//│ deforest > call +@result @ test@test -> Pure
+//│ deforest > call +@result @ test@test -> Pure
+//│ deforest > call +@result @ test@test -> Pure
+//│ deforest > call -@result @ test@test -> Pure
+//│ deforest > call -@result @ test@test -> Pure
+//│ deforest > call -@result @ test@test -> Pure
+//│ deforest > call -@result @ test@test -> Pure
+//│ deforest > call id@result @ <root> -> UnsafeEta
+//│ deforest > call t@result @ test@test -> UnsafeEta
+//│ deforest > call t@result @ test@test -> UnsafeEta
+//│ deforest > call test@result @ <root> -> UnsafeEta
+//│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > BB⁰(CCC⁰) ->
 //│ deforest > 	match: x²¹
@@ -554,6 +906,15 @@ test(p, id(CCC(123)))
 fun f(x) = if x is
   A then 1
 f(id(A)) + f(A)
+//│ deforest > >>> effect-analysis results >>>
+//│ deforest > function f#0 @ f@f -> UnsafeEta
+//│ deforest > function f#0 @ f@f -> UnsafeEta
+//│ deforest > function f#0 @ f@f -> UnsafeEta
+//│ deforest > call +@result @ <root> -> Pure
+//│ deforest > call f@result @ <root> -> UnsafeEta
+//│ deforest > call f@result @ <root> -> UnsafeEta
+//│ deforest > call id@result @ <root> -> UnsafeEta
+//│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > A⁰ ->
 //│ deforest > 	match: x²²
@@ -598,6 +959,14 @@ fun g(x) = if x is
   AA then A
   BB then B
 f(g(AA(1)))
+//│ deforest > >>> effect-analysis results >>>
+//│ deforest > function f#0 @ f@f -> UnsafeEta
+//│ deforest > function f#0 @ f@f -> UnsafeEta
+//│ deforest > function g#0 @ g@g -> UnsafeEta
+//│ deforest > function g#0 @ g@g -> UnsafeEta
+//│ deforest > call f@result @ <root> -> UnsafeEta
+//│ deforest > call g@result @ <root> -> UnsafeEta
+//│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > A⁰ ->
 //│ deforest > 	match: x²³
@@ -614,6 +983,11 @@ fun f(a, b) = if a is
   A and b is B then 1
   else 0
 f(A, B)
+//│ deforest > >>> effect-analysis results >>>
+//│ deforest > function f#0 @ f@f -> Pure
+//│ deforest > function f#0 @ f@f -> Pure
+//│ deforest > call f@result @ <root> -> Pure
+//│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > A⁰ ->
 //│ deforest > 	match: a⁶
@@ -633,6 +1007,27 @@ fun c2(x) = if x is
   AA(i) then i
   A then 0
 c1(app(AA)) + c1(AA(2)) + c2(AA(3)) + c2(A)
+//│ deforest > >>> effect-analysis results >>>
+//│ deforest > function app#0 @ app@app -> UnsafeEta
+//│ deforest > function app#0 @ app@app -> UnsafeEta
+//│ deforest > function c1#0 @ c1@c1 -> UnsafeEta
+//│ deforest > function c1#0 @ c1@c1 -> UnsafeEta
+//│ deforest > function c1#0 @ c1@c1 -> UnsafeEta
+//│ deforest > function c2#0 @ c2@c2 -> UnsafeEta
+//│ deforest > function c2#0 @ c2@c2 -> UnsafeEta
+//│ deforest > function c2#0 @ c2@c2 -> UnsafeEta
+//│ deforest > function identity#0 @ identity@identity -> Pure
+//│ deforest > call +@result @ <root> -> Pure
+//│ deforest > call +@result @ <root> -> Pure
+//│ deforest > call +@result @ <root> -> Pure
+//│ deforest > call app@result @ <root> -> UnsafeEta
+//│ deforest > call c1@result @ <root> -> UnsafeEta
+//│ deforest > call c1@result @ <root> -> UnsafeEta
+//│ deforest > call c2@result @ <root> -> UnsafeEta
+//│ deforest > call c2@result @ <root> -> UnsafeEta
+//│ deforest > call f@result @ app@app -> UnsafeEta
+//│ deforest > call f@result @ app@app -> UnsafeEta
+//│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > A⁰ ->
 //│ deforest > 	match: x²⁵
@@ -655,6 +1050,30 @@ fun c(x) = if x is
   else throw (if A is A then Error("e1") else Error("e2"))
 print(c(p(true)) + c(p(false)))
 c(B)
+//│ deforest > >>> effect-analysis results >>>
+//│ deforest > function c#0 @ c@c -> UnsafeEta
+//│ deforest > function c#0 @ c@c -> UnsafeEta
+//│ deforest > function c#0 @ c@c -> UnsafeEta
+//│ deforest > function c#0 @ c@c -> UnsafeEta
+//│ deforest > function p#0 @ p@p -> UnsafeEta
+//│ deforest > function p#0 @ p@p -> UnsafeEta
+//│ deforest > function p#0 @ p@p -> UnsafeEta
+//│ deforest > call +@result @ <root> -> Pure
+//│ deforest > call Error@result @ c@c -> UnsafeEta
+//│ deforest > call Error@result @ c@c -> UnsafeEta
+//│ deforest > call Error@result @ c@c -> UnsafeEta
+//│ deforest > call Error@result @ c@c -> UnsafeEta
+//│ deforest > call Error@result @ c@c -> UnsafeEta
+//│ deforest > call Error@result @ c@c -> UnsafeEta
+//│ deforest > call Error@result @ c@c -> UnsafeEta
+//│ deforest > call Error@result @ c@c -> UnsafeEta
+//│ deforest > call c@result @ <root> -> UnsafeEta
+//│ deforest > call c@result @ <root> -> UnsafeEta
+//│ deforest > call c@result @ <root> -> UnsafeEta
+//│ deforest > call p@result @ <root> -> UnsafeEta
+//│ deforest > call p@result @ <root> -> UnsafeEta
+//│ deforest > call print@result @ <root> -> UnsafeEta
+//│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > A⁰ ->
 //│ deforest > 	match: A⁰
@@ -687,6 +1106,13 @@ c(B)
 fun f(a, b) = if a is
   AA(x) then x + b.BB#bb
 f(AA(1), BB(2))
+//│ deforest > >>> effect-analysis results >>>
+//│ deforest > function f#0 @ f@f -> UnsafeEta
+//│ deforest > function f#0 @ f@f -> UnsafeEta
+//│ deforest > call +@result @ f@f -> Pure
+//│ deforest > call +@result @ f@f -> Pure
+//│ deforest > call f@result @ <root> -> UnsafeEta
+//│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > BB⁰(2) ->
 //│ deforest > 	select: bb
@@ -702,6 +1128,15 @@ f(AA(1), BB(2))
 fun g(k, x) = if k is
   A then x.AA#aa + x.AA#aa + x.AA#aa
 g(A, AA(3))
+//│ deforest > >>> effect-analysis results >>>
+//│ deforest > function g#0 @ g@g -> UnsafeEta
+//│ deforest > function g#0 @ g@g -> UnsafeEta
+//│ deforest > call +@result @ g@g -> Pure
+//│ deforest > call +@result @ g@g -> Pure
+//│ deforest > call +@result @ g@g -> Pure
+//│ deforest > call +@result @ g@g -> Pure
+//│ deforest > call g@result @ <root> -> UnsafeEta
+//│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > A⁰ ->
 //│ deforest > 	match: k⁰
@@ -728,6 +1163,83 @@ fun outer2(x, y)(z) =
   t + y
 let p = AA(AA(3))
 outer1(p)(1, 2) + outer2(p, 3)(4) + inner(AA(5))(6)
+//│ deforest > >>> effect-analysis results >>>
+//│ deforest > function inner#0 @ inner@inner -> Pure
+//│ deforest > function inner#0 @ inner@inner -> Pure
+//│ deforest > function inner#0 @ outer1@outer1.inner@inner -> Pure
+//│ deforest > function inner#0 @ outer1@outer1.inner@inner -> Pure
+//│ deforest > function inner#0 @ outer1@outer1.inner@inner -> Pure
+//│ deforest > function inner#0 @ outer1@outer1.inner@inner -> Pure
+//│ deforest > function inner#0 @ outer2@outer2.inner@inner -> Pure
+//│ deforest > function inner#0 @ outer2@outer2.inner@inner -> Pure
+//│ deforest > function inner#0 @ outer2@outer2.inner@inner -> Pure
+//│ deforest > function inner#0 @ outer2@outer2.inner@inner -> Pure
+//│ deforest > function inner#1 @ inner@inner -> UnsafeEta
+//│ deforest > function inner#1 @ inner@inner -> UnsafeEta
+//│ deforest > function inner#1 @ outer1@outer1.inner@inner -> UnsafeEta
+//│ deforest > function inner#1 @ outer1@outer1.inner@inner -> UnsafeEta
+//│ deforest > function inner#1 @ outer1@outer1.inner@inner -> UnsafeEta
+//│ deforest > function inner#1 @ outer1@outer1.inner@inner -> UnsafeEta
+//│ deforest > function inner#1 @ outer2@outer2.inner@inner -> UnsafeEta
+//│ deforest > function inner#1 @ outer2@outer2.inner@inner -> UnsafeEta
+//│ deforest > function inner#1 @ outer2@outer2.inner@inner -> UnsafeEta
+//│ deforest > function inner#1 @ outer2@outer2.inner@inner -> UnsafeEta
+//│ deforest > function outer1#0 @ outer1@outer1 -> Pure
+//│ deforest > function outer1#0 @ outer1@outer1 -> Pure
+//│ deforest > function outer1#1 @ outer1@outer1 -> UnsafeEta
+//│ deforest > function outer1#1 @ outer1@outer1 -> UnsafeEta
+//│ deforest > function outer2#0 @ outer2@outer2 -> Pure
+//│ deforest > function outer2#0 @ outer2@outer2 -> Pure
+//│ deforest > function outer2#1 @ outer2@outer2 -> UnsafeEta
+//│ deforest > function outer2#1 @ outer2@outer2 -> UnsafeEta
+//│ deforest > call *@result @ inner@inner -> Pure
+//│ deforest > call *@result @ inner@inner -> Pure
+//│ deforest > call *@result @ outer1@outer1.inner@inner -> Pure
+//│ deforest > call *@result @ outer1@outer1.inner@inner -> Pure
+//│ deforest > call *@result @ outer1@outer1.inner@inner -> Pure
+//│ deforest > call *@result @ outer1@outer1.inner@inner -> Pure
+//│ deforest > call *@result @ outer2@outer2.inner@inner -> Pure
+//│ deforest > call *@result @ outer2@outer2.inner@inner -> Pure
+//│ deforest > call *@result @ outer2@outer2.inner@inner -> Pure
+//│ deforest > call *@result @ outer2@outer2.inner@inner -> Pure
+//│ deforest > call +@result @ <root> -> Pure
+//│ deforest > call +@result @ <root> -> Pure
+//│ deforest > call +@result @ inner@inner -> Pure
+//│ deforest > call +@result @ inner@inner -> Pure
+//│ deforest > call +@result @ outer1@outer1 -> Pure
+//│ deforest > call +@result @ outer1@outer1 -> Pure
+//│ deforest > call +@result @ outer1@outer1.inner@inner -> Pure
+//│ deforest > call +@result @ outer1@outer1.inner@inner -> Pure
+//│ deforest > call +@result @ outer1@outer1.inner@inner -> Pure
+//│ deforest > call +@result @ outer1@outer1.inner@inner -> Pure
+//│ deforest > call +@result @ outer2@outer2 -> Pure
+//│ deforest > call +@result @ outer2@outer2 -> Pure
+//│ deforest > call +@result @ outer2@outer2.inner@inner -> Pure
+//│ deforest > call +@result @ outer2@outer2.inner@inner -> Pure
+//│ deforest > call +@result @ outer2@outer2.inner@inner -> Pure
+//│ deforest > call +@result @ outer2@outer2.inner@inner -> Pure
+//│ deforest > call -@result @ inner@inner -> Pure
+//│ deforest > call -@result @ inner@inner -> Pure
+//│ deforest > call -@result @ outer1@outer1.inner@inner -> Pure
+//│ deforest > call -@result @ outer1@outer1.inner@inner -> Pure
+//│ deforest > call -@result @ outer1@outer1.inner@inner -> Pure
+//│ deforest > call -@result @ outer1@outer1.inner@inner -> Pure
+//│ deforest > call -@result @ outer2@outer2.inner@inner -> Pure
+//│ deforest > call -@result @ outer2@outer2.inner@inner -> Pure
+//│ deforest > call -@result @ outer2@outer2.inner@inner -> Pure
+//│ deforest > call -@result @ outer2@outer2.inner@inner -> Pure
+//│ deforest > call inner@result @ <root> -> UnsafeEta
+//│ deforest > call inner@result @ outer1@outer1 -> UnsafeEta
+//│ deforest > call inner@result @ outer1@outer1 -> UnsafeEta
+//│ deforest > call inner@result @ outer1@outer1 -> UnsafeEta
+//│ deforest > call inner@result @ outer1@outer1 -> UnsafeEta
+//│ deforest > call inner@result @ outer2@outer2 -> UnsafeEta
+//│ deforest > call inner@result @ outer2@outer2 -> UnsafeEta
+//│ deforest > call inner@result @ outer2@outer2 -> UnsafeEta
+//│ deforest > call inner@result @ outer2@outer2 -> UnsafeEta
+//│ deforest > call outer1@result @ <root> -> UnsafeEta
+//│ deforest > call outer2@result @ <root> -> UnsafeEta
+//│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > AA⁰(5) ->
 //│ deforest > 	match: x²⁷
@@ -745,6 +1257,11 @@ fun f(x) = if x is
   AA then if x.AA#aa is
     AA then x.AA#aa.AA#aa
 f(AA(AA(3)))
+//│ deforest > >>> effect-analysis results >>>
+//│ deforest > function f#0 @ f@f -> UnsafeEta
+//│ deforest > function f#0 @ f@f -> UnsafeEta
+//│ deforest > call f@result @ <root> -> UnsafeEta
+//│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > AA⁰(tmp⁷) ->
 //│ deforest > 	match: x²⁸
@@ -761,6 +1278,20 @@ fun id(x) = x
 fun f1(a1) = if a1 is AA then 1
 fun f2(a2) = if a2 is AA then 2
 f1(id(AA(1))) + f2(id(AA(2)))
+//│ deforest > >>> effect-analysis results >>>
+//│ deforest > function f1#0 @ f1@f1 -> UnsafeEta
+//│ deforest > function f1#0 @ f1@f1 -> UnsafeEta
+//│ deforest > function f2#0 @ f2@f2 -> UnsafeEta
+//│ deforest > function f2#0 @ f2@f2 -> UnsafeEta
+//│ deforest > function id#0 @ id@id -> Pure
+//│ deforest > function id#0 @ id@id -> Pure
+//│ deforest > function id#0 @ id@id -> Pure
+//│ deforest > call +@result @ <root> -> Pure
+//│ deforest > call f1@result @ <root> -> UnsafeEta
+//│ deforest > call f2@result @ <root> -> UnsafeEta
+//│ deforest > call id@result @ <root> -> Pure
+//│ deforest > call id@result @ <root> -> Pure
+//│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > AA⁰(2) ->
 //│ deforest > 	match: a2⁰
@@ -778,6 +1309,11 @@ fun c1(x) = if x is
     if t is
       Nil then 0
 c1(1 :: Nil)
+//│ deforest > >>> effect-analysis results >>>
+//│ deforest > function c1#0 @ c1@c1 -> UnsafeEta
+//│ deforest > function c1#0 @ c1@c1 -> UnsafeEta
+//│ deforest > call c1@result @ <root> -> UnsafeEta
+//│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > Cons⁰(1, Nil⁰) ->
 //│ deforest > 	match: x²⁹
@@ -801,6 +1337,25 @@ fun apply(f) =
   let inner = AA(0)
   f(AA(inner))
 apply(f)
+//│ deforest > >>> effect-analysis results >>>
+//│ deforest > function apply#0 @ apply@apply -> UnsafeEta
+//│ deforest > function apply#0 @ apply@apply -> UnsafeEta
+//│ deforest > function f#0 @ f@f -> UnsafeEta
+//│ deforest > function f#0 @ f@f -> UnsafeEta
+//│ deforest > function g1#0 @ f@f.g1@g1 -> UnsafeEta
+//│ deforest > function g1#0 @ f@f.g1@g1 -> UnsafeEta
+//│ deforest > function g1#0 @ g1@g1 -> UnsafeEta
+//│ deforest > function g2#0 @ f@f.g2@g2 -> UnsafeEta
+//│ deforest > function g2#0 @ f@f.g2@g2 -> UnsafeEta
+//│ deforest > function g2#0 @ g2@g2 -> UnsafeEta
+//│ deforest > call apply@result @ <root> -> UnsafeEta
+//│ deforest > call f@result @ apply@apply -> UnsafeEta
+//│ deforest > call f@result @ apply@apply -> UnsafeEta
+//│ deforest > call g1@result @ f@f -> UnsafeEta
+//│ deforest > call g1@result @ f@f -> UnsafeEta
+//│ deforest > call g2@result @ f@f -> UnsafeEta
+//│ deforest > call g2@result @ f@f -> UnsafeEta
+//│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > AA⁰(inner⁰) ->
 //│ deforest > 	match: x³⁰
@@ -818,6 +1373,36 @@ fun wrap(x) = wrap1(x)
 fun f1(a1) = if a1 is AA then 1
 fun f2(a2) = if a2 is AA then 2
 f1(wrap(1)) + f2(wrap(2))
+//│ deforest > >>> effect-analysis results >>>
+//│ deforest > function f1#0 @ f1@f1 -> UnsafeEta
+//│ deforest > function f1#0 @ f1@f1 -> UnsafeEta
+//│ deforest > function f2#0 @ f2@f2 -> UnsafeEta
+//│ deforest > function f2#0 @ f2@f2 -> UnsafeEta
+//│ deforest > function p#0 @ p@p -> UnsafeEta
+//│ deforest > function p#0 @ wrap1@wrap1.p@p -> UnsafeEta
+//│ deforest > function p#0 @ wrap@wrap.wrap1@wrap1.p@p -> UnsafeEta
+//│ deforest > function p#0 @ wrap@wrap.wrap1@wrap1.p@p -> UnsafeEta
+//│ deforest > function p#0 @ wrap@wrap.wrap1@wrap1.p@p -> UnsafeEta
+//│ deforest > function wrap#0 @ wrap@wrap -> UnsafeEta
+//│ deforest > function wrap#0 @ wrap@wrap -> UnsafeEta
+//│ deforest > function wrap#0 @ wrap@wrap -> UnsafeEta
+//│ deforest > function wrap1#0 @ wrap1@wrap1 -> UnsafeEta
+//│ deforest > function wrap1#0 @ wrap@wrap.wrap1@wrap1 -> UnsafeEta
+//│ deforest > function wrap1#0 @ wrap@wrap.wrap1@wrap1 -> UnsafeEta
+//│ deforest > function wrap1#0 @ wrap@wrap.wrap1@wrap1 -> UnsafeEta
+//│ deforest > call +@result @ <root> -> Pure
+//│ deforest > call f1@result @ <root> -> UnsafeEta
+//│ deforest > call f2@result @ <root> -> UnsafeEta
+//│ deforest > call p@result @ wrap1@wrap1 -> UnsafeEta
+//│ deforest > call p@result @ wrap@wrap.wrap1@wrap1 -> UnsafeEta
+//│ deforest > call p@result @ wrap@wrap.wrap1@wrap1 -> UnsafeEta
+//│ deforest > call p@result @ wrap@wrap.wrap1@wrap1 -> UnsafeEta
+//│ deforest > call wrap1@result @ wrap@wrap -> UnsafeEta
+//│ deforest > call wrap1@result @ wrap@wrap -> UnsafeEta
+//│ deforest > call wrap1@result @ wrap@wrap -> UnsafeEta
+//│ deforest > call wrap@result @ <root> -> UnsafeEta
+//│ deforest > call wrap@result @ <root> -> UnsafeEta
+//│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > AA⁰(x³¹) ->
 //│ deforest > 	match: a2¹
@@ -832,6 +1417,30 @@ fun p1(x) = p2(x)
 fun p2(x) = if x == 0 then AA(x) else p1(x - 1)
 fun c(a) = if a is AA(x) then x
 c(p1(3))
+//│ deforest > >>> effect-analysis results >>>
+//│ deforest > function c#0 @ c@c -> UnsafeEta
+//│ deforest > function c#0 @ c@c -> UnsafeEta
+//│ deforest > function p1#0 @ p1@p1 -> UnsafeEta
+//│ deforest > function p1#0 @ p1@p1 -> UnsafeEta
+//│ deforest > function p1#0 @ p2@p2 -> UnsafeEta
+//│ deforest > function p2#0 @ p1@p1 -> UnsafeEta
+//│ deforest > function p2#0 @ p1@p1 -> UnsafeEta
+//│ deforest > function p2#0 @ p2@p2 -> UnsafeEta
+//│ deforest > call -@result @ p1@p1 -> Pure
+//│ deforest > call -@result @ p1@p1 -> Pure
+//│ deforest > call -@result @ p2@p2 -> Pure
+//│ deforest > call c@result @ <root> -> UnsafeEta
+//│ deforest > call equals@result @ p1@p1 -> UnsafeEta
+//│ deforest > call equals@result @ p1@p1 -> UnsafeEta
+//│ deforest > call equals@result @ p2@p2 -> UnsafeEta
+//│ deforest > call p1@result @ <root> -> UnsafeEta
+//│ deforest > call p1@result @ p1@p1 -> UnsafeEta
+//│ deforest > call p1@result @ p1@p1 -> UnsafeEta
+//│ deforest > call p1@result @ p2@p2 -> UnsafeEta
+//│ deforest > call p2@result @ p1@p1 -> UnsafeEta
+//│ deforest > call p2@result @ p1@p1 -> UnsafeEta
+//│ deforest > call p2@result @ p2@p2 -> UnsafeEta
+//│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > AA⁰(x³²) ->
 //│ deforest > 	match: a⁸
@@ -854,6 +1463,38 @@ fun g(b) =
   else
     C
 [f(3), g(true)]
+//│ deforest > >>> effect-analysis results >>>
+//│ deforest > function f#0 @ f@f -> UnsafeEta
+//│ deforest > function f#0 @ f@f -> UnsafeEta
+//│ deforest > function f#0 @ g@g -> UnsafeEta
+//│ deforest > function f#0 @ g@g -> UnsafeEta
+//│ deforest > function g#0 @ f@f -> UnsafeEta
+//│ deforest > function g#0 @ f@f -> UnsafeEta
+//│ deforest > function g#0 @ g@g -> UnsafeEta
+//│ deforest > function g#0 @ g@g -> UnsafeEta
+//│ deforest > call -@result @ f@f -> Pure
+//│ deforest > call -@result @ f@f -> Pure
+//│ deforest > call -@result @ g@g -> Pure
+//│ deforest > call -@result @ g@g -> Pure
+//│ deforest > call <@result @ f@f -> Pure
+//│ deforest > call <@result @ f@f -> Pure
+//│ deforest > call <@result @ g@g -> Pure
+//│ deforest > call <@result @ g@g -> Pure
+//│ deforest > call f@result @ <root> -> UnsafeEta
+//│ deforest > call f@result @ f@f -> UnsafeEta
+//│ deforest > call f@result @ f@f -> UnsafeEta
+//│ deforest > call f@result @ f@f -> UnsafeEta
+//│ deforest > call f@result @ f@f -> UnsafeEta
+//│ deforest > call f@result @ g@g -> UnsafeEta
+//│ deforest > call f@result @ g@g -> UnsafeEta
+//│ deforest > call f@result @ g@g -> UnsafeEta
+//│ deforest > call f@result @ g@g -> UnsafeEta
+//│ deforest > call g@result @ <root> -> UnsafeEta
+//│ deforest > call g@result @ f@f -> UnsafeEta
+//│ deforest > call g@result @ f@f -> UnsafeEta
+//│ deforest > call g@result @ g@g -> UnsafeEta
+//│ deforest > call g@result @ g@g -> UnsafeEta
+//│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > BB⁰(0) ->
 //│ deforest > 	match: scrut⁰
@@ -888,6 +1529,21 @@ fun f(ls) = if ls is [] then
   fun h(z) = if z > 0 then h(z - 1) else y
   h(3)
 f([])
+//│ deforest > >>> effect-analysis results >>>
+//│ deforest > function f#0 @ f@f -> UnsafeEta
+//│ deforest > function f#0 @ f@f -> UnsafeEta
+//│ deforest > function h#0 @ f@f -> UnsafeEta
+//│ deforest > function h#0 @ f@f -> UnsafeEta
+//│ deforest > call -@result @ f@f -> Pure
+//│ deforest > call -@result @ f@f -> Pure
+//│ deforest > call >@result @ f@f -> Pure
+//│ deforest > call >@result @ f@f -> Pure
+//│ deforest > call f@result @ <root> -> UnsafeEta
+//│ deforest > call h@result @ f@f -> UnsafeEta
+//│ deforest > call h@result @ f@f -> UnsafeEta
+//│ deforest > call h@result @ f@f -> UnsafeEta
+//│ deforest > call h@result @ f@f -> UnsafeEta
+//│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > [] ->
 //│ deforest > 	match: ls⁰
@@ -899,6 +1555,13 @@ f([])
 fun f(x, b) = if x is
   Nil then if b then f(Nil, false) else 0
 f(Nil, false)
+//│ deforest > >>> effect-analysis results >>>
+//│ deforest > function f#0 @ f@f -> UnsafeEta
+//│ deforest > function f#0 @ f@f -> UnsafeEta
+//│ deforest > call f@result @ <root> -> UnsafeEta
+//│ deforest > call f@result @ f@f -> UnsafeEta
+//│ deforest > call f@result @ f@f -> UnsafeEta
+//│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > Nil⁰ ->
 //│ deforest > 	match: x³³
@@ -917,6 +1580,17 @@ fun test() =
     AA(x) then x
   a + b
 test() + test()
+//│ deforest > >>> effect-analysis results >>>
+//│ deforest > function test#0 @ test@test -> UnsafeEta
+//│ deforest > function test#0 @ test@test -> UnsafeEta
+//│ deforest > function test#0 @ test@test -> UnsafeEta
+//│ deforest > call +@result @ <root> -> Pure
+//│ deforest > call +@result @ test@test -> Pure
+//│ deforest > call +@result @ test@test -> Pure
+//│ deforest > call +@result @ test@test -> Pure
+//│ deforest > call test@result @ <root> -> UnsafeEta
+//│ deforest > call test@result @ <root> -> UnsafeEta
+//│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > <<< fusing <<<
 //│ = 4
@@ -927,6 +1601,20 @@ fun p(d) = AA(3)
 fun c1(x) = if x is AA then 1
 fun c2(x) = if x is AA then 2
 c1(p(1)) + c2(p(2))
+//│ deforest > >>> effect-analysis results >>>
+//│ deforest > function c1#0 @ c1@c1 -> UnsafeEta
+//│ deforest > function c1#0 @ c1@c1 -> UnsafeEta
+//│ deforest > function c2#0 @ c2@c2 -> UnsafeEta
+//│ deforest > function c2#0 @ c2@c2 -> UnsafeEta
+//│ deforest > function p#0 @ p@p -> UnsafeEta
+//│ deforest > function p#0 @ p@p -> UnsafeEta
+//│ deforest > function p#0 @ p@p -> UnsafeEta
+//│ deforest > call +@result @ <root> -> Pure
+//│ deforest > call c1@result @ <root> -> UnsafeEta
+//│ deforest > call c2@result @ <root> -> UnsafeEta
+//│ deforest > call p@result @ <root> -> UnsafeEta
+//│ deforest > call p@result @ <root> -> UnsafeEta
+//│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > AA⁰(3) ->
 //│ deforest > 	match: x³⁴
@@ -944,6 +1632,38 @@ fun f3(a3) = if a3 is AA(aa) then aa
 fun f4(a4) = if a4 is AA(aa) then aa
 fun f5(a5) = if a5 is AA(aa) then aa
 f1(p(1)) + f2(p(2)) + f3(p(3)) + f4(p(4)) + f5(p(5))
+//│ deforest > >>> effect-analysis results >>>
+//│ deforest > function f1#0 @ f1@f1 -> UnsafeEta
+//│ deforest > function f1#0 @ f1@f1 -> UnsafeEta
+//│ deforest > function f2#0 @ f2@f2 -> UnsafeEta
+//│ deforest > function f2#0 @ f2@f2 -> UnsafeEta
+//│ deforest > function f3#0 @ f3@f3 -> UnsafeEta
+//│ deforest > function f3#0 @ f3@f3 -> UnsafeEta
+//│ deforest > function f4#0 @ f4@f4 -> UnsafeEta
+//│ deforest > function f4#0 @ f4@f4 -> UnsafeEta
+//│ deforest > function f5#0 @ f5@f5 -> UnsafeEta
+//│ deforest > function f5#0 @ f5@f5 -> UnsafeEta
+//│ deforest > function p#0 @ p@p -> UnsafeEta
+//│ deforest > function p#0 @ p@p -> UnsafeEta
+//│ deforest > function p#0 @ p@p -> UnsafeEta
+//│ deforest > function p#0 @ p@p -> UnsafeEta
+//│ deforest > function p#0 @ p@p -> UnsafeEta
+//│ deforest > function p#0 @ p@p -> UnsafeEta
+//│ deforest > call +@result @ <root> -> Pure
+//│ deforest > call +@result @ <root> -> Pure
+//│ deforest > call +@result @ <root> -> Pure
+//│ deforest > call +@result @ <root> -> Pure
+//│ deforest > call f1@result @ <root> -> UnsafeEta
+//│ deforest > call f2@result @ <root> -> UnsafeEta
+//│ deforest > call f3@result @ <root> -> UnsafeEta
+//│ deforest > call f4@result @ <root> -> UnsafeEta
+//│ deforest > call f5@result @ <root> -> UnsafeEta
+//│ deforest > call p@result @ <root> -> UnsafeEta
+//│ deforest > call p@result @ <root> -> UnsafeEta
+//│ deforest > call p@result @ <root> -> UnsafeEta
+//│ deforest > call p@result @ <root> -> UnsafeEta
+//│ deforest > call p@result @ <root> -> UnsafeEta
+//│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > AA⁰(x³⁶) ->
 //│ deforest > 	match: a5⁰
@@ -985,6 +1705,63 @@ fun f4(ls4) = if ls4 is
   h :: t then h + f4(t)
   Nil then 5
 f1(to(4)) + f2(to(5)) + f3(to(6)) + f4(to(7))
+//│ deforest > >>> effect-analysis results >>>
+//│ deforest > function f1#0 @ f1@f1 -> UnsafeEta
+//│ deforest > function f1#0 @ f1@f1 -> UnsafeEta
+//│ deforest > function f2#0 @ f2@f2 -> UnsafeEta
+//│ deforest > function f2#0 @ f2@f2 -> UnsafeEta
+//│ deforest > function f3#0 @ f3@f3 -> UnsafeEta
+//│ deforest > function f3#0 @ f3@f3 -> UnsafeEta
+//│ deforest > function f4#0 @ f4@f4 -> UnsafeEta
+//│ deforest > function f4#0 @ f4@f4 -> UnsafeEta
+//│ deforest > function to#0 @ to@to -> UnsafeEta
+//│ deforest > function to#0 @ to@to -> UnsafeEta
+//│ deforest > function to#0 @ to@to -> UnsafeEta
+//│ deforest > function to#0 @ to@to -> UnsafeEta
+//│ deforest > function to#0 @ to@to -> UnsafeEta
+//│ deforest > call +@result @ <root> -> Pure
+//│ deforest > call +@result @ <root> -> Pure
+//│ deforest > call +@result @ <root> -> Pure
+//│ deforest > call +@result @ f1@f1 -> Pure
+//│ deforest > call +@result @ f1@f1 -> Pure
+//│ deforest > call +@result @ f2@f2 -> Pure
+//│ deforest > call +@result @ f2@f2 -> Pure
+//│ deforest > call +@result @ f3@f3 -> Pure
+//│ deforest > call +@result @ f3@f3 -> Pure
+//│ deforest > call +@result @ f4@f4 -> Pure
+//│ deforest > call +@result @ f4@f4 -> Pure
+//│ deforest > call -@result @ to@to -> Pure
+//│ deforest > call -@result @ to@to -> Pure
+//│ deforest > call -@result @ to@to -> Pure
+//│ deforest > call -@result @ to@to -> Pure
+//│ deforest > call -@result @ to@to -> Pure
+//│ deforest > call >@result @ to@to -> Pure
+//│ deforest > call >@result @ to@to -> Pure
+//│ deforest > call >@result @ to@to -> Pure
+//│ deforest > call >@result @ to@to -> Pure
+//│ deforest > call >@result @ to@to -> Pure
+//│ deforest > call f1@result @ <root> -> UnsafeEta
+//│ deforest > call f1@result @ f1@f1 -> UnsafeEta
+//│ deforest > call f1@result @ f1@f1 -> UnsafeEta
+//│ deforest > call f2@result @ <root> -> UnsafeEta
+//│ deforest > call f2@result @ f2@f2 -> UnsafeEta
+//│ deforest > call f2@result @ f2@f2 -> UnsafeEta
+//│ deforest > call f3@result @ <root> -> UnsafeEta
+//│ deforest > call f3@result @ f3@f3 -> UnsafeEta
+//│ deforest > call f3@result @ f3@f3 -> UnsafeEta
+//│ deforest > call f4@result @ <root> -> UnsafeEta
+//│ deforest > call f4@result @ f4@f4 -> UnsafeEta
+//│ deforest > call f4@result @ f4@f4 -> UnsafeEta
+//│ deforest > call to@result @ <root> -> UnsafeEta
+//│ deforest > call to@result @ <root> -> UnsafeEta
+//│ deforest > call to@result @ <root> -> UnsafeEta
+//│ deforest > call to@result @ <root> -> UnsafeEta
+//│ deforest > call to@result @ to@to -> UnsafeEta
+//│ deforest > call to@result @ to@to -> UnsafeEta
+//│ deforest > call to@result @ to@to -> UnsafeEta
+//│ deforest > call to@result @ to@to -> UnsafeEta
+//│ deforest > call to@result @ to@to -> UnsafeEta
+//│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > Cons⁰(n⁰, tmp⁸) ->
 //│ deforest > 	match: ls4⁰
@@ -1024,6 +1801,51 @@ fun g2(b) = if b then p(3) else p(4)
 fun f1(p) = if p is AA(a) then a + 1
 fun f2(p) = if p is AA(b) then b + 2
 f1(wrap(true)) + f2(g2(false))
+//│ deforest > >>> effect-analysis results >>>
+//│ deforest > function f1#0 @ f1@f1 -> UnsafeEta
+//│ deforest > function f1#0 @ f1@f1 -> UnsafeEta
+//│ deforest > function f2#0 @ f2@f2 -> UnsafeEta
+//│ deforest > function f2#0 @ f2@f2 -> UnsafeEta
+//│ deforest > function g1#0 @ g1@g1 -> UnsafeEta
+//│ deforest > function g1#0 @ wrap@wrap.g1@g1 -> UnsafeEta
+//│ deforest > function g1#0 @ wrap@wrap.g1@g1 -> UnsafeEta
+//│ deforest > function g2#0 @ g2@g2 -> UnsafeEta
+//│ deforest > function g2#0 @ g2@g2 -> UnsafeEta
+//│ deforest > function p#0 @ g1@g1.p@p -> UnsafeEta
+//│ deforest > function p#0 @ g1@g1.p@p -> UnsafeEta
+//│ deforest > function p#0 @ g2@g2.p@p -> UnsafeEta
+//│ deforest > function p#0 @ g2@g2.p@p -> UnsafeEta
+//│ deforest > function p#0 @ g2@g2.p@p -> UnsafeEta
+//│ deforest > function p#0 @ g2@g2.p@p -> UnsafeEta
+//│ deforest > function p#0 @ p@p -> UnsafeEta
+//│ deforest > function p#0 @ wrap@wrap.g1@g1.p@p -> UnsafeEta
+//│ deforest > function p#0 @ wrap@wrap.g1@g1.p@p -> UnsafeEta
+//│ deforest > function p#0 @ wrap@wrap.g1@g1.p@p -> UnsafeEta
+//│ deforest > function p#0 @ wrap@wrap.g1@g1.p@p -> UnsafeEta
+//│ deforest > function wrap#0 @ wrap@wrap -> UnsafeEta
+//│ deforest > function wrap#0 @ wrap@wrap -> UnsafeEta
+//│ deforest > call +@result @ <root> -> Pure
+//│ deforest > call +@result @ f1@f1 -> Pure
+//│ deforest > call +@result @ f1@f1 -> Pure
+//│ deforest > call +@result @ f2@f2 -> Pure
+//│ deforest > call +@result @ f2@f2 -> Pure
+//│ deforest > call f1@result @ <root> -> UnsafeEta
+//│ deforest > call f2@result @ <root> -> UnsafeEta
+//│ deforest > call g1@result @ wrap@wrap -> UnsafeEta
+//│ deforest > call g1@result @ wrap@wrap -> UnsafeEta
+//│ deforest > call g2@result @ <root> -> UnsafeEta
+//│ deforest > call p@result @ g1@g1 -> UnsafeEta
+//│ deforest > call p@result @ g1@g1 -> UnsafeEta
+//│ deforest > call p@result @ g2@g2 -> UnsafeEta
+//│ deforest > call p@result @ g2@g2 -> UnsafeEta
+//│ deforest > call p@result @ g2@g2 -> UnsafeEta
+//│ deforest > call p@result @ g2@g2 -> UnsafeEta
+//│ deforest > call p@result @ wrap@wrap.g1@g1 -> UnsafeEta
+//│ deforest > call p@result @ wrap@wrap.g1@g1 -> UnsafeEta
+//│ deforest > call p@result @ wrap@wrap.g1@g1 -> UnsafeEta
+//│ deforest > call p@result @ wrap@wrap.g1@g1 -> UnsafeEta
+//│ deforest > call wrap@result @ <root> -> UnsafeEta
+//│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > AA⁰(x³⁷) ->
 //│ deforest > 	match: p⁰
@@ -1049,6 +1871,30 @@ fun f1(p) = if p is AA(a) then a + 1
 fun f2(p) = if p is AA(b) then b + 2
 fun f3(p) = if p is AA(c) then c + 3
 f1(one) + f2(one) + f3(two)
+//│ deforest > >>> effect-analysis results >>>
+//│ deforest > function f1#0 @ f1@f1 -> UnsafeEta
+//│ deforest > function f1#0 @ f1@f1 -> UnsafeEta
+//│ deforest > function f2#0 @ f2@f2 -> UnsafeEta
+//│ deforest > function f2#0 @ f2@f2 -> UnsafeEta
+//│ deforest > function f3#0 @ f3@f3 -> UnsafeEta
+//│ deforest > function f3#0 @ f3@f3 -> UnsafeEta
+//│ deforest > function p#0 @ p@p -> UnsafeEta
+//│ deforest > function p#0 @ p@p -> UnsafeEta
+//│ deforest > function p#0 @ p@p -> UnsafeEta
+//│ deforest > call +@result @ <root> -> Pure
+//│ deforest > call +@result @ <root> -> Pure
+//│ deforest > call +@result @ f1@f1 -> Pure
+//│ deforest > call +@result @ f1@f1 -> Pure
+//│ deforest > call +@result @ f2@f2 -> Pure
+//│ deforest > call +@result @ f2@f2 -> Pure
+//│ deforest > call +@result @ f3@f3 -> Pure
+//│ deforest > call +@result @ f3@f3 -> Pure
+//│ deforest > call f1@result @ <root> -> UnsafeEta
+//│ deforest > call f2@result @ <root> -> UnsafeEta
+//│ deforest > call f3@result @ <root> -> UnsafeEta
+//│ deforest > call p@result @ <root> -> UnsafeEta
+//│ deforest > call p@result @ <root> -> UnsafeEta
+//│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > AA⁰(x³⁸) ->
 //│ deforest > 	match: p²
@@ -1062,6 +1908,22 @@ fun id(x) = x
 fun f1(a) = if a is AA(i) then i
 fun f2(a) = if a is AA(i) then i + 1
 f1(id(AA(1))) + f2(id(AA(2)))
+//│ deforest > >>> effect-analysis results >>>
+//│ deforest > function f1#0 @ f1@f1 -> UnsafeEta
+//│ deforest > function f1#0 @ f1@f1 -> UnsafeEta
+//│ deforest > function f2#0 @ f2@f2 -> UnsafeEta
+//│ deforest > function f2#0 @ f2@f2 -> UnsafeEta
+//│ deforest > function id#0 @ id@id -> Pure
+//│ deforest > function id#0 @ id@id -> Pure
+//│ deforest > function id#0 @ id@id -> Pure
+//│ deforest > call +@result @ <root> -> Pure
+//│ deforest > call +@result @ f2@f2 -> Pure
+//│ deforest > call +@result @ f2@f2 -> Pure
+//│ deforest > call f1@result @ <root> -> UnsafeEta
+//│ deforest > call f2@result @ <root> -> UnsafeEta
+//│ deforest > call id@result @ <root> -> Pure
+//│ deforest > call id@result @ <root> -> Pure
+//│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > AA⁰(2) ->
 //│ deforest > 	match: a⁹
@@ -1081,6 +1943,27 @@ fun f1(a1) = if a1 is AA(a) then a + 1
 fun f2(a2) = if a2 is AA(a) then a + 2
 fun wrap(a) = a
 f1(wrap(p(2))) + f2(p(1))
+//│ deforest > >>> effect-analysis results >>>
+//│ deforest > function f1#0 @ f1@f1 -> UnsafeEta
+//│ deforest > function f1#0 @ f1@f1 -> UnsafeEta
+//│ deforest > function f2#0 @ f2@f2 -> UnsafeEta
+//│ deforest > function f2#0 @ f2@f2 -> UnsafeEta
+//│ deforest > function p#0 @ p@p -> UnsafeEta
+//│ deforest > function p#0 @ p@p -> UnsafeEta
+//│ deforest > function p#0 @ p@p -> UnsafeEta
+//│ deforest > function wrap#0 @ wrap@wrap -> Pure
+//│ deforest > function wrap#0 @ wrap@wrap -> Pure
+//│ deforest > call +@result @ <root> -> Pure
+//│ deforest > call +@result @ f1@f1 -> Pure
+//│ deforest > call +@result @ f1@f1 -> Pure
+//│ deforest > call +@result @ f2@f2 -> Pure
+//│ deforest > call +@result @ f2@f2 -> Pure
+//│ deforest > call f1@result @ <root> -> UnsafeEta
+//│ deforest > call f2@result @ <root> -> UnsafeEta
+//│ deforest > call p@result @ <root> -> UnsafeEta
+//│ deforest > call p@result @ <root> -> UnsafeEta
+//│ deforest > call wrap@result @ <root> -> Pure
+//│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > AA⁰(x³⁹) ->
 //│ deforest > 	match: a2³
