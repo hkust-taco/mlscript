@@ -33,6 +33,18 @@ object Inheritance:
 
   def isOpen(d: TermDefinition): Bool = d.body.isEmpty || hasModifier(d, Keyword.`open`)
 
+  /** Symbol states identify compilation units, including all blocks of a worksheet. Source
+    * locations cannot establish this boundary: generated classes may have no source location,
+    * and imported aliases must retain the defining class's unit rather than the alias's unit.
+    */
+  def validateParent(child: ClassLikeDef, parent: ClassLikeDef, site: Term.New)(using Erasure, Raise): Unit =
+    if parent.isInstanceOf[ClassDef] && (parent.sym.getState isnt child.sym.getState) &&
+        !hasModifier(parent, Keyword.`open`) && !hasModifier(parent, Keyword.`abstract`) then
+      raise(ErrorReport(
+        msg"Cannot extend sealed class '${parent.sym.nme}' outside its compilation unit" -> site.toLoc ::
+          (msg"Class '${parent.sym.nme}' is defined here; declare it 'open' or 'abstract' to allow external subclasses" -> parent.toLoc) :: Nil,
+        source = Diagnostic.Source.Compilation))
+
   /** An ancestor may itself be a target (one receiver overrides a member, another inherits it).
     * Discard less-specific common ancestors, so a chain of overrides is not an ambiguity.
     */

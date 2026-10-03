@@ -161,11 +161,12 @@ final class Erasure private (using Config, Ctx, State)(using Raise):
         case _ => ()
     visit(root)
 
-    def parentClass(parent: New): Opt[ClassLikeDef] =
-      parent.cls.resolvedSym.flatMap(_.asClsOrMod).flatMap(_.defn).orElse:
-        ClassValueShape.targetsOf(parent) match
-          case target :: Nil => S(ClassValueShape.definitionOf(target))
-          case _ => N
+    def parentClasses(parent: New): Ls[ClassLikeDef] =
+      (parent.cls.resolvedSym.flatMap(_.asClsOrMod).flatMap(_.defn).toList :::
+        ClassValueShape.targetsOf(parent).map(ClassValueShape.definitionOf)).distinct
+    def parentClass(parent: New): Opt[ClassLikeDef] = parentClasses(parent) match
+      case cls :: Nil => S(cls)
+      case _ => N
 
     // No erased representation is read until every interpretation has been validated and every
     // nominal parent header has been published, including forward and external declarations.
@@ -173,12 +174,15 @@ final class Erasure private (using Config, Ctx, State)(using Raise):
       case term: Term => term.typeInterpretation.foreach(_.validate(Set.empty))
       case _ => ()
     statements.foreach:
-      case cls: ClassLikeDef => cls.sym match
-        case sym: ClassLikeSymbol if sym.irClassHeader.isEmpty =>
-          sym.irClassHeader = cls.ext match
-            case N => S(ClassHeader(N))
-            case S(parent) => parentClass(parent).flatMap(_.sym.asClsOrMod).map(p => ClassHeader(S(p)))
-        case _ => ()
+      case cls: ClassLikeDef =>
+        cls.ext.foreach: extension =>
+          parentClasses(extension).foreach(Inheritance.validateParent(cls, _, extension))
+        cls.sym match
+          case sym: ClassLikeSymbol if sym.irClassHeader.isEmpty =>
+            sym.irClassHeader = cls.ext match
+              case N => S(ClassHeader(N))
+              case S(parent) => parentClass(parent).flatMap(_.sym.asClsOrMod).map(p => ClassHeader(S(p)))
+          case _ => ()
       case _ => ()
 
     // Public members replace inherited names; private members retain their declaration identity.

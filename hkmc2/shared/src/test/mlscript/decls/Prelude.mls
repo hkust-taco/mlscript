@@ -4,7 +4,7 @@ declare type Any
 declare type Anything
 declare type Nothing
 
-declare class Object {
+declare open class Object {
   fun toString(): Str
 }
 declare fun Object(...args): Object // TODO: use an optional parameter when supported
@@ -49,7 +49,7 @@ declare class BigInt {
 declare fun BigInt(value: Str | Int | Bool | BigInt): BigInt
 declare module BigInt
 
-declare class Function {
+declare open class Function {
   val name: Str
   fun bind(thisArg, ...args): Function
   fun apply(thisArg, args: Array): Any
@@ -579,7 +579,7 @@ declare module runtime {
 declare val document: dyn
 declare val customElements: dyn
 // Preserve the nominal superclass while its host members remain dynamic.
-declare class HTMLElement {
+declare open class HTMLElement {
   val textContent: dyn
   val innerHTML: dyn
   val shadowRoot: dyn
