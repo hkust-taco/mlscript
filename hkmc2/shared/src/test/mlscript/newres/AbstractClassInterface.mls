@@ -1,0 +1,20 @@
+:.
+
+// The annotation names the interface that subclasses of the abstract class
+// conform to. The following braces contain the class body, not a refinement
+// of the interface; its methods must remain available to subclasses.
+type Named = {name: Str}
+abstract class NamedBase(prefix: Str): Named {
+  fun label(suffix: Str): Str = prefix + suffix
+}
+class NamedChild extends NamedBase("hello ") {
+  val name: Str = this.label("world")
+}
+fun readName(value: Named): Str = value.name
+fun labelThroughBase(value: NamedBase): Str = value.label("base")
+
+:expect ["hello world", "hello base"]
+let child = new NamedChild
+[readName(child), labelThroughBase(child)]
+//│ = ["hello world", "hello base"]
+//│ child = NamedChild { name: "hello world" }
