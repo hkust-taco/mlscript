@@ -7,13 +7,15 @@
 //│ eta-expansion > <<< eta-expansion targets shapes <<<
 
 
-fun effect() = print()
+let state = 0
+fun effect() = set state += 42
 //│ flow-analysis > >>> effect-analysis results >>>
 //│ flow-analysis > function effect#0 @ <root> -> UnsafeEta
-//│ flow-analysis > call print@result @ <root> -> UnsafeEta
+//│ flow-analysis > call +@result @ <root> -> Pure
 //│ flow-analysis > <<< effect-analysis results <<<
 //│ eta-expansion > >>> eta-expansion targets shapes >>>
 //│ eta-expansion > <<< eta-expansion targets shapes <<<
+//│ state = 0
 
 
 // * Pure doesn't prevent eta-expansion.
@@ -54,7 +56,6 @@ node()()
 //│ flow-analysis > <<< effect-analysis results <<<
 //│ eta-expansion > >>> eta-expansion targets shapes >>>
 //│ eta-expansion > <<< eta-expansion targets shapes <<<
-//│ > 
 //│ = 42
 
 
@@ -105,5 +106,4 @@ node()()()
 //│ eta-expansion > >>> eta-expansion targets shapes >>>
 //│ eta-expansion > node⁰#0 @ <root>: [0, 0]
 //│ eta-expansion > <<< eta-expansion targets shapes <<<
-//│ > 
 //│ = 42
