@@ -434,7 +434,7 @@ let changingParent = makeParent(4)
 class SavedParent extends changingParent { override fun f() = super.f() }
 set changingParent = makeParent(9)
 (new SavedParent).f()
-//│ ╔══[INTERNAL ERROR] Compiler reached an unexpected state at 'NewResolver.scala:2840'
+//│ ╔══[INTERNAL ERROR] Compiler reached an unexpected state at 'NewResolver.scala:2874'
 //│ ╟── The compilation result may be incorrect.
 //│ ╙── This is a compiler bug; please report it to the maintainers.
 //│ = 4
@@ -449,7 +449,7 @@ let changingHolder = Holder(5)
 class SavedNestedParent extends changingHolder.Parent { override fun f() = super.f() }
 set changingHolder = Holder(11)
 (new SavedNestedParent).f()
-//│ ╔══[INTERNAL ERROR] Compiler reached an unexpected state at 'NewResolver.scala:2840'
+//│ ╔══[INTERNAL ERROR] Compiler reached an unexpected state at 'NewResolver.scala:2874'
 //│ ╟── The compilation result may be incorrect.
 //│ ╙── This is a compiler bug; please report it to the maintainers.
 //│ = 5

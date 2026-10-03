@@ -875,7 +875,7 @@ class NewResolver:
           val bindings = instances.filter((parameter, _) => lexical(parameter))
             .map((parameter, instance) => parameter -> instanceType(instance)) ++
             nominal.bindings.map((parameter, bound) => parameter -> bound.instantiate(instances))
-          nominal.copy(bindings = bindings, parent = nominal.parent.map(instantiateShape(_, instances)))(nominal.annotation)(this)
+          nominal.copy(bindings = bindings, parent = nominal.parent.map(instantiateShape(_, instances)))(nominal.annotation, nominal.provenance)(this)
         case record: RecordTypeShape =>
           RecordTypeShape(record.fields.map((name, tpe) => name -> tpe.instantiate(instances)))(record.source, record.declarations)
         case contextual: ContextualShape => contextual.copy(instances = instances.withOverrides(contextual.instances))
@@ -996,7 +996,7 @@ class NewResolver:
                 val parameters = nominalLexicalBinders(defn) ++ defn.tparams.map(_.sym)
                 val bindings = bind(defn.tparams).filter((parameter, _) => parameters(parameter))
                 defn.ext match
-                  case N => publish(NominalInstanceView(defn, bindings, implicitParent(defn))(S(source))(this))
+                  case N => publish(NominalInstanceView(defn, bindings, implicitParent(defn))(S(source), ShapeProvenance.empty)(this))
                   case S(parent) =>
                     // Only the parent's declared type is relevant here. Evaluating
                     // its constructor arguments would reintroduce implementation flow.
@@ -1007,7 +1007,7 @@ class NewResolver:
                     withTypeDependencies(parentType): dependencies =>
                       val local = captureNominalBindings(defn, bindings.filter((symbol, _) => dependencies(symbol)))
                       listenTypeViews(declaredType(parentType, local), mergeIntersections): ext =>
-                        publish(NominalInstanceView(defn, bindings, S(ext))(S(source))(this))
+                        publish(NominalInstanceView(defn, bindings, S(ext))(S(source), ShapeProvenance.empty)(this))
               case TypeShape.Alias(symbol, rhs) =>
                 // Revisiting the same alias reference without reaching a structural
                 // shape supplies no additional interface. Track
@@ -1053,7 +1053,7 @@ class NewResolver:
                   , fields.exists(!_.isInstanceOf[Fld]), N)
                   case single => DeclaredParams(S(declaredType(typeResolution(single), current.copy(positive = !current.positive)(current.origin))) :: Nil, false, N)
                 publish(CallableTypeShape(source, ps ne_:: Nil,
-                  S(declaredType(ret, current)), N, N, N))
+                  S(declaredType(ret, current)), N, N, N, N))
               case TypeShape.Polymorphic(params, _, body) =>
                 val symbols = params.map(_.parameter.symbol)
                 val lexical = current.copy(bindings = current.bindings -- symbols, instances = current.instances.without(symbols))(current.origin)
@@ -1116,6 +1116,50 @@ class NewResolver:
   private[semantics] def resultSignature(td: TermDefinition)(using NewResolverState): Opt[Term] = td.tsym.decl match
     case S(p: Param) => p.sign
     case _ => td.resultSignature
+
+  private def promiseShape(annotation: Annot.Async): NominalInstanceView =
+    val cls = prelude.builtins.Promise.defn.get
+    // The prelude currently exposes an unparameterized Promise interface. Do
+    // not propagate the body's fields to the wrapper or invent a payload type.
+    softAssert(cls.tparams.isEmpty && cls.ext.isEmpty,
+      "The builtin Promise must expose a non-generic interface with the implicit Object parent")
+    val provenance = ShapeProvenance(
+      msg"This async annotation wraps the body's result in a promise." -> N :: Nil).withTypeOrigin(annotation)
+    NominalInstanceView(cls, Map.empty, implicitParent(cls))(N, provenance)(this)
+
+  /** Result annotations constrain the body before async lowering. Consumers of
+    * the function observe the wrapper, including when the body always throws.
+    * Keep this distinction shared by calls and higher-order inference.
+    * Declared types use the supplied instances, while inferred values stay at
+    * their lexical endpoint: callers must exit the definition's scope before
+    * substituting them, so candidates from distinct calls remain separate.
+    */
+  private def listenDefinitionResult(td: TermDefinition, instances: TypeSubstitution)(listener: Listener)(using NewResolverState): Unit =
+    td.asyncAnnotation match
+      case S(annotation) => listener(promiseShape(annotation))
+      case N => td.sign match
+        case S(sign) => listenSignatureResult(declaredType(typeResolution(sign), Map.empty).instantiate(instances),
+          if td.flags.hasResultAnnotation then 0 else td.params.length)(listener)
+        case N => td.body.foreach(body => listenResult(body)(listener))
+
+  /** Observe one application of a declared callable. Partial application keeps
+    * the async wrapper pending, even across the nested arrows of a full signature.
+    */
+  private[semantics] def listenCallableResult(callable: CallableTypeShape)(listener: Listener)(using NewResolverState): Unit =
+    callable.asyncResult match
+      case S(AsyncResult(annotation, 1)) =>
+        softAssert(callable.paramLists.tail.isEmpty)
+        listener(promiseShape(annotation))
+      case pending =>
+        val remaining = pending.map(info => info.copy(remainingLists = info.remainingLists - 1))
+        callable.paramLists.tail match
+          case tail: NELs[DeclaredParams] => listener(callable.copy(paramLists = tail, asyncResult = remaining))
+          case Nil => callable.result match
+            case S(tpe) if remaining.nonEmpty => listenTypeViews(tpe):
+              case Marked(next: CallableTypeShape, marks) => listener(Marked(next.copy(asyncResult = remaining), marks))
+              case other => listener(other)
+            case S(tpe) => listenTypeInstances(tpe)(listener)
+            case N => listener(UnknownValueShape.at(callable.source))
 
   /** Retain a scope transfer on the reference, including deferred fields and
     * both argument parts. Flatten existing transfers before interning, so a
@@ -1189,7 +1233,8 @@ class NewResolver:
             val generic = interface match
               case callable: CallableTypeShape if !isByName(td) =>
                 val parameters = td.tparams.toList.flatten.map(p => declaredParameter(p.sym)) ::: callable.tparams
-                callable.copy(scheme = if parameters.isEmpty then N else S(TypeScheme(td.tsym, parameters)), declaration = S(td))
+                callable.copy(scheme = if parameters.isEmpty then N else S(TypeScheme(td.tsym, parameters)), declaration = S(td),
+                  asyncResult = td.asyncAnnotation.map(AsyncResult(_, td.params.length)))
               case instance: InstanceShape if !isByName(td) =>
                 InstanceShape(quantifiedType(instance.tpe, td.tparams.toList.flatten.map(_.sym)))
               case _ => interface
@@ -1211,7 +1256,9 @@ class NewResolver:
           else td.params match
             case params: NELs[ParamList] => publish(CallableTypeShape(source,
               params.ne_map(ps => DeclaredParams(ps.params.map(_.sign.map(signature(_, !positive))),
-                ps.restParam.nonEmpty, ps.restParam.flatMap(_.sign).map(signature(_, !positive)))), result, N, N, S(td)))
+                ps.restParam.nonEmpty, ps.restParam.flatMap(_.sign).map(signature(_, !positive)))),
+              result, N, N, S(td), N))
+            case Nil if td.asyncAnnotation.nonEmpty => publish(promiseShape(td.asyncAnnotation.get))
             case Nil => result match
               case S(tpe) => listenTypeInstances(tpe)(publish)
               case N =>
@@ -1526,10 +1573,8 @@ class NewResolver:
         case Lam(_, body) => listenResult(body)(shape => listener(instantiateShape(shape, instances)))(using rstate.withInstances(instances))
         case _ => ()
       case ds: DefnShape => ds.defn match
-        case td: TermDefinition => td.sign match
-          case S(sign) => listenSignatureResult(declaredType(typeResolution(sign), Map.empty).instantiate(instances),
-            if td.flags.hasResultAnnotation then 0 else td.params.length)(listener)
-          case N => td.body.foreach(body => listenResult(body)(shape => listener(instantiateShape(shape, instances)))(using rstate.withInstances(instances)))
+        case td: TermDefinition => listenDefinitionResult(td, instances)(shape =>
+          listener(instantiateShape(shape, instances)))(using rstate.withInstances(instances))
         case _ => ()
       case _ => ()
     def matchLists(expected: DeclaredType, remaining: Ls[(ParamList, Ls[Marks])])(using NewResolverState): Unit =
@@ -1592,9 +1637,7 @@ class NewResolver:
                 def receive(shape: TermShape)(using NewResolverState): Unit = shape.exit(actualContext).enter(expectedContext) match
                   case value: TermShape => inferTypeArguments(ret, value, marks)
                   case NoShape => ()
-                givenType.paramLists.tail match
-                  case Nil => givenType.result.foreach(listenTypeInstances(_)(receive))
-                  case tail: NELs[DeclaredParams] => receive(givenType.copy(paramLists = tail))
+                listenCallableResult(givenType)(receive)
           case _ => ()
       case _ => matchLists(expected, actual.unappliedParams)
 
@@ -1617,7 +1660,7 @@ class NewResolver:
         val cls = prelude.builtins.Array.defn.get
         softAssert(cls.tparams.length == 1, "The builtin Array must have one element type parameter")
         val elements = new TypeResolution(tuple.source, messages => resolError(tuple.source, messages))
-        val parent = NominalInstanceView(cls, Map(cls.tparams.head.sym -> declaredType(elements, Map.empty)), implicitParent(cls))(N)(this)
+        val parent = NominalInstanceView(cls, Map(cls.tparams.head.sym -> declaredType(elements, Map.empty)), implicitParent(cls))(N, ShapeProvenance.empty)(this)
         tupleArrayParents(new Identity(tuple)) = parent
         tuple.segments.foreach: segment =>
           listenTupleField(segment.element): value =>
@@ -1645,7 +1688,7 @@ class NewResolver:
         // on the whole interface would also exit a selected method's class scope
         // twice, once here and once in NominalInstanceView.getMemberImpl.
         val element = transportType(declaredType(elements, Map.empty), context :: Nil)
-        val shape = NominalInstanceView(cls, Map(param -> element), implicitParent(cls))(N)(this)
+        val shape = NominalInstanceView(cls, Map(param -> element), implicitParent(cls))(N, ShapeProvenance.empty)(this)
         rstate.mutableArrays(new Identity(source)) = shape
         listenTerm(underlying): tuple =>
           listenArrayElements(tuple): element =>
@@ -2432,11 +2475,7 @@ class NewResolver:
           case value: TermShape =>
             publishViewed(res, value, TypeSubstitution.empty)(using rstate.withInstances(callerInstances))
           case NoShape => ()
-        callable.paramLists.tail match
-          case Nil => callable.result match
-            case S(tpe) => listenTypeInstances(tpe)(publish)
-            case N => publish(UnknownValueShape.at(callable.source))
-          case tail: NELs[DeclaredParams] => publish(callable.copy(paramLists = tail))
+        listenCallableResult(callable)(publish)
         return
       case _ => ()
     // log(s"appShape? lhs = $lhs, args = $args, res = $res")
@@ -2488,15 +2527,10 @@ class NewResolver:
             register
           case _ =>
             log(s"appShape: td.body = ${td.body}")
-            td.sign match
-              case S(sign) =>
-                val count = if td.flags.hasResultAnnotation then 0 else td.params.length
-                listenSignatureResult(declaredType(typeResolution(sign), Map.empty).instantiate(instances), count): result =>
-                  transportShape(result, mss) match
-                    case value: TermShape =>
-                      publish(value)
-                    case NoShape => ()
-              case N => td.body.foreach(go(_, mss))
+            listenDefinitionResult(td, instances): result =>
+              transportShape(result, mss) match
+                case value: TermShape => publish(value)
+                case NoShape => ()
         case _ =>
           softAssert(rstate.hasError(res))
       case (sh: IntroShape, mss) =>
@@ -2940,7 +2974,9 @@ class NewResolver:
           def showDbg(using DebugPrinter): Str = s"result of ${td.tsym.nme}"
         rstate.byNameResults(key) = host
         listenValueHost(host)(listener)
-        listenResult(body)(publishActivated(host, _))
+        td.asyncAnnotation match
+          case S(annotation) => publishActivated(host, promiseShape(annotation))
+          case N => listenResult(body)(publishActivated(host, _))
 
   def pipeTerm(from: Term, to: ShapeHost)(using NewResolverState): Unit =
     log(s"pipeTerm: from = ${from.showDbg}, to = ${to.showDbg}; ${to.currentShapes}")
@@ -2950,7 +2986,7 @@ class NewResolver:
   // Classes without an explicit parent expose Object's declarations. Share this
   // root interface between inferred instances, nominal annotations, and this-values;
   // Object itself must terminate the chain. This does not add a runtime constructor call.
-  private lazy val objectShape = NominalInstanceView(prelude.builtins.Object.defn.get, Map.empty, N)(N)(this)
+  private lazy val objectShape = NominalInstanceView(prelude.builtins.Object.defn.get, Map.empty, N)(N, ShapeProvenance.empty)(this)
   private def implicitParent(defn: ClassLikeDef): Opt[TermShape] =
     if defn.sym is prelude.builtins.Object then N else S(objectShape)
 
@@ -3091,7 +3127,8 @@ class NewResolver:
             else callerInstances.without(td.tparams.toList.flatten.map(_.sym))
           def receive(shape: TermShape)(using NewResolverState): Unit =
             wrappedListener(instantiateShape(shape, instances))(using rstate.withInstances(callerInstances))
-          resultSignature(td) match
+          if td.asyncAnnotation.nonEmpty then receive(promiseShape(td.asyncAnnotation.get))
+          else resultSignature(td) match
             case S(sign) =>
               val result = declaredType(typeResolution(sign), Map.empty).instantiate(instances)
               val tpe = if isByName(td) then result else quantifiedType(result, td.tparams.toList.flatten.map(_.sym))
@@ -3601,13 +3638,7 @@ class NewResolver:
       val flow = resultFlow(body)
       if flow.normal then listen(body, discardMarks)(listener)
       flow.exits.getOrElse(S(label), Vector.empty).foreach(value => listen(value, discardMarks)(listener))
-    case Annotated(annotation @ Annot.Async(), _) =>
-      // Async lowering wraps the result in a promise. Point to the annotation
-      // that changes the result, rather than suggesting that the body's shape
-      // is unknown. The declared Promise interface is not yet connected here.
-      listener(UnknownValueShape(trm, fromPublicInterface = false)(ShapeProvenance(
-        (msg"This async expression returns a promise, rather than the value of its body." -> annotation.toLoc) ::
-        (msg"Member resolution for async results is not supported yet." -> N) :: Nil)))
+    case Annotated(annotation @ Annot.Async(), _) => listener(promiseShape(annotation))
     case Annotated(_, target) => listen(target, discardMarks)(listener)
     case _: Assgn | _: Drop => listener(unitResultShape)
     case _: Ret | _: Break | _: Throw | _: Continue => () // These expressions do not complete normally.

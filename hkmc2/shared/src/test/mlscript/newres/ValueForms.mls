@@ -48,11 +48,10 @@ promise.answer
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
 //│ ║  l.47: 	promise.answer
 //│ ║        	^^^^^^^^^^^^^^
-//│ ╟── Cannot resolve member 'answer' of a value with unknown shape.
-//│ ╟── This async expression returns a promise, rather than the value of its body.
+//│ ╟── Value of type 'Promise' does not contain member 'answer'
 //│ ║  l.46: 	let promise = @annotations.async {answer: 42}
 //│ ║        	              ^^^^^^^^^^^^^^^^^^
-//│ ╙── Member resolution for async results is not supported yet.
+//│ ╙── This async annotation wraps the body's result in a promise.
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ promise = Promise {}
 

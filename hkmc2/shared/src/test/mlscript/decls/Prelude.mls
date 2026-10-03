@@ -176,7 +176,7 @@ declare module BigInt64Array
 declare class BigUint64Array
 declare module BigUint64Array
 
-declare class Promise {
+declare class Promise(executor: (Function, Function) -> Any) {
   fun id"then"(onFulfilled: Function, ...onRejected): Promise
 }
 declare module Promise {
@@ -560,7 +560,7 @@ declare module annotations {
 }
 
 declare module handlers {
-  fun await
+  fun await(promise: Promise): Any
 }
 
 declare module scope {

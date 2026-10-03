@@ -17,47 +17,45 @@ Promise.reject("failed").then((value: dyn) => value, (reason: dyn) => "recovered
 Promise.all([Promise.resolve(20), Promise.resolve(22)]).then((values: dyn) => values.at(0) + values.at(1))
 //│ = 42
 
-// Async expressions execute, but do not yet expose the declared Promise interface.
+// Async expressions expose the same Promise interface as declared factories.
 :await
 :expect {answer: 42}
 @annotations.async {answer: 42}
 //│ = {answer: 42}
 
-:e
+:await
+:expect 42
 let asyncResult = @annotations.async {answer: 42}
 asyncResult.then((value: dyn) => value.answer)
-//│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.28: 	asyncResult.then((value: dyn) => value.answer)
-//│ ║        	^^^^^^^^^^^^^^^^
-//│ ╟── Cannot resolve member 'then' of a value with unknown shape.
-//│ ╟── This async expression returns a promise, rather than the value of its body.
-//│ ║  l.27: 	let asyncResult = @annotations.async {answer: 42}
-//│ ║        	                  ^^^^^^^^^^^^^^^^^^
-//│ ╙── Member resolution for async results is not supported yet.
-//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ = 42
 //│ asyncResult = Promise {}
 
-// The unknown async result must retain its origin through a function call.
+// The Promise interface and its async origin survive a function call.
 :e
 fun makePromise() = @annotations.async {answer: 42}
 makePromise().answer
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.43: 	makePromise().answer
+//│ ║  l.36: 	makePromise().answer
 //│ ║        	^^^^^^^^^^^^^^^^^^^^
-//│ ╟── Cannot resolve member 'answer' of a value with unknown shape.
-//│ ╟── This async expression returns a promise, rather than the value of its body.
-//│ ║  l.42: 	fun makePromise() = @annotations.async {answer: 42}
+//│ ╟── Value of type 'Promise' does not contain member 'answer'
+//│ ║  l.35: 	fun makePromise() = @annotations.async {answer: 42}
 //│ ║        	                    ^^^^^^^^^^^^^^^^^^
-//│ ╙── Member resolution for async results is not supported yet.
+//│ ╙── This async annotation wraps the body's result in a promise.
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
-// FIXME: An async function's caller currently sees the body's shape, although
-// lowering wraps the result in a promise. This selection should be rejected.
-:breakme
+// Async functions expose Promise, so selecting a field of their body is invalid.
 :e
 @annotations.async
 fun asyncFunction() = {answer: 42}
 asyncFunction().answer
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.50: 	asyncFunction().answer
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Value of type 'Promise' does not contain member 'answer'
+//│ ║  l.48: 	@annotations.async
+//│ ║        	^^^^^^^^^^^^^^^^^^
+//│ ╙── This async annotation wraps the body's result in a promise.
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 // FIXME: Await does not yet propagate the fulfilled value's interface.
 :fixme
@@ -68,9 +66,235 @@ fun awaitAnswer() =
   let value = handlers.await(Promise.resolve({answer: 42}))
   value.answer
 awaitAnswer()
-//│ ╔══[COMPILATION ERROR] This selection of member 'answer' has no resolved target
-//│ ║  l.69: 	  value.answer
-//│ ╙──      	  ^^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.67: 	  value.answer
+//│ ║        	  ^^^^^^^^^^^^
+//│ ╟── Cannot resolve member 'answer' of a value with unknown shape.
+//│ ║  in ../decls/Prelude.mls
+//│ ║  l.562: 	  fun await(promise: Promise): Any
+//│ ║         	                               ^^^
+//│ ╟── Type 'Any' is declared without a member interface.
+//│ ║  l.2: 	declare type Any
+//│ ╙──     	             ^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ ═══[RUNTIME ERROR] Expected: '42', got: 'Promise {}'
 //│ = Promise {}
+
+// Both inferred and annotated bodies expose Promise at the call boundary.
+:await
+:expect 42
+@annotations.async
+fun inferred() = {answer: 42}
+inferred().then((value: {answer: Int}) => value.answer)
+//│ = 42
+
+:await
+:expect 43
+@annotations.async
+fun typed(value: Int): {answer: Int} = {answer: value}
+typed(43).then((value: {answer: Int}) => value.answer)
+//│ = 43
+
+:e
+typed(43).answer
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.99: 	typed(43).answer
+//│ ║        	^^^^^^^^^^^^^^^^
+//│ ╟── Value of type 'Promise' does not contain member 'answer'
+//│ ║  l.93: 	@annotations.async
+//│ ║        	^^^^^^^^^^^^^^^^^^
+//│ ╙── This async annotation wraps the body's result in a promise.
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// Returning explicitly, or returning a closure, must not expose the payload.
+:await
+:expect 44
+@annotations.async
+fun explicitReturn() = return {answer: 44}
+explicitReturn().then((value: {answer: Int}) => value.answer)
+//│ = 44
+
+:e
+@annotations.async
+fun returnedClosure() = () => 42
+returnedClosure()()
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.120: 	returnedClosure()()
+//│ ║         	^^^^^^^^^^^^^^^^^^^
+//│ ╟── Value of type 'Promise' cannot be called like a function.
+//│ ║  l.118: 	@annotations.async
+//│ ║         	^^^^^^^^^^^^^^^^^^
+//│ ╙── This async annotation wraps the body's result in a promise.
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// Async getters and methods obey the same rule as ordinary functions.
+:await
+:expect 45
+@annotations.async
+fun asyncGetter: {answer: Int} = {answer: 45}
+asyncGetter.then((value: {answer: Int}) => value.answer)
+//│ = 45
+
+:await
+:expect 46
+class AsyncMethods with
+  @annotations.async
+  fun fetch(value: Int): {answer: Int} = {answer: value}
+(new AsyncMethods).fetch(46).then((value: {answer: Int}) => value.answer)
+//│ = 46
+
+// Partial application is still a function; only the last call returns Promise.
+:await
+:expect 47
+@annotations.async
+fun curried(x: Int)(y: Int): Int = x + y
+let remaining = curried(20)
+remaining(27).then((value: Int) => value)
+//│ = 47
+//│ remaining = fun
+
+:e
+curried(20).then((value: Int) => value)
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.157: 	curried(20).then((value: Int) => value)
+//│ ║         	^^^^^^^^^^^^^^^^
+//│ ╟── Function 'curried' does not contain member 'then'
+//│ ║  l.149: 	@annotations.async
+//│ ║         	^^^^^^^^^^^^^^^^^^
+//│ ║  l.150: 	fun curried(x: Int)(y: Int): Int = x + y
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// Generic result inference through a callback must infer Promise, not the body.
+:await
+:expect 42
+fun invoke[T](callback: () -> T): T = callback()
+invoke(inferred).then((value: {answer: Int}) => value.answer)
+//│ = 42
+
+:await
+:expect 48
+invoke(() => typed(48)).then((value: {answer: Int}) => value.answer)
+//│ = 48
+
+// Throwing bodies still have the async calling interface, even without returns.
+@annotations.async
+fun throws() = throw new Error("failed")
+fun inspectThrows() = throws().then((value: Any) => 0)
+
+// The built-in Promise must be used even when a local declaration shadows it.
+:await
+:expect 49
+fun shadowed() =
+  class Promise
+  @annotations.async
+  fun result() = 49
+  result().then((value: Int) => value)
+shadowed()
+//│ = 49
+
+// Separate signatures describe the body's result, including curried arrows.
+:await
+:expect 50
+fun separatelyTyped: Int -> Int -> Int
+@annotations.async
+fun separatelyTyped(x)(y) = x + y
+let typedRemaining = separatelyTyped(20)
+typedRemaining(30).then((value: Int) => value)
+//│ = 50
+//│ typedRemaining = fun
+
+:e
+separatelyTyped(20).then((value: Int) => value)
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.208: 	separatelyTyped(20).then((value: Int) => value)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Function with a declared signature does not contain member 'then'
+//│ ║  l.199: 	fun separatelyTyped: Int -> Int -> Int
+//│ ╙──       	                            ^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// A generic async signature must retain Promise after explicit specialization.
+:await
+:expect 51
+@annotations.async
+fun generic[T](value: T): T = value
+generic[Int](51).then((value: Int) => value)
+//│ = 51
+
+// Typed higher-order inference must also see the wrapped result.
+:await
+:expect 52
+fun invokeWith[T](callback: Int -> T): T = callback(52)
+invokeWith(typed).then((value: {answer: Int}) => value.answer)
+//│ = 52
+
+// Imported interfaces retain async annotations through cloning and completion.
+import "../../mlscript-compile/AsyncLibrary.mls"
+
+:await
+:expect 53
+AsyncLibrary.inferred().then((value: {answer: Int}) => value.answer)
+//│ = 53
+
+:await
+:expect 54
+AsyncLibrary.typed(54).then((value: {answer: Int}) => value.answer)
+//│ = 54
+
+:await
+:expect 55
+AsyncLibrary.curried(20)(35).then((value: Int) => value)
+//│ = 55
+
+:await
+:expect 56
+AsyncLibrary.getter.then((value: Int) => value)
+//│ = 56
+
+:await
+:expect 57
+fun nominalMethod(receiver: AsyncLibrary.Methods) =
+  receiver.result(57).then((value: Int) => value)
+nominalMethod(new AsyncLibrary.Methods)
+//│ = 57
+
+:e
+AsyncLibrary.inferred().answer
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.263: 	AsyncLibrary.inferred().answer
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Value of type 'Promise' does not contain member 'answer'
+//│ ║  in ../../mlscript-compile/AsyncLibrary.mls
+//│ ║  l.3: 	  @annotations.async
+//│ ║       	  ^^^^^^^^^^^^^^^^^^
+//│ ╙── This async annotation wraps the body's result in a promise.
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// The pending wrapper survives higher-order inference after partial application.
+:await
+:expect 58
+fun finish[T](callback: Int -> T): T = callback(38)
+finish(separatelyTyped(20)).then((value: Int) => value)
+//│ = 58
+
+// An arrow in the payload type is not an extra parameter list of the definition.
+:await
+:expect 59
+fun signedClosure: () -> () -> Int
+@annotations.async
+fun signedClosure() = () => 59
+signedClosure().then((callback: () -> Int) => callback())
+//│ = 59
+
+// An ineffective annotation on a value must not change its interface.
+:w
+:expect 60
+@annotations.async
+val plainValue = {answer: 60}
+plainValue.answer
+//│ ╔══[WARNING] This annotation has no effect.
+//│ ║  l.293: 	@annotations.async
+//│ ╙──       	^^^^^^^^^^^^^^^^^^
+//│ = 60
+//│ plainValue = {answer: 60}

@@ -888,6 +888,13 @@ final case class TermDefinition(
   require(k is tsym.k)
   def bsym: BlockMemberSymbol = sym
   val owner = tsym.owner
+  /** Only function bodies are wrapped by AsyncLowering; annotations on other
+    * definitions are ignored with a warning and must not change their interface.
+    */
+  def asyncAnnotation: Opt[Annot.Async] =
+    if (k is syntax.Fun) && body.nonEmpty then annotations.collectFirst:
+      case annotation: Annot.Async => annotation
+    else N
   /** A result annotation denotes the whole result; a separate function signature
     * includes the arrows corresponding to the definition's written parameter lists.
     */

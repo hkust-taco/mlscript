@@ -399,7 +399,7 @@ class TypeRelationTest extends AnyFunSuite:
     val defn = ClassDef.Plain(N, Cls, symbol, BlockMemberSymbol("Closed", Nil), Nil, N,
       ObjBody(Term.Blk(Nil, Term.UnitVal())), N, Nil, Nil, N)(N)
     h.state.lexicalTypeBinders(symbol) = Set.empty
-    val original = NominalInstanceView(defn, Map.empty, N)(N)(h.resolver)
+    val original = NominalInstanceView(defn, Map.empty, N)(N, ShapeProvenance.empty)(h.resolver)
     val scheme = h.tpe(TypeShape.Top).resolution
     val substitutions = (1 to 16).map: index =>
       val (parameter, _) = h.parameter(s"A$index")

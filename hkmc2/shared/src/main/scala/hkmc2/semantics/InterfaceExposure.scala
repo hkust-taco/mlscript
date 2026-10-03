@@ -179,9 +179,8 @@ final class InterfaceExposure(resolver: NewResolver)(using NewResolverState, TL)
             unknown.enter(marks) match
               case value: TermShape => resolver.exposeTypeHoles(input, value, marks)
               case NoShape => ()
-        callable.result.foreach: result =>
-          watch((result, marks))(resolver.listenTypeInstances(result)): shape =>
-            emit(shape.exit(marks), path)
+        watch((callable, marks, "call result"))(resolver.listenCallableResult(callable)): shape =>
+          emit(shape.exit(marks), path)
       case nominal: NominalInstanceView =>
         // Array element bindings may contain escaping closures. Follow only the
         // declared binding; concrete annotations still hide implementation shapes.

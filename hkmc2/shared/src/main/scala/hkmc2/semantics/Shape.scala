@@ -27,7 +27,7 @@ sealed trait Shape extends ShapeEvent, ShapeLike:
     */
   final def diagnostic(message: Message): Ls[(Message, Opt[Loc])] = this match
     case value: TermShape => value.applicationHead._1 match
-      case view: NominalInstanceView => (message -> view.annotation.flatMap(_.toLoc).orElse(toLoc)) :: Nil
+      case view: NominalInstanceView => view.provenance.diagnostic(message, view.annotation.flatMap(_.toLoc).orElse(toLoc))
       case view: ContextualShape => view.source.diagnostic(message)
       case view: SpecializedShape => view.declaration.diagnostic(message)
       case unknown: UnknownValueShape => unknown.provenance.diagnostic(message, toLoc)
@@ -561,9 +561,11 @@ final case class ActivatedShapeEvent(value: Shape, instances: TypeSubstitution) 
   * In particular, selecting an unannotated field does not inspect its initializer.
   * The annotation is a diagnostic witness, excluded from shape equality; synthesized
   * interfaces such as a tuple's Array parent have no written annotation.
+  * Provenance can instead identify the construct that introduces an interface,
+  * such as the async annotation that creates a Promise result.
   */
 final case class NominalInstanceView(defn: ClassLikeDef, bindings: Map[VarSymbol, DeclaredType],
-    parent: Opt[TermShape])(val annotation: Opt[Term])(resolver: NewResolver) extends CoreHeadShape:
+    parent: Opt[TermShape])(val annotation: Opt[Term], val provenance: ShapeProvenance)(resolver: NewResolver) extends CoreHeadShape:
   def describe: Str = s"value of type '${defn.sym.nme}'"
   def toLoc: Opt[Loc] = defn.toLoc
   override def isInstanceOfClass(cls: ClassLikeDef)(using NewResolverState): Bool =
@@ -584,6 +586,13 @@ final case class NominalInstanceView(defn: ClassLikeDef, bindings: Map[VarSymbol
   */
 final case class DeclaredParams(params: Ls[Opt[DeclaredType]], hasRest: Bool, rest: Opt[DeclaredType])
 
+/** Async lowering wraps the result only after all written parameter lists have
+  * been applied. A separate signature can encode those lists as nested arrows,
+  * so the pending wrapper must survive observing the next callable interface.
+  */
+final case class AsyncResult(annotation: Annot.Async, remainingLists: Int):
+  require(remainingLists > 0)
+
 /** Calls through annotations expose only the declared result. Argument shapes
   * constrain type parameters in the interface; they do not recover its implementation.
   * `scheme` retains binders that are still available for instantiation; capture
@@ -594,7 +603,7 @@ final case class DeclaredParams(params: Ls[Opt[DeclaredType]], hasRest: Bool, re
   */
 final case class CallableTypeShape(source: Term, paramLists: NELs[DeclaredParams],
     result: Opt[DeclaredType], scheme: Opt[TypeScheme], supplied: Opt[Ls[DeclaredType]],
-    declaration: Opt[TermDefinition]) extends CoreHeadShape:
+    declaration: Opt[TermDefinition], asyncResult: Opt[AsyncResult]) extends CoreHeadShape:
   def tparams: Ls[DeclaredTypeParameter] = scheme.toList.flatMap(_.parameters)
   def describe: Str = declaration.fold("function with a declared signature")(d => s"function '${d.bsym.nme}'")
   def toLoc: Opt[Loc] = declaration.fold(source.toLoc)(_.toLoc)
@@ -796,7 +805,7 @@ final case class DynShape() extends CoreHeadShape:
   * Discovery retains one witness per reached shape to bound recursive paths.
   */
 final class ShapeProvenance private (path: => Ls[(Message, Opt[Loc])], notes: => Ls[(Message, Opt[Loc])],
-    typeOrigin: Opt[Term]):
+    typeOrigin: Opt[Located]):
   private lazy val pathNotes = path
   private lazy val originNotes = notes
   /** A type origin anchors the operation's explanation: first trace the value
@@ -809,10 +818,11 @@ final class ShapeProvenance private (path: => Ls[(Message, Opt[Loc])], notes: =>
     case N => (message -> fallback) :: pathNotes ::: originNotes
   def via(note: => (Message, Opt[Loc])): ShapeProvenance =
     new ShapeProvenance(note :: pathNotes, originNotes, typeOrigin)
-  /** Keep the written type restricting this observation separate from the path
-    * through parameters, returns, and storage that led to the observation.
+  /** Keep the annotation providing this interface separate from the path through
+    * parameters, returns, and storage that led to the observation. Besides written
+    * types, an async annotation provides the Promise interface of its result.
     */
-  def withTypeOrigin(source: Term): ShapeProvenance =
+  def withTypeOrigin(source: Located): ShapeProvenance =
     new ShapeProvenance(pathNotes, originNotes, S(source))
 
 object ShapeProvenance:
