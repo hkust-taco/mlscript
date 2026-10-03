@@ -350,8 +350,9 @@ sealed trait NewSelImpl extends NewResolvableImpl:
   // access rather than looking for a nominal field symbol.
   var tupleIndex: Opt[Int] = N
   var resolvedMembers: Ls[BlockMemberSymbol] = Nil // * filled during resolution
-  // Class identity and captures must survive even when candidates share an inherited member.
-  var resolvedClasses: Ls[(ClassSymbol, Ls[Marks])] = Nil
+  // Projection qualifiers disambiguate declarations, independently of runtime captures.
+  // Keep class identities because different classes can select the same inherited member.
+  var resolvedClasses: Ls[ClassSymbol] = Nil
   // Unlike a field whose value happens to be a class, C.class has a class
   // target without an ordinary member. Its receiver remains the class reference.
   def isClassValue(using Erasure): Bool =
@@ -359,10 +360,7 @@ sealed trait NewSelImpl extends NewResolvableImpl:
       !hasDynamicTarget && resolvedTargets.exists(_.isInstanceOf[ClassSymbol])
   def hasAmbiguousClass(using Erasure): Bool = hasAmbiguousClassImpl
   // Also used by the guarded symbol lookup for completed imports.
-  private[semantics] def hasAmbiguousClassImpl: Bool = resolvedClasses.sizeCompare(1) > 0 || self.cls.exists:
-    _.withoutCaptures match
-      case ref: Term.UnresolvedRef => ref.resolvedMembers.distinct.sizeCompare(1) > 0
-      case _ => false
+  private[semantics] def hasAmbiguousClassImpl: Bool = resolvedClasses.sizeCompare(1) > 0
 
 sealed trait UnresolvedRefImpl extends NewResolvableImpl:
   self: Term.UnresolvedRef =>

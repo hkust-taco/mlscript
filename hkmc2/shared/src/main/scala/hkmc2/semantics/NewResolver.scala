@@ -2676,6 +2676,23 @@ class NewResolver:
             () => fromSymbol(sh, value, trm, sym => if recordTargets then recordValueTarget(trm, sym), false))
         case sh: TermShape => value(sh)
 
+  /** Locate a projected declaration in the actual receiver's class ancestry.
+    * Each parent shape carries the crossing from its class into the child, so
+    * keep those crossings before adding the receiver's outer captures.
+    */
+  private def projectedMember(receiver: TermShape, cls: ClassDef, name: Str)(using NewResolverState): Opt[MemberLookup] =
+    val ShapeParts(source, instances, _) = shapeParts(receiver)
+    val (head, marks) = source.applicationHead
+    val member = head match
+      case definition: DefnShape =>
+        if definition.clsDef.contains(cls) then S(definition.getInstanceMember(name))
+        else definition.ext.flatMap(projectedMember(_, cls, name))
+      case base: BaseShape =>
+        if base.defn is cls then S(base.getMember(name))
+        else base.ext.flatMap(projectedMember(_, cls, name))
+      case _ => N
+    member.map(_.withMarks(marks).instantiate(instances))
+
   def newSel(sel: NewSel)(using NewResolverState): Unit =
     log(s"newSel? sel = ${sel.showDbg}")
     def member(info: MemberLookup, description: Message, diagnostic: Message => Ls[(Message, Opt[Loc])],
@@ -2736,13 +2753,11 @@ class NewResolver:
       case S(cls) =>
         listenClass(cls, recordTargets = true)(ref =>
           val cd = ref.definition
-          val marks = ref.marks
-          val candidate = cd.sym -> marks
-          rstate.recordResolution(sel, sel.resolvedClasses.contains(candidate))(sel.resolvedClasses ::= candidate)
+          rstate.recordResolution(sel, sel.resolvedClasses.contains(cd.sym))(sel.resolvedClasses ::= cd.sym)
           listenExt(cd, ext =>
-            val info = DefnShape(cd, ext).getInstanceMember(sel.id.name).withMarks(marks)
+            val info = DefnShape(cd, ext).getInstanceMember(sel.id.name)
             info match
-              case MemberLookup.Found(bms: BlockMemberSymbol, _) =>
+              case MemberLookup.Found(bms: BlockMemberSymbol, declarationMarks) =>
                 // Resolve the projection target even in an unused function. Wait
                 // for the receiver before deciding whether its result may expose
                 // implementation flow or only the declared member signature.
@@ -2760,7 +2775,15 @@ class NewResolver:
                           // it cannot recover that class's implementation arguments.
                           val opaque = abstractType(new TypeResolution(sel, msgs => resolError(sel, msgs)))
                           MemberLookup.Declared(bms, cd.tparams.map(_.sym -> opaque).toMap, context :: Nil, nominal.annotation, true)
-                    case _ => info
+                    case _ =>
+                      // C# selects a declaration, not an instance of C. Transport
+                      // the member through the actual receiver, never the qualifier.
+                      projectedMember(receiver, cd, sel.id.name).getOrElse:
+                        // Without a path into this class, only its declared
+                        // interface is available; qualifier values add no evidence.
+                        val opaque = abstractType(new TypeResolution(sel, msgs => resolError(sel, msgs)))
+                        MemberLookup.Declared(bms, cd.tparams.map(_.sym -> opaque).toMap,
+                          declarationMarks ::: ExitMark(ResolutionBoundary(cd.sym), N, NoMarks) :: Nil, N, true)
                   member(selected, msg"Class '${cd.sym.nme}'", message => (message -> cd.toLoc) :: Nil, TypeSubstitution.empty)
               case _ => member(info, msg"Class '${cd.sym.nme}'", message => (message -> cd.toLoc) :: Nil, TypeSubstitution.empty))
         , sh =>

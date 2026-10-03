@@ -724,17 +724,16 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
     case N => Select(prefix, name)(target, sel.toLoc)(false)
 
   /** A projection must identify its class as well as its member: different
-    * classes can inherit the same definition, and wildcard receivers can differ. */
+    * classes can inherit the same definition. Captures do not disambiguate classes. */
   private def checkProjection(sel: NewSel): Bool = sel.cls match
     case N => true
     case S(cls) =>
       if sel.isErroneous then false
       else if sel.hasAmbiguousClass then
-        // Different instance contexts can lead to the same class declaration.
-        // Preserve the ambiguity, but report each declaration's location once.
+        // Qualifiers denote class declarations; their runtime receivers are irrelevant.
         raise:
           ErrorReport(msg"The projection class is ambiguous" -> cls.toLoc ::
-            sel.resolvedClasses.map(_._1).distinct.map(sym => msg"class: '${sym.nme}'" -> sym.toLoc),
+            sel.resolvedClasses.map(sym => msg"class: '${sym.nme}'" -> sym.toLoc),
             source = Diagnostic.Source.Compilation)
         false
       else if sel.resolvedClasses.isEmpty then
