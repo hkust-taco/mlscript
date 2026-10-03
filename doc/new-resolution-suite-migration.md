@@ -37,15 +37,15 @@ compilation fixture; mixed-mode imports are supported.
 | lifter | 11 | 5 | 16 |
 | meta | 7 | 0 | 7 |
 | nofib | 38 | 0 | 38 |
-| objbuf | 1 | 2 | 3 |
+| objbuf | 2 | 1 | 3 |
 | opt | 30 | 0 | 30 |
 | std | 8 | 2 | 10 |
 | syntax | 11 | 0 | 11 |
 | tailrec | 2 | 3 | 5 |
 | ucs | 69 | 1 | 70 |
-| ups | 59 | 12 | 71 |
+| ups | 60 | 11 | 71 |
 | wasm | 23 | 0 | 23 |
-| Total | 526 | 109 | 635 |
+| Total | 528 | 107 | 635 |
 
 | Compilation suite | New resolution | Legacy resolution | Total |
 | --- | ---: | ---: | ---: |
@@ -100,7 +100,6 @@ following constraints identify the current failing behavior and representative t
 - **Recursive definitions and staged functions:** `basics/FunDefs` and recursive
   getter cases in `tailrec` can overflow during resolution. `block-staging/Functions`
   and `codegen/FirstClassFunctionTransform` encounter unfinished generated symbols.
-  `objbuf/BasicsObjBuf` exceeds the worksheet time limit under new resolution.
 - **Legacy flow analysis:** the `flows` worksheets run a separate flow pass that
   does not handle new-resolution selections and can throw on `NewSel` nodes.
 - **Runtime instrumentation and privacy:** `codegen/ObjectMethodDebinding` loses
@@ -110,9 +109,8 @@ following constraints identify the current failing behavior and representative t
   `ups/SimpleTransform`, `std/RenderingTest`, and regex worksheets use pattern
   values or direct `.unapply`/`.unapplyStringPrefix` access. Range and higher-order
   transformations lack result interfaces in `ups/examples/Computation` and
-  `ups/examples/ListPredicates`. Evaluation-context and Hindley–Milner worksheets
-  additionally need recursive member interfaces; `ups/examples/EvaluationContext`
-  has unknown `freeVars` results and unresolved `show` and `unapply` selections.
+  `ups/examples/ListPredicates`. `ups/examples/EvaluationContext2` and the
+  Hindley–Milner worksheets additionally need recursive member interfaces.
 - **Quasiquotes:** `codegen/Quasiquotes` needs type-selection and generated-reference
   support. Pattern and quote lowering must preserve source targets and receiver paths.
 

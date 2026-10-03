@@ -328,15 +328,8 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
                 )(mod.toLoc)
             case _ => _defn
           reportAnnotations(defn, defn.extraAnnotations)
-          val bufferableAnnots = defn.annotations.flatMap:
-            case Annot.Trm(trm: SynthSel) =>
-              if trm.sym.contains(ctx.builtins.annotations.buffered) then
-                S(false -> trm)
-              else if trm.sym.contains(ctx.builtins.annotations.bufferable) then
-                S(true -> trm)
-              else
-                N
-            case _ => N
+          val bufferableAnnots = defn.annotations.collect:
+            case annot @ Annot.Bufferable(keepInstances) => keepInstances -> annot
           if bufferableAnnots.length > 1 then
             raise(ErrorReport(
               msg"Only one of bufferable annotation is allowed." -> Loc(bufferableAnnots.map(_._2)) :: Nil,

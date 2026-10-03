@@ -2928,7 +2928,7 @@ class NewResolver:
     bms.onComplete: () =>
       log(s"listenedBMS: bms = ${bms.describe}")
       valueTarget(bms, receiver) match
-      case S(sym: (ModuleOrObjectSymbol | TermSymbol | ClassSymbol)) =>
+      case S(sym: (ModuleOrObjectSymbol | TermSymbol | ClassSymbol | PatternSymbol)) =>
         // Selection is independent of the selected value's shape. In particular,
         // an assignment needs its target even if the value has no inferred shape.
         // Pattern resolution supplies its own interpretation of the selected head.
@@ -2936,10 +2936,11 @@ class NewResolver:
         val wrappedListener: Listener = sh =>
           log(s"fromBMS: bms = ${bms.showDbg}, sh = ${sh.shwDbg}, flow = ${resSym.showDbg}, markss = ${markss.map(_.showDbg)}")
           val sh0 = sh
-          // Modules and objects introduce no enter/exit boundary of their own.
-          // Adding an exit here would create a mismatch because we do not track module captures explicitly.
+          // Modules, objects, and runtime pattern objects introduce no value
+          // boundary. Pattern bodies have separate matching scopes; passing the
+          // generated matcher object does not enter or leave those scopes.
           val exited = sym match
-            case _: ModuleOrObjectSymbol => sh
+            case _: ModuleOrObjectSymbol | _: PatternSymbol => sh
             case sym: TermSymbol if sym.k is LetBind => sh
             case _ => MarkedShape.exit(sh, ResolutionBoundary(sym), S(resSym))
           (exited match
@@ -3070,8 +3071,8 @@ class NewResolver:
     * and opened names use the same interpretation as direct references.
     */
   private def valueTarget(member: BlockMemberSymbol, receiver: Bool): Opt[DefinitionSymbol[?]] =
-    if receiver then member.asModOrObj.orElse(member.asTrm).orElse(member.asCls)
-    else member.asTrm.orElse(member.asModOrObj).orElse(member.asCls)
+    if receiver then member.asModOrObj.orElse(member.asTrm).orElse(member.asCls).orElse(member.asPat)
+    else member.asTrm.orElse(member.asModOrObj).orElse(member.asCls).orElse(member.asPat)
 
   def listenTerm(trm: Term)(listener: Listener)(using NewResolverState): Unit =
     log(s"listenTerm: trm = ${trm.showDbg}")

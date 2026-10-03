@@ -654,10 +654,36 @@ class DefnShape(val defn: Definition, val ext: Opt[TermShape]) extends CoreHeadS
     }'${defn.bsym.nme}'"
   // override def toString: String = s"DefnShape(${defn.describe} ${defn.bsym.nme})"
   override def toString: String = s"DefnShape(${defn.describe})"
+  /** Shape-only counterparts of BufferableTransform's static members. The extra
+    * (buffer, index) list precedes the original method/constructor lists; it must
+    * not consume their arguments or expose instance fields as static members.
+    * These fields are never lowered: their symbols identify the generated names.
+    */
+  private lazy val bufferedMembers: Map[Str, RecordMember] = defn match
+    case cls: ClassDef if cls.annotations.exists(_.isInstanceOf[Annot.Bufferable]) =>
+      given Elaborator.State = cls.sym.getState
+      def field(name: Str, value: Term): (Str, RecordMember) =
+        name -> RecordMember(RcdField(Term.Lit(syntax.Tree.StrLit(name)), value), false)
+      def withBuffer(body: Term): Term =
+        val params = PlainParamList(List("buffer", "index").map: name =>
+          Param.simple(VarSymbol(new syntax.Tree.Ident(name), erasedType = N)))(cls.toLoc)
+        Term.Lam(params, body)
+      // Constructors return the allocated index after all their original lists.
+      val ctor = (cls.paramsOpt.toList ::: cls.auxParams).foldRight[Term](Term.Lit(syntax.Tree.IntLit(0))):
+        (params, body) => Term.Lam(params, body)
+      val methods = cls.body.methods.filter(method => method.body.nonEmpty && !method.tsym.isPrivate).map: method =>
+        val ref = Term.MemberRef(method.bsym)(new syntax.Tree.Ident(method.bsym.nme), FlowSymbol.memSym(method.bsym))
+        field(method.bsym.nme, withBuffer(ref))
+      (field("size", Term.Lit(syntax.Tree.IntLit(0))) ::
+        field("ctor", withBuffer(ctor)) :: methods).toMap
+    case _ => Map.empty
+
   protected def getMemberImpl(name: Str)(using NewResolverState): MemberLookup =
     defn match
     case defn: ModuleOrObjectDef =>
       MemberLookup.inClass(defn, ext, name)
+    case cls: ClassDef if cls.annotations.exists(_.isInstanceOf[Annot.Bufferable]) =>
+      bufferedMembers.get(name).fold[MemberLookup](MemberLookup.Missing)(MemberLookup.Found(_, Nil))
     case _: TermDefinition => MemberLookup.Missing
     case _ => MemberLookup.Missing
   def toLoc: Opt[Loc] = defn.sym.toLoc

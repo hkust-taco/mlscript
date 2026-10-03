@@ -85,8 +85,12 @@ fun _try(f: () -> Any) =
 
 
 // For `pattern` definitions
-data class MatchSuccess(output, bindings)
+data class MatchSuccess[out A, out B](output: A, bindings: B)
 data class MatchFailure(errors)
+
+// Runtime pattern objects expose their transformed output through MatchSuccess.
+type MatchResult[A] = MatchSuccess[A, Any] | MatchFailure
+type Pattern[A, B] = { unapply: A -> MatchResult[B] }
 
 // For pattern matching on tuples
 module Tuple with

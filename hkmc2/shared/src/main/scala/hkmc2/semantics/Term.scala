@@ -40,6 +40,8 @@ enum Annot extends Located:
   case RaiseEffects()(val toLoc: Opt[Loc])
   // Whether the function is guaranteed to not raise effects.
   case Pure()(val toLoc: Opt[Loc])
+  // Buffered classes expose generated allocation and access methods on the class value.
+  case Bufferable(keepInstances: Bool)(val toLoc: Opt[Loc])
   case Config(modify: hkmc2.Config => hkmc2.Config)(val toLoc: Opt[Loc])
   // Marks if a function or lambda is one-shot, i.e. called at most once.
   // Functions with multiple parameter lists are considered here as a chain of
@@ -60,7 +62,7 @@ enum Annot extends Located:
   def subTerms: Vector[Term] = this match
     case Trm(trm) => Vector.single(trm)
     case _: Modifier | Untyped() | TailRec() | TailCall() | Inline() | NoInline()
-      | Generator() | Async() | RaiseEffects() | Pure() | _: Config | _: Affine => Vector.empty
+      | Generator() | Async() | RaiseEffects() | Pure() | _: Bufferable | _: Config | _: Affine => Vector.empty
   
   def show(using Scope, ShowCfg, Raise): Document = this match
     case Untyped() => doc"@untyped"
@@ -74,6 +76,7 @@ enum Annot extends Located:
     case Affine(n) => doc"@affine($n)"
     case Modifier(mod) => doc"@${mod.name}"
     case Pure() => doc"@pure"
+    case Bufferable(keepInstances) => if keepInstances then doc"@bufferable" else doc"@buffered"
     case Trm(trm) => doc"@${trm.show}"
     case Config(_) => doc"@config(...)"
   
@@ -1538,10 +1541,7 @@ sealed abstract class ClassLikeDef extends TypeLikeDef:
     case _ => N
   def extraAnnotations(using Ctx): Ls[Annot] = annotations.filter:
     case Annot.Modifier(Keyword.`declare` | Keyword.`abstract` | Keyword.`data`) => false
-    case Annot.Trm(trm: SynthSel) if
-      (kind is Cls) &&
-        (trm.sym.contains(ctx.builtins.annotations.bufferable) ||
-        trm.sym.contains(ctx.builtins.annotations.buffered)) => false
+    case _: Annot.Bufferable if kind is Cls => false
     case _ => true
 
 

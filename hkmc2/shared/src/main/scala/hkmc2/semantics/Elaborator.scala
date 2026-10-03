@@ -808,6 +808,10 @@ extends Importer:
             return S(Annot.Generator()(tree.toLoc))
           case ctx.builtins.annotations.async =>
             return S(Annot.Async()(tree.toLoc))
+          case ctx.builtins.annotations.buffered =>
+            return S(Annot.Bufferable(false)(tree.toLoc))
+          case ctx.builtins.annotations.bufferable =>
+            return S(Annot.Bufferable(true)(tree.toLoc))
           case ctx.builtins.annotations.pure =>
             return S(Annot.Pure()(tree.toLoc))
           case _ => ()
