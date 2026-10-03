@@ -419,3 +419,13 @@ class InheritedPrivateRequirement extends PrivateRequirement { fun hidden() = 1 
 //│ ╟── Member 'hidden' requires an implementation
 //│ ║  l.412: 	abstract class PrivateRequirement { private fun hidden() }
 //│ ╙──       	                                                ^^^^^^
+
+// Different receiver classes can inherit the same declaration without overriding it.
+:expect [1, 1]
+class OtherInherited extends Base
+private fun readInherited(flag) = {
+  let receiver = if flag then new Inherited else new OtherInherited
+  receiver.foo()
+}
+[readInherited(true), readInherited(false)]
+//│ = [1, 1]
