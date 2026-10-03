@@ -1348,9 +1348,9 @@ case class Select(qual: Path, name: Tree.Ident)(val symbol: Opt[DefinitionSymbol
   def extraInfo(using DebugPrinter): Str = symbol.map(s => s"sym=${s.showAsPlain}").mkString
 
 /** Direct lookup on the lexical parent's prototype, with the original receiver as `this`.
-  * `base` is captured when the class is defined, so an extends expression is never re-evaluated
-  * at a super call. Explicit operands preserve this meaning through lifting and inlining.
-  * For Wasm's static dispatch, `base` is a class reference and `symbol` names the called function.
+  * `base` is the same stable parent operand used by the class definition: a direct class
+  * reference or a previously evaluated value. No extends expression is re-evaluated at a
+  * super call. Both operands are explicit so lifting and inlining preserve their bindings.
   */
 case class SuperSelect(qual: Path, base: Path, name: Tree.Ident)(val symbol: TermSymbol, val toLoc: Opt[Loc]) extends Path:
   def withLoc(loc: Opt[Loc]): SuperSelect = if loc == toLoc then this else copy()(symbol, loc)

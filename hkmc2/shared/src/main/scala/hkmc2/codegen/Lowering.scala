@@ -41,6 +41,7 @@ class LoweringCtx(
   val mayRet: Bool, // For rewriting while loop into tail recursive function, represent whether an explicit return is legal in the current block
   private val definedSymsDuringLowering: collection.mutable.Set[ScopedSymbol], // used to create Scoped blocks
   val returnType: Opt[ErasedType], // the declared return type of the enclosing function, used to coerce `return`s
+  val superBases: Map[InnerSymbol, Path], // evaluated parents of the enclosing class definitions
 ):
   val map = initMap
   def collectScopedSym(s: ScopedSymbol) = definedSymsDuringLowering.add(s)
@@ -64,11 +65,13 @@ class LoweringCtx(
 object LoweringCtx:
   def loweringCtx(using sub: LoweringCtx): LoweringCtx = sub
   def empty =
-    LoweringCtx(Map.empty, mayRet = false, collection.mutable.Set.empty, returnType = N)
+    LoweringCtx(Map.empty, mayRet = false, collection.mutable.Set.empty, returnType = N, superBases = Map.empty)
   def nestFunc(returnType: Opt[ErasedType])(using sub: LoweringCtx): LoweringCtx =
-    LoweringCtx(sub.map, mayRet = true, sub.definedSymsDuringLowering, returnType)
+    LoweringCtx(sub.map, mayRet = true, sub.definedSymsDuringLowering, returnType, sub.superBases)
   def nestScoped(using sub: LoweringCtx): LoweringCtx =
-    LoweringCtx(sub.map, sub.mayRet, collection.mutable.Set.empty, sub.returnType)
+    LoweringCtx(sub.map, sub.mayRet, collection.mutable.Set.empty, sub.returnType, sub.superBases)
+  def withSuperBase(owner: InnerSymbol, parent: Path)(using sub: LoweringCtx): LoweringCtx =
+    LoweringCtx(sub.map, sub.mayRet, sub.definedSymsDuringLowering, sub.returnType, sub.superBases + (owner -> parent))
 end LoweringCtx
 
 import LoweringCtx.loweringCtx
@@ -90,20 +93,25 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
   val newResolution: Bool = config.language.useNewResolution
   val strictResolution: Bool = config.language.strictResolution
   
-  // Methods are lowered before their class's extends expression. Reserve the captured parent
-  // here and initialize it at the class definition, in the surrounding lexical scope.
-  private val superBases = scala.collection.mutable.Map.empty[InnerSymbol, TempSymbol]
-  private def superBase(owner: InnerSymbol): TempSymbol =
-    superBases.getOrElseUpdate(owner, TempSymbol(N, erasedType = N, "superBase"))
-  private def captureSuperBase(owner: InnerSymbol, parent: Path)(body: => Block)(using LoweringCtx): Block =
-    superBases.get(owner) match
-      case S(sym) =>
-        // classOf evaluates computed class values into temporaries. The remaining path is
-        // stable across this assignment and the immediately following class definition.
-        softAssert(parent.isPure, "Superclass operand must be evaluated before it is captured")
-        loweringCtx.collectScopedSym(sym)
-        Assign(sym, parent, body)
-      case N => body
+  /** Lower the parent before the class body and share its value with every super reference.
+    * Definition references are stable; classOf already saves computed class values in temporaries.
+    * Other paths (notably a class selected through a mutable receiver) must be read here, once,
+    * so changing that receiver after the class definition cannot redirect its super calls.
+    */
+  private def withClassParent(parent: Path)(k: Path => Block)(using LoweringCtx): Block =
+    def save(path: Path)(k: Path => Block): Block =
+      val saved = loweringCtx.registerTempSymbol(N, erasedType = N, "superBase")
+      Assign(saved, path, k(saved.asSimpleRef))
+    parent match
+      case Value.MemberRef(_, _: ClassSymbol) | Value.SimpleRef(_: TempSymbol) => k(parent)
+      case sel: Select if sel.symbol.exists(_.isInstanceOf[ClassSymbol]) =>
+        // The selected class declaration is immutable, but its receiver might be a variable.
+        // Save that receiver while retaining the class symbol for nominal IR analyses.
+        sel.qual match
+          case _: Value.This | Value.MemberRef(_, _: ClassSymbol | _: ModuleOrObjectSymbol) |
+              Value.SimpleRef(_: TempSymbol) => k(sel)
+          case qual => save(qual)(p => k(sel.copy(qual = p)(sel.symbol, sel.toLoc)(sel.sanitize)))
+      case _ => save(parent)(k)
   
   extension (t: Term)
     def instantiated = t match
@@ -364,68 +372,56 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
                 msg"Buffered classes must not have a main parameter list; use `constructor(...)` syntax instead." -> defn.toLoc :: Nil,
                 source = Diagnostic.Source.Compilation
               ))
-          val (mtds, publicFlds, privateFlds, ctor) = defn match
-            case pd: PatternDef =>
-              // Compile the pattern definition into `unapply` and `unapplyStringPrefix`
-              // methods using the `SplitCompiler`, which transliterate the pattern into
-              // UCS splits that backtrack without any optimizations.
-              val compiler = new ups.SplitCompiler
-              val methods = compiler.compilePattern(pd)
-              // We only need `owner`, `sym`, `params` and `body`
-              val mtds = methods.map:
-                case (sym, params, split) =>
-                  val paramLists = params :: Nil
-                  val bodyBlock = inScopedBlock(ucs.Normalization(this)(split)(Ret))
-                  FunDefn.withFreshSymbol(N, sym, paramLists, bodyBlock)(configOverride = N, annotations = Nil)
-              // The return type is intended to be consistent with `gatherMembers`
-              (mtds, Nil, Nil, End())
-            case _ => gatherMembers(defn.body)
-          val mod = defn.companion match
-            case S(sym) =>
-              sym.defn match
-              case S(mod: ModuleOrObjectDef) =>
-                reportAnnotations(mod, mod.extraAnnotations)
-                mod.ext match
-                case S(ext) => fail:
-                  ErrorReport(
-                    msg"Modules cannot have an extension clause." -> ext.toLoc :: Nil,
-                    source = Diagnostic.Source.Compilation
-                  )
-                case N =>
-                val (mtds, publicFlds, privateFlds, ctor) =
-                  gatherMembers(mod.body)
-                S(ClsLikeBody(mod.sym, mtds, privateFlds, publicFlds, ctor, mod.annotations))
-              case _ => N
-            case _ => N
+          def defineClass(parent: Opt[Path], parentParams: Ls[ParamList]): Block =
+            val base = parent.getOrElse(
+              Select(State.globalThisSymbol.asThis, Tree.Ident("Object"))(S(ctx.builtins.Object), defn.toLoc)(false))
+            val clsDef = LoweringCtx.withSuperBase(defn.sym, base).givenIn:
+              val (mtds, publicFlds, privateFlds, ctor) = defn match
+                case pd: PatternDef =>
+                  // Compile the pattern definition into `unapply` and `unapplyStringPrefix`
+                  // methods using the `SplitCompiler`, which transliterate the pattern into
+                  // UCS splits that backtrack without any optimizations.
+                  val compiler = new ups.SplitCompiler
+                  val methods = compiler.compilePattern(pd)
+                  // We only need `owner`, `sym`, `params` and `body`
+                  val mtds = methods.map:
+                    case (sym, params, split) =>
+                      val paramLists = params :: Nil
+                      val bodyBlock = inScopedBlock(ucs.Normalization(this)(split)(Ret))
+                      FunDefn.withFreshSymbol(N, sym, paramLists, bodyBlock)(configOverride = N, annotations = Nil)
+                  // The return type is intended to be consistent with `gatherMembers`
+                  (mtds, Nil, Nil, End())
+                case _ => gatherMembers(defn.body)
+              val mod = defn.companion match
+                case S(sym) =>
+                  sym.defn match
+                  case S(mod: ModuleOrObjectDef) =>
+                    reportAnnotations(mod, mod.extraAnnotations)
+                    mod.ext match
+                    case S(ext) => fail:
+                      ErrorReport(
+                        msg"Modules cannot have an extension clause." -> ext.toLoc :: Nil,
+                        source = Diagnostic.Source.Compilation
+                      )
+                    case N =>
+                    val (mtds, publicFlds, privateFlds, ctor) =
+                      gatherMembers(mod.body)
+                    S(ClsLikeBody(mod.sym, mtds, privateFlds, publicFlds, ctor, mod.annotations))
+                  case _ => N
+                case _ => N
+              val pctor = defn.ext.fold[Block](End()): ext =>
+                inScopedBlock(parentConstructor(parentParams, ext.args, ext.toLoc))
+              val cfgOverride = defn.extraAnnotations.collectFirst:
+                case Annot.Config(modify) => modify(config)
+              ClsLikeDefn(defn.owner, defn.sym, defn.bsym, defn.ctorSym, defn.kind, defn.paramsOpt, defn.auxParams, parent,
+                mtds, privateFlds, publicFlds, pctor, ctor, mod, bufferable)(cfgOverride, defn.annotations)
+            Define(clsDef, blockImpl(stats, res))
           defn.ext match
-          case N =>
-            val cfgOverride = defn.extraAnnotations.collectFirst:
-              case Annot.Config(modify) => modify(config)
-            captureSuperBase(defn.sym,
-              Select(State.globalThisSymbol.asThis, Tree.Ident("Object"))(S(ctx.builtins.Object), defn.toLoc)(false))(Define(
-              ClsLikeDefn(defn.owner, defn.sym, defn.bsym, defn.ctorSym, defn.kind, defn.paramsOpt, defn.auxParams, N,
-                mtds,
-                privateFlds,
-                publicFlds,
-                End(),
-                ctor,
-                mod,
-                bufferable,
-              )(cfgOverride, defn.annotations),
-              blockImpl(stats, res)))
+          case N => defineClass(N, Nil)
           case S(ext) =>
             assert(k isnt syntax.Mod) // modules can't extend things and can't have super calls
-            val cfgOverride = defn.extraAnnotations.collectFirst:
-              case Annot.Config(modify) => modify(config)
             classOf(ext.cls, ext): (clsp, params) =>
-              val pctor = inScopedBlock(parentConstructor(params, ext.args, ext.toLoc))
-              captureSuperBase(defn.sym, clsp)(Define(
-                ClsLikeDefn(
-                  defn.owner, defn.sym, defn.bsym, defn.ctorSym, defn.kind, defn.paramsOpt, defn.auxParams, S(clsp),
-                  mtds, privateFlds, publicFlds, pctor, ctor, mod, bufferable,
-                )(cfgOverride, defn.annotations),
-                blockImpl(stats, res)
-              ))
+              withClassParent(clsp)(parent => defineClass(S(parent), params))
         case td: TypeDef => // * Type definitions are erased
           blockImpl(stats, res)
     
@@ -746,12 +742,8 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
           // Fields live on the receiver; only methods/getters have a base implementation
           // on the prototype. In particular Reflect.get(base.prototype, ...) cannot read fields.
           if target.k is syntax.Fun then
-            // Wasm dispatches to a statically named function and only supports static parents;
-            // its class operand, like an Instantiate operand, need not be a runtime class value.
-            val base = if config.target == CompilationTarget.Wasm then
-              val owner = target.owner.get
-              owner.asBlkMember.get.asMemberRef(owner.asDefnSym)
-            else superBase(sup.owner).asSimpleRef
+            val base = loweringCtx.superBases.getOrElse(sup.owner,
+              lastWords("Superclass must be lowered before its members"))
             k(SuperSelect(receiver, base, target.id)(target, sup.toLoc))
           else k(Select(receiver, target.id)(S(target), sup.toLoc)(false))
       case targets => fail(ErrorReport(
@@ -1416,12 +1408,14 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
         case S((isym, rft)) =>
           val sym = isym.defn.get.bsym
           loweringCtx.collectScopedSym(sym)
-          val (mtds, publicFlds, privateFlds, ctor) = gatherMembers(rft)
-          val pctor = parentConstructor(params, as, nw.toLoc)
-          val clsDef = ClsLikeDefn(N, isym, sym, N, syntax.Cls, N, Nil, S(sr),
-            mtds, privateFlds, publicFlds, pctor, ctor, N, N)(N, Nil)
-          val inner = new New(sym.ref().resolved(isym), Nil, N)(FlowSymbol.neww(), N)
-          captureSuperBase(isym, sr)(Define(clsDef, term_nonTail(if mut then Mut(inner) else inner)(k)))
+          withClassParent(sr): parent =>
+            val clsDef = LoweringCtx.withSuperBase(isym, parent).givenIn:
+              val (mtds, publicFlds, privateFlds, ctor) = gatherMembers(rft)
+              val pctor = parentConstructor(params, as, nw.toLoc)
+              ClsLikeDefn(N, isym, sym, N, syntax.Cls, N, Nil, S(parent),
+                mtds, privateFlds, publicFlds, pctor, ctor, N, N)(N, Nil)
+            val inner = new New(sym.ref().resolved(isym), Nil, N)(FlowSymbol.neww(), N)
+            Define(clsDef, term_nonTail(if mut then Mut(inner) else inner)(k))
       
     case Try(sub, finallyDo) =>
       val l = loweringCtx.registerTempSymbol(S(sub), erasedType = N)

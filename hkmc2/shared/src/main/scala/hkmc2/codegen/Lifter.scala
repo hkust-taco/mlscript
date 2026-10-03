@@ -213,10 +213,9 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
     new BlockTraverser:
       this.applyScopedObject(s.obj)
       override def applyPath(p: Path): Unit = p match
-        // Wasm's super operand identifies a static class, just like the operand of
-        // Instantiate. It does not escape as a first-class runtime class value.
-        case sel @ SuperSelect(qual, RefOfDefn(S(cls: ClassSymbol), _), _)
-            if config.target == CompilationTarget.Wasm =>
+        // A direct superclass reference, like an extends or Instantiate operand, does not
+        // let the class escape as a value. Its receiver still needs ordinary capture analysis.
+        case sel @ SuperSelect(qual, RefOfDefn(S(cls: ClassSymbol), _), _) =>
           applyPath(qual)
           cls.traverse
           sel.symbol.traverse

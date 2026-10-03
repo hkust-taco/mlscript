@@ -157,12 +157,7 @@ private class SymbolRefresherInternal(m: MutMap[Symbol, Symbol])(using State) ex
   // We have a pretty weird setup here, where we store a mutable state inside the SymbolRefresher
   // We must initialize the SymbolRefresher by walking before applyBlock
   def apply(b: Block) =
-    val existing = m.keySet.toSet
     SymbolRefresherWalker(m).applyBlock(b)
-    m.foreach:
-      case (source: MemberSymbol, target: MemberSymbol) if !existing(source) =>
-        target.copyOverrideLinksFrom(source)(using SymbolRefresher.initSymbolSubst(m))
-      case _ => ()
     applyBlock(b)
 
   // Although the types created during walking can always be symbol substituted, the user may pass in extra symbol that map across different types

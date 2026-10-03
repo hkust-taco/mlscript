@@ -82,18 +82,17 @@ class SuperBase { open fun foo(x) = x + 1 }
 class SuperChild extends SuperBase { override fun foo(x) = super.foo(x + 1) * 2 }
 (new SuperChild).foo(3)
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let superBase, tmp;
+//│ let tmp;
 //│ define SuperBase⁰ as class SuperBase¹ {
 //│   method foo¹ = fun foo²(x) {
 //│     return +⁰(x, 1)
 //│   }
 //│ };
-//│ set superBase = SuperBase¹;
 //│ define SuperChild⁰ as class SuperChild¹ extends SuperBase¹ {
 //│   method foo³ = fun foo⁴(x) {
 //│     let tmp1, tmp2;
 //│     set tmp1 = +⁰(x, 1);
-//│     set tmp2 = super[superBase](SuperChild¹.this).foo²(tmp1);
+//│     set tmp2 = super[SuperBase¹](SuperChild¹.this).foo²(tmp1);
 //│     return *⁰(tmp2, 2)
 //│   }
 //│ };
@@ -154,23 +153,23 @@ class ForwardBase { open fun f(x) = x + 2 }
 :e
 super.foo()
 //│ ╔══[COMPILATION ERROR] Cannot use 'super' outside of an object scope
-//│ ║  l.155: 	super.foo()
+//│ ║  l.154: 	super.foo()
 //│ ╙──       	^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :e
 class NoParent { fun f() = super.missing() }
 //│ ╔══[COMPILATION ERROR] Resolution error in super reference
-//│ ║  l.162: 	class NoParent { fun f() = super.missing() }
+//│ ║  l.161: 	class NoParent { fun f() = super.missing() }
 //│ ║         	                           ^^^^^^^^^^^^^
 //│ ╟── No inherited member 'missing' is available through 'super'
-//│ ║  l.162: 	class NoParent { fun f() = super.missing() }
+//│ ║  l.161: 	class NoParent { fun f() = super.missing() }
 //│ ╙──       	                           ^^^^^^^^^^^^^
 
 :e
 class AbstractSuper extends Abstract { fun foo() = super.foo() }
 //│ ╔══[COMPILATION ERROR] Super reference 'foo' requires one inherited implementation
-//│ ║  l.171: 	class AbstractSuper extends Abstract { fun foo() = super.foo() }
+//│ ║  l.170: 	class AbstractSuper extends Abstract { fun foo() = super.foo() }
 //│ ║         	                                                   ^^^^^^^^^
 //│ ╟── Candidate 'foo' is declared here
 //│ ║  l.53: 	abstract class Abstract { fun foo() }
@@ -180,25 +179,25 @@ class AbstractSuper extends Abstract { fun foo() = super.foo() }
 class PrivateBase { private fun secret() = 1 }
 class PrivateSuper extends PrivateBase { fun f() = super.secret() }
 //│ ╔══[COMPILATION ERROR] Super reference 'secret' requires one inherited implementation
-//│ ║  l.181: 	class PrivateSuper extends PrivateBase { fun f() = super.secret() }
+//│ ║  l.180: 	class PrivateSuper extends PrivateBase { fun f() = super.secret() }
 //│ ║         	                                                   ^^^^^^^^^^^^
 //│ ╟── Candidate 'secret' is declared here
-//│ ║  l.180: 	class PrivateBase { private fun secret() = 1 }
+//│ ║  l.179: 	class PrivateBase { private fun secret() = 1 }
 //│ ╙──       	                                ^^^^^^
 
 :e
 class ConcreteMissing { fun foo() }
 //│ ╔══[COMPILATION ERROR] Class 'ConcreteMissing' has unimplemented members
-//│ ║  l.190: 	class ConcreteMissing { fun foo() }
+//│ ║  l.189: 	class ConcreteMissing { fun foo() }
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Member 'foo' requires an implementation
-//│ ║  l.190: 	class ConcreteMissing { fun foo() }
+//│ ║  l.189: 	class ConcreteMissing { fun foo() }
 //│ ╙──       	                            ^^^
 
 :e
 object MissingObject extends Abstract
 //│ ╔══[COMPILATION ERROR] Object 'MissingObject' has unimplemented members
-//│ ║  l.199: 	object MissingObject extends Abstract
+//│ ║  l.198: 	object MissingObject extends Abstract
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Member 'foo' requires an implementation
 //│ ║  l.53: 	abstract class Abstract { fun foo() }
@@ -207,7 +206,7 @@ object MissingObject extends Abstract
 :e
 class BadKind extends Base { override fun foo = 1 }
 //│ ╔══[COMPILATION ERROR] Overriding member 'foo' must preserve whether the member is a field, getter, or method
-//│ ║  l.208: 	class BadKind extends Base { override fun foo = 1 }
+//│ ║  l.207: 	class BadKind extends Base { override fun foo = 1 }
 //│ ║         	                             ^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Inherited member 'foo' is defined here
 //│ ║  l.3: 	class Base { open fun foo() = 1 }
@@ -216,20 +215,20 @@ class BadKind extends Base { override fun foo = 1 }
 :e
 class AbstractCall() { fun f() }
 //│ ╔══[COMPILATION ERROR] Class 'AbstractCall' has unimplemented members
-//│ ║  l.217: 	class AbstractCall() { fun f() }
+//│ ║  l.216: 	class AbstractCall() { fun f() }
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Member 'f' requires an implementation
-//│ ║  l.217: 	class AbstractCall() { fun f() }
+//│ ║  l.216: 	class AbstractCall() { fun f() }
 //│ ╙──       	                           ^
 
 :e
 abstract class AbstractCallable() { fun f() }
 AbstractCallable()
 //│ ╔══[COMPILATION ERROR] Cannot instantiate abstract class 'AbstractCallable'
-//│ ║  l.227: 	AbstractCallable()
+//│ ║  l.226: 	AbstractCallable()
 //│ ║         	^^^^^^^^^^^^^^^^^^
 //│ ╟── Abstract class defined here
-//│ ║  l.226: 	abstract class AbstractCallable() { fun f() }
+//│ ║  l.225: 	abstract class AbstractCallable() { fun f() }
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -246,7 +245,7 @@ AbstractCallable()
 :e
 new Abstract with { fun other() = 9 }
 //│ ╔══[COMPILATION ERROR] Class '$anon' has unimplemented members
-//│ ║  l.247: 	new Abstract with { fun other() = 9 }
+//│ ║  l.246: 	new Abstract with { fun other() = 9 }
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Member 'foo' requires an implementation
 //│ ║  l.53: 	abstract class Abstract { fun foo() }
@@ -256,10 +255,10 @@ new Abstract with { fun other() = 9 }
 :e
 class PrivateAbstract { private fun hidden() }
 //│ ╔══[COMPILATION ERROR] Class 'PrivateAbstract' has unimplemented members
-//│ ║  l.257: 	class PrivateAbstract { private fun hidden() }
+//│ ║  l.256: 	class PrivateAbstract { private fun hidden() }
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Member 'hidden' requires an implementation
-//│ ║  l.257: 	class PrivateAbstract { private fun hidden() }
+//│ ║  l.256: 	class PrivateAbstract { private fun hidden() }
 //│ ╙──       	                                    ^^^^^^
 
 // The nearest common ancestor is used even when a deeper ancestor is also common.
@@ -271,9 +270,7 @@ private fun readDeep(x) = x.foo()
 [readDeep(new DeepLeft), readDeep(new DeepRight)]
 //│ = [5, 6]
 
-// Captured parent values and receivers remain correct when lifting is requested.
-// The lifter currently leaves first-class local parents (and their subclasses) in place.
-:w
+// Local classes and their super calls can be lifted while retaining captured arguments.
 :lift
 :inlineThreshold 10000
 :expect [6, 14]
@@ -283,8 +280,6 @@ fun local(n) = {
   (new LocalChild).foo(1)
 }
 [local(2), local(6)]
-//│ ═══[WARNING] Cannot yet lift class `LocalBase` as it is used as a first-class class.
-//│ ═══[WARNING] Cannot yet lift definition `LocalChild` as it extends an unliftable class.
 //│ = [6, 14]
 
 :e
@@ -292,10 +287,10 @@ class Unrelated { fun foo() = 0 }
 private fun ambiguous(x) = x.foo()
 [ambiguous(new Base), ambiguous(new Unrelated)]
 //│ ╔══[COMPILATION ERROR] This selection of member 'foo' is ambiguous, as it has multiple resolved targets
-//│ ║  l.292: 	private fun ambiguous(x) = x.foo()
+//│ ║  l.287: 	private fun ambiguous(x) = x.foo()
 //│ ║         	                           ^^^^^
 //│ ╟── target: function 'foo' in class 'Unrelated'
-//│ ║  l.291: 	class Unrelated { fun foo() = 0 }
+//│ ║  l.286: 	class Unrelated { fun foo() = 0 }
 //│ ║         	                      ^^^
 //│ ╟── target: function 'foo' in class 'Base'
 //│ ║  l.3: 	class Base { open fun foo() = 1 }
@@ -305,7 +300,7 @@ private fun ambiguous(x) = x.foo()
 :e
 class ClosedAgain extends Left { override fun foo() = 4 }
 //│ ╔══[COMPILATION ERROR] Cannot override non-open member 'foo'
-//│ ║  l.306: 	class ClosedAgain extends Left { override fun foo() = 4 }
+//│ ║  l.301: 	class ClosedAgain extends Left { override fun foo() = 4 }
 //│ ║         	                                 ^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Inherited member 'foo' is defined here
 //│ ║  l.4: 	class Left extends Base { override fun foo() = 2 }
@@ -315,7 +310,7 @@ class ClosedAgain extends Left { override fun foo() = 4 }
 abstract class MissingInherited extends Abstract
 class StillMissing extends MissingInherited
 //│ ╔══[COMPILATION ERROR] Class 'StillMissing' has unimplemented members
-//│ ║  l.316: 	class StillMissing extends MissingInherited
+//│ ║  l.311: 	class StillMissing extends MissingInherited
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Member 'foo' requires an implementation
 //│ ║  l.53: 	abstract class Abstract { fun foo() }
@@ -347,7 +342,7 @@ class StoredParent extends parent { override fun f() = super.f() * 2 }
 let abstractValue = Abstract
 new abstractValue
 //│ ╔══[COMPILATION ERROR] Cannot instantiate abstract class 'Abstract'
-//│ ║  l.348: 	new abstractValue
+//│ ║  l.343: 	new abstractValue
 //│ ║         	^^^^^^^^^^^^^^^^^
 //│ ╟── Abstract class defined here
 //│ ║  l.53: 	abstract class Abstract { fun foo() }
@@ -359,10 +354,10 @@ new abstractValue
 let abstractCtor = AbstractCallable
 abstractCtor()
 //│ ╔══[COMPILATION ERROR] Cannot instantiate abstract class 'AbstractCallable'
-//│ ║  l.360: 	abstractCtor()
+//│ ║  l.355: 	abstractCtor()
 //│ ║         	^^^^^^^^^^^^^^
 //│ ╟── Abstract class defined here
-//│ ║  l.226: 	abstract class AbstractCallable() { fun f() }
+//│ ║  l.225: 	abstract class AbstractCallable() { fun f() }
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ abstractCtor = fun AbstractCallable { class: class AbstractCallable }
@@ -371,7 +366,7 @@ abstractCtor()
 let abstractParent = Abstract
 class StoredIncomplete extends abstractParent
 //│ ╔══[COMPILATION ERROR] Class 'StoredIncomplete' has unimplemented members
-//│ ║  l.372: 	class StoredIncomplete extends abstractParent
+//│ ║  l.367: 	class StoredIncomplete extends abstractParent
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Member 'foo' requires an implementation
 //│ ║  l.53: 	abstract class Abstract { fun foo() }
@@ -414,10 +409,10 @@ abstract class PrivateRequirement { private fun hidden() }
 :e
 class InheritedPrivateRequirement extends PrivateRequirement { fun hidden() = 1 }
 //│ ╔══[COMPILATION ERROR] Class 'InheritedPrivateRequirement' has unimplemented members
-//│ ║  l.415: 	class InheritedPrivateRequirement extends PrivateRequirement { fun hidden() = 1 }
+//│ ║  l.410: 	class InheritedPrivateRequirement extends PrivateRequirement { fun hidden() = 1 }
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Member 'hidden' requires an implementation
-//│ ║  l.412: 	abstract class PrivateRequirement { private fun hidden() }
+//│ ║  l.407: 	abstract class PrivateRequirement { private fun hidden() }
 //│ ╙──       	                                                ^^^^^^
 
 // Different receiver classes can inherit the same declaration without overriding it.
@@ -429,3 +424,33 @@ private fun readInherited(flag) = {
 }
 [readInherited(true), readInherited(false)]
 //│ = [1, 1]
+
+// Reassigning a stored class cannot change a previously defined superclass.
+// The resolver still assumes one contextual parent shape per class; reassignment violates
+// its constructor-shape cache assertion before lowering. The runtime result remains correct.
+:fixme
+:expect 4
+let changingParent = makeParent(4)
+class SavedParent extends changingParent { override fun f() = super.f() }
+set changingParent = makeParent(9)
+(new SavedParent).f()
+//│ ╔══[INTERNAL ERROR] Compiler reached an unexpected state at 'NewResolver.scala:2838'
+//│ ╟── The compilation result may be incorrect.
+//│ ╙── This is a compiler bug; please report it to the maintainers.
+//│ = 4
+//│ changingParent = class Parent
+
+// For a nested class, its receiver must likewise be saved at the extends clause.
+// This also encounters the constructor-shape cache limitation above.
+:fixme
+:expect 5
+class Holder(n) { class Parent { open fun f() = n } }
+let changingHolder = Holder(5)
+class SavedNestedParent extends changingHolder.Parent { override fun f() = super.f() }
+set changingHolder = Holder(11)
+(new SavedNestedParent).f()
+//│ ╔══[INTERNAL ERROR] Compiler reached an unexpected state at 'NewResolver.scala:2838'
+//│ ╟── The compilation result may be incorrect.
+//│ ╙── This is a compiler bug; please report it to the maintainers.
+//│ = 5
+//│ changingHolder = Holder(_)

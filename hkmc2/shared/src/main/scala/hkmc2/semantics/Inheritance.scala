@@ -13,9 +13,6 @@ import codegen.Erasure
 private[semantics] final class OverrideLinks extends Host[TermSymbol]:
   def showDbg(using DebugPrinter): Str = "overridden members"
   def members(using Erasure): Ls[TermSymbol] = shapes.toList
-  def copyFrom(source: OverrideLinks)(using SymbolSubst): Unit =
-    assert(shapes.isEmpty, "Override links must be copied onto a fresh symbol")
-    shapes ++= source.shapes.iterator.map(_.subst)
 
 object Inheritance:
   def hasModifier(d: Definition, keyword: Keyword.Modifier): Bool = d.annotations.exists:
