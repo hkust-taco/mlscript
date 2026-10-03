@@ -25,7 +25,7 @@ compilation fixture; mixed-mode imports are supported.
 | --- | ---: | ---: | ---: |
 | apps | 17 | 0 | 17 |
 | backlog | 5 | 3 | 8 |
-| basics | 78 | 12 | 90 |
+| basics | 79 | 11 | 90 |
 | block-staging | 4 | 3 | 7 |
 | codegen | 106 | 20 | 126 |
 | ctx | 3 | 10 | 13 |
@@ -41,11 +41,11 @@ compilation fixture; mixed-mode imports are supported.
 | opt | 30 | 0 | 30 |
 | std | 8 | 2 | 10 |
 | syntax | 11 | 0 | 11 |
-| tailrec | 3 | 2 | 5 |
+| tailrec | 4 | 1 | 5 |
 | ucs | 69 | 1 | 70 |
 | ups | 60 | 11 | 71 |
 | wasm | 23 | 0 | 23 |
-| Total | 529 | 106 | 635 |
+| Total | 531 | 104 | 635 |
 
 | Compilation suite | New resolution | Legacy resolution | Total |
 | --- | ---: | ---: | ---: |
@@ -97,10 +97,8 @@ following constraints identify the current failing behavior and representative t
   in `handlers`, `codegen/ScopedBlocksAndHandlers`, and handler cases in `lifter`.
   Receiver flow, resumption arguments, and abortive results need distinct handling
   (`newres/HandlerResults`).
-- **Operator checks, tail-call annotations, and staged functions:** `basics/FunDefs`
-  needs negative expectations for calls to non-callable operator definitions.
-  `tailrec/Annots` and `tailrec/TailRecOpt` need `@tailcall` support for getter
-  references and selections; `Annots` also contains an unresolved handler receiver.
+- **Tail-call annotations and staged functions:** `tailrec/Annots` needs `@tailcall`
+  support for getter references and contains an unresolved handler receiver.
   `block-staging/Functions` and `codegen/FirstClassFunctionTransform` encounter
   unfinished generated symbols.
 - **Legacy flow analysis:** the `flows` worksheets run a separate flow pass that
