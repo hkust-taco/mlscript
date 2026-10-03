@@ -333,7 +333,7 @@ object Elaborator:
             case Tree.Modified(_, body) => underlyingTypeDef(body)
             case _ => N
 
-          val stmts = parent.tree.withPart match
+          val stmts = parent.tree.bodies.headOption match
             case S(Tree.Block(stmts)) => stmts
             case _ => Nil
           stmts.flatMap(underlyingTypeDef).collectFirst:
@@ -2293,7 +2293,7 @@ extends Importer:
         val owner = ctx.outer.inner
         
         softTODO((k is Als) || (k is Cls) || (k is Mod) || (k is Obj) || (k is Pat), k.desc + " not yet supported")
-        val body = td.reft ++ td.withPart match
+        val body = td.bodies match
           case Nil => N
           case hd :: Nil => S(hd)
           case hd :: hd2 :: tl =>

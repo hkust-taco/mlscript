@@ -99,7 +99,7 @@ pattern Bad = ((Str as s => s.length) as n) => n.toUpperCase()
 //│ ║        	                                               ^^^^^^^^^^^^^
 //│ ╟── Value of type 'Int' does not contain member 'toUpperCase'
 //│ ║  in ../decls/Prelude.mls
-//│ ║  l.174: 	  val length: Int
+//│ ║  l.190: 	  val length: Int
 //│ ╙──       	              ^^^
 
 // Conjunction produces a pair, not the string tested by its left operand.

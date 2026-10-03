@@ -31,7 +31,7 @@ xs.reverse()
 :re
 xs.map(x => x * 2)
 //│ ╔══[COMPILATION ERROR] Resolution error in function type
-//│ ║  l.228: 	  fun map[U](f: (T, Int, Array[T]) -> U): Array[U]
+//│ ║  l.245: 	  fun map[U](f: (T, Int, Array[T]) -> U): Array[U]
 //│ ║         	                ^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Callback parameter list does not match its declared function type.
 //│ ║  in MiscArrayTests.mls:32

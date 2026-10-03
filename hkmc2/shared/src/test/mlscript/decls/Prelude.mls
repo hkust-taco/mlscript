@@ -4,10 +4,11 @@ declare type Any
 declare type Anything
 declare type Nothing
 
-declare class Object with
+declare class Object {
   fun toString(): Str
+}
 declare fun Object(...args): Object
-declare module Object with
+declare module Object {
   fun entries(target): Array[[Str, Any]]
   fun getOwnPropertyDescriptor(target, key): Object | undefined
   fun getOwnPropertyDescriptors(target): Object
@@ -19,15 +20,17 @@ declare module Object with
     fromEntries
     getPrototypeOf
     defineProperty
+}
 
 declare class JSON
-declare module JSON with
+declare module JSON {
   fun
     stringify
+}
 
 declare class Number
 declare fun Number(...args): Num
-declare module Number with
+declare module Number {
   val
     MIN_VALUE
     MAX_VALUE
@@ -35,35 +38,40 @@ declare module Number with
     MAX_SAFE_INTEGER
     NEGATIVE_INFINITY
     POSITIVE_INFINITY
+}
 
-declare class BigInt with
+declare class BigInt {
   // private constructor() // FIXME: Unsupported constructor in this position.
   fun toString(...radix): Str
+}
 // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/BigInt/BigInt
 declare fun BigInt(value: Str | Int | Bool | BigInt): BigInt
 declare module BigInt
 
-declare class Function with
+declare class Function {
   val name: Str
   fun bind(thisArg, ...args): Function
   fun apply(thisArg, args: Array): Any
+}
 declare module Function
 
 declare class String
 declare fun String(...args): Str
-declare module String with
+declare module String {
   fun
     fromCharCode
     fromCodePoint
     raw
+}
 
-declare class RegExp with
+declare class RegExp {
   fun toString(): Str
   fun exec(input: Str): Array[Str] | null
   fun test(input: Str): Bool
+}
 declare module RegExp
 
-declare class Set[V] with
+declare class Set[V] {
   val size: Int
   fun add(value: V): Set[V]
   fun has(value: V): Bool
@@ -72,9 +80,10 @@ declare class Set[V] with
   fun values(): Iterator[V]
   fun union(other: Set[V]): Set[V]
   fun difference(other: Set[V]): Set[V]
+}
 declare module Set
 
-declare class Map[K, V] with
+declare class Map[K, V] {
   val size: Int
   fun get(key: K): V | undefined
   fun has(key: K): Bool
@@ -85,26 +94,30 @@ declare class Map[K, V] with
   fun values(): Iterator[V]
   fun entries(): Iterator[[K, V]]
   fun forEach(f: (V, K, Map[K, V]) -> Any): undefined
+}
 
-declare class Iterator[out T] with
+declare class Iterator[out T] {
   fun next(): { value: T, done: Bool }
+}
 
 declare module Map
 
 declare class WeakSet[V]
 declare module WeakSet
 
-declare class WeakMap[K, V] with
+declare class WeakMap[K, V] {
   fun get(key: K): V | undefined
   fun has(key: K): Bool
   fun delete(key: K): Bool
   fun id"set"(key: K, value: V): WeakMap[K, V]
+}
 declare module WeakMap
 
-declare class Error with
+declare class Error {
   val message: Str
   val name: Str
   val stack: Str | undefined
+}
 declare fun Error(...args): Error
 
 declare class TypeError extends Error
@@ -158,20 +171,23 @@ declare module BigInt64Array
 declare class BigUint64Array
 declare module BigUint64Array
 
-declare class Promise with
+declare class Promise {
   fun id"then"(onFulfilled: Function, ...onRejected): Promise
-declare module Promise with
+}
+declare module Promise {
   fun resolve(value): Promise
   fun reject(reason): Promise
   fun all(values): Promise
+}
 
 // MLscript-specific types
 declare class Bool
-declare class Num with
+declare class Num {
   fun toString(...radix): Str
   fun toFixed(...digits): Str
+}
 declare class Int extends Num
-declare class Str with
+declare class Str {
   val length: Int
   fun toString(): Str
   fun at(index: Int): Str | undefined
@@ -193,6 +209,7 @@ declare class Str with
   fun toLowerCase(): Str
   fun localeCompare(other: Str, ...localesAndOptions): Int
   fun trim(): Str
+}
 declare class Class
 
 // The `Array` class/function is a footgun:
@@ -206,7 +223,7 @@ declare class Class
 // Foreign constructor signatures describe the native binding and do not introduce
 // the `.class` storage used by generated MLscript constructor functions.
 // The `val length` parameter also supports matching with `Array(length)`.
-declare class Array[T](val length: Int): Array[T] with
+declare class Array[T](val length: Int): Array[T] {
   fun join(...separators): Str
   fun reverse(): Array[T]
   fun sort(...compare): Array[T]
@@ -247,22 +264,26 @@ declare class Array[T](val length: Int): Array[T] with
   fun includes(value: T, ...from): Bool
   fun toString(): Str
   fun toLocaleString(...options): Str
-declare module Array with
+}
+declare module Array {
   fun from(...args): Array[Any]
   fun
     concat
     isArray
   val prototype: Array[Any]
+}
 
-declare class Symbol with
+declare class Symbol {
   val description: Str | undefined
+}
 declare fun Symbol(...description): Symbol
-declare module Symbol with
+declare module Symbol {
   // The `TermDef` needs `rhs` to be defined to be recognized as `isMLsFun`.
   // Otherwise, it would be wrapped in `runtime.safeCall`, which accesses the
   // uninitialized `runtime` in the `Rendering` module.
   fun for: Str -> Any = ()
   val iterator: Any
+}
 
 // MLwasm-specific types
 declare class Int32
@@ -272,7 +293,7 @@ declare class Float64
 declare class Int31 extends Int  // `i31ref`
 
 // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math
-declare module Math with
+declare module Math {
   declare
     val
       E: Num
@@ -320,8 +341,9 @@ declare module Math with
       tan: Num -> Num
       tanh: Num -> Num
       trunc: Num -> Num
+}
 
-declare module Reflect with
+declare module Reflect {
   // Prototype objects may expose arbitrary host properties.
   fun getPrototypeOf(target): dyn
   fun
@@ -331,8 +353,9 @@ declare module Reflect with
     ownKeys
     apply
     construct
+}
 
-declare module console with
+declare module console {
   declare
     fun
       log
@@ -353,10 +376,12 @@ declare module console with
       time
       timeEnd
       trace
+}
 
-declare module process with
+declare module process {
   fun cwd(): Str
   val env
+}
 
 // Host APIs remain explicitly dynamic until their interfaces are modeled.
 declare val fs: dyn
@@ -364,19 +389,22 @@ declare val fs: dyn
 declare val Infinity
 
 // Wasm support
-declare object WebAssembly with
-  declare class Instance with
+declare object WebAssembly {
+  declare class Instance {
     val exports: dyn
+  }
   declare class Memory
   declare class Module
-  declare module Module with
+  declare module Module {
     fun
       exports
       imports
+  }
 
   fun
     instantiate
     validate
+}
 
 // declare fun typeof: (Any) -> Str
 
@@ -384,22 +412,24 @@ declare fun parseInt(str: Str, radix: Int): Int
 declare fun parseFloat(str: Str): Num
 
 
-declare module source with
+declare module source {
   object
     line
     name
     file
+}
 
-declare module js with
+declare module js {
   fun
     bitand
     bitnot
     bitor
     shl
     try_catch
+}
 
-declare module wasm with
-  module i32 with
+declare module wasm {
+  module i32 {
     fun
       const(c: Int): Int32
       add(i1: Int32, i2: Int32): Int32
@@ -418,7 +448,8 @@ declare module wasm with
       ge_s(i1: Int32, i2: Int32): Int32
       eqz(i: Int32): Int32
       reinterpret_f32(f: Float32): Int32
-  module i64 with
+  }
+  module i64 {
     fun
       const(c: Int): Int64
       add(i1: Int64, i2: Int64): Int64
@@ -437,7 +468,8 @@ declare module wasm with
       ge_s(i1: Int64, i2: Int64): Int32
       eqz(i: Int64): Int32
       reinterpret_f64(f: Float64): Int64
-  module f32 with
+  }
+  module f32 {
     fun
       const(c: Num): Float32
       add(f1: Float32, f2: Float32): Float32
@@ -456,7 +488,8 @@ declare module wasm with
       gt(f1: Float32, f2: Float32): Int32
       ge(f1: Float32, f2: Float32): Int32
       reinterpret_i32(i: Int32): Float32
-  module f64 with
+  }
+  module f64 {
     fun
       const(c: Num): Float64
       add(f1: Float64, f2: Float64): Float64
@@ -475,13 +508,16 @@ declare module wasm with
       gt(f1: Float64, f2: Float64): Int32
       ge(f1: Float64, f2: Float64): Int32
       reinterpret_i64(i: Int64): Float64
-  module ref with
+  }
+  module ref {
     fun
       i31(i: Int32): Int31
-  module i31 with
+  }
+  module i31 {
     fun
       get_s(i: Int31): Int32
       get_u(i: Int31): Int32
+  }
   fun
     plus_impl
     minus_impl
@@ -497,11 +533,13 @@ declare module wasm with
     neg_impl
     pos_impl
     not_impl
+}
 
-declare module debug with
+declare module debug {
   fun printStack
+}
 
-declare module annotations with
+declare module annotations {
   object pure
   object untyped
   object tailrec
@@ -513,17 +551,21 @@ declare module annotations with
   object bufferable
   object generator
   object async
+}
 
-declare module handlers with
+declare module handlers {
   fun await
+}
 
-declare module scope with
+declare module scope {
   fun locally
+}
 
-declare module runtime with
+declare module runtime {
   fun
     suspend
     handle_suspension
+}
 
 
 // HTML DOM API definitions.
@@ -531,7 +573,7 @@ declare module runtime with
 declare val document: dyn
 declare val customElements: dyn
 // Preserve the nominal superclass while its host members remain dynamic.
-declare class HTMLElement with
+declare class HTMLElement {
   val textContent: dyn
   val innerHTML: dyn
   val shadowRoot: dyn
@@ -540,6 +582,7 @@ declare class HTMLElement with
   val addEventListener: dyn
   val querySelector: dyn
   val classList: dyn
+}
 
 //│ ————————————————————————————————————————————————————————————————————————————————
 

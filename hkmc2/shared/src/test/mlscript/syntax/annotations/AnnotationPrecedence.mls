@@ -40,7 +40,7 @@ fun foo(x) = if x is @annotations.compile (A(0) as y) then y
 //│ ║        	                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Object 'compile' cannot be called like a function.
 //│ ║  in ../../decls/Prelude.mls
-//│ ║  l.508: 	  object compile
+//│ ║  l.548: 	  object compile
 //│ ╙──       	         ^^^^^^^
 //│ ╔══[COMPILATION ERROR] Name not found: y
 //│ ║  l.22: 	fun foo(x) = if x is @annotations.compile (A(0) as y) then y

@@ -585,6 +585,12 @@ trait TypeOrTermDef extends Located:
       case Reft(base, body) =>
         rec(base, symbName, annot, body :: refts)
       
+      // In `class C(...): R { ... }`, the parser attaches the brace body to R.
+      // Extract it as the class body, just as for a body following `extends`.
+      // Parenthesized result refinements remain part of the result annotation.
+      case InfixApp(tree, kw @ Keywrd(Keyword.`:`), Reft(ann, body)) if this.isInstanceOf[TypeDef] =>
+        rec(InfixApp(tree, kw, ann), symbName, annot, body :: refts)
+      
       case InfixApp(tree, Keywrd(Keyword.`:`), ann) =>
         rec(tree, symbName, S(ann), refts)
       
@@ -663,10 +669,14 @@ trait TypeDefImpl(using State) extends TypeOrTermDef:
       rhs.getOrElse(Empty()))
     case Trt | Mxn => ???
   
+  // Brace bodies and `with` bodies must expose the same members to builtin lookup
+  // and elaboration. Keep all candidates so elaboration can diagnose multiple bodies.
+  lazy val bodies: Ls[Tree] = reft ++ withPart
+  
   lazy val definedSymbols: Map[Str, BlockMemberSymbol] =
     // val fromParams = 
     // val fromTypeParams = 
-    withPart match
+    bodies.headOption match
     case S(blk: Block) =>
       blk.definedSymbols.toMap
     case _ =>
