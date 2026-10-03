@@ -1266,7 +1266,10 @@ extends Importer:
       res
     
     def elaborateProjection(prefix: Term, cls: Term, name: Ident): Term =
-      val res = new Term.NewSel(prefix, name, S(cls))(FlowSymbol.selProj(name.name)).withLocOf(tree)
+      // The qualifier denotes a class even when its source is a stored constructor.
+      // Resolve that interpretation on the qualifier itself, as for explicit `.class`.
+      val qualifier = new Term.NewSel(cls, new Ident("class").withLocOf(cls), N)(FlowSymbol.sel("class")).withLocOf(cls)
+      val res = new Term.NewSel(prefix, name, S(qualifier))(FlowSymbol.selProj(name.name)).withLocOf(tree)
       newSel(res)
       interpretRef(res, interp)
 

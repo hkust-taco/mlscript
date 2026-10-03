@@ -250,3 +250,25 @@ class FieldChild extends FieldBase(5) {}
 fun readInherited(value) = value.FieldChild#item + 1
 readInherited(new FieldChild)
 //│ = 6
+
+// Constructor functions and raw class objects agree on the disambiguating symbol.
+:expect 5
+class Identified(val item)
+let qualifier = Identified
+set qualifier = Identified.class
+fun readMixed(value) = value.qualifier#item
+readMixed(Identified(5))
+//│ = 5
+//│ qualifier = class Identified
+
+// A projection qualifier requires a class interpretation, not a field named class.
+:e
+let recordQualifier = {"class": Parent}
+fun invalidRecordQualifier(value) = value.recordQualifier#get()
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.267: 	fun invalidRecordQualifier(value) = value.recordQualifier#get()
+//│ ║         	                                    ^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Record literal cannot be used as a projection class.
+//│ ║  l.266: 	let recordQualifier = {"class": Parent}
+//│ ╙──       	                       ^^^^^^^^^^^^^^^
+//│ recordQualifier = {class: class Parent}

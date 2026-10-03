@@ -2693,6 +2693,17 @@ class NewResolver:
       case _ => N
     member.map(_.withMarks(marks).instantiate(instances))
 
+  /** Class selections own their resolved class targets, including for aliases.
+    * Projection qualifiers use this same representation without evaluating it.
+    * The caller decides whether non-class values permit ordinary field selection.
+    */
+  private def classSelection(sel: NewSel)(selected: ShapeListener[ClassReference], reject: ShapeListener[TermShape])(using NewResolverState): Unit =
+    listenClass(sel.prefix, recordTargets = true)(ref =>
+      val cls = ref.definition.sym
+      rstate.recordResolution(sel, sel.resolvedTargets.contains(cls))(sel.resolvedTargets ::= cls)
+      selected(ref)
+    , reject)
+
   def newSel(sel: NewSel)(using NewResolverState): Unit =
     log(s"newSel? sel = ${sel.showDbg}")
     def member(info: MemberLookup, description: Message, diagnostic: Message => Ls[(Message, Opt[Loc])],
@@ -2731,13 +2742,8 @@ class NewResolver:
       case _ => ()
     sel.cls match
       case N if sel.id.name == "class" =>
-        // Resolve the class overload directly, without selecting its constructor
-        // or companion. The resolved class symbol also identifies this selection
-        // during lowering; no ordinary member named `class` is involved.
-        listenClass(sel.prefix, recordTargets = true)(ref =>
-          val cd = ref.definition
-          rstate.recordResolution(sel, sel.resolvedTargets.contains(cd.sym))(sel.resolvedTargets ::= cd.sym)
-          listenExt(cd, ext =>
+        classSelection(sel)(ref =>
+          listenExt(ref.definition, ext =>
             val shape = ClassValueShape(ref.target, ext)
             assert(rstate.canResolve(sel) || ClassValueShape.targetsOf(sel).contains(ref.target),
               "Inference changed a completed class-value interpretation")
@@ -2750,10 +2756,9 @@ class NewResolver:
       case N => listenReceiver(sel.prefix): shape =>
         log(s"newSel: sel = ${sel.showDbg}, shape = ${shape.shwDbg}")
         member(shape.getMember(sel.id.name), msg"${shape.describe.capitalize}", shape.diagnostic, TypeSubstitution.empty)
-      case S(cls) =>
-        listenClass(cls, recordTargets = true)(ref =>
+      case S(cls: NewSel) =>
+        classSelection(cls)(ref =>
           val cd = ref.definition
-          rstate.recordResolution(sel, sel.resolvedClasses.contains(cd.sym))(sel.resolvedClasses ::= cd.sym)
           listenExt(cd, ext =>
             val info = DefnShape(cd, ext).getInstanceMember(sel.id.name)
             info match
@@ -2790,6 +2795,7 @@ class NewResolver:
           rstate.markError(sel)
           resolError(sel, sh.diagnostic(msg"${sh.describe.capitalize} cannot be used as a projection class."))
         )
+      case S(_) => lastWords("A projection qualifier must be a class selection")
   
   /** Both constructor references and explicit `new` use the same definition and
     * parameter lists, including auxiliary constructor(...) lists. A partial `new`

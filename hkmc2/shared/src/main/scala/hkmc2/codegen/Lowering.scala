@@ -733,10 +733,10 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
         // Qualifiers denote class declarations; their runtime receivers are irrelevant.
         raise:
           ErrorReport(msg"The projection class is ambiguous" -> cls.toLoc ::
-            sel.resolvedClasses.map(sym => msg"class: '${sym.nme}'" -> sym.toLoc),
+            sel.projectionClasses.map(sym => msg"class: '${sym.nme}'" -> sym.toLoc),
             source = Diagnostic.Source.Compilation)
         false
-      else if sel.resolvedClasses.isEmpty then
+      else if sel.projectionClasses.isEmpty then
         raise:
           ErrorReport(msg"Cannot resolve the projection class" -> cls.toLoc :: Nil,
             source = Diagnostic.Source.Compilation)
