@@ -2832,7 +2832,7 @@ class NewResolver:
     case S(td: TermDefinition) if td.params.isEmpty =>
       td.body match
       case S(body) =>
-        listenTerm(body)(listener)
+        listenByNameBody(td, body)(listener)
       case N =>
         ??? // TODO error
     case S(d) =>
@@ -2840,6 +2840,25 @@ class NewResolver:
     case N =>
       sym.defnListeners += (d => listener(defnShapes.getOrElseUpdate(sym, DefnShape(d, N))))
   
+  /** Close recursive getter dependencies before following the body. A cycle with
+    * no normal result publishes nothing; a productive branch can still publish
+    * later and propagate around the cycle until duplicate candidates stop it.
+    * Results stay at the body's lexical endpoint: each reference applies its own
+    * exit/capture marks after subscribing. Activation events retain substitutions
+    * when a deferred body candidate arrives through an enclosing generic call.
+    */
+  private def listenByNameBody(td: TermDefinition, body: Term)(listener: Listener)(using NewResolverState): Unit =
+    assert(td.params.isEmpty)
+    val key = (td.tsym, rstate.instances)
+    rstate.byNameResults.get(key) match
+      case S(host) => listenValueHost(host)(listener)
+      case N =>
+        val host = new Host[ShapeEvent]:
+          def showDbg(using DebugPrinter): Str = s"result of ${td.tsym.nme}"
+        rstate.byNameResults(key) = host
+        listenValueHost(host)(listener)
+        listenTerm(body)(publishActivated(host, _))
+
   def pipeTerm(from: Term, to: ShapeHost)(using NewResolverState): Unit =
     log(s"pipeTerm: from = ${from.showDbg}, to = ${to.showDbg}; ${to.currentShapes}")
     listenTerm(from): sh =>
@@ -2972,7 +2991,7 @@ class NewResolver:
                   case S(_: Param) => receive(MarkedShape.enter(shape, ResolutionBoundary(td.tsym), N))
                   case _ => receive(shape)
             case N => td.body.foreach: body =>
-              listenTerm(body)(shape =>
+              listenByNameBody(td, body)(shape =>
                 // Legacy synthesized fields use a plain reference to their
                 // constructor parameter. Supply the field capture explicitly;
                 // new-resolution fields already carry it in their body syntax.
@@ -3127,11 +3146,14 @@ class NewResolver:
       case value: TermShape => receive(instantiateShape(value, rstate.instances))
       case symbol: SymShape => receive(symbol)
 
-  private def listenMemberVariable(sym: TermSymbol)(receive: Listener)(using NewResolverState): Unit =
-    rstate.memberVariable(sym).subscribeToShapes(activationListener:
+  private def listenValueHost(host: ShapeHost)(receive: Listener)(using NewResolverState): Unit =
+    host.subscribeToShapes(activationListener:
       case value: TermShape => receive(value)
-      case _: SymShape => softAssert(false, "Member variables contain only term shapes")
+      case _: SymShape => softAssert(false, "Value hosts contain only term shapes")
     )
+
+  private def listenMemberVariable(sym: TermSymbol)(receive: Listener)(using NewResolverState): Unit =
+    listenValueHost(rstate.memberVariable(sym))(receive)
 
   def listen(trm: Term, discardMarks: Bool = false)(receive: ShapeListener[Shape])(using NewResolverState): Unit =
     val listener = activationListener(receive)

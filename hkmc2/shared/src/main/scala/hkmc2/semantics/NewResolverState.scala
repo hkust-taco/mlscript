@@ -265,6 +265,11 @@ final class NewResolverState private (
     new Cache(inherited.map(_.selfShapes), identity)
   val defnShapes: Cache[DefinitionSymbol[?], DefnShape] =
     new Cache(inherited.map(_.defnShapes), identity)
+  // Parameterless definition bodies share a result node before following their
+  // references. Keep distinct generic activations separate, and inherit the host
+  // identity so imported listeners use the consumer's private publisher data.
+  val byNameResults: Cache[(TermSymbol, TypeSubstitution), ShapeHost] =
+    new Cache(inherited.map(_.byNameResults), identity)
   val typeInterpretations: Cache[Identity[Term], TypeResolution] =
     new Cache(inherited.map(_.typeInterpretations), identity)
   // Qualification can deliver the same declaration in several environments.

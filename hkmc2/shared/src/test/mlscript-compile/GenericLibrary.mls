@@ -9,3 +9,8 @@ module GenericLibrary with
   val known = identity(Known(3))
   val mapped = [Known(4)].map((item, ...) => Known(5))
   fun inferred[A](x: A) = x
+  // Importers must observe a recursive getter's result without rebuilding its cycle.
+  fun recursiveIdentity[A](x: A) =
+    fun result = if true then x else result
+    result
+  fun recursiveGetter = if true then Known(7) else recursiveGetter

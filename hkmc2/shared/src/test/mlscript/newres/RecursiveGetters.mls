@@ -1,0 +1,132 @@
+:.
+
+// Resolving a recursive getter must terminate even when it has no normal result.
+fun self = self
+
+fun left = right
+fun right = left
+
+:e
+left.oops
+//│ ╔══[COMPILATION ERROR] This selection of member 'oops' has no resolved target
+//│ ║  l.10: 	left.oops
+//│ ╙──      	^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+module Loop with
+  fun value = value
+
+:e
+Loop.value.oops
+//│ ╔══[COMPILATION ERROR] This selection of member 'oops' has no resolved target
+//│ ║  l.20: 	Loop.value.oops
+//│ ╙──      	^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// The recursive edge also runs: getter reads must retain their runtime effects.
+:expect 45
+private fun countdown() =
+  let remaining = 3
+  fun result = if remaining == 0 then {answer: 45} else
+    set remaining = remaining - 1
+    result
+  result.answer
+countdown()
+//│ = 45
+
+// A base result discovered after a forward reference must reach both getters.
+:expect [42, 42]
+fun first = second
+fun second = if true then {answer: 42} else first
+[first.answer, second.answer]
+//│ = [42, 42]
+
+// Re-observing completed definitions must replay their inferred result.
+:expect 42
+first.answer
+//│ = 42
+
+// Recursive getters retain the enclosing call's captured value.
+:expect [1, 2]
+private fun captured(value) =
+  fun result = if true then value else result
+  result
+[captured({left: 1}).left, captured({right: 2}).right]
+//│ = [1, 2]
+
+// Selected member getters use the same finite result graph as direct references.
+:expect 43
+module Getters with
+  fun first = second
+  fun second = if true then {answer: 43} else first
+Getters.first.answer
+//│ = 43
+
+// Sharing results must retain each invocation's generic substitution.
+:expect [3, 4]
+class First(val left: Int)
+class Second(val right: Int)
+private fun generic[T](value: T) =
+  fun result = if true then value else result
+  result
+[generic(First(3)).left, generic(Second(4)).right]
+//│ = [3, 4]
+
+// A by-name generic consumes its own type arguments before returning a closure.
+:expect [5, 6]
+private fun identity[T] = if true then (value: T) => value else identity[T]
+[identity[First](First(5)).left, identity[Second](Second(6)).right]
+//│ = [5, 6]
+
+// Imported bodies retain copied listeners and independent caller activations.
+import "../../mlscript-compile/GenericLibrary.mls"
+
+:expect [8, 9, 7]
+[GenericLibrary.recursiveIdentity(First(8)).left,
+ GenericLibrary.recursiveIdentity(Second(9)).right,
+ GenericLibrary.recursiveGetter.known]
+//│ = [8, 9, 7]
+
+// A result cycle does not grant dynamic member access.
+:ge
+fun invalid = if true then {answer: 44} else invalid
+invalid.missing
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.93: 	invalid.missing
+//│ ║        	^^^^^^^^^^^^^^^
+//│ ╟── Record literal does not contain member 'missing'
+//│ ║  l.92: 	fun invalid = if true then {answer: 44} else invalid
+//│ ╙──      	                            ^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// A valid alternative must not hide a later alternative without the member.
+:ge
+fun mixed = if true then {answer: 46} else if true then {other: 47} else mixed
+mixed.answer
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.105: 	mixed.answer
+//│ ║         	^^^^^^^^^^^^
+//│ ╟── Record literal does not contain member 'answer'
+//│ ║  l.104: 	fun mixed = if true then {answer: 46} else if true then {other: 47} else mixed
+//│ ╙──       	                                                         ^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// Exposure of a getter's enclosing function must still propagate unknown inputs.
+:ge
+fun exposed(value) =
+  fun result = if true then value else result
+  result.answer
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.118: 	  result.answer
+//│ ║         	  ^^^^^^^^^^^^^
+//│ ╟── Cannot resolve member 'answer' of a value with unknown shape.
+//│ ╟── Parameter 'value' admits values of unknown shape.
+//│ ║  l.116: 	fun exposed(value) =
+//│ ║         	            ^^^^^
+//│ ╟── 'exposed' is exposed by this compilation unit.
+//│ ║  l.116: 	fun exposed(value) =
+//│ ║         	^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.117: 	  fun result = if true then value else result
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.118: 	  result.answer
+//│ ╙──       	^^^^^^^^^^^^^^^

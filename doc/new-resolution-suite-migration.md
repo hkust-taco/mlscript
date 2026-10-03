@@ -41,11 +41,11 @@ compilation fixture; mixed-mode imports are supported.
 | opt | 30 | 0 | 30 |
 | std | 8 | 2 | 10 |
 | syntax | 11 | 0 | 11 |
-| tailrec | 2 | 3 | 5 |
+| tailrec | 3 | 2 | 5 |
 | ucs | 69 | 1 | 70 |
 | ups | 60 | 11 | 71 |
 | wasm | 23 | 0 | 23 |
-| Total | 528 | 107 | 635 |
+| Total | 529 | 106 | 635 |
 
 | Compilation suite | New resolution | Legacy resolution | Total |
 | --- | ---: | ---: | ---: |
@@ -97,9 +97,12 @@ following constraints identify the current failing behavior and representative t
   in `handlers`, `codegen/ScopedBlocksAndHandlers`, and handler cases in `lifter`.
   Receiver flow, resumption arguments, and abortive results need distinct handling
   (`newres/HandlerResults`).
-- **Recursive definitions and staged functions:** `basics/FunDefs` and recursive
-  getter cases in `tailrec` can overflow during resolution. `block-staging/Functions`
-  and `codegen/FirstClassFunctionTransform` encounter unfinished generated symbols.
+- **Operator checks, tail-call annotations, and staged functions:** `basics/FunDefs`
+  needs negative expectations for calls to non-callable operator definitions.
+  `tailrec/Annots` and `tailrec/TailRecOpt` need `@tailcall` support for getter
+  references and selections; `Annots` also contains an unresolved handler receiver.
+  `block-staging/Functions` and `codegen/FirstClassFunctionTransform` encounter
+  unfinished generated symbols.
 - **Legacy flow analysis:** the `flows` worksheets run a separate flow pass that
   does not handle new-resolution selections and can throw on `NewSel` nodes.
 - **Runtime instrumentation and privacy:** `codegen/ObjectMethodDebinding` loses
@@ -118,6 +121,8 @@ Focused coverage for capture identity and nominal interfaces is in `newres/CtxSe
 `ValCtxSens`, `Projections`, `RecursiveEnvironment`, `SpreadCalls`, `ScopePaths`,
 `InheritedTypeArguments`, and `InterfaceExposure`. These tests constrain fixes to
 recursive and exposed interfaces; unknown shapes must not silently become dynamic.
+`newres/RecursiveGetters` covers cyclic getter inference, productive results,
+captured and generic activations, imports, and invalid member access.
 
 ## Migration rules
 

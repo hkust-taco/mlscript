@@ -138,12 +138,6 @@ M.p.id
 //│ | | | | listenBMS: bms = value
 //│ | | | | listenedBMS: bms = value
 //│ | | | | listenTerm: td.body = member:Predef⁰^term:M⁰/p⁰
-//│ | | | | listenTerm: trm = member:Predef⁰^term:M⁰/p⁰
-//│ | | | | listen: trm = member:Predef⁰
-//│ | | | | listenBMS: bms = module
-//│ | | | | listenedBMS: bms = module
-//│ | | | | fromBMS: bms = member:Predef⁰, sh = module:Predef¹, flow = Predef², markss = List()
-//│ | | | | PUSH module:Predef¹
 //│ | | | | fromBMS: bms = member:p¹, sh = MarkedShape(module:Predef¹, ↘⟨term:M⁰/p⁰⟩ϵ), flow = ⋅p⁰, markss = List()
 //│ | | | | .exit MarkedShape (MarkedShape(module:Predef¹, ↘⟨term:M⁰/p⁰⟩ϵ), term:M⁰/p⁰, ⋅p⁰)
 //│ | | | | = module:Predef¹
@@ -154,12 +148,6 @@ M.p.id
 //│ | | | listenBMS: bms = value
 //│ | | | listenedBMS: bms = value
 //│ | | | listenTerm: td.body = member:Predef⁰^term:M⁰/p⁰
-//│ | | | listenTerm: trm = member:Predef⁰^term:M⁰/p⁰
-//│ | | | listen: trm = member:Predef⁰
-//│ | | | listenBMS: bms = module
-//│ | | | listenedBMS: bms = module
-//│ | | | fromBMS: bms = member:Predef⁰, sh = module:Predef¹, flow = Predef², markss = List()
-//│ | | | PUSH module:Predef¹
 //│ | | | fromBMS: bms = member:p¹, sh = MarkedShape(module:Predef¹, ↘⟨term:M⁰/p⁰⟩ϵ), flow = ⋅p⁰, markss = List()
 //│ | | | .exit MarkedShape (MarkedShape(module:Predef¹, ↘⟨term:M⁰/p⁰⟩ϵ), term:M⁰/p⁰, ⋅p⁰)
 //│ | | | = module:Predef¹

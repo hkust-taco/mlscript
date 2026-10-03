@@ -178,6 +178,22 @@ disambiguation. Class projections, constructor patterns, and type references req
 known, unambiguous identities. See `newres/Dynamic.mls`, `Records.mls`,
 `SpreadCalls.mls`, and `loose/Targets.mls`.
 
+## Recursive getter results
+
+Parameterless definition bodies have a shared result host, cached by definition
+and generic activation before following the body. Recursive references subscribe
+to that host instead of traversing the body again. An unproductive cycle has no
+normal result candidates; a productive branch publishes candidates through the
+cycle, with the publisher suppressing duplicates. No unknown or dynamic fallback
+is introduced to stop recursion.
+
+The host stores results at the body's lexical endpoint, including their activation
+events. Each reference still applies its own exit and capture marks. Resolver-state
+caches and consumer-local publisher copies preserve this graph across imports
+without sharing mutable inference between consumers. `newres/RecursiveGetters`
+checks cycles, later candidates, captures, generic specializations, imports, and
+runtime getter effects.
+
 ## Normal results of control flow
 
 Resolution must agree with lowering about which expressions produce values.
