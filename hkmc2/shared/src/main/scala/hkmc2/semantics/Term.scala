@@ -362,18 +362,6 @@ sealed trait NewSelImpl extends NewResolvableImpl:
   private def projectionClassesImpl: Ls[ClassSymbol] = self.cls.toList.flatMap: qualifier =>
     qualifier.resolvedTargets.collect { case cls: ClassSymbol => cls }.distinct
 
-  /** Preserve the selection subtype when cloning a projection's class qualifier. */
-  def mkSelClone(using State, Erasure): Term.NewSel =
-    val copy = new Term.NewSel(self.prefix.mkClone, self.id, self.cls.map(_.mkSelClone))(self.resSym)
-    copy.withLocOf(self)
-    copy.resolvedMembers = resolvedMembers
-    copy.hasDynamicTarget = hasDynamicTarget
-    copy.tupleIndex = tupleIndex
-    copy.resolvedTargets = resolvedTargets
-    copy.isErroneous = isErroneous
-    copy.shapes ++= self.shapes
-    copy.typeInterpretation = self.typeInterpretation
-    copy
 
 sealed trait UnresolvedRefImpl extends NewResolvableImpl:
   self: Term.UnresolvedRef =>
@@ -631,6 +619,10 @@ enum Term extends Statement, AutoLocated, ShapePublisher:
     * identity and completed results. Listeners belong to elaboration and are not copied.
     */
   override def mkClone(using State, Erasure): Term =
+    def copyMetadata[T <: Term](source: Term, copy: T): T =
+      copy.withLocOf(source)
+      copy.typeInterpretation = source.typeInterpretation
+      copy
     def copyShapes[T <: ShapeHost](source: ShapeHost, copy: T): T =
       copy.shapes ++= source.shapes
       copy
@@ -645,6 +637,13 @@ enum Term extends Statement, AutoLocated, ShapePublisher:
       copy.resolvedTargets = source.resolvedTargets
       copy.isErroneous = source.isErroneous
       copy
+    // Keep class qualifiers typed as selections while sharing all clone metadata copying.
+    def cloneSel(term: NewSel): NewSel =
+      val copy = new NewSel(term.prefix.mkClone, term.id, term.cls.map(cloneSel))(term.resSym)
+      copy.resolvedMembers = term.resolvedMembers
+      copy.hasDynamicTarget = term.hasDynamicTarget
+      copy.tupleIndex = term.tupleIndex
+      copyMetadata(term, copyNewResolution(term, copyShapes(term, copy)))
     val that = this match
       case Error() => Error()
       case UnitVal() => UnitVal()
@@ -658,7 +657,7 @@ enum Term extends Statement, AutoLocated, ShapePublisher:
       case term @ SimpleRef(sym) => SimpleRef(sym)(term.tree)
       case term @ SelfRef(sym) => SelfRef(sym)(term.tree)
       case term @ MemberRef(sym) => copyNewResolution(term, MemberRef(sym)(term.tree, term.resSym))
-      case term: NewSel => return term.mkSelClone
+      case term: NewSel => return cloneSel(term)
       case term @ UnresolvedRef(prefixes, id) =>
         val clonedPrefixes = prefixes.map(_.mkClone)
         val copy = UnresolvedRef(clonedPrefixes, id)(term.resSym)
@@ -732,9 +731,7 @@ enum Term extends Statement, AutoLocated, ShapePublisher:
       case Annotated(annot, target) => Annotated(annot, target.mkClone)
       case Handle(lhs, rhs, args, derivedClsSym, defs, body) =>
         Handle(lhs, rhs.mkClone, args.map(_.mkClone), derivedClsSym, defs, body.mkClone)
-    that.withLocOf(this)
-    that.typeInterpretation = typeInterpretation
-    that
+    copyMetadata(this, that)
   
   // // private[semantics] val reslListeners: Buffer[Resolution] = MutSet.empty
   // private[semantics] val shapeListeners: Buffer[Shape => Unit] = Buffer.empty
