@@ -153,7 +153,8 @@ class UnusedField with
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 
-// A read in the constructor alone keeps the initialized member storage live.
+// TODO: improve
+// A read in the constructor alone currently keeps the initialized member storage live.
 :soir
 class ConstructorLocal(value) with
   let stored = value

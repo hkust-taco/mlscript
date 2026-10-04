@@ -24,6 +24,7 @@ fun stringify(n: Int): Str = ["a", "b", "c"].[n]
 [0, 1, 2].map(pass1(stringify))
 //│ = ["a", "b", "c"]
 
+
 // A module member alias preserves access to imported polymorphic functions.
 module Imported with
   val p = Predef
@@ -31,3 +32,9 @@ module Imported with
 :expect 42
 Imported.p.id({answer: 42}).answer
 //│ = 42
+
+:expect true
+Imported.p.id(Predef).maybe
+//│ = true
+
+
