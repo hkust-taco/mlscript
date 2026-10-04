@@ -853,7 +853,9 @@ abstract class Parser(
       assert(opPrec(op)._1 <= prec)
       if rest.collectFirst{ case (_: NEWLINE_COMMA | IDENT("then", false), _) => }.isEmpty // TODO dedup
       then
-        OpSplit(lhs, acc.reverse)
+        // * The operator ends the split and is left for the caller to parse;
+        // * note that the item parsed on this line must be kept (hence `newAcc`, not `acc`)
+        OpSplit(lhs, newAcc.reverse)
       else
         err(
           msg"Operator cannot be used inside this operator split" -> S(l0) ::
@@ -865,7 +867,7 @@ abstract class Parser(
       err(msg"Unexpected ${tok.describe} in this operator split inner position" -> S(loc)::
           msg"Note: the operator split starts here" -> S(splittingOpLoc)
           :: Nil)
-      OpSplit(lhs, acc reverse_::: errExpr :: Nil)
+      OpSplit(lhs, newAcc reverse_::: errExpr :: Nil)
   
   
   /** `gobbleSpaces` is currently only used to prevent `@foo (2 + 2)` from parsing as `@foo(2 + 2) ...` */
