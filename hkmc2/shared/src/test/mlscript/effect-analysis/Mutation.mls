@@ -11,7 +11,7 @@ let state = 0
 fun mutate() =
   set state = 42
 //│ flow-analysis > >>> effect-analysis results >>>
-//│ flow-analysis > function mutate#0 @ <root> -> UnsafeEta
+//│ flow-analysis > function mutate⁰#0 @ <root> -> UnsafeEta
 //│ flow-analysis > <<< effect-analysis results <<<
 //│ state = 0
 
@@ -21,7 +21,7 @@ fun mutate_local() =
   let local = 0
   set local = 42
 //│ flow-analysis > >>> effect-analysis results >>>
-//│ flow-analysis > function mutate_local#0 @ <root> -> Pure
+//│ flow-analysis > function mutate_local⁰#0 @ <root> -> Pure
 //│ flow-analysis > <<< effect-analysis results <<<
 
 
@@ -30,7 +30,7 @@ fun mutate_alias(value) =
   let local = value
   set local = 42
 //│ flow-analysis > >>> effect-analysis results >>>
-//│ flow-analysis > function mutate_alias#0 @ <root> -> Pure
+//│ flow-analysis > function mutate_alias⁰#0 @ <root> -> Pure
 //│ flow-analysis > <<< effect-analysis results <<<
 
 
@@ -40,12 +40,12 @@ fun mutate_captured() =
   () =>
     set local = 42
 //│ flow-analysis > >>> effect-analysis results >>>
-//│ flow-analysis > function lambda#0 @ <root> -> UnsafeEta
-//│ flow-analysis > function lambda$#0 @ <root> -> Pure
-//│ flow-analysis > function lambda$#1 @ <root> -> UnsafeEta
-//│ flow-analysis > function mutate_captured#0 @ <root> -> UnsafeEta
-//│ flow-analysis > call lambda$@result @ <root> -> Pure
-//│ flow-analysis > call lambda@result @ <root> -> UnsafeEta
+//│ flow-analysis > function lambda$⁰#0 @ <root> -> Pure
+//│ flow-analysis > function lambda$⁰#1 @ <root> -> UnsafeEta
+//│ flow-analysis > function lambda⁰#0 @ <root> -> UnsafeEta
+//│ flow-analysis > function mutate_captured⁰#0 @ <root> -> UnsafeEta
+//│ flow-analysis > call lambda$⁰@result⁰ @ <root> -> Pure
+//│ flow-analysis > call lambda⁰@result¹ @ <root> -> UnsafeEta
 //│ flow-analysis > <<< effect-analysis results <<<
 
 
@@ -54,7 +54,7 @@ let state = mut { value: 0 }
 fun mutate_field() =
   set state.value = 42
 //│ flow-analysis > >>> effect-analysis results >>>
-//│ flow-analysis > function mutate_field#0 @ <root> -> UnsafeEta
+//│ flow-analysis > function mutate_field⁰#0 @ <root> -> UnsafeEta
 //│ flow-analysis > <<< effect-analysis results <<<
 //│ state = {value: 0}
 
@@ -63,7 +63,7 @@ let state = mut [0]
 fun mutate_element() =
   set state.[0] = 42
 //│ flow-analysis > >>> effect-analysis results >>>
-//│ flow-analysis > function mutate_element#0 @ <root> -> UnsafeEta
+//│ flow-analysis > function mutate_element⁰#0 @ <root> -> UnsafeEta
 //│ flow-analysis > <<< effect-analysis results <<<
 //│ state = [0]
 
@@ -78,8 +78,8 @@ fun mutate_local_element() =
   let local = mut [0]
   set local.[0] = 42
 //│ flow-analysis > >>> effect-analysis results >>>
-//│ flow-analysis > function mutate_local_element#0 @ <root> -> UnsafeEta
-//│ flow-analysis > function mutate_local_field#0 @ <root> -> UnsafeEta
+//│ flow-analysis > function mutate_local_element⁰#0 @ <root> -> UnsafeEta
+//│ flow-analysis > function mutate_local_field⁰#0 @ <root> -> UnsafeEta
 //│ flow-analysis > <<< effect-analysis results <<<
 
 
@@ -91,8 +91,8 @@ fun mutate_alias_element(xs) =
   let local = xs
   set local.[0] = 42
 //│ flow-analysis > >>> effect-analysis results >>>
-//│ flow-analysis > function mutate_alias_element#0 @ <root> -> UnsafeEta
-//│ flow-analysis > function mutate_alias_field#0 @ <root> -> UnsafeEta
+//│ flow-analysis > function mutate_alias_element⁰#0 @ <root> -> UnsafeEta
+//│ flow-analysis > function mutate_alias_field⁰#0 @ <root> -> UnsafeEta
 //│ flow-analysis > <<< effect-analysis results <<<
 
 
@@ -103,7 +103,7 @@ let state = 0
 fun observe() =
   state
 //│ flow-analysis > >>> effect-analysis results >>>
-//│ flow-analysis > function observe#0 @ <root> -> UnsafeEta
+//│ flow-analysis > function observe⁰#0 @ <root> -> UnsafeEta
 //│ flow-analysis > <<< effect-analysis results <<<
 //│ state = 0
 
@@ -113,7 +113,7 @@ fun observe_local() =
   let local = 0
   local
 //│ flow-analysis > >>> effect-analysis results >>>
-//│ flow-analysis > function observe_local#0 @ <root> -> Pure
+//│ flow-analysis > function observe_local⁰#0 @ <root> -> Pure
 //│ flow-analysis > <<< effect-analysis results <<<
 
 
@@ -122,7 +122,7 @@ fun observe_alias(value) =
   let local = value
   local
 //│ flow-analysis > >>> effect-analysis results >>>
-//│ flow-analysis > function observe_alias#0 @ <root> -> Pure
+//│ flow-analysis > function observe_alias⁰#0 @ <root> -> Pure
 //│ flow-analysis > <<< effect-analysis results <<<
 
 
@@ -132,12 +132,12 @@ fun observe_captured() =
   () =>
     local
 //│ flow-analysis > >>> effect-analysis results >>>
-//│ flow-analysis > function lambda#0 @ <root> -> Pure
-//│ flow-analysis > function lambda$#0 @ <root> -> Pure
-//│ flow-analysis > function lambda$#1 @ <root> -> Pure
-//│ flow-analysis > function observe_captured#0 @ <root> -> Pure
-//│ flow-analysis > call lambda$@result @ <root> -> Pure
-//│ flow-analysis > call lambda@result @ <root> -> Pure
+//│ flow-analysis > function lambda$⁰#0 @ <root> -> Pure
+//│ flow-analysis > function lambda$⁰#1 @ <root> -> Pure
+//│ flow-analysis > function lambda⁰#0 @ <root> -> Pure
+//│ flow-analysis > function observe_captured⁰#0 @ <root> -> Pure
+//│ flow-analysis > call lambda$⁰@result⁰ @ <root> -> Pure
+//│ flow-analysis > call lambda⁰@result¹ @ <root> -> Pure
 //│ flow-analysis > <<< effect-analysis results <<<
 
 // * Observing a mutable state is an effect.
@@ -147,7 +147,7 @@ set state = 42
 fun observe_mutable() =
   state
 //│ flow-analysis > >>> effect-analysis results >>>
-//│ flow-analysis > function observe_mutable#0 @ <root> -> UnsafeEta
+//│ flow-analysis > function observe_mutable⁰#0 @ <root> -> UnsafeEta
 //│ flow-analysis > <<< effect-analysis results <<<
 //│ state = 42
 let state = 0
@@ -155,7 +155,7 @@ fun observe_mutable() =
   state
 set state = 42
 //│ flow-analysis > >>> effect-analysis results >>>
-//│ flow-analysis > function observe_mutable#0 @ <root> -> UnsafeEta
+//│ flow-analysis > function observe_mutable⁰#0 @ <root> -> UnsafeEta
 //│ flow-analysis > <<< effect-analysis results <<<
 //│ state = 42
 
@@ -168,8 +168,8 @@ let state = [0]
 fun observe_element() =
   state.[0]
 //│ flow-analysis > >>> effect-analysis results >>>
-//│ flow-analysis > function observe_element#0 @ <root> -> UnsafeEta
-//│ flow-analysis > function observe_field#0 @ <root> -> UnsafeEta
+//│ flow-analysis > function observe_element⁰#0 @ <root> -> UnsafeEta
+//│ flow-analysis > function observe_field⁰#0 @ <root> -> UnsafeEta
 //│ flow-analysis > <<< effect-analysis results <<<
 //│ state = [0]
 
@@ -183,8 +183,8 @@ fun observe_local_element() =
   let local = [0]
   local.[0]
 //│ flow-analysis > >>> effect-analysis results >>>
-//│ flow-analysis > function observe_local_element#0 @ <root> -> UnsafeEta
-//│ flow-analysis > function observe_local_field#0 @ <root> -> UnsafeEta
+//│ flow-analysis > function observe_local_element⁰#0 @ <root> -> UnsafeEta
+//│ flow-analysis > function observe_local_field⁰#0 @ <root> -> UnsafeEta
 //│ flow-analysis > <<< effect-analysis results <<<
 
 
@@ -196,8 +196,8 @@ fun observe_alias_element(xs) =
   let local = xs
   local.[0]
 //│ flow-analysis > >>> effect-analysis results >>>
-//│ flow-analysis > function observe_alias_element#0 @ <root> -> UnsafeEta
-//│ flow-analysis > function observe_alias_field#0 @ <root> -> UnsafeEta
+//│ flow-analysis > function observe_alias_element⁰#0 @ <root> -> UnsafeEta
+//│ flow-analysis > function observe_alias_field⁰#0 @ <root> -> UnsafeEta
 //│ flow-analysis > <<< effect-analysis results <<<
 
 
@@ -211,8 +211,8 @@ fun rec_spread_local() =
   let obj = { value: 42 }
   {...obj}
 //│ flow-analysis > >>> effect-analysis results >>>
-//│ flow-analysis > function rec_spread_local#0 @ <root> -> UnsafeEta
-//│ flow-analysis > function tup_spread_local#0 @ <root> -> UnsafeEta
+//│ flow-analysis > function rec_spread_local⁰#0 @ <root> -> UnsafeEta
+//│ flow-analysis > function tup_spread_local⁰#0 @ <root> -> UnsafeEta
 //│ flow-analysis > <<< effect-analysis results <<<
 let xs = [42]
 fun tup_spread_nonlocal() =
@@ -221,8 +221,8 @@ let obj = { value: 42 }
 fun rec_spread_nonlocal() =
   {...obj}
 //│ flow-analysis > >>> effect-analysis results >>>
-//│ flow-analysis > function rec_spread_nonlocal#0 @ <root> -> UnsafeEta
-//│ flow-analysis > function tup_spread_nonlocal#0 @ <root> -> UnsafeEta
+//│ flow-analysis > function rec_spread_nonlocal⁰#0 @ <root> -> UnsafeEta
+//│ flow-analysis > function tup_spread_nonlocal⁰#0 @ <root> -> UnsafeEta
 //│ flow-analysis > <<< effect-analysis results <<<
 //│ obj = {value: 42}
 //│ xs = [42]
@@ -237,17 +237,17 @@ fun shared_captures() =
     set local = 42
   [observe, mutate]
 //│ flow-analysis > >>> effect-analysis results >>>
-//│ flow-analysis > function mutate#0 @ <root> -> UnsafeEta
-//│ flow-analysis > function mutate$#0 @ <root> -> Pure
-//│ flow-analysis > function mutate$#1 @ <root> -> UnsafeEta
-//│ flow-analysis > function observe#0 @ <root> -> UnsafeEta
-//│ flow-analysis > function observe$#0 @ <root> -> Pure
-//│ flow-analysis > function observe$#1 @ <root> -> UnsafeEta
-//│ flow-analysis > function shared_captures#0 @ <root> -> UnsafeEta
-//│ flow-analysis > call mutate$@result @ <root> -> Pure
-//│ flow-analysis > call mutate@result @ <root> -> UnsafeEta
-//│ flow-analysis > call observe$@result @ <root> -> Pure
-//│ flow-analysis > call observe@result @ <root> -> UnsafeEta
+//│ flow-analysis > function mutate$⁰#0 @ <root> -> Pure
+//│ flow-analysis > function mutate$⁰#1 @ <root> -> UnsafeEta
+//│ flow-analysis > function mutate⁰#0 @ <root> -> UnsafeEta
+//│ flow-analysis > function observe$⁰#0 @ <root> -> Pure
+//│ flow-analysis > function observe$⁰#1 @ <root> -> UnsafeEta
+//│ flow-analysis > function observe⁰#0 @ <root> -> UnsafeEta
+//│ flow-analysis > function shared_captures⁰#0 @ <root> -> UnsafeEta
+//│ flow-analysis > call mutate$⁰@result⁰ @ <root> -> Pure
+//│ flow-analysis > call mutate⁰@result² @ <root> -> UnsafeEta
+//│ flow-analysis > call observe$⁰@result¹ @ <root> -> Pure
+//│ flow-analysis > call observe⁰@result³ @ <root> -> UnsafeEta
 //│ flow-analysis > <<< effect-analysis results <<<
 
 
@@ -256,7 +256,7 @@ let state = 0
 fun mutate_if(cond) =
   if cond do set state = 42
 //│ flow-analysis > >>> effect-analysis results >>>
-//│ flow-analysis > function mutate_if#0 @ <root> -> UnsafeEta
+//│ flow-analysis > function mutate_if⁰#0 @ <root> -> UnsafeEta
 //│ flow-analysis > <<< effect-analysis results <<<
 //│ state = 0
 
@@ -267,7 +267,7 @@ fun mutate_local_if(cond) =
   if cond do set local = 42
   local
 //│ flow-analysis > >>> effect-analysis results >>>
-//│ flow-analysis > function mutate_local_if#0 @ <root> -> Pure
+//│ flow-analysis > function mutate_local_if⁰#0 @ <root> -> Pure
 //│ flow-analysis > <<< effect-analysis results <<<
 
 
@@ -278,7 +278,7 @@ fun mutate_loop(again) =
     set state = 42
     set again = false
 //│ flow-analysis > >>> effect-analysis results >>>
-//│ flow-analysis > function mutate_loop#0 @ <root> -> UnsafeEta
+//│ flow-analysis > function mutate_loop⁰#0 @ <root> -> UnsafeEta
 //│ flow-analysis > <<< effect-analysis results <<<
 //│ state = 0
 
@@ -291,5 +291,5 @@ fun mutate_local_loop(again) =
     set again = false
   local
 //│ flow-analysis > >>> effect-analysis results >>>
-//│ flow-analysis > function mutate_local_loop#0 @ <root> -> Pure
+//│ flow-analysis > function mutate_local_loop⁰#0 @ <root> -> Pure
 //│ flow-analysis > <<< effect-analysis results <<<

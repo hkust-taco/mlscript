@@ -38,25 +38,25 @@ f(3)
 //│ deforest > tmp_for_f⁰
 //│ deforest > <<< non-affine syms <<<
 //│ deforest > >>> effect-analysis results >>>
-//│ deforest > function f#0 @ f@f -> UnsafeEta
-//│ deforest > function f#0 @ f@f -> UnsafeEta
-//│ deforest > function f#0 @ g@g -> UnsafeEta
-//│ deforest > function g#0 @ f@f -> UnsafeEta
-//│ deforest > function g#0 @ f@f -> UnsafeEta
-//│ deforest > function g#0 @ g@g -> UnsafeEta
-//│ deforest > call -@result @ f@f -> Pure
-//│ deforest > call -@result @ f@f -> Pure
-//│ deforest > call -@result @ g@g -> Pure
-//│ deforest > call equals@result @ f@f -> UnsafeEta
-//│ deforest > call equals@result @ f@f -> UnsafeEta
-//│ deforest > call equals@result @ g@g -> UnsafeEta
-//│ deforest > call f@result @ <root> -> UnsafeEta
-//│ deforest > call f@result @ f@f -> UnsafeEta
-//│ deforest > call f@result @ f@f -> UnsafeEta
-//│ deforest > call f@result @ g@g -> UnsafeEta
-//│ deforest > call g@result @ f@f -> UnsafeEta
-//│ deforest > call g@result @ f@f -> UnsafeEta
-//│ deforest > call g@result @ g@g -> UnsafeEta
+//│ deforest > function f⁰#0 @ f² -> UnsafeEta
+//│ deforest > function f⁰#0 @ f¹ -> UnsafeEta
+//│ deforest > function f⁰#0 @ g⁰ -> UnsafeEta
+//│ deforest > function g¹#0 @ f² -> UnsafeEta
+//│ deforest > function g¹#0 @ f¹ -> UnsafeEta
+//│ deforest > function g¹#0 @ g⁰ -> UnsafeEta
+//│ deforest > call -⁰@result¹ @ f² -> Pure
+//│ deforest > call -⁰@result¹ @ f¹ -> Pure
+//│ deforest > call -⁰@result¹ @ g⁰ -> Pure
+//│ deforest > call equals@result⁰ @ f² -> UnsafeEta
+//│ deforest > call equals@result⁰ @ f¹ -> UnsafeEta
+//│ deforest > call equals@result⁰ @ g⁰ -> UnsafeEta
+//│ deforest > call f⁰@result³ @ f² -> UnsafeEta
+//│ deforest > call f⁰@result³ @ f¹ -> UnsafeEta
+//│ deforest > call f⁰@result³ @ g⁰ -> UnsafeEta
+//│ deforest > call f⁰@result⁴ @ <root> -> UnsafeEta
+//│ deforest > call g¹@result² @ f² -> UnsafeEta
+//│ deforest > call g¹@result² @ f¹ -> UnsafeEta
+//│ deforest > call g¹@result² @ g⁰ -> UnsafeEta
 //│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > <<< fusing <<<

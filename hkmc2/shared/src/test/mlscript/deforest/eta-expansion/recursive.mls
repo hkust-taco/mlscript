@@ -23,22 +23,22 @@ fun sum(ls, acc) = if ls is
   h :: t then sum(t, h + acc)
 sum(enum(5), 0)
 //│ deforest > >>> effect-analysis results >>>
-//│ deforest > function enum#0 @ enum@enum -> UnsafeEta
-//│ deforest > function enum#0 @ enum@enum -> UnsafeEta
-//│ deforest > function sum#0 @ sum@sum -> UnsafeEta
-//│ deforest > function sum#0 @ sum@sum -> UnsafeEta
-//│ deforest > call +@result @ sum@sum -> Pure
-//│ deforest > call +@result @ sum@sum -> Pure
-//│ deforest > call -@result @ enum@enum -> Pure
-//│ deforest > call -@result @ enum@enum -> Pure
-//│ deforest > call <@result @ enum@enum -> Pure
-//│ deforest > call <@result @ enum@enum -> Pure
-//│ deforest > call enum@result @ <root> -> UnsafeEta
-//│ deforest > call enum@result @ enum@enum -> UnsafeEta
-//│ deforest > call enum@result @ enum@enum -> UnsafeEta
-//│ deforest > call sum@result @ <root> -> UnsafeEta
-//│ deforest > call sum@result @ sum@sum -> UnsafeEta
-//│ deforest > call sum@result @ sum@sum -> UnsafeEta
+//│ deforest > function enum⁰#0 @ enum² -> UnsafeEta
+//│ deforest > function enum⁰#0 @ enum¹ -> UnsafeEta
+//│ deforest > function sum⁰#0 @ sum² -> UnsafeEta
+//│ deforest > function sum⁰#0 @ sum¹ -> UnsafeEta
+//│ deforest > call +⁰@result⁰ @ sum² -> Pure
+//│ deforest > call +⁰@result⁰ @ sum¹ -> Pure
+//│ deforest > call -⁰@result³ @ enum² -> Pure
+//│ deforest > call -⁰@result³ @ enum¹ -> Pure
+//│ deforest > call <⁰@result² @ enum² -> Pure
+//│ deforest > call <⁰@result² @ enum¹ -> Pure
+//│ deforest > call enum⁰@result⁴ @ enum² -> UnsafeEta
+//│ deforest > call enum⁰@result⁴ @ enum¹ -> UnsafeEta
+//│ deforest > call enum⁰@result⁶ @ <root> -> UnsafeEta
+//│ deforest > call sum⁰@result¹ @ sum² -> UnsafeEta
+//│ deforest > call sum⁰@result¹ @ sum¹ -> UnsafeEta
+//│ deforest > call sum⁰@result⁵ @ <root> -> UnsafeEta
 //│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > Nil⁰ ->
@@ -124,27 +124,27 @@ fun len(ls) = if ls is
   h :: t then 1 + len(t)
 len(flatten(id((1 :: 2 :: Nil) :: (3 :: Nil) :: Nil)))
 //│ deforest > >>> effect-analysis results >>>
-//│ deforest > function append#0 @ append@append -> UnsafeEta
-//│ deforest > function append#0 @ flatten@flatten.append@append -> UnsafeEta
-//│ deforest > function append#0 @ flatten@flatten.append@append -> UnsafeEta
-//│ deforest > function flatten#0 @ flatten@flatten -> UnsafeEta
-//│ deforest > function flatten#0 @ flatten@flatten -> UnsafeEta
-//│ deforest > function len#0 @ len@len -> UnsafeEta
-//│ deforest > function len#0 @ len@len -> UnsafeEta
-//│ deforest > call +@result @ len@len -> Pure
-//│ deforest > call +@result @ len@len -> Pure
-//│ deforest > call append@result @ append@append -> UnsafeEta
-//│ deforest > call append@result @ flatten@flatten -> UnsafeEta
-//│ deforest > call append@result @ flatten@flatten -> UnsafeEta
-//│ deforest > call append@result @ flatten@flatten.append@append -> UnsafeEta
-//│ deforest > call append@result @ flatten@flatten.append@append -> UnsafeEta
-//│ deforest > call flatten@result @ <root> -> UnsafeEta
-//│ deforest > call flatten@result @ flatten@flatten -> UnsafeEta
-//│ deforest > call flatten@result @ flatten@flatten -> UnsafeEta
-//│ deforest > call id@result @ <root> -> UnsafeEta
-//│ deforest > call len@result @ <root> -> UnsafeEta
-//│ deforest > call len@result @ len@len -> UnsafeEta
-//│ deforest > call len@result @ len@len -> UnsafeEta
+//│ deforest > function append⁰#0 @ append² -> UnsafeEta
+//│ deforest > function append⁰#0 @ flatten².append¹ -> UnsafeEta
+//│ deforest > function append⁰#0 @ flatten⁰.append¹ -> UnsafeEta
+//│ deforest > function flatten¹#0 @ flatten² -> UnsafeEta
+//│ deforest > function flatten¹#0 @ flatten⁰ -> UnsafeEta
+//│ deforest > function len⁰#0 @ len² -> UnsafeEta
+//│ deforest > function len⁰#0 @ len¹ -> UnsafeEta
+//│ deforest > call +⁰@result¹ @ len² -> Pure
+//│ deforest > call +⁰@result¹ @ len¹ -> Pure
+//│ deforest > call append⁰@result³ @ append² -> UnsafeEta
+//│ deforest > call append⁰@result³ @ flatten².append¹ -> UnsafeEta
+//│ deforest > call append⁰@result³ @ flatten⁰.append¹ -> UnsafeEta
+//│ deforest > call append⁰@result⁴ @ flatten² -> UnsafeEta
+//│ deforest > call append⁰@result⁴ @ flatten⁰ -> UnsafeEta
+//│ deforest > call flatten¹@result² @ flatten² -> UnsafeEta
+//│ deforest > call flatten¹@result² @ flatten⁰ -> UnsafeEta
+//│ deforest > call flatten¹@result⁶ @ <root> -> UnsafeEta
+//│ deforest > call id@result⁷ @ <root> -> UnsafeEta
+//│ deforest > call len⁰@result⁰ @ len² -> UnsafeEta
+//│ deforest > call len⁰@result⁰ @ len¹ -> UnsafeEta
+//│ deforest > call len⁰@result⁵ @ <root> -> UnsafeEta
 //│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > Nil⁰ ->
@@ -252,7 +252,7 @@ len(flatten(id((1 :: 2 :: Nil) :: (3 :: Nil) :: Nil)))
 :flowBasedOpt debugEta
 fun f(x) = f
 //│ deforest > >>> effect-analysis results >>>
-//│ deforest > function f#0 @ f@f -> Pure
+//│ deforest > function f⁰#0 @ f¹ -> Pure
 //│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > <<< fusing <<<

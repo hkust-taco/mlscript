@@ -23,20 +23,20 @@ fun fix(x) =
     fix(res)
 fix
 //│ deforest > >>> effect-analysis results >>>
-//│ deforest > function dl#0 @ dl@dl -> UnsafeEta
-//│ deforest > function dl#0 @ fix@fix.dl@dl -> UnsafeEta
-//│ deforest > function dl#0 @ fix@fix.dl@dl -> UnsafeEta
-//│ deforest > function fix#0 @ fix@fix -> UnsafeEta
-//│ deforest > function fix#0 @ fix@fix -> UnsafeEta
-//│ deforest > call dl@result @ dl@dl -> UnsafeEta
-//│ deforest > call dl@result @ fix@fix -> UnsafeEta
-//│ deforest > call dl@result @ fix@fix -> UnsafeEta
-//│ deforest > call dl@result @ fix@fix.dl@dl -> UnsafeEta
-//│ deforest > call dl@result @ fix@fix.dl@dl -> UnsafeEta
-//│ deforest > call fix@result @ fix@fix -> UnsafeEta
-//│ deforest > call fix@result @ fix@fix -> UnsafeEta
-//│ deforest > call lseq@result @ fix@fix -> UnsafeEta
-//│ deforest > call lseq@result @ fix@fix -> UnsafeEta
+//│ deforest > function dl⁰#0 @ dl² -> UnsafeEta
+//│ deforest > function dl⁰#0 @ fix².dl¹ -> UnsafeEta
+//│ deforest > function dl⁰#0 @ fix⁰.dl¹ -> UnsafeEta
+//│ deforest > function fix¹#0 @ fix² -> UnsafeEta
+//│ deforest > function fix¹#0 @ fix⁰ -> UnsafeEta
+//│ deforest > call dl⁰@result¹ @ fix² -> UnsafeEta
+//│ deforest > call dl⁰@result¹ @ fix⁰ -> UnsafeEta
+//│ deforest > call dl⁰@result⁰ @ dl² -> UnsafeEta
+//│ deforest > call dl⁰@result⁰ @ fix².dl¹ -> UnsafeEta
+//│ deforest > call dl⁰@result⁰ @ fix⁰.dl¹ -> UnsafeEta
+//│ deforest > call fix¹@result³ @ fix² -> UnsafeEta
+//│ deforest > call fix¹@result³ @ fix⁰ -> UnsafeEta
+//│ deforest > call lseq⁰@result² @ fix² -> UnsafeEta
+//│ deforest > call lseq⁰@result² @ fix⁰ -> UnsafeEta
 //│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > <<< fusing <<<
@@ -57,22 +57,22 @@ fun fix(x, fuel) =
     fix(res, fuel - 1)
 fix
 //│ deforest > >>> effect-analysis results >>>
-//│ deforest > function dl#0 @ dl@dl -> UnsafeEta
-//│ deforest > function dl#0 @ fix@fix.dl@dl -> UnsafeEta
-//│ deforest > function dl#0 @ fix@fix.dl@dl -> UnsafeEta
-//│ deforest > function fix#0 @ fix@fix -> UnsafeEta
-//│ deforest > function fix#0 @ fix@fix -> UnsafeEta
-//│ deforest > call -@result @ fix@fix -> Pure
-//│ deforest > call -@result @ fix@fix -> Pure
-//│ deforest > call dl@result @ dl@dl -> UnsafeEta
-//│ deforest > call dl@result @ fix@fix -> UnsafeEta
-//│ deforest > call dl@result @ fix@fix -> UnsafeEta
-//│ deforest > call dl@result @ fix@fix.dl@dl -> UnsafeEta
-//│ deforest > call dl@result @ fix@fix.dl@dl -> UnsafeEta
-//│ deforest > call equals@result @ fix@fix -> UnsafeEta
-//│ deforest > call equals@result @ fix@fix -> UnsafeEta
-//│ deforest > call fix@result @ fix@fix -> UnsafeEta
-//│ deforest > call fix@result @ fix@fix -> UnsafeEta
+//│ deforest > function dl⁰#0 @ dl² -> UnsafeEta
+//│ deforest > function dl⁰#0 @ fix².dl¹ -> UnsafeEta
+//│ deforest > function dl⁰#0 @ fix⁰.dl¹ -> UnsafeEta
+//│ deforest > function fix¹#0 @ fix² -> UnsafeEta
+//│ deforest > function fix¹#0 @ fix⁰ -> UnsafeEta
+//│ deforest > call -⁰@result³ @ fix² -> Pure
+//│ deforest > call -⁰@result³ @ fix⁰ -> Pure
+//│ deforest > call dl⁰@result¹ @ fix² -> UnsafeEta
+//│ deforest > call dl⁰@result¹ @ fix⁰ -> UnsafeEta
+//│ deforest > call dl⁰@result⁰ @ dl² -> UnsafeEta
+//│ deforest > call dl⁰@result⁰ @ fix².dl¹ -> UnsafeEta
+//│ deforest > call dl⁰@result⁰ @ fix⁰.dl¹ -> UnsafeEta
+//│ deforest > call equals@result² @ fix² -> UnsafeEta
+//│ deforest > call equals@result² @ fix⁰ -> UnsafeEta
+//│ deforest > call fix¹@result⁴ @ fix² -> UnsafeEta
+//│ deforest > call fix¹@result⁴ @ fix⁰ -> UnsafeEta
 //│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > <<< fusing <<<
@@ -94,30 +94,30 @@ fun fix(x, fuel) =
     fix(res, fuel - 1)
 fix
 //│ deforest > >>> effect-analysis results >>>
-//│ deforest > function dl#0 @ dl@dl -> UnsafeEta
-//│ deforest > function dl#0 @ fix@fix.dl@dl -> UnsafeEta
-//│ deforest > function dl#0 @ fix@fix.dl@dl -> UnsafeEta
-//│ deforest > function dlHelper#0 @ dl@dl.dlHelper@dlHelper -> UnsafeEta
-//│ deforest > function dlHelper#0 @ dlHelper@dlHelper -> UnsafeEta
-//│ deforest > function dlHelper#0 @ fix@fix.dl@dl.dlHelper@dlHelper -> UnsafeEta
-//│ deforest > function dlHelper#0 @ fix@fix.dl@dl.dlHelper@dlHelper -> UnsafeEta
-//│ deforest > function fix#0 @ fix@fix -> UnsafeEta
-//│ deforest > function fix#0 @ fix@fix -> UnsafeEta
-//│ deforest > call -@result @ fix@fix -> Pure
-//│ deforest > call -@result @ fix@fix -> Pure
-//│ deforest > call dl@result @ fix@fix -> UnsafeEta
-//│ deforest > call dl@result @ fix@fix -> UnsafeEta
-//│ deforest > call dlHelper@result @ dl@dl -> UnsafeEta
-//│ deforest > call dlHelper@result @ dl@dl.dlHelper@dlHelper -> UnsafeEta
-//│ deforest > call dlHelper@result @ dlHelper@dlHelper -> UnsafeEta
-//│ deforest > call dlHelper@result @ fix@fix.dl@dl -> UnsafeEta
-//│ deforest > call dlHelper@result @ fix@fix.dl@dl -> UnsafeEta
-//│ deforest > call dlHelper@result @ fix@fix.dl@dl.dlHelper@dlHelper -> UnsafeEta
-//│ deforest > call dlHelper@result @ fix@fix.dl@dl.dlHelper@dlHelper -> UnsafeEta
-//│ deforest > call equals@result @ fix@fix -> UnsafeEta
-//│ deforest > call equals@result @ fix@fix -> UnsafeEta
-//│ deforest > call fix@result @ fix@fix -> UnsafeEta
-//│ deforest > call fix@result @ fix@fix -> UnsafeEta
+//│ deforest > function dlHelper⁰#0 @ dlHelper² -> UnsafeEta
+//│ deforest > function dlHelper⁰#0 @ dl².dlHelper¹ -> UnsafeEta
+//│ deforest > function dlHelper⁰#0 @ fix².dl¹.dlHelper¹ -> UnsafeEta
+//│ deforest > function dlHelper⁰#0 @ fix⁰.dl¹.dlHelper¹ -> UnsafeEta
+//│ deforest > function dl⁰#0 @ dl² -> UnsafeEta
+//│ deforest > function dl⁰#0 @ fix².dl¹ -> UnsafeEta
+//│ deforest > function dl⁰#0 @ fix⁰.dl¹ -> UnsafeEta
+//│ deforest > function fix¹#0 @ fix² -> UnsafeEta
+//│ deforest > function fix¹#0 @ fix⁰ -> UnsafeEta
+//│ deforest > call -⁰@result⁴ @ fix² -> Pure
+//│ deforest > call -⁰@result⁴ @ fix⁰ -> Pure
+//│ deforest > call dlHelper⁰@result¹ @ dlHelper² -> UnsafeEta
+//│ deforest > call dlHelper⁰@result¹ @ dl².dlHelper¹ -> UnsafeEta
+//│ deforest > call dlHelper⁰@result¹ @ fix².dl¹.dlHelper¹ -> UnsafeEta
+//│ deforest > call dlHelper⁰@result¹ @ fix⁰.dl¹.dlHelper¹ -> UnsafeEta
+//│ deforest > call dlHelper⁰@result⁰ @ dl² -> UnsafeEta
+//│ deforest > call dlHelper⁰@result⁰ @ fix².dl¹ -> UnsafeEta
+//│ deforest > call dlHelper⁰@result⁰ @ fix⁰.dl¹ -> UnsafeEta
+//│ deforest > call dl⁰@result² @ fix² -> UnsafeEta
+//│ deforest > call dl⁰@result² @ fix⁰ -> UnsafeEta
+//│ deforest > call equals@result³ @ fix² -> UnsafeEta
+//│ deforest > call equals@result³ @ fix⁰ -> UnsafeEta
+//│ deforest > call fix¹@result⁵ @ fix² -> UnsafeEta
+//│ deforest > call fix¹@result⁵ @ fix⁰ -> UnsafeEta
 //│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > <<< fusing <<<
@@ -138,24 +138,24 @@ fun fix(x, fuel) =
     fix(res, fuel - 1)
 id(fix(Nil, 1000))
 //│ deforest > >>> effect-analysis results >>>
-//│ deforest > function dlHelper#0 @ dlHelper@dlHelper -> UnsafeEta
-//│ deforest > function dlHelper#0 @ fix@fix.dlHelper@dlHelper -> UnsafeEta
-//│ deforest > function dlHelper#0 @ fix@fix.dlHelper@dlHelper -> UnsafeEta
-//│ deforest > function fix#0 @ fix@fix -> UnsafeEta
-//│ deforest > function fix#0 @ fix@fix -> UnsafeEta
-//│ deforest > call -@result @ fix@fix -> Pure
-//│ deforest > call -@result @ fix@fix -> Pure
-//│ deforest > call dlHelper@result @ dlHelper@dlHelper -> UnsafeEta
-//│ deforest > call dlHelper@result @ fix@fix -> UnsafeEta
-//│ deforest > call dlHelper@result @ fix@fix -> UnsafeEta
-//│ deforest > call dlHelper@result @ fix@fix.dlHelper@dlHelper -> UnsafeEta
-//│ deforest > call dlHelper@result @ fix@fix.dlHelper@dlHelper -> UnsafeEta
-//│ deforest > call equals@result @ fix@fix -> UnsafeEta
-//│ deforest > call equals@result @ fix@fix -> UnsafeEta
-//│ deforest > call fix@result @ <root> -> UnsafeEta
-//│ deforest > call fix@result @ fix@fix -> UnsafeEta
-//│ deforest > call fix@result @ fix@fix -> UnsafeEta
-//│ deforest > call id@result @ <root> -> UnsafeEta
+//│ deforest > function dlHelper⁰#0 @ dlHelper² -> UnsafeEta
+//│ deforest > function dlHelper⁰#0 @ fix².dlHelper¹ -> UnsafeEta
+//│ deforest > function dlHelper⁰#0 @ fix⁰.dlHelper¹ -> UnsafeEta
+//│ deforest > function fix¹#0 @ fix² -> UnsafeEta
+//│ deforest > function fix¹#0 @ fix⁰ -> UnsafeEta
+//│ deforest > call -⁰@result³ @ fix² -> Pure
+//│ deforest > call -⁰@result³ @ fix⁰ -> Pure
+//│ deforest > call dlHelper⁰@result¹ @ fix² -> UnsafeEta
+//│ deforest > call dlHelper⁰@result¹ @ fix⁰ -> UnsafeEta
+//│ deforest > call dlHelper⁰@result⁰ @ dlHelper² -> UnsafeEta
+//│ deforest > call dlHelper⁰@result⁰ @ fix².dlHelper¹ -> UnsafeEta
+//│ deforest > call dlHelper⁰@result⁰ @ fix⁰.dlHelper¹ -> UnsafeEta
+//│ deforest > call equals@result² @ fix² -> UnsafeEta
+//│ deforest > call equals@result² @ fix⁰ -> UnsafeEta
+//│ deforest > call fix¹@result⁴ @ fix² -> UnsafeEta
+//│ deforest > call fix¹@result⁴ @ fix⁰ -> UnsafeEta
+//│ deforest > call fix¹@result⁶ @ <root> -> UnsafeEta
+//│ deforest > call id@result⁵ @ <root> -> UnsafeEta
 //│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > <<< fusing <<<
@@ -176,19 +176,19 @@ fun fix(x) =
     x :: xs then fix(dlHelper(x, xs))
 fix(2 :: 3 :: Nil)
 //│ deforest > >>> effect-analysis results >>>
-//│ deforest > function dlHelper#0 @ dlHelper@dlHelper -> UnsafeEta
-//│ deforest > function dlHelper#0 @ fix@fix.dlHelper@dlHelper -> UnsafeEta
-//│ deforest > function dlHelper#0 @ fix@fix.dlHelper@dlHelper -> UnsafeEta
-//│ deforest > function fix#0 @ fix@fix -> UnsafeEta
-//│ deforest > function fix#0 @ fix@fix -> UnsafeEta
-//│ deforest > call dlHelper@result @ dlHelper@dlHelper -> UnsafeEta
-//│ deforest > call dlHelper@result @ fix@fix -> UnsafeEta
-//│ deforest > call dlHelper@result @ fix@fix -> UnsafeEta
-//│ deforest > call dlHelper@result @ fix@fix.dlHelper@dlHelper -> UnsafeEta
-//│ deforest > call dlHelper@result @ fix@fix.dlHelper@dlHelper -> UnsafeEta
-//│ deforest > call fix@result @ <root> -> UnsafeEta
-//│ deforest > call fix@result @ fix@fix -> UnsafeEta
-//│ deforest > call fix@result @ fix@fix -> UnsafeEta
+//│ deforest > function dlHelper⁰#0 @ dlHelper² -> UnsafeEta
+//│ deforest > function dlHelper⁰#0 @ fix².dlHelper¹ -> UnsafeEta
+//│ deforest > function dlHelper⁰#0 @ fix⁰.dlHelper¹ -> UnsafeEta
+//│ deforest > function fix¹#0 @ fix² -> UnsafeEta
+//│ deforest > function fix¹#0 @ fix⁰ -> UnsafeEta
+//│ deforest > call dlHelper⁰@result¹ @ fix² -> UnsafeEta
+//│ deforest > call dlHelper⁰@result¹ @ fix⁰ -> UnsafeEta
+//│ deforest > call dlHelper⁰@result⁰ @ dlHelper² -> UnsafeEta
+//│ deforest > call dlHelper⁰@result⁰ @ fix².dlHelper¹ -> UnsafeEta
+//│ deforest > call dlHelper⁰@result⁰ @ fix⁰.dlHelper¹ -> UnsafeEta
+//│ deforest > call fix¹@result² @ fix² -> UnsafeEta
+//│ deforest > call fix¹@result² @ fix⁰ -> UnsafeEta
+//│ deforest > call fix¹@result³ @ <root> -> UnsafeEta
 //│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > <<< fusing <<<
@@ -207,21 +207,21 @@ fun f(x) = if x is
 fun loop(l, n) = if n > 0 then loop(f(l), n - 1) else l
 id(loop(Nil, 2))
 //│ deforest > >>> effect-analysis results >>>
-//│ deforest > function f#0 @ f@f -> UnsafeEta
-//│ deforest > function f#0 @ loop@loop.f@f -> UnsafeEta
-//│ deforest > function f#0 @ loop@loop.f@f -> UnsafeEta
-//│ deforest > function loop#0 @ loop@loop -> UnsafeEta
-//│ deforest > function loop#0 @ loop@loop -> UnsafeEta
-//│ deforest > call -@result @ loop@loop -> Pure
-//│ deforest > call -@result @ loop@loop -> Pure
-//│ deforest > call >@result @ loop@loop -> Pure
-//│ deforest > call >@result @ loop@loop -> Pure
-//│ deforest > call f@result @ loop@loop -> UnsafeEta
-//│ deforest > call f@result @ loop@loop -> UnsafeEta
-//│ deforest > call id@result @ <root> -> UnsafeEta
-//│ deforest > call loop@result @ <root> -> UnsafeEta
-//│ deforest > call loop@result @ loop@loop -> UnsafeEta
-//│ deforest > call loop@result @ loop@loop -> UnsafeEta
+//│ deforest > function f⁰#0 @ f² -> UnsafeEta
+//│ deforest > function f⁰#0 @ loop².f¹ -> UnsafeEta
+//│ deforest > function f⁰#0 @ loop⁰.f¹ -> UnsafeEta
+//│ deforest > function loop¹#0 @ loop² -> UnsafeEta
+//│ deforest > function loop¹#0 @ loop⁰ -> UnsafeEta
+//│ deforest > call -⁰@result² @ loop² -> Pure
+//│ deforest > call -⁰@result² @ loop⁰ -> Pure
+//│ deforest > call >⁰@result⁰ @ loop² -> Pure
+//│ deforest > call >⁰@result⁰ @ loop⁰ -> Pure
+//│ deforest > call f⁰@result¹ @ loop² -> UnsafeEta
+//│ deforest > call f⁰@result¹ @ loop⁰ -> UnsafeEta
+//│ deforest > call id@result⁴ @ <root> -> UnsafeEta
+//│ deforest > call loop¹@result³ @ loop² -> UnsafeEta
+//│ deforest > call loop¹@result³ @ loop⁰ -> UnsafeEta
+//│ deforest > call loop¹@result⁵ @ <root> -> UnsafeEta
 //│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > <<< fusing <<<

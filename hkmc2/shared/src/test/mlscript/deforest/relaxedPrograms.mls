@@ -15,9 +15,9 @@ class Store(n) with
 val store = Store(1)
 store.foo(AA(4))
 //│ deforest > >>> effect-analysis results >>>
-//│ deforest > call +@result @ <root> -> Pure
-//│ deforest > call +@result @ <root> -> Pure
-//│ deforest > call foo@result @ <root> -> UnsafeEta
+//│ deforest > call +⁰@result² @ <root> -> Pure
+//│ deforest > call +⁰@result¹ @ <root> -> Pure
+//│ deforest > call foo@result⁰ @ <root> -> UnsafeEta
 //│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > AA⁰(Store⁰.this.n⁰) ->
@@ -44,9 +44,9 @@ class Store(n) with
 val store = Store(1)
 store.foo(AA(4))
 //│ deforest > >>> effect-analysis results >>>
-//│ deforest > call +@result @ <root> -> Pure
-//│ deforest > call +@result @ <root> -> Pure
-//│ deforest > call foo@result @ <root> -> UnsafeEta
+//│ deforest > call +⁰@result² @ <root> -> Pure
+//│ deforest > call +⁰@result¹ @ <root> -> Pure
+//│ deforest > call foo@result⁰ @ <root> -> UnsafeEta
 //│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > AA¹(Store¹.this.n¹) ->
@@ -73,13 +73,13 @@ fun classMethodSibling() =
     AA(x) then x + store.get()
 classMethodSibling()
 //│ deforest > >>> effect-analysis results >>>
-//│ deforest > function classMethodSibling#0 @ classMethodSibling@classMethodSibling -> UnsafeEta
-//│ deforest > function classMethodSibling#0 @ classMethodSibling@classMethodSibling -> UnsafeEta
-//│ deforest > call +@result @ classMethodSibling@classMethodSibling -> Pure
-//│ deforest > call +@result @ classMethodSibling@classMethodSibling -> Pure
-//│ deforest > call classMethodSibling@result @ <root> -> UnsafeEta
-//│ deforest > call get@result @ classMethodSibling@classMethodSibling -> UnsafeEta
-//│ deforest > call get@result @ classMethodSibling@classMethodSibling -> UnsafeEta
+//│ deforest > function classMethodSibling⁰#0 @ classMethodSibling² -> UnsafeEta
+//│ deforest > function classMethodSibling⁰#0 @ classMethodSibling¹ -> UnsafeEta
+//│ deforest > call +⁰@result¹ @ classMethodSibling² -> Pure
+//│ deforest > call +⁰@result¹ @ classMethodSibling¹ -> Pure
+//│ deforest > call classMethodSibling⁰@result² @ <root> -> UnsafeEta
+//│ deforest > call get@result⁰ @ classMethodSibling² -> UnsafeEta
+//│ deforest > call get@result⁰ @ classMethodSibling¹ -> UnsafeEta
 //│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > AA¹(1) ->
@@ -101,7 +101,7 @@ if AA(1) is
   AA(x) then
     x + r!a
 //│ deforest > >>> effect-analysis results >>>
-//│ deforest > call +@result @ <root> -> Pure
+//│ deforest > call +⁰@result⁰ @ <root> -> Pure
 //│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > AA¹(1) ->
@@ -119,7 +119,7 @@ if AA(1) is
     let xs = [0, 1]
     x + xs!1
 //│ deforest > >>> effect-analysis results >>>
-//│ deforest > call +@result @ <root> -> Pure
+//│ deforest > call +⁰@result⁰ @ <root> -> Pure
 //│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > AA¹(1) ->
@@ -139,11 +139,11 @@ fun nestedClass() =
     AA(x) then x
 nestedClass()
 //│ deforest > >>> effect-analysis results >>>
-//│ deforest > function nestedClass#0 @ nestedClass@nestedClass -> UnsafeEta
-//│ deforest > function nestedClass#0 @ nestedClass@nestedClass -> UnsafeEta
-//│ deforest > call get@result @ nestedClass@nestedClass -> UnsafeEta
-//│ deforest > call get@result @ nestedClass@nestedClass -> UnsafeEta
-//│ deforest > call nestedClass@result @ <root> -> UnsafeEta
+//│ deforest > function nestedClass⁰#0 @ nestedClass² -> UnsafeEta
+//│ deforest > function nestedClass⁰#0 @ nestedClass¹ -> UnsafeEta
+//│ deforest > call get@result⁰ @ nestedClass² -> UnsafeEta
+//│ deforest > call get@result⁰ @ nestedClass¹ -> UnsafeEta
+//│ deforest > call nestedClass⁰@result¹ @ <root> -> UnsafeEta
 //│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > AA¹(1) ->
@@ -165,8 +165,8 @@ fun loopSibling() =
     if AA(1) is
       AA(x) then print(x)
 //│ deforest > >>> effect-analysis results >>>
-//│ deforest > function loopSibling#0 @ loopSibling@loopSibling -> UnsafeEta
-//│ deforest > call print@result @ loopSibling@loopSibling -> UnsafeEta
+//│ deforest > function loopSibling⁰#0 @ loopSibling¹ -> UnsafeEta
+//│ deforest > call print@result⁰ @ loopSibling¹ -> UnsafeEta
 //│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > AA¹(1) ->
@@ -189,11 +189,11 @@ class C(n) with
 let c = C(1)
 c.get() + c.get()
 //│ deforest > >>> effect-analysis results >>>
-//│ deforest > call +@result @ <root> -> Pure
-//│ deforest > call +@result @ <root> -> Pure
-//│ deforest > call +@result @ <root> -> Pure
-//│ deforest > call get@result @ <root> -> UnsafeEta
-//│ deforest > call get@result @ <root> -> UnsafeEta
+//│ deforest > call +⁰@result³ @ <root> -> Pure
+//│ deforest > call +⁰@result⁰ @ <root> -> Pure
+//│ deforest > call +⁰@result⁴ @ <root> -> Pure
+//│ deforest > call get@result² @ <root> -> UnsafeEta
+//│ deforest > call get@result¹ @ <root> -> UnsafeEta
 //│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > AA¹(1) ->
@@ -213,11 +213,11 @@ module M with
       AA(a) then a + _private
 M.f()
 //│ deforest > >>> effect-analysis results >>>
-//│ deforest > function f#0 @ f@f -> UnsafeEta
-//│ deforest > function f#0 @ f@f -> UnsafeEta
-//│ deforest > call +@result @ f@f -> Pure
-//│ deforest > call +@result @ f@f -> Pure
-//│ deforest > call f@result @ <root> -> UnsafeEta
+//│ deforest > function f⁰#0 @ f² -> UnsafeEta
+//│ deforest > function f⁰#0 @ f¹ -> UnsafeEta
+//│ deforest > call +⁰@result⁰ @ f² -> Pure
+//│ deforest > call +⁰@result⁰ @ f¹ -> Pure
+//│ deforest > call f@result¹ @ <root> -> UnsafeEta
 //│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > AA¹(1) ->
@@ -242,16 +242,16 @@ module M with
         AA(a) then a + g()
 M.MM.f()
 //│ deforest > >>> effect-analysis results >>>
-//│ deforest > function f#0 @ f@f -> UnsafeEta
-//│ deforest > function f#0 @ f@f -> UnsafeEta
-//│ deforest > function g#0 @ f@f.g@g -> Pure
-//│ deforest > function g#0 @ f@f.g@g -> Pure
-//│ deforest > function g#0 @ g@g -> Pure
-//│ deforest > call +@result @ f@f -> Pure
-//│ deforest > call +@result @ f@f -> Pure
-//│ deforest > call f@result @ <root> -> UnsafeEta
-//│ deforest > call g@result @ f@f -> Pure
-//│ deforest > call g@result @ f@f -> Pure
+//│ deforest > function f¹#0 @ f² -> UnsafeEta
+//│ deforest > function f¹#0 @ f⁰ -> UnsafeEta
+//│ deforest > function g⁰#0 @ f².g¹ -> Pure
+//│ deforest > function g⁰#0 @ f⁰.g¹ -> Pure
+//│ deforest > function g⁰#0 @ g² -> Pure
+//│ deforest > call +⁰@result¹ @ f² -> Pure
+//│ deforest > call +⁰@result¹ @ f⁰ -> Pure
+//│ deforest > call f@result² @ <root> -> UnsafeEta
+//│ deforest > call g@result⁰ @ f² -> Pure
+//│ deforest > call g@result⁰ @ f⁰ -> Pure
 //│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > AA¹(1) ->

@@ -25,12 +25,12 @@ fun c(x) = if x is
   X(a) then a
 c(p(3))
 //│ deforest > >>> effect-analysis results >>>
-//│ deforest > function c#0 @ c@c -> UnsafeEta
-//│ deforest > function c#0 @ c@c -> UnsafeEta
-//│ deforest > function p#0 @ p@p -> UnsafeEta
-//│ deforest > function p#0 @ p@p -> UnsafeEta
-//│ deforest > call c@result @ <root> -> UnsafeEta
-//│ deforest > call p@result @ <root> -> UnsafeEta
+//│ deforest > function c⁰#0 @ c² -> UnsafeEta
+//│ deforest > function c⁰#0 @ c¹ -> UnsafeEta
+//│ deforest > function p⁰#0 @ p² -> UnsafeEta
+//│ deforest > function p⁰#0 @ p¹ -> UnsafeEta
+//│ deforest > call c⁰@result⁰ @ <root> -> UnsafeEta
+//│ deforest > call p⁰@result¹ @ <root> -> UnsafeEta
 //│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > X⁰(x⁰) ->
@@ -52,12 +52,12 @@ fun c(x) = if x is
   B then 2
 c(p(true))
 //│ deforest > >>> effect-analysis results >>>
-//│ deforest > function c#0 @ c@c -> UnsafeEta
-//│ deforest > function c#0 @ c@c -> UnsafeEta
-//│ deforest > function p#0 @ p@p -> Pure
-//│ deforest > function p#0 @ p@p -> Pure
-//│ deforest > call c@result @ <root> -> UnsafeEta
-//│ deforest > call p@result @ <root> -> Pure
+//│ deforest > function c⁰#0 @ c² -> UnsafeEta
+//│ deforest > function c⁰#0 @ c¹ -> UnsafeEta
+//│ deforest > function p⁰#0 @ p² -> Pure
+//│ deforest > function p⁰#0 @ p¹ -> Pure
+//│ deforest > call c⁰@result⁰ @ <root> -> UnsafeEta
+//│ deforest > call p⁰@result¹ @ <root> -> Pure
 //│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > A⁰ ->
@@ -79,15 +79,15 @@ fun g(y) = if y is
   Y(o) then o
 g(f(p()))
 //│ deforest > >>> effect-analysis results >>>
-//│ deforest > function f#0 @ f@f -> UnsafeEta
-//│ deforest > function f#0 @ f@f -> UnsafeEta
-//│ deforest > function g#0 @ g@g -> UnsafeEta
-//│ deforest > function g#0 @ g@g -> UnsafeEta
-//│ deforest > function p#0 @ p@p -> UnsafeEta
-//│ deforest > function p#0 @ p@p -> UnsafeEta
-//│ deforest > call f@result @ <root> -> UnsafeEta
-//│ deforest > call g@result @ <root> -> UnsafeEta
-//│ deforest > call p@result @ <root> -> UnsafeEta
+//│ deforest > function f⁰#0 @ f² -> UnsafeEta
+//│ deforest > function f⁰#0 @ f¹ -> UnsafeEta
+//│ deforest > function g⁰#0 @ g² -> UnsafeEta
+//│ deforest > function g⁰#0 @ g¹ -> UnsafeEta
+//│ deforest > function p⁰#0 @ p² -> UnsafeEta
+//│ deforest > function p⁰#0 @ p¹ -> UnsafeEta
+//│ deforest > call f⁰@result¹ @ <root> -> UnsafeEta
+//│ deforest > call g⁰@result⁰ @ <root> -> UnsafeEta
+//│ deforest > call p⁰@result² @ <root> -> UnsafeEta
 //│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > X⁰(tmp⁰) ->
@@ -113,12 +113,12 @@ fun c(x) = if x is
   X(Y(y)) then y
 c(p(true))
 //│ deforest > >>> effect-analysis results >>>
-//│ deforest > function c#0 @ c@c -> UnsafeEta
-//│ deforest > function c#0 @ c@c -> UnsafeEta
-//│ deforest > function p#0 @ p@p -> UnsafeEta
-//│ deforest > function p#0 @ p@p -> UnsafeEta
-//│ deforest > call c@result @ <root> -> UnsafeEta
-//│ deforest > call p@result @ <root> -> UnsafeEta
+//│ deforest > function c⁰#0 @ c² -> UnsafeEta
+//│ deforest > function c⁰#0 @ c¹ -> UnsafeEta
+//│ deforest > function p⁰#0 @ p² -> UnsafeEta
+//│ deforest > function p⁰#0 @ p¹ -> UnsafeEta
+//│ deforest > call c⁰@result⁰ @ <root> -> UnsafeEta
+//│ deforest > call p⁰@result¹ @ <root> -> UnsafeEta
 //│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > X⁰(tmp¹) ->
@@ -148,19 +148,19 @@ fun main(x) =
   c(p(2))
 main(3)
 //│ deforest > >>> effect-analysis results >>>
-//│ deforest > function c#0 @ main@main -> UnsafeEta
-//│ deforest > function c#0 @ main@main -> UnsafeEta
-//│ deforest > function main#0 @ main@main -> UnsafeEta
-//│ deforest > function main#0 @ main@main -> UnsafeEta
-//│ deforest > function p#0 @ main@main -> UnsafeEta
-//│ deforest > function p#0 @ main@main -> UnsafeEta
-//│ deforest > call +@result @ main@main -> Pure
-//│ deforest > call +@result @ main@main -> Pure
-//│ deforest > call c@result @ main@main -> UnsafeEta
-//│ deforest > call c@result @ main@main -> UnsafeEta
-//│ deforest > call main@result @ <root> -> UnsafeEta
-//│ deforest > call p@result @ main@main -> UnsafeEta
-//│ deforest > call p@result @ main@main -> UnsafeEta
+//│ deforest > function c⁰#0 @ main² -> UnsafeEta
+//│ deforest > function c⁰#0 @ main⁰ -> UnsafeEta
+//│ deforest > function main¹#0 @ main² -> UnsafeEta
+//│ deforest > function main¹#0 @ main⁰ -> UnsafeEta
+//│ deforest > function p⁰#0 @ main² -> UnsafeEta
+//│ deforest > function p⁰#0 @ main⁰ -> UnsafeEta
+//│ deforest > call +⁰@result⁰ @ main² -> Pure
+//│ deforest > call +⁰@result⁰ @ main⁰ -> Pure
+//│ deforest > call c⁰@result² @ main² -> UnsafeEta
+//│ deforest > call c⁰@result² @ main⁰ -> UnsafeEta
+//│ deforest > call main¹@result³ @ <root> -> UnsafeEta
+//│ deforest > call p⁰@result¹ @ main² -> UnsafeEta
+//│ deforest > call p⁰@result¹ @ main⁰ -> UnsafeEta
 //│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > X⁰(tmp³) ->
@@ -190,12 +190,12 @@ fun c(x) = if x is
   X(a) then a
 c(p(3))
 //│ deforest > >>> effect-analysis results >>>
-//│ deforest > function c#0 @ c@c -> UnsafeEta
-//│ deforest > function c#0 @ c@c -> UnsafeEta
-//│ deforest > function p#0 @ p@p -> UnsafeEta
-//│ deforest > function p#0 @ p@p -> UnsafeEta
-//│ deforest > call c@result @ <root> -> UnsafeEta
-//│ deforest > call p@result @ <root> -> UnsafeEta
+//│ deforest > function c⁰#0 @ c² -> UnsafeEta
+//│ deforest > function c⁰#0 @ c¹ -> UnsafeEta
+//│ deforest > function p⁰#0 @ p² -> UnsafeEta
+//│ deforest > function p⁰#0 @ p¹ -> UnsafeEta
+//│ deforest > call c⁰@result⁰ @ <root> -> UnsafeEta
+//│ deforest > call p⁰@result¹ @ <root> -> UnsafeEta
 //│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > X⁰(x⁶) ->

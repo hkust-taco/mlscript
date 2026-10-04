@@ -48,7 +48,7 @@ fun selected(n: Int, k: Str) =
   if b is
     Box(x) then [x, k]
 //│ deforest > >>> effect-analysis results >>>
-//│ deforest > function selected#0 @ selected@selected -> UnsafeEta
+//│ deforest > function selected⁰#0 @ selected¹ -> UnsafeEta
 //│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > Box¹(n⁰) ->
@@ -85,7 +85,7 @@ fun withRest(n: Int, k: Str) =
     else 0
   [r, k]
 //│ deforest > >>> effect-analysis results >>>
-//│ deforest > function withRest#0 @ withRest@withRest -> UnsafeEta
+//│ deforest > function withRest⁰#0 @ withRest¹ -> UnsafeEta
 //│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > Box¹(n¹) ->
@@ -122,7 +122,7 @@ fun noFields(n: Int, s: Str) =
   if p is
     Pair then 1
 //│ deforest > >>> effect-analysis results >>>
-//│ deforest > function noFields#0 @ noFields@noFields -> UnsafeEta
+//│ deforest > function noFields⁰#0 @ noFields¹ -> UnsafeEta
 //│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > Pair¹(n², s⁰) ->

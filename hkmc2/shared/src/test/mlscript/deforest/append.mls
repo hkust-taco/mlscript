@@ -26,28 +26,28 @@ appendThree of
   id(3 :: 4 :: Nil)
   id(5 :: 6 :: Nil)
 //│ deforest > >>> effect-analysis results >>>
-//│ deforest > function append1#0 @ append1@append1 -> UnsafeEta
-//│ deforest > function append1#0 @ appendThree@appendThree.append1@append1 -> UnsafeEta
-//│ deforest > function append1#0 @ appendThree@appendThree.append1@append1 -> UnsafeEta
-//│ deforest > function append2#0 @ append2@append2 -> UnsafeEta
-//│ deforest > function append2#0 @ appendThree@appendThree.append2@append2 -> UnsafeEta
-//│ deforest > function append2#0 @ appendThree@appendThree.append2@append2 -> UnsafeEta
-//│ deforest > function appendThree#0 @ appendThree@appendThree -> UnsafeEta
-//│ deforest > function appendThree#0 @ appendThree@appendThree -> UnsafeEta
-//│ deforest > call append1@result @ append1@append1 -> UnsafeEta
-//│ deforest > call append1@result @ appendThree@appendThree -> UnsafeEta
-//│ deforest > call append1@result @ appendThree@appendThree -> UnsafeEta
-//│ deforest > call append1@result @ appendThree@appendThree.append1@append1 -> UnsafeEta
-//│ deforest > call append1@result @ appendThree@appendThree.append1@append1 -> UnsafeEta
-//│ deforest > call append2@result @ append2@append2 -> UnsafeEta
-//│ deforest > call append2@result @ appendThree@appendThree -> UnsafeEta
-//│ deforest > call append2@result @ appendThree@appendThree -> UnsafeEta
-//│ deforest > call append2@result @ appendThree@appendThree.append2@append2 -> UnsafeEta
-//│ deforest > call append2@result @ appendThree@appendThree.append2@append2 -> UnsafeEta
-//│ deforest > call appendThree@result @ <root> -> UnsafeEta
-//│ deforest > call id@result @ <root> -> UnsafeEta
-//│ deforest > call id@result @ <root> -> UnsafeEta
-//│ deforest > call id@result @ <root> -> UnsafeEta
+//│ deforest > function append1⁰#0 @ append1² -> UnsafeEta
+//│ deforest > function append1⁰#0 @ appendThree².append1¹ -> UnsafeEta
+//│ deforest > function append1⁰#0 @ appendThree⁰.append1¹ -> UnsafeEta
+//│ deforest > function append2⁰#0 @ append2² -> UnsafeEta
+//│ deforest > function append2⁰#0 @ appendThree².append2¹ -> UnsafeEta
+//│ deforest > function append2⁰#0 @ appendThree⁰.append2¹ -> UnsafeEta
+//│ deforest > function appendThree¹#0 @ appendThree² -> UnsafeEta
+//│ deforest > function appendThree¹#0 @ appendThree⁰ -> UnsafeEta
+//│ deforest > call append1⁰@result² @ append1² -> UnsafeEta
+//│ deforest > call append1⁰@result² @ appendThree².append1¹ -> UnsafeEta
+//│ deforest > call append1⁰@result² @ appendThree⁰.append1¹ -> UnsafeEta
+//│ deforest > call append1⁰@result³ @ appendThree² -> UnsafeEta
+//│ deforest > call append1⁰@result³ @ appendThree⁰ -> UnsafeEta
+//│ deforest > call append2⁰@result¹ @ appendThree² -> UnsafeEta
+//│ deforest > call append2⁰@result¹ @ appendThree⁰ -> UnsafeEta
+//│ deforest > call append2⁰@result⁰ @ append2² -> UnsafeEta
+//│ deforest > call append2⁰@result⁰ @ appendThree².append2¹ -> UnsafeEta
+//│ deforest > call append2⁰@result⁰ @ appendThree⁰.append2¹ -> UnsafeEta
+//│ deforest > call appendThree¹@result⁴ @ <root> -> UnsafeEta
+//│ deforest > call id@result⁵ @ <root> -> UnsafeEta
+//│ deforest > call id@result⁶ @ <root> -> UnsafeEta
+//│ deforest > call id@result⁷ @ <root> -> UnsafeEta
 //│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > <<< fusing <<<
@@ -70,54 +70,54 @@ test of
   id(3 :: 4 :: Nil)
   id(5 :: 6 :: Nil)
 //│ deforest > >>> effect-analysis results >>>
-//│ deforest > function append1#0 @ append1@append1 -> UnsafeEta
-//│ deforest > function append1#0 @ append2@append2.append1@append1 -> UnsafeEta
-//│ deforest > function append1#0 @ test@test.append1@append1 -> UnsafeEta
-//│ deforest > function append1#0 @ test@test.append1@append1 -> UnsafeEta
-//│ deforest > function append1#0 @ test@test.append2@append2.append1@append1 -> UnsafeEta
-//│ deforest > function append1#0 @ test@test.append2@append2.append1@append1 -> UnsafeEta
-//│ deforest > function append2#0 @ append2@append2 -> UnsafeEta
-//│ deforest > function append2#0 @ test@test.append2@append2 -> UnsafeEta
-//│ deforest > function append2#0 @ test@test.append2@append2 -> UnsafeEta
-//│ deforest > function appendReified#0 @ append2@append2.appendReified@appendReified -> UnsafeEta
-//│ deforest > function appendReified#0 @ appendReified@appendReified -> UnsafeEta
-//│ deforest > function appendReified#0 @ test@test.append2@append2.appendReified@appendReified -> UnsafeEta
-//│ deforest > function appendReified#0 @ test@test.append2@append2.appendReified@appendReified -> UnsafeEta
-//│ deforest > function lambda#0 @ append2@append2 -> UnsafeEta
-//│ deforest > function lambda#0 @ append2@append2 -> UnsafeEta
-//│ deforest > function lambda#0 @ test@test.append2@append2 -> UnsafeEta
-//│ deforest > function lambda#0 @ test@test.append2@append2 -> UnsafeEta
-//│ deforest > function lambda#0 @ test@test.append2@append2 -> UnsafeEta
-//│ deforest > function lambda#0 @ test@test.append2@append2 -> UnsafeEta
-//│ deforest > function test#0 @ test@test -> UnsafeEta
-//│ deforest > function test#0 @ test@test -> UnsafeEta
-//│ deforest > call append1@result @ append2@append2 -> UnsafeEta
-//│ deforest > call append1@result @ test@test -> UnsafeEta
-//│ deforest > call append1@result @ test@test -> UnsafeEta
-//│ deforest > call append1@result @ test@test.append2@append2 -> UnsafeEta
-//│ deforest > call append1@result @ test@test.append2@append2 -> UnsafeEta
-//│ deforest > call append2@result @ append2@append2 -> UnsafeEta
-//│ deforest > call append2@result @ test@test -> UnsafeEta
-//│ deforest > call append2@result @ test@test -> UnsafeEta
-//│ deforest > call append2@result @ test@test.append2@append2 -> UnsafeEta
-//│ deforest > call append2@result @ test@test.append2@append2 -> UnsafeEta
-//│ deforest > call appendReified@result @ append2@append2 -> UnsafeEta
-//│ deforest > call appendReified@result @ append2@append2.appendReified@appendReified -> UnsafeEta
-//│ deforest > call appendReified@result @ appendReified@appendReified -> UnsafeEta
-//│ deforest > call appendReified@result @ test@test.append2@append2 -> UnsafeEta
-//│ deforest > call appendReified@result @ test@test.append2@append2 -> UnsafeEta
-//│ deforest > call appendReified@result @ test@test.append2@append2.appendReified@appendReified -> UnsafeEta
-//│ deforest > call appendReified@result @ test@test.append2@append2.appendReified@appendReified -> UnsafeEta
-//│ deforest > call id@result @ <root> -> UnsafeEta
-//│ deforest > call id@result @ <root> -> UnsafeEta
-//│ deforest > call id@result @ <root> -> UnsafeEta
-//│ deforest > call test@result @ <root> -> UnsafeEta
-//│ deforest > call ys@result @ append1@append1 -> UnsafeEta
-//│ deforest > call ys@result @ append2@append2.append1@append1 -> UnsafeEta
-//│ deforest > call ys@result @ test@test.append1@append1 -> UnsafeEta
-//│ deforest > call ys@result @ test@test.append1@append1 -> UnsafeEta
-//│ deforest > call ys@result @ test@test.append2@append2.append1@append1 -> UnsafeEta
-//│ deforest > call ys@result @ test@test.append2@append2.append1@append1 -> UnsafeEta
+//│ deforest > function append1⁰#0 @ append1³ -> UnsafeEta
+//│ deforest > function append1⁰#0 @ append2².append1¹ -> UnsafeEta
+//│ deforest > function append1⁰#0 @ test².append1² -> UnsafeEta
+//│ deforest > function append1⁰#0 @ test².append2¹.append1¹ -> UnsafeEta
+//│ deforest > function append1⁰#0 @ test⁰.append1² -> UnsafeEta
+//│ deforest > function append1⁰#0 @ test⁰.append2¹.append1¹ -> UnsafeEta
+//│ deforest > function append2⁰#0 @ append2² -> UnsafeEta
+//│ deforest > function append2⁰#0 @ test².append2¹ -> UnsafeEta
+//│ deforest > function append2⁰#0 @ test⁰.append2¹ -> UnsafeEta
+//│ deforest > function appendReified⁰#0 @ append2².appendReified¹ -> UnsafeEta
+//│ deforest > function appendReified⁰#0 @ appendReified² -> UnsafeEta
+//│ deforest > function appendReified⁰#0 @ test².append2¹.appendReified¹ -> UnsafeEta
+//│ deforest > function appendReified⁰#0 @ test⁰.append2¹.appendReified¹ -> UnsafeEta
+//│ deforest > function lambda¹#0 @ append2² -> UnsafeEta
+//│ deforest > function lambda¹#0 @ test².append2¹ -> UnsafeEta
+//│ deforest > function lambda¹#0 @ test⁰.append2¹ -> UnsafeEta
+//│ deforest > function lambda⁰#0 @ append2² -> UnsafeEta
+//│ deforest > function lambda⁰#0 @ test².append2¹ -> UnsafeEta
+//│ deforest > function lambda⁰#0 @ test⁰.append2¹ -> UnsafeEta
+//│ deforest > function test¹#0 @ test² -> UnsafeEta
+//│ deforest > function test¹#0 @ test⁰ -> UnsafeEta
+//│ deforest > call append1⁰@result² @ append2² -> UnsafeEta
+//│ deforest > call append1⁰@result² @ test².append2¹ -> UnsafeEta
+//│ deforest > call append1⁰@result² @ test⁰.append2¹ -> UnsafeEta
+//│ deforest > call append1⁰@result⁶ @ test² -> UnsafeEta
+//│ deforest > call append1⁰@result⁶ @ test⁰ -> UnsafeEta
+//│ deforest > call append2⁰@result⁴ @ append2² -> UnsafeEta
+//│ deforest > call append2⁰@result⁴ @ test².append2¹ -> UnsafeEta
+//│ deforest > call append2⁰@result⁴ @ test⁰.append2¹ -> UnsafeEta
+//│ deforest > call append2⁰@result⁵ @ test² -> UnsafeEta
+//│ deforest > call append2⁰@result⁵ @ test⁰ -> UnsafeEta
+//│ deforest > call appendReified⁰@result¹ @ append2².appendReified¹ -> UnsafeEta
+//│ deforest > call appendReified⁰@result¹ @ appendReified² -> UnsafeEta
+//│ deforest > call appendReified⁰@result¹ @ test².append2¹.appendReified¹ -> UnsafeEta
+//│ deforest > call appendReified⁰@result¹ @ test⁰.append2¹.appendReified¹ -> UnsafeEta
+//│ deforest > call appendReified⁰@result⁰ @ append2² -> UnsafeEta
+//│ deforest > call appendReified⁰@result⁰ @ test².append2¹ -> UnsafeEta
+//│ deforest > call appendReified⁰@result⁰ @ test⁰.append2¹ -> UnsafeEta
+//│ deforest > call id@result¹⁰ @ <root> -> UnsafeEta
+//│ deforest > call id@result⁸ @ <root> -> UnsafeEta
+//│ deforest > call id@result⁹ @ <root> -> UnsafeEta
+//│ deforest > call test¹@result⁷ @ <root> -> UnsafeEta
+//│ deforest > call ys⁰@result³ @ append1³ -> UnsafeEta
+//│ deforest > call ys⁰@result³ @ append2².append1¹ -> UnsafeEta
+//│ deforest > call ys⁰@result³ @ test².append1² -> UnsafeEta
+//│ deforest > call ys⁰@result³ @ test².append2¹.append1¹ -> UnsafeEta
+//│ deforest > call ys⁰@result³ @ test⁰.append1² -> UnsafeEta
+//│ deforest > call ys⁰@result³ @ test⁰.append2¹.append1¹ -> UnsafeEta
 //│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > <<< fusing <<<
@@ -138,43 +138,43 @@ appendThree of
   id(3 :: 4 :: Nil)
   id(5 :: 6 :: Nil)
 //│ deforest > >>> effect-analysis results >>>
-//│ deforest > function append#0 @ append@append -> UnsafeEta
-//│ deforest > function append#0 @ appendThree@appendThree.append@append -> UnsafeEta
-//│ deforest > function append#0 @ appendThree@appendThree.append@append -> UnsafeEta
-//│ deforest > function append#0 @ appendThree@appendThree.append@append -> UnsafeEta
-//│ deforest > function append#0 @ appendThree@appendThree.append@append -> UnsafeEta
-//│ deforest > function appendThree#0 @ appendThree@appendThree -> UnsafeEta
-//│ deforest > function appendThree#0 @ appendThree@appendThree -> UnsafeEta
-//│ deforest > function idList#0 @ append@append.idList@idList -> UnsafeEta
-//│ deforest > function idList#0 @ appendThree@appendThree.append@append.idList@idList -> UnsafeEta
-//│ deforest > function idList#0 @ appendThree@appendThree.append@append.idList@idList -> UnsafeEta
-//│ deforest > function idList#0 @ appendThree@appendThree.append@append.idList@idList -> UnsafeEta
-//│ deforest > function idList#0 @ appendThree@appendThree.append@append.idList@idList -> UnsafeEta
-//│ deforest > function idList#0 @ idList@idList -> UnsafeEta
-//│ deforest > call append@result @ append@append -> UnsafeEta
-//│ deforest > call append@result @ appendThree@appendThree -> UnsafeEta
-//│ deforest > call append@result @ appendThree@appendThree -> UnsafeEta
-//│ deforest > call append@result @ appendThree@appendThree -> UnsafeEta
-//│ deforest > call append@result @ appendThree@appendThree -> UnsafeEta
-//│ deforest > call append@result @ appendThree@appendThree.append@append -> UnsafeEta
-//│ deforest > call append@result @ appendThree@appendThree.append@append -> UnsafeEta
-//│ deforest > call append@result @ appendThree@appendThree.append@append -> UnsafeEta
-//│ deforest > call append@result @ appendThree@appendThree.append@append -> UnsafeEta
-//│ deforest > call appendThree@result @ <root> -> UnsafeEta
-//│ deforest > call id@result @ <root> -> UnsafeEta
-//│ deforest > call id@result @ <root> -> UnsafeEta
-//│ deforest > call id@result @ <root> -> UnsafeEta
-//│ deforest > call idList@result @ append@append -> UnsafeEta
-//│ deforest > call idList@result @ append@append.idList@idList -> UnsafeEta
-//│ deforest > call idList@result @ appendThree@appendThree.append@append -> UnsafeEta
-//│ deforest > call idList@result @ appendThree@appendThree.append@append -> UnsafeEta
-//│ deforest > call idList@result @ appendThree@appendThree.append@append -> UnsafeEta
-//│ deforest > call idList@result @ appendThree@appendThree.append@append -> UnsafeEta
-//│ deforest > call idList@result @ appendThree@appendThree.append@append.idList@idList -> UnsafeEta
-//│ deforest > call idList@result @ appendThree@appendThree.append@append.idList@idList -> UnsafeEta
-//│ deforest > call idList@result @ appendThree@appendThree.append@append.idList@idList -> UnsafeEta
-//│ deforest > call idList@result @ appendThree@appendThree.append@append.idList@idList -> UnsafeEta
-//│ deforest > call idList@result @ idList@idList -> UnsafeEta
+//│ deforest > function appendThree¹#0 @ appendThree² -> UnsafeEta
+//│ deforest > function appendThree¹#0 @ appendThree⁰ -> UnsafeEta
+//│ deforest > function append⁰#0 @ appendThree².append² -> UnsafeEta
+//│ deforest > function append⁰#0 @ appendThree².append¹ -> UnsafeEta
+//│ deforest > function append⁰#0 @ appendThree⁰.append² -> UnsafeEta
+//│ deforest > function append⁰#0 @ appendThree⁰.append¹ -> UnsafeEta
+//│ deforest > function append⁰#0 @ append³ -> UnsafeEta
+//│ deforest > function idList⁰#0 @ appendThree².append².idList¹ -> UnsafeEta
+//│ deforest > function idList⁰#0 @ appendThree².append¹.idList¹ -> UnsafeEta
+//│ deforest > function idList⁰#0 @ appendThree⁰.append².idList¹ -> UnsafeEta
+//│ deforest > function idList⁰#0 @ appendThree⁰.append¹.idList¹ -> UnsafeEta
+//│ deforest > function idList⁰#0 @ append³.idList¹ -> UnsafeEta
+//│ deforest > function idList⁰#0 @ idList² -> UnsafeEta
+//│ deforest > call appendThree¹@result⁵ @ <root> -> UnsafeEta
+//│ deforest > call append⁰@result² @ appendThree².append² -> UnsafeEta
+//│ deforest > call append⁰@result² @ appendThree².append¹ -> UnsafeEta
+//│ deforest > call append⁰@result² @ appendThree⁰.append² -> UnsafeEta
+//│ deforest > call append⁰@result² @ appendThree⁰.append¹ -> UnsafeEta
+//│ deforest > call append⁰@result² @ append³ -> UnsafeEta
+//│ deforest > call append⁰@result³ @ appendThree² -> UnsafeEta
+//│ deforest > call append⁰@result³ @ appendThree⁰ -> UnsafeEta
+//│ deforest > call append⁰@result⁴ @ appendThree² -> UnsafeEta
+//│ deforest > call append⁰@result⁴ @ appendThree⁰ -> UnsafeEta
+//│ deforest > call id@result⁶ @ <root> -> UnsafeEta
+//│ deforest > call id@result⁷ @ <root> -> UnsafeEta
+//│ deforest > call id@result⁸ @ <root> -> UnsafeEta
+//│ deforest > call idList⁰@result¹ @ appendThree².append².idList¹ -> UnsafeEta
+//│ deforest > call idList⁰@result¹ @ appendThree².append¹.idList¹ -> UnsafeEta
+//│ deforest > call idList⁰@result¹ @ appendThree⁰.append².idList¹ -> UnsafeEta
+//│ deforest > call idList⁰@result¹ @ appendThree⁰.append¹.idList¹ -> UnsafeEta
+//│ deforest > call idList⁰@result¹ @ append³.idList¹ -> UnsafeEta
+//│ deforest > call idList⁰@result¹ @ idList² -> UnsafeEta
+//│ deforest > call idList⁰@result⁰ @ appendThree².append² -> UnsafeEta
+//│ deforest > call idList⁰@result⁰ @ appendThree².append¹ -> UnsafeEta
+//│ deforest > call idList⁰@result⁰ @ appendThree⁰.append² -> UnsafeEta
+//│ deforest > call idList⁰@result⁰ @ appendThree⁰.append¹ -> UnsafeEta
+//│ deforest > call idList⁰@result⁰ @ append³ -> UnsafeEta
 //│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > Cons⁰(h⁰, tmp⁰) ->
@@ -214,23 +214,23 @@ concat of id of
   (3 :: 4 :: Nil) ::
   (5 :: 6 :: Nil) :: Nil
 //│ deforest > >>> effect-analysis results >>>
-//│ deforest > function append#0 @ append@append -> UnsafeEta
-//│ deforest > function append#0 @ concat@concat.append@append -> UnsafeEta
-//│ deforest > function append#0 @ concat@concat.append@append -> UnsafeEta
-//│ deforest > function concat#0 @ concat@concat -> UnsafeEta
-//│ deforest > function concat#0 @ concat@concat -> UnsafeEta
-//│ deforest > call append@result @ append@append -> UnsafeEta
-//│ deforest > call append@result @ concat@concat -> UnsafeEta
-//│ deforest > call append@result @ concat@concat -> UnsafeEta
-//│ deforest > call append@result @ concat@concat.append@append -> UnsafeEta
-//│ deforest > call append@result @ concat@concat.append@append -> UnsafeEta
-//│ deforest > call concat@result @ <root> -> UnsafeEta
-//│ deforest > call concat@result @ concat@concat -> UnsafeEta
-//│ deforest > call concat@result @ concat@concat -> UnsafeEta
-//│ deforest > call id@result @ <root> -> UnsafeEta
-//│ deforest > call idList@result @ append@append -> UnsafeEta
-//│ deforest > call idList@result @ concat@concat.append@append -> UnsafeEta
-//│ deforest > call idList@result @ concat@concat.append@append -> UnsafeEta
+//│ deforest > function append⁰#0 @ append² -> UnsafeEta
+//│ deforest > function append⁰#0 @ concat².append¹ -> UnsafeEta
+//│ deforest > function append⁰#0 @ concat⁰.append¹ -> UnsafeEta
+//│ deforest > function concat¹#0 @ concat² -> UnsafeEta
+//│ deforest > function concat¹#0 @ concat⁰ -> UnsafeEta
+//│ deforest > call append⁰@result² @ append² -> UnsafeEta
+//│ deforest > call append⁰@result² @ concat².append¹ -> UnsafeEta
+//│ deforest > call append⁰@result² @ concat⁰.append¹ -> UnsafeEta
+//│ deforest > call append⁰@result³ @ concat² -> UnsafeEta
+//│ deforest > call append⁰@result³ @ concat⁰ -> UnsafeEta
+//│ deforest > call concat¹@result⁰ @ concat² -> UnsafeEta
+//│ deforest > call concat¹@result⁰ @ concat⁰ -> UnsafeEta
+//│ deforest > call concat¹@result⁴ @ <root> -> UnsafeEta
+//│ deforest > call id@result⁵ @ <root> -> UnsafeEta
+//│ deforest > call idList⁰@result¹ @ append² -> UnsafeEta
+//│ deforest > call idList⁰@result¹ @ concat².append¹ -> UnsafeEta
+//│ deforest > call idList⁰@result¹ @ concat⁰.append¹ -> UnsafeEta
 //│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > <<< fusing <<<

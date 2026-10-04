@@ -57,9 +57,9 @@ fun c2(x) = if x is
   A(A(A(A(A(A(a)))))) then a
 c2 of A(A(A(A(A(A(1))))))
 //│ deforest > >>> effect-analysis results >>>
-//│ deforest > function c2#0 @ c2@c2 -> UnsafeEta
-//│ deforest > function c2#0 @ c2@c2 -> UnsafeEta
-//│ deforest > call c2@result @ <root> -> UnsafeEta
+//│ deforest > function c2⁰#0 @ c2² -> UnsafeEta
+//│ deforest > function c2⁰#0 @ c2¹ -> UnsafeEta
+//│ deforest > call c2⁰@result⁰ @ <root> -> UnsafeEta
 //│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > A⁰(tmp⁰) ->

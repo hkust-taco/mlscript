@@ -10,8 +10,8 @@
 let state = 0
 fun effect() = set state += 42
 //│ flow-analysis > >>> effect-analysis results >>>
-//│ flow-analysis > function effect#0 @ <root> -> UnsafeEta
-//│ flow-analysis > call +@result @ <root> -> Pure
+//│ flow-analysis > function effect⁰#0 @ <root> -> UnsafeEta
+//│ flow-analysis > call +⁰@result⁰ @ <root> -> Pure
 //│ flow-analysis > <<< effect-analysis results <<<
 //│ eta-expansion > >>> eta-expansion targets shapes >>>
 //│ eta-expansion > <<< eta-expansion targets shapes <<<
@@ -27,12 +27,12 @@ fun node() =
   leaf
 node()()
 //│ flow-analysis > >>> effect-analysis results >>>
-//│ flow-analysis > function leaf#0 @ <root> -> Pure
-//│ flow-analysis > function node#0 @ <root> -> Pure
-//│ flow-analysis > function pure#0 @ <root> -> Pure
-//│ flow-analysis > call baseCall@result @ <root> -> Pure
-//│ flow-analysis > call node@result @ <root> -> Pure
-//│ flow-analysis > call pure@result @ <root> -> Pure
+//│ flow-analysis > function leaf⁰#0 @ <root> -> Pure
+//│ flow-analysis > function node⁰#0 @ <root> -> Pure
+//│ flow-analysis > function pure⁰#0 @ <root> -> Pure
+//│ flow-analysis > call baseCall⁰@result⁰ @ <root> -> Pure
+//│ flow-analysis > call node⁰@result¹ @ <root> -> Pure
+//│ flow-analysis > call pure⁰@result² @ <root> -> Pure
 //│ flow-analysis > <<< effect-analysis results <<<
 //│ eta-expansion > >>> eta-expansion targets shapes >>>
 //│ eta-expansion > node⁰#0 @ <root>: [0, 0]
@@ -48,11 +48,11 @@ fun node() =
   leaf
 node()()
 //│ flow-analysis > >>> effect-analysis results >>>
-//│ flow-analysis > function leaf#0 @ <root> -> Pure
-//│ flow-analysis > function node#0 @ <root> -> UnsafeEta
-//│ flow-analysis > call baseCall@result @ <root> -> Pure
-//│ flow-analysis > call effect@result @ <root> -> UnsafeEta
-//│ flow-analysis > call node@result @ <root> -> UnsafeEta
+//│ flow-analysis > function leaf⁰#0 @ <root> -> Pure
+//│ flow-analysis > function node⁰#0 @ <root> -> UnsafeEta
+//│ flow-analysis > call baseCall⁰@result⁰ @ <root> -> Pure
+//│ flow-analysis > call effect⁰@result² @ <root> -> UnsafeEta
+//│ flow-analysis > call node⁰@result¹ @ <root> -> UnsafeEta
 //│ flow-analysis > <<< effect-analysis results <<<
 //│ eta-expansion > >>> eta-expansion targets shapes >>>
 //│ eta-expansion > <<< eta-expansion targets shapes <<<
@@ -70,14 +70,14 @@ fun pure() = 42
 fun node() = leaf_1
 node()()()
 //│ flow-analysis > >>> effect-analysis results >>>
-//│ flow-analysis > function leaf_1#0 @ <root> -> Pure
-//│ flow-analysis > function leaf_2#0 @ <root> -> Pure
-//│ flow-analysis > function node#0 @ <root> -> Pure
-//│ flow-analysis > function pure#0 @ <root> -> Pure
-//│ flow-analysis > call baseCall@result @ <root> -> Pure
-//│ flow-analysis > call callPrefix@result @ <root> -> Pure
-//│ flow-analysis > call node@result @ <root> -> Pure
-//│ flow-analysis > call pure@result @ <root> -> Pure
+//│ flow-analysis > function leaf_1⁰#0 @ <root> -> Pure
+//│ flow-analysis > function leaf_2⁰#0 @ <root> -> Pure
+//│ flow-analysis > function node⁰#0 @ <root> -> Pure
+//│ flow-analysis > function pure⁰#0 @ <root> -> Pure
+//│ flow-analysis > call baseCall⁰@result¹ @ <root> -> Pure
+//│ flow-analysis > call callPrefix⁰@result⁰ @ <root> -> Pure
+//│ flow-analysis > call node⁰@result² @ <root> -> Pure
+//│ flow-analysis > call pure⁰@result³ @ <root> -> Pure
 //│ flow-analysis > <<< effect-analysis results <<<
 //│ eta-expansion > >>> eta-expansion targets shapes >>>
 //│ eta-expansion > node⁰#0 @ <root>: [0, 0, 0]
@@ -95,13 +95,13 @@ node()()()
 fun node() = leaf_1
 node()()()
 //│ flow-analysis > >>> effect-analysis results >>>
-//│ flow-analysis > function leaf_1#0 @ <root> -> UnsafeEta
-//│ flow-analysis > function leaf_2#0 @ <root> -> Pure
-//│ flow-analysis > function node#0 @ <root> -> Pure
-//│ flow-analysis > call baseCall@result @ <root> -> UnsafeEta
-//│ flow-analysis > call callPrefix@result @ <root> -> Pure
-//│ flow-analysis > call effect@result @ <root> -> UnsafeEta
-//│ flow-analysis > call node@result @ <root> -> Pure
+//│ flow-analysis > function leaf_1⁰#0 @ <root> -> UnsafeEta
+//│ flow-analysis > function leaf_2⁰#0 @ <root> -> Pure
+//│ flow-analysis > function node⁰#0 @ <root> -> Pure
+//│ flow-analysis > call baseCall⁰@result¹ @ <root> -> UnsafeEta
+//│ flow-analysis > call callPrefix⁰@result⁰ @ <root> -> Pure
+//│ flow-analysis > call effect⁰@result³ @ <root> -> UnsafeEta
+//│ flow-analysis > call node⁰@result² @ <root> -> Pure
 //│ flow-analysis > <<< effect-analysis results <<<
 //│ eta-expansion > >>> eta-expansion targets shapes >>>
 //│ eta-expansion > node⁰#0 @ <root>: [0, 0]

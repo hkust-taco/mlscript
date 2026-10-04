@@ -22,8 +22,8 @@ fun foo(x) =
     A then 1
     B then 2
 //│ deforest > >>> effect-analysis results >>>
-//│ deforest > function foo#0 @ foo@foo -> UnsafeEta
-//│ deforest > call print@result @ foo@foo -> UnsafeEta
+//│ deforest > function foo⁰#0 @ foo¹ -> UnsafeEta
+//│ deforest > call print@result⁰ @ foo¹ -> UnsafeEta
 //│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > <<< fusing <<<
@@ -35,9 +35,9 @@ fun foo(x) =
   if x is A do print(123)
   if x is B do print(456)
 //│ deforest > >>> effect-analysis results >>>
-//│ deforest > function foo#0 @ foo@foo -> UnsafeEta
-//│ deforest > call print@result @ foo@foo -> UnsafeEta
-//│ deforest > call print@result @ foo@foo -> UnsafeEta
+//│ deforest > function foo⁰#0 @ foo¹ -> UnsafeEta
+//│ deforest > call print@result¹ @ foo¹ -> UnsafeEta
+//│ deforest > call print@result⁰ @ foo¹ -> UnsafeEta
 //│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > <<< fusing <<<
@@ -55,19 +55,19 @@ fun bar(v) = if v is
   B then 2
 foo(bar, 123)
 //│ deforest > >>> effect-analysis results >>>
-//│ deforest > function bar#0 @ bar@bar -> UnsafeEta
-//│ deforest > function bar#0 @ bar@bar -> UnsafeEta
-//│ deforest > function foo#0 @ foo@foo -> UnsafeEta
-//│ deforest > function foo#0 @ foo@foo -> UnsafeEta
-//│ deforest > call ===@result @ foo@foo -> Pure
-//│ deforest > call ===@result @ foo@foo -> Pure
-//│ deforest > call >@result @ foo@foo -> Pure
-//│ deforest > call >@result @ foo@foo -> Pure
-//│ deforest > call foo@result @ <root> -> UnsafeEta
-//│ deforest > call k@result @ foo@foo -> UnsafeEta
-//│ deforest > call k@result @ foo@foo -> UnsafeEta
-//│ deforest > call k@result @ foo@foo -> UnsafeEta
-//│ deforest > call k@result @ foo@foo -> UnsafeEta
+//│ deforest > function bar⁰#0 @ bar² -> UnsafeEta
+//│ deforest > function bar⁰#0 @ bar¹ -> UnsafeEta
+//│ deforest > function foo⁰#0 @ foo² -> UnsafeEta
+//│ deforest > function foo⁰#0 @ foo¹ -> UnsafeEta
+//│ deforest > call ===⁰@result⁰ @ foo² -> Pure
+//│ deforest > call ===⁰@result⁰ @ foo¹ -> Pure
+//│ deforest > call >⁰@result² @ foo² -> Pure
+//│ deforest > call >⁰@result² @ foo¹ -> Pure
+//│ deforest > call foo⁰@result⁴ @ <root> -> UnsafeEta
+//│ deforest > call k⁰@result³ @ foo² -> UnsafeEta
+//│ deforest > call k⁰@result³ @ foo¹ -> UnsafeEta
+//│ deforest > call k⁰@result¹ @ foo² -> UnsafeEta
+//│ deforest > call k⁰@result¹ @ foo¹ -> UnsafeEta
 //│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > A⁰ ->

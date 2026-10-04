@@ -42,14 +42,14 @@ fun f(a) = if a is
   else D
 (x => 0)(f(f(C)))
 //│ deforest > >>> effect-analysis results >>>
-//│ deforest > function f#0 @ f@f -> Pure
-//│ deforest > function f#0 @ f@f -> Pure
-//│ deforest > function f#0 @ f@f -> Pure
-//│ deforest > function lambda#0 @ lambda@lambda -> Pure
-//│ deforest > function lambda#0 @ lambda@lambda -> Pure
-//│ deforest > call f@result @ <root> -> Pure
-//│ deforest > call f@result @ <root> -> Pure
-//│ deforest > call lambda@result @ <root> -> Pure
+//│ deforest > function f⁰#0 @ f² -> Pure
+//│ deforest > function f⁰#0 @ f³ -> Pure
+//│ deforest > function f⁰#0 @ f¹ -> Pure
+//│ deforest > function lambda⁰#0 @ lambda² -> Pure
+//│ deforest > function lambda⁰#0 @ lambda¹ -> Pure
+//│ deforest > call f⁰@result² @ <root> -> Pure
+//│ deforest > call f⁰@result¹ @ <root> -> Pure
+//│ deforest > call lambda⁰@result⁰ @ <root> -> Pure
 //│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > C⁰ ->
@@ -72,14 +72,14 @@ fun maxOpt(ls) = if ls is
       Some(m) then if m > h then Some(m) else Some(h)
 maxOpt(id(1 :: 2 :: Nil))
 //│ deforest > >>> effect-analysis results >>>
-//│ deforest > function maxOpt#0 @ maxOpt@maxOpt -> UnsafeEta
-//│ deforest > function maxOpt#0 @ maxOpt@maxOpt -> UnsafeEta
-//│ deforest > call >@result @ maxOpt@maxOpt -> Pure
-//│ deforest > call >@result @ maxOpt@maxOpt -> Pure
-//│ deforest > call id@result @ <root> -> UnsafeEta
-//│ deforest > call maxOpt@result @ <root> -> UnsafeEta
-//│ deforest > call maxOpt@result @ maxOpt@maxOpt -> UnsafeEta
-//│ deforest > call maxOpt@result @ maxOpt@maxOpt -> UnsafeEta
+//│ deforest > function maxOpt⁰#0 @ maxOpt² -> UnsafeEta
+//│ deforest > function maxOpt⁰#0 @ maxOpt¹ -> UnsafeEta
+//│ deforest > call >⁰@result¹ @ maxOpt² -> Pure
+//│ deforest > call >⁰@result¹ @ maxOpt¹ -> Pure
+//│ deforest > call id@result³ @ <root> -> UnsafeEta
+//│ deforest > call maxOpt⁰@result² @ <root> -> UnsafeEta
+//│ deforest > call maxOpt⁰@result⁰ @ maxOpt² -> UnsafeEta
+//│ deforest > call maxOpt⁰@result⁰ @ maxOpt¹ -> UnsafeEta
 //│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > <<< fusing <<<
@@ -96,15 +96,15 @@ fun modSome(x, m) = if x is
   None then None
 modSome(Some(17), 3)
 //│ deforest > >>> effect-analysis results >>>
-//│ deforest > function modSome#0 @ modSome@modSome -> UnsafeEta
-//│ deforest > function modSome#0 @ modSome@modSome -> UnsafeEta
-//│ deforest > call -@result @ modSome@modSome -> Pure
-//│ deforest > call -@result @ modSome@modSome -> Pure
-//│ deforest > call >=@result @ modSome@modSome -> Pure
-//│ deforest > call >=@result @ modSome@modSome -> Pure
-//│ deforest > call modSome@result @ <root> -> UnsafeEta
-//│ deforest > call modSome@result @ modSome@modSome -> UnsafeEta
-//│ deforest > call modSome@result @ modSome@modSome -> UnsafeEta
+//│ deforest > function modSome⁰#0 @ modSome² -> UnsafeEta
+//│ deforest > function modSome⁰#0 @ modSome¹ -> UnsafeEta
+//│ deforest > call -⁰@result¹ @ modSome² -> Pure
+//│ deforest > call -⁰@result¹ @ modSome¹ -> Pure
+//│ deforest > call >=⁰@result⁰ @ modSome² -> Pure
+//│ deforest > call >=⁰@result⁰ @ modSome¹ -> Pure
+//│ deforest > call modSome⁰@result² @ modSome² -> UnsafeEta
+//│ deforest > call modSome⁰@result² @ modSome¹ -> UnsafeEta
+//│ deforest > call modSome⁰@result³ @ <root> -> UnsafeEta
 //│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > Some⁰(tmp⁰) ->
@@ -170,18 +170,18 @@ fun maxOpt2(ls, x) = if ls is
       else maxOpt2(t, Some(m))
 maxOpt2(id(1 :: 2 :: 3 :: Nil), None)
 //│ deforest > >>> effect-analysis results >>>
-//│ deforest > function maxOpt2#0 @ maxOpt2@maxOpt2 -> UnsafeEta
-//│ deforest > function maxOpt2#0 @ maxOpt2@maxOpt2 -> UnsafeEta
-//│ deforest > call >@result @ maxOpt2@maxOpt2 -> Pure
-//│ deforest > call >@result @ maxOpt2@maxOpt2 -> Pure
-//│ deforest > call id@result @ <root> -> UnsafeEta
-//│ deforest > call maxOpt2@result @ <root> -> UnsafeEta
-//│ deforest > call maxOpt2@result @ maxOpt2@maxOpt2 -> UnsafeEta
-//│ deforest > call maxOpt2@result @ maxOpt2@maxOpt2 -> UnsafeEta
-//│ deforest > call maxOpt2@result @ maxOpt2@maxOpt2 -> UnsafeEta
-//│ deforest > call maxOpt2@result @ maxOpt2@maxOpt2 -> UnsafeEta
-//│ deforest > call maxOpt2@result @ maxOpt2@maxOpt2 -> UnsafeEta
-//│ deforest > call maxOpt2@result @ maxOpt2@maxOpt2 -> UnsafeEta
+//│ deforest > function maxOpt2⁰#0 @ maxOpt2² -> UnsafeEta
+//│ deforest > function maxOpt2⁰#0 @ maxOpt2¹ -> UnsafeEta
+//│ deforest > call >⁰@result¹ @ maxOpt2² -> Pure
+//│ deforest > call >⁰@result¹ @ maxOpt2¹ -> Pure
+//│ deforest > call id@result⁵ @ <root> -> UnsafeEta
+//│ deforest > call maxOpt2⁰@result² @ maxOpt2² -> UnsafeEta
+//│ deforest > call maxOpt2⁰@result² @ maxOpt2¹ -> UnsafeEta
+//│ deforest > call maxOpt2⁰@result³ @ maxOpt2² -> UnsafeEta
+//│ deforest > call maxOpt2⁰@result³ @ maxOpt2¹ -> UnsafeEta
+//│ deforest > call maxOpt2⁰@result⁰ @ maxOpt2² -> UnsafeEta
+//│ deforest > call maxOpt2⁰@result⁰ @ maxOpt2¹ -> UnsafeEta
+//│ deforest > call maxOpt2⁰@result⁴ @ <root> -> UnsafeEta
 //│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > <<< fusing <<<
@@ -194,17 +194,17 @@ fun zipWith(xsys, f) = if xsys is
   [Nil, Nil] then Nil
 zipWith([id(Nil), id(Nil)], (x, y) => x)
 //│ deforest > >>> effect-analysis results >>>
-//│ deforest > function lambda#0 @ lambda@lambda -> Pure
-//│ deforest > function lambda#0 @ lambda@lambda -> Pure
-//│ deforest > function zipWith#0 @ zipWith@zipWith -> UnsafeEta
-//│ deforest > function zipWith#0 @ zipWith@zipWith -> UnsafeEta
-//│ deforest > call f@result @ zipWith@zipWith -> Pure
-//│ deforest > call f@result @ zipWith@zipWith -> UnsafeEta
-//│ deforest > call id@result @ <root> -> UnsafeEta
-//│ deforest > call id@result @ <root> -> UnsafeEta
-//│ deforest > call zipWith@result @ <root> -> UnsafeEta
-//│ deforest > call zipWith@result @ zipWith@zipWith -> UnsafeEta
-//│ deforest > call zipWith@result @ zipWith@zipWith -> UnsafeEta
+//│ deforest > function lambda⁰#0 @ lambda² -> Pure
+//│ deforest > function lambda⁰#0 @ lambda¹ -> Pure
+//│ deforest > function zipWith⁰#0 @ zipWith² -> UnsafeEta
+//│ deforest > function zipWith⁰#0 @ zipWith¹ -> UnsafeEta
+//│ deforest > call f⁰@result⁰ @ zipWith² -> Pure
+//│ deforest > call f⁰@result⁰ @ zipWith¹ -> UnsafeEta
+//│ deforest > call id@result³ @ <root> -> UnsafeEta
+//│ deforest > call id@result⁴ @ <root> -> UnsafeEta
+//│ deforest > call zipWith⁰@result² @ <root> -> UnsafeEta
+//│ deforest > call zipWith⁰@result¹ @ zipWith² -> UnsafeEta
+//│ deforest > call zipWith⁰@result¹ @ zipWith¹ -> UnsafeEta
 //│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > [tx⁰, ty⁰] ->

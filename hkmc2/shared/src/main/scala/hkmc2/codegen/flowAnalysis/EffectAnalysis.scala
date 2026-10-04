@@ -5,6 +5,7 @@ package flowAnalysis
 import hkmc2.semantics.*
 import hkmc2.utils.*, shorthands.*
 import utils.*
+import scala.collection.immutable.*
 
 
 enum EffectSummary:
@@ -27,12 +28,13 @@ object EffectAnalysis:
 
   def apply(solver: FlowConstraintSolver)(using tl: TraceLogger): EffectAnalysisResult =
     given fState: FlowAnalysis.State = solver.fState
-    given eState: Elaborator.State = solver.eState
+    given raise: Raise = solver.preAnalyzer.raise
+    given symbolPrinter: SymbolPrinter = solver.preAnalyzer.traceSymbolPrinter
 
 
     val result = EffectAnalysisResult(
-      solver.functionEffectVars.iterator.map((id, effect) => id -> summarize(effect)).toMap,
-      solver.callEffectVars.iterator.map((id, effect) => id -> summarize(effect)).toMap,
+      solver.functionEffectVars.iterator.map((id, effect) => id -> summarize(effect)).to(SeqMap),
+      solver.callEffectVars.iterator.map((id, effect) => id -> summarize(effect)).to(SeqMap),
     )
 
     if tl.doTrace then logResult(result)
@@ -42,34 +44,26 @@ object EffectAnalysis:
   private def logResult(result: EffectAnalysisResult)(using
     tl: TraceLogger,
     fState: FlowAnalysis.State,
-    eState: Elaborator.State,
+    symbolPrinter: SymbolPrinter,
+    raise: Raise,
   ): Unit =
-    def showRefSite(resultId: ResultId): Str =
-      resultId.getReferredFun match
-        case Some(fun) => s"${fun.nme}@$resultId"
-        case None => s"${resultId.getResult}@$resultId"
-
-    def showInstId(instId: InstantiationId): Str =
-      if instId.isEmpty then "<root>" else instId.map(showRefSite).mkString(".")
+    given ShowCfg = ShowCfg.internal
 
     def showFunction(id: ConcreteId[FunId]): Str =
-      val name = id.exprId match
-        case (funSym: TermSymbol, whichParamList) => s"${funSym.nme}#$whichParamList"
-        case exprId: ResultId => s"lambda@$exprId"
-      s"function $name @ ${showInstId(id.instId)}"
+      s"function ${id.showConcreteFunId}"
 
     def showPath(path: Path): Str = path match
-      case Value.SimpleRef(sym) => sym.nme
-      case Value.MemberRef(_, disamb) => disamb.nme
+      case Value.SimpleRef(sym) => symbolPrinter.printSymbol(sym)
+      case Value.MemberRef(_, disamb) => symbolPrinter.printSymbol(disamb)
       case Select(_, name) => name.name
       case _ => "<dynamic>"
 
     def showCall(id: ConcreteId[ResultId]): Str =
       val call = id.exprId.getResult match
-        case Call(fun, _) => s"call ${showPath(fun)}@${id.exprId}"
-        case Instantiate(_, cls, _) => s"instantiate ${showPath(cls)}@${id.exprId}"
-        case other => s"call $other@${id.exprId}"
-      s"$call @ ${showInstId(id.instId)}"
+        case Call(fun, _) => s"call ${showPath(fun)}@${id.exprId.showRefSite}"
+        case Instantiate(_, cls, _) => s"instantiate ${showPath(cls)}@${id.exprId.showRefSite}"
+        case other => s"call $other@${id.exprId.showRefSite}"
+      s"$call @ ${id.instId.showInstId}"
 
     tl.log(">>> effect-analysis results >>>")
     result.latentEffects.iterator.map: (id, effect) =>
