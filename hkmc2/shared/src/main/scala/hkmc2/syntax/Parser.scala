@@ -870,6 +870,44 @@ abstract class Parser(
       OpSplit(lhs, newAcc reverse_::: errExpr :: Nil)
   
   
+  /** If a block starting with token `tok` is an operator split continuing the preceding expression
+   *  (as in `foo { + 1 }`, `foo { .bar }`, or `foo { as T }`, or their indented equivalents),
+   *  returns the left precedence of that operator, which determines what the block applies to. */
+  private def opSplitLeftPrec(tok: Stroken): Opt[Int] = tok match
+    case SELECT(_, _) => S(SelPrec)
+    case id @ (IDENT(_, true) | KEYWORD(_: Keyword.InfixSplittable)) => S(id match
+      case KEYWORD(Keyword.`of`) => AppPrec
+      case KEYWORD(kw) => kw.leftPrecOrMin
+      case _ => opPrec(id.name)._1
+    )
+    case _ => N
+  
+  /** Whether a block starting with `toks` continues the preceding expression with an infix operator,
+   *  as in `foo { + 1 }`, `foo { .bar }`, `foo { as T }`, or `foo { and bar }`.
+   *  Such blocks are handled by the corresponding cases of `exprContImpl`
+   *  and should never be parsed as refinements. */
+  private def startsInfixCont(toks: Ls[TokLoc]): Bool = toks match
+    case (tok, _) :: _ => opSplitLeftPrec(tok).isDefined || (tok match
+      case KEYWORD(kw) => infixRules.kwAlts.contains(kw.name)
+      case _ => false
+    )
+    case Nil => false
+  
+  /** Parses a curly-brace block `br` that continues the preceding expression with an infix operator,
+   *  as in `acc { + 1 }`, `acc { as T }`, or `acc { == 0 then a, == 1 then b }`.
+   *  Unlike an indented block, which merely continues the current line,
+   *  curly braces explicitly delimit the continuation: `acc { op ... }` is understood as `(acc op ...)`.
+   *  So the block's contents must be parsed entirely within the braces
+   *  and must never be spliced back into the enclosing token stream
+   *  (doing so used to make `42 { + 1 } * 2` parse as `42 + 1 * 2`).
+   *  `start` parses the beginning of the block (e.g., an operator split, or nothing),
+   *  and whatever remains in the block is then parsed as a continuation of that, with minimal precedence. */
+  private def closedCurlyCont(br: BRACKETS, prec: Int, allowNewlines: Bool)(start: Parser => Tree)(using Line): Tree =
+    val res = rec(br.contents, S(br.innerLoc), "operator block").concludeWith: r =>
+      r.exprCont(start(r), MinPrec, allowNewlines = true)
+    exprCont(res, prec, allowNewlines = allowNewlines)
+  
+  
   /** `gobbleSpaces` is currently only used to prevent `@foo (2 + 2)` from parsing as `@foo(2 + 2) ...` */
   final def exprCont(acc: Tree, prec: Int, allowNewlines: Bool, gobbleSpaces: Bool = true)(using Line): Tree =
     wrap(prec, s"`$acc`", allowNewlines)(exprContImpl(acc, prec, allowNewlines, gobbleSpaces))
@@ -970,17 +1008,15 @@ abstract class Parser(
         */
       
       // * Parse operator splits
-      case (br @ BRACKETS(_: Indent_Curly,
-          toks @ ((tok @ (IDENT(_, true) | SELECT(_, _) | KEYWORD(_: Keyword.InfixSplittable)), l0) :: _)), loc) :: _
-      if tok.match {
-        case KEYWORD(Keyword.`of`) => AppPrec
-        case KEYWORD(kw) => kw.leftPrecOrMin
-        case id: IDENT => opPrec(id.name)._1
-        case sel: SELECT => SelPrec
-      } > prec
+      case (br @ BRACKETS(bk: Indent_Curly, toks @ ((tok, l0) :: _)), loc) :: _
+      if opSplitLeftPrec(tok).exists(_ > prec)
       =>
         consume
-        if toks.collectFirst{ case (_: NEWLINE_COMMA, _) => }.isEmpty then
+        val isSplit = toks.collectFirst{ case (_: NEWLINE_COMMA, _) => }.isDefined
+        if bk is Curly then
+          closedCurlyCont(br, prec, allowNewlines): r =>
+            if isSplit then r.opSplit(acc, l0, prec) else acc
+        else if !isSplit then
           // * If the indented block doens't have any newlines or commas,
           // * this is not truly a split, and we can parse it as a normal expression continuation.
           cur = toks ::: cur
@@ -1107,14 +1143,16 @@ abstract class Parser(
       && infixRules.kwAlts.contains(kw.name)
       =>
         consume
-        val (res, rest) = rec(toks, S(br.innerLoc), br.describe).continueWith:
-          _.exprCont(acc, prec, allowNewlines = true)
-        rest match
-          case (_, l) :: _ =>
-            printDbg(s"!! REDUCING BRACKET")
-            cur = (NEWLINE, l.left) :: rest ::: cur
-          case _ =>
-        exprCont(res, prec, allowNewlines = allowNewlines)
+        if bk is Curly then closedCurlyCont(br, prec, allowNewlines)(_ => acc)
+        else
+          val (res, rest) = rec(toks, S(br.innerLoc), br.describe).continueWith:
+            _.exprCont(acc, prec, allowNewlines = true)
+          rest match
+            case (_, l) :: _ =>
+              printDbg(s"!! REDUCING BRACKET")
+              cur = (NEWLINE, l.left) :: rest ::: cur
+            case _ =>
+          exprCont(res, prec, allowNewlines = allowNewlines)
         
       
       case (KEYWORD(kw), l0) :: _ if kw.leftPrecOrMin > prec =>
@@ -1164,7 +1202,7 @@ abstract class Parser(
       exprJux(res, prec, allowNewlines = allowNewlines)
     // case (br @ BRACKETS(_: Indent_Curly, toks), l0) :: _
     case (br @ BRACKETS(Curly, toks), l0) :: _
-    if prec <= AppPrec =>
+    if prec <= AppPrec && !startsInfixCont(toks) =>
       consume
       val res = rec(toks, S(br.innerLoc), br.describe).concludeWith(_.block(allowNewlines = true))
       exprCont(Reft(acc, Block(res).withLoc(S(l0))), prec, allowNewlines = allowNewlines)

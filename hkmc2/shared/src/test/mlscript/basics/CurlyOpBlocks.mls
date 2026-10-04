@@ -1,0 +1,74 @@
+:js
+
+// * Curly-brace operator blocks are delimited: `e {op ...}` means `(e op ...)`,
+// * where `e` is chosen by the precedence of `op`, as for indented operator blocks.
+
+
+fun inc(x) = x + 1
+
+:pt
+42{as Int} * 2
+//│ ———————————————| Parsed tree |——————————————————————————————————————————————————————————————————————
+//│ OpApp:
+//│   lhs = InfixApp:
+//│     lhs = IntLit of 42
+//│     kw = Keywrd of keyword 'as'
+//│     rhs = Ident of "Int"
+//│   op = Ident of "*"
+//│   rhss = Ls of
+//│     IntLit of 2
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 84
+
+42{|> inc} * 2
+//│ = 86
+
+42{+ 1} * 2
+//│ = 86
+
+
+// * The block attaches to the left operand that its leading operator would bind to
+2 * 3 {+ 1}
+//│ = 7
+
+let x = 1
+1 + x{+ 2 * 3}
+//│ = 8
+//│ x = 1
+
+// * Lower-precedence operators inside the braces stay inside the braces
+1 + 2 {* 3 + 1} * 10
+//│ = 71
+
+1 + 2 { * 3, * 4 } * 10
+//│ = 241
+
+1 + 2 { * 3, * 4 + 1 } * 10
+//│ = 251
+
+
+// * Selections and keyword-led blocks
+"ab"{.length} + 1
+//│ = 3
+
+42{is Int} and false
+//│ = false
+
+
+// * Interaction with conditionals
+fun f(x) = if x {== 1 then "a"} else "b"
+[f(1), f(2)]
+//│ = ["a", "b"]
+
+fun g(x) = if x + 1 { == 2 then "a", == 3 then "b" } else "c"
+[g(1), g(2), g(3)]
+//│ = ["a", "b", "c"]
+
+// * `else` belongs to the `if`, so it cannot be nested inside the braces
+:pe
+fun h(x) = if x {== 1 then "a" else "b"}
+//│ ╔══[PARSE ERROR] Unexpected 'else' keyword here
+//│ ║  l.69: 	fun h(x) = if x {== 1 then "a" else "b"}
+//│ ╙──      	                               ^^^^
+
+
