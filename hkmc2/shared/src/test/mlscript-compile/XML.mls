@@ -16,7 +16,7 @@ module XML with ...
 
 fun serializeValue(value) = if value is
   Str then JSON.stringify(value)
-  // * TOOD: Allow just `StyleAttributeValue then value.toValue()`
+  // * TODO: Allow just `StyleAttributeValue then value.toValue()`
   // *  Currently, scrutinees are not refined implicitly for resolution.
   StyleAttributeValue as value then value.toValue()
 
