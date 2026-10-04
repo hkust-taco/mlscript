@@ -33,6 +33,8 @@ object NoEtaExpansion extends EtaExpansionResult:
 class EtaExpansionSolver(val constraintSolver: FlowConstraintSolver, tl: TraceLogger) extends EtaExpansionResult:
   given fState: FlowAnalysis.State = constraintSolver.fState
   given eState: Elaborator.State = constraintSolver.eState
+  given raise: Raise = constraintSolver.preAnalyzer.raise
+  given symbolPrinter: SymbolPrinter = constraintSolver.preAnalyzer.traceSymbolPrinter
   
   private val cache = MutMap.empty[ProdFun, Ls[EtaTargets]]
   
@@ -139,19 +141,11 @@ class EtaExpansionSolver(val constraintSolver: FlowConstraintSolver, tl: TraceLo
     case _ => ()
 
   if tl.doTrace then
-    def showFunShapeId(id: ConcreteFunId): Str =
-      val funStr = id.exprId match
-        case (funSym: TermSymbol, _) => funSym.nme
-        case lamId: ResultId =>
-          lamId.getResult match
-          case Lambda(_, _) => s"lambda@$lamId"
-          case r => lastWords(s"not lambda $r")
-      if id.instId.isEmpty then funStr else s"$funStr @ ${id.instId.showInstId}"
-    end showFunShapeId
+    given ShowCfg = ShowCfg.internal
     
     tl.log(">>> eta-expansion targets shapes >>>")
     for (id, shape) <- etaExpandedFunShape do
-      tl.log(s"${showFunShapeId(id)}: ${shape.map(_.ppParamInfo).mkString("[", ", ", "]")}")
+      tl.log(s"${id.showConcreteFunId}: ${shape.map(_.ppParamInfo).mkString("[", ", ", "]")}")
     tl.log("<<< eta-expansion targets shapes <<<")
   end if
 end EtaExpansionSolver
