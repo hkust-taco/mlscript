@@ -1148,7 +1148,7 @@ class FlowConstraintsCollector(
           case refSite@FunRef(f, selectedFrom) =>
             // ? It's a special case for module getters but I'm not sure if
             // ? this is good enough. It just conservatively marks it unsafe.
-            if preAnalyzer.res.funSymToFunDefn.get(f).exists(_.params.isEmpty) then markUnsafeEta()
+            if f.irFunDefn.fold(!f.isPure)(_.params.isEmpty) then markUnsafeEta()
             for qual <- selectedFrom do
               cc.constrain(processResult(qual), UnknownCons)
             funsToProdStratScheme.get(f) match

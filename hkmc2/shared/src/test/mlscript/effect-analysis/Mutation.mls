@@ -293,3 +293,18 @@ fun mutate_local_loop(again) =
 //│ flow-analysis > >>> effect-analysis results >>>
 //│ flow-analysis > function mutate_local_loop⁰#0 @ <root> -> Pure
 //│ flow-analysis > <<< effect-analysis results <<<
+
+
+// * Regressions
+
+// * A getter from an earlier block is unsafe.
+module M with
+  fun get = set state = 42
+//│ flow-analysis > >>> effect-analysis results >>>
+//│ flow-analysis > <<< effect-analysis results <<<
+//-
+fun node() = M.get
+//│ flow-analysis > >>> effect-analysis results >>>
+//│ flow-analysis > function node⁰#0 @ <root> -> UnsafeEta
+//│ flow-analysis > <<< effect-analysis results <<<
+
