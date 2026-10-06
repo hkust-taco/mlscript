@@ -38,6 +38,7 @@ enum Annot extends Located:
   case RaiseEffects()(val toLoc: Opt[Loc])
   // Whether the function is guaranteed to not raise effects.
   case Pure()(val toLoc: Opt[Loc])
+  case MatchShapes(patterns: Ls[Pattern])(val toLoc: Opt[Loc])
   case Config(modify: hkmc2.Config => hkmc2.Config)(val toLoc: Opt[Loc])
   // Marks if a function or lambda is one-shot, i.e. called at most once.
   // Functions with multiple parameter lists are considered here as a chain of
@@ -57,6 +58,7 @@ enum Annot extends Located:
   
   def subTerms: Vector[Term] = this match
     case Trm(trm) => Vector.single(trm)
+    case MatchShapes(patterns) => patterns.iterator.flatMap(_.subTerms).toVector
     case _: Modifier | Untyped() | TailRec() | TailCall() | Inline() | NoInline()
       | Generator() | Async() | RaiseEffects() | Pure() | _: Config | _: Affine => Vector.empty
   
@@ -72,6 +74,7 @@ enum Annot extends Located:
     case Affine(n) => doc"@affine($n)"
     case Modifier(mod) => doc"@${mod.name}"
     case Pure() => doc"@pure"
+    case MatchShapes(_) => doc"@matchShapes"
     case Trm(trm) => doc"@${trm.show}"
     case Config(_) => doc"@config(...)"
   
@@ -1494,4 +1497,3 @@ trait BlkImpl:
     (stats ::: (res match
       case Lit(Tree.UnitLit(false)) => Nil
       case res => res :: Nil)).map(_.show).mkDocument(doc", # ")
-

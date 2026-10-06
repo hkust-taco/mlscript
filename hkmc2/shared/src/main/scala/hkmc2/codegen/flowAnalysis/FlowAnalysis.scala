@@ -78,7 +78,7 @@ object FlowAnalysis:
     mono: Bool,
     nonAffineTracking: Bool,
     accumulatorTracking: Bool,
-  )(using TraceLogger, Elaborator.State, Raise, SymbolPrinter) =
+  )(using TraceLogger, Elaborator.State, Elaborator.Ctx, Raise, SymbolPrinter) =
     given State = new State
     val pre = new FlowPreAnalyzer(pgrm)
     val constrCol = new FlowConstraintsCollector(pre, mono, nonAffineTracking, accumulatorTracking)
@@ -672,7 +672,7 @@ class FlowConstraintsCollector(
   val mono: Bool,
   val nonAffineTracking: Bool,
   val accumulatorTracking: Bool,
-):
+)(using ctx: Elaborator.Ctx):
   given FlowPreAnalyzer = preAnalyzer
   given Raise = preAnalyzer.raise
   given fState: FlowAnalysis.State = preAnalyzer.fState
@@ -977,6 +977,8 @@ class FlowConstraintsCollector(
     
     def processResult(r: Result)(using cc: ConstraintsCollector): ProdStrat =
       val instId = cc.instId
+      def isShapeMatch(fun: Path): Bool =
+        fun.targetSymbol.flatMap(_.asBlkMember).contains(ctx.builtins.shape.`match`)
       def handleCallLike(callExprId: ResultId, f: Path, args: List[Arg]): ProdStrat =
         val fStrat = processResult(f)
         val argsStrat = args.map(a => processResult(a.value))
@@ -1024,6 +1026,13 @@ class FlowConstraintsCollector(
             cc.constrain(processResult(qual), UnknownCons)
           args.foreach(arg => cc.constrain(processResult(arg.value), UnknownCons))
           UnknownProd
+        case c@Call(fun, (Arg(N, scrutinee) :: branches) :: Nil)
+            if isShapeMatch(fun) && branches.nonEmpty && branches.forall(_.spread.isEmpty) =>
+          cc.constrain(processResult(scrutinee), new Dtor(c.uid, instId))
+          val matchResult = freshVar("shape_match_res", cc.forFunGroup)
+          for Arg(_, branch) <- branches do
+            cc.constrain(processResult(branch), new ConsFun(c.uid, instId)(Nil, matchResult))
+          matchResult
         case c@Call(fun, argss) =>
           argss match
             case args :: Nil => handleCallLike(c.uid, fun, args)

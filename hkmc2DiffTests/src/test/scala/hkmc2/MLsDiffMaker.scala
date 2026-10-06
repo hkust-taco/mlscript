@@ -97,6 +97,7 @@ abstract class MLsDiffMaker extends DiffMaker:
   val inlineThreshold = Command("inlineThreshold")(_.trim.toInt)
   val noTailRecOpt = NullaryCommand("noTailRec")
   val deforest = Command("deforest")(_.trim)
+  val classTags = Command("classTags")(_.trim)
   val patMatConsequentSharingThreshold = Command("patMatConsequentSharingThreshold")(_.trim.toInt)
   val flowBasedOpt = Command("flowBasedOpt")(_.trim)
 
@@ -111,6 +112,7 @@ abstract class MLsDiffMaker extends DiffMaker:
     "logAccumulator",
     "noLogAccumulator",
   )
+  private val ClassTagsKnownFlags = Set("debug", "mono")
   private val FlowBasedOptKnownFlags =
     Set("debug", "debugEta", "debugDpe", "debugDce", "on", "off", "mono", "poly")
   
@@ -172,6 +174,13 @@ abstract class MLsDiffMaker extends DiffMaker:
       target = if wasm.isSet then CompilationTarget.Wasm else CompilationTarget.JS,
       rewriteWhileLoops = rewriteWhile.isSet,
 
+      classTags = Opt.when(classTags.isSet):
+        val flags = parseFlags(classTags.get)
+        reportUnknownFlags(":classTags", flags, ClassTagsKnownFlags)
+        ClassTags(
+          debug = flags.contains("debug"),
+          mono = flags.contains("mono"),
+        ),
       qqEnabled = importQQ.isSet,
       funcToCls = funcToCls.isSet,
       commentGeneratedCode = debug.isSet,
