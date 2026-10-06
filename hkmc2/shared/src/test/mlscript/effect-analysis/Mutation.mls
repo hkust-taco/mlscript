@@ -298,10 +298,12 @@ fun mutate_local_loop(again) =
 // * Regressions
 
 // * A getter from an earlier block is unsafe.
+let state = 0
 module M with
   fun get = set state = 42
 //│ flow-analysis > >>> effect-analysis results >>>
 //│ flow-analysis > <<< effect-analysis results <<<
+//│ state = 0
 //-
 fun node() = M.get
 //│ flow-analysis > >>> effect-analysis results >>>
