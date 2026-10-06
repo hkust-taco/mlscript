@@ -1,0 +1,70 @@
+:classTags mono
+:js
+:noFreeze
+
+class Box(val x)
+class A(val x)
+class B(val x)
+
+
+// A safe outer allocation pulls an unsafe mixed local/external consumer back into the web.
+fun unknownThroughField(flag, external) =
+  let local = new A(0)
+  let holder = new Box(local)
+  let _ = @matchShapes(Box(_)) shape.match of holder, () => 0
+  let value = if flag then local else external
+  @matchShapes(A(_), B(_)) shape.match of value, () => 1, () => 2
+
+:fixme
+:expect 2
+unknownThroughField(false, new B(0))
+//│ ═══[RUNTIME ERROR] Expected: '2', got: '1'
+//│ = 1
+
+
+// Immutable parameter declarations do not prevent a constructor from writing a dynamic field.
+class Rewritten(val x) with
+  set this.("x") = new B(0)
+fun rewrittenConstructor() =
+  let value = new Rewritten(new A(0))
+  @matchShapes(Rewritten(A(_)), Rewritten(B(_))) shape.match of value, () => 1, () => 2
+
+:fixme
+:expect 2
+rewrittenConstructor()
+//│ ═══[RUNTIME ERROR] Expected: '2', got: '1'
+//│ = 1
+
+
+// Every shape.match call must be checked, including calls with no branches.
+:breakme
+:ge
+fun zeroBranches() =
+  let value = new Box(0)
+  @matchShapes(Box(_)) shape.match of value
+
+:fixme
+zeroBranches()
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'match')
+
+
+fun returnedThunk() =
+  let value = new Box(0)
+  let result = @matchShapes(Box(_)) shape.match of value, () => () => 42
+  result()
+
+:expect 42
+returnedThunk()
+//│ = 42
+
+
+// Anonymous branches preserve an ordinary recursive call without expanding it indefinitely.
+fun recursiveLambdaBranch(n) =
+  if n > 0 then
+    let value = new Box(0)
+    @matchShapes(Box(_)) shape.match of value, () => recursiveLambdaBranch(n - 1)
+  else 42
+
+:expect 42
+recursiveLambdaBranch(2)
+//│ = 42

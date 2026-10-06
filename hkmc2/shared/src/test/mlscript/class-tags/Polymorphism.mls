@@ -23,13 +23,13 @@ fun poly(flag) =
   let value = if flag then a else b
   @matchShapes(Box(A(_)), Box(B(_))) shape.match of value, () => 1, () => 2
 //│ >>> start class-tags collection-phase
-//│ class-tags collection-phase > track construction of Box@1 in wrap
-//│ class-tags collection-phase > track consumption at match@8 in poly
+//│ class-tags collection-phase > track construction of Box@result in wrap
+//│ class-tags collection-phase > track consumption at match@result in poly
 //│ <<< end class-tags collection-phase
 //│ >>> start class-tags web-computation-phase
 //│ class-tags web-computation-phase > web 0:
-//│ class-tags web-computation-phase >   producers: Box@1, Box@1, A@2, B@5
-//│ class-tags web-computation-phase >   pattern matches: match@8
+//│ class-tags web-computation-phase >   producers: Box@result, Box@result, A@result, B@result
+//│ class-tags web-computation-phase >   pattern matches: match@result
 //│ <<< end class-tags web-computation-phase
 //│ >>> start class-tags transform-phase
 //│ class-tags transform-phase > allocated tag 0 for Box(x: A(x: 0))

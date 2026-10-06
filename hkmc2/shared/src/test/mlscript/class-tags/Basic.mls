@@ -26,14 +26,14 @@ fun foo(x, y) =
   let f = new Foo(x, y)
   @matchShapes(Foo(_, _)) shape.match of f, () => new Bar(f.Foo#x + f.Foo#y)
 //│ >>> start class-tags collection-phase
-//│ class-tags collection-phase > track construction of Foo@2 in foo
-//│ class-tags collection-phase > track consumption at match@5 in foo
+//│ class-tags collection-phase > track construction of Foo@result in foo
+//│ class-tags collection-phase > track consumption at match@result in foo
 //│ <<< end class-tags collection-phase
 //│ >>> start class-tags web-computation-phase
 //│ class-tags web-computation-phase > web 0:
-//│ class-tags web-computation-phase >   producers: Foo@2
-//│ class-tags web-computation-phase >   field accesses: Foo.x@0, Foo.y@1
-//│ class-tags web-computation-phase >   pattern matches: match@5
+//│ class-tags web-computation-phase >   producers: Foo@result
+//│ class-tags web-computation-phase >   field accesses: Foo.x@result, Foo.y@result
+//│ class-tags web-computation-phase >   pattern matches: match@result
 //│ <<< end class-tags web-computation-phase
 //│ >>> start class-tags transform-phase
 //│ class-tags transform-phase > allocated tag 0 for Foo(x: _, y: _)
@@ -58,16 +58,16 @@ module Baz with
     let f = new Foo(x, x)
     @matchShapes(Foo(_, _)) shape.match of f, () => new Bar(f.Foo#x + f.Foo#y)
 //│ >>> start class-tags collection-phase
-//│ class-tags collection-phase > track construction of Foo@6 in Baz.barr
-//│ class-tags collection-phase > track consumption at Foo.x@0, Foo.y@1 in Baz.barr
-//│ class-tags collection-phase > track construction of Foo@9 in Baz.baz
-//│ class-tags collection-phase > track consumption at match@12 in Baz.baz
+//│ class-tags collection-phase > track construction of Foo@result in Baz.barr
+//│ class-tags collection-phase > track consumption at Foo.x@result, Foo.y@result in Baz.barr
+//│ class-tags collection-phase > track construction of Foo@result in Baz.baz
+//│ class-tags collection-phase > track consumption at match@result in Baz.baz
 //│ <<< end class-tags collection-phase
 //│ >>> start class-tags web-computation-phase
 //│ class-tags web-computation-phase > web 0:
-//│ class-tags web-computation-phase >   producers: Foo@9
-//│ class-tags web-computation-phase >   field accesses: Foo.x@3, Foo.y@4
-//│ class-tags web-computation-phase >   pattern matches: match@12
+//│ class-tags web-computation-phase >   producers: Foo@result
+//│ class-tags web-computation-phase >   field accesses: Foo.x@result, Foo.y@result
+//│ class-tags web-computation-phase >   pattern matches: match@result
 //│ <<< end class-tags web-computation-phase
 //│ >>> start class-tags transform-phase
 //│ class-tags transform-phase > allocated tag 0 for Foo(x: _, y: _)
@@ -84,15 +84,15 @@ private fun bar(f) =
 private fun baz(f) =
   @matchShapes(Foo(_, _)) shape.match of f, () => f.Foo#x - f.Foo#y
 //│ >>> start class-tags collection-phase
-//│ class-tags collection-phase > track construction of Foo@4 in foo
-//│ class-tags collection-phase > track consumption at match@9 in bar
-//│ class-tags collection-phase > track consumption at match@11 in baz
+//│ class-tags collection-phase > track construction of Foo@result in foo
+//│ class-tags collection-phase > track consumption at match@result in bar
+//│ class-tags collection-phase > track consumption at match@result in baz
 //│ <<< end class-tags collection-phase
 //│ >>> start class-tags web-computation-phase
 //│ class-tags web-computation-phase > web 0:
-//│ class-tags web-computation-phase >   producers: Foo@4
-//│ class-tags web-computation-phase >   field accesses: Foo.x@0, Foo.y@1, Foo.x@2, Foo.y@3
-//│ class-tags web-computation-phase >   pattern matches: match@9, match@11
+//│ class-tags web-computation-phase >   producers: Foo@result
+//│ class-tags web-computation-phase >   field accesses: Foo.x@result, Foo.y@result, Foo.x@result, Foo.y@result
+//│ class-tags web-computation-phase >   pattern matches: match@result, match@result
 //│ <<< end class-tags web-computation-phase
 //│ >>> start class-tags transform-phase
 //│ class-tags transform-phase > allocated tag 0 for Foo(x: _, y: _)
@@ -153,15 +153,15 @@ private fun baz(t) =
     () => t.Foo#x + t.Foo#y
     () => t.Bar#x
 //│ >>> start class-tags collection-phase
-//│ class-tags collection-phase > track construction of Foo@3 in foo
-//│ class-tags collection-phase > track construction of Bar@5 in bar
-//│ class-tags collection-phase > track consumption at match@8 in baz
+//│ class-tags collection-phase > track construction of Foo@result in foo
+//│ class-tags collection-phase > track construction of Bar@result in bar
+//│ class-tags collection-phase > track consumption at match@result in baz
 //│ <<< end class-tags collection-phase
 //│ >>> start class-tags web-computation-phase
 //│ class-tags web-computation-phase > web 0:
-//│ class-tags web-computation-phase >   producers: Foo@3, Bar@5
-//│ class-tags web-computation-phase >   field accesses: Foo.x@0, Foo.y@1, Bar.x@2
-//│ class-tags web-computation-phase >   pattern matches: match@8
+//│ class-tags web-computation-phase >   producers: Foo@result, Bar@result
+//│ class-tags web-computation-phase >   field accesses: Foo.x@result, Foo.y@result, Bar.x@result
+//│ class-tags web-computation-phase >   pattern matches: match@result
 //│ <<< end class-tags web-computation-phase
 //│ >>> start class-tags transform-phase
 //│ class-tags transform-phase > allocated tag 0 for Foo(x: _, y: _)
@@ -222,14 +222,14 @@ fun bar(x) =
     () => t.Some#x,
     () => 0
 //│ >>> start class-tags collection-phase
-//│ class-tags collection-phase > track construction of None@4, Some@3 in foo
-//│ class-tags collection-phase > track consumption at match@6 in bar
+//│ class-tags collection-phase > track construction of Some@result, None@None in foo
+//│ class-tags collection-phase > track consumption at match@result in bar
 //│ <<< end class-tags collection-phase
 //│ >>> start class-tags web-computation-phase
 //│ class-tags web-computation-phase > web 0:
-//│ class-tags web-computation-phase >   producers: Some@3, None@4
-//│ class-tags web-computation-phase >   field accesses: Some.x@1
-//│ class-tags web-computation-phase >   pattern matches: match@6
+//│ class-tags web-computation-phase >   producers: Some@result, None@None
+//│ class-tags web-computation-phase >   field accesses: Some.x@result
+//│ class-tags web-computation-phase >   pattern matches: match@result
 //│ <<< end class-tags web-computation-phase
 //│ >>> start class-tags transform-phase
 //│ class-tags transform-phase > allocated tag 0 for Some(x: _)
@@ -277,14 +277,14 @@ fun callCtor(x, y) =
   let f = Foo(x, y)
   @matchShapes(Foo(_, _)) shape.match of f, () => f.Foo#x + f.Foo#y
 //│ >>> start class-tags collection-phase
-//│ class-tags collection-phase > track construction of Foo@2 in callCtor
-//│ class-tags collection-phase > track consumption at match@4 in callCtor
+//│ class-tags collection-phase > track construction of Foo@result in callCtor
+//│ class-tags collection-phase > track consumption at match@result in callCtor
 //│ <<< end class-tags collection-phase
 //│ >>> start class-tags web-computation-phase
 //│ class-tags web-computation-phase > web 0:
-//│ class-tags web-computation-phase >   producers: Foo@2
-//│ class-tags web-computation-phase >   field accesses: Foo.x@0, Foo.y@1
-//│ class-tags web-computation-phase >   pattern matches: match@4
+//│ class-tags web-computation-phase >   producers: Foo@result
+//│ class-tags web-computation-phase >   field accesses: Foo.x@result, Foo.y@result
+//│ class-tags web-computation-phase >   pattern matches: match@result
 //│ <<< end class-tags web-computation-phase
 //│ >>> start class-tags transform-phase
 //│ class-tags transform-phase > allocated tag 0 for Foo(x: _, y: _)
@@ -309,8 +309,8 @@ fun foo(x, y) =
   if f is
     [x, y, z] then new Bar(x + y + z)
 //│ >>> start class-tags collection-phase
-//│ class-tags collection-phase > track construction of tup(size 3)@4 in foo
-//│ class-tags collection-phase > track consumption at tup(size 3).2@2, tup(size 3).1@1, tup(size 3).0@0 in foo
+//│ class-tags collection-phase > track construction of tup(size 3)@result in foo
+//│ class-tags collection-phase > track consumption at tup(size 3).2@result, tup(size 3).1@result, tup(size 3).0@result in foo
 //│ <<< end class-tags collection-phase
 //│ >>> start class-tags transform-phase
 //│ <<< end class-tags transform-phase
@@ -343,14 +343,14 @@ fun foo(x, y) =
   let p = @matchShapes(Some(_), None) shape.match of t, () => new Bar(t.Some#x), () => new Bar(0)
   @matchShapes(Bar(_)) shape.match of p, () => p.Bar#x + 1
 //│ >>> start class-tags collection-phase
-//│ class-tags collection-phase > track construction of Some@2 in foo
-//│ class-tags collection-phase > track consumption at match@7, match@5 in foo
+//│ class-tags collection-phase > track construction of Some@result in foo
+//│ class-tags collection-phase > track consumption at match@result in foo
 //│ <<< end class-tags collection-phase
 //│ >>> start class-tags web-computation-phase
 //│ class-tags web-computation-phase > web 0:
-//│ class-tags web-computation-phase >   producers: Some@2, Bar@3, Bar@4
-//│ class-tags web-computation-phase >   field accesses: Some.x@0, Bar.x@1
-//│ class-tags web-computation-phase >   pattern matches: match@5, match@7
+//│ class-tags web-computation-phase >   producers: Some@result, Bar@result, Bar@result
+//│ class-tags web-computation-phase >   field accesses: Some.x@result, Bar.x@result
+//│ class-tags web-computation-phase >   pattern matches: match@result, match@result
 //│ <<< end class-tags web-computation-phase
 //│ >>> start class-tags transform-phase
 //│ class-tags transform-phase > allocated tag 0 for Some(x: _)
@@ -394,14 +394,14 @@ fun foo(x) =
   let t = if x then new Bar(new C(0)) else new Bar(new D(1))
   @matchShapes(Bar(_)) shape.match of t, () => t.Bar#x.x
 //│ >>> start class-tags collection-phase
-//│ class-tags collection-phase > track construction of Bar@5, Bar@3 in foo
-//│ class-tags collection-phase > track consumption at match@6 in foo
+//│ class-tags collection-phase > track construction of Bar@result in foo
+//│ class-tags collection-phase > track consumption at match@result in foo
 //│ <<< end class-tags collection-phase
 //│ >>> start class-tags web-computation-phase
 //│ class-tags web-computation-phase > web 0:
-//│ class-tags web-computation-phase >   producers: C@2, Bar@3, D@4, Bar@5
-//│ class-tags web-computation-phase >   field accesses: Bar.x@1
-//│ class-tags web-computation-phase >   pattern matches: match@6
+//│ class-tags web-computation-phase >   producers: C@result, Bar@result, D@result, Bar@result
+//│ class-tags web-computation-phase >   field accesses: Bar.x@result
+//│ class-tags web-computation-phase >   pattern matches: match@result
 //│ <<< end class-tags web-computation-phase
 //│ >>> start class-tags transform-phase
 //│ class-tags transform-phase > allocated tag 0 for C(x: 0)
@@ -445,14 +445,14 @@ fun foo(x) =
   let t = if x then new C(0) else new C(0)
   @matchShapes(C(_)) shape.match of t, () => t.C#x
 //│ >>> start class-tags collection-phase
-//│ class-tags collection-phase > track construction of C@2, C@3 in foo
-//│ class-tags collection-phase > track consumption at match@4 in foo
+//│ class-tags collection-phase > track construction of C@result in foo
+//│ class-tags collection-phase > track consumption at match@result in foo
 //│ <<< end class-tags collection-phase
 //│ >>> start class-tags web-computation-phase
 //│ class-tags web-computation-phase > web 0:
-//│ class-tags web-computation-phase >   producers: C@2, C@3
-//│ class-tags web-computation-phase >   field accesses: C.x@1
-//│ class-tags web-computation-phase >   pattern matches: match@4
+//│ class-tags web-computation-phase >   producers: C@result, C@result
+//│ class-tags web-computation-phase >   field accesses: C.x@result
+//│ class-tags web-computation-phase >   pattern matches: match@result
 //│ <<< end class-tags web-computation-phase
 //│ >>> start class-tags transform-phase
 //│ class-tags transform-phase > allocated tag 0 for C(x: 0)
@@ -488,13 +488,13 @@ fun foo(x) =
     () => 3,
     () => 4
 //│ >>> start class-tags collection-phase
-//│ class-tags collection-phase > track construction of Bar@3 in foo
-//│ class-tags collection-phase > track consumption at match@4 in foo
+//│ class-tags collection-phase > track construction of Bar@result in foo
+//│ class-tags collection-phase > track consumption at match@result in foo
 //│ <<< end class-tags collection-phase
 //│ >>> start class-tags web-computation-phase
 //│ class-tags web-computation-phase > web 0:
-//│ class-tags web-computation-phase >   producers: tup(size 2)@1, tup(size 2)@2, Bar@3
-//│ class-tags web-computation-phase >   pattern matches: match@4
+//│ class-tags web-computation-phase >   producers: tup(size 2)@result, tup(size 2)@result, Bar@result
+//│ class-tags web-computation-phase >   pattern matches: match@result
 //│ <<< end class-tags web-computation-phase
 //│ >>> start class-tags transform-phase
 //│ class-tags transform-phase > allocated tag 0 for Bar(x: tup(size 2)(1, 3))
@@ -587,7 +587,7 @@ fun foo(x) =
   if t is
     Bar then t.Bar#x.x
 //│ >>> start class-tags collection-phase
-//│ class-tags collection-phase > track construction of Bar@6, Bar@4 in foo
+//│ class-tags collection-phase > track construction of Bar@result in foo
 //│ <<< end class-tags collection-phase
 //│ >>> start class-tags transform-phase
 //│ <<< end class-tags transform-phase
