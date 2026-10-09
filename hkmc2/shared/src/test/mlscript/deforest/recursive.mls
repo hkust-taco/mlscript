@@ -925,3 +925,90 @@ f
 //│ deforest > 	match: x⁷
 //│ deforest > <<< fusing <<<
 //│ = fun f$f
+
+
+
+
+// a ctor in f's in-place body flowing to a match in g's, with f and g in one scc group
+:soir
+:noInline
+:noTailRec
+data class A(x)
+fun f(x) = if x < 0 then 0 else g(A(x))
+fun g(a) = if a is A(y) then f(y - 1) else 1
+f(3)
+//│ deforest > >>> fusing >>>
+//│ deforest > A¹(x⁸) ->
+//│ deforest > 	match: a⁸
+//│ deforest > 	fields: a⁸.x⁹
+//│ deforest > A¹(x⁸) ->
+//│ deforest > 	match: a⁸
+//│ deforest > 	fields: a⁸.x⁹
+//│ deforest > <<< fusing <<<
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let f$f, f$g, f$a_A, f$a_A1;
+//│ @private
+//│ define f$f as fun f$f⁰(x) {
+//│   let scrut, tmp;
+//│   set scrut = <⁰(x, 0);
+//│   match scrut
+//│     true =>
+//│       return 0
+//│     else
+//│       set tmp = f$a_A⁰(x);
+//│       return f$g⁰(tmp)
+//│   end
+//│ };
+//│ @private
+//│ define f$g as fun f$g⁰(a) {
+//│   return a(undefined, undefined, undefined)
+//│ };
+//│ @affine(1) @private
+//│ define f$a_A as fun f$a_A¹(A_x)(fv_f, fv_y, fv_arg$A$0$, fv_tmp) {
+//│   set fv_tmp = -⁰(A_x, 1);
+//│   return fv_f(fv_tmp)
+//│ };
+//│ @affine(1) @private
+//│ define f$a_A1 as fun f$a_A⁰(A_x)(fv_y, fv_arg$A$0$, fv_tmp) {
+//│   set fv_tmp = -⁰(A_x, 1);
+//│   return f$f⁰(fv_tmp)
+//│ };
+//│ define f⁰ as fun f¹(x) {
+//│   let scrut, tmp;
+//│   set scrut = <⁰(x, 0);
+//│   match scrut
+//│     true =>
+//│       return 0
+//│     else
+//│       set tmp = f$a_A¹(x);
+//│       return g⁰(tmp)
+//│   end
+//│ };
+//│ define g¹ as fun g⁰(a) {
+//│   let arg$A$0$, tmp;
+//│   match a
+//│     A² =>
+//│       set arg$A$0$ = a.x⁹;
+//│       set tmp = -⁰(arg$A$0$, 1);
+//│       return f¹(tmp)
+//│     else
+//│       return 1
+//│   end
+//│ };
+//│ @data
+//│ define A³ as class A² {
+//│   val x¹⁰;
+//│   constructor A¹(x) { define x¹⁰ as val x⁹ = x; end }
+//│ };
+//│ return f$f⁰(3)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 0
+
+:expect 0
+f(3)
+//│ deforest > >>> fusing >>>
+//│ deforest > <<< fusing <<<
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: processIRBlock (JSBackendDiffMaker.scala:319)
+//│ ═══[RUNTIME ERROR] Expected: '0', got: '1'
+//│ = 1
