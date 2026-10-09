@@ -873,21 +873,27 @@ abstract class Parser(
   /** If a block starting with token `tok` is an operator split continuing the preceding expression
    *  (as in `foo { + 1 }`, `foo { .bar }`, or `foo { as T }`, or their indented equivalents),
    *  returns the left precedence of that operator, which determines what the block applies to.
-   * To avoid `Some` wrapper allocations, we return -1 when this is not applicable. */
+   * To avoid `Some` wrapper allocations, we return `Int.MinValue` when this is not applicable,
+   * which is also what `Keyword.leftPrecOrMin` returns for keywords that cannot continue an expression.
+   * Note that the sentinel must not be greater than any precedence `prec` that callers compare it with
+   * using `opSplitLeftPrec(tok) > prec`, and `prec` itself can be `Int.MinValue`:
+   * for instance, the head of `declare class A { fun f: Int }` is parsed with the right precedence of `class`,
+   * which is `Int.MinValue` (see `Keyword.rightPrecOrMin`). A sentinel like -1 would then make the body
+   * `{ fun f: Int }` be parsed as an operator split instead of as a refinement of `A`. */
   private def opSplitLeftPrec(tok: Stroken): Int = tok match
     case SELECT(_, _) => SelPrec
     case id @ (IDENT(_, true) | KEYWORD(_: Keyword.InfixSplittable)) => id match
       case KEYWORD(Keyword.`of`) => AppPrec
       case KEYWORD(kw) => kw.leftPrecOrMin
       case _ => opPrec(id.name)._1
-    case _ => -1
+    case _ => Int.MinValue
   
   /** Whether a block starting with `toks` continues the preceding expression with an infix operator,
    *  as in `foo { + 1 }`, `foo { .bar }`, `foo { as T }`, or `foo { and bar }`.
    *  Such blocks are handled by the corresponding cases of `exprContImpl`
    *  and should never be parsed as refinements. */
   private def startsInfixCont(toks: Ls[TokLoc]): Bool = toks match
-    case (tok, _) :: _ => opSplitLeftPrec(tok) >= 0 || tok.match
+    case (tok, _) :: _ => opSplitLeftPrec(tok) > Int.MinValue || tok.match
       case KEYWORD(kw) => infixRules.kwAlts.contains(kw.name)
       case _ => false
     case Nil => false

@@ -105,3 +105,15 @@ fun h(x) = if x {== 1 then "a" else "b"}
 //│ ╙──       	                               ^^^^
 
 
+// * Curly-brace bodies that do not start with an operator are not operator blocks.
+// * This also holds after a modifier, where the head of the definition is parsed with minimal precedence.
+data class Foo(x) {
+  fun f = x + 1
+  fun g = x * 2
+}
+Foo(2).f + Foo(2).g
+//│ = 7
+
+data class Bar(x) { fun f = x + 1 }
+Bar(2).f
+//│ = 3
