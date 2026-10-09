@@ -946,7 +946,11 @@ f(3)
 //│ deforest > 	fields: a⁸.x⁹
 //│ deforest > <<< fusing <<<
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let f$f, f$g, f$a_A, f$a_A1;
+//│ let f$g, f$f, f$g1, f$a_A, f$a_A1;
+//│ @private
+//│ define f$g as fun f$g⁰(a) {
+//│   return a(f⁰, undefined, undefined, undefined)
+//│ };
 //│ @private
 //│ define f$f as fun f$f⁰(x) {
 //│   let scrut, tmp;
@@ -956,11 +960,11 @@ f(3)
 //│       return 0
 //│     else
 //│       set tmp = f$a_A⁰(x);
-//│       return f$g⁰(tmp)
+//│       return f$g¹(tmp)
 //│   end
 //│ };
 //│ @private
-//│ define f$g as fun f$g⁰(a) {
+//│ define f$g1 as fun f$g¹(a) {
 //│   return a(undefined, undefined, undefined)
 //│ };
 //│ @affine(1) @private
@@ -973,7 +977,7 @@ f(3)
 //│   set fv_tmp = -⁰(A_x, 1);
 //│   return f$f⁰(fv_tmp)
 //│ };
-//│ define f⁰ as fun f¹(x) {
+//│ define f¹ as fun f⁰(x) {
 //│   let scrut, tmp;
 //│   set scrut = <⁰(x, 0);
 //│   match scrut
@@ -981,16 +985,16 @@ f(3)
 //│       return 0
 //│     else
 //│       set tmp = f$a_A¹(x);
-//│       return g⁰(tmp)
+//│       return f$g⁰(tmp)
 //│   end
 //│ };
-//│ define g¹ as fun g⁰(a) {
+//│ define g⁰ as fun g¹(a) {
 //│   let arg$A$0$, tmp;
 //│   match a
 //│     A² =>
 //│       set arg$A$0$ = a.x⁹;
 //│       set tmp = -⁰(arg$A$0$, 1);
-//│       return f¹(tmp)
+//│       return f⁰(tmp)
 //│     else
 //│       return 1
 //│   end
@@ -1008,7 +1012,4 @@ f(3)
 f(3)
 //│ deforest > >>> fusing >>>
 //│ deforest > <<< fusing <<<
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: processIRBlock (JSBackendDiffMaker.scala:319)
-//│ ═══[RUNTIME ERROR] Expected: '0', got: '1'
-//│ = 1
+//│ = 0

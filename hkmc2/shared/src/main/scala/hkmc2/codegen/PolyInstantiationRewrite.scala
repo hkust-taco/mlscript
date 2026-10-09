@@ -65,21 +65,24 @@ abstract class PolyInstantiationRewrite(val constraintSolver: FlowConstraintSolv
   
   val newPolyFnSyms : LinkedHashMap[InstantiationId, Map[TermSymbol, (BlockMemberSymbol, TermSymbol)]] =
     val res = LinkedHashMap.empty[InstantiationId, Map[TermSymbol, (BlockMemberSymbol, TermSymbol)]]
+    def funSymsToBeCopiedAt(path: InstantiationId): Iterator[TermSymbol] =
+      collector.synthesizedInstIdToFunSym.get(path) match
+      case S(entry) => collector.funToSccGroups(entry).iterator.filterNot(_ is entry)
+      case N => collector.funToSccGroups(path.last.getReferredFun.get).iterator
     for
       instId <- solvers.iterator.flatMap(_.polyInstIds)
       path <- instId.inits
-      // skip synthesized instIds — those rewrite in-place
-      if path.nonEmpty && !collector.synthesizedInstIdToFunSym.contains(path)
+      if path.nonEmpty && !res.contains(path)
+      copied = funSymsToBeCopiedAt(path)
+      if copied.nonEmpty
     do
-      res.getOrElseUpdate(
-        path,
-        collector.funToSccGroups(path.last.getReferredFun.get)
-          .map: f =>
-            val name = path.mkFunName + s"$$${f.nme}"
-            f -> (
-              new BlockMemberSymbol(name, Nil, true),
-              new TermSymbol(Fun, N, Tree.Ident(name), erasedType = f.erasedType))
-          .toMap)
+      res(path) = copied
+        .map: f =>
+          val name = path.mkFunName + s"$$${f.nme}"
+          f -> (
+            new BlockMemberSymbol(name, Nil, true),
+            new TermSymbol(Fun, N, Tree.Ident(name), erasedType = f.erasedType))
+        .toMap
     res
   end newPolyFnSyms
   
@@ -132,8 +135,13 @@ abstract class PolyInstantiationRewrite(val constraintSolver: FlowConstraintSolv
     object PolyFnRef:
       def unapply(p: Path): Opt[Value.MemberRef] = p match
         case ref@FunRef(f, _) =>
-          newPolyFnSyms.get(newRefId(ref.uid, f)).map: syms =>
-            val (bms, tSym) = syms(f)
+          val path = newRefId(ref.uid, f)
+          for
+            newSymsMap <- newPolyFnSyms.get(path)
+            (bms, tSym) <- newSymsMap.get(f).orElse:
+              if collector.synthesizedInstIdToFunSym.get(path).contains(f) then N
+              else lastWords(s"no copy of ${f.nme} at an instantiation path of its group")
+          yield
             bms.asMemberRef(tSym)
         case _ => N
   
