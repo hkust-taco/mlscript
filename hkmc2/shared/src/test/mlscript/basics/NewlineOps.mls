@@ -213,8 +213,8 @@ let x
 //│ = 6
 
 // * Note: `{+ ...}` binds looser than `*`, so it attaches to the whole product (not parsed as a refinement)
-2 { * 1 { + 2 } }
-//│ = 4
+2 { * 3 { + 2 } }
+//│ = 8
 
 // :dp
 2

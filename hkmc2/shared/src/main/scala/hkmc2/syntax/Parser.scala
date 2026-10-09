@@ -872,25 +872,24 @@ abstract class Parser(
   
   /** If a block starting with token `tok` is an operator split continuing the preceding expression
    *  (as in `foo { + 1 }`, `foo { .bar }`, or `foo { as T }`, or their indented equivalents),
-   *  returns the left precedence of that operator, which determines what the block applies to. */
-  private def opSplitLeftPrec(tok: Stroken): Opt[Int] = tok match
-    case SELECT(_, _) => S(SelPrec)
-    case id @ (IDENT(_, true) | KEYWORD(_: Keyword.InfixSplittable)) => S(id match
+   *  returns the left precedence of that operator, which determines what the block applies to.
+   * To avoid `Some` wrapper allocations, we return -1 when this is not applicable. */
+  private def opSplitLeftPrec(tok: Stroken): Int = tok match
+    case SELECT(_, _) => SelPrec
+    case id @ (IDENT(_, true) | KEYWORD(_: Keyword.InfixSplittable)) => id match
       case KEYWORD(Keyword.`of`) => AppPrec
       case KEYWORD(kw) => kw.leftPrecOrMin
       case _ => opPrec(id.name)._1
-    )
-    case _ => N
+    case _ => -1
   
   /** Whether a block starting with `toks` continues the preceding expression with an infix operator,
    *  as in `foo { + 1 }`, `foo { .bar }`, `foo { as T }`, or `foo { and bar }`.
    *  Such blocks are handled by the corresponding cases of `exprContImpl`
    *  and should never be parsed as refinements. */
   private def startsInfixCont(toks: Ls[TokLoc]): Bool = toks match
-    case (tok, _) :: _ => opSplitLeftPrec(tok).isDefined || (tok match
+    case (tok, _) :: _ => opSplitLeftPrec(tok) >= 0 || tok.match
       case KEYWORD(kw) => infixRules.kwAlts.contains(kw.name)
       case _ => false
-    )
     case Nil => false
   
   /** Parses a curly-brace block `br` that continues the preceding expression with an infix operator,
@@ -1009,7 +1008,7 @@ abstract class Parser(
       
       // * Parse operator splits
       case (br @ BRACKETS(bk: Indent_Curly, toks @ ((tok, l0) :: _)), loc) :: _
-      if opSplitLeftPrec(tok).exists(_ > prec)
+      if opSplitLeftPrec(tok) > prec
       =>
         consume
         val isSplit = toks.collectFirst{ case (_: NEWLINE_COMMA, _) => }.isDefined
@@ -1017,7 +1016,7 @@ abstract class Parser(
           closedCurlyCont(br, prec, allowNewlines): r =>
             if isSplit then r.opSplit(acc, l0, prec) else acc
         else if !isSplit then
-          // * If the indented block doens't have any newlines or commas,
+          // * If the indented block doesn't have any newlines or commas,
           // * this is not truly a split, and we can parse it as a normal expression continuation.
           cur = toks ::: cur
           exprCont(acc, prec, allowNewlines = allowNewlines)
@@ -1148,10 +1147,10 @@ abstract class Parser(
           val (res, rest) = rec(toks, S(br.innerLoc), br.describe).continueWith:
             _.exprCont(acc, prec, allowNewlines = true)
           rest match
-            case (_, l) :: _ =>
-              printDbg(s"!! REDUCING BRACKET")
-              cur = (NEWLINE, l.left) :: rest ::: cur
-            case _ =>
+          case (_, l) :: _ =>
+            printDbg(s"!! REDUCING BRACKET")
+            cur = (NEWLINE, l.left) :: rest ::: cur
+          case _ =>
           exprCont(res, prec, allowNewlines = allowNewlines)
         
       
