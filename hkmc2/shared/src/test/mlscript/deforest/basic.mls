@@ -359,14 +359,13 @@ f()
 //│ deforest > 	match: scrut³
 //│ deforest > <<< fusing <<<
 //│ = 1
-//│ f = undefined
-//│ x = undefined
+//│ f = fun f
+//│ x = 1
 
-:fixme
 f()
 //│ deforest > >>> fusing >>>
 //│ deforest > <<< fusing <<<
-//│ ═══[RUNTIME ERROR] TypeError: f10 is not a function
+//│ = 1
 
 
 :expect B(0)

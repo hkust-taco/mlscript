@@ -97,16 +97,16 @@ sumPlus(enum(3))
 //│ deforest > 	fields: ls⁰.t⁰
 //│ deforest > <<< fusing <<<
 //│ eta-expansion > >>> eta-expansion targets shapes >>>
-//│ eta-expansion > enum$enum⁰#0 @ <root>: [1, 9]
+//│ eta-expansion > enum$enum⁰#0 @ <root>: [1, 8]
 //│ eta-expansion > <<< eta-expansion targets shapes <<<
 //│ dead-param-elim > >>> dead-param-elim results >>>
-//│ dead-param-elim > sumPlus$ls_Cons⁰#1 @ <root> -> eliminable: {0, 5}
-//│ dead-param-elim > sumPlus$ls_Nil⁰#1 @ <root> -> eliminable: {0, 5}
+//│ dead-param-elim > sumPlus$ls_Cons⁰#1 @ <root> -> eliminable: {4}
+//│ dead-param-elim > sumPlus$ls_Nil⁰#1 @ <root> -> eliminable: {4}
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ let enum$enum$worker;
 //│ @private
-//│ define enum$enum$worker as fun enum$enum$worker⁰(x, eta$0$1, eta$0$2, eta$0$3, eta$0$4, eta$0$6, eta$0$7, eta$0$8) {
+//│ define enum$enum$worker as fun enum$enum$worker⁰(x, eta$0$0, eta$0$1, eta$0$2, eta$0$3, eta$0$5, eta$0$6, eta$0$7) {
 //│   let scrut, tmp;
 //│   set scrut = <⁰(x, 0);
 //│   match scrut

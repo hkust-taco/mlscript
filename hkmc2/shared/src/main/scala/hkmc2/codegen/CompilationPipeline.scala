@@ -40,7 +40,7 @@ class CompilationPipeline(using Config, Raise, State, Ctx, SymbolPrinter):
         case None => prog
         case Some(dCfg) =>
           flowAnalysis.FlowAnalysis.mkTraceLogger(dCfg.config, "deforest > ", outterTl).givenIn:
-            deforest.Deforest(prog)
+            deforest.Deforest(prog, additionalTopLevelSymbols = symbolsToPreserve)
     runPass("Lifter"): prog =>
       if config.liftDefns.isDefined then
         blockPass(Lifter(_).transform)(prog)

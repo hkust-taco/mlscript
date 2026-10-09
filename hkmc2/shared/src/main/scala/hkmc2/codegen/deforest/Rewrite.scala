@@ -12,7 +12,7 @@ import hkmc2.codegen.flowAnalysis.*
 
 
 
-class DeforestRewriter(val solver: DeforestFusionSolver)(using Raise)
+class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbols: Set[BoundSymbol])(using Raise)
   extends PolyInstantiationRewrite(solver.constraintSolver):
   
   type MatchOrLabelId = ResultId | LabelSymbol
@@ -218,6 +218,8 @@ class DeforestRewriter(val solver: DeforestFusionSolver)(using Raise)
         ++ pre.pgrm.main.match
           case Scoped(syms, _) => syms.iterator
           case _ => Nil
+        // for diff tests
+        ++ additionalTopLevelSymbols
       val freeVars = MutSet.empty[ValueSymbol]
       
       private def handleTrackableSel(s: Result) =
