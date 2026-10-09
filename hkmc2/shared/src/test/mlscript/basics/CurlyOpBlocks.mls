@@ -40,16 +40,49 @@ let x = 1
 1 + 2 {* 3 + 1} * 10
 //│ = 71
 
+// * This is the same as:
+1 + (2 * 3 + 1) * 10
+//│ = 71
+
+// * Operators following the braces apply to the whole block, according to their own precedence
+2 + 2 {* 3 + 1} + 2
+//│ = 11
+
+(2 + 2) {* 3 + 1} * 2
+//│ = 26
+
+// * Successive blocks each apply to the result of the previous one
+2 {+ 2} {* 3 + 1} * 2
+//│ = 26
+
+// * Blocks in an indented operand
+2 +
+  2 {* 3 + 1} * 2
+//│ = 16
+
 1 + 2 { * 3, * 4 } * 10
 //│ = 241
 
 1 + 2 { * 3, * 4 + 1 } * 10
 //│ = 251
 
+// * Here, the split applies to `2 * 2` because `*` is left-associative
+2 * 2 { * 2, + 1 } / 2
+//│ = 4.5
+
 
 // * Selections and keyword-led blocks
 "ab"{.length} + 1
 //│ = 3
+
+let rcd = {a: {b: 2}}
+//│ rcd = {a: {b: 2}}
+
+rcd {.a.b + 1} * 2
+//│ = 6
+
+rcd {.a} {.b + 1} * 2
+//│ = 6
 
 42{is Int} and false
 //│ = false
@@ -68,7 +101,7 @@ fun g(x) = if x + 1 { == 2 then "a", == 3 then "b" } else "c"
 :pe
 fun h(x) = if x {== 1 then "a" else "b"}
 //│ ╔══[PARSE ERROR] Unexpected 'else' keyword here
-//│ ║  l.69: 	fun h(x) = if x {== 1 then "a" else "b"}
-//│ ╙──      	                               ^^^^
+//│ ║  l.102: 	fun h(x) = if x {== 1 then "a" else "b"}
+//│ ╙──       	                               ^^^^
 
 
