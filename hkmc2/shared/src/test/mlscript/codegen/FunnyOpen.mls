@@ -40,10 +40,10 @@ Mod.|>>
 open Mod { |>> }
 //│ ╔══[PARSE ERROR] Expected start of expression in this position; found end of input instead
 //│ ║  l.40: 	open Mod { |>> }
-//│ ╙──      	                ^
+//│ ╙──      	               ^
 //│ ╔══[COMPILATION ERROR] Illegal 'open' statement shape.
 //│ ║  l.40: 	open Mod { |>> }
-//│ ╙──      	     ^^^^^^^^^^^
+//│ ╙──      	     ^^^^^^^^^^
 
 
 :e

@@ -213,7 +213,7 @@ let x
 
 // :dp
 2 {+ 1} * 2
-//│ = 4
+//│ = 6
 
 {2
   + 1} * 2
@@ -222,12 +222,9 @@ let x
 {2 { + 1 }} * 2
 //│ = 6
 
-:e // Note: this used to parse as a juxtaposition (the curly braces were treated equally to an indented section)
-2 { * 1 { + 2 } }
-//│ ╔══[COMPILATION ERROR] Unsupported refinement in this position.
-//│ ║  l.226: 	2 { * 1 { + 2 } }
-//│ ╙──       	      ^^^^^^^^^
-//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+// * Note: `{+ ...}` binds looser than `*`, so it attaches to the whole product (not parsed as a refinement)
+2 { * 3 { + 2 } }
+//│ = 8
 
 // :dp
 2
@@ -332,10 +329,10 @@ let incr = _ + 1
 :w
 2, * 3
 //│ ╔══[PARSE ERROR] Expected end of input; found literal instead
-//│ ║  l.333: 	2, * 3
+//│ ║  l.330: 	2, * 3
 //│ ╙──       	     ^
 //│ ╔══[WARNING] Pure expression in statement position
-//│ ║  l.333: 	2, * 3
+//│ ║  l.330: 	2, * 3
 //│ ╙──       	^
 //│ = fun
 
@@ -389,9 +386,9 @@ xs |> Arr.len
 ,+
 ys |> Arr.len
 //│ ╔══[PARSE ERROR] Expected start of expression in this position; found new line instead
-//│ ║  l.389: 	,+
+//│ ║  l.386: 	,+
 //│ ║         	  ^
-//│ ║  l.390: 	ys |> Arr.len
+//│ ║  l.387: 	ys |> Arr.len
 //│ ╙──
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -405,9 +402,9 @@ xs |> Arr.len
 +,
 ys |> Arr.len
 //│ ╔══[PARSE ERROR] Expected start of expression in this position; found new line instead
-//│ ║  l.405: 	+,
+//│ ║  l.402: 	+,
 //│ ║         	  ^
-//│ ║  l.406: 	ys |> Arr.len
+//│ ║  l.403: 	ys |> Arr.len
 //│ ╙──
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -438,10 +435,10 @@ new Foo(1) is Foo
 :fixme // ?
 new Foo(1) ,is Foo
 //│ ╔══[PARSE ERROR] Expected start of expression in this position; found 'is' keyword instead
-//│ ║  l.439: 	new Foo(1) ,is Foo
+//│ ║  l.436: 	new Foo(1) ,is Foo
 //│ ╙──       	            ^^
 //│ ╔══[PARSE ERROR] Expected end of input; found identifier instead
-//│ ║  l.439: 	new Foo(1) ,is Foo
+//│ ║  l.436: 	new Foo(1) ,is Foo
 //│ ╙──       	               ^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -449,10 +446,10 @@ new Foo(1) ,is Foo
 new Foo(1)
 is Foo
 //│ ╔══[PARSE ERROR] Expected start of expression in this position; found 'is' keyword instead
-//│ ║  l.450: 	is Foo
+//│ ║  l.447: 	is Foo
 //│ ╙──       	^^
 //│ ╔══[PARSE ERROR] Expected end of input; found identifier instead
-//│ ║  l.450: 	is Foo
+//│ ║  l.447: 	is Foo
 //│ ╙──       	   ^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 

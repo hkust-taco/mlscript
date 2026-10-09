@@ -1,0 +1,119 @@
+:js
+
+// * Curly-brace operator blocks are delimited: `e {op ...}` means `(e op ...)`,
+// * where `e` is chosen by the precedence of `op`, as for indented operator blocks.
+
+
+fun inc(x) = x + 1
+
+:pt
+42{as Int} * 2
+//│ ———————————————| Parsed tree |——————————————————————————————————————————————————————————————————————
+//│ OpApp:
+//│   lhs = InfixApp:
+//│     lhs = IntLit of 42
+//│     kw = Keywrd of keyword 'as'
+//│     rhs = Ident of "Int"
+//│   op = Ident of "*"
+//│   rhss = Ls of
+//│     IntLit of 2
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 84
+
+42{|> inc} * 2
+//│ = 86
+
+42{+ 1} * 2
+//│ = 86
+
+
+// * The block attaches to the left operand that its leading operator would bind to
+2 * 3 {+ 1}
+//│ = 7
+
+let x = 1
+1 + x{+ 2 * 3}
+//│ = 8
+//│ x = 1
+
+// * Lower-precedence operators inside the braces stay inside the braces
+1 + 2 {* 3 + 1} * 10
+//│ = 71
+
+// * This is the same as:
+1 + (2 * 3 + 1) * 10
+//│ = 71
+
+// * Operators following the braces apply to the whole block, according to their own precedence
+2 + 2 {* 3 + 1} + 2
+//│ = 11
+
+(2 + 2) {* 3 + 1} * 2
+//│ = 26
+
+// * Successive blocks each apply to the result of the previous one
+2 {+ 2} {* 3 + 1} * 2
+//│ = 26
+
+// * Blocks in an indented operand
+2 +
+  2 {* 3 + 1} * 2
+//│ = 16
+
+1 + 2 { * 3, * 4 } * 10
+//│ = 241
+
+1 + 2 { * 3, * 4 + 1 } * 10
+//│ = 251
+
+// * Here, the split applies to `2 * 2` because `*` is left-associative
+2 * 2 { * 2, + 1 } / 2
+//│ = 4.5
+
+
+// * Selections and keyword-led blocks
+"ab"{.length} + 1
+//│ = 3
+
+let rcd = {a: {b: 2}}
+//│ rcd = {a: {b: 2}}
+
+rcd {.a.b + 1} * 2
+//│ = 6
+
+rcd {.a} {.b + 1} * 2
+//│ = 6
+
+42{is Int} and false
+//│ = false
+
+
+// * Interaction with conditionals
+fun f(x) = if x {== 1 then "a"} else "b"
+[f(1), f(2)]
+//│ = ["a", "b"]
+
+fun g(x) = if x + 1 { == 2 then "a", == 3 then "b" } else "c"
+[g(1), g(2), g(3)]
+//│ = ["a", "b", "c"]
+
+// * `else` belongs to the `if`, so it cannot be nested inside the braces
+:pe
+fun h(x) = if x {== 1 then "a" else "b"}
+//│ ╔══[PARSE ERROR] Unexpected 'else' keyword here
+//│ ║  l.102: 	fun h(x) = if x {== 1 then "a" else "b"}
+//│ ╙──       	                               ^^^^
+
+
+// * Curly-brace bodies that do not start with an operator are not operator blocks.
+// * This also holds after a modifier, where the head of the definition is parsed with minimal precedence.
+data class Foo(x) {
+  fun f = x + 1
+  fun g = x * 2
+}
+Foo(2).f + Foo(2).g
+//│ = 7
+
+data class Bar(x) { fun f = x + 1 }
+Bar(2).f
+//│ = 3
