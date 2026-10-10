@@ -176,16 +176,22 @@ class FlowAnalysisBasedRewrite(
           .filterNot(_.isPure)
           .foldLeft(k(Value.Lit(Tree.UnitLit(false))(ctorSite.toLoc))): (rest, p) =>
             applyPath(p)(Assign.discard(_, rest))
-      case c@Call(fun, args :: restArgss) if args.forall(_.spread.isEmpty) =>
-        val eliminable = deadParamElimSolver.eliminableCallSiteArgs(ConcreteId(c.uid, instId))
+      case c@Call(fun, argss) =>
+        def rewriteArgss(argLists: Iterator[(Ls[Arg], Int)])(k: Ls[Ls[Arg]] => Block): Block = argLists.nextOption() match
+          case N => k(Nil)
+          case S((args, whichArgList)) =>
+            val eliminable = deadParamElimSolver.eliminableCallSiteArgs(ConcreteId((c.uid, whichArgList), instId))
+            rewriteArgs(args, eliminable): args2 =>
+              rewriteArgss(argLists): rest2 =>
+                k(args2 :: rest2)
         applyPath(fun): fun2 =>
-          rewriteArgs(args, eliminable): args2 =>
+          rewriteArgss(argss.iterator.zipWithIndex): argss2 =>
             k(
-              if (fun2 is fun) && (args2 is args) then c
-              else Call(fun2, args2 ne_:: restArgss)(c.metadata, c.toLoc)
+              if (fun2 is fun) && argss2.corresponds(argss)(_ is _) then c
+              else Call(fun2, argss2.ne_!)(c.metadata, c.toLoc)
             )
       case i@Instantiate(mut, cls, args :: restArgss) if args.forall(_.spread.isEmpty) =>
-        val eliminable = deadParamElimSolver.eliminableCallSiteArgs(ConcreteId(i.uid, instId))
+        val eliminable = deadParamElimSolver.eliminableCallSiteArgs(ConcreteId((i.uid, 0), instId))
         applyPath(cls): cls2 =>
           rewriteArgs(args, eliminable): args2 =>
             k(

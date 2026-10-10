@@ -8,7 +8,7 @@ import hkmc2.codegen.flowAnalysis.*
 import scala.collection.mutable.{LinkedHashMap, Buffer}
 
 
-type ConcreteCallSiteId = ConcreteId[ResultId]
+type ConcreteCallSiteId = ConcreteId[CallId]
 
 
 

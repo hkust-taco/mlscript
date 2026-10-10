@@ -183,10 +183,12 @@ private fun ping(n)(unused) = if n == 0 then 0 else pong(n - 1)(unused)
 private fun pong(n)(unused) = if n == 0 then 0 else ping(n - 1)(unused)
 ping(5)(99)
 //│ dead-param-elim > >>> dead-param-elim results >>>
+//│ dead-param-elim > ping⁴#1 @ <root> -> eliminable: {0}
+//│ dead-param-elim > pong⁴#1 @ <root> -> eliminable: {0}
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ @private
-//│ define ping⁴ as fun ping⁵(n)(unused) {
+//│ define ping⁴ as fun ping⁵(n)() {
 //│   let scrut, tmp;
 //│   set scrut = Predef⁰.equals⁰(n, 0);
 //│   match scrut
@@ -194,11 +196,11 @@ ping(5)(99)
 //│       return 0
 //│     else
 //│       set tmp = -⁰(n, 1);
-//│       return pong⁴(tmp)(unused)
+//│       return pong⁴(tmp)()
 //│   end
 //│ };
 //│ @private
-//│ define pong⁵ as fun pong⁴(n)(unused) {
+//│ define pong⁵ as fun pong⁴(n)() {
 //│   let scrut, tmp;
 //│   set scrut = Predef⁰.equals⁰(n, 0);
 //│   match scrut
@@ -206,10 +208,10 @@ ping(5)(99)
 //│       return 0
 //│     else
 //│       set tmp = -⁰(n, 1);
-//│       return ping⁵(tmp)(unused)
+//│       return ping⁵(tmp)()
 //│   end
 //│ };
-//│ return ping⁵(5)(99)
+//│ return ping⁵(5)()
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 0
 
