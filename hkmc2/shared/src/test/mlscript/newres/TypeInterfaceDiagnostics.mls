@@ -144,8 +144,8 @@ pair.1.item.value
 //│ ║         	^^^^^^^^^^^^^^^^^
 //│ ╟── Cannot resolve member 'value' of a value with unknown shape.
 //│ ╟── This type argument supplies only an input bound for 'R'.
-//│ ║  l.140: 	let pair = ([new Left(Item(1)), new Right(Item(2))] as Pair[Item])
-//│ ║         	                                                            ^^^^
+//│ ║  l.139: 	type Pair[A] = [Left[A], Right[A]]
+//│ ║         	                               ^
 //│ ╟── Type parameter 'R' is declared contravariant here.
 //│ ║  l.138: 	class Right[in R](val item: R)
 //│ ║         	               ^
@@ -167,8 +167,8 @@ delay(pair)().1.item.value
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Cannot resolve member 'value' of a value with unknown shape.
 //│ ╟── This type argument supplies only an input bound for 'R'.
-//│ ║  l.163: 	let pair = ([new Left(Item(1)), new Right(Item(2))] as Pair[Item])
-//│ ║         	                                                            ^^^^
+//│ ║  l.161: 	type Pair[A] = [Left[A], Right[A]]
+//│ ║         	                               ^
 //│ ╟── Type parameter 'R' is declared contravariant here.
 //│ ║  l.160: 	class Right[in R](val item: R)
 //│ ║         	               ^

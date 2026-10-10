@@ -1,0 +1,95 @@
+:.
+
+// The receiver can insert a Base. Its nested invariant argument must propagate
+// that possibility back to the array instead of preserving an all-Child view.
+:ge
+class Base
+class Child(val value: Int) extends Base
+class Receiver[T](val value: T) with
+  fun accept(xs: Array[T]): () =
+    xs.push(value)
+    ()
+let receiver = (new Receiver[Base](new Base) as Receiver[in Child out Base])
+let xs = mut [Child(1)]
+receiver.accept(xs)
+xs.1.value
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.15: 	xs.1.value
+//│ ║        	^^^^^^^^^^
+//│ ╟── Value of type 'Base' does not contain member 'value'
+//│ ║  l.12: 	let receiver = (new Receiver[Base](new Base) as Receiver[in Child out Base])
+//│ ╙──      	                                                                      ^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ receiver = Receiver(Base)
+//│ xs = [Child(1), Base]
+
+// A positive invariant argument must retain the holder's input bound too.
+// The actual cell calls its argument on a Base, so a Child-only callback is unsafe.
+:ge
+class Base
+class Child(val value: Int) extends Base
+class Cell[T](val consume: T -> Int) with
+  fun put(value: T): Int = consume(value)
+class Holder[T](val cell: Cell[T])
+let holder = (new Holder[Base -> Int](new Cell[Base -> Int](f => f(new Base)))
+  as Holder[in (Base -> Int) out (Child -> Int)])
+holder.cell.put(x => x.value)
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.36: 	holder.cell.put(x => x.value)
+//│ ║        	                     ^^^^^^^
+//│ ╟── Value of type 'Base' does not contain member 'value'
+//│ ║  l.35: 	  as Holder[in (Base -> Int) out (Child -> Int)])
+//│ ╙──      	                ^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ holder = Holder(Cell(fun))
+
+// A declaration-site input annotation composes polarity just like written in.
+:ge
+class Base
+class Child(val value: Int) extends Base
+class Sink[in T](val consume: T -> Int) with
+  fun put(value: T): Int = consume(value)
+class Holder[T](val sink: Sink[T])
+let holder = (new Holder[Base -> Int](new Sink[Base -> Int](f => f(new Base)))
+  as Holder[in (Base -> Int) out (Child -> Int)])
+holder.sink.put(x => x.value)
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.55: 	holder.sink.put(x => x.value)
+//│ ║        	                     ^^^^^^^
+//│ ╟── Value of type 'Base' does not contain member 'value'
+//│ ║  l.54: 	  as Holder[in (Base -> Int) out (Child -> Int)])
+//│ ╙──      	                ^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ holder = Holder(Sink(fun))
+
+// A callback that handles every Base remains valid through both nested views.
+:expect [3, 4]
+class Base
+class Child(val value: Int) extends Base
+class Cell[T](val consume: T -> Int) with
+  fun put(value: T): Int = consume(value)
+class Sink[in T](val consume: T -> Int) with
+  fun put(value: T): Int = consume(value)
+class Holder[T](val cell: Cell[T], val sink: Sink[T])
+let holder = (new Holder[Base -> Int](
+  new Cell[Base -> Int](f => f(new Base)), new Sink[Base -> Int](f => f(new Base)))
+  as Holder[in (Base -> Int) out (Child -> Int)])
+[holder.cell.put(x => 3), holder.sink.put(x => 4)]
+//│ = [3, 4]
+//│ holder = Holder(Cell(fun), Sink(fun))
+
+// Resolution honors the supplied Child interface. Rejecting the incompatible
+// array argument is the type checker's job, covered in InvalMLVarianceSubstitution.
+// With type checking disabled, execution still inserts a Base into this array.
+class Base
+class Child(val value: Int) extends Base
+class Receiver[T](val value: T) with
+  fun accept(xs: Array[T]): () =
+    xs.push(value)
+    ()
+let receiver = (new Receiver[Base](new Base) as Receiver[in Child out Base])
+let xs = (mut [Child(5)] as Array[Child])
+receiver.accept(xs)
+xs.1.value
+//│ receiver = Receiver(Base)
+//│ xs = [Child(5), Base]

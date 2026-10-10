@@ -33,8 +33,8 @@ For example, `(Int -> Int) & (Str -> Str) <: A -> B` constrains both arrows,
 producing `A <: Int`, `Int <: B`, `A <: Str`, and `Str <: B`.
 These rules collect possible resolution targets without solving
 alternative constraint sets or forming products of intersection candidates.
-They deliberately approximate type inference; concrete incompatibilities such as
-`Str <: Int` do not currently produce resolution diagnostics.
+They deliberately approximate type inference; diagnosing concrete incompatibilities
+such as `Str <: Int` belongs to type checking, not resolution.
 
 ## Instance wrappers and interface observations
 
@@ -153,13 +153,18 @@ subclass scope before applying the value's caller path. `nominalParent` shares
 that exit between ancestor constraints and inherited member lookup. Constructed
 receivers already carry the exit in their constructor context.
 
-### Substitute at the occurrence before applying argument variance
+### Compose substitution polarity through type arguments
 
-First interpret an argument expression at its lexical occurrence polarity. A
-formal bound to `in L out U` selects `U` positively and `L` negatively. Function
-domains and written wildcard input parts reverse polarity; results and structural
-fields preserve it. Then apply the enclosing formal's declaration variance to the
-interpreted argument. An invariant formal uses that one type for both parts.
+A formal bound to `in L out U` selects `U` positively and `L` negatively.
+Function domains and type-argument input parts reverse polarity; results,
+structural fields, and type-argument output parts preserve it. Write `I_p(S)` for
+interpreting `S` at polarity `p`. For an unqualified argument `S`, an invariant
+formal therefore retains both
+`I_not-p(S)` as its input and `I_p(S)` as its output. These interpretations can
+differ when `S` contains substituted parameters. Declaration-site `in` retains
+the input interpretation and supplies `Any` as the output; declaration-site `out`
+retains the output interpretation and supplies `Nothing` as the input. Written
+wildcards use the same polarity composition and override declaration variance.
 
 For example, with `Child <: Base`:
 
@@ -169,20 +174,38 @@ class Receiver[T] with
   fun accept(box: Box[T]): () = ()
 ```
 
-On `Receiver[in Child out Base]`, `accept` expects `Box[Child]`: the occurrence of
-`T` is negative, and the invariant `Box` argument uses the selected `Child` for
-both parts. A declaration's `in` annotation does not itself change the lexical
-polarity at which a substituted argument is evaluated.
+On `Receiver[in Child out Base]`, `accept` expects `Box[in Base out Child]`.
+The domain reverses polarity, and `Box`'s input part reverses it again, selecting
+`Base`; its output part selects `Child`. Selecting `Child` once and using it for
+both parts would be unsound: a `Receiver[Base]` can be viewed through this receiver
+type, but an invariant `Box[Child]` is not a `Box[Base]`. A receiver that writes its
+stored `Base` into an `Array[T]` exposes the runtime failure of that rule.
+
+Resolution propagates these obligations into inferred arguments and preserves
+explicitly supplied interfaces. Checking concrete subtype compatibility belongs
+to the later type checking phases: an `Array[Child]` annotation remains the read
+interface during resolution, while the incompatible call must be rejected by the
+type checker. The annotated-array case in `VarianceSoundness.mls` resolves
+normally and, with type checking disabled, records the unsafe runtime write.
+InvalML regressions check rejection of the corresponding concrete mismatch.
+
+Aliases bind both argument interpretations before interpreting their bodies at the
+enclosing polarity. This avoids applying the enclosing reversal twice:
+`Identity[T]`, for `type Identity[A] = A`, must behave like `T` in either polarity.
+Captured enclosing binders retain their own bindings. Nominal applications instead
+retain the argument pair composed with the application's polarity, since member
+signatures subsequently interpret that pair from the member's positive interface.
 
 `DeclaredType.positive` records this lexical polarity, independently of a later
 constraint's direction. `TypeShape.Wildcard` retains written parts;
-`TypeShape.Argument` retains contextual references for synthesized variance.
+`TypeShape.Argument` retains both contextual argument parts.
 Neither transplants supplied syntax into the callee's binding environment.
 
-`TypeShape.SelectedArgument` saves a requested part when the argument is deferred.
-Both subsequent constraint directions use that same selected type. Selections are
-cached by argument reference and polarity; selecting an existing selection is
-idempotent. Forwarding cycles retain subscriptions but stop repeated observation.
+`TypeShape.SelectedArgument` saves one requested part for a scalar occurrence when
+the argument is deferred. Both subsequent constraint directions use that same
+selected type; an invariant argument makes separate selections for its two parts.
+Selections are cached by argument reference and polarity; selecting an existing
+selection is idempotent. Forwarding cycles retain subscriptions but stop repeated observation.
 For a fixed argument-reference set, selection adds at most two nodes per reference.
 
 ## Shared bodies and contextual constraints
@@ -522,8 +545,8 @@ These algebraic checks cover combinations that worksheet examples cannot exhaust
 
 Worksheet coverage under `newres` includes `MutableArrays`, `ContextualInference`,
 `InstantiationSites`, `StoredSpecializations`, `SpecializationCaptures`,
-`TypeArgumentVariance`, `VarianceSubstitution`, `AnnotationContexts`, and
-`TypeGraphTermination`. `Promises` covers async fulfillment, nested adoption,
-constructor inference, generic call isolation, and escaping payloads. Deferred cases
+`TypeArgumentVariance`, `VarianceSubstitution`, `VarianceSoundness`, `VarianceAliases`,
+`AnnotationContexts`, and `TypeGraphTermination`. `Promises` covers async fulfillment,
+nested adoption, constructor inference, generic call isolation, and escaping payloads. Deferred cases
 retain explicit regression expectations;
 see the [future-work reference](new-resolution-future-work.md).

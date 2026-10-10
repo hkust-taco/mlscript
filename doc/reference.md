@@ -1385,10 +1385,12 @@ Use-site type arguments have input and output parts:
 For an unqualified argument, the declaration's `in` or `out` annotation selects
 the corresponding form. An explicitly written use-site variance supplies its own
 parts. Substitution selects the output part in positive positions and the input
-part in negative positions. Function inputs reverse polarity; results preserve it.
-Interpret an argument at its occurrence before applying the enclosing declaration's
-variance. For example, a method input `Box[T]` on `Receiver[in Child out Base]`
-uses `Box[Child]` when `Box` is invariant.
+part in negative positions. Function inputs and type-argument input parts reverse
+polarity; results and type-argument output parts preserve it. An invariant argument
+must be interpreted in both polarities before substitution selects its bounds.
+For example, a method input `Box[T]` on `Receiver[in Child out Base]` becomes
+`Box[in Base out Child]` when `Box` is invariant. Declaration-site `in` reverses
+polarity just like a written input part; declaration-site `out` preserves it.
 
 Each explicit generic parameter is instantiated once at the expression that
 specializes or invokes its definition: `f[T]`, a by-name reference/selection, or
