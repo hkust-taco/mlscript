@@ -188,22 +188,24 @@ final class Erasure private (using Config, Ctx, State)(using Raise):
     // Public members replace inherited names; private members retain their declaration identity.
     // A subclass cannot implement a private declaration by introducing the same name.
     type MemberKey = Either[TermSymbol, Str]
-    val effectiveMembers = mutable.Map.empty[ClassLikeDef, Map[MemberKey, TermSymbol]]
+    // Definitions are keyed by identity: as case classes, they would otherwise
+    // be hashed and compared through their entire bodies on every lookup.
+    val effectiveMembers = mutable.Map.empty[Identity[ClassLikeDef], Map[MemberKey, TermSymbol]]
     def checkConstruction(term: Term & PossiblyErroneous, cls: ClassDef): Unit =
       if Inheritance.hasModifier(cls, syntax.Keyword.`abstract`) then
         term.isErroneous = true
         raise(ErrorReport(
           msg"Cannot instantiate abstract class '${cls.sym.nme}'" -> term.toLoc ::
             (msg"Abstract class defined here" -> cls.toLoc) :: Nil, source = Diagnostic.Source.Compilation))
-    def members(cls: ClassLikeDef, visiting: Set[ClassLikeDef]): Map[MemberKey, TermSymbol] =
-      effectiveMembers.getOrElseUpdate(cls,
-        if visiting(cls) then
+    def members(cls: ClassLikeDef, visiting: Set[Identity[ClassLikeDef]]): Map[MemberKey, TermSymbol] =
+      effectiveMembers.getOrElseUpdate(Identity(cls),
+        if visiting(Identity(cls)) then
           raise(ErrorReport(msg"Inheritance cycle involving '${cls.sym.nme}'" -> cls.toLoc :: Nil,
             source = Diagnostic.Source.Compilation))
           Map.empty
         else
           val inherited = cls.ext.flatMap(parentClass)
-            .fold(Map.empty[MemberKey, TermSymbol])(members(_, visiting + cls))
+            .fold(Map.empty[MemberKey, TermSymbol])(members(_, visiting + Identity(cls)))
           inherited ++ cls.body.members.toList.flatMap: (name, member) =>
             member.asTrm.map: symbol =>
               val key: MemberKey = if symbol.isPrivate then Left(symbol) else Right(name)
