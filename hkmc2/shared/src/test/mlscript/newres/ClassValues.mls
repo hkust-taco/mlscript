@@ -442,3 +442,14 @@ new mixedRepresentation
 //│ ╙──     	      ^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ mixedRepresentation = class Primary
+
+// A class selection on a call result reads the class interpretation recorded on
+// the selection, as for a local variable; recursion must reach a fixed point.
+:expect 36
+private fun classThroughRecursion(value, n: Int) =
+  if n == 0 then value.class
+  else classThroughRecursion(value, n - 1).class
+let recursiveClass = classThroughRecursion(Primary, 3)
+new recursiveClass(36).x
+//│ = 36
+//│ recursiveClass = class Primary

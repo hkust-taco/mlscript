@@ -474,9 +474,9 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
             ErrorReport(msg"The class instantiated here is ambiguous" -> trm.toLoc ::
               targets.map(target => msg"target: ${target.describeKind} '${target.nme}'" -> target.toLoc),
               source = Diagnostic.Source.Compilation)
-      case _ =>
-        softAssert(nw.isErroneous, "Unexpected class term shape")
-        compError
+      // Calls and other computed values retain their class interpretation on
+      // the enclosing selection or construction, just like local variables.
+      case _ => classValue
     else subTerm(trm)(p => k(p, getClassParamLists(p)))
   
   private def classParamLists(cls: ClassLikeDef): Ls[ParamList] = cls.paramsOpt.toList ::: cls.auxParams
