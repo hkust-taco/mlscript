@@ -1,0 +1,40 @@
+:.
+#lang(eagerResolution: false)
+
+// Both arrows constrain A -> B: A <: Int, Int <: B, A <: Str, Str <: B.
+// Each result member witnesses a different arrow; choosing just one loses it.
+:expect ["12.0", "ABC"]
+fun adapt[A, B](f: A -> B): A -> B = f
+fun results(f: (Int -> Int) & (Str -> Str)) =
+  let g = adapt(f)
+  [g(12).toFixed(1), g("abc").toUpperCase()]
+results(x => x)
+//│ = ["12.0", "ABC"]
+
+// The same two constraints must propagate contravariantly into both domains.
+// The only declared source of these fields is the argument passed to invoke.
+// Leave domains uncalled so argument values cannot supply the missing fields.
+fun invoke[A, B](f: A -> B, value: A): B = f(value)
+private fun domains[X, Y](f: (X -> Int) & (Y -> Str), x: X, y: Y) =
+  invoke(f, {first: 1, second: "two"})
+  [x.first, y.second]
+
+// Eager checking sees both concrete result candidates, including the one that
+// lacks each member. The approximation does not turn the result into dyn.
+:e
+#lang(eagerResolution: true)
+fun allResults(f: (Int -> Int) & (Str -> Str)) =
+  let g = adapt(f)
+  [g(0).toUpperCase(), g("").toFixed(0)]
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.28: 	  [g(0).toUpperCase(), g("").toFixed(0)]
+//│ ║        	   ^^^^^^^^^^^^^^^^
+//│ ╟── Value of type 'Int' does not contain member 'toUpperCase'
+//│ ║  l.26: 	fun allResults(f: (Int -> Int) & (Str -> Str)) =
+//│ ╙──      	                          ^^^
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.28: 	  [g(0).toUpperCase(), g("").toFixed(0)]
+//│ ║        	                       ^^^^^^^^^^^^^
+//│ ╟── Value of type 'Str' does not contain member 'toFixed'
+//│ ║  l.26: 	fun allResults(f: (Int -> Int) & (Str -> Str)) =
+//│ ╙──      	                                         ^^^

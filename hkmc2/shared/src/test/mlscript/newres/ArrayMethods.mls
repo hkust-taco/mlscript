@@ -1,0 +1,33 @@
+:.
+
+// Exercise the Array interfaces used by Iter's forwarding methods, including
+// typed iterator results and callbacks checked against their declared domains.
+:expect "[[2,3,3],[0,1],0,2,1,3,2,[3,2,1],[1,2,3],[1,4,3],[1,4,3],6]"
+fun inspect(xs: Array[Int]) = [
+  (mut [1, 2, 3]).copyWithin(0, 1)
+  xs.entries().next().value
+  xs.keys().next().value
+  xs.find((x, i, a) => x > 1)
+  xs.findIndex((x, i, a) => x > 1)
+  xs.findLast((x, i, a) => x > 1)
+  xs.findLastIndex((x, i, a) => x > 1)
+  xs.toReversed()
+  xs.toSorted()
+  xs.toSpliced(1, 1, 4)
+  xs.with(1, 4)
+  xs.reduceRight((acc, x, i, a) => acc + x, 0)
+]
+JSON.stringify(inspect([1, 2, 3]))
+//│ = "[[2,3,3],[0,1],0,2,1,3,2,[3,2,1],[1,2,3],[1,4,3],[1,4,3],6]"
+
+:expect ["AB", "AB"]
+fun flatten(xs: Array[Str]) =
+  let mapped = xs.flatMap((x, i, a) => [x.toUpperCase()])
+  [mapped.join(""), [mapped].flat().join("")]
+flatten(["a", "b"])
+//│ = ["AB", "AB"]
+
+:expect "Array"
+fun prototypeName(value) = Reflect.getPrototypeOf(value).constructor.name
+prototypeName([1])
+//│ = "Array"

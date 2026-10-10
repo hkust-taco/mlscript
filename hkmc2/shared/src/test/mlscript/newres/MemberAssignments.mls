@@ -1,0 +1,22 @@
+:.
+
+class Counter with
+  let count = 0
+  fun increment() = {
+    set count = count + 1
+    count
+  }
+
+:expect [1, 2]
+let counter = new mut Counter
+[counter.increment(), counter.increment()]
+//│ = [1, 2]
+//│ counter = Counter
+
+:e
+module Fixed with
+  fun value() = 0
+  fun change() = set value = 1
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int' at an unrelated type 'Function'
+//│ ║  l.19: 	  fun change() = set value = 1
+//│ ╙──      	                     ^^^^^

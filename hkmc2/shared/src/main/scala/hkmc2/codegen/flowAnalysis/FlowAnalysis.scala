@@ -154,6 +154,7 @@ object MemberRefTo:
       locally:
         p match
           case Select(qual, _) => S(qual)
+          case SuperSelect(qual, _, _) => S(qual)
           case _ => N
 
 object CtorProducer:
@@ -597,7 +598,7 @@ class FlowPreAnalyzer(val pgrm: Program)(using
         if ctxTracker.isEnclosingMatchScrutSym(disamb) =>
           applyValueMemberRef(v, recordAffinity = false)
       case _ => applyPath(qual)
-    case p: Select =>
+    case p: (Select | SuperSelect) =>
       super.applyPath(p)
     case c: Cast => applyResult(c.value)
     case v: Value => applyValue(v)
@@ -1060,6 +1061,10 @@ class FlowConstraintsCollector(
             case Some(fScheme) =>
               fScheme.instantiate(refSite.uid, f)
             case None => generatedVars(f)
+          case s @ SuperSelect(qual, base, _) =>
+            cc.constrain(processResult(qual), UnknownCons)
+            cc.constrain(processResult(base), UnknownCons)
+            generatedVars(s.symbol)
           case s@Select(qual, name) =>
             cc.constrain(processResult(qual), UnknownCons)
             s.symbol.fold(UnknownProd): selSym =>

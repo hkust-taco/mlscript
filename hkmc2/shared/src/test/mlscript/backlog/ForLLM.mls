@@ -1,3 +1,4 @@
+:.
 :js
 
 // Instruction for agent: for each test case you solve, move it to its own test file outside of the `backlog` folder
@@ -27,7 +28,7 @@ let
   x = 1
 in x
 //│ ╔══[COMPILATION ERROR] Illegal position for 'in' modifier.
-//│ ║  l.28: 	in x
+//│ ║  l.29: 	in x
 //│ ╙──      	^^
 //│ = 1
 //│ x = 1
@@ -109,7 +110,7 @@ if 2
 :fixme // * Should be a call of two arguments, not a sequenced expression
 +(1,2)
 //│ ╔══[WARNING] Pure expression in statement position
-//│ ║  l.110: 	+(1,2)
+//│ ║  l.111: 	+(1,2)
 //│ ╙──       	  ^
 //│ = 2
 
@@ -120,19 +121,19 @@ pattern ShapeArea =
   | (:radius) => 0
   | x => 1
 //│ ╔══[COMPILATION ERROR] Found an inconsistent variable in disjunction patterns.
-//│ ║  l.120: 	  | (:radius) => 0
+//│ ║  l.121: 	  | (:radius) => 0
 //│ ║         	      ^^^^^^
 //│ ╟── The variable is missing from this sub-pattern.
-//│ ║  l.121: 	  | x => 1
+//│ ║  l.122: 	  | x => 1
 //│ ╙──       	    ^^^^^^
 
 :fixme
 pattern P = {:radius} => radius
 //│ ╔══[COMPILATION ERROR] Expected a valid parameter, found type definition
-//│ ║  l.130: 	pattern P = {:radius} => radius
+//│ ║  l.131: 	pattern P = {:radius} => radius
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Name not found: radius
-//│ ║  l.130: 	pattern P = {:radius} => radius
+//│ ║  l.131: 	pattern P = {:radius} => radius
 //│ ╙──       	                         ^^^^^^
 //│ = fun
 
@@ -143,7 +144,7 @@ pattern P = ((:radius)) => radius
 :fixme
 pattern P = (:radius) => radius
 //│ ╔══[WARNING] Unused pattern binding: radius.
-//│ ║  l.144: 	pattern P = (:radius) => radius
+//│ ║  l.145: 	pattern P = (:radius) => radius
 //│ ╙──       	              ^^^^^^
 
 // ——— ——— ———

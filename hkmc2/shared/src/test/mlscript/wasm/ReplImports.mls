@@ -1,6 +1,5 @@
+:.
 
-:global
-:wasm
 
 object Foo with
   val x = 1

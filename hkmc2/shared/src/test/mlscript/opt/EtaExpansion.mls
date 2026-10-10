@@ -1,3 +1,4 @@
+:.
 :js
 :flowBasedOpt debugEta
 
@@ -125,10 +126,10 @@ g(f, 1)(2) + g(h, 3)(4)
 :w
 fun h(x) = @affine(1) y => x + y
 //│ ╔══[WARNING] This annotation has no effect.
-//│ ║  l.126: 	fun h(x) = @affine(1) y => x + y
+//│ ║  l.127: 	fun h(x) = @affine(1) y => x + y
 //│ ║         	           ^^^^^^^^^^
 //│ ╟── This annotation is not supported on function literal terms.
-//│ ║  l.126: 	fun h(x) = @affine(1) y => x + y
+//│ ║  l.127: 	fun h(x) = @affine(1) y => x + y
 //│ ╙──       	                      ^^^^^^^^^^
 //│ eta-expansion > >>> eta-expansion targets shapes >>>
 //│ eta-expansion > <<< eta-expansion targets shapes <<<
@@ -136,7 +137,7 @@ fun h(x) = @affine(1) y => x + y
 :w
 @affine(0) val v = 1
 //│ ╔══[WARNING] This annotation has no effect.
-//│ ║  l.137: 	@affine(0) val v = 1
+//│ ║  l.138: 	@affine(0) val v = 1
 //│ ╙──       	^^^^^^^^^^
 //│ eta-expansion > >>> eta-expansion targets shapes >>>
 //│ eta-expansion > <<< eta-expansion targets shapes <<<
@@ -145,10 +146,10 @@ fun h(x) = @affine(1) y => x + y
 :w
 fun h(x) = @affine(0) x
 //│ ╔══[WARNING] This annotation has no effect.
-//│ ║  l.146: 	fun h(x) = @affine(0) x
+//│ ║  l.147: 	fun h(x) = @affine(0) x
 //│ ║         	           ^^^^^^^^^^
 //│ ╟── This annotation is not supported on reference terms.
-//│ ║  l.146: 	fun h(x) = @affine(0) x
+//│ ║  l.147: 	fun h(x) = @affine(0) x
 //│ ╙──       	                      ^
 //│ eta-expansion > >>> eta-expansion targets shapes >>>
 //│ eta-expansion > <<< eta-expansion targets shapes <<<

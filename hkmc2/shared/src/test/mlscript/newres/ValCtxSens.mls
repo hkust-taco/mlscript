@@ -1,0 +1,123 @@
+:.
+
+
+:sr
+module A {
+  val u = 1
+}
+module B {
+  val u = 2
+}
+//│ ————————————————| Resolved |————————————————————————————————————————————————————————————————————————
+//│   module A⁰::A¹ { val u⁰::u¹ ‹flow:u⁰› = 1 }, module B⁰::B¹ { val u²::u³ ‹flow:u¹› = 2 }
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+
+val foo = x => x
+//│ foo = fun
+
+:sr
+foo(A).u
+//│ ————————————————| Resolved |————————————————————————————————————————————————————————————————————————
+//│   foo⁰(A⁰)‹app⁰›.u⁰
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 1
+
+foo(A).u
+//│ = 1
+
+// * We now preserve context sensitivity
+:sr
+:expect 2
+foo(B).u
+//│ ————————————————| Resolved |————————————————————————————————————————————————————————————————————————
+//│   foo⁰(B⁰)‹app¹›.u²
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 2
+
+:expect 1
+foo(A).u
+//│ = 1
+
+:expect 2
+foo(B).u
+//│ = 2
+
+
+// Capturing the function in a value alias still loses context sensitivity, as in CtxSens.mls.
+val alias = foo
+//│ alias = fun
+
+// FIXME: Alias capture loses the activation of the exposed lambda.
+:fixme
+:expect 2
+alias(B).u
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.54: 	alias(B).u
+//│ ║        	^^^^^^^^^^
+//│ ╟── Cannot resolve member 'u' of a value with unknown shape.
+//│ ╟── Parameter 'x' admits values of unknown shape.
+//│ ║  l.16: 	val foo = x => x
+//│ ║        	          ^
+//│ ╟── 'alias' is exposed by this compilation unit.
+//│ ║  l.48: 	val alias = foo
+//│ ╙──      	^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ ═══[RUNTIME ERROR] Expected: '2', got: 'undefined'
+
+:todo // The captured reference to foo is shared by both calls of alias.
+:sr
+alias(A).u
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.70: 	alias(A).u
+//│ ║        	^^^^^^^^^^
+//│ ╟── Cannot resolve member 'u' of a value with unknown shape.
+//│ ╟── Parameter 'x' admits values of unknown shape.
+//│ ║  l.16: 	val foo = x => x
+//│ ║        	          ^
+//│ ╟── 'alias' is exposed by this compilation unit.
+//│ ║  l.48: 	val alias = foo
+//│ ╙──      	^^^^^^^^^^^^^^^
+//│ ————————————————| Resolved |————————————————————————————————————————————————————————————————————————
+//│   alias⁰(A⁰)‹app²›.u‹u⁰, u²›
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+
+// Returning a captured value
+val captured = x => A
+//│ captured = fun
+
+:expect 1
+captured(B).u
+//│ = 1
+
+:expect 1
+captured(A).u
+//│ = 1
+
+
+// :de
+val foo = case x then x
+//│ foo = fun
+
+// :de
+:sr
+foo(A).u
+//│ ————————————————| Resolved |————————————————————————————————————————————————————————————————————————
+//│   foo¹(A⁰)‹app³›.u⁰
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 1
+
+foo(A).u
+//│ = 1
+
+// * We now preserve context sensitivity
+:sr
+foo(B).u
+//│ ————————————————| Resolved |————————————————————————————————————————————————————————————————————————
+//│   foo¹(B⁰)‹app⁴›.u²
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 2
+
+

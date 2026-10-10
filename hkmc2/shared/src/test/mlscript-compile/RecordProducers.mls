@@ -1,0 +1,8 @@
+#lang(0.3.x, strictResolution: true)
+
+module RecordProducers {
+  val fields = {...{value: 36}}
+  // Resolving this selection records the `value` field in the shape of `fields`,
+  // before another file imports this module.
+  val observed = fields.value
+}

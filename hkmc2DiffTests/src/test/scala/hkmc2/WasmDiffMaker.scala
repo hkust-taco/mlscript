@@ -51,6 +51,12 @@ abstract class WasmDiffMaker extends InvalMLDiffMaker:
   lazy val prettifyBinaryenWat = (content: Str) =>
     content.substring(2, content.length() - 2).replace("\\\\n", "\n").replace("\\\\\"", "\"")
 
+  override def processTrees(trees: Ls[syntax.Tree])(using Config, Raise): Unit =
+    if trees.nonEmpty && js.isSet && wasm.isSet && config.target == CompilationTarget.Wasm then
+      raise(WarningReport(
+        msg"Enabling both :js and :wasm is not currently supported; disable one before compiling this block." -> N :: Nil))
+    super.processTrees(trees)
+
   override def processIRBlock(
       pgrm: Program,
       definedValues: ComputeDefinedValues,
@@ -61,7 +67,7 @@ abstract class WasmDiffMaker extends InvalMLDiffMaker:
     
     val outerRaise: Raise = summon
 
-    if wasm.isSet then
+    if wasm.isSet && config.target == CompilationTarget.Wasm then
 
       val reportedMessages = mutable.Set.empty[Str]
 
@@ -73,29 +79,8 @@ abstract class WasmDiffMaker extends InvalMLDiffMaker:
           errored = true
           outerRaise(d)
         case d => outerRaise(d)
-      val sessionImportSymbols = mutable.LinkedHashSet.from[Symbol](pgrm.main.freeVars)
-      new BlockTraverser:
-        override def applyResult(r: Result): Unit =
-          // Cast targets are type dependencies rather than value references, so freeVars omits them.
-          r match
-            case Cast(_, target, _) => target.canonicalize match
-              case ErasedType.AnyRef(_, tpeSym) => sessionImportSymbols += tpeSym.bms.get
-              case _ => ()
-            case _ => ()
-          super.applyResult(r)
-        override def applyPath(p: Path): Unit = p match
-          // ValDefn traverses its RHS as a Path, whereas Return and Assign traverse a Result.
-          case c: Cast => applyResult(c)
-          case sel: Select =>
-            sel.symbol.foreach:
-              case sym: ModuleOrObjectSymbol => sessionImportSymbols += sym
-              case _ => ()
-            super.applyPath(sel)
-          case _ =>
-            super.applyPath(p)
-      .applyBlock(pgrm.main)
       val sessionImports = mutable.LinkedHashMap.empty[Str, SessionBinding]
-      sessionImportSymbols.iterator.foreach: sym =>
+      SessionBinding.referencedSymbols(pgrm.main).foreach: sym =>
         sessionImportsBySymbol.get(sym).foreach: bindings =>
           bindings.foreach: (bindingKey, binding) =>
             sessionImports.update(bindingKey, binding)

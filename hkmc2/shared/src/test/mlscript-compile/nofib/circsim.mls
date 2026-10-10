@@ -1,3 +1,5 @@
+#lang(0.3.x)
+
 import "./NofibPrelude.mls"
 import "../../../../../../hkmc2/shared/src/test/mlscript-compile/Predef.mls"
 open NofibPrelude
@@ -30,15 +32,15 @@ object Unit
 
 data class PS[T](pid: Int, compType: Componenet, pathDepth: Int, inports: List[[Int, Int, T]], outports: List[[Int, T, Bool, Int, Bool, Int]])
 
-fun pid(p) = p.pid
+fun pid(p: PS) = p.pid
 
-fun compType(p) = p.compType
+fun compType(p: PS) = p.compType
 
-fun pathDepth(p) = p.pathDepth
+fun pathDepth(p: PS) = p.pathDepth
 
-fun inports(p) = p.inports
+fun inports(p: PS) = p.inports
 
-fun outports(p) = p.outports
+fun outports(p: PS) = p.outports
 
 fun updateOutports(p, noutports) = PS(pid(p), compType(p), pathDepth(p), inports(p), noutports)
 
@@ -58,12 +60,12 @@ fun get(t) = if t is
   Cell(x) then x :: Nil
   Node(_, l, r) then get(l) +: get(r)
 
-fun upsweep(f, t) = if t is
+fun upsweep(f: Function, t) = if t is
   Cell(a) then [a, Cell(a)]
   Node(x, l, r) and upsweep(f, l) is [lv, l_] and upsweep(f, r) is [rv, r_] then
     [f(lv, rv), Node([lv, rv], l_, r_)]
 
-fun downsweep(g, d, t) = if t is
+fun downsweep(g: Function, d, t) = if t is
   Cell(x) then Cell(d)
   Node([lv, rv], l, r) and g(lv, rv, d) is [dl, dr] then
     Node(Unit, downsweep(g, dl, l), downsweep(g, dr, r))
@@ -71,15 +73,15 @@ fun downsweep(g, d, t) = if t is
 fun sweep_ud(up, down, u, t) = if upsweep(up, t) is [ans, t_] then
   [ans, downsweep(down, u, t_)]
 
-fun scanL(f, u, xs) =
+fun scanL(f: Function, u, xs) =
   fun down1(l, r, x) = [x, f(x, l)]
   if sweep_ud(f, down1, u, put(xs)) is [up_ans, t_] then [up_ans, get(t_)]
 
-fun scanR(f, u, xs) =
+fun scanR(f: Function, u, xs) =
   fun down2(l, r, x) = [f(r, x), x]
   if sweep_ud(f, down2, u, put(xs)) is [up_ans, t_] then [up_ans, get(t_)]
 
-fun scanlr(f, g, lu, ru, xs) =
+fun scanlr(f: Function, g: Function, lu, ru, xs) =
   fun up(f, g, lxly, rxry) = if lxly is [lx, ly] and rxry is [rx, ry] then [f(lx, rx), g(ly, ry)]
 
   fun down3(f, g, lxly, rxry, ab) = if lxly is [lx, ly] and rxry is [rx, ry] and ab is [a, b] then

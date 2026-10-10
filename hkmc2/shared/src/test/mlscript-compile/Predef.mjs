@@ -24,10 +24,8 @@ lambda2 = (undefined, function (Predef2, acc, x) {
   return acc + x
 });
 lambda$1 = (undefined, function (Predef2, b) {
-  return (a, i) => {
-    let tmp;
-    tmp = runtime.safeCall(b.at(i));
-    return Predef2.equals(a, tmp)
+  return (a, i, ..._) => {
+    return lambda1(Predef2, b, a, i, ..._)
   }
 });
 lambda$ = (undefined, function (Predef2, a, b) {
@@ -35,7 +33,7 @@ lambda$ = (undefined, function (Predef2, a, b) {
     return lambda(Predef2, a, b, field)
   }
 });
-lambda1 = (undefined, function (Predef2, b, a, i) {
+lambda1 = (undefined, function (Predef2, b, a, i, ..._) {
   let tmp;
   tmp = runtime.safeCall(b.at(i));
   return Predef2.equals(a, tmp)
@@ -189,7 +187,7 @@ lambda = (undefined, function (Predef2, a, b, field) {
     }
   }
   static equals(a, b) {
-    let scrut, scrut1, scrut2, ac, scrut3, md, scrut4, scrut5, scrut6, scrut7, scrut8, scrut9, lambda$here, lambda$here1;
+    let scrut, scrut1, scrut2, ac, scrut3, md, scrut4, scrut5, scrut6, scrut7, scrut8, scrut9, lambda$here;
     scrut = a === b;
     if (scrut === true) {
       return true
@@ -198,8 +196,7 @@ lambda = (undefined, function (Predef2, a, b, field) {
       if (b instanceof globalThis.Array) {
         scrut1 = a.length === b.length;
         if (scrut1 === true) {
-          lambda$here = lambda$1(Predef, b);
-          return runtime.safeCall(a.every(lambda$here))
+          return runtime.safeCall(a.every(lambda$1(Predef, b)))
         }
       }
     }
@@ -211,16 +208,16 @@ lambda = (undefined, function (Predef2, a, b, field) {
         if (scrut8 === true) {
           scrut7 = b !== null;
           if (scrut7 === true) {
-            ac = a.constructor;
+            ac = a["constructor"];
             scrut3 = ac !== undefined;
             if (scrut3 === true) {
-              scrut6 = ac === b.constructor;
+              scrut6 = ac === b["constructor"];
               if (scrut6 === true) {
                 md = ac[Predef.Symbols.definitionMetadata];
                 scrut4 = md !== undefined;
                 if (scrut4 === true) {
-                  lambda$here1 = lambda$(Predef, a, b);
-                  scrut5 = runtime.safeCall(md[2].every(lambda$here1));
+                  lambda$here = lambda$(Predef, a, b);
+                  scrut5 = runtime.safeCall(md[2].every(lambda$here));
                   if (scrut5 === true) {
                     return true
                   }
@@ -349,4 +346,4 @@ export { lambda2 as _$_modulePrivate_$_lambda2 };
 export { lambda$ as _$_modulePrivate_$_lambda$ };
 export { lambda$1 as _$_modulePrivate_$_lambda$1 };
 export { lambda$2 as _$_modulePrivate_$_lambda$2 };
-let Predef = Predef1; export default Predef;
+export default Predef1;

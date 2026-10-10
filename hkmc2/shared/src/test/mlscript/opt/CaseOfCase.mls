@@ -1,3 +1,4 @@
+:.
 // * [test:case-of-case]
 :js
 
@@ -217,7 +218,7 @@ prefixDependency(false)
 
 
 @inline
-fun partlyKnownProducer(x) = if x is
+fun partlyKnownProducer(x: Str) = if x is
   "" then 0
   "1" then x.length
   "2" then 1
@@ -233,12 +234,13 @@ x => if partlyKnownProducer(x) is
 //│ let lambda;
 //│ @private
 //│ define lambda as fun lambda¹(x) {
-//│   let inlinedVal;
-//│   match x
+//│   let x1, inlinedVal;
+//│   set x1 = (x as! Str⁰);
+//│   match x1
 //│     "" =>
 //│       return Predef⁰.print⁰("Z")
 //│     "1" =>
-//│       set inlinedVal = x.length﹖;
+//│       set inlinedVal = x1.length⁰;
 //│       match inlinedVal
 //│         0 =>
 //│           return Predef⁰.print⁰("Z")
@@ -306,13 +308,14 @@ x => if partlyKnownProducer(x) is
 //│ let lambda;
 //│ @private
 //│ define lambda as fun lambda³(x) {
-//│   let inlinedVal;
-//│   match x
+//│   let x1, inlinedVal;
+//│   set x1 = (x as! Str⁰);
+//│   match x1
 //│     "" =>
 //│       set inlinedVal = 0;
 //│       end
 //│     "1" =>
-//│       set inlinedVal = x.length﹖;
+//│       set inlinedVal = x1.length⁰;
 //│       end
 //│     "2" =>
 //│       set inlinedVal = 1;
@@ -342,12 +345,13 @@ x => if partlyKnownProducer(x) is
 //│ let lambda;
 //│ @private
 //│ define lambda as fun lambda⁴(x) {
-//│   let inlinedVal;
-//│   match x
+//│   let x1, inlinedVal;
+//│   set x1 = (x as! Str⁰);
+//│   match x1
 //│     "" =>
 //│       return Predef⁰.print⁰("Z")
 //│     "1" =>
-//│       set inlinedVal = x.length﹖;
+//│       set inlinedVal = x1.length⁰;
 //│       match inlinedVal
 //│         0 =>
 //│           return Predef⁰.print⁰("Z")

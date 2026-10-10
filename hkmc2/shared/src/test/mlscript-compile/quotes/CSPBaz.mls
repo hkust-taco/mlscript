@@ -1,3 +1,5 @@
+#lang(0.3.x)
+
 import "./CSPNest.mls"
 module CSPBaz with ...
 fun res =

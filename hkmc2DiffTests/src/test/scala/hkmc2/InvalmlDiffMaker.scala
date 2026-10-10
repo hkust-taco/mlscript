@@ -37,8 +37,10 @@ abstract class InvalMLDiffMaker extends JSBackendDiffMaker:
     super.processTerm(trm, inImport)
     if invalmlOpt.isSet then
       given Scope = Scope.empty(Scope.Cfg.default)
+      given Elaborator.Ctx = curCtx
+      // Typing may lower patterns even when executable code generation is disabled.
+      given codegen.Erasure = codegen.Erasure(trm)
       if invalmlTyper.isEmpty then
-        given Elaborator.Ctx = curCtx
         invalmlTyper = S(InvalTyper())
       given hkmc2.invalml.InvalCtx = invalCtx.copy(raise = summon)
       val typer = invalmlTyper.get

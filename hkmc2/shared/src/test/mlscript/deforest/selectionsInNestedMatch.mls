@@ -1,3 +1,4 @@
+:.
 :js
 :deforest
 
@@ -30,9 +31,9 @@ fun c(x) = if x is
 c(AA(2))
 //│ deforest > >>> fusing >>>
 //│ deforest > A⁰ ->
-//│ deforest > 	match: A⁰
+//│ deforest > 	match: scrut⁰
 //│ deforest > A⁰ ->
-//│ deforest > 	match: A⁰
+//│ deforest > 	match: scrut⁰
 //│ deforest > AA⁰(2) ->
 //│ deforest > 	match: x⁰
 //│ deforest > 	fields: x⁰.x¹
@@ -165,9 +166,9 @@ fun c(x, y) =
 c(AA(2), 10)
 //│ deforest > >>> fusing >>>
 //│ deforest > A⁰ ->
-//│ deforest > 	match: A⁰
+//│ deforest > 	match: scrut¹
 //│ deforest > A⁰ ->
-//│ deforest > 	match: A⁰
+//│ deforest > 	match: scrut¹
 //│ deforest > AA⁰(2) ->
 //│ deforest > 	match: x⁹
 //│ deforest > 	fields: x⁹.x¹

@@ -1,3 +1,5 @@
+#lang(0.3.x)
+
 import "./NofibPrelude.mls"
 import "../../../../../../hkmc2/shared/src/test/mlscript-compile/Predef.mls"
 open NofibPrelude
@@ -5,7 +7,7 @@ open NofibPrelude
 module knights with ...
 
 
-fun myIsDigit(c) =
+fun myIsDigit(c: Str) =
   c.codePointAt(0) >= 48 && c.codePointAt(0) <= 57
 
 fun intintComp(a_b, c_d) = if a_b is [a, b] and c_d is [c, d] then (a < c) || ((a === c) && (b < d))
@@ -247,16 +249,16 @@ fun inquireFront_lz(h_t) = if force(h_t) is LzCons(h, t) then h
 
 fun addAllFront_lz(list, q) = append_lz_lz(list, q)
 
-fun depthSearch(q, growFn, finFn) =
+fun depthSearch(q, growFn: Function, finFn: Function) =
   if
     emptyQueue_lz(q) then lazy of () => LzNil
     finFn(inquireFront_lz(q)) then lazy of () => LzCons(inquireFront_lz(q), depthSearch(removeFront_lz(q), growFn, finFn))
     else depthSearch(addAllFront_lz(growFn(inquireFront_lz(q)), removeFront_lz(q)), growFn, finFn)
 
 fun printTour(ss) =
-  fun strToInt(y, xs) = if xs is
+  fun strToInt(y, xs: List[Str]) = if xs is
     Nil then y
-    x :: xs then strToInt((10 * y) + (x.codePointAt(0) - 48), xs)
+    x :: xs then strToInt((10 * y) + ((x as Str).codePointAt(0) - 48), xs)
   fun pp(xs) = if xs is
     Nil then Nil
     [x, y] :: xs then

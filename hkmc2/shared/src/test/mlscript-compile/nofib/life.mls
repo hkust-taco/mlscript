@@ -1,3 +1,5 @@
+#lang(0.3.x)
+
 import "./NofibPrelude.mls"
 import "../../../../../../hkmc2/shared/src/test/mlscript-compile/Predef.mls"
 open NofibPrelude
@@ -25,7 +27,7 @@ fun init(ls) = if ls is
   a :: t then a :: init(t)
   else throw Error(ls)
 
-fun zipWith3(f, xs, ys, zs) = if
+fun zipWith3(f: Function, xs, ys, zs) = if
   xs is hx :: tx and ys is hy :: ty and zs is hz :: tz then f(hx, hy, hz) :: zipWith3(f, tx, ty, tz)
   else Nil
 

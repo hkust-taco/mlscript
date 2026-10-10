@@ -1,0 +1,99 @@
+:.
+
+:expect 10
+class Base() { open fun f(x) = x + 1 }
+class Child() extends Base() { override fun f(x) = super.f(x + 1) * 2 }
+Child().f(3)
+//│ Wasm result:
+//│ = 10
+
+:expect 21
+class Root() { open fun f() = 1 }
+class Middle() extends Root()
+class Leaf() extends Middle() { override fun f() = 21 }
+fun read(x: Root) = x.f()
+read(Leaf())
+//│ Wasm result:
+//│ = 21
+
+:expect 7
+abstract class Abstract() { fun f() }
+class Concrete() extends Abstract() { fun f() = 7 }
+fun readAbstract(x: Abstract) = x.f()
+readAbstract(Concrete())
+//│ Wasm result:
+//│ = 7
+
+:expect 10
+class GetterBase() { open fun value = 5 }
+class GetterChild() extends GetterBase() { override fun value = super.value * 2 }
+GetterChild().value
+//│ Wasm result:
+//│ = 10
+
+:expect 9
+class FieldBase() { open val x: Int = 1 }
+class FieldChild() extends FieldBase() { override val x: Int = 9 }
+fun field(x: FieldBase) = x.x
+field(FieldChild())
+//│ Wasm result:
+//│ = 9
+
+:expect 7
+abstract class AbstractField() { val x: Int }
+class ConcreteField() extends AbstractField() { val x: Int = 7 }
+fun abstractField(x: AbstractField) = x.x
+abstractField(ConcreteField())
+//│ Wasm result:
+//│ = 7
+
+:lift
+:inlineThreshold 10000
+:expect 10
+fun local() = {
+  class Base() { open fun f(x) = x + 1 }
+  class Child() extends Base() { override fun f(x) = super.f(x) * 2 }
+  Child().f(4)
+}
+local()
+//│ Wasm result:
+//│ = 10
+
+:expect 12
+abstract class WideField() { val value: Any }
+class NarrowField() extends WideField() { val value: Int = 12 }
+fun readNarrow(x: NarrowField): Int = x.value
+readNarrow(NarrowField())
+//│ Wasm result:
+//│ = 12
+
+:wat
+:expect 9
+FieldChild().x
+//│ Wat:
+//│ (module
+//│   (type $TypeInfoBase (sub (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
+//│   (type $Object (sub (struct (field $$typeinfo (mut (ref $TypeInfoBase))))))
+//│   (type $FieldBase (sub $Object (struct (field $$typeinfo (mut (ref $TypeInfoBase))) (field $x (mut (ref null i31))))))
+//│   (type $FieldChild (sub $FieldBase (struct (field $$typeinfo (mut (ref $TypeInfoBase))) (field $x (mut (ref null i31))))))
+//│   (type $FieldBase_typeinfo (sub $TypeInfoBase (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
+//│   (type $FieldBase_FieldBase (func (result (ref $FieldBase))))
+//│   (type $FieldChild_typeinfo (sub $FieldBase_typeinfo (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
+//│   (type $FieldChild_FieldChild (func (result (ref $FieldChild))))
+//│   (type $entry (func (result (ref null i31))))
+//│   (import "repl" "FieldBase" (func $FieldBase_FieldBase (type $FieldBase_FieldBase)))
+//│   (import "repl" "FieldChild" (func $FieldChild_FieldChild (type $FieldChild_FieldChild)))
+//│   (import "repl" "FieldBase_typeinfo" (global $FieldBase_typeinfo (ref $FieldBase_typeinfo)))
+//│   (import "repl" "FieldChild_typeinfo" (global $FieldChild_typeinfo (ref $FieldChild_typeinfo)))
+//│   (func $entry (export "entry") (type $entry) (result (ref null i31))
+//│     (local $tmp (ref null any))
+//│     (block (result (ref null i31))
+//│       (local.set $tmp
+//│         (call $FieldChild_FieldChild))
+//│       (return
+//│         (struct.get $FieldChild $x
+//│           (ref.cast (ref $FieldChild)
+//│             (local.get $tmp))))))
+//│   (elem $entry declare func $entry))
+//│ Wasm result:
+//│ = 9

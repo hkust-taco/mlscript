@@ -1,3 +1,4 @@
+:.
 :js
 
 
@@ -30,14 +31,14 @@ val ++ = 0
 :e
 val ++ y = 1
 //│ ╔══[COMPILATION ERROR] Invalid value definition head: unexpected identifier in this position
-//│ ║  l.31: 	val ++ y = 1
+//│ ║  l.32: 	val ++ y = 1
 //│ ╙──      	       ^
 //│ ++ = 1
 
 :e
 y
 //│ ╔══[COMPILATION ERROR] Name not found: y
-//│ ║  l.38: 	y
+//│ ║  l.39: 	y
 //│ ╙──      	^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -48,7 +49,7 @@ y
 :e
 fun ++ z = 0
 //│ ╔══[COMPILATION ERROR] Invalid function definition head: unexpected identifier in this position
-//│ ║  l.49: 	fun ++ z = 0
+//│ ║  l.50: 	fun ++ z = 0
 //│ ╙──      	       ^
 
 :sjs
@@ -62,7 +63,7 @@ fun ++ z = 0
 :e
 fun (class Lol) foo = 0
 //│ ╔══[COMPILATION ERROR] This type definition is not a valid symbolic name
-//│ ║  l.63: 	fun (class Lol) foo = 0
+//│ ║  l.64: 	fun (class Lol) foo = 0
 //│ ╙──      	     ^^^^^^^^^
 
 foo
@@ -71,7 +72,7 @@ foo
 :e
 Lol
 //│ ╔══[COMPILATION ERROR] Name not found: Lol
-//│ ║  l.72: 	Lol
+//│ ║  l.73: 	Lol
 //│ ╙──      	^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 

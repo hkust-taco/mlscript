@@ -1,3 +1,4 @@
+:.
 :js
 
 import "../../../mlscript-compile/Option.mls"
@@ -68,13 +69,13 @@ fun g(y) =
     Some(v) and v % 2 == 0 then set x = Some(v / 2)
   x
 //│ ╔══[COMPILATION ERROR] Mixed use of `do` and `then` in the `if` expression.
-//│ ║  l.66: 	  if x is
+//│ ║  l.67: 	  if x is
 //│ ║        	  ^^
 //│ ╟── Keyword `then` is used here.
-//│ ║  l.68: 	    Some(v) and v % 2 == 0 then set x = Some(v / 2)
+//│ ║  l.69: 	    Some(v) and v % 2 == 0 then set x = Some(v / 2)
 //│ ║        	                           ^^^^
 //│ ╟── Keyword `do` is used here.
-//│ ║  l.67: 	    Some(0) do set x = None
+//│ ║  l.68: 	    Some(0) do set x = None
 //│ ╙──      	            ^^
 
 g(0)
@@ -128,7 +129,7 @@ h(41)
 Some(1) is
   Some of [process, rest] do "hi"
 //│ ╔══[COMPILATION ERROR] Unrecognized pattern (infix operator 'do').
-//│ ║  l.129: 	  Some of [process, rest] do "hi"
+//│ ║  l.130: 	  Some of [process, rest] do "hi"
 //│ ╙──       	          ^^^^^^^^^^^^^^^^^^^^^^^
 //│ = true
 

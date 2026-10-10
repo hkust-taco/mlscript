@@ -1,0 +1,15 @@
+:.
+
+// Type application preserves the runtime constructor, including in inheritance.
+:expect 42
+class Parent[T]
+class Child[T](val value) extends Parent[T]
+(new Child[Int](42)).value
+//│ = 42
+
+// Applying type arguments to a function preserves the shape of its result.
+:expect 43
+fun identity[T](x) = x
+identity[Int](new Child[Int](43)).value
+//│ = 43
+

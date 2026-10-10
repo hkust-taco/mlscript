@@ -1,0 +1,59 @@
+:.
+:js
+
+import "../../mlscript-compile/Block.mls"
+import "../../mlscript-compile/Shape.mls"
+import "../../mlscript-compile/Option.mls"
+
+class Pair(val left: Int, val right: Str)
+val pair = Block.ConcreteClassSymbol("Pair", Pair, Option.Some([
+  Block.Symbol("left"), Block.Symbol("right")]), [])
+//│ pair = ConcreteClassSymbol(
+//│   _,
+//│   fun Pair { class: class Pair },
+//│   Some([Symbol("left"), Symbol("right")]),
+//│   []
+//│ )
+
+:expect "Class(Pair, [Dyn, Dyn])"
+Shape.show(Shape.silh(Block.Cls(pair, Block.ValueLit(null))))
+//│ = "Class(Pair, [Dyn, Dyn])"
+
+:expect "Arr(Dyn, Dyn, Dyn)"
+Shape.show(Shape.silh(Block.Tup(3)))
+//│ = "Arr(Dyn, Dyn, Dyn)"
+
+:expect ["Lit(42)"]
+val pairShape = Shape.Class(pair, [Shape.Lit(42), Shape.Lit("hello")])
+Shape.sel(pairShape, Shape.Lit("left")).map((s, ...) => Shape.show(s))
+//│ = ["Lit(42)"]
+//│ pairShape = Class(
+//│   ConcreteClassSymbol(
+//│     _,
+//│     fun Pair { class: class Pair },
+//│     Some([Symbol("left"), Symbol("right")]),
+//│     []
+//│   ),
+//│   [Lit(42), Lit("hello")]
+//│ )
+
+:expect ["Lit(\"hello\")"]
+Shape.sel(pairShape, Shape.Lit("right")).map((s, ...) => Shape.show(s))
+//│ = ["Lit(\"hello\")"]
+
+:expect []
+Shape.sel(pairShape, Shape.Lit("missing"))
+//│ = []
+
+:expect [true, false, false]
+[Shape.static(Shape.Lit(42)), Shape.static(Shape.Lit("Int")),
+ Shape.static(Shape.silh(Block.Tup(1)))]
+//│ = [true, false, false]
+
+:expect "_name"
+Block.showSymbol(Block.Symbol("$name"))
+//│ = "_name"
+
+:expect "42 then 1"
+Block.showArm(Block.Arm(Block.Lit(42), Block.Return(Block.ValueLit(1))))
+//│ = "42 then 1"

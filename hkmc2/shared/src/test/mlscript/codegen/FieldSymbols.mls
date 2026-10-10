@@ -1,3 +1,4 @@
+:.
 :js
 
 
@@ -10,13 +11,13 @@ data class Foo(val x) with
 Foo(42).x
 //│ —————————————| Elaborated tree |————————————————————————————————————————————————————————————————————
 //│ Blk:
-//│   res = Sel:
+//│   res = NewSel:
 //│     prefix = App:
-//│       lhs = Ref{sym=member:Foo⁰} of member:Foo⁰
+//│       lhs = MemberRef of member:Foo⁰
 //│       rhs = Tup of Ls of
 //│         Fld:
 //│           term = Lit of IntLit of 42
-//│     nme = Ident of "x"
+//│     id = Ident of "x"
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 42
 
@@ -29,9 +30,9 @@ let foo = Foo(42)
 foo.x
 //│ —————————————| Elaborated tree |————————————————————————————————————————————————————————————————————
 //│ Blk:
-//│   res = Sel:
-//│     prefix = Ref{sym=foo⁰} of foo⁰
-//│     nme = Ident of "x"
+//│   res = NewSel:
+//│     prefix = SimpleRef of foo⁰
+//│     id = Ident of "x"
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 42
 
@@ -41,9 +42,9 @@ foo.x
 foo.y
 //│ —————————————| Elaborated tree |————————————————————————————————————————————————————————————————————
 //│ Blk:
-//│   res = Sel:
-//│     prefix = Ref{sym=foo⁰} of foo⁰
-//│     nme = Ident of "y"
+//│   res = NewSel:
+//│     prefix = SimpleRef of foo⁰
+//│     id = Ident of "y"
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 42
 
@@ -68,12 +69,12 @@ case
 //│         branch = Match:
 //│           scrutinee = Ref{sym=caseScrut⁰} of caseScrut⁰
 //│           pattern = Constructor:
-//│             target = Ref{sym=member:Foo⁰} of member:Foo⁰
+//│             target = MemberRef of member:Foo⁰
 //│             arguments = S of Ls of
 //│               Alias:
 //│                 pattern = Wildcard
 //│                 id = Ident of "a"
-//│           consequent = Else of Ref{sym=a⁰} of a⁰
+//│           consequent = Else of SimpleRef of a⁰
 //│         tail = End
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let lambda;

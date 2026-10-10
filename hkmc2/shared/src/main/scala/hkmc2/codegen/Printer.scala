@@ -209,6 +209,8 @@ class Printer(using Config, Ctx, Raise, ShowCfg, State, SymbolPrinter):
     case Value.Lit(lit) => doc"${lit.idStr}"
   
   def print(path: Path)(using Scope): Document = path match
+    case sel @ SuperSelect(qual, base, name) =>
+      doc"super[${print(base)}](${print(qual)}).${showMemberSymbol(name.name, S(sel.symbol))}"
     case sel @ Select(qual, name) =>
       val docQual = print(qual)
       doc"${docQual}.${showMemberSymbol(name.name, sel.symbol)}"

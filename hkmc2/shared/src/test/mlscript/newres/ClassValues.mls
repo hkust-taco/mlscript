@@ -1,0 +1,444 @@
+:.
+:js
+
+// Class objects are independent of constructor syntax and term overloads.
+class Bare
+class Empty()
+class Primary(val x)
+class Auxiliary {
+  constructor(val x)
+  fun value() = x
+}
+class Curried(val x)(val y)
+class Overloaded {
+  fun answer() = 42
+}
+// Selecting the class must not call its function companion.
+fun Overloaded() = throw "must not call the companion function"
+class Companion()
+module Companion {
+  val value = 10
+}
+
+:expect class Bare
+:sr
+Bare.class
+//│ ————————————————| Resolved |————————————————————————————————————————————————————————————————————————
+//│   Bare⁰.class‹Bare¹›
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = class Bare
+
+:expect class Empty
+:sr
+Empty.class
+//│ ————————————————| Resolved |————————————————————————————————————————————————————————————————————————
+//│   Empty⁰.class‹Empty¹›
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = class Empty
+
+:expect class Primary
+Primary.class
+//│ = class Primary
+
+:expect class Auxiliary
+Auxiliary.class
+//│ = class Auxiliary
+
+:expect class Curried
+Curried.class
+//│ = class Curried
+
+:expect class Overloaded
+Overloaded.class
+//│ = class Overloaded
+
+:expect class Companion { value: 10 }
+Companion.class
+//│ = class Companion { value: 10 }
+
+:expect 42
+(new Overloaded.class).answer()
+//│ = 42
+
+:expect 12
+new Primary.class(12).x
+//│ = 12
+
+:expect 13
+new Auxiliary.class(13).value()
+//│ = 13
+
+:expect 15
+new Curried.class(14)(15).y
+//│ = 15
+
+// Constructor functions and class values support the same class selection through bindings.
+let raw = Primary.class
+let ctor = Primary
+val saved = Primary
+//│ ctor = fun Primary { class: class Primary }
+//│ raw = class Primary
+//│ saved = fun Primary { class: class Primary }
+
+:expect true
+raw == Primary.class
+//│ = true
+
+:expect class Primary
+raw.class
+//│ = class Primary
+
+:expect fun
+new raw
+//│ = fun
+
+:expect fun
+new ctor
+//│ = fun
+
+:expect class Primary
+:sr
+ctor.class
+//│ ————————————————| Resolved |————————————————————————————————————————————————————————————————————————
+//│   ctor⁰.class‹Primary⁰›
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = class Primary
+
+:expect class Primary
+saved.class
+//│ = class Primary
+
+:expect class Primary
+Primary.class.class
+//│ = class Primary
+
+:expect class Primary
+({make: Primary}).make.class
+//│ = class Primary
+
+// Qualified, opened, and captured classes must retain their runtime receiver.
+module Namespace {
+  class Item(val value)
+  class Plain
+  fun Plain() = 100
+}
+
+:expect class Item
+Namespace.Item.class
+//│ = class Item
+
+:expect class Plain
+Namespace.Plain.class
+//│ = class Plain
+
+open Namespace
+
+:expect true
+Item.class == Namespace.Item.class
+//│ = true
+
+fun captured(x) = {
+  class Local {
+    fun value() = x
+  }
+  fun Local() = 1
+  (new Local.class).value()
+}
+
+:expect 23
+captured(23)
+//│ = 23
+
+// Selecting the runtime class does not instantiate it.
+class Explosive() {
+  throw "must not run the constructor"
+}
+
+:expect class Explosive
+Explosive.class
+//│ = class Explosive
+
+:e
+Empty().class
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.162: 	Empty().class
+//│ ║         	^^^^^^^^^^^^^
+//│ ╟── Instance of class 'Empty' does not contain member 'class'
+//│ ║  l.162: 	Empty().class
+//│ ╙──       	^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+:e
+set Bare.class = 1
+//│ ╔══[COMPILATION ERROR] Assignment requires a term member
+//│ ║  l.172: 	set Bare.class = 1
+//│ ╙──       	    ^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// Specialization must survive class selection and subsequent construction.
+class Generic[T](val value: T)
+class Payload(val number: Int)
+
+:expect 31
+new Generic[Payload].class(Payload(31)).value.number
+//│ = 31
+
+:expect 32
+new Generic.class[Payload](Payload(32)).value.number
+//│ = 32
+
+:expect true
+Generic[Payload].class == Generic.class
+//│ = true
+
+// Each outer instance owns a distinct nested class object.
+class Outer(val value) {
+  class Inner {
+    fun result() = value
+  }
+}
+let first = Outer(41)
+let second = Outer(42)
+//│ first = Outer(41)
+//│ second = Outer(42)
+
+:expect [41, 42, false]
+[(new first.Inner.class).result(), (new second.Inner.class).result(),
+ first.Inner.class == second.Inner.class]
+//│ = [41, 42, false]
+
+// Calling through a closure retains the selected class, even with inlining off.
+fun runtimeClass() = Primary.class
+
+:noInline
+:expect true
+runtimeClass() == Primary.class
+//│ = true
+
+// Forward references wait for the whole overload set to complete.
+fun forwardClass() = Forward.class
+class Forward
+fun Forward() = false
+
+:expect class Forward
+forwardClass()
+//│ = class Forward
+
+import "../../mlscript-compile/OverloadedClassLibrary.mls"
+
+:expect class Item
+OverloadedClassLibrary.Item.class
+//│ = class Item
+
+:expect 52
+(new OverloadedClassLibrary.Item.class).answer()
+//│ = 52
+
+// Ordinary fields and foreign dynamic selections keep their usual behavior.
+let record = {"class": 5}
+//│ record = {class: 5}
+
+:expect 5
+record.class
+//│ = 5
+
+// Class selection also recovers constructor functions passed as arguments.
+:expect class Empty
+private fun classOfValue(value) = value.class
+classOfValue(Empty)
+//│ = class Empty
+
+// Foreign class declarations denote their native binding directly.
+declare class String with
+  constructor(value: Str)
+  val length: Int
+declare fun String(value: Str): Str
+
+:expect 5
+new String.class("hello").length
+//│ = 5
+
+// Class values retain constructor arity and captured receivers through bindings.
+:expect 16
+new raw(16).x
+//│ = 16
+
+let rawCurried = Curried.class
+//│ rawCurried = class Curried
+
+:expect 18
+new rawCurried(17)(18).y
+//│ = 18
+
+let partial = new rawCurried(19)
+//│ partial = fun partial
+
+:expect 20
+partial(20).y
+//│ = 20
+
+val storedClass = Primary.class
+let classRecord = {make: Primary.class}
+//│ classRecord = {make: class Primary}
+//│ storedClass = class Primary
+
+:expect [21, 22]
+[new storedClass(21).x, new classRecord.make(22).x]
+//│ = [21, 22]
+
+let specializedClass = Generic[Payload].class
+//│ specializedClass = class Generic
+
+:expect 33
+new specializedClass(Payload(33)).value.number
+//│ = 33
+
+let nestedClass = first.Inner.class
+//│ nestedClass = class Inner
+
+:expect 41
+new nestedClass().result()
+//│ = 41
+
+// A partial construction captures the class object before its binding changes.
+class Enclosing(val number) {
+  class Nested(val argument) {
+    fun result() = number + argument
+  }
+}
+let earlier = Enclosing(100)
+let later = Enclosing(200)
+let currentClass = earlier.Nested.class
+let construct = new currentClass
+set currentClass = later.Nested.class
+//│ construct = fun construct
+//│ currentClass = class Nested
+//│ earlier = Enclosing(100)
+//│ later = Enclosing(200)
+
+:noInline
+:expect [101, 201]
+[construct(1).result(), new currentClass(1).result()]
+//│ = [101, 201]
+
+// Class values can flow through function parameters and getter results.
+:expect 34
+private fun instantiate(cls, x) = new cls(x)
+instantiate(Primary.class, 34).x
+//│ = 34
+
+fun storedGetter = Primary.class
+
+:expect 35
+new storedGetter(35).x
+//│ = 35
+
+// Inheritance uses the same class value and constructor parameter lists.
+class Derived extends rawCurried(36)(37)
+
+:expect 37
+new Derived().y
+//│ = 37
+
+let bareClass = Bare
+//│ bareClass = class Bare
+
+:expect true
+new bareClass is Bare
+//│ = true
+
+:e
+let invalidClass = 0
+new invalidClass
+//│ ╔══[COMPILATION ERROR] Resolution error in object instantiation
+//│ ║  l.352: 	new invalidClass
+//│ ║         	^^^^^^^^^^^^^^^^
+//│ ╟── Integer literal cannot be instantiated with keyword 'new'.
+//│ ║  l.351: 	let invalidClass = 0
+//│ ╙──       	                   ^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ invalidClass = 0
+
+:e
+let ambiguousClass = Primary.class
+set ambiguousClass = Curried.class
+new ambiguousClass
+//│ ╔══[COMPILATION ERROR] The class interpretation here is ambiguous
+//│ ║  l.365: 	new ambiguousClass
+//│ ║         	    ^^^^^^^^^^^^^^
+//│ ╟── class 'Primary' defined here
+//│ ║  l.7: 	class Primary(val x)
+//│ ║       	      ^^^^^^^
+//│ ╟── class 'Curried' defined here
+//│ ║  l.12: 	class Curried(val x)(val y)
+//│ ╙──      	      ^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ ambiguousClass = class Curried
+
+// Storing a constructor function in a variable or a record preserves the same value.
+:expect true
+let constructors = {make: Primary}
+ctor == constructors.make
+//│ = true
+//│ constructors = {make: fun Primary { class: class Primary }}
+
+:expect [35, 35]
+[new ctor(35).x, new constructors.make(35).x]
+//│ = [35, 35]
+
+:expect true
+ctor.class == constructors.make.class
+//│ = true
+
+let curriedCtor = Curried
+//│ curriedCtor = fun Curried { class: class Curried }
+
+:expect 44
+new curriedCtor(43)(44).y
+//│ = 44
+
+let partialCtor = new curriedCtor(45)
+//│ partialCtor = fun partialCtor
+
+:expect 46
+partialCtor(46).y
+//│ = 46
+
+let capturedCtor = earlier.Nested
+let capturedRecord = {make: earlier.Nested}
+//│ capturedCtor = fun Nested { class: class Nested }
+//│ capturedRecord = {make: fun Nested { class: class Nested }}
+
+:noInline
+:expect [101, 101, true]
+[new capturedCtor(1).result(), new capturedRecord.make(1).result(),
+ capturedCtor.class == capturedRecord.make.class]
+//│ = [101, 101, true]
+
+// Partial construction reads the constructor's class before a later assignment.
+let currentCtor = earlier.Nested
+let ctorFactory = new currentCtor
+set currentCtor = later.Nested
+//│ ctorFactory = fun ctorFactory
+//│ currentCtor = fun Nested { class: class Nested }
+
+:noInline
+:expect [101, 201]
+[ctorFactory(1).result(), new currentCtor(1).result()]
+//│ = [101, 201]
+
+:e
+let mixedRepresentation = Primary
+set mixedRepresentation = Primary.class
+new mixedRepresentation
+//│ ╔══[COMPILATION ERROR] The class interpretation here is ambiguous
+//│ ║  l.433: 	new mixedRepresentation
+//│ ║         	    ^^^^^^^^^^^^^^^^^^^
+//│ ╟── function 'Primary' defined here
+//│ ║  l.7: 	class Primary(val x)
+//│ ║       	      ^^^^^^^
+//│ ╟── class 'Primary' defined here
+//│ ║  l.7: 	class Primary(val x)
+//│ ╙──     	      ^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ mixedRepresentation = class Primary

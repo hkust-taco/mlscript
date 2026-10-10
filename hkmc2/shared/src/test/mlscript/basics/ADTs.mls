@@ -1,3 +1,4 @@
+:.
 :js
 :ignore
 
@@ -8,7 +9,7 @@ class Expr
   constructor Lit(n: Int)
   constructor Add(lhs: Expr, rhs: Expr)
 //│ ╔══[PARSE ERROR] Expected end of input; found indented block instead
-//│ ║  l.8: 	  constructor Lit(n: Int)
+//│ ║  l.9: 	  constructor Lit(n: Int)
 //│ ╙──     	^^
 
 class Expr[A] with
@@ -32,7 +33,7 @@ enum Expr =
   | Lit(n: Int)
   | Add(lhs: Expr, rhs: Expr)
 //│ ╔══[COMPILATION ERROR] Unrecognized definitional assignment left-hand side: juxtaposition
-//│ ║  l.31: 	enum Expr =
+//│ ║  l.32: 	enum Expr =
 //│ ╙──      	^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 

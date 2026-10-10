@@ -1,3 +1,5 @@
+#lang(0.3.x)
+
 import "./NofibPrelude.mls"
 import "../../../../../../hkmc2/shared/src/test/mlscript-compile/Predef.mls"
 open NofibPrelude
@@ -115,7 +117,7 @@ fun integral(fs_) =
   lazy of () => Pc(0, int1(fs_, 1))
 
 
-fun integralLz(fs_) =
+fun integralLz(fs_ : Function) =
   fun int1(fss, n) = lazy of () => if force(fss) is
     Pz then Pz
     Pc(f, fs_) then Pc(f/n, int1(fs_, n + 1))
@@ -139,7 +141,7 @@ fun cosx() = minusPs((lazy of () => Pc(1, lazy of () => Pz)), integral(integralL
 
 fun sinx() = integral(minusPs((lazy of () => Pc(1, lazy of () => Pz)), integralLz(sinx)))
 
-fun testPower_nofib(p) =
+fun testPower_nofib(p): List[Num] =
   extract(p, minusPs(sinx(), sqrtPs(minusPs(fromIntegerPs(1), powerPs(cosx(), 2)))));
   extract(p, minusPs(divPs(sinx(), cosx()), revert(integral(divPs(fromIntegerPs(1), addPs(fromIntegerPs(1), powerPs(x_(), 2)))))));
   extract(p, ts());

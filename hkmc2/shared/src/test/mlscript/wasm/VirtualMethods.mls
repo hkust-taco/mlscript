@@ -1,13 +1,12 @@
+:.
 
-:global
-:wasm
 
 
 class A() with
-  virtual fun f(x) = x + 1
+  open fun f(x) = x + 1
 class B() extends A() with
-  virtual fun g() = 0
-  fun f(x) = x * 2
+  open fun g() = 0
+  override fun f(x) = x * 2
 B().f(5)
 //│ Wasm result:
 //│ = 10
@@ -15,9 +14,9 @@ B().f(5)
 
 :wat
 class A() with
-  virtual fun f(x) = x + 1
+  open fun f(x) = x + 1
 class B() extends A() with
-  fun f(x) = x * 2
+  override fun f(x) = x * 2
 fun callF(a: A) = a.f(5)
 callF(B())
 //│ Wat:
@@ -146,37 +145,37 @@ callF(B())
 
 
 class A(val a) with
-  virtual fun f(x) = x + a
+  open fun f(x) = x + a
 class B(val b) extends A(b) with
-  virtual fun f(x) = x * b
+  open override fun f(x) = x * b
 class C(val c) extends B(c) with
-  fun f(x) = x - c
+  override fun f(x) = x - c
 C(3).f(5)
 //│ Wasm result:
 //│ = 2
 
 
 class A() with
-  virtual fun f() = 1
+  open fun f() = 1
 class B() extends A() with
-  virtual fun g() = 2
+  open fun g() = 2
 class C() extends B() with
-  fun f() = 10
-  fun g() = 20
+  override fun f() = 10
+  override fun g() = 20
 fun callF(a: A) = a.f()
 fun callG(b: B) = b.g()
 callF(C()) + callG(C())
 //│ Wasm result:
-//│ = 21
+//│ = 30
 
 
 // A virtual slot's Wasm type carries the result type of the method that introduced it, so overrides share it
 :wat
 val n32: Int32 = wasm.i32.const(7)
 class V() with
-  virtual fun f(m: Int32): Int32 = m
+  open fun f(m: Int32): Int32 = m
 class W() extends V() with
-  fun f(m: Int32): Int32 = m
+  override fun f(m: Int32): Int32 = m
 fun callPrim(a: V): Int32 = a.f(n32)
 callPrim(W())
 //│ Wat:
@@ -301,36 +300,36 @@ callPrim(W())
 // Overrides share the slot's Wasm function type, so primitives must match exactly - here in the result.
 :ge
 class M1() with
-  virtual fun f(m: Int32): Int32 = m
+  open fun f(m: Int32): Int32 = m
 class M2() extends M1() with
-  fun f(m: Int32): Int = 0
+  override fun f(m: Int32): Int = 0
 M2().f(1)
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int' at an unrelated type 'Int32'
-//│ ║  l.307: 	M2().f(1)
+//│ ║  l.306: 	M2().f(1)
 //│ ╙──       	       ^
 //│ ╔══[COMPILATION ERROR] Overriding method `f` declares result as `(ref null i31)`, but the method it overrides declares `i32`
-//│ ║  l.306: 	  fun f(m: Int32): Int = 0
-//│ ╙──       	  ^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.305: 	  override fun f(m: Int32): Int = 0
+//│ ╙──       	           ^^^^^^^^^^^^^^^^^^^^^^^^
 
 
 // The same rule on a parameter: `g`'s `m` is unannotated, so it erases to `anyref` rather than `i32`.
 :ge
 class N1() with
-  virtual fun g(m: Int32): Int32 = m
+  open fun g(m: Int32): Int32 = m
 class N2() extends N1() with
-  fun g(m): Int32 = 0
+  override fun g(m): Int32 = 0
 N2().g(1)
 //│ ═══[COMPILATION ERROR] Cannot use a value of type 'Int' at an unrelated type 'Int32'
 //│ ╔══[COMPILATION ERROR] Overriding method `g` declares parameter 1 as `(ref null any)`, but the method it overrides declares `i32`
-//│ ║  l.321: 	  fun g(m): Int32 = 0
-//│ ╙──       	  ^^^^^^^^^^^^^^^^^^^
+//│ ║  l.320: 	  override fun g(m): Int32 = 0
+//│ ╙──       	           ^^^^^^^^^^^^^^^^^^^
 
 
 // Boxed types are bridged by casts, so they need not match
 class R1() with
-  virtual fun h(x: Int): Anything = x
+  open fun h(x: Int): Anything = x
 class R2() extends R1() with
-  fun h(x) = x
+  override fun h(x) = x
 R2().h(3)
 //│ Wasm result:
 //│ = 3
@@ -342,9 +341,9 @@ R2().h(3)
 :noInline
 :wat
 class Parent() with
-  virtual fun get(): Object = new Parent()
+  open fun get(): Object = new Parent()
 class Child() extends Parent() with
-  fun get(): Child = new Child()
+  override fun get(): Child = new Child()
 fun readChild(c: Child): Child = c.get()
 readChild(new Child())
 //│ Wat:

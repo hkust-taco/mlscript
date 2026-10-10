@@ -1,0 +1,9 @@
+:.
+:js
+
+class Base { open fun f(x) = x + 1 }
+class Child extends Base { override fun f(x) = super.f(x + 1) * 2 }
+
+:expect 10
+(new Child).f(3)
+//│ = 10

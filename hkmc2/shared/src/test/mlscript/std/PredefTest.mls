@@ -1,3 +1,4 @@
+:.
 :js
 
 
@@ -9,9 +10,13 @@ id(123)
 :e
 :re
 id()
-//│ ╔══[COMPILATION ERROR] Expected 1 arguments, got 0
-//│ ║  l.11: 	id()
-//│ ╙──      	  ^^
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.12: 	id()
+//│ ║        	^^^^
+//│ ╟── Function 'id' expected 1 argument, but got 0
+//│ ║  in ../../mlscript-compile/Predef.mls
+//│ ║  l.19: 	fun id(x) = x
+//│ ╙──      	^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] Error: MLscript call unexpectedly returned `undefined`, the forbidden value.
 
 
@@ -183,14 +188,26 @@ foldr(tuple)(0, 1, 2, 3)
 
 :todo
 foldr(+)()
-//│ ╔══[COMPILATION ERROR] Expected at least 1 arguments, got 0
-//│ ║  l.185: 	foldr(+)()
-//│ ╙──       	        ^^
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.190: 	foldr(+)()
+//│ ║         	^^^^^^^^^^
+//│ ╟── Function 'foldr' expected 1 argument, but got 0
+//│ ║  in ../../mlscript-compile/Predef.mls
+//│ ║  l.118: 	fun foldr[A](f: (A, A) -> A)(first: A, ...rest: Array[A]): A =
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.119: 	  let len = rest.length
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.120: 	  if len === 0 then first else...
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.121: 	  let
+//│ ║         	^^^^^
+//│ ║  l.122: 	... (more lines omitted) ...
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] Error: MLscript call unexpectedly returned `undefined`, the forbidden value.
 
 
 // An alternative implementation of foldr
-fun foldr(f)(first, ...rest) =
+fun foldr(f)(first, ...rest: Array) =
   let len = rest.length
   if len == 0 then first else...
   let
@@ -218,12 +235,28 @@ fold(+) of
 
 import "../../mlscript-compile/Iter.mls"
 
+:e
 Iter.joined(_, "") of [
   "0"
   "1"
   "2"
   "3"
 ]
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.239: 	Iter.joined(_, "") of [
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.240: 	  "0"
+//│ ║         	^^^^^
+//│ ║  l.241: 	  "1"
+//│ ║         	^^^^^
+//│ ║  l.242: 	  "2"
+//│ ║         	^^^^^
+//│ ║  l.243: 	... (more lines omitted) ...
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── String literal cannot be called like a function.
+//│ ║  in ../../mlscript-compile/Iter.mls
+//│ ║  l.226: 	  if next.done then "" else
+//│ ╙──       	                    ^^
 //│ = fun
 
 

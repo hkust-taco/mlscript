@@ -1,3 +1,4 @@
+:.
 :js
 :patMatConsequentSharingThreshold 1
 // ^ force dedup even for small consequents

@@ -31,12 +31,11 @@ abstract class CompileTestRunnerBase(
   
   val mainTestDir: os.Path = TestFolders.mainTestDir(workingDir)
   
-  val validExt = Set("mls")
   
   for dir <- compileDirs do {
     val allFiles = os.walk(dir)
       .filter(_.toIO.isFile)
-      .filter(_.ext in validExt)
+      .filter(TestFolders.isTestSource)
     
     lazy val compileTestFiles = allFiles.filter: file =>
       file.segments.contains("mlscript-compile")

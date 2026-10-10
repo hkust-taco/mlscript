@@ -1,3 +1,4 @@
+:.
 :js
 
 
@@ -7,7 +8,7 @@ data class Some[out A](value: A)
 :todo
 let Some(x) = Some(42)
 //│ ╔══[COMPILATION ERROR] Unsupported let binding shape
-//│ ║  l.8: 	let Some(x) = Some(42)
+//│ ║  l.9: 	let Some(x) = Some(42)
 //│ ╙──     	    ^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 

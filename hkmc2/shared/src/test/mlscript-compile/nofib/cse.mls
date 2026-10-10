@@ -1,3 +1,5 @@
+#lang(0.3.x)
+
 import "./NofibPrelude.mls"
 import "../../../../../../hkmc2/shared/src/test/mlscript-compile/Predef.mls"
 open NofibPrelude
@@ -9,13 +11,13 @@ module cse with ...
 
 fun retURN(a) = s => [s, a]
 
-fun bind(m, f) = s => if m(s) is [s_, a] then f(a)(s_)
+fun bind(m: Function, f: Any -> Function) = s => if m(s) is [s_, a] then f(a)(s_)
 
-fun join(m) = s => if m(s) is [s_, ma] then ma(s_)
+fun join(m: Any -> [Any, Function]) = s => if m(s) is [s_, ma] then ma(s_)
 
-fun mmap(f, m) = s => if m(s) is [s_, a] then [s_, f(a)]
+fun mmap(f: Function, m: Function) = s => if m(s) is [s_, a] then [s_, f(a)]
 
-fun mmapl(f, aas) = if aas is
+fun mmapl(f: Function, aas) = if aas is
   Nil then retURN(Nil)
   a :: as_ then
     bind of
@@ -24,7 +26,7 @@ fun mmapl(f, aas) = if aas is
         mmapl(f, as_)
         bs => retURN(b :: bs)
 
-fun mmapr(f, xs) = if xs is
+fun mmapr(f: Function, xs) = if xs is
   Nil then retURN(Nil)
   x :: xs then
     bind of
@@ -33,25 +35,25 @@ fun mmapr(f, xs) = if xs is
         f(x)
         y => retURN(y :: ys)
 
-fun mfoldl(f, a, xs) = if xs is
+fun mfoldl(f: Function, a, xs) = if xs is
   Nil then retURN(a)
   x :: xs then
     bind(f(a, x), fax => mfoldl(f, fax, xs))
 
-fun mfoldr(f, a, xs) = if xs is
+fun mfoldr(f: Function, a, xs) = if xs is
   Nil then retURN(a)
   x :: xs then
     bind(mfoldr(f, a, xs), y => f(x, y))
 
 fun mif(c, t, f) = bind(c, cond => if cond then t else f)
 
-fun startingWith(m, v) = if m(v) is [final, answer] then answer
+fun startingWith(m: Function, v) = if m(v) is [final, answer] then answer
 
 fun fetch(s) = [s, s]
 
-fun fetchWith(f) = s => [s, f(s)]
+fun fetchWith(f: Function) = s => [s, f(s)]
 
-fun update(f) = s => [f(s), s]
+fun update(f: Function) = s => [f(s), s]
 
 fun set_(s_) = s => [s_, s]
 
@@ -78,9 +80,9 @@ fun visited(n) = bind of
   fetch
   us => if inList(n, us) then retURN(true) else bind(set_(n :: us), _p => retURN(false))
 
-fun newlyDefined(x, fx, f, y) = if x === y then fx else f(y)
+fun newlyDefined(x, fx, f: Function, y) = if x === y then fx else f(y)
 
-fun findCommon(ls) =
+fun findCommon[A](ls: List[[Int, A, List[Int]]]) =
   fun sim(n_s_cs, r_lg) = if n_s_cs is [n, s, cs] and r_lg is [r, lg] then
     let rcs = map(r, cs)
     fun lscomp(ls) = if ls is

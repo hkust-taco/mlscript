@@ -1,3 +1,4 @@
+:.
 :js
 
 // This is caused by the implementation of `+:` in `NofibPrelude.mls`. Replacing

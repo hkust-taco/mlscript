@@ -1,3 +1,4 @@
+:.
 :js
 
 
@@ -13,11 +14,12 @@ let a = new A
 a.n
 //│ = 123
 
-A.prototype
+A!prototype
 //│ = {}
 
-// * This can be used for deserialization
-let b = Object.create(A.prototype)
+// * This can be used for deserialization. The constructor has not initialized its
+// * fields, so use a dynamic receiver to retain runtime checks for missing fields.
+let b = Object.create(A!prototype) as dyn
 //│ b = A
 
 :sjs

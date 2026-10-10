@@ -1,3 +1,4 @@
+:.
 :js
 :effectHandlers
 
@@ -60,7 +61,7 @@ fun g(a)(b) = f(a)(b) + f(b)(a)
 //│           set pc = 2;
 //│           end
 //│         else
-//│           return runtime⁰.unwind﹖(g¹, 2, "CurriedFunctionCalls.mls:32:15", null, null, 2, 1, a, 1, b, 1, tmp)
+//│           return runtime⁰.unwind﹖(g¹, 2, "CurriedFunctionCalls.mls:33:15", null, null, 2, 1, a, 1, b, 1, tmp)
 //│       end
 //│   match pc
 //│     2 =>
@@ -73,7 +74,7 @@ fun g(a)(b) = f(a)(b) + f(b)(a)
 //│           set pc = 1;
 //│           end
 //│         else
-//│           return runtime⁰.unwind﹖(g¹, 1, "CurriedFunctionCalls.mls:32:25", null, null, 2, 1, a, 1, b, 1, tmp)
+//│           return runtime⁰.unwind﹖(g¹, 1, "CurriedFunctionCalls.mls:33:25", null, null, 2, 1, a, 1, b, 1, tmp)
 //│       end
 //│   match pc
 //│     1 =>

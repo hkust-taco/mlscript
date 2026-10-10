@@ -20,6 +20,9 @@ extension [A](xs: Ls[A])
     case Nil => N
     case xs: NELs[A] => S(xs)
 
+extension [A](xs: NELs[A])
+  def ne_map[B](f: A => B): NELs[B] = f(xs.head) ne_:: xs.tail.map(f)
+
 
 // * Valid identifiers for the members of module and class-like definitions
 // * Importantly, these are the same as valid JavaScript identifiers,

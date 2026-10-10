@@ -1,3 +1,4 @@
+:.
 :js
 :flowBasedOpt debugDpe poly
 :noInline
@@ -90,7 +91,7 @@ wrapper(42, 0)
 //│   };
 //│   set tmp = new A⁰();
 //│   set tmp1 = tmp.makeB¹();
-//│   return tmp1.getVal﹖()
+//│   return tmp1.getVal¹()
 //│ };
 //│ define wrapper⁰ as fun wrapper¹(val1, dead) {
 //│   let A, tmp, tmp1;
@@ -107,7 +108,7 @@ wrapper(42, 0)
 //│   };
 //│   set tmp = new A¹();
 //│   set tmp1 = tmp.makeB³();
-//│   return tmp1.getVal﹖()
+//│   return tmp1.getVal³()
 //│ };
 //│ return wrapper$wrapper⁰(42)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————

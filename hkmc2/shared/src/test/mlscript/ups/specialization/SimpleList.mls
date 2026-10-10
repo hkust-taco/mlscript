@@ -1,3 +1,4 @@
+:.
 :js
 
 open annotations { compile }
@@ -151,10 +152,10 @@ fun (::) cons(head, tail) = Pair(head, tail)
 :e
 pattern List(a) = null | Pair(a, List)
 //│ ╔══[COMPILATION ERROR] Found an inconsistent variable in disjunction patterns.
-//│ ║  l.152: 	pattern List(a) = null | Pair(a, List)
+//│ ║  l.153: 	pattern List(a) = null | Pair(a, List)
 //│ ║         	                              ^
 //│ ╟── The variable is missing from this sub-pattern.
-//│ ║  l.152: 	pattern List(a) = null | Pair(a, List)
+//│ ║  l.153: 	pattern List(a) = null | Pair(a, List)
 //│ ╙──       	                  ^^^^
 
 null is @compile List

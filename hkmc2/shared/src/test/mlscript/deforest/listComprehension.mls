@@ -1,3 +1,4 @@
+:.
 :js
 :deforest
 
@@ -242,7 +243,7 @@ if A is
 //│ deforest > Nil⁰ ->
 //│ deforest > 	match: ls¹
 //│ deforest > A⁰ ->
-//│ deforest > 	match: A⁰
+//│ deforest > 	match: scrut⁰
 //│ deforest > <<< fusing <<<
 //│ = Cons(2, Cons(3, Cons(4, Nil)))
 

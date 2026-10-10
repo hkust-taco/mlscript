@@ -1,3 +1,4 @@
+:.
 :js
 
 
@@ -5,44 +6,50 @@
 :re
 new
 //│ ╔══[PARSE ERROR] Expected 'with' keyword, expression, or block after `new` keyword; found end of input instead
-//│ ║  l.6: 	new
+//│ ║  l.7: 	new
 //│ ╙──     	   ^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :e
 :re
 new 2
-//│ ╔══[COMPILATION ERROR] Expected a statically known class; found integer literal.
-//│ ║  l.14: 	new 2
-//│ ║        	    ^
-//│ ╙── The 'new' keyword requires a statically known class; use the 'new!' operator for dynamic instantiation.
-//│ ═══[RUNTIME ERROR] TypeError: 2 is not a constructor
+//│ ╔══[COMPILATION ERROR] Resolution error in object instantiation
+//│ ║  l.15: 	new 2
+//│ ║        	^^^^^
+//│ ╟── Invalid class expression: integer literal
+//│ ║  l.15: 	new 2
+//│ ╙──      	    ^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :e
 :re
 new 2 + 2
-//│ ╔══[COMPILATION ERROR] Expected a statically known class; found integer literal.
-//│ ║  l.23: 	new 2 + 2
-//│ ║        	    ^
-//│ ╙── The 'new' keyword requires a statically known class; use the 'new!' operator for dynamic instantiation.
-//│ ═══[RUNTIME ERROR] TypeError: 2 is not a constructor
+//│ ╔══[COMPILATION ERROR] Resolution error in object instantiation
+//│ ║  l.26: 	new 2 + 2
+//│ ║        	^^^^^
+//│ ╟── Invalid class expression: integer literal
+//│ ║  l.26: 	new 2 + 2
+//│ ╙──      	    ^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :sjs
 :re
 new! 2 + 2
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let tmp1; tmp1 = globalThis.Object.freeze(new 2()); return tmp1 + 2
+//│ let tmp; tmp = globalThis.Object.freeze(new 2()); return tmp + 2
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ ═══[RUNTIME ERROR] TypeError: 2 is not a constructor
 
 :e
 :re
 new()
-//│ ╔══[COMPILATION ERROR] Expected a statically known class; found unit value.
-//│ ║  l.40: 	new()
-//│ ║        	   ^^
-//│ ╙── The 'new' keyword requires a statically known class; use the 'new!' operator for dynamic instantiation.
-//│ ═══[RUNTIME ERROR] TypeError: runtime.Unit is not a constructor
+//│ ╔══[COMPILATION ERROR] Resolution error in object instantiation
+//│ ║  l.45: 	new()
+//│ ║        	^^^^^
+//│ ╟── Invalid class expression: unit value
+//│ ║  l.45: 	new()
+//│ ╙──      	   ^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :re
 new!()
@@ -51,14 +58,16 @@ new!()
 :e
 :re
 new {}
-//│ ╔══[COMPILATION ERROR] Expected a statically known class; found unit value.
-//│ ╙── The 'new' keyword requires a statically known class; use the 'new!' operator for dynamic instantiation.
-//│ ═══[RUNTIME ERROR] TypeError: runtime.Unit is not a constructor
+//│ ╔══[COMPILATION ERROR] Resolution error in object instantiation
+//│ ║  l.60: 	new {}
+//│ ║        	^^^
+//│ ╙── Invalid class expression: unit value
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :pe
 new! {}
 //│ ╔══[PARSE ERROR] Expected expression after prefix keyword 'new!'; found end of block instead
-//│ ║  l.59: 	new! {}
+//│ ║  l.68: 	new! {}
 //│ ╙──      	     ^^
 
 
@@ -75,17 +84,19 @@ new { x = 1 }
 //│       lhs = Ident of "x"
 //│       rhs = IntLit of 1
 //│ ╔══[COMPILATION ERROR] Name not found: x
-//│ ║  l.70: 	new { x = 1 }
+//│ ║  l.79: 	new { x = 1 }
 //│ ╙──      	      ^
-//│ ╔══[COMPILATION ERROR] Expected a statically known class; found block.
-//│ ╙── The 'new' keyword requires a statically known class; use the 'new!' operator for dynamic instantiation.
+//│ ╔══[COMPILATION ERROR] Resolution error in object instantiation
+//│ ║  l.79: 	new { x = 1 }
+//│ ║        	^^^^^^^^^^^
+//│ ╙── Invalid class expression: block
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :e
 new! { x = 1 }
 //│ ╔══[COMPILATION ERROR] Unrecognized definitional assignment left-hand side: prefix operator 'new!'
-//│ ║  l.86: 	new! { x = 1 }
+//│ ║  l.97: 	new! { x = 1 }
 //│ ╙──      	^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -93,12 +104,8 @@ new! { x = 1 }
 :e
 let xs = new Oopsie
 //│ ╔══[COMPILATION ERROR] Name not found: Oopsie
-//│ ║  l.94: 	let xs = new Oopsie
-//│ ╙──      	             ^^^^^^
-//│ ╔══[COMPILATION ERROR] Expected a statically known class; found ‹error›.
-//│ ║  l.94: 	let xs = new Oopsie
-//│ ║        	             ^^^^^^
-//│ ╙── The 'new' keyword requires a statically known class; use the 'new!' operator for dynamic instantiation.
+//│ ║  l.105: 	let xs = new Oopsie
+//│ ╙──       	             ^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ xs = undefined
 

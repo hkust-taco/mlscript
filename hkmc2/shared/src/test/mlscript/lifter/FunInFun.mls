@@ -1,3 +1,4 @@
+:..
 :.
 
 
@@ -130,12 +131,12 @@ x + y
 
 
 data class Tuple(a, b)
-fun f(used1) =
-  fun g1(used2) =
+fun f(used1: Int) =
+  fun g1(used2: Int) =
     fun h() = 
       set used1 = 10
       set used2 = 100
-    fun i() = used1 + used2
+    fun i(): Int = used1 + used2
     Tuple(h, i)
   fun g22() = used1
   Tuple(g1(10), g22)

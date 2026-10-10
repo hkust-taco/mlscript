@@ -1,3 +1,4 @@
+:.
 :js
 
 
@@ -15,17 +16,20 @@ sum(1, 2)
 fun sum([x, y]) = x + y
 sum([1, 2])
 //│ ╔══[COMPILATION ERROR] Expected a valid parameter, found tuple
-//│ ║  l.15: 	fun sum([x, y]) = x + y
+//│ ║  l.16: 	fun sum([x, y]) = x + y
 //│ ╙──      	        ^^^^^^
 //│ ╔══[COMPILATION ERROR] Name not found: x
-//│ ║  l.15: 	fun sum([x, y]) = x + y
+//│ ║  l.16: 	fun sum([x, y]) = x + y
 //│ ╙──      	                  ^
 //│ ╔══[COMPILATION ERROR] Name not found: y
-//│ ║  l.15: 	fun sum([x, y]) = x + y
+//│ ║  l.16: 	fun sum([x, y]) = x + y
 //│ ╙──      	                      ^
-//│ ╔══[COMPILATION ERROR] Expected 0 arguments, got 1
-//│ ║  l.16: 	sum([1, 2])
-//│ ╙──      	   ^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.17: 	sum([1, 2])
+//│ ║        	^^^^^^^^^^^
+//│ ╟── Function 'sum' expected 0 arguments, but got 1
+//│ ║  l.16: 	fun sum([x, y]) = x + y
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 fun sum(pair) =

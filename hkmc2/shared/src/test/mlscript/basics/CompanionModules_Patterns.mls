@@ -1,3 +1,4 @@
+:.
 :js
 
 
@@ -5,10 +6,10 @@
 pattern Foo = 1
 module Foo
 //│ ╔══[COMPILATION ERROR] Not yet supported: overloading of pattern 'Foo'
-//│ ║  l.5: 	pattern Foo = 1
+//│ ║  l.6: 	pattern Foo = 1
 //│ ║       	^^^^^^^^^^^^^^^
 //│ ╟── with module of the same name
-//│ ║  l.6: 	module Foo
+//│ ║  l.7: 	module Foo
 //│ ╙──     	^^^^^^^^^^
 
 

@@ -1,6 +1,5 @@
+:.
 
-:global
-:wasm
 
 "Hello World!"
 //│ Wasm result:

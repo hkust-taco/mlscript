@@ -1,7 +1,9 @@
+:.
 :js
 
 import "../../mlscript-compile/Rendering.mls"
 
+open Rendering { render }
 open Rendering
 
 // We set `breakLength` to 74. With the `print` function and diff test comments
@@ -195,14 +197,14 @@ let testMap = new Map([[testKey, testKey]])
 show of testMap
 //│ > Map(1) {{x: 0, y: 0, z: 0} => {x: 0, y: 0, z: 0}}                         ┊
 
-set testKey.w = 0, show of testMap
+set testKey!w = 0, show of testMap
 //│ > Map(1) {{x: 0, y: 0, z: 0, w: 0} => {x: 0, y: 0, z: 0, w: 0}}             ┊
 
-set testKey.a = 42, show of testMap
+set testKey!a = 42, show of testMap
 //│ > Map(1) {{x: 0, y: 0, z: 0, w: 0, a: 42} => {x: 0, y: 0, z: 0, w: 0, a: 42}}
 
 // TODO
-set testKey.b = 404, show of testMap
+set testKey!b = 404, show of testMap
 //│ > Map(1) {                                                                  ┊
 //│ >   {x: 0, y: 0, z: 0, w: 0, a: 42, b: 404} => {x: 0, y: 0, z: 0, w: 0, a: 42, b: 404}
 //│ > }                                                                         ┊
@@ -214,15 +216,15 @@ let testMap = new Map([[testKey, shortText]])
 show of testMap
 //│ > Map(1) {{a: 1, b: 10, c: 100, d: 1000, e: 10000} => "Hello, world!"}      ┊
 
-set testKey.x = 42, show of testMap
+set testKey!x = 42, show of testMap
 //│ > Map(1) {{a: 1, b: 10, c: 100, d: 1000, e: 10000, x: 42} => "Hello, world!"}
 
-set testKey.y = 100, show of testMap
+set testKey!y = 100, show of testMap
 //│ > Map(1) {                                                                  ┊
 //│ >   {a: 1, b: 10, c: 100, d: 1000, e: 10000, x: 42, y: 100} => "Hello, world!"
 //│ > }                                                                         ┊
 
-set testKey.z = shortText, show of testMap
+set testKey!z = shortText, show of testMap
 //│ > Map(1) {                                                                  ┊
 //│ >   {a: 1, b: 10, c: 100, d: 1000, e: 10000, x: 42, y: 100, z: "Hello, world!"} => "Hello, world!"
 //│ > }                                                                         ┊

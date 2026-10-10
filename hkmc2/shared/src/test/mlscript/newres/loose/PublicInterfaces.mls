@@ -1,0 +1,265 @@
+:.
+#lang(strictResolution: true, eagerResolution: false)
+
+// Local targets cannot discharge the inputs admitted by a public interface.
+:e
+fun read(x) = x.value
+read({value: 1})
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.6: 	fun read(x) = x.value
+//│ ║       	              ^^^^^^^
+//│ ╟── Cannot resolve member 'value' of a value with unknown shape.
+//│ ╟── Parameter 'x' admits values of unknown shape.
+//│ ║  l.6: 	fun read(x) = x.value
+//│ ║       	         ^
+//│ ╟── 'read' is exposed by this compilation unit.
+//│ ║  l.6: 	fun read(x) = x.value
+//│ ╙──     	^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// Rest parameters retain the same obligation through tuple element lookup.
+:e
+fun rest(...xs) = xs.0.value
+rest({value: 2})
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.22: 	fun rest(...xs) = xs.0.value
+//│ ║        	                  ^^^^^^^^^^
+//│ ╟── Cannot resolve member 'value' of a value with unknown shape.
+//│ ╟── Rest parameter 'xs' admits elements of unknown shape.
+//│ ║  l.22: 	fun rest(...xs) = xs.0.value
+//│ ║        	         ^^^^^
+//│ ╟── 'rest' is exposed by this compilation unit.
+//│ ║  l.22: 	fun rest(...xs) = xs.0.value
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// Returned closures are reachable from the public interface too.
+:e
+fun escaped() = x => x.value
+escaped()({value: 3})
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.38: 	fun escaped() = x => x.value
+//│ ║        	                     ^^^^^^^
+//│ ╟── Cannot resolve member 'value' of a value with unknown shape.
+//│ ╟── Parameter 'x' admits values of unknown shape.
+//│ ║  l.38: 	fun escaped() = x => x.value
+//│ ║        	                ^
+//│ ╟── This value is returned here.
+//│ ║  l.38: 	fun escaped() = x => x.value
+//│ ║        	                ^^^^^^^^^^^^
+//│ ╟── 'escaped' is exposed by this compilation unit.
+//│ ║  l.38: 	fun escaped() = x => x.value
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// A completed private helper must still be checked when it later escapes.
+:expect 4
+private fun hidden(x) = x.value
+hidden({value: 4})
+//│ = 4
+
+:e
+val exported = {callback: hidden}
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.57: 	private fun hidden(x) = x.value
+//│ ║        	                        ^^^^^^^
+//│ ╟── Cannot resolve member 'value' of a value with unknown shape.
+//│ ╟── Parameter 'x' admits values of unknown shape.
+//│ ║  l.57: 	private fun hidden(x) = x.value
+//│ ║        	                   ^
+//│ ╟── This value is stored in this record field.
+//│ ║  l.62: 	val exported = {callback: hidden}
+//│ ║        	                ^^^^^^^^
+//│ ╟── 'exported' is exposed by this compilation unit.
+//│ ║  l.62: 	val exported = {callback: hidden}
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ exported = {callback: fun hidden}
+
+// Record spreads preserve the public origin across nested copies.
+:e
+fun recordSpread(x) = ({...{...x}}).value
+recordSpread({value: 5})
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.80: 	fun recordSpread(x) = ({...{...x}}).value
+//│ ║        	                      ^^^^^^^^^^^^^^^^^^^
+//│ ╟── Cannot resolve member 'value' across a computed key or unknown record spread.
+//│ ╟── This spread has no known element shape.
+//│ ║  l.80: 	fun recordSpread(x) = ({...{...x}}).value
+//│ ║        	                               ^
+//│ ╟── Parameter 'x' admits values of unknown shape.
+//│ ║  l.80: 	fun recordSpread(x) = ({...{...x}}).value
+//│ ║        	                 ^
+//│ ╟── 'recordSpread' is exposed by this compilation unit.
+//│ ║  l.80: 	fun recordSpread(x) = ({...{...x}}).value
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// Tuple spreads preserve it on their unknown elements.
+:e
+fun tupleSpread(xs) = [...xs].0.value
+tupleSpread([{value: 6}])
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.99: 	fun tupleSpread(xs) = [...xs].0.value
+//│ ║        	                      ^^^^^^^^^^^^^^^
+//│ ╟── Cannot resolve member 'value' of a value with unknown shape.
+//│ ╟── This spread has no known element shape.
+//│ ║  l.99: 	fun tupleSpread(xs) = [...xs].0.value
+//│ ║        	                          ^^
+//│ ╟── Parameter 'xs' admits values of unknown shape.
+//│ ║  l.99: 	fun tupleSpread(xs) = [...xs].0.value
+//│ ║        	                ^^
+//│ ╟── 'tupleSpread' is exposed by this compilation unit.
+//│ ║  l.99: 	fun tupleSpread(xs) = [...xs].0.value
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// Checked indexing carries the origin and its diagnostic path to the result.
+:e
+fun indexed(xs) = xs.[0].value
+indexed([{value: 7}])
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.118: 	fun indexed(xs) = xs.[0].value
+//│ ║         	                    ^^^^^^^^^^
+//│ ╟── Cannot resolve member 'value' of a value with unknown shape.
+//│ ╟── This array index has no known element shape.
+//│ ║  l.118: 	fun indexed(xs) = xs.[0].value
+//│ ║         	                  ^^^^^
+//│ ╟── Parameter 'xs' admits values of unknown shape.
+//│ ║  l.118: 	fun indexed(xs) = xs.[0].value
+//│ ║         	            ^^
+//│ ╟── 'indexed' is exposed by this compilation unit.
+//│ ║  l.118: 	fun indexed(xs) = xs.[0].value
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// Type substitution must keep the public input distinct from ordinary unknowns.
+:e
+private fun identity[A](x: A): A = x
+fun throughType(x) = identity(x).value
+throughType({value: 8})
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.138: 	fun throughType(x) = identity(x).value
+//│ ║         	                     ^^^^^^^^^^^^^^^^^
+//│ ╟── Parameter 'x' admits values of unknown shape.
+//│ ║  l.138: 	fun throughType(x) = identity(x).value
+//│ ║         	                ^
+//│ ╟── 'throughType' is exposed by this compilation unit.
+//│ ║  l.138: 	fun throughType(x) = identity(x).value
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Cannot resolve member 'value' of a value with unknown shape.
+//│ ║  l.137: 	private fun identity[A](x: A): A = x
+//│ ╙──       	                               ^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// Omitted type arguments admit external values despite a known local element.
+:e
+fun hole(xs: Array) = xs.0.value
+hole([{value: 9}])
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.156: 	fun hole(xs: Array) = xs.0.value
+//│ ║         	                      ^^^^^^^^^^
+//│ ╟── Cannot resolve member 'value' of a value with unknown shape.
+//│ ╟── Parameter 'xs' admits values of unknown shape.
+//│ ║  l.156: 	fun hole(xs: Array) = xs.0.value
+//│ ║         	         ^^^^^^^^^
+//│ ╟── 'hole' is exposed by this compilation unit.
+//│ ║  l.156: 	fun hole(xs: Array) = xs.0.value
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// Constructor refinement must preserve the input's origin on unknown fields.
+:e
+private class Box(val item)
+fun refined(x) = if x is Box(item) then item.value else 0
+refined(Box({value: 10}))
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.173: 	fun refined(x) = if x is Box(item) then item.value else 0
+//│ ║         	                                        ^^^^^^^^^^
+//│ ╟── Cannot resolve member 'value' of a value with unknown shape.
+//│ ╟── This constructor field may contain a value of unknown shape.
+//│ ║  l.172: 	private class Box(val item)
+//│ ║         	                      ^^^^
+//│ ╟── Parameter 'x' admits values of unknown shape.
+//│ ║  l.173: 	fun refined(x) = if x is Box(item) then item.value else 0
+//│ ║         	            ^
+//│ ╟── 'refined' is exposed by this compilation unit.
+//│ ║  l.173: 	fun refined(x) = if x is Box(item) then item.value else 0
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// Private helpers that do not escape retain local inference.
+:expect 11
+private fun local(x) = x.value
+local({value: 11})
+//│ = 11
+
+// Explicitly described alternatives still use lenient missing-member checking.
+:expect 12
+module Known { val value = 12 }
+module Other { val other = 0 }
+fun declared(x: Known | Other) = x.value
+declared(Known)
+//│ = 12
+
+// A dynamic target does not exempt the function's other possible public inputs.
+:e
+fun dynamic(x) = x.value
+dynamic({value: 13} as dyn)
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.206: 	fun dynamic(x) = x.value
+//│ ║         	                 ^^^^^^^
+//│ ╟── Cannot resolve member 'value' of a value with unknown shape.
+//│ ╟── Parameter 'x' admits values of unknown shape.
+//│ ║  l.206: 	fun dynamic(x) = x.value
+//│ ║         	            ^
+//│ ╟── 'dynamic' is exposed by this compilation unit.
+//│ ║  l.206: 	fun dynamic(x) = x.value
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// A tuple target likewise cannot close an unannotated public parameter.
+:e
+fun first(xs) = xs.0
+first([14])
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.222: 	fun first(xs) = xs.0
+//│ ║         	                ^^^^
+//│ ╟── Cannot resolve member '0' of a value with unknown shape.
+//│ ╟── Parameter 'xs' admits values of unknown shape.
+//│ ║  l.222: 	fun first(xs) = xs.0
+//│ ║         	          ^^
+//│ ╟── 'first' is exposed by this compilation unit.
+//│ ║  l.222: 	fun first(xs) = xs.0
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// An annotated callback interface must be checked in a non-strict worksheet too.
+:e
+#lang(strictResolution: false)
+private fun erase(f: Function) = ()
+private fun callback(x) = x.value
+callback({value: 15})
+erase(callback)
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.240: 	private fun callback(x) = x.value
+//│ ║         	                          ^^^^^^^
+//│ ╟── Parameter 'x' admits values of unknown shape.
+//│ ║  l.240: 	private fun callback(x) = x.value
+//│ ║         	                     ^
+//│ ╟── Cannot resolve member 'value' of a value with unknown shape.
+//│ ║  l.239: 	private fun erase(f: Function) = ()
+//│ ║         	                     ^^^^^^^^
+//│ ╙── The 'Function' type does not specify parameter types.
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// Recursive spread widening must not hide public inputs behind a local target.
+// FIXME: Preserve public-input provenance in the bounded tuple widening representation.
+:breakme
+:e
+#lang(strictResolution: true)
+private fun padded(x, n: Int) = if n == 0 then [x] else [x, ...padded(x, n - 1)]
+fun deep(x) =
+  let value = if hide(true) then padded(x, 4).4 else {value: 0}
+  value.value
+deep({value: 16})
+//│ = 16

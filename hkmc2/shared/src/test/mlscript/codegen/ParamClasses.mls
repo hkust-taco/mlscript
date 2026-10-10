@@ -1,3 +1,4 @@
+:.
 :js
 
 
@@ -112,7 +113,8 @@ i.i1(20)
 //│ = 120
 
 
-// * This is strange, but does not need to be an error
+// The new resolver rejects duplicate constructor members.
+:e
 :sjs
 class Foo(x, val y, z, val z, z) with
   let x = 1
@@ -122,6 +124,72 @@ class Foo(x, val y, z, val z, z) with
   print("this.y = " + this.y)
   print("z = " + z)
   print("this.z = " + this.z)
+//│ ╔══[COMPILATION ERROR] Duplicate definition of member named 'z'.
+//│ ╟── Defined at: 
+//│ ║  l.119: 	class Foo(x, val y, z, val z, z) with
+//│ ║         	                    ^
+//│ ╟── Defined at: 
+//│ ║  l.119: 	class Foo(x, val y, z, val z, z) with
+//│ ║         	                       ^^^^^
+//│ ╟── Defined at: 
+//│ ║  l.119: 	class Foo(x, val y, z, val z, z) with
+//│ ╙──       	                              ^
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.121: 	  let y += 1
+//│ ║         	      ^
+//│ ╟── Class definition 'Foo' does not contain member 'y'
+//│ ║  l.119: 	class Foo(x, val y, z, val z, z) with
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.120: 	  let x = 1
+//│ ║         	^^^^^^^^^^^
+//│ ║  l.121: 	  let y += 1
+//│ ║         	^^^^^^^^^^^^
+//│ ║  l.122: 	  print("x = " + x)
+//│ ║         	^^^^^^^^^^^^^^^^^^^
+//│ ║  l.123: 	... (more lines omitted) ...
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.124: 	  print("this.y = " + this.y)
+//│ ║         	                      ^^^^^^
+//│ ╟── Class definition 'Foo' does not contain member 'y'
+//│ ║  l.119: 	class Foo(x, val y, z, val z, z) with
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.120: 	  let x = 1
+//│ ║         	^^^^^^^^^^^
+//│ ║  l.121: 	  let y += 1
+//│ ║         	^^^^^^^^^^^^
+//│ ║  l.122: 	  print("x = " + x)
+//│ ║         	^^^^^^^^^^^^^^^^^^^
+//│ ║  l.123: 	... (more lines omitted) ...
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.125: 	  print("z = " + z)
+//│ ║         	                 ^
+//│ ╟── Class definition 'Foo' does not contain member 'z'
+//│ ║  l.119: 	class Foo(x, val y, z, val z, z) with
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.120: 	  let x = 1
+//│ ║         	^^^^^^^^^^^
+//│ ║  l.121: 	  let y += 1
+//│ ║         	^^^^^^^^^^^^
+//│ ║  l.122: 	  print("x = " + x)
+//│ ║         	^^^^^^^^^^^^^^^^^^^
+//│ ║  l.123: 	... (more lines omitted) ...
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.126: 	  print("this.z = " + this.z)
+//│ ║         	                      ^^^^^^
+//│ ╟── Class definition 'Foo' does not contain member 'z'
+//│ ║  l.119: 	class Foo(x, val y, z, val z, z) with
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.120: 	  let x = 1
+//│ ║         	^^^^^^^^^^^
+//│ ║  l.121: 	  let y += 1
+//│ ║         	^^^^^^^^^^^^
+//│ ║  l.122: 	  print("x = " + x)
+//│ ║         	^^^^^^^^^^^^^^^^^^^
+//│ ║  l.123: 	... (more lines omitted) ...
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let Foo9;
 //│ Foo9 = function Foo(x, y, z, z1, z2) {
@@ -132,48 +200,26 @@ class Foo(x, val y, z, val z, z) with
 //│     Foo9.class = this
 //│   }
 //│   constructor(x, y, z, z1, z2) {
-//│     let tmp3, tmp4, tmp5, tmp6, tmp7;
-//│     this.y = y;
-//│     this.z = z1;
-//│     this.#z = z2;
-//│     this.#x = 1;
-//│     this.#y = this.y + 1;
-//│     tmp3 = "x = " + this.#x;
-//│     Predef.print(tmp3);
-//│     tmp4 = "y = " + this.#y;
-//│     Predef.print(tmp4);
-//│     tmp5 = "this.y = " + this.y;
-//│     Predef.print(tmp5);
-//│     tmp6 = "z = " + this.#z;
-//│     Predef.print(tmp6);
-//│     tmp7 = "this.z = " + this.z;
-//│     Predef.print(tmp7);
+//│     throw "This code cannot be run as its compilation yielded an error.";
 //│   }
-//│   #z;
-//│   #x;
-//│   #y;
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "Foo", [null, "y", null, "z", null]];
 //│ });
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
+:re
 Foo(10, 20, 30, 40, 50)
-//│ > x = 1
-//│ > y = 21
-//│ > this.y = 20
-//│ > z = 50
-//│ > this.z = 40
-//│ = Foo(_, 20, _, 40, _)
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
 :e
 class Foo(val z, val z)
 //│ ╔══[COMPILATION ERROR] Duplicate definition of member named 'z'.
 //│ ╟── Defined at: 
-//│ ║  l.170: 	class Foo(val z, val z)
+//│ ║  l.216: 	class Foo(val z, val z)
 //│ ║         	          ^^^^^
 //│ ╟── Defined at: 
-//│ ║  l.170: 	class Foo(val z, val z)
+//│ ║  l.216: 	class Foo(val z, val z)
 //│ ╙──       	                 ^^^^^
 
 Foo(1, 2)

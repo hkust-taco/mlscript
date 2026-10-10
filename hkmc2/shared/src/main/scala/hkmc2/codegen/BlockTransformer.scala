@@ -180,6 +180,12 @@ class BlockTransformer(subst: SymbolSubst):
     case p: Path => applyPath(p)(k)
   
   def applyPath(p: Path)(k: Path => Block): Block = p match
+    case p @ SuperSelect(qual, base, name) =>
+      applyPath(qual): qual2 =>
+        applyPath(base): base2 =>
+          val sym2 = p.symbol.subst
+          k(if (qual2 is qual) && (base2 is base) && (sym2 is p.symbol) then p
+            else SuperSelect(qual2, base2, name)(sym2, p.toLoc))
     case DynSelect(qual, fld, arrayIdx) =>
       applyPath(qual): qual2 =>
         applyPath(fld): fld2 =>

@@ -1,0 +1,14 @@
+#lang(0.3.x, strictResolution: true)
+
+module SealedClasses with
+  class Closed { fun value() = 1 }
+  open class Open { fun value() = 2 }
+  abstract class Abstract { fun value() }
+  // Sealing restricts direct subclasses; a local subclass may itself be open.
+  open class OpenChild extends Closed
+  class ClosedChild extends Open
+  val alias = Closed
+  module Nested with
+    class Closed
+  class Parameterized[A](val item: A)
+  open class OpenParameterized[A](val item: A)

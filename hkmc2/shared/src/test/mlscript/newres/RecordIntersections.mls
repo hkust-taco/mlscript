@@ -1,0 +1,100 @@
+:.
+
+// Aliases contribute complementary fields, and common fields retain both types.
+:expect ["LEFT", 3, 4, "RIGHT"]
+type Left[A] = {left: A, both: {x: Int}}
+type Right = {right: Int, both: {y: Str}}
+fun read(value: Left[Str] & Right) =
+  [value.left.toUpperCase(), value.right, value.both.x, value.both.y.toUpperCase()]
+read(left: "left", right: 3, both: {x: 4, y: "right"})
+//│ = ["LEFT", 3, 4, "RIGHT"]
+
+// Grouping, repetition, and operand order do not change the interface.
+:expect [1, 2, 3]
+type A = {a: Int}
+type B = {b: Int}
+type C = {c: Int}
+fun regroup(value: (A & B) & (C & (B & A))) = [value.a, value.b, value.c]
+regroup(a: 1, b: 2, c: 3)
+//│ = [1, 2, 3]
+
+// Distribution preserves union alternatives instead of combining their fields.
+:expect ["L", 5]
+type Choice = ({left: Str} | {right: Int}) & {tag: Str, common: Int}
+fun common(value: Choice) = [value.tag.toUpperCase(), value.common]
+common(left: "left", common: 5, tag: "l")
+//│ = ["L", 5]
+
+:e
+fun missing(value: Choice) = value.left
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.29: 	fun missing(value: Choice) = value.left
+//│ ║        	                             ^^^^^^^^^^
+//│ ╟── Record type does not contain member 'left'
+//│ ║  l.23: 	type Choice = ({left: Str} | {right: Int}) & {tag: Str, common: Int}
+//│ ╙──      	                              ^^^^^^^^^^
+
+// Common fields may themselves contain unions of record intersections.
+:expect "YES"
+type Nested = ({item: ({x: Int} | {z: Bool})} & {item: {y: Str}})
+fun nested(value: Nested) = value.item.y.toUpperCase()
+nested(item: {x: 1, y: "yes"})
+//│ = "YES"
+
+// Productive mutual recursion is observed one field at a time.
+:expect [1, "END"]
+type X = {next: X, x: Int}
+type Y = {next: Y, y: Str}
+fun descend(value: X & Y) = [value.next.next.x, value.next.next.y.toUpperCase()]
+class Link(val x: Int, val y: Str) with
+  val next = this
+descend(Link(1, "end"))
+//│ = [1, "END"]
+
+// Recursive Boolean substitutions must stabilize rather than nest merged shapes.
+type Loop[A, B] = {value: A, next: Loop[A & B, B & A]}
+fun cycle(value: Loop[{x: Int}, {y: Str}]) =
+  [value.next.next.next.value.x, value.next.next.next.value.y.toUpperCase()]
+
+// The annotation remains an abstraction boundary.
+:e
+fun hidden(value: A & B) = value.extra
+hidden(a: 1, b: 2, extra: 3)
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.61: 	fun hidden(value: A & B) = value.extra
+//│ ║        	                           ^^^^^^^^^^^
+//│ ╟── Record type does not contain member 'extra'
+//│ ║  l.14: 	type A = {a: Int}
+//│ ╙──      	          ^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// A wildcard open reads a single runtime field even when two records declare it.
+:expect 7
+fun opened(value: {shared: Int} & {shared: Int, extra: Bool}) =
+  open value
+  shared
+opened(shared: 7, extra: true)
+//│ = 7
+
+// Intersection constraints infer generic fields and check callback parameters.
+:expect "TYPED"
+fun extract[T](value: {item: T} & {tag: Int}): T = value.item
+extract(item: "typed", tag: 0).toUpperCase()
+//│ = "TYPED"
+
+:expect "CALLBACK"
+fun callback(value: {run: Str -> Str} & {tag: Int}) = value.run("callback")
+callback(run: x => x.toUpperCase(), tag: 0)
+//│ = "CALLBACK"
+
+:e
+fun invalidCallback(): {run: Object -> Int} & {tag: Int} =
+  {run: x => x.secret, tag: 0}
+invalidCallback()
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.92: 	  {run: x => x.secret, tag: 0}
+//│ ║        	             ^^^^^^^^
+//│ ╟── Value of type 'Object' does not contain member 'secret'
+//│ ║  l.91: 	fun invalidCallback(): {run: Object -> Int} & {tag: Int} =
+//│ ╙──      	                             ^^^^^^
+//│ = {run: fun, tag: 0}

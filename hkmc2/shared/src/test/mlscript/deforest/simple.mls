@@ -1,3 +1,4 @@
+:.
 :js
 :deforest
 
@@ -295,11 +296,11 @@ fun p(a) = c1(a) + c2(a)
 p(AA(1))
 //│ deforest > >>> fusing >>>
 //│ deforest > A⁰ ->
-//│ deforest > 	match: A⁰
+//│ deforest > 	match: scrut⁰
 //│ deforest > A⁰ ->
-//│ deforest > 	match: A⁰
+//│ deforest > 	match: scrut⁰
 //│ deforest > A⁰ ->
-//│ deforest > 	match: A⁰
+//│ deforest > 	match: scrut⁰
 //│ deforest > <<< fusing <<<
 //│ = 2
 
@@ -461,7 +462,7 @@ if A is
 k + 2
 //│ deforest > >>> fusing >>>
 //│ deforest > A⁰ ->
-//│ deforest > 	match: A⁰
+//│ deforest > 	match: scrut¹
 //│ deforest > <<< fusing <<<
 //│ = 5
 //│ k = undefined
@@ -657,13 +658,13 @@ print(c(p(true)) + c(p(false)))
 c(B)
 //│ deforest > >>> fusing >>>
 //│ deforest > A⁰ ->
-//│ deforest > 	match: A⁰
+//│ deforest > 	match: scrut²
 //│ deforest > A⁰ ->
-//│ deforest > 	match: A⁰
+//│ deforest > 	match: scrut²
 //│ deforest > B⁰ ->
 //│ deforest > 	match: x²⁶
 //│ deforest > A⁰ ->
-//│ deforest > 	match: A⁰
+//│ deforest > 	match: scrut²
 //│ deforest > new AA¹(2) ->
 //│ deforest > 	match: x²⁶
 //│ deforest > 	fields: x²⁶.aa⁰
@@ -671,7 +672,7 @@ c(B)
 //│ deforest > 	match: x²⁶
 //│ deforest > 	fields: x²⁶.bb⁰
 //│ deforest > A⁰ ->
-//│ deforest > 	match: A⁰
+//│ deforest > 	match: scrut²
 //│ deforest > new AA¹(2) ->
 //│ deforest > 	match: x²⁶
 //│ deforest > 	fields: x²⁶.aa⁰
@@ -856,25 +857,25 @@ fun g(b) =
 [f(3), g(true)]
 //│ deforest > >>> fusing >>>
 //│ deforest > BB⁰(0) ->
-//│ deforest > 	match: scrut⁰
+//│ deforest > 	match: scrut³
 //│ deforest > D⁰ ->
-//│ deforest > 	match: scrut⁰
+//│ deforest > 	match: scrut³
 //│ deforest > AA⁰(0) ->
-//│ deforest > 	match: scrut¹
+//│ deforest > 	match: scrut⁴
 //│ deforest > AA⁰(1) ->
-//│ deforest > 	match: scrut¹
+//│ deforest > 	match: scrut⁴
 //│ deforest > C⁰ ->
-//│ deforest > 	match: scrut¹
+//│ deforest > 	match: scrut⁴
 //│ deforest > BB⁰(0) ->
-//│ deforest > 	match: scrut⁰
+//│ deforest > 	match: scrut³
 //│ deforest > D⁰ ->
-//│ deforest > 	match: scrut⁰
+//│ deforest > 	match: scrut³
 //│ deforest > AA⁰(0) ->
-//│ deforest > 	match: scrut¹
+//│ deforest > 	match: scrut⁴
 //│ deforest > AA⁰(1) ->
-//│ deforest > 	match: scrut¹
+//│ deforest > 	match: scrut⁴
 //│ deforest > C⁰ ->
-//│ deforest > 	match: scrut¹
+//│ deforest > 	match: scrut⁴
 //│ deforest > <<< fusing <<<
 //│ = [D, AA(1)]
 

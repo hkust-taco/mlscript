@@ -1,0 +1,16 @@
+#lang(0.3.x, strictResolution: true)
+
+module GenericLibrary with
+  class Known(val known: Int)
+  fun identity[A](x: A): A = x
+  class Methods with
+    fun identity[A](x: A): A = x
+    fun inferred[A](x: A) = x
+  val known = identity(Known(3))
+  val mapped = [Known(4)].map((item, ...) => Known(5))
+  fun inferred[A](x: A) = x
+  // Importers must observe a recursive getter's result without rebuilding its cycle.
+  fun recursiveIdentity[A](x: A) =
+    fun result = if true then x else result
+    result
+  fun recursiveGetter = if true then Known(7) else recursiveGetter

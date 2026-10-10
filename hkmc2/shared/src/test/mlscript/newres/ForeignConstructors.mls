@@ -1,0 +1,29 @@
+:.
+
+// Explicit foreign function overloads and class constructors share the native binding.
+declare class String with
+  constructor(value: Str)
+  val length: Int
+declare fun String(value: Str): Str
+
+:sjs
+:expect "hello"
+String("hello")
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ return runtime.safeCall(globalThis.String("hello"))
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = "hello"
+
+:sjs
+:expect 5
+let boxed = new String("hello")
+boxed.length
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ let boxed; boxed = globalThis.Object.freeze(new globalThis.String("hello")); return boxed.length
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 5
+//│ boxed = String { "0": "h", "1": "e", "2": "l", "3": "l", "4": "o", length: 5 }
+
+:expect true
+boxed is String
+//│ = true

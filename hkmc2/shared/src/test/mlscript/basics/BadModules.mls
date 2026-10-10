@@ -1,3 +1,4 @@
+:.
 :js
 
 
@@ -6,7 +7,7 @@ class Foo
 :ge
 module M extends Foo
 //│ ╔══[COMPILATION ERROR] Modules cannot have an extension clause.
-//│ ║  l.7: 	module M extends Foo
+//│ ║  l.8: 	module M extends Foo
 //│ ╙──     	                 ^^^
 
 

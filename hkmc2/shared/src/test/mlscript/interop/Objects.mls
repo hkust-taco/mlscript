@@ -1,13 +1,14 @@
+:.
 :js
 
 
 let rcd = { x: 0, y: undefined, z: null}
 //│ rcd = {x: 0, y: undefined, z: null}
 
-rcd.constructor
+rcd!constructor
 //│ = class Object
 
-typeof(rcd.constructor)
+typeof(rcd!constructor)
 //│ = "function"
 
 Object.entries of rcd
@@ -30,23 +31,23 @@ Object.entries of Foo
 Object.entries of foo
 //│ = [["x", 1], ["y", 2], ["a", 3]]
 
-Foo.name
+Foo!name
 //│ = "Foo"
 
-Foo.class.name
+Foo!class!name
 //│ = "Foo"
 
-foo.constructor
+foo!constructor
 //│ = class Foo
 
 // ! will be changed by minification
-foo.constructor.name
+foo!constructor!name
 //│ = "Foo"
 
 typeof(foo)
 //│ = "object"
 
-typeof(foo.constructor)
+typeof(foo!constructor)
 //│ = "function"
 
 

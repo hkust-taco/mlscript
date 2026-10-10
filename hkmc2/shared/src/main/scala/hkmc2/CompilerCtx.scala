@@ -89,11 +89,13 @@ class CompilerCtx(
         ParserSetup(file)
       given Elaborator.Ctx = prelude
       val artifactCtx = derive(parse.origin.fileName, dependencies)
+      val parsed = parse.resultBlk
+      val elaborationConfig = Config.elaborationConfig(parsed)
       val elab =
         given CompilerCtx = artifactCtx
+        given Config = elaborationConfig
         Elaborator(tl, file.up, prelude)
 
-      val parsed = parse.resultBlk
       val nme = file.baseName
       val exportedSymbol = parsed.definedSymbols.find(_._1 === nme).map(_._2)
       def collectCompilationUnitSymbols(program: codegen.Program): Set[codegen.BoundSymbol] =
@@ -103,15 +105,18 @@ class CompilerCtx(
             case sym: BlockMemberSymbol => sym
           .toSet
         case _ => Set.empty
-      val (blk0, _) = elab.importFrom(parsed)
-      if file.toString === paths.runtimeSourceFile.toString then
-        state.initRuntimeSymbolsFromBlock(blk0)
-      else
+      val isRuntime = file.toString === paths.runtimeSourceFile.toString
+      // Elaboration synthesizes references to runtime definitions (e.g. assertFail).
+      // The runtime itself supplies these symbols once its own body is elaborated.
+      if !isRuntime then
         state.initRuntimeSymbolsFromFile(paths.runtimeSourceFile, prelude)(
           using tl, summon[Raise], artifactCtx)
+      val (blk0, _) = elaborationConfig.givenIn(elab.importFrom(parsed, exportedSymbol.toList))
+      if isRuntime then
+        state.initRuntimeSymbolsFromBlock(blk0)
 
       val artifactConfig = Config.extractConfigFromStats(blk0)
-      artifactConfig.givenIn:
+      if !artifactConfig.language.useNewResolution then artifactConfig.givenIn:
         given Elaborator.State = state
         val resolver = Resolver(backendTL)
         resolver.traverseBlock(blk0)(using Resolver.ICtx.empty)
@@ -159,6 +164,7 @@ class CompilerCtx(
       val ir =
         artifactConfig.givenIn:
           given Elaborator.State = state
+          given codegen.Erasure = codegen.Erasure(blk)(using artifactConfig, prelude, state)
           val low = backendTL.givenIn:
             new codegen.Lowering()(using artifactConfig, backendTL, summon[Raise], state, prelude, summon[SymbolPrinter])
           optimize(low.program(blk, Set.empty))
@@ -196,8 +202,9 @@ class CompilerCtx(
     // The prelude context is shared so every compilation unit sees the same prelude
     // symbols. Callers still elaborate their own files with a fresh State; the frozen
     // State remains the owner captured by the prelude symbols themselves.
-    // The prelude is elaborated once per context, under its root configuration: were it
-    // elaborated per requester, cached compilation units would keep referring to whichever
+    // The prelude is elaborated once per context, under its own file directives applied
+    // to the root configuration. Were it elaborated per requester, cached compilation
+    // units would keep referring to whichever
     // elaboration came first, and a body inlined across units would then carry prelude symbols
     // that the importing file does not recognize.
     val lastMod = fs.getLastChangedTimestamp(file)
@@ -213,9 +220,19 @@ class CompilerCtx(
         given Config = rootConfig
         given CompilerCtx = this
         val parse = ParserSetup(file)
-        val elab = Elaborator(tl, file.up, Ctx.empty)
-        val initCtx = State.init.nestLocal("prelude")
-        val (blk, ctx) = elab.importFrom(parse.resultBlk)(using initCtx)
+        val elaborationConfig = Config.elaborationConfig(parse.resultBlk)
+        // The prelude defines the builtins consulted during its own resolution.
+        // Seed lookup with the block's original symbols, as block elaboration does,
+        // so those lookups share the declarations that are being elaborated.
+        val initCtx = State.init.nestLocal("prelude").withMembers(parse.resultBlk.definedSymbols)
+        val elab =
+          given Config = elaborationConfig
+          Elaborator(tl, file.up, initCtx)
+        val (blk, ctx) = elaborationConfig.givenIn(elab.importFrom(parse.resultBlk, Nil)(using initCtx))
+        // Prelude declarations have no executable program, but their signatures and nominal hierarchy
+        // must be erased before any compilation unit can use them.
+        given Ctx = ctx
+        elaborationConfig.givenIn(codegen.Erasure(blk))
         PreludeArtifact(parse.resultBlk, blk, ctx, state, rootConfig, lastMod),
     )
   

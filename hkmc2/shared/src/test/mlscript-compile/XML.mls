@@ -1,3 +1,5 @@
+#lang(0.3.x)
+
 import "./Predef.mls"
 import "./Iter.mls"
 
@@ -14,8 +16,10 @@ module XML with ...
 
 fun serializeValue(value) = if value is
   Str then JSON.stringify(value)
-  StyleAttributeValue then value.toValue()
-    
+  // * TODO: Allow just `StyleAttributeValue then value.toValue()`
+  // *  Currently, scrutinees are not refined implicitly for resolution.
+  StyleAttributeValue as value then value.toValue()
+
 fun joinAttributes(attributes) = attributes
   mapping of case
     [name, value] then name + "=" + serializeValue(value)

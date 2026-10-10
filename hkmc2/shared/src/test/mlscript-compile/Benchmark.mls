@@ -1,3 +1,5 @@
+#lang(0.3.x)
+
 import "benchmark"
 
 let bm = benchmark
@@ -11,10 +13,10 @@ fun mkSuite() = new! mut bm.Suite()
 
 fun setPrefixPath(path) = set prefixPath = path
 
-fun runSuite(suite) =
+fun runSuite(suite: { run: Function }) =
   let settings = { async: false }
   suite.run(settings)
 
-fun writeResults(suite, path) =
+fun writeResults(suite: { map: Function }, path) =
   let jsonStr = JSON.stringify(suite.map((res, _, _) => res), null, 2)
   fs.writeFileSync(prefixPath + path, jsonStr)

@@ -1,3 +1,4 @@
+#lang(0.3.x)
 
 // Adapted from https://www.bennadel.com/blog/1504-ask-ben-parsing-csv-strings-with-javascript-exec-regular-expression-command.htm
 // (JS code commented at bottom)
@@ -23,7 +24,7 @@ val objPattern = new mut RegExp of
   "gi"
 
 // This will parse a delimited string into an array of arrays.
-fun toArrays(strData) =
+fun toArrays(strData: Str) =
   
   // Create an array to hold our data. Give the array a default empty first row.
   let arrData = mut [mut []]

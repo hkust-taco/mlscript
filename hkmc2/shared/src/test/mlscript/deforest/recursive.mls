@@ -1,3 +1,4 @@
+:.
 :js
 :deforest
 
@@ -742,17 +743,17 @@ fun g2() = f()
 f
 //│ deforest > >>> fusing >>>
 //│ deforest > B⁰ ->
-//│ deforest > 	match: B⁰
+//│ deforest > 	match: scrut⁰
 //│ deforest > B⁰ ->
-//│ deforest > 	match: B⁰
+//│ deforest > 	match: scrut⁰
 //│ deforest > B⁰ ->
-//│ deforest > 	match: B⁰
+//│ deforest > 	match: scrut⁰
 //│ deforest > B⁰ ->
-//│ deforest > 	match: B⁰
+//│ deforest > 	match: scrut⁰
 //│ deforest > B⁰ ->
-//│ deforest > 	match: B⁰
+//│ deforest > 	match: scrut⁰
 //│ deforest > B⁰ ->
-//│ deforest > 	match: B⁰
+//│ deforest > 	match: scrut⁰
 //│ deforest > <<< fusing <<<
 //│ = fun f$f
 

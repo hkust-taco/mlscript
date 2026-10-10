@@ -1,3 +1,4 @@
+:.
 let id"of" = 42
 fun id"fun"(x: Int) = x + 1
 
@@ -13,13 +14,13 @@ module id"object" with
 :pe
 id""
 //│ ╔══[LEXICAL ERROR] unexpected identifier escape
-//│ ║  l.14: 	id""
+//│ ║  l.15: 	id""
 //│ ╙──      	^
 //│ ╔══[PARSE ERROR] Expected an expression; found error instead
-//│ ║  l.14: 	id""
+//│ ║  l.15: 	id""
 //│ ╙──      	^^^^
 //│ ╔══[PARSE ERROR] Expected end of input; found error instead
-//│ ║  l.14: 	id""
+//│ ║  l.15: 	id""
 //│ ╙──      	^^^^
 
 // Quoted names need not follow ordinary identifier syntax.
@@ -60,53 +61,53 @@ id"hello\u0009世界😀"
 :pe
 id"
 //│ ╔══[LEXICAL ERROR] unclosed quotation mark
-//│ ║  l.61: 	id"
+//│ ║  l.62: 	id"
 //│ ╙──      	   ^
 //│ ╔══[PARSE ERROR] Expected an expression; found error instead
-//│ ║  l.61: 	id"
+//│ ║  l.62: 	id"
 //│ ╙──      	^^^
 //│ ╔══[PARSE ERROR] Expected end of input; found error instead
-//│ ║  l.61: 	id"
+//│ ║  l.62: 	id"
 //│ ╙──      	^^^
 
 :pe
 id"unterminated
 //│ ╔══[LEXICAL ERROR] unclosed quotation mark
-//│ ║  l.73: 	id"unterminated
+//│ ║  l.74: 	id"unterminated
 //│ ╙──      	               ^
 //│ ╔══[PARSE ERROR] Expected an expression; found error instead
-//│ ║  l.73: 	id"unterminated
+//│ ║  l.74: 	id"unterminated
 //│ ╙──      	^^^^^^^^^^^^^^^
 //│ ╔══[PARSE ERROR] Expected end of input; found error instead
-//│ ║  l.73: 	id"unterminated
+//│ ║  l.74: 	id"unterminated
 //│ ╙──      	^^^^^^^^^^^^^^^
 
 :pe
 id"trailing escape\
 //│ ╔══[LEXICAL ERROR] Expected an escape character
-//│ ║  l.85: 	id"trailing escape\
+//│ ║  l.86: 	id"trailing escape\
 //│ ╙──      	                   ^
 //│ ╔══[LEXICAL ERROR] unclosed quotation mark
-//│ ║  l.85: 	id"trailing escape\
+//│ ║  l.86: 	id"trailing escape\
 //│ ╙──      	                   ^
 //│ ╔══[PARSE ERROR] Expected an expression; found error instead
-//│ ║  l.85: 	id"trailing escape\
+//│ ║  l.86: 	id"trailing escape\
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^
 //│ ╔══[PARSE ERROR] Expected end of input; found error instead
-//│ ║  l.85: 	id"trailing escape\
+//│ ║  l.86: 	id"trailing escape\
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^
 
 :pe
 id"unterminated
 let afterUnterminated = 1
 //│ ╔══[LEXICAL ERROR] unclosed quotation mark
-//│ ║  l.100: 	id"unterminated
+//│ ║  l.101: 	id"unterminated
 //│ ║         	               ^
-//│ ║  l.101: 	let afterUnterminated = 1
+//│ ║  l.102: 	let afterUnterminated = 1
 //│ ╙──
 //│ ╔══[PARSE ERROR] Expected an expression; found error instead
-//│ ║  l.100: 	id"unterminated
+//│ ║  l.101: 	id"unterminated
 //│ ╙──       	^^^^^^^^^^^^^^^
 //│ ╔══[PARSE ERROR] Expected end of input; found error instead
-//│ ║  l.100: 	id"unterminated
+//│ ║  l.101: 	id"unterminated
 //│ ╙──       	^^^^^^^^^^^^^^^

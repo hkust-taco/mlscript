@@ -1,0 +1,171 @@
+:.
+:js
+
+// Negation removes only the excluded value, and emits a null test rather than instanceof.
+:sjs
+fun nullableLength(value: Str | null) =
+  if value is ~null as text then text.length else 0
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ let nullableLength;
+//│ nullableLength = function nullableLength(value) {
+//│   if (value === null) { return 0 }
+//│   return value.length;
+//│ };
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+:expect [3, 0]
+[nullableLength("abc"), nullableLength(null)]
+//│ = [3, 0]
+
+// Other singleton literals use the same refinement rule.
+:expect [3, 0]
+fun definedLength(value: Str | undefined) =
+  if value is ~undefined as text then text.length else 0
+[definedLength("abc"), definedLength(undefined)]
+//│ = [3, 0]
+
+:expect [3, 0]
+fun truthyLength(value: Str | false) =
+  if value is ~false as text then text.length else 0
+[truthyLength("abc"), truthyLength(false)]
+//│ = [3, 0]
+
+// Excluding a class keeps the other union members and their declared fields.
+class TextBox(val text: Str)
+class Empty
+
+:expect [3, 0]
+fun boxLength(value: TextBox | Empty) =
+  if value is ~Empty as box then box.text.length else 0
+[boxLength(TextBox("abc")), boxLength(new Empty)]
+//│ = [3, 0]
+
+// De Morgan's laws apply to both alternatives and conjunctions.
+:expect [3, 0, 0]
+fun presentLength(value: Str | null | undefined) =
+  if value is ~(null | undefined) as text then text.length else 0
+[presentLength("abc"), presentLength(null), presentLength(undefined)]
+//│ = [3, 0, 0]
+
+:expect [3, 0]
+fun nonNullLength(value: Str | null) =
+  if value is ~(null & _) as text then text.length else 0
+[nonNullLength("abc"), nonNullLength(null)]
+//│ = [3, 0]
+
+:expect [3, 0]
+fun stringLength(value: Str | Int) =
+  if value is ~(~Str) as text then text.length else 0
+[stringLength("abc"), stringLength(42)]
+//│ = [3, 0]
+
+// A negative test of a subclass must retain possible instances of its base class.
+class Base(val text: Str)
+class Child extends Base("child")
+
+:expect [3, 0]
+fun baseLength(value: Base) =
+  if value is ~Child as base then base.text.length else 0
+[baseLength(Base("abc")), baseLength(new Child)]
+//│ = [3, 0]
+
+// Field tests and guards can fail even when the constructor matches.
+:expect [3, 0]
+fun nonEmptyLength(value: TextBox) =
+  if value is ~TextBox("") as box then box.text.length else 0
+[nonEmptyLength(TextBox("abc")), nonEmptyLength(TextBox(""))]
+//│ = [3, 0]
+
+:expect 3
+fun guardedLength(value: TextBox) =
+  if value is ~(TextBox where false) as box then box.text.length else 0
+guardedLength(TextBox("abc"))
+//│ = 3
+
+// A named extractor is not an unconditional nominal test.
+pattern Blank = TextBox("")
+
+:expect 3
+fun extractedLength(value: TextBox) =
+  if value is ~Blank as box then box.text.length else 0
+extractedLength(TextBox("abc"))
+//│ = 3
+
+// Excluding null does not remove undefined or manufacture an interface for Any.
+:ge
+fun stillUndefined(value: Str | null | undefined) =
+  if value is ~null as text then text.length else 0
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.97: 	  if value is ~null as text then text.length else 0
+//│ ║        	                                 ^^^^^^^^^^^
+//│ ╟── Undefined literal does not contain member 'length'
+//│ ║  l.96: 	fun stillUndefined(value: Str | null | undefined) =
+//│ ╙──      	                                       ^^^^^^^^^
+
+:ge
+fun stillUnknown(value: Any) =
+  if value is ~TextBox as other then other.text else ""
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.107: 	  if value is ~TextBox as other then other.text else ""
+//│ ║         	                                     ^^^^^^^^^^
+//│ ╟── Cannot resolve member 'text' of a value with unknown shape.
+//│ ║  l.106: 	fun stillUnknown(value: Any) =
+//│ ║         	                        ^^^
+//│ ╟── Type 'Any' is declared without a member interface.
+//│ ║  in ../decls/Prelude.mls
+//│ ║  l.2: 	declare type Any
+//│ ╙──     	             ^^^
+
+// An impossible conjunction must not exclude either of its alternatives.
+:ge
+fun stillNull(value: Str | null) =
+  if value is ~(null & Str) as text then text.length else 0
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.122: 	  if value is ~(null & Str) as text then text.length else 0
+//│ ║         	                                         ^^^^^^^^^^^
+//│ ╟── Null literal does not contain member 'length'
+//│ ║  l.121: 	fun stillNull(value: Str | null) =
+//│ ╙──       	                           ^^^^
+
+// A negated loop condition is checked again after assigning the next link.
+:expect [0, 2]
+class Link(val next: Link | null)
+fun linkCount(head: Link | null) =
+  let cur = head
+  let count = 0
+  while cur is ~null as node do
+    set count += 1
+    set cur = node.next
+  count
+[linkCount(null), linkCount(Link(Link(null)))]
+//│ = [0, 2]
+
+// Rewritten loops used by effect handlers must also reach the failure exit.
+:lift
+:effectHandlers
+:expect [0, 2]
+fun countLinks(head: Link | null) =
+  let cur = head
+  let count = 0
+  while cur is ~null as node do
+    set count += 1
+    set cur = node.next
+  count
+[countLinks(null), countLinks(Link(Link(null)))]
+//│ = [0, 2]
+
+// A failed negation in an imperative conditional skips its body.
+:expect [0, 1]
+fun mark(value: TextBox | Empty) =
+  let count = 0
+  if value is ~Empty do set count = 1
+  count
+[mark(new Empty), mark(TextBox("abc"))]
+//│ = [0, 1]
+
+// A nominal constructor with unrestricted fields can be excluded as a whole.
+:expect [0, 3]
+fun unboxedLength(value: TextBox | Str) =
+  if value is ~TextBox(_) as text then text.length else 0
+[unboxedLength(TextBox("abc")), unboxedLength("abc")]
+//│ = [0, 3]

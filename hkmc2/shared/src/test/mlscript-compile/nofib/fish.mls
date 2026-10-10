@@ -1,3 +1,5 @@
+#lang(0.3.x)
+
 import "./NofibPrelude.mls"
 open NofibPrelude
 
@@ -62,13 +64,13 @@ fun grid(m, n, segments, a, b, c) =
       lscomp(t)
   lscomp(segments)
 
-fun rot(p, a, b, c) = p(vec_add(a, b), c, vec_sub([0, 0], b))
+fun rot(p: Function, a, b, c) = p(vec_add(a, b), c, vec_sub([0, 0], b))
 
-fun beside(m, n, p, q, a, b, c) =
+fun beside(m, n, p: Function, q: Function, a, b, c) =
   p(a, scale_vec2(b, m, m + n), c) +:
   q(vec_add(a, scale_vec2(b, m, m + n)), scale_vec2(b, n, n + m), c)
 
-fun above(m, n, p, q, a, b, c) =
+fun above(m, n, p: Function, q: Function, a, b, c) =
   p(vec_add(a, scale_vec2(c, n, m + n)), b, scale_vec2(c, m, n + m)) +:
   q(a, b, scale_vec2(c, n, m + n))
 

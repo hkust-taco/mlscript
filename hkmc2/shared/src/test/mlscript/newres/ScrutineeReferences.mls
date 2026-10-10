@@ -1,0 +1,140 @@
+:.
+:js
+
+// Local references stay direct before optimization, so field selections and
+// pattern matches remain visibly attached to the same value for deforestation.
+:sir
+class Item(val value: Int)
+fun read(item) = if item is Item(_) then item.Item#value else 0
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define read⁰ as fun read¹(item) {
+//│   let arg$Item$0$;
+//│   match item
+//│     Item⁰ =>
+//│       set arg$Item$0$ = item.value⁰;
+//│       return item.value⁰
+//│     else
+//│       return 0
+//│   end
+//│ };
+//│ define Item¹ as class Item⁰ {
+//│   val value¹;
+//│   constructor Item²(value) { define value¹ as val value⁰ = value; end }
+//│ };
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+:expect 7
+read(Item(7))
+//│ = 7
+
+
+// Captured references need their lexical scope information for extraction,
+// even though their runtime match does not need a scrutinee temporary.
+:sir
+class Box[out A](val value: A)
+private fun reader[A](value: Box[A] | null) =
+  fun read() =
+    if value is ~null as box then box.value else throw "empty"
+  read
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ @private
+//│ define reader⁰ as fun reader¹(value) {
+//│   let read;
+//│   define read as fun read²() {
+//│     let box, output;
+//│     match value
+//│       null =>
+//│         throw "empty"
+//│       else
+//│         set output = value;
+//│         set box = output;
+//│         return box.value²
+//│     end
+//│   };
+//│   return read²
+//│ };
+//│ define Box⁰ as class Box² {
+//│   val value³;
+//│   constructor Box¹(value) { define value³ as val value² = value; end }
+//│ };
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+:expect [3, 4]
+[reader[Int](Box(3))(), reader[Str](Box("four"))().length]
+//│ = [3, 4]
+
+
+// Reading a captured loop condition again must observe assignments in the body.
+:sir
+fun drain(flag) =
+  fun run() =
+    while flag do
+      set flag = false
+  run()
+  flag
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define drain⁰ as fun drain¹(flag) {
+//│   let run;
+//│   define run as fun run⁰() {
+//│     loop lbl:
+//│       match flag
+//│         true =>
+//│           set flag = false;
+//│           continue lbl
+//│         else
+//│           end
+//│       end
+//│     return runtime⁰.Unit⁰
+//│   };
+//│   do run⁰();
+//│   return flag
+//│ };
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+:expect [false, false]
+[drain(true), drain(false)]
+//│ = [false, false]
+
+
+// A by-name reference invokes a getter. Matching several alternatives must
+// evaluate it once and retain the result, rather than reusing the reference.
+:sir
+:expect [7, 1]
+let reads = 0
+fun source =
+  set reads += 1
+  reads
+let result = if source is
+  0 then 0
+  1 then 7
+  else 9
+[result, reads]
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let scrut, tmp;
+//│ define source⁰ as fun source¹() {
+//│   let tmp1;
+//│   set tmp1 = +⁰(reads⁰, 1);
+//│   set reads⁰ = tmp1;
+//│   return reads⁰
+//│ };
+//│ set reads⁰ = 0;
+//│ set scrut = source¹();
+//│ match scrut
+//│   0 =>
+//│     set tmp = 0;
+//│     end
+//│   1 =>
+//│     set tmp = 7;
+//│     end
+//│   else
+//│     set tmp = 9;
+//│     end
+//│ set result⁰ = tmp;
+//│ return [result⁰, reads⁰]
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = [7, 1]
+//│ reads = 1
+//│ result = 7

@@ -1,0 +1,66 @@
+:.
+
+// The same generic method site sees both a locally created receiver and one
+// captured from outside the function. Its parameter hosts have one endpoint.
+:expect [2, 1, 3]
+class Item(val value: Int)
+let outside = [Item(1)]
+private fun run(x, local) =
+  let inside = [x]
+  let values = if local then inside else outside
+  values.map((item, ...) => item)
+[run(Item(2), true).0.value, run(Item(3), false).0.value, run(Item(3), true).0.value]
+//│ = [2, 1, 3]
+//│ outside = [Item(1)]
+
+// A local module's type path includes both the method and the enclosing class.
+:expect [4, 5]
+class First(val first: Int)
+class Second(val second: Int)
+class Factory[A](val item: A) with
+  module Types with
+    class Box(val value: A)
+    type Alias = Box
+  fun read() =
+    fun make(): Types.Alias = Types.Box(item)
+    fun use(box: Types.Alias) = box.value
+    use(make())
+[Factory(First(4)).read().first, Factory(Second(5)).read().second]
+//│ = [4, 5]
+
+// A receiver can escape the generic function that declared its local class.
+:expect [6, 7]
+class First(val first: Int)
+class Second(val second: Int)
+private fun make[A](item: A) =
+  module Types with
+    class Box(val value: A)
+    type Alias = Box
+  fun get(): Types.Alias = Types.Box(item)
+  get
+let first = make(First(6))
+let second = make(Second(7))
+[first().value.first, second().value.second]
+//│ = [6, 7]
+//│ first = fun get
+//│ second = fun get
+
+// Different outer activations must not supply one another's member shapes.
+:e
+class First(val first: Int)
+class Second(val second: Int)
+private fun make[A](item: A) =
+  module Types with
+    class Box(val value: A)
+    type Alias = Box
+  fun get(): Types.Alias = Types.Box(item)
+  get()
+make(Second(8)).value.second
+make(First(9)).value.second
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.59: 	make(First(9)).value.second
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Instance of class 'First' does not contain member 'second'
+//│ ║  l.59: 	make(First(9)).value.second
+//│ ╙──      	     ^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.

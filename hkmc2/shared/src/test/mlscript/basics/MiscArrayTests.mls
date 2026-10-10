@@ -1,3 +1,4 @@
+:.
 :js
 
 
@@ -26,8 +27,16 @@ f()
 xs.reverse()
 //│ = [2, 1, 0]
 
+:e
 :re
 xs.map(x => x * 2)
+//│ ╔══[COMPILATION ERROR] Resolution error in function type
+//│ ║  l.260: 	  fun map[U](f: (T, Int, Array[T]) -> U): Array[U]
+//│ ║         	                ^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Callback parameter list does not match its declared function type.
+//│ ║  in MiscArrayTests.mls:32
+//│ ║  l.32: 	xs.map(x => x * 2)
+//│ ╙──      	       ^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] Error: Function expected 1 argument but got 3
 
 xs.map((x, i, a) => x * 2)
@@ -39,20 +48,23 @@ xs.map((x, ...) => x * 2)
 xs.map((x, ..._) => x * 2)
 //│ = [4, 2, 0]
 
-fun map(xs, f) = xs.map((x, ...bs) => f(x))
+fun map(xs: Array, f) = xs.map((x, ...bs) => f(x))
 
 xs \map(x => x * 2) \print()
 //│ > [4, 2, 0]
 
-// * Note: the RHS of `\` is a self-contained block, thus implicitly parenthesized.
+// * Note: the RHS of this `\` is a self-contained block, thus implicitly parenthesized.
 :sjs
 :e
 :re
 xs \
   map(x => x * 2)
-//│ ╔══[COMPILATION ERROR] Expected 2 arguments, got 1
-//│ ║  l.52: 	  map(x => x * 2)
-//│ ╙──      	     ^^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.61: 	  map(x => x * 2)
+//│ ║        	  ^^^^^^^^^^^^^^^
+//│ ╟── Function 'map' expected 2 arguments, but got 1
+//│ ║  l.51: 	fun map(xs: Array, f) = xs.map((x, ...bs) => f(x))
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let lambda5, tmp;
 //│ lambda5 = (undefined, function (x) {
@@ -67,9 +79,12 @@ xs \
 :re
 xs\
   map(x => x * 2)
-//│ ╔══[COMPILATION ERROR] Expected 2 arguments, got 1
-//│ ║  l.69: 	  map(x => x * 2)
-//│ ╙──      	     ^^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.81: 	  map(x => x * 2)
+//│ ║        	  ^^^^^^^^^^^^^^^
+//│ ╟── Function 'map' expected 2 arguments, but got 1
+//│ ║  l.51: 	fun map(xs: Array, f) = xs.map((x, ...bs) => f(x))
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] Error: Function 'map' expected 2 arguments but got 1
 
 :pt
