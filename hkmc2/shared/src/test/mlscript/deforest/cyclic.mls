@@ -84,7 +84,7 @@ modSome(Some(17), 3)
 //│ deforest > 	fields: x⁰.x¹
 //│ deforest > <<< fusing <<<
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let Some_x, fv_m, fv_scrut, fv_tmp, inlinedVal;
+//│ let Some_x, fv_scrut, fv_m, fv_tmp, inlinedVal;
 //│ define modSome⁰ as fun modSome¹(x, m) {
 //│   loop loopLabel:
 //│     let scrut, arg$Some$0$, tmp, tmp1;

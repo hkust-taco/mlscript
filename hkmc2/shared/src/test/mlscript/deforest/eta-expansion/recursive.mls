@@ -117,11 +117,11 @@ len(flatten(id((1 :: 2 :: Nil) :: (3 :: Nil) :: Nil)))
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ let tmp, tmp1, tmp2, tmp3, tmp4, flatten$flatten, flatten_append$append$worker, flatten$flatten$worker;
 //│ @inline @private
-//│ define flatten$flatten as fun flatten$flatten⁰(xss)(eta$0$0, eta$0$3, eta$0$4) {
-//│   return flatten$flatten$worker⁰(xss, eta$0$0, eta$0$3, eta$0$4)
+//│ define flatten$flatten as fun flatten$flatten⁰(xss)(eta$0$1, eta$0$2, eta$0$4) {
+//│   return flatten$flatten$worker⁰(xss, eta$0$1, eta$0$2, eta$0$4)
 //│ };
 //│ @private
-//│ define flatten$flatten$worker as fun flatten$flatten$worker⁰(xss, eta$0$0, eta$0$3, eta$0$4) {
+//│ define flatten$flatten$worker as fun flatten$flatten$worker⁰(xss, eta$0$1, eta$0$2, eta$0$4) {
 //│   let arg$Cons$0$, arg$Cons$1$;
 //│   match xss
 //│     Nil⁰ =>
@@ -131,17 +131,17 @@ len(flatten(id((1 :: 2 :: Nil) :: (3 :: Nil) :: Nil)))
 //│       set arg$Cons$0$ = xss.h⁰;
 //│       set arg$Cons$1$ = xss.t⁰;
 //│       set ys = flatten$flatten⁰(arg$Cons$1$);
-//│       return flatten_append$append$worker⁰(arg$Cons$0$, ys, eta$0$0, eta$0$3, eta$0$4)
+//│       return flatten_append$append$worker⁰(arg$Cons$0$, ys, eta$0$1, eta$0$2, eta$0$4)
 //│     else
 //│       throw new globalThis⁰.Error⁰("match error")
 //│   end
 //│ };
 //│ @private
-//│ define flatten_append$append$worker as fun flatten_append$append$worker⁰(xs, ys, eta$0$0, eta$0$3, eta$0$4) {
+//│ define flatten_append$append$worker as fun flatten_append$append$worker⁰(xs, ys, eta$0$1, eta$0$2, eta$0$4) {
 //│   let arg$Cons$1$;
 //│   match xs
 //│     Nil⁰ =>
-//│       return ys(eta$0$0, eta$0$3, eta$0$4)
+//│       return ys(eta$0$1, eta$0$2, eta$0$4)
 //│     Cons¹ =>
 //│       let inlinedVal;
 //│       set arg$Cons$1$ = xs.t⁰;

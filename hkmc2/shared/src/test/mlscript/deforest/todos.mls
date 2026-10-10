@@ -21,12 +21,9 @@ data class Some(x)
 //│ deforest > <<< fusing <<<
 
 
-// TODO: many dead code contain duplicated `t + 5 * 4 - 3 + 2 - 1`.
-// `t + 5 * 4 - 3 + 2 - 1` is the "rest" of a fusing match;
-// Deforestation makes programs early return at fusing matches,
-// and after deforestation, the "rest" of fusing matches would appear both
-// in "rest function"s and after the early return (and becomes dead code).
-// A dead code elimination pass that detects code after early return would solve this problem.
+// TODO: the "rest" of a fusing match is copied for each instance of `test`:
+// `test$x_rest` (for `test(B)`) and `test$x_rest1` (for `test(AA(AA(AA(10))))`) are identical.
+// can share them when we know they are nothing rewritten inside.
 :sir
 :expect 78
 fun test(x) =
@@ -56,34 +53,34 @@ test(p) + f(p) + test(AA(AA(AA(10)))) + test(B)
 //│ @private
 //│ define test$test as fun test$test⁰(x) {
 //│   let t, a, arg$AA$0$, arg$AA$0$1, arg$AA$0$2, tmp11, tmp12, tmp13, tmp14;
-//│   return x(tmp11, t, tmp11, tmp12, tmp13, tmp14)
+//│   return x(tmp11, t, tmp12, tmp13, tmp14)
 //│ };
 //│ @private
 //│ define test$test1 as fun test$test¹(x) {
 //│   let t, a, arg$AA$0$, arg$AA$0$1, arg$AA$0$2, tmp11, tmp12, tmp13, tmp14;
-//│   return x(t, a, arg$AA$0$, arg$AA$0$1, arg$AA$0$2, tmp11, tmp12, tmp13, tmp14, t, tmp11, tmp12, tmp13, tmp14)
+//│   return x(arg$AA$0$, arg$AA$0$1, arg$AA$0$2, a, tmp11, t, tmp12, tmp13, tmp14)
 //│ };
 //│ @affine(1) @private
-//│ define test$x_dflt as fun test$x_dflt⁰()(fv_tmp, fv_t, fv_tmp1, fv_tmp2, fv_tmp3, fv_tmp4) {
-//│   set fv_tmp1 = 4;
-//│   return test$x_rest⁰(fv_t, fv_tmp1, fv_tmp2, fv_tmp3, fv_tmp4)
+//│ define test$x_dflt as fun test$x_dflt⁰()(fv_tmp, fv_t, fv_tmp1, fv_tmp2, fv_tmp3) {
+//│   set fv_tmp = 4;
+//│   return test$x_rest⁰(fv_t, fv_tmp, fv_tmp1, fv_tmp2, fv_tmp3)
 //│ };
 //│ @affine(1) @private
-//│ define test$x_AA as fun test$x_AA⁰(AA_x3)(fv_t, fv_a, fv_arg$AA$0$, fv_arg$AA$0$1, fv_arg$AA$0$2, fv_tmp, fv_tmp1, fv_tmp2, fv_tmp3, fv_t1, fv_tmp4, fv_tmp5, fv_tmp6, fv_tmp7) {
+//│ define test$x_AA as fun test$x_AA⁰(AA_x3)(fv_arg$AA$0$, fv_arg$AA$0$1, fv_arg$AA$0$2, fv_a, fv_tmp, fv_t, fv_tmp1, fv_tmp2, fv_tmp3) {
 //│   set fv_arg$AA$0$ = AA_x3;
-//│   return fv_arg$AA$0$(fv_t1, fv_a, fv_arg$AA$0$1, fv_arg$AA$0$2, fv_tmp4, fv_tmp5, fv_tmp6, fv_tmp7, fv_t1, fv_tmp4, fv_tmp5, fv_tmp6, fv_tmp7)
+//│   return fv_arg$AA$0$(fv_arg$AA$0$1, fv_arg$AA$0$2, fv_a, fv_tmp, fv_t, fv_tmp1, fv_tmp2, fv_tmp3)
 //│ };
 //│ @affine(1) @private
-//│ define test$arg$AA$0$_AA as fun test$arg$AA$0$_AA⁰(AA_x3)(fv_t, fv_a, fv_arg$AA$0$, fv_arg$AA$0$1, fv_tmp, fv_tmp1, fv_tmp2, fv_tmp3, fv_t1, fv_tmp4, fv_tmp5, fv_tmp6, fv_tmp7) {
+//│ define test$arg$AA$0$_AA as fun test$arg$AA$0$_AA⁰(AA_x3)(fv_arg$AA$0$, fv_arg$AA$0$1, fv_a, fv_tmp, fv_t, fv_tmp1, fv_tmp2, fv_tmp3) {
 //│   set fv_arg$AA$0$ = AA_x3;
-//│   return fv_arg$AA$0$(fv_a, fv_arg$AA$0$1, fv_tmp4, fv_t1, fv_tmp4, fv_tmp5, fv_tmp6, fv_tmp7)
+//│   return fv_arg$AA$0$(fv_arg$AA$0$1, fv_a, fv_tmp, fv_t, fv_tmp1, fv_tmp2, fv_tmp3)
 //│ };
 //│ @affine(1) @private
-//│ define test$arg$AA$0$_AA1 as fun test$arg$AA$0$_AA¹(AA_x3)(fv_a, fv_arg$AA$0$, fv_tmp, fv_t, fv_tmp1, fv_tmp2, fv_tmp3, fv_tmp4) {
+//│ define test$arg$AA$0$_AA1 as fun test$arg$AA$0$_AA¹(AA_x3)(fv_arg$AA$0$, fv_a, fv_tmp, fv_t, fv_tmp1, fv_tmp2, fv_tmp3) {
 //│   set fv_arg$AA$0$ = AA_x3;
 //│   set fv_a = fv_arg$AA$0$;
-//│   set fv_tmp1 = fv_a;
-//│   return test$arg$AA$0$_rest⁰(fv_t, fv_tmp1, fv_tmp2, fv_tmp3, fv_tmp4)
+//│   set fv_tmp = fv_a;
+//│   return test$arg$AA$0$_rest⁰(fv_t, fv_tmp, fv_tmp1, fv_tmp2, fv_tmp3)
 //│ };
 //│ @private
 //│ define test$x_rest as fun test$x_rest⁰(fv_t, fv_tmp, fv_tmp1, fv_tmp2, fv_tmp3) {
@@ -195,10 +192,10 @@ test()
 //│ deforest > 	fields: scrut⁰.x²
 //│ deforest > <<< fusing <<<
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'Local'
-//│ ║  l.187: 	    Global(x) then Local(x + 1)
+//│ ║  l.184: 	    Global(x) then Local(x + 1)
 //│ ║         	                   ^^^^^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.185: 	  data class Local(x)
+//│ ║  l.182: 	  data class Local(x)
 //│ ╙──       	             ^^^^^^^^
 //│ ═══[RUNTIME ERROR] ReferenceError: Local is not defined
 //│ ═══[RUNTIME ERROR] Expected: 'Local(2)', got: 'undefined'

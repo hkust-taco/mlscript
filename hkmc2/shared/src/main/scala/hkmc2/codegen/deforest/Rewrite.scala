@@ -6,7 +6,7 @@ import utils.*
 import hkmc2.utils.*, shorthands.*
 import semantics.*
 import syntax.Tree
-import scala.collection.mutable.{Set as MutSet, Map as MutMap, LinkedHashMap, Buffer}
+import scala.collection.mutable.{Set as MutSet, Map as MutMap, LinkedHashMap, LinkedHashSet, Buffer}
 import hkmc2.syntax.Fun
 import hkmc2.codegen.flowAnalysis.*
 
@@ -202,7 +202,7 @@ class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbo
       def deforestFreeVars(
         ctx: collection.Set[ValueSymbol],
         instId: InstantiationId
-      ): collection.Set[ValueSymbol] =
+      ): LinkedHashSet[ValueSymbol] =
         val traverser = new FreeVarTraverser(ctx, instId)
         traverser.applyBlock(b)
         traverser.freeVars
@@ -220,7 +220,7 @@ class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbo
           case _ => Nil
         // for diff tests
         ++ additionalTopLevelSymbols
-      val freeVars = MutSet.empty[ValueSymbol]
+      val freeVars = LinkedHashSet.empty[ValueSymbol]
       
       private def handleTrackableSel(s: Result) =
         val toBeSubstSymbol = branchSelSyms(s.uid.concreteId)
@@ -288,16 +288,15 @@ class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbo
       dtorBranchFnFvs.get(dtorId) match
       case Some(fvs) => fvs
       case None =>
-        val fvsOfBranches = allBranchesOfDtor(dtorId)
-          .flatMap: branchId =>
+        val fvsOfBranches = LinkedHashSet.empty[ValueSymbol]
+        for branchId <- allBranchesOfDtor(dtorId) do
+          fvsOfBranches.addAll:
             branchOriginalBodies(branchId._1._1 -> branchId._2)
               .deforestFreeVars(
                 branchFunParamFieldSyms(branchId).toSet,
                 branchId._1._2)
-          .toSortedSet(using Ordering.by[ValueSymbol, Uid[Symbol]](_.uid))
-          .toList
         val fvsOfRest = fvsForRest(dtorId)
-        val fvs = fvsOfBranches ++ fvsOfRest
+        val fvs = fvsOfBranches.addAll(fvsOfRest).toList
         dtorBranchFnFvs(dtorId) = fvs
         fvs
     
@@ -307,9 +306,9 @@ class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbo
       case None =>
         val instId = restFunId.getInstId
         val (restBody, parentRest) = restOriginalBodiesAndParentRest(restFunId.withoutInstId)
-        val fvOfRestBody = restBody.deforestFreeVars(Set.empty, restFunId.getInstId).toList.sortBy(_.uid)
+        val fvOfRestBody = restBody.deforestFreeVars(Set.empty, restFunId.getInstId)
         val fvOfRestParent = parentRest.fold(List.empty)(pr => fvsForRest(pr.withInstId(instId)))
-        val fvs = fvOfRestBody ++ fvOfRestParent
+        val fvs = (fvOfRestBody ++ fvOfRestParent).toList
         restFnFvs(restFunId) = fvs
         fvs
     

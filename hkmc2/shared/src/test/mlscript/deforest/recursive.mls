@@ -968,12 +968,12 @@ f(3)
 //│   return a(undefined, undefined, undefined)
 //│ };
 //│ @affine(1) @private
-//│ define f$a_A as fun f$a_A¹(A_x)(fv_y, fv_arg$A$0$, fv_tmp) {
+//│ define f$a_A as fun f$a_A¹(A_x)(fv_arg$A$0$, fv_y, fv_tmp) {
 //│   set fv_tmp = -⁰(A_x, 1);
 //│   return f⁰(fv_tmp)
 //│ };
 //│ @affine(1) @private
-//│ define f$a_A1 as fun f$a_A⁰(A_x)(fv_y, fv_arg$A$0$, fv_tmp) {
+//│ define f$a_A1 as fun f$a_A⁰(A_x)(fv_arg$A$0$, fv_y, fv_tmp) {
 //│   set fv_tmp = -⁰(A_x, 1);
 //│   return f$f⁰(fv_tmp)
 //│ };
