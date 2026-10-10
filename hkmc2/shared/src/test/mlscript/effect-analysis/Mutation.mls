@@ -1,0 +1,310 @@
+:js
+
+#config(inlining: None, liftDefns: Some(LiftDefn), flowBasedOpt: Some(FlowBasedOpt(logEffects: true, mono: true)))
+//│ flow-analysis > >>> effect-analysis results >>>
+//│ flow-analysis > <<< effect-analysis results <<<
+
+
+
+// * Mutating a state is an effect.
+let state = 0
+fun mutate() =
+  set state = 42
+//│ flow-analysis > >>> effect-analysis results >>>
+//│ flow-analysis > function mutate⁰#0 @ <root> -> UnsafeEta
+//│ flow-analysis > <<< effect-analysis results <<<
+//│ state = 0
+
+
+// * Mutating a local (unescaped) variable is pure.
+fun mutate_local() =
+  let local = 0
+  set local = 42
+//│ flow-analysis > >>> effect-analysis results >>>
+//│ flow-analysis > function mutate_local⁰#0 @ <root> -> Pure
+//│ flow-analysis > <<< effect-analysis results <<<
+
+
+// * Reassigning a local copy does not mutate the input binding.
+fun mutate_alias(value) =
+  let local = value
+  set local = 42
+//│ flow-analysis > >>> effect-analysis results >>>
+//│ flow-analysis > function mutate_alias⁰#0 @ <root> -> Pure
+//│ flow-analysis > <<< effect-analysis results <<<
+
+
+// * Mutating a local (escaped, captured) variable is an effect.
+fun mutate_captured() =
+  let local = 0
+  () =>
+    set local = 42
+//│ flow-analysis > >>> effect-analysis results >>>
+//│ flow-analysis > function lambda$⁰#0 @ <root> -> Pure
+//│ flow-analysis > function lambda$⁰#1 @ <root> -> UnsafeEta
+//│ flow-analysis > function lambda⁰#0 @ <root> -> UnsafeEta
+//│ flow-analysis > function mutate_captured⁰#0 @ <root> -> UnsafeEta
+//│ flow-analysis > call lambda$⁰@result⁰ @ <root> -> Pure
+//│ flow-analysis > call lambda⁰@result¹ @ <root> -> UnsafeEta
+//│ flow-analysis > <<< effect-analysis results <<<
+
+
+// * Mutating a state field is an effect.
+let state = mut { value: 0 }
+fun mutate_field() =
+  set state.value = 42
+//│ flow-analysis > >>> effect-analysis results >>>
+//│ flow-analysis > function mutate_field⁰#0 @ <root> -> UnsafeEta
+//│ flow-analysis > <<< effect-analysis results <<<
+//│ state = {value: 0}
+
+// * Mutating a state element is an effect.
+let state = mut [0]
+fun mutate_element() =
+  set state.[0] = 42
+//│ flow-analysis > >>> effect-analysis results >>>
+//│ flow-analysis > function mutate_element⁰#0 @ <root> -> UnsafeEta
+//│ flow-analysis > <<< effect-analysis results <<<
+//│ state = [0]
+
+
+// * Mutating a local field/element is pure.
+// TODO: this shouldn't be an effect because the local is unescaped
+//       to be refined by a "capture-tracking-based local mutation escape analysis"
+fun mutate_local_field() =
+  let local = mut { value: 0 }
+  set local.value = 42
+fun mutate_local_element() =
+  let local = mut [0]
+  set local.[0] = 42
+//│ flow-analysis > >>> effect-analysis results >>>
+//│ flow-analysis > function mutate_local_element⁰#0 @ <root> -> UnsafeEta
+//│ flow-analysis > function mutate_local_field⁰#0 @ <root> -> UnsafeEta
+//│ flow-analysis > <<< effect-analysis results <<<
+
+
+// * Mutating an aliased field/element is an effect.
+fun mutate_alias_field(obj) =
+  let local = obj
+  set local.value = 42
+fun mutate_alias_element(xs) =
+  let local = xs
+  set local.[0] = 42
+//│ flow-analysis > >>> effect-analysis results >>>
+//│ flow-analysis > function mutate_alias_element⁰#0 @ <root> -> UnsafeEta
+//│ flow-analysis > function mutate_alias_field⁰#0 @ <root> -> UnsafeEta
+//│ flow-analysis > <<< effect-analysis results <<<
+
+
+// * Observing a state is an effect.
+// TODO: this shouldn't be an effect because state is immutable
+//       to be refined by distinguishing between init and assign
+let state = 0
+fun observe() =
+  state
+//│ flow-analysis > >>> effect-analysis results >>>
+//│ flow-analysis > function observe⁰#0 @ <root> -> UnsafeEta
+//│ flow-analysis > <<< effect-analysis results <<<
+//│ state = 0
+
+
+// * Observing a local (unescaped) variable is pure.
+fun observe_local() =
+  let local = 0
+  local
+//│ flow-analysis > >>> effect-analysis results >>>
+//│ flow-analysis > function observe_local⁰#0 @ <root> -> Pure
+//│ flow-analysis > <<< effect-analysis results <<<
+
+
+// * Observing a local copy of a parameter is pure.
+fun observe_alias(value) =
+  let local = value
+  local
+//│ flow-analysis > >>> effect-analysis results >>>
+//│ flow-analysis > function observe_alias⁰#0 @ <root> -> Pure
+//│ flow-analysis > <<< effect-analysis results <<<
+
+
+// * Observing a local (escaped, captured) variable is pure.
+fun observe_captured() =
+  let local = 0
+  () =>
+    local
+//│ flow-analysis > >>> effect-analysis results >>>
+//│ flow-analysis > function lambda$⁰#0 @ <root> -> Pure
+//│ flow-analysis > function lambda$⁰#1 @ <root> -> Pure
+//│ flow-analysis > function lambda⁰#0 @ <root> -> Pure
+//│ flow-analysis > function observe_captured⁰#0 @ <root> -> Pure
+//│ flow-analysis > call lambda$⁰@result⁰ @ <root> -> Pure
+//│ flow-analysis > call lambda⁰@result¹ @ <root> -> Pure
+//│ flow-analysis > <<< effect-analysis results <<<
+
+// * Observing a mutable state is an effect.
+// ? But are there analysis-wise difference between the following 2 cases?
+let state = 0
+set state = 42
+fun observe_mutable() =
+  state
+//│ flow-analysis > >>> effect-analysis results >>>
+//│ flow-analysis > function observe_mutable⁰#0 @ <root> -> UnsafeEta
+//│ flow-analysis > <<< effect-analysis results <<<
+//│ state = 42
+let state = 0
+fun observe_mutable() =
+  state
+set state = 42
+//│ flow-analysis > >>> effect-analysis results >>>
+//│ flow-analysis > function observe_mutable⁰#0 @ <root> -> UnsafeEta
+//│ flow-analysis > <<< effect-analysis results <<<
+//│ state = 42
+
+
+// * Observing a state field/element is an effect.
+let state = { value: 0 }
+fun observe_field() =
+  state.value
+let state = [0]
+fun observe_element() =
+  state.[0]
+//│ flow-analysis > >>> effect-analysis results >>>
+//│ flow-analysis > function observe_element⁰#0 @ <root> -> UnsafeEta
+//│ flow-analysis > function observe_field⁰#0 @ <root> -> UnsafeEta
+//│ flow-analysis > <<< effect-analysis results <<<
+//│ state = [0]
+
+
+// * Observing a local field/element is pure.
+// TODO: the same refinement as above
+fun observe_local_field() =
+  let local = { value: 0 }
+  local.value
+fun observe_local_element() =
+  let local = [0]
+  local.[0]
+//│ flow-analysis > >>> effect-analysis results >>>
+//│ flow-analysis > function observe_local_element⁰#0 @ <root> -> UnsafeEta
+//│ flow-analysis > function observe_local_field⁰#0 @ <root> -> UnsafeEta
+//│ flow-analysis > <<< effect-analysis results <<<
+
+
+// * Observing an aliased field/element is an effect.
+fun observe_alias_field(obj) =
+  let local = obj
+  local.value
+fun observe_alias_element(xs) =
+  let local = xs
+  local.[0]
+//│ flow-analysis > >>> effect-analysis results >>>
+//│ flow-analysis > function observe_alias_element⁰#0 @ <root> -> UnsafeEta
+//│ flow-analysis > function observe_alias_field⁰#0 @ <root> -> UnsafeEta
+//│ flow-analysis > <<< effect-analysis results <<<
+
+
+// * Some edge cases...
+// * Spreading a tuple or record is an effect because it is equivalent to accesses.
+// TODO: the same refinement as above
+fun tup_spread_local() = 
+  let xs = [42]
+  [...xs]
+fun rec_spread_local() =
+  let obj = { value: 42 }
+  {...obj}
+//│ flow-analysis > >>> effect-analysis results >>>
+//│ flow-analysis > function rec_spread_local⁰#0 @ <root> -> UnsafeEta
+//│ flow-analysis > function tup_spread_local⁰#0 @ <root> -> UnsafeEta
+//│ flow-analysis > <<< effect-analysis results <<<
+let xs = [42]
+fun tup_spread_nonlocal() =
+  [...xs]
+let obj = { value: 42 }
+fun rec_spread_nonlocal() =
+  {...obj}
+//│ flow-analysis > >>> effect-analysis results >>>
+//│ flow-analysis > function rec_spread_nonlocal⁰#0 @ <root> -> UnsafeEta
+//│ flow-analysis > function tup_spread_nonlocal⁰#0 @ <root> -> UnsafeEta
+//│ flow-analysis > <<< effect-analysis results <<<
+//│ obj = {value: 42}
+//│ xs = [42]
+
+
+// * Reading a shared capture is an effect even though only the other closure writes it.
+fun shared_captures() =
+  let local = 0
+  fun observe() =
+    local
+  fun mutate() =
+    set local = 42
+  [observe, mutate]
+//│ flow-analysis > >>> effect-analysis results >>>
+//│ flow-analysis > function mutate$⁰#0 @ <root> -> Pure
+//│ flow-analysis > function mutate$⁰#1 @ <root> -> UnsafeEta
+//│ flow-analysis > function mutate⁰#0 @ <root> -> UnsafeEta
+//│ flow-analysis > function observe$⁰#0 @ <root> -> Pure
+//│ flow-analysis > function observe$⁰#1 @ <root> -> UnsafeEta
+//│ flow-analysis > function observe⁰#0 @ <root> -> UnsafeEta
+//│ flow-analysis > function shared_captures⁰#0 @ <root> -> UnsafeEta
+//│ flow-analysis > call mutate$⁰@result⁰ @ <root> -> Pure
+//│ flow-analysis > call mutate⁰@result² @ <root> -> UnsafeEta
+//│ flow-analysis > call observe$⁰@result¹ @ <root> -> Pure
+//│ flow-analysis > call observe⁰@result³ @ <root> -> UnsafeEta
+//│ flow-analysis > <<< effect-analysis results <<<
+
+
+// * Conditional branches retain shared writes.
+let state = 0
+fun mutate_if(cond) =
+  if cond do set state = 42
+//│ flow-analysis > >>> effect-analysis results >>>
+//│ flow-analysis > function mutate_if⁰#0 @ <root> -> UnsafeEta
+//│ flow-analysis > <<< effect-analysis results <<<
+//│ state = 0
+
+
+// * Conditional local mutation remains pure.
+fun mutate_local_if(cond) =
+  let local = 0
+  if cond do set local = 42
+  local
+//│ flow-analysis > >>> effect-analysis results >>>
+//│ flow-analysis > function mutate_local_if⁰#0 @ <root> -> Pure
+//│ flow-analysis > <<< effect-analysis results <<<
+
+
+// * Loops retain shared writes.
+let state = 0
+fun mutate_loop(again) =
+  while again do
+    set state = 42
+    set again = false
+//│ flow-analysis > >>> effect-analysis results >>>
+//│ flow-analysis > function mutate_loop⁰#0 @ <root> -> UnsafeEta
+//│ flow-analysis > <<< effect-analysis results <<<
+//│ state = 0
+
+
+// * Local mutation in a loop remains pure.
+fun mutate_local_loop(again) =
+  let local = 0
+  while again do
+    set local = 42
+    set again = false
+  local
+//│ flow-analysis > >>> effect-analysis results >>>
+//│ flow-analysis > function mutate_local_loop⁰#0 @ <root> -> Pure
+//│ flow-analysis > <<< effect-analysis results <<<
+
+
+// * Regressions
+
+// * A getter from an earlier block is unsafe.
+module M with
+  fun get = set state = 42
+//│ flow-analysis > >>> effect-analysis results >>>
+//│ flow-analysis > <<< effect-analysis results <<<
+//-
+fun node() = M.get
+//│ flow-analysis > >>> effect-analysis results >>>
+//│ flow-analysis > function node⁰#0 @ <root> -> UnsafeEta
+//│ flow-analysis > <<< effect-analysis results <<<
+

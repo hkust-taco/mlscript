@@ -1,4 +1,5 @@
 :js
+:lift
 :deforest
 :flowBasedOpt debugEta debugDpe
 
@@ -7,6 +8,8 @@ data class (::) Cons(h, t)
 data object Nil
 data object A
 data object B
+//│ deforest > >>> effect-analysis results >>>
+//│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > <<< fusing <<<
 //│ eta-expansion > >>> eta-expansion targets shapes >>>
@@ -30,6 +33,14 @@ fun c(x) =
     B do set r = 2
   r
 c(p(true))
+//│ deforest > >>> effect-analysis results >>>
+//│ deforest > function c⁰#0 @ c² -> Pure
+//│ deforest > function c⁰#0 @ c¹ -> Pure
+//│ deforest > function p⁰#0 @ p² -> Pure
+//│ deforest > function p⁰#0 @ p¹ -> Pure
+//│ deforest > call c⁰@result⁰ @ <root> -> Pure
+//│ deforest > call p⁰@result¹ @ <root> -> Pure
+//│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > A⁰ ->
 //│ deforest > 	match: x⁰
@@ -88,6 +99,26 @@ fun sumPlus(ls) =
     h :: t then h + sumPlus(t)
   r + 1
 sumPlus(enum(3))
+//│ deforest > >>> effect-analysis results >>>
+//│ deforest > function enum⁰#0 @ enum² -> UnsafeEta
+//│ deforest > function enum⁰#0 @ enum¹ -> UnsafeEta
+//│ deforest > function sumPlus⁰#0 @ sumPlus² -> UnsafeEta
+//│ deforest > function sumPlus⁰#0 @ sumPlus¹ -> UnsafeEta
+//│ deforest > call +⁰@result² @ sumPlus² -> Pure
+//│ deforest > call +⁰@result² @ sumPlus¹ -> Pure
+//│ deforest > call +⁰@result¹ @ sumPlus² -> Pure
+//│ deforest > call +⁰@result¹ @ sumPlus¹ -> Pure
+//│ deforest > call -⁰@result⁴ @ enum² -> Pure
+//│ deforest > call -⁰@result⁴ @ enum¹ -> Pure
+//│ deforest > call <⁰@result³ @ enum² -> Pure
+//│ deforest > call <⁰@result³ @ enum¹ -> Pure
+//│ deforest > call enum⁰@result⁵ @ enum² -> UnsafeEta
+//│ deforest > call enum⁰@result⁵ @ enum¹ -> UnsafeEta
+//│ deforest > call enum⁰@result⁷ @ <root> -> UnsafeEta
+//│ deforest > call sumPlus⁰@result⁰ @ sumPlus² -> UnsafeEta
+//│ deforest > call sumPlus⁰@result⁰ @ sumPlus¹ -> UnsafeEta
+//│ deforest > call sumPlus⁰@result⁶ @ <root> -> UnsafeEta
+//│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > Nil⁰ ->
 //│ deforest > 	match: ls⁰
@@ -170,6 +201,14 @@ fun c(x) = if x is
   A then 1
   B then 2
 c(p(true))
+//│ deforest > >>> effect-analysis results >>>
+//│ deforest > function c²#0 @ c³ -> UnsafeEta
+//│ deforest > function c²#0 @ c⁴ -> UnsafeEta
+//│ deforest > function p²#0 @ p³ -> Pure
+//│ deforest > function p²#0 @ p⁴ -> Pure
+//│ deforest > call c²@result⁰ @ <root> -> UnsafeEta
+//│ deforest > call p²@result¹ @ <root> -> Pure
+//│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > A⁰ ->
 //│ deforest > 	match: x²

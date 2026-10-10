@@ -12,6 +12,8 @@
 
 data class Box(v: Int)
 data class Pair(a: Int, b: Str)
+//│ deforest > >>> effect-analysis results >>>
+//│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > <<< fusing <<<
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
@@ -45,6 +47,9 @@ fun selected(n: Int, k: Str) =
   let b = Box(n)
   if b is
     Box(x) then [x, k]
+//│ deforest > >>> effect-analysis results >>>
+//│ deforest > function selected⁰#0 @ selected¹ -> UnsafeEta
+//│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > Box¹(n⁰) ->
 //│ deforest > 	match: b²
@@ -79,6 +84,9 @@ fun withRest(n: Int, k: Str) =
     Box(x) then x
     else 0
   [r, k]
+//│ deforest > >>> effect-analysis results >>>
+//│ deforest > function withRest⁰#0 @ withRest¹ -> UnsafeEta
+//│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > Box¹(n¹) ->
 //│ deforest > 	match: b³
@@ -113,6 +121,9 @@ fun noFields(n: Int, s: Str) =
   let p = Pair(n, s)
   if p is
     Pair then 1
+//│ deforest > >>> effect-analysis results >>>
+//│ deforest > function noFields⁰#0 @ noFields¹ -> UnsafeEta
+//│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > Pair¹(n², s⁰) ->
 //│ deforest > 	match: p⁰

@@ -1,0 +1,109 @@
+:js
+
+#config(inlining: None, liftDefns: Some(LiftDefns), flowBasedOpt: Some(FlowBasedOpt(logEffects: true, debugEta: true, mono: true)))
+//│ flow-analysis > >>> effect-analysis results >>>
+//│ flow-analysis > <<< effect-analysis results <<<
+//│ eta-expansion > >>> eta-expansion targets shapes >>>
+//│ eta-expansion > <<< eta-expansion targets shapes <<<
+
+
+let state = 0
+fun effect() = set state += 42
+//│ flow-analysis > >>> effect-analysis results >>>
+//│ flow-analysis > function effect⁰#0 @ <root> -> UnsafeEta
+//│ flow-analysis > call +⁰@result⁰ @ <root> -> Pure
+//│ flow-analysis > <<< effect-analysis results <<<
+//│ eta-expansion > >>> eta-expansion targets shapes >>>
+//│ eta-expansion > <<< eta-expansion targets shapes <<<
+//│ state = 0
+
+
+// * Pure doesn't prevent eta-expansion.
+:expect 42
+fun pure() = 42
+@affine(0) fun leaf() = 42
+fun node() = 
+  pure()
+  leaf
+node()()
+//│ flow-analysis > >>> effect-analysis results >>>
+//│ flow-analysis > function leaf⁰#0 @ <root> -> Pure
+//│ flow-analysis > function node⁰#0 @ <root> -> Pure
+//│ flow-analysis > function pure⁰#0 @ <root> -> Pure
+//│ flow-analysis > call baseCall⁰@result⁰ @ <root> -> Pure
+//│ flow-analysis > call node⁰@result¹ @ <root> -> Pure
+//│ flow-analysis > call pure⁰@result² @ <root> -> Pure
+//│ flow-analysis > <<< effect-analysis results <<<
+//│ eta-expansion > >>> eta-expansion targets shapes >>>
+//│ eta-expansion > node⁰#0 @ <root>: [0, 0]
+//│ eta-expansion > <<< eta-expansion targets shapes <<<
+//│ = 42
+
+
+// * Unsafe prevents eta-expansion.
+:expect 42
+@affine(0) fun leaf() = 42
+fun node() = 
+  effect()
+  leaf
+node()()
+//│ flow-analysis > >>> effect-analysis results >>>
+//│ flow-analysis > function leaf⁰#0 @ <root> -> Pure
+//│ flow-analysis > function node⁰#0 @ <root> -> UnsafeEta
+//│ flow-analysis > call baseCall⁰@result⁰ @ <root> -> Pure
+//│ flow-analysis > call effect⁰@result² @ <root> -> UnsafeEta
+//│ flow-analysis > call node⁰@result¹ @ <root> -> UnsafeEta
+//│ flow-analysis > <<< effect-analysis results <<<
+//│ eta-expansion > >>> eta-expansion targets shapes >>>
+//│ eta-expansion > <<< eta-expansion targets shapes <<<
+//│ = 42
+
+
+// * Pure works for multi-stage expansion
+:expect 42
+fun pure() = 42
+@affine(0) fun leaf_2() =
+  42
+@affine(0) fun leaf_1() =
+  pure()
+  leaf_2
+fun node() = leaf_1
+node()()()
+//│ flow-analysis > >>> effect-analysis results >>>
+//│ flow-analysis > function leaf_1⁰#0 @ <root> -> Pure
+//│ flow-analysis > function leaf_2⁰#0 @ <root> -> Pure
+//│ flow-analysis > function node⁰#0 @ <root> -> Pure
+//│ flow-analysis > function pure⁰#0 @ <root> -> Pure
+//│ flow-analysis > call baseCall⁰@result¹ @ <root> -> Pure
+//│ flow-analysis > call callPrefix⁰@result⁰ @ <root> -> Pure
+//│ flow-analysis > call node⁰@result² @ <root> -> Pure
+//│ flow-analysis > call pure⁰@result³ @ <root> -> Pure
+//│ flow-analysis > <<< effect-analysis results <<<
+//│ eta-expansion > >>> eta-expansion targets shapes >>>
+//│ eta-expansion > node⁰#0 @ <root>: [0, 0, 0]
+//│ eta-expansion > leaf_1⁰#0 @ <root>: [0, 0]
+//│ eta-expansion > <<< eta-expansion targets shapes <<<
+//│ = 42
+
+// * Unsafe prevents direct expansion but still expands as far as possible
+:expect 42
+@affine(0) fun leaf_2() =
+  42
+@affine(0) fun leaf_1() =
+  effect()
+  leaf_2
+fun node() = leaf_1
+node()()()
+//│ flow-analysis > >>> effect-analysis results >>>
+//│ flow-analysis > function leaf_1⁰#0 @ <root> -> UnsafeEta
+//│ flow-analysis > function leaf_2⁰#0 @ <root> -> Pure
+//│ flow-analysis > function node⁰#0 @ <root> -> Pure
+//│ flow-analysis > call baseCall⁰@result¹ @ <root> -> UnsafeEta
+//│ flow-analysis > call callPrefix⁰@result⁰ @ <root> -> Pure
+//│ flow-analysis > call effect⁰@result³ @ <root> -> UnsafeEta
+//│ flow-analysis > call node⁰@result² @ <root> -> Pure
+//│ flow-analysis > <<< effect-analysis results <<<
+//│ eta-expansion > >>> eta-expansion targets shapes >>>
+//│ eta-expansion > node⁰#0 @ <root>: [0, 0]
+//│ eta-expansion > <<< eta-expansion targets shapes <<<
+//│ = 42

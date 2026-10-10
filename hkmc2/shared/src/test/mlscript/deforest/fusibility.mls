@@ -5,6 +5,8 @@ data class (::) Cons(h, t)
 data object Nil
 //│ deforest > >>> non-affine syms >>>
 //│ deforest > <<< non-affine syms <<<
+//│ deforest > >>> effect-analysis results >>>
+//│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > <<< fusing <<<
 
@@ -12,6 +14,8 @@ data class AA(x)
 data class BB(x)
 //│ deforest > >>> non-affine syms >>>
 //│ deforest > <<< non-affine syms <<<
+//│ deforest > >>> effect-analysis results >>>
+//│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > <<< fusing <<<
 
@@ -19,6 +23,8 @@ data class Many(x)
 data class Once(x)
 //│ deforest > >>> non-affine syms >>>
 //│ deforest > <<< non-affine syms <<<
+//│ deforest > >>> effect-analysis results >>>
+//│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > <<< fusing <<<
 
@@ -30,6 +36,11 @@ fun c(p) = if p is AA(v) then v
 c(AA(3))
 //│ deforest > >>> non-affine syms >>>
 //│ deforest > <<< non-affine syms <<<
+//│ deforest > >>> effect-analysis results >>>
+//│ deforest > function c⁰#0 @ c² -> UnsafeEta
+//│ deforest > function c⁰#0 @ c¹ -> UnsafeEta
+//│ deforest > call c⁰@result⁰ @ <root> -> UnsafeEta
+//│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > AA⁰(3) ->
 //│ deforest > 	match: p⁰
@@ -43,6 +54,13 @@ fun c(x) = if x is AA(_) then x.AA#x + x.AA#x
 c(AA(7))
 //│ deforest > >>> non-affine syms >>>
 //│ deforest > <<< non-affine syms <<<
+//│ deforest > >>> effect-analysis results >>>
+//│ deforest > function c⁰#0 @ c² -> UnsafeEta
+//│ deforest > function c⁰#0 @ c¹ -> UnsafeEta
+//│ deforest > call +⁰@result⁰ @ c² -> Pure
+//│ deforest > call +⁰@result⁰ @ c¹ -> Pure
+//│ deforest > call c⁰@result¹ @ <root> -> UnsafeEta
+//│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > AA⁰(7) ->
 //│ deforest > 	match: x¹
@@ -68,6 +86,19 @@ c(AA(7))
 //│ deforest > p_for_c⁰
 //│ deforest > tmp⁰
 //│ deforest > <<< non-affine syms <<<
+//│ deforest > >>> effect-analysis results >>>
+//│ deforest > function c¹#0 @ c² -> UnsafeEta
+//│ deforest > function c¹#0 @ c⁰ -> UnsafeEta
+//│ deforest > function lambda⁰#0 @ c² -> UnsafeEta
+//│ deforest > function lambda⁰#0 @ c⁰ -> UnsafeEta
+//│ deforest > call +⁰@result² @ c² -> Pure
+//│ deforest > call +⁰@result² @ c⁰ -> Pure
+//│ deforest > call cl⁰@result¹ @ c² -> UnsafeEta
+//│ deforest > call cl⁰@result¹ @ c⁰ -> UnsafeEta
+//│ deforest > call cl⁰@result⁰ @ c² -> UnsafeEta
+//│ deforest > call cl⁰@result⁰ @ c⁰ -> UnsafeEta
+//│ deforest > call c¹@result³ @ <root> -> UnsafeEta
+//│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > <<< fusing <<<
 //│ = 14
@@ -81,6 +112,19 @@ fun affine_branched(x, y, cons_y) = if x is
 affine_branched(AA(0), AA(1), (y) => if y is AA(x) then x + 2)
 //│ deforest > >>> non-affine syms >>>
 //│ deforest > <<< non-affine syms <<<
+//│ deforest > >>> effect-analysis results >>>
+//│ deforest > function affine_branched⁰#0 @ affine_branched² -> UnsafeEta
+//│ deforest > function affine_branched⁰#0 @ affine_branched¹ -> UnsafeEta
+//│ deforest > function lambda⁰#0 @ lambda² -> UnsafeEta
+//│ deforest > function lambda⁰#0 @ lambda¹ -> UnsafeEta
+//│ deforest > call +⁰@result⁰ @ lambda² -> Pure
+//│ deforest > call +⁰@result⁰ @ lambda¹ -> Pure
+//│ deforest > call affine_branched⁰@result³ @ <root> -> UnsafeEta
+//│ deforest > call cons_y⁰@result² @ affine_branched² -> UnsafeEta
+//│ deforest > call cons_y⁰@result² @ affine_branched¹ -> UnsafeEta
+//│ deforest > call cons_y⁰@result¹ @ affine_branched² -> UnsafeEta
+//│ deforest > call cons_y⁰@result¹ @ affine_branched¹ -> UnsafeEta
+//│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > AA⁰(1) ->
 //│ deforest > 	match: y⁰
@@ -99,6 +143,14 @@ let p = AA(10) in
 //│ deforest > >>> non-affine syms >>>
 //│ deforest > p¹
 //│ deforest > <<< non-affine syms <<<
+//│ deforest > >>> effect-analysis results >>>
+//│ deforest > function c⁰#0 @ c² -> UnsafeEta
+//│ deforest > function c⁰#0 @ c³ -> UnsafeEta
+//│ deforest > function c⁰#0 @ c¹ -> UnsafeEta
+//│ deforest > call +⁰@result⁰ @ <root> -> Pure
+//│ deforest > call c⁰@result² @ <root> -> UnsafeEta
+//│ deforest > call c⁰@result¹ @ <root> -> UnsafeEta
+//│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > <<< fusing <<<
 //│ = 0
@@ -116,6 +168,19 @@ apply(c, AA(3))
 //│ deforest > x_for_apply¹
 //│ deforest > x_for_apply⁰
 //│ deforest > <<< non-affine syms <<<
+//│ deforest > >>> effect-analysis results >>>
+//│ deforest > function apply⁰#0 @ apply² -> UnsafeEta
+//│ deforest > function apply⁰#0 @ apply¹ -> UnsafeEta
+//│ deforest > function c⁰#0 @ c² -> UnsafeEta
+//│ deforest > function c⁰#0 @ c¹ -> UnsafeEta
+//│ deforest > call +⁰@result² @ apply² -> Pure
+//│ deforest > call +⁰@result² @ apply¹ -> Pure
+//│ deforest > call apply⁰@result³ @ <root> -> UnsafeEta
+//│ deforest > call f⁰@result¹ @ apply² -> UnsafeEta
+//│ deforest > call f⁰@result¹ @ apply¹ -> UnsafeEta
+//│ deforest > call f⁰@result⁰ @ apply² -> UnsafeEta
+//│ deforest > call f⁰@result⁰ @ apply¹ -> UnsafeEta
+//│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > <<< fusing <<<
 //│ = 6
@@ -129,6 +194,15 @@ c(AA(0), AA(3))
 //│ deforest > x_for_c¹
 //│ deforest > x_for_c⁰
 //│ deforest > <<< non-affine syms <<<
+//│ deforest > >>> effect-analysis results >>>
+//│ deforest > function c⁰#0 @ c² -> UnsafeEta
+//│ deforest > function c⁰#0 @ c¹ -> UnsafeEta
+//│ deforest > call +⁰@result¹ @ c² -> Pure
+//│ deforest > call +⁰@result¹ @ c¹ -> Pure
+//│ deforest > call +⁰@result⁰ @ c² -> Pure
+//│ deforest > call +⁰@result⁰ @ c¹ -> Pure
+//│ deforest > call c⁰@result² @ <root> -> UnsafeEta
+//│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > AA⁰(0) ->
 //│ deforest > 	match: k⁰
@@ -150,6 +224,13 @@ c(AA(1))
 //│ deforest > y_for_c¹
 //│ deforest > y_for_c⁰
 //│ deforest > <<< non-affine syms <<<
+//│ deforest > >>> effect-analysis results >>>
+//│ deforest > function _d⁰#0 @ c² -> UnsafeEta
+//│ deforest > function _d⁰#0 @ c⁰ -> UnsafeEta
+//│ deforest > function c¹#0 @ c² -> UnsafeEta
+//│ deforest > function c¹#0 @ c⁰ -> UnsafeEta
+//│ deforest > call c¹@result⁰ @ <root> -> UnsafeEta
+//│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > <<< fusing <<<
 //│ = 0
@@ -165,6 +246,15 @@ let p = AA(AA(AA(10))) in
 //│ deforest > tmp¹
 //│ deforest > tmp⁰
 //│ deforest > <<< non-affine syms <<<
+//│ deforest > >>> effect-analysis results >>>
+//│ deforest > function c1⁰#0 @ c1² -> UnsafeEta
+//│ deforest > function c1⁰#0 @ c1¹ -> UnsafeEta
+//│ deforest > function c2⁰#0 @ c2² -> UnsafeEta
+//│ deforest > function c2⁰#0 @ c2¹ -> UnsafeEta
+//│ deforest > call +⁰@result⁰ @ <root> -> Pure
+//│ deforest > call c1⁰@result² @ <root> -> UnsafeEta
+//│ deforest > call c2⁰@result¹ @ <root> -> UnsafeEta
+//│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > <<< fusing <<<
 //│ = 11
@@ -183,6 +273,21 @@ apply(c1, c2, Many(Once(10)))
 //│ deforest > tmp¹
 //│ deforest > tmp⁰
 //│ deforest > <<< non-affine syms <<<
+//│ deforest > >>> effect-analysis results >>>
+//│ deforest > function apply⁰#0 @ apply² -> UnsafeEta
+//│ deforest > function apply⁰#0 @ apply¹ -> UnsafeEta
+//│ deforest > function c1⁰#0 @ c1² -> UnsafeEta
+//│ deforest > function c1⁰#0 @ c1¹ -> UnsafeEta
+//│ deforest > function c2⁰#0 @ c2² -> UnsafeEta
+//│ deforest > function c2⁰#0 @ c2¹ -> UnsafeEta
+//│ deforest > call +⁰@result² @ apply² -> Pure
+//│ deforest > call +⁰@result² @ apply¹ -> Pure
+//│ deforest > call apply⁰@result³ @ <root> -> UnsafeEta
+//│ deforest > call f⁰@result⁰ @ apply² -> UnsafeEta
+//│ deforest > call f⁰@result⁰ @ apply¹ -> UnsafeEta
+//│ deforest > call g⁰@result¹ @ apply² -> UnsafeEta
+//│ deforest > call g⁰@result¹ @ apply¹ -> UnsafeEta
+//│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > <<< fusing <<<
 //│ = 13
@@ -208,6 +313,24 @@ nest_consume(nest_pickB, nest_prod(10))
 //│ deforest > tmp_for_nest_prod⁰
 //│ deforest > x_for_nest_prod⁰
 //│ deforest > <<< non-affine syms <<<
+//│ deforest > >>> effect-analysis results >>>
+//│ deforest > function nest_consume⁰#0 @ nest_consume² -> UnsafeEta
+//│ deforest > function nest_consume⁰#0 @ nest_consume¹ -> UnsafeEta
+//│ deforest > function nest_pickB⁰#0 @ nest_pickB² -> UnsafeEta
+//│ deforest > function nest_pickB⁰#0 @ nest_pickB¹ -> UnsafeEta
+//│ deforest > function nest_prod⁰#0 @ nest_prod² -> UnsafeEta
+//│ deforest > function nest_prod⁰#0 @ nest_prod¹ -> UnsafeEta
+//│ deforest > call +⁰@result³ @ nest_consume² -> Pure
+//│ deforest > call +⁰@result³ @ nest_consume¹ -> Pure
+//│ deforest > call +⁰@result⁰ @ nest_pickB² -> Pure
+//│ deforest > call +⁰@result⁰ @ nest_pickB¹ -> Pure
+//│ deforest > call f⁰@result² @ nest_consume² -> UnsafeEta
+//│ deforest > call f⁰@result² @ nest_consume¹ -> UnsafeEta
+//│ deforest > call f⁰@result¹ @ nest_consume² -> UnsafeEta
+//│ deforest > call f⁰@result¹ @ nest_consume¹ -> UnsafeEta
+//│ deforest > call nest_consume⁰@result⁴ @ <root> -> UnsafeEta
+//│ deforest > call nest_prod⁰@result⁵ @ <root> -> UnsafeEta
+//│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > AA⁰(tmp⁰) ->
 //│ deforest > 	match: p¹
@@ -235,6 +358,24 @@ length(from(5, Nil))
 //│ deforest > acc_for_from¹
 //│ deforest > acc_for_from⁰
 //│ deforest > <<< accumulator syms <<<
+//│ deforest > >>> effect-analysis results >>>
+//│ deforest > function from⁰#0 @ from² -> UnsafeEta
+//│ deforest > function from⁰#0 @ from¹ -> UnsafeEta
+//│ deforest > function length⁰#0 @ length² -> UnsafeEta
+//│ deforest > function length⁰#0 @ length¹ -> UnsafeEta
+//│ deforest > call +⁰@result⁴ @ length² -> Pure
+//│ deforest > call +⁰@result⁴ @ length¹ -> Pure
+//│ deforest > call -⁰@result¹ @ from² -> Pure
+//│ deforest > call -⁰@result¹ @ from¹ -> Pure
+//│ deforest > call equals@result⁰ @ from² -> UnsafeEta
+//│ deforest > call equals@result⁰ @ from¹ -> UnsafeEta
+//│ deforest > call from⁰@result² @ from² -> UnsafeEta
+//│ deforest > call from⁰@result² @ from¹ -> UnsafeEta
+//│ deforest > call from⁰@result⁶ @ <root> -> UnsafeEta
+//│ deforest > call length⁰@result³ @ length² -> UnsafeEta
+//│ deforest > call length⁰@result³ @ length¹ -> UnsafeEta
+//│ deforest > call length⁰@result⁵ @ <root> -> UnsafeEta
+//│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > <<< fusing <<<
 //│ = 5
@@ -252,6 +393,21 @@ length(append(id(1 :: Nil), 2 :: Nil))
 //│ deforest > <<< non-affine syms <<<
 //│ deforest > >>> accumulator syms >>>
 //│ deforest > <<< accumulator syms <<<
+//│ deforest > >>> effect-analysis results >>>
+//│ deforest > function append⁰#0 @ append² -> UnsafeEta
+//│ deforest > function append⁰#0 @ append¹ -> UnsafeEta
+//│ deforest > function length⁰#0 @ length² -> UnsafeEta
+//│ deforest > function length⁰#0 @ length¹ -> UnsafeEta
+//│ deforest > call +⁰@result² @ length² -> Pure
+//│ deforest > call +⁰@result² @ length¹ -> Pure
+//│ deforest > call append⁰@result⁰ @ append² -> UnsafeEta
+//│ deforest > call append⁰@result⁰ @ append¹ -> UnsafeEta
+//│ deforest > call append⁰@result⁴ @ <root> -> UnsafeEta
+//│ deforest > call id@result⁵ @ <root> -> UnsafeEta
+//│ deforest > call length⁰@result³ @ <root> -> UnsafeEta
+//│ deforest > call length⁰@result¹ @ length² -> UnsafeEta
+//│ deforest > call length⁰@result¹ @ length¹ -> UnsafeEta
+//│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > Cons⁰(h⁰, tmp¹) ->
 //│ deforest > 	match: ls⁰
@@ -283,6 +439,29 @@ length(ping(id(1 :: 2 :: Nil), 3 :: 4 :: Nil))
 //│ deforest > <<< non-affine syms <<<
 //│ deforest > >>> accumulator syms >>>
 //│ deforest > <<< accumulator syms <<<
+//│ deforest > >>> effect-analysis results >>>
+//│ deforest > function length⁰#0 @ length² -> UnsafeEta
+//│ deforest > function length⁰#0 @ length¹ -> UnsafeEta
+//│ deforest > function ping⁰#0 @ ping² -> UnsafeEta
+//│ deforest > function ping⁰#0 @ ping¹ -> UnsafeEta
+//│ deforest > function ping⁰#0 @ pong⁰ -> UnsafeEta
+//│ deforest > function pong¹#0 @ ping² -> UnsafeEta
+//│ deforest > function pong¹#0 @ ping¹ -> UnsafeEta
+//│ deforest > function pong¹#0 @ pong⁰ -> UnsafeEta
+//│ deforest > call +⁰@result³ @ length² -> Pure
+//│ deforest > call +⁰@result³ @ length¹ -> Pure
+//│ deforest > call id@result⁶ @ <root> -> UnsafeEta
+//│ deforest > call length⁰@result² @ length² -> UnsafeEta
+//│ deforest > call length⁰@result² @ length¹ -> UnsafeEta
+//│ deforest > call length⁰@result⁴ @ <root> -> UnsafeEta
+//│ deforest > call ping⁰@result¹ @ ping² -> UnsafeEta
+//│ deforest > call ping⁰@result¹ @ ping¹ -> UnsafeEta
+//│ deforest > call ping⁰@result¹ @ pong⁰ -> UnsafeEta
+//│ deforest > call ping⁰@result⁵ @ <root> -> UnsafeEta
+//│ deforest > call pong¹@result⁰ @ ping² -> UnsafeEta
+//│ deforest > call pong¹@result⁰ @ ping¹ -> UnsafeEta
+//│ deforest > call pong¹@result⁰ @ pong⁰ -> UnsafeEta
+//│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > Cons⁰(3, tmp²) ->
 //│ deforest > 	match: ls¹
@@ -313,6 +492,21 @@ sum(append(id(Nil), Nil), 0)
 //│ deforest > <<< non-affine syms <<<
 //│ deforest > >>> accumulator syms >>>
 //│ deforest > <<< accumulator syms <<<
+//│ deforest > >>> effect-analysis results >>>
+//│ deforest > function append⁰#0 @ append² -> UnsafeEta
+//│ deforest > function append⁰#0 @ append¹ -> UnsafeEta
+//│ deforest > function sum⁰#0 @ sum² -> UnsafeEta
+//│ deforest > function sum⁰#0 @ sum¹ -> UnsafeEta
+//│ deforest > call +⁰@result⁰ @ sum² -> Pure
+//│ deforest > call +⁰@result⁰ @ sum¹ -> Pure
+//│ deforest > call append⁰@result² @ append² -> UnsafeEta
+//│ deforest > call append⁰@result² @ append¹ -> UnsafeEta
+//│ deforest > call append⁰@result⁴ @ <root> -> UnsafeEta
+//│ deforest > call id@result⁵ @ <root> -> UnsafeEta
+//│ deforest > call sum⁰@result³ @ <root> -> UnsafeEta
+//│ deforest > call sum⁰@result¹ @ sum² -> UnsafeEta
+//│ deforest > call sum⁰@result¹ @ sum¹ -> UnsafeEta
+//│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > Cons⁰(h², tmp³) ->
 //│ deforest > 	match: ls²
@@ -354,6 +548,29 @@ length(flatten(id((1 :: Nil) :: Nil)))
 //│ deforest > <<< non-affine syms <<<
 //│ deforest > >>> accumulator syms >>>
 //│ deforest > <<< accumulator syms <<<
+//│ deforest > >>> effect-analysis results >>>
+//│ deforest > function append⁰#0 @ append² -> UnsafeEta
+//│ deforest > function append⁰#0 @ flatten².append¹ -> UnsafeEta
+//│ deforest > function append⁰#0 @ flatten⁰.append¹ -> UnsafeEta
+//│ deforest > function flatten¹#0 @ flatten² -> UnsafeEta
+//│ deforest > function flatten¹#0 @ flatten⁰ -> UnsafeEta
+//│ deforest > function length⁰#0 @ length² -> UnsafeEta
+//│ deforest > function length⁰#0 @ length¹ -> UnsafeEta
+//│ deforest > call +⁰@result⁴ @ length² -> Pure
+//│ deforest > call +⁰@result⁴ @ length¹ -> Pure
+//│ deforest > call append⁰@result² @ flatten² -> UnsafeEta
+//│ deforest > call append⁰@result² @ flatten⁰ -> UnsafeEta
+//│ deforest > call append⁰@result¹ @ append² -> UnsafeEta
+//│ deforest > call append⁰@result¹ @ flatten².append¹ -> UnsafeEta
+//│ deforest > call append⁰@result¹ @ flatten⁰.append¹ -> UnsafeEta
+//│ deforest > call flatten¹@result⁰ @ flatten² -> UnsafeEta
+//│ deforest > call flatten¹@result⁰ @ flatten⁰ -> UnsafeEta
+//│ deforest > call flatten¹@result⁶ @ <root> -> UnsafeEta
+//│ deforest > call id@result⁷ @ <root> -> UnsafeEta
+//│ deforest > call length⁰@result³ @ length² -> UnsafeEta
+//│ deforest > call length⁰@result³ @ length¹ -> UnsafeEta
+//│ deforest > call length⁰@result⁵ @ <root> -> UnsafeEta
+//│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > Cons⁰(h³, tmp⁴) ->
 //│ deforest > 	match: ls³
@@ -378,6 +595,15 @@ alias_then_patmat(Cons(12, 13))
 //│ deforest > <<< non-affine syms <<<
 //│ deforest > >>> accumulator syms >>>
 //│ deforest > <<< accumulator syms <<<
+//│ deforest > >>> effect-analysis results >>>
+//│ deforest > function alias_then_patmat⁰#0 @ alias_then_patmat² -> UnsafeEta
+//│ deforest > function alias_then_patmat⁰#0 @ alias_then_patmat¹ -> UnsafeEta
+//│ deforest > call +⁰@result¹ @ alias_then_patmat² -> Pure
+//│ deforest > call +⁰@result¹ @ alias_then_patmat¹ -> Pure
+//│ deforest > call +⁰@result⁰ @ alias_then_patmat² -> Pure
+//│ deforest > call +⁰@result⁰ @ alias_then_patmat¹ -> Pure
+//│ deforest > call alias_then_patmat⁰@result² @ <root> -> UnsafeEta
+//│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > <<< fusing <<<
 //│ = 37
@@ -394,6 +620,19 @@ foo of AA of () => 1
 //│ deforest > <<< non-affine syms <<<
 //│ deforest > >>> accumulator syms >>>
 //│ deforest > <<< accumulator syms <<<
+//│ deforest > >>> effect-analysis results >>>
+//│ deforest > function foo⁰#0 @ foo² -> UnsafeEta
+//│ deforest > function foo⁰#0 @ foo¹ -> UnsafeEta
+//│ deforest > function lambda⁰#0 @ lambda² -> Pure
+//│ deforest > function lambda⁰#0 @ lambda¹ -> Pure
+//│ deforest > call +⁰@result² @ foo² -> Pure
+//│ deforest > call +⁰@result² @ foo¹ -> Pure
+//│ deforest > call foo⁰@result³ @ <root> -> UnsafeEta
+//│ deforest > call x@result¹ @ foo² -> Pure
+//│ deforest > call x@result¹ @ foo¹ -> UnsafeEta
+//│ deforest > call x@result⁰ @ foo² -> Pure
+//│ deforest > call x@result⁰ @ foo¹ -> UnsafeEta
+//│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > AA⁰(lambda⁰) ->
 //│ deforest > 	match: a⁰
@@ -419,6 +658,19 @@ foo of AA of () => 1
 //│ deforest > <<< non-affine syms <<<
 //│ deforest > >>> accumulator syms >>>
 //│ deforest > <<< accumulator syms <<<
+//│ deforest > >>> effect-analysis results >>>
+//│ deforest > function foo⁰#0 @ foo² -> UnsafeEta
+//│ deforest > function foo⁰#0 @ foo¹ -> UnsafeEta
+//│ deforest > function lambda¹#0 @ lambda² -> Pure
+//│ deforest > function lambda¹#0 @ lambda³ -> Pure
+//│ deforest > call +⁰@result² @ foo² -> Pure
+//│ deforest > call +⁰@result² @ foo¹ -> Pure
+//│ deforest > call foo⁰@result³ @ <root> -> UnsafeEta
+//│ deforest > call f⁰@result¹ @ foo² -> Pure
+//│ deforest > call f⁰@result¹ @ foo¹ -> UnsafeEta
+//│ deforest > call f⁰@result⁰ @ foo² -> Pure
+//│ deforest > call f⁰@result⁰ @ foo¹ -> UnsafeEta
+//│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > AA⁰(lambda¹) ->
 //│ deforest > 	match: a¹

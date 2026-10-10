@@ -91,7 +91,7 @@ class EtaExpansionSolver(val constraintSolver: FlowConstraintSolver, tl: TraceLo
                     EtaTargets(a.paramCount, a.hasRestParam, a.prodFuns ++ b.prodFuns)
                 go(S(mergedRes))
               else Nil
-            case UnknownProd => Nil
+            case UnknownProd | UnsafeEta => Nil
             case _: Ctor => Nil
         end go
         
@@ -101,7 +101,7 @@ class EtaExpansionSolver(val constraintSolver: FlowConstraintSolver, tl: TraceLo
           case _ => false
         then go(N)
         else Nil
-      case UnknownProd => Nil
+      case UnknownProd | UnsafeEta => Nil
       case _: Ctor => Nil
     end funResShape
 
@@ -110,7 +110,10 @@ class EtaExpansionSolver(val constraintSolver: FlowConstraintSolver, tl: TraceLo
     case N =>
       val targets = EtaTargets(pf.params.size, pf.restParam.isDefined, Set.single(pf))
       if !processing.contains(pf) then
-        val res = targets :: funResShape(pf.res)
+        // It'd be unsound if eta-expansion postpones the evaluation of a
+        // function if it may have or observe (side) effects.
+        val safe = pf.effect.exists(EffectAnalysis.summarize(_) == EffectSummary.Pure)
+        val res = targets :: (if safe then funResShape(pf.res) else Nil)
         cache(pf) = res
         res
       else

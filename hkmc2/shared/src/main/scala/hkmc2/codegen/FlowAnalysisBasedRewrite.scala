@@ -113,7 +113,11 @@ class FlowAnalysisBasedRewrite(
       val body2 = withEliminatedParams(removed):
         withEtaArgss(etaParams.map(_.args)):
           applyFunBodyLikeBlock(body)
-      params2 -> body2
+      // The appended stage may be effectful even when the original producer was pure.
+      val annotations2 =
+        if etaParams.nonEmpty then fun.annotations.filterNot(_.isInstanceOf[Annot.Pure])
+        else fun.annotations
+      (params2, body2, annotations2)
     
     
     // traversal
@@ -138,7 +142,9 @@ class FlowAnalysisBasedRewrite(
             Return(etaCall(p).withLocOf(res2))
           case c @ Call(fun, argss) =>
             Return(
-              Call(fun, (argss ++ activeEtaArgss).ne_!)(c.metadata, c.toLoc))
+              Call(fun, (argss ++ activeEtaArgss).ne_!)(c.metadata.copy(
+                mayRaiseEffects = true,
+                annotations = c.metadata.annotations.filterNot(_.isInstanceOf[Annot.Pure])), c.toLoc))
           case _ =>
             val tmp = TempSymbol(N, erasedType = N, "eta$res")
             Scoped(
@@ -206,9 +212,9 @@ class FlowAnalysisBasedRewrite(
         super.applyObjBody(defn)
     
     override def applyFunDefn(fun: FunDefn): FunDefn =
-      val (params2, body2) = rewriteFunDefn(fun)
-      if (params2 is fun.params) && (body2 is fun.body) then fun
-      else FunDefn(fun.owner, fun.sym, fun.dSym, params2, body2)(fun.configOverride, fun.annotations)
+      val (params2, body2, annotations2) = rewriteFunDefn(fun)
+      if (params2 is fun.params) && (body2 is fun.body) && (annotations2 is fun.annotations) then fun
+      else FunDefn(fun.owner, fun.sym, fun.dSym, params2, body2)(fun.configOverride, annotations2)
     
     override def applyLam(lam: Lambda): Lambda =
       val lamId: ConcreteFunId = ConcreteId(lam.uid, instId)
@@ -236,9 +242,9 @@ class FlowAnalysisBasedRewrite(
     new Rewriter(Nil):
       override def applyFunDefn(fun: FunDefn): FunDefn =
         rewrittenInPlace.get(fun.dSym) match
-          case S((params, body)) =>
-            if (params is fun.params) && (body is fun.body) then fun
-            else FunDefn(fun.owner, fun.sym, fun.dSym, params, body)(fun.configOverride, fun.annotations)
+          case S((params, body, annotations)) =>
+            if (params is fun.params) && (body is fun.body) && (annotations is fun.annotations) then fun
+            else FunDefn(fun.owner, fun.sym, fun.dSym, params, body)(fun.configOverride, annotations)
           case N => super.applyFunDefn(fun)
   
   def mkPolyFunCopy(
@@ -257,7 +263,7 @@ class FlowAnalysisBasedRewrite(
         case _ => super.applyValue(v)(k)
     end RefreshSymbol
     
-    val (rewrittenParams, rewrittenBody) = rewritten
+    val (rewrittenParams, rewrittenBody, rewrittenAnnotations) = rewritten
     val refreshParamMap = MutMap.empty[Symbol, Symbol]
     def refreshParam(p: Param): Param =
       val newSym = new VarSymbol(Tree.Ident(p.sym.name), erasedType = p.sym.erasedType)
@@ -269,7 +275,7 @@ class FlowAnalysisBasedRewrite(
     FunDefn(
       N, bms, tSym, refreshedParams,
       new RefreshSymbol(refreshParamMap.toMap).apply(rewrittenBody))(
-        original.configOverride, original.annotations)
+        original.configOverride, rewrittenAnnotations)
   end mkPolyFunCopy
   
   def otherNewFunDefns: Iterable[FunDefn] = Nil
@@ -314,7 +320,7 @@ object FlowAnalysisBasedRewrite:
       )
     
     val etaExpansionSolver =
-      if eta then new EtaExpansionSolver(
+      if eta && cfg.liftDefns.isDefined then new EtaExpansionSolver(
         flowAnalysisRes, mkTl("eta-expansion > ", optCfg.effectiveDebugEta))
       else NoEtaExpansion
     val deadParamElimSolver =

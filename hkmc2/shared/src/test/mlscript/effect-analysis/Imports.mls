@@ -1,0 +1,74 @@
+// The test harness imports and opens Predef.mls; print's body is outside this program.
+:lift
+#config(flowBasedOpt: Some(FlowBasedOpt(logEffects: true, mono: true)), inlining: None)
+//│ flow-analysis > >>> effect-analysis results >>>
+//│ flow-analysis > <<< effect-analysis results <<<
+
+
+// Isolate print so another effectful call cannot mask a missing imported-call effect.
+fun leaf(x) = print(x)
+fun node(x) = leaf(x)
+fun qualified(x) = Predef.print(x)
+//│ flow-analysis > >>> effect-analysis results >>>
+//│ flow-analysis > function leaf⁰#0 @ <root> -> UnsafeEta
+//│ flow-analysis > function node⁰#0 @ <root> -> UnsafeEta
+//│ flow-analysis > function qualified⁰#0 @ <root> -> UnsafeEta
+//│ flow-analysis > call leaf⁰@result¹ @ <root> -> UnsafeEta
+//│ flow-analysis > call print@result² @ <root> -> UnsafeEta
+//│ flow-analysis > call print@result⁰ @ <root> -> UnsafeEta
+//│ flow-analysis > <<< effect-analysis results <<<
+
+
+// Passing an imported function as a value must also propagate its unknown effect.
+private fun invoke(f, x) = f(x)
+fun indirect(x) = invoke(print, x)
+fun pure_callback(x) = invoke(y => y, x)
+//│ flow-analysis > >>> effect-analysis results >>>
+//│ flow-analysis > function indirect⁰#0 @ <root> -> UnsafeEta
+//│ flow-analysis > function invoke⁰#0 @ <root> -> UnsafeEta
+//│ flow-analysis > function lambda⁰#0 @ <root> -> Pure
+//│ flow-analysis > function pure_callback⁰#0 @ <root> -> UnsafeEta
+//│ flow-analysis > call f⁰@result² @ <root> -> UnsafeEta
+//│ flow-analysis > call invoke⁰@result¹ @ <root> -> UnsafeEta
+//│ flow-analysis > call invoke⁰@result⁰ @ <root> -> UnsafeEta
+//│ flow-analysis > <<< effect-analysis results <<<
+
+
+#config(flowBasedOpt: Some(FlowBasedOpt(logEffects: true, mono: false)))
+//│ flow-analysis > >>> effect-analysis results >>>
+//│ flow-analysis > <<< effect-analysis results <<<
+
+
+fun leaf(x) = print(x)
+fun node(x) = leaf(x)
+fun qualified(x) = Predef.print(x)
+//│ flow-analysis > >>> effect-analysis results >>>
+//│ flow-analysis > function leaf⁰#0 @ leaf² -> UnsafeEta
+//│ flow-analysis > function leaf⁰#0 @ node⁰.leaf¹ -> UnsafeEta
+//│ flow-analysis > function node¹#0 @ node⁰ -> UnsafeEta
+//│ flow-analysis > function qualified⁰#0 @ qualified¹ -> UnsafeEta
+//│ flow-analysis > call leaf⁰@result² @ node⁰ -> UnsafeEta
+//│ flow-analysis > call print@result¹ @ leaf² -> UnsafeEta
+//│ flow-analysis > call print@result¹ @ node⁰.leaf¹ -> UnsafeEta
+//│ flow-analysis > call print@result⁰ @ qualified¹ -> UnsafeEta
+//│ flow-analysis > <<< effect-analysis results <<<
+
+
+// Poly mode keeps the pure callback separate from the imported print callback.
+private fun invoke(f, x) = f(x)
+fun indirect(x) = invoke(print, x)
+fun pure_callback(x) = invoke(y => y, x)
+//│ flow-analysis > >>> effect-analysis results >>>
+//│ flow-analysis > function indirect¹#0 @ indirect⁰ -> UnsafeEta
+//│ flow-analysis > function invoke⁰#0 @ indirect⁰.invoke² -> UnsafeEta
+//│ flow-analysis > function invoke⁰#0 @ invoke³ -> UnsafeEta
+//│ flow-analysis > function invoke⁰#0 @ pure_callback⁰.invoke¹ -> Pure
+//│ flow-analysis > function lambda⁰#0 @ lambda² -> Pure
+//│ flow-analysis > function lambda⁰#0 @ pure_callback⁰.lambda¹ -> Pure
+//│ flow-analysis > function pure_callback¹#0 @ pure_callback⁰ -> Pure
+//│ flow-analysis > call f⁰@result⁰ @ indirect⁰.invoke² -> UnsafeEta
+//│ flow-analysis > call f⁰@result⁰ @ invoke³ -> UnsafeEta
+//│ flow-analysis > call f⁰@result⁰ @ pure_callback⁰.invoke¹ -> Pure
+//│ flow-analysis > call invoke⁰@result² @ indirect⁰ -> UnsafeEta
+//│ flow-analysis > call invoke⁰@result¹ @ pure_callback⁰ -> Pure
+//│ flow-analysis > <<< effect-analysis results <<<

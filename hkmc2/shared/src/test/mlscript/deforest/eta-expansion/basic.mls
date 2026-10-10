@@ -1,4 +1,5 @@
 :js
+:lift
 :deforest
 :flowBasedOpt debugEta
 
@@ -10,6 +11,8 @@ data object A
 data object B
 data object O
 data object Nil
+//│ deforest > >>> effect-analysis results >>>
+//│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > <<< fusing <<<
 //│ eta-expansion > >>> eta-expansion targets shapes >>>
@@ -21,6 +24,14 @@ fun p(x) = X(x)
 fun c(x) = if x is
   X(a) then a
 c(p(3))
+//│ deforest > >>> effect-analysis results >>>
+//│ deforest > function c⁰#0 @ c² -> UnsafeEta
+//│ deforest > function c⁰#0 @ c¹ -> UnsafeEta
+//│ deforest > function p⁰#0 @ p² -> UnsafeEta
+//│ deforest > function p⁰#0 @ p¹ -> UnsafeEta
+//│ deforest > call c⁰@result⁰ @ <root> -> UnsafeEta
+//│ deforest > call p⁰@result¹ @ <root> -> UnsafeEta
+//│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > X⁰(x⁰) ->
 //│ deforest > 	match: x¹
@@ -40,6 +51,14 @@ fun c(x) = if x is
   A then 1
   B then 2
 c(p(true))
+//│ deforest > >>> effect-analysis results >>>
+//│ deforest > function c⁰#0 @ c² -> UnsafeEta
+//│ deforest > function c⁰#0 @ c¹ -> UnsafeEta
+//│ deforest > function p⁰#0 @ p² -> Pure
+//│ deforest > function p⁰#0 @ p¹ -> Pure
+//│ deforest > call c⁰@result⁰ @ <root> -> UnsafeEta
+//│ deforest > call p⁰@result¹ @ <root> -> Pure
+//│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > A⁰ ->
 //│ deforest > 	match: x²
@@ -59,6 +78,17 @@ fun f(x) = if x is
 fun g(y) = if y is
   Y(o) then o
 g(f(p()))
+//│ deforest > >>> effect-analysis results >>>
+//│ deforest > function f⁰#0 @ f² -> UnsafeEta
+//│ deforest > function f⁰#0 @ f¹ -> UnsafeEta
+//│ deforest > function g⁰#0 @ g² -> UnsafeEta
+//│ deforest > function g⁰#0 @ g¹ -> UnsafeEta
+//│ deforest > function p⁰#0 @ p² -> UnsafeEta
+//│ deforest > function p⁰#0 @ p¹ -> UnsafeEta
+//│ deforest > call f⁰@result¹ @ <root> -> UnsafeEta
+//│ deforest > call g⁰@result⁰ @ <root> -> UnsafeEta
+//│ deforest > call p⁰@result² @ <root> -> UnsafeEta
+//│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > X⁰(tmp⁰) ->
 //│ deforest > 	match: x³
@@ -82,6 +112,14 @@ fun p(b) =
 fun c(x) = if x is
   X(Y(y)) then y
 c(p(true))
+//│ deforest > >>> effect-analysis results >>>
+//│ deforest > function c⁰#0 @ c² -> UnsafeEta
+//│ deforest > function c⁰#0 @ c¹ -> UnsafeEta
+//│ deforest > function p⁰#0 @ p² -> UnsafeEta
+//│ deforest > function p⁰#0 @ p¹ -> UnsafeEta
+//│ deforest > call c⁰@result⁰ @ <root> -> UnsafeEta
+//│ deforest > call p⁰@result¹ @ <root> -> UnsafeEta
+//│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > X⁰(tmp¹) ->
 //│ deforest > 	match: x⁴
@@ -109,6 +147,21 @@ fun main(x) =
     X(Y(y)) then y
   c(p(2))
 main(3)
+//│ deforest > >>> effect-analysis results >>>
+//│ deforest > function c⁰#0 @ main² -> UnsafeEta
+//│ deforest > function c⁰#0 @ main⁰ -> UnsafeEta
+//│ deforest > function main¹#0 @ main² -> UnsafeEta
+//│ deforest > function main¹#0 @ main⁰ -> UnsafeEta
+//│ deforest > function p⁰#0 @ main² -> UnsafeEta
+//│ deforest > function p⁰#0 @ main⁰ -> UnsafeEta
+//│ deforest > call +⁰@result⁰ @ main² -> Pure
+//│ deforest > call +⁰@result⁰ @ main⁰ -> Pure
+//│ deforest > call c⁰@result² @ main² -> UnsafeEta
+//│ deforest > call c⁰@result² @ main⁰ -> UnsafeEta
+//│ deforest > call main¹@result³ @ <root> -> UnsafeEta
+//│ deforest > call p⁰@result¹ @ main² -> UnsafeEta
+//│ deforest > call p⁰@result¹ @ main⁰ -> UnsafeEta
+//│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > X⁰(tmp³) ->
 //│ deforest > 	match: x⁵
@@ -124,8 +177,8 @@ main(3)
 //│ deforest > 	fields: arg$X$0$¹.b⁰
 //│ deforest > <<< fusing <<<
 //│ eta-expansion > >>> eta-expansion targets shapes >>>
-//│ eta-expansion > p⁰#0 @ <root>: [1, 3]
-//│ eta-expansion > p¹#0 @ <root>: [1, 3]
+//│ eta-expansion > p⁰#0 @ <root>: [2, 3]
+//│ eta-expansion > p¹#0 @ <root>: [2, 3]
 //│ eta-expansion > <<< eta-expansion targets shapes <<<
 //│ = 5
 
@@ -136,6 +189,14 @@ fun p(x) = X(x)
 fun c(x) = if x is
   X(a) then a
 c(p(3))
+//│ deforest > >>> effect-analysis results >>>
+//│ deforest > function c⁰#0 @ c² -> UnsafeEta
+//│ deforest > function c⁰#0 @ c¹ -> UnsafeEta
+//│ deforest > function p⁰#0 @ p² -> UnsafeEta
+//│ deforest > function p⁰#0 @ p¹ -> UnsafeEta
+//│ deforest > call c⁰@result⁰ @ <root> -> UnsafeEta
+//│ deforest > call p⁰@result¹ @ <root> -> UnsafeEta
+//│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > X⁰(x⁶) ->
 //│ deforest > 	match: x⁷

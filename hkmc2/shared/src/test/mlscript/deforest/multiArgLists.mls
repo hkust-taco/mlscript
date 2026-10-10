@@ -4,12 +4,25 @@
 // Test: Deforestation with function of multiple parameter lists
 object A
 data class Pair(x, y)
+//│ deforest > >>> effect-analysis results >>>
+//│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > <<< fusing <<<
 
 fun test(a)(b) =
   if a is Pair(x, y) then x + y + b
 test(Pair(1, 2))(3)
+//│ deforest > >>> effect-analysis results >>>
+//│ deforest > function test⁰#0 @ test² -> Pure
+//│ deforest > function test⁰#0 @ test¹ -> Pure
+//│ deforest > function test⁰#1 @ test² -> UnsafeEta
+//│ deforest > function test⁰#1 @ test¹ -> UnsafeEta
+//│ deforest > call +⁰@result¹ @ test² -> Pure
+//│ deforest > call +⁰@result¹ @ test¹ -> Pure
+//│ deforest > call +⁰@result⁰ @ test² -> Pure
+//│ deforest > call +⁰@result⁰ @ test¹ -> Pure
+//│ deforest > call test⁰@result² @ <root> -> UnsafeEta
+//│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > Pair⁰(1, 2) ->
 //│ deforest > 	match: a⁰
@@ -20,12 +33,23 @@ test(Pair(1, 2))(3)
 
 // Test: Deforestation with nested constructor calls and multiple param lists
 data class Box(v)
+//│ deforest > >>> effect-analysis results >>>
+//│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > <<< fusing <<<
 
 fun unbox(b)(offset) =
   if b is Box(v) then v + offset
 unbox(Box(10))(5)
+//│ deforest > >>> effect-analysis results >>>
+//│ deforest > function unbox⁰#0 @ unbox² -> Pure
+//│ deforest > function unbox⁰#0 @ unbox¹ -> Pure
+//│ deforest > function unbox⁰#1 @ unbox² -> UnsafeEta
+//│ deforest > function unbox⁰#1 @ unbox¹ -> UnsafeEta
+//│ deforest > call +⁰@result⁰ @ unbox² -> Pure
+//│ deforest > call +⁰@result⁰ @ unbox¹ -> Pure
+//│ deforest > call unbox⁰@result¹ @ <root> -> UnsafeEta
+//│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > Box⁰(10) ->
 //│ deforest > 	match: b⁰
