@@ -576,10 +576,7 @@ fun f =
 f
 //│ = 0
 
-let p = 0
-//│ p = 0
 
-// TODO: `f2` and `g` get spurious params
 :sir
 :expect 2
 :noInline
@@ -593,7 +590,7 @@ fun h(z) =
 h(1)
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let g, f2, f1;
-//│ define g as fun g⁸(b, c) {
+//│ define g as fun g⁸(c) {
 //│   let scrut, tmp, tmp1, tmp2, tmp3;
 //│   set scrut = >⁰(c, 0);
 //│   match scrut
@@ -608,7 +605,7 @@ h(1)
 //│   end
 //│ };
 //│ define f2 as fun f2⁰(b) {
-//│   return g⁸(b, b)
+//│   return g⁸(b)
 //│ };
 //│ define f1 as fun f1⁰(a) { return f2⁰(a) };
 //│ define h² as fun h³(z) { return f1⁰(z) };
