@@ -204,49 +204,43 @@ sealed abstract class Pattern[+K <: Kind.Complete] extends AutoLocated:
     case Extract(pattern, correspondence, term) =>
       Extract[L](pattern.map(f), correspondence, term)
   
-  /** A simplified reduce for ``Pattern``.
-    * It is designed to be used when we want to
-    * compute a single value, starting from the leaves.
-    * It silently goes through ``Not``, ``Extract``, ``Rename`` and ``Synonym``.
-    * The function must provide all the other base cases, and how
-    * a list is merged (for ``And`` and ``Or`` nodes)
+  /** Visit tests of the current scrutinee in source order. Constructor,
+    * record and tuple children test other scrutinees; synonyms must be
+    * expanded before their bodies can be traversed here.
     */
-  def reduce[A](merge: List[A] => A)(f: PartialFunction[Pattern[K], A]): A = this match
-    case p: NonCompositional[? <: K] =>
-      if f.isDefinedAt(p) then f(p) else merge(Nil)
-    case And(patterns) => merge(patterns.map(_.reduce(merge)(f)))
-    case Or(patterns) => merge(patterns.map(_.reduce(merge)(f)))
-    case Not(pattern) => pattern.reduce(merge)(f)
-    case Rename(pattern, _) => pattern.reduce(merge)(f)
-    case Extract(pattern, _, _) => pattern.reduce(merge)(f)
+  private def components: Iterator[NonCompositional[? <: K]] = this match
+    case p: NonCompositional[? <: K] => Iterator.single(p)
+    case And(patterns) => patterns.iterator.flatMap(_.components)
+    case Or(patterns) => patterns.iterator.flatMap(_.components)
+    case Not(pattern) => pattern.components
+    case Rename(pattern, _) => pattern.components
+    case Extract(pattern, _, _) => pattern.components
 
-  // Keep source traversal order here. The compiler deduplicates these lists
+  // Keep source traversal order here. The compiler deduplicates these iterators
   // before emitting branches; hash iteration order must not order generated code.
-  def heads: Ls[Head] = reduce[Ls[Head]](_.flatten):
-    case Literal(lit) => lit :: Nil
-    case ClassLike(head, _) => head :: Nil
+  def heads: Iterator[Head] = components.collect:
+    case Literal(lit) => lit
+    case ClassLike(head, _) => head
 
-  def fields: Ls[Ident | Int] = reduce[Ls[Ident | Int]](_.flatten):
-    case MatchedClassLike(_, entries) => entries.keysIterator.toList
-    case Record(entries) => entries.keysIterator.toList
+  def fields: Iterator[Ident | Int] = components.flatMap:
+    case MatchedClassLike(_, entries) => entries.keysIterator
+    case Record(entries) => entries.keysIterator
     case Tuple(leading, spread) =>
       val n = leading.size + spread.fold(0)(_._3.size)
-      val subfields: Ls[Ident | Int] = Range(0, n).toList
       // if this is strict, then a condition is imposed on field n
-      if spread.isEmpty then subfields :+ n else subfields
+      Iterator.range(0, if spread.isEmpty then n + 1 else n)
+    case _ => Iterator.empty
 
-  def collectSubPatterns(field: Ident | Int): Ls[Pat] = field match
-    case id: Ident => this.reduce[Ls[Pat]](_.flatten):
+  def collectSubPatterns(field: Ident | Int): Iterator[Pat] = field match
+    case id: Ident => components.flatMap:
         // TODO: raise a warning
-      case ClassLike(_, arguments) => /* TODO:raise a warning */ arguments match
-        case None => Nil
-        case Some(arguments) =>
-          arguments.find((id1, _) => id1 === id).map((_, p) => p).toList
-      case MatchedClassLike(_, entries) => entries.get(id).toList
-      case Record(entries) => entries.get(id).toList
-      case Tuple(leading, spread) => Nil
-    case n: Int => this.reduce[Ls[Pat]](_.flatten):
-      case Tuple(leading, S(_, _, trailing)) => trailing.lift(n).toList
+      case ClassLike(_, arguments) => arguments.iterator.flatMap(_.get(id))
+      case MatchedClassLike(_, entries) => entries.get(id).iterator
+      case Record(entries) => entries.get(id).iterator
+      case _ => Iterator.empty
+    case n: Int => components.flatMap:
+      case Tuple(leading, S(_, _, trailing)) => trailing.lift(n).iterator
+      case _ => Iterator.empty
   
   /** Simplify the pattern by removing `Never` patterns. */
   def simplify: Pattern[K] = this match

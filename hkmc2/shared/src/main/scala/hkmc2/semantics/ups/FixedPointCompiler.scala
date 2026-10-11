@@ -715,13 +715,14 @@ class FixedPointCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynt
   private def assembleAlternating(links: Ls[(Pat, Opt[Pat])])(using Context): Machine =
     // Like in `assemble`, every matcher gets its own compiler instance
     // because the matcher memoization is instance-bound.
-    val matchers = links.map: (step, post) =>
+    val matchers = links.iterator.map: (step, post) =>
       val stepCompiler = new Compiler
       val (stepMatcher, stepImpls) = stepCompiler.buildMatcher(step, ResultMode.Full)
       val postMatcherOpt = post.map: postPattern =>
         val postCompiler = new Compiler
         postCompiler.buildMatcher(postPattern, ResultMode.Full)
       (stepMatcher, stepImpls, postMatcherOpt)
+    .toVector
 
     val inputSymbol = VarSymbol(Ident("input"), erasedType = N)
     val phaseSymbol = TempSymbol(N, erasedType = N, "phase")
@@ -758,15 +759,16 @@ class FixedPointCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynt
             case N => makeMatchSuccess(focusSymbol.safeRef)
           Branch(failPhaseSymbol.safeRef, intPattern(index), Split.Else(success)) ~: rest)
 
-    val prelude =
-      matchers.flatMap((_, stepImpls, postMatcherOpt) =>
-        stepImpls ::: postMatcherOpt.fold(Nil)(_._2)
+    val matcherDefinitions =
+      matchers.iterator.flatMap((_, stepImpls, postMatcherOpt) =>
+        stepImpls.iterator ++ postMatcherOpt.iterator.flatMap(_._2)
       ).flatMap: (symbol, params, body) =>
-        LetDecl(symbol, Nil)(N) :: DefineVar(symbol, Term.Lam(params, body))(N) :: Nil
-      ::: List(
+        Iterator(LetDecl(symbol, Nil)(N), DefineVar(symbol, Term.Lam(params, body))(N))
+    val prelude =
+      (matcherDefinitions ++ Iterator(
         LetDecl(phaseSymbol, Nil)(N), DefineVar(phaseSymbol, int(0))(N),
         LetDecl(focusSymbol, Nil)(N), DefineVar(focusSymbol, inputSymbol.safeRef)(N),
-        LetDecl(failPhaseSymbol, Nil)(N), DefineVar(failPhaseSymbol, int(-1))(N))
+        LetDecl(failPhaseSymbol, Nil)(N), DefineVar(failPhaseSymbol, int(-1))(N))).toList
 
     Machine(paramList(param(inputSymbol)), prelude, loop, result)
 
@@ -782,14 +784,14 @@ class FixedPointCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynt
     val redexCompiler = new Compiler
     val (redexMatcher, redexImpls) = redexCompiler.buildMatcher(redexPattern, ResultMode.Full)
     val sideCompiler = new Compiler
-    val (sideEntries, sideImplementations) =
+    val compiledSides =
       classes.iterator.flatMap(_.alts.iterator.flatMap(_.sides.iterator.map(_._2)))
-        .toList.distinct.map: side =>
-          val (matcher, implementations) = sideCompiler.buildMatcher(side, ResultMode.MatchOnly)
-          (side -> matcher, implementations)
-        .unzip
-    val sideMatchers = sideEntries.toMap
-    val sideImpls = sideImplementations.flatten
+        .distinct.map: side =>
+          side -> sideCompiler.buildMatcher(side, ResultMode.MatchOnly)
+        .toVector
+    val sideMatchers = compiledSides.iterator.map:
+      case (side, (matcher, _)) => side -> matcher
+    .toMap
     // The post matcher processes the final normal form. It is total (the
     // definition's trailing wildcard is among its alternatives), so it always
     // returns a `MatchSuccess` that the `unapply` can yield directly.
@@ -963,17 +965,19 @@ class FixedPointCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynt
       Branch(modeSymbol.safeRef, intPattern(ModeUp), upSplit) ~:
       Split.End
 
+    val matcherDefinitions =
+      (redexImpls.iterator ++ compiledSides.iterator.flatMap(_._2._2) ++ postMatcherOpt.iterator.flatMap(_._2))
+        .flatMap: (symbol, params, body) =>
+          Iterator(LetDecl(symbol, Nil)(N), DefineVar(symbol, Term.Lam(params, body))(N))
     val prelude =
-      (redexImpls ::: sideImpls ::: postMatcherOpt.fold(Nil)(_._2)).flatMap: (symbol, params, body) =>
-        LetDecl(symbol, Nil)(N) :: DefineVar(symbol, Term.Lam(params, body))(N) :: Nil
-      ::: List(
+      (matcherDefinitions ++ Iterator(
         LetDecl(modeSymbol, Nil)(N), DefineVar(modeSymbol, int(ModeFind))(N),
         LetDecl(focusSymbol, Nil)(N), DefineVar(focusSymbol, inputSymbol.safeRef)(N),
         LetDecl(stackSymbol, Nil)(N), DefineVar(stackSymbol, `null`)(N),
         LetDecl(resultSymbol, Nil)(N), DefineVar(resultSymbol, `null`)(N))
-      ::: (if requireProgress then
-        LetDecl(progressedSymbol, Nil)(N) :: DefineVar(progressedSymbol, bool(false))(N) :: Nil
-      else Nil)
+      ++ (if requireProgress then
+        Iterator(LetDecl(progressedSymbol, Nil)(N), DefineVar(progressedSymbol, bool(false))(N))
+      else Iterator.empty)).toList
 
     // Succeed with the normal form, post-processed by the trailing
     // alternatives when present. In the one-or-more shape the first step is

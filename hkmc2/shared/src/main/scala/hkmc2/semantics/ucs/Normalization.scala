@@ -98,9 +98,9 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
   
   extension (split: Split)
     /** Check if any branch in the split tests the given scrutinee. */
-    private def referencesScrutinee(scrutinee: Symbol): Bool = split match
+    private def referencesScrutinee(scrutinee: Term.Ref): Bool = split match
       case Split.Cons(Branch(thatScrutinee, _, continuation), tail) =>
-        (scrutinee is thatScrutinee.sym) || continuation.referencesScrutinee(scrutinee) || tail.referencesScrutinee(scrutinee)
+        (scrutinee.sym is thatScrutinee.sym) || continuation.referencesScrutinee(scrutinee) || tail.referencesScrutinee(scrutinee)
       case Split.Let(_, _, tail) => tail.referencesScrutinee(scrutinee)
       case Split.Else(_) | Split.End => false
       case Split.LetSplit(_, tail) => tail.referencesScrutinee(scrutinee)
@@ -301,7 +301,7 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
         // scrutinee, inline it and specialize; otherwise keep the reference.
         // When rec returns N (body unchanged), the UseSplit is preserved to
         // maintain sharing via the join point.
-        if sym.body.referencesScrutinee(scrutinee.sym) then
+        if sym.body.referencesScrutinee(scrutinee) then
           rec(sym.body)
         else N
     end rec

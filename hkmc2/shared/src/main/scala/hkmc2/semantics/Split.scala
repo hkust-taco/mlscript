@@ -176,18 +176,21 @@ object Split:
   /** Desugar a `SimpleSplit` into a `Split`. */
   def from(rootSplit: SS)(using tl: TL)(using Ctx, Raise, State): Split =
     val compiler = new SplitCompiler()
-    // Separate references to the same binding must reuse its sub-scrutinees,
+    // Separate references to the same local binding must reuse its sub-scrutinees,
     // so normalization can merge repeated tests and field extractions.
-    val scrutCache = MutMap.empty[Symbol, Scrut]
+    val scrutCache = MutMap.empty[LocalVarSymbol, Scrut]
     def go(split: SS): Split = split match
       case SS.Cons(branch, tail) => branch match
         case SS.Head.Match(ref, pattern, consequent) =>
+          val symbol = ref.sym match
+            case symbol: LocalVarSymbol => symbol
+            case _ => lastWords("A simple split scrutinee must refer to a local binding")
           lazy val alternative = go(tail)
           val makeConsequent: MakeConsequent = (output, bindings) =>
             bindings.iterator.foldLeft(go(consequent)):
               case (innerSplit, (symbol, mkTerm)) => Let(symbol, mkTerm(), innerSplit)
           compiler.makeMatchSplit
-            (scrutCache.getOrElseUpdate(ref.sym, Scrut.from(ref)), pattern, false)
+            (scrutCache.getOrElseUpdate(symbol, Scrut.from(ref)), pattern, false)
             (makeConsequent, alternative)
         case SS.Head.Let(binding, term) => Let(binding, term, go(tail))
       case SS.Else(default) => Else(default)

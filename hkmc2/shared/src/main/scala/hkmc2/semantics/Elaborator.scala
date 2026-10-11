@@ -1016,8 +1016,10 @@ extends Importer:
   extension (term: Term)
     private inline def reference(continuation: Reference => SimpleSplit): SimpleSplit =
       term match
-        // If the term is already a reference, we can re-reference its symbol.
-        case Term.Ref(symbol) => continuation(() => symbol.ref().withLocOf(term))
+        // Local bindings already name the value being tested. Other references
+        // can expand during resolution, so evaluate them once into a local
+        // binding before sharing the scrutinee across pattern alternatives.
+        case Term.Ref(symbol: LocalVarSymbol) => continuation(() => symbol.ref().withLocOf(term))
         // Otherwise, we need to create a temporary symbol holding the term.
         case term: Term =>
           val symbol = TempSymbol(N, erasedType = N, "scrut")

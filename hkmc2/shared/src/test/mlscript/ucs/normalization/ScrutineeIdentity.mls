@@ -98,3 +98,28 @@ fun twice() = if
 :expect ["two", 2]
 [twice(), calls]
 //│ = ["two", 2]
+
+// A member reference can invoke a getter. Bind its result once before
+// testing several alternatives, but evaluate separate occurrences separately.
+let reads = 0
+fun nextValue =
+  set reads = reads + 1
+  Box(reads)
+fun memberAlternatives() = if nextValue is
+  Box(0) then "zero"
+  Box(1) then "one"
+  else "other"
+//│ reads = 0
+
+:expect ["one", 1]
+[memberAlternatives(), reads]
+//│ = ["one", 1]
+
+fun memberOccurrences() = if
+  nextValue is Box(0) then "zero"
+  nextValue is Box(3) then "three"
+  else "other"
+
+:expect ["three", 3]
+[memberOccurrences(), reads]
+//│ = ["three", 3]
