@@ -323,7 +323,7 @@ class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbo
 
   // Rewrites the program under a specific instantiation id
   // from the polymorphic analysis
-  private class Rewriter(instId: InstantiationId) extends InstantiationRewriter(instId):
+  private class Rewriter(instId: InstantiationId, forCopy: Bool) extends InstantiationRewriter(instId):
     
     override def rewriteFunDefn(fun: FunDefn): RewrittenFunDefn =
       fun.params -> applyBlock(fun.body)
@@ -406,6 +406,9 @@ class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbo
         case Some(labelRestFunSym) =>
           val labelRestFunFvs = restFnFvs(labelRestFunId)
           Return(mkCall(labelRestFunSym, labelRestFunFvs))
+      // copying a definition would need fresh symbols for it; lifting removes the nested ones beforehand
+      case Define(defn, _) if forCopy =>
+        lastWords(s"deforestation copying the definition ${defn.sym.nme}")
       case _ => super.applyBlock(b)
   end Rewriter
   
@@ -444,33 +447,11 @@ class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbo
       case _ => super.applyValue(v)(k)
   end RefreshSymbol
 
-  // FIXME: This is a temporary workaround for the deforestation problem discussed at
-  //        https://discord.com/channels/884326249617559653/935507764384501760/1512041398520774832
-  //        It should be fixed after we fix Lowering; then, this function should be removed,
-  //        and its uses replaced back by `new RefreshSymbol(refreshParamMap.toMap).apply`
-  // TODO: it may cause BMS to malfunction if both class and function refer to same BMS and they are split apart
-  private def refreshExtractedBody(mapping: Map[Symbol, Symbol], body: Block): Block =
-    val defined = MutSet.empty[ScopedSymbol]
-    val missing = MutSet.empty[ScopedSymbol]
-    val walker = new BlockTraverserShallow:
-      override def applyBlock(b: Block): Unit = b match
-        case Scoped(syms, body) =>
-          defined.addAll(syms)
-          applyBlock(body)
-        case Define(defn: FunDefn, rest) =>
-          if !defined(defn.sym) then
-            missing.add(defn.sym)
-            defined.add(defn.sym)
-          applyBlock(rest)
-        case _ => super.applyBlock(b)
-    walker.applyBlock(body)
-    new RefreshSymbol(mapping).apply(Scoped(missing, body))
-  
   
   // ====== start: implements the abstract members of `PolyInstantiationRewrite` ======
   def solvers: Iterable[FlowAnalysisSolverResult] = solver :: Nil
   
-  def mkRewriter(instId: InstantiationId) = new Rewriter(instId)
+  def mkRewriter(instId: InstantiationId, forCopy: Bool) = new Rewriter(instId, forCopy)
   
   def mkPolyFunCopy(
     original: FunDefn,
@@ -490,7 +471,7 @@ class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbo
           refreshParamMap(p.sym) = newSym
           Param(p.flags, newSym, p.sign, p.modulefulness)(p.toLoc),
         pl.restParam)(pl.toLoc)
-    val bodyWithCorrectSymbols = refreshExtractedBody(refreshParamMap.toMap, rewrittenBody)
+    val bodyWithCorrectSymbols = new RefreshSymbol(refreshParamMap.toMap).apply(rewrittenBody)
     FunDefn(
       N, bms, tSym, refreshedParams,
       bodyWithCorrectSymbols)(N, PrivateModifier :: original.annotations)
@@ -507,10 +488,10 @@ class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbo
         val restFunSym = restFunSyms(dtorId)
         val restFunArgs = restFnFvs(dtorId)
         val actualBody = Begin(
-          new Rewriter(instId).applyBlock(ogBody),
+          new Rewriter(instId, forCopy = true).applyBlock(ogBody),
           Return(mkCall(restFunSym, restFunArgs)))
         val refreshedFvSymbols = dtorBranchFnFvs(branchId._1).map(s => s -> new VarSymbol(Tree.Ident(s"fv_${s.nme}"), erasedType = s.mapErasedValueType))
-        val bodyWithCorrectSymbols = refreshExtractedBody(refreshedFvSymbols.toMap, actualBody)
+        val bodyWithCorrectSymbols = new RefreshSymbol(refreshedFvSymbols.toMap).apply(actualBody)
         FunDefn(N, bms, tSym,
           branchFunParamFieldSyms(branchId).asParamList :: refreshedFvSymbols.unzip._2.asParamList :: Nil,
           bodyWithCorrectSymbols
@@ -522,7 +503,7 @@ class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbo
       for (restFunId, (bms, tsym)) <- restFunSyms yield
         val instId = restFunId.getInstId
         val (ogBody, parent) = restOriginalBodiesAndParentRest(restFunId.withoutInstId)
-        val transformedOgBody = new Rewriter(instId).applyBlock(ogBody)
+        val transformedOgBody = new Rewriter(instId, forCopy = true).applyBlock(ogBody)
         val actualBody = parent match
           case Some(parentRestId) =>
             val parentRestFunId = parentRestId.withInstId(instId)
@@ -534,7 +515,7 @@ class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbo
           case None =>
             Begin(transformedOgBody, Return(Value.Lit(Tree.UnitLit(true))(N)))
         val refreshedFvSymbols = restFnFvs(restFunId).map(s => s -> new VarSymbol(Tree.Ident(s"fv_${s.nme}"), erasedType = s.mapErasedValueType))
-        val bodyWithCorrectSymbols = refreshExtractedBody(refreshedFvSymbols.toMap, actualBody)
+        val bodyWithCorrectSymbols = new RefreshSymbol(refreshedFvSymbols.toMap).apply(actualBody)
         FunDefn(N, bms, tsym, refreshedFvSymbols.unzip._2.asParamList :: Nil, bodyWithCorrectSymbols)(N, annotations = PrivateModifier :: Nil)
     end newRestFuns
     
@@ -543,7 +524,7 @@ class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbo
   end otherNewFunDefns
   
   def mkRootRewriter(rewrittenInPlace: Map[TermSymbol, RewrittenFunDefn]) =
-    new Rewriter(Nil):
+    new Rewriter(Nil, forCopy = false):
       override def applyFunDefn(fun: FunDefn): FunDefn =
         rewrittenInPlace.get(fun.dSym) match
           case Some((params, rewrittenBody)) =>

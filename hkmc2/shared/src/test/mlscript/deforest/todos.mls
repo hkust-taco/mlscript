@@ -231,3 +231,54 @@ Test.Test2.foo(AA(2))
 //│ deforest > 	fields: a⁰.x¹
 //│ deforest > <<< fusing <<<
 //│ ═══[RUNTIME ERROR] ReferenceError: Test2 is not defined
+
+
+// TODO: objects are not lifted, so fusing copies a nested definition, which deforestation does not support
+:todo
+data class D(x)
+fun f(d) = if d is
+  D(x) then
+    object O with
+      val v = x
+    O.v
+f(D(1))
+//│ ╔══[WARNING] Objects are not yet lifted.
+//│ ║  l.241: 	    object O with
+//│ ╙──       	           ^
+//│ deforest > >>> fusing >>>
+//│ deforest > D⁰(1) ->
+//│ deforest > 	match: d⁰
+//│ deforest > 	fields: d⁰.x⁴
+//│ deforest > <<< fusing <<<
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: deforestation copying the definition O
+
+
+// TODO: a top-level class defined after a fused top-level match is copied into the extracted rest,
+// which deforestation does not support
+:todo
+:expect 3
+let y = if AA(0) is AA then 1
+class E(z) with
+  fun get() = z + 2
+E(y).get()
+//│ deforest > >>> fusing >>>
+//│ deforest > AA⁰(0) ->
+//│ deforest > 	match: scrut¹
+//│ deforest > <<< fusing <<<
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: deforestation copying the definition E
+
+
+// TODO: `val` is also a define so we crash here,
+// although we may want to disallow `val` appearing here in the first place.
+:todo
+fun f(d) = if d is
+  D(x) then
+    val v = x
+    print(v)
+f(D(1))
+//│ deforest > >>> fusing >>>
+//│ deforest > D⁰(1) ->
+//│ deforest > 	match: d¹
+//│ deforest > 	fields: d¹.x⁴
+//│ deforest > <<< fusing <<<
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: deforestation copying the definition v

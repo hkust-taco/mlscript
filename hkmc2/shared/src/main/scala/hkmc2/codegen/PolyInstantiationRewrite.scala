@@ -29,8 +29,8 @@ abstract class PolyInstantiationRewrite(val constraintSolver: FlowConstraintSolv
   // the solvers driving this rewrite
   def solvers: Iterable[FlowAnalysisSolverResult]
   
-  // the rewriter for the program as seen from `instId`
-  def mkRewriter(instId: InstantiationId): InstantiationRewriter
+  // the rewriter for the program as seen from `instId`; `forCopy` when its output becomes a new definition
+  def mkRewriter(instId: InstantiationId, forCopy: Bool): InstantiationRewriter
   
   // the rewriter for the main block, which may change fun defns in place
   def mkRootRewriter(rewrittenInPlace: Map[TermSymbol, RewrittenFunDefn]): InstantiationRewriter
@@ -94,13 +94,13 @@ abstract class PolyInstantiationRewrite(val constraintSolver: FlowConstraintSolv
         (referringFun, (bms, tSym)) <- funSymMap.toList.sortBy(_._1.uid)
       yield
         val original = pre.res.funSymToFunDefn(referringFun)
-        mkPolyFunCopy(original, bms, tSym, mkRewriter(instId).rewriteFunDefn(original))
+        mkPolyFunCopy(original, bms, tSym, mkRewriter(instId, forCopy = true).rewriteFunDefn(original))
     
     val newFuns = newPolyFuns ++ otherNewFunDefns
     
     val rewrittenInPlace = Map.from[TermSymbol, RewrittenFunDefn]:
       for (selfInstId, funSym) <- collector.synthesizedInstIdToFunSym yield
-        funSym -> mkRewriter(selfInstId).rewriteFunDefn(pre.res.funSymToFunDefn(funSym))
+        funSym -> mkRewriter(selfInstId, forCopy = false).rewriteFunDefn(pre.res.funSymToFunDefn(funSym))
     
     val newMainBody = Scoped(
       Set.from(newFuns.map(_.sym)),

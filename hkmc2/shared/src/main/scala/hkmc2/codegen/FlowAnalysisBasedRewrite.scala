@@ -236,7 +236,7 @@ class FlowAnalysisBasedRewrite(
   def solvers: Iterable[FlowAnalysisSolverResult] =
     deadParamElimSolver :: etaExpansionSolver :: deadConstructorElimSolver :: Nil
   
-  def mkRewriter(instId: InstantiationId) = new Rewriter(instId)
+  def mkRewriter(instId: InstantiationId, forCopy: Bool) = new Rewriter(instId)
   
   def mkRootRewriter(rewrittenInPlace: Map[TermSymbol, RewrittenFunDefn]) =
     new Rewriter(Nil):
