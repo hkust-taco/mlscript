@@ -20,7 +20,7 @@ class FlowAnalysisBasedRewrite(
 
   private case class EtaParamList(params: ParamList, args: Ls[Arg])
   
-  class Rewriter(instId: InstantiationId) extends InstantiationRewriter(instId):
+  class Rewriter(instId: InstantiationId, forCopy: Bool) extends InstantiationRewriter(instId):
     
     // dead parameter elimination states and helper functions
     private val activeEliminatedParams = MutSet.empty[VarSymbol]
@@ -200,12 +200,19 @@ class FlowAnalysisBasedRewrite(
             )
       case _ => super.applyResult(r)(k)
     
-    override def applyDefn(defn: Defn)(k: Defn => Block): Block = defn match
+    override def applyDefn(defn: Defn)(k: Defn => Block): Block =
+      def checkedK(defn2: Defn): Block =
+        // if we are making specialized copies of the original code,
+        // we shouldn't rebind the original symbol as this leads to wrong irDefn stored in the symbol
+        if forCopy then defn2.defnSym.foreach: ds =>
+          softAssert(!defn.defnSym.contains(ds), s"a copy binds the original symbol ${ds}")
+        k(defn2)
+      defn match
       case cls: ClsLikeDefn =>
         withEtaArgss(Nil):
-          super.applyDefn(cls)(k)
+          super.applyDefn(cls)(checkedK)
       case _ =>
-        super.applyDefn(defn)(k)
+        super.applyDefn(defn)(checkedK)
     
     override def applyObjBody(defn: ClsLikeBody): ClsLikeBody =
       withEtaArgss(Nil):
@@ -236,10 +243,10 @@ class FlowAnalysisBasedRewrite(
   def solvers: Iterable[FlowAnalysisSolverResult] =
     deadParamElimSolver :: etaExpansionSolver :: deadConstructorElimSolver :: Nil
   
-  def mkRewriter(instId: InstantiationId, forCopy: Bool) = new Rewriter(instId)
+  def mkRewriter(instId: InstantiationId, forCopy: Bool) = new Rewriter(instId, forCopy)
   
   def mkRootRewriter(rewrittenInPlace: Map[TermSymbol, RewrittenFunDefn]) =
-    new Rewriter(Nil):
+    new Rewriter(Nil, forCopy = false):
       override def applyFunDefn(fun: FunDefn): FunDefn =
         rewrittenInPlace.get(fun.dSym) match
           case S((params, body)) =>

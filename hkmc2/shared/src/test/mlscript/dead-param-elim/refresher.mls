@@ -13,10 +13,17 @@ f(1, 2).get()
 //│ dead-param-elim > >>> dead-param-elim results >>>
 //│ dead-param-elim > f⁰#0 @ f¹ -> eliminable: {1}
 //│ dead-param-elim > <<< dead-param-elim results <<<
+//│ FAILURE: Unexpected internal error
+//│ FAILURE LOCATION: softAssert (FlowAnalysisBasedRewrite.scala:208)
+//│ ╔══[INTERNAL ERROR] Compiler reached an unexpected state at 'FlowAnalysisBasedRewrite.scala:208': a copy binds the original symbol class:C
+//│ ╟── The compilation result may be incorrect.
+//│ ╙── This is a compiler bug; please report it to the maintainers.
 //│ = 1
 
 
 
+// the DPE copy of `foo` rebuilds `M` with its original symbol before refreshing it, taking `M`'s irDefn from the kept `M`
+:fixme
 :checkIR
 fun foo(y) =
   class M with
@@ -26,6 +33,9 @@ foo(10)
 //│ dead-param-elim > >>> dead-param-elim results >>>
 //│ dead-param-elim > foo⁰#0 @ foo¹ -> eliminable: {0}
 //│ dead-param-elim > <<< dead-param-elim results <<<
+//│ ╔══[INTERNAL ERROR] Compiler reached an unexpected state at 'FlowAnalysisBasedRewrite.scala:208': a copy binds the original symbol class:M
+//│ ╟── The compilation result may be incorrect.
+//│ ╙── This is a compiler bug; please report it to the maintainers.
 
 
 
@@ -41,6 +51,11 @@ g(10, 99)
 //│ dead-param-elim > >>> dead-param-elim results >>>
 //│ dead-param-elim > g⁰#0 @ g¹ -> eliminable: {1}
 //│ dead-param-elim > <<< dead-param-elim results <<<
+//│ FAILURE: Unexpected internal error
+//│ FAILURE LOCATION: softAssert (FlowAnalysisBasedRewrite.scala:208)
+//│ ╔══[INTERNAL ERROR] Compiler reached an unexpected state at 'FlowAnalysisBasedRewrite.scala:208': a copy binds the original symbol class:Pair
+//│ ╟── The compilation result may be incorrect.
+//│ ╙── This is a compiler bug; please report it to the maintainers.
 //│ = 10
 
 
@@ -55,6 +70,11 @@ h(10, 0).add(3)
 //│ dead-param-elim > >>> dead-param-elim results >>>
 //│ dead-param-elim > h⁰#0 @ h¹ -> eliminable: {1}
 //│ dead-param-elim > <<< dead-param-elim results <<<
+//│ FAILURE: Unexpected internal error
+//│ FAILURE LOCATION: softAssert (FlowAnalysisBasedRewrite.scala:208)
+//│ ╔══[INTERNAL ERROR] Compiler reached an unexpected state at 'FlowAnalysisBasedRewrite.scala:208': a copy binds the original symbol class:Adder
+//│ ╟── The compilation result may be incorrect.
+//│ ╙── This is a compiler bug; please report it to the maintainers.
 //│ = 13
 
 
@@ -73,6 +93,16 @@ wrapper(42, 0)
 //│ dead-param-elim > >>> dead-param-elim results >>>
 //│ dead-param-elim > wrapper⁰#0 @ wrapper¹ -> eliminable: {1}
 //│ dead-param-elim > <<< dead-param-elim results <<<
+//│ FAILURE: Unexpected internal error
+//│ FAILURE LOCATION: softAssert (FlowAnalysisBasedRewrite.scala:208)
+//│ ╔══[INTERNAL ERROR] Compiler reached an unexpected state at 'FlowAnalysisBasedRewrite.scala:208': a copy binds the original symbol class:B
+//│ ╟── The compilation result may be incorrect.
+//│ ╙── This is a compiler bug; please report it to the maintainers.
+//│ FAILURE: Unexpected internal error
+//│ FAILURE LOCATION: softAssert (FlowAnalysisBasedRewrite.scala:208)
+//│ ╔══[INTERNAL ERROR] Compiler reached an unexpected state at 'FlowAnalysisBasedRewrite.scala:208': a copy binds the original symbol class:A
+//│ ╟── The compilation result may be incorrect.
+//│ ╙── This is a compiler bug; please report it to the maintainers.
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ let wrapper$wrapper;
 //│ define wrapper$wrapper as fun wrapper$wrapper⁰(val1) {
@@ -125,4 +155,9 @@ multi(5, 6, 999)
 //│ dead-param-elim > >>> dead-param-elim results >>>
 //│ dead-param-elim > multi⁰#0 @ multi¹ -> eliminable: {2}
 //│ dead-param-elim > <<< dead-param-elim results <<<
+//│ FAILURE: Unexpected internal error
+//│ FAILURE LOCATION: softAssert (FlowAnalysisBasedRewrite.scala:208)
+//│ ╔══[INTERNAL ERROR] Compiler reached an unexpected state at 'FlowAnalysisBasedRewrite.scala:208': a copy binds the original symbol class:Calc
+//│ ╟── The compilation result may be incorrect.
+//│ ╙── This is a compiler bug; please report it to the maintainers.
 //│ = 30
