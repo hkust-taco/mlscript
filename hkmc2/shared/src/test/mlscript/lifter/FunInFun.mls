@@ -576,6 +576,9 @@ fun f =
 f
 //│ = 0
 
+let p = 0
+//│ p = 0
+
 // TODO: `f2` and `g` get spurious params
 :sir
 :expect 2
@@ -590,7 +593,7 @@ fun h(z) =
 h(1)
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let g, f2, f1;
-//│ define g as fun g⁸(a, c) {
+//│ define g as fun g⁸(b, c) {
 //│   let scrut, tmp, tmp1, tmp2, tmp3;
 //│   set scrut = >⁰(c, 0);
 //│   match scrut
@@ -598,16 +601,16 @@ h(1)
 //│       set tmp = -⁰(c, 1);
 //│       set tmp1 = f1⁰(tmp);
 //│       set tmp2 = -⁰(c, 1);
-//│       set tmp3 = f2⁰(a, tmp2);
+//│       set tmp3 = f2⁰(tmp2);
 //│       return +⁰(tmp1, tmp3)
 //│     else
 //│       return 1
 //│   end
 //│ };
-//│ define f2 as fun f2⁰(a, b) {
-//│   return g⁸(a, b)
+//│ define f2 as fun f2⁰(b) {
+//│   return g⁸(b, b)
 //│ };
-//│ define f1 as fun f1⁰(a) { return f2⁰(a, a) };
+//│ define f1 as fun f1⁰(a) { return f2⁰(a) };
 //│ define h² as fun h³(z) { return f1⁰(z) };
 //│ return h³(1)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
