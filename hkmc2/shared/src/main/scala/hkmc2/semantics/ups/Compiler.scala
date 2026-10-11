@@ -39,16 +39,16 @@ class Compiler(using Context)(using tl: TL)(using Ctx, State, Raise) extends Ter
       * the singleton direct-return optimization.
       */
     def select(label: Label)(using ResultMode): Term =
-      if labels.size is 1 then result
+      if labels.sizeCompare(1) === 0 then result
       else sel(result, label.asFieldName)
     /** Produce the default failure value for this matcher result with the same
       * shape that a successful submatcher call would have produced.
       */
     def default(using ResultMode): Term = matcherResult(`null`,
-      if labels.size is 1 then emptyMatchResult("empty")
+      if labels.sizeCompare(1) === 0 then emptyMatchResult("empty")
       else Rcd(false, labels.toVector.sorted.iterator.map: label =>
-        RcdField(str(label.asFieldName), emptyMatchResult("empty"))
-      .toList))
+          RcdField(str(label.asFieldName), emptyMatchResult("empty"))
+        .toList))
   
   /** Make a match result record containing `input` and `result` fields. */
   private def matcherResult(input: => Term, result: => Term)(using ResultMode): Term =
@@ -243,8 +243,8 @@ class Compiler(using Context)(using tl: TL)(using Ctx, State, Raise) extends Ter
     val resultTerm = resultTerms match
       case (_, term) :: Nil => term
       case terms => Rcd(false, terms.reverseIterator.map: (label, term) =>
-        RcdField(str(label.asFieldName), term)
-      .toList)
+          RcdField(str(label.asFieldName), term)
+        .toList)
     // Lastly, we return the matcher result, directly for singleton matchers
     // and as a record otherwise.
     Blk(statements.reverse, resultTerm)

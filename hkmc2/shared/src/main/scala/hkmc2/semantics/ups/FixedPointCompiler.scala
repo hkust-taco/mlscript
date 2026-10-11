@@ -788,10 +788,11 @@ class FixedPointCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynt
       classes.iterator.flatMap(_.alts.iterator.flatMap(_.sides.iterator.map(_._2)))
         .distinct.map: side =>
           side -> sideCompiler.buildMatcher(side, ResultMode.MatchOnly)
-        .toVector
-    val sideMatchers = compiledSides.iterator.map:
-      case (side, (matcher, _)) => side -> matcher
-    .toMap
+        .toArray
+    val sideMatchers = compiledSides.iterator
+      .map:
+        case (side, (matcher, _)) => side -> matcher
+      .toMap
     // The post matcher processes the final normal form. It is total (the
     // definition's trailing wildcard is among its alternatives), so it always
     // returns a `MatchSuccess` that the `unapply` can yield directly.
