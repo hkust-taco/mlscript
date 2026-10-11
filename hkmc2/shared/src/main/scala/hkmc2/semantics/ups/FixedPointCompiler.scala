@@ -782,14 +782,14 @@ class FixedPointCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynt
     val redexCompiler = new Compiler
     val (redexMatcher, redexImpls) = redexCompiler.buildMatcher(redexPattern, ResultMode.Full)
     val sideCompiler = new Compiler
-    val sideMatchers: Map[Pat, LocalVarSymbol] =
+    val (sideEntries, sideImplementations) =
       classes.iterator.flatMap(_.alts.iterator.flatMap(_.sides.iterator.map(_._2)))
         .toList.distinct.map: side =>
-          side -> sideCompiler.buildMatcher(side, ResultMode.MatchOnly)._1
-        .toMap
-    val sideImpls = sideCompiler.implementations.iterator.map:
-      case (symbol, (params, body)) => (symbol, params, body)
-    .toList
+          val (matcher, implementations) = sideCompiler.buildMatcher(side, ResultMode.MatchOnly)
+          (side -> matcher, implementations)
+        .unzip
+    val sideMatchers = sideEntries.toMap
+    val sideImpls = sideImplementations.flatten
     // The post matcher processes the final normal form. It is total (the
     // definition's trailing wildcard is among its alternatives), so it always
     // returns a `MatchSuccess` that the `unapply` can yield directly.

@@ -220,31 +220,33 @@ sealed abstract class Pattern[+K <: Kind.Complete] extends AutoLocated:
     case Rename(pattern, _) => pattern.reduce(merge)(f)
     case Extract(pattern, _, _) => pattern.reduce(merge)(f)
 
-  def heads: Set[Head] = reduce[Set[Head]](_.toSet.flatten):
-    case Literal(lit) => Set(lit)
-    case ClassLike(head, _) => Set(head)
+  // Keep source traversal order here. The compiler deduplicates these lists
+  // before emitting branches; hash iteration order must not order generated code.
+  def heads: Ls[Head] = reduce[Ls[Head]](_.flatten):
+    case Literal(lit) => lit :: Nil
+    case ClassLike(head, _) => head :: Nil
 
-  def fields: Set[Ident | Int] = reduce[Set[Ident | Int]](_.toSet.flatten):
-    case MatchedClassLike(_, entries) => entries.keys.toSet
-    case Record(entries) => entries.keys.toSet
+  def fields: Ls[Ident | Int] = reduce[Ls[Ident | Int]](_.flatten):
+    case MatchedClassLike(_, entries) => entries.keysIterator.toList
+    case Record(entries) => entries.keysIterator.toList
     case Tuple(leading, spread) =>
       val n = leading.size + spread.fold(0)(_._3.size)
-      val subfields = Range(0, n).toSet[Ident | Int]
+      val subfields: Ls[Ident | Int] = Range(0, n).toList
       // if this is strict, then a condition is imposed on field n
-      if spread.isEmpty then subfields + n else subfields
+      if spread.isEmpty then subfields :+ n else subfields
 
-  def collectSubPatterns(field: Ident | Int): Set[Pat] = field match
-    case id: Ident => this.reduce[Set[Pat]](_.toSet.flatten):
+  def collectSubPatterns(field: Ident | Int): Ls[Pat] = field match
+    case id: Ident => this.reduce[Ls[Pat]](_.flatten):
         // TODO: raise a warning
       case ClassLike(_, arguments) => /* TODO:raise a warning */ arguments match
-        case None => Set()
+        case None => Nil
         case Some(arguments) =>
-          arguments.find((id1, _) => id1 === id).map((_, p) => p).toSet
-      case MatchedClassLike(_, entries) => entries.get(id).toSet
-      case Record(entries) => entries.get(id).toSet
-      case Tuple(leading, spread) => Set()
-    case n: Int => this.reduce[Set[Pat]](_.toSet.flatten):
-      case Tuple(leading, S(_, _, trailing)) => trailing.lift(n).toSet
+          arguments.find((id1, _) => id1 === id).map((_, p) => p).toList
+      case MatchedClassLike(_, entries) => entries.get(id).toList
+      case Record(entries) => entries.get(id).toList
+      case Tuple(leading, spread) => Nil
+    case n: Int => this.reduce[Ls[Pat]](_.flatten):
+      case Tuple(leading, S(_, _, trailing)) => trailing.lift(n).toList
   
   /** Simplify the pattern by removing `Never` patterns. */
   def simplify: Pattern[K] = this match
@@ -454,6 +456,10 @@ object Pattern:
     * @param correspondence The correspondence between symbols in the pattern
     *        and symbols in the transformation term.
     * @param term The term to be applied to the extracted values.
+    *        Its identity is part of the pattern's equality: distinct source
+    *        transformations must not be conflated by comparing their syntax.
+    *        Instantiation and specialization preserve this term, so recursive
+    *        uses of the same transformation can still reuse a matcher.
     */
   final case class Extract[+K <: Kind.Complete](
       pattern: Pattern[K],

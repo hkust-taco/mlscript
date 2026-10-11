@@ -172,12 +172,13 @@ object Split:
   import utils.{tl, TL}
   import collection.mutable.{Map as MutMap}
   import ups.SplitCompiler, SplitCompiler.{MakeConsequent, Scrut, SymbolScrut}
-  import Term.Ref
   
   /** Desugar a `SimpleSplit` into a `Split`. */
   def from(rootSplit: SS)(using tl: TL)(using Ctx, Raise, State): Split =
     val compiler = new SplitCompiler()
-    val scrutCache = MutMap.empty[Ref, Scrut]
+    // Separate references to the same binding must reuse its sub-scrutinees,
+    // so normalization can merge repeated tests and field extractions.
+    val scrutCache = MutMap.empty[Symbol, Scrut]
     def go(split: SS): Split = split match
       case SS.Cons(branch, tail) => branch match
         case SS.Head.Match(ref, pattern, consequent) =>
@@ -186,7 +187,7 @@ object Split:
             bindings.iterator.foldLeft(go(consequent)):
               case (innerSplit, (symbol, mkTerm)) => Let(symbol, mkTerm(), innerSplit)
           compiler.makeMatchSplit
-            (scrutCache.getOrElseUpdate(ref, Scrut.from(ref)), pattern, false)
+            (scrutCache.getOrElseUpdate(ref.sym, Scrut.from(ref)), pattern, false)
             (makeConsequent, alternative)
         case SS.Head.Let(binding, term) => Let(binding, term, go(tail))
       case SS.Else(default) => Else(default)
