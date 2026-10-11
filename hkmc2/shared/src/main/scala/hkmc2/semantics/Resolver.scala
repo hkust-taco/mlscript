@@ -883,8 +883,7 @@ class Resolver(tl: TraceLogger)
             clsSym.defn.getOrElse(die)
         
         // Modules and objects are class-like definitions too. Resolve the
-        // selection once, using the explicit projection class when present;
-        // a separate singleton lookup would expand the same term twice.
+        // selection once, using the explicit projection class when present.
         
         // Class-Like Definitions
         (clsDefn orElse lhs.typDefn).foreach: 
