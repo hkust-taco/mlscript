@@ -715,14 +715,13 @@ class FixedPointCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynt
   private def assembleAlternating(links: Ls[(Pat, Opt[Pat])])(using Context): Machine =
     // Like in `assemble`, every matcher gets its own compiler instance
     // because the matcher memoization is instance-bound.
-    val matchers = links.iterator.map: (step, post) =>
+    val matchers = links.map: (step, post) =>
       val stepCompiler = new Compiler
       val (stepMatcher, stepImpls) = stepCompiler.buildMatcher(step, ResultMode.Full)
       val postMatcherOpt = post.map: postPattern =>
         val postCompiler = new Compiler
         postCompiler.buildMatcher(postPattern, ResultMode.Full)
       (stepMatcher, stepImpls, postMatcherOpt)
-    .toVector
 
     val inputSymbol = VarSymbol(Ident("input"), erasedType = N)
     val phaseSymbol = TempSymbol(N, erasedType = N, "phase")
