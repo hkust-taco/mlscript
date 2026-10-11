@@ -1,0 +1,62 @@
+:js
+
+open annotations { compile }
+
+data class Box(value)
+data class Link(value, rest)
+
+// These two transformations have identical syntax but allocate separately.
+// Sharing their matcher results would incorrectly share the returned objects.
+pattern Separate = Box(_ => Box(0)) & Box(_ => Box(0))
+
+fun separate(x) = if x is @compile Separate as [a, b] then
+  [a.value.value, b.value.value, a.value === b.value]
+else false
+
+:expect [0, 0, false]
+separate(Box(123))
+//│ = [0, 0, false]
+
+// Recursive instantiation retains the identity of the transformation body,
+// allowing the matcher graph to close even when its pattern argument includes
+// a transformation.
+pattern Links(pattern P) = null | Link(P, Links(P))
+pattern Increment = (Int as x) => x + 1
+
+fun increment(xs) = if xs is @compile Links(Increment) as result then result else false
+
+:expect Link(2, Link(3, null))
+increment(Link(1, Link(2, null)))
+//│ = Link(2, Link(3, null))
+
+:expect false
+increment(Link(1, Link("bad", null)))
+//│ = false
+
+// More than four distinct transformations force the former Set-based matcher
+// builder to use a hash trie. Emission must follow encounter order even though
+// transformation identities (and their hash codes) differ across compilations.
+let calls = 0
+fun tick() =
+  set calls = calls + 1
+  calls
+pattern Ordered =
+  & Box(_ => tick())
+  & Box(_ => tick())
+  & Box(_ => tick())
+  & Box(_ => tick())
+  & Box(_ => tick())
+  & Box(_ => tick())
+//│ calls = 0
+
+fun ordered(x) = if x is @compile Ordered as [a, b, c, d, e, f] then
+  [a.value, b.value, c.value, d.value, e.value, f.value]
+else false
+
+:expect [1, 2, 3, 4, 5, 6]
+ordered(Box(0))
+//│ = [1, 2, 3, 4, 5, 6]
+
+:expect 6
+calls
+//│ = 6

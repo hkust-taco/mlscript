@@ -1,0 +1,125 @@
+:js
+
+data class Box(value)
+
+// Each branch contains a separately elaborated reference to x. They must
+// share the constructor test and its extracted field through x's symbol.
+:ucs normalized
+fun classify(x) = if
+  x is Box(0) then "zero"
+  x is Box(1) then "one"
+  x is Box(_) then "other"
+  else "unboxed"
+//│ Normalized:
+//│ >  ‹if|while›
+//│ >    x is Box(arg$Box$0$) and
+//│ >      tmp:arg$Box$0$ is 0 then "zero"
+//│ >      tmp:arg$Box$0$ is 1 then "one"
+//│ >      else "other"
+//│ >    else "unboxed"
+
+:expect ["zero", "one", "other", "unboxed"]
+[classify(Box(0)), classify(Box(1)), classify(Box(2)), classify(0)]
+//│ = ["zero", "one", "other", "unboxed"]
+
+// Tuple positions and record fields are also shared between references to
+// the same scrutinee, including in a consequent after a successful match.
+:ucs normalized
+fun tuple(x) = if
+  x is [0, y] and x is [0, 1] then y
+  x is [0, z] then z + 10
+  else -1
+//│ Normalized:
+//│ >  ‹if|while›
+//│ >    x is []=2 and
+//│ >      let tmp:element0$ = ((tmp:runtime⁰.)Tuple‹module:Tuple›.)get‹term:Tuple/get›(x⁰, 0)
+//│ >      let tmp:element1$ = ((tmp:runtime⁰.)Tuple‹module:Tuple›.)get‹term:Tuple/get›(x⁰, 1)
+//│ >      tmp:element0$ is 0 and
+//│ >        let y = tmp:element1$⁰
+//│ >        tmp:element1$ is 1 then y⁰
+//│ >        let z = tmp:element1$⁰
+//│ >        else builtin:+⁰(z⁰, 10)
+//│ >      else builtin:-⁰(1)
+//│ >    else builtin:-⁰(1)
+
+:expect [1, 12, -1]
+[tuple([0, 1]), tuple([0, 2]), tuple([1, 2])]
+//│ = [1, 12, -1]
+
+:ucs normalized
+fun record(x) = if
+  x is {value: 0} then "zero"
+  x is {value: 1} then "one"
+  else "other"
+//│ Normalized:
+//│ >  ‹if|while›
+//│ >    x is { value: tmp:field_value$ } and
+//│ >      tmp:field_value$ is 0 then "zero"
+//│ >      tmp:field_value$ is 1 then "one"
+//│ >      else "other"
+//│ >    else "other"
+
+:expect ["zero", "one", "other"]
+[record({value: 0}), record({value: 1}), record({value: 2})]
+//│ = ["zero", "one", "other"]
+
+// The inner x has the same spelling but a different binding. Its constructor
+// test must not be specialized using knowledge about the outer x.
+:ucs normalized
+fun shadow(x) = if
+  x is Box(x) and x is Box(y) then y
+  else -1
+//│ Normalized:
+//│ >  ‹if|while›
+//│ >    x is Box(arg$Box$0$) and
+//│ >      let x = tmp:arg$Box$0$⁰
+//│ >      x is Box(arg$Box$0$) and
+//│ >        let y = tmp:arg$Box$0$¹
+//│ >        else y¹
+//│ >      else builtin:-⁰(1)
+//│ >    else builtin:-⁰(1)
+
+:expect [42, -1]
+[shadow(Box(Box(42))), shadow(Box(42))]
+//│ = [42, -1]
+
+// Equal-looking expressions are distinct evaluations. Only references to a
+// binding can share a scrutinee; these calls each need their own temporary.
+let calls = 0
+fun next() =
+  set calls = calls + 1
+  calls
+fun twice() = if
+  next() is 0 then "zero"
+  next() is 2 then "two"
+  else "other"
+//│ calls = 0
+
+:expect ["two", 2]
+[twice(), calls]
+//│ = ["two", 2]
+
+// A member reference can invoke a getter. Bind its result once before
+// testing several alternatives, but evaluate separate occurrences separately.
+let reads = 0
+fun nextValue =
+  set reads = reads + 1
+  Box(reads)
+fun memberAlternatives() = if nextValue is
+  Box(0) then "zero"
+  Box(1) then "one"
+  else "other"
+//│ reads = 0
+
+:expect ["one", 1]
+[memberAlternatives(), reads]
+//│ = ["one", 1]
+
+fun memberOccurrences() = if
+  nextValue is Box(0) then "zero"
+  nextValue is Box(3) then "three"
+  else "other"
+
+:expect ["three", 3]
+[memberOccurrences(), reads]
+//│ = ["three", 3]

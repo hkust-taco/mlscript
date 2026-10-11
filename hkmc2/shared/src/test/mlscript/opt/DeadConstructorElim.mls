@@ -452,8 +452,10 @@ consume()
 //│ define Consumer¹ as class Consumer² {
 //│   private val x³;
 //│   constructor Consumer⁰(x) {
+//│     let scrut;
 //│     set Consumer².this.x³ = x;
-//│     match Consumer².this.x³
+//│     set scrut = Consumer².this.x³;
+//│     match scrut
 //│       Observed² =>
 //│         end
 //│       else

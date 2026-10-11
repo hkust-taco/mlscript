@@ -100,7 +100,7 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
     /** Check if any branch in the split tests the given scrutinee. */
     private def referencesScrutinee(scrutinee: Term.Ref): Bool = split match
       case Split.Cons(Branch(thatScrutinee, _, continuation), tail) =>
-        (scrutinee === thatScrutinee) || continuation.referencesScrutinee(scrutinee) || tail.referencesScrutinee(scrutinee)
+        (scrutinee.sym is thatScrutinee.sym) || continuation.referencesScrutinee(scrutinee) || tail.referencesScrutinee(scrutinee)
       case Split.Let(_, _, tail) => tail.referencesScrutinee(scrutinee)
       case Split.Else(_) | Split.End => false
       case Split.LetSplit(_, tail) => tail.referencesScrutinee(scrutinee)
@@ -230,7 +230,7 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
         rec(tail).map(newTail => split.copy(tail = newTail))
       case split @ Split.Cons(head @ Branch(thatScrutinee, thatPattern, continuation), tail) =>
         log(s"CASE Cons ${head.showDbg}")
-        if scrutinee === thatScrutinee then mode match
+        if scrutinee.sym is thatScrutinee.sym then mode match
           case + =>
             log(s"Case 1.1: $scrutinee === $thatScrutinee")
             if thatPattern =:= pattern then

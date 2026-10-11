@@ -12,7 +12,7 @@ import Elaborator.{Ctx, State, ctx}, utils.TL
 import ucs.{TermSynthesizer, FlatPattern, safeRef}
 import Message.MessageContext, ucs.error
 
-import collection.mutable.{Queue, Map as MutMap, LinkedHashMap}, collection.immutable.{Set, Map}
+import collection.mutable.{Queue, Map as MutMap}, collection.immutable.{Set, Map}
 
 /** The compiler for pattern definitions. It compiles instantiated patterns into
   * a few matcher functions. Each matcher function matches a set of patterns
@@ -39,16 +39,15 @@ class Compiler(using Context)(using tl: TL)(using Ctx, State, Raise) extends Ter
       * the singleton direct-return optimization.
       */
     def select(label: Label)(using ResultMode): Term =
-      if labels.size is 1 then result
+      if labels.sizeCompare(1) === 0 then result
       else sel(result, label.asFieldName)
     /** Produce the default failure value for this matcher result with the same
       * shape that a successful submatcher call would have produced.
       */
-    def default(using ResultMode): Term = matcherResult(`null`, labels.toList match
-      case label :: Nil => emptyMatchResult("empty")
-      case labels =>
-        Rcd(false, labels.map: label =>
-          RcdField(str(label.asFieldName), emptyMatchResult("empty"))))
+    def default(using ResultMode): Term = matcherResult(`null`,
+      if labels.sizeCompare(1) === 0 then emptyMatchResult("empty")
+      else Rcd(false, labels.toList.sorted.map: label =>
+        RcdField(str(label.asFieldName), emptyMatchResult("empty"))))
   
   /** Make a match result record containing `input` and `result` fields. */
   private def matcherResult(input: => Term, result: => Term)(using ResultMode): Term =
@@ -93,9 +92,9 @@ class Compiler(using Context)(using tl: TL)(using Ctx, State, Raise) extends Ter
       case lit: syntax.Literal => lit.idStr
       case head: ClassLikeHead => head.symbol.nme
   
-  extension (patterns: Set[(Label, ExPat)])
+  extension (patterns: Ls[(Label, ExPat)])
     /** Specialize a set of patterns. Also display them in the debug log. */
-    def specializeSet(head: Opt[Head]): Set[(Label, SpPat)] =
+    def specializePatterns(head: Opt[Head]): Ls[(Label, SpPat)] =
       log(s"Specialized patterns of ${head.fold("the case without tags")(_.showDbg)}:")
       patterns.map: (label, pattern) =>
         val spec = pattern.specialize(head)
@@ -105,57 +104,58 @@ class Compiler(using Context)(using tl: TL)(using Ctx, State, Raise) extends Ter
         log(s"  ‣ Simplified: ${simp.showDbg}")
         (label, simp)
   
-  val labelMap: MutMap[Pat, Label] = MutMap()
+  private val labelMap: MutMap[Pat, Label] = MutMap()
   
-  val multiMatchers: MutMap[Set[Label], LocalVarSymbol] = MutMap.empty
+  private val multiMatchers: MutMap[Set[Label], LocalVarSymbol] = MutMap.empty
   
-  /** The built multi-matcher functions, in their deterministic build-queue
-    * order. This order is observable in generated code, so a hash map would
-    * make golden output depend on identity hash codes. */
-  val implementations: LinkedHashMap[LocalVarSymbol, (ParamList, Term)] = LinkedHashMap.empty
   
-  val buildQueue: Queue[(LocalVarSymbol, Set[Pat])] = Queue.empty
+  // Matcher identity is an unordered set of labels, but code emission follows
+  // the first request's pattern order, including its fields and transformations.
+  private val buildQueue: Queue[(LocalVarSymbol, Ls[Pat])] = Queue.empty
   
-  /** Build a matcher function that matches a single pattern. This function
-   *  should be applied to the pattern that is considered as the entry point.*/
+  /** Build a matcher for one entry pattern, returning only newly generated
+    * functions. Callers compiling several entry points with this compiler
+    * must collect all returned implementations and use the same result mode.
+    */
   def buildMatcher(pattern: Pat, resultMode: ResultMode): (LocalVarSymbol, Ls[Implementation]) = scoped("ucs:compiler"):
     given ResultMode = resultMode
-    val entryPointSymbol = buildMultiMatcher(Set(pattern))
+    val entryPointSymbol = buildMultiMatcher(Iterator.single(pattern))
+    val implementations = List.newBuilder[Implementation]
     while buildQueue.nonEmpty do
       val (symbol, patterns) = buildQueue.dequeue()
-      implementations += (symbol -> buildMultiMatcherBody(patterns))
-    entryPointSymbol -> implementations.iterator.map:
-      case (symbol, (paramList, term)) => (symbol, paramList, term)
-    .toList
+      val (paramList, term) = buildMultiMatcherBody(patterns)
+      implementations += ((symbol, paramList, term))
+    entryPointSymbol -> implementations.result()
   
-  /** Build a multi-matcher function and returns the local symbol that we can
-   *  use to call it. The built function definition is stored in the map
-   *  `implementations`. */
-  def buildMultiMatcher(patterns: Set[Pat])(using ResultMode): LocalVarSymbol =
+  /** Reuse or schedule a multi-matcher and return its callable symbol.
+    * `buildMatcher` drains the queue and returns the generated functions. */
+  def buildMultiMatcher(patterns: Iterator[Pat])(using ResultMode): LocalVarSymbol =
     // Get or create the label for each pattern. Multi-matchers are identified
     // by the set of labels (orders are not important).
-    val labels = patterns.map(_.label)
+    val distinctPatterns = patterns.distinct.toList
+    val labels = distinctPatterns.iterator.map(_.label).toSet
     multiMatchers.get(labels).getOrElse:
-      val f = TempSymbol(N, erasedType = N, makeMultiMatcherName(patterns))
+      val f = TempSymbol(N, erasedType = N, makeMultiMatcherName(distinctPatterns))
       multiMatchers += (labels -> f)
-      buildQueue enqueue (f -> patterns)
+      buildQueue enqueue (f -> distinctPatterns)
       f // Return the symbol of the built function.
   
   /** Build the body of a multi-matcher function. The memoization is done by
    *  `buildMultiMatcher`. */
-  def buildMultiMatcherBody(patterns: Set[Pat])(using ResultMode): (ParamList, Term) = trace(
+  def buildMultiMatcherBody(patterns: Ls[Pat])(using ResultMode): (ParamList, Term) = trace(
     pre = s"buildMultiMatcherBody: ${
       patterns.iterator.map: pattern =>
         s"${pattern.showDbg} => ${pattern.label}"
       .mkString("{", ", ", "}")}"
   ):
     val expandedPatterns = patterns.map(p => (p.label, p.expand(Set.empty)))
-    val heads = expandedPatterns.flatMap((_, p) => p.heads).toList
+    val heads = expandedPatterns.iterator.flatMap((_, p) => p.heads).distinct
     // This is the parameter of the current multi-matcher.
     val scrutinee = VarSymbol(Ident("input"), erasedType = N)
-    // Assemble branches for constructors and literals.
-    val branches = heads.map: head =>
-      val specialized = expandedPatterns.specializeSet(S(head))
+    // Allocate branches in source order before the default, but accumulate
+    // them in reverse order so they can be prepended to the default below.
+    val branches = heads.foldLeft(Ls.empty[Branch]): (branches, head) =>
+      val specialized = expandedPatterns.specializePatterns(S(head))
       lazy val empty = (N: Opt[Ls[(LocalVarSymbol, Option[Loc])]], Map.empty[Ident | Int, LocalVarSymbol])
       val (classFieldArguments, classFields) = head match
         case head: ClassLikeHead => head.symbol match
@@ -166,24 +166,24 @@ class Compiler(using Context)(using tl: TL)(using Ctx, State, Raise) extends Ter
               val (arguments, fields) = params.params.foldLeft(empty): (acc, param) =>
                 val (argAcc, fieldAcc) = acc
                 val fieldSymbol = TempSymbol(N, erasedType = N, param.sym.nme)
-                (argAcc :+ (fieldSymbol, param.toLoc), fieldAcc + ((param.sym.id: Ident | Int) -> fieldSymbol))
-              (S(arguments), fields)
+                ((fieldSymbol, param.toLoc) :: argAcc, fieldAcc + ((param.sym.id: Ident | Int) -> fieldSymbol))
+              (S(arguments.reverse), fields)
           case _: ModuleOrObjectSymbol => empty
         case _: syntax.Literal => empty
       val consequent = Split.Else(multiMatcherBranch(specialized, scrutinee, classFields))
-      Branch(scrutinee.safeRef, head.toFlatPattern(classFieldArguments), consequent)
+      Branch(scrutinee.safeRef, head.toFlatPattern(classFieldArguments), consequent) :: branches
     // Assemble the default branch.
     val default =
-      val specialized = expandedPatterns.specializeSet(N)
+      val specialized = expandedPatterns.specializePatterns(N)
       Split.Else(multiMatcherBranch(specialized, scrutinee, Map.empty))
     // Make a split that tries all branches in order.
-    val topmostSplit = branches.foldRight(default)(_ ~: _)
+    val topmostSplit = branches.foldLeft(default: Split)((tail, branch) => branch ~: tail)
     val bodyTerm = SynthIf(topmostSplit)
     log(s"Multi-matcher body:\n${topmostSplit.prettyPrint}")
     (paramList(param(scrutinee)), bodyTerm)
   
   def multiMatcherBranch(
-      patterns: Set[(Label, SpPat)],
+      patterns: Ls[(Label, SpPat)],
       scrutinee: LocalVarSymbol,
       knownFields: Map[Ident | Int, LocalVarSymbol]
   )(using ResultMode): Blk = trace(
@@ -192,18 +192,19 @@ class Compiler(using Context)(using tl: TL)(using Ctx, State, Raise) extends Ter
         s"${pattern.showDbg} => ${label}"
       .mkString("{", ", ", "}")}"
   ):
-    val fields = patterns.flatMap((_, p) => p.fields)
+    val fields = patterns.iterator.flatMap((_, p) => p.fields).distinct.toList
     log(s"fields: ${fields.iterator.map(_.showDbg).mkString("{", ", ", "}")}")
-    val subPatternsByField = Map.from(fields.map: field =>
-      field -> patterns.flatMap((_, p) => p.collectSubPatterns(field)))
-    val subScrutinees = Map.from(subPatternsByField.map: (field, subPatterns) =>
-      field -> MatcherResult(VarSymbol(field.asIdent, erasedType = N), subPatterns.map(_.label)))
+    val subPatternsByField = fields.map: field =>
+      field -> patterns.iterator.flatMap((_, p) => p.collectSubPatterns(field)).toList
+    val subScrutinees = Map.from(subPatternsByField.iterator.map: (field, subPatterns) =>
+      field -> MatcherResult(VarSymbol(field.asIdent, erasedType = N), subPatterns.iterator.map(_.label).toSet))
     // Let bindings that bind the sub-scrutinee to the result of each matcher.
-    val bindings = subPatternsByField.iterator.flatMap: (field, subPatterns) =>
+    val bindings = subPatternsByField.foldLeft(Ls.empty[Statement]): (statements, entry) =>
+      val (field, subPatterns) = entry
       val subScrutinee = subScrutinees(field)
       log(s"subPattern for field ${field.showDbg}: ${
         subPatterns.iterator.map(_.showDbg).mkString("{", ", ", "}")}")
-      val subMatcherSymbol = buildMultiMatcher(subPatterns)
+      val subMatcherSymbol = buildMultiMatcher(subPatterns.iterator)
       /** Shorthands for the result of the matcher branch. */
       def makeResult(fieldSymbol: LocalVarSymbol) = matcherResult(
           fieldSymbol.safeRef,
@@ -218,12 +219,11 @@ class Compiler(using Context)(using tl: TL)(using Ctx, State, Raise) extends Ter
           val consequent = Split.Else(makeResult(fieldSymbol))
           val branch = Branch(scrutinee.safeRef, fieldTest, consequent)
           SynthIf(branch ~: Split.Else(subScrutinee.default))
-      LetDecl(subScrutinee.symbol, Nil)(N) :: DefineVar(subScrutinee.symbol, result)(N) :: Nil
-    .toList
+      DefineVar(subScrutinee.symbol, result)(N) :: LetDecl(subScrutinee.symbol, Nil)(N) :: statements
     // For each pattern, we compile a split and bind the result to a variable.
     // The variable will be a field of the output record.
-    val z = (Nil: Ls[Statement], Nil: Ls[(Label, Term)])
-    val (tests, resultTerms) = patterns.iterator.foldLeft(z):
+    val z = (bindings, Nil: Ls[(Label, Term)])
+    val (statements, resultTerms) = patterns.foldLeft(z):
       case ((stmts, results), (label, pattern)) =>
         val symbol = TempSymbol(N, erasedType = N, label.asFieldName + "$")
         val makeSplit = completePattern(pattern, scrutinee, subScrutinees, Nil)
@@ -238,13 +238,14 @@ class Compiler(using Context)(using tl: TL)(using Ctx, State, Raise) extends Ter
         (DefineVar(symbol, test)(N) :: LetDecl(symbol, Nil)(N) :: stmts, (label, symbol.safeRef) :: results)
     // Materialize the matcher's final return value. Singleton matchers return
     // their only field directly; multi-label matchers still return a record.
-    val resultTerm = resultTerms.reverse match
+    val resultTerm = resultTerms match
       case (_, term) :: Nil => term
-      case terms => Rcd(false, terms.map: (label, term) =>
-        RcdField(str(label.asFieldName), term))
+      case terms => Rcd(false, terms.reverseIterator.map: (label, term) =>
+          RcdField(str(label.asFieldName), term)
+        .toList)
     // Lastly, we return the matcher result, directly for singleton matchers
     // and as a record otherwise.
-    Blk(bindings ::: tests.reverse, resultTerm)
+    Blk(statements.reverse, resultTerm)
   
   import Pattern.*
   
@@ -555,7 +556,7 @@ class Compiler(using Context)(using tl: TL)(using Ctx, State, Raise) extends Ter
   
   /** Make a human-readable name for patterns that only have class patterns. If
    *  the patterns are too complicated, we just use the counter. */
-  def makeMultiMatcherName(patterns: Set[Pat]): Str =
+  def makeMultiMatcherName(patterns: Ls[Pat]): Str =
     "matcher" +
     patterns.iterator.mapOption(_.shortName()).fold(multiMatchers.size.toString):
       _.reverse.mkString("__", "_", "")

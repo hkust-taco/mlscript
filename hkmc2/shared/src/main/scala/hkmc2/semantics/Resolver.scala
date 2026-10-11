@@ -882,27 +882,8 @@ class Resolver(tl: TraceLogger)
           sym.resolvedSym.flatMap(_.asCls).map: clsSym =>
             clsSym.defn.getOrElse(die)
         
-        // Singleton Definitions
-        lhs.singletonDefn.foreach: defn =>
-          val fsym = defn.body.members.get(id.name)
-          fsym match
-            case S(bms: BlockMemberSymbol) =>
-              log(s"Resolving symbol for ${t}, defn = ${lhs.defn}")
-              disambSym(prefer, sign)(bms) match
-                case S(ds) =>
-                  checkPrivateAccess(t, ds)
-                  t.expand(S(t.withSym(bms).resolved(ds)))
-                case N =>
-                  log(s"Unable to disambiguate ${bms}")
-                  t.expand(S(t.withSym(bms)))
-              log(s"Resolved symbol for ${t}: ${bms}")
-            case N => 
-              t.expand(S(t.withSym(ErrorSymbol(id.name, Tree.Dummy))))
-              raise: 
-                ErrorReport(
-                  msg"${defn.kind.desc.capitalize} '${defn.sym.nme}' " +
-                  msg"does not contain member '${id.name}'" -> t.toLoc :: Nil,
-                  extraInfo = S(defn))
+        // Modules and objects are class-like definitions too. Resolve the
+        // selection once, using the explicit projection class when present.
         
         // Class-Like Definitions
         (clsDefn orElse lhs.typDefn).foreach: 
@@ -925,9 +906,18 @@ class Resolver(tl: TraceLogger)
                     t.expand(S(t.withSym(bms)))
                 log(s"Resolved symbol for ${t}: ${bms}")
               case N =>
-                // TODO @Harry: Appropriately resolve all selections on classes.
-                // - MLscript programs selecting JS members without properly defining them.
-                // - Inherited members.
+                defn match
+                  case defn: ModuleOrObjectDef =>
+                    t.expand(S(t.withSym(ErrorSymbol(id.name, Tree.Dummy))))
+                    raise:
+                      ErrorReport(
+                        msg"${defn.kind.desc.capitalize} '${defn.sym.nme}' " +
+                        msg"does not contain member '${id.name}'" -> t.toLoc :: Nil,
+                        extraInfo = S(defn))
+                  case _ =>
+                    // TODO @Harry: Appropriately resolve all selections on classes.
+                    // - MLscript programs selecting JS members without properly defining them.
+                    // - Inherited members.
           case defn =>
             log(s"Unsupported selection from definition: ${defn}")
       
