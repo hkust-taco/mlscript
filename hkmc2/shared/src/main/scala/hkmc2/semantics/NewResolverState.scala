@@ -300,8 +300,8 @@ final class NewResolverState private (
     new Cache(inherited.map(_.regularTypes), identity)
   val combinedTypes: Cache[TypeFormula[DeclaredType], DeclaredType] =
     new Cache(inherited.map(_.combinedTypes), identity)
-  val wildcardTypes: Cache[(TypeResolution, TypeArgument), DeclaredType] =
-    new Cache(inherited.map(_.wildcardTypes), identity)
+  val argumentTypes: Cache[(TypeResolution, TypeArgument), DeclaredType] =
+    new Cache(inherited.map(_.argumentTypes), identity)
   val pendingTypeDependencies: Cache[TypeResolution, TypeDependencyHost] =
     new Cache(inherited.map(_.pendingTypeDependencies), identity)
   val dependencySubscriptions: Seen[(TypeResolution, TypeResolution)] =

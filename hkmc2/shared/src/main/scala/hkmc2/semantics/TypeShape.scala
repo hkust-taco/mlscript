@@ -25,7 +25,7 @@ enum TypeShape:
   case Polymorphic(params: Ls[TypeQuantifier], outer: Opt[VarSymbol], body: TypeResolution)
   case Applied(base: TypeResolution, args: Ls[TypeResolution])
   case Wildcard(input: Opt[TypeResolution], output: Opt[TypeResolution])
-  // Synthesized declaration variance retains the argument's lexical environment.
+  // Interpreted arguments retain both polarities in the argument's lexical environment.
   case Argument(parts: TypeArgument)
   // Substitution selects one part before the type is used in further constraints.
   // The argument stays in its own lexical environment, including delayed parts.
@@ -149,8 +149,9 @@ final case class DeclaredType(resolution: TypeResolution, bindings: Map[VarSymbo
   */
 final case class ContextualType(tpe: DeclaredType, marks: Ls[Marks])
 
-/** Invariant S has S in both positions. Missing wildcard parts are represented
-  * by Nothing on input and Any on output, never by inference holes.
+/** An unqualified argument is interpreted separately in the two polarities;
+  * these parts coincide only when substitution gives the same type in both.
+  * Missing wildcard parts are Nothing on input and Any on output, never holes.
   */
 final case class TypeArgument(input: DeclaredType, output: DeclaredType)
 

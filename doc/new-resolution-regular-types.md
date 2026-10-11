@@ -104,10 +104,12 @@ normalization does not freeze its current bounds. Combined nodes are interned in
 the consuming resolution state, using the same inherited-cache discipline as other
 type references.
 
-Applied aliases reduce before they become another type's argument. Arguments
-are interpreted in their caller environment first, then declaration variance is
-applied and the alias's formals are substituted. A guard on source alias symbols
-stops unproductive recursive expansion. Nested arguments are reduced before adding
+Applied aliases reduce before they become another type's argument. Both argument
+polarities are interpreted in their caller environment, then declaration variance
+retains the applicable parts and the alias's formals are substituted. The body
+receives the enclosing polarity once; nominal applications compose that polarity
+into their retained argument parts before exposing members. A guard on source alias
+symbols stops unproductive recursive expansion. Nested arguments are reduced before adding
 the outer alias to that guard, so `Identity[Identity[A]]` reduces to `A`.
 Reduction stops at nominal, tuple, record, and function constructors.
 
@@ -221,22 +223,20 @@ For the parts produced by the current argument interpretation rules:
 
 | Argument | Input part | Output part |
 | --- | --- | --- |
-| Invariant `S` | `I_p(S)` | `I_p(S)` |
+| Invariant `S` | `I_not-p(S)` | `I_p(S)` |
 | Written `in T` | `I_not-p(T)` | `Any` |
 | Written `out U` | `Nothing` | `I_p(U)` |
-| Plain `S` with declaration `in` | `I_p(S)` | `Any` |
+| Plain `S` with declaration `in` | `I_not-p(S)` | `Any` |
 | Plain `S` with declaration `out` | `Nothing` | `I_p(S)` |
 
-Written wildcards override declaration variance, as in the existing interpreter.
-The difference between the written `in T` row and the declaration-variance row is
-intentional: a written input bound is an opposite-polarity syntax occurrence;
-declaration variance selects which parts of an already interpreted argument are
-available. These are the rules to preserve, not a proposal to change substitution.
+Written wildcards override declaration variance. Written and declaration-site
+input variance both reverse polarity. An invariant argument retains both
+interpretations rather than freezing one endpoint before its two uses are known.
 
-For an invariant actual argument `B`, selecting either part of the callee's formal
-still selects the same saved `I_p(B)`. It must not reinterpret `B` with the callee's
-current polarity. Likewise, after selecting a written argument part, both subsequent
-constraint directions use that fixed type. Function inputs reverse lexical polarity;
+For an invariant actual argument `B`, selecting a part of the callee's formal
+selects the corresponding saved interpretation of `B` in its caller environment.
+After selecting either argument part, both subsequent constraint directions use
+that fixed type. Function inputs reverse lexical polarity;
 record fields, tuple fields, and function results preserve it. Scope transport does
 not change which argument part is selected and continues to use ordinary marks.
 
