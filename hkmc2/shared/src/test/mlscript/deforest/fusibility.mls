@@ -60,15 +60,25 @@ fun c(p) =
   cl() + cl()
 c(AA(7))
 //│ deforest > >>> non-affine syms >>>
+//│ deforest > call_res_for_c¹
+//│ deforest > call_res_for_c⁰
 //│ deforest > cap_ub_(term:c,0)_for_c⁰
-//│ deforest > cap_ub_(term:lambda,0)_for_c¹
-//│ deforest > cap_ub_(term:lambda,0)_for_c⁰
+//│ deforest > cap_ub_(term:lambda$,0)_for_lambda$⁰
+//│ deforest > cap_ub_(term:lambda$,1)_for_lambda$_for_c¹
+//│ deforest > cap_ub_(term:lambda$,1)_for_lambda$_for_c⁰
+//│ deforest > cap_ub_(term:lambda$,1)_for_lambda$⁰
+//│ deforest > cap_ub_(term:lambda,0)_for_lambda⁰
 //│ deforest > cl_for_c¹
 //│ deforest > cl_for_c⁰
-//│ deforest > lambda_for_c¹
-//│ deforest > lambda_for_c⁰
+//│ deforest > lambda$_for_lambda$⁰
+//│ deforest > lambda$here_for_c¹
+//│ deforest > lambda$here_for_c⁰
+//│ deforest > lambda_for_lambda⁰
 //│ deforest > p_for_c¹
 //│ deforest > p_for_c⁰
+//│ deforest > p_for_lambda$_for_c¹
+//│ deforest > p_for_lambda$_for_c⁰
+//│ deforest > p_for_lambda$⁰
 //│ deforest > tmp⁰
 //│ deforest > <<< non-affine syms <<<
 //│ deforest > >>> fusing >>>
@@ -155,10 +165,14 @@ fun c(y) = if y is AA(_) then
   0
 c(AA(1))
 //│ deforest > >>> non-affine syms >>>
-//│ deforest > _d_for_c⁰
-//│ deforest > cap_ub_(term:_d,0)_for_c⁰
+//│ deforest > _d$_for__d$⁰
+//│ deforest > _d_for__d⁰
+//│ deforest > cap_ub_(term:_d$,0)_for__d$⁰
+//│ deforest > cap_ub_(term:_d$,1)_for__d$⁰
+//│ deforest > cap_ub_(term:_d,0)_for__d⁰
 //│ deforest > cap_ub_(term:c,0)_for_c⁰
 //│ deforest > tmp⁰
+//│ deforest > y_for__d$⁰
 //│ deforest > y_for_c¹
 //│ deforest > y_for_c⁰
 //│ deforest > <<< non-affine syms <<<
@@ -673,15 +687,22 @@ c(mk(7))
 //│ deforest > call_res⁰
 //│ deforest > cap_ub_(term:c,0)_for_c⁰
 //│ deforest > cap_ub_(term:expensive,0)_for_expensive⁰
-//│ deforest > cap_ub_(term:lambda,0)_for_c¹
-//│ deforest > cap_ub_(term:lambda,0)_for_c⁰
+//│ deforest > cap_ub_(term:lambda$,0)_for_lambda$⁰
+//│ deforest > cap_ub_(term:lambda$,1)_for_lambda$_for_c¹
+//│ deforest > cap_ub_(term:lambda$,1)_for_lambda$_for_c⁰
+//│ deforest > cap_ub_(term:lambda$,1)_for_lambda$⁰
+//│ deforest > cap_ub_(term:lambda,0)_for_lambda⁰
 //│ deforest > cap_ub_(term:mk,0)_for_mk⁰
 //│ deforest > expensive_for_expensive⁰
 //│ deforest > expensive_res_for_expensive_for_mk⁰
-//│ deforest > lambda_for_c⁰
+//│ deforest > lambda$_for_lambda$⁰
+//│ deforest > lambda_for_lambda⁰
 //│ deforest > mk_res_for_mk⁰
 //│ deforest > p_for_c¹
 //│ deforest > p_for_c⁰
+//│ deforest > p_for_lambda$_for_c¹
+//│ deforest > p_for_lambda$_for_c⁰
+//│ deforest > p_for_lambda$⁰
 //│ deforest > tmp_for_mk⁰
 //│ deforest > tmp⁵
 //│ deforest > <<< non-affine syms <<<
@@ -690,7 +711,19 @@ c(mk(7))
 //│ deforest > >>> fusing >>>
 //│ deforest > <<< fusing <<<
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let tmp;
+//│ let lambda, tmp, lambda$;
+//│ @inline
+//│ define lambda$ as fun lambda$⁰(p)() {
+//│   return lambda²(p)
+//│ };
+//│ define lambda as fun lambda²(p) {
+//│   match p
+//│     AA¹ =>
+//│       return p.x⁰
+//│     else
+//│       throw new globalThis⁰.Error⁰("match error")
+//│   end
+//│ };
 //│ define expensive⁴ as fun expensive⁵(x) {
 //│   return +⁰(x, 1)
 //│ };
@@ -700,16 +733,9 @@ c(mk(7))
 //│   return AA⁰(tmp1)
 //│ };
 //│ define c⁴ as fun c⁵(p) {
-//│   let lambda;
-//│   define lambda as fun lambda²() {
-//│     match p
-//│       AA¹ =>
-//│         return p.x⁰
-//│       else
-//│         throw new globalThis⁰.Error⁰("match error")
-//│     end
-//│   };
-//│   return callTwice⁰(lambda²)
+//│   let lambda$here;
+//│   set lambda$here = lambda$⁰(p);
+//│   return callTwice⁰(lambda$here)
 //│ };
 //│ set tmp = mk⁵(7);
 //│ return c⁵(tmp)

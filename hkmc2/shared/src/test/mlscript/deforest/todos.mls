@@ -174,8 +174,6 @@ test(p) + f(p) + test(AA(AA(AA(10)))) + test(B)
 //│ p = AA(AA(AA(10)))
 
 
-// TODO: rewriting does not handle properly classes nested in functions yet
-:todo
 :expect Local(2)
 data class Global(x)
 fun test() =
@@ -191,14 +189,7 @@ test()
 //│ deforest > 	match: scrut⁰
 //│ deforest > 	fields: scrut⁰.x²
 //│ deforest > <<< fusing <<<
-//│ ╔══[COMPILATION ERROR] No definition found in scope for member 'Local'
-//│ ║  l.184: 	    Global(x) then Local(x + 1)
-//│ ║         	                   ^^^^^
-//│ ╟── which references the symbol introduced here
-//│ ║  l.182: 	  data class Local(x)
-//│ ╙──       	             ^^^^^^^^
-//│ ═══[RUNTIME ERROR] ReferenceError: Local is not defined
-//│ ═══[RUNTIME ERROR] Expected: 'Local(2)', got: 'undefined'
+//│ = Local(2)
 
 
 // TODO: fusion opportunity is lost
