@@ -1,7 +1,7 @@
 package hkmc2
 package codegen
 
-import scala.collection.mutable.LinkedHashMap
+import scala.collection.mutable.{LinkedHashMap, Map as MutMap}
 
 import hkmc2.utils.*, shorthands.*
 import utils.*
@@ -29,19 +29,15 @@ abstract class PolyInstantiationRewrite(val constraintSolver: FlowConstraintSolv
   // the solvers driving this rewrite
   def solvers: Iterable[FlowAnalysisSolverResult]
   
-  // the rewriter for the program as seen from `instId`; `forCopy` when its output becomes a new definition
-  def mkRewriter(instId: InstantiationId, forCopy: Bool): InstantiationRewriter
+  // the subclass's rewriter
+  protected type Rewriter <: InstantiationRewriter
+  
+  // the rewriter for the program as seen from `instId`: in place if `refreshSymbolMappingForCopy` is `N`,
+  // otherwise into a copy whose symbols are refreshed by the map
+  def mkRewriter(instId: InstantiationId, refreshSymbolMappingForCopy: Opt[collection.Map[Symbol, Symbol]]): Rewriter
   
   // the rewriter for the main block, which may change fun defns in place
-  def mkRootRewriter(rewrittenInPlace: Map[TermSymbol, RewrittenFunDefn]): InstantiationRewriter
-  
-  // specialized function bodies with symbols refreshed as needed
-  def mkPolyFunCopy(
-    original: FunDefn,
-    bms: BlockMemberSymbol,
-    tSym: TermSymbol,
-    rewritten: RewrittenFunDefn,
-  ): FunDefn
+  def mkRootRewriter(rewrittenInPlace: Map[TermSymbol, RewrittenFunDefn]): Rewriter
   
   // definitions this rewrite introduces besides the specialized copies
   def otherNewFunDefns: Iterable[FunDefn]
@@ -94,13 +90,14 @@ abstract class PolyInstantiationRewrite(val constraintSolver: FlowConstraintSolv
         (referringFun, (bms, tSym)) <- funSymMap.toList.sortBy(_._1.uid)
       yield
         val original = pre.res.funSymToFunDefn(referringFun)
-        mkPolyFunCopy(original, bms, tSym, mkRewriter(instId, forCopy = true).rewriteFunDefn(original))
+        val (params, body) = mkCopyRewriter(instId, original.params, original.body, Map.empty).rewriteFunDefn(original)
+        FunDefn(N, bms, tSym, params, body)(original.configOverride, Annot.Private :: original.annotations)
     
     val newFuns = newPolyFuns ++ otherNewFunDefns
     
     val rewrittenInPlace = Map.from[TermSymbol, RewrittenFunDefn]:
       for (selfInstId, funSym) <- collector.synthesizedInstIdToFunSym yield
-        funSym -> mkRewriter(selfInstId, forCopy = false).rewriteFunDefn(pre.res.funSymToFunDefn(funSym))
+        funSym -> mkRewriter(selfInstId, N).rewriteFunDefn(pre.res.funSymToFunDefn(funSym))
     
     val newMainBody = Scoped(
       Set.from(newFuns.map(_.sym)),
@@ -110,12 +107,22 @@ abstract class PolyInstantiationRewrite(val constraintSolver: FlowConstraintSolv
       Define(fdef, rest)
   
   end mkNewProgramBody
+  
+  // the rewriter of a copy of `params` and `body`, which maps symbol defined in `initMapping`
+  // and refreshes symbols bound in `body` so that a copy never rebinds an original symbol
+  protected final def mkCopyRewriter(instId: InstantiationId, params: Ls[ParamList], body: Block, initMapping: Map[Symbol, Symbol]): Rewriter =
+    val mapping = MutMap.from(initMapping)
+    val walker = SymbolRefresherWalker(mapping)
+    params.foreach(walker.refreshParamList)
+    walker.applyBlock(body)
+    mkRewriter(instId, S(mapping))
 
 
-  // rewrites the program as seen from one instantiation path `instId`
+  // rewrites the program as seen from one instantiation path `instId`: in place if `refreshSymbolMappingForCopy` is `N`,
+  // otherwise into a copy whose symbols are refreshed by the map
   // helps subclass compute the symbol for the instantiated fun defns
-  protected abstract class InstantiationRewriter(val instId: InstantiationId)
-    extends BlockTransformer(SymbolSubst.Id):
+  protected abstract class InstantiationRewriter(val instId: InstantiationId, val refreshSymbolMappingForCopy: Opt[collection.Map[Symbol, Symbol]])
+    extends SymbolMapTransformer(refreshSymbolMappingForCopy.getOrElse(Map.empty)):
     
     def rewriteFunDefn(fun: FunDefn): RewrittenFunDefn
     

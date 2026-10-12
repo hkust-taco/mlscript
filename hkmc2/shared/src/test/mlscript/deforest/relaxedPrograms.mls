@@ -137,7 +137,7 @@ fun loopSibling() =
 //│ deforest > 	match: scrut⁶
 //│ deforest > 	fields: scrut⁶.x¹
 //│ deforest > <<< fusing <<<
-//│ /!!!\ Uncaught error: scala.NotImplementedError: unsupported `continue` instruction during rewriting (of class String)
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: unsupported `continue` instruction during rewriting
 
 
 // Branch body capturing mutable vars
