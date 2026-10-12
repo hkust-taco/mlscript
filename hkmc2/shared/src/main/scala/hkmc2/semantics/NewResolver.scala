@@ -2225,8 +2225,9 @@ class NewResolver:
       case _ => ()
     // Some pattern outputs (notably concatenations and rebuilt constructors)
     // need a separate output interface. Do not reuse the input's fields for them.
-    def unknownOutput: UnknownValueShape = UnknownValueShape(Term.Error().withLocOf(pattern), fromPublicInterface = false)(ShapeProvenance(
-      msg"The output shape of this pattern is not yet known." -> pattern.toLoc :: Nil))
+    def unknownOutput: UnknownValueShape = rstate.patternOutput(pattern):
+      UnknownValueShape(Term.Error().withLocOf(pattern), fromPublicInterface = false)(ShapeProvenance(
+        msg"The output shape of this pattern is not yet known." -> pattern.toLoc :: Nil))
     def isNominal(ctor: Pattern.Constructor): Bool =
       ctor.resolvedTargets.nonEmpty && ctor.resolvedTargets.forall:
         case _: ClassSymbol | _: ModuleOrObjectSymbol => true

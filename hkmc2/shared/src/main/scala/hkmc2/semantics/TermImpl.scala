@@ -455,9 +455,9 @@ trait StatementImpl extends Located, ProductWithExtraInfo, Describable:
       case S(S(exp)) =>
         val rhs = exp.show(using summon, summon[ShowCfg].copy(showExpansionMappings = false))
         if summon[ShowCfg].showExpansionMappings then
-          if exp === t then rhs
-          // ^ Some expansions only modify meta-data, such as types and symbols;
-          //    we don't print them for conciseness
+          // Omit mappings whose displayed forms are unchanged, for example
+          // when resolution only attaches type metadata to an occurrence.
+          if res === rhs then rhs
           else res :: doc"{ ~> " :: rhs :: doc" }"
         else exp.show
       case _ => res

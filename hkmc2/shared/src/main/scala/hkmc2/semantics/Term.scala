@@ -203,15 +203,11 @@ sealed trait ResolvableImpl extends ShapeHost, PossiblyErroneous:
    * This method is only supposed to be called by Resolver. 
    */
   private[semantics] def expand(expansion: Opt[Term]): this.type =
-    // `expansion.isDefined`: Ideally, if a term is already expanded,
-    // one should look at the term's expansion and expand it again. This
-    // check is to prevent one from mistakenly overriding an expansion
-    // without looking at the instantiation.
-    //
-    // `expansion.get =/= newExpansion`: Waiting for @Luyu to revamp the
-    // desugaring stage so that no same term occurs in different places.
+    // An occurrence has one expansion. Reusing it may request that same
+    // expansion again, but further transformations must expand its current
+    // result instead of replacing it. Term equality is occurrence identity.
     if this.expansion.isDefined && this.expansion.get =/= expansion then
-      lastWords(s"Cannot expand the term ${this} multiple times (to different expansions ${expansion.get}).")
+      lastWords(s"Cannot expand the term ${this} multiple times (to different expansions ${expansion}).")
     
     this.expansion = S(expansion)
     this
@@ -422,13 +418,13 @@ enum Term extends Statement, AutoLocated, ShapePublisher:
       val originalCtx: Opt[SrcScope]
     ) (using State) extends Term, ResolvableImpl, LeadingDotSelImpl
   
-  // TODO: once the UCS/UPS stop using terms as keys
-  /* 
-  override def equals(that: Any): Bool = that match
+  // Terms are individual occurrences with their own resolution state and source
+  // locations. Comparing their syntax does not establish that they denote the
+  // same value; clients such as pattern normalization compare symbols instead.
+  final override def equals(that: Any): Bool = that match
     case that: Term => this eq that
     case _ => false
-  override def hashCode: Int = System.identityHashCode(this)
-  */
+  final override def hashCode: Int = System.identityHashCode(this)
   
   def withoutCaptures: Term = this match
     case Capture(base, _) => base.withoutCaptures

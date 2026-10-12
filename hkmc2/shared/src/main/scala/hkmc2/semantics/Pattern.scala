@@ -255,6 +255,14 @@ enum Pattern extends AutoLocated, Describable, PatternShapePublisher:
    *  `and` in split. */
   case Guarded(pattern: Pattern, guard: Term)
   
+  // Patterns are source occurrences with their own locations and alias bindings.
+  // Structurally identical aliases can bind different symbols, so equality must
+  // distinguish their nodes even before those symbols have been allocated.
+  final override def equals(that: Any): Bool = that match
+    case that: Pattern => this eq that
+    case _ => false
+  final override def hashCode: Int = System.identityHashCode(this)
+  
   
   // val trmHost: ShapeHost = new ShapeHost{}
   object trmHost extends ShapeHost:

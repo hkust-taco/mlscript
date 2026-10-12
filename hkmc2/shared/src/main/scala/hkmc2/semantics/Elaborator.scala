@@ -1161,11 +1161,13 @@ extends Importer:
   extension (term: Term)
     private inline def reference(continuation: Reference => SimpleSplit): SimpleSplit =
       term match
-        // If the term is already a reference, we can re-reference its symbol.
-        case Term.Ref(symbol) => continuation(() => symbol.ref().withLocOf(term))
-        // New references may carry lexical captures with no runtime evaluation.
+        // Local bindings already name the scrutinee; other legacy references can
+        // expand during resolution and must be evaluated once before sharing.
+        case Term.Ref(symbol: LocalVarSymbol) => continuation(() => symbol.ref().withLocOf(term))
+        // Captured local references still name a local binding. Other references,
+        // including `this`, need one for the simple split's scrutinee cache.
         case _ => term.withoutCaptures match
-          case _: Term.SimpleRef | _: Term.SelfRef => continuation(() => term)
+          case Term.SimpleRef(_: LocalVarSymbol) => continuation(() => term)
           // Member references can invoke getters; evaluate those only once.
           case _ =>
             val symbol = TempSymbol(N, erasedType = N, "scrut")

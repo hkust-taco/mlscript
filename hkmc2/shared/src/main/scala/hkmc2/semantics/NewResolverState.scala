@@ -365,6 +365,13 @@ final class NewResolverState private (
     new Cache(inherited.map(_.typeViews), identity)
   val patternTypes: Cache[(Identity[Pattern.Constructor], InnerSymbol), DeclaredType] =
     new Cache(inherited.map(_.patternTypes), identity)
+  // A pattern's unknown output has one source identity across repeated inputs.
+  // Rebuilding its synthetic term on every match would create fresh candidates
+  // in recursive pattern calls, where hosts compare source identities.
+  private val patternOutputs: Cache[Pattern, UnknownValueShape] =
+    new Cache(inherited.map(_.patternOutputs), identity)
+  def patternOutput(pattern: Pattern)(make: => UnknownValueShape): UnknownValueShape =
+    root.patternOutputs.getOrElseUpdate(pattern, patternOutputs.get(pattern).getOrElse(make))
   // Repeated refinement of one input must reuse its synthesized type hosts.
   // Constructor paths distinguish references to the same captured class.
   val patternRefinements: Cache[(Identity[Pattern.Constructor], InnerSymbol, Ls[Marks], TermShape), DeclaredType] =
