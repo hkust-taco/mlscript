@@ -33,7 +33,6 @@ trait AnyRefImpl:
 
 trait NewRefImpl extends AnyRefImpl:
   self: Term.SimpleRef | Term.MemberRef | Term.SelfRef =>
-  def refNum: Int = 0 // TODO: track reference counts like in the old refs?
 
 trait NewSelImpl extends NewResolvableImpl:
   self: Term.NewSel =>
@@ -64,7 +63,6 @@ trait UnresolvedRefImpl extends NewResolvableImpl:
   var dynamicPrefixes: Ls[Term] = Nil
 
 
-// trait FldImpl extends AutoLocated:
 trait FldImpl:
   self: Fld =>
   def children: Vector[Located] = self.term +: self.asc.toVector
@@ -91,8 +89,6 @@ trait LeadingDotSelImpl(using State):
   var resolvedTargets: Ls[flow.SelectionTarget.CompanionMember] = Nil // * filled during flow analysis
 
 
-type AnyResolvable = Resolvable | NewResolvableImpl
-// type AnyRef = Ref | SimpleRef | MemberRef
 
 type NewResolvable = NewResolvableImpl & Term
 
@@ -103,8 +99,6 @@ trait PossiblyErroneous:
 trait NewResolvableImpl extends PossiblyErroneous:
   self: MemberRef | NewSel | UnresolvedRef | Super =>
   var resolvedTargets: Ls[DefinitionSymbol[?]] = Nil // * filled during flow analysis
-  // val resSym: FlowSymbol = FlowSymbol.simpleRef(self.sym.name)
-  // var disamb: Opt[Disambiguation] = None // * filled during flow analysis
 
 
 trait StatementImpl extends Located, ProductWithExtraInfo, Describable:

@@ -457,8 +457,6 @@ object Elaborator:
             Term.SelfRef(sym)(id)
           case sym: MemberSymbol =>
             Term.MemberRef(sym)(id, FlowSymbol.memSym(sym))
-          // case sym: TermSymbol => // FIXME: should never happen... (currently happens for ref to ctor let)
-          //   Term.MemberRef(sym)(id)
         else
           // * Note: due to symbolic ops, we may have `id.name =/= nme`;
           // * e.g., we can have `id.name = "|>"` and `nme = "pipe"`.
@@ -1240,7 +1238,6 @@ extends Importer:
   def ifLike(kw: Keyword.SplitLike, form: IfLikeForm, split: SimpleSplit, loc: Opt[Loc]): Term.IfLike =
     val res = new Term.IfLike(kw, form, split).withLoc(loc)
     if newResolution then
-      // log(s"Listening to if-like split ${res.showDbg}")
       // Imperative branches are evaluated for effects; lowering discards their
       // values and returns unit, including when a loop executes zero iterations.
       if form.isImperative then pipeTerm(unit, res)
@@ -2282,7 +2279,6 @@ extends Importer:
                 val (res, newCtx2) = funParams(ps)(using newCtx)
                 newCtx = newCtx2
                 res
-              
               // * Elaborate signature
               val st = td.annotatedResultType.orElse(newSignatureTrees.get(id.name)) // FIXME: may elaborate external sig twice!!
               val s = st.map:
@@ -2694,7 +2690,6 @@ extends Importer:
     val res = ctx.withMembers(members).givenIn:
       go(blk.desugStmts, Nil, Nil)(N)
     
-    // if newResolution then
     members.valuesIterator.foreach(_.complete())
     members.valuesIterator.foreach: bms =>
       bms.symbols.foreach:
@@ -2720,7 +2715,6 @@ extends Importer:
               val sh = BaseShape(d, N) // TODO actually use applied shape providing generics?
               sym.notifyShapeListeners(sh)
         case sym: InnerSymbol =>
-          // println(">>> "+sym)
           // TODO: patterns
         case _ => ()
     

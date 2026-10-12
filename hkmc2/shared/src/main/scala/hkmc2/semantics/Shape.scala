@@ -15,7 +15,7 @@ import scala.collection.mutable
   */
 sealed trait ShapeEvent
 
-sealed trait Shape extends ShapeEvent, ShapeLike:
+sealed trait Shape extends ShapeEvent:
   def describe: Str
   /** Origin of the value or symbol described by this shape, independently of its use site. */
   def toLoc: Opt[Loc]
@@ -36,7 +36,6 @@ sealed trait Shape extends ShapeEvent, ShapeLike:
       case _ => (message -> toLoc) :: Nil
     case _: SymShape => (message -> toLoc) :: Nil
   def shwDbg(using DebugPrinter): Str = this match
-    // case ds: DefnShape => s"DefnShape(${ds.defn.describe} ${ds.defn.sym.showDbg})"
     case ds: DefnShape => ds.defn.sym.showDbg
     case as: AppShape => s"AppShape(${as.receiver.shwDbg}, ${as.args.showDbg})"
     case ms: MarkedShape[?] => s"MarkedShape(${ms.sh.shwDbg}, ${ms.mark.showDbg})"
@@ -194,7 +193,7 @@ object MarkedShape:
         else NoShape
 end MarkedShape
 
-sealed trait TermShape extends Shape:
+sealed trait TermShape extends Shape, ShapeLike:
   // Cache all lookup outcomes per shape, without materializing all inherited members.
   final def getMember(name: Str)(using state: NewResolverState): MemberLookup =
     state.membersCache.getOrElseUpdate((new Identity[TermShape](this), name), getMemberImpl(name))
@@ -263,10 +262,6 @@ sealed trait TermShape extends Shape:
   tl.trace[TermShape | NoShape](s".exit $shwDbg (${marks.showDbg})", res => s"= ${res.shwDbg}"):
     marks match
     case NoMarks => this
-    // case EntryMark(sym, id, rest) =>
-    //   MarkedShape.enter(this, sym, id).exit(rest)
-    // case ExitMark(sym, id, rest) =>
-    //   MarkedShape.exit(this, sym, id).exit(rest)
     case EntryMark(sym, id, rest) =>
       exit(rest) match
       case NoShape =>  NoShape
@@ -286,24 +281,9 @@ sealed trait TermShape extends Shape:
     marks match
     case NoMarks => this
     case EntryMark(sym, id, rest) =>
-      // MarkedShape.enter(this, sym, id).enter(rest)
-      // ???
-      // MarkedShape.exit(this, sym, id) match
-      // case NoShape => this // TODO: should this be an error?
-      // case sh: TermShape => sh.enter(rest)
       MarkedShape.exit(this, sym, id).enter(rest)
     case ExitMark(sym, id, rest) =>
-      // MarkedShape.exit(this, sym, id) match
-      // case NoShape => this // TODO: should this be an error?
-      // case sh => sh.enter(rest)
       MarkedShape.enter(this, sym, id).enter(rest)
-    // marks match
-    // case NoMarks => this
-    // case marks: SomeMarks =>
-    //   this match
-    //   case sh: NonMarkedShape => MarkedShape(sh, marks)
-    //   case MarkedShape(sh, mark) =>
-    //     ???
   
   def enter(revMarkss: Ls[Marks])(using TL): TermShape | NoShape = revMarkss match
     case Nil => this
@@ -316,11 +296,6 @@ sealed trait TermShape extends Shape:
   
 end TermShape
 
-// sealed trait TermShape:
-//   def describe: Str = this match
-//     case app: AppShape => s"application of ${app.lhs.describe} to ${app.args.describe}"
-//     case sel: SelShape => s"selection of ${sel.nme.name} from ${sel.receiver.describe}"
-//     case sym: SymShape => s"symbol ${sym.sym.describe}"
 
 /** Missing means definitely absent; Unknown must not be treated as a miss when
   * searching wildcard opens, since it can introduce an additional candidate. */
@@ -397,7 +372,6 @@ class AppShape(val receiver: CoreTermShape, val args: Term, val src: Term.App)(u
     s"instance of ${applicationHead._1.describe}"
   def toLoc: Opt[Loc] = src.toLoc
   override def toString: String = s"AppShape($receiver, ${args.showDbg})"
-  // def target: Opt[AppTarget]
 
 class NewShape(val receiver: DefnShape, val classTarget: ClassValueTarget, val clsMarks: Ls[Marks], val argss: Ls[Term], val src: Term.New,
     val supplied: Opt[Ls[DeclaredType]])(using DebugPrinter) extends CoreShape:
@@ -445,10 +419,6 @@ sealed abstract class SymShape(val sym: BlockMemberSymbol, val resSym: FlowSymbo
   def describe: Str = s"${sym.describe} symbol '${sym.nme}'"
   def toLoc: Opt[Loc] = sym.toLoc
   override def toString: String = s"SymShape($sym)"
-  def exit(revMarkss: Ls[Marks])(using TL): TermShape | NoShape = ???
-  def exit(marks: Marks)(using TL): TermShape | NoShape = ???
-  def enter(revMarkss: Ls[Marks])(using TL): TermShape | NoShape = ???
-  def enter(marks: Marks)(using TL): TermShape | NoShape = ???
 
 /** A symbolic value before its captured substitution is attached. Contextual
   * symbol views compose substitutions instead of wrapping one another.
@@ -469,12 +439,6 @@ extends SymShape(source.sym, source.resSym, source.markss)
 final class DeclaredSymShape(symbol: BlockMemberSymbol, site: FlowSymbol, marks: Ls[Marks],
     val bindings: Map[VarSymbol, DeclaredType], val annotation: Opt[Term], val positive: Bool) extends CoreSymShape(symbol, site, marks)
 
-/* 
-class ThisShape(val defn: Definition) extends NonAppTermShape:
-  def describe: Str = s"Self-reference to ${defn.bsym.describe} '${defn.bsym.nme}'"
-  override def toString: String = s"ThisShape(${defn.describe})"
-  def members: Map[Str, MemberInfo] = ???
-*/
 
 // TODO: make it not a TermShape?
 class BaseShape(val defn: ClassLikeDef, val ext: Opt[TermShape]) extends CoreHeadShape:
@@ -677,11 +641,7 @@ class DefnShape(val defn: Definition, val ext: Opt[TermShape]) extends CoreHeadS
       case ts: ClassCtorSymbol => S(ts.associatedCls.defn.get)
       case _ => N
     case _ => N
-  // def describe: Str = s"${defn.describe}"
   def describe: Str =
-    // s"${defn.bsym.describe} '${defn.bsym.nme}'"
-    // s"${defn.describe}"
-    // s"${defn.bsym.asCls.fold("")(_.defn.get.kind.desc+" ")}'${defn.bsym.nme}'"
     s"${defn match
       case defn: ClassDef => return defn.kind.desc + " value"
       case defn: TypeLikeDef => defn.kind.desc + " "
@@ -971,14 +931,12 @@ object RecordShape:
   export Element.*
 
 
-type IntroTerm = Term.Lit | Term.UnitVal | Term.Lam //| Term.New
+type IntroTerm = Term.Lit | Term.UnitVal | Term.Lam
 class IntroShape(val trm: IntroTerm, val primitive: Opt[NominalInstanceView]) extends CoreHeadShape:
   def describe: Str = trm.describe
   protected def getMemberImpl(name: Str)(using NewResolverState): MemberLookup = trm match
     case _: Term.Lit | _: Term.UnitVal => primitive.fold[MemberLookup](MemberLookup.Missing)(_.getMember(name))
     case lam: Term.Lam => MemberLookup.Missing // TODO: methods on lambdas
-    // case newTerm: Term.New =>
-    //   Map.empty // TODO
   override def getMemberThrough(name: Str, receiver: Marks)(using NewResolverState): MemberLookup = trm match
     case _: Term.Lit | _: Term.UnitVal => primitive.fold[MemberLookup](MemberLookup.Missing)(_.getMemberThrough(name, receiver))
     case _: Term.Lam => super.getMemberThrough(name, receiver)
@@ -987,9 +945,6 @@ class IntroShape(val trm: IntroTerm, val primitive: Opt[NominalInstanceView]) ex
   def toLoc: Opt[Loc] = trm.toLoc
   override def toString: Str = s"IntroShape(${trm})"
 
-sealed trait LitShape extends CoreHeadShape:
-  self: Term.Lit =>
-  protected def getMemberImpl(name: Str)(using NewResolverState): MemberLookup = MemberLookup.Missing // TODO: methods on literals, e.g. string methods
 
 
 type ShapePublisher = Publisher[ShapeEvent]

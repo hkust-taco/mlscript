@@ -773,7 +773,6 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
 
   def selSymbol(sel: AnySelTerm): Opt[DefinitionSymbol[?]] =
     sel.validResolvedTargets match
-    // sel.resolvedTargets match
     case Nil =>
       if newResolution && !sel.isErroneous then raise:
         ErrorReport(
@@ -794,8 +793,6 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
         N
     case ts =>
       if newResolution && strictResolution && !sel.isErroneous then raise:
-        // println(ts)
-        // ???
         ErrorReport(
           msg"Selection of member '${sel.nme.name}' is ambiguous, as it has multiple resolved targets" -> sel.toLoc ::
             ts.map: t =>

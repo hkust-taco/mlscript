@@ -10,7 +10,6 @@ import hkmc2.Message.MessageContext
 import hkmc2.io
 import utils.TraceLogger
 import syntax.*
-// import Tree.*
 import Term.*
 
 import Elaborator.*
@@ -22,25 +21,6 @@ class NewResolver:
   import tl.*
   import NewResolverState.Listener
   
-  /* 
-  class Constraint(val lhs: Term, val rhs: Term):
-    override def equals(obj: Any): Bool = obj match
-      case that: Constraint => (this.lhs is that.lhs) && (this.rhs is that.rhs)
-      case _ => false
-    private var _hash: Int = 0
-    override def hashCode(): Int = 
-      if _hash =/= 0 then _hash
-      else
-        var h = lhs.hashCode() * 31 + rhs.hashCode()
-        if h === 0 then h += 1
-        _hash = h
-        h
-    def showDbg(using DebugPrinter): Str =
-      s"${lhs.showDbg} <: ${rhs.showDbg}"
-  
-  val processedConstraints: mutable.Set[Constraint] = mutable.Set.empty
-  val collectedConstraints: mutable.Buffer[Constraint] = mutable.Buffer.empty
-  */
   
   // * The `FlowSymbol`s are currently used to uniquely identify terms
   private def appShapes(using rs: NewResolverState) = rs.appShapes
@@ -2593,7 +2573,6 @@ class NewResolver:
         listenCallableResult(callable)(publish)
         return
       case _ => ()
-    // log(s"appShape? lhs = $lhs, args = $args, res = $res")
     val sh = appShapes.getOrElseUpdate((lhs, res.resSym), {
       log(s"appShape: lhs = ${lhs.shwDbg}, args = ${args.showDbg}, res = ${res.showDbg}")
       new AppShape(lhs, args, res)
@@ -2633,11 +2612,9 @@ class NewResolver:
           // TODO: handle `mss`
           register
         case td: TermDefinition =>
-          // listenTerm(td.body, sh => newShape(sh, args, res))
           td.tsym match
           case ccs: ClassCtorSymbol => // TOOD: to avoid the special case, give this the actual body?
             softAssert(td.body.isEmpty)
-            // ccs.associatedCls
             // TODO: handle `mss`
             register
           case _ =>
@@ -2816,7 +2793,7 @@ class NewResolver:
       case Capture(base, thru) =>
         listenClass(base, recordTargets)(ref => selected(ref.copy(marks =
           ref.marks ::: EntryMark(ResolutionBoundary(thru), N, NoMarks) :: Nil)), reject)
-      case _ => listen(trm):
+      case _ => listen(trm, discardMarks = false):
         case sh: SymShape =>
           completedClass(sh)(cls => select(ClassReference(cls.sym,
             ExitMark(ResolutionBoundary(cls.sym), S(sh.resSym), NoMarks) :: sh.markss,
@@ -3055,7 +3032,7 @@ class NewResolver:
         listenTerm(rhs): sh =>
           publishActivated(rstate.memberVariable(sym), sh)
       case sym: LocalSymbol =>
-        listen(rhs): sh =>
+        listen(rhs, discardMarks = false): sh =>
           publishActivated(sym, sh)
     DefineVar(sym, rhs)(loc)
   
@@ -3228,7 +3205,6 @@ class NewResolver:
             case NoShape =>
               log(s"FILTER OUT ${sh.shwDbg} for ${sym.showDbg} % ${resSym.showDbg}")
             case sh: TermShape =>
-              // if sh is sh0
               if sh0.isInstanceOf[MarkedShape[?]]
               then log(s"MATCH ${sh.shwDbg} for ${sym.showDbg} % ${resSym.showDbg}")
               else log(s"PUSH ${sh.shwDbg}")
@@ -3330,7 +3306,7 @@ class NewResolver:
       // This listener validates an elaboration decision; it transports no values.
       // Keep checking late candidates in the defining block, but never mutate its
       // local bookkeeping when a completed block's listeners run in a consumer.
-      listen(trm): shape =>
+      listen(trm, discardMarks = false): shape =>
         if rstate.canResolve(trm) then shape match
           case sh: SymShape =>
             if symbols.add(sh.sym) && !collecting then fail()
@@ -3447,7 +3423,7 @@ class NewResolver:
     case Capture(base, thru) =>
       listenValue(base, receiver): shape =>
         listener(MarkedShape.enter(shape, ResolutionBoundary(thru), N))
-    case _ => listen(trm):
+    case _ => listen(trm, discardMarks = false):
       case sh: TermShape => listener(sh)
       case ss: SymShape =>
         fromSymbol(ss, listener, trm, recordValueTarget(trm, _), receiver)
@@ -3498,7 +3474,7 @@ class NewResolver:
   private def listenMemberVariable(sym: TermSymbol)(receive: Listener)(using NewResolverState): Unit =
     listenValueHost(rstate.memberVariable(sym))(receive)
 
-  def listen(trm: Term, discardMarks: Bool = false)(receive: ShapeListener[Shape])(using NewResolverState): Unit =
+  private def listen(trm: Term, discardMarks: Bool)(receive: ShapeListener[Shape])(using NewResolverState): Unit =
     val listener = activationListener(receive)
     log(s"listen: trm = ${trm.showDbg}")
     trm.addShapeListener(listener)

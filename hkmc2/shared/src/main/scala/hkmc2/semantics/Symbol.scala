@@ -2,7 +2,7 @@ package hkmc2
 package semantics
 
 import scala.collection.mutable
-import scala.collection.mutable.{Buffer, LinkedHashSet}
+import scala.collection.mutable.Buffer
 
 import hkmc2.utils.*, shorthands.*
 import syntax.*
@@ -200,8 +200,6 @@ object FlowSymbol:
   def selProj(nme: Str)(using State) =
     FlowSymbol(s"#⋅$nme")
   
-  // def memSym(sym: MemberSymbol, nme: Str)(using State) =
-  //   FlowSymbol(s"$nme(${sym.nme})")
   def memSym(sym: MemberSymbol)(using State) =
     FlowSymbol(sym.nme)
   
@@ -214,11 +212,6 @@ class ConcreteFlowSymbol(label: Str)(using State) extends FlowSymbol(label):
   def subst(using s: SymbolSubst): FlowSymbol = s.mapFlowSym(this)
 
 
-// sealed trait LocalSymbol extends Symbol, ShapePublisher:
-//   /** Shapes are published in discovery order. Resolution replays this collection to late
-//     * listeners, so an unordered set would make ambiguous-target diagnostics depend on hash and
-//     * parallel compilation timing. */
-//   private[semantics] val shapes: LinkedHashSet[Shape] = LinkedHashSet.empty
 sealed trait LocalSymbol extends Symbol, ShapeHost
 
 sealed trait NamedSymbol extends Symbol:

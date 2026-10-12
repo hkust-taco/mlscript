@@ -158,11 +158,12 @@ final class InterfaceExposure(resolver: NewResolver)(using NewResolverState, TL)
               emit(resolver.instantiateShape(shape, instances).exit(marks),
                 path.via(msg"This value is returned here." -> body.toLoc))
         case _ => ()
-      case tuple: TupleShape => tuple.segments.foreach:
-        case field: TupleShape.Fixed =>
-          watch((tuple, field, marks))(resolver.listenTupleField(field)): shape =>
-            emit(shape.exit(marks), path.via(msg"This value is stored in this tuple." -> tuple.source.toLoc))
-        case _ => ()
+      case tuple: TupleShape => tuple.segments.foreach: segment =>
+        // A spread's length can be unknown while its elements still contain
+        // private functions whose inputs become public through this tuple.
+        val field = segment.element
+        watch((tuple, field, marks))(resolver.listenTupleField(field)): shape =>
+          emit(shape.exit(marks), path.via(msg"This value is stored in this tuple." -> tuple.source.toLoc))
       case record: RecordShape => record.elements.foreach:
         case RecordShape.Field(field) => contextualTerm(field.rhs, marks,
           path.via(msg"This value is stored in this record field." -> field.toLoc), instances.withOverrides(record.instances))

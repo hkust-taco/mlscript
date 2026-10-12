@@ -160,3 +160,12 @@ private fun viaNested(x) =
   nested().get(i => i.value)
 [wrap[First](First(1)).0.first, wrap[Second](Second(2)).1.second, viaNested(Item(3))]
 //│ = [1, 2, 3]
+
+// Imported recursive aliases preserve distinct consumers' type arguments.
+class AliasFirst(val first: Int)
+private fun readFirst(chain: GenericLibrary.Chain[AliasFirst]): Int =
+  GenericLibrary.step[AliasFirst](chain).next.value.first
+
+class AliasSecond(val second: Int)
+private fun readSecond(chain: GenericLibrary.Chain[AliasSecond]): Int =
+  GenericLibrary.step[AliasSecond](chain).next.value.second

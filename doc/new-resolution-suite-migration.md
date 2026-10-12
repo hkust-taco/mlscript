@@ -5,59 +5,9 @@ is in fact likely to contain parts that are unintelligible to readers who lack s
 
 # New-resolution suite migration
 
-This document must describe only the **current state** of the migration: active
-configuration, remaining work, and validation requirements. Remove obsolete blockers
-and historical progress notes when updating it; Git history records earlier states.
-
-## Scope and status
-
-Language rules are in the [language reference](reference.md#resolution-interfaces).
-Resolver invariants are in the [design notes](new-resolution-design.md), and
-backend constraints are in [WASM resolution](new-resolution-wasm.md).
-
-The table counts semantic worksheets, following their `:.` and `:..` configuration
-imports. It excludes configuration files, shared declarations, dedicated `newres`
-regressions, root scratch files, parser-only tests, the separate InvalML checker,
-and the inactive `ucs/staging` directory. A migrated worksheet can import a legacy
-compilation fixture; mixed-mode imports are supported.
-
-| Diff-test suite | New resolution | Legacy resolution | Total |
-| --- | ---: | ---: | ---: |
-| apps | 17 | 0 | 17 |
-| backlog | 5 | 3 | 8 |
-| basics | 79 | 11 | 90 |
-| block-staging | 4 | 3 | 7 |
-| codegen | 106 | 20 | 126 |
-| ctx | 3 | 10 | 13 |
-| dead-param-elim | 14 | 0 | 14 |
-| deforest | 21 | 0 | 21 |
-| flows | 0 | 7 | 7 |
-| handlers | 9 | 29 | 38 |
-| interop | 10 | 0 | 10 |
-| lifter | 11 | 5 | 16 |
-| meta | 7 | 0 | 7 |
-| nofib | 38 | 0 | 38 |
-| objbuf | 2 | 1 | 3 |
-| opt | 30 | 0 | 30 |
-| std | 8 | 2 | 10 |
-| syntax | 11 | 0 | 11 |
-| tailrec | 4 | 1 | 5 |
-| ucs | 69 | 1 | 70 |
-| ups | 60 | 11 | 71 |
-| wasm | 23 | 0 | 23 |
-| Total | 531 | 104 | 635 |
-
-| Compilation suite | New resolution | Legacy resolution | Total |
-| --- | ---: | ---: | ---: |
-| Main | 46 | 4 | 50 |
-| Applications | 18 | 2 | 20 |
-| Nofib | 38 | 1 | 39 |
-| WASM | 1 | 0 | 1 |
-| Total | 103 | 7 | 110 |
-
-`LegacyGenericLibrary` deliberately uses legacy resolution to test mixed-mode
-imports. The other legacy compilation fixtures are listed below. Counts describe
-source configuration, not the number of test cases reported by SBT.
+Remaining migration gaps are recorded below and in the corresponding `.mls`
+regressions. Language rules are in the [language reference](reference.md#resolution-interfaces),
+and implementation contracts are in the [design notes](new-resolution-design.md).
 
 ## Remaining compilation fixtures
 
@@ -120,46 +70,7 @@ recursive and exposed interfaces; unknown shapes must not silently become dynami
 `newres/RecursiveGetters` covers cyclic getter inference, productive results,
 captured and generic activations, imports, and invalid member access.
 
-## Migration rules
-
-- Load the common language configuration before the first blank line. Most suites
-  use `:.` and a local `.mls` containing `:..`. Lifter worksheets use `:..` for the
-  language configuration and `:.` for their existing lifting flags. Preserve all
-  execution flags. `wasm/Binaryen` imports the parent language configuration with
-  `:..` because it tests JavaScript host tooling rather than the compiler's WASM backend.
-- Add ordinary parameter and result interfaces before attributing a failure to
-  language design. Use shared `Indexable` and `IterableIndexable` aliases from
-  `decls/Prelude`; avoid invariant `Any` arguments and unnecessary casts.
-- Keep host declarations accurate. Array callbacks receive three arguments for
-  `map`/`filter`/`forEach` and four for `reduce`; use `pass1`, `pass2`, or unused
-  rest parameters where appropriate. Static callbacks must retain these arities.
-- Explicitly open names that shadow builtins, including operators and helpers such
-  as `equals`, `render`, and `Symbol`. Use dynamic selectors for deliberate host
-  reflection and undeclared property additions, preserving observable effects.
-  For tests of checked dynamic access, annotate receivers as `dyn` and keep ordinary
-  selections: raw `!` selectors omit checks that these tests need to exercise.
-- Review values and logs as well as test-runner success. A tolerated error or
-  an uncalled function can hide a regression. Existing invalid operations may
-  need compilation-error expectations in addition to runtime-error expectations.
-- Keep blocked worksheets on their existing configuration with their source and
-  goldens intact. Do not add failure suppressions or dynamic escapes to bypass
-  unresolved language features.
-  Reproduce compiler failures in focused `.mls` regressions.
-
 Host-interface precision still needs work for `Array.concat`, `Array.splice`, and
 `Array.from`. `Array.reduce` without an initial accumulator also needs a signature
 that includes the element type; declared methods cannot overload by arity.
 `newres/MutableArrays` covers the missing insertion constraint for `splice`.
-
-## Validation
-
-Follow the [repository test workflow](../README.md#running-the-tests-1):
-
-1. Run `ctest` before worksheet tests to regenerate main runtime dependencies.
-   Use `catest`, `cntest`, and `cwtest` for application, Nofib, and WASM fixtures.
-2. Run affected worksheets with `dtest`, `adtest`, `ndtest`, or `wdtest`; inspect
-   all rewritten goldens and retain existing successful results and negative intent.
-3. Run `hkmc2AllTests/test` for the retained changes. Commit the final golden output
-   together with the migration, using the agent's own identity for agent commits.
-4. Update this inventory and remove resolved blockers. Remove legacy configurations
-   only when every covered worksheet can migrate without lost coverage.

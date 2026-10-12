@@ -157,7 +157,6 @@ object Pattern:
   trait ConstructorImpl extends PatternShapeHost, PossiblyErroneous:
     self: Pattern.Constructor =>
     
-    // val resSym: FlowSymbol = FlowSymbol.app
     var resolvedTargets: Ls[DefinitionSymbol[?] | VarSymbol] = Nil
   
   /** Add a mutable field to the `Alias` pattern to store the symbol for the
@@ -264,7 +263,6 @@ enum Pattern extends AutoLocated, Describable, PatternShapePublisher:
   final override def hashCode: Int = System.identityHashCode(this)
   
   
-  // val trmHost: ShapeHost = new ShapeHost{}
   object trmHost extends ShapeHost:
     def showDbg(using DebugPrinter): Str = s"trmHost(${Pattern.this.showDbg})"
   end trmHost
@@ -337,7 +335,6 @@ enum Pattern extends AutoLocated, Describable, PatternShapePublisher:
       ).toList.mkDocument("[", ", ", "]")
     case Record(fields) => doc"{${fields.map((k, v) => doc"${k.name}: ${v.show}").mkString(", ")}}"
     case Chain(first, second) => doc"${first.show} >> ${second.show}"
-    // case al @ Alias(pattern, alias) => doc"${pattern.show} as ${alias.name}‹${al.symbolOption.fold("")(_.showName)}›"
     case al @ Alias(pattern, alias) => doc"${pattern.show} as ${al.symbolOption.fold(alias.name+"ˀˀˀ")(_.showName)}"
     case Transform(pattern, _, transform) => doc"${pattern.show} => ${transform.show}"
     case Annotated(pattern, annotations) => annotations.iterator.map:

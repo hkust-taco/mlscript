@@ -403,3 +403,36 @@ private class EscapedClass with
 fun annotatedInstance(): EscapedClass = new EscapedClass
 (new EscapedClass).inspect({a: 1})
 //│ = 1
+
+// Spreading an array hides its length, but still exposes the stored functions.
+:e
+private fun hiddenInSpread(x) = x.a
+private val callbacks = mut [hiddenInSpread]
+val escapedSpread = [...callbacks]
+hiddenInSpread({a: 1})
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.409: 	private fun hiddenInSpread(x) = x.a
+//│ ║         	                                ^^^
+//│ ╟── Cannot resolve member 'a' of a value with unknown shape.
+//│ ╟── Parameter 'x' admits values of unknown shape.
+//│ ║  l.409: 	private fun hiddenInSpread(x) = x.a
+//│ ║         	                           ^
+//│ ╟── This value is stored in this tuple.
+//│ ║  l.411: 	val escapedSpread = [...callbacks]
+//│ ║         	                        ^^^^^^^^^
+//│ ╟── 'escapedSpread' is exposed by this compilation unit.
+//│ ║  l.411: 	val escapedSpread = [...callbacks]
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ callbacks = [fun hiddenInSpread]
+//│ escapedSpread = [fun hiddenInSpread]
+
+// A stored callback with a declared input interface remains callable.
+:expect 3
+private fun typedInSpread(x: {a: Int}) = x.a
+private val typedCallbacks = mut [typedInSpread]
+val escapedTypedSpread = [...typedCallbacks]
+escapedTypedSpread.0({a: 3})
+//│ = 3
+//│ escapedTypedSpread = [fun typedInSpread]
+//│ typedCallbacks = [fun typedInSpread]

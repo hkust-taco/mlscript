@@ -14,3 +14,5 @@ module GenericLibrary with
     fun result = if true then x else result
     result
   fun recursiveGetter = if true then Known(7) else recursiveGetter
+  type Chain[A] = {value: A, next: Chain[A]}
+  fun step[A](chain: Chain[A]): Chain[A] = chain.next
