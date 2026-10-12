@@ -1,0 +1,22 @@
+// PR #555 follow-up: the 256-shape budget is checked after materializing the product.
+// This 21-field input attempts to allocate 2^21 shapes before reporting a diagnostic.
+// Kept behind :exit because it exhausts the test JVM instead of completing a golden snapshot.
+// Reproduced at e785faeb3 in a separate JVM with -Xmx512m -XX:+ExitOnOutOfMemoryError:
+//   Terminating due to java.lang.OutOfMemoryError: Java heap space (exit 3, 13.46 seconds).
+// To rerun, remove :exit and its separator, then run only ReviewFlattenBudget in a disposable, memory-limited JVM.
+
+:exit
+====================================================================================================
+
+:classTags mono
+:noFreeze
+
+class A(val x)
+class B(val x)
+class Wide(val f0, val f1, val f2, val f3, val f4, val f5, val f6, val f7, val f8, val f9, val f10, val f11, val f12, val f13, val f14, val f15, val f16, val f17, val f18, val f19, val f20)
+
+:ge
+fun flattenBudget(flag) =
+  let field = if flag then new A(0) else new B(0)
+  let value = new Wide(field, field, field, field, field, field, field, field, field, field, field, field, field, field, field, field, field, field, field, field, field)
+  @matchShapes(Wide(_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _)) shape.match of value, () => 1
