@@ -2415,73 +2415,72 @@ extends Importer:
         def withFields(extraParams: Ls[ParamList])(using Ctx)(fn: (Ctx) ?=> (Term.Blk, Ctx)): (Term.Blk, Ctx) =
           softAssert(pss.sizeCompare(td.clsParams) === 0,
             s"mismatched parameter list numbers ${pss} vs ${td.clsParams}")
+          
+          lazy val owner = td.symbol match
+            // Any MemberSymbol should be an InnerSymbol, except for TypeAliasSymbol,
+            // but type aliases should not call this function.
+            case s: InnerSymbol => S(s)
+            case _: TypeAliasSymbol => die
+          
+          // For class-like types, "desugar" the parameters into additional class fields.
+          // The kind of the field's term symbol `tsym` tells whether the field is mutable.
+          def paramField(p: Param, tsym: TermSymbol, isPublicField: Bool): Ls[Statement] =
+            val fsym = BlockMemberSymbol(p.sym.nme, Nil)
+            fsym.sourceAliases = p.sym.sourceAliases
+            tsym.sourceAliases = p.sym.sourceAliases
+            tsym.decl = S(p)
+            val fdef = TermDefinition(
+              tsym.k,
+              fsym,
+              tsym,
+              Nil, N, N,
+              if newResolution then
+                S(Term.Capture(Term.SimpleRef(p.sym)(Ident(p.sym.name)), tsym))
+              else S(p.sym.ref())
+              ,
+              // `isMethod` marks members written in class bodies, which the legacy resolver
+              // forbids from returning modules. Parameter fields are not such members:
+              // moduleful class parameters are rejected as moduleful references instead.
+              TermDefFlags.empty,
+              p.modulefulness,
+              if isPublicField then Nil else Annot.Private :: Nil,
+              N,
+            )(p.toLoc)
+            assert(p.fldSym.isEmpty)
+            p.fldSym = S(fsym)
+            fsym.tsym = S(tsym)
+            tsym.defn = S(fdef)
+            fsym.complete()
+            fdef :: Nil
+          
+          // Other parameters are only bound locally in the class body.
+          def paramBinding(p: Param): Ls[Statement] =
+            val psym = TermSymbol(LetBind, owner, p.sym.id)
+            psym.sourceAliases = p.sym.sourceAliases
+            val decl = LetDecl(psym, Nil)(p.toLoc) // TODO: never use term symbols on LetDecl LHS
+            val defn = defineVar(psym, p.sym.ref())(p.toLoc)
+            p.fldSym = S(psym)
+            decl :: defn :: Nil
+          
           val fields: Ls[Statement] = pss.zip(td.clsParams).flatMap: (ps, cps) =>
             // TODO: handle this gracefully (could be caused by erroneous input code)
             softTODO(ps.params.sizeCompare(cps) === 0,
               s"mismatched param list lengths ${ps.params} vs ${cps}")
             ps.params.zip(cps).flatMap: (p, cp) =>
-              // For class-like types, "desugar" the parameters into additional class fields.
-              
-              val owner = td.symbol match
-                // Any MemberSymbol should be an InnerSymbol, except for TypeAliasSymbol,
-                // but type aliases should not call this function.
-                case s: InnerSymbol => S(s)
-                case _: TypeAliasSymbol => die
-              
               val isPublicField = p.flags.isVal || isDataClass
               if isPublicField
                 // TODO:
                 || newResolution // TODO: rm `|| newResolution`
-              then
-                val k = if p.flags.mut then MutVal else ImmutVal
-                val fsym = BlockMemberSymbol(p.sym.nme, Nil)
-                fsym.sourceAliases = p.sym.sourceAliases
-                val tsym = cp
-                tsym.sourceAliases = p.sym.sourceAliases
-                cp.decl = S(p)
-                val fdef = TermDefinition(
-                  k,
-                  fsym,
-                  tsym,
-                  Nil, N, N,
-                  if newResolution then
-                    S(Term.Capture(Term.SimpleRef(p.sym)(Ident(p.sym.name)), tsym))
-                  else S(p.sym.ref())
-                  ,
-                  // `isMethod` marks members written in class bodies, which the legacy resolver
-                  // forbids from returning modules. Parameter fields are not such members:
-                  // moduleful class parameters are rejected as moduleful references instead.
-                  TermDefFlags.empty,
-                  p.modulefulness,
-                  if isPublicField then Nil else Annot.Private :: Nil,
-                  N,
-                )(p.toLoc)
-                assert(p.fldSym.isEmpty)
-                p.fldSym = S(fsym)
-                fsym.tsym = S(tsym)
-                tsym.defn = S(fdef)
-                fsym.complete()
-                fdef :: Nil
-              else
-                val psym = TermSymbol(LetBind, owner, p.sym.id)
-                psym.sourceAliases = p.sym.sourceAliases
-                val decl = LetDecl(psym, Nil)(p.toLoc) // TODO: never use term symbols on LetDecl LHS
-                val defn = defineVar(psym, p.sym.ref())(p.toLoc)
-                p.fldSym = S(psym)
-                decl :: defn :: Nil
+              then paramField(p, cp, isPublicField)
+              else paramBinding(p)
           
-          // Also create fields for constructor(...) params (always use LetBind path)
+          // Parameters of constructor(...) declarations become fields only when marked `val`.
           val ctorFields: Ls[Statement] = extraParams.flatMap: ps =>
             ps.params.flatMap: p =>
-              val owner = td.symbol match
-                case s: InnerSymbol => S(s)
-                case _: TypeAliasSymbol => die
-              val psym = TermSymbol(LetBind, owner, p.sym.id)
-              psym.sourceAliases = p.sym.sourceAliases
-              val decl = LetDecl(psym, Nil)(p.toLoc)
-              val defn = defineVar(psym, p.sym.ref())(p.toLoc)
-              p.fldSym = S(psym)
-              decl :: defn :: Nil
+              if p.flags.isVal then
+                val k = if p.flags.mut then MutVal else ImmutVal
+                paramField(p, TermSymbol(k, owner, p.sym.id), isPublicField = true)
+              else paramBinding(p)
           
           val allFields = fields ::: ctorFields
           
@@ -2618,7 +2617,9 @@ extends Importer:
           val auxCtorPss = auxCtorParamTrees.map: ps =>
             val (res, newCtx2) =
               given Ctx = newCtx
-              params(ps, isDataClass, false)
+              // Unlike main parameters, constructor(...) parameters of data classes are not
+              // implicitly `val`: they only become fields when explicitly marked.
+              params(ps, false, false)
             newCtx = newCtx2
             res.restParam.foreach: rp =>
               raise(ErrorReport(

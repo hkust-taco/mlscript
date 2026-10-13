@@ -108,22 +108,17 @@ object Derived extends Outer.Inner1(11)
 //│ define Derived⁰ as object Derived¹ extends Outer⁰.Inner1⁰ {}; end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
-:fixme
+:expect 11
 Derived.x
-//│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.112: 	Derived.x
-//│ ║         	^^^^^^^^^
-//│ ╟── Object 'Derived' does not contain member 'x'
-//│ ║  l.104: 	object Derived extends Outer.Inner1(11)
-//│ ╙──       	       ^^^^^^^
-//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ = 11
 
 Derived."x"
+//│ = 11
 
 :e
 object Derived extends Outer.Inner2
 //│ ╔══[COMPILATION ERROR] Extending a partially applied class is not supported
-//│ ║  l.124: 	object Derived extends Outer.Inner2
+//│ ║  l.119: 	object Derived extends Outer.Inner2
 //│ ╙──       	                       ^^^^^^^^^^^^
 
 :sr

@@ -108,46 +108,43 @@ class Foo {
 //│ ╙──       	^^^
 
 
-// :fixme
-:breakme // `val` in ctor param list should be compiled or explicitly disallowed
+// A `val` constructor parameter becomes a public field.
 :sr
 class Foo {
   constructor(val a)
   val b = a + 1
 }
 //│ ————————————————| Resolved |————————————————————————————————————————————————————————————————————————
-//│   fun Foo² class Foo³::Foo⁴(val a⁰) { let a¹, a¹ = a⁰, val b²::b³ ‹flow:b¹› = +(a¹^b³, 1)‹app⁰› }
+//│   fun Foo²
+//│   class Foo³::Foo⁴(val a⁰) {
+//│     val a¹::a² ‹flow:a⁰› = a⁰^a²,
+//│     val b²::b³ ‹flow:b¹› = +(Foo⁴.this.a¹^b³, 1)‹app⁰›
+//│   }
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 
 :e
 let f = Foo(1)
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.124: 	let f = Foo(1)
+//│ ║  l.127: 	let f = Foo(1)
 //│ ║         	        ^^^^^^
 //│ ╟── Class 'Foo' must be instantiated with 'new'.
-//│ ║  l.114: 	class Foo {
+//│ ║  l.113: 	class Foo {
 //│ ╙──       	      ^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ f = undefined
 
 
 let f = new Foo(1)
-//│ f = Foo { b: 2 }
+//│ f = Foo { a: 1, b: 2 }
 
-:fixme
+:expect 1
 :sr
 f.a
-//│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.140: 	f.a
-//│ ║         	^^^
-//│ ╟── Instance of class 'Foo' does not contain member 'a'
-//│ ║  l.135: 	let f = new Foo(1)
-//│ ╙──       	        ^^^^^^^^^^
 //│ ————————————————| Resolved |————————————————————————————————————————————————————————————————————————
-//│   f².aˀˀˀ
+//│   f².a¹
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
-//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ = 1
 
 :sr
 f.b
