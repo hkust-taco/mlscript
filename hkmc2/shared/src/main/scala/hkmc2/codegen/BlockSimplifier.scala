@@ -1715,6 +1715,9 @@ class BlockSimplifier
             fun match
               case Select(qual, _) => applyPath(qual)
               case SuperSelect(qual, base, _) => applyPath(qual); applyPath(base)
+              // Otherwise, `fun` is a direct `Value.MemberRef` to `ts`: the call target itself,
+              // which `observeCall` records. Traversing it as a value would count `ts` again and
+              // set `disallowElimination`, preventing every directly called function from being inlined.
               case _ => ()
             argss.foreach(_.foreach(applyArg))
           case _ => super.applyResult(r)
