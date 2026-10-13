@@ -1,6 +1,4 @@
 :.
-:flowBasedOpt off
-// ^ FIXME: DPE causes problems
 
 // Control: an exact nominal match transfers the supplied argument to read's A.
 :expect 1
@@ -134,10 +132,10 @@ private fun read[A](parent: Types.Parent[A]) = parent.item
 read(make(Types.Second(9))).second
 read(make(Types.First(8))).second
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.135: 	read(make(Types.First(8))).second
+//│ ║  l.133: 	read(make(Types.First(8))).second
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Instance of class 'First' does not contain member 'second'
-//│ ║  l.135: 	read(make(Types.First(8))).second
+//│ ║  l.133: 	read(make(Types.First(8))).second
 //│ ╙──       	          ^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 

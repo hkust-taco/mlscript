@@ -1111,6 +1111,19 @@ class FlowConstraintSolver(val collector: FlowConstraintsCollector):
     if c.srcs.isEmpty then consFunsWithSrcs += c
     c.srcs += p
   
+  /** Whether instances of `cls` may have the fields of `ancestor` through inheritance.
+    * A class whose parent chain is not known is assumed to possibly inherit them. */
+  private def mayInheritFields(cls: CtorCls, ancestor: CtorCls): Bool = (cls, ancestor) match
+    case (cls: ClassLikeSymbol, ancestor: ClassLikeSymbol) =>
+      def go(cur: ClassLikeSymbol, seen: Set[ClassLikeSymbol]): Bool = cur.irClassHeader match
+        case N => true
+        case S(ClassHeader(N)) => false
+        case S(ClassHeader(S(parent))) => parent.asClsOrMod match
+          case S(parent) => (parent is ancestor) || !seen(parent) && go(parent, seen + parent)
+          case N => true
+      go(cls, Set(cls))
+    case _ => false
+  
   object AllUpperBounds extends
     SccAnalysis.NoopHandling[StratVar]
     with SccAnalysis.CachingComputedNodeValue[StratVar, collection.Set[ConsStrat]]:
@@ -1189,6 +1202,13 @@ class FlowConstraintSolver(val collector: FlowConstraintsCollector):
           handle(
             c.args.find(_._1 is d.field).get._2,
             d.consVar)
+        // An inherited field is initialized by a parent constructor, which can receive any
+        // of the subclass constructor's arguments. This analysis does not relate them to
+        // the field, so the instance and the selected value must be treated as unknown.
+        // Otherwise, dead-parameter elimination would drop the argument that the field holds.
+        else if mayInheritFields(c.ctor, d.selectsFrom) then
+          handle(c, UnknownCons)
+          handle(UnknownProd, d)
       case (c: Ctor, UnknownCons) =>
         addCtorDest(c, UnknownCons)
         for (_, argProd) <- c.args do handle(argProd, UnknownCons)
