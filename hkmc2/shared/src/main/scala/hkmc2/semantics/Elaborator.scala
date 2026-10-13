@@ -500,6 +500,13 @@ object Elaborator:
     */
   enum Interpretation:
     case Trm, Receiver, Specialization, Clss, Ptrn, Tpe
+    
+    /** The interpretation of the elements of a tuple or record with this interpretation.
+      * Elements are values, even when their aggregate is a receiver or a class operand.
+      */
+    def elements: Interpretation = this match
+      case Tpe => Tpe
+      case _ => Trm
 
   enum Mode:
     case Full
@@ -1688,11 +1695,11 @@ extends Importer:
           , N, rs)
       )
     case tree @ Tup(TermDef(Ins, f, N) :: fs) =>
-      Term.CtxTup((f :: fs).map(fld(_, interp)))(tree)
+      Term.CtxTup((f :: fs).map(fld(_, interp.elements)))(tree)
     case Modified(kw @ Keywrd(Keyword.`mut`), tree @ Tup(fields)) =>
-      Term.Mut(Term.Tup(fields.map(fld(_, interp)))(tree)).mkLocWith(kw)
+      Term.Mut(Term.Tup(fields.map(fld(_, interp.elements)))(tree)).mkLocWith(kw)
     case tree @ Tup(fields) =>
-      Term.Tup(fields.map(fld(_, interp)))(tree)
+      Term.Tup(fields.map(fld(_, interp.elements)))(tree)
       
     case DynamicNew(Apps(c, args)) =>
       val (mut, c2) = c match
@@ -1961,9 +1968,7 @@ extends Importer:
       ):
     
     val members = blk.definedSymbols.toMap
-    val fieldInterpretation = resultInterp match
-      case Tpe => Tpe
-      case _ => Trm
+    val fieldInterpretation = resultInterp.elements
     val newSignatureTrees = mutable.Map.empty[Str, Tree] // * Store trees of signatures
     
     // * Check for double/incompatible definitions and declarations

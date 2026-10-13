@@ -18,6 +18,11 @@ let f = Compute
 [f(3), Compute.next(3)]
 //│ = [3, 4]
 
+// Tuple elements are values, even when the tuple is the receiver of a selection.
+:expect [4, 1]
+[[Compute].0(4), [Compute].length]
+//│ = [4, 1]
+
 class Item(val value: Int)
 module Item with
   fun next(x: Item) = Item(x.value + 1)
@@ -53,10 +58,10 @@ nested()
 fun plain(x: Int) = x
 plain.missing
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.54: 	plain.missing
+//│ ║  l.59: 	plain.missing
 //│ ║        	^^^^^^^^^^^^^
 //│ ╟── Function 'plain' does not contain member 'missing'
-//│ ║  l.53: 	fun plain(x: Int) = x
+//│ ║  l.58: 	fun plain(x: Int) = x
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
