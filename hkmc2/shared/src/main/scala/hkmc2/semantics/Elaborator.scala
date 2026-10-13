@@ -2448,7 +2448,10 @@ extends Importer:
                     S(Term.Capture(Term.SimpleRef(p.sym)(Ident(p.sym.name)), tsym))
                   else S(p.sym.ref())
                   ,
-                  TermDefFlags.empty.copy(isMethod = (k is Cls)), // FIXME?!
+                  // `isMethod` marks members written in class bodies, which the legacy resolver
+                  // forbids from returning modules. Parameter fields are not such members:
+                  // moduleful class parameters are rejected as moduleful references instead.
+                  TermDefFlags.empty,
                   p.modulefulness,
                   if isPublicField then Nil else Annot.Private :: Nil,
                   N,
