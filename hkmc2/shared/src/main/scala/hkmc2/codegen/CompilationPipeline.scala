@@ -45,7 +45,8 @@ class CompilationPipeline(using Config, Raise, State, Ctx, SymbolPrinter):
         case None => prog
         case Some(dCfg) =>
           flowAnalysis.FlowAnalysis.mkTraceLogger(dCfg.config, "deforest > ", outterTl).givenIn:
-            deforest.Deforest(prog, additionalTopLevelSymbols = symbolsToPreserve)
+            deforest.Deforest(prog, additionalTopLevelSymbols =
+              symbolsToPreserve.collect{case s: semantics.LocalVarSymbol => s})
     runPass("HandlerLowering"): prog =>
       HandlerLowering(new HandlerPaths, config.effectHandlers).translateProgram(prog)
     runPass("AsyncLowering")(AsyncLowering().transform)

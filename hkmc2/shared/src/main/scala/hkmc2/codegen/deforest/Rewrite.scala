@@ -12,7 +12,7 @@ import hkmc2.codegen.flowAnalysis.*
 
 
 
-class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbols: Set[BoundSymbol])(using Raise)
+class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbols: Set[LocalVarSymbol])(using Raise)
   extends PolyInstantiationRewrite(solver.constraintSolver):
   
   type MatchOrLabelId = ResultId | LabelSymbol
@@ -193,34 +193,31 @@ class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbo
   }
   
   // compute free vars after we know new symbols
-  val dtorBranchFnFvs = MutMap.empty[CtorDtorId, Ls[ValueSymbol]]
-  val restFnFvs = MutMap.empty[RestFunId, Ls[ValueSymbol]]
+  val dtorBranchFnFvs = MutMap.empty[CtorDtorId, Ls[LocalVarSymbol]]
+  val restFnFvs = MutMap.empty[RestFunId, Ls[LocalVarSymbol]]
   locally {
     val allBranchesOfDtor = branchFunSyms.keys.groupBy(_._1)
     extension (b: Block)
       // ctx should be the branch fun parameters corresponding to ctor fields 
       def deforestFreeVars(
-        ctx: collection.Set[ValueSymbol],
+        ctx: collection.Set[LocalVarSymbol],
         instId: InstantiationId
-      ): LinkedHashSet[ValueSymbol] =
+      ): LinkedHashSet[LocalVarSymbol] =
         val traverser = new FreeVarTraverser(ctx, instId)
         traverser.applyBlock(b)
         traverser.freeVars
         
-    class FreeVarTraverser(ctx: collection.Set[ValueSymbol], instId: InstantiationId) extends BlockTraverser:
+    class FreeVarTraverser(ctx: collection.Set[LocalVarSymbol], instId: InstantiationId) extends BlockTraverser:
       extension (resId: ResultId) def concreteId = ConcreteId(resId, instId)
-      val inCtx = MutSet.from[ValueSymbol]:
+      val inCtx = MutSet.from[LocalVarSymbol]:
         ctx
-        ++ newPolyFnSyms.values.flatMap(_.values.unzip._1)
-        ++ branchFunSyms.values.unzip._1
-        ++ eState.builtinOpsMap.values
-        ++ (eState.globalThisSymbol :: eState.runtimeSymbol :: Nil : Ls[ValueSymbol])
+        ++ (eState.runtimeSymbol :: Nil : Ls[LocalVarSymbol])
         ++ pre.pgrm.main.match
-          case Scoped(syms, _) => syms.iterator
+          case Scoped(syms, _) => syms.iterator.collect{case s: LocalVarSymbol => s}
           case _ => Nil
         // for diff tests
         ++ additionalTopLevelSymbols
-      val freeVars = LinkedHashSet.empty[ValueSymbol]
+      val freeVars = LinkedHashSet.empty[LocalVarSymbol]
       
       private def handleTrackableSel(s: Result) =
         val toBeSubstSymbol = branchSelSyms(s.uid.concreteId)
@@ -228,8 +225,10 @@ class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbo
       
       override def applyValue(v: Value): Unit =
         v match
-        case Value.SimpleRef(l) if !inCtx(l) => freeVars.add(l)
-        case Value.MemberRef(bms, _) if !inCtx(bms) && bms.asClsLike.isEmpty => freeVars.add(bms)
+        case Value.SimpleRef(l) =>
+          l match
+          case l: LocalVarSymbol => if !inCtx(l) then freeVars.add(l)
+          case _: BuiltinSymbol => super.applyValue(v)
         case _ => super.applyValue(v)
       
       override def applyResult(r: Result): Unit =
@@ -261,20 +260,20 @@ class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbo
           applyResult(rhs)
           applyBlock(rest)
         case Scoped(syms, body) =>
-          for s <- syms do inCtx.add(s)
+          for case s: LocalVarSymbol <- syms do inCtx.add(s)
           applyBlock(body)
-          for s <- syms do inCtx.remove(s)
+          for case s: LocalVarSymbol <- syms do inCtx.remove(s)
         case _ => super.applyBlock(b)
       
       override def applyDefn(defn: Defn): Unit =
         lastWords(s"deforestation copying the definition ${defn.sym.nme}")
     end FreeVarTraverser
     
-    def fvsForDtor(dtorId: CtorDtorId): Ls[ValueSymbol] =
+    def fvsForDtor(dtorId: CtorDtorId): Ls[LocalVarSymbol] =
       dtorBranchFnFvs.get(dtorId) match
       case Some(fvs) => fvs
       case None =>
-        val fvsOfBranches = LinkedHashSet.empty[ValueSymbol]
+        val fvsOfBranches = LinkedHashSet.empty[LocalVarSymbol]
         for branchId <- allBranchesOfDtor(dtorId) do
           fvsOfBranches.addAll:
             branchOriginalBodies(branchId._1._1 -> branchId._2)
@@ -286,7 +285,7 @@ class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbo
         dtorBranchFnFvs(dtorId) = fvs
         fvs
     
-    def fvsForRest(restFunId: RestFunId): Ls[ValueSymbol] =
+    def fvsForRest(restFunId: RestFunId): Ls[LocalVarSymbol] =
       restFnFvs.get(restFunId) match
       case Some(fvs) => fvs
       case None =>
@@ -303,13 +302,13 @@ class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbo
 
   // Rewrites the program under a specific instantiation id
   // from the polymorphic analysis
-  protected class Rewriter(instId: InstantiationId, refreshSymbolMappingForCopy: Opt[collection.Map[Symbol, Symbol]]) extends InstantiationRewriter(instId, refreshSymbolMappingForCopy):
+  protected class Rewriter(instId: InstantiationId, refreshSymbolMappingForCopy: Opt[collection.Map[LocalVarSymbol, LocalVarSymbol]]) extends InstantiationRewriter(instId, refreshSymbolMappingForCopy):
     
     def rewriteFunDefn(fun: FunDefn): RewrittenFunDefn =
       fun.params.mapConserve(applyParamList) -> applyBlock(fun.body)
     
     // calls `fun` with possibly remapped `args`
-    def mkCall(fun: Path, args: Ls[ValueSymbol])(k: Result => Block): Block =
+    def mkCall(fun: Path, args: Ls[LocalVarSymbol])(k: Result => Block): Block =
       applyArgs(args.map(s => Arg(N, s.asPath))): args2 =>
         k(Call(fun, args2 ne_:: Nil)(CallMetadata.defaultMlsFun, N))
     
@@ -377,10 +376,6 @@ class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbo
     
     // a free block member symbol of an extracted part becomes an `fv_` parameter, which needs a different node
     override def applyValue(v: Value)(k: Value => Block): Block = v match
-      case Value.MemberRef(bms, _) => refreshSymbolMappingForCopy.flatMap(_.get(bms)) match
-        case S(s: VarSymbol) => k(Value.SimpleRef(s)(v.toLoc))
-        case S(_: BlockMemberSymbol) | N => super.applyValue(v)(k)
-        case S(s) => lastWords(s"block member symbol ${bms} mapped to ${s}")
       case Value.This(l) if refreshSymbolMappingForCopy.isDefined =>
         pre.res.modSymToBms.get(l) match
         case S(bms) => k(bms.asMemberRef(l.asMod.get))
@@ -413,13 +408,13 @@ class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbo
   // ====== start: implements the abstract members of `PolyInstantiationRewrite` ======
   def solvers: Iterable[FlowAnalysisSolverResult] = solver :: Nil
   
-  def mkRewriter(instId: InstantiationId, refreshSymbolMappingForCopy: Opt[collection.Map[Symbol, Symbol]]) = new Rewriter(instId, refreshSymbolMappingForCopy)
+  def mkRewriter(instId: InstantiationId, refreshSymbolMappingForCopy: Opt[collection.Map[LocalVarSymbol, LocalVarSymbol]]) = new Rewriter(instId, refreshSymbolMappingForCopy)
   
   def otherNewFunDefns: Iterable[FunDefn] =
     
     // the rewriter of an extracted part (branch body functions and match rest functions),
     // whose free variables `fvs` become the `fv_` parameters it returns
-    def mkExtractedBodyRewriter(instId: InstantiationId, body: Block, fvs: Ls[ValueSymbol]): (Rewriter, Ls[VarSymbol]) =
+    def mkExtractedBodyRewriter(instId: InstantiationId, body: Block, fvs: Ls[LocalVarSymbol]): (Rewriter, Ls[VarSymbol]) =
       val fvParams = fvs.map(s => new VarSymbol(Tree.Ident(s"fv_${s.nme}"), erasedType = s.mapErasedValueType))
       mkCopyRewriter(instId, Nil, body, Map.from(fvs.iterator.zip(fvParams))) -> fvParams
   

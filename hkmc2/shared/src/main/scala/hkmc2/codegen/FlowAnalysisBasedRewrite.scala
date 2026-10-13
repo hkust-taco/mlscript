@@ -20,7 +20,7 @@ class FlowAnalysisBasedRewrite(
 
   private case class EtaParamList(params: ParamList, args: Ls[Arg])
   
-  class Rewriter(instId: InstantiationId, refreshSymbolMappingForCopy: Opt[collection.Map[Symbol, Symbol]]) extends InstantiationRewriter(instId, refreshSymbolMappingForCopy):
+  class Rewriter(instId: InstantiationId, refreshSymbolMappingForCopy: Opt[collection.Map[LocalVarSymbol, LocalVarSymbol]]) extends InstantiationRewriter(instId, refreshSymbolMappingForCopy):
     
     // dead parameter elimination states and helper functions
     private val activeEliminatedParams = MutSet.empty[VarSymbol]
@@ -250,7 +250,7 @@ class FlowAnalysisBasedRewrite(
   def solvers: Iterable[FlowAnalysisSolverResult] =
     deadParamElimSolver :: etaExpansionSolver :: deadConstructorElimSolver :: Nil
   
-  def mkRewriter(instId: InstantiationId, refreshSymbolMappingForCopy: Opt[collection.Map[Symbol, Symbol]]) = new Rewriter(instId, refreshSymbolMappingForCopy)
+  def mkRewriter(instId: InstantiationId, refreshSymbolMappingForCopy: Opt[collection.Map[LocalVarSymbol, LocalVarSymbol]]) = new Rewriter(instId, refreshSymbolMappingForCopy)
   
   def mkRootRewriter(rewrittenInPlace: Map[TermSymbol, RewrittenFunDefn]) =
     new Rewriter(Nil, N):

@@ -137,7 +137,7 @@ end DeforestFusionSolver
 
 
 object Deforest:
-  def apply(p: Program, additionalTopLevelSymbols: Set[BoundSymbol])(using
+  def apply(p: Program, additionalTopLevelSymbols: Set[LocalVarSymbol])(using
     cfg: Config,
     tl: TL,
     raise: Raise,

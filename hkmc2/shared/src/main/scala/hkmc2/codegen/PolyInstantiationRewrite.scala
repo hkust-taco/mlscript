@@ -34,7 +34,7 @@ abstract class PolyInstantiationRewrite(val constraintSolver: FlowConstraintSolv
   
   // the rewriter for the program as seen from `instId`: in place if `refreshSymbolMappingForCopy` is `N`,
   // otherwise into a copy whose symbols are refreshed by the map
-  def mkRewriter(instId: InstantiationId, refreshSymbolMappingForCopy: Opt[collection.Map[Symbol, Symbol]]): Rewriter
+  def mkRewriter(instId: InstantiationId, refreshSymbolMappingForCopy: Opt[collection.Map[LocalVarSymbol, LocalVarSymbol]]): Rewriter
   
   // the rewriter for the main block, which may change fun defns in place
   def mkRootRewriter(rewrittenInPlace: Map[TermSymbol, RewrittenFunDefn]): Rewriter
@@ -110,9 +110,9 @@ abstract class PolyInstantiationRewrite(val constraintSolver: FlowConstraintSolv
   
   // the rewriter of a copy of `params` and `body`, which maps symbol defined in `initMapping`
   // and refreshes symbols bound in `body` so that a copy never rebinds an original symbol
-  protected final def mkCopyRewriter(instId: InstantiationId, params: Ls[ParamList], body: Block, initMapping: Map[Symbol, Symbol]): Rewriter =
+  protected final def mkCopyRewriter(instId: InstantiationId, params: Ls[ParamList], body: Block, initMapping: Map[LocalVarSymbol, LocalVarSymbol]): Rewriter =
     val mapping = MutMap.from(initMapping)
-    val walker = SymbolRefresherWalker(mapping)
+    val walker = SymbolRefresherWalker(mapping.asInstanceOf)
     params.foreach(walker.refreshParamList)
     walker.applyBlock(body)
     mkRewriter(instId, S(mapping))
@@ -121,8 +121,8 @@ abstract class PolyInstantiationRewrite(val constraintSolver: FlowConstraintSolv
   // rewrites the program as seen from one instantiation path `instId`: in place if `refreshSymbolMappingForCopy` is `N`,
   // otherwise into a copy whose symbols are refreshed by the map
   // helps subclass compute the symbol for the instantiated fun defns
-  protected abstract class InstantiationRewriter(val instId: InstantiationId, val refreshSymbolMappingForCopy: Opt[collection.Map[Symbol, Symbol]])
-    extends SymbolMapTransformer(refreshSymbolMappingForCopy.getOrElse(Map.empty)):
+  protected abstract class InstantiationRewriter(val instId: InstantiationId, val refreshSymbolMappingForCopy: Opt[collection.Map[LocalVarSymbol, LocalVarSymbol]])
+    extends SymbolMapTransformer(refreshSymbolMappingForCopy.getOrElse(Map.empty).asInstanceOf):
     
     def rewriteFunDefn(fun: FunDefn): RewrittenFunDefn
     
