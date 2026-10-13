@@ -90,7 +90,7 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
     def definedValues(includeNonTerms: Bool): Ls[(Str, ScopedSymbol, N)] =
       import Elaborator.Ctx.*
       curCtx.env.iterator.flatMap:
-        case (nme, e @ (_: RefElem | SelElem(base = RefElem(_: InnerSymbol)))) =>
+        case (nme, e @ (_: RefElem)) =>
           e.symbol match
           case S(ts: TermSymbol) =>
             softAssert(false, s"Unexpected term symbol in the top-level environment: ${ts.showDbg}")
