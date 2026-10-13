@@ -210,8 +210,10 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
   
   def block(stats: Ls[Statement], res: Rcd \/ Term, inStmtPos: Bool = false)
         (k: Result => Block)(using LoweringCtx): Block =
+    
     // TODO we should also isolate and reorder classes by inheritance topological sort
     val (imps, funs, rest) = splitBlock(stats, Nil, Nil, Nil)
+    
     // * Bind local values before lowering any statements: hoisted functions and recursive initializers can
     // * refer to them before their definitions are lowered, even if an early return skips their initialization.
     // * Keep preserved definitions on their original symbols for imports and subsequent REPL blocks,
@@ -268,7 +270,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
         d match
         case td: TermDefinition =>
           reportAnnotations(td, td.extraAnnotations)
-          val localVal = loweringCtx.localVals.get(td.tsym)
+          lazy val localVal = loweringCtx.localVals.get(td.tsym)
           if td.owner.isEmpty && td.hasDeclareModifier.isEmpty && localVal.isEmpty then
             loweringCtx.collectScopedSym(td.sym)
           td.body match
@@ -276,22 +278,23 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
             blockImpl(stats, res)
           case S(bod) =>
             td.k match
-            case _: syntax.Val if localVal.isDefined =>
-              assert(td.params.isEmpty)
-              term_nonTail(bod): r =>
-                defineSymbol(localVal.get, r, blockImpl(stats, res))
             case knd: syntax.Val =>
-              assert(td.params.isEmpty)
-              val cfgOverride = td.extraAnnotations.collectFirst:
-                case Annot.Config(modify) => modify(config)
-              subTerm_nonTail(bod)(r =>
-                // Assign(td.sym, r,
-                //   term(st.Blk(stats, res))(k)))
-                Define(
-                  ValDefn(td.tsym, td.sym, castTo(r, td.tsym.erasedType, bod.toLoc))(cfgOverride, td.annotations),
-                  blockImpl(stats, res),
-                ),
-              )(using LoweringCtx.nestFunc(N))
+              localVal match
+              case S(sym) =>
+                term_nonTail(bod): r =>
+                  defineSymbol(sym, r, blockImpl(stats, res))
+              case N =>
+                assert(td.params.isEmpty)
+                val cfgOverride = td.extraAnnotations.collectFirst:
+                  case Annot.Config(modify) => modify(config)
+                subTerm_nonTail(bod)(r =>
+                  // Assign(td.sym, r,
+                  //   term(st.Blk(stats, res))(k)))
+                  Define(
+                    ValDefn(td.tsym, td.sym, castTo(r, td.tsym.erasedType, bod.toLoc))(cfgOverride, td.annotations),
+                    blockImpl(stats, res),
+                  ),
+                )(using LoweringCtx.nestFunc(N))
             case syntax.Fun =>
               val (paramLists, bodyBlock) = setupFunctionOrByNameDef(td.params, bod, S(td.sym.nme), td.tsym.declaredResultType)
               val cfgOverride = td.extraAnnotations.collectFirst:
@@ -1496,11 +1499,11 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
   def program(main: st.Blk, symbolsToPreserve: Set[ScopedSymbol]): Program =
     
     val (imps, funs, rest) = splitBlock(main.stats, Nil, Nil, Nil)
+    
     // * File-level values participate in the compilation unit's default export and private ABI.
     // * Only values inside local blocks can be replaced by fresh variables without breaking that linkage.
-    val topLevelVals = rest.collect:
-      case td: TermDefinition if td.k.isInstanceOf[syntax.Val] => td.sym
-    .toSet
+    inline def topLevelVals = rest.iterator.collect:
+        case td: TermDefinition if td.k.isInstanceOf[syntax.Val] => td.sym
     
     val blk =
       inScopedBlockExcept(symbolsToPreserve)(using LoweringCtx.empty(symbolsToPreserve ++ topLevelVals)):
