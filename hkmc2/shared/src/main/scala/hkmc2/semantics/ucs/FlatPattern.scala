@@ -58,7 +58,7 @@ enum FlatPattern extends AutoLocated:
       .toVector
   
   def show(using utils.Scope, ShowCfg, Raise): document.Document =
-    import document.*, Document.*
+    import document.*
     this match
       case Lit(literal) => doc"${literal.idStr}"
       case ClassLike(ctor, _, args, refined) =>

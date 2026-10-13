@@ -127,7 +127,7 @@ enum Split extends AutoLocated with ProductWithTail:
     case Split.UseSplit(sym) => sym.body.freeSplitSyms + sym
   
   def show(using utils.Scope, ShowCfg, Raise): document.Document =
-    import document.*, Document.*
+    import document.*
     this match
       case Cons(Branch(scrutinee, pattern, continuation), tail) =>
         doc"${scrutinee.show} is ${pattern.show} then { #{  # ${continuation.show} #}  # } # ${tail.show}"

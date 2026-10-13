@@ -1,8 +1,6 @@
 package hkmc2
 package semantics
 
-import hkmc2.utils.*, shorthands.*
-
 /** A flat substitution from source binders to their canonical call-site instances.
   * Keys are derived from instance origins; callers cannot choose a different key.
   * Composition preserves existing instance identities, never instantiates an

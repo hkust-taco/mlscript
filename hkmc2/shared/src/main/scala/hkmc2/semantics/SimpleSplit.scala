@@ -4,7 +4,6 @@ package semantics
 import hkmc2.utils.*, shorthands.*, syntax.*, Tree.{BoolLit, Keywrd}
 import Keyword.{`do`, `else`, `then`}, utils.TL, Elaborator.{Ctx, State}
 import hkmc2.document.*
-import hkmc2.document.Document.*
 
 /**
   * Similar to `Split` but contains nested patterns (i.e., class `Pattern`).
@@ -32,7 +31,6 @@ enum SimpleSplit extends AutoLocated with ProductWithTail:
       case End => this
   
   def showSub(using Scope, ShowCfg, Raise, IfLikeForm): Document = this match
-        // doc"${scrutinee.show} is ${pattern.show} and { #{  # ${consequent.show} #}  # }"
     case Cons(head, End) => doc"${summon[IfLikeForm].midStr} ${head.show}"
     case Cons(head, tail) => doc" and { #{  # ${head.show}; # ${tail.show} #}  # }"
     // case Else(default) => doc" else ${default.show}"

@@ -1,7 +1,7 @@
 package hkmc2
 package semantics
 
-import scala.collection.mutable.{Buffer, Set as MutSet, LinkedHashSet}
+import scala.collection.mutable.{Buffer, Set as MutSet}
 
 import hkmc2.utils.*, shorthands.*
 import syntax.*
@@ -14,7 +14,6 @@ import Elaborator.State
 import hkmc2.typing.Type
 import hkmc2.semantics.Elaborator.{Ctx, ctx}
 import hkmc2.Message.MessageContext
-import hkmc2.semantics.flow.{SelectionTarget, AppTarget}
 import hkmc2.codegen.Erasure
 
 
@@ -107,9 +106,6 @@ sealed trait AnySel extends ResolvableImpl:
   val originalCtx: Opt[SrcScope]
   
   var resolvedTargets: Ls[flow.SelectionTarget] = Nil // * filled during flow analysis
-  def validResolvedTargets = resolvedTargets.filterNot:
-    case flow.SelectionTarget.Err(_) => true
-    case _ => false
 end AnySel
 
 object AnySel:
@@ -119,13 +115,6 @@ object AnySel:
     case Term.SelProj(lhs, cls, proj) => S((lhs, proj, S(cls)))
 end AnySel
 
-
-sealed trait AppImpl extends ResolvableImpl:
-  self: Term.App =>
-  var resolvedTargets: Ls[flow.AppTarget] = Nil // * filled during flow analysis
-end AppImpl
-
-
 type Resolvable = Term & ResolvableImpl
 
 // TODO: remove when the new resolution migration is completed.
@@ -133,8 +122,6 @@ sealed trait ResolvableImpl extends ShapeHost, PossiblyErroneous:
   this: Term =>
   
   import Resolvable.CallableDefinition
-  
-  def getShapes: Ls[ShapeEvent] = shapes.toList
   
   /**
    * The expanded form of the term, if it exists. 
@@ -331,7 +318,7 @@ enum Term extends Statement, AutoLocated, ShapePublisher:
   case UnitVal()
   case DynTy()
   case Missing // Placeholder terms that were not elaborated due to the "lightweight" elaboration mode `Mode.Light`
-  case Lit(lit: Literal) extends Term
+  case Lit(lit: Literal)
   
   // --- NEW ---
   case SimpleRef(sym: codegen.SimpleSymbol)(val tree: Tree.Ident) extends Term, NewRefImpl
@@ -362,7 +349,7 @@ enum Term extends Statement, AutoLocated, ShapePublisher:
   // --- END ---
   
   case App(lhs: Term, rhs: Term)
-    (val tree: Tree.App, val typ: Opt[Type], val resSym: FlowSymbol) extends Term, AppImpl
+    (val tree: Tree.App, val typ: Opt[Type], val resSym: FlowSymbol) extends Term, ResolvableImpl
   case TyApp(lhs: Term, targs: Ls[Term])
     (val typ: Opt[Type]) extends Term, ResolvableImpl
   /** `checked` asks resolution to validate the receiver and determine the element
@@ -628,10 +615,7 @@ enum Term extends Statement, AutoLocated, ShapePublisher:
       case Capture(base, thru) => Capture(base.mkClone, thru)
       case term @ Resolved(t, sym) => copyResolution(term, Resolved(t.mkClone, sym)(term.typ))
       case term @ Ref(sym) => copyResolution(term, Ref(sym)(Tree.Ident(term.tree.name), term.typ))
-      case term @ App(lhs, rhs) =>
-        val copy = App(lhs.mkClone, rhs.mkClone)(term.tree, term.typ, term.resSym)
-        copy.resolvedTargets = term.resolvedTargets
-        copyResolution(term, copy)
+      case term @ App(lhs, rhs) => copyResolution(term, App(lhs.mkClone, rhs.mkClone)(term.tree, term.typ, term.resSym))
       case term @ TyApp(lhs, targs) => copyResolution(term, TyApp(lhs.mkClone, targs.map(_.mkClone))(term.typ))
       case term @ Sel(prefix, nme) => copySelection(term, Sel(prefix.mkClone, Tree.Ident(nme.name))(term.sym, term.resSym, term.typ, term.originalCtx))
       case term @ SynthSel(prefix, nme) => copySelection(term, SynthSel(prefix.mkClone, Tree.Ident(nme.name))(term.sym, term.resSym, term.typ, term.originalCtx))
@@ -691,11 +675,6 @@ enum Term extends Statement, AutoLocated, ShapePublisher:
       case Handle(lhs, rhs, args, derivedClsSym, defs, body) =>
         Handle(lhs, rhs.mkClone, args.map(_.mkClone), derivedClsSym, defs, body.mkClone)
     copyMetadata(this, that)
-  
-  // // private[semantics] val reslListeners: Buffer[Resolution] = MutSet.empty
-  // private[semantics] val shapeListeners: Buffer[Shape => Unit] = Buffer.empty
-  // // private[semantics] def listen(f: Shape => Unit): Unit =
-  // //   shapeListeners += f
   
 end Term
 
@@ -1222,7 +1201,7 @@ enum IfLikeForm:
     case ReturningIf => "if"
     case ImperativeIf => "if"
     case While => "while"
-  def midStr: Str =  if isImperative then "do" else "then"
+  def midStr: Str = if isImperative then "do" else "then"
 
 
 sealed abstract class Elem extends AutoLocated:

@@ -5,10 +5,7 @@ import scala.collection.mutable
 import scala.annotation.tailrec
 
 import hkmc2.utils.*, shorthands.*
-import hkmc2.utils.*
 import hkmc2.Message.MessageContext
-import hkmc2.io
-import utils.TraceLogger
 import syntax.*
 import Term.*
 
@@ -3260,7 +3257,6 @@ class NewResolver:
         case N if sym.asTrm.exists(_.k is LetBind) =>
           listenMemberVariable(sym.asTrm.get)(wrappedListener)
         case N =>
-          // sym.defnListeners += (d => listener(defnShapes.getOrElseUpdate(sym, DefnShape(d))))
           softAssert(false, s"Symbol definition of ${sym} is not set upon completion of ${bms}")
       case _ =>
         def reportError(using NewResolverState) = resolError(trm,

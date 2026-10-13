@@ -973,11 +973,7 @@ extends Importer:
     ifLike(tree.kw.kw, form, split, tree.toLoc)
   
   protected def mkSplitLet(binding: LocalVarSymbol, term: Term): Head.Let =
-    if newResolution then
-      binding match
-      case binding: ShapeHost =>
-        if newResolution then pipeTerm(term, binding)
-      // case _ => ???
+    if newResolution then pipeTerm(term, binding)
     Head.Let(binding, term)
   
   protected def mkMatch(scrutinee: Term, pattern: Pattern, consequent: SimpleSplit) =

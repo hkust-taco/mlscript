@@ -772,7 +772,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
       else true
 
   def selSymbol(sel: AnySelTerm): Opt[DefinitionSymbol[?]] =
-    sel.validResolvedTargets match
+    sel.resolvedTargets match
     case Nil =>
       if newResolution && !sel.isErroneous then raise:
         ErrorReport(
@@ -1357,7 +1357,6 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
     case sel: NewSel => newSelection(sel): (prefix, name, target) =>
       if sel.tupleIndex.nonEmpty then subTerm_nonTail(prefix)(p => k(selectionPath(sel, p, name, target)))
       else setupNamedSelection(prefix, name, target, sel.toLoc)(k)
-        
     
     case sel @ Sel(prefix, nme) =>
       if sel.isErroneous then compError else

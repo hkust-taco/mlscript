@@ -1,19 +1,13 @@
 package hkmc2
 package semantics
 
-import scala.collection.mutable.{Buffer, Set as MutSet, LinkedHashSet}
-
 import hkmc2.utils.*, shorthands.*
 import syntax.*
 import hkmc2.utils.Scope
-import hkmc2.utils.Scope.scope
 import hkmc2.document.*
 import hkmc2.document.Document.*
 
 import Elaborator.State
-import hkmc2.typing.Type
-import hkmc2.semantics.Elaborator.{Ctx, ctx}
-import hkmc2.Message.MessageContext
 import hkmc2.codegen.Erasure
 
 import Term.*
@@ -384,7 +378,6 @@ trait StatementImpl extends Located, ProductWithExtraInfo, Describable:
         // doc"${kw.name} ${form.headStr} ${split.show}"
         given IfLikeForm = form
         doc"${form.headStr} { #{  # ${split.show} #}  # }"
-        // val fs = fomr match
       case Missing => doc"‹missing›"
       case TyApp(lhs, targs) => doc"${lhs.show}[${targs.map(_.show).mkDocument(", ")}]"
       case DynSel(prefix, field, arrayIdx, _) =>
@@ -569,6 +562,6 @@ trait StatementImpl extends Located, ProductWithExtraInfo, Describable:
     case LeadingDotSel(nme) => s"_?_.${nme.name}"
     case SetConfig(_) => "#config(...)"
   
-end StatementImpl  
+end StatementImpl
 
 

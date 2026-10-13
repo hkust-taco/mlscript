@@ -204,9 +204,8 @@ class CompilerCtx(
     // State remains the owner captured by the prelude symbols themselves.
     // The prelude is elaborated once per context, under its own file directives applied
     // to the root configuration. Were it elaborated per requester, cached compilation
-    // units would keep referring to whichever
-    // elaboration came first, and a body inlined across units would then carry prelude symbols
-    // that the importing file does not recognize.
+    // units would keep referring to whichever elaboration came first, and a body inlined
+    // across units would then carry prelude symbols that the importing file does not recognize.
     val lastMod = fs.getLastChangedTimestamp(file)
     cache.upsertPrelude(file)(
       isCurrent = art =>

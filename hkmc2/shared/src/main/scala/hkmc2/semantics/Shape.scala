@@ -4,9 +4,6 @@ package semantics
 import hkmc2.utils.*, shorthands.*
 import syntax.*
 import hkmc2.Message.MessageContext
-import hkmc2.document.*
-import hkmc2.document.Document.*
-import scala.collection.mutable
 
 
 type ShapePublisher = Publisher[ShapeEvent]

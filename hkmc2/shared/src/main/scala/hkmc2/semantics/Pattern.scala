@@ -8,7 +8,6 @@ import Elaborator.State, Message.MessageContext, ucs.error
 import scala.annotation.tailrec, util.chaining.*
 import utils.{TraceLogger, tl}
 import hkmc2.document.*
-import hkmc2.document.Document.*
 
 object Pattern:
   /** The reason why a variable obtained from `Pattern.variables` is invalid. */
