@@ -100,7 +100,6 @@ let f = Foo(1)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ f = Foo(1)
 
-// :fixme
 // :de
 :sr
 f.a
@@ -109,7 +108,6 @@ f.a
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 1
 
-// :fixme
 // :de
 :sr
 f.b
@@ -145,7 +143,6 @@ val fv = Foo(1)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ fv = Foo(1)
 
-// :fixme
 :sr
 :sir
 :expect 1
@@ -236,17 +233,17 @@ let g = f(1)
 :e
 g(2)
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.237: 	g(2)
+//│ ║  l.234: 	g(2)
 //│ ║         	^^^^
 //│ ╟── Instance of class 'Foo' cannot receive more argument lists.
-//│ ║  l.233: 	let g = f(1)
+//│ ║  l.230: 	let g = f(1)
 //│ ╙──       	        ^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :e
 let f = new Foo()
 //│ ╔══[COMPILATION ERROR] Resolution error in object instantiation
-//│ ║  l.247: 	let f = new Foo()
+//│ ║  l.244: 	let f = new Foo()
 //│ ║         	        ^^^^^^^^^
 //│ ╟── Class 'Foo' expected 1 argument, but got 0
 //│ ║  l.84: 	class Foo(val a) {
@@ -261,10 +258,10 @@ let f = new Foo()
 :e
 new 42
 //│ ╔══[COMPILATION ERROR] Resolution error in object instantiation
-//│ ║  l.262: 	new 42
+//│ ║  l.259: 	new 42
 //│ ║         	^^^^^^
 //│ ╟── Invalid class expression: integer literal
-//│ ║  l.262: 	new 42
+//│ ║  l.259: 	new 42
 //│ ╙──       	    ^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 

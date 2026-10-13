@@ -89,7 +89,6 @@ trait LeadingDotSelImpl(using State):
   var resolvedTargets: Ls[flow.SelectionTarget.CompanionMember] = Nil // * filled during flow analysis
 
 
-
 type NewResolvable = NewResolvableImpl & Term
 
 /** Suppress follow-on diagnostics after a resolution or flow error. */

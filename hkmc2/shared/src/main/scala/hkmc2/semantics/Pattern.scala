@@ -262,11 +262,6 @@ enum Pattern extends AutoLocated, Describable, PatternShapePublisher:
     case _ => false
   final override def hashCode: Int = System.identityHashCode(this)
   
-  
-  object trmHost extends ShapeHost:
-    def showDbg(using DebugPrinter): Str = s"trmHost(${Pattern.this.showDbg})"
-  end trmHost
-  
   infix def binds(id: Ident): Pattern.Alias = Pattern.Alias(this, id)
   
   /** Annotate the pattern using the given term. If the term is `Error`, then

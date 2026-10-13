@@ -230,7 +230,9 @@ final class NewResolverState private (
     if !unchanged then
       assert(canResolve(host), "Inference changed a completed reference target")
       update
-
+  
+  // * The `FlowSymbol`s are currently used to uniquely identify terms
+  
   val membersCache: Cache[(Identity[TermShape], Str), MemberLookup] =
     new Cache(inherited.map(_.membersCache), identity)
   val spreadInputs: Cache[Object, mutable.Set[TermShape]] =

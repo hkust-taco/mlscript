@@ -9,11 +9,15 @@ import hkmc2.document.Document.*
 import scala.collection.mutable
 
 
+type ShapePublisher = Publisher[ShapeEvent]
+type ShapeHost = Host[ShapeEvent]
+
 /** Publisher payloads distinguish ordinary shapes from activation-tagged events.
   * Only Shape supports value operations; an event must be dispatched first.
   * Plain shapes need no allocation to participate in activation-independent flow.
   */
 sealed trait ShapeEvent
+
 
 sealed trait Shape extends ShapeEvent:
   def describe: Str
@@ -56,6 +60,24 @@ sealed trait Shape extends ShapeEvent:
     case rigid: RigidTypeShape => s"RigidTypeShape(${rigid.parameter.showDbg})"
     case bs: BaseShape => s"BaseShape(${bs.defn.sym.showDbg})"
     case es: ErrShape => es.describe
+
+
+sealed trait ShapeLike:
+  def exit(revMarkss: Ls[Marks])(using TL): TermShape | NoShape
+  def exit(marks: Marks)(using TL): TermShape | NoShape
+  def enter(revMarkss: Ls[Marks])(using TL): TermShape | NoShape
+  def enter(marks: Marks)(using TL): TermShape | NoShape
+  def shwDbg(using DebugPrinter): Str
+
+case object NoShape extends ShapeLike:
+  def exit(revMarkss: Ls[Marks])(using TL): TermShape | NoShape = NoShape
+  def exit(marks: Marks)(using TL): TermShape | NoShape = NoShape
+  def enter(revMarkss: Ls[Marks])(using TL): TermShape | NoShape = NoShape
+  def enter(marks: Marks)(using TL): TermShape | NoShape = NoShape
+  def shwDbg(using DebugPrinter): Str = toString
+
+type NoShape = NoShape.type
+
 
 sealed trait NonMarkedShape extends TermShape
 sealed trait NonAppTermShape extends NonMarkedShape
@@ -139,21 +161,6 @@ case class ExitMark(boundary: ResolutionBoundary, id: Opt[FlowSymbol], rest: Exi
     assert(!rest.hasExit(boundary), "Repeated exit from the same lexical resolution scope")
 case object NoMarks extends ExitMarks
 
-sealed trait ShapeLike:
-  def exit(revMarkss: Ls[Marks])(using TL): TermShape | NoShape
-  def exit(marks: Marks)(using TL): TermShape | NoShape
-  def enter(revMarkss: Ls[Marks])(using TL): TermShape | NoShape
-  def enter(marks: Marks)(using TL): TermShape | NoShape
-  def shwDbg(using DebugPrinter): Str
-
-case object NoShape extends ShapeLike:
-  def exit(revMarkss: Ls[Marks])(using TL): TermShape | NoShape = NoShape
-  def exit(marks: Marks)(using TL): TermShape | NoShape = NoShape
-  def enter(revMarkss: Ls[Marks])(using TL): TermShape | NoShape = NoShape
-  def enter(marks: Marks)(using TL): TermShape | NoShape = NoShape
-  def shwDbg(using DebugPrinter): Str = toString
-
-type NoShape = NoShape.type
 
 object Marked:
   // Reattach an already normalized outer path without erasing the core's type.
@@ -192,6 +199,7 @@ object MarkedShape:
           case rest: SomeMarks => MarkedShape(sh, rest)
         else NoShape
 end MarkedShape
+
 
 sealed trait TermShape extends Shape, ShapeLike:
   // Cache all lookup outcomes per shape, without materializing all inherited members.
@@ -343,6 +351,9 @@ object MemberLookup:
     defn.body.members.get(name) match
       case S(member) => Found(member, Nil)
       case N => ext.fold[MemberLookup](Missing)(_.getMember(name))
+
+end MemberLookup
+
 
 extension (member: BlockMemberSymbol | RecordMember)
   def memberSymbol: BlockMemberSymbol = member match
@@ -686,14 +697,11 @@ class DefnShape(val defn: Definition, val ext: Opt[TermShape]) extends CoreHeadS
     case _ => MemberLookup.Missing
   def toLoc: Opt[Loc] = defn.sym.toLoc
 
-/* 
+/*
+// TODO – see `RefinedShape`
 class RefinedShape(val base: TermShape, val refinements: Ls[Str -> Term]) extends NonAppTermShape:
-  def describe: Str = base.describe
-  lazy val members: Map[Str, MemberInfo] =
-    base.members ++ refinements.iterator.map: (nme, trm) =>
-      // nme -> BlockMemberSymbol(nme, trm)
-      ???
 */
+
 /** A tuple candidate selects a value shape for each spread. Ordinary fields stay
   * lazy. Recursive spreads can have unknown length; retain the known fields around
   * them instead of discarding either those fields or the unresolved possibilities.
@@ -945,8 +953,4 @@ class IntroShape(val trm: IntroTerm, val primitive: Opt[NominalInstanceView]) ex
   def toLoc: Opt[Loc] = trm.toLoc
   override def toString: Str = s"IntroShape(${trm})"
 
-
-
-type ShapePublisher = Publisher[ShapeEvent]
-type ShapeHost = Host[ShapeEvent]
 

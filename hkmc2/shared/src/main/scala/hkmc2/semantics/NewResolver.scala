@@ -21,8 +21,6 @@ class NewResolver:
   import tl.*
   import NewResolverState.Listener
   
-  
-  // * The `FlowSymbol`s are currently used to uniquely identify terms
   private def appShapes(using rs: NewResolverState) = rs.appShapes
   private def newShapes(using rs: NewResolverState) = rs.newShapes
   private def introShapes(using rs: NewResolverState) = rs.introShapes

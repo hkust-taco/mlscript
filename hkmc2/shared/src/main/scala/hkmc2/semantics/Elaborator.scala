@@ -2266,6 +2266,7 @@ extends Importer:
             val tsym = TermSymbol(k, owner, id) // TODO?
             
             val tdf = ctx.nest(OuterCtx.NonReturnContext(S(tsym))).givenIn: newCtx ?=>
+              
               // * Add type parameters to context
               val (tps, newCtx1) = td.typeParams match
                 case S(t) =>
@@ -2279,6 +2280,7 @@ extends Importer:
                 val (res, newCtx2) = funParams(ps)(using newCtx)
                 newCtx = newCtx2
                 res
+              
               // * Elaborate signature
               val st = td.annotatedResultType.orElse(newSignatureTrees.get(id.name)) // FIXME: may elaborate external sig twice!!
               val s = st.map:
@@ -2329,6 +2331,7 @@ extends Importer:
               if newResolution then checkDeclaredResult(tdf)
               
               tdf
+            
             go(sts, Nil, tdf :: acc)(N)
           case L(d) =>
             reportUnusedAnnotations
