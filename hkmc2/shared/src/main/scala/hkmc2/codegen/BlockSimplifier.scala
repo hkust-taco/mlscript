@@ -1707,8 +1707,15 @@ class BlockSimplifier
           registerNonLocalFunction(ts)
 
         override def applyResult(r: Result): Unit = r match
-          case c @ Call(TermSymbolPath(ts), argss) =>
+          case c @ Call(fun @ TermSymbolPath(ts), argss) =>
             observeCall(ts, c, currentCallGraphSource)
+            // A resolved method call still uses its receiver (and a super call its parent)
+            // as ordinary values. In particular, a function whose only use is as such a
+            // receiver, as in `(x => x).apply(...)`, is not dead.
+            fun match
+              case Select(qual, _) => applyPath(qual)
+              case SuperSelect(qual, base, _) => applyPath(qual); applyPath(base)
+              case _ => ()
             argss.foreach(_.foreach(applyArg))
           case _ => super.applyResult(r)
         
