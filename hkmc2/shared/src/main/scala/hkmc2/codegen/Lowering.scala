@@ -37,7 +37,7 @@ object Thrw extends TailOp(transfersControl = true):
 
 class LoweringCtx(
   val localVals: Map[TermSymbol, VarSymbol],
-  val symbolsToPreserve: Set[BoundSymbol],
+  val symbolsToPreserve: Set[ScopedSymbol],
   val mayRet: Bool, // For rewriting while loop into tail recursive function, represent whether an explicit return is legal in the current block
   private val definedSymsDuringLowering: collection.mutable.Set[ScopedSymbol], // used to create Scoped blocks
   val returnType: Opt[ErasedType], // the declared return type of the enclosing function, used to coerce `return`s
@@ -57,7 +57,7 @@ class LoweringCtx(
     case _ => v
 object LoweringCtx:
   def loweringCtx(using sub: LoweringCtx): LoweringCtx = sub
-  def empty(symbolsToPreserve: Set[BoundSymbol]) =
+  def empty(symbolsToPreserve: Set[ScopedSymbol]) =
     LoweringCtx(Map.empty, symbolsToPreserve, mayRet = false, collection.mutable.Set.empty, returnType = N)
   def nestFunc(returnType: Opt[ErasedType])(using sub: LoweringCtx): LoweringCtx =
     LoweringCtx(sub.localVals, sub.symbolsToPreserve, mayRet = true, sub.definedSymsDuringLowering, returnType)
@@ -218,8 +218,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
     // * which refer to those symbols through a fresh lowering context.
     val localVals = stats.iterator.collect:
       case td: TermDefinition if td.k.isInstanceOf[syntax.Val] && td.owner.isEmpty && td.body.isDefined
-          && td.hasDeclareModifier.isEmpty && !loweringCtx.symbolsToPreserve(td.sym)
-          && !loweringCtx.symbolsToPreserve(td.tsym) =>
+          && td.hasDeclareModifier.isEmpty && !loweringCtx.symbolsToPreserve(td.sym) =>
         td.tsym -> new VarSymbol(td.tsym.id, erasedType = td.tsym.mapErasedValueType)
     .toMap
     localVals.valuesIterator.foreach(loweringCtx.collectScopedSym)
@@ -1494,7 +1493,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
     ps.params.map(_.sym.erasedType)
 
 
-  def program(main: st.Blk, symbolsToPreserve: Set[BoundSymbol]): Program =
+  def program(main: st.Blk, symbolsToPreserve: Set[ScopedSymbol]): Program =
     
     val (imps, funs, rest) = splitBlock(main.stats, Nil, Nil, Nil)
     // * File-level values participate in the compilation unit's default export and private ABI.
@@ -1530,7 +1529,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
   
   def inScopedBlock(using LoweringCtx)(mkBlock: LoweringCtx ?=> Block): Block =
     inScopedBlockExcept(Set.empty)(mkBlock)
-  def inScopedBlockExcept(syms: Set[BoundSymbol])(using LoweringCtx)(mkBlock: LoweringCtx ?=> Block): Block =
+  def inScopedBlockExcept(syms: Set[ScopedSymbol])(using LoweringCtx)(mkBlock: LoweringCtx ?=> Block): Block =
     LoweringCtx.nestScoped.givenIn:
       val body = mkBlock
       val scopedSyms = loweringCtx.getCollectedSym.filterNot(syms)
