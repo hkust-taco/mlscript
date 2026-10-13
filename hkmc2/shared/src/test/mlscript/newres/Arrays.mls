@@ -177,6 +177,13 @@ new Array[Int]()
 Array[Int](3).length
 //│ = 3
 
+// Tuples are not constructed as `Array` instances: reading the external `length` field
+// of a tuple must not let flow-based optimizations consider the tuple dead.
+:expect [1, 2]
+fun pair() = [1, 2]
+[[1].length, pair().length]
+//│ = [1, 2]
+
 // at supports negative indices; foreign undefined results normalize to unit.
 :expect [3, 1, ()]
 let xs = [1, 2, 3]
@@ -208,10 +215,10 @@ class Item(val value: Int)
 class Total(val total: Int)
 [Item(1)].reduce((acc, item, ...) => acc.missing, Total(0))
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.209: 	[Item(1)].reduce((acc, item, ...) => acc.missing, Total(0))
+//│ ║  l.216: 	[Item(1)].reduce((acc, item, ...) => acc.missing, Total(0))
 //│ ║         	                                     ^^^^^^^^^^^
 //│ ╟── Instance of class 'Total' does not contain member 'missing'
-//│ ║  l.209: 	[Item(1)].reduce((acc, item, ...) => acc.missing, Total(0))
+//│ ║  l.216: 	[Item(1)].reduce((acc, item, ...) => acc.missing, Total(0))
 //│ ╙──       	                                                  ^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -220,7 +227,7 @@ class Total(val total: Int)
 :e
 [1, 2].reduce((acc, x, ...) => acc + x)
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.221: 	[1, 2].reduce((acc, x, ...) => acc + x)
+//│ ║  l.228: 	[1, 2].reduce((acc, x, ...) => acc + x)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Function 'reduce' expected 2 arguments, but got 1
 //│ ║  in ../decls/Prelude.mls
@@ -260,20 +267,20 @@ let items = mut [Item(4)]
 class Item(val value: Int)
 (new Item(1)).[0]
 //│ ╔══[COMPILATION ERROR] Resolution error in array index
-//│ ║  l.261: 	(new Item(1)).[0]
+//│ ║  l.268: 	(new Item(1)).[0]
 //│ ║         	 ^^^^^^^^^^^^^^^
 //│ ╟── Instance of class 'Item' does not support checked array indexing.
-//│ ║  l.261: 	(new Item(1)).[0]
+//│ ║  l.268: 	(new Item(1)).[0]
 //│ ║         	 ^^^^^^^^^^^
 //│ ╙── Use '![...]' for a dynamic access.
-//│ ═══[RUNTIME ERROR] TypeError: tmp48.at is not a function
+//│ ═══[RUNTIME ERROR] TypeError: tmp49.at is not a function
 
 // A dynamic access authorizes dynamic operations on its result; a checked index does not.
 :e
 fun first(xs: Array[Int]) = [xs![0].whatever, xs.[0].whatever]
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.273: 	fun first(xs: Array[Int]) = [xs![0].whatever, xs.[0].whatever]
+//│ ║  l.280: 	fun first(xs: Array[Int]) = [xs![0].whatever, xs.[0].whatever]
 //│ ║         	                                                ^^^^^^^^^^^^^
 //│ ╟── Value of type 'Int' does not contain member 'whatever'
-//│ ║  l.273: 	fun first(xs: Array[Int]) = [xs![0].whatever, xs.[0].whatever]
+//│ ║  l.280: 	fun first(xs: Array[Int]) = [xs![0].whatever, xs.[0].whatever]
 //│ ╙──       	                    ^^^
