@@ -174,23 +174,6 @@ test(p) + f(p) + test(AA(AA(AA(10)))) + test(B)
 //│ p = AA(AA(AA(10)))
 
 
-:expect Local(2)
-data class Global(x)
-fun test() =
-  data class Local(x)
-  if Global(1) is
-    Global(x) then Local(x + 1)
-test()
-//│ deforest > >>> fusing >>>
-//│ deforest > Global⁰(1) ->
-//│ deforest > 	match: scrut⁰
-//│ deforest > 	fields: scrut⁰.x²
-//│ deforest > Global⁰(1) ->
-//│ deforest > 	match: scrut⁰
-//│ deforest > 	fields: scrut⁰.x²
-//│ deforest > <<< fusing <<<
-//│ = Local(2)
-
 
 // TODO: fusion opportunity is lost
 // because there are two consumers due to two call sites of `inner`s.
@@ -211,9 +194,9 @@ fun f(x) = if x is A then 1
 f(A) + f(A)
 //│ deforest > >>> fusing >>>
 //│ deforest > A⁰ ->
-//│ deforest > 	match: x³
+//│ deforest > 	match: x²
 //│ deforest > A⁰ ->
-//│ deforest > 	match: x³
+//│ deforest > 	match: x²
 //│ deforest > <<< fusing <<<
 //│ = 2
 
@@ -245,12 +228,12 @@ fun f(d) = if d is
     O.v
 f(D(1))
 //│ ╔══[WARNING] Objects are not yet lifted.
-//│ ║  l.243: 	    object O with
+//│ ║  l.226: 	    object O with
 //│ ╙──       	           ^
 //│ deforest > >>> fusing >>>
 //│ deforest > D⁰(1) ->
 //│ deforest > 	match: d⁰
-//│ deforest > 	fields: d⁰.x⁴
+//│ deforest > 	fields: d⁰.x³
 //│ deforest > <<< fusing <<<
 //│ ╔══[INTERNAL ERROR] Compiler reached an unexpected state at 'Rewrite.scala:269': deforestation copying the definition O
 //│ ╟── The compilation result may be incorrect.
@@ -268,7 +251,7 @@ class E(z) with
 E(y).get()
 //│ deforest > >>> fusing >>>
 //│ deforest > AA⁰(0) ->
-//│ deforest > 	match: scrut¹
+//│ deforest > 	match: scrut⁰
 //│ deforest > <<< fusing <<<
 //│ ╔══[INTERNAL ERROR] Compiler reached an unexpected state at 'Rewrite.scala:269': deforestation copying the definition E
 //│ ╟── The compilation result may be incorrect.

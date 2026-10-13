@@ -417,3 +417,21 @@ k(10)
 //│ deforest > <<< fusing <<<
 //│ = 11
 
+
+// this should work as we lift before deforest
+:expect Local(2)
+data class Global(x)
+fun test() =
+  data class Local(x)
+  if Global(1) is
+    Global(x) then Local(x + 1)
+test()
+//│ deforest > >>> fusing >>>
+//│ deforest > Global⁰(1) ->
+//│ deforest > 	match: scrut⁵
+//│ deforest > 	fields: scrut⁵.x¹⁴
+//│ deforest > Global⁰(1) ->
+//│ deforest > 	match: scrut⁵
+//│ deforest > 	fields: scrut⁵.x¹⁴
+//│ deforest > <<< fusing <<<
+//│ = Local(2)
