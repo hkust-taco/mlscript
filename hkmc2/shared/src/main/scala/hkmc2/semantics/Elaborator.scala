@@ -2123,18 +2123,26 @@ extends Importer:
       case Nil =>
         reportUnusedAnnotations
         (mkBlk(acc, N, hasResult), ctx)
+      // * Annotations on constructor declarations, as in `private constructor()`, are not supported yet,
+      // * so the two cases below report them as unused. They must not be passed on to the next statement,
+      // * which they would otherwise silently modify (e.g., by making the following class member private).
+      // * Note that annotated constructor declarations are currently ignored altogether,
+      // * as only unannotated ones are desugared into sibling classes (in `BlockImpl.desugStmts`)
+      // * or have their parameters extracted (in the `Cls` case of type definitions below).
       case Constructor(Block(ctors)) :: sts =>
         // TODO properly handle (it currently desugars to sibling classes)
-        go(sts, annotations, acc)(N)
+        reportUnusedAnnotations
+        go(sts, Nil, acc)(N)
       case (ctorParams @ Constructor(ConstructorParamDecl(_))) :: sts =>
         // constructor(x, y) or constructor(x, y)(u, v) syntax: params are extracted during class elaboration
+        reportUnusedAnnotations
         ctx.getOuter match
         case S(_: ClassSymbol) =>
-          go(sts, annotations, acc)(N)
+          go(sts, Nil, acc)(N)
         case _ =>
           raise(ErrorReport(msg"'constructor(...)' declarations are only allowed in class bodies"
             -> ctorParams.toLoc :: Nil))
-          go(sts, annotations, acc)(N)
+          go(sts, Nil, acc)(N)
       case Open(bod) :: sts =>
         reportUnusedAnnotations
         bod match

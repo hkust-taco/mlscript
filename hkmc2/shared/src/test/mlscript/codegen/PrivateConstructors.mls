@@ -8,9 +8,9 @@ class Foo with
 //│ ╔══[WARNING] This annotation has no effect
 //│ ║  l.7: 	  private constructor(val x, val y)
 //│ ║       	  ^^^^^^^
-//│ ╟── A target term is expected at the end of block
+//│ ╟── Annotations are not supported on constructor terms.
 //│ ║  l.7: 	  private constructor(val x, val y)
-//│ ╙──     	                                   ^
+//│ ╙──     	          ^^^^^^^^^^^^^^^^^^^^^^^^^
 
 :breakme
 :e
@@ -18,3 +18,62 @@ new Foo(1, 2)
 //│ = Foo
 
 
+// * Annotations on constructor declarations are reported as unused,
+// * and must not apply to the statement that follows the constructor:
+// * the members declared after the constructors below stay public.
+
+:w
+declare class BigInt2 {
+  private constructor()
+  fun toString(...radix): Str
+}
+//│ ╔══[WARNING] This annotation has no effect
+//│ ║  l.27: 	  private constructor()
+//│ ║        	  ^^^^^^^
+//│ ╟── Annotations are not supported on constructor terms.
+//│ ║  l.27: 	  private constructor()
+//│ ╙──      	          ^^^^^^^^^^^^^
+
+// * `toString` is called as a public method, not through a private accessor symbol.
+:sjs
+fun f(x: BigInt2) = x.toString(16)
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ let f; f = function f(x) { return runtime.safeCall(x.toString(16)) };
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+:w
+class Bar with
+  private constructor
+    Baz
+  fun foo = 42
+//│ ╔══[WARNING] This annotation has no effect
+//│ ║  l.46: 	  private constructor
+//│ ║        	  ^^^^^^^
+//│ ╟── Annotations are not supported on constructor terms.
+//│ ║  l.46: 	  private constructor
+//│ ║        	          ^^^^^^^^^^^
+//│ ║  l.47: 	    Baz
+//│ ╙──      	^^^^^^^
+
+:expect 42
+(new Bar).foo
+//│ = 42
+
+:e
+:w
+module M with
+  private constructor(x)
+  fun foo = 42
+//│ ╔══[WARNING] This annotation has no effect
+//│ ║  l.65: 	  private constructor(x)
+//│ ║        	  ^^^^^^^
+//│ ╟── Annotations are not supported on constructor terms.
+//│ ║  l.65: 	  private constructor(x)
+//│ ╙──      	          ^^^^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] 'constructor(...)' declarations are only allowed in class bodies
+//│ ║  l.65: 	  private constructor(x)
+//│ ╙──      	          ^^^^^^^^^^^^^^
+
+:expect 42
+M.foo
+//│ = 42
