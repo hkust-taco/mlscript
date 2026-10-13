@@ -485,7 +485,7 @@ class UsedVarAnalyzer(b: Block, scopeData: ScopeData)(using State):
   val shallowAccesses: Map[ScopedInfo, AccessInfo] =
     scopeData.scopeTree.root.allChildren.map(obj => obj.toInfo -> findAccessesShallow(obj)).toMap
   
-  private val accessedByChild =
+  private val accessedByChild: Set[DefinitionSymbol[? <: Definition] | LabelSymbol | ScopeUID | Unit] =
     // Optimization: Find all nodes which are accessed by their children
     // See the comment for findAccesses
     val allEdges =
@@ -495,8 +495,9 @@ class UsedVarAnalyzer(b: Block, scopeData: ScopeData)(using State):
         if src =/= refd
       yield
         (src, refd)
-    allEdges.toList
+    allEdges.toBuffer
       .groupBy(_._2) // group by edge destination
+      .iterator
       .map:
         case (_: Unit) -> _ => () -> false
         case d -> edges =>
