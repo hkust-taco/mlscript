@@ -1,15 +1,13 @@
 :.
 
 
-// FIXME: dedup errors
-
 :e
 42()
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.7: 	42()
+//│ ║  l.5: 	42()
 //│ ║       	^^^^
 //│ ╟── Integer literal cannot be called like a function.
-//│ ║  l.7: 	42()
+//│ ║  l.5: 	42()
 //│ ╙──     	^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -20,10 +18,10 @@ let x = 123
 :e
 x(456)
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.21: 	x(456)
+//│ ║  l.19: 	x(456)
 //│ ║        	^^^^^^
 //│ ╟── Integer literal cannot be called like a function.
-//│ ║  l.17: 	let x = 123
+//│ ║  l.15: 	let x = 123
 //│ ╙──      	        ^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -33,10 +31,10 @@ x(456)
 fun result() = 1
 result()()
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.34: 	result()()
+//│ ║  l.32: 	result()()
 //│ ║        	^^^^^^^^^^
 //│ ╟── Integer literal cannot be called like a function.
-//│ ║  l.33: 	fun result() = 1
+//│ ║  l.31: 	fun result() = 1
 //│ ╙──      	               ^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -46,10 +44,10 @@ module M
 fun call(x) = x()
 call(M)
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.46: 	fun call(x) = x()
+//│ ║  l.44: 	fun call(x) = x()
 //│ ║        	              ^^^
 //│ ╟── Module 'M' cannot be called like a function.
-//│ ║  l.45: 	module M
+//│ ║  l.43: 	module M
 //│ ╙──      	       ^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -59,10 +57,10 @@ class Plain
 fun instantiate(cls) = cls()
 instantiate(Plain)
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.59: 	fun instantiate(cls) = cls()
+//│ ║  l.57: 	fun instantiate(cls) = cls()
 //│ ║        	                       ^^^^^
 //│ ╟── Class 'Plain' must be instantiated with 'new'.
-//│ ║  l.58: 	class Plain
+//│ ║  l.56: 	class Plain
 //│ ╙──      	      ^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -72,10 +70,10 @@ class Curried(x)(y)
 fun overapply(instance) = instance()
 overapply(Curried(1)(2))
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.72: 	fun overapply(instance) = instance()
+//│ ║  l.70: 	fun overapply(instance) = instance()
 //│ ║        	                          ^^^^^^^^^^
 //│ ╟── Instance of class 'Curried' cannot receive more argument lists.
-//│ ║  l.73: 	overapply(Curried(1)(2))
+//│ ║  l.71: 	overapply(Curried(1)(2))
 //│ ╙──      	          ^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -85,10 +83,10 @@ class Plain
 fun overapply(instance) = instance()
 overapply(new Plain)
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.85: 	fun overapply(instance) = instance()
+//│ ║  l.83: 	fun overapply(instance) = instance()
 //│ ║        	                          ^^^^^^^^^^
 //│ ╟── Instance of class 'Plain' cannot receive more argument lists.
-//│ ║  l.86: 	overapply(new Plain)
+//│ ║  l.84: 	overapply(new Plain)
 //│ ╙──      	          ^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 

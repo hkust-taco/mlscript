@@ -77,10 +77,6 @@ Foo(Predef).a.id
 
 
 :sr
-// TODO
-// class Foo(val a) {
-//   val b = a + 1
-// }
 class Foo(val a) {
   val b = a + 1
 }
@@ -233,24 +229,24 @@ let g = f(1)
 :e
 g(2)
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.234: 	g(2)
+//│ ║  l.230: 	g(2)
 //│ ║         	^^^^
 //│ ╟── Instance of class 'Foo' cannot receive more argument lists.
-//│ ║  l.230: 	let g = f(1)
+//│ ║  l.226: 	let g = f(1)
 //│ ╙──       	        ^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :e
 let f = new Foo()
 //│ ╔══[COMPILATION ERROR] Resolution error in object instantiation
-//│ ║  l.244: 	let f = new Foo()
+//│ ║  l.240: 	let f = new Foo()
 //│ ║         	        ^^^^^^^^^
 //│ ╟── Class 'Foo' expected 1 argument, but got 0
-//│ ║  l.84: 	class Foo(val a) {
+//│ ║  l.80: 	class Foo(val a) {
 //│ ║        	^^^^^^^^^^^^^^^^^^
-//│ ║  l.85: 	  val b = a + 1
+//│ ║  l.81: 	  val b = a + 1
 //│ ║        	^^^^^^^^^^^^^^^
-//│ ║  l.86: 	}
+//│ ║  l.82: 	}
 //│ ╙──      	^
 //│ f = Foo(undefined)
 
@@ -258,10 +254,10 @@ let f = new Foo()
 :e
 new 42
 //│ ╔══[COMPILATION ERROR] Resolution error in object instantiation
-//│ ║  l.259: 	new 42
+//│ ║  l.255: 	new 42
 //│ ║         	^^^^^^
 //│ ╟── Invalid class expression: integer literal
-//│ ║  l.259: 	new 42
+//│ ║  l.255: 	new 42
 //│ ╙──       	    ^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -269,8 +265,7 @@ new 42
 // :de
 :sr
 :sjs
-// private class Foo(pred) { // TODO
-private class Foo(pred) with {
+private class Foo(pred) {
   // val r = pred.id(42)
   pred.id(42)
 }
