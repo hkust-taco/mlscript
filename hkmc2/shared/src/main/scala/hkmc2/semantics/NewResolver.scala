@@ -2111,7 +2111,9 @@ class NewResolver:
               resolError(res, msg"${cls.describe.capitalize} does not take pattern arguments." -> cls.toLoc :: Nil)
             Nil
           case S(ps) =>
-            if ps.restParam.nonEmpty then TODO(ps.restParam)
+            // Elaboration reports and removes rest parameters of class-like definitions,
+            // so the arity of a constructor pattern is the number of plain parameters.
+            softAssert(ps.restParam.isEmpty, "Class-like parameter lists cannot retain a rest parameter")
             if args.sizeCompare(ps.params) =/= 0 then
               rstate.markError(res)
               resolError(res,
