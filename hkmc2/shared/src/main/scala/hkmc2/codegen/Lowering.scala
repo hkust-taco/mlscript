@@ -42,7 +42,7 @@ class LoweringCtx(
   private val definedSymsDuringLowering: collection.mutable.Set[ScopedSymbol], // used to create Scoped blocks
   val returnType: Opt[ErasedType], // the declared return type of the enclosing function, used to coerce `return`s
 ):
-  def withLocalVals(syms: Map[TermSymbol, VarSymbol]): LoweringCtx =
+  def withLocalVals(syms: IterableOnce[TermSymbol -> VarSymbol]): LoweringCtx =
     LoweringCtx(localVals ++ syms, symbolsToPreserve, mayRet, definedSymsDuringLowering, returnType)
   def collectScopedSym(s: ScopedSymbol) = definedSymsDuringLowering.add(s)
   def collectScopedSyms(s: ScopedSymbol*) = definedSymsDuringLowering.addAll(s)
@@ -216,12 +216,12 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
     // * refer to them before their definitions are lowered, even if an early return skips their initialization.
     // * Keep preserved definitions on their original symbols for imports and subsequent REPL blocks,
     // * which refer to those symbols through a fresh lowering context.
-    val localVals = stats.iterator.collect:
+    val localVals = stats.collect:
       case td: TermDefinition if td.k.isInstanceOf[syntax.Val] && td.owner.isEmpty && td.body.isDefined
           && td.hasDeclareModifier.isEmpty && !loweringCtx.symbolsToPreserve(td.sym) =>
-        td.tsym -> new VarSymbol(td.tsym.id, erasedType = td.tsym.mapErasedValueType)
-    .toMap
-    localVals.valuesIterator.foreach(loweringCtx.collectScopedSym)
+        val newSym = new VarSymbol(td.tsym.id, erasedType = td.tsym.mapErasedValueType)
+        loweringCtx.collectScopedSym(newSym)
+        td.tsym -> newSym
     
     def blockImpl(stats: Ls[Statement], res: Rcd \/ Term)(using LoweringCtx): Block =
       stats match

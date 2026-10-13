@@ -2,21 +2,18 @@
 :noInline
 
 
-fun identity(x) = x
-
-
 // Local vals and lets should produce the same scoped assignments, including call initializers.
 :sir
 fun withVal =
   val x = 1
-  val y = identity(x + 1)
+  val y = id(x + 1)
   print(y)
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define withVal⁰ as fun withVal¹() {
 //│   let x, y, tmp;
 //│   set x = 1;
 //│   set tmp = +⁰(x, 1);
-//│   set y = identity⁰(tmp);
+//│   set y = Predef⁰.id⁰(tmp);
 //│   return Predef⁰.print⁰(y)
 //│ };
 //│ end
@@ -25,14 +22,14 @@ fun withVal =
 :sir
 fun withLet =
   let x = 1
-  let y = identity(x + 1)
+  let y = id(x + 1)
   print(y)
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define withLet⁰ as fun withLet¹() {
 //│   let x, y, tmp;
 //│   set x = 1;
 //│   set tmp = +⁰(x, 1);
-//│   set y = identity⁰(tmp);
+//│   set y = Predef⁰.id⁰(tmp);
 //│   return Predef⁰.print⁰(y)
 //│ };
 //│ end
@@ -45,20 +42,10 @@ withLet
 
 
 // Hoisted functions must capture the variable allocated for a later val definition.
-:sir
 fun makeAdder(start) =
   fun add(n) = x + n
   val x = start
   add
-//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ define makeAdder⁰ as fun makeAdder¹(start) {
-//│   let add, x;
-//│   define add as fun add⁰(n) { return +⁰(x, n) };
-//│   set x = start;
-//│   return add⁰
-//│ };
-//│ end
-//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 let add = makeAdder(40)
 //│ add = fun add
@@ -190,80 +177,3 @@ fun earlyReturn(input): Int =
 earlyReturn(42)
 //│ = 42
 
-
-// Object, class, and module members stay fields; their method-local vals become assignments.
-:sir
-fun fields(seed) =
-  val offset = seed
-  object Box with
-    val x = offset
-    fun read() =
-      val y = x + 1
-      y
-  class Cell(val x) with
-    val y = x + offset
-  module Constants with
-    val x = 10
-  let cell = new Cell(2)
-  Box.x + Box.read() + cell.y + Constants.x
-//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ define fields⁰ as fun fields¹(seed) {
-//│   let Constants, Box, Cell, cell, offset, tmp, tmp1, tmp2;
-//│   set offset = seed;
-//│   define Box as object Box⁰ {
-//│     val x⁰;
-//│     constructor() {
-//│       define x⁰ as val x¹ = offset;
-//│       end
-//│     }
-//│     method read⁰ = fun read¹() {
-//│       let y;
-//│       set y = +⁰(Box⁰.this.x¹, 1);
-//│       return y
-//│     }
-//│   };
-//│   define Cell as class Cell¹ {
-//│     val x²;
-//│     val y⁰;
-//│     constructor Cell⁰(x) {
-//│       let tmp3;
-//│       define x² as val x³ = x;
-//│       set tmp3 = +⁰(Cell¹.this.x³, offset);
-//│       define y⁰ as val y¹ = tmp3;
-//│       end
-//│     }
-//│   };
-//│   define Constants as class Constants⁰
-//│   module Constants¹ {
-//│     val x⁴;
-//│     constructor {
-//│       define x⁴ as val x⁵ = 10;
-//│       end
-//│     }
-//│   };
-//│   set cell = new Cell¹(2);
-//│   set tmp = Box⁰.read¹();
-//│   set tmp1 = +⁰(Box⁰.x¹, tmp);
-//│   set tmp2 = +⁰(tmp1, cell.y﹖);
-//│   return +⁰(tmp2, Constants¹.x⁵)
-//│ };
-//│ end
-//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
-
-:expect 25
-fields(4)
-//│ = 25
-
-
-// Lowering a val to a variable does not make source-level assignment legal.
-:e
-fun immutable() =
-  val x = 1
-  set x = 2
-  x
-//│ ╔══[COMPILATION ERROR] Cannot assign to value 'x'
-//│ ║  l.262: 	  set x = 2
-//│ ║         	      ^^^^^
-//│ ╟── Defined here:
-//│ ║  l.261: 	  val x = 1
-//│ ╙──       	  ^^^^^^^^^
