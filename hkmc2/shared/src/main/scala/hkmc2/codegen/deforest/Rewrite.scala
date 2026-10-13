@@ -294,7 +294,7 @@ class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbo
         val (restBody, parentRest) = restOriginalBodiesAndParentRest(restFunId.withoutInstId)
         val fvOfRestBody = restBody.deforestFreeVars(Set.empty, restFunId.getInstId)
         val fvOfRestParent = parentRest.fold(List.empty)(pr => fvsForRest(pr.withInstId(instId)))
-        val fvs = (fvOfRestBody ++ fvOfRestParent).toList
+        val fvs = (fvOfRestBody.iterator ++ fvOfRestParent.iterator.filterNot(fvOfRestBody)).toList
         restFnFvs(restFunId) = fvs
         fvs
     
