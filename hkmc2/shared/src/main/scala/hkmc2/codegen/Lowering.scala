@@ -339,7 +339,8 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
               case N =>
                 val stagedAnnots = mod.annotations.collect:
                   case a @ Annot.Modifier(Keyword.`staged`) => a
-                ClassDef.Plain(mod.owner, syntax.Cls, new ClassSymbol(Tree.DummyTypeDef(syntax.Cls), mod.sym.id),
+                val clsSym = new ClassSymbol(Tree.DummyTypeDef(syntax.Cls), mod.sym.id)
+                val clsDef = ClassDef.Plain(mod.owner, syntax.Cls, clsSym,
                   mod.bsym,
                   Nil,
                   N,
@@ -349,6 +350,11 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
                   Nil,
                   N,
                 )(mod.toLoc)
+                // Link the class to the module's member symbol. A module overloaded with a
+                // function is stored in the function's `.class` property, as references to the
+                // module expect (see `JSBuilder.shouldBeLifted`), so the class must know it too.
+                clsSym.defn = S(clsDef)
+                clsDef
             case _ => _defn
           reportAnnotations(defn, defn.extraAnnotations)
           val bufferableAnnots = defn.annotations.collect:

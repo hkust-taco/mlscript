@@ -9,14 +9,13 @@ fun Foo() = 1
 module Foo with { val x = 1 }
 
 Foo
-//│ = class Foo { x: 1 }
+//│ = fun Foo { class: class Foo { x: 1 } }
 
 Foo()
 //│ = 1
 
-:todo
 :noInline
 Foo()
-//│ ═══[RUNTIME ERROR] TypeError: Class constructor Foo cannot be invoked without 'new'
+//│ = 1
 
 

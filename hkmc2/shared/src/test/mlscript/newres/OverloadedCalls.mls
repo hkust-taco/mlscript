@@ -10,7 +10,13 @@ module Compute with
 let f = Compute
 [Compute(2), f(3), Compute.next(3)]
 //│ = [2, 3, 4]
-//│ f = class Compute
+//│ f = fun Compute { class: class Compute }
+
+// The module is stored on the function, so both remain available without inlining.
+:noInline
+:expect [3, 4]
+[f(3), Compute.next(3)]
+//│ = [3, 4]
 
 class Item(val value: Int)
 module Item with
@@ -47,10 +53,10 @@ nested()
 fun plain(x: Int) = x
 plain.missing
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.48: 	plain.missing
+//│ ║  l.54: 	plain.missing
 //│ ║        	^^^^^^^^^^^^^
 //│ ╟── Function 'plain' does not contain member 'missing'
-//│ ║  l.47: 	fun plain(x: Int) = x
+//│ ║  l.53: 	fun plain(x: Int) = x
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 

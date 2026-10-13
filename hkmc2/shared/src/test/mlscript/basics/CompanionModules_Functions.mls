@@ -10,9 +10,8 @@ module foo with
 foo(123)
 //│ = 124
 
-:fixme
 :noInline
 foo(123)
-//│ ═══[RUNTIME ERROR] TypeError: Class constructor foo cannot be invoked without 'new'
+//│ = 124
 
 

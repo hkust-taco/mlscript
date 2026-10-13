@@ -97,17 +97,18 @@ module Foo
 //│ ╟── Arbitrary values cannot be overloaded with module 'Foo'
 //│ ║  l.93: 	module Foo
 //│ ╙──      	^^^^^^^^^^
-//│ Foo = class Foo
+//│ ═══[RUNTIME ERROR] TypeError: Cannot create property 'class' on number '1'
+//│ Foo = 1
 
 
 :e
 fun (**) f1(a, b) = "[" + a + " * " + b + "]"
 fun (**) f2(a, b) = "(" + a + " + " + b + ")"
 //│ ╔══[COMPILATION ERROR] Symbolic name '**' of definition 'f1' is already used
-//│ ║  l.104: 	fun (**) f1(a, b) = "[" + a + " * " + b + "]"
+//│ ║  l.105: 	fun (**) f1(a, b) = "[" + a + " * " + b + "]"
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── by sibling member 'f2'
-//│ ║  l.105: 	fun (**) f2(a, b) = "(" + a + " + " + b + ")"
+//│ ║  l.106: 	fun (**) f2(a, b) = "(" + a + " + " + b + ")"
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 1 ** 2
@@ -118,10 +119,10 @@ fun (**) t() = 0
 fun (++) t() = 1
 //│ ╔══[COMPILATION ERROR] Multiple definitions of symbol 't'
 //│ ╟── defined here
-//│ ║  l.117: 	fun (**) t() = 0
+//│ ║  l.118: 	fun (**) t() = 0
 //│ ║         	^^^^^^^^^^^^^^^^
 //│ ╟── defined here
-//│ ║  l.118: 	fun (++) t() = 1
+//│ ║  l.119: 	fun (++) t() = 1
 //│ ╙──       	^^^^^^^^^^^^^^^^
 
 
