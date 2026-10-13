@@ -3620,13 +3620,15 @@ class NewResolver:
           case _ :: rest => expand(rest, reversed)
         expand(record.stats, Nil)
     case intro: IntroTerm =>
-      // Literals have the declared primitive interface, including inherited
-      // members. Retain their literal shape for pattern tests and provenance.
+      // Literals and lambdas have the declared interface of their builtin class,
+      // including inherited members. Retain their own shape for calls, pattern
+      // tests, and provenance.
       val primitive = intro match
         case Lit(_: Tree.StrLit) => S(prelude.builtins.Str)
         case Lit(_: Tree.IntLit) => S(prelude.builtins.Int)
         case Lit(_: Tree.DecLit) => S(prelude.builtins.Num)
         case Lit(_: Tree.BoolLit) => S(prelude.builtins.Bool)
+        case _: Lam => S(prelude.builtins.Function)
         case _ => N
       def publish(parent: Opt[NominalInstanceView])(using NewResolverState): Unit =
         listener(introShapes.getOrElseUpdate(new Identity(intro), {

@@ -252,3 +252,29 @@ foo(Predef)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 
+// Lambdas expose the declared interface of the builtin Function class.
+:expect "f"
+let f = x => x
+f.name
+//│ = "f"
+//│ f = fun f
+
+// A lambda used only as the receiver of a resolved method call is still live.
+:expect 3
+(x => x + 1).apply(null, [2])
+//│ = 3
+
+:expect true
+(x => x) is Function
+//│ = true
+
+:e
+(x => x).foo
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.272: 	(x => x).foo
+//│ ║         	^^^^^^^^^^^^
+//│ ╟── Function literal does not contain member 'foo'
+//│ ║  l.272: 	(x => x).foo
+//│ ╙──       	 ^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+

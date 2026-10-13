@@ -939,12 +939,10 @@ object RecordShape:
 type IntroTerm = Term.Lit | Term.UnitVal | Term.Lam
 class IntroShape(val trm: IntroTerm, val primitive: Opt[NominalInstanceView]) extends CoreHeadShape:
   def describe: Str = trm.describe
-  protected def getMemberImpl(name: Str)(using NewResolverState): MemberLookup = trm match
-    case _: Term.Lit | _: Term.UnitVal => primitive.fold[MemberLookup](MemberLookup.Missing)(_.getMember(name))
-    case lam: Term.Lam => MemberLookup.Missing // TODO: methods on lambdas
-  override def getMemberThrough(name: Str, receiver: Marks)(using NewResolverState): MemberLookup = trm match
-    case _: Term.Lit | _: Term.UnitVal => primitive.fold[MemberLookup](MemberLookup.Missing)(_.getMemberThrough(name, receiver))
-    case _: Term.Lam => super.getMemberThrough(name, receiver)
+  protected def getMemberImpl(name: Str)(using NewResolverState): MemberLookup =
+    primitive.fold[MemberLookup](MemberLookup.Missing)(_.getMember(name))
+  override def getMemberThrough(name: Str, receiver: Marks)(using NewResolverState): MemberLookup =
+    primitive.fold[MemberLookup](MemberLookup.Missing)(_.getMemberThrough(name, receiver))
   override def isInstanceOfClass(cls: ClassLikeDef)(using NewResolverState): Bool =
     primitive.exists(_.isInstanceOfClass(cls))
   def toLoc: Opt[Loc] = trm.toLoc
