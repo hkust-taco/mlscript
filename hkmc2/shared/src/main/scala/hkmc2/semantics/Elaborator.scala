@@ -716,6 +716,8 @@ object Elaborator:
     * Constructor declarations are parsed as applied round braces or tuples;
     * for example, `constructor(x, y)(u, v)` becomes
     * `App(Bra(Round, Block(x, y)), Tup(u, v))`.
+    * An empty first parameter list is parsed as the unit literal:
+    * `constructor()(x)` becomes `App(Unt(), Tup(x))`.
     */
   private object ConstructorParamDecl:
     def mkTup(inner: Tree): Tree = inner match
@@ -724,6 +726,8 @@ object Elaborator:
       case other => Tup(other :: Nil)
 
     def unapply(tree: Tree): Opt[Ls[Tree]] = tree match
+      case Unt() =>
+        S(Tup(Nil) :: Nil)
       case Bra(Round, inner) =>
         S(mkTup(inner) :: Nil)
       case App(lhs, rhs @ (_: Tup)) =>

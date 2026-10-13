@@ -42,7 +42,7 @@ declare module Number {
 }
 
 declare class BigInt {
-  // private constructor() // FIXME: Unsupported constructor in this position.
+  // private constructor() // FIXME: private constructors are not supported yet
   fun toString(...radix): Str
 }
 // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/BigInt/BigInt
