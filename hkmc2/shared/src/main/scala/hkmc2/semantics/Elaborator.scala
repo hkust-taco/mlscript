@@ -105,9 +105,9 @@ object Elaborator:
     
     lazy val scope: SrcScope = SrcScope(outer, parent.map(_.scope))
     
-    def +(local: Str -> Symbol): Ctx =
+    def +(local: Str -> RefSymbol): Ctx =
       copy(env = env + local.mapSecond(Ctx.RefElem(_)))
-    def ++(locals: IterableOnce[Str -> Symbol]): Ctx =
+    def ++(locals: IterableOnce[Str -> RefSymbol]): Ctx =
       copy(env = env ++ locals.mapValues(Ctx.RefElem(_)))
     def elem_++(locals: IterableOnce[Str -> Ctx.Elem]): Ctx =
       copy(env = env ++ locals.iterator.filter: kv =>
@@ -115,7 +115,7 @@ object Elaborator:
         // * but they should be allowed to shadow previous imports.
         env.get(kv._1).forall(_.isImport))
     
-    def withMembers(members: Iterable[Str -> MemberSymbol]): Ctx =
+    def withMembers(members: Iterable[Str -> BlockMemberSymbol]): Ctx =
       copy(env = env ++ members.map:
         case (nme, sym) =>
           val elem = outer.inner match
@@ -378,13 +378,15 @@ object Elaborator:
         */
       val primitivelyRepresentedRoots: Set[TypeSymbol] = Set(Num, Str, Bool)
   
+  type RefSymbol = LocalVarSymbol | TermSymbol | BlockMemberSymbol | InnerSymbol | LabelSymbol
+  
   object Ctx:
     abstract class Elem:
       def nme: Str
       def ref(id: Ident)(using Elaborator.State, Ctx): Resolvable
       def symbol: Opt[Symbol]
       def isImport: Bool
-    final case class RefElem(sym: Symbol) extends Elem:
+    final case class RefElem(sym: RefSymbol) extends Elem:
       val nme = sym.nme
       def ref(id: Ident)(using Elaborator.State, Ctx): Resolvable =
         // * Note: due to symbolic ops, we may have `id.name =/= nme`;
@@ -398,7 +400,7 @@ object Elaborator:
         Term.SynthSel(base.ref(Ident(base.nme)),
           new Ident(nme).withLocOf(id))(symOpt, FlowSymbol.synthSel(nme), N, S(summon))
       def symbol = symOpt
-    given Conversion[Symbol, Elem] = RefElem(_)
+    given Conversion[RefSymbol, Elem] = RefElem(_)
     val empty: Ctx = Ctx(OuterCtx.LocalScope("top-level"), N, Map.empty, Mode.Full, Map.empty)
     
   enum Mode:

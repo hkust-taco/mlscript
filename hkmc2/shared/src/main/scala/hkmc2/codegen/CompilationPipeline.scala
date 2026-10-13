@@ -20,13 +20,13 @@ class CompilationPipeline(using Config, Raise, State, Ctx, SymbolPrinter):
     * optimization have run and the definitions that make up the compilation unit are settled.
     * Static module compilation uses this to keep such definitions alive as a private ABI:
     * another compilation unit may inline a body of this one that still refers to them. */
-  def extraSymbolsToPreserveFrom(prog: Program): Set[BoundSymbol] = Set.empty
+  def extraSymbolsToPreserveFrom(prog: Program): Set[ScopedSymbol] = Set.empty
   
   private inline def blockPass(inline pass: Block => Block)(prog: Program): Program =
     val blk = pass(prog.main)
     if blk is prog.main then prog else Program(prog.imports, blk)
   
-  def run(prog: Program, printer: Program => Str, symbolsToPreserve: Set[BoundSymbol], otl: TL)(using TL): Program =
+  def run(prog: Program, printer: Program => Str, symbolsToPreserve: Set[ScopedSymbol], otl: TL)(using TL): Program =
     var result = prog
     inline def runPass(passName: Str)(inline transform: Program => Program) =
       val before = result

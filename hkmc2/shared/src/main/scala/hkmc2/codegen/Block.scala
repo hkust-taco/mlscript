@@ -59,10 +59,6 @@ type ScopedSymbol = LocalVarSymbol | BlockMemberSymbol
   */
 type ValueSymbol = SimpleSymbol | TermSymbol | BlockMemberSymbol | InnerSymbol
 
-/** Symbols that may be bound by MIR binding forms such as `Scoped`.
-  */
-type BoundSymbol = ScopedSymbol | TermSymbol
-
 /** Symbols that may occur in MIR free-variable sets.
   */
 type FreeSymbol = SimpleSymbol | BlockMemberSymbol | LabelSymbol
@@ -146,7 +142,7 @@ sealed abstract class Block extends Product:
   // * Note: this function is only for rather fringe use-cases in the optimizer;
   // * it should not be used for scope analysis purposes
   // * (like it used to before we added Scoped blocks).
-  lazy val definedVars: Set[BoundSymbol] = this match
+  lazy val definedVars: Set[ScopedSymbol] = this match
     case _: Return | _: Throw | _: Unreachable => Set.empty
     case Begin(sub, rst) => sub.definedVars ++ rst.definedVars
     case Assign(NoSymbol, r, rst) => rst.definedVars
