@@ -1,5 +1,4 @@
-:js
-:deforest
+:.
 
 
 data class A(x)

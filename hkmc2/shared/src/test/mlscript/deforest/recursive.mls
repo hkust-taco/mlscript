@@ -1,5 +1,4 @@
-:js
-:deforest
+:.
 
 
 
@@ -674,7 +673,6 @@ lastFilter(id(1 :: 2 :: 3 :: 4 :: 5 :: Nil), x => (x % 2 == 0))
 //│ = Some(4)
 
 // should prevent processing a function body more than once
-:deforest
 fun g() = f()
 fun f() = g() + g()
 [f, g]
@@ -684,7 +682,6 @@ fun f() = g() + g()
 
 
 // should prevent processing a function body more than once
-:deforest
 fun h1() = g()
 fun h2() = g()
 fun g() = f()
@@ -697,7 +694,6 @@ fun f() = h1() + h2()
 
 
 // should prevent processing a function body more than once
-:deforest
 fun h1() = g()
 fun h2() = g() + h1()
 fun g() = f()
@@ -709,7 +705,6 @@ fun f() = h1() + h2()
 
 
 // should prevent processing a function body more than once
-:deforest
 fun main() = if
   false then f() + g()
   else 0
@@ -731,7 +726,6 @@ main
 
 
 
-:deforest
 fun f() =
   if B is
     B then h1() + h2()
@@ -757,7 +751,6 @@ f
 //│ = fun f$f
 
 
-:deforest
 fun h1() = g()
 fun h2() = g() + h2()
 fun g() = f()
@@ -767,7 +760,6 @@ fun f() = h1() + h2()
 //│ deforest > <<< fusing <<<
 //│ = [fun h1, fun h2, fun g, fun f]
 
-:deforest
 fun g() = f()
 fun f() = g()
 [g, f]
@@ -777,7 +769,6 @@ fun f() = g()
 
 
 
-:deforest
 fun g() = 0
 fun f() = f() + g()
 [f, g]
@@ -786,7 +777,6 @@ fun f() = f() + g()
 //│ = [fun f, fun g]
 
 
-:deforest
 fun h(x) = if x is
   A then 0
   else f()
@@ -862,7 +852,6 @@ f
 //│ = fun f$f
 
 
-:deforest
 fun h(x) = if x is
   A then 0
   else f()
@@ -894,8 +883,6 @@ f
 
 
 
-:deforest
-:lift
 fun f() =
   fun h(x) = if x is
     A then 0

@@ -1,4 +1,4 @@
-:js
+:.
 :deforest logNonAffine
 
 data class (::) Cons(h, t)

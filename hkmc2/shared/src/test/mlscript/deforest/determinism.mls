@@ -1,9 +1,10 @@
-:js
+:.
 
 data class A(a)
 data class B(a, b, c, d, e)
+//│ deforest > >>> fusing >>>
+//│ deforest > <<< fusing <<<
 
-:deforest
 :sir
 :expect 0
 if B(1,2,3,4,5) is
@@ -49,7 +50,6 @@ if B(1,2,3,4,5) is
 
 
 :sir
-:deforest
 :expect 1
 fun c2(x) = if x is
   A(A(A(A(A(A(a)))))) then a
