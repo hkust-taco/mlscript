@@ -232,10 +232,12 @@ Test.Test2.foo(AA(2))
 //│ deforest > <<< fusing <<<
 //│ ═══[RUNTIME ERROR] ReferenceError: Test2 is not defined
 
+data class D(x)
+//│ deforest > >>> fusing >>>
+//│ deforest > <<< fusing <<<
 
 // TODO: objects are not lifted, so fusing copies a nested definition, which deforestation does not support
 :todo
-data class D(x)
 fun f(d) = if d is
   D(x) then
     object O with
@@ -243,7 +245,7 @@ fun f(d) = if d is
     O.v
 f(D(1))
 //│ ╔══[WARNING] Objects are not yet lifted.
-//│ ║  l.241: 	    object O with
+//│ ║  l.243: 	    object O with
 //│ ╙──       	           ^
 //│ deforest > >>> fusing >>>
 //│ deforest > D⁰(1) ->
@@ -267,18 +269,3 @@ E(y).get()
 //│ deforest > <<< fusing <<<
 //│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: deforestation copying the definition E
 
-
-// TODO: `val` is also a define so we crash here,
-// although we may want to disallow `val` appearing here in the first place.
-:todo
-fun f(d) = if d is
-  D(x) then
-    val v = x
-    print(v)
-f(D(1))
-//│ deforest > >>> fusing >>>
-//│ deforest > D⁰(1) ->
-//│ deforest > 	match: d¹
-//│ deforest > 	fields: d¹.x⁴
-//│ deforest > <<< fusing <<<
-//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: deforestation copying the definition v

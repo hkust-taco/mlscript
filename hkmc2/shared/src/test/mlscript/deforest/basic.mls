@@ -385,3 +385,35 @@ dtor(A(B(0)))
 //│ deforest > <<< fusing <<<
 //│ = B(0)
 
+
+// local `val`s are lowered to be the same as let bindings
+// so deforest should handle them correctly
+fun f(d) = if d is
+  A(x) then
+    val v = x
+    print(v)
+f(A(1))
+//│ deforest > >>> fusing >>>
+//│ deforest > A⁰(1) ->
+//│ deforest > 	match: d⁰
+//│ deforest > 	fields: d⁰.x⁸
+//│ deforest > <<< fusing <<<
+//│ > 1
+
+:noInline
+fun k(n) =
+  val v = n
+  if A(1) is
+    A(a) then a + v
+//│ deforest > >>> fusing >>>
+//│ deforest > A⁰(1) ->
+//│ deforest > 	match: scrut⁴
+//│ deforest > 	fields: scrut⁴.x⁸
+//│ deforest > <<< fusing <<<
+
+:noInline
+k(10)
+//│ deforest > >>> fusing >>>
+//│ deforest > <<< fusing <<<
+//│ = 11
+
