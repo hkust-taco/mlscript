@@ -10,6 +10,7 @@ import codegen.{Lowering, Erasure}
 
 
 class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, Config, Erasure) extends TermSynthesizer:
+
   import Normalization.*, Mode.*
   import tl.*
 
@@ -666,3 +667,5 @@ object Normalization:
   enum Mode:
     case +
     case -
+
+end Normalization

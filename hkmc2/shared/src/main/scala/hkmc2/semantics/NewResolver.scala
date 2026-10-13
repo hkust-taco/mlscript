@@ -2113,7 +2113,7 @@ class NewResolver:
           case S(ps) =>
             // Elaboration reports and removes rest parameters of class-like definitions,
             // so the arity of a constructor pattern is the number of plain parameters.
-            softAssert(ps.restParam.isEmpty, "Class-like parameter lists cannot retain a rest parameter")
+            softAssert(ps.restParam.isEmpty, "Unexected rest parameter in class-like definition")
             if args.sizeCompare(ps.params) =/= 0 then
               rstate.markError(res)
               resolError(res,

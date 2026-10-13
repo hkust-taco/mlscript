@@ -4,13 +4,27 @@
 
 // === Basic constructor with single param list ===
 
-// An empty constructor parameter list is parsed as the unit literal `()`
+// Note: an empty constructor parameter list is parsed as the unit literal `()`
+:pt
 class Foo with
   constructor()
   fun get = 0
+//│ ———————————————| Parsed tree |——————————————————————————————————————————————————————————————————————
+//│ TypeDef:
+//│   k = Cls
+//│   head = InfixApp:
+//│     lhs = Ident of "Foo"
+//│     kw = Keywrd of keyword 'with'
+//│     rhs = Block of Ls of
+//│       Constructor of Unt
+//│       TermDef:
+//│         k = Fun
+//│         head = Ident of "get"
+//│         rhs = S of IntLit of 0
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 :expect 0
-(new Foo()).get
+new Foo().get
 //│ = 0
 
 class Foo with
@@ -18,7 +32,7 @@ class Foo with
   fun get = x
 
 :expect 1
-(new Foo()(1)).get
+new Foo()(1).get
 //│ = 1
 
 // Plain class with constructor(x, y) generates JS constructor with field assignments
@@ -135,7 +149,7 @@ class B extends A(1)(2)(3)
 :e
 class B extends A(0)
 //│ ╔══[COMPILATION ERROR] Extending a partially applied class is not supported
-//│ ║  l.136: 	class B extends A(0)
+//│ ║  l.150: 	class B extends A(0)
 //│ ╙──       	                ^^^^
 
 new B
@@ -146,16 +160,16 @@ class C
 :e
 class D extends C(0)
 //│ ╔══[COMPILATION ERROR] Too many parameter lists for parent class
-//│ ║  l.147: 	class D extends C(0)
+//│ ║  l.161: 	class D extends C(0)
 //│ ╙──       	                ^^^^
 
 :e
 new A(1)(2) with
   fun a = 0
 //│ ╔══[COMPILATION ERROR] Extending a partially applied class is not supported
-//│ ║  l.153: 	new A(1)(2) with
+//│ ║  l.167: 	new A(1)(2) with
 //│ ║         	^^^^^^^^^^^^^^^^
-//│ ║  l.154: 	  fun a = 0
+//│ ║  l.168: 	  fun a = 0
 //│ ╙──       	^^^^^^^^^^^
 //│ = $anon { x: 1 }
 
@@ -164,8 +178,8 @@ new A(1)(2)(3)(4) with
   fun a = 0
 //? = $anon { x: 1 }
 //│ ╔══[COMPILATION ERROR] Too many parameter lists for parent class
-//│ ║  l.163: 	new A(1)(2)(3)(4) with
+//│ ║  l.177: 	new A(1)(2)(3)(4) with
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.164: 	  fun a = 0
+//│ ║  l.178: 	  fun a = 0
 //│ ╙──       	^^^^^^^^^^^
 //│ = $anon { x: 1 }

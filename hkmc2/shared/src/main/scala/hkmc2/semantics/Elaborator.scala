@@ -605,18 +605,18 @@ object Elaborator:
         case sym: BlockMemberSymbol if isForeign =>
           S(ExternalModuleImport.Private(sym, modulePath))
         case _ => N
-
+  
   end CompilationUnit
-
+  
   /** Immutable JavaScript ABI published after optimization has fixed the emitted definitions. */
   final case class CompilationUnitAbi(
     privateExportNames: Map[BlockMemberSymbol, Str],
   )
-
+  
   enum ExternalModuleImport:
     case Default(sym: ImportSymbol, modulePath: Str)
     case Private(sym: BlockMemberSymbol, modulePath: Str)
-
+  
   class State:
     lazy val newResolverState: NewResolverState = new NewResolverState(this)
     val suid = new Uid.Symbol.State
@@ -2185,8 +2185,10 @@ extends Importer:
           case lit: Literal =>
             reportUnusedAnnotations
             val field = Term.Lit(lit).withLocOf(lit)
-            (if fieldInterpretation == Tpe then RcdField.signature(field, rhs_t)
-             else RcdField(field, rhs_t)) :: acc
+            (if fieldInterpretation == Tpe
+              then RcdField.signature(field, rhs_t)
+              else RcdField(field, rhs_t)
+            ) :: acc
           case Bra(Round, inner) =>
             reportUnusedAnnotations
             RcdField(term(inner, Trm), rhs_t) :: acc
@@ -2439,13 +2441,10 @@ extends Importer:
               fsym,
               tsym,
               Nil, N, N,
-              if newResolution then
-                S(Term.Capture(Term.SimpleRef(p.sym)(Ident(p.sym.name)), tsym))
-              else S(p.sym.ref())
+              if newResolution
+                then S(Term.Capture(Term.SimpleRef(p.sym)(Ident(p.sym.name)), tsym))
+                else S(p.sym.ref())
               ,
-              // `isMethod` marks members written in class bodies, which the legacy resolver
-              // forbids from returning modules. Parameter fields are not such members:
-              // moduleful class parameters are rejected as moduleful references instead.
               TermDefFlags.empty,
               p.modulefulness,
               if isPublicField then Nil else Annot.Private :: Nil,
@@ -2474,7 +2473,6 @@ extends Importer:
             ps.params.zip(cps).flatMap: (p, cp) =>
               val isPublicField = p.flags.isVal || isDataClass
               if isPublicField
-                // TODO:
                 || newResolution // TODO: rm `|| newResolution`
               then paramField(p, cp, isPublicField)
               else paramBinding(p)
