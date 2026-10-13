@@ -110,6 +110,9 @@ class Lexer(origin: Origin, dbg: Bool)(using raise: Raise):
       val (fraction, j) =
         if test(i, _ === '.')
         then takeDigits(i + 1, isDigit) match
+        // Unreachable: both callers of `decimal` check `isDecimalStart(i)`, which only holds
+        // for a period if a digit follows it, and `takeDigits` always takes that first digit.
+        // A period without a following digit instead ends the literal and is lexed separately.
         case (N, j) => lastWords("A decimal point must be followed by a digit")
         case (S(digits), j) => ("." + digits, j)
         else ("", i)
