@@ -36,12 +36,14 @@ object Thrw extends TailOp(transfersControl = true):
 
 
 class LoweringCtx(
-  initMap: Map[ValueSymbol, Value], // No longer in meaningful use and could be removed if we don't find a use for it
+  val localVals: Map[TermSymbol, VarSymbol],
+  val symbolsToPreserve: Set[BoundSymbol],
   val mayRet: Bool, // For rewriting while loop into tail recursive function, represent whether an explicit return is legal in the current block
   private val definedSymsDuringLowering: collection.mutable.Set[ScopedSymbol], // used to create Scoped blocks
   val returnType: Opt[ErasedType], // the declared return type of the enclosing function, used to coerce `return`s
 ):
-  val map = initMap
+  def withLocalVals(syms: Map[TermSymbol, VarSymbol]): LoweringCtx =
+    LoweringCtx(localVals ++ syms, symbolsToPreserve, mayRet, definedSymsDuringLowering, returnType)
   def collectScopedSym(s: ScopedSymbol) = definedSymsDuringLowering.add(s)
   def collectScopedSyms(s: ScopedSymbol*) = definedSymsDuringLowering.addAll(s)
   def registerTempSymbol(trm: Option[Term], erasedType: Opt[ErasedValueType], dbgNme: Str = "tmp")(using State) =
@@ -49,25 +51,18 @@ class LoweringCtx(
     definedSymsDuringLowering.add(tmp)
     tmp
   def getCollectedSym: collection.Set[ScopedSymbol] = definedSymsDuringLowering
-  /*
-  def +(kv: (Symbol, Value)): Subst =
-    kv match
-    case (ns: NamedSymbol, Value.SimpleRef(ts: TempSymbol)) =>
-      ts.nameHints += ns.name
-    case _ =>
-    Subst(map + kv)
-  */
   def apply(v: Value): Value = v match
-    case Value.SimpleRef(l) => map.getOrElse(l, v)
+    case Value.MemberRef(_, sym: TermSymbol) =>
+      localVals.get(sym).fold(v)(_.asSimpleRef.withLocOf(v))
     case _ => v
 object LoweringCtx:
   def loweringCtx(using sub: LoweringCtx): LoweringCtx = sub
-  def empty =
-    LoweringCtx(Map.empty, mayRet = false, collection.mutable.Set.empty, returnType = N)
+  def empty(symbolsToPreserve: Set[BoundSymbol]) =
+    LoweringCtx(Map.empty, symbolsToPreserve, mayRet = false, collection.mutable.Set.empty, returnType = N)
   def nestFunc(returnType: Opt[ErasedType])(using sub: LoweringCtx): LoweringCtx =
-    LoweringCtx(sub.map, mayRet = true, sub.definedSymsDuringLowering, returnType)
+    LoweringCtx(sub.localVals, sub.symbolsToPreserve, mayRet = true, sub.definedSymsDuringLowering, returnType)
   def nestScoped(using sub: LoweringCtx): LoweringCtx =
-    LoweringCtx(sub.map, sub.mayRet, collection.mutable.Set.empty, sub.returnType)
+    LoweringCtx(sub.localVals, sub.symbolsToPreserve, sub.mayRet, collection.mutable.Set.empty, sub.returnType)
 end LoweringCtx
 
 import LoweringCtx.loweringCtx
@@ -217,6 +212,17 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
         (k: Result => Block)(using LoweringCtx): Block =
     // TODO we should also isolate and reorder classes by inheritance topological sort
     val (imps, funs, rest) = splitBlock(stats, Nil, Nil, Nil)
+    // * Bind local values before lowering any statements: hoisted functions and recursive initializers can
+    // * refer to them before their definitions are lowered, even if an early return skips their initialization.
+    // * Keep preserved definitions on their original symbols for imports and subsequent REPL blocks,
+    // * which refer to those symbols through a fresh lowering context.
+    val localVals = stats.iterator.collect:
+      case td: TermDefinition if td.k.isInstanceOf[syntax.Val] && td.owner.isEmpty && td.body.isDefined
+          && td.hasDeclareModifier.isEmpty && !loweringCtx.symbolsToPreserve(td.sym)
+          && !loweringCtx.symbolsToPreserve(td.tsym) =>
+        td.tsym -> new VarSymbol(td.tsym.id, erasedType = td.tsym.mapErasedValueType)
+    .toMap
+    localVals.valuesIterator.foreach(loweringCtx.collectScopedSym)
     
     def blockImpl(stats: Ls[Statement], res: Rcd \/ Term)(using LoweringCtx): Block =
       stats match
@@ -263,13 +269,18 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
         d match
         case td: TermDefinition =>
           reportAnnotations(td, td.extraAnnotations)
-          if td.owner.isEmpty && td.hasDeclareModifier.isEmpty then
+          val localVal = loweringCtx.localVals.get(td.tsym)
+          if td.owner.isEmpty && td.hasDeclareModifier.isEmpty && localVal.isEmpty then
             loweringCtx.collectScopedSym(td.sym)
           td.body match
           case N => // abstract declarations have no lowering
             blockImpl(stats, res)
           case S(bod) =>
             td.k match
+            case _: syntax.Val if localVal.isDefined =>
+              assert(td.params.isEmpty)
+              term_nonTail(bod): r =>
+                defineSymbol(localVal.get, r, blockImpl(stats, res))
             case knd: syntax.Val =>
               assert(td.params.isEmpty)
               val cfgOverride = td.extraAnnotations.collectFirst:
@@ -416,7 +427,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
         case td: TypeDef => // * Type definitions are erased
           blockImpl(stats, res)
     
-    blockImpl(imps ::: funs ::: rest, res)
+    blockImpl(imps ::: funs ::: rest, res)(using loweringCtx.withLocalVals(localVals))
   
   def getClassParamLists(cls: Path): Ls[ParamList] =
     cls.targetSymbol match
@@ -691,6 +702,11 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
       case S(_) => ()
       case N => () // TODO panic here; can only lower refs to elab'd symbols
     case sym: TermSymbol =>
+      loweringCtx.localVals.get(sym) match
+      case S(local) =>
+        warnStmt
+        return k(local.asSimpleRef.withLocOf(ref))
+      case N => ()
       sym.owner match
       case S(owner) =>
         warnStmt
@@ -1252,10 +1268,10 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
       setupTerm("Builtin", Value.Lit(Tree.StrLit(sym.nme))(N) :: Nil)(k)
     case Resolved(Ref(sym), disamb) =>
       sym match
-        case sym: BlockMemberSymbol => k(sym.asMemberRef(disamb))
+        case sym: BlockMemberSymbol => k(loweringCtx(sym.asMemberRef(disamb)))
         case sym: SimpleSymbol => k(sym.asSimpleRef)
         case sym => lastWords(s"Unexpected symbol kind ${sym.getClass.getSimpleName}: $sym")
-    case Ref(sym: ValueSymbol) => k(sym.asPath)
+    case Ref(sym: ValueSymbol) => k(loweringCtx(sym.asPath))
     case Ref(sym) => lastWords(s"Unexpected symbol kind ${sym.getClass.getSimpleName}: $sym")
     case SynthSel(Ref(sym: ModuleOrObjectSymbol), name) => // Module/object cross-stage references
       setupSymbol(sym): r1 =>
@@ -1481,9 +1497,14 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
   def program(main: st.Blk, symbolsToPreserve: Set[BoundSymbol]): Program =
     
     val (imps, funs, rest) = splitBlock(main.stats, Nil, Nil, Nil)
+    // * File-level values participate in the compilation unit's default export and private ABI.
+    // * Only values inside local blocks can be replaced by fresh variables without breaking that linkage.
+    val topLevelVals = rest.collect:
+      case td: TermDefinition if td.k.isInstanceOf[syntax.Val] => td.sym
+    .toSet
     
     val blk =
-      inScopedBlockExcept(symbolsToPreserve)(using LoweringCtx.empty):
+      inScopedBlockExcept(symbolsToPreserve)(using LoweringCtx.empty(symbolsToPreserve ++ topLevelVals)):
         block(funs ::: rest, R(main.res))(ImplctRet)
     
     Program(
