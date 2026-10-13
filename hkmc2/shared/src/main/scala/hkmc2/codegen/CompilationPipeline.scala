@@ -34,17 +34,19 @@ class CompilationPipeline(using Config, Raise, State, Ctx, SymbolPrinter):
       passHook(passName, before, result)
     
     runPass("LambdaRewriter")(LambdaRewriter.desugar)
+    // deforestation only supports lifted programs
+    runPass("Lifter"): prog =>
+      if config.liftDefns.isDefined || config.deforest.isDefined then
+        blockPass(Lifter(_).transform)(prog)
+      else prog
     runPass("Deforest"): prog =>
       val outterTl = tl
       config.deforest match
         case None => prog
         case Some(dCfg) =>
           flowAnalysis.FlowAnalysis.mkTraceLogger(dCfg.config, "deforest > ", outterTl).givenIn:
-            deforest.Deforest(prog)
-    runPass("Lifter"): prog =>
-      if config.liftDefns.isDefined then
-        blockPass(Lifter(_).transform)(prog)
-      else prog
+            deforest.Deforest(prog, additionalTopLevelSymbols =
+              symbolsToPreserve.collect{case s: semantics.LocalVarSymbol => s})
     runPass("HandlerLowering"): prog =>
       HandlerLowering(new HandlerPaths, config.effectHandlers).translateProgram(prog)
     runPass("AsyncLowering")(AsyncLowering().transform)

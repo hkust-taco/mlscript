@@ -464,7 +464,7 @@ k + 2
 //│ deforest > 	match: scrut¹
 //│ deforest > <<< fusing <<<
 //│ = 5
-//│ k = undefined
+//│ k = 3
 
 :expect 4
 fun test(a) = if a is
