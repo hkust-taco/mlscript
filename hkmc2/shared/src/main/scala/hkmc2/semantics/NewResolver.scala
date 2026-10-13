@@ -3033,19 +3033,6 @@ class NewResolver:
           publishActivated(sym, sh)
     DefineVar(sym, rhs)(loc)
   
-  def listenDefn(sym: TermSymbol, listener: Listener)(using NewResolverState): Unit =
-    sym.defn match
-    case S(td: TermDefinition) if td.params.isEmpty =>
-      td.body match
-      case S(body) =>
-        listenByNameBody(td, body)(listener)
-      case N =>
-        ??? // TODO error
-    case S(d) =>
-      listener(defnShapes.getOrElseUpdate(sym, DefnShape(d, N)))
-    case N =>
-      sym.defnListeners += (d => listener(defnShapes.getOrElseUpdate(sym, DefnShape(d, N))))
-  
   /** Close recursive getter dependencies before following the body. A cycle with
     * no normal result publishes nothing; a productive branch can still publish
     * later and propagate around the cycle until duplicate candidates stop it.
@@ -3686,11 +3673,10 @@ class NewResolver:
       // function/class captures still enter and exit through Capture normally.
       recordValueTarget(ref, sym)
       rstate.memberVariable(sym).subscribeToShapes(listener)
-    case ref @ MemberRef(sym: TermSymbol) =>
-      listenDefn(sym, sh =>
-        MarkedShape.exit(sh, ResolutionBoundary(sym), S(ref.resSym)) match
-          case sh: TermShape => listener(sh)
-          case NoShape => ())
+    case MemberRef(_: TermSymbol) =>
+      // Ctx.RefElem only refers to let-bound term symbols directly. Other definitions,
+      // including class parameter fields, are referenced through their BlockMemberSymbol.
+      lastWords("Only let-bound term symbols can be referenced directly")
     case ref @ MemberRef(sym: BlockMemberSymbol) =>
       val fs = ref.resSym
       val sh = symShapes.getOrElseUpdate((sym, fs, Nil), CoreSymShape(sym, fs, Nil))
