@@ -3728,8 +3728,7 @@ class NewResolver:
     case _: DynTy | _: FunTy | _: Forall | _: Constrained | _: WildcardTy | _: CompType | _: Neg =>
       resolError(trm, msg"A type cannot be used as a runtime value." -> N :: Nil)
     case Error() => () // Elaboration has already reported the error; it supplies no candidate.
-    case Missing =>
-      () // FIXME: Currently get this from light-elaborated Predef import
+    case Missing => () // A body skipped by lightweight elaboration (`Mode.Light`) supplies no candidate.
     case _: SynthIf | _: SynthWhile =>
       lastWords("Lowering-generated control flow must not enter resolution")
     case _: Region | _: RegRef | _: Deref | _: SetRef =>
