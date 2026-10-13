@@ -266,7 +266,7 @@ class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbo
         case _ => super.applyBlock(b)
       
       override def applyDefn(defn: Defn): Unit =
-        lastWords(s"deforestation copying the definition ${defn.sym.nme}")
+        softAssert(false, s"deforestation copying the definition ${defn.sym.nme}")
     end FreeVarTraverser
     
     def fvsForDtor(dtorId: CtorDtorId): Ls[LocalVarSymbol] =
@@ -395,11 +395,14 @@ class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbo
           mkCall(bms.asMemberRef(tSym), restFnFvs(labelRestFunId))(Return(_))
       // copying a definition would need fresh symbols for it; lifting removes the nested ones beforehand
       case Define(defn, _) if refreshSymbolMappingForCopy.isDefined =>
-        lastWords(s"deforestation copying the definition ${defn.sym.nme}")
-      case Label(_, true, _, _) if refreshSymbolMappingForCopy.isDefined =>
-        lastWords("unsupported loop during rewriting")
-      case Continue(_) if refreshSymbolMappingForCopy.isDefined =>
-        lastWords("unsupported `continue` instruction during rewriting")
+        softAssert(false, s"deforestation copying the definition ${defn.sym.nme}")
+        b
+      case Label(sym, true, _, _) if refreshSymbolMappingForCopy.isDefined =>
+        softAssert(false, s"unsupported loop $sym during rewriting")
+        b
+      case Continue(sym) if refreshSymbolMappingForCopy.isDefined =>
+        softAssert(false, s"unsupported `continue` to $sym during rewriting")
+        b
       case _ => super.applyBlock(b)
   end Rewriter
   

@@ -252,7 +252,10 @@ f(D(1))
 //│ deforest > 	match: d⁰
 //│ deforest > 	fields: d⁰.x⁴
 //│ deforest > <<< fusing <<<
-//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: deforestation copying the definition O
+//│ ╔══[INTERNAL ERROR] Compiler reached an unexpected state at 'Rewrite.scala:269': deforestation copying the definition O
+//│ ╟── The compilation result may be incorrect.
+//│ ╙── This is a compiler bug; please report it to the maintainers.
+//│ /!!!\ Uncaught error: java.lang.AssertionError: assertion failed: BlockMemberSymbol member:O for ClsLikeDefn is a free variable for this block
 
 
 // TODO: a top-level class defined after a fused top-level match is copied into the extracted rest,
@@ -267,5 +270,8 @@ E(y).get()
 //│ deforest > AA⁰(0) ->
 //│ deforest > 	match: scrut¹
 //│ deforest > <<< fusing <<<
-//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: deforestation copying the definition E
+//│ ╔══[INTERNAL ERROR] Compiler reached an unexpected state at 'Rewrite.scala:269': deforestation copying the definition E
+//│ ╟── The compilation result may be incorrect.
+//│ ╙── This is a compiler bug; please report it to the maintainers.
+//│ /!!!\ Uncaught error: java.lang.AssertionError: assertion failed: BlockMemberSymbol member:E for ClsLikeDefn is a free variable for this block
 
