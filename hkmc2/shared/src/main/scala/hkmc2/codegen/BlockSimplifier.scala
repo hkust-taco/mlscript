@@ -18,7 +18,7 @@ import hkmc2.{codegen => argss}
   * typically, these will be top-level symbols that are being exported from a diff-test block;
   * we don't want to eliminate these. */
 class BlockSimplifier
-    (symbolsToPreserve: Set[BoundSymbol], tl: TL, printer: Program => Str)
+    (symbolsToPreserve: Set[ScopedSymbol], tl: TL, printer: Program => Str)
     (using DebugPrinter, State, Config, Raise, Ctx):
   import tl.*
   
@@ -1417,9 +1417,9 @@ class BlockSimplifier
       // * TODO: once bad actors like the current pattern compiler stop duplicating symbols,
       // *  we can remove this ugly workaround.
       def hasDuplicateBoundSymbols(fun: FunDefn): Bool =
-        val seen = MutSet.empty[BoundSymbol | LabelSymbol | ClassCtorSymbol]
+        val seen = MutSet.empty[ScopedSymbol | TermSymbol | LabelSymbol | ClassCtorSymbol]
         var found = false
-        def register(sym: BoundSymbol | LabelSymbol | ClassCtorSymbol): Unit =
+        def register(sym: ScopedSymbol | TermSymbol | LabelSymbol | ClassCtorSymbol): Unit =
           if seen(sym) then found = true
           else seen += sym
         def registerParamList(pl: ParamList): Unit =
