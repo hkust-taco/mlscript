@@ -39,7 +39,10 @@ class CompilationPipeline(using Config, Raise, State, Ctx, SymbolPrinter):
       if config.liftDefns.isDefined || config.deforest.isDefined then
         if config.deforest.isDefined && config.liftDefns.isEmpty then
           import hkmc2.Message.MessageContext
-          raise(WarningReport(msg"deforest requires lifted program" -> N :: Nil))
+          raise:
+            WarningReport:
+              msg"The deforestation optimization requires definition lifting to be enabled." ->
+              N :: Nil
         blockPass(Lifter(_).transform)(prog)
       else prog
     runPass("Deforest"): prog =>

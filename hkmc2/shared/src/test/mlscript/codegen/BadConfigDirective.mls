@@ -42,13 +42,13 @@
 :w
 :deforest
 let deforest = 0
-//│ ═══[WARNING] deforest requires lifted program
+//│ ═══[WARNING] The deforestation optimization requires definition lifting to be enabled.
 //│ deforest > >>> fusing >>>
 //│ deforest > <<< fusing <<<
 //│ deforest = 0
 
 :w
 #config(deforest: Some(Deforest(mono: false)), liftDefns: None)
-//│ ═══[WARNING] deforest requires lifted program
+//│ ═══[WARNING] The deforestation optimization requires definition lifting to be enabled.
 //│ deforest > >>> fusing >>>
 //│ deforest > <<< fusing <<<
