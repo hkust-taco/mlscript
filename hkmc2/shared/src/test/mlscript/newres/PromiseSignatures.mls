@@ -92,7 +92,7 @@ new Promise((resolve, reject) => resolve(10).missing)
 //│ ║        	                                 ^^^^^^^^^^^^^^^^^^^
 //│ ╟── Undefined literal does not contain member 'missing'
 //│ ║  in ../decls/Prelude.mls
-//│ ║  l.184: 	declare class Promise[out A](executor: ((A | Promise[A]) -> undefined, Any -> undefined) -> undefined) {
+//│ ║  l.185: 	declare class Promise[out A](executor: ((A | Promise[A]) -> undefined, Any -> undefined) -> undefined) {
 //│ ╙──       	                                                            ^^^^^^^^^
 
 :!js
@@ -103,7 +103,7 @@ new Promise((resolve, reject) => reject("failed").missing)
 //│ ║         	                                 ^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Undefined literal does not contain member 'missing'
 //│ ║  in ../decls/Prelude.mls
-//│ ║  l.184: 	declare class Promise[out A](executor: ((A | Promise[A]) -> undefined, Any -> undefined) -> undefined) {
+//│ ║  l.185: 	declare class Promise[out A](executor: ((A | Promise[A]) -> undefined, Any -> undefined) -> undefined) {
 //│ ╙──       	                                                                              ^^^^^^^^^
 
 // Both then branches contribute to the resulting promise type.

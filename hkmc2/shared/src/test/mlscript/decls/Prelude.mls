@@ -49,6 +49,7 @@ declare class BigInt {
 declare fun BigInt(value: Str | Int | Bool | BigInt): BigInt
 declare module BigInt
 
+// TODO: declare as class Function[...As, B]
 declare open class Function {
   val name: Str
   fun bind(thisArg, ...args): Function

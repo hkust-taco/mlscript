@@ -278,3 +278,21 @@ f.name
 //│ ╙──       	 ^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
+:e
+f is Int -> Int
+//│ ╔══[COMPILATION ERROR] Unrecognized pattern (infix operator '->').
+//│ ║  l.282: 	f is Int -> Int
+//│ ╙──       	     ^^^^^^^^^^
+//│ = true
+
+:fixme
+(f as Int -> Int).apply
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.289: 	(f as Int -> Int).apply
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Function with a declared signature does not contain member 'apply'
+//│ ║  l.289: 	(f as Int -> Int).apply
+//│ ╙──       	      ^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+
