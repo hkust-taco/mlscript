@@ -915,8 +915,8 @@ final case class ClsLikeDefn(
   isym match
     case sym: ClassLikeSymbol =>
       sym.irClassHeader = parentPath match
-        case N => S(ClassHeader(N))
-        case S(parent) => parent.targetSymbol.flatMap(_.asTpe).map(p => ClassHeader(S(p)))
+      case N => S(ClassHeader(N))
+      case S(parent) => parent.targetSymbol.flatMap(_.asTpe).map(p => ClassHeader(S(p)))
     case _ => ()
   methods.foreach: m =>
     m.dSym.irDefn = S(m)

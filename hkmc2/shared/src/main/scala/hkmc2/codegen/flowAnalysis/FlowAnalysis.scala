@@ -1116,7 +1116,8 @@ class FlowConstraintSolver(val collector: FlowConstraintsCollector):
     c.srcs += p
   
   /** Whether instances of `cls` may have the fields of `ancestor` through inheritance.
-    * A class whose parent chain is not known is assumed to possibly inherit them. */
+    * A class whose parent chain is not known is assumed to possibly inherit them.
+    * TODO: cache inheritance set in header object to avoid retraversals, here and elsewhere (eg erased types). */
   private def mayInheritFields(cls: CtorCls, ancestor: CtorCls): Bool = (cls, ancestor) match
     case (cls: ClassLikeSymbol, ancestor: ClassLikeSymbol) =>
       def go(cur: ClassLikeSymbol, seen: Set[ClassLikeSymbol]): Bool = cur.irClassHeader match
@@ -1209,7 +1210,8 @@ class FlowConstraintSolver(val collector: FlowConstraintsCollector):
         // An inherited field is initialized by a parent constructor, which can receive any
         // of the subclass constructor's arguments. This analysis does not relate them to
         // the field, so the instance and the selected value must be treated as unknown.
-        // Otherwise, dead-parameter elimination would drop the argument that the field holds.
+        // Otherwise, eg, dead-parameter elimination would drop the argument that the field holds.
+        // TODO: Properly track value flows through class constructors (current and inherited)
         else if mayInheritFields(c.ctor, d.selectsFrom) then
           handle(c, UnknownCons)
           handle(UnknownProd, d)

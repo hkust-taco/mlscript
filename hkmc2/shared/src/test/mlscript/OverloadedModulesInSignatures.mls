@@ -10,7 +10,7 @@ type TypMod = Int
 module TypMod with
   val whoami = "module"
 
-:fixme
+:e
 fun TrmMod = 42
 module TrmMod with
   val whoami = "module"
