@@ -1,5 +1,4 @@
-:js
-:deforest
+:.
 
 
 object A
@@ -697,7 +696,6 @@ f(AA(1), BB(2))
 //│ = 3
 
 
-:deforest
 :expect 9
 fun g(k, x) = if k is
   A then x.AA#aa + x.AA#aa + x.AA#aa

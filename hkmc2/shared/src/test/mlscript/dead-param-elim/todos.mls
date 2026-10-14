@@ -1,5 +1,6 @@
 :js
 :deforest
+:lift
 :flowBasedOpt debugEta debugDpe
 
 open annotations { noInline }

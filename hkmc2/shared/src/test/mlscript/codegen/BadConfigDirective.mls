@@ -37,3 +37,18 @@
 //│ ╔══[COMPILATION ERROR] Unsupported Language argument
 //│ ║  l.36: 	#lang(versionName: "custom")
 //│ ╙──      	      ^^^^^^^^^^^^^^^^^^^^^
+
+
+:w
+:deforest
+let deforest = 0
+//│ ═══[WARNING] The deforestation optimization requires definition lifting to be enabled.
+//│ deforest > >>> fusing >>>
+//│ deforest > <<< fusing <<<
+//│ deforest = 0
+
+:w
+#config(deforest: Some(Deforest(mono: false)), liftDefns: None)
+//│ ═══[WARNING] The deforestation optimization requires definition lifting to be enabled.
+//│ deforest > >>> fusing >>>
+//│ deforest > <<< fusing <<<
