@@ -135,17 +135,20 @@ class Printer(using Config, Ctx, Raise, ShowCfg, State, SymbolPrinter):
     val pubFields = publicFields.map(x => doc"val ${print(x._1)}${erasedTypeAnnot(x._2)};").mkDocument(sep = doc" # ")
     val docPrivFlds = if privateFields.isEmpty then doc"" else doc" # ${privFields}"
     val docPubFlds = if publicFields.isEmpty then doc"" else doc" # ${pubFields}"
-    val docPreCtor = preCtor match
-      case Some(End(_)) => doc""
-      case Some(value) => print(value) :: doc"; # "
-      case None => doc""
     val docCtor = ctor match
       case End(_) =>
         ctorSym match
         case S(ctorSym) => doc" # constructor ${print(ctorSym)}"
         case N => doc""
-      case _ => doc" # constructor${ctorSym.fold(doc"")(doc" " :: print(_))}${printParamLists(auxParams)} ${
-        bracedbk(docPreCtor :: print(ctor))}"
+      case _ =>
+        // the preCtor's call to `super` refers to the ctor params, so print params first to put them in the local scope
+        val docParams = printParamLists(auxParams)
+        val docPreCtor = preCtor match
+          case Some(End(_)) => doc""
+          case Some(value) => print(value) :: doc"; # "
+          case None => doc""
+        doc" # constructor${ctorSym.fold(doc"")(doc" " :: print(_))}${docParams} ${
+          bracedbk(docPreCtor :: print(ctor))}"
     val mtds = methods.map(m => doc"method ${print(m.sym)} = " :: print(m)).mkDocument(sep = doc" # ")
     val docMethods = if methods.isEmpty then doc"" else doc" # ${mtds}"
     if publicFields.isEmpty
